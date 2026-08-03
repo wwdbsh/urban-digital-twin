@@ -1,0 +1,16 @@
+node_modules/
+dist/
+coverage/
+.DS_Store
+*.local
+.env
+.env.*
+!.env.example
+
+# Local Blender and generated city artifacts are intentionally not committed.
+*.blend
+*.blend1
+data/raw/
+data/generated/
+public/tiles/
+artifacts/offline-ingest/

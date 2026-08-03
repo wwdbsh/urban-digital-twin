@@ -1,0 +1,75 @@
+{
+  "type": "FeatureCollection",
+  "schemaVersion": "1.0",
+  "snapshotId": "invented-manhattan-areas-v1",
+  "purpose": "Synthetic area contract fixture; not real Manhattan coverage.",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "sourceRegistryEntryId": "fixture.local.manhattan-slice",
+        "provider": "Urban Digital Twin local test fixture",
+        "datasetId": "manhattan-flatiron-v1",
+        "sourceRecordId": "fixture-area-nta-001",
+        "termsUrl": "https://example.invalid/udt/local-fixture-terms",
+        "attribution": "Synthetic local fixture; not real Manhattan coverage.",
+        "licenseClass": "fixture-only",
+        "officialName": "Fixture Flatiron Study Area",
+        "areaType": "nta",
+        "areaLevel": "vertical-slice",
+        "semantics": "statistical",
+        "labels": ["Flatiron-like fixture", "not a universally accepted neighborhood"],
+        "capturedAt": "2026-08-03T00:00:00Z",
+        "updatedAt": null
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[-74.020,40.730],[-73.986,40.730],[-73.986,40.748],[-74.020,40.748],[-74.020,40.730]], [[-73.994,40.742],[-73.990,40.742],[-73.990,40.745],[-73.994,40.745],[-73.994,40.742]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "sourceRegistryEntryId": "fixture.local.manhattan-slice",
+        "provider": "Urban Digital Twin local test fixture",
+        "datasetId": "manhattan-flatiron-v1",
+        "sourceRecordId": "fixture-area-cd-001",
+        "termsUrl": "https://example.invalid/udt/local-fixture-terms",
+        "attribution": "Synthetic local fixture; not real Manhattan coverage.",
+        "licenseClass": "fixture-only",
+        "officialName": "Fixture NoMad Administrative Study Area",
+        "areaType": "community-district",
+        "areaLevel": "vertical-slice",
+        "semantics": "administrative",
+        "labels": ["NoMad-like fixture", "administrative semantics only"],
+        "capturedAt": "2026-08-03T00:00:00Z",
+        "updatedAt": null
+      },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [[[[-73.996,40.748],[-73.988,40.748],[-73.988,40.753],[-73.996,40.753],[-73.996,40.748]]], [[[-73.984,40.748],[-73.981,40.748],[-73.981,40.751],[-73.984,40.751],[-73.984,40.748]]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "sourceRegistryEntryId": "fixture.local.manhattan-slice",
+        "provider": "Urban Digital Twin local test fixture",
+        "datasetId": "manhattan-flatiron-v1",
+        "sourceRecordId": "fixture-area-outside",
+        "termsUrl": "https://example.invalid/udt/local-fixture-terms",
+        "attribution": "Synthetic local fixture; not real Manhattan coverage.",
+        "licenseClass": "fixture-only",
+        "officialName": "Fixture Outside Area",
+        "areaType": "other",
+        "areaLevel": "vertical-slice",
+        "semantics": "colloquial",
+        "labels": []
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[-73.80,40.90],[-73.79,40.90],[-73.79,40.91],[-73.80,40.91],[-73.80,40.90]]]
+      }
+    }
+  ]
+}

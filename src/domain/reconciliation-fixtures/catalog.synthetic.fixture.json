@@ -1,0 +1,61 @@
+{
+  "schemaVersion": "1.0",
+  "sourceRegistryEntryIds": ["fixture.local.manhattan-slice"],
+  "observations": [
+    {
+      "schemaVersion": "1.0",
+      "observationId": "fixture-observation-cli-coffee",
+      "entityKind": "poi",
+      "cityId": "manhattan",
+      "source": {
+        "schemaVersion": "1.0",
+        "id": "source-ref:fixture.local.manhattan-slice:cli-coffee",
+        "registryEntryId": "fixture.local.manhattan-slice",
+        "provider": "Urban Digital Twin local test fixture",
+        "datasetId": "reconciliation-v1",
+        "sourceRecordId": "fixture-cli-coffee-001",
+        "sourceUrl": "https://example.invalid/udt/local-fixture",
+        "licenseRefId": "license:fixture.local.manhattan-slice",
+        "role": "fixture",
+        "capturedAt": "2026-08-03T00:00:00Z",
+        "updatedAt": null,
+        "observedAt": "2026-08-03T00:00:00Z",
+        "release": "fixture-v1"
+      },
+      "payload": {
+        "name": "Fixture CLI Coffee",
+        "aliases": ["CLI Cafe"],
+        "categories": ["cafe"],
+        "rawCategories": ["amenity=cafe"],
+        "address": {
+          "formatted": "200 Invented Fixture Way, Manhattan, NY 10010",
+          "houseNumber": "200",
+          "street": "Invented Fixture Way",
+          "unit": null,
+          "locality": "Manhattan",
+          "region": "NY",
+          "postalCode": "10010",
+          "countryCode": "US",
+          "normalizedKey": "200 invented fixture way manhattan ny 10010 us"
+        },
+        "contact": { "website": null, "phone": null, "email": null },
+        "brand": null,
+        "operator": null,
+        "cuisine": "coffee",
+        "openingHours": { "raw": null, "parsedStatus": "unknown", "timezone": null, "weekdayText": null },
+        "accessibility": "unknown",
+        "priceLevel": null,
+        "rating": null,
+        "geometry": { "type": "Point", "coordinates": [-73.9912, 40.7431] },
+        "runtimeFeatureId": null,
+        "links": { "buildingIds": [], "areaIds": [], "transitIds": [] }
+      },
+      "validFrom": null,
+      "validTo": null,
+      "observedAt": "2026-08-03T00:00:00Z",
+      "ingestedAt": "2026-08-03T00:00:00Z",
+      "confidence": 0.5,
+      "uncertainty": "Synthetic CLI fixture; not real Manhattan coverage."
+    }
+  ]
+}

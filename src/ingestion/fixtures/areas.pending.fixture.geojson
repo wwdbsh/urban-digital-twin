@@ -1,0 +1,21 @@
+{
+  "type": "FeatureCollection",
+  "purpose": "Synthetic pending-registry gate fixture; not provider data.",
+  "features": [{
+    "type": "Feature",
+    "properties": {
+      "sourceRegistryEntryId": "nyc.nta-2020",
+      "provider": "NYC DCP",
+      "datasetId": "4hft-v355",
+      "sourceRecordId": "invented-pending-area",
+      "termsUrl": "https://www.nyc.gov/content/planning/pages/resources/datasets",
+      "attribution": "Synthetic gate test; not a real record.",
+      "licenseClass": "unknown",
+      "officialName": "Invented Pending Area",
+      "areaType": "nta",
+      "areaLevel": "2020",
+      "semantics": "statistical"
+    },
+    "geometry": {"type":"Polygon","coordinates":[[[-73.99,40.74],[-73.98,40.74],[-73.98,40.75],[-73.99,40.75],[-73.99,40.74]]]}
+  }]
+}

@@ -1,0 +1,103 @@
+{
+  "type": "FeatureCollection",
+  "name": "INVENTED NYC BUILDING FOOTPRINTS SCHEMA FIXTURE - NOT REAL DATA",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "DOITT_ID": "fixture-doitt-001",
+        "BIN": "1000001",
+        "BASE_BBL": "1000010001",
+        "MAPPLUTO_BBL": "1000010001",
+        "NAME": "Invented Fixture Building A",
+        "CONSTRUCTION_YEAR": 2001,
+        "FEATURE_CODE": 2100,
+        "GEOM_SOURCE": "Photogrammetric",
+        "GROUND_ELEVATION": 5.2,
+        "HEIGHT_ROOF": 30.5
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-73.995, 40.741],
+            [-73.993, 40.741],
+            [-73.993, 40.743],
+            [-73.995, 40.743],
+            [-73.995, 40.741]
+          ],
+          [
+            [-73.9945, 40.7415],
+            [-73.9935, 40.7415],
+            [-73.9935, 40.7425],
+            [-73.9945, 40.7425],
+            [-73.9945, 40.7415]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "DOITT_ID": "fixture-doitt-002",
+        "BIN": "1000002",
+        "BASE_BBL": "1000010002",
+        "MAPPLUTO_BBL": "1000010002",
+        "NAME": "Invented Fixture Building B MultiPart",
+        "CONSTRUCTION_YEAR": 1998,
+        "FEATURE_CODE": 2100,
+        "GEOM_SOURCE": "Other",
+        "GROUND_ELEVATION": null,
+        "HEIGHT_ROOF": 0
+      },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [-73.998, 40.744],
+              [-73.996, 40.744],
+              [-73.996, 40.746],
+              [-73.998, 40.746],
+              [-73.998, 40.744]
+            ]
+          ],
+          [
+            [
+              [-74.012, 40.744],
+              [-74.008, 40.744],
+              [-74.008, 40.748],
+              [-74.012, 40.748],
+              [-74.012, 40.744]
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "DOITT_ID": "fixture-doitt-invalid-height",
+        "BIN": "1000003",
+        "BASE_BBL": "1000010003",
+        "MAPPLUTO_BBL": "1000010003",
+        "NAME": "Invented Fixture Invalid Height",
+        "CONSTRUCTION_YEAR": 2010,
+        "FEATURE_CODE": 2100,
+        "GEOM_SOURCE": "Other",
+        "GROUND_ELEVATION": 4,
+        "HEIGHT_ROOF": -4
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-73.99, 40.748],
+          [-73.989, 40.748],
+          [-73.989, 40.749],
+          [-73.99, 40.749],
+          [-73.99, 40.748]
+        ]]
+      }
+    }
+  ]
+}

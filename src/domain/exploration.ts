@@ -1,0 +1,63 @@
+import { normalizeText, type CanonicalEntity, type ReconciliationResult } from "./reconciliation.ts";
+import type { Feature, FeatureKind } from "./schema.ts";
+
+export interface ExplorationUrlState {
+  featureId: string | null;
+  query: string;
+}
+
+export interface UnifiedSearchResult {
+  feature: Feature;
+  entity: CanonicalEntity | null;
+  group: "Buildings" | "Areas" | "Places" | "Transit" | "Addresses";
+  typeLabel: string;
+  score: number;
+  matchedBy: "id" | "source" | "name" | "alias" | "address" | "category" | "text";
+}
+
+const GROUPS: Record<FeatureKind, UnifiedSearchResult["group"]> = {
+  building: "Buildings", parcel: "Addresses", street: "Addresses", park: "Places", landmark: "Places", facility: "Places", poi: "Places", "transit-stop": "Transit", "transit-station": "Transit", "transit-entrance": "Transit", "transit-route": "Transit", neighborhood: "Areas", area: "Areas", "fixture-point": "Places",
+};
+
+const TYPE_LABELS: Partial<Record<FeatureKind, string>> = { building: "Building", area: "Area", neighborhood: "Neighborhood", poi: "Place", park: "Park", landmark: "Landmark", facility: "Facility", "transit-station": "Station", "transit-entrance": "Entrance", "transit-route": "Route", "transit-stop": "Stop" };
+
+function valuesFor(feature: Feature, entity: CanonicalEntity | null): { value: string; matchedBy: UnifiedSearchResult["matchedBy"] }[] {
+  const values: { value: string; matchedBy: UnifiedSearchResult["matchedBy"] }[] = [];
+  values.push({ value: feature.id, matchedBy: "id" });
+  values.push({ value: feature.name, matchedBy: "name" });
+  values.push(...feature.sourceRefs.flatMap((source) => [source.id, source.registryEntryId, source.provider, source.datasetId, source.sourceRecordId].map((value) => ({ value, matchedBy: "source" as const }))));
+  values.push(...Object.values(feature.attributes).filter((value): value is string => typeof value === "string").map((value) => ({ value, matchedBy: "text" as const })));
+  if (entity) {
+    values.push(...entity.fields.aliases.map((value) => ({ value, matchedBy: "alias" as const })));
+    values.push(...entity.fields.categories.map((value) => ({ value, matchedBy: "category" as const })));
+    values.push(...entity.fields.rawCategories.map((value) => ({ value, matchedBy: "category" as const })));
+    const address = entity.fields.address;
+    values.push(...[address.formatted, address.houseNumber, address.street, address.unit, address.locality, address.region, address.postalCode].filter((value): value is string => Boolean(value)).map((value) => ({ value, matchedBy: "address" as const })));
+    values.push(...entity.observationIds.map((value) => ({ value, matchedBy: "source" as const })));
+  }
+  return values;
+}
+
+export function searchUnifiedCatalog(features: readonly Feature[], catalog: ReconciliationResult, query: string): UnifiedSearchResult[] {
+  const normalizedQuery = normalizeText(query);
+  if (!normalizedQuery) return [];
+  const entityByFeature = new Map(catalog.entities.filter((entity) => entity.fields.runtimeFeatureId).map((entity) => [entity.fields.runtimeFeatureId!, entity]));
+  return features.flatMap((feature) => {
+    const entity = entityByFeature.get(feature.id) ?? null;
+    const values = valuesFor(feature, entity);
+    const matches = values.map(({ value, matchedBy }) => ({ normalized: normalizeText(value), matchedBy })).filter((item) => item.normalized === normalizedQuery || item.normalized.startsWith(normalizedQuery) || item.normalized.includes(normalizedQuery));
+    if (matches.length === 0) return [];
+    const matchPriority: Record<UnifiedSearchResult["matchedBy"], number> = { id: 0, source: 1, name: 2, alias: 3, address: 4, category: 5, text: 6 };
+    const best = matches.sort((left, right) => (left.normalized === normalizedQuery ? 0 : 1) - (right.normalized === normalizedQuery ? 0 : 1) || matchPriority[left.matchedBy] - matchPriority[right.matchedBy] || left.normalized.length - right.normalized.length)[0]!;
+    const score = best.matchedBy === "source" && best.normalized === normalizedQuery ? 0 : best.normalized === normalizedQuery ? 1 : best.matchedBy === "alias" ? 2 : best.matchedBy === "address" ? 3 : best.matchedBy === "category" ? 4 : 5;
+    return [{ feature, entity, group: GROUPS[feature.kind], typeLabel: TYPE_LABELS[feature.kind] ?? "Feature", score, matchedBy: best.matchedBy }];
+  }).sort((left, right) => left.score - right.score || left.group.localeCompare(right.group) || left.feature.name.localeCompare(right.feature.name) || left.feature.id.localeCompare(right.feature.id));
+}
+
+export function parseExplorationUrl(value: string): ExplorationUrlState {
+  try { const url = new URL(value); return { featureId: url.searchParams.get("feature"), query: url.searchParams.get("q") ?? "" }; } catch { return { featureId: null, query: "" }; }
+}
+
+export function explorationUrl(value: ExplorationUrlState, base: string): string {
+  const url = new URL(base); if (value.featureId) url.searchParams.set("feature", value.featureId); else url.searchParams.delete("feature"); if (value.query) url.searchParams.set("q", value.query); else url.searchParams.delete("q"); return url.toString();
+}

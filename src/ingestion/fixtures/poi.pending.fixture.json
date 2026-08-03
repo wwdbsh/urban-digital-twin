@@ -1,0 +1,19 @@
+{
+  "schemaVersion": "1.0",
+  "snapshotId": "invented-pending-source-v1",
+  "purpose": "Synthetic pending-registry gate fixture; not provider data.",
+  "records": [
+    {
+      "sourceRegistryEntryId": "overture.places",
+      "provider": "Overture Maps Foundation",
+      "datasetId": "places",
+      "sourceRecordId": "invented-pending-record",
+      "termsUrl": "https://docs.overturemaps.org/attribution/",
+      "attribution": "Synthetic gate test; not a real record.",
+      "licenseClass": "unknown",
+      "name": "Invented Pending Place",
+      "categories": ["other"],
+      "coordinates": [-73.991, 40.743]
+    }
+  ]
+}

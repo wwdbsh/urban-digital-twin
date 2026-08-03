@@ -1,0 +1,73 @@
+{
+  "schemaVersion": "1.0",
+  "fixtureId": "manhattan-flatiron-v1",
+  "purpose": "Synthetic local fixture for validating IDs, coordinate normalization, provenance, search/detail projection, and rejection accounting; not real Manhattan coverage.",
+  "sourceRegistryId": "fixture.local.manhattan-slice",
+  "inputCrs": "EPSG:4326",
+  "verticalDatum": "fixture-illustrative-height",
+  "features": [
+    {
+      "sourceId": "fixture-building-001",
+      "kind": "building",
+      "name": "Fixture Flatiron Block",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-73.9945, 40.7415],
+          [-73.9938, 40.7415],
+          [-73.9938, 40.7422],
+          [-73.9945, 40.7422],
+          [-73.9945, 40.7415]
+        ]]
+      },
+      "heightMeters": 31.2,
+      "capturedAt": "2026-08-03T00:00:00Z",
+      "updatedAt": "2026-08-03T00:00:00Z",
+      "observedAt": "2026-08-03T00:00:00Z",
+      "horizontalUncertaintyMeters": 5,
+      "verticalUncertaintyMeters": 3,
+      "confidence": {
+        "score": 0.72,
+        "label": "medium",
+        "rationale": "Synthetic geometry used to exercise the source-aware contract."
+      },
+      "attributes": {
+        "fixtureClass": "building-massing"
+      }
+    },
+    {
+      "sourceId": "fixture-poi-001",
+      "kind": "poi",
+      "name": "Fixture Coffee Counter",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-73.9912, 40.7431]
+      },
+      "heightMeters": null,
+      "capturedAt": "2026-08-03T00:00:00Z",
+      "updatedAt": null,
+      "observedAt": "2026-08-03T00:00:00Z",
+      "horizontalUncertaintyMeters": 8,
+      "verticalUncertaintyMeters": null,
+      "confidence": {
+        "score": 0.45,
+        "label": "low",
+        "rationale": "Synthetic point used to exercise low-confidence detail display."
+      },
+      "attributes": {
+        "category": "food-and-drink",
+        "openingHours": "fixture-only"
+      }
+    },
+    {
+      "sourceId": "fixture-invalid-001",
+      "kind": "building",
+      "name": "Rejected Fixture",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-73.9900, 95.0000]
+      },
+      "heightMeters": 10
+    }
+  ]
+}

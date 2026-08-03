@@ -1,0 +1,21 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "sourceRegistryEntryId": "mta.gtfs-static",
+        "provider": "Metropolitan Transportation Authority",
+        "datasetId": "fgm6-ccue",
+        "sourceRecordId": "pending-fixture-only",
+        "termsUrl": "https://www.mta.info/open-data",
+        "attribution": "Synthetic pending-gate test; not an MTA record.",
+        "licenseClass": "unknown",
+        "transitKind": "station",
+        "name": "Synthetic pending source gate",
+        "inputCrs": "EPSG:4326"
+      },
+      "geometry": { "type": "Point", "coordinates": [-73.99, 40.74] }
+    }
+  ]
+}

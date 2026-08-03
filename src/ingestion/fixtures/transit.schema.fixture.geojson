@@ -1,0 +1,108 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "sourceRegistryEntryId": "fixture.local.transit",
+        "provider": "Urban Digital Twin local transit fixture",
+        "datasetId": "transit-v1",
+        "sourceRecordId": "fixture-station-001",
+        "termsUrl": "https://example.invalid/udt/local-transit-terms",
+        "attribution": "Synthetic local transit fixture; not real Manhattan coverage.",
+        "licenseClass": "fixture-only",
+        "transitKind": "station",
+        "name": "Fixture Union Square Station Complex",
+        "inputCrs": "EPSG:4326",
+        "stationComplexId": "fixture-complex-001",
+        "routeIds": ["1", "4"],
+        "routeNames": ["Fixture 1", "Fixture 4"],
+        "routeColor": "#EE352E",
+        "mode": "subway",
+        "serviceDate": "2026-08-03",
+        "serviceSemantics": "station-inventory",
+        "accessibility": "partial",
+        "elevatorStatus": "unknown",
+        "capturedAt": "2026-08-03T00:00:00Z",
+        "updatedAt": null,
+        "observedAt": "2026-08-03T00:00:00Z"
+      },
+      "geometry": { "type": "Point", "coordinates": [-73.9903, 40.7358] }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "sourceRegistryEntryId": "fixture.local.transit",
+        "provider": "Urban Digital Twin local transit fixture",
+        "datasetId": "transit-v1",
+        "sourceRecordId": "fixture-entrance-001",
+        "termsUrl": "https://example.invalid/udt/local-transit-terms",
+        "attribution": "Synthetic local transit fixture; not real Manhattan coverage.",
+        "licenseClass": "fixture-only",
+        "transitKind": "entrance",
+        "name": "Fixture Union Square North Entrance",
+        "inputCrs": "EPSG:4326",
+        "stationComplexId": "fixture-complex-001",
+        "parentStationId": "fixture-station-001",
+        "routeIds": ["1", "4"],
+        "routeNames": ["Fixture 1", "Fixture 4"],
+        "mode": "subway",
+        "serviceDate": "2026-08-03",
+        "serviceSemantics": "station-inventory",
+        "accessibility": "unknown",
+        "elevatorStatus": "unknown",
+        "capturedAt": "2026-08-03T00:00:00Z",
+        "updatedAt": null,
+        "observedAt": "2026-08-03T00:00:00Z"
+      },
+      "geometry": { "type": "Point", "coordinates": [-73.9900, 40.7362] }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "sourceRegistryEntryId": "fixture.local.transit",
+        "provider": "Urban Digital Twin local transit fixture",
+        "datasetId": "transit-v1",
+        "sourceRecordId": "fixture-route-001",
+        "termsUrl": "https://example.invalid/udt/local-transit-terms",
+        "attribution": "Synthetic local transit fixture; not real Manhattan coverage.",
+        "licenseClass": "fixture-only",
+        "transitKind": "route",
+        "name": "Fixture Route 1 (schematic)",
+        "inputCrs": "EPSG:4326",
+        "routeIds": ["1"],
+        "routeNames": ["Fixture 1"],
+        "routeColor": "#EE352E",
+        "routeTextColor": "#FFFFFF",
+        "mode": "subway",
+        "serviceDate": "2026-08-03",
+        "serviceSemantics": "schematic-route",
+        "accessibility": "unknown",
+        "elevatorStatus": "unknown",
+        "capturedAt": "2026-08-03T00:00:00Z",
+        "updatedAt": null,
+        "observedAt": null
+      },
+      "geometry": { "type": "MultiLineString", "coordinates": [[[-74.001, 40.730], [-73.9903, 40.7358], [-73.982, 40.744]], [[-73.9903, 40.7358], [-73.986, 40.750]]] }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "sourceRegistryEntryId": "fixture.local.transit",
+        "provider": "Urban Digital Twin local transit fixture",
+        "datasetId": "transit-v1",
+        "sourceRecordId": "fixture-invalid-outside",
+        "termsUrl": "https://example.invalid/udt/local-transit-terms",
+        "attribution": "Synthetic local transit fixture; not real Manhattan coverage.",
+        "licenseClass": "fixture-only",
+        "transitKind": "station",
+        "name": "Fixture Outside Slice",
+        "inputCrs": "EPSG:4326",
+        "mode": "subway",
+        "serviceSemantics": "station-inventory",
+        "capturedAt": "2026-08-03T00:00:00Z"
+      },
+      "geometry": { "type": "Point", "coordinates": [-73.50, 40.70] }
+    }
+  ]
+}

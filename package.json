@@ -1,0 +1,53 @@
+{
+  "name": "urban-digital-twin",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "packageManager": "pnpm@11.15.1",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -b --pretty false",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "nyc:building-ingest": "node --experimental-strip-types scripts/run-nyc-building-ingest.mjs",
+    "poi:ingest": "node --experimental-strip-types scripts/run-poi-ingest.mjs",
+    "area:ingest": "node --experimental-strip-types scripts/run-area-ingest.mjs",
+    "transit:ingest": "node --experimental-strip-types scripts/run-transit-ingest.mjs",
+    "route:ingest": "node --experimental-strip-types scripts/run-route-graph-ingest.mjs",
+    "reconcile:ingest": "node --experimental-strip-types scripts/run-reconciliation-ingest.mjs",
+    "catalog:build": "node --experimental-strip-types scripts/run-catalog-build.mjs",
+    "catalog:fixtures": "node --experimental-strip-types scripts/generate-catalog-fixtures.mjs",
+    "catalog:benchmark": "node --experimental-strip-types scripts/run-catalog-benchmark.mjs",
+    "tile:benchmark": "node --experimental-strip-types scripts/run-tile-benchmark.mjs",
+    "tile:validate": "node --experimental-strip-types scripts/validate-tile-package.mjs",
+    "asset:fixture": "node --experimental-strip-types scripts/run-asset-package-fixture.mjs",
+    "offline:ingest": "node --experimental-strip-types scripts/run-offline-ingest.mjs",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "cesium": "1.143.0",
+    "lucide-react": "1.28.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@testing-library/jest-dom": "7.0.0",
+    "@testing-library/react": "16.3.2",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.4",
+    "@vitejs/plugin-react": "6.0.5",
+    "eslint": "10.8.0",
+    "jsdom": "30.0.1",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.65.0",
+    "vite": "8.2.0",
+    "vite-plugin-static-copy": "4.1.1",
+    "vitest": "4.1.10"
+  }
+}
