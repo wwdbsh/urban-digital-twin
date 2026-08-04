@@ -37,6 +37,10 @@ export interface NycBuildingFootprintsSnapshotMetadata {
   ingestedAt: string;
   inputCrs: CoordinateReferenceSystem;
   verticalDatum: string;
+  /** Unit published for HEIGHT_ROOF in this immutable snapshot. */
+  heightUnit: "feet" | "meters" | "unknown";
+  /** Unit published for GROUND_ELEVATION; the OTI metadata currently leaves this unspecified. */
+  groundElevationUnit: "feet" | "meters" | "unknown";
   fixtureOnly: boolean;
   immutable: true;
 }
@@ -47,6 +51,8 @@ export interface NycBuildingFootprintsIngestionReport extends IngestionRun {
   sourceTermsUrl: string;
   sourceAttribution: string;
   outputCrs: "EPSG:4326";
+  heightUnit: NycBuildingFootprintsSnapshotMetadata["heightUnit"];
+  groundElevationUnit: NycBuildingFootprintsSnapshotMetadata["groundElevationUnit"];
   acceptedFeatureCount: number;
   acceptedFeatureIds: string[];
   rejected: Rejection[];
@@ -59,6 +65,8 @@ export interface NycBuildingFootprintsSnapshotAdapterOptions {
   snapshotText: string;
   metadata: NycBuildingFootprintsSnapshotMetadata;
   city?: CityAdapter;
+  /** Pilot keeps its documented clipping default; citywide explicitly preserves all source geometry. */
+  scope?: "pilot" | "citywide";
   registryEntries?: readonly SourceRegistryEntry[];
 }
 
@@ -84,6 +92,7 @@ interface SliceBounds {
 }
 
 const WGS84_MAX_MERCATOR = 20_037_508.342789244;
+const FEET_TO_METERS = 0.3048;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -270,7 +279,7 @@ function confidenceFor(geometrySource: string | null, fixtureOnly: boolean): Con
   return { score: 0.7, label: "medium", rationale: "OTI metadata identifies manually digitized geometry as less accurate than photogrammetric updates." };
 }
 
-function propertyAttributes(properties: Record<string, unknown>, sourceId: string, fixtureOnly: boolean): Record<string, string | number | boolean | null> {
+function propertyAttributes(properties: Record<string, unknown>, sourceId: string, fixtureOnly: boolean, heightUnit: NycBuildingFootprintsSnapshotMetadata["heightUnit"], heightMeters: number | null, groundElevationUnit: NycBuildingFootprintsSnapshotMetadata["groundElevationUnit"], groundElevationMeters: number | null): Record<string, string | number | boolean | null> {
   const baseBbl = textProperty(properties, "BASE_BBL", "base_bbl", "BASEBBL");
   const mapPlutoBbl = textProperty(properties, "MAPPLUTO_BBL", "mappluto_bbl", "MPLUTO_BBL", "mpluto_bbl");
   const bin = textProperty(properties, "BIN", "bin");
@@ -290,8 +299,12 @@ function propertyAttributes(properties: Record<string, unknown>, sourceId: strin
     mapPlutoBbl,
     constructionYear,
     featureCode,
-    groundElevationMeters: groundElevation,
-    heightRoofMeters: heightRoof,
+    groundElevationMeters,
+    groundElevationSourceValue: groundElevation,
+    groundElevationSourceUnit: groundElevationUnit,
+    heightRoofMeters: heightMeters,
+    heightRoofSourceValue: heightRoof,
+    heightRoofSourceUnit: heightUnit,
     geometrySource,
     sourceName: name,
     lastEditedDate,
@@ -306,7 +319,8 @@ function parseFeatureIntoNormalized(
   metadata: NycBuildingFootprintsSnapshotMetadata,
   entry: SourceRegistryEntry,
   city: CityAdapter,
-  bounds: SliceBounds,
+  bounds: SliceBounds | null,
+  scope: "pilot" | "citywide",
 ): { features: Feature[]; rejection?: Rejection } {
   const heightResult = nullableNumberProperty(raw.properties, "HEIGHT_ROOF", "HEIGHTROOF", "height_roof");
   const groundResult = nullableNumberProperty(raw.properties, "GROUND_ELEVATION", "GROUNDELEV", "ground_elevation");
@@ -315,10 +329,16 @@ function parseFeatureIntoNormalized(
   if (heightResult.invalid || (heightResult.value !== null && heightResult.value < 0)) {
     return { features: [], rejection: { index, sourceId: raw.sourceId, code: "schema-invalid", path: `features[${index}].properties.HEIGHT_ROOF`, message: "HEIGHT_ROOF must be a non-negative finite number or null; zero means unavailable." } };
   }
+  if (heightResult.value !== null && heightResult.value !== 0 && metadata.heightUnit === "unknown") {
+    return { features: [], rejection: { index, sourceId: raw.sourceId, code: "schema-invalid", path: `features[${index}].properties.HEIGHT_ROOF`, message: "HEIGHT_ROOF has a positive source value but its unit is unknown; record feet or meters explicitly before ingesting." } };
+  }
   if (groundResult.invalid || yearResult.invalid || codeResult.invalid) {
     return { features: [], rejection: { index, sourceId: raw.sourceId, code: "schema-invalid", path: `features[${index}].properties`, message: "Documented numeric fields must be finite numbers or null." } };
   }
-  const clipped = raw.geometry.map((polygon) => clipPolygon(polygon.map((ring) => ring.map((position) => normalizePosition(position, metadata.inputCrs))), bounds)).filter((polygon): polygon is PolygonCoordinates => polygon !== null);
+  const normalizedPolygons = raw.geometry.map((polygon) => polygon.map((ring) => ring.map((position) => normalizePosition(position, metadata.inputCrs))));
+  const clipped = scope === "citywide"
+    ? normalizedPolygons
+    : normalizedPolygons.map((polygon) => clipPolygon(polygon, bounds as SliceBounds)).filter((polygon): polygon is PolygonCoordinates => polygon !== null);
   if (clipped.length === 0) {
     return { features: [], rejection: { index, sourceId: raw.sourceId, code: "outside-slice", path: `features[${index}].geometry`, message: "Feature does not intersect the documented Manhattan study slice." } };
   }
@@ -326,12 +346,24 @@ function parseFeatureIntoNormalized(
   const baseId = makeCanonicalFeatureId(city.cityId, "building", { provider: entry.provider, datasetId: entry.datasetId, sourceId: raw.sourceId });
   const geometrySource = textProperty(raw.properties, "GEOM_SOURCE", "geometry_source");
   const name = textProperty(raw.properties, "NAME", "name") ?? `Building ${raw.sourceId}`;
-  const heightValue = heightResult.value === null || heightResult.value === 0 ? null : heightResult.value;
-  const features = clipped.map((polygon, partIndex) => {
+  const heightValue = heightResult.value === null || heightResult.value === 0
+    ? null
+    : metadata.heightUnit === "feet" ? heightResult.value * FEET_TO_METERS : heightResult.value;
+  const groundElevationValue = groundResult.value === null
+    ? null
+    : metadata.groundElevationUnit === "feet" ? groundResult.value * FEET_TO_METERS
+      : metadata.groundElevationUnit === "meters" ? groundResult.value
+        : null;
+  const orderedPolygons = scope === "citywide"
+    ? [...clipped].sort((left, right) => JSON.stringify(left).localeCompare(JSON.stringify(right)))
+    : clipped;
+  const features = orderedPolygons.map((polygon, partIndex) => {
     const id = clipped.length === 1 ? baseId : `${baseId}:part-${String(partIndex + 1).padStart(3, "0")}`;
     const height: GeometryProvenance["height"] = {
       schemaVersion: DOMAIN_SCHEMA_VERSION,
       valueMeters: heightValue,
+      sourceValue: heightResult.value,
+      sourceUnit: metadata.heightUnit,
       verticalDatum: metadata.verticalDatum,
       sourceRefId: sourceRef.id,
       method: heightValue === null ? "unknown" : "source",
@@ -354,8 +386,8 @@ function parseFeatureIntoNormalized(
         height,
         horizontalUncertaintyMeters: geometrySource?.toLocaleLowerCase() === "photogrammetric" ? 0.6096 : null,
         notes: metadata.fixtureOnly
-          ? "Invented schema fixture clipped to the documented slice; not real Manhattan coverage."
-          : "Clipped from the approved local NYC Building Footprints GeoJSON snapshot. HEIGHT_ROOF is relative to source ground; no roof-height uncertainty was published.",
+          ? scope === "citywide" ? "Invented schema fixture normalized without citywide clipping; not real Manhattan coverage." : "Invented schema fixture clipped to the documented slice; not real Manhattan coverage."
+          : `${scope === "citywide" ? "Normalized without pilot-slice clipping" : "Clipped to the documented pilot slice"} from the approved local NYC Building Footprints GeoJSON snapshot. HEIGHT_ROOF is relative to source ground; the source value/unit (${heightResult.value ?? "null"} ${metadata.heightUnit}) is preserved and normalized to meters${metadata.heightUnit === "feet" ? " with ×0.3048" : ""}; no roof-height uncertainty was published.`,
       },
       sourceRefs: [sourceRef],
       provenance: metadata.fixtureOnly ? "generated" : "authoritative",
@@ -373,9 +405,9 @@ function parseFeatureIntoNormalized(
         ingestedAt: metadata.ingestedAt,
       },
       attributes: {
-        ...propertyAttributes(raw.properties, raw.sourceId, metadata.fixtureOnly),
+        ...propertyAttributes(raw.properties, raw.sourceId, metadata.fixtureOnly, metadata.heightUnit, heightValue, metadata.groundElevationUnit, groundElevationValue),
         geometryPartIndex: partIndex,
-        geometryPartCount: clipped.length,
+        geometryPartCount: orderedPolygons.length,
       },
     };
     return feature;
@@ -418,6 +450,7 @@ export class NycBuildingFootprintsSnapshotAdapter implements RuntimeCityAdapter 
 
   static async fromSnapshot(options: NycBuildingFootprintsSnapshotAdapterOptions): Promise<NycBuildingFootprintsSnapshotAdapter> {
     const metadata = options.metadata;
+    const scope = options.scope ?? "pilot";
     const city = options.city ?? manhattanAdapter;
     const registry = options.registryEntries ?? sourceRegistry;
     const entry = registry.find((candidate) => candidate.id === metadata.sourceRegistryEntryId) ?? getSourceRegistryEntry(metadata.sourceRegistryEntryId);
@@ -428,10 +461,10 @@ export class NycBuildingFootprintsSnapshotAdapter implements RuntimeCityAdapter 
     if (metadata.termsUrl !== entry.termsUrl) throw new Error("Recorded terms URL does not match the approved source registry entry.");
     if (!isNonEmptyString(metadata.attribution)) throw new Error("Recorded attribution is required.");
     if (!/^[a-f0-9]{64}$/i.test(metadata.inputChecksumSha256)) throw new Error("A 64-character SHA-256 snapshot checksum is required.");
-    const actualChecksum = await (await import("./offline")).sha256Hex(options.snapshotText);
+    const actualChecksum = await (await import("./offline.ts")).sha256Hex(options.snapshotText);
     if (actualChecksum.toLocaleLowerCase() !== metadata.inputChecksumSha256.toLocaleLowerCase()) throw new Error("Snapshot checksum does not match recorded metadata.");
     const collection = parseCollection(JSON.parse(options.snapshotText));
-    const bounds = boundsForCity(city);
+    const bounds = scope === "citywide" ? null : boundsForCity(city);
     const features: Feature[] = [];
     const rejected: Rejection[] = [];
     collection.features.forEach((value, index) => {
@@ -440,7 +473,7 @@ export class NycBuildingFootprintsSnapshotAdapter implements RuntimeCityAdapter 
         parsed.issues.forEach((item) => rejected.push({ index, sourceId: sourceRecordIndex(value), code: "geometry-invalid", path: item.path, message: item.message }));
         return;
       }
-      const normalized = parseFeatureIntoNormalized(parsed.value, index, metadata, entry, city, bounds);
+      const normalized = parseFeatureIntoNormalized(parsed.value, index, metadata, entry, city, bounds, scope);
       if (normalized.rejection) rejected.push(normalized.rejection);
       features.push(...normalized.features);
     });
@@ -467,6 +500,8 @@ export class NycBuildingFootprintsSnapshotAdapter implements RuntimeCityAdapter 
       sourceTermsUrl: metadata.termsUrl,
       sourceAttribution: metadata.attribution,
       outputCrs: "EPSG:4326",
+      heightUnit: metadata.heightUnit,
+      groundElevationUnit: metadata.groundElevationUnit,
       acceptedFeatureCount: features.length,
       acceptedFeatureIds: features.map((feature) => feature.id),
       rejected,

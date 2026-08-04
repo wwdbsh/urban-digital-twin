@@ -5,6 +5,12 @@ Date: 2026-08-04
 Status: accepted for fixture-only implementation; real-world navigation and
 asset integration remain approval-gated.
 
+> **Current-state note (2026-08-04):** Decision 0013 preserves this validated
+> camera/deep-link/navigation contract for OTI/DOHMH real releases. Directions
+> and itinerary previews remain synthetic/offline, while unknown releases and
+> parents fail closed without fixture substitution. No live navigation, transit,
+> traffic, or street imagery was added.
+
 ## Decision
 
 Keep one Cesium camera with explicit overview/explore modes and a validated

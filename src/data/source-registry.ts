@@ -7,6 +7,7 @@ import type {
 import { DOMAIN_SCHEMA_VERSION } from "../domain/schema.ts";
 
 const evidenceDate = "2026-08-03T00:00:00Z";
+const realWaveApprovalDate = "2026-08-04T00:00:00Z";
 
 const cityTerms = "https://www.nyc.gov/html/datamine/html/data/terms.html?dataSetJs=raw";
 const overtureTerms = "https://overturemaps.org/about/faq/";
@@ -43,8 +44,38 @@ function pendingEntry(
   };
 }
 
+function approvedEntry(
+  entry: Omit<SourceRegistryEntry, "schemaVersion" | "approval"> & { approvalNote: string },
+): SourceRegistryEntry {
+  return {
+    schemaVersion: DOMAIN_SCHEMA_VERSION,
+    ...entry,
+    approval: {
+      state: "approved",
+      scope: "ingestion",
+      reviewedAt: realWaveApprovalDate,
+      note: entry.approvalNote,
+    },
+  };
+}
+
+function approvedAssetReferenceEntry(
+  entry: Omit<SourceRegistryEntry, "schemaVersion" | "approval"> & { approvalNote: string },
+): SourceRegistryEntry {
+  return {
+    schemaVersion: DOMAIN_SCHEMA_VERSION,
+    ...entry,
+    approval: {
+      state: "approved",
+      scope: "runtime",
+      reviewedAt: realWaveApprovalDate,
+      note: entry.approvalNote,
+    },
+  };
+}
+
 export const sourceRegistry = [
-  pendingEntry({
+  approvedEntry({
     id: "nyc.building-footprints",
     provider: "NYC Office of Technology and Innovation (OTI) GIS",
     datasetId: "jh45-qr5r",
@@ -61,8 +92,8 @@ export const sourceRegistry = [
     access: pendingAccess,
     geographicScope: "New York City building footprints and centroid companion layer",
     expectedCrs: "EPSG:4326",
-    expectedVerticalDatum: "GROUND_ELEVATION is NAVD88 for photogrammetric/modern-source records when documented; HEIGHT_ROOF is relative to ground, not sea level.",
-    approvalNote: "Official metadata verified 2026-08-03; source terms, snapshot retention, and the City's disclaimer still require approval before download or integration.",
+    expectedVerticalDatum: "GROUND_ELEVATION is NAVD88 for photogrammetric/modern-source records when documented, but its numeric field unit is not published; HEIGHT_ROOF is relative to ground, not sea level and the approved pilot records are ingested as feet-equivalent values with explicit unit provenance.",
+    approvalNote: "User-approved in Orca reply msg_91770ac6d098 for this immutable local all-Manhattan citywide wave; preserve the City disclaimer, source IDs, capture timestamp, checksum, CRS, and height uncertainty. Scope is only OTI jh45-qr5r raw retention, derived local spatial/search/detail artifacts, and local browser display; no new provider, Google data, public deployment, or unrelated dataset.",
   }),
   pendingEntry({
     id: "nyc.mappluto",
@@ -304,7 +335,7 @@ export const sourceRegistry = [
     expectedVerticalDatum: "Not applicable to business point semantics.",
     approvalNote: "Supplement to broad POI coverage; not a complete business directory.",
   }),
-  pendingEntry({
+  approvedEntry({
     id: "nyc.dohmh-restaurant-inspections",
     provider: "NYC Department of Health and Mental Hygiene",
     datasetId: "43nn-pn8j",
@@ -322,7 +353,7 @@ export const sourceRegistry = [
     geographicScope: "New York City restaurant inspections",
     expectedCrs: "varies",
     expectedVerticalDatum: "Not applicable to inspection point semantics.",
-    approvalNote: "Inspection grades must remain separate from consumer ratings/reviews and directory completeness.",
+    approvalNote: "User-approved in Orca reply msg_91770ac6d098 for this immutable local all-Manhattan citywide wave under NYC Open Data/DataMine terms; preserve CAMIS and every inspection observation with capture date, source truth, and checksum, including unlocated groups. Scope is only DOHMH 43nn-pn8j raw retention, derived local spatial/search/detail artifacts, and local browser display; keep grades separate from consumer ratings/reviews/opening hours/current status, and do not claim directory completeness or public deployment.",
   }),
   pendingEntry({
     id: "mta.gtfs-static",
@@ -686,6 +717,126 @@ export const sourceRegistry = [
     expectedCrs: "EPSG:4326",
     expectedVerticalDatum: "Not applicable to 2D network geometry.",
     approvalNote: "Official OSM copyright and OSMF attribution guidance verified 2026-08-03; public visibility is not permission to skip attribution or extract/provider review.",
+  }),
+  approvedAssetReferenceEntry({
+    id: "nyc.lpc-flatiron-designation",
+    provider: "NYC Landmarks Preservation Commission",
+    datasetId: "LP-0219",
+    canonicalUrl: "https://s-media.nyc.gov/agencies/lpc/lp/0219.pdf",
+    termsUrl: "https://www.nyc.gov/home/terms-of-use.page",
+    licenseClass: "nyc-publication-facts",
+    attribution: "Source: NYC Landmarks Preservation Commission, Flatiron Building designation report (LP-0219).",
+    releaseTimestamp: "1966-09-20T00:00:00Z",
+    captureTimestamp: null,
+    updateTimestamp: null,
+    cadence: "Historic designation report; static reference.",
+    retention: { rawSnapshots: "conditional", maximumDays: null, caching: "allowed", constraints: "Retain City attribution and disclaimer; use only documented architectural facts, not unverified detail." },
+    derivativePolicy: { allowed: "conditional", constraints: "Use factual massing/material/height statements for a derived model with City attribution; legal review required for any protected artwork or marks." },
+    access: { keyOrAgreementRequired: false, kind: "none", constraints: "Public NYC government publication." },
+    geographicScope: "Flatiron Building, Manhattan",
+    expectedCrs: "varies",
+    expectedVerticalDatum: "Not applicable to architectural description.",
+    approvalNote: "Reviewed 2026-08-04 as a factual architectural reference for the bounded Flatiron asset; no image or texture extraction.",
+  }),
+  approvedAssetReferenceEntry({
+    id: "nyc.dcp-empire-state-design",
+    provider: "NYC Department of City Planning",
+    datasetId: "15 Penn Plaza FEIS chapters 8/9",
+    canonicalUrl: "https://www.nyc.gov/assets/planning/download/pdf/applicants/env-review/15_penn/08_feis.pdf",
+    termsUrl: "https://www.nyc.gov/home/terms-of-use.page",
+    licenseClass: "nyc-publication-facts",
+    attribution: "Source: NYC Department of City Planning, 15 Penn Plaza FEIS (Empire State Building visual/architectural description).",
+    releaseTimestamp: "2010-07-01T00:00:00Z",
+    captureTimestamp: null,
+    updateTimestamp: null,
+    cadence: "Historic planning document; static reference.",
+    retention: { rawSnapshots: "conditional", maximumDays: null, caching: "allowed", constraints: "Retain City attribution and disclaimer; use only documented massing/material/height statements, not unverified detail." },
+    derivativePolicy: { allowed: "conditional", constraints: "Use factual massing/material/height statements for a derived model with City attribution; do not copy images, logos, or marks." },
+    access: { keyOrAgreementRequired: false, kind: "none", constraints: "Public NYC government publication." },
+    geographicScope: "Empire State Building, Manhattan",
+    expectedCrs: "varies",
+    expectedVerticalDatum: "Not applicable to architectural description.",
+    approvalNote: "Reviewed 2026-08-04 as a factual architectural reference for the bounded Empire asset; mast/antenna dimensions are recorded separately from OTI roof height.",
+  }),
+  approvedAssetReferenceEntry({
+    id: "nps.theodore-roosevelt-birthplace-hsr",
+    provider: "U.S. National Park Service",
+    datasetId: "Theodore Roosevelt Birthplace Historic Structure Report",
+    canonicalUrl: "https://www.nps.gov/parkhistory/online_books/thrb/thrb_hsr.pdf",
+    termsUrl: "https://www.nps.gov/aboutus/disclaimer.htm",
+    licenseClass: "public-domain",
+    attribution: "Source: U.S. National Park Service, Theodore Roosevelt Birthplace National Historic Site Historic Structure Report; U.S. federal work attribution retained.",
+    releaseTimestamp: null,
+    captureTimestamp: null,
+    updateTimestamp: null,
+    cadence: "Historic structure report; static reference.",
+    retention: { rawSnapshots: "allowed", maximumDays: null, caching: "allowed", constraints: "U.S. federal work; retain NPS attribution and page-specific notices where present." },
+    derivativePolicy: { allowed: "yes", constraints: "Public-domain U.S. federal factual/architectural reference; do not imply NPS endorsement and do not copy third-party material embedded in the report." },
+    access: { keyOrAgreementRequired: false, kind: "none", constraints: "Public NPS publication." },
+    geographicScope: "Theodore Roosevelt Birthplace National Historic Site, 28 East 20th Street, Manhattan",
+    expectedCrs: "varies",
+    expectedVerticalDatum: "Not applicable to architectural description.",
+    approvalNote: "Reviewed 2026-08-04 as the primary architectural reference for the bounded Theodore Roosevelt Birthplace asset.",
+  }),
+  pendingEntry({
+    id: "commons.flatiron-photo-pd",
+    provider: "Wikimedia Commons / Gryffindor",
+    datasetId: "File:Flatiron building.jpg (oldid 1180887899)",
+    canonicalUrl: "https://commons.wikimedia.org/wiki/File:Flatiron_building.jpg",
+    termsUrl: "https://creativecommons.org/publicdomain/zero/1.0/",
+    licenseClass: "public-domain",
+    attribution: "Photo reference: Gryffindor, Wikimedia Commons, File:Flatiron building.jpg; public-domain dedication.",
+    releaseTimestamp: "2007-08-01T00:00:00Z",
+    captureTimestamp: null,
+    updateTimestamp: "2026-03-14T00:00:00Z",
+    cadence: "Static reference photo; verify file page revision before reuse.",
+    retention: { rawSnapshots: "allowed", maximumDays: null, caching: "allowed", constraints: "Public-domain dedication; retain author and source URL as courtesy attribution." },
+    derivativePolicy: { allowed: "yes", constraints: "Derivative/commercial use permitted under the public-domain dedication; no source image is shipped in this asset wave." },
+    access: { keyOrAgreementRequired: false, kind: "none", constraints: "Public Wikimedia Commons file page." },
+    geographicScope: "Flatiron Building, Manhattan",
+    expectedCrs: "varies",
+    expectedVerticalDatum: "Not applicable to photograph.",
+    approvalNote: "Individually verified 2026-08-04 as a research-only optional visual reference; not used by the runtime GLB and no download/texture extraction/photogrammetry.",
+  }),
+  pendingEntry({
+    id: "commons.empire-state-photo-cc-by-sa-4",
+    provider: "Wikimedia Commons / NegweS",
+    datasetId: "File:Empire State Building.png",
+    canonicalUrl: "https://commons.wikimedia.org/wiki/File:Empire_State_Building.png",
+    termsUrl: "https://creativecommons.org/licenses/by-sa/4.0/",
+    licenseClass: "cc-by-sa-4.0",
+    attribution: "Photo reference: NegweS, Wikimedia Commons, File:Empire State Building.png; CC BY-SA 4.0.",
+    releaseTimestamp: "2019-02-21T00:00:00Z",
+    captureTimestamp: null,
+    updateTimestamp: null,
+    cadence: "Static reference photo; verify file page revision before reuse.",
+    retention: { rawSnapshots: "conditional", maximumDays: null, caching: "allowed", constraints: "Attribution and link to CC BY-SA 4.0 required; share-alike applies to adapted photo material." },
+    derivativePolicy: { allowed: "conditional", constraints: "Derivative/commercial use permitted with attribution; share-alike applies to adapted photo material. This wave uses the page only as a visual reference and ships no photo pixels." },
+    access: { keyOrAgreementRequired: false, kind: "none", constraints: "Public Wikimedia Commons file page." },
+    geographicScope: "Empire State Building, Manhattan",
+    expectedCrs: "varies",
+    expectedVerticalDatum: "Not applicable to photograph.",
+    approvalNote: "Individually verified 2026-08-04 as a research-only optional visual reference; not used by the runtime GLB and no download/texture extraction/photogrammetry.",
+  }),
+  pendingEntry({
+    id: "commons.theodore-roosevelt-birthplace-photo-cc-by-sa-4",
+    provider: "Wikimedia Commons / Beyond My Ken",
+    datasetId: "File:Theodore Roosevelt Birthplace.jpg",
+    canonicalUrl: "https://commons.wikimedia.org/wiki/File:Theodore_Roosevelt_Birthplace.jpg",
+    termsUrl: "https://creativecommons.org/licenses/by-sa/4.0/",
+    licenseClass: "cc-by-sa-4.0",
+    attribution: "Photo reference: Beyond My Ken, Wikimedia Commons, File:Theodore Roosevelt Birthplace.jpg; CC BY-SA 4.0.",
+    releaseTimestamp: "2010-08-09T00:00:00Z",
+    captureTimestamp: null,
+    updateTimestamp: "2025-06-21T00:00:00Z",
+    cadence: "Static reference photo; verify file page revision before reuse.",
+    retention: { rawSnapshots: "conditional", maximumDays: null, caching: "allowed", constraints: "Attribution and link to CC BY-SA 4.0 required; share-alike applies to adapted photo material." },
+    derivativePolicy: { allowed: "conditional", constraints: "Derivative/commercial use permitted with attribution; share-alike applies to adapted photo material. This wave uses the page only as a visual reference and ships no photo pixels." },
+    access: { keyOrAgreementRequired: false, kind: "none", constraints: "Public Wikimedia Commons file page." },
+    geographicScope: "Theodore Roosevelt Birthplace, Manhattan",
+    expectedCrs: "varies",
+    expectedVerticalDatum: "Not applicable to photograph.",
+    approvalNote: "Individually verified 2026-08-04 as a research-only optional visual reference; not used by the runtime GLB and no download/texture extraction/photogrammetry.",
   }),
 ] as const satisfies readonly SourceRegistryEntry[];
 

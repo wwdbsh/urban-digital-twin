@@ -39,6 +39,10 @@ const checksum = required(args, "checksum");
 const termsUrl = required(args, "terms-url");
 const inputCrs = required(args, "input-crs");
 if (inputCrs !== "EPSG:4326" && inputCrs !== "EPSG:3857") throw new Error("--input-crs must be EPSG:4326 or EPSG:3857");
+const heightUnit = required(args, "height-unit");
+if (heightUnit !== "feet" && heightUnit !== "meters" && heightUnit !== "unknown") throw new Error("--height-unit must be feet, meters, or unknown");
+const groundElevationUnit = required(args, "ground-elevation-unit");
+if (groundElevationUnit !== "feet" && groundElevationUnit !== "meters" && groundElevationUnit !== "unknown") throw new Error("--ground-elevation-unit must be feet, meters, or unknown");
 if (inputPath === outputPath) throw new Error("--input and --output must be different paths");
 
 const registryEntry = getSourceRegistryEntry("nyc.building-footprints");
@@ -58,6 +62,8 @@ const adapter = await NycBuildingFootprintsSnapshotAdapter.fromSnapshot({
     ingestedAt: nullableTimestamp(required(args, "ingested-at")) ?? new Date(0).toISOString(),
     inputCrs,
     verticalDatum: required(args, "vertical-datum"),
+    heightUnit,
+    groundElevationUnit,
     fixtureOnly: false,
     immutable: true,
   },

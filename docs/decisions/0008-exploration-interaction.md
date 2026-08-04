@@ -5,6 +5,12 @@ Date: 2026-08-04
 Status: accepted for fixture-only implementation; real catalog integration
 remains approval-gated.
 
+> **Current-state note (2026-08-04):** The same search/pick/detail/deep-link
+> contract is now used by the approved bounded and citywide OTI/DOHMH modes.
+> Unknown release/parent IDs fail closed and no same-name fixture is selected;
+> unsupported categories, transit, routing, and consumer place facts remain
+> outside the delivery. See [Decision 0013](0013-manhattan-citywide-foundation-delivery.md).
+
 ## Decision
 
 Use one unified, deterministic search result contract over runtime features and

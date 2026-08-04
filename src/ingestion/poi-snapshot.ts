@@ -20,6 +20,7 @@ import {
   type PlaceCategory,
   type PlaceConflict,
   type PlaceContact,
+  type PlaceInspectionObservation,
   type PlaceOpeningHours,
   type PlaceRecord,
   type PlaceSourceLicense,
@@ -61,6 +62,7 @@ export interface PoiSnapshotRecord {
   capturedAt?: string | null;
   updatedAt?: string | null;
   observedAt?: string | null;
+  inspectionObservation?: Partial<PlaceInspectionObservation> | null;
 }
 
 export interface PoiIngestionReport extends IngestionRun {
@@ -89,6 +91,7 @@ interface ParsedRecord extends PoiSnapshotRecord {
   coordinates: Position;
   categories: PlaceCategory[];
   matchKey: string;
+  inspectionObservation: PlaceInspectionObservation | null;
 }
 
 interface PoiCollection {
@@ -142,6 +145,27 @@ function parseHours(value: unknown): Partial<PlaceOpeningHours> {
 function parseAccessibility(value: unknown): Partial<PlaceAccessibility> {
   if (!isRecord(value)) return {};
   return value;
+}
+
+function parseInspectionObservation(value: unknown, sourceRefId: string): PlaceInspectionObservation | null {
+  if (!isRecord(value)) return null;
+  const nullable = (field: string): string | null => text(value[field]);
+  const camis = text(value.camis);
+  if (!camis) return null;
+  return {
+    sourceRefId,
+    camis,
+    inspectionDate: nullable("inspectionDate"),
+    recordDate: nullable("recordDate"),
+    action: nullable("action"),
+    violationCode: nullable("violationCode"),
+    violationDescription: nullable("violationDescription"),
+    criticalFlag: nullable("criticalFlag"),
+    score: nullable("score"),
+    grade: nullable("grade"),
+    gradeDate: nullable("gradeDate"),
+    inspectionType: nullable("inspectionType"),
+  };
 }
 
 function asCollection(value: unknown): PoiCollection {
@@ -282,6 +306,7 @@ function toFeature(place: PlaceRecord): Feature {
       placeBrand: place.brand,
       placeOpeningHours: place.openingHours.weekdayText ? JSON.stringify(place.openingHours.weekdayText) : null,
       placeAccessibility: place.accessibility.wheelchair,
+      placeInspectionObservations: JSON.stringify(place.inspectionObservations),
       placeSourceRecordIds: JSON.stringify(place.sourceRecordIds),
       placeConflicts: JSON.stringify(place.conflicts),
       placeLicenses: JSON.stringify(place.sourceLicenses),
@@ -369,6 +394,7 @@ export class PoiSnapshotAdapter implements RuntimeCityAdapter {
         coordinates,
         categories,
         matchKey: text(raw.matchKey) ?? sourceKeyValue,
+        inspectionObservation: parseInspectionObservation(raw.inspectionObservation, `source-ref:${entry.id}:${sourceId}`),
       });
     });
     const groups = new Map<string, ParsedRecord[]>();
@@ -404,6 +430,9 @@ export class PoiSnapshotAdapter implements RuntimeCityAdapter {
         },
         sourceRefs,
         sourceLicenses: sorted.map((record) => record.sourceLicense),
+        inspectionObservations: sorted
+          .flatMap((record) => record.inspectionObservation ? [record.inspectionObservation] : [])
+          .sort((left, right) => `${left.camis}|${left.inspectionDate ?? ""}|${left.recordDate ?? ""}|${left.violationCode ?? ""}|${left.sourceRefId}`.localeCompare(`${right.camis}|${right.inspectionDate ?? ""}|${right.recordDate ?? ""}|${right.violationCode ?? ""}|${right.sourceRefId}`)),
         conflicts,
         sourceRecordIds: sorted.map((record) => record.sourceRecordId).sort(),
         fixtureOnly: options.metadata.fixtureOnly,

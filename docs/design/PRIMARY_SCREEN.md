@@ -61,10 +61,34 @@ thin borders and almost no shadow.
   authoritative.
 - Compare remains disabled until two compatible sourced records exist.
 
-## Setup-milestone deviations
+## Current implementation (2026-08-04)
 
-The initial implementation intentionally uses only a local Cesium grid and a
-generated Manhattan runtime marker. It does not use the photorealistic Manhattan
+The running screen now supports three explicit data modes through the Data
+panel: synthetic fixture, bounded real OTI/DOHMH pilot, and the local
+`manhattan-citywide-20260804` OTI/DOHMH release. The search combobox, result
+listbox, Cesium pick, detail/provenance panel, layer controls, deep links,
+camera controls, and failure notices use stable feature IDs. Citywide mode
+loads viewport geometry and global search/detail shards lazily; its status text
+states that the release is local snapshot-relative and that no provider,
+imagery, live routing, or public deployment is connected.
+
+The responsive layout keeps the full-bleed Cesium canvas and turns the desktop
+inspector/navigation into a mobile continuation. Keyboard focus behavior,
+visible controls, and source/unknown wording are runtime behavior; the concept
+PNG below remains design direction, not a screenshot or proof of visual
+fidelity. The three protected landmark GLB pairs are shown only by the bounded
+pilot; ordinary and citywide buildings remain procedural footprint massing.
+
+Remaining design gaps are real neighborhoods/parks/shops/attractions beyond
+the approved records, transit, routing, live status, hours, reviews, ratings,
+photos, street imagery, traffic, facades, photorealism, public hosting, and
+production 3D Tiles delivery.
+
+## Setup-milestone deviations (historical, 2026-08-03)
+
+The initial implementation intentionally used only a local Cesium grid and a
+generated Manhattan runtime marker. It did not use the photorealistic Manhattan
 imagery shown in the concept because a data provider, license, and credential
-have not been approved. The concept remains the target for the first sourced-data
-milestone.
+had not been approved. That statement describes the setup checkpoint; the
+current bounded/citywide local OTI/DOHMH modes are documented above and do not
+claim photorealism or public imagery.

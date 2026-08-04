@@ -1,31 +1,30 @@
 
 
 <!-- codex-lean-workflow:start -->
-# Token-efficient Codex workflow
+# Current Codex/Orca workflow
 
 Project root: `/Users/sangheonlee/dev/games/urban-digital-twin`
 
 ## Objective
 
-Maximize completed, verified work per token. Model calls and worker count are
-costs, not evidence of quality. Prefer a single context that understands the
-repository and use deterministic evidence to decide whether escalation is useful.
+This repository uses a visible, staged workflow for nontrivial changes. Model
+calls and worker count are costs, not evidence of quality; the explicit plan,
+deterministic checks, ownership evidence, and final diff are the acceptance
+artifacts.
 
 ## Routing
 
-| Work | Default route |
+| Responsibility | Route |
 |---|---|
-| Exploration, implementation, refactoring, tests, builds | GPT-5.6 Luna High |
-| Routine diagnosis and review | GPT-5.6 Luna High |
-| Same blocker after two failed default attempts | GPT-5.6 Luna Max |
-| Documented cross-system reasoning problem | GPT-5.6 Luna Max |
-| Major architecture or direction gate | GPT-5.6 Sol Medium/High |
-| Review after a substantial milestone batch | At most one GPT-5.6 Sol Medium/High pass |
-| Routine critique, fresh-context checks, reviewer voting | Do not delegate |
-| Disabled model family | Claude/Opus |
+| Briefing and orchestration | Root GPT-5.6 Sol High |
+| Requirement clarification and implementation-ready plan | Exactly one visible GPT-5.6 Sol Medium session |
+| Implementation, focused/full tests, fixes, and deterministic loops | Exactly one visible GPT-5.6 Luna Max session from the handoff |
+| High-risk/final review | Root Sol High; no code implementation by Root |
+| Disabled model family | Claude/Opus unless the user explicitly enables it |
 
 Use capability-equivalent replacements if these labels are unavailable, while
-preserving the same cheap-to-expensive escalation order.
+preserving the visible one-planner/one-implementation-owner structure. Do not
+create workers for quota, duplicated research, or fresh-context review.
 
 ## Escalation evidence
 
@@ -40,12 +39,23 @@ Before escalation, record:
 Task size alone is not escalation evidence. A large mechanical change can remain
 with the default owner; a small cross-system defect may justify deeper reasoning.
 
-## Worker lifecycle
+## Worker lifecycle and handoff
 
-Create a worker only when its task can proceed independently and in parallel.
-Give it one named deliverable and explicit scope. When it finishes, persist useful
-findings, integrate or reject them, and close or interrupt the worker. Retain no
-idle worker for speculative reuse.
+The normal shape is Root plus one Sol Medium plus one Luna Max. Every Luna Max
+handoff names the goal, allowed areas, do-not-touch areas, ordered steps,
+observable completion conditions, exact tests/checks, rollback point,
+report-instead-of-guessing conditions, and a pre-exit checklist. All sessions
+must be visible in Orca. Exceptional workers require one independent bounded
+need, a recorded reason, persisted findings when useful, and prompt closure.
+
+## Delivery gate
+
+Luna Max owns implementation and validation. Root reviews ownership, truth,
+rights, protected/generated paths, and the complete diff. No commit or push is
+allowed until Root explicitly authorizes the exact staged path list and staged
+diff; a completed work unit creates exactly one normal commit and one normal
+push attempt. Never reset, clean, discard, force-push, or silently absorb a
+path with unclear ownership.
 
 ## Validation order
 
@@ -69,7 +79,8 @@ Finish safe in-progress commands before switching to the added work.
 
 ## Decision log entry
 
-When routing changes materially, append a short project decision containing the
-date, accepted policy, superseded policy, default model, escalation conditions,
-disabled models, and primary verification evidence.
+When routing changes materially, append a short decision containing the date,
+accepted policy, superseded policy, route, disabled models, and primary
+verification evidence. The current repository contract is also maintained in
+`AGENTS.md`; this file is its concise operational summary.
 <!-- codex-lean-workflow:end -->

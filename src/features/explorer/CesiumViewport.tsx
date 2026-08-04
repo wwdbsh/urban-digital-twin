@@ -8,8 +8,10 @@ import {
   EllipsoidTerrainProvider,
   GridImageryProvider,
   HeightReference,
-  HeadingPitchRange,
   ImageryLayer,
+  Matrix3,
+  Matrix4,
+  ModelGraphics,
   Math as CesiumMath,
   PolygonHierarchy,
   PolygonGeometry,
@@ -19,6 +21,8 @@ import {
   PointPrimitiveCollection,
   PrimitiveCollection,
   ScreenSpaceEventType,
+  Quaternion,
+  Transforms,
   Viewer,
 } from "cesium";
 import type { Feature, Position } from "../../domain/schema";
@@ -40,12 +44,84 @@ interface CesiumViewportProps {
   previewRequest?: { action: "start" | "pause" | "stop" | "previous" | "next" | "focus"; requestId: number };
   denseRendering?: boolean;
   denseFeatures?: Feature[];
+  denseFeatureLimit?: number;
+  onDenseMetrics?: (metrics: DenseRenderMetrics) => void;
   selectedFeatureId?: string | null;
   onCameraChanged?: (camera: CameraPose) => void;
   cameraRequest?: (TileCameraState | CameraPose) & { requestId: number };
   cameraPoseRequest?: (CameraPose & { requestId: number });
   onViewportKeyDown?: KeyboardEventHandler<HTMLDivElement>;
   assetResolver?: CityAssetResolver;
+}
+
+export interface DenseRenderMetrics {
+  featureCount: number;
+  primitiveCount: number;
+  instanceCount: number;
+  buildingFeatureCount: number;
+  pointFeatureCount: number;
+}
+
+export interface DenseRenderCamera {
+  longitude: number;
+  latitude: number;
+}
+
+export interface DenseRenderBounds {
+  west: number;
+  east: number;
+  south: number;
+  north: number;
+}
+
+function positionsInFeature(feature: Feature): Position[] {
+  if (feature.geometry.type === "Point") return [feature.geometry.coordinates];
+  if (feature.geometry.type === "Polygon") return feature.geometry.coordinates.flat();
+  if (feature.geometry.type === "MultiPolygon") return feature.geometry.coordinates.flat(2);
+  if (feature.geometry.type === "LineString") return feature.geometry.coordinates;
+  return feature.geometry.coordinates.flat(1);
+}
+
+export function denseFeatureIntersectsBounds(feature: Feature, bounds: DenseRenderBounds): boolean {
+  const positions = positionsInFeature(feature);
+  if (positions.length === 0) return false;
+  const west = Math.min(bounds.west, bounds.east);
+  const east = Math.max(bounds.west, bounds.east);
+  const south = Math.min(bounds.south, bounds.north);
+  const north = Math.max(bounds.south, bounds.north);
+  const longitudes = positions.map((position) => position[0]);
+  const latitudes = positions.map((position) => position[1]);
+  return Math.min(...longitudes) <= east && Math.max(...longitudes) >= west && Math.min(...latitudes) <= north && Math.max(...latitudes) >= south;
+}
+
+/**
+ * Select a bounded, deterministic dense render proxy for a settled camera.
+ * The adapter retains every loaded parent for search/detail/picking; this
+ * seam only bounds the Cesium instance set at a dense citywide LOD. A
+ * selected parent is retained even when it falls outside the nearest set.
+ */
+export function selectDenseFeatures(
+  features: readonly Feature[],
+  camera: DenseRenderCamera | null,
+  limit: number,
+  selectedFeatureId: string | null = null,
+  bounds: DenseRenderBounds | null = null,
+): Feature[] {
+  if (!Number.isSafeInteger(limit) || limit < 1) throw new Error("Dense render feature limit must be a positive integer.");
+  const selected = selectedFeatureId ? features.find((feature) => feature.id === selectedFeatureId) : undefined;
+  const spatial = bounds ? features.filter((feature) => denseFeatureIntersectsBounds(feature, bounds)) : [...features];
+  const candidates = selected && !spatial.some((feature) => feature.id === selected.id) ? [...spatial, selected] : spatial;
+  if (candidates.length <= limit) return [...candidates].sort((left, right) => left.id.localeCompare(right.id));
+  const distance = (feature: Feature): number => {
+    if (!camera) return 0;
+    const longitude = feature.coordinates[0] ?? 0;
+    const latitude = feature.coordinates[1] ?? 0;
+    return (longitude - camera.longitude) ** 2 + (latitude - camera.latitude) ** 2;
+  };
+  const ordered = [...candidates].sort((left, right) => distance(left) - distance(right) || left.id.localeCompare(right.id));
+  const bounded = ordered.slice(0, limit);
+  if (selected && !bounded.some((feature) => feature.id === selected.id)) bounded[bounded.length - 1] = selected;
+  return bounded.sort((left, right) => left.id.localeCompare(right.id));
 }
 
 function polygonParts(feature: Feature): Position[][][] {
@@ -87,8 +163,35 @@ function hierarchyForArea(feature: Feature, partIndex = 0): PolygonHierarchy | u
   return new PolygonHierarchy(positionsForRing(outer), holes.map((hole) => new PolygonHierarchy(positionsForRing(hole))));
 }
 
-function addFeatureEntity(viewer: Viewer, feature: Feature, partIndex = 0, assetResolver?: CityAssetResolver): ReturnType<Viewer["entities"]["add"]> {
-  const assetResolution = assetResolver?.resolve(feature.id, 240, 1);
+/** Return the immutable runtime URI only when the manifest and package gate approve this building. */
+export function assetModelUriForFeature(feature: Feature, assetResolver: CityAssetResolver | undefined, distanceMeters = 240): string | null {
+  if (feature.kind !== "building") return null;
+  const resolution = assetResolver?.resolve(feature.id, distanceMeters, 1);
+  return resolution?.kind === "asset" ? `/${resolution.lod.content.relativeContentRef}` : null;
+}
+
+/** Construct the Cesium ModelGraphics payload used by the semantic entity branch. */
+export function modelGraphicsForFeature(feature: Feature, assetResolver: CityAssetResolver | undefined, distanceMeters = 240): ModelGraphics | null {
+  const uri = assetModelUriForFeature(feature, assetResolver, distanceMeters);
+  return uri ? new ModelGraphics({ uri, scale: 1, minimumPixelSize: 1 }) : null;
+}
+
+/** Dense rendering intentionally keeps ordinary buildings in the procedural primitive path. */
+export function denseFeatureRenderMode(feature: Feature, assetResolver: CityAssetResolver | undefined, distanceMeters = 240): "asset-model" | "procedural-massing" {
+  return assetModelUriForFeature(feature, assetResolver, distanceMeters) ? "asset-model" : "procedural-massing";
+}
+
+export type PoiRenderMode = "point-primitive" | "selected-entity" | "entity";
+
+/** Ordinary dense POIs stay in the app-owned point collection; only the active selection gets an entity label. */
+export function poiRenderMode(feature: Feature, denseRendering: boolean, selected: boolean): PoiRenderMode {
+  if (feature.kind !== "poi") return "entity";
+  if (!denseRendering) return "entity";
+  return selected ? "selected-entity" : "point-primitive";
+}
+
+function addFeatureEntity(viewer: Viewer, feature: Feature, partIndex = 0, assetResolver?: CityAssetResolver, assetDistanceMeters = 240): ReturnType<Viewer["entities"]["add"]> {
+  const assetResolution = assetResolver?.resolve(feature.id, assetDistanceMeters, 1);
   const assetProperties = {
     assetResolution: assetResolution?.kind ?? "not-registered",
     assetDiagnostic: assetResolution?.kind === "procedural-fallback" ? assetResolution.diagnostic.message : null,
@@ -118,12 +221,32 @@ function addFeatureEntity(viewer: Viewer, feature: Feature, partIndex = 0, asset
       properties: {
         canonicalFeatureId: feature.id,
         sourceRecordId: feature.sourceRefs[0]?.sourceRecordId ?? null,
-        fixtureOnly: true,
+        fixtureOnly: fixtureOnlyForFeature(feature),
         ...assetProperties,
       },
     });
   }
   if (feature.kind === "building" && feature.geometry.type === "Polygon") {
+    const assetModelUri = assetModelUriForFeature(feature, assetResolver, assetDistanceMeters);
+    const assetModel = modelGraphicsForFeature(feature, assetResolver, assetDistanceMeters);
+    if (assetResolution?.kind === "asset" && assetModelUri && assetModel) {
+      const anchor = Cartesian3.fromDegrees(assetResolution.entry.wgs84Anchor.longitude, assetResolution.entry.wgs84Anchor.latitude, assetResolution.entry.wgs84Anchor.heightMeters);
+      const enuFrame = Transforms.eastNorthUpToFixedFrame(anchor);
+      const enuRotation = Matrix4.getMatrix3(enuFrame, new Matrix3());
+      return viewer.entities.add({
+        id: feature.id,
+        name: feature.name,
+        position: anchor,
+        orientation: Quaternion.fromRotationMatrix(enuRotation),
+        model: assetModel,
+        properties: {
+          canonicalFeatureId: feature.id,
+          sourceRecordId: feature.sourceRefs[0]?.sourceRecordId ?? null,
+          fixtureOnly: fixtureOnlyForFeature(feature),
+          ...assetProperties,
+        },
+      });
+    }
     const height = feature.geometryProvenance.height.valueMeters ?? 1;
     return viewer.entities.add({
       id: feature.id,
@@ -139,7 +262,7 @@ function addFeatureEntity(viewer: Viewer, feature: Feature, partIndex = 0, asset
       properties: {
         canonicalFeatureId: feature.id,
         sourceRecordId: feature.sourceRefs[0]?.sourceRecordId ?? null,
-        fixtureOnly: true,
+        fixtureOnly: fixtureOnlyForFeature(feature),
         ...assetProperties,
       },
     });
@@ -155,7 +278,7 @@ function addFeatureEntity(viewer: Viewer, feature: Feature, partIndex = 0, asset
       name: feature.name,
       polyline: { positions: positionsForLine(lines[partIndex] ?? lines[0] ?? []), width: 5, material: Color.fromCssColorString(colorValue).withAlpha(0.92), clampToGround: true },
       label: partIndex === 0 ? { text: `${feature.name} · schematic`, font: "11px Inter, sans-serif", fillColor: Color.WHITE, showBackground: true, backgroundColor: Color.fromCssColorString("#0d151b").withAlpha(0.82), pixelOffset: new Cartesian2(0, -18), disableDepthTestDistance: Number.POSITIVE_INFINITY } : undefined,
-      properties: { canonicalFeatureId: feature.id, sourceRecordId: feature.sourceRefs[0]?.sourceRecordId ?? null, fixtureOnly: true, ...assetProperties },
+      properties: { canonicalFeatureId: feature.id, sourceRecordId: feature.sourceRefs[0]?.sourceRecordId ?? null, fixtureOnly: fixtureOnlyForFeature(feature), ...assetProperties },
     });
   }
 
@@ -185,24 +308,30 @@ function addFeatureEntity(viewer: Viewer, feature: Feature, partIndex = 0, asset
     properties: {
       canonicalFeatureId: feature.id,
       sourceRecordId: feature.sourceRefs[0]?.sourceRecordId ?? null,
-      fixtureOnly: true,
+      fixtureOnly: fixtureOnlyForFeature(feature),
       ...assetProperties,
     },
   });
 }
 
-function addFeatureEntities(viewer: Viewer, feature: Feature, assetResolver?: CityAssetResolver): ReturnType<Viewer["entities"]["add"]>[] {
-  if (feature.kind === "area" && feature.geometry.type === "MultiPolygon") {
-    return feature.geometry.coordinates.map((_, partIndex) => addFeatureEntity(viewer, feature, partIndex, assetResolver));
-  }
-  if (feature.kind === "transit-route" && feature.geometry.type === "MultiLineString") {
-    return feature.geometry.coordinates.map((_, partIndex) => addFeatureEntity(viewer, feature, partIndex, assetResolver));
-  }
-  return [addFeatureEntity(viewer, feature, 0, assetResolver)];
+/** Source role, rather than a renderer branch, controls fixture truth. */
+export function fixtureOnlyForFeature(feature: Feature): boolean {
+  return feature.sourceRefs.length === 0 || feature.sourceRefs.every((source) => source.role === "fixture" || source.registryEntryId.startsWith("fixture."));
 }
 
-function addDensePrimitives(collection: PrimitiveCollection, features: Feature[], selectedFeatureId: string | null): void {
+function addFeatureEntities(viewer: Viewer, feature: Feature, assetResolver?: CityAssetResolver, assetDistanceMeters = 240): ReturnType<Viewer["entities"]["add"]>[] {
+  if (feature.kind === "area" && feature.geometry.type === "MultiPolygon") {
+    return feature.geometry.coordinates.map((_, partIndex) => addFeatureEntity(viewer, feature, partIndex, assetResolver, assetDistanceMeters));
+  }
+  if (feature.kind === "transit-route" && feature.geometry.type === "MultiLineString") {
+    return feature.geometry.coordinates.map((_, partIndex) => addFeatureEntity(viewer, feature, partIndex, assetResolver, assetDistanceMeters));
+  }
+  return [addFeatureEntity(viewer, feature, 0, assetResolver, assetDistanceMeters)];
+}
+
+function addDensePrimitives(collection: PrimitiveCollection, features: Feature[], selectedFeatureId: string | null): DenseRenderMetrics {
   const buildings = features.filter((feature): feature is Feature & { kind: "building"; geometry: Extract<Feature["geometry"], { type: "Polygon" }> } => feature.kind === "building" && feature.geometry.type === "Polygon");
+  let primitiveCount = 0;
   if (buildings.length) {
     const instances = buildings.map((feature) => new GeometryInstance({
       id: feature.id,
@@ -211,12 +340,51 @@ function addDensePrimitives(collection: PrimitiveCollection, features: Feature[]
     }));
     const primitive = new Primitive({ geometryInstances: instances, appearance: new PerInstanceColorAppearance({ flat: true, translucent: true }), asynchronous: false });
     collection.add(primitive);
+    primitiveCount += 1;
   }
-  const points = features.filter((feature) => feature.kind === "poi");
+  const points = features.filter((feature) => feature.kind === "poi" && feature.id !== selectedFeatureId);
   if (points.length) {
     const pointCollection = collection.add(new PointPrimitiveCollection());
     points.forEach((feature) => pointCollection.add({ id: feature.id, position: Cartesian3.fromDegrees(feature.coordinates[0], feature.coordinates[1], 14), pixelSize: feature.id === selectedFeatureId ? 20 : 12, color: Color.fromCssColorString(feature.id === selectedFeatureId ? "#ffdf6b" : "#4ce2e6"), outlineColor: Color.WHITE, outlineWidth: feature.id === selectedFeatureId ? 3 : 1 }));
+    primitiveCount += 1;
   }
+  return { featureCount: buildings.length + points.length, primitiveCount, instanceCount: buildings.length + points.length, buildingFeatureCount: buildings.length, pointFeatureCount: points.length };
+}
+
+function addSelectedPoiEntity(viewer: Viewer, feature: Feature): ReturnType<Viewer["entities"]["add"]> {
+  const [longitude, latitude] = feature.coordinates;
+  return viewer.entities.add({
+    id: feature.id,
+    name: feature.name,
+    position: Cartesian3.fromDegrees(longitude, latitude, 16),
+    point: {
+      pixelSize: 24,
+      color: Color.fromCssColorString("#ffdf6b"),
+      outlineColor: Color.WHITE,
+      outlineWidth: 3,
+      heightReference: HeightReference.NONE,
+    },
+    label: {
+      text: `${feature.name} · selected`,
+      font: "12px Inter, sans-serif",
+      fillColor: Color.WHITE,
+      showBackground: true,
+      backgroundColor: Color.fromCssColorString("#0d151b").withAlpha(0.9),
+      pixelOffset: new Cartesian2(0, -26),
+      disableDepthTestDistance: Number.POSITIVE_INFINITY,
+    },
+    properties: {
+      canonicalFeatureId: feature.id,
+      sourceRecordId: feature.sourceRefs[0]?.sourceRecordId ?? null,
+      fixtureOnly: fixtureOnlyForFeature(feature),
+      selected: true,
+    },
+  });
+}
+
+function verifiedAssetBuildingIds(features: Feature[], assetResolver: CityAssetResolver | undefined, distanceMeters: number): ReadonlySet<string> {
+  if (!assetResolver) return new Set<string>();
+  return new Set(features.filter((feature) => denseFeatureRenderMode(feature, assetResolver, distanceMeters) === "asset-model").map((feature) => feature.id));
 }
 
 function cameraStateForViewer(viewer: Viewer): CameraPose {
@@ -224,6 +392,35 @@ function cameraStateForViewer(viewer: Viewer): CameraPose {
   return { longitude: CesiumMath.toDegrees(position.longitude), latitude: CesiumMath.toDegrees(position.latitude), height: Math.max(0, Number.isFinite(position.height) ? position.height : 0), heading: CesiumMath.toDegrees(viewer.camera.heading), pitch: CesiumMath.toDegrees(viewer.camera.pitch), roll: CesiumMath.toDegrees(viewer.camera.roll) };
 }
 function cameraDuration(seconds: number): number { return typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ? 0.01 : seconds; }
+
+/** Build the bounded, deterministic camera pose used for a selected parent. */
+export function focusPoseForFeature(feature: Feature, height = 240): CameraPose {
+  return { longitude: feature.coordinates[0], latitude: feature.coordinates[1], height, heading: 0, pitch: -35, roll: 0 };
+}
+
+/**
+ * Cesium can report an equivalent 180° local-frame roll after a low-altitude
+ * WGS84 flight even when the requested view is upright. Keep the published
+ * focus link tied to its deterministic requested orientation.
+ */
+export function normalizeFocusCameraPose(actual: CameraPose, requested: CameraPose): CameraPose {
+  return { ...actual, heading: requested.heading, pitch: requested.pitch, roll: requested.roll };
+}
+
+/**
+ * A focus request owns one flight. Dense shard refreshes may rerun the effect,
+ * but they must not restart that request's flight or re-enter the camera loop.
+ */
+export function shouldStartFocusFlight(lastRequest: number, nextRequest: number, hasTarget: boolean): boolean {
+  return hasTarget && Number.isSafeInteger(nextRequest) && nextRequest > 0 && nextRequest !== lastRequest;
+}
+
+export function medianFrameInterval(values: readonly number[]): number | null {
+  if (values.length === 0) return null;
+  const sorted = [...values].sort((left, right) => left - right);
+  const middle = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 1 ? sorted[middle]! : ((sorted[middle - 1]! + sorted[middle]!) / 2);
+}
 
 export function CesiumViewport({
   adapter,
@@ -236,6 +433,8 @@ export function CesiumViewport({
   previewRequest,
   denseRendering = false,
   denseFeatures = [],
+  denseFeatureLimit,
+  onDenseMetrics,
   selectedFeatureId = null,
   onCameraChanged,
   cameraRequest,
@@ -245,12 +444,12 @@ export function CesiumViewport({
 }: CesiumViewportProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<Viewer | null>(null);
-  const entitiesByFeatureIdRef = useRef(new Map<string, ReturnType<Viewer["entities"]["add"]>>());
   const previewIndexRef = useRef(0);
   const previewTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const denseFeatureMapRef = useRef(new Map<string, Feature>());
   const denseCollectionRef = useRef<PrimitiveCollection | null>(null);
   const suppressCameraEventsUntilRef = useRef(0);
+  const lastFocusFlightRequestRef = useRef(0);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -311,7 +510,6 @@ export function CesiumViewport({
     if (onCameraChanged) viewer.camera.changed.addEventListener(onCameraMove);
 
     return () => {
-      entitiesByFeatureIdRef.current.clear();
       denseCollectionRef.current?.removeAll();
       if (cameraTimer) clearTimeout(cameraTimer);
       if (onCameraChanged) viewer.camera.changed.removeEventListener(onCameraMove);
@@ -331,21 +529,41 @@ export function CesiumViewport({
       const visibleFeatures = loaded.flat().filter((feature) => featureFilter?.(feature) ?? true);
       viewer.entities.removeAll();
       denseCollectionRef.current?.removeAll();
-      entitiesByFeatureIdRef.current.clear();
       const visibleDenseFeatures = denseFeatures.filter((feature) => {
         const layer = layerForFeature(feature);
         return !layer || visibleLayers[layer];
       });
       denseFeatureMapRef.current = new Map(visibleDenseFeatures.map((feature) => [feature.id, feature]));
-      const allFeatures = visibleDenseFeatures.length ? [...visibleFeatures, ...visibleDenseFeatures] : visibleFeatures;
-      const semanticFeatures = denseRendering ? allFeatures.filter((feature) => feature.kind !== "building" && feature.kind !== "poi") : allFeatures;
+      const allFeatures = [...new Map([...visibleFeatures, ...visibleDenseFeatures].map((feature) => [feature.id, feature])).values()];
+      const denseCamera = Number.isFinite(viewer.camera.positionCartographic.longitude) && Number.isFinite(viewer.camera.positionCartographic.latitude)
+        ? { longitude: CesiumMath.toDegrees(viewer.camera.positionCartographic.longitude), latitude: CesiumMath.toDegrees(viewer.camera.positionCartographic.latitude) }
+        : null;
+      const viewRectangle = viewer.camera.computeViewRectangle(viewer.scene.globe.ellipsoid);
+      const denseBounds = viewRectangle ? {
+        west: CesiumMath.toDegrees(viewRectangle.west),
+        east: CesiumMath.toDegrees(viewRectangle.east),
+        south: CesiumMath.toDegrees(viewRectangle.south),
+        north: CesiumMath.toDegrees(viewRectangle.north),
+      } : null;
+      const renderedDenseFeatures = denseFeatureLimit
+        ? selectDenseFeatures(allFeatures, denseCamera, denseFeatureLimit, selectedFeatureId, denseBounds)
+        : allFeatures;
+      const assetDistanceMeters = Math.max(0, Number.isFinite(viewer.camera.positionCartographic.height) ? viewer.camera.positionCartographic.height : 240);
+      const assetBuildingIds = verifiedAssetBuildingIds(renderedDenseFeatures, assetResolver, assetDistanceMeters);
+      const semanticFeatures = denseRendering
+        ? renderedDenseFeatures.filter((feature) => (feature.kind !== "building" && feature.kind !== "poi") || assetBuildingIds.has(feature.id))
+        : renderedDenseFeatures;
       semanticFeatures.forEach((feature) => {
-        const entities = addFeatureEntities(viewer, feature, assetResolver);
-        entities.forEach((entity, partIndex) => {
-          entitiesByFeatureIdRef.current.set(partIndex === 0 ? feature.id : `${feature.id}:part:${partIndex}`, entity);
-        });
+        addFeatureEntities(viewer, feature, assetResolver, assetDistanceMeters);
       });
-      if (denseRendering && denseCollectionRef.current) addDensePrimitives(denseCollectionRef.current, allFeatures, selectedFeatureId);
+      const denseMetrics = denseRendering && denseCollectionRef.current
+        ? addDensePrimitives(denseCollectionRef.current, renderedDenseFeatures.filter((feature) => !assetBuildingIds.has(feature.id)), selectedFeatureId)
+        : { featureCount: 0, primitiveCount: 0, instanceCount: 0, buildingFeatureCount: 0, pointFeatureCount: 0 };
+      onDenseMetrics?.(denseMetrics);
+      if (denseRendering && selectedFeatureId) {
+        const selectedPoi = allFeatures.find((feature) => feature.id === selectedFeatureId && feature.kind === "poi");
+        if (selectedPoi) addSelectedPoiEntity(viewer, selectedPoi);
+      }
       if (itinerary) {
         itineraryLines(itinerary).forEach((line, index) => {
           viewer.entities.add({
@@ -356,27 +574,10 @@ export function CesiumViewport({
           });
         });
       }
-      if (focusFeatureId) {
-        const entity = entitiesByFeatureIdRef.current.get(focusFeatureId);
-        if (entity) void viewer.flyTo(entity, { duration: cameraDuration(0.6) });
-        else {
-          const denseFeature = denseFeatureMapRef.current.get(focusFeatureId);
-          if (denseFeature) viewer.camera.flyTo({ destination: Cartesian3.fromDegrees(denseFeature.coordinates[0], denseFeature.coordinates[1], 240), duration: cameraDuration(0.6) });
-        }
-      } else {
-        const first = visibleFeatures[0];
-        if (first) {
-          const [longitude, latitude] = first.coordinates;
-          viewer.camera.lookAt(
-            Cartesian3.fromDegrees(longitude, latitude, first.geometryProvenance.height.valueMeters ?? 0),
-            new HeadingPitchRange(CesiumMath.toRadians(18), CesiumMath.toRadians(-30), 2_000),
-          );
-        }
-      }
     };
     void loadVisibleFeatures();
     return () => { cancelled = true; };
-  }, [adapter, assetResolver, denseFeatures, denseRendering, featureFilter, itinerary, selectedFeatureId, visibleLayers.buildings, visibleLayers.pois, visibleLayers.areas, visibleLayers.stations, visibleLayers.entrances, visibleLayers.routes, focusFeatureId]);
+  }, [adapter, assetResolver, denseFeatureLimit, denseFeatures, denseRendering, featureFilter, itinerary, onDenseMetrics, selectedFeatureId, visibleLayers.buildings, visibleLayers.pois, visibleLayers.areas, visibleLayers.stations, visibleLayers.entrances, visibleLayers.routes]);
 
   useEffect(() => {
     const viewer = viewerRef.current;
@@ -425,13 +626,27 @@ export function CesiumViewport({
   useEffect(() => {
     const viewer = viewerRef.current;
     if (!viewer || focusRequest === 0 || !focusFeatureId) return;
-    const entity = entitiesByFeatureIdRef.current.get(focusFeatureId);
-    if (entity) void viewer.flyTo(entity, { duration: cameraDuration(0.7) });
-    else {
-      const denseFeature = denseFeatureMapRef.current.get(focusFeatureId);
-      if (denseFeature) viewer.camera.flyTo({ destination: Cartesian3.fromDegrees(denseFeature.coordinates[0], denseFeature.coordinates[1], 240), duration: cameraDuration(0.7) });
-    }
-  }, [focusFeatureId, focusRequest]);
+    const feature = denseFeatureMapRef.current.get(focusFeatureId) ?? adapter.getFeature(focusFeatureId);
+    if (!shouldStartFocusFlight(lastFocusFlightRequestRef.current, focusRequest, Boolean(feature)) || !feature) return;
+    lastFocusFlightRequestRef.current = focusRequest;
+    viewer.camera.cancelFlight();
+    const pose = focusPoseForFeature(feature);
+    const duration = cameraDuration(0.6);
+    suppressCameraEventsUntilRef.current = Date.now() + Math.max(900, duration * 1_000 + 250);
+    viewer.camera.flyTo({
+      destination: Cartesian3.fromDegrees(pose.longitude, pose.latitude, pose.height),
+      orientation: {
+        heading: CesiumMath.toRadians(pose.heading),
+        pitch: CesiumMath.toRadians(pose.pitch),
+        roll: CesiumMath.toRadians(pose.roll),
+      },
+      duration,
+      complete: () => {
+        suppressCameraEventsUntilRef.current = Date.now() + 900;
+        onCameraChanged?.(normalizeFocusCameraPose(cameraStateForViewer(viewer), pose));
+      },
+    });
+  }, [adapter, denseFeatures, focusFeatureId, focusRequest, onCameraChanged]);
 
   useEffect(() => {
     const viewer = viewerRef.current;

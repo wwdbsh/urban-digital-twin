@@ -13,4 +13,5 @@ coverage/
 data/raw/
 data/generated/
 public/tiles/
+public/data/
 artifacts/offline-ingest/

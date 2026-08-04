@@ -27,6 +27,15 @@
     "tile:validate": "node --experimental-strip-types scripts/validate-tile-package.mjs",
     "asset:fixture": "node --experimental-strip-types scripts/run-asset-package-fixture.mjs",
     "offline:ingest": "node --experimental-strip-types scripts/run-offline-ingest.mjs",
+    "citywide:acquire:dohmh": "node --experimental-strip-types scripts/acquire-manhattan-citywide-dohmh-snapshot.mjs",
+    "citywide:acquire:buildings": "node --experimental-strip-types scripts/acquire-manhattan-citywide-buildings.mjs",
+    "citywide:validate:raw": "node --experimental-strip-types scripts/validate-manhattan-citywide-raw.mjs",
+    "citywide:normalize": "node --experimental-strip-types scripts/normalize-manhattan-citywide.mjs",
+    "citywide:validate:coverage": "node --experimental-strip-types scripts/validate-manhattan-citywide-coverage.mjs",
+    "citywide:build": "node --experimental-strip-types scripts/build-manhattan-citywide.mjs",
+    "citywide:validate": "node --experimental-strip-types scripts/validate-manhattan-citywide-release.mjs",
+    "citywide:publish-local": "node --experimental-strip-types scripts/publish-manhattan-citywide-local.mjs",
+    "citywide:benchmark": "node --experimental-strip-types scripts/benchmark-manhattan-citywide.mjs",
     "test:watch": "vitest"
   },
   "dependencies": {

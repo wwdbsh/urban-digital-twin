@@ -1,7 +1,26 @@
 # NYC Building Footprints: dated adapter evidence
 
-**Evidence checked:** 2026-08-03 (UTC)
-**Scope:** official City of New York / NYC Office of Technology and Innovation (OTI) sources only. No NYC record was downloaded or queried for this note.
+**Evidence checked:** 2026-08-04 (UTC)
+**Scope:** official City of New York / NYC Office of Technology and Innovation (OTI) sources only. A bounded pilot and a later approved immutable citywide snapshot are retained locally; no new provider action occurs in this documentation catch-up.
+
+## Delivered citywide state (2026-08-04)
+
+The approved citywide release uses OTI dataset `jh45-qr5r`, capture
+`2026-08-04T08:25:05.580Z`, source update `2026-08-02T02:17:27.174Z`, and the
+immutable raw snapshot declared as 41,739,923 bytes with SHA-256
+`52c841e388f8e56e6e3666d2ce8b6436ec10f9eeb2bbcad2b2452b51d58dafc7`. It
+contains 45,194 source records, all accepted, and the release renders 45,194
+building parents/render parts across local JSON geometry shards. Positive
+`HEIGHT_ROOF` values retain feet-equivalent provenance and convert to meters;
+unknown ground-elevation units remain unknown. This is source-backed footprint
+massing, not a facade or photorealism claim.
+
+The approval is limited to the local snapshot-relative OTI/DOHMH wave under
+`msg_91770ac6d098`; it does not approve PLUTO, terrain, NTA, Parks, LPC site
+data, public deployment, or unrelated source expansion. The bounded pilot
+evidence below remains valid historical provenance. See [Decision 0013](../decisions/0013-manhattan-citywide-foundation-delivery.md)
+and the [implementation record](../codex/MANHATTAN_CITYWIDE_FOUNDATION_IMPLEMENTATION.md)
+for release-level accounting.
 
 ## Canonical source and release behavior
 
@@ -13,7 +32,7 @@ The metadata says the dataset covers New York City and is publicly accessible th
 
 The current page’s preview displays WKT beginning with `MULTIPOLYGON`, whereas the metadata describes the geometry type as polygon and the `SHAPE` field as a single outer polygon ring. This is a portal/export representation mismatch, not evidence that holes or multipart geometry can be discarded. The adapter accepts GeoJSON `Polygon` and `MultiPolygon`, preserves all rings, clips each part to the documented slice, and emits an explicit rejection when geometry is invalid.
 
-The official [NYC Open Data overview and terms](https://opendata.cityofnewyork.us/overview/) state that users agree to NYC.gov terms, privacy policy, and any additional agency terms; datasets are informational and carry no City warranty for completeness, accuracy, content, or fitness. The submitting agency remains authoritative and may update, correct, or refresh datasets at any time. The registry remains `pending`: public visibility is not treated as prior approval for retaining raw files or shipping derivatives.
+The official [NYC Open Data overview and terms](https://opendata.cityofnewyork.us/overview/) state that users agree to NYC.gov terms, privacy policy, and any additional agency terms; datasets are informational and carry no City warranty for completeness, accuracy, content, or fitness. The submitting agency remains authoritative and may update, correct, or refresh datasets at any time. The registry is approved only for this bounded pilot; public visibility is not treated as blanket approval for unrelated datasets or full-city retention.
 
 ## Field contract used by the adapter
 
@@ -24,8 +43,8 @@ The official [NYC Open Data overview and terms](https://opendata.cityofnewyork.u
 | `BIN` | Building Identification Number. Preserved as text. The first digit is the borough code; “million BINs” such as `1000000` indicate unassigned/unknown and BIN is not globally unique. It is not substituted for `DOITT_ID`. |
 | `BASE_BBL` | Physical tax lot BBL associated with the footprint. Preserved as text; the metadata warns that temporary synchronization can associate a building with a different lot or no property-tax lot. |
 | `MAPPLUTO_BBL` | BBL used for joining to MapPLUTO, especially condominium billing-BBL semantics. Preserved separately from `BASE_BBL`; it is not a building identity. |
-| `GROUND_ELEVATION` / `GROUNDELEV` | Lowest elevation at building ground level, calculated from LiDAR or photogrammetry. Official metadata says modern/photogrammetric values use NAVD88. Retained as an attribute; it is not silently added to roof height. |
-| `HEIGHT_ROOF` / `HEIGHTROOF` | Roof height above ground, explicitly not height above sea level. Zero or NULL means unavailable. A positive numeric value becomes the extruded height with `method: source`; missing/zero becomes `valueMeters: null`, `method: unknown`. Negative, non-finite, or non-numeric values reject the record. |
+| `GROUND_ELEVATION` / `GROUNDELEV` | Lowest elevation at building ground level, calculated from LiDAR or photogrammetry. Official metadata says modern/photogrammetric values use NAVD88, but does not publish the numeric field's unit. The adapter therefore preserves `groundElevationSourceValue`/`groundElevationSourceUnit` and leaves `groundElevationMeters` null when the unit is unknown; it never guesses from the horizontal CRS. |
+| `HEIGHT_ROOF` / `HEIGHTROOF` | Roof height above ground, explicitly not height above sea level. The approved pilot records are interpreted as feet-equivalent source measurements and normalize positive values with `0.3048`; raw value/unit are retained in height provenance and attributes. Zero or NULL means unavailable. Negative, non-finite, or non-numeric values reject the record. |
 | `CONSTRUCTION_YEAR` / `CNSTRCT_YR` | Completed construction year. Zero/NULL means unavailable. Preserved as an attribute and never used to infer height. |
 | `FEATURE_CODE` / `FEAT_CODE` | Official type code, including building, placeholder, skybridge, garage, and under-construction values. Preserved as an attribute; the first adapter emits the records as `building` features and does not claim every code is a conventional building. |
 | `GEOM_SOURCE` | `Photogrammetric` indicates the highest stated positional quality; `Other (Manual)` is less accurate. The adapter records this source, gives photogrammetric geometry the documented ~0.6096 m horizontal uncertainty, and leaves roof-height uncertainty null because no numeric roof-height error was published. |
@@ -43,16 +62,20 @@ The metadata says features include buildings over 400 square feet and taller tha
 1. Explicit local GeoJSON text containing a `FeatureCollection`.
 2. A recorded SHA-256 checksum that matches the exact supplied bytes.
 3. Snapshot metadata explicitly marked `immutable: true`, plus the registry terms URL and attribution recorded with the snapshot.
-4. Explicit input CRS, release/capture/update timestamps, vertical-datum wording, and ingestion timestamp.
-5. An `approved` `nyc.building-footprints` registry entry. The repository entry is intentionally still `pending`, so production construction fails closed.
+4. Explicit input CRS, release/capture/update timestamps, vertical-datum wording, `heightUnit`, `groundElevationUnit`, and ingestion timestamp. Positive height values fail closed when `heightUnit` is unknown; ground elevation values remain source-only when `groundElevationUnit` is unknown.
+5. An `approved` `nyc.building-footprints` registry entry. The repository entry is approved only for the dated pilot documented in decision 0012; expansion remains a separate review.
 
 `Polygon` and `MultiPolygon` source records are validated, reprojected to WGS84, clipped against the documented Flatiron–NoMad–Union Square rectangle, and represented as one or more canonical `Feature` records. Multipart parts receive deterministic `:part-###` suffixes while every part retains the same `DOITT_ID`, BIN, BBL fields, source reference, freshness, license reference, and height provenance. No height is fabricated when `HEIGHT_ROOF` is zero/NULL. Rejection reports account for every input record, including invalid height, invalid geometry, and records outside the slice; layer manifests count normalized output features.
 
 The clearly invented fixture is [`nyc-building-footprints.schema.fixture.geojson`](../../src/ingestion/fixtures/nyc-building-footprints.schema.fixture.geojson). Its IDs and names are synthetic and it is marked fixture-only; it must not be described as Manhattan coverage.
 
+## Pilot evidence and reproducible command
+
+The 2026-08-04 pilot uses server-side ArcGIS envelope filtering `-74.005,40.738,-73.982,40.752` (Flatiron/NoMad/Union Square travel slice), then requests the 3,532 sorted object IDs in 15 POST batches (`250`, 30-second timeout). The immutable raw GeoJSON has 3,532 features, 2,788,919 bytes, and SHA-256 `cf311cd757564fe9cc75f8dc6a60d42c643bb402db4d811f448338ff5f6a18fb`; all 3,532 records normalized and none rejected. The exact raw and ID manifests are ignored local artifacts under `data/raw/real-wave-20260804/`; aborted full-envelope partials are quarantined there and are never accepted inputs.
+
 ## Exact approval and post-approval command
 
-Approval is required for: (a) downloading and retaining one immutable NYC Building Footprints GeoJSON snapshot, (b) accepting the NYC Open Data/agency terms and disclaimer for derived normalized features and tiles, and (c) recording its exact release, capture, update, CRS, vertical-datum, checksum, and retention decision in the registry.
+The user approved the bounded pilot on 2026-08-04 for: (a) downloading and retaining one immutable NYC Building Footprints GeoJSON snapshot, (b) applying the NYC Open Data/agency terms and disclaimer to derived normalized features and tiles, and (c) recording its exact capture, update, CRS, vertical-datum, checksum, and retention decision in the registry. Full Manhattan expansion still requires a measured budget and review; do not rerun the 133-batch envelope by default.
 
 After approval, update only `nyc.building-footprints.approval` to the approved scope and place the authorized snapshot at a local path. Then run:
 
@@ -67,7 +90,9 @@ pnpm nyc:building-ingest -- \
   --capture <ISO-or-null> \
   --updated <ISO-or-null> \
   --ingested-at <ISO-8601> \
-  --vertical-datum 'NAVD88 for documented GROUND_ELEVATION; HEIGHT_ROOF relative to source ground'
+  --vertical-datum 'NAVD88 for documented GROUND_ELEVATION; HEIGHT_ROOF relative to source ground; source units recorded separately' \
+  --height-unit feet \
+  --ground-elevation-unit unknown
 ```
 
 The CLI writes manifest, normalized features, and a building layer manifest with exclusive-create semantics and refuses to overwrite existing outputs. It never contacts NYC Open Data or any other network service; adding later PLUTO/POI/terrain adapters remains a separate approval and evidence task.

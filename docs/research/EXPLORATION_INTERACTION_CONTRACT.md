@@ -3,8 +3,19 @@
 The explorer is provider-neutral: it consumes the existing `Feature`,
 `CanonicalEntity`, `SourceRef`, and route contracts and does not assume that a
 source is authoritative merely because a value is visible. The checked-in
-journey is synthetic fixture data and explicitly makes no claim of real
-Manhattan coverage.
+journey remains available as synthetic fixture data, while the delivered
+bounded and citywide OTI/DOHMH adapters use the same interaction contracts.
+
+## Delivered real-release behavior (2026-08-04)
+
+In the explicit citywide mode, exact OTI/DOHMH IDs, normalized source fields,
+lazy search/detail shards, Cesium feature picks, and deep links resolve to the
+same canonical parent identity. Unlocated DOHMH parents remain searchable and
+detail-addressable without invented geometry. Unknown release or parent IDs
+fail closed; the app does not choose a same-name or nearby fixture. DOHMH
+inspection history remains distinct from consumer place truth. Real transit,
+shops, parks, broad attractions, live routing, ratings/reviews, and hours were
+not added.
 
 ## Unified discovery
 

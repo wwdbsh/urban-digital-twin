@@ -1,0 +1,72 @@
+{
+  "schemaVersion": "1.0",
+  "manifestId": "manhattan-landmark-assets-20260804",
+  "cityId": "manhattan",
+  "generatedAt": "2026-08-04T12:50:00Z",
+  "fixtureOnly": false,
+  "assets": [
+    {
+      "canonicalFeatureId": "udt:manhattan:building:nyc%20office%20of%20technology%20and%20innovation%20(oti)%20gis:jh45-qr5r:507159",
+      "featureKind": "building",
+      "lineage": {
+        "sourceRegistryEntryIds": ["nyc.building-footprints", "nyc.lpc-flatiron-designation"],
+        "sourceRefIds": ["source-ref:nyc.building-footprints:507159", "reference:nyc.lpc-flatiron-designation:LP-0219"],
+        "licenseRefIds": ["license:nyc.building-footprints", "license:nyc.lpc-flatiron-designation"],
+        "attribution": "Source: NYC OTI Building Footprints (DOITT_ID 507159, BIN 1016278), plus NYC LPC Flatiron Building designation report LP-0219. NYC publication facts terms; City attribution and disclaimer retained."
+      },
+      "capture": {"capturedAt": "2026-08-04T03:08:28.735Z", "authoredAt": "2026-08-04T12:50:00Z", "updatedAt": "2026-08-03T02:59:51Z"},
+      "approval": {"fixtureOnly": false, "state": "approved", "scope": "runtime", "reviewedAt": "2026-08-04T12:50:00Z", "note": "Bounded first-wave exterior; factual massing/material cues only. No photo pixels, Google imagery, photogrammetry, or facade detail beyond references."},
+      "wgs84Anchor": {"longitude": -73.9896354428363, "latitude": 40.74104413547001, "heightMeters": 0},
+      "transform": {"coordinateFrame": "ENU", "units": "meters", "origin": "wgs84-anchor", "matrix": [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1], "orientationConvention": "heading-degrees-clockwise-from-north;local+x-east;local+y-north;local+z-up;right-handed"},
+      "bounds": {"min": [-20.03550148010254,-30.540983200073242,0], "max": [11.181159973144531,35.524147033691406,91.52838897705078]},
+      "lodVariants": [
+        {"id": "lod_0", "geometricErrorMeters": 0.25, "selection": {"maxDistanceMeters": 1200, "maxScreenSpaceError": 2}, "content": {"relativeContentRef": "assets/landmarks/landmark-wave-20260804/flatiron-building__lod_0.glb", "format": "glb", "sha256": "89ea83cff781dc52bdd853fb855c7fa61c0617442429c4334e2ad5b42c602db2", "byteSize": 72692, "contentStatus": "verified"}},
+        {"id": "lod_1", "geometricErrorMeters": 4, "selection": {"maxDistanceMeters": null, "maxScreenSpaceError": 16}, "content": {"relativeContentRef": "assets/landmarks/landmark-wave-20260804/flatiron-building__lod_1.glb", "format": "glb", "sha256": "7a7c2c7467966d8ca77e4fb0a7ffad73418fcd0ae19a7ea5d2e38fb6aac5e38c", "byteSize": 9324, "contentStatus": "verified"}}
+      ],
+      "quality": {"triangleCount": 1424, "materialCount": 2, "textureCount": 0, "budgets": {"maxTriangles": 6000, "maxMaterials": 4, "maxTextures": 0}},
+      "uncertaintyNotes": "OTI HEIGHT_ROOF is retained as 300.29 feet-equivalent source units and is modeled as 300.29 × 0.3048 = 91.528392 m (Blender float bound 91.52838897705078 m). The LPC/NYC planning reference's approximately 296-foot figure is not used to override OTI. The top prism remains continuous from 82 m to the corrected target. Rounded corners, ornament, windows, and unseen sides are simplified; no exact facade claim. Bounds are computed from object matrix_world @ vertex.co."
+    },
+    {
+      "canonicalFeatureId": "udt:manhattan:building:nyc%20office%20of%20technology%20and%20innovation%20(oti)%20gis:jh45-qr5r:778052",
+      "featureKind": "building",
+      "lineage": {
+        "sourceRegistryEntryIds": ["nyc.building-footprints", "nyc.dcp-empire-state-design"],
+        "sourceRefIds": ["source-ref:nyc.building-footprints:778052", "reference:nyc.dcp-empire-state-design:15-penn-feis"],
+        "licenseRefIds": ["license:nyc.building-footprints", "license:nyc.dcp-empire-state-design"],
+        "attribution": "Source: NYC OTI Building Footprints (DOITT_ID 778052, BIN 1015862), plus NYC DCP 15 Penn Plaza FEIS chapters 8/9. NYC publication facts terms; City attribution and disclaimer retained."
+      },
+      "capture": {"capturedAt": "2026-08-04T03:08:28.735Z", "authoredAt": "2026-08-04T12:50:00Z", "updatedAt": "2026-08-03T02:59:51Z"},
+      "approval": {"fixtureOnly": false, "state": "approved", "scope": "runtime", "reviewedAt": "2026-08-04T12:50:00Z", "note": "Bounded first-wave exterior; documented setbacks, limestone/glass material groups, and overall mast evidence only. Branding and logos omitted."},
+      "wgs84Anchor": {"longitude": -73.98597876025568, "latitude": 40.748558555157594, "heightMeters": 0},
+      "transform": {"coordinateFrame": "ENU", "units": "meters", "origin": "wgs84-anchor", "matrix": [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1], "orientationConvention": "heading-degrees-clockwise-from-north;local+x-east;local+y-north;local+z-up;right-handed"},
+      "bounds": {"min": [-59.38691711425781,-69.3035659790039,0], "max": [97.43683624267578,43.316612243652344,442.6000061035156]},
+      "lodVariants": [
+        {"id": "lod_0", "geometricErrorMeters": 0.5, "selection": {"maxDistanceMeters": 1600, "maxScreenSpaceError": 2}, "content": {"relativeContentRef": "assets/landmarks/landmark-wave-20260804/empire-state-building__lod_0.glb", "format": "glb", "sha256": "1062622b08d456d2011b744da83dd6d6ccfda399f0a8e5635436cea6ed2a4d80", "byteSize": 28060, "contentStatus": "verified"}},
+        {"id": "lod_1", "geometricErrorMeters": 8, "selection": {"maxDistanceMeters": null, "maxScreenSpaceError": 16}, "content": {"relativeContentRef": "assets/landmarks/landmark-wave-20260804/empire-state-building__lod_1.glb", "format": "glb", "sha256": "ccbd194969405a2bfdff734e089de8528ef7c382729c459c570e64823ba39511", "byteSize": 9048, "contentStatus": "verified"}}
+      ],
+      "quality": {"triangleCount": 416, "materialCount": 3, "textureCount": 0, "budgets": {"maxTriangles": 6000, "maxMaterials": 4, "maxTextures": 0}},
+      "uncertaintyNotes": "OTI HEIGHT_ROOF is retained as 1238.790 source units; model roof is 377.60 m using the documented source-unit-to-feet interpretation. NYC DCP FEIS records the building's overall pinnacle at approximately 1,453 feet (442.6 m), which is the explicit basis for the mast/antenna extent. Setbacks are simplified and the model is not a photoreal or exact facade claim. Bounds are computed from object matrix_world @ vertex.co."
+    },
+    {
+      "canonicalFeatureId": "udt:manhattan:building:nyc%20office%20of%20technology%20and%20innovation%20(oti)%20gis:jh45-qr5r:777417",
+      "featureKind": "building",
+      "lineage": {
+        "sourceRegistryEntryIds": ["nyc.building-footprints", "nps.theodore-roosevelt-birthplace-hsr"],
+        "sourceRefIds": ["source-ref:nyc.building-footprints:777417", "reference:nps.theodore-roosevelt-birthplace-hsr:28-east-20th"],
+        "licenseRefIds": ["license:nyc.building-footprints", "license:nps.theodore-roosevelt-birthplace-hsr"],
+        "attribution": "Source: NYC OTI Building Footprints (DOITT_ID 777417, BIN 1016182), plus U.S. National Park Service Historic Structure Report for Theodore Roosevelt Birthplace National Historic Site, 28 East 20th Street. U.S. federal factual reference; NPS attribution retained."
+      },
+      "capture": {"capturedAt": "2026-08-04T03:08:28.735Z", "authoredAt": "2026-08-04T12:50:00Z", "updatedAt": "2026-08-03T02:59:51Z"},
+      "approval": {"fixtureOnly": false, "state": "approved", "scope": "runtime", "reviewedAt": "2026-08-04T12:50:00Z", "note": "Bounded first-wave exterior; five-story two-component complex reflected from NPS factual description. Brownstone facade details are intentionally sparse."},
+      "wgs84Anchor": {"longitude": -73.98905955221147, "latitude": 40.73861975378337, "heightMeters": 0},
+      "transform": {"coordinateFrame": "ENU", "units": "meters", "origin": "wgs84-anchor", "matrix": [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1], "orientationConvention": "heading-degrees-clockwise-from-north;local+x-east;local+y-north;local+z-up;right-handed"},
+      "bounds": {"min": [-11.879002571105957,-13.149590492248535,0], "max": [12.591371536254883,14.436662673950195,19.18716049194336]},
+      "lodVariants": [
+        {"id": "lod_0", "geometricErrorMeters": 0.2, "selection": {"maxDistanceMeters": 800, "maxScreenSpaceError": 2}, "content": {"relativeContentRef": "assets/landmarks/landmark-wave-20260804/theodore-roosevelt-birthplace__lod_0.glb", "format": "glb", "sha256": "70723b90da12a30fdbc5306897ba957ab439178a6ce51d819edf1c656422ae01", "byteSize": 20428, "contentStatus": "verified"}},
+        {"id": "lod_1", "geometricErrorMeters": 3, "selection": {"maxDistanceMeters": null, "maxScreenSpaceError": 16}, "content": {"relativeContentRef": "assets/landmarks/landmark-wave-20260804/theodore-roosevelt-birthplace__lod_1.glb", "format": "glb", "sha256": "3d76db1a843ebf59bb62499591d86e44daa0c023e904955d118be060008f2a32", "byteSize": 2460, "contentStatus": "verified"}}
+      ],
+      "quality": {"triangleCount": 200, "materialCount": 2, "textureCount": 0, "budgets": {"maxTriangles": 2000, "maxMaterials": 3, "maxTextures": 0}},
+      "uncertaintyNotes": "OTI HEIGHT_ROOF is retained as 62.95 source units; model height is 19.19 m using the documented source-unit-to-feet interpretation. NPS describes a five-story complex of townhouse reconstruction plus museum/library; exact room layouts, windows, and unseen sides are not claimed. Bounds are computed from object matrix_world @ vertex.co."
+    }
+  ]
+}

@@ -1,33 +1,59 @@
 # Blender MCP research
 
-Date: 2026-08-03
+Date: 2026-08-04
+
+## Current asset-wave status (2026-08-04)
+
+The later protected landmark wave completed the bounded-pilot asset package:
+Flatiron Building, Empire State Building, and Theodore Roosevelt Birthplace,
+with two GLB LODs each and a manifest. The seven candidate runtime files under
+`public/assets/landmarks/landmark-wave-20260804/` are immutable for this
+documentation catch-up; their expected SHA-256 values are recorded in the
+[implementation record](../codex/MANHATTAN_CITYWIDE_FOUNDATION_IMPLEMENTATION.md)
+and the asset-wave research note. Do not open, regenerate, edit, or export
+those files here. They are not activated by citywide mode; ordinary and
+citywide buildings remain procedural footprint massing.
+
+Blender MCP was not needed for this documentation/civic-data-free work unit.
+Future asset authoring, inspection, or export must use the connected Blender
+MCP gate and remain a separate work unit.
 
 ## Local environment
 
 - Blender 5.2.0 LTS is installed at `/Applications/Blender.app`.
-- Codex supports project-scoped MCP configuration through `.codex/config.toml`
-  for trusted projects, as well as `codex mcp add` for shared host config.
-- No Blender MCP is currently configured.
-- `uv` and `uvx` are not currently available on the shell path.
+- Codex's available configuration is user-level
+  `/Users/sangheonlee/.codex/config.toml`; it now contains one minimal,
+  project-scoped-by-`cwd` Blender entry and preserves all previous settings.
+- `uv` 0.12.1 is installed at `/opt/homebrew/bin/uv`; `uvx` resolves to the
+  same Homebrew installation.
+- The exact installation record, source checksums, validation transcript,
+  threat model, and rollback procedure are in
+  `docs/decisions/0011-blender-mcp-install-and-threat-model.md`.
 
 ## Leading candidates
 
-### `ahujasid/blender-mcp`
+### `ahujasid/blender-mcp` (installed exact pin)
 
 - Repository: <https://github.com/ahujasid/blender-mcp>
-- MIT licensed, widely adopted, active as of 2026-07-29.
+- MIT licensed; the reviewed upstream head is
+  `3ab892510cc0e5435ba5e611c01fb1021fbde8de` (2026-08-03). No stable tag or
+  release was found, so the source SHA is pinned rather than using `main`.
 - Supports scene inspection, screenshots, object and material operations,
   external asset services, and arbitrary Blender Python execution.
-- Requires a Blender add-on plus an MCP process, commonly launched through
-  `uvx blender-mcp`.
-- The repository states Blender 3.0 or newer, but this investigation found no
-  explicit Blender 5.2 compatibility guarantee.
+- Requires a Blender add-on plus an MCP stdio process, launched here through
+  `uvx --python 3.11 --from git+...@<SHA> blender-mcp`.
+- The repository states Blender 3.0 or newer. Blender 5.2.0 LTS was verified
+  locally through its executable, and the pinned addon connected successfully
+  in a disposable default scene; upstream does not make a Blender 5.2-specific
+  compatibility guarantee.
 
 Security gate: the MCP intentionally accepts arbitrary Python and executes it
-inside Blender. Public issue #207 documents that this grants access beyond the
-Blender scene to the host operating system. This is powerful enough for city
-generation but must be treated as trusted-code execution, not a low-risk design
-tool.
+inside Blender. Upstream issue #202 demonstrates a path where a tool can read a
+local file and send its contents to a remote provider; this confirms that the
+bridge must be treated as trusted-code execution with host-file and network
+risk, not as a low-risk design tool. Telemetry is explicitly disabled and all
+optional asset/provider integrations are disabled, but those controls do not
+remove arbitrary Python risk.
 
 ### `djeada/blender-mcp-server`
 
@@ -39,16 +65,23 @@ tool.
   does not remove the core host-code-execution risk.
 - Provides explicit Codex registration instructions and can export glTF/GLB.
 
-## Recommendation
+## Installation and controls
 
-Use a pinned revision of `ahujasid/blender-mcp` only after explicit approval,
-because it has the strongest adoption and matches the reference workflow. Apply
-these controls:
+The user approved installation on 2026-08-04. The installed addon lives at
+`/Users/sangheonlee/Library/Application Support/Blender/5.2/scripts/addons/blender_mcp_pinned/__init__.py`,
+and the MCP command is configured in the user's Codex config with
+`BLENDER_HOST=127.0.0.1`, `BLENDER_PORT=9876`, and
+`DISABLE_TELEMETRY=true`. The running Blender listener was observed as
+`127.0.0.1:9876` only, and fresh MCP initialize, scene inspection, temporary
+cube create/inspect/delete, and scene restoration all passed.
+
+Continue to apply these controls:
 
 1. Bind the Blender bridge to localhost only.
 2. Disable optional external asset/generation integrations initially.
-3. Use project-scoped Codex MCP configuration with tool approvals set to prompt.
-4. Keep Blender work in a dedicated project directory and save versioned `.blend`
+3. Use the reviewed source SHA and the dedicated user-level addon directory;
+   start a fresh Codex/Luna session when discovery is needed.
+4. Keep Blender work in a dedicated disposable directory and save versioned `.blend`
    checkpoints before material operations.
 5. Review generated Python before execution when the MCP client exposes it.
 6. Pin the MCP package or source revision; do not execute a floating latest build
@@ -56,19 +89,20 @@ these controls:
 7. Treat any downloaded `.blend`, model, texture, script, or web content as
    untrusted input.
 
-## Approval required
-
-Installing this MCP changes the local Blender application and enables arbitrary
-code execution in its process. Do not install or register it until the user
-accepts this risk and chooses whether to use the recommended community server or
-a constrained fork with arbitrary-code tools removed.
+At the installation checkpoint no Manhattan assets had been authored and no
+provider/API/credentialed service had been called. The later protected
+landmark wave supersedes only that asset-status statement; installation remains
+reversible, and any future real asset generation remains approval-gated and
+must preserve source provenance and uncertainty.
 
 ## Handoff contract (implementation-ready, provider-neutral)
 
-Blender MCP is not installed, configured, invoked, or simulated by this
-repository. An approved export may enter the existing Cesium runtime only by
-passing `src/runtime/city-asset-manifest.ts` validation and the local immutable
-asset package replay. A failed validation or integrity replay keeps the current
+Blender MCP is installed outside this repository as an optional authoring tool;
+it is not a runtime dependency. The protected landmark wave is an approved
+bounded-pilot export; any later export may enter the existing Cesium runtime
+only by passing
+`src/runtime/city-asset-manifest.ts` validation and the local immutable asset
+package replay. A failed validation or integrity replay keeps the current
 Cesium procedural geometry and reports a diagnostic.
 
 Each approved feature entry must preserve its canonical feature ID exactly; the
@@ -103,6 +137,6 @@ Geometry handoff rules:
   Include explicit quality and uncertainty notes.
 
 The handoff validator is deliberately provider-neutral: Blender MCP is one
-possible authoring path, not a runtime dependency. Installation and execution
-remain approval-gated because the researched MCP servers expose trusted Python
+possible authoring path, not a runtime dependency. Future authoring remains
+subject to source/license approval because the MCP exposes trusted Python
 execution in the Blender host.

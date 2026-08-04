@@ -5,9 +5,16 @@
 - **Owners:** Urban Digital Twin implementation owner/coordinator
 - **Related:** [Manhattan data strategy](../research/MANHATTAN_DATA_STRATEGY.md), [project foundation](0001-project-foundation.md)
 
+> **Implementation-status note (2026-08-04):** The proposed strategy has a
+> delivered local OTI/DOHMH foundation recorded in [Decision 0013](0013-manhattan-citywide-foundation-delivery.md).
+> The citywide runtime currently uses local JSON/shard delivery, not a hosted
+> production 3D Tiles service. PLUTO, NTA, Parks, LPC site data, MTA, OSM,
+> Overture, Google, live traffic, and public deployment remain pending; the
+> future-provider gates below are preserved.
+
 ## Context
 
-Manhattan needs a navigable, clickable 3D city experience with buildings, neighbourhoods, businesses, landmarks, parks, streets, facilities and transit, while the data model must support other cities. The current application is a Cesium/React/TypeScript scaffold with a metadata-aware inspector and a generated validation marker; it has no authoritative city ingestion or 3D Tiles dataset yet.
+At the 2026-08-03 decision checkpoint, Manhattan needed a navigable, clickable 3D city experience with buildings, neighbourhoods, businesses, landmarks, parks, streets, facilities and transit, while the data model supported other cities. At that checkpoint the application was a Cesium/React/TypeScript scaffold with a metadata-aware inspector and a generated validation marker; the later approved local OTI/DOHMH foundation is documented separately in Decision 0013.
 
 The benchmark inspiration is not evidence of geographic accuracy, source rights, current business facts, or production performance. A single Blender scene would make source updates, provenance, streaming and multi-city reuse difficult. A Google-like detail experience also cannot be implemented by scraping Google Maps or silently caching Google content.
 
@@ -59,7 +66,7 @@ No provider installation or integration should occur until the coordinator resol
 - Blender MCP server/revision, arbitrary-code risk, filesystem/network scope, credential isolation and review process.
 - Hero/interior/Three.js scope and agreed device/network/memory/frame-time baseline.
 
-## First implementation task
+## First implementation task (historical; superseded by Decision 0013)
 
 Create the source registry and offline Flatiron–NoMad–Union Square ingest described in [the research strategy](../research/MANHATTAN_DATA_STRATEGY.md#first-implementation-task-specification). The task must emit immutable manifests, normalized provenance-bearing features, explicit join/conflict reports, a small metadata-bearing 3D Tiles set, Cesium pick-to-detail behavior, search fixtures and deterministic acceptance captures. It must not call Google, traffic/realtime APIs or unapproved hosted services, and must not install Blender MCP.
 

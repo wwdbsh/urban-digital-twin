@@ -3,6 +3,7 @@ import { explorationUrl, parseExplorationUrl, type ExplorationUrlState } from ".
 
 export const VISITOR_NAVIGATION_SCHEMA_VERSION = "1.0" as const;
 export type CameraMode = "overview" | "explore";
+export type NavigationDataMode = "fixtures" | "real-pilot";
 export type JourneyStepAction = "start" | "previous" | "next" | "focus";
 
 export interface CameraPose {
@@ -18,6 +19,10 @@ export interface NavigationUrlState extends ExplorationUrlState {
   cameraMode: CameraMode;
   pose: CameraPose | null;
   poseInvalid: boolean;
+  /** Optional for backward compatibility with legacy `?feature=` links. */
+  dataMode?: NavigationDataMode;
+  /** The immutable release requested by a real link; absent means fixture mode. */
+  releaseId?: string | null;
 }
 
 export interface SavedPlace {
@@ -73,14 +78,20 @@ export function parseNavigationUrl(value: string): NavigationUrlState {
   const base = parseExplorationUrl(value);
   try {
     const url = new URL(value);
+    const dataValue = url.searchParams.get("data");
+    const releaseValue = url.searchParams.get("release");
+    const isFixtureData = dataValue === "fixture" || dataValue === "fixtures";
+    const dataMode: NavigationDataMode | undefined = dataValue && !isFixtureData || releaseValue ? "real-pilot" : undefined;
+    const releaseId = dataMode ? releaseValue ?? (dataValue === "real-pilot" ? null : dataValue) : undefined;
+    const dataState = dataMode ? { dataMode, releaseId } : {};
     const modeValue = url.searchParams.get("view");
     const cameraMode: CameraMode = modeValue === "overview" ? "overview" : "explore";
     const poseKeys = ["lon", "lat", "height", "heading", "pitch", "roll"];
     const hasPose = poseKeys.some((key) => url.searchParams.has(key));
-    if (!hasPose) return { ...base, cameraMode, pose: null, poseInvalid: false };
+    if (!hasPose) return { ...base, ...dataState, cameraMode, pose: null, poseInvalid: false };
     const values = Object.fromEntries(poseKeys.map((key) => [key, parseNumber(url.searchParams.get(key))]));
     const pose = normalizeCameraPose({ longitude: values.lon!, latitude: values.lat!, height: values.height!, heading: values.heading!, pitch: values.pitch!, roll: values.roll! });
-    return { ...base, cameraMode, pose, poseInvalid: pose === null };
+    return { ...base, ...dataState, cameraMode, pose, poseInvalid: pose === null };
   } catch {
     return { ...base, cameraMode: "explore", pose: null, poseInvalid: true };
   }
@@ -89,6 +100,14 @@ export function parseNavigationUrl(value: string): NavigationUrlState {
 export function navigationUrl(value: NavigationUrlState, base: string): string {
   const url = new URL(explorationUrl({ featureId: value.featureId, query: value.query }, base));
   url.searchParams.set("view", value.cameraMode);
+  if (value.dataMode === "real-pilot") {
+    url.searchParams.set("data", value.releaseId ?? "real-pilot");
+    if (value.releaseId) url.searchParams.set("release", value.releaseId);
+    else url.searchParams.delete("release");
+  } else {
+    url.searchParams.delete("data");
+    url.searchParams.delete("release");
+  }
   if (value.pose) {
     const pose = normalizeCameraPose(value.pose);
     if (pose) for (const [key, numberValue] of Object.entries({ lon: pose.longitude, lat: pose.latitude, height: pose.height, heading: pose.heading, pitch: pose.pitch, roll: pose.roll })) url.searchParams.set(key, numberValue.toFixed(6));

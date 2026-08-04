@@ -12,6 +12,16 @@ describe("visitor navigation contracts", () => {
     expect(parseNavigationUrl(cameraOnly).featureId).toBeNull();
   });
 
+  it("round trips an explicit real release and keeps legacy feature links fixture-compatible", () => {
+    const url = navigationUrl({ featureId: "real:place:donut-pub", query: "DONUT PUB", cameraMode: "explore", pose: null, poseInvalid: false, dataMode: "real-pilot", releaseId: "real-wave-20260804" }, "https://fixture.invalid/explore");
+    expect(new URL(url).searchParams.get("data")).toBe("real-wave-20260804");
+    expect(new URL(url).searchParams.get("release")).toBe("real-wave-20260804");
+    expect(parseNavigationUrl(url)).toMatchObject({ dataMode: "real-pilot", releaseId: "real-wave-20260804", featureId: "real:place:donut-pub" });
+    expect(parseNavigationUrl("https://fixture.invalid/explore?feature=fixture:one")).not.toHaveProperty("dataMode");
+    expect(parseNavigationUrl("https://fixture.invalid/explore?data=real-wave-missing&feature=real:place:donut-pub")).toMatchObject({ dataMode: "real-pilot", releaseId: "real-wave-missing" });
+    expect(parseNavigationUrl("https://fixture.invalid/explore?data=unknown-release&release=unknown-release")).toMatchObject({ dataMode: "real-pilot", releaseId: "unknown-release" });
+  });
+
   it("fails closed on malformed or partial poses", () => {
     expect(parseNavigationUrl("https://fixture.invalid/?feature=place:one&lon=bad&lat=40&height=500&heading=0&pitch=-45&roll=0").pose).toBeNull();
     expect(parseNavigationUrl("https://fixture.invalid/?lon=1&lat=2").poseInvalid).toBe(true);

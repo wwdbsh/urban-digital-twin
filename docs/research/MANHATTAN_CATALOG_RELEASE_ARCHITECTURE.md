@@ -1,10 +1,21 @@
 # Manhattan catalog release assembly (2026-08-03)
 
 This note records the approval-safe assembly boundary for the Urban Digital
-Twin. It is a local build over immutable, independently approved adapter
-artifacts; this task contacted no provider and includes no real NYC records.
-The checked-in fixtures describe a Manhattan-like vertical slice only and must
-not be presented as citywide coverage.
+Twin. Its original fixture-only checkpoint is historical. The delivered local
+citywide release is a build over immutable, independently approved OTI/DOHMH
+adapter artifacts; this documentation task contacted no provider and does not
+change those artifacts. The generated release remains local JSON/shard output,
+not a hosted production 3D Tiles service.
+
+## Delivered release note (2026-08-04)
+
+`manhattan-citywide-20260804` passes the same provider-neutral manifest,
+checksum, safe-path, source-lineage, and relationship contracts. Its manifest
+accounts for 45,194 building parents/render parts, 109,386 DOHMH observations,
+12,439 CAMIS parents, 103 geometry shards, 214 search shards, 134 detail
+shards, 57,633 detail entries, and 304,382,520 declared bytes. The only
+approved citywide sources are OTI `jh45-qr5r` and DOHMH `43nn-pn8j`; pending
+registry entries remain rejected and no future provider is implied.
 
 ## Evidence and standards
 
@@ -86,12 +97,14 @@ field-level, provenance, freshness, and bounded tile impact.
 ## Limits and next gate
 
 This local release is not a database, hosted tile service, live freshness
-system, or proof of full-Manhattan scale. It does not grant any license to
-ingest NYC, OSM, Overture, MTA, or other data. Before the first real release,
-the coordinator must approve each source's registry state, terms/attribution,
-retention/derivative plan, CRS/vertical datum mapping, and immutable snapshot
-checksums. The exact post-approval sequence is: run each approved adapter to
-produce local artifacts, then run
+system, or proof of photorealistic or full-Manhattan coverage. Its approval
+covers only the dated OTI/DOHMH snapshot scope recorded in the manifest; it does
+not grant additional permission to ingest NYC, OSM, Overture, MTA, or other
+data. Before any future source release, the coordinator must approve each
+source's registry state, terms/attribution, retention/derivative plan,
+CRS/vertical datum mapping, and immutable snapshot checksums. The exact
+post-approval sequence is: run each newly approved adapter to produce local
+artifacts, then run
 
 ```sh
 pnpm catalog:build -- --output <new-release-dir> --release-version <version> \

@@ -37,7 +37,7 @@ describe("city tile package and runtime stream", () => {
 
   it("fails closed for a pending source in a non-fixture package", async () => {
     const fixture = await generateSyntheticTileHarness({ featuresPerLayerPerLod: 1 });
-    const pendingPackage = { ...fixture.package, fixtureOnly: false, tiles: fixture.package.tiles.map((tile) => ({ ...tile, sourceRegistryEntryIds: ["nyc.building-footprints"] })) };
+    const pendingPackage = { ...fixture.package, fixtureOnly: false, tiles: fixture.package.tiles.map((tile) => ({ ...tile, sourceRegistryEntryIds: ["mta.subway-entrances-2024"] })) };
     const result = validateCityTilePackage(pendingPackage);
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.issues.some((issue) => issue.message.includes("Pending source"))).toBe(true);

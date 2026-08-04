@@ -5,6 +5,12 @@ Date: 2026-08-03
 Status: accepted for fixture-only implementation; real-source integration
 pending explicit source-by-source approval.
 
+> **Current-state note (2026-08-04):** The provider-neutral builder and
+> checksum/safe-path rules now back the approved local OTI/DOHMH citywide
+> release. The release is still local JSON/shard output, not a public or OGC
+> 3D Tiles deployment; all future source approvals remain separate. See
+> [Decision 0013](0013-manhattan-citywide-foundation-delivery.md).
+
 ## Decision
 
 Assemble separately approved immutable adapter outputs through a pure,

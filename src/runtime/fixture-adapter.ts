@@ -27,7 +27,8 @@ export interface RuntimeCityAdapter {
 }
 
 export class LocalFixtureCityAdapter implements RuntimeCityAdapter {
-  readonly fixtureOnly = true;
+  readonly fixtureOnly: boolean;
+  readonly releaseId: string | null;
   readonly city: CityAdapter;
   private readonly features: readonly Feature[];
   private readonly layerManifests = new Map<RuntimeLayerId, LayerManifest>();
@@ -41,16 +42,21 @@ export class LocalFixtureCityAdapter implements RuntimeCityAdapter {
     features: readonly Feature[] = runtimeFixtureFeatures,
     city: CityAdapter = manhattanAdapter,
     assetManifest: CityAssetManifest = buildMetadataOnlyFixtureAssetManifest(features),
+    fixtureOnly = true,
+    verifiedContentRefs: ReadonlySet<string> = new Set<string>(),
+    releaseId: string | null = null,
   ) {
     this.features = [...features];
     this.city = city;
+    this.fixtureOnly = fixtureOnly;
+    this.releaseId = releaseId;
     this.assetManifest = assetManifest;
-    this.assetResolver = new CityAssetResolver(assetManifest);
+    this.assetResolver = new CityAssetResolver(assetManifest, { verifiedContentRefs });
     for (const layer of ["buildings", "pois", "areas", "stations", "entrances", "routes"] as const) {
       this.layerManifests.set(layer, buildLayerManifest(layer, this.features, {
         tileLevel: 12,
         generatedAt: "2026-08-03T00:00:00Z",
-        fixtureOnly: true,
+        fixtureOnly,
       }));
     }
     for (const feature of this.features) {

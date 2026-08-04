@@ -1,5 +1,7 @@
 import { normalizeText, type CanonicalEntity, type ReconciliationResult } from "./reconciliation.ts";
 import type { Feature, FeatureKind } from "./schema.ts";
+import { buildRealPlaceSearchDocument, normalizeSearchText, type RealPlaceSearchDocument } from "../runtime/real-place-view.ts";
+import type { PlaceCategory } from "./places.ts";
 
 export interface ExplorationUrlState {
   featureId: string | null;
@@ -12,7 +14,7 @@ export interface UnifiedSearchResult {
   group: "Buildings" | "Areas" | "Places" | "Transit" | "Addresses";
   typeLabel: string;
   score: number;
-  matchedBy: "id" | "source" | "name" | "alias" | "address" | "category" | "text";
+  matchedBy: "id" | "source" | "name" | "alias" | "address" | "category" | "cuisine" | "text";
 }
 
 const GROUPS: Record<FeatureKind, UnifiedSearchResult["group"]> = {
@@ -47,11 +49,59 @@ export function searchUnifiedCatalog(features: readonly Feature[], catalog: Reco
     const values = valuesFor(feature, entity);
     const matches = values.map(({ value, matchedBy }) => ({ normalized: normalizeText(value), matchedBy })).filter((item) => item.normalized === normalizedQuery || item.normalized.startsWith(normalizedQuery) || item.normalized.includes(normalizedQuery));
     if (matches.length === 0) return [];
-    const matchPriority: Record<UnifiedSearchResult["matchedBy"], number> = { id: 0, source: 1, name: 2, alias: 3, address: 4, category: 5, text: 6 };
+    const matchPriority: Record<UnifiedSearchResult["matchedBy"], number> = { id: 0, source: 1, name: 2, alias: 3, address: 4, category: 5, cuisine: 5, text: 6 };
     const best = matches.sort((left, right) => (left.normalized === normalizedQuery ? 0 : 1) - (right.normalized === normalizedQuery ? 0 : 1) || matchPriority[left.matchedBy] - matchPriority[right.matchedBy] || left.normalized.length - right.normalized.length)[0]!;
-    const score = best.matchedBy === "source" && best.normalized === normalizedQuery ? 0 : best.normalized === normalizedQuery ? 1 : best.matchedBy === "alias" ? 2 : best.matchedBy === "address" ? 3 : best.matchedBy === "category" ? 4 : 5;
+    const score = best.matchedBy === "source" && best.normalized === normalizedQuery ? 0 : best.normalized === normalizedQuery ? 1 : best.matchedBy === "alias" ? 2 : best.matchedBy === "address" ? 3 : best.matchedBy === "category" || best.matchedBy === "cuisine" ? 4 : 5;
     return [{ feature, entity, group: GROUPS[feature.kind], typeLabel: TYPE_LABELS[feature.kind] ?? "Feature", score, matchedBy: best.matchedBy }];
   }).sort((left, right) => left.score - right.score || left.group.localeCompare(right.group) || left.feature.name.localeCompare(right.feature.name) || left.feature.id.localeCompare(right.feature.id));
+}
+
+interface RealSearchValue {
+  value: string;
+  matchedBy: UnifiedSearchResult["matchedBy"];
+}
+
+function realSearchValues(document: RealPlaceSearchDocument): RealSearchValue[] {
+  return [
+    { value: document.canonicalId, matchedBy: "id" },
+    { value: document.name, matchedBy: "name" },
+    ...document.address.map((value) => ({ value, matchedBy: "address" as const })),
+    ...document.cuisine.map((value) => ({ value, matchedBy: "cuisine" as const })),
+    ...document.categories.map((value) => ({ value, matchedBy: "category" as const })),
+    ...document.rawCategories.map((value) => ({ value, matchedBy: "category" as const })),
+    ...document.sourceIds.map((value) => ({ value, matchedBy: "source" as const })),
+    ...document.sourceRecordIds.map((value) => ({ value, matchedBy: "source" as const })),
+    ...(document.camis ? [{ value: document.camis, matchedBy: "source" as const }] : []),
+  ];
+}
+
+/**
+ * Search the active real browser partition directly. This deliberately does
+ * not accept a reconciliation catalog: the lightweight DOHMH records are the
+ * only visitor-search truth for the approved release.
+ */
+export function searchRealPlaceCatalog(features: readonly Feature[], query: string, selectedCategories: readonly PlaceCategory[] = []): UnifiedSearchResult[] {
+  const normalizedQuery = normalizeSearchText(query);
+  if (!normalizedQuery) return [];
+  const documents = features
+    .map(buildRealPlaceSearchDocument)
+    .filter((document): document is RealPlaceSearchDocument => Boolean(document))
+    .filter((document) => selectedCategories.length === 0 || selectedCategories.some((category) => document.categories.includes(category)));
+  const priority: Record<UnifiedSearchResult["matchedBy"], number> = { id: 0, source: 1, name: 2, alias: 3, address: 4, cuisine: 5, category: 6, text: 7 };
+  return documents.flatMap((document) => {
+    const matches = realSearchValues(document)
+      .map(({ value, matchedBy }) => ({ normalized: normalizeSearchText(value), matchedBy }))
+      .filter(({ normalized }) => normalized === normalizedQuery || normalized.startsWith(normalizedQuery) || normalized.includes(normalizedQuery));
+    if (matches.length === 0) return [];
+    const best = matches.sort((left, right) => {
+      const exact = Number(left.normalized !== normalizedQuery) - Number(right.normalized !== normalizedQuery);
+      return exact || priority[left.matchedBy] - priority[right.matchedBy] || left.normalized.length - right.normalized.length || left.normalized.localeCompare(right.normalized);
+    })[0]!;
+    const score = best.normalized === normalizedQuery
+      ? priority[best.matchedBy]
+      : 10 + priority[best.matchedBy];
+    return [{ feature: features.find((feature) => feature.id === document.featureId)!, entity: null, group: "Places" as const, typeLabel: document.canonicalCategory === "restaurant" ? "Restaurant" : "Place", score, matchedBy: best.matchedBy }];
+  }).sort((left, right) => left.score - right.score || normalizeSearchText(left.feature.name).localeCompare(normalizeSearchText(right.feature.name)) || left.feature.id.localeCompare(right.feature.id));
 }
 
 export function parseExplorationUrl(value: string): ExplorationUrlState {

@@ -67,6 +67,22 @@ export interface PlaceConflict {
   values: string[];
 }
 
+/** Administrative DOHMH inspection observations; never a consumer rating or business-status claim. */
+export interface PlaceInspectionObservation {
+  sourceRefId: string;
+  camis: string;
+  inspectionDate: string | null;
+  recordDate: string | null;
+  action: string | null;
+  violationCode: string | null;
+  violationDescription: string | null;
+  criticalFlag: string | null;
+  score: string | null;
+  grade: string | null;
+  gradeDate: string | null;
+  inspectionType: string | null;
+}
+
 /** Provider-neutral place contract. Missing source fields stay null. */
 export interface PlaceRecord {
   schemaVersion: typeof DOMAIN_SCHEMA_VERSION;
@@ -84,6 +100,7 @@ export interface PlaceRecord {
   freshness: Freshness;
   sourceRefs: SourceRef[];
   sourceLicenses: PlaceSourceLicense[];
+  inspectionObservations: PlaceInspectionObservation[];
   conflicts: PlaceConflict[];
   sourceRecordIds: string[];
   fixtureOnly: boolean;
@@ -128,6 +145,12 @@ export function validatePlaceRecord(value: unknown): ValidationResult<PlaceRecor
   for (const field of ["address", "contact", "openingHours", "accessibility", "freshness"] as const) if (!isRecord(value[field])) issues.push(issue(field, "Field is required even when all source values are unknown."));
   if (!Array.isArray(value.sourceRefs) || value.sourceRefs.length === 0) issues.push(issue("sourceRefs", "At least one source reference is required."));
   if (!Array.isArray(value.sourceLicenses) || value.sourceLicenses.length === 0) issues.push(issue("sourceLicenses", "Per-source license records are required."));
+  if (!Array.isArray(value.inspectionObservations)) issues.push(issue("inspectionObservations", "Inspection observations must be an array, even when none are sourced."));
+  if (Array.isArray(value.inspectionObservations)) value.inspectionObservations.forEach((item, index) => {
+    if (!isRecord(item)) { issues.push(issue(`inspectionObservations[${index}]`, "Expected an observation object.")); return; }
+    for (const field of ["sourceRefId", "camis"] as const) if (typeof item[field] !== "string" || item[field].length === 0) issues.push(issue(`inspectionObservations[${index}].${field}`, "Required inspection identity is missing."));
+    for (const field of ["inspectionDate", "recordDate", "action", "violationCode", "violationDescription", "criticalFlag", "score", "grade", "gradeDate", "inspectionType"] as const) nullableString(item[field], `inspectionObservations[${index}].${field}`, issues);
+  });
   if (!Array.isArray(value.conflicts)) issues.push(issue("conflicts", "Reconciliation conflicts must be explicit."));
   if (!Array.isArray(value.sourceRecordIds) || value.sourceRecordIds.some((id) => typeof id !== "string")) issues.push(issue("sourceRecordIds", "Source record IDs are required."));
   if (typeof value.fixtureOnly !== "boolean") issues.push(issue("fixtureOnly", "Fixture state must be explicit."));

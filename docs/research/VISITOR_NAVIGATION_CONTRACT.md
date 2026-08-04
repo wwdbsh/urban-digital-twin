@@ -1,9 +1,19 @@
 # Visitor navigation contract (2026-08-04)
 
-The current navigation experience is an offline, synthetic fixture journey.
-Cesium remains the world camera and selection authority; no street-level
-imagery, collision model, live navigation, current traffic, or real Manhattan
-coverage is implied.
+The fixture journey remains an offline synthetic mode. The delivered bounded
+and citywide OTI/DOHMH modes reuse the same offline navigation contract;
+Cesium remains the world camera and selection authority. No street-level
+imagery, collision model, live navigation, current traffic, or unsupported
+real-Manhattan category coverage is implied.
+
+## Delivered release navigation (2026-08-04)
+
+Citywide links retain the selected release ID, canonical building/restaurant
+parent ID, query, and validated WGS84 camera pose. Reload, Back, Forward,
+unknown-release, and unknown-parent handling remain fail-closed and never
+replace a missing real entity with a fixture. Directions and itinerary
+previews remain explicitly synthetic/offline in every mode; no real transit,
+routing, traffic, or pedestrian guidance was added.
 
 ## Camera and links
 

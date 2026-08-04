@@ -2,6 +2,16 @@
 
 Date: 2026-08-03
 
+## Workflow supersession note (2026-08-04)
+
+The historical routing and escalation policy below remains valid for the date
+it was accepted, but the user-authorized `AGENTS.md` contract now requires one
+visible Sol Medium planning session, one visible Luna Max implementation/test
+owner, and Root Sol High orchestration/final review for each nontrivial change.
+`docs/codex/AGENT_WORKFLOW.md` is the synchronized operational summary. The
+current policy also requires an explicit Root gate before one scoped commit and
+normal push; this note does not rewrite the historical decision body.
+
 ## Accepted
 
 - The repository is named `urban-digital-twin` to support Manhattan first and

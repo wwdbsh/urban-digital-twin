@@ -1,8 +1,27 @@
 # Manhattan data strategy
 
-**Status:** implementation proposal; source and provider approvals are still required
+**Status:** historical implementation proposal; superseded for the delivered
+OTI/DOHMH foundation by [Decision 0013](../decisions/0013-manhattan-citywide-foundation-delivery.md)
 
 **Evidence date:** 2026-08-03. Update dates and product terms below are observations from the linked primary documentation on that date, not promises about future availability.
+
+## Delivered-state supersession (2026-08-04)
+
+The proposal below remains useful for the reusable platform direction and for
+future provider decisions, but its scaffold-only current-state description is
+historical. The repository now has an approved local OTI `jh45-qr5r` and DOHMH
+`43nn-pn8j` citywide release with 45,194 accepted building parents/render parts,
+109,386 inspection observations grouped into 12,439 CAMIS parents, lazy local
+geometry/search/detail shards, stable IDs, and fail-closed source provenance.
+The release is JSON/shard based rather than a deployed 3D Tiles service; PLUTO,
+NTA, Parks, LPC site data, Facilities, MTA, OSM, Overture, Google, live traffic,
+public hosting, and other future sources remain pending or out of scope.
+
+The bounded Flatiron–NoMad–Union Square pilot additionally integrates the three
+protected landmark GLB pairs. Citywide mode does not activate those landmark
+assets, and neither mode claims facade accuracy or photorealism. See the
+[implementation record](../codex/MANHATTAN_CITYWIDE_FOUNDATION_IMPLEMENTATION.md)
+for exact manifest, approval, hash, and validation evidence.
 
 ## Executive recommendation
 
@@ -14,9 +33,9 @@ Do not use Google Maps or Google Places as the canonical geometry, building, roa
 
 The first useful slice is a bounded Flatiron–NoMad–Union Square area (W 14th–W 34th St, Hudson River–3rd Ave; approximately 1.0 by 1.2 miles, exact clip to be generated from WGS84 data). It contains ordinary buildings, dense retail/restaurant POIs, parks, historic assets, facilities, subway stations and a complex street network. It tests every citywide pipeline while remaining small enough to validate identity, picking, provenance and frame time.
 
-## What the existing application can and cannot prove
+## What the setup application could and could not prove (historical)
 
-The current Vite/React/TypeScript app has a Cesium globe, a generated New York validation marker, a metadata-aware feature model and an inspector/search interaction. It does not yet ingest NYC or Overture data, stream 3D Tiles, resolve a citywide search index, or claim real-world coverage. Existing provenance fields and inspector behavior are useful scaffolding and should be retained; the generated marker must remain explicitly labelled as a runtime validation fixture.
+At the 2026-08-03 setup checkpoint, the Vite/React/TypeScript app had a Cesium globe, a generated New York validation marker, a metadata-aware feature model and an inspector/search interaction. It did not yet ingest NYC or Overture data, stream 3D Tiles, resolve a citywide search index, or claim real-world coverage. Those statements describe that historical checkpoint; the later approved OTI/DOHMH local release is documented in Decision 0013. Existing provenance fields and inspector behavior remain useful scaffolding, and the generated marker remains explicitly labelled as a runtime validation fixture.
 
 ## Source decisions
 
@@ -112,9 +131,9 @@ The slice must have an ingestion accounting report: source feature count, valid/
 
 The geometric error targets should be added only after a ground-truth survey/control sample is approved. Until then, report source-to-source discrepancies and authoritative metadata rather than inventing a precision claim.
 
-## First implementation task specification
+## First implementation task specification (historical; completed in the delivered foundation)
 
-Implement a source registry and offline vertical-slice ingest, without adding an external runtime provider:
+The original implementation task was to implement a source registry and offline vertical-slice ingest, without adding an external runtime provider:
 
 1. Add a versioned registry entry for NYC Building Footprints/BUILDING, MapPLUTO, LPC sites/districts, Parks Properties/Active-Passive, Facilities DB, DCP Centerline, NYC elevation metadata, MTA static GTFS and one approved Overture/OSM snapshot. Each entry must include terms URL, attribution, release/capture/update fields, cadence, retention, licence class, key/agreement requirement and `approval_status`.
 2. Define TypeScript/JSON schema for `Feature`, `SourceRef`, `LicenseRef`, `IngestionRun`, `FeatureLink` and tombstone/alias records. Validate WGS84 geometry, heights/vertical datum, required provenance and source-specific IDs.

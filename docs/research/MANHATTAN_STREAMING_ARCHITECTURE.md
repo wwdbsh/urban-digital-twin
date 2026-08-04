@@ -1,9 +1,21 @@
 # Manhattan streaming and dense-rendering architecture
 
 Evidence checked 2026-08-03 (Asia/Seoul). This note records the implementation
-decision for a reusable multi-city runtime. All content used by the current
-implementation is invented local fixture content; no provider record, tile, or
-network response was downloaded.
+decision for a reusable multi-city runtime. Its fixture-only current-state
+description is historical; the delivered runtime also loads an approved local
+OTI/DOHMH JSON/shard release. No provider request occurs during this
+documentation catch-up.
+
+## Delivered streaming state (2026-08-04)
+
+`src/runtime/citywide-release-runtime.ts` performs bounded, lazy viewport
+geometry loading and on-demand search/detail shard loading for
+`manhattan-citywide-20260804`. Stable parent IDs connect Cesium picks, search,
+deep links, and detail records; cache/concurrency metrics are exposed in the
+UI and benchmark. The release remains local JSON/shard delivery rather than
+production OGC 3D Tiles, and the bounded pilot continues to use its separate
+local partitions and protected landmark GLBs. Existing synthetic harness
+claims below remain valid for the fixture mode only.
 
 ## Evidence and what it means
 
@@ -16,7 +28,7 @@ network response was downloaded.
 | [OGC 3D Tiles 1.1, 22-025r4](https://docs.ogc.org/cs/22-025r4/22-025r4.html) (approved 2022-12-17, published 2023-01-12; accessed 2026-08-03) | The standard defines hierarchical tiles, bounding volumes, geometric error and content refinement; glTF 2.0 is the primary tile format. | Preserve tile bounds, quadtree key, LOD, geometric error, checksum and provenance in manifests. Do not treat a fixture JSON tile as an OGC 3D Tiles claim. The production conversion remains a later adapter decision. |
 | [Khronos glTF registry](https://registry.khronos.org/glTF/) (accessed 2026-08-03) | The registry identifies glTF 2.0 as the current runtime 3D asset format and describes patch-level clarifications. | Use approved GLB/glTF only for detailed landmark assets or 3D Tiles content; do not add Blender or Three.js to the runtime foundation. Asset rights and attribution remain per source group. |
 | [MDN WebGL context loss](https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/isContextLost) and [WebGL best practices](https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_best_practices) (accessed 2026-08-03) | Browsers can lose a WebGL context under GPU/resource pressure; guidance calls out memory, context loss, synchronous stalls and eager resource cleanup. | Budget bytes, tile count and concurrency; abort stale requests; evict by LRU; destroy app-owned primitives and viewers; report a responsiveness proxy rather than claiming universal FPS. |
-| [NYC Open Data Building Footprints `jh45-qr5r`](https://data.cityofnewyork.us/d/jh45-qr5r) (official portal metadata accessed 2026-08-03) | The official page describes citywide building footprint outlines, exposes multipolygon geometry and fields including BIN, DOITT_ID, BASE_BBL, Ground Elevation and Height Roof; the page displayed “Updated July 18, 2026” and a portal row count of 1,082,974 at access time. | This is order-of-magnitude planning evidence only, not a benchmark. The source registry remains pending; field semantics, terms, export behavior, missing values and CRS must be revalidated against the approved immutable snapshot before production ingest. |
+| [NYC Open Data Building Footprints `jh45-qr5r`](https://data.cityofnewyork.us/d/jh45-qr5r) (official portal metadata accessed 2026-08-03) | The official page describes citywide building footprint outlines, exposes multipolygon geometry and fields including BIN, DOITT_ID, BASE_BBL, Ground Elevation and Height Roof; the page displayed “Updated July 18, 2026” and a portal row count of 1,082,974 at access time. | This was order-of-magnitude planning evidence only, not a benchmark. At that evidence checkpoint the source registry was pending; the later approved immutable snapshot and its exact validation facts are recorded in Decision 0013. |
 
 The Cesium and OGC documents are normative or first-party engine documentation;
 MDN is implementation guidance rather than a performance guarantee. The NYC

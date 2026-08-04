@@ -23,28 +23,36 @@ import {
 import type { Feature } from "../domain/schema";
 import type { Itinerary, TravelMode } from "../domain/routing";
 import { PLACE_CATEGORIES, placeCategoriesFromFeature, type PlaceCategory } from "../domain/places";
+import { evaluatePlaceHours, placeTruthCategoryLabel } from "../domain/place-truth";
+import { placeTruthByRuntimeFeatureId, placeTruthFixtures } from "../domain/place-truth-fixtures";
 import { areaSemanticsLabel, isAreaSemantic } from "../domain/areas";
 import { transitKindLabel } from "../domain/transit";
 import { DEFAULT_PROXIMITY_MAX_RESULTS, DEFAULT_PROXIMITY_THRESHOLD_METERS, findNearbyFeatures, formatDistanceMeters, representativePoint } from "../domain/proximity";
 import { buildSyntheticReconciliationCatalog } from "../domain/reconciliation-fixtures";
 import { searchReconciledCatalog, type CanonicalEntity } from "../domain/reconciliation";
-import { searchUnifiedCatalog, type UnifiedSearchResult } from "../domain/exploration";
+import { searchRealPlaceCatalog, searchUnifiedCatalog, type UnifiedSearchResult } from "../domain/exploration";
 import { buildCatalogRelease } from "../release/catalog-release";
 import { buildSyntheticCatalogArtifacts } from "../release/fixtures";
-import { CesiumViewport } from "../features/explorer/CesiumViewport";
-import { LocalFixtureCityAdapter } from "../runtime/fixture-adapter";
+import { CesiumViewport, medianFrameInterval, type DenseRenderMetrics } from "../features/explorer/CesiumViewport";
+import { LocalFixtureCityAdapter, type RuntimeCityAdapter } from "../runtime/fixture-adapter";
 import { RouteGraphSnapshotAdapter } from "../ingestion/route-graph-snapshot";
 import { sha256Hex } from "../ingestion/offline";
 import routeGraphFixture from "../ingestion/fixtures/route-graph.synthetic.fixture.json";
 import { generateSyntheticTileHarness, SYNTHETIC_TILE_ANCHORS, type SyntheticTileContent } from "../runtime/synthetic-tile-harness";
 import { RuntimeTileStream, type TileCameraState, type TileStreamMetrics } from "../runtime/tile-stream";
-import { DEFAULT_CAMERA_POSE, loadSavedNavigation, navigationUrl, normalizeCameraPose, parseNavigationUrl, persistSavedNavigation, saveJourney, savePlace, stepIndex, journeyStepCount, VISITOR_NAVIGATION_SCHEMA_VERSION, type CameraMode, type CameraPose, type SavedNavigationState } from "../domain/visitor-navigation";
+import { DEFAULT_CAMERA_POSE, loadSavedNavigation, navigationUrl, normalizeCameraPose, parseNavigationUrl, persistSavedNavigation, saveJourney, savePlace, stepIndex, journeyStepCount, VISITOR_NAVIGATION_SCHEMA_VERSION, type CameraMode, type CameraPose, type NavigationDataMode, type SavedNavigationState } from "../domain/visitor-navigation";
 import {
   DEFAULT_LAYER_VISIBILITY,
   LAYER_LABELS,
   type LayerVisibility,
   type RuntimeLayerId,
 } from "../runtime/layers";
+import { loadRealPilot } from "../runtime/real-pilot-manifest";
+import { parseRealPlaceFeature, REAL_PILOT_RELEASE_ID, type RealPlaceView } from "../runtime/real-place-view";
+import { loadLandmarkAssets } from "../runtime/landmark-assets";
+import { CITYWIDE_BUDGETS, CITYWIDE_RELEASE_ID } from "../release/citywide-release";
+import { loadCitywideRelease } from "../runtime/citywide-release-runtime";
+import type { CitywideReleaseAdapter, CitywideRuntimeMetrics } from "../runtime/citywide-release-runtime";
 
 const navigation = [
   { label: "Explore", icon: Compass },
@@ -52,11 +60,95 @@ const navigation = [
   { label: "Bookmarks", icon: Bookmark },
 ] as const;
 
+const CITYWIDE_DEBUG_ANCHORS = [
+  { label: "Financial/Battery", longitude: -74.012, latitude: 40.706 },
+  { label: "Chelsea/Midtown", longitude: -73.992, latitude: 40.748 },
+  { label: "Upper West", longitude: -73.975, latitude: 40.787 },
+  { label: "Upper East", longitude: -73.956, latitude: 40.773 },
+  { label: "Harlem", longitude: -73.944, latitude: 40.817 },
+  { label: "Inwood/Marble Hill", longitude: -73.922, latitude: 40.871 },
+  { label: "Roosevelt Island", longitude: -73.949, latitude: 40.762 },
+] as const;
+
 const fixtureAdapter = new LocalFixtureCityAdapter();
 const fixtureIngestionSummary = runtimeMarker.ingestionSummary;
 const syntheticCatalog = buildSyntheticReconciliationCatalog();
 const syntheticCatalogV1 = buildCatalogRelease(buildSyntheticCatalogArtifacts("v1"), { releaseVersion: "fixture-v1", generatedAt: "2026-08-03T00:00:00Z", fixtureOnly: true });
 const syntheticCatalogRelease = buildCatalogRelease(buildSyntheticCatalogArtifacts("v2"), { releaseVersion: "fixture-v2", generatedAt: "2026-08-04T00:00:00Z", fixtureOnly: true, previousRelease: syntheticCatalogV1 });
+const EMPTY_CITYWIDE_METRICS: CitywideRuntimeMetrics = {
+  visibleShardCount: 0,
+  requestedShardCount: 0,
+  loadedFeatureCount: 0,
+  loadedBytes: 0,
+  maxConcurrentRequests: 0,
+  activeRequests: 0,
+  failedRequestCount: 0,
+  cancelledRequestCount: 0,
+  staleResultCount: 0,
+  retainedSummaryCount: 0,
+  retainedFeatureCount: 0,
+  retainedDetailCount: 0,
+  detailIndexEntryCount: 0,
+  cacheEntries: 0,
+  cacheEvictions: 0,
+};
+
+type CitywideDebugMeasurement = {
+  anchor: string;
+  status: "idle" | "settling" | "measuring" | "complete";
+  frameCount: number;
+  frameAverageMs: number | null;
+  frameMedianMs: number | null;
+  frameP95Ms: number | null;
+  frameMaxMs: number | null;
+  heapBytes: number | null;
+  citywideResourceCount: number;
+  citywideResourceBytes: number;
+};
+
+const EMPTY_CITYWIDE_DEBUG_MEASUREMENT: CitywideDebugMeasurement = {
+  anchor: "",
+  status: "idle",
+  frameCount: 0,
+  frameAverageMs: null,
+  frameMedianMs: null,
+  frameP95Ms: null,
+  frameMaxMs: null,
+  heapBytes: null,
+  citywideResourceCount: 0,
+  citywideResourceBytes: 0,
+};
+
+const EMPTY_CITYWIDE_DENSE_METRICS: DenseRenderMetrics = {
+  featureCount: 0,
+  primitiveCount: 0,
+  instanceCount: 0,
+  buildingFeatureCount: 0,
+  pointFeatureCount: 0,
+};
+
+type CitywideBrowserBaseline = {
+  heapBytes: number | null;
+  citywideResourceCount: number;
+  citywideResourceBytes: number;
+};
+
+const EMPTY_CITYWIDE_BROWSER_BASELINE: CitywideBrowserBaseline = {
+  heapBytes: null,
+  citywideResourceCount: 0,
+  citywideResourceBytes: 0,
+};
+
+function readCitywideBrowserMeasurement(): CitywideBrowserBaseline {
+  if (typeof performance === "undefined") return EMPTY_CITYWIDE_BROWSER_BASELINE;
+  const memory = (performance as Performance & { memory?: { usedJSHeapSize?: number } }).memory?.usedJSHeapSize;
+  const resources = performance.getEntriesByType("resource").filter((entry): entry is PerformanceResourceTiming => entry.name.includes(`/data/${CITYWIDE_RELEASE_ID}/`));
+  return {
+    heapBytes: typeof memory === "number" && Number.isFinite(memory) ? memory : null,
+    citywideResourceCount: resources.length,
+    citywideResourceBytes: resources.reduce((sum, entry) => sum + Math.max(entry.transferSize || 0, entry.encodedBodySize || 0, entry.decodedBodySize || 0), 0),
+  };
+}
 
 function hasDisplayValue(value: unknown): boolean {
   if (value === null || value === undefined || value === "") return false;
@@ -65,17 +157,47 @@ function hasDisplayValue(value: unknown): boolean {
 }
 
 function toCityFeature(feature: Feature) {
-  return projectFeatureToCityFeature(feature, "Manhattan, New York", fixtureIngestionSummary);
+  const fixture = feature.sourceRefs.some((source) => source.registryEntryId.startsWith("fixture."));
+  return projectFeatureToCityFeature(feature, "Manhattan, New York", fixture ? fixtureIngestionSummary : {
+    manifestVersion: "1.0",
+    manifestId: "real-wave-20260804",
+    fixtureOnly: false,
+    acceptedCount: 0,
+    rejectedCount: 0,
+    rejectionReport: "No records rejected by the bounded real-data adapter.",
+  });
 }
 
 export function App() {
   const initialNavigation = typeof window === "undefined" ? { featureId: null, query: "", cameraMode: "explore" as CameraMode, pose: null, poseInvalid: false } : parseNavigationUrl(window.location.href);
+  // A URL cannot activate the real adapter until its immutable release has
+  // loaded and passed validation. Start every first render in fixtures so an
+  // unknown/loading release never wears a real label over fixture geometry.
+  const initialRealRequest = initialNavigation.dataMode === "real-pilot";
+  const initialCitywideRequest = initialNavigation.releaseId === CITYWIDE_RELEASE_ID;
+  const initialDataMode: NavigationDataMode = "fixtures";
+  const initialReleaseId = null;
   const fixtureFeatureIds = useMemo(() => new Set(fixtureAdapter.getFeatures().map((feature) => feature.id)), []);
-  const initialSelectionId = initialNavigation.featureId && fixtureFeatureIds.has(initialNavigation.featureId) ? initialNavigation.featureId : null;
+  const [activeAdapter, setActiveAdapter] = useState<RuntimeCityAdapter>(fixtureAdapter);
+  const [realAdapter, setRealAdapter] = useState<RuntimeCityAdapter | null>(null);
+  const [dataMode, setDataMode] = useState<NavigationDataMode>(initialDataMode);
+  const [realLoadState, setRealLoadState] = useState<"loading" | "ready" | "failed">("loading");
+  const [citywideAdapter, setCitywideAdapter] = useState<CitywideReleaseAdapter | null>(null);
+  const [citywideLoadState, setCitywideLoadState] = useState<"loading" | "ready" | "failed">("loading");
+  const [citywideFeatures, setCitywideFeatures] = useState<Feature[]>([]);
+  const [citywideMetrics, setCitywideMetrics] = useState<CitywideRuntimeMetrics>(EMPTY_CITYWIDE_METRICS);
+  const [citywideDenseMetrics, setCitywideDenseMetrics] = useState<DenseRenderMetrics>(EMPTY_CITYWIDE_DENSE_METRICS);
+  const [citywideBrowserBaseline, setCitywideBrowserBaseline] = useState<CitywideBrowserBaseline>(() => initialRealRequest && typeof window !== "undefined" ? readCitywideBrowserMeasurement() : EMPTY_CITYWIDE_BROWSER_BASELINE);
+  const [citywideDebugMeasurement, setCitywideDebugMeasurement] = useState<CitywideDebugMeasurement>(EMPTY_CITYWIDE_DEBUG_MEASUREMENT);
+  const [citywideSearchResults, setCitywideSearchResults] = useState<UnifiedSearchResult[]>([]);
+  const [realFallbackActive, setRealFallbackActive] = useState(initialRealRequest);
+  const [realDataMessage, setRealDataMessage] = useState("Real pilot artifact not loaded; fixture fallback is active.");
+  const [landmarkAssetMessage, setLandmarkAssetMessage] = useState("Landmark GLB package not loaded; procedural fallback is active.");
+  const initialSelectionId = !initialRealRequest && initialNavigation.featureId && fixtureFeatureIds.has(initialNavigation.featureId) ? initialNavigation.featureId : null;
   const [activeNavigation, setActiveNavigation] = useState("Explore");
-  const [inspectorOpen, setInspectorOpen] = useState(true);
+  const [inspectorOpen, setInspectorOpen] = useState(!initialRealRequest);
   const [focusRequest, setFocusRequest] = useState(0);
-  const [focusFeatureId, setFocusFeatureId] = useState<string | null>(runtimeMarker.id);
+  const [focusFeatureId, setFocusFeatureId] = useState<string | null>(initialRealRequest ? null : runtimeMarker.id);
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [activeSearchIndex, setActiveSearchIndex] = useState(-1);
@@ -115,13 +237,152 @@ export function App() {
   const cameraPoseRef = useRef(cameraPose);
   const cameraModeRef = useRef(cameraMode);
   const activeSelectionRef = useRef(activeSelectionId);
+  const citywideAdapterRef = useRef<CitywideReleaseAdapter | null>(citywideAdapter);
+  const citywideModeRef = useRef(false);
+  const dataModeRef = useRef(dataMode);
+  const releaseIdRef = useRef<string | null>(initialReleaseId);
+  // Cesium can report its initial camera before the URL hydration effect has
+  // activated a requested release. Preserve that request until the pinned
+  // adapter is ready instead of replacing it with the fixture mode.
+  const initialRealNavigationPendingRef = useRef(initialRealRequest);
+  const pendingNavigationPoseRef = useRef<CameraPose | null>(initialRealRequest ? initialNavigation.pose : null);
+  const terminalRealFallbackNoticeRef = useRef<string | null>(null);
+  const citywideDebugMeasurementRunRef = useRef(0);
   const detailsHeadingRef = useRef<HTMLHeadingElement>(null);
   queryRef.current = query;
   cameraPoseRef.current = cameraPose;
   cameraModeRef.current = cameraMode;
   activeSelectionRef.current = activeSelectionId;
+  dataModeRef.current = dataMode;
+  citywideAdapterRef.current = citywideAdapter;
+  const citywideMode = dataMode === "real-pilot" && activeAdapter === citywideAdapter && citywideAdapter !== null;
+  citywideModeRef.current = citywideMode;
+  if (dataMode === "fixtures") releaseIdRef.current = null;
+  else if (!releaseIdRef.current) releaseIdRef.current = REAL_PILOT_RELEASE_ID;
+
+  const publishCitywideMetrics = useCallback((adapter: CitywideReleaseAdapter) => {
+    if (citywideAdapterRef.current !== adapter) return;
+    const next = adapter.getMetrics();
+    setCitywideMetrics((previous) => (
+      previous.visibleShardCount === next.visibleShardCount &&
+      previous.requestedShardCount === next.requestedShardCount &&
+      previous.loadedFeatureCount === next.loadedFeatureCount &&
+      previous.loadedBytes === next.loadedBytes &&
+      previous.maxConcurrentRequests === next.maxConcurrentRequests &&
+      previous.activeRequests === next.activeRequests &&
+      previous.failedRequestCount === next.failedRequestCount &&
+      previous.cancelledRequestCount === next.cancelledRequestCount &&
+      previous.staleResultCount === next.staleResultCount &&
+      previous.retainedSummaryCount === next.retainedSummaryCount &&
+      previous.retainedFeatureCount === next.retainedFeatureCount &&
+      previous.retainedDetailCount === next.retainedDetailCount &&
+      previous.detailIndexEntryCount === next.detailIndexEntryCount &&
+      previous.cacheEntries === next.cacheEntries &&
+      previous.cacheEvictions === next.cacheEvictions
+        ? previous
+        : next
+    ));
+  }, []);
+
+  const publishCitywideDenseMetrics = useCallback((next: DenseRenderMetrics) => {
+    setCitywideDenseMetrics((previous) => (
+      previous.featureCount === next.featureCount &&
+      previous.primitiveCount === next.primitiveCount &&
+      previous.instanceCount === next.instanceCount &&
+      previous.buildingFeatureCount === next.buildingFeatureCount &&
+      previous.pointFeatureCount === next.pointFeatureCount
+        ? previous
+        : next
+    ));
+  }, []);
 
   useEffect(() => { if (typeof window !== "undefined") persistSavedNavigation(window.localStorage, savedNavigation); }, [savedNavigation]);
+
+  useEffect(() => {
+    let active = true;
+    const controller = new AbortController();
+    const loadCitywide = async () => {
+      try {
+        const adapter = await loadCitywideRelease("/data/manhattan-citywide-20260804/", controller.signal);
+        if (!active) { adapter.destroy(); return; }
+        setCitywideAdapter(adapter);
+        setCitywideLoadState("ready");
+        if (initialCitywideRequest) setRealDataMessage(`Citywide release ${CITYWIDE_RELEASE_ID} validated locally; viewport geometry and global search/detail shards load on demand.`);
+      } catch (error) {
+        if (active && !(error instanceof DOMException && error.name === "AbortError")) {
+          setCitywideAdapter(null);
+          setCitywideLoadState("failed");
+          if (initialCitywideRequest) setRealDataMessage(error instanceof Error ? `${error.message} Fixture fallback is active.` : "Citywide release unavailable. Fixture fallback is active.");
+        }
+      }
+    };
+    void loadCitywide();
+    const load = async () => {
+      try {
+        const [loaded, landmarkAssets] = await Promise.all([
+          loadRealPilot("/data/real-wave-20260804/", controller.signal),
+          loadLandmarkAssets().catch((error) => {
+            if (active) setLandmarkAssetMessage(error instanceof Error ? error.message : "Landmark GLB package unavailable; procedural fallback is active.");
+            return null;
+          }),
+        ]);
+        const buildings = loaded.features.filter((feature) => feature.kind === "building");
+        const restaurants = loaded.features.filter((feature) => feature.kind === "poi");
+        if (buildings.length === 0 || restaurants.length === 0) throw new Error("Published real pilot partitions are invalid.");
+        if (!active) return;
+        const adapter = landmarkAssets
+          ? new LocalFixtureCityAdapter([...buildings, ...restaurants], undefined, landmarkAssets.manifest, false, landmarkAssets.verifiedContentRefs, REAL_PILOT_RELEASE_ID)
+          : new LocalFixtureCityAdapter([...buildings, ...restaurants], undefined, undefined, false, new Set<string>(), REAL_PILOT_RELEASE_ID);
+        setRealAdapter(adapter);
+        setRealLoadState("ready");
+        if (landmarkAssets) setLandmarkAssetMessage(`${landmarkAssets.manifest.assets.length} bounded landmark GLBs verified with SHA-256; all other buildings remain procedural fallback.`);
+        setRealDataMessage(`Real pilot available: ${buildings.length.toLocaleString()} buildings and ${restaurants.length.toLocaleString()} restaurants; source dates and attribution are shown in Data.`);
+      } catch (error) {
+        if (active && !(error instanceof DOMException && error.name === "AbortError")) {
+          setRealAdapter(null);
+          setRealLoadState("failed");
+          setRealDataMessage(error instanceof Error ? `${error.message} Fixture fallback is active.` : "Real pilot unavailable. Fixture fallback is active.");
+        }
+      }
+    };
+    void load();
+    return () => { active = false; controller.abort(); };
+  }, []);
+
+  useEffect(() => {
+    if (!citywideMode || !citywideAdapter) {
+      setCitywideFeatures([]);
+      setCitywideMetrics((previous) => previous === EMPTY_CITYWIDE_METRICS ? previous : EMPTY_CITYWIDE_METRICS);
+      setCitywideDenseMetrics((previous) => previous === EMPTY_CITYWIDE_DENSE_METRICS ? previous : EMPTY_CITYWIDE_DENSE_METRICS);
+      return undefined;
+    }
+    let active = true;
+    void citywideAdapter.refreshViewport(cameraPoseRef.current).then((features) => {
+      if (active && citywideAdapterRef.current === citywideAdapter) {
+        setCitywideFeatures(features);
+        publishCitywideMetrics(citywideAdapter);
+      }
+    }).catch((error: unknown) => {
+      if (active && !(error instanceof DOMException && error.name === "AbortError")) setDeepLinkMessage(error instanceof Error ? error.message : "Citywide viewport shard failed closed.");
+    });
+    return () => { active = false; };
+  }, [citywideAdapter, citywideMode, publishCitywideMetrics]);
+
+  useEffect(() => {
+    if (!citywideMode || !citywideAdapter || !query.trim()) {
+      setCitywideSearchResults([]);
+      return undefined;
+    }
+    const controller = new AbortController();
+    void citywideAdapter.searchAsync(query, controller.signal).then((features) => {
+      if (controller.signal.aborted || citywideAdapterRef.current !== citywideAdapter) return;
+      setCitywideSearchResults(features.map((feature, index) => ({ feature, entity: null, group: feature.kind === "building" ? "Buildings" : "Places", typeLabel: feature.kind === "building" ? "Building" : "Restaurant", score: index, matchedBy: "text" as const })));
+      publishCitywideMetrics(citywideAdapter);
+    }).catch((error: unknown) => {
+      if (!(error instanceof DOMException && error.name === "AbortError")) setCitywideSearchResults([]);
+    });
+    return () => controller.abort();
+  }, [citywideAdapter, citywideMode, publishCitywideMetrics, query]);
 
   const publishStressState = useCallback((stream: RuntimeTileStream<SyntheticTileContent>) => {
     if (stressStreamRef.current !== stream) return;
@@ -135,12 +396,36 @@ export function App() {
     else stressCameraIntentRef.current = null;
     const tileCamera: TileCameraState = { longitude: camera.longitude, latitude: camera.latitude, distanceMeters: camera.height };
     stressCameraRef.current = tileCamera;
-    setCameraPose(normalizeCameraPose(camera) ?? DEFAULT_CAMERA_POSE);
-    if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrl({ featureId: activeSelectionRef.current, query: queryRef.current, cameraMode: cameraModeRef.current, pose: normalizeCameraPose(camera), poseInvalid: false }, window.location.href));
+    const normalizedCamera = normalizeCameraPose(camera) ?? DEFAULT_CAMERA_POSE;
+    setCameraPose(normalizedCamera);
+    const pendingPose = pendingNavigationPoseRef.current;
+    if (pendingPose) {
+      const poseMatches = Math.abs(normalizedCamera.longitude - pendingPose.longitude) < 1e-7 &&
+        Math.abs(normalizedCamera.latitude - pendingPose.latitude) < 1e-7 &&
+        Math.abs(normalizedCamera.height - pendingPose.height) < 1e-3 &&
+        Math.abs(normalizedCamera.heading - pendingPose.heading) < 1e-6 &&
+        Math.abs(normalizedCamera.pitch - pendingPose.pitch) < 1e-6 &&
+        Math.abs(normalizedCamera.roll - pendingPose.roll) < 1e-6;
+      if (!poseMatches) return;
+      pendingNavigationPoseRef.current = null;
+    }
+    if (initialRealNavigationPendingRef.current) return;
+    if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrl({ featureId: activeSelectionRef.current ?? initialNavigation.featureId, query: queryRef.current || initialNavigation.query, cameraMode: cameraModeRef.current, pose: normalizedCamera, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current }, window.location.href));
+    const citywide = citywideAdapterRef.current;
+    if (citywideModeRef.current && citywide) {
+      void citywide.refreshViewport(camera).then((features) => {
+        if (citywideAdapterRef.current === citywide && citywideModeRef.current) {
+          setCitywideFeatures(features);
+          publishCitywideMetrics(citywide);
+        }
+      }).catch((error: unknown) => {
+        if (!(error instanceof DOMException && error.name === "AbortError")) setDeepLinkMessage(error instanceof Error ? error.message : "Citywide viewport shard failed closed.");
+      });
+    }
     const stream = stressStreamRef.current;
     if (!stream) return;
     void stream.refresh(tileCamera).then(() => publishStressState(stream));
-  }, [publishStressState, selectedFeature.id]);
+  }, [publishCitywideMetrics, publishStressState]);
 
   const moveStressCamera = (anchorIndex: number, distanceMeters: number) => {
     const anchor = SYNTHETIC_TILE_ANCHORS[anchorIndex];
@@ -189,11 +474,24 @@ export function App() {
     setFocusFeatureId(feature.id);
     setInspectorOpen(true);
     setDeepLinkMessage(null);
-    if (options.syncUrl !== false && typeof window !== "undefined") window.history.pushState({}, "", navigationUrl({ featureId: feature.id, query: queryRef.current, cameraMode: cameraModeRef.current, pose: cameraPoseRef.current, poseInvalid: false }, window.location.href));
+    if (options.syncUrl !== false && typeof window !== "undefined") window.history.pushState({}, "", navigationUrl({ featureId: feature.id, query: queryRef.current, cameraMode: cameraModeRef.current, pose: cameraPoseRef.current, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current }, window.location.href));
     window.setTimeout(() => detailsHeadingRef.current?.focus(), 0);
-  }, []);
+    const citywide = citywideAdapterRef.current;
+    if (citywideModeRef.current && citywide && feature.attributes.citywideDetailLoaded !== true) {
+      void citywide.loadDetailsForFeature(feature).then((detail) => {
+        if (detail && citywideAdapterRef.current === citywide && citywideModeRef.current && activeSelectionRef.current === detail.id) setSelectedFeature(toCityFeature(detail));
+        publishCitywideMetrics(citywide);
+      }).catch((error: unknown) => {
+        if (!(error instanceof DOMException && error.name === "AbortError")) setDeepLinkMessage(error instanceof Error ? error.message : "Citywide detail shard failed closed; no substitute record was selected.");
+      });
+    }
+  }, [publishCitywideMetrics]);
 
-  const unifiedResults = useMemo(() => searchUnifiedCatalog(fixtureAdapter.getFeatures(), syntheticCatalog, query).filter((result) => selectedCategories.length === 0 || result.feature.kind !== "poi" || selectedCategories.some((category) => placeCategoriesFromFeature(result.feature).includes(category))), [query, selectedCategories]);
+  const unifiedResults = useMemo(() => citywideMode
+    ? citywideSearchResults
+    : dataMode === "real-pilot"
+    ? searchRealPlaceCatalog(activeAdapter.getFeatures(), query, selectedCategories)
+    : searchUnifiedCatalog(activeAdapter.getFeatures(), syntheticCatalog, query).filter((result) => selectedCategories.length === 0 || result.feature.kind !== "poi" || selectedCategories.some((category) => placeCategoriesFromFeature(result.feature).includes(category))), [activeAdapter, citywideMode, citywideSearchResults, dataMode, query, selectedCategories]);
 
   useEffect(() => {
     if (typeof window === "undefined") return undefined;
@@ -202,15 +500,138 @@ export function App() {
       setQuery(state.query);
       setCameraMode(state.cameraMode); setPoseInvalid(state.poseInvalid);
       if (state.pose) { setCameraPose(state.pose); setCameraRequest((current) => ({ ...state.pose!, requestId: (current?.requestId ?? 0) + 1 })); }
-      if (!state.featureId) { setActiveSelectionId(null); setDeepLinkMessage(state.poseInvalid ? "This shared camera pose is malformed; the safe default view is active." : null); return; }
+      const requestedReal = state.dataMode === "real-pilot";
+      const requestedCitywide = requestedReal && state.releaseId === CITYWIDE_RELEASE_ID;
+      pendingNavigationPoseRef.current = requestedReal ? state.pose : null;
+      if (!requestedReal) initialRealNavigationPendingRef.current = false;
+      if (requestedCitywide) {
+        releaseIdRef.current = CITYWIDE_RELEASE_ID;
+        if (citywideLoadState !== "ready" || !citywideAdapter) {
+          if (citywideLoadState === "failed") {
+            initialRealNavigationPendingRef.current = false;
+            pendingNavigationPoseRef.current = null;
+            releaseIdRef.current = null;
+          }
+          dataModeRef.current = "fixtures";
+          setDataMode("fixtures");
+          if (activeAdapter !== fixtureAdapter) setActiveAdapter(fixtureAdapter);
+          setRealFallbackActive(true);
+          setInspectorOpen(false);
+          setActiveSelectionId(null);
+          setSelectedCatalogEntityId(null);
+          setFocusFeatureId(null);
+          const notice = citywideLoadState === "failed"
+            ? "The requested citywide release failed to load or validate. Fixture fallback is active; no fixture or same-name substitute was selected."
+            : "The requested citywide release is still loading. Fixture fallback is active; no fixture or same-name substitute was selected.";
+          if (citywideLoadState === "failed") terminalRealFallbackNoticeRef.current = notice;
+          setDeepLinkMessage(notice);
+          return;
+        }
+        initialRealNavigationPendingRef.current = false;
+        terminalRealFallbackNoticeRef.current = null;
+        dataModeRef.current = "real-pilot";
+        releaseIdRef.current = CITYWIDE_RELEASE_ID;
+        setDataMode("real-pilot");
+        setRealFallbackActive(false);
+        if (activeAdapter !== citywideAdapter) setActiveAdapter(citywideAdapter);
+        if (!state.featureId) {
+          setActiveSelectionId(null);
+          setFocusFeatureId(null);
+          setInspectorOpen(false);
+          setDeepLinkMessage(state.poseInvalid ? "This shared camera pose is malformed; the safe citywide view is active." : null);
+          return;
+        }
+        const feature = citywideAdapter.getFeature(state.featureId);
+        if (feature) selectFeature(feature, { syncUrl: false });
+        else {
+          setActiveSelectionId(null);
+          setFocusFeatureId(null);
+          setInspectorOpen(false);
+          void citywideAdapter.loadDetail(state.featureId).then((loadedFeature) => {
+            if (loadedFeature && citywideAdapterRef.current === citywideAdapter && citywideModeRef.current) selectFeature(loadedFeature, { syncUrl: false });
+            else if (!loadedFeature && activeSelectionRef.current === null) setDeepLinkMessage(`This shared link points to a parent unavailable in release ${CITYWIDE_RELEASE_ID}; no substitute was selected.`);
+          }).catch(() => setDeepLinkMessage(`This shared link could not load parent ${state.featureId}; no substitute was selected.`));
+        }
+        return;
+      }
+      const releaseValid = requestedReal && state.releaseId === REAL_PILOT_RELEASE_ID;
+      if (requestedReal) {
+        releaseIdRef.current = state.releaseId ?? null;
+        if (!releaseValid) {
+          initialRealNavigationPendingRef.current = false;
+          pendingNavigationPoseRef.current = null;
+          releaseIdRef.current = null;
+          dataModeRef.current = "fixtures";
+          setDataMode("fixtures");
+          if (activeAdapter !== fixtureAdapter) setActiveAdapter(fixtureAdapter);
+          setRealFallbackActive(true);
+          setInspectorOpen(false);
+          setActiveSelectionId(null);
+          setSelectedCatalogEntityId(null);
+          setFocusFeatureId(null);
+          const notice = `This shared link requests unavailable real release “${state.releaseId ?? "unknown"}”. Fixture fallback is active; no fixture or same-name substitute was selected.`;
+          terminalRealFallbackNoticeRef.current = notice;
+          setDeepLinkMessage(notice);
+          return;
+        }
+        if (realLoadState !== "ready" || !realAdapter) {
+          if (realLoadState === "failed") {
+            initialRealNavigationPendingRef.current = false;
+            pendingNavigationPoseRef.current = null;
+            releaseIdRef.current = null;
+          }
+          dataModeRef.current = "fixtures";
+          setDataMode("fixtures");
+          if (activeAdapter !== fixtureAdapter) setActiveAdapter(fixtureAdapter);
+          setRealFallbackActive(true);
+          setInspectorOpen(false);
+          setActiveSelectionId(null);
+          setSelectedCatalogEntityId(null);
+          setFocusFeatureId(null);
+          const notice = realLoadState === "failed"
+            ? "The requested real pilot release failed to load or validate. Fixture fallback is active; no fixture substitute was selected."
+            : "The requested real pilot release is still loading. Fixture fallback is active; no fixture substitute was selected.";
+          if (realLoadState === "failed") terminalRealFallbackNoticeRef.current = notice;
+          setDeepLinkMessage(notice);
+          return;
+        }
+        initialRealNavigationPendingRef.current = false;
+        terminalRealFallbackNoticeRef.current = null;
+        dataModeRef.current = "real-pilot";
+        releaseIdRef.current = REAL_PILOT_RELEASE_ID;
+        setDataMode("real-pilot");
+        setRealFallbackActive(false);
+        if (activeAdapter !== realAdapter) setActiveAdapter(realAdapter);
+        if (!state.featureId) { setDeepLinkMessage(state.poseInvalid ? "This shared camera pose is malformed; the safe real pilot view is active." : null); return; }
+        const feature = realAdapter.getFeature(state.featureId);
+        if (feature) selectFeature(feature, { syncUrl: false });
+        else {
+          setActiveSelectionId(null);
+          setFocusFeatureId(null);
+          setInspectorOpen(false);
+          setDeepLinkMessage(state.poseInvalid ? "This shared link has an invalid camera pose and a feature that is not in the current real release." : `This shared link points to a feature unavailable in release ${state.releaseId ?? REAL_PILOT_RELEASE_ID}; no substitute was selected.`);
+        }
+        return;
+      } else {
+        dataModeRef.current = "fixtures";
+        setDataMode("fixtures");
+        releaseIdRef.current = null;
+        setRealFallbackActive(false);
+        if (activeAdapter !== fixtureAdapter) setActiveAdapter(fixtureAdapter);
+      }
+      if (!state.featureId) {
+        setActiveSelectionId(null);
+        setDeepLinkMessage(terminalRealFallbackNoticeRef.current ?? (state.poseInvalid ? "This shared camera pose is malformed; the safe default view is active." : null));
+        return;
+      }
       const feature = fixtureAdapter.getFeature(state.featureId);
       if (feature) selectFeature(feature, { syncUrl: false });
-      else { setActiveSelectionId(null); setDeepLinkMessage(state.poseInvalid ? "This shared link has an invalid camera pose and a feature that is not in the current catalog release." : "This shared link points to a feature that is not in the current catalog release."); }
+      else { setActiveSelectionId(null); setDeepLinkMessage(terminalRealFallbackNoticeRef.current ?? (state.poseInvalid ? "This shared link has an invalid camera pose and a feature that is not in the current catalog release." : `This shared link points to a feature unavailable in release ${state.releaseId ?? "the active fixture catalog"}; no substitute was selected.`)); }
     };
     applyUrl();
     window.addEventListener("popstate", applyUrl);
     return () => window.removeEventListener("popstate", applyUrl);
-  }, [selectFeature]);
+  }, [activeAdapter, citywideAdapter, citywideLoadState, realAdapter, realLoadState, selectFeature]);
 
   useEffect(() => {
     const onKeyDown = (event: globalThis.KeyboardEvent) => {
@@ -240,18 +661,22 @@ export function App() {
     event.preventDefault();
     const unifiedMatch = unifiedResults[activeSearchIndex >= 0 ? activeSearchIndex : 0];
     if (unifiedMatch) { selectSearchResult(unifiedMatch); return; }
+    if (dataMode === "real-pilot") {
+      setDeepLinkMessage(null);
+      return;
+    }
     const catalogMatch = searchReconciledCatalog(syntheticCatalog, query).find((entity) => {
       if (selectedCategories.length === 0 || entity.entityKind !== "poi") return true;
       return selectedCategories.some((category) => entity.fields.categories.includes(category));
     });
-    const catalogFeature = catalogMatch?.fields.runtimeFeatureId ? fixtureAdapter.getFeature(catalogMatch.fields.runtimeFeatureId) : undefined;
+    const catalogFeature = catalogMatch?.fields.runtimeFeatureId ? activeAdapter.getFeature(catalogMatch.fields.runtimeFeatureId) : undefined;
     if (catalogMatch && catalogFeature) {
       setSelectedCatalogEntityId(catalogMatch.canonicalId);
       selectFeature(catalogFeature);
       setFocusRequest((request) => request + 1);
       return;
     }
-    const matches = fixtureAdapter.search(query);
+    const matches = activeAdapter.search(query);
     const match = matches.find((feature) => selectedCategories.length === 0 || selectedCategories.some((category) => placeCategoriesFromFeature(feature).includes(category))) ?? matches[0];
     if (match && featureMatchesQuery(toCityFeature(match), query)) selectFeature(match);
     if (match) { setFocusRequest((request) => request + 1); setSearchOpen(false); }
@@ -265,8 +690,9 @@ export function App() {
 
   const copyShareLink = async () => {
     if (typeof window === "undefined") return;
-    const link = navigationUrl({ featureId: selectedFeature.id, query: queryRef.current, cameraMode: cameraModeRef.current, pose: cameraPoseRef.current, poseInvalid: false }, window.location.href);
-    try { await navigator.clipboard?.writeText(link); setShareMessage("Share link copied."); } catch { setShareMessage(link); }
+    const link = navigationUrl({ featureId: selectedFeature.id, query: queryRef.current, cameraMode: cameraModeRef.current, pose: cameraPoseRef.current, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current }, window.location.href);
+    setShareMessage("Share link copied.");
+    try { await navigator.clipboard?.writeText(link); } catch { setShareMessage(link); }
     window.setTimeout(() => setShareMessage(null), 2500);
   };
 
@@ -275,6 +701,20 @@ export function App() {
       ? current.filter((item) => item !== category)
       : [...current, category]);
   };
+
+  const availableCategories = useMemo<PlaceCategory[]>(() => {
+    if (citywideMode) return ["restaurant"];
+    if (dataMode === "real-pilot") {
+      return [...new Set(activeAdapter.getFeatures().filter((feature) => feature.kind === "poi").flatMap((feature) => {
+        try { return parseRealPlaceFeature(feature).categories; } catch { return []; }
+      }))].sort((left, right) => left.localeCompare(right));
+    }
+    return PLACE_CATEGORIES.filter((category) => ["restaurant", "cafe", "bar", "retail", "department-store", "grocery", "attraction", "museum"].includes(category));
+  }, [activeAdapter, citywideMode, dataMode]);
+
+  useEffect(() => {
+    setSelectedCategories((current) => current.filter((category) => availableCategories.includes(category)));
+  }, [availableCategories]);
 
   const featureFilter = useCallback((feature: Feature) => {
     if (selectedCategories.length === 0 || feature.kind !== "poi") return true;
@@ -286,22 +726,32 @@ export function App() {
     setLayerVisibility((current) => ({ ...current, [layer]: !current[layer] }));
   };
 
-  const selectedRuntimeFeature = fixtureAdapter.getFeature(selectedFeature.id);
-  const selectedCatalogEntity: CanonicalEntity | undefined = syntheticCatalog.entities.find((entity) => entity.canonicalId === selectedCatalogEntityId)
-    ?? syntheticCatalog.entities.find((entity) => entity.fields.runtimeFeatureId === selectedFeature.id);
+  const selectedRuntimeFeature = activeAdapter.getFeature(selectedFeature.id);
+  const selectedPlaceTruth = dataMode === "fixtures" && selectedRuntimeFeature ? placeTruthByRuntimeFeatureId.get(selectedRuntimeFeature.id) : undefined;
+  const selectedRealPlace = useMemo<RealPlaceView | null>(() => {
+    // Citywide uses its own parent/detail projection below. Do not parse a
+    // citywide feature through the bounded pilot view as well: occurrence
+    // source refs can legitimately repeat, and rendering both projections
+    // creates duplicate keyed attribution links and a misleading pilot claim.
+    if (dataMode !== "real-pilot" || citywideMode || !selectedRuntimeFeature || selectedRuntimeFeature.kind !== "poi") return null;
+    try { return parseRealPlaceFeature(selectedRuntimeFeature); } catch { return null; }
+  }, [citywideMode, dataMode, selectedRuntimeFeature]);
+  const selectedPlaceHoursStatus = selectedPlaceTruth ? evaluatePlaceHours(selectedPlaceTruth.hours, new Date()) : null;
+  const selectedCatalogEntity: CanonicalEntity | undefined = dataMode === "fixtures" ? syntheticCatalog.entities.find((entity) => entity.canonicalId === selectedCatalogEntityId)
+    ?? syntheticCatalog.entities.find((entity) => entity.fields.runtimeFeatureId === selectedFeature.id) : undefined;
   const relatedFeatureIds = selectedCatalogEntity ? [...selectedCatalogEntity.fields.links.buildingIds, ...selectedCatalogEntity.fields.links.areaIds, ...selectedCatalogEntity.fields.links.transitIds] : [];
-  const relatedFeatures = relatedFeatureIds.map((id) => fixtureAdapter.getFeature(id)).filter((feature): feature is Feature => Boolean(feature));
-  const nearbyTransit = findNearbyFeatures(selectedRuntimeFeature, fixtureAdapter.getFeatures(), {
+  const relatedFeatures = relatedFeatureIds.map((id) => activeAdapter.getFeature(id)).filter((feature): feature is Feature => Boolean(feature));
+  const nearbyTransit = findNearbyFeatures(selectedRuntimeFeature, activeAdapter.getFeatures(), {
     thresholdMeters: DEFAULT_PROXIMITY_THRESHOLD_METERS,
     maxResults: DEFAULT_PROXIMITY_MAX_RESULTS,
     predicate: (feature) => feature.kind === "transit-station" || feature.kind === "transit-entrance",
   });
   const proximityOriginAvailable = representativePoint(selectedRuntimeFeature) !== null;
-  const routeOriginName = fixtureAdapter.getFeature(routeOriginId ?? "")?.name ?? "Not set";
-  const routeDestinationName = fixtureAdapter.getFeature(routeDestinationId ?? "")?.name ?? "Not set";
+  const routeOriginName = activeAdapter.getFeature(routeOriginId ?? "")?.name ?? "Not set";
+  const routeDestinationName = activeAdapter.getFeature(routeDestinationId ?? "")?.name ?? "Not set";
   const selectedRouteSupported = Boolean(routeAdapter?.canRouteFeature(selectedRuntimeFeature, routeMode));
-  const routeOriginFeature = fixtureAdapter.getFeature(routeOriginId ?? "");
-  const routeDestinationFeature = fixtureAdapter.getFeature(routeDestinationId ?? "");
+  const routeOriginFeature = activeAdapter.getFeature(routeOriginId ?? "");
+  const routeDestinationFeature = activeAdapter.getFeature(routeDestinationId ?? "");
   const routeEndpointsSupported = Boolean(routeAdapter && routeOriginFeature && routeDestinationFeature
     && routeAdapter.canRouteFeature(routeOriginFeature, routeMode)
     && routeAdapter.canRouteFeature(routeDestinationFeature, routeMode));
@@ -316,7 +766,7 @@ export function App() {
   };
   const resolveRouteSearch = (endpoint: "origin" | "destination") => {
     const queryValue = endpoint === "origin" ? routeOriginQuery : routeDestinationQuery;
-    const match = fixtureAdapter.search(queryValue)[0];
+    const match = activeAdapter.search(queryValue)[0];
     if (!match) { setRouteMessage(`No synthetic feature matches “${queryValue}”.`); return; }
     if (!routeAdapter || !routeAdapter.canRouteFeature(match, routeMode)) {
       if (endpoint === "origin") setRouteOriginId(null); else setRouteDestinationId(null);
@@ -328,7 +778,7 @@ export function App() {
     setRouteMessage("");
   };
   const calculateRoute = () => {
-    const origin = fixtureAdapter.getFeature(routeOriginId ?? ""); const destination = fixtureAdapter.getFeature(routeDestinationId ?? "");
+    const origin = activeAdapter.getFeature(routeOriginId ?? ""); const destination = activeAdapter.getFeature(routeDestinationId ?? "");
     if (!origin || !destination || !routeAdapter) { setRouteMessage("Set both endpoints after the local fixture graph loads."); return; }
     if (!routeAdapter.canRouteFeature(origin, routeMode) || !routeAdapter.canRouteFeature(destination, routeMode)) {
       setItinerary(null);
@@ -352,10 +802,14 @@ export function App() {
     if (!normalized) return;
     setCameraMode(nextMode); setCameraPose(normalized); setPoseInvalid(false);
     setCameraRequest((current) => ({ ...normalized, requestId: (current?.requestId ?? 0) + 1 }));
-    if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrl({ featureId: activeSelectionRef.current, query: queryRef.current, cameraMode: nextMode, pose: normalized, poseInvalid: false }, window.location.href));
+    if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrl({ featureId: activeSelectionRef.current, query: queryRef.current, cameraMode: nextMode, pose: normalized, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current }, window.location.href));
   };
   const focusCurrentSelection = () => {
     if (!selectedRuntimeFeature) return;
+    if (citywideMode && selectedRuntimeFeature.attributes.citywideLocationStatus === "location-unavailable") {
+      setDeepLinkMessage("This DOHMH parent has no source coordinates; details remain available and no substitute marker is shown.");
+      return;
+    }
     setActiveSelectionId(selectedRuntimeFeature.id);
     updateCamera({ longitude: selectedRuntimeFeature.coordinates[0], latitude: selectedRuntimeFeature.coordinates[1], height: 240, pitch: -35 }, "explore");
     setFocusRequest((request) => request + 1);
@@ -378,8 +832,129 @@ export function App() {
     const journeyId = `journey:${itinerary.originFeatureId}:${itinerary.destinationFeatureId}:${itinerary.mode}`;
     setSavedNavigation((current) => saveJourney(current, { schemaVersion: VISITOR_NAVIGATION_SCHEMA_VERSION, id: journeyId, originFeatureId: itinerary.originFeatureId, destinationFeatureId: itinerary.destinationFeatureId, mode: itinerary.mode, label: `${routeOriginName} → ${routeDestinationName}`, savedAt: new Date().toISOString() }));
   };
-  const restorePlace = (canonicalId: string) => { const feature = fixtureAdapter.getFeature(canonicalId); if (feature) { selectFeature(feature); setFocusRequest((request) => request + 1); } };
-  const restoreJourney = (journey: SavedNavigationState["journeys"][number]) => { setRouteOriginId(journey.originFeatureId); setRouteDestinationId(journey.destinationFeatureId); setRouteOriginQuery(fixtureAdapter.getFeature(journey.originFeatureId)?.name ?? ""); setRouteDestinationQuery(fixtureAdapter.getFeature(journey.destinationFeatureId)?.name ?? ""); setRouteMode(journey.mode); setItinerary(null); setRouteMessage("Saved journey restored; calculate to preview the synthetic route."); };
+  const restorePlace = (canonicalId: string) => { const feature = activeAdapter.getFeature(canonicalId); if (feature) { selectFeature(feature); setFocusRequest((request) => request + 1); } };
+  const restoreJourney = (journey: SavedNavigationState["journeys"][number]) => { setRouteOriginId(journey.originFeatureId); setRouteDestinationId(journey.destinationFeatureId); setRouteOriginQuery(activeAdapter.getFeature(journey.originFeatureId)?.name ?? ""); setRouteDestinationQuery(activeAdapter.getFeature(journey.destinationFeatureId)?.name ?? ""); setRouteMode(journey.mode); setItinerary(null); setRouteMessage("Saved journey restored; calculate to preview the synthetic route."); };
+  const switchDataMode = (nextMode: NavigationDataMode) => {
+    initialRealNavigationPendingRef.current = false;
+    terminalRealFallbackNoticeRef.current = null;
+    if (nextMode === "real-pilot") {
+      if (!realAdapter) {
+        setRealFallbackActive(true);
+        setActiveSelectionId(null);
+        setFocusFeatureId(null);
+        setInspectorOpen(false);
+        setDeepLinkMessage(realLoadState === "failed"
+          ? "The approved real pilot release failed to load or validate; fixture fallback remains active."
+          : "The approved real pilot release is still loading; fixture fallback remains active.");
+        return;
+      }
+      dataModeRef.current = "real-pilot";
+      releaseIdRef.current = REAL_PILOT_RELEASE_ID;
+      setRealFallbackActive(false);
+      setDataMode("real-pilot");
+      setActiveAdapter(realAdapter);
+      setSelectedCatalogEntityId(null);
+      const realFeatures = realAdapter.getFeatures();
+      const queryMatch = queryRef.current.trim() ? searchRealPlaceCatalog(realFeatures, queryRef.current)[0]?.feature : undefined;
+      const firstRealFeature = queryMatch ?? realFeatures.find((feature) => feature.kind === "poi") ?? realFeatures[0];
+      if (firstRealFeature) selectFeature(firstRealFeature);
+      return;
+    }
+    dataModeRef.current = "fixtures";
+    releaseIdRef.current = null;
+    setRealFallbackActive(false);
+    setDataMode("fixtures");
+    setActiveAdapter(fixtureAdapter);
+    const fixture = fixtureAdapter.getFeature(runtimeMarker.id);
+    if (fixture) selectFeature(fixture);
+  };
+  const switchCitywideMode = () => {
+    initialRealNavigationPendingRef.current = false;
+    terminalRealFallbackNoticeRef.current = null;
+    if (!citywideAdapter || citywideLoadState !== "ready") {
+      setRealFallbackActive(true);
+      setActiveSelectionId(null);
+      setFocusFeatureId(null);
+      setInspectorOpen(false);
+      setDeepLinkMessage(citywideLoadState === "failed"
+        ? "The approved citywide release failed to load or validate; fixture fallback remains active."
+        : "The approved citywide release is still loading; fixture fallback remains active.");
+      return;
+    }
+    dataModeRef.current = "real-pilot";
+    releaseIdRef.current = CITYWIDE_RELEASE_ID;
+    setDataMode("real-pilot");
+    setActiveAdapter(citywideAdapter);
+    setRealFallbackActive(false);
+    setSelectedCatalogEntityId(null);
+    setActiveSelectionId(null);
+    setFocusFeatureId(null);
+    setInspectorOpen(false);
+    setDeepLinkMessage(null);
+    if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrl({ featureId: null, query: queryRef.current, cameraMode: cameraModeRef.current, pose: cameraPoseRef.current, poseInvalid: false, dataMode: "real-pilot", releaseId: CITYWIDE_RELEASE_ID }, window.location.href));
+  };
+
+  const measureCitywideDebugAnchor = (anchor: (typeof CITYWIDE_DEBUG_ANCHORS)[number]) => {
+    if (!citywideMode) return;
+    const pose: CameraPose = { longitude: anchor.longitude, latitude: anchor.latitude, height: 1_200, heading: 0, pitch: -45, roll: 0 };
+    const runId = ++citywideDebugMeasurementRunRef.current;
+    setCitywideDebugMeasurement({ ...EMPTY_CITYWIDE_DEBUG_MEASUREMENT, anchor: anchor.label, status: "settling" });
+    setCameraPose(pose);
+    setCameraRequest((current) => ({ ...pose, requestId: (current?.requestId ?? 0) + 1 }));
+    window.setTimeout(() => {
+      if (runId !== citywideDebugMeasurementRunRef.current || !citywideModeRef.current) return;
+      setCitywideDebugMeasurement((current) => ({ ...current, status: "measuring" }));
+      const frameIntervals: number[] = [];
+      let previous = performance.now();
+      const started = previous;
+      const sampleFrame = (now: number) => {
+        if (runId !== citywideDebugMeasurementRunRef.current || !citywideModeRef.current) return;
+        frameIntervals.push(now - previous);
+        previous = now;
+        if (now - started < 10_000) {
+          window.requestAnimationFrame(sampleFrame);
+          return;
+        }
+        const sorted = [...frameIntervals].sort((left, right) => left - right);
+        const browserMeasurement = readCitywideBrowserMeasurement();
+        setCitywideDebugMeasurement((current) => ({
+          ...current,
+          status: "complete",
+          frameCount: frameIntervals.length,
+          frameAverageMs: frameIntervals.length > 0 ? frameIntervals.reduce((sum, value) => sum + value, 0) / frameIntervals.length : null,
+          frameMedianMs: medianFrameInterval(sorted),
+          frameP95Ms: sorted.length > 0 ? sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * 0.95))] ?? null : null,
+          frameMaxMs: sorted.at(-1) ?? null,
+          heapBytes: browserMeasurement.heapBytes,
+          citywideResourceCount: browserMeasurement.citywideResourceCount,
+          citywideResourceBytes: browserMeasurement.citywideResourceBytes,
+        }));
+      };
+      window.requestAnimationFrame(sampleFrame);
+    }, 3_000);
+  };
+
+  const captureCitywideBrowserBaseline = () => {
+    if (typeof window === "undefined" || citywideMode) return;
+    setCitywideBrowserBaseline(readCitywideBrowserMeasurement());
+  };
+
+  const displayedTileMetrics: TileStreamMetrics = citywideMode ? {
+    generation: 0,
+    selectedLod: 14,
+    visibleTileCount: citywideMetrics.visibleShardCount,
+    requestedTileCount: citywideMetrics.requestedShardCount,
+    loadedTileCount: citywideMetrics.cacheEntries,
+    evictedTileCount: citywideMetrics.cacheEvictions,
+    failedTileCount: citywideMetrics.failedRequestCount,
+    loadedBytes: citywideMetrics.loadedBytes,
+    activeRequests: citywideMetrics.activeRequests,
+    maxConcurrentRequests: citywideMetrics.maxConcurrentRequests,
+    deduplicatedRequests: 0,
+    cancelledRequestCount: citywideMetrics.cancelledRequestCount,
+    staleResultCount: citywideMetrics.staleResultCount,
+    renderedFeatureCount: citywideMetrics.loadedFeatureCount,
+  } : tileMetrics;
 
   return (
     <main className="app-shell">
@@ -414,7 +989,7 @@ export function App() {
                   <span className="search-result-icon" aria-hidden="true">{result.typeLabel.slice(0, 1)}</span>
                   <span><strong>{result.feature.name}</strong><small>{result.typeLabel} · {result.group} · {result.matchedBy}</small></span>
                 </button>
-              )) : <p className="search-empty" role="status">No fixture result for “{query}”. Try a source ID, alias, address, or category.</p>}
+              )) : <p className="search-empty" role="status">{citywideMode ? `The active citywide release ${CITYWIDE_RELEASE_ID} has no result for “${query}”; this does not mean Manhattan has no such place.` : dataMode === "real-pilot" ? `The active bounded real pilot release ${REAL_PILOT_RELEASE_ID} has no result for “${query}”; this does not mean Manhattan has no such place.` : `No fixture result for “${query}”. Try a source ID, alias, address, or category.`}</p>}
             </div>
           )}
         </div>
@@ -446,8 +1021,8 @@ export function App() {
 
       <section className="map-region" aria-label="City explorer">
         <CesiumViewport
-          adapter={fixtureAdapter}
-          assetResolver={fixtureAdapter.assetResolver}
+          adapter={activeAdapter}
+          assetResolver={activeAdapter.assetResolver}
           focusRequest={focusRequest}
           focusFeatureId={focusFeatureId}
           onFeatureSelected={selectFeature}
@@ -455,9 +1030,11 @@ export function App() {
           visibleLayers={layerVisibility}
           itinerary={routeLines}
           previewRequest={previewRequest}
-          denseRendering={stressMode}
-          denseFeatures={stressFeatures}
-          selectedFeatureId={selectedFeature.id}
+          denseRendering={stressMode || dataMode === "real-pilot"}
+          denseFeatures={citywideMode ? citywideFeatures : stressFeatures}
+          denseFeatureLimit={citywideMode ? CITYWIDE_BUDGETS.maxRenderedDenseFeatures : undefined}
+          onDenseMetrics={citywideMode ? publishCitywideDenseMetrics : undefined}
+          selectedFeatureId={realFallbackActive ? activeSelectionId : activeSelectionId ?? (dataMode === "fixtures" ? selectedFeature.id : null)}
           onCameraChanged={onTileCameraChanged}
           cameraRequest={stressCameraRequest}
           cameraPoseRequest={cameraRequest}
@@ -475,14 +1052,19 @@ export function App() {
         </section>
         <div className="runtime-note">
           Local runtime layer
-          <span>Synthetic fixture only · no real Manhattan coverage</span>
+          <span>{citywideMode ? `Real NYC citywide release · ${CITYWIDE_RELEASE_ID} · local snapshot-relative coverage` : dataMode === "real-pilot" ? "Real NYC pilot · bounded Flatiron/NoMad/Union Square coverage" : "Synthetic fixture only · no real Manhattan coverage"}</span>
         </div>
-        {deepLinkMessage && <div className="exploration-notice" role="alert">{deepLinkMessage} <button type="button" onClick={() => { setDeepLinkMessage(null); setPoseInvalid(false); window.history.replaceState({}, "", navigationUrl({ featureId: activeSelectionRef.current, query, cameraMode, pose: cameraPose, poseInvalid: false }, window.location.href)); }}>Dismiss</button></div>}
+        {deepLinkMessage && <div className="exploration-notice" role="alert">{deepLinkMessage} <button type="button" onClick={() => { terminalRealFallbackNoticeRef.current = null; setDeepLinkMessage(null); setPoseInvalid(false); window.history.replaceState({}, "", navigationUrl({ featureId: activeSelectionRef.current, query, cameraMode, pose: cameraPose, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current }, window.location.href)); }}>Dismiss</button></div>}
         {shareMessage && <div className="share-notice" role="status">{shareMessage}</div>}
         <section className="tile-diagnostics" aria-label="Tile diagnostics">
           <div><strong>Tile diagnostics</strong><button type="button" aria-pressed={stressMode} onClick={() => setStressMode((enabled) => !enabled)}>{stressMode ? "Normal mode" : "Stress harness"}</button></div>
-          <span>Fixture-only synthetic harness · not full-Manhattan performance</span>
-          <span>Assets: {fixtureAdapter.getAssetDiagnostics().registered} registered · {fixtureAdapter.getAssetDiagnostics().approved} approved · {fixtureAdapter.getAssetDiagnostics().verified} verified · procedural fallback retained when unavailable</span>
+          <span>{citywideMode ? "Citywide viewport shards loaded lazily · global search/detail shards remain on demand" : dataMode === "real-pilot" ? "Partitioned real pilot loaded · not full-Manhattan performance" : "Fixture-only synthetic harness · not full-Manhattan performance"}</span>
+          {citywideMode && <span>Decoded summaries / features / details: {citywideMetrics.retainedSummaryCount.toLocaleString()} / {citywideMetrics.retainedFeatureCount.toLocaleString()} / {citywideMetrics.retainedDetailCount.toLocaleString()} · detail index: {citywideMetrics.detailIndexEntryCount.toLocaleString()}</span>}
+          <span>Assets: {activeAdapter.getAssetDiagnostics?.().registered ?? 0} registered · {activeAdapter.getAssetDiagnostics?.().approved ?? 0} approved · {activeAdapter.getAssetDiagnostics?.().verified ?? 0} verified · procedural fallback retained when unavailable</span>
+          {import.meta.env.DEV && !citywideMode && <div className="citywide-debug-baseline" aria-label="Citywide browser baseline">
+            <button type="button" onClick={captureCitywideBrowserBaseline}>Capture Citywide browser baseline</button>
+            <span data-citywide-browser-baseline>Heap {citywideBrowserBaseline.heapBytes?.toLocaleString() ?? "unsupported"} · citywide resources {citywideBrowserBaseline.citywideResourceCount} / {citywideBrowserBaseline.citywideResourceBytes.toLocaleString()} bytes</span>
+          </div>}
           {stressMode ? <div className="tile-stress-controls" aria-label="Synthetic camera anchors">
             <button type="button" onClick={() => moveStressCamera(0, 4_000)}>Center tile</button>
             <button type="button" onClick={() => moveStressCamera(1, 4_000)}>West tile</button>
@@ -490,38 +1072,78 @@ export function App() {
             <button type="button" onClick={() => moveStressCamera(2, 100)}>Zoom closer</button>
           </div> : null}
           <dl>
-            <div><dt>LOD</dt><dd>{tileMetrics.selectedLod ?? "—"}</dd></div>
-            <div><dt>Visible / requested</dt><dd>{tileMetrics.visibleTileCount} / {tileMetrics.requestedTileCount}</dd></div>
-            <div><dt>Loaded / evicted</dt><dd>{tileMetrics.loadedTileCount} / {tileMetrics.evictedTileCount}</dd></div>
-            <div><dt>Failed / active</dt><dd>{tileMetrics.failedTileCount} / {tileMetrics.activeRequests}</dd></div>
-            <div><dt>Cancelled / stale</dt><dd>{tileMetrics.cancelledRequestCount} / {tileMetrics.staleResultCount}</dd></div>
-            <div><dt>Bytes / features</dt><dd>{tileMetrics.loadedBytes.toLocaleString()} / {tileMetrics.renderedFeatureCount}</dd></div>
+            <div><dt>LOD</dt><dd>{displayedTileMetrics.selectedLod ?? "—"}</dd></div>
+            <div><dt>Visible / requested</dt><dd>{displayedTileMetrics.visibleTileCount} / {displayedTileMetrics.requestedTileCount}</dd></div>
+            <div><dt>Loaded / evicted</dt><dd>{displayedTileMetrics.loadedTileCount} / {displayedTileMetrics.evictedTileCount}</dd></div>
+            <div><dt>Failed / active</dt><dd>{displayedTileMetrics.failedTileCount} / {displayedTileMetrics.activeRequests}</dd></div>
+            <div><dt>Cancelled / stale</dt><dd>{displayedTileMetrics.cancelledRequestCount} / {displayedTileMetrics.staleResultCount}</dd></div>
+            <div><dt>Bytes / features</dt><dd>{displayedTileMetrics.loadedBytes.toLocaleString()} / {citywideMode ? citywideDenseMetrics.featureCount : displayedTileMetrics.renderedFeatureCount}</dd></div>
           </dl>
+          {import.meta.env.DEV && citywideMode && <div className="citywide-debug-anchors" aria-label="Citywide debug anchors">
+            {CITYWIDE_DEBUG_ANCHORS.map((anchor) => <button key={anchor.label} type="button" onClick={() => measureCitywideDebugAnchor(anchor)}>Debug {anchor.label}</button>)}
+            <span data-citywide-render-metrics>Rendered dense features / instances / primitives: {citywideDenseMetrics.featureCount} / {citywideDenseMetrics.instanceCount} / {citywideDenseMetrics.primitiveCount}</span>
+            <span data-citywide-browser-baseline>Pre-citywide initial-mount baseline heap {citywideBrowserBaseline.heapBytes?.toLocaleString() ?? "unsupported"} · citywide resources {citywideBrowserBaseline.citywideResourceCount} / {citywideBrowserBaseline.citywideResourceBytes.toLocaleString()} bytes</span>
+            {citywideDebugMeasurement.status !== "idle" && <span data-citywide-debug-measurement role="status">Debug {citywideDebugMeasurement.anchor} · {citywideDebugMeasurement.status} · frames {citywideDebugMeasurement.frameCount} · avg/median/p95/max {citywideDebugMeasurement.frameAverageMs?.toFixed(2) ?? "unsupported"}/{citywideDebugMeasurement.frameMedianMs?.toFixed(2) ?? "unsupported"}/{citywideDebugMeasurement.frameP95Ms?.toFixed(2) ?? "unsupported"}/{citywideDebugMeasurement.frameMaxMs?.toFixed(2) ?? "unsupported"} ms · heap {citywideDebugMeasurement.heapBytes?.toLocaleString() ?? "unsupported"} · citywide resources {citywideDebugMeasurement.citywideResourceCount} / {citywideDebugMeasurement.citywideResourceBytes.toLocaleString()} bytes</span>}
+          </div>}
         </section>
         {qualityOpen && (
           <section className="quality-panel" aria-label="Data quality">
             <div className="quality-heading"><strong>Data quality</strong><button type="button" onClick={() => setQualityOpen(false)}>Close</button></div>
-            <p className="section-label">Synthetic fixture catalog only · no real provider records</p>
-            <p className="section-label">Unpublished vertical-slice release {syntheticCatalogRelease.releaseVersion} · {syntheticCatalogRelease.releaseId}</p>
-            <dl>
-              <div><dt>Artifacts / layers</dt><dd>{syntheticCatalogRelease.recordCounts.artifacts} / {syntheticCatalogRelease.tileCoverage.partitionCount}</dd></div>
-              <div><dt>Accepted / rejected</dt><dd>{syntheticCatalogRelease.recordCounts.accepted} / {syntheticCatalogRelease.recordCounts.rejected}</dd></div>
-              <div><dt>Freshness range</dt><dd>{syntheticCatalogRelease.freshness.earliest ?? "Unknown"} → {syntheticCatalogRelease.freshness.latest ?? "Unknown"}</dd></div>
-              <div><dt>Changes / affected tiles</dt><dd>{syntheticCatalogRelease.releaseDiff?.entries.length ?? 0} / {syntheticCatalogRelease.releaseDiff?.affectedTileKeys.length ?? 0}</dd></div>
-              <div><dt>Explicit tombstones</dt><dd>{syntheticCatalogRelease.recordCounts.tombstones}</dd></div>
-              <div><dt>Canonical entities</dt><dd>{syntheticCatalog.quality.canonicalEntityCount}</dd></div>
-              <div><dt>Source observations</dt><dd>{syntheticCatalog.quality.sourceObservationCount}</dd></div>
-              <div><dt>Merged groups</dt><dd>{syntheticCatalog.quality.mergedGroupCount}</dd></div>
-              <div><dt>Unmerged / quarantined</dt><dd>{syntheticCatalog.quality.unmergedCandidateCount} / {syntheticCatalog.quality.quarantinedCount}</dd></div>
-              <div><dt>Conflicts / stale</dt><dd>{syntheticCatalog.quality.conflictCount} / {syntheticCatalog.quality.staleObservationCount}</dd></div>
-              <div><dt>Rejected records</dt><dd>{syntheticCatalog.quality.rejectedRecordCount}</dd></div>
-              <div><dt>Pending-source refusal</dt><dd>{syntheticCatalog.quality.pendingSourceRefusal ? "Yes" : "No"}</dd></div>
-            </dl>
-            <button type="button" onClick={() => {
-              const conflict = syntheticCatalog.entities.find((entity) => entity.conflicts.length > 0);
-              const feature = conflict?.fields.runtimeFeatureId ? fixtureAdapter.getFeature(conflict.fields.runtimeFeatureId) : undefined;
-              if (conflict && feature) { setSelectedCatalogEntityId(conflict.canonicalId); selectFeature(feature); }
-            }}>Inspect synthetic conflict</button>
+            <div className="data-mode-controls" role="group" aria-label="Data mode">
+              <button type="button" aria-pressed={dataMode === "fixtures"} onClick={() => switchDataMode("fixtures")}>Fixture catalog</button>
+              <button type="button" aria-pressed={dataMode === "real-pilot" && !citywideMode} disabled={!realAdapter} onClick={() => switchDataMode("real-pilot")}>Real open-data pilot</button>
+              <button type="button" aria-pressed={citywideMode} disabled={citywideLoadState !== "ready"} onClick={switchCitywideMode}>Citywide local release</button>
+            </div>
+            <p className="section-label">Mode: {citywideMode ? `Real NYC citywide snapshot · release ${CITYWIDE_RELEASE_ID} · local lazy shards` : dataMode === "real-pilot" ? `Real NYC pilot · bounded Flatiron/NoMad/Union Square coverage · release ${REAL_PILOT_RELEASE_ID} · not full Manhattan` : "Synthetic fixture only · no real provider records"}</p>
+            <p className="section-label" role="status">{realDataMessage}</p>
+            <p className="section-label" role="status">{landmarkAssetMessage}</p>
+            {citywideMode && <section className="real-source-summary" aria-label="Citywide source scope">
+              <strong>Approved citywide source scope</strong>
+              <p className="section-label">Every accepted OTI Building Footprints record (dataset jh45-qr5r) and every accepted DOHMH Restaurant Inspection Results observation (dataset 43nn-pn8j) in the immutable Manhattan snapshot is represented by local release shards; unlocated DOHMH parents remain searchable and detail-visible without invented geometry.</p>
+              <p className="section-label">No external provider, imagery, ratings, hours, routing, facade, or public deployment is connected by this release.</p>
+            </section>}
+            {dataMode === "real-pilot" && !citywideMode && <section className="real-source-summary" aria-label="Real pilot source scope">
+              <strong>Approved source scope</strong>
+              <p className="section-label">Restaurants from the NYC Department of Health and Mental Hygiene Restaurant Inspection Results dataset 43nn-pn8j, captured 2026-08-04; bounded WGS84 pilot envelope west -74.005, south 40.738, east -73.982, north 40.752.</p>
+              <p className="section-label">Source: NYC Department of Health and Mental Hygiene, DOHMH New York City Restaurant Inspection Results (dataset 43nn-pn8j), accessed through NYC Open Data.</p>
+              <p className="section-label">City/agency disclaimer: this source is informational, may be updated, corrected, or discontinued, and NYC makes no warranty of completeness, accuracy, content, or fitness; this app does not claim full-Manhattan directory coverage.</p>
+              <p className="source-links"><a href="https://data.cityofnewyork.us/Health/DOHMH-New-York-City-Restaurant-Inspection-Results/43nn-pn8j" target="_blank" rel="noreferrer">Dataset 43nn-pn8j</a> · <a href="https://www.nyc.gov/html/datamine/html/data/terms.html?dataSetJs=raw" target="_blank" rel="noreferrer">NYC DataMine terms</a></p>
+            </section>}
+            <section aria-label="Visual fidelity and provenance">
+              <strong>Visual fidelity / provenance</strong>
+              <p className="section-label">High-fidelity means a bounded, source-anchored procedural GLB—not photorealism or exact facade reconstruction.</p>
+              <ul>
+                {(activeAdapter.assetResolver?.manifest.assets ?? []).filter((entry) => !entry.approval.fixtureOnly && entry.approval.state === "approved").map((entry) => (
+                  <li key={entry.canonicalFeatureId}><strong>High-fidelity bounded:</strong> {activeAdapter.getFeature(entry.canonicalFeatureId)?.name ?? entry.canonicalFeatureId} · {entry.lineage.licenseRefIds.join(", ")}</li>
+                ))}
+                <li><strong>Procedural fallback:</strong> all ordinary pilot buildings and any landmark whose verified package content is unavailable.</li>
+                <li><strong>Missing:</strong> no additional landmark exterior is claimed in this wave.</li>
+              </ul>
+              <p className="section-label">Commons CC BY-SA photographs were reviewed as optional visual references only and are not adapted, bundled, or a dependency of these GLBs; the assets rely on NYC factual publications, NPS public-domain facts, and OTI geometry.</p>
+            </section>
+            {dataMode === "fixtures" && <>
+              <p className="section-label">Unpublished vertical-slice release {syntheticCatalogRelease.releaseVersion} · {syntheticCatalogRelease.releaseId}</p>
+              <dl>
+                <div><dt>Artifacts / layers</dt><dd>{syntheticCatalogRelease.recordCounts.artifacts} / {syntheticCatalogRelease.tileCoverage.partitionCount}</dd></div>
+                <div><dt>Accepted / rejected</dt><dd>{syntheticCatalogRelease.recordCounts.accepted} / {syntheticCatalogRelease.recordCounts.rejected}</dd></div>
+                <div><dt>Freshness range</dt><dd>{syntheticCatalogRelease.freshness.earliest ?? "Unknown"} → {syntheticCatalogRelease.freshness.latest ?? "Unknown"}</dd></div>
+                <div><dt>Changes / affected tiles</dt><dd>{syntheticCatalogRelease.releaseDiff?.entries.length ?? 0} / {syntheticCatalogRelease.releaseDiff?.affectedTileKeys.length ?? 0}</dd></div>
+                <div><dt>Explicit tombstones</dt><dd>{syntheticCatalogRelease.recordCounts.tombstones}</dd></div>
+                <div><dt>Canonical entities</dt><dd>{syntheticCatalog.quality.canonicalEntityCount}</dd></div>
+                <div><dt>Source observations</dt><dd>{syntheticCatalog.quality.sourceObservationCount}</dd></div>
+                <div><dt>Merged groups</dt><dd>{syntheticCatalog.quality.mergedGroupCount}</dd></div>
+                <div><dt>Unmerged / quarantined</dt><dd>{syntheticCatalog.quality.unmergedCandidateCount} / {syntheticCatalog.quality.quarantinedCount}</dd></div>
+                <div><dt>Conflicts / stale</dt><dd>{syntheticCatalog.quality.conflictCount} / {syntheticCatalog.quality.staleObservationCount}</dd></div>
+                <div><dt>Rejected records</dt><dd>{syntheticCatalog.quality.rejectedRecordCount}</dd></div>
+                <div><dt>Pending-source refusal</dt><dd>{syntheticCatalog.quality.pendingSourceRefusal ? "Yes" : "No"}</dd></div>
+                <div><dt>Place truth</dt><dd>{placeTruthFixtures.length} fixture records · open-source baseline pending approval</dd></div>
+              </dl>
+              <button type="button" onClick={() => {
+                const conflict = syntheticCatalog.entities.find((entity) => entity.conflicts.length > 0);
+                const feature = conflict?.fields.runtimeFeatureId ? activeAdapter.getFeature(conflict.fields.runtimeFeatureId) : undefined;
+                if (conflict && feature) { setSelectedCatalogEntityId(conflict.canonicalId); selectFeature(feature); }
+              }}>Inspect synthetic conflict</button>
+            </>}
           </section>
         )}
         {activeNavigation === "Bookmarks" && <section className="bookmarks-panel" aria-label="Saved places and journeys">
@@ -549,7 +1171,7 @@ export function App() {
         </div>
         <div className="category-controls" aria-label="POI categories">
           <span>POI</span>
-          {PLACE_CATEGORIES.filter((category) => ["restaurant", "cafe", "bar", "retail", "department-store", "grocery", "attraction", "museum"].includes(category)).map((category) => (
+          {availableCategories.map((category) => (
             <button
               aria-pressed={selectedCategories.includes(category)}
               className={selectedCategories.includes(category) ? "is-selected" : ""}
@@ -557,7 +1179,7 @@ export function App() {
               onClick={() => toggleCategory(category)}
               type="button"
             >
-              {category}
+              {placeTruthCategoryLabel(category)}
             </button>
           ))}
         </div>
@@ -634,9 +1256,9 @@ export function App() {
               <div>
                 <dt>Coordinates</dt>
                 <dd>
-                  {selectedFeature.coordinates.latitude.toFixed(4)}, {" "}
-                  {selectedFeature.coordinates.longitude.toFixed(4)} ({" "}
-                  {selectedFeature.coordinates.heightMeters.toFixed(1)} m)
+                  {citywideMode && selectedFeature.attributes.citywideLocationStatus === "location-unavailable"
+                    ? "Location unavailable in the accepted DOHMH source; no marker invented"
+                    : `${selectedFeature.coordinates.latitude.toFixed(4)}, ${selectedFeature.coordinates.longitude.toFixed(4)} (${selectedFeature.coordinates.heightMeters.toFixed(1)} m)`}
                 </dd>
               </div>
               <div><dt>Geometry</dt><dd>{selectedFeature.geometry}</dd></div>
@@ -650,8 +1272,8 @@ export function App() {
           <section className="inspector-section asset-detail" aria-label="3D asset diagnostics">
             <h2>3D asset diagnostics</h2>
             {(() => {
-              const resolution = fixtureAdapter.getAssetResolution(selectedFeature.id, 240, 1);
-              return resolution.kind === "asset" ? <dl><div><dt>Resolution</dt><dd>Verified {resolution.lod.id}</dd></div><div><dt>Content</dt><dd>{resolution.lod.content.relativeContentRef}</dd></div><div><dt>Geometric error</dt><dd>{resolution.lod.geometricErrorMeters} m</dd></div></dl> : <><p className="section-label">Procedural geometry fallback remains active.</p><p className="section-label" role="status">{resolution.diagnostic.message}</p></>;
+              const resolution = activeAdapter.getAssetResolution?.(selectedFeature.id, 240, 1);
+              return resolution?.kind === "asset" ? <dl><div><dt>Resolution</dt><dd>Verified {resolution.lod.id}</dd></div><div><dt>Content</dt><dd>{resolution.lod.content.relativeContentRef}</dd></div><div><dt>Geometric error</dt><dd>{resolution.lod.geometricErrorMeters} m</dd></div></dl> : <><p className="section-label">Procedural geometry fallback remains active.</p><p className="section-label" role="status">{resolution?.diagnostic.message ?? "No asset manifest is published for this data mode."}</p></>;
             })()}
           </section>
 
@@ -680,6 +1302,106 @@ export function App() {
             </section>
           )}
 
+          {selectedPlaceTruth && (
+            <section className="inspector-section place-truth-detail" aria-label="Place truth details">
+              <div className="place-truth-heading">
+                <h2>Place truth</h2>
+                <span className="truth-badge">Fixture only</span>
+              </div>
+              <p className="section-label">Provider-neutral travel record · synthetic values only · no real Manhattan fact asserted</p>
+              <dl>
+                <div><dt>Categories</dt><dd>{selectedPlaceTruth.categories.map(placeTruthCategoryLabel).join(" · ")}</dd></div>
+                <div><dt>Facets</dt><dd>{selectedPlaceTruth.facets.join(" · ")}</dd></div>
+                <div><dt>Localizations</dt><dd>{selectedPlaceTruth.localizedNames.map((name) => `${name.value}${name.language ? ` (${name.language})` : ""}`).join(" · ")}</dd></div>
+                <div><dt>Address</dt><dd>{selectedPlaceTruth.address.value?.formatted ?? `Not supplied (${selectedPlaceTruth.address.status})`}</dd></div>
+                <div><dt>Entrances</dt><dd>{selectedPlaceTruth.entrances.length ? `${selectedPlaceTruth.entrances.length} sourced entrance${selectedPlaceTruth.entrances.length === 1 ? "" : "s"}` : "Not recorded (absent)"}</dd></div>
+                <div><dt>Contact</dt><dd>{selectedPlaceTruth.contact.value ? [selectedPlaceTruth.contact.value.website, selectedPlaceTruth.contact.value.phone].filter(Boolean).join(" · ") || "No contact values" : `Not supplied (${selectedPlaceTruth.contact.status})`}</dd></div>
+                <div><dt>Brand / operator</dt><dd>{selectedPlaceTruth.brand.value || selectedPlaceTruth.operator.value ? [selectedPlaceTruth.brand.value, selectedPlaceTruth.operator.value].filter(Boolean).join(" · ") : `Not supplied (${selectedPlaceTruth.brand.status} / ${selectedPlaceTruth.operator.status})`}</dd></div>
+                <div><dt>Hours</dt><dd><strong className={`truth-status truth-status-${selectedPlaceHoursStatus?.status ?? "unknown"}`}>{selectedPlaceHoursStatus?.status ?? "unknown"}</strong>{selectedPlaceTruth.hours.raw ? ` · ${selectedPlaceTruth.hours.raw}` : ""}{selectedPlaceHoursStatus?.localTime ? ` · local ${selectedPlaceHoursStatus.localTime}` : ""}</dd></div>
+                <div><dt>Hours note</dt><dd>{selectedPlaceHoursStatus?.explanation ?? "Opening hours are unknown."}</dd></div>
+                <div><dt>Timezone</dt><dd>{selectedPlaceTruth.hours.timezone ?? "Unknown"}</dd></div>
+                <div><dt>Amenities</dt><dd>{selectedPlaceTruth.amenities.value?.length ? selectedPlaceTruth.amenities.value.map((amenity) => `${amenity.label}: ${amenity.value}`).join(" · ") : `Not supplied (${selectedPlaceTruth.amenities.status})`}</dd></div>
+                <div><dt>Accessibility</dt><dd>{selectedPlaceTruth.accessibility.value ? `${selectedPlaceTruth.accessibility.value.wheelchair} wheelchair · ${selectedPlaceTruth.accessibility.value.entrance} entrance` : `Not supplied (${selectedPlaceTruth.accessibility.status})`}</dd></div>
+                <div><dt>Price / reviews</dt><dd>{selectedPlaceTruth.commercial.priceLevel.status === "absent" && selectedPlaceTruth.commercial.rating.status === "absent" ? "Not sourced" : "See source lineage"}</dd></div>
+                <div><dt>Business status</dt><dd>{selectedPlaceTruth.commercial.businessStatus.value ?? `Not supplied (${selectedPlaceTruth.commercial.businessStatus.status})`}</dd></div>
+                <div><dt>Imagery</dt><dd>{selectedPlaceTruth.imagery.status === "absent" ? "No photo or street imagery reference" : selectedPlaceTruth.imagery.status}</dd></div>
+              </dl>
+              <details>
+                <summary>Field-level lineage</summary>
+                <ul className="place-lineage-list">
+                  {selectedPlaceTruth.lineage.map((field) => <li key={field.field}><strong>{field.field}</strong><span>{field.status} · {field.sourceRefIds.join(", ") || "no source"}</span><small>{field.uncertainty}</small></li>)}
+                </ul>
+              </details>
+              <p className="section-label">Source: {selectedPlaceTruth.sourceRefs.map((source) => `${source.provider} · ${source.sourceRecordId}`).join(" · ")} · {selectedPlaceTruth.sourceLicenses.map((license) => license.licenseClass).join(", ")}</p>
+            </section>
+          )}
+
+          {citywideMode && selectedRuntimeFeature?.kind === "poi" && (
+            <section className="inspector-section real-place-detail" aria-label="Citywide restaurant details">
+              <div className="place-truth-heading">
+                <h2>Citywide restaurant record</h2>
+                <span className="truth-badge real-badge">Real · {CITYWIDE_RELEASE_ID}</span>
+              </div>
+              <p className="section-label">NYC DOHMH snapshot-relative parent record · administrative inspection observations only, not a rating, review, opening-status claim, or recommendation.</p>
+              <dl>
+                <div><dt>CAMIS parent</dt><dd>{selectedRuntimeFeature.id.replace(/^dohmh:camis:/, "")}</dd></div>
+                <div><dt>Location status</dt><dd>{selectedRuntimeFeature.attributes.citywideLocationStatus === "location-unavailable" ? "Location unavailable in source; no map marker is invented." : "Located from the accepted source point."}</dd></div>
+                <div><dt>Inspection observations</dt><dd>{selectedRuntimeFeature.attributes.citywideObservationCount ?? "Unknown / detail not loaded"}</dd></div>
+                <div><dt>Latest usable inspection date</dt><dd>{selectedRuntimeFeature.attributes.citywideLatestInspectionDate ?? "Unknown / no usable inspection date"}</dd></div>
+                <div><dt>Record date</dt><dd>{selectedRuntimeFeature.attributes.citywideRecordDate ?? "Unknown / not provided"} <small>(record date is not an inspection date)</small></dd></div>
+                <div><dt>Grade / score</dt><dd>{[selectedRuntimeFeature.attributes.citywideGrade, selectedRuntimeFeature.attributes.citywideScore].filter(hasDisplayValue).join(" · ") || "Unknown / not provided"}</dd></div>
+                <div><dt>Action / type</dt><dd>{[selectedRuntimeFeature.attributes.citywideAction, selectedRuntimeFeature.attributes.citywideInspectionType].filter(hasDisplayValue).join(" · ") || "Unknown / not provided"}</dd></div>
+                <div><dt>Snapshot captured</dt><dd>{selectedRuntimeFeature.freshness.capturedAt ?? "Unknown"}</dd></div>
+                <div><dt>Source updated</dt><dd>{selectedRuntimeFeature.freshness.updatedAt ?? "Unknown"}</dd></div>
+              </dl>
+              <p className="section-label">Source observations retain derived occurrence identity internally; no derived occurrence token is presented as a DOHMH inspection ID.</p>
+            </section>
+          )}
+
+          {selectedRealPlace && (
+            <section className="inspector-section real-place-detail" aria-label="Real restaurant details">
+              <div className="place-truth-heading">
+                <h2>Real restaurant record</h2>
+                <span className="truth-badge real-badge">Real · {selectedRealPlace.releaseId}</span>
+              </div>
+              <p className="section-label">Bounded NYC DOHMH place projection · source facts only · not a full-Manhattan directory.</p>
+              <dl>
+                <div><dt>Canonical ID</dt><dd>{selectedRealPlace.canonicalId}</dd></div>
+                <div><dt>Address</dt><dd>{selectedRealPlace.address.formatted ?? "Unknown / Not provided"}</dd></div>
+                <div><dt>Cuisine</dt><dd>{selectedRealPlace.cuisine ?? "Unknown / Not provided"}</dd></div>
+                <div><dt>Phone</dt><dd>{selectedRealPlace.contact.phone ?? "Unknown / Not provided"}</dd></div>
+                <div><dt>CAMIS</dt><dd>{selectedRealPlace.latestInspection?.camis ?? "Unknown / Not provided"} <small>(DOHMH source identity; not the platform canonical ID)</small></dd></div>
+                <div><dt>Source record</dt><dd>{selectedRealPlace.sourceRecordIds.join(" · ") || "Unknown / Not provided"}</dd></div>
+                <div><dt>Hours</dt><dd>Unknown / Not provided by this release</dd></div>
+                <div><dt>Accessibility</dt><dd>Unknown / Not provided by this release</dd></div>
+                <div><dt>Brand / website</dt><dd>Unknown / Not provided</dd></div>
+                <div><dt>Snapshot captured</dt><dd>{selectedRealPlace.freshness.capturedAt ?? "Unknown"}</dd></div>
+                <div><dt>Record updated</dt><dd>{selectedRealPlace.freshness.updatedAt ?? "Unknown"}</dd></div>
+                <div><dt>Source observed</dt><dd>{selectedRealPlace.freshness.observedAt ?? "Unknown"}</dd></div>
+                <div><dt>Uncertainty</dt><dd>{selectedRealPlace.uncertainty}</dd></div>
+              </dl>
+              <section className="inspection-record" aria-label="DOHMH inspection record">
+                <h3>DOHMH inspection record</h3>
+                <p className="section-label">Administrative inspection data only — not a consumer rating, review, popularity signal, opening-status claim, or recommendation.</p>
+                <dl>
+                  <div><dt>Inspection observations</dt><dd>{selectedRealPlace.inspectionObservationCount ?? "Unknown / Not provided"}</dd></div>
+                  <div><dt>Latest usable date</dt><dd>{selectedRealPlace.latestInspection?.inspectionDateStatus === "not-yet-inspected" ? "not yet inspected / no usable inspection date" : selectedRealPlace.latestInspection?.inspectionDate ?? "Unknown / no usable inspection date"}</dd></div>
+                  <div><dt>Record date</dt><dd>{selectedRealPlace.latestInspection?.recordDate ?? "Unknown / Not provided"} <small>(record date is not an inspection date)</small></dd></div>
+                  <div><dt>Grade</dt><dd>{selectedRealPlace.latestInspection?.grade ?? "Unknown / Not provided"}</dd></div>
+                  <div><dt>Score</dt><dd>{selectedRealPlace.latestInspection?.score ?? "Unknown / Not provided"}</dd></div>
+                  <div><dt>Action</dt><dd>{selectedRealPlace.latestInspection?.action ?? "Unknown / Not provided"}</dd></div>
+                  <div><dt>Inspection type</dt><dd>{selectedRealPlace.latestInspection?.inspectionType ?? "Unknown / Not provided"}</dd></div>
+                </dl>
+              </section>
+              {selectedRealPlace.diagnostics.length > 0 && <p className="section-label" role="status">Optional record detail diagnostic: {selectedRealPlace.diagnostics.join(" ")}</p>}
+              <details>
+                <summary>Source and terms</summary>
+                <p className="section-label">{selectedRealPlace.sourceLicenses.map((license) => license.attribution).join(" ") || "Source attribution unknown."}</p>
+                <p className="source-links">{selectedRealPlace.sourceRefs.map((source) => <a href={source.sourceUrl} key={source.id} target="_blank" rel="noreferrer">Dataset {source.datasetId}</a>)} · {selectedRealPlace.sourceLicenses.map((license) => <a href={license.termsUrl} key={`${license.sourceRefId}:terms`} target="_blank" rel="noreferrer">Terms</a>)}</p>
+              </details>
+            </section>
+          )}
+
           <section className="inspector-section relationship-detail">
             <h2>Related entities</h2>
             {relatedFeatures.length > 0 ? <ul className="related-list">{relatedFeatures.map((feature) => <li key={feature.id}><button type="button" onClick={() => { selectFeature(feature); setFocusRequest((request) => request + 1); }}>{feature.name}<small>{feature.kind}</small></button></li>)}</ul> : <p className="section-label">No source-linked related entities recorded for this feature.</p>}
@@ -687,7 +1409,7 @@ export function App() {
             {nearbyTransit.length > 0 ? <ul className="related-list">{nearbyTransit.map(({ feature, distanceMeters, method }) => <li key={feature.id}><button type="button" onClick={() => { selectFeature(feature); setFocusRequest((request) => request + 1); }}>{feature.name}<small>{feature.kind} · {formatDistanceMeters(distanceMeters)} · geometry-derived {method}</small></button></li>)}</ul> : <p className="section-label">{proximityOriginAvailable ? "Unknown · no geometry-derived transit within 1,000 meters." : "Proximity unavailable · this geometry has no trustworthy representative point."}</p>}
           </section>
 
-          {selectedFeature.kind === "poi" && (
+          {selectedFeature.kind === "poi" && !selectedRealPlace && (
             <section className="inspector-section poi-detail">
               <h2>Place details</h2>
               <dl>
@@ -753,7 +1475,7 @@ export function App() {
           <section className="inspector-section">
             <h2>Sources</h2>
             <p className="section-label">
-              {selectedFeature.provenanceRecord.label} · local fixture only
+              {selectedFeature.provenanceRecord.label} · {citywideMode ? `local citywide release ${CITYWIDE_RELEASE_ID}; source attribution retained` : dataMode === "real-pilot" ? `bounded real pilot ${REAL_PILOT_RELEASE_ID}; source attribution retained` : "local fixture only"}
             </p>
             <div className="provenance-list">
               {(["authoritative", "derived", "generated"] as const).map((kind) => (
@@ -763,7 +1485,7 @@ export function App() {
                     <strong>{provenanceLabel(kind)}</strong>
                     <small>
                       {kind === selectedFeature.provenance
-                        ? "Current normalized local fixture; not production city data."
+                        ? citywideMode ? "Current normalized source snapshot; citywide scope and uncertainty apply." : dataMode === "real-pilot" ? "Current normalized source snapshot; pilot scope and uncertainty apply." : "Current normalized local fixture; not production city data."
                         : kind === "generated"
                           ? "Visible runtime-only geometry; not ground truth."
                           : "No source connected in this setup milestone."}
@@ -775,7 +1497,7 @@ export function App() {
             <dl className="source-record">
               <div>
                 <dt>Source URL</dt>
-                <dd>{selectedFeature.provenanceRecord.sourceUrl ?? "Not recorded"}</dd>
+                <dd>{selectedFeature.provenanceRecord.sourceUrl ? <a href={selectedFeature.provenanceRecord.sourceUrl} target="_blank" rel="noreferrer">{selectedFeature.provenanceRecord.sourceUrl}</a> : "Not recorded"}</dd>
               </div>
               <div>
                 <dt>Captured</dt>
@@ -793,6 +1515,11 @@ export function App() {
                 <dt>Ingestion rejects</dt>
                 <dd>{selectedFeature.ingestionSummary.rejectionReport}</dd>
               </div>
+              {selectedRealPlace && <>
+                <div><dt>Terms URL</dt><dd>{selectedRealPlace.sourceLicenses[0]?.termsUrl ? <a href={selectedRealPlace.sourceLicenses[0].termsUrl} target="_blank" rel="noreferrer">NYC DataMine terms</a> : "Unknown / Not provided"}</dd></div>
+                <div><dt>Attribution</dt><dd>{selectedRealPlace.sourceLicenses[0]?.attribution ?? "Unknown / Not provided"}</dd></div>
+                <div><dt>City disclaimer</dt><dd>Informational source; may be updated, corrected, or discontinued; NYC makes no warranty of completeness, accuracy, content, or fitness.</dd></div>
+              </>}
             </dl>
           </section>
 
@@ -808,8 +1535,8 @@ export function App() {
 
       <footer className="status-bar">
         <span>Manhattan, New York</span>
-        <span><Box size={16} />Cesium entities ready</span>
-        <span className="status-pending">Fixture data only · provider approval pending</span>
+        <span><Box size={16} />{dataMode === "real-pilot" ? "Cesium primitives + selected detail ready" : "Cesium entities ready"}</span>
+        <span className="status-pending">{citywideMode ? "Real NYC citywide snapshot · local app-origin requests only" : dataMode === "real-pilot" ? "Real open-data pilot · MTA/OSM/Overture not loaded" : "Fixture data only · provider approval pending"}</span>
       </footer>
     </main>
   );

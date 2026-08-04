@@ -5,6 +5,12 @@ Date: 2026-08-03
 Status: accepted for the fixture-only runtime foundation; production data and
 hosting remain approval-pending.
 
+> **Current-state note (2026-08-04):** Decision 0013 extends this runtime
+> contract to the approved local OTI/DOHMH citywide JSON/shard release. The
+> fixture stress harness remains fixture-only; citywide mode adds bounded lazy
+> geometry/search/detail loading but does not claim production OGC 3D Tiles,
+> public hosting, or provider freshness.
+
 ## Decision
 
 Keep CesiumJS as the sole geospatial renderer. Establish a versioned,

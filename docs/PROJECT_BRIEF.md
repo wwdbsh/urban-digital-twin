@@ -21,6 +21,24 @@ The Manhattan release should let a user:
 It does not mean inventing unseen facades, interiors, live occupancy, or traffic
 and presenting them as ground truth.
 
+## Delivered Manhattan foundation (2026-08-04)
+
+The repository now contains the completed local Manhattan foundation described
+in [the implementation record](codex/MANHATTAN_CITYWIDE_FOUNDATION_IMPLEMENTATION.md)
+and [Decision 0013](decisions/0013-manhattan-citywide-foundation-delivery.md):
+synthetic fixture mode, a bounded approved OTI/DOHMH real-data pilot, and an
+explicit local citywide OTI/DOHMH release with lazy geometry/search/detail
+shards, stable identity, source provenance, and fail-closed navigation. The
+citywide release is snapshot-relative and local-only; it is not a public
+deployment or production 3D Tiles service. The three protected procedural
+landmark GLB pairs are integrated into the bounded pilot only.
+
+The delivered source scope does not add real neighborhoods, parks, retail or
+general attractions, transit, routing, live status, reviews, ratings, photos,
+street imagery, traffic, or facade-accurate/photorealistic building models.
+DOHMH values remain inspection history observations, and OTI footprint
+extrusions remain source-derived massing with explicit uncertainty.
+
 ## Proposed technical baseline
 
 | Concern | Baseline |

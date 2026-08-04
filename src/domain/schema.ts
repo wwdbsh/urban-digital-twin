@@ -14,6 +14,9 @@ export type LicenseClass =
   | "cdla-permissive-2.0"
   | "apache-2.0"
   | "cc0-1.0"
+  | "cc-by-sa-4.0"
+  | "cc-by-sa-3.0"
+  | "nyc-publication-facts"
   | "public-domain"
   | "provider-terms"
   | "fixture-only"
@@ -115,6 +118,9 @@ export interface SourceRef {
 export interface HeightProvenance {
   schemaVersion: typeof DOMAIN_SCHEMA_VERSION;
   valueMeters: number | null;
+  /** Raw source measurement retained when a provider publishes a unit-bearing value. */
+  sourceValue?: number | null;
+  sourceUnit?: "feet" | "meters" | "unknown";
   verticalDatum: string;
   sourceRefId: string | null;
   method: "source" | "derived" | "unknown";
@@ -515,6 +521,8 @@ export function validateHeightProvenance(value: unknown): ValidationResult<Heigh
   if (!record(value)) return { ok: false, issues: [{ path: "$", message: "Expected HeightProvenance." }] };
   schemaVersionField(value.schemaVersion, "schemaVersion", issues);
   if (value.valueMeters !== null && !finiteField(value.valueMeters, "valueMeters", issues)) issues.push({ path: "valueMeters", message: "Height must be a finite number or null." });
+  if (value.sourceValue !== undefined && value.sourceValue !== null && !finiteField(value.sourceValue, "sourceValue", issues)) issues.push({ path: "sourceValue", message: "Source height must be a finite number or null." });
+  if (value.sourceUnit !== undefined && !["feet", "meters", "unknown"].includes(String(value.sourceUnit))) issues.push({ path: "sourceUnit", message: "Unsupported source height unit." });
   stringField(value.verticalDatum, "verticalDatum", issues);
   nullableStringField(value.sourceRefId, "sourceRefId", issues);
   if (!["source", "derived", "unknown"].includes(String(value.method))) issues.push({ path: "method", message: "Unsupported height provenance method." });
