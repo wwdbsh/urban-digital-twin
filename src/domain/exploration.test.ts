@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { buildSyntheticReconciliationCatalog } from "./reconciliation-fixtures.ts";
 import { runtimeFixtureFeatures } from "./features.ts";
 import restaurants from "../../public/data/real-wave-20260804/restaurants.json";
-import { explorationUrl, parseExplorationUrl, searchRealPlaceCatalog, searchUnifiedCatalog } from "./exploration.ts";
+import { explorationUrl, parseExplorationUrl, rankOverlapCandidates, searchRealPlaceCatalog, searchUnifiedCatalog } from "./exploration.ts";
 import type { Feature } from "./schema.ts";
 
 describe("exploration contracts", () => {
@@ -41,5 +41,14 @@ describe("exploration contracts", () => {
     const copy = { ...duplicate, id: `${duplicate.id}:duplicate` };
     const results = searchRealPlaceCatalog([copy, duplicate], "DONUT PUB");
     expect(results.map((result) => result.feature.id)).toEqual([duplicate.id, copy.id].sort());
+  });
+
+  it("orders overlapping civic candidates without hiding alternatives", () => {
+    const ordered = rankOverlapCandidates([
+      { canonicalId: "building", layerId: "buildings", kind: "building", label: "Same", priority: 40 },
+      { canonicalId: "lpc", layerId: "landmarks", kind: "landmark-record", label: "Same", priority: 10 },
+      { canonicalId: "park", layerId: "parks", kind: "park", label: "Same", priority: 20 },
+    ]);
+    expect(ordered.map((item) => item.canonicalId)).toEqual(["lpc", "park", "building"]);
   });
 });

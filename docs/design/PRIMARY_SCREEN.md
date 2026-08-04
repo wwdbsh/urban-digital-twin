@@ -92,3 +92,25 @@ imagery shown in the concept because a data provider, license, and credential
 had not been approved. That statement describes the setup checkpoint; the
 current bounded/citywide local OTI/DOHMH modes are documented above and do not
 claim photorealism or public imagery.
+
+## Civic-context controls and accessibility (2026-08-04)
+
+The current Explore surface also supports the immutable local
+`manhattan-civic-context-20260804` release. Runtime layer controls expose
+Statistical areas, Parks, and Landmark records independently; civic facets filter
+the same record kinds and persist in `layers`/`facets` URL state. Search results
+show the source type and match method, and details retain the canonical source
+ID, source relationship, dates, attribution, uncertainty, and explicit unknowns.
+
+Cesium pointer picks use WGS84 geometry and a deterministic drill-pick ordering.
+When records overlap, the UI presents an accessible chooser rather than silently
+selecting the first hit. Search and detail selections update cold-loadable URLs;
+Back/Forward and release-pinned bookmarks never substitute a fixture or a
+same-name record when a civic detail is missing.
+
+The mobile layout remains usable at 390x844: controls are semantic buttons,
+search is a combobox/listbox, details are keyboard reachable, Escape closes the
+inspector, and focus returns to the triggering control or search input. The
+layout honors the existing reduced-motion CSS behavior. Civic layer faults are
+announced as isolated status messages and leave unaffected sources searchable;
+no provider-domain requests are made by the browser.

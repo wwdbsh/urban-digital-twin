@@ -3,7 +3,7 @@ import { explorationUrl, parseExplorationUrl, type ExplorationUrlState } from ".
 
 export const VISITOR_NAVIGATION_SCHEMA_VERSION = "1.0" as const;
 export type CameraMode = "overview" | "explore";
-export type NavigationDataMode = "fixtures" | "real-pilot";
+export type NavigationDataMode = "fixtures" | "real-pilot" | "civic-context";
 export type JourneyStepAction = "start" | "previous" | "next" | "focus";
 
 export interface CameraPose {
@@ -23,6 +23,10 @@ export interface NavigationUrlState extends ExplorationUrlState {
   dataMode?: NavigationDataMode;
   /** The immutable release requested by a real link; absent means fixture mode. */
   releaseId?: string | null;
+  /** URL-restored visibility state for generic v2 release layers. */
+  visibleLayers?: string[];
+  /** URL-restored category/facet state for the active release. */
+  facets?: string[];
 }
 
 export interface SavedPlace {
@@ -30,6 +34,8 @@ export interface SavedPlace {
   canonicalId: string;
   label: string;
   savedAt: string;
+  /** Immutable release pin for real/civic bookmarks; absent means legacy fixture bookmark. */
+  releaseId?: string | null;
 }
 
 export interface SavedJourney {
@@ -81,17 +87,24 @@ export function parseNavigationUrl(value: string): NavigationUrlState {
     const dataValue = url.searchParams.get("data");
     const releaseValue = url.searchParams.get("release");
     const isFixtureData = dataValue === "fixture" || dataValue === "fixtures";
-    const dataMode: NavigationDataMode | undefined = dataValue && !isFixtureData || releaseValue ? "real-pilot" : undefined;
-    const releaseId = dataMode ? releaseValue ?? (dataValue === "real-pilot" ? null : dataValue) : undefined;
+    const civicData = dataValue === "civic-context" || releaseValue === "manhattan-civic-context-20260804";
+    const dataMode: NavigationDataMode | undefined = dataValue && !isFixtureData || releaseValue ? civicData ? "civic-context" : "real-pilot" : undefined;
+    const releaseId = dataMode ? releaseValue ?? (dataValue === "real-pilot" ? null : dataValue === "civic-context" ? "manhattan-civic-context-20260804" : dataValue) : undefined;
     const dataState = dataMode ? { dataMode, releaseId } : {};
     const modeValue = url.searchParams.get("view");
     const cameraMode: CameraMode = modeValue === "overview" ? "overview" : "explore";
     const poseKeys = ["lon", "lat", "height", "heading", "pitch", "roll"];
     const hasPose = poseKeys.some((key) => url.searchParams.has(key));
-    if (!hasPose) return { ...base, ...dataState, cameraMode, pose: null, poseInvalid: false };
+    const layerValue = url.searchParams.get("layers");
+    const facetValue = url.searchParams.get("facets");
+    const filterState = {
+      ...(layerValue ? { visibleLayers: [...new Set(layerValue.split(",").map((item) => item.trim()).filter(Boolean))].sort() } : {}),
+      ...(facetValue ? { facets: [...new Set(facetValue.split(",").map((item) => item.trim()).filter(Boolean))].sort() } : {}),
+    };
+    if (!hasPose) return { ...base, ...dataState, ...filterState, cameraMode, pose: null, poseInvalid: false };
     const values = Object.fromEntries(poseKeys.map((key) => [key, parseNumber(url.searchParams.get(key))]));
     const pose = normalizeCameraPose({ longitude: values.lon!, latitude: values.lat!, height: values.height!, heading: values.heading!, pitch: values.pitch!, roll: values.roll! });
-    return { ...base, ...dataState, cameraMode, pose, poseInvalid: pose === null };
+    return { ...base, ...dataState, ...filterState, cameraMode, pose, poseInvalid: pose === null };
   } catch {
     return { ...base, cameraMode: "explore", pose: null, poseInvalid: true };
   }
@@ -100,7 +113,7 @@ export function parseNavigationUrl(value: string): NavigationUrlState {
 export function navigationUrl(value: NavigationUrlState, base: string): string {
   const url = new URL(explorationUrl({ featureId: value.featureId, query: value.query }, base));
   url.searchParams.set("view", value.cameraMode);
-  if (value.dataMode === "real-pilot") {
+  if (value.dataMode === "real-pilot" || value.dataMode === "civic-context") {
     url.searchParams.set("data", value.releaseId ?? "real-pilot");
     if (value.releaseId) url.searchParams.set("release", value.releaseId);
     else url.searchParams.delete("release");
@@ -108,6 +121,10 @@ export function navigationUrl(value: NavigationUrlState, base: string): string {
     url.searchParams.delete("data");
     url.searchParams.delete("release");
   }
+  if (value.visibleLayers && value.visibleLayers.length > 0) url.searchParams.set("layers", [...new Set(value.visibleLayers)].sort().join(","));
+  else url.searchParams.delete("layers");
+  if (value.facets && value.facets.length > 0) url.searchParams.set("facets", [...new Set(value.facets)].sort().join(","));
+  else url.searchParams.delete("facets");
   if (value.pose) {
     const pose = normalizeCameraPose(value.pose);
     if (pose) for (const [key, numberValue] of Object.entries({ lon: pose.longitude, lat: pose.latitude, height: pose.height, heading: pose.heading, pitch: pose.pitch, roll: pose.roll })) url.searchParams.set(key, numberValue.toFixed(6));
@@ -127,7 +144,7 @@ export function stepIndex(current: number, action: JourneyStepAction, count: num
 export function journeyStepCount(itinerary: Itinerary | null | undefined): number { return itinerary?.legs.reduce((count, leg) => count + leg.steps.length, 0) ?? 0; }
 
 function emptySavedState(): SavedNavigationState { return { schemaVersion: VISITOR_NAVIGATION_SCHEMA_VERSION, places: [], journeys: [] }; }
-function validSavedPlace(value: unknown): value is SavedPlace { return typeof value === "object" && value !== null && (value as SavedPlace).schemaVersion === VISITOR_NAVIGATION_SCHEMA_VERSION && typeof (value as SavedPlace).canonicalId === "string" && Boolean((value as SavedPlace).canonicalId) && typeof (value as SavedPlace).label === "string" && typeof (value as SavedPlace).savedAt === "string"; }
+function validSavedPlace(value: unknown): value is SavedPlace { return typeof value === "object" && value !== null && (value as SavedPlace).schemaVersion === VISITOR_NAVIGATION_SCHEMA_VERSION && typeof (value as SavedPlace).canonicalId === "string" && Boolean((value as SavedPlace).canonicalId) && typeof (value as SavedPlace).label === "string" && typeof (value as SavedPlace).savedAt === "string" && (!Object.prototype.hasOwnProperty.call(value, "releaseId") || (typeof (value as SavedPlace).releaseId === "string" || (value as SavedPlace).releaseId === null)); }
 function validSavedJourney(value: unknown): value is SavedJourney { return typeof value === "object" && value !== null && (value as SavedJourney).schemaVersion === VISITOR_NAVIGATION_SCHEMA_VERSION && typeof (value as SavedJourney).id === "string" && typeof (value as SavedJourney).originFeatureId === "string" && typeof (value as SavedJourney).destinationFeatureId === "string" && (value as SavedJourney).mode !== undefined && ((value as SavedJourney).mode === "walking" || (value as SavedJourney).mode === "transit") && typeof (value as SavedJourney).label === "string" && typeof (value as SavedJourney).savedAt === "string"; }
 
 export function loadSavedNavigation(storage: NavigationStorage | null | undefined, validFeatureIds: ReadonlySet<string>): SavedNavigationState {
@@ -135,7 +152,10 @@ export function loadSavedNavigation(storage: NavigationStorage | null | undefine
   try {
     const parsed = JSON.parse(storage.getItem(VISITOR_NAVIGATION_STORAGE_KEY) ?? "null") as Partial<SavedNavigationState> | null;
     if (!parsed || parsed.schemaVersion !== VISITOR_NAVIGATION_SCHEMA_VERSION) return emptySavedState();
-    const places = [...new Map((Array.isArray(parsed.places) ? parsed.places : []).filter(validSavedPlace).filter((place) => validFeatureIds.has(place.canonicalId)).map((place) => [place.canonicalId, place])).values()].sort((a, b) => a.canonicalId.localeCompare(b.canonicalId));
+    // Pinned real/civic bookmarks are intentionally retained even when their
+    // release is not the currently hydrated adapter. The UI can then explain
+    // the release mismatch instead of silently dropping a user bookmark.
+    const places = [...new Map((Array.isArray(parsed.places) ? parsed.places : []).filter(validSavedPlace).filter((place) => Boolean(place.releaseId) || validFeatureIds.has(place.canonicalId)).map((place) => [place.canonicalId, place])).values()].sort((a, b) => a.canonicalId.localeCompare(b.canonicalId));
     const journeys = [...new Map((Array.isArray(parsed.journeys) ? parsed.journeys : []).filter(validSavedJourney).filter((journey) => validFeatureIds.has(journey.originFeatureId) && validFeatureIds.has(journey.destinationFeatureId)).map((journey) => [journey.id, journey])).values()].sort((a, b) => a.id.localeCompare(b.id));
     return { schemaVersion: VISITOR_NAVIGATION_SCHEMA_VERSION, places, journeys };
   } catch { return emptySavedState(); }

@@ -51,7 +51,7 @@ describe("approval-safe area snapshots", () => {
 
   it("refuses a pending production source before any output can be created", async () => {
     const pending = JSON.stringify({ type: "FeatureCollection", features: [{ type: "Feature", properties: {
-      sourceRegistryEntryId: "nyc.nta-2020", provider: "NYC DCP", datasetId: "4hft-v355", sourceRecordId: "pending", termsUrl: "https://opendata.cityofnewyork.us/overview/", attribution: "Synthetic", licenseClass: "unknown", officialName: "Pending", areaType: "nta", areaLevel: "2020", semantics: "statistical",
+      sourceRegistryEntryId: "nyc.community-districts", provider: "NYC DCP", datasetId: "yfnk-k7r4", sourceRecordId: "pending", termsUrl: "https://opendata.cityofnewyork.us/overview/", attribution: "Synthetic", licenseClass: "unknown", officialName: "Pending", areaType: "district", areaLevel: "2020", semantics: "administrative",
     }, geometry: { type: "Polygon", coordinates: [[[-73.99, 40.74], [-73.98, 40.74], [-73.98, 40.75], [-73.99, 40.75], [-73.99, 40.74]]] } }] });
     await expect(AreaSnapshotAdapter.fromSnapshot({ snapshotText: pending, metadata: await metadata(pending), city: manhattanAdapter })).rejects.toThrow(/pending/);
   });

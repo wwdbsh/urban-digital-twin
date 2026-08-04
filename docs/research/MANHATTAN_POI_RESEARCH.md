@@ -70,3 +70,24 @@ pnpm poi:ingest -- --input /absolute/path/approved/places.snapshot.json --output
 ```
 
 The command must refuse pending registry entries, network URLs, missing checksums, mismatched terms, and an existing output directory. The approved pilot wrote only immutable manifest/normalized-feature/layer-manifest files after successful validation and captured its source license, WGS84 coordinates, timestamps, counts, checksums, and rejection list; future sources still require their own review.
+
+## Implemented Parks/LPC civic wave (2026-08-04)
+
+The same durable local approval covers exactly two additional NYC Open Data
+sources: NYC Parks Properties `enfh-gkve` and LPC Designated and Calendared
+Buildings and Sites `ncre-qhxs`. The captured source metadata was pinned before
+and after the 2026-08-04T14:47:42.642Z snapshot; update metadata was
+2026-07-17T13:40:16.000Z for Parks and 2026-06-18T14:42:53.000Z for LPC. The
+Parks snapshot contains 395 records (395 accepted, 0 rejected); LPC contains
+15,313 observations (15,313 accepted, 0 rejected), grouped reversibly into
+1,140 parent records with 10 missing-location observations retained off-map.
+Both sources are normalized to WGS84 (EPSG:4326) and preserve source IDs,
+observation relationships, capture/update dates, attribution, and unknowns.
+
+The portal metadata does not state an explicit license, so the local release
+records NYC Open Data terms, source attribution, the City modified-data
+disclaimer, and local-only retention/derivative use. Parks presence does not
+prove hours, amenities, current access, or legal survey accuracy. LPC records
+are designation/calendar records; dates and names do not prove current
+condition, use, ownership, or public access. The wave intentionally adds no
+shops directory, ratings, reviews, photos, hours, transit, or live status.

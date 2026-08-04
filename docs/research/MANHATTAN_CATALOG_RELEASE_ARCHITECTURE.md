@@ -119,3 +119,21 @@ The developer-only `pnpm catalog:benchmark -- --records 2000` command generates
 2,000 invented records across 12 deterministic tiles and reports elapsed time,
 bytes, fingerprint, and bounded-budget status. It is a regression/performance
 proxy for local assembly only, not a full-Manhattan performance claim.
+
+## Generic civic-context release v2 (2026-08-04)
+
+The current local sibling release is `manhattan-civic-context-20260804`, built
+from the approved DCP NTA, Parks, and LPC snapshots without mutating the older
+citywide release. Its typed manifest carries source approval evidence, layer and
+record kind, canonical identity, WGS84 geometry kind, reversible observation and
+parent relationships, search/detail references, checksums, and explicit
+accounting. The release contains statistical-area (38), park (395), and LPC
+landmark-record (1,140 parent / 1,130 placed) records; 10 missing-location LPC
+observations remain searchable/detailable but have no map marker.
+
+The compact immutable payload is 22,424,795 bytes with 114 geometry, 307 search,
+and 52 detail shards plus 1,573 detail-index entries, below the 40 MiB
+incremental budget. Validation rejects unsafe paths, checksum mismatch, unknown
+approval evidence, non-WGS84 geometry, layer/accounting drift, and release
+overwrite. The local browser activates this sibling only after manifest and
+approval validation; fixture, pilot, and old citywide releases remain available.

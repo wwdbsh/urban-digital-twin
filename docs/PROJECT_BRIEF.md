@@ -102,3 +102,29 @@ metadata interaction, browser performance, and multi-city reuse.
 
 Do not choose these implicitly. Present concrete options and ask the user before
 the affected implementation begins.
+
+## Implemented civic-context release (2026-08-04)
+
+The bounded local Manhattan wave is implemented as the immutable sibling release
+`manhattan-civic-context-20260804`. It adds generic v2 statistical-area, Parks
+property, and LPC landmark-record layers while preserving the existing fixture,
+bounded pilot, and citywide release modes. Cesium owns WGS84 positioning and
+lazy geometry; local search/detail shards preserve source IDs, provenance,
+capture/update dates, attribution, uncertainty, and explicit no-data caveats.
+
+The approved source set is DCP NTA `9nt8-h7nd` / mapped view `4hft-v355`, NYC
+Parks Properties `enfh-gkve`, and LPC designated/calendared sites `ncre-qhxs`.
+The durable approval ID is
+`codex-user-turn:2026-08-04:manhattan-civic-context-local-v1`; canonical scope
+SHA-256 is
+`7860f0c6c867488935443df1f1f1bb6fefa950646fa7cd1cd32d5a3d0c1eda58`.
+This wave is local-only and does not authorize public deployment, redistribution,
+new providers, credentials, fees, imagery, facade work, or live transit/status.
+
+The release is navigable by source ID/name, supports pointer and keyboard
+selection, deterministic overlap choices, URL layer/facet/deep-link state, and
+bookmarks pinned to the immutable release. Statistical areas are not definitive
+or exhaustive vernacular neighborhoods; Parks presence does not prove current
+hours, amenities, legal survey accuracy, or access; LPC dates and designation
+records do not prove current condition or use. See the implementation record for
+exact counts, checksums, budgets, browser evidence, and the documentation audit.

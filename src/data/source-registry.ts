@@ -2,6 +2,7 @@ import type {
   DerivativePolicy,
   LicenseRef,
   RetentionPolicy,
+  SourceApprovalEvidence,
   SourceRegistryEntry,
 } from "../domain/schema.ts";
 import { DOMAIN_SCHEMA_VERSION } from "../domain/schema.ts";
@@ -11,6 +12,19 @@ const realWaveApprovalDate = "2026-08-04T00:00:00Z";
 
 const cityTerms = "https://www.nyc.gov/html/datamine/html/data/terms.html?dataSetJs=raw";
 const overtureTerms = "https://overturemaps.org/about/faq/";
+export const MANHATTAN_CIVIC_APPROVAL_EVIDENCE = Object.freeze({
+  evidenceId: "codex-user-turn:2026-08-04:manhattan-civic-context-local-v1",
+  fingerprintSha256: "7860f0c6c867488935443df1f1f1bb6fefa950646fa7cd1cd32d5a3d0c1eda58",
+  canonicalScopeJson: '{"approvalDate":"2026-08-04","approvalSource":"current Codex user turn","captureScope":"dated Manhattan-filtered local snapshots","datasets":[{"agency":"DCP","baseId":"9nt8-h7nd","mappedViewId":"4hft-v355","name":"2020 NTAs"},{"agency":"NYC Parks","datasetId":"enfh-gkve","name":"Parks Properties"},{"agency":"LPC","datasetId":"ncre-qhxs","name":"Designated and Calendared Buildings and Sites"}],"derivedUse":["local WGS84 geometry","search","detail","source relationships","browser UI"],"licenseAcceptance":"portal metadata license unspecified","localRawRetention":true,"metadataRetention":true,"obligations":["DCP/Parks/LPC attribution","NYC Open Data terms","City modified-data disclaimer","capture/update dates","uncertainty"],"publicDeployment":false,"redistribution":false,"expectedFee":false,"credentials":false}',
+  scope: "Dated Manhattan-filtered local snapshots; local raw/metadata retention; local WGS84 geometry, search, detail, source relationships, and browser UI only; DCP/Parks/LPC attribution, NYC Open Data terms, City modified-data disclaimer, capture/update dates, and uncertainty retained; portal metadata license unspecified; local-only with no public deployment, redistribution, fee, or credentials.",
+  exclusions: ["public deployment", "redistribution", "new providers", "credentials", "fees", "imagery/facades/textures", "Google/OSM/Overture/MTA/Facilities"],
+} satisfies SourceApprovalEvidence & { canonicalScopeJson: string });
+
+const civicLocalAccess = {
+  keyOrAgreementRequired: false,
+  kind: "none" as const,
+  constraints: "No credential or provider fee expected; local-only retention and derivatives are limited to the recorded user-turn approval scope.",
+};
 const cityRetention: RetentionPolicy = {
   rawSnapshots: "conditional",
   maximumDays: null,
@@ -155,25 +169,27 @@ export const sourceRegistry = [
     expectedVerticalDatum: "Read the chosen DEM/LiDAR product metadata.",
     approvalNote: "Preferred first-city terrain source; vertical datum must be verified per file.",
   }),
-  pendingEntry({
+  approvedEntry({
     id: "nyc.nta-2020",
     provider: "NYC DCP",
-    datasetId: "4hft-v355",
-    canonicalUrl: "https://data.cityofnewyork.us/d/4hft-v355",
+    datasetId: "9nt8-h7nd",
+    mappedViewId: "4hft-v355",
+    canonicalUrl: "https://data.cityofnewyork.us/City-Government/2020-Neighborhood-Tabulation-Areas-NTAs-/9nt8-h7nd",
     termsUrl: cityTerms,
     licenseClass: "nyc-open-data-terms",
     attribution: "Source: City of New York DCP 2020 Neighborhood Tabulation Areas.",
-    releaseTimestamp: "2020-01-01T00:00:00Z",
-    captureTimestamp: "2020-01-01T00:00:00Z",
-    updateTimestamp: null,
-    cadence: "Statistical boundary release; verify current dataset metadata.",
+    releaseTimestamp: "2026-05-28T00:00:00Z",
+    captureTimestamp: null,
+    updateTimestamp: "2026-05-28T00:00:00Z",
+    cadence: "Quarterly automated updates; verify the dated 26B metadata at capture time. Mapped view 4hft-v355 is presentation-only, not a second source.",
     retention: cityRetention,
     derivativePolicy: openDerivative,
-    access: pendingAccess,
+    access: civicLocalAccess,
     geographicScope: "New York City statistical areas",
     expectedCrs: "varies",
     expectedVerticalDatum: "Not applicable to 2D boundary semantics.",
-    approvalNote: "Typed statistical division, not an assertion of vernacular neighborhood boundaries.",
+    approvalEvidence: MANHATTAN_CIVIC_APPROVAL_EVIDENCE,
+    approvalNote: "Approved under codex-user-turn:2026-08-04:manhattan-civic-context-local-v1 (SHA-256 7860f0c6c867488935443df1f1f1bb6fefa950646fa7cd1cd32d5a3d0c1eda58) for local dated Manhattan-filtered snapshots, derivatives, and browser display. NTA is a statistical area, not an assertion of vernacular neighborhood boundaries; mapped view 4hft-v355 is presentation-only.",
   }),
   pendingEntry({
     id: "nyc.community-districts",
@@ -255,7 +271,7 @@ export const sourceRegistry = [
     expectedVerticalDatum: "Not applicable to 2D boundaries.",
     approvalNote: "Official portal verified 2026-08-03: 2,325 MultiPolygon rows, GEOID and borough/tract fields, current version 26B; portal license is unspecified and DCP informational limitations apply.",
   }),
-  pendingEntry({
+  approvedEntry({
     id: "nyc.lpc-sites",
     provider: "NYC Landmarks Preservation Commission",
     datasetId: "ncre-qhxs",
@@ -263,19 +279,20 @@ export const sourceRegistry = [
     termsUrl: cityTerms,
     licenseClass: "nyc-open-data-terms",
     attribution: "Source: NYC Landmarks Preservation Commission.",
-    releaseTimestamp: null,
+    releaseTimestamp: "2026-06-18T00:00:00Z",
     captureTimestamp: null,
     updateTimestamp: "2026-06-18T00:00:00Z",
-    cadence: "Verify the LPC dataset page at ingest time.",
+    cadence: "As-needed portal updates; verify dated metadata at capture time.",
     retention: cityRetention,
     derivativePolicy: openDerivative,
-    access: pendingAccess,
+    access: civicLocalAccess,
     geographicScope: "New York City designated/calendared sites",
     expectedCrs: "varies",
     expectedVerticalDatum: "Not applicable unless joined to building height.",
-    approvalNote: "Landmark status is semantic provenance, not an automatic geometry or architectural-detail claim.",
+    approvalEvidence: MANHATTAN_CIVIC_APPROVAL_EVIDENCE,
+    approvalNote: "Approved under codex-user-turn:2026-08-04:manhattan-civic-context-local-v1 (SHA-256 7860f0c6c867488935443df1f1f1bb6fefa950646fa7cd1cd32d5a3d0c1eda58) for local dated Manhattan-filtered observations, reversible source relationships, and browser display. Landmark status is semantic provenance, not an attraction, facade, or architectural-detail claim.",
   }),
-  pendingEntry({
+  approvedEntry({
     id: "nyc.parks-properties",
     provider: "NYC Parks",
     datasetId: "enfh-gkve",
@@ -283,17 +300,18 @@ export const sourceRegistry = [
     termsUrl: cityTerms,
     licenseClass: "nyc-open-data-terms",
     attribution: "Source: NYC Parks Properties.",
-    releaseTimestamp: null,
+    releaseTimestamp: "2026-07-17T00:00:00Z",
     captureTimestamp: null,
-    updateTimestamp: null,
-    cadence: "Verify dataset page; managed-property geometry is not a legal survey.",
+    updateTimestamp: "2026-07-17T00:00:00Z",
+    cadence: "Monthly automated updates; verify dated metadata at capture time. Managed-property geometry is not a legal survey.",
     retention: cityRetention,
     derivativePolicy: openDerivative,
-    access: pendingAccess,
+    access: civicLocalAccess,
     geographicScope: "New York City park-managed property",
     expectedCrs: "varies",
     expectedVerticalDatum: "Not applicable to 2D park semantics.",
-    approvalNote: "Use with approximate/managed-property wording where the source requires it.",
+    approvalEvidence: MANHATTAN_CIVIC_APPROVAL_EVIDENCE,
+    approvalNote: "Approved under codex-user-turn:2026-08-04:manhattan-civic-context-local-v1 (SHA-256 7860f0c6c867488935443df1f1f1bb6fefa950646fa7cd1cd32d5a3d0c1eda58) for local dated Manhattan-filtered acquisition observations, reversible parent grouping, and browser display. Presence means NYC Parks-managed property only; it does not prove legal-boundary accuracy, hours, amenities, or current access.",
   }),
   pendingEntry({
     id: "nyc.facilities",

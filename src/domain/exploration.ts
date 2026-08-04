@@ -1,5 +1,5 @@
 import { normalizeText, type CanonicalEntity, type ReconciliationResult } from "./reconciliation.ts";
-import type { Feature, FeatureKind } from "./schema.ts";
+import { travelContextPickPriority, type Feature, type FeatureKind, type TravelContextOverlapCandidate } from "./schema.ts";
 import { buildRealPlaceSearchDocument, normalizeSearchText, type RealPlaceSearchDocument } from "../runtime/real-place-view.ts";
 import type { PlaceCategory } from "./places.ts";
 
@@ -15,6 +15,11 @@ export interface UnifiedSearchResult {
   typeLabel: string;
   score: number;
   matchedBy: "id" | "source" | "name" | "alias" | "address" | "category" | "cuisine" | "text";
+}
+
+/** Deterministic, keyboard-friendly order for overlapping source features. */
+export function rankOverlapCandidates(candidates: readonly TravelContextOverlapCandidate[]): TravelContextOverlapCandidate[] {
+  return [...candidates].sort((left, right) => left.priority - right.priority || travelContextPickPriority(left.kind) - travelContextPickPriority(right.kind) || left.label.localeCompare(right.label) || left.canonicalId.localeCompare(right.canonicalId));
 }
 
 const GROUPS: Record<FeatureKind, UnifiedSearchResult["group"]> = {

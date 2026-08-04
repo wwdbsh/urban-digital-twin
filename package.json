@@ -36,6 +36,14 @@
     "citywide:validate": "node --experimental-strip-types scripts/validate-manhattan-citywide-release.mjs",
     "citywide:publish-local": "node --experimental-strip-types scripts/publish-manhattan-citywide-local.mjs",
     "citywide:benchmark": "node --experimental-strip-types scripts/benchmark-manhattan-citywide.mjs",
+    "travel-context:acquire": "node --experimental-strip-types scripts/travel-context-cli.mjs acquire",
+    "travel-context:validate:raw": "node --experimental-strip-types scripts/travel-context-cli.mjs validate:raw",
+    "travel-context:normalize": "node --experimental-strip-types scripts/travel-context-cli.mjs normalize",
+    "travel-context:validate:coverage": "node --experimental-strip-types scripts/travel-context-cli.mjs validate:coverage",
+    "travel-context:build": "node --experimental-strip-types scripts/travel-context-cli.mjs build",
+    "travel-context:validate": "node --experimental-strip-types scripts/travel-context-cli.mjs validate",
+    "travel-context:benchmark": "node --experimental-strip-types scripts/travel-context-cli.mjs benchmark",
+    "travel-context:publish-local": "node --experimental-strip-types scripts/travel-context-cli.mjs publish-local",
     "test:watch": "vitest"
   },
   "dependencies": {

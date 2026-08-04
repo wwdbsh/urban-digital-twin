@@ -46,3 +46,18 @@ state; there is no remote sync claim.
 Real catalog publication still requires source approvals, licensing and
 attribution review, immutable release validation, and any Blender MCP approval
 before offline asset authoring or runtime integration.
+
+## Civic-context URL and bookmark state (2026-08-04)
+
+Navigation schema remains backward-compatible while accepting
+`data=civic-context` / `release=manhattan-civic-context-20260804`, visible layer
+state, and civic facet state. Search and pointer/keyboard selection preserve
+canonical NTA, Parks, or LPC IDs in cold-loadable URLs; browser Back/Forward
+restores the previous query, feature, camera, layers, and facets. Bookmarks
+retain the immutable civic release ID, so an unavailable detail produces an
+explicit message rather than a fixture or same-name substitute.
+
+Focus returns to the invoking search/result or control after closing details;
+the mobile inspector retains semantic headings, status announcements, and
+Escape handling. Civic source caveats and unknown values are rendered directly
+from the release detail rather than inferred by navigation.

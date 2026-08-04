@@ -55,3 +55,20 @@ No real Manhattan hours, reviews, photos, popularity, or business status were
 added. General place-truth fixture records remain synthetic; the separate
 OTI/DOHMH adapters expose only the approved source-backed building and
 inspection observations described above.
+
+## Civic-context wave update (2026-08-04)
+
+The historical fixture-only statements above describe the pre-wave place-truth
+catalog and remain historical; the current app also activates the immutable
+local `manhattan-civic-context-20260804` release after validation. This release
+adds only DCP NTA `9nt8-h7nd` / `4hft-v355`, Parks `enfh-gkve`, and LPC
+`ncre-qhxs`, under approval ID
+`codex-user-turn:2026-08-04:manhattan-civic-context-local-v1` and scope SHA-256
+`7860f0c6c867488935443df1f1f1bb6fefa950646fa7cd1cd32d5a3d0c1eda58`.
+
+The adapter preserves source-typed identity, WGS84 geometry, reversible
+observations, source relationships, capture/update dates, attribution, terms,
+and uncertainty. Search, detail, deep-link, bookmark, facet, overlap, and
+failure-isolation behavior is documented in the civic implementation record;
+ratings, reviews, photos, hours, access, live status, routing, and completeness
+remain out of scope.

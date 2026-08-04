@@ -39,6 +39,7 @@ interface CesiumViewportProps {
   focusFeatureId: string | null;
   visibleLayers: LayerVisibility;
   onFeatureSelected: (feature: Feature) => void;
+  onFeatureOverlap?: (features: Feature[]) => void;
   featureFilter?: (feature: Feature) => boolean;
   itinerary?: Itinerary | null;
   previewRequest?: { action: "start" | "pause" | "stop" | "previous" | "next" | "focus"; requestId: number };
@@ -197,7 +198,8 @@ function addFeatureEntity(viewer: Viewer, feature: Feature, partIndex = 0, asset
     assetDiagnostic: assetResolution?.kind === "procedural-fallback" ? assetResolution.diagnostic.message : null,
     assetContentRef: assetResolution?.kind === "asset" ? assetResolution.lod.content.relativeContentRef : null,
   };
-  if (feature.kind === "area") {
+  if (feature.kind === "area" || feature.kind === "park") {
+    const isPark = feature.kind === "park";
     return viewer.entities.add({
       id: partIndex === 0 ? feature.id : `${feature.id}:part:${partIndex}`,
       name: feature.name,
@@ -205,12 +207,12 @@ function addFeatureEntity(viewer: Viewer, feature: Feature, partIndex = 0, asset
         hierarchy: hierarchyForArea(feature, partIndex),
         height: 0,
         extrudedHeight: 0,
-        material: Color.fromCssColorString("#7e9de8").withAlpha(0.18),
+        material: Color.fromCssColorString(isPark ? "#55b875" : "#7e9de8").withAlpha(isPark ? 0.26 : 0.18),
         outline: true,
-        outlineColor: Color.fromCssColorString("#a7c0ff").withAlpha(0.9),
+        outlineColor: Color.fromCssColorString(isPark ? "#b7f2c6" : "#a7c0ff").withAlpha(0.9),
       },
       label: partIndex === 0 ? {
-        text: `${feature.name} · ${feature.attributes.areaSemantics ?? "area"}`,
+        text: `${feature.name} · ${isPark ? "NYC Parks-managed property" : feature.attributes.areaSemantics ?? "area"}`,
         font: "11px Inter, sans-serif",
         fillColor: Color.WHITE,
         showBackground: true,
@@ -283,8 +285,8 @@ function addFeatureEntity(viewer: Viewer, feature: Feature, partIndex = 0, asset
   }
 
   const [longitude, latitude] = feature.coordinates;
-  const pointColor = feature.kind === "transit-station" ? "#ff7ac8" : feature.kind === "transit-entrance" ? "#ffd166" : "#4ce2e6";
-  const pointSize = feature.kind === "transit-station" ? 22 : feature.kind === "transit-entrance" ? 12 : 16;
+  const pointColor = feature.kind === "transit-station" ? "#ff7ac8" : feature.kind === "transit-entrance" ? "#ffd166" : feature.kind === "landmark" ? "#f0a3ff" : "#4ce2e6";
+  const pointSize = feature.kind === "transit-station" ? 22 : feature.kind === "transit-entrance" ? 12 : feature.kind === "landmark" ? 18 : 16;
   return viewer.entities.add({
     id: feature.id,
     name: feature.name,
@@ -320,7 +322,7 @@ export function fixtureOnlyForFeature(feature: Feature): boolean {
 }
 
 function addFeatureEntities(viewer: Viewer, feature: Feature, assetResolver?: CityAssetResolver, assetDistanceMeters = 240): ReturnType<Viewer["entities"]["add"]>[] {
-  if (feature.kind === "area" && feature.geometry.type === "MultiPolygon") {
+  if ((feature.kind === "area" || feature.kind === "park") && feature.geometry.type === "MultiPolygon") {
     return feature.geometry.coordinates.map((_, partIndex) => addFeatureEntity(viewer, feature, partIndex, assetResolver, assetDistanceMeters));
   }
   if (feature.kind === "transit-route" && feature.geometry.type === "MultiLineString") {
@@ -415,6 +417,28 @@ export function shouldStartFocusFlight(lastRequest: number, nextRequest: number,
   return hasTarget && Number.isSafeInteger(nextRequest) && nextRequest > 0 && nextRequest !== lastRequest;
 }
 
+/** Cesium dense primitives use a part suffix, while runtime adapters index the parent. */
+export function canonicalPickId(pickedId: string): string {
+  const partSeparator = pickedId.indexOf(":part:");
+  return partSeparator >= 0 ? pickedId.slice(0, partSeparator) : pickedId;
+}
+
+/** Resolve a Cesium pick through the canonical parent ID before consulting either index. */
+export function featureForPickedId(
+  pickedId: string | null,
+  denseFeatureMap: ReadonlyMap<string, Feature>,
+  adapter: Pick<RuntimeCityAdapter, "getFeature">,
+): Feature | undefined {
+  if (!pickedId) return undefined;
+  const canonicalId = canonicalPickId(pickedId);
+  return denseFeatureMap.get(canonicalId) ?? adapter.getFeature(canonicalId);
+}
+
+/** Locationless civic/citywide records remain selectable but must never trigger a camera flight. */
+export function shouldFocusFeature(feature: Pick<Feature, "attributes"> | null | undefined): boolean {
+  return Boolean(feature && feature.attributes.civicNoMarker !== true && feature.attributes.citywideNoMarker !== true);
+}
+
 export function medianFrameInterval(values: readonly number[]): number | null {
   if (values.length === 0) return null;
   const sorted = [...values].sort((left, right) => left - right);
@@ -428,6 +452,7 @@ export function CesiumViewport({
   focusFeatureId,
   visibleLayers,
   onFeatureSelected,
+  onFeatureOverlap,
   featureFilter,
   itinerary = null,
   previewRequest,
@@ -489,14 +514,22 @@ export function CesiumViewport({
 
     viewer.selectedEntityChanged.addEventListener((entity) => {
       if (!entity || typeof entity.id !== "string") return;
-      const featureId = entity.id.split(":part:")[0] ?? entity.id;
-      const feature = adapter.getFeature(featureId);
+      const feature = featureForPickedId(entity.id, denseFeatureMapRef.current, adapter);
       if (feature) onFeatureSelected(feature);
     });
     viewer.screenSpaceEventHandler.setInputAction((movement: { position: Cartesian2 }) => {
+      const picks = viewer.scene.drillPick(movement.position, 12) as Array<{ id?: unknown }>;
+      const pickedFeatures = [...new Map(picks.map((picked) => {
+        const pickedId = typeof picked?.id === "string" ? picked.id : null;
+        return pickedId ? [canonicalPickId(pickedId), featureForPickedId(pickedId, denseFeatureMapRef.current, adapter)] as const : ["", undefined] as const;
+      }).filter((entry): entry is readonly [string, Feature] => Boolean(entry[0] && entry[1]))).values()];
+      if (pickedFeatures.length > 1) {
+        onFeatureOverlap?.(pickedFeatures);
+        return;
+      }
       const picked = viewer.scene.pick(movement.position) as { id?: unknown } | undefined;
       const pickedId = typeof picked?.id === "string" ? picked.id : null;
-      const feature = pickedId ? denseFeatureMapRef.current.get(pickedId) ?? adapter.getFeature(pickedId) : undefined;
+      const feature = featureForPickedId(pickedId, denseFeatureMapRef.current, adapter) ?? pickedFeatures[0];
       if (feature) onFeatureSelected(feature);
     }, ScreenSpaceEventType.LEFT_CLICK);
     viewerRef.current = viewer;
@@ -516,7 +549,7 @@ export function CesiumViewport({
       viewerRef.current = null;
       viewer.destroy();
     };
-  }, [adapter, onCameraChanged, onFeatureSelected]);
+  }, [adapter, onCameraChanged, onFeatureOverlap, onFeatureSelected]);
 
   useEffect(() => {
     const viewer = viewerRef.current;
@@ -577,7 +610,7 @@ export function CesiumViewport({
     };
     void loadVisibleFeatures();
     return () => { cancelled = true; };
-  }, [adapter, assetResolver, denseFeatureLimit, denseFeatures, denseRendering, featureFilter, itinerary, onDenseMetrics, selectedFeatureId, visibleLayers.buildings, visibleLayers.pois, visibleLayers.areas, visibleLayers.stations, visibleLayers.entrances, visibleLayers.routes]);
+  }, [adapter, assetResolver, denseFeatureLimit, denseFeatures, denseRendering, featureFilter, itinerary, onDenseMetrics, selectedFeatureId, visibleLayers.buildings, visibleLayers.pois, visibleLayers.areas, visibleLayers.stations, visibleLayers.entrances, visibleLayers.routes, visibleLayers["statistical-areas"], visibleLayers.parks, visibleLayers.landmarks]);
 
   useEffect(() => {
     const viewer = viewerRef.current;
@@ -627,7 +660,7 @@ export function CesiumViewport({
     const viewer = viewerRef.current;
     if (!viewer || focusRequest === 0 || !focusFeatureId) return;
     const feature = denseFeatureMapRef.current.get(focusFeatureId) ?? adapter.getFeature(focusFeatureId);
-    if (!shouldStartFocusFlight(lastFocusFlightRequestRef.current, focusRequest, Boolean(feature)) || !feature) return;
+    if (!shouldStartFocusFlight(lastFocusFlightRequestRef.current, focusRequest, shouldFocusFeature(feature)) || !feature) return;
     lastFocusFlightRequestRef.current = focusRequest;
     viewer.camera.cancelFlight();
     const pose = focusPoseForFeature(feature);

@@ -159,3 +159,27 @@ Copyright Office architectural works](https://www.copyright.gov/register/va-arch
 41](https://copyright.gov/circs/circ41.pdf), and the [Copyright Office AI
 initiative](https://www.copyright.gov/ai/). No provider imagery or payload was
 downloaded, captured, cached, or stored.
+
+## Civic-context approval state (2026-08-04)
+
+The current approved local wave is limited to DCP NTA `9nt8-h7nd` (mapped view
+`4hft-v355`), NYC Parks Properties `enfh-gkve`, and LPC designated/calendared
+sites `ncre-qhxs`. Its durable approval ID is
+`codex-user-turn:2026-08-04:manhattan-civic-context-local-v1`, with canonical
+scope SHA-256
+`7860f0c6c867488935443df1f1f1bb6fefa950646fa7cd1cd32d5a3d0c1eda58`.
+The approval permits dated Manhattan-filtered local snapshots, raw/metadata
+retention, local WGS84 geometry/search/detail/browser derivatives, DCP/Parks/LPC
+attribution, NYC Open Data terms, the City modified-data disclaimer,
+capture/update dates, and explicit uncertainty. It does not permit public
+deployment/redistribution, new providers, credentials, fees, imagery, facade
+work, or any broader place-truth claim.
+
+The resulting local release contains a statistical-area layer, a Parks-managed
+property layer, and LPC landmark-record layer. Statistical areas are not
+vernacular-neighborhood authority; Parks records do not establish access,
+hours, amenities, or legal survey accuracy; LPC records do not establish
+current condition/use or public access. Categories still missing include
+consumer ratings/reviews, photos, hours, shops completeness, live transit/status,
+and routing. Exact source counts, checksums, terms/caveats, and replay evidence
+are in [`MANHATTAN_TRAVEL_CONTEXT_IMPLEMENTATION.md`](../codex/MANHATTAN_TRAVEL_CONTEXT_IMPLEMENTATION.md).

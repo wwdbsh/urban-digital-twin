@@ -20,7 +20,7 @@ import {
   provenanceLabel,
   runtimeMarker,
 } from "../domain/features";
-import type { Feature } from "../domain/schema";
+import type { Feature, TravelContextOverlapCandidate, TravelContextRecordKind } from "../domain/schema";
 import type { Itinerary, TravelMode } from "../domain/routing";
 import { PLACE_CATEGORIES, placeCategoriesFromFeature, type PlaceCategory } from "../domain/places";
 import { evaluatePlaceHours, placeTruthCategoryLabel } from "../domain/place-truth";
@@ -30,10 +30,10 @@ import { transitKindLabel } from "../domain/transit";
 import { DEFAULT_PROXIMITY_MAX_RESULTS, DEFAULT_PROXIMITY_THRESHOLD_METERS, findNearbyFeatures, formatDistanceMeters, representativePoint } from "../domain/proximity";
 import { buildSyntheticReconciliationCatalog } from "../domain/reconciliation-fixtures";
 import { searchReconciledCatalog, type CanonicalEntity } from "../domain/reconciliation";
-import { searchRealPlaceCatalog, searchUnifiedCatalog, type UnifiedSearchResult } from "../domain/exploration";
+import { rankOverlapCandidates, searchRealPlaceCatalog, searchUnifiedCatalog, type UnifiedSearchResult } from "../domain/exploration";
 import { buildCatalogRelease } from "../release/catalog-release";
 import { buildSyntheticCatalogArtifacts } from "../release/fixtures";
-import { CesiumViewport, medianFrameInterval, type DenseRenderMetrics } from "../features/explorer/CesiumViewport";
+import { CesiumViewport, medianFrameInterval, shouldFocusFeature, type DenseRenderMetrics } from "../features/explorer/CesiumViewport";
 import { LocalFixtureCityAdapter, type RuntimeCityAdapter } from "../runtime/fixture-adapter";
 import { RouteGraphSnapshotAdapter } from "../ingestion/route-graph-snapshot";
 import { sha256Hex } from "../ingestion/offline";
@@ -53,12 +53,18 @@ import { loadLandmarkAssets } from "../runtime/landmark-assets";
 import { CITYWIDE_BUDGETS, CITYWIDE_RELEASE_ID } from "../release/citywide-release";
 import { loadCitywideRelease } from "../runtime/citywide-release-runtime";
 import type { CitywideReleaseAdapter, CitywideRuntimeMetrics } from "../runtime/citywide-release-runtime";
+import { loadTravelContextRelease, type TravelContextFault, type TravelContextReleaseAdapter, type TravelContextRuntimeMetrics } from "../runtime/travel-context-release-runtime";
+import { TRAVEL_CONTEXT_BUDGETS, TRAVEL_CONTEXT_RELEASE_ID, TRAVEL_CONTEXT_TILE_LEVEL } from "../release/travel-context-release";
 
 const navigation = [
   { label: "Explore", icon: Compass },
   { label: "Layers", icon: Layers3 },
   { label: "Bookmarks", icon: Bookmark },
 ] as const;
+
+const CIVIC_FACETS = ["statistical-area", "park", "landmark-record"] as const satisfies readonly TravelContextRecordKind[];
+type CivicFacet = (typeof CIVIC_FACETS)[number];
+const civicFacetLabel = (facet: CivicFacet): string => facet === "statistical-area" ? "Statistical areas" : facet === "park" ? "Parks" : "Landmark records";
 
 const CITYWIDE_DEBUG_ANCHORS = [
   { label: "Financial/Battery", longitude: -74.012, latitude: 40.706 },
@@ -91,6 +97,25 @@ const EMPTY_CITYWIDE_METRICS: CitywideRuntimeMetrics = {
   detailIndexEntryCount: 0,
   cacheEntries: 0,
   cacheEvictions: 0,
+};
+
+const EMPTY_TRAVEL_CONTEXT_METRICS: TravelContextRuntimeMetrics = {
+  visibleShardCount: 0,
+  requestedShardCount: 0,
+  loadedFeatureCount: 0,
+  loadedBytes: 0,
+  maxConcurrentRequests: 0,
+  activeRequests: 0,
+  failedRequestCount: 0,
+  cancelledRequestCount: 0,
+  staleResultCount: 0,
+  retainedSummaryCount: 0,
+  retainedFeatureCount: 0,
+  retainedDetailCount: 0,
+  detailIndexEntryCount: 0,
+  cacheEntries: 0,
+  cacheEvictions: 0,
+  failedLayers: [],
 };
 
 type CitywideDebugMeasurement = {
@@ -156,9 +181,37 @@ function hasDisplayValue(value: unknown): boolean {
   return true;
 }
 
+function civicDetailValue(feature: Feature | undefined, key: string): string {
+  const value = feature?.attributes[key];
+  if (!hasDisplayValue(value)) return "Unknown / not provided";
+  if (typeof value !== "string") return String(value);
+  try {
+    const parsed: unknown = JSON.parse(value);
+    if (Array.isArray(parsed)) return parsed.length > 0 ? parsed.map(String).join(" · ") : "Unknown / not provided";
+  } catch { /* scalar source values remain strings */ }
+  return value;
+}
+
+function overlapKind(feature: Feature): TravelContextRecordKind {
+  if (feature.kind === "building") return "building";
+  if (feature.kind === "poi") return "restaurant";
+  if (feature.kind === "park") return "park";
+  if (feature.kind === "landmark") return "landmark-record";
+  if (feature.kind === "area" && (feature.attributes.areaSemantics === "statistical-area" || feature.attributes.areaSemantics === "statistical")) return "statistical-area";
+  return "building";
+}
+
 function toCityFeature(feature: Feature) {
   const fixture = feature.sourceRefs.some((source) => source.registryEntryId.startsWith("fixture."));
-  return projectFeatureToCityFeature(feature, "Manhattan, New York", fixture ? fixtureIngestionSummary : {
+  const civic = feature.attributes.civicReleaseId === TRAVEL_CONTEXT_RELEASE_ID;
+  return projectFeatureToCityFeature(feature, "Manhattan, New York", fixture ? fixtureIngestionSummary : civic ? {
+    manifestVersion: "2.0",
+    manifestId: TRAVEL_CONTEXT_RELEASE_ID,
+    fixtureOnly: false,
+    acceptedCount: 1,
+    rejectedCount: 0,
+    rejectionReport: "Civic source accounting is zero remainder/collisions; parent grouping and source observations remain reversible in the local release.",
+  } : {
     manifestVersion: "1.0",
     manifestId: "real-wave-20260804",
     fixtureOnly: false,
@@ -173,8 +226,9 @@ export function App() {
   // A URL cannot activate the real adapter until its immutable release has
   // loaded and passed validation. Start every first render in fixtures so an
   // unknown/loading release never wears a real label over fixture geometry.
-  const initialRealRequest = initialNavigation.dataMode === "real-pilot";
+  const initialRealRequest = initialNavigation.dataMode === "real-pilot" || initialNavigation.dataMode === "civic-context";
   const initialCitywideRequest = initialNavigation.releaseId === CITYWIDE_RELEASE_ID;
+  const initialCivicRequest = initialNavigation.releaseId === TRAVEL_CONTEXT_RELEASE_ID || initialNavigation.dataMode === "civic-context";
   const initialDataMode: NavigationDataMode = "fixtures";
   const initialReleaseId = null;
   const fixtureFeatureIds = useMemo(() => new Set(fixtureAdapter.getFeatures().map((feature) => feature.id)), []);
@@ -190,7 +244,12 @@ export function App() {
   const [citywideBrowserBaseline, setCitywideBrowserBaseline] = useState<CitywideBrowserBaseline>(() => initialRealRequest && typeof window !== "undefined" ? readCitywideBrowserMeasurement() : EMPTY_CITYWIDE_BROWSER_BASELINE);
   const [citywideDebugMeasurement, setCitywideDebugMeasurement] = useState<CitywideDebugMeasurement>(EMPTY_CITYWIDE_DEBUG_MEASUREMENT);
   const [citywideSearchResults, setCitywideSearchResults] = useState<UnifiedSearchResult[]>([]);
-  const [realFallbackActive, setRealFallbackActive] = useState(initialRealRequest);
+  const [civicAdapter, setCivicAdapter] = useState<TravelContextReleaseAdapter | null>(null);
+  const [civicLoadState, setCivicLoadState] = useState<"loading" | "ready" | "failed">("loading");
+  const [civicFeatures, setCivicFeatures] = useState<Feature[]>([]);
+  const [civicMetrics, setCivicMetrics] = useState<TravelContextRuntimeMetrics>(EMPTY_TRAVEL_CONTEXT_METRICS);
+  const [civicSearchResults, setCivicSearchResults] = useState<UnifiedSearchResult[]>([]);
+  const [, setRealFallbackActive] = useState(initialRealRequest);
   const [realDataMessage, setRealDataMessage] = useState("Real pilot artifact not loaded; fixture fallback is active.");
   const [landmarkAssetMessage, setLandmarkAssetMessage] = useState("Landmark GLB package not loaded; procedural fallback is active.");
   const initialSelectionId = !initialRealRequest && initialNavigation.featureId && fixtureFeatureIds.has(initialNavigation.featureId) ? initialNavigation.featureId : null;
@@ -205,10 +264,16 @@ export function App() {
   const [shareMessage, setShareMessage] = useState<string | null>(null);
   const [selectedFeature, setSelectedFeature] = useState(runtimeMarker);
   const [activeSelectionId, setActiveSelectionId] = useState<string | null>(initialSelectionId);
+  const [overlapFeatures, setOverlapFeatures] = useState<Feature[]>([]);
   const [selectedCatalogEntityId, setSelectedCatalogEntityId] = useState<string | null>(null);
   const [qualityOpen, setQualityOpen] = useState(false);
-  const [selectedCategories, setSelectedCategories] = useState<PlaceCategory[]>([]);
-  const [layerVisibility, setLayerVisibility] = useState<LayerVisibility>(DEFAULT_LAYER_VISIBILITY);
+  const [selectedCategories, setSelectedCategories] = useState<PlaceCategory[]>(initialNavigation.facets?.filter((value): value is PlaceCategory => PLACE_CATEGORIES.includes(value as PlaceCategory)) ?? []);
+  const [selectedCivicFacets, setSelectedCivicFacets] = useState<CivicFacet[]>(initialNavigation.facets?.filter((value): value is CivicFacet => (CIVIC_FACETS as readonly string[]).includes(value)) ?? []);
+  const [layerVisibility, setLayerVisibility] = useState<LayerVisibility>(() => {
+    if (!initialNavigation.visibleLayers) return DEFAULT_LAYER_VISIBILITY;
+    const requested = new Set(initialNavigation.visibleLayers);
+    return Object.fromEntries((Object.keys(DEFAULT_LAYER_VISIBILITY) as RuntimeLayerId[]).map((layer) => [layer, requested.has(layer)])) as LayerVisibility;
+  });
   const [routeAdapter, setRouteAdapter] = useState<RouteGraphSnapshotAdapter | null>(null);
   const [routeOriginId, setRouteOriginId] = useState<string | null>(null);
   const [routeDestinationId, setRouteDestinationId] = useState<string | null>(null);
@@ -237,8 +302,13 @@ export function App() {
   const cameraPoseRef = useRef(cameraPose);
   const cameraModeRef = useRef(cameraMode);
   const activeSelectionRef = useRef(activeSelectionId);
+  const layerVisibilityRef = useRef(layerVisibility);
+  const selectedCategoriesRef = useRef(selectedCategories);
+  const selectedCivicFacetsRef = useRef(selectedCivicFacets);
   const citywideAdapterRef = useRef<CitywideReleaseAdapter | null>(citywideAdapter);
+  const civicAdapterRef = useRef<TravelContextReleaseAdapter | null>(civicAdapter);
   const citywideModeRef = useRef(false);
+  const civicModeRef = useRef(false);
   const dataModeRef = useRef(dataMode);
   const releaseIdRef = useRef<string | null>(initialReleaseId);
   // Cesium can report its initial camera before the URL hydration effect has
@@ -249,16 +319,24 @@ export function App() {
   const terminalRealFallbackNoticeRef = useRef<string | null>(null);
   const citywideDebugMeasurementRunRef = useRef(0);
   const detailsHeadingRef = useRef<HTMLHeadingElement>(null);
+  const detailsReturnRef = useRef<HTMLElement | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   queryRef.current = query;
   cameraPoseRef.current = cameraPose;
   cameraModeRef.current = cameraMode;
   activeSelectionRef.current = activeSelectionId;
+  layerVisibilityRef.current = layerVisibility;
+  selectedCategoriesRef.current = selectedCategories;
+  selectedCivicFacetsRef.current = selectedCivicFacets;
   dataModeRef.current = dataMode;
   citywideAdapterRef.current = citywideAdapter;
+  civicAdapterRef.current = civicAdapter;
   const citywideMode = dataMode === "real-pilot" && activeAdapter === citywideAdapter && citywideAdapter !== null;
+  const civicMode = dataMode === "civic-context" && activeAdapter === civicAdapter && civicAdapter !== null;
   citywideModeRef.current = citywideMode;
+  civicModeRef.current = civicMode;
   if (dataMode === "fixtures") releaseIdRef.current = null;
-  else if (!releaseIdRef.current) releaseIdRef.current = REAL_PILOT_RELEASE_ID;
+  else if (!releaseIdRef.current) releaseIdRef.current = dataMode === "civic-context" ? TRAVEL_CONTEXT_RELEASE_ID : REAL_PILOT_RELEASE_ID;
 
   const publishCitywideMetrics = useCallback((adapter: CitywideReleaseAdapter) => {
     if (citywideAdapterRef.current !== adapter) return;
@@ -296,11 +374,41 @@ export function App() {
     ));
   }, []);
 
+  const publishCivicMetrics = useCallback((adapter: TravelContextReleaseAdapter) => {
+    if (civicAdapterRef.current !== adapter) return;
+    const next = adapter.getMetrics();
+    setCivicMetrics((previous) => (
+      previous.visibleShardCount === next.visibleShardCount &&
+      previous.requestedShardCount === next.requestedShardCount &&
+      previous.loadedFeatureCount === next.loadedFeatureCount &&
+      previous.loadedBytes === next.loadedBytes &&
+      previous.maxConcurrentRequests === next.maxConcurrentRequests &&
+      previous.activeRequests === next.activeRequests &&
+      previous.failedRequestCount === next.failedRequestCount &&
+      previous.cancelledRequestCount === next.cancelledRequestCount &&
+      previous.staleResultCount === next.staleResultCount &&
+      previous.retainedSummaryCount === next.retainedSummaryCount &&
+      previous.retainedFeatureCount === next.retainedFeatureCount &&
+      previous.retainedDetailCount === next.retainedDetailCount &&
+      previous.detailIndexEntryCount === next.detailIndexEntryCount &&
+      previous.cacheEntries === next.cacheEntries &&
+      previous.cacheEvictions === next.cacheEvictions &&
+      previous.failedLayers.join(",") === next.failedLayers.join(",")
+        ? previous
+        : next
+    ));
+  }, []);
+
   useEffect(() => { if (typeof window !== "undefined") persistSavedNavigation(window.localStorage, savedNavigation); }, [savedNavigation]);
 
   useEffect(() => {
     let active = true;
     const controller = new AbortController();
+    const civicFault: TravelContextFault | null = import.meta.env.DEV && typeof window !== "undefined"
+      ? ((new URL(window.location.href).searchParams.get("travelFault") as TravelContextFault | null) === "parks-geometry" || (new URL(window.location.href).searchParams.get("travelFault") as TravelContextFault | null) === "lpc-detail"
+        ? new URL(window.location.href).searchParams.get("travelFault") as TravelContextFault
+        : null)
+      : null;
     const loadCitywide = async () => {
       try {
         const adapter = await loadCitywideRelease("/data/manhattan-citywide-20260804/", controller.signal);
@@ -317,6 +425,22 @@ export function App() {
       }
     };
     void loadCitywide();
+    const loadCivic = async () => {
+      try {
+        const adapter = await loadTravelContextRelease("/data/manhattan-civic-context-20260804/", controller.signal, undefined, { fault: civicFault });
+        if (!active) { adapter.destroy(); return; }
+        setCivicAdapter(adapter);
+        setCivicLoadState("ready");
+        if (initialCivicRequest) setRealDataMessage(`Civic-context release ${TRAVEL_CONTEXT_RELEASE_ID} validated locally; statistical areas, Parks properties, and LPC records load from checksum-pinned local shards.`);
+      } catch (error) {
+        if (active && !(error instanceof DOMException && error.name === "AbortError")) {
+          setCivicAdapter(null);
+          setCivicLoadState("failed");
+          if (initialCivicRequest) setRealDataMessage(error instanceof Error ? `${error.message} Fixture fallback is active.` : "Civic-context release unavailable. Fixture fallback is active.");
+        }
+      }
+    };
+    void loadCivic();
     const load = async () => {
       try {
         const [loaded, landmarkAssets] = await Promise.all([
@@ -369,6 +493,24 @@ export function App() {
   }, [citywideAdapter, citywideMode, publishCitywideMetrics]);
 
   useEffect(() => {
+    if (!civicMode || !civicAdapter) {
+      setCivicFeatures([]);
+      setCivicMetrics((previous) => previous === EMPTY_TRAVEL_CONTEXT_METRICS ? previous : EMPTY_TRAVEL_CONTEXT_METRICS);
+      return undefined;
+    }
+    let active = true;
+    void civicAdapter.refreshViewport(cameraPoseRef.current).then((features) => {
+      if (active && civicAdapterRef.current === civicAdapter) {
+        setCivicFeatures(features);
+        publishCivicMetrics(civicAdapter);
+      }
+    }).catch((error: unknown) => {
+      if (active && !(error instanceof DOMException && error.name === "AbortError")) setDeepLinkMessage(error instanceof Error ? error.message : "Civic-context viewport shard failed closed.");
+    });
+    return () => { active = false; };
+  }, [civicAdapter, civicMode, publishCivicMetrics]);
+
+  useEffect(() => {
     if (!citywideMode || !citywideAdapter || !query.trim()) {
       setCitywideSearchResults([]);
       return undefined;
@@ -383,6 +525,30 @@ export function App() {
     });
     return () => controller.abort();
   }, [citywideAdapter, citywideMode, publishCitywideMetrics, query]);
+
+  useEffect(() => {
+    if (!civicMode || !civicAdapter || !query.trim()) {
+      setCivicSearchResults([]);
+      return undefined;
+    }
+    const controller = new AbortController();
+    void civicAdapter.searchAsync(query, controller.signal).then((features) => {
+      if (controller.signal.aborted || civicAdapterRef.current !== civicAdapter) return;
+      const filtered = selectedCivicFacets.length === 0 ? features : features.filter((feature) => selectedCivicFacets.includes(feature.attributes.civicRecordKind as CivicFacet));
+      setCivicSearchResults(filtered.map((feature, index) => ({
+        feature,
+        entity: null,
+        group: feature.kind === "area" ? "Areas" : "Places",
+        typeLabel: feature.attributes.civicTypeLabel?.toString() ?? feature.kind,
+        score: index,
+        matchedBy: "text" as const,
+      })));
+      publishCivicMetrics(civicAdapter);
+    }).catch((error: unknown) => {
+      if (!(error instanceof DOMException && error.name === "AbortError")) setCivicSearchResults([]);
+    });
+    return () => controller.abort();
+  }, [civicAdapter, civicMode, publishCivicMetrics, query, selectedCivicFacets]);
 
   const publishStressState = useCallback((stream: RuntimeTileStream<SyntheticTileContent>) => {
     if (stressStreamRef.current !== stream) return;
@@ -410,7 +576,7 @@ export function App() {
       pendingNavigationPoseRef.current = null;
     }
     if (initialRealNavigationPendingRef.current) return;
-    if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrl({ featureId: activeSelectionRef.current ?? initialNavigation.featureId, query: queryRef.current || initialNavigation.query, cameraMode: cameraModeRef.current, pose: normalizedCamera, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current }, window.location.href));
+    if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrl({ featureId: activeSelectionRef.current ?? initialNavigation.featureId, query: queryRef.current || initialNavigation.query, cameraMode: cameraModeRef.current, pose: normalizedCamera, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(layerVisibilityRef.current).filter(([, visible]) => visible).map(([layer]) => layer), facets: civicModeRef.current ? selectedCivicFacetsRef.current : selectedCategoriesRef.current }, window.location.href));
     const citywide = citywideAdapterRef.current;
     if (citywideModeRef.current && citywide) {
       void citywide.refreshViewport(camera).then((features) => {
@@ -422,10 +588,21 @@ export function App() {
         if (!(error instanceof DOMException && error.name === "AbortError")) setDeepLinkMessage(error instanceof Error ? error.message : "Citywide viewport shard failed closed.");
       });
     }
+    const civic = civicAdapterRef.current;
+    if (civicModeRef.current && civic) {
+      void civic.refreshViewport(camera).then((features) => {
+        if (civicAdapterRef.current === civic && civicModeRef.current) {
+          setCivicFeatures(features);
+          publishCivicMetrics(civic);
+        }
+      }).catch((error: unknown) => {
+        if (!(error instanceof DOMException && error.name === "AbortError")) setDeepLinkMessage(error instanceof Error ? error.message : "Civic-context viewport shard failed closed.");
+      });
+    }
     const stream = stressStreamRef.current;
     if (!stream) return;
     void stream.refresh(tileCamera).then(() => publishStressState(stream));
-  }, [publishCitywideMetrics, publishStressState]);
+  }, [publishCivicMetrics, publishCitywideMetrics, publishStressState]);
 
   const moveStressCamera = (anchorIndex: number, distanceMeters: number) => {
     const anchor = SYNTHETIC_TILE_ANCHORS[anchorIndex];
@@ -468,13 +645,18 @@ export function App() {
   }, [publishStressState, stressMode]);
 
   const selectFeature = useCallback((feature: Feature, options: { syncUrl?: boolean } = {}) => {
+    if (typeof document !== "undefined") {
+      const activeElement = document.activeElement;
+      if (activeElement instanceof HTMLElement && !activeElement.closest(".inspector")) detailsReturnRef.current = activeElement;
+    }
+    setOverlapFeatures([]);
     setSelectedFeature(toCityFeature(feature));
     setActiveSelectionId(feature.id);
     setSelectedCatalogEntityId(syntheticCatalog.entities.find((entity) => entity.fields.runtimeFeatureId === feature.id)?.canonicalId ?? null);
-    setFocusFeatureId(feature.id);
+    setFocusFeatureId(shouldFocusFeature(feature) ? feature.id : null);
     setInspectorOpen(true);
     setDeepLinkMessage(null);
-    if (options.syncUrl !== false && typeof window !== "undefined") window.history.pushState({}, "", navigationUrl({ featureId: feature.id, query: queryRef.current, cameraMode: cameraModeRef.current, pose: cameraPoseRef.current, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current }, window.location.href));
+    if (options.syncUrl !== false && typeof window !== "undefined") window.history.pushState({}, "", navigationUrl({ featureId: feature.id, query: queryRef.current, cameraMode: cameraModeRef.current, pose: cameraPoseRef.current, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(layerVisibilityRef.current).filter(([, visible]) => visible).map(([layer]) => layer), facets: civicModeRef.current ? selectedCivicFacetsRef.current : selectedCategoriesRef.current }, window.location.href));
     window.setTimeout(() => detailsHeadingRef.current?.focus(), 0);
     const citywide = citywideAdapterRef.current;
     if (citywideModeRef.current && citywide && feature.attributes.citywideDetailLoaded !== true) {
@@ -485,13 +667,30 @@ export function App() {
         if (!(error instanceof DOMException && error.name === "AbortError")) setDeepLinkMessage(error instanceof Error ? error.message : "Citywide detail shard failed closed; no substitute record was selected.");
       });
     }
-  }, [publishCitywideMetrics]);
+    const civic = civicAdapterRef.current;
+    if (civicModeRef.current && civic && feature.attributes.civicDetailLoaded !== true) {
+      void civic.loadDetailsForFeature(feature).then((detail) => {
+        if (detail && civicAdapterRef.current === civic && civicModeRef.current && activeSelectionRef.current === detail.id) setSelectedFeature(toCityFeature(detail));
+        publishCivicMetrics(civic);
+      }).catch((error: unknown) => {
+        if (!(error instanceof DOMException && error.name === "AbortError")) setDeepLinkMessage(error instanceof Error ? error.message : "Civic-context detail shard failed closed; no substitute record was selected.");
+      });
+    }
+  }, [publishCivicMetrics, publishCitywideMetrics]);
 
-  const unifiedResults = useMemo(() => citywideMode
+  const selectOverlapFeatures = useCallback((features: Feature[]) => {
+    const byId = new Map(features.map((feature) => [feature.id, feature]));
+    const candidates: TravelContextOverlapCandidate[] = features.map((feature) => ({ canonicalId: feature.id, layerId: feature.attributes.civicLayerId === "statistical-areas" ? "statistical-areas" : feature.attributes.civicLayerId === "parks" ? "parks" : feature.attributes.civicLayerId === "landmarks" ? "landmarks" : feature.kind === "building" ? "buildings" : "restaurants", kind: overlapKind(feature), label: feature.name, priority: 0 }));
+    setOverlapFeatures(rankOverlapCandidates(candidates).map((candidate) => byId.get(candidate.canonicalId)).filter((feature): feature is Feature => Boolean(feature)));
+  }, []);
+
+  const unifiedResults = useMemo(() => civicMode
+    ? civicSearchResults
+    : citywideMode
     ? citywideSearchResults
     : dataMode === "real-pilot"
     ? searchRealPlaceCatalog(activeAdapter.getFeatures(), query, selectedCategories)
-    : searchUnifiedCatalog(activeAdapter.getFeatures(), syntheticCatalog, query).filter((result) => selectedCategories.length === 0 || result.feature.kind !== "poi" || selectedCategories.some((category) => placeCategoriesFromFeature(result.feature).includes(category))), [activeAdapter, citywideMode, citywideSearchResults, dataMode, query, selectedCategories]);
+    : searchUnifiedCatalog(activeAdapter.getFeatures(), syntheticCatalog, query).filter((result) => selectedCategories.length === 0 || result.feature.kind !== "poi" || selectedCategories.some((category) => placeCategoriesFromFeature(result.feature).includes(category))), [activeAdapter, civicMode, civicSearchResults, citywideMode, citywideSearchResults, dataMode, query, selectedCategories]);
 
   useEffect(() => {
     if (typeof window === "undefined") return undefined;
@@ -499,9 +698,18 @@ export function App() {
       const state = parseNavigationUrl(window.location.href);
       setQuery(state.query);
       setCameraMode(state.cameraMode); setPoseInvalid(state.poseInvalid);
+      if (state.visibleLayers) {
+        const requestedLayers = new Set(state.visibleLayers);
+        setLayerVisibility(Object.fromEntries((Object.keys(DEFAULT_LAYER_VISIBILITY) as RuntimeLayerId[]).map((layer) => [layer, requestedLayers.has(layer)])) as LayerVisibility);
+      }
+      if (state.facets) {
+        setSelectedCategories(state.facets.filter((value): value is PlaceCategory => PLACE_CATEGORIES.includes(value as PlaceCategory)));
+        setSelectedCivicFacets(state.facets.filter((value): value is CivicFacet => (CIVIC_FACETS as readonly string[]).includes(value)));
+      }
       if (state.pose) { setCameraPose(state.pose); setCameraRequest((current) => ({ ...state.pose!, requestId: (current?.requestId ?? 0) + 1 })); }
-      const requestedReal = state.dataMode === "real-pilot";
+      const requestedReal = state.dataMode === "real-pilot" || state.dataMode === "civic-context";
       const requestedCitywide = requestedReal && state.releaseId === CITYWIDE_RELEASE_ID;
+      const requestedCivic = requestedReal && state.releaseId === TRAVEL_CONTEXT_RELEASE_ID;
       pendingNavigationPoseRef.current = requestedReal ? state.pose : null;
       if (!requestedReal) initialRealNavigationPendingRef.current = false;
       if (requestedCitywide) {
@@ -550,6 +758,56 @@ export function App() {
           void citywideAdapter.loadDetail(state.featureId).then((loadedFeature) => {
             if (loadedFeature && citywideAdapterRef.current === citywideAdapter && citywideModeRef.current) selectFeature(loadedFeature, { syncUrl: false });
             else if (!loadedFeature && activeSelectionRef.current === null) setDeepLinkMessage(`This shared link points to a parent unavailable in release ${CITYWIDE_RELEASE_ID}; no substitute was selected.`);
+          }).catch(() => setDeepLinkMessage(`This shared link could not load parent ${state.featureId}; no substitute was selected.`));
+        }
+        return;
+      }
+      if (requestedCivic) {
+        releaseIdRef.current = TRAVEL_CONTEXT_RELEASE_ID;
+        if (civicLoadState !== "ready" || !civicAdapter) {
+          if (civicLoadState === "failed") {
+            initialRealNavigationPendingRef.current = false;
+            pendingNavigationPoseRef.current = null;
+            releaseIdRef.current = null;
+          }
+          dataModeRef.current = "fixtures";
+          setDataMode("fixtures");
+          if (activeAdapter !== fixtureAdapter) setActiveAdapter(fixtureAdapter);
+          setRealFallbackActive(true);
+          setInspectorOpen(false);
+          setActiveSelectionId(null);
+          setSelectedCatalogEntityId(null);
+          setFocusFeatureId(null);
+          const notice = civicLoadState === "failed"
+            ? "The requested civic-context release failed to load or validate. Fixture fallback is active; no fixture or same-name substitute was selected."
+            : "The requested civic-context release is still loading. Fixture fallback is active; no fixture or same-name substitute was selected.";
+          if (civicLoadState === "failed") terminalRealFallbackNoticeRef.current = notice;
+          setDeepLinkMessage(notice);
+          return;
+        }
+        initialRealNavigationPendingRef.current = false;
+        terminalRealFallbackNoticeRef.current = null;
+        dataModeRef.current = "civic-context";
+        releaseIdRef.current = TRAVEL_CONTEXT_RELEASE_ID;
+        setDataMode("civic-context");
+        setRealFallbackActive(false);
+        if (activeAdapter !== civicAdapter) setActiveAdapter(civicAdapter);
+        if (!state.featureId) {
+          setActiveSelectionId(null);
+          setFocusFeatureId(null);
+          setInspectorOpen(false);
+          setDeepLinkMessage(state.poseInvalid ? "This shared camera pose is malformed; the safe civic-context view is active." : null);
+          return;
+        }
+        const feature = civicAdapter.getFeature(state.featureId);
+        if (feature) selectFeature(feature, { syncUrl: false });
+        else {
+          setActiveSelectionId(null);
+          setFocusFeatureId(null);
+          setInspectorOpen(false);
+          void civicAdapter.loadDetail(state.featureId).then((loadedFeature) => {
+            if (loadedFeature && civicAdapterRef.current === civicAdapter && civicModeRef.current) selectFeature(loadedFeature, { syncUrl: false });
+            else if (!loadedFeature && activeSelectionRef.current === null) setDeepLinkMessage(`This shared link points to a parent unavailable in release ${TRAVEL_CONTEXT_RELEASE_ID}; no substitute was selected.`);
           }).catch(() => setDeepLinkMessage(`This shared link could not load parent ${state.featureId}; no substitute was selected.`));
         }
         return;
@@ -631,7 +889,7 @@ export function App() {
     applyUrl();
     window.addEventListener("popstate", applyUrl);
     return () => window.removeEventListener("popstate", applyUrl);
-  }, [activeAdapter, citywideAdapter, citywideLoadState, realAdapter, realLoadState, selectFeature]);
+  }, [activeAdapter, civicAdapter, civicLoadState, citywideAdapter, citywideLoadState, realAdapter, realLoadState, selectFeature]);
 
   useEffect(() => {
     const onKeyDown = (event: globalThis.KeyboardEvent) => {
@@ -645,6 +903,7 @@ export function App() {
 
   const focusMarker = () => {
     setInspectorOpen(true);
+    if (!shouldFocusFeature(selectedFeature)) return;
     setFocusFeatureId(selectedFeature.id);
     setFocusRequest((request) => request + 1);
   };
@@ -661,7 +920,7 @@ export function App() {
     event.preventDefault();
     const unifiedMatch = unifiedResults[activeSearchIndex >= 0 ? activeSearchIndex : 0];
     if (unifiedMatch) { selectSearchResult(unifiedMatch); return; }
-    if (dataMode === "real-pilot") {
+    if (dataMode !== "fixtures") {
       setDeepLinkMessage(null);
       return;
     }
@@ -685,45 +944,64 @@ export function App() {
   const onSearchKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "ArrowDown") { event.preventDefault(); setSearchOpen(true); setActiveSearchIndex((index) => Math.min(index + 1, unifiedResults.length - 1)); }
     if (event.key === "ArrowUp") { event.preventDefault(); setActiveSearchIndex((index) => Math.max(index - 1, 0)); }
+    if (event.key === "Enter" && unifiedResults.length > 0) {
+      event.preventDefault();
+      const result = unifiedResults[activeSearchIndex >= 0 ? activeSearchIndex : 0];
+      if (result) selectSearchResult(result);
+    }
     if (event.key === "Escape") { event.preventDefault(); setSearchOpen(false); setActiveSearchIndex(-1); }
   };
 
   const copyShareLink = async () => {
     if (typeof window === "undefined") return;
-    const link = navigationUrl({ featureId: selectedFeature.id, query: queryRef.current, cameraMode: cameraModeRef.current, pose: cameraPoseRef.current, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current }, window.location.href);
+    const link = navigationUrl({ featureId: selectedFeature.id, query: queryRef.current, cameraMode: cameraModeRef.current, pose: cameraPoseRef.current, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(layerVisibility).filter(([, visible]) => visible).map(([layer]) => layer), facets: civicMode ? selectedCivicFacets : selectedCategories }, window.location.href);
     setShareMessage("Share link copied.");
     try { await navigator.clipboard?.writeText(link); } catch { setShareMessage(link); }
     window.setTimeout(() => setShareMessage(null), 2500);
   };
 
   const toggleCategory = (category: PlaceCategory) => {
-    setSelectedCategories((current) => current.includes(category)
-      ? current.filter((item) => item !== category)
-      : [...current, category]);
+    const next = selectedCategories.includes(category)
+      ? selectedCategories.filter((item) => item !== category)
+      : [...selectedCategories, category];
+    setSelectedCategories(next);
+    if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrl({ featureId: activeSelectionRef.current, query: queryRef.current, cameraMode: cameraModeRef.current, pose: cameraPoseRef.current, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(layerVisibility).filter(([, visible]) => visible).map(([layer]) => layer), facets: next }, window.location.href));
+  };
+
+  const toggleCivicFacet = (facet: CivicFacet) => {
+    const next = selectedCivicFacets.includes(facet)
+      ? selectedCivicFacets.filter((item) => item !== facet)
+      : [...selectedCivicFacets, facet];
+    setSelectedCivicFacets(next);
+    if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrl({ featureId: activeSelectionRef.current, query: queryRef.current, cameraMode: cameraModeRef.current, pose: cameraPoseRef.current, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(layerVisibility).filter(([, visible]) => visible).map(([layer]) => layer), facets: next }, window.location.href));
   };
 
   const availableCategories = useMemo<PlaceCategory[]>(() => {
     if (citywideMode) return ["restaurant"];
+    if (civicMode) return [];
     if (dataMode === "real-pilot") {
       return [...new Set(activeAdapter.getFeatures().filter((feature) => feature.kind === "poi").flatMap((feature) => {
         try { return parseRealPlaceFeature(feature).categories; } catch { return []; }
       }))].sort((left, right) => left.localeCompare(right));
     }
     return PLACE_CATEGORIES.filter((category) => ["restaurant", "cafe", "bar", "retail", "department-store", "grocery", "attraction", "museum"].includes(category));
-  }, [activeAdapter, citywideMode, dataMode]);
+  }, [activeAdapter, civicMode, citywideMode, dataMode]);
 
   useEffect(() => {
     setSelectedCategories((current) => current.filter((category) => availableCategories.includes(category)));
   }, [availableCategories]);
 
   const featureFilter = useCallback((feature: Feature) => {
+    if (civicMode && selectedCivicFacets.length > 0 && !selectedCivicFacets.includes(feature.attributes.civicRecordKind as CivicFacet)) return false;
     if (selectedCategories.length === 0 || feature.kind !== "poi") return true;
     const categories = placeCategoriesFromFeature(feature);
     return selectedCategories.some((category) => categories.includes(category));
-  }, [selectedCategories]);
+  }, [civicMode, selectedCategories, selectedCivicFacets]);
 
   const toggleLayer = (layer: RuntimeLayerId) => {
-    setLayerVisibility((current) => ({ ...current, [layer]: !current[layer] }));
+    const next = { ...layerVisibility, [layer]: !layerVisibility[layer] };
+    setLayerVisibility(next);
+    if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrl({ featureId: activeSelectionRef.current, query: queryRef.current, cameraMode: cameraModeRef.current, pose: cameraPoseRef.current, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(next).filter(([, visible]) => visible).map(([visibleLayer]) => visibleLayer), facets: civicMode ? selectedCivicFacets : selectedCategories }, window.location.href));
   };
 
   const selectedRuntimeFeature = activeAdapter.getFeature(selectedFeature.id);
@@ -802,12 +1080,12 @@ export function App() {
     if (!normalized) return;
     setCameraMode(nextMode); setCameraPose(normalized); setPoseInvalid(false);
     setCameraRequest((current) => ({ ...normalized, requestId: (current?.requestId ?? 0) + 1 }));
-    if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrl({ featureId: activeSelectionRef.current, query: queryRef.current, cameraMode: nextMode, pose: normalized, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current }, window.location.href));
+    if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrl({ featureId: activeSelectionRef.current, query: queryRef.current, cameraMode: nextMode, pose: normalized, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(layerVisibility).filter(([, visible]) => visible).map(([layer]) => layer), facets: civicMode ? selectedCivicFacets : selectedCategories }, window.location.href));
   };
   const focusCurrentSelection = () => {
     if (!selectedRuntimeFeature) return;
-    if (citywideMode && selectedRuntimeFeature.attributes.citywideLocationStatus === "location-unavailable") {
-      setDeepLinkMessage("This DOHMH parent has no source coordinates; details remain available and no substitute marker is shown.");
+    if ((citywideMode || civicMode) && (selectedRuntimeFeature.attributes.citywideLocationStatus === "location-unavailable" || selectedRuntimeFeature.attributes.civicLocationStatus === "location-unavailable")) {
+      setDeepLinkMessage(citywideMode ? "This DOHMH parent has no source coordinates; details remain available and no substitute marker is shown." : "This civic record has no source coordinates; details remain available and no substitute marker is shown.");
       return;
     }
     setActiveSelectionId(selectedRuntimeFeature.id);
@@ -825,18 +1103,70 @@ export function App() {
     else if (event.key === "Home") { event.preventDefault(); updateCamera(DEFAULT_CAMERA_POSE, "overview"); }
   };
   const saveCurrentPlace = () => {
-    setSavedNavigation((current) => savePlace(current, { schemaVersion: VISITOR_NAVIGATION_SCHEMA_VERSION, canonicalId: selectedFeature.id, label: selectedFeature.name, savedAt: new Date().toISOString() }));
+    setSavedNavigation((current) => savePlace(current, { schemaVersion: VISITOR_NAVIGATION_SCHEMA_VERSION, canonicalId: selectedFeature.id, label: selectedFeature.name, savedAt: new Date().toISOString(), releaseId: dataModeRef.current === "fixtures" ? null : releaseIdRef.current }));
   };
   const saveCurrentJourney = () => {
     if (!itinerary) return;
     const journeyId = `journey:${itinerary.originFeatureId}:${itinerary.destinationFeatureId}:${itinerary.mode}`;
     setSavedNavigation((current) => saveJourney(current, { schemaVersion: VISITOR_NAVIGATION_SCHEMA_VERSION, id: journeyId, originFeatureId: itinerary.originFeatureId, destinationFeatureId: itinerary.destinationFeatureId, mode: itinerary.mode, label: `${routeOriginName} → ${routeDestinationName}`, savedAt: new Date().toISOString() }));
   };
-  const restorePlace = (canonicalId: string) => { const feature = activeAdapter.getFeature(canonicalId); if (feature) { selectFeature(feature); setFocusRequest((request) => request + 1); } };
+  const restorePlace = (place: SavedNavigationState["places"][number]) => {
+    const activeRelease = dataModeRef.current === "fixtures" ? null : releaseIdRef.current;
+    if (place.releaseId && place.releaseId !== activeRelease) {
+      setDeepLinkMessage(`Saved place ${place.label} belongs to immutable release ${place.releaseId}; the active release is ${activeRelease ?? "fixture mode"}.`);
+      return;
+    }
+    const feature = activeAdapter.getFeature(place.canonicalId);
+    if (feature) { selectFeature(feature); setFocusRequest((request) => request + 1); return; }
+    const civic = civicAdapterRef.current;
+    if (civicModeRef.current && civic) {
+      void civic.loadDetail(place.canonicalId).then((detail) => {
+        if (detail && civicAdapterRef.current === civic && civicModeRef.current) { selectFeature(detail); setFocusRequest((request) => request + 1); }
+        else setDeepLinkMessage(`Saved civic place ${place.label} is not present in release ${TRAVEL_CONTEXT_RELEASE_ID}; no substitute record was selected.`);
+      }).catch(() => setDeepLinkMessage(`Saved civic place ${place.label} could not be loaded from release ${TRAVEL_CONTEXT_RELEASE_ID}; no substitute record was selected.`));
+      return;
+    }
+    setDeepLinkMessage(`Saved place ${place.label} is not present in the active release; no substitute record was selected.`);
+  };
+  const closeInspector = () => {
+    setInspectorOpen(false);
+    window.setTimeout(() => {
+      const returnTarget = detailsReturnRef.current;
+      if (returnTarget && returnTarget !== document.body && document.contains(returnTarget)) returnTarget.focus();
+      else searchInputRef.current?.focus();
+    }, 0);
+  };
   const restoreJourney = (journey: SavedNavigationState["journeys"][number]) => { setRouteOriginId(journey.originFeatureId); setRouteDestinationId(journey.destinationFeatureId); setRouteOriginQuery(activeAdapter.getFeature(journey.originFeatureId)?.name ?? ""); setRouteDestinationQuery(activeAdapter.getFeature(journey.destinationFeatureId)?.name ?? ""); setRouteMode(journey.mode); setItinerary(null); setRouteMessage("Saved journey restored; calculate to preview the synthetic route."); };
   const switchDataMode = (nextMode: NavigationDataMode) => {
     initialRealNavigationPendingRef.current = false;
     terminalRealFallbackNoticeRef.current = null;
+    if (nextMode === "civic-context") {
+      if (!civicAdapter || civicLoadState !== "ready") {
+        setRealFallbackActive(true);
+        setActiveSelectionId(null);
+        setFocusFeatureId(null);
+        setInspectorOpen(false);
+        setDeepLinkMessage(civicLoadState === "failed"
+          ? "The approved civic-context release failed to load or validate; fixture fallback remains active."
+          : "The approved civic-context release is still loading; fixture fallback remains active.");
+        return;
+      }
+      dataModeRef.current = "civic-context";
+      releaseIdRef.current = TRAVEL_CONTEXT_RELEASE_ID;
+      setRealFallbackActive(false);
+      setDataMode("civic-context");
+      setActiveAdapter(civicAdapter);
+      setSelectedCatalogEntityId(null);
+      const civicFeaturesNow = civicAdapter.getFeatures();
+      const queryMatch = queryRef.current.trim() ? civicAdapter.search(queryRef.current)[0] : undefined;
+      const firstCivicFeature = queryMatch ?? civicFeaturesNow[0];
+      if (firstCivicFeature) selectFeature(firstCivicFeature);
+      else {
+        setActiveSelectionId(null); setFocusFeatureId(null); setInspectorOpen(false);
+        if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrl({ featureId: null, query: queryRef.current, cameraMode: cameraModeRef.current, pose: cameraPoseRef.current, poseInvalid: false, dataMode: "civic-context", releaseId: TRAVEL_CONTEXT_RELEASE_ID, visibleLayers: Object.entries(layerVisibility).filter(([, visible]) => visible).map(([layer]) => layer), facets: selectedCivicFacets }, window.location.href));
+      }
+      return;
+    }
     if (nextMode === "real-pilot") {
       if (!realAdapter) {
         setRealFallbackActive(true);
@@ -891,8 +1221,10 @@ export function App() {
     setFocusFeatureId(null);
     setInspectorOpen(false);
     setDeepLinkMessage(null);
-    if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrl({ featureId: null, query: queryRef.current, cameraMode: cameraModeRef.current, pose: cameraPoseRef.current, poseInvalid: false, dataMode: "real-pilot", releaseId: CITYWIDE_RELEASE_ID }, window.location.href));
+    if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrl({ featureId: null, query: queryRef.current, cameraMode: cameraModeRef.current, pose: cameraPoseRef.current, poseInvalid: false, dataMode: "real-pilot", releaseId: CITYWIDE_RELEASE_ID, visibleLayers: Object.entries(layerVisibility).filter(([, visible]) => visible).map(([layer]) => layer), facets: selectedCategories }, window.location.href));
   };
+
+  const switchCivicMode = () => switchDataMode("civic-context");
 
   const measureCitywideDebugAnchor = (anchor: (typeof CITYWIDE_DEBUG_ANCHORS)[number]) => {
     if (!citywideMode) return;
@@ -939,7 +1271,22 @@ export function App() {
     setCitywideBrowserBaseline(readCitywideBrowserMeasurement());
   };
 
-  const displayedTileMetrics: TileStreamMetrics = citywideMode ? {
+  const displayedTileMetrics: TileStreamMetrics = civicMode ? {
+    generation: 0,
+    selectedLod: TRAVEL_CONTEXT_TILE_LEVEL,
+    visibleTileCount: civicMetrics.visibleShardCount,
+    requestedTileCount: civicMetrics.requestedShardCount,
+    loadedTileCount: civicMetrics.cacheEntries,
+    evictedTileCount: civicMetrics.cacheEvictions,
+    failedTileCount: civicMetrics.failedRequestCount,
+    loadedBytes: civicMetrics.loadedBytes,
+    activeRequests: civicMetrics.activeRequests,
+    maxConcurrentRequests: civicMetrics.maxConcurrentRequests,
+    deduplicatedRequests: 0,
+    cancelledRequestCount: civicMetrics.cancelledRequestCount,
+    staleResultCount: civicMetrics.staleResultCount,
+    renderedFeatureCount: civicMetrics.loadedFeatureCount,
+  } : citywideMode ? {
     generation: 0,
     selectedLod: 14,
     visibleTileCount: citywideMetrics.visibleShardCount,
@@ -979,6 +1326,7 @@ export function App() {
               onKeyDown={onSearchKeyDown}
               placeholder="Search buildings, places, areas, transit"
               role="combobox"
+              ref={searchInputRef}
               value={query}
             />
           </form>
@@ -989,7 +1337,7 @@ export function App() {
                   <span className="search-result-icon" aria-hidden="true">{result.typeLabel.slice(0, 1)}</span>
                   <span><strong>{result.feature.name}</strong><small>{result.typeLabel} · {result.group} · {result.matchedBy}</small></span>
                 </button>
-              )) : <p className="search-empty" role="status">{citywideMode ? `The active citywide release ${CITYWIDE_RELEASE_ID} has no result for “${query}”; this does not mean Manhattan has no such place.` : dataMode === "real-pilot" ? `The active bounded real pilot release ${REAL_PILOT_RELEASE_ID} has no result for “${query}”; this does not mean Manhattan has no such place.` : `No fixture result for “${query}”. Try a source ID, alias, address, or category.`}</p>}
+              )) : <p className="search-empty" role="status">{civicMode ? `The active civic-context release ${TRAVEL_CONTEXT_RELEASE_ID} has no result for “${query}”; this does not mean Manhattan has no such record.` : citywideMode ? `The active citywide release ${CITYWIDE_RELEASE_ID} has no result for “${query}”; this does not mean Manhattan has no such place.` : dataMode === "real-pilot" ? `The active bounded real pilot release ${REAL_PILOT_RELEASE_ID} has no result for “${query}”; this does not mean Manhattan has no such place.` : `No fixture result for “${query}”. Try a source ID, alias, address, or category.`}</p>}
             </div>
           )}
         </div>
@@ -1026,15 +1374,16 @@ export function App() {
           focusRequest={focusRequest}
           focusFeatureId={focusFeatureId}
           onFeatureSelected={selectFeature}
+          onFeatureOverlap={selectOverlapFeatures}
           featureFilter={featureFilter}
           visibleLayers={layerVisibility}
           itinerary={routeLines}
           previewRequest={previewRequest}
-          denseRendering={stressMode || dataMode === "real-pilot"}
-          denseFeatures={citywideMode ? citywideFeatures : stressFeatures}
-          denseFeatureLimit={citywideMode ? CITYWIDE_BUDGETS.maxRenderedDenseFeatures : undefined}
-          onDenseMetrics={citywideMode ? publishCitywideDenseMetrics : undefined}
-          selectedFeatureId={realFallbackActive ? activeSelectionId : activeSelectionId ?? (dataMode === "fixtures" ? selectedFeature.id : null)}
+          denseRendering={stressMode || dataMode === "real-pilot" || dataMode === "civic-context"}
+          denseFeatures={citywideMode ? citywideFeatures : civicMode ? civicFeatures : stressFeatures}
+          denseFeatureLimit={citywideMode ? CITYWIDE_BUDGETS.maxRenderedDenseFeatures : civicMode ? TRAVEL_CONTEXT_BUDGETS.maxAreaRenderParts : undefined}
+          onDenseMetrics={citywideMode || civicMode ? publishCitywideDenseMetrics : undefined}
+          selectedFeatureId={dataMode === "fixtures" ? activeSelectionId ?? selectedFeature.id : activeSelectionId}
           onCameraChanged={onTileCameraChanged}
           cameraRequest={stressCameraRequest}
           cameraPoseRequest={cameraRequest}
@@ -1050,18 +1399,28 @@ export function App() {
           <small>Keyboard arrows move only when this 3D viewport is focused; no street-level imagery or live navigation.</small>
           {poseInvalid && <small role="status">Malformed camera pose ignored; safe bounded view is active.</small>}
         </section>
+        {overlapFeatures.length > 1 && <section className="overlap-chooser" aria-label="Overlapping feature choices" role="dialog">
+          <strong>Overlapping records</strong>
+          <p className="section-label">Choose a source record; ordering is deterministic and no hidden first hit is selected.</p>
+          <div role="listbox" aria-label="Overlap candidates">
+            {overlapFeatures.map((feature) => <button key={feature.id} type="button" role="option" onClick={() => selectFeature(feature)}>{feature.name}<small>{feature.attributes.civicTypeLabel?.toString() ?? feature.kind} · {feature.id}</small></button>)}
+          </div>
+          <button type="button" onClick={() => setOverlapFeatures([])}>Close choices</button>
+        </section>}
         <div className="runtime-note">
           Local runtime layer
-          <span>{citywideMode ? `Real NYC citywide release · ${CITYWIDE_RELEASE_ID} · local snapshot-relative coverage` : dataMode === "real-pilot" ? "Real NYC pilot · bounded Flatiron/NoMad/Union Square coverage" : "Synthetic fixture only · no real Manhattan coverage"}</span>
+          <span>{civicMode ? `Real NYC civic-context release · ${TRAVEL_CONTEXT_RELEASE_ID} · local snapshot-relative coverage` : citywideMode ? `Real NYC citywide release · ${CITYWIDE_RELEASE_ID} · local snapshot-relative coverage` : dataMode === "real-pilot" ? "Real NYC pilot · bounded Flatiron/NoMad/Union Square coverage" : "Synthetic fixture only · no real Manhattan coverage"}</span>
         </div>
-        {deepLinkMessage && <div className="exploration-notice" role="alert">{deepLinkMessage} <button type="button" onClick={() => { terminalRealFallbackNoticeRef.current = null; setDeepLinkMessage(null); setPoseInvalid(false); window.history.replaceState({}, "", navigationUrl({ featureId: activeSelectionRef.current, query, cameraMode, pose: cameraPose, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current }, window.location.href)); }}>Dismiss</button></div>}
+        {deepLinkMessage && <div className="exploration-notice" role="alert">{deepLinkMessage} <button type="button" onClick={() => { terminalRealFallbackNoticeRef.current = null; setDeepLinkMessage(null); setPoseInvalid(false); window.history.replaceState({}, "", navigationUrl({ featureId: activeSelectionRef.current, query, cameraMode, pose: cameraPose, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(layerVisibility).filter(([, visible]) => visible).map(([layer]) => layer), facets: civicMode ? selectedCivicFacets : selectedCategories }, window.location.href)); }}>Dismiss</button></div>}
         {shareMessage && <div className="share-notice" role="status">{shareMessage}</div>}
         <section className="tile-diagnostics" aria-label="Tile diagnostics">
           <div><strong>Tile diagnostics</strong><button type="button" aria-pressed={stressMode} onClick={() => setStressMode((enabled) => !enabled)}>{stressMode ? "Normal mode" : "Stress harness"}</button></div>
-          <span>{citywideMode ? "Citywide viewport shards loaded lazily · global search/detail shards remain on demand" : dataMode === "real-pilot" ? "Partitioned real pilot loaded · not full-Manhattan performance" : "Fixture-only synthetic harness · not full-Manhattan performance"}</span>
+          <span>{civicMode ? "Civic layers stream independently · search/detail shards remain on demand" : citywideMode ? "Citywide viewport shards loaded lazily · global search/detail shards remain on demand" : dataMode === "real-pilot" ? "Partitioned real pilot loaded · not full-Manhattan performance" : "Fixture-only synthetic harness · not full-Manhattan performance"}</span>
+          {civicMode && <span>Decoded summaries / features / details: {civicMetrics.retainedSummaryCount.toLocaleString()} / {civicMetrics.retainedFeatureCount.toLocaleString()} / {civicMetrics.retainedDetailCount.toLocaleString()} · detail index: {civicMetrics.detailIndexEntryCount.toLocaleString()}</span>}
+          {civicMode && civicMetrics.failedLayers.length > 0 && <span role="status">Layer failures isolated: {civicMetrics.failedLayers.join(", ")}</span>}
           {citywideMode && <span>Decoded summaries / features / details: {citywideMetrics.retainedSummaryCount.toLocaleString()} / {citywideMetrics.retainedFeatureCount.toLocaleString()} / {citywideMetrics.retainedDetailCount.toLocaleString()} · detail index: {citywideMetrics.detailIndexEntryCount.toLocaleString()}</span>}
           <span>Assets: {activeAdapter.getAssetDiagnostics?.().registered ?? 0} registered · {activeAdapter.getAssetDiagnostics?.().approved ?? 0} approved · {activeAdapter.getAssetDiagnostics?.().verified ?? 0} verified · procedural fallback retained when unavailable</span>
-          {import.meta.env.DEV && !citywideMode && <div className="citywide-debug-baseline" aria-label="Citywide browser baseline">
+          {import.meta.env.DEV && citywideMode && <div className="citywide-debug-baseline" aria-label="Citywide browser baseline">
             <button type="button" onClick={captureCitywideBrowserBaseline}>Capture Citywide browser baseline</button>
             <span data-citywide-browser-baseline>Heap {citywideBrowserBaseline.heapBytes?.toLocaleString() ?? "unsupported"} · citywide resources {citywideBrowserBaseline.citywideResourceCount} / {citywideBrowserBaseline.citywideResourceBytes.toLocaleString()} bytes</span>
           </div>}
@@ -1093,14 +1452,22 @@ export function App() {
               <button type="button" aria-pressed={dataMode === "fixtures"} onClick={() => switchDataMode("fixtures")}>Fixture catalog</button>
               <button type="button" aria-pressed={dataMode === "real-pilot" && !citywideMode} disabled={!realAdapter} onClick={() => switchDataMode("real-pilot")}>Real open-data pilot</button>
               <button type="button" aria-pressed={citywideMode} disabled={citywideLoadState !== "ready"} onClick={switchCitywideMode}>Citywide local release</button>
+              <button type="button" aria-pressed={civicMode} disabled={civicLoadState !== "ready"} onClick={switchCivicMode}>Civic context release</button>
             </div>
-            <p className="section-label">Mode: {citywideMode ? `Real NYC citywide snapshot · release ${CITYWIDE_RELEASE_ID} · local lazy shards` : dataMode === "real-pilot" ? `Real NYC pilot · bounded Flatiron/NoMad/Union Square coverage · release ${REAL_PILOT_RELEASE_ID} · not full Manhattan` : "Synthetic fixture only · no real provider records"}</p>
+            <p className="section-label">Mode: {civicMode ? `Real NYC civic-context snapshot · release ${TRAVEL_CONTEXT_RELEASE_ID} · local lazy shards` : citywideMode ? `Real NYC citywide snapshot · release ${CITYWIDE_RELEASE_ID} · local lazy shards` : dataMode === "real-pilot" ? `Real NYC pilot · bounded Flatiron/NoMad/Union Square coverage · release ${REAL_PILOT_RELEASE_ID} · not full Manhattan` : "Synthetic fixture only · no real provider records"}</p>
             <p className="section-label" role="status">{realDataMessage}</p>
             <p className="section-label" role="status">{landmarkAssetMessage}</p>
             {citywideMode && <section className="real-source-summary" aria-label="Citywide source scope">
               <strong>Approved citywide source scope</strong>
               <p className="section-label">Every accepted OTI Building Footprints record (dataset jh45-qr5r) and every accepted DOHMH Restaurant Inspection Results observation (dataset 43nn-pn8j) in the immutable Manhattan snapshot is represented by local release shards; unlocated DOHMH parents remain searchable and detail-visible without invented geometry.</p>
               <p className="section-label">No external provider, imagery, ratings, hours, routing, facade, or public deployment is connected by this release.</p>
+            </section>}
+            {civicMode && <section className="real-source-summary" aria-label="Civic context source scope">
+              <strong>Approved civic-context source scope</strong>
+              <p className="section-label">DCP 2020 Neighborhood Tabulation Areas (NTA2020 / mapped view 4hft-v355), NYC Parks Properties, and LPC Designated and Calendared Buildings and Sites are dated Manhattan-filtered snapshots in local WGS84 release {TRAVEL_CONTEXT_RELEASE_ID}. Exact source IDs, capture/update dates, terms, attribution, and uncertainty remain attached to every record.</p>
+              <p className="section-label">NTAs are statistical geographies, not definitive or exhaustive neighborhoods. Parks presence does not prove hours, amenities, legal survey accuracy, or current access. LPC records are designation/calendaring records, not attractions or facade/photo/model claims; generated LPC time values are dates only.</p>
+              <p className="section-label">NYC Open Data terms and City modified-data disclaimer apply; portal metadata license remains unspecified. This release is local-only and is not publicly deployed or redistributed.</p>
+              <p className="source-links"><a href="https://data.cityofnewyork.us/City-Government/2020-Neighborhood-Tabulation-Areas-NTAs-/9nt8-h7nd" target="_blank" rel="noreferrer">DCP 9nt8-h7nd</a> · <a href="https://nycopendata.socrata.com/Recreation/Parks-Properties/enfh-gkve" target="_blank" rel="noreferrer">NYC Parks enfh-gkve</a> · <a href="https://data.cityofnewyork.us/Housing-Development/Designated-and-Calendared-Buildings-and-Sites/ncre-qhxs" target="_blank" rel="noreferrer">LPC ncre-qhxs</a></p>
             </section>}
             {dataMode === "real-pilot" && !citywideMode && <section className="real-source-summary" aria-label="Real pilot source scope">
               <strong>Approved source scope</strong>
@@ -1149,7 +1516,7 @@ export function App() {
         {activeNavigation === "Bookmarks" && <section className="bookmarks-panel" aria-label="Saved places and journeys">
           <div className="quality-heading"><strong>Bookmarks</strong><span>Local only · no remote sync</span></div>
           <h2>Saved places</h2>
-          {savedNavigation.places.length ? <ul>{savedNavigation.places.map((place) => <li key={place.canonicalId}><button type="button" onClick={() => restorePlace(place.canonicalId)}>{place.label}</button><small>{place.canonicalId}</small></li>)}</ul> : <p className="section-label">No saved places yet.</p>}
+          {savedNavigation.places.length ? <ul>{savedNavigation.places.map((place) => <li key={place.canonicalId}><button type="button" onClick={() => restorePlace(place)}>{place.label}</button><small>{place.canonicalId}{place.releaseId ? ` · ${place.releaseId}` : " · legacy fixture"}</small></li>)}</ul> : <p className="section-label">No saved places yet.</p>}
           <h2>Saved journeys</h2>
           {savedNavigation.journeys.length ? <ul>{savedNavigation.journeys.map((journey) => <li key={journey.id}><button type="button" onClick={() => restoreJourney(journey)}>{journey.label}</button><small>{journey.mode} · local synthetic route</small></li>)}</ul> : <p className="section-label">No saved journeys yet.</p>}
         </section>}
@@ -1169,7 +1536,7 @@ export function App() {
             </button>
           ))}
         </div>
-        <div className="category-controls" aria-label="POI categories">
+        {availableCategories.length > 0 && <div className="category-controls" aria-label="POI categories">
           <span>POI</span>
           {availableCategories.map((category) => (
             <button
@@ -1182,7 +1549,21 @@ export function App() {
               {placeTruthCategoryLabel(category)}
             </button>
           ))}
-        </div>
+        </div>}
+        {civicMode && <div className="category-controls" aria-label="Civic context facets">
+          <span>Civic facets</span>
+          {CIVIC_FACETS.map((facet) => (
+            <button
+              aria-pressed={selectedCivicFacets.includes(facet)}
+              className={selectedCivicFacets.includes(facet) ? "is-selected" : ""}
+              key={facet}
+              onClick={() => toggleCivicFacet(facet)}
+              type="button"
+            >
+              {civicFacetLabel(facet)}
+            </button>
+          ))}
+        </div>}
         <section className="directions-panel" aria-label="Synthetic directions">
           <div className="directions-heading"><strong>Directions</strong><span>Synthetic 3D route preview</span></div>
           <div className="direction-field">
@@ -1240,12 +1621,12 @@ export function App() {
           <div className="inspector-actions">
             <button
               aria-label="Collapse details"
-              onClick={() => setInspectorOpen(false)}
+              onClick={closeInspector}
               type="button"
             >
               <ChevronLeft />
             </button>
-            <button aria-label="Close details" onClick={() => setInspectorOpen(false)} type="button"><X /></button>
+            <button aria-label="Close details" onClick={closeInspector} type="button"><X /></button>
           </div>
           <h1 ref={detailsHeadingRef} tabIndex={-1}>{selectedFeature.name}</h1>
 
@@ -1256,8 +1637,8 @@ export function App() {
               <div>
                 <dt>Coordinates</dt>
                 <dd>
-                  {citywideMode && selectedFeature.attributes.citywideLocationStatus === "location-unavailable"
-                    ? "Location unavailable in the accepted DOHMH source; no marker invented"
+                  {(citywideMode || civicMode) && (selectedFeature.attributes.citywideLocationStatus === "location-unavailable" || selectedFeature.attributes.civicLocationStatus === "location-unavailable")
+                    ? "Location unavailable in the accepted source; no marker invented"
                     : `${selectedFeature.coordinates.latitude.toFixed(4)}, ${selectedFeature.coordinates.longitude.toFixed(4)} (${selectedFeature.coordinates.heightMeters.toFixed(1)} m)`}
                 </dd>
               </div>
@@ -1355,6 +1736,55 @@ export function App() {
                 <div><dt>Source updated</dt><dd>{selectedRuntimeFeature.freshness.updatedAt ?? "Unknown"}</dd></div>
               </dl>
               <p className="section-label">Source observations retain derived occurrence identity internally; no derived occurrence token is presented as a DOHMH inspection ID.</p>
+            </section>
+          )}
+
+          {civicMode && selectedRuntimeFeature?.attributes.civicRecordKind && (
+            <section className="inspector-section real-place-detail" aria-label="Civic context details">
+              <div className="place-truth-heading">
+                <h2>Civic context record</h2>
+                <span className="truth-badge real-badge">Real · {TRAVEL_CONTEXT_RELEASE_ID}</span>
+              </div>
+              <p className="section-label">Snapshot-relative source record · local WGS84 derivative · missing values remain unknown.</p>
+              <dl>
+                <div><dt>Record type</dt><dd>{civicDetailValue(selectedRuntimeFeature, "civicTypeLabel")}</dd></div>
+                <div><dt>Canonical ID</dt><dd>{selectedRuntimeFeature.id}</dd></div>
+                <div><dt>Location status</dt><dd>{selectedRuntimeFeature.attributes.civicLocationStatus === "location-unavailable" ? "Location unavailable in accepted source; no marker invented." : "Located from accepted source geometry/point."}</dd></div>
+                {selectedRuntimeFeature.attributes.civicRecordKind === "statistical-area" && <>
+                  <div><dt>NTA2020</dt><dd>{civicDetailValue(selectedRuntimeFeature, "nta2020")}</dd></div>
+                  <div><dt>Official name</dt><dd>{civicDetailValue(selectedRuntimeFeature, "ntaName")}</dd></div>
+                  <div><dt>Abbreviation / type</dt><dd>{[civicDetailValue(selectedRuntimeFeature, "ntaAbbrev"), civicDetailValue(selectedRuntimeFeature, "ntaType")].join(" · ")}</dd></div>
+                  <div><dt>CDTA relationship</dt><dd>{[civicDetailValue(selectedRuntimeFeature, "cdta2020"), civicDetailValue(selectedRuntimeFeature, "cdtaName")].join(" · ")}</dd></div>
+                  <div><dt>Statistical caveat</dt><dd>DCP 2020 NTA is a statistical geography, not a definitive or exhaustive neighborhood.</dd></div>
+                </>}
+                {selectedRuntimeFeature.attributes.civicRecordKind === "park" && <>
+                  <div><dt>GISPROPNUM / parent</dt><dd>{[civicDetailValue(selectedRuntimeFeature, "gispropnum"), civicDetailValue(selectedRuntimeFeature, "parentId")].join(" · ")}</dd></div>
+                  <div><dt>Source names</dt><dd>{civicDetailValue(selectedRuntimeFeature, "names")}</dd></div>
+                  <div><dt>Management / jurisdiction</dt><dd>{civicDetailValue(selectedRuntimeFeature, "jurisdiction")}</dd></div>
+                  <div><dt>Address / location</dt><dd>{[civicDetailValue(selectedRuntimeFeature, "address"), civicDetailValue(selectedRuntimeFeature, "location")].join(" · ")}</dd></div>
+                  <div><dt>Type / subcategory</dt><dd>{[civicDetailValue(selectedRuntimeFeature, "typeCategory"), civicDetailValue(selectedRuntimeFeature, "subcategory")].join(" · ")}</dd></div>
+                  <div><dt>Acres / acquisition</dt><dd>{[civicDetailValue(selectedRuntimeFeature, "acres"), civicDetailValue(selectedRuntimeFeature, "acquisitionDate")].join(" · ")}</dd></div>
+                  <div><dt>Retired/current source state</dt><dd>{civicDetailValue(selectedRuntimeFeature, "currentSourceState")}</dd></div>
+                  <div><dt>Access caveat</dt><dd>Source presence does not prove hours, amenities, legal survey accuracy, or current access.</dd></div>
+                </>}
+                {selectedRuntimeFeature.attributes.civicRecordKind === "landmark-record" && <>
+                  <div><dt>LP number</dt><dd>{civicDetailValue(selectedRuntimeFeature, "lpNumber")}</dd></div>
+                  <div><dt>Official name / type</dt><dd>{[selectedRuntimeFeature.name, civicDetailValue(selectedRuntimeFeature, "landmarkTypes")].join(" · ")}</dd></div>
+                  <div><dt>Status / current flag</dt><dd>{[civicDetailValue(selectedRuntimeFeature, "siteStatuses"), civicDetailValue(selectedRuntimeFeature, "mostCurrent")].join(" · ")}</dd></div>
+                  <div><dt>Designation address</dt><dd>{civicDetailValue(selectedRuntimeFeature, "designationAddresses")}</dd></div>
+                  <div><dt>PLUTO address</dt><dd>{civicDetailValue(selectedRuntimeFeature, "plutoAddresses")}</dd></div>
+                  <div><dt>BIN / BBL</dt><dd>{[civicDetailValue(selectedRuntimeFeature, "bins"), civicDetailValue(selectedRuntimeFeature, "bbls")].join(" · ")}</dd></div>
+                  <div><dt>Designation / calendaring dates</dt><dd>{[civicDetailValue(selectedRuntimeFeature, "designationDates"), civicDetailValue(selectedRuntimeFeature, "calendaringDates")].join(" · ")}</dd></div>
+                  <div><dt>Last action</dt><dd>{civicDetailValue(selectedRuntimeFeature, "lastActions")}</dd></div>
+                  <div><dt>Relationship to OTI building</dt><dd>No relationship asserted without explicit BIN, BBL, or geometry evidence.</dd></div>
+                  <div><dt>Date semantics</dt><dd>LPC generated time values are rendered as dates only; no official action time is inferred.</dd></div>
+                </>}
+                <div><dt>Source captured</dt><dd>{selectedRuntimeFeature.freshness.capturedAt ?? "Unknown / not provided"}</dd></div>
+                <div><dt>Source updated</dt><dd>{selectedRuntimeFeature.freshness.updatedAt ?? "Unknown / not provided"}</dd></div>
+                <div><dt>Terms / attribution</dt><dd>NYC Open Data terms · DCP/NYC Parks/LPC attribution · portal metadata license unspecified.</dd></div>
+                <div><dt>Uncertainty</dt><dd>{selectedRuntimeFeature.uncertainty.notes}</dd></div>
+              </dl>
+              {selectedRuntimeFeature.attributes.civicDetailLoaded !== true && <p className="section-label" role="status">Loading checksum-pinned detail shard…</p>}
             </section>
           )}
 
@@ -1475,7 +1905,7 @@ export function App() {
           <section className="inspector-section">
             <h2>Sources</h2>
             <p className="section-label">
-              {selectedFeature.provenanceRecord.label} · {citywideMode ? `local citywide release ${CITYWIDE_RELEASE_ID}; source attribution retained` : dataMode === "real-pilot" ? `bounded real pilot ${REAL_PILOT_RELEASE_ID}; source attribution retained` : "local fixture only"}
+              {selectedFeature.provenanceRecord.label} · {civicMode ? `local civic-context release ${TRAVEL_CONTEXT_RELEASE_ID}; DCP/NYC Parks/LPC attribution retained` : citywideMode ? `local citywide release ${CITYWIDE_RELEASE_ID}; source attribution retained` : dataMode === "real-pilot" ? `bounded real pilot ${REAL_PILOT_RELEASE_ID}; source attribution retained` : "local fixture only"}
             </p>
             <div className="provenance-list">
               {(["authoritative", "derived", "generated"] as const).map((kind) => (
@@ -1485,7 +1915,7 @@ export function App() {
                     <strong>{provenanceLabel(kind)}</strong>
                     <small>
                       {kind === selectedFeature.provenance
-                        ? citywideMode ? "Current normalized source snapshot; citywide scope and uncertainty apply." : dataMode === "real-pilot" ? "Current normalized source snapshot; pilot scope and uncertainty apply." : "Current normalized local fixture; not production city data."
+                        ? civicMode ? "Current normalized civic-context source snapshot; Manhattan filter, source dates, terms, and uncertainty apply." : citywideMode ? "Current normalized source snapshot; citywide scope and uncertainty apply." : dataMode === "real-pilot" ? "Current normalized source snapshot; pilot scope and uncertainty apply." : "Current normalized local fixture; not production city data."
                         : kind === "generated"
                           ? "Visible runtime-only geometry; not ground truth."
                           : "No source connected in this setup milestone."}
@@ -1535,8 +1965,8 @@ export function App() {
 
       <footer className="status-bar">
         <span>Manhattan, New York</span>
-        <span><Box size={16} />{dataMode === "real-pilot" ? "Cesium primitives + selected detail ready" : "Cesium entities ready"}</span>
-        <span className="status-pending">{citywideMode ? "Real NYC citywide snapshot · local app-origin requests only" : dataMode === "real-pilot" ? "Real open-data pilot · MTA/OSM/Overture not loaded" : "Fixture data only · provider approval pending"}</span>
+            <span><Box size={16} />{dataMode === "real-pilot" || dataMode === "civic-context" ? "Cesium primitives + selected detail ready" : "Cesium entities ready"}</span>
+            <span className="status-pending">{civicMode ? "Real NYC civic-context snapshot · local app-origin requests only" : citywideMode ? "Real NYC citywide snapshot · local app-origin requests only" : dataMode === "real-pilot" ? "Real open-data pilot · MTA/OSM/Overture not loaded" : "Fixture data only · provider approval pending"}</span>
       </footer>
     </main>
   );

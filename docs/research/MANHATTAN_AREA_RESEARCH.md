@@ -47,7 +47,7 @@ NYC Planning's [resources page](https://www.nyc.gov/content/planning/pages/resou
 
 | Registry entry | Role | IDs / geometry / CRS | Cadence and export | License, attribution, uncertainty | Decision |
 | --- | --- | --- | --- | --- | --- |
-| `nyc.nta-2020` / `4hft-v355` | Statistical | NTA ID/name, MultiPolygon; CRS varies until snapshot metadata | Portal/API/export; verify release at ingest | NYC Open Data/DCP terms and disclaimer; historical-neighborhood mismatch is explicit | Pending; use only as “2020 NTA (statistical)” |
+| `nyc.nta-2020` / `4hft-v355` | Statistical | NTA ID/name, MultiPolygon; CRS varies until snapshot metadata | Portal/API/export; verify release at ingest | NYC Open Data/DCP terms and disclaimer; historical-neighborhood mismatch is explicit | Approved only for the 2026-08-04 local civic wave; use only as “2020 NTA (statistical)” |
 | `nyc.community-districts` / `yfnk-k7r4`, feature class `nycd` | Administrative | Community District codes/names, Polygon; source EPSG:2263 | Quarterly DCP metadata; Shapefile | DCP attribution, informational/no-warranty; includes joint-interest areas | Pending; label “Community District (administrative)” |
 | `nyc.cdta-2020` / release `CDTA-2020-26B` | Statistical | CDTA IDs/names, Polygon/MultiPolygon; release metadata controls CRS | Quarterly, REST/GeoJSON/metadata/download; latest cited 26B May 2026 | DCP attribution and informational limitations; only approximates CDs | Pending; never conflate with `nycd` |
 | `nyc.borough-boundaries` / `nybb` | Administrative | Five Polygon boroughs; source EPSG:2263; `nybb` includes water, `nybbwi` shoreline variant | Quarterly DCP metadata; Shapefile | DCP attribution and disclaimer; shoreline treatment affects clipping | Pending; use as borough context, not neighborhood |
@@ -57,4 +57,27 @@ NYC Planning's [resources page](https://www.nyc.gov/content/planning/pages/resou
 
 The local adapter accepts only a supplied immutable GeoJSON `FeatureCollection` containing Polygon/MultiPolygon geometry. It preserves ring holes, multipart polygons, source IDs, area type/level, official name, optional labels, CRS normalization to WGS84, freshness, per-source terms/license/attribution, and a deterministic label point. Its clipping boundary is the project-documented Flatiron–NoMad–Union Square slice, not an official NYC boundary. Records outside the slice are rejected; intersecting rings are clipped and remain explicitly source-derived.
 
-Production remains fail-closed while each registry entry is pending. Before first approved ingest, confirm the precise release, source CRS (including EPSG:2263 to WGS84 transformation), shoreline/water variant, export format, file size/API limits, terms/retention/derivative rights, expected ID/name/null behavior, and whether labels are official or aliases. No current research result authorizes downloading or integrating a real record.
+Production remains fail-closed for registry entries outside this wave. Before
+any new approved ingest, confirm the precise release, source CRS (including
+EPSG:2263 to WGS84 transformation), shoreline/water variant, export format,
+file size/API limits, terms/retention/derivative rights, expected ID/name/null
+behavior, and whether labels are official or aliases.
+
+## Implemented DCP NTA civic wave (2026-08-04)
+
+The recorded user approval now authorizes one dated local snapshot of DCP 2020
+Neighborhood Tabulation Areas, base dataset `9nt8-h7nd`, mapped view
+`4hft-v355`, filtered to Manhattan (`boroname=Manhattan` and `borocode=1`).
+The capture was made on 2026-08-04 at 14:47:42.642Z; the source update metadata
+was pinned at 2026-05-28T15:11:19.000Z before and after capture. The snapshot
+contains 38 records, all accepted, with 0 rejected rows, 0 accounting remainder,
+0 identity collisions, and 0 missing locations. The normalized and published
+geometry is WGS84 (EPSG:4326), retaining MultiPolygon rings and source IDs.
+
+This source is a statistical geography, not a definitive or exhaustive
+vernacular neighborhood authority. The UI labels it exactly “2020 NTA
+(statistical)” and does not infer neighborhood identity, current boundaries,
+resident counts, amenities, or completeness. Raw response, metadata, headers,
+checksums, terms/disclaimer, and release provenance are retained only in the
+ignored local evidence roots; see the civic implementation record for exact
+checksums and the approval fingerprint.

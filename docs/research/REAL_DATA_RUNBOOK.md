@@ -45,3 +45,39 @@ and never substitutes a same-name fixture for a missing real parent.
 6. Quarantine aborted `.partial` files; do not resume or concatenate them. Full-city acquisition needs a new bounded budget review and deterministic replay evidence.
 
 Known first-wave gaps: no MTA because official license metadata is unspecified; no OSM or Overture payload; no real routing, live status, photos, ratings, reviews, hours, or consumer business status. The next approval checklist is: written NYC/MTA retention and derivative terms; OSM ODbL extract/attribution/share-alike treatment; Overture per-source license retention; then optional separately approved paid Google augmentation with credentials/terms/billing and no scraping.
+
+## Civic-context local sibling procedure (2026-08-04)
+
+The approved three-source procedure is intentionally separate from the older
+citywide release and never overwrites it. First validate the durable approval
+ID/fingerprint, then run the bounded acquisition with the exact dataset IDs and
+Manhattan predicates:
+
+```sh
+pnpm travel-context:acquire -- --datasets 9nt8-h7nd,enfh-gkve,ncre-qhxs \
+  --predicate "NTA boroname=Manhattan and borocode=1; Parks borough=M; LPC boroughid=MN" \
+  --output data/raw/travel-context-wave-20260804 \
+  --approval-id codex-user-turn:2026-08-04:manhattan-civic-context-local-v1 \
+  --approval-fingerprint 7860f0c6c867488935443df1f1f1bb6fefa950646fa7cd1cd32d5a3d0c1eda58 \
+  --max-bytes 100000000 --timeout-ms 60000 --no-overwrite
+pnpm travel-context:validate:raw -- --input data/raw/travel-context-wave-20260804 \
+  --approval-id codex-user-turn:2026-08-04:manhattan-civic-context-local-v1 \
+  --approval-fingerprint 7860f0c6c867488935443df1f1f1bb6fefa950646fa7cd1cd32d5a3d0c1eda58
+pnpm travel-context:normalize -- --input data/raw/travel-context-wave-20260804 \
+  --output data/generated/travel-context-wave-20260804-normalized-a \
+  --approval-id codex-user-turn:2026-08-04:manhattan-civic-context-local-v1 \
+  --approval-fingerprint 7860f0c6c867488935443df1f1f1bb6fefa950646fa7cd1cd32d5a3d0c1eda58
+pnpm travel-context:validate:coverage -- --input data/generated/travel-context-wave-20260804-normalized-a \
+  --approval-id codex-user-turn:2026-08-04:manhattan-civic-context-local-v1 \
+  --approval-fingerprint 7860f0c6c867488935443df1f1f1bb6fefa950646fa7cd1cd32d5a3d0c1eda58
+pnpm travel-context:validate -- --root public/data/manhattan-civic-context-20260804
+pnpm travel-context:benchmark -- --root public/data/manhattan-civic-context-20260804
+```
+
+Raw and normalized roots are ignored local evidence; `publish-local` validates
+once and copies to the new immutable sibling only. If any provider metadata,
+response, checksum, accounting, budget, or approval value changes, quarantine
+the incomplete root and stop. Rollback is activation of the previous local
+release, not deletion or overwrite of either release. The civic implementation
+record contains the exact checksums, counts, replay A/B result, and fault
+journeys.

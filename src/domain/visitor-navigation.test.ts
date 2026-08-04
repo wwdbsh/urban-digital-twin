@@ -22,6 +22,20 @@ describe("visitor navigation contracts", () => {
     expect(parseNavigationUrl("https://fixture.invalid/explore?data=unknown-release&release=unknown-release")).toMatchObject({ dataMode: "real-pilot", releaseId: "unknown-release" });
   });
 
+  it("round trips URL layer and facet state deterministically", () => {
+    const url = navigationUrl({ featureId: "place:one", query: "NTA", cameraMode: "explore", pose: null, poseInvalid: false, dataMode: "real-pilot", releaseId: "civic-release", visibleLayers: ["parks", "statistical-areas", "parks"], facets: ["lpc", "parks"] }, "https://fixture.invalid/explore");
+    expect(new URL(url).searchParams.get("layers")).toBe("parks,statistical-areas");
+    expect(parseNavigationUrl(url)).toMatchObject({ visibleLayers: ["parks", "statistical-areas"], facets: ["lpc", "parks"] });
+  });
+
+  it("pins civic deep links and retains pinned bookmarks across adapter hydration", () => {
+    const url = navigationUrl({ featureId: "udt:manhattan:nta:MN6491", query: "Central Park", cameraMode: "explore", pose: null, poseInvalid: false, dataMode: "civic-context", releaseId: "manhattan-civic-context-20260804", visibleLayers: ["parks", "statistical-areas"], facets: ["statistical-area"] }, "https://fixture.invalid/explore");
+    expect(parseNavigationUrl(url)).toMatchObject({ dataMode: "civic-context", releaseId: "manhattan-civic-context-20260804", featureId: "udt:manhattan:nta:MN6491", visibleLayers: ["parks", "statistical-areas"], facets: ["statistical-area"] });
+    const pinned = { schemaVersion: VISITOR_NAVIGATION_SCHEMA_VERSION, canonicalId: "udt:manhattan:nta:MN6491", label: "Central Park", savedAt: "2026-08-04", releaseId: "manhattan-civic-context-20260804" };
+    const loaded = loadSavedNavigation(storage(JSON.stringify({ schemaVersion: VISITOR_NAVIGATION_SCHEMA_VERSION, places: [pinned], journeys: [] })), featureIds);
+    expect(loaded.places[0]).toMatchObject({ canonicalId: pinned.canonicalId, releaseId: pinned.releaseId });
+  });
+
   it("fails closed on malformed or partial poses", () => {
     expect(parseNavigationUrl("https://fixture.invalid/?feature=place:one&lon=bad&lat=40&height=500&heading=0&pitch=-45&roll=0").pose).toBeNull();
     expect(parseNavigationUrl("https://fixture.invalid/?lon=1&lat=2").poseInvalid).toBe(true);

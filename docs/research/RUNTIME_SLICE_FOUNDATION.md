@@ -52,3 +52,19 @@ interface RuntimeCityAdapter {
 The adapter should read only an approved immutable local snapshot, convert records through the existing offline normalization/validation path, create per-layer manifests and tile indexes, set `fixtureOnly: false` only when the source registry and legal approval support that claim, and preserve source IDs/licences/freshness/uncertainty in every `Feature`. Replace the `fixtureAdapter` singleton in `App.tsx` through dependency injection or a city selection context; do not add provider fetches to `CesiumViewport`.
 
 The first approved implementation task was therefore: **adapt one approved NYC Building Footprints snapshot into `RuntimeCityAdapter`, emit a building-only layer manifest for the documented Flatiron–NoMad–Union Square boundary, and prove geometry validity, height provenance, canonical IDs, WGS84 tile keys, Cesium click identity and source-rich search/detail behavior before enabling PLUTO or any POI/transit/traffic source.** The later citywide release extends this seam only for the separately approved OTI/DOHMH adapters; PLUTO and other pending sources remain disabled.
+
+## Current civic-context adapter (2026-08-04)
+
+The runtime now has a second generic local adapter for release
+`manhattan-civic-context-20260804`. It validates the recorded approval ID and
+fingerprint, manifest checksums, safe relative paths, WGS84 point/polygon/area
+geometry, layer accounting, and incremental budgets before activation. It maps
+statistical areas, Parks properties, and LPC records to source-typed
+`RuntimeCityAdapter` features while preserving reversible observation/source
+relationships and explicit uncertainty.
+
+The adapter loads viewport geometry lazily, performs bounded prefix/exact search,
+and loads details through an index only when requested. Per-layer corruption or
+missing shards are isolated; no real ID falls back to fixtures. The older
+fixture, bounded pilot, and citywide modes remain separately selectable, and
+all browser requests remain immutable app-origin local files.

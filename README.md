@@ -146,7 +146,10 @@ documentation does not claim that the connected browser forced and observed the
 enabled media-query path. Browser console/network evidence and exact current
 benchmark output are recorded in the implementation record; deterministic
 tests are not a substitute for visual, accessibility, or device-performance
-validation.
+validation. The accepted CP5 focused-page `requestAnimationFrame` probe used a
+3-second settle and 340 frames (median 8.3 ms, p95 16.6 ms). The unchanged
+seven-anchor harness emitted 11 frames over about 1008 ms per anchor; that is a
+known validation issue, not a product-frame result.
 
 ## Known limitations
 
@@ -177,11 +180,62 @@ validation.
 ## Provenance and future work
 
 The current approved source boundary is deliberately narrow. OTI and DOHMH
-remain local-only and source-labelled. DCP NTA, NYC Parks, LPC designated or
-calendared sites, MTA, OSM, Overture, Google, paid services, and public
-deployment remain pending or separately gated in the registry. Do not contact
-those providers or add data without a new documented approval and work unit.
+remain local-only and source-labelled. The 2026-08-04 civic-context wave adds
+dated local DCP NTA, NYC Parks, and LPC records under its recorded approval;
+MTA, OSM, Overture, Google, paid services, and public deployment remain
+separately gated. Do not contact any other provider or add data without a new
+documented approval and work unit.
 
 See [`docs/codex/AGENT_WORKFLOW.md`](docs/codex/AGENT_WORKFLOW.md) for the
 current visible-agent/review workflow, and the research/decision documents for
 historical planning provenance and source-specific uncertainty.
+
+## Current civic-context local release (2026-08-04)
+
+The app now exposes one immutable local sibling release,
+`manhattan-civic-context-20260804`, in addition to the existing citywide and
+fixture modes. It streams generic v2 statistical-area, Parks property, and LPC
+landmark-record layers through Cesium, with source-ID/name search, source-typed
+details, deterministic overlap choices, URL layer/facet state, cold deep links,
+local bookmarks pinned to the release, and per-layer failure isolation. The
+release is local-only; it is not a public deployment or a claim of complete
+neighborhood, park, landmark, access, hours, amenity, facade, rating, review,
+or transit coverage.
+
+The recorded approval is
+`codex-user-turn:2026-08-04:manhattan-civic-context-local-v1` with canonical
+scope SHA-256
+`7860f0c6c867488935443df1f1f1bb6fefa950646fa7cd1cd32d5a3d0c1eda58`.
+The retained local source snapshots are DCP NTA `9nt8-h7nd` (mapped view
+`4hft-v355`), NYC Parks Properties `enfh-gkve`, and LPC designated/calendared
+sites `ncre-qhxs`; source attribution, NYC Open Data terms, the City modified-
+data disclaimer, capture/update dates, and uncertainty are preserved in the
+release details and evidence record.
+
+Captured input was 38 NTA records, 395 Parks records, and 15,313 LPC
+observations. Normalization accepted all observations with zero rejected rows,
+zero accounting remainder, and zero identity collisions; LPC grouping yielded
+1,140 parent records, including 10 records without a usable location that are
+retained as detail/search data but are not placed on the map. The published
+release contains 22,424,795 declared bytes, 114 geometry shards, 307 search
+shards, 52 detail shards, and 1,573 detail-index entries; its deterministic
+benchmark passes the 40 MiB incremental budget (latest local run: cold search
+p95 10.90 ms, warm search p95 9.91 ms, cold detail p95 0.23 ms).
+
+For local validation and replay, use the aliases in `package.json`, for example:
+
+```sh
+pnpm travel-context:validate:raw -- --input data/raw/travel-context-wave-20260804 \
+  --approval-id codex-user-turn:2026-08-04:manhattan-civic-context-local-v1 \
+  --approval-fingerprint 7860f0c6c867488935443df1f1f1bb6fefa950646fa7cd1cd32d5a3d0c1eda58
+pnpm travel-context:validate -- --root public/data/manhattan-civic-context-20260804
+pnpm travel-context:benchmark -- --root public/data/manhattan-civic-context-20260804
+```
+
+Raw, normalized, generated, and browser-capture payloads are ignored local
+evidence and intentionally excluded from staging/commit; the browser may
+request only immutable app-origin files. The complete checksums, metadata
+pins, browser journeys, protected-hash proof, documentation matrix, rollback
+target, and remaining limitations are recorded in
+[`docs/codex/MANHATTAN_TRAVEL_CONTEXT_IMPLEMENTATION.md`](docs/codex/MANHATTAN_TRAVEL_CONTEXT_IMPLEMENTATION.md)
+and [Decision 0014](docs/decisions/0014-nyc-civic-context-wave.md).

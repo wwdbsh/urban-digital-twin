@@ -62,6 +62,17 @@ export interface AccessRequirement {
   constraints: string;
 }
 
+/** Durable evidence carried by source registry entries when a user turn
+ * authorizes a narrowly scoped local snapshot/derivative wave.  This is
+ * deliberately separate from Orca message IDs: an approval may originate in
+ * the current Codex user turn and therefore have no message identifier. */
+export interface SourceApprovalEvidence {
+  evidenceId: string;
+  fingerprintSha256: string;
+  scope: string;
+  exclusions: string[];
+}
+
 export interface LicenseRef {
   schemaVersion: typeof DOMAIN_SCHEMA_VERSION;
   id: string;
@@ -91,6 +102,10 @@ export interface SourceRegistryEntry {
   geographicScope: string;
   expectedCrs: CoordinateReferenceSystem | "varies" | "unknown";
   expectedVerticalDatum: string;
+  /** DCP mapped/presentation view associated with a canonical base dataset. */
+  mappedViewId?: string | null;
+  /** Durable user-turn evidence for this entry's local-only scope. */
+  approvalEvidence?: SourceApprovalEvidence;
   approval: {
     state: ApprovalState;
     scope: ApprovalScope;
@@ -202,6 +217,93 @@ export interface Feature {
   uncertainty: Uncertainty;
   freshness: Freshness;
   attributes: Record<string, string | number | boolean | null>;
+}
+
+/** Generic v2 release vocabulary shared by citywide and civic-context layers.
+ * Existing Feature/citywide v1 contracts remain unchanged for rollback and
+ * fixture compatibility. */
+export const TRAVEL_CONTEXT_SCHEMA_VERSION = "2.0" as const;
+
+export type TravelContextLayerId =
+  | "buildings"
+  | "restaurants"
+  | "statistical-areas"
+  | "parks"
+  | "landmarks";
+
+export type TravelContextRecordKind =
+  | "building"
+  | "restaurant"
+  | "statistical-area"
+  | "park"
+  | "landmark-record";
+
+export type TravelContextGeometryKind = "point" | "polygon" | "area";
+
+export interface TravelContextLayerDescriptor {
+  schemaVersion: typeof TRAVEL_CONTEXT_SCHEMA_VERSION;
+  id: TravelContextLayerId;
+  label: string;
+  recordKind: TravelContextRecordKind;
+  geometryKind: TravelContextGeometryKind;
+  sourceRegistryEntryIds: string[];
+  parentCount: number;
+  renderPartCount: number;
+  shardCount: number;
+  failurePolicy: "isolated-layer";
+}
+
+export interface TravelContextRecordIdentity {
+  canonicalId: string;
+  sourceRecordIds: string[];
+  groupingKey: string;
+  reversible: true;
+}
+
+export interface TravelContextRecord {
+  schemaVersion: typeof TRAVEL_CONTEXT_SCHEMA_VERSION;
+  identity: TravelContextRecordIdentity;
+  cityId: string;
+  layerId: TravelContextLayerId;
+  kind: TravelContextRecordKind;
+  geometryKind: TravelContextGeometryKind;
+  name: string | null;
+  geometry: Geometry | null;
+  coordinates: Position | null;
+  sourceRefs: SourceRef[];
+  freshness: Freshness;
+  uncertainty: string;
+  attributes: Record<string, string | number | boolean | null | string[]>;
+}
+
+export interface TravelContextSearchSummary {
+  canonicalId: string;
+  layerId: TravelContextLayerId;
+  kind: TravelContextRecordKind;
+  name: string | null;
+  searchableText: string[];
+  sourceIdentifiers: string[];
+  coordinates: Position | null;
+  geometryShardRefs: string[];
+  detailShardRef: string;
+}
+
+export interface TravelContextOverlapCandidate {
+  canonicalId: string;
+  layerId: TravelContextLayerId;
+  kind: TravelContextRecordKind;
+  label: string;
+  priority: number;
+}
+
+export function travelContextPickPriority(kind: TravelContextRecordKind): number {
+  return ({
+    "landmark-record": 10,
+    park: 20,
+    "statistical-area": 30,
+    building: 40,
+    restaurant: 50,
+  } as const)[kind];
 }
 
 export interface FeatureLink {

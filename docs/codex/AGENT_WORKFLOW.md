@@ -83,4 +83,18 @@ When routing changes materially, append a short decision containing the date,
 accepted policy, superseded policy, route, disabled models, and primary
 verification evidence. The current repository contract is also maintained in
 `AGENTS.md`; this file is its concise operational summary.
+
+## Final review and work-unit publication policy
+
+For the approved civic-context wave, Luna Max may implement and validate only
+the handoff scope. Before any commit or push, Root Sol High must review the
+high-risk source registry, acquisition/accounting, immutable release, runtime
+failure isolation, browser evidence, protected hashes, and final documentation
+matrix. Root review is complete; this commit is the scoped CP7 delivery; push
+verification follows/is recorded in Git history. The current user authorization
+permits this dispatched implementation worker to execute only the explicitly
+reviewed stage, normal commit, and normal push sequence; no additional path,
+deployment, or external notification is implied. The rollback target remains
+the baseline commit plus the untouched old release, with new release activation
+reversible by switching back rather than deleting evidence.
 <!-- codex-lean-workflow:end -->

@@ -128,3 +128,19 @@ assumed by this fixture-only change.
 Stress diagnostics expose synthetic Center/West/North tile and Zoom closer
 camera controls for deterministic browser verification; they are labeled as
 fixture controls and do not represent real geographic coverage.
+
+## Civic-context polygon streaming (2026-08-04)
+
+The immutable civic sibling release uses the same app-origin-only contract but a
+generic v2 multi-kind runtime. Cesium owns WGS84 camera/terrain behavior;
+statistical-area, Parks, and LPC geometry shards are loaded lazily with bounded
+concurrency and request deduplication. Search shards and detail shards are
+loaded on demand, and the runtime retains compact summaries separately from
+decoded polygon features/details so a query does not eagerly hydrate the city.
+
+A corrupt or missing shard marks only its mapped layer as failed, leaves other
+layers searchable, and never substitutes fixture or same-name data. A missing
+location is an explicit no-marker condition. The release benchmark passes with
+22,424,795 declared bytes, 114 geometry shards, 307 search shards, 52 detail
+shards, 45 fixed queries, and 30 fixed details; latest cold/warm search p95 was
+10.90/9.69 ms and cold detail p95 was 0.25 ms.

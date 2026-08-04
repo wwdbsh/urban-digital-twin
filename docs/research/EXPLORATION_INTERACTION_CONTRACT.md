@@ -73,3 +73,21 @@ attribution review, retention/derivative decisions, immutable checksums, CRS
 and vertical-datum validation, freshness policy, and a production tile/search
 publication review. No provider was contacted and no external data was added
 for this interaction slice.
+
+## Civic-context search and overlap contract (2026-08-04)
+
+The immutable local civic release adds source-typed search summaries for NTA,
+Parks, and LPC records. Queries support official names, canonical IDs, and
+source IDs; results identify the source kind and whether the match was exact,
+prefix, or text. Selecting a result loads only its release-pinned detail and
+updates the canonical URL with `data`, `release`, `feature`, `q`, layer, facet,
+and camera state. A cold URL first validates the release and then loads geometry
+and detail; it never substitutes a fixture or same-name result.
+
+Cesium drill-picks are ranked deterministically by layer/record identity. If
+more than one civic record overlaps, the chooser exposes every candidate as a
+keyboard-accessible option. Missing or corrupt geometry/detail shards report an
+isolated layer status and leave unaffected source kinds available. NTA,
+Parks, and LPC wording remains source-specific and does not imply neighborhood
+authority, access/hours/amenities, current condition, ratings, reviews, or
+completeness.

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import restaurants from "../../../public/data/real-wave-20260804/restaurants.json";
 import { runtimeFixtureFeatures } from "../../domain/features";
 import type { Feature } from "../../domain/schema";
-import { denseFeatureIntersectsBounds, fixtureOnlyForFeature, focusPoseForFeature, medianFrameInterval, normalizeFocusCameraPose, poiRenderMode, selectDenseFeatures, shouldStartFocusFlight } from "./CesiumViewport";
+import { canonicalPickId, denseFeatureIntersectsBounds, featureForPickedId, fixtureOnlyForFeature, focusPoseForFeature, medianFrameInterval, normalizeFocusCameraPose, poiRenderMode, selectDenseFeatures, shouldFocusFeature, shouldStartFocusFlight } from "./CesiumViewport";
 
 describe("Cesium POI render seam", () => {
   const realRestaurant = (restaurants as unknown as Feature[])[0]!;
@@ -67,5 +67,38 @@ describe("Cesium POI render seam", () => {
     const actual = { longitude: -74, latitude: 40.7, height: 240, heading: 0, pitch: -35, roll: 180 };
     const requested = { longitude: -74, latitude: 40.7, height: 240, heading: 0, pitch: -35, roll: 0 };
     expect(normalizeFocusCameraPose(actual, requested)).toEqual(requested);
+  });
+
+  it("resolves every Cesium part pick through its canonical parent ID", () => {
+    const canonicalId = "udt:manhattan:lpc:LP-00006";
+    const feature = { ...realRestaurant, id: canonicalId };
+    const denseFeatureMap = new Map([[canonicalId, feature]]);
+    const adapterCalls: string[] = [];
+    const adapter = { getFeature: (id: string) => { adapterCalls.push(id); return undefined; } };
+
+    expect(canonicalPickId(`${canonicalId}:part:0`)).toBe(canonicalId);
+    expect(canonicalPickId(`${canonicalId}:part:1`)).toBe(canonicalId);
+    expect(featureForPickedId(`${canonicalId}:part:1`, denseFeatureMap, adapter)).toBe(feature);
+    expect(adapterCalls).toEqual([]);
+  });
+
+  it("uses the canonical ID for adapter fallback after a part pick", () => {
+    const canonicalId = "udt:manhattan:lpc:LP-00007";
+    const feature = { ...realRestaurant, id: canonicalId };
+    const adapterCalls: string[] = [];
+    const adapter = { getFeature: (id: string) => { adapterCalls.push(id); return id === canonicalId ? feature : undefined; } };
+
+    expect(featureForPickedId(`${canonicalId}:part:2`, new Map(), adapter)).toBe(feature);
+    expect(adapterCalls).toEqual([canonicalId]);
+  });
+
+  it("keeps locationless civic records selectable without a focus target", () => {
+    const locationlessCivic = { ...realRestaurant, attributes: { ...realRestaurant.attributes, civicNoMarker: true } };
+    const locatedCivic = { ...realRestaurant, attributes: { ...realRestaurant.attributes, civicNoMarker: false } };
+
+    expect(shouldFocusFeature(locationlessCivic)).toBe(false);
+    expect(shouldFocusFeature(locatedCivic)).toBe(true);
+    expect(shouldFocusFeature(realRestaurant)).toBe(true);
+    expect(shouldFocusFeature(null)).toBe(false);
   });
 });
