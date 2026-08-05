@@ -151,6 +151,30 @@ validation. The accepted CP5 focused-page `requestAnimationFrame` probe used a
 seven-anchor harness emitted 11 frames over about 1008 ms per anchor; that is a
 known validation issue, not a product-frame result.
 
+## Overlay interaction behavior (2026-08-05)
+
+The desktop map owns the complete main region between the 60 px top bar, the
+navigation rail, and the status bar. Opening or closing feature details does not
+add or remove a grid track: the warm-white inspector is an absolute, scrollable
+overlay inside that map region. At mobile widths the same inspector becomes a
+scrollable bottom sheet, so the map remains the underlying navigation surface.
+
+Every locatable selection path (Cesium pick, search, deterministic overlap
+choice, related entity, nearby transit, or saved-place restore) goes through one
+selection/focus transaction. The transaction opens or updates details and owns
+one camera focus request; source records explicitly marked locationless remain
+selectable and open details without a camera flight. Focus accounts for the
+inspector occlusion so the selected feature is settled toward the unobscured
+visual center. URL feature and camera state, source IDs, release semantics, and
+unknown/provenance wording remain unchanged.
+
+Diagnostics, directions, and layer controls start as compact accessible launchers.
+Diagnostics and directions are mutually exclusive when expanded, while the
+responsive placement policy keeps expanded surfaces clear of the camera,
+inspector, and category controls. Dense civic and overview rendering suppresses
+unselected label clutter but keeps the selected feature's highlight and label
+feedback; geometry and Cesium picking remain available for all visible records.
+
 ## Known limitations
 
 - Raw/generated `data/**`, ignored `public/data/**`, and local validation

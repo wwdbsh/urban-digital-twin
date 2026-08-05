@@ -16,7 +16,8 @@ science-fiction dashboard.
 - 60 px graphite top bar: brand, centered search, Data and Time controls.
 - 92 px graphite navigation rail: Explore, Layers, Bookmarks, Help, Settings.
 - Flexible CesiumJS canvas: dominant area, oblique city view, cyan selection.
-- 390 px warm-white inspector: selected feature, overview, sources, actions.
+- Warm-white inspector overlay: selected feature, overview, sources, actions;
+  it does not reserve a desktop grid column.
 - 44 px graphite status bar: city, delivery format, data status.
 - Mobile continuation: canvas stays full-screen and inspector becomes a bottom
   sheet; the desktop navigation rail is removed.
@@ -43,7 +44,8 @@ thin borders and almost no shadow.
 
 ## Component families
 
-- `AppShell`: fixed grid and responsive mobile stack.
+- `AppShell`: fixed chrome grid with a map-owned main region and responsive
+  overlay stacking policy.
 - `TopBar`: brand, search form, quiet utility buttons.
 - `NavigationRail`: icon/label actions with one cyan active indicator.
 - `CesiumViewport`: real WebGL canvas; never substitute the concept image.
@@ -55,7 +57,9 @@ thin borders and almost no shadow.
 
 - Search focuses known supported features.
 - Selecting rendered geometry opens or updates the inspector.
-- Focus flies the camera to the selected feature.
+- Each locatable selection path claims one deterministic focus transaction; the
+  camera settles toward the unobscured visual center around the inspector.
+- Locationless records open details without a camera flight.
 - Layers and navigation have visible selected states.
 - Generated placeholder geometry is labeled as generated and never presented as
   authoritative.
@@ -73,11 +77,23 @@ states that the release is local snapshot-relative and that no provider,
 imagery, live routing, or public deployment is connected.
 
 The responsive layout keeps the full-bleed Cesium canvas and turns the desktop
-inspector/navigation into a mobile continuation. Keyboard focus behavior,
-visible controls, and source/unknown wording are runtime behavior; the concept
-PNG below remains design direction, not a screenshot or proof of visual
-fidelity. The three protected landmark GLB pairs are shown only by the bounded
-pilot; ordinary and citywide buildings remain procedural footprint massing.
+inspector/navigation into a mobile continuation. At desktop widths, inspector
+open/close changes only the overlay stack, not the map/Cesium bounding
+rectangle. At 390×844 the inspector is a scrollable bottom sheet and persistent
+camera, diagnostics, directions, layers, and category controls use compact,
+non-overlapping placements; diagnostics and directions start collapsed and are
+mutually exclusive when expanded. Keyboard focus behavior, visible controls,
+and source/unknown wording are runtime behavior; the concept PNG below remains
+design direction, not a screenshot or proof of visual fidelity. The three
+protected landmark GLB pairs are shown only by the bounded pilot; ordinary and
+citywide buildings remain procedural footprint massing.
+
+Selection rendering also applies a deterministic label priority: dense civic or
+overview views suppress unselected labels to avoid a label carpet while the
+selected feature keeps its highlight and selected label. The geometry remains
+pickable even when its unselected label is suppressed. Search, direct picks,
+overlap choices, related selections, and locationless records share the same
+selection transaction so URL and detail behavior do not diverge by entry path.
 
 Remaining design gaps are real neighborhoods/parks/shops/attractions beyond
 the approved records, transit, routing, live status, hours, reviews, ratings,
@@ -114,3 +130,10 @@ inspector, and focus returns to the triggering control or search input. The
 layout honors the existing reduced-motion CSS behavior. Civic layer faults are
 announced as isolated status messages and leave unaffected sources searchable;
 no provider-domain requests are made by the browser.
+
+The component regression suite covers the map-owned inspector nesting, one
+focus request for a located direct pick, no focus request for a locationless
+selection, and collapsed/mutually exclusive diagnostics and directions. The
+Cesium helper suite covers occlusion-aware focus pose calculation and selected
+label priority; rendered fixed-viewport evidence remains separate from these
+deterministic tests.

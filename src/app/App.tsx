@@ -181,6 +181,34 @@ function hasDisplayValue(value: unknown): boolean {
   return true;
 }
 
+export interface SelectionFocusTransaction {
+  focusFeatureId: string | null;
+  shouldFly: boolean;
+}
+
+/** Every locatable selection path claims one focus request; locationless records claim none. */
+export function selectionFocusTransaction(feature: Pick<Feature, "id" | "attributes">): SelectionFocusTransaction {
+  const shouldFly = shouldFocusFeature(feature);
+  return { focusFeatureId: shouldFly ? feature.id : null, shouldFly };
+}
+
+export interface OverlayLayoutPolicy {
+  mapOwnsMainRegion: true;
+  inspectorPosition: "overlay";
+  desktopRightInset: "inspector-width" | "none";
+  mobileBottomInset: "inspector-sheet" | "none";
+}
+
+/** Shared placement contract for persistent controls and the details surface. */
+export function overlayLayoutPolicy(inspectorOpen: boolean, mobile: boolean): OverlayLayoutPolicy {
+  return {
+    mapOwnsMainRegion: true,
+    inspectorPosition: "overlay",
+    desktopRightInset: inspectorOpen && !mobile ? "inspector-width" : "none",
+    mobileBottomInset: inspectorOpen && mobile ? "inspector-sheet" : "none",
+  };
+}
+
 function civicDetailValue(feature: Feature | undefined, key: string): string {
   const value = feature?.attributes[key];
   if (!hasDisplayValue(value)) return "Unknown / not provided";
@@ -267,6 +295,9 @@ export function App() {
   const [overlapFeatures, setOverlapFeatures] = useState<Feature[]>([]);
   const [selectedCatalogEntityId, setSelectedCatalogEntityId] = useState<string | null>(null);
   const [qualityOpen, setQualityOpen] = useState(false);
+  const [layersOpen, setLayersOpen] = useState(false);
+  const [diagnosticsOpen, setDiagnosticsOpen] = useState(false);
+  const [directionsOpen, setDirectionsOpen] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<PlaceCategory[]>(initialNavigation.facets?.filter((value): value is PlaceCategory => PLACE_CATEGORIES.includes(value as PlaceCategory)) ?? []);
   const [selectedCivicFacets, setSelectedCivicFacets] = useState<CivicFacet[]>(initialNavigation.facets?.filter((value): value is CivicFacet => (CIVIC_FACETS as readonly string[]).includes(value)) ?? []);
   const [layerVisibility, setLayerVisibility] = useState<LayerVisibility>(() => {
@@ -653,7 +684,9 @@ export function App() {
     setSelectedFeature(toCityFeature(feature));
     setActiveSelectionId(feature.id);
     setSelectedCatalogEntityId(syntheticCatalog.entities.find((entity) => entity.fields.runtimeFeatureId === feature.id)?.canonicalId ?? null);
-    setFocusFeatureId(shouldFocusFeature(feature) ? feature.id : null);
+    const focusTransaction = selectionFocusTransaction(feature);
+    setFocusFeatureId(focusTransaction.focusFeatureId);
+    if (focusTransaction.shouldFly) setFocusRequest((request) => request + 1);
     setInspectorOpen(true);
     setDeepLinkMessage(null);
     if (options.syncUrl !== false && typeof window !== "undefined") window.history.pushState({}, "", navigationUrl({ featureId: feature.id, query: queryRef.current, cameraMode: cameraModeRef.current, pose: cameraPoseRef.current, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(layerVisibilityRef.current).filter(([, visible]) => visible).map(([layer]) => layer), facets: civicModeRef.current ? selectedCivicFacetsRef.current : selectedCategoriesRef.current }, window.location.href));
@@ -891,15 +924,25 @@ export function App() {
     return () => window.removeEventListener("popstate", applyUrl);
   }, [activeAdapter, civicAdapter, civicLoadState, citywideAdapter, citywideLoadState, realAdapter, realLoadState, selectFeature]);
 
+  const closeInspector = useCallback(() => {
+    setInspectorOpen(false);
+    window.setTimeout(() => {
+      const returnTarget = detailsReturnRef.current;
+      if (returnTarget && returnTarget !== document.body && document.contains(returnTarget)) returnTarget.focus();
+      else searchInputRef.current?.focus();
+    }, 0);
+  }, []);
+
   useEffect(() => {
     const onKeyDown = (event: globalThis.KeyboardEvent) => {
       if (event.key !== "Escape") return;
       setSearchOpen(false); setActiveSearchIndex(-1); setQualityOpen(false);
-      if (inspectorOpen) setInspectorOpen(false);
+      setLayersOpen(false); setDiagnosticsOpen(false); setDirectionsOpen(false);
+      if (inspectorOpen) closeInspector();
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [inspectorOpen]);
+  }, [closeInspector, inspectorOpen]);
 
   const focusMarker = () => {
     setInspectorOpen(true);
@@ -913,7 +956,6 @@ export function App() {
     selectFeature(result.feature);
     setSearchOpen(false);
     setActiveSearchIndex(-1);
-    setFocusRequest((request) => request + 1);
   };
 
   const submitSearch = (event: React.FormEvent<HTMLFormElement>) => {
@@ -932,13 +974,12 @@ export function App() {
     if (catalogMatch && catalogFeature) {
       setSelectedCatalogEntityId(catalogMatch.canonicalId);
       selectFeature(catalogFeature);
-      setFocusRequest((request) => request + 1);
       return;
     }
     const matches = activeAdapter.search(query);
     const match = matches.find((feature) => selectedCategories.length === 0 || selectedCategories.some((category) => placeCategoriesFromFeature(feature).includes(category))) ?? matches[0];
     if (match && featureMatchesQuery(toCityFeature(match), query)) selectFeature(match);
-    if (match) { setFocusRequest((request) => request + 1); setSearchOpen(false); }
+    if (match) setSearchOpen(false);
   };
 
   const onSearchKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -1084,12 +1125,12 @@ export function App() {
   };
   const focusCurrentSelection = () => {
     if (!selectedRuntimeFeature) return;
-    if ((citywideMode || civicMode) && (selectedRuntimeFeature.attributes.citywideLocationStatus === "location-unavailable" || selectedRuntimeFeature.attributes.civicLocationStatus === "location-unavailable")) {
+    if (!shouldFocusFeature(selectedRuntimeFeature) || (citywideMode || civicMode) && (selectedRuntimeFeature.attributes.citywideLocationStatus === "location-unavailable" || selectedRuntimeFeature.attributes.civicLocationStatus === "location-unavailable")) {
       setDeepLinkMessage(citywideMode ? "This DOHMH parent has no source coordinates; details remain available and no substitute marker is shown." : "This civic record has no source coordinates; details remain available and no substitute marker is shown.");
       return;
     }
     setActiveSelectionId(selectedRuntimeFeature.id);
-    updateCamera({ longitude: selectedRuntimeFeature.coordinates[0], latitude: selectedRuntimeFeature.coordinates[1], height: 240, pitch: -35 }, "explore");
+    setFocusFeatureId(selectedRuntimeFeature.id);
     setFocusRequest((request) => request + 1);
   };
   const onViewportKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
@@ -1117,24 +1158,16 @@ export function App() {
       return;
     }
     const feature = activeAdapter.getFeature(place.canonicalId);
-    if (feature) { selectFeature(feature); setFocusRequest((request) => request + 1); return; }
+    if (feature) { selectFeature(feature); return; }
     const civic = civicAdapterRef.current;
     if (civicModeRef.current && civic) {
       void civic.loadDetail(place.canonicalId).then((detail) => {
-        if (detail && civicAdapterRef.current === civic && civicModeRef.current) { selectFeature(detail); setFocusRequest((request) => request + 1); }
+        if (detail && civicAdapterRef.current === civic && civicModeRef.current) selectFeature(detail);
         else setDeepLinkMessage(`Saved civic place ${place.label} is not present in release ${TRAVEL_CONTEXT_RELEASE_ID}; no substitute record was selected.`);
       }).catch(() => setDeepLinkMessage(`Saved civic place ${place.label} could not be loaded from release ${TRAVEL_CONTEXT_RELEASE_ID}; no substitute record was selected.`));
       return;
     }
     setDeepLinkMessage(`Saved place ${place.label} is not present in the active release; no substitute record was selected.`);
-  };
-  const closeInspector = () => {
-    setInspectorOpen(false);
-    window.setTimeout(() => {
-      const returnTarget = detailsReturnRef.current;
-      if (returnTarget && returnTarget !== document.body && document.contains(returnTarget)) returnTarget.focus();
-      else searchInputRef.current?.focus();
-    }, 0);
   };
   const restoreJourney = (journey: SavedNavigationState["journeys"][number]) => { setRouteOriginId(journey.originFeatureId); setRouteDestinationId(journey.destinationFeatureId); setRouteOriginQuery(activeAdapter.getFeature(journey.originFeatureId)?.name ?? ""); setRouteDestinationQuery(activeAdapter.getFeature(journey.destinationFeatureId)?.name ?? ""); setRouteMode(journey.mode); setItinerary(null); setRouteMessage("Saved journey restored; calculate to preview the synthetic route."); };
   const switchDataMode = (nextMode: NavigationDataMode) => {
@@ -1342,7 +1375,7 @@ export function App() {
           )}
         </div>
         <div className="top-actions">
-          <button type="button" onClick={() => setQualityOpen((open) => !open)}><Database size={18} />Data</button>
+          <button type="button" onClick={() => { setQualityOpen((open) => !open); setLayersOpen(false); setDiagnosticsOpen(false); setDirectionsOpen(false); }}><Database size={18} />Data</button>
           <button type="button"><Clock3 size={18} />Time</button>
         </div>
       </header>
@@ -1367,12 +1400,13 @@ export function App() {
         </div>
       </nav>
 
-      <section className="map-region" aria-label="City explorer">
+      <section className={`map-region${inspectorOpen ? " inspector-open" : ""}`} aria-label="City explorer" data-overlay-policy="map-with-inspector-overlay">
         <CesiumViewport
           adapter={activeAdapter}
           assetResolver={activeAdapter.assetResolver}
           focusRequest={focusRequest}
           focusFeatureId={focusFeatureId}
+          focusOverlayOpen={inspectorOpen}
           onFeatureSelected={selectFeature}
           onFeatureOverlap={selectOverlapFeatures}
           featureFilter={featureFilter}
@@ -1413,7 +1447,9 @@ export function App() {
         </div>
         {deepLinkMessage && <div className="exploration-notice" role="alert">{deepLinkMessage} <button type="button" onClick={() => { terminalRealFallbackNoticeRef.current = null; setDeepLinkMessage(null); setPoseInvalid(false); window.history.replaceState({}, "", navigationUrl({ featureId: activeSelectionRef.current, query, cameraMode, pose: cameraPose, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(layerVisibility).filter(([, visible]) => visible).map(([layer]) => layer), facets: civicMode ? selectedCivicFacets : selectedCategories }, window.location.href)); }}>Dismiss</button></div>}
         {shareMessage && <div className="share-notice" role="status">{shareMessage}</div>}
-        <section className="tile-diagnostics" aria-label="Tile diagnostics">
+        <section className={`tile-diagnostics ${diagnosticsOpen ? "is-open" : "is-collapsed"}`} aria-label="Tile diagnostics">
+          <button className="overlay-launcher" type="button" aria-expanded={diagnosticsOpen} onClick={() => { setDiagnosticsOpen((open) => !open); setDirectionsOpen(false); }}><strong>Diagnostics</strong><span>{diagnosticsOpen ? "Collapse" : "Runtime health"}</span></button>
+          {diagnosticsOpen && <div className="tile-diagnostics-content">
           <div><strong>Tile diagnostics</strong><button type="button" aria-pressed={stressMode} onClick={() => setStressMode((enabled) => !enabled)}>{stressMode ? "Normal mode" : "Stress harness"}</button></div>
           <span>{civicMode ? "Civic layers stream independently · search/detail shards remain on demand" : citywideMode ? "Citywide viewport shards loaded lazily · global search/detail shards remain on demand" : dataMode === "real-pilot" ? "Partitioned real pilot loaded · not full-Manhattan performance" : "Fixture-only synthetic harness · not full-Manhattan performance"}</span>
           {civicMode && <span>Decoded summaries / features / details: {civicMetrics.retainedSummaryCount.toLocaleString()} / {civicMetrics.retainedFeatureCount.toLocaleString()} / {civicMetrics.retainedDetailCount.toLocaleString()} · detail index: {civicMetrics.detailIndexEntryCount.toLocaleString()}</span>}
@@ -1443,6 +1479,7 @@ export function App() {
             <span data-citywide-render-metrics>Rendered dense features / instances / primitives: {citywideDenseMetrics.featureCount} / {citywideDenseMetrics.instanceCount} / {citywideDenseMetrics.primitiveCount}</span>
             <span data-citywide-browser-baseline>Pre-citywide initial-mount baseline heap {citywideBrowserBaseline.heapBytes?.toLocaleString() ?? "unsupported"} · citywide resources {citywideBrowserBaseline.citywideResourceCount} / {citywideBrowserBaseline.citywideResourceBytes.toLocaleString()} bytes</span>
             {citywideDebugMeasurement.status !== "idle" && <span data-citywide-debug-measurement role="status">Debug {citywideDebugMeasurement.anchor} · {citywideDebugMeasurement.status} · frames {citywideDebugMeasurement.frameCount} · avg/median/p95/max {citywideDebugMeasurement.frameAverageMs?.toFixed(2) ?? "unsupported"}/{citywideDebugMeasurement.frameMedianMs?.toFixed(2) ?? "unsupported"}/{citywideDebugMeasurement.frameP95Ms?.toFixed(2) ?? "unsupported"}/{citywideDebugMeasurement.frameMaxMs?.toFixed(2) ?? "unsupported"} ms · heap {citywideDebugMeasurement.heapBytes?.toLocaleString() ?? "unsupported"} · citywide resources {citywideDebugMeasurement.citywideResourceCount} / {citywideDebugMeasurement.citywideResourceBytes.toLocaleString()} bytes</span>}
+          </div>}
           </div>}
         </section>
         {qualityOpen && (
@@ -1522,19 +1559,22 @@ export function App() {
         </section>}
         {helpOpen && <section className="help-panel" aria-label="Help"><strong>Help</strong><p>Search or focus a fixture feature, then inspect its provenance. Use the camera controls or focus the viewport before arrow-key exploration; routes and camera previews are synthetic offline fixtures.</p><button type="button" onClick={() => setHelpOpen(false)}>Close</button></section>}
         {settingsOpen && <section className="settings-panel" aria-label="Settings"><strong>Settings</strong><p>Provider connections, live navigation, street imagery, and remote sync are not enabled. Reduced-motion preferences are honored by the camera journey.</p><button type="button" onClick={() => setSettingsOpen(false)}>Close</button></section>}
-        <div className="layer-controls" aria-label="Runtime layers">
-          {(Object.keys(LAYER_LABELS) as RuntimeLayerId[]).map((layer) => (
-            <button
-              aria-pressed={layerVisibility[layer]}
-              className={layerVisibility[layer] ? "is-visible" : ""}
-              key={layer}
-              onClick={() => toggleLayer(layer)}
-              type="button"
-            >
-              <span className={`layer-dot layer-dot-${layer}`} />
-              {LAYER_LABELS[layer]}
-            </button>
-          ))}
+        <div className={`layer-controls ${layersOpen ? "is-open" : "is-collapsed"}`} aria-label="Runtime layers">
+          <button className="overlay-launcher" type="button" aria-expanded={layersOpen} onClick={() => { setLayersOpen((open) => !open); setDiagnosticsOpen(false); setDirectionsOpen(false); }}><strong>Layers</strong><span>{layersOpen ? "Collapse" : "Show layers"}</span></button>
+          {layersOpen && <div className="layer-options">
+            {(Object.keys(LAYER_LABELS) as RuntimeLayerId[]).map((layer) => (
+              <button
+                aria-pressed={layerVisibility[layer]}
+                className={layerVisibility[layer] ? "is-visible" : ""}
+                key={layer}
+                onClick={() => toggleLayer(layer)}
+                type="button"
+              >
+                <span className={`layer-dot layer-dot-${layer}`} />
+                {LAYER_LABELS[layer]}
+              </button>
+            ))}
+          </div>}
         </div>
         {availableCategories.length > 0 && <div className="category-controls" aria-label="POI categories">
           <span>POI</span>
@@ -1564,7 +1604,9 @@ export function App() {
             </button>
           ))}
         </div>}
-        <section className="directions-panel" aria-label="Synthetic directions">
+        <section className={`directions-panel ${directionsOpen ? "is-open" : "is-collapsed"}`} aria-label="Synthetic directions">
+          <button className="overlay-launcher" type="button" aria-expanded={directionsOpen} onClick={() => { setDirectionsOpen((open) => !open); setDiagnosticsOpen(false); }}><strong>Directions</strong><span>{directionsOpen ? "Collapse" : "Plan a synthetic route"}</span></button>
+          {directionsOpen && <div className="directions-content">
           <div className="directions-heading"><strong>Directions</strong><span>Synthetic 3D route preview</span></div>
           <div className="direction-field">
             <label htmlFor="route-origin">Start</label>
@@ -1604,6 +1646,7 @@ export function App() {
               <button type="button" onClick={saveCurrentJourney}>Save journey locally</button>
             </div>
           )}
+          </div>}
         </section>
         {!inspectorOpen && (
           <button
@@ -1614,8 +1657,6 @@ export function App() {
             Open details
           </button>
         )}
-      </section>
-
       {inspectorOpen && (
         <aside className="inspector" aria-label="Selected feature details">
           <div className="inspector-actions">
@@ -1834,9 +1875,9 @@ export function App() {
 
           <section className="inspector-section relationship-detail">
             <h2>Related entities</h2>
-            {relatedFeatures.length > 0 ? <ul className="related-list">{relatedFeatures.map((feature) => <li key={feature.id}><button type="button" onClick={() => { selectFeature(feature); setFocusRequest((request) => request + 1); }}>{feature.name}<small>{feature.kind}</small></button></li>)}</ul> : <p className="section-label">No source-linked related entities recorded for this feature.</p>}
+            {relatedFeatures.length > 0 ? <ul className="related-list">{relatedFeatures.map((feature) => <li key={feature.id}><button type="button" onClick={() => selectFeature(feature)}>{feature.name}<small>{feature.kind}</small></button></li>)}</ul> : <p className="section-label">No source-linked related entities recorded for this feature.</p>}
             <h3>Nearby transit</h3>
-            {nearbyTransit.length > 0 ? <ul className="related-list">{nearbyTransit.map(({ feature, distanceMeters, method }) => <li key={feature.id}><button type="button" onClick={() => { selectFeature(feature); setFocusRequest((request) => request + 1); }}>{feature.name}<small>{feature.kind} · {formatDistanceMeters(distanceMeters)} · geometry-derived {method}</small></button></li>)}</ul> : <p className="section-label">{proximityOriginAvailable ? "Unknown · no geometry-derived transit within 1,000 meters." : "Proximity unavailable · this geometry has no trustworthy representative point."}</p>}
+            {nearbyTransit.length > 0 ? <ul className="related-list">{nearbyTransit.map(({ feature, distanceMeters, method }) => <li key={feature.id}><button type="button" onClick={() => selectFeature(feature)}>{feature.name}<small>{feature.kind} · {formatDistanceMeters(distanceMeters)} · geometry-derived {method}</small></button></li>)}</ul> : <p className="section-label">{proximityOriginAvailable ? "Unknown · no geometry-derived transit within 1,000 meters." : "Proximity unavailable · this geometry has no trustworthy representative point."}</p>}
           </section>
 
           {selectedFeature.kind === "poi" && !selectedRealPlace && (
@@ -1962,6 +2003,8 @@ export function App() {
           </div>
         </aside>
       )}
+
+      </section>
 
       <footer className="status-bar">
         <span>Manhattan, New York</span>

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import restaurants from "../../../public/data/real-wave-20260804/restaurants.json";
 import { runtimeFixtureFeatures } from "../../domain/features";
 import type { Feature } from "../../domain/schema";
-import { canonicalPickId, denseFeatureIntersectsBounds, featureForPickedId, fixtureOnlyForFeature, focusPoseForFeature, medianFrameInterval, normalizeFocusCameraPose, poiRenderMode, selectDenseFeatures, shouldFocusFeature, shouldStartFocusFlight } from "./CesiumViewport";
+import { canonicalPickId, denseFeatureIntersectsBounds, featureForPickedId, fixtureOnlyForFeature, focusPoseForFeature, focusPoseForFeatureWithOcclusion, medianFrameInterval, normalizeFocusCameraPose, poiRenderMode, selectDenseFeatures, shouldFocusFeature, shouldShowFeatureLabel, shouldStartFocusFlight } from "./CesiumViewport";
 
 describe("Cesium POI render seam", () => {
   const realRestaurant = (restaurants as unknown as Feature[])[0]!;
@@ -100,5 +100,19 @@ describe("Cesium POI render seam", () => {
     expect(shouldFocusFeature(locatedCivic)).toBe(true);
     expect(shouldFocusFeature(realRestaurant)).toBe(true);
     expect(shouldFocusFeature(null)).toBe(false);
+  });
+
+  it("shifts a focus destination away from the inspector occlusion", () => {
+    const feature = { ...realRestaurant, id: "citywide:occluded-focus", coordinates: [-73.99, 40.748] as Feature["coordinates"] };
+    const pose = focusPoseForFeatureWithOcclusion(feature, 240, { rightPx: 360, bottomPx: 0, viewportWidthPx: 1_200, viewportHeightPx: 700 });
+    expect(pose.longitude).toBeGreaterThan(feature.coordinates[0]);
+    expect(pose.latitude).toBe(feature.coordinates[1]);
+  });
+
+  it("suppresses dense and overview labels without suppressing the selected label", () => {
+    expect(shouldShowFeatureLabel(realRestaurant, true, false, null)).toBe(false);
+    expect(shouldShowFeatureLabel(realRestaurant, false, true, null)).toBe(false);
+    expect(shouldShowFeatureLabel(realRestaurant, true, true, realRestaurant.id)).toBe(true);
+    expect(shouldShowFeatureLabel(realRestaurant, false, false, realRestaurant.id)).toBe(true);
   });
 });

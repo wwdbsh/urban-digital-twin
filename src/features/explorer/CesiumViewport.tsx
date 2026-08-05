@@ -37,6 +37,7 @@ interface CesiumViewportProps {
   adapter: RuntimeCityAdapter;
   focusRequest: number;
   focusFeatureId: string | null;
+  focusOverlayOpen?: boolean;
   visibleLayers: LayerVisibility;
   onFeatureSelected: (feature: Feature) => void;
   onFeatureOverlap?: (features: Feature[]) => void;
@@ -191,7 +192,17 @@ export function poiRenderMode(feature: Feature, denseRendering: boolean, selecte
   return selected ? "selected-entity" : "point-primitive";
 }
 
-function addFeatureEntity(viewer: Viewer, feature: Feature, partIndex = 0, assetResolver?: CityAssetResolver, assetDistanceMeters = 240): ReturnType<Viewer["entities"]["add"]> {
+function addFeatureEntity(
+  viewer: Viewer,
+  feature: Feature,
+  partIndex = 0,
+  assetResolver?: CityAssetResolver,
+  assetDistanceMeters = 240,
+  selectedFeatureId: string | null = null,
+  suppressUnselectedLabels = false,
+): ReturnType<Viewer["entities"]["add"]> {
+  const selected = feature.id === selectedFeatureId;
+  const showLabel = shouldShowFeatureLabel(feature, suppressUnselectedLabels, assetDistanceMeters >= 1_200, selectedFeatureId);
   const assetResolution = assetResolver?.resolve(feature.id, assetDistanceMeters, 1);
   const assetProperties = {
     assetResolution: assetResolution?.kind ?? "not-registered",
@@ -203,16 +214,17 @@ function addFeatureEntity(viewer: Viewer, feature: Feature, partIndex = 0, asset
     return viewer.entities.add({
       id: partIndex === 0 ? feature.id : `${feature.id}:part:${partIndex}`,
       name: feature.name,
+      position: Cartesian3.fromDegrees(feature.coordinates[0], feature.coordinates[1], 18),
       polygon: {
         hierarchy: hierarchyForArea(feature, partIndex),
         height: 0,
         extrudedHeight: 0,
-        material: Color.fromCssColorString(isPark ? "#55b875" : "#7e9de8").withAlpha(isPark ? 0.26 : 0.18),
+        material: Color.fromCssColorString(selected ? "#63f3c5" : isPark ? "#55b875" : "#7e9de8").withAlpha(selected ? 0.42 : isPark ? 0.26 : 0.18),
         outline: true,
-        outlineColor: Color.fromCssColorString(isPark ? "#b7f2c6" : "#a7c0ff").withAlpha(0.9),
+        outlineColor: Color.fromCssColorString(selected ? "#ffdf6b" : isPark ? "#b7f2c6" : "#a7c0ff").withAlpha(0.95),
       },
-      label: partIndex === 0 ? {
-        text: `${feature.name} · ${isPark ? "NYC Parks-managed property" : feature.attributes.areaSemantics ?? "area"}`,
+      label: partIndex === 0 && showLabel ? {
+        text: `${feature.name}${selected ? " · selected" : ` · ${isPark ? "NYC Parks-managed property" : feature.attributes.areaSemantics ?? "area"}`}`,
         font: "11px Inter, sans-serif",
         fillColor: Color.WHITE,
         showBackground: true,
@@ -241,6 +253,15 @@ function addFeatureEntity(viewer: Viewer, feature: Feature, partIndex = 0, asset
         position: anchor,
         orientation: Quaternion.fromRotationMatrix(enuRotation),
         model: assetModel,
+        label: selected && showLabel ? {
+          text: `${feature.name} · selected`,
+          font: "12px Inter, sans-serif",
+          fillColor: Color.WHITE,
+          showBackground: true,
+          backgroundColor: Color.fromCssColorString("#0d151b").withAlpha(0.9),
+          pixelOffset: new Cartesian2(0, -22),
+          disableDepthTestDistance: Number.POSITIVE_INFINITY,
+        } : undefined,
         properties: {
           canonicalFeatureId: feature.id,
           sourceRecordId: feature.sourceRefs[0]?.sourceRecordId ?? null,
@@ -250,17 +271,27 @@ function addFeatureEntity(viewer: Viewer, feature: Feature, partIndex = 0, asset
       });
     }
     const height = feature.geometryProvenance.height.valueMeters ?? 1;
-    return viewer.entities.add({
-      id: feature.id,
-      name: feature.name,
-      polygon: {
+      return viewer.entities.add({
+        id: feature.id,
+        name: feature.name,
+        position: Cartesian3.fromDegrees(feature.coordinates[0], feature.coordinates[1], 18),
+        polygon: {
         hierarchy: new PolygonHierarchy(positionsForRing(feature.geometry.coordinates[0] ?? [])),
         height: 0,
         extrudedHeight: Math.max(1, height),
-        material: Color.fromCssColorString("#d7a85d").withAlpha(0.82),
+        material: Color.fromCssColorString(selected ? "#63f3c5" : "#d7a85d").withAlpha(0.82),
         outline: true,
-        outlineColor: Color.fromCssColorString("#f4d89a"),
+        outlineColor: Color.fromCssColorString(selected ? "#ffdf6b" : "#f4d89a"),
       },
+      label: selected && showLabel ? {
+        text: `${feature.name} · selected`,
+        font: "12px Inter, sans-serif",
+        fillColor: Color.WHITE,
+        showBackground: true,
+        backgroundColor: Color.fromCssColorString("#0d151b").withAlpha(0.9),
+        pixelOffset: new Cartesian2(0, -22),
+        disableDepthTestDistance: Number.POSITIVE_INFINITY,
+      } : undefined,
       properties: {
         canonicalFeatureId: feature.id,
         sourceRecordId: feature.sourceRefs[0]?.sourceRecordId ?? null,
@@ -278,8 +309,8 @@ function addFeatureEntity(viewer: Viewer, feature: Feature, partIndex = 0, asset
     return viewer.entities.add({
       id: partIndex === 0 ? feature.id : `${feature.id}:part:${partIndex}`,
       name: feature.name,
-      polyline: { positions: positionsForLine(lines[partIndex] ?? lines[0] ?? []), width: 5, material: Color.fromCssColorString(colorValue).withAlpha(0.92), clampToGround: true },
-      label: partIndex === 0 ? { text: `${feature.name} · schematic`, font: "11px Inter, sans-serif", fillColor: Color.WHITE, showBackground: true, backgroundColor: Color.fromCssColorString("#0d151b").withAlpha(0.82), pixelOffset: new Cartesian2(0, -18), disableDepthTestDistance: Number.POSITIVE_INFINITY } : undefined,
+      polyline: { positions: positionsForLine(lines[partIndex] ?? lines[0] ?? []), width: selected ? 7 : 5, material: Color.fromCssColorString(selected ? "#63f3c5" : colorValue).withAlpha(0.92), clampToGround: true },
+      label: partIndex === 0 && showLabel ? { text: `${feature.name}${selected ? " · selected" : " · schematic"}`, font: "11px Inter, sans-serif", fillColor: Color.WHITE, showBackground: true, backgroundColor: Color.fromCssColorString("#0d151b").withAlpha(0.82), pixelOffset: new Cartesian2(0, -18), disableDepthTestDistance: Number.POSITIVE_INFINITY } : undefined,
       properties: { canonicalFeatureId: feature.id, sourceRecordId: feature.sourceRefs[0]?.sourceRecordId ?? null, fixtureOnly: fixtureOnlyForFeature(feature), ...assetProperties },
     });
   }
@@ -292,21 +323,21 @@ function addFeatureEntity(viewer: Viewer, feature: Feature, partIndex = 0, asset
     name: feature.name,
     position: Cartesian3.fromDegrees(longitude, latitude, 14),
     point: {
-      pixelSize: pointSize,
-      color: Color.fromCssColorString(pointColor),
+      pixelSize: selected ? pointSize + 7 : pointSize,
+      color: Color.fromCssColorString(selected ? "#ffdf6b" : pointColor),
       outlineColor: Color.fromCssColorString("#d5ffff"),
       outlineWidth: 2,
       heightReference: HeightReference.NONE,
     },
-    label: {
-      text: feature.name,
+    label: showLabel ? {
+      text: `${feature.name}${selected ? " · selected" : ""}`,
       font: "12px Inter, sans-serif",
       fillColor: Color.WHITE,
       showBackground: true,
       backgroundColor: Color.fromCssColorString("#0d151b").withAlpha(0.82),
       pixelOffset: new Cartesian2(0, -22),
       disableDepthTestDistance: Number.POSITIVE_INFINITY,
-    },
+    } : undefined,
     properties: {
       canonicalFeatureId: feature.id,
       sourceRecordId: feature.sourceRefs[0]?.sourceRecordId ?? null,
@@ -321,18 +352,25 @@ export function fixtureOnlyForFeature(feature: Feature): boolean {
   return feature.sourceRefs.length === 0 || feature.sourceRefs.every((source) => source.role === "fixture" || source.registryEntryId.startsWith("fixture."));
 }
 
-function addFeatureEntities(viewer: Viewer, feature: Feature, assetResolver?: CityAssetResolver, assetDistanceMeters = 240): ReturnType<Viewer["entities"]["add"]>[] {
+function addFeatureEntities(
+  viewer: Viewer,
+  feature: Feature,
+  assetResolver?: CityAssetResolver,
+  assetDistanceMeters = 240,
+  selectedFeatureId: string | null = null,
+  suppressUnselectedLabels = false,
+): ReturnType<Viewer["entities"]["add"]>[] {
   if ((feature.kind === "area" || feature.kind === "park") && feature.geometry.type === "MultiPolygon") {
-    return feature.geometry.coordinates.map((_, partIndex) => addFeatureEntity(viewer, feature, partIndex, assetResolver, assetDistanceMeters));
+    return feature.geometry.coordinates.map((_, partIndex) => addFeatureEntity(viewer, feature, partIndex, assetResolver, assetDistanceMeters, selectedFeatureId, suppressUnselectedLabels));
   }
   if (feature.kind === "transit-route" && feature.geometry.type === "MultiLineString") {
-    return feature.geometry.coordinates.map((_, partIndex) => addFeatureEntity(viewer, feature, partIndex, assetResolver, assetDistanceMeters));
+    return feature.geometry.coordinates.map((_, partIndex) => addFeatureEntity(viewer, feature, partIndex, assetResolver, assetDistanceMeters, selectedFeatureId, suppressUnselectedLabels));
   }
-  return [addFeatureEntity(viewer, feature, 0, assetResolver, assetDistanceMeters)];
+  return [addFeatureEntity(viewer, feature, 0, assetResolver, assetDistanceMeters, selectedFeatureId, suppressUnselectedLabels)];
 }
 
 function addDensePrimitives(collection: PrimitiveCollection, features: Feature[], selectedFeatureId: string | null): DenseRenderMetrics {
-  const buildings = features.filter((feature): feature is Feature & { kind: "building"; geometry: Extract<Feature["geometry"], { type: "Polygon" }> } => feature.kind === "building" && feature.geometry.type === "Polygon");
+  const buildings = features.filter((feature): feature is Feature & { kind: "building"; geometry: Extract<Feature["geometry"], { type: "Polygon" }> } => feature.kind === "building" && feature.geometry.type === "Polygon" && feature.id !== selectedFeatureId);
   let primitiveCount = 0;
   if (buildings.length) {
     const instances = buildings.map((feature) => new GeometryInstance({
@@ -400,6 +438,56 @@ export function focusPoseForFeature(feature: Feature, height = 240): CameraPose 
   return { longitude: feature.coordinates[0], latitude: feature.coordinates[1], height, heading: 0, pitch: -35, roll: 0 };
 }
 
+export interface FocusOcclusion {
+  leftPx?: number;
+  rightPx?: number;
+  topPx?: number;
+  bottomPx?: number;
+  viewportWidthPx: number;
+  viewportHeightPx: number;
+}
+
+/**
+ * Keep dense and overview labels quiet while preserving a deterministic label
+ * for the active feature. Geometry and picking remain present either way.
+ */
+export function shouldShowFeatureLabel(
+  feature: Pick<Feature, "id">,
+  denseRendering: boolean,
+  overview: boolean,
+  selectedFeatureId: string | null,
+): boolean {
+  return feature.id === selectedFeatureId || (!denseRendering && !overview);
+}
+
+/**
+ * Shift the requested camera center away from an overlay's occluded center.
+ * Cesium's camera destination is the visual center, so a right-side panel
+ * requires an eastward destination shift to place the selected world point
+ * on the left side of the unobscured viewport; a bottom sheet shifts south.
+ */
+export function focusPoseForFeatureWithOcclusion(feature: Feature, height = 240, occlusion?: FocusOcclusion): CameraPose {
+  const base = focusPoseForFeature(feature, height);
+  if (!occlusion || occlusion.viewportWidthPx <= 0 || occlusion.viewportHeightPx <= 0) return base;
+  const width = occlusion.viewportWidthPx;
+  const viewportHeight = occlusion.viewportHeightPx;
+  const horizontalShiftPx = ((occlusion.rightPx ?? 0) - (occlusion.leftPx ?? 0)) / 2;
+  const verticalShiftPx = ((occlusion.bottomPx ?? 0) - (occlusion.topPx ?? 0)) / 2;
+  if (horizontalShiftPx === 0 && verticalShiftPx === 0) return base;
+  // A bounded 45° ground-span approximation is stable across fixtures and
+  // local releases and avoids making focus dependent on provider imagery.
+  const groundSpanMeters = Math.max(1, height) * 0.8284271247;
+  const metersPerHorizontalPixel = groundSpanMeters / width;
+  const metersPerVerticalPixel = groundSpanMeters / viewportHeight;
+  const latitudeRadians = CesiumMath.toRadians(base.latitude);
+  const metersPerLongitudeDegree = 111_320 * Math.max(0.2, Math.cos(latitudeRadians));
+  return {
+    ...base,
+    longitude: base.longitude + (horizontalShiftPx * metersPerHorizontalPixel) / metersPerLongitudeDegree,
+    latitude: base.latitude - (verticalShiftPx * metersPerVerticalPixel) / 111_320,
+  };
+}
+
 /**
  * Cesium can report an equivalent 180° local-frame roll after a low-altitude
  * WGS84 flight even when the requested view is upright. Keep the published
@@ -450,6 +538,7 @@ export function CesiumViewport({
   adapter,
   focusRequest,
   focusFeatureId,
+  focusOverlayOpen = false,
   visibleLayers,
   onFeatureSelected,
   onFeatureOverlap,
@@ -586,14 +675,19 @@ export function CesiumViewport({
       const semanticFeatures = denseRendering
         ? renderedDenseFeatures.filter((feature) => (feature.kind !== "building" && feature.kind !== "poi") || assetBuildingIds.has(feature.id))
         : renderedDenseFeatures;
+      const suppressUnselectedLabels = denseRendering || assetDistanceMeters >= 1_200;
       semanticFeatures.forEach((feature) => {
-        addFeatureEntities(viewer, feature, assetResolver, assetDistanceMeters);
+        addFeatureEntities(viewer, feature, assetResolver, assetDistanceMeters, selectedFeatureId, suppressUnselectedLabels);
       });
       const denseMetrics = denseRendering && denseCollectionRef.current
         ? addDensePrimitives(denseCollectionRef.current, renderedDenseFeatures.filter((feature) => !assetBuildingIds.has(feature.id)), selectedFeatureId)
         : { featureCount: 0, primitiveCount: 0, instanceCount: 0, buildingFeatureCount: 0, pointFeatureCount: 0 };
       onDenseMetrics?.(denseMetrics);
       if (denseRendering && selectedFeatureId) {
+        const selectedFeature = renderedDenseFeatures.find((feature) => feature.id === selectedFeatureId);
+        if (selectedFeature && !semanticFeatures.some((feature) => feature.id === selectedFeature.id) && selectedFeature.kind !== "poi") {
+          addFeatureEntities(viewer, selectedFeature, assetResolver, assetDistanceMeters, selectedFeatureId, false);
+        }
         const selectedPoi = allFeatures.find((feature) => feature.id === selectedFeatureId && feature.kind === "poi");
         if (selectedPoi) addSelectedPoiEntity(viewer, selectedPoi);
       }
@@ -663,7 +757,31 @@ export function CesiumViewport({
     if (!shouldStartFocusFlight(lastFocusFlightRequestRef.current, focusRequest, shouldFocusFeature(feature)) || !feature) return;
     lastFocusFlightRequestRef.current = focusRequest;
     viewer.camera.cancelFlight();
-    const pose = focusPoseForFeature(feature);
+    const viewport = containerRef.current;
+    const inspector = focusOverlayOpen ? viewport?.parentElement?.querySelector<HTMLElement>(".inspector") : null;
+    const viewportRect = viewport?.getBoundingClientRect();
+    const inspectorRect = inspector?.getBoundingClientRect();
+    const viewportWidthPx = viewportRect?.width ?? 0;
+    const viewportHeightPx = viewportRect?.height ?? 0;
+    const intersectionLeft = viewportRect && inspectorRect ? Math.max(viewportRect.left, inspectorRect.left) : 0;
+    const intersectionRight = viewportRect && inspectorRect ? Math.min(viewportRect.right, inspectorRect.right) : 0;
+    const intersectionTop = viewportRect && inspectorRect ? Math.max(viewportRect.top, inspectorRect.top) : 0;
+    const intersectionBottom = viewportRect && inspectorRect ? Math.min(viewportRect.bottom, inspectorRect.bottom) : 0;
+    const intersectionWidth = Math.max(0, intersectionRight - intersectionLeft);
+    const intersectionHeight = Math.max(0, intersectionBottom - intersectionTop);
+    const overlayCenterX = viewportRect ? (intersectionLeft + intersectionRight) / 2 - viewportRect.left : 0;
+    const overlayCenterY = viewportRect ? (intersectionTop + intersectionBottom) / 2 - viewportRect.top : 0;
+    const occlusion: FocusOcclusion | undefined = viewportRect && inspectorRect && intersectionWidth > 0 && intersectionHeight > 0
+      ? {
+        leftPx: overlayCenterX < viewportWidthPx / 2 ? intersectionWidth : 0,
+        rightPx: overlayCenterX > viewportWidthPx / 2 ? intersectionWidth : 0,
+        topPx: overlayCenterY < viewportHeightPx / 2 ? intersectionHeight : 0,
+        bottomPx: overlayCenterY > viewportHeightPx / 2 ? intersectionHeight : 0,
+        viewportWidthPx,
+        viewportHeightPx,
+      }
+      : undefined;
+    const pose = focusPoseForFeatureWithOcclusion(feature, 240, occlusion);
     const duration = cameraDuration(0.6);
     suppressCameraEventsUntilRef.current = Date.now() + Math.max(900, duration * 1_000 + 250);
     viewer.camera.flyTo({
@@ -679,7 +797,7 @@ export function CesiumViewport({
         onCameraChanged?.(normalizeFocusCameraPose(cameraStateForViewer(viewer), pose));
       },
     });
-  }, [adapter, denseFeatures, focusFeatureId, focusRequest, onCameraChanged]);
+  }, [adapter, denseFeatures, focusFeatureId, focusOverlayOpen, focusRequest, onCameraChanged]);
 
   useEffect(() => {
     const viewer = viewerRef.current;
