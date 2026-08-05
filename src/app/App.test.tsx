@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { runtimeFixtureFeatures } from "../domain/features";
@@ -14,10 +14,11 @@ vi.mock("../features/explorer/CesiumViewport", async () => {
     focusRequest: number;
     focusFeatureId: string | null;
     focusOverlayOpen?: boolean;
+    cameraPoseRequest?: { longitude: number; latitude: number; height: number; heading: number; pitch: number; roll: number; requestId: number };
     onFeatureSelected?: (feature: Feature) => void;
   };
 
-  const MockCesiumViewport = ({ adapter, focusRequest, focusFeatureId, focusOverlayOpen, onFeatureSelected }: MockProps) => {
+  const MockCesiumViewport = ({ adapter, focusRequest, focusFeatureId, focusOverlayOpen, cameraPoseRequest, onFeatureSelected }: MockProps) => {
     const locatedFeature = adapter.getFeatures().find((feature) => feature.kind === "poi") ?? adapter.getFeatures()[0]!;
     const locationlessFeature: Feature = {
       ...locatedFeature,
@@ -32,6 +33,7 @@ vi.mock("../features/explorer/CesiumViewport", async () => {
         "data-focus-request": focusRequest,
         "data-focus-feature-id": focusFeatureId ?? "",
         "data-focus-overlay-open": focusOverlayOpen ? "true" : "false",
+        "data-camera-pose-request": cameraPoseRequest ? `${cameraPoseRequest.longitude},${cameraPoseRequest.latitude},${cameraPoseRequest.height},${cameraPoseRequest.pitch},${cameraPoseRequest.requestId}` : "",
       },
       React.createElement("button", { type: "button", onClick: () => onFeatureSelected?.(locatedFeature) }, "Mock located pick"),
       React.createElement("button", { type: "button", onClick: () => onFeatureSelected?.(locationlessFeature) }, "Mock locationless pick"),
@@ -57,18 +59,24 @@ describe("explorer overlay policy", () => {
       inspectorPosition: "overlay",
       desktopRightInset: "none",
       mobileBottomInset: "none",
+      runtimeNoteLane: "left-control-lane",
+      cameraControlsLane: "centered-control-lane",
     });
     expect(overlayLayoutPolicy(true, false)).toEqual({
       mapOwnsMainRegion: true,
       inspectorPosition: "overlay",
       desktopRightInset: "inspector-width",
       mobileBottomInset: "none",
+      runtimeNoteLane: "left-control-lane",
+      cameraControlsLane: "centered-control-lane",
     });
     expect(overlayLayoutPolicy(true, true)).toEqual({
       mapOwnsMainRegion: true,
       inspectorPosition: "overlay",
       desktopRightInset: "none",
       mobileBottomInset: "inspector-sheet",
+      runtimeNoteLane: "left-control-lane",
+      cameraControlsLane: "centered-control-lane",
     });
   });
 
@@ -83,6 +91,15 @@ describe("explorer overlay policy", () => {
 });
 
 describe("App overlay and selection regressions", () => {
+  it("requests the normalized URL pose or safe default on the first viewport render", () => {
+    render(<App />);
+
+    expect(document.querySelector(".viewport")).toHaveAttribute("data-camera-pose-request", "-73.991,40.744,4000,-75,1");
+    const cameraControls = within(screen.getByRole("region", { name: "Camera controls" }));
+    expect(cameraControls.getByRole("button", { name: "Overview" })).toHaveAttribute("aria-pressed", "true");
+    expect(cameraControls.getByRole("button", { name: "Explore" })).toHaveAttribute("aria-pressed", "false");
+  });
+
   it("keeps the inspector inside the map region and claims one focus request for a direct pick", async () => {
     render(<App />);
 

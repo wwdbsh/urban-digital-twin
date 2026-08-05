@@ -128,3 +128,28 @@ or exhaustive vernacular neighborhoods; Parks presence does not prove current
 hours, amenities, legal survey accuracy, or access; LPC dates and designation
 records do not prove current condition or use. See the implementation record for
 exact counts, checksums, budgets, browser evidence, and the documentation audit.
+
+## Runtime civic composition (2026-08-05)
+
+The canonical civic URL/runtime root `manhattan-civic-context-20260804` now
+composes the civic layers over its manifest-pinned base
+`manhattan-citywide-20260804`. This is a runtime-only composition; neither
+immutable manifest was rewritten and no composed release was emitted. Feature
+origin remains separate from the composition root, so a selected citywide
+building keeps citywide search/detail/provenance identity while the URL keeps
+the civic root.
+
+The composition uses one shared 24-entry/48 MiB cache and four-request
+aggregate budget. Cesium receives independent deterministic groups capped at
+6,000 citywide base features and 128 civic context parts, with collision-checked
+picking and selected feedback retained outside a full group only when active.
+The exact manifest hashes are citywide
+`acb5a9b52014f86535c8478e7d4e516efc03f6dff95c17e9896dfea4413c203c` and civic
+`225aba4efb041b26c38932b265f927373ec8974f0fb4a5e63e34baefd07da2a2`.
+
+The implementation and browser evidence are recorded in
+[`MANHATTAN_CIVIC_RUNTIME_COMPOSITION_IMPLEMENTATION.md`](codex/MANHATTAN_CIVIC_RUNTIME_COMPOSITION_IMPLEMENTATION.md)
+and [Decision 0015](decisions/0015-manhattan-civic-runtime-composition.md).
+Citywide procedural footprint/height massing remains explicitly distinct from
+real facade imagery, textures, roofs, interiors, entrances, and photorealistic
+models; bounded-pilot GLBs are inactive in the civic composition.

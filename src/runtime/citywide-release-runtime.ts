@@ -21,7 +21,7 @@ import {
 import { tileBounds, tileKeyForCoordinate, tileKeyString, type TileBounds } from "./spatial.ts";
 import { DEFAULT_LAYER_VISIBILITY, layerForFeature, type LayerManifest, type LayerVisibility, type RuntimeLayerId } from "./layers.ts";
 import type { RuntimeCityAdapter } from "./fixture-adapter.ts";
-import { CitywideRequestPool } from "../release/citywide-release.ts";
+import { CitywideLruCache, CitywideRequestPool, type CitywideSharedRequestBudget } from "../release/citywide-release.ts";
 import type { CameraPose } from "../domain/visitor-navigation.ts";
 
 const DOHMH_SOURCE_URL = "https://data.cityofnewyork.us/resource/43nn-pn8j.json";
@@ -55,6 +55,13 @@ export interface CitywideRuntimeMetrics {
   detailIndexEntryCount: number;
   cacheEntries: number;
   cacheEvictions: number;
+}
+
+export interface CitywideRuntimeOptions {
+  sharedBudget?: CitywideSharedRequestBudget | null;
+  /** A shared cache is supplied only by an approved composed runtime. */
+  sharedCache?: CitywideLruCache<unknown>;
+  cacheNamespace?: string;
 }
 
 interface SourceSnapshot {
@@ -255,7 +262,8 @@ export class CitywideReleaseAdapter implements RuntimeCityAdapter {
   readonly manifest: CitywideReleaseManifest;
   private readonly basePath: string;
   private readonly fetcher: Fetcher;
-  private readonly pool = new CitywideRequestPool<LoadedShard>(CITYWIDE_BUDGETS.maxConcurrentRequests);
+  private readonly pool: CitywideRequestPool<LoadedShard>;
+  private readonly cacheNamespace: string;
   private readonly sourceSnapshots: ReadonlyMap<string, SourceSnapshot>;
   private readonly summaries = new Map<string, CitywideSearchSummary>();
   private readonly features = new Map<string, Feature>();
@@ -270,7 +278,7 @@ export class CitywideReleaseAdapter implements RuntimeCityAdapter {
   private staleResultCount = 0;
   private destroyed = false;
 
-  constructor(manifest: CitywideReleaseManifest, basePath: string, fetcher: Fetcher = globalThis.fetch.bind(globalThis)) {
+  constructor(manifest: CitywideReleaseManifest, basePath: string, fetcher: Fetcher = globalThis.fetch.bind(globalThis), options: CitywideRuntimeOptions = {}) {
     const validation = validateCitywideReleaseManifest(manifest);
     if (!validation.ok) throw new Error(`Citywide release manifest is invalid: ${validation.issues.map((item) => `${item.path} ${item.message}`).join("; ")}`);
     if (manifest.fixtureOnly || manifest.releaseId !== CITYWIDE_RELEASE_ID) throw new Error("Only the pinned non-fixture citywide release may activate this adapter.");
@@ -279,6 +287,9 @@ export class CitywideReleaseAdapter implements RuntimeCityAdapter {
     this.releaseId = manifest.releaseId;
     this.basePath = basePath.replace(/\/$/, "");
     this.fetcher = fetcher;
+    this.cacheNamespace = options.cacheNamespace ?? manifest.releaseId;
+    const sharedCache = options.sharedCache as unknown as CitywideLruCache<LoadedShard> | undefined;
+    this.pool = new CitywideRequestPool<LoadedShard>(CITYWIDE_BUDGETS.maxConcurrentRequests, sharedCache ?? new CitywideLruCache<LoadedShard>(), options.sharedBudget ?? null);
     this.sourceSnapshots = new Map(manifest.sourceSnapshots.map((source) => [source.registryEntryId, source]));
   }
 
@@ -621,7 +632,7 @@ export class CitywideReleaseAdapter implements RuntimeCityAdapter {
     const safeRef = ref.replace(/^\/+/, "");
     if (safeRef !== ref || safeRef.includes("..") || safeRef.includes("\\") || safeRef.includes("://")) throw new Error(`Unsafe citywide runtime ref ${ref}.`);
     if (signal?.aborted) return undefined;
-    const task = { key: ref, loader: async (requestSignal: AbortSignal) => {
+    const task = { key: `${this.cacheNamespace}:${ref}`, loader: async (requestSignal: AbortSignal) => {
       const combinedController = new AbortController();
       const abort = () => combinedController.abort();
       requestSignal.addEventListener("abort", abort, { once: true });
@@ -659,7 +670,7 @@ export class CitywideReleaseAdapter implements RuntimeCityAdapter {
   }
 }
 
-export async function loadCitywideRelease(basePath = "/data/manhattan-citywide-20260804/", signal?: AbortSignal, fetcher: Fetcher = globalThis.fetch.bind(globalThis)): Promise<CitywideReleaseAdapter> {
+export async function loadCitywideRelease(basePath = "/data/manhattan-citywide-20260804/", signal?: AbortSignal, fetcher: Fetcher = globalThis.fetch.bind(globalThis), options: CitywideRuntimeOptions = {}): Promise<CitywideReleaseAdapter> {
   const normalizedPath = basePath.replace(/\/$/, "");
   const response = await fetcher(`${normalizedPath}/manifest.json`, { signal });
   if (!response.ok) throw new Error(`Citywide release manifest request failed (${response.status}).`);
@@ -674,7 +685,7 @@ export async function loadCitywideRelease(basePath = "/data/manhattan-citywide-2
   const declaredHash = (await hashResponse.text()).trim().split(/\s+/)[0] ?? "";
   const actual = await sha256Hex(text);
   if (!/^[a-f0-9]{64}$/i.test(declaredHash) || actual.toLowerCase() !== declaredHash.toLowerCase()) throw new Error("Citywide root manifest checksum mismatch.");
-  return new CitywideReleaseAdapter(validation.value, normalizedPath, fetcher);
+  return new CitywideReleaseAdapter(validation.value, normalizedPath, fetcher, options);
 }
 
 export { stableCitywidePickId };

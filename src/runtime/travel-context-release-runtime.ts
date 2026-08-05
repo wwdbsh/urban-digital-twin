@@ -25,7 +25,7 @@ import {
   type TravelContextSearchShardManifest,
 } from "../release/travel-context-release.ts";
 import { MANHATTAN_CIVIC_APPROVAL_EVIDENCE } from "../data/source-registry.ts";
-import { CitywideRequestPool } from "../release/citywide-release.ts";
+import { CitywideLruCache, CitywideRequestPool, type CitywideSharedRequestBudget } from "../release/citywide-release.ts";
 import { DEFAULT_LAYER_VISIBILITY, layerForFeature, type LayerManifest, type LayerVisibility, type RuntimeLayerId } from "./layers.ts";
 import type { TileBounds } from "./spatial.ts";
 import type { CameraPose } from "../domain/visitor-navigation.ts";
@@ -83,6 +83,15 @@ export interface TravelContextRuntimeMetrics {
   cacheEntries: number;
   cacheEvictions: number;
   failedLayers: RuntimeLayerId[];
+}
+
+export interface TravelContextRuntimeOptions {
+  allowFixture?: boolean;
+  fault?: TravelContextFault | null;
+  sharedBudget?: CitywideSharedRequestBudget | null;
+  /** A shared cache is supplied only by an approved composed runtime. */
+  sharedCache?: CitywideLruCache<unknown>;
+  cacheNamespace?: string;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -328,7 +337,8 @@ export class TravelContextReleaseAdapter implements RuntimeCityAdapter {
   readonly manifest: TravelContextReleaseManifest;
   private readonly basePath: string;
   private readonly fetcher: Fetcher;
-  private readonly pool = new CitywideRequestPool<LoadedShard>(TRAVEL_CONTEXT_BUDGETS.maxConcurrentRequests);
+  private readonly pool: CitywideRequestPool<LoadedShard>;
+  private readonly cacheNamespace: string;
   private readonly summaries = new Map<string, TravelContextSearchSummary>();
   private readonly features = new Map<string, Feature>();
   private readonly detailFeatures = new Map<string, Feature>();
@@ -343,9 +353,10 @@ export class TravelContextReleaseAdapter implements RuntimeCityAdapter {
   private viewportAbortController: AbortController | null = null;
   private staleResultCount = 0;
   private failedLayers = new Set<RuntimeLayerId>();
+  private geometryFailedLayers = new Set<RuntimeLayerId>();
   private destroyed = false;
 
-  constructor(manifest: TravelContextReleaseManifest, basePath: string, fetcher: Fetcher = globalThis.fetch.bind(globalThis), options: { allowFixture?: boolean; fault?: TravelContextFault | null } = {}) {
+  constructor(manifest: TravelContextReleaseManifest, basePath: string, fetcher: Fetcher = globalThis.fetch.bind(globalThis), options: TravelContextRuntimeOptions = {}) {
     const validation = validateTravelContextReleaseManifest(manifest);
     if (!validation.ok) throw new Error(`Travel-context release manifest is invalid: ${validation.issues.map((item) => `${item.path} ${item.message}`).join("; ")}`);
     if ((!options.allowFixture && manifest.fixtureOnly) || (!manifest.fixtureOnly && manifest.releaseId !== TRAVEL_CONTEXT_RELEASE_ID)) throw new Error("Only the pinned civic-context release may activate this adapter.");
@@ -356,6 +367,9 @@ export class TravelContextReleaseAdapter implements RuntimeCityAdapter {
     this.basePath = basePath.replace(/\/$/u, "");
     this.fetcher = fetcher;
     this.fault = options.fault ?? null;
+    this.cacheNamespace = options.cacheNamespace ?? manifest.releaseId;
+    const sharedCache = options.sharedCache as unknown as CitywideLruCache<LoadedShard> | undefined;
+    this.pool = new CitywideRequestPool<LoadedShard>(TRAVEL_CONTEXT_BUDGETS.maxConcurrentRequests, sharedCache ?? new CitywideLruCache<LoadedShard>(), options.sharedBudget ?? null);
     this.sourceSnapshots = new Map(manifest.sourceSnapshots.map((source) => [source.registryEntryId, source]));
   }
 
@@ -446,6 +460,7 @@ export class TravelContextReleaseAdapter implements RuntimeCityAdapter {
     const visibleRefs = new Set(bounded.map((shard) => shard.relativeContentRef));
     this.visibleShardCount = visibleRefs.size;
     this.requestedShardCount = bounded.length;
+    const viewportFailedLayers = new Set<RuntimeLayerId>();
     const values = await Promise.all(bounded.map((shard) => this.loadRef(shard.relativeContentRef, shard.checksumSha256, controller.signal).catch(() => undefined)));
     if (controller.signal.aborted || generation !== this.generation || this.destroyed) {
       this.staleResultCount += 1;
@@ -456,10 +471,10 @@ export class TravelContextReleaseAdapter implements RuntimeCityAdapter {
     values.forEach((loaded, index) => {
       const shard = bounded[index];
       if (!shard) return;
-      if (!loaded) { this.failedLayers.add(runtimeLayerForTravelLayer(shard.layerId)); return; }
-      if (!Array.isArray(loaded.payload)) { this.failedLayers.add(runtimeLayerForTravelLayer(shard.layerId)); return; }
+      if (!loaded) { viewportFailedLayers.add(runtimeLayerForTravelLayer(shard.layerId)); return; }
+      if (!Array.isArray(loaded.payload)) { viewportFailedLayers.add(runtimeLayerForTravelLayer(shard.layerId)); return; }
       const records = loaded.payload.map(compactGeometry);
-      if (records.some((record) => !record)) { this.failedLayers.add(runtimeLayerForTravelLayer(shard.layerId)); return; }
+      if (records.some((record) => !record)) { viewportFailedLayers.add(runtimeLayerForTravelLayer(shard.layerId)); return; }
       const grouped = new Map<string, CompactGeometryRecord[]>();
       records.forEach((record) => { if (record) grouped.set(record.p, [...(grouped.get(record.p) ?? []), record]); });
       grouped.forEach((parts, canonicalId) => {
@@ -469,10 +484,11 @@ export class TravelContextReleaseAdapter implements RuntimeCityAdapter {
           next.set(feature.id, feature);
           this.setBounded(this.features, feature.id, feature, TRAVEL_CONTEXT_BUDGETS.maxLoadedShards * 700);
         } catch {
-          this.failedLayers.add(runtimeLayerForTravelLayer(shard.layerId));
+          viewportFailedLayers.add(runtimeLayerForTravelLayer(shard.layerId));
         }
       });
     });
+    this.geometryFailedLayers = viewportFailedLayers;
     this.visibleFeatures = [...next.values()].sort((left, right) => left.id.localeCompare(right.id));
     signal?.removeEventListener("abort", abort);
     if (this.viewportAbortController === controller) this.viewportAbortController = null;
@@ -531,7 +547,7 @@ export class TravelContextReleaseAdapter implements RuntimeCityAdapter {
       detailIndexEntryCount: this.detailIndexEntryCount,
       cacheEntries: cache.entries,
       cacheEvictions: cache.evictions,
-      failedLayers: [...this.failedLayers].sort(),
+      failedLayers: [...new Set([...this.failedLayers, ...this.geometryFailedLayers])].sort(),
     };
   }
 
@@ -601,7 +617,7 @@ export class TravelContextReleaseAdapter implements RuntimeCityAdapter {
     const declaredLayer = this.manifest.geometryShards.find((item) => item.relativeContentRef === ref)?.layerId;
     if (this.fault === "parks-geometry" && declaredLayer === "parks") throw new Error("Injected parks geometry shard failure; the immutable release was not modified.");
     const task = {
-      key: ref,
+      key: `${this.cacheNamespace}:${ref}`,
       loader: async (requestSignal: AbortSignal) => {
         const combinedController = new AbortController();
         const abort = () => combinedController.abort();
@@ -630,7 +646,7 @@ export class TravelContextReleaseAdapter implements RuntimeCityAdapter {
 
 }
 
-export async function loadTravelContextRelease(basePath = "/data/manhattan-civic-context-20260804/", signal?: AbortSignal, fetcher: Fetcher = globalThis.fetch.bind(globalThis), options: { fault?: TravelContextFault | null } = {}): Promise<TravelContextReleaseAdapter> {
+export async function loadTravelContextRelease(basePath = "/data/manhattan-civic-context-20260804/", signal?: AbortSignal, fetcher: Fetcher = globalThis.fetch.bind(globalThis), options: TravelContextRuntimeOptions = {}): Promise<TravelContextReleaseAdapter> {
   const normalizedPath = basePath.replace(/\/$/u, "");
   const response = await fetcher(`${normalizedPath}/manifest.json`, { signal });
   if (!response.ok) throw new Error(`Travel-context release manifest request failed (${response.status}).`);
@@ -645,7 +661,7 @@ export async function loadTravelContextRelease(basePath = "/data/manhattan-civic
   const declaredHash = (await hashResponse.text()).trim().split(/\s+/u)[0] ?? "";
   const actual = await sha256Hex(text);
   if (!/^[a-f0-9]{64}$/iu.test(declaredHash) || actual.toLowerCase() !== declaredHash.toLowerCase()) throw new Error("Travel-context root manifest checksum mismatch.");
-  return new TravelContextReleaseAdapter(validation.value, normalizedPath, fetcher, { fault: options.fault });
+  return new TravelContextReleaseAdapter(validation.value, normalizedPath, fetcher, options);
 }
 
 export { kindLabel };

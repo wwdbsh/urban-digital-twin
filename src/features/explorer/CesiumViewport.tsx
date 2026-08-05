@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { KeyboardEventHandler } from "react";
 import {
   Cartesian3,
@@ -47,6 +47,8 @@ interface CesiumViewportProps {
   denseRendering?: boolean;
   denseFeatures?: Feature[];
   denseFeatureLimit?: number;
+  denseFeatureGroups?: DenseFeatureGroups;
+  denseFeatureGroupLimits?: { base: number; context: number };
   onDenseMetrics?: (metrics: DenseRenderMetrics) => void;
   selectedFeatureId?: string | null;
   onCameraChanged?: (camera: CameraPose) => void;
@@ -62,6 +64,39 @@ export interface DenseRenderMetrics {
   instanceCount: number;
   buildingFeatureCount: number;
   pointFeatureCount: number;
+  baseFeatureCount?: number;
+  contextFeatureCount?: number;
+  contextPartCount?: number;
+}
+
+export interface DenseFeatureGroups {
+  base: Feature[];
+  context: Feature[];
+}
+
+export interface DensePoiMarkerStyle {
+  pixelSize: number;
+  outlineWidth: number;
+  color: string;
+  opacity: number;
+}
+
+export function densePoiMarkerStyle(selected: boolean): DensePoiMarkerStyle {
+  return selected
+    ? { pixelSize: 20, outlineWidth: 3, color: "#ffdf6b", opacity: 1 }
+    : { pixelSize: 5, outlineWidth: 0, color: "#4ce2e6", opacity: 0.78 };
+}
+
+function applyCameraPoseRequest(viewer: Viewer, request: CameraPose & { requestId: number }): void {
+  viewer.camera.cancelFlight();
+  viewer.camera.setView({
+    destination: Cartesian3.fromDegrees(request.longitude, request.latitude, request.height),
+    orientation: {
+      heading: CesiumMath.toRadians(request.heading),
+      pitch: CesiumMath.toRadians(request.pitch),
+      roll: CesiumMath.toRadians(request.roll),
+    },
+  });
 }
 
 export interface DenseRenderCamera {
@@ -124,6 +159,63 @@ export function selectDenseFeatures(
   const bounded = ordered.slice(0, limit);
   if (selected && !bounded.some((feature) => feature.id === selected.id)) bounded[bounded.length - 1] = selected;
   return bounded.sort((left, right) => left.id.localeCompare(right.id));
+}
+
+function denseRenderPartCount(feature: Feature): number {
+  if (feature.geometry.type === "MultiPolygon") return feature.geometry.coordinates.length;
+  if (feature.geometry.type === "MultiLineString") return feature.geometry.coordinates.length;
+  return 1;
+}
+
+/**
+ * Select independent ordinary-base and civic-context quotas.  Both groups use
+ * the same settled camera/bounds, and only the active selection may be added
+ * after its group's bulk quota is full.
+ */
+export function selectDenseFeatureGroups(
+  baseFeatures: readonly Feature[],
+  contextFeatures: readonly Feature[],
+  camera: DenseRenderCamera | null,
+  limits: { base: number; context: number },
+  selectedFeatureId: string | null = null,
+  bounds: DenseRenderBounds | null = null,
+): DenseFeatureGroups {
+  const base = selectDenseFeatures(baseFeatures, camera, limits.base, selectedFeatureId, bounds);
+  const spatial = contextFeatures.filter((feature) => !bounds || denseFeatureIntersectsBounds(feature, bounds));
+  const distance = (feature: Feature): number => {
+    if (!camera) return 0;
+    return (feature.coordinates[0] - camera.longitude) ** 2 + (feature.coordinates[1] - camera.latitude) ** 2;
+  };
+  const ordered = [...spatial].sort((left, right) => distance(left) - distance(right) || left.id.localeCompare(right.id));
+  const selected = selectedFeatureId ? contextFeatures.find((feature) => feature.id === selectedFeatureId) : undefined;
+  const context: Feature[] = [];
+  let parts = 0;
+  for (const feature of ordered) {
+    const count = denseRenderPartCount(feature);
+    if (parts + count > limits.context && feature.id !== selectedFeatureId) continue;
+    context.push(feature);
+    parts += count;
+    if (parts >= limits.context && !selected) break;
+  }
+  if (selected && !context.some((feature) => feature.id === selected.id)) context.push(selected);
+  return { base: [...base].sort((left, right) => left.id.localeCompare(right.id)), context: context.sort((left, right) => left.id.localeCompare(right.id)) };
+}
+
+/** Build a pick map that omits ambiguous IDs instead of overwriting an owner. */
+export function buildCollisionCheckedFeatureMap(features: readonly Feature[]): Map<string, Feature> {
+  const map = new Map<string, Feature>();
+  const collisions = new Set<string>();
+  for (const feature of features) {
+    if (collisions.has(feature.id)) continue;
+    const existing = map.get(feature.id);
+    if (existing) {
+      map.delete(feature.id);
+      collisions.add(feature.id);
+      continue;
+    }
+    map.set(feature.id, feature);
+  }
+  return map;
 }
 
 function polygonParts(feature: Feature): Position[][][] {
@@ -317,7 +409,8 @@ function addFeatureEntity(
 
   const [longitude, latitude] = feature.coordinates;
   const pointColor = feature.kind === "transit-station" ? "#ff7ac8" : feature.kind === "transit-entrance" ? "#ffd166" : feature.kind === "landmark" ? "#f0a3ff" : "#4ce2e6";
-  const pointSize = feature.kind === "transit-station" ? 22 : feature.kind === "transit-entrance" ? 12 : feature.kind === "landmark" ? 18 : 16;
+  const ordinaryDensePoint = suppressUnselectedLabels && !selected;
+  const pointSize = ordinaryDensePoint ? 6 : feature.kind === "transit-station" ? 22 : feature.kind === "transit-entrance" ? 12 : feature.kind === "landmark" ? 18 : 16;
   return viewer.entities.add({
     id: feature.id,
     name: feature.name,
@@ -326,7 +419,7 @@ function addFeatureEntity(
       pixelSize: selected ? pointSize + 7 : pointSize,
       color: Color.fromCssColorString(selected ? "#ffdf6b" : pointColor),
       outlineColor: Color.fromCssColorString("#d5ffff"),
-      outlineWidth: 2,
+      outlineWidth: ordinaryDensePoint ? 0 : 2,
       heightReference: HeightReference.NONE,
     },
     label: showLabel ? {
@@ -385,7 +478,10 @@ function addDensePrimitives(collection: PrimitiveCollection, features: Feature[]
   const points = features.filter((feature) => feature.kind === "poi" && feature.id !== selectedFeatureId);
   if (points.length) {
     const pointCollection = collection.add(new PointPrimitiveCollection());
-    points.forEach((feature) => pointCollection.add({ id: feature.id, position: Cartesian3.fromDegrees(feature.coordinates[0], feature.coordinates[1], 14), pixelSize: feature.id === selectedFeatureId ? 20 : 12, color: Color.fromCssColorString(feature.id === selectedFeatureId ? "#ffdf6b" : "#4ce2e6"), outlineColor: Color.WHITE, outlineWidth: feature.id === selectedFeatureId ? 3 : 1 }));
+    points.forEach((feature) => {
+      const style = densePoiMarkerStyle(feature.id === selectedFeatureId);
+      pointCollection.add({ id: feature.id, position: Cartesian3.fromDegrees(feature.coordinates[0], feature.coordinates[1], 14), pixelSize: style.pixelSize, color: Color.fromCssColorString(style.color).withAlpha(style.opacity), outlineColor: Color.WHITE, outlineWidth: style.outlineWidth });
+    });
     primitiveCount += 1;
   }
   return { featureCount: buildings.length + points.length, primitiveCount, instanceCount: buildings.length + points.length, buildingFeatureCount: buildings.length, pointFeatureCount: points.length };
@@ -548,6 +644,8 @@ export function CesiumViewport({
   denseRendering = false,
   denseFeatures = [],
   denseFeatureLimit,
+  denseFeatureGroups,
+  denseFeatureGroupLimits,
   onDenseMetrics,
   selectedFeatureId = null,
   onCameraChanged,
@@ -558,6 +656,9 @@ export function CesiumViewport({
 }: CesiumViewportProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<Viewer | null>(null);
+  const [viewerReadyGeneration, setViewerReadyGeneration] = useState(0);
+  const cameraPoseRequestRef = useRef(cameraPoseRequest);
+  cameraPoseRequestRef.current = cameraPoseRequest;
   const previewIndexRef = useRef(0);
   const previewTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const denseFeatureMapRef = useRef(new Map<string, Feature>());
@@ -622,6 +723,13 @@ export function CesiumViewport({
       if (feature) onFeatureSelected(feature);
     }, ScreenSpaceEventType.LEFT_CLICK);
     viewerRef.current = viewer;
+    const initialCameraPoseRequest = cameraPoseRequestRef.current;
+    if (initialCameraPoseRequest) {
+      suppressCameraEventsUntilRef.current = Date.now() + 900;
+      applyCameraPoseRequest(viewer, initialCameraPoseRequest);
+      onCameraChanged?.(initialCameraPoseRequest);
+    }
+    setViewerReadyGeneration((generation) => generation + 1);
     let cameraTimer: ReturnType<typeof setTimeout> | null = null;
     const onCameraMove = () => {
       if (!onCameraChanged) return;
@@ -655,7 +763,6 @@ export function CesiumViewport({
         const layer = layerForFeature(feature);
         return !layer || visibleLayers[layer];
       });
-      denseFeatureMapRef.current = new Map(visibleDenseFeatures.map((feature) => [feature.id, feature]));
       const allFeatures = [...new Map([...visibleFeatures, ...visibleDenseFeatures].map((feature) => [feature.id, feature])).values()];
       const denseCamera = Number.isFinite(viewer.camera.positionCartographic.longitude) && Number.isFinite(viewer.camera.positionCartographic.latitude)
         ? { longitude: CesiumMath.toDegrees(viewer.camera.positionCartographic.longitude), latitude: CesiumMath.toDegrees(viewer.camera.positionCartographic.latitude) }
@@ -667,28 +774,44 @@ export function CesiumViewport({
         south: CesiumMath.toDegrees(viewRectangle.south),
         north: CesiumMath.toDegrees(viewRectangle.north),
       } : null;
-      const renderedDenseFeatures = denseFeatureLimit
-        ? selectDenseFeatures(allFeatures, denseCamera, denseFeatureLimit, selectedFeatureId, denseBounds)
-        : allFeatures;
+      const selectedFromAdapter = selectedFeatureId ? adapter.getFeature(selectedFeatureId) : undefined;
+      const layerVisible = (feature: Feature): boolean => {
+        const layer = layerForFeature(feature);
+        return !layer || visibleLayers[layer] !== false;
+      };
+      const baseDenseFeatures = (denseFeatureGroups?.base ?? visibleDenseFeatures.filter((feature) => feature.kind === "building" || feature.kind === "poi")).filter(layerVisible);
+      const contextDenseFeatures = (denseFeatureGroups?.context ?? visibleDenseFeatures.filter((feature) => feature.kind !== "building" && feature.kind !== "poi")).filter(layerVisible);
+      const renderedGroups = denseFeatureGroups && denseFeatureGroupLimits
+        ? selectDenseFeatureGroups(baseDenseFeatures, contextDenseFeatures, denseCamera, denseFeatureGroupLimits, selectedFeatureId, denseBounds)
+        : { base: denseFeatureLimit ? selectDenseFeatures(allFeatures, denseCamera, denseFeatureLimit, selectedFeatureId, denseBounds) : allFeatures, context: [] };
+      const renderedDenseFeatures = [...renderedGroups.base, ...renderedGroups.context];
+      if (selectedFromAdapter && layerVisible(selectedFromAdapter) && !renderedDenseFeatures.some((feature) => feature.id === selectedFromAdapter.id)) renderedDenseFeatures.push(selectedFromAdapter);
+      denseFeatureMapRef.current = buildCollisionCheckedFeatureMap(renderedDenseFeatures);
       const assetDistanceMeters = Math.max(0, Number.isFinite(viewer.camera.positionCartographic.height) ? viewer.camera.positionCartographic.height : 240);
       const assetBuildingIds = verifiedAssetBuildingIds(renderedDenseFeatures, assetResolver, assetDistanceMeters);
-      const semanticFeatures = denseRendering
-        ? renderedDenseFeatures.filter((feature) => (feature.kind !== "building" && feature.kind !== "poi") || assetBuildingIds.has(feature.id))
+      const semanticBaseFeatures = denseRendering
+        ? renderedGroups.base.filter((feature) => (feature.kind !== "building" && feature.kind !== "poi") || assetBuildingIds.has(feature.id))
         : renderedDenseFeatures;
+      const semanticContextFeatures = denseRendering
+        ? renderedGroups.context.filter((feature) => (feature.kind !== "building" && feature.kind !== "poi") || assetBuildingIds.has(feature.id))
+        : [];
       const suppressUnselectedLabels = denseRendering || assetDistanceMeters >= 1_200;
-      semanticFeatures.forEach((feature) => {
+      semanticBaseFeatures.forEach((feature) => {
         addFeatureEntities(viewer, feature, assetResolver, assetDistanceMeters, selectedFeatureId, suppressUnselectedLabels);
       });
       const denseMetrics = denseRendering && denseCollectionRef.current
-        ? addDensePrimitives(denseCollectionRef.current, renderedDenseFeatures.filter((feature) => !assetBuildingIds.has(feature.id)), selectedFeatureId)
+        ? addDensePrimitives(denseCollectionRef.current, renderedGroups.base.filter((feature) => !assetBuildingIds.has(feature.id)), selectedFeatureId)
         : { featureCount: 0, primitiveCount: 0, instanceCount: 0, buildingFeatureCount: 0, pointFeatureCount: 0 };
-      onDenseMetrics?.(denseMetrics);
+      onDenseMetrics?.({ ...denseMetrics, baseFeatureCount: renderedGroups.base.length, contextFeatureCount: renderedGroups.context.length, contextPartCount: renderedGroups.context.reduce((sum, feature) => sum + denseRenderPartCount(feature), 0) });
+      semanticContextFeatures.forEach((feature) => {
+        addFeatureEntities(viewer, feature, assetResolver, assetDistanceMeters, selectedFeatureId, suppressUnselectedLabels);
+      });
       if (denseRendering && selectedFeatureId) {
         const selectedFeature = renderedDenseFeatures.find((feature) => feature.id === selectedFeatureId);
-        if (selectedFeature && !semanticFeatures.some((feature) => feature.id === selectedFeature.id) && selectedFeature.kind !== "poi") {
+        if (selectedFeature && !semanticBaseFeatures.some((feature) => feature.id === selectedFeature.id) && !semanticContextFeatures.some((feature) => feature.id === selectedFeature.id) && selectedFeature.kind !== "poi") {
           addFeatureEntities(viewer, selectedFeature, assetResolver, assetDistanceMeters, selectedFeatureId, false);
         }
-        const selectedPoi = allFeatures.find((feature) => feature.id === selectedFeatureId && feature.kind === "poi");
+        const selectedPoi = renderedDenseFeatures.find((feature) => feature.id === selectedFeatureId && feature.kind === "poi");
         if (selectedPoi) addSelectedPoiEntity(viewer, selectedPoi);
       }
       if (itinerary) {
@@ -704,23 +827,22 @@ export function CesiumViewport({
     };
     void loadVisibleFeatures();
     return () => { cancelled = true; };
-  }, [adapter, assetResolver, denseFeatureLimit, denseFeatures, denseRendering, featureFilter, itinerary, onDenseMetrics, selectedFeatureId, visibleLayers.buildings, visibleLayers.pois, visibleLayers.areas, visibleLayers.stations, visibleLayers.entrances, visibleLayers.routes, visibleLayers["statistical-areas"], visibleLayers.parks, visibleLayers.landmarks]);
+  }, [adapter, assetResolver, denseFeatureGroups, denseFeatureGroupLimits, denseFeatureLimit, denseFeatures, denseRendering, featureFilter, itinerary, onDenseMetrics, selectedFeatureId, visibleLayers.buildings, visibleLayers.pois, visibleLayers.areas, visibleLayers.stations, visibleLayers.entrances, visibleLayers.routes, visibleLayers["statistical-areas"], visibleLayers.parks, visibleLayers.landmarks]);
 
   useEffect(() => {
     const viewer = viewerRef.current;
     if (!viewer || !cameraRequest) return;
-    viewer.camera.cancelFlight();
     suppressCameraEventsUntilRef.current = Date.now() + 900;
-    const height = "height" in cameraRequest ? cameraRequest.height : cameraRequest.distanceMeters;
-    const heading = "heading" in cameraRequest ? cameraRequest.heading : 0;
-    const pitch = "pitch" in cameraRequest ? cameraRequest.pitch : -45;
-    const roll = "roll" in cameraRequest ? cameraRequest.roll : 0;
-    viewer.camera.setView({ destination: Cartesian3.fromDegrees(cameraRequest.longitude, cameraRequest.latitude, height), orientation: { heading: CesiumMath.toRadians(heading), pitch: CesiumMath.toRadians(pitch), roll: CesiumMath.toRadians(roll) } });
     const callbackPose: CameraPose = "height" in cameraRequest ? cameraRequest : { longitude: cameraRequest.longitude, latitude: cameraRequest.latitude, height: cameraRequest.distanceMeters, heading: 0, pitch: -45, roll: 0 };
+    if ("height" in cameraRequest) applyCameraPoseRequest(viewer, cameraRequest);
+    else {
+      viewer.camera.cancelFlight();
+      viewer.camera.setView({ destination: Cartesian3.fromDegrees(cameraRequest.longitude, cameraRequest.latitude, cameraRequest.distanceMeters), orientation: { heading: 0, pitch: CesiumMath.toRadians(-45), roll: 0 } });
+    }
     onCameraChanged?.(callbackPose);
     const settleTimer = setTimeout(() => onCameraChanged?.(callbackPose), 950);
     return () => clearTimeout(settleTimer);
-  }, [cameraRequest, onCameraChanged]);
+  }, [cameraRequest, onCameraChanged, viewerReadyGeneration]);
 
   useEffect(() => {
     const viewer = viewerRef.current;

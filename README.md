@@ -8,7 +8,7 @@ uncertainty.
 
 ## Current foundation
 
-As of 2026-08-04 (Asia/Seoul), the repository contains three explicit data
+As of 2026-08-05 (Asia/Seoul), the repository contains four explicit data
 modes:
 
 - **Fixture catalog** — deterministic synthetic buildings, places, transit,
@@ -23,11 +23,19 @@ modes:
   `manhattan-citywide-20260804` snapshot-relative release. It streams local
   JSON geometry, search, and detail shards lazily; it does not contact a
   provider and it does not activate the three landmark GLBs.
+- **Civic composition** — the canonical
+  `manhattan-civic-context-20260804` URL/runtime root, composed over the
+  civic manifest's exact `baseReleaseId`, `manhattan-citywide-20260804`. It
+  shows citywide procedural footprint/height massing beneath statistical
+  areas, Parks properties, and LPC records with mixed search/detail/picking;
+  bounded-pilot GLBs remain inactive.
 
 The durable implementation record, exact manifests, audit matrix, validation
 transcript, and remaining limitations are in
 [`docs/codex/MANHATTAN_CITYWIDE_FOUNDATION_IMPLEMENTATION.md`](docs/codex/MANHATTAN_CITYWIDE_FOUNDATION_IMPLEMENTATION.md).
 The delivery decision is [`Decision 0013`](docs/decisions/0013-manhattan-citywide-foundation-delivery.md).
+The runtime composition decision is [`Decision 0015`](docs/decisions/0015-manhattan-civic-runtime-composition.md), with its evidence in
+[`MANHATTAN_CIVIC_RUNTIME_COMPOSITION_IMPLEMENTATION.md`](docs/codex/MANHATTAN_CIVIC_RUNTIME_COMPOSITION_IMPLEMENTATION.md).
 
 ## Prerequisites and setup
 
@@ -94,13 +102,17 @@ content, or unrelated data.
 ## Architecture
 
 - `src/app/App.tsx` owns the mode switch, search, details, deep links, camera
-  state, layer controls, and explicit failure/fallback messages.
+  state, layer controls, and explicit failure/fallback messages. Civic mode
+  activates the runtime-only composition of the civic context over its pinned
+  citywide base; the civic URL remains canonical.
 - CesiumJS in `src/features/explorer/CesiumViewport.tsx` owns WGS84 globe
   positioning, camera behavior, rendering, and feature picking.
 - `src/runtime/fixture-adapter.ts` is the deterministic synthetic adapter.
   `src/runtime/real-pilot-manifest.ts` loads the bounded pilot, while
   `src/runtime/citywide-release-runtime.ts` loads validated local citywide
-  shards on demand.
+  shards on demand. `src/runtime/composed-release-runtime.ts` joins the two
+  immutable citywide/civic adapters with a shared 24-entry/48 MiB cache and
+  four-request aggregate budget without emitting a new release.
 - `src/ingestion/` contains provider-neutral validation and the approved OTI
   and DOHMH snapshot adapters. `src/data/source-registry.ts` keeps source IDs,
   terms, attribution, approval scope, freshness, retention, and uncertainty.
@@ -137,19 +149,34 @@ inspection history, not a consumer rating, review, current opening state, or
 complete business directory. Unlocated CAMIS parents remain searchable and
 detail-addressable without invented geometry.
 
+The civic manifest is a runtime composition root, not a replacement release:
+`manhattan-civic-context-20260804` declares `baseReleaseId` exactly equal to
+`manhattan-citywide-20260804`. Its 38 statistical areas, 395 Parks parents,
+and 1,140 LPC parents (1,130 placed parts) use 114 geometry, 307 search, and
+52 detail shards with 22,424,795 declared bytes. The exact immutable manifest
+hashes are citywide
+`acb5a9b52014f86535c8478e7d4e516efc03f6dff95c17e9896dfea4413c203c` and civic
+`225aba4efb041b26c38932b265f927373ec8974f0fb4a5e63e34baefd07da2a2`.
+
+In civic mode, one shared runtime cache is capped at 24 entries and 48 MiB
+(`50,331,648` bytes), active shard requests are capped at 4, and rendering
+uses independent caps of 6,000 citywide base features and 128 civic context
+parts. The current 1440×900 direct frame probe measured 1,158 samples after a
+3-second settle (median 8.3 ms, p95 10.3 ms). See
+[`MANHATTAN_CIVIC_RUNTIME_COMPOSITION_IMPLEMENTATION.md`](docs/codex/MANHATTAN_CIVIC_RUNTIME_COMPOSITION_IMPLEMENTATION.md)
+for the browser journey and validation evidence.
+
 ## Accessibility and performance evidence
 
 The current UI has keyboard combobox/listbox behavior, focus-aware viewport
 keyboard controls, visible layer/data controls, and a responsive 390×844 layout
-path. Reduced-motion handling exists in the camera journey code, but this
-documentation does not claim that the connected browser forced and observed the
-enabled media-query path. Browser console/network evidence and exact current
-benchmark output are recorded in the implementation record; deterministic
-tests are not a substitute for visual, accessibility, or device-performance
-validation. The accepted CP5 focused-page `requestAnimationFrame` probe used a
-3-second settle and 340 frames (median 8.3 ms, p95 16.6 ms). The unchanged
-seven-anchor harness emitted 11 frames over about 1008 ms per anchor; that is a
-known validation issue, not a product-frame result.
+path. Reduced-motion handling remains in the camera journey code and CSS; the
+connected Orca environment reported success setting media emulation but
+`matchMedia('(prefers-reduced-motion: reduce)')` stayed false, so no forced
+browser observation is claimed. Browser console/network evidence and exact
+current benchmark output are recorded in the composition implementation
+record; deterministic tests are not a substitute for visual, accessibility,
+or device-performance validation.
 
 ## Overlay interaction behavior (2026-08-05)
 
@@ -184,6 +211,9 @@ feedback; geometry and Cesium picking remain available for all visible records.
   claim.
 - Buildings are footprint massing with source or unknown fallback heights, not
   verified facades, interiors, entrances, roofs, imagery, or photorealism.
+- Civic composition keeps this procedural massing beneath statistical-area,
+  Parks, and LPC source geometry/metadata; it does not turn those records into
+  facade imagery or photorealistic models. Bounded-pilot GLBs remain inactive.
 - Citywide mode does not activate the three protected landmark GLBs; verified
   landmark integration is bounded-pilot behavior.
 - Real neighborhoods, parks, shops beyond DOHMH restaurant observations,
@@ -216,15 +246,15 @@ historical planning provenance and source-specific uncertainty.
 
 ## Current civic-context local release (2026-08-04)
 
-The app now exposes one immutable local sibling release,
-`manhattan-civic-context-20260804`, in addition to the existing citywide and
-fixture modes. It streams generic v2 statistical-area, Parks property, and LPC
-landmark-record layers through Cesium, with source-ID/name search, source-typed
-details, deterministic overlap choices, URL layer/facet state, cold deep links,
-local bookmarks pinned to the release, and per-layer failure isolation. The
-release is local-only; it is not a public deployment or a claim of complete
-neighborhood, park, landmark, access, hours, amenity, facade, rating, review,
-or transit coverage.
+The app exposes the immutable local sibling release
+`manhattan-civic-context-20260804` as the canonical civic composition root. It
+streams generic v2 statistical-area, Parks property, and LPC landmark-record
+layers through Cesium over the pinned citywide base, with mixed source-ID/name
+search, source-typed details, deterministic overlap choices, URL layer/facet
+state, cold deep links, local bookmarks pinned transitively to the base, and
+per-layer failure isolation. The release is local-only; it is not a public
+deployment or a claim of complete neighborhood, park, landmark, access, hours,
+amenity, facade, rating, review, or transit coverage.
 
 The recorded approval is
 `codex-user-turn:2026-08-04:manhattan-civic-context-local-v1` with canonical
@@ -263,3 +293,6 @@ pins, browser journeys, protected-hash proof, documentation matrix, rollback
 target, and remaining limitations are recorded in
 [`docs/codex/MANHATTAN_TRAVEL_CONTEXT_IMPLEMENTATION.md`](docs/codex/MANHATTAN_TRAVEL_CONTEXT_IMPLEMENTATION.md)
 and [Decision 0014](docs/decisions/0014-nyc-civic-context-wave.md).
+Runtime composition evidence is in
+[`docs/codex/MANHATTAN_CIVIC_RUNTIME_COMPOSITION_IMPLEMENTATION.md`](docs/codex/MANHATTAN_CIVIC_RUNTIME_COMPOSITION_IMPLEMENTATION.md)
+and [Decision 0015](docs/decisions/0015-manhattan-civic-runtime-composition.md).

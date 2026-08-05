@@ -17,6 +17,107 @@ export interface UnifiedSearchResult {
   matchedBy: "id" | "source" | "name" | "alias" | "address" | "category" | "cuisine" | "text";
 }
 
+export type ReleaseFeatureOrigin = "citywide" | "civic" | "unknown";
+
+/** Keep composition identity separate from the civic URL/root identity. */
+export function releaseFeatureOrigin(feature: Pick<Feature, "id" | "attributes">): ReleaseFeatureOrigin {
+  if (feature.attributes.citywideReleaseId === "manhattan-citywide-20260804" || /^(?:doitt:|dohmh:)/iu.test(feature.id)) return "citywide";
+  if (feature.attributes.civicReleaseId === "manhattan-civic-context-20260804" || /^udt:manhattan:(?:nta|park|lpc):/iu.test(feature.id)) return "civic";
+  return "unknown";
+}
+
+export function releaseIdForFeature(feature: Pick<Feature, "id" | "attributes">): string | null {
+  const origin = releaseFeatureOrigin(feature);
+  if (origin === "citywide") return "manhattan-citywide-20260804";
+  if (origin === "civic") return "manhattan-civic-context-20260804";
+  return null;
+}
+
+export interface MixedSearchOptions {
+  civicFacets?: readonly string[];
+  limit?: number;
+}
+
+const MIXED_KIND_PRIORITY: Record<FeatureKind, number> = {
+  building: 0,
+  poi: 1,
+  area: 2,
+  park: 3,
+  landmark: 4,
+  parcel: 5,
+  street: 6,
+  facility: 7,
+  neighborhood: 8,
+  "fixture-point": 9,
+  "transit-station": 10,
+  "transit-entrance": 11,
+  "transit-stop": 12,
+  "transit-route": 13,
+};
+
+function mixedGroup(feature: Feature): UnifiedSearchResult["group"] {
+  if (feature.kind === "building") return "Buildings";
+  if (feature.kind === "area" && (feature.attributes.areaSemantics === "statistical" || feature.attributes.areaSemantics === "statistical-area")) return "Areas";
+  if (feature.kind === "transit-station" || feature.kind === "transit-entrance" || feature.kind === "transit-stop" || feature.kind === "transit-route") return "Transit";
+  return feature.kind === "neighborhood" ? "Areas" : "Places";
+}
+
+function mixedTypeLabel(feature: Feature): string {
+  if (typeof feature.attributes.civicTypeLabel === "string") return feature.attributes.civicTypeLabel;
+  if (feature.kind === "building") return "Building";
+  if (feature.kind === "poi") return feature.attributes.placeCategories?.toString().includes("restaurant") ? "Restaurant" : "Place";
+  if (feature.kind === "area") return "Area";
+  if (feature.kind === "park") return "Park";
+  if (feature.kind === "landmark") return "Landmark record";
+  return TYPE_LABELS[feature.kind] ?? "Feature";
+}
+
+function mixedValues(feature: Feature): Array<{ value: string; matchedBy: UnifiedSearchResult["matchedBy"] }> {
+  return [
+    { value: feature.id, matchedBy: "id" },
+    { value: feature.name, matchedBy: "name" },
+    ...feature.sourceRefs.flatMap((source) => [
+      { value: source.id, matchedBy: "source" as const },
+      { value: source.sourceRecordId, matchedBy: "source" as const },
+    ]),
+    ...Object.entries(feature.attributes)
+      .filter(([, value]) => typeof value === "string")
+      .map(([key, value]) => ({ value: String(value), matchedBy: key.toLocaleLowerCase().includes("id") ? "source" as const : "text" as const })),
+  ];
+}
+
+/**
+ * Search the two immutable children as one deterministic catalog. Civic
+ * facets apply only to civic-origin features; citywide buildings/restaurants
+ * remain eligible under every civic facet selection.
+ */
+export function searchMixedReleaseFeatures(
+  baseFeatures: readonly Feature[],
+  civicFeatures: readonly Feature[],
+  query: string,
+  options: MixedSearchOptions = {},
+): UnifiedSearchResult[] {
+  const normalized = normalizeSearchText(query);
+  if (!normalized) return [];
+  const facets = options.civicFacets ?? [];
+  const values = [...baseFeatures, ...civicFeatures].filter((feature) => {
+    if (releaseFeatureOrigin(feature) !== "civic" || facets.length === 0) return true;
+    return facets.includes(String(feature.attributes.civicRecordKind));
+  });
+  const ranked = values.flatMap((feature) => {
+    const matches = mixedValues(feature)
+      .map(({ value, matchedBy }) => ({ normalized: normalizeSearchText(value), matchedBy }))
+      .filter((value) => value.normalized === normalized || value.normalized.startsWith(normalized) || value.normalized.includes(normalized));
+    if (matches.length === 0) return [];
+    const matchPriority: Record<UnifiedSearchResult["matchedBy"], number> = { id: 0, source: 1, name: 2, alias: 3, address: 4, category: 5, cuisine: 5, text: 6 };
+    const best = matches.sort((left, right) => Number(left.normalized !== normalized) - Number(right.normalized !== normalized) || matchPriority[left.matchedBy] - matchPriority[right.matchedBy] || left.normalized.length - right.normalized.length || left.normalized.localeCompare(right.normalized))[0]!;
+    const score = best.normalized === normalized ? matchPriority[best.matchedBy] : 10 + matchPriority[best.matchedBy];
+    const origin = releaseFeatureOrigin(feature);
+    return [{ feature, entity: null, group: mixedGroup(feature), typeLabel: mixedTypeLabel(feature), score, matchedBy: best.matchedBy, origin }];
+  }).sort((left, right) => left.score - right.score || MIXED_KIND_PRIORITY[left.feature.kind] - MIXED_KIND_PRIORITY[right.feature.kind] || left.typeLabel.localeCompare(right.typeLabel) || left.origin.localeCompare(right.origin) || left.feature.name.localeCompare(right.feature.name) || left.feature.id.localeCompare(right.feature.id));
+  return options.limit && options.limit > 0 ? ranked.slice(0, options.limit) : ranked;
+}
+
 /** Deterministic, keyboard-friendly order for overlapping source features. */
 export function rankOverlapCandidates(candidates: readonly TravelContextOverlapCandidate[]): TravelContextOverlapCandidate[] {
   return [...candidates].sort((left, right) => left.priority - right.priority || travelContextPickPriority(left.kind) - travelContextPickPriority(right.kind) || left.label.localeCompare(right.label) || left.canonicalId.localeCompare(right.canonicalId));

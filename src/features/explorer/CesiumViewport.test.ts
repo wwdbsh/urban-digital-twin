@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import restaurants from "../../../public/data/real-wave-20260804/restaurants.json";
 import { runtimeFixtureFeatures } from "../../domain/features";
 import type { Feature } from "../../domain/schema";
-import { canonicalPickId, denseFeatureIntersectsBounds, featureForPickedId, fixtureOnlyForFeature, focusPoseForFeature, focusPoseForFeatureWithOcclusion, medianFrameInterval, normalizeFocusCameraPose, poiRenderMode, selectDenseFeatures, shouldFocusFeature, shouldShowFeatureLabel, shouldStartFocusFlight } from "./CesiumViewport";
+import { buildCollisionCheckedFeatureMap, canonicalPickId, denseFeatureIntersectsBounds, densePoiMarkerStyle, featureForPickedId, fixtureOnlyForFeature, focusPoseForFeature, focusPoseForFeatureWithOcclusion, medianFrameInterval, normalizeFocusCameraPose, poiRenderMode, selectDenseFeatureGroups, selectDenseFeatures, shouldFocusFeature, shouldShowFeatureLabel, shouldStartFocusFlight } from "./CesiumViewport";
 
 describe("Cesium POI render seam", () => {
   const realRestaurant = (restaurants as unknown as Feature[])[0]!;
@@ -13,6 +13,11 @@ describe("Cesium POI render seam", () => {
     expect(poiRenderMode(realRestaurant, true, true)).toBe("selected-entity");
     expect(poiRenderMode(realRestaurant, false, false)).toBe("entity");
     expect(poiRenderMode(fixturePoi, true, false)).toBe("point-primitive");
+  });
+
+  it("keeps ordinary dense POI markers bounded while retaining a strong selected marker", () => {
+    expect(densePoiMarkerStyle(false)).toEqual({ pixelSize: 5, outlineWidth: 0, color: "#4ce2e6", opacity: 0.78 });
+    expect(densePoiMarkerStyle(true)).toEqual({ pixelSize: 20, outlineWidth: 3, color: "#ffdf6b", opacity: 1 });
   });
 
   it("derives fixture truth from source role for real and fixture records", () => {
@@ -49,6 +54,21 @@ describe("Cesium POI render seam", () => {
     expect(denseFeatureIntersectsBounds(inViewport, bounds)).toBe(true);
     expect(denseFeatureIntersectsBounds(outsideViewport, bounds)).toBe(false);
     expect(selectDenseFeatures([inViewport, outsideViewport], { longitude: -73.99, latitude: 40.748 }, 6_000, null, bounds).map((feature) => feature.id)).toEqual(["citywide:in-viewport"]);
+  });
+
+  it("keeps independent 6,000 base and 128 context quotas with selected retention", () => {
+    const baseFeatures = Array.from({ length: 6_001 }, (_, index) => ({ ...realRestaurant, id: `doitt:base:${index}`, kind: "building" as const, geometry: { type: "Point" as const, coordinates: [-73.99, 40.748] as Feature["coordinates"] }, coordinates: [-73.99, 40.748] as Feature["coordinates"] }));
+    const contextFeatures = Array.from({ length: 130 }, (_, index) => ({ ...realRestaurant, id: `udt:manhattan:park:M${index}`, kind: "park" as const, geometry: { type: "Polygon" as const, coordinates: [[[-73.99, 40.748], [-73.989, 40.748], [-73.989, 40.749], [-73.99, 40.748]]] } as unknown as Feature["geometry"], coordinates: [-73.99, 40.748] as Feature["coordinates"] }));
+    const groups = selectDenseFeatureGroups(baseFeatures, contextFeatures, { longitude: -73.99, latitude: 40.748 }, { base: 6_000, context: 128 }, contextFeatures.at(-1)!.id);
+    expect(groups.base).toHaveLength(6_000);
+    expect(groups.context.length).toBeLessThanOrEqual(129);
+    expect(groups.context).toContainEqual(expect.objectContaining({ id: contextFeatures.at(-1)!.id }));
+  });
+
+  it("omits ambiguous IDs from the pick map instead of silently overwriting an owner", () => {
+    const first = { ...realRestaurant, id: "shared:id" };
+    const second = { ...realRestaurant, id: "shared:id", name: "Different owner" };
+    expect(buildCollisionCheckedFeatureMap([first, second])).not.toHaveProperty("shared:id");
   });
 
   it("owns one deterministic focus flight per request across repeated dense updates", () => {

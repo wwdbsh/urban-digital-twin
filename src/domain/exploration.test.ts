@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { buildSyntheticReconciliationCatalog } from "./reconciliation-fixtures.ts";
 import { runtimeFixtureFeatures } from "./features.ts";
 import restaurants from "../../public/data/real-wave-20260804/restaurants.json";
-import { explorationUrl, parseExplorationUrl, rankOverlapCandidates, searchRealPlaceCatalog, searchUnifiedCatalog } from "./exploration.ts";
+import { explorationUrl, parseExplorationUrl, rankOverlapCandidates, releaseFeatureOrigin, releaseIdForFeature, searchMixedReleaseFeatures, searchRealPlaceCatalog, searchUnifiedCatalog } from "./exploration.ts";
 import type { Feature } from "./schema.ts";
 
 describe("exploration contracts", () => {
@@ -50,5 +50,19 @@ describe("exploration contracts", () => {
       { canonicalId: "park", layerId: "parks", kind: "park", label: "Same", priority: 20 },
     ]);
     expect(ordered.map((item) => item.canonicalId)).toEqual(["lpc", "park", "building"]);
+  });
+
+  it("ranks mixed citywide/civic results without relabelling origin or hiding base records behind civic facets", () => {
+    const citywide = { ...runtimeFixtureFeatures.find((feature) => feature.kind === "building")!, id: "doitt:building-1", name: "Central Park Building", attributes: { citywideReleaseId: "manhattan-citywide-20260804" } };
+    const nta = { ...citywide, id: "udt:manhattan:nta:MN6491", name: "Central Park", kind: "area" as const, attributes: { civicReleaseId: "manhattan-civic-context-20260804", civicRecordKind: "statistical-area", areaSemantics: "statistical" } };
+    const park = { ...citywide, id: "udt:manhattan:park:M001", name: "Central Park", kind: "park" as const, attributes: { civicReleaseId: "manhattan-civic-context-20260804", civicRecordKind: "park" } };
+    const results = searchMixedReleaseFeatures([citywide], [nta, park], "Central Park", { civicFacets: ["park"] });
+    expect(results.map((result) => result.feature.id).sort()).toEqual(["doitt:building-1", "udt:manhattan:park:M001"].sort());
+    expect(results.find((result) => result.feature.id === "doitt:building-1")?.group).toBe("Buildings");
+    expect(results.find((result) => result.feature.id === "udt:manhattan:park:M001")?.typeLabel).toBe("Park");
+    expect(releaseFeatureOrigin(citywide)).toBe("citywide");
+    expect(releaseFeatureOrigin(park)).toBe("civic");
+    expect(releaseIdForFeature(citywide)).toBe("manhattan-citywide-20260804");
+    expect(releaseIdForFeature(park)).toBe("manhattan-civic-context-20260804");
   });
 });

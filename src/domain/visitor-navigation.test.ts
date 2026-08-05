@@ -39,7 +39,14 @@ describe("visitor navigation contracts", () => {
   it("fails closed on malformed or partial poses", () => {
     expect(parseNavigationUrl("https://fixture.invalid/?feature=place:one&lon=bad&lat=40&height=500&heading=0&pitch=-45&roll=0").pose).toBeNull();
     expect(parseNavigationUrl("https://fixture.invalid/?lon=1&lat=2").poseInvalid).toBe(true);
+    expect(DEFAULT_CAMERA_POSE.pitch).toBe(-75);
     expect(normalizeCameraPose(DEFAULT_CAMERA_POSE)).toEqual(DEFAULT_CAMERA_POSE);
+  });
+
+  it("starts bare URLs in overview while preserving explicit view and pose intent", () => {
+    expect(parseNavigationUrl("https://fixture.invalid/?data=manhattan-civic-context-20260804")).toMatchObject({ cameraMode: "overview", pose: null, poseInvalid: false });
+    expect(parseNavigationUrl("https://fixture.invalid/?data=manhattan-civic-context-20260804&view=explore")).toMatchObject({ cameraMode: "explore", pose: null });
+    expect(parseNavigationUrl("https://fixture.invalid/?data=manhattan-civic-context-20260804&lon=-73.991&lat=40.744&height=4000&heading=0&pitch=-75&roll=0")).toMatchObject({ cameraMode: "explore", pose: DEFAULT_CAMERA_POSE });
   });
 
   it("guards itinerary step navigation at both ends", () => {

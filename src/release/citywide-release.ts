@@ -477,8 +477,21 @@ export interface CitywideRequestTask<T> {
   loader: (signal: AbortSignal) => Promise<{ value: T; bytes: number }>;
 }
 
+/**
+ * Optional aggregate request ownership for composed releases.  Standalone
+ * adapters keep their historical per-adapter pool when this is omitted;
+ * composition injects one owner shared by the base and context adapters.
+ */
+export interface CitywideSharedRequestBudget {
+  readonly maxConcurrent: number;
+  acquire(signal?: AbortSignal): Promise<() => void>;
+  activeCount(): number;
+  peakConcurrency(): number;
+}
+
 export class CitywideRequestPool<T> {
   private readonly cache: CitywideLruCache<T>;
+  private readonly sharedBudget: CitywideSharedRequestBudget | null;
   private readonly pending = new Map<string, { controller: AbortController; promise: Promise<T | undefined>; resolve: (value: T | undefined) => void; started: boolean; waiters: number; nonAbortableWaiters: number }>();
   private readonly queue: CitywideRequestTask<T>[] = [];
   private active = 0;
@@ -486,10 +499,12 @@ export class CitywideRequestPool<T> {
   private aborted = 0;
   private failed = 0;
   readonly maxConcurrent: number;
-  constructor(maxConcurrent: number = CITYWIDE_BUDGETS.maxConcurrentRequests, cache = new CitywideLruCache<T>()) {
+  constructor(maxConcurrent: number = CITYWIDE_BUDGETS.maxConcurrentRequests, cache = new CitywideLruCache<T>(), sharedBudget: CitywideSharedRequestBudget | null = null) {
     if (!Number.isSafeInteger(maxConcurrent) || maxConcurrent < 1 || maxConcurrent > CITYWIDE_BUDGETS.maxConcurrentRequests) throw new Error("Citywide request concurrency must be between 1 and 4.");
+    if (sharedBudget && (!Number.isSafeInteger(sharedBudget.maxConcurrent) || sharedBudget.maxConcurrent < 1 || sharedBudget.maxConcurrent > CITYWIDE_BUDGETS.maxConcurrentRequests)) throw new Error("Shared request concurrency must be between 1 and 4.");
     this.maxConcurrent = maxConcurrent;
     this.cache = cache;
+    this.sharedBudget = sharedBudget;
   }
   load(task: CitywideRequestTask<T>, signal?: AbortSignal): Promise<T | undefined> {
     const shared = this.loadShared(task);
@@ -544,8 +559,17 @@ export class CitywideRequestPool<T> {
         if (current) current.started = true;
         this.active += 1;
         this.peak = Math.max(this.peak, this.active);
-        task.loader(controller.signal).then(({ value, bytes }) => {
-          this.cache.set(task.key, value, bytes);
+        const runTask = async (): Promise<T | undefined> => {
+          const release = this.sharedBudget ? await this.sharedBudget.acquire(controller.signal) : null;
+          try {
+            const result = await task.loader(controller.signal);
+            this.cache.set(task.key, result.value, result.bytes);
+            return result.value;
+          } finally {
+            release?.();
+          }
+        };
+        runTask().then((value) => {
           return value;
         }).catch((error: unknown) => {
           if (error instanceof DOMException && error.name === "AbortError") this.aborted += 1;

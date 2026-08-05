@@ -65,11 +65,13 @@ thin borders and almost no shadow.
   authoritative.
 - Compare remains disabled until two compatible sourced records exist.
 
-## Current implementation (2026-08-04)
+## Current implementation (2026-08-05)
 
-The running screen now supports three explicit data modes through the Data
-panel: synthetic fixture, bounded real OTI/DOHMH pilot, and the local
-`manhattan-citywide-20260804` OTI/DOHMH release. The search combobox, result
+The running screen now supports synthetic fixture, bounded real OTI/DOHMH
+pilot, standalone local `manhattan-citywide-20260804`, and canonical civic
+composition modes through the Data panel. The civic root
+`manhattan-civic-context-20260804` composes its exact manifest-pinned citywide
+base beneath statistical-area, Parks, and LPC layers. The search combobox, result
 listbox, Cesium pick, detail/provenance panel, layer controls, deep links,
 camera controls, and failure notices use stable feature IDs. Citywide mode
 loads viewport geometry and global search/detail shards lazily; its status text
@@ -137,3 +139,13 @@ selection, and collapsed/mutually exclusive diagnostics and directions. The
 Cesium helper suite covers occlusion-aware focus pose calculation and selected
 label priority; rendered fixed-viewport evidence remains separate from these
 deterministic tests.
+
+The civic composition keeps the canonical civic URL and selected feature origin
+separate. Its shared streaming budget is 24 cached entries / 48 MiB / 4 active
+requests, and its independent dense render groups are capped at 6,000 citywide
+base features and 128 civic context parts. The immutable manifest hashes are
+citywide `acb5a9b52014f86535c8478e7d4e516efc03f6dff95c17e9896dfea4413c203c`
+and civic `225aba4efb041b26c38932b265f927373ec8974f0fb4a5e63e34baefd07da2a2`.
+Citywide geometry remains procedural footprint/height massing, not facade
+imagery, textures, roofs, interiors, entrances, or photorealistic models;
+bounded-pilot GLBs are inactive in this composition.

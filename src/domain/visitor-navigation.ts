@@ -59,7 +59,7 @@ export interface NavigationStorage {
   setItem(key: string, value: string): void;
 }
 
-export const DEFAULT_CAMERA_POSE: CameraPose = { longitude: -73.991, latitude: 40.744, height: 4_000, heading: 0, pitch: -45, roll: 0 };
+export const DEFAULT_CAMERA_POSE: CameraPose = { longitude: -73.991, latitude: 40.744, height: 4_000, heading: 0, pitch: -75, roll: 0 };
 export const VISITOR_NAVIGATION_STORAGE_KEY = "udt.visitor-navigation.v1";
 
 function finite(value: unknown): value is number { return typeof value === "number" && Number.isFinite(value); }
@@ -91,10 +91,13 @@ export function parseNavigationUrl(value: string): NavigationUrlState {
     const dataMode: NavigationDataMode | undefined = dataValue && !isFixtureData || releaseValue ? civicData ? "civic-context" : "real-pilot" : undefined;
     const releaseId = dataMode ? releaseValue ?? (dataValue === "real-pilot" ? null : dataValue === "civic-context" ? "manhattan-civic-context-20260804" : dataValue) : undefined;
     const dataState = dataMode ? { dataMode, releaseId } : {};
-    const modeValue = url.searchParams.get("view");
-    const cameraMode: CameraMode = modeValue === "overview" ? "overview" : "explore";
     const poseKeys = ["lon", "lat", "height", "heading", "pitch", "roll"];
     const hasPose = poseKeys.some((key) => url.searchParams.has(key));
+    const modeValue = url.searchParams.get("view");
+    // A bare URL has no camera intent to restore, so start in the safe
+    // overview. An explicit view or any pose-bearing link retains the legacy
+    // explore default and remains deterministic for shared links.
+    const cameraMode: CameraMode = modeValue === "overview" ? "overview" : modeValue === "explore" || hasPose ? "explore" : "overview";
     const layerValue = url.searchParams.get("layers");
     const facetValue = url.searchParams.get("facets");
     const filterState = {
