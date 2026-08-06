@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import restaurants from "../../../public/data/real-wave-20260804/restaurants.json";
 import { runtimeFixtureFeatures } from "../../domain/features";
 import type { Feature } from "../../domain/schema";
-import { buildCollisionCheckedFeatureMap, canonicalPickId, denseFeatureIntersectsBounds, densePoiMarkerStyle, featureForPickedId, fixtureOnlyForFeature, focusPoseForFeature, focusPoseForFeatureWithOcclusion, medianFrameInterval, normalizeFocusCameraPose, poiRenderMode, selectDenseFeatureGroups, selectDenseFeatures, shouldFocusFeature, shouldShowFeatureLabel, shouldStartFocusFlight } from "./CesiumViewport";
+import type { CityAssetResolver } from "../../runtime/city-asset-manifest";
+import { buildCollisionCheckedFeatureMap, canonicalPickId, commercialStorefrontProxyId, denseFeatureIntersectsBounds, densePoiMarkerStyle, featureForPickedId, fixtureOnlyForFeature, focusCameraCoordinatesForFeature, focusCoordinatesForFeature, focusHeightForFeature, focusPoseForFeature, focusPoseForFeatureWithOcclusion, medianFrameInterval, normalizeFocusCameraPose, poiRenderMode, selectDenseFeatureGroups, selectDenseFeatures, shouldFocusFeature, shouldShowFeatureLabel, shouldStartFocusFlight } from "./CesiumViewport";
 
 describe("Cesium POI render seam", () => {
   const realRestaurant = (restaurants as unknown as Feature[])[0]!;
@@ -13,6 +14,11 @@ describe("Cesium POI render seam", () => {
     expect(poiRenderMode(realRestaurant, true, true)).toBe("selected-entity");
     expect(poiRenderMode(realRestaurant, false, false)).toBe("entity");
     expect(poiRenderMode(fixturePoi, true, false)).toBe("point-primitive");
+  });
+
+  it("uses a stable namespace for accepted commercial storefront proxies", () => {
+    expect(commercialStorefrontProxyId("storefront:osm:node:1@2")).toBe("commercial-storefront:storefront:osm:node:1@2");
+    expect(commercialStorefrontProxyId("storefront:osm:node:1@2")).toBe(commercialStorefrontProxyId("storefront:osm:node:1@2"));
   });
 
   it("keeps ordinary dense POI markers bounded while retaining a strong selected marker", () => {
@@ -73,7 +79,7 @@ describe("Cesium POI render seam", () => {
 
   it("owns one deterministic focus flight per request across repeated dense updates", () => {
     const feature = { ...realRestaurant, id: "citywide:focus-target", coordinates: [-73.99, 40.748] as Feature["coordinates"] };
-    expect(focusPoseForFeature(feature)).toEqual({ longitude: -73.99, latitude: 40.748, height: 240, heading: 0, pitch: -35, roll: 0 });
+    expect(focusPoseForFeature(feature)).toEqual({ longitude: -73.99, latitude: 40.748, height: 240, heading: 35, pitch: -35, roll: 0 });
     expect(shouldStartFocusFlight(0, 1, true)).toBe(true);
     // The load/render effect may rerun for every dense shard refresh, but the
     // request has already claimed its flight and must not start another one.
@@ -81,6 +87,18 @@ describe("Cesium POI render seam", () => {
     expect(shouldStartFocusFlight(1, 1, true)).toBe(false);
     expect(shouldStartFocusFlight(1, 2, true)).toBe(true);
     expect(shouldStartFocusFlight(2, 3, false)).toBe(false);
+  });
+
+  it("frames a verified tall asset from outside its authored bounds and uses its WGS84 anchor", () => {
+    const feature = { ...realRestaurant, id: "doitt:778052", kind: "building" as const, geometry: { type: "Polygon" as const, coordinates: [] }, coordinates: [-73.986, 40.7486] as Feature["coordinates"], geometryProvenance: { ...realRestaurant.geometryProvenance, height: { ...realRestaurant.geometryProvenance.height, valueMeters: 377.583 } } } as Feature;
+    const resolver = { resolve: () => ({ kind: "asset" as const, featureId: feature.id, entry: { bounds: { min: [-58, -72, 0], max: [98, 41, 442.6] }, wgs84Anchor: { longitude: -73.9859858615, latitude: 40.7485827513, heightMeters: 0 } }, lod: {} }) } as unknown as Pick<CityAssetResolver, "resolve">;
+    expect(focusHeightForFeature(feature, resolver)).toBeGreaterThan(442.6);
+    expect(focusCoordinatesForFeature(feature, resolver)).toEqual([-73.9859858615, 40.7485827513]);
+    const targetCoordinates = focusCoordinatesForFeature(feature, resolver);
+    const cameraCoordinates = focusCameraCoordinatesForFeature(feature, focusHeightForFeature(feature, resolver), targetCoordinates);
+    expect(cameraCoordinates[0]).toBeLessThan(targetCoordinates[0]);
+    expect(cameraCoordinates[1]).toBeLessThan(targetCoordinates[1]);
+    expect(focusPoseForFeatureWithOcclusion(feature, focusHeightForFeature(feature, resolver), undefined, cameraCoordinates).heading).toBe(35);
   });
 
   it("serializes an upright requested focus pose when Cesium reports local-frame roll 180", () => {

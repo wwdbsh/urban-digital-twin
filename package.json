@@ -44,6 +44,15 @@
     "travel-context:validate": "node --experimental-strip-types scripts/travel-context-cli.mjs validate",
     "travel-context:benchmark": "node --experimental-strip-types scripts/travel-context-cli.mjs benchmark",
     "travel-context:publish-local": "node --experimental-strip-types scripts/travel-context-cli.mjs publish-local",
+    "exterior-pilot:acquire": "node --experimental-strip-types scripts/exterior-pilot-cli.mjs acquire",
+    "exterior-pilot:overpass-retry": "node --experimental-strip-types scripts/exterior-pilot-cli.mjs overpass-retry",
+    "exterior-pilot:commercial-poi": "node --experimental-strip-types scripts/exterior-pilot-cli.mjs commercial-poi-overpass",
+    "exterior-pilot:validate:raw": "node --experimental-strip-types scripts/exterior-pilot-cli.mjs validate:raw",
+    "exterior-pilot:normalize": "node --experimental-strip-types scripts/exterior-pilot-cli.mjs normalize",
+    "exterior-pilot:build": "node --experimental-strip-types scripts/exterior-pilot-cli.mjs build",
+    "exterior-pilot:validate": "node --experimental-strip-types scripts/exterior-pilot-cli.mjs validate",
+    "exterior-pilot:benchmark": "node --experimental-strip-types scripts/exterior-pilot-cli.mjs benchmark",
+    "exterior-pilot:publish-local": "node --experimental-strip-types scripts/exterior-pilot-cli.mjs publish-local",
     "test:watch": "vitest"
   },
   "dependencies": {

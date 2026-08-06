@@ -32,6 +32,7 @@ import type { RuntimeCityAdapter } from "../../runtime/fixture-adapter";
 import type { TileCameraState } from "../../runtime/tile-stream";
 import type { CameraPose } from "../../domain/visitor-navigation";
 import type { CityAssetResolver } from "../../runtime/city-asset-manifest";
+import type { CommercialStorefrontPlacement, LoadedExteriorPilotRelease } from "../../runtime/exterior-pilot-release";
 
 interface CesiumViewportProps {
   adapter: RuntimeCityAdapter;
@@ -56,6 +57,8 @@ interface CesiumViewportProps {
   cameraPoseRequest?: (CameraPose & { requestId: number });
   onViewportKeyDown?: KeyboardEventHandler<HTMLDivElement>;
   assetResolver?: CityAssetResolver;
+  commercialOverlay?: LoadedExteriorPilotRelease | null;
+  onStorefrontSelected?: (placement: CommercialStorefrontPlacement) => void;
 }
 
 export interface DenseRenderMetrics {
@@ -72,6 +75,10 @@ export interface DenseRenderMetrics {
 export interface DenseFeatureGroups {
   base: Feature[];
   context: Feature[];
+}
+
+export function commercialStorefrontProxyId(storefrontId: string): string {
+  return `commercial-storefront:${storefrontId}`;
 }
 
 export interface DensePoiMarkerStyle {
@@ -530,8 +537,42 @@ function cameraStateForViewer(viewer: Viewer): CameraPose {
 function cameraDuration(seconds: number): number { return typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ? 0.01 : seconds; }
 
 /** Build the bounded, deterministic camera pose used for a selected parent. */
-export function focusPoseForFeature(feature: Feature, height = 240): CameraPose {
-  return { longitude: feature.coordinates[0], latitude: feature.coordinates[1], height, heading: 0, pitch: -35, roll: 0 };
+export function focusAssetEntryForFeature(feature: Feature, assetResolver?: Pick<CityAssetResolver, "resolve">) {
+  const resolution = assetResolver?.resolve(feature.id, 180, 1);
+  return resolution?.kind === "asset" ? resolution.entry : undefined;
+}
+
+/** Keep a selected asset outside the camera while retaining a little three-quarter context. */
+export function focusHeightForFeature(feature: Feature, assetResolver?: Pick<CityAssetResolver, "resolve">, minimumHeight = 240): number {
+  const sourceHeight = feature.geometryProvenance.height.valueMeters ?? 0;
+  const assetBounds = focusAssetEntryForFeature(feature, assetResolver)?.bounds;
+  const assetHeight = assetBounds ? Math.max(0, assetBounds.max[2] - assetBounds.min[2]) : 0;
+  const targetHeight = Math.max(sourceHeight, assetHeight);
+  return Math.max(minimumHeight, Math.ceil(targetHeight * 1.8 + 180));
+}
+
+export function focusCoordinatesForFeature(feature: Feature, assetResolver?: Pick<CityAssetResolver, "resolve">): Position {
+  const anchor = focusAssetEntryForFeature(feature, assetResolver)?.wgs84Anchor;
+  return anchor ? [anchor.longitude, anchor.latitude] : feature.coordinates;
+}
+
+/** Place the camera behind the selected target so a pitched view looks at it from outside. */
+export function focusCameraCoordinatesForFeature(feature: Feature, height = 240, targetCoordinates: Position = feature.coordinates): Position {
+  const headingRadians = CesiumMath.toRadians(35);
+  const pitchRadians = CesiumMath.toRadians(35);
+  const groundDistance = height / Math.max(0.1, Math.tan(pitchRadians));
+  const eastOffset = groundDistance * Math.sin(headingRadians);
+  const northOffset = groundDistance * Math.cos(headingRadians);
+  const latitudeRadians = CesiumMath.toRadians(targetCoordinates[1]);
+  const metersPerLongitudeDegree = 111_320 * Math.max(0.2, Math.cos(latitudeRadians));
+  return [
+    targetCoordinates[0] - eastOffset / metersPerLongitudeDegree,
+    targetCoordinates[1] - northOffset / 111_320,
+  ];
+}
+
+export function focusPoseForFeature(feature: Feature, height = 240, coordinates: Position = feature.coordinates): CameraPose {
+  return { longitude: coordinates[0], latitude: coordinates[1], height, heading: 35, pitch: -35, roll: 0 };
 }
 
 export interface FocusOcclusion {
@@ -562,8 +603,8 @@ export function shouldShowFeatureLabel(
  * requires an eastward destination shift to place the selected world point
  * on the left side of the unobscured viewport; a bottom sheet shifts south.
  */
-export function focusPoseForFeatureWithOcclusion(feature: Feature, height = 240, occlusion?: FocusOcclusion): CameraPose {
-  const base = focusPoseForFeature(feature, height);
+export function focusPoseForFeatureWithOcclusion(feature: Feature, height = 240, occlusion?: FocusOcclusion, coordinates: Position = feature.coordinates): CameraPose {
+  const base = focusPoseForFeature(feature, height, coordinates);
   if (!occlusion || occlusion.viewportWidthPx <= 0 || occlusion.viewportHeightPx <= 0) return base;
   const width = occlusion.viewportWidthPx;
   const viewportHeight = occlusion.viewportHeightPx;
@@ -653,6 +694,8 @@ export function CesiumViewport({
   cameraPoseRequest,
   onViewportKeyDown,
   assetResolver,
+  commercialOverlay = null,
+  onStorefrontSelected,
 }: CesiumViewportProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<Viewer | null>(null);
@@ -663,8 +706,10 @@ export function CesiumViewport({
   const previewTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const denseFeatureMapRef = useRef(new Map<string, Feature>());
   const denseCollectionRef = useRef<PrimitiveCollection | null>(null);
+  const storefrontPickMapRef = useRef(new Map<string, CommercialStorefrontPlacement>());
   const suppressCameraEventsUntilRef = useRef(0);
   const lastFocusFlightRequestRef = useRef(0);
+  const lastFocusTargetSignatureRef = useRef<string | null>(null);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -704,11 +749,15 @@ export function CesiumViewport({
 
     viewer.selectedEntityChanged.addEventListener((entity) => {
       if (!entity || typeof entity.id !== "string") return;
+      const storefront = storefrontPickMapRef.current.get(entity.id);
+      if (storefront) { onStorefrontSelected?.(storefront); return; }
       const feature = featureForPickedId(entity.id, denseFeatureMapRef.current, adapter);
       if (feature) onFeatureSelected(feature);
     });
     viewer.screenSpaceEventHandler.setInputAction((movement: { position: Cartesian2 }) => {
       const picks = viewer.scene.drillPick(movement.position, 12) as Array<{ id?: unknown }>;
+      const storefront = picks.map((picked) => typeof picked?.id === "string" ? storefrontPickMapRef.current.get(picked.id) : undefined).find((placement): placement is CommercialStorefrontPlacement => Boolean(placement));
+      if (storefront) { onStorefrontSelected?.(storefront); return; }
       const pickedFeatures = [...new Map(picks.map((picked) => {
         const pickedId = typeof picked?.id === "string" ? picked.id : null;
         return pickedId ? [canonicalPickId(pickedId), featureForPickedId(pickedId, denseFeatureMapRef.current, adapter)] as const : ["", undefined] as const;
@@ -746,7 +795,7 @@ export function CesiumViewport({
       viewerRef.current = null;
       viewer.destroy();
     };
-  }, [adapter, onCameraChanged, onFeatureOverlap, onFeatureSelected]);
+  }, [adapter, onCameraChanged, onFeatureOverlap, onFeatureSelected, onStorefrontSelected]);
 
   useEffect(() => {
     const viewer = viewerRef.current;
@@ -759,6 +808,7 @@ export function CesiumViewport({
       const visibleFeatures = loaded.flat().filter((feature) => featureFilter?.(feature) ?? true);
       viewer.entities.removeAll();
       denseCollectionRef.current?.removeAll();
+      storefrontPickMapRef.current.clear();
       const visibleDenseFeatures = denseFeatures.filter((feature) => {
         const layer = layerForFeature(feature);
         return !layer || visibleLayers[layer];
@@ -797,19 +847,48 @@ export function CesiumViewport({
         : [];
       const suppressUnselectedLabels = denseRendering || assetDistanceMeters >= 1_200;
       semanticBaseFeatures.forEach((feature) => {
-        addFeatureEntities(viewer, feature, assetResolver, assetDistanceMeters, selectedFeatureId, suppressUnselectedLabels);
+        // Keep the selected model on its highest verified LOD while the camera
+        // is framed from outside its full authored bounds; this preserves a
+        // visible pinnacle/silhouette instead of swapping to a roof-only LOD.
+        const selectedAssetDistanceMeters = feature.id === selectedFeatureId ? Math.min(assetDistanceMeters, 180) : assetDistanceMeters;
+        addFeatureEntities(viewer, feature, assetResolver, selectedAssetDistanceMeters, selectedFeatureId, suppressUnselectedLabels);
       });
       const denseMetrics = denseRendering && denseCollectionRef.current
         ? addDensePrimitives(denseCollectionRef.current, renderedGroups.base.filter((feature) => !assetBuildingIds.has(feature.id)), selectedFeatureId)
         : { featureCount: 0, primitiveCount: 0, instanceCount: 0, buildingFeatureCount: 0, pointFeatureCount: 0 };
       onDenseMetrics?.({ ...denseMetrics, baseFeatureCount: renderedGroups.base.length, contextFeatureCount: renderedGroups.context.length, contextPartCount: renderedGroups.context.reduce((sum, feature) => sum + denseRenderPartCount(feature), 0) });
       semanticContextFeatures.forEach((feature) => {
-        addFeatureEntities(viewer, feature, assetResolver, assetDistanceMeters, selectedFeatureId, suppressUnselectedLabels);
+        const selectedAssetDistanceMeters = feature.id === selectedFeatureId ? Math.min(assetDistanceMeters, 180) : assetDistanceMeters;
+        addFeatureEntities(viewer, feature, assetResolver, selectedAssetDistanceMeters, selectedFeatureId, suppressUnselectedLabels);
       });
+      if (commercialOverlay && (assetDistanceMeters <= 900)) {
+        const visibleBuildingIds = new Set(allFeatures.filter((feature) => feature.kind === "building").map((feature) => feature.id));
+        for (const buildingId of commercialOverlay.manifest.assets.map((asset) => asset.canonicalFeatureId)) {
+          if (!visibleBuildingIds.has(buildingId)) continue;
+          const frontage = commercialOverlay.commercialForBuilding(buildingId);
+          for (const placement of frontage.acceptedPlacements) {
+            const anchor = placement.anchorWgs84;
+            if (!anchor || anchor.length !== 2) continue;
+            const resolution = commercialOverlay.resolve(buildingId, assetDistanceMeters, 1);
+            if (resolution.kind !== "asset") continue;
+            const proxyId = commercialStorefrontProxyId(placement.storefrontId);
+            storefrontPickMapRef.current.set(proxyId, placement);
+            const tenantLabel = placement.displayName ?? placement.rawName ?? "Verified storefront";
+            viewer.entities.add({
+              id: proxyId,
+              name: tenantLabel,
+              position: Cartesian3.fromDegrees(anchor[0], anchor[1], 4),
+              point: { pixelSize: 12, color: Color.fromCssColorString("#ffdf6b"), outlineColor: Color.fromCssColorString("#17372c"), outlineWidth: 2, disableDepthTestDistance: Number.POSITIVE_INFINITY },
+              label: resolution.lod.id === "lod0" ? { text: tenantLabel, font: "11px Inter, sans-serif", fillColor: Color.WHITE, showBackground: true, backgroundColor: Color.fromCssColorString("#17372c").withAlpha(0.9), pixelOffset: new Cartesian2(0, -18), disableDepthTestDistance: Number.POSITIVE_INFINITY } : undefined,
+              properties: { canonicalTenantId: placement.canonicalTenantId, canonicalBuildingId: placement.canonicalBuildingId, storefrontId: placement.storefrontId, evidenceIds: placement.evidenceIds.join(","), activeAssetLod: resolution.lod.id, placementDecision: placement.placementDecision, licensePartition: placement.licensePartition },
+            });
+          }
+        }
+      }
       if (denseRendering && selectedFeatureId) {
         const selectedFeature = renderedDenseFeatures.find((feature) => feature.id === selectedFeatureId);
         if (selectedFeature && !semanticBaseFeatures.some((feature) => feature.id === selectedFeature.id) && !semanticContextFeatures.some((feature) => feature.id === selectedFeature.id) && selectedFeature.kind !== "poi") {
-          addFeatureEntities(viewer, selectedFeature, assetResolver, assetDistanceMeters, selectedFeatureId, false);
+          addFeatureEntities(viewer, selectedFeature, assetResolver, Math.min(assetDistanceMeters, 180), selectedFeatureId, false);
         }
         const selectedPoi = renderedDenseFeatures.find((feature) => feature.id === selectedFeatureId && feature.kind === "poi");
         if (selectedPoi) addSelectedPoiEntity(viewer, selectedPoi);
@@ -827,7 +906,7 @@ export function CesiumViewport({
     };
     void loadVisibleFeatures();
     return () => { cancelled = true; };
-  }, [adapter, assetResolver, denseFeatureGroups, denseFeatureGroupLimits, denseFeatureLimit, denseFeatures, denseRendering, featureFilter, itinerary, onDenseMetrics, selectedFeatureId, visibleLayers.buildings, visibleLayers.pois, visibleLayers.areas, visibleLayers.stations, visibleLayers.entrances, visibleLayers.routes, visibleLayers["statistical-areas"], visibleLayers.parks, visibleLayers.landmarks]);
+  }, [adapter, assetResolver, commercialOverlay, denseFeatureGroups, denseFeatureGroupLimits, denseFeatureLimit, denseFeatures, denseRendering, featureFilter, itinerary, onDenseMetrics, onStorefrontSelected, selectedFeatureId, visibleLayers.buildings, visibleLayers.pois, visibleLayers.areas, visibleLayers.stations, visibleLayers.entrances, visibleLayers.routes, visibleLayers["statistical-areas"], visibleLayers.parks, visibleLayers.landmarks]);
 
   useEffect(() => {
     const viewer = viewerRef.current;
@@ -876,8 +955,16 @@ export function CesiumViewport({
     const viewer = viewerRef.current;
     if (!viewer || focusRequest === 0 || !focusFeatureId) return;
     const feature = denseFeatureMapRef.current.get(focusFeatureId) ?? adapter.getFeature(focusFeatureId);
-    if (!shouldStartFocusFlight(lastFocusFlightRequestRef.current, focusRequest, shouldFocusFeature(feature)) || !feature) return;
+    if (!feature || !shouldFocusFeature(feature)) return;
+    const requestChanged = shouldStartFocusFlight(lastFocusFlightRequestRef.current, focusRequest, true);
+    const focusHeight = focusHeightForFeature(feature, assetResolver);
+    const focusCoordinates = focusCoordinatesForFeature(feature, assetResolver);
+    const focusCameraCoordinates = focusCameraCoordinatesForFeature(feature, focusHeight, focusCoordinates);
+    const focusTargetSignature = `${feature.id}:${focusHeight}:${focusCoordinates[0]}:${focusCoordinates[1]}`;
+    const targetChanged = focusTargetSignature !== lastFocusTargetSignatureRef.current;
+    if (!requestChanged && !targetChanged) return;
     lastFocusFlightRequestRef.current = focusRequest;
+    lastFocusTargetSignatureRef.current = focusTargetSignature;
     viewer.camera.cancelFlight();
     const viewport = containerRef.current;
     const inspector = focusOverlayOpen ? viewport?.parentElement?.querySelector<HTMLElement>(".inspector") : null;
@@ -903,7 +990,7 @@ export function CesiumViewport({
         viewportHeightPx,
       }
       : undefined;
-    const pose = focusPoseForFeatureWithOcclusion(feature, 240, occlusion);
+    const pose = focusPoseForFeatureWithOcclusion(feature, focusHeight, occlusion, focusCameraCoordinates);
     const duration = cameraDuration(0.6);
     suppressCameraEventsUntilRef.current = Date.now() + Math.max(900, duration * 1_000 + 250);
     viewer.camera.flyTo({
@@ -919,7 +1006,7 @@ export function CesiumViewport({
         onCameraChanged?.(normalizeFocusCameraPose(cameraStateForViewer(viewer), pose));
       },
     });
-  }, [adapter, denseFeatures, focusFeatureId, focusOverlayOpen, focusRequest, onCameraChanged]);
+  }, [adapter, assetResolver, denseFeatures, focusFeatureId, focusOverlayOpen, focusRequest, onCameraChanged]);
 
   useEffect(() => {
     const viewer = viewerRef.current;

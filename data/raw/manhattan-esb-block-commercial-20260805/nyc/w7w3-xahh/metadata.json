@@ -1,0 +1,2354 @@
+{
+  "id" : "w7w3-xahh",
+  "name" : "Issued Licenses",
+  "assetType" : "dataset",
+  "attribution" : "Department of Consumer and Worker Protection (DCWP)",
+  "averageRating" : 0,
+  "category" : "Business",
+  "createdAt" : 1425675688,
+  "description" : "This dataset features licenses issued by the NYC Department of Consumer and Worker Protection (DCWP)—formerly the Department of Consumer Affairs (DCA).",
+  "diciBackend" : false,
+  "displayType" : "table",
+  "downloadCount" : 82219,
+  "hideFromCatalog" : false,
+  "hideFromDataJson" : false,
+  "locked" : false,
+  "newBackend" : true,
+  "numberOfComments" : 12,
+  "oid" : 41864548,
+  "provenance" : "official",
+  "publicationAppendEnabled" : true,
+  "publicationDate" : 1767804508,
+  "publicationGroup" : 2429938,
+  "publicationStage" : "published",
+  "rowClass" : "",
+  "rowsUpdatedAt" : 1777059043,
+  "rowsUpdatedBy" : "5fuc-pqz2",
+  "tableId" : 20229021,
+  "totalTimesRated" : 0,
+  "viewCount" : 150398,
+  "viewLastModified" : 1785526215,
+  "viewType" : "tabular",
+  "approvals" : [ {
+    "reviewedAt" : 1727194261,
+    "reviewedAutomatically" : false,
+    "state" : "approved",
+    "submissionId" : 7297757,
+    "submissionObject" : "public_audience_request",
+    "submissionOutcome" : "change_audience",
+    "submittedAt" : 1727194248,
+    "targetAudience" : "public",
+    "workflowId" : 2285,
+    "reviewer" : {
+      "id" : "d5dp-fses",
+      "displayName" : "afinkel"
+    },
+    "submissionDetails" : {
+      "permissionType" : "read"
+    },
+    "submissionOutcomeApplication" : {
+      "endedAt" : 1727194261,
+      "failureCount" : 0,
+      "startedAt" : 1727194261,
+      "status" : "success"
+    },
+    "submitter" : {
+      "id" : "d5dp-fses",
+      "displayName" : "afinkel"
+    }
+  } ],
+  "clientContext" : {
+    "clientContextVariables" : [ ],
+    "inheritedVariables" : { }
+  },
+  "columns" : [ {
+    "id" : 624427527,
+    "name" : "License Number",
+    "dataTypeName" : "text",
+    "description" : "An identification number issued to a business or individual when their license application is approved by DCWP.",
+    "fieldName" : "license_nbr",
+    "position" : 1,
+    "renderTypeName" : "text",
+    "tableColumnId" : 26157789,
+    "width" : 188,
+    "cachedContents" : {
+      "non_null" : "69885",
+      "largest" : "2134402-DCWP",
+      "null" : "0",
+      "top" : [ {
+        "item" : "2080975-DCA",
+        "count" : "2"
+      }, {
+        "item" : "2127611-1-DCWP",
+        "count" : "1"
+      }, {
+        "item" : "0923019-DCA",
+        "count" : "1"
+      }, {
+        "item" : "2113314-DCA",
+        "count" : "1"
+      }, {
+        "item" : "2122013-DCWP",
+        "count" : "1"
+      }, {
+        "item" : "1346147-DCA",
+        "count" : "1"
+      }, {
+        "item" : "1185204-DCA",
+        "count" : "1"
+      }, {
+        "item" : "1410489-DCA",
+        "count" : "1"
+      }, {
+        "item" : "1194546-DCA",
+        "count" : "1"
+      }, {
+        "item" : "2107025-DCA",
+        "count" : "1"
+      }, {
+        "item" : "2106529-DCA",
+        "count" : "1"
+      }, {
+        "item" : "2110553-DCA",
+        "count" : "1"
+      }, {
+        "item" : "2044161-DCA",
+        "count" : "1"
+      }, {
+        "item" : "1152221-DCA",
+        "count" : "1"
+      }, {
+        "item" : "2074389-DCA",
+        "count" : "1"
+      }, {
+        "item" : "2072753-1-DCA",
+        "count" : "1"
+      }, {
+        "item" : "1260198-DCA",
+        "count" : "1"
+      }, {
+        "item" : "0907453-DCA",
+        "count" : "1"
+      }, {
+        "item" : "2006015-1365-DCA",
+        "count" : "1"
+      }, {
+        "item" : "2103602-DCA",
+        "count" : "1"
+      } ],
+      "smallest" : "0002902-DCA",
+      "count" : "69885",
+      "cardinality" : "69885"
+    },
+    "format" : {
+      "align" : "left"
+    }
+  }, {
+    "id" : 624427528,
+    "name" : "Business Name",
+    "dataTypeName" : "text",
+    "description" : "The legal business name as filed with the New York State Secretary of State or County Clerk or, if an individual, the person’s first name and last name.",
+    "fieldName" : "business_name",
+    "position" : 2,
+    "renderTypeName" : "text",
+    "tableColumnId" : 26157793,
+    "width" : 242,
+    "cachedContents" : {
+      "non_null" : "69884",
+      "largest" : "ZZ WIRELESS INC",
+      "null" : "1",
+      "top" : [ {
+        "item" : "T-MOBILE NORTHEAST LLC",
+        "count" : "289"
+      }, {
+        "item" : "SP PLUS CORPORATION",
+        "count" : "280"
+      }, {
+        "item" : "ecoATM, LLC",
+        "count" : "129"
+      }, {
+        "item" : "AT&T MOBILITY SUPPLY, LLC",
+        "count" : "121"
+      }, {
+        "item" : "ECOATM LLC",
+        "count" : "100"
+      }, {
+        "item" : "OFFICE SUPERSTORE EAST LLC",
+        "count" : "93"
+      }, {
+        "item" : "GAMESTOP, INC.",
+        "count" : "91"
+      }, {
+        "item" : "WIRELESS VISION LLC",
+        "count" : "74"
+      }, {
+        "item" : "BOLLA OPERATING CORP.",
+        "count" : "72"
+      }, {
+        "item" : "SPECTRUM NEW YORK METRO LLC",
+        "count" : "69"
+      }, {
+        "item" : "SPEEDWAY LLC",
+        "count" : "61"
+      }, {
+        "item" : "LAZ PARKING NEW YORK/NEW JERSEY, LLC",
+        "count" : "52"
+      }, {
+        "item" : "RENT-A-CENTER EAST, INC.",
+        "count" : "48"
+      }, {
+        "item" : "GEM FINANCIAL SERVICES, INC.",
+        "count" : "45"
+      }, {
+        "item" : "Amtel NY LLC",
+        "count" : "38"
+      }, {
+        "item" : "P.C. RICHARD & SON LONG ISLAND CORPORATION",
+        "count" : "38"
+      }, {
+        "item" : "HOME DEPOT USA INC",
+        "count" : "37"
+      }, {
+        "item" : "FAMILY DOLLAR STORES OF NEW YORK, INC.",
+        "count" : "36"
+      }, {
+        "item" : "ELITE WIRELESS GROUP NY LLC",
+        "count" : "36"
+      }, {
+        "item" : "NEW YORK SMSA LIMITED PARTNERSHIP",
+        "count" : "36"
+      } ],
+      "smallest" : "007 NEW CENTURY 99 & UP INC.",
+      "count" : "69885",
+      "cardinality" : "69885"
+    },
+    "format" : {
+      "align" : "left"
+    }
+  }, {
+    "id" : 624427529,
+    "name" : "DBA/Trade Name",
+    "dataTypeName" : "text",
+    "description" : "The \"Doing Business As\" or \"Trade Name\" registered with the NYS Department of State.",
+    "fieldName" : "dba_trade_name",
+    "position" : 3,
+    "renderTypeName" : "text",
+    "tableColumnId" : 154916424,
+    "cachedContents" : {
+      "non_null" : "9557",
+      "largest" : "ZUPPLER",
+      "null" : "60328",
+      "top" : [ {
+        "item" : "T-Mobile 4110",
+        "count" : "112"
+      }, {
+        "item" : "ecoATM",
+        "count" : "101"
+      }, {
+        "item" : "AT&T MOBILITY",
+        "count" : "90"
+      }, {
+        "item" : "STAPLES THE OFFICE SUPERSTORE",
+        "count" : "73"
+      }, {
+        "item" : "SPECTRUM",
+        "count" : "70"
+      }, {
+        "item" : "BP",
+        "count" : "61"
+      }, {
+        "item" : "VERIZON WIRELESS",
+        "count" : "40"
+      }, {
+        "item" : "GEM PAWNBROKERS",
+        "count" : "38"
+      }, {
+        "item" : "T-Mobile",
+        "count" : "34"
+      }, {
+        "item" : "AT&T Mobility",
+        "count" : "26"
+      }, {
+        "item" : "FAMILY DOLLAR #31640",
+        "count" : "22"
+      }, {
+        "item" : "WIRELESSONE",
+        "count" : "20"
+      }, {
+        "item" : "WE BUY",
+        "count" : "19"
+      }, {
+        "item" : "METRO BY T-MOBILE",
+        "count" : "19"
+      }, {
+        "item" : "IMPARK",
+        "count" : "19"
+      }, {
+        "item" : "T-Mobile Limited",
+        "count" : "18"
+      }, {
+        "item" : "T-MOBILE",
+        "count" : "18"
+      }, {
+        "item" : "SHELL",
+        "count" : "17"
+      }, {
+        "item" : "Sprint",
+        "count" : "17"
+      }, {
+        "item" : "Staples the Office Superstore",
+        "count" : "16"
+      } ],
+      "smallest" : "`",
+      "count" : "69885",
+      "cardinality" : "69885"
+    },
+    "format" : { }
+  }, {
+    "id" : 624427530,
+    "name" : "Business Unique ID",
+    "dataTypeName" : "text",
+    "description" : "An identification number assigned by DCWP to track unique businesses across its systems.",
+    "fieldName" : "business_unique_id",
+    "position" : 4,
+    "renderTypeName" : "text",
+    "tableColumnId" : 154916423,
+    "cachedContents" : {
+      "non_null" : "69885",
+      "largest" : "BA-999636-2022",
+      "null" : "0",
+      "top" : [ {
+        "item" : "BA-1305489-2022",
+        "count" : "10"
+      }, {
+        "item" : "BA-1302088-2022",
+        "count" : "7"
+      }, {
+        "item" : "BA-1103941-2022",
+        "count" : "6"
+      }, {
+        "item" : "BA-1123441-2022",
+        "count" : "6"
+      }, {
+        "item" : "BA-1458176-2022",
+        "count" : "6"
+      }, {
+        "item" : "BA-1597171-2023",
+        "count" : "6"
+      }, {
+        "item" : "BA-1117031-2022",
+        "count" : "5"
+      }, {
+        "item" : "BA-1565437-2022",
+        "count" : "5"
+      }, {
+        "item" : "BA-1442784-2022",
+        "count" : "5"
+      }, {
+        "item" : "BA-1560832-2022",
+        "count" : "5"
+      }, {
+        "item" : "BA-1556583-2022",
+        "count" : "5"
+      }, {
+        "item" : "BA-1386591-2022",
+        "count" : "5"
+      }, {
+        "item" : "BA-1112089-2022",
+        "count" : "5"
+      }, {
+        "item" : "BA-1223791-2022",
+        "count" : "5"
+      }, {
+        "item" : "BA-1278926-2022",
+        "count" : "5"
+      }, {
+        "item" : "BA-1207411-2022",
+        "count" : "5"
+      }, {
+        "item" : "BA-1204167-2022",
+        "count" : "5"
+      }, {
+        "item" : "BA-1469679-2022",
+        "count" : "5"
+      }, {
+        "item" : "BA-1123677-2022",
+        "count" : "5"
+      }, {
+        "item" : "BA-1699693-2024",
+        "count" : "5"
+      } ],
+      "smallest" : "BA-1000527-2022",
+      "count" : "69885",
+      "cardinality" : "69885"
+    },
+    "format" : { }
+  }, {
+    "id" : 624427531,
+    "name" : "Business Category",
+    "dataTypeName" : "text",
+    "description" : "The business activity or business category requiring a DCWP-issued license in order to operate legally within NYC.",
+    "fieldName" : "business_category",
+    "position" : 5,
+    "renderTypeName" : "text",
+    "tableColumnId" : 154916422,
+    "cachedContents" : {
+      "non_null" : "69885",
+      "largest" : "Tow Truck Driver",
+      "null" : "0",
+      "top" : [ {
+        "item" : "Home Improvement Contractor",
+        "count" : "18437"
+      }, {
+        "item" : "Tobacco Retail Dealer",
+        "count" : "6586"
+      }, {
+        "item" : "Secondhand Dealer - General",
+        "count" : "5415"
+      }, {
+        "item" : "Electronics Store",
+        "count" : "4153"
+      }, {
+        "item" : "Sightseeing Guide",
+        "count" : "3846"
+      }, {
+        "item" : "Tow Truck Driver",
+        "count" : "3082"
+      }, {
+        "item" : "Locksmith",
+        "count" : "2946"
+      }, {
+        "item" : "Electronic Cigarette Dealer",
+        "count" : "2724"
+      }, {
+        "item" : "Garage & Parking Lot",
+        "count" : "2702"
+      }, {
+        "item" : "Stoop Line Stand",
+        "count" : "2656"
+      }, {
+        "item" : "General Vendor",
+        "count" : "2505"
+      }, {
+        "item" : "Dealer In Products For The Disabled",
+        "count" : "2241"
+      }, {
+        "item" : "Debt Collection Agency",
+        "count" : "2102"
+      }, {
+        "item" : "Pedicab Driver",
+        "count" : "1961"
+      }, {
+        "item" : "Electronic & Home Appliance Service Dealer",
+        "count" : "1832"
+      }, {
+        "item" : "Ticket Seller Individual",
+        "count" : "1105"
+      }, {
+        "item" : "Process Server Individual",
+        "count" : "839"
+      }, {
+        "item" : "Hotel",
+        "count" : "795"
+      }, {
+        "item" : "Secondhand Dealer - Auto",
+        "count" : "683"
+      }, {
+        "item" : "Newsstand",
+        "count" : "396"
+      } ],
+      "smallest" : "Bingo Game Operator",
+      "count" : "69885",
+      "cardinality" : "69885"
+    },
+    "format" : { }
+  }, {
+    "id" : 624427532,
+    "name" : "License Type",
+    "dataTypeName" : "text",
+    "description" : "Indicates whether the license is issued to an individual or an organization.",
+    "fieldName" : "license_type",
+    "position" : 6,
+    "renderTypeName" : "text",
+    "tableColumnId" : 26157790,
+    "width" : 147,
+    "cachedContents" : {
+      "non_null" : "69885",
+      "largest" : "Premises",
+      "null" : "0",
+      "top" : [ {
+        "item" : "Premises",
+        "count" : "53318"
+      }, {
+        "item" : "Individual",
+        "count" : "16567"
+      } ],
+      "smallest" : "Individual",
+      "count" : "69885",
+      "cardinality" : "69885"
+    },
+    "format" : {
+      "align" : "left"
+    }
+  }, {
+    "id" : 624427533,
+    "name" : "License Status",
+    "dataTypeName" : "text",
+    "description" : "Indicates the current status of the license.",
+    "fieldName" : "license_status",
+    "position" : 7,
+    "renderTypeName" : "text",
+    "tableColumnId" : 61231985,
+    "width" : 100,
+    "cachedContents" : {
+      "non_null" : "69885",
+      "largest" : "Voided",
+      "null" : "0",
+      "top" : [ {
+        "item" : "Active",
+        "count" : "43581"
+      }, {
+        "item" : "Expired",
+        "count" : "18642"
+      }, {
+        "item" : "Surrendered",
+        "count" : "2712"
+      }, {
+        "item" : "Failed to Renew",
+        "count" : "1918"
+      }, {
+        "item" : "Ready for Renewal",
+        "count" : "1671"
+      }, {
+        "item" : "Revoked",
+        "count" : "556"
+      }, {
+        "item" : "Voided",
+        "count" : "498"
+      }, {
+        "item" : "Suspended",
+        "count" : "243"
+      }, {
+        "item" : "Out of Business",
+        "count" : "61"
+      }, {
+        "item" : "Close",
+        "count" : "2"
+      }, {
+        "item" : "TOL",
+        "count" : "1"
+      } ],
+      "smallest" : "Active",
+      "count" : "69885",
+      "cardinality" : "69885"
+    },
+    "format" : { }
+  }, {
+    "id" : 624427558,
+    "name" : "Initial Issuance Date",
+    "dataTypeName" : "calendar_date",
+    "description" : "The date the license was originally issued.",
+    "fieldName" : "license_creation_date",
+    "position" : 8,
+    "renderTypeName" : "calendar_date",
+    "tableColumnId" : 164481499,
+    "width" : 126,
+    "cachedContents" : {
+      "non_null" : "69885",
+      "largest" : "2026-04-16T00:00:00.000",
+      "null" : "0",
+      "top" : [ {
+        "item" : "1900-12-31T00:00:00.000",
+        "count" : "164"
+      }, {
+        "item" : "2018-02-23T00:00:00.000",
+        "count" : "104"
+      }, {
+        "item" : "2025-05-16T00:00:00.000",
+        "count" : "103"
+      }, {
+        "item" : "2023-06-05T00:00:00.000",
+        "count" : "92"
+      }, {
+        "item" : "2023-05-30T00:00:00.000",
+        "count" : "76"
+      }, {
+        "item" : "2024-08-20T00:00:00.000",
+        "count" : "76"
+      }, {
+        "item" : "2025-05-20T00:00:00.000",
+        "count" : "76"
+      }, {
+        "item" : "2018-06-12T00:00:00.000",
+        "count" : "73"
+      }, {
+        "item" : "2018-06-20T00:00:00.000",
+        "count" : "68"
+      }, {
+        "item" : "2023-05-22T00:00:00.000",
+        "count" : "68"
+      }, {
+        "item" : "2023-07-25T00:00:00.000",
+        "count" : "67"
+      }, {
+        "item" : "2018-06-18T00:00:00.000",
+        "count" : "65"
+      }, {
+        "item" : "2025-05-22T00:00:00.000",
+        "count" : "63"
+      }, {
+        "item" : "2025-05-19T00:00:00.000",
+        "count" : "63"
+      }, {
+        "item" : "2018-06-21T00:00:00.000",
+        "count" : "63"
+      }, {
+        "item" : "2018-06-13T00:00:00.000",
+        "count" : "62"
+      }, {
+        "item" : "2018-06-19T00:00:00.000",
+        "count" : "62"
+      }, {
+        "item" : "2018-05-29T00:00:00.000",
+        "count" : "60"
+      }, {
+        "item" : "2018-06-05T00:00:00.000",
+        "count" : "58"
+      }, {
+        "item" : "2026-01-22T00:00:00.000",
+        "count" : "58"
+      } ],
+      "smallest" : "1900-12-31T00:00:00.000",
+      "count" : "69885",
+      "cardinality" : "69885"
+    },
+    "format" : {
+      "view" : "date",
+      "align" : "left"
+    }
+  }, {
+    "id" : 624427559,
+    "name" : "Expiration Date",
+    "dataTypeName" : "calendar_date",
+    "description" : "The date the license term expired or will expire.",
+    "fieldName" : "lic_expir_dd",
+    "position" : 9,
+    "renderTypeName" : "calendar_date",
+    "tableColumnId" : 164481500,
+    "width" : 193,
+    "cachedContents" : {
+      "non_null" : "69856",
+      "largest" : "2100-12-18T00:00:00.000",
+      "null" : "29",
+      "top" : [ {
+        "item" : "2027-02-28T00:00:00.000",
+        "count" : "12951"
+      }, {
+        "item" : "2026-12-31T00:00:00.000",
+        "count" : "6044"
+      }, {
+        "item" : "2027-07-31T00:00:00.000",
+        "count" : "4118"
+      }, {
+        "item" : "2028-03-31T00:00:00.000",
+        "count" : "3998"
+      }, {
+        "item" : "2025-02-28T00:00:00.000",
+        "count" : "2762"
+      }, {
+        "item" : "2023-02-28T00:00:00.000",
+        "count" : "2749"
+      }, {
+        "item" : "2026-10-31T00:00:00.000",
+        "count" : "2496"
+      }, {
+        "item" : "2027-05-31T00:00:00.000",
+        "count" : "2277"
+      }, {
+        "item" : "2027-09-30T00:00:00.000",
+        "count" : "1771"
+      }, {
+        "item" : "2027-12-31T00:00:00.000",
+        "count" : "1744"
+      }, {
+        "item" : "2022-12-31T00:00:00.000",
+        "count" : "1730"
+      }, {
+        "item" : "2026-03-31T00:00:00.000",
+        "count" : "1728"
+      }, {
+        "item" : "2027-03-31T00:00:00.000",
+        "count" : "1692"
+      }, {
+        "item" : "2027-03-15T00:00:00.000",
+        "count" : "1522"
+      }, {
+        "item" : "2024-12-31T00:00:00.000",
+        "count" : "1401"
+      }, {
+        "item" : "2027-01-31T00:00:00.000",
+        "count" : "1399"
+      }, {
+        "item" : "2027-11-30T00:00:00.000",
+        "count" : "1318"
+      }, {
+        "item" : "2023-07-31T00:00:00.000",
+        "count" : "1276"
+      }, {
+        "item" : "2025-07-31T00:00:00.000",
+        "count" : "1112"
+      }, {
+        "item" : "2024-03-31T00:00:00.000",
+        "count" : "1069"
+      } ],
+      "smallest" : "2019-09-30T00:00:00.000",
+      "count" : "69885",
+      "cardinality" : "69885"
+    },
+    "format" : {
+      "view" : "date",
+      "align" : "left"
+    }
+  }, {
+    "id" : 624427536,
+    "name" : "Details",
+    "dataTypeName" : "text",
+    "description" : "Additional information about the license for certain business categories.",
+    "fieldName" : "detail",
+    "position" : 10,
+    "renderTypeName" : "text",
+    "tableColumnId" : 34071066,
+    "width" : 100,
+    "cachedContents" : {
+      "non_null" : "8139",
+      "largest" : "Vendor Type: Midtown Specialized Vendor (Blue)",
+      "null" : "61746",
+      "top" : [ {
+        "item" : "Vendor Type: General Vendor (White)",
+        "count" : "1598"
+      }, {
+        "item" : "Vendor Type: Citywide Specialized Vendor (Yellow)",
+        "count" : "798"
+      }, {
+        "item" : "Product Category: Fruits, Vegetables, Flowers, Soft Drinks, Confectionary and Ice Cream; 4 foot stands: 2; 5 foot stands: 0; 5-10 foot stands: 0",
+        "count" : "293"
+      }, {
+        "item" : "Product Category: Fruits, Vegetables, Soft Drinks PLUS any of these additional types of products: Flowers, Confectionery, Ice Cream or Ices; 4 foot stands: 0; 5 foot stands: 2; 5-10 foot stands: 0",
+        "count" : "271"
+      }, {
+        "item" : "Product Category: Fruits, Vegetables, Flowers, Soft Drinks, Confectionary and Ice Cream; 4 foot stands: 1; 5 foot stands: 0; 5-10 foot stands: 0",
+        "count" : "206"
+      }, {
+        "item" : "Product Category: Fruits, Vegetables, Soft Drinks PLUS any of these additional types of products: Flowers, Confectionery, Ice Cream or Ices; 4 foot stands: 0; 5 foot stands: 1; 5-10 foot stands: 0",
+        "count" : "183"
+      }, {
+        "item" : "DARP/ROTOW Enrollment: Not Enrolled",
+        "count" : "137"
+      }, {
+        "item" : "DARP/ROTOW Enrollment: DARP",
+        "count" : "126"
+      }, {
+        "item" : "Product Category: Fruits, Vegetables, Soft Drinks PLUS any of these additional types of products: Flowers, Confectionery, Ice Cream or Ices; 4 foot stands: 0; 5 foot stands: 3; 5-10 foot stands: 0",
+        "count" : "116"
+      }, {
+        "item" : "Vendor Type: Midtown Specialized Vendor (Blue)",
+        "count" : "116"
+      }, {
+        "item" : "Product Category: Fruits, Vegetables, Soft Drinks PLUS any of these additional types of products: Flowers, Confectionery, Ice Cream or Ices; 4 foot stands: 0; 5 foot stands: 4; 5-10 foot stands: 0",
+        "count" : "111"
+      }, {
+        "item" : "Product Category: Fruits, Vegetables, Flowers, Soft Drinks, Confectionary and Ice Cream; 4 foot stands: 3; 5 foot stands: 0; 5-10 foot stands: 0",
+        "count" : "98"
+      }, {
+        "item" : "Product Category: Fruits, Vegetables, Flowers, Soft Drinks, Confectionary and Ice Cream; 4 foot stands: 4; 5 foot stands: 0; 5-10 foot stands: 0",
+        "count" : "90"
+      }, {
+        "item" : "Vehicle Capacity: 150; Bicycle Capacity: 15",
+        "count" : "76"
+      }, {
+        "item" : "DARP/ROTOW Enrollment: DARP and ROTOW",
+        "count" : "69"
+      }, {
+        "item" : "Product Category: Fruits, Vegetables, Soft Drinks PLUS any of these additional types of products: Flowers, Confectionery, Ice Cream or Ices; 4 foot stands: 0; 5 foot stands: 0; 5-10 foot stands: 2",
+        "count" : "60"
+      }, {
+        "item" : "Product Category: Fruits, Vegetables, Soft Drinks PLUS any of these additional types of products: Flowers, Confectionery, Ice Cream or Ices; 4 foot stands: 0; 5 foot stands: 0; 5-10 foot stands: 1",
+        "count" : "54"
+      }, {
+        "item" : "Product Category: Fruits, Vegetables, Soft Drinks only; 4 foot stands: 0; 5 foot stands: 2; 5-10 foot stands: 0",
+        "count" : "53"
+      }, {
+        "item" : "Product Category: Fruits, Vegetables, Soft Drinks PLUS any of these additional types of products: Flowers, Confectionery, Ice Cream or Ices; 4 foot stands: 0; 5 foot stands: 5; 5-10 foot stands: 0",
+        "count" : "51"
+      }, {
+        "item" : "Vehicle Capacity: 100; Bicycle Capacity: 10",
+        "count" : "48"
+      } ],
+      "smallest" : "DARP/ROTOW Enrollment: DARP",
+      "count" : "69885",
+      "cardinality" : "69885"
+    },
+    "format" : {
+      "displayStyle" : "plain",
+      "align" : "left"
+    }
+  }, {
+    "id" : 624427537,
+    "name" : "Contact Phone",
+    "dataTypeName" : "text",
+    "description" : "The phone number of the business contact. ",
+    "fieldName" : "contact_phone",
+    "position" : 11,
+    "renderTypeName" : "text",
+    "tableColumnId" : 26157801,
+    "width" : 160,
+    "cachedContents" : {
+      "non_null" : "50683",
+      "largest" : "9898768505",
+      "null" : "19202",
+      "top" : [ {
+        "item" : "2123217542",
+        "count" : "215"
+      }, {
+        "item" : "(425) 279-4550",
+        "count" : "201"
+      }, {
+        "item" : "8587667242",
+        "count" : "190"
+      }, {
+        "item" : "(877) 727-5464",
+        "count" : "144"
+      }, {
+        "item" : "2127367171",
+        "count" : "137"
+      }, {
+        "item" : "2122222292",
+        "count" : "135"
+      }, {
+        "item" : "2124903460",
+        "count" : "134"
+      }, {
+        "item" : "6465840409",
+        "count" : "122"
+      }, {
+        "item" : "(630) 857-2100",
+        "count" : "82"
+      }, {
+        "item" : "8777275464",
+        "count" : "81"
+      }, {
+        "item" : "718-623-2151",
+        "count" : "78"
+      }, {
+        "item" : "5082535000",
+        "count" : "78"
+      }, {
+        "item" : "3143949867",
+        "count" : "74"
+      }, {
+        "item" : "2126869800",
+        "count" : "68"
+      }, {
+        "item" : "7182371166",
+        "count" : "65"
+      }, {
+        "item" : "2128642763",
+        "count" : "64"
+      }, {
+        "item" : "7573215000",
+        "count" : "60"
+      }, {
+        "item" : "9378636473",
+        "count" : "59"
+      }, {
+        "item" : "2484064630",
+        "count" : "56"
+      }, {
+        "item" : "8587667249",
+        "count" : "55"
+      } ],
+      "smallest" : "0000000000",
+      "count" : "69885",
+      "cardinality" : "69885"
+    },
+    "format" : {
+      "align" : "right"
+    }
+  }, {
+    "id" : 624427538,
+    "name" : "Address Type",
+    "dataTypeName" : "text",
+    "description" : "The type of address where the business is located.",
+    "fieldName" : "address_type",
+    "position" : 12,
+    "renderTypeName" : "text",
+    "tableColumnId" : 154916431,
+    "cachedContents" : {
+      "non_null" : "53238",
+      "largest" : "P.O. Box",
+      "null" : "16647",
+      "top" : [ {
+        "item" : "Complete Address",
+        "count" : "52291"
+      }, {
+        "item" : "Cross Street (Intersection)",
+        "count" : "880"
+      }, {
+        "item" : "Place (Landmark)",
+        "count" : "52"
+      }, {
+        "item" : "P.O. Box",
+        "count" : "15"
+      } ],
+      "smallest" : "Complete Address",
+      "count" : "69885",
+      "cardinality" : "69885"
+    },
+    "format" : { }
+  }, {
+    "id" : 624427539,
+    "name" : "Building Number",
+    "dataTypeName" : "text",
+    "description" : "The building number where the business is located.",
+    "fieldName" : "address_building",
+    "position" : 13,
+    "renderTypeName" : "text",
+    "tableColumnId" : 26157795,
+    "width" : 196,
+    "cachedContents" : {
+      "non_null" : "52356",
+      "largest" : "Woodmead Country Club Estate",
+      "null" : "17529",
+      "top" : [ {
+        "item" : "1",
+        "count" : "237"
+      }, {
+        "item" : "200",
+        "count" : "167"
+      }, {
+        "item" : "10",
+        "count" : "165"
+      }, {
+        "item" : "2",
+        "count" : "158"
+      }, {
+        "item" : "20",
+        "count" : "151"
+      }, {
+        "item" : "15",
+        "count" : "149"
+      }, {
+        "item" : "100",
+        "count" : "149"
+      }, {
+        "item" : "55",
+        "count" : "137"
+      }, {
+        "item" : "25",
+        "count" : "129"
+      }, {
+        "item" : "300",
+        "count" : "117"
+      }, {
+        "item" : "40",
+        "count" : "116"
+      }, {
+        "item" : "30",
+        "count" : "110"
+      }, {
+        "item" : "7",
+        "count" : "107"
+      }, {
+        "item" : "14",
+        "count" : "103"
+      }, {
+        "item" : "5",
+        "count" : "103"
+      }, {
+        "item" : "75",
+        "count" : "102"
+      }, {
+        "item" : "31",
+        "count" : "102"
+      }, {
+        "item" : "11",
+        "count" : "100"
+      }, {
+        "item" : "16",
+        "count" : "99"
+      }, {
+        "item" : "50",
+        "count" : "99"
+      } ],
+      "smallest" : "000",
+      "count" : "69885",
+      "cardinality" : "69885"
+    },
+    "format" : {
+      "align" : "left"
+    }
+  }, {
+    "id" : 624427540,
+    "name" : "Street1",
+    "dataTypeName" : "text",
+    "description" : "The name of the street where the business is located.",
+    "fieldName" : "address_street_name",
+    "position" : 14,
+    "renderTypeName" : "text",
+    "tableColumnId" : 26157796,
+    "width" : 172,
+    "cachedContents" : {
+      "non_null" : "53239",
+      "largest" : "ZULETTE AVE",
+      "null" : "16646",
+      "top" : [ {
+        "item" : "BROADWAY",
+        "count" : "1307"
+      }, {
+        "item" : "JAMAICA AVE",
+        "count" : "474"
+      }, {
+        "item" : "5TH AVE",
+        "count" : "414"
+      }, {
+        "item" : "ROOSEVELT AVE",
+        "count" : "382"
+      }, {
+        "item" : "LIBERTY AVE",
+        "count" : "346"
+      }, {
+        "item" : "3RD AVE",
+        "count" : "345"
+      }, {
+        "item" : "NORTHERN BLVD",
+        "count" : "307"
+      }, {
+        "item" : "QUEENS BLVD",
+        "count" : "292"
+      }, {
+        "item" : "8TH AVE",
+        "count" : "268"
+      }, {
+        "item" : "CONEY ISLAND AVE",
+        "count" : "254"
+      }, {
+        "item" : "MYRTLE AVE",
+        "count" : "239"
+      }, {
+        "item" : "WHITE PLAINS RD",
+        "count" : "233"
+      }, {
+        "item" : "FULTON ST",
+        "count" : "226"
+      }, {
+        "item" : "MAIN ST",
+        "count" : "222"
+      }, {
+        "item" : "ATLANTIC AVE",
+        "count" : "220"
+      }, {
+        "item" : "NOSTRAND AVE",
+        "count" : "220"
+      }, {
+        "item" : "FLATBUSH AVE",
+        "count" : "217"
+      }, {
+        "item" : "HILLSIDE AVE",
+        "count" : "212"
+      }, {
+        "item" : "3 AVENUE",
+        "count" : "210"
+      }, {
+        "item" : "W 47TH ST",
+        "count" : "209"
+      } ],
+      "smallest" : "100M SUR 200M",
+      "count" : "69885",
+      "cardinality" : "69885"
+    },
+    "format" : {
+      "align" : "left"
+    }
+  }, {
+    "id" : 624427541,
+    "name" : "Street2",
+    "dataTypeName" : "text",
+    "description" : "The name of the cross street where the business is located.",
+    "fieldName" : "address_street_name_2",
+    "position" : 15,
+    "renderTypeName" : "text",
+    "tableColumnId" : 26157797,
+    "width" : 196,
+    "cachedContents" : {
+      "non_null" : "0",
+      "null" : "69885",
+      "count" : "69885",
+      "cardinality" : "69885"
+    },
+    "format" : {
+      "align" : "left"
+    }
+  }, {
+    "id" : 624427542,
+    "name" : "Street3",
+    "dataTypeName" : "text",
+    "description" : "The name of the street where the business is located.",
+    "fieldName" : "street3",
+    "position" : 16,
+    "renderTypeName" : "text",
+    "tableColumnId" : 154916430,
+    "cachedContents" : {
+      "non_null" : "3",
+      "largest" : "MADISON AVENUE",
+      "null" : "69882",
+      "top" : [ {
+        "item" : "MADISON AVENUE",
+        "count" : "3"
+      } ],
+      "smallest" : "MADISON AVENUE",
+      "count" : "69885",
+      "cardinality" : "69885"
+    },
+    "format" : { }
+  }, {
+    "id" : 624427543,
+    "name" : "Unit Type",
+    "dataTypeName" : "text",
+    "description" : "The type of unit of the business' address.",
+    "fieldName" : "unit_type",
+    "position" : 17,
+    "renderTypeName" : "text",
+    "tableColumnId" : 154916429,
+    "cachedContents" : {
+      "non_null" : "10504",
+      "largest" : "UPPR",
+      "null" : "59381",
+      "top" : [ {
+        "item" : "APT",
+        "count" : "3971"
+      }, {
+        "item" : "STE",
+        "count" : "3238"
+      }, {
+        "item" : "FL",
+        "count" : "1377"
+      }, {
+        "item" : "UNIT",
+        "count" : "1086"
+      }, {
+        "item" : "FRNT",
+        "count" : "280"
+      }, {
+        "item" : "RM",
+        "count" : "214"
+      }, {
+        "item" : "BLDG",
+        "count" : "147"
+      }, {
+        "item" : "#",
+        "count" : "66"
+      }, {
+        "item" : "BSMT",
+        "count" : "24"
+      }, {
+        "item" : "OFC",
+        "count" : "19"
+      }, {
+        "item" : "SPC",
+        "count" : "19"
+      }, {
+        "item" : "LBBY",
+        "count" : "14"
+      }, {
+        "item" : "LOWR",
+        "count" : "14"
+      }, {
+        "item" : "PH",
+        "count" : "10"
+      }, {
+        "item" : "LOT",
+        "count" : "8"
+      }, {
+        "item" : "UPPR",
+        "count" : "6"
+      }, {
+        "item" : "REAR",
+        "count" : "5"
+      }, {
+        "item" : "SIDE",
+        "count" : "3"
+      }, {
+        "item" : "DEPT",
+        "count" : "2"
+      }, {
+        "item" : "TRLR",
+        "count" : "1"
+      } ],
+      "smallest" : "#",
+      "count" : "69885",
+      "cardinality" : "69885"
+    },
+    "format" : { }
+  }, {
+    "id" : 624427544,
+    "name" : "Apt/Suite",
+    "dataTypeName" : "text",
+    "description" : "The unit number of the business' address.",
+    "fieldName" : "apt_suite",
+    "position" : 18,
+    "renderTypeName" : "text",
+    "tableColumnId" : 154916435,
+    "cachedContents" : {
+      "non_null" : "10109",
+      "largest" : "ZONA 10",
+      "null" : "59776",
+      "top" : [ {
+        "item" : "1",
+        "count" : "1192"
+      }, {
+        "item" : "2",
+        "count" : "857"
+      }, {
+        "item" : "3",
+        "count" : "319"
+      }, {
+        "item" : "A",
+        "count" : "231"
+      }, {
+        "item" : "B",
+        "count" : "160"
+      }, {
+        "item" : "4",
+        "count" : "138"
+      }, {
+        "item" : "2F",
+        "count" : "119"
+      }, {
+        "item" : "200",
+        "count" : "108"
+      }, {
+        "item" : "1A",
+        "count" : "106"
+      }, {
+        "item" : "5",
+        "count" : "97"
+      }, {
+        "item" : "100",
+        "count" : "89"
+      }, {
+        "item" : "2R",
+        "count" : "88"
+      }, {
+        "item" : "1F",
+        "count" : "88"
+      }, {
+        "item" : "1R",
+        "count" : "85"
+      }, {
+        "item" : "300",
+        "count" : "82"
+      }, {
+        "item" : "1B",
+        "count" : "76"
+      }, {
+        "item" : "6",
+        "count" : "67"
+      }, {
+        "item" : "1C",
+        "count" : "66"
+      }, {
+        "item" : "2A",
+        "count" : "66"
+      }, {
+        "item" : "2B",
+        "count" : "66"
+      } ],
+      "smallest" : "02",
+      "count" : "69885",
+      "cardinality" : "69885"
+    },
+    "format" : { }
+  }, {
+    "id" : 624427545,
+    "name" : "City",
+    "dataTypeName" : "text",
+    "description" : "The city where the business is located.",
+    "fieldName" : "address_city",
+    "position" : 19,
+    "renderTypeName" : "text",
+    "tableColumnId" : 26157798,
+    "width" : 148,
+    "cachedContents" : {
+      "non_null" : "69871",
+      "largest" : "ZIONSVILLE",
+      "null" : "14",
+      "top" : [ {
+        "item" : "BROOKLYN",
+        "count" : "16961"
+      }, {
+        "item" : "NEW YORK",
+        "count" : "12425"
+      }, {
+        "item" : "BRONX",
+        "count" : "8376"
+      }, {
+        "item" : "STATEN ISLAND",
+        "count" : "3714"
+      }, {
+        "item" : "JAMAICA",
+        "count" : "1963"
+      }, {
+        "item" : "FLUSHING",
+        "count" : "1820"
+      }, {
+        "item" : "ASTORIA",
+        "count" : "1189"
+      }, {
+        "item" : "CORONA",
+        "count" : "759"
+      }, {
+        "item" : "LONG ISLAND CITY",
+        "count" : "584"
+      }, {
+        "item" : "WOODSIDE",
+        "count" : "567"
+      }, {
+        "item" : "RIDGEWOOD",
+        "count" : "542"
+      }, {
+        "item" : "JACKSON HEIGHTS",
+        "count" : "517"
+      }, {
+        "item" : "OZONE PARK",
+        "count" : "486"
+      }, {
+        "item" : "YONKERS",
+        "count" : "469"
+      }, {
+        "item" : "ELMHURST",
+        "count" : "468"
+      }, {
+        "item" : "FOREST HILLS",
+        "count" : "423"
+      }, {
+        "item" : "SOUTH RICHMOND HILL",
+        "count" : "396"
+      }, {
+        "item" : "MASPETH",
+        "count" : "340"
+      }, {
+        "item" : "REGO PARK",
+        "count" : "328"
+      }, {
+        "item" : "EAST ELMHURST",
+        "count" : "326"
+      } ],
+      "smallest" : "6070 WOODHAVEN",
+      "count" : "69885",
+      "cardinality" : "69885"
+    },
+    "format" : {
+      "align" : "left"
+    }
+  }, {
+    "id" : 624427546,
+    "name" : "State",
+    "dataTypeName" : "text",
+    "description" : "The state where the business is located.",
+    "fieldName" : "address_state",
+    "position" : 20,
+    "renderTypeName" : "text",
+    "tableColumnId" : 26157799,
+    "width" : 143,
+    "cachedContents" : {
+      "non_null" : "69829",
+      "largest" : "WY",
+      "null" : "56",
+      "top" : [ {
+        "item" : "NY",
+        "count" : "65309"
+      }, {
+        "item" : "NJ",
+        "count" : "1881"
+      }, {
+        "item" : "Outside USA",
+        "count" : "261"
+      }, {
+        "item" : "FL",
+        "count" : "256"
+      }, {
+        "item" : "TX",
+        "count" : "218"
+      }, {
+        "item" : "CT",
+        "count" : "211"
+      }, {
+        "item" : "PA",
+        "count" : "209"
+      }, {
+        "item" : "CA",
+        "count" : "201"
+      }, {
+        "item" : "IL",
+        "count" : "95"
+      }, {
+        "item" : "VA",
+        "count" : "95"
+      }, {
+        "item" : "OH",
+        "count" : "94"
+      }, {
+        "item" : "AZ",
+        "count" : "75"
+      }, {
+        "item" : "GA",
+        "count" : "68"
+      }, {
+        "item" : "MA",
+        "count" : "68"
+      }, {
+        "item" : "MD",
+        "count" : "53"
+      }, {
+        "item" : "CO",
+        "count" : "53"
+      }, {
+        "item" : "MN",
+        "count" : "52"
+      }, {
+        "item" : "WA",
+        "count" : "52"
+      }, {
+        "item" : "NV",
+        "count" : "47"
+      }, {
+        "item" : "NC",
+        "count" : "44"
+      } ],
+      "smallest" : "AL",
+      "count" : "69885",
+      "cardinality" : "69885"
+    },
+    "format" : {
+      "align" : "left"
+    }
+  }, {
+    "id" : 624427547,
+    "name" : "ZIP Code",
+    "dataTypeName" : "text",
+    "description" : "The ZIP Code where the business is located.",
+    "fieldName" : "address_zip",
+    "position" : 21,
+    "renderTypeName" : "text",
+    "tableColumnId" : 26157800,
+    "width" : 136,
+    "cachedContents" : {
+      "non_null" : "69851",
+      "largest" : "X5000LJJ",
+      "null" : "34",
+      "top" : [ {
+        "item" : "11235",
+        "count" : "952"
+      }, {
+        "item" : "11214",
+        "count" : "848"
+      }, {
+        "item" : "11385",
+        "count" : "843"
+      }, {
+        "item" : "10036",
+        "count" : "821"
+      }, {
+        "item" : "11368",
+        "count" : "797"
+      }, {
+        "item" : "11229",
+        "count" : "788"
+      }, {
+        "item" : "11220",
+        "count" : "769"
+      }, {
+        "item" : "11223",
+        "count" : "758"
+      }, {
+        "item" : "11218",
+        "count" : "751"
+      }, {
+        "item" : "10019",
+        "count" : "740"
+      }, {
+        "item" : "11234",
+        "count" : "686"
+      }, {
+        "item" : "11230",
+        "count" : "675"
+      }, {
+        "item" : "11372",
+        "count" : "674"
+      }, {
+        "item" : "10314",
+        "count" : "633"
+      }, {
+        "item" : "10001",
+        "count" : "611"
+      }, {
+        "item" : "11101",
+        "count" : "599"
+      }, {
+        "item" : "11377",
+        "count" : "595"
+      }, {
+        "item" : "10467",
+        "count" : "565"
+      }, {
+        "item" : "11354",
+        "count" : "559"
+      }, {
+        "item" : "11419",
+        "count" : "553"
+      } ],
+      "smallest" : "0",
+      "count" : "69885",
+      "cardinality" : "69885"
+    },
+    "format" : {
+      "precisionStyle" : "standard",
+      "noCommas" : "true",
+      "align" : "right"
+    }
+  }, {
+    "id" : 624427548,
+    "name" : "Borough",
+    "dataTypeName" : "text",
+    "description" : "The NYC Borough where the business is located.",
+    "fieldName" : "address_borough",
+    "position" : 22,
+    "renderTypeName" : "text",
+    "tableColumnId" : 34069086,
+    "width" : 100,
+    "cachedContents" : {
+      "non_null" : "49111",
+      "largest" : "Staten Island",
+      "null" : "20774",
+      "top" : [ {
+        "item" : "Queens",
+        "count" : "13129"
+      }, {
+        "item" : "Brooklyn",
+        "count" : "13067"
+      }, {
+        "item" : "Manhattan",
+        "count" : "9987"
+      }, {
+        "item" : "Bronx",
+        "count" : "6144"
+      }, {
+        "item" : "Outside NYC",
+        "count" : "3786"
+      }, {
+        "item" : "Staten Island",
+        "count" : "2998"
+      } ],
+      "smallest" : "Bronx",
+      "count" : "69885",
+      "cardinality" : "69885"
+    },
+    "format" : {
+      "align" : "left"
+    }
+  }, {
+    "id" : 624427549,
+    "name" : "Community Board",
+    "dataTypeName" : "text",
+    "description" : "The NYC Community District where the business is located.",
+    "fieldName" : "community_board",
+    "position" : 23,
+    "renderTypeName" : "text",
+    "tableColumnId" : 164481446,
+    "width" : 100,
+    "cachedContents" : {
+      "non_null" : "44871",
+      "largest" : "503",
+      "null" : "25014",
+      "top" : [ {
+        "item" : "105",
+        "count" : "2199"
+      }, {
+        "item" : "412",
+        "count" : "1441"
+      }, {
+        "item" : "407",
+        "count" : "1410"
+      }, {
+        "item" : "401",
+        "count" : "1291"
+      }, {
+        "item" : "311",
+        "count" : "1241"
+      }, {
+        "item" : "405",
+        "count" : "1228"
+      }, {
+        "item" : "501",
+        "count" : "1211"
+      }, {
+        "item" : "315",
+        "count" : "1154"
+      }, {
+        "item" : "312",
+        "count" : "1046"
+      }, {
+        "item" : "410",
+        "count" : "1036"
+      }, {
+        "item" : "301",
+        "count" : "1035"
+      }, {
+        "item" : "409",
+        "count" : "1020"
+      }, {
+        "item" : "104",
+        "count" : "1016"
+      }, {
+        "item" : "403",
+        "count" : "1010"
+      }, {
+        "item" : "108",
+        "count" : "945"
+      }, {
+        "item" : "502",
+        "count" : "920"
+      }, {
+        "item" : "413",
+        "count" : "888"
+      }, {
+        "item" : "318",
+        "count" : "877"
+      }, {
+        "item" : "503",
+        "count" : "852"
+      }, {
+        "item" : "404",
+        "count" : "844"
+      } ],
+      "smallest" : "101",
+      "count" : "69885",
+      "cardinality" : "69885"
+    },
+    "format" : { }
+  }, {
+    "id" : 624427550,
+    "name" : "Council District",
+    "dataTypeName" : "text",
+    "description" : "The NYC City Council District where the business is located.",
+    "fieldName" : "council_district",
+    "position" : 24,
+    "renderTypeName" : "text",
+    "tableColumnId" : 164481445,
+    "width" : 100,
+    "cachedContents" : {
+      "non_null" : "44830",
+      "largest" : "51",
+      "null" : "25055",
+      "top" : [ {
+        "item" : "04",
+        "count" : "2034"
+      }, {
+        "item" : "03",
+        "count" : "1897"
+      }, {
+        "item" : "01",
+        "count" : "1341"
+      }, {
+        "item" : "48",
+        "count" : "1233"
+      }, {
+        "item" : "38",
+        "count" : "1188"
+      }, {
+        "item" : "29",
+        "count" : "1140"
+      }, {
+        "item" : "26",
+        "count" : "1097"
+      }, {
+        "item" : "50",
+        "count" : "1067"
+      }, {
+        "item" : "49",
+        "count" : "1062"
+      }, {
+        "item" : "30",
+        "count" : "1059"
+      }, {
+        "item" : "43",
+        "count" : "1031"
+      }, {
+        "item" : "34",
+        "count" : "1028"
+      }, {
+        "item" : "27",
+        "count" : "1027"
+      }, {
+        "item" : "22",
+        "count" : "1007"
+      }, {
+        "item" : "21",
+        "count" : "1004"
+      }, {
+        "item" : "28",
+        "count" : "971"
+      }, {
+        "item" : "32",
+        "count" : "961"
+      }, {
+        "item" : "39",
+        "count" : "952"
+      }, {
+        "item" : "37",
+        "count" : "926"
+      }, {
+        "item" : "02",
+        "count" : "909"
+      } ],
+      "smallest" : "01",
+      "count" : "69885",
+      "cardinality" : "69885"
+    },
+    "format" : { }
+  }, {
+    "id" : 624427551,
+    "name" : "BIN",
+    "dataTypeName" : "text",
+    "description" : "The Building Identification Number where the business is located.",
+    "fieldName" : "bin",
+    "position" : 25,
+    "renderTypeName" : "text",
+    "tableColumnId" : 164481444,
+    "width" : 100,
+    "cachedContents" : {
+      "non_null" : "43609",
+      "largest" : "5175329",
+      "null" : "26276",
+      "top" : [ {
+        "item" : "4000000",
+        "count" : "213"
+      }, {
+        "item" : "3000000",
+        "count" : "141"
+      }, {
+        "item" : "2000000",
+        "count" : "84"
+      }, {
+        "item" : "1000000",
+        "count" : "76"
+      }, {
+        "item" : "1080999",
+        "count" : "44"
+      }, {
+        "item" : "4543418",
+        "count" : "43"
+      }, {
+        "item" : "1039975",
+        "count" : "34"
+      }, {
+        "item" : "5000000",
+        "count" : "34"
+      }, {
+        "item" : "4309526",
+        "count" : "34"
+      }, {
+        "item" : "5039658",
+        "count" : "33"
+      }, {
+        "item" : "1034472",
+        "count" : "29"
+      }, {
+        "item" : "1034341",
+        "count" : "28"
+      }, {
+        "item" : "3326830",
+        "count" : "27"
+      }, {
+        "item" : "1034356",
+        "count" : "26"
+      }, {
+        "item" : "4045999",
+        "count" : "25"
+      }, {
+        "item" : "1012516",
+        "count" : "24"
+      }, {
+        "item" : "1034345",
+        "count" : "24"
+      }, {
+        "item" : "1034508",
+        "count" : "21"
+      }, {
+        "item" : "1083268",
+        "count" : "21"
+      }, {
+        "item" : "1034477",
+        "count" : "21"
+      } ],
+      "smallest" : "1000000",
+      "count" : "69885",
+      "cardinality" : "69885"
+    },
+    "format" : {
+      "noCommas" : "true"
+    }
+  }, {
+    "id" : 624427552,
+    "name" : "BBL",
+    "dataTypeName" : "text",
+    "description" : "The Borough-Block-Lot number where the business is located.",
+    "fieldName" : "bbl",
+    "position" : 26,
+    "renderTypeName" : "text",
+    "tableColumnId" : 164481443,
+    "width" : 100,
+    "cachedContents" : {
+      "non_null" : "43609",
+      "largest" : "5080480066",
+      "null" : "26276",
+      "top" : [ {
+        "item" : "4115440100",
+        "count" : "47"
+      }, {
+        "item" : "1010990043",
+        "count" : "44"
+      }, {
+        "item" : "4050447501",
+        "count" : "35"
+      }, {
+        "item" : "1013480049",
+        "count" : "34"
+      }, {
+        "item" : "5024000180",
+        "count" : "33"
+      }, {
+        "item" : "1012630007",
+        "count" : "29"
+      }, {
+        "item" : "1012620048",
+        "count" : "28"
+      }, {
+        "item" : "3084700055",
+        "count" : "27"
+      }, {
+        "item" : "1012627501",
+        "count" : "26"
+      }, {
+        "item" : "4018600100",
+        "count" : "25"
+      }, {
+        "item" : "1007090060",
+        "count" : "24"
+      }, {
+        "item" : "1012620056",
+        "count" : "24"
+      }, {
+        "item" : "1010320029",
+        "count" : "21"
+      }, {
+        "item" : "1012640040",
+        "count" : "21"
+      }, {
+        "item" : "1012630014",
+        "count" : "21"
+      }, {
+        "item" : "4142600001",
+        "count" : "20"
+      }, {
+        "item" : "3053287501",
+        "count" : "20"
+      }, {
+        "item" : "4097940048",
+        "count" : "19"
+      }, {
+        "item" : "1012620054",
+        "count" : "18"
+      }, {
+        "item" : "1012630034",
+        "count" : "18"
+      } ],
+      "smallest" : "0000000000",
+      "count" : "69885",
+      "cardinality" : "69885"
+    },
+    "format" : {
+      "noCommas" : "true"
+    }
+  }, {
+    "id" : 624427553,
+    "name" : "NTA",
+    "dataTypeName" : "text",
+    "description" : "The Neighborhood Tabulation Area where the business is located.",
+    "fieldName" : "nta",
+    "position" : 27,
+    "renderTypeName" : "text",
+    "tableColumnId" : 61232370,
+    "width" : 100,
+    "cachedContents" : {
+      "non_null" : "43972",
+      "largest" : "SI54",
+      "null" : "25913",
+      "top" : [ {
+        "item" : "MN17",
+        "count" : "1523"
+      }, {
+        "item" : "QN55",
+        "count" : "701"
+      }, {
+        "item" : "MN13",
+        "count" : "677"
+      }, {
+        "item" : "QN61",
+        "count" : "642"
+      }, {
+        "item" : "BK28",
+        "count" : "616"
+      }, {
+        "item" : "QN28",
+        "count" : "594"
+      }, {
+        "item" : "QN54",
+        "count" : "581"
+      }, {
+        "item" : "QN22",
+        "count" : "578"
+      }, {
+        "item" : "QN31",
+        "count" : "549"
+      }, {
+        "item" : "BK42",
+        "count" : "524"
+      }, {
+        "item" : "QN70",
+        "count" : "507"
+      }, {
+        "item" : "QN20",
+        "count" : "494"
+      }, {
+        "item" : "BK34",
+        "count" : "466"
+      }, {
+        "item" : "BK32",
+        "count" : "464"
+      }, {
+        "item" : "MN19",
+        "count" : "460"
+      }, {
+        "item" : "MN24",
+        "count" : "458"
+      }, {
+        "item" : "BK82",
+        "count" : "447"
+      }, {
+        "item" : "MN15",
+        "count" : "442"
+      }, {
+        "item" : "QN29",
+        "count" : "422"
+      }, {
+        "item" : "BK61",
+        "count" : "415"
+      } ],
+      "smallest" : "BK09",
+      "count" : "69885",
+      "cardinality" : "69885"
+    },
+    "format" : { }
+  }, {
+    "id" : 624427554,
+    "name" : "Census Block (2010)",
+    "dataTypeName" : "text",
+    "description" : "The 2010 Census Block where the business is located.",
+    "fieldName" : "census_block_2010_",
+    "position" : 28,
+    "renderTypeName" : "text",
+    "tableColumnId" : 164481442,
+    "cachedContents" : {
+      "non_null" : "43971",
+      "largest" : "9003",
+      "null" : "25914",
+      "top" : [ {
+        "item" : "1000",
+        "count" : "3862"
+      }, {
+        "item" : "2000",
+        "count" : "3465"
+      }, {
+        "item" : "1001",
+        "count" : "3144"
+      }, {
+        "item" : "2001",
+        "count" : "2715"
+      }, {
+        "item" : "1002",
+        "count" : "2504"
+      }, {
+        "item" : "3000",
+        "count" : "2263"
+      }, {
+        "item" : "2002",
+        "count" : "1781"
+      }, {
+        "item" : "1003",
+        "count" : "1738"
+      }, {
+        "item" : "3001",
+        "count" : "1644"
+      }, {
+        "item" : "2003",
+        "count" : "1358"
+      }, {
+        "item" : "1004",
+        "count" : "1268"
+      }, {
+        "item" : "4000",
+        "count" : "1207"
+      }, {
+        "item" : "3002",
+        "count" : "1098"
+      }, {
+        "item" : "1005",
+        "count" : "952"
+      }, {
+        "item" : "2004",
+        "count" : "877"
+      }, {
+        "item" : "4001",
+        "count" : "763"
+      }, {
+        "item" : "2005",
+        "count" : "762"
+      }, {
+        "item" : "1006",
+        "count" : "682"
+      }, {
+        "item" : "3003",
+        "count" : "671"
+      }, {
+        "item" : "5000",
+        "count" : "586"
+      } ],
+      "smallest" : "0001",
+      "count" : "69885",
+      "cardinality" : "69885"
+    },
+    "format" : {
+      "noCommas" : "true"
+    }
+  }, {
+    "id" : 624427555,
+    "name" : "Census Tract (2010)",
+    "dataTypeName" : "text",
+    "description" : "The 2010 Census Tract where the business is located.",
+    "fieldName" : "census_tract",
+    "position" : 29,
+    "renderTypeName" : "text",
+    "tableColumnId" : 164481441,
+    "width" : 100,
+    "cachedContents" : {
+      "non_null" : "44828",
+      "largest" : "99802",
+      "null" : "25057",
+      "top" : [ {
+        "item" : "96",
+        "count" : "495"
+      }, {
+        "item" : "21",
+        "count" : "215"
+      }, {
+        "item" : "76",
+        "count" : "205"
+      }, {
+        "item" : "33",
+        "count" : "195"
+      }, {
+        "item" : "7",
+        "count" : "191"
+      }, {
+        "item" : "54",
+        "count" : "180"
+      }, {
+        "item" : "226",
+        "count" : "176"
+      }, {
+        "item" : "289",
+        "count" : "176"
+      }, {
+        "item" : "871",
+        "count" : "174"
+      }, {
+        "item" : "104",
+        "count" : "169"
+      }, {
+        "item" : "58",
+        "count" : "168"
+      }, {
+        "item" : "108",
+        "count" : "166"
+      }, {
+        "item" : "65",
+        "count" : "165"
+      }, {
+        "item" : "119",
+        "count" : "151"
+      }, {
+        "item" : "41",
+        "count" : "148"
+      }, {
+        "item" : "74",
+        "count" : "148"
+      }, {
+        "item" : "19",
+        "count" : "146"
+      }, {
+        "item" : "63",
+        "count" : "143"
+      }, {
+        "item" : "98",
+        "count" : "143"
+      }, {
+        "item" : "138",
+        "count" : "142"
+      } ],
+      "smallest" : "1",
+      "count" : "69885",
+      "cardinality" : "69885"
+    },
+    "format" : {
+      "noCommas" : "true"
+    }
+  }, {
+    "id" : 624427556,
+    "name" : "Latitude",
+    "dataTypeName" : "number",
+    "description" : "The latitudinal coordinate where the business is located.",
+    "fieldName" : "latitude",
+    "position" : 30,
+    "renderTypeName" : "number",
+    "tableColumnId" : 154916432,
+    "width" : 100,
+    "cachedContents" : {
+      "non_null" : "45996",
+      "largest" : "47.5765318",
+      "null" : "23889",
+      "top" : [ {
+        "item" : "40.58230457095598",
+        "count" : "32"
+      }, {
+        "item" : "40.758226805707956",
+        "count" : "32"
+      }, {
+        "item" : "40.67004755675707",
+        "count" : "26"
+      }, {
+        "item" : "40.75703326730581",
+        "count" : "23"
+      }, {
+        "item" : "40.75739571541868",
+        "count" : "22"
+      }, {
+        "item" : "40.75719252876094",
+        "count" : "21"
+      }, {
+        "item" : "40.646489931901215",
+        "count" : "20"
+      }, {
+        "item" : "40.75721997999364",
+        "count" : "19"
+      }, {
+        "item" : "40.75782342931539",
+        "count" : "19"
+      }, {
+        "item" : "40.707380328349345",
+        "count" : "18"
+      }, {
+        "item" : "40.64832044578112",
+        "count" : "18"
+      }, {
+        "item" : "40.75700305512625",
+        "count" : "17"
+      }, {
+        "item" : "40.767363420596666",
+        "count" : "14"
+      }, {
+        "item" : "40.733848",
+        "count" : "13"
+      }, {
+        "item" : "40.610059129575966",
+        "count" : "13"
+      }, {
+        "item" : "40.744521105429",
+        "count" : "13"
+      }, {
+        "item" : "40.7561920718278",
+        "count" : "13"
+      }, {
+        "item" : "40.757919",
+        "count" : "13"
+      }, {
+        "item" : "40.6613541596485",
+        "count" : "13"
+      }, {
+        "item" : "40.75695907728295",
+        "count" : "12"
+      } ],
+      "smallest" : "0",
+      "count" : "69885",
+      "cardinality" : "69885"
+    },
+    "format" : {
+      "precision" : "5"
+    }
+  }, {
+    "id" : 624427557,
+    "name" : "Longitude",
+    "dataTypeName" : "number",
+    "description" : "The longitudinal coordinate where the business is located.",
+    "fieldName" : "longitude",
+    "position" : 31,
+    "renderTypeName" : "number",
+    "tableColumnId" : 154916436,
+    "width" : 100,
+    "cachedContents" : {
+      "non_null" : "45996",
+      "largest" : "40.8846883",
+      "null" : "23889",
+      "top" : [ {
+        "item" : "-73.96606610619004",
+        "count" : "32"
+      }, {
+        "item" : "-74.16905343328875",
+        "count" : "32"
+      }, {
+        "item" : "-73.84264537457251",
+        "count" : "26"
+      }, {
+        "item" : "-73.97947976528437",
+        "count" : "23"
+      }, {
+        "item" : "-73.98029180455218",
+        "count" : "22"
+      }, {
+        "item" : "-73.97985510928227",
+        "count" : "21"
+      }, {
+        "item" : "-73.9760867777466",
+        "count" : "20"
+      }, {
+        "item" : "-73.97773248375582",
+        "count" : "19"
+      }, {
+        "item" : "-73.97987675828107",
+        "count" : "19"
+      }, {
+        "item" : "-73.79611172540667",
+        "count" : "18"
+      }, {
+        "item" : "-73.78828125130184",
+        "count" : "18"
+      }, {
+        "item" : "-73.97936787890136",
+        "count" : "17"
+      }, {
+        "item" : "-73.994288822108",
+        "count" : "14"
+      }, {
+        "item" : "-73.98742672460722",
+        "count" : "13"
+      }, {
+        "item" : "-73.871578",
+        "count" : "13"
+      }, {
+        "item" : "-73.999231",
+        "count" : "13"
+      }, {
+        "item" : "-73.99056478174674",
+        "count" : "13"
+      }, {
+        "item" : "-73.96968010080575",
+        "count" : "13"
+      }, {
+        "item" : "-73.92209392808607",
+        "count" : "13"
+      }, {
+        "item" : "-73.9681942563908",
+        "count" : "12"
+      } ],
+      "smallest" : "-122.6696955",
+      "count" : "69885",
+      "cardinality" : "69885"
+    },
+    "format" : {
+      "precision" : "6"
+    }
+  } ],
+  "grants" : [ {
+    "inherited" : false,
+    "type" : "viewer",
+    "flags" : [ "public" ]
+  } ],
+  "metadata" : {
+    "rdfSubject" : "0",
+    "rdfClass" : "",
+    "attachments" : [ {
+      "filename" : "Archived_Legally_Operating_Businesses_20240924.csv",
+      "assetId" : "2ac8f932-3ce2-4172-813c-5c5a485a19bc",
+      "name" : "Archived_Legally_Operating_Businesses.csv"
+    }, {
+      "filename" : "DCWP_Issued_Licenses_Data Dictionary.xlsx",
+      "assetId" : "07ac3678-414d-4a2d-8db9-3803857f0fde",
+      "name" : "DCWP_Issued_Licenses_Data Dictionary.xlsx"
+    } ],
+    "custom_fields" : {
+      "Update" : {
+        "Automation" : "Yes",
+        "Date Made Public" : "2/22/2016",
+        "Update Frequency" : "Weekly",
+        "Data Change Frequency" : "As needed"
+      },
+      "Legislative Compliance" : {
+        "Geo-coding Attached?" : "No"
+      },
+      "Dataset Information" : {
+        "Agency" : "Department of Consumer and Worker Protection (DCWP)"
+      }
+    },
+    "rowLabel" : "license issued by DCWP and its current status.",
+    "availableDisplayTypes" : [ "table", "fatrow", "page" ],
+    "renderTypeConfig" : {
+      "visible" : {
+        "table" : true
+      }
+    }
+  },
+  "owner" : {
+    "id" : "5fuc-pqz2",
+    "displayName" : "NYC OpenData",
+    "profileImageUrlLarge" : "/api/users/5fuc-pqz2/profile_images/LARGE",
+    "profileImageUrlMedium" : "/api/users/5fuc-pqz2/profile_images/THUMB",
+    "profileImageUrlSmall" : "/api/users/5fuc-pqz2/profile_images/TINY",
+    "screenName" : "NYC OpenData",
+    "type" : "interactive",
+    "flags" : [ "acceptedEula", "mayBeStoriesCoOwner" ]
+  },
+  "query" : { },
+  "rights" : [ "read" ],
+  "tableAuthor" : {
+    "id" : "5fuc-pqz2",
+    "displayName" : "NYC OpenData",
+    "profileImageUrlLarge" : "/api/users/5fuc-pqz2/profile_images/LARGE",
+    "profileImageUrlMedium" : "/api/users/5fuc-pqz2/profile_images/THUMB",
+    "profileImageUrlSmall" : "/api/users/5fuc-pqz2/profile_images/TINY",
+    "screenName" : "NYC OpenData",
+    "type" : "interactive",
+    "flags" : [ "acceptedEula", "mayBeStoriesCoOwner" ]
+  },
+  "tags" : [ "license", "dcwp", "industry", "business", "individual", "city government", "department of consumer and worker protection", "department of consumer affairs", "dca", "consumer" ],
+  "flags" : [ "default", "ownerMayBeContacted", "restorable", "restorePossibleForType" ]
+}

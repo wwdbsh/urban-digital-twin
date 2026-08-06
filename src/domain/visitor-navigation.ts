@@ -27,6 +27,12 @@ export interface NavigationUrlState extends ExplorationUrlState {
   visibleLayers?: string[];
   /** URL-restored category/facet state for the active release. */
   facets?: string[];
+  /** Optional additive exterior asset package; base/civic release identity remains separate. */
+  exteriorReleaseId?: string | null;
+  /** Commercial frontage metadata/signs are opt-in with the exterior package. */
+  commercial?: boolean;
+  /** Optional accepted storefront deep-link while preserving its building identity. */
+  storefrontId?: string | null;
 }
 
 export interface SavedPlace {
@@ -86,6 +92,9 @@ export function parseNavigationUrl(value: string): NavigationUrlState {
     const url = new URL(value);
     const dataValue = url.searchParams.get("data");
     const releaseValue = url.searchParams.get("release");
+    const exteriorValue = url.searchParams.get("exterior");
+    const commercialValue = url.searchParams.get("commercial");
+    const storefrontValue = url.searchParams.get("storefront");
     const isFixtureData = dataValue === "fixture" || dataValue === "fixtures";
     const civicData = dataValue === "civic-context" || releaseValue === "manhattan-civic-context-20260804";
     const dataMode: NavigationDataMode | undefined = dataValue && !isFixtureData || releaseValue ? civicData ? "civic-context" : "real-pilot" : undefined;
@@ -104,10 +113,11 @@ export function parseNavigationUrl(value: string): NavigationUrlState {
       ...(layerValue ? { visibleLayers: [...new Set(layerValue.split(",").map((item) => item.trim()).filter(Boolean))].sort() } : {}),
       ...(facetValue ? { facets: [...new Set(facetValue.split(",").map((item) => item.trim()).filter(Boolean))].sort() } : {}),
     };
-    if (!hasPose) return { ...base, ...dataState, ...filterState, cameraMode, pose: null, poseInvalid: false };
+    const overlayState = exteriorValue ? { exteriorReleaseId: exteriorValue, commercial: commercialValue === "1" || commercialValue === "true", storefrontId: storefrontValue } : {};
+    if (!hasPose) return { ...base, ...dataState, ...filterState, ...overlayState, cameraMode, pose: null, poseInvalid: false };
     const values = Object.fromEntries(poseKeys.map((key) => [key, parseNumber(url.searchParams.get(key))]));
     const pose = normalizeCameraPose({ longitude: values.lon!, latitude: values.lat!, height: values.height!, heading: values.heading!, pitch: values.pitch!, roll: values.roll! });
-    return { ...base, ...dataState, ...filterState, cameraMode, pose, poseInvalid: pose === null };
+    return { ...base, ...dataState, ...filterState, ...overlayState, cameraMode, pose, poseInvalid: pose === null };
   } catch {
     return { ...base, cameraMode: "explore", pose: null, poseInvalid: true };
   }
@@ -124,6 +134,12 @@ export function navigationUrl(value: NavigationUrlState, base: string): string {
     url.searchParams.delete("data");
     url.searchParams.delete("release");
   }
+  if (value.exteriorReleaseId) url.searchParams.set("exterior", value.exteriorReleaseId);
+  else url.searchParams.delete("exterior");
+  if (value.commercial && value.exteriorReleaseId) url.searchParams.set("commercial", "1");
+  else url.searchParams.delete("commercial");
+  if (value.storefrontId && value.exteriorReleaseId && value.commercial) url.searchParams.set("storefront", value.storefrontId);
+  else url.searchParams.delete("storefront");
   if (value.visibleLayers && value.visibleLayers.length > 0) url.searchParams.set("layers", [...new Set(value.visibleLayers)].sort().join(","));
   else url.searchParams.delete("layers");
   if (value.facets && value.facets.length > 0) url.searchParams.set("facets", [...new Set(value.facets)].sort().join(","));

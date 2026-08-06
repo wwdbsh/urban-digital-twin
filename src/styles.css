@@ -316,6 +316,7 @@ button {
   position: absolute;
   top: 18px;
   left: 18px;
+  z-index: 6;
   display: flex;
   box-sizing: border-box;
   flex-direction: column;
@@ -331,6 +332,10 @@ button {
   backdrop-filter: blur(8px);
 }
 
+.runtime-note strong {
+  font-size: 12px;
+}
+
 .runtime-note span {
   min-width: 0;
   overflow: hidden;
@@ -339,6 +344,20 @@ button {
   color: #aab8be;
   font-size: 11px;
   font-weight: 430;
+}
+
+.runtime-note .runtime-note-overlay {
+  color: #ffd166;
+}
+
+.runtime-note .runtime-note-attribution {
+  min-width: 0;
+  overflow: visible;
+  color: #9deef1;
+  font-size: 10px;
+  font-weight: 430;
+  text-decoration: underline;
+  white-space: normal;
 }
 
 .camera-controls {
@@ -596,6 +615,14 @@ button {
   backdrop-filter: blur(8px);
 }
 
+.category-controls-poi {
+  bottom: calc(var(--details-bottom-inset) + 70px);
+  max-width: min(280px, calc(100% - var(--details-right-inset) - 36px));
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  justify-content: flex-start;
+}
+
 .category-controls > span {
   padding: 0 5px;
   color: #9ba9b0;
@@ -828,6 +855,47 @@ button {
   margin: 0 0 18px;
   font-size: 15px;
 }
+
+.claim-badge {
+  display: inline-block;
+  margin: 0 0 10px;
+  padding: 4px 8px;
+  border: 1px solid #c8a557;
+  border-radius: 999px;
+  background: #fff7df;
+  color: #735719;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.claim-badge[data-visual-evidence-level="licensed-near-real"] {
+  border-color: #2c9872;
+  background: #e7fff4;
+  color: #176247;
+}
+
+.commercial-frontage-list {
+  display: grid;
+  gap: 10px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.commercial-frontage-list li {
+  display: grid;
+  gap: 3px;
+  padding: 9px;
+  border: 1px solid #d0d8d8;
+  border-radius: 5px;
+  background: #fbfcfc;
+  font-size: 11px;
+}
+
+.commercial-frontage-list li span { color: #657075; overflow-wrap: anywhere; }
+.commercial-frontage-list li[data-placement-decision="unknown"],
+.commercial-frontage-list li[data-placement-decision="ambiguous"] { background: #fffaf0; }
 
 .place-truth-heading {
   display: flex;
@@ -1361,7 +1429,7 @@ button {
   .map-region { --controls-left-inset: 0px; }
 
   .runtime-note {
-    max-width: calc(100% - 180px);
+    max-width: calc(100% - 160px);
     padding: 8px 9px;
     font-size: 10px;
   }

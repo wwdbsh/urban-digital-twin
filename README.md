@@ -37,6 +37,55 @@ The delivery decision is [`Decision 0013`](docs/decisions/0013-manhattan-citywid
 The runtime composition decision is [`Decision 0015`](docs/decisions/0015-manhattan-civic-runtime-composition.md), with its evidence in
 [`MANHATTAN_CIVIC_RUNTIME_COMPOSITION_IMPLEMENTATION.md`](docs/codex/MANHATTAN_CIVIC_RUNTIME_COMPOSITION_IMPLEMENTATION.md).
 
+## Stage 3 block 835 exterior/commercial overlay (2026-08-05)
+
+The optional local-only Stage 3 overlay is an additive sibling of the
+citywide/civic releases. It is enabled explicitly, without relabelling the
+base release, for example:
+
+```text
+/?data=citywide&release=manhattan-civic-context-20260804&exterior=manhattan-esb-block-exterior-pilot-20260805&commercial=1
+```
+
+The release contains exactly the 14 OTI parents in NYC tax block 835 and 28
+per-building GLBs (LOD0/LOD1). Empire State Building (`doitt:778052`) and
+Herald Towers (`doitt:131170`) carry licensed-near-real claims only for the
+visible evidence-backed portions; the other twelve are
+source-constrained massing with explicitly estimated general/storefront
+geometry. The commercial layer has eight neutral text-only signs, 144
+metadata-only records, 12 ambiguous candidates, and 72 unknown candidates;
+unknown or ambiguous occupants never become signs or pick proxies.
+
+NYC OTI, DOHMH, AddressPoint, and DCWP records remain in the independent NYC
+partition. OSM-derived observations and association edges are isolated in the
+ODbL 1.0 partition, with visible `OpenStreetMap` attribution and the exact
+local query/response retained for reproducibility. No Google content, external
+textures/fonts/logos, provider request, or runtime network access is used.
+The source packet, evidence matrix, Blender/browser validation paths, and
+remaining limitations are recorded in
+[`docs/implementation/20260805-stage3-commercial-frontage.md`](docs/implementation/20260805-stage3-commercial-frontage.md)
+and [`Decision 0016`](docs/decisions/0016-stage3-commercial-frontage.md).
+
+The bounded validation aliases are:
+
+```sh
+pnpm exterior-pilot:validate:raw -- --raw-root data/raw/manhattan-esb-block-commercial-20260805
+pnpm exterior-pilot:validate -- --root public/data/manhattan-esb-block-exterior-pilot-20260805
+pnpm exterior-pilot:benchmark -- --root public/data/manhattan-esb-block-exterior-pilot-20260805
+```
+
+The Stage 3 runtime and source payloads remain local-only, and public
+deployment, hosting, redistribution, and other public conveyance remain
+excluded. The local-runtime implementation is validated by the recorded
+checks below; implementation and review/fix workers did not stage, commit, or
+push this work unit. The 2026-08-06 approval
+`codex-user-turn:2026-08-06:stage3-private-repo-commit-push-approval` authorizes
+this separately authorized release task to commit and push this work unit to
+the existing private GitHub repository only. It does not expand the original
+2026-08-05 acquisition approval, whose commit/push exclusions may remain as the
+scope of that acquisition request; public deployment or conveyance still
+requires separate approval.
+
 ## Prerequisites and setup
 
 - Node.js `>=22.12.0`

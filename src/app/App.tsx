@@ -56,6 +56,7 @@ import type { CitywideReleaseAdapter, CitywideRuntimeMetrics } from "../runtime/
 import { loadTravelContextRelease, type TravelContextFault, type TravelContextReleaseAdapter, type TravelContextRuntimeMetrics } from "../runtime/travel-context-release-runtime";
 import { TRAVEL_CONTEXT_BUDGETS, TRAVEL_CONTEXT_RELEASE_ID, TRAVEL_CONTEXT_TILE_LEVEL } from "../release/travel-context-release";
 import { AggregateRequestBudget, ComposedReleaseAdapter, type ComposedReleaseMetrics } from "../runtime/composed-release-runtime";
+import { EXTERIOR_PILOT_RELEASE_ID, loadExteriorPilotRelease, type CommercialStorefrontPlacement, type LoadedExteriorPilotRelease } from "../runtime/exterior-pilot-release";
 
 const navigation = [
   { label: "Explore", icon: Compass },
@@ -239,6 +240,12 @@ export function overlayLayoutPolicy(inspectorOpen: boolean, mobile: boolean): Ov
   };
 }
 
+function navigationOverlayFields(exteriorRequested: boolean, selectedStorefrontId: string | null) {
+  return exteriorRequested
+    ? { exteriorReleaseId: EXTERIOR_PILOT_RELEASE_ID, commercial: true, storefrontId: selectedStorefrontId }
+    : {};
+}
+
 function civicDetailValue(feature: Feature | undefined, key: string): string {
   const value = feature?.attributes[key];
   if (!hasDisplayValue(value)) return "Unknown / not provided";
@@ -295,6 +302,7 @@ export function App() {
   const initialRealRequest = initialNavigation.dataMode === "real-pilot" || initialNavigation.dataMode === "civic-context";
   const initialCitywideRequest = initialNavigation.releaseId === CITYWIDE_RELEASE_ID;
   const initialCivicRequest = initialNavigation.releaseId === TRAVEL_CONTEXT_RELEASE_ID || initialNavigation.dataMode === "civic-context";
+  const initialExteriorRequest = initialNavigation.exteriorReleaseId === EXTERIOR_PILOT_RELEASE_ID && initialNavigation.commercial === true;
   const initialDataMode: NavigationDataMode = "fixtures";
   const initialReleaseId = null;
   const fixtureFeatureIds = useMemo(() => new Set(fixtureAdapter.getFeatures().map((feature) => feature.id)), []);
@@ -317,6 +325,10 @@ export function App() {
   const [composedAdapter, setComposedAdapter] = useState<ComposedReleaseAdapter | null>(null);
   const [compositionLoadState, setCompositionLoadState] = useState<"loading" | "ready" | "failed">("loading");
   const [composedMetrics, setComposedMetrics] = useState<ComposedReleaseMetrics>(EMPTY_COMPOSED_METRICS);
+  const [exteriorRequested, setExteriorRequested] = useState(initialExteriorRequest);
+  const [exteriorOverlay, setExteriorOverlay] = useState<LoadedExteriorPilotRelease | null>(null);
+  const [exteriorLoadState, setExteriorLoadState] = useState<"idle" | "loading" | "ready" | "failed">(initialExteriorRequest ? "loading" : "idle");
+  const [exteriorMessage, setExteriorMessage] = useState(initialExteriorRequest ? "Exterior/commercial overlay is loading from the local release…" : "");
   const [, setRealFallbackActive] = useState(initialRealRequest);
   const [realDataMessage, setRealDataMessage] = useState("Real pilot artifact not loaded; fixture fallback is active.");
   const [landmarkAssetMessage, setLandmarkAssetMessage] = useState("Landmark GLB package not loaded; procedural fallback is active.");
@@ -332,6 +344,7 @@ export function App() {
   const [shareMessage, setShareMessage] = useState<string | null>(null);
   const [selectedFeature, setSelectedFeature] = useState(runtimeMarker);
   const [activeSelectionId, setActiveSelectionId] = useState<string | null>(initialSelectionId);
+  const [selectedStorefrontId, setSelectedStorefrontId] = useState<string | null>(initialNavigation.storefrontId ?? null);
   const [overlapFeatures, setOverlapFeatures] = useState<Feature[]>([]);
   const [selectedCatalogEntityId, setSelectedCatalogEntityId] = useState<string | null>(null);
   const [qualityOpen, setQualityOpen] = useState(false);
@@ -378,6 +391,8 @@ export function App() {
   const selectedCivicFacetsRef = useRef(selectedCivicFacets);
   const citywideAdapterRef = useRef<CitywideReleaseAdapter | null>(citywideAdapter);
   const composedAdapterRef = useRef<ComposedReleaseAdapter | null>(composedAdapter);
+  const exteriorRequestedRef = useRef(exteriorRequested);
+  const selectedStorefrontIdRef = useRef(selectedStorefrontId);
   const aggregateBudgetRef = useRef(new AggregateRequestBudget());
   const aggregateCacheRef = useRef<CitywideLruCache<unknown>>(new CitywideLruCache<unknown>(CITYWIDE_BUDGETS.maxLoadedShards, CITYWIDE_BUDGETS.maxLoadedBytes));
   const citywideModeRef = useRef(false);
@@ -404,8 +419,16 @@ export function App() {
   dataModeRef.current = dataMode;
   citywideAdapterRef.current = citywideAdapter;
   composedAdapterRef.current = composedAdapter;
+  exteriorRequestedRef.current = exteriorRequested;
+  selectedStorefrontIdRef.current = selectedStorefrontId;
+  const getOverlayUrlFields = useCallback(() => navigationOverlayFields(exteriorRequestedRef.current, selectedStorefrontIdRef.current), []);
+  const updateSelectedStorefront = useCallback((storefrontId: string | null) => {
+    selectedStorefrontIdRef.current = storefrontId;
+    setSelectedStorefrontId(storefrontId);
+  }, []);
   const citywideMode = dataMode === "real-pilot" && activeAdapter === citywideAdapter && citywideAdapter !== null;
   const civicMode = dataMode === "civic-context" && activeAdapter === composedAdapter && composedAdapter !== null;
+  const exteriorActive = Boolean(exteriorOverlay && exteriorLoadState === "ready" && (citywideMode || civicMode) && exteriorOverlay.compatibleWith(CITYWIDE_RELEASE_ID));
   citywideModeRef.current = citywideMode;
   civicModeRef.current = civicMode;
   if (dataMode === "fixtures") releaseIdRef.current = null;
@@ -548,6 +571,33 @@ export function App() {
   }, []);
 
   useEffect(() => {
+    if (!exteriorRequested) {
+      setExteriorOverlay(null);
+      setExteriorLoadState("idle");
+      setExteriorMessage("");
+      return undefined;
+    }
+    let active = true;
+    const controller = new AbortController();
+    setExteriorLoadState("loading");
+    setExteriorMessage("Exterior/commercial overlay is loading from the local release…");
+    void loadExteriorPilotRelease(`/data/${EXTERIOR_PILOT_RELEASE_ID}/`, controller.signal).then((loaded) => {
+      if (!active) return;
+      setExteriorOverlay(loaded);
+      setExteriorLoadState("ready");
+      setExteriorMessage(loaded.assetFailures.length > 0
+        ? `Exterior overlay active with ${loaded.assetFailures.length} asset fallback${loaded.assetFailures.length === 1 ? "" : "s"}; the affected building remains procedural.`
+        : `Exterior overlay ${EXTERIOR_PILOT_RELEASE_ID} verified locally: 14 buildings, 28 LOD assets, ${loaded.diagnostics.acceptedStorefronts} accepted storefront signs.`);
+    }).catch((error: unknown) => {
+      if (!active || (error instanceof DOMException && error.name === "AbortError")) return;
+      setExteriorOverlay(null);
+      setExteriorLoadState("failed");
+      setExteriorMessage(error instanceof Error ? `${error.message} The untouched base/civic release remains active.` : "Exterior overlay failed closed; the untouched base/civic release remains active.");
+    });
+    return () => { active = false; controller.abort(); };
+  }, [exteriorRequested]);
+
+  useEffect(() => {
     if (!citywideAdapter || !civicAdapter || citywideLoadState !== "ready" || civicLoadState !== "ready") {
       setComposedAdapter(null);
       setCompositionLoadState(citywideLoadState === "failed" || civicLoadState === "failed" ? "failed" : "loading");
@@ -664,7 +714,7 @@ export function App() {
       pendingNavigationPoseRef.current = null;
     }
     if (initialRealNavigationPendingRef.current) return;
-    if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrl({ featureId: activeSelectionRef.current ?? initialNavigation.featureId, query: queryRef.current || initialNavigation.query, cameraMode: cameraModeRef.current, pose: normalizedCamera, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(layerVisibilityRef.current).filter(([, visible]) => visible).map(([layer]) => layer), facets: civicModeRef.current ? selectedCivicFacetsRef.current : selectedCategoriesRef.current }, window.location.href));
+    if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrl({ featureId: activeSelectionRef.current ?? initialNavigation.featureId, query: queryRef.current || initialNavigation.query, cameraMode: cameraModeRef.current, pose: normalizedCamera, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(layerVisibilityRef.current).filter(([, visible]) => visible).map(([layer]) => layer), facets: civicModeRef.current ? selectedCivicFacetsRef.current : selectedCategoriesRef.current, ...getOverlayUrlFields() }, window.location.href));
     const citywide = citywideAdapterRef.current;
     if (citywideModeRef.current && citywide) {
       void citywide.refreshViewport(camera).then((features) => {
@@ -690,7 +740,7 @@ export function App() {
     const stream = stressStreamRef.current;
     if (!stream) return;
     void stream.refresh(tileCamera).then(() => publishStressState(stream));
-  }, [publishCitywideMetrics, publishComposedMetrics, publishStressState]);
+  }, [getOverlayUrlFields, publishCitywideMetrics, publishComposedMetrics, publishStressState]);
 
   const moveStressCamera = (anchorIndex: number, distanceMeters: number) => {
     const anchor = SYNTHETIC_TILE_ANCHORS[anchorIndex];
@@ -738,6 +788,7 @@ export function App() {
       if (activeElement instanceof HTMLElement && !activeElement.closest(".inspector")) detailsReturnRef.current = activeElement;
     }
     setOverlapFeatures([]);
+    updateSelectedStorefront(null);
     setSelectedFeature(toCityFeature(feature));
     setActiveSelectionId(feature.id);
     setSelectedCatalogEntityId(syntheticCatalog.entities.find((entity) => entity.fields.runtimeFeatureId === feature.id)?.canonicalId ?? null);
@@ -746,7 +797,7 @@ export function App() {
     if (focusTransaction.shouldFly) setFocusRequest((request) => request + 1);
     setInspectorOpen(true);
     setDeepLinkMessage(null);
-    if (options.syncUrl !== false && typeof window !== "undefined") window.history.pushState({}, "", navigationUrl({ featureId: feature.id, query: queryRef.current, cameraMode: cameraModeRef.current, pose: cameraPoseRef.current, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(layerVisibilityRef.current).filter(([, visible]) => visible).map(([layer]) => layer), facets: civicModeRef.current ? selectedCivicFacetsRef.current : selectedCategoriesRef.current }, window.location.href));
+    if (options.syncUrl !== false && typeof window !== "undefined") window.history.pushState({}, "", navigationUrl({ featureId: feature.id, query: queryRef.current, cameraMode: cameraModeRef.current, pose: cameraPoseRef.current, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(layerVisibilityRef.current).filter(([, visible]) => visible).map(([layer]) => layer), facets: civicModeRef.current ? selectedCivicFacetsRef.current : selectedCategoriesRef.current, ...getOverlayUrlFields() }, window.location.href));
     window.setTimeout(() => detailsHeadingRef.current?.focus(), 0);
     const citywide = citywideAdapterRef.current;
     if (citywideModeRef.current && citywide && feature.attributes.citywideDetailLoaded !== true) {
@@ -766,7 +817,35 @@ export function App() {
         if (!(error instanceof DOMException && error.name === "AbortError")) setDeepLinkMessage(error instanceof Error ? error.message : "Civic/base detail shard failed closed; no substitute record was selected.");
       });
     }
-  }, [publishComposedMetrics, publishCitywideMetrics]);
+  }, [getOverlayUrlFields, publishComposedMetrics, publishCitywideMetrics, updateSelectedStorefront]);
+
+  const selectStorefront = useCallback((placement: CommercialStorefrontPlacement) => {
+    const building = placement.canonicalBuildingId ? activeAdapter.getFeature(placement.canonicalBuildingId) : undefined;
+    if (building) {
+      selectFeature(building, { syncUrl: false });
+      // selectFeature clears any prior storefront selection; restore the
+      // accepted proxy after the building identity has become authoritative.
+      updateSelectedStorefront(placement.storefrontId);
+      setDeepLinkMessage(null);
+    } else {
+      updateSelectedStorefront(placement.storefrontId);
+      setDeepLinkMessage(`Storefront ${placement.storefrontId} has no loaded canonical building; no substitute identity was selected.`);
+    }
+    if (typeof window !== "undefined") {
+      window.history.pushState({}, "", navigationUrl({
+        featureId: building?.id ?? activeSelectionRef.current,
+        query: queryRef.current,
+        cameraMode: cameraModeRef.current,
+        pose: cameraPoseRef.current,
+        poseInvalid: false,
+        dataMode: dataModeRef.current,
+        releaseId: releaseIdRef.current,
+        visibleLayers: Object.entries(layerVisibilityRef.current).filter(([, visible]) => visible).map(([layer]) => layer),
+        facets: civicModeRef.current ? selectedCivicFacetsRef.current : selectedCategoriesRef.current,
+        ...getOverlayUrlFields(),
+      }, window.location.href));
+    }
+  }, [activeAdapter, getOverlayUrlFields, selectFeature, updateSelectedStorefront]);
 
   const selectOverlapFeatures = useCallback((features: Feature[]) => {
     const byId = new Map(features.map((feature) => [feature.id, feature]));
@@ -787,6 +866,10 @@ export function App() {
     if (typeof window === "undefined") return undefined;
     const applyUrl = () => {
       const state = parseNavigationUrl(window.location.href);
+      const requestedExterior = state.exteriorReleaseId === EXTERIOR_PILOT_RELEASE_ID && state.commercial === true;
+      exteriorRequestedRef.current = requestedExterior;
+      updateSelectedStorefront(state.storefrontId ?? null);
+      setExteriorRequested(requestedExterior);
       setQuery(state.query);
       setCameraMode(state.cameraMode); setPoseInvalid(state.poseInvalid);
       if (state.visibleLayers) {
@@ -841,13 +924,19 @@ export function App() {
           return;
         }
         const feature = citywideAdapter.getFeature(state.featureId);
-        if (feature) selectFeature(feature, { syncUrl: false });
+        if (feature) {
+          selectFeature(feature, { syncUrl: false });
+          if (state.storefrontId) updateSelectedStorefront(state.storefrontId);
+        }
         else {
           setActiveSelectionId(null);
           setFocusFeatureId(null);
           setInspectorOpen(false);
           void citywideAdapter.loadDetail(state.featureId).then((loadedFeature) => {
-            if (loadedFeature && citywideAdapterRef.current === citywideAdapter && citywideModeRef.current) selectFeature(loadedFeature, { syncUrl: false });
+            if (loadedFeature && citywideAdapterRef.current === citywideAdapter && citywideModeRef.current) {
+              selectFeature(loadedFeature, { syncUrl: false });
+              if (state.storefrontId) updateSelectedStorefront(state.storefrontId);
+            }
             else if (!loadedFeature && activeSelectionRef.current === null) setDeepLinkMessage(`This shared link points to a parent unavailable in release ${CITYWIDE_RELEASE_ID}; no substitute was selected.`);
           }).catch(() => setDeepLinkMessage(`This shared link could not load parent ${state.featureId}; no substitute was selected.`));
         }
@@ -871,7 +960,7 @@ export function App() {
             setFocusFeatureId(null);
             setInspectorOpen(false);
             setDeepLinkMessage(terminalRealFallbackNoticeRef.current);
-            if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrl({ featureId: baseFeatureId, query: state.query, cameraMode: state.cameraMode, pose: state.pose, poseInvalid: state.poseInvalid, dataMode: "real-pilot", releaseId: CITYWIDE_RELEASE_ID, visibleLayers: state.visibleLayers, facets: state.facets }, window.location.href));
+            if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrl({ featureId: baseFeatureId, query: state.query, cameraMode: state.cameraMode, pose: state.pose, poseInvalid: state.poseInvalid, dataMode: "real-pilot", releaseId: CITYWIDE_RELEASE_ID, visibleLayers: state.visibleLayers, facets: state.facets, ...getOverlayUrlFields() }, window.location.href));
             return;
           }
           if (civicLoadState === "failed" || compositionLoadState === "failed") {
@@ -909,13 +998,19 @@ export function App() {
           return;
         }
         const feature = composedAdapter.getFeature(state.featureId);
-        if (feature) selectFeature(feature, { syncUrl: false });
+        if (feature) {
+          selectFeature(feature, { syncUrl: false });
+          if (state.storefrontId) updateSelectedStorefront(state.storefrontId);
+        }
         else {
           setActiveSelectionId(null);
           setFocusFeatureId(null);
           setInspectorOpen(false);
           void composedAdapter.loadDetail(state.featureId).then((loadedFeature) => {
-            if (loadedFeature && composedAdapterRef.current === composedAdapter && civicModeRef.current) selectFeature(loadedFeature, { syncUrl: false });
+            if (loadedFeature && composedAdapterRef.current === composedAdapter && civicModeRef.current) {
+              selectFeature(loadedFeature, { syncUrl: false });
+              if (state.storefrontId) updateSelectedStorefront(state.storefrontId);
+            }
             else if (!loadedFeature && activeSelectionRef.current === null) setDeepLinkMessage(`This shared link points to a parent unavailable in release ${TRAVEL_CONTEXT_RELEASE_ID}; no substitute was selected.`);
           }).catch(() => setDeepLinkMessage(`This shared link could not load parent ${state.featureId}; no substitute was selected.`));
         }
@@ -971,7 +1066,10 @@ export function App() {
         if (activeAdapter !== realAdapter) setActiveAdapter(realAdapter);
         if (!state.featureId) { setDeepLinkMessage(state.poseInvalid ? "This shared camera pose is malformed; the safe real pilot view is active." : null); return; }
         const feature = realAdapter.getFeature(state.featureId);
-        if (feature) selectFeature(feature, { syncUrl: false });
+        if (feature) {
+          selectFeature(feature, { syncUrl: false });
+          if (state.storefrontId) updateSelectedStorefront(state.storefrontId);
+        }
         else {
           setActiveSelectionId(null);
           setFocusFeatureId(null);
@@ -992,13 +1090,16 @@ export function App() {
         return;
       }
       const feature = fixtureAdapter.getFeature(state.featureId);
-      if (feature) selectFeature(feature, { syncUrl: false });
+      if (feature) {
+        selectFeature(feature, { syncUrl: false });
+        if (state.storefrontId) updateSelectedStorefront(state.storefrontId);
+      }
       else { setActiveSelectionId(null); setDeepLinkMessage(terminalRealFallbackNoticeRef.current ?? (state.poseInvalid ? "This shared link has an invalid camera pose and a feature that is not in the current catalog release." : `This shared link points to a feature unavailable in release ${state.releaseId ?? "the active fixture catalog"}; no substitute was selected.`)); }
     };
     applyUrl();
     window.addEventListener("popstate", applyUrl);
     return () => window.removeEventListener("popstate", applyUrl);
-  }, [activeAdapter, civicAdapter, civicLoadState, citywideAdapter, citywideLoadState, composedAdapter, compositionLoadState, realAdapter, realLoadState, selectFeature]);
+  }, [activeAdapter, civicAdapter, civicLoadState, citywideAdapter, citywideLoadState, composedAdapter, compositionLoadState, getOverlayUrlFields, realAdapter, realLoadState, selectFeature, updateSelectedStorefront]);
 
   const closeInspector = useCallback(() => {
     setInspectorOpen(false);
@@ -1071,7 +1172,7 @@ export function App() {
 
   const copyShareLink = async () => {
     if (typeof window === "undefined") return;
-    const link = navigationUrl({ featureId: selectedFeature.id, query: queryRef.current, cameraMode: cameraModeRef.current, pose: cameraPoseRef.current, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(layerVisibility).filter(([, visible]) => visible).map(([layer]) => layer), facets: civicMode ? selectedCivicFacets : selectedCategories }, window.location.href);
+    const link = navigationUrl({ featureId: selectedFeature.id, query: queryRef.current, cameraMode: cameraModeRef.current, pose: cameraPoseRef.current, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(layerVisibility).filter(([, visible]) => visible).map(([layer]) => layer), facets: civicMode ? selectedCivicFacets : selectedCategories, ...getOverlayUrlFields() }, window.location.href);
     setShareMessage("Share link copied.");
     try { await navigator.clipboard?.writeText(link); } catch { setShareMessage(link); }
     window.setTimeout(() => setShareMessage(null), 2500);
@@ -1082,7 +1183,7 @@ export function App() {
       ? selectedCategories.filter((item) => item !== category)
       : [...selectedCategories, category];
     setSelectedCategories(next);
-    if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrl({ featureId: activeSelectionRef.current, query: queryRef.current, cameraMode: cameraModeRef.current, pose: cameraPoseRef.current, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(layerVisibility).filter(([, visible]) => visible).map(([layer]) => layer), facets: next }, window.location.href));
+    if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrl({ featureId: activeSelectionRef.current, query: queryRef.current, cameraMode: cameraModeRef.current, pose: cameraPoseRef.current, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(layerVisibility).filter(([, visible]) => visible).map(([layer]) => layer), facets: next, ...getOverlayUrlFields() }, window.location.href));
   };
 
   const toggleCivicFacet = (facet: CivicFacet) => {
@@ -1090,7 +1191,7 @@ export function App() {
       ? selectedCivicFacets.filter((item) => item !== facet)
       : [...selectedCivicFacets, facet];
     setSelectedCivicFacets(next);
-    if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrl({ featureId: activeSelectionRef.current, query: queryRef.current, cameraMode: cameraModeRef.current, pose: cameraPoseRef.current, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(layerVisibility).filter(([, visible]) => visible).map(([layer]) => layer), facets: next }, window.location.href));
+    if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrl({ featureId: activeSelectionRef.current, query: queryRef.current, cameraMode: cameraModeRef.current, pose: cameraPoseRef.current, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(layerVisibility).filter(([, visible]) => visible).map(([layer]) => layer), facets: next, ...getOverlayUrlFields() }, window.location.href));
   };
 
   const availableCategories = useMemo<PlaceCategory[]>(() => {
@@ -1117,10 +1218,11 @@ export function App() {
   const toggleLayer = (layer: RuntimeLayerId) => {
     const next = { ...layerVisibility, [layer]: !layerVisibility[layer] };
     setLayerVisibility(next);
-    if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrl({ featureId: activeSelectionRef.current, query: queryRef.current, cameraMode: cameraModeRef.current, pose: cameraPoseRef.current, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(next).filter(([, visible]) => visible).map(([visibleLayer]) => visibleLayer), facets: civicMode ? selectedCivicFacets : selectedCategories }, window.location.href));
+    if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrl({ featureId: activeSelectionRef.current, query: queryRef.current, cameraMode: cameraModeRef.current, pose: cameraPoseRef.current, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(next).filter(([, visible]) => visible).map(([visibleLayer]) => visibleLayer), facets: civicMode ? selectedCivicFacets : selectedCategories, ...getOverlayUrlFields() }, window.location.href));
   };
 
   const selectedRuntimeFeature = activeAdapter.getFeature(selectedFeature.id);
+  const selectedCommercialBuilding = exteriorActive && selectedRuntimeFeature?.kind === "building" && exteriorOverlay ? exteriorOverlay.commercialForBuilding(selectedRuntimeFeature.id) : null;
   const selectedPlaceTruth = dataMode === "fixtures" && selectedRuntimeFeature ? placeTruthByRuntimeFeatureId.get(selectedRuntimeFeature.id) : undefined;
   const selectedRealPlace = useMemo<RealPlaceView | null>(() => {
     // Citywide uses its own parent/detail projection below. Do not parse a
@@ -1196,7 +1298,7 @@ export function App() {
     if (!normalized) return;
     setCameraMode(nextMode); setCameraPose(normalized); setPoseInvalid(false);
     setCameraRequest((current) => ({ ...normalized, requestId: (current?.requestId ?? 0) + 1 }));
-    if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrl({ featureId: activeSelectionRef.current, query: queryRef.current, cameraMode: nextMode, pose: normalized, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(layerVisibility).filter(([, visible]) => visible).map(([layer]) => layer), facets: civicMode ? selectedCivicFacets : selectedCategories }, window.location.href));
+    if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrl({ featureId: activeSelectionRef.current, query: queryRef.current, cameraMode: nextMode, pose: normalized, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(layerVisibility).filter(([, visible]) => visible).map(([layer]) => layer), facets: civicMode ? selectedCivicFacets : selectedCategories, ...getOverlayUrlFields() }, window.location.href));
   };
   const focusCurrentSelection = () => {
     if (!selectedRuntimeFeature) return;
@@ -1271,7 +1373,7 @@ export function App() {
       if (firstCivicFeature) selectFeature(firstCivicFeature);
       else {
         setActiveSelectionId(null); setFocusFeatureId(null); setInspectorOpen(false);
-        if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrl({ featureId: null, query: queryRef.current, cameraMode: cameraModeRef.current, pose: cameraPoseRef.current, poseInvalid: false, dataMode: "civic-context", releaseId: TRAVEL_CONTEXT_RELEASE_ID, visibleLayers: Object.entries(layerVisibility).filter(([, visible]) => visible).map(([layer]) => layer), facets: selectedCivicFacets }, window.location.href));
+        if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrl({ featureId: null, query: queryRef.current, cameraMode: cameraModeRef.current, pose: cameraPoseRef.current, poseInvalid: false, dataMode: "civic-context", releaseId: TRAVEL_CONTEXT_RELEASE_ID, visibleLayers: Object.entries(layerVisibility).filter(([, visible]) => visible).map(([layer]) => layer), facets: selectedCivicFacets, ...getOverlayUrlFields() }, window.location.href));
       }
       return;
     }
@@ -1329,7 +1431,7 @@ export function App() {
     setFocusFeatureId(null);
     setInspectorOpen(false);
     setDeepLinkMessage(null);
-    if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrl({ featureId: null, query: queryRef.current, cameraMode: cameraModeRef.current, pose: cameraPoseRef.current, poseInvalid: false, dataMode: "real-pilot", releaseId: CITYWIDE_RELEASE_ID, visibleLayers: Object.entries(layerVisibility).filter(([, visible]) => visible).map(([layer]) => layer), facets: selectedCategories }, window.location.href));
+    if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrl({ featureId: null, query: queryRef.current, cameraMode: cameraModeRef.current, pose: cameraPoseRef.current, poseInvalid: false, dataMode: "real-pilot", releaseId: CITYWIDE_RELEASE_ID, visibleLayers: Object.entries(layerVisibility).filter(([, visible]) => visible).map(([layer]) => layer), facets: selectedCategories, ...getOverlayUrlFields() }, window.location.href));
   };
 
   const switchCivicMode = () => switchDataMode("civic-context");
@@ -1481,11 +1583,13 @@ export function App() {
       <section className={`map-region${inspectorOpen ? " inspector-open" : ""}`} aria-label="City explorer" data-overlay-policy="map-with-inspector-overlay">
         <CesiumViewport
           adapter={activeAdapter}
-          assetResolver={activeAdapter.assetResolver}
+          assetResolver={exteriorActive && exteriorOverlay ? exteriorOverlay.resolver : activeAdapter.assetResolver}
           focusRequest={focusRequest}
           focusFeatureId={focusFeatureId}
           focusOverlayOpen={inspectorOpen}
           onFeatureSelected={selectFeature}
+          commercialOverlay={exteriorActive && exteriorOverlay ? exteriorOverlay : null}
+          onStorefrontSelected={selectStorefront}
           onFeatureOverlap={selectOverlapFeatures}
           featureFilter={featureFilter}
           visibleLayers={layerVisibility}
@@ -1521,14 +1625,20 @@ export function App() {
           </div>
           <button type="button" onClick={() => setOverlapFeatures([])}>Close choices</button>
         </section>}
-        <div className="runtime-note">
-          Local runtime layer
-          <span>{civicMode ? `Real NYC civic-context release · ${TRAVEL_CONTEXT_RELEASE_ID} over base ${CITYWIDE_RELEASE_ID} · local snapshot-relative coverage` : citywideMode ? `Real NYC citywide release · ${CITYWIDE_RELEASE_ID} · local snapshot-relative coverage` : dataMode === "real-pilot" ? "Real NYC pilot · bounded Flatiron/NoMad/Union Square coverage" : "Synthetic fixture only · no real Manhattan coverage"}</span>
+        <div
+          className="runtime-note"
+          aria-label={exteriorActive ? "Block 835 exterior commercial overlay status" : "Local runtime layer"}
+          data-overlay-status={exteriorRequested ? exteriorLoadState : undefined}
+        >
+          {exteriorActive ? <strong title={exteriorMessage}>Block 835 · 14 buildings · {exteriorOverlay?.diagnostics.acceptedStorefronts ?? 0} signs</strong> : <strong>Local runtime layer</strong>}
+          {!exteriorRequested && <span>{civicMode ? `Real NYC civic-context release · ${TRAVEL_CONTEXT_RELEASE_ID} over base ${CITYWIDE_RELEASE_ID} · local snapshot-relative coverage` : citywideMode ? `Real NYC citywide release · ${CITYWIDE_RELEASE_ID} · local snapshot-relative coverage` : dataMode === "real-pilot" ? "Real NYC pilot · bounded Flatiron/NoMad/Union Square coverage" : "Synthetic fixture only · no real Manhattan coverage"}</span>}
+          {exteriorRequested && !exteriorActive && <span className="runtime-note-overlay" role="status">{exteriorLoadState === "loading" ? "Block 835 overlay · loading local release…" : exteriorMessage || "Block 835 overlay unavailable; base release remains active."}</span>}
+          {exteriorActive && <a className="runtime-note-attribution" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">Map data © OpenStreetMap contributors.</a>}
         </div>
-        {deepLinkMessage && <div className="exploration-notice" role="alert">{deepLinkMessage} <button type="button" onClick={() => { terminalRealFallbackNoticeRef.current = null; setDeepLinkMessage(null); setPoseInvalid(false); window.history.replaceState({}, "", navigationUrl({ featureId: activeSelectionRef.current, query, cameraMode, pose: cameraPose, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(layerVisibility).filter(([, visible]) => visible).map(([layer]) => layer), facets: civicMode ? selectedCivicFacets : selectedCategories }, window.location.href)); }}>Dismiss</button></div>}
+        {deepLinkMessage && <div className="exploration-notice" role="alert">{deepLinkMessage} <button type="button" onClick={() => { terminalRealFallbackNoticeRef.current = null; setDeepLinkMessage(null); setPoseInvalid(false); window.history.replaceState({}, "", navigationUrl({ featureId: activeSelectionRef.current, query, cameraMode, pose: cameraPose, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(layerVisibility).filter(([, visible]) => visible).map(([layer]) => layer), facets: civicMode ? selectedCivicFacets : selectedCategories, ...getOverlayUrlFields() }, window.location.href)); }}>Dismiss</button></div>}
         {shareMessage && <div className="share-notice" role="status">{shareMessage}</div>}
         <section className={`tile-diagnostics ${diagnosticsOpen ? "is-open" : "is-collapsed"}`} aria-label="Tile diagnostics">
-          <button className="overlay-launcher" type="button" aria-expanded={diagnosticsOpen} onClick={() => { setDiagnosticsOpen((open) => !open); setDirectionsOpen(false); }}><strong>Diagnostics</strong><span>{diagnosticsOpen ? "Collapse" : "Runtime health"}</span></button>
+          <button className="overlay-launcher" type="button" aria-expanded={diagnosticsOpen} onClick={() => { setDiagnosticsOpen((open) => !open); setDirectionsOpen(false); setLayersOpen(false); }}><strong>Diagnostics</strong><span>{diagnosticsOpen ? "Collapse" : "Runtime health"}</span></button>
           {diagnosticsOpen && <div className="tile-diagnostics-content">
           <div><strong>Tile diagnostics</strong><button type="button" aria-pressed={stressMode} onClick={() => setStressMode((enabled) => !enabled)}>{stressMode ? "Normal mode" : "Stress harness"}</button></div>
           <span>{civicMode ? `Composed ${TRAVEL_CONTEXT_RELEASE_ID} over ${CITYWIDE_RELEASE_ID} · one aggregate streaming budget · search/detail shards remain on demand` : citywideMode ? "Citywide viewport shards loaded lazily · global search/detail shards remain on demand" : dataMode === "real-pilot" ? "Partitioned real pilot loaded · not full-Manhattan performance" : "Fixture-only synthetic harness · not full-Manhattan performance"}</span>
@@ -1665,7 +1775,7 @@ export function App() {
             ))}
           </div>}
         </div>
-        {availableCategories.length > 0 && <div className="category-controls" aria-label="POI categories">
+        {availableCategories.length > 0 && <div className="category-controls category-controls-poi" aria-label="POI categories" role="group">
           <span>POI</span>
           {availableCategories.map((category) => (
             <button
@@ -1679,7 +1789,7 @@ export function App() {
             </button>
           ))}
         </div>}
-        {civicMode && <div className="category-controls" aria-label="Civic context facets">
+        {civicMode && <div className="category-controls category-controls-civic" aria-label="Civic context facets" role="group">
           <span>Civic facets</span>
           {CIVIC_FACETS.map((facet) => (
             <button
@@ -1694,7 +1804,7 @@ export function App() {
           ))}
         </div>}
         <section className={`directions-panel ${directionsOpen ? "is-open" : "is-collapsed"}`} aria-label="Synthetic directions">
-          <button className="overlay-launcher" type="button" aria-expanded={directionsOpen} onClick={() => { setDirectionsOpen((open) => !open); setDiagnosticsOpen(false); }}><strong>Directions</strong><span>{directionsOpen ? "Collapse" : "Plan a synthetic route"}</span></button>
+          <button className="overlay-launcher" type="button" aria-expanded={directionsOpen} onClick={() => { setDirectionsOpen((open) => !open); setDiagnosticsOpen(false); setLayersOpen(false); }}><strong>Directions</strong><span>{directionsOpen ? "Collapse" : "Plan a synthetic route"}</span></button>
           {directionsOpen && <div className="directions-content">
           <div className="directions-heading"><strong>Directions</strong><span>Synthetic 3D route preview</span></div>
           <div className="direction-field">
@@ -1783,10 +1893,52 @@ export function App() {
           <section className="inspector-section asset-detail" aria-label="3D asset diagnostics">
             <h2>3D asset diagnostics</h2>
             {(() => {
-              const resolution = activeAdapter.getAssetResolution?.(selectedFeature.id, 240, 1);
+              const selectedAssetDistanceMeters = selectedFeature.id === activeSelectionId ? 180 : 240;
+              const resolution = exteriorActive && exteriorOverlay
+                ? exteriorOverlay.resolve(selectedFeature.id, selectedAssetDistanceMeters, 1)
+                : activeAdapter.getAssetResolution?.(selectedFeature.id, selectedAssetDistanceMeters, 1);
               return resolution?.kind === "asset" ? <dl><div><dt>Resolution</dt><dd>Verified {resolution.lod.id}</dd></div><div><dt>Content</dt><dd>{resolution.lod.content.relativeContentRef}</dd></div><div><dt>Geometric error</dt><dd>{resolution.lod.geometricErrorMeters} m</dd></div></dl> : <><p className="section-label">Procedural geometry fallback remains active.</p><p className="section-label" role="status">{resolution?.diagnostic.message ?? "No asset manifest is published for this data mode."}</p></>;
             })()}
           </section>
+
+          {selectedCommercialBuilding && exteriorOverlay && <section className="inspector-section exterior-commercial-detail" aria-label="Exterior commercial frontage provenance">
+            <h2>Block 835 exterior / frontage</h2>
+            {(() => {
+              const commercial = exteriorOverlay.document.commercialRelease;
+              const resolution = exteriorOverlay.resolve(selectedCommercialBuilding.canonicalBuildingId, 240, 1);
+              const doittId = selectedRuntimeFeature?.attributes.citywideDoittId ?? selectedCommercialBuilding.canonicalBuildingId.replace(/^doitt:/u, "");
+              const bin = selectedRuntimeFeature?.attributes.citywideBin ?? "Unknown / not provided";
+              const bbl = selectedRuntimeFeature?.attributes.citywideBaseBbl ?? "Unknown / not provided";
+              const tenantById = new Map(commercial.tenantEntities.map((tenant) => [tenant.canonicalTenantId, tenant]));
+              const observationsById = new Map(commercial.tenantObservations.map((observation) => [observation.observationId, observation]));
+              return <>
+                <p className="claim-badge" data-visual-evidence-level={selectedCommercialBuilding.visualEvidenceLevel}>{selectedCommercialBuilding.visualEvidenceLevel === "licensed-near-real" ? "Near-real licensed details (ESB/Herald visible evidence only)" : "Source-constrained massing; estimated facade/storefront geometry"}</p>
+                <p className="section-label">{selectedCommercialBuilding.claim}</p>
+                <dl>
+                  <div><dt>Canonical / DOITT</dt><dd>{selectedCommercialBuilding.canonicalBuildingId} · {doittId}</dd></div>
+                  <div><dt>BIN / BBL</dt><dd>{String(bin)} · {String(bbl)}</dd></div>
+                  <div><dt>Exterior LOD / checksum</dt><dd>{resolution.kind === "asset" ? `${resolution.lod.id} · ${resolution.lod.content.sha256}` : "Procedural fallback · no verified overlay content"}</dd></div>
+                  <div><dt>Storefront signs</dt><dd>{selectedCommercialBuilding.acceptedPlacements.length} accepted neutral-text sign{selectedCommercialBuilding.acceptedPlacements.length === 1 ? "" : "s"} · {selectedCommercialBuilding.unknownPlacements.length} unknown/ambiguous placement{selectedCommercialBuilding.unknownPlacements.length === 1 ? "" : "s"}</dd></div>
+                </dl>
+                {resolution.kind === "procedural-fallback" && <p className="section-label" role="status">Overlay diagnostic: {resolution.diagnostic.message}</p>}
+                {selectedCommercialBuilding.placements.length > 0 && <ul className="commercial-frontage-list">
+                  {selectedCommercialBuilding.placements.map((placement, placementIndex) => {
+                    const tenant = placement.canonicalTenantId ? tenantById.get(placement.canonicalTenantId) : undefined;
+                    const observation = placement.sourceObservationId ? observationsById.get(placement.sourceObservationId) : undefined;
+                    const eligible = placement.signPolicy === "neutral-text-only" && placement.placementDecision.startsWith("storefront");
+                    return <li key={`${placement.storefrontId}:${placementIndex}`} data-placement-decision={placement.placementDecision} data-selected={selectedStorefrontId === placement.storefrontId} aria-current={selectedStorefrontId === placement.storefrontId ? "true" : undefined}>
+                      <strong>{eligible ? (tenant?.signText ?? placement.displayName ?? "Unknown") : "Unknown / metadata-only"}</strong>
+                      {selectedStorefrontId === placement.storefrontId && <span role="status">Selected storefront proxy</span>}
+                      <span>{placement.storefrontId} · {placement.placementDecision} · confidence {placement.confidence.toFixed(2)}</span>
+                      <span>{observation?.source ?? "Source unknown"} {observation?.sourceRecordId ?? ""} · observed {observation?.sourceRecordObservedAt ?? "Unknown"} · status {observation?.rawStatus ?? "Unknown / not live"}</span>
+                      <span>{placement.evidenceIds.join(", ")} · {placement.licensePartition} · {placement.reasons.join("; ")}</span>
+                    </li>;
+                  })}
+                </ul>}
+                <p className="section-label">ODbL-derived frontage metadata retains {commercial.totals.acceptedSigns} accepted signs and {Number(commercial.rejectionConflictSummary.unknownStorefronts ?? 0)} unknown storefronts; no current occupancy is inferred. Map data © OpenStreetMap contributors.</p>
+              </>;
+            })()}
+          </section>}
 
           {selectedCatalogEntity && (
             <section className="inspector-section reconciliation-detail">

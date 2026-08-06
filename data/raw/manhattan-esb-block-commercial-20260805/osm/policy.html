@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>API Usage policy</title>
+
+    <!-- syntax highlighting CSS -->
+    <link rel="stylesheet" href="/css/syntax.css">
+
+    <!-- Bootstrap and overrides -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/overrides.css">
+
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+
+    <!-- link to Atom feed -->
+    <link type="application/atom+xml" rel="alternate" href="https://operations.osmfoundation.org/feed.xml" title="OSMF Operations Working Group" />
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="navbar navbar-default">
+        <div class="container-fluid">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <div class="navbar-header">
+            <a class="navbar-brand" href="/">OSMF OWG</a>
+          </div>
+          <ul class="nav navbar-nav">
+            <li><a href="/">Home</a></li>
+            <li><a href="/reports/">Reports</a></li>
+            <li><a href="/post-mortems/">Post-mortems</a></li>
+            <li><a href="/policies/">Policies</a></li>
+            <li><a href="/meetings/">Meetings</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <h1 id="api-usage-policy">API Usage policy</h1>
+
+<p><em>This forms part of a set of usage policies governing core OpenStreetMap services. Note that ‘API’ relates to the data editing API. For developers accessing maps (often using javascript “APIs”) the OpenStreetMap <a href="/policies/tiles/">Tile Usage Policy</a> is more relevant</em></p>
+
+<hr />
+
+<p>The editing API is provided in order to edit the map data, <strong>not</strong> for read-only purposes or projects. Clients may be blocked without notice if they are affecting the service level for others or causing data corruption.</p>
+
+<p>Large or frequent data users must use the download service “<a href="https://wiki.openstreetmap.org/wiki/Planet.osm">planet.osm</a>” other alternatives described below.</p>
+
+<p>To avoid having your access blocked, please discuss your requirement with <a href="https://wiki.openstreetmap.org/wiki/System_Administrators">system administrators</a> either via their wiki pages or on the <a href="https://wiki.openstreetmap.org/wiki/IRC">IRC channel</a> prior to starting.</p>
+
+<p>The OSMF Operations Working Group (OWG) are the team in charge of API Usage policies for OSMF-run services.</p>
+
+<p>Use of any OSMF provided service is further governed by the <a href="https://wiki.osmfoundation.org/wiki/Terms_of_Use">OSMF Terms of Use</a>.</p>
+
+<h2 id="requirements">Requirements</h2>
+
+<ul>
+  <li>Clearly display <a href="https://wiki.openstreetmap.org/wiki/Licence">licence</a> <a href="https://wiki.osmfoundation.org/wiki/Licence/Attribution_Guidelines">attribution</a> as required.</li>
+  <li>Do not actively or passively encourage copyright infringement.</li>
+  <li>Do not submit website forms in an automated manner or on behalf of users. Website forms are intended only for users interacting directly with the website.</li>
+</ul>
+
+<h2 id="technical-usage-requirements">Technical Usage Requirements</h2>
+
+<ul>
+  <li><strong>Valid User-Agent</strong> identifying application and version. Faking another app’s User-Agent WILL get you blocked.</li>
+  <li>If known, a <strong>valid HTTP Referer</strong>.</li>
+  <li><strong>Maximum of 2 download threads</strong>.</li>
+</ul>
+
+<h2 id="heavy-users">Heavy Users</h2>
+
+<p>We request that you</p>
+
+<ul>
+  <li>set up your own data server, usually with <a href="https://wiki.openstreetmap.org/wiki/Planet.osm">planet.osm</a>; or</li>
+  <li>use another provider. See list below.</li>
+</ul>
+
+<p>All of the tools and software needed to create a complete mirror of OpenStreetMap and/or its API are available as open source software and can be found in OpenStreetMap’s source repositories at <a href="https://github.com/openstreetmap/">github.com/openstreetmap/</a>. Additional useful tools and API’s can be found there too.</p>
+
+<h2 id="privacy">Privacy</h2>
+
+<p>Use of all services is subject to the <a href="http://wiki.osmfoundation.org/wiki/Privacy_Policy">OpenStreetMap Foundation privacy policy</a>. Please do not submit personal data or other confidential material to any of our services.</p>
+
+<h2 id="changes-to-this-policy">Changes to this policy</h2>
+
+<p>This policy may change at any time subject to the needs and constraints of the project. Commercial services, or those that seek donations, should be especially aware that access may be withdrawn at any point: you may no longer be able to serve your paying customers if access is withdrawn.</p>
+
+<h2 id="alternative-openstreetmap-data-providers">Alternative OpenStreetMap Data Providers</h2>
+
+<ul>
+  <li><a href="https://wiki.openstreetmap.org/wiki/Planet.osm">planet.osm</a> (and many 3rd party mirrors) - This bulk data download service offers the entire planet of vector data, as well as diffs for syncing on a minutely basis. Smaller “extract” downloads are available by geographical area.</li>
+  <li><a href="https://wiki.openstreetmap.org/wiki/Overpass_API">Overpass API</a> - This is an API provided for read only purposes. It is part of the OpenStreetMap ecosystem, but not as “core” as the main editing API covered by this policy. They are however subject to limitations and policies of their own. Note that the servers which run these APIs would be using the same planet.osm diffs to stay in sync.</li>
+  <li><a href="https://adiffs.osmcha.org/">https://adiffs.osmcha.org/</a> - This is a web service providing <a href="https://wiki.openstreetmap.org/wiki/Overpass_API/Augmented_Diffs">augmented diffs</a> for OpenStreetMap changesets. This service was developed to support <a href="https://osmcha.org/">OSMCha</a>, a changeset viewer and validation tool for OpenStreetMap. OSMCha is a Charter Project of <a href="https://openstreetmap.us/">OpenStreetMap US</a>, a 501(c)(3) nonprofit organization that aims to grow and support the OpenStreetMap community in the United States and beyond. OpenStreetMap US provides financial support for OSMCha development and infrastructure.</li>
+  <li>See <a href="https://wiki.openstreetmap.org/wiki/Commercial_OSM_Software_and_Services">List of Companies offering OpenStreetMap Services / Support / Consulting</a>.</li>
+</ul>
+
+
+      <footer class="footer">
+        <div class="container">
+          <p>You can contribute to this website at <a href="https://github.com/openstreetmap/owg-website">github.com/openstreetmap/owg-website</a></p>
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>

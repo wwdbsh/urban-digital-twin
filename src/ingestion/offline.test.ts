@@ -45,6 +45,29 @@ describe("source registry and city adapter", () => {
     });
   });
 
+  it("keeps licensed facade evidence scoped to ESB and Herald only", () => {
+    const esb = sourceRegistry.find((source) => source.id === "commons.empire-state-photo-cc-by-sa-4");
+    const herald = sourceRegistry.find((source) => source.id === "commons.herald-towers-photo-cc-by-sa-4");
+    expect(esb?.approval.state).toBe("approved");
+    expect(herald?.approval.state).toBe("approved");
+    expect(esb?.licenseClass).toBe("cc-by-sa-4.0");
+    expect(herald?.licenseClass).toBe("cc-by-sa-4.0");
+    expect(sourceRegistry.filter((source) => source.id.startsWith("commons.")).map((source) => source.id)).toEqual(expect.arrayContaining([
+      "commons.empire-state-photo-cc-by-sa-4",
+      "commons.herald-towers-photo-cc-by-sa-4",
+    ]));
+  });
+
+  it("records the commercial approval fingerprint as a lowercase SHA-256 digest", () => {
+    const commercialApprovals = sourceRegistry
+      .flatMap((source) => "approvalEvidence" in source ? [source.approvalEvidence] : [])
+      .filter((evidence) => evidence?.evidenceId === "codex-user-turn:2026-08-05:bounded-overpass-single-query-approval");
+
+    expect(commercialApprovals.length).toBeGreaterThan(0);
+    for (const evidence of commercialApprovals) expect(evidence?.fingerprintSha256).toMatch(/^[0-9a-f]{64}$/);
+    expect(commercialApprovals[0]?.fingerprintSha256).toBe("b4fc25a430fabacaba0250bc223e99e071b1aaa04f563607e5c8c97b05b20949");
+  });
+
   it("validates the reviewable Manhattan slice polygon", () => {
     const result = validateCityAdapter(manhattanAdapter);
     expect(result.ok).toBe(true);

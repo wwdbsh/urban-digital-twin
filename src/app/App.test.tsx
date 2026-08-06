@@ -5,6 +5,8 @@ import "@testing-library/jest-dom/vitest";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { runtimeFixtureFeatures } from "../domain/features";
 import type { Feature } from "../domain/schema";
+import type { CameraPose } from "../domain/visitor-navigation";
+import type { CommercialStorefrontPlacement } from "../runtime/exterior-pilot-release";
 
 vi.mock("../features/explorer/CesiumViewport", async () => {
   const React = await import("react");
@@ -16,9 +18,13 @@ vi.mock("../features/explorer/CesiumViewport", async () => {
     focusOverlayOpen?: boolean;
     cameraPoseRequest?: { longitude: number; latitude: number; height: number; heading: number; pitch: number; roll: number; requestId: number };
     onFeatureSelected?: (feature: Feature) => void;
+    onCameraChanged?: (camera: CameraPose) => void;
+    onStorefrontSelected?: (placement: CommercialStorefrontPlacement) => void;
   };
 
-  const MockCesiumViewport = ({ adapter, focusRequest, focusFeatureId, focusOverlayOpen, cameraPoseRequest, onFeatureSelected }: MockProps) => {
+  const MockCesiumViewport = ({ adapter, focusRequest, focusFeatureId, focusOverlayOpen, cameraPoseRequest, onFeatureSelected, onCameraChanged, onStorefrontSelected }: MockProps) => {
+    const [cameraCallbackSetupCount, setCameraCallbackSetupCount] = React.useState(0);
+    React.useEffect(() => { setCameraCallbackSetupCount((count) => count + 1); }, [onCameraChanged]);
     const locatedFeature = adapter.getFeatures().find((feature) => feature.kind === "poi") ?? adapter.getFeatures()[0]!;
     const locationlessFeature: Feature = {
       ...locatedFeature,
@@ -34,9 +40,12 @@ vi.mock("../features/explorer/CesiumViewport", async () => {
         "data-focus-feature-id": focusFeatureId ?? "",
         "data-focus-overlay-open": focusOverlayOpen ? "true" : "false",
         "data-camera-pose-request": cameraPoseRequest ? `${cameraPoseRequest.longitude},${cameraPoseRequest.latitude},${cameraPoseRequest.height},${cameraPoseRequest.pitch},${cameraPoseRequest.requestId}` : "",
+        "data-camera-callback-setup-count": cameraCallbackSetupCount,
       },
       React.createElement("button", { type: "button", onClick: () => onFeatureSelected?.(locatedFeature) }, "Mock located pick"),
       React.createElement("button", { type: "button", onClick: () => onFeatureSelected?.(locationlessFeature) }, "Mock locationless pick"),
+      React.createElement("button", { type: "button", onClick: () => onStorefrontSelected?.({ canonicalBuildingId: locatedFeature.id, storefrontId: "storefront:osm:node:10908810995@1" } as CommercialStorefrontPlacement) }, "Mock storefront pick"),
+      React.createElement("button", { type: "button", onClick: () => onCameraChanged?.({ longitude: -73.99, latitude: 40.748, height: 900, heading: 15, pitch: -45, roll: 0 }) }, "Mock camera update"),
     );
   };
 
@@ -48,8 +57,10 @@ vi.mock("../features/explorer/CesiumViewport", async () => {
 });
 
 import { App, overlayLayoutPolicy, selectionFocusTransaction } from "./App";
+import { navigationUrl, parseNavigationUrl } from "../domain/visitor-navigation";
 
-afterEach(() => cleanup());
+const initialTestUrl = window.location.href;
+afterEach(() => { cleanup(); window.history.replaceState({}, "", initialTestUrl); });
 const locatedFeature = runtimeFixtureFeatures.find((feature) => feature.kind === "poi")!;
 
 describe("explorer overlay policy", () => {
@@ -91,6 +102,32 @@ describe("explorer overlay policy", () => {
 });
 
 describe("App overlay and selection regressions", () => {
+  it("keeps a selected storefront in the URL after a camera update without rebuilding the viewport callback", async () => {
+    const storefrontId = "storefront:osm:node:10908810995@1";
+    window.history.replaceState({}, "", `/?exterior=manhattan-esb-block-exterior-pilot-20260805&commercial=1`);
+    render(<App />);
+
+    const viewport = document.querySelector<HTMLElement>(".viewport");
+    expect(viewport).not.toBeNull();
+    await waitFor(() => expect(viewport).toHaveAttribute("data-camera-callback-setup-count", "1"));
+    fireEvent.click(screen.getByRole("button", { name: "Mock storefront pick" }));
+    await waitFor(() => expect(new URL(window.location.href).searchParams.get("storefront")).toBe(storefrontId));
+    const callbackSetupCount = viewport?.getAttribute("data-camera-callback-setup-count");
+
+    fireEvent.click(screen.getByRole("button", { name: "Mock camera update" }));
+    await waitFor(() => expect(new URL(window.location.href).searchParams.get("storefront")).toBe(storefrontId));
+    expect(viewport).toHaveAttribute("data-camera-callback-setup-count", callbackSetupCount);
+  });
+
+  it("keeps the optional commercial overlay and storefront deep-link separate from the base release", () => {
+    const url = navigationUrl({ featureId: "doitt:778052", query: "", cameraMode: "overview", pose: null, poseInvalid: false, dataMode: "civic-context", releaseId: "manhattan-civic-context-20260804", exteriorReleaseId: "manhattan-esb-block-exterior-pilot-20260805", commercial: true, storefrontId: "storefront:osm:node:1@2" }, "http://localhost/");
+    const parsed = parseNavigationUrl(url);
+    expect(parsed.releaseId).toBe("manhattan-civic-context-20260804");
+    expect(parsed.exteriorReleaseId).toBe("manhattan-esb-block-exterior-pilot-20260805");
+    expect(parsed.commercial).toBe(true);
+    expect(parsed.storefrontId).toBe("storefront:osm:node:1@2");
+  });
+
   it("requests the normalized URL pose or safe default on the first viewport render", () => {
     render(<App />);
 
