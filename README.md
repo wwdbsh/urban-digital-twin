@@ -86,6 +86,17 @@ the existing private GitHub repository only. It does not expand the original
 scope of that acquisition request; public deployment or conveyance still
 requires separate approval.
 
+The camera-stabilized `b192253` acceptance replay now closes the local Stage 3
+proof: all 8/8 accepted storefronts were selected through native Cesium canvas
+pointer actions with exact storefront and canonical `doitt:` identity, details,
+URL/history/reload persistence, all four typed fault journeys, normal
+Fixture→Citywide→Civic transitions, desktop/iPhone 14 layout, reduced motion,
+local-only network, and frame-pacing gates. Fresh evidence is retained under
+`/tmp/udt-stage3-acceptance-proof-20260806/`; the implementation record names
+the exact files. This is a source-constrained, local-only validation baseline,
+not a claim of photorealism, current occupancy, survey-grade geometry, or a
+complete Manhattan model; no public deployment or conveyance is included.
+
 ## Prerequisites and setup
 
 - Node.js `>=22.12.0`

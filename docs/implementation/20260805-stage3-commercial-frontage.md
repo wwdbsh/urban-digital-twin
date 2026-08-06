@@ -332,3 +332,152 @@ remain mandatory limitations; it is not a fully complete product gate. The
 executable tests, assets, source partitions, hashes, local-only network, and
 measured frame probe pass. No procedural or licensed claim was substituted for
 those missing journeys.
+
+## 2026-08-06 acceptance-proof follow-up (historical incomplete browser gate)
+
+This section records the earlier `iab unavailable`/camera-collapse state and
+is retained as history. It is superseded by the fresh completion replay below;
+the earlier gaps are not being presented as current product status.
+
+This follow-up adds only development-gated acceptance instrumentation and
+in-memory fault simulation; it does not alter any source packet, normalized
+packet, public release document, GLB, manifest, claim, count, attribution, or
+asset. `exteriorFault` accepts exactly `tenant-placement`, `odbl-partition`,
+`one-glb`, and `base-compatibility` only from the `import.meta.env.DEV` App
+branch. Its fetch wrapper permits only current-app local Stage 3 paths, clones
+the response before changing it in memory, makes tenant/placement and ODbL
+errors fail the overlay closed, makes the incompatible base document fail
+closed, and corrupts only the ESB LOD0 response in memory so that `doitt:778052`
+falls back while the other 13 buildings and commercial metadata remain active.
+Unsupported values are inert. The production bundle does not contain the
+fault identifiers or proof query; its only retained proof-related literal is
+the inert DOM-attribute cleanup path, which cannot select a feature.
+
+With `stage3Proof=storefront-picks` in development only, the Cesium viewport
+publishes a read-only JSON array in
+`data-stage3-storefront-projections`. Every rendered accepted proxy row carries
+the canonical storefront/building IDs, the existing
+`commercial-storefront:<storefrontId>` entity ID, projected Cesium canvas x/y,
+visible/in-bounds state, and camera signature. It reads the existing proxy map
+and Cesium world-to-window projection after render, clears stale rows when a
+proxy is gone or the camera is beyond the existing 900 m boundary, and removes
+the attribute on cleanup. It has no selection callback or selection control;
+the only valid selection proof remains a native pointer action through the
+existing `drillPick` path.
+
+### Deterministic evidence
+
+After the final source mutation, the required command matrix passed:
+
+```text
+pnpm exec vitest run <the six required Stage 3 suites>  6 files / 44 tests passed
+pnpm typecheck                                       passed
+pnpm lint                                            passed
+pnpm test                                            37 files / 217 tests passed
+pnpm exterior-pilot:validate:raw                     passed (14 parents, 3 retained requests)
+pnpm exterior-pilot:validate                         passed (14 assets, 28 LODs, 8 signs)
+pnpm exterior-pilot:benchmark                        passed
+pnpm citywide:validate / citywide:benchmark          passed
+pnpm travel-context:validate / travel-context:benchmark passed
+pnpm build                                           passed; existing >500 KiB advisory only
+```
+
+The focused runtime tests cover the four typed values, tenant/placement,
+ODbL, base-release fail-closed boundaries, the isolated GLB failure, rejection
+of a non-local fault fetch, exact eight proxy identities, stable entity
+namespace, bounds/out-of-range filtering, DOM stale cleanup, and unsupported
+fault no-op. The final build inspection found no `stage3Proof`,
+`storefront-picks`, `exteriorFault`, or fault value in the production JS.
+
+### Orca-browser result and remaining mandatory limitations
+
+The local development server started at `http://localhost:5173/`; production
+preview started at `http://127.0.0.1:4175/` and returned the built application
+HTML through the Orca terminal. Before any browser interaction, the mandated
+Orca in-app browser binding was selected and returned exactly `Browser is not
+available: iab`. No alternative browser, synthetic DOM event, direct callback,
+`selectedEntity` assignment, or URL edit was used as a substitute.
+
+Consequently, the following gates remain explicitly **unmet** rather than
+inferred: all eight independent native canvas-pointer storefront picks; the
+four browser fault journeys; actual `matchMedia('(prefers-reduced-motion:
+reduce)').matches === true`; a real CSS 1440x900 surface; fresh desktop/mobile
+keyboard, history/reload, console, network-host, frame, and overflow checks in
+the final build. The previous validated browser evidence remains historical;
+this follow-up does not represent it as a new pass. Capability and command
+notes are local-only under
+`/tmp/udt-stage3-acceptance-proof-20260806/`, including
+`00-baseline.md` and `01-orca-browser-capability.md`.
+
+No staging, commit, push, deployment, public conveyance, provider call,
+Blender action, or protected-file change was attempted. Root review and an
+exact staged-path authorization remain required before any one-commit/one-push
+delivery action.
+
+## 2026-08-06 acceptance-proof completion on `b192253`
+
+The camera/render stabilization baseline `b19225340e1c850adb3999fc62a96c98459e4ad2`
+was replayed against the existing user-owned `http://localhost:5173` server.
+No geometry, road, street-tree, external asset, release payload, GLB, manifest,
+raw/normalized packet, or protected path was changed. Three minimal proof fixes
+were required and remain within the Stage 3 allowlist: Cesium drill-pick ID
+normalization now accepts the native nested pick shape; a storefront click
+loads a missing canonical DOITT detail through the active local adapter before
+opening the details panel; and asynchronous storefront detail results are
+guarded by latest request ID, adapter identity, and data mode so stale success
+or failure cannot overwrite a newer storefront or ordinary feature selection.
+All three are covered by focused tests, including deferred race cases for URL,
+details, and storefront state.
+
+### Fresh browser evidence
+
+- Eight accepted storefronts were independently selected with native canvas
+  `mouse move`/`mouse down`/`mouse up` after reading a fresh projection record
+  immediately before each click. All 8/8 rows matched the exact storefront ID,
+  canonical `doitt:` building, selected storefront proxy, details panel, and
+  `storefront=` URL. No DOM event dispatch, callback invocation,
+  `selectedEntity` assignment, or URL identity injection was used. Full rows:
+  `/tmp/udt-stage3-acceptance-proof-20260806/06-native-storefront-picks-fresh.json`.
+- Native history proof on the Dim Sum storefront URL passed back → previous
+  building state, forward → exact storefront selection, and reload → the same
+  exact storefront/details/canonical state.
+- Typed `tenant-placement`, `odbl-partition`, and `base-compatibility` faults
+  each failed the exterior overlay closed while retaining the base/civic
+  viewport. The typed `one-glb` fault retained the ready 14-building/8-sign
+  commercial overlay, kept the affected building procedural, and retained a
+  verified GLB plus commercial provenance on another building.
+- Normal UI Fixture catalog → Citywide local release → Civic context release
+  retained one canvas, one viewport, and one React surface at every step. The
+  desktop `1440×900` and iPhone 14 (`390×844`, `dpr=3`) inspector-open and
+  inspector-closed checks had no overflow and zero positive-area intersections
+  across the required map controls. Reduced motion was set with Orca's native
+  `set media reduced-motion`; `matchMedia` was true after reload and during a
+  normal UI selection smoke, then restored to no-preference.
+- Console contained no errors/exceptions/warnings; network contained no HTTP
+  failures, no failed release/GLB request, and only the `localhost:5173` HTTP
+  host. After a five-second warm-up, three-second rAF probes passed the existing
+  gate: overview median `9.8 ms`, p95 `33.3 ms`; Block 835 near view median
+  `10.0 ms`, p95 `32.6 ms`.
+- Combined fresh matrix and layout/fault details are in
+  `/tmp/udt-stage3-acceptance-proof-20260806/07-fault-layout-performance-fresh.md`.
+
+### Final validation and limitations
+
+The focused Stage 3/runtime suites (11 files / 91 tests), typecheck, lint, full
+test suite (38 files / 234 tests), raw and release validators,
+exterior/citywide/civic benchmarks, build, diff check,
+Blender read-only scene/provider checks, immutable asset hashes, and protected
+Transit/artifact separation passed after the final mutation. Production JS
+contains no `stage3Proof`, `storefront-picks`, `exteriorFault`, or fault
+diagnostic strings; only the inert projection-attribute cleanup literal remains
+as reviewed. The app remains local-only and source-constrained: it is not a
+photorealistic, current-occupancy, survey-grade, or complete Manhattan model;
+the eight OSM-derived signs retain attribution and no current occupancy is
+inferred. No public deployment, hosting, redistribution, or public conveyance
+is included.
+
+This completion is evidence for the existing Block 835 exterior/commercial
+layer and the next visual layer's validation baseline. It does not authorize
+new geometry or an expanded city boundary. Exact path staging and the one
+commit/one private push remain subject to the coordinator's explicit blocking
+Orca authorization after final diff review.

@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { CameraEventType, KeyboardEventModifier } from "cesium";
 import restaurants from "../../../public/data/real-wave-20260804/restaurants.json";
+import exteriorRelease from "../../../public/data/manhattan-esb-block-exterior-pilot-20260805/release.json";
 import { runtimeFixtureFeatures } from "../../domain/features";
 import type { Feature } from "../../domain/schema";
 import type { CityAssetResolver } from "../../runtime/city-asset-manifest";
-import { buildCollisionCheckedFeatureMap, canonicalPickId, commercialStorefrontProxyId, denseFeatureIntersectsBounds, densePoiMarkerStyle, denseRenderPlanKey, featureForPickedId, fixtureOnlyForFeature, focusCameraCoordinatesForFeature, focusCoordinatesForFeature, focusHeightForFeature, focusPoseForFeature, focusPoseForFeatureWithOcclusion, medianFrameInterval, nativeCameraControlBindings, normalizeFocusCameraPose, poiRenderMode, selectDenseFeatureGroups, selectDenseFeatures, shouldApplyCameraPoseRequest, shouldFocusFeature, shouldReplaceDenseRenderPlan, shouldShowFeatureLabel, shouldStartFocusFlight } from "./CesiumViewport";
+import { STAGE3_STOREFRONT_PROJECTIONS_ATTRIBUTE, buildCollisionCheckedFeatureMap, canonicalPickId, clearStorefrontProjectionRecords, collectStorefrontProjectionRecords, commercialStorefrontProxyId, denseFeatureIntersectsBounds, densePoiMarkerStyle, denseRenderPlanKey, drillPickedEntityId, featureForPickedId, fixtureOnlyForFeature, focusCameraCoordinatesForFeature, focusCoordinatesForFeature, focusHeightForFeature, focusPoseForFeature, focusPoseForFeatureWithOcclusion, medianFrameInterval, nativeCameraControlBindings, normalizeFocusCameraPose, poiRenderMode, publishStorefrontProjectionRecords, selectDenseFeatureGroups, selectDenseFeatures, shouldApplyCameraPoseRequest, shouldFocusFeature, shouldReplaceDenseRenderPlan, shouldShowFeatureLabel, shouldStartFocusFlight, stage3StorefrontProofRequested, storefrontProjectionCameraSignature } from "./CesiumViewport";
 
 describe("Cesium POI render seam", () => {
   const realRestaurant = (restaurants as unknown as Feature[])[0]!;
@@ -49,6 +50,59 @@ describe("Cesium POI render seam", () => {
   it("uses a stable namespace for accepted commercial storefront proxies", () => {
     expect(commercialStorefrontProxyId("storefront:osm:node:1@2")).toBe("commercial-storefront:storefront:osm:node:1@2");
     expect(commercialStorefrontProxyId("storefront:osm:node:1@2")).toBe(commercialStorefrontProxyId("storefront:osm:node:1@2"));
+  });
+
+  it("normalizes Cesium drill-pick entity wrappers to their string IDs", () => {
+    expect(drillPickedEntityId({ id: "commercial-storefront:storefront:osm:node:1@2" })).toBe("commercial-storefront:storefront:osm:node:1@2");
+    expect(drillPickedEntityId({ id: { id: "commercial-storefront:storefront:osm:node:1@2" } })).toBe("commercial-storefront:storefront:osm:node:1@2");
+    expect(drillPickedEntityId({ id: { id: 123 } })).toBeNull();
+    expect(drillPickedEntityId(undefined)).toBeNull();
+  });
+
+  it("publishes the exact eight rendered storefront identities as a non-selecting, stable proof payload", () => {
+    const release = exteriorRelease as unknown as { commercialRelease: { storefrontPlacements: Array<{ storefrontId: string; canonicalBuildingId: string | null; anchorWgs84: readonly [number, number] | null; signPolicy: string; placementDecision: string }> } };
+    const accepted = release.commercialRelease.storefrontPlacements.filter((placement) => placement.signPolicy === "neutral-text-only" && placement.placementDecision.startsWith("storefront"));
+    const candidates = accepted.map((placement) => ({
+      storefrontId: placement.storefrontId,
+      canonicalBuildingId: placement.canonicalBuildingId ?? "",
+      proxyEntityId: commercialStorefrontProxyId(placement.storefrontId),
+      anchorWgs84: placement.anchorWgs84,
+      rendered: true,
+    }));
+    const selectionCallbackCount = 0;
+    const records = collectStorefrontProjectionRecords(
+      candidates,
+      240,
+      { clientWidth: 1_200, clientHeight: 800 },
+      storefrontProjectionCameraSignature({ longitude: -73.986, latitude: 40.748, height: 240, heading: 35, pitch: -35, roll: 0 }),
+      (anchor) => ({ x: (anchor[0] + 74) * 100_000, y: (41 - anchor[1]) * 100_000 }),
+    );
+    expect(records).toHaveLength(8);
+    expect(records.map((record) => record.storefrontId)).toEqual([...records.map((record) => record.storefrontId)].sort());
+    expect(records.map((record) => record.proxyEntityId)).toEqual(records.map((record) => commercialStorefrontProxyId(record.storefrontId)));
+    expect(records.every((record) => record.canonicalBuildingId.startsWith("doitt:") && record.canvasX !== null && record.canvasY !== null)).toBe(true);
+    // Projection records have no selection callback or selection state; merely
+    // reading them cannot select an entity.
+    expect(selectionCallbackCount).toBe(0);
+  });
+
+  it("filters stale/out-of-range proxies, records bounds state, and clears the proof DOM attribute", () => {
+    const candidate = { storefrontId: "storefront:osm:node:1@2", canonicalBuildingId: "doitt:778052", proxyEntityId: commercialStorefrontProxyId("storefront:osm:node:1@2"), anchorWgs84: [-73.986, 40.748] as const, rendered: true };
+    const outOfBounds = collectStorefrontProjectionRecords([candidate], 240, { clientWidth: 100, clientHeight: 100 }, "camera", () => ({ x: -1, y: 101 }));
+    expect(outOfBounds).toEqual([expect.objectContaining({ visible: true, inBounds: false, canvasX: -1, canvasY: 101 })]);
+    expect(collectStorefrontProjectionRecords([candidate], 901, { clientWidth: 100, clientHeight: 100 }, "camera", () => ({ x: 1, y: 1 }))).toEqual([]);
+    expect(collectStorefrontProjectionRecords([{ ...candidate, rendered: false }], 240, { clientWidth: 100, clientHeight: 100 }, "camera", () => ({ x: 1, y: 1 }))).toEqual([]);
+    const attributes = new Map<string, string>();
+    const element = {
+      setAttribute: (name: string, value: string) => attributes.set(name, value),
+      removeAttribute: (name: string) => attributes.delete(name),
+    } as unknown as HTMLElement;
+    publishStorefrontProjectionRecords(element, outOfBounds);
+    expect(JSON.parse(attributes.get(STAGE3_STOREFRONT_PROJECTIONS_ATTRIBUTE) ?? "[]")).toEqual(outOfBounds);
+    clearStorefrontProjectionRecords(element);
+    expect(attributes.has(STAGE3_STOREFRONT_PROJECTIONS_ATTRIBUTE)).toBe(false);
+    expect(stage3StorefrontProofRequested("?stage3Proof=storefront-picks")).toBe(true);
+    expect(stage3StorefrontProofRequested("?stage3Proof=unsupported")).toBe(false);
   });
 
   it("keeps ordinary dense POI markers bounded while retaining a strong selected marker", () => {

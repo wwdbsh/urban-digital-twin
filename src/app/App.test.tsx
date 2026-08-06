@@ -2,11 +2,15 @@
 
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { runtimeFixtureFeatures } from "../domain/features";
 import type { Feature } from "../domain/schema";
 import type { CameraPose } from "../domain/visitor-navigation";
-import type { CommercialStorefrontPlacement } from "../runtime/exterior-pilot-release";
+import type { CommercialStorefrontPlacement, LoadedExteriorPilotRelease } from "../runtime/exterior-pilot-release";
+
+const exteriorRuntimeMocks = vi.hoisted(() => ({
+  loadExteriorPilotRelease: vi.fn(),
+}));
 
 vi.mock("../features/explorer/CesiumViewport", async () => {
   const React = await import("react");
@@ -56,10 +60,45 @@ vi.mock("../features/explorer/CesiumViewport", async () => {
   };
 });
 
-import { App, overlayLayoutPolicy, preserveFeatureSequence, selectionFocusTransaction } from "./App";
+vi.mock("../runtime/exterior-pilot-release", async (importOriginal) => {
+  const actual = await importOriginal() as Record<string, unknown>;
+  return { ...actual, loadExteriorPilotRelease: exteriorRuntimeMocks.loadExteriorPilotRelease };
+});
+
+import { App, applyStorefrontResolution, isCurrentStorefrontResolution, overlayLayoutPolicy, preserveFeatureSequence, resolveStorefrontBuilding, selectionFocusTransaction, type StorefrontResolutionState } from "./App";
 import { navigationUrl, parseNavigationUrl } from "../domain/visitor-navigation";
 
 const initialTestUrl = window.location.href;
+function deferred<T>() {
+  let resolve!: (value: T | PromiseLike<T>) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((resolvePromise, rejectPromise) => {
+    resolve = resolvePromise;
+    reject = rejectPromise;
+  });
+  return { promise, resolve, reject };
+}
+
+function exteriorOverlayFixture(assetFailures: LoadedExteriorPilotRelease["assetFailures"] = []): LoadedExteriorPilotRelease {
+  return {
+    document: { commercialRelease: { totals: { acceptedSigns: 8 } } },
+    manifest: { assets: [] },
+    resolver: {},
+    verifiedContentRefs: new Set(),
+    assetFailures,
+    diagnostics: { overlay: "active", reason: null, assetFailures: [...assetFailures], buildingFallbacks: [...new Set(assetFailures.map((failure) => failure.canonicalFeatureId))], acceptedStorefronts: 8, unknownStorefronts: 72, ambiguousStorefronts: 12 },
+    compatibleWith: () => true,
+    resolve: () => ({ kind: "procedural-fallback", featureId: "doitt:778052", diagnostic: { message: "Fixture fallback" } }),
+    buildingEntry: () => undefined,
+    commercialForBuilding: () => ({ canonicalBuildingId: "doitt:778052", visualEvidenceLevel: "licensed-near-real", claim: "Fixture", entry: undefined, links: [], placements: [], unknownPlacements: [], acceptedPlacements: [] }),
+    storefront: () => undefined,
+  } as unknown as LoadedExteriorPilotRelease;
+}
+
+beforeEach(() => {
+  exteriorRuntimeMocks.loadExteriorPilotRelease.mockReset();
+  exteriorRuntimeMocks.loadExteriorPilotRelease.mockResolvedValue(exteriorOverlayFixture());
+});
 afterEach(() => { cleanup(); window.history.replaceState({}, "", initialTestUrl); });
 const locatedFeature = runtimeFixtureFeatures.find((feature) => feature.kind === "poi")!;
 
@@ -113,6 +152,79 @@ describe("explorer overlay policy", () => {
     const retained = preserveFeatureSequence(previous, [revised]);
     expect(retained).not.toBe(previous);
     expect(retained).toEqual([revised]);
+  });
+
+  it("loads a missing canonical building before resolving a storefront selection", async () => {
+    const canonical = { ...locatedFeature, id: "doitt:982383" };
+    const loadCanonical = vi.fn().mockResolvedValue(canonical);
+    const adapter = { getFeature: vi.fn(() => undefined) };
+    await expect(resolveStorefrontBuilding({ canonicalBuildingId: canonical.id }, adapter, loadCanonical)).resolves.toBe(canonical);
+    expect(loadCanonical).toHaveBeenCalledWith(canonical.id);
+  });
+
+  it("ignores a stale storefront completion after a newer storefront selection", async () => {
+    const adapter = {};
+    const featureA = { ...locatedFeature, id: "doitt:storefront-a" };
+    const featureB = { ...locatedFeature, id: "doitt:storefront-b" };
+    const pendingA = deferred<Feature | undefined>();
+    const pendingB = deferred<Feature | undefined>();
+    let current: StorefrontResolutionState = { requestId: 0, adapter, dataMode: "real-pilot" };
+    const state: { featureId: string | null; storefrontId: string | null; url: string } = { featureId: null, storefrontId: null, url: "" };
+    const begin = (storefrontId: string, resolution: Promise<Feature | undefined>) => {
+      current = { requestId: current.requestId + 1, adapter, dataMode: "real-pilot" };
+      const request = current;
+      return applyStorefrontResolution(request, () => current, resolution, (building) => {
+        state.featureId = building?.id ?? null;
+        state.storefrontId = building ? storefrontId : null;
+        state.url = building ? `?feature=${building.id}&storefront=${storefrontId}` : "";
+      });
+    };
+
+    const first = begin("storefront:A", pendingA.promise);
+    const second = begin("storefront:B", pendingB.promise);
+    pendingB.resolve(featureB);
+    await second;
+    pendingA.resolve(featureA);
+    await first;
+
+    expect(state).toEqual({ featureId: featureB.id, storefrontId: "storefront:B", url: `?feature=${featureB.id}&storefront=storefront:B` });
+  });
+
+  it("ignores stale success and rejection after an ordinary selection invalidates the request", async () => {
+    const adapter = {};
+    const nextAdapter = {};
+    const staleFeature = { ...locatedFeature, id: "doitt:stale-storefront" };
+    const pendingSuccess = deferred<Feature | undefined>();
+    let current: StorefrontResolutionState = { requestId: 1, adapter, dataMode: "real-pilot" };
+    const state: { featureId: string | null; storefrontId: string | null; url: string } = { featureId: null, storefrontId: "storefront:A", url: "?feature=doitt:old&storefront=storefront:A" };
+    const staleRequest = current;
+    const success = applyStorefrontResolution(staleRequest, () => current, pendingSuccess.promise, (building) => {
+      state.featureId = building?.id ?? null;
+      state.storefrontId = building ? "storefront:A" : null;
+      state.url = building ? `?feature=${building.id}&storefront=storefront:A` : "";
+    });
+
+    current = { requestId: 2, adapter: nextAdapter, dataMode: "civic-context" };
+    state.featureId = "doitt:ordinary-selection";
+    state.storefrontId = null;
+    state.url = "?feature=doitt:ordinary-selection";
+    pendingSuccess.resolve(staleFeature);
+    await success;
+    expect(state).toEqual({ featureId: "doitt:ordinary-selection", storefrontId: null, url: "?feature=doitt:ordinary-selection" });
+    expect(isCurrentStorefrontResolution(staleRequest, current)).toBe(false);
+
+    const pendingFailure = deferred<Feature | undefined>();
+    const failingRequest = current;
+    const failure = applyStorefrontResolution(failingRequest, () => current, pendingFailure.promise, () => {
+      state.featureId = "doitt:should-not-commit";
+      state.storefrontId = "storefront:should-not-commit";
+      state.url = "?feature=doitt:should-not-commit&storefront=storefront:should-not-commit";
+    });
+    current = { requestId: 3, adapter: nextAdapter, dataMode: "civic-context" };
+    pendingFailure.reject(new Error("stale failure"));
+    await failure;
+    expect(state).toEqual({ featureId: "doitt:ordinary-selection", storefrontId: null, url: "?feature=doitt:ordinary-selection" });
+    expect(isCurrentStorefrontResolution(failingRequest, current)).toBe(false);
   });
 });
 
@@ -209,4 +321,53 @@ describe("App overlay and selection regressions", () => {
     expect(diagnostics).toHaveAttribute("aria-expanded", "false");
   });
 
+  it.each([
+    ["tenant-placement", "Exterior overlay manifest failed closed: commercialRelease.storefrontPlacements Accepted storefront placement must reference one canonical tenant"],
+    ["odbl-partition", "Exterior overlay manifest failed closed: commercialRelease.licensePartitions.odbl-derived ODbL partition must include exact attribution"],
+    ["base-compatibility", "Exterior overlay manifest failed closed: baseReleaseId Exterior release must pin an approved citywide/civic base release"],
+  ])("keeps the base/civic surface usable when the %s fault fails the overlay closed", async (fault, message) => {
+    exteriorRuntimeMocks.loadExteriorPilotRelease.mockRejectedValueOnce(new Error(message));
+    window.history.replaceState({}, "", `/?data=citywide&release=manhattan-civic-context-20260804&exterior=manhattan-esb-block-exterior-pilot-20260805&commercial=1&exteriorFault=${fault}`);
+    render(<App />);
+
+    const status = await waitFor(() => {
+      const element = document.querySelector<HTMLElement>("[data-overlay-status='failed'] [role='status']");
+      expect(element).not.toBeNull();
+      return element!;
+    });
+    expect(status).toHaveTextContent(`${message} The untouched base/civic release remains active.`);
+    expect(document.querySelector(".viewport")).toBeInTheDocument();
+    expect(exteriorRuntimeMocks.loadExteriorPilotRelease).toHaveBeenCalledWith(
+      "/data/manhattan-esb-block-exterior-pilot-20260805/",
+      expect.any(AbortSignal),
+      expect.any(Function),
+    );
+  });
+
+  it("keeps exactly one GLB fallback localized in the development fault journey", async () => {
+    exteriorRuntimeMocks.loadExteriorPilotRelease.mockResolvedValueOnce(exteriorOverlayFixture([{
+      canonicalFeatureId: "doitt:778052",
+      lod: "lod0",
+      relativeContentRef: "assets/manhattan-esb-block-exterior-pilot-20260805/doitt-778052__lod_0.glb",
+      code: "checksum-mismatch",
+      message: "Injected one-GLB response corruption; procedural building fallback remains active.",
+    }]));
+    window.history.replaceState({}, "", "/?data=citywide&release=manhattan-civic-context-20260804&exterior=manhattan-esb-block-exterior-pilot-20260805&commercial=1&exteriorFault=one-glb");
+    render(<App />);
+
+    const status = await waitFor(() => {
+      const element = document.querySelector<HTMLElement>("[data-overlay-status='ready'] [role='status']");
+      expect(element).not.toBeNull();
+      return element!;
+    });
+    expect(status).toHaveTextContent("Exterior overlay active with 1 asset fallback; the affected building remains procedural.");
+    expect(exteriorRuntimeMocks.loadExteriorPilotRelease.mock.calls[0]?.[2]).toEqual(expect.any(Function));
+  });
+
+  it("treats unsupported exteriorFault values as an inert production-equivalent query", async () => {
+    window.history.replaceState({}, "", "/?data=citywide&release=manhattan-civic-context-20260804&exterior=manhattan-esb-block-exterior-pilot-20260805&commercial=1&exteriorFault=unsupported");
+    render(<App />);
+    await waitFor(() => expect(exteriorRuntimeMocks.loadExteriorPilotRelease).toHaveBeenCalled());
+    expect(exteriorRuntimeMocks.loadExteriorPilotRelease.mock.calls[0]?.[2]).toBeUndefined();
+  });
 });

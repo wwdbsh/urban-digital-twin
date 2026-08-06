@@ -19,6 +19,15 @@ export const EXTERIOR_PILOT_RELEASE_ID = COMMERCIAL_RELEASE_ID;
 export const EXTERIOR_PILOT_BASE_RELEASE_IDS = [CITYWIDE_RELEASE_ID, TRAVEL_CONTEXT_RELEASE_ID] as const;
 export const OSM_ATTRIBUTION = "Map data © OpenStreetMap contributors.";
 export const OSM_COPYRIGHT_URL = "https://www.openstreetmap.org/copyright";
+export const EXTERIOR_PILOT_FAULTS = ["tenant-placement", "odbl-partition", "one-glb", "base-compatibility"] as const;
+export type ExteriorPilotFault = (typeof EXTERIOR_PILOT_FAULTS)[number];
+
+/** Accept an injected fault only in the development-only App branch. */
+export function parseExteriorPilotFault(value: unknown, development: boolean): ExteriorPilotFault | null {
+  return development && typeof value === "string" && (EXTERIOR_PILOT_FAULTS as readonly string[]).includes(value)
+    ? value as ExteriorPilotFault
+    : null;
+}
 
 export interface CommercialTenantObservation {
   observationId: string;
@@ -215,6 +224,27 @@ function validateCommercial(value: unknown, issues: ExteriorPilotValidationIssue
   const budgets = value.budgets;
   if (!record(budgets) || budgets.maxSigns !== 32 || budgets.maxProxies !== 32 || !Number.isSafeInteger(budgets.maxCompressedMetadataBytes)) issue(issues, "commercialRelease.budgets", "Commercial budgets are missing or changed.");
   if (!nonEmpty(value.fallback)) issue(issues, "commercialRelease.fallback", "Component-scoped fallback contract is required.");
+  if (Array.isArray(value.storefrontPlacements) && Array.isArray(value.tenantEntities) && Array.isArray(value.tenantObservations) && Array.isArray(value.buildingOccupancyLinks) && record(totals)) {
+    const accepted = value.storefrontPlacements.filter((placement): placement is Record<string, unknown> => record(placement) && placement.signPolicy === "neutral-text-only" && typeof placement.placementDecision === "string" && placement.placementDecision.startsWith("storefront"));
+    if (accepted.length !== totals.acceptedSigns || accepted.length !== totals.storefrontPickProxies) issue(issues, "commercialRelease.storefrontPlacements", "Accepted storefront placements must match exact sign/proxy accounting.");
+    if (new Set(accepted.map((placement) => placement.storefrontId)).size !== accepted.length) issue(issues, "commercialRelease.storefrontPlacements", "Accepted storefront IDs must be unique.");
+    const tenantIds = new Set(value.tenantEntities.filter(record).map((tenant) => tenant.canonicalTenantId).filter(nonEmpty));
+    const observationIds = new Set(value.tenantObservations.filter(record).map((observation) => observation.observationId).filter(nonEmpty));
+    const canonicalBuildingIds = new Set(BLOCK_835_DOITT_IDS.map((id) => `doitt:${id}`));
+    const links = value.buildingOccupancyLinks.filter(record);
+    for (const placement of accepted) {
+      const storefrontId = placement.storefrontId;
+      const tenantId = placement.canonicalTenantId;
+      const buildingId = placement.canonicalBuildingId;
+      const observationId = placement.sourceObservationId;
+      if (!nonEmpty(storefrontId) || !nonEmpty(tenantId) || !tenantIds.has(tenantId) || !nonEmpty(buildingId) || !canonicalBuildingIds.has(buildingId) || !nonEmpty(observationId) || !observationIds.has(observationId)) {
+        issue(issues, "commercialRelease.storefrontPlacements", "Accepted storefront placement must reference one canonical tenant, Block 835 building, and retained observation.");
+        continue;
+      }
+      const linked = links.some((link) => link.canonicalTenantId === tenantId && link.canonicalBuildingId === buildingId && link.sourceObservationId === observationId && link.licensePartition === placement.licensePartition);
+      if (!linked) issue(issues, "commercialRelease.storefrontPlacements", "Accepted storefront placement must retain its reversible tenant/building relationship.");
+    }
+  }
   return true;
 }
 
@@ -235,6 +265,7 @@ export function validateExteriorPilotRelease(value: unknown): ExteriorPilotValid
   if (!Array.isArray(partitions)) issue(issues, "licensePartitions", "Top-level license partitions are required.");
   else if (!partitions.some((partition) => record(partition) && partition.partitionId === "odbl-derived" && partition.license === OSM_ODBL_LICENSE && partition.attribution === OSM_ATTRIBUTION && partition.licenseUrl === OSM_COPYRIGHT_URL && nonEmpty(partition.databaseOffer))) issue(issues, "licensePartitions.odbl-derived", "Top-level ODbL partition is missing exact metadata.");
   if (!validateCommercial(value.commercialRelease, issues)) { /* issues already recorded */ }
+  else if (value.commercialRelease.baseReleaseId !== value.baseReleaseId) issue(issues, "commercialRelease.baseReleaseId", "Commercial frontage must pin the same approved base release as the overlay.");
   const manifestValue = value.assets;
   const manifest = validateCityAssetManifest(manifestValue);
   if (!manifest.ok) manifest.issues.forEach((item) => issue(issues, `assets.${item.path}`, item.message));
@@ -264,7 +295,82 @@ async function sha256(bytes: ArrayBuffer): Promise<string> {
   return [...new Uint8Array(digest)].map((part) => part.toString(16).padStart(2, "0")).join("");
 }
 
-type ReleaseFetcher = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
+export type ReleaseFetcher = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
+
+function localExteriorFaultPath(input: RequestInfo | URL): string | null {
+  const raw = input instanceof URL ? input.href : typeof input === "string" ? input : input.url;
+  const currentOrigin = typeof window !== "undefined" ? window.location.origin : null;
+  try {
+    const url = new URL(raw, currentOrigin ?? "http://stage3-local.invalid");
+    if (currentOrigin && url.origin !== currentOrigin) return null;
+    if (!currentOrigin && !raw.startsWith("/")) return null;
+    return url.pathname.startsWith(`/data/${EXTERIOR_PILOT_RELEASE_ID}/`) || url.pathname.startsWith(`/assets/${EXTERIOR_PILOT_RELEASE_ID}/`)
+      ? url.pathname
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function clonedJsonRecord(response: Response): Promise<Record<string, unknown>> {
+  return response.clone().json().then((value: unknown) => {
+    if (!record(value)) throw new Error("Exterior development fault expected a JSON release document.");
+    return JSON.parse(JSON.stringify(value)) as Record<string, unknown>;
+  });
+}
+
+function corruptExteriorReleaseDocument(document: Record<string, unknown>, fault: Exclude<ExteriorPilotFault, "one-glb">): void {
+  const commercial = record(document.commercialRelease) ? document.commercialRelease : null;
+  if (fault === "base-compatibility") {
+    document.baseReleaseId = "manhattan-stage3-incompatible-base";
+    if (commercial) commercial.baseReleaseId = "manhattan-stage3-incompatible-base";
+    return;
+  }
+  if (!commercial) throw new Error("Exterior development fault expected commercial frontage metadata.");
+  if (fault === "odbl-partition") {
+    const partition = Array.isArray(commercial.licensePartitions)
+      ? commercial.licensePartitions.find((candidate): candidate is Record<string, unknown> => record(candidate) && candidate.partitionId === "odbl-derived")
+      : undefined;
+    if (!partition) throw new Error("Exterior development fault expected the ODbL partition.");
+    partition.attribution = "Missing required ODbL attribution";
+    return;
+  }
+  const placement = Array.isArray(commercial.storefrontPlacements)
+    ? commercial.storefrontPlacements.find((candidate): candidate is Record<string, unknown> => record(candidate) && candidate.signPolicy === "neutral-text-only" && typeof candidate.placementDecision === "string" && candidate.placementDecision.startsWith("storefront"))
+    : undefined;
+  if (!placement) throw new Error("Exterior development fault expected an accepted storefront placement.");
+  placement.canonicalBuildingId = "doitt:stage3-invalid-placement";
+}
+
+/**
+ * Development proof seam: mutate cloned, app-origin responses only. The
+ * immutable release files remain untouched and normal production loading never
+ * constructs this wrapper.
+ */
+export function createExteriorPilotFaultFetcher(
+  fault: ExteriorPilotFault,
+  fetcher: ReleaseFetcher = globalThis.fetch.bind(globalThis),
+): ReleaseFetcher {
+  return async (input, init) => {
+    const path = localExteriorFaultPath(input);
+    if (!path) throw new Error("Exterior development fault fetcher permits only current app-origin release files.");
+    const response = await fetcher(input, init);
+    if (fault === "one-glb" && path.endsWith("/doitt-778052__lod_0.glb") && response.ok) {
+      const bytes = new Uint8Array(await response.clone().arrayBuffer());
+      if (bytes.length === 0) throw new Error("Exterior development fault expected non-empty GLB content.");
+      bytes[0] = bytes[0]! ^ 0xff;
+      return new Response(bytes, { status: response.status, statusText: response.statusText, headers: new Headers(response.headers) });
+    }
+    if (path.endsWith("/release.json") && fault !== "one-glb") {
+      const document = await clonedJsonRecord(response);
+      corruptExteriorReleaseDocument(document, fault);
+      const headers = new Headers(response.headers);
+      headers.set("content-type", "application/json");
+      return new Response(JSON.stringify(document), { status: response.status, statusText: response.statusText, headers });
+    }
+    return response;
+  };
+}
 
 async function fetchJson(fetcher: ReleaseFetcher, url: string, signal?: AbortSignal): Promise<unknown> {
   const response = await fetcher(url, { signal, cache: "force-cache" });

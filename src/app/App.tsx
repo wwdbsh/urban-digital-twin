@@ -56,7 +56,7 @@ import type { CitywideReleaseAdapter, CitywideRuntimeMetrics } from "../runtime/
 import { loadTravelContextRelease, type TravelContextFault, type TravelContextReleaseAdapter, type TravelContextRuntimeMetrics } from "../runtime/travel-context-release-runtime";
 import { TRAVEL_CONTEXT_BUDGETS, TRAVEL_CONTEXT_RELEASE_ID, TRAVEL_CONTEXT_TILE_LEVEL } from "../release/travel-context-release";
 import { AggregateRequestBudget, ComposedReleaseAdapter, type ComposedReleaseMetrics } from "../runtime/composed-release-runtime";
-import { EXTERIOR_PILOT_RELEASE_ID, loadExteriorPilotRelease, type CommercialStorefrontPlacement, type LoadedExteriorPilotRelease } from "../runtime/exterior-pilot-release";
+import { EXTERIOR_PILOT_RELEASE_ID, createExteriorPilotFaultFetcher, loadExteriorPilotRelease, parseExteriorPilotFault, type CommercialStorefrontPlacement, type LoadedExteriorPilotRelease } from "../runtime/exterior-pilot-release";
 import { fallbackViewportFootprint, type ViewportFootprint } from "../runtime/viewport-footprint";
 
 const navigation = [
@@ -204,6 +204,44 @@ const EMPTY_CITYWIDE_BROWSER_BASELINE: CitywideBrowserBaseline = {
 /** Retain a stable array only when every immutable feature object is unchanged. */
 export function preserveFeatureSequence(previous: readonly Feature[], next: readonly Feature[]): Feature[] {
   return previous.length === next.length && previous.every((feature, index) => feature === next[index]) ? previous as Feature[] : [...next];
+}
+
+export async function resolveStorefrontBuilding(
+  placement: Pick<CommercialStorefrontPlacement, "canonicalBuildingId">,
+  activeAdapter: Pick<RuntimeCityAdapter, "getFeature">,
+  loadCanonical?: (featureId: string) => Promise<Feature | undefined>,
+): Promise<Feature | undefined> {
+  const canonicalBuildingId = placement.canonicalBuildingId;
+  if (!canonicalBuildingId) return undefined;
+  const loaded = activeAdapter.getFeature(canonicalBuildingId);
+  if (loaded) return loaded;
+  return loadCanonical?.(canonicalBuildingId);
+}
+
+export type StorefrontResolutionState = {
+  requestId: number;
+  adapter: unknown;
+  dataMode: NavigationDataMode;
+};
+
+export function isCurrentStorefrontResolution(request: StorefrontResolutionState, current: StorefrontResolutionState): boolean {
+  return request.requestId === current.requestId && request.adapter === current.adapter && request.dataMode === current.dataMode;
+}
+
+export function applyStorefrontResolution(
+  request: StorefrontResolutionState,
+  current: () => StorefrontResolutionState,
+  resolution: Promise<Feature | undefined>,
+  commit: (building: Feature | undefined) => void,
+): Promise<void> {
+  return resolution.then(
+    (building) => {
+      if (isCurrentStorefrontResolution(request, current())) commit(building);
+    },
+    () => {
+      if (isCurrentStorefrontResolution(request, current())) commit(undefined);
+    },
+  );
 }
 
 function formatDenseTiming(value: number | undefined): string {
@@ -407,6 +445,8 @@ export function App() {
   const viewportFootprintRef = useRef(viewportFootprint);
   const cameraModeRef = useRef(cameraMode);
   const activeSelectionRef = useRef(activeSelectionId);
+  const activeAdapterRef = useRef<RuntimeCityAdapter>(activeAdapter);
+  const storefrontResolutionRequestRef = useRef(0);
   const layerVisibilityRef = useRef(layerVisibility);
   const selectedCategoriesRef = useRef(selectedCategories);
   const selectedCivicFacetsRef = useRef(selectedCivicFacets);
@@ -435,6 +475,7 @@ export function App() {
   viewportFootprintRef.current = viewportFootprint;
   cameraModeRef.current = cameraMode;
   activeSelectionRef.current = activeSelectionId;
+  activeAdapterRef.current = activeAdapter;
   layerVisibilityRef.current = layerVisibility;
   selectedCategoriesRef.current = selectedCategories;
   selectedCivicFacetsRef.current = selectedCivicFacets;
@@ -614,9 +655,16 @@ export function App() {
     }
     let active = true;
     const controller = new AbortController();
+    // This branch is compiled out of production builds. It is deliberately
+    // query-driven and has no user-facing control because it exists only for
+    // local Stage 3 failure-boundary proof against cloned responses.
+    const exteriorFault = import.meta.env.DEV && typeof window !== "undefined"
+      ? parseExteriorPilotFault(new URL(window.location.href).searchParams.get("exteriorFault"), true)
+      : null;
+    const exteriorFetcher = exteriorFault ? createExteriorPilotFaultFetcher(exteriorFault) : undefined;
     setExteriorLoadState("loading");
     setExteriorMessage("Exterior/commercial overlay is loading from the local release…");
-    void loadExteriorPilotRelease(`/data/${EXTERIOR_PILOT_RELEASE_ID}/`, controller.signal).then((loaded) => {
+    void loadExteriorPilotRelease(`/data/${EXTERIOR_PILOT_RELEASE_ID}/`, controller.signal, exteriorFetcher).then((loaded) => {
       if (!active) return;
       setExteriorOverlay(loaded);
       setExteriorLoadState("ready");
@@ -823,6 +871,7 @@ export function App() {
   }, [publishStressState, stressMode]);
 
   const selectFeature = useCallback((feature: Feature, options: { syncUrl?: boolean } = {}) => {
+    storefrontResolutionRequestRef.current += 1;
     if (typeof document !== "undefined") {
       const activeElement = document.activeElement;
       if (activeElement instanceof HTMLElement && !activeElement.closest(".inspector")) detailsReturnRef.current = activeElement;
@@ -860,32 +909,53 @@ export function App() {
   }, [getOverlayUrlFields, publishComposedMetrics, publishCitywideMetrics, updateSelectedStorefront]);
 
   const selectStorefront = useCallback((placement: CommercialStorefrontPlacement) => {
-    const building = placement.canonicalBuildingId ? activeAdapter.getFeature(placement.canonicalBuildingId) : undefined;
-    if (building) {
-      selectFeature(building, { syncUrl: false });
-      // selectFeature clears any prior storefront selection; restore the
-      // accepted proxy after the building identity has become authoritative.
-      updateSelectedStorefront(placement.storefrontId);
-      setDeepLinkMessage(null);
-    } else {
-      updateSelectedStorefront(placement.storefrontId);
-      setDeepLinkMessage(`Storefront ${placement.storefrontId} has no loaded canonical building; no substitute identity was selected.`);
-    }
-    if (typeof window !== "undefined") {
-      window.history.pushState({}, "", navigationUrl({
-        featureId: building?.id ?? activeSelectionRef.current,
-        query: queryRef.current,
-        cameraMode: cameraModeRef.current,
-        pose: cameraPoseRef.current,
-        poseInvalid: false,
-        dataMode: dataModeRef.current,
-        releaseId: releaseIdRef.current,
-        visibleLayers: Object.entries(layerVisibilityRef.current).filter(([, visible]) => visible).map(([layer]) => layer),
-        facets: civicModeRef.current ? selectedCivicFacetsRef.current : selectedCategoriesRef.current,
-        ...getOverlayUrlFields(),
-      }, window.location.href));
-    }
-  }, [activeAdapter, getOverlayUrlFields, selectFeature, updateSelectedStorefront]);
+    const request: StorefrontResolutionState = {
+      requestId: storefrontResolutionRequestRef.current + 1,
+      adapter: activeAdapter,
+      dataMode,
+    };
+    storefrontResolutionRequestRef.current = request.requestId;
+    const composed = composedAdapterRef.current;
+    const citywide = citywideAdapterRef.current;
+    const loadCanonical = civicModeRef.current && composed
+      ? (featureId: string) => composed.loadDetail(featureId)
+      : citywideModeRef.current && citywide
+      ? (featureId: string) => citywide.loadDetail(featureId)
+      : undefined;
+    const commit = (building: Feature | undefined) => {
+      if (building) {
+        selectFeature(building, { syncUrl: false });
+        // selectFeature clears any prior storefront selection; restore the
+        // accepted proxy after the building identity has become authoritative.
+        updateSelectedStorefront(placement.storefrontId);
+        setDeepLinkMessage(null);
+      } else {
+        updateSelectedStorefront(placement.storefrontId);
+        setDeepLinkMessage(`Storefront ${placement.storefrontId} has no loaded canonical building; no substitute identity was selected.`);
+      }
+      if (typeof window !== "undefined") {
+        window.history.pushState({}, "", navigationUrl({
+          featureId: building?.id ?? activeSelectionRef.current,
+          query: queryRef.current,
+          cameraMode: cameraModeRef.current,
+          pose: cameraPoseRef.current,
+          poseInvalid: false,
+          dataMode: dataModeRef.current,
+          releaseId: releaseIdRef.current,
+          visibleLayers: Object.entries(layerVisibilityRef.current).filter(([, visible]) => visible).map(([layer]) => layer),
+          facets: civicModeRef.current ? selectedCivicFacetsRef.current : selectedCategoriesRef.current,
+          ...getOverlayUrlFields(),
+        }, window.location.href));
+      }
+    };
+    updateSelectedStorefront(placement.storefrontId);
+    void applyStorefrontResolution(
+      request,
+      () => ({ requestId: storefrontResolutionRequestRef.current, adapter: activeAdapterRef.current, dataMode: dataModeRef.current }),
+      resolveStorefrontBuilding(placement, activeAdapter, loadCanonical),
+      commit,
+    );
+  }, [activeAdapter, dataMode, getOverlayUrlFields, selectFeature, updateSelectedStorefront]);
 
   const selectOverlapFeatures = useCallback((features: Feature[]) => {
     const byId = new Map(features.map((feature) => [feature.id, feature]));

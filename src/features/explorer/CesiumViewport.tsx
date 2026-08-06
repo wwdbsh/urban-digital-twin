@@ -25,6 +25,7 @@ import {
   KeyboardEventModifier,
   ScreenSpaceEventType,
   Quaternion,
+  SceneTransforms,
   Transforms,
   VertexFormat,
   Viewer,
@@ -140,6 +141,79 @@ export interface DenseFeatureGroups {
 
 export function commercialStorefrontProxyId(storefrontId: string): string {
   return `commercial-storefront:${storefrontId}`;
+}
+
+/** Cesium drill picks may expose an Entity object under `id` rather than its string id. */
+export function drillPickedEntityId(picked: { id?: unknown } | null | undefined): string | null {
+  const id = picked?.id;
+  if (typeof id === "string") return id;
+  if (id && typeof id === "object" && "id" in id) {
+    const entityId = (id as { id?: unknown }).id;
+    return typeof entityId === "string" ? entityId : null;
+  }
+  return null;
+}
+
+export const STAGE3_STOREFRONT_PROOF_QUERY = "storefront-picks";
+export const STAGE3_STOREFRONT_PROJECTIONS_ATTRIBUTE = "data-stage3-storefront-projections";
+
+export interface StorefrontProjectionCandidate {
+  storefrontId: string;
+  canonicalBuildingId: string;
+  proxyEntityId: string;
+  anchorWgs84: readonly [number, number] | null;
+  rendered: boolean;
+}
+
+export interface StorefrontProjectionRecord {
+  storefrontId: string;
+  canonicalBuildingId: string;
+  proxyEntityId: string;
+  canvasX: number | null;
+  canvasY: number | null;
+  visible: boolean;
+  inBounds: boolean;
+  cameraSignature: string;
+}
+
+export function stage3StorefrontProofRequested(search: string): boolean {
+  return new URLSearchParams(search).get("stage3Proof") === STAGE3_STOREFRONT_PROOF_QUERY;
+}
+
+export function storefrontProjectionCameraSignature(camera: CameraPose): string {
+  return [camera.longitude, camera.latitude, camera.height, camera.heading, camera.pitch, camera.roll]
+    .map((value) => Number.isFinite(value) ? value.toFixed(6) : "invalid")
+    .join(",");
+}
+
+/** Derive a stable, non-selecting diagnostic payload for already-rendered proxies. */
+export function collectStorefrontProjectionRecords(
+  candidates: readonly StorefrontProjectionCandidate[],
+  assetDistanceMeters: number,
+  canvas: Pick<HTMLCanvasElement, "clientWidth" | "clientHeight">,
+  cameraSignature: string,
+  project: (anchor: readonly [number, number]) => Pick<Cartesian2, "x" | "y"> | undefined,
+): StorefrontProjectionRecord[] {
+  if (!Number.isFinite(assetDistanceMeters) || assetDistanceMeters > 900) return [];
+  return candidates
+    .filter((candidate) => candidate.rendered && candidate.anchorWgs84 !== null)
+    .map((candidate) => {
+      const projected = project(candidate.anchorWgs84!);
+      const visible = Boolean(projected && Number.isFinite(projected.x) && Number.isFinite(projected.y));
+      const canvasX = visible ? Number(projected!.x.toFixed(3)) : null;
+      const canvasY = visible ? Number(projected!.y.toFixed(3)) : null;
+      const inBounds = visible && canvasX !== null && canvasY !== null && canvasX >= 0 && canvasY >= 0 && canvasX <= canvas.clientWidth && canvasY <= canvas.clientHeight;
+      return { storefrontId: candidate.storefrontId, canonicalBuildingId: candidate.canonicalBuildingId, proxyEntityId: candidate.proxyEntityId, canvasX, canvasY, visible, inBounds, cameraSignature };
+    })
+    .sort((left, right) => left.storefrontId.localeCompare(right.storefrontId));
+}
+
+export function publishStorefrontProjectionRecords(element: HTMLElement, records: readonly StorefrontProjectionRecord[]): void {
+  element.setAttribute(STAGE3_STOREFRONT_PROJECTIONS_ATTRIBUTE, JSON.stringify(records));
+}
+
+export function clearStorefrontProjectionRecords(element: HTMLElement): void {
+  element.removeAttribute(STAGE3_STOREFRONT_PROJECTIONS_ATTRIBUTE);
 }
 
 export interface DensePoiMarkerStyle {
@@ -974,6 +1048,7 @@ export function CesiumViewport({
 }: CesiumViewportProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<Viewer | null>(null);
+  const stage3StorefrontProofEnabled = import.meta.env.DEV && typeof window !== "undefined" && stage3StorefrontProofRequested(window.location.search);
   const [viewerReadyGeneration, setViewerReadyGeneration] = useState(0);
   const adapterRef = useRef(adapter);
   const onFeatureSelectedRef = useRef(onFeatureSelected);
@@ -1068,10 +1143,13 @@ export function CesiumViewport({
     });
     viewer.screenSpaceEventHandler.setInputAction((movement: { position: Cartesian2 }) => {
       const picks = viewer.scene.drillPick(movement.position, 12) as Array<{ id?: unknown }>;
-      const storefront = picks.map((picked) => typeof picked?.id === "string" ? storefrontPickMapRef.current.get(picked.id) : undefined).find((placement): placement is CommercialStorefrontPlacement => Boolean(placement));
+      const storefront = picks.map((picked) => {
+        const pickedId = drillPickedEntityId(picked);
+        return pickedId ? storefrontPickMapRef.current.get(pickedId) : undefined;
+      }).find((placement): placement is CommercialStorefrontPlacement => Boolean(placement));
       if (storefront) { onStorefrontSelectedRef.current?.(storefront); return; }
       const pickedFeatures = [...new Map(picks.map((picked) => {
-        const pickedId = typeof picked?.id === "string" ? picked.id : null;
+        const pickedId = drillPickedEntityId(picked);
         return pickedId ? [canonicalPickId(pickedId), featureForPickedId(pickedId, denseFeatureMapRef.current, adapterRef.current)] as const : ["", undefined] as const;
       }).filter((entry): entry is readonly [string, Feature] => Boolean(entry[0] && entry[1]))).values()];
       if (pickedFeatures.length > 1) {
@@ -1079,7 +1157,7 @@ export function CesiumViewport({
         return;
       }
       const picked = viewer.scene.pick(movement.position) as { id?: unknown } | undefined;
-      const pickedId = typeof picked?.id === "string" ? picked.id : null;
+      const pickedId = drillPickedEntityId(picked);
       const feature = featureForPickedId(pickedId, denseFeatureMapRef.current, adapterRef.current) ?? pickedFeatures[0];
       if (feature) onFeatureSelectedRef.current(feature);
     }, ScreenSpaceEventType.LEFT_CLICK);
@@ -1313,6 +1391,49 @@ export function CesiumViewport({
     void loadVisibleFeatures();
     return () => { cancelled = true; };
   }, [adapter, assetResolver, commercialOverlay, denseFeatureGroups, denseFeatureGroupLimits, denseFeatureLimit, denseFeatures, denseRendering, featureFilter, itinerary, selectedFeatureId, viewportFootprint, visibleLayers.buildings, visibleLayers.pois, visibleLayers.areas, visibleLayers.stations, visibleLayers.entrances, visibleLayers.routes, visibleLayers["statistical-areas"], visibleLayers.parks, visibleLayers.landmarks]);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    const viewer = viewerRef.current;
+    if (!container) return undefined;
+    if (!stage3StorefrontProofEnabled || !viewer || !commercialOverlay) {
+      clearStorefrontProjectionRecords(container);
+      return undefined;
+    }
+    let frame: number | null = null;
+    const publish = () => {
+      frame = null;
+      const assetDistanceMeters = Math.max(0, Number.isFinite(viewer.camera.positionCartographic.height) ? viewer.camera.positionCartographic.height : Number.POSITIVE_INFINITY);
+      const cameraSignature = storefrontProjectionCameraSignature(cameraStateForViewer(viewer));
+      const candidates = [...storefrontPickMapRef.current.entries()].map(([proxyEntityId, placement]) => ({
+        storefrontId: placement.storefrontId,
+        canonicalBuildingId: placement.canonicalBuildingId ?? "",
+        proxyEntityId,
+        anchorWgs84: placement.anchorWgs84 ?? null,
+        rendered: Boolean(viewer.entities.getById(proxyEntityId)),
+      }));
+      publishStorefrontProjectionRecords(container, collectStorefrontProjectionRecords(
+        candidates,
+        assetDistanceMeters,
+        viewer.canvas,
+        cameraSignature,
+        (anchor) => SceneTransforms.worldToWindowCoordinates(viewer.scene, Cartesian3.fromDegrees(anchor[0], anchor[1], 4)),
+      ));
+    };
+    const schedule = () => {
+      if (frame !== null) return;
+      frame = window.requestAnimationFrame(publish);
+    };
+    viewer.camera.changed.addEventListener(schedule);
+    viewer.scene.postRender.addEventListener(schedule);
+    schedule();
+    return () => {
+      if (frame !== null) window.cancelAnimationFrame(frame);
+      viewer.camera.changed.removeEventListener(schedule);
+      viewer.scene.postRender.removeEventListener(schedule);
+      clearStorefrontProjectionRecords(container);
+    };
+  }, [commercialOverlay, stage3StorefrontProofEnabled, viewerReadyGeneration]);
 
   useEffect(() => {
     const viewer = viewerRef.current;
