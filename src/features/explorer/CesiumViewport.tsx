@@ -3,6 +3,8 @@ import type { KeyboardEventHandler } from "react";
 import {
   Cartesian3,
   Cartesian2,
+  Cartographic,
+  CameraEventType,
   Color,
   ColorGeometryInstanceAttribute,
   EllipsoidTerrainProvider,
@@ -20,9 +22,11 @@ import {
   Primitive,
   PointPrimitiveCollection,
   PrimitiveCollection,
+  KeyboardEventModifier,
   ScreenSpaceEventType,
   Quaternion,
   Transforms,
+  VertexFormat,
   Viewer,
 } from "cesium";
 import type { Feature, Position } from "../../domain/schema";
@@ -33,6 +37,12 @@ import type { TileCameraState } from "../../runtime/tile-stream";
 import type { CameraPose } from "../../domain/visitor-navigation";
 import type { CityAssetResolver } from "../../runtime/city-asset-manifest";
 import type { CommercialStorefrontPlacement, LoadedExteriorPilotRelease } from "../../runtime/exterior-pilot-release";
+import {
+  viewportFootprintFromGroundPoints,
+  viewportBoundsIntersect,
+  type ViewportBounds,
+  type ViewportFootprint,
+} from "../../runtime/viewport-footprint";
 
 interface CesiumViewportProps {
   adapter: RuntimeCityAdapter;
@@ -52,7 +62,8 @@ interface CesiumViewportProps {
   denseFeatureGroupLimits?: { base: number; context: number };
   onDenseMetrics?: (metrics: DenseRenderMetrics) => void;
   selectedFeatureId?: string | null;
-  onCameraChanged?: (camera: CameraPose) => void;
+  onCameraChanged?: (camera: CameraPose, footprint?: ViewportFootprint) => void;
+  viewportFootprint?: ViewportFootprint | null;
   cameraRequest?: (TileCameraState | CameraPose) & { requestId: number };
   cameraPoseRequest?: (CameraPose & { requestId: number });
   onViewportKeyDown?: KeyboardEventHandler<HTMLDivElement>;
@@ -70,6 +81,56 @@ export interface DenseRenderMetrics {
   baseFeatureCount?: number;
   contextFeatureCount?: number;
   contextPartCount?: number;
+  /** Counters make repeated dense-plan work observable in the local diagnostics. */
+  planBuildCount?: number;
+  planReuseCount?: number;
+  planCancellationCount?: number;
+  planSwapCount?: number;
+  planFingerprint?: string;
+  selectionMs?: number;
+  keyMs?: number;
+  allocationMs?: number;
+  allocationMaxSliceMs?: number;
+  allocationChunkCount?: number;
+  workerReadyMs?: number;
+  totalBuildMs?: number;
+}
+
+interface PendingDenseBuild {
+  complete: boolean;
+  result: DenseBuildResult | null;
+  cancel: () => void;
+}
+
+// Polygon hierarchy allocation is still JavaScript work even when Cesium's
+// primitive compilation is asynchronous. Keep each visible-frame slice small.
+const DENSE_BUILD_CHUNK_SIZE = 120;
+// A handful of asynchronous worker jobs avoids both the old per-chunk
+// primitive churn and one monolithic main-thread-ready upload.
+const DENSE_PRIMITIVE_GROUP_SIZE = 1_500;
+
+interface DenseBuildResult {
+  metrics: DenseRenderMetrics;
+  startedAt: number;
+  allocationMs: number;
+  allocationMaxSliceMs: number;
+  allocationChunkCount: number;
+  allocationCompletedAt: number;
+}
+
+interface DenseRenderTelemetry {
+  planBuildCount: number;
+  planReuseCount: number;
+  planCancellationCount: number;
+  planSwapCount: number;
+  planFingerprint: string;
+  selectionMs: number;
+  keyMs: number;
+  allocationMs?: number;
+  allocationMaxSliceMs?: number;
+  allocationChunkCount?: number;
+  workerReadyMs?: number;
+  totalBuildMs?: number;
 }
 
 export interface DenseFeatureGroups {
@@ -111,11 +172,76 @@ export interface DenseRenderCamera {
   latitude: number;
 }
 
-export interface DenseRenderBounds {
-  west: number;
-  east: number;
-  south: number;
-  north: number;
+export type DenseRenderBounds = ViewportBounds;
+
+export interface CameraControlBindings {
+  rotateEventTypes: Array<CameraEventType | { eventType: CameraEventType; modifier: KeyboardEventModifier }>;
+  tiltEventTypes: Array<CameraEventType | { eventType: CameraEventType; modifier: KeyboardEventModifier }>;
+  zoomEventTypes: CameraEventType[];
+  lookEventTypes: Array<{ eventType: CameraEventType; modifier: KeyboardEventModifier }>;
+}
+
+/** Explicit, native-pointer camera contract: drag to orbit, middle/Ctrl-drag to tilt, wheel/pinch to zoom. */
+export function nativeCameraControlBindings(): CameraControlBindings {
+  return {
+    rotateEventTypes: [CameraEventType.LEFT_DRAG],
+    tiltEventTypes: [CameraEventType.MIDDLE_DRAG, CameraEventType.PINCH, { eventType: CameraEventType.LEFT_DRAG, modifier: KeyboardEventModifier.CTRL }],
+    zoomEventTypes: [CameraEventType.WHEEL, CameraEventType.PINCH, CameraEventType.RIGHT_DRAG],
+    lookEventTypes: [{ eventType: CameraEventType.LEFT_DRAG, modifier: KeyboardEventModifier.SHIFT }],
+  };
+}
+
+export function shouldApplyCameraPoseRequest(lastRequestId: number, request: { requestId: number } | undefined): boolean {
+  return Boolean(request && Number.isSafeInteger(request.requestId) && request.requestId > 0 && request.requestId !== lastRequestId);
+}
+
+export function shouldReplaceDenseRenderPlan(previousFeatures: readonly Feature[] | null, nextFeatures: readonly Feature[]): boolean {
+  return previousFeatures === null || previousFeatures.length !== nextFeatures.length || previousFeatures.some((feature, index) => feature !== nextFeatures[index]);
+}
+
+/**
+ * Compact O(n) diagnostic fingerprint for dense-plan observations. Rendering
+ * reuse is intentionally decided by reference sequence above, so a hash
+ * collision can never retain stale geometry or content.
+ */
+export function denseRenderPlanKey(
+  features: readonly Feature[],
+): string {
+  let hash = 2_166_136_261;
+  const fold = (value: string): void => {
+    for (let index = 0; index < value.length; index += 1) {
+      hash ^= value.charCodeAt(index);
+      hash = Math.imul(hash, 16_777_619);
+    }
+  };
+  for (const feature of features) {
+    fold(feature.id);
+    fold(feature.kind);
+    fold(`${feature.coordinates[0].toFixed(6)},${feature.coordinates[1].toFixed(6)},${feature.geometryProvenance.height.valueMeters ?? "unknown"}`);
+  }
+  return `${features.length}:${(hash >>> 0).toString(16)}`;
+}
+
+function emptyDenseRenderMetrics(): DenseRenderMetrics {
+  return { featureCount: 0, primitiveCount: 0, instanceCount: 0, buildingFeatureCount: 0, pointFeatureCount: 0 };
+}
+
+function withDenseRenderTelemetry(metrics: DenseRenderMetrics, telemetry: DenseRenderTelemetry): DenseRenderMetrics {
+  return {
+    ...metrics,
+    planBuildCount: telemetry.planBuildCount,
+    planReuseCount: telemetry.planReuseCount,
+    planCancellationCount: telemetry.planCancellationCount,
+    planSwapCount: telemetry.planSwapCount,
+    planFingerprint: telemetry.planFingerprint,
+    selectionMs: telemetry.selectionMs,
+    keyMs: telemetry.keyMs,
+    allocationMs: telemetry.allocationMs,
+    allocationMaxSliceMs: telemetry.allocationMaxSliceMs,
+    allocationChunkCount: telemetry.allocationChunkCount,
+    workerReadyMs: telemetry.workerReadyMs,
+    totalBuildMs: telemetry.totalBuildMs,
+  };
 }
 
 function positionsInFeature(feature: Feature): Position[] {
@@ -129,13 +255,15 @@ function positionsInFeature(feature: Feature): Position[] {
 export function denseFeatureIntersectsBounds(feature: Feature, bounds: DenseRenderBounds): boolean {
   const positions = positionsInFeature(feature);
   if (positions.length === 0) return false;
-  const west = Math.min(bounds.west, bounds.east);
-  const east = Math.max(bounds.west, bounds.east);
-  const south = Math.min(bounds.south, bounds.north);
-  const north = Math.max(bounds.south, bounds.north);
   const longitudes = positions.map((position) => position[0]);
   const latitudes = positions.map((position) => position[1]);
-  return Math.min(...longitudes) <= east && Math.max(...longitudes) >= west && Math.min(...latitudes) <= north && Math.max(...latitudes) >= south;
+  const featureBounds: ViewportBounds = {
+    west: Math.min(...longitudes),
+    east: Math.max(...longitudes),
+    south: Math.min(...latitudes),
+    north: Math.max(...latitudes),
+  };
+  return viewportBoundsIntersect(featureBounds, bounds) || positions.some(([longitude, latitude]) => viewportBoundsIntersect({ west: longitude, east: longitude, south: latitude, north: latitude }, bounds));
 }
 
 /**
@@ -469,29 +597,130 @@ function addFeatureEntities(
   return [addFeatureEntity(viewer, feature, 0, assetResolver, assetDistanceMeters, selectedFeatureId, suppressUnselectedLabels)];
 }
 
-function addDensePrimitives(collection: PrimitiveCollection, features: Feature[], selectedFeatureId: string | null): DenseRenderMetrics {
-  const buildings = features.filter((feature): feature is Feature & { kind: "building"; geometry: Extract<Feature["geometry"], { type: "Polygon" }> } => feature.kind === "building" && feature.geometry.type === "Polygon" && feature.id !== selectedFeatureId);
+type DenseBuildingFeature = Feature & { kind: "building"; geometry: Extract<Feature["geometry"], { type: "Polygon" }> };
+
+function isDenseBuildingFeature(feature: Feature): feature is DenseBuildingFeature {
+  return feature.kind === "building" && feature.geometry.type === "Polygon";
+}
+
+function denseBuildingInstance(feature: DenseBuildingFeature): GeometryInstance {
+  return new GeometryInstance({
+    id: feature.id,
+    geometry: new PolygonGeometry({
+      polygonHierarchy: new PolygonHierarchy(positionsForRing(feature.geometry.coordinates[0] ?? [])),
+      height: 0,
+      extrudedHeight: Math.max(1, feature.geometryProvenance.height.valueMeters ?? 1),
+      // Cesium's flat per-instance appearance requires position only; keeping
+      // normals/ST/bitangents out of every citywide polygon reduces worker and
+      // upload work without changing the flat-colored visual contract.
+      vertexFormat: VertexFormat.POSITION_ONLY,
+    }),
+    attributes: { color: ColorGeometryInstanceAttribute.fromColor(Color.fromCssColorString("#d7a85d").withAlpha(0.82)) },
+  });
+}
+
+function addDensePrimitives(
+  collection: PrimitiveCollection,
+  buildingInstances: readonly GeometryInstance[],
+  points: readonly Feature[],
+): DenseRenderMetrics {
   let primitiveCount = 0;
-  if (buildings.length) {
-    const instances = buildings.map((feature) => new GeometryInstance({
-      id: feature.id,
-      geometry: new PolygonGeometry({ polygonHierarchy: new PolygonHierarchy(positionsForRing(feature.geometry.coordinates[0] ?? [])), height: 0, extrudedHeight: Math.max(1, feature.geometryProvenance.height.valueMeters ?? 1) }),
-      attributes: { color: ColorGeometryInstanceAttribute.fromColor(Color.fromCssColorString(feature.id === selectedFeatureId ? "#63f3c5" : "#d7a85d").withAlpha(0.82)) },
-    }));
-    const primitive = new Primitive({ geometryInstances: instances, appearance: new PerInstanceColorAppearance({ flat: true, translucent: true }), asynchronous: false });
+  for (let start = 0; start < buildingInstances.length; start += DENSE_PRIMITIVE_GROUP_SIZE) {
+    const primitive = new Primitive({
+      geometryInstances: buildingInstances.slice(start, start + DENSE_PRIMITIVE_GROUP_SIZE),
+      appearance: new PerInstanceColorAppearance({ flat: true, translucent: true }),
+      asynchronous: true,
+    });
     collection.add(primitive);
     primitiveCount += 1;
   }
-  const points = features.filter((feature) => feature.kind === "poi" && feature.id !== selectedFeatureId);
   if (points.length) {
     const pointCollection = collection.add(new PointPrimitiveCollection());
-    points.forEach((feature) => {
-      const style = densePoiMarkerStyle(feature.id === selectedFeatureId);
+    const style = densePoiMarkerStyle(false);
+    for (const feature of points) {
       pointCollection.add({ id: feature.id, position: Cartesian3.fromDegrees(feature.coordinates[0], feature.coordinates[1], 14), pixelSize: style.pixelSize, color: Color.fromCssColorString(style.color).withAlpha(style.opacity), outlineColor: Color.WHITE, outlineWidth: style.outlineWidth });
-    });
+    }
     primitiveCount += 1;
   }
-  return { featureCount: buildings.length + points.length, primitiveCount, instanceCount: buildings.length + points.length, buildingFeatureCount: buildings.length, pointFeatureCount: points.length };
+  return {
+    featureCount: buildingInstances.length + points.length,
+    primitiveCount,
+    instanceCount: buildingInstances.length + points.length,
+    buildingFeatureCount: buildingInstances.length,
+    pointFeatureCount: points.length,
+  };
+}
+
+/**
+ * Build a replacement layer over several animation frames. The current layer
+ * remains active until every owned primitive is ready, so no camera settle can
+ * expose a clear-before-ready frame.
+ */
+function scheduleDensePrimitiveBuild(
+  viewer: Viewer,
+  collection: PrimitiveCollection,
+  features: readonly Feature[],
+  onComplete: (result: DenseBuildResult) => void,
+): PendingDenseBuild {
+  let cursor = 0;
+  let frame: number | null = null;
+  let cancelled = false;
+  const startedAt = performance.now();
+  const buildingInstances: GeometryInstance[] = [];
+  const points: Feature[] = [];
+  let allocationMs = 0;
+  let allocationMaxSliceMs = 0;
+  let allocationChunkCount = 0;
+  const build: PendingDenseBuild = {
+    complete: false,
+    result: null,
+    cancel: () => {
+      cancelled = true;
+      if (frame !== null) window.cancelAnimationFrame(frame);
+      frame = null;
+    },
+  };
+  const appendChunk = () => {
+    frame = null;
+    if (cancelled) return;
+    const sliceStartedAt = performance.now();
+    const sliceEnd = Math.min(features.length, cursor + DENSE_BUILD_CHUNK_SIZE);
+    while (cursor < sliceEnd) {
+      const feature = features[cursor]!;
+      if (isDenseBuildingFeature(feature)) buildingInstances.push(denseBuildingInstance(feature));
+      else if (feature.kind === "poi") points.push(feature);
+      cursor += 1;
+    }
+    const sliceMs = performance.now() - sliceStartedAt;
+    allocationMs += sliceMs;
+    allocationMaxSliceMs = Math.max(allocationMaxSliceMs, sliceMs);
+    allocationChunkCount += 1;
+    if (cursor < features.length) {
+      frame = window.requestAnimationFrame(appendChunk);
+      viewer.scene.requestRender();
+      return;
+    }
+    // Primitive construction only groups the already-created descriptors;
+    // Cesium performs polygon geometry work asynchronously after this frame.
+    const finalizeStartedAt = performance.now();
+    const metrics = addDensePrimitives(collection, buildingInstances, points);
+    const finalizeMs = performance.now() - finalizeStartedAt;
+    allocationMs += finalizeMs;
+    allocationMaxSliceMs = Math.max(allocationMaxSliceMs, finalizeMs);
+    build.result = {
+      metrics,
+      startedAt,
+      allocationMs,
+      allocationMaxSliceMs,
+      allocationChunkCount,
+      allocationCompletedAt: performance.now(),
+    };
+    build.complete = true;
+    onComplete(build.result);
+    viewer.scene.requestRender();
+  };
+  frame = window.requestAnimationFrame(appendChunk);
+  return build;
 }
 
 function addSelectedPoiEntity(viewer: Viewer, feature: Feature): ReturnType<Viewer["entities"]["add"]> {
@@ -534,6 +763,51 @@ function cameraStateForViewer(viewer: Viewer): CameraPose {
   const position = viewer.camera.positionCartographic;
   return { longitude: CesiumMath.toDegrees(position.longitude), latitude: CesiumMath.toDegrees(position.latitude), height: Math.max(0, Number.isFinite(position.height) ? position.height : 0), heading: CesiumMath.toDegrees(viewer.camera.heading), pitch: CesiumMath.toDegrees(viewer.camera.pitch), roll: CesiumMath.toDegrees(viewer.camera.roll) };
 }
+
+function fallbackBoundsForViewer(viewer: Viewer): ViewportBounds | null {
+  const rectangle = viewer.camera.computeViewRectangle(viewer.scene.globe.ellipsoid);
+  if (!rectangle) return null;
+  return {
+    west: CesiumMath.toDegrees(rectangle.west),
+    east: CesiumMath.toDegrees(rectangle.east),
+    south: CesiumMath.toDegrees(rectangle.south),
+    north: CesiumMath.toDegrees(rectangle.north),
+  };
+}
+
+/** Sample the real visible globe surface instead of deriving loading bounds from the camera's air position. */
+function cameraFootprintForViewer(viewer: Viewer, lastValid: ViewportFootprint | null): ViewportFootprint | null {
+  const width = Math.max(1, viewer.canvas.clientWidth || viewer.canvas.width || 1);
+  const height = Math.max(1, viewer.canvas.clientHeight || viewer.canvas.height || 1);
+  // Canvas coordinates are zero-based: sampling width/height can land one
+  // pixel outside its valid pick-ray domain on the right/bottom edges.
+  const maxX = Math.max(0, width - 1);
+  const maxY = Math.max(0, height - 1);
+  const samples: Array<readonly [number, number]> = [
+    [maxX * 0.5, maxY * 0.5],
+    [0, 0], [maxX, 0], [0, maxY], [maxX, maxY],
+    [maxX * 0.5, 0], [maxX * 0.5, maxY], [0, maxY * 0.5], [maxX, maxY * 0.5],
+  ];
+  const groundPoints: Array<readonly [number, number]> = [];
+  for (const [x, y] of samples) {
+    const ray = viewer.camera.getPickRay(new Cartesian2(x, y));
+    const hit = ray ? viewer.scene.globe.pick(ray, viewer.scene) : undefined;
+    const cartographic = hit ? Cartographic.fromCartesian(hit) : undefined;
+    if (cartographic && Number.isFinite(cartographic.longitude) && Number.isFinite(cartographic.latitude)) {
+      groundPoints.push([CesiumMath.toDegrees(cartographic.longitude), CesiumMath.toDegrees(cartographic.latitude)]);
+    }
+  }
+  return viewportFootprintFromGroundPoints(groundPoints, { lastValid, fallbackBounds: fallbackBoundsForViewer(viewer) });
+}
+
+function primitiveLayerReady(layer: PrimitiveCollection): boolean {
+  for (let index = 0; index < layer.length; index += 1) {
+    const primitive = layer.get(index) as { ready?: boolean } | undefined;
+    if (primitive && primitive.ready === false) return false;
+  }
+  return true;
+}
+
 function cameraDuration(seconds: number): number { return typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ? 0.01 : seconds; }
 
 /** Build the bounded, deterministic camera pose used for a selected parent. */
@@ -690,6 +964,7 @@ export function CesiumViewport({
   onDenseMetrics,
   selectedFeatureId = null,
   onCameraChanged,
+  viewportFootprint = null,
   cameraRequest,
   cameraPoseRequest,
   onViewportKeyDown,
@@ -700,16 +975,42 @@ export function CesiumViewport({
   const containerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<Viewer | null>(null);
   const [viewerReadyGeneration, setViewerReadyGeneration] = useState(0);
+  const adapterRef = useRef(adapter);
+  const onFeatureSelectedRef = useRef(onFeatureSelected);
+  const onFeatureOverlapRef = useRef(onFeatureOverlap);
+  const onStorefrontSelectedRef = useRef(onStorefrontSelected);
+  const onCameraChangedRef = useRef(onCameraChanged);
+  const onDenseMetricsRef = useRef(onDenseMetrics);
+  adapterRef.current = adapter;
+  onFeatureSelectedRef.current = onFeatureSelected;
+  onFeatureOverlapRef.current = onFeatureOverlap;
+  onStorefrontSelectedRef.current = onStorefrontSelected;
+  onCameraChangedRef.current = onCameraChanged;
+  onDenseMetricsRef.current = onDenseMetrics;
   const cameraPoseRequestRef = useRef(cameraPoseRequest);
   cameraPoseRequestRef.current = cameraPoseRequest;
   const previewIndexRef = useRef(0);
   const previewTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const denseFeatureMapRef = useRef(new Map<string, Feature>());
   const denseCollectionRef = useRef<PrimitiveCollection | null>(null);
+  const activeDenseLayerRef = useRef<PrimitiveCollection | null>(null);
+  const pendingDenseLayerRef = useRef<PrimitiveCollection | null>(null);
+  const pendingDenseBuildRef = useRef<PendingDenseBuild | null>(null);
+  const denseRenderPlanFeaturesRef = useRef<readonly Feature[] | null>(null);
+  const denseBuildGenerationRef = useRef(0);
+  const denseRenderTelemetryRef = useRef<DenseRenderTelemetry>({ planBuildCount: 0, planReuseCount: 0, planCancellationCount: 0, planSwapCount: 0, planFingerprint: "", selectionMs: 0, keyMs: 0 });
+  const denseMetricsRef = useRef<DenseRenderMetrics>(emptyDenseRenderMetrics());
+  const denseGroupMetricsRef = useRef({ baseFeatureCount: 0, contextFeatureCount: 0, contextPartCount: 0 });
+  const ownedEntityIdsRef = useRef(new Set<string>());
   const storefrontPickMapRef = useRef(new Map<string, CommercialStorefrontPlacement>());
   const suppressCameraEventsUntilRef = useRef(0);
+  const lastValidFootprintRef = useRef<ViewportFootprint | null>(viewportFootprint?.valid ? viewportFootprint : null);
+  const cameraSettledEmitterRef = useRef<(() => void) | null>(null);
+  const lastCameraRequestIdRef = useRef(0);
+  const lastCameraPoseRequestIdRef = useRef(0);
   const lastFocusFlightRequestRef = useRef(0);
   const lastFocusTargetSignatureRef = useRef<string | null>(null);
+  if (viewportFootprint?.valid) lastValidFootprintRef.current = viewportFootprint;
 
   useEffect(() => {
     const container = containerRef.current;
@@ -737,6 +1038,17 @@ export function CesiumViewport({
     viewer.scene.globe.enableLighting = false;
     if (viewer.scene.skyAtmosphere) viewer.scene.skyAtmosphere.show = false;
     if (viewer.scene.skyBox) viewer.scene.skyBox.show = false;
+    const controls = nativeCameraControlBindings();
+    const controller = viewer.scene.screenSpaceCameraController;
+    controller.enableInputs = true;
+    controller.enableRotate = true;
+    controller.enableTilt = true;
+    controller.enableZoom = true;
+    controller.enableLook = true;
+    controller.rotateEventTypes = controls.rotateEventTypes;
+    controller.tiltEventTypes = controls.tiltEventTypes;
+    controller.zoomEventTypes = controls.zoomEventTypes;
+    controller.lookEventTypes = controls.lookEventTypes;
     const denseCollection = viewer.scene.primitives.add(new PrimitiveCollection());
     denseCollectionRef.current = denseCollection;
     viewer.imageryLayers.add(new ImageryLayer(new GridImageryProvider({
@@ -750,52 +1062,61 @@ export function CesiumViewport({
     viewer.selectedEntityChanged.addEventListener((entity) => {
       if (!entity || typeof entity.id !== "string") return;
       const storefront = storefrontPickMapRef.current.get(entity.id);
-      if (storefront) { onStorefrontSelected?.(storefront); return; }
-      const feature = featureForPickedId(entity.id, denseFeatureMapRef.current, adapter);
-      if (feature) onFeatureSelected(feature);
+      if (storefront) { onStorefrontSelectedRef.current?.(storefront); return; }
+      const feature = featureForPickedId(entity.id, denseFeatureMapRef.current, adapterRef.current);
+      if (feature) onFeatureSelectedRef.current(feature);
     });
     viewer.screenSpaceEventHandler.setInputAction((movement: { position: Cartesian2 }) => {
       const picks = viewer.scene.drillPick(movement.position, 12) as Array<{ id?: unknown }>;
       const storefront = picks.map((picked) => typeof picked?.id === "string" ? storefrontPickMapRef.current.get(picked.id) : undefined).find((placement): placement is CommercialStorefrontPlacement => Boolean(placement));
-      if (storefront) { onStorefrontSelected?.(storefront); return; }
+      if (storefront) { onStorefrontSelectedRef.current?.(storefront); return; }
       const pickedFeatures = [...new Map(picks.map((picked) => {
         const pickedId = typeof picked?.id === "string" ? picked.id : null;
-        return pickedId ? [canonicalPickId(pickedId), featureForPickedId(pickedId, denseFeatureMapRef.current, adapter)] as const : ["", undefined] as const;
+        return pickedId ? [canonicalPickId(pickedId), featureForPickedId(pickedId, denseFeatureMapRef.current, adapterRef.current)] as const : ["", undefined] as const;
       }).filter((entry): entry is readonly [string, Feature] => Boolean(entry[0] && entry[1]))).values()];
       if (pickedFeatures.length > 1) {
-        onFeatureOverlap?.(pickedFeatures);
+        onFeatureOverlapRef.current?.(pickedFeatures);
         return;
       }
       const picked = viewer.scene.pick(movement.position) as { id?: unknown } | undefined;
       const pickedId = typeof picked?.id === "string" ? picked.id : null;
-      const feature = featureForPickedId(pickedId, denseFeatureMapRef.current, adapter) ?? pickedFeatures[0];
-      if (feature) onFeatureSelected(feature);
+      const feature = featureForPickedId(pickedId, denseFeatureMapRef.current, adapterRef.current) ?? pickedFeatures[0];
+      if (feature) onFeatureSelectedRef.current(feature);
     }, ScreenSpaceEventType.LEFT_CLICK);
     viewerRef.current = viewer;
+    const emitSettledCamera = (force = false) => {
+      if (!force && Date.now() < suppressCameraEventsUntilRef.current) return;
+      const footprint = cameraFootprintForViewer(viewer, lastValidFootprintRef.current);
+      if (footprint?.valid) lastValidFootprintRef.current = footprint;
+      onCameraChangedRef.current?.(cameraStateForViewer(viewer), footprint ?? lastValidFootprintRef.current ?? undefined);
+    };
+    cameraSettledEmitterRef.current = () => emitSettledCamera(true);
+    const onCameraMoveEnd = () => emitSettledCamera();
+    viewer.camera.moveEnd.addEventListener(onCameraMoveEnd);
     const initialCameraPoseRequest = cameraPoseRequestRef.current;
-    if (initialCameraPoseRequest) {
+    if (initialCameraPoseRequest && shouldApplyCameraPoseRequest(lastCameraPoseRequestIdRef.current, initialCameraPoseRequest)) {
+      lastCameraPoseRequestIdRef.current = initialCameraPoseRequest.requestId;
       suppressCameraEventsUntilRef.current = Date.now() + 900;
       applyCameraPoseRequest(viewer, initialCameraPoseRequest);
-      onCameraChanged?.(initialCameraPoseRequest);
     }
+    emitSettledCamera(true);
     setViewerReadyGeneration((generation) => generation + 1);
-    let cameraTimer: ReturnType<typeof setTimeout> | null = null;
-    const onCameraMove = () => {
-      if (!onCameraChanged) return;
-      if (Date.now() < suppressCameraEventsUntilRef.current) return;
-      if (cameraTimer) clearTimeout(cameraTimer);
-      cameraTimer = setTimeout(() => { cameraTimer = null; onCameraChanged(cameraStateForViewer(viewer)); }, 120);
-    };
-    if (onCameraChanged) viewer.camera.changed.addEventListener(onCameraMove);
 
     return () => {
-      denseCollectionRef.current?.removeAll();
-      if (cameraTimer) clearTimeout(cameraTimer);
-      if (onCameraChanged) viewer.camera.changed.removeEventListener(onCameraMove);
-      viewerRef.current = null;
+      viewer.camera.moveEnd.removeEventListener(onCameraMoveEnd);
+      if (cameraSettledEmitterRef.current) cameraSettledEmitterRef.current = null;
+      if (denseCollectionRef.current === denseCollection) denseCollectionRef.current = null;
+      activeDenseLayerRef.current = null;
+      pendingDenseLayerRef.current = null;
+      pendingDenseBuildRef.current?.cancel();
+      pendingDenseBuildRef.current = null;
+      denseRenderPlanFeaturesRef.current = null;
+      denseBuildGenerationRef.current += 1;
+      ownedEntityIdsRef.current.clear();
+      if (viewerRef.current === viewer) viewerRef.current = null;
       viewer.destroy();
     };
-  }, [adapter, onCameraChanged, onFeatureOverlap, onFeatureSelected, onStorefrontSelected]);
+  }, []);
 
   useEffect(() => {
     const viewer = viewerRef.current;
@@ -804,26 +1125,22 @@ export function CesiumViewport({
     const loadVisibleFeatures = async () => {
       const layers = (Object.keys(visibleLayers) as Array<keyof LayerVisibility>).filter((layer) => visibleLayers[layer]);
       const loaded = await Promise.all(layers.map((layer) => adapter.loadLayerFeatures(layer)));
-      if (cancelled) return;
+      if (cancelled || viewerRef.current !== viewer) return;
       const visibleFeatures = loaded.flat().filter((feature) => featureFilter?.(feature) ?? true);
-      viewer.entities.removeAll();
-      denseCollectionRef.current?.removeAll();
-      storefrontPickMapRef.current.clear();
       const visibleDenseFeatures = denseFeatures.filter((feature) => {
         const layer = layerForFeature(feature);
         return !layer || visibleLayers[layer];
       });
       const allFeatures = [...new Map([...visibleFeatures, ...visibleDenseFeatures].map((feature) => [feature.id, feature])).values()];
-      const denseCamera = Number.isFinite(viewer.camera.positionCartographic.longitude) && Number.isFinite(viewer.camera.positionCartographic.latitude)
+      const selectionStartedAt = performance.now();
+      const cameraFootprint = viewportFootprint ?? cameraFootprintForViewer(viewer, lastValidFootprintRef.current);
+      if (cameraFootprint?.valid) lastValidFootprintRef.current = cameraFootprint;
+      const denseCamera = cameraFootprint
+        ? cameraFootprint.groundCenter
+        : Number.isFinite(viewer.camera.positionCartographic.longitude) && Number.isFinite(viewer.camera.positionCartographic.latitude)
         ? { longitude: CesiumMath.toDegrees(viewer.camera.positionCartographic.longitude), latitude: CesiumMath.toDegrees(viewer.camera.positionCartographic.latitude) }
         : null;
-      const viewRectangle = viewer.camera.computeViewRectangle(viewer.scene.globe.ellipsoid);
-      const denseBounds = viewRectangle ? {
-        west: CesiumMath.toDegrees(viewRectangle.west),
-        east: CesiumMath.toDegrees(viewRectangle.east),
-        south: CesiumMath.toDegrees(viewRectangle.south),
-        north: CesiumMath.toDegrees(viewRectangle.north),
-      } : null;
+      const denseBounds = cameraFootprint?.bounds ?? null;
       const selectedFromAdapter = selectedFeatureId ? adapter.getFeature(selectedFeatureId) : undefined;
       const layerVisible = (feature: Feature): boolean => {
         const layer = layerForFeature(feature);
@@ -839,6 +1156,83 @@ export function CesiumViewport({
       denseFeatureMapRef.current = buildCollisionCheckedFeatureMap(renderedDenseFeatures);
       const assetDistanceMeters = Math.max(0, Number.isFinite(viewer.camera.positionCartographic.height) ? viewer.camera.positionCartographic.height : 240);
       const assetBuildingIds = verifiedAssetBuildingIds(renderedDenseFeatures, assetResolver, assetDistanceMeters);
+      const rootDenseCollection = denseCollectionRef.current;
+      const primitiveDenseFeatures = renderedGroups.base.filter((feature) => !assetBuildingIds.has(feature.id));
+      const telemetry = denseRenderTelemetryRef.current;
+      telemetry.selectionMs = performance.now() - selectionStartedAt;
+      const keyStartedAt = performance.now();
+      const nextDensePlanKey = denseRenderPlanKey(primitiveDenseFeatures);
+      telemetry.keyMs = performance.now() - keyStartedAt;
+      telemetry.planFingerprint = nextDensePlanKey;
+      const groupMetrics = { baseFeatureCount: renderedGroups.base.length, contextFeatureCount: renderedGroups.context.length, contextPartCount: renderedGroups.context.reduce((sum, feature) => sum + denseRenderPartCount(feature), 0) };
+      denseGroupMetricsRef.current = groupMetrics;
+      const publishDenseMetrics = (metrics: DenseRenderMetrics): void => {
+        onDenseMetricsRef.current?.({ ...withDenseRenderTelemetry(metrics, telemetry), ...denseGroupMetricsRef.current });
+      };
+      if (denseRendering && rootDenseCollection && shouldReplaceDenseRenderPlan(denseRenderPlanFeaturesRef.current, primitiveDenseFeatures)) {
+        const pending = pendingDenseLayerRef.current;
+        if (pendingDenseBuildRef.current) telemetry.planCancellationCount += 1;
+        pendingDenseBuildRef.current?.cancel();
+        pendingDenseBuildRef.current = null;
+        if (pending && pending !== activeDenseLayerRef.current) rootDenseCollection.remove(pending);
+        const nextDenseLayer = new PrimitiveCollection();
+        rootDenseCollection.add(nextDenseLayer);
+        const previousDenseLayer = activeDenseLayerRef.current;
+        const buildGeneration = denseBuildGenerationRef.current + 1;
+        denseBuildGenerationRef.current = buildGeneration;
+        denseRenderPlanFeaturesRef.current = primitiveDenseFeatures;
+        telemetry.planBuildCount += 1;
+        pendingDenseLayerRef.current = nextDenseLayer;
+        const pendingBuild = scheduleDensePrimitiveBuild(viewer, nextDenseLayer, primitiveDenseFeatures, (result) => {
+          if (viewerRef.current !== viewer || denseBuildGenerationRef.current !== buildGeneration) return;
+          telemetry.allocationMs = result.allocationMs;
+          telemetry.allocationMaxSliceMs = result.allocationMaxSliceMs;
+          telemetry.allocationChunkCount = result.allocationChunkCount;
+          denseMetricsRef.current = result.metrics;
+          publishDenseMetrics(result.metrics);
+        });
+        pendingDenseBuildRef.current = pendingBuild;
+        const commitDenseLayer = () => {
+          if (viewerRef.current !== viewer || denseBuildGenerationRef.current !== buildGeneration) {
+            pendingBuild.cancel();
+            rootDenseCollection.remove(nextDenseLayer);
+            if (pendingDenseLayerRef.current === nextDenseLayer) pendingDenseLayerRef.current = null;
+            if (pendingDenseBuildRef.current === pendingBuild) pendingDenseBuildRef.current = null;
+            viewer.scene.postRender.removeEventListener(commitDenseLayer);
+            return;
+          }
+          if (!pendingBuild.complete || !primitiveLayerReady(nextDenseLayer)) return;
+          if (previousDenseLayer && previousDenseLayer !== nextDenseLayer) rootDenseCollection.remove(previousDenseLayer);
+          activeDenseLayerRef.current = nextDenseLayer;
+          if (pendingDenseLayerRef.current === nextDenseLayer) pendingDenseLayerRef.current = null;
+          if (pendingDenseBuildRef.current === pendingBuild) pendingDenseBuildRef.current = null;
+          const result = pendingBuild.result;
+          if (result) {
+            telemetry.workerReadyMs = performance.now() - result.allocationCompletedAt;
+            telemetry.totalBuildMs = performance.now() - result.startedAt;
+            telemetry.planSwapCount += 1;
+            denseMetricsRef.current = result.metrics;
+            publishDenseMetrics(result.metrics);
+          }
+          viewer.scene.postRender.removeEventListener(commitDenseLayer);
+        };
+        viewer.scene.postRender.addEventListener(commitDenseLayer);
+        viewer.scene.requestRender();
+      } else if (denseRendering && rootDenseCollection) {
+        telemetry.planReuseCount += 1;
+      } else if (!denseRendering && rootDenseCollection) {
+        if (pendingDenseBuildRef.current) telemetry.planCancellationCount += 1;
+        pendingDenseBuildRef.current?.cancel();
+        pendingDenseBuildRef.current = null;
+        if (activeDenseLayerRef.current) rootDenseCollection.remove(activeDenseLayerRef.current);
+        if (pendingDenseLayerRef.current && pendingDenseLayerRef.current !== activeDenseLayerRef.current) rootDenseCollection.remove(pendingDenseLayerRef.current);
+        activeDenseLayerRef.current = null;
+        pendingDenseLayerRef.current = null;
+        denseRenderPlanFeaturesRef.current = null;
+        denseBuildGenerationRef.current += 1;
+        Object.assign(telemetry, { planBuildCount: 0, planReuseCount: 0, planCancellationCount: 0, planSwapCount: 0, planFingerprint: "", selectionMs: 0, keyMs: 0, allocationMs: undefined, allocationMaxSliceMs: undefined, allocationChunkCount: undefined, workerReadyMs: undefined, totalBuildMs: undefined });
+        denseMetricsRef.current = emptyDenseRenderMetrics();
+      }
       const semanticBaseFeatures = denseRendering
         ? renderedGroups.base.filter((feature) => (feature.kind !== "building" && feature.kind !== "poi") || assetBuildingIds.has(feature.id))
         : renderedDenseFeatures;
@@ -846,20 +1240,26 @@ export function CesiumViewport({
         ? renderedGroups.context.filter((feature) => (feature.kind !== "building" && feature.kind !== "poi") || assetBuildingIds.has(feature.id))
         : [];
       const suppressUnselectedLabels = denseRendering || assetDistanceMeters >= 1_200;
+      for (const entityId of ownedEntityIdsRef.current) viewer.entities.removeById(entityId);
+      const nextOwnedEntityIds = new Set<string>();
+      storefrontPickMapRef.current.clear();
+      const addOwnedFeatureEntities = (feature: Feature, distance: number, suppressLabels: boolean) => {
+        addFeatureEntities(viewer, feature, assetResolver, distance, selectedFeatureId, suppressLabels).forEach((entity) => {
+          if (typeof entity.id === "string") nextOwnedEntityIds.add(entity.id);
+        });
+      };
       semanticBaseFeatures.forEach((feature) => {
         // Keep the selected model on its highest verified LOD while the camera
         // is framed from outside its full authored bounds; this preserves a
         // visible pinnacle/silhouette instead of swapping to a roof-only LOD.
         const selectedAssetDistanceMeters = feature.id === selectedFeatureId ? Math.min(assetDistanceMeters, 180) : assetDistanceMeters;
-        addFeatureEntities(viewer, feature, assetResolver, selectedAssetDistanceMeters, selectedFeatureId, suppressUnselectedLabels);
+        addOwnedFeatureEntities(feature, selectedAssetDistanceMeters, suppressUnselectedLabels);
       });
-      const denseMetrics = denseRendering && denseCollectionRef.current
-        ? addDensePrimitives(denseCollectionRef.current, renderedGroups.base.filter((feature) => !assetBuildingIds.has(feature.id)), selectedFeatureId)
-        : { featureCount: 0, primitiveCount: 0, instanceCount: 0, buildingFeatureCount: 0, pointFeatureCount: 0 };
-      onDenseMetrics?.({ ...denseMetrics, baseFeatureCount: renderedGroups.base.length, contextFeatureCount: renderedGroups.context.length, contextPartCount: renderedGroups.context.reduce((sum, feature) => sum + denseRenderPartCount(feature), 0) });
+      const denseMetrics = denseRendering ? denseMetricsRef.current : emptyDenseRenderMetrics();
+      publishDenseMetrics(denseMetrics);
       semanticContextFeatures.forEach((feature) => {
         const selectedAssetDistanceMeters = feature.id === selectedFeatureId ? Math.min(assetDistanceMeters, 180) : assetDistanceMeters;
-        addFeatureEntities(viewer, feature, assetResolver, selectedAssetDistanceMeters, selectedFeatureId, suppressUnselectedLabels);
+        addOwnedFeatureEntities(feature, selectedAssetDistanceMeters, suppressUnselectedLabels);
       });
       if (commercialOverlay && (assetDistanceMeters <= 900)) {
         const visibleBuildingIds = new Set(allFeatures.filter((feature) => feature.kind === "building").map((feature) => feature.id));
@@ -874,7 +1274,7 @@ export function CesiumViewport({
             const proxyId = commercialStorefrontProxyId(placement.storefrontId);
             storefrontPickMapRef.current.set(proxyId, placement);
             const tenantLabel = placement.displayName ?? placement.rawName ?? "Verified storefront";
-            viewer.entities.add({
+            const storefrontEntity = viewer.entities.add({
               id: proxyId,
               name: tenantLabel,
               position: Cartesian3.fromDegrees(anchor[0], anchor[1], 4),
@@ -882,46 +1282,51 @@ export function CesiumViewport({
               label: resolution.lod.id === "lod0" ? { text: tenantLabel, font: "11px Inter, sans-serif", fillColor: Color.WHITE, showBackground: true, backgroundColor: Color.fromCssColorString("#17372c").withAlpha(0.9), pixelOffset: new Cartesian2(0, -18), disableDepthTestDistance: Number.POSITIVE_INFINITY } : undefined,
               properties: { canonicalTenantId: placement.canonicalTenantId, canonicalBuildingId: placement.canonicalBuildingId, storefrontId: placement.storefrontId, evidenceIds: placement.evidenceIds.join(","), activeAssetLod: resolution.lod.id, placementDecision: placement.placementDecision, licensePartition: placement.licensePartition },
             });
+            if (typeof storefrontEntity.id === "string") nextOwnedEntityIds.add(storefrontEntity.id);
           }
         }
       }
       if (denseRendering && selectedFeatureId) {
         const selectedFeature = renderedDenseFeatures.find((feature) => feature.id === selectedFeatureId);
         if (selectedFeature && !semanticBaseFeatures.some((feature) => feature.id === selectedFeature.id) && !semanticContextFeatures.some((feature) => feature.id === selectedFeature.id) && selectedFeature.kind !== "poi") {
-          addFeatureEntities(viewer, selectedFeature, assetResolver, Math.min(assetDistanceMeters, 180), selectedFeatureId, false);
+          addOwnedFeatureEntities(selectedFeature, Math.min(assetDistanceMeters, 180), false);
         }
         const selectedPoi = renderedDenseFeatures.find((feature) => feature.id === selectedFeatureId && feature.kind === "poi");
-        if (selectedPoi) addSelectedPoiEntity(viewer, selectedPoi);
+        if (selectedPoi) {
+          const selectedPoiEntity = addSelectedPoiEntity(viewer, selectedPoi);
+          if (typeof selectedPoiEntity.id === "string") nextOwnedEntityIds.add(selectedPoiEntity.id);
+        }
       }
       if (itinerary) {
         itineraryLines(itinerary).forEach((line, index) => {
-          viewer.entities.add({
+          const routeEntity = viewer.entities.add({
             id: `synthetic-itinerary-route:${index}`,
             name: "Synthetic itinerary preview",
             polyline: { positions: positionsForLine(line), width: 8, material: Color.fromCssColorString("#63f3c5").withAlpha(0.95), clampToGround: true },
             properties: { fixtureOnly: true, routeWarning: "Synthetic route preview; not real navigation." },
           });
+          if (typeof routeEntity.id === "string") nextOwnedEntityIds.add(routeEntity.id);
         });
       }
+      ownedEntityIdsRef.current = nextOwnedEntityIds;
     };
     void loadVisibleFeatures();
     return () => { cancelled = true; };
-  }, [adapter, assetResolver, commercialOverlay, denseFeatureGroups, denseFeatureGroupLimits, denseFeatureLimit, denseFeatures, denseRendering, featureFilter, itinerary, onDenseMetrics, onStorefrontSelected, selectedFeatureId, visibleLayers.buildings, visibleLayers.pois, visibleLayers.areas, visibleLayers.stations, visibleLayers.entrances, visibleLayers.routes, visibleLayers["statistical-areas"], visibleLayers.parks, visibleLayers.landmarks]);
+  }, [adapter, assetResolver, commercialOverlay, denseFeatureGroups, denseFeatureGroupLimits, denseFeatureLimit, denseFeatures, denseRendering, featureFilter, itinerary, selectedFeatureId, viewportFootprint, visibleLayers.buildings, visibleLayers.pois, visibleLayers.areas, visibleLayers.stations, visibleLayers.entrances, visibleLayers.routes, visibleLayers["statistical-areas"], visibleLayers.parks, visibleLayers.landmarks]);
 
   useEffect(() => {
     const viewer = viewerRef.current;
-    if (!viewer || !cameraRequest) return;
+    if (!viewer || !cameraRequest || !shouldApplyCameraPoseRequest(lastCameraRequestIdRef.current, cameraRequest)) return;
+    lastCameraRequestIdRef.current = cameraRequest.requestId;
     suppressCameraEventsUntilRef.current = Date.now() + 900;
-    const callbackPose: CameraPose = "height" in cameraRequest ? cameraRequest : { longitude: cameraRequest.longitude, latitude: cameraRequest.latitude, height: cameraRequest.distanceMeters, heading: 0, pitch: -45, roll: 0 };
     if ("height" in cameraRequest) applyCameraPoseRequest(viewer, cameraRequest);
     else {
       viewer.camera.cancelFlight();
       viewer.camera.setView({ destination: Cartesian3.fromDegrees(cameraRequest.longitude, cameraRequest.latitude, cameraRequest.distanceMeters), orientation: { heading: 0, pitch: CesiumMath.toRadians(-45), roll: 0 } });
     }
-    onCameraChanged?.(callbackPose);
-    const settleTimer = setTimeout(() => onCameraChanged?.(callbackPose), 950);
-    return () => clearTimeout(settleTimer);
-  }, [cameraRequest, onCameraChanged, viewerReadyGeneration]);
+    viewer.scene.requestRender();
+    cameraSettledEmitterRef.current?.();
+  }, [cameraRequest, viewerReadyGeneration]);
 
   useEffect(() => {
     const viewer = viewerRef.current;
@@ -1003,19 +1408,22 @@ export function CesiumViewport({
       duration,
       complete: () => {
         suppressCameraEventsUntilRef.current = Date.now() + 900;
-        onCameraChanged?.(normalizeFocusCameraPose(cameraStateForViewer(viewer), pose));
+        const footprint = cameraFootprintForViewer(viewer, lastValidFootprintRef.current);
+        if (footprint?.valid) lastValidFootprintRef.current = footprint;
+        onCameraChangedRef.current?.(normalizeFocusCameraPose(cameraStateForViewer(viewer), pose), footprint ?? lastValidFootprintRef.current ?? undefined);
       },
     });
-  }, [adapter, assetResolver, denseFeatures, focusFeatureId, focusOverlayOpen, focusRequest, onCameraChanged]);
+  }, [adapter, assetResolver, denseFeatures, focusFeatureId, focusOverlayOpen, focusRequest]);
 
   useEffect(() => {
     const viewer = viewerRef.current;
-    if (!viewer || !cameraPoseRequest) return;
-    viewer.camera.cancelFlight();
+    if (!viewer || !cameraPoseRequest || !shouldApplyCameraPoseRequest(lastCameraPoseRequestIdRef.current, cameraPoseRequest)) return;
+    lastCameraPoseRequestIdRef.current = cameraPoseRequest.requestId;
     suppressCameraEventsUntilRef.current = Date.now() + 900;
-    viewer.camera.setView({ destination: Cartesian3.fromDegrees(cameraPoseRequest.longitude, cameraPoseRequest.latitude, cameraPoseRequest.height), orientation: { heading: CesiumMath.toRadians(cameraPoseRequest.heading), pitch: CesiumMath.toRadians(cameraPoseRequest.pitch), roll: CesiumMath.toRadians(cameraPoseRequest.roll) } });
-    onCameraChanged?.(cameraPoseRequest);
-  }, [cameraPoseRequest, onCameraChanged]);
+    applyCameraPoseRequest(viewer, cameraPoseRequest);
+    viewer.scene.requestRender();
+    cameraSettledEmitterRef.current?.();
+  }, [cameraPoseRequest]);
 
   return <div className="viewport" ref={containerRef} aria-label="3D city viewport" tabIndex={0} onKeyDown={onViewportKeyDown} />;
 }

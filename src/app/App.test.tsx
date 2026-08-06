@@ -56,7 +56,7 @@ vi.mock("../features/explorer/CesiumViewport", async () => {
   };
 });
 
-import { App, overlayLayoutPolicy, selectionFocusTransaction } from "./App";
+import { App, overlayLayoutPolicy, preserveFeatureSequence, selectionFocusTransaction } from "./App";
 import { navigationUrl, parseNavigationUrl } from "../domain/visitor-navigation";
 
 const initialTestUrl = window.location.href;
@@ -98,6 +98,21 @@ describe("explorer overlay policy", () => {
   it("opens locationless records without claiming a camera transaction", () => {
     const locationless = { ...locatedFeature, attributes: { ...locatedFeature.attributes, civicNoMarker: true } };
     expect(selectionFocusTransaction(locationless)).toEqual({ focusFeatureId: null, shouldFly: false });
+  });
+
+  it("does not retain an ID-only sequence when a same-ID feature receives new geometry or detail content", () => {
+    const revisedCoordinates: Feature["coordinates"] = [locatedFeature.coordinates[0] + 0.001, locatedFeature.coordinates[1]];
+    const revised: Feature = {
+      ...locatedFeature,
+      name: "Revised same-ID feature",
+      coordinates: revisedCoordinates,
+      geometry: locatedFeature.geometry.type === "Point" ? { ...locatedFeature.geometry, coordinates: revisedCoordinates } : locatedFeature.geometry,
+      attributes: { ...locatedFeature.attributes, refreshedDetail: "new-content" },
+    };
+    const previous = [locatedFeature];
+    const retained = preserveFeatureSequence(previous, [revised]);
+    expect(retained).not.toBe(previous);
+    expect(retained).toEqual([revised]);
   });
 });
 
@@ -193,4 +208,5 @@ describe("App overlay and selection regressions", () => {
     await waitFor(() => expect(directions).toHaveAttribute("aria-expanded", "true"));
     expect(diagnostics).toHaveAttribute("aria-expanded", "false");
   });
+
 });

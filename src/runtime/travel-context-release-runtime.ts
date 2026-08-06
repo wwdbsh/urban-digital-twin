@@ -27,10 +27,14 @@ import {
 import { MANHATTAN_CIVIC_APPROVAL_EVIDENCE } from "../data/source-registry.ts";
 import { CitywideLruCache, CitywideRequestPool, type CitywideSharedRequestBudget } from "../release/citywide-release.ts";
 import { DEFAULT_LAYER_VISIBILITY, layerForFeature, type LayerManifest, type LayerVisibility, type RuntimeLayerId } from "./layers.ts";
-import type { TileBounds } from "./spatial.ts";
-import type { CameraPose } from "../domain/visitor-navigation.ts";
 import type { RuntimeCityAdapter } from "./fixture-adapter.ts";
 import { sha256Hex } from "../ingestion/offline.ts";
+import {
+  normalizeViewportRefreshRequest,
+  viewportBoundsIntersect,
+  type ViewportGroundCenter,
+  type ViewportRefreshInput,
+} from "./viewport-footprint.ts";
 
 type Fetcher = (input: string, init?: RequestInit) => Promise<Response>;
 
@@ -83,6 +87,7 @@ export interface TravelContextRuntimeMetrics {
   cacheEntries: number;
   cacheEvictions: number;
   failedLayers: RuntimeLayerId[];
+  dedupedRefreshCount?: number;
 }
 
 export interface TravelContextRuntimeOptions {
@@ -161,16 +166,6 @@ function normalizeAttribute(value: unknown): string | number | boolean | null {
 
 function attributesFromRecord(source: Record<string, unknown>): Record<string, string | number | boolean | null> {
   return Object.fromEntries(Object.entries(source).map(([key, value]) => [key, normalizeAttribute(value)]));
-}
-
-function viewportForCamera(camera: CameraPose): TileBounds {
-  const radiusLongitude = Math.min(0.12, Math.max(0.006, camera.height / 111_000 * 0.9));
-  const radiusLatitude = radiusLongitude * 0.65;
-  return { west: camera.longitude - radiusLongitude, east: camera.longitude + radiusLongitude, south: camera.latitude - radiusLatitude, north: camera.latitude + radiusLatitude };
-}
-
-function intersects(left: TileBounds, right: TileBounds): boolean {
-  return left.west <= right.east && left.east >= right.west && left.south <= right.north && left.north >= right.south;
 }
 
 function sourceRecordIdFromValue(value: string): string {
@@ -351,6 +346,10 @@ export class TravelContextReleaseAdapter implements RuntimeCityAdapter {
   private requestedShardCount = 0;
   private generation = 0;
   private viewportAbortController: AbortController | null = null;
+  private activeViewportSignature: string | null = null;
+  private activeViewportPromise: Promise<Feature[]> | null = null;
+  private committedViewportSignature: string | null = null;
+  private dedupedRefreshCount = 0;
   private staleResultCount = 0;
   private failedLayers = new Set<RuntimeLayerId>();
   private geometryFailedLayers = new Set<RuntimeLayerId>();
@@ -445,8 +444,24 @@ export class TravelContextReleaseAdapter implements RuntimeCityAdapter {
     return this.getFeatures({ ...DEFAULT_LAYER_VISIBILITY, buildings: layer === "buildings", pois: layer === "pois", areas: layer === "areas", stations: false, entrances: false, routes: false, "statistical-areas": layer === "statistical-areas", parks: layer === "parks", landmarks: layer === "landmarks" });
   }
 
-  async refreshViewport(camera: CameraPose, signal?: AbortSignal): Promise<Feature[]> {
-    if (this.destroyed) return [];
+  refreshViewport(input: ViewportRefreshInput, signal?: AbortSignal): Promise<Feature[]> {
+    if (this.destroyed) return Promise.resolve([]);
+    const request = normalizeViewportRefreshRequest(input);
+    const viewport = request.footprint.bounds;
+    const candidates = this.manifest.geometryShards
+      .filter((shard) => viewportBoundsIntersect(shard.bounds, viewport))
+      .sort((left, right) => this.shardDistance(left, request.footprint.groundCenter) - this.shardDistance(right, request.footprint.groundCenter) || left.shardId.localeCompare(right.shardId));
+    const bounded = candidates.slice(0, TRAVEL_CONTEXT_BUDGETS.maxLoadedShards);
+    const visibleRefs = new Set(bounded.map((shard) => shard.relativeContentRef));
+    const signature = `${request.footprint.signature}|${[...visibleRefs].sort().join(",")}`;
+    if (signature === this.activeViewportSignature && this.activeViewportPromise) {
+      this.dedupedRefreshCount += 1;
+      return this.activeViewportPromise;
+    }
+    if (signature === this.committedViewportSignature) {
+      this.dedupedRefreshCount += 1;
+      return Promise.resolve(this.getFeatures());
+    }
     this.viewportAbortController?.abort();
     const controller = new AbortController();
     this.viewportAbortController = controller;
@@ -454,45 +469,54 @@ export class TravelContextReleaseAdapter implements RuntimeCityAdapter {
     signal?.addEventListener("abort", abort, { once: true });
     if (signal?.aborted) controller.abort();
     const generation = ++this.generation;
-    const viewport = viewportForCamera(camera);
-    const candidates = this.manifest.geometryShards.filter((shard) => intersects(shard.bounds, viewport)).sort((left, right) => this.shardDistance(left, camera) - this.shardDistance(right, camera) || left.shardId.localeCompare(right.shardId));
-    const bounded = candidates.slice(0, TRAVEL_CONTEXT_BUDGETS.maxLoadedShards);
-    const visibleRefs = new Set(bounded.map((shard) => shard.relativeContentRef));
     this.visibleShardCount = visibleRefs.size;
     this.requestedShardCount = bounded.length;
-    const viewportFailedLayers = new Set<RuntimeLayerId>();
-    const values = await Promise.all(bounded.map((shard) => this.loadRef(shard.relativeContentRef, shard.checksumSha256, controller.signal).catch(() => undefined)));
-    if (controller.signal.aborted || generation !== this.generation || this.destroyed) {
-      this.staleResultCount += 1;
-      signal?.removeEventListener("abort", abort);
-      return this.getFeatures();
-    }
-    const next = new Map<string, Feature>();
-    values.forEach((loaded, index) => {
-      const shard = bounded[index];
-      if (!shard) return;
-      if (!loaded) { viewportFailedLayers.add(runtimeLayerForTravelLayer(shard.layerId)); return; }
-      if (!Array.isArray(loaded.payload)) { viewportFailedLayers.add(runtimeLayerForTravelLayer(shard.layerId)); return; }
-      const records = loaded.payload.map(compactGeometry);
-      if (records.some((record) => !record)) { viewportFailedLayers.add(runtimeLayerForTravelLayer(shard.layerId)); return; }
-      const grouped = new Map<string, CompactGeometryRecord[]>();
-      records.forEach((record) => { if (record) grouped.set(record.p, [...(grouped.get(record.p) ?? []), record]); });
-      grouped.forEach((parts, canonicalId) => {
-        const first = parts[0]!;
-        try {
-          const feature = buildFeature(this.manifest, { ...first, g: mergeGeometry(parts.map((part) => part.g).filter((value): value is Geometry => Boolean(value))) }, this.summaries.get(canonicalId) ?? null, this.detailFeatures.get(canonicalId) ? this.detailFromFeature(this.detailFeatures.get(canonicalId)!) : null);
-          next.set(feature.id, feature);
-          this.setBounded(this.features, feature.id, feature, TRAVEL_CONTEXT_BUDGETS.maxLoadedShards * 700);
-        } catch {
-          viewportFailedLayers.add(runtimeLayerForTravelLayer(shard.layerId));
+    const run = async (): Promise<Feature[]> => {
+      try {
+        const viewportFailedLayers = new Set<RuntimeLayerId>();
+        const values = await Promise.all(bounded.map((shard) => this.loadRef(shard.relativeContentRef, shard.checksumSha256, controller.signal).catch(() => undefined)));
+        if (controller.signal.aborted || generation !== this.generation || this.destroyed) {
+          this.staleResultCount += 1;
+          return this.getFeatures();
         }
-      });
-    });
-    this.geometryFailedLayers = viewportFailedLayers;
-    this.visibleFeatures = [...next.values()].sort((left, right) => left.id.localeCompare(right.id));
-    signal?.removeEventListener("abort", abort);
-    if (this.viewportAbortController === controller) this.viewportAbortController = null;
-    return this.getFeatures();
+        const next = new Map<string, Feature>();
+        values.forEach((loaded, index) => {
+          const shard = bounded[index];
+          if (!shard) return;
+          if (!loaded) { viewportFailedLayers.add(runtimeLayerForTravelLayer(shard.layerId)); return; }
+          if (!Array.isArray(loaded.payload)) { viewportFailedLayers.add(runtimeLayerForTravelLayer(shard.layerId)); return; }
+          const records = loaded.payload.map(compactGeometry);
+          if (records.some((record) => !record)) { viewportFailedLayers.add(runtimeLayerForTravelLayer(shard.layerId)); return; }
+          const grouped = new Map<string, CompactGeometryRecord[]>();
+          records.forEach((record) => { if (record) grouped.set(record.p, [...(grouped.get(record.p) ?? []), record]); });
+          grouped.forEach((parts, canonicalId) => {
+            const first = parts[0]!;
+            try {
+              const feature = buildFeature(this.manifest, { ...first, g: mergeGeometry(parts.map((part) => part.g).filter((value): value is Geometry => Boolean(value))) }, this.summaries.get(canonicalId) ?? null, this.detailFeatures.get(canonicalId) ? this.detailFromFeature(this.detailFeatures.get(canonicalId)!) : null);
+              next.set(feature.id, feature);
+              this.setBounded(this.features, feature.id, feature, TRAVEL_CONTEXT_BUDGETS.maxLoadedShards * 700);
+            } catch {
+              viewportFailedLayers.add(runtimeLayerForTravelLayer(shard.layerId));
+            }
+          });
+        });
+        this.geometryFailedLayers = viewportFailedLayers;
+        this.visibleFeatures = [...next.values()].sort((left, right) => left.id.localeCompare(right.id));
+        this.committedViewportSignature = signature;
+        return this.getFeatures();
+      } finally {
+        signal?.removeEventListener("abort", abort);
+        if (this.viewportAbortController === controller) this.viewportAbortController = null;
+        if (this.activeViewportSignature === signature) {
+          this.activeViewportSignature = null;
+          this.activeViewportPromise = null;
+        }
+      }
+    };
+    const promise = run();
+    this.activeViewportSignature = signature;
+    this.activeViewportPromise = promise;
+    return promise;
   }
 
   async loadDetailsForFeature(feature: Feature, signal?: AbortSignal): Promise<Feature | undefined> { return this.loadDetail(feature.id, signal); }
@@ -548,6 +572,7 @@ export class TravelContextReleaseAdapter implements RuntimeCityAdapter {
       cacheEntries: cache.entries,
       cacheEvictions: cache.evictions,
       failedLayers: [...new Set([...this.failedLayers, ...this.geometryFailedLayers])].sort(),
+      dedupedRefreshCount: this.dedupedRefreshCount,
     };
   }
 
@@ -581,10 +606,10 @@ export class TravelContextReleaseAdapter implements RuntimeCityAdapter {
     layerIds.forEach((layerId) => this.failedLayers.add(runtimeLayerForTravelLayer(layerId)));
   }
 
-  private shardDistance(shard: TravelContextGeometryShardManifest, camera: CameraPose): number {
+  private shardDistance(shard: TravelContextGeometryShardManifest, groundCenter: ViewportGroundCenter): number {
     const centerLongitude = (shard.bounds.west + shard.bounds.east) / 2;
     const centerLatitude = (shard.bounds.south + shard.bounds.north) / 2;
-    return (centerLongitude - camera.longitude) ** 2 + (centerLatitude - camera.latitude) ** 2;
+    return (centerLongitude - groundCenter.longitude) ** 2 + (centerLatitude - groundCenter.latitude) ** 2;
   }
 
   private async loadDetailIndex(signal?: AbortSignal): Promise<Map<string, TravelContextDetailIndexEntry>> {

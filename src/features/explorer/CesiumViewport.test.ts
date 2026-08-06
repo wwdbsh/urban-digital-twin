@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
+import { CameraEventType, KeyboardEventModifier } from "cesium";
 import restaurants from "../../../public/data/real-wave-20260804/restaurants.json";
 import { runtimeFixtureFeatures } from "../../domain/features";
 import type { Feature } from "../../domain/schema";
 import type { CityAssetResolver } from "../../runtime/city-asset-manifest";
-import { buildCollisionCheckedFeatureMap, canonicalPickId, commercialStorefrontProxyId, denseFeatureIntersectsBounds, densePoiMarkerStyle, featureForPickedId, fixtureOnlyForFeature, focusCameraCoordinatesForFeature, focusCoordinatesForFeature, focusHeightForFeature, focusPoseForFeature, focusPoseForFeatureWithOcclusion, medianFrameInterval, normalizeFocusCameraPose, poiRenderMode, selectDenseFeatureGroups, selectDenseFeatures, shouldFocusFeature, shouldShowFeatureLabel, shouldStartFocusFlight } from "./CesiumViewport";
+import { buildCollisionCheckedFeatureMap, canonicalPickId, commercialStorefrontProxyId, denseFeatureIntersectsBounds, densePoiMarkerStyle, denseRenderPlanKey, featureForPickedId, fixtureOnlyForFeature, focusCameraCoordinatesForFeature, focusCoordinatesForFeature, focusHeightForFeature, focusPoseForFeature, focusPoseForFeatureWithOcclusion, medianFrameInterval, nativeCameraControlBindings, normalizeFocusCameraPose, poiRenderMode, selectDenseFeatureGroups, selectDenseFeatures, shouldApplyCameraPoseRequest, shouldFocusFeature, shouldReplaceDenseRenderPlan, shouldShowFeatureLabel, shouldStartFocusFlight } from "./CesiumViewport";
 
 describe("Cesium POI render seam", () => {
   const realRestaurant = (restaurants as unknown as Feature[])[0]!;
@@ -14,6 +15,35 @@ describe("Cesium POI render seam", () => {
     expect(poiRenderMode(realRestaurant, true, true)).toBe("selected-entity");
     expect(poiRenderMode(realRestaurant, false, false)).toBe("entity");
     expect(poiRenderMode(fixturePoi, true, false)).toBe("point-primitive");
+  });
+
+  it("declares native mouse and trackpad camera controls without relying on synthetic DOM events", () => {
+    const controls = nativeCameraControlBindings();
+    expect(controls.rotateEventTypes).toHaveLength(1);
+    expect(controls.tiltEventTypes).toHaveLength(3);
+    expect(controls.zoomEventTypes).toHaveLength(3);
+    expect(controls.lookEventTypes).toHaveLength(1);
+    expect(controls.rotateEventTypes).not.toEqual(controls.tiltEventTypes);
+    expect(controls.rotateEventTypes).toContain(CameraEventType.LEFT_DRAG);
+    expect(controls.tiltEventTypes).toEqual(expect.arrayContaining([
+      CameraEventType.MIDDLE_DRAG,
+      CameraEventType.PINCH,
+      { eventType: CameraEventType.LEFT_DRAG, modifier: KeyboardEventModifier.CTRL },
+    ]));
+    expect(controls.lookEventTypes).toEqual([{ eventType: CameraEventType.LEFT_DRAG, modifier: KeyboardEventModifier.SHIFT }]);
+    expect(controls.zoomEventTypes).toEqual(expect.arrayContaining([CameraEventType.WHEEL, CameraEventType.PINCH]));
+  });
+
+  it("applies each programmatic camera request once and keeps selection out of an unchanged dense plan", () => {
+    expect(shouldApplyCameraPoseRequest(4, { requestId: 4 })).toBe(false);
+    expect(shouldApplyCameraPoseRequest(4, { requestId: 5 })).toBe(true);
+    expect(shouldApplyCameraPoseRequest(4, undefined)).toBe(false);
+    const key = denseRenderPlanKey([realRestaurant]);
+    expect(shouldReplaceDenseRenderPlan(null, [realRestaurant])).toBe(true);
+    expect(shouldReplaceDenseRenderPlan([realRestaurant], [realRestaurant])).toBe(false);
+    expect(shouldReplaceDenseRenderPlan([realRestaurant], [{ ...realRestaurant, name: "revised" }])).toBe(true);
+    expect(denseRenderPlanKey([realRestaurant])).toBe(key);
+    expect(key).toMatch(/^1:[0-9a-f]+$/);
   });
 
   it("uses a stable namespace for accepted commercial storefront proxies", () => {
@@ -60,6 +90,16 @@ describe("Cesium POI render seam", () => {
     expect(denseFeatureIntersectsBounds(inViewport, bounds)).toBe(true);
     expect(denseFeatureIntersectsBounds(outsideViewport, bounds)).toBe(false);
     expect(selectDenseFeatures([inViewport, outsideViewport], { longitude: -73.99, latitude: 40.748 }, 6_000, null, bounds).map((feature) => feature.id)).toEqual(["citywide:in-viewport"]);
+  });
+
+  it("keeps dense feature filtering aligned with wrapped shared viewport bounds", () => {
+    const eastOfDateline = { ...realRestaurant, id: "citywide:dateline-east", coordinates: [179.8, 10] as Feature["coordinates"], geometry: { type: "Point" as const, coordinates: [179.8, 10] as Feature["coordinates"] } };
+    const westOfDateline = { ...realRestaurant, id: "citywide:dateline-west", coordinates: [-179.8, 10] as Feature["coordinates"], geometry: { type: "Point" as const, coordinates: [-179.8, 10] as Feature["coordinates"] } };
+    const middleOfWorld = { ...realRestaurant, id: "citywide:dateline-middle", coordinates: [0, 10] as Feature["coordinates"], geometry: { type: "Point" as const, coordinates: [0, 10] as Feature["coordinates"] } };
+    const wrappedBounds = { west: 179.7, east: -179.7, south: 9, north: 11 };
+    expect(denseFeatureIntersectsBounds(eastOfDateline, wrappedBounds)).toBe(true);
+    expect(denseFeatureIntersectsBounds(westOfDateline, wrappedBounds)).toBe(true);
+    expect(denseFeatureIntersectsBounds(middleOfWorld, wrappedBounds)).toBe(false);
   });
 
   it("keeps independent 6,000 base and 128 context quotas with selected retention", () => {

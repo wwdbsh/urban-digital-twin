@@ -18,11 +18,18 @@ import {
   type CitywideSearchSummary,
   type CitywideShardManifest,
 } from "../release/citywide-release.ts";
-import { tileBounds, tileKeyForCoordinate, tileKeyString, type TileBounds } from "./spatial.ts";
+import { tileKeyForCoordinate, tileKeyString } from "./spatial.ts";
 import { DEFAULT_LAYER_VISIBILITY, layerForFeature, type LayerManifest, type LayerVisibility, type RuntimeLayerId } from "./layers.ts";
 import type { RuntimeCityAdapter } from "./fixture-adapter.ts";
 import { CitywideLruCache, CitywideRequestPool, type CitywideSharedRequestBudget } from "../release/citywide-release.ts";
-import type { CameraPose } from "../domain/visitor-navigation.ts";
+import {
+  normalizeViewportRefreshRequest,
+  viewportBoundsCrossesAntimeridian,
+  viewportBoundsIntersect,
+  type ViewportBounds,
+  type ViewportGroundCenter,
+  type ViewportRefreshInput,
+} from "./viewport-footprint.ts";
 
 const DOHMH_SOURCE_URL = "https://data.cityofnewyork.us/resource/43nn-pn8j.json";
 const OTI_SOURCE_URL = "https://data.cityofnewyork.us/resource/jh45-qr5r.json";
@@ -55,6 +62,7 @@ export interface CitywideRuntimeMetrics {
   detailIndexEntryCount: number;
   cacheEntries: number;
   cacheEvictions: number;
+  dedupedRefreshCount?: number;
 }
 
 export interface CitywideRuntimeOptions {
@@ -249,12 +257,6 @@ function detailAttributes(detail: CompactDetail, summary: CitywideSearchSummary)
   return attributes;
 }
 
-function viewportForCamera(camera: CameraPose): TileBounds {
-  const radiusLongitude = Math.min(0.12, Math.max(0.006, camera.height / 111_000 * 0.9));
-  const radiusLatitude = radiusLongitude * 0.65;
-  return { west: camera.longitude - radiusLongitude, east: camera.longitude + radiusLongitude, south: camera.latitude - radiusLatitude, north: camera.latitude + radiusLatitude };
-}
-
 export class CitywideReleaseAdapter implements RuntimeCityAdapter {
   readonly city: CityAdapter = manhattanAdapter;
   readonly fixtureOnly = false;
@@ -275,6 +277,10 @@ export class CitywideReleaseAdapter implements RuntimeCityAdapter {
   private requestedShardCount = 0;
   private generation = 0;
   private viewportAbortController: AbortController | null = null;
+  private activeViewportSignature: string | null = null;
+  private activeViewportPromise: Promise<Feature[]> | null = null;
+  private committedViewportSignature: string | null = null;
+  private dedupedRefreshCount = 0;
   private staleResultCount = 0;
   private destroyed = false;
 
@@ -371,11 +377,31 @@ export class CitywideReleaseAdapter implements RuntimeCityAdapter {
     return this.getFeatures({ ...DEFAULT_LAYER_VISIBILITY, buildings: layer === "buildings", pois: layer === "pois", areas: false, stations: false, entrances: false, routes: false });
   }
 
-  async refreshViewport(camera: CameraPose, signal?: AbortSignal): Promise<Feature[]> {
-    if (this.destroyed) return [];
-    // A camera move cancels only the previous viewport's waiter.  The request
-    // pool still owns the shared fetch and keeps it alive for any concurrent
-    // cold-detail waiter that joined the same geometry ref.
+  refreshViewport(input: ViewportRefreshInput, signal?: AbortSignal): Promise<Feature[]> {
+    if (this.destroyed) return Promise.resolve([]);
+    const request = normalizeViewportRefreshRequest(input);
+    const viewport = request.footprint.bounds;
+    const requested = [
+      // Fixed-camera citywide requests must stay within the first-camera
+      // budget. Geometry outside the viewport is loaded only when a later
+      // camera move intersects it; the cache remains bounded independently.
+      ...this.selectViewportShards(this.manifest.geometryShards.filter((shard) => shard.layer === "buildings"), viewport),
+      ...this.selectViewportShards(this.manifest.geometryShards.filter((shard) => shard.layer === "restaurants"), viewport),
+    ];
+    const unique = [...new Map(requested.map((shard) => [shard.relativeContentRef, shard])).values()];
+    const bounded = unique.sort((left, right) => this.shardDistance(left, request.footprint.groundCenter) - this.shardDistance(right, request.footprint.groundCenter) || left.shardId.localeCompare(right.shardId)).slice(0, CITYWIDE_BUDGETS.maxLoadedShards);
+    const visibleRefs = new Set(bounded.filter((shard) => this.shardIntersectsViewport(shard, viewport)).map((shard) => shard.relativeContentRef));
+    const signature = `${request.footprint.signature}|${[...visibleRefs].sort().join(",")}|${bounded.map((shard) => shard.relativeContentRef).sort().join(",")}`;
+    if (signature === this.activeViewportSignature && this.activeViewportPromise) {
+      this.dedupedRefreshCount += 1;
+      return this.activeViewportPromise;
+    }
+    if (signature === this.committedViewportSignature) {
+      this.dedupedRefreshCount += 1;
+      return Promise.resolve(this.getFeatures());
+    }
+    // A changed settled footprint cancels only the previous viewport waiter.
+    // The shared request pool still owns joined local fetches.
     this.viewportAbortController?.abort();
     const viewportController = new AbortController();
     this.viewportAbortController = viewportController;
@@ -383,50 +409,50 @@ export class CitywideReleaseAdapter implements RuntimeCityAdapter {
     signal?.addEventListener("abort", abortViewport, { once: true });
     if (signal?.aborted) viewportController.abort();
     const generation = ++this.generation;
-    const viewport = viewportForCamera(camera);
-    const requested = [
-      // Fixed-camera citywide requests must stay within the first-camera
-      // budget. Geometry outside the viewport is loaded only when a later
-      // camera move intersects it; the cache remains bounded independently.
-      ...selectViewportShards(this.manifest.geometryShards.filter((shard) => shard.layer === "buildings"), viewport, 0),
-      ...selectViewportShards(this.manifest.geometryShards.filter((shard) => shard.layer === "restaurants"), viewport, 0),
-    ];
-    const unique = [...new Map(requested.map((shard) => [shard.relativeContentRef, shard])).values()];
-    const bounded = unique.sort((left, right) => this.shardDistance(left, camera) - this.shardDistance(right, camera) || left.shardId.localeCompare(right.shardId)).slice(0, CITYWIDE_BUDGETS.maxLoadedShards);
-    const visibleRefs = new Set(bounded.filter((shard) => this.shardIntersectsViewport(shard, viewport)).map((shard) => shard.relativeContentRef));
     this.visibleShardCount = visibleRefs.size;
     this.requestedShardCount = bounded.length;
-    try {
-      const values = await Promise.all(bounded.map((shard) => this.loadRef(shard.relativeContentRef, shard.checksumSha256, viewportController.signal)));
-      if (viewportController.signal.aborted || generation !== this.generation || this.destroyed) {
-        this.staleResultCount += 1;
+    const run = async (): Promise<Feature[]> => {
+      try {
+        const values = await Promise.all(bounded.map((shard) => this.loadRef(shard.relativeContentRef, shard.checksumSha256, viewportController.signal)));
+        if (viewportController.signal.aborted || generation !== this.generation || this.destroyed) {
+          this.staleResultCount += 1;
+          return this.getFeatures();
+        }
+        const next = new Map<string, Feature>();
+        values.forEach((loaded) => {
+          if (!loaded || !isRecord(loaded.payload) || loaded.payload.schemaVersion !== "citywide-geometry-1" || !Array.isArray(loaded.payload.features)) return;
+          const payload = loaded.payload as GeometryPayload;
+          const declared = bounded.find((shard) => shard.relativeContentRef === loaded.ref);
+          if (!declared || payload.layer !== declared.layer || payload.tileKey !== declared.tileKey) throw new Error(`Citywide geometry payload ${loaded.ref} does not match its emitted manifest tile/layer.`);
+          if (!visibleRefs.has(loaded.ref)) return;
+          const recordsByParent = new Map<string, unknown[]>();
+          payload.features.forEach((value) => {
+            const parentId = isRecord(value) && typeof value.parentId === "string" ? value.parentId : null;
+            if (!parentId) throw new Error(`Geometry shard ${loaded.ref} contains a record without a stable parent ID.`);
+            recordsByParent.set(parentId, [...(recordsByParent.get(parentId) ?? []), value]);
+          });
+          recordsByParent.forEach((records, parentId) => {
+            const feature = payload.layer === "buildings" ? this.buildingFeature(records, parentId, payload.tileKey) : this.restaurantGeometryFeature(records, parentId);
+            if (feature) next.set(feature.id, feature);
+          });
+        });
+        this.visibleFeatures = [...next.values()].sort((left, right) => left.id.localeCompare(right.id));
+        this.visibleFeatures.forEach((feature) => this.setBounded(this.features, feature.id, feature, CITYWIDE_BUDGETS.maxDecodedFeatures));
+        this.committedViewportSignature = signature;
         return this.getFeatures();
+      } finally {
+        signal?.removeEventListener("abort", abortViewport);
+        if (this.viewportAbortController === viewportController) this.viewportAbortController = null;
+        if (this.activeViewportSignature === signature) {
+          this.activeViewportSignature = null;
+          this.activeViewportPromise = null;
+        }
       }
-      const next = new Map<string, Feature>();
-      values.forEach((loaded) => {
-        if (!loaded || !isRecord(loaded.payload) || loaded.payload.schemaVersion !== "citywide-geometry-1" || !Array.isArray(loaded.payload.features)) return;
-        const payload = loaded.payload as GeometryPayload;
-        const declared = bounded.find((shard) => shard.relativeContentRef === loaded.ref);
-        if (!declared || payload.layer !== declared.layer || payload.tileKey !== declared.tileKey) throw new Error(`Citywide geometry payload ${loaded.ref} does not match its emitted manifest tile/layer.`);
-        if (!visibleRefs.has(loaded.ref)) return;
-        const recordsByParent = new Map<string, unknown[]>();
-        payload.features.forEach((value) => {
-          const parentId = isRecord(value) && typeof value.parentId === "string" ? value.parentId : null;
-          if (!parentId) throw new Error(`Geometry shard ${loaded.ref} contains a record without a stable parent ID.`);
-          recordsByParent.set(parentId, [...(recordsByParent.get(parentId) ?? []), value]);
-        });
-        recordsByParent.forEach((records, parentId) => {
-          const feature = payload.layer === "buildings" ? this.buildingFeature(records, parentId, payload.tileKey) : this.restaurantGeometryFeature(records, parentId);
-          if (feature) next.set(feature.id, feature);
-        });
-      });
-      this.visibleFeatures = [...next.values()].sort((left, right) => left.id.localeCompare(right.id));
-      this.visibleFeatures.forEach((feature) => this.setBounded(this.features, feature.id, feature, CITYWIDE_BUDGETS.maxDecodedFeatures));
-      return this.getFeatures();
-    } finally {
-      signal?.removeEventListener("abort", abortViewport);
-      if (this.viewportAbortController === viewportController) this.viewportAbortController = null;
-    }
+    };
+    const promise = run();
+    this.activeViewportSignature = signature;
+    this.activeViewportPromise = promise;
+    return promise;
   }
 
   async loadDetail(parentId: string, signal?: AbortSignal): Promise<Feature | undefined> {
@@ -486,6 +512,7 @@ export class CitywideReleaseAdapter implements RuntimeCityAdapter {
       detailIndexEntryCount: this.detailIndexEntryCount,
       cacheEntries: cache.entries,
       cacheEvictions: cache.evictions,
+      dedupedRefreshCount: this.dedupedRefreshCount,
     };
   }
 
@@ -660,13 +687,21 @@ export class CitywideReleaseAdapter implements RuntimeCityAdapter {
     }
   }
 
-  private shardDistance(shard: CitywideShardManifest, camera: CameraPose): number {
-    const bounds = tileBounds({ scheme: "wgs84-geodetic", level: CITYWIDE_TILE_LEVEL, x: Number(shard.tileKey.split("/")[2]), y: Number(shard.tileKey.split("/")[3]) });
-    return ((bounds.west + bounds.east) / 2 - camera.longitude) ** 2 + ((bounds.south + bounds.north) / 2 - camera.latitude) ** 2;
+  private selectViewportShards(shards: readonly CitywideShardManifest[], viewport: ViewportBounds): CitywideShardManifest[] {
+    // The existing release helper intentionally has a non-wrapped TileBounds
+    // contract. Preserve its prefetch behavior for normal views and use the
+    // shared wrapped-bounds predicate only for the reusable dateline case.
+    return viewportBoundsCrossesAntimeridian(viewport)
+      ? shards.filter((shard) => viewportBoundsIntersect(shard.bounds, viewport)).sort((left, right) => left.shardId.localeCompare(right.shardId))
+      : selectViewportShards(shards, viewport, 0);
   }
 
-  private shardIntersectsViewport(shard: CitywideShardManifest, viewport: TileBounds): boolean {
-    return shard.bounds.west <= viewport.east && shard.bounds.east >= viewport.west && shard.bounds.south <= viewport.north && shard.bounds.north >= viewport.south;
+  private shardDistance(shard: CitywideShardManifest, groundCenter: ViewportGroundCenter): number {
+    return ((shard.bounds.west + shard.bounds.east) / 2 - groundCenter.longitude) ** 2 + ((shard.bounds.south + shard.bounds.north) / 2 - groundCenter.latitude) ** 2;
+  }
+
+  private shardIntersectsViewport(shard: CitywideShardManifest, viewport: ViewportBounds): boolean {
+    return viewportBoundsIntersect(shard.bounds, viewport);
   }
 }
 

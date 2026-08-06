@@ -114,6 +114,36 @@ describe("citywide release runtime", () => {
     expect(metrics.retainedDetailCount).toBeLessThanOrEqual(CITYWIDE_BUDGETS.maxDecodedDetails);
   });
 
+  it("selects shards from a supplied ground footprint and dedupes repeated settled views", async () => {
+    const { manifest, files } = productionLikeFixture();
+    let geometryRequests = 0;
+    const adapter = new CitywideReleaseAdapter(manifest, "/data/citywide", async (input) => {
+      const ref = input.replace("/data/citywide/", "");
+      if (ref.startsWith("geometry/")) geometryRequests += 1;
+      return response(files.get(ref) ?? "{}", files.has(ref) ? 200 : 404);
+    });
+    const target = manifest.geometryShards.find((shard) => shard.relativeContentRef.endsWith("/1.json"))!;
+    const request = {
+      // Deliberately far from the selected shard: the ground footprint, not
+      // this aerial position, is the release selection contract.
+      camera: { longitude: -73.7, latitude: 40.95, height: 8_000, heading: 20, pitch: -50, roll: 0 },
+      footprint: {
+        bounds: target.bounds,
+        groundCenter: { longitude: -74.01, latitude: 40.71 },
+        valid: true,
+        source: "ground-rays" as const,
+        signature: "target-ground-footprint",
+      },
+    };
+    const first = adapter.refreshViewport(request);
+    const duplicate = adapter.refreshViewport(request);
+    expect(duplicate).toBe(first);
+    await expect(first).resolves.toEqual(expect.arrayContaining([expect.objectContaining({ id: "doitt:target" })]));
+    await expect(adapter.refreshViewport(request)).resolves.toEqual(expect.arrayContaining([expect.objectContaining({ id: "doitt:target" })]));
+    expect(adapter.getMetrics().dedupedRefreshCount).toBe(2);
+    expect(geometryRequests).toBeGreaterThan(0);
+  });
+
   it("routes exact identifiers through their hash bucket and supports cold parent details", async () => {
     const { manifest, files } = productionLikeFixture();
     const requested: string[] = [];

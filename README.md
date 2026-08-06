@@ -178,6 +178,19 @@ Cesium remains the sole world camera and picking authority. Three.js is not
 needed by this foundation. Blender MCP is an offline authoring/inspection tool
 for a separate asset work unit and was not used for this documentation task.
 
+### Camera and viewport behavior (2026-08-06)
+
+Citywide and civic release loading now use the same ground footprint that
+Cesium uses to filter dense geometry, with a last-valid fallback at the
+horizon/dateline boundary. Primary drag orbits, middle/Ctrl+primary drag tilts,
+and right drag, wheel, or pinch zooms; dense replacement preserves the visible
+component-owned layer until its asynchronous successor is ready. The native
+browser replay, environment limitations, and raw frame-pacing comparison are
+recorded in
+[`20260806-camera-visibility-performance-runtime-fix.md`](docs/implementation/20260806-camera-visibility-performance-runtime-fix.md);
+the final three traces materially reduce the prior pathological tail stalls,
+while retaining the raw measurements and their comparability limits.
+
 ## Release facts
 
 The `manhattan-citywide-20260804` manifest records snapshot-relative coverage:

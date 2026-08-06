@@ -131,6 +131,40 @@ describe("composed release runtime", () => {
     expect(metrics.aggregate.activeRequests).toBe(0);
   });
 
+  it("forwards one shared footprint unchanged and avoids duplicate child refreshes", async () => {
+    let baseCalls = 0;
+    let contextCalls = 0;
+    const baseAdapter = fakeBase();
+    const contextAdapter = fakeContext();
+    const request = {
+      camera: { longitude: -73.7, latitude: 40.95, height: 8_000, heading: 20, pitch: -50, roll: 0 },
+      footprint: {
+        bounds: { west: -74.02, east: -73.98, south: 40.7, north: 40.75 },
+        groundCenter: { longitude: -74, latitude: 40.725 },
+        valid: true,
+        source: "ground-rays" as const,
+        signature: "composed-ground-footprint",
+      },
+    };
+    baseAdapter.refreshViewport = async (input) => {
+      baseCalls += 1;
+      expect(input).toEqual(request);
+      return [base];
+    };
+    contextAdapter.refreshViewport = async (input) => {
+      contextCalls += 1;
+      expect(input).toEqual(request);
+      return [civic];
+    };
+    const adapter = new ComposedReleaseAdapter(baseAdapter, contextAdapter);
+    const first = adapter.refreshViewport(request);
+    expect(adapter.refreshViewport(request)).toBe(first);
+    await expect(first).resolves.toEqual([base, civic]);
+    await expect(adapter.refreshViewport(request)).resolves.toEqual([base, civic]);
+    expect(baseCalls).toBe(1);
+    expect(contextCalls).toBe(1);
+  });
+
   it("does not destroy borrowed children and can recreate after StrictMode-style cleanup", async () => {
     let baseDestroyed = 0;
     let contextDestroyed = 0;

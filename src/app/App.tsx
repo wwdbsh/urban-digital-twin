@@ -57,6 +57,7 @@ import { loadTravelContextRelease, type TravelContextFault, type TravelContextRe
 import { TRAVEL_CONTEXT_BUDGETS, TRAVEL_CONTEXT_RELEASE_ID, TRAVEL_CONTEXT_TILE_LEVEL } from "../release/travel-context-release";
 import { AggregateRequestBudget, ComposedReleaseAdapter, type ComposedReleaseMetrics } from "../runtime/composed-release-runtime";
 import { EXTERIOR_PILOT_RELEASE_ID, loadExteriorPilotRelease, type CommercialStorefrontPlacement, type LoadedExteriorPilotRelease } from "../runtime/exterior-pilot-release";
+import { fallbackViewportFootprint, type ViewportFootprint } from "../runtime/viewport-footprint";
 
 const navigation = [
   { label: "Explore", icon: Compass },
@@ -99,6 +100,7 @@ const EMPTY_CITYWIDE_METRICS: CitywideRuntimeMetrics = {
   detailIndexEntryCount: 0,
   cacheEntries: 0,
   cacheEvictions: 0,
+  dedupedRefreshCount: 0,
 };
 
 const EMPTY_TRAVEL_CONTEXT_METRICS: TravelContextRuntimeMetrics = {
@@ -118,6 +120,7 @@ const EMPTY_TRAVEL_CONTEXT_METRICS: TravelContextRuntimeMetrics = {
   cacheEntries: 0,
   cacheEvictions: 0,
   failedLayers: [],
+  dedupedRefreshCount: 0,
 };
 
 const EMPTY_COMPOSED_METRICS: ComposedReleaseMetrics = {
@@ -177,6 +180,13 @@ const EMPTY_CITYWIDE_DENSE_METRICS: DenseRenderMetrics = {
   baseFeatureCount: 0,
   contextFeatureCount: 0,
   contextPartCount: 0,
+  planBuildCount: 0,
+  planReuseCount: 0,
+  planCancellationCount: 0,
+  planSwapCount: 0,
+  planFingerprint: "",
+  selectionMs: 0,
+  keyMs: 0,
 };
 
 type CitywideBrowserBaseline = {
@@ -190,6 +200,15 @@ const EMPTY_CITYWIDE_BROWSER_BASELINE: CitywideBrowserBaseline = {
   citywideResourceCount: 0,
   citywideResourceBytes: 0,
 };
+
+/** Retain a stable array only when every immutable feature object is unchanged. */
+export function preserveFeatureSequence(previous: readonly Feature[], next: readonly Feature[]): Feature[] {
+  return previous.length === next.length && previous.every((feature, index) => feature === next[index]) ? previous as Feature[] : [...next];
+}
+
+function formatDenseTiming(value: number | undefined): string {
+  return typeof value === "number" && Number.isFinite(value) ? value.toFixed(2) : "pending";
+}
 
 function readCitywideBrowserMeasurement(): CitywideBrowserBaseline {
   if (typeof performance === "undefined") return EMPTY_CITYWIDE_BROWSER_BASELINE;
@@ -370,6 +389,7 @@ export function App() {
   const [previewStep, setPreviewStep] = useState(0);
   const [cameraMode, setCameraMode] = useState<CameraMode>(initialNavigation.cameraMode);
   const [cameraPose, setCameraPose] = useState<CameraPose>(initialNavigation.pose ?? DEFAULT_CAMERA_POSE);
+  const [viewportFootprint, setViewportFootprint] = useState<ViewportFootprint>(() => fallbackViewportFootprint(initialNavigation.pose ?? DEFAULT_CAMERA_POSE));
   const [cameraRequest, setCameraRequest] = useState<CameraPose & { requestId: number }>({ ...(initialNavigation.pose ?? DEFAULT_CAMERA_POSE), requestId: 1 });
   const [poseInvalid, setPoseInvalid] = useState(initialNavigation.poseInvalid);
   const [savedNavigation, setSavedNavigation] = useState<SavedNavigationState>(() => typeof window === "undefined" ? { schemaVersion: VISITOR_NAVIGATION_SCHEMA_VERSION, places: [], journeys: [] } : loadSavedNavigation(window.localStorage, fixtureFeatureIds));
@@ -384,6 +404,7 @@ export function App() {
   const stressCameraIntentRef = useRef<{ camera: TileCameraState; expiresAt: number } | null>(null);
   const queryRef = useRef(query);
   const cameraPoseRef = useRef(cameraPose);
+  const viewportFootprintRef = useRef(viewportFootprint);
   const cameraModeRef = useRef(cameraMode);
   const activeSelectionRef = useRef(activeSelectionId);
   const layerVisibilityRef = useRef(layerVisibility);
@@ -411,6 +432,7 @@ export function App() {
   const searchInputRef = useRef<HTMLInputElement>(null);
   queryRef.current = query;
   cameraPoseRef.current = cameraPose;
+  viewportFootprintRef.current = viewportFootprint;
   cameraModeRef.current = cameraMode;
   activeSelectionRef.current = activeSelectionId;
   layerVisibilityRef.current = layerVisibility;
@@ -452,7 +474,8 @@ export function App() {
       previous.retainedDetailCount === next.retainedDetailCount &&
       previous.detailIndexEntryCount === next.detailIndexEntryCount &&
       previous.cacheEntries === next.cacheEntries &&
-      previous.cacheEvictions === next.cacheEvictions
+      previous.cacheEvictions === next.cacheEvictions &&
+      previous.dedupedRefreshCount === next.dedupedRefreshCount
         ? previous
         : next
     ));
@@ -467,7 +490,19 @@ export function App() {
       previous.pointFeatureCount === next.pointFeatureCount &&
       previous.baseFeatureCount === next.baseFeatureCount &&
       previous.contextFeatureCount === next.contextFeatureCount &&
-      previous.contextPartCount === next.contextPartCount
+      previous.contextPartCount === next.contextPartCount &&
+      previous.planBuildCount === next.planBuildCount &&
+      previous.planReuseCount === next.planReuseCount &&
+      previous.planCancellationCount === next.planCancellationCount &&
+      previous.planSwapCount === next.planSwapCount &&
+      previous.planFingerprint === next.planFingerprint &&
+      previous.selectionMs === next.selectionMs &&
+      previous.keyMs === next.keyMs &&
+      previous.allocationMs === next.allocationMs &&
+      previous.allocationMaxSliceMs === next.allocationMaxSliceMs &&
+      previous.allocationChunkCount === next.allocationChunkCount &&
+      previous.workerReadyMs === next.workerReadyMs &&
+      previous.totalBuildMs === next.totalBuildMs
         ? previous
         : next
     ));
@@ -625,9 +660,9 @@ export function App() {
       return undefined;
     }
     let active = true;
-    void citywideAdapter.refreshViewport(cameraPoseRef.current).then((features) => {
+    void citywideAdapter.refreshViewport({ camera: cameraPoseRef.current, footprint: viewportFootprintRef.current }).then((features) => {
       if (active && citywideAdapterRef.current === citywideAdapter) {
-        setCitywideFeatures(features);
+        setCitywideFeatures((previous) => preserveFeatureSequence(previous, features));
         publishCitywideMetrics(citywideAdapter);
       }
     }).catch((error: unknown) => {
@@ -643,9 +678,9 @@ export function App() {
       return undefined;
     }
     let active = true;
-    void composedAdapter.refreshViewport(cameraPoseRef.current).then((features) => {
+    void composedAdapter.refreshViewport({ camera: cameraPoseRef.current, footprint: viewportFootprintRef.current }).then((features) => {
       if (active && composedAdapterRef.current === composedAdapter) {
-        setCivicFeatures(features);
+        setCivicFeatures((previous) => preserveFeatureSequence(previous, features));
         publishComposedMetrics(composedAdapter);
       }
     }).catch((error: unknown) => {
@@ -694,13 +729,18 @@ export function App() {
     setTileMetrics(stream.getMetrics());
   }, []);
 
-  const onTileCameraChanged = useCallback((camera: CameraPose) => {
+  const onTileCameraChanged = useCallback((camera: CameraPose, receivedFootprint?: ViewportFootprint) => {
     const intent = stressCameraIntentRef.current;
     if (intent && Date.now() < intent.expiresAt) camera = { longitude: intent.camera.longitude, latitude: intent.camera.latitude, height: intent.camera.distanceMeters, heading: 0, pitch: -45, roll: 0 };
     else stressCameraIntentRef.current = null;
     const tileCamera: TileCameraState = { longitude: camera.longitude, latitude: camera.latitude, distanceMeters: camera.height };
     stressCameraRef.current = tileCamera;
     const normalizedCamera = normalizeCameraPose(camera) ?? DEFAULT_CAMERA_POSE;
+    const nextFootprint = receivedFootprint ?? fallbackViewportFootprint(normalizedCamera);
+    if (viewportFootprintRef.current.signature !== nextFootprint.signature) {
+      viewportFootprintRef.current = nextFootprint;
+      setViewportFootprint(nextFootprint);
+    }
     setCameraPose(normalizedCamera);
     const pendingPose = pendingNavigationPoseRef.current;
     if (pendingPose) {
@@ -717,9 +757,9 @@ export function App() {
     if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrl({ featureId: activeSelectionRef.current ?? initialNavigation.featureId, query: queryRef.current || initialNavigation.query, cameraMode: cameraModeRef.current, pose: normalizedCamera, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(layerVisibilityRef.current).filter(([, visible]) => visible).map(([layer]) => layer), facets: civicModeRef.current ? selectedCivicFacetsRef.current : selectedCategoriesRef.current, ...getOverlayUrlFields() }, window.location.href));
     const citywide = citywideAdapterRef.current;
     if (citywideModeRef.current && citywide) {
-      void citywide.refreshViewport(camera).then((features) => {
+      void citywide.refreshViewport({ camera: normalizedCamera, footprint: nextFootprint }).then((features) => {
         if (citywideAdapterRef.current === citywide && citywideModeRef.current) {
-          setCitywideFeatures(features);
+          setCitywideFeatures((previous) => preserveFeatureSequence(previous, features));
           publishCitywideMetrics(citywide);
         }
       }).catch((error: unknown) => {
@@ -728,9 +768,9 @@ export function App() {
     }
     const composed = composedAdapterRef.current;
     if (civicModeRef.current && composed) {
-      void composed.refreshViewport(camera).then((features) => {
+      void composed.refreshViewport({ camera: normalizedCamera, footprint: nextFootprint }).then((features) => {
         if (composedAdapterRef.current === composed && civicModeRef.current) {
-          setCivicFeatures(features);
+          setCivicFeatures((previous) => preserveFeatureSequence(previous, features));
           publishComposedMetrics(composed);
         }
       }).catch((error: unknown) => {
@@ -861,6 +901,7 @@ export function App() {
     ? searchRealPlaceCatalog(activeAdapter.getFeatures(), query, selectedCategories)
     : searchUnifiedCatalog(activeAdapter.getFeatures(), syntheticCatalog, query).filter((result) => selectedCategories.length === 0 || result.feature.kind !== "poi" || selectedCategories.some((category) => placeCategoriesFromFeature(result.feature).includes(category))), [activeAdapter, civicMode, civicSearchResults, citywideMode, citywideSearchResults, dataMode, query, selectedCategories]);
   const composedDenseGroups = useMemo(() => civicMode && composedAdapter ? composedAdapter.getVisibleFeatureGroups() : undefined, [civicFeatures, civicMode, composedAdapter]);
+  const composedDenseGroupLimits = useMemo(() => civicMode ? { base: CITYWIDE_BUDGETS.maxRenderedDenseFeatures, context: TRAVEL_CONTEXT_BUDGETS.maxAreaRenderParts } : undefined, [civicMode]);
 
   useEffect(() => {
     if (typeof window === "undefined") return undefined;
@@ -1599,10 +1640,11 @@ export function App() {
           denseFeatures={citywideMode ? citywideFeatures : civicMode ? civicFeatures : stressFeatures}
           denseFeatureLimit={citywideMode ? CITYWIDE_BUDGETS.maxRenderedDenseFeatures : undefined}
           denseFeatureGroups={composedDenseGroups}
-          denseFeatureGroupLimits={civicMode ? { base: CITYWIDE_BUDGETS.maxRenderedDenseFeatures, context: TRAVEL_CONTEXT_BUDGETS.maxAreaRenderParts } : undefined}
+          denseFeatureGroupLimits={composedDenseGroupLimits}
           onDenseMetrics={citywideMode || civicMode ? publishCitywideDenseMetrics : undefined}
           selectedFeatureId={dataMode === "fixtures" ? activeSelectionId ?? selectedFeature.id : activeSelectionId}
           onCameraChanged={onTileCameraChanged}
+          viewportFootprint={viewportFootprint}
           cameraRequest={stressCameraRequest}
           cameraPoseRequest={cameraRequest}
           onViewportKeyDown={onViewportKeyDown}
@@ -1668,6 +1710,7 @@ export function App() {
           {import.meta.env.DEV && citywideMode && <div className="citywide-debug-anchors" aria-label="Citywide debug anchors">
             {CITYWIDE_DEBUG_ANCHORS.map((anchor) => <button key={anchor.label} type="button" onClick={() => measureCitywideDebugAnchor(anchor)}>Debug {anchor.label}</button>)}
             <span data-citywide-render-metrics>Rendered dense features / instances / primitives: {citywideDenseMetrics.featureCount} / {citywideDenseMetrics.instanceCount} / {citywideDenseMetrics.primitiveCount}</span>
+            <span data-citywide-dense-build-metrics>Dense plans build / reuse / cancelled / swapped: {citywideDenseMetrics.planBuildCount ?? 0} / {citywideDenseMetrics.planReuseCount ?? 0} / {citywideDenseMetrics.planCancellationCount ?? 0} / {citywideDenseMetrics.planSwapCount ?? 0} · fingerprint {citywideDenseMetrics.planFingerprint || "pending"} · select / key / allocation / max slice / worker-ready / total: {formatDenseTiming(citywideDenseMetrics.selectionMs)} / {formatDenseTiming(citywideDenseMetrics.keyMs)} / {formatDenseTiming(citywideDenseMetrics.allocationMs)} / {formatDenseTiming(citywideDenseMetrics.allocationMaxSliceMs)} / {formatDenseTiming(citywideDenseMetrics.workerReadyMs)} / {formatDenseTiming(citywideDenseMetrics.totalBuildMs)} ms · allocation chunks {citywideDenseMetrics.allocationChunkCount ?? 0}</span>
             <span data-citywide-browser-baseline>Pre-citywide initial-mount baseline heap {citywideBrowserBaseline.heapBytes?.toLocaleString() ?? "unsupported"} · citywide resources {citywideBrowserBaseline.citywideResourceCount} / {citywideBrowserBaseline.citywideResourceBytes.toLocaleString()} bytes</span>
             {citywideDebugMeasurement.status !== "idle" && <span data-citywide-debug-measurement role="status">Debug {citywideDebugMeasurement.anchor} · {citywideDebugMeasurement.status} · frames {citywideDebugMeasurement.frameCount} · avg/median/p95/max {citywideDebugMeasurement.frameAverageMs?.toFixed(2) ?? "unsupported"}/{citywideDebugMeasurement.frameMedianMs?.toFixed(2) ?? "unsupported"}/{citywideDebugMeasurement.frameP95Ms?.toFixed(2) ?? "unsupported"}/{citywideDebugMeasurement.frameMaxMs?.toFixed(2) ?? "unsupported"} ms · heap {citywideDebugMeasurement.heapBytes?.toLocaleString() ?? "unsupported"} · citywide resources {citywideDebugMeasurement.citywideResourceCount} / {citywideDebugMeasurement.citywideResourceBytes.toLocaleString()} bytes</span>}
           </div>}

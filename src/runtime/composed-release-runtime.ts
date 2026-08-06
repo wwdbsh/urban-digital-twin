@@ -6,11 +6,11 @@ import {
 } from "../release/citywide-release.ts";
 import type { CitywideLruCache, CitywideSharedRequestBudget } from "../release/citywide-release.ts";
 import { TRAVEL_CONTEXT_BUDGETS, TRAVEL_CONTEXT_RELEASE_ID } from "../release/travel-context-release.ts";
-import type { CameraPose } from "../domain/visitor-navigation.ts";
 import { DEFAULT_LAYER_VISIBILITY, type LayerManifest, type LayerVisibility, type RuntimeLayerId } from "./layers.ts";
 import type { RuntimeCityAdapter } from "./fixture-adapter.ts";
 import type { CitywideReleaseAdapter, CitywideRuntimeMetrics } from "./citywide-release-runtime.ts";
 import type { TravelContextReleaseAdapter, TravelContextRuntimeMetrics } from "./travel-context-release-runtime.ts";
+import { normalizeViewportRefreshRequest, type ViewportRefreshInput } from "./viewport-footprint.ts";
 
 export type ComposedReleaseOrigin = "base" | "context";
 
@@ -213,6 +213,9 @@ export class ComposedReleaseAdapter implements RuntimeCityAdapter {
   private baseFeatures: Feature[] = [];
   private contextFeatures: Feature[] = [];
   private viewportAbortController: AbortController | null = null;
+  private activeViewportSignature: string | null = null;
+  private activeViewportPromise: Promise<Feature[]> | null = null;
+  private committedViewportSignature: string | null = null;
   private searchAbortController: AbortController | null = null;
   private generation = 0;
   private searchGeneration = 0;
@@ -307,8 +310,15 @@ export class ComposedReleaseAdapter implements RuntimeCityAdapter {
     return [];
   }
 
-  async refreshViewport(camera: CameraPose, signal?: AbortSignal): Promise<Feature[]> {
+  refreshViewport(input: ViewportRefreshInput, signal?: AbortSignal): Promise<Feature[]> {
     if (this.destroyed) throw composedAbortError("Composed viewport refresh was aborted.");
+    const request = normalizeViewportRefreshRequest(input);
+    const signature = request.footprint.signature;
+    if (signature === this.activeViewportSignature && this.activeViewportPromise) return this.activeViewportPromise;
+    if (signature === this.committedViewportSignature) {
+      const groups = mergeFeatureGroups(this.baseFeatures, this.contextFeatures);
+      return Promise.resolve([...groups.base, ...groups.context]);
+    }
     this.viewportAbortController?.abort();
     const controller = new AbortController();
     this.viewportAbortController = controller;
@@ -316,33 +326,44 @@ export class ComposedReleaseAdapter implements RuntimeCityAdapter {
     signal?.addEventListener("abort", abort, { once: true });
     if (signal?.aborted) controller.abort();
     const generation = ++this.generation;
-    try {
-      const [baseResult, contextResult] = await Promise.allSettled([
-        this.base.refreshViewport(camera, controller.signal),
-        this.context.refreshViewport(camera, controller.signal),
-      ]);
-      if (controller.signal.aborted || generation !== this.generation || this.destroyed) {
-        this.staleResultCount += 1;
-        throw composedAbortError("Composed viewport refresh was aborted.");
+    const run = async (): Promise<Feature[]> => {
+      try {
+        const [baseResult, contextResult] = await Promise.allSettled([
+          this.base.refreshViewport(request, controller.signal),
+          this.context.refreshViewport(request, controller.signal),
+        ]);
+        if (controller.signal.aborted || generation !== this.generation || this.destroyed) {
+          this.staleResultCount += 1;
+          throw composedAbortError("Composed viewport refresh was aborted.");
+        }
+        if (baseResult.status === "fulfilled") {
+          this.baseFeatures = baseResult.value;
+          this.failedRoles.delete("base");
+        } else if (!isAbort(baseResult.reason)) {
+          this.failedRoles.add("base");
+        }
+        if (contextResult.status === "fulfilled") {
+          this.contextFeatures = contextResult.value;
+          this.failedRoles.delete("context");
+        } else if (!isAbort(contextResult.reason)) {
+          this.failedRoles.add("context");
+        }
+        const groups = mergeFeatureGroups(this.baseFeatures, this.contextFeatures);
+        this.committedViewportSignature = signature;
+        return [...groups.base, ...groups.context];
+      } finally {
+        signal?.removeEventListener("abort", abort);
+        if (this.viewportAbortController === controller) this.viewportAbortController = null;
+        if (this.activeViewportSignature === signature) {
+          this.activeViewportSignature = null;
+          this.activeViewportPromise = null;
+        }
       }
-      if (baseResult.status === "fulfilled") {
-        this.baseFeatures = baseResult.value;
-        this.failedRoles.delete("base");
-      } else if (!isAbort(baseResult.reason)) {
-        this.failedRoles.add("base");
-      }
-      if (contextResult.status === "fulfilled") {
-        this.contextFeatures = contextResult.value;
-        this.failedRoles.delete("context");
-      } else if (!isAbort(contextResult.reason)) {
-        this.failedRoles.add("context");
-      }
-      const groups = mergeFeatureGroups(this.baseFeatures, this.contextFeatures);
-      return [...groups.base, ...groups.context];
-    } finally {
-      signal?.removeEventListener("abort", abort);
-      if (this.viewportAbortController === controller) this.viewportAbortController = null;
-    }
+    };
+    const promise = run();
+    this.activeViewportSignature = signature;
+    this.activeViewportPromise = promise;
+    return promise;
   }
 
   async loadDetailsForFeature(feature: Feature, signal?: AbortSignal): Promise<Feature | undefined> {

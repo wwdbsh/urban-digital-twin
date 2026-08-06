@@ -31,6 +31,27 @@ describe("TravelContextReleaseAdapter", () => {
     expect(adapter.getMetrics().detailIndexEntryCount).toBe(5);
   });
 
+  it("uses the shared ground footprint for viewport selection and joins duplicate settled refreshes", async () => {
+    const adapter = fixtureAdapter();
+    const shard = adapter.manifest.geometryShards[0]!;
+    const request = {
+      camera: { longitude: -73.7, latitude: 40.95, height: 8_000, heading: 20, pitch: -50, roll: 0 },
+      footprint: {
+        bounds: shard.bounds,
+        groundCenter: { longitude: (shard.bounds.west + shard.bounds.east) / 2, latitude: (shard.bounds.south + shard.bounds.north) / 2 },
+        valid: true,
+        source: "ground-rays" as const,
+        signature: "travel-ground-footprint",
+      },
+    };
+    const first = adapter.refreshViewport(request);
+    const duplicate = adapter.refreshViewport(request);
+    expect(duplicate).toBe(first);
+    await expect(first).resolves.not.toEqual([]);
+    await expect(adapter.refreshViewport(request)).resolves.not.toEqual([]);
+    expect(adapter.getMetrics().dedupedRefreshCount).toBe(2);
+  });
+
   it("fails only the injected parks layer while retaining other loaded layers", async () => {
     const adapter = fixtureAdapter(undefined, { fault: "parks-geometry" });
     await expect(adapter.refreshViewport({ longitude: -73.991, latitude: 40.744, height: 700, heading: 0, pitch: -35, roll: 0 })).resolves.toBeDefined();
