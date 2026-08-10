@@ -240,7 +240,7 @@ export function parseGlbV2(bytes: Uint8Array): ParsedGlb {
   if (!(bytes instanceof Uint8Array) || bytes.byteLength < 20 || bytes.byteLength > MULTI_LOD_ASSEMBLY_LIMITS.artifactBytes) throw new Error("GLB byte length is outside the supported profile.");
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   if (u32(view, 0) !== 0x46546c67 || u32(view, 4) !== 2 || u32(view, 8) !== bytes.byteLength) throw new Error("GLB 2 header or declared length is invalid.");
-  let offset = 12; let json: Record<string, unknown> | null = null; let jsonBytes = 0; let binBytes = 0; let chunks = 0;
+  let offset = 12; let json: Record<string, unknown> | null = null; let jsonBytes = 0; let bin: Uint8Array | null = null; let chunks = 0;
   while (offset < bytes.byteLength) {
     if (offset + 8 > bytes.byteLength) throw new Error("GLB chunk header is truncated.");
     const length = u32(view, offset); const type = u32(view, offset + 4); offset += 8;
@@ -248,27 +248,49 @@ export function parseGlbV2(bytes: Uint8Array): ParsedGlb {
     const chunk = bytes.subarray(offset, offset + length); offset += length; chunks += 1;
     if (chunks === 1 && type !== 0x4e4f534a) throw new Error("GLB JSON must be the first chunk.");
     if (type === 0x4e4f534a) { if (json) throw new Error("GLB may contain exactly one JSON chunk."); jsonBytes = length; if (length > MULTI_LOD_ASSEMBLY_LIMITS.glbJsonBytes) throw new Error("GLB JSON exceeds the cap."); const parsed = parseJsonBytes(chunk); if (!rec(parsed)) throw new Error("GLB JSON must be an object."); json = parsed; }
-    else if (type === 0x004e4942) { if (binBytes) throw new Error("GLB may contain at most one BIN chunk."); binBytes = length; }
+    else if (type === 0x004e4942) { if (bin !== null) throw new Error("GLB may contain at most one BIN chunk."); bin = chunk; }
     else throw new Error("Unsupported GLB chunk type.");
   }
   if (!json || offset !== bytes.byteLength) throw new Error("GLB JSON or exact byte closure is missing.");
-  validateGltfJson(json, binBytes);
-  return { json, jsonBytes, binBytes };
+  validateGltfJson(json, bin ?? new Uint8Array());
+  return { json, jsonBytes, binBytes: bin?.byteLength ?? 0 };
 }
-function validateGltfJson(json: Record<string, unknown>, binBytes: number): void {
+const COMPONENT_BYTES: Record<number, number> = { 5121: 1, 5123: 2, 5125: 4, 5126: 4 };
+const TYPE_COMPONENTS: Record<string, number> = { SCALAR: 1, VEC2: 2, VEC3: 3, VEC4: 4 };
+function validateGltfJson(json: Record<string, unknown>, bin: Uint8Array): void {
   if (!rec(json.asset) || json.asset.version !== "2.0") throw new Error("glTF asset.version 2.0 is required.");
   const unsupported = Array.isArray(json.extensionsUsed) ? json.extensionsUsed.filter((name) => typeof name === "string" && /draco|meshopt|compression/iu.test(name)) : [];
   if (unsupported.length) throw new Error("Compressed glTF extensions are unsupported.");
   const buffers = Array.isArray(json.buffers) ? json.buffers : [];
-  if (buffers.length !== 1 || !rec(buffers[0]) || "uri" in buffers[0] || !integer(buffers[0].byteLength, binBytes) || buffers[0].byteLength > binBytes) throw new Error("One embedded BIN buffer with a bounded length is required.");
+  if (buffers.length !== 1 || !rec(buffers[0]) || "uri" in buffers[0] || !integer(buffers[0].byteLength, bin.byteLength) || buffers[0].byteLength > bin.byteLength || bin.byteLength - buffers[0].byteLength > 3) throw new Error("One embedded BIN buffer with a bounded length is required.");
   if (Array.isArray(json.images) && json.images.some((image) => rec(image) && "uri" in image)) throw new Error("External image URIs are forbidden.");
   const views = Array.isArray(json.bufferViews) ? json.bufferViews : [];
-  for (const raw of views) { if (!rec(raw) || raw.buffer !== 0 || !integer(raw.byteOffset ?? 0) || !integer(raw.byteLength) || (raw.byteOffset as number | undefined ?? 0) + (raw.byteLength as number) > (buffers[0].byteLength as number)) throw new Error("bufferView range is invalid."); }
+  for (const raw of views) { if (!rec(raw) || raw.buffer !== 0 || !integer(raw.byteOffset ?? 0) || !integer(raw.byteLength) || (raw.byteOffset as number | undefined ?? 0) + (raw.byteLength as number) > (buffers[0].byteLength as number) || (raw.byteStride !== undefined && (!integer(raw.byteStride, 252) || raw.byteStride < 4))) throw new Error("bufferView range is invalid."); }
   const accessors = Array.isArray(json.accessors) ? json.accessors : [];
   if (accessors.length > MULTI_LOD_ASSEMBLY_LIMITS.accessors) throw new Error("Accessor cap exceeded.");
-  for (const raw of accessors) { if (!rec(raw) || "sparse" in raw || !integer(raw.bufferView, Math.max(0, views.length - 1)) || !integer(raw.count) || ![5121, 5123, 5125, 5126].includes(Number(raw.componentType)) || !["SCALAR", "VEC2", "VEC3", "VEC4"].includes(String(raw.type))) throw new Error("Accessor profile or range is invalid."); }
+  for (const raw of accessors) {
+    if (!rec(raw) || "sparse" in raw || !integer(raw.bufferView, Math.max(0, views.length - 1)) || !integer(raw.count) || raw.count === 0 || ![5121, 5123, 5125, 5126].includes(Number(raw.componentType)) || !["SCALAR", "VEC2", "VEC3", "VEC4"].includes(String(raw.type)) || !integer(raw.byteOffset ?? 0)) throw new Error("Accessor profile or range is invalid.");
+    const view = views[raw.bufferView as number]; if (!rec(view)) throw new Error("Accessor bufferView is missing.");
+    const componentBytes = COMPONENT_BYTES[raw.componentType as number]!; const elementBytes = componentBytes * TYPE_COMPONENTS[raw.type as string]!;
+    const accessorOffset = raw.byteOffset as number | undefined ?? 0; const viewOffset = view.byteOffset as number | undefined ?? 0; const stride = view.byteStride as number | undefined ?? elementBytes;
+    if (accessorOffset % componentBytes !== 0 || viewOffset % componentBytes !== 0 || stride < elementBytes || stride % componentBytes !== 0) throw new Error("Accessor alignment or stride is invalid.");
+    const extent = accessorOffset + ((raw.count as number) - 1) * stride + elementBytes;
+    if (!Number.isSafeInteger(extent) || extent > (view.byteLength as number)) throw new Error("Accessor byte range exceeds its bufferView.");
+  }
   const meshes = Array.isArray(json.meshes) ? json.meshes : []; let primitives = 0;
-  for (const mesh of meshes) { if (!rec(mesh) || !Array.isArray(mesh.primitives)) throw new Error("Mesh primitives are required."); for (const primitive of mesh.primitives) { primitives += 1; if (!rec(primitive) || (primitive.mode ?? 4) !== 4 || !rec(primitive.attributes) || !integer(primitive.attributes.POSITION, Math.max(0, accessors.length - 1)) || !integer(primitive.indices, Math.max(0, accessors.length - 1))) throw new Error("Only indexed TRIANGLES with POSITION are supported."); const indexAccessor = accessors[primitive.indices as number] as Record<string, unknown>; const positionAccessor = accessors[primitive.attributes.POSITION as number] as Record<string, unknown>; if (indexAccessor.type !== "SCALAR" || (indexAccessor.count as number) % 3 !== 0 || positionAccessor.type !== "VEC3" || (positionAccessor.count as number) < 3) throw new Error("Triangle topology accessor counts are invalid."); } }
+  const binary = new DataView(bin.buffer, bin.byteOffset, bin.byteLength);
+  const info = (index: number) => { const accessor = accessors[index] as Record<string, unknown>; const view = views[accessor.bufferView as number] as Record<string, unknown>; const componentBytes = COMPONENT_BYTES[accessor.componentType as number]!; const elementBytes = componentBytes * TYPE_COMPONENTS[accessor.type as string]!; return { accessor, count: accessor.count as number, componentType: accessor.componentType as number, offset: (view.byteOffset as number | undefined ?? 0) + (accessor.byteOffset as number | undefined ?? 0), stride: view.byteStride as number | undefined ?? elementBytes }; };
+  const component = (type: number, offset: number): number => type === 5121 ? binary.getUint8(offset) : type === 5123 ? binary.getUint16(offset, true) : type === 5125 ? binary.getUint32(offset, true) : binary.getFloat32(offset, true);
+  for (const mesh of meshes) {
+    if (!rec(mesh) || !Array.isArray(mesh.primitives)) throw new Error("Mesh primitives are required.");
+    for (const primitive of mesh.primitives) {
+      primitives += 1; if (!rec(primitive) || (primitive.mode ?? 4) !== 4 || !rec(primitive.attributes) || !integer(primitive.attributes.POSITION, Math.max(0, accessors.length - 1)) || !integer(primitive.indices, Math.max(0, accessors.length - 1))) throw new Error("Only indexed TRIANGLES with POSITION are supported.");
+      const positions = info(primitive.attributes.POSITION); const indices = info(primitive.indices as number);
+      if (indices.accessor.type !== "SCALAR" || indices.componentType === 5126 || indices.count % 3 !== 0 || positions.accessor.type !== "VEC3" || positions.componentType !== 5126 || positions.count < 3) throw new Error("Triangle topology accessor counts are invalid.");
+      for (let index = 0; index < positions.count; index += 1) for (let axis = 0; axis < 3; axis += 1) if (!Number.isFinite(component(5126, positions.offset + index * positions.stride + axis * 4))) throw new Error("POSITION contains a non-finite coordinate.");
+      for (let index = 0; index < indices.count; index += 1) if (component(indices.componentType, indices.offset + index * indices.stride) >= positions.count) throw new Error("Triangle index exceeds POSITION count.");
+    }
+  }
   if (primitives === 0 || primitives > MULTI_LOD_ASSEMBLY_LIMITS.primitives) throw new Error("Primitive count is outside the profile.");
   if ((Array.isArray(json.materials) ? json.materials.length : 0) > MULTI_LOD_ASSEMBLY_LIMITS.materials || (Array.isArray(json.textures) ? json.textures.length : 0) > MULTI_LOD_ASSEMBLY_LIMITS.textures) throw new Error("Material or texture cap exceeded.");
 }

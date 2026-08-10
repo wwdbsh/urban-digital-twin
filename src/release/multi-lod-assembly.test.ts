@@ -20,12 +20,12 @@ async function digest(bytes: Uint8Array): Promise<string> {
 function chunk(value: Uint8Array, pad = 0x20): Uint8Array {
   const result = new Uint8Array(Math.ceil(value.byteLength / 4) * 4); result.fill(pad); result.set(value); return result;
 }
-function glb(metadata: Record<string, unknown>, options: { indexCount?: number; externalBuffer?: boolean } = {}): Uint8Array {
+function glb(metadata: Record<string, unknown>, options: { indexCount?: number; externalBuffer?: boolean; emptyRanges?: boolean; outOfRangeIndex?: boolean } = {}): Uint8Array {
   const indexCount = options.indexCount ?? 3;
   const json = {
     asset: { version: "2.0" },
     buffers: [{ byteLength: 48, ...(options.externalBuffer ? { uri: "bad.bin" } : {}) }],
-    bufferViews: [{ buffer: 0, byteOffset: 0, byteLength: 36 }, { buffer: 0, byteOffset: 36, byteLength: 12 }],
+    bufferViews: [{ buffer: 0, byteOffset: 0, byteLength: options.emptyRanges ? 0 : 36 }, { buffer: 0, byteOffset: options.emptyRanges ? 0 : 36, byteLength: options.emptyRanges ? 0 : 12 }],
     accessors: [
       { bufferView: 0, componentType: 5126, count: 3, type: "VEC3" },
       { bufferView: 1, componentType: 5125, count: indexCount, type: "SCALAR" },
@@ -33,7 +33,7 @@ function glb(metadata: Record<string, unknown>, options: { indexCount?: number; 
     meshes: [{ primitives: [{ attributes: { POSITION: 0 }, indices: 1, mode: 4, material: 0 }] }],
     materials: [{}], textures: [], extras: { urbanDigitalTwin: metadata },
   };
-  const jsonBytes = chunk(new TextEncoder().encode(JSON.stringify(json))); const bin = new Uint8Array(48); const total = 12 + 8 + jsonBytes.length + 8 + bin.length;
+  const jsonBytes = chunk(new TextEncoder().encode(JSON.stringify(json))); const bin = new Uint8Array(48); if (options.outOfRangeIndex) new DataView(bin.buffer).setUint32(36, 3, true); const total = 12 + 8 + jsonBytes.length + 8 + bin.length;
   const result = new Uint8Array(total); const view = new DataView(result.buffer);
   view.setUint32(0, 0x46546c67, true); view.setUint32(4, 2, true); view.setUint32(8, total, true);
   view.setUint32(12, jsonBytes.length, true); view.setUint32(16, 0x4e4f534a, true); result.set(jsonBytes, 20);
@@ -119,6 +119,8 @@ describe("multi-LOD immutable assembly", () => {
     expect(() => parseGlbV2(malformed)).toThrow(/header/iu);
     expect(() => parseGlbV2(glb(metadata("lod-0"), { externalBuffer: true }))).toThrow(/embedded/iu);
     expect(() => parseGlbV2(glb(metadata("lod-0"), { indexCount: 2 }))).toThrow(/topology/iu);
+    expect(() => parseGlbV2(glb(metadata("lod-0"), { emptyRanges: true }))).toThrow(/range/iu);
+    expect(() => parseGlbV2(glb(metadata("lod-0"), { outOfRangeIndex: true }))).toThrow(/index/iu);
   });
 
   it("binds canonical identity, truth, source dates and predecessors to each GLB", async () => {
