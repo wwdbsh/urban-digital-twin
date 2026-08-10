@@ -19,6 +19,50 @@ import {
   type CitywideShardManifest,
 } from "../release/citywide-release.ts";
 import { tileKeyForCoordinate, tileKeyString } from "./spatial.ts";
+
+/** Whether a shard's declared bounds contain a WGS84 point, edges inclusive. */
+export function shardContainsPoint(shard: Pick<CitywideShardManifest, "bounds">, longitude: number, latitude: number): boolean {
+  const { west, east, south, north } = shard.bounds;
+  const withinLongitude = west <= east
+    ? longitude >= west && longitude <= east
+    : longitude >= west || longitude <= east;
+  return withinLongitude && latitude >= south && latitude <= north;
+}
+
+/**
+ * Reserve the shard the camera is standing on before the budget truncation.
+ *
+ * The ranking is by distance from the footprint's ground centre, which is the
+ * right ordering for what the camera is *looking at*. It is the wrong ordering
+ * for what the camera is *standing on*: at a shallow attitude the ground centre
+ * sits far downrange, and the camera's own shard is ranked out and dropped by
+ * `slice(0, maxLoadedShards)`. Losing that shard costs the base building
+ * records under the camera, and with them the verified WGS84 anchors the
+ * exterior cells need, so a street-level facade view renders nothing (T009
+ * finding F2).
+ *
+ * The fix is deliberately confined to selection ordering: the camera's shards
+ * are moved to the front so truncation can never discard them. The LRU cache
+ * itself is untouched, and cross-cell cache pressure remains the T013+ concern
+ * ADR 0024 hands forward.
+ */
+export function retainCameraShards<T extends Pick<CitywideShardManifest, "bounds" | "relativeContentRef">>(
+  ranked: readonly T[],
+  camera: { longitude: number; latitude: number },
+  limit: number,
+): T[] {
+  if (ranked.length <= limit) return [...ranked];
+  // Invariant: the reserved head cannot itself overflow the budget. The shards
+  // are a non-overlapping tile grid, so a point falls in one tile per layer —
+  // up to four only when it lands exactly on a tile edge or corner, since
+  // `shardContainsPoint` is edge-inclusive — across the two geometry layers
+  // this selection requests. That is a small constant against the budget, so
+  // the slice below can never drop a reserved shard.
+  const cameraShards = ranked.filter((shard) => shardContainsPoint(shard, camera.longitude, camera.latitude));
+  if (cameraShards.length === 0) return ranked.slice(0, limit);
+  const reserved = new Set(cameraShards.map((shard) => shard.relativeContentRef));
+  return [...cameraShards, ...ranked.filter((shard) => !reserved.has(shard.relativeContentRef))].slice(0, limit);
+}
 import { DEFAULT_LAYER_VISIBILITY, layerForFeature, type LayerManifest, type LayerVisibility, type RuntimeLayerId } from "./layers.ts";
 import type { RuntimeCityAdapter } from "./fixture-adapter.ts";
 import { CitywideLruCache, CitywideRequestPool, type CitywideSharedRequestBudget } from "../release/citywide-release.ts";
@@ -419,7 +463,8 @@ export class CitywideReleaseAdapter implements RuntimeCityAdapter {
       ...this.selectViewportShards(this.manifest.geometryShards.filter((shard) => shard.layer === "restaurants"), viewport),
     ];
     const unique = [...new Map(requested.map((shard) => [shard.relativeContentRef, shard])).values()];
-    const bounded = unique.sort((left, right) => this.shardDistance(left, request.footprint.groundCenter) - this.shardDistance(right, request.footprint.groundCenter) || left.shardId.localeCompare(right.shardId)).slice(0, CITYWIDE_BUDGETS.maxLoadedShards);
+    const ranked = unique.sort((left, right) => this.shardDistance(left, request.footprint.groundCenter) - this.shardDistance(right, request.footprint.groundCenter) || left.shardId.localeCompare(right.shardId));
+    const bounded = retainCameraShards(ranked, request.camera, CITYWIDE_BUDGETS.maxLoadedShards);
     const visibleRefs = new Set(bounded.filter((shard) => this.shardIntersectsViewport(shard, viewport)).map((shard) => shard.relativeContentRef));
     const signature = `${request.footprint.signature}|${[...visibleRefs].sort().join(",")}|${bounded.map((shard) => shard.relativeContentRef).sort().join(",")}`;
     if (signature === this.activeViewportSignature && this.activeViewportPromise) {

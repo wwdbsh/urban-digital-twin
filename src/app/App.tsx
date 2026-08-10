@@ -59,6 +59,22 @@ import { AggregateRequestBudget, ComposedReleaseAdapter, type ComposedReleaseMet
 import { EXTERIOR_PILOT_RELEASE_ID, createExteriorPilotFaultFetcher, loadExteriorPilotRelease, parseExteriorPilotFault, type CommercialStorefrontPlacement, type LoadedExteriorPilotRelease } from "../runtime/exterior-pilot-release";
 import { BLOCK835_PUBLIC_REALM_RELEASE_ID, createBlock835PublicRealmFaultFetcher, loadBlock835PublicRealmRelease, parseBlock835PublicRealmFault, publicRealmFeatureToFeature, type Block835PublicRealmFeature, type LoadedBlock835PublicRealmRelease } from "../runtime/block835-public-realm-release";
 import { loadExteriorCellRuntime, type ExteriorCellOutcome, type ExteriorCellRuntime, type ExteriorHeadRequest } from "../runtime/exterior-cell-runtime";
+import { createExteriorCellFaultFetcher, parseExteriorCellFault } from "../runtime/exterior-cell-fault";
+import {
+  BLOCK835_CANARY_REPEATS,
+  BLOCK835_CANARY_SAMPLES_PER_POSE,
+  BLOCK835_CANARY_SETTLE_MS,
+  block835CanaryBudgetVerdict,
+  block835CanaryHeapVerdict,
+  block835CanaryRuntimeVerdict,
+  block835CanaryFacadePath,
+  estimateCanaryDisplay,
+  parseBlock835CanaryProbeMode,
+  parseBlock835CanaryPathVariant,
+  summarizeCanaryFrames,
+  type Block835CanaryProbeResult,
+  type Block835CanaryRepeatSample,
+} from "../runtime/block835-canary-probe";
 import { DEFAULT_EXTERIOR_RENDER_PROFILE, EXTERIOR_RENDER_PROFILES, exteriorRenderProfileLabel, parseExteriorRenderProfile, type ExteriorRenderProfile } from "../runtime/exterior-render-profiles";
 import { fallbackViewportFootprint, type ViewportFootprint } from "../runtime/viewport-footprint";
 
@@ -81,6 +97,16 @@ const CITYWIDE_DEBUG_ANCHORS = [
   { label: "Inwood/Marble Hill", longitude: -73.922, latitude: 40.871 },
   { label: "Roosevelt Island", longitude: -73.949, latitude: 40.762 },
 ] as const;
+
+/**
+ * Build-time opt-in for the T009 Block 835 canary validation harness (the
+ * canary frame-time probe and the exterior-cell fault seam). A normal
+ * `pnpm build` leaves `VITE_BLOCK835_PROBE` unset, so this constant folds to
+ * `false` and both branches are tree-shaken out of the shipped bundle. The
+ * separate `import.meta.env.DEV` guards on the Stage 3 probe and the Stage 3
+ * fault fetcher are untouched.
+ */
+const BLOCK835_CANARY_HARNESS_ENABLED = import.meta.env.VITE_BLOCK835_PROBE === "1";
 
 const BLOCK835_PERFORMANCE_PROBE_QUERY = "block835Performance";
 const BLOCK835_PERFORMANCE_CAMERA_PATH_ID = "block835-stage3-six-pose-v1";
@@ -729,6 +755,13 @@ export function App() {
     : parseExteriorStreamingUrl(window.location.href);
   const stage3RenderProofRequested = import.meta.env.DEV && typeof window !== "undefined" && new URL(window.location.href).searchParams.get("stage3Proof") === "storefront-picks";
   const block835PerformanceMode = import.meta.env.DEV && typeof window !== "undefined" ? block835PerformanceProbeMode(window.location.search) : null;
+  // Separate condition axis from the Stage 3 probe above. The Stage 3 probe
+  // refuses a scene that streams exterior cells, because certifying it against
+  // a Stage-3-only control sample would compare two different scenes. The
+  // canary probe is the inverse: it *requires* the exterior-cell release to be
+  // active and measures the Goal's absolute budgets instead of a regression.
+  const block835CanaryMode = BLOCK835_CANARY_HARNESS_ENABLED && typeof window !== "undefined" ? parseBlock835CanaryProbeMode(window.location.search) : null;
+  const block835CanaryPathVariant = BLOCK835_CANARY_HARNESS_ENABLED && typeof window !== "undefined" ? parseBlock835CanaryPathVariant(window.location.search) : "level";
   // A URL cannot activate the real adapter until its immutable release has
   // loaded and passed validation. Start every first render in fixtures so an
   // unknown/loading release never wears a real label over fixture geometry.
@@ -785,6 +818,7 @@ export function App() {
   );
   const [stage3RenderProof, setStage3RenderProof] = useState<Stage3RenderProof | null>(null);
   const [block835PerformanceProbe, setBlock835PerformanceProbe] = useState<Block835PerformanceProbeResult | null>(null);
+  const [block835CanaryProbe, setBlock835CanaryProbe] = useState<Block835CanaryProbeResult | null>(null);
   const [, setRealFallbackActive] = useState(initialRealRequest);
   const [realDataMessage, setRealDataMessage] = useState("Real pilot artifact not loaded; fixture fallback is active.");
   const [landmarkAssetMessage, setLandmarkAssetMessage] = useState("Landmark GLB package not loaded; procedural fallback is active.");
@@ -851,6 +885,7 @@ export function App() {
   const selectedCivicFacetsRef = useRef(selectedCivicFacets);
   const citywideAdapterRef = useRef<CitywideReleaseAdapter | null>(citywideAdapter);
   const composedAdapterRef = useRef<ComposedReleaseAdapter | null>(composedAdapter);
+  const composedMetricsRef = useRef<ComposedReleaseMetrics>(composedMetrics);
   const exteriorRequestedRef = useRef(exteriorRequested);
   const selectedStorefrontIdRef = useRef(selectedStorefrontId);
   const publicRealmRequestedRef = useRef(publicRealmRequested);
@@ -873,6 +908,7 @@ export function App() {
   const terminalRealFallbackNoticeRef = useRef<string | null>(null);
   const citywideDebugMeasurementRunRef = useRef(0);
   const block835PerformanceProbeRunRef = useRef(0);
+  const block835CanaryProbeRunRef = useRef(0);
   const detailsHeadingRef = useRef<HTMLHeadingElement>(null);
   const detailsReturnRef = useRef<HTMLElement | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -888,6 +924,7 @@ export function App() {
   dataModeRef.current = dataMode;
   citywideAdapterRef.current = citywideAdapter;
   composedAdapterRef.current = composedAdapter;
+  composedMetricsRef.current = composedMetrics;
   exteriorRequestedRef.current = exteriorRequested;
   selectedStorefrontIdRef.current = selectedStorefrontId;
   publicRealmRequestedRef.current = publicRealmRequested;
@@ -1087,6 +1124,170 @@ export function App() {
     };
   }, [activeRealBaseReleaseId, block835PerformanceMode, exteriorActive, exteriorStreamingRequested, publicRealmActive, publicRealmRequested]);
 
+  // T009 canary validation probe. Compiled out unless VITE_BLOCK835_PROBE=1.
+  useEffect(() => {
+    if (!block835CanaryMode || typeof window === "undefined") return undefined;
+    const runtime = exteriorCellRuntime;
+    const buildMode: "development" | "production" = import.meta.env.DEV ? "development" : "production";
+    const facadePath = block835CanaryFacadePath(block835CanaryPathVariant);
+    const poses = facadePath.poses;
+    const pending = (status: Block835CanaryProbeResult["status"], reason: string | null, partial?: Partial<Block835CanaryProbeResult>): Block835CanaryProbeResult => ({
+      schemaVersion: "1.0",
+      status,
+      profile: block835CanaryMode,
+      pathId: facadePath.pathId,
+      exteriorReleaseId: runtime?.releaseId ?? null,
+      exteriorSnapshotId: runtime?.snapshot.snapshotId ?? null,
+      baseReleaseId: activeRealBaseReleaseId ?? null,
+      capturedAt: null,
+      repeats: BLOCK835_CANARY_REPEATS,
+      settleMs: BLOCK835_CANARY_SETTLE_MS,
+      samplesPerPose: BLOCK835_CANARY_SAMPLES_PER_POSE,
+      poseCount: poses.length,
+      closestCameraToFacadeMeters: facadePath.closestCameraToFacadeMeters,
+      perRepeat: [],
+      aggregate: summarizeCanaryFrames([]),
+      display: estimateCanaryDisplay([]),
+      budget: block835CanaryBudgetVerdict(block835CanaryMode, { medianMs: null, p95Ms: null }),
+      heap: block835CanaryHeapVerdict([]),
+      runtime: block835CanaryRuntimeVerdict(null, null),
+      disclosures: {
+        buildMode,
+        viewportCss: { width: window.innerWidth, height: window.innerHeight },
+        devicePixelRatio: window.devicePixelRatio,
+        documentHasFocus: { before: document.hasFocus(), after: document.hasFocus() },
+        visibilityState: { before: document.visibilityState, after: document.visibilityState },
+        userAgent: window.navigator.userAgent,
+        consoleErrors: [],
+        windowErrors: [],
+        networkHosts: block835NetworkHosts(),
+      },
+      reason,
+      ...partial,
+    });
+    // The canary probe certifies the canary scene, so it starts only once the
+    // exterior-cell release is actually streaming over an active real base.
+    if (!activeRealBaseReleaseId || !exteriorStreamingActive || !runtime) {
+      setBlock835CanaryProbe(pending("waiting-for-prerequisites", "Waiting for an active compatible real base with the pinned exterior-cell release streaming. Add ?exteriorCells=manhattan-exterior-cells-20260811 to opt in."));
+      return undefined;
+    }
+
+    let cancelled = false;
+    let started = false;
+    const runId = ++block835CanaryProbeRunRef.current;
+    const isCurrent = () => !cancelled && runId === block835CanaryProbeRunRef.current;
+    const jsHeapBytes = (): number | null => {
+      const used = (performance as Performance & { memory?: { usedJSHeapSize?: number } }).memory?.usedJSHeapSize;
+      return typeof used === "number" && Number.isFinite(used) ? used : null;
+    };
+    const peakConcurrency = (): number => Math.max(aggregateBudgetRef.current.peakConcurrency(), runtime.getMetrics().peakConcurrentRequests);
+    const run = async () => {
+      if (!isCurrent()) return;
+      const beforeFocus = document.hasFocus();
+      const beforeVisibility = document.visibilityState;
+      if (!beforeFocus || beforeVisibility !== "visible") {
+        setBlock835CanaryProbe(pending("waiting-for-focus", "The browser page must be focused and visible before the deterministic canary probe starts."));
+        return;
+      }
+      setBlock835CanaryProbe(pending("running", null));
+      const audit = startBlock835ConsoleAudit();
+      const perRepeat: Block835CanaryRepeatSample[] = [];
+      const allSamples: number[] = [];
+      let peakCachedBytes = 0;
+      let reason: string | null = null;
+      try {
+        for (let repeatIndex = 0; repeatIndex < BLOCK835_CANARY_REPEATS && !reason; repeatIndex += 1) {
+          const repeatSamples: number[] = [];
+          for (const facadePose of poses) {
+            if (!isCurrent()) return;
+            const pose: CameraPose = { ...facadePose.pose };
+            setCameraPose(pose);
+            setCameraRequest((current) => ({ ...pose, requestId: (current?.requestId ?? 0) + 1 }));
+            await delay(BLOCK835_CANARY_SETTLE_MS);
+            if (!isCurrent()) return;
+            if (!document.hasFocus() || document.visibilityState !== "visible") {
+              reason = "Focus or visibility changed while collecting settled requestAnimationFrame samples.";
+              break;
+            }
+            let previous = await nextAnimationFrame();
+            for (let index = 0; index < BLOCK835_CANARY_SAMPLES_PER_POSE; index += 1) {
+              const now = await nextAnimationFrame();
+              if (!isCurrent()) return;
+              repeatSamples.push(now - previous);
+              previous = now;
+              if (!document.hasFocus() || document.visibilityState !== "visible") {
+                reason = "Focus or visibility changed while collecting settled requestAnimationFrame samples.";
+                break;
+              }
+            }
+            if (reason) break;
+          }
+          allSamples.push(...repeatSamples);
+          const exteriorMetrics = runtime.getMetrics();
+          const cachedBytes = exteriorMetrics.cachedBytes + composedMetricsRef.current.aggregate.cachedBytes;
+          peakCachedBytes = Math.max(peakCachedBytes, cachedBytes);
+          perRepeat.push({
+            repeatIndex,
+            summary: summarizeCanaryFrames(repeatSamples),
+            cacheEntries: exteriorMetrics.cacheEntries + composedMetricsRef.current.aggregate.cacheEntries,
+            cachedBytes,
+            cacheEvictions: exteriorMetrics.cacheEvictions + composedMetricsRef.current.aggregate.cacheEvictions,
+            peakConcurrentRequests: peakConcurrency(),
+            jsHeapBytes: jsHeapBytes(),
+          });
+        }
+      } catch (error) {
+        reason = error instanceof Error ? error.message : String(error);
+      } finally {
+        audit.stop();
+      }
+      if (!isCurrent()) return;
+      const aggregate = summarizeCanaryFrames(allSamples);
+      const afterFocus = document.hasFocus();
+      const afterVisibility = document.visibilityState;
+      const expectedSamples = BLOCK835_CANARY_REPEATS * poses.length * BLOCK835_CANARY_SAMPLES_PER_POSE;
+      const complete = reason === null && aggregate.sampleCount >= expectedSamples && beforeFocus && afterFocus && beforeVisibility === "visible" && afterVisibility === "visible";
+      setBlock835CanaryProbe({
+        ...pending(complete ? "complete" : "invalid", reason ?? (complete ? null : `The probe did not retain ${expectedSamples} focused, visible settled samples.`)),
+        capturedAt: new Date().toISOString(),
+        perRepeat,
+        aggregate,
+        display: estimateCanaryDisplay(allSamples),
+        budget: block835CanaryBudgetVerdict(block835CanaryMode, aggregate),
+        heap: block835CanaryHeapVerdict(perRepeat.map((entry) => entry.jsHeapBytes)),
+        runtime: block835CanaryRuntimeVerdict(peakConcurrency(), peakCachedBytes || null),
+        disclosures: {
+          buildMode,
+          viewportCss: { width: window.innerWidth, height: window.innerHeight },
+          devicePixelRatio: window.devicePixelRatio,
+          documentHasFocus: { before: beforeFocus, after: afterFocus },
+          visibilityState: { before: beforeVisibility, after: afterVisibility },
+          userAgent: window.navigator.userAgent,
+          consoleErrors: audit.consoleErrors,
+          windowErrors: audit.windowErrors,
+          networkHosts: block835NetworkHosts(),
+        },
+      });
+    };
+    const startWhenFocused = () => {
+      if (started || !isCurrent() || !document.hasFocus() || document.visibilityState !== "visible") return;
+      started = true;
+      void run();
+    };
+    if (!document.hasFocus() || document.visibilityState !== "visible") {
+      setBlock835CanaryProbe(pending("waiting-for-focus", "The browser page must be focused and visible before the deterministic canary probe starts."));
+      window.addEventListener("focus", startWhenFocused);
+      document.addEventListener("visibilitychange", startWhenFocused);
+    } else {
+      startWhenFocused();
+    }
+    return () => {
+      cancelled = true;
+      window.removeEventListener("focus", startWhenFocused);
+      document.removeEventListener("visibilitychange", startWhenFocused);
+    };
+  }, [activeRealBaseReleaseId, block835CanaryMode, block835CanaryPathVariant, exteriorCellRuntime, exteriorStreamingActive]);
+
   useEffect(() => {
     if (!exteriorStreamingRequested) {
       setExteriorCellRuntime(null);
@@ -1101,6 +1302,14 @@ export function App() {
     setExteriorCellLoadState("loading");
     setExteriorCellMessage("Exterior streaming is loading from the local release…");
     const request: ExteriorHeadRequest = exteriorCanarySnapshotId ? { kind: "canary", snapshotId: exteriorCanarySnapshotId } : { kind: "default" };
+    // Harness-only failure-boundary seam. It is compiled out unless the build
+    // opted in, is query-driven with no user-facing control, and corrupts only
+    // a cloned response body in memory: the pinned release files on disk are
+    // never rewritten, so the fault journey cannot disturb an immutable byte.
+    const cellFault = BLOCK835_CANARY_HARNESS_ENABLED && typeof window !== "undefined"
+      ? parseExteriorCellFault(new URL(window.location.href).searchParams.get("exteriorCellFault"), true)
+      : null;
+    const cellFetcher = cellFault ? createExteriorCellFaultFetcher(cellFault) : undefined;
     // Depend on the adapter STATE, not the ref. `exteriorStreamingRequested` is
     // URL-derived and true on the very first render, while the citywide adapter
     // arrives asynchronously afterwards. Reading the ref captured the
@@ -1121,6 +1330,7 @@ export function App() {
       .then(() => loadExteriorCellRuntime(exteriorCellBasePath(exteriorCellReleaseId), {
         signal: controller.signal,
         request,
+        fetcher: cellFetcher,
         sharedBudget: aggregateBudgetRef.current,
         baseIdentity: { releaseId: activeRealBaseReleaseId ?? "no-active-base", has: (featureId) => exteriorBaseIdentityHas(adapter, featureId) },
       })).then(({ runtime, head }) => {
@@ -2573,6 +2783,11 @@ export function App() {
           role="status"
           style={{ position: "fixed", zIndex: 100, right: 8, bottom: 8, maxWidth: "min(960px, calc(100vw - 16px))", maxHeight: "40vh", overflow: "auto", overflowWrap: "anywhere", whiteSpace: "pre-wrap", padding: 8, background: "rgba(13, 21, 27, 0.94)", color: "#d5ffff", font: "11px ui-monospace, SFMono-Regular, Menlo, monospace" }}
         >{block835PerformanceProbe ? JSON.stringify(block835PerformanceProbe) : "Block 835 performance probe is initializing."}</output>}
+        {block835CanaryMode && <output
+          data-block835-canary-probe
+          role="status"
+          style={{ position: "fixed", zIndex: 100, left: 8, bottom: 8, maxWidth: "min(960px, calc(100vw - 16px))", maxHeight: "40vh", overflow: "auto", overflowWrap: "anywhere", whiteSpace: "pre-wrap", padding: 8, background: "rgba(13, 21, 27, 0.94)", color: "#d5ffff", font: "11px ui-monospace, SFMono-Regular, Menlo, monospace" }}
+        >{block835CanaryProbe ? JSON.stringify(block835CanaryProbe) : "Block 835 canary probe is initializing."}</output>}
         {deepLinkMessage && <div className="exploration-notice" role="alert">{deepLinkMessage} <button type="button" onClick={() => { terminalRealFallbackNoticeRef.current = null; setDeepLinkMessage(null); setPoseInvalid(false); window.history.replaceState({}, "", navigationUrlForApp({ featureId: activeSelectionRef.current, query, cameraMode, pose: cameraPose, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(layerVisibility).filter(([, visible]) => visible).map(([layer]) => layer), facets: civicMode ? selectedCivicFacets : selectedCategories, ...getOverlayUrlFields() }, window.location.href)); }}>Dismiss</button></div>}
         {exteriorDeepLinkNotice && <div className="exploration-notice" role="alert" data-exterior-deep-link-notice>
           {exteriorDeepLinkNotice} <button type="button" onClick={() => setExteriorDeepLinkNotice(null)}>Dismiss</button>

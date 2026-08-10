@@ -1,0 +1,369 @@
+{
+  "schemaVersion": "1.0",
+  "pathId": "block835-canary-facade-v1-oblique",
+  "generator": "urban-digital-twin:block835-canary-facade-path",
+  "minimumCameraToFacadeMeters": 10,
+  "closestCameraToFacadeMeters": 13,
+  "framingReference": {
+    "note": "CesiumJS applies its default 60 degree field of view to the wider viewport axis. These standoffs were solved against the declared aspect below; the real viewport aspect is recorded with each probe run and governs what was actually framed.",
+    "aspect": "16:9",
+    "verticalHalfAngleDegrees": 17.991699
+  },
+  "poses": [
+    {
+      "poseId": "canary-facade-01-oblique",
+      "buildingId": "doitt:262867",
+      "facade": "south",
+      "framing": "full-facade-oblique",
+      "cameraToFacadeMeters": 13,
+      "cameraToBuildingCentreMeters": 19.974,
+      "tier0HalfExtentMeters": 6.974,
+      "buildingHeightMeters": 8.172,
+      "rooflineInFrame": false,
+      "referenceVerticalExtentMeters": 8.444,
+      "pose": {
+        "longitude": -73.986754421,
+        "latitude": 40.748802244,
+        "height": 11.592,
+        "heading": 0,
+        "pitch": -30,
+        "roll": 0
+      },
+      "anchor": {
+        "longitude": -73.98675442125356,
+        "latitude": 40.74898211038914,
+        "source": {
+          "releaseId": "manhattan-citywide-20260804",
+          "file": "public/data/manhattan-citywide-20260804/geometry/buildings/buildings-wgs84-geodetic-14-4824-4482-000.json",
+          "fileSha256": "057064679347214aed0233c3293e056e9db696a3af018ed3554f895f668cfe00",
+          "partId": "udt:manhattan:building:nyc%20office%20of%20technology%20and%20innovation%20(oti)%20gis:jh45-qr5r:262867",
+          "heightMeters": 8.171688,
+          "note": "Exterior-cell entities are anchored at this base building coordinate, so it is the anchor the rendered geometry actually uses."
+        }
+      },
+      "plan": {
+        "file": "data/manhattan-esb-block-reference-20260811/plans/doitt-262867.json",
+        "planHashSha256": "c6b3da2e7110db0dbac8219dfd33f7947a936cd0b53ba69f41e8ee671f8a8e2f",
+        "fileSha256": "14241aa6efcaa9d0b337735aaeb7459eb5785908cbd55c6f6a57a05b75824d6e",
+        "tier0BoundsMm": {
+          "minX": -14710,
+          "maxX": 14710,
+          "minY": -6974,
+          "maxY": 6974
+        },
+        "heightMm": 8172
+      }
+    },
+    {
+      "poseId": "canary-facade-02-oblique",
+      "buildingId": "doitt:102705",
+      "facade": "west",
+      "framing": "full-facade-oblique",
+      "cameraToFacadeMeters": 23,
+      "cameraToBuildingCentreMeters": 37.812,
+      "tier0HalfExtentMeters": 14.812,
+      "buildingHeightMeters": 14.788,
+      "rooflineInFrame": false,
+      "referenceVerticalExtentMeters": 14.939,
+      "pose": {
+        "longitude": -73.987701731,
+        "latitude": 40.748996179,
+        "height": 20.673,
+        "heading": 90,
+        "pitch": -30,
+        "roll": 0
+      },
+      "anchor": {
+        "longitude": -73.98725400532192,
+        "latitude": 40.74899617866989,
+        "source": {
+          "releaseId": "manhattan-citywide-20260804",
+          "file": "public/data/manhattan-citywide-20260804/geometry/buildings/buildings-wgs84-geodetic-14-4824-4482-000.json",
+          "fileSha256": "057064679347214aed0233c3293e056e9db696a3af018ed3554f895f668cfe00",
+          "partId": "udt:manhattan:building:nyc%20office%20of%20technology%20and%20innovation%20(oti)%20gis:jh45-qr5r:102705",
+          "heightMeters": 14.785848,
+          "note": "Exterior-cell entities are anchored at this base building coordinate, so it is the anchor the rendered geometry actually uses."
+        }
+      },
+      "plan": {
+        "file": "data/manhattan-esb-block-reference-20260811/plans/doitt-102705.json",
+        "planHashSha256": "a67b3479a5c612701dd0474772169913076cd7dd0f4c20c8201027f5f848d1e3",
+        "fileSha256": "d6bd8daeb07b96997b1a32aeb38c10c9e6ee06c2388129acc9820cbdaa02f33e",
+        "tier0BoundsMm": {
+          "minX": -14812,
+          "maxX": 14812,
+          "minY": -6853,
+          "maxY": 6853
+        },
+        "heightMm": 14788
+      }
+    },
+    {
+      "poseId": "canary-facade-03-oblique",
+      "buildingId": "doitt:498980",
+      "facade": "north",
+      "framing": "full-facade-oblique",
+      "cameraToFacadeMeters": 28,
+      "cameraToBuildingCentreMeters": 31.765,
+      "tier0HalfExtentMeters": 3.765,
+      "buildingHeightMeters": 17.605,
+      "rooflineInFrame": false,
+      "referenceVerticalExtentMeters": 18.187,
+      "pose": {
+        "longitude": -73.98680811,
+        "latitude": 40.749364603,
+        "height": 24.968,
+        "heading": 180,
+        "pitch": -30,
+        "roll": 0
+      },
+      "anchor": {
+        "longitude": -73.98680810953702,
+        "latitude": 40.74907855773476,
+        "source": {
+          "releaseId": "manhattan-citywide-20260804",
+          "file": "public/data/manhattan-citywide-20260804/geometry/buildings/buildings-wgs84-geodetic-14-4824-4482-000.json",
+          "fileSha256": "057064679347214aed0233c3293e056e9db696a3af018ed3554f895f668cfe00",
+          "partId": "udt:manhattan:building:nyc%20office%20of%20technology%20and%20innovation%20(oti)%20gis:jh45-qr5r:498980",
+          "heightMeters": 17.605248,
+          "note": "Exterior-cell entities are anchored at this base building coordinate, so it is the anchor the rendered geometry actually uses."
+        }
+      },
+      "plan": {
+        "file": "data/manhattan-esb-block-reference-20260811/plans/doitt-498980.json",
+        "planHashSha256": "f2634386609e3c8a346264fb35ac0df8c556af678627e312eb3ed99a7977cdb7",
+        "fileSha256": "26febe2ab5bb72af040943a9eb32095132d3b71b6ab1b8b901cf1c0370d3b4f0",
+        "tier0BoundsMm": {
+          "minX": -14879,
+          "maxX": 14879,
+          "minY": -3765,
+          "maxY": 3765
+        },
+        "heightMm": 17605
+      }
+    },
+    {
+      "poseId": "canary-facade-04-oblique",
+      "buildingId": "doitt:39969",
+      "facade": "east",
+      "framing": "full-facade-oblique",
+      "cameraToFacadeMeters": 37,
+      "cameraToBuildingCentreMeters": 51.712,
+      "tier0HalfExtentMeters": 14.712,
+      "buildingHeightMeters": 23.499,
+      "rooflineInFrame": false,
+      "referenceVerticalExtentMeters": 24.032,
+      "pose": {
+        "longitude": -73.985958708,
+        "latitude": 40.748923527,
+        "height": 33.111,
+        "heading": 270,
+        "pitch": -30,
+        "roll": 0
+      },
+      "anchor": {
+        "longitude": -73.98657102080391,
+        "latitude": 40.74892352735635,
+        "source": {
+          "releaseId": "manhattan-citywide-20260804",
+          "file": "public/data/manhattan-citywide-20260804/geometry/buildings/buildings-wgs84-geodetic-14-4824-4482-000.json",
+          "fileSha256": "057064679347214aed0233c3293e056e9db696a3af018ed3554f895f668cfe00",
+          "partId": "udt:manhattan:building:nyc%20office%20of%20technology%20and%20innovation%20(oti)%20gis:jh45-qr5r:39969",
+          "heightMeters": 23.497032,
+          "note": "Exterior-cell entities are anchored at this base building coordinate, so it is the anchor the rendered geometry actually uses."
+        }
+      },
+      "plan": {
+        "file": "data/manhattan-esb-block-reference-20260811/plans/doitt-39969.json",
+        "planHashSha256": "e4e013da18931299b2750d0f99d7254d5deaf9607295ecc0dfecf5b331b92ad9",
+        "fileSha256": "27a7e609038aff4e38f4844a47b55ab7667402457ad1a2d0a74ae5e053609ac0",
+        "tier0BoundsMm": {
+          "minX": -14712,
+          "maxX": 14712,
+          "minY": -7365,
+          "maxY": 7365
+        },
+        "heightMm": 23499
+      }
+    },
+    {
+      "poseId": "canary-facade-05-oblique",
+      "buildingId": "doitt:835659",
+      "facade": "south",
+      "framing": "full-facade-oblique",
+      "cameraToFacadeMeters": 36,
+      "cameraToBuildingCentreMeters": 39.821,
+      "tier0HalfExtentMeters": 3.821,
+      "buildingHeightMeters": 23.136,
+      "rooflineInFrame": false,
+      "referenceVerticalExtentMeters": 23.383,
+      "pose": {
+        "longitude": -73.986906301,
+        "latitude": 40.748726009,
+        "height": 32.353,
+        "heading": 0,
+        "pitch": -30,
+        "roll": 0
+      },
+      "anchor": {
+        "longitude": -73.98690630113413,
+        "latitude": 40.749084598222105,
+        "source": {
+          "releaseId": "manhattan-citywide-20260804",
+          "file": "public/data/manhattan-citywide-20260804/geometry/buildings/buildings-wgs84-geodetic-14-4824-4482-000.json",
+          "fileSha256": "057064679347214aed0233c3293e056e9db696a3af018ed3554f895f668cfe00",
+          "partId": "udt:manhattan:building:nyc%20office%20of%20technology%20and%20innovation%20(oti)%20gis:jh45-qr5r:835659",
+          "heightMeters": 23.134320000000002,
+          "note": "Exterior-cell entities are anchored at this base building coordinate, so it is the anchor the rendered geometry actually uses."
+        }
+      },
+      "plan": {
+        "file": "data/manhattan-esb-block-reference-20260811/plans/doitt-835659.json",
+        "planHashSha256": "6bfc10b2fd9e7c41c47ffb8a2655b15b66066ae728d57dd55b6624012367ec2c",
+        "fileSha256": "c0010504c47e47461d7b956233401a2fa4dbb3d7686f2c9683f1bcfad3a3bfc6",
+        "tier0BoundsMm": {
+          "minX": -15247,
+          "maxX": 15247,
+          "minY": -3821,
+          "maxY": 3821
+        },
+        "heightMm": 23136
+      }
+    },
+    {
+      "poseId": "canary-facade-06-oblique",
+      "buildingId": "doitt:584049",
+      "facade": "west",
+      "framing": "full-facade-oblique",
+      "cameraToFacadeMeters": 36,
+      "cameraToBuildingCentreMeters": 49.606,
+      "tier0HalfExtentMeters": 13.606,
+      "buildingHeightMeters": 23.34,
+      "rooflineInFrame": false,
+      "referenceVerticalExtentMeters": 23.383,
+      "pose": {
+        "longitude": -73.987753944,
+        "latitude": 40.748862003,
+        "height": 32.455,
+        "heading": 90,
+        "pitch": -30,
+        "roll": 0
+      },
+      "anchor": {
+        "longitude": -73.98716656882674,
+        "latitude": 40.74886200275197,
+        "source": {
+          "releaseId": "manhattan-citywide-20260804",
+          "file": "public/data/manhattan-citywide-20260804/geometry/buildings/buildings-wgs84-geodetic-14-4824-4482-000.json",
+          "fileSha256": "057064679347214aed0233c3293e056e9db696a3af018ed3554f895f668cfe00",
+          "partId": "udt:manhattan:building:nyc%20office%20of%20technology%20and%20innovation%20(oti)%20gis:jh45-qr5r:584049",
+          "heightMeters": 23.341584,
+          "note": "Exterior-cell entities are anchored at this base building coordinate, so it is the anchor the rendered geometry actually uses."
+        }
+      },
+      "plan": {
+        "file": "data/manhattan-esb-block-reference-20260811/plans/doitt-584049.json",
+        "planHashSha256": "e0330a72d9f82ba790f034c1fe917bca7b5689a61f452459c49de9fb21cb0ee8",
+        "fileSha256": "cb86d5ff9a520f23f9fe977ddf33ac10a1f04238f9c9750ffd85b4b8158918dd",
+        "tier0BoundsMm": {
+          "minX": -13606,
+          "maxX": 13606,
+          "minY": -9438,
+          "maxY": 9438
+        },
+        "heightMm": 23340
+      }
+    },
+    {
+      "poseId": "canary-facade-07-oblique",
+      "buildingId": "doitt:982383",
+      "facade": "east",
+      "framing": "street-level-lower-facade-oblique",
+      "cameraToFacadeMeters": 25,
+      "cameraToBuildingCentreMeters": 40.257,
+      "tier0HalfExtentMeters": 15.257,
+      "buildingHeightMeters": 115.68,
+      "rooflineInFrame": false,
+      "referenceVerticalExtentMeters": 16.238,
+      "pose": {
+        "longitude": -73.986310494,
+        "latitude": 40.748832536,
+        "height": 72.274,
+        "heading": 270,
+        "pitch": -30,
+        "roll": 0
+      },
+      "anchor": {
+        "longitude": -73.98678716952531,
+        "latitude": 40.74883253628388,
+        "source": {
+          "releaseId": "manhattan-citywide-20260804",
+          "file": "public/data/manhattan-citywide-20260804/geometry/buildings/buildings-wgs84-geodetic-14-4824-4482-000.json",
+          "fileSha256": "057064679347214aed0233c3293e056e9db696a3af018ed3554f895f668cfe00",
+          "partId": "udt:manhattan:building:nyc%20office%20of%20technology%20and%20innovation%20(oti)%20gis:jh45-qr5r:982383",
+          "heightMeters": 115.69314561096,
+          "note": "Exterior-cell entities are anchored at this base building coordinate, so it is the anchor the rendered geometry actually uses."
+        }
+      },
+      "plan": {
+        "file": "data/manhattan-esb-block-reference-20260811/plans/doitt-982383.json",
+        "planHashSha256": "7095305269e5294e3156ccd04de4116bc2f18b3743f4f62f379da392bb4bd504",
+        "fileSha256": "aaebd3fa0472136df8d77547c0a643a4e8a0ec4151781cc3e3fd86616e19baa3",
+        "tier0BoundsMm": {
+          "minX": -15257,
+          "maxX": 15257,
+          "minY": -10314,
+          "maxY": 10314
+        },
+        "heightMm": 115680
+      }
+    },
+    {
+      "poseId": "canary-facade-08-oblique",
+      "buildingId": "doitt:778052",
+      "facade": "north",
+      "framing": "street-level-lower-facade-oblique",
+      "cameraToFacadeMeters": 25,
+      "cameraToBuildingCentreMeters": 54.18,
+      "tier0HalfExtentMeters": 29.18,
+      "buildingHeightMeters": 377.58,
+      "rooflineInFrame": false,
+      "referenceVerticalExtentMeters": 16.238,
+      "pose": {
+        "longitude": -73.98597876,
+        "latitude": 40.749046448,
+        "height": 203.224,
+        "heading": 180,
+        "pitch": -30,
+        "roll": 0
+      },
+      "anchor": {
+        "longitude": -73.98597876025568,
+        "latitude": 40.748558555157594,
+        "source": {
+          "releaseId": "manhattan-citywide-20260804",
+          "file": "public/data/manhattan-citywide-20260804/geometry/buildings/buildings-wgs84-geodetic-14-4824-4482-000.json",
+          "fileSha256": "057064679347214aed0233c3293e056e9db696a3af018ed3554f895f668cfe00",
+          "partId": "udt:manhattan:building:nyc%20office%20of%20technology%20and%20innovation%20(oti)%20gis:jh45-qr5r:778052",
+          "heightMeters": 377.58329171836806,
+          "note": "Exterior-cell entities are anchored at this base building coordinate, so it is the anchor the rendered geometry actually uses."
+        }
+      },
+      "plan": {
+        "file": "data/manhattan-esb-block-reference-20260811/plans/doitt-778052.json",
+        "planHashSha256": "7f4dee8b532fb04a4ec3bda2f3b36aa5315f237148b2bab6aea5f2dfa9a86618",
+        "fileSha256": "7dc5ab13fa70c26dedb51c4e585b65791d2665fb5b99124567b0479d235cba87",
+        "tier0BoundsMm": {
+          "minX": -74494,
+          "maxX": 74494,
+          "minY": -29180,
+          "maxY": 29180
+        },
+        "heightMm": 377580
+      }
+    }
+  ],
+  "variantOf": "block835-canary-facade-v1",
+  "obliquePitchDegrees": -30,
+  "mitigationNote": "Measured mitigation path. The citywide base only serves the camera's own shard at a pitch of roughly -25 degrees or steeper; at a level attitude the viewport footprint saturates the 24-shard cache budget and the shard under the camera is evicted, so no base anchor exists and the exterior cells draw nothing. This variant keeps the identical perpendicular camera-to-facade distance and exists so frame-time, memory and request evidence can be gathered against a scene that contains the canary geometry. It does not satisfy the level facade viewpoint criterion."
+}
