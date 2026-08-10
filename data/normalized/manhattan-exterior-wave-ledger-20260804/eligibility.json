@@ -1,0 +1,4423 @@
+{
+  "schemaVersion": "1.0",
+  "ledgerId": "manhattan-exterior-wave-ledger-20260804-a3382ef4cac213a2",
+  "ledgerChecksumSha256": "62e093d2ca50b54b49fd8bbad9d0b11f6301b2b197623deb343f9ea915e59016",
+  "basis": "Ledger membership is private-eligible only. No cell is public-eligible until a promotion task supplies per-cell rights-cleared evidence; this artifact never widens the accepted ownership ledger schema.",
+  "cells": [
+    {
+      "cellId": "manhattan-exterior-cell-w00-000000-block-00835",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000001-14-4823-4482",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000002-16-19296-17928",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000003-16-19297-17928",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000004-16-19298-17928",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000005-16-19299-17928",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000006-17-38594-35858",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000007-17-38595-35858",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000008-17-38596-35858",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000009-17-38597-35858",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000010-16-19296-17929",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000011-17-38594-35859",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000012-17-38595-35859",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000013-17-38596-35859",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000014-17-38597-35859",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000015-16-19299-17929",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000016-17-38598-35860",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000017-17-38599-35860",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000018-16-19296-17930",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000019-16-19297-17930",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000020-16-19298-17930",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000021-17-38598-35861",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000022-17-38599-35861",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000023-17-38594-35862",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000024-17-38595-35862",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000025-17-38598-35862",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000026-17-38599-35862",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000027-16-19296-17931",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000028-17-38594-35863",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000029-17-38595-35863",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000030-16-19298-17931",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000031-17-38598-35863",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000032-17-38599-35863",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000033-17-38604-35856",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000034-17-38605-35856",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000035-17-38606-35856",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000036-17-38607-35856",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000037-16-19300-17928",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000038-16-19301-17928",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000039-17-38604-35857",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000040-17-38605-35857",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000041-17-38606-35857",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000042-17-38607-35857",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000043-17-38604-35858",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000044-17-38605-35858",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000045-16-19300-17929",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000046-16-19301-17929",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000047-17-38604-35859",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000048-17-38605-35859",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000049-16-19303-17929",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000050-16-19300-17930",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000051-16-19301-17930",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000052-16-19302-17930",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000053-16-19303-17930",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000054-17-38600-35862",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000055-17-38601-35862",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000056-17-38600-35863",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000057-17-38601-35863",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000058-16-19301-17931",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000059-16-19302-17931",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000060-16-19303-17931",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000061-14-4826-4482",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000062-14-4823-4481",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000063-16-19298-17924",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000064-16-19299-17924",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000065-17-38596-35850",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000066-17-38597-35850",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000067-17-38598-35850",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000068-17-38599-35850",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000069-15-9648-8962",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000070-17-38596-35851",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000071-17-38597-35851",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000072-17-38598-35851",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000073-17-38599-35851",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000074-17-38594-35852",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000075-17-38595-35852",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000076-17-38596-35852",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000077-17-38597-35852",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000078-16-19296-17926",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000079-17-38594-35853",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000080-17-38595-35853",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000081-17-38596-35853",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000082-17-38597-35853",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000083-16-19299-17926",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000084-17-38594-35854",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000085-17-38595-35854",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000086-17-38596-35854",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000087-17-38597-35854",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000088-16-19296-17927",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000089-17-38594-35855",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000090-17-38595-35855",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000091-17-38596-35855",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000092-17-38597-35855",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000093-16-19299-17927",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000094-17-38604-35848",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000095-17-38605-35848",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000096-17-38606-35848",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000097-17-38607-35848",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000098-17-38604-35849",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000099-17-38605-35849",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000100-17-38606-35849",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000101-17-38607-35849",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000102-17-38604-35850",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000103-17-38605-35850",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000104-17-38606-35850",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000105-17-38607-35850",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000106-15-9650-8962",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000107-17-38604-35851",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000108-17-38605-35851",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000109-17-38606-35851",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000110-17-38607-35851",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000111-17-38604-35852",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000112-17-38605-35852",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000113-17-38606-35852",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000114-17-38607-35852",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000115-16-19300-17926",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000116-16-19301-17926",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000117-17-38604-35853",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000118-17-38605-35853",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000119-17-38606-35853",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000120-17-38607-35853",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000121-17-38604-35854",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000122-17-38605-35854",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000123-17-38606-35854",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000124-17-38607-35854",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000125-16-19300-17927",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000126-16-19301-17927",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000127-17-38604-35855",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000128-17-38605-35855",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000129-17-38606-35855",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000130-17-38607-35855",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000131-17-38608-35848",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000132-17-38609-35848",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000133-17-38610-35848",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000134-17-38611-35848",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000135-17-38608-35849",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000136-17-38609-35849",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000137-17-38610-35849",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000138-17-38611-35849",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000139-17-38608-35850",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000140-17-38609-35850",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000141-17-38608-35851",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000142-17-38609-35851",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000143-16-19305-17925",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000144-15-9653-8962",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000145-16-19304-17926",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000146-16-19305-17926",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000147-16-19304-17927",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000148-16-19305-17927",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000149-15-9653-8963",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000150-14-4822-4488",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000151-15-9646-8976",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000152-15-9647-8976",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000153-15-9646-8977",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000154-15-9647-8977",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000155-14-4822-4487",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000156-14-4823-4487",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000157-16-19294-17944",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000158-16-19295-17944",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000159-15-9646-8972",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000160-16-19294-17945",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000161-16-19295-17945",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000162-16-19294-17946",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000163-16-19295-17946",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000164-15-9646-8973",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000165-16-19294-17947",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000166-16-19295-17947",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000167-17-38594-35888",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000168-17-38595-35888",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000169-17-38596-35888",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000170-17-38597-35888",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000171-16-19296-17944",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000172-17-38594-35889",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000173-17-38595-35889",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000174-17-38596-35889",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000175-17-38597-35889",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000176-16-19299-17944",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000177-17-38594-35890",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000178-17-38595-35890",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000179-16-19296-17945",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000180-17-38594-35891",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000181-17-38595-35891",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000182-16-19298-17945",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000183-16-19299-17945",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000184-16-19296-17946",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000185-16-19297-17946",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000186-16-19296-17947",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000187-15-9649-8973",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000188-14-4825-4486",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000189-16-19294-17940",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000190-16-19295-17940",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000191-16-19294-17941",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000192-16-19295-17941",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000193-17-38590-35884",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000194-17-38591-35884",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000195-16-19294-17942",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000196-17-38590-35885",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000197-17-38591-35885",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000198-17-38590-35886",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000199-17-38591-35886",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000200-15-9646-8971",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000201-16-19294-17943",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000202-17-38590-35887",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000203-17-38591-35887",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000204-17-38592-35880",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000205-17-38593-35880",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000206-17-38594-35880",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000207-17-38595-35880",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000208-17-38596-35880",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000209-17-38597-35880",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000210-17-38598-35880",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000211-17-38599-35880",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000212-17-38592-35881",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000213-17-38593-35881",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000214-17-38594-35881",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000215-17-38595-35881",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000216-17-38596-35881",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000217-17-38597-35881",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000218-17-38598-35881",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000219-17-38599-35881",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000220-17-38592-35882",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000221-17-38593-35882",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000222-17-38594-35882",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000223-17-38595-35882",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000224-17-38596-35882",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000225-17-38597-35882",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000226-17-38598-35882",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000227-17-38599-35882",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000228-17-38592-35883",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000229-17-38593-35883",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000230-17-38594-35883",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000231-17-38595-35883",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000232-17-38596-35883",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000233-17-38597-35883",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000234-17-38598-35883",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000235-17-38599-35883",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000236-17-38592-35884",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000237-17-38593-35884",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000238-17-38594-35884",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000239-17-38595-35884",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000240-17-38596-35884",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000241-17-38597-35884",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000242-17-38598-35884",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000243-17-38599-35884",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000244-17-38592-35885",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000245-17-38593-35885",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000246-17-38594-35885",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000247-17-38595-35885",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000248-17-38596-35885",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000249-17-38597-35885",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000250-17-38598-35885",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000251-17-38599-35885",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000252-17-38592-35886",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000253-17-38593-35886",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000254-17-38594-35886",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000255-17-38595-35886",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000256-17-38596-35886",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000257-17-38597-35886",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000258-17-38592-35887",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000259-17-38593-35887",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000260-17-38594-35887",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000261-17-38595-35887",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000262-17-38596-35887",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000263-17-38597-35887",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000264-16-19299-17943",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000265-17-38600-35880",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000266-17-38601-35880",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000267-17-38600-35881",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000268-17-38601-35881",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000269-16-19301-17940",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000270-17-38600-35882",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000271-17-38601-35882",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000272-17-38600-35883",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000273-17-38601-35883",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000274-16-19301-17941",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w02-000275-15-9650-8971",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000276-17-38590-35872",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000277-17-38591-35872",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000278-18-77182-71746",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000279-18-77183-71746",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000280-16-19294-17936",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000281-17-38590-35873",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000282-18-77182-71747",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000283-18-77183-71747",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000284-17-38590-35874",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000285-17-38591-35874",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000286-16-19294-17937",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000287-17-38590-35875",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000288-17-38591-35875",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000289-17-38590-35876",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000290-17-38591-35876",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000291-16-19294-17938",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000292-17-38590-35877",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000293-17-38591-35877",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000294-15-9646-8969",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000295-16-19294-17939",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000296-16-19295-17939",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000297-17-38592-35872",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000298-17-38593-35872",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000299-17-38594-35872",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000300-17-38595-35872",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000301-17-38598-35872",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000302-17-38599-35872",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000303-18-77184-71746",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000304-18-77185-71746",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000305-18-77184-71747",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000306-18-77185-71747",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000307-17-38593-35873",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000308-17-38594-35873",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000309-17-38595-35873",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000310-16-19298-17936",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000311-17-38598-35873",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000312-17-38599-35873",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000313-17-38592-35874",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000314-17-38593-35874",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000315-17-38594-35874",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000316-17-38595-35874",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000317-17-38596-35874",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000318-17-38597-35874",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000319-17-38598-35874",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000320-17-38599-35874",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000321-17-38592-35875",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000322-17-38593-35875",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000323-17-38594-35875",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000324-17-38595-35875",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000325-17-38596-35875",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000326-17-38597-35875",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000327-17-38598-35875",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000328-17-38599-35875",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000329-17-38592-35876",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000330-17-38593-35876",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000331-17-38596-35876",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000332-17-38597-35876",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000333-17-38598-35876",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000334-17-38599-35876",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000335-17-38592-35877",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000336-17-38593-35877",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000337-16-19297-17938",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000338-17-38596-35877",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000339-17-38597-35877",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000340-17-38598-35877",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000341-17-38599-35877",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000342-17-38592-35878",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000343-17-38593-35878",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000344-17-38596-35878",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000345-17-38597-35878",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000346-17-38598-35878",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000347-17-38599-35878",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000348-17-38592-35879",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000349-17-38593-35879",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000350-16-19297-17939",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000351-17-38596-35879",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000352-17-38597-35879",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000353-17-38598-35879",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000354-17-38599-35879",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000355-16-19300-17936",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000356-16-19301-17936",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000357-16-19300-17937",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000358-16-19301-17937",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000359-16-19300-17938",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000360-16-19301-17938",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000361-17-38600-35878",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000362-17-38601-35878",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000363-17-38600-35879",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000364-17-38601-35879",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000365-16-19301-17939",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000366-16-19295-17932",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000367-16-19294-17933",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000368-16-19295-17933",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000369-16-19294-17934",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000370-16-19295-17934",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000371-17-38590-35870",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000372-17-38591-35870",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000373-16-19294-17935",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000374-17-38590-35871",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000375-17-38591-35871",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000376-17-38592-35864",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000377-17-38593-35864",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000378-17-38596-35864",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000379-17-38597-35864",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000380-17-38598-35864",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000381-17-38599-35864",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000382-17-38592-35865",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000383-17-38593-35865",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000384-16-19297-17932",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000385-17-38596-35865",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000386-17-38597-35865",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000387-17-38598-35865",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000388-17-38599-35865",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000389-17-38592-35866",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000390-17-38593-35866",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000391-17-38594-35866",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000392-17-38595-35866",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000393-17-38596-35866",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000394-17-38597-35866",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000395-17-38598-35866",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000396-17-38599-35866",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000397-17-38592-35867",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000398-17-38593-35867",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000399-17-38594-35867",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000400-17-38595-35867",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000401-17-38596-35867",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000402-17-38597-35867",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000403-17-38598-35867",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000404-17-38599-35867",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000405-17-38592-35868",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000406-17-38593-35868",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000407-17-38594-35868",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000408-17-38595-35868",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000409-17-38598-35868",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000410-17-38599-35868",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000411-17-38592-35869",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000412-17-38593-35869",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000413-17-38594-35869",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000414-17-38595-35869",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000415-16-19298-17934",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000416-17-38598-35869",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000417-17-38599-35869",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000418-17-38592-35870",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000419-17-38593-35870",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000420-17-38594-35870",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000421-17-38595-35870",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000422-17-38596-35870",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000423-17-38597-35870",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000424-17-38598-35870",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000425-17-38599-35870",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000426-17-38592-35871",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000427-17-38593-35871",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000428-17-38594-35871",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000429-17-38595-35871",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000430-17-38596-35871",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000431-17-38597-35871",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000432-17-38598-35871",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000433-17-38599-35871",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000434-17-38600-35864",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000435-17-38601-35864",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000436-17-38600-35865",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000437-17-38601-35865",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000438-16-19301-17932",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000439-17-38600-35866",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000440-17-38601-35866",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000441-17-38600-35867",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000442-17-38601-35867",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000443-16-19301-17933",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000444-15-9651-8966",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000445-17-38600-35868",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000446-17-38601-35868",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000447-17-38600-35869",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000448-17-38601-35869",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000449-16-19301-17934",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000450-16-19300-17935",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w03-000451-16-19301-17935",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000452-17-38598-35840",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000453-17-38599-35840",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000454-16-19298-17920",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000455-17-38598-35841",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000456-17-38599-35841",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000457-16-19298-17921",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000458-16-19299-17921",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000459-15-9648-8961",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000460-15-9649-8961",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000461-17-38600-35840",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000462-17-38601-35840",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000463-17-38600-35841",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000464-17-38601-35841",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000465-16-19301-17920",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000466-16-19302-17920",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000467-16-19303-17920",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000468-17-38600-35842",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000469-17-38601-35842",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000470-17-38606-35842",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000471-17-38607-35842",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000472-17-38600-35843",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000473-17-38601-35843",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000474-16-19301-17921",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000475-16-19302-17921",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000476-17-38606-35843",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000477-17-38607-35843",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000478-17-38600-35844",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000479-17-38601-35844",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000480-17-38606-35844",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000481-17-38607-35844",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000482-17-38600-35845",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000483-17-38601-35845",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000484-16-19301-17922",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000485-16-19302-17922",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000486-17-38606-35845",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000487-17-38607-35845",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000488-17-38606-35846",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000489-17-38607-35846",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000490-16-19300-17923",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000491-16-19301-17923",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000492-16-19302-17923",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000493-17-38606-35847",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000494-17-38607-35847",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000495-17-38610-35840",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000496-17-38611-35840",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000497-17-38612-35840",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000498-17-38613-35840",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000499-16-19304-17920",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000500-17-38610-35841",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000501-17-38611-35841",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000502-17-38612-35841",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000503-17-38613-35841",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000504-16-19307-17920",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000505-17-38608-35842",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000506-17-38609-35842",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000507-17-38610-35842",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000508-17-38611-35842",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000509-17-38612-35842",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000510-17-38613-35842",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000511-17-38608-35843",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000512-17-38609-35843",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000513-17-38610-35843",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000514-17-38611-35843",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000515-17-38612-35843",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000516-17-38613-35843",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000517-16-19307-17921",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000518-17-38608-35844",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000519-17-38609-35844",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000520-17-38610-35844",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000521-17-38611-35844",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000522-17-38612-35844",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000523-17-38613-35844",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000524-17-38608-35845",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000525-17-38609-35845",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000526-17-38610-35845",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000527-17-38611-35845",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000528-17-38612-35845",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000529-17-38613-35845",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000530-17-38608-35846",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000531-17-38609-35846",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000532-17-38610-35846",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000533-17-38611-35846",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000534-17-38608-35847",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000535-17-38609-35847",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000536-17-38610-35847",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000537-17-38611-35847",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000538-16-19306-17923",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000539-16-19307-17923",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000540-15-9649-8958",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000541-16-19299-17918",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000542-17-38598-35838",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000543-17-38599-35838",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000544-16-19298-17919",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000545-17-38598-35839",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000546-17-38599-35839",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000547-17-38600-35832",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000548-17-38601-35832",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000549-17-38602-35832",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000550-17-38603-35832",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000551-17-38604-35832",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000552-17-38605-35832",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000553-17-38600-35833",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000554-17-38601-35833",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000555-17-38602-35833",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000556-17-38603-35833",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000557-17-38604-35833",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000558-17-38605-35833",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000559-16-19303-17916",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000560-17-38600-35834",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000561-17-38601-35834",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000562-17-38602-35834",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000563-17-38603-35834",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000564-17-38604-35834",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000565-17-38605-35834",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000566-17-38600-35835",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000567-17-38601-35835",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000568-17-38602-35835",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000569-17-38603-35835",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000570-17-38604-35835",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000571-17-38605-35835",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000572-16-19303-17917",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000573-17-38600-35836",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000574-17-38601-35836",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000575-17-38602-35836",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000576-17-38603-35836",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000577-17-38600-35837",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000578-17-38601-35837",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000579-17-38602-35837",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000580-17-38603-35837",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000581-17-38600-35838",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000582-17-38601-35838",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000583-17-38602-35838",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000584-17-38603-35838",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000585-17-38600-35839",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000586-17-38601-35839",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000587-17-38602-35839",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000588-17-38603-35839",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000589-15-9651-8959",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000590-17-38612-35832",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000591-17-38613-35832",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000592-16-19304-17916",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000593-16-19305-17916",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000594-17-38612-35833",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000595-17-38613-35833",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000596-16-19307-17916",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000597-16-19304-17917",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000598-16-19305-17917",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000599-16-19306-17917",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000600-16-19307-17917",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000601-17-38609-35836",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000602-17-38610-35836",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000603-17-38611-35836",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000604-17-38608-35837",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000605-17-38609-35837",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000606-17-38610-35837",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000607-17-38611-35837",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000608-16-19306-17918",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000609-16-19307-17918",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000610-17-38610-35838",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000611-17-38611-35838",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000612-17-38612-35838",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000613-17-38613-35838",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000614-16-19304-17919",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000615-17-38610-35839",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000616-17-38611-35839",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000617-17-38612-35839",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000618-17-38613-35839",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000619-15-9654-8958",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000620-15-9655-8958",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000621-15-9654-8959",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000622-15-9655-8959",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000623-17-38604-35824",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000624-17-38605-35824",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000625-17-38606-35824",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000626-17-38607-35824",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000627-17-38604-35825",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000628-17-38605-35825",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000629-17-38606-35825",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000630-17-38607-35825",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000631-17-38604-35826",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000632-17-38605-35826",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000633-17-38606-35826",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000634-17-38607-35826",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000635-15-9650-8956",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000636-17-38604-35827",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000637-17-38605-35827",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000638-17-38606-35827",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000639-17-38607-35827",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000640-16-19300-17914",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000641-16-19301-17914",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000642-16-19302-17914",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000643-16-19303-17914",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000644-17-38602-35830",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000645-17-38603-35830",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000646-16-19300-17915",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000647-17-38602-35831",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000648-17-38603-35831",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000649-16-19302-17915",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000650-16-19303-17915",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000651-17-38608-35824",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000652-17-38609-35824",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000653-17-38610-35824",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000654-17-38611-35824",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000655-17-38612-35824",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000656-17-38613-35824",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000657-17-38608-35825",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000658-17-38609-35825",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000659-17-38610-35825",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000660-17-38611-35825",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000661-17-38612-35825",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000662-17-38613-35825",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000663-16-19307-17912",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000664-17-38614-35826",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000665-17-38615-35826",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000666-16-19304-17913",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000667-16-19305-17913",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000668-16-19306-17913",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000669-17-38614-35827",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000670-17-38615-35827",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000671-17-38614-35828",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000672-17-38615-35828",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000673-16-19306-17914",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000674-17-38614-35829",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000675-17-38615-35829",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000676-17-38612-35830",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000677-17-38613-35830",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000678-17-38614-35830",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000679-17-38615-35830",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000680-15-9652-8957",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000681-17-38612-35831",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000682-17-38613-35831",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000683-17-38614-35831",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000684-17-38615-35831",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000685-16-19308-17912",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000686-16-19309-17912",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000687-17-38616-35826",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000688-17-38617-35826",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000689-17-38616-35827",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000690-17-38617-35827",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000691-16-19309-17913",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000692-15-9655-8956",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000693-17-38616-35828",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000694-17-38617-35828",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000695-17-38616-35829",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000696-17-38617-35829",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000697-16-19309-17914",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000698-16-19308-17915",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000699-16-19309-17915",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000700-15-9655-8957",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000701-15-9651-8954",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000702-16-19302-17910",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000703-16-19303-17910",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000704-16-19302-17911",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000705-16-19303-17911",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000706-17-38610-35816",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000707-17-38611-35816",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000708-17-38612-35816",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000709-17-38613-35816",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000710-17-38614-35816",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000711-17-38615-35816",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000712-16-19304-17908",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000713-17-38610-35817",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000714-17-38611-35817",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000715-17-38612-35817",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000716-17-38613-35817",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000717-17-38614-35817",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000718-17-38615-35817",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000719-17-38610-35818",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000720-17-38611-35818",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000721-17-38612-35818",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000722-17-38613-35818",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000723-17-38614-35818",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000724-17-38615-35818",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000725-16-19304-17909",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000726-17-38610-35819",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000727-17-38611-35819",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000728-17-38612-35819",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000729-17-38613-35819",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000730-17-38614-35819",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000731-17-38615-35819",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000732-17-38610-35820",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000733-17-38611-35820",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000734-17-38612-35820",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000735-17-38613-35820",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000736-17-38614-35820",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000737-17-38615-35820",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000738-16-19304-17910",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000739-17-38610-35821",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000740-17-38611-35821",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000741-17-38612-35821",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000742-17-38613-35821",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000743-17-38614-35821",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000744-17-38615-35821",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000745-17-38608-35822",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000746-17-38609-35822",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000747-17-38610-35822",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000748-17-38611-35822",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000749-17-38612-35822",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000750-17-38613-35822",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000751-17-38608-35823",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000752-17-38609-35823",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000753-17-38610-35823",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000754-17-38611-35823",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000755-17-38612-35823",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000756-17-38613-35823",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000757-16-19307-17911",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000758-15-9654-8954",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000759-15-9654-8955",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000760-14-4825-4476",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000761-17-38610-35808",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000762-17-38611-35808",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000763-17-38612-35808",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000764-17-38613-35808",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000765-17-38614-35808",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000766-17-38615-35808",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000767-16-19304-17904",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000768-17-38610-35809",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000769-17-38611-35809",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000770-17-38612-35809",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000771-17-38613-35809",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000772-17-38614-35809",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000773-17-38615-35809",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000774-17-38612-35810",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000775-17-38613-35810",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000776-17-38614-35810",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000777-17-38615-35810",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000778-16-19304-17905",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000779-16-19305-17905",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000780-17-38612-35811",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000781-17-38613-35811",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000782-17-38614-35811",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000783-17-38615-35811",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000784-18-77226-71624",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000785-18-77227-71624",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000786-17-38612-35812",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000787-18-77226-71625",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000788-18-77227-71625",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000789-17-38614-35812",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000790-17-38615-35812",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000791-18-77226-71626",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000792-18-77227-71626",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000793-16-19304-17906",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000794-16-19305-17906",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000795-17-38612-35813",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000796-18-77226-71627",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000797-18-77227-71627",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000798-17-38614-35813",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000799-17-38615-35813",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000800-17-38612-35814",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000801-17-38613-35814",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000802-17-38614-35814",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000803-17-38615-35814",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000804-16-19304-17907",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000805-16-19305-17907",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000806-17-38612-35815",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000807-17-38613-35815",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000808-17-38614-35815",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000809-17-38615-35815",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000810-14-4827-4476",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000811-17-38614-35800",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000812-17-38615-35800",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000813-16-19306-17900",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000814-17-38614-35801",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000815-17-38615-35801",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000816-15-9652-8950",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000817-16-19306-17901",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000818-16-19307-17901",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000819-17-38612-35804",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000820-17-38613-35804",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000821-17-38614-35804",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000822-17-38615-35804",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000823-16-19305-17902",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000824-17-38612-35805",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000825-17-38613-35805",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000826-17-38614-35805",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000827-17-38615-35805",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000828-17-38612-35806",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000829-17-38613-35806",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000830-16-19304-17903",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000831-16-19305-17903",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000832-17-38612-35807",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000833-17-38613-35807",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000834-16-19307-17903",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000835-14-4827-4475",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000836-16-19306-17896",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000837-16-19307-17896",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000838-16-19306-17897",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000839-16-19307-17897",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000840-16-19306-17898",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000841-16-19307-17898",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000842-17-38614-35798",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000843-17-38615-35798",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000844-16-19306-17899",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000845-17-38614-35799",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000846-17-38615-35799",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000847-16-19308-17896",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000848-16-19309-17896",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000849-16-19308-17897",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000850-16-19309-17897",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000851-15-9654-8949",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000852-15-9653-8946",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000853-15-9653-8947",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000854-16-19308-17892",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000855-16-19309-17892",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000856-16-19308-17893",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000857-16-19309-17893",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000858-15-9655-8946",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000859-17-38618-35788",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000860-17-38619-35788",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000861-16-19308-17894",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000862-17-38618-35789",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000863-17-38619-35789",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000864-16-19308-17895",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000865-16-19309-17895",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000866-16-19310-17888",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000867-16-19311-17888",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000868-15-9654-8944",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000869-16-19310-17889",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000870-16-19311-17889",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000871-16-19310-17890",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000872-16-19311-17890",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000873-15-9654-8945",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000874-16-19310-17891",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000875-16-19311-17891",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000876-14-4828-4472",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000877-14-4827-4471",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000878-16-19312-17884",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000879-16-19313-17884",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000880-16-19312-17885",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000881-16-19313-17885",
+      "privateEligible": true,
+      "publicEligible": false
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000882-15-9656-8943",
+      "privateEligible": true,
+      "publicEligible": false
+    }
+  ]
+}
