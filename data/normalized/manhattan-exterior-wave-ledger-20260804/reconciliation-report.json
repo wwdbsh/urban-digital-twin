@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "1.0",
+  "ledgerId": "manhattan-exterior-wave-ledger-20260804-a3382ef4cac213a2",
+  "ledgerChecksumSha256": "62e093d2ca50b54b49fd8bbad9d0b11f6301b2b197623deb343f9ea915e59016",
+  "baseIdentitySetId": "manhattan-citywide-20260804:exterior-base-identity:fecff2cf008fd86d",
+  "baseIdentitySetChecksumSha256": "17d28c8355a8a062d19a9e79f2aa5d08a5a02e7bb72126a98f4750a656b78e7f",
+  "baseReleaseId": "manhattan-citywide-20260804",
+  "observedBuildingCount": 45194,
+  "ownedBuildingCount": 45194,
+  "cellCount": 883,
+  "counts": {
+    "missing": 0,
+    "duplicate": 0,
+    "cross-cell-duplicate": 0,
+    "stale": 0,
+    "changed": 0
+  },
+  "ok": true,
+  "findings": []
+}
