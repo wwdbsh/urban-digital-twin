@@ -24,6 +24,7 @@ export const DETERMINISTIC_FACADE_LIMITS = {
 
 export const DETERMINISTIC_FACADE_UNCERTAINTY = "Procedural local-millimeter representation only; it does not assert real-world facade accuracy, tenants, brands, text, or signage." as const;
 export const DETERMINISTIC_SIGNAGE_ABSENCE_REASON = "No signage representation was generated; this is not a claim that real-world signage is absent." as const;
+export const DETERMINISTIC_SETBACKS_ABSENCE_REASON = "No setbacks representation was generated; this is not a claim that real-world setbacks are absent." as const;
 
 export type Point2Mm = [number, number];
 export type Point3Mm = [number, number, number];
@@ -164,6 +165,16 @@ function canonicalRectangle(value: unknown, path: string, issues: FacadePlanIssu
     else points.push([point[0], point[1]]);
   });
   if (points.length !== 4) return null;
+  for (let index = 0; index < points.length; index += 1) {
+    const point = points[index]!;
+    const next = points[(index + 1) % points.length]!;
+    const sharesX = point[0] === next[0];
+    const sharesY = point[1] === next[1];
+    if (sharesX === sharesY) {
+      addIssue(issues, path, "Every consecutive footprint edge, including the closing edge, must share exactly one coordinate.");
+      return null;
+    }
+  }
   const unique = new Set(points.map(([x, y]) => `${x}:${y}`));
   const xs = points.map(([x]) => x);
   const ys = points.map(([, y]) => y);
@@ -183,7 +194,21 @@ function validateParameters(value: unknown, path: string, issues: FacadePlanIssu
   if (!safeInteger(value.floorCount, 2, DETERMINISTIC_FACADE_LIMITS.maxFloors)) addIssue(issues, `${path}.floorCount`, "Floor count is outside the V1 safe-integer cap.");
   if (!safeInteger(value.bayCount, 2, DETERMINISTIC_FACADE_LIMITS.maxBays)) addIssue(issues, `${path}.bayCount`, "Bay count is outside the V1 safe-integer cap.");
   for (const key of keys.slice(2)) if (!safeInteger(value[key], 1, DETERMINISTIC_FACADE_LIMITS.maxLocalMillimeters)) addIssue(issues, `${path}.${key}`, "Parameter must be a positive bounded safe integer in millimeters.");
-  return issues.some((entry) => entry.path === path || entry.path.startsWith(`${path}.`)) ? null : value as unknown as FacadeGeneratorParameters;
+  if (issues.some((entry) => entry.path === path || entry.path.startsWith(`${path}.`))) return null;
+  return Object.freeze({
+    floorCount: value.floorCount as number,
+    bayCount: value.bayCount as number,
+    floorHeightMm: value.floorHeightMm as number,
+    windowWidthMm: value.windowWidthMm as number,
+    windowHeightMm: value.windowHeightMm as number,
+    windowSillMm: value.windowSillMm as number,
+    openingInsetMm: value.openingInsetMm as number,
+    entranceWidthMm: value.entranceWidthMm as number,
+    entranceHeightMm: value.entranceHeightMm as number,
+    storefrontHeightMm: value.storefrontHeightMm as number,
+    corniceHeightMm: value.corniceHeightMm as number,
+    roofEquipmentSizeMm: value.roofEquipmentSizeMm as number,
+  });
 }
 
 export function validateDeterministicFacadeInput(value: unknown): FacadePlanValidation<DeterministicFacadeInput> {
@@ -263,7 +288,7 @@ const COLORS: ReadonlyArray<readonly [number, number, number, number]> = [
   [184, 96, 68, 255], [215, 178, 112, 255], [104, 128, 142, 255], [168, 155, 139, 255],
   [86, 112, 92, 255], [128, 92, 118, 255], [202, 204, 196, 255], [66, 76, 88, 255],
 ];
-const ABSENT_KINDS = new Set<ExteriorComponentKind>(["balconies", "fire-escapes", "water-tanks", "signage"]);
+const ABSENT_KINDS = new Set<ExteriorComponentKind>(["setbacks", "balconies", "fire-escapes", "water-tanks", "signage"]);
 
 function buildInventory(input: DeterministicFacadeInput, inputFingerprintSha256: string, parametersHashSha256: string): ExteriorComponentInventory {
   const constraintSourceIds = [...new Set(input.sourceAnchors.map((anchor) => anchor.sourceRefId))].sort(compareText);
@@ -275,7 +300,7 @@ function buildInventory(input: DeterministicFacadeInput, inputFingerprintSha256:
       kind,
       state: "absent" as const,
       representation: "none" as const,
-      reason: kind === "signage" ? DETERMINISTIC_SIGNAGE_ABSENCE_REASON : `No ${kind} representation was generated; this is not a claim that the real building lacks it.`,
+      reason: kind === "signage" ? DETERMINISTIC_SIGNAGE_ABSENCE_REASON : kind === "setbacks" ? DETERMINISTIC_SETBACKS_ABSENCE_REASON : `No ${kind} representation was generated; this is not a claim that the real building lacks it.`,
       uncertainty: DETERMINISTIC_FACADE_UNCERTAINTY,
     } : {
       componentId: `${input.buildingId}:${kind}`,
@@ -349,6 +374,38 @@ function buildPlacements(input: DeterministicFacadeInput, surfaces: readonly Fac
   return placements;
 }
 
+function canonicalEdge(left: string, right: string): [string, string] {
+  return compareText(left, right) <= 0 ? [left, right] : [right, left];
+}
+
+function point3Key(point: Point3Mm): string {
+  return `${point[0]}:${point[1]}:${point[2]}`;
+}
+
+function surfaceEdgeKeys(surface: FacadeSurface): Set<string> {
+  const edges = new Set<string>();
+  for (let index = 0; index < surface.ring.length; index += 1) {
+    const first = point3Key(surface.ring[index]!);
+    const second = point3Key(surface.ring[(index + 1) % surface.ring.length]!);
+    edges.add(canonicalEdge(first, second).join("|"));
+  }
+  return edges;
+}
+
+function deriveGeometricAdjacency(surfaces: readonly FacadeSurface[]): Array<[string, string]> {
+  const edgeSets = surfaces.map(surfaceEdgeKeys);
+  const adjacency: Array<[string, string]> = [];
+  for (let leftIndex = 0; leftIndex < surfaces.length; leftIndex += 1) {
+    for (let rightIndex = leftIndex + 1; rightIndex < surfaces.length; rightIndex += 1) {
+      const leftEdges = edgeSets[leftIndex]!;
+      const rightEdges = edgeSets[rightIndex]!;
+      if ([...leftEdges].some((edge) => rightEdges.has(edge))) adjacency.push(canonicalEdge(surfaces[leftIndex]!.id, surfaces[rightIndex]!.id));
+    }
+  }
+  adjacency.sort((left, right) => compareText(left[0], right[0]) || compareText(left[1], right[1]));
+  return adjacency;
+}
+
 function buildPlan(input: DeterministicFacadeInput): DeterministicFacadePlan {
   const inputFingerprintSha256 = domainSeparatedSha256("udt.facade.input.v1", input);
   const parametersHashSha256 = domainSeparatedSha256("udt.facade.parameters.v1", input.parameters);
@@ -374,7 +431,7 @@ function buildPlan(input: DeterministicFacadeInput): DeterministicFacadePlan {
     placements: buildPlacements(input, surfaces),
     topology: {
       parts: [{ id: "part:building", surfaceIds: surfaces.map((surface) => surface.id), bounds: { minX, minY, minZ: input.geometry.baseElevationMm, maxX, maxY, maxZ: input.geometry.baseElevationMm + input.geometry.heightMm } }],
-      adjacency: [["surface:facade:south", "surface:facade:east"], ["surface:facade:east", "surface:facade:north"], ["surface:facade:north", "surface:facade:west"], ["surface:facade:west", "surface:facade:south"]],
+      adjacency: deriveGeometricAdjacency(surfaces),
       closedManifold: true,
     },
   };
@@ -428,8 +485,164 @@ function validatePlacement(value: unknown, path: string, issues: FacadePlanIssue
   }
 }
 
-function overlaps(left: FacadePlacement["bounds"], right: FacadePlacement["bounds"]): boolean {
-  return left.uMinMm < right.uMaxMm && right.uMinMm < left.uMaxMm && left.vMinMm < right.vMaxMm && right.vMinMm < left.vMaxMm;
+interface PlacementSweepEntry { placement: FacadePlacement; index: number }
+interface ActiveIntervalNode {
+  entry: PlacementSweepEntry;
+  height: number;
+  maxVMax: number;
+  left: ActiveIntervalNode | null;
+  right: ActiveIntervalNode | null;
+}
+
+function intervalHeight(node: ActiveIntervalNode | null): number { return node?.height ?? 0; }
+function updateIntervalNode(node: ActiveIntervalNode): ActiveIntervalNode {
+  node.height = Math.max(intervalHeight(node.left), intervalHeight(node.right)) + 1;
+  node.maxVMax = Math.max(node.entry.placement.bounds.vMaxMm, node.left?.maxVMax ?? -1, node.right?.maxVMax ?? -1);
+  return node;
+}
+function compareIntervalEntry(left: PlacementSweepEntry, right: PlacementSweepEntry): number {
+  return left.placement.bounds.vMinMm - right.placement.bounds.vMinMm || left.index - right.index;
+}
+function rotateIntervalLeft(node: ActiveIntervalNode): ActiveIntervalNode {
+  const root = node.right!;
+  node.right = root.left;
+  root.left = updateIntervalNode(node);
+  return updateIntervalNode(root);
+}
+function rotateIntervalRight(node: ActiveIntervalNode): ActiveIntervalNode {
+  const root = node.left!;
+  node.left = root.right;
+  root.right = updateIntervalNode(node);
+  return updateIntervalNode(root);
+}
+function balanceIntervalNode(node: ActiveIntervalNode): ActiveIntervalNode {
+  updateIntervalNode(node);
+  const balance = intervalHeight(node.left) - intervalHeight(node.right);
+  if (balance > 1) {
+    if (intervalHeight(node.left!.left) < intervalHeight(node.left!.right)) node.left = rotateIntervalLeft(node.left!);
+    return rotateIntervalRight(node);
+  }
+  if (balance < -1) {
+    if (intervalHeight(node.right!.right) < intervalHeight(node.right!.left)) node.right = rotateIntervalRight(node.right!);
+    return rotateIntervalLeft(node);
+  }
+  return node;
+}
+function insertInterval(node: ActiveIntervalNode | null, entry: PlacementSweepEntry): ActiveIntervalNode {
+  if (!node) return { entry, height: 1, maxVMax: entry.placement.bounds.vMaxMm, left: null, right: null };
+  if (compareIntervalEntry(entry, node.entry) < 0) node.left = insertInterval(node.left, entry);
+  else node.right = insertInterval(node.right, entry);
+  return balanceIntervalNode(node);
+}
+function removeInterval(node: ActiveIntervalNode | null, entry: PlacementSweepEntry): ActiveIntervalNode | null {
+  if (!node) return null;
+  const comparison = compareIntervalEntry(entry, node.entry);
+  if (comparison < 0) node.left = removeInterval(node.left, entry);
+  else if (comparison > 0) node.right = removeInterval(node.right, entry);
+  else if (!node.left || !node.right) return node.left ?? node.right;
+  else {
+    let successor = node.right;
+    while (successor.left) successor = successor.left;
+    node.entry = successor.entry;
+    node.right = removeInterval(node.right, successor.entry);
+  }
+  return balanceIntervalNode(node);
+}
+function findIntervalOverlap(node: ActiveIntervalNode | null, vMinMm: number, vMaxMm: number): PlacementSweepEntry | null {
+  if (!node || node.maxVMax <= vMinMm) return null;
+  const inLeft = findIntervalOverlap(node.left, vMinMm, vMaxMm);
+  if (inLeft) return inLeft;
+  const bounds = node.entry.placement.bounds;
+  if (bounds.vMinMm < vMaxMm && vMinMm < bounds.vMaxMm) return node.entry;
+  if (bounds.vMinMm >= vMaxMm) return null;
+  return findIntervalOverlap(node.right, vMinMm, vMaxMm);
+}
+
+function compareSweepEnd(left: PlacementSweepEntry, right: PlacementSweepEntry): number {
+  return left.placement.bounds.uMaxMm - right.placement.bounds.uMaxMm || left.index - right.index;
+}
+function pushSweepEnd(heap: PlacementSweepEntry[], entry: PlacementSweepEntry): void {
+  heap.push(entry);
+  let index = heap.length - 1;
+  while (index > 0) {
+    const parent = Math.floor((index - 1) / 2);
+    if (compareSweepEnd(heap[parent]!, entry) <= 0) break;
+    heap[index] = heap[parent]!;
+    index = parent;
+  }
+  heap[index] = entry;
+}
+function popSweepEnd(heap: PlacementSweepEntry[]): PlacementSweepEntry {
+  const first = heap[0]!;
+  const last = heap.pop()!;
+  if (heap.length === 0) return first;
+  let index = 0;
+  while (true) {
+    const left = index * 2 + 1;
+    if (left >= heap.length) break;
+    const right = left + 1;
+    const child = right < heap.length && compareSweepEnd(heap[right]!, heap[left]!) < 0 ? right : left;
+    if (compareSweepEnd(last, heap[child]!) <= 0) break;
+    heap[index] = heap[child]!;
+    index = child;
+  }
+  heap[index] = last;
+  return first;
+}
+
+function validatePlacementOverlaps(placements: readonly FacadePlacement[], issues: FacadePlanIssue[]): void {
+  const bySurface = new Map<string, PlacementSweepEntry[]>();
+  placements.forEach((placement, index) => {
+    const entries = bySurface.get(placement.surfaceId) ?? [];
+    entries.push({ placement, index });
+    bySurface.set(placement.surfaceId, entries);
+  });
+  for (const surfaceId of [...bySurface.keys()].sort(compareText)) {
+    const entries = bySurface.get(surfaceId)!;
+    entries.sort((left, right) => left.placement.bounds.uMinMm - right.placement.bounds.uMinMm
+      || left.placement.bounds.uMaxMm - right.placement.bounds.uMaxMm
+      || left.placement.bounds.vMinMm - right.placement.bounds.vMinMm
+      || left.placement.bounds.vMaxMm - right.placement.bounds.vMaxMm
+      || compareText(left.placement.id, right.placement.id)
+      || left.index - right.index);
+    const endings: PlacementSweepEntry[] = [];
+    let active: ActiveIntervalNode | null = null;
+    for (const entry of entries) {
+      while (endings.length > 0 && endings[0]!.placement.bounds.uMaxMm <= entry.placement.bounds.uMinMm) active = removeInterval(active, popSweepEnd(endings));
+      const overlap = findIntervalOverlap(active, entry.placement.bounds.vMinMm, entry.placement.bounds.vMaxMm);
+      if (overlap) {
+        addIssue(issues, "placements", `Placements ${overlap.placement.id} and ${entry.placement.id} overlap.`);
+        return;
+      }
+      active = insertInterval(active, entry);
+      pushSweepEnd(endings, entry);
+    }
+  }
+}
+
+function validateTopologyAdjacency(plan: DeterministicFacadePlan, issues: FacadePlanIssue[]): void {
+  const surfaceIds = new Set(plan.surfaces.map((surface) => surface.id));
+  const geometric = deriveGeometricAdjacency(plan.surfaces);
+  const expected = new Set(geometric.map((edge) => edge.join("|")));
+  const degrees = new Map(plan.surfaces.map((surface) => [surface.id, 0]));
+  for (const [left, right] of geometric) {
+    degrees.set(left, degrees.get(left)! + 1);
+    degrees.set(right, degrees.get(right)! + 1);
+  }
+  if (geometric.length !== 12 || [...degrees.values()].some((degree) => degree !== 4)) addIssue(issues, "topology.adjacency", "Rectangular-prism geometry must resolve to exactly 12 edges with degree four on every surface.");
+  const seen = new Set<string>();
+  plan.topology.adjacency.forEach((edge, index) => {
+    const path = `topology.adjacency[${index}]`;
+    if (!surfaceIds.has(edge[0]) || !surfaceIds.has(edge[1])) {
+      addIssue(issues, path, "Adjacency surface IDs must resolve.");
+      return;
+    }
+    const key = canonicalEdge(edge[0], edge[1]).join("|");
+    if (seen.has(key)) addIssue(issues, path, "Adjacency edges must be unique even when reversed.");
+    else seen.add(key);
+    if (!expected.has(key)) addIssue(issues, path, "Adjacency must represent one shared geometric surface edge.");
+  });
+  for (const edge of geometric) if (!seen.has(edge.join("|"))) addIssue(issues, "topology.adjacency", `Missing geometric adjacency ${edge[0]} to ${edge[1]}.`);
 }
 
 export function calculateDeterministicFacadePlanHash(plan: Omit<DeterministicFacadePlan, "planHashSha256"> | DeterministicFacadePlan): string {
@@ -511,16 +724,14 @@ export function validateDeterministicFacadePlan(value: unknown): FacadePlanValid
       if (placement.kind === "roof-equipment" && (placement.anchor !== "roof" || surface.kind !== "roof")) addIssue(issues, `placements.${placement.id}.anchor`, "Roof equipment must anchor to the roof.");
     }
   }
-  for (let leftIndex = 0; leftIndex < plan.placements.length; leftIndex += 1) for (let rightIndex = leftIndex + 1; rightIndex < plan.placements.length; rightIndex += 1) {
-    const left = plan.placements[leftIndex]!; const right = plan.placements[rightIndex]!;
-    if (left.surfaceId === right.surfaceId && overlaps(left.bounds, right.bounds)) addIssue(issues, "placements", `Placements ${left.id} and ${right.id} overlap.`);
-  }
+  validatePlacementOverlaps(plan.placements, issues);
   const ownedSurfaces = plan.topology.parts.flatMap((part) => part.surfaceIds);
   if (plan.topology.parts.length > DETERMINISTIC_FACADE_LIMITS.maxParts || new Set(plan.topology.parts.map((part) => part.id)).size !== plan.topology.parts.length || new Set(ownedSurfaces).size !== ownedSurfaces.length || !sameValue([...ownedSurfaces].sort(compareText), [...surfaceIds].sort(compareText))) addIssue(issues, "topology.parts", "Topology parts must uniquely own every surface exactly once.");
   for (let left = 0; left < plan.topology.parts.length; left += 1) for (let right = left + 1; right < plan.topology.parts.length; right += 1) {
     const a = plan.topology.parts[left]!.bounds; const b = plan.topology.parts[right]!.bounds;
     if (a.minX < b.maxX && b.minX < a.maxX && a.minY < b.maxY && b.minY < a.maxY && a.minZ < b.maxZ && b.minZ < a.maxZ) addIssue(issues, "topology.parts", "Topology part volumes cannot overlap.");
   }
+  validateTopologyAdjacency(plan, issues);
   const expected = buildPlan(inputResult.value);
   if (!sameValue(plan.anchors, inputResult.value.sourceAnchors)) addIssue(issues, "anchors", "Plan anchors must use canonical input order.");
   if (plan.inventory.components.some((component) => component.state !== "generated" && component.state !== "absent")) addIssue(issues, "inventory", "V1 inventory permits generated or absent states only.");

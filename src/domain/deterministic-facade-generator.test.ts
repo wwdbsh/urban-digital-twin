@@ -5,6 +5,7 @@ import {
   DETERMINISTIC_FACADE_LIMITS,
   DETERMINISTIC_FACADE_SCHEMA_VERSION,
   DETERMINISTIC_FACADE_UNCERTAINTY,
+  DETERMINISTIC_SETBACKS_ABSENCE_REASON,
   DETERMINISTIC_SIGNAGE_ABSENCE_REASON,
   generateDeterministicFacadePlan,
   serializeDeterministicFacadePlan,
@@ -66,6 +67,14 @@ function allNumbersAreIntegers(value: unknown): boolean {
   return true;
 }
 
+function rectangleTraversals(points: DeterministicFacadeInput["geometry"]["footprint"]["outer"]): Array<DeterministicFacadeInput["geometry"]["footprint"]["outer"]> {
+  const traversals: Array<DeterministicFacadeInput["geometry"]["footprint"]["outer"]> = [];
+  for (const direction of [points, [...points].reverse()] as const) {
+    for (let offset = 0; offset < direction.length; offset += 1) traversals.push([...direction.slice(offset), ...direction.slice(0, offset)]);
+  }
+  return traversals;
+}
+
 describe("deterministic facade plan generator", () => {
   it("preserves the shared hash API and produces the golden plan", () => {
     expect(sha256HexSync("abc")).toBe("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
@@ -74,17 +83,32 @@ describe("deterministic facade plan generator", () => {
     const first = mustGenerate();
     const second = mustGenerate();
     expect(first).toEqual(second);
-    expect(first.planHashSha256).toBe("fc629bac6ca808f8f89d2c41396a91a64b20b26de7de5b33d23d4b808b58143a");
+    expect(first.planHashSha256).toBe("e84a3907674083c98cec3b9ff4e9564eaba3d4b419a3d521ced080898bda2c34");
     expect(validateDeterministicFacadePlan(first).ok).toBe(true);
   });
 
   it("canonicalizes ring and anchor reorderings before fingerprinting", () => {
     const original = mustGenerate();
-    const reordered = input();
-    reordered.sourceAnchors.reverse();
-    reordered.geometry.footprint.outer = [[24_000, 16_000], [24_000, 0], [0, 0], [0, 16_000]];
-    expect(mustGenerate(reordered)).toEqual(original);
+    const corners: DeterministicFacadeInput["geometry"]["footprint"]["outer"] = [[0, 0], [24_000, 0], [24_000, 16_000], [0, 16_000]];
+    for (const traversal of rectangleTraversals(corners)) {
+      const reordered = input();
+      reordered.sourceAnchors.reverse();
+      reordered.geometry.footprint.outer = traversal;
+      expect(mustGenerate(reordered)).toEqual(original);
+    }
     expect(original.anchors.map((anchor) => anchor.id)).toEqual(["anchor:footprint", "anchor:height"]);
+  });
+
+  it("rejects both bow-tie traversal classes under every rotation and reversal", () => {
+    const bowTies: Array<DeterministicFacadeInput["geometry"]["footprint"]["outer"]> = [
+      [[0, 0], [24_000, 0], [0, 16_000], [24_000, 16_000]],
+      [[0, 0], [24_000, 16_000], [24_000, 0], [0, 16_000]],
+    ];
+    for (const bowTie of bowTies) for (const traversal of rectangleTraversals(bowTie)) {
+      const value = input();
+      value.geometry.footprint.outer = traversal;
+      expect(validateDeterministicFacadeInput(value).ok).toBe(false);
+    }
   });
 
   it("changes domain-separated plan hashes for bounded input perturbations", () => {
@@ -107,6 +131,8 @@ describe("deterministic facade plan generator", () => {
     expect(plan.inventory.components.every((component) => component.state === "generated" || component.state === "absent")).toBe(true);
     const signage = plan.inventory.components.find((component) => component.kind === "signage")!;
     expect(signage).toEqual(expect.objectContaining({ state: "absent", representation: "none", reason: DETERMINISTIC_SIGNAGE_ABSENCE_REASON, uncertainty: DETERMINISTIC_FACADE_UNCERTAINTY }));
+    const setbacks = plan.inventory.components.find((component) => component.kind === "setbacks")!;
+    expect(setbacks).toEqual(expect.objectContaining({ state: "absent", representation: "none", reason: DETERMINISTIC_SETBACKS_ABSENCE_REASON, uncertainty: DETERMINISTIC_FACADE_UNCERTAINTY }));
     const generated = plan.inventory.components.filter((component) => component.state === "generated");
     expect(generated.every((component) => component.generator.constraintSourceIds.join(",") === "source:footprint,source:height")).toBe(true);
   });
@@ -159,6 +185,35 @@ describe("deterministic facade plan generator", () => {
     expect(validateDeterministicFacadePlan(open).ok).toBe(false);
   });
 
+  it("emits and independently validates the exact rectangular-prism adjacency graph", () => {
+    const first = mustGenerate();
+    const second = mustGenerate();
+    expect(first.topology.adjacency).toHaveLength(12);
+    expect(first.topology.adjacency[0]).not.toBe(second.topology.adjacency[0]);
+    const degrees = new Map(first.surfaces.map((surface) => [surface.id, 0]));
+    for (const [left, right] of first.topology.adjacency) {
+      degrees.set(left, degrees.get(left)! + 1);
+      degrees.set(right, degrees.get(right)! + 1);
+    }
+    expect([...degrees.values()]).toEqual([4, 4, 4, 4, 4, 4]);
+
+    const reversedDuplicate = structuredClone(first);
+    reversedDuplicate.topology.adjacency.push([...reversedDuplicate.topology.adjacency[0]!].reverse() as [string, string]);
+    expect(validateDeterministicFacadePlan(reversedDuplicate).ok).toBe(false);
+
+    const dangling = structuredClone(first);
+    dangling.topology.adjacency[0]![0] = "surface:missing";
+    expect(validateDeterministicFacadePlan(dangling).ok).toBe(false);
+
+    const roofGround = structuredClone(first);
+    roofGround.topology.adjacency[0] = ["surface:ground", "surface:roof"];
+    expect(validateDeterministicFacadePlan(roofGround).ok).toBe(false);
+
+    const missing = structuredClone(first);
+    missing.topology.adjacency.pop();
+    expect(validateDeterministicFacadePlan(missing).ok).toBe(false);
+  });
+
   it("keeps placements closed, bounded, non-overlapping, and ground/roof anchored", () => {
     const plan = mustGenerate();
     const surfaces = new Map(plan.surfaces.map((surface) => [surface.id, surface]));
@@ -174,6 +229,40 @@ describe("deterministic facade plan generator", () => {
     expect(validateDeterministicFacadePlan(dangling).ok).toBe(false);
     const overlapping = structuredClone(plan); overlapping.placements.push({ ...structuredClone(overlapping.placements[0]!), id: "placement:overlap" });
     expect(validateDeterministicFacadePlan(overlapping).ok).toBe(false);
+  });
+
+  it("uses half-open placement bounds and bounds overlap diagnostics at the 50,000-placement cap", () => {
+    const touching = structuredClone(mustGenerate());
+    touching.placements[1]!.bounds.uMinMm = touching.placements[0]!.bounds.uMaxMm;
+    touching.planHashSha256 = calculateDeterministicFacadePlanHash(touching);
+    const touchingResult = validateDeterministicFacadePlan(touching);
+    expect(touchingResult.ok).toBe(false);
+    if (!touchingResult.ok) expect(touchingResult.issues.filter((issue) => issue.message.includes("overlap"))).toEqual([]);
+
+    const oneMillimeterOverlap = structuredClone(touching);
+    oneMillimeterOverlap.placements[1]!.bounds.uMinMm -= 1;
+    oneMillimeterOverlap.planHashSha256 = calculateDeterministicFacadePlanHash(oneMillimeterOverlap);
+    const overlapResult = validateDeterministicFacadePlan(oneMillimeterOverlap);
+    expect(overlapResult.ok).toBe(false);
+    if (!overlapResult.ok) expect(overlapResult.issues.filter((issue) => issue.message.includes("overlap"))).toHaveLength(1);
+
+    const maximum = input();
+    maximum.parameters.floorCount = 127;
+    maximum.parameters.bayCount = 99;
+    maximum.geometry.heightMm = 381_000;
+    maximum.geometry.footprint.outer = [[0, 0], [990_000, 0], [990_000, 990_000], [0, 990_000]];
+    const maximumPlan = mustGenerate(maximum);
+    expect(maximumPlan.placements).toHaveLength(DETERMINISTIC_FACADE_LIMITS.maxPlacements);
+    expect(validateDeterministicFacadePlan(maximumPlan).ok).toBe(true);
+
+    maximumPlan.placements[1]!.bounds = { ...maximumPlan.placements[0]!.bounds };
+    maximumPlan.planHashSha256 = calculateDeterministicFacadePlanHash(maximumPlan);
+    const maximumOverlap = validateDeterministicFacadePlan(maximumPlan);
+    expect(maximumOverlap.ok).toBe(false);
+    if (!maximumOverlap.ok) {
+      expect(maximumOverlap.issues.filter((issue) => issue.message.includes("overlap"))).toHaveLength(1);
+      expect(maximumOverlap.issues).toHaveLength(2);
+    }
   });
 
   it("uses a distinct bounded PBR palette with adjacent facade non-repeat", () => {
@@ -200,7 +289,15 @@ describe("deterministic facade plan generator", () => {
     const value = input(); const before = structuredClone(value);
     const plans = await Promise.all(Array.from({ length: 24 }, async () => mustGenerate(value)));
     expect(value).toEqual(before);
+    expect(Object.isFrozen(value.parameters)).toBe(false);
+    expect(Object.isFrozen(plans[0]!.input.parameters)).toBe(true);
+    expect(plans[0]!.input.parameters).not.toBe(value.parameters);
+    expect(plans[0]!.input.parameters).not.toBe(plans[1]!.input.parameters);
     expect(plans.every((plan) => plan.planHashSha256 === plans[0]!.planHashSha256)).toBe(true);
+    value.parameters.windowWidthMm = 1_700;
+    expect(plans[0]!.input.parameters.windowWidthMm).toBe(1_800);
+    expect(calculateDeterministicFacadePlanHash(plans[0]!)).toBe(plans[0]!.planHashSha256);
+    expect(() => { plans[0]!.input.parameters.windowWidthMm = 1_700; }).toThrow(TypeError);
     plans[0]!.materials[0]!.baseColorSrgb[0] = 0;
     expect(plans[1]!.materials[0]!.baseColorSrgb[0]).not.toBe(0);
   });
