@@ -19,3 +19,7 @@ __pycache__/
 *.pyc
 artifacts/blender/
 artifacts/block835-reference-determinism/
+# Raw T009 canary validation evidence. The hashes are committed in
+# data/block835-canary-validation-20260811/evidence-inventory.json so they stay
+# checkable after this worktree-local tree is removed.
+artifacts/block835-canary-validation-20260811/

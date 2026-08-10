@@ -2,13 +2,16 @@ import { describe, expect, it } from "vitest";
 import { readFileSync, readdirSync } from "node:fs";
 import {
   BLOCK835_CANARY_FACADE_PATH,
+  BLOCK835_CANARY_FACADE_PATH_OBLIQUE,
   BLOCK835_CANARY_FRAME_BUDGETS,
   BLOCK835_CANARY_MAX_ACTIVE_REQUESTS,
   BLOCK835_CANARY_MAX_CACHED_BYTES,
   block835CanaryBudgetVerdict,
+  block835CanaryFacadePath,
   block835CanaryHeapVerdict,
   block835CanaryRuntimeVerdict,
   estimateCanaryDisplay,
+  parseBlock835CanaryPathVariant,
   parseBlock835CanaryProbeMode,
   summarizeCanaryFrames,
 } from "./block835-canary-probe.ts";
@@ -172,5 +175,42 @@ describe("committed facade camera path", () => {
       expect(pose.framing).toBe("full-facade");
       expect(pose.referenceVerticalExtentMeters).toBeGreaterThanOrEqual(pose.buildingHeightMeters);
     }
+  });
+});
+
+describe("oblique mitigation path", () => {
+  it("selects the level path unless the oblique variant is explicitly requested", () => {
+    expect(parseBlock835CanaryPathVariant("")).toBe("level");
+    expect(parseBlock835CanaryPathVariant("?block835CanaryPath=level")).toBe("level");
+    expect(parseBlock835CanaryPathVariant("?block835CanaryPath=oblique")).toBe("oblique");
+    expect(block835CanaryFacadePath("level")).toBe(BLOCK835_CANARY_FACADE_PATH);
+    expect(block835CanaryFacadePath("oblique")).toBe(BLOCK835_CANARY_FACADE_PATH_OBLIQUE);
+  });
+
+  it("preserves the perpendicular camera-to-facade distance of every level pose", () => {
+    const level = BLOCK835_CANARY_FACADE_PATH.poses;
+    const oblique = BLOCK835_CANARY_FACADE_PATH_OBLIQUE.poses;
+    expect(oblique).toHaveLength(level.length);
+    for (const [index, pose] of oblique.entries()) {
+      expect(pose.cameraToFacadeMeters).toBe(level[index]!.cameraToFacadeMeters);
+      expect(pose.cameraToFacadeMeters).toBeGreaterThanOrEqual(10);
+      expect(pose.pose.longitude).toBe(level[index]!.pose.longitude);
+      expect(pose.pose.latitude).toBe(level[index]!.pose.latitude);
+      expect(pose.pose.heading).toBe(level[index]!.pose.heading);
+    }
+  });
+
+  it("looks down steeply enough for the base to serve the camera's own shard, and claims no roofline", () => {
+    for (const pose of BLOCK835_CANARY_FACADE_PATH_OBLIQUE.poses) {
+      expect(pose.pose.pitch).toBe(-30);
+      expect(pose.pose.pitch).toBeLessThanOrEqual(-28);
+      expect(pose.rooflineInFrame).toBe(false);
+    }
+  });
+
+  it("carries the mitigation disclosure so no reader can mistake it for the criterion path", () => {
+    const fixture = BLOCK835_CANARY_FACADE_PATH_OBLIQUE as unknown as { mitigationNote: string; variantOf: string };
+    expect(fixture.variantOf).toBe("block835-canary-facade-v1");
+    expect(fixture.mitigationNote).toMatch(/does not satisfy the level facade viewpoint criterion/);
   });
 });

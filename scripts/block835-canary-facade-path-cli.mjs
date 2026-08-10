@@ -33,6 +33,29 @@ const PLAN_DIR = join(repoRoot, "data/manhattan-esb-block-reference-20260811/pla
 const CITYWIDE_GEOMETRY_DIR = join(repoRoot, "public/data/manhattan-citywide-20260804/geometry/buildings");
 const OUTPUT_DIR = join(repoRoot, "data/block835-canary-validation-20260811");
 const OUTPUT_FILE = join(OUTPUT_DIR, "facade-path.json");
+const OBLIQUE_OUTPUT_FILE = join(OUTPUT_DIR, "facade-path-oblique.json");
+
+/**
+ * Oblique variant, added after real-browser validation.
+ *
+ * The level path above is the geometrically correct >=10 m facade path the Goal
+ * describes, and it stays exactly as derived. But the citywide base streaming
+ * only serves the camera's own shard when the camera looks down by roughly 25
+ * degrees or more: at a shallower attitude the nine globe pick-rays that define
+ * the viewport footprint sweep to the horizon, the visible-shard set saturates
+ * the 24-shard cache budget, and the shard under the camera is evicted. With no
+ * base building record there is no verified WGS84 anchor, so the exterior cells
+ * draw nothing. That is measured in the T009 record, not assumed.
+ *
+ * This variant therefore exists only so frame-time, memory and request evidence
+ * can be gathered against a scene that actually contains the canary geometry.
+ * It preserves the perpendicular camera-to-facade distance exactly — the
+ * standoff is unchanged and stays horizontal — and raises the camera so a
+ * -30 degree ray still meets the facade at mid-height. It is a mitigation path,
+ * not a substitute for the level facade viewpoint, and no row in the evidence
+ * record may claim the level criterion from it.
+ */
+const OBLIQUE_PITCH_DEGREES = -30;
 
 export const BLOCK835_CANARY_FACADE_PATH_ID = "block835-canary-facade-v1";
 
@@ -117,6 +140,21 @@ export function fullFacadeStandoffMeters(heightMeters) {
 }
 
 /** Pure pose derivation. Every input is a committed-byte fact. */
+export function deriveObliqueFacadePose(levelPose) {
+  const midHeightMeters = levelPose.buildingHeightMeters / 2;
+  const rise = levelPose.cameraToFacadeMeters * Math.tan((-OBLIQUE_PITCH_DEGREES * Math.PI) / 180);
+  return {
+    ...levelPose,
+    poseId: `${levelPose.poseId}-oblique`,
+    framing: `${levelPose.framing}-oblique`,
+    // Unchanged: the standoff is horizontal, so the perpendicular distance to
+    // the facade plane is identical to the level pose.
+    cameraToFacadeMeters: levelPose.cameraToFacadeMeters,
+    rooflineInFrame: false,
+    pose: { ...levelPose.pose, height: round(midHeightMeters + rise, 3), pitch: OBLIQUE_PITCH_DEGREES },
+  };
+}
+
 export function deriveFacadePose(spec, building) {
   const facade = FACADE_GEOMETRY[spec.facade];
   if (!facade) throw new Error(`Unknown facade ${spec.facade} for ${spec.poseId}.`);
@@ -273,7 +311,17 @@ function main() {
   }
   mkdirSync(OUTPUT_DIR, { recursive: true });
   writeFileSync(OUTPUT_FILE, serialized);
+  const oblique = {
+    ...fixture,
+    pathId: `${fixture.pathId}-oblique`,
+    variantOf: fixture.pathId,
+    obliquePitchDegrees: OBLIQUE_PITCH_DEGREES,
+    mitigationNote: "Measured mitigation path. The citywide base only serves the camera's own shard at a pitch of roughly -25 degrees or steeper; at a level attitude the viewport footprint saturates the 24-shard cache budget and the shard under the camera is evicted, so no base anchor exists and the exterior cells draw nothing. This variant keeps the identical perpendicular camera-to-facade distance and exists so frame-time, memory and request evidence can be gathered against a scene that contains the canary geometry. It does not satisfy the level facade viewpoint criterion.",
+    poses: fixture.poses.map(deriveObliqueFacadePose),
+  };
+  writeFileSync(OBLIQUE_OUTPUT_FILE, `${JSON.stringify(oblique, null, 2)}\n`);
   console.log(`Wrote ${OUTPUT_FILE}`);
+  console.log(`Wrote ${OBLIQUE_OUTPUT_FILE}`);
   console.log(`${fixture.poses.length} poses, closest camera-to-facade ${fixture.closestCameraToFacadeMeters} m`);
   for (const pose of fixture.poses) {
     console.log(`  ${pose.poseId} ${pose.buildingId} ${pose.facade} ${pose.cameraToFacadeMeters} m ${pose.framing} roofline=${pose.rooflineInFrame}`);

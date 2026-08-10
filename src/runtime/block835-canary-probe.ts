@@ -14,6 +14,7 @@
  * produces an acceptance verdict is unit-testable without a browser.
  */
 import facadePathFixture from "../../data/block835-canary-validation-20260811/facade-path.json";
+import obliqueFacadePathFixture from "../../data/block835-canary-validation-20260811/facade-path-oblique.json";
 
 export const BLOCK835_CANARY_PROBE_QUERY = "block835CanaryPerformance";
 export const BLOCK835_CANARY_PROBE_MODES = ["exploration", "inspection"] as const;
@@ -72,6 +73,28 @@ export interface Block835CanaryFacadePath {
 
 /** Derived from committed release bytes by `scripts/block835-canary-facade-path-cli.mjs`. */
 export const BLOCK835_CANARY_FACADE_PATH = facadePathFixture as Block835CanaryFacadePath;
+
+/**
+ * Mitigation path. See the note carried in the fixture: the level path is the
+ * criterion path, but the citywide base does not serve the camera's own shard
+ * at a level attitude, so nothing renders there. This variant keeps the
+ * identical perpendicular camera-to-facade distance and exists purely so
+ * frame-time, memory and request evidence can be measured against a scene that
+ * actually contains the canary geometry.
+ */
+export const BLOCK835_CANARY_FACADE_PATH_OBLIQUE = obliqueFacadePathFixture as Block835CanaryFacadePath;
+
+export const BLOCK835_CANARY_PATH_VARIANTS = ["level", "oblique"] as const;
+export type Block835CanaryPathVariant = (typeof BLOCK835_CANARY_PATH_VARIANTS)[number];
+
+export function parseBlock835CanaryPathVariant(search: string): Block835CanaryPathVariant {
+  const value = new URLSearchParams(search).get("block835CanaryPath");
+  return value === "oblique" ? "oblique" : "level";
+}
+
+export function block835CanaryFacadePath(variant: Block835CanaryPathVariant): Block835CanaryFacadePath {
+  return variant === "oblique" ? BLOCK835_CANARY_FACADE_PATH_OBLIQUE : BLOCK835_CANARY_FACADE_PATH;
+}
 
 export function parseBlock835CanaryProbeMode(search: string): Block835CanaryProbeMode | null {
   const value = new URLSearchParams(search).get(BLOCK835_CANARY_PROBE_QUERY);

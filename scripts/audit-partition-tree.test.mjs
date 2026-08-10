@@ -10,6 +10,7 @@ import {
   privatePathSegments,
   scanTreeForPrivatePaths,
   scanTreeForProhibitedEvidence,
+  classifyEvidenceFinding,
 } from "./audit-partition-tree.mjs";
 import { findPrivatePartitionDirectories, prunePrivatePartitions } from "./prune-private-partitions.mjs";
 import { DISALLOWED_EXTERIOR_SOURCE_CLASSIFICATIONS } from "../src/domain/exterior-evidence-intake.ts";
@@ -87,6 +88,32 @@ describe("prohibited evidence vocabulary", () => {
     expect(result.findings).toHaveLength(1);
     expect(result.findings[0].path).toBe("data/pkg/public/leak.json");
     expect(result.findings[0].tokens).toContain("street-view");
+    expect(result.findings[0].classification).toBe("release-data");
+  });
+});
+
+describe("finding classification", () => {
+  it("separates release data from third-party runtime code", () => {
+    expect(classifyEvidenceFinding("data/pkg/public/notes.json")).toBe("release-data");
+    expect(classifyEvidenceFinding("cesiumStatic/ThirdParty/google-earth-dbroot-parser.js")).toBe("vendor-runtime");
+    expect(classifyEvidenceFinding("assets/index-T-wrPl4q.js")).toBe("vendor-runtime");
+    expect(classifyEvidenceFinding("index.html")).toBe("other");
+  });
+
+  it("fails the criterion only on a release-data token, and never hides a vendor one", () => {
+    const root = fixtureTree();
+    mkdirSync(join(root, "cesiumStatic/ThirdParty"), { recursive: true });
+    writeFileSync(join(root, "cesiumStatic/ThirdParty/vendor.js"), "streetview endpoint");
+    const vendorOnly = auditPartitionTree({ distDir: root, publicDir: root }).f2ProhibitedEvidence;
+    expect(vendorOnly.vendorRuntimeFindings.length).toBeGreaterThan(0);
+    expect(vendorOnly.releaseDataFindings).toHaveLength(0);
+    expect(vendorOnly.pass).toBe(true);
+    writeFileSync(join(root, "data/pkg/public/leak.json"), JSON.stringify({ origin: "street-view" }));
+    const withLeak = auditPartitionTree({ distDir: root, publicDir: root }).f2ProhibitedEvidence;
+    // The fixture points both trees at one directory, so the leak is reported
+    // once per scanned tree.
+    expect(withLeak.releaseDataFindings.map((finding) => finding.path)).toEqual(["data/pkg/public/leak.json", "data/pkg/public/leak.json"]);
+    expect(withLeak.pass).toBe(false);
   });
 });
 

@@ -61,15 +61,16 @@ import { BLOCK835_PUBLIC_REALM_RELEASE_ID, createBlock835PublicRealmFaultFetcher
 import { loadExteriorCellRuntime, type ExteriorCellOutcome, type ExteriorCellRuntime, type ExteriorHeadRequest } from "../runtime/exterior-cell-runtime";
 import { createExteriorCellFaultFetcher, parseExteriorCellFault } from "../runtime/exterior-cell-fault";
 import {
-  BLOCK835_CANARY_FACADE_PATH,
   BLOCK835_CANARY_REPEATS,
   BLOCK835_CANARY_SAMPLES_PER_POSE,
   BLOCK835_CANARY_SETTLE_MS,
   block835CanaryBudgetVerdict,
   block835CanaryHeapVerdict,
   block835CanaryRuntimeVerdict,
+  block835CanaryFacadePath,
   estimateCanaryDisplay,
   parseBlock835CanaryProbeMode,
+  parseBlock835CanaryPathVariant,
   summarizeCanaryFrames,
   type Block835CanaryProbeResult,
   type Block835CanaryRepeatSample,
@@ -760,6 +761,7 @@ export function App() {
   // canary probe is the inverse: it *requires* the exterior-cell release to be
   // active and measures the Goal's absolute budgets instead of a regression.
   const block835CanaryMode = BLOCK835_CANARY_HARNESS_ENABLED && typeof window !== "undefined" ? parseBlock835CanaryProbeMode(window.location.search) : null;
+  const block835CanaryPathVariant = BLOCK835_CANARY_HARNESS_ENABLED && typeof window !== "undefined" ? parseBlock835CanaryPathVariant(window.location.search) : "level";
   // A URL cannot activate the real adapter until its immutable release has
   // loaded and passed validation. Start every first render in fixtures so an
   // unknown/loading release never wears a real label over fixture geometry.
@@ -1127,12 +1129,13 @@ export function App() {
     if (!block835CanaryMode || typeof window === "undefined") return undefined;
     const runtime = exteriorCellRuntime;
     const buildMode: "development" | "production" = import.meta.env.DEV ? "development" : "production";
-    const poses = BLOCK835_CANARY_FACADE_PATH.poses;
+    const facadePath = block835CanaryFacadePath(block835CanaryPathVariant);
+    const poses = facadePath.poses;
     const pending = (status: Block835CanaryProbeResult["status"], reason: string | null, partial?: Partial<Block835CanaryProbeResult>): Block835CanaryProbeResult => ({
       schemaVersion: "1.0",
       status,
       profile: block835CanaryMode,
-      pathId: BLOCK835_CANARY_FACADE_PATH.pathId,
+      pathId: facadePath.pathId,
       exteriorReleaseId: runtime?.releaseId ?? null,
       exteriorSnapshotId: runtime?.snapshot.snapshotId ?? null,
       baseReleaseId: activeRealBaseReleaseId ?? null,
@@ -1141,7 +1144,7 @@ export function App() {
       settleMs: BLOCK835_CANARY_SETTLE_MS,
       samplesPerPose: BLOCK835_CANARY_SAMPLES_PER_POSE,
       poseCount: poses.length,
-      closestCameraToFacadeMeters: BLOCK835_CANARY_FACADE_PATH.closestCameraToFacadeMeters,
+      closestCameraToFacadeMeters: facadePath.closestCameraToFacadeMeters,
       perRepeat: [],
       aggregate: summarizeCanaryFrames([]),
       display: estimateCanaryDisplay([]),
@@ -1283,7 +1286,7 @@ export function App() {
       window.removeEventListener("focus", startWhenFocused);
       document.removeEventListener("visibilitychange", startWhenFocused);
     };
-  }, [activeRealBaseReleaseId, block835CanaryMode, exteriorCellRuntime, exteriorStreamingActive]);
+  }, [activeRealBaseReleaseId, block835CanaryMode, block835CanaryPathVariant, exteriorCellRuntime, exteriorStreamingActive]);
 
   useEffect(() => {
     if (!exteriorStreamingRequested) {
