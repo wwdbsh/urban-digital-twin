@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
+  ASSEMBLY_ISSUE_BUFFER_GAP_FORBIDDEN,
+  ASSEMBLY_ISSUE_BUFFER_TAIL_FORBIDDEN,
+  ASSEMBLY_ISSUE_DECLARED_TEXTURE_FORBIDDEN,
+  ASSEMBLY_ISSUE_EMBEDDED_IMAGE_FORBIDDEN,
+  ASSEMBLY_ISSUE_UNREFERENCED_BUFFER_VIEW_FORBIDDEN,
   multiLodAssemblyFingerprint,
   parseGlbV2,
   replayMultiLodAssembly,
@@ -36,6 +41,34 @@ function glb(metadata: Record<string, unknown>, options: { indexCount?: number; 
   options.mutateJson?.(json as Record<string, unknown>);
   if (options.nulPadding) { const canonical = (json.extras.urbanDigitalTwin as Record<string, unknown>); while (new TextEncoder().encode(JSON.stringify(json)).byteLength % 4 === 0) canonical.uncertainty = `${canonical.uncertainty as string}x`; }
   const jsonBytes = chunk(new TextEncoder().encode(JSON.stringify(json)), options.nulPadding ? 0 : 0x20); const bin = new Uint8Array(48); if (options.outOfRangeIndex) new DataView(bin.buffer).setUint32(36, 3, true); const total = 12 + 8 + jsonBytes.length + 8 + bin.length;
+  const result = new Uint8Array(total); const view = new DataView(result.buffer);
+  view.setUint32(0, 0x46546c67, true); view.setUint32(4, 2, true); view.setUint32(8, total, true);
+  view.setUint32(12, jsonBytes.length, true); view.setUint32(16, 0x4e4f534a, true); result.set(jsonBytes, 20);
+  const offset = 20 + jsonBytes.length; view.setUint32(offset, bin.length, true); view.setUint32(offset + 4, 0x004e4942, true); result.set(bin, offset + 8);
+  return result;
+}
+/**
+ * GLB whose declared BIN buffer carries bytes no bufferView covers, either in
+ * a tail past the last view or in an interior gap between two live views.
+ * Both bufferViews stay accessor-referenced, so only coverage rules catch it.
+ */
+function glbWithUncoveredBin(metadataValue: Record<string, unknown>, options: { binLength: number; indexViewOffset: number; smuggleAt: number }): Uint8Array {
+  const { binLength, indexViewOffset, smuggleAt } = options;
+  const json = {
+    asset: { version: "2.0" },
+    buffers: [{ byteLength: binLength }],
+    bufferViews: [{ buffer: 0, byteOffset: 0, byteLength: 36 }, { buffer: 0, byteOffset: indexViewOffset, byteLength: 12 }],
+    accessors: [
+      { bufferView: 0, componentType: 5126, count: 3, type: "VEC3" },
+      { bufferView: 1, componentType: 5125, count: 3, type: "SCALAR" },
+    ],
+    meshes: [{ primitives: [{ attributes: { POSITION: 0 }, indices: 1, mode: 4, material: 0 }] }],
+    materials: [{}], textures: [], extras: { urbanDigitalTwin: metadataValue },
+  };
+  const jsonBytes = chunk(new TextEncoder().encode(JSON.stringify(json)));
+  const bin = new Uint8Array(binLength);
+  bin.set([0xff, 0xd8, 0xff, 0xe0], smuggleAt); // JPEG SOI/APP0 in uncovered bytes.
+  const total = 12 + 8 + jsonBytes.length + 8 + bin.length;
   const result = new Uint8Array(total); const view = new DataView(result.buffer);
   view.setUint32(0, 0x46546c67, true); view.setUint32(4, 2, true); view.setUint32(8, total, true);
   view.setUint32(12, jsonBytes.length, true); view.setUint32(16, 0x4e4f534a, true); result.set(jsonBytes, 20);
@@ -265,6 +298,81 @@ describe("multi-LOD immutable assembly", () => {
     const leakedValue = JSON.parse(new TextDecoder().decode(tileset(["../assets/building-1-lod0.glb", "../assets/building-1-lod1.glb"]))) as { root: { children: Array<Record<string, unknown>> } };
     leakedValue.root.children[0]!.contents = [{ uri: "../../private/secret.glb" }]; const leakedTiles = new TextEncoder().encode(JSON.stringify(leakedValue));
     const publicLeak = await fixture({ audience: "public", tileset: leakedTiles }); expect((await replayMultiLodAssembly(publicLeak.manifest, publicLeak.contents)).ok).toBe(false);
+  });
+
+  it("rejects embedded imagery in public and intake-linked packages while private packages keep it", async () => {
+    // One embedded PNG that no used material references: measured textureCount
+    // stays 0, so only the structural gate can catch it.
+    const embedImage = (json: Record<string, unknown>) => {
+      (json.bufferViews as Array<Record<string, unknown>>).push({ buffer: 0, byteOffset: 0, byteLength: 4 });
+      json.images = [{ bufferView: 2, mimeType: "image/png" }];
+      json.textures = [{ source: 0 }];
+    };
+    const withImage = () => glb(metadata("lod-0"), { mutateJson: embedImage });
+
+    const publicPackage = await fixture({ audience: "public", lod0: withImage() });
+    const publicReplay = await replayMultiLodAssembly(publicPackage.manifest, publicPackage.contents);
+    expect(publicReplay.ok).toBe(false);
+    if (publicReplay.ok) throw new Error("public package with an embedded image must fail closed");
+    expect(publicReplay.issues.some((entry) => entry.message === ASSEMBLY_ISSUE_EMBEDDED_IMAGE_FORBIDDEN)).toBe(true);
+
+    const privatePackage = await fixture({ lod0: withImage() });
+    expect((await replayMultiLodAssembly(privatePackage.manifest, privatePackage.contents)).ok).toBe(true);
+
+    const intakeLinked = await fixture({ lod0: withImage() });
+    const intakeReplay = await replayMultiLodAssembly(intakeLinked.manifest, intakeLinked.contents, { requireTextureFreeAssembly: true });
+    expect(intakeReplay.ok).toBe(false);
+    if (intakeReplay.ok) throw new Error("intake-linked package with an embedded image must fail closed");
+    expect(intakeReplay.issues.some((entry) => entry.message === ASSEMBLY_ISSUE_EMBEDDED_IMAGE_FORBIDDEN)).toBe(true);
+
+    const declaredTexture = clone((await fixture({ audience: "public" })).manifest);
+    declaredTexture.assets[0]!.lods[0]!.quality = { triangleCount: 1, materialCount: 1, textureCount: 1, budgets: { maxTriangles: 2, maxMaterials: 1, maxTextures: 1 } };
+    const declaredResult = validateMultiLodAssembly(declaredTexture);
+    expect(declaredResult.ok).toBe(false);
+    if (declaredResult.ok) throw new Error("public package declaring a texture must fail closed");
+    expect(declaredResult.issues).toContainEqual({ path: "$.assets[0].lods[0].quality.textureCount", message: ASSEMBLY_ISSUE_DECLARED_TEXTURE_FORBIDDEN });
+  });
+
+  it("still admits a clean texture-free public package", async () => {
+    const clean = await fixture({ audience: "public" });
+    expect((await replayMultiLodAssembly(clean.manifest, clean.contents)).ok).toBe(true);
+  });
+
+  it("rejects imagery smuggled through an unreferenced bufferView, a BIN tail, or an interior gap", async () => {
+    // Variant 1: bytes reachable only through a bufferView no accessor reads.
+    const unreferencedView = (json: Record<string, unknown>) => {
+      (json.bufferViews as Array<Record<string, unknown>>).push({ buffer: 0, byteOffset: 0, byteLength: 48 });
+    };
+    const viewSmuggle = await fixture({ audience: "public", lod0: glb(metadata("lod-0"), { mutateJson: unreferencedView }) });
+    const viewResult = await replayMultiLodAssembly(viewSmuggle.manifest, viewSmuggle.contents);
+    expect(viewResult.ok).toBe(false);
+    if (viewResult.ok) throw new Error("unreferenced bufferView must fail closed");
+    expect(viewResult.issues.some((entry) => entry.message === ASSEMBLY_ISSUE_UNREFERENCED_BUFFER_VIEW_FORBIDDEN)).toBe(true);
+
+    // Variant 2: bytes in a declared BIN tail that no bufferView covers.
+    const tailLayout = { binLength: 2096, indexViewOffset: 36, smuggleAt: 48 };
+    const tailSmuggle = await fixture({ audience: "public", lod0: glbWithUncoveredBin(metadata("lod-0"), tailLayout) });
+    const tailResult = await replayMultiLodAssembly(tailSmuggle.manifest, tailSmuggle.contents);
+    expect(tailResult.ok).toBe(false);
+    if (tailResult.ok) throw new Error("uncovered BIN tail must fail closed");
+    expect(tailResult.issues.some((entry) => entry.message === ASSEMBLY_ISSUE_BUFFER_TAIL_FORBIDDEN)).toBe(true);
+
+    // Variant 3: two accessor-referenced views at [0,36) and [2036,2048) with
+    // 2000 uncovered interior bytes. A maximum-extent rule would admit this.
+    const gapLayout = { binLength: 2048, indexViewOffset: 2036, smuggleAt: 36 };
+    const gapSmuggle = await fixture({ audience: "public", lod0: glbWithUncoveredBin(metadata("lod-0"), gapLayout) });
+    const gapResult = await replayMultiLodAssembly(gapSmuggle.manifest, gapSmuggle.contents);
+    expect(gapResult.ok).toBe(false);
+    if (gapResult.ok) throw new Error("uncovered interior BIN gap must fail closed");
+    expect(gapResult.issues.some((entry) => entry.message === ASSEMBLY_ISSUE_BUFFER_GAP_FORBIDDEN)).toBe(true);
+
+    // All three variants remain legal in a private package.
+    const privateView = await fixture({ lod0: glb(metadata("lod-0"), { mutateJson: unreferencedView }) });
+    expect((await replayMultiLodAssembly(privateView.manifest, privateView.contents)).ok).toBe(true);
+    const privateTail = await fixture({ lod0: glbWithUncoveredBin(metadata("lod-0"), tailLayout) });
+    expect((await replayMultiLodAssembly(privateTail.manifest, privateTail.contents)).ok).toBe(true);
+    const privateGap = await fixture({ lod0: glbWithUncoveredBin(metadata("lod-0"), gapLayout) });
+    expect((await replayMultiLodAssembly(privateGap.manifest, privateGap.contents)).ok).toBe(true);
   });
 
   it("rejects LOD membership drift and silhouette budget promotion", async () => {

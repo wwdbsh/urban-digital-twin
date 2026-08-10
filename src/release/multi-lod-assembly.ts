@@ -11,6 +11,26 @@ export const MULTI_LOD_ASSEMBLY_LIMITS = {
   nodes: 200_000, scenes: 10_000, tileNodes: 200_000, tileDepth: 32,
 } as const;
 
+/**
+ * Stable issue codes for the texture-free (no-embedded-image) partition gate.
+ * Embedded imagery is the one payload that can carry a face or a plate past
+ * every metadata-level rights check, so public packages must not contain any.
+ */
+export const ASSEMBLY_ISSUE_DECLARED_TEXTURE_FORBIDDEN = "embedded-image-gate/declared-texture-forbidden: a texture-free assembly cannot declare a nonzero measured texture count." as const;
+export const ASSEMBLY_ISSUE_EMBEDDED_IMAGE_FORBIDDEN = "embedded-image-gate/embedded-image-forbidden: a texture-free assembly cannot embed glTF images or textures." as const;
+export const ASSEMBLY_ISSUE_UNREFERENCED_BUFFER_VIEW_FORBIDDEN = "embedded-image-gate/unreferenced-buffer-view-forbidden: a texture-free assembly cannot declare a bufferView no accessor reads." as const;
+export const ASSEMBLY_ISSUE_BUFFER_TAIL_FORBIDDEN = "embedded-image-gate/buffer-tail-forbidden: a texture-free assembly cannot declare BIN bytes outside its covered bufferView extent." as const;
+export const ASSEMBLY_ISSUE_BUFFER_GAP_FORBIDDEN = "embedded-image-gate/buffer-gap-forbidden: a texture-free assembly cannot leave an uncovered gap between declared bufferViews." as const;
+
+export interface MultiLodAssemblyPolicy {
+  /**
+   * Forces the texture-free gate for a package whose lineage includes
+   * intake-derived evidence. Public packages are always gated; this flag can
+   * only add enforcement, never remove it.
+   */
+  requireTextureFreeAssembly?: boolean;
+}
+
 export type AssemblyAudience = "private" | "public";
 export type ComponentTruthTier = "generated" | "evidence-backed" | "absent" | "not-applicable";
 export interface ImmutablePin { id: string; checksumSha256: string }
@@ -140,7 +160,12 @@ function canonicalManifest(manifest: MultiLodAssemblyManifest): MultiLodAssembly
 export function serializeMultiLodAssembly(manifest: MultiLodAssemblyManifest): string { return `${stableSerialize(canonicalManifest(manifest))}\n`; }
 export function multiLodAssemblyFingerprint(manifest: MultiLodAssemblyManifest): string { return domainSeparatedSha256("urban-digital-twin/multi-lod-assembly/1.0", canonicalManifest(manifest)); }
 
-export function validateMultiLodAssembly(value: unknown): AssemblyValidation {
+/** Public packages are always texture-free; the policy flag can only add enforcement. */
+function requiresTextureFreeAssembly(audience: AssemblyAudience, policy?: MultiLodAssemblyPolicy): boolean {
+  return audience === "public" || policy?.requireTextureFreeAssembly === true;
+}
+
+export function validateMultiLodAssembly(value: unknown, policy?: MultiLodAssemblyPolicy): AssemblyValidation {
   const issues: AssemblyIssue[] = [];
   if (!rec(value)) return { ok: false, issues: [{ path: "$", message: "Assembly manifest must be an object." }] };
   exact(value, ["schemaVersion", "packageId", "audience", "generatedAt", "immutable", "release", "baseIdentitySet", "ownershipLedger", "cells", "assets", "artifacts", "tilesetRef", "declaredTotalBytes"], "$", issues);
@@ -148,6 +173,7 @@ export function validateMultiLodAssembly(value: unknown): AssemblyValidation {
   if (!text(value.packageId)) issue(issues, "$.packageId", "Package ID is required.");
   if (value.audience !== "private" && value.audience !== "public") issue(issues, "$.audience", "Audience must be private or public.");
   const audience: AssemblyAudience = value.audience === "public" ? "public" : "private";
+  const textureFree = requiresTextureFreeAssembly(audience, policy);
   if (!iso(value.generatedAt)) issue(issues, "$.generatedAt", "Canonical UTC timestamp is required.");
   if (value.immutable !== true) issue(issues, "$.immutable", "Assembly must declare immutability.");
   if (!rec(value.release)) issue(issues, "$.release", "Pinned exterior release identity is required.");
@@ -225,6 +251,7 @@ export function validateMultiLodAssembly(value: unknown): AssemblyValidation {
           exact(lodRaw.quality.budgets, ["maxTriangles", "maxMaterials", "maxTextures"], `${lodPath}.quality.budgets`, issues);
           for (const [count, budget] of [["triangleCount", "maxTriangles"], ["materialCount", "maxMaterials"], ["textureCount", "maxTextures"]] as const) if (!integer(lodRaw.quality[count]) || !integer(lodRaw.quality.budgets[budget]) || lodRaw.quality[count] > lodRaw.quality.budgets[budget]) issue(issues, `${lodPath}.quality.${count}`, "Measured count must fit its safe budget.");
         }
+        if (textureFree && lodRaw.quality.textureCount !== 0) issue(issues, `${lodPath}.quality.textureCount`, ASSEMBLY_ISSUE_DECLARED_TEXTURE_FORBIDDEN);
         if (integer(lodRaw.quality.triangleCount) && lodRaw.quality.triangleCount > previousTriangles) issue(issues, `${lodPath}.quality.triangleCount`, "Near-to-far detail must not increase."); else if (integer(lodRaw.quality.triangleCount)) previousTriangles = lodRaw.quality.triangleCount;
       }
       if (lodIndex === 0 && lodRaw.silhouette !== null) issue(issues, `${lodPath}.silhouette`, "Finest LOD has no transition silhouette measurement.");
@@ -458,8 +485,36 @@ function counts(json: Record<string, unknown>): { triangleCount: number; materia
   const materials = Array.isArray(json.materials) ? json.materials : []; for (const id of materialIds) collect(materials[id]);
   return { triangleCount: triangles, materialCount: materialIds.size, textureCount: textureIds.size };
 }
-function validateGlbBinding(parsed: ParsedGlb, asset: AssemblyAsset, lod: AssemblyLod): void {
+/**
+ * Closes every route by which raw imagery can ride inside a texture-free GLB.
+ * Declared `textureCount` only sees textures reachable from a used material, so
+ * an unreferenced image, an unreferenced bufferView, or a BIN tail outside all
+ * declared views would otherwise carry a face or a plate past every gate.
+ */
+function validateTextureFreeGlb(json: Record<string, unknown>): void {
+  if ((Array.isArray(json.images) && json.images.length > 0) || (Array.isArray(json.textures) && json.textures.length > 0)) throw new Error(ASSEMBLY_ISSUE_EMBEDDED_IMAGE_FORBIDDEN);
+  const views = json.bufferViews as Array<Record<string, unknown>>;
+  const accessors = json.accessors as Array<Record<string, unknown>>;
+  const referenced = new Set(accessors.map((accessor) => accessor.bufferView as number));
+  if (views.some((_, index) => !referenced.has(index))) throw new Error(ASSEMBLY_ISSUE_UNREFERENCED_BUFFER_VIEW_FORBIDDEN);
+  // Union coverage, not maximum extent: a maximum would leave an unreferenced
+  // interior gap between two legitimate views free to carry raw imagery.
+  const ordered = [...views].sort((left, right) => (((left.byteOffset as number | undefined) ?? 0) - ((right.byteOffset as number | undefined) ?? 0)));
+  let covered = 0;
+  for (const [index, view] of ordered.entries()) {
+    const offset = (view.byteOffset as number | undefined) ?? 0;
+    if (index === 0 && offset !== 0) throw new Error(ASSEMBLY_ISSUE_BUFFER_GAP_FORBIDDEN);
+    // Allow only the 4-byte alignment slack a conforming GLB writer emits.
+    if (offset - covered > 3) throw new Error(ASSEMBLY_ISSUE_BUFFER_GAP_FORBIDDEN);
+    covered = Math.max(covered, offset + (view.byteLength as number));
+  }
+  const declared = (json.buffers as Array<Record<string, unknown>>)[0]!.byteLength as number;
+  if (declared !== Math.ceil(covered / 4) * 4) throw new Error(ASSEMBLY_ISSUE_BUFFER_TAIL_FORBIDDEN);
+}
+
+function validateGlbBinding(parsed: ParsedGlb, asset: AssemblyAsset, lod: AssemblyLod, textureFree: boolean): void {
   const metadata = glbMetadata(parsed.json);
+  if (textureFree) validateTextureFreeGlb(parsed.json);
   const expected = { canonicalFeatureId: asset.canonicalFeatureId, lodId: lod.lodId, ownerCellId: asset.ownerCellId, inventoryId: asset.inventoryId, inventoryHashSha256: asset.inventoryHashSha256, evidenceShardId: asset.evidenceShardId, truthTiers: [...asset.truthTiers].sort(compareText), sourceDates: asset.sourceDates, predecessor: asset.predecessor, uncertainty: asset.uncertainty, planHashSha256: asset.source.kind === "facade-plan" ? asset.source.planHashSha256 : asset.source.assetManifestChecksumSha256 };
   if (stableSerialize({ ...metadata, truthTiers: [...metadata.truthTiers].sort(compareText) }) !== stableSerialize(expected)) throw new Error("GLB canonical metadata differs from the immutable assembly manifest.");
   if (stableSerialize(counts(parsed.json)) !== stableSerialize({ triangleCount: lod.quality.triangleCount, materialCount: lod.quality.materialCount, textureCount: lod.quality.textureCount })) throw new Error("GLB topology/material/texture counts differ from declared quality.");
@@ -514,8 +569,9 @@ function validateTileset(bytes: Uint8Array, manifest: MultiLodAssemblyManifest):
 }
 async function sha256Bytes(bytes: Uint8Array): Promise<string> { const digest = await globalThis.crypto.subtle.digest("SHA-256", bytes as Uint8Array<ArrayBuffer>); return Array.from(new Uint8Array(digest), (part) => part.toString(16).padStart(2, "0")).join(""); }
 
-export async function replayMultiLodAssembly(manifest: MultiLodAssemblyManifest, contents: ReadonlyMap<string, Uint8Array>): Promise<AssemblyValidation<AssemblyReplay>> {
-  const structural = validateMultiLodAssembly(manifest); if (!structural.ok) return structural;
+export async function replayMultiLodAssembly(manifest: MultiLodAssemblyManifest, contents: ReadonlyMap<string, Uint8Array>, policy?: MultiLodAssemblyPolicy): Promise<AssemblyValidation<AssemblyReplay>> {
+  const structural = validateMultiLodAssembly(manifest, policy); if (!structural.ok) return structural;
+  const textureFree = requiresTextureFreeAssembly(structural.value.audience, policy);
   const issues: AssemblyIssue[] = []; const declared = new Map(manifest.artifacts.map((artifact) => [artifact.relativeRef, artifact]));
   const lodBindings = new Map<string, { asset: AssemblyAsset; lod: AssemblyLod }>();
   for (const asset of manifest.assets) for (const lod of asset.lods) {
@@ -529,7 +585,7 @@ export async function replayMultiLodAssembly(manifest: MultiLodAssemblyManifest,
     if (bytes.byteLength !== artifact.byteSize || await sha256Bytes(bytes) !== artifact.checksumSha256) { issue(issues, `contents.${artifact.relativeRef}`, "Artifact byte/hash accounting failed."); continue; }
     const next = add(total, bytes.byteLength); if (next === null || next > MULTI_LOD_ASSEMBLY_LIMITS.totalBytes) { issue(issues, "contents", "Verified byte accounting overflowed."); continue; } total = next;
     if (artifact.ownerCellId) { const cellNext = add(cellByteTotals.get(artifact.ownerCellId) ?? 0, bytes.byteLength); if (cellNext === null) issue(issues, `contents.${artifact.relativeRef}`, "Cell bytes overflowed."); else cellByteTotals.set(artifact.ownerCellId, cellNext); }
-    try { if (artifact.role === "tileset-json") tilesetBytes = bytes; else { const binding = lodBindings.get(artifact.relativeRef); if (!binding) throw new Error("GLB has no asset/LOD binding."); validateGlbBinding(parseGlbV2(bytes), binding.asset, binding.lod); } } catch (error) { issue(issues, `contents.${artifact.relativeRef}`, error instanceof Error ? error.message : "Artifact validation failed."); }
+    try { if (artifact.role === "tileset-json") tilesetBytes = bytes; else { const binding = lodBindings.get(artifact.relativeRef); if (!binding) throw new Error("GLB has no asset/LOD binding."); validateGlbBinding(parseGlbV2(bytes), binding.asset, binding.lod, textureFree); } } catch (error) { issue(issues, `contents.${artifact.relativeRef}`, error instanceof Error ? error.message : "Artifact validation failed."); }
     verified.push({ relativeRef: artifact.relativeRef, byteSize: bytes.byteLength, checksumSha256: artifact.checksumSha256 });
   }
   if (total !== manifest.declaredTotalBytes) issue(issues, "contents", "Verified total differs from the manifest.");
