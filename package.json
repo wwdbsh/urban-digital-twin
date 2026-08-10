@@ -26,6 +26,7 @@
     "tile:benchmark": "node --experimental-strip-types scripts/run-tile-benchmark.mjs",
     "tile:validate": "node --experimental-strip-types scripts/validate-tile-package.mjs",
     "asset:fixture": "node --experimental-strip-types scripts/run-asset-package-fixture.mjs",
+    "multi-lod:validate": "node --experimental-strip-types scripts/validate-multi-lod-assembly.mjs",
     "offline:ingest": "node --experimental-strip-types scripts/run-offline-ingest.mjs",
     "citywide:acquire:dohmh": "node --experimental-strip-types scripts/acquire-manhattan-citywide-dohmh-snapshot.mjs",
     "citywide:acquire:buildings": "node --experimental-strip-types scripts/acquire-manhattan-citywide-buildings.mjs",
