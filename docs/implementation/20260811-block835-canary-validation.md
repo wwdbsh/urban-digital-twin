@@ -13,8 +13,8 @@ Predecessor record: [T008 canary implementation](20260811-block835-exterior-cana
 
 Committed evidence inventory:
 [`data/block835-canary-validation-20260811/evidence-inventory.json`](../../data/block835-canary-validation-20260811/evidence-inventory.json)
-(SHA-256 `6dba074be924af6658846eb675ec55e115a0ea28b8833cae200d156c7e187462`,
-35 files). The raw evidence lives untracked under
+(SHA-256 `e18bcf89dc7e9936a2c422d3b5d5e93fdee906af564a04e2e520c61a2b14ae6e`,
+38 files after the 2026-08-11 post-merge perf addendum). The raw evidence lives untracked under
 `artifacts/block835-canary-validation-20260811/`; the inventory keeps its hashes
 checkable after that tree is removed.
 
@@ -286,8 +286,25 @@ Focus could not be obtained via `orca tab switch`, `orca click`, `window.focus()
 or `orca open`.
 
 Publishing a frame time from a 15 FPS throttle would be a fabricated
-measurement. Both frame-time rows below are therefore **explicit failures —
-not measured**, and no median or p95 is quoted anywhere in this record.
+measurement. Both frame-time rows were therefore recorded as **explicit
+failures — not measured** when this record was first written.
+
+**Resolved post-merge (2026-08-11): the F3 environment blocker was cleared** by
+running the same production build in a dedicated desktop Chrome instance on the
+reference machine, launched with a CDP debugging port and brought to the
+foreground via `Page.bringToFront` (no extension, no remote browser). The probe
+observed `documentHasFocus: true` before and after every accepted run and
+self-invalidated one earlier run when focus changed mid-collection — the
+integrity gate this record relies on. Measured results now populate rows 4 and
+18 below; raw payloads are `json/perf-exploration-cdp-chrome.json`
+(sha256 `bd760b84…`) and `json/perf-inspection-cdp-chrome.json`
+(sha256 `e1011eea…`).
+
+Declared measurement environment (recorded from the accepted runs): production
+build (`VITE_BLOCK835_PROBE=1`), Chrome 151 on macOS, viewport **1728×920 CSS px
+at devicePixelRatio 2** (built-in display, ~128 Hz refresh estimate,
+droppedFrameRatio 0). This is **not a 1440p-class 2560×1440 CSS viewport**; the
+1440p scope item remains partially met and the viewport is declared as measured.
 
 ## Criteria table
 
@@ -296,10 +313,10 @@ an explicit failure, never an assumed pass.
 
 | # | Criterion (GOAL.md) | Verdict | Evidence |
 | ---: | --- | --- | --- |
-| 1 | Block 835 proves partition, generated-vs-real model, multi-LOD, native selection, comparison, performance, rollback (:180-182) | **partial — decomposed** | Umbrella row; it is exactly as strong as rows 2-20. Row 2 now passes with correction, so the remaining blockers are row 4 (frame-time, not measured) and row 18's memory-growth third. Both are blocked by the same environment limitation (F3), not by the release. |
+| 1 | Block 835 proves partition, generated-vs-real model, multi-LOD, native selection, comparison, performance, rollback (:180-182) | **partial — decomposed** | Umbrella row; it is exactly as strong as rows 2-20. Row 2 passes with correction and row 4 now passes measured (post-merge, F3 cleared). Remaining blockers: row 3 (mobile disclosure, unmet) and row 18's memory third (bounded method cannot certify; GC-controlled re-run required). |
 | 2 | Accepted facade composition, openings, entrances, material classes, roofline, truth labelling at ≈10 m or farther (:185-188) | **pass with correction** | F2 found this failing (0/14 at every derived level pose) and the authorised fix corrects it: all **8/8** poses of the committed level path `block835-canary-facade-v1` now render **14/14**, closest camera-to-facade **13 m**, every pose ≥10 m and recomputable from committed plan bytes (`json/level-facade-path-postfix.json`, `screenshots/j05-level-*.png`). Composition, openings, banding, setback and roofline are shown at a level pitch-0 facade view in `screenshots/j06-level-facade-esb-doitt-778052-200m-pitch0.png` and in close detail in `screenshots/j03-canary-facade-0{1..4}-oblique.png`. Bounded by F4: the derived *close* poses render but do not each frame their target, so no per-pose composition claim is made. |
 | 3 | Mobile keeps navigation/picking/details/provenance/deep links at lower LOD with explicit lower-LOD status (:189-190) | **EXPLICIT FAILURE — unmet, not implemented** | Confirmed absent from the codebase. No mobile LOD policy or disclosure exists. Not implemented here (out of scope); recorded as an open gap. |
-| 4 | Exploration median ≤16.7 ms / p95 ≤25 ms; inspection median ≤33.3 ms / p95 ≤45 ms after 1 s settle (:191-193) | **EXPLICIT FAILURE — not measured** | F3, unchanged by the F2 fix. rAF throttled to a 65.2 ms median with `hasFocus:false`; the probe refused (`waiting-for-focus`). No frame-time number is claimed. Evaluator and budgets are implemented and unit-tested (`block835CanaryBudgetVerdict`), and a missing measurement is coded to fail, never pass. **Re-running this row requires a focusable 1440p-class desktop browser** — an environment that grants `document.hasFocus()` and does not throttle `requestAnimationFrame`. It is an environment blocker, not a release defect. |
+| 4 | Exploration median ≤16.7 ms / p95 ≤25 ms; inspection median ≤33.3 ms / p95 ≤45 ms after 1 s settle (:191-193) | **PASS — measured post-merge (2026-08-11)** | F3 blocker cleared (see above). Focused production-build runs on the declared environment, 1 s settle, 8 poses × 60 samples × 4 repeats (1,920 accepted samples per profile), closest camera-to-facade 13 m: **exploration median 8.3 ms / p95 8.9 ms** (budgets 16.7/25) and **inspection median 8.3 ms / p95 8.7 ms** (budgets 33.3/45); droppedFrameRatio 0 at a ~128 Hz refresh estimate. One earlier run was self-invalidated by the probe when focus changed mid-collection and is retained as `json/perf-exploration-invalidated-focus-flap.json` evidence of the integrity gate; run count including it is disclosed. rAF-quantization caveat applies (fast-refresh display, so the budget margin is real, not quantization-pinned). Raw: `json/perf-{exploration,inspection}-cdp-chrome.json`. |
 | 5 | Profile switch preserves feature ownership, URL, details, provenance, release identity (:194-195) | **pass** | `json/profile-switch-{before-exploration,after-inspection}.json`. Across the switch: `featureId` `doitt:102705`, release origin, `cell:manhattan:block-835 · cell-release:…:v1`, truth tier `generated` and confidence all identical. Only the profile and LOD changed — `lod_1 6bac3b59…` → `lod_0 16046eae…`, both matching `assemblies.json` exactly. URL gained `exteriorProfile=inspection`. |
 | 6 | Component inventory per class; no grammar-required placeholder blank walls in the ≈10 m views (:204-206) | **pass** | `screenshots/j03-canary-facade-04-oblique.png` shows facade bands, window recesses, setback decks, cornices, roof equipment and a water-tank prism on legs. The level pitch-0 view `screenshots/j06-level-facade-esb-doitt-778052-200m-pitch0.png` shows continuous floor banding and a setback across the full facade. No blank placeholder wall appears on any visible surface in either. |
 | 7 | Generated storefronts expose zero tenant, logo, trade-dress, occupancy, operating-status or signage claims (:207-208) | **pass** | Details panel carries the V2 uncertainty verbatim: "…does not assert real-world facade, setback, balcony, fire-escape, water-tank or signage accuracy, nor any tenant, brand or text." Package is texture-free and glyph-free by construction (T008). No tenant or sign text appears in any screenshot. |
@@ -313,7 +330,7 @@ an explicit failure, never an assumed pass.
 | 15 | Self-captured evidence with personal identifiers never ships in runtime textures or public artifacts (:97-99) | **N/A by construction** | The package is texture-free and imagery-free: 0 textures per asset, `runtimeTexture: false` on all 14 building details, `evidence: []` on every shard. No capture exists that could carry a face or plate. Cited from the T008 record rather than re-derived. |
 | 16 | Each geographic wave can be disabled independently, restoring the previous verified representation (:225) | **pass** | `screenshots/j04-disabled-base-massing.png`. Removing `exteriorCells` removes the exterior streaming section entirely (`hasExteriorStreamingSection: false`), disables the profile controls, and the scene returns to plain flat-topped base massing with the base release note unchanged. |
 | 17 | Canary, rollback, partition, cold load, deep links, Back/Forward and isolated failure journeys pass in a real browser (:228) | **pass with caveat** | Cold load: `screenshots/j01-cold-load-overview.png` — a first load with no toggle reaches the pinned default snapshot over the real citywide/civic base. Deep links + Back/Forward: row 10. Unknown canary deep link degrades loudly: "Exterior canary snapshot `snapshot` is not available: release … publishes no canary heads. The default pinned snapshot was used instead." (`canaryHeads` is empty by design; the opt-in mechanism is the `exteriorCells` parameter.) Isolated failure, three faults, app alive and search present in all three: `assembly-pin` → "Assembly package … failed closed: `$.cells[0].cellRelease.logicalId` Unexpected field. Exterior streaming was disabled; the existing base/exterior state was left unchanged."; `head-checksum` → "Pinned exterior snapshot … checksum does not match its public root declaration."; `one-glb` at inspection → "Exterior cell `cell:manhattan:block-835` failed verification (checksum-mismatch). Its pinned fallback is the base identity set …, which carries no exterior geometry, so the existing verified base massing is shown for this cell." Caveat: default activation is deferred to T010 and was not exercised. |
-| 18 | ≤8 active exterior requests, ≤256 MiB compressed exterior cache, no monotonic retained-memory growth over repeated paths (:229-230) | **partial — 2 of 3 pass, memory FAILS** | `json/request-concurrency-breakdown.json`, from real `PerformanceResourceTiming` overlap: peak concurrency **6** across all release data (citywide 4, civic 1, exterior cells 3) — **≤8 pass**. Exterior bytes **3,708,440** (≈3.5 MiB) against 256 MiB — **pass**. Non-release browser load (bundle, Cesium workers) peaks at 44 and is outside this budget; it is reported, not counted. **Monotonic growth: EXPLICIT FAILURE — not measured**, because the repeated-path harness runs inside the probe, which refuses without focus (F3). **Re-running it requires a focusable 1440p-class desktop browser**; it is an environment blocker, not a release defect. A single-traverse heap reading of 149,720,843 bytes is recorded but proves nothing about growth. |
+| 18 | ≤8 active exterior requests, ≤256 MiB compressed exterior cache, no monotonic retained-memory growth over repeated paths (:229-230) | **partial — 2 of 3 pass, memory FAILS** | `json/request-concurrency-breakdown.json`, from real `PerformanceResourceTiming` overlap: peak concurrency **6** across all release data (citywide 4, civic 1, exterior cells 3) — **≤8 pass**. Exterior bytes **3,708,440** (≈3.5 MiB) against 256 MiB — **pass**. Non-release browser load (bundle, Cesium workers) peaks at 44 and is outside this budget; it is reported, not counted. **Monotonic growth: measured post-merge, NOT SATISFIED as written** — the focused CDP-Chrome runs sampled JS heap once per repeat (4 samples/profile) and detected first-half→second-half growth of **+28.8 % (exploration) / +32.4 % (inspection)**, above the 0.1 noise band. The bounded-method caveat is decisive here: `performance.memory` JS heap with **no forced collection opportunity** cannot distinguish not-yet-collected garbage from retained growth, and the Goal criterion is scoped to growth "after eviction and collection opportunity". The measurement is recorded honestly (raw in `json/perf-*-cdp-chrome.json`); this method **cannot certify the criterion either way**, so the row's memory third is carried as an open item requiring a GC-controlled measurement (e.g. a Chrome launch with `--js-flags=--expose-gc`), not as a proven leak and not as a pass. The probe's own exterior-scoped counters passed: peak concurrency 4 ≤ 8, peak exterior cache 555,740 bytes ≤ 256 MiB, consistent with the earlier `PerformanceResourceTiming` evidence. |
 | 19 | Every wave starts as an opt-in canary; default only after gates and explicit promotion (:160-162) | **pass** | Opt-in preserved. Streaming activates only with `?exteriorCells=manhattan-exterior-cells-20260811`; without it there is no exterior state at all (row 16). `index.json` still has `canaryHeads: []`, `localOnly: true`, `runtimeExternalNetwork: false`. No default-activation change was made. |
 | 20 | Rollback restores the previous verified mapping without deleting or mutating immutable releases (:164-166) | **pass — two truthfully-labelled halves** | **Browser half:** disabling the release restores base massing (row 16). The browser cannot resolve `20260810` as an active head and this is not pretended otherwise. **Ledger half:** `json/predecessor-checksum-verification.json` — all **14** per-asset predecessor pins `manhattan-esb-block-reference-20260810:doitt:*:lod_0` verified against the actual 20260810 bytes, **0 mismatches**; the cell predecessor `manhattan-esb-block-exterior-pilot-20260805` verified at `4a84ddbb…`; the head checksum recomputed from the snapshot file and matched. **Zero mutation:** `json/git-zero-mutation-proof.txt` — `git diff` over `public/data` and `data` is empty and no untracked file was added under `public/data`. |
 
@@ -321,19 +338,22 @@ an explicit failure, never an assumed pass.
 
 | Verdict | Count | Rows |
 | --- | ---: | --- |
-| pass | 10 | 5, 6, 7, 8, 9, 12, 16, 19, 20 (+ row 2 counted under correction below) |
+| pass | 10 | 4 (measured post-merge), 5, 6, 7, 8, 9, 12, 16, 19, 20 |
 | pass with correction / caveat / disclosure | 5 | 2, 10, 13, 14, 17 |
 | N/A with reason | 1 | 15 |
 | partial | 3 | 1, 11, 18 |
-| **EXPLICIT FAILURE** | **2** | **3 (mobile lower-LOD disclosure), 4 (frame-time budgets)** |
+| **EXPLICIT FAILURE** | **1** | **3 (mobile lower-LOD disclosure)** |
 
-Precisely: 9 rows pass outright (5, 6, 7, 8, 9, 12, 16, 19, 20), 5 pass with a
-correction, caveat or disclosure (2, 10, 13, 14, 17), 1 is N/A by construction
-(15), 3 are partial (1, 11, 18), and 2 are explicit failures (3, 4).
+Precisely (after the 2026-08-11 post-merge measurement): 10 rows pass outright
+(4, 5, 6, 7, 8, 9, 12, 16, 19, 20), 5 pass with a correction, caveat or
+disclosure (2, 10, 13, 14, 17), 1 is N/A by construction (15), 3 are partial
+(1, 11, 18), and 1 is an explicit failure (3).
 
-Row 18 additionally contains an explicit failure on its memory-growth third.
-Row 1 cannot pass while row 4 and row 18's memory third do not — both blocked by
-the same environment limitation (F3), not by the release.
+Row 18's memory-growth third is now measured but **cannot be certified either
+way** by the bounded JS-heap method (growth above the noise band with no
+collection opportunity — see the row); it stays an open item requiring a
+GC-controlled re-run. Row 1 remains partial exactly because of row 3 and row
+18's memory third; the frame-time blocker is resolved.
 
 ## Honesty disclosures
 
@@ -343,13 +363,16 @@ the same environment limitation (F3), not by the release.
 - **Frame-time quantization.** The evaluator carries the caveat that
   `requestAnimationFrame` is quantized to the display refresh, so a 60 Hz median
   of ~16.67 ms would mean "no frame dropped", not "measured headroom" — the
-  dropped-frame ratio is the discriminating number. This caveat is implemented
-  and unit-tested even though F3 meant no frame time was ever recorded.
+  dropped-frame ratio is the discriminating number. The accepted post-merge runs
+  measured on a ~128 Hz display with droppedFrameRatio 0, so the reported
+  medians reflect real headroom rather than refresh quantization.
 - **Heap claim is bounded.** `performance.memory` reports the JS heap only, with
   no way to force a collection from page script; native GPU and decoded-texture
   retention are invisible. The verdict type says so in a `boundedClaim` field.
-- **Viewport.** 1097 × 894 CSS px, not 1440p-class. Every scale-dependent row is
-  marked partial.
+- **Viewport.** Journey evidence: 1097 × 894 CSS px (Orca embedded browser).
+  Post-merge perf runs: 1728 × 920 CSS px at devicePixelRatio 2 (dedicated
+  desktop Chrome). Neither is 1440p-class; every scale-dependent row is marked
+  partial and the actual viewports are declared.
 - **Pointer input.** Picking used script-dispatched pointer events into the real
   Cesium canvas, because the embedded tab takes no OS focus. The pick pipeline is
   the product's own; the input is not OS-level.
@@ -402,9 +425,12 @@ literally byte-identical.
 
 ## What this validation does not claim
 
-It does not claim any frame-time budget is met or missed, because no honest
-frame time was obtainable (F3). It does not claim retained memory is stable
-across repeated paths. It does not claim 1440p-class behaviour, mobile
+Frame-time budgets are now claimed as measured (post-merge, focused
+production-build runs on the declared environment) — but only for that
+environment; no other hardware class is claimed. It does not claim retained
+memory is stable across repeated paths: the bounded JS-heap method observed
+above-noise growth without a collection opportunity and cannot certify the
+criterion either way. It does not claim 1440p-class behaviour, mobile
 behaviour, real keyboard traversal, or reduced-motion behaviour. It does not
 claim validated facade composition at each individual derived close pose (F4) —
 only that the canary renders at all eight, and that composition is sound in the

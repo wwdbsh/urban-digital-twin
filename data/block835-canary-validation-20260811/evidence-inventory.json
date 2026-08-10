@@ -1,184 +1,199 @@
 {
-  "schemaVersion": "1.0",
-  "inventoryId": "block835-canary-validation-20260811",
-  "note": "Hashes of the untracked real-browser evidence produced by the T009 Block 835 canary validation, including the post-fix re-run of finding F2 and the re-run after the F2 bound was gated on a horizon-stretched attitude. The raw files live under artifacts/block835-canary-validation-20260811/ in the validation worktree and are not committed; these hashes stay checkable after that tree is removed. The inventory hashes every evidence file except itself.",
-  "artifactRoot": "artifacts/block835-canary-validation-20260811",
-  "fileCount": 35,
-  "files": [
-    {
-      "path": "json/accessibility-probe.json",
-      "bytes": 511,
-      "sha256": "995e4e2f88ae1ab62cb17563fa4642011079192e49195af63a1ee0aeec25366c"
-    },
-    {
-      "path": "json/git-zero-mutation-proof.txt",
-      "bytes": 639,
-      "sha256": "be9489f54a7159b7124e425d9624ead936ce5e5ba86ba9d8d8ce500a044b7e8f"
-    },
-    {
-      "path": "json/level-facade-path-n1-gate.json",
-      "bytes": 2834,
-      "sha256": "20eb26e74893534d8e149cbacd563f3b75e5cf7c6f2af629ef6525fa295bcfd5"
-    },
-    {
-      "path": "json/level-facade-path-postfix.json",
-      "bytes": 1306,
-      "sha256": "494299a7588b4e36fd26b2fad816d71eb7d56d07eccfcc5c32d6aa30afb3f065"
-    },
-    {
-      "path": "json/partition-audit-harness-build.json",
-      "bytes": 24194,
-      "sha256": "d66763f09ebd4bc5d2b7fe4a1bb3f1390a9c166f907ac157e94c132a47ec1859"
-    },
-    {
-      "path": "json/perf-probe-exploration-refusal.json",
-      "bytes": 2196,
-      "sha256": "5d90158d3cdb03b5654fc89db15b937f854732030df5ecb6096b2790496750a7"
-    },
-    {
-      "path": "json/postfix-profile-after-inspection.json",
-      "bytes": 879,
-      "sha256": "c96fd6850001e24b4bbcd928a28722b6a566c0c1b130ee12a65f18cb48c28313"
-    },
-    {
-      "path": "json/postfix-profile-before-exploration.json",
-      "bytes": 883,
-      "sha256": "54ee367f8fb2a88f83821fe6bb6202a0c94933dbb5ca410620d515553731b363"
-    },
-    {
-      "path": "json/predecessor-chain.json",
-      "bytes": 1909,
-      "sha256": "93f4ca2865d7b95c5e45750ec1e2e001f163ede8c1a2d1885b0096039073e53a"
-    },
-    {
-      "path": "json/predecessor-checksum-verification.json",
-      "bytes": 1064,
-      "sha256": "a6d15bc0625e38f2ad9b228133463bc1513a951e6cedd4940b5ba847b93df6e8"
-    },
-    {
-      "path": "json/profile-switch-after-inspection.json",
-      "bytes": 879,
-      "sha256": "46969bf3ca81e671d46593e463961409475981edc40eccf1b8f616e11148c726"
-    },
-    {
-      "path": "json/profile-switch-before-exploration.json",
-      "bytes": 883,
-      "sha256": "4e9efe6b222d691c92e32a5f6b1589b6dd003d7047b1d814ac948799ff607614"
-    },
-    {
-      "path": "json/raf-throttle-evidence.json",
-      "bytes": 320,
-      "sha256": "69b8c87eba611072d1cfa8d70bd44347772af6a0a0183e595b489776d91a4dba"
-    },
-    {
-      "path": "json/request-concurrency-breakdown.json",
-      "bytes": 251,
-      "sha256": "dd6af2ae8ae4d4585b653e3c6b5e5ea7dc854de816219194b961f10a227c76a0"
-    },
-    {
-      "path": "json/rollback-ledger-verification.json",
-      "bytes": 882,
-      "sha256": "b8370734a66125df95987f850038a9b18280843616b74f68dceb3721b918a96c"
-    },
-    {
-      "path": "json/runtime-requests-cache.json",
-      "bytes": 277,
-      "sha256": "5436878ec99750549475acbf257b9f8501f8004a48cc0b2a18cb17080e5c9e55"
-    },
-    {
-      "path": "partition-audit-default-build.json",
-      "bytes": 24194,
-      "sha256": "879e0761f7f67eaaa6d5333f6723566a8efd8b6d99f132817b1c2f64d5ed285b"
-    },
-    {
-      "path": "partition-audit-project-source.json",
-      "bytes": 1867,
-      "sha256": "fe6c0ae436462302aaba07225c5b012c1fa9b779f6139aa3921b2c3c3c2f1d21"
-    },
-    {
-      "path": "screenshots/j01-cold-load-overview.png",
-      "bytes": 667265,
-      "sha256": "173ee636812be0ae2f8d96aa1dd9a886de9a2694e1cc8c26f77c205876095d80"
-    },
-    {
-      "path": "screenshots/j02-facade-01-doitt262867-south-13m.png",
-      "bytes": 297026,
-      "sha256": "8275f698f6c6a0959f043dcd0b1e5f401024b2db19f2b4e30b59ad191375f40a"
-    },
-    {
-      "path": "screenshots/j03-canary-facade-01-oblique.png",
-      "bytes": 311651,
-      "sha256": "717370e7386711ea53e68f3c9c95b1514fe0bbcc0508ef97b93ef2b2a49d7ec5"
-    },
-    {
-      "path": "screenshots/j03-canary-facade-02-oblique.png",
-      "bytes": 242033,
-      "sha256": "bc890c75174a55a1e4f3ae873cb92c057218629eb3a63d0b5f701950ddf29199"
-    },
-    {
-      "path": "screenshots/j03-canary-facade-03-oblique.png",
-      "bytes": 272638,
-      "sha256": "694ed28872be3ca8a80ec1dc2d1bcd02aa90cc8306a189a817396754ebc713fb"
-    },
-    {
-      "path": "screenshots/j03-canary-facade-04-oblique.png",
-      "bytes": 264830,
-      "sha256": "313bc0fb5c6835c744ccf9f1dcfef12c102209ea1972159b12e378529e9998e5"
-    },
-    {
-      "path": "screenshots/j04-disabled-base-massing.png",
-      "bytes": 477531,
-      "sha256": "6f7dc888e25a7cca7b631f3c6ee6d6ba11e0c5f2df2e3c5d3208ac4b230da77c"
-    },
-    {
-      "path": "screenshots/j05-level-canary-facade-01-doitt-262867-13m.png",
-      "bytes": 341448,
-      "sha256": "9fcc2a1404457971a555ec86ac4f9fdc98ae04bc5e317700e6953431b8d4cc49"
-    },
-    {
-      "path": "screenshots/j05-level-canary-facade-02-doitt-102705-23m.png",
-      "bytes": 187323,
-      "sha256": "4e8f752da6f25ab726a2a4b29bbd35d2287ba1aad4f2aa2b34496c0a4a49e07a"
-    },
-    {
-      "path": "screenshots/j05-level-canary-facade-03-doitt-498980-28m.png",
-      "bytes": 209446,
-      "sha256": "b4cc5bfa29903d5769dc82d16c81942b22a5d929b17a76674d2865df19683948"
-    },
-    {
-      "path": "screenshots/j05-level-canary-facade-04-doitt-39969-37m.png",
-      "bytes": 217055,
-      "sha256": "62c29fc720008cad47d1ba8b5ee1f42e857fcaac0c680615ea98ec5a59e6af58"
-    },
-    {
-      "path": "screenshots/j05-level-canary-facade-05-doitt-835659-36m.png",
-      "bytes": 208930,
-      "sha256": "31412cb8c2a3ea0d1f7b04712af519b2341cfa92a0d8f01d5401ca14f3bbe6b0"
-    },
-    {
-      "path": "screenshots/j05-level-canary-facade-06-doitt-584049-36m.png",
-      "bytes": 205883,
-      "sha256": "9195dec2783ba66beeed54afdea7bf598f378e6320c6310d12584bf6d08d5454"
-    },
-    {
-      "path": "screenshots/j05-level-canary-facade-07-doitt-982383-25m.png",
-      "bytes": 192433,
-      "sha256": "11cb6fa7bab39e81ca98824142d763b9e877d08f7e8417e9cd89af3d87f544aa"
-    },
-    {
-      "path": "screenshots/j05-level-canary-facade-08-doitt-778052-25m.png",
-      "bytes": 450360,
-      "sha256": "8af7d336609993a2629955901297873dc657ac5a9adbee98560116053859b553"
-    },
-    {
-      "path": "screenshots/j06-level-facade-esb-doitt-778052-200m-pitch0.png",
-      "bytes": 210440,
-      "sha256": "3c7ef7f179cb9e41c8909980f29b6f418a4dcdc9ba6a4ed9b646971121e832dc"
-    },
-    {
-      "path": "screenshots/n1-gate-level-canary-facade-01-doitt-262867.png",
-      "bytes": 366299,
-      "sha256": "918d44ea4006f8fb7022c43cd9b86cd3b25e6a6603484daeb6e2bcaf11bfe979"
-    }
-  ]
+ "artifactRoot": "artifacts/block835-canary-validation-20260811",
+ "fileCount": 38,
+ "files": [
+  {
+   "bytes": 511,
+   "path": "json/accessibility-probe.json",
+   "sha256": "995e4e2f88ae1ab62cb17563fa4642011079192e49195af63a1ee0aeec25366c"
+  },
+  {
+   "bytes": 639,
+   "path": "json/git-zero-mutation-proof.txt",
+   "sha256": "be9489f54a7159b7124e425d9624ead936ce5e5ba86ba9d8d8ce500a044b7e8f"
+  },
+  {
+   "bytes": 2834,
+   "path": "json/level-facade-path-n1-gate.json",
+   "sha256": "20eb26e74893534d8e149cbacd563f3b75e5cf7c6f2af629ef6525fa295bcfd5"
+  },
+  {
+   "bytes": 1306,
+   "path": "json/level-facade-path-postfix.json",
+   "sha256": "494299a7588b4e36fd26b2fad816d71eb7d56d07eccfcc5c32d6aa30afb3f065"
+  },
+  {
+   "bytes": 24194,
+   "path": "json/partition-audit-harness-build.json",
+   "sha256": "d66763f09ebd4bc5d2b7fe4a1bb3f1390a9c166f907ac157e94c132a47ec1859"
+  },
+  {
+   "bytes": 3599,
+   "path": "json/perf-exploration-cdp-chrome.json",
+   "sha256": "bd760b8402ad23ecfa1116eeadc00b744cdfa4db06ca48443d572be14de4a6a2"
+  },
+  {
+   "bytes": 2746,
+   "path": "json/perf-exploration-invalidated-focus-flap.json",
+   "sha256": "a391a2707b5c1802048756b0f6b37a587e4703a059cc9cac04a04076d519f6ac"
+  },
+  {
+   "bytes": 3566,
+   "path": "json/perf-inspection-cdp-chrome.json",
+   "sha256": "e1011eea85fc80e2625d6dc0463b27afc7ca69126110fa95a22ec2114da1b063"
+  },
+  {
+   "bytes": 2196,
+   "path": "json/perf-probe-exploration-refusal.json",
+   "sha256": "5d90158d3cdb03b5654fc89db15b937f854732030df5ecb6096b2790496750a7"
+  },
+  {
+   "bytes": 879,
+   "path": "json/postfix-profile-after-inspection.json",
+   "sha256": "c96fd6850001e24b4bbcd928a28722b6a566c0c1b130ee12a65f18cb48c28313"
+  },
+  {
+   "bytes": 883,
+   "path": "json/postfix-profile-before-exploration.json",
+   "sha256": "54ee367f8fb2a88f83821fe6bb6202a0c94933dbb5ca410620d515553731b363"
+  },
+  {
+   "bytes": 1909,
+   "path": "json/predecessor-chain.json",
+   "sha256": "93f4ca2865d7b95c5e45750ec1e2e001f163ede8c1a2d1885b0096039073e53a"
+  },
+  {
+   "bytes": 1064,
+   "path": "json/predecessor-checksum-verification.json",
+   "sha256": "a6d15bc0625e38f2ad9b228133463bc1513a951e6cedd4940b5ba847b93df6e8"
+  },
+  {
+   "bytes": 879,
+   "path": "json/profile-switch-after-inspection.json",
+   "sha256": "46969bf3ca81e671d46593e463961409475981edc40eccf1b8f616e11148c726"
+  },
+  {
+   "bytes": 883,
+   "path": "json/profile-switch-before-exploration.json",
+   "sha256": "4e9efe6b222d691c92e32a5f6b1589b6dd003d7047b1d814ac948799ff607614"
+  },
+  {
+   "bytes": 320,
+   "path": "json/raf-throttle-evidence.json",
+   "sha256": "69b8c87eba611072d1cfa8d70bd44347772af6a0a0183e595b489776d91a4dba"
+  },
+  {
+   "bytes": 251,
+   "path": "json/request-concurrency-breakdown.json",
+   "sha256": "dd6af2ae8ae4d4585b653e3c6b5e5ea7dc854de816219194b961f10a227c76a0"
+  },
+  {
+   "bytes": 882,
+   "path": "json/rollback-ledger-verification.json",
+   "sha256": "b8370734a66125df95987f850038a9b18280843616b74f68dceb3721b918a96c"
+  },
+  {
+   "bytes": 277,
+   "path": "json/runtime-requests-cache.json",
+   "sha256": "5436878ec99750549475acbf257b9f8501f8004a48cc0b2a18cb17080e5c9e55"
+  },
+  {
+   "bytes": 24194,
+   "path": "partition-audit-default-build.json",
+   "sha256": "879e0761f7f67eaaa6d5333f6723566a8efd8b6d99f132817b1c2f64d5ed285b"
+  },
+  {
+   "bytes": 1867,
+   "path": "partition-audit-project-source.json",
+   "sha256": "fe6c0ae436462302aaba07225c5b012c1fa9b779f6139aa3921b2c3c3c2f1d21"
+  },
+  {
+   "bytes": 667265,
+   "path": "screenshots/j01-cold-load-overview.png",
+   "sha256": "173ee636812be0ae2f8d96aa1dd9a886de9a2694e1cc8c26f77c205876095d80"
+  },
+  {
+   "bytes": 297026,
+   "path": "screenshots/j02-facade-01-doitt262867-south-13m.png",
+   "sha256": "8275f698f6c6a0959f043dcd0b1e5f401024b2db19f2b4e30b59ad191375f40a"
+  },
+  {
+   "bytes": 311651,
+   "path": "screenshots/j03-canary-facade-01-oblique.png",
+   "sha256": "717370e7386711ea53e68f3c9c95b1514fe0bbcc0508ef97b93ef2b2a49d7ec5"
+  },
+  {
+   "bytes": 242033,
+   "path": "screenshots/j03-canary-facade-02-oblique.png",
+   "sha256": "bc890c75174a55a1e4f3ae873cb92c057218629eb3a63d0b5f701950ddf29199"
+  },
+  {
+   "bytes": 272638,
+   "path": "screenshots/j03-canary-facade-03-oblique.png",
+   "sha256": "694ed28872be3ca8a80ec1dc2d1bcd02aa90cc8306a189a817396754ebc713fb"
+  },
+  {
+   "bytes": 264830,
+   "path": "screenshots/j03-canary-facade-04-oblique.png",
+   "sha256": "313bc0fb5c6835c744ccf9f1dcfef12c102209ea1972159b12e378529e9998e5"
+  },
+  {
+   "bytes": 477531,
+   "path": "screenshots/j04-disabled-base-massing.png",
+   "sha256": "6f7dc888e25a7cca7b631f3c6ee6d6ba11e0c5f2df2e3c5d3208ac4b230da77c"
+  },
+  {
+   "bytes": 341448,
+   "path": "screenshots/j05-level-canary-facade-01-doitt-262867-13m.png",
+   "sha256": "9fcc2a1404457971a555ec86ac4f9fdc98ae04bc5e317700e6953431b8d4cc49"
+  },
+  {
+   "bytes": 187323,
+   "path": "screenshots/j05-level-canary-facade-02-doitt-102705-23m.png",
+   "sha256": "4e8f752da6f25ab726a2a4b29bbd35d2287ba1aad4f2aa2b34496c0a4a49e07a"
+  },
+  {
+   "bytes": 209446,
+   "path": "screenshots/j05-level-canary-facade-03-doitt-498980-28m.png",
+   "sha256": "b4cc5bfa29903d5769dc82d16c81942b22a5d929b17a76674d2865df19683948"
+  },
+  {
+   "bytes": 217055,
+   "path": "screenshots/j05-level-canary-facade-04-doitt-39969-37m.png",
+   "sha256": "62c29fc720008cad47d1ba8b5ee1f42e857fcaac0c680615ea98ec5a59e6af58"
+  },
+  {
+   "bytes": 208930,
+   "path": "screenshots/j05-level-canary-facade-05-doitt-835659-36m.png",
+   "sha256": "31412cb8c2a3ea0d1f7b04712af519b2341cfa92a0d8f01d5401ca14f3bbe6b0"
+  },
+  {
+   "bytes": 205883,
+   "path": "screenshots/j05-level-canary-facade-06-doitt-584049-36m.png",
+   "sha256": "9195dec2783ba66beeed54afdea7bf598f378e6320c6310d12584bf6d08d5454"
+  },
+  {
+   "bytes": 192433,
+   "path": "screenshots/j05-level-canary-facade-07-doitt-982383-25m.png",
+   "sha256": "11cb6fa7bab39e81ca98824142d763b9e877d08f7e8417e9cd89af3d87f544aa"
+  },
+  {
+   "bytes": 450360,
+   "path": "screenshots/j05-level-canary-facade-08-doitt-778052-25m.png",
+   "sha256": "8af7d336609993a2629955901297873dc657ac5a9adbee98560116053859b553"
+  },
+  {
+   "bytes": 210440,
+   "path": "screenshots/j06-level-facade-esb-doitt-778052-200m-pitch0.png",
+   "sha256": "3c7ef7f179cb9e41c8909980f29b6f418a4dcdc9ba6a4ed9b646971121e832dc"
+  },
+  {
+   "bytes": 366299,
+   "path": "screenshots/n1-gate-level-canary-facade-01-doitt-262867.png",
+   "sha256": "918d44ea4006f8fb7022c43cd9b86cd3b25e6a6603484daeb6e2bcaf11bfe979"
+  }
+ ],
+ "inventoryId": "block835-canary-validation-20260811",
+ "note": "Hashes of the untracked real-browser evidence produced by the T009 Block 835 canary validation, including the post-fix re-run of finding F2 and the re-run after the F2 bound was gated on a horizon-stretched attitude. The raw files live under artifacts/block835-canary-validation-20260811/ in the validation worktree and are not committed; these hashes stay checkable after that tree is removed. The inventory hashes every evidence file except itself. Post-merge addendum (2026-08-11): three perf evidence files added after the F3 focus blocker was cleared in a dedicated CDP-driven desktop Chrome; the invalidated focus-flap run is retained as integrity-gate evidence.",
+ "schemaVersion": "1.0"
 }
