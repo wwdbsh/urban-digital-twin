@@ -1,9 +1,9 @@
 {
   "schemaVersion": "1.0",
   "inventoryId": "block835-canary-validation-20260811",
-  "note": "Hashes of the untracked real-browser evidence produced by the T009 Block 835 canary validation. The raw files live under artifacts/block835-canary-validation-20260811/ in the validation worktree and are not committed; these hashes stay checkable after that tree is removed. The inventory hashes every evidence file except itself.",
+  "note": "Hashes of the untracked real-browser evidence produced by the T009 Block 835 canary validation, including the post-fix re-run of finding F2. The raw files live under artifacts/block835-canary-validation-20260811/ in the validation worktree and are not committed; these hashes stay checkable after that tree is removed. The inventory hashes every evidence file except itself.",
   "artifactRoot": "artifacts/block835-canary-validation-20260811",
-  "fileCount": 21,
+  "fileCount": 33,
   "files": [
     {
       "path": "json/accessibility-probe.json",
@@ -16,14 +16,29 @@
       "sha256": "be9489f54a7159b7124e425d9624ead936ce5e5ba86ba9d8d8ce500a044b7e8f"
     },
     {
+      "path": "json/level-facade-path-postfix.json",
+      "bytes": 1306,
+      "sha256": "494299a7588b4e36fd26b2fad816d71eb7d56d07eccfcc5c32d6aa30afb3f065"
+    },
+    {
       "path": "json/partition-audit-harness-build.json",
       "bytes": 24194,
-      "sha256": "565aa96283afade0adbb9ebebb5f631d8eb20630348bdbd9caa18935ec892bd3"
+      "sha256": "d66763f09ebd4bc5d2b7fe4a1bb3f1390a9c166f907ac157e94c132a47ec1859"
     },
     {
       "path": "json/perf-probe-exploration-refusal.json",
       "bytes": 2196,
       "sha256": "5d90158d3cdb03b5654fc89db15b937f854732030df5ecb6096b2790496750a7"
+    },
+    {
+      "path": "json/postfix-profile-after-inspection.json",
+      "bytes": 879,
+      "sha256": "c96fd6850001e24b4bbcd928a28722b6a566c0c1b130ee12a65f18cb48c28313"
+    },
+    {
+      "path": "json/postfix-profile-before-exploration.json",
+      "bytes": 883,
+      "sha256": "54ee367f8fb2a88f83821fe6bb6202a0c94933dbb5ca410620d515553731b363"
     },
     {
       "path": "json/predecessor-chain.json",
@@ -109,6 +124,51 @@
       "path": "screenshots/j04-disabled-base-massing.png",
       "bytes": 477531,
       "sha256": "6f7dc888e25a7cca7b631f3c6ee6d6ba11e0c5f2df2e3c5d3208ac4b230da77c"
+    },
+    {
+      "path": "screenshots/j05-level-canary-facade-01-doitt-262867-13m.png",
+      "bytes": 341448,
+      "sha256": "9fcc2a1404457971a555ec86ac4f9fdc98ae04bc5e317700e6953431b8d4cc49"
+    },
+    {
+      "path": "screenshots/j05-level-canary-facade-02-doitt-102705-23m.png",
+      "bytes": 187323,
+      "sha256": "4e8f752da6f25ab726a2a4b29bbd35d2287ba1aad4f2aa2b34496c0a4a49e07a"
+    },
+    {
+      "path": "screenshots/j05-level-canary-facade-03-doitt-498980-28m.png",
+      "bytes": 209446,
+      "sha256": "b4cc5bfa29903d5769dc82d16c81942b22a5d929b17a76674d2865df19683948"
+    },
+    {
+      "path": "screenshots/j05-level-canary-facade-04-doitt-39969-37m.png",
+      "bytes": 217055,
+      "sha256": "62c29fc720008cad47d1ba8b5ee1f42e857fcaac0c680615ea98ec5a59e6af58"
+    },
+    {
+      "path": "screenshots/j05-level-canary-facade-05-doitt-835659-36m.png",
+      "bytes": 208930,
+      "sha256": "31412cb8c2a3ea0d1f7b04712af519b2341cfa92a0d8f01d5401ca14f3bbe6b0"
+    },
+    {
+      "path": "screenshots/j05-level-canary-facade-06-doitt-584049-36m.png",
+      "bytes": 205883,
+      "sha256": "9195dec2783ba66beeed54afdea7bf598f378e6320c6310d12584bf6d08d5454"
+    },
+    {
+      "path": "screenshots/j05-level-canary-facade-07-doitt-982383-25m.png",
+      "bytes": 192433,
+      "sha256": "11cb6fa7bab39e81ca98824142d763b9e877d08f7e8417e9cd89af3d87f544aa"
+    },
+    {
+      "path": "screenshots/j05-level-canary-facade-08-doitt-778052-25m.png",
+      "bytes": 450360,
+      "sha256": "8af7d336609993a2629955901297873dc657ac5a9adbee98560116053859b553"
+    },
+    {
+      "path": "screenshots/j06-level-facade-esb-doitt-778052-200m-pitch0.png",
+      "bytes": 210440,
+      "sha256": "3c7ef7f179cb9e41c8909980f29b6f418a4dcdc9ba6a4ed9b646971121e832dc"
     }
   ]
 }

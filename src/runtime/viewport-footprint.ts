@@ -145,6 +145,53 @@ export function viewportFootprintFromGroundPoints(
   return options.fallbackBounds ? viewportFootprintFromBounds(options.fallbackBounds) : null;
 }
 
+/**
+ * Bound a ground-ray footprint to the extent the camera could reasonably be
+ * serving, anchored on the camera's own sub-point.
+ *
+ * Why this exists (T009 finding F2). The footprint is sampled by nine globe
+ * pick-rays. At a level or near-level camera attitude the upper rays graze the
+ * horizon, so the sampled bounds stretch for kilometres and their centre lands
+ * far downrange of the camera. Shard selection then ranks candidates by
+ * distance from that displaced centre and truncates to the shard budget, and
+ * the shard the camera is *standing on* falls outside the cut. With no base
+ * building record there is no verified WGS84 anchor, so exterior cells withhold
+ * geometry and a street-level facade view renders nothing. Measured: at a fixed
+ * position, pitch -30 deg drew 14/14 Block 835 buildings while pitch -20 deg and
+ * shallower drew 0/14.
+ *
+ * The bound reuses the already-accepted `fallbackViewportFootprint` extent
+ * rather than inventing a new constant, and it is applied as an
+ * **intersection**: a footprint already inside the bound is returned unchanged,
+ * so this can only ever narrow a horizon-stretched sample, never widen a
+ * legitimate one.
+ *
+ * Deliberately *not* in scope: multi-cell cache pressure and cell-bounds
+ * culling, which ADR 0024 hands forward to T013+. This clamps one camera
+ * sample; it does not schedule the cache.
+ */
+export function boundFootprintToCamera(footprint: ViewportFootprint, camera: CameraPose): ViewportFootprint {
+  const limit = fallbackViewportFootprint(camera).bounds;
+  // The antimeridian case is left alone: intersecting a wrapped arc needs the
+  // two-interval form, and narrowing is an optimisation, not a correctness
+  // requirement. Manhattan never wraps.
+  if (viewportBoundsCrossesAntimeridian(footprint.bounds) || viewportBoundsCrossesAntimeridian(limit)) return footprint;
+  const bounded: ViewportBounds = {
+    west: Math.max(footprint.bounds.west, limit.west),
+    east: Math.min(footprint.bounds.east, limit.east),
+    south: Math.max(footprint.bounds.south, limit.south),
+    north: Math.min(footprint.bounds.north, limit.north),
+  };
+  // A degenerate intersection means the camera sub-point is not inside its own
+  // sampled footprint. Keep the sample rather than invent an empty viewport.
+  if (bounded.west >= bounded.east || bounded.south >= bounded.north) return footprint;
+  if (
+    bounded.west === footprint.bounds.west && bounded.east === footprint.bounds.east &&
+    bounded.south === footprint.bounds.south && bounded.north === footprint.bounds.north
+  ) return footprint;
+  return footprintFromBounds(bounded, viewportBoundsCenter(bounded), footprint.valid, footprint.source);
+}
+
 /** Compatibility-only bootstrap used until Cesium has supplied ground rays. */
 export function fallbackViewportFootprint(camera: CameraPose): ViewportFootprint {
   const radiusLongitude = Math.min(0.12, Math.max(0.006, camera.height / 111_000 * 0.9));

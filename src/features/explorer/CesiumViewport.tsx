@@ -42,6 +42,7 @@ import { publicRealmFeatureToFeature, type Block835PublicRealmFeature, type Load
 import type { ExteriorCellOutcome, ExteriorCellRenderPlan } from "../../runtime/exterior-cell-runtime";
 import type { ExteriorRenderProfile } from "../../runtime/exterior-render-profiles";
 import {
+  boundFootprintToCamera,
   viewportFootprintFromGroundPoints,
   viewportBoundsIntersect,
   type ViewportBounds,
@@ -1146,7 +1147,10 @@ function cameraFootprintForViewer(viewer: Viewer, lastValid: ViewportFootprint |
       groundPoints.push([CesiumMath.toDegrees(cartographic.longitude), CesiumMath.toDegrees(cartographic.latitude)]);
     }
   }
-  return viewportFootprintFromGroundPoints(groundPoints, { lastValid, fallbackBounds: fallbackBoundsForViewer(viewer) });
+  const sampled = viewportFootprintFromGroundPoints(groundPoints, { lastValid, fallbackBounds: fallbackBoundsForViewer(viewer) });
+  // Bound a horizon-stretched sample to the camera's own neighbourhood so the
+  // shard the camera stands on cannot be ranked out of the budget (T009 F2).
+  return sampled ? boundFootprintToCamera(sampled, cameraStateForViewer(viewer)) : sampled;
 }
 
 function primitiveLayerReady(layer: PrimitiveCollection): boolean {

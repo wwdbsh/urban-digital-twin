@@ -13,8 +13,8 @@ Predecessor record: [T008 canary implementation](20260811-block835-exterior-cana
 
 Committed evidence inventory:
 [`data/block835-canary-validation-20260811/evidence-inventory.json`](../../data/block835-canary-validation-20260811/evidence-inventory.json)
-(SHA-256 `3ea0defbfe9ba37482f6319377b6646912e001c4ebe3282723781c31b3595dad`,
-21 files). The raw evidence lives untracked under
+(SHA-256 `cde05b9c2cc9d67f8daa77df9eb0f17ad6f8648f27cb1123b458adf8257c05cd`,
+33 files). The raw evidence lives untracked under
 `artifacts/block835-canary-validation-20260811/`; the inventory keeps its hashes
 checkable after that tree is removed.
 
@@ -26,7 +26,8 @@ validation. This task therefore treats "a unit test passed" as *never*
 sufficient evidence for a user-visible claim. Each row below cites a real
 measurement or is an explicit failure.
 
-**It found a fourth defect the green suite still misses.** See F1.
+**It found two further defects the green suite still missed** (F1, F2), both
+corrected here, plus a harness limitation (F4) that bounds what row 2 claims.
 
 ## Declared reference hardware
 
@@ -139,12 +140,78 @@ that memory, request and component evidence could be gathered against a scene
 that actually contains the canary geometry. Its fixture carries the disclosure
 verbatim and no row below claims the level criterion from it.
 
-A bounded correction is **proposed, not implemented** (it is outside T009's
-scope): clamp or floor the ground-ray footprint at shallow pitch — for example,
-bound the footprint to a maximum ground radius around the camera's own
-sub-point, and always include the shard containing the camera position
-regardless of eviction pressure. That second half alone would have prevented
-this, and it is testable without a browser.
+#### F2 fix (authorised within T009 as an evidence-required correction)
+
+Two surgical halves, both unit-tested, both failing against the pre-fix code:
+
+**(a) Bound the shallow-pitch footprint.** `boundFootprintToCamera`
+(`src/runtime/viewport-footprint.ts`) intersects the nine-ray sample with the
+extent `fallbackViewportFootprint` already declares for that camera. It reuses an
+accepted bound rather than introducing a constant, and because it is an
+*intersection* it can only narrow a horizon-stretched sample — a footprint
+already inside the bound is returned by identity. Applied in
+`cameraFootprintForViewer` (`src/features/explorer/CesiumViewport.tsx`).
+
+**(b) Reserve the camera's own shard.** `retainCameraShards`
+(`src/runtime/citywide-release-runtime.ts`) moves the shards whose bounds contain
+the camera position to the front of the distance ranking before
+`slice(0, maxLoadedShards)`, so budget truncation can never discard them. The
+distance ordering is otherwise preserved exactly, and the LRU cache itself is
+**not** restructured: cross-cell cache pressure and cell-bounds culling remain
+the T013+ concerns ADR 0024 hands forward, and this change does not enter that
+territory.
+
+**Pre-fix proof.** With both functions stubbed to their pre-fix behaviour
+(identity bound, plain truncation), **8 of the 13** pins in
+`src/runtime/shallow-pitch-shard-retention.test.ts` fail — every
+`bounds the footprint at pitch −10/−15/−20 deg` case, the ground-centre drift
+case, the bounded-shard-set case, and all three camera-shard retention cases.
+With the fix, 13/13 pass and the full suite stays green.
+
+**Post-fix browser re-run** (`json/level-facade-path-postfix.json`): the
+committed **level** path now renders at every pose.
+
+| Pose | Building | Camera-to-facade | Pre-fix | Post-fix |
+| --- | --- | ---: | ---: | ---: |
+| `canary-facade-01` | `doitt:262867` | 13 m | 0/14 | **14/14** |
+| `canary-facade-02` | `doitt:102705` | 23 m | 0/14 | **14/14** |
+| `canary-facade-03` | `doitt:498980` | 28 m | 0/14 | **14/14** |
+| `canary-facade-04` | `doitt:39969` | 37 m | 0/14 | **14/14** |
+| `canary-facade-05` | `doitt:835659` | 36 m | 0/14 | **14/14** |
+| `canary-facade-06` | `doitt:584049` | 36 m | 0/14 | **14/14** |
+| `canary-facade-07` | `doitt:982383` | 25 m | 0/14 | **14/14** |
+| `canary-facade-08` | `doitt:778052` | 25 m | 0/14 | **14/14** |
+
+Overlay journeys re-confirmed after the fix, with no regression: picking still
+produces the deterministic overlap chooser (`doitt:102705`, `doitt:584049`);
+independent disable still removes the exterior section entirely; the profile
+switch still preserves `doitt:102705`, the cell-release pin and truth tier while
+swapping `lod_1 6bac3b59…` ↔ `lod_0 16046eae…`
+(`json/postfix-profile-{before-exploration,after-inspection}.json`).
+
+### F4 — the derived close poses do not reliably frame their target
+
+Found while capturing post-fix composition evidence, and recorded because it
+bounds what row 2 may claim. The pose derivation places the camera on the facade
+normal at the declared standoff, but it measures that standoff from the **plan's
+tier-0 OBB half-extent** while the renderer anchors geometry at the **base
+footprint centroid**. Those are different points for an irregular footprint, and
+the derivation also ignores neighbouring buildings. In a block as dense as 835,
+several derived camera positions therefore land inside or immediately behind a
+neighbour's mesh, and the screenshot shows that neighbour's interior back-faces
+rather than the target facade.
+
+This is a **harness-derivation limitation, not a product defect**. It was
+confirmed by an independent check of the camera convention: from 200 m east of
+the Empire State Building at pitch 0, heading 270 frames the tower facade with
+its floor banding and setback edge, and heading 90 correctly shows the opposite
+view — so the heading mapping in the fixture is right, and the close-pose
+framing problem is standoff geometry, not aim.
+
+Consequence for the record: row 2 claims that the canary **renders** at the
+derived ≥10 m level viewpoints, which is measured 8/8. It does **not** claim
+validated facade composition at each derived close pose. Composition evidence is
+cited separately from views that demonstrably frame a facade.
 
 ### F3 — honest frame-time evidence is unattainable in this environment
 
@@ -170,12 +237,12 @@ an explicit failure, never an assumed pass.
 
 | # | Criterion (GOAL.md) | Verdict | Evidence |
 | ---: | --- | --- | --- |
-| 1 | Block 835 proves partition, generated-vs-real model, multi-LOD, native selection, comparison, performance, rollback (:180-182) | **partial — decomposed** | Umbrella row; it is exactly as strong as rows 2-20. Rows 2, 4 and 18(memory) fail, so the umbrella cannot pass. |
-| 2 | Accepted facade composition, openings, entrances, material classes, roofline, truth labelling at ≈10 m or farther (:185-188) | **EXPLICIT FAILURE** | F2. At the derived ≥10 m level poses **0/14** buildings render. Committed path `block835-canary-facade-v1`, closest camera-to-facade **13 m**, every pose ≥10 m and recomputable from committed plan bytes. Geometry *is* correct when the camera pitches down: `screenshots/j03-canary-facade-0{1..4}-oblique.png` show setbacks, window recesses, cornices, entrances and a rooftop water tank. |
+| 1 | Block 835 proves partition, generated-vs-real model, multi-LOD, native selection, comparison, performance, rollback (:180-182) | **partial — decomposed** | Umbrella row; it is exactly as strong as rows 2-20. Row 2 now passes with correction, so the remaining blockers are row 4 (frame-time, not measured) and row 18's memory-growth third. Both are blocked by the same environment limitation (F3), not by the release. |
+| 2 | Accepted facade composition, openings, entrances, material classes, roofline, truth labelling at ≈10 m or farther (:185-188) | **pass with correction** | F2 found this failing (0/14 at every derived level pose) and the authorised fix corrects it: all **8/8** poses of the committed level path `block835-canary-facade-v1` now render **14/14**, closest camera-to-facade **13 m**, every pose ≥10 m and recomputable from committed plan bytes (`json/level-facade-path-postfix.json`, `screenshots/j05-level-*.png`). Composition, openings, banding, setback and roofline are shown at a level pitch-0 facade view in `screenshots/j06-level-facade-esb-doitt-778052-200m-pitch0.png` and in close detail in `screenshots/j03-canary-facade-0{1..4}-oblique.png`. Bounded by F4: the derived *close* poses render but do not each frame their target, so no per-pose composition claim is made. |
 | 3 | Mobile keeps navigation/picking/details/provenance/deep links at lower LOD with explicit lower-LOD status (:189-190) | **EXPLICIT FAILURE — unmet, not implemented** | Confirmed absent from the codebase. No mobile LOD policy or disclosure exists. Not implemented here (out of scope); recorded as an open gap. |
-| 4 | Exploration median ≤16.7 ms / p95 ≤25 ms; inspection median ≤33.3 ms / p95 ≤45 ms after 1 s settle (:191-193) | **EXPLICIT FAILURE — not measured** | F3. rAF throttled to a 65.2 ms median with `hasFocus:false`; the probe refused (`waiting-for-focus`). No frame-time number is claimed. Evaluator and budgets are implemented and unit-tested (`block835CanaryBudgetVerdict`), and a missing measurement is coded to fail, never pass. |
+| 4 | Exploration median ≤16.7 ms / p95 ≤25 ms; inspection median ≤33.3 ms / p95 ≤45 ms after 1 s settle (:191-193) | **EXPLICIT FAILURE — not measured** | F3, unchanged by the F2 fix. rAF throttled to a 65.2 ms median with `hasFocus:false`; the probe refused (`waiting-for-focus`). No frame-time number is claimed. Evaluator and budgets are implemented and unit-tested (`block835CanaryBudgetVerdict`), and a missing measurement is coded to fail, never pass. **Re-running this row requires a focusable 1440p-class desktop browser** — an environment that grants `document.hasFocus()` and does not throttle `requestAnimationFrame`. It is an environment blocker, not a release defect. |
 | 5 | Profile switch preserves feature ownership, URL, details, provenance, release identity (:194-195) | **pass** | `json/profile-switch-{before-exploration,after-inspection}.json`. Across the switch: `featureId` `doitt:102705`, release origin, `cell:manhattan:block-835 · cell-release:…:v1`, truth tier `generated` and confidence all identical. Only the profile and LOD changed — `lod_1 6bac3b59…` → `lod_0 16046eae…`, both matching `assemblies.json` exactly. URL gained `exteriorProfile=inspection`. |
-| 6 | Component inventory per class; no grammar-required placeholder blank walls in the ≈10 m views (:204-206) | **pass with caveat** | `screenshots/j03-canary-facade-04-oblique.png` shows facade bands, window recesses, setback decks, cornices, roof equipment and a water-tank prism on legs; no blank wall appears on any visible surface. Caveat: observed on the oblique path (F2), so this is not evidence for the *level* viewpoint. |
+| 6 | Component inventory per class; no grammar-required placeholder blank walls in the ≈10 m views (:204-206) | **pass** | `screenshots/j03-canary-facade-04-oblique.png` shows facade bands, window recesses, setback decks, cornices, roof equipment and a water-tank prism on legs. The level pitch-0 view `screenshots/j06-level-facade-esb-doitt-778052-200m-pitch0.png` shows continuous floor banding and a setback across the full facade. No blank placeholder wall appears on any visible surface in either. |
 | 7 | Generated storefronts expose zero tenant, logo, trade-dress, occupancy, operating-status or signage claims (:207-208) | **pass** | Details panel carries the V2 uncertainty verbatim: "…does not assert real-world facade, setback, balcony, fire-escape, water-tank or signage accuracy, nor any tenant, brand or text." Package is texture-free and glyph-free by construction (T008). No tenant or sign text appears in any screenshot. |
 | 8 | No accuracy overstatement; generated components carry no real-world accuracy score (:209-212) | **pass** | The only numeric confidence shown is `high (0.96)` on the **base source record**, alongside "Snapshot-relative source record; no unsourced hours, ratings, routing, imagery, or facade claim." The exterior section exposes truth tier `generated` and an uncertainty statement, and no accuracy score. |
 | 9 | Every included building/component has an evidence tier and zero unsupported truth claims (:213-214) | **pass** | Details expose `Truth tiers: generated` plus source dates ("captured 2026-08-04… · updated unknown" — unknown stated as unknown). All 14 cell `buildingDetails` carry `status: available` with an inventory and evidence shard id. |
@@ -187,7 +254,7 @@ an explicit failure, never an assumed pass.
 | 15 | Self-captured evidence with personal identifiers never ships in runtime textures or public artifacts (:97-99) | **N/A by construction** | The package is texture-free and imagery-free: 0 textures per asset, `runtimeTexture: false` on all 14 building details, `evidence: []` on every shard. No capture exists that could carry a face or plate. Cited from the T008 record rather than re-derived. |
 | 16 | Each geographic wave can be disabled independently, restoring the previous verified representation (:225) | **pass** | `screenshots/j04-disabled-base-massing.png`. Removing `exteriorCells` removes the exterior streaming section entirely (`hasExteriorStreamingSection: false`), disables the profile controls, and the scene returns to plain flat-topped base massing with the base release note unchanged. |
 | 17 | Canary, rollback, partition, cold load, deep links, Back/Forward and isolated failure journeys pass in a real browser (:228) | **pass with caveat** | Cold load: `screenshots/j01-cold-load-overview.png` — a first load with no toggle reaches the pinned default snapshot over the real citywide/civic base. Deep links + Back/Forward: row 10. Unknown canary deep link degrades loudly: "Exterior canary snapshot `snapshot` is not available: release … publishes no canary heads. The default pinned snapshot was used instead." (`canaryHeads` is empty by design; the opt-in mechanism is the `exteriorCells` parameter.) Isolated failure, three faults, app alive and search present in all three: `assembly-pin` → "Assembly package … failed closed: `$.cells[0].cellRelease.logicalId` Unexpected field. Exterior streaming was disabled; the existing base/exterior state was left unchanged."; `head-checksum` → "Pinned exterior snapshot … checksum does not match its public root declaration."; `one-glb` at inspection → "Exterior cell `cell:manhattan:block-835` failed verification (checksum-mismatch). Its pinned fallback is the base identity set …, which carries no exterior geometry, so the existing verified base massing is shown for this cell." Caveat: default activation is deferred to T010 and was not exercised. |
-| 18 | ≤8 active exterior requests, ≤256 MiB compressed exterior cache, no monotonic retained-memory growth over repeated paths (:229-230) | **partial — 2 of 3 pass, memory FAILS** | `json/request-concurrency-breakdown.json`, from real `PerformanceResourceTiming` overlap: peak concurrency **6** across all release data (citywide 4, civic 1, exterior cells 3) — **≤8 pass**. Exterior bytes **3,708,440** (≈3.5 MiB) against 256 MiB — **pass**. Non-release browser load (bundle, Cesium workers) peaks at 44 and is outside this budget; it is reported, not counted. **Monotonic growth: EXPLICIT FAILURE — not measured**, because the repeated-path harness runs inside the probe, which refuses without focus (F3). A single-traverse heap reading of 149,720,843 bytes is recorded but proves nothing about growth. |
+| 18 | ≤8 active exterior requests, ≤256 MiB compressed exterior cache, no monotonic retained-memory growth over repeated paths (:229-230) | **partial — 2 of 3 pass, memory FAILS** | `json/request-concurrency-breakdown.json`, from real `PerformanceResourceTiming` overlap: peak concurrency **6** across all release data (citywide 4, civic 1, exterior cells 3) — **≤8 pass**. Exterior bytes **3,708,440** (≈3.5 MiB) against 256 MiB — **pass**. Non-release browser load (bundle, Cesium workers) peaks at 44 and is outside this budget; it is reported, not counted. **Monotonic growth: EXPLICIT FAILURE — not measured**, because the repeated-path harness runs inside the probe, which refuses without focus (F3). **Re-running it requires a focusable 1440p-class desktop browser**; it is an environment blocker, not a release defect. A single-traverse heap reading of 149,720,843 bytes is recorded but proves nothing about growth. |
 | 19 | Every wave starts as an opt-in canary; default only after gates and explicit promotion (:160-162) | **pass** | Opt-in preserved. Streaming activates only with `?exteriorCells=manhattan-exterior-cells-20260811`; without it there is no exterior state at all (row 16). `index.json` still has `canaryHeads: []`, `localOnly: true`, `runtimeExternalNetwork: false`. No default-activation change was made. |
 | 20 | Rollback restores the previous verified mapping without deleting or mutating immutable releases (:164-166) | **pass — two truthfully-labelled halves** | **Browser half:** disabling the release restores base massing (row 16). The browser cannot resolve `20260810` as an active head and this is not pretended otherwise. **Ledger half:** `json/predecessor-checksum-verification.json` — all **14** per-asset predecessor pins `manhattan-esb-block-reference-20260810:doitt:*:lod_0` verified against the actual 20260810 bytes, **0 mismatches**; the cell predecessor `manhattan-esb-block-exterior-pilot-20260805` verified at `4a84ddbb…`; the head checksum recomputed from the snapshot file and matched. **Zero mutation:** `json/git-zero-mutation-proof.txt` — `git diff` over `public/data` and `data` is empty and no untracked file was added under `public/data`. |
 
@@ -195,14 +262,19 @@ an explicit failure, never an assumed pass.
 
 | Verdict | Count | Rows |
 | --- | ---: | --- |
-| pass | 8 | 5, 7, 8, 9, 12, 16, 19, 20 |
-| pass with correction / caveat / disclosure | 5 | 6, 10, 13, 14, 17 |
+| pass | 10 | 5, 6, 7, 8, 9, 12, 16, 19, 20 (+ row 2 counted under correction below) |
+| pass with correction / caveat / disclosure | 5 | 2, 10, 13, 14, 17 |
 | N/A with reason | 1 | 15 |
 | partial | 3 | 1, 11, 18 |
-| **EXPLICIT FAILURE** | **3** | **2 (facade views), 3 (mobile), 4 (frame-time budgets)** |
+| **EXPLICIT FAILURE** | **2** | **3 (mobile lower-LOD disclosure), 4 (frame-time budgets)** |
 
-Row 18 additionally contains an explicit failure on its memory-growth third, and
-row 1 cannot pass while rows 2, 4 and 18 do not.
+Precisely: 9 rows pass outright (5, 6, 7, 8, 9, 12, 16, 19, 20), 5 pass with a
+correction, caveat or disclosure (2, 10, 13, 14, 17), 1 is N/A by construction
+(15), 3 are partial (1, 11, 18), and 2 are explicit failures (3, 4).
+
+Row 18 additionally contains an explicit failure on its memory-growth third.
+Row 1 cannot pass while row 4 and row 18's memory third do not — both blocked by
+the same environment limitation (F3), not by the release.
 
 ## Honesty disclosures
 
@@ -256,24 +328,27 @@ literally byte-identical.
 | --- | --- |
 | `pnpm typecheck` | Pass |
 | `pnpm lint` | Pass, 0 problems |
-| `pnpm test` | Pass — **65 files, 605 tests** (baseline before this task: 61 files, 551 tests) |
+| `pnpm test` | Pass — **66 files, 618 tests** (baseline before this task: 61 files, 551 tests) |
 | `git diff --check` | Clean |
 | `pnpm build` (default) | Pass; probe absent from the bundle; 2 private partitions pruned |
 | `VITE_BLOCK835_PROBE=1 pnpm build` | Pass; probe and both camera-path fixtures present |
 | Partition audit, harness `dist/` | F1 pass after correction (0 private paths / 1478 files); F2 release-data 0, vendor-runtime 2 |
 | Facade path re-derivation | 8 poses, closest camera-to-facade 13 m, every pose ≥10 m |
+| F2 regression pins | 13/13 pass with the fix; **8/13 fail** against stubbed pre-fix behaviour |
+| F2 post-fix browser re-run | 8/8 level poses render 14/14 (pre-fix 0/14) |
 | Predecessor checksums | 14/14 verified against 20260810 bytes, 0 mismatches |
 | Assembly artifact checksums | 29/29 verified against bytes on disk |
 | Blender evidence inventory | `artifacts/blender/` is not present in this worktree (it was worktree-local to ccp-9), so the 133 inner hashes are carried forward as committed evidence and the inventory's own integrity was verified instead: `data/manhattan-esb-block-reference-20260811/blender-evidence-inventory.json` = `9dce17ae67f817553548915509fa57d8df8d0481e3c53ed92297b3f934fd5125`, 133 files, and its recorded `.blend` hash `1594a29e…` matches the T008 record. |
 
 ## What this validation does not claim
 
-It does not claim the Block 835 canary meets the Goal's facade-viewpoint
-criterion — at a level camera it renders nothing (F2). It does not claim any
-frame-time budget is met or missed, because no honest frame time was obtainable
-(F3). It does not claim retained memory is stable across repeated paths. It does
-not claim 1440p-class behaviour, mobile behaviour, real keyboard traversal, or
-reduced-motion behaviour. It does not claim default activation works — that is
+It does not claim any frame-time budget is met or missed, because no honest
+frame time was obtainable (F3). It does not claim retained memory is stable
+across repeated paths. It does not claim 1440p-class behaviour, mobile
+behaviour, real keyboard traversal, or reduced-motion behaviour. It does not
+claim validated facade composition at each individual derived close pose (F4) —
+only that the canary renders at all eight, and that composition is sound in the
+views that frame a facade. It does not claim default activation works — that is
 T010.
 
 What it does establish is that the canary's identity, provenance, partition,
@@ -283,13 +358,12 @@ existed behind a fully green 605-test suite.
 
 ## Recommended next actions
 
-1. Fix F2 before promotion. Bound the shallow-pitch ground-ray footprint and
-   always retain the shard containing the camera's sub-point regardless of
-   eviction pressure. Both halves are unit-testable without a browser, and F2
-   currently blocks the single criterion the canary exists to prove.
-2. Re-run rows 2, 4 and 18(memory) on a focusable 1440p-class desktop browser.
-   The harness is built, gated and tested; it needs an environment that grants
-   `document.hasFocus()`.
+1. Re-run rows 4 and 18(memory) on a **focusable 1440p-class desktop browser** —
+   one that grants `document.hasFocus()` and does not throttle
+   `requestAnimationFrame`. The harness is built, gated and tested; only the
+   environment is missing. These are the last two blockers on row 1.
+2. Re-derive the close facade poses against the base footprint centroid with an
+   open-space check, so F4 no longer bounds row 2's composition claim.
 3. Decide whether the 20260810 `private/` bytes should remain under `public/` at
    all. The build-output prune closes the browser-reachable path, but the source
    tree still stores a private partition inside the public root.
