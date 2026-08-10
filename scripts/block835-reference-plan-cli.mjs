@@ -6,6 +6,7 @@
  *   plans        Regenerate the committed canonical facade plans.
  *   authoring    Emit per-building Blender authoring inputs (plan path + ENU frame).
  *   measurements Convert the Blender silhouette evidence into the committed measurement input.
+ *   evidence     Commit the hashed Blender evidence inventory alongside the plans.
  *   build        Write the immutable multi-LOD package (manifest + private content).
  *   registration Report exported-vs-source massing registration.
  *   determinism  Build twice into scratch roots and compare every artifact byte.
@@ -13,16 +14,18 @@
  * The pinned pilot release is read-only input. Nothing here acquires external
  * data, mutates a pinned release, or admits exterior evidence.
  */
-import { mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
-import { dirname, join, resolve } from "node:path";
+import { mkdir, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
+import { dirname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   BLOCK835_PILOT_RELEASE_ID,
   BLOCK835_REFERENCE_PACKAGE_ID,
   BLOCK835_REFERENCE_GENERATED_AT,
+  BLOCK835_REGISTRATION_METHOD,
   BLOCK835_REGISTRATION_TOLERANCE,
   assembleBlock835ReferencePackage,
   buildBuildingPlan,
+  decidePackageTarget,
   readPilotBuildings,
   roofEquipmentHeightMm,
 } from "../src/release/block835-reference-package.ts";
@@ -143,12 +146,50 @@ async function promoteMeasurements(evidencePath) {
   console.log(JSON.stringify({ ok: true, command: "measurements", buildings: buildings.length, worstDeviationRatio: Math.max(...buildings.map((entry) => entry.deviationRatio)), path: MEASUREMENT_PATH }, null, 2));
 }
 
+/**
+ * Copies the hashed Blender evidence inventory into the committed data
+ * directory so the evidence hashes stay checkable after the untracked
+ * worktree-local `artifacts/` tree is removed.
+ */
+async function promoteEvidenceInventory(sourcePath) {
+  const inventory = JSON.parse(await readFile(sourcePath, "utf8").catch(() => fail(`Blender evidence inventory is required at ${sourcePath}.`)));
+  if (inventory.packageId !== BLOCK835_REFERENCE_PACKAGE_ID || !Array.isArray(inventory.files) || inventory.files.length === 0) fail("Blender evidence inventory does not match the approved package identity.");
+  const target = join(ROOT, "data", BLOCK835_REFERENCE_PACKAGE_ID, "blender-evidence-inventory.json");
+  await mkdir(dirname(target), { recursive: true });
+  await writeFile(target, `${stableSerialize(inventory)}\n`, "utf8");
+  console.log(JSON.stringify({ ok: true, command: "evidence", files: inventory.files.length, path: target }, null, 2));
+}
+
 async function assemble(measurementPath) {
   const { release, releaseChecksumSha256 } = await loadPilot();
   return assembleBlock835ReferencePackage({ release, releaseChecksumSha256, measurements: await loadMeasurements(measurementPath) });
 }
 
+/**
+ * Refuses to recursively delete anything that is not this package's own output.
+ *
+ * `--out` is operator-supplied, and a typo pointing at a pinned immutable
+ * release would otherwise be unrecoverable. A target is only writable when it is
+ * the canonical package directory, or lives under an explicit scratch root, and
+ * any directory that already exists must prove it is this package by carrying a
+ * matching `manifest.json`.
+ */
+async function assertWritableTarget(targetDir) {
+  const found = await stat(targetDir).catch(() => null);
+  const existing = found === null ? "absent" : found.isDirectory() ? "directory" : "file";
+  const decision = decidePackageTarget({
+    targetDir,
+    packageDir: PACKAGE_DIR,
+    scratchRoot: resolve(ROOT, "artifacts"),
+    separator: sep,
+    existing,
+    existingManifest: existing === "directory" ? await readFile(join(targetDir, "manifest.json"), "utf8").catch(() => null) : null,
+  });
+  if (!decision.allowed) fail(decision.reason);
+}
+
 async function writePackage(targetDir, measurementPath) {
+  await assertWritableTarget(targetDir);
   const assembled = await assemble(measurementPath);
   await rm(targetDir, { recursive: true, force: true });
   await mkdir(join(targetDir, "private", "assets"), { recursive: true });
@@ -158,7 +199,7 @@ async function writePackage(targetDir, measurementPath) {
   }
   await writeFile(join(targetDir, "manifest.json"), serializeMultiLodAssembly(assembled.manifest), "utf8");
   await writeFile(join(targetDir, "ownership-ledger.json"), `${stableSerialize(assembled.ownershipLedger)}\n`, "utf8");
-  await writeFile(join(targetDir, "registration.json"), `${stableSerialize({ packageId: BLOCK835_REFERENCE_PACKAGE_ID, tolerance: BLOCK835_REGISTRATION_TOLERANCE, entries: assembled.registration })}\n`, "utf8");
+  await writeFile(join(targetDir, "registration.json"), `${stableSerialize({ packageId: BLOCK835_REFERENCE_PACKAGE_ID, ...BLOCK835_REGISTRATION_METHOD, tolerance: BLOCK835_REGISTRATION_TOLERANCE, entries: assembled.registration })}\n`, "utf8");
   return assembled;
 }
 
@@ -212,12 +253,13 @@ async function main() {
   const measurements = parsed.measurements ? resolve(parsed.measurements) : MEASUREMENT_PATH;
   switch (command) {
     case "plans": return writePlans();
+    case "evidence": return promoteEvidenceInventory(resolve(parsed.evidence ?? join(ROOT, "artifacts", "blender", BLOCK835_REFERENCE_PACKAGE_ID, "evidence-inventory.json")));
     case "measurements": return promoteMeasurements(resolve(parsed.evidence ?? join(ROOT, "artifacts", "blender", BLOCK835_REFERENCE_PACKAGE_ID, "silhouette-measurement.json")));
     case "authoring": return authoringInputs(resolve(parsed.out ?? join(ROOT, "artifacts", "blender", BLOCK835_REFERENCE_PACKAGE_ID, "inputs")));
     case "build": return build(parsed.out ? resolve(parsed.out) : PACKAGE_DIR, measurements);
     case "registration": return registration(measurements);
     case "determinism": return determinism(resolve(parsed.scratch ?? join(ROOT, "artifacts", "block835-reference-determinism")), measurements);
-    default: return fail("Usage: block835-reference-plan-cli.mjs <plans|authoring|measurements|build|registration|determinism> [--out DIR] [--scratch DIR] [--measurements FILE]");
+    default: return fail("Usage: block835-reference-plan-cli.mjs <plans|authoring|measurements|evidence|build|registration|determinism> [--out DIR] [--scratch DIR] [--measurements FILE]");
   }
 }
 

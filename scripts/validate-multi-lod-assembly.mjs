@@ -13,9 +13,19 @@ function args(argv) {
   const result = {};
   for (let index = 0; index < argv.length; index += 1) {
     const token = argv[index]; if (!token?.startsWith("--")) continue;
-    if (BOOLEAN_FLAGS.has(token.slice(2))) { result[token.slice(2)] = true; continue; }
+    // `--flag=value` is accepted for both forms so a boolean switch written
+    // with an explicit value is never silently ignored.
+    const equals = token.indexOf("=");
+    const name = equals === -1 ? token.slice(2) : token.slice(2, equals);
+    const inline = equals === -1 ? null : token.slice(equals + 1);
+    if (BOOLEAN_FLAGS.has(name)) {
+      if (inline === null) { result[name] = true; continue; }
+      if (inline !== "true" && inline !== "false") fail(`Boolean flag --${name} accepts only true or false.`);
+      result[name] = inline === "true"; continue;
+    }
+    if (inline !== null) { if (inline.length === 0) fail(`Missing value for --${name}.`); result[name] = inline; continue; }
     const value = argv[index + 1]; if (!value || value.startsWith("--")) fail(`Missing value for ${token}.`);
-    result[token.slice(2)] = value; index += 1;
+    result[name] = value; index += 1;
   }
   return result;
 }

@@ -41,6 +41,20 @@ export const BLOCK835_OWNERSHIP_LEDGER_ID = "ownership-ledger:manhattan:block-83
 export const BLOCK835_NO_EVIDENCE_SHARD_ID = "evidence-shard:none:block-835-reference-20260810" as const;
 export const BLOCK835_QUALITY_BUDGETS = { maxTriangles: 75_000, maxMaterials: 8, maxTextures: 0 } as const;
 export const BLOCK835_REGISTRATION_TOLERANCE = { horizontalMeters: 0.25, verticalMeters: 0.5 } as const;
+/**
+ * Disclosure carried inside `registration.json`. The report is a build record,
+ * not part of the immutable assembly contract: it is deliberately absent from
+ * `manifest.artifacts[]`, so it is neither checksum-pinned nor replayed by the
+ * multi-LOD validator.
+ */
+export const BLOCK835_REGISTRATION_METHOD = {
+  method: "oriented-bounding-rectangle-registration",
+  contractual: false,
+  referenceGeometry: "Minimum-area oriented bounding rectangle of the DOITT source footprint, not the source polygon itself.",
+  measures: "Pipeline drift only: unit conversion, WGS84-to-ENU anchoring, millimetre rounding and float32 quantisation. It is not a measure of shape fidelity to the source footprint.",
+  verticalReference: "Roof plane of the massing envelope against the sourced heightMeters.",
+  aboveSourcedHeight: "Shipped geometry extends up to 1.2 m above the sourced heightMeters: the roof-equipment component is declared truth tier `generated` by the approved deterministic generator and is authored rather than suppressed.",
+} as const;
 export const BLOCK835_LOD1_GEOMETRIC_ERROR_METERS = 0.2 as const;
 export const BLOCK835_LOD0_MAX_DISTANCE_METERS = 250 as const;
 export const WGS84_METERS_PER_DEGREE_LAT = 111_320 as const;
@@ -397,7 +411,26 @@ export function tessellatePlan(plan: DeterministicFacadePlan, options: { include
   return { quads, materials };
 }
 
-/** Maps plan-local millimetres into the building-anchored ENU metre frame the GLB ships in. */
+/**
+ * Rotates building-anchored ENU (east, north, height) into the +Y-up frame
+ * glTF 2.0 mandates for file content: `(east, height, -north)`.
+ *
+ * 3D Tiles 1.1 places glTF content by applying the implicit y-up-to-z-up
+ * rotation before the tile transform, and the tileset `asset` object is closed
+ * to `version` by the assembly validator, so `gltfUpAxis` cannot be declared to
+ * opt out. Shipping ENU directly in the file would therefore be re-rotated by
+ * the renderer into (east, -height, north) and lay every building on its side.
+ *
+ * Only file bytes are rotated. The tile frame stays z-up ENU, so bounding
+ * volumes, tile transforms and the registration gate all continue to work in
+ * ENU. The mapping has determinant +1, so triangle winding is preserved.
+ */
+export function toGltfYUp(quads: readonly CanonicalGlbQuad[]): CanonicalGlbQuad[] {
+  const map = (corner: Vec3): Vec3 => [corner[0], corner[2], -corner[1]];
+  return quads.map((quad) => ({ materialIndex: quad.materialIndex, corners: [map(quad.corners[0]), map(quad.corners[1]), map(quad.corners[2]), map(quad.corners[3])] }));
+}
+
+/** Maps plan-local millimetres into the building-anchored ENU metre frame. */
 export function planToEnu(context: BuildingPlanContext, quads: readonly CanonicalGlbQuad[]): CanonicalGlbQuad[] {
   const [axisX, axisY] = context.rectangle.axis;
   const [centerX, centerY] = context.rectangle.center;
@@ -468,6 +501,44 @@ export function registrationEntry(context: BuildingPlanContext, exported: readon
     exportedMaxElevationMeters: maximumZ - minimumZ,
     withinTolerance: horizontal <= BLOCK835_REGISTRATION_TOLERANCE.horizontalMeters && vertical <= BLOCK835_REGISTRATION_TOLERANCE.verticalMeters,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Destructive-write guard
+// ---------------------------------------------------------------------------
+
+export interface PackageTargetDecision { allowed: boolean; reason: string }
+
+/**
+ * Decides whether a build target may be recursively deleted and rewritten.
+ *
+ * The build CLI takes an operator-supplied `--out`, and a typo pointing at a
+ * pinned immutable release would be unrecoverable. A target is writable only
+ * when it is the canonical package directory or lives under the explicit
+ * scratch root, and any directory that already exists must prove it belongs to
+ * this package by carrying a matching manifest.
+ *
+ * Pure so the refusal paths are directly testable: the caller supplies the
+ * filesystem facts.
+ */
+export function decidePackageTarget(input: {
+  targetDir: string;
+  packageDir: string;
+  scratchRoot: string;
+  separator: string;
+  existing: "absent" | "file" | "directory";
+  existingManifest: string | null;
+}): PackageTargetDecision {
+  const { targetDir, packageDir, scratchRoot, separator, existing, existingManifest } = input;
+  const withinScratch = targetDir === scratchRoot || targetDir.startsWith(`${scratchRoot}${separator}`);
+  if (targetDir !== packageDir && !withinScratch) return { allowed: false, reason: `Refusing to write outside the package directory or the artifacts scratch root: ${targetDir}` };
+  if (existing === "absent") return { allowed: true, reason: "New target." };
+  if (existing !== "directory") return { allowed: false, reason: `Refusing to replace a non-directory target: ${targetDir}` };
+  if (existingManifest === null) return { allowed: false, reason: `Refusing to delete an existing directory with no ${BLOCK835_REFERENCE_PACKAGE_ID} manifest: ${targetDir}` };
+  let packageId: unknown;
+  try { packageId = (JSON.parse(existingManifest) as { packageId?: unknown }).packageId; } catch { return { allowed: false, reason: `Refusing to delete a directory whose manifest is unreadable: ${targetDir}` }; }
+  if (packageId !== BLOCK835_REFERENCE_PACKAGE_ID) return { allowed: false, reason: `Refusing to delete a directory owned by another package (${String(packageId)}): ${targetDir}` };
+  return { allowed: true, reason: "Target is this package." };
 }
 
 // ---------------------------------------------------------------------------
@@ -562,7 +633,8 @@ export function assembleBlock835ReferencePackage(options: {
         uncertainty: DETERMINISTIC_FACADE_UNCERTAINTY,
         planHashSha256: plan.planHashSha256,
       };
-      const written = writeCanonicalGlb({ quads, materials: tessellated.materials, metadata });
+      // File bytes are +Y up; every other consumer below stays in z-up ENU.
+      const written = writeCanonicalGlb({ quads: toGltfYUp(quads), materials: tessellated.materials, metadata });
       if (written.counts.triangleCount > BLOCK835_QUALITY_BUDGETS.maxTriangles || written.counts.materialCount > BLOCK835_QUALITY_BUDGETS.maxMaterials || written.counts.textureCount !== 0) {
         throw new Error(`Block 835 ${building.canonicalBuildingId} ${lodId} exceeds the approved asset budgets.`);
       }

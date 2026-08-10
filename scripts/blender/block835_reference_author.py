@@ -399,8 +399,14 @@ def reimport_diff(canonical_building_id, lod_id):
             matrix = obj.matrix_world
             for vertex in obj.data.vertices:
                 world = matrix @ vertex.co
-                # glTF ships Y-up; Blender's importer maps (x, y, z) -> (x, -z, y).
-                points.append((world[0], world[2], -world[1]))
+                # No compensation on purpose. The shipped file is +Y up
+                # (east, height, -north) and Blender's importer applies the
+                # glTF y-up-to-z-up mapping (x, y, z) -> (x, -z, y), which
+                # recovers ENU (east, north, height) exactly. Comparing raw
+                # world coordinates therefore ASSERTS the file's up axis: a
+                # z-up file would import lying on its side and fail this diff,
+                # which is the defect Cesium would otherwise render.
+                points.append((world[0], world[1], world[2]))
         authored_points = [tuple(vertex.co) for vertex in authored.data.vertices]
         if not points:
             raise RuntimeError("Re-imported GLB contained no mesh vertices.")
