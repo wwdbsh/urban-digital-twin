@@ -19,8 +19,11 @@ const SHA256_H = [0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x
 function rotateRight(value: number, bits: number): number { return (value >>> bits) | (value << (32 - bits)); }
 
 /** Synchronous SHA-256 retained unchanged from the catalog implementation. */
-export function sha256HexSync(value: string): string {
-  const bytes = new TextEncoder().encode(value); const blockCount = Math.ceil((bytes.length + 9) / 64); const padded = new Uint8Array(blockCount * 64); padded.set(bytes); padded[bytes.length] = 0x80;
+export function sha256HexSync(value: string): string { return sha256HexBytes(new TextEncoder().encode(value)); }
+
+/** Same digest over raw bytes, for artifact payloads that are not valid UTF-8 text. */
+export function sha256HexBytes(bytes: Uint8Array): string {
+  const blockCount = Math.ceil((bytes.length + 9) / 64); const padded = new Uint8Array(blockCount * 64); padded.set(bytes); padded[bytes.length] = 0x80;
   const bitLength = bytes.length * 8; const lengthOffset = padded.length - 8; const high = Math.floor(bitLength / 0x1_0000_0000); const low = bitLength >>> 0;
   padded[lengthOffset] = (high >>> 24) & 0xff; padded[lengthOffset + 1] = (high >>> 16) & 0xff; padded[lengthOffset + 2] = (high >>> 8) & 0xff; padded[lengthOffset + 3] = high & 0xff; padded[lengthOffset + 4] = (low >>> 24) & 0xff; padded[lengthOffset + 5] = (low >>> 16) & 0xff; padded[lengthOffset + 6] = (low >>> 8) & 0xff; padded[lengthOffset + 7] = low & 0xff;
   const hash = [...SHA256_H] as [number, number, number, number, number, number, number, number]; const words = new Uint32Array(64);

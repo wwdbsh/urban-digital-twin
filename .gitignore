@@ -15,3 +15,7 @@ data/generated/
 public/tiles/
 public/data/
 artifacts/offline-ingest/
+__pycache__/
+*.pyc
+artifacts/blender/
+artifacts/block835-reference-determinism/
