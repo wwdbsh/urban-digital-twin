@@ -32,12 +32,13 @@ import {
 } from "cesium";
 import type { Feature, Position } from "../../domain/schema";
 import type { Itinerary } from "../../domain/routing";
-import { layerForFeature, type LayerVisibility } from "../../runtime/layers";
+import { layerForFeature, type LayerVisibility, type RuntimeLayerId } from "../../runtime/layers";
 import type { RuntimeCityAdapter } from "../../runtime/fixture-adapter";
 import type { TileCameraState } from "../../runtime/tile-stream";
 import type { CameraPose } from "../../domain/visitor-navigation";
 import type { CityAssetResolver } from "../../runtime/city-asset-manifest";
-import type { CommercialStorefrontPlacement, LoadedExteriorPilotRelease } from "../../runtime/exterior-pilot-release";
+import { EXTERIOR_PILOT_RELEASE_ID, type CommercialStorefrontPlacement, type LoadedExteriorPilotRelease } from "../../runtime/exterior-pilot-release";
+import { publicRealmFeatureToFeature, type Block835PublicRealmFeature, type LoadedBlock835PublicRealmRelease } from "../../runtime/block835-public-realm-release";
 import {
   viewportFootprintFromGroundPoints,
   viewportBoundsIntersect,
@@ -71,6 +72,9 @@ interface CesiumViewportProps {
   assetResolver?: CityAssetResolver;
   commercialOverlay?: LoadedExteriorPilotRelease | null;
   onStorefrontSelected?: (placement: CommercialStorefrontPlacement) => void;
+  publicRealmOverlay?: LoadedBlock835PublicRealmRelease | null;
+  onPublicRealmSelected?: (feature: Block835PublicRealmFeature) => void;
+  onStage3RenderProof?: (proof: Stage3RenderProof | null) => void;
 }
 
 export interface DenseRenderMetrics {
@@ -95,6 +99,28 @@ export interface DenseRenderMetrics {
   allocationChunkCount?: number;
   workerReadyMs?: number;
   totalBuildMs?: number;
+}
+
+/**
+ * A release can expose fewer layers than the shared visibility model.  Probe
+ * the manifest before scheduling a load so an initial fixture adapter cannot
+ * leave an unhandled rejected promise while the compatible real adapter is
+ * being selected.
+ */
+export function supportedVisibleLayers(
+  adapter: Pick<RuntimeCityAdapter, "getLayerManifest">,
+  visibleLayers: LayerVisibility,
+): RuntimeLayerId[] {
+  return (Object.keys(visibleLayers) as RuntimeLayerId[]).filter((layer) => {
+    if (!visibleLayers[layer]) return false;
+    try {
+      adapter.getLayerManifest(layer);
+      return true;
+    } catch (error) {
+      if (error instanceof Error && error.message === `Unknown runtime layer: ${layer}`) return false;
+      throw error;
+    }
+  });
 }
 
 interface PendingDenseBuild {
@@ -143,6 +169,29 @@ export function commercialStorefrontProxyId(storefrontId: string): string {
   return `commercial-storefront:${storefrontId}`;
 }
 
+export function publicRealmProxyId(featureId: string): string {
+  return `public-realm:feature:${featureId}`;
+}
+
+export function publicRealmAssetEntityId(semantic: string): string {
+  return `public-realm:asset:${semantic}`;
+}
+
+/** Public-realm source geometry has no point primitive; use its first coordinate as a stable pick proxy. */
+export function publicRealmRepresentative(feature: Block835PublicRealmFeature): readonly [number, number] | null {
+  let result: readonly [number, number] | null = null;
+  const walk = (part: unknown): void => {
+    if (result || !Array.isArray(part)) return;
+    if (part.length >= 2 && typeof part[0] === "number" && typeof part[1] === "number") {
+      if (Number.isFinite(part[0]) && Number.isFinite(part[1])) result = [part[0], part[1]];
+      return;
+    }
+    part.forEach(walk);
+  };
+  walk(feature.geometry.coordinates);
+  return result;
+}
+
 /** Cesium drill picks may expose an Entity object under `id` rather than its string id. */
 export function drillPickedEntityId(picked: { id?: unknown } | null | undefined): string | null {
   const id = picked?.id;
@@ -156,6 +205,7 @@ export function drillPickedEntityId(picked: { id?: unknown } | null | undefined)
 
 export const STAGE3_STOREFRONT_PROOF_QUERY = "storefront-picks";
 export const STAGE3_STOREFRONT_PROJECTIONS_ATTRIBUTE = "data-stage3-storefront-projections";
+export const STAGE3_RENDER_PROOF_ATTRIBUTE = "data-stage3-render-proof";
 
 export interface StorefrontProjectionCandidate {
   storefrontId: string;
@@ -169,11 +219,36 @@ export interface StorefrontProjectionRecord {
   storefrontId: string;
   canonicalBuildingId: string;
   proxyEntityId: string;
+  rendered: boolean;
   canvasX: number | null;
   canvasY: number | null;
   visible: boolean;
   inBounds: boolean;
   cameraSignature: string;
+}
+
+export interface Stage3BuildingRenderCandidate {
+  canonicalBuildingId: string;
+  entityId: string;
+  modelUri: string | null;
+  modelEntity: boolean;
+  showing: boolean;
+}
+
+export interface Stage3BuildingRenderRecord extends Stage3BuildingRenderCandidate {
+  active: boolean;
+}
+
+export interface Stage3RenderProof {
+  cameraSignature: string;
+  assetDistanceMeters: number;
+  expectedBuildingCount: number;
+  activeBuildingCount: number;
+  expectedStorefrontCount: number;
+  activeStorefrontCount: number;
+  buildings: readonly Stage3BuildingRenderRecord[];
+  storefronts: readonly StorefrontProjectionRecord[];
+  pass: boolean;
 }
 
 export function stage3StorefrontProofRequested(search: string): boolean {
@@ -203,7 +278,7 @@ export function collectStorefrontProjectionRecords(
       const canvasX = visible ? Number(projected!.x.toFixed(3)) : null;
       const canvasY = visible ? Number(projected!.y.toFixed(3)) : null;
       const inBounds = visible && canvasX !== null && canvasY !== null && canvasX >= 0 && canvasY >= 0 && canvasX <= canvas.clientWidth && canvasY <= canvas.clientHeight;
-      return { storefrontId: candidate.storefrontId, canonicalBuildingId: candidate.canonicalBuildingId, proxyEntityId: candidate.proxyEntityId, canvasX, canvasY, visible, inBounds, cameraSignature };
+      return { storefrontId: candidate.storefrontId, canonicalBuildingId: candidate.canonicalBuildingId, proxyEntityId: candidate.proxyEntityId, rendered: candidate.rendered, canvasX, canvasY, visible, inBounds, cameraSignature };
     })
     .sort((left, right) => left.storefrontId.localeCompare(right.storefrontId));
 }
@@ -214,6 +289,42 @@ export function publishStorefrontProjectionRecords(element: HTMLElement, records
 
 export function clearStorefrontProjectionRecords(element: HTMLElement): void {
   element.removeAttribute(STAGE3_STOREFRONT_PROJECTIONS_ATTRIBUTE);
+}
+
+/**
+ * Renderer proof is derived from the live Cesium entity collection after the
+ * Stage 3 model/proxy branch has executed, never from manifest or status text.
+ */
+export function collectStage3RenderProof(
+  buildingCandidates: readonly Stage3BuildingRenderCandidate[],
+  storefronts: readonly StorefrontProjectionRecord[],
+  cameraSignature: string,
+  assetDistanceMeters: number,
+): Stage3RenderProof {
+  const buildings = buildingCandidates
+    .map((candidate) => ({ ...candidate, active: candidate.modelEntity && candidate.showing && typeof candidate.modelUri === "string" && candidate.modelUri.startsWith("/assets/manhattan-esb-block-exterior-pilot-20260805/") }))
+    .sort((left, right) => left.canonicalBuildingId.localeCompare(right.canonicalBuildingId));
+  const activeBuildingCount = buildings.filter((record) => record.active).length;
+  const activeStorefrontCount = storefronts.filter((record) => record.rendered).length;
+  return {
+    cameraSignature,
+    assetDistanceMeters: Number.isFinite(assetDistanceMeters) ? Number(assetDistanceMeters.toFixed(3)) : Number.POSITIVE_INFINITY,
+    expectedBuildingCount: buildings.length,
+    activeBuildingCount,
+    expectedStorefrontCount: storefronts.length,
+    activeStorefrontCount,
+    buildings,
+    storefronts,
+    pass: buildings.length === 14 && activeBuildingCount === 14 && storefronts.length === 8 && activeStorefrontCount === 8,
+  };
+}
+
+export function publishStage3RenderProof(element: HTMLElement, proof: Stage3RenderProof): void {
+  element.setAttribute(STAGE3_RENDER_PROOF_ATTRIBUTE, JSON.stringify(proof));
+}
+
+export function clearStage3RenderProof(element: HTMLElement): void {
+  element.removeAttribute(STAGE3_RENDER_PROOF_ATTRIBUTE);
 }
 
 export interface DensePoiMarkerStyle {
@@ -1045,6 +1156,9 @@ export function CesiumViewport({
   assetResolver,
   commercialOverlay = null,
   onStorefrontSelected,
+  publicRealmOverlay = null,
+  onPublicRealmSelected,
+  onStage3RenderProof,
 }: CesiumViewportProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<Viewer | null>(null);
@@ -1054,12 +1168,16 @@ export function CesiumViewport({
   const onFeatureSelectedRef = useRef(onFeatureSelected);
   const onFeatureOverlapRef = useRef(onFeatureOverlap);
   const onStorefrontSelectedRef = useRef(onStorefrontSelected);
+  const onPublicRealmSelectedRef = useRef(onPublicRealmSelected);
+  const onStage3RenderProofRef = useRef(onStage3RenderProof);
   const onCameraChangedRef = useRef(onCameraChanged);
   const onDenseMetricsRef = useRef(onDenseMetrics);
   adapterRef.current = adapter;
   onFeatureSelectedRef.current = onFeatureSelected;
   onFeatureOverlapRef.current = onFeatureOverlap;
   onStorefrontSelectedRef.current = onStorefrontSelected;
+  onPublicRealmSelectedRef.current = onPublicRealmSelected;
+  onStage3RenderProofRef.current = onStage3RenderProof;
   onCameraChangedRef.current = onCameraChanged;
   onDenseMetricsRef.current = onDenseMetrics;
   const cameraPoseRequestRef = useRef(cameraPoseRequest);
@@ -1078,6 +1196,7 @@ export function CesiumViewport({
   const denseGroupMetricsRef = useRef({ baseFeatureCount: 0, contextFeatureCount: 0, contextPartCount: 0 });
   const ownedEntityIdsRef = useRef(new Set<string>());
   const storefrontPickMapRef = useRef(new Map<string, CommercialStorefrontPlacement>());
+  const publicRealmPickMapRef = useRef(new Map<string, Block835PublicRealmFeature>());
   const suppressCameraEventsUntilRef = useRef(0);
   const lastValidFootprintRef = useRef<ViewportFootprint | null>(viewportFootprint?.valid ? viewportFootprint : null);
   const cameraSettledEmitterRef = useRef<(() => void) | null>(null);
@@ -1140,6 +1259,10 @@ export function CesiumViewport({
       if (storefront) { onStorefrontSelectedRef.current?.(storefront); return; }
       const feature = featureForPickedId(entity.id, denseFeatureMapRef.current, adapterRef.current);
       if (feature) onFeatureSelectedRef.current(feature);
+      else {
+        const publicRealmFeature = publicRealmPickMapRef.current.get(entity.id);
+        if (publicRealmFeature) onPublicRealmSelectedRef.current?.(publicRealmFeature);
+      }
     });
     viewer.screenSpaceEventHandler.setInputAction((movement: { position: Cartesian2 }) => {
       const picks = viewer.scene.drillPick(movement.position, 12) as Array<{ id?: unknown }>;
@@ -1156,10 +1279,26 @@ export function CesiumViewport({
         onFeatureOverlapRef.current?.(pickedFeatures);
         return;
       }
+      if (pickedFeatures.length === 1) {
+        onFeatureSelectedRef.current?.(pickedFeatures[0]!);
+        return;
+      }
+      const publicRealmFeatures = [...new Map(picks.map((picked) => {
+        const pickedId = drillPickedEntityId(picked);
+        return pickedId ? [pickedId, publicRealmPickMapRef.current.get(pickedId)] as const : ["", undefined] as const;
+      }).filter((entry): entry is readonly [string, Block835PublicRealmFeature] => Boolean(entry[0] && entry[1]))).values()];
+      if (publicRealmFeatures.length > 0) {
+        onPublicRealmSelectedRef.current?.(publicRealmFeatures[0]!);
+        return;
+      }
       const picked = viewer.scene.pick(movement.position) as { id?: unknown } | undefined;
       const pickedId = drillPickedEntityId(picked);
       const feature = featureForPickedId(pickedId, denseFeatureMapRef.current, adapterRef.current) ?? pickedFeatures[0];
       if (feature) onFeatureSelectedRef.current(feature);
+      else if (pickedId) {
+        const publicRealmFeature = publicRealmPickMapRef.current.get(pickedId);
+        if (publicRealmFeature) onPublicRealmSelectedRef.current?.(publicRealmFeature);
+      }
     }, ScreenSpaceEventType.LEFT_CLICK);
     viewerRef.current = viewer;
     const emitSettledCamera = (force = false) => {
@@ -1191,6 +1330,8 @@ export function CesiumViewport({
       denseRenderPlanFeaturesRef.current = null;
       denseBuildGenerationRef.current += 1;
       ownedEntityIdsRef.current.clear();
+      storefrontPickMapRef.current.clear();
+      publicRealmPickMapRef.current.clear();
       if (viewerRef.current === viewer) viewerRef.current = null;
       viewer.destroy();
     };
@@ -1201,7 +1342,7 @@ export function CesiumViewport({
     if (!viewer) return;
     let cancelled = false;
     const loadVisibleFeatures = async () => {
-      const layers = (Object.keys(visibleLayers) as Array<keyof LayerVisibility>).filter((layer) => visibleLayers[layer]);
+      const layers = supportedVisibleLayers(adapter, visibleLayers);
       const loaded = await Promise.all(layers.map((layer) => adapter.loadLayerFeatures(layer)));
       if (cancelled || viewerRef.current !== viewer) return;
       const visibleFeatures = loaded.flat().filter((feature) => featureFilter?.(feature) ?? true);
@@ -1321,6 +1462,7 @@ export function CesiumViewport({
       for (const entityId of ownedEntityIdsRef.current) viewer.entities.removeById(entityId);
       const nextOwnedEntityIds = new Set<string>();
       storefrontPickMapRef.current.clear();
+      publicRealmPickMapRef.current.clear();
       const addOwnedFeatureEntities = (feature: Feature, distance: number, suppressLabels: boolean) => {
         addFeatureEntities(viewer, feature, assetResolver, distance, selectedFeatureId, suppressLabels).forEach((entity) => {
           if (typeof entity.id === "string") nextOwnedEntityIds.add(entity.id);
@@ -1340,9 +1482,41 @@ export function CesiumViewport({
         addOwnedFeatureEntities(feature, selectedAssetDistanceMeters, suppressUnselectedLabels);
       });
       if (commercialOverlay && (assetDistanceMeters <= 900)) {
-        const visibleBuildingIds = new Set(allFeatures.filter((feature) => feature.kind === "building").map((feature) => feature.id));
-        for (const buildingId of commercialOverlay.manifest.assets.map((asset) => asset.canonicalFeatureId)) {
-          if (!visibleBuildingIds.has(buildingId)) continue;
+        // The citywide streaming set is intentionally sparse. Stage 3 is a
+        // bounded, checksum-verified 14-building overlay, so render its
+        // approved models directly at close range instead of treating a
+        // temporary viewport-shard omission as a building fallback.
+        const activeStage3BuildingIds = new Set<string>();
+        for (const asset of commercialOverlay.manifest.assets) {
+          const buildingId = asset.canonicalFeatureId;
+          const resolution = commercialOverlay.resolve(buildingId, assetDistanceMeters, 1);
+          if (resolution.kind !== "asset") continue;
+          let buildingEntity = viewer.entities.getById(buildingId);
+          if (!buildingEntity?.model) {
+            if (buildingEntity) viewer.entities.removeById(buildingId);
+            const anchor = Cartesian3.fromDegrees(resolution.entry.wgs84Anchor.longitude, resolution.entry.wgs84Anchor.latitude, resolution.entry.wgs84Anchor.heightMeters);
+            const enuFrame = Transforms.eastNorthUpToFixedFrame(anchor);
+            const enuRotation = Matrix4.getMatrix3(enuFrame, new Matrix3());
+            buildingEntity = viewer.entities.add({
+              id: buildingId,
+              name: `Block 835 ${buildingId}`,
+              position: anchor,
+              orientation: Quaternion.fromRotationMatrix(enuRotation),
+              model: new ModelGraphics({ uri: `/${resolution.lod.content.relativeContentRef}`, scale: 1, minimumPixelSize: 1 }),
+              properties: {
+                canonicalFeatureId: buildingId,
+                fixtureOnly: false,
+                assetResolution: "asset",
+                assetContentRef: resolution.lod.content.relativeContentRef,
+                block835ExteriorOverlay: EXTERIOR_PILOT_RELEASE_ID,
+              },
+            });
+            nextOwnedEntityIds.delete(buildingId);
+            nextOwnedEntityIds.add(buildingId);
+          }
+          if (buildingEntity.model) activeStage3BuildingIds.add(buildingId);
+        }
+        for (const buildingId of activeStage3BuildingIds) {
           const frontage = commercialOverlay.commercialForBuilding(buildingId);
           for (const placement of frontage.acceptedPlacements) {
             const anchor = placement.anchorWgs84;
@@ -1362,6 +1536,66 @@ export function CesiumViewport({
             });
             if (typeof storefrontEntity.id === "string") nextOwnedEntityIds.add(storefrontEntity.id);
           }
+        }
+      }
+      if (publicRealmOverlay && assetDistanceMeters <= 900) {
+        const anchor = publicRealmOverlay.document.anchorWgs84;
+        const anchorCartesian = Cartesian3.fromDegrees(anchor[0], anchor[1], anchor[2]);
+        const enuFrame = Transforms.eastNorthUpToFixedFrame(anchorCartesian);
+        const enuRotation = Matrix4.getMatrix3(enuFrame, new Matrix3());
+        for (const semantic of ["roadbed", "sidewalk", "curb", "crosswalk"] as const) {
+          const resolution = publicRealmOverlay.resolve(semantic, assetDistanceMeters);
+          if (!resolution) continue;
+          const modelId = publicRealmAssetEntityId(semantic);
+          const firstFeature = publicRealmOverlay.featuresForSemantic(semantic)[0];
+          if (firstFeature) publicRealmPickMapRef.current.set(modelId, firstFeature);
+          const modelEntity = viewer.entities.add({
+            id: modelId,
+            name: `Block 835 ${semantic}`,
+            position: anchorCartesian,
+            orientation: Quaternion.fromRotationMatrix(enuRotation),
+            model: new ModelGraphics({ uri: resolution.uri, scale: 1, minimumPixelSize: 1 }),
+            properties: {
+              publicRealmSemantic: semantic,
+              activeAssetLod: resolution.lod,
+              assetSha256: resolution.entry.sha256,
+              assetContentRef: resolution.entry.relativeContentRef,
+              sourceDatasets: publicRealmOverlay.document.sourceSnapshots.map((snapshot) => snapshot.datasetId).join(","),
+              claimCeiling: publicRealmOverlay.document.claimCeilings[semantic],
+              localOnly: true,
+            },
+          });
+          if (typeof modelEntity.id === "string") nextOwnedEntityIds.add(modelEntity.id);
+        }
+        for (const feature of publicRealmOverlay.features) {
+          const representative = publicRealmRepresentative(feature);
+          if (!representative) continue;
+          const proxyId = publicRealmProxyId(feature.id);
+          publicRealmPickMapRef.current.set(proxyId, feature);
+          const selected = selectedFeatureId === `public-realm:${feature.id}`;
+          const proxyEntity = viewer.entities.add({
+            id: proxyId,
+            name: `Block 835 ${feature.semantic}`,
+            position: Cartesian3.fromDegrees(representative[0], representative[1], feature.semantic === "curb" ? 0.32 : feature.semantic === "crosswalk" ? 0.16 : 0.05),
+            point: {
+              pixelSize: selected ? 16 : 8,
+              color: Color.fromCssColorString(selected ? "#ffdf6b" : feature.semantic === "crosswalk" ? "#f6d66b" : feature.semantic === "curb" ? "#b9d0c2" : feature.semantic === "sidewalk" ? "#8bc3bf" : "#4ce2e6").withAlpha(selected ? 1 : 0.88),
+              outlineColor: Color.fromCssColorString("#17372c"),
+              outlineWidth: 2,
+              disableDepthTestDistance: Number.POSITIVE_INFINITY,
+            },
+            label: selected ? { text: `Block 835 · ${feature.semantic}`, font: "11px Inter, sans-serif", fillColor: Color.WHITE, showBackground: true, backgroundColor: Color.fromCssColorString("#17372c").withAlpha(0.9), pixelOffset: new Cartesian2(0, -18), disableDepthTestDistance: Number.POSITIVE_INFINITY } : undefined,
+            properties: {
+              publicRealmFeatureId: feature.id,
+              publicRealmSemantic: feature.semantic,
+              claimLevel: feature.claimLevel,
+              sourceDatasetId: feature.sourceDatasetId,
+              sourceFeatureIds: (feature.sourceFeatureIds ?? []).join(","),
+              uncertainty: feature.uncertainty.temporal,
+              localOnly: true,
+            },
+          });
+          if (typeof proxyEntity.id === "string") nextOwnedEntityIds.add(proxyEntity.id);
         }
       }
       if (denseRendering && selectedFeatureId) {
@@ -1390,7 +1624,7 @@ export function CesiumViewport({
     };
     void loadVisibleFeatures();
     return () => { cancelled = true; };
-  }, [adapter, assetResolver, commercialOverlay, denseFeatureGroups, denseFeatureGroupLimits, denseFeatureLimit, denseFeatures, denseRendering, featureFilter, itinerary, selectedFeatureId, viewportFootprint, visibleLayers.buildings, visibleLayers.pois, visibleLayers.areas, visibleLayers.stations, visibleLayers.entrances, visibleLayers.routes, visibleLayers["statistical-areas"], visibleLayers.parks, visibleLayers.landmarks]);
+  }, [adapter, assetResolver, commercialOverlay, denseFeatureGroups, denseFeatureGroupLimits, denseFeatureLimit, denseFeatures, denseRendering, featureFilter, itinerary, publicRealmOverlay, selectedFeatureId, viewportFootprint, visibleLayers.buildings, visibleLayers.pois, visibleLayers.areas, visibleLayers.stations, visibleLayers.entrances, visibleLayers.routes, visibleLayers["statistical-areas"], visibleLayers.parks, visibleLayers.landmarks]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -1398,6 +1632,8 @@ export function CesiumViewport({
     if (!container) return undefined;
     if (!stage3StorefrontProofEnabled || !viewer || !commercialOverlay) {
       clearStorefrontProjectionRecords(container);
+      clearStage3RenderProof(container);
+      onStage3RenderProofRef.current?.(null);
       return undefined;
     }
     let frame: number | null = null;
@@ -1412,13 +1648,34 @@ export function CesiumViewport({
         anchorWgs84: placement.anchorWgs84 ?? null,
         rendered: Boolean(viewer.entities.getById(proxyEntityId)),
       }));
-      publishStorefrontProjectionRecords(container, collectStorefrontProjectionRecords(
+      const storefrontRecords = collectStorefrontProjectionRecords(
         candidates,
         assetDistanceMeters,
         viewer.canvas,
         cameraSignature,
         (anchor) => SceneTransforms.worldToWindowCoordinates(viewer.scene, Cartesian3.fromDegrees(anchor[0], anchor[1], 4)),
-      ));
+      );
+      publishStorefrontProjectionRecords(container, storefrontRecords);
+      const buildingCandidates = commercialOverlay.manifest.assets.map((asset) => {
+        const entity = viewer.entities.getById(asset.canonicalFeatureId);
+        const uriProperty = entity?.model?.uri as unknown as { getValue?: (time: unknown) => unknown } | undefined;
+        const uriValue = uriProperty?.getValue?.(viewer.clock.currentTime) ?? uriProperty;
+        const modelUri = typeof uriValue === "string"
+          ? uriValue
+          : uriValue && typeof uriValue === "object" && "url" in uriValue && typeof (uriValue as { url?: unknown }).url === "string"
+          ? (uriValue as { url: string }).url
+          : null;
+        return {
+          canonicalBuildingId: asset.canonicalFeatureId,
+          entityId: asset.canonicalFeatureId,
+          modelUri,
+          modelEntity: Boolean(entity?.model),
+          showing: entity?.isShowing === true,
+        };
+      });
+      const proof = collectStage3RenderProof(buildingCandidates, storefrontRecords, cameraSignature, assetDistanceMeters);
+      publishStage3RenderProof(container, proof);
+      onStage3RenderProofRef.current?.(proof);
     };
     const schedule = () => {
       if (frame !== null) return;
@@ -1432,6 +1689,8 @@ export function CesiumViewport({
       viewer.camera.changed.removeEventListener(schedule);
       viewer.scene.postRender.removeEventListener(schedule);
       clearStorefrontProjectionRecords(container);
+      clearStage3RenderProof(container);
+      onStage3RenderProofRef.current?.(null);
     };
   }, [commercialOverlay, stage3StorefrontProofEnabled, viewerReadyGeneration]);
 
@@ -1480,7 +1739,8 @@ export function CesiumViewport({
   useEffect(() => {
     const viewer = viewerRef.current;
     if (!viewer || focusRequest === 0 || !focusFeatureId) return;
-    const feature = denseFeatureMapRef.current.get(focusFeatureId) ?? adapter.getFeature(focusFeatureId);
+    const publicRealmFeature = publicRealmOverlay?.feature(focusFeatureId.replace(/^public-realm:/u, ""));
+    const feature = denseFeatureMapRef.current.get(focusFeatureId) ?? adapter.getFeature(focusFeatureId) ?? (publicRealmFeature && publicRealmOverlay ? publicRealmFeatureToFeature(publicRealmFeature, publicRealmOverlay.document.generatedAt) : undefined);
     if (!feature || !shouldFocusFeature(feature)) return;
     const requestChanged = shouldStartFocusFlight(lastFocusFlightRequestRef.current, focusRequest, true);
     const focusHeight = focusHeightForFeature(feature, assetResolver);
@@ -1534,7 +1794,7 @@ export function CesiumViewport({
         onCameraChangedRef.current?.(normalizeFocusCameraPose(cameraStateForViewer(viewer), pose), footprint ?? lastValidFootprintRef.current ?? undefined);
       },
     });
-  }, [adapter, assetResolver, denseFeatures, focusFeatureId, focusOverlayOpen, focusRequest]);
+  }, [adapter, assetResolver, denseFeatures, focusFeatureId, focusOverlayOpen, focusRequest, publicRealmOverlay]);
 
   useEffect(() => {
     const viewer = viewerRef.current;

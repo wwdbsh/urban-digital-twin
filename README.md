@@ -74,17 +74,56 @@ pnpm exterior-pilot:validate -- --root public/data/manhattan-esb-block-exterior-
 pnpm exterior-pilot:benchmark -- --root public/data/manhattan-esb-block-exterior-pilot-20260805
 ```
 
+## Block 835 public-realm overlay (2026-08-06)
+
+The approved public-realm work unit is an opt-in, local-only sibling overlay
+for the Block 835 roadbed, sidewalks, estimated curb profiles, and estimated
+crosswalks. Its canonical compatible local URL is
+`/?data=citywide&release=manhattan-civic-context-20260804&exterior=manhattan-esb-block-exterior-pilot-20260805&commercial=1&publicRealm=manhattan-esb-block-public-realm-20260806`.
+Append `&publicRealmFeature=crosswalk%3Aw33-broadway` for a verified deep link.
+A bare `publicRealm` query deliberately does not activate the overlay: runtime
+activation requires both a real compatible base and the active Stage 3
+exterior/commercial overlay. Buildings and accepted storefronts remain
+independently selectable and the runtime status surface can disable only this
+overlay.
+
+The release is built from exactly NYC OTI Planimetrics Sidewalk `vfx9-tbb6`,
+Roadbed `xgwd-7vhd`, and Pavement Edge `x9uq-u3qs`, clipped to the Block 835
+union plus four adjacent approaches. Roadbed/sidewalk geometry is
+source-backed; curb vertical profile and crosswalk placement/striping are
+deterministic estimates and are not current-paint or survey-grade truth. The
+loader is fail-closed, verifies local SHA-256-pinned JSON/GLB content, uses
+only Cesium WGS84/ENU positioning, and never performs runtime external
+requests. See [`Decision 0017`](docs/decisions/0017-block835-public-realm.md)
+and [`20260806-block835-public-realm.md`](docs/implementation/20260806-block835-public-realm.md)
+for the source packet, bounds, hashes, Blender MCP evidence, corrected
+hole/concavity-preserving triangulation validation, and validation limits.
+
 The Stage 3 runtime and source payloads remain local-only, and public
 deployment, hosting, redistribution, and other public conveyance remain
 excluded. The local-runtime implementation is validated by the recorded
-checks below; implementation and review/fix workers did not stage, commit, or
-push this work unit. The 2026-08-06 approval
+checks below. The 2026-08-06 approval
 `codex-user-turn:2026-08-06:stage3-private-repo-commit-push-approval` authorizes
 this separately authorized release task to commit and push this work unit to
 the existing private GitHub repository only. It does not expand the original
 2026-08-05 acquisition approval, whose commit/push exclusions may remain as the
 scope of that acquisition request; public deployment or conveyance still
 requires separate approval.
+
+Focused external-browser performance evidence was captured in one visible,
+focused Google Chrome session against the unchanged local Vite PID 19129. The
+same six-pose deterministic path settled for 1 second and collected 600
+`requestAnimationFrame` samples per condition at 1721×878 CSS pixels / DPR 2:
+Stage 3-only measured 8.30 ms median, 9.20 ms p95, and 24.90 ms maximum;
+Stage 3 plus public realm measured 8.30 ms median, 8.90 ms p95, and 17.50 ms
+maximum. The overlay p95 delta was -0.30 ms (-3.26%), so the required median
+≤12 ms, p95 ≤30 ms, and p95-regression ≤20% gates passed; both samples record
+focused/visible documents, no console or window errors, only `localhost:5173`
+network hosts, and a live Cesium-entity proof of 14/14 buildings plus 8/8
+storefront proxies. The retained local source artifact is
+`/tmp/udt-block835-public-realm-20260806/external-chrome-performance-evidence.json`;
+the durable checksum-validated embedded evidence is in
+`public/data/manhattan-esb-block-public-realm-20260806/benchmark.json`.
 
 The camera-stabilized `b192253` acceptance replay now closes the local Stage 3
 proof: all 8/8 accepted storefronts were selected through native Cesium canvas

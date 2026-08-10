@@ -1,0 +1,473 @@
+{
+  "id" : "vs44-rznx",
+  "name" : "NYC Planimetric Database: Pavement Edge",
+  "assetType" : "dataset",
+  "attribution" : "Office of Technology and Innovation (OTI)",
+  "averageRating" : 0,
+  "category" : "Environment",
+  "createdAt" : 1403718462,
+  "description" : "Planimetric basemap layer containing pavement edge features. Please see the following link for additional documentation- https://github.com/CityOfNewYork/nyc-planimetrics/blob/master/Capture_Rules.md.",
+  "diciBackend" : false,
+  "displayType" : "table",
+  "downloadCount" : 2285,
+  "hideFromCatalog" : false,
+  "hideFromDataJson" : false,
+  "locked" : false,
+  "newBackend" : true,
+  "numberOfComments" : 2,
+  "oid" : 40540765,
+  "provenance" : "official",
+  "publicationAppendEnabled" : false,
+  "publicationDate" : 1714052055,
+  "publicationGroup" : 6270513,
+  "publicationStage" : "published",
+  "rowClass" : "",
+  "rowsUpdatedAt" : 1714164498,
+  "tableId" : 19510463,
+  "totalTimesRated" : 0,
+  "viewCount" : 1802,
+  "viewLastModified" : 1765383213,
+  "viewType" : "tabular",
+  "approvals" : [ {
+    "reviewedAt" : 1458057501,
+    "reviewedAutomatically" : true,
+    "state" : "approved",
+    "submissionId" : 6289062,
+    "submissionObject" : "public_audience_request",
+    "submissionOutcome" : "change_audience",
+    "submittedAt" : 1458057501,
+    "targetAudience" : "public",
+    "workflowId" : 2285,
+    "submissionDetails" : {
+      "permissionType" : "READ"
+    },
+    "submissionOutcomeApplication" : {
+      "failureCount" : 0,
+      "status" : "success"
+    },
+    "submitter" : {
+      "id" : "5fuc-pqz2",
+      "displayName" : "NYC OpenData"
+    }
+  } ],
+  "clientContext" : {
+    "clientContextVariables" : [ ],
+    "inheritedVariables" : { }
+  },
+  "columns" : [ {
+    "id" : 591911139,
+    "name" : "the_geom",
+    "dataTypeName" : "multiline",
+    "description" : "Geometry field used for mapping. Geometry Type: Polyline",
+    "fieldName" : "the_geom",
+    "position" : 1,
+    "renderTypeName" : "multiline",
+    "tableColumnId" : 152320484,
+    "format" : { }
+  }, {
+    "id" : 591911131,
+    "name" : "SOURCE_ID",
+    "dataTypeName" : "number",
+    "description" : "Unique feature Identification Number.",
+    "fieldName" : "source_id",
+    "position" : 2,
+    "renderTypeName" : "number",
+    "tableColumnId" : 35025083,
+    "cachedContents" : {
+      "non_null" : "178947",
+      "largest" : "21350001163.0",
+      "null" : "0",
+      "top" : [ {
+        "item" : "0.0",
+        "count" : "2492"
+      }, {
+        "item" : "16226001318.0",
+        "count" : "7"
+      }, {
+        "item" : "16226009174.0",
+        "count" : "6"
+      }, {
+        "item" : "13226000864.0",
+        "count" : "5"
+      }, {
+        "item" : "20226004543.0",
+        "count" : "5"
+      }, {
+        "item" : "16226002750.0",
+        "count" : "4"
+      }, {
+        "item" : "20226008535.0",
+        "count" : "4"
+      }, {
+        "item" : "13226000394.0",
+        "count" : "4"
+      }, {
+        "item" : "20226010321.0",
+        "count" : "4"
+      }, {
+        "item" : "15226000398.0",
+        "count" : "4"
+      }, {
+        "item" : "10226001233.0",
+        "count" : "4"
+      }, {
+        "item" : "20226013085.0",
+        "count" : "4"
+      }, {
+        "item" : "20226013777.0",
+        "count" : "4"
+      }, {
+        "item" : "16226238802.0",
+        "count" : "4"
+      }, {
+        "item" : "10226001400.0",
+        "count" : "4"
+      }, {
+        "item" : "14226002742.0",
+        "count" : "4"
+      }, {
+        "item" : "3226000305.0",
+        "count" : "4"
+      }, {
+        "item" : "17226009746.0",
+        "count" : "4"
+      }, {
+        "item" : "14226004588.0",
+        "count" : "4"
+      }, {
+        "item" : "4226000595.0",
+        "count" : "4"
+      } ],
+      "smallest" : "0.0",
+      "count" : "178947",
+      "cardinality" : "175751"
+    },
+    "format" : { }
+  }, {
+    "id" : 591911133,
+    "name" : "FEAT_CODE",
+    "dataTypeName" : "number",
+    "description" : "Feature Code Indicates the type of feature.",
+    "fieldName" : "feat_code",
+    "position" : 3,
+    "renderTypeName" : "number",
+    "tableColumnId" : 35025085,
+    "cachedContents" : {
+      "non_null" : "178947",
+      "largest" : "2270",
+      "null" : "0",
+      "top" : [ {
+        "item" : "2260",
+        "count" : "170985"
+      }, {
+        "item" : "2270",
+        "count" : "7613"
+      }, {
+        "item" : "2230",
+        "count" : "349"
+      } ],
+      "smallest" : "2230",
+      "count" : "178947",
+      "cardinality" : "3"
+    },
+    "format" : { }
+  }, {
+    "id" : 591911134,
+    "name" : "SUB_CODE",
+    "dataTypeName" : "number",
+    "description" : "Sub Feature Code (where applicable) indicates a subset of features within a given “Feature_Code” set.",
+    "fieldName" : "sub_code",
+    "position" : 4,
+    "renderTypeName" : "number",
+    "tableColumnId" : 35025086,
+    "cachedContents" : {
+      "non_null" : "178947",
+      "largest" : "227000",
+      "null" : "0",
+      "top" : [ {
+        "item" : "226000",
+        "count" : "170985"
+      }, {
+        "item" : "227000",
+        "count" : "7613"
+      }, {
+        "item" : "223000",
+        "count" : "349"
+      } ],
+      "smallest" : "223000",
+      "count" : "178947",
+      "cardinality" : "3"
+    },
+    "format" : { }
+  }, {
+    "id" : 591911135,
+    "name" : "STATUS",
+    "dataTypeName" : "text",
+    "description" : "Field indicating the feature status as it fits into one of the following categories:    a)     b) Feature has changed in 2022 collection - feature existed previously but has been updated during the 2022 planimetrics update project.    c) No change in 2022 collection - feature is unchanged from the source planimetrics database.",
+    "fieldName" : "status",
+    "position" : 5,
+    "renderTypeName" : "text",
+    "tableColumnId" : 35025087,
+    "cachedContents" : {
+      "non_null" : "178947",
+      "largest" : "Updated",
+      "null" : "0",
+      "top" : [ {
+        "item" : "Unchanged",
+        "count" : "156774"
+      }, {
+        "item" : "Updated",
+        "count" : "19687"
+      }, {
+        "item" : "New",
+        "count" : "2486"
+      } ],
+      "smallest" : "New",
+      "count" : "178947",
+      "cardinality" : "3"
+    },
+    "format" : { }
+  }, {
+    "id" : 591911136,
+    "name" : "BLOCKF_ID",
+    "dataTypeName" : "number",
+    "description" : "Field indicates the Unique ID generated automatically. This ID was conflated to the corresponding L/R BLOCKFACEID in NYC Street Centerline (CSCL).",
+    "fieldName" : "blockf_id",
+    "position" : 6,
+    "renderTypeName" : "number",
+    "tableColumnId" : 35025088,
+    "cachedContents" : {
+      "non_null" : "178947",
+      "largest" : "2022714379",
+      "null" : "0",
+      "top" : [ {
+        "item" : "0",
+        "count" : "1435"
+      }, {
+        "item" : "1922602020",
+        "count" : "14"
+      }, {
+        "item" : "1622601318",
+        "count" : "8"
+      }, {
+        "item" : "1322606323",
+        "count" : "6"
+      }, {
+        "item" : "1622609174",
+        "count" : "6"
+      }, {
+        "item" : "1322603506",
+        "count" : "6"
+      }, {
+        "item" : "1622602371",
+        "count" : "6"
+      }, {
+        "item" : "12262280",
+        "count" : "5"
+      }, {
+        "item" : "1222604316",
+        "count" : "5"
+      }, {
+        "item" : "82267249",
+        "count" : "5"
+      }, {
+        "item" : "82267749",
+        "count" : "5"
+      }, {
+        "item" : "1322600864",
+        "count" : "5"
+      }, {
+        "item" : "1322602992",
+        "count" : "5"
+      }, {
+        "item" : "1222602406",
+        "count" : "5"
+      }, {
+        "item" : "2022604543",
+        "count" : "5"
+      }, {
+        "item" : "212260568",
+        "count" : "4"
+      }, {
+        "item" : "102261400",
+        "count" : "4"
+      }, {
+        "item" : "212261644",
+        "count" : "4"
+      }, {
+        "item" : "1222604319",
+        "count" : "4"
+      }, {
+        "item" : "12261914",
+        "count" : "4"
+      } ],
+      "smallest" : "0",
+      "count" : "178947",
+      "cardinality" : "175772"
+    },
+    "format" : { }
+  }, {
+    "id" : 591911137,
+    "name" : "CONFLATED",
+    "dataTypeName" : "number",
+    "description" : "Field indicates whether or not the BLOCKFACEID value was conflated to a CSCL segment.",
+    "fieldName" : "conflated",
+    "position" : 7,
+    "renderTypeName" : "number",
+    "tableColumnId" : 35025090,
+    "cachedContents" : {
+      "non_null" : "178947",
+      "largest" : "1",
+      "null" : "0",
+      "top" : [ {
+        "item" : "1",
+        "count" : "164373"
+      }, {
+        "item" : "0",
+        "count" : "14574"
+      } ],
+      "smallest" : "0",
+      "count" : "178947",
+      "cardinality" : "2"
+    },
+    "format" : { }
+  }, {
+    "id" : 591911138,
+    "name" : "SHAPE_Leng",
+    "dataTypeName" : "number",
+    "description" : "The shape length values for polyline feature classes.",
+    "fieldName" : "shape_leng",
+    "position" : 8,
+    "renderTypeName" : "number",
+    "tableColumnId" : 35025092,
+    "cachedContents" : {
+      "non_null" : "178947",
+      "largest" : "69487.5758739",
+      "null" : "0",
+      "top" : [ {
+        "item" : "31.6290310618",
+        "count" : "1"
+      }, {
+        "item" : "422.098729497",
+        "count" : "1"
+      }, {
+        "item" : "209.780882687",
+        "count" : "1"
+      }, {
+        "item" : "316.741746576",
+        "count" : "1"
+      }, {
+        "item" : "212.96430296",
+        "count" : "1"
+      }, {
+        "item" : "166.802925799",
+        "count" : "1"
+      }, {
+        "item" : "1061.16509346",
+        "count" : "1"
+      }, {
+        "item" : "938.117198362",
+        "count" : "1"
+      }, {
+        "item" : "218.358948525",
+        "count" : "1"
+      }, {
+        "item" : "1028.92240746",
+        "count" : "1"
+      }, {
+        "item" : "325.732698887",
+        "count" : "1"
+      }, {
+        "item" : "978.393279552",
+        "count" : "1"
+      }, {
+        "item" : "669.086713166",
+        "count" : "1"
+      }, {
+        "item" : "357.792383057",
+        "count" : "1"
+      }, {
+        "item" : "118.038572776",
+        "count" : "1"
+      }, {
+        "item" : "427.277229575",
+        "count" : "1"
+      }, {
+        "item" : "132.964888363",
+        "count" : "1"
+      }, {
+        "item" : "230.901463085",
+        "count" : "1"
+      }, {
+        "item" : "624.94025004",
+        "count" : "1"
+      }, {
+        "item" : "1788.02797686",
+        "count" : "1"
+      } ],
+      "smallest" : "0.190585075057",
+      "count" : "178947",
+      "cardinality" : "178947"
+    },
+    "format" : { }
+  } ],
+  "grants" : [ {
+    "inherited" : false,
+    "type" : "viewer",
+    "flags" : [ "public" ]
+  } ],
+  "metadata" : {
+    "rdfSubject" : "0",
+    "rdfClass" : "",
+    "attachments" : [ {
+      "filename" : "Pavement Edge_Data Dictionary.xlsx",
+      "assetId" : "9207507a-5e97-47c9-841a-2ed44e826801",
+      "name" : "Pavement Edge_Data Dictionary.xlsx"
+    }, {
+      "filename" : "NYC_Planimetrics_2022.gdb.zip",
+      "assetId" : "f2348c45-48a9-4ee4-8f33-c79b592aaca9",
+      "name" : "NYC_Planimetrics_2022.gdb.zip"
+    }, {
+      "filename" : "NYC_Planimetrics_Historical_Data 2000-2016.zip",
+      "assetId" : "4b02c201-f5e4-4900-a624-7416c9c97769",
+      "name" : "NYC_Planimetrics_Historical_Data 2000-2016.zip"
+    } ],
+    "custom_fields" : {
+      "Update" : {
+        "Automation" : "No",
+        "Date Made Public" : "6/25/2014",
+        "Update Frequency" : "As needed",
+        "Data Change Frequency" : "As Needed"
+      },
+      "Dataset Information" : {
+        "Agency" : "Office of Technology and Innovation (OTI)"
+      }
+    },
+    "rowLabel" : "Location of the pavement edge feature.",
+    "availableDisplayTypes" : [ "table", "fatrow", "page" ]
+  },
+  "owner" : {
+    "id" : "5fuc-pqz2",
+    "displayName" : "NYC OpenData",
+    "profileImageUrlLarge" : "/api/users/5fuc-pqz2/profile_images/LARGE",
+    "profileImageUrlMedium" : "/api/users/5fuc-pqz2/profile_images/THUMB",
+    "profileImageUrlSmall" : "/api/users/5fuc-pqz2/profile_images/TINY",
+    "screenName" : "NYC OpenData",
+    "type" : "interactive",
+    "flags" : [ "acceptedEula", "mayBeStoriesCoOwner" ]
+  },
+  "query" : { },
+  "rights" : [ "read" ],
+  "tableAuthor" : {
+    "id" : "5fuc-pqz2",
+    "displayName" : "NYC OpenData",
+    "profileImageUrlLarge" : "/api/users/5fuc-pqz2/profile_images/LARGE",
+    "profileImageUrlMedium" : "/api/users/5fuc-pqz2/profile_images/THUMB",
+    "profileImageUrlSmall" : "/api/users/5fuc-pqz2/profile_images/TINY",
+    "screenName" : "NYC OpenData",
+    "type" : "interactive",
+    "flags" : [ "acceptedEula", "mayBeStoriesCoOwner" ]
+  },
+  "tags" : [ "pavement", "edge", "planimetrics" ],
+  "flags" : [ "default", "ownerMayBeContacted", "restorable", "restorePossibleForType" ]
+}

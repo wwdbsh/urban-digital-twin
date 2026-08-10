@@ -1,0 +1,175 @@
+{
+  "id" : "xgwd-7vhd",
+  "name" : "NYC Planimetric Database: Roadbed",
+  "assetType" : "map",
+  "attribution" : "Office of Technology and Innovation (OTI)",
+  "averageRating" : 0,
+  "category" : "Transportation",
+  "createdAt" : 1403721815,
+  "description" : "Planimetric basemap layer containing Roadbed. Roadbed is the foundation structure on which railroad tracks are laid.\t\t\t\r\nPlease see the following link for additional documentation- https://github.com/CityOfNewYork/nyc-planimetrics/blob/master/Capture_Rules.md.",
+  "diciBackend" : false,
+  "displayType" : "visualization_canvas_map",
+  "downloadCount" : 3239,
+  "hideFromCatalog" : false,
+  "hideFromDataJson" : false,
+  "locked" : false,
+  "modifyingViewUid" : "i36f-5ih7",
+  "newBackend" : true,
+  "numberOfComments" : 0,
+  "oid" : 40537758,
+  "provenance" : "official",
+  "publicationAppendEnabled" : false,
+  "publicationDate" : 1713990469,
+  "publicationGroup" : 6270494,
+  "publicationStage" : "published",
+  "rowClass" : "",
+  "rowsUpdatedAt" : 1713990327,
+  "tableId" : 8990240,
+  "totalTimesRated" : 0,
+  "viewCount" : 9640,
+  "viewLastModified" : 1714502905,
+  "viewType" : "tabular",
+  "approvals" : [ {
+    "reviewedAt" : 1458055203,
+    "reviewedAutomatically" : true,
+    "state" : "approved",
+    "submissionId" : 6286895,
+    "submissionObject" : "public_audience_request",
+    "submissionOutcome" : "change_audience",
+    "submittedAt" : 1458055203,
+    "targetAudience" : "public",
+    "workflowId" : 2285,
+    "submissionDetails" : {
+      "permissionType" : "READ"
+    },
+    "submissionOutcomeApplication" : {
+      "failureCount" : 0,
+      "status" : "success"
+    },
+    "submitter" : {
+      "id" : "5fuc-pqz2",
+      "displayName" : "NYC OpenData"
+    }
+  } ],
+  "clientContext" : {
+    "clientContextVariables" : [ ],
+    "inheritedVariables" : { }
+  },
+  "columns" : [ ],
+  "displayFormat" : {
+    "visualizationCanvasMetadata" : {
+      "vifs" : [ {
+        "configuration" : {
+          "viewSourceDataLink" : true,
+          "mapCenterAndZoom" : {
+            "center" : {
+              "lng" : -73.97733425139032,
+              "lat" : 40.70649854508473
+            },
+            "zoom" : 8
+          },
+          "basemapOptions" : {
+            "searchBoundaryLowerRightLongitude" : -73.69963142735735,
+            "searchBoundaryUpperLeftLongitude" : -74.25503707542327,
+            "searchBoundaryUpperLeftLatitude" : 40.91513123973883,
+            "navigationControl" : true,
+            "basemapStyle" : "mapbox://styles/mapbox/basic-v9",
+            "geoCoderControl" : false,
+            "geoLocateControl" : true,
+            "searchBoundaryLowerRightLatitude" : 40.49786585043062
+          },
+          "mapPitchAndBearing" : {
+            "bearing" : 0,
+            "pitch" : 0
+          },
+          "datasetMetadata" : false,
+          "panAndZoom" : true,
+          "locateUser" : false
+        },
+        "series" : [ {
+          "visible" : true,
+          "color" : {
+            "primary" : "#eb6900"
+          },
+          "mapOptions" : {
+            "shapeOutlineColor" : "#f98d27",
+            "colorByQuantificationMethod" : "category",
+            "mapFlyoutTitleColumnName" : "sub_code",
+            "mapType" : "boundaryMap",
+            "additionalFlyoutColumns" : [ "source_id", "feat_code", "status", "shape_leng", "shape_area" ]
+          },
+          "showLegend" : true,
+          "type" : "map",
+          "dataSource" : {
+            "measure" : {
+              "aggregationFunction" : "count"
+            },
+            "name" : "ROADBED",
+            "type" : "socrata.soql",
+            "datasetUid" : "i36f-5ih7",
+            "dimension" : {
+              "columnName" : "the_geom"
+            }
+          },
+          "primary" : true
+        } ],
+        "format" : {
+          "type" : "visualization_interchange_format",
+          "version" : 6
+        },
+        "description" : "",
+        "id" : "5537306f-1dba-486f-92c6-105dc4a02e69",
+        "title" : "",
+        "currentMapLayerIndex" : 0
+      } ],
+      "version" : 1
+    }
+  },
+  "grants" : [ {
+    "inherited" : false,
+    "type" : "viewer",
+    "flags" : [ "public" ]
+  } ],
+  "metadata" : {
+    "rdfClass" : "",
+    "rdfSubject" : "0",
+    "custom_fields" : {
+      "Data Collection" : {
+        "Data Collection" : "NYC Planimetric Database"
+      },
+      "Update" : {
+        "Automation" : "No",
+        "Date Made Public" : "6/25/2014",
+        "Update Frequency" : "As needed"
+      },
+      "Dataset Information" : {
+        "Agency" : "Office of Technology and Innovation (OTI)"
+      }
+    },
+    "availableDisplayTypes" : [ "visualization" ]
+  },
+  "owner" : {
+    "id" : "5fuc-pqz2",
+    "displayName" : "NYC OpenData",
+    "profileImageUrlLarge" : "/api/users/5fuc-pqz2/profile_images/LARGE",
+    "profileImageUrlMedium" : "/api/users/5fuc-pqz2/profile_images/THUMB",
+    "profileImageUrlSmall" : "/api/users/5fuc-pqz2/profile_images/TINY",
+    "screenName" : "NYC OpenData",
+    "type" : "interactive",
+    "flags" : [ "acceptedEula", "mayBeStoriesCoOwner" ]
+  },
+  "query" : { },
+  "rights" : [ "read" ],
+  "tableAuthor" : {
+    "id" : "5fuc-pqz2",
+    "displayName" : "NYC OpenData",
+    "profileImageUrlLarge" : "/api/users/5fuc-pqz2/profile_images/LARGE",
+    "profileImageUrlMedium" : "/api/users/5fuc-pqz2/profile_images/THUMB",
+    "profileImageUrlSmall" : "/api/users/5fuc-pqz2/profile_images/TINY",
+    "screenName" : "NYC OpenData",
+    "type" : "interactive",
+    "flags" : [ "acceptedEula", "mayBeStoriesCoOwner" ]
+  },
+  "tags" : [ "roadbed", "planimetrics" ],
+  "flags" : [ "ownerMayBeContacted", "restorable", "restorePossibleForType" ]
+}

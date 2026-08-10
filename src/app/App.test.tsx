@@ -65,7 +65,7 @@ vi.mock("../runtime/exterior-pilot-release", async (importOriginal) => {
   return { ...actual, loadExteriorPilotRelease: exteriorRuntimeMocks.loadExteriorPilotRelease };
 });
 
-import { App, applyStorefrontResolution, isCurrentStorefrontResolution, overlayLayoutPolicy, preserveFeatureSequence, resolveStorefrontBuilding, selectionFocusTransaction, type StorefrontResolutionState } from "./App";
+import { App, appendBlock835PublicRealmUrl, applyStorefrontResolution, block835PerformanceGate, block835PerformanceProbeMode, block835PublicRealmActivation, block835PublicRealmFailureMessage, isCurrentStorefrontResolution, overlayLayoutPolicy, preserveFeatureSequence, resolveStorefrontBuilding, selectionFocusTransaction, summarizeBlock835Frames, type StorefrontResolutionState } from "./App";
 import { navigationUrl, parseNavigationUrl } from "../domain/visitor-navigation";
 
 const initialTestUrl = window.location.href;
@@ -103,6 +103,85 @@ afterEach(() => { cleanup(); window.history.replaceState({}, "", initialTestUrl)
 const locatedFeature = runtimeFixtureFeatures.find((feature) => feature.kind === "poi")!;
 
 describe("explorer overlay policy", () => {
+  it("parses only the two deterministic external-browser performance probe modes", () => {
+    expect(block835PerformanceProbeMode("?block835Performance=stage3-only")).toBe("stage3-only");
+    expect(block835PerformanceProbeMode("?block835Performance=stage3-plus-public-realm")).toBe("stage3-plus-public-realm");
+    expect(block835PerformanceProbeMode("?block835Performance=unsupported")).toBeNull();
+    expect(block835PerformanceProbeMode("")).toBeNull();
+  });
+
+  it("summarizes deterministic frame samples and enforces the unchanged overlay gates", () => {
+    expect(summarizeBlock835Frames([10, 20, 30, 40])).toEqual({ sampleCount: 4, medianMs: 25, p95Ms: 40, maxMs: 40 });
+    expect(block835PerformanceGate({ medianMs: 12, p95Ms: 30 }, { p95Ms: 25 })).toMatchObject({
+      p95DeltaMs: 5,
+      p95Regression: 0.2,
+      overlayMedianPass: true,
+      overlayP95Pass: true,
+      p95RegressionPass: true,
+      pass: true,
+    });
+    expect(block835PerformanceGate({ medianMs: 12.01, p95Ms: 30.01 }, { p95Ms: 25 })).toMatchObject({ pass: false });
+  });
+
+  it("fails closed when a bare publicRealm URL has no genuinely active real base or Stage 3 exterior", () => {
+    const activation = block835PublicRealmActivation({
+      requested: true,
+      loadState: "ready",
+      hasVerifiedOverlay: true,
+      activeBaseReleaseId: null,
+      exteriorActive: false,
+      compatibleWithActiveBase: false,
+    });
+
+    expect(activation.active).toBe(false);
+    expect(activation.prerequisiteMessage).toContain("requires an active compatible real base");
+    expect(activation.prerequisiteMessage).toContain("active Stage 3 exterior/commercial overlay");
+  });
+
+  it("activates public realm only with a compatible active real base and active Stage 3 exterior", () => {
+    expect(block835PublicRealmActivation({
+      requested: true,
+      loadState: "ready",
+      hasVerifiedOverlay: true,
+      activeBaseReleaseId: "manhattan-civic-context-20260804",
+      exteriorActive: true,
+      compatibleWithActiveBase: true,
+    })).toEqual({ active: true, prerequisiteMessage: null });
+
+    expect(block835PublicRealmActivation({
+      requested: true,
+      loadState: "ready",
+      hasVerifiedOverlay: true,
+      activeBaseReleaseId: "manhattan-incompatible-base",
+      exteriorActive: true,
+      compatibleWithActiveBase: false,
+    }).active).toBe(false);
+  });
+
+  it("keeps public-realm fault status truthful when Stage 3 was never active", () => {
+    expect(block835PublicRealmFailureMessage(new Error("Public-realm request failed (503)."))).toBe(
+      "Public-realm request failed (503). The public-realm overlay was disabled; the existing base/exterior state was left unchanged.",
+    );
+    expect(block835PublicRealmFailureMessage(null)).toContain("The public-realm overlay was disabled; the existing base/exterior state was left unchanged.");
+    expect(block835PublicRealmFailureMessage(null)).not.toContain("buildings/storefronts remain active");
+  });
+
+  it("round-trips the additive Block 835 public-realm URL state without touching base release parameters", () => {
+    const canonical = appendBlock835PublicRealmUrl(
+      navigationUrl({ featureId: "doitt:778052", query: "empire", cameraMode: "overview", pose: null, poseInvalid: false, dataMode: "fixtures", releaseId: null }, initialTestUrl),
+      true,
+      "crosswalk:intersection-1",
+    );
+    const parsed = new URL(canonical);
+    expect(parsed.searchParams.get("feature")).toBe("doitt:778052");
+    expect(parsed.searchParams.get("publicRealm")).toBe("manhattan-esb-block-public-realm-20260806");
+    expect(parsed.searchParams.get("publicRealmFeature")).toBe("crosswalk:intersection-1");
+    const disabled = new URL(appendBlock835PublicRealmUrl(canonical, false, null));
+    expect(disabled.searchParams.has("publicRealm")).toBe(false);
+    expect(disabled.searchParams.has("publicRealmFeature")).toBe(false);
+    expect(disabled.searchParams.get("feature")).toBe("doitt:778052");
+  });
+
   it("keeps the map as the desktop main region while reserving only overlay insets", () => {
     expect(overlayLayoutPolicy(false, false)).toEqual({
       mapOwnsMainRegion: true,

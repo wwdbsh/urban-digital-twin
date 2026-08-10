@@ -5,7 +5,10 @@ import exteriorRelease from "../../../public/data/manhattan-esb-block-exterior-p
 import { runtimeFixtureFeatures } from "../../domain/features";
 import type { Feature } from "../../domain/schema";
 import type { CityAssetResolver } from "../../runtime/city-asset-manifest";
-import { STAGE3_STOREFRONT_PROJECTIONS_ATTRIBUTE, buildCollisionCheckedFeatureMap, canonicalPickId, clearStorefrontProjectionRecords, collectStorefrontProjectionRecords, commercialStorefrontProxyId, denseFeatureIntersectsBounds, densePoiMarkerStyle, denseRenderPlanKey, drillPickedEntityId, featureForPickedId, fixtureOnlyForFeature, focusCameraCoordinatesForFeature, focusCoordinatesForFeature, focusHeightForFeature, focusPoseForFeature, focusPoseForFeatureWithOcclusion, medianFrameInterval, nativeCameraControlBindings, normalizeFocusCameraPose, poiRenderMode, publishStorefrontProjectionRecords, selectDenseFeatureGroups, selectDenseFeatures, shouldApplyCameraPoseRequest, shouldFocusFeature, shouldReplaceDenseRenderPlan, shouldShowFeatureLabel, shouldStartFocusFlight, stage3StorefrontProofRequested, storefrontProjectionCameraSignature } from "./CesiumViewport";
+import { LocalFixtureCityAdapter } from "../../runtime/fixture-adapter";
+import { DEFAULT_LAYER_VISIBILITY } from "../../runtime/layers";
+import { STAGE3_RENDER_PROOF_ATTRIBUTE, STAGE3_STOREFRONT_PROJECTIONS_ATTRIBUTE, buildCollisionCheckedFeatureMap, canonicalPickId, clearStorefrontProjectionRecords, collectStage3RenderProof, collectStorefrontProjectionRecords, commercialStorefrontProxyId, denseFeatureIntersectsBounds, densePoiMarkerStyle, denseRenderPlanKey, drillPickedEntityId, featureForPickedId, fixtureOnlyForFeature, focusCameraCoordinatesForFeature, focusCoordinatesForFeature, focusHeightForFeature, focusPoseForFeature, focusPoseForFeatureWithOcclusion, medianFrameInterval, nativeCameraControlBindings, normalizeFocusCameraPose, poiRenderMode, publicRealmAssetEntityId, publicRealmProxyId, publicRealmRepresentative, publishStage3RenderProof, publishStorefrontProjectionRecords, selectDenseFeatureGroups, selectDenseFeatures, shouldApplyCameraPoseRequest, shouldFocusFeature, shouldReplaceDenseRenderPlan, shouldShowFeatureLabel, shouldStartFocusFlight, stage3StorefrontProofRequested, storefrontProjectionCameraSignature, supportedVisibleLayers } from "./CesiumViewport";
+import type { Block835PublicRealmFeature } from "../../runtime/block835-public-realm-release";
 
 describe("Cesium POI render seam", () => {
   const realRestaurant = (restaurants as unknown as Feature[])[0]!;
@@ -50,6 +53,24 @@ describe("Cesium POI render seam", () => {
   it("uses a stable namespace for accepted commercial storefront proxies", () => {
     expect(commercialStorefrontProxyId("storefront:osm:node:1@2")).toBe("commercial-storefront:storefront:osm:node:1@2");
     expect(commercialStorefrontProxyId("storefront:osm:node:1@2")).toBe(commercialStorefrontProxyId("storefront:osm:node:1@2"));
+  });
+
+  it("keeps Block 835 public-realm proxy and asset IDs isolated from buildings/storefronts", () => {
+    expect(publicRealmProxyId("crosswalk:intersection-1")).toBe("public-realm:feature:crosswalk:intersection-1");
+    expect(publicRealmAssetEntityId("roadbed")).toBe("public-realm:asset:roadbed");
+    const feature: Block835PublicRealmFeature = {
+      id: "crosswalk:intersection-1",
+      semantic: "crosswalk",
+      sourceDatasetId: "derived:block835",
+      geometry: { type: "MultiPolygon", coordinates: [[[[ -73.99, 40.748 ], [ -73.989, 40.748 ], [ -73.989, 40.749 ], [ -73.99, 40.749 ], [ -73.99, 40.748 ]]]] },
+      sourceCrs: "CRS84",
+      normalizedCrs: "EPSG:4326",
+      verticalDatum: "NAVD88",
+      claimLevel: "estimated",
+      uncertainty: { horizontalMeters: 2, verticalMeters: 0.1, temporal: "estimated" },
+      transform: { inputCrs: "CRS84", outputCrs: "EPSG:4326", verticalDatum: "NAVD88", method: "identity", residualMeters: 0, zPolicy: "none" },
+    };
+    expect(publicRealmRepresentative(feature)).toEqual([-73.99, 40.748]);
   });
 
   it("normalizes Cesium drill-pick entity wrappers to their string IDs", () => {
@@ -105,6 +126,38 @@ describe("Cesium POI render seam", () => {
     expect(stage3StorefrontProofRequested("?stage3Proof=unsupported")).toBe(false);
   });
 
+  it("proves all live Stage 3 model entities and storefront proxies instead of reusing manifest or UI counts", () => {
+    const storefronts = Array.from({ length: 8 }, (_, index) => ({
+      storefrontId: `storefront:${index}`,
+      canonicalBuildingId: `doitt:${index}`,
+      proxyEntityId: `commercial-storefront:storefront:${index}`,
+      canvasX: 20,
+      canvasY: 20,
+      visible: true,
+      inBounds: true,
+      cameraSignature: "camera",
+      rendered: true,
+    }));
+    const proof = collectStage3RenderProof(
+      Array.from({ length: 14 }, (_, index) => ({
+        canonicalBuildingId: `doitt:${index}`,
+        entityId: `doitt:${index}`,
+        modelUri: `/assets/manhattan-esb-block-exterior-pilot-20260805/doitt-${index}__lod_0.glb`,
+        modelEntity: true,
+        showing: true,
+      })),
+      storefronts,
+      "camera",
+      240,
+    );
+    expect(proof).toMatchObject({ expectedBuildingCount: 14, activeBuildingCount: 14, expectedStorefrontCount: 8, activeStorefrontCount: 8, pass: true });
+    expect(collectStage3RenderProof([{ canonicalBuildingId: "doitt:bad", entityId: "doitt:bad", modelUri: null, modelEntity: true, showing: true }], [], "camera", 240).pass).toBe(false);
+    const attributes = new Map<string, string>();
+    const element = { setAttribute: (name: string, value: string) => attributes.set(name, value) } as unknown as HTMLElement;
+    publishStage3RenderProof(element, proof);
+    expect(JSON.parse(attributes.get(STAGE3_RENDER_PROOF_ATTRIBUTE) ?? "{}")).toMatchObject({ pass: true, activeBuildingCount: 14, activeStorefrontCount: 8 });
+  });
+
   it("keeps ordinary dense POI markers bounded while retaining a strong selected marker", () => {
     expect(densePoiMarkerStyle(false)).toEqual({ pixelSize: 5, outlineWidth: 0, color: "#4ce2e6", opacity: 0.78 });
     expect(densePoiMarkerStyle(true)).toEqual({ pixelSize: 20, outlineWidth: 3, color: "#ffdf6b", opacity: 1 });
@@ -120,6 +173,21 @@ describe("Cesium POI render seam", () => {
     expect(medianFrameInterval([9, 1, 5])).toBe(5);
     expect(medianFrameInterval([10, 2, 8, 4])).toBe(6);
     expect(medianFrameInterval([])).toBeNull();
+  });
+
+  it("does not schedule unavailable shared layers while the fixture adapter is active", () => {
+    const fixture = new LocalFixtureCityAdapter();
+    expect(supportedVisibleLayers(fixture, DEFAULT_LAYER_VISIBILITY)).toEqual([
+      "buildings",
+      "pois",
+      "areas",
+      "stations",
+      "entrances",
+      "routes",
+    ]);
+    expect(() => supportedVisibleLayers({
+      getLayerManifest: () => { throw new Error("Corrupt layer manifest"); },
+    }, { buildings: true })).toThrow("Corrupt layer manifest");
   });
 
   it("bounds the citywide dense proxy while retaining a selected parent deterministically", () => {

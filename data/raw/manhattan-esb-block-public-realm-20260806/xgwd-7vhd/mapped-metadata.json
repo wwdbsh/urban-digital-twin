@@ -1,0 +1,458 @@
+{
+  "id" : "i36f-5ih7",
+  "name" : "NYC Planimetric Database: Roadbed",
+  "assetType" : "dataset",
+  "attribution" : "Office of Technology and Innovation (OTI)",
+  "averageRating" : 0,
+  "category" : "Transportation",
+  "createdAt" : 1403722395,
+  "description" : "Planimetric basemap layer containing Roadbed. Roadbed is the foundation structure on which railroad tracks are laid.\t\t\t\r\n\r\nPlease see the following link for additional documentation- https://github.com/CityOfNewYork/nyc-planimetrics/blob/master/Capture_Rules.md.",
+  "diciBackend" : false,
+  "displayType" : "table",
+  "downloadCount" : 1840,
+  "hideFromCatalog" : false,
+  "hideFromDataJson" : false,
+  "indexUpdatedAt" : 1536599086,
+  "locked" : false,
+  "newBackend" : true,
+  "numberOfComments" : 0,
+  "oid" : 18901576,
+  "provenance" : "official",
+  "publicationAppendEnabled" : false,
+  "publicationDate" : 1458055202,
+  "publicationGroup" : 6270494,
+  "publicationStage" : "published",
+  "rowClass" : "",
+  "rowsUpdatedAt" : 1713990327,
+  "tableId" : 8990240,
+  "totalTimesRated" : 0,
+  "viewCount" : 1427,
+  "viewLastModified" : 1765382646,
+  "viewType" : "tabular",
+  "approvals" : [ {
+    "reviewedAt" : 1458055203,
+    "reviewedAutomatically" : true,
+    "state" : "approved",
+    "submissionId" : 6177563,
+    "submissionObject" : "public_audience_request",
+    "submissionOutcome" : "change_audience",
+    "submittedAt" : 1458055203,
+    "targetAudience" : "public",
+    "workflowId" : 2285,
+    "submissionDetails" : {
+      "permissionType" : "READ"
+    },
+    "submissionOutcomeApplication" : {
+      "failureCount" : 0,
+      "status" : "success"
+    },
+    "submitter" : {
+      "id" : "5fuc-pqz2",
+      "displayName" : "NYC OpenData"
+    }
+  } ],
+  "clientContext" : {
+    "clientContextVariables" : [ ],
+    "inheritedVariables" : { }
+  },
+  "columns" : [ {
+    "id" : 246942998,
+    "name" : "the_geom",
+    "dataTypeName" : "multipolygon",
+    "description" : "Geometry field used for mapping. Geometry Type: Polygon",
+    "fieldName" : "the_geom",
+    "position" : 1,
+    "renderTypeName" : "multipolygon",
+    "tableColumnId" : 35024048,
+    "format" : { }
+  }, {
+    "id" : 246942996,
+    "name" : "SOURCE_ID",
+    "dataTypeName" : "number",
+    "description" : "Unique feature Identification Number.",
+    "fieldName" : "source_id",
+    "position" : 2,
+    "renderTypeName" : "number",
+    "tableColumnId" : 35024046,
+    "cachedContents" : {
+      "largest" : "21350092501.0",
+      "non_null" : "104961",
+      "null" : "0",
+      "top" : [ {
+        "item" : "0.0",
+        "count" : "505"
+      }, {
+        "item" : "7350000062.0",
+        "count" : "165"
+      }, {
+        "item" : "9350004324.0",
+        "count" : "102"
+      }, {
+        "item" : "13350004313.0",
+        "count" : "91"
+      }, {
+        "item" : "14350000029.0",
+        "count" : "79"
+      }, {
+        "item" : "2350001676.0",
+        "count" : "78"
+      }, {
+        "item" : "9350000073.0",
+        "count" : "71"
+      }, {
+        "item" : "8350004094.0",
+        "count" : "71"
+      }, {
+        "item" : "14350004176.0",
+        "count" : "66"
+      }, {
+        "item" : "9350005164.0",
+        "count" : "65"
+      }, {
+        "item" : "13350004109.0",
+        "count" : "64"
+      }, {
+        "item" : "6350000012.0",
+        "count" : "64"
+      }, {
+        "item" : "15350000001.0",
+        "count" : "57"
+      }, {
+        "item" : "2350001675.0",
+        "count" : "57"
+      }, {
+        "item" : "9350004401.0",
+        "count" : "49"
+      }, {
+        "item" : "7350004327.0",
+        "count" : "49"
+      }, {
+        "item" : "13350004104.0",
+        "count" : "46"
+      }, {
+        "item" : "14350004180.0",
+        "count" : "45"
+      }, {
+        "item" : "18350001732.0",
+        "count" : "44"
+      }, {
+        "item" : "11350000146.0",
+        "count" : "42"
+      } ],
+      "smallest" : "0.0",
+      "count" : "104961",
+      "cardinality" : "91693"
+    },
+    "format" : { }
+  }, {
+    "id" : 246942995,
+    "name" : "SUB_CODE",
+    "dataTypeName" : "number",
+    "description" : "Sub Feature Code (where applicable) indicates a subset of features within a given “Feature_Code” set.",
+    "fieldName" : "sub_code",
+    "position" : 3,
+    "renderTypeName" : "number",
+    "tableColumnId" : 35024045,
+    "cachedContents" : {
+      "largest" : "350030",
+      "non_null" : "104961",
+      "null" : "0",
+      "top" : [ {
+        "item" : "350000",
+        "count" : "77384"
+      }, {
+        "item" : "350010",
+        "count" : "23992"
+      }, {
+        "item" : "350020",
+        "count" : "3074"
+      }, {
+        "item" : "350030",
+        "count" : "511"
+      } ],
+      "smallest" : "350000",
+      "count" : "104961",
+      "cardinality" : "4"
+    },
+    "format" : { }
+  }, {
+    "id" : 246942997,
+    "name" : "FEAT_CODE",
+    "dataTypeName" : "number",
+    "description" : "Feature Code Indicates the type of feature.",
+    "fieldName" : "feat_code",
+    "position" : 4,
+    "renderTypeName" : "number",
+    "tableColumnId" : 35024047,
+    "cachedContents" : {
+      "largest" : "3500",
+      "non_null" : "104961",
+      "null" : "0",
+      "top" : [ {
+        "item" : "3500",
+        "count" : "104961"
+      } ],
+      "smallest" : "3500",
+      "count" : "104961",
+      "cardinality" : "1"
+    },
+    "format" : { }
+  }, {
+    "id" : 246942999,
+    "name" : "STATUS",
+    "dataTypeName" : "text",
+    "description" : "Field indicating the feature status as it fits into one of the following categories:    a)     b) Feature has changed in 2022 collection - feature existed previously but has been updated during the 2022 planimetrics update project.    c) No change in 2022 collection - feature is unchanged from the source planimetrics database.",
+    "fieldName" : "status",
+    "position" : 5,
+    "renderTypeName" : "text",
+    "tableColumnId" : 35024049,
+    "cachedContents" : {
+      "largest" : "Updated",
+      "non_null" : "104961",
+      "null" : "0",
+      "top" : [ {
+        "item" : "Unchanged",
+        "count" : "80760"
+      }, {
+        "item" : "Updated",
+        "count" : "23692"
+      }, {
+        "item" : "New",
+        "count" : "509"
+      } ],
+      "smallest" : "New",
+      "count" : "104961",
+      "cardinality" : "3"
+    },
+    "format" : { }
+  }, {
+    "id" : 246943000,
+    "name" : "SHAPE_Leng",
+    "dataTypeName" : "number",
+    "description" : "The shape length values for polyline feature classes.",
+    "fieldName" : "shape_leng",
+    "position" : 6,
+    "renderTypeName" : "number",
+    "tableColumnId" : 35024050,
+    "cachedContents" : {
+      "largest" : "290863.719409",
+      "non_null" : "104961",
+      "null" : "0",
+      "top" : [ {
+        "item" : "166.685437746",
+        "count" : "2"
+      }, {
+        "item" : "456.311336479",
+        "count" : "2"
+      }, {
+        "item" : "426.870687051",
+        "count" : "2"
+      }, {
+        "item" : "551.859861436",
+        "count" : "1"
+      }, {
+        "item" : "473.755624352",
+        "count" : "1"
+      }, {
+        "item" : "1312.12460686",
+        "count" : "1"
+      }, {
+        "item" : "614.612455904",
+        "count" : "1"
+      }, {
+        "item" : "426.809059051",
+        "count" : "1"
+      }, {
+        "item" : "387.105309717",
+        "count" : "1"
+      }, {
+        "item" : "1532.41869667",
+        "count" : "1"
+      }, {
+        "item" : "254.993432001",
+        "count" : "1"
+      }, {
+        "item" : "481.492987023",
+        "count" : "1"
+      }, {
+        "item" : "296.377439116",
+        "count" : "1"
+      }, {
+        "item" : "1034.3856013",
+        "count" : "1"
+      }, {
+        "item" : "183.089543663",
+        "count" : "1"
+      }, {
+        "item" : "1222.36635721",
+        "count" : "1"
+      }, {
+        "item" : "80.7691907191",
+        "count" : "1"
+      }, {
+        "item" : "632.081512644",
+        "count" : "1"
+      }, {
+        "item" : "159.948134686",
+        "count" : "1"
+      }, {
+        "item" : "198.910344595",
+        "count" : "1"
+      } ],
+      "smallest" : "0.0834860603333",
+      "count" : "104961",
+      "cardinality" : "104958"
+    },
+    "format" : { }
+  }, {
+    "id" : 246943001,
+    "name" : "SHAPE_Area",
+    "dataTypeName" : "number",
+    "description" : "The shape length and area values for polygon feature classes.",
+    "fieldName" : "shape_area",
+    "position" : 7,
+    "renderTypeName" : "number",
+    "tableColumnId" : 35024051,
+    "cachedContents" : {
+      "largest" : "50825533.4107",
+      "non_null" : "104961",
+      "null" : "0",
+      "top" : [ {
+        "item" : "889.091054632",
+        "count" : "2"
+      }, {
+        "item" : "860.401088803",
+        "count" : "2"
+      }, {
+        "item" : "1173.36297416",
+        "count" : "2"
+      }, {
+        "item" : "10850.3890561",
+        "count" : "1"
+      }, {
+        "item" : "5621.90630411",
+        "count" : "1"
+      }, {
+        "item" : "46712.8507492",
+        "count" : "1"
+      }, {
+        "item" : "3843.86477265",
+        "count" : "1"
+      }, {
+        "item" : "20856.3781503",
+        "count" : "1"
+      }, {
+        "item" : "1356.10104001",
+        "count" : "1"
+      }, {
+        "item" : "7055.54216669",
+        "count" : "1"
+      }, {
+        "item" : "2195.15722634",
+        "count" : "1"
+      }, {
+        "item" : "22958.5253631",
+        "count" : "1"
+      }, {
+        "item" : "1624.23557036",
+        "count" : "1"
+      }, {
+        "item" : "8822.79871378",
+        "count" : "1"
+      }, {
+        "item" : "52405.7942591",
+        "count" : "1"
+      }, {
+        "item" : "949.990859713",
+        "count" : "1"
+      }, {
+        "item" : "20531.5748158",
+        "count" : "1"
+      }, {
+        "item" : "6513.99311394",
+        "count" : "1"
+      }, {
+        "item" : "26124.9682934",
+        "count" : "1"
+      }, {
+        "item" : "0.113208056521",
+        "count" : "1"
+      } ],
+      "smallest" : "0.000217107183249",
+      "count" : "104961",
+      "cardinality" : "104958"
+    },
+    "format" : { }
+  } ],
+  "displayFormat" : {
+    "distinctLegend" : true,
+    "bkgdLayers" : [ {
+      "layerKey" : "World Street Map (ESRI)",
+      "alias" : "ESRI",
+      "opacity" : 1
+    } ],
+    "exclusiveLayers" : true,
+    "viewDefinitions" : [ {
+      "uid" : "self"
+    } ]
+  },
+  "grants" : [ {
+    "inherited" : false,
+    "type" : "viewer",
+    "flags" : [ "public" ]
+  } ],
+  "metadata" : {
+    "rdfSubject" : "0",
+    "rdfClass" : "",
+    "attachments" : [ {
+      "filename" : "Roadbed_Data Dictionary.xlsx",
+      "assetId" : "d32655df-f9e7-4ecc-aa12-e471014cca97",
+      "name" : "Roadbed_Data Dictionary.xlsx"
+    }, {
+      "filename" : "NYC_Planimetrics_2022.gdb.zip",
+      "assetId" : "05c71ee0-4251-4b06-a0f9-00a5908c7a76",
+      "name" : "NYC_Planimetrics_2022.gdb.zip"
+    }, {
+      "filename" : "NYC_Planimetrics_Historical_Data 2000-2016.zip",
+      "assetId" : "65e25700-bcaa-4bf4-a441-d30d778def14",
+      "name" : "NYC_Planimetrics_Historical_Data 2000-2016.zip"
+    } ],
+    "custom_fields" : {
+      "Update" : {
+        "Automation" : "No",
+        "Date Made Public" : "6/25/2014",
+        "Update Frequency" : "As needed",
+        "Data Change Frequency" : "As Needed"
+      },
+      "Dataset Information" : {
+        "Agency" : "Office of Technology and Innovation (OTI)"
+      }
+    },
+    "rowLabel" : "location of the roadbed.",
+    "availableDisplayTypes" : [ "table", "fatrow", "page" ]
+  },
+  "owner" : {
+    "id" : "5fuc-pqz2",
+    "displayName" : "NYC OpenData",
+    "profileImageUrlLarge" : "/api/users/5fuc-pqz2/profile_images/LARGE",
+    "profileImageUrlMedium" : "/api/users/5fuc-pqz2/profile_images/THUMB",
+    "profileImageUrlSmall" : "/api/users/5fuc-pqz2/profile_images/TINY",
+    "screenName" : "NYC OpenData",
+    "type" : "interactive",
+    "flags" : [ "acceptedEula", "mayBeStoriesCoOwner" ]
+  },
+  "query" : { },
+  "rights" : [ "read" ],
+  "tableAuthor" : {
+    "id" : "5fuc-pqz2",
+    "displayName" : "NYC OpenData",
+    "profileImageUrlLarge" : "/api/users/5fuc-pqz2/profile_images/LARGE",
+    "profileImageUrlMedium" : "/api/users/5fuc-pqz2/profile_images/THUMB",
+    "profileImageUrlSmall" : "/api/users/5fuc-pqz2/profile_images/TINY",
+    "screenName" : "NYC OpenData",
+    "type" : "interactive",
+    "flags" : [ "acceptedEula", "mayBeStoriesCoOwner" ]
+  },
+  "tags" : [ "roadbed", "planimetrics" ],
+  "flags" : [ "default", "ownerMayBeContacted", "restorable", "restorePossibleForType" ]
+}

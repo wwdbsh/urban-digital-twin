@@ -54,6 +54,12 @@
     "exterior-pilot:validate": "node --experimental-strip-types scripts/exterior-pilot-cli.mjs validate",
     "exterior-pilot:benchmark": "node --experimental-strip-types scripts/exterior-pilot-cli.mjs benchmark",
     "exterior-pilot:publish-local": "node --experimental-strip-types scripts/exterior-pilot-cli.mjs publish-local",
+    "public-realm:acquire": "node scripts/block835-public-realm-cli.mjs acquire",
+    "public-realm:validate:raw": "node scripts/block835-public-realm-cli.mjs validate:raw",
+    "public-realm:normalize": "node scripts/block835-public-realm-cli.mjs normalize",
+    "public-realm:build": "node scripts/block835-public-realm-cli.mjs build",
+    "public-realm:validate": "node scripts/block835-public-realm-cli.mjs validate",
+    "public-realm:benchmark": "node scripts/block835-public-realm-cli.mjs benchmark",
     "test:watch": "vitest"
   },
   "dependencies": {

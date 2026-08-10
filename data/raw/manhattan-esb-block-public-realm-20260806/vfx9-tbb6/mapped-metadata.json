@@ -1,0 +1,452 @@
+{
+  "id" : "52n9-sdep",
+  "name" : "NYC Planimetric Database: Sidewalk",
+  "assetType" : "dataset",
+  "attribution" : "Office of Technology and Innovation (OTI)",
+  "averageRating" : 0,
+  "category" : "City Government",
+  "createdAt" : 1404760401,
+  "description" : "Planimetric basemap polygon layer containing sidewalk features. \r\n\r\nPlease see the following link for additional documentation- https://github.com/CityOfNewYork/nyc-planimetrics/blob/master/Capture_Rules.md.",
+  "diciBackend" : false,
+  "displayType" : "table",
+  "downloadCount" : 2500,
+  "hideFromCatalog" : false,
+  "hideFromDataJson" : false,
+  "indexUpdatedAt" : 1536848855,
+  "locked" : false,
+  "newBackend" : true,
+  "numberOfComments" : 0,
+  "oid" : 18900924,
+  "provenance" : "official",
+  "publicationAppendEnabled" : false,
+  "publicationDate" : 1458053708,
+  "publicationGroup" : 6258419,
+  "publicationStage" : "published",
+  "rowClass" : "",
+  "rowsUpdatedAt" : 1713990022,
+  "tableId" : 8989708,
+  "totalTimesRated" : 0,
+  "viewCount" : 2246,
+  "viewLastModified" : 1765382416,
+  "viewType" : "tabular",
+  "approvals" : [ {
+    "reviewedAt" : 1458053709,
+    "reviewedAutomatically" : true,
+    "state" : "approved",
+    "submissionId" : 6177558,
+    "submissionObject" : "public_audience_request",
+    "submissionOutcome" : "change_audience",
+    "submittedAt" : 1458053709,
+    "targetAudience" : "public",
+    "workflowId" : 2285,
+    "submissionDetails" : {
+      "permissionType" : "READ"
+    },
+    "submissionOutcomeApplication" : {
+      "failureCount" : 0,
+      "status" : "success"
+    },
+    "submitter" : {
+      "id" : "5fuc-pqz2",
+      "displayName" : "NYC OpenData"
+    }
+  } ],
+  "clientContext" : {
+    "clientContextVariables" : [ ],
+    "inheritedVariables" : { }
+  },
+  "columns" : [ {
+    "id" : 246940090,
+    "name" : "the_geom",
+    "dataTypeName" : "multipolygon",
+    "description" : "Geometry field used for mapping. Geometry Type: Polygon",
+    "fieldName" : "the_geom",
+    "position" : 1,
+    "renderTypeName" : "multipolygon",
+    "tableColumnId" : 35023600,
+    "format" : { }
+  }, {
+    "id" : 246940091,
+    "name" : "SOURCE_ID",
+    "dataTypeName" : "number",
+    "description" : "Unique feature Identification Number.",
+    "fieldName" : "source_id",
+    "position" : 2,
+    "renderTypeName" : "number",
+    "tableColumnId" : 35023601,
+    "cachedContents" : {
+      "largest" : "21380051294.0",
+      "non_null" : "50865",
+      "null" : "0",
+      "top" : [ {
+        "item" : "0.0",
+        "count" : "2089"
+      }, {
+        "item" : "20380000714.0",
+        "count" : "5"
+      }, {
+        "item" : "17380001044.0",
+        "count" : "5"
+      }, {
+        "item" : "16380000872.0",
+        "count" : "5"
+      }, {
+        "item" : "18380002892.0",
+        "count" : "4"
+      }, {
+        "item" : "13380000060.0",
+        "count" : "4"
+      }, {
+        "item" : "14380000307.0",
+        "count" : "4"
+      }, {
+        "item" : "10380001305.0",
+        "count" : "4"
+      }, {
+        "item" : "20380001680.0",
+        "count" : "4"
+      }, {
+        "item" : "19380004234.0",
+        "count" : "4"
+      }, {
+        "item" : "2380000461.0",
+        "count" : "4"
+      }, {
+        "item" : "13380003624.0",
+        "count" : "4"
+      }, {
+        "item" : "19380001714.0",
+        "count" : "4"
+      }, {
+        "item" : "15380000226.0",
+        "count" : "3"
+      }, {
+        "item" : "12380000558.0",
+        "count" : "3"
+      }, {
+        "item" : "9380000949.0",
+        "count" : "3"
+      }, {
+        "item" : "15380000323.0",
+        "count" : "3"
+      }, {
+        "item" : "1380000301.0",
+        "count" : "3"
+      }, {
+        "item" : "16380001220.0",
+        "count" : "3"
+      }, {
+        "item" : "10380000372.0",
+        "count" : "3"
+      } ],
+      "smallest" : "0.0",
+      "count" : "50865",
+      "cardinality" : "48395"
+    },
+    "format" : { }
+  }, {
+    "id" : 246940092,
+    "name" : "SUB_CODE",
+    "dataTypeName" : "number",
+    "description" : "Sub Feature Code (where applicable) indicates a subset of features within a given “Feature_Code” set.",
+    "fieldName" : "sub_code",
+    "position" : 3,
+    "renderTypeName" : "number",
+    "tableColumnId" : 35023602,
+    "cachedContents" : {
+      "largest" : "380010",
+      "non_null" : "50865",
+      "null" : "0",
+      "top" : [ {
+        "item" : "380000",
+        "count" : "44683"
+      }, {
+        "item" : "380010",
+        "count" : "6182"
+      } ],
+      "smallest" : "380000",
+      "count" : "50865",
+      "cardinality" : "2"
+    },
+    "format" : { }
+  }, {
+    "id" : 246940093,
+    "name" : "FEAT_CODE",
+    "dataTypeName" : "number",
+    "description" : "Feature Code Indicates the type of feature.",
+    "fieldName" : "feat_code",
+    "position" : 4,
+    "renderTypeName" : "number",
+    "tableColumnId" : 35023603,
+    "cachedContents" : {
+      "largest" : "3800",
+      "non_null" : "50865",
+      "null" : "0",
+      "top" : [ {
+        "item" : "3800",
+        "count" : "50865"
+      } ],
+      "smallest" : "3800",
+      "count" : "50865",
+      "cardinality" : "1"
+    },
+    "format" : { }
+  }, {
+    "id" : 246940094,
+    "name" : "STATUS",
+    "dataTypeName" : "text",
+    "description" : "Field indicating the feature status as it fits into one of the following categories:    a)     b) Feature has changed in 2022 collection - feature existed previously but has been updated during the 2022 planimetrics update project.    c) No change in 2022 collection - feature is unchanged from the source planimetrics database.",
+    "fieldName" : "status",
+    "position" : 5,
+    "renderTypeName" : "text",
+    "tableColumnId" : 35023604,
+    "cachedContents" : {
+      "largest" : "Updated",
+      "non_null" : "50865",
+      "null" : "0",
+      "top" : [ {
+        "item" : "Unchanged",
+        "count" : "36778"
+      }, {
+        "item" : "Updated",
+        "count" : "12003"
+      }, {
+        "item" : "New",
+        "count" : "2084"
+      } ],
+      "smallest" : "New",
+      "count" : "50865",
+      "cardinality" : "3"
+    },
+    "format" : { }
+  }, {
+    "id" : 246940095,
+    "name" : "SHAPE_Leng",
+    "dataTypeName" : "number",
+    "description" : "The shape length values for polyline feature classes.",
+    "fieldName" : "shape_leng",
+    "position" : 6,
+    "renderTypeName" : "number",
+    "tableColumnId" : 35023605,
+    "cachedContents" : {
+      "largest" : "170326.174298",
+      "non_null" : "50865",
+      "null" : "0",
+      "top" : [ {
+        "item" : "48.5830977474",
+        "count" : "2"
+      }, {
+        "item" : "2062.56132187",
+        "count" : "1"
+      }, {
+        "item" : "6110.2334804",
+        "count" : "1"
+      }, {
+        "item" : "951.075363741",
+        "count" : "1"
+      }, {
+        "item" : "4635.61366401",
+        "count" : "1"
+      }, {
+        "item" : "964.706146064",
+        "count" : "1"
+      }, {
+        "item" : "3527.69636585",
+        "count" : "1"
+      }, {
+        "item" : "3675.2914978",
+        "count" : "1"
+      }, {
+        "item" : "3003.21434329",
+        "count" : "1"
+      }, {
+        "item" : "2300.05071532",
+        "count" : "1"
+      }, {
+        "item" : "2271.05325041",
+        "count" : "1"
+      }, {
+        "item" : "239.656447485",
+        "count" : "1"
+      }, {
+        "item" : "1802.43243135",
+        "count" : "1"
+      }, {
+        "item" : "157.58698726",
+        "count" : "1"
+      }, {
+        "item" : "3756.5211968",
+        "count" : "1"
+      }, {
+        "item" : "3738.37130341",
+        "count" : "1"
+      }, {
+        "item" : "2270.36108308",
+        "count" : "1"
+      }, {
+        "item" : "2087.98873112",
+        "count" : "1"
+      }, {
+        "item" : "271.12151148",
+        "count" : "1"
+      }, {
+        "item" : "2750.58286454",
+        "count" : "1"
+      } ],
+      "smallest" : "13.8881542718",
+      "count" : "50865",
+      "cardinality" : "50864"
+    },
+    "format" : { }
+  }, {
+    "id" : 246940096,
+    "name" : "SHAPE_Area",
+    "dataTypeName" : "number",
+    "description" : "The shape length and area values for polygon feature classes.",
+    "fieldName" : "shape_area",
+    "position" : 7,
+    "renderTypeName" : "number",
+    "tableColumnId" : 35023606,
+    "cachedContents" : {
+      "largest" : "1238857.90051",
+      "non_null" : "50865",
+      "null" : "0",
+      "top" : [ {
+        "item" : "151.686948381",
+        "count" : "2"
+      }, {
+        "item" : "13027.303515",
+        "count" : "1"
+      }, {
+        "item" : "1291.25016988",
+        "count" : "1"
+      }, {
+        "item" : "8423.42663967",
+        "count" : "1"
+      }, {
+        "item" : "8110.77848325",
+        "count" : "1"
+      }, {
+        "item" : "15809.9696876",
+        "count" : "1"
+      }, {
+        "item" : "14340.2517177",
+        "count" : "1"
+      }, {
+        "item" : "16690.7446151",
+        "count" : "1"
+      }, {
+        "item" : "2993.49319552",
+        "count" : "1"
+      }, {
+        "item" : "29609.2596414",
+        "count" : "1"
+      }, {
+        "item" : "30774.9695782",
+        "count" : "1"
+      }, {
+        "item" : "2239.58051929",
+        "count" : "1"
+      }, {
+        "item" : "1597.6913289",
+        "count" : "1"
+      }, {
+        "item" : "14279.3771025",
+        "count" : "1"
+      }, {
+        "item" : "8049.38288918",
+        "count" : "1"
+      }, {
+        "item" : "1417.23707472",
+        "count" : "1"
+      }, {
+        "item" : "256.037223209",
+        "count" : "1"
+      }, {
+        "item" : "12387.0872177",
+        "count" : "1"
+      }, {
+        "item" : "119.24509531",
+        "count" : "1"
+      }, {
+        "item" : "9903.23375179",
+        "count" : "1"
+      } ],
+      "smallest" : "10.1835909819",
+      "count" : "50865",
+      "cardinality" : "50864"
+    },
+    "format" : { }
+  } ],
+  "displayFormat" : {
+    "distinctLegend" : true,
+    "bkgdLayers" : [ {
+      "layerKey" : "World Street Map (ESRI)",
+      "alias" : "ESRI",
+      "opacity" : 1
+    } ],
+    "exclusiveLayers" : true,
+    "viewDefinitions" : [ {
+      "uid" : "self"
+    } ]
+  },
+  "grants" : [ {
+    "inherited" : false,
+    "type" : "viewer",
+    "flags" : [ "public" ]
+  } ],
+  "metadata" : {
+    "rdfSubject" : "0",
+    "rdfClass" : "",
+    "attachments" : [ {
+      "filename" : "Sidewalk_Data Dictionary.xlsx",
+      "assetId" : "d6c9a71c-f5b2-4b73-948a-891fde0467e7",
+      "name" : "Sidewalk_Data Dictionary.xlsx"
+    }, {
+      "filename" : "NYC_Planimetrics_2022.gdb.zip",
+      "assetId" : "352fc056-2023-4b16-b363-342c16edf020",
+      "name" : "NYC_Planimetrics_2022.gdb.zip"
+    }, {
+      "filename" : "NYC_Planimetrics_Historical_Data 2000-2016.zip",
+      "assetId" : "94731e4d-23ab-4f1d-9450-b02464f717e3",
+      "name" : "NYC_Planimetrics_Historical_Data 2000-2016.zip"
+    } ],
+    "custom_fields" : {
+      "Update" : {
+        "Automation" : "No",
+        "Date Made Public" : "7/8/2014",
+        "Update Frequency" : "As needed",
+        "Data Change Frequency" : "As Needed"
+      },
+      "Dataset Information" : {
+        "Agency" : "Office of Technology and Innovation (OTI)"
+      }
+    },
+    "rowLabel" : "location of the sidewalk.",
+    "availableDisplayTypes" : [ "table", "fatrow", "page" ]
+  },
+  "owner" : {
+    "id" : "5fuc-pqz2",
+    "displayName" : "NYC OpenData",
+    "profileImageUrlLarge" : "/api/users/5fuc-pqz2/profile_images/LARGE",
+    "profileImageUrlMedium" : "/api/users/5fuc-pqz2/profile_images/THUMB",
+    "profileImageUrlSmall" : "/api/users/5fuc-pqz2/profile_images/TINY",
+    "screenName" : "NYC OpenData",
+    "type" : "interactive",
+    "flags" : [ "acceptedEula", "mayBeStoriesCoOwner" ]
+  },
+  "query" : { },
+  "rights" : [ "read" ],
+  "tableAuthor" : {
+    "id" : "5fuc-pqz2",
+    "displayName" : "NYC OpenData",
+    "profileImageUrlLarge" : "/api/users/5fuc-pqz2/profile_images/LARGE",
+    "profileImageUrlMedium" : "/api/users/5fuc-pqz2/profile_images/THUMB",
+    "profileImageUrlSmall" : "/api/users/5fuc-pqz2/profile_images/TINY",
+    "screenName" : "NYC OpenData",
+    "type" : "interactive",
+    "flags" : [ "acceptedEula", "mayBeStoriesCoOwner" ]
+  },
+  "tags" : [ "sidewalk", "planimetrics" ],
+  "flags" : [ "default", "ownerMayBeContacted", "restorable", "restorePossibleForType" ]
+}

@@ -1,0 +1,174 @@
+{
+  "id" : "x9uq-u3qs",
+  "name" : "NYC Planimetric Database: Pavement Edge",
+  "assetType" : "map",
+  "attribution" : "Office of Technology and Innovation (OTI)",
+  "averageRating" : 0,
+  "category" : "Environment",
+  "createdAt" : 1403717606,
+  "description" : "Planimetric basemap layer containing pavement edge features. Please see the following link for additional documentation- https://github.com/CityOfNewYork/nyc-planimetrics/blob/master/Capture_Rules.md.",
+  "diciBackend" : false,
+  "displayType" : "visualization_canvas_map",
+  "downloadCount" : 2851,
+  "hideFromCatalog" : false,
+  "hideFromDataJson" : false,
+  "locked" : false,
+  "modifyingViewUid" : "vs44-rznx",
+  "newBackend" : true,
+  "numberOfComments" : 0,
+  "oid" : 40540782,
+  "provenance" : "official",
+  "publicationAppendEnabled" : false,
+  "publicationDate" : 1714052190,
+  "publicationGroup" : 6270513,
+  "publicationStage" : "published",
+  "rowClass" : "",
+  "rowsUpdatedAt" : 1714164498,
+  "tableId" : 19510463,
+  "totalTimesRated" : 0,
+  "viewCount" : 8258,
+  "viewLastModified" : 1714164481,
+  "viewType" : "tabular",
+  "approvals" : [ {
+    "reviewedAt" : 1458057501,
+    "reviewedAutomatically" : true,
+    "state" : "approved",
+    "submissionId" : 6289067,
+    "submissionObject" : "public_audience_request",
+    "submissionOutcome" : "change_audience",
+    "submittedAt" : 1458057501,
+    "targetAudience" : "public",
+    "workflowId" : 2285,
+    "submissionDetails" : {
+      "permissionType" : "READ"
+    },
+    "submissionOutcomeApplication" : {
+      "failureCount" : 0,
+      "status" : "success"
+    },
+    "submitter" : {
+      "id" : "5fuc-pqz2",
+      "displayName" : "NYC OpenData"
+    }
+  } ],
+  "clientContext" : {
+    "clientContextVariables" : [ ],
+    "inheritedVariables" : { }
+  },
+  "columns" : [ ],
+  "displayFormat" : {
+    "visualizationCanvasMetadata" : {
+      "vifs" : [ {
+        "configuration" : {
+          "viewSourceDataLink" : true,
+          "mapCenterAndZoom" : {
+            "center" : {
+              "lng" : -73.8136841522961,
+              "lat" : 40.696098142520356
+            },
+            "zoom" : 9.272222820083314
+          },
+          "basemapOptions" : {
+            "searchBoundaryLowerRightLongitude" : -73.69963142735735,
+            "searchBoundaryUpperLeftLongitude" : -74.25503707542327,
+            "searchBoundaryUpperLeftLatitude" : 40.91513123973883,
+            "navigationControl" : true,
+            "basemapStyle" : "mapbox://styles/mapbox/basic-v9",
+            "geoCoderControl" : false,
+            "geoLocateControl" : true,
+            "searchBoundaryLowerRightLatitude" : 40.49786585043062
+          },
+          "mapPitchAndBearing" : {
+            "bearing" : 0,
+            "pitch" : 0
+          },
+          "datasetMetadata" : false,
+          "panAndZoom" : true,
+          "locateUser" : false
+        },
+        "series" : [ {
+          "visible" : true,
+          "color" : {
+            "primary" : "#f98d27"
+          },
+          "mapOptions" : {
+            "colorByQuantificationMethod" : "category",
+            "mapFlyoutTitleColumnName" : "source_id",
+            "mapType" : "lineMap",
+            "additionalFlyoutColumns" : [ "feat_code", "sub_code", "status", "blockf_id", "conflated", "shape_leng" ]
+          },
+          "showLegend" : true,
+          "type" : "map",
+          "dataSource" : {
+            "measure" : {
+              "aggregationFunction" : "count"
+            },
+            "name" : "PAVEMENT_EDGE",
+            "type" : "socrata.soql",
+            "datasetUid" : "vs44-rznx",
+            "dimension" : {
+              "columnName" : "the_geom"
+            }
+          },
+          "primary" : true
+        } ],
+        "format" : {
+          "type" : "visualization_interchange_format",
+          "version" : 6
+        },
+        "description" : "",
+        "id" : "a5f72b46-779b-4e40-9973-1aca5d1e8548",
+        "title" : "",
+        "currentMapLayerIndex" : 0
+      } ],
+      "version" : 1
+    }
+  },
+  "grants" : [ {
+    "inherited" : false,
+    "type" : "viewer",
+    "flags" : [ "public" ]
+  } ],
+  "metadata" : {
+    "rdfClass" : "",
+    "rdfSubject" : "0",
+    "custom_fields" : {
+      "Data Collection" : {
+        "Data Collection" : "NYC Planimetric Database"
+      },
+      "Update" : {
+        "Automation" : "No",
+        "Date Made Public" : "6/25/2014",
+        "Update Frequency" : "As needed"
+      },
+      "Dataset Information" : {
+        "Agency" : "Office of Technology and Innovation (OTI)"
+      }
+    },
+    "availableDisplayTypes" : [ "visualization" ]
+  },
+  "owner" : {
+    "id" : "5fuc-pqz2",
+    "displayName" : "NYC OpenData",
+    "profileImageUrlLarge" : "/api/users/5fuc-pqz2/profile_images/LARGE",
+    "profileImageUrlMedium" : "/api/users/5fuc-pqz2/profile_images/THUMB",
+    "profileImageUrlSmall" : "/api/users/5fuc-pqz2/profile_images/TINY",
+    "screenName" : "NYC OpenData",
+    "type" : "interactive",
+    "flags" : [ "acceptedEula", "mayBeStoriesCoOwner" ]
+  },
+  "query" : { },
+  "rights" : [ "read" ],
+  "tableAuthor" : {
+    "id" : "5fuc-pqz2",
+    "displayName" : "NYC OpenData",
+    "profileImageUrlLarge" : "/api/users/5fuc-pqz2/profile_images/LARGE",
+    "profileImageUrlMedium" : "/api/users/5fuc-pqz2/profile_images/THUMB",
+    "profileImageUrlSmall" : "/api/users/5fuc-pqz2/profile_images/TINY",
+    "screenName" : "NYC OpenData",
+    "type" : "interactive",
+    "flags" : [ "acceptedEula", "mayBeStoriesCoOwner" ]
+  },
+  "tags" : [ "pavement", "edge", "planimetrics" ],
+  "flags" : [ "ownerMayBeContacted", "restorable", "restorePossibleForType" ]
+}

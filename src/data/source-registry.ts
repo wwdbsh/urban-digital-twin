@@ -16,6 +16,14 @@ const commercialApprovalEvidence: SourceApprovalEvidence = {
   exclusions: ["Google products/data/imagery", "OSM main API", "OSM tiles", "Nominatim", "Overpass Turbo", "Geofabrik", "third-party extracts", "credentials", "cookies", "runtime provider requests", "public deployment", "commit", "push"],
 };
 
+/** Durable approval for the additive, local-only Block 835 public-realm unit. */
+export const BLOCK835_PUBLIC_REALM_APPROVAL_EVIDENCE: SourceApprovalEvidence = {
+  evidenceId: "approval:block835-public-realm:20260806:user-approved",
+  fingerprintSha256: "378fec5e7306c224c133de78cc18323b9ca8410039af76974dfabdf7de4cb5d5",
+  scope: "Local-only immutable NYC OTI Planimetrics snapshots for Sidewalk vfx9-tbb6, Roadbed xgwd-7vhd, and Pavement Edge x9uq-u3qs, deterministically clipped to the Block 835 building-union envelope plus only four adjacent intersection approaches; roadbed/sidewalk geometry is source-backed, curb vertical profile is estimated/source-constrained, and crosswalk placement/striping is deterministic estimated output.",
+  exclusions: ["Google products/data/imagery", "OSM/Overpass/third-party extracts", "paid or credentialed services", "runtime external network", "public deployment or conveyance", "Manhattan-wide generation", "current-paint or survey-grade crosswalk/curb claims", "street furniture/landscaping/traffic/lighting/signs/facades"],
+};
+
 const cityTerms = "https://www.nyc.gov/html/datamine/html/data/terms.html?dataSetJs=raw";
 const overtureTerms = "https://overturemaps.org/about/faq/";
 export const MANHATTAN_CIVIC_APPROVAL_EVIDENCE = Object.freeze({
@@ -95,6 +103,72 @@ function approvedAssetReferenceEntry(
 }
 
 export const sourceRegistry = [
+  approvedEntry({
+    id: "nyc.oti-planimetrics-sidewalk-block835",
+    provider: "NYC Office of Technology and Innovation (OTI) Planimetrics",
+    datasetId: "vfx9-tbb6",
+    mappedViewId: "52n9-sdep",
+    canonicalUrl: "https://data.cityofnewyork.us/City-Government/Sidewalk/vfx9-tbb6",
+    termsUrl: "https://opendata.cityofnewyork.us/overview/",
+    licenseClass: "nyc-open-data-terms",
+    attribution: "Source: NYC Office of Technology and Innovation (OTI), NYC Planimetric Database: Sidewalk; accessed through NYC Open Data (vfx9-tbb6).",
+    releaseTimestamp: null,
+    captureTimestamp: "2026-08-06T00:00:00Z",
+    updateTimestamp: "2024-04-24T20:20:22.000Z",
+    cadence: "As needed; portal rows updated 2024-04-24 for the approved snapshot.",
+    retention: cityRetention,
+    derivativePolicy: openDerivative,
+    access: civicLocalAccess,
+    geographicScope: "Block 835 perimeter and four adjacent intersection approaches only; no Manhattan-wide derivative.",
+    expectedCrs: "EPSG:4326",
+    expectedVerticalDatum: "NAVD88 where source-native Z is present; Socrata GeoJSON snapshot is CRS84 2D and retains that absence explicitly. Source capture rules document State Plane NAD83 US feet / NAVD88.",
+    approvalEvidence: BLOCK835_PUBLIC_REALM_APPROVAL_EVIDENCE,
+    approvalNote: "Approved under approval:block835-public-realm:20260806:user-approved. Immutable local snapshot only; retain portal metadata, exact bounded query, raw bytes/hash, source IDs, CRS/vertical-datum notes, and NYC Open Data disclaimer.",
+  }),
+  approvedEntry({
+    id: "nyc.oti-planimetrics-roadbed-block835",
+    provider: "NYC Office of Technology and Innovation (OTI) Planimetrics",
+    datasetId: "xgwd-7vhd",
+    mappedViewId: "i36f-5ih7",
+    canonicalUrl: "https://data.cityofnewyork.us/City-Government/Roadbed/xgwd-7vhd",
+    termsUrl: "https://opendata.cityofnewyork.us/overview/",
+    licenseClass: "nyc-open-data-terms",
+    attribution: "Source: NYC Office of Technology and Innovation (OTI), NYC Planimetric Database: Roadbed; accessed through NYC Open Data (xgwd-7vhd).",
+    releaseTimestamp: null,
+    captureTimestamp: "2026-08-06T00:00:00Z",
+    updateTimestamp: "2024-04-24T20:25:27.000Z",
+    cadence: "As needed; portal rows updated 2024-04-24 for the approved snapshot.",
+    retention: cityRetention,
+    derivativePolicy: openDerivative,
+    access: civicLocalAccess,
+    geographicScope: "Block 835 perimeter and four adjacent intersection approaches only; no Manhattan-wide derivative.",
+    expectedCrs: "EPSG:4326",
+    expectedVerticalDatum: "NAVD88 where source-native Z is present; Socrata GeoJSON snapshot is CRS84 2D and retains that absence explicitly. Source capture rules document State Plane NAD83 US feet / NAVD88.",
+    approvalEvidence: BLOCK835_PUBLIC_REALM_APPROVAL_EVIDENCE,
+    approvalNote: "Approved under approval:block835-public-realm:20260806:user-approved. Immutable local snapshot only; retain portal metadata, exact bounded query, raw bytes/hash, source IDs, CRS/vertical-datum notes, and NYC Open Data disclaimer.",
+  }),
+  approvedEntry({
+    id: "nyc.oti-planimetrics-pavement-edge-block835",
+    provider: "NYC Office of Technology and Innovation (OTI) Planimetrics",
+    datasetId: "x9uq-u3qs",
+    mappedViewId: "vs44-rznx",
+    canonicalUrl: "https://data.cityofnewyork.us/City-Government/Pavement-Edge/x9uq-u3qs",
+    termsUrl: "https://opendata.cityofnewyork.us/overview/",
+    licenseClass: "nyc-open-data-terms",
+    attribution: "Source: NYC Office of Technology and Innovation (OTI), NYC Planimetric Database: Pavement Edge; accessed through NYC Open Data (x9uq-u3qs).",
+    releaseTimestamp: null,
+    captureTimestamp: "2026-08-06T00:00:00Z",
+    updateTimestamp: "2024-04-26T20:48:18.000Z",
+    cadence: "As needed; portal rows updated 2024-04-26 for the approved snapshot.",
+    retention: cityRetention,
+    derivativePolicy: openDerivative,
+    access: civicLocalAccess,
+    geographicScope: "Block 835 perimeter and four adjacent intersection approaches only; no Manhattan-wide derivative.",
+    expectedCrs: "EPSG:4326",
+    expectedVerticalDatum: "NAVD88 where source-native Z is present; Socrata GeoJSON snapshot is CRS84 2D and retains that absence explicitly. Source capture rules document State Plane NAD83 US feet / NAVD88.",
+    approvalEvidence: BLOCK835_PUBLIC_REALM_APPROVAL_EVIDENCE,
+    approvalNote: "Approved under approval:block835-public-realm:20260806:user-approved. Pavement edges constrain estimated curb alignment only; no survey-grade curb elevation is asserted.",
+  }),
   approvedEntry({
     id: "nyc.building-footprints",
     provider: "NYC Office of Technology and Innovation (OTI) GIS",

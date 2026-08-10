@@ -33,7 +33,7 @@ import { searchReconciledCatalog, type CanonicalEntity } from "../domain/reconci
 import { rankOverlapCandidates, searchMixedReleaseFeatures, searchRealPlaceCatalog, searchUnifiedCatalog, type UnifiedSearchResult } from "../domain/exploration";
 import { buildCatalogRelease } from "../release/catalog-release";
 import { buildSyntheticCatalogArtifacts } from "../release/fixtures";
-import { CesiumViewport, medianFrameInterval, shouldFocusFeature, type DenseRenderMetrics } from "../features/explorer/CesiumViewport";
+import { CesiumViewport, medianFrameInterval, shouldFocusFeature, type DenseRenderMetrics, type Stage3RenderProof } from "../features/explorer/CesiumViewport";
 import { LocalFixtureCityAdapter, type RuntimeCityAdapter } from "../runtime/fixture-adapter";
 import { RouteGraphSnapshotAdapter } from "../ingestion/route-graph-snapshot";
 import { sha256Hex } from "../ingestion/offline";
@@ -57,6 +57,7 @@ import { loadTravelContextRelease, type TravelContextFault, type TravelContextRe
 import { TRAVEL_CONTEXT_BUDGETS, TRAVEL_CONTEXT_RELEASE_ID, TRAVEL_CONTEXT_TILE_LEVEL } from "../release/travel-context-release";
 import { AggregateRequestBudget, ComposedReleaseAdapter, type ComposedReleaseMetrics } from "../runtime/composed-release-runtime";
 import { EXTERIOR_PILOT_RELEASE_ID, createExteriorPilotFaultFetcher, loadExteriorPilotRelease, parseExteriorPilotFault, type CommercialStorefrontPlacement, type LoadedExteriorPilotRelease } from "../runtime/exterior-pilot-release";
+import { BLOCK835_PUBLIC_REALM_RELEASE_ID, createBlock835PublicRealmFaultFetcher, loadBlock835PublicRealmRelease, parseBlock835PublicRealmFault, publicRealmFeatureToFeature, type Block835PublicRealmFeature, type LoadedBlock835PublicRealmRelease } from "../runtime/block835-public-realm-release";
 import { fallbackViewportFootprint, type ViewportFootprint } from "../runtime/viewport-footprint";
 
 const navigation = [
@@ -78,6 +79,48 @@ const CITYWIDE_DEBUG_ANCHORS = [
   { label: "Inwood/Marble Hill", longitude: -73.922, latitude: 40.871 },
   { label: "Roosevelt Island", longitude: -73.949, latitude: 40.762 },
 ] as const;
+
+const BLOCK835_PERFORMANCE_PROBE_QUERY = "block835Performance";
+const BLOCK835_PERFORMANCE_CAMERA_PATH_ID = "block835-stage3-six-pose-v1";
+const BLOCK835_PERFORMANCE_SETTLE_MS = 1_000;
+const BLOCK835_PERFORMANCE_SAMPLES_PER_POSE = 100;
+const BLOCK835_PERFORMANCE_CAMERA_PATH = [
+  { longitude: -73.98683, latitude: 40.74825, height: 760, heading: 0, pitch: -45, roll: 0 },
+  { longitude: -73.98658, latitude: 40.74853, height: 720, heading: 22, pitch: -43, roll: 0 },
+  { longitude: -73.98622, latitude: 40.74885, height: 680, heading: 48, pitch: -42, roll: 0 },
+  { longitude: -73.98588, latitude: 40.74904, height: 720, heading: 82, pitch: -44, roll: 0 },
+  { longitude: -73.98563, latitude: 40.74876, height: 760, heading: 118, pitch: -46, roll: 0 },
+  { longitude: -73.98616, latitude: 40.74852, height: 700, heading: 156, pitch: -43, roll: 0 },
+] as const satisfies readonly CameraPose[];
+
+export type Block835PerformanceProbeMode = "stage3-only" | "stage3-plus-public-realm";
+
+export interface Block835FrameSummary {
+  sampleCount: number;
+  medianMs: number | null;
+  p95Ms: number | null;
+  maxMs: number | null;
+}
+
+export interface Block835PerformanceProbeResult extends Block835FrameSummary {
+  schemaVersion: "1.0";
+  status: "waiting-for-prerequisites" | "waiting-for-focus" | "running" | "invalid" | "complete";
+  condition: Block835PerformanceProbeMode;
+  releaseId: string;
+  browserSessionId: string | null;
+  capturedAt: string | null;
+  cameraPath: { id: string; poses: readonly CameraPose[]; settleMs: number; samplesPerPose: number };
+  documentHasFocus: { before: boolean; after: boolean };
+  visibilityState: { before: DocumentVisibilityState; after: DocumentVisibilityState };
+  viewportCss: { width: number; height: number };
+  devicePixelRatio: number;
+  consoleErrors: readonly string[];
+  windowErrors: readonly string[];
+  networkHosts: readonly string[];
+  reason: string | null;
+  control: Block835PerformanceProbeResult | null;
+  comparison: { sameBrowserSession: boolean; p95DeltaMs: number | null; p95Regression: number | null; overlayMedianPass: boolean; overlayP95Pass: boolean; p95RegressionPass: boolean; pass: boolean } | null;
+}
 
 const fixtureAdapter = new LocalFixtureCityAdapter();
 const fixtureIngestionSummary = runtimeMarker.ingestionSummary;
@@ -259,6 +302,114 @@ function readCitywideBrowserMeasurement(): CitywideBrowserBaseline {
   };
 }
 
+export function block835PerformanceProbeMode(search: string): Block835PerformanceProbeMode | null {
+  const value = new URLSearchParams(search).get(BLOCK835_PERFORMANCE_PROBE_QUERY);
+  return value === "stage3-only" || value === "stage3-plus-public-realm" ? value : null;
+}
+
+export function summarizeBlock835Frames(samples: readonly number[]): Block835FrameSummary {
+  const sorted = samples.filter((value) => Number.isFinite(value) && value > 0).sort((left, right) => left - right);
+  if (!sorted.length) return { sampleCount: 0, medianMs: null, p95Ms: null, maxMs: null };
+  const middle = Math.floor(sorted.length / 2);
+  const medianMs = sorted.length % 2 === 0
+    ? ((sorted[middle - 1] ?? 0) + (sorted[middle] ?? 0)) / 2
+    : sorted[middle] ?? null;
+  return {
+    sampleCount: sorted.length,
+    medianMs,
+    p95Ms: sorted[Math.min(sorted.length - 1, Math.ceil(sorted.length * 0.95) - 1)] ?? null,
+    maxMs: sorted.at(-1) ?? null,
+  };
+}
+
+export function block835PerformanceGate(overlay: Pick<Block835FrameSummary, "medianMs" | "p95Ms">, control: Pick<Block835FrameSummary, "p95Ms"> | null) {
+  const controlP95Ms = control?.p95Ms ?? null;
+  const p95DeltaMs = overlay.p95Ms !== null && controlP95Ms !== null ? overlay.p95Ms - controlP95Ms : null;
+  const p95Regression = p95DeltaMs !== null && controlP95Ms !== null && controlP95Ms > 0 ? p95DeltaMs / controlP95Ms : null;
+  const overlayMedianPass = overlay.medianMs !== null && overlay.medianMs <= 12;
+  const overlayP95Pass = overlay.p95Ms !== null && overlay.p95Ms <= 30;
+  const p95RegressionPass = p95Regression !== null && p95Regression <= 0.2;
+  return { p95DeltaMs, p95Regression, overlayMedianPass, overlayP95Pass, p95RegressionPass, pass: overlayMedianPass && overlayP95Pass && p95RegressionPass };
+}
+
+const BLOCK835_PERFORMANCE_CONTROL_STORAGE_KEY = "udt:block835-performance-control:v1";
+const BLOCK835_PERFORMANCE_SESSION_STORAGE_KEY = "udt:block835-performance-session:v1";
+
+function block835PerformanceSessionId(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const existing = window.sessionStorage.getItem(BLOCK835_PERFORMANCE_SESSION_STORAGE_KEY);
+    if (existing) return existing;
+    const created = globalThis.crypto?.randomUUID?.() ?? `session-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    window.sessionStorage.setItem(BLOCK835_PERFORMANCE_SESSION_STORAGE_KEY, created);
+    return created;
+  } catch {
+    return null;
+  }
+}
+
+function storedBlock835PerformanceControl(): Block835PerformanceProbeResult | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.sessionStorage.getItem(BLOCK835_PERFORMANCE_CONTROL_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed: unknown = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? parsed as Block835PerformanceProbeResult : null;
+  } catch {
+    return null;
+  }
+}
+
+function storeBlock835PerformanceControl(control: Block835PerformanceProbeResult): void {
+  try { window.sessionStorage.setItem(BLOCK835_PERFORMANCE_CONTROL_STORAGE_KEY, JSON.stringify(control)); } catch { /* the overlay run will report the missing same-session control */ }
+}
+
+function block835NetworkHosts(): string[] {
+  if (typeof performance === "undefined" || typeof window === "undefined") return [];
+  return [...new Set(performance.getEntriesByType("resource").flatMap((entry) => {
+    try { return [new URL(entry.name, window.location.href).host]; } catch { return []; }
+  }))].sort();
+}
+
+function compactConsoleArguments(values: readonly unknown[]): string {
+  return values.map((value) => {
+    if (typeof value === "string") return value;
+    try { return JSON.stringify(value); } catch { return String(value); }
+  }).join(" ").slice(0, 500);
+}
+
+function startBlock835ConsoleAudit() {
+  const consoleErrors: string[] = [];
+  const windowErrors: string[] = [];
+  const originalError = console.error;
+  const patchedError = (...values: unknown[]) => {
+    consoleErrors.push(compactConsoleArguments(values));
+    originalError.apply(console, values);
+  };
+  const onError = (event: ErrorEvent) => windowErrors.push(event.message || "window error");
+  const onUnhandledRejection = (event: PromiseRejectionEvent) => windowErrors.push(`unhandled rejection: ${String(event.reason)}`);
+  console.error = patchedError;
+  window.addEventListener("error", onError);
+  window.addEventListener("unhandledrejection", onUnhandledRejection);
+  return {
+    consoleErrors,
+    windowErrors,
+    stop: () => {
+      if (console.error === patchedError) console.error = originalError;
+      window.removeEventListener("error", onError);
+      window.removeEventListener("unhandledrejection", onUnhandledRejection);
+    },
+  };
+}
+
+function nextAnimationFrame(): Promise<number> {
+  return new Promise((resolve) => window.requestAnimationFrame(resolve));
+}
+
+function delay(milliseconds: number): Promise<void> {
+  return new Promise((resolve) => window.setTimeout(resolve, milliseconds));
+}
+
 function hasDisplayValue(value: unknown): boolean {
   if (value === null || value === undefined || value === "") return false;
   if (Array.isArray(value)) return value.length > 0;
@@ -301,6 +452,50 @@ function navigationOverlayFields(exteriorRequested: boolean, selectedStorefrontI
   return exteriorRequested
     ? { exteriorReleaseId: EXTERIOR_PILOT_RELEASE_ID, commercial: true, storefrontId: selectedStorefrontId }
     : {};
+}
+
+/** Preserve the additive local Block 835 overlay across canonical navigation URL writes. */
+export function appendBlock835PublicRealmUrl(baseUrl: string, requested: boolean, featureId: string | null): string {
+  const url = new URL(baseUrl, typeof window === "undefined" ? "http://localhost/" : window.location.href);
+  if (requested) url.searchParams.set("publicRealm", BLOCK835_PUBLIC_REALM_RELEASE_ID);
+  else url.searchParams.delete("publicRealm");
+  if (requested && featureId) url.searchParams.set("publicRealmFeature", featureId);
+  else url.searchParams.delete("publicRealmFeature");
+  return url.toString();
+}
+
+export interface Block835PublicRealmActivationInput {
+  requested: boolean;
+  loadState: "idle" | "loading" | "ready" | "failed";
+  hasVerifiedOverlay: boolean;
+  activeBaseReleaseId: string | null;
+  exteriorActive: boolean;
+  compatibleWithActiveBase: boolean;
+}
+
+export interface Block835PublicRealmActivation {
+  active: boolean;
+  prerequisiteMessage: string | null;
+}
+
+/**
+ * The public-realm manifest may describe compatible releases, but it cannot
+ * activate itself. It is an additive Stage 3 child that needs both a live
+ * compatible real base and the already-validated exterior/commercial overlay.
+ */
+export function block835PublicRealmActivation(input: Block835PublicRealmActivationInput): Block835PublicRealmActivation {
+  if (!input.requested || input.loadState !== "ready" || !input.hasVerifiedOverlay) return { active: false, prerequisiteMessage: null };
+  if (input.activeBaseReleaseId && input.compatibleWithActiveBase && input.exteriorActive) return { active: true, prerequisiteMessage: null };
+  return {
+    active: false,
+    prerequisiteMessage: `Block 835 public realm was verified locally but was not activated: it requires an active compatible real base and the active Stage 3 exterior/commercial overlay (${EXTERIOR_PILOT_RELEASE_ID}).`,
+  };
+}
+
+/** Do not imply Stage 3 is active when a public-realm request fails in isolation. */
+export function block835PublicRealmFailureMessage(error: unknown): string {
+  const prefix = error instanceof Error ? error.message : "Block 835 public-realm overlay failed closed.";
+  return `${prefix} The public-realm overlay was disabled; the existing base/exterior state was left unchanged.`;
 }
 
 function civicDetailValue(feature: Feature | undefined, key: string): string {
@@ -353,6 +548,10 @@ function toCityFeature(feature: Feature) {
 
 export function App() {
   const initialNavigation = typeof window === "undefined" ? { featureId: null, query: "", cameraMode: "overview" as CameraMode, pose: null, poseInvalid: false } : parseNavigationUrl(window.location.href);
+  const initialPublicRealmRequested = typeof window !== "undefined" && new URL(window.location.href).searchParams.get("publicRealm") === BLOCK835_PUBLIC_REALM_RELEASE_ID;
+  const initialPublicRealmFeatureId = typeof window !== "undefined" ? new URL(window.location.href).searchParams.get("publicRealmFeature") : null;
+  const stage3RenderProofRequested = import.meta.env.DEV && typeof window !== "undefined" && new URL(window.location.href).searchParams.get("stage3Proof") === "storefront-picks";
+  const block835PerformanceMode = import.meta.env.DEV && typeof window !== "undefined" ? block835PerformanceProbeMode(window.location.search) : null;
   // A URL cannot activate the real adapter until its immutable release has
   // loaded and passed validation. Start every first render in fixtures so an
   // unknown/loading release never wears a real label over fixture geometry.
@@ -386,6 +585,13 @@ export function App() {
   const [exteriorOverlay, setExteriorOverlay] = useState<LoadedExteriorPilotRelease | null>(null);
   const [exteriorLoadState, setExteriorLoadState] = useState<"idle" | "loading" | "ready" | "failed">(initialExteriorRequest ? "loading" : "idle");
   const [exteriorMessage, setExteriorMessage] = useState(initialExteriorRequest ? "Exterior/commercial overlay is loading from the local release…" : "");
+  const [publicRealmRequested, setPublicRealmRequested] = useState(initialPublicRealmRequested);
+  const [publicRealmOverlay, setPublicRealmOverlay] = useState<LoadedBlock835PublicRealmRelease | null>(null);
+  const [publicRealmLoadState, setPublicRealmLoadState] = useState<"idle" | "loading" | "ready" | "failed">(initialPublicRealmRequested ? "loading" : "idle");
+  const [publicRealmMessage, setPublicRealmMessage] = useState(initialPublicRealmRequested ? "Block 835 public-realm overlay is loading from the local release…" : "");
+  const [selectedPublicRealmId, setSelectedPublicRealmId] = useState<string | null>(initialPublicRealmFeatureId);
+  const [stage3RenderProof, setStage3RenderProof] = useState<Stage3RenderProof | null>(null);
+  const [block835PerformanceProbe, setBlock835PerformanceProbe] = useState<Block835PerformanceProbeResult | null>(null);
   const [, setRealFallbackActive] = useState(initialRealRequest);
   const [realDataMessage, setRealDataMessage] = useState("Real pilot artifact not loaded; fixture fallback is active.");
   const [landmarkAssetMessage, setLandmarkAssetMessage] = useState("Landmark GLB package not loaded; procedural fallback is active.");
@@ -454,6 +660,8 @@ export function App() {
   const composedAdapterRef = useRef<ComposedReleaseAdapter | null>(composedAdapter);
   const exteriorRequestedRef = useRef(exteriorRequested);
   const selectedStorefrontIdRef = useRef(selectedStorefrontId);
+  const publicRealmRequestedRef = useRef(publicRealmRequested);
+  const selectedPublicRealmIdRef = useRef(selectedPublicRealmId);
   const aggregateBudgetRef = useRef(new AggregateRequestBudget());
   const aggregateCacheRef = useRef<CitywideLruCache<unknown>>(new CitywideLruCache<unknown>(CITYWIDE_BUDGETS.maxLoadedShards, CITYWIDE_BUDGETS.maxLoadedBytes));
   const citywideModeRef = useRef(false);
@@ -467,6 +675,7 @@ export function App() {
   const pendingNavigationPoseRef = useRef<CameraPose | null>(initialRealRequest ? initialNavigation.pose : null);
   const terminalRealFallbackNoticeRef = useRef<string | null>(null);
   const citywideDebugMeasurementRunRef = useRef(0);
+  const block835PerformanceProbeRunRef = useRef(0);
   const detailsHeadingRef = useRef<HTMLHeadingElement>(null);
   const detailsReturnRef = useRef<HTMLElement | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -484,7 +693,10 @@ export function App() {
   composedAdapterRef.current = composedAdapter;
   exteriorRequestedRef.current = exteriorRequested;
   selectedStorefrontIdRef.current = selectedStorefrontId;
+  publicRealmRequestedRef.current = publicRealmRequested;
+  selectedPublicRealmIdRef.current = selectedPublicRealmId;
   const getOverlayUrlFields = useCallback(() => navigationOverlayFields(exteriorRequestedRef.current, selectedStorefrontIdRef.current), []);
+  const navigationUrlForApp = useCallback((value: Parameters<typeof navigationUrl>[0], base: string) => appendBlock835PublicRealmUrl(navigationUrl(value, base), publicRealmRequestedRef.current, selectedPublicRealmIdRef.current), []);
   const updateSelectedStorefront = useCallback((storefrontId: string | null) => {
     selectedStorefrontIdRef.current = storefrontId;
     setSelectedStorefrontId(storefrontId);
@@ -492,10 +704,154 @@ export function App() {
   const citywideMode = dataMode === "real-pilot" && activeAdapter === citywideAdapter && citywideAdapter !== null;
   const civicMode = dataMode === "civic-context" && activeAdapter === composedAdapter && composedAdapter !== null;
   const exteriorActive = Boolean(exteriorOverlay && exteriorLoadState === "ready" && (citywideMode || civicMode) && exteriorOverlay.compatibleWith(CITYWIDE_RELEASE_ID));
+  const activeRealBaseReleaseId = citywideMode ? CITYWIDE_RELEASE_ID : civicMode ? TRAVEL_CONTEXT_RELEASE_ID : null;
+  const publicRealmActivation = block835PublicRealmActivation({
+    requested: publicRealmRequested,
+    loadState: publicRealmLoadState,
+    hasVerifiedOverlay: publicRealmOverlay !== null,
+    activeBaseReleaseId: activeRealBaseReleaseId,
+    exteriorActive,
+    compatibleWithActiveBase: Boolean(publicRealmOverlay && activeRealBaseReleaseId && publicRealmOverlay.compatibleWith(activeRealBaseReleaseId)),
+  });
+  const publicRealmActive = publicRealmActivation.active;
+  const publicRealmStatusMessage = publicRealmActivation.prerequisiteMessage ?? publicRealmMessage;
   citywideModeRef.current = citywideMode;
   civicModeRef.current = civicMode;
   if (dataMode === "fixtures") releaseIdRef.current = null;
   else if (!releaseIdRef.current) releaseIdRef.current = dataMode === "civic-context" ? TRAVEL_CONTEXT_RELEASE_ID : REAL_PILOT_RELEASE_ID;
+
+  useEffect(() => {
+    if (!block835PerformanceMode || typeof window === "undefined") return undefined;
+    const expectedPublicRealm = block835PerformanceMode === "stage3-plus-public-realm";
+    const prerequisitesReady = Boolean(activeRealBaseReleaseId && exteriorActive && (expectedPublicRealm ? publicRealmActive : !publicRealmRequested));
+    const sessionId = block835PerformanceSessionId();
+    const pending = (status: Block835PerformanceProbeResult["status"], reason: string | null): Block835PerformanceProbeResult => ({
+      schemaVersion: "1.0",
+      status,
+      condition: block835PerformanceMode,
+      releaseId: BLOCK835_PUBLIC_REALM_RELEASE_ID,
+      browserSessionId: sessionId,
+      capturedAt: null,
+      cameraPath: { id: BLOCK835_PERFORMANCE_CAMERA_PATH_ID, poses: BLOCK835_PERFORMANCE_CAMERA_PATH, settleMs: BLOCK835_PERFORMANCE_SETTLE_MS, samplesPerPose: BLOCK835_PERFORMANCE_SAMPLES_PER_POSE },
+      sampleCount: 0,
+      medianMs: null,
+      p95Ms: null,
+      maxMs: null,
+      documentHasFocus: { before: document.hasFocus(), after: document.hasFocus() },
+      visibilityState: { before: document.visibilityState, after: document.visibilityState },
+      viewportCss: { width: window.innerWidth, height: window.innerHeight },
+      devicePixelRatio: window.devicePixelRatio,
+      consoleErrors: [],
+      windowErrors: [],
+      networkHosts: block835NetworkHosts(),
+      reason,
+      control: null,
+      comparison: null,
+    });
+    if (!prerequisitesReady) {
+      setBlock835PerformanceProbe(pending("waiting-for-prerequisites", expectedPublicRealm
+        ? "Waiting for an active compatible real base, active Stage 3 exterior, and active public-realm overlay."
+        : "Waiting for an active compatible real base and active Stage 3 exterior with public realm disabled."));
+      return undefined;
+    }
+
+    let cancelled = false;
+    let started = false;
+    const runId = ++block835PerformanceProbeRunRef.current;
+    const isCurrent = () => !cancelled && runId === block835PerformanceProbeRunRef.current;
+    const run = async () => {
+      if (!isCurrent()) return;
+      const beforeFocus = document.hasFocus();
+      const beforeVisibility = document.visibilityState;
+      if (!beforeFocus || beforeVisibility !== "visible") {
+        setBlock835PerformanceProbe(pending("waiting-for-focus", "The external browser page must be focused and visible before the deterministic probe starts."));
+        return;
+      }
+      setBlock835PerformanceProbe(pending("running", null));
+      const audit = startBlock835ConsoleAudit();
+      const samples: number[] = [];
+      let reason: string | null = null;
+      try {
+        for (const pose of BLOCK835_PERFORMANCE_CAMERA_PATH) {
+          if (!isCurrent()) return;
+          setCameraPose(pose);
+          setCameraRequest((current) => ({ ...pose, requestId: (current?.requestId ?? 0) + 1 }));
+          await delay(BLOCK835_PERFORMANCE_SETTLE_MS);
+          if (!isCurrent()) return;
+          if (!document.hasFocus() || document.visibilityState !== "visible") {
+            reason = "Focus or visibility changed while collecting settled requestAnimationFrame samples.";
+            break;
+          }
+          let previous = await nextAnimationFrame();
+          for (let index = 0; index < BLOCK835_PERFORMANCE_SAMPLES_PER_POSE; index += 1) {
+            const now = await nextAnimationFrame();
+            if (!isCurrent()) return;
+            samples.push(now - previous);
+            previous = now;
+            if (!document.hasFocus() || document.visibilityState !== "visible") {
+              reason = "Focus or visibility changed while collecting settled requestAnimationFrame samples.";
+              break;
+            }
+          }
+          if (reason) break;
+        }
+      } catch (error) {
+        reason = error instanceof Error ? error.message : String(error);
+      } finally {
+        audit.stop();
+      }
+      if (!isCurrent()) return;
+      const summary = summarizeBlock835Frames(samples);
+      const afterFocus = document.hasFocus();
+      const afterVisibility = document.visibilityState;
+      const control = expectedPublicRealm ? storedBlock835PerformanceControl() : null;
+      const gate = expectedPublicRealm ? block835PerformanceGate(summary, control) : null;
+      const comparison = expectedPublicRealm && gate ? {
+        sameBrowserSession: Boolean(control && sessionId && control.browserSessionId === sessionId),
+        ...gate,
+      } : null;
+      const complete = reason === null && summary.sampleCount >= BLOCK835_PERFORMANCE_CAMERA_PATH.length * BLOCK835_PERFORMANCE_SAMPLES_PER_POSE && beforeFocus && afterFocus && beforeVisibility === "visible" && afterVisibility === "visible";
+      const result: Block835PerformanceProbeResult = {
+        schemaVersion: "1.0",
+        status: complete ? "complete" : "invalid",
+        condition: block835PerformanceMode,
+        releaseId: BLOCK835_PUBLIC_REALM_RELEASE_ID,
+        browserSessionId: sessionId,
+        capturedAt: new Date().toISOString(),
+        cameraPath: { id: BLOCK835_PERFORMANCE_CAMERA_PATH_ID, poses: BLOCK835_PERFORMANCE_CAMERA_PATH, settleMs: BLOCK835_PERFORMANCE_SETTLE_MS, samplesPerPose: BLOCK835_PERFORMANCE_SAMPLES_PER_POSE },
+        ...summary,
+        documentHasFocus: { before: beforeFocus, after: afterFocus },
+        visibilityState: { before: beforeVisibility, after: afterVisibility },
+        viewportCss: { width: window.innerWidth, height: window.innerHeight },
+        devicePixelRatio: window.devicePixelRatio,
+        consoleErrors: audit.consoleErrors,
+        windowErrors: audit.windowErrors,
+        networkHosts: block835NetworkHosts(),
+        reason: reason ?? (complete ? null : "The probe did not retain 600 focused, visible settled samples."),
+        control,
+        comparison,
+      };
+      if (!expectedPublicRealm && complete) storeBlock835PerformanceControl(result);
+      setBlock835PerformanceProbe(result);
+    };
+    const startWhenFocused = () => {
+      if (started || !isCurrent() || !document.hasFocus() || document.visibilityState !== "visible") return;
+      started = true;
+      void run();
+    };
+    if (!document.hasFocus() || document.visibilityState !== "visible") {
+      setBlock835PerformanceProbe(pending("waiting-for-focus", "The external browser page must be focused and visible before the deterministic probe starts."));
+      window.addEventListener("focus", startWhenFocused);
+      document.addEventListener("visibilitychange", startWhenFocused);
+    } else {
+      startWhenFocused();
+    }
+    return () => {
+      cancelled = true;
+      window.removeEventListener("focus", startWhenFocused);
+      document.removeEventListener("visibilitychange", startWhenFocused);
+    };
+  }, [activeRealBaseReleaseId, block835PerformanceMode, exteriorActive, publicRealmActive, publicRealmRequested]);
 
   const publishCitywideMetrics = useCallback((adapter: CitywideReleaseAdapter) => {
     if (citywideAdapterRef.current !== adapter) return;
@@ -681,6 +1037,39 @@ export function App() {
   }, [exteriorRequested]);
 
   useEffect(() => {
+    if (!publicRealmRequested) {
+      setPublicRealmOverlay(null);
+      setPublicRealmLoadState("idle");
+      setPublicRealmMessage("");
+      setSelectedPublicRealmId(null);
+      selectedPublicRealmIdRef.current = null;
+      return undefined;
+    }
+    let active = true;
+    const controller = new AbortController();
+    const publicRealmFault = import.meta.env.DEV && typeof window !== "undefined"
+      ? parseBlock835PublicRealmFault(new URL(window.location.href).searchParams.get("publicRealmFault"), true)
+      : null;
+    const publicRealmFetcher = publicRealmFault ? createBlock835PublicRealmFaultFetcher(publicRealmFault) : undefined;
+    setPublicRealmLoadState("loading");
+    setPublicRealmMessage("Block 835 public-realm overlay is loading from the local release…");
+    void loadBlock835PublicRealmRelease(`/data/${BLOCK835_PUBLIC_REALM_RELEASE_ID}/`, controller.signal, publicRealmFetcher).then((loaded) => {
+      if (!active) return;
+      setPublicRealmOverlay(loaded);
+      setPublicRealmLoadState("ready");
+      setPublicRealmMessage(`Block 835 public realm verified locally: ${loaded.features.length} selectable source/estimated features, four intersections, and 8 hashed LOD assets.`);
+    }).catch((error: unknown) => {
+      if (!active || (error instanceof DOMException && error.name === "AbortError")) return;
+      setPublicRealmOverlay(null);
+      setPublicRealmLoadState("failed");
+      setSelectedPublicRealmId(null);
+      selectedPublicRealmIdRef.current = null;
+      setPublicRealmMessage(block835PublicRealmFailureMessage(error));
+    });
+    return () => { active = false; controller.abort(); };
+  }, [publicRealmRequested]);
+
+  useEffect(() => {
     if (!citywideAdapter || !civicAdapter || citywideLoadState !== "ready" || civicLoadState !== "ready") {
       setComposedAdapter(null);
       setCompositionLoadState(citywideLoadState === "failed" || civicLoadState === "failed" ? "failed" : "loading");
@@ -802,7 +1191,7 @@ export function App() {
       pendingNavigationPoseRef.current = null;
     }
     if (initialRealNavigationPendingRef.current) return;
-    if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrl({ featureId: activeSelectionRef.current ?? initialNavigation.featureId, query: queryRef.current || initialNavigation.query, cameraMode: cameraModeRef.current, pose: normalizedCamera, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(layerVisibilityRef.current).filter(([, visible]) => visible).map(([layer]) => layer), facets: civicModeRef.current ? selectedCivicFacetsRef.current : selectedCategoriesRef.current, ...getOverlayUrlFields() }, window.location.href));
+    if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrlForApp({ featureId: activeSelectionRef.current ?? initialNavigation.featureId, query: queryRef.current || initialNavigation.query, cameraMode: cameraModeRef.current, pose: normalizedCamera, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(layerVisibilityRef.current).filter(([, visible]) => visible).map(([layer]) => layer), facets: civicModeRef.current ? selectedCivicFacetsRef.current : selectedCategoriesRef.current, ...getOverlayUrlFields() }, window.location.href));
     const citywide = citywideAdapterRef.current;
     if (citywideModeRef.current && citywide) {
       void citywide.refreshViewport({ camera: normalizedCamera, footprint: nextFootprint }).then((features) => {
@@ -828,7 +1217,7 @@ export function App() {
     const stream = stressStreamRef.current;
     if (!stream) return;
     void stream.refresh(tileCamera).then(() => publishStressState(stream));
-  }, [getOverlayUrlFields, publishCitywideMetrics, publishComposedMetrics, publishStressState]);
+  }, [getOverlayUrlFields, navigationUrlForApp, publishCitywideMetrics, publishComposedMetrics, publishStressState]);
 
   const moveStressCamera = (anchorIndex: number, distanceMeters: number) => {
     const anchor = SYNTHETIC_TILE_ANCHORS[anchorIndex];
@@ -878,6 +1267,8 @@ export function App() {
     }
     setOverlapFeatures([]);
     updateSelectedStorefront(null);
+    selectedPublicRealmIdRef.current = null;
+    setSelectedPublicRealmId(null);
     setSelectedFeature(toCityFeature(feature));
     setActiveSelectionId(feature.id);
     setSelectedCatalogEntityId(syntheticCatalog.entities.find((entity) => entity.fields.runtimeFeatureId === feature.id)?.canonicalId ?? null);
@@ -886,7 +1277,7 @@ export function App() {
     if (focusTransaction.shouldFly) setFocusRequest((request) => request + 1);
     setInspectorOpen(true);
     setDeepLinkMessage(null);
-    if (options.syncUrl !== false && typeof window !== "undefined") window.history.pushState({}, "", navigationUrl({ featureId: feature.id, query: queryRef.current, cameraMode: cameraModeRef.current, pose: cameraPoseRef.current, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(layerVisibilityRef.current).filter(([, visible]) => visible).map(([layer]) => layer), facets: civicModeRef.current ? selectedCivicFacetsRef.current : selectedCategoriesRef.current, ...getOverlayUrlFields() }, window.location.href));
+    if (options.syncUrl !== false && typeof window !== "undefined") window.history.pushState({}, "", navigationUrlForApp({ featureId: feature.id, query: queryRef.current, cameraMode: cameraModeRef.current, pose: cameraPoseRef.current, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(layerVisibilityRef.current).filter(([, visible]) => visible).map(([layer]) => layer), facets: civicModeRef.current ? selectedCivicFacetsRef.current : selectedCategoriesRef.current, ...getOverlayUrlFields() }, window.location.href));
     window.setTimeout(() => detailsHeadingRef.current?.focus(), 0);
     const citywide = citywideAdapterRef.current;
     if (citywideModeRef.current && citywide && feature.attributes.citywideDetailLoaded !== true) {
@@ -906,7 +1297,31 @@ export function App() {
         if (!(error instanceof DOMException && error.name === "AbortError")) setDeepLinkMessage(error instanceof Error ? error.message : "Civic/base detail shard failed closed; no substitute record was selected.");
       });
     }
-  }, [getOverlayUrlFields, publishComposedMetrics, publishCitywideMetrics, updateSelectedStorefront]);
+  }, [getOverlayUrlFields, navigationUrlForApp, publishComposedMetrics, publishCitywideMetrics, updateSelectedStorefront]);
+
+  const selectPublicRealm = useCallback((feature: Block835PublicRealmFeature, options: { syncUrl?: boolean } = {}) => {
+    if (!publicRealmOverlay) return;
+    const runtimeFeature = publicRealmFeatureToFeature(feature, publicRealmOverlay.document.generatedAt);
+    selectedPublicRealmIdRef.current = feature.id;
+    setSelectedPublicRealmId(feature.id);
+    selectFeature(runtimeFeature, { syncUrl: false });
+    selectedPublicRealmIdRef.current = feature.id;
+    setSelectedPublicRealmId(feature.id);
+    if (options.syncUrl !== false && typeof window !== "undefined") {
+      window.history.pushState({}, "", navigationUrlForApp({
+        featureId: runtimeFeature.id,
+        query: queryRef.current,
+        cameraMode: cameraModeRef.current,
+        pose: cameraPoseRef.current,
+        poseInvalid: false,
+        dataMode: dataModeRef.current,
+        releaseId: releaseIdRef.current,
+        visibleLayers: Object.entries(layerVisibilityRef.current).filter(([, visible]) => visible).map(([layer]) => layer),
+        facets: civicModeRef.current ? selectedCivicFacetsRef.current : selectedCategoriesRef.current,
+        ...getOverlayUrlFields(),
+      }, window.location.href));
+    }
+  }, [getOverlayUrlFields, navigationUrlForApp, publicRealmOverlay, selectFeature]);
 
   const selectStorefront = useCallback((placement: CommercialStorefrontPlacement) => {
     const request: StorefrontResolutionState = {
@@ -934,7 +1349,7 @@ export function App() {
         setDeepLinkMessage(`Storefront ${placement.storefrontId} has no loaded canonical building; no substitute identity was selected.`);
       }
       if (typeof window !== "undefined") {
-        window.history.pushState({}, "", navigationUrl({
+        window.history.pushState({}, "", navigationUrlForApp({
           featureId: building?.id ?? activeSelectionRef.current,
           query: queryRef.current,
           cameraMode: cameraModeRef.current,
@@ -955,7 +1370,7 @@ export function App() {
       resolveStorefrontBuilding(placement, activeAdapter, loadCanonical),
       commit,
     );
-  }, [activeAdapter, dataMode, getOverlayUrlFields, selectFeature, updateSelectedStorefront]);
+  }, [activeAdapter, dataMode, getOverlayUrlFields, navigationUrlForApp, selectFeature, updateSelectedStorefront]);
 
   const selectOverlapFeatures = useCallback((features: Feature[]) => {
     const byId = new Map(features.map((feature) => [feature.id, feature]));
@@ -978,9 +1393,16 @@ export function App() {
     const applyUrl = () => {
       const state = parseNavigationUrl(window.location.href);
       const requestedExterior = state.exteriorReleaseId === EXTERIOR_PILOT_RELEASE_ID && state.commercial === true;
+      const url = new URL(window.location.href);
+      const requestedPublicRealm = url.searchParams.get("publicRealm") === BLOCK835_PUBLIC_REALM_RELEASE_ID;
+      const requestedPublicRealmFeature = requestedPublicRealm ? url.searchParams.get("publicRealmFeature") : null;
       exteriorRequestedRef.current = requestedExterior;
+      publicRealmRequestedRef.current = requestedPublicRealm;
+      selectedPublicRealmIdRef.current = requestedPublicRealmFeature;
       updateSelectedStorefront(state.storefrontId ?? null);
       setExteriorRequested(requestedExterior);
+      setPublicRealmRequested(requestedPublicRealm);
+      setSelectedPublicRealmId(requestedPublicRealmFeature);
       setQuery(state.query);
       setCameraMode(state.cameraMode); setPoseInvalid(state.poseInvalid);
       if (state.visibleLayers) {
@@ -1071,7 +1493,7 @@ export function App() {
             setFocusFeatureId(null);
             setInspectorOpen(false);
             setDeepLinkMessage(terminalRealFallbackNoticeRef.current);
-            if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrl({ featureId: baseFeatureId, query: state.query, cameraMode: state.cameraMode, pose: state.pose, poseInvalid: state.poseInvalid, dataMode: "real-pilot", releaseId: CITYWIDE_RELEASE_ID, visibleLayers: state.visibleLayers, facets: state.facets, ...getOverlayUrlFields() }, window.location.href));
+            if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrlForApp({ featureId: baseFeatureId, query: state.query, cameraMode: state.cameraMode, pose: state.pose, poseInvalid: state.poseInvalid, dataMode: "real-pilot", releaseId: CITYWIDE_RELEASE_ID, visibleLayers: state.visibleLayers, facets: state.facets, ...getOverlayUrlFields() }, window.location.href));
             return;
           }
           if (civicLoadState === "failed" || compositionLoadState === "failed") {
@@ -1210,7 +1632,15 @@ export function App() {
     applyUrl();
     window.addEventListener("popstate", applyUrl);
     return () => window.removeEventListener("popstate", applyUrl);
-  }, [activeAdapter, civicAdapter, civicLoadState, citywideAdapter, citywideLoadState, composedAdapter, compositionLoadState, getOverlayUrlFields, realAdapter, realLoadState, selectFeature, updateSelectedStorefront]);
+  }, [activeAdapter, civicAdapter, civicLoadState, citywideAdapter, citywideLoadState, composedAdapter, compositionLoadState, getOverlayUrlFields, navigationUrlForApp, realAdapter, realLoadState, selectFeature, updateSelectedStorefront]);
+
+  useEffect(() => {
+    if (!publicRealmRequested || publicRealmLoadState !== "ready" || !publicRealmOverlay || !selectedPublicRealmId) return;
+    if (activeSelectionRef.current === `public-realm:${selectedPublicRealmId}`) return;
+    const feature = publicRealmOverlay.feature(selectedPublicRealmId);
+    if (feature) selectPublicRealm(feature, { syncUrl: false });
+    else setDeepLinkMessage(`This shared link points to a public-realm feature unavailable in release ${BLOCK835_PUBLIC_REALM_RELEASE_ID}; no substitute was selected.`);
+  }, [publicRealmLoadState, publicRealmOverlay, publicRealmRequested, selectPublicRealm, selectedPublicRealmId]);
 
   const closeInspector = useCallback(() => {
     setInspectorOpen(false);
@@ -1283,7 +1713,7 @@ export function App() {
 
   const copyShareLink = async () => {
     if (typeof window === "undefined") return;
-    const link = navigationUrl({ featureId: selectedFeature.id, query: queryRef.current, cameraMode: cameraModeRef.current, pose: cameraPoseRef.current, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(layerVisibility).filter(([, visible]) => visible).map(([layer]) => layer), facets: civicMode ? selectedCivicFacets : selectedCategories, ...getOverlayUrlFields() }, window.location.href);
+    const link = navigationUrlForApp({ featureId: selectedFeature.id, query: queryRef.current, cameraMode: cameraModeRef.current, pose: cameraPoseRef.current, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(layerVisibility).filter(([, visible]) => visible).map(([layer]) => layer), facets: civicMode ? selectedCivicFacets : selectedCategories, ...getOverlayUrlFields() }, window.location.href);
     setShareMessage("Share link copied.");
     try { await navigator.clipboard?.writeText(link); } catch { setShareMessage(link); }
     window.setTimeout(() => setShareMessage(null), 2500);
@@ -1294,7 +1724,7 @@ export function App() {
       ? selectedCategories.filter((item) => item !== category)
       : [...selectedCategories, category];
     setSelectedCategories(next);
-    if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrl({ featureId: activeSelectionRef.current, query: queryRef.current, cameraMode: cameraModeRef.current, pose: cameraPoseRef.current, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(layerVisibility).filter(([, visible]) => visible).map(([layer]) => layer), facets: next, ...getOverlayUrlFields() }, window.location.href));
+    if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrlForApp({ featureId: activeSelectionRef.current, query: queryRef.current, cameraMode: cameraModeRef.current, pose: cameraPoseRef.current, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(layerVisibility).filter(([, visible]) => visible).map(([layer]) => layer), facets: next, ...getOverlayUrlFields() }, window.location.href));
   };
 
   const toggleCivicFacet = (facet: CivicFacet) => {
@@ -1302,7 +1732,7 @@ export function App() {
       ? selectedCivicFacets.filter((item) => item !== facet)
       : [...selectedCivicFacets, facet];
     setSelectedCivicFacets(next);
-    if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrl({ featureId: activeSelectionRef.current, query: queryRef.current, cameraMode: cameraModeRef.current, pose: cameraPoseRef.current, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(layerVisibility).filter(([, visible]) => visible).map(([layer]) => layer), facets: next, ...getOverlayUrlFields() }, window.location.href));
+    if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrlForApp({ featureId: activeSelectionRef.current, query: queryRef.current, cameraMode: cameraModeRef.current, pose: cameraPoseRef.current, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(layerVisibility).filter(([, visible]) => visible).map(([layer]) => layer), facets: next, ...getOverlayUrlFields() }, window.location.href));
   };
 
   const availableCategories = useMemo<PlaceCategory[]>(() => {
@@ -1329,10 +1759,11 @@ export function App() {
   const toggleLayer = (layer: RuntimeLayerId) => {
     const next = { ...layerVisibility, [layer]: !layerVisibility[layer] };
     setLayerVisibility(next);
-    if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrl({ featureId: activeSelectionRef.current, query: queryRef.current, cameraMode: cameraModeRef.current, pose: cameraPoseRef.current, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(next).filter(([, visible]) => visible).map(([visibleLayer]) => visibleLayer), facets: civicMode ? selectedCivicFacets : selectedCategories, ...getOverlayUrlFields() }, window.location.href));
+    if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrlForApp({ featureId: activeSelectionRef.current, query: queryRef.current, cameraMode: cameraModeRef.current, pose: cameraPoseRef.current, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(next).filter(([, visible]) => visible).map(([visibleLayer]) => visibleLayer), facets: civicMode ? selectedCivicFacets : selectedCategories, ...getOverlayUrlFields() }, window.location.href));
   };
 
   const selectedRuntimeFeature = activeAdapter.getFeature(selectedFeature.id);
+  const selectedPublicRealmFeature = publicRealmActive && publicRealmOverlay && selectedPublicRealmId ? publicRealmOverlay.feature(selectedPublicRealmId) ?? null : null;
   const selectedCommercialBuilding = exteriorActive && selectedRuntimeFeature?.kind === "building" && exteriorOverlay ? exteriorOverlay.commercialForBuilding(selectedRuntimeFeature.id) : null;
   const selectedPlaceTruth = dataMode === "fixtures" && selectedRuntimeFeature ? placeTruthByRuntimeFeatureId.get(selectedRuntimeFeature.id) : undefined;
   const selectedRealPlace = useMemo<RealPlaceView | null>(() => {
@@ -1409,7 +1840,7 @@ export function App() {
     if (!normalized) return;
     setCameraMode(nextMode); setCameraPose(normalized); setPoseInvalid(false);
     setCameraRequest((current) => ({ ...normalized, requestId: (current?.requestId ?? 0) + 1 }));
-    if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrl({ featureId: activeSelectionRef.current, query: queryRef.current, cameraMode: nextMode, pose: normalized, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(layerVisibility).filter(([, visible]) => visible).map(([layer]) => layer), facets: civicMode ? selectedCivicFacets : selectedCategories, ...getOverlayUrlFields() }, window.location.href));
+    if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrlForApp({ featureId: activeSelectionRef.current, query: queryRef.current, cameraMode: nextMode, pose: normalized, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(layerVisibility).filter(([, visible]) => visible).map(([layer]) => layer), facets: civicMode ? selectedCivicFacets : selectedCategories, ...getOverlayUrlFields() }, window.location.href));
   };
   const focusCurrentSelection = () => {
     if (!selectedRuntimeFeature) return;
@@ -1484,7 +1915,7 @@ export function App() {
       if (firstCivicFeature) selectFeature(firstCivicFeature);
       else {
         setActiveSelectionId(null); setFocusFeatureId(null); setInspectorOpen(false);
-        if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrl({ featureId: null, query: queryRef.current, cameraMode: cameraModeRef.current, pose: cameraPoseRef.current, poseInvalid: false, dataMode: "civic-context", releaseId: TRAVEL_CONTEXT_RELEASE_ID, visibleLayers: Object.entries(layerVisibility).filter(([, visible]) => visible).map(([layer]) => layer), facets: selectedCivicFacets, ...getOverlayUrlFields() }, window.location.href));
+        if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrlForApp({ featureId: null, query: queryRef.current, cameraMode: cameraModeRef.current, pose: cameraPoseRef.current, poseInvalid: false, dataMode: "civic-context", releaseId: TRAVEL_CONTEXT_RELEASE_ID, visibleLayers: Object.entries(layerVisibility).filter(([, visible]) => visible).map(([layer]) => layer), facets: selectedCivicFacets, ...getOverlayUrlFields() }, window.location.href));
       }
       return;
     }
@@ -1542,7 +1973,7 @@ export function App() {
     setFocusFeatureId(null);
     setInspectorOpen(false);
     setDeepLinkMessage(null);
-    if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrl({ featureId: null, query: queryRef.current, cameraMode: cameraModeRef.current, pose: cameraPoseRef.current, poseInvalid: false, dataMode: "real-pilot", releaseId: CITYWIDE_RELEASE_ID, visibleLayers: Object.entries(layerVisibility).filter(([, visible]) => visible).map(([layer]) => layer), facets: selectedCategories, ...getOverlayUrlFields() }, window.location.href));
+    if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrlForApp({ featureId: null, query: queryRef.current, cameraMode: cameraModeRef.current, pose: cameraPoseRef.current, poseInvalid: false, dataMode: "real-pilot", releaseId: CITYWIDE_RELEASE_ID, visibleLayers: Object.entries(layerVisibility).filter(([, visible]) => visible).map(([layer]) => layer), facets: selectedCategories, ...getOverlayUrlFields() }, window.location.href));
   };
 
   const switchCivicMode = () => switchDataMode("civic-context");
@@ -1590,6 +2021,26 @@ export function App() {
   const captureCitywideBrowserBaseline = () => {
     if (typeof window === "undefined" || citywideMode) return;
     setCitywideBrowserBaseline(readCitywideBrowserMeasurement());
+  };
+
+  const disablePublicRealm = () => {
+    const wasPublicRealmSelection = activeSelectionRef.current?.startsWith("public-realm:") ?? false;
+    publicRealmRequestedRef.current = false;
+    selectedPublicRealmIdRef.current = null;
+    setPublicRealmRequested(false);
+    setSelectedPublicRealmId(null);
+    setPublicRealmOverlay(null);
+    setPublicRealmLoadState("idle");
+    setPublicRealmMessage("");
+    if (wasPublicRealmSelection) {
+      activeSelectionRef.current = null;
+      setActiveSelectionId(null);
+      setSelectedFeature(runtimeMarker);
+      setSelectedCatalogEntityId(null);
+      setFocusFeatureId(null);
+      setInspectorOpen(false);
+    }
+    if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrlForApp({ featureId: wasPublicRealmSelection ? null : activeSelectionRef.current, query: queryRef.current, cameraMode: cameraModeRef.current, pose: cameraPoseRef.current, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(layerVisibilityRef.current).filter(([, visible]) => visible).map(([layer]) => layer), facets: civicModeRef.current ? selectedCivicFacetsRef.current : selectedCategoriesRef.current, ...getOverlayUrlFields() }, window.location.href));
   };
 
   const displayedTileMetrics: TileStreamMetrics = civicMode ? {
@@ -1701,6 +2152,9 @@ export function App() {
           onFeatureSelected={selectFeature}
           commercialOverlay={exteriorActive && exteriorOverlay ? exteriorOverlay : null}
           onStorefrontSelected={selectStorefront}
+          publicRealmOverlay={publicRealmActive && publicRealmOverlay ? publicRealmOverlay : null}
+          onPublicRealmSelected={(feature) => selectPublicRealm(feature)}
+          onStage3RenderProof={stage3RenderProofRequested ? setStage3RenderProof : undefined}
           onFeatureOverlap={selectOverlapFeatures}
           featureFilter={featureFilter}
           visibleLayers={layerVisibility}
@@ -1739,15 +2193,26 @@ export function App() {
         </section>}
         <div
           className="runtime-note"
-          aria-label={exteriorActive ? "Block 835 exterior commercial overlay status" : "Local runtime layer"}
-          data-overlay-status={exteriorRequested ? exteriorLoadState : undefined}
+          aria-label={publicRealmActive ? "Block 835 public-realm overlay status" : exteriorActive ? "Block 835 exterior commercial overlay status" : "Local runtime layer"}
+          data-overlay-status={publicRealmRequested ? publicRealmLoadState : exteriorRequested ? exteriorLoadState : undefined}
         >
-          {exteriorActive ? <strong title={exteriorMessage}>Block 835 · 14 buildings · {exteriorOverlay?.diagnostics.acceptedStorefronts ?? 0} signs</strong> : <strong>Local runtime layer</strong>}
+          {publicRealmActive ? <strong title={publicRealmStatusMessage}>Block 835 · public realm · 4 semantic classes · 4 intersections</strong> : exteriorActive ? <strong title={exteriorMessage}>Block 835 · 14 buildings · {exteriorOverlay?.diagnostics.acceptedStorefronts ?? 0} signs</strong> : <strong>Local runtime layer</strong>}
           {!exteriorRequested && <span>{civicMode ? `Real NYC civic-context release · ${TRAVEL_CONTEXT_RELEASE_ID} over base ${CITYWIDE_RELEASE_ID} · local snapshot-relative coverage` : citywideMode ? `Real NYC citywide release · ${CITYWIDE_RELEASE_ID} · local snapshot-relative coverage` : dataMode === "real-pilot" ? "Real NYC pilot · bounded Flatiron/NoMad/Union Square coverage" : "Synthetic fixture only · no real Manhattan coverage"}</span>}
           {exteriorRequested && !exteriorActive && <span className="runtime-note-overlay" role="status">{exteriorLoadState === "loading" ? "Block 835 overlay · loading local release…" : exteriorMessage || "Block 835 overlay unavailable; base release remains active."}</span>}
+          {publicRealmActive && <span className="runtime-note-overlay" role="status">NYC OTI Planimetrics local snapshot · curb profile and crosswalk striping are estimated, source-constrained, and not survey/current-paint truth.</span>}
+          {publicRealmRequested && !publicRealmActive && <span className="runtime-note-overlay" role="status">{publicRealmLoadState === "loading" ? "Block 835 public realm · loading local release…" : publicRealmStatusMessage || "Block 835 public realm unavailable; the existing base/exterior state was left unchanged."}</span>}
+          {publicRealmRequested && <button type="button" onClick={disablePublicRealm}>Disable public realm</button>}
           {exteriorActive && <a className="runtime-note-attribution" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">Map data © OpenStreetMap contributors.</a>}
         </div>
-        {deepLinkMessage && <div className="exploration-notice" role="alert">{deepLinkMessage} <button type="button" onClick={() => { terminalRealFallbackNoticeRef.current = null; setDeepLinkMessage(null); setPoseInvalid(false); window.history.replaceState({}, "", navigationUrl({ featureId: activeSelectionRef.current, query, cameraMode, pose: cameraPose, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(layerVisibility).filter(([, visible]) => visible).map(([layer]) => layer), facets: civicMode ? selectedCivicFacets : selectedCategories, ...getOverlayUrlFields() }, window.location.href)); }}>Dismiss</button></div>}
+        {stage3RenderProofRequested && <output data-stage3-render-proof-summary role="status">{stage3RenderProof
+          ? `Stage 3 renderer proof: ${stage3RenderProof.activeBuildingCount}/${stage3RenderProof.expectedBuildingCount} active GLB model entities; ${stage3RenderProof.activeStorefrontCount}/${stage3RenderProof.expectedStorefrontCount} active storefront proxies; ${stage3RenderProof.pass ? "pass" : "not yet complete"}.`
+          : "Stage 3 renderer proof is waiting for the live Cesium entities."}</output>}
+        {block835PerformanceMode && <output
+          data-block835-performance-probe
+          role="status"
+          style={{ position: "fixed", zIndex: 100, right: 8, bottom: 8, maxWidth: "min(960px, calc(100vw - 16px))", maxHeight: "40vh", overflow: "auto", overflowWrap: "anywhere", whiteSpace: "pre-wrap", padding: 8, background: "rgba(13, 21, 27, 0.94)", color: "#d5ffff", font: "11px ui-monospace, SFMono-Regular, Menlo, monospace" }}
+        >{block835PerformanceProbe ? JSON.stringify(block835PerformanceProbe) : "Block 835 performance probe is initializing."}</output>}
+        {deepLinkMessage && <div className="exploration-notice" role="alert">{deepLinkMessage} <button type="button" onClick={() => { terminalRealFallbackNoticeRef.current = null; setDeepLinkMessage(null); setPoseInvalid(false); window.history.replaceState({}, "", navigationUrlForApp({ featureId: activeSelectionRef.current, query, cameraMode, pose: cameraPose, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(layerVisibility).filter(([, visible]) => visible).map(([layer]) => layer), facets: civicMode ? selectedCivicFacets : selectedCategories, ...getOverlayUrlFields() }, window.location.href)); }}>Dismiss</button></div>}
         {shareMessage && <div className="share-notice" role="status">{shareMessage}</div>}
         <section className={`tile-diagnostics ${diagnosticsOpen ? "is-open" : "is-collapsed"}`} aria-label="Tile diagnostics">
           <button className="overlay-launcher" type="button" aria-expanded={diagnosticsOpen} onClick={() => { setDiagnosticsOpen((open) => !open); setDirectionsOpen(false); setLayersOpen(false); }}><strong>Diagnostics</strong><span>{diagnosticsOpen ? "Collapse" : "Runtime health"}</span></button>
@@ -2002,6 +2467,28 @@ export function App() {
               <div><dt>Freshness</dt><dd>{selectedFeature.freshness.observedAt ?? "Not observed"}</dd></div>
             </dl>
           </section>
+
+          {selectedPublicRealmFeature && publicRealmOverlay && <section className="inspector-section public-realm-detail" aria-label="Block 835 public-realm provenance">
+            <div className="place-truth-heading">
+              <h2>Block 835 public realm</h2>
+              <span className="truth-badge real-badge">Local · {BLOCK835_PUBLIC_REALM_RELEASE_ID}</span>
+            </div>
+            <p className="claim-badge" data-visual-evidence-level={selectedPublicRealmFeature.claimLevel}>{selectedPublicRealmFeature.claimLevel === "estimated" ? "Estimated / source-constrained geometry" : "Source-backed planimetry"}</p>
+            <p className="section-label">Roadbed and sidewalk geometry come from the approved NYC OTI snapshot. Curb vertical profile and crosswalk placement/striping are deterministic estimates—not current-paint or survey-grade truth.</p>
+            <dl>
+              <div><dt>Semantic</dt><dd>{selectedPublicRealmFeature.semantic}</dd></div>
+              <div><dt>Source dataset</dt><dd>{selectedPublicRealmFeature.sourceDatasetId}{selectedPublicRealmFeature.sourceMappedViewId ? ` · view ${selectedPublicRealmFeature.sourceMappedViewId}` : ""}</dd></div>
+              <div><dt>Source feature</dt><dd>{(selectedPublicRealmFeature.sourceFeatureIds ?? (selectedPublicRealmFeature.sourceFeatureId ? [selectedPublicRealmFeature.sourceFeatureId] : [])).join(" · ") || "Derived from source edges"}</dd></div>
+              <div><dt>Capture / generated</dt><dd>{publicRealmOverlay.document.generatedAt} · {selectedPublicRealmFeature.sourceEpoch ?? publicRealmOverlay.document.provenance.sourceEpoch}</dd></div>
+              <div><dt>CRS / vertical</dt><dd>{selectedPublicRealmFeature.transform.inputCrs} → {selectedPublicRealmFeature.transform.outputCrs} · {selectedPublicRealmFeature.verticalDatum}</dd></div>
+              <div><dt>Uncertainty</dt><dd>{selectedPublicRealmFeature.uncertainty.temporal} · horizontal ±{selectedPublicRealmFeature.uncertainty.horizontalMeters ?? "unknown"} m · vertical ±{selectedPublicRealmFeature.uncertainty.verticalMeters ?? "unknown"} m</dd></div>
+              <div><dt>Claim ceiling</dt><dd>{publicRealmOverlay.document.claimCeilings[selectedPublicRealmFeature.semantic]}</dd></div>
+              <div><dt>Active asset</dt><dd>{(() => { const resolution = publicRealmOverlay.resolve(selectedPublicRealmFeature.semantic, 180); return resolution ? `${resolution.lod} · ${resolution.entry.sha256}` : "No verified local asset"; })()}</dd></div>
+              {selectedPublicRealmFeature.derivation && <div><dt>Derivation</dt><dd>{selectedPublicRealmFeature.derivation.algorithm}{selectedPublicRealmFeature.derivation.parameters ? ` · ${JSON.stringify(selectedPublicRealmFeature.derivation.parameters)}` : ""}</dd></div>}
+              <div><dt>Terms / attribution</dt><dd><a href={publicRealmOverlay.document.provenance.termsUrl} target="_blank" rel="noreferrer">NYC Open Data terms</a> · {publicRealmOverlay.document.provenance.attribution}</dd></div>
+              <div><dt>Disclaimer</dt><dd>{publicRealmOverlay.document.provenance.disclaimer}</dd></div>
+            </dl>
+          </section>}
 
           <section className="inspector-section asset-detail" aria-label="3D asset diagnostics">
             <h2>3D asset diagnostics</h2>
