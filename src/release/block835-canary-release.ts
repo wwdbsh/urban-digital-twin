@@ -512,7 +512,17 @@ export function buildBlock835CanaryRelease(input: Block835CanaryInput): Block835
     },
     baseIdentitySet: { id: ledger.baseIdentitySet.id, checksumSha256: ledger.baseIdentitySet.checksumSha256 },
     ownershipLedger: { id: ledger.ledgerId, checksumSha256: ledgerBlobs.public.ref.checksumSha256 },
-    cells: inputManifest.cells.map((cell) => ({ ...cell, buildingIds: [...cell.buildingIds] })),
+    // The runtime binds an assembly to a cell by matching `cellRelease` against
+    // the graph's cell-release node and the public root's declared artifact
+    // checksum. Carrying over the private package's own pin here is what caused
+    // `assembly-pin-mismatch` and silently fell back to pinned-base with no
+    // geometry, so it is rewritten to this graph's cell release exactly as the
+    // `release.*` fields above are.
+    cells: inputManifest.cells.map((cell) => ({
+      ...cell,
+      cellRelease: { id: cellRelease.cellReleaseId, checksumSha256: cellReleaseBlob.ref.checksumSha256 },
+      buildingIds: [...cell.buildingIds],
+    })),
     assets: inputManifest.assets.map((asset) => ({
       ...asset,
       truthTiers: [...asset.truthTiers],
