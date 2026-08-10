@@ -658,4 +658,3 @@ export function assembleBlock835ReferencePackage(options: {
 
   return { manifest, contents, plans, registration, ownershipLedger };
 }
-
