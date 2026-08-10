@@ -68,7 +68,7 @@ vi.mock("../runtime/exterior-pilot-release", async (importOriginal) => {
   return { ...actual, loadExteriorPilotRelease: exteriorRuntimeMocks.loadExteriorPilotRelease };
 });
 
-import { App, appendBlock835PublicRealmUrl, appendExteriorProfileUrl, exteriorDeepLinkMessage, exteriorSnapshotOriginLabel, exteriorStreamingActivation, exteriorStreamingFailureMessage, exteriorStreamingNotices, parseExteriorStreamingUrl, applyStorefrontResolution, block835PerformanceGate, block835PerformanceProbeMode, block835PublicRealmActivation, block835PublicRealmFailureMessage, isCurrentStorefrontResolution, overlayLayoutPolicy, preserveFeatureSequence, resolveStorefrontBuilding, selectionFocusTransaction, summarizeBlock835Frames, type StorefrontResolutionState } from "./App";
+import { App, EXTERIOR_CELL_STREAMING_RELEASE_ID, PINNED_EXTERIOR_CELL_RELEASE_IDS, appendBlock835PublicRealmUrl, appendExteriorProfileUrl, exteriorCellBasePath, exteriorDeepLinkMessage, exteriorSnapshotOriginLabel, isPinnedExteriorCellRelease, exteriorStreamingActivation, exteriorStreamingFailureMessage, exteriorStreamingNotices, parseExteriorStreamingUrl, applyStorefrontResolution, block835PerformanceGate, block835PerformanceProbeMode, block835PublicRealmActivation, block835PublicRealmFailureMessage, isCurrentStorefrontResolution, overlayLayoutPolicy, preserveFeatureSequence, resolveStorefrontBuilding, selectionFocusTransaction, summarizeBlock835Frames, type StorefrontResolutionState } from "./App";
 import { navigationUrl, parseNavigationUrl } from "../domain/visitor-navigation";
 
 const initialTestUrl = window.location.href;
@@ -455,14 +455,14 @@ describe("App overlay and selection regressions", () => {
 });
 
 describe("exterior streaming profiles and canary state", () => {
-  const canonicalUrl = (overlayState: { requested: boolean; profile: "exploration" | "inspection"; canarySnapshotId: string | null }) =>
+  const canonicalUrl = (overlayState: { requested: boolean; releaseId?: string; profile: "exploration" | "inspection"; canarySnapshotId: string | null }) =>
     appendExteriorProfileUrl(
       appendBlock835PublicRealmUrl(
         navigationUrl({ featureId: "doitt:778052", query: "empire", cameraMode: "explore", pose: { longitude: -73.99, latitude: 40.748, height: 700, heading: 15, pitch: -35, roll: 0 }, poseInvalid: false, dataMode: "civic-context", releaseId: "manhattan-civic-context-20260804" }, initialTestUrl),
         true,
         "crosswalk:intersection-1",
       ),
-      overlayState,
+      { ...overlayState, releaseId: overlayState.releaseId ?? "udt-fixture-exterior-cells" },
     );
 
   it("preserves every base and public-realm parameter when profile and canary parameters are appended", () => {
@@ -486,8 +486,8 @@ describe("exterior streaming profiles and canary state", () => {
 
   it("round-trips profile and canary state and clears both when streaming is disabled", () => {
     const enabled = canonicalUrl({ requested: true, profile: "inspection", canarySnapshotId: "snapshot:v3" });
-    expect(parseExteriorStreamingUrl(enabled)).toEqual({ requested: true, profile: "inspection", canarySnapshotId: "snapshot:v3" });
-    const disabled = new URL(appendExteriorProfileUrl(enabled, { requested: false, profile: "inspection", canarySnapshotId: "snapshot:v3" }));
+    expect(parseExteriorStreamingUrl(enabled)).toEqual({ requested: true, releaseId: "udt-fixture-exterior-cells", profile: "inspection", canarySnapshotId: "snapshot:v3" });
+    const disabled = new URL(appendExteriorProfileUrl(enabled, { requested: false, releaseId: "udt-fixture-exterior-cells", profile: "inspection", canarySnapshotId: "snapshot:v3" }));
     expect(disabled.searchParams.has("exteriorCells")).toBe(false);
     expect(disabled.searchParams.has("exteriorProfile")).toBe(false);
     expect(disabled.searchParams.has("exteriorCanary")).toBe(false);
@@ -496,9 +496,33 @@ describe("exterior streaming profiles and canary state", () => {
   });
 
   it("ignores an unknown exterior release ID and an unsupported profile instead of guessing", () => {
-    expect(parseExteriorStreamingUrl("/?exteriorCells=manhattan-exterior-production&exteriorProfile=inspection")).toEqual({ requested: false, profile: "exploration", canarySnapshotId: null });
-    expect(parseExteriorStreamingUrl("/?exteriorCells=udt-fixture-exterior-cells&exteriorProfile=cinematic")).toEqual({ requested: true, profile: "exploration", canarySnapshotId: null });
-    expect(parseExteriorStreamingUrl("/?exteriorCanary=snapshot:v3")).toEqual({ requested: false, profile: "exploration", canarySnapshotId: null });
+    expect(parseExteriorStreamingUrl("/?exteriorCells=manhattan-exterior-production&exteriorProfile=inspection")).toEqual({ requested: false, releaseId: "udt-fixture-exterior-cells", profile: "exploration", canarySnapshotId: null });
+    expect(parseExteriorStreamingUrl("/?exteriorCells=udt-fixture-exterior-cells&exteriorProfile=cinematic")).toEqual({ requested: true, releaseId: "udt-fixture-exterior-cells", profile: "exploration", canarySnapshotId: null });
+    expect(parseExteriorStreamingUrl("/?exteriorCanary=snapshot:v3")).toEqual({ requested: false, releaseId: "udt-fixture-exterior-cells", profile: "exploration", canarySnapshotId: null });
+  });
+
+  it("round-trips the pinned Manhattan canary release without disturbing the default pin", () => {
+    expect(PINNED_EXTERIOR_CELL_RELEASE_IDS).toEqual(["udt-fixture-exterior-cells", "manhattan-exterior-cells-20260811"]);
+    expect(EXTERIOR_CELL_STREAMING_RELEASE_ID).toBe("udt-fixture-exterior-cells");
+    expect(isPinnedExteriorCellRelease("manhattan-exterior-cells-20260811")).toBe(true);
+    expect(isPinnedExteriorCellRelease("manhattan-exterior-production")).toBe(false);
+    expect(exteriorCellBasePath("manhattan-exterior-cells-20260811")).toBe("/data/manhattan-exterior-cells-20260811/");
+
+    const canary = new URL(canonicalUrl({ requested: true, releaseId: "manhattan-exterior-cells-20260811", profile: "inspection", canarySnapshotId: "snapshot:v3" }));
+    expect(canary.searchParams.get("exteriorCells")).toBe("manhattan-exterior-cells-20260811");
+    expect(parseExteriorStreamingUrl(canary.toString())).toEqual({ requested: true, releaseId: "manhattan-exterior-cells-20260811", profile: "inspection", canarySnapshotId: "snapshot:v3" });
+    expect(canary.searchParams.get("feature")).toBe("doitt:778052");
+    expect(canary.searchParams.get("publicRealm")).toBe("manhattan-esb-block-public-realm-20260806");
+    expect(exteriorDeepLinkMessage(canary.toString())).toBeNull();
+  });
+
+  it("falls back to the default pin and stays loud when the URL names a release outside the allowlist", () => {
+    const state = parseExteriorStreamingUrl("/?exteriorCells=manhattan-exterior-cells-20270101&exteriorProfile=inspection");
+    expect(state.requested).toBe(false);
+    expect(state.releaseId).toBe(EXTERIOR_CELL_STREAMING_RELEASE_ID);
+    const message = exteriorDeepLinkMessage("/?exteriorCells=manhattan-exterior-cells-20270101&exteriorProfile=inspection");
+    expect(message).toContain("manhattan-exterior-cells-20270101");
+    expect(message).toContain("is not pinned by this build");
   });
 
   it("fails closed when exterior streaming has no compatible active base release", () => {
@@ -564,6 +588,23 @@ describe("exterior streaming profiles and canary state", () => {
     expect(notice.textContent).toContain("Exterior streaming");
     expect(new URL(window.location.href).searchParams.get("exteriorCells")).toBe("udt-fixture-exterior-cells");
   });
+
+  it("streams a pinned canary deep link from that release's own local base path", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockImplementation(async () => new Response(null, { status: 404 }));
+    try {
+      window.history.replaceState({}, "", "/?exteriorCells=manhattan-exterior-cells-20260811");
+      render(<App />);
+      const requestedPaths = () => fetchSpy.mock.calls.map(([input]) => String(input));
+      await waitFor(() => {
+        expect(requestedPaths().some((path) => path.startsWith("/data/manhattan-exterior-cells-20260811/"))).toBe(true);
+      });
+      // The default pin must not be requested behind the canary's back.
+      expect(requestedPaths().some((path) => path.startsWith("/data/udt-fixture-exterior-cells/"))).toBe(false);
+      expect(new URL(window.location.href).searchParams.get("exteriorCells")).toBe("manhattan-exterior-cells-20260811");
+    } finally {
+      fetchSpy.mockRestore();
+    }
+  });
 });
 
 describe("exterior streaming deep-link and anchor honesty", () => {
@@ -571,8 +612,10 @@ describe("exterior streaming deep-link and anchor honesty", () => {
     const message = exteriorDeepLinkMessage("/?exteriorCells=manhattan-exterior-production-20270101&exteriorProfile=inspection");
     expect(message).toContain("manhattan-exterior-production-20270101");
     expect(message).toContain("is not pinned by this build");
-    expect(message).toContain("udt-fixture-exterior-cells");
+    // Every pinned release is listed, so the notice never understates what this build accepts.
+    for (const pinned of PINNED_EXTERIOR_CELL_RELEASE_IDS) expect(message).toContain(pinned);
     expect(exteriorDeepLinkMessage("/?exteriorCells=udt-fixture-exterior-cells&exteriorProfile=inspection")).toBeNull();
+    expect(exteriorDeepLinkMessage("/?exteriorCells=manhattan-exterior-cells-20260811&exteriorProfile=inspection")).toBeNull();
     expect(exteriorDeepLinkMessage("/?feature=doitt:778052")).toBeNull();
   });
 

@@ -467,16 +467,30 @@ export function appendBlock835PublicRealmUrl(baseUrl: string, requested: boolean
 }
 
 /**
- * The only exterior-cell release this build pins is the synthetic, obviously
- * named fixture package. Producing production exterior assets is out of scope,
- * so a deep link naming any other exterior release fails closed rather than
- * resolving something that merely shares a shape.
+ * This build pins an explicit allowlist of exterior-cell releases: the
+ * synthetic, obviously named fixture package and the local Manhattan canary
+ * package. A deep link naming any other exterior release still fails closed
+ * rather than resolving something that merely shares a shape.
  */
-export const EXTERIOR_CELL_STREAMING_RELEASE_ID = "udt-fixture-exterior-cells";
-export const EXTERIOR_CELL_STREAMING_BASE_PATH = `/data/${EXTERIOR_CELL_STREAMING_RELEASE_ID}/`;
+export const PINNED_EXTERIOR_CELL_RELEASE_IDS = ["udt-fixture-exterior-cells", "manhattan-exterior-cells-20260811"] as const;
+
+/** The release used when a URL pins none: still the synthetic fixture package. */
+export const EXTERIOR_CELL_STREAMING_RELEASE_ID = PINNED_EXTERIOR_CELL_RELEASE_IDS[0];
+
+export function isPinnedExteriorCellRelease(releaseId: string | null | undefined): boolean {
+  return typeof releaseId === "string" && (PINNED_EXTERIOR_CELL_RELEASE_IDS as readonly string[]).includes(releaseId);
+}
+
+export function exteriorCellBasePath(releaseId: string): string {
+  return `/data/${releaseId}/`;
+}
+
+export const EXTERIOR_CELL_STREAMING_BASE_PATH = exteriorCellBasePath(EXTERIOR_CELL_STREAMING_RELEASE_ID);
 
 export interface ExteriorStreamingUrlState {
   requested: boolean;
+  /** A pinned release id; falls back to the default when the URL pins none. */
+  releaseId: string;
   profile: ExteriorRenderProfile;
   canarySnapshotId: string | null;
 }
@@ -489,7 +503,7 @@ export interface ExteriorStreamingUrlState {
 export function appendExteriorProfileUrl(baseUrl: string, state: ExteriorStreamingUrlState): string {
   const url = new URL(baseUrl, typeof window === "undefined" ? "http://localhost/" : window.location.href);
   if (state.requested) {
-    url.searchParams.set("exteriorCells", EXTERIOR_CELL_STREAMING_RELEASE_ID);
+    url.searchParams.set("exteriorCells", state.releaseId);
     url.searchParams.set("exteriorProfile", state.profile);
   } else {
     url.searchParams.delete("exteriorCells");
@@ -502,10 +516,12 @@ export function appendExteriorProfileUrl(baseUrl: string, state: ExteriorStreami
 
 export function parseExteriorStreamingUrl(href: string): ExteriorStreamingUrlState {
   const url = new URL(href, typeof window === "undefined" ? "http://localhost/" : window.location.href);
-  const requested = url.searchParams.get("exteriorCells") === EXTERIOR_CELL_STREAMING_RELEASE_ID;
+  const requestedRelease = url.searchParams.get("exteriorCells");
+  const requested = isPinnedExteriorCellRelease(requestedRelease);
   const canary = requested ? url.searchParams.get("exteriorCanary") : null;
   return {
     requested,
+    releaseId: requested && requestedRelease ? requestedRelease : EXTERIOR_CELL_STREAMING_RELEASE_ID,
     profile: (requested ? parseExteriorRenderProfile(url.searchParams.get("exteriorProfile")) : null) ?? DEFAULT_EXTERIOR_RENDER_PROFILE,
     canarySnapshotId: canary && canary.trim().length > 0 ? canary : null,
   };
@@ -513,6 +529,8 @@ export function parseExteriorStreamingUrl(href: string): ExteriorStreamingUrlSta
 
 export interface ExteriorStreamingActivationInput {
   requested: boolean;
+  /** The pinned release actually being streamed; defaults to the default pin. */
+  releaseId?: string;
   loadState: "idle" | "loading" | "ready" | "failed";
   hasVerifiedRuntime: boolean;
   activeBaseReleaseId: string | null;
@@ -533,7 +551,7 @@ export function exteriorStreamingActivation(input: ExteriorStreamingActivationIn
   if (input.activeBaseReleaseId && input.compatibleWithActiveBase) return { active: true, prerequisiteMessage: null };
   return {
     active: false,
-    prerequisiteMessage: `Exterior streaming release ${EXTERIOR_CELL_STREAMING_RELEASE_ID} was verified locally but was not activated: it requires an active base release its index declares compatible.`,
+    prerequisiteMessage: `Exterior streaming release ${input.releaseId ?? EXTERIOR_CELL_STREAMING_RELEASE_ID} was verified locally but was not activated: it requires an active base release its index declares compatible.`,
   };
 }
 
@@ -570,11 +588,11 @@ export function exteriorStreamingNotices(
 export function exteriorDeepLinkMessage(href: string): string | null {
   const url = new URL(href, typeof window === "undefined" ? "http://localhost/" : window.location.href);
   const requestedRelease = url.searchParams.get("exteriorCells");
-  if (requestedRelease !== null && requestedRelease !== EXTERIOR_CELL_STREAMING_RELEASE_ID) {
-    return `Exterior streaming release ${requestedRelease} is not pinned by this build; exterior streaming stayed off and the rest of the view was left unchanged. The only pinned exterior-cell release here is ${EXTERIOR_CELL_STREAMING_RELEASE_ID}.`;
+  if (requestedRelease !== null && !isPinnedExteriorCellRelease(requestedRelease)) {
+    return `Exterior streaming release ${requestedRelease} is not pinned by this build; exterior streaming stayed off and the rest of the view was left unchanged. The pinned exterior-cell releases here are ${PINNED_EXTERIOR_CELL_RELEASE_IDS.join(", ")}.`;
   }
   const requestedProfile = url.searchParams.get("exteriorProfile");
-  if (requestedRelease === EXTERIOR_CELL_STREAMING_RELEASE_ID && requestedProfile !== null && parseExteriorRenderProfile(requestedProfile) === null) {
+  if (isPinnedExteriorCellRelease(requestedRelease) && requestedProfile !== null && parseExteriorRenderProfile(requestedProfile) === null) {
     return `Exterior render profile ${requestedProfile} is not supported; the ${DEFAULT_EXTERIOR_RENDER_PROFILE} profile was used instead.`;
   }
   return null;
@@ -670,8 +688,8 @@ export function App() {
   const initialNavigation = typeof window === "undefined" ? { featureId: null, query: "", cameraMode: "overview" as CameraMode, pose: null, poseInvalid: false } : parseNavigationUrl(window.location.href);
   const initialPublicRealmRequested = typeof window !== "undefined" && new URL(window.location.href).searchParams.get("publicRealm") === BLOCK835_PUBLIC_REALM_RELEASE_ID;
   const initialPublicRealmFeatureId = typeof window !== "undefined" ? new URL(window.location.href).searchParams.get("publicRealmFeature") : null;
-  const initialExteriorStreaming = typeof window === "undefined"
-    ? { requested: false, profile: DEFAULT_EXTERIOR_RENDER_PROFILE, canarySnapshotId: null }
+  const initialExteriorStreaming: ExteriorStreamingUrlState = typeof window === "undefined"
+    ? { requested: false, releaseId: EXTERIOR_CELL_STREAMING_RELEASE_ID, profile: DEFAULT_EXTERIOR_RENDER_PROFILE, canarySnapshotId: null }
     : parseExteriorStreamingUrl(window.location.href);
   const stage3RenderProofRequested = import.meta.env.DEV && typeof window !== "undefined" && new URL(window.location.href).searchParams.get("stage3Proof") === "storefront-picks";
   const block835PerformanceMode = import.meta.env.DEV && typeof window !== "undefined" ? block835PerformanceProbeMode(window.location.search) : null;
@@ -714,6 +732,9 @@ export function App() {
   const [publicRealmMessage, setPublicRealmMessage] = useState(initialPublicRealmRequested ? "Block 835 public-realm overlay is loading from the local release…" : "");
   const [selectedPublicRealmId, setSelectedPublicRealmId] = useState<string | null>(initialPublicRealmFeatureId);
   const [exteriorStreamingRequested, setExteriorStreamingRequested] = useState(initialExteriorStreaming.requested);
+  // The pinned release a deep link selected. It is fixed for the session: only
+  // a new URL can move streaming to a different pinned exterior-cell release.
+  const [exteriorCellReleaseId] = useState(initialExteriorStreaming.releaseId);
   const [exteriorProfile, setExteriorProfile] = useState<ExteriorRenderProfile>(initialExteriorStreaming.profile);
   const [exteriorCanarySnapshotId, setExteriorCanarySnapshotId] = useState<string | null>(initialExteriorStreaming.canarySnapshotId);
   const [exteriorCellRuntime, setExteriorCellRuntime] = useState<ExteriorCellRuntime | null>(null);
@@ -799,6 +820,7 @@ export function App() {
   const publicRealmRequestedRef = useRef(publicRealmRequested);
   const selectedPublicRealmIdRef = useRef(selectedPublicRealmId);
   const exteriorStreamingRequestedRef = useRef(exteriorStreamingRequested);
+  const exteriorCellReleaseIdRef = useRef(exteriorCellReleaseId);
   const exteriorProfileRef = useRef(exteriorProfile);
   const exteriorCanarySnapshotIdRef = useRef(exteriorCanarySnapshotId);
   const aggregateBudgetRef = useRef(new AggregateRequestBudget());
@@ -835,12 +857,13 @@ export function App() {
   publicRealmRequestedRef.current = publicRealmRequested;
   selectedPublicRealmIdRef.current = selectedPublicRealmId;
   exteriorStreamingRequestedRef.current = exteriorStreamingRequested;
+  exteriorCellReleaseIdRef.current = exteriorCellReleaseId;
   exteriorProfileRef.current = exteriorProfile;
   exteriorCanarySnapshotIdRef.current = exteriorCanarySnapshotId;
   const getOverlayUrlFields = useCallback(() => navigationOverlayFields(exteriorRequestedRef.current, selectedStorefrontIdRef.current), []);
   const navigationUrlForApp = useCallback((value: Parameters<typeof navigationUrl>[0], base: string) => appendExteriorProfileUrl(
     appendBlock835PublicRealmUrl(navigationUrl(value, base), publicRealmRequestedRef.current, selectedPublicRealmIdRef.current),
-    { requested: exteriorStreamingRequestedRef.current, profile: exteriorProfileRef.current, canarySnapshotId: exteriorCanarySnapshotIdRef.current },
+    { requested: exteriorStreamingRequestedRef.current, releaseId: exteriorCellReleaseIdRef.current, profile: exteriorProfileRef.current, canarySnapshotId: exteriorCanarySnapshotIdRef.current },
   ), []);
   const updateSelectedStorefront = useCallback((storefrontId: string | null) => {
     selectedStorefrontIdRef.current = storefrontId;
@@ -864,6 +887,7 @@ export function App() {
   activeRealBaseReleaseIdRef.current = activeRealBaseReleaseId;
   const exteriorStreamingState = exteriorStreamingActivation({
     requested: exteriorStreamingRequested,
+    releaseId: exteriorCellReleaseId,
     loadState: exteriorCellLoadState,
     hasVerifiedRuntime: exteriorCellRuntime !== null,
     activeBaseReleaseId: activeRealBaseReleaseId,
@@ -1041,7 +1065,7 @@ export function App() {
     setExteriorCellLoadState("loading");
     setExteriorCellMessage("Exterior streaming is loading from the local release…");
     const request: ExteriorHeadRequest = exteriorCanarySnapshotId ? { kind: "canary", snapshotId: exteriorCanarySnapshotId } : { kind: "default" };
-    void loadExteriorCellRuntime(EXTERIOR_CELL_STREAMING_BASE_PATH, {
+    void loadExteriorCellRuntime(exteriorCellBasePath(exteriorCellReleaseId), {
       signal: controller.signal,
       request,
       sharedBudget: aggregateBudgetRef.current,
@@ -1063,7 +1087,7 @@ export function App() {
       setExteriorCellMessage(exteriorStreamingFailureMessage(error));
     });
     return () => controller.abort();
-  }, [exteriorCanarySnapshotId, exteriorStreamingRequested]);
+  }, [exteriorCanarySnapshotId, exteriorCellReleaseId, exteriorStreamingRequested]);
 
   useEffect(() => {
     if (!exteriorCellRuntime) return undefined;
