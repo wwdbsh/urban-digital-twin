@@ -1,0 +1,186 @@
+{
+  "schemaVersion": "1.0",
+  "evidenceId": "manhattan-exterior-fullsnapshot-dryrun-20260810",
+  "taskId": "T012",
+  "runKind": "dry-run",
+  "activatedRelease": false,
+  "publishedArtifacts": false,
+  "deterministic": true,
+  "producedBy": "pnpm exterior-fullsnapshot:dryrun -- <output-directory> --evidence",
+  "hostObservationsLocation": "docs/implementation/20260810-exterior-fullsnapshot-dryrun.md (host timings and memory are deliberately not part of this artifact)",
+  "runDigestSha256": "05a47492ed50c3b9a8c540683d97630c37628608e1750363dea357c09f81bf32",
+  "summary": {
+    "schemaVersion": "1.0",
+    "runKind": "dry-run",
+    "activatedRelease": false,
+    "baseReleaseId": "manhattan-citywide-20260804",
+    "baseManifestChecksumSha256": "acb5a9b52014f86535c8478e7d4e516efc03f6dff95c17e9896dfea4413c203c",
+    "ledgerId": "manhattan-exterior-wave-ledger-20260804-a3382ef4cac213a2",
+    "ledgerChecksumSha256": "62e093d2ca50b54b49fd8bbad9d0b11f6301b2b197623deb343f9ea915e59016",
+    "generatedAt": "2026-08-04T00:00:00.000Z",
+    "projection": {
+      "referenceLatitudeNanodegrees": 40781250000,
+      "millimetersPerDegreeLatitude": 111049654,
+      "millimetersPerDegreeLongitude": 84412702,
+      "maximumLongitudeScaleErrorPartsPerMillion": 1463,
+      "maximumLatitudeScaleErrorPartsPerMillion": 17
+    },
+    "counts": {
+      "enumerated": 45194,
+      "planned": 45194,
+      "stopped": 0,
+      "stopsByCode": {
+        "unsupported-base-manifest": 0,
+        "invalid-identity": 0,
+        "degenerate-footprint": 0,
+        "degenerate-rectangle": 0,
+        "invalid-height": 0,
+        "cap-exceeded": 0,
+        "rejected-input": 0
+      },
+      "cells": 883,
+      "heightUnknown": 76,
+      "fallbackHeight": 76,
+      "forcedTwoFloor": 1393,
+      "forcedTwoBay": 29011,
+      "subThreeMeterHeight": 140,
+      "buildingsWithDroppedHoles": 797,
+      "holeRingsDropped": 1048
+    },
+    "grammar": {
+      "maximumFloorCount": 135,
+      "maximumBayCount": 39,
+      "maximumPlacementCount": 8308,
+      "medianPlacementCount": 39,
+      "capsReached": 0
+    },
+    "quantization": {
+      "medianHeightResidualMm": 2,
+      "maximumHeightResidualMm": 87,
+      "meanHeightResidualMicrometers": 2843
+    },
+    "footprintProxy": {
+      "proxy": "min-rect-proxy-v1",
+      "medianAreaRatioPartsPerMillion": 1046168,
+      "p95AreaRatioPartsPerMillion": 1417838,
+      "maximumAreaRatioPartsPerMillion": 6077246,
+      "medianAxisAlignedAreaRatioPartsPerMillion": 2291255,
+      "p95AxisAlignedAreaRatioPartsPerMillion": 3070358,
+      "maximumAxisAlignedAreaRatioPartsPerMillion": 16422841,
+      "medianSpanMm": 26719,
+      "p95SpanMm": 65844,
+      "maximumSpanMm": 655906,
+      "maximumProjectionScaleErrorMm": 960
+    },
+    "bytes": {
+      "gatingBasis": "structural-gltf-accessor-arithmetic-v1",
+      "structuralTotalBytes": 1212845412,
+      "nonGatingPilotTotalBytes": 7932980295,
+      "maximumArtifactEstimatedBytes": 1171612,
+      "maximumCellEstimatedBytes": 7602576
+    }
+  },
+  "budgetTable": {
+    "schemaVersion": "1.0",
+    "gatingBasis": "structural-gltf-accessor-arithmetic-v1",
+    "nonGatingPilotTotalBytes": 7932980295,
+    "ok": true,
+    "checks": [
+      {
+        "id": "total-bytes",
+        "limit": 8589934592,
+        "observed": 1212845412,
+        "headroomPartsPerMillion": 858806,
+        "ok": true,
+        "detail": "Structural estimate of all LOD artifacts against the 8 GiB package cap."
+      },
+      {
+        "id": "artifact-bytes",
+        "limit": 268435456,
+        "observed": 1171612,
+        "headroomPartsPerMillion": 995635,
+        "ok": true,
+        "detail": "Largest single estimated GLB against the 256 MiB artifact cap."
+      },
+      {
+        "id": "assets",
+        "limit": 50000,
+        "observed": 45194,
+        "headroomPartsPerMillion": 96120,
+        "ok": true,
+        "detail": "One asset per accepted building parent against the 50,000 asset cap."
+      },
+      {
+        "id": "artifacts",
+        "limit": 200000,
+        "observed": 90388,
+        "headroomPartsPerMillion": 548060,
+        "ok": true,
+        "detail": "Assets times LOD profile depth against the 200,000 artifact cap."
+      },
+      {
+        "id": "cells",
+        "limit": 20000,
+        "observed": 883,
+        "headroomPartsPerMillion": 955850,
+        "ok": true,
+        "detail": "Ledger cells against the 20,000 cell cap."
+      },
+      {
+        "id": "lods-per-asset",
+        "limit": 8,
+        "observed": 2,
+        "headroomPartsPerMillion": 750000,
+        "ok": true,
+        "detail": "LOD profile depth against the 8 LOD cap."
+      },
+      {
+        "id": "placements-per-plan",
+        "limit": 50000,
+        "observed": 8308,
+        "headroomPartsPerMillion": 833840,
+        "ok": true,
+        "detail": "Largest generated placement count against the deterministic facade cap."
+      },
+      {
+        "id": "cell-membership",
+        "limit": 120,
+        "observed": 119,
+        "headroomPartsPerMillion": 8333,
+        "ok": true,
+        "detail": "Largest ledger cell membership against the accepted per-cell cap."
+      }
+    ]
+  },
+  "cacheSimulation": {
+    "schemaVersion": "1.0",
+    "maxCacheEntries": 256,
+    "maxCachedBytes": 268435456,
+    "cellCount": 883,
+    "maximumCellBuildingCount": 119,
+    "medianCellBuildingCount": 49,
+    "maximumSingleCellEntries": 119,
+    "singleCellFitsCache": true,
+    "maximumPredecessorFallbackEntries": 238,
+    "predecessorFallbackFitsCache": true,
+    "medianCellsPerCache": 5,
+    "maximumCellEstimatedBytes": 7602576,
+    "maximumCellFitsCachedBytes": true,
+    "cellsOverCachedBytes": 0
+  },
+  "reconciliation": {
+    "schemaVersion": "1.0",
+    "ledgerId": "manhattan-exterior-wave-ledger-20260804-a3382ef4cac213a2",
+    "ledgerChecksumSha256": "62e093d2ca50b54b49fd8bbad9d0b11f6301b2b197623deb343f9ea915e59016",
+    "enumeratedBuildingCount": 45194,
+    "plannedBuildingCount": 45194,
+    "stoppedBuildingCount": 0,
+    "counts": {
+      "missing": 0,
+      "duplicate": 0,
+      "unclassified": 0
+    },
+    "ok": true,
+    "findings": []
+  }
+}
