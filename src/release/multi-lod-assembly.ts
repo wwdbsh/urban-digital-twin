@@ -6,6 +6,7 @@ export const MULTI_LOD_ASSEMBLY_LIMITS = {
   assets: 50_000, artifacts: 200_000, cells: 20_000, lodsPerAsset: 8,
   artifactBytes: 256 * 1024 * 1024, totalBytes: 8 * 1024 * 1024 * 1024,
   glbJsonBytes: 16 * 1024 * 1024, accessors: 200_000, primitives: 200_000,
+  glbScannedComponents: 10_000_000,
   materials: 10_000, textures: 10_000, tileNodes: 200_000, tileDepth: 32,
 } as const;
 
@@ -120,12 +121,18 @@ function stringList(value: unknown, path: string, issues: AssemblyIssue[], allow
 function audiencePath(value: unknown, audience: AssemblyAudience): value is string {
   return isSafeReleaseArtifactReference(value) && value.startsWith(`${audience}/`) && (audience !== "public" || !value.toLowerCase().includes("private"));
 }
+/** Locale-independent UTF-16 code-unit order; unlike localeCompare this is a total order for every accepted ID. */
+function compareText(left: string, right: string): number { return left < right ? -1 : left > right ? 1 : 0; }
 function canonicalManifest(manifest: MultiLodAssemblyManifest): MultiLodAssemblyManifest {
   return {
     ...manifest,
-    cells: [...manifest.cells].map((cell) => ({ ...cell, buildingIds: [...cell.buildingIds].sort() })).sort((a, b) => a.cellId.localeCompare(b.cellId)),
-    assets: [...manifest.assets].map((asset) => ({ ...asset, truthTiers: [...asset.truthTiers].sort(), lods: [...asset.lods] })).sort((a, b) => a.canonicalFeatureId.localeCompare(b.canonicalFeatureId)),
-    artifacts: [...manifest.artifacts].sort((a, b) => a.relativeRef.localeCompare(b.relativeRef)),
+    cells: [...manifest.cells].map((cell) => ({ ...cell, buildingIds: [...cell.buildingIds].sort(compareText) })).sort((a, b) => compareText(a.cellId, b.cellId)),
+    assets: [...manifest.assets].map((asset) => ({
+      ...asset,
+      truthTiers: [...asset.truthTiers].sort(compareText),
+      lods: asset.lods.map((lod) => ({ ...lod, silhouette: lod.silhouette === null ? null : { ...lod.silhouette, viewIds: [...lod.silhouette.viewIds].sort(compareText) } })),
+    })).sort((a, b) => compareText(a.canonicalFeatureId, b.canonicalFeatureId)),
+    artifacts: [...manifest.artifacts].sort((a, b) => compareText(a.relativeRef, b.relativeRef)),
   };
 }
 
@@ -166,11 +173,11 @@ export function validateMultiLodAssembly(value: unknown): AssemblyValidation {
     if (!hash(raw.membershipChecksumSha256)) issue(issues, `${path}.membershipChecksumSha256`, "Membership checksum is required.");
     if (text(raw.cellId)) cells.set(raw.cellId, raw as unknown as AssemblyCell);
   });
-  const artifacts = new Map<string, AssemblyArtifact>(); let total = 0;
+  const artifacts = new Map<string, AssemblyArtifact>(); const artifactLogicalIds = new Set<string>(); let total = 0;
   if (Array.isArray(value.artifacts)) value.artifacts.forEach((raw, index) => {
     const path = `$.artifacts[${index}]`; if (!rec(raw)) return issue(issues, path, "Artifact must be an object.");
     exact(raw, ["logicalId", "role", "relativeRef", "byteSize", "checksumSha256", "ownerCellId"], path, issues);
-    if (!text(raw.logicalId)) issue(issues, `${path}.logicalId`, "Logical ID is required.");
+    if (!text(raw.logicalId) || artifactLogicalIds.has(String(raw.logicalId))) issue(issues, `${path}.logicalId`, "Logical IDs must be unique and non-empty."); else artifactLogicalIds.add(raw.logicalId);
     if (raw.role !== "tileset-json" && raw.role !== "glb") issue(issues, `${path}.role`, "Artifact role must be tileset-json or glb.");
     if (!audiencePath(raw.relativeRef, audience)) issue(issues, `${path}.relativeRef`, "Artifact path must be safe and audience-rooted.");
     else if (artifacts.has(raw.relativeRef)) issue(issues, `${path}.relativeRef`, "Artifact refs must be unique.");
@@ -197,13 +204,14 @@ export function validateMultiLodAssembly(value: unknown): AssemblyValidation {
     if (!text(raw.uncertainty)) issue(issues, `${path}.uncertainty`, "Explicit uncertainty is required.");
     if (!rec(raw.source)) issue(issues, `${path}.source`, "Closed source discriminant is required."); else if (raw.source.kind === "facade-plan") { exact(raw.source, ["kind", "planId", "planHashSha256"], `${path}.source`, issues); if (!text(raw.source.planId) || !hash(raw.source.planHashSha256)) issue(issues, `${path}.source`, "Facade-plan ID/hash are required."); } else if (raw.source.kind === "authored-override") { exact(raw.source, ["kind", "assetManifestId", "assetManifestChecksumSha256", "approvalFingerprintSha256"], `${path}.source`, issues); if (!text(raw.source.assetManifestId) || !hash(raw.source.assetManifestChecksumSha256) || !hash(raw.source.approvalFingerprintSha256)) issue(issues, `${path}.source`, "Authored override manifest/approval pins are required."); } else issue(issues, `${path}.source.kind`, "Unsupported asset source.");
     if (!Array.isArray(raw.lods) || raw.lods.length === 0 || raw.lods.length > MULTI_LOD_ASSEMBLY_LIMITS.lodsPerAsset) return issue(issues, `${path}.lods`, "A bounded LOD list is required.");
-    let previousDistance = -1; let previousError = -1; let previousTriangles = Number.POSITIVE_INFINITY;
+    let previousDistance = -1; let previousError = -1; let previousTriangles = Number.POSITIVE_INFINITY; const lodIds = new Set<string>();
     raw.lods.forEach((lodRaw, lodIndex) => {
       const lodPath = `${path}.lods[${lodIndex}]`; if (!rec(lodRaw)) return issue(issues, lodPath, "LOD must be an object.");
       exact(lodRaw, ["lodId", "artifactRef", "geometricErrorMeters", "maxDistanceMeters", "eligible", "quality", "silhouette"], lodPath, issues);
-      if (!text(lodRaw.lodId)) issue(issues, `${lodPath}.lodId`, "LOD ID is required.");
+      if (!text(lodRaw.lodId) || lodIds.has(String(lodRaw.lodId))) issue(issues, `${lodPath}.lodId`, "Per-asset LOD IDs must be unique and non-empty."); else lodIds.add(lodRaw.lodId);
       if (!audiencePath(lodRaw.artifactRef, audience) || artifacts.get(String(lodRaw.artifactRef))?.role !== "glb" || artifacts.get(String(lodRaw.artifactRef))?.ownerCellId !== raw.ownerCellId || claimedRefs.has(String(lodRaw.artifactRef))) issue(issues, `${lodPath}.artifactRef`, "Each LOD must uniquely cite an owner-cell GLB."); else claimedRefs.add(lodRaw.artifactRef);
       if (!finite(lodRaw.geometricErrorMeters, 0) || lodRaw.geometricErrorMeters < previousError) issue(issues, `${lodPath}.geometricErrorMeters`, "Near-to-far geometric error must be nondecreasing."); else previousError = lodRaw.geometricErrorMeters;
+      if (lodIndex === 0 && lodRaw.geometricErrorMeters !== 0) issue(issues, `${lodPath}.geometricErrorMeters`, "Finest LOD geometric error must be zero.");
       let distance: number;
       if (lodRaw.maxDistanceMeters === null) distance = Number.POSITIVE_INFINITY;
       else if (finite(lodRaw.maxDistanceMeters, 0)) distance = lodRaw.maxDistanceMeters;
@@ -221,7 +229,7 @@ export function validateMultiLodAssembly(value: unknown): AssemblyValidation {
       if (lodIndex === 0 && lodRaw.silhouette !== null) issue(issues, `${lodPath}.silhouette`, "Finest LOD has no transition silhouette measurement.");
       if (lodIndex > 0) {
         if (!rec(lodRaw.silhouette)) issue(issues, `${lodPath}.silhouette`, "LOD transition requires declared authoring measurement.");
-        else { exact(lodRaw.silhouette, ["status", "method", "metricVersion", "planHashSha256", "viewIds", "deviationRatio", "maximumRatio"], `${lodPath}.silhouette`, issues); if (lodRaw.silhouette.status !== "authoring-declared" || lodRaw.silhouette.method !== "projected-silhouette-ratio" || lodRaw.silhouette.metricVersion !== "1.0" || !hash(lodRaw.silhouette.planHashSha256) || !stringList(lodRaw.silhouette.viewIds, `${lodPath}.silhouette.viewIds`, issues) || !finite(lodRaw.silhouette.deviationRatio, 0) || lodRaw.silhouette.maximumRatio !== 0.02 || lodRaw.silhouette.deviationRatio > 0.02) issue(issues, `${lodPath}.silhouette`, "Declared silhouette metadata must use v1 and stay within 2%."); if (rec(raw.source) && raw.source.kind === "facade-plan" && lodRaw.silhouette.planHashSha256 !== raw.source.planHashSha256) issue(issues, `${lodPath}.silhouette.planHashSha256`, "Silhouette measurement must bind the facade plan."); }
+        else { exact(lodRaw.silhouette, ["status", "method", "metricVersion", "planHashSha256", "viewIds", "deviationRatio", "maximumRatio"], `${lodPath}.silhouette`, issues); if (lodRaw.silhouette.status !== "authoring-declared" || lodRaw.silhouette.method !== "projected-silhouette-ratio" || lodRaw.silhouette.metricVersion !== "1.0" || !hash(lodRaw.silhouette.planHashSha256) || !stringList(lodRaw.silhouette.viewIds, `${lodPath}.silhouette.viewIds`, issues) || !finite(lodRaw.silhouette.deviationRatio, 0) || lodRaw.silhouette.maximumRatio !== 0.02 || lodRaw.silhouette.deviationRatio > 0.02) issue(issues, `${lodPath}.silhouette`, "Declared silhouette metadata must use v1 and stay within 2%."); if (rec(raw.source)) { const sourceHash = raw.source.kind === "facade-plan" ? raw.source.planHashSha256 : raw.source.kind === "authored-override" ? raw.source.assetManifestChecksumSha256 : null; if (lodRaw.silhouette.planHashSha256 !== sourceHash) issue(issues, `${lodPath}.silhouette.planHashSha256`, "Silhouette measurement must bind the immutable asset source."); } }
       }
     });
   });
@@ -233,7 +241,7 @@ export function validateMultiLodAssembly(value: unknown): AssemblyValidation {
 function u32(view: DataView, offset: number): number { return view.getUint32(offset, true); }
 function parseJsonBytes(bytes: Uint8Array): unknown {
   const decoded = new TextDecoder("utf-8", { fatal: true }).decode(bytes); let end = decoded.length;
-  while (end > 0 && (decoded.charCodeAt(end - 1) === 0 || decoded.charCodeAt(end - 1) === 32)) end -= 1;
+  while (end > 0 && decoded.charCodeAt(end - 1) === 32) end -= 1;
   return JSON.parse(decoded.slice(0, end));
 }
 export function parseGlbV2(bytes: Uint8Array): ParsedGlb {
@@ -257,15 +265,24 @@ export function parseGlbV2(bytes: Uint8Array): ParsedGlb {
 }
 const COMPONENT_BYTES: Record<number, number> = { 5121: 1, 5123: 2, 5125: 4, 5126: 4 };
 const TYPE_COMPONENTS: Record<string, number> = { SCALAR: 1, VEC2: 2, VEC3: 3, VEC4: 4 };
+function rejectUnsupportedGltfSurfaces(value: unknown): void {
+  if (Array.isArray(value)) { for (const part of value) rejectUnsupportedGltfSurfaces(part); return; }
+  if (!rec(value)) return;
+  for (const [key, part] of Object.entries(value)) {
+    if (key === "uri" || key === "extensions") throw new Error("External URI and extension surfaces are unsupported in the GLB v1 profile.");
+    rejectUnsupportedGltfSurfaces(part);
+  }
+}
 function validateGltfJson(json: Record<string, unknown>, bin: Uint8Array): void {
   if (!rec(json.asset) || json.asset.version !== "2.0") throw new Error("glTF asset.version 2.0 is required.");
-  const unsupported = Array.isArray(json.extensionsUsed) ? json.extensionsUsed.filter((name) => typeof name === "string" && /draco|meshopt|compression/iu.test(name)) : [];
-  if (unsupported.length) throw new Error("Compressed glTF extensions are unsupported.");
+  const topLevel = new Set(["asset", "buffers", "bufferViews", "accessors", "meshes", "materials", "textures", "images", "samplers", "nodes", "scenes", "scene", "extras"]);
+  if (Object.keys(json).some((key) => !topLevel.has(key))) throw new Error("Unsupported top-level glTF field or extension declaration.");
+  rejectUnsupportedGltfSurfaces(json);
   const buffers = Array.isArray(json.buffers) ? json.buffers : [];
   if (buffers.length !== 1 || !rec(buffers[0]) || "uri" in buffers[0] || !integer(buffers[0].byteLength, bin.byteLength) || buffers[0].byteLength > bin.byteLength || bin.byteLength - buffers[0].byteLength > 3) throw new Error("One embedded BIN buffer with a bounded length is required.");
   if (Array.isArray(json.images) && json.images.some((image) => rec(image) && "uri" in image)) throw new Error("External image URIs are forbidden.");
   const views = Array.isArray(json.bufferViews) ? json.bufferViews : [];
-  for (const raw of views) { if (!rec(raw) || raw.buffer !== 0 || !integer(raw.byteOffset ?? 0) || !integer(raw.byteLength) || (raw.byteOffset as number | undefined ?? 0) + (raw.byteLength as number) > (buffers[0].byteLength as number) || (raw.byteStride !== undefined && (!integer(raw.byteStride, 252) || raw.byteStride < 4))) throw new Error("bufferView range is invalid."); }
+  for (const raw of views) { if (!rec(raw) || raw.buffer !== 0 || !integer(raw.byteOffset ?? 0) || !integer(raw.byteLength) || (raw.byteOffset as number | undefined ?? 0) + (raw.byteLength as number) > (buffers[0].byteLength as number) || (raw.byteStride !== undefined && (!integer(raw.byteStride, 252) || raw.byteStride < 4 || raw.byteStride % 4 !== 0))) throw new Error("bufferView range is invalid."); }
   const accessors = Array.isArray(json.accessors) ? json.accessors : [];
   if (accessors.length > MULTI_LOD_ASSEMBLY_LIMITS.accessors) throw new Error("Accessor cap exceeded.");
   for (const raw of accessors) {
@@ -277,30 +294,44 @@ function validateGltfJson(json: Record<string, unknown>, bin: Uint8Array): void 
     const extent = accessorOffset + ((raw.count as number) - 1) * stride + elementBytes;
     if (!Number.isSafeInteger(extent) || extent > (view.byteLength as number)) throw new Error("Accessor byte range exceeds its bufferView.");
   }
-  const meshes = Array.isArray(json.meshes) ? json.meshes : []; let primitives = 0;
+  const images = Array.isArray(json.images) ? json.images : []; const textures = Array.isArray(json.textures) ? json.textures : []; const samplers = Array.isArray(json.samplers) ? json.samplers : [];
+  if (images.length > MULTI_LOD_ASSEMBLY_LIMITS.textures || textures.length > MULTI_LOD_ASSEMBLY_LIMITS.textures || samplers.length > MULTI_LOD_ASSEMBLY_LIMITS.textures) throw new Error("Image, texture, or sampler cap exceeded.");
+  for (const image of images) if (!rec(image) || !integer(image.bufferView, Math.max(0, views.length - 1)) || !["image/png", "image/jpeg", "image/webp"].includes(String(image.mimeType))) throw new Error("Embedded image profile is invalid.");
+  for (const texture of textures) if (!rec(texture) || !integer(texture.source, images.length - 1) || (texture.sampler !== undefined && !integer(texture.sampler, samplers.length - 1))) throw new Error("Texture source or sampler index is invalid.");
+  const referencedTextures = new Set<number>();
+  const collectTextures = (value: unknown, key = ""): void => { if (!rec(value)) return; if (key.endsWith("Texture")) { if (!integer(value.index, textures.length - 1)) throw new Error("Material texture index is invalid."); referencedTextures.add(value.index); return; } for (const [childKey, child] of Object.entries(value)) collectTextures(child, childKey); };
+  if (Array.isArray(json.materials)) for (const material of json.materials) { if (!rec(material)) throw new Error("Material must be an object."); collectTextures(material); }
+  const meshes = Array.isArray(json.meshes) ? json.meshes : []; let primitives = 0; let scannedComponents = 0;
   const binary = new DataView(bin.buffer, bin.byteOffset, bin.byteLength);
   const info = (index: number) => { const accessor = accessors[index] as Record<string, unknown>; const view = views[accessor.bufferView as number] as Record<string, unknown>; const componentBytes = COMPONENT_BYTES[accessor.componentType as number]!; const elementBytes = componentBytes * TYPE_COMPONENTS[accessor.type as string]!; return { accessor, count: accessor.count as number, componentType: accessor.componentType as number, offset: (view.byteOffset as number | undefined ?? 0) + (accessor.byteOffset as number | undefined ?? 0), stride: view.byteStride as number | undefined ?? elementBytes }; };
   const component = (type: number, offset: number): number => type === 5121 ? binary.getUint8(offset) : type === 5123 ? binary.getUint16(offset, true) : type === 5125 ? binary.getUint32(offset, true) : binary.getFloat32(offset, true);
+  const positionCounts = new Map<number, number>(); const indexMaximums = new Map<number, number>();
+  const reserveScan = (count: number): void => { const next = add(scannedComponents, count); if (next === null || next > MULTI_LOD_ASSEMBLY_LIMITS.glbScannedComponents) throw new Error("GLB component scan work cap exceeded."); scannedComponents = next; };
   for (const mesh of meshes) {
     if (!rec(mesh) || !Array.isArray(mesh.primitives)) throw new Error("Mesh primitives are required.");
     for (const primitive of mesh.primitives) {
       primitives += 1; if (!rec(primitive) || (primitive.mode ?? 4) !== 4 || !rec(primitive.attributes) || !integer(primitive.attributes.POSITION, Math.max(0, accessors.length - 1)) || !integer(primitive.indices, Math.max(0, accessors.length - 1))) throw new Error("Only indexed TRIANGLES with POSITION are supported.");
-      const positions = info(primitive.attributes.POSITION); const indices = info(primitive.indices as number);
+      for (const accessorIndex of Object.values(primitive.attributes)) if (!integer(accessorIndex, Math.max(0, accessors.length - 1))) throw new Error("Primitive attribute accessor is invalid.");
+      if (primitive.material !== undefined && !integer(primitive.material, (Array.isArray(json.materials) ? json.materials.length : 0) - 1)) throw new Error("Primitive material index is invalid.");
+      const positionIndex = primitive.attributes.POSITION; const indexIndex = primitive.indices as number; const positions = info(positionIndex); const indices = info(indexIndex);
       if (indices.accessor.type !== "SCALAR" || indices.componentType === 5126 || indices.count % 3 !== 0 || positions.accessor.type !== "VEC3" || positions.componentType !== 5126 || positions.count < 3) throw new Error("Triangle topology accessor counts are invalid.");
-      for (let index = 0; index < positions.count; index += 1) for (let axis = 0; axis < 3; axis += 1) if (!Number.isFinite(component(5126, positions.offset + index * positions.stride + axis * 4))) throw new Error("POSITION contains a non-finite coordinate.");
-      for (let index = 0; index < indices.count; index += 1) if (component(indices.componentType, indices.offset + index * indices.stride) >= positions.count) throw new Error("Triangle index exceeds POSITION count.");
+      if (!positionCounts.has(positionIndex)) { reserveScan(positions.count * 3); for (let index = 0; index < positions.count; index += 1) for (let axis = 0; axis < 3; axis += 1) if (!Number.isFinite(component(5126, positions.offset + index * positions.stride + axis * 4))) throw new Error("POSITION contains a non-finite coordinate."); positionCounts.set(positionIndex, positions.count); }
+      if (!indexMaximums.has(indexIndex)) { reserveScan(indices.count); let maximum = -1; for (let index = 0; index < indices.count; index += 1) maximum = Math.max(maximum, component(indices.componentType, indices.offset + index * indices.stride)); indexMaximums.set(indexIndex, maximum); }
+      if (indexMaximums.get(indexIndex)! >= positionCounts.get(positionIndex)!) throw new Error("Triangle index exceeds POSITION count.");
     }
   }
   if (primitives === 0 || primitives > MULTI_LOD_ASSEMBLY_LIMITS.primitives) throw new Error("Primitive count is outside the profile.");
-  if ((Array.isArray(json.materials) ? json.materials.length : 0) > MULTI_LOD_ASSEMBLY_LIMITS.materials || (Array.isArray(json.textures) ? json.textures.length : 0) > MULTI_LOD_ASSEMBLY_LIMITS.textures) throw new Error("Material or texture cap exceeded.");
+  if ((Array.isArray(json.materials) ? json.materials.length : 0) > MULTI_LOD_ASSEMBLY_LIMITS.materials) throw new Error("Material cap exceeded.");
 }
 
 interface UdtGlbMetadata { canonicalFeatureId: string; lodId: string; ownerCellId: string; inventoryId: string; inventoryHashSha256: string; evidenceShardId: string; truthTiers: ComponentTruthTier[]; sourceDates: { capturedAt: string | null; updatedAt: string | null }; predecessor: ImmutablePin | null; uncertainty: string; planHashSha256: string }
 function glbMetadata(json: Record<string, unknown>): UdtGlbMetadata | null { const extras = rec(json.extras) ? json.extras : null; return extras && rec(extras.urbanDigitalTwin) ? extras.urbanDigitalTwin as unknown as UdtGlbMetadata : null; }
 function counts(json: Record<string, unknown>): { triangleCount: number; materialCount: number; textureCount: number } {
-  const accessors = json.accessors as Record<string, unknown>[]; let triangles = 0;
-  for (const mesh of json.meshes as Array<{ primitives: Array<{ indices: number }> }>) for (const primitive of mesh.primitives) triangles += (accessors[primitive.indices]!.count as number) / 3;
-  return { triangleCount: triangles, materialCount: Array.isArray(json.materials) ? json.materials.length : 0, textureCount: Array.isArray(json.textures) ? json.textures.length : 0 };
+  const accessors = json.accessors as Record<string, unknown>[]; const materialIds = new Set<number>(); const textureIds = new Set<number>(); let triangles = 0;
+  for (const mesh of json.meshes as Array<{ primitives: Array<{ indices: number; material?: number }> }>) for (const primitive of mesh.primitives) { triangles += (accessors[primitive.indices]!.count as number) / 3; if (primitive.material !== undefined) materialIds.add(primitive.material); }
+  const collect = (value: unknown, key = ""): void => { if (!rec(value)) return; if (key.endsWith("Texture")) { textureIds.add(value.index as number); return; } for (const [childKey, child] of Object.entries(value)) collect(child, childKey); };
+  const materials = Array.isArray(json.materials) ? json.materials : []; for (const id of materialIds) collect(materials[id]);
+  return { triangleCount: triangles, materialCount: materialIds.size, textureCount: textureIds.size };
 }
 function validateGlbBinding(parsed: ParsedGlb, asset: AssemblyAsset, lod: AssemblyLod): void {
   const metadata = glbMetadata(parsed.json); if (!metadata) throw new Error("GLB canonical metadata is required.");
@@ -310,38 +341,70 @@ function validateGlbBinding(parsed: ParsedGlb, asset: AssemblyAsset, lod: Assemb
 }
 
 interface Tile { boundingVolume?: { box?: number[] }; geometricError?: number; refine?: string; transform?: number[]; content?: { uri?: string }; children?: Tile[] }
+function closedKeys(value: Record<string, unknown>, allowed: readonly string[], required: readonly string[], label: string): void {
+  const keys = new Set(allowed); if (Object.keys(value).some((key) => !keys.has(key)) || required.some((key) => !(key in value))) throw new Error(`${label} contains unsupported or missing fields.`);
+}
+function resolveTilesetUri(tilesetRef: string, uri: unknown, audience: AssemblyAudience): string {
+  if (typeof uri !== "string" || uri.length === 0 || uri.startsWith("/") || /^[A-Za-z][A-Za-z0-9+.-]*:/u.test(uri) || /[%?#\\]/u.test(uri) || [...uri].some((part) => part.charCodeAt(0) <= 0x20 || part.charCodeAt(0) === 0x7f)) throw new Error("Tile content URI is not a strict local relative reference.");
+  const parts = tilesetRef.split("/").slice(0, -1);
+  for (const segment of uri.split("/")) {
+    if (segment === "..") { if (parts.length === 0) throw new Error("Tile content URI escapes the package root."); parts.pop(); }
+    else if (segment.length === 0 || segment === "." || !/^[A-Za-z0-9][A-Za-z0-9._-]*$/u.test(segment)) throw new Error("Tile content URI has a non-canonical segment.");
+    else parts.push(segment);
+  }
+  const resolved = parts.join("/"); if (!audiencePath(resolved, audience)) throw new Error("Tile content URI resolves outside its audience root."); return resolved;
+}
 function validateTransform(value: unknown): void { if (!Array.isArray(value) || value.length !== 16 || !value.every(Number.isFinite) || value.some((part) => Math.abs(part) > 1e9) || value[3] !== 0 || value[7] !== 0 || value[11] !== 0 || value[15] !== 1) throw new Error("3D Tiles transform must be bounded column-major affine."); const determinant = value[0]! * (value[5]! * value[10]! - value[9]! * value[6]!) - value[4]! * (value[1]! * value[10]! - value[9]! * value[2]!) + value[8]! * (value[1]! * value[6]! - value[5]! * value[2]!); if (Math.abs(determinant) < 1e-9) throw new Error("3D Tiles transform is singular."); }
 function validateBox(value: unknown): void { if (!Array.isArray(value) || value.length !== 12 || !value.every(Number.isFinite)) throw new Error("3D Tiles box requires 12 finite numbers."); for (const offset of [3, 6, 9]) if (Math.hypot(value[offset]!, value[offset + 1]!, value[offset + 2]!) <= 0) throw new Error("3D Tiles box half axes must be nondegenerate."); }
 function validateTileset(bytes: Uint8Array, manifest: MultiLodAssemblyManifest): Set<string> {
-  if (bytes.byteLength > MULTI_LOD_ASSEMBLY_LIMITS.glbJsonBytes) throw new Error("Tileset JSON exceeds the cap."); const raw = parseJsonBytes(bytes); if (!rec(raw) || !rec(raw.asset) || raw.asset.version !== "1.1" || !rec(raw.root)) throw new Error("3D Tiles 1.1 root is required.");
+  if (bytes.byteLength > MULTI_LOD_ASSEMBLY_LIMITS.glbJsonBytes) throw new Error("Tileset JSON exceeds the cap."); const raw = parseJsonBytes(bytes); if (!rec(raw)) throw new Error("3D Tiles 1.1 document is required.");
+  closedKeys(raw, ["asset", "geometricError", "root"], ["asset", "geometricError", "root"], "Tileset");
+  if (!rec(raw.asset)) throw new Error("3D Tiles asset metadata is required."); closedKeys(raw.asset, ["version"], ["version"], "Tileset asset");
+  if (raw.asset.version !== "1.1" || !finite(raw.geometricError, 0) || !rec(raw.root)) throw new Error("3D Tiles 1.1 root and top-level geometricError are required.");
   const expected = new Map<string, { asset: AssemblyAsset; lod: AssemblyLod }>(); for (const asset of manifest.assets) for (const lod of asset.lods) expected.set(lod.artifactRef, { asset, lod });
   const seen = new Set<string>(); const active = new Set<object>(); let nodes = 0;
-  const walk = (tile: Tile, parentError: number | null, depth: number): void => {
+  const walk = (tile: Tile, parentError: number | null, depth: number, expectedBinding: { asset: AssemblyAsset; lodIndex: number } | null): void => {
     if (!rec(tile)) throw new Error("Tile must be an object."); if (active.has(tile as object)) throw new Error("Tile graph cycle detected."); active.add(tile as object); nodes += 1;
+    closedKeys(tile, ["boundingVolume", "geometricError", "refine", "transform", "content", "children"], ["boundingVolume", "geometricError", "refine"], "Tile");
     if (nodes > MULTI_LOD_ASSEMBLY_LIMITS.tileNodes || depth > MULTI_LOD_ASSEMBLY_LIMITS.tileDepth) throw new Error("Tileset topology cap exceeded.");
-    const volume = tile.boundingVolume; if (!rec(volume)) throw new Error("Tile bounding volume is required."); validateBox(volume.box);
+    const volume = tile.boundingVolume; if (!rec(volume)) throw new Error("Tile bounding volume is required."); closedKeys(volume, ["box"], ["box"], "Tile boundingVolume"); validateBox(volume.box);
     if (!finite(tile.geometricError, 0) || (parentError !== null && tile.geometricError! > parentError)) throw new Error("Tile geometric error hierarchy is invalid.");
     if ((tile.refine ?? "REPLACE") !== "REPLACE") throw new Error("Only REPLACE refinement is supported."); if (tile.transform !== undefined) validateTransform(tile.transform);
     const children = tile.children ?? []; if (!Array.isArray(children)) throw new Error("Tile children must be an array.");
-    if (children.length === 0 && tile.geometricError !== 0) throw new Error("Content leaves must have zero geometric error.");
-    if (tile.content !== undefined) { if (!rec(tile.content)) throw new Error("Tile content must be an object."); const uri = tile.content.uri; if (!audiencePath(uri, manifest.audience) || !expected.has(uri) || seen.has(uri)) throw new Error("Tile content URI is unsafe, undeclared, or duplicated."); seen.add(uri); }
-    for (const child of children) walk(child, tile.geometricError!, depth + 1); active.delete(tile as object);
+    if (expectedBinding === null) {
+      if (tile.content !== undefined || depth !== 0 || children.length !== manifest.assets.length) throw new Error("Tileset root must be one contentless container with one LOD chain per asset.");
+      const orderedAssets = [...manifest.assets].sort((a, b) => compareText(a.canonicalFeatureId, b.canonicalFeatureId));
+      for (let index = 0; index < orderedAssets.length; index += 1) walk(children[index]!, tile.geometricError!, depth + 1, { asset: orderedAssets[index]!, lodIndex: orderedAssets[index]!.lods.length - 1 });
+    } else {
+      if (!rec(tile.content)) throw new Error("Every asset LOD chain node requires content."); closedKeys(tile.content, ["uri"], ["uri"], "Tile content"); const resolvedUri = resolveTilesetUri(manifest.tilesetRef, tile.content.uri, manifest.audience); const lod = expectedBinding.asset.lods[expectedBinding.lodIndex]!;
+      if (resolvedUri !== lod.artifactRef || !expected.has(resolvedUri) || seen.has(resolvedUri)) throw new Error("Tile content URI does not match the canonical asset LOD refinement chain.");
+      if (tile.geometricError !== lod.geometricErrorMeters) throw new Error("Tile geometric error differs from its manifest LOD."); seen.add(resolvedUri);
+      if (expectedBinding.lodIndex === 0) { if (children.length !== 0 || tile.geometricError !== 0) throw new Error("Finest LOD must be a zero-error leaf."); }
+      else { if (children.length !== 1) throw new Error("Each coarser LOD must refine to exactly one finer LOD."); walk(children[0]!, tile.geometricError!, depth + 1, { asset: expectedBinding.asset, lodIndex: expectedBinding.lodIndex - 1 }); }
+    }
+    active.delete(tile as object);
   };
-  walk(raw.root as Tile, null, 0); if (seen.size !== expected.size) throw new Error("Tileset content closure is incomplete."); return seen;
+  const rootError = (raw.root as Record<string, unknown>).geometricError; if (!finite(rootError, 0) || rootError > raw.geometricError) throw new Error("Tileset top-level geometricError must bound the root tile.");
+  walk(raw.root as Tile, raw.geometricError, 0, null); if (seen.size !== expected.size) throw new Error("Tileset content closure is incomplete."); return seen;
 }
 async function sha256Bytes(bytes: Uint8Array): Promise<string> { const digest = await globalThis.crypto.subtle.digest("SHA-256", bytes as Uint8Array<ArrayBuffer>); return Array.from(new Uint8Array(digest), (part) => part.toString(16).padStart(2, "0")).join(""); }
 
 export async function replayMultiLodAssembly(manifest: MultiLodAssemblyManifest, contents: ReadonlyMap<string, Uint8Array>): Promise<AssemblyValidation<AssemblyReplay>> {
   const structural = validateMultiLodAssembly(manifest); if (!structural.ok) return structural;
   const issues: AssemblyIssue[] = []; const declared = new Map(manifest.artifacts.map((artifact) => [artifact.relativeRef, artifact]));
+  const lodBindings = new Map<string, { asset: AssemblyAsset; lod: AssemblyLod }>();
+  for (const asset of manifest.assets) for (const lod of asset.lods) {
+    if (lodBindings.has(lod.artifactRef)) issue(issues, `assets.${asset.canonicalFeatureId}`, "Duplicate LOD artifact binding is forbidden.");
+    else lodBindings.set(lod.artifactRef, { asset, lod });
+  }
   for (const key of contents.keys()) if (!declared.has(key)) issue(issues, `contents.${key}`, "Undeclared content is forbidden.");
   const verified: AssemblyReplay["verifiedArtifacts"] = []; const cellBytes: Record<string, number> = {}; let total = 0; let tilesetBytes: Uint8Array | null = null;
-  for (const artifact of [...manifest.artifacts].sort((a, b) => a.relativeRef.localeCompare(b.relativeRef))) {
+  for (const artifact of [...manifest.artifacts].sort((a, b) => compareText(a.relativeRef, b.relativeRef))) {
     const bytes = contents.get(artifact.relativeRef); if (!(bytes instanceof Uint8Array)) { issue(issues, `contents.${artifact.relativeRef}`, "Declared raw Uint8Array content is missing."); continue; }
     if (bytes.byteLength !== artifact.byteSize || await sha256Bytes(bytes) !== artifact.checksumSha256) { issue(issues, `contents.${artifact.relativeRef}`, "Artifact byte/hash accounting failed."); continue; }
     const next = add(total, bytes.byteLength); if (next === null || next > MULTI_LOD_ASSEMBLY_LIMITS.totalBytes) { issue(issues, "contents", "Verified byte accounting overflowed."); continue; } total = next;
     if (artifact.ownerCellId) { const cellNext = add(cellBytes[artifact.ownerCellId] ?? 0, bytes.byteLength); if (cellNext === null) issue(issues, `contents.${artifact.relativeRef}`, "Cell bytes overflowed."); else cellBytes[artifact.ownerCellId] = cellNext; }
-    try { if (artifact.role === "tileset-json") tilesetBytes = bytes; else { const binding = manifest.assets.flatMap((asset) => asset.lods.map((lod) => ({ asset, lod }))).find(({ lod }) => lod.artifactRef === artifact.relativeRef); if (!binding) throw new Error("GLB has no asset/LOD binding."); validateGlbBinding(parseGlbV2(bytes), binding.asset, binding.lod); } } catch (error) { issue(issues, `contents.${artifact.relativeRef}`, error instanceof Error ? error.message : "Artifact validation failed."); }
+    try { if (artifact.role === "tileset-json") tilesetBytes = bytes; else { const binding = lodBindings.get(artifact.relativeRef); if (!binding) throw new Error("GLB has no asset/LOD binding."); validateGlbBinding(parseGlbV2(bytes), binding.asset, binding.lod); } } catch (error) { issue(issues, `contents.${artifact.relativeRef}`, error instanceof Error ? error.message : "Artifact validation failed."); }
     verified.push({ relativeRef: artifact.relativeRef, byteSize: bytes.byteLength, checksumSha256: artifact.checksumSha256 });
   }
   if (total !== manifest.declaredTotalBytes) issue(issues, "contents", "Verified total differs from the manifest.");

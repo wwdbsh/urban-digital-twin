@@ -25,14 +25,23 @@ hashes, header and chunk closure, strict JSON, embedded buffer ranges, indexed
 triangle topology, bounded counts, and canonical metadata for building, LOD,
 owner cell, inventory/evidence, truth tiers, source dates, uncertainty, and
 predecessor identity. External buffers/images, sparse accessors, compression,
-and unsupported primitive modes are rejected.
+extensions, nonconformant strides, NUL JSON padding, and unsupported primitive
+modes are rejected. Shared POSITION and index accessors are scanned once under
+an aggregate component-work cap.
 
 The v1 3D Tiles profile accepts one 1.1 tileset with box bounding volumes,
 bounded acyclic topology, `REPLACE` refinement, non-increasing child geometric
 error, zero-error leaves, and finite nonsingular column-major affine
 transforms. This convention is deliberately distinct from the row-major local
-ENU matrices in the existing city asset manifest. Every content-bearing leaf
-must close over exactly one declared owner-cell GLB.
+ENU matrices in the existing city asset manifest. The contentless root has one
+deterministically ordered branch per asset; each branch is an exact
+coarsest-to-finest `REPLACE` chain whose URI and geometric error match the
+manifest LOD, ending in a zero-error finest leaf. Sibling/co-rendered variants,
+reversed LODs, missing variants, and orphan content fail closed.
+Content URIs use standard tileset-relative semantics, resolve inside the
+audience package root, and close over declared artifacts. Multiple-content,
+implicit-tiling, extension, and other unsupported URI-bearing surfaces are
+rejected rather than ignored.
 
 LOD silhouette eligibility retains a method/version, facade-plan hash, view
 set, and a maximum two-percent deviation. It is explicitly an
@@ -44,7 +53,10 @@ Replay is pure and sequential over a caller-provided map of raw bytes. It uses
 bounded safe-integer byte accounting and a domain-separated canonical
 fingerprint independent of map and manifest collection order. The CLI reads
 only declared regular non-symlink files contained under an explicit content
-root and performs no writes, network requests, acquisition, or publication.
+root, checks size before bounded allocation, and caps retained CLI content at
+256 MiB. Reads use a no-follow file descriptor whose device, inode, type, and
+size must match the checked path. The CLI performs no writes, network requests,
+acquisition, or publication.
 
 ## Consequences
 
