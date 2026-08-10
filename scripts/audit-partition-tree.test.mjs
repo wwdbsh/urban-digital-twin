@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { existsSync, mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import {
   PROHIBITED_EVIDENCE_TOKENS,
   auditPartitionTree,
@@ -12,7 +12,12 @@ import {
   scanTreeForProhibitedEvidence,
   classifyEvidenceFinding,
 } from "./audit-partition-tree.mjs";
-import { findPrivatePartitionDirectories, prunePrivatePartitions } from "./prune-private-partitions.mjs";
+import {
+  findPrivatePartitionDirectories,
+  prunePrivatePartitions,
+  resolveDistArgument,
+  runPrunePrivatePartitionsCli,
+} from "./prune-private-partitions.mjs";
 import { DISALLOWED_EXTERIOR_SOURCE_CLASSIFICATIONS } from "../src/domain/exterior-evidence-intake.ts";
 
 function fixtureTree() {
@@ -153,5 +158,44 @@ describe("private partition pruning", () => {
 
   it("is a no-op when no build output exists", () => {
     expect(prunePrivatePartitions(join(tmpdir(), "udt-no-dist-xyz")).removedCount).toBe(0);
+  });
+});
+
+/**
+ * The script deletes recursively, so its one steering argument is guarded. An
+ * unguarded `--dist public` resolves to `public/` and would delete the
+ * committed, immutable `public/data/<package>/private/**` release bytes.
+ */
+describe("--dist containment guard", () => {
+  it("accepts only the repository's own build output", () => {
+    const allowed = mkdtempSync(join(tmpdir(), "udt-dist-allowed-"));
+    expect(resolveDistArgument(allowed, { defaultDistDir: allowed })).toBe(resolve(allowed));
+    // No argument keeps the default target.
+    expect(resolveDistArgument(undefined, { defaultDistDir: allowed })).toBe(allowed);
+    for (const rejected of ["public", "data", ".", "..", join(allowed, "data"), dirname(allowed)]) {
+      expect(() => resolveDistArgument(rejected, { defaultDistDir: allowed })).toThrow(/refuses --dist/);
+    }
+  });
+
+  it("refuses a public/ target before anything is scanned or deleted", () => {
+    // Stands in for the real public/ tree: a committed release package whose
+    // private partition must survive any invocation of this script.
+    const publicTree = mkdtempSync(join(tmpdir(), "udt-public-"));
+    mkdirSync(join(publicTree, "data/manhattan-esb-block-reference-20260810/private/assets"), { recursive: true });
+    const releaseByte = join(publicTree, "data/manhattan-esb-block-reference-20260810/private/assets/doitt.glb");
+    writeFileSync(releaseByte, "immutable-release-bytes");
+    const before = readFileSync(releaseByte, "utf8");
+    const allowed = mkdtempSync(join(tmpdir(), "udt-dist-allowed-"));
+
+    expect(() => runPrunePrivatePartitionsCli(["--dist", publicTree], { defaultDistDir: allowed })).toThrow(/refuses --dist/);
+    // The refusal is the first thing that happens: the partition is still there,
+    // byte for byte, and the audit still sees it.
+    expect(existsSync(join(publicTree, "data/manhattan-esb-block-reference-20260810/private"))).toBe(true);
+    expect(readFileSync(releaseByte, "utf8")).toBe(before);
+    expect(scanTreeForPrivatePaths(publicTree, "public").findings).toHaveLength(1);
+
+    // Same refusal with --dry-run: the guard does not depend on the mode.
+    expect(() => runPrunePrivatePartitionsCli(["--dist", publicTree, "--dry-run"], { defaultDistDir: allowed })).toThrow(/refuses --dist/);
+    expect(existsSync(releaseByte)).toBe(true);
   });
 });

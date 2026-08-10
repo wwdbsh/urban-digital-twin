@@ -13,8 +13,8 @@ Predecessor record: [T008 canary implementation](20260811-block835-exterior-cana
 
 Committed evidence inventory:
 [`data/block835-canary-validation-20260811/evidence-inventory.json`](../../data/block835-canary-validation-20260811/evidence-inventory.json)
-(SHA-256 `cde05b9c2cc9d67f8daa77df9eb0f17ad6f8648f27cb1123b458adf8257c05cd`,
-33 files). The raw evidence lives untracked under
+(SHA-256 `6dba074be924af6658846eb675ec55e115a0ea28b8833cae200d156c7e187462`,
+35 files). The raw evidence lives untracked under
 `artifacts/block835-canary-validation-20260811/`; the inventory keeps its hashes
 checkable after that tree is removed.
 
@@ -80,9 +80,19 @@ recorded as such and not softened.
 
 **Corrected.** `scripts/prune-private-partitions.mjs` runs as the last step of
 `pnpm build` and removes directories literally named `private` under
-`dist/data/`. It never touches `public/data/` or `data/`. After the correction
-the audit reports **0 private paths in `dist/` over 1478 scanned files**, and
-the canary is unaffected because it references only `public/`-rooted artifacts.
+`dist/data/`. It never touches `public/data/` or `data/`, and that is enforced
+rather than merely intended: its `--dist` argument is refused unless it resolves
+to the repository's own `dist/`, before any traversal or removal, so no
+invocation can point the recursive delete at a committed release partition. The
+refusal and the fact that nothing is deleted when it fires are unit-pinned in
+`scripts/audit-partition-tree.test.mjs`. After the correction the audit reports
+**0 private paths in `dist/` over 1478 scanned files**, and the canary is
+unaffected because it references only `public/`-rooted artifacts.
+
+The audit itself (`scripts/audit-partition-tree.mjs`) is read-only **with
+respect to the bytes it audits** — it never writes to, moves or deletes a
+scanned file. It does write one file of its own, the JSON report requested with
+`--json <out>`, which lands outside the audited trees.
 
 ### F2 — the level facade viewpoint renders nothing (product defect)
 
@@ -147,10 +157,26 @@ Two surgical halves, both unit-tested, both failing against the pre-fix code:
 **(a) Bound the shallow-pitch footprint.** `boundFootprintToCamera`
 (`src/runtime/viewport-footprint.ts`) intersects the nine-ray sample with the
 extent `fallbackViewportFootprint` already declares for that camera. It reuses an
-accepted bound rather than introducing a constant, and because it is an
-*intersection* it can only narrow a horizon-stretched sample — a footprint
-already inside the bound is returned by identity. Applied in
+accepted bound rather than introducing a constant. Applied in
 `cameraFootprintForViewer` (`src/features/explorer/CesiumViewport.tsx`).
+
+The intersection is **gated on the attitude the finding actually describes**,
+`isHorizonStretchedAttitude`, and this gate is load-bearing rather than
+decorative. The reused extent is a pure function of camera *height* — it knows
+nothing about pitch, field of view or aspect — so an unconditional intersection
+would narrow *any* oversized sample, not only a horizon-stretched one: the app's
+own 4 km default overview (pitch −75°) is wider than that extent, and at
+citywide altitude the extent's 0.12° / 0.078° caps are narrower than Manhattan's
+~0.18° latitude span, which would clip the northern tip out of the streaming
+footprint. Gated, a steeper sample is returned by identity and only a shallow one
+is narrowed. The threshold, `HORIZON_STRETCH_PITCH_DEGREES = −28`, is taken from
+the sweep above and from nothing else: −28° was the shallowest attitude measured
+to draw 14/14, and −25° was the steepest measured to degrade (10/14). Pitch is
+the discriminator because pitch is what the sweep isolated — position, height and
+heading were held fixed and only the attitude changed. The other candidate,
+camera-sub-point-to-sampled-ground-centre distance, is a symptom of the same
+geometry and would additionally misfire on a wide near-nadir view whose centre is
+far from the camera merely because the view is large.
 
 **(b) Reserve the camera's own shard.** `retainCameraShards`
 (`src/runtime/citywide-release-runtime.ts`) moves the shards whose bounds contain
@@ -161,12 +187,23 @@ distance ordering is otherwise preserved exactly, and the LRU cache itself is
 the T013+ concerns ADR 0024 hands forward, and this change does not enter that
 territory.
 
-**Pre-fix proof.** With both functions stubbed to their pre-fix behaviour
-(identity bound, plain truncation), **8 of the 13** pins in
-`src/runtime/shallow-pitch-shard-retention.test.ts` fail — every
+**Pre-fix proof.** `src/runtime/shallow-pitch-shard-retention.test.ts` holds 22
+pins in three groups, and each group fails against the behaviour it replaced.
+
+With both functions stubbed to their pre-fix behaviour (identity bound, plain
+truncation), **8 of the 13** pins in groups (a) and (b) fail — every
 `bounds the footprint at pitch −10/−15/−20 deg` case, the ground-centre drift
 case, the bounded-shard-set case, and all three camera-shard retention cases.
-With the fix, 13/13 pass and the full suite stays green.
+
+Group (c), 9 pins, is the selectivity of the gate. With the gate removed so the
+intersection runs unconditionally — the shape the bound had when it first
+landed — **8 of those 9 fail**: the default 4 km overview, the citywide
+near-nadir Manhattan view, the same-sample-different-pitch case, and all five
+steep-attitude cases are clipped instead of returned by identity. (The ninth
+pins `isHorizonStretchedAttitude` itself, which does not exist without the gate.)
+
+With both halves and the gate in place, 22/22 pass and the full suite stays
+green.
 
 **Post-fix browser re-run** (`json/level-facade-path-postfix.json`): the
 committed **level** path now renders at every pose.
@@ -181,6 +218,28 @@ committed **level** path now renders at every pose.
 | `canary-facade-06` | `doitt:584049` | 36 m | 0/14 | **14/14** |
 | `canary-facade-07` | `doitt:982383` | 25 m | 0/14 | **14/14** |
 | `canary-facade-08` | `doitt:778052` | 25 m | 0/14 | **14/14** |
+
+**Re-verified after the bound was gated** (the N1 review nit above added
+`isHorizonStretchedAttitude`, which changes exactly the code that fixed F2).
+Same production build (`VITE_BLOCK835_PROBE=1 vite build`, `vite preview` on
+`localhost:4310`), same Orca embedded browser. Each of the 8 committed level
+poses was delivered as a deep link and the DOM was read for the unanchored
+notice, which is the signal F2 raised (`json/level-facade-path-n1-gate.json`,
+`screenshots/n1-gate-level-canary-facade-01-doitt-262867.png`): **8/8 poses
+reported 0 unanchored, i.e. 14/14 anchored and drawn**, and the canary still
+activated with no `failed verification`. The same 8 poses were also measured against a build with
+the gate removed (the unconditional bound) and gave the identical 8/8 — expected,
+because every level pose is pitch 0 or +25 and is bounded either way. The default
+4 km overview, which the gate *does* change, settles to **0 unanchored on 3/3
+runs**; a shorter 14 s sample can still catch it mid-load reporting 4, so the
+number is settle-sensitive and is quoted at ≥25 s settle.
+
+Two limits on that re-verification, stated rather than papered over: the poses
+were delivered through the URL, and `normalizeCameraPose` clamps height to its
+80 m floor, so these are the fixture's longitude/latitude/heading/pitch at 80 m
+rather than its 4–40 m heights; and the count is read from the app's unanchored
+notice (anchored and drawn vs. withheld), not from a per-entity render census.
+The `≥10 m` camera-to-facade claim is unchanged and is not re-derived here.
 
 Overlay journeys re-confirmed after the fix, with no regression: picking still
 produces the deterministic overlap chooser (`doitt:102705`, `doitt:584049`);
@@ -307,7 +366,7 @@ criteria could only have been asserted, not measured:
 | --- | --- |
 | `src/runtime/block835-canary-probe.ts` | The Goal's **absolute** budgets have no evaluator. `block835PerformanceGate` encodes a different contract (Stage 3 overlay-vs-control, 12/30 ms, +20 % regression) and the Stage 3 probe refuses exterior scenes by design. Both are left **byte-unchanged**; this is a sibling on its own condition axis. |
 | Probe effect in `src/app/App.tsx` | Frame time, cache bytes, measured peak concurrency and JS heap can only be sampled from inside the running app. Gated on `import.meta.env.VITE_BLOCK835_PROBE === "1"`; verified tree-shaken from a normal build (0 occurrences of `block835CanaryPerformance` in the default bundle). The existing `import.meta.env.DEV` guards were not weakened. |
-| `src/runtime/exterior-cell-fault.ts` | The isolated-failure journey needs a fault that mutates **no** release byte. It mirrors `createExteriorPilotFaultFetcher`: cloned response bodies only, same-origin `/data/` paths only, rejected cross-origin unconditionally. |
+| `src/runtime/exterior-cell-fault.ts` | The isolated-failure journey needs a fault that mutates **no** release byte. It mirrors `createExteriorPilotFaultFetcher`: cloned response bodies only, same-origin `/data/` paths only, rejected cross-origin unconditionally. Its gate is the **`VITE_BLOCK835_PROBE` build flag**, not `import.meta.env.DEV`: `parseExteriorCellFault` returns `null` unless the caller passes `harnessEnabled`, and the only caller (`src/app/App.tsx`) passes `BLOCK835_CANARY_HARNESS_ENABLED` (`import.meta.env.VITE_BLOCK835_PROBE === "1"`). A default build — dev server included — cannot construct the fault fetcher at all. |
 | `src/vite-env.d.ts` | Types the new build-time flag. |
 
 Deviation from the frozen architecture, recorded rather than hidden: the private
@@ -328,14 +387,15 @@ literally byte-identical.
 | --- | --- |
 | `pnpm typecheck` | Pass |
 | `pnpm lint` | Pass, 0 problems |
-| `pnpm test` | Pass — **66 files, 618 tests** (baseline before this task: 61 files, 551 tests) |
+| `pnpm test` | Pass — **66 files, 629 tests** (baseline before this task: 61 files, 551 tests) |
 | `git diff --check` | Clean |
 | `pnpm build` (default) | Pass; probe absent from the bundle; 2 private partitions pruned |
 | `VITE_BLOCK835_PROBE=1 pnpm build` | Pass; probe and both camera-path fixtures present |
 | Partition audit, harness `dist/` | F1 pass after correction (0 private paths / 1478 files); F2 release-data 0, vendor-runtime 2 |
 | Facade path re-derivation | 8 poses, closest camera-to-facade 13 m, every pose ≥10 m |
-| F2 regression pins | 13/13 pass with the fix; **8/13 fail** against stubbed pre-fix behaviour |
+| F2 regression pins | 22/22 pass; **8/13** of groups (a)+(b) fail against stubbed pre-fix behaviour, **8/9** of group (c) fail against an ungated (unconditional) bound |
 | F2 post-fix browser re-run | 8/8 level poses render 14/14 (pre-fix 0/14) |
+| F2 re-run after gating the bound | 8/8 level poses report 0 unanchored (14/14); default 4 km overview 0 unanchored on 3/3 runs at ≥25 s settle |
 | Predecessor checksums | 14/14 verified against 20260810 bytes, 0 mismatches |
 | Assembly artifact checksums | 29/29 verified against bytes on disk |
 | Blender evidence inventory | `artifacts/blender/` is not present in this worktree (it was worktree-local to ccp-9), so the 133 inner hashes are carried forward as committed evidence and the inventory's own integrity was verified instead: `data/manhattan-esb-block-reference-20260811/blender-evidence-inventory.json` = `9dce17ae67f817553548915509fa57d8df8d0481e3c53ed92297b3f934fd5125`, 133 files, and its recorded `.blend` hash `1594a29e…` matches the T008 record. |

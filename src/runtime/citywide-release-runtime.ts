@@ -52,6 +52,12 @@ export function retainCameraShards<T extends Pick<CitywideShardManifest, "bounds
   limit: number,
 ): T[] {
   if (ranked.length <= limit) return [...ranked];
+  // Invariant: the reserved head cannot itself overflow the budget. The shards
+  // are a non-overlapping tile grid, so a point falls in one tile per layer —
+  // up to four only when it lands exactly on a tile edge or corner, since
+  // `shardContainsPoint` is edge-inclusive — across the two geometry layers
+  // this selection requests. That is a small constant against the budget, so
+  // the slice below can never drop a reserved shard.
   const cameraShards = ranked.filter((shard) => shardContainsPoint(shard, camera.longitude, camera.latitude));
   if (cameraShards.length === 0) return ranked.slice(0, limit);
   const reserved = new Set(cameraShards.map((shard) => shard.relativeContentRef));

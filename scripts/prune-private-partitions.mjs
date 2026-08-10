@@ -20,8 +20,12 @@
  * `manhattan-exterior-cells-20260811` references only `public/`-rooted
  * artifacts, so it is unaffected.
  *
+ * That restriction is enforced, not just documented: `--dist` is refused unless
+ * it resolves to the repository's own `dist/`, so no argument can point the
+ * recursive removal at `public/data/**` or `data/**`.
+ *
  * Runs as the last step of `pnpm build`. Also runnable standalone:
- *   node scripts/prune-private-partitions.mjs [--dist <dir>] [--dry-run]
+ *   node scripts/prune-private-partitions.mjs [--dist <dist dir>] [--dry-run]
  */
 import { readdirSync, rmSync, statSync } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
@@ -58,6 +62,31 @@ export function findPrivatePartitionDirectories(root) {
   return found.sort();
 }
 
+export const DEFAULT_DIST_DIR = join(repoRoot, "dist");
+
+/**
+ * Resolve `--dist` under a containment guard.
+ *
+ * This script deletes directories recursively, so the one argument that steers
+ * it has to be the narrowest thing that still works. Unguarded, `--dist public`
+ * resolves to `public/` and `prunePrivatePartitions` would then delete
+ * `public/data/<package>/private/**` — committed, immutable release bytes. The
+ * refusal is a `throw` before any traversal or removal, so a rejected argument
+ * cannot remove anything, and the accepted set is exactly one path: the
+ * repository's own build output.
+ *
+ * `defaultDistDir` is injectable so a test can prove the refusal against a
+ * throwaway tree instead of the real one; production callers never pass it.
+ */
+export function resolveDistArgument(rawValue, { defaultDistDir = DEFAULT_DIST_DIR } = {}) {
+  if (rawValue === undefined || rawValue === null || rawValue === "") return defaultDistDir;
+  const resolved = resolve(rawValue);
+  if (resolved !== resolve(defaultDistDir)) {
+    throw new Error(`prune-private-partitions refuses --dist ${resolved}: it only ever prunes the build output at ${defaultDistDir}. Committed release partitions under public/ and data/ are immutable and are never deleted by this script.`);
+  }
+  return resolved;
+}
+
 export function prunePrivatePartitions(distDir, { dryRun = false } = {}) {
   const dataDir = join(distDir, "data");
   const directories = findPrivatePartitionDirectories(dataDir);
@@ -66,11 +95,16 @@ export function prunePrivatePartitions(distDir, { dryRun = false } = {}) {
   return { distDir, dataDir, removed, removedCount: removed.length, dryRun };
 }
 
+export function runPrunePrivatePartitionsCli(args, { defaultDistDir = DEFAULT_DIST_DIR } = {}) {
+  const distIndex = args.indexOf("--dist");
+  // Guard first: nothing is scanned or removed until the target is accepted.
+  const distDir = resolveDistArgument(distIndex >= 0 ? args[distIndex + 1] : undefined, { defaultDistDir });
+  return prunePrivatePartitions(distDir, { dryRun: args.includes("--dry-run") });
+}
+
 function main() {
   const args = process.argv.slice(2);
-  const distIndex = args.indexOf("--dist");
-  const distDir = distIndex >= 0 && args[distIndex + 1] ? resolve(args[distIndex + 1]) : join(repoRoot, "dist");
-  const result = prunePrivatePartitions(distDir, { dryRun: args.includes("--dry-run") });
+  const result = runPrunePrivatePartitionsCli(args);
   if (result.removedCount === 0) {
     console.log(`prune-private-partitions: no private partition reached ${result.dataDir}`);
     return;

@@ -1150,6 +1150,7 @@ function cameraFootprintForViewer(viewer: Viewer, lastValid: ViewportFootprint |
   const sampled = viewportFootprintFromGroundPoints(groundPoints, { lastValid, fallbackBounds: fallbackBoundsForViewer(viewer) });
   // Bound a horizon-stretched sample to the camera's own neighbourhood so the
   // shard the camera stands on cannot be ranked out of the budget (T009 F2).
+  // Shallow attitudes only: a steep or near-nadir sample is returned unchanged.
   return sampled ? boundFootprintToCamera(sampled, cameraStateForViewer(viewer)) : sampled;
 }
 

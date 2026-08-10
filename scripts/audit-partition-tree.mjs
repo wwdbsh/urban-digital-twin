@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /* global console, process */
 /**
- * Read-only partition audit over the browser-reachable file tree.
+ * Partition audit over the browser-reachable file tree, read-only with respect
+ * to the bytes it audits.
  *
  * Two questions, both answered by scanning bytes rather than by reading a
  * manifest that claims an answer:
@@ -20,7 +21,9 @@
  *      that must be explained — so every hit is reported with its file and the
  *      matched token.
  *
- * The script never writes to, moves, or deletes a scanned file.
+ * The script never writes to, moves, or deletes a scanned file. It does write
+ * one file of its own, and only one: the JSON report at `--json <out>`, which
+ * is outside the audited trees.
  *
  * Usage:
  *   node scripts/audit-partition-tree.mjs [--dist <dir>] [--public <dir>] [--json <out>]

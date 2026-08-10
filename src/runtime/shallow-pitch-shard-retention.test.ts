@@ -16,11 +16,13 @@
  * them, forward to T013+.
  */
 import { describe, expect, it } from "vitest";
-import type { CameraPose } from "../domain/visitor-navigation.ts";
+import { DEFAULT_CAMERA_POSE, type CameraPose } from "../domain/visitor-navigation.ts";
 import { retainCameraShards, shardContainsPoint } from "./citywide-release-runtime.ts";
 import {
+  HORIZON_STRETCH_PITCH_DEGREES,
   boundFootprintToCamera,
   fallbackViewportFootprint,
+  isHorizonStretchedAttitude,
   viewportFootprintFromGroundPoints,
   type ViewportFootprint,
 } from "./viewport-footprint.ts";
@@ -135,6 +137,79 @@ describe("(a) shallow-pitch footprint is bounded to the camera neighbourhood", (
     // Comfortably inside the 24-shard budget, so nothing has to be truncated.
     expect(boundedCount).toBeLessThanOrEqual(24);
     expect(boundedCount).toBeGreaterThan(0);
+  });
+});
+
+/** Corners of a symmetric near-nadir sample: the ground a top-down camera actually covers. */
+function nadirFootprint(camera: CameraPose, halfLongitudeDegrees: number, halfLatitudeDegrees: number): ViewportFootprint {
+  const sampled = viewportFootprintFromGroundPoints([
+    [camera.longitude - halfLongitudeDegrees, camera.latitude - halfLatitudeDegrees],
+    [camera.longitude + halfLongitudeDegrees, camera.latitude - halfLatitudeDegrees],
+    [camera.longitude - halfLongitudeDegrees, camera.latitude + halfLatitudeDegrees],
+    [camera.longitude + halfLongitudeDegrees, camera.latitude + halfLatitudeDegrees],
+  ]);
+  expect(sampled).not.toBeNull();
+  return sampled!;
+}
+
+/**
+ * (c) pins the *selectivity* of the bound, which is what keeps it from becoming
+ * a general viewport clamp. `fallbackViewportFootprint`'s extent is a pure
+ * function of camera height, so intersecting with it unconditionally would also
+ * narrow legitimate wide near-nadir views. Every case here fails against an
+ * unconditional bound and passes against the gated one.
+ */
+describe("(c) the bound applies only to a horizon-stretched attitude", () => {
+  it("treats pitch as the discriminator, at the boundary the F2 sweep measured", () => {
+    // -28 deg was the shallowest attitude measured to draw 14/14; -25 deg drew
+    // 10/14 and -20 deg drew 0/14, so the gate sits between them.
+    expect(HORIZON_STRETCH_PITCH_DEGREES).toBe(-28);
+    expect(isHorizonStretchedAttitude(cameraAt(-25, 12))).toBe(true);
+    expect(isHorizonStretchedAttitude(cameraAt(-28, 12))).toBe(false);
+    expect(isHorizonStretchedAttitude(cameraAt(-30, 12))).toBe(false);
+    expect(isHorizonStretchedAttitude(cameraAt(Number.NaN, 12))).toBe(false);
+  });
+
+  it("bounds or spares one and the same sample purely on pitch", () => {
+    // Identical bounds, identical position and height: only the attitude
+    // differs, exactly as in the measured sweep.
+    const raw = footprintForPitch(cameraAt(-10, 12));
+    expect(boundFootprintToCamera(raw, cameraAt(-20, 12))).not.toBe(raw);
+    expect(boundFootprintToCamera(raw, cameraAt(-30, 12))).toBe(raw);
+  });
+
+  it("leaves the app's default 4 km overview untouched", () => {
+    const camera = DEFAULT_CAMERA_POSE;
+    expect(camera.height).toBe(4_000);
+    expect(camera.pitch).toBe(-75);
+    const raw = footprintForPitch(camera);
+    // Proof this case is not vacuous: the camera-anchored extent is narrower
+    // than the ground this overview really covers, so an unconditional
+    // intersection would clip the default view on first load.
+    expect(raw.bounds.north).toBeGreaterThan(fallbackViewportFootprint(camera).bounds.north);
+    expect(boundFootprintToCamera(raw, camera)).toBe(raw);
+  });
+
+  it("leaves a citywide near-nadir view able to see all of Manhattan", () => {
+    // ~40 km, the altitude at which the whole island is framed.
+    const camera: CameraPose = { longitude: -73.97, latitude: 40.78, height: 40_000, heading: 0, pitch: -80, roll: 0 };
+    const raw = nadirFootprint(camera, 0.16, 0.11);
+    const limit = fallbackViewportFootprint(camera).bounds;
+    // The height-derived caps (0.12 / 0.078 deg) are narrower than Manhattan's
+    // ~0.18 deg latitude span, so an unconditional bound clips the northern tip.
+    expect(limit.north - limit.south).toBeLessThan(0.18);
+    expect(limit.north).toBeLessThan(40.88);
+    const bounded = boundFootprintToCamera(raw, camera);
+    expect(bounded).toBe(raw);
+    expect(bounded.bounds.north).toBeGreaterThanOrEqual(40.88);
+    expect(bounded.bounds.south).toBeLessThanOrEqual(40.70);
+  });
+
+  it.each([-28, -30, -45, -60, -90])("leaves an oversized sample untouched at pitch %i deg", (pitch) => {
+    const camera = cameraAt(pitch, 4_000);
+    const raw = nadirFootprint(camera, 0.09, 0.06);
+    expect(raw.bounds.north).toBeGreaterThan(fallbackViewportFootprint(camera).bounds.north);
+    expect(boundFootprintToCamera(raw, camera)).toBe(raw);
   });
 });
 

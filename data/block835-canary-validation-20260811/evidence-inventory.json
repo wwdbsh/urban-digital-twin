@@ -1,9 +1,9 @@
 {
   "schemaVersion": "1.0",
   "inventoryId": "block835-canary-validation-20260811",
-  "note": "Hashes of the untracked real-browser evidence produced by the T009 Block 835 canary validation, including the post-fix re-run of finding F2. The raw files live under artifacts/block835-canary-validation-20260811/ in the validation worktree and are not committed; these hashes stay checkable after that tree is removed. The inventory hashes every evidence file except itself.",
+  "note": "Hashes of the untracked real-browser evidence produced by the T009 Block 835 canary validation, including the post-fix re-run of finding F2 and the re-run after the F2 bound was gated on a horizon-stretched attitude. The raw files live under artifacts/block835-canary-validation-20260811/ in the validation worktree and are not committed; these hashes stay checkable after that tree is removed. The inventory hashes every evidence file except itself.",
   "artifactRoot": "artifacts/block835-canary-validation-20260811",
-  "fileCount": 33,
+  "fileCount": 35,
   "files": [
     {
       "path": "json/accessibility-probe.json",
@@ -14,6 +14,11 @@
       "path": "json/git-zero-mutation-proof.txt",
       "bytes": 639,
       "sha256": "be9489f54a7159b7124e425d9624ead936ce5e5ba86ba9d8d8ce500a044b7e8f"
+    },
+    {
+      "path": "json/level-facade-path-n1-gate.json",
+      "bytes": 2834,
+      "sha256": "20eb26e74893534d8e149cbacd563f3b75e5cf7c6f2af629ef6525fa295bcfd5"
     },
     {
       "path": "json/level-facade-path-postfix.json",
@@ -169,6 +174,11 @@
       "path": "screenshots/j06-level-facade-esb-doitt-778052-200m-pitch0.png",
       "bytes": 210440,
       "sha256": "3c7ef7f179cb9e41c8909980f29b6f418a4dcdc9ba6a4ed9b646971121e832dc"
+    },
+    {
+      "path": "screenshots/n1-gate-level-canary-facade-01-doitt-262867.png",
+      "bytes": 366299,
+      "sha256": "918d44ea4006f8fb7022c43cd9b86cd3b25e6a6603484daeb6e2bcaf11bfe979"
     }
   ]
 }
