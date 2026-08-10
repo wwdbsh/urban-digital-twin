@@ -161,7 +161,7 @@ export function serializeMultiLodAssembly(manifest: MultiLodAssemblyManifest): s
 export function multiLodAssemblyFingerprint(manifest: MultiLodAssemblyManifest): string { return domainSeparatedSha256("urban-digital-twin/multi-lod-assembly/1.0", canonicalManifest(manifest)); }
 
 /** Public packages are always texture-free; the policy flag can only add enforcement. */
-function requiresTextureFreeAssembly(audience: AssemblyAudience, policy?: MultiLodAssemblyPolicy): boolean {
+export function requiresTextureFreeAssembly(audience: AssemblyAudience, policy?: MultiLodAssemblyPolicy): boolean {
   return audience === "public" || policy?.requireTextureFreeAssembly === true;
 }
 
@@ -512,7 +512,13 @@ function validateTextureFreeGlb(json: Record<string, unknown>): void {
   if (declared !== Math.ceil(covered / 4) * 4) throw new Error(ASSEMBLY_ISSUE_BUFFER_TAIL_FORBIDDEN);
 }
 
-function validateGlbBinding(parsed: ParsedGlb, asset: AssemblyAsset, lod: AssemblyLod, textureFree: boolean): void {
+/**
+ * Export-only surface for the runtime loader: the browser must repeat the exact
+ * per-artifact binding and texture-free checks the offline replay performs, so
+ * the runtime cannot admit a GLB the release pipeline would have rejected.
+ * Behavior and signature are unchanged.
+ */
+export function validateGlbBinding(parsed: ParsedGlb, asset: AssemblyAsset, lod: AssemblyLod, textureFree: boolean): void {
   const metadata = glbMetadata(parsed.json);
   if (textureFree) validateTextureFreeGlb(parsed.json);
   const expected = { canonicalFeatureId: asset.canonicalFeatureId, lodId: lod.lodId, ownerCellId: asset.ownerCellId, inventoryId: asset.inventoryId, inventoryHashSha256: asset.inventoryHashSha256, evidenceShardId: asset.evidenceShardId, truthTiers: [...asset.truthTiers].sort(compareText), sourceDates: asset.sourceDates, predecessor: asset.predecessor, uncertainty: asset.uncertainty, planHashSha256: asset.source.kind === "facade-plan" ? asset.source.planHashSha256 : asset.source.assetManifestChecksumSha256 };

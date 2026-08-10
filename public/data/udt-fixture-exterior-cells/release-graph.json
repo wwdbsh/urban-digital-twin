@@ -1,0 +1,1514 @@
+{
+  "schemaVersion": "1.0",
+  "roots": [
+    {
+      "schemaVersion": "1.0",
+      "audience": "private",
+      "rootId": "root:udt-fixture:private",
+      "rootChecksumSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "releaseId": "release:udt-fixture:private",
+      "cityId": "city:udt-fixture",
+      "configId": "config:udt-fixture",
+      "generatedAt": "2026-08-09T00:00:00.000Z",
+      "immutable": true,
+      "artifactAllowlist": [
+        "private/ownership-ledger/ledger-udt-fixture.json"
+      ],
+      "artifacts": [
+        {
+          "logicalId": "ledger:udt-fixture",
+          "kind": "ownership-ledger",
+          "relativeRef": "private/ownership-ledger/ledger-udt-fixture.json",
+          "byteSize": 81,
+          "checksumSha256": "adbf7d1b625b251863c477c955b723e25fb2c5a6de8c91c9fea8e39e9d79bf76"
+        }
+      ],
+      "approval": {
+        "id": "approval:udt-fixture:private-root",
+        "fingerprintSha256": "bdbdd644c49d33ec25ca9ffc9a411376964ab3162370828a443ec90ccf0f67a6",
+        "scope": "Synthetic exterior streaming fixture; no real-world claim.",
+        "exclusions": [
+          "real-world use"
+        ],
+        "approvedAt": "2026-08-09T00:00:00.000Z"
+      },
+      "predecessor": null,
+      "privatePredecessor": null
+    },
+    {
+      "schemaVersion": "1.0",
+      "audience": "public",
+      "rootId": "root:udt-fixture:public",
+      "rootChecksumSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "releaseId": "release:udt-fixture:public",
+      "cityId": "city:udt-fixture",
+      "configId": "config:udt-fixture",
+      "generatedAt": "2026-08-09T00:00:00.000Z",
+      "immutable": true,
+      "artifactAllowlist": [
+        "public/ownership-ledger/ledger-udt-fixture.json",
+        "public/cell-release/cell-c1-v1.json",
+        "public/cell-release/cell-c1-v2.json",
+        "public/cell-release/cell-c2-v1.json",
+        "public/cell-release/cell-c2-v2.json",
+        "public/inventory/inventory-b1-v1.json",
+        "public/inventory/inventory-b1-v2.json",
+        "public/inventory/inventory-b2-v1.json",
+        "public/inventory/inventory-b2-v2.json",
+        "public/evidence/evidence-b1-v1.json",
+        "public/evidence/evidence-b1-v2.json",
+        "public/evidence/evidence-b2-v1.json",
+        "public/evidence/evidence-b2-v2.json",
+        "public/rollout-snapshot/snapshot-v1.json",
+        "public/rollout-snapshot/snapshot-v2.json",
+        "public/rollout-snapshot/snapshot-v3.json"
+      ],
+      "artifacts": [
+        {
+          "logicalId": "ledger:udt-fixture",
+          "kind": "ownership-ledger",
+          "relativeRef": "public/ownership-ledger/ledger-udt-fixture.json",
+          "byteSize": 80,
+          "checksumSha256": "4903011cfca885477c61c334cd89530529bb8deaba2dc4f28397217094a686e5"
+        },
+        {
+          "logicalId": "cell:c1:v1",
+          "kind": "cell-release",
+          "relativeRef": "public/cell-release/cell-c1-v1.json",
+          "byteSize": 68,
+          "checksumSha256": "ed5abbfa2992c6616cfcb336f6920f4e21292d687221554c96cff8c7720b9a0a"
+        },
+        {
+          "logicalId": "cell:c1:v2",
+          "kind": "cell-release",
+          "relativeRef": "public/cell-release/cell-c1-v2.json",
+          "byteSize": 68,
+          "checksumSha256": "3e2222e8f1700a1d3cf97c243d2a9d0d2584c934864adad7f1144931c31cd2c6"
+        },
+        {
+          "logicalId": "cell:c2:v1",
+          "kind": "cell-release",
+          "relativeRef": "public/cell-release/cell-c2-v1.json",
+          "byteSize": 68,
+          "checksumSha256": "e2ab798b14c648d69f9733eb315a482364967b69637343ad8134347086c8611e"
+        },
+        {
+          "logicalId": "cell:c2:v2",
+          "kind": "cell-release",
+          "relativeRef": "public/cell-release/cell-c2-v2.json",
+          "byteSize": 68,
+          "checksumSha256": "b1531f145829864c59059fba44163297c8d42532c84b6a6c3fedae88ecf04d32"
+        },
+        {
+          "logicalId": "inventory:b1:v1",
+          "kind": "inventory",
+          "relativeRef": "public/inventory/inventory-b1-v1.json",
+          "byteSize": 70,
+          "checksumSha256": "699c11dd4caf4887b7e3d51816221114cebdff1da9d22b5d8483b596fc68d54b"
+        },
+        {
+          "logicalId": "inventory:b1:v2",
+          "kind": "inventory",
+          "relativeRef": "public/inventory/inventory-b1-v2.json",
+          "byteSize": 70,
+          "checksumSha256": "1cce1db2bf23635f8798fca5299b8a2cc65c615cfc19ea6bcab027b328166945"
+        },
+        {
+          "logicalId": "inventory:b2:v1",
+          "kind": "inventory",
+          "relativeRef": "public/inventory/inventory-b2-v1.json",
+          "byteSize": 70,
+          "checksumSha256": "3b44b23ec38bb9d5ddda5a726f475eb3ec2894439e07d08b133922d99c1dcd23"
+        },
+        {
+          "logicalId": "inventory:b2:v2",
+          "kind": "inventory",
+          "relativeRef": "public/inventory/inventory-b2-v2.json",
+          "byteSize": 70,
+          "checksumSha256": "358dd0d90524e8c98148808f4f0514f4cfe292dd30f3ab44fa9eb23797188a29"
+        },
+        {
+          "logicalId": "evidence:b1:v1",
+          "kind": "evidence",
+          "relativeRef": "public/evidence/evidence-b1-v1.json",
+          "byteSize": 68,
+          "checksumSha256": "ec86d75437b4a861572cb8c76bb87a46c8c17acd28c95d745f485b9770f3b3c9"
+        },
+        {
+          "logicalId": "evidence:b1:v2",
+          "kind": "evidence",
+          "relativeRef": "public/evidence/evidence-b1-v2.json",
+          "byteSize": 68,
+          "checksumSha256": "092aae2ef71bd1a14eaa3175a8dc2617fe39cb5fa5d87e34aee082f0bbf023a9"
+        },
+        {
+          "logicalId": "evidence:b2:v1",
+          "kind": "evidence",
+          "relativeRef": "public/evidence/evidence-b2-v1.json",
+          "byteSize": 68,
+          "checksumSha256": "f36673bdecdebf5ca6ca8683177f4bc0a69ec4da433c6472ee2d5d3c0f315da6"
+        },
+        {
+          "logicalId": "evidence:b2:v2",
+          "kind": "evidence",
+          "relativeRef": "public/evidence/evidence-b2-v2.json",
+          "byteSize": 68,
+          "checksumSha256": "90e9e5f32f73600c9d143db59c7224f2005dfe4986add9d95dcbdb929659c218"
+        },
+        {
+          "logicalId": "snapshot:v1",
+          "kind": "rollout-snapshot",
+          "relativeRef": "public/rollout-snapshot/snapshot-v1.json",
+          "byteSize": 73,
+          "checksumSha256": "0b3bb64262f51c01712f409901a68edd31fc2f146edbdd41c0adbdc1ae57dd72"
+        },
+        {
+          "logicalId": "snapshot:v2",
+          "kind": "rollout-snapshot",
+          "relativeRef": "public/rollout-snapshot/snapshot-v2.json",
+          "byteSize": 73,
+          "checksumSha256": "8ce40e915c91ea53153efe65375737073060e5a64f5333ec564feafb7e5eb8a1"
+        },
+        {
+          "logicalId": "snapshot:v3",
+          "kind": "rollout-snapshot",
+          "relativeRef": "public/rollout-snapshot/snapshot-v3.json",
+          "byteSize": 73,
+          "checksumSha256": "cecab3ce74f9482cf0c2ff8528d8cd570d509dca40b0dc329db64f5a7ae10918"
+        }
+      ],
+      "approval": {
+        "id": "approval:udt-fixture:public-root",
+        "fingerprintSha256": "ca72272d2ccc066facfe182054beb682fac370b42e062dc1b0c465df04959447",
+        "scope": "Synthetic exterior streaming fixture; no real-world claim.",
+        "exclusions": [
+          "real-world use"
+        ],
+        "approvedAt": "2026-08-09T00:00:00.000Z"
+      },
+      "predecessor": null,
+      "privatePredecessor": {
+        "rootId": "root:udt-fixture:private",
+        "rootChecksumSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+      }
+    }
+  ],
+  "ownershipLedger": {
+    "schemaVersion": "1.0",
+    "ledgerId": "ledger:udt-fixture",
+    "cityId": "city:udt-fixture",
+    "configId": "config:udt-fixture",
+    "immutable": true,
+    "baseIdentitySet": {
+      "id": "identity:udt-fixture-base",
+      "checksumSha256": "f1a250d126a1cdc75165c4d33671f999b04ac9733cef2c1086d462fcf040dd43",
+      "buildingCount": 2
+    },
+    "coverage": {
+      "west": -74.02,
+      "south": 40.7,
+      "east": -73.93,
+      "north": 40.8
+    },
+    "cells": [
+      {
+        "cellId": "c1",
+        "order": 0,
+        "bounds": {
+          "west": -74.02,
+          "south": 40.7,
+          "east": -73.9857,
+          "north": 40.8
+        },
+        "buildingIds": [
+          "doitt:778052"
+        ],
+        "membershipChecksumSha256": "349fe630fd24489801dce0e85133168636bf6ed10d98966b874384a342f0a194"
+      },
+      {
+        "cellId": "c2",
+        "order": 1,
+        "bounds": {
+          "west": -73.9857,
+          "south": 40.7,
+          "east": -73.93,
+          "north": 40.8
+        },
+        "buildingIds": [
+          "doitt:982383"
+        ],
+        "membershipChecksumSha256": "f694190d925dc34ccb095dc254b4cc3bfca3007dda5ed0001acbe63b3bcc9fb1"
+      }
+    ]
+  },
+  "cellReleases": [
+    {
+      "schemaVersion": "1.0",
+      "cellReleaseId": "cell:c1:v1",
+      "version": "v1",
+      "audience": "public",
+      "artifactRef": "public/cell-release/cell-c1-v1.json",
+      "cityId": "city:udt-fixture",
+      "configId": "config:udt-fixture",
+      "cellId": "c1",
+      "bounds": {
+        "west": -74.02,
+        "south": 40.7,
+        "east": -73.9857,
+        "north": 40.8
+      },
+      "ownershipLedgerId": "ledger:udt-fixture",
+      "baseIdentitySetId": "identity:udt-fixture-base",
+      "baseIdentitySetChecksumSha256": "f1a250d126a1cdc75165c4d33671f999b04ac9733cef2c1086d462fcf040dd43",
+      "buildingIds": [
+        "doitt:778052"
+      ],
+      "predecessor": null,
+      "promotion": {
+        "id": "approval:cell:c1:v1",
+        "fingerprintSha256": "f79178dc33bc83cbc50895c55bf3a7a9ba07776b2e1bd035f1536ffa232ade9b",
+        "scope": "Synthetic exterior streaming fixture; no real-world claim.",
+        "exclusions": [
+          "real-world use"
+        ],
+        "approvedAt": "2026-08-09T00:00:00.000Z"
+      },
+      "fallback": {
+        "mode": "pinned-base",
+        "baseIdentitySetId": "identity:udt-fixture-base",
+        "checksumSha256": "f1a250d126a1cdc75165c4d33671f999b04ac9733cef2c1086d462fcf040dd43"
+      },
+      "buildingDetails": [
+        {
+          "buildingId": "doitt:778052",
+          "status": "available",
+          "inventoryId": "inventory:b1:v1",
+          "evidenceShardId": "evidence:b1:v1",
+          "runtimeTexture": false
+        }
+      ],
+      "immutable": true
+    },
+    {
+      "schemaVersion": "1.0",
+      "cellReleaseId": "cell:c1:v2",
+      "version": "v2",
+      "audience": "public",
+      "artifactRef": "public/cell-release/cell-c1-v2.json",
+      "cityId": "city:udt-fixture",
+      "configId": "config:udt-fixture",
+      "cellId": "c1",
+      "bounds": {
+        "west": -74.02,
+        "south": 40.7,
+        "east": -73.9857,
+        "north": 40.8
+      },
+      "ownershipLedgerId": "ledger:udt-fixture",
+      "baseIdentitySetId": "identity:udt-fixture-base",
+      "baseIdentitySetChecksumSha256": "f1a250d126a1cdc75165c4d33671f999b04ac9733cef2c1086d462fcf040dd43",
+      "buildingIds": [
+        "doitt:778052"
+      ],
+      "predecessor": {
+        "cellReleaseId": "cell:c1:v1",
+        "checksumSha256": "ed5abbfa2992c6616cfcb336f6920f4e21292d687221554c96cff8c7720b9a0a"
+      },
+      "promotion": {
+        "id": "approval:cell:c1:v2",
+        "fingerprintSha256": "c4a13292191191f53a539554e24e6ae4cf60df11742b653eff7005c3c93f5bf0",
+        "scope": "Synthetic exterior streaming fixture; no real-world claim.",
+        "exclusions": [
+          "real-world use"
+        ],
+        "approvedAt": "2026-08-09T00:00:00.000Z"
+      },
+      "fallback": {
+        "mode": "predecessor",
+        "cellReleaseId": "cell:c1:v1",
+        "checksumSha256": "ed5abbfa2992c6616cfcb336f6920f4e21292d687221554c96cff8c7720b9a0a"
+      },
+      "buildingDetails": [
+        {
+          "buildingId": "doitt:778052",
+          "status": "available",
+          "inventoryId": "inventory:b1:v2",
+          "evidenceShardId": "evidence:b1:v2",
+          "runtimeTexture": false
+        }
+      ],
+      "immutable": true
+    },
+    {
+      "schemaVersion": "1.0",
+      "cellReleaseId": "cell:c2:v1",
+      "version": "v1",
+      "audience": "public",
+      "artifactRef": "public/cell-release/cell-c2-v1.json",
+      "cityId": "city:udt-fixture",
+      "configId": "config:udt-fixture",
+      "cellId": "c2",
+      "bounds": {
+        "west": -73.9857,
+        "south": 40.7,
+        "east": -73.93,
+        "north": 40.8
+      },
+      "ownershipLedgerId": "ledger:udt-fixture",
+      "baseIdentitySetId": "identity:udt-fixture-base",
+      "baseIdentitySetChecksumSha256": "f1a250d126a1cdc75165c4d33671f999b04ac9733cef2c1086d462fcf040dd43",
+      "buildingIds": [
+        "doitt:982383"
+      ],
+      "predecessor": null,
+      "promotion": {
+        "id": "approval:cell:c2:v1",
+        "fingerprintSha256": "1ada3798c9952d83252f606081ffaa4e19b60a1a59946326e750e1b8749d9670",
+        "scope": "Synthetic exterior streaming fixture; no real-world claim.",
+        "exclusions": [
+          "real-world use"
+        ],
+        "approvedAt": "2026-08-09T00:00:00.000Z"
+      },
+      "fallback": {
+        "mode": "pinned-base",
+        "baseIdentitySetId": "identity:udt-fixture-base",
+        "checksumSha256": "f1a250d126a1cdc75165c4d33671f999b04ac9733cef2c1086d462fcf040dd43"
+      },
+      "buildingDetails": [
+        {
+          "buildingId": "doitt:982383",
+          "status": "available",
+          "inventoryId": "inventory:b2:v1",
+          "evidenceShardId": "evidence:b2:v1",
+          "runtimeTexture": false
+        }
+      ],
+      "immutable": true
+    },
+    {
+      "schemaVersion": "1.0",
+      "cellReleaseId": "cell:c2:v2",
+      "version": "v2",
+      "audience": "public",
+      "artifactRef": "public/cell-release/cell-c2-v2.json",
+      "cityId": "city:udt-fixture",
+      "configId": "config:udt-fixture",
+      "cellId": "c2",
+      "bounds": {
+        "west": -73.9857,
+        "south": 40.7,
+        "east": -73.93,
+        "north": 40.8
+      },
+      "ownershipLedgerId": "ledger:udt-fixture",
+      "baseIdentitySetId": "identity:udt-fixture-base",
+      "baseIdentitySetChecksumSha256": "f1a250d126a1cdc75165c4d33671f999b04ac9733cef2c1086d462fcf040dd43",
+      "buildingIds": [
+        "doitt:982383"
+      ],
+      "predecessor": {
+        "cellReleaseId": "cell:c2:v1",
+        "checksumSha256": "e2ab798b14c648d69f9733eb315a482364967b69637343ad8134347086c8611e"
+      },
+      "promotion": {
+        "id": "approval:cell:c2:v2",
+        "fingerprintSha256": "89a99cfa1bd529cbcb5bc2da1136bc38c66db0cc76cfcc3cb737dc92a84e085c",
+        "scope": "Synthetic exterior streaming fixture; no real-world claim.",
+        "exclusions": [
+          "real-world use"
+        ],
+        "approvedAt": "2026-08-09T00:00:00.000Z"
+      },
+      "fallback": {
+        "mode": "predecessor",
+        "cellReleaseId": "cell:c2:v1",
+        "checksumSha256": "e2ab798b14c648d69f9733eb315a482364967b69637343ad8134347086c8611e"
+      },
+      "buildingDetails": [
+        {
+          "buildingId": "doitt:982383",
+          "status": "available",
+          "inventoryId": "inventory:b2:v2",
+          "evidenceShardId": "evidence:b2:v2",
+          "runtimeTexture": false
+        }
+      ],
+      "immutable": true
+    }
+  ],
+  "inventoryShards": [
+    {
+      "schemaVersion": "1.0",
+      "shardId": "inventory:b1:v1",
+      "audience": "public",
+      "artifactRef": "public/inventory/inventory-b1-v1.json",
+      "inventoryId": "inventory:b1:v1",
+      "inventory": {
+        "schemaVersion": "1.0",
+        "buildingId": "doitt:778052",
+        "components": [
+          {
+            "componentId": "doitt:778052:v1:massing",
+            "kind": "massing",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "d71fab31ac779da8fc4ce76e57907fbec404625b0433a5b51c6b90f55cf68ce6",
+              "seed": "doitt:778052:v1:massing",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:778052:v1:setbacks",
+            "kind": "setbacks",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "84955f2ece25fe875b65250b7d434aaa552f6076469d6dbb2e3e55d7b9c2c8a6",
+              "seed": "doitt:778052:v1:setbacks",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:778052:v1:facade-bays",
+            "kind": "facade-bays",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "d52f32ee8a36a9f3bea42e87b3ecd1ddf0a5b977ad36f173c50913a2f9a4db15",
+              "seed": "doitt:778052:v1:facade-bays",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:778052:v1:windows",
+            "kind": "windows",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "be7f82091dabf5b30da7b5a224ec7706d7541d1d6095ba9bafb473c22bf95840",
+              "seed": "doitt:778052:v1:windows",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:778052:v1:entrances",
+            "kind": "entrances",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "9b5878a84abaf2785c68fbe83912777e791247e0f666f1a50f8813c6df5bc559",
+              "seed": "doitt:778052:v1:entrances",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:778052:v1:ground-floor-divisions",
+            "kind": "ground-floor-divisions",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "28aff322161c12e721253cf7b840d6c28bba1bd5ea1a99afd1ea5da70c6aa822",
+              "seed": "doitt:778052:v1:ground-floor-divisions",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:778052:v1:storefronts",
+            "kind": "storefronts",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "70a015e4bb3a65791dc46c0ea8d6fc3eea9a5e6d87a57548d481a1c6b030a6fe",
+              "seed": "doitt:778052:v1:storefronts",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:778052:v1:cornices",
+            "kind": "cornices",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "5d0a5ad9cc7eba4bed1e53cb3640ce616616ba6051a00a39d39431fcc3b8b206",
+              "seed": "doitt:778052:v1:cornices",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:778052:v1:roof-form",
+            "kind": "roof-form",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "ced16096e9e3fe7c1fa125dcfd1980ad0ae314188e2fc9323c194ee319b1ad14",
+              "seed": "doitt:778052:v1:roof-form",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:778052:v1:balconies",
+            "kind": "balconies",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "92fc703d1a4cab4e0508ca818b1b66b6c5c7c476547b4b88c87a28c24d74d6d2",
+              "seed": "doitt:778052:v1:balconies",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:778052:v1:fire-escapes",
+            "kind": "fire-escapes",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "22fc4d2f6355515154e4b129fe7be437a06fd0d8a612f75250d1b2f7a36c4e71",
+              "seed": "doitt:778052:v1:fire-escapes",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:778052:v1:roof-equipment",
+            "kind": "roof-equipment",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "6749de494bd1f521e79af5cd3c3c6f3063bad4a1a9288cd025185cc25bea97a4",
+              "seed": "doitt:778052:v1:roof-equipment",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:778052:v1:water-tanks",
+            "kind": "water-tanks",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "431d9e90c22f8a456de794722123df82d319af3203f34a3cc64bd9dccfc59a40",
+              "seed": "doitt:778052:v1:water-tanks",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:778052:v1:materials",
+            "kind": "materials",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "f72d93405d67b5e399507913dc1677e86a27bf23b6b287b815a827bb6fc5c0c0",
+              "seed": "doitt:778052:v1:materials",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:778052:v1:signage",
+            "kind": "signage",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "dfc2c89b668d4009264b420edba48778cc7802a7ac8702ed0f72eca22813e385",
+              "seed": "doitt:778052:v1:signage",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          }
+        ]
+      }
+    },
+    {
+      "schemaVersion": "1.0",
+      "shardId": "inventory:b1:v2",
+      "audience": "public",
+      "artifactRef": "public/inventory/inventory-b1-v2.json",
+      "inventoryId": "inventory:b1:v2",
+      "inventory": {
+        "schemaVersion": "1.0",
+        "buildingId": "doitt:778052",
+        "components": [
+          {
+            "componentId": "doitt:778052:v2:massing",
+            "kind": "massing",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "1ed3c13cc3547d26d34c2d2255012505cc958da56b8721c214898a3fc31d1159",
+              "seed": "doitt:778052:v2:massing",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:778052:v2:setbacks",
+            "kind": "setbacks",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "0587395c6d038076cfe8b2b76b78dd66c9040286db2ad415b393a4968eb27d2e",
+              "seed": "doitt:778052:v2:setbacks",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:778052:v2:facade-bays",
+            "kind": "facade-bays",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "74c38eac475cd878fdca56634217cddd7a36756cddb9bef658c7045e25972f8c",
+              "seed": "doitt:778052:v2:facade-bays",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:778052:v2:windows",
+            "kind": "windows",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "6b4eabfea3e59c32c0381323dc126c7b9bf8fae7662e1e9f187072ffa68375c2",
+              "seed": "doitt:778052:v2:windows",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:778052:v2:entrances",
+            "kind": "entrances",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "49a8b9c4f2444292c2087c2df9aa73158116e197782a8cfdc9d49951fe7bdf7e",
+              "seed": "doitt:778052:v2:entrances",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:778052:v2:ground-floor-divisions",
+            "kind": "ground-floor-divisions",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "2904f86642b1b55c746caa5b6997c0e12370e81c14bb3be1a410205fd92d8e2b",
+              "seed": "doitt:778052:v2:ground-floor-divisions",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:778052:v2:storefronts",
+            "kind": "storefronts",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "a8789c52fedf224edcd8f2013ca01f09bc5da4e2311d4aabe464304dcfe84288",
+              "seed": "doitt:778052:v2:storefronts",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:778052:v2:cornices",
+            "kind": "cornices",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "63532dedb35b7c8f485aab73caed0129e7a2f51acf2895dad9f4bac11b246a50",
+              "seed": "doitt:778052:v2:cornices",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:778052:v2:roof-form",
+            "kind": "roof-form",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "b1a4a23322c4fac558f714ab03aba18cc9ea35990fafbf45dc4f51f7496bae8b",
+              "seed": "doitt:778052:v2:roof-form",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:778052:v2:balconies",
+            "kind": "balconies",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "af90622faf1fccb60bba1aa9d55eb4642b75abca1c34d54da5fc093bee2113eb",
+              "seed": "doitt:778052:v2:balconies",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:778052:v2:fire-escapes",
+            "kind": "fire-escapes",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "d33d00e569f94e27bf0fc39625a759b0f5f2a0722a6a9c25c7223c80b7118351",
+              "seed": "doitt:778052:v2:fire-escapes",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:778052:v2:roof-equipment",
+            "kind": "roof-equipment",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "0c8340bdc5e326c7014a0aba488f21ae0b86d2fda4e0a398aad2164e7235edd7",
+              "seed": "doitt:778052:v2:roof-equipment",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:778052:v2:water-tanks",
+            "kind": "water-tanks",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "7ccca7f2118ebacb41756a7f690fbf19340c9479ed4186e2c241f831c373ad35",
+              "seed": "doitt:778052:v2:water-tanks",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:778052:v2:materials",
+            "kind": "materials",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "079187206ae38817be96121b13d24d55fa75a328bc045c05703efb39992a5632",
+              "seed": "doitt:778052:v2:materials",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:778052:v2:signage",
+            "kind": "signage",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "a8321a7cb19e033c5b69211ce3e45a6ef87b57c98bfbb3ebfb8e93d146ae8d72",
+              "seed": "doitt:778052:v2:signage",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          }
+        ]
+      }
+    },
+    {
+      "schemaVersion": "1.0",
+      "shardId": "inventory:b2:v1",
+      "audience": "public",
+      "artifactRef": "public/inventory/inventory-b2-v1.json",
+      "inventoryId": "inventory:b2:v1",
+      "inventory": {
+        "schemaVersion": "1.0",
+        "buildingId": "doitt:982383",
+        "components": [
+          {
+            "componentId": "doitt:982383:v1:massing",
+            "kind": "massing",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "c2987280537f12039aca2bac911de14e935553e9a042df2d66ffba216a514f85",
+              "seed": "doitt:982383:v1:massing",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:982383:v1:setbacks",
+            "kind": "setbacks",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "2161d1a79d46071e1cc5abcb551d8429b0e58547e9f39405ad69de7e7049bbf6",
+              "seed": "doitt:982383:v1:setbacks",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:982383:v1:facade-bays",
+            "kind": "facade-bays",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "807047d9bb2f5a4a454bfa1ffd95fade6f18bbd5ef87238c11f0aca5996cfb47",
+              "seed": "doitt:982383:v1:facade-bays",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:982383:v1:windows",
+            "kind": "windows",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "02138fd48d3f3dd03196c6dc6a7880b9dc332320eb756457359447de4ff16a98",
+              "seed": "doitt:982383:v1:windows",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:982383:v1:entrances",
+            "kind": "entrances",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "9ecf14ef1977f09740dbfc89089d2eaf298d0b2790280b3ef4dbfcdf1f3b3518",
+              "seed": "doitt:982383:v1:entrances",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:982383:v1:ground-floor-divisions",
+            "kind": "ground-floor-divisions",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "a08ffb780f8f6de5161ea09c7c8b21b1ea10f11f43e0e7618f23c1076ef44e9a",
+              "seed": "doitt:982383:v1:ground-floor-divisions",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:982383:v1:storefronts",
+            "kind": "storefronts",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "71976ad612867584b783ec59b43b413b22e4fbe60fe851023480e9ae200c5a5d",
+              "seed": "doitt:982383:v1:storefronts",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:982383:v1:cornices",
+            "kind": "cornices",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "0bab3d0e18d05a7c98d096526096ae40522f44c91e01e71a5b71b99583b4f5d8",
+              "seed": "doitt:982383:v1:cornices",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:982383:v1:roof-form",
+            "kind": "roof-form",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "1f238ca0d98e359fc54daa706deb60ff08d4e626e9866aa6601b9d17649f9463",
+              "seed": "doitt:982383:v1:roof-form",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:982383:v1:balconies",
+            "kind": "balconies",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "452e737d86d3dd2e2022d4f13e4f01038e043ed5590dfbd581d55b13d2f093a0",
+              "seed": "doitt:982383:v1:balconies",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:982383:v1:fire-escapes",
+            "kind": "fire-escapes",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "63abbbe47a874f6e695367ec029e8816d75da09db0de5836d8d4a8ece882689a",
+              "seed": "doitt:982383:v1:fire-escapes",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:982383:v1:roof-equipment",
+            "kind": "roof-equipment",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "fde9504fd60a1327b19ed3c60bf0498a06f631ffa71f170d6f3604e2760c99fe",
+              "seed": "doitt:982383:v1:roof-equipment",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:982383:v1:water-tanks",
+            "kind": "water-tanks",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "61b46482e498af78fc7ea5f22c169203ed2ca053c290235fdacb15ba03c7fce8",
+              "seed": "doitt:982383:v1:water-tanks",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:982383:v1:materials",
+            "kind": "materials",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "6b3dd47edcf768c2f6e7dfd08ca0dfb12c2597dbc56e7a41e8f6a4ff994d39f1",
+              "seed": "doitt:982383:v1:materials",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:982383:v1:signage",
+            "kind": "signage",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "50507cb0462a9db9169cad608a385f85afee4ff7487a756ec4d67fdd125fab79",
+              "seed": "doitt:982383:v1:signage",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          }
+        ]
+      }
+    },
+    {
+      "schemaVersion": "1.0",
+      "shardId": "inventory:b2:v2",
+      "audience": "public",
+      "artifactRef": "public/inventory/inventory-b2-v2.json",
+      "inventoryId": "inventory:b2:v2",
+      "inventory": {
+        "schemaVersion": "1.0",
+        "buildingId": "doitt:982383",
+        "components": [
+          {
+            "componentId": "doitt:982383:v2:massing",
+            "kind": "massing",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "66e87aac4defd769cd03ed53762ecd258c4af6a89326b3f159b2adf113e0e233",
+              "seed": "doitt:982383:v2:massing",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:982383:v2:setbacks",
+            "kind": "setbacks",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "ac7d3e9c5c32f2160c68b16727d488822b8b20c1c1128c591fda64dbf973ccdb",
+              "seed": "doitt:982383:v2:setbacks",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:982383:v2:facade-bays",
+            "kind": "facade-bays",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "04693fe29e92b9c80c0f10d2742e1a98f97294e5d137f2d9fcd9824185932330",
+              "seed": "doitt:982383:v2:facade-bays",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:982383:v2:windows",
+            "kind": "windows",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "1cc32c357dc3cbdfdcf83663c7d7ce718a35dea1b074be6cb8aad90c04c9b827",
+              "seed": "doitt:982383:v2:windows",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:982383:v2:entrances",
+            "kind": "entrances",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "ede39e6be3194e353b409bd0b36c924a079befe3158bcc6920cff58959660ff4",
+              "seed": "doitt:982383:v2:entrances",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:982383:v2:ground-floor-divisions",
+            "kind": "ground-floor-divisions",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "ea39025bb8d5df7d067a0b2c3391d66ca1c17c94751f82db071af6687a146554",
+              "seed": "doitt:982383:v2:ground-floor-divisions",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:982383:v2:storefronts",
+            "kind": "storefronts",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "0fb08703538dcb5a000373ca6e8d68c1e720632268f2790e633ec520c547b167",
+              "seed": "doitt:982383:v2:storefronts",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:982383:v2:cornices",
+            "kind": "cornices",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "485fc9172d4ca7cf8f6ad57522378db03deeb4e1413ef651922831977dc60dc1",
+              "seed": "doitt:982383:v2:cornices",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:982383:v2:roof-form",
+            "kind": "roof-form",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "872e3f602d62f92693a532127d09a2198d3353242bd9f1d4e8e6cf4568f4bbb7",
+              "seed": "doitt:982383:v2:roof-form",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:982383:v2:balconies",
+            "kind": "balconies",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "55c790ad5ba1cc80b05b7269b98e311047ee895aae028984770a3788d9fe0256",
+              "seed": "doitt:982383:v2:balconies",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:982383:v2:fire-escapes",
+            "kind": "fire-escapes",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "40c64b4919568d0af310bc2a68bfdae5b5fbcebdf9c71436cb9e3691064df970",
+              "seed": "doitt:982383:v2:fire-escapes",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:982383:v2:roof-equipment",
+            "kind": "roof-equipment",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "8ddbe50c790d7d305f9b24aa5511450580ca855419f0257099d353a80e815ef7",
+              "seed": "doitt:982383:v2:roof-equipment",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:982383:v2:water-tanks",
+            "kind": "water-tanks",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "ab7a4dab300420001f9622194f6d9bb005ef3201bd2a44b04f1703af48385e4c",
+              "seed": "doitt:982383:v2:water-tanks",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:982383:v2:materials",
+            "kind": "materials",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "a5a97f22f275bd351609d464ffc05f7f1dbf51e896b467cb7d992794a311cddd",
+              "seed": "doitt:982383:v2:materials",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          },
+          {
+            "componentId": "doitt:982383:v2:signage",
+            "kind": "signage",
+            "state": "generated",
+            "uncertainty": "Procedural fixture geometry; no real-world claim.",
+            "generator": {
+              "id": "udt-fixture",
+              "version": "1",
+              "inputFingerprintSha256": "a434e05346fffecd43dd6a30f1895f7406c91c1579ded50fd49af2e2af282cb0",
+              "seed": "doitt:982383:v2:signage",
+              "generatedAt": "2026-08-09T00:00:00.000Z",
+              "constraintSourceIds": []
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "evidenceShards": [
+    {
+      "schemaVersion": "1.0",
+      "shardId": "evidence:b1:v1",
+      "audience": "public",
+      "artifactRef": "public/evidence/evidence-b1-v1.json",
+      "inventoryId": "inventory:b1:v1",
+      "graph": {
+        "schemaVersion": "1.0",
+        "sources": [],
+        "licenses": [],
+        "approvals": [],
+        "evidence": []
+      }
+    },
+    {
+      "schemaVersion": "1.0",
+      "shardId": "evidence:b1:v2",
+      "audience": "public",
+      "artifactRef": "public/evidence/evidence-b1-v2.json",
+      "inventoryId": "inventory:b1:v2",
+      "graph": {
+        "schemaVersion": "1.0",
+        "sources": [],
+        "licenses": [],
+        "approvals": [],
+        "evidence": []
+      }
+    },
+    {
+      "schemaVersion": "1.0",
+      "shardId": "evidence:b2:v1",
+      "audience": "public",
+      "artifactRef": "public/evidence/evidence-b2-v1.json",
+      "inventoryId": "inventory:b2:v1",
+      "graph": {
+        "schemaVersion": "1.0",
+        "sources": [],
+        "licenses": [],
+        "approvals": [],
+        "evidence": []
+      }
+    },
+    {
+      "schemaVersion": "1.0",
+      "shardId": "evidence:b2:v2",
+      "audience": "public",
+      "artifactRef": "public/evidence/evidence-b2-v2.json",
+      "inventoryId": "inventory:b2:v2",
+      "graph": {
+        "schemaVersion": "1.0",
+        "sources": [],
+        "licenses": [],
+        "approvals": [],
+        "evidence": []
+      }
+    }
+  ],
+  "snapshots": [
+    {
+      "schemaVersion": "1.0",
+      "snapshotId": "snapshot:v1",
+      "audience": "public",
+      "artifactRef": "public/rollout-snapshot/snapshot-v1.json",
+      "cityId": "city:udt-fixture",
+      "configId": "config:udt-fixture",
+      "ownershipLedgerId": "ledger:udt-fixture",
+      "baseIdentitySetId": "identity:udt-fixture-base",
+      "baseIdentitySetChecksumSha256": "f1a250d126a1cdc75165c4d33671f999b04ac9733cef2c1086d462fcf040dd43",
+      "predecessor": null,
+      "rollbackTarget": null,
+      "cells": [
+        {
+          "cellId": "c1",
+          "cellReleaseId": "cell:c1:v1",
+          "checksumSha256": "ed5abbfa2992c6616cfcb336f6920f4e21292d687221554c96cff8c7720b9a0a"
+        },
+        {
+          "cellId": "c2",
+          "cellReleaseId": "cell:c2:v1",
+          "checksumSha256": "e2ab798b14c648d69f9733eb315a482364967b69637343ad8134347086c8611e"
+        }
+      ],
+      "promotion": {
+        "id": "approval:snapshot:v1",
+        "fingerprintSha256": "f6cb75d886d5aef45d58576174cd010727a533230975962b2665e5e945f36a80",
+        "scope": "Synthetic exterior streaming fixture; no real-world claim.",
+        "exclusions": [
+          "real-world use"
+        ],
+        "approvedAt": "2026-08-09T00:00:00.000Z"
+      },
+      "generatedAt": "2026-08-09T00:00:00.000Z",
+      "immutable": true
+    },
+    {
+      "schemaVersion": "1.0",
+      "snapshotId": "snapshot:v2",
+      "audience": "public",
+      "artifactRef": "public/rollout-snapshot/snapshot-v2.json",
+      "cityId": "city:udt-fixture",
+      "configId": "config:udt-fixture",
+      "ownershipLedgerId": "ledger:udt-fixture",
+      "baseIdentitySetId": "identity:udt-fixture-base",
+      "baseIdentitySetChecksumSha256": "f1a250d126a1cdc75165c4d33671f999b04ac9733cef2c1086d462fcf040dd43",
+      "predecessor": {
+        "snapshotId": "snapshot:v1",
+        "checksumSha256": "0b3bb64262f51c01712f409901a68edd31fc2f146edbdd41c0adbdc1ae57dd72"
+      },
+      "rollbackTarget": {
+        "snapshotId": "snapshot:v1",
+        "checksumSha256": "0b3bb64262f51c01712f409901a68edd31fc2f146edbdd41c0adbdc1ae57dd72"
+      },
+      "cells": [
+        {
+          "cellId": "c1",
+          "cellReleaseId": "cell:c1:v2",
+          "checksumSha256": "3e2222e8f1700a1d3cf97c243d2a9d0d2584c934864adad7f1144931c31cd2c6"
+        },
+        {
+          "cellId": "c2",
+          "cellReleaseId": "cell:c2:v1",
+          "checksumSha256": "e2ab798b14c648d69f9733eb315a482364967b69637343ad8134347086c8611e"
+        }
+      ],
+      "promotion": {
+        "id": "approval:snapshot:v2",
+        "fingerprintSha256": "dc18cd849ade967cd4edcf7b7ab63e20fd2f547e4257dacbc6c40ca9406dce2a",
+        "scope": "Synthetic exterior streaming fixture; no real-world claim.",
+        "exclusions": [
+          "real-world use"
+        ],
+        "approvedAt": "2026-08-09T00:00:00.000Z"
+      },
+      "generatedAt": "2026-08-09T00:00:00.000Z",
+      "immutable": true
+    },
+    {
+      "schemaVersion": "1.0",
+      "snapshotId": "snapshot:v3",
+      "audience": "public",
+      "artifactRef": "public/rollout-snapshot/snapshot-v3.json",
+      "cityId": "city:udt-fixture",
+      "configId": "config:udt-fixture",
+      "ownershipLedgerId": "ledger:udt-fixture",
+      "baseIdentitySetId": "identity:udt-fixture-base",
+      "baseIdentitySetChecksumSha256": "f1a250d126a1cdc75165c4d33671f999b04ac9733cef2c1086d462fcf040dd43",
+      "predecessor": {
+        "snapshotId": "snapshot:v2",
+        "checksumSha256": "8ce40e915c91ea53153efe65375737073060e5a64f5333ec564feafb7e5eb8a1"
+      },
+      "rollbackTarget": {
+        "snapshotId": "snapshot:v2",
+        "checksumSha256": "8ce40e915c91ea53153efe65375737073060e5a64f5333ec564feafb7e5eb8a1"
+      },
+      "cells": [
+        {
+          "cellId": "c1",
+          "cellReleaseId": "cell:c1:v2",
+          "checksumSha256": "3e2222e8f1700a1d3cf97c243d2a9d0d2584c934864adad7f1144931c31cd2c6"
+        },
+        {
+          "cellId": "c2",
+          "cellReleaseId": "cell:c2:v2",
+          "checksumSha256": "b1531f145829864c59059fba44163297c8d42532c84b6a6c3fedae88ecf04d32"
+        }
+      ],
+      "promotion": {
+        "id": "approval:snapshot:v3",
+        "fingerprintSha256": "3a0c75be4c2a14b955934a7ff17e075720e11a7f470d80adedda528f76835020",
+        "scope": "Synthetic exterior streaming fixture; no real-world claim.",
+        "exclusions": [
+          "real-world use"
+        ],
+        "approvedAt": "2026-08-09T00:00:00.000Z"
+      },
+      "generatedAt": "2026-08-09T00:00:00.000Z",
+      "immutable": true
+    }
+  ]
+}

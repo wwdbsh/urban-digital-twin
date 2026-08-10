@@ -253,6 +253,12 @@ button {
 }
 
 .map-region {
+  /*
+   * Height of the top-left band owned by the runtime-layer card. The tile
+   * diagnostics widget starts immediately below it, so the two never overlap
+   * and neither can steal pointer events from the other's controls.
+   */
+  --runtime-note-lane-height: 60px;
   --controls-left-inset: 328px;
   --details-right-inset: 0px;
   --details-bottom-inset: 0px;
@@ -312,6 +318,19 @@ button {
   display: none;
 }
 
+/*
+ * The exterior control group adds interactive rows to the runtime-layer card.
+ * Sized for the tallest real combination (heading + release line + public-realm
+ * status and button + the three control rows + the exterior status line), so
+ * the card does not need to scroll in any state the app can actually reach.
+ * Correctness does not depend on this number: the card's `max-height` is this
+ * same band, and the diagnostics widget starts exactly at the band's edge, so
+ * the two cannot overlap for any value.
+ */
+.map-region:has(.exterior-streaming-controls) {
+  --runtime-note-lane-height: 208px;
+}
+
 .runtime-note {
   position: absolute;
   top: 18px;
@@ -322,7 +341,12 @@ button {
   flex-direction: column;
   gap: 3px;
   max-width: min(292px, calc(var(--controls-left-inset) - 36px));
+  /* Bounded, not clipped: overflow stays reachable instead of rendering
+     underneath the diagnostics widget where clicks would be intercepted. */
+  max-height: var(--runtime-note-lane-height);
   padding: 10px 12px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   border: 1px solid rgb(135 166 177 / 45%);
   border-radius: 7px;
   background: rgb(10 18 23 / 88%);
@@ -348,6 +372,38 @@ button {
 
 .runtime-note .runtime-note-overlay {
   color: #ffd166;
+}
+
+.runtime-note .exterior-streaming-controls {
+  display: grid;
+  flex-shrink: 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  /* Exactly three 26px rows plus two 4px gaps; a release pinning extra canary
+     heads scrolls here rather than pushing the card past its band. */
+  max-height: 86px;
+  gap: 4px;
+  margin-top: 4px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.runtime-note .exterior-streaming-controls > button:first-child,
+.runtime-note .exterior-streaming-controls > button[data-exterior-canary] {
+  grid-column: 1 / -1;
+}
+
+.runtime-note .exterior-streaming-controls button {
+  min-height: 26px;
+}
+
+.runtime-note .exterior-streaming-controls button[aria-pressed="true"] {
+  border-color: rgb(157 238 241 / 70%);
+  color: #9deef1;
+}
+
+.runtime-note .exterior-streaming-controls button[disabled] {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .runtime-note .runtime-note-attribution {
@@ -398,7 +454,7 @@ button {
 
 .tile-diagnostics {
   position: absolute;
-  top: 78px;
+  top: calc(18px + var(--runtime-note-lane-height));
   left: 18px;
   z-index: 6;
   display: grid;
@@ -1505,7 +1561,11 @@ button {
 
   .map-region:has(.layer-controls.is-open) .camera-controls { top: 102px; }
 
-  .tile-diagnostics { top: 160px; }
+  /* Keeps the existing 160px placement while still bounding the card above it. */
+  .map-region,
+  .map-region:has(.exterior-streaming-controls) {
+    --runtime-note-lane-height: 142px;
+  }
 
   .tile-diagnostics.is-open {
     top: 124px;

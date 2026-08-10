@@ -67,6 +67,9 @@
     "block835-reference:build": "node scripts/block835-reference-plan-cli.mjs build",
     "block835-reference:registration": "node scripts/block835-reference-plan-cli.mjs registration",
     "block835-reference:determinism": "node scripts/block835-reference-plan-cli.mjs determinism",
+    "exterior-cells:emit-fixture": "node --experimental-strip-types scripts/emit-exterior-cell-fixture-release.mjs",
+    "exterior-ledger:emit": "node --experimental-strip-types scripts/emit-exterior-wave-ledger.mjs",
+    "exterior-fullsnapshot:dryrun": "node --experimental-strip-types scripts/exterior-fullsnapshot-dryrun.mjs",
     "test:watch": "vitest"
   },
   "dependencies": {
