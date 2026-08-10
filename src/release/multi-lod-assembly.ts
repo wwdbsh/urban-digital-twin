@@ -7,7 +7,8 @@ export const MULTI_LOD_ASSEMBLY_LIMITS = {
   artifactBytes: 256 * 1024 * 1024, totalBytes: 8 * 1024 * 1024 * 1024,
   glbJsonBytes: 16 * 1024 * 1024, accessors: 200_000, primitives: 200_000,
   glbScannedComponents: 10_000_000,
-  materials: 10_000, textures: 10_000, tileNodes: 200_000, tileDepth: 32,
+  bufferViews: 200_000, meshes: 50_000, materials: 10_000, textures: 10_000,
+  nodes: 200_000, scenes: 10_000, tileNodes: 200_000, tileDepth: 32,
 } as const;
 
 export type AssemblyAudience = "private" | "public";
@@ -265,54 +266,121 @@ export function parseGlbV2(bytes: Uint8Array): ParsedGlb {
 }
 const COMPONENT_BYTES: Record<number, number> = { 5121: 1, 5123: 2, 5125: 4, 5126: 4 };
 const TYPE_COMPONENTS: Record<string, number> = { SCALAR: 1, VEC2: 2, VEC3: 3, VEC4: 4 };
-function rejectUnsupportedGltfSurfaces(value: unknown): void {
-  if (Array.isArray(value)) { for (const part of value) rejectUnsupportedGltfSurfaces(part); return; }
-  if (!rec(value)) return;
-  for (const [key, part] of Object.entries(value)) {
-    if (key === "uri" || key === "extensions") throw new Error("External URI and extension surfaces are unsupported in the GLB v1 profile.");
-    rejectUnsupportedGltfSurfaces(part);
+const GLTF_ATTRIBUTES = new Set(["POSITION", "NORMAL", "TANGENT", "COLOR_0", ...Array.from({ length: 8 }, (_, index) => `TEXCOORD_${index}`)]);
+function gltfObjects(value: unknown, label: string, maximum: number, required = false): Record<string, unknown>[] {
+  if (value === undefined && !required) return [];
+  if (!Array.isArray(value) || (required && value.length === 0) || value.length > maximum || value.some((part) => !rec(part))) throw new Error(`${label} must be a bounded array of objects.`);
+  return value as Record<string, unknown>[];
+}
+function finiteArray(value: unknown, length: number, label: string, minimum = Number.NEGATIVE_INFINITY, maximum = Number.POSITIVE_INFINITY): value is number[] {
+  if (!Array.isArray(value) || value.length !== length || value.some((part) => typeof part !== "number" || !Number.isFinite(part) || part < minimum || part > maximum)) throw new Error(`${label} must contain exactly ${length} bounded finite numbers.`);
+  return true;
+}
+function gltfIndices(value: unknown, maximum: number, label: string, allowEmpty = true): value is number[] {
+  if (!Array.isArray(value) || (!allowEmpty && value.length === 0) || value.some((part) => !integer(part, maximum)) || new Set(value).size !== value.length) throw new Error(`${label} must contain unique in-range indices.`);
+  return true;
+}
+function validateTextureInfo(value: unknown, textureMaximum: number, label: string, kind: "basic" | "normal" | "occlusion" = "basic"): number {
+  if (!rec(value)) throw new Error(`${label} must be an object.`);
+  const extraKey = kind === "normal" ? "scale" : kind === "occlusion" ? "strength" : null;
+  closedKeys(value, extraKey ? ["index", "texCoord", extraKey] : ["index", "texCoord"], ["index"], label);
+  if (!integer(value.index, textureMaximum) || (value.texCoord !== undefined && !integer(value.texCoord, 7))) throw new Error(`${label} texture or coordinate index is invalid.`);
+  if (kind === "normal" && value.scale !== undefined && !finite(value.scale)) throw new Error(`${label} scale must be finite.`);
+  if (kind === "occlusion" && value.strength !== undefined && (!finite(value.strength, 0) || value.strength > 1)) throw new Error(`${label} strength must be within [0, 1].`);
+  return value.index;
+}
+function validateMaterial(material: Record<string, unknown>, textureMaximum: number, referencedTextures: Set<number>): void {
+  closedKeys(material, ["pbrMetallicRoughness", "normalTexture", "occlusionTexture", "emissiveTexture", "emissiveFactor", "alphaMode", "alphaCutoff", "doubleSided"], [], "Material");
+  if (material.pbrMetallicRoughness !== undefined) {
+    if (!rec(material.pbrMetallicRoughness)) throw new Error("Material PBR metallic-roughness data must be an object.");
+    const pbr = material.pbrMetallicRoughness;
+    closedKeys(pbr, ["baseColorFactor", "baseColorTexture", "metallicFactor", "roughnessFactor", "metallicRoughnessTexture"], [], "Material PBR metallic-roughness data");
+    if (pbr.baseColorFactor !== undefined) finiteArray(pbr.baseColorFactor, 4, "Material base color", 0, 1);
+    for (const key of ["metallicFactor", "roughnessFactor"] as const) if (pbr[key] !== undefined && (!finite(pbr[key], 0) || pbr[key] > 1)) throw new Error(`Material ${key} must be within [0, 1].`);
+    for (const key of ["baseColorTexture", "metallicRoughnessTexture"] as const) if (pbr[key] !== undefined) referencedTextures.add(validateTextureInfo(pbr[key], textureMaximum, `Material ${key}`));
   }
+  if (material.normalTexture !== undefined) referencedTextures.add(validateTextureInfo(material.normalTexture, textureMaximum, "Material normalTexture", "normal"));
+  if (material.occlusionTexture !== undefined) referencedTextures.add(validateTextureInfo(material.occlusionTexture, textureMaximum, "Material occlusionTexture", "occlusion"));
+  if (material.emissiveTexture !== undefined) referencedTextures.add(validateTextureInfo(material.emissiveTexture, textureMaximum, "Material emissiveTexture"));
+  if (material.emissiveFactor !== undefined) finiteArray(material.emissiveFactor, 3, "Material emissive factor", 0, 1);
+  if (material.alphaMode !== undefined && (typeof material.alphaMode !== "string" || !["OPAQUE", "MASK", "BLEND"].includes(material.alphaMode))) throw new Error("Material alphaMode is invalid.");
+  if (material.alphaCutoff !== undefined && !finite(material.alphaCutoff)) throw new Error("Material alphaCutoff must be finite.");
+  if (material.doubleSided !== undefined && typeof material.doubleSided !== "boolean") throw new Error("Material doubleSided must be boolean.");
+}
+function validateAttributeAccessor(accessors: Record<string, unknown>[], semantic: string, index: number): void {
+  const accessor = accessors[index]!; const componentType = accessor.componentType; const normalized = accessor.normalized === true; const type = accessor.type;
+  if (semantic === "POSITION" && (componentType !== 5126 || type !== "VEC3" || normalized)) throw new Error("POSITION must use unnormalized FLOAT VEC3 data.");
+  if (semantic === "NORMAL" && (componentType !== 5126 || type !== "VEC3" || normalized)) throw new Error("NORMAL must use unnormalized FLOAT VEC3 data.");
+  if (semantic === "TANGENT" && (componentType !== 5126 || type !== "VEC4" || normalized)) throw new Error("TANGENT must use unnormalized FLOAT VEC4 data.");
+  if (semantic.startsWith("TEXCOORD_") && (type !== "VEC2" || (componentType !== 5126 && !([5121, 5123].includes(Number(componentType)) && normalized)))) throw new Error("Texture coordinates use an unsupported accessor profile.");
+  if (semantic === "COLOR_0" && (!["VEC3", "VEC4"].includes(String(type)) || (componentType !== 5126 && !([5121, 5123].includes(Number(componentType)) && normalized)))) throw new Error("Vertex colors use an unsupported accessor profile.");
 }
 function validateGltfJson(json: Record<string, unknown>, bin: Uint8Array): void {
-  if (!rec(json.asset) || json.asset.version !== "2.0") throw new Error("glTF asset.version 2.0 is required.");
   const topLevel = new Set(["asset", "buffers", "bufferViews", "accessors", "meshes", "materials", "textures", "images", "samplers", "nodes", "scenes", "scene", "extras"]);
   if (Object.keys(json).some((key) => !topLevel.has(key))) throw new Error("Unsupported top-level glTF field or extension declaration.");
-  rejectUnsupportedGltfSurfaces(json);
-  const buffers = Array.isArray(json.buffers) ? json.buffers : [];
-  if (buffers.length !== 1 || !rec(buffers[0]) || "uri" in buffers[0] || !integer(buffers[0].byteLength, bin.byteLength) || buffers[0].byteLength > bin.byteLength || bin.byteLength - buffers[0].byteLength > 3) throw new Error("One embedded BIN buffer with a bounded length is required.");
-  if (Array.isArray(json.images) && json.images.some((image) => rec(image) && "uri" in image)) throw new Error("External image URIs are forbidden.");
-  const views = Array.isArray(json.bufferViews) ? json.bufferViews : [];
-  for (const raw of views) { if (!rec(raw) || raw.buffer !== 0 || !integer(raw.byteOffset ?? 0) || !integer(raw.byteLength) || (raw.byteOffset as number | undefined ?? 0) + (raw.byteLength as number) > (buffers[0].byteLength as number) || (raw.byteStride !== undefined && (!integer(raw.byteStride, 252) || raw.byteStride < 4 || raw.byteStride % 4 !== 0))) throw new Error("bufferView range is invalid."); }
-  const accessors = Array.isArray(json.accessors) ? json.accessors : [];
-  if (accessors.length > MULTI_LOD_ASSEMBLY_LIMITS.accessors) throw new Error("Accessor cap exceeded.");
+  if (!rec(json.asset)) throw new Error("glTF asset metadata is required.");
+  closedKeys(json.asset, ["version"], ["version"], "glTF asset");
+  if (json.asset.version !== "2.0") throw new Error("glTF asset.version 2.0 is required.");
+  glbMetadata(json);
+  const buffers = gltfObjects(json.buffers, "glTF buffers", 1, true);
+  if (buffers.length !== 1) throw new Error("One embedded BIN buffer is required.");
+  if (Object.hasOwn(buffers[0]!, "uri")) throw new Error("External buffer URIs are unsupported; one embedded BIN buffer is required.");
+  closedKeys(buffers[0]!, ["byteLength"], ["byteLength"], "glTF buffer");
+  if (!integer(buffers[0]!.byteLength, bin.byteLength) || buffers[0]!.byteLength > bin.byteLength || bin.byteLength - buffers[0]!.byteLength > 3) throw new Error("One embedded BIN buffer with a bounded length is required.");
+  const views = gltfObjects(json.bufferViews, "glTF bufferViews", MULTI_LOD_ASSEMBLY_LIMITS.bufferViews, true);
+  for (const raw of views) {
+    closedKeys(raw, ["buffer", "byteOffset", "byteLength", "byteStride", "target"], ["buffer", "byteLength"], "glTF bufferView");
+    if (raw.buffer !== 0 || !integer(raw.byteOffset ?? 0) || !integer(raw.byteLength) || (raw.byteOffset as number | undefined ?? 0) + (raw.byteLength as number) > (buffers[0]!.byteLength as number) || (raw.byteStride !== undefined && (!integer(raw.byteStride, 252) || raw.byteStride < 4 || raw.byteStride % 4 !== 0)) || (raw.target !== undefined && raw.target !== 34962 && raw.target !== 34963)) throw new Error("bufferView range or target is invalid.");
+  }
+  const accessors = gltfObjects(json.accessors, "glTF accessors", MULTI_LOD_ASSEMBLY_LIMITS.accessors, true);
   for (const raw of accessors) {
-    if (!rec(raw) || "sparse" in raw || !integer(raw.bufferView, Math.max(0, views.length - 1)) || !integer(raw.count) || raw.count === 0 || ![5121, 5123, 5125, 5126].includes(Number(raw.componentType)) || !["SCALAR", "VEC2", "VEC3", "VEC4"].includes(String(raw.type)) || !integer(raw.byteOffset ?? 0)) throw new Error("Accessor profile or range is invalid.");
+    closedKeys(raw, ["bufferView", "byteOffset", "componentType", "normalized", "count", "type", "min", "max"], ["bufferView", "componentType", "count", "type"], "glTF accessor");
+    if (!integer(raw.bufferView, Math.max(0, views.length - 1)) || !integer(raw.count) || raw.count === 0 || typeof raw.componentType !== "number" || ![5121, 5123, 5125, 5126].includes(raw.componentType) || typeof raw.type !== "string" || !["SCALAR", "VEC2", "VEC3", "VEC4"].includes(raw.type) || !integer(raw.byteOffset ?? 0) || (raw.normalized !== undefined && typeof raw.normalized !== "boolean") || (raw.componentType === 5126 && raw.normalized === true)) throw new Error("Accessor profile or range is invalid.");
     const view = views[raw.bufferView as number]; if (!rec(view)) throw new Error("Accessor bufferView is missing.");
     const componentBytes = COMPONENT_BYTES[raw.componentType as number]!; const elementBytes = componentBytes * TYPE_COMPONENTS[raw.type as string]!;
     const accessorOffset = raw.byteOffset as number | undefined ?? 0; const viewOffset = view.byteOffset as number | undefined ?? 0; const stride = view.byteStride as number | undefined ?? elementBytes;
     if (accessorOffset % componentBytes !== 0 || viewOffset % componentBytes !== 0 || stride < elementBytes || stride % componentBytes !== 0) throw new Error("Accessor alignment or stride is invalid.");
     const extent = accessorOffset + ((raw.count as number) - 1) * stride + elementBytes;
     if (!Number.isSafeInteger(extent) || extent > (view.byteLength as number)) throw new Error("Accessor byte range exceeds its bufferView.");
+    const components = TYPE_COMPONENTS[raw.type as string]!;
+    if (raw.min !== undefined) finiteArray(raw.min, components, "Accessor minimum");
+    if (raw.max !== undefined) finiteArray(raw.max, components, "Accessor maximum");
+    if (Array.isArray(raw.min) && Array.isArray(raw.max) && raw.min.some((part, index) => part > (raw.max as number[])[index]!)) throw new Error("Accessor minimum exceeds maximum.");
   }
-  const images = Array.isArray(json.images) ? json.images : []; const textures = Array.isArray(json.textures) ? json.textures : []; const samplers = Array.isArray(json.samplers) ? json.samplers : [];
-  if (images.length > MULTI_LOD_ASSEMBLY_LIMITS.textures || textures.length > MULTI_LOD_ASSEMBLY_LIMITS.textures || samplers.length > MULTI_LOD_ASSEMBLY_LIMITS.textures) throw new Error("Image, texture, or sampler cap exceeded.");
-  for (const image of images) if (!rec(image) || !integer(image.bufferView, Math.max(0, views.length - 1)) || !["image/png", "image/jpeg", "image/webp"].includes(String(image.mimeType))) throw new Error("Embedded image profile is invalid.");
-  for (const texture of textures) if (!rec(texture) || !integer(texture.source, images.length - 1) || (texture.sampler !== undefined && !integer(texture.sampler, samplers.length - 1))) throw new Error("Texture source or sampler index is invalid.");
+  const images = gltfObjects(json.images, "glTF images", MULTI_LOD_ASSEMBLY_LIMITS.textures); const textures = gltfObjects(json.textures, "glTF textures", MULTI_LOD_ASSEMBLY_LIMITS.textures); const samplers = gltfObjects(json.samplers, "glTF samplers", MULTI_LOD_ASSEMBLY_LIMITS.textures);
+  for (const image of images) {
+    closedKeys(image, ["bufferView", "mimeType"], ["bufferView", "mimeType"], "glTF image");
+    if (!integer(image.bufferView, Math.max(0, views.length - 1)) || typeof image.mimeType !== "string" || !["image/png", "image/jpeg", "image/webp"].includes(image.mimeType)) throw new Error("Embedded image profile is invalid.");
+    const view = views[image.bufferView as number]!; if (view.byteStride !== undefined || view.target !== undefined) throw new Error("Image bufferView cannot declare geometry stride or target.");
+  }
+  const magFilters = new Set([9728, 9729]); const minFilters = new Set([9728, 9729, 9984, 9985, 9986, 9987]); const wraps = new Set([33071, 33648, 10497]);
+  for (const sampler of samplers) {
+    closedKeys(sampler, ["magFilter", "minFilter", "wrapS", "wrapT"], [], "glTF sampler");
+    if ((sampler.magFilter !== undefined && (typeof sampler.magFilter !== "number" || !magFilters.has(sampler.magFilter))) || (sampler.minFilter !== undefined && (typeof sampler.minFilter !== "number" || !minFilters.has(sampler.minFilter))) || (sampler.wrapS !== undefined && (typeof sampler.wrapS !== "number" || !wraps.has(sampler.wrapS))) || (sampler.wrapT !== undefined && (typeof sampler.wrapT !== "number" || !wraps.has(sampler.wrapT)))) throw new Error("Sampler filter or wrapping mode is invalid.");
+  }
+  for (const texture of textures) {
+    closedKeys(texture, ["sampler", "source"], ["source"], "glTF texture");
+    if (!integer(texture.source, images.length - 1) || (texture.sampler !== undefined && !integer(texture.sampler, samplers.length - 1))) throw new Error("Texture source or sampler index is invalid.");
+  }
   const referencedTextures = new Set<number>();
-  const collectTextures = (value: unknown, key = ""): void => { if (!rec(value)) return; if (key.endsWith("Texture")) { if (!integer(value.index, textures.length - 1)) throw new Error("Material texture index is invalid."); referencedTextures.add(value.index); return; } for (const [childKey, child] of Object.entries(value)) collectTextures(child, childKey); };
-  if (Array.isArray(json.materials)) for (const material of json.materials) { if (!rec(material)) throw new Error("Material must be an object."); collectTextures(material); }
-  const meshes = Array.isArray(json.meshes) ? json.meshes : []; let primitives = 0; let scannedComponents = 0;
+  const materials = gltfObjects(json.materials, "glTF materials", MULTI_LOD_ASSEMBLY_LIMITS.materials);
+  for (const material of materials) validateMaterial(material, textures.length - 1, referencedTextures);
+  const meshes = gltfObjects(json.meshes, "glTF meshes", MULTI_LOD_ASSEMBLY_LIMITS.meshes, true); let primitives = 0; let scannedComponents = 0;
   const binary = new DataView(bin.buffer, bin.byteOffset, bin.byteLength);
   const info = (index: number) => { const accessor = accessors[index] as Record<string, unknown>; const view = views[accessor.bufferView as number] as Record<string, unknown>; const componentBytes = COMPONENT_BYTES[accessor.componentType as number]!; const elementBytes = componentBytes * TYPE_COMPONENTS[accessor.type as string]!; return { accessor, count: accessor.count as number, componentType: accessor.componentType as number, offset: (view.byteOffset as number | undefined ?? 0) + (accessor.byteOffset as number | undefined ?? 0), stride: view.byteStride as number | undefined ?? elementBytes }; };
   const component = (type: number, offset: number): number => type === 5121 ? binary.getUint8(offset) : type === 5123 ? binary.getUint16(offset, true) : type === 5125 ? binary.getUint32(offset, true) : binary.getFloat32(offset, true);
   const positionCounts = new Map<number, number>(); const indexMaximums = new Map<number, number>();
   const reserveScan = (count: number): void => { const next = add(scannedComponents, count); if (next === null || next > MULTI_LOD_ASSEMBLY_LIMITS.glbScannedComponents) throw new Error("GLB component scan work cap exceeded."); scannedComponents = next; };
   for (const mesh of meshes) {
-    if (!rec(mesh) || !Array.isArray(mesh.primitives)) throw new Error("Mesh primitives are required.");
+    closedKeys(mesh, ["primitives"], ["primitives"], "glTF mesh");
+    if (!Array.isArray(mesh.primitives) || mesh.primitives.length === 0) throw new Error("Mesh primitives are required.");
     for (const primitive of mesh.primitives) {
-      primitives += 1; if (!rec(primitive) || (primitive.mode ?? 4) !== 4 || !rec(primitive.attributes) || !integer(primitive.attributes.POSITION, Math.max(0, accessors.length - 1)) || !integer(primitive.indices, Math.max(0, accessors.length - 1))) throw new Error("Only indexed TRIANGLES with POSITION are supported.");
-      for (const accessorIndex of Object.values(primitive.attributes)) if (!integer(accessorIndex, Math.max(0, accessors.length - 1))) throw new Error("Primitive attribute accessor is invalid.");
-      if (primitive.material !== undefined && !integer(primitive.material, (Array.isArray(json.materials) ? json.materials.length : 0) - 1)) throw new Error("Primitive material index is invalid.");
+      primitives += 1; if (!rec(primitive)) throw new Error("Mesh primitive must be an object.");
+      closedKeys(primitive, ["attributes", "indices", "material", "mode"], ["attributes", "indices"], "glTF mesh primitive");
+      if ((primitive.mode ?? 4) !== 4 || !rec(primitive.attributes) || !integer(primitive.attributes.POSITION, Math.max(0, accessors.length - 1)) || !integer(primitive.indices, Math.max(0, accessors.length - 1))) throw new Error("Only indexed TRIANGLES with POSITION are supported.");
+      if (Object.keys(primitive.attributes).some((key) => !GLTF_ATTRIBUTES.has(key))) throw new Error("Primitive contains an unsupported attribute semantic.");
+      for (const [semantic, accessorIndex] of Object.entries(primitive.attributes)) { if (!integer(accessorIndex, Math.max(0, accessors.length - 1))) throw new Error("Primitive attribute accessor is invalid."); validateAttributeAccessor(accessors, semantic, accessorIndex); }
+      if (primitive.material !== undefined && !integer(primitive.material, materials.length - 1)) throw new Error("Primitive material index is invalid.");
       const positionIndex = primitive.attributes.POSITION; const indexIndex = primitive.indices as number; const positions = info(positionIndex); const indices = info(indexIndex);
       if (indices.accessor.type !== "SCALAR" || indices.componentType === 5126 || indices.count % 3 !== 0 || positions.accessor.type !== "VEC3" || positions.componentType !== 5126 || positions.count < 3) throw new Error("Triangle topology accessor counts are invalid.");
       if (!positionCounts.has(positionIndex)) { reserveScan(positions.count * 3); for (let index = 0; index < positions.count; index += 1) for (let axis = 0; axis < 3; axis += 1) if (!Number.isFinite(component(5126, positions.offset + index * positions.stride + axis * 4))) throw new Error("POSITION contains a non-finite coordinate."); positionCounts.set(positionIndex, positions.count); }
@@ -321,11 +389,41 @@ function validateGltfJson(json: Record<string, unknown>, bin: Uint8Array): void 
     }
   }
   if (primitives === 0 || primitives > MULTI_LOD_ASSEMBLY_LIMITS.primitives) throw new Error("Primitive count is outside the profile.");
-  if ((Array.isArray(json.materials) ? json.materials.length : 0) > MULTI_LOD_ASSEMBLY_LIMITS.materials) throw new Error("Material cap exceeded.");
+  const nodes = gltfObjects(json.nodes, "glTF nodes", MULTI_LOD_ASSEMBLY_LIMITS.nodes); const scenes = gltfObjects(json.scenes, "glTF scenes", MULTI_LOD_ASSEMBLY_LIMITS.scenes);
+  for (let index = 0; index < nodes.length; index += 1) {
+    const node = nodes[index]!; closedKeys(node, ["children", "mesh", "matrix", "translation", "rotation", "scale"], [], "glTF node");
+    if (node.children !== undefined) { gltfIndices(node.children, nodes.length - 1, "Node children", false); if ((node.children as number[]).includes(index)) throw new Error("Node cannot be its own child."); }
+    if (node.mesh !== undefined && !integer(node.mesh, meshes.length - 1)) throw new Error("Node mesh index is invalid.");
+    const hasTrs = node.translation !== undefined || node.rotation !== undefined || node.scale !== undefined;
+    if (node.matrix !== undefined) { if (hasTrs) throw new Error("Node matrix and TRS transforms are mutually exclusive."); finiteArray(node.matrix, 16, "Node matrix"); }
+    if (node.translation !== undefined) finiteArray(node.translation, 3, "Node translation");
+    if (node.rotation !== undefined) finiteArray(node.rotation, 4, "Node rotation", -1, 1);
+    if (node.scale !== undefined) finiteArray(node.scale, 3, "Node scale");
+  }
+  for (const scene of scenes) { closedKeys(scene, ["nodes"], [], "glTF scene"); if (scene.nodes !== undefined) gltfIndices(scene.nodes, nodes.length - 1, "Scene root nodes"); }
+  if (json.scene !== undefined && !integer(json.scene, scenes.length - 1)) throw new Error("Default scene index is invalid.");
 }
 
 interface UdtGlbMetadata { canonicalFeatureId: string; lodId: string; ownerCellId: string; inventoryId: string; inventoryHashSha256: string; evidenceShardId: string; truthTiers: ComponentTruthTier[]; sourceDates: { capturedAt: string | null; updatedAt: string | null }; predecessor: ImmutablePin | null; uncertainty: string; planHashSha256: string }
-function glbMetadata(json: Record<string, unknown>): UdtGlbMetadata | null { const extras = rec(json.extras) ? json.extras : null; return extras && rec(extras.urbanDigitalTwin) ? extras.urbanDigitalTwin as unknown as UdtGlbMetadata : null; }
+function glbMetadata(json: Record<string, unknown>): UdtGlbMetadata {
+  if (!rec(json.extras)) throw new Error("GLB canonical metadata extras are required.");
+  closedKeys(json.extras, ["urbanDigitalTwin"], ["urbanDigitalTwin"], "GLB root extras");
+  const metadata = json.extras.urbanDigitalTwin;
+  if (!rec(metadata)) throw new Error("GLB canonical metadata must be an object.");
+  closedKeys(metadata, ["canonicalFeatureId", "lodId", "ownerCellId", "inventoryId", "inventoryHashSha256", "evidenceShardId", "truthTiers", "sourceDates", "predecessor", "uncertainty", "planHashSha256"], ["canonicalFeatureId", "lodId", "ownerCellId", "inventoryId", "inventoryHashSha256", "evidenceShardId", "truthTiers", "sourceDates", "predecessor", "uncertainty", "planHashSha256"], "GLB canonical metadata");
+  for (const key of ["canonicalFeatureId", "lodId", "ownerCellId", "inventoryId", "evidenceShardId", "uncertainty"] as const) if (!text(metadata[key])) throw new Error(`GLB canonical metadata ${key} is invalid.`);
+  if (!hash(metadata.inventoryHashSha256) || !hash(metadata.planHashSha256)) throw new Error("GLB canonical metadata source hashes are invalid.");
+  if (!Array.isArray(metadata.truthTiers) || metadata.truthTiers.length === 0 || metadata.truthTiers.length > TRUTH.size || metadata.truthTiers.some((tier) => !TRUTH.has(tier as ComponentTruthTier)) || new Set(metadata.truthTiers).size !== metadata.truthTiers.length) throw new Error("GLB canonical metadata truth tiers are invalid.");
+  if (!rec(metadata.sourceDates)) throw new Error("GLB canonical metadata source dates are invalid.");
+  closedKeys(metadata.sourceDates, ["capturedAt", "updatedAt"], ["capturedAt", "updatedAt"], "GLB canonical metadata source dates");
+  if (!iso(metadata.sourceDates.capturedAt, true) || !iso(metadata.sourceDates.updatedAt, true)) throw new Error("GLB canonical metadata source dates are invalid.");
+  if (metadata.predecessor !== null) {
+    if (!rec(metadata.predecessor)) throw new Error("GLB canonical metadata predecessor is invalid.");
+    closedKeys(metadata.predecessor, ["id", "checksumSha256"], ["id", "checksumSha256"], "GLB canonical metadata predecessor");
+    if (!text(metadata.predecessor.id) || !hash(metadata.predecessor.checksumSha256)) throw new Error("GLB canonical metadata predecessor is invalid.");
+  }
+  return metadata as unknown as UdtGlbMetadata;
+}
 function counts(json: Record<string, unknown>): { triangleCount: number; materialCount: number; textureCount: number } {
   const accessors = json.accessors as Record<string, unknown>[]; const materialIds = new Set<number>(); const textureIds = new Set<number>(); let triangles = 0;
   for (const mesh of json.meshes as Array<{ primitives: Array<{ indices: number; material?: number }> }>) for (const primitive of mesh.primitives) { triangles += (accessors[primitive.indices]!.count as number) / 3; if (primitive.material !== undefined) materialIds.add(primitive.material); }
@@ -334,15 +432,15 @@ function counts(json: Record<string, unknown>): { triangleCount: number; materia
   return { triangleCount: triangles, materialCount: materialIds.size, textureCount: textureIds.size };
 }
 function validateGlbBinding(parsed: ParsedGlb, asset: AssemblyAsset, lod: AssemblyLod): void {
-  const metadata = glbMetadata(parsed.json); if (!metadata) throw new Error("GLB canonical metadata is required.");
-  const expected = { canonicalFeatureId: asset.canonicalFeatureId, lodId: lod.lodId, ownerCellId: asset.ownerCellId, inventoryId: asset.inventoryId, inventoryHashSha256: asset.inventoryHashSha256, evidenceShardId: asset.evidenceShardId, truthTiers: [...asset.truthTiers].sort(), sourceDates: asset.sourceDates, predecessor: asset.predecessor, uncertainty: asset.uncertainty, planHashSha256: asset.source.kind === "facade-plan" ? asset.source.planHashSha256 : asset.source.assetManifestChecksumSha256 };
-  if (stableSerialize({ ...metadata, truthTiers: [...metadata.truthTiers].sort() }) !== stableSerialize(expected)) throw new Error("GLB canonical metadata differs from the immutable assembly manifest.");
+  const metadata = glbMetadata(parsed.json);
+  const expected = { canonicalFeatureId: asset.canonicalFeatureId, lodId: lod.lodId, ownerCellId: asset.ownerCellId, inventoryId: asset.inventoryId, inventoryHashSha256: asset.inventoryHashSha256, evidenceShardId: asset.evidenceShardId, truthTiers: [...asset.truthTiers].sort(compareText), sourceDates: asset.sourceDates, predecessor: asset.predecessor, uncertainty: asset.uncertainty, planHashSha256: asset.source.kind === "facade-plan" ? asset.source.planHashSha256 : asset.source.assetManifestChecksumSha256 };
+  if (stableSerialize({ ...metadata, truthTiers: [...metadata.truthTiers].sort(compareText) }) !== stableSerialize(expected)) throw new Error("GLB canonical metadata differs from the immutable assembly manifest.");
   if (stableSerialize(counts(parsed.json)) !== stableSerialize({ triangleCount: lod.quality.triangleCount, materialCount: lod.quality.materialCount, textureCount: lod.quality.textureCount })) throw new Error("GLB topology/material/texture counts differ from declared quality.");
 }
 
 interface Tile { boundingVolume?: { box?: number[] }; geometricError?: number; refine?: string; transform?: number[]; content?: { uri?: string }; children?: Tile[] }
 function closedKeys(value: Record<string, unknown>, allowed: readonly string[], required: readonly string[], label: string): void {
-  const keys = new Set(allowed); if (Object.keys(value).some((key) => !keys.has(key)) || required.some((key) => !(key in value))) throw new Error(`${label} contains unsupported or missing fields.`);
+  const keys = new Set(allowed); if (Object.keys(value).some((key) => !keys.has(key)) || required.some((key) => !Object.hasOwn(value, key))) throw new Error(`${label} contains unsupported or missing fields.`);
 }
 function resolveTilesetUri(tilesetRef: string, uri: unknown, audience: AssemblyAudience): string {
   if (typeof uri !== "string" || uri.length === 0 || uri.startsWith("/") || /^[A-Za-z][A-Za-z0-9+.-]*:/u.test(uri) || /[%?#\\]/u.test(uri) || [...uri].some((part) => part.charCodeAt(0) <= 0x20 || part.charCodeAt(0) === 0x7f)) throw new Error("Tile content URI is not a strict local relative reference.");
@@ -398,17 +496,19 @@ export async function replayMultiLodAssembly(manifest: MultiLodAssemblyManifest,
     else lodBindings.set(lod.artifactRef, { asset, lod });
   }
   for (const key of contents.keys()) if (!declared.has(key)) issue(issues, `contents.${key}`, "Undeclared content is forbidden.");
-  const verified: AssemblyReplay["verifiedArtifacts"] = []; const cellBytes: Record<string, number> = {}; let total = 0; let tilesetBytes: Uint8Array | null = null;
+  const verified: AssemblyReplay["verifiedArtifacts"] = []; const cellByteTotals = new Map<string, number>(); let total = 0; let tilesetBytes: Uint8Array | null = null;
   for (const artifact of [...manifest.artifacts].sort((a, b) => compareText(a.relativeRef, b.relativeRef))) {
     const bytes = contents.get(artifact.relativeRef); if (!(bytes instanceof Uint8Array)) { issue(issues, `contents.${artifact.relativeRef}`, "Declared raw Uint8Array content is missing."); continue; }
     if (bytes.byteLength !== artifact.byteSize || await sha256Bytes(bytes) !== artifact.checksumSha256) { issue(issues, `contents.${artifact.relativeRef}`, "Artifact byte/hash accounting failed."); continue; }
     const next = add(total, bytes.byteLength); if (next === null || next > MULTI_LOD_ASSEMBLY_LIMITS.totalBytes) { issue(issues, "contents", "Verified byte accounting overflowed."); continue; } total = next;
-    if (artifact.ownerCellId) { const cellNext = add(cellBytes[artifact.ownerCellId] ?? 0, bytes.byteLength); if (cellNext === null) issue(issues, `contents.${artifact.relativeRef}`, "Cell bytes overflowed."); else cellBytes[artifact.ownerCellId] = cellNext; }
+    if (artifact.ownerCellId) { const cellNext = add(cellByteTotals.get(artifact.ownerCellId) ?? 0, bytes.byteLength); if (cellNext === null) issue(issues, `contents.${artifact.relativeRef}`, "Cell bytes overflowed."); else cellByteTotals.set(artifact.ownerCellId, cellNext); }
     try { if (artifact.role === "tileset-json") tilesetBytes = bytes; else { const binding = lodBindings.get(artifact.relativeRef); if (!binding) throw new Error("GLB has no asset/LOD binding."); validateGlbBinding(parseGlbV2(bytes), binding.asset, binding.lod); } } catch (error) { issue(issues, `contents.${artifact.relativeRef}`, error instanceof Error ? error.message : "Artifact validation failed."); }
     verified.push({ relativeRef: artifact.relativeRef, byteSize: bytes.byteLength, checksumSha256: artifact.checksumSha256 });
   }
   if (total !== manifest.declaredTotalBytes) issue(issues, "contents", "Verified total differs from the manifest.");
   if (tilesetBytes) try { validateTileset(tilesetBytes, manifest); } catch (error) { issue(issues, `contents.${manifest.tilesetRef}`, error instanceof Error ? error.message : "Tileset validation failed."); }
   if (issues.length) return { ok: false, issues };
+  const cellBytes = Object.create(null) as Record<string, number>;
+  for (const [cellId, byteSize] of [...cellByteTotals].sort(([left], [right]) => compareText(left, right))) cellBytes[cellId] = byteSize;
   return { ok: true, value: { manifest: canonicalManifest(manifest), fingerprintSha256: multiLodAssemblyFingerprint(manifest), verifiedArtifacts: verified, totalBytes: total, cellBytes } };
 }

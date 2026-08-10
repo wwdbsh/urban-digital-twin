@@ -29,6 +29,15 @@ extensions, nonconformant strides, NUL JSON padding, and unsupported primitive
 modes are rejected. Shared POSITION and index accessors are scanned once under
 an aggregate component-work cap.
 
+Every accepted glTF object role has a closed v1 field set. Root `extras` is
+exactly `{ urbanDigitalTwin }`; that value, its source-date object, and its
+optional predecessor pin have exact shapes and bounded truth tiers before any
+canonical comparison. `extras` anywhere else, unknown fields, descriptive
+names, generator/copyright text, and all other unmodeled metadata or URI
+surfaces are rejected. Functional core geometry, scene transforms, embedded
+images/samplers, and metallic-roughness PBR fields remain supported under
+explicit type, index, and collection bounds.
+
 The v1 3D Tiles profile accepts one 1.1 tileset with box bounding volumes,
 bounded acyclic topology, `REPLACE` refinement, non-increasing child geometric
 error, zero-error leaves, and finite nonsingular column-major affine
@@ -57,6 +66,10 @@ root, checks size before bounded allocation, and caps retained CLI content at
 256 MiB. Reads use a no-follow file descriptor whose device, inode, type, and
 size must match the checked path. The CLI performs no writes, network requests,
 acquisition, or publication.
+
+Per-cell byte accounting uses keyed map semantics internally and returns a
+deterministically populated null-prototype record, so every accepted cell ID,
+including JavaScript prototype-property names, has ordinary data-key behavior.
 
 ## Consequences
 

@@ -20,7 +20,7 @@ async function digest(bytes: Uint8Array): Promise<string> {
 function chunk(value: Uint8Array, pad = 0x20): Uint8Array {
   const result = new Uint8Array(Math.ceil(value.byteLength / 4) * 4); result.fill(pad); result.set(value); return result;
 }
-function glb(metadata: Record<string, unknown>, options: { indexCount?: number; externalBuffer?: boolean; emptyRanges?: boolean; outOfRangeIndex?: boolean; nulPadding?: boolean; invalidStride?: boolean; extension?: boolean } = {}): Uint8Array {
+function glb(metadata: Record<string, unknown>, options: { indexCount?: number; externalBuffer?: boolean; emptyRanges?: boolean; outOfRangeIndex?: boolean; nulPadding?: boolean; invalidStride?: boolean; extension?: boolean; mutateJson?: (json: Record<string, unknown>) => void } = {}): Uint8Array {
   const indexCount = options.indexCount ?? 3;
   const json = {
     asset: { version: "2.0" },
@@ -33,7 +33,8 @@ function glb(metadata: Record<string, unknown>, options: { indexCount?: number; 
     meshes: [{ primitives: [{ attributes: { POSITION: 0 }, indices: 1, mode: 4, material: 0 }] }],
     materials: [{}], textures: [], extras: { urbanDigitalTwin: metadata }, ...(options.extension ? { extensionsUsed: ["EXT_meshopt_compression"] } : {}),
   };
-  if (options.nulPadding) { const asset = json.asset as { version: string; generator?: string }; while (new TextEncoder().encode(JSON.stringify(json)).byteLength % 4 === 0) asset.generator = `${asset.generator ?? ""}x`; }
+  options.mutateJson?.(json as Record<string, unknown>);
+  if (options.nulPadding) { const canonical = (json.extras.urbanDigitalTwin as Record<string, unknown>); while (new TextEncoder().encode(JSON.stringify(json)).byteLength % 4 === 0) canonical.uncertainty = `${canonical.uncertainty as string}x`; }
   const jsonBytes = chunk(new TextEncoder().encode(JSON.stringify(json)), options.nulPadding ? 0 : 0x20); const bin = new Uint8Array(48); if (options.outOfRangeIndex) new DataView(bin.buffer).setUint32(36, 3, true); const total = 12 + 8 + jsonBytes.length + 8 + bin.length;
   const result = new Uint8Array(total); const view = new DataView(result.buffer);
   view.setUint32(0, 0x46546c67, true); view.setUint32(4, 2, true); view.setUint32(8, total, true);
@@ -41,12 +42,25 @@ function glb(metadata: Record<string, unknown>, options: { indexCount?: number; 
   const offset = 20 + jsonBytes.length; view.setUint32(offset, bin.length, true); view.setUint32(offset + 4, 0x004e4942, true); result.set(bin, offset + 8);
   return result;
 }
-function metadata(lodId: string): Record<string, unknown> {
+function metadata(lodId: string, ownerCellId = "cell:1"): Record<string, unknown> {
   return {
-    canonicalFeatureId: "building:1", lodId, ownerCellId: "cell:1", inventoryId: "inventory:1", inventoryHashSha256: H,
+    canonicalFeatureId: "building:1", lodId, ownerCellId, inventoryId: "inventory:1", inventoryHashSha256: H,
     evidenceShardId: "evidence:1", truthTiers: ["generated"], sourceDates: { capturedAt: "2026-01-01T00:00:00.000Z", updatedAt: null },
     predecessor: { id: "asset:v0", checksumSha256: H }, uncertainty: "Generated geometry is not observed truth.", planHashSha256: PLAN,
   };
+}
+function addCorePbrAndScene(json: Record<string, unknown>): void {
+  const views = json.bufferViews as Array<Record<string, unknown>>; views[0]!.target = 34962; views[1]!.target = 34963; views.push({ buffer: 0, byteOffset: 0, byteLength: 4 });
+  const accessors = json.accessors as Array<Record<string, unknown>>; accessors[0]!.min = [0, 0, 0]; accessors[0]!.max = [1, 1, 1];
+  json.images = [{ bufferView: 2, mimeType: "image/png" }];
+  json.samplers = [{ magFilter: 9729, minFilter: 9987, wrapS: 10497, wrapT: 33071 }];
+  json.textures = [{ sampler: 0, source: 0 }];
+  json.materials = [{
+    pbrMetallicRoughness: { baseColorFactor: [1, 0.8, 0.6, 1], baseColorTexture: { index: 0, texCoord: 0 }, metallicFactor: 0.1, roughnessFactor: 0.8, metallicRoughnessTexture: { index: 0 } },
+    normalTexture: { index: 0, scale: 1 }, occlusionTexture: { index: 0, strength: 0.5 }, emissiveTexture: { index: 0 }, emissiveFactor: [0, 0, 0], alphaMode: "MASK", alphaCutoff: 0.5, doubleSided: true,
+  }];
+  json.nodes = [{ mesh: 0, translation: [0, 0, 0], rotation: [0, 0, 0, 1], scale: [1, 1, 1] }];
+  json.scenes = [{ nodes: [0] }]; json.scene = 0;
 }
 function tileset(refs: string[], transform = IDENTITY, leafError = 0): Uint8Array {
   const chain = refs.reduce((child, uri, index) => ({ boundingVolume: { box: BOX }, geometricError: index === 0 ? leafError : index * 2, refine: "REPLACE", content: { uri }, ...(child ? { children: [child] } : {}) }), null as Record<string, unknown> | null);
@@ -55,22 +69,22 @@ function tileset(refs: string[], transform = IDENTITY, leafError = 0): Uint8Arra
     root: { boundingVolume: { box: BOX }, geometricError: 10, refine: "REPLACE", transform, children: [chain] },
   }));
 }
-async function fixture(overrides: { tileset?: Uint8Array; lod0?: Uint8Array; lod1?: Uint8Array; audience?: "private" | "public" } = {}): Promise<{ manifest: MultiLodAssemblyManifest; contents: Map<string, Uint8Array> }> {
-  const audience = overrides.audience ?? "private"; const prefix = audience;
-  const lod0 = overrides.lod0 ?? glb(metadata("lod-0")); const lod1 = overrides.lod1 ?? glb(metadata("lod-1"));
+async function fixture(overrides: { tileset?: Uint8Array; lod0?: Uint8Array; lod1?: Uint8Array; audience?: "private" | "public"; cellId?: string } = {}): Promise<{ manifest: MultiLodAssemblyManifest; contents: Map<string, Uint8Array> }> {
+  const audience = overrides.audience ?? "private"; const prefix = audience; const cellId = overrides.cellId ?? "cell:1";
+  const lod0 = overrides.lod0 ?? glb(metadata("lod-0", cellId)); const lod1 = overrides.lod1 ?? glb(metadata("lod-1", cellId));
   const tiles = overrides.tileset ?? tileset(["../assets/building-1-lod0.glb", "../assets/building-1-lod1.glb"]);
   const artifacts = [
     { logicalId: "tileset:1", role: "tileset-json" as const, relativeRef: `${prefix}/tiles/tileset.json`, byteSize: tiles.byteLength, checksumSha256: await digest(tiles), ownerCellId: null },
-    { logicalId: "glb:0", role: "glb" as const, relativeRef: `${prefix}/assets/building-1-lod0.glb`, byteSize: lod0.byteLength, checksumSha256: await digest(lod0), ownerCellId: "cell:1" },
-    { logicalId: "glb:1", role: "glb" as const, relativeRef: `${prefix}/assets/building-1-lod1.glb`, byteSize: lod1.byteLength, checksumSha256: await digest(lod1), ownerCellId: "cell:1" },
+    { logicalId: "glb:0", role: "glb" as const, relativeRef: `${prefix}/assets/building-1-lod0.glb`, byteSize: lod0.byteLength, checksumSha256: await digest(lod0), ownerCellId: cellId },
+    { logicalId: "glb:1", role: "glb" as const, relativeRef: `${prefix}/assets/building-1-lod1.glb`, byteSize: lod1.byteLength, checksumSha256: await digest(lod1), ownerCellId: cellId },
   ];
   const manifest: MultiLodAssemblyManifest = {
     schemaVersion: "1.0", packageId: "fixture-package", audience, generatedAt: "2026-08-10T00:00:00.000Z", immutable: true,
     release: { rootId: `${audience}:root`, rootChecksumSha256: H, releaseId: "release:1", cityId: "city:fixture", configId: "config:fixture", privatePredecessor: audience === "public" ? { id: "private:root", checksumSha256: H } : null },
     baseIdentitySet: { id: "base:1", checksumSha256: H }, ownershipLedger: { id: "ledger:1", checksumSha256: H },
-    cells: [{ cellId: "cell:1", cellRelease: { id: "cell-release:1", checksumSha256: H }, predecessor: { id: "cell-release:0", checksumSha256: H }, buildingIds: ["building:1"], membershipChecksumSha256: H }],
+    cells: [{ cellId, cellRelease: { id: "cell-release:1", checksumSha256: H }, predecessor: { id: "cell-release:0", checksumSha256: H }, buildingIds: ["building:1"], membershipChecksumSha256: H }],
     assets: [{
-      canonicalFeatureId: "building:1", ownerCellId: "cell:1", inventoryId: "inventory:1", inventoryHashSha256: H, evidenceShardId: "evidence:1", truthTiers: ["generated"],
+      canonicalFeatureId: "building:1", ownerCellId: cellId, inventoryId: "inventory:1", inventoryHashSha256: H, evidenceShardId: "evidence:1", truthTiers: ["generated"],
       sourceDates: { capturedAt: "2026-01-01T00:00:00.000Z", updatedAt: null }, predecessor: { id: "asset:v0", checksumSha256: H }, uncertainty: "Generated geometry is not observed truth.",
       source: { kind: "facade-plan", planId: "plan:1", planHashSha256: PLAN },
       lods: [
@@ -93,6 +107,14 @@ describe("multi-LOD immutable assembly", () => {
     expect(first.value.totalBytes).toBe(manifest.declaredTotalBytes);
     expect(first.value.verifiedArtifacts).toHaveLength(3);
     expect(first.value.cellBytes["cell:1"]).toBe(manifest.artifacts.filter((item) => item.role === "glb").reduce((sum, item) => sum + item.byteSize, 0));
+  });
+
+  it.each(["__proto__", "constructor"])("accounts safely for the accepted cell ID %s", async (cellId) => {
+    const { manifest, contents } = await fixture({ cellId }); const replay = await replayMultiLodAssembly(manifest, contents);
+    expect(replay.ok).toBe(true);
+    if (!replay.ok) return;
+    expect(Object.getPrototypeOf(replay.value.cellBytes)).toBeNull();
+    expect(replay.value.cellBytes[cellId]).toBe(manifest.artifacts.filter((item) => item.role === "glb").reduce((sum, item) => sum + item.byteSize, 0));
   });
 
   it("canonicalizes unordered manifest collections", async () => {
@@ -132,6 +154,59 @@ describe("multi-LOD immutable assembly", () => {
     expect(() => parseGlbV2(glb(metadata("lod-0"), { nulPadding: true }))).toThrow();
     expect(() => parseGlbV2(glb(metadata("lod-0"), { invalidStride: true }))).toThrow(/bufferView|stride/iu);
     expect(() => parseGlbV2(glb(metadata("lod-0"), { extension: true }))).toThrow(/unsupported/iu);
+    const metadataExtra = metadata("lod-0"); metadataExtra.privateOwnerName = "not declared";
+    expect(() => parseGlbV2(glb(metadataExtra))).toThrow(/metadata|unsupported/iu);
+    const malformedTruth = metadata("lod-0"); malformedTruth.truthTiers = { 0: "generated", length: 1 };
+    expect(() => parseGlbV2(glb(malformedTruth))).toThrow(/metadata|truth/iu);
+    const nestedMetadataExtra = metadata("lod-0"); (nestedMetadataExtra.sourceDates as Record<string, unknown>).sourceNotes = "not declared";
+    expect(() => parseGlbV2(glb(nestedMetadataExtra))).toThrow(/metadata|unsupported/iu);
+  });
+
+  it("accepts closed functional core PBR and scene fields", () => {
+    expect(() => parseGlbV2(glb(metadata("lod-0"), { mutateJson: addCorePbrAndScene }))).not.toThrow();
+  });
+
+  it("rejects arbitrary fields on every supported nested glTF object role", () => {
+    const mutations: Array<[string, (json: Record<string, unknown>) => void]> = [
+      ["asset", (json) => { (json.asset as Record<string, unknown>).generator = "private note"; }],
+      ["buffer", (json) => { ((json.buffers as Array<Record<string, unknown>>)[0]!).extras = { sourceNotes: true }; }],
+      ["bufferView", (json) => { ((json.bufferViews as Array<Record<string, unknown>>)[0]!).name = "private note"; }],
+      ["accessor", (json) => { ((json.accessors as Array<Record<string, unknown>>)[0]!).extras = { sourceNotes: true }; }],
+      ["mesh", (json) => { ((json.meshes as Array<Record<string, unknown>>)[0]!).name = "private note"; }],
+      ["primitive", (json) => { const mesh = (json.meshes as Array<Record<string, unknown>>)[0]!; const primitive = (mesh.primitives as Array<Record<string, unknown>>)[0]!; primitive.extras = { sourceNotes: true }; }],
+      ["attributes", (json) => { const mesh = (json.meshes as Array<Record<string, unknown>>)[0]!; const primitive = (mesh.primitives as Array<Record<string, unknown>>)[0]!; (primitive.attributes as Record<string, unknown>)._SOURCE_NOTE = 0; }],
+      ["material", (json) => { ((json.materials as Array<Record<string, unknown>>)[0]!).name = "private note"; }],
+      ["PBR", (json) => { const material = (json.materials as Array<Record<string, unknown>>)[0]!; (material.pbrMetallicRoughness as Record<string, unknown>).extras = { sourceNotes: true }; }],
+      ["textureInfo", (json) => { const material = (json.materials as Array<Record<string, unknown>>)[0]!; const pbr = material.pbrMetallicRoughness as Record<string, unknown>; (pbr.baseColorTexture as Record<string, unknown>).extras = { sourceNotes: true }; }],
+      ["texture", (json) => { ((json.textures as Array<Record<string, unknown>>)[0]!).name = "private note"; }],
+      ["image", (json) => { ((json.images as Array<Record<string, unknown>>)[0]!).name = "private note"; }],
+      ["sampler", (json) => { ((json.samplers as Array<Record<string, unknown>>)[0]!).name = "private note"; }],
+      ["node", (json) => { ((json.nodes as Array<Record<string, unknown>>)[0]!).name = "private note"; }],
+      ["scene", (json) => { ((json.scenes as Array<Record<string, unknown>>)[0]!).name = "private note"; }],
+    ];
+    for (const [label, mutate] of mutations) expect(() => parseGlbV2(glb(metadata("lod-0"), { mutateJson: (json) => { addCorePbrAndScene(json); mutate(json); } })), label).toThrow();
+    expect(() => parseGlbV2(glb(metadata("lod-0"), { mutateJson: (json) => { json.nodes = { sourceNotes: "not an array" }; } }))).toThrow(/bounded array/iu);
+  });
+
+  it("rejects undeclared root and nested GLB metadata surfaces in public replay", async () => {
+    const rootSibling = await fixture({
+      audience: "public",
+      lod0: glb(metadata("lod-0"), { mutateJson: (json) => { (json.extras as Record<string, unknown>).privateOwnerName = "not declared"; } }),
+    });
+    expect((await replayMultiLodAssembly(rootSibling.manifest, rootSibling.contents)).ok).toBe(false);
+
+    const mutations: Array<(json: Record<string, unknown>) => void> = [
+      (json) => { ((json.materials as Array<Record<string, unknown>>)[0]!).extras = { sourceNotes: "not declared" }; },
+      (json) => { ((json.materials as Array<Record<string, unknown>>)[0]!).name = "private owner note"; },
+      (json) => {
+        ((json.materials as Array<Record<string, unknown>>)[0]!).pbrMetallicRoughness = { baseColorFactor: [1, 1, 1, 1], extras: { sourceNotes: "not declared" } };
+      },
+      (json) => { json.nodes = [{ mesh: 0, extras: { sourceNotes: "not declared" } }]; json.scenes = [{ nodes: [0] }]; json.scene = 0; },
+    ];
+    for (const mutateJson of mutations) {
+      const nested = await fixture({ audience: "public", lod0: glb(metadata("lod-0"), { mutateJson }) });
+      expect((await replayMultiLodAssembly(nested.manifest, nested.contents)).ok).toBe(false);
+    }
   });
 
   it("binds canonical identity, truth, source dates and predecessors to each GLB", async () => {
