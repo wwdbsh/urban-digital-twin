@@ -534,7 +534,7 @@ export function decidePackageTarget(input: {
   if (targetDir !== packageDir && !withinScratch) return { allowed: false, reason: `Refusing to write outside the package directory or the artifacts scratch root: ${targetDir}` };
   if (existing === "absent") return { allowed: true, reason: "New target." };
   if (existing !== "directory") return { allowed: false, reason: `Refusing to replace a non-directory target: ${targetDir}` };
-  if (existingManifest === null) return { allowed: false, reason: `Refusing to delete an existing directory with no ${BLOCK835_REFERENCE_PACKAGE_ID} manifest: ${targetDir}` };
+  if (existingManifest === null) return { allowed: false, reason: `Refusing to delete an existing directory with no ${BLOCK835_REFERENCE_PACKAGE_ID} manifest: ${targetDir}. If this is a scratch directory you created yourself, remove it first or choose a path that does not exist yet.` };
   let packageId: unknown;
   try { packageId = (JSON.parse(existingManifest) as { packageId?: unknown }).packageId; } catch { return { allowed: false, reason: `Refusing to delete a directory whose manifest is unreadable: ${targetDir}` }; }
   if (packageId !== BLOCK835_REFERENCE_PACKAGE_ID) return { allowed: false, reason: `Refusing to delete a directory owned by another package (${String(packageId)}): ${targetDir}` };

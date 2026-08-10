@@ -200,7 +200,10 @@ Plus `renders/` (112 silhouette PNGs and 2 viewport screenshots) and `inputs/`
 (15 authoring input files). All 133 files are hashed in
 `evidence-inventory.json`, which is committed to
 [`data/manhattan-esb-block-reference-20260810/blender-evidence-inventory.json`](../../data/manhattan-esb-block-reference-20260810/blender-evidence-inventory.json)
-so the hashes stay checkable after this untracked worktree tree is removed.
+so the hashes stay checkable after this untracked worktree tree is removed. The
+committed copy is a `stableSerialize` re-serialization, so its own bytes differ
+from the worktree `evidence-inventory.json`; the 133 inner file hashes are the
+authoritative artifact, not the digest of either container.
 
 ## Verification
 
@@ -208,7 +211,8 @@ so the hashes stay checkable after this untracked worktree tree is removed.
 | --- | --- |
 | `pnpm typecheck` | Pass for all changed files; 3 pre-existing failures unrelated to this task (see risks) |
 | `pnpm lint` | Pass |
-| Focused tests (7 files, 66 tests) | Pass |
+| Full suite `npx vitest run` | Pass, 307 tests |
+| Focused tests (9 files, 76 tests) | Pass |
 | `pnpm multi-lod:validate -- --manifest … --require-texture-free` | Pass, 29 artifacts, texture-free enforced |
 | Registration gate | Pass, 0.91 mm / 13.1 mm worst |
 | Double-run byte determinism | Pass, 32 files byte-identical, identical fingerprint |
