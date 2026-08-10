@@ -4,7 +4,7 @@ Date: 2026-08-10 (Asia/Seoul)
 
 Package: `manhattan-esb-block-reference-20260810`
 
-Decision record: [ADR 0023](../decisions/0023-block835-reference-asset-authoring.md)
+Decision record: [ADR 0026](../decisions/0026-block835-reference-asset-authoring.md)
 
 Source of truth: the pinned pilot release
 `manhattan-esb-block-exterior-pilot-20260805`
@@ -39,7 +39,7 @@ Every plan carries all fifteen `REQUIRED_EXTERIOR_COMPONENT_KINDS`, ten
 `generated` and five `absent` (`setbacks`, `balconies`, `fire-escapes`,
 `water-tanks`, `signage`), and the verbatim
 `DETERMINISTIC_FACADE_UNCERTAINTY` statement. No component anywhere in the
-package is `evidence-backed`; see ADR 0023 Decision 2.
+package is `evidence-backed`; see ADR 0026 Decision 2.
 
 ### Canonical GLB writer
 

@@ -1,4 +1,4 @@
-# 0023 — Block 835 generated-exterior reference asset authoring
+# 0026 — Block 835 generated-exterior reference asset authoring
 
 - Status: Accepted
 - Date: 2026-08-10
