@@ -1100,7 +1100,15 @@ export function App() {
     setExteriorCellLoadState("loading");
     setExteriorCellMessage("Exterior streaming is loading from the local release…");
     const request: ExteriorHeadRequest = exteriorCanarySnapshotId ? { kind: "canary", snapshotId: exteriorCanarySnapshotId } : { kind: "default" };
-    const adapter = activeAdapterRef.current;
+    // Depend on the adapter STATE, not the ref. `exteriorStreamingRequested` is
+    // URL-derived and true on the very first render, while the citywide adapter
+    // arrives asynchronously afterwards. Reading the ref captured the
+    // placeholder adapter, membership resolution no-opped, verification failed
+    // base-incompatible, and nothing re-ran when the real adapter landed — only
+    // a manual disable/enable toggle recovered. Listing it as a dependency makes
+    // the effect re-run on adapter swap, and the abort in the cleanup cancels
+    // the in-flight load so the stale attempt cannot overwrite the new one.
+    const adapter = activeAdapter;
     // Membership must be DETERMINISTIC RELEASE MEMBERSHIP, not residency.
     // `getFeature` only sees shards the camera has already streamed, so asking
     // it whether a Block 835 building belongs to the base release answered
@@ -1113,7 +1121,7 @@ export function App() {
         signal: controller.signal,
         request,
         sharedBudget: aggregateBudgetRef.current,
-        baseIdentity: { releaseId: activeRealBaseReleaseIdRef.current ?? "no-active-base", has: (featureId) => exteriorBaseIdentityHas(adapter, featureId) },
+        baseIdentity: { releaseId: activeRealBaseReleaseId ?? "no-active-base", has: (featureId) => exteriorBaseIdentityHas(adapter, featureId) },
       })).then(({ runtime, head }) => {
       if (controller.signal.aborted) return;
       setExteriorCellRuntime(runtime);
@@ -1135,7 +1143,7 @@ export function App() {
       setExteriorCellMessage(exteriorStreamingFailureMessage(error));
     });
     return () => controller.abort();
-  }, [exteriorCanarySnapshotId, exteriorCellReleaseId, exteriorStreamingRequested]);
+  }, [activeAdapter, activeRealBaseReleaseId, exteriorCanarySnapshotId, exteriorCellReleaseId, exteriorStreamingRequested]);
 
   useEffect(() => {
     if (!exteriorCellRuntime) return undefined;
