@@ -85,7 +85,7 @@ describe("Block 835 reference build CLI target guard", () => {
     await mkdir(target, { recursive: true });
     const result = await build(target);
     expect(result.failed).toBe(true);
-    expect(result.stderr).toMatch(/no manhattan-esb-block-reference-20260810 manifest/u);
+    expect(result.stderr).toMatch(/manhattan-esb-block-reference-20260810 or manhattan-esb-block-reference-20260811 manifest/u);
     expect(result.stderr).toMatch(/remove it first or choose a path that does not exist yet/u);
   });
 

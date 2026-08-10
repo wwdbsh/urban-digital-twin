@@ -166,7 +166,7 @@ describe("Block 835 generated-exterior reference package", () => {
       .toEqual({ allowed: false, reason: expect.stringContaining("Refusing to write outside the package directory") as unknown as string });
     expect(decidePackageTarget({ ...base, targetDir: "/repo/artifacts-elsewhere", existing: "absent", existingManifest: null }).allowed).toBe(false);
     expect(decidePackageTarget({ ...base, targetDir: "/repo/artifacts/scratch", existing: "directory", existingManifest: null }).reason)
-      .toContain("no manhattan-esb-block-reference-20260810 manifest");
+      .toContain("manifest: /repo/artifacts/scratch");
     expect(decidePackageTarget({ ...base, targetDir: "/repo/artifacts/scratch", existing: "directory", existingManifest: JSON.stringify({ packageId: "manhattan-esb-block-exterior-pilot-20260805" }) }).reason)
       .toContain("owned by another package");
     expect(decidePackageTarget({ ...base, targetDir: "/repo/artifacts/scratch", existing: "directory", existingManifest: "not json" }).reason)

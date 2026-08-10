@@ -1,0 +1,1346 @@
+[
+  {
+    "artifacts": [
+      {
+        "byteSize": 34640,
+        "checksumSha256": "16046eaea8335a20cf5672d3ba3ae567ee2780cc59dc5566768fbd2a47f47004",
+        "logicalId": "glb:doitt:102705:lod_0",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-102705__lod_0.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 14748,
+        "checksumSha256": "6bac3b59da7c2f5fc5bdd880a03e142e0483bad41d220adbfcb8c66610fd7ff1",
+        "logicalId": "glb:doitt:102705:lod_1",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-102705__lod_1.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 463272,
+        "checksumSha256": "0fb22da368e85512989977d84db5f0b5499cffa32f40fd1e7941884911b647be",
+        "logicalId": "glb:doitt:131170:lod_0",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-131170__lod_0.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 69408,
+        "checksumSha256": "e6a3e114f0495d0602fd1f62c021e6b5bf4649f6f653c357916a81a1da473e2f",
+        "logicalId": "glb:doitt:131170:lod_1",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-131170__lod_1.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 67048,
+        "checksumSha256": "8e51b05ea005160174e62df3bc9693e66b3575d262bbcd7912ede65ae1be96bc",
+        "logicalId": "glb:doitt:147902:lod_0",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-147902__lod_0.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 17492,
+        "checksumSha256": "58a348978835b6d71088353e3bbea8a58dd299e6042ef39f14c127245089c3b2",
+        "logicalId": "glb:doitt:147902:lod_1",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-147902__lod_1.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 19076,
+        "checksumSha256": "5a72444226ef733ad8a1a2422c0a692e421511779642d30d97af016958923817",
+        "logicalId": "glb:doitt:262867:lod_0",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-262867__lod_0.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 10712,
+        "checksumSha256": "1b4e9647e7f89859b0ba8e3af9d976bb888f64af0797aee60f55c48afae06ccc",
+        "logicalId": "glb:doitt:262867:lod_1",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-262867__lod_1.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 56532,
+        "checksumSha256": "1726d46a59ff905850ab8b2e9bb1ddc36b5bff1d2bc0d8d393d00586893485b4",
+        "logicalId": "glb:doitt:39969:lod_0",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-39969__lod_0.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 19368,
+        "checksumSha256": "75836440c3be37fe8287d4cf29dc6ecb3e31b55ffea8b1932e9721e4b9e06c01",
+        "logicalId": "glb:doitt:39969:lod_1",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-39969__lod_1.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 47176,
+        "checksumSha256": "610aac4ab8b9f46f9a8e636b3c0423d710f31c1a0e658b8919ee4b39d2e9987d",
+        "logicalId": "glb:doitt:460555:lod_0",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-460555__lod_0.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 15764,
+        "checksumSha256": "2e10e3f53523cbf574a2b5d47479303e35ab68df751d210305f6a21d29ff81d4",
+        "logicalId": "glb:doitt:460555:lod_1",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-460555__lod_1.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 32628,
+        "checksumSha256": "56edc9006228eabc9d163b46f589dd01c4a94afcb53c186a5ce5b0ad5f5250b9",
+        "logicalId": "glb:doitt:498980:lod_0",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-498980__lod_0.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 14324,
+        "checksumSha256": "6025bd6840df867bf5096364a21cba74bce96adf65a3d8e92e2e0854a556cf06",
+        "logicalId": "glb:doitt:498980:lod_1",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-498980__lod_1.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 32620,
+        "checksumSha256": "b1de5b52ee2b4333dc7e84329bc7b42006bec2918b769fb8537343d4d6beb945",
+        "logicalId": "glb:doitt:502491:lod_0",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-502491__lod_0.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 14312,
+        "checksumSha256": "db12177811c2eca589336b2b133043e1140dea21264565cbbb88c69a57ea30e0",
+        "logicalId": "glb:doitt:502491:lod_1",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-502491__lod_1.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 57108,
+        "checksumSha256": "5c0fb688960ac5781f0573c31c5c3fdd298f85479c4de5024de417850c2772da",
+        "logicalId": "glb:doitt:584049:lod_0",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-584049__lod_0.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 16632,
+        "checksumSha256": "2a4517cca1ce6a15b9c211203a67045f039b90d845bd43c971ec7178a3aec69f",
+        "logicalId": "glb:doitt:584049:lod_1",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-584049__lod_1.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 1761900,
+        "checksumSha256": "d91c2404c2874aa2cc43c84a7093766a2a5997492cae7e91500c0601a81d6299",
+        "logicalId": "glb:doitt:778052:lod_0",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-778052__lod_0.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 258656,
+        "checksumSha256": "609f2614669aed888485248422c1a6ea6ee0a2dab9b988a8474281559f919b49",
+        "logicalId": "glb:doitt:778052:lod_1",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-778052__lod_1.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 32620,
+        "checksumSha256": "39e31ec248b61e903a6b8f10716f45899f1f2c141c34353c36a82f53e74e60bf",
+        "logicalId": "glb:doitt:812702:lod_0",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-812702__lod_0.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 14316,
+        "checksumSha256": "7afc4280c2d2d22ca2a327420f1549ddd642d61f7ed48ca93bba58f38fb0b3ca",
+        "logicalId": "glb:doitt:812702:lod_1",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-812702__lod_1.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 37244,
+        "checksumSha256": "10a7433b86382424c46b2b923f532b086c8ca71ed2547504b63ee0ef5b6550af",
+        "logicalId": "glb:doitt:835659:lod_0",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-835659__lod_0.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 14904,
+        "checksumSha256": "ef3e0841efd139b2cfe5d6c807c33f9213ae23c97d3504a886a65ebe3105059f",
+        "logicalId": "glb:doitt:835659:lod_1",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-835659__lod_1.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 32588,
+        "checksumSha256": "6f52bbd1b84f32835c18043bcf1c648cf32495972a729d84d2c332be566728e3",
+        "logicalId": "glb:doitt:925937:lod_0",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-925937__lod_0.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 14316,
+        "checksumSha256": "7f689b93746839642981baecd9386c916eb5946bc60938f55d0499bfe4f752ec",
+        "logicalId": "glb:doitt:925937:lod_1",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-925937__lod_1.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 350256,
+        "checksumSha256": "b465584f2ab0a4d01292530d1d2fc7809330228e0e475adafab63cd996aa32bf",
+        "logicalId": "glb:doitt:982383:lod_0",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-982383__lod_0.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 60788,
+        "checksumSha256": "5e36d175c7ebfd2c696a1353dfb2877d05b05e831a7a963c7c6a34311074ad87",
+        "logicalId": "glb:doitt:982383:lod_1",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-982383__lod_1.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 7782,
+        "checksumSha256": "ffc8b22882e7667f2eeee42ab4defd745c4d6b9bff6432e5a373676b4af3e7e6",
+        "logicalId": "tileset:manhattan-esb-block-reference-20260811",
+        "ownerCellId": null,
+        "relativeRef": "public/tiles/tileset.json",
+        "role": "tileset-json"
+      }
+    ],
+    "assets": [
+      {
+        "canonicalFeatureId": "doitt:102705",
+        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811:doitt:102705",
+        "inventoryHashSha256": "58f6f086a5215dd88c0011bde2bda78a538ce76547a0ec9ccfde040a3a95b953",
+        "inventoryId": "inventory:manhattan-esb-block-reference-20260811:doitt:102705",
+        "lods": [
+          {
+            "artifactRef": "public/assets/doitt-102705__lod_0.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0,
+            "lodId": "lod_0",
+            "maxDistanceMeters": 250,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 8,
+                "maxTextures": 0,
+                "maxTriangles": 75000
+              },
+              "materialCount": 7,
+              "textureCount": 0,
+              "triangleCount": 814
+            },
+            "silhouette": null
+          },
+          {
+            "artifactRef": "public/assets/doitt-102705__lod_1.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0.2,
+            "lodId": "lod_1",
+            "maxDistanceMeters": null,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 8,
+                "maxTextures": 0,
+                "maxTriangles": 75000
+              },
+              "materialCount": 6,
+              "textureCount": 0,
+              "triangleCount": 278
+            },
+            "silhouette": {
+              "deviationRatio": 0,
+              "maximumRatio": 0.02,
+              "method": "projected-silhouette-ratio",
+              "metricVersion": "1.0",
+              "planHashSha256": "a67b3479a5c612701dd0474772169913076cd7dd0f4c20c8201027f5f848d1e3",
+              "status": "authoring-declared",
+              "viewIds": [
+                "view:east",
+                "view:north",
+                "view:south",
+                "view:west"
+              ]
+            }
+          }
+        ],
+        "ownerCellId": "cell:manhattan:block-835",
+        "predecessor": {
+          "checksumSha256": "f62326c6bc88fcd3ecef107d76ec50b41f4c0a5f564f4d07cc5decc7b22b3b02",
+          "id": "manhattan-esb-block-reference-20260810:doitt:102705:lod_0"
+        },
+        "source": {
+          "kind": "facade-plan",
+          "planHashSha256": "a67b3479a5c612701dd0474772169913076cd7dd0f4c20c8201027f5f848d1e3",
+          "planId": "facade-plan-v2:3cf95f34edb60c4a8cf452bc"
+        },
+        "sourceDates": {
+          "capturedAt": "2026-08-04T08:25:05.580Z",
+          "updatedAt": null
+        },
+        "truthTiers": [
+          "generated"
+        ],
+        "uncertainty": "Procedurally generated complete exterior in local millimetres. Every component is generated from footprint and height constraints only; it does not assert real-world facade, setback, balcony, fire-escape, water-tank or signage accuracy, nor any tenant, brand or text."
+      },
+      {
+        "canonicalFeatureId": "doitt:131170",
+        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811:doitt:131170",
+        "inventoryHashSha256": "2900e7d70aeb2642008a2dcb4b73dfb718ba9f9f02ec4b8c958ba97a80271c67",
+        "inventoryId": "inventory:manhattan-esb-block-reference-20260811:doitt:131170",
+        "lods": [
+          {
+            "artifactRef": "public/assets/doitt-131170__lod_0.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0,
+            "lodId": "lod_0",
+            "maxDistanceMeters": 250,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 8,
+                "maxTextures": 0,
+                "maxTriangles": 75000
+              },
+              "materialCount": 7,
+              "textureCount": 0,
+              "triangleCount": 12720
+            },
+            "silhouette": null
+          },
+          {
+            "artifactRef": "public/assets/doitt-131170__lod_1.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0.2,
+            "lodId": "lod_1",
+            "maxDistanceMeters": null,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 8,
+                "maxTextures": 0,
+                "maxTriangles": 75000
+              },
+              "materialCount": 6,
+              "textureCount": 0,
+              "triangleCount": 1796
+            },
+            "silhouette": {
+              "deviationRatio": 0,
+              "maximumRatio": 0.02,
+              "method": "projected-silhouette-ratio",
+              "metricVersion": "1.0",
+              "planHashSha256": "cdbbcdcbf768551d59c3de56d2d31f12c18bc1236f620b2e275fd7c57710e1d9",
+              "status": "authoring-declared",
+              "viewIds": [
+                "view:east",
+                "view:north",
+                "view:south",
+                "view:west"
+              ]
+            }
+          }
+        ],
+        "ownerCellId": "cell:manhattan:block-835",
+        "predecessor": {
+          "checksumSha256": "c6d3dd541078b1a8dc6b052a18dde938d05d6517824fc2751ef30ec2632303fb",
+          "id": "manhattan-esb-block-reference-20260810:doitt:131170:lod_0"
+        },
+        "source": {
+          "kind": "facade-plan",
+          "planHashSha256": "cdbbcdcbf768551d59c3de56d2d31f12c18bc1236f620b2e275fd7c57710e1d9",
+          "planId": "facade-plan-v2:d64e9e45badde4682b4c9b8b"
+        },
+        "sourceDates": {
+          "capturedAt": "2026-08-04T08:25:05.580Z",
+          "updatedAt": null
+        },
+        "truthTiers": [
+          "generated"
+        ],
+        "uncertainty": "Procedurally generated complete exterior in local millimetres. Every component is generated from footprint and height constraints only; it does not assert real-world facade, setback, balcony, fire-escape, water-tank or signage accuracy, nor any tenant, brand or text."
+      },
+      {
+        "canonicalFeatureId": "doitt:147902",
+        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811:doitt:147902",
+        "inventoryHashSha256": "638180cd515c1c62c270f5a6b6ff1b02efefd423d74cd937f4c2e07aaa9c3700",
+        "inventoryId": "inventory:manhattan-esb-block-reference-20260811:doitt:147902",
+        "lods": [
+          {
+            "artifactRef": "public/assets/doitt-147902__lod_0.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0,
+            "lodId": "lod_0",
+            "maxDistanceMeters": 250,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 8,
+                "maxTextures": 0,
+                "maxTriangles": 75000
+              },
+              "materialCount": 7,
+              "textureCount": 0,
+              "triangleCount": 1714
+            },
+            "silhouette": null
+          },
+          {
+            "artifactRef": "public/assets/doitt-147902__lod_1.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0.2,
+            "lodId": "lod_1",
+            "maxDistanceMeters": null,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 8,
+                "maxTextures": 0,
+                "maxTriangles": 75000
+              },
+              "materialCount": 6,
+              "textureCount": 0,
+              "triangleCount": 354
+            },
+            "silhouette": {
+              "deviationRatio": 0,
+              "maximumRatio": 0.02,
+              "method": "projected-silhouette-ratio",
+              "metricVersion": "1.0",
+              "planHashSha256": "2f9e965a420430059d750e8e14f87ea18a7d323d25b872fed4a1f9ea0f049a09",
+              "status": "authoring-declared",
+              "viewIds": [
+                "view:east",
+                "view:north",
+                "view:south",
+                "view:west"
+              ]
+            }
+          }
+        ],
+        "ownerCellId": "cell:manhattan:block-835",
+        "predecessor": {
+          "checksumSha256": "cd5117745f78d157c362268f689a50f9c51e6355d3df4c1f571b4b44d140d564",
+          "id": "manhattan-esb-block-reference-20260810:doitt:147902:lod_0"
+        },
+        "source": {
+          "kind": "facade-plan",
+          "planHashSha256": "2f9e965a420430059d750e8e14f87ea18a7d323d25b872fed4a1f9ea0f049a09",
+          "planId": "facade-plan-v2:4886ed06c40cf7678f43e2e9"
+        },
+        "sourceDates": {
+          "capturedAt": "2026-08-04T08:25:05.580Z",
+          "updatedAt": null
+        },
+        "truthTiers": [
+          "generated"
+        ],
+        "uncertainty": "Procedurally generated complete exterior in local millimetres. Every component is generated from footprint and height constraints only; it does not assert real-world facade, setback, balcony, fire-escape, water-tank or signage accuracy, nor any tenant, brand or text."
+      },
+      {
+        "canonicalFeatureId": "doitt:262867",
+        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811:doitt:262867",
+        "inventoryHashSha256": "fc5a0d13da8ffd785598019750b8f9bd667e39a6370f487afaacf7c808ad92a8",
+        "inventoryId": "inventory:manhattan-esb-block-reference-20260811:doitt:262867",
+        "lods": [
+          {
+            "artifactRef": "public/assets/doitt-262867__lod_0.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0,
+            "lodId": "lod_0",
+            "maxDistanceMeters": 250,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 8,
+                "maxTextures": 0,
+                "maxTriangles": 75000
+              },
+              "materialCount": 7,
+              "textureCount": 0,
+              "triangleCount": 382
+            },
+            "silhouette": null
+          },
+          {
+            "artifactRef": "public/assets/doitt-262867__lod_1.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0.2,
+            "lodId": "lod_1",
+            "maxDistanceMeters": null,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 8,
+                "maxTextures": 0,
+                "maxTriangles": 75000
+              },
+              "materialCount": 6,
+              "textureCount": 0,
+              "triangleCount": 166
+            },
+            "silhouette": {
+              "deviationRatio": 0,
+              "maximumRatio": 0.02,
+              "method": "projected-silhouette-ratio",
+              "metricVersion": "1.0",
+              "planHashSha256": "c6b3da2e7110db0dbac8219dfd33f7947a936cd0b53ba69f41e8ee671f8a8e2f",
+              "status": "authoring-declared",
+              "viewIds": [
+                "view:east",
+                "view:north",
+                "view:south",
+                "view:west"
+              ]
+            }
+          }
+        ],
+        "ownerCellId": "cell:manhattan:block-835",
+        "predecessor": {
+          "checksumSha256": "82ea73dade688d9ae28f2a88583ca411906a0b37c50d4174dc40630bda9065ed",
+          "id": "manhattan-esb-block-reference-20260810:doitt:262867:lod_0"
+        },
+        "source": {
+          "kind": "facade-plan",
+          "planHashSha256": "c6b3da2e7110db0dbac8219dfd33f7947a936cd0b53ba69f41e8ee671f8a8e2f",
+          "planId": "facade-plan-v2:e0c0cc4b99ff7c6482f036c1"
+        },
+        "sourceDates": {
+          "capturedAt": "2026-08-04T08:25:05.580Z",
+          "updatedAt": null
+        },
+        "truthTiers": [
+          "generated"
+        ],
+        "uncertainty": "Procedurally generated complete exterior in local millimetres. Every component is generated from footprint and height constraints only; it does not assert real-world facade, setback, balcony, fire-escape, water-tank or signage accuracy, nor any tenant, brand or text."
+      },
+      {
+        "canonicalFeatureId": "doitt:39969",
+        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811:doitt:39969",
+        "inventoryHashSha256": "d152dda295f36ab8f49930d6c5858eacbe8ecac4b5f2b629802aad21ce4de435",
+        "inventoryId": "inventory:manhattan-esb-block-reference-20260811:doitt:39969",
+        "lods": [
+          {
+            "artifactRef": "public/assets/doitt-39969__lod_0.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0,
+            "lodId": "lod_0",
+            "maxDistanceMeters": 250,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 8,
+                "maxTextures": 0,
+                "maxTriangles": 75000
+              },
+              "materialCount": 7,
+              "textureCount": 0,
+              "triangleCount": 1422
+            },
+            "silhouette": null
+          },
+          {
+            "artifactRef": "public/assets/doitt-39969__lod_1.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0.2,
+            "lodId": "lod_1",
+            "maxDistanceMeters": null,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 8,
+                "maxTextures": 0,
+                "maxTriangles": 75000
+              },
+              "materialCount": 6,
+              "textureCount": 0,
+              "triangleCount": 406
+            },
+            "silhouette": {
+              "deviationRatio": 0,
+              "maximumRatio": 0.02,
+              "method": "projected-silhouette-ratio",
+              "metricVersion": "1.0",
+              "planHashSha256": "e4e013da18931299b2750d0f99d7254d5deaf9607295ecc0dfecf5b331b92ad9",
+              "status": "authoring-declared",
+              "viewIds": [
+                "view:east",
+                "view:north",
+                "view:south",
+                "view:west"
+              ]
+            }
+          }
+        ],
+        "ownerCellId": "cell:manhattan:block-835",
+        "predecessor": {
+          "checksumSha256": "f8629376ba4e9ec06f6cfbac3733e58ce648244483446f04eec3bef2108f3e1d",
+          "id": "manhattan-esb-block-reference-20260810:doitt:39969:lod_0"
+        },
+        "source": {
+          "kind": "facade-plan",
+          "planHashSha256": "e4e013da18931299b2750d0f99d7254d5deaf9607295ecc0dfecf5b331b92ad9",
+          "planId": "facade-plan-v2:237b30b5ad5ae07fbc2528f0"
+        },
+        "sourceDates": {
+          "capturedAt": "2026-08-04T08:25:05.580Z",
+          "updatedAt": null
+        },
+        "truthTiers": [
+          "generated"
+        ],
+        "uncertainty": "Procedurally generated complete exterior in local millimetres. Every component is generated from footprint and height constraints only; it does not assert real-world facade, setback, balcony, fire-escape, water-tank or signage accuracy, nor any tenant, brand or text."
+      },
+      {
+        "canonicalFeatureId": "doitt:460555",
+        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811:doitt:460555",
+        "inventoryHashSha256": "371b27097260e7860ca72945d90b5eb322c245661b619415ed084a4d0115ed2c",
+        "inventoryId": "inventory:manhattan-esb-block-reference-20260811:doitt:460555",
+        "lods": [
+          {
+            "artifactRef": "public/assets/doitt-460555__lod_0.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0,
+            "lodId": "lod_0",
+            "maxDistanceMeters": 250,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 8,
+                "maxTextures": 0,
+                "maxTriangles": 75000
+              },
+              "materialCount": 7,
+              "textureCount": 0,
+              "triangleCount": 1162
+            },
+            "silhouette": null
+          },
+          {
+            "artifactRef": "public/assets/doitt-460555__lod_1.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0.2,
+            "lodId": "lod_1",
+            "maxDistanceMeters": null,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 8,
+                "maxTextures": 0,
+                "maxTriangles": 75000
+              },
+              "materialCount": 6,
+              "textureCount": 0,
+              "triangleCount": 306
+            },
+            "silhouette": {
+              "deviationRatio": 0,
+              "maximumRatio": 0.02,
+              "method": "projected-silhouette-ratio",
+              "metricVersion": "1.0",
+              "planHashSha256": "8b032252f4805f52a8137ec6edeaee62cffff6102fbb21f89d1b2505cbdfdef1",
+              "status": "authoring-declared",
+              "viewIds": [
+                "view:east",
+                "view:north",
+                "view:south",
+                "view:west"
+              ]
+            }
+          }
+        ],
+        "ownerCellId": "cell:manhattan:block-835",
+        "predecessor": {
+          "checksumSha256": "1c112092c67970cde21d5760ef7b8654ea667bdd975e6bcc9f4633221ecb3e03",
+          "id": "manhattan-esb-block-reference-20260810:doitt:460555:lod_0"
+        },
+        "source": {
+          "kind": "facade-plan",
+          "planHashSha256": "8b032252f4805f52a8137ec6edeaee62cffff6102fbb21f89d1b2505cbdfdef1",
+          "planId": "facade-plan-v2:fb65bc8fb745bb1792623c8e"
+        },
+        "sourceDates": {
+          "capturedAt": "2026-08-04T08:25:05.580Z",
+          "updatedAt": null
+        },
+        "truthTiers": [
+          "generated"
+        ],
+        "uncertainty": "Procedurally generated complete exterior in local millimetres. Every component is generated from footprint and height constraints only; it does not assert real-world facade, setback, balcony, fire-escape, water-tank or signage accuracy, nor any tenant, brand or text."
+      },
+      {
+        "canonicalFeatureId": "doitt:498980",
+        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811:doitt:498980",
+        "inventoryHashSha256": "875cddde7d22bf12547072af40d4ddb0b72e46cef6204a2eaa3cc46862d6c4ff",
+        "inventoryId": "inventory:manhattan-esb-block-reference-20260811:doitt:498980",
+        "lods": [
+          {
+            "artifactRef": "public/assets/doitt-498980__lod_0.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0,
+            "lodId": "lod_0",
+            "maxDistanceMeters": 250,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 8,
+                "maxTextures": 0,
+                "maxTriangles": 75000
+              },
+              "materialCount": 7,
+              "textureCount": 0,
+              "triangleCount": 758
+            },
+            "silhouette": null
+          },
+          {
+            "artifactRef": "public/assets/doitt-498980__lod_1.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0.2,
+            "lodId": "lod_1",
+            "maxDistanceMeters": null,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 8,
+                "maxTextures": 0,
+                "maxTriangles": 75000
+              },
+              "materialCount": 6,
+              "textureCount": 0,
+              "triangleCount": 266
+            },
+            "silhouette": {
+              "deviationRatio": 0,
+              "maximumRatio": 0.02,
+              "method": "projected-silhouette-ratio",
+              "metricVersion": "1.0",
+              "planHashSha256": "f2634386609e3c8a346264fb35ac0df8c556af678627e312eb3ed99a7977cdb7",
+              "status": "authoring-declared",
+              "viewIds": [
+                "view:east",
+                "view:north",
+                "view:south",
+                "view:west"
+              ]
+            }
+          }
+        ],
+        "ownerCellId": "cell:manhattan:block-835",
+        "predecessor": {
+          "checksumSha256": "d2a2fe08f9f8f37c33e0d750911f2c9e29134f3997656eaa2179fdf9d259e5d4",
+          "id": "manhattan-esb-block-reference-20260810:doitt:498980:lod_0"
+        },
+        "source": {
+          "kind": "facade-plan",
+          "planHashSha256": "f2634386609e3c8a346264fb35ac0df8c556af678627e312eb3ed99a7977cdb7",
+          "planId": "facade-plan-v2:f70413041582eaad8a07bcbc"
+        },
+        "sourceDates": {
+          "capturedAt": "2026-08-04T08:25:05.580Z",
+          "updatedAt": null
+        },
+        "truthTiers": [
+          "generated"
+        ],
+        "uncertainty": "Procedurally generated complete exterior in local millimetres. Every component is generated from footprint and height constraints only; it does not assert real-world facade, setback, balcony, fire-escape, water-tank or signage accuracy, nor any tenant, brand or text."
+      },
+      {
+        "canonicalFeatureId": "doitt:502491",
+        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811:doitt:502491",
+        "inventoryHashSha256": "3a99df2f35f839e90ea2edf5c914a15d2bca73bdda9cfdc9b70029ccc44c16d4",
+        "inventoryId": "inventory:manhattan-esb-block-reference-20260811:doitt:502491",
+        "lods": [
+          {
+            "artifactRef": "public/assets/doitt-502491__lod_0.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0,
+            "lodId": "lod_0",
+            "maxDistanceMeters": 250,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 8,
+                "maxTextures": 0,
+                "maxTriangles": 75000
+              },
+              "materialCount": 7,
+              "textureCount": 0,
+              "triangleCount": 758
+            },
+            "silhouette": null
+          },
+          {
+            "artifactRef": "public/assets/doitt-502491__lod_1.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0.2,
+            "lodId": "lod_1",
+            "maxDistanceMeters": null,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 8,
+                "maxTextures": 0,
+                "maxTriangles": 75000
+              },
+              "materialCount": 6,
+              "textureCount": 0,
+              "triangleCount": 266
+            },
+            "silhouette": {
+              "deviationRatio": 0,
+              "maximumRatio": 0.02,
+              "method": "projected-silhouette-ratio",
+              "metricVersion": "1.0",
+              "planHashSha256": "a82ce88ff0c8a83f63decfac8f49d624610a806dca55041edade08baa096d89f",
+              "status": "authoring-declared",
+              "viewIds": [
+                "view:east",
+                "view:north",
+                "view:south",
+                "view:west"
+              ]
+            }
+          }
+        ],
+        "ownerCellId": "cell:manhattan:block-835",
+        "predecessor": {
+          "checksumSha256": "3d4a286eafc82b25d48dabb7821ca79ce1dc5e631bef10af847ab5949e1a335b",
+          "id": "manhattan-esb-block-reference-20260810:doitt:502491:lod_0"
+        },
+        "source": {
+          "kind": "facade-plan",
+          "planHashSha256": "a82ce88ff0c8a83f63decfac8f49d624610a806dca55041edade08baa096d89f",
+          "planId": "facade-plan-v2:484ace67af21faf9ae9955df"
+        },
+        "sourceDates": {
+          "capturedAt": "2026-08-04T08:25:05.580Z",
+          "updatedAt": null
+        },
+        "truthTiers": [
+          "generated"
+        ],
+        "uncertainty": "Procedurally generated complete exterior in local millimetres. Every component is generated from footprint and height constraints only; it does not assert real-world facade, setback, balcony, fire-escape, water-tank or signage accuracy, nor any tenant, brand or text."
+      },
+      {
+        "canonicalFeatureId": "doitt:584049",
+        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811:doitt:584049",
+        "inventoryHashSha256": "5a77651b096f7133ccb4ca8fa1faa6cb3f2273a8b25955eb10f381c2b3b50407",
+        "inventoryId": "inventory:manhattan-esb-block-reference-20260811:doitt:584049",
+        "lods": [
+          {
+            "artifactRef": "public/assets/doitt-584049__lod_0.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0,
+            "lodId": "lod_0",
+            "maxDistanceMeters": 250,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 8,
+                "maxTextures": 0,
+                "maxTriangles": 75000
+              },
+              "materialCount": 7,
+              "textureCount": 0,
+              "triangleCount": 1438
+            },
+            "silhouette": null
+          },
+          {
+            "artifactRef": "public/assets/doitt-584049__lod_1.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0.2,
+            "lodId": "lod_1",
+            "maxDistanceMeters": null,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 8,
+                "maxTextures": 0,
+                "maxTriangles": 75000
+              },
+              "materialCount": 6,
+              "textureCount": 0,
+              "triangleCount": 330
+            },
+            "silhouette": {
+              "deviationRatio": 0,
+              "maximumRatio": 0.02,
+              "method": "projected-silhouette-ratio",
+              "metricVersion": "1.0",
+              "planHashSha256": "e0330a72d9f82ba790f034c1fe917bca7b5689a61f452459c49de9fb21cb0ee8",
+              "status": "authoring-declared",
+              "viewIds": [
+                "view:east",
+                "view:north",
+                "view:south",
+                "view:west"
+              ]
+            }
+          }
+        ],
+        "ownerCellId": "cell:manhattan:block-835",
+        "predecessor": {
+          "checksumSha256": "5056aedb10a79f537c09f400e77e5db0a341c18bd8a16ff4b4c3b1fc980ef663",
+          "id": "manhattan-esb-block-reference-20260810:doitt:584049:lod_0"
+        },
+        "source": {
+          "kind": "facade-plan",
+          "planHashSha256": "e0330a72d9f82ba790f034c1fe917bca7b5689a61f452459c49de9fb21cb0ee8",
+          "planId": "facade-plan-v2:6ea45607c35d956c3cdb7c27"
+        },
+        "sourceDates": {
+          "capturedAt": "2026-08-04T08:25:05.580Z",
+          "updatedAt": null
+        },
+        "truthTiers": [
+          "generated"
+        ],
+        "uncertainty": "Procedurally generated complete exterior in local millimetres. Every component is generated from footprint and height constraints only; it does not assert real-world facade, setback, balcony, fire-escape, water-tank or signage accuracy, nor any tenant, brand or text."
+      },
+      {
+        "canonicalFeatureId": "doitt:778052",
+        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811:doitt:778052",
+        "inventoryHashSha256": "d6903b2ae2e90d0973acac512671ad6005b6da58d8ee2a6578bdd99187f4b14f",
+        "inventoryId": "inventory:manhattan-esb-block-reference-20260811:doitt:778052",
+        "lods": [
+          {
+            "artifactRef": "public/assets/doitt-778052__lod_0.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0,
+            "lodId": "lod_0",
+            "maxDistanceMeters": 250,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 8,
+                "maxTextures": 0,
+                "maxTriangles": 75000
+              },
+              "materialCount": 7,
+              "textureCount": 0,
+              "triangleCount": 48792
+            },
+            "silhouette": null
+          },
+          {
+            "artifactRef": "public/assets/doitt-778052__lod_1.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0.2,
+            "lodId": "lod_1",
+            "maxDistanceMeters": null,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 8,
+                "maxTextures": 0,
+                "maxTriangles": 75000
+              },
+              "materialCount": 6,
+              "textureCount": 0,
+              "triangleCount": 7052
+            },
+            "silhouette": {
+              "deviationRatio": 0,
+              "maximumRatio": 0.02,
+              "method": "projected-silhouette-ratio",
+              "metricVersion": "1.0",
+              "planHashSha256": "7f4dee8b532fb04a4ec3bda2f3b36aa5315f237148b2bab6aea5f2dfa9a86618",
+              "status": "authoring-declared",
+              "viewIds": [
+                "view:east",
+                "view:north",
+                "view:south",
+                "view:west"
+              ]
+            }
+          }
+        ],
+        "ownerCellId": "cell:manhattan:block-835",
+        "predecessor": {
+          "checksumSha256": "bea8d42837026caeb9898cdc4e2dafbbc42f1e047c00bf67a181790b92c858e2",
+          "id": "manhattan-esb-block-reference-20260810:doitt:778052:lod_0"
+        },
+        "source": {
+          "kind": "facade-plan",
+          "planHashSha256": "7f4dee8b532fb04a4ec3bda2f3b36aa5315f237148b2bab6aea5f2dfa9a86618",
+          "planId": "facade-plan-v2:51156f51ec97decf71337522"
+        },
+        "sourceDates": {
+          "capturedAt": "2026-08-04T08:25:05.580Z",
+          "updatedAt": null
+        },
+        "truthTiers": [
+          "generated"
+        ],
+        "uncertainty": "Procedurally generated complete exterior in local millimetres. Every component is generated from footprint and height constraints only; it does not assert real-world facade, setback, balcony, fire-escape, water-tank or signage accuracy, nor any tenant, brand or text."
+      },
+      {
+        "canonicalFeatureId": "doitt:812702",
+        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811:doitt:812702",
+        "inventoryHashSha256": "7818d10963174a77976f6492aae91e1bad9f5467ae77177bc0611f1bdfd4fa26",
+        "inventoryId": "inventory:manhattan-esb-block-reference-20260811:doitt:812702",
+        "lods": [
+          {
+            "artifactRef": "public/assets/doitt-812702__lod_0.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0,
+            "lodId": "lod_0",
+            "maxDistanceMeters": 250,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 8,
+                "maxTextures": 0,
+                "maxTriangles": 75000
+              },
+              "materialCount": 7,
+              "textureCount": 0,
+              "triangleCount": 758
+            },
+            "silhouette": null
+          },
+          {
+            "artifactRef": "public/assets/doitt-812702__lod_1.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0.2,
+            "lodId": "lod_1",
+            "maxDistanceMeters": null,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 8,
+                "maxTextures": 0,
+                "maxTriangles": 75000
+              },
+              "materialCount": 6,
+              "textureCount": 0,
+              "triangleCount": 266
+            },
+            "silhouette": {
+              "deviationRatio": 0,
+              "maximumRatio": 0.02,
+              "method": "projected-silhouette-ratio",
+              "metricVersion": "1.0",
+              "planHashSha256": "fecf0125f8d5f981736e6b352ba85ee5b1ff48e25fde6a7d069afa6ac00cdd0d",
+              "status": "authoring-declared",
+              "viewIds": [
+                "view:east",
+                "view:north",
+                "view:south",
+                "view:west"
+              ]
+            }
+          }
+        ],
+        "ownerCellId": "cell:manhattan:block-835",
+        "predecessor": {
+          "checksumSha256": "4956d209f197535a427ea992b391d329a65f85220522b62f2555683c62c1ff2a",
+          "id": "manhattan-esb-block-reference-20260810:doitt:812702:lod_0"
+        },
+        "source": {
+          "kind": "facade-plan",
+          "planHashSha256": "fecf0125f8d5f981736e6b352ba85ee5b1ff48e25fde6a7d069afa6ac00cdd0d",
+          "planId": "facade-plan-v2:b3e47ad5e51751908a9a5653"
+        },
+        "sourceDates": {
+          "capturedAt": "2026-08-04T08:25:05.580Z",
+          "updatedAt": null
+        },
+        "truthTiers": [
+          "generated"
+        ],
+        "uncertainty": "Procedurally generated complete exterior in local millimetres. Every component is generated from footprint and height constraints only; it does not assert real-world facade, setback, balcony, fire-escape, water-tank or signage accuracy, nor any tenant, brand or text."
+      },
+      {
+        "canonicalFeatureId": "doitt:835659",
+        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811:doitt:835659",
+        "inventoryHashSha256": "325b4648c4985ab398e62cdfb9d901cf789a5d930234de8d1ac4ceab1adafb3d",
+        "inventoryId": "inventory:manhattan-esb-block-reference-20260811:doitt:835659",
+        "lods": [
+          {
+            "artifactRef": "public/assets/doitt-835659__lod_0.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0,
+            "lodId": "lod_0",
+            "maxDistanceMeters": 250,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 8,
+                "maxTextures": 0,
+                "maxTriangles": 75000
+              },
+              "materialCount": 7,
+              "textureCount": 0,
+              "triangleCount": 886
+            },
+            "silhouette": null
+          },
+          {
+            "artifactRef": "public/assets/doitt-835659__lod_1.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0.2,
+            "lodId": "lod_1",
+            "maxDistanceMeters": null,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 8,
+                "maxTextures": 0,
+                "maxTriangles": 75000
+              },
+              "materialCount": 6,
+              "textureCount": 0,
+              "triangleCount": 282
+            },
+            "silhouette": {
+              "deviationRatio": 0,
+              "maximumRatio": 0.02,
+              "method": "projected-silhouette-ratio",
+              "metricVersion": "1.0",
+              "planHashSha256": "6bfc10b2fd9e7c41c47ffb8a2655b15b66066ae728d57dd55b6624012367ec2c",
+              "status": "authoring-declared",
+              "viewIds": [
+                "view:east",
+                "view:north",
+                "view:south",
+                "view:west"
+              ]
+            }
+          }
+        ],
+        "ownerCellId": "cell:manhattan:block-835",
+        "predecessor": {
+          "checksumSha256": "da30d5af2228b4af26dfcd4d8d94782a560e56bf026e27e5257685344d844e21",
+          "id": "manhattan-esb-block-reference-20260810:doitt:835659:lod_0"
+        },
+        "source": {
+          "kind": "facade-plan",
+          "planHashSha256": "6bfc10b2fd9e7c41c47ffb8a2655b15b66066ae728d57dd55b6624012367ec2c",
+          "planId": "facade-plan-v2:b7a33250fc342e750cf9bf37"
+        },
+        "sourceDates": {
+          "capturedAt": "2026-08-04T08:25:05.580Z",
+          "updatedAt": null
+        },
+        "truthTiers": [
+          "generated"
+        ],
+        "uncertainty": "Procedurally generated complete exterior in local millimetres. Every component is generated from footprint and height constraints only; it does not assert real-world facade, setback, balcony, fire-escape, water-tank or signage accuracy, nor any tenant, brand or text."
+      },
+      {
+        "canonicalFeatureId": "doitt:925937",
+        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811:doitt:925937",
+        "inventoryHashSha256": "83edf4e3a6954d87c7ce54783d59b3d19df111130c315fb29e99c3975fedaf1d",
+        "inventoryId": "inventory:manhattan-esb-block-reference-20260811:doitt:925937",
+        "lods": [
+          {
+            "artifactRef": "public/assets/doitt-925937__lod_0.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0,
+            "lodId": "lod_0",
+            "maxDistanceMeters": 250,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 8,
+                "maxTextures": 0,
+                "maxTriangles": 75000
+              },
+              "materialCount": 7,
+              "textureCount": 0,
+              "triangleCount": 758
+            },
+            "silhouette": null
+          },
+          {
+            "artifactRef": "public/assets/doitt-925937__lod_1.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0.2,
+            "lodId": "lod_1",
+            "maxDistanceMeters": null,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 8,
+                "maxTextures": 0,
+                "maxTriangles": 75000
+              },
+              "materialCount": 6,
+              "textureCount": 0,
+              "triangleCount": 266
+            },
+            "silhouette": {
+              "deviationRatio": 0,
+              "maximumRatio": 0.02,
+              "method": "projected-silhouette-ratio",
+              "metricVersion": "1.0",
+              "planHashSha256": "7706f40c4e896a7974c0cef8616bc525177fc1f62d707875422399593a5c9c24",
+              "status": "authoring-declared",
+              "viewIds": [
+                "view:east",
+                "view:north",
+                "view:south",
+                "view:west"
+              ]
+            }
+          }
+        ],
+        "ownerCellId": "cell:manhattan:block-835",
+        "predecessor": {
+          "checksumSha256": "88fcf1f7d65a50e1a775875c596e6ea11d9e7d943267ed119d8b6ca510d778af",
+          "id": "manhattan-esb-block-reference-20260810:doitt:925937:lod_0"
+        },
+        "source": {
+          "kind": "facade-plan",
+          "planHashSha256": "7706f40c4e896a7974c0cef8616bc525177fc1f62d707875422399593a5c9c24",
+          "planId": "facade-plan-v2:6b28a369d2dd9914616c3045"
+        },
+        "sourceDates": {
+          "capturedAt": "2026-08-04T08:25:05.580Z",
+          "updatedAt": null
+        },
+        "truthTiers": [
+          "generated"
+        ],
+        "uncertainty": "Procedurally generated complete exterior in local millimetres. Every component is generated from footprint and height constraints only; it does not assert real-world facade, setback, balcony, fire-escape, water-tank or signage accuracy, nor any tenant, brand or text."
+      },
+      {
+        "canonicalFeatureId": "doitt:982383",
+        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811:doitt:982383",
+        "inventoryHashSha256": "5a33250b8647c942300bab6b2524497abe9d47b2c727fe03000646433036c5dc",
+        "inventoryId": "inventory:manhattan-esb-block-reference-20260811:doitt:982383",
+        "lods": [
+          {
+            "artifactRef": "public/assets/doitt-982383__lod_0.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0,
+            "lodId": "lod_0",
+            "maxDistanceMeters": 250,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 8,
+                "maxTextures": 0,
+                "maxTriangles": 75000
+              },
+              "materialCount": 7,
+              "textureCount": 0,
+              "triangleCount": 9580
+            },
+            "silhouette": null
+          },
+          {
+            "artifactRef": "public/assets/doitt-982383__lod_1.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0.2,
+            "lodId": "lod_1",
+            "maxDistanceMeters": null,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 8,
+                "maxTextures": 0,
+                "maxTriangles": 75000
+              },
+              "materialCount": 6,
+              "textureCount": 0,
+              "triangleCount": 1556
+            },
+            "silhouette": {
+              "deviationRatio": 0,
+              "maximumRatio": 0.02,
+              "method": "projected-silhouette-ratio",
+              "metricVersion": "1.0",
+              "planHashSha256": "7095305269e5294e3156ccd04de4116bc2f18b3743f4f62f379da392bb4bd504",
+              "status": "authoring-declared",
+              "viewIds": [
+                "view:east",
+                "view:north",
+                "view:south",
+                "view:west"
+              ]
+            }
+          }
+        ],
+        "ownerCellId": "cell:manhattan:block-835",
+        "predecessor": {
+          "checksumSha256": "48531cd02ee389cfb783bb628302429c5658d0e69ef0eb62b8646726cbfc9f67",
+          "id": "manhattan-esb-block-reference-20260810:doitt:982383:lod_0"
+        },
+        "source": {
+          "kind": "facade-plan",
+          "planHashSha256": "7095305269e5294e3156ccd04de4116bc2f18b3743f4f62f379da392bb4bd504",
+          "planId": "facade-plan-v2:cb37fb726a16188923535c67"
+        },
+        "sourceDates": {
+          "capturedAt": "2026-08-04T08:25:05.580Z",
+          "updatedAt": null
+        },
+        "truthTiers": [
+          "generated"
+        ],
+        "uncertainty": "Procedurally generated complete exterior in local millimetres. Every component is generated from footprint and height constraints only; it does not assert real-world facade, setback, balcony, fire-escape, water-tank or signage accuracy, nor any tenant, brand or text."
+      }
+    ],
+    "audience": "public",
+    "baseIdentitySet": {
+      "id": "base-identity-set:manhattan:block-835:20260811",
+      "checksumSha256": "98a7c50abc157fb4f2e52f23e2a129274b7273cace496929406bbbff448a8dfa"
+    },
+    "cells": [
+      {
+        "buildingIds": [
+          "doitt:102705",
+          "doitt:131170",
+          "doitt:147902",
+          "doitt:262867",
+          "doitt:39969",
+          "doitt:460555",
+          "doitt:498980",
+          "doitt:502491",
+          "doitt:584049",
+          "doitt:778052",
+          "doitt:812702",
+          "doitt:835659",
+          "doitt:925937",
+          "doitt:982383"
+        ],
+        "cellId": "cell:manhattan:block-835",
+        "cellRelease": {
+          "checksumSha256": "a99e3773c1c0cc5df50a2480a9a46e7f4ca446fd8aec1187d86c481167fbd3fe",
+          "id": "manhattan-esb-block-reference-20260811"
+        },
+        "membershipChecksumSha256": "98a7c50abc157fb4f2e52f23e2a129274b7273cace496929406bbbff448a8dfa",
+        "predecessor": {
+          "checksumSha256": "4a84ddbb5b46dcc5ad84fc618922cc2c2225f9a86ee0373e9f3cec4246d1b38a",
+          "id": "manhattan-esb-block-exterior-pilot-20260805"
+        }
+      }
+    ],
+    "declaredTotalBytes": 3588230,
+    "generatedAt": "2026-08-11T00:00:00.000Z",
+    "immutable": true,
+    "ownershipLedger": {
+      "id": "ownership-ledger:manhattan-exterior-cells-20260811",
+      "checksumSha256": "6292bc6884e900d31961c5006baa47401da709add1d33ba0afa98b24a963eabe"
+    },
+    "packageId": "manhattan-esb-block-reference-20260811",
+    "release": {
+      "rootId": "root:manhattan-exterior-cells-20260811:public",
+      "rootChecksumSha256": "ad5f7233380347e80157d4917623c5750dbfa25c958844ad5a888a80d084d020",
+      "releaseId": "manhattan-exterior-cells-20260811",
+      "cityId": "manhattan",
+      "configId": "manhattan-esb-block-835",
+      "privatePredecessor": {
+        "id": "root:manhattan-exterior-cells-20260811:private",
+        "checksumSha256": "f348b0ea5d8ed07af604376fd661f1d5fc11a7116563f2d55e38cdf675cd0f58"
+      }
+    },
+    "schemaVersion": "1.0",
+    "tilesetRef": "public/tiles/tileset.json"
+  }
+]

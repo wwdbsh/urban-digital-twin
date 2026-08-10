@@ -24,6 +24,14 @@ import { writeCanonicalGlb, type CanonicalGlbMaterial, type CanonicalGlbQuad, ty
 import type { AssemblyAsset, AssemblyLod, ComponentTruthTier, MultiLodAssemblyManifest } from "./multi-lod-assembly.ts";
 
 export const BLOCK835_REFERENCE_PACKAGE_ID = "manhattan-esb-block-reference-20260810" as const;
+/** Successor package built by the V2 generative-completion grammar. */
+export const BLOCK835_SUCCESSOR_PACKAGE_ID = "manhattan-esb-block-reference-20260811" as const;
+/**
+ * Every package id this builder is allowed to overwrite. The guard refuses any
+ * directory owned by anything else, so a pinned immutable release can never be
+ * the target of a `--out` typo.
+ */
+export const BLOCK835_WRITABLE_PACKAGE_IDS: readonly string[] = [BLOCK835_REFERENCE_PACKAGE_ID, BLOCK835_SUCCESSOR_PACKAGE_ID];
 export const BLOCK835_REFERENCE_GENERATED_AT = "2026-08-10T00:00:00.000Z" as const;
 export const BLOCK835_REFERENCE_SEED = "block-835-reference-20260810" as const;
 export const BLOCK835_REFERENCE_TOOL = { id: "urban-digital-twin:block835-reference", version: "1.0.0" } as const;
@@ -523,6 +531,7 @@ export interface PackageTargetDecision { allowed: boolean; reason: string }
  */
 export function decidePackageTarget(input: {
   targetDir: string;
+  /** Canonical directory of the package being written (20260810 or its successor). */
   packageDir: string;
   scratchRoot: string;
   separator: string;
@@ -534,10 +543,10 @@ export function decidePackageTarget(input: {
   if (targetDir !== packageDir && !withinScratch) return { allowed: false, reason: `Refusing to write outside the package directory or the artifacts scratch root: ${targetDir}` };
   if (existing === "absent") return { allowed: true, reason: "New target." };
   if (existing !== "directory") return { allowed: false, reason: `Refusing to replace a non-directory target: ${targetDir}` };
-  if (existingManifest === null) return { allowed: false, reason: `Refusing to delete an existing directory with no ${BLOCK835_REFERENCE_PACKAGE_ID} manifest: ${targetDir}. If this is a scratch directory you created yourself, remove it first or choose a path that does not exist yet.` };
+  if (existingManifest === null) return { allowed: false, reason: `Refusing to delete an existing directory with no ${BLOCK835_WRITABLE_PACKAGE_IDS.join(" or ")} manifest: ${targetDir}. If this is a scratch directory you created yourself, remove it first or choose a path that does not exist yet.` };
   let packageId: unknown;
   try { packageId = (JSON.parse(existingManifest) as { packageId?: unknown }).packageId; } catch { return { allowed: false, reason: `Refusing to delete a directory whose manifest is unreadable: ${targetDir}` }; }
-  if (packageId !== BLOCK835_REFERENCE_PACKAGE_ID) return { allowed: false, reason: `Refusing to delete a directory owned by another package (${String(packageId)}): ${targetDir}` };
+  if (typeof packageId !== "string" || !BLOCK835_WRITABLE_PACKAGE_IDS.includes(packageId)) return { allowed: false, reason: `Refusing to delete a directory owned by another package (${String(packageId)}): ${targetDir}` };
   return { allowed: true, reason: "Target is this package." };
 }
 
