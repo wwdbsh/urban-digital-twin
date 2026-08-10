@@ -66,7 +66,7 @@ silhouette deviation is exactly zero.
 
 `audience: "private"`, one cell `cell:manhattan:block-835` owning all 14
 buildings, one tileset artifact plus 28 GLBs, 2,603,565 bytes total, assembly
-fingerprint `f76e07eea092d6d246d1a74481b5bed2c8cbe945170a09ee5fdac5d230cddd17`.
+fingerprint `8b0bd07b94b74a0e62ffb6657c76aecf4d638fa0178a40bfe8a1342679d4f26c`.
 
 The base identity checksum uses the exact ownership rule at
 `src/release/exterior-release.ts` —
@@ -111,8 +111,11 @@ one `execute_blender_code` call per building with an object or scene checkpoint
 after each. Nothing was downloaded; Polyhaven, Sketchfab, Hyper3D and Hunyuan
 were not used.
 [`scripts/blender/block835_reference_author.py`](../../scripts/blender/block835_reference_author.py)
-is an independent Python port of the plan tessellation rules, so its agreement
-with the TypeScript writer is a genuine cross-check.
+is a Python transliteration of `tessellatePlan`. Its agreement with the
+TypeScript writer catches transcription and transport errors, but it is **not**
+independent verification of the tessellation rules. The two genuinely
+independent checks are the analytic-volume identity below (which found a real
+defect) and the up-axis-asserting re-import diff.
 
 **Watertightness.** For each of the 28 meshes the divergence-theorem volume was
 compared against the analytic solid volume (box, minus every recess, plus the
@@ -148,6 +151,39 @@ tileset's per-building transforms and inspected in the viewport. Recessed window
 grids, per-orientation facade materials, flush cornice bands, roof planes and
 rooftop appurtenances all read correctly at street level and in overview.
 
+### glTF up axis
+
+Shipped GLBs carry `(east, height, -north)`, the +Y-up frame glTF 2.0 mandates.
+An earlier revision of this package shipped ENU `(east, north, height)`
+directly; CesiumJS applies the implicit y-up-to-z-up rotation to glTF content,
+so those bytes would have rendered every building lying flat. The tileset cannot
+opt out — the assembly validator closes the tileset `asset` object to `version`,
+so `gltfUpAxis` is not declarable. Every deterministic and profile gate passed on
+the defective bytes, because no schema check can see an up-axis error.
+
+Only file bytes are rotated. Tile bounding volumes are computed from
+pre-rotation ENU bounds, tile transforms stay pure translations `(east, north,
+0)` in the z-up ENU tile frame, and registration keeps measuring in ENU. The
+rotation has determinant +1, so winding and outward-normal orientation are
+preserved.
+
+Two checks pin this down. The shipped Empire State Building `lod_1` accessor
+bounds put its 378.78 m extent on axis Y, not Z. And the re-import diff compares
+**raw** Blender world coordinates with no compensation, relying on Blender's own
+y-up-to-z-up import mapping to recover ENU — so a z-up file fails it.
+
+### Report status
+
+`registration.json` is a build report, not part of the immutable contract. It is
+deliberately **not** listed in `manifest.artifacts[]`, so it is neither
+checksum-pinned nor replayed by the multi-LOD validator, and it carries its own
+method and limitation disclosure inline (reference geometry is the oriented
+bounding rectangle, deviation measures pipeline drift only, and shipped geometry
+extends up to 1.2 m above the sourced `heightMeters`). The committed-package
+drift test in `src/release/block835-reference-package.test.ts` is what actually
+prevents the frozen package going stale: it rebuilds from the committed inputs
+and asserts the on-disk manifest fingerprint plus every artifact checksum.
+
 ### Evidence inventory
 
 Worktree-local and untracked, under
@@ -157,12 +193,14 @@ Worktree-local and untracked, under
 | --- | --- |
 | `scene-inspection.json` | `7f9ccc88efa8fdc2e6b9ba6d1dbd38d5917d952bda5ddfe3ee46d42461ba612a` |
 | `silhouette-measurement.json` | `ca97575616387f9a6c8b417106e67d4829b36e0eca9d44c8e83099793c994621` |
-| `reimport-diff.json` | `dc824d4c4fbb6f6d135a36d6186304acb9192c079ddad366a5b3a3a68a5b1098` |
-| `evidence-inventory.json` | `f5642fd2b029a79ca02a0dbf8e35e91f0d3e666e4331ffbfcb8d10625938d019` |
-| `block835-reference-authoring.blend` | `85741b45fdbdf9997f5d266c811c429519000544066d4a084060c0636b4f4667` |
+| `reimport-diff.json` | `4ff7885f19f5774c727c35f4a8227bd9b15f05481501fd5226fbdeb5ecb17490` |
+| `block835-reference-authoring.blend` | `0d43b2609f2cc99b6334781c0889fada2ba6b88444dbaf1516b8d15cec1bf9b4` |
 
 Plus `renders/` (112 silhouette PNGs and 2 viewport screenshots) and `inputs/`
-(15 authoring input files). `evidence-inventory.json` hashes all 133 files.
+(15 authoring input files). All 133 files are hashed in
+`evidence-inventory.json`, which is committed to
+[`data/manhattan-esb-block-reference-20260810/blender-evidence-inventory.json`](../../data/manhattan-esb-block-reference-20260810/blender-evidence-inventory.json)
+so the hashes stay checkable after this untracked worktree tree is removed.
 
 ## Verification
 
@@ -175,7 +213,9 @@ Plus `renders/` (112 silhouette PNGs and 2 viewport screenshots) and `inputs/`
 | Registration gate | Pass, 0.91 mm / 13.1 mm worst |
 | Double-run byte determinism | Pass, 32 files byte-identical, identical fingerprint |
 | Blender watertightness | Pass, 28/28 below 1e-7 relative |
-| Blender re-import diff | Pass, 28/28 exact, 0 mismatches |
+| Blender re-import diff (asserts +Y up) | Pass, 28/28 exact, 0 mismatches |
+| Committed-package drift test | Pass, on-disk fingerprint and all 29 artifact checksums match a fresh build |
+| Build target guard | Pass, refuses non-package and foreign-package `--out` targets |
 
 ## What this package does not claim
 

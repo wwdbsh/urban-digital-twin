@@ -109,7 +109,40 @@ The package is texture-free by construction: no images, no textures, no
 samplers, and a BIN that contains nothing but accessor-covered geometry. That
 closes every route by which raw imagery could ride inside a shipped asset.
 
-## Decision 5 — T007/T008 boundary
+## Decision 5 — Shipped glTF content is +Y up; tile transforms stay translation
+
+glTF 2.0 mandates +Y up for file content, and 3D Tiles applies the implicit
+y-up-to-z-up rotation to glTF content before the tile transform. The assembly
+validator closes the tileset `asset` object to `version` alone, so `gltfUpAxis`
+cannot be declared to opt out of that rotation — and should not be, since it is
+a legacy 3D Tiles 1.0 extension.
+
+Shipped GLBs therefore carry `(east, height, -north)`. An earlier revision of
+this package shipped ENU `(east, north, height)` directly. That is a z-up file
+in a format that mandates y-up: CesiumJS would have re-rotated it to
+`(east, -height, north)` and laid every building flat on its side. The
+deterministic and profile gates all passed on those bytes, because no schema
+check can see an up-axis error.
+
+Only the file bytes are rotated. The tile coordinate frame remains z-up ENU, so:
+
+- tile `boundingVolume.box` values are computed from the pre-rotation ENU bounds
+  and stay ENU-aligned after the renderer's y-up-to-z-up correction;
+- tile `transform` stays a pure translation `(east, north, 0)` in the tile frame,
+  with no rotation component, keeping the per-building anchor trivially
+  auditable;
+- the registration gate keeps measuring in ENU.
+
+The rotation `(x, y, z) -> (x, z, -y)` has determinant +1, so triangle winding
+and the outward-normal orientation proven by the volume identity are preserved.
+
+The re-import diff now **asserts** this axis rather than compensating for it. It
+compares raw Blender world coordinates against the authored ENU scene with no
+correction, relying on Blender's own y-up-to-z-up import mapping to recover ENU.
+A z-up file fails that comparison, which is precisely the defect a renderer
+would show.
+
+## Decision 6 — T007/T008 boundary
 
 T007 produces the package and its evidence only. It touches no file under
 `src/runtime/`, registers no loader, and adds no runtime provider request.
@@ -131,7 +164,17 @@ references them, and the three existing pinned packages
 - Blender remains required for authoring judgement, visual validation and the
   watertightness/silhouette measurements that no schema check can supply.
 - Any future change to the plan rules must be made in both the TypeScript
-  tessellator and its Python port, or the re-import diff will fail — which is
-  the intended cost of keeping the cross-check honest.
+  tessellator and its Python port, or the re-import diff will fail. The Python
+  port is a transliteration of `tessellatePlan`, so agreement between them is a
+  transcription check, not independent verification. The genuinely independent
+  checks are the analytic-volume identity (which found the inverted winding) and
+  the up-axis-asserting re-import diff.
+- `registration.json` is a build report, not part of the immutable contract: it
+  is deliberately absent from `manifest.artifacts[]`, so it is neither
+  checksum-pinned nor replayed by the multi-LOD validator. It carries its own
+  method and limitation disclosure inline.
+- A committed-package drift test rebuilds from the committed inputs and asserts
+  the on-disk manifest fingerprint and every artifact checksum, so a tessellation
+  change can no longer leave the frozen package silently stale.
 - The package is a reference set, not a fidelity claim. It must not be presented
   as showing what these buildings actually look like.
