@@ -82,4 +82,17 @@ describe("Block 835 canary release through the exterior cell runtime", () => {
     expect(pin.checksumSha256).toBe(declared.checksumSha256);
     expect(pin.id).not.toBe("manhattan-esb-block-reference-20260811");
   });
+
+  it("covers all 14 Block 835 buildings in the checksum-verified citywide identity index", () => {
+    // The deterministic membership fix reads this index instead of asking which
+    // shards happen to be resident, so its coverage is the load-bearing fact.
+    const base = "public/data/manhattan-citywide-20260804/";
+    const manifest = JSON.parse(new TextDecoder().decode(new Uint8Array(readFileSync(`${base}manifest.json`)))) as {
+      detailIndex: { relativeContentRef: string; entryCount: number; checksumSha256: string };
+    };
+    const index = JSON.parse(new TextDecoder().decode(new Uint8Array(readFileSync(`${base}${manifest.detailIndex.relativeContentRef}`)))) as { entries: Array<[string, string]> };
+    expect(index.entries).toHaveLength(manifest.detailIndex.entryCount);
+    const members = new Set(index.entries.map(([parentId]) => parentId));
+    for (const id of [...BLOCK_835_DOITT_IDS].map((value) => `doitt:${value}`)) expect(members.has(id)).toBe(true);
+  });
 });

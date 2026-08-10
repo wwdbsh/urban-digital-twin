@@ -271,6 +271,7 @@ export class CitywideReleaseAdapter implements RuntimeCityAdapter {
   private readonly features = new Map<string, Feature>();
   private readonly detailFeatures = new Map<string, Feature>();
   private detailIndexPromise: Promise<Map<string, string>> | null = null;
+  private identityIndex: Map<string, string> | null = null;
   private detailIndexEntryCount = 0;
   private visibleFeatures: Feature[] = [];
   private visibleShardCount = 0;
@@ -321,6 +322,25 @@ export class CitywideReleaseAdapter implements RuntimeCityAdapter {
   }
 
   getFeature(featureId: string): Feature | undefined { return this.detailFeatures.get(featureId) ?? this.features.get(featureId); }
+
+  /**
+   * Deterministic release membership, independent of what is currently resident.
+   *
+   * `getFeature` only sees shards the camera has already streamed, so using it
+   * as a membership oracle makes the answer load-order and camera dependent.
+   * The detail index is checksum-verified release data covering every parent in
+   * the release, so it answers "is this a member" the same way on every run.
+   * Call `ensureIdentityIndex` once before relying on `hasIdentityMember`.
+   */
+  async ensureIdentityIndex(signal?: AbortSignal): Promise<number> {
+    const index = await this.loadDetailIndex(signal);
+    this.identityIndex = index;
+    return index.size;
+  }
+
+  hasIdentityMember(featureId: string): boolean {
+    return (this.identityIndex?.has(featureId) ?? false) || this.getFeature(featureId) !== undefined;
+  }
 
   getFeatures(visibility: LayerVisibility = DEFAULT_LAYER_VISIBILITY): Feature[] {
     return this.visibleFeatures.filter((feature) => {
