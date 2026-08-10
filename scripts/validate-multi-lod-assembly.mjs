@@ -7,10 +7,13 @@ import { replayMultiLodAssembly, validateMultiLodAssembly } from "../src/release
 const MAX_MANIFEST_BYTES = 16 * 1024 * 1024;
 const MAX_CLI_TOTAL_BYTES = 256 * 1024 * 1024;
 function fail(message) { throw new Error(message); }
+/** Value-less switches; every other `--flag` still requires an explicit value. */
+const BOOLEAN_FLAGS = new Set(["require-texture-free"]);
 function args(argv) {
   const result = {};
   for (let index = 0; index < argv.length; index += 1) {
     const token = argv[index]; if (!token?.startsWith("--")) continue;
+    if (BOOLEAN_FLAGS.has(token.slice(2))) { result[token.slice(2)] = true; continue; }
     const value = argv[index + 1]; if (!value || value.startsWith("--")) fail(`Missing value for ${token}.`);
     result[token.slice(2)] = value; index += 1;
   }
@@ -33,12 +36,15 @@ function contained(root, candidate) {
 }
 
 async function main() {
-  const options = args(process.argv.slice(2)); if (!options.manifest) fail("Usage: pnpm multi-lod:validate -- --manifest FILE [--content-root DIR]");
+  const options = args(process.argv.slice(2)); if (!options.manifest) fail("Usage: pnpm multi-lod:validate -- --manifest FILE [--content-root DIR] [--require-texture-free]");
+  // Additive only: the flag can force the embedded-image gate on a private
+  // package, and can never relax the gate a public package always carries.
+  const policy = { requireTextureFreeAssembly: options["require-texture-free"] === true };
   const manifestPath = resolve(options.manifest); const manifestStat = await lstat(manifestPath);
   if (!manifestStat.isFile() || manifestStat.isSymbolicLink() || manifestStat.size > MAX_MANIFEST_BYTES) fail("Manifest must be a bounded regular non-symlink file.");
   const manifestBytes = await boundedFile(manifestPath, "Manifest", manifestStat.size, MAX_MANIFEST_BYTES);
   const manifest = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(manifestBytes));
-  const shape = validateMultiLodAssembly(manifest); if (!shape.ok) fail(shape.issues.map((item) => `${item.path}: ${item.message}`).join("\n"));
+  const shape = validateMultiLodAssembly(manifest, policy); if (!shape.ok) fail(shape.issues.map((item) => `${item.path}: ${item.message}`).join("\n"));
   if (shape.value.declaredTotalBytes > MAX_CLI_TOTAL_BYTES) fail(`CLI replay exceeds its ${MAX_CLI_TOTAL_BYTES}-byte memory bound.`);
   const root = await realpath(resolve(options["content-root"] ?? dirname(manifestPath))); const contents = new Map(); let loadedBytes = 0;
   for (const artifact of [...shape.value.artifacts].sort((a, b) => a.relativeRef.localeCompare(b.relativeRef))) {
@@ -48,8 +54,8 @@ async function main() {
     const bytes = await boundedFile(resolved, artifact.relativeRef, artifact.byteSize, MAX_CLI_TOTAL_BYTES); loadedBytes += bytes.byteLength;
     if (loadedBytes > MAX_CLI_TOTAL_BYTES) fail("CLI replay exceeded its aggregate byte bound."); contents.set(artifact.relativeRef, bytes);
   }
-  const replay = await replayMultiLodAssembly(shape.value, contents); if (!replay.ok) fail(replay.issues.map((item) => `${item.path}: ${item.message}`).join("\n"));
-  console.log(JSON.stringify({ ok: true, packageId: replay.value.manifest.packageId, audience: replay.value.manifest.audience, artifacts: replay.value.verifiedArtifacts.length, totalBytes: replay.value.totalBytes, fingerprintSha256: replay.value.fingerprintSha256 }, null, 2));
+  const replay = await replayMultiLodAssembly(shape.value, contents, policy); if (!replay.ok) fail(replay.issues.map((item) => `${item.path}: ${item.message}`).join("\n"));
+  console.log(JSON.stringify({ ok: true, packageId: replay.value.manifest.packageId, audience: replay.value.manifest.audience, textureFreeEnforced: replay.value.manifest.audience === "public" || policy.requireTextureFreeAssembly, artifacts: replay.value.verifiedArtifacts.length, totalBytes: replay.value.totalBytes, fingerprintSha256: replay.value.fingerprintSha256 }, null, 2));
 }
 
 main().catch((error) => { console.error(error instanceof Error ? error.message : String(error)); process.exitCode = 1; });

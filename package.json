@@ -60,6 +60,12 @@
     "public-realm:build": "node scripts/block835-public-realm-cli.mjs build",
     "public-realm:validate": "node scripts/block835-public-realm-cli.mjs validate",
     "public-realm:benchmark": "node scripts/block835-public-realm-cli.mjs benchmark",
+    "block835-reference:plans": "node scripts/block835-reference-plan-cli.mjs plans",
+    "block835-reference:authoring": "node scripts/block835-reference-plan-cli.mjs authoring",
+    "block835-reference:measurements": "node scripts/block835-reference-plan-cli.mjs measurements",
+    "block835-reference:build": "node scripts/block835-reference-plan-cli.mjs build",
+    "block835-reference:registration": "node scripts/block835-reference-plan-cli.mjs registration",
+    "block835-reference:determinism": "node scripts/block835-reference-plan-cli.mjs determinism",
     "test:watch": "vitest"
   },
   "dependencies": {
