@@ -7,7 +7,7 @@ import type { Feature } from "../../domain/schema";
 import type { CityAssetResolver } from "../../runtime/city-asset-manifest";
 import { LocalFixtureCityAdapter } from "../../runtime/fixture-adapter";
 import { DEFAULT_LAYER_VISIBILITY } from "../../runtime/layers";
-import { STAGE3_RENDER_PROOF_ATTRIBUTE, STAGE3_STOREFRONT_PROJECTIONS_ATTRIBUTE, buildCollisionCheckedFeatureMap, canonicalPickId, clearStorefrontProjectionRecords, collectStage3RenderProof, collectStorefrontProjectionRecords, commercialStorefrontProxyId, denseFeatureIntersectsBounds, densePoiMarkerStyle, denseRenderPlanKey, drillPickedEntityId, featureForPickedId, fixtureOnlyForFeature, focusCameraCoordinatesForFeature, focusCoordinatesForFeature, focusHeightForFeature, focusPoseForFeature, focusPoseForFeatureWithOcclusion, medianFrameInterval, nativeCameraControlBindings, normalizeFocusCameraPose, poiRenderMode, publicRealmAssetEntityId, publicRealmProxyId, publicRealmRepresentative, publishStage3RenderProof, publishStorefrontProjectionRecords, selectDenseFeatureGroups, selectDenseFeatures, shouldApplyCameraPoseRequest, shouldFocusFeature, shouldReplaceDenseRenderPlan, shouldShowFeatureLabel, shouldStartFocusFlight, stage3StorefrontProofRequested, storefrontProjectionCameraSignature, supportedVisibleLayers } from "./CesiumViewport";
+import { STAGE3_RENDER_PROOF_ATTRIBUTE, STAGE3_STOREFRONT_PROJECTIONS_ATTRIBUTE, buildCollisionCheckedFeatureMap, canonicalPickId, clearStorefrontProjectionRecords, collectStage3RenderProof, collectStorefrontProjectionRecords, commercialStorefrontProxyId, denseFeatureIntersectsBounds, densePoiMarkerStyle, denseRenderPlanKey, drillPickedEntityId, featureForPickedId, fixtureOnlyForFeature, focusCameraCoordinatesForFeature, focusCoordinatesForFeature, focusHeightForFeature, focusPoseForFeature, focusPoseForFeatureWithOcclusion, medianFrameInterval, nativeCameraControlBindings, normalizeFocusCameraPose, poiRenderMode, publicRealmAssetEntityId, publicRealmProxyId, publicRealmRepresentative, publishStage3RenderProof, publishStorefrontProjectionRecords, selectDenseFeatureGroups, selectDenseFeatures, shouldApplyCameraPoseRequest, shouldFocusFeature, shouldReplaceDenseRenderPlan, shouldShowFeatureLabel, shouldStartFocusFlight, stage3StorefrontProofRequested, storefrontProjectionCameraSignature, supportedVisibleLayers, canonicalExteriorPickId, exteriorCellEntityId, exteriorCellSignature, exteriorOverlayRenderEntries, exteriorUnanchoredNotice, planExteriorOverlayUpdate, type ExteriorCellOverlay } from "./CesiumViewport";
 import type { Block835PublicRealmFeature } from "../../runtime/block835-public-realm-release";
 
 describe("Cesium POI render seam", () => {
@@ -314,5 +314,190 @@ describe("Cesium POI render seam", () => {
     expect(shouldShowFeatureLabel(realRestaurant, false, true, null)).toBe(false);
     expect(shouldShowFeatureLabel(realRestaurant, true, true, realRestaurant.id)).toBe(true);
     expect(shouldShowFeatureLabel(realRestaurant, false, false, realRestaurant.id)).toBe(true);
+  });
+});
+
+describe("exterior cell overlay seam", () => {
+  const canonicalId = "doitt:778052";
+  const baseFeature = { ...(restaurants as unknown as Feature[])[0]!, id: canonicalId };
+  const provenance = {
+    inventoryId: "inventory:b1:v2",
+    inventoryHashSha256: "a".repeat(64),
+    evidenceShardId: "evidence:b1:v2",
+    truthTiers: ["generated" as const],
+    sourceDates: { capturedAt: "2026-08-09T00:00:00.000Z", updatedAt: null },
+    predecessor: null,
+    uncertainty: "Generated exterior geometry; not observed real-world truth.",
+  };
+  const asset = (lodId: string, checksumSha256: string) => ({
+    canonicalFeatureId: canonicalId,
+    ownerCellId: "c1",
+    lodId,
+    artifactRef: `public/assemblies/cell-c1-v2/assets/${lodId}.glb`,
+    byteSize: 240,
+    checksumSha256,
+    bytes: new Uint8Array([1, 2, 3]),
+    geometricErrorMeters: lodId === "lod-0" ? 0 : 2,
+    maxDistanceMeters: lodId === "lod-0" ? 220 : null,
+    provenance,
+  });
+  const overlayFor = (lodId: string, checksumSha256: string, profile: "exploration" | "inspection"): ExteriorCellOverlay => ({
+    releaseId: "udt-fixture-exterior-cells",
+    snapshotId: "snapshot:v2",
+    origin: "default",
+    profile,
+    cells: [
+      { kind: "rendered", cellId: "c1", cellReleaseId: "cell:c1:v2", cellReleaseVersion: "v2", assemblyPackageId: "assembly:cell:c1:v2", representation: "head", assets: [asset(lodId, checksumSha256)], notice: null },
+      { kind: "failed", cellId: "c9", cellReleaseId: "cell:c9:v1", code: "checksum-mismatch", message: "corrupt", notice: "no exterior geometry is shown" },
+      { kind: "base-massing", cellId: "c8", cellReleaseId: "cell:c8:v1", code: "checksum-mismatch", message: "corrupt", notice: "base massing" },
+    ],
+  });
+
+  it("renders only verified cells and gives each cell one stable entity per canonical feature", () => {
+    const entries = exteriorOverlayRenderEntries(overlayFor("lod-0", "b".repeat(64), "inspection"));
+    expect(entries).toHaveLength(1);
+    expect(entries[0]!.entityId).toBe(exteriorCellEntityId("c1", canonicalId));
+    expect(entries[0]!.canonicalFeatureId).toBe(canonicalId);
+    expect(exteriorOverlayRenderEntries(null)).toEqual([]);
+  });
+
+  it("keeps entity identity and provenance byte-identical across a profile change", () => {
+    const inspection = exteriorOverlayRenderEntries(overlayFor("lod-0", "b".repeat(64), "inspection"))[0]!;
+    const exploration = exteriorOverlayRenderEntries(overlayFor("lod-1", "c".repeat(64), "exploration"))[0]!;
+    expect(exploration.entityId).toBe(inspection.entityId);
+    expect(exploration.canonicalFeatureId).toBe(inspection.canonicalFeatureId);
+    expect(exploration.cellReleaseId).toBe(inspection.cellReleaseId);
+    expect(exploration.provenance).toEqual(inspection.provenance);
+    expect(exploration.lodId).not.toBe(inspection.lodId);
+    expect(exteriorCellSignature([exploration])).not.toBe(exteriorCellSignature([inspection]));
+    expect(exteriorCellSignature([inspection])).toBe(exteriorCellSignature([inspection]));
+  });
+
+  it("resolves an exterior pick to its base canonical feature ahead of the public-realm proxy branch", () => {
+    const denseFeatureMap = new Map([[canonicalId, baseFeature]]);
+    const adapter = { getFeature: () => undefined };
+    const entityId = exteriorCellEntityId("c1", canonicalId);
+    const pickMap = new Map([[entityId, canonicalId]]);
+
+    // The exterior primitive resolves through the existing canonical cascade to
+    // the same base feature, so it is answered in the base-feature branch.
+    expect(canonicalExteriorPickId(entityId, pickMap)).toBe(canonicalId);
+    expect(featureForPickedId(canonicalExteriorPickId(entityId, pickMap), denseFeatureMap, adapter)).toBe(baseFeature);
+
+    // A public-realm proxy in the same drill pick is untouched and stays in the
+    // later, lower-precedence branch.
+    const proxyId = publicRealmProxyId("crosswalk:intersection-1");
+    expect(canonicalExteriorPickId(proxyId, pickMap)).toBe(proxyId);
+    expect(featureForPickedId(canonicalExteriorPickId(proxyId, pickMap), denseFeatureMap, adapter)).toBeUndefined();
+  });
+
+  it("keeps the exterior pick identity stable across LOD and profile swaps", () => {
+    const inspection = exteriorOverlayRenderEntries(overlayFor("lod-0", "b".repeat(64), "inspection"))[0]!;
+    const exploration = exteriorOverlayRenderEntries(overlayFor("lod-1", "c".repeat(64), "exploration"))[0]!;
+    const pickMap = new Map([[inspection.entityId, inspection.canonicalFeatureId]]);
+    expect(canonicalExteriorPickId(exploration.entityId, pickMap)).toBe(canonicalId);
+    expect(canonicalExteriorPickId(inspection.entityId, pickMap)).toBe(canonicalId);
+  });
+});
+
+describe("exterior overlay owned-collection reducer", () => {
+  const provenance = {
+    inventoryId: "inventory:1",
+    inventoryHashSha256: "a".repeat(64),
+    evidenceShardId: "evidence:1",
+    truthTiers: ["generated" as const],
+    sourceDates: { capturedAt: null, updatedAt: null },
+    predecessor: null,
+    uncertainty: "Generated exterior geometry; not observed real-world truth.",
+  };
+  const entry = (cellId: string, canonicalFeatureId: string, lodId = "lod-0", checksumSha256 = "b".repeat(64)) => ({
+    entityId: exteriorCellEntityId(cellId, canonicalFeatureId),
+    cellId,
+    cellReleaseId: `cell:${cellId}:v1`,
+    representation: "head" as const,
+    canonicalFeatureId,
+    lodId,
+    checksumSha256,
+    byteSize: 240,
+    bytes: new Uint8Array([1, 2, 3]),
+    geometricErrorMeters: 0,
+    provenance,
+  });
+  const anchor = { longitude: -73.9857, latitude: 40.7484, name: "base building" };
+  const anchorAll = () => anchor;
+
+  it("adds each cell once and retains an unchanged complete cell without re-adding it", () => {
+    const entries = [entry("c1", "doitt:778052"), entry("c2", "doitt:982383")];
+    const first = planExteriorOverlayUpdate(entries, new Map(), anchorAll);
+    expect(first.addCells.map((cell) => cell.cellId)).toEqual(["c1", "c2"]);
+    expect(first.addCells.every((cell) => cell.complete)).toBe(true);
+    expect(first.removeEntityIds).toEqual([]);
+    expect(first.unanchoredCanonicalFeatureIds).toEqual([]);
+
+    const owned = new Map(first.addCells.map((cell) => [cell.cellId, {
+      entityIds: cell.adds.map(({ entry: added }) => added.entityId),
+      objectUrls: cell.adds.map(({ entry: added }) => `blob:${added.entityId}`),
+      signature: cell.signature,
+      complete: cell.complete,
+    }]));
+    const second = planExteriorOverlayUpdate(entries, owned, anchorAll);
+    expect(second.retainedCellIds).toEqual(["c1", "c2"]);
+    expect(second.addCells).toEqual([]);
+    expect(second.removeEntityIds).toEqual([]);
+    expect(second.revokeObjectUrls).toEqual([]);
+  });
+
+  it("retries a cell whose verified asset had no base anchor instead of memoizing the gap", () => {
+    const entries = [entry("c1", "doitt:778052")];
+    const first = planExteriorOverlayUpdate(entries, new Map(), () => null);
+    expect(first.addCells[0]!.adds).toEqual([]);
+    expect(first.addCells[0]!.complete).toBe(false);
+    expect(first.addCells[0]!.unanchoredCanonicalFeatureIds).toEqual(["doitt:778052"]);
+    expect(first.unanchoredCanonicalFeatureIds).toEqual(["doitt:778052"]);
+
+    // Same entries, same signature, but the cell was recorded incomplete: the
+    // next pass must retry rather than retain, so a later dense-map load wins.
+    const owned = new Map([["c1", { entityIds: [], objectUrls: [], signature: first.addCells[0]!.signature, complete: false }]]);
+    const retry = planExteriorOverlayUpdate(entries, owned, anchorAll);
+    expect(retry.retainedCellIds).toEqual([]);
+    expect(retry.addCells[0]!.complete).toBe(true);
+    expect(retry.addCells[0]!.adds).toHaveLength(1);
+    expect(retry.unanchoredCanonicalFeatureIds).toEqual([]);
+  });
+
+  it("replaces exactly one cell and revokes only that cell's object URLs", () => {
+    const before = [entry("c1", "doitt:778052"), entry("c2", "doitt:982383")];
+    const owned = new Map(before.map((added) => [added.cellId, {
+      entityIds: [added.entityId],
+      objectUrls: [`blob:${added.entityId}`],
+      signature: exteriorCellSignature([added]),
+      complete: true,
+    }]));
+    const after = [entry("c1", "doitt:778052", "lod-1", "c".repeat(64)), entry("c2", "doitt:982383")];
+    const plan = planExteriorOverlayUpdate(after, owned, anchorAll);
+    expect(plan.retainedCellIds).toEqual(["c2"]);
+    expect(plan.removeCellIds).toEqual(["c1"]);
+    expect(plan.removeEntityIds).toEqual([exteriorCellEntityId("c1", "doitt:778052")]);
+    expect(plan.revokeObjectUrls).toEqual([`blob:${exteriorCellEntityId("c1", "doitt:778052")}`]);
+    expect(plan.addCells.map((cell) => cell.cellId)).toEqual(["c1"]);
+  });
+
+  it("removes and revokes a cell that failed closed and is no longer rendered", () => {
+    const owned = new Map([["c1", { entityIds: ["exterior-cell:c1:doitt:778052"], objectUrls: ["blob:one", "blob:two"], signature: "stale", complete: true }]]);
+    const plan = planExteriorOverlayUpdate([], owned, anchorAll);
+    expect(plan.removeCellIds).toEqual(["c1"]);
+    expect(plan.removeEntityIds).toEqual(["exterior-cell:c1:doitt:778052"]);
+    expect(plan.revokeObjectUrls).toEqual(["blob:one", "blob:two"]);
+    expect(plan.addCells).toEqual([]);
+    expect(plan.retainedCellIds).toEqual([]);
+  });
+
+  it("states plainly when verified geometry is withheld for want of an anchor", () => {
+    expect(exteriorUnanchoredNotice([])).toBeNull();
+    const notice = exteriorUnanchoredNotice(["doitt:778052"]);
+    expect(notice).toContain("doitt:778052");
+    expect(notice).toContain("1 verified building");
+    expect(notice).toContain("no verified WGS84 anchor");
+    expect(exteriorUnanchoredNotice(["a", "b"])).toContain("2 verified buildings");
   });
 });

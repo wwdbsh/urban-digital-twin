@@ -53,7 +53,10 @@ vi.mock("../features/explorer/CesiumViewport", async () => {
     );
   };
 
+  const actual = await vi.importActual("../features/explorer/CesiumViewport") as Record<string, unknown>;
+
   return {
+    ...actual,
     CesiumViewport: MockCesiumViewport,
     medianFrameInterval: (values: readonly number[]) => values.length === 0 ? null : values[0] ?? null,
     shouldFocusFeature: (feature: Pick<Feature, "attributes"> | null | undefined) => Boolean(feature && feature.attributes.civicNoMarker !== true && feature.attributes.citywideNoMarker !== true),
@@ -65,7 +68,7 @@ vi.mock("../runtime/exterior-pilot-release", async (importOriginal) => {
   return { ...actual, loadExteriorPilotRelease: exteriorRuntimeMocks.loadExteriorPilotRelease };
 });
 
-import { App, appendBlock835PublicRealmUrl, applyStorefrontResolution, block835PerformanceGate, block835PerformanceProbeMode, block835PublicRealmActivation, block835PublicRealmFailureMessage, isCurrentStorefrontResolution, overlayLayoutPolicy, preserveFeatureSequence, resolveStorefrontBuilding, selectionFocusTransaction, summarizeBlock835Frames, type StorefrontResolutionState } from "./App";
+import { App, appendBlock835PublicRealmUrl, appendExteriorProfileUrl, exteriorDeepLinkMessage, exteriorSnapshotOriginLabel, exteriorStreamingActivation, exteriorStreamingFailureMessage, exteriorStreamingNotices, parseExteriorStreamingUrl, applyStorefrontResolution, block835PerformanceGate, block835PerformanceProbeMode, block835PublicRealmActivation, block835PublicRealmFailureMessage, isCurrentStorefrontResolution, overlayLayoutPolicy, preserveFeatureSequence, resolveStorefrontBuilding, selectionFocusTransaction, summarizeBlock835Frames, type StorefrontResolutionState } from "./App";
 import { navigationUrl, parseNavigationUrl } from "../domain/visitor-navigation";
 
 const initialTestUrl = window.location.href;
@@ -448,5 +451,155 @@ describe("App overlay and selection regressions", () => {
     render(<App />);
     await waitFor(() => expect(exteriorRuntimeMocks.loadExteriorPilotRelease).toHaveBeenCalled());
     expect(exteriorRuntimeMocks.loadExteriorPilotRelease.mock.calls[0]?.[2]).toBeUndefined();
+  });
+});
+
+describe("exterior streaming profiles and canary state", () => {
+  const canonicalUrl = (overlayState: { requested: boolean; profile: "exploration" | "inspection"; canarySnapshotId: string | null }) =>
+    appendExteriorProfileUrl(
+      appendBlock835PublicRealmUrl(
+        navigationUrl({ featureId: "doitt:778052", query: "empire", cameraMode: "explore", pose: { longitude: -73.99, latitude: 40.748, height: 700, heading: 15, pitch: -35, roll: 0 }, poseInvalid: false, dataMode: "civic-context", releaseId: "manhattan-civic-context-20260804" }, initialTestUrl),
+        true,
+        "crosswalk:intersection-1",
+      ),
+      overlayState,
+    );
+
+  it("preserves every base and public-realm parameter when profile and canary parameters are appended", () => {
+    const base = new URL(canonicalUrl({ requested: false, profile: "exploration", canarySnapshotId: null }));
+    const withProfile = new URL(canonicalUrl({ requested: true, profile: "inspection", canarySnapshotId: "snapshot:v3" }));
+    for (const key of ["feature", "q", "camera", "lon", "lat", "height", "heading", "pitch", "roll", "data", "release", "publicRealm", "publicRealmFeature"]) {
+      expect(withProfile.searchParams.get(key), key).toBe(base.searchParams.get(key));
+    }
+    expect(withProfile.searchParams.get("exteriorCells")).toBe("udt-fixture-exterior-cells");
+    expect(withProfile.searchParams.get("exteriorProfile")).toBe("inspection");
+    expect(withProfile.searchParams.get("exteriorCanary")).toBe("snapshot:v3");
+  });
+
+  it("changes only the profile parameter when the render profile switches", () => {
+    const exploration = new URL(canonicalUrl({ requested: true, profile: "exploration", canarySnapshotId: null }));
+    const inspection = new URL(canonicalUrl({ requested: true, profile: "inspection", canarySnapshotId: null }));
+    const difference = [...inspection.searchParams.keys()].filter((key) => inspection.searchParams.get(key) !== exploration.searchParams.get(key));
+    expect(difference).toEqual(["exteriorProfile"]);
+    expect([...inspection.searchParams.keys()].sort()).toEqual([...exploration.searchParams.keys()].sort());
+  });
+
+  it("round-trips profile and canary state and clears both when streaming is disabled", () => {
+    const enabled = canonicalUrl({ requested: true, profile: "inspection", canarySnapshotId: "snapshot:v3" });
+    expect(parseExteriorStreamingUrl(enabled)).toEqual({ requested: true, profile: "inspection", canarySnapshotId: "snapshot:v3" });
+    const disabled = new URL(appendExteriorProfileUrl(enabled, { requested: false, profile: "inspection", canarySnapshotId: "snapshot:v3" }));
+    expect(disabled.searchParams.has("exteriorCells")).toBe(false);
+    expect(disabled.searchParams.has("exteriorProfile")).toBe(false);
+    expect(disabled.searchParams.has("exteriorCanary")).toBe(false);
+    expect(disabled.searchParams.get("publicRealm")).toBe("manhattan-esb-block-public-realm-20260806");
+    expect(disabled.searchParams.get("feature")).toBe("doitt:778052");
+  });
+
+  it("ignores an unknown exterior release ID and an unsupported profile instead of guessing", () => {
+    expect(parseExteriorStreamingUrl("/?exteriorCells=manhattan-exterior-production&exteriorProfile=inspection")).toEqual({ requested: false, profile: "exploration", canarySnapshotId: null });
+    expect(parseExteriorStreamingUrl("/?exteriorCells=udt-fixture-exterior-cells&exteriorProfile=cinematic")).toEqual({ requested: true, profile: "exploration", canarySnapshotId: null });
+    expect(parseExteriorStreamingUrl("/?exteriorCanary=snapshot:v3")).toEqual({ requested: false, profile: "exploration", canarySnapshotId: null });
+  });
+
+  it("fails closed when exterior streaming has no compatible active base release", () => {
+    expect(exteriorStreamingActivation({ requested: true, loadState: "ready", hasVerifiedRuntime: true, activeBaseReleaseId: null, compatibleWithActiveBase: false }))
+      .toEqual({ active: false, prerequisiteMessage: expect.stringContaining("requires an active base release") });
+    expect(exteriorStreamingActivation({ requested: true, loadState: "ready", hasVerifiedRuntime: true, activeBaseReleaseId: "manhattan-citywide-20260804", compatibleWithActiveBase: false }).active).toBe(false);
+    expect(exteriorStreamingActivation({ requested: true, loadState: "failed", hasVerifiedRuntime: false, activeBaseReleaseId: "manhattan-citywide-20260804", compatibleWithActiveBase: true }))
+      .toEqual({ active: false, prerequisiteMessage: null });
+    expect(exteriorStreamingActivation({ requested: true, loadState: "ready", hasVerifiedRuntime: true, activeBaseReleaseId: "manhattan-citywide-20260804", compatibleWithActiveBase: true }))
+      .toEqual({ active: true, prerequisiteMessage: null });
+  });
+
+  it("keeps an exterior streaming failure from implying the base or Stage 3 state changed", () => {
+    expect(exteriorStreamingFailureMessage(new Error("Exterior runtime request failed (404)."))).toBe(
+      "Exterior runtime request failed (404). Exterior streaming was disabled; the existing base/exterior state was left unchanged.",
+    );
+    expect(exteriorStreamingFailureMessage(null)).toContain("the existing base/exterior state was left unchanged");
+  });
+
+  it("surfaces one explicit notice for every cell that did not render its pinned head", () => {
+    const notices = exteriorStreamingNotices("canary not pinned here", [
+      { kind: "rendered", cellId: "c1", cellReleaseId: "cell:c1:v1", cellReleaseVersion: "v1", assemblyPackageId: "assembly:cell:c1:v1", representation: "predecessor", assets: [], notice: "predecessor is shown instead" },
+      { kind: "rendered", cellId: "c2", cellReleaseId: "cell:c2:v1", cellReleaseVersion: "v1", assemblyPackageId: "assembly:cell:c2:v1", representation: "head", assets: [], notice: null },
+      { kind: "base-massing", cellId: "c3", cellReleaseId: "cell:c3:v1", code: "checksum-mismatch", message: "corrupt", notice: "base massing remains for c3" },
+      { kind: "failed", cellId: "c4", cellReleaseId: "cell:c4:v1", code: "checksum-mismatch", message: "corrupt", notice: "no exterior geometry for c4" },
+    ]);
+    expect(notices).toEqual([
+      "canary not pinned here",
+      "predecessor is shown instead",
+      "base massing remains for c3",
+      "no exterior geometry for c4",
+    ]);
+    expect(exteriorStreamingNotices(null, [])).toEqual([]);
+  });
+
+  it("labels the release origin so a canary is never mistaken for the default head", () => {
+    expect(exteriorSnapshotOriginLabel("default", "snapshot:v2")).toBe("Default pinned snapshot snapshot:v2");
+    expect(exteriorSnapshotOriginLabel("canary", "snapshot:v3")).toContain("Canary snapshot snapshot:v3");
+    expect(exteriorSnapshotOriginLabel("canary", "snapshot:v3")).toContain("explicitly selected");
+  });
+
+  it("renders the profile controls disabled until the exterior runtime is genuinely active", async () => {
+    render(<App />);
+    const controls = await waitFor(() => {
+      const element = document.querySelector<HTMLElement>("[aria-label='Exterior streaming and render profile']");
+      expect(element).not.toBeNull();
+      return element!;
+    });
+    expect(within(controls).getByRole("button", { name: "Enable exterior streaming" })).toBeEnabled();
+    expect(within(controls).getByRole("button", { name: "Inspection profile" })).toBeDisabled();
+    expect(within(controls).getByRole("button", { name: "Exploration profile" })).toBeDisabled();
+    expect(within(controls).getByRole("button", { name: "Exploration profile" })).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("keeps the exterior deep link and shows an explicit notice when the local release is absent", async () => {
+    window.history.replaceState({}, "", "/?exteriorCells=udt-fixture-exterior-cells&exteriorProfile=inspection");
+    render(<App />);
+    const notice = await waitFor(() => {
+      const element = [...document.querySelectorAll<HTMLElement>(".runtime-note [role='status']")].find((candidate) => candidate.textContent?.includes("Exterior streaming"));
+      expect(element).toBeDefined();
+      return element!;
+    });
+    expect(notice.textContent).toContain("Exterior streaming");
+    expect(new URL(window.location.href).searchParams.get("exteriorCells")).toBe("udt-fixture-exterior-cells");
+  });
+});
+
+describe("exterior streaming deep-link and anchor honesty", () => {
+  it("names an exterior release this build does not pin instead of degrading silently", () => {
+    const message = exteriorDeepLinkMessage("/?exteriorCells=manhattan-exterior-production-20270101&exteriorProfile=inspection");
+    expect(message).toContain("manhattan-exterior-production-20270101");
+    expect(message).toContain("is not pinned by this build");
+    expect(message).toContain("udt-fixture-exterior-cells");
+    expect(exteriorDeepLinkMessage("/?exteriorCells=udt-fixture-exterior-cells&exteriorProfile=inspection")).toBeNull();
+    expect(exteriorDeepLinkMessage("/?feature=doitt:778052")).toBeNull();
+  });
+
+  it("names an unsupported render profile instead of quietly using the default", () => {
+    const message = exteriorDeepLinkMessage("/?exteriorCells=udt-fixture-exterior-cells&exteriorProfile=cinematic");
+    expect(message).toContain("cinematic");
+    expect(message).toContain("exploration");
+  });
+
+  it("shows the unrecognized-release notice in the live app without changing the rest of the view", async () => {
+    window.history.replaceState({}, "", "/?exteriorCells=manhattan-exterior-production-20270101");
+    render(<App />);
+    const alert = await waitFor(() => {
+      const element = [...document.querySelectorAll<HTMLElement>("[role='alert']")].find((candidate) => candidate.textContent?.includes("is not pinned by this build"));
+      expect(element).toBeDefined();
+      return element!;
+    });
+    expect(alert.textContent).toContain("manhattan-exterior-production-20270101");
+  });
+
+  it("reports verified geometry withheld for want of a base anchor as an explicit notice", () => {
+    const notices = exteriorStreamingNotices(null, [
+      { kind: "rendered", cellId: "c1", cellReleaseId: "cell:c1:v1", cellReleaseVersion: "v1", assemblyPackageId: "assembly:cell:c1:v1", representation: "head", assets: [], notice: null },
+    ], ["doitt:778052"]);
+    expect(notices).toHaveLength(1);
+    expect(notices[0]).toContain("doitt:778052");
+    expect(notices[0]).toContain("no verified WGS84 anchor");
+    expect(exteriorStreamingNotices(null, [], [])).toEqual([]);
   });
 });

@@ -39,6 +39,8 @@ import type { CameraPose } from "../../domain/visitor-navigation";
 import type { CityAssetResolver } from "../../runtime/city-asset-manifest";
 import { EXTERIOR_PILOT_RELEASE_ID, type CommercialStorefrontPlacement, type LoadedExteriorPilotRelease } from "../../runtime/exterior-pilot-release";
 import { publicRealmFeatureToFeature, type Block835PublicRealmFeature, type LoadedBlock835PublicRealmRelease } from "../../runtime/block835-public-realm-release";
+import type { ExteriorCellOutcome, ExteriorCellRenderPlan } from "../../runtime/exterior-cell-runtime";
+import type { ExteriorRenderProfile } from "../../runtime/exterior-render-profiles";
 import {
   viewportFootprintFromGroundPoints,
   viewportBoundsIntersect,
@@ -74,7 +76,23 @@ interface CesiumViewportProps {
   onStorefrontSelected?: (placement: CommercialStorefrontPlacement) => void;
   publicRealmOverlay?: LoadedBlock835PublicRealmRelease | null;
   onPublicRealmSelected?: (feature: Block835PublicRealmFeature) => void;
+  exteriorOverlay?: ExteriorCellOverlay | null;
+  onExteriorUnanchored?: (canonicalFeatureIds: string[]) => void;
   onStage3RenderProof?: (proof: Stage3RenderProof | null) => void;
+}
+
+/**
+ * Verified exterior cells handed to the viewport as bytes, not paths. The
+ * runtime already checksum-verified and canonically bound every GLB, so the
+ * viewport must never re-resolve an artifact by path (a second fetch would
+ * reopen a time-of-check/time-of-use gap and escape the request accounting).
+ */
+export interface ExteriorCellOverlay {
+  releaseId: string;
+  snapshotId: string;
+  origin: "default" | "canary";
+  profile: ExteriorRenderProfile;
+  cells: readonly ExteriorCellOutcome[];
 }
 
 export interface DenseRenderMetrics {
@@ -190,6 +208,152 @@ export function publicRealmRepresentative(feature: Block835PublicRealmFeature): 
   };
   walk(feature.geometry.coordinates);
   return result;
+}
+
+/**
+ * Stable across LOD and profile swaps: the LOD is a rendering choice, not an
+ * identity, so it never enters the entity ID or the pick path.
+ */
+export function exteriorCellEntityId(cellId: string, canonicalFeatureId: string): string {
+  return `exterior-cell:${cellId}:${canonicalFeatureId}`;
+}
+
+export interface ExteriorCellRenderEntry {
+  entityId: string;
+  cellId: string;
+  cellReleaseId: string;
+  representation: ExteriorCellRenderPlan["representation"];
+  canonicalFeatureId: string;
+  lodId: string;
+  checksumSha256: string;
+  byteSize: number;
+  bytes: Uint8Array;
+  geometricErrorMeters: number;
+  provenance: ExteriorCellRenderPlan["assets"][number]["provenance"];
+}
+
+/** Only cells the runtime actually verified reach the scene; failures render nothing. */
+export function exteriorOverlayRenderEntries(overlay: ExteriorCellOverlay | null | undefined): ExteriorCellRenderEntry[] {
+  if (!overlay) return [];
+  return overlay.cells
+    .filter((cell): cell is ExteriorCellRenderPlan => cell.kind === "rendered")
+    .flatMap((cell) => cell.assets.map((asset) => ({
+      entityId: exteriorCellEntityId(cell.cellId, asset.canonicalFeatureId),
+      cellId: cell.cellId,
+      cellReleaseId: cell.cellReleaseId,
+      representation: cell.representation,
+      canonicalFeatureId: asset.canonicalFeatureId,
+      lodId: asset.lodId,
+      checksumSha256: asset.checksumSha256,
+      byteSize: asset.byteSize,
+      bytes: asset.bytes,
+      geometricErrorMeters: asset.geometricErrorMeters,
+      provenance: asset.provenance,
+    })))
+    .sort((left, right) => (left.entityId < right.entityId ? -1 : left.entityId > right.entityId ? 1 : 0));
+}
+
+/** Diff key for one cell's owned collection; a change replaces exactly that cell. */
+export function exteriorCellSignature(entries: readonly ExteriorCellRenderEntry[]): string {
+  return entries.map((entry) => `${entry.entityId}|${entry.cellReleaseId}|${entry.representation}|${entry.lodId}|${entry.checksumSha256}`).join(";");
+}
+
+export interface ExteriorOverlayAnchor {
+  longitude: number;
+  latitude: number;
+  name: string;
+}
+
+export interface ExteriorOwnedCellCollection {
+  entityIds: string[];
+  objectUrls: string[];
+  signature: string;
+  /**
+   * False when at least one verified asset of this cell had no resolvable base
+   * anchor on the pass that built it. An incomplete cell is never retained, so
+   * a later pass retries it once the base feature is available.
+   */
+  complete: boolean;
+}
+
+export interface ExteriorOverlayCellPlan {
+  cellId: string;
+  signature: string;
+  complete: boolean;
+  adds: Array<{ entry: ExteriorCellRenderEntry; anchor: ExteriorOverlayAnchor }>;
+  unanchoredCanonicalFeatureIds: string[];
+}
+
+export interface ExteriorOverlayPlan {
+  removeCellIds: string[];
+  removeEntityIds: string[];
+  revokeObjectUrls: string[];
+  retainedCellIds: string[];
+  addCells: ExteriorOverlayCellPlan[];
+  unanchoredCanonicalFeatureIds: string[];
+}
+
+/**
+ * Pure diff between the currently owned per-cell collections and the verified
+ * entries the runtime produced. Keeping this outside the imperative Cesium
+ * effect makes the retry, isolation, and object-URL revocation rules testable.
+ */
+export function planExteriorOverlayUpdate(
+  entries: readonly ExteriorCellRenderEntry[],
+  owned: ReadonlyMap<string, ExteriorOwnedCellCollection>,
+  anchorFor: (entry: ExteriorCellRenderEntry) => ExteriorOverlayAnchor | null,
+): ExteriorOverlayPlan {
+  const byCell = new Map<string, ExteriorCellRenderEntry[]>();
+  for (const entry of entries) byCell.set(entry.cellId, [...(byCell.get(entry.cellId) ?? []), entry]);
+  const removeCellIds: string[] = [];
+  const removeEntityIds: string[] = [];
+  const revokeObjectUrls: string[] = [];
+  const retainedCellIds: string[] = [];
+  for (const [cellId, collection] of owned) {
+    const next = byCell.get(cellId);
+    if (next && collection.complete && collection.signature === exteriorCellSignature(next)) { retainedCellIds.push(cellId); continue; }
+    removeCellIds.push(cellId);
+    removeEntityIds.push(...collection.entityIds);
+    revokeObjectUrls.push(...collection.objectUrls);
+  }
+  const retained = new Set(retainedCellIds);
+  const addCells: ExteriorOverlayCellPlan[] = [];
+  const unanchored: string[] = [];
+  for (const [cellId, cellEntries] of byCell) {
+    if (retained.has(cellId)) continue;
+    const adds: ExteriorOverlayCellPlan["adds"] = [];
+    const missing: string[] = [];
+    for (const entry of cellEntries) {
+      const anchor = anchorFor(entry);
+      if (anchor) adds.push({ entry, anchor });
+      else missing.push(entry.canonicalFeatureId);
+    }
+    unanchored.push(...missing);
+    addCells.push({ cellId, signature: exteriorCellSignature(cellEntries), complete: missing.length === 0, adds, unanchoredCanonicalFeatureIds: missing });
+  }
+  return { removeCellIds, removeEntityIds, revokeObjectUrls, retainedCellIds, addCells, unanchoredCanonicalFeatureIds: [...new Set(unanchored)].sort() };
+}
+
+/** One explicit line naming verified geometry that was withheld for want of an anchor. */
+export function exteriorUnanchoredNotice(canonicalFeatureIds: readonly string[]): string | null {
+  if (canonicalFeatureIds.length === 0) return null;
+  return `Exterior geometry for ${canonicalFeatureIds.length} verified building${canonicalFeatureIds.length === 1 ? "" : "s"} (${canonicalFeatureIds.join(", ")}) is not drawn: the matching base building record is not loaded, so there is no verified WGS84 anchor for it. It will be drawn once that base record loads.`;
+}
+
+/**
+ * Exterior canonical feature IDs are base building IDs, so an exterior pick
+ * resolves through the existing canonical cascade to the same base feature the
+ * dense layer would have produced. Pick precedence therefore stays exactly:
+ * storefront proxy, then base feature (including exterior geometry), then
+ * public-realm proxy. This helper only translates an exterior entity ID; it
+ * does not reorder the cascade.
+ */
+export function canonicalExteriorPickId(pickedId: string, exteriorPickMap: ReadonlyMap<string, string>): string {
+  return exteriorPickMap.get(pickedId) ?? pickedId;
+}
+
+export function exteriorModelObjectUrl(bytes: Uint8Array): string {
+  return URL.createObjectURL(new Blob([new Uint8Array(bytes) as unknown as BlobPart], { type: "model/gltf-binary" }));
 }
 
 /** Cesium drill picks may expose an Entity object under `id` rather than its string id. */
@@ -1158,6 +1322,8 @@ export function CesiumViewport({
   onStorefrontSelected,
   publicRealmOverlay = null,
   onPublicRealmSelected,
+  exteriorOverlay = null,
+  onExteriorUnanchored,
   onStage3RenderProof,
 }: CesiumViewportProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -1197,6 +1363,11 @@ export function CesiumViewport({
   const ownedEntityIdsRef = useRef(new Set<string>());
   const storefrontPickMapRef = useRef(new Map<string, CommercialStorefrontPlacement>());
   const publicRealmPickMapRef = useRef(new Map<string, Block835PublicRealmFeature>());
+  const exteriorPickMapRef = useRef(new Map<string, string>());
+  const exteriorCellCollectionsRef = useRef(new Map<string, ExteriorOwnedCellCollection>());
+  const exteriorUnanchoredRef = useRef<string>("");
+  const onExteriorUnanchoredRef = useRef(onExteriorUnanchored);
+  onExteriorUnanchoredRef.current = onExteriorUnanchored;
   const suppressCameraEventsUntilRef = useRef(0);
   const lastValidFootprintRef = useRef<ViewportFootprint | null>(viewportFootprint?.valid ? viewportFootprint : null);
   const cameraSettledEmitterRef = useRef<(() => void) | null>(null);
@@ -1257,7 +1428,7 @@ export function CesiumViewport({
       if (!entity || typeof entity.id !== "string") return;
       const storefront = storefrontPickMapRef.current.get(entity.id);
       if (storefront) { onStorefrontSelectedRef.current?.(storefront); return; }
-      const feature = featureForPickedId(entity.id, denseFeatureMapRef.current, adapterRef.current);
+      const feature = featureForPickedId(canonicalExteriorPickId(entity.id, exteriorPickMapRef.current), denseFeatureMapRef.current, adapterRef.current);
       if (feature) onFeatureSelectedRef.current(feature);
       else {
         const publicRealmFeature = publicRealmPickMapRef.current.get(entity.id);
@@ -1273,7 +1444,9 @@ export function CesiumViewport({
       if (storefront) { onStorefrontSelectedRef.current?.(storefront); return; }
       const pickedFeatures = [...new Map(picks.map((picked) => {
         const pickedId = drillPickedEntityId(picked);
-        return pickedId ? [canonicalPickId(pickedId), featureForPickedId(pickedId, denseFeatureMapRef.current, adapterRef.current)] as const : ["", undefined] as const;
+        if (!pickedId) return ["", undefined] as const;
+        const canonicalId = canonicalExteriorPickId(pickedId, exteriorPickMapRef.current);
+        return [canonicalPickId(canonicalId), featureForPickedId(canonicalId, denseFeatureMapRef.current, adapterRef.current)] as const;
       }).filter((entry): entry is readonly [string, Feature] => Boolean(entry[0] && entry[1]))).values()];
       if (pickedFeatures.length > 1) {
         onFeatureOverlapRef.current?.(pickedFeatures);
@@ -1293,7 +1466,7 @@ export function CesiumViewport({
       }
       const picked = viewer.scene.pick(movement.position) as { id?: unknown } | undefined;
       const pickedId = drillPickedEntityId(picked);
-      const feature = featureForPickedId(pickedId, denseFeatureMapRef.current, adapterRef.current) ?? pickedFeatures[0];
+      const feature = featureForPickedId(pickedId === null ? null : canonicalExteriorPickId(pickedId, exteriorPickMapRef.current), denseFeatureMapRef.current, adapterRef.current) ?? pickedFeatures[0];
       if (feature) onFeatureSelectedRef.current(feature);
       else if (pickedId) {
         const publicRealmFeature = publicRealmPickMapRef.current.get(pickedId);
@@ -1332,6 +1505,9 @@ export function CesiumViewport({
       ownedEntityIdsRef.current.clear();
       storefrontPickMapRef.current.clear();
       publicRealmPickMapRef.current.clear();
+      exteriorPickMapRef.current.clear();
+      for (const owned of exteriorCellCollectionsRef.current.values()) for (const objectUrl of owned.objectUrls) URL.revokeObjectURL(objectUrl);
+      exteriorCellCollectionsRef.current.clear();
       if (viewerRef.current === viewer) viewerRef.current = null;
       viewer.destroy();
     };
@@ -1625,6 +1801,71 @@ export function CesiumViewport({
     void loadVisibleFeatures();
     return () => { cancelled = true; };
   }, [adapter, assetResolver, commercialOverlay, denseFeatureGroups, denseFeatureGroupLimits, denseFeatureLimit, denseFeatures, denseRendering, featureFilter, itinerary, publicRealmOverlay, selectedFeatureId, viewportFootprint, visibleLayers.buildings, visibleLayers.pois, visibleLayers.areas, visibleLayers.stations, visibleLayers.entrances, visibleLayers.routes, visibleLayers["statistical-areas"], visibleLayers.parks, visibleLayers.landmarks]);
+
+  // Exterior cells own a per-cell collection with diff-and-replace discipline so
+  // one cell failing closed removes exactly that cell. Bytes come from the
+  // runtime already verified; the scene never refetches an artifact by path.
+  useEffect(() => {
+    const viewer = viewerRef.current;
+    if (!viewer) return undefined;
+    const owned = exteriorCellCollectionsRef.current;
+    // Exterior canonical feature IDs are base building IDs; CesiumJS keeps its
+    // WGS84 authority by anchoring on the base feature's own coordinates.
+    const plan = planExteriorOverlayUpdate(exteriorOverlayRenderEntries(exteriorOverlay), owned, (entry) => {
+      const baseFeature = featureForPickedId(entry.canonicalFeatureId, denseFeatureMapRef.current, adapterRef.current);
+      return baseFeature ? { longitude: baseFeature.coordinates[0], latitude: baseFeature.coordinates[1], name: baseFeature.name } : null;
+    });
+    for (const entityId of plan.removeEntityIds) {
+      viewer.entities.removeById(entityId);
+      exteriorPickMapRef.current.delete(entityId);
+    }
+    for (const objectUrl of plan.revokeObjectUrls) URL.revokeObjectURL(objectUrl);
+    for (const cellId of plan.removeCellIds) owned.delete(cellId);
+    for (const cell of plan.addCells) {
+      const entityIds: string[] = [];
+      const objectUrls: string[] = [];
+      for (const { entry, anchor } of cell.adds) {
+        const objectUrl = exteriorModelObjectUrl(entry.bytes);
+        objectUrls.push(objectUrl);
+        const position = Cartesian3.fromDegrees(anchor.longitude, anchor.latitude, 0);
+        const enuRotation = Matrix4.getMatrix3(Transforms.eastNorthUpToFixedFrame(position), new Matrix3());
+        viewer.entities.removeById(entry.entityId);
+        const entity = viewer.entities.add({
+          id: entry.entityId,
+          name: anchor.name,
+          position,
+          orientation: Quaternion.fromRotationMatrix(enuRotation),
+          model: new ModelGraphics({ uri: objectUrl, scale: 1, minimumPixelSize: 1 }),
+          properties: {
+            canonicalFeatureId: entry.canonicalFeatureId,
+            exteriorReleaseId: exteriorOverlay?.releaseId ?? null,
+            exteriorSnapshotId: exteriorOverlay?.snapshotId ?? null,
+            exteriorSnapshotOrigin: exteriorOverlay?.origin ?? null,
+            exteriorProfile: exteriorOverlay?.profile ?? null,
+            exteriorCellId: cell.cellId,
+            exteriorCellReleaseId: entry.cellReleaseId,
+            exteriorRepresentation: entry.representation,
+            activeAssetLod: entry.lodId,
+            assetSha256: entry.checksumSha256,
+            geometricErrorMeters: entry.geometricErrorMeters,
+            uncertainty: entry.provenance.uncertainty,
+            localOnly: true,
+          },
+        });
+        if (typeof entity.id === "string") {
+          entityIds.push(entity.id);
+          exteriorPickMapRef.current.set(entity.id, entry.canonicalFeatureId);
+        }
+      }
+      owned.set(cell.cellId, { entityIds, objectUrls, signature: cell.signature, complete: cell.complete });
+    }
+    const unanchoredKey = plan.unanchoredCanonicalFeatureIds.join(",");
+    if (unanchoredKey !== exteriorUnanchoredRef.current) {
+      exteriorUnanchoredRef.current = unanchoredKey;
+      onExteriorUnanchoredRef.current?.(plan.unanchoredCanonicalFeatureIds);
+    }
+    return undefined;
+  }, [exteriorOverlay, viewerReadyGeneration, denseFeatures, adapter]);
 
   useEffect(() => {
     const container = containerRef.current;
