@@ -68,7 +68,7 @@ vi.mock("../runtime/exterior-pilot-release", async (importOriginal) => {
   return { ...actual, loadExteriorPilotRelease: exteriorRuntimeMocks.loadExteriorPilotRelease };
 });
 
-import { App, EXTERIOR_CELL_STREAMING_RELEASE_ID, PINNED_EXTERIOR_CELL_RELEASE_IDS, appendBlock835PublicRealmUrl, appendExteriorProfileUrl, exteriorCellBasePath, exteriorDeepLinkMessage, exteriorSnapshotOriginLabel, isPinnedExteriorCellRelease, exteriorStreamingActivation, exteriorStreamingFailureMessage, exteriorStreamingNotices, parseExteriorStreamingUrl, applyStorefrontResolution, block835PerformanceGate, block835PerformanceProbeMode, block835PublicRealmActivation, block835PublicRealmFailureMessage, isCurrentStorefrontResolution, overlayLayoutPolicy, preserveFeatureSequence, resolveStorefrontBuilding, selectionFocusTransaction, summarizeBlock835Frames, type StorefrontResolutionState } from "./App";
+import { App, EXTERIOR_CELL_STREAMING_RELEASE_ID, PINNED_EXTERIOR_CELL_RELEASE_IDS, appendBlock835PublicRealmUrl, appendExteriorProfileUrl, exteriorCellBasePath, exteriorCanarySnapshotMessage, exteriorDeepLinkMessage, exteriorSnapshotOriginLabel, isPinnedExteriorCellRelease, exteriorStreamingActivation, exteriorStreamingFailureMessage, exteriorStreamingNotices, parseExteriorStreamingUrl, applyStorefrontResolution, block835PerformanceGate, block835PerformanceProbeMode, block835PublicRealmActivation, block835PublicRealmFailureMessage, isCurrentStorefrontResolution, overlayLayoutPolicy, preserveFeatureSequence, resolveStorefrontBuilding, selectionFocusTransaction, summarizeBlock835Frames, type StorefrontResolutionState } from "./App";
 import { navigationUrl, parseNavigationUrl } from "../domain/visitor-navigation";
 
 const initialTestUrl = window.location.href;
@@ -644,5 +644,16 @@ describe("exterior streaming deep-link and anchor honesty", () => {
     expect(notices[0]).toContain("doitt:778052");
     expect(notices[0]).toContain("no verified WGS84 anchor");
     expect(exteriorStreamingNotices(null, [], [])).toEqual([]);
+  });
+
+  it("reports an exterior canary snapshot the loaded release cannot resolve", () => {
+    // manhattan-exterior-cells-20260811 ships an empty canaryHeads, so a canary
+    // deep link into it must say so instead of silently using the default head.
+    expect(exteriorCanarySnapshotMessage("manhattan-exterior-cells-20260811", "snapshot:does-not-exist", []))
+      .toBe("Exterior canary snapshot snapshot:does-not-exist is not available: release manhattan-exterior-cells-20260811 publishes no canary heads. The default pinned snapshot was used instead.");
+    expect(exteriorCanarySnapshotMessage("udt-fixture-exterior-cells", "snapshot:missing", ["snapshot:canary-a"]))
+      .toContain("Available canary snapshots are snapshot:canary-a");
+    // A resolvable canary snapshot produces no notice at all.
+    expect(exteriorCanarySnapshotMessage("udt-fixture-exterior-cells", "snapshot:canary-a", ["snapshot:canary-a"])).toBeNull();
   });
 });

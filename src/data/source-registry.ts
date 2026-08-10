@@ -195,6 +195,10 @@ export const sourceRegistry = [
     cadence: "OTI metadata (10/09/2025) says features are updated daily and publicly released weekly; portal page reports Updated July 18, 2026. Verify the exact snapshot release at ingest time.",
     retention: cityRetention,
     derivativePolicy: generatedGeometryConveyanceDerivative,
+    // Two independent gates, deliberately not merged. `access` still requires
+    // explicit approval before any NEW download or runtime integration of the
+    // raw dataset. The broadened derivative policy below governs only what may
+    // be done with geometry ALREADY generated from the retained snapshot.
     access: pendingAccess,
     geographicScope: "New York City building footprints and centroid companion layer",
     expectedCrs: "EPSG:4326",

@@ -598,6 +598,19 @@ export function exteriorDeepLinkMessage(href: string): string | null {
   return null;
 }
 
+/**
+ * A canary snapshot can only be resolved against the heads the loaded release
+ * actually publishes. `manhattan-exterior-cells-20260811` ships an empty
+ * `canaryHeads`, so any `exteriorCanary` deep link into it is unresolvable and
+ * must say so rather than silently falling back to the default head.
+ */
+export function exteriorCanarySnapshotMessage(releaseId: string, snapshotId: string, availableCanarySnapshotIds: readonly string[]): string | null {
+  if (availableCanarySnapshotIds.includes(snapshotId)) return null;
+  return availableCanarySnapshotIds.length === 0
+    ? `Exterior canary snapshot ${snapshotId} is not available: release ${releaseId} publishes no canary heads. The default pinned snapshot was used instead.`
+    : `Exterior canary snapshot ${snapshotId} is not published by release ${releaseId}; the default pinned snapshot was used instead. Available canary snapshots are ${availableCanarySnapshotIds.join(", ")}.`;
+}
+
 export function exteriorSnapshotOriginLabel(origin: "default" | "canary", snapshotId: string): string {
   return origin === "canary" ? `Canary snapshot ${snapshotId} (explicitly selected)` : `Default pinned snapshot ${snapshotId}`;
 }
@@ -1078,6 +1091,12 @@ export function App() {
       setExteriorHeadNotice(head.notice);
       setExteriorCellLoadState("ready");
       setExteriorCellMessage("");
+      // Only the loaded index knows which canary heads exist, so an
+      // unresolvable canary deep link is reported here rather than at parse time.
+      const requestedCanary = exteriorCanarySnapshotIdRef.current;
+      if (requestedCanary) {
+        setExteriorDeepLinkNotice(exteriorCanarySnapshotMessage(exteriorCellReleaseId, requestedCanary, runtime.index.canaryHeads.map((entry) => entry.snapshotId)));
+      }
     }).catch((error: unknown) => {
       if (controller.signal.aborted) return;
       setExteriorCellRuntime(null);

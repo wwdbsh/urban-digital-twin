@@ -14,6 +14,7 @@ import {
   successorPredecessorPins,
   type AssembledSuccessor,
 } from "./block835-successor-package";
+import { validateV2Plan } from "../domain/deterministic-facade-generator-v2";
 import {
   multiLodAssemblyFingerprint,
   replayMultiLodAssembly,
@@ -151,5 +152,20 @@ describe("Block 835 generative-completion successor package", () => {
     expect(serialized).not.toContain("facade-plan-v2");
     expect(serialized).not.toContain(DETERMINISTIC_FACADE_V2_UNCERTAINTY);
     for (const asset of previous.assets) expect(asset.evidenceShardId.startsWith(NO_EVIDENCE_SENTINEL_PREFIX)).toBe(true);
+  });
+
+  it("validates all 14 committed plans through the full V2 validator", () => {
+    // The ADR claims the shipped package inherits the containment/overlap guard.
+    // That is only true if the guard actually runs over the committed plans.
+    const planDir = "data/manhattan-esb-block-reference-20260811/plans/";
+    const index = JSON.parse(readText("data/manhattan-esb-block-reference-20260811/plan-index.json")) as { plans: Array<{ canonicalBuildingId: string; planHashSha256: string }> };
+    expect(index.plans).toHaveLength(14);
+    for (const entry of index.plans) {
+      const plan = JSON.parse(readText(`${planDir}${entry.canonicalBuildingId.replace(":", "-")}.json`)) as { planHashSha256: string };
+      expect(plan.planHashSha256).toBe(entry.planHashSha256);
+      const file = entry.canonicalBuildingId;
+      const validated = validateV2Plan(plan);
+      expect(validated.ok ? null : { file, issues: validated.issues }).toBeNull();
+    }
   });
 });

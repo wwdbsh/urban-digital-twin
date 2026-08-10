@@ -20,6 +20,7 @@ import {
   DETERMINISTIC_FACADE_V2_SCHEMA_VERSION,
   DETERMINISTIC_FACADE_V2_UNCERTAINTY,
   generateV2FacadePlan,
+  validateV2Plan,
   type V2Input,
   type V2Placement,
   type V2Plan,
@@ -154,7 +155,12 @@ export function buildSuccessorPlan(building: PilotBuildingSource): SuccessorPlan
   };
   const generated = generateV2FacadePlan(input);
   if (!generated.ok) throw new Error(`V2 facade plan failed for ${building.canonicalBuildingId}: ${generated.issues.map((issue) => `${issue.path}: ${issue.message}`).join("; ")}`);
-  return { building, frame, rectangle, plan: generated.value };
+  // Validation only, never serialization: the shipped plan must clear the full
+  // V2 validator, including the surface containment and overlap guard that
+  // caught the blade-sign overrun. Generation alone does not run it.
+  const validated = validateV2Plan(generated.value);
+  if (!validated.ok) throw new Error(`V2 facade plan failed validation for ${building.canonicalBuildingId}: ${validated.issues.map((issue) => `${issue.path}: ${issue.message}`).join("; ")}`);
+  return { building, frame, rectangle, plan: validated.value };
 }
 
 // ---------------------------------------------------------------------------

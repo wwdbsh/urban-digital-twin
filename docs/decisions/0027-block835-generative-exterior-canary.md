@@ -113,11 +113,16 @@ brand content could ride inside a shipped asset.
 `manhattan-esb-block-reference-20260811` supersedes 20260810 by **citation
 only**:
 
-- `cells[0].predecessor` is set to the 20260810 manifest's `cells[0].cellRelease`
-  pin;
 - every `AssemblyAsset.predecessor` is that building's 20260810 `lod_0` artifact
   pin, `manhattan-esb-block-reference-20260810:<buildingId>:lod_0` with that
-  artifact's immutable checksum.
+  artifact's immutable checksum. **This is the only place 20260810 is cited**,
+  and it is what carries the supersession;
+- `cells[0].predecessor` is copied from the 20260810 manifest's
+  `cells[0].cellRelease`, which itself pins the shared upstream pilot release
+  `manhattan-esb-block-exterior-pilot-20260805`. So the cell-level predecessor
+  records the *inherited source lineage*, not a citation of 20260810: both
+  packages are cell releases derived from the same pilot snapshot. Reading that
+  field as "the previous package" would be wrong.
 
 Not one byte of 20260810 changes. Both packages remain on disk, both remain
 immutable, and both remain drift-tested by their own committed-package tests.
