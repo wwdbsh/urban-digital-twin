@@ -281,6 +281,42 @@ Reverting the `jh45-qr5r` envelope is a separate, independently revertible edit
 to `src/data/source-registry.ts`: restore `derivativePolicy: openDerivative` and
 the prior `approvalNote`.
 
+## Lessons
+
+Three defects in this release family were found by driving the shipped bytes
+through a browser, after a fully green test suite. Each is recorded as a rule for
+the family, not as an incident report.
+
+1. **An emitter must re-root every pin.** Rewriting a manifest from one audience
+   or release into another puts *every* pin in scope: `release.*`, the ownership
+   ledger, the base identity set, artifact refs — and `cells[].cellRelease`. The
+   public assembly kept the private package's own `cellRelease` pin, and both
+   structural validators, `validateMultiLodAssembly` and
+   `validateExteriorReleaseGraph`, accepted it: each checked a document that was
+   internally consistent. The consumer was not. `assemblyForCell` in
+   `src/runtime/exterior-cell-runtime.ts` rejected it as `assembly-pin-mismatch`
+   and fell back to pinned-base, so the cell rendered no geometry at all. Two
+   structural validators agreeing is not the same as the consumer accepting the
+   bytes. **The runtime is the authority**, so a release is not proven until its
+   committed bytes have been driven through the real runtime.
+2. **Base membership is release membership, not residency.** Membership was
+   proved with `adapter.getFeature`, which only sees shards the camera has
+   already streamed. That answers "is this resident right now", which is
+   camera- and load-order-dependent, so it answered false for all 14 Block 835
+   buildings whenever the camera was elsewhere and every cell failed
+   `base-incompatible`. Membership must come from checksum-verified release
+   data — here the citywide detail index. The fixture path hid this completely:
+   fixture adapters are fully resident, so residency and membership coincide
+   there and only there.
+3. **Renderer validation is a mandatory gate for this release family.** The
+   committed suite was green through all three defects. Deterministic tests
+   proved the bytes were internally consistent and the helpers behaved; they did
+   not prove that a browser on a clean load ends up with geometry on screen.
+   Browser validation on a **clean load** — not after a manual disable/enable
+   toggle, which masks activation-ordering defects by re-running the effect — is
+   required before any release in this family is treated as
+   acceptance-complete.
+
 ## Consequences
 
 - Two facade generators now exist and must both be maintained. A change to

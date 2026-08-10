@@ -333,7 +333,17 @@ export class CitywideReleaseAdapter implements RuntimeCityAdapter {
    * Call `ensureIdentityIndex` once before relying on `hasIdentityMember`.
    */
   async ensureIdentityIndex(signal?: AbortSignal): Promise<number> {
-    const index = await this.loadDetailIndex(signal);
+    let index: Map<string, string>;
+    try {
+      index = await this.loadDetailIndex(signal);
+    } catch (error) {
+      // A concurrent caller can abort the memoized load while this caller is
+      // still live. The memo self-clears on rejection, so retry once rather
+      // than leaving streaming failed until someone toggles it manually.
+      const foreignAbort = error instanceof DOMException && error.name === "AbortError" && signal?.aborted !== true;
+      if (!foreignAbort) throw error;
+      index = await this.loadDetailIndex(signal);
+    }
     this.identityIndex = index;
     return index.size;
   }

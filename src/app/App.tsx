@@ -630,7 +630,8 @@ export async function ensureExteriorBaseIdentity(adapter: ExteriorBaseIdentityAd
 
 export function exteriorBaseIdentityHas(adapter: ExteriorBaseIdentityAdapter, featureId: string): boolean {
   if (typeof adapter.hasIdentityMember === "function") return adapter.hasIdentityMember(featureId);
-  return adapter.getFeature(featureId) !== undefined && adapter.getFeature(featureId) !== null;
+  const resident = adapter.getFeature(featureId);
+  return resident !== undefined && resident !== null;
 }
 
 export function exteriorSnapshotOriginLabel(origin: "default" | "canary", snapshotId: string): string {

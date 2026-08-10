@@ -294,6 +294,55 @@ public deployment remains excluded.
 | Blender re-import diff (asserts +Y up) | Pass, 28/28 exact, 191,064 vertices, 0 mismatches |
 | Committed-package drift test | Pass, on-disk fingerprint and all 29 artifact checksums match a fresh build |
 | Replay with `requireTextureFreeAssembly` | Pass, no issues |
+| `npx vitest run src/runtime/block835-canary-runtime.test.ts` | Pass, 5 tests — the committed canary bytes driven through the real `ExteriorCellRuntime` |
+| `npx vitest run src/app/exterior-base-identity.test.ts src/app/exterior-activation-ordering.test.tsx` | Pass, 7 tests — membership and clean-load activation ordering |
+| `npx vitest run src/app/App.test.tsx` | Pass, 44 tests — includes the clean-load canary activation regression rendering `<App />` over the committed release bytes |
+| **Renderer validation on a clean load — required gate** | Required for every release in this family. The canary deep link must reach rendered geometry in a browser on a **first** load, with no manual disable/enable toggle. All three defects below were found only here. |
+
+### What the green suite did not prove
+
+The committed suite was green — 536 to 549 tests through the whole wave — while
+three defects made the canary render nothing in a browser. They are recorded
+here because each is a durable rule for this family; ADR 0027 carries the same
+three as Lessons.
+
+**An emitter must re-root every pin.** Turning the private assembly manifest
+into the public one rewrote `release.*`, `baseIdentitySet`, `ownershipLedger`
+and the artifact refs, but copied `cells[].cellRelease` verbatim, so the public
+assembly still pinned the private package. `validateMultiLodAssembly` and
+`validateExteriorReleaseGraph` both passed it: each document was internally
+consistent. The consumer was not — `assemblyForCell` in
+`src/runtime/exterior-cell-runtime.ts` rejected it as `assembly-pin-mismatch`,
+fell back to pinned-base, and rendered no geometry. When a manifest is rewritten
+from one audience or release into another, every pin is in scope, and structural
+validators agreeing is not the consumer accepting: the runtime is the authority,
+so a release is not proven until its committed bytes have been driven through
+the real runtime. `src/runtime/block835-canary-runtime.test.ts` now does exactly
+that and fails on the pre-fix bytes.
+
+**Base membership is release membership, not residency.** The app proved base
+membership with `adapter.getFeature`, which only sees shards the camera has
+already streamed. That is a residency question — camera- and load-order
+dependent — so it answered false for all 14 Block 835 buildings whenever the
+camera was elsewhere, and every cell failed `base-incompatible`. Membership now
+comes from checksum-verified release data: `ensureIdentityIndex` /
+`hasIdentityMember` on the citywide adapter, backed by the detail index (57,633
+entries, all 14 Block 835 `doitt` ids present). The fixture path hid this
+completely, because fixture adapters are fully resident and residency and
+membership coincide there and only there.
+
+**Activation ordering on a clean load.** `exteriorStreamingRequested` is
+URL-derived and true on the first render, while the citywide adapter arrives
+asynchronously; the activation effect captured `activeAdapterRef.current` and
+carried no adapter in its dependency list, so it ran once against the
+placeholder and never re-ran when the real adapter landed. Only a manual
+disable/enable toggle recovered — which is precisely why a toggle does not
+satisfy the renderer gate: re-running the effect by hand hides the defect the
+gate exists to catch. The regression is now pinned against the real wiring by
+the clean-load test in `src/app/App.test.tsx`, which renders `<App />`, lets the
+base adapter arrive after the first activation attempt, serves the committed
+canary bytes to the real exterior runtime, and asserts 14 verified assets reach
+the renderer with no interaction; reverting either half of the fix turns it red.
 
 ## What this package does not claim
 

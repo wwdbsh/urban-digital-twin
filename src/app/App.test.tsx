@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import { readFileSync } from "node:fs";
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -12,6 +13,10 @@ const exteriorRuntimeMocks = vi.hoisted(() => ({
   loadExteriorPilotRelease: vi.fn(),
 }));
 
+const citywideRuntimeMocks = vi.hoisted(() => ({
+  loadCitywideRelease: vi.fn(),
+}));
+
 vi.mock("../features/explorer/CesiumViewport", async () => {
   const React = await import("react");
 
@@ -21,12 +26,13 @@ vi.mock("../features/explorer/CesiumViewport", async () => {
     focusFeatureId: string | null;
     focusOverlayOpen?: boolean;
     cameraPoseRequest?: { longitude: number; latitude: number; height: number; heading: number; pitch: number; roll: number; requestId: number };
+    exteriorOverlay?: unknown;
     onFeatureSelected?: (feature: Feature) => void;
     onCameraChanged?: (camera: CameraPose) => void;
     onStorefrontSelected?: (placement: CommercialStorefrontPlacement) => void;
   };
 
-  const MockCesiumViewport = ({ adapter, focusRequest, focusFeatureId, focusOverlayOpen, cameraPoseRequest, onFeatureSelected, onCameraChanged, onStorefrontSelected }: MockProps) => {
+  const MockCesiumViewport = ({ adapter, focusRequest, focusFeatureId, focusOverlayOpen, cameraPoseRequest, exteriorOverlay, onFeatureSelected, onCameraChanged, onStorefrontSelected }: MockProps) => {
     const [cameraCallbackSetupCount, setCameraCallbackSetupCount] = React.useState(0);
     React.useEffect(() => { setCameraCallbackSetupCount((count) => count + 1); }, [onCameraChanged]);
     const locatedFeature = adapter.getFeatures().find((feature) => feature.kind === "poi") ?? adapter.getFeatures()[0]!;
@@ -36,6 +42,9 @@ vi.mock("../features/explorer/CesiumViewport", async () => {
       name: "Locationless test record",
       attributes: { ...locatedFeature.attributes, civicNoMarker: true },
     };
+    // The real projection is reused, so this counts exactly the verified exterior
+    // assets the scene would build; a cell that failed verification contributes none.
+    const exteriorRenderEntryCount = (actual.exteriorOverlayRenderEntries as (overlay: unknown) => unknown[])(exteriorOverlay).length;
     return React.createElement(
       "div",
       {
@@ -45,6 +54,7 @@ vi.mock("../features/explorer/CesiumViewport", async () => {
         "data-focus-overlay-open": focusOverlayOpen ? "true" : "false",
         "data-camera-pose-request": cameraPoseRequest ? `${cameraPoseRequest.longitude},${cameraPoseRequest.latitude},${cameraPoseRequest.height},${cameraPoseRequest.pitch},${cameraPoseRequest.requestId}` : "",
         "data-camera-callback-setup-count": cameraCallbackSetupCount,
+        "data-exterior-render-entry-count": exteriorRenderEntryCount,
       },
       React.createElement("button", { type: "button", onClick: () => onFeatureSelected?.(locatedFeature) }, "Mock located pick"),
       React.createElement("button", { type: "button", onClick: () => onFeatureSelected?.(locationlessFeature) }, "Mock locationless pick"),
@@ -68,8 +78,19 @@ vi.mock("../runtime/exterior-pilot-release", async (importOriginal) => {
   return { ...actual, loadExteriorPilotRelease: exteriorRuntimeMocks.loadExteriorPilotRelease };
 });
 
+// The 291 MB citywide release is not served to jsdom, so the loader is stubbed.
+// The default stub reproduces what these tests already saw (an unavailable
+// release); only the clean-load ordering test supplies a base adapter.
+vi.mock("../runtime/citywide-release-runtime", async (importOriginal) => {
+  const actual = await importOriginal() as Record<string, unknown>;
+  return { ...actual, loadCitywideRelease: citywideRuntimeMocks.loadCitywideRelease };
+});
+
 import { App, EXTERIOR_CELL_STREAMING_RELEASE_ID, PINNED_EXTERIOR_CELL_RELEASE_IDS, appendBlock835PublicRealmUrl, appendExteriorProfileUrl, exteriorCellBasePath, exteriorCanarySnapshotMessage, exteriorDeepLinkMessage, exteriorSnapshotOriginLabel, isPinnedExteriorCellRelease, exteriorStreamingActivation, exteriorStreamingFailureMessage, exteriorStreamingNotices, parseExteriorStreamingUrl, applyStorefrontResolution, block835PerformanceGate, block835PerformanceProbeMode, block835PublicRealmActivation, block835PublicRealmFailureMessage, isCurrentStorefrontResolution, overlayLayoutPolicy, preserveFeatureSequence, resolveStorefrontBuilding, selectionFocusTransaction, summarizeBlock835Frames, type StorefrontResolutionState } from "./App";
 import { navigationUrl, parseNavigationUrl } from "../domain/visitor-navigation";
+import { BLOCK_835_DOITT_IDS } from "../domain/commercial-frontage";
+import { CITYWIDE_RELEASE_ID } from "../release/citywide-release";
+import type { CitywideReleaseAdapter, CitywideRuntimeMetrics } from "../runtime/citywide-release-runtime";
 
 const initialTestUrl = window.location.href;
 function deferred<T>() {
@@ -101,9 +122,67 @@ function exteriorOverlayFixture(assetFailures: LoadedExteriorPilotRelease["asset
 beforeEach(() => {
   exteriorRuntimeMocks.loadExteriorPilotRelease.mockReset();
   exteriorRuntimeMocks.loadExteriorPilotRelease.mockResolvedValue(exteriorOverlayFixture());
+  citywideRuntimeMocks.loadCitywideRelease.mockReset();
+  citywideRuntimeMocks.loadCitywideRelease.mockImplementation(async () => { throw new Error("Citywide release bytes are not served in this test."); });
 });
 afterEach(() => { cleanup(); window.history.replaceState({}, "", initialTestUrl); });
 const locatedFeature = runtimeFixtureFeatures.find((feature) => feature.kind === "poi")!;
+
+const CANARY_EXTERIOR_RELEASE_ID = "manhattan-exterior-cells-20260811";
+const CANARY_EXTERIOR_ROOT = `/data/${CANARY_EXTERIOR_RELEASE_ID}/`;
+const BLOCK_835_FEATURE_IDS = [...BLOCK_835_DOITT_IDS].map((id) => `doitt:${id}`);
+
+/**
+ * Serves the COMMITTED canary release bytes from `public/` so the App drives the
+ * real exterior runtime. Everything else fails closed exactly as it does when a
+ * local release is absent.
+ */
+function serveCommittedCanaryRelease() {
+  return vi.spyOn(globalThis, "fetch").mockImplementation(async (input: RequestInfo | URL) => {
+    const path = String(input);
+    if (!path.startsWith(CANARY_EXTERIOR_ROOT)) return new Response(null, { status: 404 });
+    try {
+      return new Response(new Uint8Array(readFileSync(`public${path}`)), { status: 200 });
+    } catch {
+      return new Response(null, { status: 404 });
+    }
+  });
+}
+
+const ZERO_CITYWIDE_METRICS = {
+  visibleShardCount: 0, requestedShardCount: 0, loadedFeatureCount: 0, loadedBytes: 0,
+  maxConcurrentRequests: 6, activeRequests: 0, failedRequestCount: 0, cancelledRequestCount: 0,
+  staleResultCount: 0, retainedSummaryCount: 0, retainedFeatureCount: 0, retainedDetailCount: 0,
+  detailIndexEntryCount: BLOCK_835_FEATURE_IDS.length, cacheEntries: 0, cacheEvictions: 0, dedupedRefreshCount: 0,
+} as unknown as CitywideRuntimeMetrics;
+
+/**
+ * A citywide base adapter with the shape that matters for exterior activation:
+ * membership is provable from the checksum-verified detail index, while nothing
+ * in Block 835 is resident because the camera has never streamed those shards.
+ */
+function lateCitywideBaseAdapter(memberIds: readonly string[]) {
+  const identityIndex = new Set<string>();
+  let ensureCalls = 0;
+  const adapter = {
+    releaseId: CITYWIDE_RELEASE_ID,
+    fixtureOnly: false,
+    // Camera-elsewhere clean load: no Block 835 building is resident.
+    getFeature: () => undefined,
+    // One resident summary keeps the mocked viewport's pick harness usable; it
+    // is deliberately not a Block 835 building.
+    getFeatures: () => [locatedFeature],
+    search: () => [],
+    searchAsync: async () => [],
+    refreshViewport: async () => [],
+    loadDetail: async () => undefined,
+    getMetrics: () => ZERO_CITYWIDE_METRICS,
+    destroy: () => {},
+    ensureIdentityIndex: async () => { ensureCalls += 1; for (const id of memberIds) identityIndex.add(id); return identityIndex.size; },
+    hasIdentityMember: (featureId: string) => identityIndex.has(featureId),
+  };
+  return { adapter: adapter as unknown as CitywideReleaseAdapter, ensureCalls: () => ensureCalls };
+}
 
 describe("explorer overlay policy", () => {
   it("parses only the two deterministic external-browser performance probe modes", () => {
@@ -605,6 +684,64 @@ describe("exterior streaming profiles and canary state", () => {
       fetchSpy.mockRestore();
     }
   });
+
+  /**
+   * Clean-load ordering regression, against the real App wiring.
+   *
+   * `exteriorStreamingRequested` is URL-derived and true on the very first
+   * render, while the citywide base adapter arrives asynchronously afterwards.
+   * The activation effect used to capture `activeAdapterRef.current` and carried
+   * no adapter in its dependency list, so it ran once against the fixture
+   * placeholder with no active base, every cell failed `base-incompatible`, and
+   * nothing re-ran when the real adapter landed — only a manual disable/enable
+   * toggle recovered. This drives the committed canary bytes through the real
+   * exterior runtime inside `<App />` and allows no toggle.
+   */
+  it("renders the pinned canary on a clean load when the citywide base adapter arrives after the first activation attempt", async () => {
+    const fetchSpy = serveCommittedCanaryRelease();
+    const citywide = lateCitywideBaseAdapter(BLOCK_835_FEATURE_IDS);
+    const citywideGate = deferred<CitywideReleaseAdapter>();
+    citywideRuntimeMocks.loadCitywideRelease.mockReturnValue(citywideGate.promise);
+    try {
+      window.history.replaceState({}, "", `/?data=${CITYWIDE_RELEASE_ID}&release=${CITYWIDE_RELEASE_ID}&exteriorCells=${CANARY_EXTERIOR_RELEASE_ID}`);
+      render(<App />);
+      const requestedPaths = () => fetchSpy.mock.calls.map(([input]) => String(input));
+
+      // Ordering under test: activation runs first, with the fixture placeholder
+      // active and no real base release.
+      await waitFor(() => {
+        expect(requestedPaths().some((path) => path.startsWith(CANARY_EXTERIOR_ROOT))).toBe(true);
+      });
+      expect(citywide.ensureCalls()).toBe(0);
+
+      // Only now does the base adapter land. No user interaction follows.
+      citywideGate.resolve(citywide.adapter);
+
+      const viewport = await waitFor(() => {
+        const element = document.querySelector<HTMLElement>(".viewport");
+        expect(element?.getAttribute("data-exterior-render-entry-count")).toBe(String(BLOCK_835_FEATURE_IDS.length));
+        return element!;
+      }, { timeout: 20_000 });
+      expect(viewport.getAttribute("data-exterior-render-entry-count")).toBe("14");
+
+      // Membership was proven from the release identity index, not residency.
+      expect(citywide.ensureCalls()).toBeGreaterThan(0);
+
+      const status = [...document.querySelectorAll<HTMLElement>(".runtime-note-overlay")].find((candidate) => candidate.textContent?.startsWith("Exterior streaming ·"));
+      expect(status?.textContent).toContain("Default pinned snapshot");
+      expect(status?.textContent).toContain("verified local GLB bytes only");
+      expect(status?.getAttribute("data-exterior-snapshot-origin")).toBe("default");
+
+      // No fallback notice, and nothing fell back to base massing.
+      expect(document.querySelector("[data-exterior-notices]")).toBeNull();
+      expect(document.body.textContent).not.toContain("failed verification");
+      expect(document.body.textContent).not.toContain("base-incompatible");
+      expect(document.body.textContent).not.toContain("requires an active base release");
+      expect(within(document.body).getByRole("button", { name: "Disable exterior streaming" })).toBeInTheDocument();
+    } finally {
+      fetchSpy.mockRestore();
+    }
+  }, 30_000);
 });
 
 describe("exterior streaming deep-link and anchor honesty", () => {

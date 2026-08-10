@@ -67,4 +67,27 @@ describe("exterior base identity membership", () => {
     for (const id of BLOCK_835_IDS) expect(exteriorBaseIdentityHas(adapter, id)).toBe(true);
     expect(exteriorBaseIdentityHas(adapter, "doitt:999999")).toBe(false);
   });
+
+  it("resolves membership through a composed civic-context adapter", async () => {
+    // Civic-context composes over the citywide base and index.json declares it
+    // base-compatible, so it must not fall back to the residency oracle.
+    const index = new Set<string>();
+    const base = {
+      getFeature: () => undefined,
+      ensureIdentityIndex: async (_signal?: AbortSignal) => { void _signal; for (const id of BLOCK_835_IDS) index.add(id); return index.size; },
+      hasIdentityMember: (id: string) => index.has(id),
+    };
+    // Mirrors ComposedReleaseAdapter: nothing resident, membership delegated
+    // to the citywide base it composes over.
+    const composedResident = new Set<string>();
+    const composed = {
+      getFeature: (featureId: string): unknown => (composedResident.has(featureId) ? { id: featureId } : undefined),
+      ensureIdentityIndex: (signal?: AbortSignal) => base.ensureIdentityIndex(signal),
+      hasIdentityMember: (id: string) => base.hasIdentityMember(id) || composedResident.has(id),
+    };
+    expect(exteriorBaseIdentityHas(composed, BLOCK_835_IDS[0]!)).toBe(false);
+    await ensureExteriorBaseIdentity(composed);
+    for (const id of BLOCK_835_IDS) expect(exteriorBaseIdentityHas(composed, id)).toBe(true);
+    expect(exteriorBaseIdentityHas(composed, "doitt:999999")).toBe(false);
+  });
 });
