@@ -1,0 +1,574 @@
+[
+  {
+    "schemaVersion": "1.0",
+    "packageId": "assembly:cell:c1:v1",
+    "audience": "public",
+    "generatedAt": "2026-08-09T00:00:00.000Z",
+    "immutable": true,
+    "release": {
+      "rootId": "root:udt-fixture:public",
+      "rootChecksumSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "releaseId": "release:udt-fixture:public",
+      "cityId": "city:udt-fixture",
+      "configId": "config:udt-fixture",
+      "privatePredecessor": {
+        "id": "root:udt-fixture:private",
+        "checksumSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+      }
+    },
+    "baseIdentitySet": {
+      "id": "identity:udt-fixture-base",
+      "checksumSha256": "f1a250d126a1cdc75165c4d33671f999b04ac9733cef2c1086d462fcf040dd43"
+    },
+    "ownershipLedger": {
+      "id": "ledger:udt-fixture",
+      "checksumSha256": "4903011cfca885477c61c334cd89530529bb8deaba2dc4f28397217094a686e5"
+    },
+    "cells": [
+      {
+        "cellId": "c1",
+        "cellRelease": {
+          "id": "cell:c1:v1",
+          "checksumSha256": "ed5abbfa2992c6616cfcb336f6920f4e21292d687221554c96cff8c7720b9a0a"
+        },
+        "predecessor": null,
+        "buildingIds": [
+          "doitt:778052"
+        ],
+        "membershipChecksumSha256": "349fe630fd24489801dce0e85133168636bf6ed10d98966b874384a342f0a194"
+      }
+    ],
+    "assets": [
+      {
+        "canonicalFeatureId": "doitt:778052",
+        "ownerCellId": "c1",
+        "inventoryId": "inventory:b1:v1",
+        "inventoryHashSha256": "c657b18fbab3ae1ad5bdb2ac9869f082ee2b86600d8458003a072353ee02d48b",
+        "evidenceShardId": "evidence:b1:v1",
+        "truthTiers": [
+          "generated"
+        ],
+        "sourceDates": {
+          "capturedAt": "2026-08-09T00:00:00.000Z",
+          "updatedAt": null
+        },
+        "predecessor": null,
+        "uncertainty": "Generated exterior geometry; not observed real-world truth.",
+        "source": {
+          "kind": "facade-plan",
+          "planId": "plan:cell:c1:v1",
+          "planHashSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "lods": [
+          {
+            "lodId": "lod-0",
+            "artifactRef": "public/assemblies/cell-c1-v1/assets/doitt-778052-lod0.glb",
+            "geometricErrorMeters": 0,
+            "maxDistanceMeters": 220,
+            "eligible": true,
+            "quality": {
+              "triangleCount": 1,
+              "materialCount": 1,
+              "textureCount": 0,
+              "budgets": {
+                "maxTriangles": 2,
+                "maxMaterials": 1,
+                "maxTextures": 0
+              }
+            },
+            "silhouette": null
+          },
+          {
+            "lodId": "lod-1",
+            "artifactRef": "public/assemblies/cell-c1-v1/assets/doitt-778052-lod1.glb",
+            "geometricErrorMeters": 2,
+            "maxDistanceMeters": null,
+            "eligible": true,
+            "quality": {
+              "triangleCount": 1,
+              "materialCount": 1,
+              "textureCount": 0,
+              "budgets": {
+                "maxTriangles": 1,
+                "maxMaterials": 1,
+                "maxTextures": 0
+              }
+            },
+            "silhouette": {
+              "status": "authoring-declared",
+              "method": "projected-silhouette-ratio",
+              "metricVersion": "1.0",
+              "planHashSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "viewIds": [
+                "north",
+                "south"
+              ],
+              "deviationRatio": 0.01,
+              "maximumRatio": 0.02
+            }
+          }
+        ]
+      }
+    ],
+    "artifacts": [
+      {
+        "logicalId": "assembly:cell:c1:v1:tileset",
+        "role": "tileset-json",
+        "relativeRef": "public/assemblies/cell-c1-v1/tiles/tileset.json",
+        "byteSize": 458,
+        "checksumSha256": "16ad9923c2fee554088e570fbece5d8c62b501f0e4a9b38c59139aa4e50e1f4a",
+        "ownerCellId": null
+      },
+      {
+        "logicalId": "assembly:cell:c1:v1:lod0",
+        "role": "glb",
+        "relativeRef": "public/assemblies/cell-c1-v1/assets/doitt-778052-lod0.glb",
+        "byteSize": 1040,
+        "checksumSha256": "b48ae7314acdaaaae4688e8c7904ec803110525131b4dc3b8cf1abd5fa44a8b1",
+        "ownerCellId": "c1"
+      },
+      {
+        "logicalId": "assembly:cell:c1:v1:lod1",
+        "role": "glb",
+        "relativeRef": "public/assemblies/cell-c1-v1/assets/doitt-778052-lod1.glb",
+        "byteSize": 1040,
+        "checksumSha256": "bb8660074b3032477d00ef22495d3e46849b4de4d16f3e71da89a04e504ef584",
+        "ownerCellId": "c1"
+      }
+    ],
+    "tilesetRef": "public/assemblies/cell-c1-v1/tiles/tileset.json",
+    "declaredTotalBytes": 2538
+  },
+  {
+    "schemaVersion": "1.0",
+    "packageId": "assembly:cell:c1:v2",
+    "audience": "public",
+    "generatedAt": "2026-08-09T00:00:00.000Z",
+    "immutable": true,
+    "release": {
+      "rootId": "root:udt-fixture:public",
+      "rootChecksumSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "releaseId": "release:udt-fixture:public",
+      "cityId": "city:udt-fixture",
+      "configId": "config:udt-fixture",
+      "privatePredecessor": {
+        "id": "root:udt-fixture:private",
+        "checksumSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+      }
+    },
+    "baseIdentitySet": {
+      "id": "identity:udt-fixture-base",
+      "checksumSha256": "f1a250d126a1cdc75165c4d33671f999b04ac9733cef2c1086d462fcf040dd43"
+    },
+    "ownershipLedger": {
+      "id": "ledger:udt-fixture",
+      "checksumSha256": "4903011cfca885477c61c334cd89530529bb8deaba2dc4f28397217094a686e5"
+    },
+    "cells": [
+      {
+        "cellId": "c1",
+        "cellRelease": {
+          "id": "cell:c1:v2",
+          "checksumSha256": "3e2222e8f1700a1d3cf97c243d2a9d0d2584c934864adad7f1144931c31cd2c6"
+        },
+        "predecessor": {
+          "id": "cell:c1:v1",
+          "checksumSha256": "ed5abbfa2992c6616cfcb336f6920f4e21292d687221554c96cff8c7720b9a0a"
+        },
+        "buildingIds": [
+          "doitt:778052"
+        ],
+        "membershipChecksumSha256": "349fe630fd24489801dce0e85133168636bf6ed10d98966b874384a342f0a194"
+      }
+    ],
+    "assets": [
+      {
+        "canonicalFeatureId": "doitt:778052",
+        "ownerCellId": "c1",
+        "inventoryId": "inventory:b1:v2",
+        "inventoryHashSha256": "d27c1d291528e389c41a6e77a2d18a52c110eb9b01b29e469205238e09aa359f",
+        "evidenceShardId": "evidence:b1:v2",
+        "truthTiers": [
+          "generated"
+        ],
+        "sourceDates": {
+          "capturedAt": "2026-08-09T00:00:00.000Z",
+          "updatedAt": null
+        },
+        "predecessor": {
+          "id": "cell:c1:v1",
+          "checksumSha256": "ed5abbfa2992c6616cfcb336f6920f4e21292d687221554c96cff8c7720b9a0a"
+        },
+        "uncertainty": "Generated exterior geometry; not observed real-world truth.",
+        "source": {
+          "kind": "facade-plan",
+          "planId": "plan:cell:c1:v2",
+          "planHashSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "lods": [
+          {
+            "lodId": "lod-0",
+            "artifactRef": "public/assemblies/cell-c1-v2/assets/doitt-778052-lod0.glb",
+            "geometricErrorMeters": 0,
+            "maxDistanceMeters": 220,
+            "eligible": true,
+            "quality": {
+              "triangleCount": 1,
+              "materialCount": 1,
+              "textureCount": 0,
+              "budgets": {
+                "maxTriangles": 2,
+                "maxMaterials": 1,
+                "maxTextures": 0
+              }
+            },
+            "silhouette": null
+          },
+          {
+            "lodId": "lod-1",
+            "artifactRef": "public/assemblies/cell-c1-v2/assets/doitt-778052-lod1.glb",
+            "geometricErrorMeters": 2,
+            "maxDistanceMeters": null,
+            "eligible": true,
+            "quality": {
+              "triangleCount": 1,
+              "materialCount": 1,
+              "textureCount": 0,
+              "budgets": {
+                "maxTriangles": 1,
+                "maxMaterials": 1,
+                "maxTextures": 0
+              }
+            },
+            "silhouette": {
+              "status": "authoring-declared",
+              "method": "projected-silhouette-ratio",
+              "metricVersion": "1.0",
+              "planHashSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "viewIds": [
+                "north",
+                "south"
+              ],
+              "deviationRatio": 0.01,
+              "maximumRatio": 0.02
+            }
+          }
+        ]
+      }
+    ],
+    "artifacts": [
+      {
+        "logicalId": "assembly:cell:c1:v2:tileset",
+        "role": "tileset-json",
+        "relativeRef": "public/assemblies/cell-c1-v2/tiles/tileset.json",
+        "byteSize": 458,
+        "checksumSha256": "16ad9923c2fee554088e570fbece5d8c62b501f0e4a9b38c59139aa4e50e1f4a",
+        "ownerCellId": null
+      },
+      {
+        "logicalId": "assembly:cell:c1:v2:lod0",
+        "role": "glb",
+        "relativeRef": "public/assemblies/cell-c1-v2/assets/doitt-778052-lod0.glb",
+        "byteSize": 1140,
+        "checksumSha256": "920572099a21be67e0d1932e27b6918c5a4fcd40f2ab18ad240603f8247a1a2f",
+        "ownerCellId": "c1"
+      },
+      {
+        "logicalId": "assembly:cell:c1:v2:lod1",
+        "role": "glb",
+        "relativeRef": "public/assemblies/cell-c1-v2/assets/doitt-778052-lod1.glb",
+        "byteSize": 1140,
+        "checksumSha256": "d6ae9c86c5283662fe0e02116ff1d33e7db605d437d38137590ef47bfbadb0c3",
+        "ownerCellId": "c1"
+      }
+    ],
+    "tilesetRef": "public/assemblies/cell-c1-v2/tiles/tileset.json",
+    "declaredTotalBytes": 2738
+  },
+  {
+    "schemaVersion": "1.0",
+    "packageId": "assembly:cell:c2:v1",
+    "audience": "public",
+    "generatedAt": "2026-08-09T00:00:00.000Z",
+    "immutable": true,
+    "release": {
+      "rootId": "root:udt-fixture:public",
+      "rootChecksumSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "releaseId": "release:udt-fixture:public",
+      "cityId": "city:udt-fixture",
+      "configId": "config:udt-fixture",
+      "privatePredecessor": {
+        "id": "root:udt-fixture:private",
+        "checksumSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+      }
+    },
+    "baseIdentitySet": {
+      "id": "identity:udt-fixture-base",
+      "checksumSha256": "f1a250d126a1cdc75165c4d33671f999b04ac9733cef2c1086d462fcf040dd43"
+    },
+    "ownershipLedger": {
+      "id": "ledger:udt-fixture",
+      "checksumSha256": "4903011cfca885477c61c334cd89530529bb8deaba2dc4f28397217094a686e5"
+    },
+    "cells": [
+      {
+        "cellId": "c2",
+        "cellRelease": {
+          "id": "cell:c2:v1",
+          "checksumSha256": "e2ab798b14c648d69f9733eb315a482364967b69637343ad8134347086c8611e"
+        },
+        "predecessor": null,
+        "buildingIds": [
+          "doitt:982383"
+        ],
+        "membershipChecksumSha256": "f694190d925dc34ccb095dc254b4cc3bfca3007dda5ed0001acbe63b3bcc9fb1"
+      }
+    ],
+    "assets": [
+      {
+        "canonicalFeatureId": "doitt:982383",
+        "ownerCellId": "c2",
+        "inventoryId": "inventory:b2:v1",
+        "inventoryHashSha256": "7f7481f56aec12474eab776ec0563f31e6a47af767a5108d7539411fe5b48964",
+        "evidenceShardId": "evidence:b2:v1",
+        "truthTiers": [
+          "generated"
+        ],
+        "sourceDates": {
+          "capturedAt": "2026-08-09T00:00:00.000Z",
+          "updatedAt": null
+        },
+        "predecessor": null,
+        "uncertainty": "Generated exterior geometry; not observed real-world truth.",
+        "source": {
+          "kind": "facade-plan",
+          "planId": "plan:cell:c2:v1",
+          "planHashSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "lods": [
+          {
+            "lodId": "lod-0",
+            "artifactRef": "public/assemblies/cell-c2-v1/assets/doitt-982383-lod0.glb",
+            "geometricErrorMeters": 0,
+            "maxDistanceMeters": 220,
+            "eligible": true,
+            "quality": {
+              "triangleCount": 1,
+              "materialCount": 1,
+              "textureCount": 0,
+              "budgets": {
+                "maxTriangles": 2,
+                "maxMaterials": 1,
+                "maxTextures": 0
+              }
+            },
+            "silhouette": null
+          },
+          {
+            "lodId": "lod-1",
+            "artifactRef": "public/assemblies/cell-c2-v1/assets/doitt-982383-lod1.glb",
+            "geometricErrorMeters": 2,
+            "maxDistanceMeters": null,
+            "eligible": true,
+            "quality": {
+              "triangleCount": 1,
+              "materialCount": 1,
+              "textureCount": 0,
+              "budgets": {
+                "maxTriangles": 1,
+                "maxMaterials": 1,
+                "maxTextures": 0
+              }
+            },
+            "silhouette": {
+              "status": "authoring-declared",
+              "method": "projected-silhouette-ratio",
+              "metricVersion": "1.0",
+              "planHashSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "viewIds": [
+                "north",
+                "south"
+              ],
+              "deviationRatio": 0.01,
+              "maximumRatio": 0.02
+            }
+          }
+        ]
+      }
+    ],
+    "artifacts": [
+      {
+        "logicalId": "assembly:cell:c2:v1:tileset",
+        "role": "tileset-json",
+        "relativeRef": "public/assemblies/cell-c2-v1/tiles/tileset.json",
+        "byteSize": 458,
+        "checksumSha256": "ddbdb76efc83ed8eab02b76b3e9f1d02a416a30c3170eac6a861bc3c78a5daa5",
+        "ownerCellId": null
+      },
+      {
+        "logicalId": "assembly:cell:c2:v1:lod0",
+        "role": "glb",
+        "relativeRef": "public/assemblies/cell-c2-v1/assets/doitt-982383-lod0.glb",
+        "byteSize": 1040,
+        "checksumSha256": "1e69babad11cef06d7362eebbcbf215e6c0f3096b08d619cebb92a1b95df824b",
+        "ownerCellId": "c2"
+      },
+      {
+        "logicalId": "assembly:cell:c2:v1:lod1",
+        "role": "glb",
+        "relativeRef": "public/assemblies/cell-c2-v1/assets/doitt-982383-lod1.glb",
+        "byteSize": 1040,
+        "checksumSha256": "4e5e6f738eeb8263d8903cd621bb147f50d8328eaf6bb2f77c3313d9bc1b9c0d",
+        "ownerCellId": "c2"
+      }
+    ],
+    "tilesetRef": "public/assemblies/cell-c2-v1/tiles/tileset.json",
+    "declaredTotalBytes": 2538
+  },
+  {
+    "schemaVersion": "1.0",
+    "packageId": "assembly:cell:c2:v2",
+    "audience": "public",
+    "generatedAt": "2026-08-09T00:00:00.000Z",
+    "immutable": true,
+    "release": {
+      "rootId": "root:udt-fixture:public",
+      "rootChecksumSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "releaseId": "release:udt-fixture:public",
+      "cityId": "city:udt-fixture",
+      "configId": "config:udt-fixture",
+      "privatePredecessor": {
+        "id": "root:udt-fixture:private",
+        "checksumSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+      }
+    },
+    "baseIdentitySet": {
+      "id": "identity:udt-fixture-base",
+      "checksumSha256": "f1a250d126a1cdc75165c4d33671f999b04ac9733cef2c1086d462fcf040dd43"
+    },
+    "ownershipLedger": {
+      "id": "ledger:udt-fixture",
+      "checksumSha256": "4903011cfca885477c61c334cd89530529bb8deaba2dc4f28397217094a686e5"
+    },
+    "cells": [
+      {
+        "cellId": "c2",
+        "cellRelease": {
+          "id": "cell:c2:v2",
+          "checksumSha256": "b1531f145829864c59059fba44163297c8d42532c84b6a6c3fedae88ecf04d32"
+        },
+        "predecessor": {
+          "id": "cell:c2:v1",
+          "checksumSha256": "e2ab798b14c648d69f9733eb315a482364967b69637343ad8134347086c8611e"
+        },
+        "buildingIds": [
+          "doitt:982383"
+        ],
+        "membershipChecksumSha256": "f694190d925dc34ccb095dc254b4cc3bfca3007dda5ed0001acbe63b3bcc9fb1"
+      }
+    ],
+    "assets": [
+      {
+        "canonicalFeatureId": "doitt:982383",
+        "ownerCellId": "c2",
+        "inventoryId": "inventory:b2:v2",
+        "inventoryHashSha256": "7f245d8e8a56945d8a19c751cd855e7e20f882b8db1e7bc505851cca0ad4dc38",
+        "evidenceShardId": "evidence:b2:v2",
+        "truthTiers": [
+          "generated"
+        ],
+        "sourceDates": {
+          "capturedAt": "2026-08-09T00:00:00.000Z",
+          "updatedAt": null
+        },
+        "predecessor": {
+          "id": "cell:c2:v1",
+          "checksumSha256": "e2ab798b14c648d69f9733eb315a482364967b69637343ad8134347086c8611e"
+        },
+        "uncertainty": "Generated exterior geometry; not observed real-world truth.",
+        "source": {
+          "kind": "facade-plan",
+          "planId": "plan:cell:c2:v2",
+          "planHashSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "lods": [
+          {
+            "lodId": "lod-0",
+            "artifactRef": "public/assemblies/cell-c2-v2/assets/doitt-982383-lod0.glb",
+            "geometricErrorMeters": 0,
+            "maxDistanceMeters": 220,
+            "eligible": true,
+            "quality": {
+              "triangleCount": 1,
+              "materialCount": 1,
+              "textureCount": 0,
+              "budgets": {
+                "maxTriangles": 2,
+                "maxMaterials": 1,
+                "maxTextures": 0
+              }
+            },
+            "silhouette": null
+          },
+          {
+            "lodId": "lod-1",
+            "artifactRef": "public/assemblies/cell-c2-v2/assets/doitt-982383-lod1.glb",
+            "geometricErrorMeters": 2,
+            "maxDistanceMeters": null,
+            "eligible": true,
+            "quality": {
+              "triangleCount": 1,
+              "materialCount": 1,
+              "textureCount": 0,
+              "budgets": {
+                "maxTriangles": 1,
+                "maxMaterials": 1,
+                "maxTextures": 0
+              }
+            },
+            "silhouette": {
+              "status": "authoring-declared",
+              "method": "projected-silhouette-ratio",
+              "metricVersion": "1.0",
+              "planHashSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "viewIds": [
+                "north",
+                "south"
+              ],
+              "deviationRatio": 0.01,
+              "maximumRatio": 0.02
+            }
+          }
+        ]
+      }
+    ],
+    "artifacts": [
+      {
+        "logicalId": "assembly:cell:c2:v2:tileset",
+        "role": "tileset-json",
+        "relativeRef": "public/assemblies/cell-c2-v2/tiles/tileset.json",
+        "byteSize": 458,
+        "checksumSha256": "ddbdb76efc83ed8eab02b76b3e9f1d02a416a30c3170eac6a861bc3c78a5daa5",
+        "ownerCellId": null
+      },
+      {
+        "logicalId": "assembly:cell:c2:v2:lod0",
+        "role": "glb",
+        "relativeRef": "public/assemblies/cell-c2-v2/assets/doitt-982383-lod0.glb",
+        "byteSize": 1140,
+        "checksumSha256": "74be0a35404efa25356a9352515aff8bd11ddffbf0c5d99d0165a307ba79cdf7",
+        "ownerCellId": "c2"
+      },
+      {
+        "logicalId": "assembly:cell:c2:v2:lod1",
+        "role": "glb",
+        "relativeRef": "public/assemblies/cell-c2-v2/assets/doitt-982383-lod1.glb",
+        "byteSize": 1140,
+        "checksumSha256": "a800ea68f9456e102dfcd16cb9c4f20cbbebcf480c4b9488ae18e9807a75ddef",
+        "ownerCellId": "c2"
+      }
+    ],
+    "tilesetRef": "public/assemblies/cell-c2-v2/tiles/tileset.json",
+    "declaredTotalBytes": 2738
+  }
+]

@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "1.0",
+  "releaseId": "udt-fixture-exterior-cells",
+  "audience": "public",
+  "cityId": "city:udt-fixture",
+  "configId": "config:udt-fixture",
+  "defaultHead": {
+    "snapshotId": "snapshot:v2",
+    "checksumSha256": "8ce40e915c91ea53153efe65375737073060e5a64f5333ec564feafb7e5eb8a1",
+    "assemblyPackageIds": [
+      "assembly:cell:c1:v1",
+      "assembly:cell:c1:v2",
+      "assembly:cell:c2:v1"
+    ]
+  },
+  "canaryHeads": [
+    {
+      "snapshotId": "snapshot:v3",
+      "checksumSha256": "cecab3ce74f9482cf0c2ff8528d8cd570d509dca40b0dc329db64f5a7ae10918",
+      "assemblyPackageIds": [
+        "assembly:cell:c1:v1",
+        "assembly:cell:c1:v2",
+        "assembly:cell:c2:v1",
+        "assembly:cell:c2:v2"
+      ]
+    }
+  ],
+  "baseCompatibility": {
+    "baseReleaseIds": [
+      "manhattan-citywide-20260804",
+      "manhattan-civic-context-20260804"
+    ]
+  },
+  "localOnly": true,
+  "runtimeExternalNetwork": false
+}

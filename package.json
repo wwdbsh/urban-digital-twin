@@ -60,6 +60,7 @@
     "public-realm:build": "node scripts/block835-public-realm-cli.mjs build",
     "public-realm:validate": "node scripts/block835-public-realm-cli.mjs validate",
     "public-realm:benchmark": "node scripts/block835-public-realm-cli.mjs benchmark",
+    "exterior-cells:emit-fixture": "node --experimental-strip-types scripts/emit-exterior-cell-fixture-release.mjs",
     "test:watch": "vitest"
   },
   "dependencies": {

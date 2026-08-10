@@ -33,7 +33,7 @@ import { searchReconciledCatalog, type CanonicalEntity } from "../domain/reconci
 import { rankOverlapCandidates, searchMixedReleaseFeatures, searchRealPlaceCatalog, searchUnifiedCatalog, type UnifiedSearchResult } from "../domain/exploration";
 import { buildCatalogRelease } from "../release/catalog-release";
 import { buildSyntheticCatalogArtifacts } from "../release/fixtures";
-import { CesiumViewport, medianFrameInterval, shouldFocusFeature, type DenseRenderMetrics, type Stage3RenderProof } from "../features/explorer/CesiumViewport";
+import { CesiumViewport, exteriorUnanchoredNotice, medianFrameInterval, shouldFocusFeature, type DenseRenderMetrics, type ExteriorCellOverlay, type Stage3RenderProof } from "../features/explorer/CesiumViewport";
 import { LocalFixtureCityAdapter, type RuntimeCityAdapter } from "../runtime/fixture-adapter";
 import { RouteGraphSnapshotAdapter } from "../ingestion/route-graph-snapshot";
 import { sha256Hex } from "../ingestion/offline";
@@ -58,6 +58,8 @@ import { TRAVEL_CONTEXT_BUDGETS, TRAVEL_CONTEXT_RELEASE_ID, TRAVEL_CONTEXT_TILE_
 import { AggregateRequestBudget, ComposedReleaseAdapter, type ComposedReleaseMetrics } from "../runtime/composed-release-runtime";
 import { EXTERIOR_PILOT_RELEASE_ID, createExteriorPilotFaultFetcher, loadExteriorPilotRelease, parseExteriorPilotFault, type CommercialStorefrontPlacement, type LoadedExteriorPilotRelease } from "../runtime/exterior-pilot-release";
 import { BLOCK835_PUBLIC_REALM_RELEASE_ID, createBlock835PublicRealmFaultFetcher, loadBlock835PublicRealmRelease, parseBlock835PublicRealmFault, publicRealmFeatureToFeature, type Block835PublicRealmFeature, type LoadedBlock835PublicRealmRelease } from "../runtime/block835-public-realm-release";
+import { loadExteriorCellRuntime, type ExteriorCellOutcome, type ExteriorCellRuntime, type ExteriorHeadRequest } from "../runtime/exterior-cell-runtime";
+import { DEFAULT_EXTERIOR_RENDER_PROFILE, EXTERIOR_RENDER_PROFILES, exteriorRenderProfileLabel, parseExteriorRenderProfile, type ExteriorRenderProfile } from "../runtime/exterior-render-profiles";
 import { fallbackViewportFootprint, type ViewportFootprint } from "../runtime/viewport-footprint";
 
 const navigation = [
@@ -464,6 +466,124 @@ export function appendBlock835PublicRealmUrl(baseUrl: string, requested: boolean
   return url.toString();
 }
 
+/**
+ * The only exterior-cell release this build pins is the synthetic, obviously
+ * named fixture package. Producing production exterior assets is out of scope,
+ * so a deep link naming any other exterior release fails closed rather than
+ * resolving something that merely shares a shape.
+ */
+export const EXTERIOR_CELL_STREAMING_RELEASE_ID = "udt-fixture-exterior-cells";
+export const EXTERIOR_CELL_STREAMING_BASE_PATH = `/data/${EXTERIOR_CELL_STREAMING_RELEASE_ID}/`;
+
+export interface ExteriorStreamingUrlState {
+  requested: boolean;
+  profile: ExteriorRenderProfile;
+  canarySnapshotId: string | null;
+}
+
+/**
+ * App-local URL wrapper chained after `navigationUrl`, exactly like the Block
+ * 835 public-realm wrapper. The canonical navigation contract in
+ * `domain/visitor-navigation` is deliberately untouched.
+ */
+export function appendExteriorProfileUrl(baseUrl: string, state: ExteriorStreamingUrlState): string {
+  const url = new URL(baseUrl, typeof window === "undefined" ? "http://localhost/" : window.location.href);
+  if (state.requested) {
+    url.searchParams.set("exteriorCells", EXTERIOR_CELL_STREAMING_RELEASE_ID);
+    url.searchParams.set("exteriorProfile", state.profile);
+  } else {
+    url.searchParams.delete("exteriorCells");
+    url.searchParams.delete("exteriorProfile");
+  }
+  if (state.requested && state.canarySnapshotId) url.searchParams.set("exteriorCanary", state.canarySnapshotId);
+  else url.searchParams.delete("exteriorCanary");
+  return url.toString();
+}
+
+export function parseExteriorStreamingUrl(href: string): ExteriorStreamingUrlState {
+  const url = new URL(href, typeof window === "undefined" ? "http://localhost/" : window.location.href);
+  const requested = url.searchParams.get("exteriorCells") === EXTERIOR_CELL_STREAMING_RELEASE_ID;
+  const canary = requested ? url.searchParams.get("exteriorCanary") : null;
+  return {
+    requested,
+    profile: (requested ? parseExteriorRenderProfile(url.searchParams.get("exteriorProfile")) : null) ?? DEFAULT_EXTERIOR_RENDER_PROFILE,
+    canarySnapshotId: canary && canary.trim().length > 0 ? canary : null,
+  };
+}
+
+export interface ExteriorStreamingActivationInput {
+  requested: boolean;
+  loadState: "idle" | "loading" | "ready" | "failed";
+  hasVerifiedRuntime: boolean;
+  activeBaseReleaseId: string | null;
+  compatibleWithActiveBase: boolean;
+}
+
+export interface ExteriorStreamingActivation {
+  active: boolean;
+  prerequisiteMessage: string | null;
+}
+
+/**
+ * Exterior cells reuse base building identities, so they can only activate on
+ * top of a live, compatible base release. An index alone cannot activate itself.
+ */
+export function exteriorStreamingActivation(input: ExteriorStreamingActivationInput): ExteriorStreamingActivation {
+  if (!input.requested || input.loadState !== "ready" || !input.hasVerifiedRuntime) return { active: false, prerequisiteMessage: null };
+  if (input.activeBaseReleaseId && input.compatibleWithActiveBase) return { active: true, prerequisiteMessage: null };
+  return {
+    active: false,
+    prerequisiteMessage: `Exterior streaming release ${EXTERIOR_CELL_STREAMING_RELEASE_ID} was verified locally but was not activated: it requires an active base release its index declares compatible.`,
+  };
+}
+
+export function exteriorStreamingFailureMessage(error: unknown): string {
+  const prefix = error instanceof Error ? error.message : "Exterior streaming failed closed.";
+  return `${prefix} Exterior streaming was disabled; the existing base/exterior state was left unchanged.`;
+}
+
+/**
+ * One user-visible line per cell that did not render its pinned head
+ * representation, plus one for verified geometry withheld for want of a base
+ * anchor. Nothing is ever withheld silently.
+ */
+export function exteriorStreamingNotices(
+  headNotice: string | null,
+  cells: readonly ExteriorCellOutcome[],
+  unanchoredCanonicalFeatureIds: readonly string[] = [],
+): string[] {
+  const notices = headNotice ? [headNotice] : [];
+  for (const cell of cells) {
+    if (cell.kind === "rendered") { if (cell.notice) notices.push(cell.notice); continue; }
+    notices.push(cell.notice);
+  }
+  const unanchored = exteriorUnanchoredNotice(unanchoredCanonicalFeatureIds);
+  if (unanchored) notices.push(unanchored);
+  return notices;
+}
+
+/**
+ * Deep links degrade loudly. An `exteriorCells` value this build does not pin,
+ * or an unsupported `exteriorProfile`, produces the same kind of explicit
+ * notice every other release/mode mismatch in the app produces.
+ */
+export function exteriorDeepLinkMessage(href: string): string | null {
+  const url = new URL(href, typeof window === "undefined" ? "http://localhost/" : window.location.href);
+  const requestedRelease = url.searchParams.get("exteriorCells");
+  if (requestedRelease !== null && requestedRelease !== EXTERIOR_CELL_STREAMING_RELEASE_ID) {
+    return `Exterior streaming release ${requestedRelease} is not pinned by this build; exterior streaming stayed off and the rest of the view was left unchanged. The only pinned exterior-cell release here is ${EXTERIOR_CELL_STREAMING_RELEASE_ID}.`;
+  }
+  const requestedProfile = url.searchParams.get("exteriorProfile");
+  if (requestedRelease === EXTERIOR_CELL_STREAMING_RELEASE_ID && requestedProfile !== null && parseExteriorRenderProfile(requestedProfile) === null) {
+    return `Exterior render profile ${requestedProfile} is not supported; the ${DEFAULT_EXTERIOR_RENDER_PROFILE} profile was used instead.`;
+  }
+  return null;
+}
+
+export function exteriorSnapshotOriginLabel(origin: "default" | "canary", snapshotId: string): string {
+  return origin === "canary" ? `Canary snapshot ${snapshotId} (explicitly selected)` : `Default pinned snapshot ${snapshotId}`;
+}
+
 export interface Block835PublicRealmActivationInput {
   requested: boolean;
   loadState: "idle" | "loading" | "ready" | "failed";
@@ -550,6 +670,9 @@ export function App() {
   const initialNavigation = typeof window === "undefined" ? { featureId: null, query: "", cameraMode: "overview" as CameraMode, pose: null, poseInvalid: false } : parseNavigationUrl(window.location.href);
   const initialPublicRealmRequested = typeof window !== "undefined" && new URL(window.location.href).searchParams.get("publicRealm") === BLOCK835_PUBLIC_REALM_RELEASE_ID;
   const initialPublicRealmFeatureId = typeof window !== "undefined" ? new URL(window.location.href).searchParams.get("publicRealmFeature") : null;
+  const initialExteriorStreaming = typeof window === "undefined"
+    ? { requested: false, profile: DEFAULT_EXTERIOR_RENDER_PROFILE, canarySnapshotId: null }
+    : parseExteriorStreamingUrl(window.location.href);
   const stage3RenderProofRequested = import.meta.env.DEV && typeof window !== "undefined" && new URL(window.location.href).searchParams.get("stage3Proof") === "storefront-picks";
   const block835PerformanceMode = import.meta.env.DEV && typeof window !== "undefined" ? block835PerformanceProbeMode(window.location.search) : null;
   // A URL cannot activate the real adapter until its immutable release has
@@ -590,6 +713,19 @@ export function App() {
   const [publicRealmLoadState, setPublicRealmLoadState] = useState<"idle" | "loading" | "ready" | "failed">(initialPublicRealmRequested ? "loading" : "idle");
   const [publicRealmMessage, setPublicRealmMessage] = useState(initialPublicRealmRequested ? "Block 835 public-realm overlay is loading from the local release…" : "");
   const [selectedPublicRealmId, setSelectedPublicRealmId] = useState<string | null>(initialPublicRealmFeatureId);
+  const [exteriorStreamingRequested, setExteriorStreamingRequested] = useState(initialExteriorStreaming.requested);
+  const [exteriorProfile, setExteriorProfile] = useState<ExteriorRenderProfile>(initialExteriorStreaming.profile);
+  const [exteriorCanarySnapshotId, setExteriorCanarySnapshotId] = useState<string | null>(initialExteriorStreaming.canarySnapshotId);
+  const [exteriorCellRuntime, setExteriorCellRuntime] = useState<ExteriorCellRuntime | null>(null);
+  const [exteriorCellLoadState, setExteriorCellLoadState] = useState<"idle" | "loading" | "ready" | "failed">(initialExteriorStreaming.requested ? "loading" : "idle");
+  const [exteriorCellMessage, setExteriorCellMessage] = useState(initialExteriorStreaming.requested ? "Exterior streaming is loading from the local release…" : "");
+  const [exteriorHeadNotice, setExteriorHeadNotice] = useState<string | null>(null);
+  const [exteriorCellOutcomes, setExteriorCellOutcomes] = useState<ExteriorCellOutcome[]>([]);
+  const [exteriorUnanchoredIds, setExteriorUnanchoredIds] = useState<string[]>([]);
+  // Kept separate from `deepLinkMessage`, which the first selection clears.
+  const [exteriorDeepLinkNotice, setExteriorDeepLinkNotice] = useState<string | null>(
+    typeof window === "undefined" ? null : exteriorDeepLinkMessage(window.location.href),
+  );
   const [stage3RenderProof, setStage3RenderProof] = useState<Stage3RenderProof | null>(null);
   const [block835PerformanceProbe, setBlock835PerformanceProbe] = useState<Block835PerformanceProbeResult | null>(null);
   const [, setRealFallbackActive] = useState(initialRealRequest);
@@ -662,6 +798,9 @@ export function App() {
   const selectedStorefrontIdRef = useRef(selectedStorefrontId);
   const publicRealmRequestedRef = useRef(publicRealmRequested);
   const selectedPublicRealmIdRef = useRef(selectedPublicRealmId);
+  const exteriorStreamingRequestedRef = useRef(exteriorStreamingRequested);
+  const exteriorProfileRef = useRef(exteriorProfile);
+  const exteriorCanarySnapshotIdRef = useRef(exteriorCanarySnapshotId);
   const aggregateBudgetRef = useRef(new AggregateRequestBudget());
   const aggregateCacheRef = useRef<CitywideLruCache<unknown>>(new CitywideLruCache<unknown>(CITYWIDE_BUDGETS.maxLoadedShards, CITYWIDE_BUDGETS.maxLoadedBytes));
   const citywideModeRef = useRef(false);
@@ -695,8 +834,14 @@ export function App() {
   selectedStorefrontIdRef.current = selectedStorefrontId;
   publicRealmRequestedRef.current = publicRealmRequested;
   selectedPublicRealmIdRef.current = selectedPublicRealmId;
+  exteriorStreamingRequestedRef.current = exteriorStreamingRequested;
+  exteriorProfileRef.current = exteriorProfile;
+  exteriorCanarySnapshotIdRef.current = exteriorCanarySnapshotId;
   const getOverlayUrlFields = useCallback(() => navigationOverlayFields(exteriorRequestedRef.current, selectedStorefrontIdRef.current), []);
-  const navigationUrlForApp = useCallback((value: Parameters<typeof navigationUrl>[0], base: string) => appendBlock835PublicRealmUrl(navigationUrl(value, base), publicRealmRequestedRef.current, selectedPublicRealmIdRef.current), []);
+  const navigationUrlForApp = useCallback((value: Parameters<typeof navigationUrl>[0], base: string) => appendExteriorProfileUrl(
+    appendBlock835PublicRealmUrl(navigationUrl(value, base), publicRealmRequestedRef.current, selectedPublicRealmIdRef.current),
+    { requested: exteriorStreamingRequestedRef.current, profile: exteriorProfileRef.current, canarySnapshotId: exteriorCanarySnapshotIdRef.current },
+  ), []);
   const updateSelectedStorefront = useCallback((storefrontId: string | null) => {
     selectedStorefrontIdRef.current = storefrontId;
     setSelectedStorefrontId(storefrontId);
@@ -715,6 +860,30 @@ export function App() {
   });
   const publicRealmActive = publicRealmActivation.active;
   const publicRealmStatusMessage = publicRealmActivation.prerequisiteMessage ?? publicRealmMessage;
+  const activeRealBaseReleaseIdRef = useRef(activeRealBaseReleaseId);
+  activeRealBaseReleaseIdRef.current = activeRealBaseReleaseId;
+  const exteriorStreamingState = exteriorStreamingActivation({
+    requested: exteriorStreamingRequested,
+    loadState: exteriorCellLoadState,
+    hasVerifiedRuntime: exteriorCellRuntime !== null,
+    activeBaseReleaseId: activeRealBaseReleaseId,
+    compatibleWithActiveBase: Boolean(exteriorCellRuntime?.compatibleWith(activeRealBaseReleaseId)),
+  });
+  const exteriorStreamingActive = exteriorStreamingState.active;
+  const exteriorStreamingStatusMessage = exteriorStreamingState.prerequisiteMessage ?? exteriorCellMessage;
+  const exteriorSnapshotId = exteriorCellRuntime?.snapshot.snapshotId ?? null;
+  const exteriorSnapshotOrigin = exteriorCellRuntime?.origin ?? "default";
+  const exteriorCellOverlay = useMemo<ExteriorCellOverlay | null>(() => (
+    exteriorStreamingActive && exteriorCellRuntime
+      ? { releaseId: exteriorCellRuntime.releaseId, snapshotId: exteriorCellRuntime.snapshot.snapshotId, origin: exteriorCellRuntime.origin, profile: exteriorProfile, cells: exteriorCellOutcomes }
+      : null
+  ), [exteriorCellOutcomes, exteriorCellRuntime, exteriorProfile, exteriorStreamingActive]);
+  const exteriorNotices = exteriorStreamingActive ? exteriorStreamingNotices(exteriorHeadNotice, exteriorCellOutcomes, exteriorUnanchoredIds) : [];
+  // Bucketed camera *ellipsoid height*, used as the proxy the exterior LOD
+  // thresholds are evaluated against. It is not a measured camera-to-asset
+  // distance, and bucketing keeps a continuous camera move from restarting LOD
+  // selection on every frame.
+  const exteriorCameraHeightBucketMeters = Math.max(50, Math.round(Math.max(0, cameraPose.height) / 100) * 100);
   citywideModeRef.current = citywideMode;
   civicModeRef.current = civicMode;
   if (dataMode === "fixtures") releaseIdRef.current = null;
@@ -723,7 +892,10 @@ export function App() {
   useEffect(() => {
     if (!block835PerformanceMode || typeof window === "undefined") return undefined;
     const expectedPublicRealm = block835PerformanceMode === "stage3-plus-public-realm";
-    const prerequisitesReady = Boolean(activeRealBaseReleaseId && exteriorActive && (expectedPublicRealm ? publicRealmActive : !publicRealmRequested));
+    // Neither declared probe condition includes the exterior streaming overlay.
+    // A scene that renders extra verified exterior cells is a different scene,
+    // so the probe must not certify it against a stale control sample.
+    const prerequisitesReady = Boolean(activeRealBaseReleaseId && exteriorActive && !exteriorStreamingRequested && (expectedPublicRealm ? publicRealmActive : !publicRealmRequested));
     const sessionId = block835PerformanceSessionId();
     const pending = (status: Block835PerformanceProbeResult["status"], reason: string | null): Block835PerformanceProbeResult => ({
       schemaVersion: "1.0",
@@ -749,9 +921,11 @@ export function App() {
       comparison: null,
     });
     if (!prerequisitesReady) {
-      setBlock835PerformanceProbe(pending("waiting-for-prerequisites", expectedPublicRealm
-        ? "Waiting for an active compatible real base, active Stage 3 exterior, and active public-realm overlay."
-        : "Waiting for an active compatible real base and active Stage 3 exterior with public realm disabled."));
+      setBlock835PerformanceProbe(pending("waiting-for-prerequisites", exteriorStreamingRequested
+        ? "Exterior streaming is requested; this probe only measures the declared Stage 3 conditions and will not certify a scene with the additional exterior overlay."
+        : expectedPublicRealm
+          ? "Waiting for an active compatible real base, active Stage 3 exterior, and active public-realm overlay."
+          : "Waiting for an active compatible real base and active Stage 3 exterior with public realm disabled."));
       return undefined;
     }
 
@@ -851,7 +1025,55 @@ export function App() {
       window.removeEventListener("focus", startWhenFocused);
       document.removeEventListener("visibilitychange", startWhenFocused);
     };
-  }, [activeRealBaseReleaseId, block835PerformanceMode, exteriorActive, publicRealmActive, publicRealmRequested]);
+  }, [activeRealBaseReleaseId, block835PerformanceMode, exteriorActive, exteriorStreamingRequested, publicRealmActive, publicRealmRequested]);
+
+  useEffect(() => {
+    if (!exteriorStreamingRequested) {
+      setExteriorCellRuntime(null);
+      setExteriorUnanchoredIds([]);
+      setExteriorCellOutcomes([]);
+      setExteriorHeadNotice(null);
+      setExteriorCellLoadState("idle");
+      setExteriorCellMessage("");
+      return undefined;
+    }
+    const controller = new AbortController();
+    setExteriorCellLoadState("loading");
+    setExteriorCellMessage("Exterior streaming is loading from the local release…");
+    const request: ExteriorHeadRequest = exteriorCanarySnapshotId ? { kind: "canary", snapshotId: exteriorCanarySnapshotId } : { kind: "default" };
+    void loadExteriorCellRuntime(EXTERIOR_CELL_STREAMING_BASE_PATH, {
+      signal: controller.signal,
+      request,
+      sharedBudget: aggregateBudgetRef.current,
+      // Exterior canonical feature IDs are base building IDs; membership is
+      // proven against the base release that is actually loaded right now.
+      baseIdentity: { releaseId: activeRealBaseReleaseIdRef.current ?? "no-active-base", has: (featureId) => Boolean(activeAdapterRef.current.getFeature(featureId)) },
+    }).then(({ runtime, head }) => {
+      if (controller.signal.aborted) return;
+      setExteriorCellRuntime(runtime);
+      setExteriorHeadNotice(head.notice);
+      setExteriorCellLoadState("ready");
+      setExteriorCellMessage("");
+    }).catch((error: unknown) => {
+      if (controller.signal.aborted) return;
+      setExteriorCellRuntime(null);
+      setExteriorCellOutcomes([]);
+      setExteriorHeadNotice(null);
+      setExteriorCellLoadState("failed");
+      setExteriorCellMessage(exteriorStreamingFailureMessage(error));
+    });
+    return () => controller.abort();
+  }, [exteriorCanarySnapshotId, exteriorStreamingRequested]);
+
+  useEffect(() => {
+    if (!exteriorCellRuntime) return undefined;
+    const controller = new AbortController();
+    let cancelled = false;
+    void Promise.all(exteriorCellRuntime.cellIds().map((cellId) => exteriorCellRuntime.loadCell(cellId, exteriorProfile, exteriorCameraHeightBucketMeters, controller.signal)))
+      .then((outcomes) => { if (!cancelled) setExteriorCellOutcomes(outcomes); })
+      .catch(() => { if (!cancelled) setExteriorCellOutcomes([]); });
+    return () => { cancelled = true; controller.abort(); };
+  }, [exteriorCameraHeightBucketMeters, exteriorCellRuntime, exteriorProfile]);
 
   const publishCitywideMetrics = useCallback((adapter: CitywideReleaseAdapter) => {
     if (citywideAdapterRef.current !== adapter) return;
@@ -2043,6 +2265,37 @@ export function App() {
     if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrlForApp({ featureId: wasPublicRealmSelection ? null : activeSelectionRef.current, query: queryRef.current, cameraMode: cameraModeRef.current, pose: cameraPoseRef.current, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(layerVisibilityRef.current).filter(([, visible]) => visible).map(([layer]) => layer), facets: civicModeRef.current ? selectedCivicFacetsRef.current : selectedCategoriesRef.current, ...getOverlayUrlFields() }, window.location.href));
   };
 
+  /**
+   * The profile is a rendering choice only: the selected feature, its details,
+   * its provenance, and the pinned release origin are untouched, and only the
+   * `exteriorProfile` URL parameter changes.
+   */
+  const switchExteriorProfile = (nextProfile: ExteriorRenderProfile) => {
+    if (nextProfile === exteriorProfileRef.current) return;
+    exteriorProfileRef.current = nextProfile;
+    setExteriorProfile(nextProfile);
+    if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrlForApp({ featureId: activeSelectionRef.current, query: queryRef.current, cameraMode: cameraModeRef.current, pose: cameraPoseRef.current, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(layerVisibilityRef.current).filter(([, visible]) => visible).map(([layer]) => layer), facets: civicModeRef.current ? selectedCivicFacetsRef.current : selectedCategoriesRef.current, ...getOverlayUrlFields() }, window.location.href));
+  };
+
+  /** A canary is always an explicit opt-in and never becomes the default head. */
+  const switchExteriorCanary = (snapshotId: string | null) => {
+    if (snapshotId === exteriorCanarySnapshotIdRef.current) return;
+    exteriorCanarySnapshotIdRef.current = snapshotId;
+    setExteriorCanarySnapshotId(snapshotId);
+    if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrlForApp({ featureId: activeSelectionRef.current, query: queryRef.current, cameraMode: cameraModeRef.current, pose: cameraPoseRef.current, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(layerVisibilityRef.current).filter(([, visible]) => visible).map(([layer]) => layer), facets: civicModeRef.current ? selectedCivicFacetsRef.current : selectedCategoriesRef.current, ...getOverlayUrlFields() }, window.location.href));
+  };
+
+  const toggleExteriorStreaming = () => {
+    const next = !exteriorStreamingRequestedRef.current;
+    exteriorStreamingRequestedRef.current = next;
+    setExteriorStreamingRequested(next);
+    if (!next) {
+      exteriorCanarySnapshotIdRef.current = null;
+      setExteriorCanarySnapshotId(null);
+    }
+    if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrlForApp({ featureId: activeSelectionRef.current, query: queryRef.current, cameraMode: cameraModeRef.current, pose: cameraPoseRef.current, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(layerVisibilityRef.current).filter(([, visible]) => visible).map(([layer]) => layer), facets: civicModeRef.current ? selectedCivicFacetsRef.current : selectedCategoriesRef.current, ...getOverlayUrlFields() }, window.location.href));
+  };
+
   const displayedTileMetrics: TileStreamMetrics = civicMode ? {
     generation: 0,
     selectedLod: TRAVEL_CONTEXT_TILE_LEVEL,
@@ -2154,6 +2407,8 @@ export function App() {
           onStorefrontSelected={selectStorefront}
           publicRealmOverlay={publicRealmActive && publicRealmOverlay ? publicRealmOverlay : null}
           onPublicRealmSelected={(feature) => selectPublicRealm(feature)}
+          exteriorOverlay={exteriorCellOverlay}
+          onExteriorUnanchored={setExteriorUnanchoredIds}
           onStage3RenderProof={stage3RenderProofRequested ? setStage3RenderProof : undefined}
           onFeatureOverlap={selectOverlapFeatures}
           featureFilter={featureFilter}
@@ -2202,6 +2457,31 @@ export function App() {
           {publicRealmActive && <span className="runtime-note-overlay" role="status">NYC OTI Planimetrics local snapshot · curb profile and crosswalk striping are estimated, source-constrained, and not survey/current-paint truth.</span>}
           {publicRealmRequested && !publicRealmActive && <span className="runtime-note-overlay" role="status">{publicRealmLoadState === "loading" ? "Block 835 public realm · loading local release…" : publicRealmStatusMessage || "Block 835 public realm unavailable; the existing base/exterior state was left unchanged."}</span>}
           {publicRealmRequested && <button type="button" onClick={disablePublicRealm}>Disable public realm</button>}
+          <div className="exterior-streaming-controls" role="group" aria-label="Exterior streaming and render profile">
+            <button type="button" aria-pressed={exteriorStreamingRequested} onClick={toggleExteriorStreaming}>{exteriorStreamingRequested ? "Disable exterior streaming" : "Enable exterior streaming"}</button>
+            {EXTERIOR_RENDER_PROFILES.map((profile) => (
+              <button
+                key={profile}
+                type="button"
+                aria-pressed={exteriorProfile === profile}
+                disabled={!exteriorStreamingActive}
+                title={exteriorRenderProfileLabel(profile)}
+                onClick={() => switchExteriorProfile(profile)}
+              >{profile === "inspection" ? "Inspection profile" : "Exploration profile"}</button>
+            ))}
+            {exteriorStreamingRequested && exteriorCellRuntime && exteriorCellRuntime.index.canaryHeads.map((canary) => (
+              <button
+                key={canary.snapshotId}
+                data-exterior-canary={canary.snapshotId}
+                type="button"
+                aria-pressed={exteriorCanarySnapshotId === canary.snapshotId}
+                disabled={!exteriorStreamingActive}
+                onClick={() => switchExteriorCanary(exteriorCanarySnapshotId === canary.snapshotId ? null : canary.snapshotId)}
+              >{exteriorCanarySnapshotId === canary.snapshotId ? `Leave canary ${canary.snapshotId}` : `Try canary ${canary.snapshotId}`}</button>
+            ))}
+          </div>
+          {exteriorStreamingActive && exteriorSnapshotId && <span className="runtime-note-overlay" data-exterior-snapshot-origin={exteriorSnapshotOrigin} role="status">Exterior streaming · {exteriorSnapshotOriginLabel(exteriorSnapshotOrigin, exteriorSnapshotId)} · {exteriorRenderProfileLabel(exteriorProfile)} · verified local GLB bytes only.</span>}
+          {exteriorStreamingRequested && !exteriorStreamingActive && <span className="runtime-note-overlay" role="status">{exteriorCellLoadState === "loading" ? "Exterior streaming · loading local release…" : exteriorStreamingStatusMessage || "Exterior streaming unavailable; the existing base state was left unchanged."}</span>}
           {exteriorActive && <a className="runtime-note-attribution" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">Map data © OpenStreetMap contributors.</a>}
         </div>
         {stage3RenderProofRequested && <output data-stage3-render-proof-summary role="status">{stage3RenderProof
@@ -2213,6 +2493,13 @@ export function App() {
           style={{ position: "fixed", zIndex: 100, right: 8, bottom: 8, maxWidth: "min(960px, calc(100vw - 16px))", maxHeight: "40vh", overflow: "auto", overflowWrap: "anywhere", whiteSpace: "pre-wrap", padding: 8, background: "rgba(13, 21, 27, 0.94)", color: "#d5ffff", font: "11px ui-monospace, SFMono-Regular, Menlo, monospace" }}
         >{block835PerformanceProbe ? JSON.stringify(block835PerformanceProbe) : "Block 835 performance probe is initializing."}</output>}
         {deepLinkMessage && <div className="exploration-notice" role="alert">{deepLinkMessage} <button type="button" onClick={() => { terminalRealFallbackNoticeRef.current = null; setDeepLinkMessage(null); setPoseInvalid(false); window.history.replaceState({}, "", navigationUrlForApp({ featureId: activeSelectionRef.current, query, cameraMode, pose: cameraPose, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(layerVisibility).filter(([, visible]) => visible).map(([layer]) => layer), facets: civicMode ? selectedCivicFacets : selectedCategories, ...getOverlayUrlFields() }, window.location.href)); }}>Dismiss</button></div>}
+        {exteriorDeepLinkNotice && <div className="exploration-notice" role="alert" data-exterior-deep-link-notice>
+          {exteriorDeepLinkNotice} <button type="button" onClick={() => setExteriorDeepLinkNotice(null)}>Dismiss</button>
+        </div>}
+        {exteriorNotices.length > 0 && <div className="exploration-notice" role="alert" data-exterior-notices={exteriorNotices.length}>
+          <strong>Exterior streaming fallback</strong>
+          <ul>{exteriorNotices.map((notice) => <li key={notice}>{notice}</li>)}</ul>
+        </div>}
         {shareMessage && <div className="share-notice" role="status">{shareMessage}</div>}
         <section className={`tile-diagnostics ${diagnosticsOpen ? "is-open" : "is-collapsed"}`} aria-label="Tile diagnostics">
           <button className="overlay-launcher" type="button" aria-expanded={diagnosticsOpen} onClick={() => { setDiagnosticsOpen((open) => !open); setDirectionsOpen(false); setLayersOpen(false); }}><strong>Diagnostics</strong><span>{diagnosticsOpen ? "Collapse" : "Runtime health"}</span></button>
@@ -2487,6 +2774,31 @@ export function App() {
               {selectedPublicRealmFeature.derivation && <div><dt>Derivation</dt><dd>{selectedPublicRealmFeature.derivation.algorithm}{selectedPublicRealmFeature.derivation.parameters ? ` · ${JSON.stringify(selectedPublicRealmFeature.derivation.parameters)}` : ""}</dd></div>}
               <div><dt>Terms / attribution</dt><dd><a href={publicRealmOverlay.document.provenance.termsUrl} target="_blank" rel="noreferrer">NYC Open Data terms</a> · {publicRealmOverlay.document.provenance.attribution}</dd></div>
               <div><dt>Disclaimer</dt><dd>{publicRealmOverlay.document.provenance.disclaimer}</dd></div>
+            </dl>
+          </section>}
+
+          {exteriorStreamingActive && exteriorCellOverlay && exteriorSnapshotId && <section className="inspector-section exterior-streaming-detail" aria-label="Exterior streaming provenance">
+            <div className="place-truth-heading">
+              <h2>Exterior streaming</h2>
+              <span className="truth-badge real-badge" data-exterior-snapshot-origin={exteriorSnapshotOrigin}>Local · {exteriorCellOverlay.releaseId}</span>
+            </div>
+            <p className="section-label">Exterior cells reuse the canonical base building identity. The render profile changes only which verified LOD is drawn; identity, provenance, and the pinned release origin do not change.</p>
+            <dl>
+              <div><dt>Release origin</dt><dd data-exterior-release-origin={exteriorSnapshotOrigin}>{exteriorSnapshotOriginLabel(exteriorSnapshotOrigin, exteriorSnapshotId)}</dd></div>
+              <div><dt>Render profile</dt><dd data-exterior-profile={exteriorProfile}>{exteriorRenderProfileLabel(exteriorProfile)}</dd></div>
+              {(() => {
+                const selectedId = activeSelectionId;
+                const owner = selectedId ? exteriorCellOutcomes.find((cell) => cell.kind === "rendered" && cell.assets.some((asset) => asset.canonicalFeatureId === selectedId)) : undefined;
+                if (!owner || owner.kind !== "rendered") return <div><dt>Selected feature</dt><dd>No verified exterior representation is active for this record.</dd></div>;
+                const asset = owner.assets.find((entry) => entry.canonicalFeatureId === selectedId)!;
+                return <>
+                  <div><dt>Cell / release</dt><dd>{owner.cellId} · {owner.cellReleaseId} ({owner.cellReleaseVersion}){owner.representation === "predecessor" ? " · pinned predecessor fallback" : ""}</dd></div>
+                  <div><dt>Active asset</dt><dd>{asset.lodId} · {asset.checksumSha256}</dd></div>
+                  <div><dt>Truth tiers</dt><dd>{asset.provenance.truthTiers.join(" · ")}</dd></div>
+                  <div><dt>Source dates</dt><dd>captured {asset.provenance.sourceDates.capturedAt ?? "unknown"} · updated {asset.provenance.sourceDates.updatedAt ?? "unknown"}</dd></div>
+                  <div><dt>Uncertainty</dt><dd>{asset.provenance.uncertainty}</dd></div>
+                </>;
+              })()}
             </dl>
           </section>}
 
