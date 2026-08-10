@@ -243,6 +243,21 @@ export class ComposedReleaseAdapter implements RuntimeCityAdapter {
     return this.base.getLayerManifest(layer);
   }
 
+  /**
+   * Civic-context mode composes over the citywide base, and exterior cells are
+   * base building identities, so membership must resolve against the base
+   * release rather than whatever the camera has streamed. Forwarding these
+   * keeps civic-context on deterministic release membership instead of silently
+   * falling back to the residency oracle and failing base-incompatible.
+   */
+  async ensureIdentityIndex(signal?: AbortSignal): Promise<number> {
+    return this.base.ensureIdentityIndex(signal);
+  }
+
+  hasIdentityMember(featureId: string): boolean {
+    return this.base.hasIdentityMember(featureId) || this.getFeature(featureId) !== undefined;
+  }
+
   getFeature(featureId: string): Feature | undefined {
     const baseFeature = this.base.getFeature(featureId);
     const contextFeature = this.context.getFeature(featureId);

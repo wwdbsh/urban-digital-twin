@@ -1311,8 +1311,8 @@
         ],
         "cellId": "cell:manhattan:block-835",
         "cellRelease": {
-          "checksumSha256": "a99e3773c1c0cc5df50a2480a9a46e7f4ca446fd8aec1187d86c481167fbd3fe",
-          "id": "manhattan-esb-block-reference-20260811"
+          "id": "cell-release:manhattan-exterior-cells-20260811:v1",
+          "checksumSha256": "418ec17d40cdbe89be781367df5cf4d47dc4fba3bf3902b019c6431e05ce4a87"
         },
         "membershipChecksumSha256": "98a7c50abc157fb4f2e52f23e2a129274b7273cace496929406bbbff448a8dfa",
         "predecessor": {

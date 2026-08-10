@@ -611,6 +611,29 @@ export function exteriorCanarySnapshotMessage(releaseId: string, snapshotId: str
     : `Exterior canary snapshot ${snapshotId} is not published by release ${releaseId}; the default pinned snapshot was used instead. Available canary snapshots are ${availableCanarySnapshotIds.join(", ")}.`;
 }
 
+/**
+ * Optional deterministic-membership surface. An adapter that can prove release
+ * membership without streaming exposes these; anything else falls back to
+ * resident lookup, which is correct for fully-resident adapters such as the
+ * fixture.
+ */
+interface ExteriorBaseIdentityAdapter {
+  getFeature(featureId: string): unknown;
+  ensureIdentityIndex?: (signal?: AbortSignal) => Promise<number>;
+  hasIdentityMember?: (featureId: string) => boolean;
+}
+
+export async function ensureExteriorBaseIdentity(adapter: ExteriorBaseIdentityAdapter, signal?: AbortSignal): Promise<void> {
+  if (typeof adapter.ensureIdentityIndex !== "function") return;
+  await adapter.ensureIdentityIndex(signal);
+}
+
+export function exteriorBaseIdentityHas(adapter: ExteriorBaseIdentityAdapter, featureId: string): boolean {
+  if (typeof adapter.hasIdentityMember === "function") return adapter.hasIdentityMember(featureId);
+  const resident = adapter.getFeature(featureId);
+  return resident !== undefined && resident !== null;
+}
+
 export function exteriorSnapshotOriginLabel(origin: "default" | "canary", snapshotId: string): string {
   return origin === "canary" ? `Canary snapshot ${snapshotId} (explicitly selected)` : `Default pinned snapshot ${snapshotId}`;
 }
@@ -1078,14 +1101,29 @@ export function App() {
     setExteriorCellLoadState("loading");
     setExteriorCellMessage("Exterior streaming is loading from the local release…");
     const request: ExteriorHeadRequest = exteriorCanarySnapshotId ? { kind: "canary", snapshotId: exteriorCanarySnapshotId } : { kind: "default" };
-    void loadExteriorCellRuntime(exteriorCellBasePath(exteriorCellReleaseId), {
-      signal: controller.signal,
-      request,
-      sharedBudget: aggregateBudgetRef.current,
-      // Exterior canonical feature IDs are base building IDs; membership is
-      // proven against the base release that is actually loaded right now.
-      baseIdentity: { releaseId: activeRealBaseReleaseIdRef.current ?? "no-active-base", has: (featureId) => Boolean(activeAdapterRef.current.getFeature(featureId)) },
-    }).then(({ runtime, head }) => {
+    // Depend on the adapter STATE, not the ref. `exteriorStreamingRequested` is
+    // URL-derived and true on the very first render, while the citywide adapter
+    // arrives asynchronously afterwards. Reading the ref captured the
+    // placeholder adapter, membership resolution no-opped, verification failed
+    // base-incompatible, and nothing re-ran when the real adapter landed — only
+    // a manual disable/enable toggle recovered. Listing it as a dependency makes
+    // the effect re-run on adapter swap, and the abort in the cleanup cancels
+    // the in-flight load so the stale attempt cannot overwrite the new one.
+    const adapter = activeAdapter;
+    // Membership must be DETERMINISTIC RELEASE MEMBERSHIP, not residency.
+    // `getFeature` only sees shards the camera has already streamed, so asking
+    // it whether a Block 835 building belongs to the base release answered
+    // "no" whenever the camera was elsewhere and every exterior cell failed
+    // base-incompatible. Adapters that publish a checksum-verified identity
+    // index resolve it once here; fully-resident adapters keep working
+    // unchanged through the `getFeature` fallback inside `hasIdentityMember`.
+    void ensureExteriorBaseIdentity(adapter, controller.signal)
+      .then(() => loadExteriorCellRuntime(exteriorCellBasePath(exteriorCellReleaseId), {
+        signal: controller.signal,
+        request,
+        sharedBudget: aggregateBudgetRef.current,
+        baseIdentity: { releaseId: activeRealBaseReleaseId ?? "no-active-base", has: (featureId) => exteriorBaseIdentityHas(adapter, featureId) },
+      })).then(({ runtime, head }) => {
       if (controller.signal.aborted) return;
       setExteriorCellRuntime(runtime);
       setExteriorHeadNotice(head.notice);
@@ -1106,7 +1144,7 @@ export function App() {
       setExteriorCellMessage(exteriorStreamingFailureMessage(error));
     });
     return () => controller.abort();
-  }, [exteriorCanarySnapshotId, exteriorCellReleaseId, exteriorStreamingRequested]);
+  }, [activeAdapter, activeRealBaseReleaseId, exteriorCanarySnapshotId, exteriorCellReleaseId, exteriorStreamingRequested]);
 
   useEffect(() => {
     if (!exteriorCellRuntime) return undefined;
