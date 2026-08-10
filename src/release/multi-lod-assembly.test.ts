@@ -166,6 +166,45 @@ describe("multi-LOD immutable assembly", () => {
     expect(() => parseGlbV2(glb(metadata("lod-0"), { mutateJson: addCorePbrAndScene }))).not.toThrow();
   });
 
+  it("accepts a disjoint scene tree with normalized quaternions", () => {
+    expect(() => parseGlbV2(glb(metadata("lod-0"), { mutateJson: (json) => {
+      json.nodes = [{ children: [1, 2], rotation: [0, 0, Math.SQRT1_2, Math.SQRT1_2] }, { mesh: 0 }, { mesh: 0 }];
+      json.scenes = [{ nodes: [0] }]; json.scene = 0;
+    } }))).not.toThrow();
+  });
+
+  it("rejects cycles across reachable and unreachable node components", () => {
+    expect(() => parseGlbV2(glb(metadata("lod-0"), { mutateJson: (json) => {
+      json.nodes = [{ children: [1] }, { children: [0], mesh: 0 }]; json.scenes = [{ nodes: [0] }]; json.scene = 0;
+    } }))).toThrow(/cycle/iu);
+
+    expect(() => parseGlbV2(glb(metadata("lod-0"), { mutateJson: (json) => {
+      const nodes = Array.from({ length: 10_000 }, (_, index) => index === 0 ? { mesh: 0 } : { children: [index === 9_999 ? 1 : index + 1] });
+      json.nodes = nodes; json.scenes = [{ nodes: [0] }]; json.scene = 0;
+    } }))).toThrow(/cycle/iu);
+  });
+
+  it("rejects nodes with multiple parents", () => {
+    expect(() => parseGlbV2(glb(metadata("lod-0"), { mutateJson: (json) => {
+      json.nodes = [{ children: [2] }, { children: [2] }, { mesh: 0 }]; json.scenes = [{ nodes: [0, 1] }]; json.scene = 0;
+    } }))).toThrow(/multiple parents/iu);
+  });
+
+  it.each([{ rotation: [0, 0, 0, 0] }, { rotation: [0, 0, 0, 0.5] }])("rejects a non-normalized node quaternion $rotation", ({ rotation }) => {
+    expect(() => parseGlbV2(glb(metadata("lod-0"), { mutateJson: (json) => {
+      json.nodes = [{ mesh: 0, rotation }]; json.scenes = [{ nodes: [0] }]; json.scene = 0;
+    } }))).toThrow(/quaternion|normalized/iu);
+  });
+
+  it("binds bufferView stride and targets to primitive roles", () => {
+    const mutations: Array<(json: Record<string, unknown>) => void> = [
+      (json) => { ((json.bufferViews as Array<Record<string, unknown>>)[1]!).byteStride = 4; },
+      (json) => { ((json.bufferViews as Array<Record<string, unknown>>)[1]!).target = 34962; },
+      (json) => { ((json.bufferViews as Array<Record<string, unknown>>)[0]!).target = 34963; },
+    ];
+    for (const mutateJson of mutations) expect(() => parseGlbV2(glb(metadata("lod-0"), { mutateJson }))).toThrow(/bufferView|target|stride/iu);
+  });
+
   it("rejects arbitrary fields on every supported nested glTF object role", () => {
     const mutations: Array<[string, (json: Record<string, unknown>) => void]> = [
       ["asset", (json) => { (json.asset as Record<string, unknown>).generator = "private note"; }],

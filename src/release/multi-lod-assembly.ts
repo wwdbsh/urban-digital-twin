@@ -379,9 +379,17 @@ function validateGltfJson(json: Record<string, unknown>, bin: Uint8Array): void 
       closedKeys(primitive, ["attributes", "indices", "material", "mode"], ["attributes", "indices"], "glTF mesh primitive");
       if ((primitive.mode ?? 4) !== 4 || !rec(primitive.attributes) || !integer(primitive.attributes.POSITION, Math.max(0, accessors.length - 1)) || !integer(primitive.indices, Math.max(0, accessors.length - 1))) throw new Error("Only indexed TRIANGLES with POSITION are supported.");
       if (Object.keys(primitive.attributes).some((key) => !GLTF_ATTRIBUTES.has(key))) throw new Error("Primitive contains an unsupported attribute semantic.");
-      for (const [semantic, accessorIndex] of Object.entries(primitive.attributes)) { if (!integer(accessorIndex, Math.max(0, accessors.length - 1))) throw new Error("Primitive attribute accessor is invalid."); validateAttributeAccessor(accessors, semantic, accessorIndex); }
+      for (const [semantic, accessorIndex] of Object.entries(primitive.attributes)) {
+        if (!integer(accessorIndex, Math.max(0, accessors.length - 1))) throw new Error("Primitive attribute accessor is invalid.");
+        validateAttributeAccessor(accessors, semantic, accessorIndex);
+        const attributeView = views[accessors[accessorIndex]!.bufferView as number]!;
+        if (attributeView.target !== undefined && attributeView.target !== 34962) throw new Error("Vertex attribute bufferView target is incompatible.");
+      }
       if (primitive.material !== undefined && !integer(primitive.material, materials.length - 1)) throw new Error("Primitive material index is invalid.");
       const positionIndex = primitive.attributes.POSITION; const indexIndex = primitive.indices as number; const positions = info(positionIndex); const indices = info(indexIndex);
+      const indexView = views[indices.accessor.bufferView as number]!;
+      if (indexView.byteStride !== undefined) throw new Error("Index bufferView cannot declare byteStride.");
+      if (indexView.target !== undefined && indexView.target !== 34963) throw new Error("Index bufferView target is incompatible.");
       if (indices.accessor.type !== "SCALAR" || indices.componentType === 5126 || indices.count % 3 !== 0 || positions.accessor.type !== "VEC3" || positions.componentType !== 5126 || positions.count < 3) throw new Error("Triangle topology accessor counts are invalid.");
       if (!positionCounts.has(positionIndex)) { reserveScan(positions.count * 3); for (let index = 0; index < positions.count; index += 1) for (let axis = 0; axis < 3; axis += 1) if (!Number.isFinite(component(5126, positions.offset + index * positions.stride + axis * 4))) throw new Error("POSITION contains a non-finite coordinate."); positionCounts.set(positionIndex, positions.count); }
       if (!indexMaximums.has(indexIndex)) { reserveScan(indices.count); let maximum = -1; for (let index = 0; index < indices.count; index += 1) maximum = Math.max(maximum, component(indices.componentType, indices.offset + index * indices.stride)); indexMaximums.set(indexIndex, maximum); }
@@ -390,15 +398,34 @@ function validateGltfJson(json: Record<string, unknown>, bin: Uint8Array): void 
   }
   if (primitives === 0 || primitives > MULTI_LOD_ASSEMBLY_LIMITS.primitives) throw new Error("Primitive count is outside the profile.");
   const nodes = gltfObjects(json.nodes, "glTF nodes", MULTI_LOD_ASSEMBLY_LIMITS.nodes); const scenes = gltfObjects(json.scenes, "glTF scenes", MULTI_LOD_ASSEMBLY_LIMITS.scenes);
+  const nodeChildren: number[][] = Array.from({ length: nodes.length }, () => []); const indegrees = new Uint32Array(nodes.length);
   for (let index = 0; index < nodes.length; index += 1) {
     const node = nodes[index]!; closedKeys(node, ["children", "mesh", "matrix", "translation", "rotation", "scale"], [], "glTF node");
-    if (node.children !== undefined) { gltfIndices(node.children, nodes.length - 1, "Node children", false); if ((node.children as number[]).includes(index)) throw new Error("Node cannot be its own child."); }
+    if (node.children !== undefined) {
+      gltfIndices(node.children, nodes.length - 1, "Node children", false); const children = node.children as number[]; nodeChildren[index] = children;
+      for (const child of children) { const indegree = (indegrees[child] ?? 0) + 1; indegrees[child] = indegree; if (indegree > 1) throw new Error("Node cannot have multiple parents."); }
+    }
     if (node.mesh !== undefined && !integer(node.mesh, meshes.length - 1)) throw new Error("Node mesh index is invalid.");
     const hasTrs = node.translation !== undefined || node.rotation !== undefined || node.scale !== undefined;
     if (node.matrix !== undefined) { if (hasTrs) throw new Error("Node matrix and TRS transforms are mutually exclusive."); finiteArray(node.matrix, 16, "Node matrix"); }
     if (node.translation !== undefined) finiteArray(node.translation, 3, "Node translation");
-    if (node.rotation !== undefined) finiteArray(node.rotation, 4, "Node rotation", -1, 1);
+    if (node.rotation !== undefined) {
+      finiteArray(node.rotation, 4, "Node rotation", -1, 1);
+      if (Math.abs(Math.hypot(...node.rotation as number[]) - 1) > 1e-6) throw new Error("Node rotation quaternion must be normalized.");
+    }
     if (node.scale !== undefined) finiteArray(node.scale, 3, "Node scale");
+  }
+  const colors = new Uint8Array(nodes.length); const nodeStack: number[] = []; const childOffsets: number[] = [];
+  for (let start = 0; start < nodes.length; start += 1) {
+    if (colors[start] !== 0) continue;
+    colors[start] = 1; nodeStack.push(start); childOffsets.push(0);
+    while (nodeStack.length > 0) {
+      const stackIndex = nodeStack.length - 1; const current = nodeStack[stackIndex]!; const childOffset = childOffsets[stackIndex]!; const children = nodeChildren[current]!;
+      if (childOffset >= children.length) { colors[current] = 2; nodeStack.pop(); childOffsets.pop(); continue; }
+      childOffsets[stackIndex] = childOffset + 1; const child = children[childOffset]!;
+      if (colors[child] === 1) throw new Error("Node hierarchy contains a cycle.");
+      if (colors[child] === 0) { colors[child] = 1; nodeStack.push(child); childOffsets.push(0); }
+    }
   }
   for (const scene of scenes) { closedKeys(scene, ["nodes"], [], "glTF scene"); if (scene.nodes !== undefined) gltfIndices(scene.nodes, nodes.length - 1, "Scene root nodes"); }
   if (json.scene !== undefined && !integer(json.scene, scenes.length - 1)) throw new Error("Default scene index is invalid.");
