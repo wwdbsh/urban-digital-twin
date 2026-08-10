@@ -51,6 +51,18 @@ const openDerivative: DerivativePolicy = {
   constraints: "Derived indexes/tiles require source attribution, licence review and the source's stated disclaimer/obligations.",
 };
 
+/**
+ * Applies to NYC OTI Building Footprints (jh45-qr5r) only.  The 2026-08-11
+ * user decision broadened that dataset's envelope to public display,
+ * derivative conveyance, and redistribution of exterior geometry *generated*
+ * from the footprints.  It is deliberately a separate constant from
+ * `openDerivative` so no other source's approval envelope moves with it.
+ */
+const generatedGeometryConveyanceDerivative: DerivativePolicy = {
+  allowed: "conditional",
+  constraints: "Derived indexes/tiles require source attribution, licence review and the source's stated disclaimer/obligations. Additionally, under the 2026-08-11 user authorization, exterior geometry generated from these footprints may be publicly displayed, conveyed as a derivative, and redistributed, provided NYC OTI attribution, the City modified-data disclaimer, source IDs, capture timestamp, checksum, CRS, and height uncertainty travel with it. Redistribution covers that generated geometry only, never the raw jh45-qr5r source dataset, and public deployment remains excluded.",
+};
+
 const pendingAccess = {
   keyOrAgreementRequired: false,
   kind: "legal-review" as const,
@@ -182,12 +194,12 @@ export const sourceRegistry = [
     updateTimestamp: "2026-07-18T00:00:00Z",
     cadence: "OTI metadata (10/09/2025) says features are updated daily and publicly released weekly; portal page reports Updated July 18, 2026. Verify the exact snapshot release at ingest time.",
     retention: cityRetention,
-    derivativePolicy: openDerivative,
+    derivativePolicy: generatedGeometryConveyanceDerivative,
     access: pendingAccess,
     geographicScope: "New York City building footprints and centroid companion layer",
     expectedCrs: "EPSG:4326",
     expectedVerticalDatum: "GROUND_ELEVATION is NAVD88 for photogrammetric/modern-source records when documented, but its numeric field unit is not published; HEIGHT_ROOF is relative to ground, not sea level and the approved pilot records are ingested as feet-equivalent values with explicit unit provenance.",
-    approvalNote: "User-approved in Orca reply msg_91770ac6d098 for this immutable local all-Manhattan citywide wave; preserve the City disclaimer, source IDs, capture timestamp, checksum, CRS, and height uncertainty. Scope is only OTI jh45-qr5r raw retention, derived local spatial/search/detail artifacts, and local browser display; no new provider, Google data, public deployment, or unrelated dataset.",
+    approvalNote: "User-approved in Orca reply msg_91770ac6d098 for this immutable local all-Manhattan citywide wave; preserve the City disclaimer, source IDs, capture timestamp, checksum, CRS, and height uncertainty. Scope is OTI jh45-qr5r raw retention, derived local spatial/search/detail artifacts, and local browser display; no new provider, Google data, or unrelated dataset. Broadened 2026-08-11 by in-session user authorization: exterior geometry generated from these footprints may additionally be publicly displayed, conveyed as a derivative, and redistributed, with NYC OTI attribution and the City modified-data disclaimer retained. That redistribution covers the generated geometry only, never the raw jh45-qr5r source dataset, and public deployment remains excluded.",
   }),
   pendingEntry({
     id: "nyc.mappluto",
