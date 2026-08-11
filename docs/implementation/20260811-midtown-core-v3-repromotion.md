@@ -225,6 +225,8 @@ swap.
 | Artifact replay | 623 emitted files verified against their declared checksums and byte sizes |
 | Anti-leak | 0 `private/`-prefixed paths emitted; private root declares exactly 1 artifact, never written |
 | Immutability | `data/midtown-core-20260811/` and every frozen `public/data/` directory untouched; only additions |
+| `-v3e` package drift | Pass — rebuilt manifest fingerprint `7acd2a15…` matches the committed bytes, all 29 artifacts byte-for-byte |
+| Cited-style admission at emit | Pass — re-derived from the rights-cleared admission, never copied from the input manifest |
 | Runtime cell binding | Pass — 170 resident cache entries, 157 Midtown GLB requests |
 | Renderer journeys | Pass — 10 journeys, 0 console errors |
 | Rollback rehearsal (browser) | Pass — real record swap, rebuild, drive, restore |
@@ -239,6 +241,8 @@ swap.
 | `App.test.tsx` | Pinned-allowlist assertion gains the successor id; `MIDTOWN_CORE_EXTERIOR_RELEASE_ID` → `-v3` | The promoted default moved; V2 opt-in paths deliberately still tested |
 | `midtown-core-v3-materialization.test.ts` (new) | 15 tests, all synthetic so they run on a fresh clone | New materializer |
 | `midtown-core-v3-release.test.ts` (new) | 20 tests | New release, profile and predecessor derivation |
+| `block835-v3-canary-release.test.ts` | + 2 tests: a forged `citedStyle` on a non-admitted building, and a dropped one on the admitted building, are both refused at the emit gate | `citedStyle` was the one trust-bearing field on that path that was copied from the private manifest rather than re-derived; both tests fail without the fix |
+| `block835-v3e-package.test.ts` (new) | 6 tests | The committed `-v3e` package — the one this build actually promotes — had no rebuild-versus-committed drift gate; its determinism fingerprint existed only in prose. The fingerprint constant was obtained by rebuild, not transcribed |
 | `assembly-cell-coverage.test.ts` (new) | 8 tests | The refined coverage rule: the honest subset is admitted, and every way of losing the anti-silent-omission property is refused — a building neither packaged nor unavailable, a building that is both, a foreign building from either side, a subset, a superset, a repeat, and a checksum describing a different set |
 
 No test was deleted or weakened.

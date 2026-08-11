@@ -103,6 +103,13 @@ and nothing in the shipped bytes asserts a setback that was not generated. Until
 it exists, the honest output for these buildings is one tier plus a disclosure,
 which is what ships.
 
+**Tracked follow-up: multi-tier setback synthesis for `tierCount <= 1`
+refusals.** This is named so that 48 % does not read as a settled end state. It
+is expected wave-chain-or-later work and carries **no schedule commitment
+here** — the point of naming it is that a future reader finds an acknowledged
+gap rather than an unexplained plateau. Nothing downstream may treat it as
+planned, and no shipped artifact anticipates it.
+
 ## Decision C — a promotion record may roll back to an ENABLED predecessor
 
 `ExteriorDefaultActivationEnabled.predecessor` was typed
@@ -249,6 +256,20 @@ per-LOD triangle, material and texture counts for all fourteen assets against th
 `-v3` manifest and requires equality, and Blender independently re-measured the
 same volumes and the same silhouette ratios under the new plan hash. The override
 changed material factors only.
+
+**Correction history for the Blender measurements.** The P3 pass over the
+Midtown wave found two measurement bugs in the shared inspection method, both of
+which had produced a flattering number: `bpy.data.images` was counted AFTER
+rendering, so Blender's own "Render Result" datablock reported one embedded image
+per texture-free asset (81 to 0), and the T013 camera scale cropped tall towers,
+which was fixed with a fit floor that only ever moves the camera back. Both are
+recorded with their pre-fix numbers in
+[the P3 implementation record](../implementation/20260811-midtown-core-v3-repromotion.md#blender-stratified-sample--81-buildings).
+The Block 835 figures above were taken with the earlier method; the image-count
+bug would have inflated an embedded-image count, and the Block 835 packages are
+independently proven texture-free by `replayMultiLodAssembly` under
+`requiresTextureFreeAssembly` and by their per-LOD `textureCount` assertions, so
+no Block 835 conclusion rests on the affected reading.
 
 `droppedFrameRatio` 0 on a ~135 Hz display, so the margin is real headroom rather
 than refresh quantization. Peak concurrent requests 4 (limit 8); peak exterior

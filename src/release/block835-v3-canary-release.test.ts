@@ -47,6 +47,48 @@ describe("Block 835 V3 successor exterior release", () => {
     expect(built.files.size).toBeGreaterThan(0);
   });
 
+  it("refuses a cited facade style the rights-cleared admission does not produce", () => {
+    // The attack this closes: `citedStyle` was the one trust-bearing field on
+    // the emit path that was COPIED from the private input manifest rather than
+    // re-derived, while the inventory beside it is rebuilt and hash-compared and
+    // truth tiers are admitted against the rebuilt inventory. A manifest-only
+    // edit could therefore attach a sourced-material citation — with a provider,
+    // a URL and an attribution line the details panel renders verbatim — to a
+    // building no intake record covers, and nothing before the runtime looked.
+    const forged = input();
+    const manifest = forged.manifest as unknown as {
+      assets: { canonicalFeatureId: string; citedStyle?: unknown }[];
+    };
+    const victim = manifest.assets.find((asset) => asset.canonicalFeatureId !== "doitt:778052")!;
+    expect(victim.citedStyle).toBeUndefined();
+    victim.citedStyle = {
+      styleClass: "stone-neutral",
+      evidenceRecordId: ESB_FACADE_MATERIAL_RECORD_ID,
+      fact: "Invented facade-material claim that no admitted intake record makes.",
+      provider: "wikipedia",
+      sourceUrl: "https://en.wikipedia.org/wiki/Empire_State_Building",
+      attribution: "Wikipedia contributors",
+    };
+    expect(() => buildBlock835CanaryRelease(forged, BLOCK835_V3_CANARY_PROFILE))
+      .toThrow(/cannot re-derive from the rights-cleared intake admission/u);
+    expect(() => buildBlock835CanaryRelease(forged, BLOCK835_V3_CANARY_PROFILE)).toThrow(new RegExp(victim.canonicalFeatureId, "u"));
+  });
+
+  it("refuses a DROPPED citation as well, so the check closes both directions", () => {
+    // The mirror case: silently removing the citation from the one building
+    // that genuinely carries one would ship a cited style class while telling
+    // the user nothing sourced it.
+    const stripped = input();
+    const manifest = stripped.manifest as unknown as {
+      assets: { canonicalFeatureId: string; citedStyle?: unknown }[];
+    };
+    const cited = manifest.assets.find((asset) => asset.canonicalFeatureId === "doitt:778052")!;
+    expect(cited.citedStyle).toBeDefined();
+    delete cited.citedStyle;
+    expect(() => buildBlock835CanaryRelease(stripped, BLOCK835_V3_CANARY_PROFILE))
+      .toThrow(/cannot re-derive from the rights-cleared intake admission/u);
+  });
+
   it("builds byte-identical output on repeated runs", () => {
     const first = buildBlock835CanaryRelease(input(), BLOCK835_V3_CANARY_PROFILE);
     const second = buildBlock835CanaryRelease(input(), BLOCK835_V3_CANARY_PROFILE);

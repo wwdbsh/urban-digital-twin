@@ -50,6 +50,7 @@ import {
   successorEvidenceShardId,
   successorInventoryId,
 } from "./block835-successor-package.ts";
+import { block835CitedStyleFor } from "./block835-facade-material-intake.ts";
 import { buildV3Plan, v3EvidenceShardId, v3InventoryId } from "./block835-v3-package.ts";
 import {
   EXTERIOR_RELEASE_SCHEMA_VERSION,
@@ -67,7 +68,7 @@ import {
   type ExteriorRootManifest,
   type Wgs84Bounds,
 } from "./exterior-release.ts";
-import { validateMultiLodAssembly, type MultiLodAssemblyManifest } from "./multi-lod-assembly.ts";
+import { validateMultiLodAssembly, type AssemblyCitedStyle, type MultiLodAssemblyManifest } from "./multi-lod-assembly.ts";
 
 /**
  * Every logical id this emitter mints is a pure function of the release id, so a
@@ -235,6 +236,53 @@ export interface Block835CanaryReleaseProfile {
     inventory: ExteriorComponentInventory,
     canonicalBuildingId: string,
   ) => void;
+  /**
+   * Throws unless the asset's cited facade style is exactly the one this build
+   * can RE-DERIVE from the rights-cleared intake admission.
+   *
+   * Every other trust-bearing field on this path is re-derived rather than
+   * copied — the inventory is rebuilt and hash-compared, and truth tiers are
+   * admitted against the rebuilt inventory — but `citedStyle` reached the public
+   * assembly through a plain spread of the private manifest. A manifest-only
+   * edit could therefore have attached a sourced-material citation to a building
+   * no intake record covers, and nothing before the runtime would have noticed.
+   * A citation is a rights and provenance claim, so it is re-derived here too.
+   */
+  readonly admitCitedStyle: (
+    citedStyle: AssemblyCitedStyle | undefined,
+    canonicalBuildingId: string,
+  ) => void;
+}
+
+/**
+ * A package with no cited lineage may carry no citation at all.
+ *
+ * The V2 grammar has no style-override mechanism, so any `citedStyle` on a V2
+ * asset is by construction something the manifest asserted and nothing produced.
+ */
+export function admitNoCitedStyle(citedStyle: AssemblyCitedStyle | undefined, canonicalBuildingId: string): void {
+  if (citedStyle !== undefined) {
+    fail(`asset ${canonicalBuildingId} declares a cited facade style, which this release's grammar cannot produce and this build cannot re-derive.`);
+  }
+}
+
+/**
+ * Re-derives the citation from the admission and refuses any disagreement.
+ *
+ * `block835CitedStyleFor` resolves through `block835FacadeMaterialAdmission`, so
+ * it returns a citation only for a building whose intake record was actually
+ * admitted and is actually conveyable in public, and throws otherwise. Comparing
+ * its result against the manifest's own claim closes both directions: an
+ * invented citation and a dropped one.
+ */
+export function admitV3CitedStyle(citedStyle: AssemblyCitedStyle | undefined, canonicalBuildingId: string): void {
+  const derived = block835CitedStyleFor(canonicalBuildingId);
+  if (stableSerialize(citedStyle ?? null) !== stableSerialize(derived ?? null)) {
+    fail(
+      `asset ${canonicalBuildingId} declares a cited facade style this build cannot re-derive from the rights-cleared intake admission. `
+      + "A public asset may only carry a citation the admission produces, so the input manifest's claim is refused rather than copied.",
+    );
+  }
 }
 
 export const BLOCK835_CANARY_V2_PROFILE: Block835CanaryReleaseProfile = {
@@ -252,6 +300,7 @@ export const BLOCK835_CANARY_V2_PROFILE: Block835CanaryReleaseProfile = {
   admitTruthTiers: (truthTiers, _inventory, canonicalBuildingId) => {
     if (truthTiers.length !== 1 || truthTiers[0] !== "generated") fail(`asset ${canonicalBuildingId} is not entirely generated.`);
   },
+  admitCitedStyle: admitNoCitedStyle,
 };
 
 /**
@@ -317,6 +366,7 @@ export function block835CanaryV3Profile(options: {
     evidenceShardIdFor: (canonicalBuildingId) => v3EvidenceShardId(canonicalBuildingId, options.inputPackageId),
     rebuildInventory: (building) => buildV3Plan(building, styleOverrides.get(building.canonicalBuildingId)).plan.inventory,
     admitTruthTiers: admitV3TruthTiers,
+    admitCitedStyle: admitV3CitedStyle,
   };
 }
 
@@ -534,6 +584,8 @@ export function buildBlock835CanaryRelease(
     // so an admitted `absent` tier is admitted only when the rebuilt components
     // actually justify it.
     profile.admitTruthTiers(asset.truthTiers, inventory, building.canonicalBuildingId);
+    // Re-derived, never copied: see `admitCitedStyle` on the profile.
+    profile.admitCitedStyle(asset.citedStyle, building.canonicalBuildingId);
 
     const capturedAt = requireNotAfter(
       canonicalTimestamp(asset.sourceDates.capturedAt ?? building.capturedAt, `capture timestamp for ${building.canonicalBuildingId}`),
