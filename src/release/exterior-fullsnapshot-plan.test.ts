@@ -226,10 +226,18 @@ describe("full-snapshot cache simulation", () => {
     expect(simulation.maximumSingleCellEntries).toBe(EXTERIOR_CELL_MAX_BUILDINGS);
     expect(simulation.singleCellFitsCache).toBe(true);
     // The predecessor-fallback path re-runs verifyCellRelease, so a full cell
-    // can cost 240 of the shared 256 entries: within budget, but saturating.
+    // can cost 240 entries. Against the old 256-entry cap that was 94% — within
+    // budget, but saturating, and this assertion said so. T018 raised the cap to
+    // 512 (ADR 0034 admissible response 1), so the SAME 240 entries are now 47%.
+    // The claim is therefore restated rather than deleted: the cost of the
+    // fallback path did not change, the headroom it runs in did, and a suite that
+    // kept asserting ">0.9" would have been asserting the old cap under the name
+    // of the new one.
     expect(simulation.maximumPredecessorFallbackEntries).toBe(EXTERIOR_CELL_MAX_BUILDINGS * 2);
     expect(simulation.predecessorFallbackFitsCache).toBe(true);
-    expect(simulation.maximumPredecessorFallbackEntries / EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries).toBeGreaterThan(0.9);
+    expect(simulation.maximumPredecessorFallbackEntries).toBe(240);
+    expect(simulation.maximumPredecessorFallbackEntries / 256).toBeGreaterThan(0.9);
+    expect(simulation.maximumPredecessorFallbackEntries / EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries).toBeCloseTo(0.469, 3);
     expect(simulation.cellsOverCachedBytes).toBe(0);
   });
 });
