@@ -543,8 +543,18 @@ export function appendBlock835PublicRealmUrl(baseUrl: string, requested: boolean
  * decision here is that wave w05 is unpromoted too and its median cell owns 55,
  * so the one 78-entry headroom admits an ordinary cell of either wave and not one
  * of each. That split belongs to promotion, and this pin makes no part of it.
+ *
+ * `manhattan-central-upper-manhattan-cells-20260812-p1` — the T020 successor —
+ * IS promoted, on exactly the terms the T016 and T018 successors were: it has an
+ * entry in the promotion record, so both promotion gates run for it on every
+ * load, while the T019 canary above keeps its narrower guarantee because it is
+ * still only an opt-in. The split the paragraph above declined to make WAS made,
+ * and it was made without moving the cache cap: ADR 0036's response 2 was taken
+ * and the 78 entries were divided 42 to this wave and 36 reserved for wave w05,
+ * proportional to their canonical building counts. That paragraph is left as it
+ * was written because it was true of the build it described.
  */
-export const PINNED_EXTERIOR_CELL_RELEASE_IDS = ["udt-fixture-exterior-cells", "manhattan-exterior-cells-20260811", "manhattan-exterior-cells-20260811-v3", "manhattan-midtown-core-cells-20260811", "manhattan-midtown-core-cells-20260811-v3", "manhattan-lower-manhattan-cells-20260812", "manhattan-lower-manhattan-cells-20260812-p1", "manhattan-southern-remainder-cells-20260812", "manhattan-southern-remainder-cells-20260812-p1", "manhattan-central-upper-manhattan-cells-20260812"] as const;
+export const PINNED_EXTERIOR_CELL_RELEASE_IDS = ["udt-fixture-exterior-cells", "manhattan-exterior-cells-20260811", "manhattan-exterior-cells-20260811-v3", "manhattan-midtown-core-cells-20260811", "manhattan-midtown-core-cells-20260811-v3", "manhattan-lower-manhattan-cells-20260812", "manhattan-lower-manhattan-cells-20260812-p1", "manhattan-southern-remainder-cells-20260812", "manhattan-southern-remainder-cells-20260812-p1", "manhattan-central-upper-manhattan-cells-20260812", "manhattan-central-upper-manhattan-cells-20260812-p1"] as const;
 
 /**
  * The release used when neither a URL nor the promoted default names one: still

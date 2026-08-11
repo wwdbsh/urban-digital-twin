@@ -101,7 +101,10 @@ describe("Southern-remainder promotion record versus the committed payload inven
     expect(RECORD!.releaseId).not.toBe(CANARY_RELEASE_ID);
     expect(RECORD!.approvalRef).toBe("Issue #19 gate approval 2026-08-12 (T018 Southern-remainder curated promotion)");
     expect(RECORD!.rolledBackReleaseId ?? null).toBeNull();
-    expect(EXTERIOR_DEFAULT_ACTIVATIONS).toHaveLength(4);
+    // Its POSITION is what this record owns, not the length of the set: T020
+    // promoted a fifth wave and appended it, so the assertion that stays true of
+    // this record is that it is still the fourth and still the same object.
+    expect(EXTERIOR_DEFAULT_ACTIVATIONS.length).toBeGreaterThanOrEqual(4);
     expect(EXTERIOR_DEFAULT_ACTIVATIONS[3]).toBe(SOUTHERN_REMAINDER_EXTERIOR_ACTIVATION);
   });
 
