@@ -169,9 +169,11 @@ describe("lower-manhattan predecessor lineage", () => {
     const committed = readJson<{ releaseId: string; roots: Record<string, { rootId: string; rootChecksumSha256: string; artifactCount: number }>; files: { path: string; byteSize: number; checksumSha256: string }[] }>(
       "data/midtown-core-20260811-v3/payload-inventory.json",
     );
+    const committedPublicRoot = committed.roots.public;
+    expect(committedPublicRoot).toBeDefined();
     const predecessor = lowerManhattanPredecessor(committed);
     expect(predecessor.releaseId).toBe(LOWER_MANHATTAN_PREDECESSOR_RELEASE_ID);
-    expect(predecessor.publicRoot.rootChecksumSha256).toBe(committed.roots.public.rootChecksumSha256);
+    expect(predecessor.publicRoot.rootChecksumSha256).toBe(committedPublicRoot!.rootChecksumSha256);
     expect(predecessor.cellReleases.size).toBe(149);
   });
 });

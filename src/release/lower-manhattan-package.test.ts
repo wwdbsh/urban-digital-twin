@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 import { EXTERIOR_FULLSNAPSHOT_BASE_MANIFEST_SHA256, EXTERIOR_FULLSNAPSHOT_BASE_RELEASE_ID } from "../domain/exterior-fullsnapshot-input.ts";
+import type { ExteriorOwnershipLedger } from "./exterior-release.ts";
 import { EXTERIOR_CELL_MAX_BUILDINGS, cellWaveIndex } from "./exterior-wave-ledger.ts";
 import { exteriorWaveArtifactChecksum } from "./exterior-wave-subset.ts";
 import {
@@ -25,7 +26,7 @@ function readText(path: string): string {
   return new TextDecoder("utf-8", { fatal: true }).decode(new Uint8Array(readFileSync(path)));
 }
 
-const parentLedger = JSON.parse(readText(`${LEDGER_ROOT}/ledger.json`)) as never;
+const parentLedger = JSON.parse(readText(`${LEDGER_ROOT}/ledger.json`)) as ExteriorOwnershipLedger;
 const parentLedgerChecksumSha256 = exteriorWaveArtifactChecksum(parentLedger);
 const digest = JSON.parse(readText(`${LEDGER_ROOT}/membership-digest.json`)) as never;
 

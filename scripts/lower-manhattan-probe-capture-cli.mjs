@@ -1,4 +1,4 @@
-/* global console, process, WebSocket, fetch */
+/* global console, process, WebSocket, fetch, setTimeout, Buffer */
 /**
  * T015 kill-switch capture: the first textured wave measured in the SHIPPING
  * renderer against its own untextured baseline.

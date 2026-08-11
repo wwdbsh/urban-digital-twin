@@ -27,10 +27,6 @@ import {
   type MidtownCoreShippedAsset,
 } from "./midtown-core-release.ts";
 import {
-  MIDTOWN_CORE_V3_GENERATED_AT,
-  MIDTOWN_CORE_V3_RELEASE_ID,
-  MIDTOWN_CORE_V3_SEED,
-  MIDTOWN_CORE_V3_TOOL,
   MIDTOWN_CORE_V3_VOLUME_TOLERANCE,
   MIDTOWN_CORE_V3_WAVE_PROFILE,
   MidtownCoreV3Stop,
