@@ -148,9 +148,13 @@ beforeEach(() => {
 afterEach(() => { cleanup(); window.history.replaceState({}, "", initialTestUrl); });
 const locatedFeature = runtimeFixtureFeatures.find((feature) => feature.kind === "poi")!;
 
+/** The V2 canary release. Still pinned and still reachable by explicit opt-in. */
 const CANARY_EXTERIOR_RELEASE_ID = "manhattan-exterior-cells-20260811";
 const CANARY_EXTERIOR_ROOT = `/data/${CANARY_EXTERIOR_RELEASE_ID}/`;
-const MIDTOWN_CORE_EXTERIOR_RELEASE_ID = "manhattan-midtown-core-cells-20260811";
+/** The V3 successor, which is what this build promotes as the Block 835 default. */
+const PROMOTED_EXTERIOR_RELEASE_ID = "manhattan-exterior-cells-20260811-v3";
+const PROMOTED_EXTERIOR_ROOT = `/data/${PROMOTED_EXTERIOR_RELEASE_ID}/`;
+const MIDTOWN_CORE_EXTERIOR_RELEASE_ID = "manhattan-midtown-core-cells-20260811-v3";
 const MIDTOWN_CORE_EXTERIOR_ROOT = `/data/${MIDTOWN_CORE_EXTERIOR_RELEASE_ID}/`;
 const BLOCK_835_FEATURE_IDS = [...BLOCK_835_DOITT_IDS].map((id) => `doitt:${id}`);
 
@@ -162,7 +166,9 @@ const BLOCK_835_FEATURE_IDS = [...BLOCK_835_DOITT_IDS].map((id) => `doitt:${id}`
 function serveCommittedCanaryRelease() {
   return vi.spyOn(globalThis, "fetch").mockImplementation(async (input: RequestInfo | URL) => {
     const path = String(input);
-    if (!path.startsWith(CANARY_EXTERIOR_ROOT)) return new Response(null, { status: 404 });
+    // Both Block 835 releases are served: the promoted V3 successor and the V2
+    // release its explicit opt-in links still name.
+    if (!path.startsWith(CANARY_EXTERIOR_ROOT) && !path.startsWith(PROMOTED_EXTERIOR_ROOT)) return new Response(null, { status: 404 });
     try {
       return new Response(new Uint8Array(readFileSync(`public${path}`)), { status: 200 });
     } catch {
@@ -639,11 +645,11 @@ describe("exterior streaming profiles and canary state", () => {
   });
 
   it("round-trips the pinned Manhattan release and keeps the fixture as the no-real-base fallback", () => {
-    expect(PINNED_EXTERIOR_CELL_RELEASE_IDS).toEqual(["udt-fixture-exterior-cells", "manhattan-exterior-cells-20260811", "manhattan-midtown-core-cells-20260811"]);
+    expect(PINNED_EXTERIOR_CELL_RELEASE_IDS).toEqual(["udt-fixture-exterior-cells", "manhattan-exterior-cells-20260811", "manhattan-exterior-cells-20260811-v3", "manhattan-midtown-core-cells-20260811", "manhattan-midtown-core-cells-20260811-v3"]);
     // Unchanged: this is the fallback for a session with no real base, not the
     // promoted default. The promoted default lives in EXTERIOR_DEFAULT_ACTIVATION.
     expect(EXTERIOR_CELL_STREAMING_RELEASE_ID).toBe("udt-fixture-exterior-cells");
-    expect(EXTERIOR_DEFAULT_ACTIVATION.releaseId).toBe("manhattan-exterior-cells-20260811");
+    expect(EXTERIOR_DEFAULT_ACTIVATION.releaseId).toBe("manhattan-exterior-cells-20260811-v3");
     expect(isPinnedExteriorCellRelease(EXTERIOR_DEFAULT_ACTIVATION.releaseId)).toBe(true);
     expect(isPinnedExteriorCellRelease("manhattan-exterior-cells-20260811")).toBe(true);
     expect(isPinnedExteriorCellRelease("manhattan-exterior-production")).toBe(false);
@@ -833,7 +839,7 @@ describe("exterior streaming profiles and canary state", () => {
 
       // The promoted default is what a parameterless session resolves.
       await waitFor(() => {
-        expect(requestedPaths().some((path) => path.startsWith(CANARY_EXTERIOR_ROOT))).toBe(true);
+        expect(requestedPaths().some((path) => path.startsWith(PROMOTED_EXTERIOR_ROOT))).toBe(true);
       });
       await waitFor(() => {
         const viewport = document.querySelector<HTMLElement>(".viewport");
@@ -844,9 +850,9 @@ describe("exterior streaming profiles and canary state", () => {
       expect(requestedPaths().some((path) => path.startsWith(MIDTOWN_CORE_EXTERIOR_ROOT))).toBe(true);
       expect(new URL(window.location.href).searchParams.get("exteriorCells")).toBeNull();
       const status = [...document.querySelectorAll<HTMLElement>(".runtime-note-overlay")].find((candidate) => candidate.textContent?.startsWith("Exterior streaming ·"));
-      expect(status?.textContent).toContain(CANARY_EXTERIOR_RELEASE_ID);
+      expect(status?.textContent).toContain(PROMOTED_EXTERIOR_RELEASE_ID);
       // Each status line names its own wave rather than one line covering both.
-      expect(status?.getAttribute("data-exterior-release")).toBe(CANARY_EXTERIOR_RELEASE_ID);
+      expect(status?.getAttribute("data-exterior-release")).toBe(PROMOTED_EXTERIOR_RELEASE_ID);
       expect(status?.textContent).not.toContain(MIDTOWN_CORE_EXTERIOR_RELEASE_ID);
     } finally {
       fetchSpy.mockRestore();
@@ -963,7 +969,7 @@ describe("promoted Block 835 exterior default activation", () => {
 
       // Exactly the accepted release resolved the default head, and the
       // pre-promotion fixture package was never requested behind its back.
-      expect(exteriorPaths(fetchSpy).every((path) => path.startsWith(CANARY_EXTERIOR_ROOT))).toBe(true);
+      expect(exteriorPaths(fetchSpy).every((path) => path.startsWith(PROMOTED_EXTERIOR_ROOT))).toBe(true);
       const status = [...document.querySelectorAll<HTMLElement>(".runtime-note-overlay")].find((candidate) => candidate.textContent?.startsWith("Exterior streaming ·"));
       expect(status?.textContent).toContain(`Default pinned snapshot ${promoted!.snapshotId}`);
       expect(status?.getAttribute("data-exterior-snapshot-origin")).toBe("default");
@@ -1057,7 +1063,7 @@ describe("promoted Block 835 exterior default activation", () => {
       await waitFor(() => expect(document.body.textContent).toContain(`Real NYC citywide release · ${CITYWIDE_RELEASE_ID}`), { timeout: 20_000 });
       fireEvent.click(within(document.body).getByRole("button", { name: "Enable exterior streaming" }));
       // Reverses the pre-promotion expectation: this used to enable the fixture.
-      await waitFor(() => expect(exteriorPaths(fetchSpy).some((path) => path.startsWith(CANARY_EXTERIOR_ROOT))).toBe(true));
+      await waitFor(() => expect(exteriorPaths(fetchSpy).some((path) => path.startsWith(PROMOTED_EXTERIOR_ROOT))).toBe(true));
       expect(exteriorPaths(fetchSpy).some((path) => path.startsWith("/data/udt-fixture-exterior-cells/"))).toBe(false);
       // ...and it re-enters the DEFAULT, not an explicit opt-in that happens to
       // name the promoted release: a default-on session serializes no exterior

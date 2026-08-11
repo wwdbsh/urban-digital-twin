@@ -1,0 +1,1359 @@
+[
+  {
+    "artifacts": [
+      {
+        "byteSize": 44376,
+        "checksumSha256": "af89dae42ee3516a7dfbe1f3c91baabe9a263428c9d958a5356c623c3ec9eb4c",
+        "logicalId": "glb:doitt:102705:lod_0",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-102705__lod_0.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 20852,
+        "checksumSha256": "32e7024822114d0980bf7e1ff7f854ce83b417b518a9f87fdddf3f655a44f904",
+        "logicalId": "glb:doitt:102705:lod_1",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-102705__lod_1.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 592056,
+        "checksumSha256": "314827e91ce8f11eee65fc48958029b9355eb67af52bd513c5ff293c7a9999b4",
+        "logicalId": "glb:doitt:131170:lod_0",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-131170__lod_0.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 235308,
+        "checksumSha256": "4acc4227c0493268b5299036475a3b24fbbae308e3c5f701b8c2b77f3ecac022",
+        "logicalId": "glb:doitt:131170:lod_1",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-131170__lod_1.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 78152,
+        "checksumSha256": "369a34697c553b586fc9c662a9777d06f6ec5f603d8467143d39329db4d4c135",
+        "logicalId": "glb:doitt:147902:lod_0",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-147902__lod_0.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 35188,
+        "checksumSha256": "9746423c7895c4fb292b7701028dd28fcaf6056356877c0f591779107df041c0",
+        "logicalId": "glb:doitt:147902:lod_1",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-147902__lod_1.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 28980,
+        "checksumSha256": "5a8b74c108aa5f70beabc46c7e134012f7c461882761dd8d8477ece106eedb7b",
+        "logicalId": "glb:doitt:262867:lod_0",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-262867__lod_0.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 15960,
+        "checksumSha256": "849c4408b05799082debc573a52466c1852b7ce04da9b6aa7f9cb47f75f7499a",
+        "logicalId": "glb:doitt:262867:lod_1",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-262867__lod_1.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 78692,
+        "checksumSha256": "6b47acd0fe286b82e7842b596d0076db9c5f8b4bd709bb6a3825c1f8501fc5f5",
+        "logicalId": "glb:doitt:39969:lod_0",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-39969__lod_0.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 35148,
+        "checksumSha256": "2e1f5c3d63105ffcb99adeccb8da7a70bd40ea082014045b8690ce43ba241693",
+        "logicalId": "glb:doitt:39969:lod_1",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-39969__lod_1.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 63784,
+        "checksumSha256": "cb05749c0019afa024df0a4edae7bdb72965afbd1a2e8d9cd59e44109a769a06",
+        "logicalId": "glb:doitt:460555:lod_0",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-460555__lod_0.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 31180,
+        "checksumSha256": "7f60cce2aaffc51460f4dbaec83c2a254a98eb15d2fcf600b561c1c19b21317c",
+        "logicalId": "glb:doitt:460555:lod_1",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-460555__lod_1.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 43972,
+        "checksumSha256": "ac136268c0ff55c4058336fae6fd9a4417ebfa7bbcb2615b0ae1ef91fcc210d2",
+        "logicalId": "glb:doitt:498980:lod_0",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-498980__lod_0.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 21168,
+        "checksumSha256": "08ab64ca7685d4c6074580d49fbf3dcccc17789f95fcfdac847fd4b3a4a76470",
+        "logicalId": "glb:doitt:498980:lod_1",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-498980__lod_1.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 52768,
+        "checksumSha256": "eb3ab11a6f46917b9690edad789d8f3ad594bea7a97e217ee5a547446d06f1e3",
+        "logicalId": "glb:doitt:502491:lod_0",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-502491__lod_0.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 24788,
+        "checksumSha256": "6be620ed6b04e555c5c1f102613e5fb37e61c2a93cb12426e78476502677a468",
+        "logicalId": "glb:doitt:502491:lod_1",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-502491__lod_1.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 73472,
+        "checksumSha256": "92ba0b91f9f6f4c1f28004caff6cb9e5e9edc3601385e5545e489f136cda44e1",
+        "logicalId": "glb:doitt:584049:lod_0",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-584049__lod_0.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 33100,
+        "checksumSha256": "a6e64b81aac0a02747b3271636c3297b9eba33f857dab61cb1c4781d559e25b2",
+        "logicalId": "glb:doitt:584049:lod_1",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-584049__lod_1.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 3716836,
+        "checksumSha256": "df4ca50a533bc4db16a28da6607eed1559ec7b31ac5f6d40da7aa8ee5886d39f",
+        "logicalId": "glb:doitt:778052:lod_0",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-778052__lod_0.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 1305780,
+        "checksumSha256": "8397c16d946de1912a0ec17fb7d750833bd9888be99b8e298832f6960f139bc3",
+        "logicalId": "glb:doitt:778052:lod_1",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-778052__lod_1.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 53100,
+        "checksumSha256": "a0162b00c5e30c1eff2357427c17d2c3c08e0c64ff340787f4149af04b52c034",
+        "logicalId": "glb:doitt:812702:lod_0",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-812702__lod_0.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 26408,
+        "checksumSha256": "4be737461dc3b1b09c1f35455bca6cea13325b576491d33a65f90f8f591b2af0",
+        "logicalId": "glb:doitt:812702:lod_1",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-812702__lod_1.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 60736,
+        "checksumSha256": "a07845205282aa36a4e7e6ccb00b0b0d4ba324e9b6061f297164baacddfc9804",
+        "logicalId": "glb:doitt:835659:lod_0",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-835659__lod_0.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 28140,
+        "checksumSha256": "d1bce9069ba81c2168fa9275c966345d498ea16c94c1426b6004b05219f4a641",
+        "logicalId": "glb:doitt:835659:lod_1",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-835659__lod_1.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 50896,
+        "checksumSha256": "1cf0b1a881abe0dec316a596b0245999113910596f8ead6de1f618f5d2841ef0",
+        "logicalId": "glb:doitt:925937:lod_0",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-925937__lod_0.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 24224,
+        "checksumSha256": "fcaac10d6ef527722728cbe6a51d50008c0e5c73398eff665de4ff7a536a58e5",
+        "logicalId": "glb:doitt:925937:lod_1",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-925937__lod_1.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 188512,
+        "checksumSha256": "d1865e3a0b95a745b9f7439b5c92924afce72d7a88f78a6b4599965c2a2c5b1b",
+        "logicalId": "glb:doitt:982383:lod_0",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-982383__lod_0.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 73540,
+        "checksumSha256": "0480096c4d573ed4eb10fd72c17dddec679cf698119bb7effafa9bae301838a0",
+        "logicalId": "glb:doitt:982383:lod_1",
+        "ownerCellId": "cell:manhattan:block-835",
+        "relativeRef": "public/assets/doitt-982383__lod_1.glb",
+        "role": "glb"
+      },
+      {
+        "byteSize": 7285,
+        "checksumSha256": "b1537ae673b59adef46a1339dbef308a46da9447fd1752d18bf174b8edcbc671",
+        "logicalId": "tileset:manhattan-esb-block-reference-20260811-v3e",
+        "ownerCellId": null,
+        "relativeRef": "public/tiles/tileset.json",
+        "role": "tileset-json"
+      }
+    ],
+    "assets": [
+      {
+        "canonicalFeatureId": "doitt:102705",
+        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:102705",
+        "inventoryHashSha256": "f69da324ef6c75f3556112aba6fe904858a8d8c26d932a8db9de2448b3c61af3",
+        "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:102705",
+        "lods": [
+          {
+            "artifactRef": "public/assets/doitt-102705__lod_0.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0,
+            "lodId": "lod_0",
+            "maxDistanceMeters": 250,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 12,
+                "maxTextures": 0,
+                "maxTriangles": 200000
+              },
+              "materialCount": 9,
+              "textureCount": 0,
+              "triangleCount": 1026
+            },
+            "silhouette": null
+          },
+          {
+            "artifactRef": "public/assets/doitt-102705__lod_1.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0.2,
+            "lodId": "lod_1",
+            "maxDistanceMeters": null,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 12,
+                "maxTextures": 0,
+                "maxTriangles": 200000
+              },
+              "materialCount": 8,
+              "textureCount": 0,
+              "triangleCount": 390
+            },
+            "silhouette": {
+              "deviationRatio": 0,
+              "maximumRatio": 0.02,
+              "method": "projected-silhouette-ratio",
+              "metricVersion": "1.0",
+              "planHashSha256": "5779f652e2da5c1f8cfeea5dda42995edc665bbc38aad0df58555e0ee8fcda5a",
+              "status": "authoring-declared",
+              "viewIds": [
+                "view:east",
+                "view:north",
+                "view:south",
+                "view:west"
+              ]
+            }
+          }
+        ],
+        "ownerCellId": "cell:manhattan:block-835",
+        "predecessor": {
+          "checksumSha256": "3e551206f48b0277111e7c85137ddeff2a7e674c8149f868c91f9e4caf6d930f",
+          "id": "manhattan-esb-block-reference-20260811-v3:doitt:102705:lod_0"
+        },
+        "source": {
+          "kind": "facade-plan",
+          "planHashSha256": "5779f652e2da5c1f8cfeea5dda42995edc665bbc38aad0df58555e0ee8fcda5a",
+          "planId": "facade-plan-v3:82d51c4eb028823dd66222f0"
+        },
+        "sourceDates": {
+          "capturedAt": "2026-08-04T08:25:05.580Z",
+          "updatedAt": null
+        },
+        "truthTiers": [
+          "generated"
+        ],
+        "uncertainty": "Footprint-faithful procedural exterior in local millimetres. The massing follows the sourced building polygon vertex for vertex and the sourced height; nothing else does. Tier subdivision, bay rhythm, openings, attached elements, colour and material are designed by this grammar, derived from no imagery and no observation, and assert nothing about the real building's appearance, facade, setbacks, balconies, fire escapes, water tanks or signage, nor any tenant, brand or text."
+      },
+      {
+        "canonicalFeatureId": "doitt:131170",
+        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:131170",
+        "inventoryHashSha256": "65377c4d426b1612ca635b7ce645d47bf40edacba6c8b31934169768028a1472",
+        "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:131170",
+        "lods": [
+          {
+            "artifactRef": "public/assets/doitt-131170__lod_0.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0,
+            "lodId": "lod_0",
+            "maxDistanceMeters": 250,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 12,
+                "maxTextures": 0,
+                "maxTriangles": 200000
+              },
+              "materialCount": 9,
+              "textureCount": 0,
+              "triangleCount": 16232
+            },
+            "silhouette": null
+          },
+          {
+            "artifactRef": "public/assets/doitt-131170__lod_1.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0.2,
+            "lodId": "lod_1",
+            "maxDistanceMeters": null,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 12,
+                "maxTextures": 0,
+                "maxTriangles": 200000
+              },
+              "materialCount": 8,
+              "textureCount": 0,
+              "triangleCount": 6340
+            },
+            "silhouette": {
+              "deviationRatio": 0.00000892227803602816,
+              "maximumRatio": 0.02,
+              "method": "projected-silhouette-ratio",
+              "metricVersion": "1.0",
+              "planHashSha256": "88a0ff40c5e26d8dbe257ad7c80e8b28153aafaef53e5b2b1d503f889630d2d4",
+              "status": "authoring-declared",
+              "viewIds": [
+                "view:east",
+                "view:north",
+                "view:south",
+                "view:west"
+              ]
+            }
+          }
+        ],
+        "ownerCellId": "cell:manhattan:block-835",
+        "predecessor": {
+          "checksumSha256": "3e59ec44f4a1798e594df134b10fe63b153c3f00c41245d35798f2139cb26871",
+          "id": "manhattan-esb-block-reference-20260811-v3:doitt:131170:lod_0"
+        },
+        "source": {
+          "kind": "facade-plan",
+          "planHashSha256": "88a0ff40c5e26d8dbe257ad7c80e8b28153aafaef53e5b2b1d503f889630d2d4",
+          "planId": "facade-plan-v3:fdf5e923bedf4463e23827ad"
+        },
+        "sourceDates": {
+          "capturedAt": "2026-08-04T08:25:05.580Z",
+          "updatedAt": null
+        },
+        "truthTiers": [
+          "absent",
+          "generated"
+        ],
+        "uncertainty": "Footprint-faithful procedural exterior in local millimetres. The massing follows the sourced building polygon vertex for vertex and the sourced height; nothing else does. Tier subdivision, bay rhythm, openings, attached elements, colour and material are designed by this grammar, derived from no imagery and no observation, and assert nothing about the real building's appearance, facade, setbacks, balconies, fire escapes, water tanks or signage, nor any tenant, brand or text."
+      },
+      {
+        "canonicalFeatureId": "doitt:147902",
+        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:147902",
+        "inventoryHashSha256": "091a799053e639129d7c2ac97c0737238eea645de16061b878e33934c4b09952",
+        "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:147902",
+        "lods": [
+          {
+            "artifactRef": "public/assets/doitt-147902__lod_0.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0,
+            "lodId": "lod_0",
+            "maxDistanceMeters": 250,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 12,
+                "maxTextures": 0,
+                "maxTriangles": 200000
+              },
+              "materialCount": 9,
+              "textureCount": 0,
+              "triangleCount": 1962
+            },
+            "silhouette": null
+          },
+          {
+            "artifactRef": "public/assets/doitt-147902__lod_1.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0.2,
+            "lodId": "lod_1",
+            "maxDistanceMeters": null,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 12,
+                "maxTextures": 0,
+                "maxTriangles": 200000
+              },
+              "materialCount": 8,
+              "textureCount": 0,
+              "triangleCount": 786
+            },
+            "silhouette": {
+              "deviationRatio": 0.0006338680579257887,
+              "maximumRatio": 0.02,
+              "method": "projected-silhouette-ratio",
+              "metricVersion": "1.0",
+              "planHashSha256": "2887670eae6d3fffba9cb7e80d8c52a7200cfe66120a22b9960e8b623d25db6f",
+              "status": "authoring-declared",
+              "viewIds": [
+                "view:east",
+                "view:north",
+                "view:south",
+                "view:west"
+              ]
+            }
+          }
+        ],
+        "ownerCellId": "cell:manhattan:block-835",
+        "predecessor": {
+          "checksumSha256": "abf10cb8f4e49d3b1c861ae9f2f7ad989acd9faee4efdeb98f78224f0f8f0c39",
+          "id": "manhattan-esb-block-reference-20260811-v3:doitt:147902:lod_0"
+        },
+        "source": {
+          "kind": "facade-plan",
+          "planHashSha256": "2887670eae6d3fffba9cb7e80d8c52a7200cfe66120a22b9960e8b623d25db6f",
+          "planId": "facade-plan-v3:163ab4abaf59651ba8fad0a2"
+        },
+        "sourceDates": {
+          "capturedAt": "2026-08-04T08:25:05.580Z",
+          "updatedAt": null
+        },
+        "truthTiers": [
+          "generated"
+        ],
+        "uncertainty": "Footprint-faithful procedural exterior in local millimetres. The massing follows the sourced building polygon vertex for vertex and the sourced height; nothing else does. Tier subdivision, bay rhythm, openings, attached elements, colour and material are designed by this grammar, derived from no imagery and no observation, and assert nothing about the real building's appearance, facade, setbacks, balconies, fire escapes, water tanks or signage, nor any tenant, brand or text."
+      },
+      {
+        "canonicalFeatureId": "doitt:262867",
+        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:262867",
+        "inventoryHashSha256": "4dcd70dbada283e420e1e04f3fec096b18a42410483bbb1652a30a83a48a105f",
+        "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:262867",
+        "lods": [
+          {
+            "artifactRef": "public/assets/doitt-262867__lod_0.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0,
+            "lodId": "lod_0",
+            "maxDistanceMeters": 250,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 12,
+                "maxTextures": 0,
+                "maxTriangles": 200000
+              },
+              "materialCount": 7,
+              "textureCount": 0,
+              "triangleCount": 632
+            },
+            "silhouette": null
+          },
+          {
+            "artifactRef": "public/assets/doitt-262867__lod_1.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0.2,
+            "lodId": "lod_1",
+            "maxDistanceMeters": null,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 12,
+                "maxTextures": 0,
+                "maxTriangles": 200000
+              },
+              "materialCount": 6,
+              "textureCount": 0,
+              "triangleCount": 288
+            },
+            "silhouette": {
+              "deviationRatio": 0,
+              "maximumRatio": 0.02,
+              "method": "projected-silhouette-ratio",
+              "metricVersion": "1.0",
+              "planHashSha256": "7f873bae4ce75da5753f514dc53c9bc6833319b1a0e2634cb47eeb5593b6e38c",
+              "status": "authoring-declared",
+              "viewIds": [
+                "view:east",
+                "view:north",
+                "view:south",
+                "view:west"
+              ]
+            }
+          }
+        ],
+        "ownerCellId": "cell:manhattan:block-835",
+        "predecessor": {
+          "checksumSha256": "27e5b6a9408f5d3eaef0c75ac453f9fae8699dc9ebd00bbb7d5f7b8ceec10259",
+          "id": "manhattan-esb-block-reference-20260811-v3:doitt:262867:lod_0"
+        },
+        "source": {
+          "kind": "facade-plan",
+          "planHashSha256": "7f873bae4ce75da5753f514dc53c9bc6833319b1a0e2634cb47eeb5593b6e38c",
+          "planId": "facade-plan-v3:0ca8919cf08c456d5a6e358b"
+        },
+        "sourceDates": {
+          "capturedAt": "2026-08-04T08:25:05.580Z",
+          "updatedAt": null
+        },
+        "truthTiers": [
+          "absent",
+          "generated"
+        ],
+        "uncertainty": "Footprint-faithful procedural exterior in local millimetres. The massing follows the sourced building polygon vertex for vertex and the sourced height; nothing else does. Tier subdivision, bay rhythm, openings, attached elements, colour and material are designed by this grammar, derived from no imagery and no observation, and assert nothing about the real building's appearance, facade, setbacks, balconies, fire escapes, water tanks or signage, nor any tenant, brand or text."
+      },
+      {
+        "canonicalFeatureId": "doitt:39969",
+        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:39969",
+        "inventoryHashSha256": "d77e266f06accef6839ab0717c8476b0a9dfde0726e8f2319ba5c12b3fdbb63b",
+        "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:39969",
+        "lods": [
+          {
+            "artifactRef": "public/assets/doitt-39969__lod_0.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0,
+            "lodId": "lod_0",
+            "maxDistanceMeters": 250,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 12,
+                "maxTextures": 0,
+                "maxTriangles": 200000
+              },
+              "materialCount": 9,
+              "textureCount": 0,
+              "triangleCount": 1980
+            },
+            "silhouette": null
+          },
+          {
+            "artifactRef": "public/assets/doitt-39969__lod_1.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0.2,
+            "lodId": "lod_1",
+            "maxDistanceMeters": null,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 12,
+                "maxTextures": 0,
+                "maxTriangles": 200000
+              },
+              "materialCount": 8,
+              "textureCount": 0,
+              "triangleCount": 788
+            },
+            "silhouette": {
+              "deviationRatio": 0.0008775241574237524,
+              "maximumRatio": 0.02,
+              "method": "projected-silhouette-ratio",
+              "metricVersion": "1.0",
+              "planHashSha256": "0ba5e7717196994719112f589b7310366c0223a137fd0dd4133b83ee5aecd4ce",
+              "status": "authoring-declared",
+              "viewIds": [
+                "view:east",
+                "view:north",
+                "view:south",
+                "view:west"
+              ]
+            }
+          }
+        ],
+        "ownerCellId": "cell:manhattan:block-835",
+        "predecessor": {
+          "checksumSha256": "004324817da542af4cca717693fa5470284067d00e9f1f3ba8164d32380d038f",
+          "id": "manhattan-esb-block-reference-20260811-v3:doitt:39969:lod_0"
+        },
+        "source": {
+          "kind": "facade-plan",
+          "planHashSha256": "0ba5e7717196994719112f589b7310366c0223a137fd0dd4133b83ee5aecd4ce",
+          "planId": "facade-plan-v3:4b9e507b2d8692f206d7eab4"
+        },
+        "sourceDates": {
+          "capturedAt": "2026-08-04T08:25:05.580Z",
+          "updatedAt": null
+        },
+        "truthTiers": [
+          "absent",
+          "generated"
+        ],
+        "uncertainty": "Footprint-faithful procedural exterior in local millimetres. The massing follows the sourced building polygon vertex for vertex and the sourced height; nothing else does. Tier subdivision, bay rhythm, openings, attached elements, colour and material are designed by this grammar, derived from no imagery and no observation, and assert nothing about the real building's appearance, facade, setbacks, balconies, fire escapes, water tanks or signage, nor any tenant, brand or text."
+      },
+      {
+        "canonicalFeatureId": "doitt:460555",
+        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:460555",
+        "inventoryHashSha256": "643546a83837a0d22758150c22aa28a26c88d224ab8112558b39cc0eb0aaf94f",
+        "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:460555",
+        "lods": [
+          {
+            "artifactRef": "public/assets/doitt-460555__lod_0.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0,
+            "lodId": "lod_0",
+            "maxDistanceMeters": 250,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 12,
+                "maxTextures": 0,
+                "maxTriangles": 200000
+              },
+              "materialCount": 9,
+              "textureCount": 0,
+              "triangleCount": 1560
+            },
+            "silhouette": null
+          },
+          {
+            "artifactRef": "public/assets/doitt-460555__lod_1.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0.2,
+            "lodId": "lod_1",
+            "maxDistanceMeters": null,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 12,
+                "maxTextures": 0,
+                "maxTriangles": 200000
+              },
+              "materialCount": 8,
+              "textureCount": 0,
+              "triangleCount": 672
+            },
+            "silhouette": {
+              "deviationRatio": 0.0009714760583821998,
+              "maximumRatio": 0.02,
+              "method": "projected-silhouette-ratio",
+              "metricVersion": "1.0",
+              "planHashSha256": "b828dabad6cb4f39408ed48fca10c5d5331452ab1fea1685d51db9d9ba57b6af",
+              "status": "authoring-declared",
+              "viewIds": [
+                "view:east",
+                "view:north",
+                "view:south",
+                "view:west"
+              ]
+            }
+          }
+        ],
+        "ownerCellId": "cell:manhattan:block-835",
+        "predecessor": {
+          "checksumSha256": "3ccdf28292fb2317b3848b141240a361c16f5b540a1f1ff03477050f1102882f",
+          "id": "manhattan-esb-block-reference-20260811-v3:doitt:460555:lod_0"
+        },
+        "source": {
+          "kind": "facade-plan",
+          "planHashSha256": "b828dabad6cb4f39408ed48fca10c5d5331452ab1fea1685d51db9d9ba57b6af",
+          "planId": "facade-plan-v3:4c08b4247c61a40899174968"
+        },
+        "sourceDates": {
+          "capturedAt": "2026-08-04T08:25:05.580Z",
+          "updatedAt": null
+        },
+        "truthTiers": [
+          "generated"
+        ],
+        "uncertainty": "Footprint-faithful procedural exterior in local millimetres. The massing follows the sourced building polygon vertex for vertex and the sourced height; nothing else does. Tier subdivision, bay rhythm, openings, attached elements, colour and material are designed by this grammar, derived from no imagery and no observation, and assert nothing about the real building's appearance, facade, setbacks, balconies, fire escapes, water tanks or signage, nor any tenant, brand or text."
+      },
+      {
+        "canonicalFeatureId": "doitt:498980",
+        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:498980",
+        "inventoryHashSha256": "bc4586c963d0b9a35df1035639e5d227948cab420f9ebcd3adc7580fcf351771",
+        "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:498980",
+        "lods": [
+          {
+            "artifactRef": "public/assets/doitt-498980__lod_0.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0,
+            "lodId": "lod_0",
+            "maxDistanceMeters": 250,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 12,
+                "maxTextures": 0,
+                "maxTriangles": 200000
+              },
+              "materialCount": 9,
+              "textureCount": 0,
+              "triangleCount": 1020
+            },
+            "silhouette": null
+          },
+          {
+            "artifactRef": "public/assets/doitt-498980__lod_1.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0.2,
+            "lodId": "lod_1",
+            "maxDistanceMeters": null,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 12,
+                "maxTextures": 0,
+                "maxTriangles": 200000
+              },
+              "materialCount": 8,
+              "textureCount": 0,
+              "triangleCount": 404
+            },
+            "silhouette": {
+              "deviationRatio": 0.0011343527383275104,
+              "maximumRatio": 0.02,
+              "method": "projected-silhouette-ratio",
+              "metricVersion": "1.0",
+              "planHashSha256": "8fb58e61c8953bec3b180620455cdb091e818b0df3e75e868a13a163f794bafe",
+              "status": "authoring-declared",
+              "viewIds": [
+                "view:east",
+                "view:north",
+                "view:south",
+                "view:west"
+              ]
+            }
+          }
+        ],
+        "ownerCellId": "cell:manhattan:block-835",
+        "predecessor": {
+          "checksumSha256": "1300ab8a8562c1ca7d8af4e807c959ac93423348ab751a1ba6c202e7220f7d29",
+          "id": "manhattan-esb-block-reference-20260811-v3:doitt:498980:lod_0"
+        },
+        "source": {
+          "kind": "facade-plan",
+          "planHashSha256": "8fb58e61c8953bec3b180620455cdb091e818b0df3e75e868a13a163f794bafe",
+          "planId": "facade-plan-v3:17eebda8c2c18614b78baee1"
+        },
+        "sourceDates": {
+          "capturedAt": "2026-08-04T08:25:05.580Z",
+          "updatedAt": null
+        },
+        "truthTiers": [
+          "generated"
+        ],
+        "uncertainty": "Footprint-faithful procedural exterior in local millimetres. The massing follows the sourced building polygon vertex for vertex and the sourced height; nothing else does. Tier subdivision, bay rhythm, openings, attached elements, colour and material are designed by this grammar, derived from no imagery and no observation, and assert nothing about the real building's appearance, facade, setbacks, balconies, fire escapes, water tanks or signage, nor any tenant, brand or text."
+      },
+      {
+        "canonicalFeatureId": "doitt:502491",
+        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:502491",
+        "inventoryHashSha256": "f9f70282fad1410c673b964ac44faace0e58156c8169166c9a0afa87efac9806",
+        "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:502491",
+        "lods": [
+          {
+            "artifactRef": "public/assets/doitt-502491__lod_0.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0,
+            "lodId": "lod_0",
+            "maxDistanceMeters": 250,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 12,
+                "maxTextures": 0,
+                "maxTriangles": 200000
+              },
+              "materialCount": 9,
+              "textureCount": 0,
+              "triangleCount": 1256
+            },
+            "silhouette": null
+          },
+          {
+            "artifactRef": "public/assets/doitt-502491__lod_1.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0.2,
+            "lodId": "lod_1",
+            "maxDistanceMeters": null,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 12,
+                "maxTextures": 0,
+                "maxTriangles": 200000
+              },
+              "materialCount": 8,
+              "textureCount": 0,
+              "triangleCount": 496
+            },
+            "silhouette": {
+              "deviationRatio": 0.0012775380422439247,
+              "maximumRatio": 0.02,
+              "method": "projected-silhouette-ratio",
+              "metricVersion": "1.0",
+              "planHashSha256": "5a3d5fc25a53535852388e281f55459d1eaf2d4f9c945d956949f202074c4cf1",
+              "status": "authoring-declared",
+              "viewIds": [
+                "view:east",
+                "view:north",
+                "view:south",
+                "view:west"
+              ]
+            }
+          }
+        ],
+        "ownerCellId": "cell:manhattan:block-835",
+        "predecessor": {
+          "checksumSha256": "80f24e12934759df7b7d58465140ccac8d456cf329af04364252fcefc99f0a6d",
+          "id": "manhattan-esb-block-reference-20260811-v3:doitt:502491:lod_0"
+        },
+        "source": {
+          "kind": "facade-plan",
+          "planHashSha256": "5a3d5fc25a53535852388e281f55459d1eaf2d4f9c945d956949f202074c4cf1",
+          "planId": "facade-plan-v3:78aa575e38349fd3d189123b"
+        },
+        "sourceDates": {
+          "capturedAt": "2026-08-04T08:25:05.580Z",
+          "updatedAt": null
+        },
+        "truthTiers": [
+          "generated"
+        ],
+        "uncertainty": "Footprint-faithful procedural exterior in local millimetres. The massing follows the sourced building polygon vertex for vertex and the sourced height; nothing else does. Tier subdivision, bay rhythm, openings, attached elements, colour and material are designed by this grammar, derived from no imagery and no observation, and assert nothing about the real building's appearance, facade, setbacks, balconies, fire escapes, water tanks or signage, nor any tenant, brand or text."
+      },
+      {
+        "canonicalFeatureId": "doitt:584049",
+        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:584049",
+        "inventoryHashSha256": "01d8b9eb4227561c797a804ac0a86969801c01b38237bc4a27ff0e7ac006f689",
+        "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:584049",
+        "lods": [
+          {
+            "artifactRef": "public/assets/doitt-584049__lod_0.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0,
+            "lodId": "lod_0",
+            "maxDistanceMeters": 250,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 12,
+                "maxTextures": 0,
+                "maxTriangles": 200000
+              },
+              "materialCount": 9,
+              "textureCount": 0,
+              "triangleCount": 1832
+            },
+            "silhouette": null
+          },
+          {
+            "artifactRef": "public/assets/doitt-584049__lod_1.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0.2,
+            "lodId": "lod_1",
+            "maxDistanceMeters": null,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 12,
+                "maxTextures": 0,
+                "maxTriangles": 200000
+              },
+              "materialCount": 8,
+              "textureCount": 0,
+              "triangleCount": 728
+            },
+            "silhouette": {
+              "deviationRatio": 0.000798562587342783,
+              "maximumRatio": 0.02,
+              "method": "projected-silhouette-ratio",
+              "metricVersion": "1.0",
+              "planHashSha256": "07d8c9827918fdef58e4e681b760262c207d33b9618dc008e875fd8d3c32da23",
+              "status": "authoring-declared",
+              "viewIds": [
+                "view:east",
+                "view:north",
+                "view:south",
+                "view:west"
+              ]
+            }
+          }
+        ],
+        "ownerCellId": "cell:manhattan:block-835",
+        "predecessor": {
+          "checksumSha256": "5bb9dc44434caa0c90cab5eadfa7a58d8f203431eb929a3c7e2c763f204911fc",
+          "id": "manhattan-esb-block-reference-20260811-v3:doitt:584049:lod_0"
+        },
+        "source": {
+          "kind": "facade-plan",
+          "planHashSha256": "07d8c9827918fdef58e4e681b760262c207d33b9618dc008e875fd8d3c32da23",
+          "planId": "facade-plan-v3:7e052fbcc32594f2c39c6ffb"
+        },
+        "sourceDates": {
+          "capturedAt": "2026-08-04T08:25:05.580Z",
+          "updatedAt": null
+        },
+        "truthTiers": [
+          "generated"
+        ],
+        "uncertainty": "Footprint-faithful procedural exterior in local millimetres. The massing follows the sourced building polygon vertex for vertex and the sourced height; nothing else does. Tier subdivision, bay rhythm, openings, attached elements, colour and material are designed by this grammar, derived from no imagery and no observation, and assert nothing about the real building's appearance, facade, setbacks, balconies, fire escapes, water tanks or signage, nor any tenant, brand or text."
+      },
+      {
+        "canonicalFeatureId": "doitt:778052",
+        "citedStyle": {
+          "attribution": "Wikipedia contributors, \"Empire State Building\", Wikipedia, licensed CC BY-SA 4.0.",
+          "evidenceRecordId": "intake:wikipedia:doitt-778052:facade-material",
+          "fact": "Indiana limestone facade with stainless steel window frames, aluminium spandrels and a black granite base.",
+          "provider": "wikipedia",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Empire_State_Building",
+          "styleClass": "stone-neutral"
+        },
+        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:778052",
+        "inventoryHashSha256": "c0fb1095a57f856e98df2636018c1b59450840a41daa75bddb63a8d36ba7df47",
+        "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:778052",
+        "lods": [
+          {
+            "artifactRef": "public/assets/doitt-778052__lod_0.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0,
+            "lodId": "lod_0",
+            "maxDistanceMeters": 250,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 12,
+                "maxTextures": 0,
+                "maxTriangles": 200000
+              },
+              "materialCount": 9,
+              "textureCount": 0,
+              "triangleCount": 102988
+            },
+            "silhouette": null
+          },
+          {
+            "artifactRef": "public/assets/doitt-778052__lod_1.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0.2,
+            "lodId": "lod_1",
+            "maxDistanceMeters": null,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 12,
+                "maxTextures": 0,
+                "maxTriangles": 200000
+              },
+              "materialCount": 8,
+              "textureCount": 0,
+              "triangleCount": 36032
+            },
+            "silhouette": {
+              "deviationRatio": 0.00008062240496634014,
+              "maximumRatio": 0.02,
+              "method": "projected-silhouette-ratio",
+              "metricVersion": "1.0",
+              "planHashSha256": "861811019f2885faf349adff8199ee9d40dde7dc7472708ada095d7d69c34b9f",
+              "status": "authoring-declared",
+              "viewIds": [
+                "view:east",
+                "view:north",
+                "view:south",
+                "view:west"
+              ]
+            }
+          }
+        ],
+        "ownerCellId": "cell:manhattan:block-835",
+        "predecessor": {
+          "checksumSha256": "31df630efdac9cfc3d31c63b48826771841dcf1a7ed7636b7889dd9d8fbfeff1",
+          "id": "manhattan-esb-block-reference-20260811-v3:doitt:778052:lod_0"
+        },
+        "source": {
+          "kind": "facade-plan",
+          "planHashSha256": "861811019f2885faf349adff8199ee9d40dde7dc7472708ada095d7d69c34b9f",
+          "planId": "facade-plan-v3:68c63f8dd3087227aed629a1"
+        },
+        "sourceDates": {
+          "capturedAt": "2026-08-04T08:25:05.580Z",
+          "updatedAt": null
+        },
+        "truthTiers": [
+          "generated"
+        ],
+        "uncertainty": "Footprint-faithful procedural exterior in local millimetres. The massing follows the sourced building polygon vertex for vertex and the sourced height; nothing else does. Tier subdivision, bay rhythm, openings and attached elements are designed by this grammar and derived from no observation. The facade material CLASS follows a cited public documentary source, recorded by intake record id in this plan; the specific tones, coursing and geometry expressing that class are still designed. No imagery was ingested, traced, sampled or reproduced, and no other real-world appearance claim is made. This plan asserts nothing about the real building's setbacks, balconies, fire escapes, water tanks or signage, nor any tenant, brand or text."
+      },
+      {
+        "canonicalFeatureId": "doitt:812702",
+        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:812702",
+        "inventoryHashSha256": "0913de8bc4d314fd74d3de3948f9225307dd97dd3dc8e85fa9c789c620ed7044",
+        "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:812702",
+        "lods": [
+          {
+            "artifactRef": "public/assets/doitt-812702__lod_0.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0,
+            "lodId": "lod_0",
+            "maxDistanceMeters": 250,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 12,
+                "maxTextures": 0,
+                "maxTriangles": 200000
+              },
+              "materialCount": 9,
+              "textureCount": 0,
+              "triangleCount": 1268
+            },
+            "silhouette": null
+          },
+          {
+            "artifactRef": "public/assets/doitt-812702__lod_1.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0.2,
+            "lodId": "lod_1",
+            "maxDistanceMeters": null,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 12,
+                "maxTextures": 0,
+                "maxTriangles": 200000
+              },
+              "materialCount": 8,
+              "textureCount": 0,
+              "triangleCount": 544
+            },
+            "silhouette": {
+              "deviationRatio": 0.0013213724655342016,
+              "maximumRatio": 0.02,
+              "method": "projected-silhouette-ratio",
+              "metricVersion": "1.0",
+              "planHashSha256": "aa4dfaf9a2b171cfc7b95045b8f43443b0d11e90bec08acdcf86f110c23dd617",
+              "status": "authoring-declared",
+              "viewIds": [
+                "view:east",
+                "view:north",
+                "view:south",
+                "view:west"
+              ]
+            }
+          }
+        ],
+        "ownerCellId": "cell:manhattan:block-835",
+        "predecessor": {
+          "checksumSha256": "83262cf8fa1bb6844ccae6d2191d097ea39809a72d6c36e480f5460da7cdada4",
+          "id": "manhattan-esb-block-reference-20260811-v3:doitt:812702:lod_0"
+        },
+        "source": {
+          "kind": "facade-plan",
+          "planHashSha256": "aa4dfaf9a2b171cfc7b95045b8f43443b0d11e90bec08acdcf86f110c23dd617",
+          "planId": "facade-plan-v3:7d4ddd733b396ab5ca94eb6f"
+        },
+        "sourceDates": {
+          "capturedAt": "2026-08-04T08:25:05.580Z",
+          "updatedAt": null
+        },
+        "truthTiers": [
+          "absent",
+          "generated"
+        ],
+        "uncertainty": "Footprint-faithful procedural exterior in local millimetres. The massing follows the sourced building polygon vertex for vertex and the sourced height; nothing else does. Tier subdivision, bay rhythm, openings, attached elements, colour and material are designed by this grammar, derived from no imagery and no observation, and assert nothing about the real building's appearance, facade, setbacks, balconies, fire escapes, water tanks or signage, nor any tenant, brand or text."
+      },
+      {
+        "canonicalFeatureId": "doitt:835659",
+        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:835659",
+        "inventoryHashSha256": "4e5e8a11b1a3a6bf13b1721074650bb46044db4d7a6328abd664ca4cf595ff45",
+        "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:835659",
+        "lods": [
+          {
+            "artifactRef": "public/assets/doitt-835659__lod_0.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0,
+            "lodId": "lod_0",
+            "maxDistanceMeters": 250,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 12,
+                "maxTextures": 0,
+                "maxTriangles": 200000
+              },
+              "materialCount": 9,
+              "textureCount": 0,
+              "triangleCount": 1490
+            },
+            "silhouette": null
+          },
+          {
+            "artifactRef": "public/assets/doitt-835659__lod_1.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0.2,
+            "lodId": "lod_1",
+            "maxDistanceMeters": null,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 12,
+                "maxTextures": 0,
+                "maxTriangles": 200000
+              },
+              "materialCount": 8,
+              "textureCount": 0,
+              "triangleCount": 602
+            },
+            "silhouette": {
+              "deviationRatio": 0.0009713138638865505,
+              "maximumRatio": 0.02,
+              "method": "projected-silhouette-ratio",
+              "metricVersion": "1.0",
+              "planHashSha256": "cd12d3dc6f8c99cf55300d4f81fb66a560652152563c78de4a98037a34b010c4",
+              "status": "authoring-declared",
+              "viewIds": [
+                "view:east",
+                "view:north",
+                "view:south",
+                "view:west"
+              ]
+            }
+          }
+        ],
+        "ownerCellId": "cell:manhattan:block-835",
+        "predecessor": {
+          "checksumSha256": "c3c7eaec114134e37c0da27b1e41d1865d4b65bae89be8afb52007f94a492b0e",
+          "id": "manhattan-esb-block-reference-20260811-v3:doitt:835659:lod_0"
+        },
+        "source": {
+          "kind": "facade-plan",
+          "planHashSha256": "cd12d3dc6f8c99cf55300d4f81fb66a560652152563c78de4a98037a34b010c4",
+          "planId": "facade-plan-v3:232b757f0a584c5612ab18d8"
+        },
+        "sourceDates": {
+          "capturedAt": "2026-08-04T08:25:05.580Z",
+          "updatedAt": null
+        },
+        "truthTiers": [
+          "absent",
+          "generated"
+        ],
+        "uncertainty": "Footprint-faithful procedural exterior in local millimetres. The massing follows the sourced building polygon vertex for vertex and the sourced height; nothing else does. Tier subdivision, bay rhythm, openings, attached elements, colour and material are designed by this grammar, derived from no imagery and no observation, and assert nothing about the real building's appearance, facade, setbacks, balconies, fire escapes, water tanks or signage, nor any tenant, brand or text."
+      },
+      {
+        "canonicalFeatureId": "doitt:925937",
+        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:925937",
+        "inventoryHashSha256": "3d392c8670b5f8df909208f8df218f116e5d4f2b9fb9f9681e80ebbf71be892f",
+        "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:925937",
+        "lods": [
+          {
+            "artifactRef": "public/assets/doitt-925937__lod_0.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0,
+            "lodId": "lod_0",
+            "maxDistanceMeters": 250,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 12,
+                "maxTextures": 0,
+                "maxTriangles": 200000
+              },
+              "materialCount": 9,
+              "textureCount": 0,
+              "triangleCount": 1208
+            },
+            "silhouette": null
+          },
+          {
+            "artifactRef": "public/assets/doitt-925937__lod_1.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0.2,
+            "lodId": "lod_1",
+            "maxDistanceMeters": null,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 12,
+                "maxTextures": 0,
+                "maxTriangles": 200000
+              },
+              "materialCount": 8,
+              "textureCount": 0,
+              "triangleCount": 484
+            },
+            "silhouette": {
+              "deviationRatio": 0.0018340422908575303,
+              "maximumRatio": 0.02,
+              "method": "projected-silhouette-ratio",
+              "metricVersion": "1.0",
+              "planHashSha256": "9121fecd5bc8efb6711d14142b828fe3231c92a121dd801c2f7fafce27d77510",
+              "status": "authoring-declared",
+              "viewIds": [
+                "view:east",
+                "view:north",
+                "view:south",
+                "view:west"
+              ]
+            }
+          }
+        ],
+        "ownerCellId": "cell:manhattan:block-835",
+        "predecessor": {
+          "checksumSha256": "b4327ba6bedf5877cc631aa0dccd2d8f0642a5034b01a30057fab44782c227cf",
+          "id": "manhattan-esb-block-reference-20260811-v3:doitt:925937:lod_0"
+        },
+        "source": {
+          "kind": "facade-plan",
+          "planHashSha256": "9121fecd5bc8efb6711d14142b828fe3231c92a121dd801c2f7fafce27d77510",
+          "planId": "facade-plan-v3:58df40348069188e0c1151f7"
+        },
+        "sourceDates": {
+          "capturedAt": "2026-08-04T08:25:05.580Z",
+          "updatedAt": null
+        },
+        "truthTiers": [
+          "generated"
+        ],
+        "uncertainty": "Footprint-faithful procedural exterior in local millimetres. The massing follows the sourced building polygon vertex for vertex and the sourced height; nothing else does. Tier subdivision, bay rhythm, openings, attached elements, colour and material are designed by this grammar, derived from no imagery and no observation, and assert nothing about the real building's appearance, facade, setbacks, balconies, fire escapes, water tanks or signage, nor any tenant, brand or text."
+      },
+      {
+        "canonicalFeatureId": "doitt:982383",
+        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:982383",
+        "inventoryHashSha256": "4157c864d1f770047a25fa67c6897a79ad70a67cd49c8f4619a6af886fcf46f8",
+        "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:982383",
+        "lods": [
+          {
+            "artifactRef": "public/assets/doitt-982383__lod_0.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0,
+            "lodId": "lod_0",
+            "maxDistanceMeters": 250,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 12,
+                "maxTextures": 0,
+                "maxTriangles": 200000
+              },
+              "materialCount": 9,
+              "textureCount": 0,
+              "triangleCount": 5022
+            },
+            "silhouette": null
+          },
+          {
+            "artifactRef": "public/assets/doitt-982383__lod_1.glb",
+            "eligible": true,
+            "geometricErrorMeters": 0.2,
+            "lodId": "lod_1",
+            "maxDistanceMeters": null,
+            "quality": {
+              "budgets": {
+                "maxMaterials": 12,
+                "maxTextures": 0,
+                "maxTriangles": 200000
+              },
+              "materialCount": 8,
+              "textureCount": 0,
+              "triangleCount": 1846
+            },
+            "silhouette": {
+              "deviationRatio": 0.00018358729575913347,
+              "maximumRatio": 0.02,
+              "method": "projected-silhouette-ratio",
+              "metricVersion": "1.0",
+              "planHashSha256": "68f690ed0262bd6a0f3eeb0fe950b305ba0c30e0507a7689bb0645eab3ba3c0b",
+              "status": "authoring-declared",
+              "viewIds": [
+                "view:east",
+                "view:north",
+                "view:south",
+                "view:west"
+              ]
+            }
+          }
+        ],
+        "ownerCellId": "cell:manhattan:block-835",
+        "predecessor": {
+          "checksumSha256": "a4e4e4f068afe8acc4fc145ec93514865c34adf2b41221b1e6724a2b50175e14",
+          "id": "manhattan-esb-block-reference-20260811-v3:doitt:982383:lod_0"
+        },
+        "source": {
+          "kind": "facade-plan",
+          "planHashSha256": "68f690ed0262bd6a0f3eeb0fe950b305ba0c30e0507a7689bb0645eab3ba3c0b",
+          "planId": "facade-plan-v3:d622da93c28c74f535fd983a"
+        },
+        "sourceDates": {
+          "capturedAt": "2026-08-04T08:25:05.580Z",
+          "updatedAt": null
+        },
+        "truthTiers": [
+          "generated"
+        ],
+        "uncertainty": "Footprint-faithful procedural exterior in local millimetres. The massing follows the sourced building polygon vertex for vertex and the sourced height; nothing else does. Tier subdivision, bay rhythm, openings, attached elements, colour and material are designed by this grammar, derived from no imagery and no observation, and assert nothing about the real building's appearance, facade, setbacks, balconies, fire escapes, water tanks or signage, nor any tenant, brand or text."
+      }
+    ],
+    "audience": "public",
+    "baseIdentitySet": {
+      "id": "base-identity-set:manhattan:block-835:20260811-v3e",
+      "checksumSha256": "98a7c50abc157fb4f2e52f23e2a129274b7273cace496929406bbbff448a8dfa"
+    },
+    "cells": [
+      {
+        "buildingIds": [
+          "doitt:102705",
+          "doitt:131170",
+          "doitt:147902",
+          "doitt:262867",
+          "doitt:39969",
+          "doitt:460555",
+          "doitt:498980",
+          "doitt:502491",
+          "doitt:584049",
+          "doitt:778052",
+          "doitt:812702",
+          "doitt:835659",
+          "doitt:925937",
+          "doitt:982383"
+        ],
+        "cellId": "cell:manhattan:block-835",
+        "cellRelease": {
+          "id": "cell-release:manhattan-exterior-cells-20260811-v3:v1",
+          "checksumSha256": "b5cb68f703f24db5d8f71e170d5de3a2b7fc0a372f853cdf8d48f0e194994d0d"
+        },
+        "membershipChecksumSha256": "98a7c50abc157fb4f2e52f23e2a129274b7273cace496929406bbbff448a8dfa",
+        "predecessor": {
+          "checksumSha256": "868705fa0ba1d5b03b084e793023c319c518bdfa0473dd54db2998404b1b2005",
+          "id": "manhattan-esb-block-reference-20260811-v3"
+        }
+      }
+    ],
+    "declaredTotalBytes": 7044401,
+    "generatedAt": "2026-08-11T00:00:00.000Z",
+    "immutable": true,
+    "ownershipLedger": {
+      "id": "ownership-ledger:manhattan-exterior-cells-20260811-v3",
+      "checksumSha256": "c0f9e8909468c88ec5a28d4d7ab91d910fe6987086eb90d99fd3f12a3d1a2df2"
+    },
+    "packageId": "manhattan-esb-block-reference-20260811-v3e",
+    "release": {
+      "rootId": "root:manhattan-exterior-cells-20260811-v3:public",
+      "rootChecksumSha256": "3eb584b5106d6cf4574b98d9992b9246a0dcd176ea1ad03c691e1c54615680ba",
+      "releaseId": "manhattan-exterior-cells-20260811-v3",
+      "cityId": "manhattan",
+      "configId": "manhattan-esb-block-835",
+      "privatePredecessor": {
+        "id": "root:manhattan-exterior-cells-20260811-v3:private",
+        "checksumSha256": "42c17fb44d14370d4d4669500b30d8cd792f22e012f0f582dc924e0ca2bf8933"
+      }
+    },
+    "schemaVersion": "1.0",
+    "tilesetRef": "public/tiles/tileset.json"
+  }
+]

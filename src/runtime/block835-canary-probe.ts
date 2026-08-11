@@ -135,11 +135,19 @@ export const EXTERIOR_CANARY_TARGET_QUERY = "exteriorCanaryWave";
 export function exteriorCanaryTarget(search: string, midtownPath: ExteriorCanaryFacadePath): ExteriorCanaryTarget {
   const params = new URLSearchParams(search);
   if (params.get(EXTERIOR_CANARY_TARGET_QUERY) === "midtown-core") {
-    return { targetId: "midtown-core", releaseId: "manhattan-midtown-core-cells-20260811", path: midtownPath };
+    // The V3 successor. The camera path is unchanged: its poses are framed on
+    // the citywide base FOOTPRINT bounding boxes and sourced heights, which V3
+    // does not move — it draws the same polygons at higher fidelity — so the
+    // same poses still frame the same buildings, and the two measurements stay
+    // comparable across the promotion.
+    return { targetId: "midtown-core", releaseId: "manhattan-midtown-core-cells-20260811-v3", path: midtownPath };
   }
   return {
     targetId: "block835",
-    releaseId: "manhattan-exterior-cells-20260811",
+    // The V3 successor. The camera path is unchanged and stays framed on the
+    // same fourteen sourced footprints and heights; V3 changes how each building
+    // is drawn, not where it stands, so the poses still frame their targets.
+    releaseId: "manhattan-exterior-cells-20260811-v3",
     path: block835CanaryFacadePath(parseBlock835CanaryPathVariant(search)),
   };
 }

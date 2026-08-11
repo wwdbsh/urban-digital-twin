@@ -17,6 +17,7 @@
 import { describe, expect, it } from "vitest";
 import releaseJson from "../../public/data/manhattan-esb-block-exterior-pilot-20260805/release.json";
 import { enuFrame, readPilotBuildings, toEnuMeters, type PilotBuildingSource } from "../release/block835-reference-package.ts";
+import { domainSeparatedSha256, stableSerialize } from "./deterministic-hash.ts";
 import {
   DETERMINISTIC_FACADE_V3_LIMITS,
   deriveV3Parameters,
@@ -26,6 +27,7 @@ import {
   ringInteriorAnglesDegrees,
   ringIsSimple,
   ringSignedAreaMm2,
+  selectV3StyleClass,
   V3_REFLEX_ANGLE_TOLERANCE_DEGREES,
   tessellateV3Plan,
   validateV3Input,
@@ -478,5 +480,86 @@ describe("(23a) the tessellated surface bounds exactly the solid the grammar des
       }
       for (const [key, bands] of rows) expect(bands.size, `${building.canonicalBuildingId} ${key}`).toBe(1);
     }
+  });
+});
+
+/**
+ * A cited style override is the one way this grammar's designed style draw can
+ * be displaced, and the constraints on it are exactly the constraints that keep
+ * it from becoming an unrecorded change of shipped appearance.
+ */
+describe("(23) a cited style override displaces the designed draw, and nothing else", () => {
+  const ESB = "doitt:778052";
+  const OVERRIDE = {
+    styleClass: "stone-neutral",
+    evidenceRecordId: "evidence-intake:wikipedia:empire-state-building:facade-material",
+    fact: "Indiana limestone facade with stainless steel window frames, aluminium spandrels and a black granite base.",
+  } as const;
+
+  it("is absent by default, so every plan generated before it existed keeps its hash", () => {
+    const plain = planFor(ESB);
+    expect("styleOverride" in plain.input).toBe(false);
+    // The key is OMITTED rather than set to undefined: `stableSerialize` writes a
+    // present undefined key as null, which would move every V3 plan hash.
+    expect(JSON.stringify(plain.input)).not.toContain("styleOverride");
+    expect(plain.styleClass).toBe(selectV3StyleClass(
+      domainSeparatedSha256("udt.facade.style.v3", { inputFingerprintSha256: plain.inputFingerprintSha256, seed: plain.input.seed }),
+      { heightMm: plain.input.geometry.heightMm, footprintAreaMm2: Math.abs(ringSignedAreaMm2(plain.input.geometry.footprint.outer)) },
+    ));
+  });
+
+  it("replaces the drawn class, moves the plan hash, and changes no geometry", () => {
+    const plain = planFor(ESB);
+    const cited = planFor(ESB, { styleOverride: { ...OVERRIDE } });
+    // The drawn class depends on the seed, so it is asserted only as "not the
+    // cited one" here; the shipped package's own draw is pinned by its manifest.
+    expect(plain.styleClass).not.toBe("stone-neutral");
+    expect(cited.styleClass).toBe("stone-neutral");
+    // The override is covered by the hash: shipped appearance cannot change
+    // without the plan saying so.
+    expect(cited.planHashSha256).not.toBe(plain.planHashSha256);
+    expect(cited.input.styleOverride).toEqual(OVERRIDE);
+    // Materials are the ONLY thing a style class feeds. Tiers, surfaces,
+    // placements and prisms are derived without ever reading it, so a sourced
+    // material fact cannot silently reshape a building.
+    expect(stableSerialize(cited.materials)).not.toBe(stableSerialize(plain.materials));
+    expect(stableSerialize(cited.tiers)).toBe(stableSerialize(plain.tiers));
+    expect(stableSerialize(cited.surfaces)).toBe(stableSerialize(plain.surfaces));
+    expect(stableSerialize(cited.placements)).toBe(stableSerialize(plain.placements));
+    expect(stableSerialize(cited.prisms)).toBe(stableSerialize(plain.prisms));
+    expect(stableSerialize(cited.massing)).toBe(stableSerialize(plain.massing));
+    // Tessellated triangle counts are therefore identical, which is why an
+    // override cannot invalidate a measured frame-time gate.
+    const count = (plan: V3Plan) => {
+      const tessellation = tessellateV3Plan(plan, { includeRecesses: true });
+      return { quads: tessellation.quads.length, triangles: tessellation.triangles.length };
+    };
+    expect(count(cited)).toEqual(count(plain));
+  });
+
+  it("re-derives through the plan validator, so an override cannot be forged onto a plan", () => {
+    const cited = planFor(ESB, { styleOverride: { ...OVERRIDE } });
+    expect(validateV3Plan(cited).ok).toBe(true);
+    // Stripping the citation while keeping the overridden style class must fail:
+    // the class no longer re-derives from the embedded input.
+    const stripped = { ...cited, input: { ...cited.input } } as Record<string, unknown>;
+    delete (stripped.input as Record<string, unknown>).styleOverride;
+    expect(validateV3Plan(stripped).ok).toBe(false);
+    // ...and so must keeping the citation while restoring the drawn class.
+    expect(validateV3Plan({ ...cited, styleClass: "curtain-cool" }).ok).toBe(false);
+  });
+
+  it("refuses an override that is uncited, unbounded, or not a declared class", () => {
+    const refuse = (styleOverride: unknown) => {
+      const result = generateV3FacadePlan(inputFor(byId.get(ESB)!, { styleOverride } as Partial<V3Input>));
+      expect(result.ok, `expected refusal for ${JSON.stringify(styleOverride)}`).toBe(false);
+    };
+    refuse({ ...OVERRIDE, evidenceRecordId: "" });
+    refuse({ styleClass: OVERRIDE.styleClass, fact: OVERRIDE.fact });
+    refuse({ ...OVERRIDE, styleClass: "limestone" });
+    refuse({ ...OVERRIDE, fact: "" });
+    refuse({ ...OVERRIDE, fact: "x".repeat(513) });
+    refuse({ ...OVERRIDE, extra: "unexpected" });
+    refuse("stone-neutral");
   });
 });

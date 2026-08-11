@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  CONDITIONALLY_APPLICABLE_EXTERIOR_COMPONENT_KINDS,
   EXTERIOR_COMPONENT_SCHEMA_VERSION,
   exteriorComponentFidelity,
   isExteriorComponentReleaseEligible,
@@ -110,6 +111,46 @@ describe("provider-neutral exterior inventory", () => {
     expect(validateExteriorComponentInventory({ ...inventory, components: [mutated, ...inventory.components.slice(1)] }).ok).toBe(false);
     const laundering = { ...generated, evidenceIds: ["evidence:1"], realWorldAccuracyClaim: "exact" };
     expect(validateExteriorComponentInventory({ ...inventory, components: [laundering, ...inventory.components.slice(1)] }).ok).toBe(false);
+  });
+
+  it("promotes an absent component only for a conditionally-applicable kind, and only with a reason", () => {
+    const inventory = generatedInventory();
+    const absentOf = (kind: string, overrides: Record<string, unknown> = {}) => ({
+      componentId: `component:${kind}`,
+      kind,
+      state: "absent",
+      representation: "none",
+      reason: "tier-offset-collapse (self-intersection) at tier 1: the inward offset was refused rather than repaired, so the massing is a single tier with no setbacks.",
+      uncertainty: "No claim about the real building.",
+      ...overrides,
+    }) as unknown as ExteriorComponentInventory["components"][number];
+
+    // The admission is exactly one kind wide, and it is a contract constant
+    // rather than anything a release can declare for itself.
+    expect([...CONDITIONALLY_APPLICABLE_EXTERIOR_COMPONENT_KINDS]).toEqual(["setbacks"]);
+    expect(isExteriorComponentReleaseEligible(absentOf("setbacks"))).toBe(true);
+
+    // EVERY other required kind is still refused when absent — including the
+    // ones a generator might be tempted to drop quietly.
+    for (const kind of REQUIRED_EXTERIOR_COMPONENT_KINDS) {
+      if ((CONDITIONALLY_APPLICABLE_EXTERIOR_COMPONENT_KINDS as readonly string[]).includes(kind)) continue;
+      expect(isExteriorComponentReleaseEligible(absentOf(kind)), `${kind} must not be promotable while absent`).toBe(false);
+    }
+
+    // The reason is what separates a determination from a silent gap, so an
+    // unexplained absence is refused even for the admitted kind.
+    for (const reason of ["", "   "]) {
+      expect(isExteriorComponentReleaseEligible(absentOf("setbacks", { reason }))).toBe(false);
+    }
+    expect(isExteriorComponentReleaseEligible(absentOf("setbacks", { reason: undefined }))).toBe(false);
+
+    // The admission changes promotion eligibility only. The absent component is
+    // still `no-representation` and still makes no real-world absence claim.
+    expect(exteriorComponentFidelity(absentOf("setbacks"))).toBe("no-representation");
+    expect(validateExteriorComponentInventory({
+      ...inventory,
+      components: inventory.components.map((entry) => entry.kind === "setbacks" ? absentOf("setbacks", { componentId: entry.componentId }) : entry),
+    }).ok).toBe(true);
   });
 
   it("closes evidence, license, approval, dates, uncertainty, and public rights", () => {

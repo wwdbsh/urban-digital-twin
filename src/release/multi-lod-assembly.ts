@@ -115,6 +115,25 @@ export interface AssemblyLod {
     maximumRatio: 0.02;
   };
 }
+/**
+ * A cited fact that displaced this asset's designed facade style class.
+ *
+ * Present only on an asset whose plan carries a `styleOverride`, so its absence
+ * is the ordinary case and means "this appearance is entirely designed". It
+ * exists to be READ: the details panel shows it, which is the whole point of
+ * admitting the fact — a citation nobody can see is not provenance.
+ */
+export interface AssemblyCitedStyle {
+  styleClass: string;
+  /** The rights-cleared intake record this override is cited from. */
+  evidenceRecordId: string;
+  /** The sourced fact, in the words the panel shows. */
+  fact: string;
+  provider: string;
+  sourceUrl: string;
+  attribution: string;
+}
+
 export interface AssemblyAsset {
   canonicalFeatureId: string;
   ownerCellId: string;
@@ -126,6 +145,7 @@ export interface AssemblyAsset {
   predecessor: ImmutablePin | null;
   uncertainty: string;
   source: AssemblyAssetSource;
+  citedStyle?: AssemblyCitedStyle;
   lods: AssemblyLod[];
 }
 export interface MultiLodAssemblyManifest {
@@ -170,8 +190,8 @@ function finite(value: unknown, minimum = Number.NEGATIVE_INFINITY): value is nu
 function integer(value: unknown, maximum = Number.MAX_SAFE_INTEGER): value is number { return Number.isSafeInteger(value) && (value as number) >= 0 && (value as number) <= maximum; }
 function add(left: number, right: number): number | null { const value = left + right; return Number.isSafeInteger(value) ? value : null; }
 function issue(issues: AssemblyIssue[], path: string, message: string): void { issues.push({ path, message }); }
-function exact(value: Record<string, unknown>, keys: readonly string[], path: string, issues: AssemblyIssue[]): void {
-  const allowed = new Set(keys);
+function exact(value: Record<string, unknown>, keys: readonly string[], path: string, issues: AssemblyIssue[], optional: readonly string[] = []): void {
+  const allowed = new Set([...keys, ...optional]);
   for (const key of Object.keys(value)) if (!allowed.has(key)) issue(issues, `${path}.${key}`, "Unexpected field.");
   for (const key of keys) if (!(key in value)) issue(issues, `${path}.${key}`, "Required field is missing.");
 }
@@ -269,7 +289,17 @@ export function validateMultiLodAssembly(value: unknown, policy?: MultiLodAssemb
   const assetIds = new Set<string>(); const claimedRefs = new Set<string>();
   if (Array.isArray(value.assets)) value.assets.forEach((raw, index) => {
     const path = `$.assets[${index}]`; if (!rec(raw)) return issue(issues, path, "Asset must be an object.");
-    exact(raw, ["canonicalFeatureId", "ownerCellId", "inventoryId", "inventoryHashSha256", "evidenceShardId", "truthTiers", "sourceDates", "predecessor", "uncertainty", "source", "lods"], path, issues);
+    exact(raw, ["canonicalFeatureId", "ownerCellId", "inventoryId", "inventoryHashSha256", "evidenceShardId", "truthTiers", "sourceDates", "predecessor", "uncertainty", "source", "lods"], path, issues, ["citedStyle"]);
+    if (raw.citedStyle !== undefined) {
+      const cited = raw.citedStyle;
+      if (typeof cited !== "object" || cited === null || Array.isArray(cited)) issue(issues, `${path}.citedStyle`, "Cited style must be an object.");
+      else {
+        exact(cited as Record<string, unknown>, ["styleClass", "evidenceRecordId", "fact", "provider", "sourceUrl", "attribution"], `${path}.citedStyle`, issues);
+        for (const field of ["styleClass", "evidenceRecordId", "fact", "provider", "sourceUrl", "attribution"] as const) {
+          if (!text((cited as Record<string, unknown>)[field])) issue(issues, `${path}.citedStyle.${field}`, "Cited style fields are required and must be non-empty.");
+        }
+      }
+    }
     if (!text(raw.canonicalFeatureId) || assetIds.has(String(raw.canonicalFeatureId))) issue(issues, `${path}.canonicalFeatureId`, "Canonical feature IDs must be unique."); else assetIds.add(raw.canonicalFeatureId);
     if (!text(raw.ownerCellId) || membership.get(String(raw.canonicalFeatureId)) !== raw.ownerCellId) issue(issues, `${path}.ownerCellId`, "Asset owner must match exact cell membership.");
     if (!text(raw.inventoryId) || !hash(raw.inventoryHashSha256) || !text(raw.evidenceShardId)) issue(issues, path, "Inventory/evidence pins are required.");
@@ -309,9 +339,91 @@ export function validateMultiLodAssembly(value: unknown, policy?: MultiLodAssemb
       }
     });
   });
+  // An assembly cell lists the buildings this PACKAGE packages, and every one of
+  // them must carry an asset. What the assembly alone cannot see is whether the
+  // package covers the whole owned cell; that is a cross-artifact property and
+  // lives in `assemblyCellCoverage` below, which the runtime applies.
   for (const [id] of membership) if (!assetIds.has(id)) issue(issues, "$.cells", `Cell member has no packaged asset: ${id}.`);
   for (const artifact of artifacts.values()) if (artifact.role === "glb" && !claimedRefs.has(artifact.relativeRef)) issue(issues, "$.artifacts", `Orphan GLB artifact: ${artifact.relativeRef}.`);
   return issues.length ? { ok: false, issues } : { ok: true, value: value as unknown as MultiLodAssemblyManifest };
+}
+
+
+// ---------------------------------------------------------------------------
+// Cell coverage: the packaged set against the owned cell
+// ---------------------------------------------------------------------------
+
+/**
+ * Whether an assembly cell covers its owned cell honestly.
+ *
+ * The original rule was exact equality: an assembly cell had to list the whole
+ * owned membership. That prevented the failure it was written for — a package
+ * silently covering fewer buildings than the cell claims — but it also made a
+ * cell containing a REFUSED building unrepresentable, because the assembly
+ * validator above independently forbids listing a building with no asset. A cell
+ * owning 77 buildings of which a grammar can draw 75 then had no legal form at
+ * all, which pushed toward inventing geometry to satisfy a gate.
+ *
+ * The refined rule keeps the anti-silent-omission property exactly and states it
+ * as what it always meant: every owned building is either PACKAGED or
+ * EXPLICITLY UNAVAILABLE with a stated reason, and the two sets are disjoint and
+ * together are the owned set. Set equality both ways, never subset or superset —
+ * a building that is neither packaged nor declared unavailable is precisely the
+ * silent omission the original rule refused, and a building that is both is a
+ * package contradicting its own release.
+ *
+ * It is byte-neutral for every package whose cells are fully packaged: an empty
+ * unavailable set reduces the rule to the original equality, so Block 835 V2 and
+ * V3 and the exterior fixture releases satisfy it unchanged.
+ *
+ * The membership checksum is re-derived over the PACKAGED list rather than
+ * compared against the owned cell's, because it must describe the list beside
+ * it. For a fully packaged cell the two derivations produce the same digest —
+ * both are `sha256HexSync(stableSerialize(sorted ids))` — so existing packages
+ * keep their committed bytes.
+ */
+export type AssemblyCellCoverage = { ok: true } | { ok: false; message: string };
+
+export function assemblyCellMembershipChecksum(buildingIds: readonly string[]): string {
+  return sha256HexBytes(new TextEncoder().encode(stableSerialize([...buildingIds].sort())));
+}
+
+export function assemblyCellCoverage(input: {
+  packagedBuildingIds: readonly string[];
+  /** The owned membership, from the ownership ledger's own cell. */
+  ownedBuildingIds: readonly string[];
+  /** Buildings the cell release declares `unavailable`, with a stated reason. */
+  unavailableBuildingIds: readonly string[];
+  declaredMembershipChecksumSha256: string;
+}): AssemblyCellCoverage {
+  const packaged = [...new Set(input.packagedBuildingIds)].sort();
+  if (packaged.length !== input.packagedBuildingIds.length) {
+    return { ok: false, message: "packaged membership repeats a building." };
+  }
+  const owned = [...input.ownedBuildingIds].sort();
+  const unavailable = [...new Set(input.unavailableBuildingIds)].sort();
+  const packagedSet = new Set(packaged);
+  const bothWays = unavailable.filter((id) => packagedSet.has(id));
+  if (bothWays.length > 0) {
+    return { ok: false, message: `package ships geometry for ${bothWays.join(", ")}, which its own cell release declares unavailable.` };
+  }
+  const covered = [...packaged, ...unavailable].sort();
+  if (covered.length !== owned.length || covered.some((id, index) => id !== owned[index])) {
+    const ownedSet = new Set(owned);
+    const missing = owned.filter((id) => !packagedSet.has(id) && !unavailable.includes(id));
+    const foreign = covered.filter((id) => !ownedSet.has(id));
+    return {
+      ok: false,
+      message: missing.length > 0
+        ? `owned building(s) ${missing.join(", ")} are neither packaged nor declared unavailable.`
+        : `package or cell release names ${foreign.join(", ")}, which the owned cell does not contain.`,
+    };
+  }
+  const expected = assemblyCellMembershipChecksum(packaged);
+  if (input.declaredMembershipChecksumSha256 !== expected) {
+    return { ok: false, message: "cell membership checksum does not describe the packaged membership beside it." };
+  }
+  return { ok: true };
 }
 
 function u32(view: DataView, offset: number): number { return view.getUint32(offset, true); }
@@ -507,7 +619,7 @@ function validateGltfJson(json: Record<string, unknown>, bin: Uint8Array): void 
   if (json.scene !== undefined && !integer(json.scene, scenes.length - 1)) throw new Error("Default scene index is invalid.");
 }
 
-interface UdtGlbMetadata { canonicalFeatureId: string; lodId: string; ownerCellId: string; inventoryId: string; inventoryHashSha256: string; evidenceShardId: string; truthTiers: ComponentTruthTier[]; sourceDates: { capturedAt: string | null; updatedAt: string | null }; predecessor: ImmutablePin | null; uncertainty: string; planHashSha256: string; textureProvenance?: unknown }
+interface UdtGlbMetadata { canonicalFeatureId: string; lodId: string; ownerCellId: string; inventoryId: string; inventoryHashSha256: string; evidenceShardId: string; truthTiers: ComponentTruthTier[]; sourceDates: { capturedAt: string | null; updatedAt: string | null }; predecessor: ImmutablePin | null; uncertainty: string; planHashSha256: string; textureProvenance?: unknown; citedStyle?: unknown }
 function glbMetadata(json: Record<string, unknown>): UdtGlbMetadata {
   if (!rec(json.extras)) throw new Error("GLB canonical metadata extras are required.");
   closedKeys(json.extras, ["urbanDigitalTwin"], ["urbanDigitalTwin"], "GLB root extras");
@@ -517,7 +629,7 @@ function glbMetadata(json: Record<string, unknown>): UdtGlbMetadata {
   // break every frozen untextured package; the requirement is conditional and
   // lives in `validateProceduralTextureGlb`, which demands it exactly when the
   // GLB embeds images.
-  closedKeys(metadata, ["canonicalFeatureId", "lodId", "ownerCellId", "inventoryId", "inventoryHashSha256", "evidenceShardId", "truthTiers", "sourceDates", "predecessor", "uncertainty", "planHashSha256", "textureProvenance"], ["canonicalFeatureId", "lodId", "ownerCellId", "inventoryId", "inventoryHashSha256", "evidenceShardId", "truthTiers", "sourceDates", "predecessor", "uncertainty", "planHashSha256"], "GLB canonical metadata");
+  closedKeys(metadata, ["canonicalFeatureId", "lodId", "ownerCellId", "inventoryId", "inventoryHashSha256", "evidenceShardId", "truthTiers", "sourceDates", "predecessor", "uncertainty", "planHashSha256", "textureProvenance", "citedStyle"], ["canonicalFeatureId", "lodId", "ownerCellId", "inventoryId", "inventoryHashSha256", "evidenceShardId", "truthTiers", "sourceDates", "predecessor", "uncertainty", "planHashSha256"], "GLB canonical metadata");
   for (const key of ["canonicalFeatureId", "lodId", "ownerCellId", "inventoryId", "evidenceShardId", "uncertainty"] as const) if (!text(metadata[key])) throw new Error(`GLB canonical metadata ${key} is invalid.`);
   if (!hash(metadata.inventoryHashSha256) || !hash(metadata.planHashSha256)) throw new Error("GLB canonical metadata source hashes are invalid.");
   if (!Array.isArray(metadata.truthTiers) || metadata.truthTiers.length === 0 || metadata.truthTiers.length > TRUTH.size || metadata.truthTiers.some((tier) => !TRUTH.has(tier as ComponentTruthTier)) || new Set(metadata.truthTiers).size !== metadata.truthTiers.length) throw new Error("GLB canonical metadata truth tiers are invalid.");
@@ -673,8 +785,13 @@ export function validateGlbBinding(parsed: ParsedGlb, asset: AssemblyAsset, lod:
   // manifest asset record has no such field, and adding one would rewrite the
   // canonical metadata shape every frozen package is pinned against. The record
   // is bound by REPLAY instead, which is a stronger check than string equality.
-  const bound: Omit<UdtGlbMetadata, "textureProvenance"> & { textureProvenance?: unknown } = { ...metadata };
+  const bound: Omit<UdtGlbMetadata, "textureProvenance"> & { textureProvenance?: unknown; citedStyle?: unknown } = { ...metadata };
   delete bound.textureProvenance;
+  // Compared separately below against the manifest asset, for the same reason
+  // `textureProvenance` is: it is per-asset, not per-LOD.
+  const citedStyle = bound.citedStyle;
+  delete bound.citedStyle;
+  if (stableSerialize(citedStyle ?? null) !== stableSerialize(asset.citedStyle ?? null)) throw new Error("GLB canonical metadata citedStyle does not match its manifest asset.");
   const expected = { canonicalFeatureId: asset.canonicalFeatureId, lodId: lod.lodId, ownerCellId: asset.ownerCellId, inventoryId: asset.inventoryId, inventoryHashSha256: asset.inventoryHashSha256, evidenceShardId: asset.evidenceShardId, truthTiers: [...asset.truthTiers].sort(compareText), sourceDates: asset.sourceDates, predecessor: asset.predecessor, uncertainty: asset.uncertainty, planHashSha256: asset.source.kind === "facade-plan" ? asset.source.planHashSha256 : asset.source.assetManifestChecksumSha256 };
   if (stableSerialize({ ...bound, truthTiers: [...bound.truthTiers].sort(compareText) }) !== stableSerialize(expected)) throw new Error("GLB canonical metadata differs from the immutable assembly manifest.");
   if (stableSerialize(counts(parsed.json)) !== stableSerialize({ triangleCount: lod.quality.triangleCount, materialCount: lod.quality.materialCount, textureCount: lod.quality.textureCount })) throw new Error("GLB topology/material/texture counts differ from declared quality.");

@@ -1,0 +1,927 @@
+{
+  "files": [
+    {
+      "byteSize": 54166,
+      "checksumSha256": "d4f65bcf03921a6e687a651e815e556f6b6c10def8f8add01ee7e78ee8d53097",
+      "path": "asset-census.json"
+    },
+    {
+      "byteSize": 5278,
+      "checksumSha256": "9a919f10321b2cdd7e13cdc0d024947ef685eee1873b86b3749154d0dfc8e4e2",
+      "path": "blender-sample.json"
+    },
+    {
+      "byteSize": 1059,
+      "checksumSha256": "f1ea514408334730ed8409f6dfad00ea3e6e983097f873c0def93f46705acd6e",
+      "path": "blender/inputs/doitt-1001111.json"
+    },
+    {
+      "byteSize": 1059,
+      "checksumSha256": "dda9dc566a5430726f8d42e8093ac6112d9d13b09587fe6386add0f78d0a5906",
+      "path": "blender/inputs/doitt-105916.json"
+    },
+    {
+      "byteSize": 1083,
+      "checksumSha256": "e75a83a70a3ab203d25564d7f991b6fd38bd3dd8c14b189a8470892b8d1a9d45",
+      "path": "blender/inputs/doitt-1104532.json"
+    },
+    {
+      "byteSize": 1063,
+      "checksumSha256": "66b5542931001a50c311cd510182ad6eec8eeb35aa7a26ff9c297bc0b4a24148",
+      "path": "blender/inputs/doitt-1105839.json"
+    },
+    {
+      "byteSize": 1067,
+      "checksumSha256": "9f87692d2b4f6319ad144f509f7956d492ae89988c2e19ed56a2a5e7f03f8fa6",
+      "path": "blender/inputs/doitt-1114625.json"
+    },
+    {
+      "byteSize": 1079,
+      "checksumSha256": "d3594865f3edea8bd8c4bfa6383f8fd0a1adf23325cb58e6d8231c9c9de85060",
+      "path": "blender/inputs/doitt-1116162.json"
+    },
+    {
+      "byteSize": 1079,
+      "checksumSha256": "bbf9abf4e26c60af54b913e0d4c03c6f46e2938cb130dae7574f664f939ca7de",
+      "path": "blender/inputs/doitt-111690.json"
+    },
+    {
+      "byteSize": 1081,
+      "checksumSha256": "f6e40bca82b4b20cfeb52bc8c696eff18554ad870558f9a13f8bdb27becc5b2c",
+      "path": "blender/inputs/doitt-1117425.json"
+    },
+    {
+      "byteSize": 1061,
+      "checksumSha256": "47cb24e823fa83524264b8982f5e80d34743ef78bca928a6474b52a0d7c36dac",
+      "path": "blender/inputs/doitt-1158178.json"
+    },
+    {
+      "byteSize": 1064,
+      "checksumSha256": "8d3d347df62f5d8d37d7d106e1a311ee146efa9919244df5fe4fbc13708ea7f9",
+      "path": "blender/inputs/doitt-1191064.json"
+    },
+    {
+      "byteSize": 1073,
+      "checksumSha256": "91ab80cfb73330af02d89cb09607a0dbe6224a3d6b56c1cf2617046580a2f933",
+      "path": "blender/inputs/doitt-1195535.json"
+    },
+    {
+      "byteSize": 1065,
+      "checksumSha256": "ddefc65781ccc59b21bec57d8f762e62da7502d7a65e485ee7251b21816ecf58",
+      "path": "blender/inputs/doitt-1215127.json"
+    },
+    {
+      "byteSize": 1077,
+      "checksumSha256": "5514714bad7275884ba83e643b1a9939de2e7a2cf41bc5f0125d76d9fd043910",
+      "path": "blender/inputs/doitt-1221493.json"
+    },
+    {
+      "byteSize": 1074,
+      "checksumSha256": "5df4e1bcf897a9afe58b38937c34a9212e0552bb042aed04ce1036874cc4c192",
+      "path": "blender/inputs/doitt-1224763.json"
+    },
+    {
+      "byteSize": 1070,
+      "checksumSha256": "3c41825697b4c96f066857f4705aafd7def36678abe9fe1b766b58f06a7848ab",
+      "path": "blender/inputs/doitt-1232671.json"
+    },
+    {
+      "byteSize": 1081,
+      "checksumSha256": "e117f1995eb5a45d9deb4a81283df86cf6278450cddfbd0494e6cd2b3146d204",
+      "path": "blender/inputs/doitt-1260400.json"
+    },
+    {
+      "byteSize": 1056,
+      "checksumSha256": "3e29ad3d56e9315cbeb6ae9aa95b19b47de93fa31001bbb9b7775e1abf772c98",
+      "path": "blender/inputs/doitt-1262786.json"
+    },
+    {
+      "byteSize": 1065,
+      "checksumSha256": "96adcc76ca3c362fa87e7a752714b8f9f8c4bab189d7b0aea10cdadf783f9339",
+      "path": "blender/inputs/doitt-1264335.json"
+    },
+    {
+      "byteSize": 1078,
+      "checksumSha256": "fdd41c596d10be29d642a9a644273a4b6e4d3af939c8c9e972375e9369eb1233",
+      "path": "blender/inputs/doitt-1268457.json"
+    },
+    {
+      "byteSize": 1062,
+      "checksumSha256": "571df5acf6587d2edb191cf4b91dd246e7d50e4f8003b7f7184199a07773b4d1",
+      "path": "blender/inputs/doitt-1272399.json"
+    },
+    {
+      "byteSize": 1068,
+      "checksumSha256": "385e0d5970b2820db906b4b3dfa5fbde370bfb1a76bd0973447131d3ea64a42b",
+      "path": "blender/inputs/doitt-127864.json"
+    },
+    {
+      "byteSize": 1074,
+      "checksumSha256": "bd4000494baa9227fdb15eef24c32702e3b7aa6d6fd7b965c5cbb828932e8ff2",
+      "path": "blender/inputs/doitt-1286246.json"
+    },
+    {
+      "byteSize": 1071,
+      "checksumSha256": "0fc53701b83eee6ba51113b1b51b5ecaccdee269aca2676812f9d420f14058d3",
+      "path": "blender/inputs/doitt-1287486.json"
+    },
+    {
+      "byteSize": 1048,
+      "checksumSha256": "b687699a0dc995be6e9251ed7beadd7db11a41332eee3960ff5aa4743c183dba",
+      "path": "blender/inputs/doitt-1289963.json"
+    },
+    {
+      "byteSize": 1063,
+      "checksumSha256": "08f3d299d84eb6c1021cdc25bc0e22b8b6eb095bd7d141cf2a95937315559df0",
+      "path": "blender/inputs/doitt-1289964.json"
+    },
+    {
+      "byteSize": 1057,
+      "checksumSha256": "fda1c21bcec45b0a5a1faa49a68e0c9f77330be69729b09089230873ce6a53f3",
+      "path": "blender/inputs/doitt-1294316.json"
+    },
+    {
+      "byteSize": 1066,
+      "checksumSha256": "ced9d51c1f768de49b9b02c802c3d0985b546d7916f92c11feb407e6afb94938",
+      "path": "blender/inputs/doitt-1295112.json"
+    },
+    {
+      "byteSize": 1074,
+      "checksumSha256": "928a1e753ce5d8ef8809ffa18ad416af74f7bc7ab9c1afb9c29b895fa8a7b0c6",
+      "path": "blender/inputs/doitt-1296496.json"
+    },
+    {
+      "byteSize": 1063,
+      "checksumSha256": "c3d327be4e1bc33dd940979e6ad4575dbab988f1378829cfbc17ef2abcb418ae",
+      "path": "blender/inputs/doitt-1297513.json"
+    },
+    {
+      "byteSize": 1070,
+      "checksumSha256": "7850eb1c5c3eed152ebba353407100531ebe2026f819c377d0b14dcf803c1c58",
+      "path": "blender/inputs/doitt-1299576.json"
+    },
+    {
+      "byteSize": 1069,
+      "checksumSha256": "b1143badfcd2259835f34d72bf95cd5e93e45f003fd4fc77fe36a2c59572510f",
+      "path": "blender/inputs/doitt-1300185.json"
+    },
+    {
+      "byteSize": 1053,
+      "checksumSha256": "8468e460f583fac863b56177c8c2f6b1aea99ff38fc60df6120ad570e3a812d6",
+      "path": "blender/inputs/doitt-1302589.json"
+    },
+    {
+      "byteSize": 1080,
+      "checksumSha256": "aa23375a4fe77135210235fe009394ee6d99cb30f5d624f8bfdc2ea77a3234e0",
+      "path": "blender/inputs/doitt-139071.json"
+    },
+    {
+      "byteSize": 1062,
+      "checksumSha256": "abc2b40783ee18b0eff7580bf03ca89cd214136ca034c4850f48b54892dc8373",
+      "path": "blender/inputs/doitt-157592.json"
+    },
+    {
+      "byteSize": 1077,
+      "checksumSha256": "52d1b4208643dcc5d040713b06d15850dbeab79df197aee0e9deb3da2e1c3f36",
+      "path": "blender/inputs/doitt-196987.json"
+    },
+    {
+      "byteSize": 1076,
+      "checksumSha256": "c91a68511e5ea3c0502e857c1dc37e0823adba817ea89d98795ed64b4360557d",
+      "path": "blender/inputs/doitt-225670.json"
+    },
+    {
+      "byteSize": 1077,
+      "checksumSha256": "6ae77e1dce75555aeb791eceaa3ad0b317fc3afcafd9330046531d7c25a5798c",
+      "path": "blender/inputs/doitt-227702.json"
+    },
+    {
+      "byteSize": 1076,
+      "checksumSha256": "9916e0d182eed64d90862229b3923f4cf13e85cf183494a6ad1b58a2de1914d9",
+      "path": "blender/inputs/doitt-228631.json"
+    },
+    {
+      "byteSize": 1078,
+      "checksumSha256": "3e086f2bd163b3269f393d070b02542b75de254255bc6dd818c9574c9696f9ef",
+      "path": "blender/inputs/doitt-260361.json"
+    },
+    {
+      "byteSize": 1078,
+      "checksumSha256": "9caeb3871643a7ef7b92edea7f1d98d93a9b85215c3a9bb52d58a047d120f284",
+      "path": "blender/inputs/doitt-275393.json"
+    },
+    {
+      "byteSize": 1078,
+      "checksumSha256": "7bf3d7da40c80cf074ed8346bd490bf1f359baba4f99f5de5a2db662750e47ec",
+      "path": "blender/inputs/doitt-297390.json"
+    },
+    {
+      "byteSize": 1055,
+      "checksumSha256": "b5e116b454147d1ee5f85fb0697574a63db2e14e4811c8015d029da698293a52",
+      "path": "blender/inputs/doitt-316002.json"
+    },
+    {
+      "byteSize": 1079,
+      "checksumSha256": "889c14f9efbfc9a8f3ef3040146dd1a7b40f8b5edc512e2da48b6071e685430f",
+      "path": "blender/inputs/doitt-317859.json"
+    },
+    {
+      "byteSize": 1079,
+      "checksumSha256": "11932d044b2abd8e88f17b264c7c53b4ff713e72b337aad85182c3bc468527da",
+      "path": "blender/inputs/doitt-347215.json"
+    },
+    {
+      "byteSize": 1080,
+      "checksumSha256": "c5af7da9cecad154a6b9142d6ef7b5c651ac9fe17ad9c4c9260d382cacc803d4",
+      "path": "blender/inputs/doitt-360993.json"
+    },
+    {
+      "byteSize": 1078,
+      "checksumSha256": "eb8d1e6bd9f3cd9b1784cc6c1158d2af32bfe7cf490aa70eb97ceecea8daae67",
+      "path": "blender/inputs/doitt-364273.json"
+    },
+    {
+      "byteSize": 1075,
+      "checksumSha256": "d9147ec175451c69f23db3caa3acd05251cc54d8e217dbdc4529abec5c6d4a8b",
+      "path": "blender/inputs/doitt-36922.json"
+    },
+    {
+      "byteSize": 1075,
+      "checksumSha256": "3b280c0623fc438828450dbbd366799a0ab49558205a5679c95b3ddd621faabb",
+      "path": "blender/inputs/doitt-373902.json"
+    },
+    {
+      "byteSize": 1078,
+      "checksumSha256": "f5f098002ecec694d2de6e904a915f42c70f8512370b6f1f7a10868ee46d40e2",
+      "path": "blender/inputs/doitt-374636.json"
+    },
+    {
+      "byteSize": 1082,
+      "checksumSha256": "d38de132bd6a42ebbe156c65f957dcb237f8350b73184bf67268658680b9c194",
+      "path": "blender/inputs/doitt-383893.json"
+    },
+    {
+      "byteSize": 1068,
+      "checksumSha256": "743bcb1982860fe3b5a1cb3c6a80a63d3d5ca19495ddc53ea0cd7bc45239c72e",
+      "path": "blender/inputs/doitt-420075.json"
+    },
+    {
+      "byteSize": 1081,
+      "checksumSha256": "b56154814ed421bf0c58e997d3d39ccf7f6cc2bca1b022a8ccc535f2467485e1",
+      "path": "blender/inputs/doitt-428362.json"
+    },
+    {
+      "byteSize": 1077,
+      "checksumSha256": "e63d9f50b2b93f9097167959c8d288fcb8d6e7b78e114aef512597b6a56552ef",
+      "path": "blender/inputs/doitt-443409.json"
+    },
+    {
+      "byteSize": 1080,
+      "checksumSha256": "36559323ab5ae38273d4f03190ccfeb6dd2438ea2a93fc0e46a9c56f984206de",
+      "path": "blender/inputs/doitt-453302.json"
+    },
+    {
+      "byteSize": 1070,
+      "checksumSha256": "b3a9f47791218b3de159ef2836a13c976f1c797eeef32f3e3d76c38857328769",
+      "path": "blender/inputs/doitt-528581.json"
+    },
+    {
+      "byteSize": 1080,
+      "checksumSha256": "c96f3b79c244986981c5232d6a0e0ba2c9819e486a1e8f38409879e38bf06194",
+      "path": "blender/inputs/doitt-559204.json"
+    },
+    {
+      "byteSize": 1080,
+      "checksumSha256": "9a2d8cede57e6b0b67b086b01ed8cf9a7035784bd0c27a40a53cc53c0e96a37f",
+      "path": "blender/inputs/doitt-563161.json"
+    },
+    {
+      "byteSize": 1078,
+      "checksumSha256": "9c31efbe3a433fb01eaa60263bdf6ec623c9184000df22cbd70dd95629194d66",
+      "path": "blender/inputs/doitt-572887.json"
+    },
+    {
+      "byteSize": 1068,
+      "checksumSha256": "d17a54a138fed83b63a17446f507668e267983b68812e62b1c467c50ea53b207",
+      "path": "blender/inputs/doitt-574826.json"
+    },
+    {
+      "byteSize": 1066,
+      "checksumSha256": "235235e4d9315e2f3f19af8685e6a24972f8ff0cf77a055898c36c6eabff3aa0",
+      "path": "blender/inputs/doitt-594251.json"
+    },
+    {
+      "byteSize": 1061,
+      "checksumSha256": "a7b87f155a37ba9fca9a5a95e211a5e00479b07e025ae78a4bf02b67dc6f95d5",
+      "path": "blender/inputs/doitt-631125.json"
+    },
+    {
+      "byteSize": 1079,
+      "checksumSha256": "da862795ba8df6b0c40f0297c211525adcc89288699905d4e77e3340ddae310e",
+      "path": "blender/inputs/doitt-645311.json"
+    },
+    {
+      "byteSize": 1079,
+      "checksumSha256": "d13266015e22e8c34375281827fe207c00e47e943bf23f07a6fd96b8eca125b2",
+      "path": "blender/inputs/doitt-664715.json"
+    },
+    {
+      "byteSize": 1063,
+      "checksumSha256": "d12a5e10fe6a5ff68d2bd340fa1e5438d1128e27a036bba9796fb3765cf4ff82",
+      "path": "blender/inputs/doitt-684855.json"
+    },
+    {
+      "byteSize": 1081,
+      "checksumSha256": "926134993dc16f259b27e0aa169c835758aa41b6f8e217641757c4201561c01e",
+      "path": "blender/inputs/doitt-688120.json"
+    },
+    {
+      "byteSize": 1060,
+      "checksumSha256": "2b802f58dde548febbc5a68b41fda0af4fb7145450d71971021158961d6fbf89",
+      "path": "blender/inputs/doitt-688202.json"
+    },
+    {
+      "byteSize": 1079,
+      "checksumSha256": "d489119cc851882967be53c67e6b5915ebb2690c7c313b46055fd1a029473728",
+      "path": "blender/inputs/doitt-688213.json"
+    },
+    {
+      "byteSize": 1069,
+      "checksumSha256": "5e054ea148db254411f9f1ef11f4b067b675364e0561572c54748cfc67b2f6e4",
+      "path": "blender/inputs/doitt-803147.json"
+    },
+    {
+      "byteSize": 1071,
+      "checksumSha256": "fe68cff3a6e59c0e19311781400cc52571e14c177eddf7da5e626ab140c438ac",
+      "path": "blender/inputs/doitt-804055.json"
+    },
+    {
+      "byteSize": 1075,
+      "checksumSha256": "9331f75abba98c2bc4f1f858f559db25ea13c00a37d4b33bbc93a12d7de518a1",
+      "path": "blender/inputs/doitt-817527.json"
+    },
+    {
+      "byteSize": 1079,
+      "checksumSha256": "13c72491a6417e1916b5b88ed4be1b331295f56d9772f9e15e7572276b97b463",
+      "path": "blender/inputs/doitt-830782.json"
+    },
+    {
+      "byteSize": 1083,
+      "checksumSha256": "0ddf5888c324f2ac17b5c2fb721bec21bfe68cf7ccd6c4f4070e8729d4a8580c",
+      "path": "blender/inputs/doitt-941537.json"
+    },
+    {
+      "byteSize": 1076,
+      "checksumSha256": "c517381f3541c6ddf61ba1bf14e440123518e15ee26349bc3651222f5b18e4f5",
+      "path": "blender/inputs/doitt-945838.json"
+    },
+    {
+      "byteSize": 1077,
+      "checksumSha256": "03d13eb2e3ea5f70f46ade06f88e5926f5720c0a18c4be2ffa83f5d78e04884c",
+      "path": "blender/inputs/doitt-97522.json"
+    },
+    {
+      "byteSize": 1075,
+      "checksumSha256": "2238a211d12a385669e8d00838261d91d16fdfe1ffc09aea9774ec43f08d5404",
+      "path": "blender/inputs/doitt-98363.json"
+    },
+    {
+      "byteSize": 1072,
+      "checksumSha256": "f9bef9e060bb3b9b83e7d5078814edc6d728005b90931b6ed0b55886dab4db48",
+      "path": "blender/inputs/doitt-996630.json"
+    },
+    {
+      "byteSize": 1078,
+      "checksumSha256": "32cdb1a7342b45b42ff1224d73b56a33fc925a0894115c093e8f2fb8af031970",
+      "path": "blender/inputs/doitt-996632.json"
+    },
+    {
+      "byteSize": 1065,
+      "checksumSha256": "c3de8b8f8c6aaba8f83ee9eb0948fbad23c4e5a5f6fbeacea20d13957589953a",
+      "path": "blender/inputs/doitt-996636.json"
+    },
+    {
+      "byteSize": 1066,
+      "checksumSha256": "f68aadb5d94717c395d9606424560cd9bee24ca6f63217dd9bb521a3994caec5",
+      "path": "blender/inputs/doitt-996688.json"
+    },
+    {
+      "byteSize": 1070,
+      "checksumSha256": "5d5462808e84f3c8a5b83b15526c41ccfefd289d261ffc232565c6d46fa24170",
+      "path": "blender/inputs/doitt-996689.json"
+    },
+    {
+      "byteSize": 1075,
+      "checksumSha256": "5deeb137e9970e340bdf8025ac0a3bb0787dfb87989bcf397ae5389e5343e24f",
+      "path": "blender/inputs/doitt-996746.json"
+    },
+    {
+      "byteSize": 92687,
+      "checksumSha256": "135ec3b049428e08250d4faa7c808012a0e0084d153f9de5f8b7aab6cce31988",
+      "path": "blender/inspection.json"
+    },
+    {
+      "byteSize": 250420,
+      "checksumSha256": "fe121f49b10c59466992024cd7ffffa1f27d873757dec26bb7a4cb7ace33dbee",
+      "path": "blender/renders/doitt-1001111.png"
+    },
+    {
+      "byteSize": 275416,
+      "checksumSha256": "a99f98706025676d61916e77a4a7335d242a35a05114577bf62b3c072c47fab9",
+      "path": "blender/renders/doitt-105916.png"
+    },
+    {
+      "byteSize": 247548,
+      "checksumSha256": "5db408946ff0c2ae036c8aa0e23d04e37443de13083cc16576803fa6872e5a0c",
+      "path": "blender/renders/doitt-1104532.png"
+    },
+    {
+      "byteSize": 293490,
+      "checksumSha256": "c139cb20700510942dfdb787e30965eafba459c85295284aaef6459ae3e294b3",
+      "path": "blender/renders/doitt-1105839.png"
+    },
+    {
+      "byteSize": 306409,
+      "checksumSha256": "3f52941052425f3575a7a82bbc15ddd14da54b150cde08115d70352277350e86",
+      "path": "blender/renders/doitt-1114625.png"
+    },
+    {
+      "byteSize": 261284,
+      "checksumSha256": "5156bb5c86a4237c4ac904d220fa32677a3a34fb04751c6863304866dcfff10f",
+      "path": "blender/renders/doitt-1116162.png"
+    },
+    {
+      "byteSize": 220121,
+      "checksumSha256": "afa293f969712bc1981b2c7058357928445c27142ecbf211f6feffd80215c08a",
+      "path": "blender/renders/doitt-111690.png"
+    },
+    {
+      "byteSize": 279340,
+      "checksumSha256": "8f50a2c09d7ad931790e3eb8def45845da2fbd01267b937e04ef0229fe2fa334",
+      "path": "blender/renders/doitt-1117425.png"
+    },
+    {
+      "byteSize": 332227,
+      "checksumSha256": "45ec55371743bd3120cb34bbc43df87d18ca3c5a0bcf2426a71f9d355aa0b39b",
+      "path": "blender/renders/doitt-1158178.png"
+    },
+    {
+      "byteSize": 289250,
+      "checksumSha256": "52a0dd1ed11f1a3b64074080d7f8b44e8472d741305aec22302b0d65b8ba7dfc",
+      "path": "blender/renders/doitt-1191064.png"
+    },
+    {
+      "byteSize": 237940,
+      "checksumSha256": "470684b0324ba0f7a553a7cc98d1502c63f0c9734d273dd0642681409f36525e",
+      "path": "blender/renders/doitt-1195535.png"
+    },
+    {
+      "byteSize": 260118,
+      "checksumSha256": "029304563c87a30d394ceadc0b545945e1f0d0c3cfa9d0615dc668dd4e9991fd",
+      "path": "blender/renders/doitt-1215127.png"
+    },
+    {
+      "byteSize": 311368,
+      "checksumSha256": "200e95f6c5fdbcef47e2a44bd76692a8fcdc6351062605b78dc9956cee285763",
+      "path": "blender/renders/doitt-1221493.png"
+    },
+    {
+      "byteSize": 199668,
+      "checksumSha256": "6ebf58b3019b52e23ccaa85738e66776bb118534d9884be050f8e845c85de061",
+      "path": "blender/renders/doitt-1224763.png"
+    },
+    {
+      "byteSize": 208949,
+      "checksumSha256": "94d864465741c97cfdff7c0c4c2ab8b1500c4c8ae1ae3941a7c920ab895f0d4c",
+      "path": "blender/renders/doitt-1232671.png"
+    },
+    {
+      "byteSize": 211613,
+      "checksumSha256": "74bf3a95eccf28e301d29ead2d5362c25d499a46a92efdfa6eb93476f5a13fb7",
+      "path": "blender/renders/doitt-1260400.png"
+    },
+    {
+      "byteSize": 214009,
+      "checksumSha256": "047fb9169ba03ad9b471b023a09f79028ac1d9e887f42e4a738336f8e599875e",
+      "path": "blender/renders/doitt-1262786.png"
+    },
+    {
+      "byteSize": 363861,
+      "checksumSha256": "f9c0562835b16f270bfcc91beef9281760adfcda6b10d2d3b6046c5e1d62bc3a",
+      "path": "blender/renders/doitt-1264335.png"
+    },
+    {
+      "byteSize": 282669,
+      "checksumSha256": "a6f600c099801dfbe213a01798111256d7d68021196f226db8fdcded1f2e85d3",
+      "path": "blender/renders/doitt-1268457.png"
+    },
+    {
+      "byteSize": 330978,
+      "checksumSha256": "ff599aadcc3dc3ebc1295e3f577b6e530bba1a77e372512a96988910e8adeda1",
+      "path": "blender/renders/doitt-1272399.png"
+    },
+    {
+      "byteSize": 217236,
+      "checksumSha256": "3c2f183b530c1169b1cd83e871e25084561d98ad45062e8465c99cd89a98fcff",
+      "path": "blender/renders/doitt-127864.png"
+    },
+    {
+      "byteSize": 307907,
+      "checksumSha256": "81a9325ceac46aeeab154418d8e2e4bf7dd53de13e4dca874676ffd383bf6e34",
+      "path": "blender/renders/doitt-1286246.png"
+    },
+    {
+      "byteSize": 219504,
+      "checksumSha256": "9fb50cafefc4f848cc8ffb6e90163d12c3df680b18cd31e6684e229e39ac8464",
+      "path": "blender/renders/doitt-1287486.png"
+    },
+    {
+      "byteSize": 203729,
+      "checksumSha256": "aece2ebcb0dcc268f4ae9d8dcb1bd9d9c21005a528b1a7c63f0b8c7cc1a82bae",
+      "path": "blender/renders/doitt-1289963.png"
+    },
+    {
+      "byteSize": 223202,
+      "checksumSha256": "444507219400e4ce3a05b166ab90994ea1a7d1361313e986266e301ec1a7851e",
+      "path": "blender/renders/doitt-1289964.png"
+    },
+    {
+      "byteSize": 337108,
+      "checksumSha256": "6635ee26ad482b699ede42f277ecdc7f01389cb841748e29df5ab39ea57f99c1",
+      "path": "blender/renders/doitt-1294316.png"
+    },
+    {
+      "byteSize": 222611,
+      "checksumSha256": "5ce253ef7591be47546d21f283637cceb1f1d84e9a78345f382deeb9dbb52ea4",
+      "path": "blender/renders/doitt-1295112.png"
+    },
+    {
+      "byteSize": 236767,
+      "checksumSha256": "aeedcf3caa9c85fa071868ddd1000064ca636198bc150c0b8afc0887bf69b0ca",
+      "path": "blender/renders/doitt-1296496.png"
+    },
+    {
+      "byteSize": 286640,
+      "checksumSha256": "49f58a6918b91fe98f25f7848c17619b800e67a3d28363448c894a6cfdea0ec0",
+      "path": "blender/renders/doitt-1297513.png"
+    },
+    {
+      "byteSize": 367978,
+      "checksumSha256": "4742845a7af2fda84fa4afa953c8096b80f094c6c232cc0630d53b82d80d4fc4",
+      "path": "blender/renders/doitt-1299576.png"
+    },
+    {
+      "byteSize": 275367,
+      "checksumSha256": "e0447eb86ded9ba92f18450be85c6cd39d7dfdf0657d18b44eda45646787de27",
+      "path": "blender/renders/doitt-1300185.png"
+    },
+    {
+      "byteSize": 277240,
+      "checksumSha256": "41b17662607986592d7ec493cd6b95e66821405faeb2a44cfcaeac1649479407",
+      "path": "blender/renders/doitt-1302589.png"
+    },
+    {
+      "byteSize": 298669,
+      "checksumSha256": "c78b8c02ec6517996b6049ed78ac70b862952ae1b876ec356f52f8ed785c04c3",
+      "path": "blender/renders/doitt-139071.png"
+    },
+    {
+      "byteSize": 217589,
+      "checksumSha256": "dc49e718c8ecf7a3cbb8706b81dc8fb2b7ff73a64a5e7704ff86e0ea19b5adf4",
+      "path": "blender/renders/doitt-157592.png"
+    },
+    {
+      "byteSize": 240285,
+      "checksumSha256": "6b77fa28e710dda8f627787b6f5452e96e907c9ec321442b20f971fc0e3076bd",
+      "path": "blender/renders/doitt-196987.png"
+    },
+    {
+      "byteSize": 246147,
+      "checksumSha256": "e7aaee2df60e88c4acb33f83424fde292e5a4adb18f2423bc391d6aad6d7429c",
+      "path": "blender/renders/doitt-225670.png"
+    },
+    {
+      "byteSize": 200558,
+      "checksumSha256": "3dc466cd77c3c5f17f20ab0fdb9700d83eab2c732fb619521d37700c91085b7b",
+      "path": "blender/renders/doitt-227702.png"
+    },
+    {
+      "byteSize": 297596,
+      "checksumSha256": "db74efa00f367d66880ac0fe20e2ee15fb70692b6e4716536b0de32a893bf478",
+      "path": "blender/renders/doitt-228631.png"
+    },
+    {
+      "byteSize": 337567,
+      "checksumSha256": "ef800905e3e18d03088a9bd705ef761e1f6f6062f54830e11e7c6e23e7df4e60",
+      "path": "blender/renders/doitt-260361.png"
+    },
+    {
+      "byteSize": 217243,
+      "checksumSha256": "38885e57acd75106be9e8b9310f9406bba4f3f64c5a3f77bec38cde66e4fbfc1",
+      "path": "blender/renders/doitt-275393.png"
+    },
+    {
+      "byteSize": 214928,
+      "checksumSha256": "507c0a9b0bea7a6bfbd372e633212a4a66868739e9cf29463211fc0dbebadf5c",
+      "path": "blender/renders/doitt-297390.png"
+    },
+    {
+      "byteSize": 242540,
+      "checksumSha256": "f5c7c7ea423086c90e75cacc55bdc0e0f4bb0483e56bb5c96f0a2c339489fd5f",
+      "path": "blender/renders/doitt-316002.png"
+    },
+    {
+      "byteSize": 223244,
+      "checksumSha256": "7b7510a83b57d20181324d54417eb4a8d3fea995694f2247c1273147e6c39c3e",
+      "path": "blender/renders/doitt-317859.png"
+    },
+    {
+      "byteSize": 267048,
+      "checksumSha256": "11df946d338a1b664aa171ea45ac349e5ce37b46358685ecade790ca40b977f4",
+      "path": "blender/renders/doitt-347215.png"
+    },
+    {
+      "byteSize": 212374,
+      "checksumSha256": "70c2676f7f46e68208f155f38d53e0ca476c98ec603c1c297451cda43f120c77",
+      "path": "blender/renders/doitt-360993.png"
+    },
+    {
+      "byteSize": 204739,
+      "checksumSha256": "cf466dfbdca42c35a00b915607613a372321c1a33e0c540debbe2eed3c2b2d09",
+      "path": "blender/renders/doitt-364273.png"
+    },
+    {
+      "byteSize": 220692,
+      "checksumSha256": "0ae97e12a647387ae43a96d13da561ead4c31c650a2d9ec3975ff4aed12980de",
+      "path": "blender/renders/doitt-36922.png"
+    },
+    {
+      "byteSize": 303362,
+      "checksumSha256": "80bab61f0273563ca016244c58e054ac825b54d09e5c6ba922795e4df6da5ce0",
+      "path": "blender/renders/doitt-373902.png"
+    },
+    {
+      "byteSize": 322303,
+      "checksumSha256": "96e6fa753e3cb8ccf32c2beb4da42a4a7c789567cc6a8fdc1d0c0f8dc2a84046",
+      "path": "blender/renders/doitt-374636.png"
+    },
+    {
+      "byteSize": 276859,
+      "checksumSha256": "47b7abef2afb2033556fa2d1c3b26e1b1b81340319f3d76fa74c275256a34c49",
+      "path": "blender/renders/doitt-383893.png"
+    },
+    {
+      "byteSize": 212107,
+      "checksumSha256": "9399d7af94f0b88134f86e3671452608035ffe025db66d15568ebf104e3f75c7",
+      "path": "blender/renders/doitt-420075.png"
+    },
+    {
+      "byteSize": 276704,
+      "checksumSha256": "4b1d182ede0ee3bb2c40420b7772e7258e4a2cc1b68f7f34f860bb475e51458c",
+      "path": "blender/renders/doitt-428362.png"
+    },
+    {
+      "byteSize": 319366,
+      "checksumSha256": "507aed54ebd93461219f30758afee9ec7af3f4bd67f30f464f9e6565f9ccbe2d",
+      "path": "blender/renders/doitt-443409.png"
+    },
+    {
+      "byteSize": 337446,
+      "checksumSha256": "7f3b567257ae73f4e6cad6909abe8aa9494fd0a7c0da3a37074e3bbc8b84dcca",
+      "path": "blender/renders/doitt-453302.png"
+    },
+    {
+      "byteSize": 283203,
+      "checksumSha256": "78c62d29809bc43431b9d114bca6bed59ed1719b8e1654dd2eae1ca0af3e12a6",
+      "path": "blender/renders/doitt-528581.png"
+    },
+    {
+      "byteSize": 239654,
+      "checksumSha256": "c29450d9a7661fa8037f07e95d5e5c394dbb4cf9be5f9ea2d6f42afdba1ebaef",
+      "path": "blender/renders/doitt-559204.png"
+    },
+    {
+      "byteSize": 295692,
+      "checksumSha256": "adddf7bcf4509afbc4aeec6a265b6c2aeb1d62676f52b5618633f89ed807cf2d",
+      "path": "blender/renders/doitt-563161.png"
+    },
+    {
+      "byteSize": 227263,
+      "checksumSha256": "da3dcc7481187d2078199e230930eb14f81b22608af20b0aa2c37426612dd005",
+      "path": "blender/renders/doitt-572887.png"
+    },
+    {
+      "byteSize": 209165,
+      "checksumSha256": "84202a6be274075060883c24c94c55678f1a41cf9c2efd91ede7407302259c84",
+      "path": "blender/renders/doitt-574826.png"
+    },
+    {
+      "byteSize": 244410,
+      "checksumSha256": "0584ce486bf90ff456c731d5450057f3610094b8ee9fe48f4d05f6210f2e8dad",
+      "path": "blender/renders/doitt-594251.png"
+    },
+    {
+      "byteSize": 269073,
+      "checksumSha256": "69b57f105d3751f485dc46251d446500596e72cd535b3e304f57debf3c6c590d",
+      "path": "blender/renders/doitt-631125.png"
+    },
+    {
+      "byteSize": 218301,
+      "checksumSha256": "7d7bbf1ea89c0a9fcf7ca0969182c121a5b6fbf5673ac634c8f453cd04addea3",
+      "path": "blender/renders/doitt-645311.png"
+    },
+    {
+      "byteSize": 256037,
+      "checksumSha256": "008da537e83938769bfb5e75ee0b4746cdf17446f41a6e56f48c655af0be507e",
+      "path": "blender/renders/doitt-664715.png"
+    },
+    {
+      "byteSize": 229878,
+      "checksumSha256": "9fe5c82aac657a8f8f99841ce6f40d25b00ca981671b5652c420642aa01ebc7b",
+      "path": "blender/renders/doitt-684855.png"
+    },
+    {
+      "byteSize": 324833,
+      "checksumSha256": "05b4290e92ee354fe910dda5ccb2fcc5a4a5b2e4795be7db9cb1c5db676c3035",
+      "path": "blender/renders/doitt-688120.png"
+    },
+    {
+      "byteSize": 186027,
+      "checksumSha256": "6511d71502c64ebcec14cb0695d283a72fd4bacd056cf957326562469d245184",
+      "path": "blender/renders/doitt-688202.png"
+    },
+    {
+      "byteSize": 290610,
+      "checksumSha256": "0078597b6f11b0aa68b1dad492b374d2cdd5368bbaebfd16aa3159566aa5db4f",
+      "path": "blender/renders/doitt-688213.png"
+    },
+    {
+      "byteSize": 227460,
+      "checksumSha256": "eb1765ff33036fa44ad90ca0227fcb483df5e31d0d76a63e68302babc7a4d6cc",
+      "path": "blender/renders/doitt-803147.png"
+    },
+    {
+      "byteSize": 200770,
+      "checksumSha256": "5a0fc9a1865a1e8f7a7818f522be3657a6859b808299d0b8018fc3902698fffc",
+      "path": "blender/renders/doitt-804055.png"
+    },
+    {
+      "byteSize": 210851,
+      "checksumSha256": "4422ae01af78cb67b6a40072f4b91324fe0b5e710611e23a0d6658dfd94a21a5",
+      "path": "blender/renders/doitt-817527.png"
+    },
+    {
+      "byteSize": 274098,
+      "checksumSha256": "c84eaf17cc5892363672004246168c4c3af0c41637409c70c72b1d33f29524f3",
+      "path": "blender/renders/doitt-830782.png"
+    },
+    {
+      "byteSize": 203907,
+      "checksumSha256": "ff8e5b68c018088ed0b9c55ebc05478328b107a1287a4881ba81b048727a1f3a",
+      "path": "blender/renders/doitt-941537.png"
+    },
+    {
+      "byteSize": 217421,
+      "checksumSha256": "f22897447a4c59aa689e9df92eff8468572f52a05f9f4eb5e769198bacd6b6e8",
+      "path": "blender/renders/doitt-945838.png"
+    },
+    {
+      "byteSize": 249811,
+      "checksumSha256": "c210c56042bea9d73a6ada68eed72ba948ea54841d187bc990ebb276555051da",
+      "path": "blender/renders/doitt-97522.png"
+    },
+    {
+      "byteSize": 252784,
+      "checksumSha256": "b7c071c9b985f10e14ef9ce672e47bce236cac83504cdf1e7bf8114adf614fd7",
+      "path": "blender/renders/doitt-98363.png"
+    },
+    {
+      "byteSize": 284436,
+      "checksumSha256": "9b73fecea2e37881cce0dfcd404f2edcf8dbfa87c23a2c8847e8ea0e17cf0320",
+      "path": "blender/renders/doitt-996630.png"
+    },
+    {
+      "byteSize": 234398,
+      "checksumSha256": "037636232665ec323b21210823e0748674aa947daea0512acc00e0a163809618",
+      "path": "blender/renders/doitt-996632.png"
+    },
+    {
+      "byteSize": 261170,
+      "checksumSha256": "efd71172451af1f5ba5f608db3a8350f536d1cdb9d8d570992a422e49404f160",
+      "path": "blender/renders/doitt-996636.png"
+    },
+    {
+      "byteSize": 228645,
+      "checksumSha256": "9e74c68caf90c61a3e646735e5a75fb87e884e0e7f6704b5423b0ef9c1a813b3",
+      "path": "blender/renders/doitt-996688.png"
+    },
+    {
+      "byteSize": 282983,
+      "checksumSha256": "b60f1ff07f67f9b731e385338ef209a29dbebbda7221690df9ff6e55fc88cbfa",
+      "path": "blender/renders/doitt-996689.png"
+    },
+    {
+      "byteSize": 227358,
+      "checksumSha256": "d80b39b77901ae662134ec6607433c97113749a14a89c07358edad5c816df61e",
+      "path": "blender/renders/doitt-996746.png"
+    },
+    {
+      "byteSize": 4156,
+      "checksumSha256": "2f6a2f1661859b598518f8ff9db16b61b5db99977863037de75b07a6d8d709e3",
+      "path": "json/p0-exploration.json"
+    },
+    {
+      "byteSize": 4137,
+      "checksumSha256": "81882c04dfde5fcb5b51d701b5ef89fca1851b03202f1aab522e550f162e4f83",
+      "path": "json/p0-inspection.json"
+    },
+    {
+      "byteSize": 58771,
+      "checksumSha256": "c673d5d6e7249713a385a3fd525d5db542eaa7d516f4533135814be459e8636d",
+      "path": "plan-census.json"
+    },
+    {
+      "byteSize": 1010384,
+      "checksumSha256": "b03813f2c2aec73e38e20768205d1618d9e6318b6f823c0ef8abd7e1f1906640",
+      "path": "screenshots/forward-attribution-midtown.png"
+    },
+    {
+      "byteSize": 887296,
+      "checksumSha256": "f8815435266e54ffcec6001b920671f90135b91dbf3e3e40e2d4e1f243e72657",
+      "path": "screenshots/forward-default-cold-load.png"
+    },
+    {
+      "byteSize": 796624,
+      "checksumSha256": "cfe19a0fa3a387f259ca598e8a551803d453f1dda70b9368257d271dc7d9922d",
+      "path": "screenshots/forward-disable.png"
+    },
+    {
+      "byteSize": 614982,
+      "checksumSha256": "54218d4f9176136ad61e19f0311bcd54efbe18f41beab2f8a1b44aa9e1425b70",
+      "path": "screenshots/forward-fixture-silence.png"
+    },
+    {
+      "byteSize": 12348,
+      "checksumSha256": "4928e5da909ec830360160e1338720e0fa8a6810b10b4f3c3267afe74dbb1ffa",
+      "path": "screenshots/forward-journeys.json"
+    },
+    {
+      "byteSize": 874928,
+      "checksumSha256": "c6dd6106349f1026654cae343711c10675d2fad0af453ce6ddfc60527cddee82",
+      "path": "screenshots/forward-optin-midtown-v3.png"
+    },
+    {
+      "byteSize": 1040897,
+      "checksumSha256": "a5fe255bb018c114167d5b212f1f16bfe067fdb32137ee384dd3107b40c6f342",
+      "path": "screenshots/forward-tombstone-refused.png"
+    },
+    {
+      "byteSize": 1979,
+      "checksumSha256": "2b709009ed85991ce7861bcd3d794adc244d785582bb8a238340d5cbdf3fdf37",
+      "path": "screenshots/rollback-journeys.json"
+    },
+    {
+      "byteSize": 891792,
+      "checksumSha256": "96d2a166d0833f8bd6a6352ebf4bcd552b4f9b2e57a02f7829ec37226ec90d2f",
+      "path": "screenshots/rollback-v2-default.png"
+    },
+    {
+      "byteSize": 804940,
+      "checksumSha256": "f704257a11491d43569eca2ef14533e424bfb35205236136312ff0baafb68e56",
+      "path": "screenshots/rollback-withdrawn-link-refused.png"
+    },
+    {
+      "byteSize": 1320,
+      "checksumSha256": "5672c9d0af06ecdb21f1db4c1c5e7145de9cdc13b2f250d9483d0fac2284cc9b",
+      "path": "stages/gates.json"
+    },
+    {
+      "byteSize": 4615,
+      "checksumSha256": "de3d9e4301a3c561efc5cd626aeab5451fea359a829e6596c9458678630bdfb8",
+      "path": "stages/glbs.json"
+    },
+    {
+      "byteSize": 1419,
+      "checksumSha256": "8efbd278a6c98f24dfbe25b5db45dd7436793fe5987814e745076547f4a5508b",
+      "path": "stages/graph.json"
+    },
+    {
+      "byteSize": 972,
+      "checksumSha256": "e505dc0804779f7d8740606290f7be0efc229390f5b120e4aecbf4d89db4940f",
+      "path": "stages/plans.json"
+    },
+    {
+      "byteSize": 5991,
+      "checksumSha256": "78361611e689db962738a55d34c4482d229e4137d9e4cf43728f6f88b151e7e2",
+      "path": "stages/sample.json"
+    }
+  ],
+  "note": "Raw T026 P3 evidence is untracked under artifacts/midtown-core-20260811-v3/. This committed inventory keeps every file checkable after the worktree-local tree is removed. It covers the full-wave plan and asset censuses, the Blender re-import/volume/render pass over the 81-building stratified sample, the CDP frame-gate probes for both profiles, and the renderer-journey and rollback-rehearsal screenshots.",
+  "releaseId": "manhattan-midtown-core-cells-20260811-v3",
+  "schemaVersion": "1.0",
+  "totals": {
+    "byteSize": 28128069,
+    "fileCount": 183
+  },
+  "workRoot": "artifacts/midtown-core-20260811-v3"
+}

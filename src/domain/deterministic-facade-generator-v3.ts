@@ -59,6 +59,41 @@ export const DETERMINISTIC_FACADE_V3_UNCERTAINTY =
   "Footprint-faithful procedural exterior in local millimetres. The massing follows the sourced building polygon vertex for vertex and the sourced height; nothing else does. Tier subdivision, bay rhythm, openings, attached elements, colour and material are designed by this grammar, derived from no imagery and no observation, and assert nothing about the real building's appearance, facade, setbacks, balconies, fire escapes, water tanks or signage, nor any tenant, brand or text." as const;
 
 /**
+ * Uncertainty statement for a plan whose style class came from a CITED source
+ * rather than from this grammar's designed draw.
+ *
+ * The V3 statement above says colour and material are "derived from no imagery
+ * and no observation". Inside a plan carrying `styleOverride` that sentence is
+ * false, and shipping it would be exactly the kind of stale boilerplate that
+ * makes an uncertainty statement worthless. This constant states the narrower
+ * truth: one designed property — the facade material class — follows a cited
+ * public documentary source named by record id, and everything else is
+ * unchanged, including the signage sentence, which is carried verbatim because
+ * a cited material fact licenses nothing about tenants, brands or text.
+ *
+ * `DETERMINISTIC_FACADE_V3_UNCERTAINTY` is NOT edited: the fourteen committed V3
+ * plans keep their bytes and their hashes.
+ */
+export const DETERMINISTIC_FACADE_V3_CITED_STYLE_UNCERTAINTY =
+  "Footprint-faithful procedural exterior in local millimetres. The massing follows the sourced building polygon vertex for vertex and the sourced height; nothing else does. Tier subdivision, bay rhythm, openings and attached elements are designed by this grammar and derived from no observation. The facade material CLASS follows a cited public documentary source, recorded by intake record id in this plan; the specific tones, coursing and geometry expressing that class are still designed. No imagery was ingested, traced, sampled or reproduced, and no other real-world appearance claim is made. This plan asserts nothing about the real building's setbacks, balconies, fire escapes, water tanks or signage, nor any tenant, brand or text." as const;
+
+export const DETERMINISTIC_FACADE_V3_UNCERTAINTY_STATEMENTS = [
+  DETERMINISTIC_FACADE_V3_UNCERTAINTY,
+  DETERMINISTIC_FACADE_V3_CITED_STYLE_UNCERTAINTY,
+] as const;
+export type DeterministicFacadeV3Uncertainty = (typeof DETERMINISTIC_FACADE_V3_UNCERTAINTY_STATEMENTS)[number];
+
+/**
+ * The statement a plan must carry, decided by the ONE fact that makes the two
+ * differ. There is no third option and no operator choice: a plan with a cited
+ * override carries the cited statement, a plan without one carries the standard
+ * statement, and `validateV3Plan` refuses either mismatch.
+ */
+export function v3UncertaintyFor(styleOverride: V3StyleOverride | undefined): DeterministicFacadeV3Uncertainty {
+  return styleOverride === undefined ? DETERMINISTIC_FACADE_V3_UNCERTAINTY : DETERMINISTIC_FACADE_V3_CITED_STYLE_UNCERTAINTY;
+}
+
+/**
  * Successor statement for an asset that additionally carries procedural detail
  * tiles. Versioned, never an edit: `DETERMINISTIC_FACADE_V3_UNCERTAINTY` above
  * is byte-frozen into every committed V3 plan and manifest and is pinned by the
@@ -94,6 +129,8 @@ export const DETERMINISTIC_FACADE_V3_LIMITS = {
   maxPrismSides: 32,
   maxInputIdLength: 128,
   maxPlanIdLength: 256,
+  /** Bound on the sourced-fact text a style override may carry into a plan. */
+  maxStyleOverrideFactLength: 512,
   /**
    * Footprint coordinates are bounded far below the vertical bound so every
    * orientation and containment predicate stays EXACT in doubles: a cross
@@ -163,6 +200,37 @@ export interface V3Parameters {
   waterTankLegSizeMm: number;
 }
 
+/**
+ * A cited replacement for this grammar's own designed style draw.
+ *
+ * The default style class is a DESIGNED draw — deterministic from the input
+ * fingerprint and modulated only by sourced height and footprint area — and it
+ * is deliberately not an inference about any real building. This override is the
+ * one way that draw can be displaced, and it can only be displaced by a fact
+ * that came through rights-cleared evidence intake: `evidenceRecordId` names the
+ * intake record, and a plan carrying an override with no record is not
+ * constructible.
+ *
+ * It selects a STYLE CLASS and nothing else. The class drives designed material
+ * tones; it drives no geometry (`buildPlan` derives tiers, surfaces, placements
+ * and prisms without ever reading `styleClass`) and it never authorises a
+ * texture. A sourced material fact may therefore make the designed appearance
+ * less wrong; it may not become a claim that the shipped surface reproduces the
+ * real one, which is why `DETERMINISTIC_FACADE_V3_UNCERTAINTY` is unchanged by
+ * an override.
+ *
+ * It lives inside `V3Input` rather than beside it because the plan hash must
+ * cover it. An override that could be applied without moving the plan hash would
+ * be an unrecorded change of shipped appearance.
+ */
+export interface V3StyleOverride {
+  styleClass: V3StyleClass;
+  /** Rights-cleared evidence intake record id this override is cited from. */
+  evidenceRecordId: string;
+  /** The sourced fact, in the words a details panel may show verbatim. */
+  fact: string;
+}
+
 export interface V3Input {
   schemaVersion: typeof DETERMINISTIC_FACADE_V3_SCHEMA_VERSION;
   buildingId: string;
@@ -173,6 +241,8 @@ export interface V3Input {
   geometry: { unit: "millimeter"; footprint: { outer: Point2Mm[] }; baseElevationMm: number; heightMm: number };
   sourceAnchors: V3SourceAnchor[];
   parameters: V3Parameters;
+  /** Present only on a plan whose style class was displaced by a cited fact. */
+  styleOverride?: V3StyleOverride;
 }
 
 export interface V3Material { id: string; role: "facade" | "glazing" | "trim" | "roof" | "ground" | "metal"; baseColorSrgb: [number, number, number, number]; metallicPermille: number; roughnessPermille: number }
@@ -280,7 +350,7 @@ export interface V3Plan {
   inputFingerprintSha256: string;
   parametersHashSha256: string;
   anchors: V3SourceAnchor[];
-  uncertainty: typeof DETERMINISTIC_FACADE_V3_UNCERTAINTY;
+  uncertainty: DeterministicFacadeV3Uncertainty;
   inventory: ExteriorComponentInventory;
   /** The designed appearance family this plan drew; see `V3_STYLE_CLASSES`. */
   styleClass: V3StyleClass;
@@ -821,6 +891,28 @@ export function validateV3Input(value: unknown): V3Validation<V3Input> {
     if (heightMm < parameters.targetFloorHeightMm) addIssue(issues, "geometry.heightMm", "Sourced height is below one floor of the requested floor height.");
   }
 
+  // The override is optional, and "absent" must stay byte-indistinguishable from
+  // "never had one": the key is omitted rather than set to null or undefined, so
+  // every plan generated before this field existed keeps its exact plan hash.
+  let styleOverride: V3StyleOverride | null = null;
+  if (value.styleOverride !== undefined) {
+    const raw = value.styleOverride;
+    if (!record(raw)) addIssue(issues, "styleOverride", "Style override must be an object.");
+    else {
+      for (const key of Object.keys(raw)) if (!["styleClass", "evidenceRecordId", "fact"].includes(key)) addIssue(issues, `styleOverride.${key}`, "Unexpected style override field.");
+      if (!(V3_STYLE_CLASSES as readonly unknown[]).includes(raw.styleClass)) addIssue(issues, "styleOverride.styleClass", "Style override must name a declared V3 style class.");
+      // A cited override with no citation is the exact failure this field exists
+      // to prevent, so the record id is required rather than merely encouraged.
+      if (!safeId(raw.evidenceRecordId)) addIssue(issues, "styleOverride.evidenceRecordId", "Style override must cite a rights-cleared evidence intake record id.");
+      if (typeof raw.fact !== "string" || raw.fact.trim().length === 0 || raw.fact.length > DETERMINISTIC_FACADE_V3_LIMITS.maxStyleOverrideFactLength) {
+        addIssue(issues, "styleOverride.fact", "Style override must state its sourced fact as bounded non-empty text.");
+      }
+      if (!issues.some((issue) => issue.path.startsWith("styleOverride"))) {
+        styleOverride = { styleClass: raw.styleClass as V3StyleClass, evidenceRecordId: raw.evidenceRecordId as string, fact: raw.fact as string };
+      }
+    }
+  }
+
   if (issues.length > 0 || !outer || !parameters) return { ok: false, issues };
   return {
     ok: true,
@@ -833,6 +925,7 @@ export function validateV3Input(value: unknown): V3Validation<V3Input> {
       geometry: { unit: "millimeter", footprint: { outer }, baseElevationMm, heightMm },
       sourceAnchors: anchors,
       parameters,
+      ...(styleOverride ? { styleOverride } : {}),
     },
   };
 }
@@ -1356,7 +1449,13 @@ function buildInventory(input: V3Input, massing: V3Massing, inputFingerprintSha2
     buildingId: input.buildingId,
     components: REQUIRED_EXTERIOR_COMPONENT_KINDS.map((kind) => {
       const componentId = `${input.buildingId}:${kind}`;
-      const uncertainty = V3_COMPONENT_UNCERTAINTY[kind] ?? DETERMINISTIC_FACADE_V3_UNCERTAINTY;
+      // The cited statement is attached to the ONE component the cited fact
+      // bears on. A sourced facade-material fact says nothing about this
+      // building's bay rhythm, roof form or water tanks, so those components
+      // keep the standard statement rather than inheriting a citation they are
+      // not covered by.
+      const uncertainty = V3_COMPONENT_UNCERTAINTY[kind]
+        ?? (kind === "materials" ? v3UncertaintyFor(input.styleOverride) : DETERMINISTIC_FACADE_V3_UNCERTAINTY);
       // When the tier offset was refused, this building HAS no setbacks. V2
       // could always claim them because a rectangle always offsets; a real ring
       // does not, and declaring a generated component that produced no geometry
@@ -1387,7 +1486,11 @@ function buildPlan(input: V3Input): V3Validation<V3Plan> {
   const parametersHashSha256 = domainSeparatedSha256("udt.facade.parameters.v3", input.parameters);
   const styleHash = domainSeparatedSha256("udt.facade.style.v3", { inputFingerprintSha256, seed: input.seed });
   const outer = input.geometry.footprint.outer;
-  const styleClass = selectV3StyleClass(styleHash, { heightMm: input.geometry.heightMm, footprintAreaMm2: Math.abs(ringSignedAreaMm2(outer)) });
+  // `selectV3StyleClass` is untouched and still runs for every building without
+  // a cited override. The override does not bias the draw, does not reseed it
+  // and is not a fifth class: it replaces the drawn class outright for exactly
+  // the buildings a rights-cleared record names.
+  const styleClass = input.styleOverride?.styleClass ?? selectV3StyleClass(styleHash, { heightMm: input.geometry.heightMm, footprintAreaMm2: Math.abs(ringSignedAreaMm2(outer)) });
   const { tiers, massing } = planTiers(input, outer);
   const facades = buildFacadeSurfaces(input, tiers, massing.floorCount);
   const caps = buildCapAndDeckSurfaces(input, tiers);
@@ -1409,7 +1512,7 @@ function buildPlan(input: V3Input): V3Validation<V3Plan> {
     inputFingerprintSha256,
     parametersHashSha256,
     anchors: input.sourceAnchors.map((anchor) => ({ ...anchor })),
-    uncertainty: DETERMINISTIC_FACADE_V3_UNCERTAINTY,
+    uncertainty: v3UncertaintyFor(input.styleOverride),
     inventory: buildInventory(input, massing, inputFingerprintSha256, parametersHashSha256),
     styleClass,
     massing,
@@ -1440,7 +1543,15 @@ export function validateV3Plan(value: unknown): V3Validation<V3Plan> {
   if (value.schemaVersion !== DETERMINISTIC_FACADE_V3_SCHEMA_VERSION || value.coordinateSystem !== "local-millimeters") addIssue(issues, "schemaVersion", "Unsupported V3 plan schema or coordinate system.");
   if (!safeId(value.planId, DETERMINISTIC_FACADE_V3_LIMITS.maxPlanIdLength) || !safeId(value.buildingId)) addIssue(issues, "planId", "Plan or building identity is invalid.");
   if (!checksum(value.planHashSha256)) addIssue(issues, "planHashSha256", "Plan hash must be lowercase SHA-256.");
-  if (value.uncertainty !== DETERMINISTIC_FACADE_V3_UNCERTAINTY) addIssue(issues, "uncertainty", "V3 plan uncertainty statement is fixed.");
+  // Exactly two statements are accepted, and which one is required is decided by
+  // the plan's own embedded input rather than by the plan's claim about itself.
+  // A cited override wearing the "no observation" statement, or an uncited plan
+  // wearing the cited statement, are both refused.
+  if (!(DETERMINISTIC_FACADE_V3_UNCERTAINTY_STATEMENTS as readonly unknown[]).includes(value.uncertainty)) {
+    addIssue(issues, "uncertainty", "V3 plan uncertainty statement is fixed to one of the two declared statements.");
+  } else if (record(value.input) && value.uncertainty !== v3UncertaintyFor((value.input as { styleOverride?: V3StyleOverride }).styleOverride)) {
+    addIssue(issues, "uncertainty", "V3 plan uncertainty statement does not match the presence of a cited style override.");
+  }
   const inputResult = validateV3Input(value.input);
   if (!inputResult.ok) for (const issue of inputResult.issues) addIssue(issues, `input.${issue.path}`, issue.message);
   if (issues.length > 0 || !inputResult.ok) return { ok: false, issues };

@@ -18,6 +18,33 @@ export const REQUIRED_EXTERIOR_COMPONENT_KINDS = [
   "signage",
 ] as const;
 
+/**
+ * Component kinds whose absence can be a DETERMINATION rather than a gap.
+ *
+ * Every other required kind is unconditionally applicable: a promoted building
+ * has a massing, a roof form and a material treatment, so an inventory that
+ * declares one of those absent is shipping a hole, and
+ * `isExteriorComponentReleaseEligible` refuses it exactly as it always has.
+ *
+ * `setbacks` is different, and the V3 footprint-faithful grammar is what made
+ * the difference observable. On a real, irregular footprint the inward tier
+ * offset can collapse into self-intersection; V3 REFUSES that offset rather than
+ * repairing it, and the resulting massing is a single tier that genuinely has no
+ * setbacks. The component is then absent because the generated massing cannot
+ * carry one, not because a representable component went unrepresented — and
+ * refusing to promote it would have pushed the grammar back toward inventing a
+ * setback to satisfy a gate, which is the precise failure the refusal exists to
+ * avoid.
+ *
+ * This is a REFINEMENT of the original rule, not a weakening of it. The rule
+ * prevented promoting an incomplete representation SILENTLY; the admission below
+ * is kind-scoped at the contract level — no release can widen its own gate — and
+ * additionally requires the component's machine-readable `reason`, which travels
+ * into per-building provenance and is rendered in the details panel. Adding a
+ * kind here is a reviewable contract edit.
+ */
+export const CONDITIONALLY_APPLICABLE_EXTERIOR_COMPONENT_KINDS = ["setbacks"] as const;
+
 export type ExteriorComponentKind = (typeof REQUIRED_EXTERIOR_COMPONENT_KINDS)[number];
 export type ExteriorEvidenceBasis = "source-observed" | "derived";
 
@@ -420,6 +447,16 @@ export function exteriorComponentFidelity(component: ExteriorComponentEntry): "g
   return component.state;
 }
 
+/**
+ * Whether a component may be promoted inside a `status:"available"` building.
+ *
+ * Unchanged for every state except `absent`, and unchanged for every absent kind
+ * except the conditionally-applicable ones. For those, the absence must still be
+ * EXPLAINED: the reason is re-checked here rather than relied on from the shape
+ * validator, so the promotion gate itself is what refuses an unexplained gap.
+ */
 export function isExteriorComponentReleaseEligible(component: ExteriorComponentEntry): boolean {
-  return component.state !== "absent";
+  if (component.state !== "absent") return true;
+  if (!(CONDITIONALLY_APPLICABLE_EXTERIOR_COMPONENT_KINDS as readonly string[]).includes(component.kind)) return false;
+  return typeof component.reason === "string" && component.reason.trim().length > 0;
 }

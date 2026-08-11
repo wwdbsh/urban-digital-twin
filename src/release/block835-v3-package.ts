@@ -2,6 +2,7 @@ import {
   DETERMINISTIC_FACADE_V3_SCHEMA_VERSION,
   DETERMINISTIC_FACADE_V3_UNCERTAINTY,
   DETERMINISTIC_FACADE_V3T_UNCERTAINTY,
+  v3UncertaintyFor,
   deriveV3Parameters,
   generateV3FacadePlan,
   ringSignedAreaMm2,
@@ -10,10 +11,12 @@ import {
   type Point2Mm,
   type V3Plan,
   type V3StyleClass,
+  type V3StyleOverride,
   type V3Tessellation,
 } from "../domain/deterministic-facade-generator-v3.ts";
 import { sha256HexBytes, sha256HexSync, stableSerialize } from "../domain/deterministic-hash.ts";
 import { writeCanonicalGlb, type CanonicalGlbMaterial, type CanonicalGlbQuad, type CanonicalGlbTextureSet, type CanonicalGlbTri, type Vec2, type Vec3 } from "./canonical-glb.ts";
+import { BLOCK835_V3_STYLE_OVERRIDES, block835CitedStyleFor } from "./block835-facade-material-intake.ts";
 import {
   BLOCK835_CELL_ID,
   BLOCK835_CITY_ID,
@@ -21,6 +24,7 @@ import {
   BLOCK835_LOD0_MAX_DISTANCE_METERS,
   BLOCK835_PILOT_RELEASE_ID,
   BLOCK835_V3_PACKAGE_ID,
+  BLOCK835_V3E_PACKAGE_ID,
   BLOCK835_V3T_PACKAGE_ID,
   deriveBaseIdentityChecksum,
   enuFrame,
@@ -139,6 +143,12 @@ export const BLOCK835_V3_LOD1_GEOMETRIC_ERROR_METERS = 0.2 as const;
 /** The V2 package this one supersedes without editing a byte of it. */
 export const BLOCK835_V3_PREDECESSOR_PACKAGE_ID = "manhattan-esb-block-reference-20260811" as const;
 
+export { BLOCK835_V3E_PACKAGE_ID };
+export const BLOCK835_V3E_BASE_IDENTITY_SET_ID = "base-identity-set:manhattan:block-835:20260811-v3e" as const;
+export const BLOCK835_V3E_OWNERSHIP_LEDGER_ID = "ownership-ledger:manhattan:block-835:20260811-v3e" as const;
+/** The untextured V3 package `-v3e` supersedes without editing a byte of it. */
+export const BLOCK835_V3E_PREDECESSOR_PACKAGE_ID = BLOCK835_V3_PACKAGE_ID;
+
 export { BLOCK835_V3T_PACKAGE_ID };
 export const BLOCK835_V3T_BASE_IDENTITY_SET_ID = "base-identity-set:manhattan:block-835:20260811-v3t" as const;
 export const BLOCK835_V3T_OWNERSHIP_LEDGER_ID = "ownership-ledger:manhattan:block-835:20260811-v3t" as const;
@@ -160,7 +170,16 @@ export interface V3PackageProfile {
   ownershipLedgerId: string;
   predecessorPackageId: string;
   budgets: { maxTriangles: number; maxMaterials: number; maxTextures: number };
+  /**
+   * The asset-level statement, when every asset in the package makes the same
+   * one. `uncertaintyForPlan` overrides it per asset; a package whose assets do
+   * NOT all say the same thing must use that instead of picking one.
+   */
   uncertainty: string;
+  /** Per-asset statement, read from the plan. Only `-v3e` needs it today. */
+  uncertaintyForPlan?: (plan: V3Plan) => string;
+  /** Cited style overrides, keyed by canonical building id. Empty for V3/V3T. */
+  styleOverrides?: ReadonlyMap<string, V3StyleOverride>;
   /** LOD 0 only. LOD 1 is viewed from beyond 250 m, where a detail tile is invisible cost. */
   texture: ProceduralTextureProfile | null;
 }
@@ -172,6 +191,28 @@ export const BLOCK835_V3_PROFILE: V3PackageProfile = {
   predecessorPackageId: BLOCK835_V3_PREDECESSOR_PACKAGE_ID,
   budgets: { ...V3_QUALITY_BUDGETS },
   uncertainty: DETERMINISTIC_FACADE_V3_UNCERTAINTY,
+  texture: null,
+};
+
+/**
+ * The evidence-cited successor of `-v3`.
+ *
+ * It differs from `-v3` in exactly two ways, and both are consequences of the
+ * same fact rather than independent choices: the Empire State Building's plan
+ * carries a cited `styleOverride`, and asset uncertainty is therefore read from
+ * each PLAN rather than declared once for the package — because the fourteen
+ * assets no longer all make the same statement. Budgets, textures (none), LOD
+ * policy and the grammar are unchanged.
+ */
+export const BLOCK835_V3E_PROFILE: V3PackageProfile = {
+  packageId: BLOCK835_V3E_PACKAGE_ID,
+  baseIdentitySetId: BLOCK835_V3E_BASE_IDENTITY_SET_ID,
+  ownershipLedgerId: BLOCK835_V3E_OWNERSHIP_LEDGER_ID,
+  predecessorPackageId: BLOCK835_V3E_PREDECESSOR_PACKAGE_ID,
+  budgets: { ...V3_QUALITY_BUDGETS },
+  uncertainty: DETERMINISTIC_FACADE_V3_UNCERTAINTY,
+  uncertaintyForPlan: (plan) => plan.uncertainty,
+  styleOverrides: BLOCK835_V3_STYLE_OVERRIDES,
   texture: null,
 };
 
@@ -218,7 +259,7 @@ export interface V3PlanContext {
  * clockwise, a reversal to the counter-clockwise orientation the grammar
  * requires. Both are recorded so registration can measure them.
  */
-export function buildV3Plan(building: PilotBuildingSource): V3PlanContext {
+export function buildV3Plan(building: PilotBuildingSource, styleOverride?: V3StyleOverride): V3PlanContext {
   const frame = enuFrame(building.anchor);
   const raw = building.footprint.map((point) => {
     const [east, north] = toEnuMeters(frame, point);
@@ -240,6 +281,10 @@ export function buildV3Plan(building: PilotBuildingSource): V3PlanContext {
       { id: `${building.canonicalBuildingId}:anchor:height`, kind: "height", sourceRefId, fingerprintSha256: sha256HexSync(stableSerialize({ heightMeters: building.heightMeters })) },
     ],
     parameters: deriveV3Parameters({ footprintOuterMm: outer, heightMm }),
+    // Omitted rather than set to `undefined`: `stableSerialize` writes a present
+    // undefined key as `null`, which would move all fourteen V3 plan hashes
+    // instead of only the overridden building's.
+    ...(styleOverride ? { styleOverride: { ...styleOverride } } : {}),
   });
   if (!generated.ok) throw new Error(`V3 facade plan failed for ${building.canonicalBuildingId}: ${generated.issues.map((issue) => `${issue.path}: ${issue.message}`).join("; ")}`);
   // Generation alone does not run the plan validator. The shipped plan must
@@ -750,12 +795,24 @@ export function assembleBlock835V3Package(options: {
   const blockBounds: BoundingBox = { minimum: [Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY], maximum: [Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY] };
 
   for (const building of buildings) {
-    const context = buildV3Plan(building);
+    const context = buildV3Plan(building, profile.styleOverrides?.get(building.canonicalBuildingId));
     const plan = context.plan;
     plans.push(plan);
     const inventoryId = v3InventoryId(building.canonicalBuildingId, profile.packageId);
     const inventoryHashSha256 = sha256HexSync(stableSerialize(plan.inventory));
     const truthTiers = v3TruthTiers(plan);
+    // Read from the plan when the package's assets do not all make the same
+    // statement, so a cited asset cannot inherit the uncited wording.
+    const assetUncertainty = profile.uncertaintyForPlan?.(plan) ?? profile.uncertainty;
+    // Resolved from the admission, so an asset can only carry a citation whose
+    // record was actually admitted and is actually conveyable in public.
+    const citedStyle = plan.input.styleOverride ? block835CitedStyleFor(building.canonicalBuildingId) : undefined;
+    if (Boolean(citedStyle) !== Boolean(plan.input.styleOverride)) {
+      throw new Error(`V3 asset ${building.canonicalBuildingId} disagrees with its plan about whether its style class is cited.`);
+    }
+    if (assetUncertainty !== v3UncertaintyFor(plan.input.styleOverride) && profile.uncertaintyForPlan) {
+      throw new Error(`V3 asset ${building.canonicalBuildingId} uncertainty does not match its cited-override state.`);
+    }
     const measurement = measurementById.get(building.canonicalBuildingId);
     if (!measurement) throw new Error(`Missing Blender silhouette measurement for ${building.canonicalBuildingId}.`);
     if (measurement.planHashSha256 !== plan.planHashSha256) throw new Error(`Silhouette measurement for ${building.canonicalBuildingId} is bound to a different plan hash.`);
@@ -785,8 +842,9 @@ export function assembleBlock835V3Package(options: {
         truthTiers,
         sourceDates: { capturedAt: building.capturedAt, updatedAt: building.updatedAt },
         predecessor,
-        uncertainty: profile.uncertainty,
+        uncertainty: assetUncertainty,
         planHashSha256: plan.planHashSha256,
+        ...(citedStyle ? { citedStyle } : {}),
         // Present exactly when the GLB carries images, which is the condition
         // the release validator uses to decide whether to demand a replay.
         ...(file.textures ? { textureProvenance: proceduralTextureProvenance() } : {}),
@@ -829,8 +887,9 @@ export function assembleBlock835V3Package(options: {
       truthTiers,
       sourceDates: { capturedAt: building.capturedAt, updatedAt: building.updatedAt },
       predecessor,
-      uncertainty: profile.uncertainty,
+      uncertainty: assetUncertainty,
       source: { kind: "facade-plan", planId: plan.planId, planHashSha256: plan.planHashSha256 },
+      ...(citedStyle ? { citedStyle } : {}),
       lods,
     });
   }
