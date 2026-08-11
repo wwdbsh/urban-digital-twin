@@ -83,7 +83,7 @@ interface BlenderEvidence {
 const inventory = readJson<Inventory>(`${RECORD_ROOT}/payload-inventory.json`);
 const journeys = readJson<JourneyEvidence>(`${RECORD_ROOT}/journey-evidence.json`);
 const blender = readJson<BlenderEvidence>(`${RECORD_ROOT}/blender-sample.json`);
-const census = readJson<{ volumeIdentity: { worstVolumeDeviation: number; worstDeviationAsFractionOfTolerance: number } }>(`${RECORD_ROOT}/wave-census.json`);
+const census = readJson<{ volumeIdentity: { worstVolumeDeviation: number; worstDeviationAsFractionOfTolerance: number; buildingsChecked: number; buildingsAccepted: number; buildingsRejected: number } }>(`${RECORD_ROOT}/wave-census.json`);
 
 const PROMOTED_RELEASE_IDS = [
   "manhattan-exterior-cells-20260811-v3",
@@ -274,7 +274,13 @@ describe("the Blender pass measured the bytes this release shipped", () => {
       expect(sample.volumeDeviation, sample.buildingId).toBeLessThan(MIDTOWN_CORE_V3_VOLUME_TOLERANCE);
     }
     // The wave-scale figure the census recorded, for contrast rather than for
-    // equality: the census measures 9,849 buildings and this pass measures 69.
+    // equality: the census CHECKED 9,865 buildings — the 9,849 it accepted plus the
+    // 16 it rejected — and this pass measures 69 of the 76 that shipped from one
+    // cell. Different implementations over different sets; agreement on the ORDER
+    // of magnitude is the evidence, and equality would be suspicious rather than
+    // reassuring.
+    expect(census.volumeIdentity.buildingsChecked)
+      .toBe(census.volumeIdentity.buildingsAccepted + census.volumeIdentity.buildingsRejected);
     expect(census.volumeIdentity.worstDeviationAsFractionOfTolerance).toBeGreaterThan(0.98);
     expect(blender.summary.maximumVolumeDeviation / MIDTOWN_CORE_V3_VOLUME_TOLERANCE)
       .toBeLessThan(census.volumeIdentity.worstDeviationAsFractionOfTolerance);

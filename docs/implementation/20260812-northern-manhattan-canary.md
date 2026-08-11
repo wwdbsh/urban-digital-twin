@@ -85,9 +85,10 @@ Over all 10,230 owned buildings, untextured.
   `volume-identity-failed` 16.
 - Absent setbacks: **5,880 of 9,849 (59.7%)** — the first wave where they are the
   majority.
-- Volume identity: 9,849 checked, 16 rejected, worst accepted deviation
-  9.895 × 10⁻⁷ against a 1 × 10⁻⁶ tolerance = **0.9895**, the narrowest yet. No
-  tolerance was moved.
+- Volume identity: **9,865 checked** (9,849 accepted + 16 rejected), worst accepted
+  deviation 9.895 × 10⁻⁷ against a 1 × 10⁻⁶ tolerance = **0.9895**, the narrowest
+  yet. No tolerance was moved. The denominator is accepted + rejected, not
+  `materializedBuildingCount`, which counts only the buildings that passed.
 - Shipped subset: 86 requested, 76 materialized, **10 refused (11.6%)** — more
   than three times the wave rate, disclosed and asserted as a ratio.
 

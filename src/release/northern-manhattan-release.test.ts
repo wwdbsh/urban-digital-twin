@@ -59,7 +59,7 @@ interface PayloadInventory {
     alongsidePromotedHeadroom: number;
     isLastUnpromotedWave: boolean;
     remainingUnpromotedWaveIds: string[];
-    reservation: { fromReleaseId: string; forWaveId: string; entries: number; splitResponse: number };
+    reservation: { fromReleaseId: string; forWaveId: string; entries: number; splitResponse: number; splitFromHeadroomEntries: number; splitTakenByPredecessorEntries: number };
     headroomExceedsReservationBy: number;
     reservationStillFitsHeadroom: boolean;
     waveCellCount: number;
@@ -255,6 +255,37 @@ describe("northern-manhattan inherited promotion reservation", () => {
     expect(reservation.entries).toBe(36);
     expect(reservation.entries).toBe(CENTRAL_UPPER_MANHATTAN_W05_RESERVED_ENTRIES);
     expect(reservation.splitResponse).toBe(2);
+    // The two halves of the split, so the sum can be checked rather than trusted.
+    expect(reservation.splitTakenByPredecessorEntries).toBe(42);
+    expect(reservation.splitFromHeadroomEntries).toBe(78);
+    expect(reservation.splitTakenByPredecessorEntries + reservation.entries)
+      .toBe(reservation.splitFromHeadroomEntries);
+  });
+
+  /**
+   * A SPLIT THAT DOES NOT ADD UP IS NOT THE DECISION THAT WAS RECORDED.
+   *
+   * Reading only `reservedForNextWaveEntries` would inherit a number without ever
+   * checking it against the arithmetic that produced it. A predecessor re-emitted
+   * with a different share, a different headroom, or a reservation edited on its
+   * own would all leave the inherited number looking exactly as authoritative as a
+   * coherent one.
+   */
+  it("refuses a re-emitted record whose split no longer adds up, and one that omits the halves", () => {
+    const coherent = { reservedForNextWaveEntries: 36, reservedForNextWaveId: "northern-manhattan", splitResponse: 2, curatedSubsetCeiling: 42, alongsidePromotedHeadroom: 78 };
+    expect(() => northernManhattanReservation({ releaseId: NORTHERN_MANHATTAN_PREDECESSOR_RELEASE_ID, occupancy: coherent })).not.toThrow();
+    expect(() => northernManhattanReservation({
+      releaseId: NORTHERN_MANHATTAN_PREDECESSOR_RELEASE_ID,
+      occupancy: { ...coherent, curatedSubsetCeiling: 50 },
+    })).toThrow(/takes 50 entries and reserves 36, which is 86 against the 78-entry headroom it was split out of/u);
+    expect(() => northernManhattanReservation({
+      releaseId: NORTHERN_MANHATTAN_PREDECESSOR_RELEASE_ID,
+      occupancy: { ...coherent, reservedForNextWaveEntries: 30 },
+    })).toThrow(/a split that does not add up is not the decision that was recorded/u);
+    expect(() => northernManhattanReservation({
+      releaseId: NORTHERN_MANHATTAN_PREDECESSOR_RELEASE_ID,
+      occupancy: { reservedForNextWaveEntries: 36, reservedForNextWaveId: "northern-manhattan", splitResponse: 2 },
+    })).toThrow(/without the headroom it was split out of or the share it kept/u);
   });
 
   /** A reservation cannot be inherited by silence, and cannot be another wave's. */
@@ -282,7 +313,7 @@ describe("northern-manhattan renderable-subset derivation", () => {
     { releaseId: "manhattan-southern-remainder-cells-20260812-p1", assetEntries: 179 },
     { releaseId: "manhattan-central-upper-manhattan-cells-20260812-p1", assetEntries: 40 },
   ];
-  const reservation = { fromReleaseId: "manhattan-central-upper-manhattan-cells-20260812-p1", forWaveId: "northern-manhattan", entries: 36, splitResponse: 2 };
+  const reservation = { fromReleaseId: "manhattan-central-upper-manhattan-cells-20260812-p1", forWaveId: "northern-manhattan", entries: 36, splitResponse: 2, splitFromHeadroomEntries: 78, splitTakenByPredecessorEntries: 42 };
   const base = {
     maxCacheEntries: 512,
     promotedWaves,
@@ -514,12 +545,24 @@ describe("northern-manhattan committed payload inventory", () => {
       forWaveId: "northern-manhattan",
       entries: 36,
       splitResponse: 2,
+      splitFromHeadroomEntries: 78,
+      splitTakenByPredecessorEntries: 42,
     });
+    // The inherited split reconstitutes the headroom it was split out of, checked
+    // against the committed bytes rather than only inside the derivation.
+    expect(inventory.occupancy.reservation.splitTakenByPredecessorEntries + inventory.occupancy.reservation.entries)
+      .toBe(inventory.occupancy.reservation.splitFromHeadroomEntries);
     expect(inventory.occupancy.alongsidePromotedHeadroom)
       .toBe(inventory.occupancy.maxCacheEntries - inventory.occupancy.promotedAssetEntries);
     expect(inventory.occupancy.alongsidePromotedHeadroom).toBe(38);
     expect(inventory.occupancy.headroomExceedsReservationBy).toBe(2);
+    // TAUTOLOGICAL BY CONSTRUCTION, and asserted as such rather than as a check.
+    // The derivation throws when the reservation exceeds the headroom, so this can
+    // only ever be `true` in a record that exists at all. The real check is the
+    // guard, and `refuses a reservation that no longer fits what is actually free`
+    // is its evidence.
     expect(inventory.occupancy.reservationStillFitsHeadroom).toBe(true);
+    expect(inventory.occupancy.reservation.entries).toBeLessThanOrEqual(inventory.occupancy.alongsidePromotedHeadroom);
     expect(inventory.occupancy.isLastUnpromotedWave).toBe(true);
     expect(inventory.occupancy.remainingUnpromotedWaveIds).toEqual(["northern-manhattan"]);
     expect(inventory.occupancy.waveCellCount).toBe(182);

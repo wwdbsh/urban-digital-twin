@@ -16,6 +16,7 @@ import {
 import { lowerManhattanRenderableCells } from "./lower-manhattan-release.ts";
 import { southernRemainderRenderableCells } from "./southern-remainder-release.ts";
 import { centralUpperManhattanRenderableCells } from "./central-upper-manhattan-release.ts";
+import { northernManhattanRenderableCells } from "./northern-manhattan-release.ts";
 import { MIDTOWN_CORE_SUBSET_IDENTITY } from "./midtown-core-package.ts";
 import { LOWER_MANHATTAN_SUBSET_IDENTITY } from "./lower-manhattan-package.ts";
 import { SOUTHERN_REMAINDER_SUBSET_IDENTITY } from "./southern-remainder-package.ts";
@@ -367,6 +368,57 @@ describe("wave-generic renderable-cell walk", () => {
       .toEqual({ cellId: "d", buildingCount: 50, wouldHaveTotalled: 128 });
     expect(deriveExteriorWaveRenderableCells(cells, 128, "any-wave").stoppedAt).toBeNull();
     expect(deriveExteriorWaveRenderableCells(cells, 128, "any-wave").cells.map((cell) => cell.cellId)).toEqual(["a", "b", "c", "d"]);
+  });
+
+  /**
+   * THE SAME AGREEMENT, AT LEDGER SCALE AND AGAINST WHAT EACH WAVE ACTUALLY
+   * SHIPPED.
+   *
+   * The case above compares four synthetic cells. That proves the implementations
+   * agree; it does not prove the generic walk would have produced the subsets three
+   * releases were emitted with, which is the claim the extraction actually rests on.
+   *
+   * So each wave's real cells are derived from the committed parent ledger, the
+   * generic walk and that wave's own copy are run over them at the entry budget
+   * that wave's committed inventory records, and both are required to reproduce the
+   * `renderableCellIds` in those committed bytes exactly. A drift in the generic
+   * walk that the synthetic fixture happened not to exercise would fail here
+   * against three frozen records.
+   *
+   * The `w04` P1 successor is deliberately absent: its subset is a CURATED list,
+   * not a walk of the ledger order, so it is not this function's output and
+   * comparing against it would assert something false.
+   */
+  it("reproduces the committed renderable subset of every order-derived wave canary", () => {
+    const canaries = [
+      { waveIndex: 2, waveId: "lower-manhattan", identity: LOWER_MANHATTAN_SUBSET_IDENTITY, walk: lowerManhattanRenderableCells, recordRoot: "data/lower-manhattan-20260812" },
+      { waveIndex: 3, waveId: "southern-remainder", identity: SOUTHERN_REMAINDER_SUBSET_IDENTITY, walk: southernRemainderRenderableCells, recordRoot: "data/southern-remainder-20260812" },
+      { waveIndex: 4, waveId: "central-upper-manhattan", identity: CENTRAL_UPPER_MANHATTAN_SUBSET_IDENTITY, walk: centralUpperManhattanRenderableCells, recordRoot: "data/central-upper-manhattan-20260812" },
+      { waveIndex: 5, waveId: "northern-manhattan", identity: NORTHERN_MANHATTAN_SUBSET_IDENTITY, walk: northernManhattanRenderableCells, recordRoot: "data/northern-manhattan-20260812" },
+    ];
+    for (const canary of canaries) {
+      const inventory = JSON.parse(readText(`${canary.recordRoot}/payload-inventory.json`)) as {
+        occupancy: { entryBudget: number };
+        renderableCellIds: string[];
+      };
+      const subset = buildExteriorWaveSubsetLedger(canary.identity, {
+        parentLedger,
+        parentLedgerChecksumSha256,
+        baseReleaseId: EXTERIOR_FULLSNAPSHOT_BASE_RELEASE_ID,
+        baseManifestChecksumSha256: EXTERIOR_FULLSNAPSHOT_BASE_MANIFEST_SHA256,
+      });
+      const budget = inventory.occupancy.entryBudget;
+      const generic = deriveExteriorWaveRenderableCells(subset.ledger.cells, budget, canary.waveId);
+      const mirror = canary.walk(subset.ledger.cells, budget);
+      expect(generic.cells.map((cell) => cell.cellId), canary.waveId).toEqual(inventory.renderableCellIds);
+      expect(mirror.cells.map((cell) => cell.cellId), canary.waveId).toEqual(inventory.renderableCellIds);
+      expect(mirror.ownedBuildingCount, canary.waveId).toBe(generic.ownedBuildingCount);
+      expect(mirror.spareEntries, canary.waveId).toBe(generic.spareEntries);
+      // Every one of these subsets was budget-limited rather than wave-limited, so
+      // the generic walk has a cell to report stopping at in all four cases.
+      expect(generic.stoppedAt, canary.waveId).not.toBeNull();
+      expect(generic.stoppedAt!.wouldHaveTotalled, canary.waveId).toBeGreaterThan(budget);
+    }
   });
 
   /** The refusal names the wave and the leading cell, which the copies do not. */

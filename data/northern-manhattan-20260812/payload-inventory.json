@@ -63,7 +63,9 @@
       "fromReleaseId": "manhattan-central-upper-manhattan-cells-20260812-p1",
       "forWaveId": "northern-manhattan",
       "entries": 36,
-      "splitResponse": 2
+      "splitResponse": 2,
+      "splitFromHeadroomEntries": 78,
+      "splitTakenByPredecessorEntries": 42
     },
     "headroomExceedsReservationBy": 2,
     "reservationStillFitsHeadroom": true,

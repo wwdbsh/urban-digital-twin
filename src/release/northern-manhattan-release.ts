@@ -292,11 +292,20 @@ export interface NorthernManhattanReservation {
   forWaveId: string;
   entries: number;
   splitResponse: number;
+  /** The two halves the recorded split divided, carried so the sum is checkable. */
+  splitFromHeadroomEntries: number;
+  splitTakenByPredecessorEntries: number;
 }
 
 export function northernManhattanReservation(inventory: {
   releaseId: string;
-  occupancy?: { reservedForNextWaveEntries?: number; reservedForNextWaveId?: string; splitResponse?: number };
+  occupancy?: {
+    reservedForNextWaveEntries?: number;
+    reservedForNextWaveId?: string;
+    splitResponse?: number;
+    curatedSubsetCeiling?: number;
+    alongsidePromotedHeadroom?: number;
+  };
 }): NorthernManhattanReservation {
   if (inventory.releaseId !== NORTHERN_MANHATTAN_PREDECESSOR_RELEASE_ID) {
     fail(`the reservation must be read from ${NORTHERN_MANHATTAN_PREDECESSOR_RELEASE_ID}, not ${inventory.releaseId}.`);
@@ -305,6 +314,8 @@ export function northernManhattanReservation(inventory: {
   const entries = occupancy?.reservedForNextWaveEntries;
   const forWaveId = occupancy?.reservedForNextWaveId;
   const splitResponse = occupancy?.splitResponse;
+  const takenByPredecessor = occupancy?.curatedSubsetCeiling;
+  const splitFromHeadroom = occupancy?.alongsidePromotedHeadroom;
   if (typeof entries !== "number" || typeof forWaveId !== "string" || typeof splitResponse !== "number") {
     fail("the promoted predecessor's committed occupancy declares no reservation; this wave's promotion budget cannot be inherited by silence.");
   }
@@ -312,7 +323,32 @@ export function northernManhattanReservation(inventory: {
   if (forWaveId !== NORTHERN_MANHATTAN_WAVE_ID) {
     fail(`the recorded reservation is for wave ${forWaveId}, not ${NORTHERN_MANHATTAN_WAVE_ID}; it is not this wave's to inherit.`);
   }
-  return { fromReleaseId: inventory.releaseId, forWaveId, entries, splitResponse };
+  // Checked AFTER the identity checks above, on the registry's precedent: an error
+  // naming the wave to fix is more useful than one reporting a missing field, and a
+  // reservation that is not this wave's is not made this wave's by carrying its
+  // halves.
+  if (typeof takenByPredecessor !== "number" || typeof splitFromHeadroom !== "number") {
+    fail("the promoted predecessor's committed occupancy declares a reservation without the headroom it was split out of or the share it kept; the split cannot be checked and must not be inherited on trust.");
+  }
+  // THE SPLIT MUST ADD UP, or it is not the split that was recorded.
+  //
+  // Reading only `reservedForNextWaveEntries` would inherit a number without ever
+  // checking it against the decision that produced it. A predecessor re-emitted
+  // with a different share, or a different headroom, or a reservation edited on its
+  // own, would all leave the number here looking exactly as authoritative as a
+  // coherent one. So the two halves are read as well and required to reconstitute
+  // the headroom they were split out of.
+  if (takenByPredecessor + entries !== splitFromHeadroom) {
+    fail(`the recorded split takes ${takenByPredecessor} entries and reserves ${entries}, which is ${takenByPredecessor + entries} against the ${splitFromHeadroom}-entry headroom it was split out of; a split that does not add up is not the decision that was recorded and must be re-opened rather than inherited.`);
+  }
+  return {
+    fromReleaseId: inventory.releaseId,
+    forWaveId,
+    entries,
+    splitResponse,
+    splitFromHeadroomEntries: splitFromHeadroom,
+    splitTakenByPredecessorEntries: takenByPredecessor,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -349,7 +385,23 @@ export interface NorthernManhattanEntryBudget {
    * surplus is an accident of what the promoted wave happened to ship.
    */
   headroomExceedsReservationBy: number;
-  reservationStillFitsHeadroom: boolean;
+  /**
+   * TAUTOLOGICAL BY CONSTRUCTION, AND KEPT ANYWAY — with the tautology stated
+   * rather than left for a reader to discover.
+   *
+   * The derivation THROWS when the reservation exceeds the headroom, so this field
+   * can only ever be `true` in a record that exists at all. It is not a check and
+   * must not be read as one; the check is the guard, and its evidence is the
+   * refusal test that drives it.
+   *
+   * It ships because a record that carries `alongsidePromotedHeadroom` and
+   * `reservation.entries` side by side invites the question "was that compared?",
+   * and the honest answer — yes, before anything else, fail-closed — is worth
+   * stating in the bytes. A reader who wants the interesting number wants
+   * `headroomExceedsReservationBy`, which is a real measurement and can be
+   * negative in no record that was ever emitted, but whose SIZE varies.
+   */
+  reservationStillFitsHeadroom: true;
   waveCellCount: number;
   smallestCellBuildingCount: number;
   /** Upper of the two middle values for an even cell count. */
@@ -471,7 +523,10 @@ export function northernManhattanRenderableEntryBudget(input: {
     remainingUnpromotedWaveIds,
     reservation: { ...input.reservation },
     headroomExceedsReservationBy: alongsidePromotedHeadroom - input.reservation.entries,
-    reservationStillFitsHeadroom: input.reservation.entries <= alongsidePromotedHeadroom,
+    // Literal `true`, not a recomputation of the guard above. Recomputing it would
+    // dress a tautology up as a check; writing the constant makes the type say
+    // what the field can be, and the guard remains the only thing that decides.
+    reservationStillFitsHeadroom: true,
     waveCellCount: sorted.length,
     smallestCellBuildingCount: sorted[0]!,
     medianCellBuildingCount,

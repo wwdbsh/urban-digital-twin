@@ -644,8 +644,12 @@ async function stageGates(context, options) {
         materializedBuildingCount: shipped.materializedBuildingCount ?? 0,
         refusedBuildingCount: shipped.refusedBuildingCount ?? 0,
       }),
+      // SAME DENOMINATOR FIX AS THE WAVE CENSUS, applied here so T022's curated
+      // successor cannot inherit the wrong one. `materializedBuildingCount` counts
+      // the buildings that PASSED this check; the buildings it rejected are not
+      // among them, so `buildingsChecked` is accepted + rejected.
       volumeMargin: context.variant.curation.volumeMargin({
-        buildingsChecked: shipped.materializedBuildingCount ?? 0,
+        buildingsChecked: (shipped.materializedBuildingCount ?? 0) + (shipped.refusalsByCode?.["volume-identity-failed"] ?? 0),
         buildingsRejected: shipped.refusalsByCode?.["volume-identity-failed"] ?? 0,
         worstVolumeDeviation: shipped.worstVolumeDeviation ?? Number.POSITIVE_INFINITY,
         tolerance: MIDTOWN_CORE_V3_VOLUME_TOLERANCE,
@@ -686,12 +690,12 @@ async function stageGates(context, options) {
  */
 function volumeIdentityStatement(input) {
   const accepted = input.buildingsRejected === 0
-    ? `It rejected NONE of them, so every materialized building's mesh volume agreed with its analytic volume inside the tolerance.`
-    : `It REJECTED ${input.buildingsRejected.toLocaleString("en-US")} of them, which is why those buildings ship as unavailable with a stated reason instead of as geometry; the deviation recorded below is the worst among the buildings it ACCEPTED, not among the ones it refused.`;
+    ? `It rejected NONE of them, so every building whose plan the grammar accepted also carried a mesh volume that agreed with its analytic volume inside the tolerance.`
+    : `It ACCEPTED ${input.buildingsAccepted.toLocaleString("en-US")} and REJECTED ${input.buildingsRejected.toLocaleString("en-US")}, which is why those ${input.buildingsRejected.toLocaleString("en-US")} ship as unavailable with a stated reason instead of as geometry; the deviation recorded below is the worst among the buildings it ACCEPTED, not among the ones it refused.`;
   const margin = input.fraction > 0.9
     ? `THE MARGIN IS NARROW AND IS REPORTED RATHER THAN ROUNDED AWAY: the worst accepted case sits at ${input.fraction.toFixed(4)} of the tolerance, more than nine tenths of it. "Inside tolerance" is therefore true and is not the same as "comfortably inside", and a reader deciding whether this wave's geometry is sound should read \`worstDeviationAsFractionOfTolerance\` and not only \`buildingsRejected\`.`
     : `The worst accepted case sits at ${input.fraction.toFixed(4)} of the tolerance.`;
-  return `Every materialized building's generated mesh volume was compared against the analytic volume its plan declares. The check ran on ${input.buildingsChecked.toLocaleString("en-US")} buildings. ${accepted} ${margin} The worst deviation is recorded beside the tolerance it was compared against, so a run in which the check silently did not execute is distinguishable from a run in which it executed. No tolerance was moved; the recorded value is the accepted MIDTOWN_CORE_V3_VOLUME_TOLERANCE unchanged.`;
+  return `Every building whose plan the grammar accepted had its generated mesh volume compared against the analytic volume that plan declares. READ THE DENOMINATOR: the check ran on ${input.buildingsChecked.toLocaleString("en-US")} buildings, which is the ${input.buildingsAccepted.toLocaleString("en-US")} that went on to materialize PLUS the ${input.buildingsRejected.toLocaleString("en-US")} this check itself refused. A building it rejects never becomes a materialized building, so \`materializedBuildingCount\` is the count of buildings that PASSED and is the wrong denominator for a rate — an earlier draft of this record used it and produced the contradiction "ran on N, rejected 16 of them" where the 16 were not in N. ${accepted} ${margin} The worst deviation is recorded beside the tolerance it was compared against, so a run in which the check silently did not execute is distinguishable from a run in which it executed. No tolerance was moved; the recorded value is the accepted MIDTOWN_CORE_V3_VOLUME_TOLERANCE unchanged.`;
 }
 
 function waveCensusNote(input) {
@@ -705,7 +709,7 @@ function waveCensusNote(input) {
   const margin = marginFraction > 0.9
     ? `THE VOLUME MARGIN IS NARROW AND IS REPORTED RATHER THAN ROUNDED AWAY: the worst deviation across this wave sits at ${marginFraction.toFixed(4)} of the tolerance, more than nine tenths of it.`
     : `THE VOLUME MARGIN IS REPORTED AS MEASURED: the worst deviation across this wave sits at ${marginFraction.toFixed(4)} of the tolerance.`;
-  return `Wave-scale V3 stop-code census over all ${input.ownedBuildingCount.toLocaleString("en-US")} owned buildings of wave w05 — the LAST wave the committed ledger declares — plus the shipped-subset census over the renderable cells. Committed so the refusal distribution stays checkable without the untracked work root. The wave census is untextured by design; the shipped subset carries procedural-texture-v1 tiles on LOD 0. READ \`wave.retention\` BEFORE \`wave.shippedAssetCount\`: the wave pass runs \`census-only\`, so it generated, gated and measured every asset and then dropped the bytes rather than keeping them. Its \`shippedAssetBytes\` is therefore a real measurement while its \`shippedAssetCount\` is zero, which is a retention mode and not a contradiction. The \`shipped\` object below is the pass that retained bytes. ${distributions} \`waveRefusals\` is the PLAN stage: the grammar reading a sourced polygon and reporting which property of it it cannot carry. \`wave.refusalsByCode\` is the ASSET stage: the same plans plus the writer's own mesh-versus-analytic volume identity check, which can only fail after a plan has been accepted and geometry has been generated. The asset distribution is therefore always a superset of the plan distribution and the only key that can appear in it alone is \`volume-identity-failed\`. NEITHER EQUALITY NOR INEQUALITY OF THE TWO TOTALS IS EVIDENCE THAT THE WRITER'S CHECK RAN, and this note does not treat it as such: ADR 0035 inferred one thing from equal totals and ADR 0036 had to retract it. The check is recorded as a MEASUREMENT instead — \`volumeIdentity\` below carries the count checked (${input.volumeIdentityChecked.toLocaleString("en-US")}), the count rejected (${writerRejected.toLocaleString("en-US")}), the worst deviation observed across the whole wave and the tolerance it was compared against — so a run in which the check silently did not execute is distinguishable from a run in which it executed and passed. ${margin} This note is GENERATED from those measurements rather than written beside them, so it cannot keep asserting a previous wave's finding.`;
+  return `Wave-scale V3 stop-code census over all ${input.ownedBuildingCount.toLocaleString("en-US")} owned buildings of wave w05 — the LAST wave the committed ledger declares — plus the shipped-subset census over the renderable cells. Committed so the refusal distribution stays checkable without the untracked work root. The wave census is untextured by design; the shipped subset carries procedural-texture-v1 tiles on LOD 0. READ \`wave.retention\` BEFORE \`wave.shippedAssetCount\`: the wave pass runs \`census-only\`, so it generated, gated and measured every asset and then dropped the bytes rather than keeping them. Its \`shippedAssetBytes\` is therefore a real measurement while its \`shippedAssetCount\` is zero, which is a retention mode and not a contradiction. The \`shipped\` object below is the pass that retained bytes. ${distributions} \`waveRefusals\` is the PLAN stage: the grammar reading a sourced polygon and reporting which property of it it cannot carry. \`wave.refusalsByCode\` is the ASSET stage: the same plans plus the writer's own mesh-versus-analytic volume identity check, which can only fail after a plan has been accepted and geometry has been generated. The asset distribution is therefore always a superset of the plan distribution and the only key that can appear in it alone is \`volume-identity-failed\`. NEITHER EQUALITY NOR INEQUALITY OF THE TWO TOTALS IS EVIDENCE THAT THE WRITER'S CHECK RAN, and this note does not treat it as such: ADR 0035 inferred one thing from equal totals and ADR 0036 had to retract it. The check is recorded as a MEASUREMENT instead — \`volumeIdentity\` below carries the count checked (${input.volumeIdentityChecked.toLocaleString("en-US")}), the count accepted (${input.volumeIdentityAccepted.toLocaleString("en-US")}), the count rejected (${writerRejected.toLocaleString("en-US")}), the worst deviation observed across the whole wave and the tolerance it was compared against. THE COUNT CHECKED IS ACCEPTED PLUS REJECTED, NOT \`wave.materializedBuildingCount\`: a building this check rejects never materializes, so the materialized count is the count that PASSED and using it as the denominator would say the check ran on a set that excludes the buildings it refused — so a run in which the check silently did not execute is distinguishable from a run in which it executed and passed. ${margin} This note is GENERATED from those measurements rather than written beside them, so it cannot keep asserting a previous wave's finding.`;
 }
 
 // ---------------------------------------------------------------------------
@@ -871,17 +875,29 @@ async function stageGraph(context, options) {
   // review found on this exact line and fixed with this exact helper.
   const waveCensus = await requireFreshReceipt(context, "glbs", "the wave-scale census");
   const planCensus = await requireFreshReceipt(context, "plans", "the plan-stage refusal distribution");
+  // THE DENOMINATOR OF THE VOLUME CHECK IS NOT `materializedBuildingCount`.
+  //
+  // A building this check REJECTS never becomes a materialized building, so the
+  // materialized count is the count of buildings that PASSED. Using it as
+  // `buildingsChecked` made the committed statement contradict itself — "the check
+  // ran on 9,849 buildings and rejected 16 of them", where the 16 were not among
+  // the 9,849. The true denominator is accepted + rejected, and both halves are
+  // emitted so the arithmetic is visible rather than implied.
+  const volumeIdentityRejected = waveCensus.summary.wave.refusalsByCode["volume-identity-failed"] ?? 0;
+  const volumeIdentityAccepted = waveCensus.summary.wave.materializedBuildingCount;
   const volumeIdentity = {
     stage: "asset-writer",
     stopCode: "volume-identity-failed",
-    buildingsChecked: waveCensus.summary.wave.materializedBuildingCount,
-    buildingsRejected: waveCensus.summary.wave.refusalsByCode["volume-identity-failed"] ?? 0,
+    buildingsChecked: volumeIdentityAccepted + volumeIdentityRejected,
+    buildingsAccepted: volumeIdentityAccepted,
+    buildingsRejected: volumeIdentityRejected,
     worstVolumeDeviation: waveCensus.summary.wave.worstVolumeDeviation,
     tolerance: MIDTOWN_CORE_V3_VOLUME_TOLERANCE,
     worstDeviationAsFractionOfTolerance: waveCensus.summary.wave.worstVolumeDeviation / MIDTOWN_CORE_V3_VOLUME_TOLERANCE,
     statement: volumeIdentityStatement({
-      buildingsChecked: waveCensus.summary.wave.materializedBuildingCount,
-      buildingsRejected: waveCensus.summary.wave.refusalsByCode["volume-identity-failed"] ?? 0,
+      buildingsChecked: volumeIdentityAccepted + volumeIdentityRejected,
+      buildingsAccepted: volumeIdentityAccepted,
+      buildingsRejected: volumeIdentityRejected,
       fraction: waveCensus.summary.wave.worstVolumeDeviation / MIDTOWN_CORE_V3_VOLUME_TOLERANCE,
     }),
   };
@@ -893,6 +909,7 @@ async function stageGraph(context, options) {
       planRefusalsByCode: planCensus.summary.refusalsByCode,
       assetRefusedBuildingCount: waveCensus.summary.wave.refusedBuildingCount,
       volumeIdentityChecked: volumeIdentity.buildingsChecked,
+      volumeIdentityAccepted: volumeIdentity.buildingsAccepted,
       volumeIdentityRejected: volumeIdentity.buildingsRejected,
       worstVolumeDeviation: volumeIdentity.worstVolumeDeviation,
       tolerance: MIDTOWN_CORE_V3_VOLUME_TOLERANCE,

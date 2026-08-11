@@ -182,6 +182,22 @@ smaller size would be re-cutting a split nobody re-opened. A simulated sixth
 promotion turns that into "the reservation no longer fits the cache it was split
 out of and must be re-decided rather than silently re-cut".
 
+**And the split must ADD UP.** Reading `reservedForNextWaveEntries` alone would
+inherit a number without ever checking it against the decision that produced it: a
+predecessor re-emitted with a different share, a different headroom, or a
+reservation edited on its own would all leave the inherited number looking exactly
+as authoritative as a coherent one. So the two halves are read as well — 42 taken,
+36 reserved — and required to reconstitute the 78-entry headroom they were split
+out of. A record that omits either half is refused rather than trusted.
+
+One field in the occupancy record is TAUTOLOGICAL BY CONSTRUCTION and says so in
+its own comment: `reservationStillFitsHeadroom` can only ever be `true`, because
+the guard throws first. It ships because a record carrying the headroom and the
+reservation side by side invites the question "was that compared?", and it is
+written as a literal rather than recomputed so that nothing dresses a tautology up
+as a check. The interesting number beside it is `headroomExceedsReservationBy`,
+which is a real measurement.
+
 ### THE RESERVATION DOES NOT ADMIT AN ORDINARY CELL OF THIS WAVE
 
 This is the finding T022 inherits, and it is a measurement rather than a warning.
@@ -351,11 +367,20 @@ Pinning either is pinning an accident of the partition.
 
 | | value |
 | --- | --- |
-| buildings checked | 9,849 |
+| buildings checked | 9,865 |
+| buildings accepted | 9,849 |
 | buildings rejected | 16 |
 | worst ACCEPTED deviation | 9.895 × 10⁻⁷ |
 | tolerance | 1 × 10⁻⁶ |
 | worst as fraction of tolerance | **0.9895** |
+
+The denominator is accepted + rejected, not `materializedBuildingCount`. A building
+this check rejects never becomes a materialized building, so the materialized count
+is the count that PASSED; an earlier draft of the record used it as
+`buildingsChecked` and produced the contradiction "ran on 9,849 buildings and
+rejected 16 of them" with the 16 outside the 9,849. Both halves now ship, the
+generated statement explains which is which, and the curated-variant path was fixed
+in the same change so T022's successor cannot inherit the wrong denominator.
 
 ADR 0036 called `w04`'s 0.988 narrow and left it unexplained. This wave sits higher
 still AND refuses 16 buildings for exceeding the line. "Inside tolerance" is true

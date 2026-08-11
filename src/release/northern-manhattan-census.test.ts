@@ -47,6 +47,7 @@ interface WaveCensusRecord {
     stage: string;
     stopCode: string;
     buildingsChecked: number;
+    buildingsAccepted: number;
     buildingsRejected: number;
     worstVolumeDeviation: number;
     tolerance: number;
@@ -148,12 +149,23 @@ describe("northern-manhattan committed wave census", () => {
    * still not proof: the count checked and the worst deviation observed are what
    * distinguish a check that ran from one that did not.
    */
-  it("shows the writer's volume check ran on every materialized building, and what it rejected", () => {
+  it("counts the buildings it REJECTED inside the set it checked, not outside it", () => {
     expect(census.volumeIdentity.stage).toBe("asset-writer");
     expect(census.volumeIdentity.stopCode).toBe(WRITER_STAGE_STOP_CODE);
-    expect(census.volumeIdentity.buildingsChecked).toBe(census.wave.materializedBuildingCount);
     expect(census.volumeIdentity.buildingsRejected).toBe(census.wave.refusalsByCode[WRITER_STAGE_STOP_CODE]);
     expect(census.volumeIdentity.buildingsRejected).toBe(16);
+    // THE DENOMINATOR. A building this check rejects never becomes a materialized
+    // building, so `materializedBuildingCount` is the count that PASSED. An earlier
+    // draft used it as `buildingsChecked` and the committed statement then said the
+    // check "ran on 9,849 and rejected 16 of them" with the 16 outside the 9,849.
+    expect(census.volumeIdentity.buildingsAccepted).toBe(census.wave.materializedBuildingCount);
+    expect(census.volumeIdentity.buildingsChecked)
+      .toBe(census.volumeIdentity.buildingsAccepted + census.volumeIdentity.buildingsRejected);
+    expect(census.volumeIdentity.buildingsChecked).toBe(9_865);
+    expect(census.volumeIdentity.buildingsChecked).toBeGreaterThan(census.wave.materializedBuildingCount);
+    // The statement says which is which, so a reader never has to reconstruct it.
+    expect(census.volumeIdentity.statement).toContain("READ THE DENOMINATOR");
+    expect(census.volumeIdentity.statement).toContain("the check ran on 9,865 buildings, which is the 9,849 that went on to materialize PLUS the 16 this check itself refused");
     // Ran, rather than trivially reported: a non-zero worst deviation over the
     // whole wave is only producible by comparing geometry that was generated.
     expect(census.volumeIdentity.worstVolumeDeviation).toBeGreaterThan(0);
@@ -183,7 +195,7 @@ describe("northern-manhattan committed wave census", () => {
     expect(census.volumeIdentity.statement).toContain("No tolerance was moved");
     // The statement describes THIS run: it names the rejections rather than
     // assuming there were none, which the predecessor wave's fixed prose did.
-    expect(census.volumeIdentity.statement).toContain("It REJECTED 16 of them");
+    expect(census.volumeIdentity.statement).toContain("It ACCEPTED 9,849 and REJECTED 16");
     expect(census.volumeIdentity.statement).toContain("the worst among the buildings it ACCEPTED");
   });
 
@@ -207,7 +219,9 @@ describe("northern-manhattan committed wave census", () => {
     // The generated numbers agree with the fields they describe, which is what
     // makes the note a statement about this run rather than about a remembered one.
     expect(census.note).toContain(`the count checked (${census.volumeIdentity.buildingsChecked.toLocaleString("en-US")})`);
+    expect(census.note).toContain(`the count accepted (${census.volumeIdentity.buildingsAccepted.toLocaleString("en-US")})`);
     expect(census.note).toContain(`the count rejected (${census.volumeIdentity.buildingsRejected.toLocaleString("en-US")})`);
+    expect(census.note).toContain("THE COUNT CHECKED IS ACCEPTED PLUS REJECTED, NOT `wave.materializedBuildingCount`");
   });
 
   /**
