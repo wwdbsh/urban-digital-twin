@@ -172,7 +172,11 @@ export interface V3Tier {
 export interface V3FacadeSurface {
   id: string;
   kind: "facade";
+  /** Shaft-zone wall material; the band below `baseVMaxMm` uses `baseMaterialId`. */
   materialId: string;
+  baseMaterialId: string;
+  /** Height within this band at which the base zone ends. Zero above tier 0. */
+  baseVMaxMm: number;
   tierIndex: number;
   edgeIndex: number;
   startVertexIndex: number;
@@ -258,6 +262,8 @@ export interface V3Plan {
   anchors: V3SourceAnchor[];
   uncertainty: typeof DETERMINISTIC_FACADE_V3_UNCERTAINTY;
   inventory: ExteriorComponentInventory;
+  /** The designed appearance family this plan drew; see `V3_STYLE_CLASSES`. */
+  styleClass: V3StyleClass;
   massing: V3Massing;
   tiers: V3Tier[];
   materials: V3Material[];
@@ -813,27 +819,118 @@ export function validateV3Input(value: unknown): V3Validation<V3Input> {
 
 // ---------------------------------------------------------------------------
 // Materials
-//
-// P3 ships role-only materials. The four designed style classes, the base/shaft
-// zoning and the named palette land in P4 and replace `makeMaterials` wholesale.
 // ---------------------------------------------------------------------------
 
-const V3_ROLE_COLORS: ReadonlyArray<readonly [number, number, number, number]> = [
-  [186, 122, 96, 255], [206, 184, 148, 255], [112, 134, 148, 255], [162, 152, 140, 255],
-  [92, 108, 96, 255], [122, 98, 118, 255], [198, 200, 194, 255], [74, 82, 92, 255],
-];
+/**
+ * Four designed style classes. The names describe a LOOK this grammar invents;
+ * none of them is a claim about what any real building is faced with. Selection
+ * is deterministic from the input fingerprint and seed, and the only thing that
+ * modulates the distribution is sourced height and sourced footprint area —
+ * never an address, a neighbourhood, a photograph or an observation.
+ */
+export const V3_STYLE_CLASSES = ["masonry-warm", "masonry-light", "stone-neutral", "curtain-cool"] as const;
+export type V3StyleClass = (typeof V3_STYLE_CLASSES)[number];
 
-function makeMaterials(choiceHash: string): V3Material[] {
-  const start = Number.parseInt(choiceHash.slice(0, 8), 16) % V3_ROLE_COLORS.length;
-  const color = (offset: number): [number, number, number, number] => [...V3_ROLE_COLORS[(start + offset) % V3_ROLE_COLORS.length]!] as [number, number, number, number];
+/**
+ * Manhattan-plausible tone palette. "Plausible" is the whole claim: these are
+ * designed sRGB tones chosen to sit believably in a Manhattan street wall. They
+ * are not sampled from imagery and not measured from any building.
+ */
+export const V3_PALETTE = {
+  brickWarm: [150, 92, 74, 255],
+  brickWarmLight: [172, 116, 96, 255],
+  brickLight: [196, 172, 146, 255],
+  brickLightPale: [214, 196, 174, 255],
+  limestone: [186, 180, 168, 255],
+  limestonePale: [204, 199, 188, 255],
+  glassCool: [120, 142, 158, 255],
+  glassCoolPale: [148, 168, 182, 255],
+  glazingWarm: [104, 118, 122, 255],
+  glazingCool: [98, 122, 140, 255],
+  trimStone: [162, 156, 144, 255],
+  trimBronze: [122, 104, 78, 255],
+  roofTar: [78, 80, 82, 255],
+  sidewalk: [138, 136, 132, 255],
+  metalGrey: [116, 120, 126, 255],
+} as const satisfies Record<string, readonly [number, number, number, number]>;
+
+interface StyleRecipe {
+  baseFacade: readonly [number, number, number, number];
+  shaftFacade: readonly [number, number, number, number];
+  glazing: readonly [number, number, number, number];
+  trim: readonly [number, number, number, number];
+  facadeRoughnessPermille: number;
+  glazingMetallicPermille: number;
+  glazingRoughnessPermille: number;
+}
+
+const V3_STYLE_RECIPES: Record<V3StyleClass, StyleRecipe> = {
+  "masonry-warm": { baseFacade: V3_PALETTE.brickWarm, shaftFacade: V3_PALETTE.brickWarmLight, glazing: V3_PALETTE.glazingWarm, trim: V3_PALETTE.trimBronze, facadeRoughnessPermille: 800, glazingMetallicPermille: 60, glazingRoughnessPermille: 220 },
+  "masonry-light": { baseFacade: V3_PALETTE.brickLight, shaftFacade: V3_PALETTE.brickLightPale, glazing: V3_PALETTE.glazingWarm, trim: V3_PALETTE.trimStone, facadeRoughnessPermille: 780, glazingMetallicPermille: 60, glazingRoughnessPermille: 220 },
+  "stone-neutral": { baseFacade: V3_PALETTE.limestone, shaftFacade: V3_PALETTE.limestonePale, glazing: V3_PALETTE.glazingCool, trim: V3_PALETTE.trimStone, facadeRoughnessPermille: 720, glazingMetallicPermille: 80, glazingRoughnessPermille: 200 },
+  "curtain-cool": { baseFacade: V3_PALETTE.limestone, shaftFacade: V3_PALETTE.glassCool, glazing: V3_PALETTE.glassCoolPale, trim: V3_PALETTE.metalGrey, facadeRoughnessPermille: 420, glazingMetallicPermille: 140, glazingRoughnessPermille: 120 },
+};
+
+/**
+ * Selection weights, modulated by sourced height and sourced footprint area and
+ * by nothing else. A tall tower leans curtain-cool, a small low lot leans
+ * masonry-warm; every class stays reachable for every building, so the choice
+ * remains a designed draw and never reads as an inference about the address.
+ */
+export function v3StyleWeights(sourced: { heightMm: number; footprintAreaMm2: number }): Record<V3StyleClass, number> {
+  const tall = sourced.heightMm >= 60_000;
+  const midRise = !tall && sourced.heightMm >= 30_000;
+  const large = sourced.footprintAreaMm2 >= 1_500_000_000;
+  return {
+    "masonry-warm": tall ? 1 : large ? 3 : 5,
+    "masonry-light": tall ? 2 : midRise ? 4 : 4,
+    "stone-neutral": tall ? 4 : midRise ? 3 : 2,
+    "curtain-cool": tall ? 6 : midRise ? 2 : 1,
+  };
+}
+
+export function selectV3StyleClass(styleHash: string, sourced: { heightMm: number; footprintAreaMm2: number }): V3StyleClass {
+  const weights = v3StyleWeights(sourced);
+  const total = V3_STYLE_CLASSES.reduce((sum, style) => sum + weights[style], 0);
+  let draw = Number.parseInt(styleHash.slice(0, 8), 16) % total;
+  for (const style of V3_STYLE_CLASSES) {
+    draw -= weights[style];
+    if (draw < 0) return style;
+  }
+  return V3_STYLE_CLASSES[V3_STYLE_CLASSES.length - 1]!;
+}
+
+/**
+ * Base/shaft zoning only this cycle. A crown zone and horizontal banding are
+ * deliberately deferred: they would push the material count and the surface
+ * subdivision up in the same cycle that raises the triangle budget, and each of
+ * those is worth measuring on its own.
+ */
+export type V3MaterialZone = "base" | "shaft";
+
+export function v3StyleMaterials(style: V3StyleClass): V3Material[] {
+  const recipe = V3_STYLE_RECIPES[style];
+  const rgba = (color: readonly [number, number, number, number]): [number, number, number, number] => [color[0], color[1], color[2], color[3]];
   return [
-    { id: "material:facade", role: "facade", baseColorSrgb: color(0), metallicPermille: 0, roughnessPermille: 760 },
-    { id: "material:glazing", role: "glazing", baseColorSrgb: color(2), metallicPermille: 80, roughnessPermille: 180 },
-    { id: "material:trim", role: "trim", baseColorSrgb: color(3), metallicPermille: 0, roughnessPermille: 620 },
-    { id: "material:roof", role: "roof", baseColorSrgb: color(4), metallicPermille: 120, roughnessPermille: 820 },
-    { id: "material:ground", role: "ground", baseColorSrgb: color(5), metallicPermille: 0, roughnessPermille: 900 },
-    { id: "material:metal", role: "metal", baseColorSrgb: color(7), metallicPermille: 700, roughnessPermille: 380 },
+    { id: "material:facade:base", role: "facade", baseColorSrgb: rgba(recipe.baseFacade), metallicPermille: 0, roughnessPermille: recipe.facadeRoughnessPermille },
+    { id: "material:facade:shaft", role: "facade", baseColorSrgb: rgba(recipe.shaftFacade), metallicPermille: 0, roughnessPermille: recipe.facadeRoughnessPermille },
+    { id: "material:glazing:base", role: "glazing", baseColorSrgb: rgba(recipe.glazing), metallicPermille: recipe.glazingMetallicPermille, roughnessPermille: recipe.glazingRoughnessPermille },
+    { id: "material:glazing:shaft", role: "glazing", baseColorSrgb: rgba(recipe.glazing), metallicPermille: recipe.glazingMetallicPermille, roughnessPermille: Math.max(80, recipe.glazingRoughnessPermille - 40) },
+    { id: "material:trim:base", role: "trim", baseColorSrgb: rgba(recipe.trim), metallicPermille: 0, roughnessPermille: 620 },
+    { id: "material:trim:shaft", role: "trim", baseColorSrgb: rgba(recipe.trim), metallicPermille: 0, roughnessPermille: 680 },
+    { id: "material:roof", role: "roof", baseColorSrgb: rgba(V3_PALETTE.roofTar), metallicPermille: 60, roughnessPermille: 860 },
+    { id: "material:ground", role: "ground", baseColorSrgb: rgba(V3_PALETTE.sidewalk), metallicPermille: 0, roughnessPermille: 900 },
+    { id: "material:metal", role: "metal", baseColorSrgb: rgba(V3_PALETTE.metalGrey), metallicPermille: 700, roughnessPermille: 380 },
   ];
+}
+
+/** The base zone is the street-facing lower floors; everything above is shaft. */
+export function v3BaseFloorCount(floorCount: number): number {
+  return Math.min(2, floorCount);
+}
+
+function zoneOf(floorIndex: number, floorCount: number): V3MaterialZone {
+  return floorIndex < v3BaseFloorCount(floorCount) ? "base" : "shaft";
 }
 
 // ---------------------------------------------------------------------------
@@ -941,11 +1038,14 @@ function maxPlacementDepthMm(parameters: V3Parameters): number {
   return Math.max(parameters.recessDepthMm, parameters.corniceDepthMm, parameters.balconyDepthMm, parameters.fireEscapeDepthMm, parameters.signBandDepthMm, parameters.bladeSignDepthMm);
 }
 
-function buildFacadeSurfaces(input: V3Input, tiers: V3Tier[]): V3FacadeSurface[] {
+function buildFacadeSurfaces(input: V3Input, tiers: V3Tier[], floorCount: number): V3FacadeSurface[] {
   const parameters = input.parameters;
   const depth = maxPlacementDepthMm(parameters);
+  const baseFloorCount = v3BaseFloorCount(floorCount);
   const surfaces: V3FacadeSurface[] = [];
   for (const tier of tiers) {
+    // The base zone only exists where the lower floors actually are.
+    const baseVMaxMm = tier.firstFloorIndex >= baseFloorCount ? 0 : floorBoundaryZMm(input, floorCount, Math.min(baseFloorCount, tier.firstFloorIndex + tier.floorCount)) - tier.baseZMm;
     const ring = tier.ring;
     const angles = ringInteriorAnglesDegrees(ring);
     for (let edgeIndex = 0; edgeIndex < ring.length; edgeIndex += 1) {
@@ -964,7 +1064,7 @@ function buildFacadeSurfaces(input: V3Input, tiers: V3Tier[]): V3FacadeSurface[]
       const bayCount = Math.max(0, Math.min(parameters.maxBaysPerEdge, Math.floor(usable / parameters.bayPitchMm)));
       surfaces.push({
         id: `surface:tier:${tier.index}:facade:${edgeIndex}`,
-        kind: "facade", materialId: "material:facade",
+        kind: "facade", materialId: "material:facade:shaft", baseMaterialId: "material:facade:base", baseVMaxMm,
         tierIndex: tier.index, edgeIndex, startVertexIndex, endVertexIndex,
         startMm: [start[0], start[1]], endMm: [end[0], end[1]],
         uLengthMm, vLengthMm: tier.topZMm - tier.baseZMm, baseZMm: tier.baseZMm,
@@ -1062,7 +1162,7 @@ function buildPlacements(input: V3Input, tiers: V3Tier[], facades: V3FacadeSurfa
       if (surface.uEndMm <= surface.uStartMm || surface.vLengthMm <= parameters.corniceHeightMm) continue;
       placements.push({
         id: `placement:cornice:${tier.index}:${surface.edgeIndex}`, kind: "cornice", surfaceId: surface.id,
-        materialId: "material:trim", tierIndex: tier.index, floorIndex: null, bayIndex: null,
+        materialId: "material:trim:shaft", tierIndex: tier.index, floorIndex: null, bayIndex: null,
         bounds: { uMinMm: surface.uStartMm, vMinMm: Math.max(0, surface.vLengthMm - parameters.corniceHeightMm), uMaxMm: surface.uEndMm, vMaxMm: surface.vLengthMm },
         depthMm: parameters.corniceDepthMm,
       });
@@ -1088,7 +1188,7 @@ function buildPlacements(input: V3Input, tiers: V3Tier[], facades: V3FacadeSurfa
           placements.push({
             id: `placement:${primaryEntrance ? "entrance" : ground ? "storefront" : "window"}:${tier.index}:${surface.edgeIndex}:${row.floorIndex}:${bayIndex}`,
             kind: primaryEntrance ? "entrance" : ground ? "storefront" : "window",
-            surfaceId: surface.id, materialId: primaryEntrance ? "material:trim" : "material:glazing",
+            surfaceId: surface.id, materialId: primaryEntrance ? `material:trim:${zoneOf(row.floorIndex, floorCount)}` : `material:glazing:${zoneOf(row.floorIndex, floorCount)}`,
             tierIndex: tier.index, floorIndex: row.floorIndex, bayIndex,
             bounds: { uMinMm, vMinMm: row.vMinMm + sill, uMaxMm: uMinMm + width, vMaxMm: row.vMinMm + sill + height },
             depthMm: -parameters.recessDepthMm,
@@ -1107,7 +1207,7 @@ function buildPlacements(input: V3Input, tiers: V3Tier[], facades: V3FacadeSurfa
           const cell = bayCellBounds(balconySurface, bayIndex);
           placements.push({
             id: `placement:balcony:${tier.index}:${balconySurface.edgeIndex}:${row.floorIndex}:${bayIndex}`, kind: "balcony",
-            surfaceId: balconySurface.id, materialId: "material:trim", tierIndex: tier.index, floorIndex: row.floorIndex, bayIndex,
+            surfaceId: balconySurface.id, materialId: `material:trim:${zoneOf(row.floorIndex, floorCount)}`, tierIndex: tier.index, floorIndex: row.floorIndex, bayIndex,
             bounds: { uMinMm: cell.startMm, vMinMm: row.vMinMm, uMaxMm: cell.endMm, vMaxMm: row.vMinMm + Math.min(parameters.balconyHeightMm, row.vMaxMm - row.vMinMm) },
             depthMm: parameters.balconyDepthMm,
           });
@@ -1142,7 +1242,7 @@ function buildPlacements(input: V3Input, tiers: V3Tier[], facades: V3FacadeSurfa
     const bandBase = Math.min(groundRow.vMaxMm - parameters.signBandHeightMm, groundRow.vMinMm + parameters.storefrontHeightMm);
     if (bandBase > groundRow.vMinMm) {
       placements.push({
-        id: "placement:sign-band:primary", kind: "sign-band", surfaceId: primary.id, materialId: "material:trim",
+        id: "placement:sign-band:primary", kind: "sign-band", surfaceId: primary.id, materialId: "material:trim:base",
         tierIndex: 0, floorIndex: 0, bayIndex: null,
         bounds: { uMinMm: primary.uStartMm, vMinMm: bandBase, uMaxMm: primary.uEndMm, vMaxMm: bandBase + parameters.signBandHeightMm },
         depthMm: parameters.signBandDepthMm,
@@ -1153,7 +1253,7 @@ function buildPlacements(input: V3Input, tiers: V3Tier[], facades: V3FacadeSurfa
     const bladeTop = Math.min(bladeSurface.vLengthMm - parameters.corniceHeightMm, groundRow.vMaxMm + parameters.bladeSignHeightMm);
     if (bladeTop - parameters.bladeSignHeightMm > 0 && bladeSurface.uEndMm - bladeSurface.uStartMm >= parameters.bladeSignWidthMm) {
       placements.push({
-        id: "placement:blade-sign:primary", kind: "blade-sign", surfaceId: bladeSurface.id, materialId: "material:trim",
+        id: "placement:blade-sign:primary", kind: "blade-sign", surfaceId: bladeSurface.id, materialId: "material:trim:base",
         tierIndex: 0, floorIndex: 1, bayIndex: null,
         bounds: { uMinMm: bladeSurface.uStartMm, vMinMm: bladeTop - parameters.bladeSignHeightMm, uMaxMm: bladeSurface.uStartMm + parameters.bladeSignWidthMm, vMaxMm: bladeTop },
         depthMm: parameters.bladeSignDepthMm,
@@ -1260,10 +1360,11 @@ function buildInventory(input: V3Input, massing: V3Massing, inputFingerprintSha2
 function buildPlan(input: V3Input): V3Validation<V3Plan> {
   const inputFingerprintSha256 = domainSeparatedSha256("udt.facade.input.v3", input);
   const parametersHashSha256 = domainSeparatedSha256("udt.facade.parameters.v3", input.parameters);
-  const choiceHash = domainSeparatedSha256("udt.facade.style.v3", { inputFingerprintSha256, seed: input.seed });
+  const styleHash = domainSeparatedSha256("udt.facade.style.v3", { inputFingerprintSha256, seed: input.seed });
   const outer = input.geometry.footprint.outer;
+  const styleClass = selectV3StyleClass(styleHash, { heightMm: input.geometry.heightMm, footprintAreaMm2: Math.abs(ringSignedAreaMm2(outer)) });
   const { tiers, massing } = planTiers(input, outer);
-  const facades = buildFacadeSurfaces(input, tiers);
+  const facades = buildFacadeSurfaces(input, tiers, massing.floorCount);
   const caps = buildCapAndDeckSurfaces(input, tiers);
   if (!caps.ok) return caps;
   const surfaces: V3Surface[] = [...facades, ...caps.value];
@@ -1285,9 +1386,10 @@ function buildPlan(input: V3Input): V3Validation<V3Plan> {
     anchors: input.sourceAnchors.map((anchor) => ({ ...anchor })),
     uncertainty: DETERMINISTIC_FACADE_V3_UNCERTAINTY,
     inventory: buildInventory(input, massing, inputFingerprintSha256, parametersHashSha256),
+    styleClass,
     massing,
     tiers,
-    materials: makeMaterials(choiceHash),
+    materials: v3StyleMaterials(styleClass),
     surfaces,
     placements,
     prisms,
@@ -1405,6 +1507,24 @@ function wallQuad(out: V3Quad[], frame: SurfaceFrame, surface: V3FacadeSurface, 
   });
 }
 
+/**
+ * Wall between two heights, split at the base/shaft boundary.
+ *
+ * Row strips never straddle the boundary — it is a floor boundary — but the
+ * corner margins and a blank wall run the full height of the band, so the split
+ * has to happen here rather than at the caller. Splitting adds vertices along a
+ * shared edge, which keeps the band watertight.
+ */
+function zonedWall(out: V3Quad[], frame: SurfaceFrame, surface: V3FacadeSurface, uMin: number, vMin: number, uMax: number, vMax: number): void {
+  const boundary = surface.baseVMaxMm;
+  if (boundary <= vMin || boundary >= vMax) {
+    wallQuad(out, frame, surface, vMax <= boundary ? surface.baseMaterialId : surface.materialId, uMin, vMin, uMax, vMax);
+    return;
+  }
+  wallQuad(out, frame, surface, surface.baseMaterialId, uMin, vMin, uMax, boundary);
+  wallQuad(out, frame, surface, surface.materialId, uMin, boundary, uMax, vMax);
+}
+
 /** Five faces: the four sides of the opening plus its back, wound outward-facing. */
 function recessBox(out: V3Quad[], frame: SurfaceFrame, surface: V3FacadeSurface, glazingId: string, wallId: string, uMin: number, vMin: number, uMax: number, vMax: number, depth: number): void {
   const point = (u: number, v: number, d: number): Point3Mm => framePoint(frame, surface.uLengthMm, u, v, d);
@@ -1441,11 +1561,11 @@ export function tessellateV3Plan(plan: V3Plan, options: { includeRecesses: boole
     const frame = surfaceFrame(surface);
     const openings = openingsBySurface.get(surface.id) ?? [];
     if (openings.length === 0) {
-      wallQuad(quads, frame, surface, surface.materialId, 0, 0, surface.uLengthMm, surface.vLengthMm);
+      zonedWall(quads, frame, surface, 0, 0, surface.uLengthMm, surface.vLengthMm);
     } else {
-      // Corner-clearance margins, full height, one quad each.
-      wallQuad(quads, frame, surface, surface.materialId, 0, 0, surface.uStartMm, surface.vLengthMm);
-      wallQuad(quads, frame, surface, surface.materialId, surface.uEndMm, 0, surface.uLengthMm, surface.vLengthMm);
+      // Corner-clearance margins, full height, split at the zone boundary.
+      zonedWall(quads, frame, surface, 0, 0, surface.uStartMm, surface.vLengthMm);
+      zonedWall(quads, frame, surface, surface.uEndMm, 0, surface.uLengthMm, surface.vLengthMm);
       // Rows: one band of openings each, tiled by two strips and n+1 piers.
       const rows = new Map<string, V3Placement[]>();
       for (const opening of openings) {
@@ -1458,18 +1578,19 @@ export function tessellateV3Plan(plan: V3Plan, options: { includeRecesses: boole
       for (const row of ordered) {
         const vMin = row[0]!.bounds.vMinMm;
         const vMax = row[0]!.bounds.vMaxMm;
-        wallQuad(quads, frame, surface, surface.materialId, surface.uStartMm, previousTop, surface.uEndMm, vMin);
+        zonedWall(quads, frame, surface, surface.uStartMm, previousTop, surface.uEndMm, vMin);
+        const rowMaterialId = vMax <= surface.baseVMaxMm ? surface.baseMaterialId : surface.materialId;
         let cursor = surface.uStartMm;
         for (const opening of row) {
-          wallQuad(quads, frame, surface, surface.materialId, cursor, vMin, opening.bounds.uMinMm, vMax);
-          if (options.includeRecesses) recessBox(quads, frame, surface, opening.materialId, surface.materialId, opening.bounds.uMinMm, vMin, opening.bounds.uMaxMm, vMax, opening.depthMm);
+          wallQuad(quads, frame, surface, rowMaterialId, cursor, vMin, opening.bounds.uMinMm, vMax);
+          if (options.includeRecesses) recessBox(quads, frame, surface, opening.materialId, rowMaterialId, opening.bounds.uMinMm, vMin, opening.bounds.uMaxMm, vMax, opening.depthMm);
           else wallQuad(quads, frame, surface, opening.materialId, opening.bounds.uMinMm, vMin, opening.bounds.uMaxMm, vMax);
           cursor = opening.bounds.uMaxMm;
         }
-        wallQuad(quads, frame, surface, surface.materialId, cursor, vMin, surface.uEndMm, vMax);
+        wallQuad(quads, frame, surface, rowMaterialId, cursor, vMin, surface.uEndMm, vMax);
         previousTop = vMax;
       }
-      wallQuad(quads, frame, surface, surface.materialId, surface.uStartMm, previousTop, surface.uEndMm, surface.vLengthMm);
+      zonedWall(quads, frame, surface, surface.uStartMm, previousTop, surface.uEndMm, surface.vLengthMm);
     }
     if (!options.includeRecesses) continue;
     for (const attachment of attachmentsBySurface.get(surface.id) ?? []) {
