@@ -18,7 +18,7 @@ import {
 import { sha256HexSync, stableSerialize } from "../domain/deterministic-hash.ts";
 import type { ExteriorOwnershipCell } from "./exterior-release.ts";
 import type { ImmutablePin } from "./multi-lod-assembly.ts";
-import { V3_QUALITY_BUDGETS } from "./block835-v3-package.ts";
+import { proceduralTextureProvenance, type ProceduralTextureProvenance } from "./procedural-texture.ts";
 import type { MidtownCoreBuildingSource } from "./midtown-core-materialization.ts";
 import { midtownCoreGlbBounds } from "./midtown-core-source.ts";
 import {
@@ -31,13 +31,14 @@ import {
   MIDTOWN_CORE_V3_RELEASE_ID,
   MIDTOWN_CORE_V3_SEED,
   MIDTOWN_CORE_V3_TOOL,
-  MIDTOWN_CORE_V3_UNCERTAINTY,
   MIDTOWN_CORE_V3_VOLUME_TOLERANCE,
+  MIDTOWN_CORE_V3_WAVE_PROFILE,
   MidtownCoreV3Stop,
   buildMidtownCoreV3Plan,
   midtownCoreV3AssetRef,
   writeMidtownCoreV3Assets,
   type MidtownCoreV3Registration,
+  type V3WaveProfile,
 } from "./midtown-core-v3-materialization.ts";
 import { midtownCoreV3RefusalReason } from "./midtown-core-v3-release.ts";
 
@@ -63,6 +64,16 @@ export interface MidtownCoreV3Census {
   maximumMaterialCount: number;
   triangleBudget: number;
   materialBudget: number;
+  textureBudget: number;
+  /** Worst declared texture count over every generated LOD of this pass. */
+  maximumTextureCount: number;
+  /**
+   * The texture catalogue the shipped tiles were rasterized from, or `null` for
+   * a texture-free wave. Pinning the rasterizer version and the parameters hash
+   * into the census is what makes "these bytes came from this profile" a
+   * checkable statement rather than a claim.
+   */
+  textureCatalog: ProceduralTextureProvenance | null;
   totalShippedTriangleCount: number;
   fallbackHeightCount: number;
   uniquePlanHashCount: number;
@@ -113,6 +124,11 @@ export interface MidtownCoreV3MaterializeInput {
    * instead of kept.
    */
   retain?: "shipped-bytes" | "census-only";
+  /**
+   * Wave identity, budgets and texture policy. Defaults to wave `w01`'s, so the
+   * midtown pipeline calls this function exactly as it always did.
+   */
+  profile?: V3WaveProfile;
 }
 
 /**
@@ -126,6 +142,7 @@ export interface MidtownCoreV3MaterializeInput {
  * about a building.
  */
 export function materializeMidtownCoreV3Cells(input: MidtownCoreV3MaterializeInput): MidtownCoreV3Materialization {
+  const profile = input.profile ?? MIDTOWN_CORE_V3_WAVE_PROFILE;
   const buildings: MidtownCoreMaterializedBuilding[] = [];
   const assetBytes = new Map<string, Uint8Array>();
   const refusals = new Map<string, string>();
@@ -144,6 +161,7 @@ export function materializeMidtownCoreV3Cells(input: MidtownCoreV3MaterializeInp
   let totalShippedTriangleCount = 0;
   let maximumTriangleCount = 0;
   let maximumMaterialCount = 0;
+  let maximumTextureCount = 0;
   let fallbackHeightCount = 0;
   let reversedRingCount = 0;
   let worstVolumeDeviation = 0;
@@ -170,7 +188,7 @@ export function materializeMidtownCoreV3Cells(input: MidtownCoreV3MaterializeInp
       resolved += 1;
       let context;
       try {
-        context = buildMidtownCoreV3Plan(source, input.baseManifestChecksumSha256);
+        context = buildMidtownCoreV3Plan(source, input.baseManifestChecksumSha256, profile);
       } catch (error) {
         if (!(error instanceof MidtownCoreV3Stop)) throw error;
         refuse(buildingId, error.code, error.detail);
@@ -183,6 +201,7 @@ export function materializeMidtownCoreV3Cells(input: MidtownCoreV3MaterializeInp
           capturedAt: input.capture.capturedAt,
           updatedAt: input.capture.updatedAt,
           predecessor: input.predecessorAssets?.get(buildingId) ?? null,
+          profile,
         });
       } catch (error) {
         if (!(error instanceof MidtownCoreV3Stop)) throw error;
@@ -206,6 +225,7 @@ export function materializeMidtownCoreV3Cells(input: MidtownCoreV3MaterializeInp
         generatedAssetBytes += asset.bytes.byteLength;
         maximumTriangleCount = Math.max(maximumTriangleCount, asset.counts.triangleCount);
         maximumMaterialCount = Math.max(maximumMaterialCount, asset.counts.materialCount);
+        maximumTextureCount = Math.max(maximumTextureCount, asset.counts.textureCount);
         worstVolumeDeviation = Math.max(worstVolumeDeviation, asset.volumeDeviation);
         if (asset.lodId !== MIDTOWN_CORE_SHIPPED_LOD_ID && input.retainAllLods !== true) continue;
         if (asset.relativeRef !== midtownCoreV3AssetRef(buildingId, asset.lodId)) fail(`asset ref drifted for ${buildingId} ${asset.lodId}.`);
@@ -233,7 +253,7 @@ export function materializeMidtownCoreV3Cells(input: MidtownCoreV3MaterializeInp
         sourceRecordId: source.sourceRecordId,
         planId: context.plan.planId,
         planHashSha256: context.plan.planHashSha256,
-        uncertainty: MIDTOWN_CORE_V3_UNCERTAINTY,
+        uncertainty: profile.uncertainty,
         inventory: context.plan.inventory,
         assets: shipped,
         predecessor: input.predecessorAssets?.get(buildingId) ?? null,
@@ -260,8 +280,11 @@ export function materializeMidtownCoreV3Cells(input: MidtownCoreV3MaterializeInp
       shippedAssetBytes,
       maximumTriangleCount,
       maximumMaterialCount,
-      triangleBudget: V3_QUALITY_BUDGETS.maxTriangles,
-      materialBudget: V3_QUALITY_BUDGETS.maxMaterials,
+      triangleBudget: profile.budgets.maxTriangles,
+      materialBudget: profile.budgets.maxMaterials,
+      textureBudget: profile.budgets.maxTextures,
+      maximumTextureCount,
+      textureCatalog: profile.texture === null ? null : proceduralTextureProvenance(),
       totalShippedTriangleCount,
       fallbackHeightCount,
       uniquePlanHashCount: planHashes.size,
@@ -287,10 +310,12 @@ export interface MidtownCoreV3StageFingerprintInput {
   baseManifestChecksumSha256: string;
   parentLedgerChecksumSha256: string;
   subsetLedgerChecksumSha256: string;
-  /** Checksum of the V2 wave's committed inventory, which supplies every pin. */
+  /** Checksum of the predecessor wave's committed inventory, which supplies every pin. */
   predecessorInventoryChecksumSha256: string;
   renderableCellCount: number;
   shippedLodId: string;
+  /** Wave identity, budgets and texture policy. Defaults to wave `w01`'s. */
+  profile?: V3WaveProfile;
 }
 
 /**
@@ -298,14 +323,21 @@ export interface MidtownCoreV3StageFingerprintInput {
  *
  * It covers the GENERATOR as well as the inputs — V3 schema and generator
  * version, this wave's own tool version, seed and frozen generation instant, the
- * V3 quality budgets and the volume tolerance — so a receipt taken before any of
- * those moved is not reusable after. It additionally covers the predecessor
- * inventory's checksum: the successor's per-asset pins are derived from it, so a
- * changed predecessor record must invalidate every stage.
+ * wave's quality budgets and the volume tolerance — so a receipt taken before
+ * any of those moved is not reusable after. It additionally covers the
+ * predecessor inventory's checksum: a successor's per-asset pins are derived
+ * from it, so a changed predecessor record must invalidate every stage.
+ *
+ * A TEXTURED wave additionally binds the rasterizer version and the parameters
+ * hash of the tile catalogue: the tiles are embedded in the emitted bytes, so a
+ * rasterizer change has to invalidate a receipt exactly as a grammar change
+ * does. The key is emitted only when the wave is textured, so wave `w01`'s
+ * fingerprints are the values they always were.
  */
 export function midtownCoreV3StageFingerprint(input: MidtownCoreV3StageFingerprintInput): string {
+  const profile = input.profile ?? MIDTOWN_CORE_V3_WAVE_PROFILE;
   return sha256HexSync(stableSerialize({
-    releaseId: MIDTOWN_CORE_V3_RELEASE_ID,
+    releaseId: profile.releaseId,
     stage: input.stage,
     baseManifestChecksumSha256: input.baseManifestChecksumSha256,
     parentLedgerChecksumSha256: input.parentLedgerChecksumSha256,
@@ -316,11 +348,17 @@ export function midtownCoreV3StageFingerprint(input: MidtownCoreV3StageFingerpri
     generator: {
       schemaVersion: DETERMINISTIC_FACADE_V3_SCHEMA_VERSION,
       generatorVersion: DETERMINISTIC_FACADE_V3_GENERATOR_VERSION,
-      tool: { ...MIDTOWN_CORE_V3_TOOL },
-      seed: MIDTOWN_CORE_V3_SEED,
-      generatedAt: MIDTOWN_CORE_V3_GENERATED_AT,
-      budgets: { ...V3_QUALITY_BUDGETS },
+      tool: { ...profile.tool },
+      seed: profile.seed,
+      generatedAt: profile.generatedAt,
+      budgets: { ...profile.budgets },
       volumeTolerance: MIDTOWN_CORE_V3_VOLUME_TOLERANCE,
+      ...(profile.texture === null ? {} : {
+        texture: {
+          ...proceduralTextureProvenance(),
+          ...(profile.textureFilter ? { samplerFilter: { ...profile.textureFilter } } : {}),
+        },
+      }),
     },
   }));
 }
