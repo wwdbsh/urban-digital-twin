@@ -1,0 +1,1497 @@
+{
+  "schemaVersion": "1.0",
+  "releaseId": "manhattan-northern-manhattan-cells-20260812-p1",
+  "payloadDirectory": "public/data/manhattan-northern-manhattan-cells-20260812-p1",
+  "note": "The payload directory is intentionally untracked, following the citywide precedent. This inventory is the committed record that keeps every emitted byte checkable after the local tree is removed; `node scripts/northern-manhattan-cli.mjs graph --release p1 --force` rebuilds it byte-identically. RIGHTS: this successor ships under the CANARY's approval instrument, carried unedited — same approval id, scope text, exclusions and note, and therefore the same fingerprint — because amending it would move the fingerprint the canary's own committed release graph pins and would falsify what was approved. That instrument's opening sentence names the release it was authored for, `manhattan-northern-manhattan-cells-20260812`, and is the only part of it that is about that release rather than about wave w05; every operative clause was checked against this release and holds, including the bounded-subset clause that is exactly what differs here. This release adds no source, no verb and no envelope to it, AND IT RESTS ON NO FRESH SIGNATURE: promotion did not obtain one, nobody was asked to approve wave w05 for default activation, and the authority is the two recorded items the canary's note names and no others. THE INSTRUMENT'S LAST-WAVE CLAUSE APPLIES AT FULL FORCE AND STILL BROADENS NOTHING: with this release completed coverage becomes a fact about the promoted DEFAULT rather than only about approved releases, and that is still an arithmetic property of the partition rather than a verb, a source or an audience — the verbs are the 2026-08-11 verbs, the source is the same pinned jh45-qr5r snapshot, public internet deployment stays excluded, and nothing here authorizes assembling the six waves into a redistributable whole that no single wave's instrument would permit. CACHE: the occupancy below is derived against the UNCHANGED 512-entry cap. The 36-entry reservation T020 recorded is CONSUMED by this promotion and recorded as consumed — see `occupancy.reservationStatement` for the decision it inherits, the arithmetic that produced 42 and 36, what the 2-entry surplus is and why it is not taken, and the ledger-wide occupancy end-state this promotion produces.",
+  "base": {
+    "releaseId": "manhattan-citywide-20260804",
+    "manifestChecksumSha256": "acb5a9b52014f86535c8478e7d4e516efc03f6dff95c17e9896dfea4413c203c"
+  },
+  "parentLedger": {
+    "releaseId": "manhattan-exterior-wave-ledger-20260804",
+    "checksumSha256": "62e093d2ca50b54b49fd8bbad9d0b11f6301b2b197623deb343f9ea915e59016"
+  },
+  "predecessor": {
+    "releaseId": "manhattan-northern-manhattan-cells-20260812",
+    "inventoryChecksumSha256": "fca8e92876423d2a7a92ae2ec53deec4796410a955702c2d22519b87dd425ddd",
+    "publicRootChecksumSha256": "1bbd97abbc36ae5fffdce7ee27317f3842afb7dfc22dec1bb72775d693d9831a",
+    "snapshotChecksumSha256": "c64eb93c503262e2573977837815e1eca131a11cb10e1b120f7e03f24cc7ab92"
+  },
+  "ownershipLedgerId": "ownership-ledger:manhattan-northern-manhattan-cells-20260812:994417d633bc5e4f",
+  "textureAdmission": {
+    "policy": "procedural-replay",
+    "profile": "procedural-texture-v1",
+    "rasterizerVersion": "1.0.0",
+    "parametersHashSha256": "121fb53e9b3b08ce3b7fa00ec5d370466c5ae2861b8966cccbfa19861ab438ff",
+    "samplerFilter": {
+      "magFilter": 9729,
+      "minFilter": 9987
+    }
+  },
+  "occupancy": {
+    "maxCacheEntries": 512,
+    "promotedWaves": [
+      {
+        "releaseId": "manhattan-exterior-cells-20260811-v3",
+        "assetEntries": 28
+      },
+      {
+        "releaseId": "manhattan-midtown-core-cells-20260811-v3",
+        "assetEntries": 156
+      },
+      {
+        "releaseId": "manhattan-lower-manhattan-cells-20260812-p1",
+        "assetEntries": 71
+      },
+      {
+        "releaseId": "manhattan-southern-remainder-cells-20260812-p1",
+        "assetEntries": 179
+      },
+      {
+        "releaseId": "manhattan-central-upper-manhattan-cells-20260812-p1",
+        "assetEntries": 40
+      }
+    ],
+    "promotedWaveCount": 5,
+    "promotedAssetEntries": 474,
+    "alongsidePromotedHeadroom": 38,
+    "reservation": {
+      "fromReleaseId": "manhattan-central-upper-manhattan-cells-20260812-p1",
+      "forWaveId": "northern-manhattan",
+      "entries": 36,
+      "splitResponse": 2,
+      "splitFromHeadroomEntries": 78,
+      "splitTakenByPredecessorEntries": 42
+    },
+    "reservationStatement": "THIS PROMOTION OPENS NO SPLIT; IT CONSUMES ONE. ADR 0036 Decision 3 named three admissible responses to a 78-entry headroom two unpromoted waves had to share, and T020 took RESPONSE 2 — the two remaining waves split it at sub-median scale — proportional to canonical buildings: 78 x 11,721 / (11,721 + 10,230) = 41.65, so wave w04 took 42 entries and wave w05 was RESERVED the remaining 36. That reservation is recorded in manhattan-central-upper-manhattan-cells-20260812-p1's own committed payload-inventory.json, and this release reads both halves back out of those bytes and requires them to reconstitute the 78-entry headroom they were split out of; a predecessor re-emitted with a different share, a different headroom, or a reservation edited on its own fails this build rather than quietly re-sizing this promotion. THE RESERVATION IS CONSUMED AND RECORDED AS CONSUMED. The entry budget applied here is 36, the promoted subset ships 24 assets, and 12 of the reserved entries are left unspent. TWO NUMBERS DIFFER AND BOTH ARE RECORDED: 38 entries are actually free — 512 minus the 474 the five promoted waves ship — while 36 were promised, and the 2-entry surplus is what wave w04's promotion did not spend of its own 42-entry share. This release is bound by the 36 it was PROMISED rather than by the 38 that happen to be free, and it does not re-open the split to take them. THE SURPLUS WOULD HAVE BOUGHT NOTHING: no cell of this wave owning 37 or 38 buildings carries a single building at the 90 m skyline threshold, so a 38-entry budget selects the same cell as a 36-entry one. THE 12 UNSPENT ENTRIES ARE NOT AN OVERSIGHT. Cell 727 owns 24 and its four edge-neighbours own 40, 41, 53 and 89, so no second cell can join it inside the reservation; the only way to spend the remainder is a second, non-adjacent island, and edge-contiguity is a precondition of this curation rather than a tie-break. THE LEDGER-WIDE END STATE, stated in full because this is the LAST wave: the six promoted waves occupy 28 + 156 + 71 + 179 + 40 + 24 = 498 of 512 exterior cache entries, leaving 14 entries of headroom and no unpromoted wave to reserve them for. The cache cap is UNCHANGED at 512 entries and 256 MiB, and EXTERIOR_RUNTIME_BUDGETS is not edited by this release. Every occupancy figure here is a count of shipped GLB artifacts on disk, on the accounting T020 adopted when it considered and rejected ADR 0034's response 3.",
+    "headroomExceedsReservationBy": 2,
+    "reservationConsumed": true,
+    "isLastUnpromotedWave": true,
+    "remainingUnpromotedWaveIds": [
+      "northern-manhattan"
+    ],
+    "promotedWaveCountAfterThisRelease": 6,
+    "completesLedgerCoverage": true,
+    "entryBudget": 36
+  },
+  "renderableCellIds": [
+    "manhattan-exterior-cell-w05-000727-17-38611-35819"
+  ],
+  "curation": {
+    "basis": "curated-list",
+    "statement": "The promoted renderable subset of wave w05 is an EXPLICIT CURATED LIST of one ownership cell, not a re-derivation of the wave ledger's cell order. The canary's order-derived cell 701 is the wave's FIRST ground rather than its best, and ADR 0037 precondition (b) forbids inheriting it; it does not appear here. THE DECISION RULE IS LEXICOGRAPHIC AND IS STATED IN THE ORDER IT WAS APPLIED. (1) EDGE-CONTIGUITY IS A PRECONDITION, not a tie-break: a promoted subset must render as one continuous piece of city rather than as scattered textured islands with untextured ground between them. (2) FIT THE 36-ENTRY INHERITED RESERVATION, which is the w05 half of ADR 0036's 78-entry split, recorded by T020 in its own committed bytes and read back out of them rather than retyped. (3) MAXIMIZE SKYLINE VALUE — the count of owned buildings whose sourced height reaches 90 m — subject to those two. (4) TIE-BREAK ON WHOLE CELLS: at equal skyline value, admit MORE WHOLE CELLS. Key 4 is NEVER REACHED here, because key 3 already leaves exactly one candidate, and it is stated rather than dropped because this is the wave w04 rule applied unchanged. THE ENUMERATION IS OVER THE WHOLE WAVE: all 182 owned cells, not a band drawn after the answer was known. Under that rule the maximum reachable skyline score is 1 AT ANY SIZE, and exactly one connected admissible subset reaches it: {727} at 24 owned. WHAT EACH PRECONDITION COSTS IS RECORDED SEPARATELY AND THEY ARE NOT THE SAME SIZE. Contiguity costs NOTHING on score — dropping it, the best 36-entry subset is {711, 727, 836, 838, 850} at 35 owned, the same score of 1 in five separate pieces — against four skyline buildings for wave w04 and two for w03. THE RESERVATION IS WHAT COSTS: the wave's best skyline cell, 778, carries FIVE buildings at 90 m or more, all of them at 102.4 m, and is refused solely because it owns 79 buildings against a 36-entry reservation. THE 90 m THRESHOLD IS CARRIED FORWARD UNCHANGED AND WAS CHECKED AGAINST THIS WAVE, AND THE ANSWER IS WEAKER THAN WAVE w04'S. It selects 19 of 10,214 sourced heights (0.19%, against 1.20% for wave w04) across 9 of 182 cells and exactly ONE of the 50 cells that fit the reservation; northern Manhattan is genuinely lower-rise, its tallest sourced structure being 123.1 m. THE RANKING DOES DEPEND ON THE THRESHOLD HERE, WHICH WAVE w04 COULD SAY IT DID NOT: under the same rule this wave would promote {714, 715} at 30 m, {852} at 45 m, {707} at 60 and 75 m, {727} at 90 and 100 m, and nothing at all at 120 m. THE ARBITRARY FIFTH KEY IS REACHED AT TWO OF THE SEVEN THRESHOLDS AND THAT IS RECORDED RATHER THAN OMITTED: at 60 m cells 707 and 782 tie on both scoring keys and only the lexicographic fallback separates them, and at 120 m nothing scores at all. At the STATED 90 m threshold key 3 alone leaves one candidate, so neither key 4 nor key 5 decides this promotion. THE THRESHOLD WAS NOT MOVED AFTER THE ANSWER WAS KNOWN — choosing a threshold for the cell it selects is the same defect as moving a tolerance to pass a gate — and the sensitivity is recorded and re-enumerated at all seven thresholds instead. A THRESHOLD-FREE KEY AGREES: cell 727 also carries the tallest sourced structure of any cell that fits the reservation, 101.5 m against 79.8 m. THE SUBSET IS ONE CELL AND 12 OF THE 36 RESERVED ENTRIES ARE LEFT UNSPENT, because cell 727's four edge-neighbours own 40, 41, 53 and 89 buildings and none of them fits beside it; the only way to spend the remainder is a second, non-adjacent island, which precondition (1) refuses.",
+    "cells": [
+      {
+        "cellId": "manhattan-exterior-cell-w05-000727-17-38611-35819",
+        "parentOrder": 727,
+        "rationale": "The one cell of this wave that fits the inherited 36-entry reservation AND carries a building at the stated 90 m skyline threshold, which is the whole of why this subset is this cell. Its bounds run from -73.95172 to -73.94897 east and 40.80872 to 40.81009 north — a roughly 231-metre by 152-metre block band in central Harlem covering the West 125th Street corridor between approximately Frederick Douglass Boulevard and Adam Clayton Powell Jr. Boulevard. It owns 24 buildings and all 24 carry a sourced height. ITS TALL STRUCTURE IS ALSO THE TALLEST IN ANY ADMISSIBLE CELL: 101.5 m, against 79.8 m for the next-tallest cell that fits the reservation, so the selection is the maximum on a threshold-free criterion as well as on the stated one. It is NOT a tower district and the record does not pretend otherwise: the same cell carries three buildings at 30 m or more and two at 45 m, so the tall structure stands over four- to eight-storey Harlem stock rather than inside a wall of towers. That is what northern Manhattan is, and promoting a curated subset of it should look like it. 24 owned, 24 materialize, NONE refused."
+      }
+    ],
+    "refusal": {
+      "ownedBuildingCount": 24,
+      "materializedBuildingCount": 24,
+      "refusedBuildingCount": 0,
+      "localRefusalRate": 0,
+      "waveRefusalRate": 0.037243401759530795,
+      "maxRefusalRate": 0.07448680351906159,
+      "localRateExceedsWaveRate": false,
+      "refusalGranularity": 0.041666666666666664,
+      "ok": true
+    },
+    "volumeMargin": {
+      "buildingsChecked": 24,
+      "buildingsAccepted": 24,
+      "buildingsRejected": 0,
+      "worstVolumeDeviation": 1.8181954616596268e-7,
+      "tolerance": 0.000001,
+      "worstDeviationAsFractionOfTolerance": 0.1818195461659627,
+      "waveWorstDeviationAsFractionOfTolerance": 0.989500294880465,
+      "betterThanWave": true,
+      "ok": true
+    }
+  },
+  "roots": {
+    "private": {
+      "rootId": "root:manhattan-northern-manhattan-cells-20260812-p1:private",
+      "rootChecksumSha256": "8bc2d5ca7f3bc99c29636cc924bef9f4e14da3d69b2c217609d1a73f659ec3de",
+      "artifactCount": 1
+    },
+    "public": {
+      "rootId": "root:manhattan-northern-manhattan-cells-20260812-p1:public",
+      "rootChecksumSha256": "dd990f70cf681727a99b6381074469fa2afa6ee212f95a9cddcdb31929b3bc0a",
+      "artifactCount": 232
+    }
+  },
+  "assemblyFingerprintSha256": "e40daf42dae8676d6d8c4ee35a621e2b147fe3f2f3a6e2d3704484fe0a6a4c4e",
+  "stats": {
+    "cellCount": 182,
+    "renderableCellCount": 1,
+    "notShippedCellCount": 181,
+    "ownedBuildingCount": 10230,
+    "availableBuildingCount": 24,
+    "unavailableBuildingCount": 10206,
+    "refusedBuildingCount": 0,
+    "shippedAssetCount": 24,
+    "shippedAssetBytes": 4219756,
+    "graphBytes": 6990834,
+    "indexBytes": 701,
+    "assembliesBytes": 65808,
+    "artifactBytes": 5667761,
+    "totalPayloadBytes": 16952743
+  },
+  "census": {
+    "requestedBuildingCount": 24,
+    "resolvedBuildingCount": 24,
+    "materializedBuildingCount": 24,
+    "refusedBuildingCount": 0,
+    "tierCollapseAbsentSetbackCount": 7,
+    "generatedAssetCount": 48,
+    "generatedAssetBytes": 5154580,
+    "retention": "shipped-bytes",
+    "shippedAssetCount": 24,
+    "shippedAssetBytes": 4219756,
+    "maximumTriangleCount": 12554,
+    "maximumMaterialCount": 9,
+    "triangleBudget": 200000,
+    "materialBudget": 12,
+    "textureBudget": 4,
+    "maximumTextureCount": 3,
+    "textureCatalog": {
+      "profile": "procedural-texture-v1",
+      "rasterizerVersion": "1.0.0",
+      "parametersHashSha256": "121fb53e9b3b08ce3b7fa00ec5d370466c5ae2861b8966cccbfa19861ab438ff"
+    },
+    "totalShippedTriangleCount": 54076,
+    "fallbackHeightCount": 0,
+    "uniquePlanHashCount": 24,
+    "reversedRingCount": 24,
+    "worstVolumeDeviation": 1.8181954616596268e-7,
+    "worstPerVertexShapeDeviationMeters": 0.000682824829448748,
+    "worstHorizontalDeviationMeters": 0.00024999980225698685,
+    "worstVerticalDeviationMeters": 0.0004800000000013682,
+    "maximumRingVertexCount": 30,
+    "refusalsByCode": {},
+    "styleClassCounts": {
+      "masonry-warm": 13,
+      "masonry-light": 6,
+      "stone-neutral": 2,
+      "curtain-cool": 3
+    }
+  },
+  "absentSetbackBuildingIds": [
+    "doitt:1097877",
+    "doitt:1114218",
+    "doitt:169205",
+    "doitt:275061",
+    "doitt:342401",
+    "doitt:527486",
+    "doitt:728255"
+  ],
+  "refusedBuildingIds": [],
+  "totals": {
+    "fileCount": 260,
+    "byteSize": 16952743
+  },
+  "files": [
+    {
+      "path": "assemblies.json",
+      "byteSize": 65808,
+      "checksumSha256": "fe0a16b52cc5bdcad419ad7dcc091da3844f63a65053a94fbb1bb7bb9f456af9"
+    },
+    {
+      "path": "index.json",
+      "byteSize": 701,
+      "checksumSha256": "7b37fd6fd9eeb53937f3e6f364aa8286c8383393275f673a073ae4d76e9bea0d"
+    },
+    {
+      "path": "public/assets/doitt-1097877__lod_0.glb",
+      "byteSize": 102616,
+      "checksumSha256": "ae786531ed5dbf3dba9163cee33b3bf36499defbaf8fd93bbdfdf500595f5622"
+    },
+    {
+      "path": "public/assets/doitt-1114218__lod_0.glb",
+      "byteSize": 362388,
+      "checksumSha256": "56c64d235bc5646dea002a2b49eb8580983e56f977541548d1a654823dabc8cc"
+    },
+    {
+      "path": "public/assets/doitt-169205__lod_0.glb",
+      "byteSize": 203404,
+      "checksumSha256": "86abb04e622e5a573abfaf390e512e6e34a0e9887eada2e88c3071fc745bd7d8"
+    },
+    {
+      "path": "public/assets/doitt-207890__lod_0.glb",
+      "byteSize": 158536,
+      "checksumSha256": "ed81dc495fbf900691219165f56be720f22512ee45f504c06bc72a504e1b56e3"
+    },
+    {
+      "path": "public/assets/doitt-24171__lod_0.glb",
+      "byteSize": 127316,
+      "checksumSha256": "ffd2b5c371962601d05ae68ca82bffb6a8ef4ded934371dcc0ef95283268f702"
+    },
+    {
+      "path": "public/assets/doitt-252214__lod_0.glb",
+      "byteSize": 105480,
+      "checksumSha256": "a56f0a6d00dd6b6f97700803d0791c58299abc1d8c33034ac40c50979634df9b"
+    },
+    {
+      "path": "public/assets/doitt-272678__lod_0.glb",
+      "byteSize": 164140,
+      "checksumSha256": "f9ebdeadc70bf491e9ecec13e862663430c8c78f708e64588b532cbe639544ab"
+    },
+    {
+      "path": "public/assets/doitt-275061__lod_0.glb",
+      "byteSize": 114556,
+      "checksumSha256": "e1c9d839f997046d3e199c9f875b1b7b88e2d7cc22bdf5151cd4d9ae8e8d298e"
+    },
+    {
+      "path": "public/assets/doitt-342401__lod_0.glb",
+      "byteSize": 711792,
+      "checksumSha256": "6b5d3cecaa6cc2a3499fcf6e0a109576537a8fb5f4228a620ef0b5594e548d1e"
+    },
+    {
+      "path": "public/assets/doitt-365535__lod_0.glb",
+      "byteSize": 91812,
+      "checksumSha256": "271fda35309498c0789a80a70a2b07cf06b8d8d70367cca99dd1da012522dd5a"
+    },
+    {
+      "path": "public/assets/doitt-481354__lod_0.glb",
+      "byteSize": 96672,
+      "checksumSha256": "77eb141eed4e7658081fb748ad552ba668c99f4be70418cf57b059af0878efa6"
+    },
+    {
+      "path": "public/assets/doitt-494791__lod_0.glb",
+      "byteSize": 155320,
+      "checksumSha256": "56cd435c154174a5b1f1650d9528450256aa8cba811620a676c771df0fed10c5"
+    },
+    {
+      "path": "public/assets/doitt-504530__lod_0.glb",
+      "byteSize": 136424,
+      "checksumSha256": "3ee253c5493b9528021c0c507d3b6b005306fc710c3c0f9e55df916398dde647"
+    },
+    {
+      "path": "public/assets/doitt-514180__lod_0.glb",
+      "byteSize": 90832,
+      "checksumSha256": "c4c0abde552eccb08f864d8d5c780f7557aaeecdd2aa403af56969dbf44c9291"
+    },
+    {
+      "path": "public/assets/doitt-527486__lod_0.glb",
+      "byteSize": 94084,
+      "checksumSha256": "06ee14130c7adafeffc46f45148b69018188cb09647d81fdf015e860e58493b8"
+    },
+    {
+      "path": "public/assets/doitt-606408__lod_0.glb",
+      "byteSize": 96108,
+      "checksumSha256": "2d3b8060a80c0491b39f7ab7ab6421a9fd0d57e97f97b175b65158bbc982b7d8"
+    },
+    {
+      "path": "public/assets/doitt-624061__lod_0.glb",
+      "byteSize": 134628,
+      "checksumSha256": "90b67cd0f033d05ee896c8dd9006906a47ef024900296901a9bf8e93fbdf01db"
+    },
+    {
+      "path": "public/assets/doitt-655028__lod_0.glb",
+      "byteSize": 93916,
+      "checksumSha256": "3bdcac0e99098bdcbdf93490fa6fe338100cb1f209e42bc2bfec38622c635fb8"
+    },
+    {
+      "path": "public/assets/doitt-668411__lod_0.glb",
+      "byteSize": 418160,
+      "checksumSha256": "b2448ac64ca22c0c57f6d9be70f0fcd3f0e7d0cd37ed6041307c33fec12ec83c"
+    },
+    {
+      "path": "public/assets/doitt-728255__lod_0.glb",
+      "byteSize": 174364,
+      "checksumSha256": "3c4127df0ca43ffbad4b108044a2947fe397ac5120a1ec5165afead2597434f0"
+    },
+    {
+      "path": "public/assets/doitt-806389__lod_0.glb",
+      "byteSize": 214568,
+      "checksumSha256": "5250e936fc7930aeb99b9fd414cf34d4aee841150c9b52f8ecef9799ffd42055"
+    },
+    {
+      "path": "public/assets/doitt-830007__lod_0.glb",
+      "byteSize": 147576,
+      "checksumSha256": "45361113010a8263482d8c859d1e7f7dc0ade882288676d64d6fb0f5b06713a5"
+    },
+    {
+      "path": "public/assets/doitt-835362__lod_0.glb",
+      "byteSize": 114848,
+      "checksumSha256": "43199602f4ded908f3b9f3c60ec95a66b71079e0955fcdce27784a68525891b6"
+    },
+    {
+      "path": "public/assets/doitt-950553__lod_0.glb",
+      "byteSize": 110216,
+      "checksumSha256": "5264d990c008d3959de8274fdc53a3196940fbc68e9984890456dddf5ab04a77"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000701-15-9651-8954-v1.json",
+      "byteSize": 39502,
+      "checksumSha256": "1217983099a66ffa89cbda194df734b0689d2864cd73ebfe3d3da9d4ce712f3a"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000702-16-19302-17910-v1.json",
+      "byteSize": 21351,
+      "checksumSha256": "7696a030978a36aaa0ac289d9279369e0c6043034469ff7bdc2c53386f8e072a"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000703-16-19303-17910-v1.json",
+      "byteSize": 31219,
+      "checksumSha256": "c2f1fc691ca688dab32a089d99340b7f6ee24c895e72e700ac385012a56041cc"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000704-16-19302-17911-v1.json",
+      "byteSize": 29989,
+      "checksumSha256": "fff1e532ae683d318e7b0f59b9b2e0c6250e465b854579c4acf5fa22c7684366"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000705-16-19303-17911-v1.json",
+      "byteSize": 42750,
+      "checksumSha256": "ddcea7dab4bd109d820e13d8c72d386ad904545d1c2aea6b94e6e8d99fba8886"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000706-17-38610-35816-v1.json",
+      "byteSize": 18881,
+      "checksumSha256": "298fc2bcdd9a7125b83019bd97ce3f5b0821c5f5e0457bba47cd153daa13a377"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000707-17-38611-35816-v1.json",
+      "byteSize": 8589,
+      "checksumSha256": "31088ef59b8bbd05b0a40b10042b232c6a6fdff56c5c22ce2b083d22535030ff"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000708-17-38612-35816-v1.json",
+      "byteSize": 31643,
+      "checksumSha256": "bd056f1b6edf65e3ec1cf6d0936dc148b17bc0a78f7dee890644189242758f4d"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000709-17-38613-35816-v1.json",
+      "byteSize": 39866,
+      "checksumSha256": "46678befb74c1eb1bbcd02d754619ccdf1de3a33697c6b15eb41a07a6ad86189"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000710-17-38614-35816-v1.json",
+      "byteSize": 21344,
+      "checksumSha256": "6794389ffbc8037146c139f358b7a33166b8171a98902135853b0a1bdfb417c1"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000711-17-38615-35816-v1.json",
+      "byteSize": 6116,
+      "checksumSha256": "5a3ff025cd1f1172d4a21bad49736a53c0bf5f71f50e20d85c8716d1d8dcd751"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000712-16-19304-17908-v1.json",
+      "byteSize": 30809,
+      "checksumSha256": "fef2940686a083fbae63059ac4c78fecec42afe3786541aca211d076dec720fe"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000713-17-38610-35817-v1.json",
+      "byteSize": 27950,
+      "checksumSha256": "a3b1ae4b6531211fcddc7a06191f5788093c85010d28649b4c7b3fdbeb3f2196"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000714-17-38611-35817-v1.json",
+      "byteSize": 15216,
+      "checksumSha256": "75a3d7b2bccaf5011aff621a39b984122dff01a4c081c362b218ab997df49e6c"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000715-17-38612-35817-v1.json",
+      "byteSize": 7773,
+      "checksumSha256": "05914d91da5229184b8874065ee46e6d0dc7bf01ba7425c44f756bc5999f1892"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000716-17-38613-35817-v1.json",
+      "byteSize": 44424,
+      "checksumSha256": "757f5979611b090881e08bdf75728008b06bedb56f02004569533fc5e5748f4d"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000717-17-38614-35817-v1.json",
+      "byteSize": 32473,
+      "checksumSha256": "17f8b37cd0ff9c7ec62e2df2c662ed3c6cec8223169a6ef766fc21d53b0b0eb8"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000718-17-38615-35817-v1.json",
+      "byteSize": 7351,
+      "checksumSha256": "ad0f5eecc22d00fd845f957409a65da8239415f5d97f7ac4684a606545e17c20"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000719-17-38610-35818-v1.json",
+      "byteSize": 13954,
+      "checksumSha256": "2f854093adb066e4a69e7152b8ac74944d35500e9c631d7c1487dc054de2a63c"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000720-17-38611-35818-v1.json",
+      "byteSize": 20542,
+      "checksumSha256": "ab4d948498d44736b3fc01cef3ce04364914b01a0e1bc38dc219cee00bea266a"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000721-17-38612-35818-v1.json",
+      "byteSize": 11069,
+      "checksumSha256": "c3d5c60a635e48cff643eb77831f2ebfe1cfff9b30c03ec2424d203baa68f4e2"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000722-17-38613-35818-v1.json",
+      "byteSize": 44439,
+      "checksumSha256": "42264aed1e1f895f6e4d09036998757322574f8f85f8b8866f05f2c1f7831e92"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000723-17-38614-35818-v1.json",
+      "byteSize": 34542,
+      "checksumSha256": "0cf8a1ee4b1a640919b0b9f77aae1c778aab848cf2ed047d53e9ef3737c9abb3"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000724-17-38615-35818-v1.json",
+      "byteSize": 27545,
+      "checksumSha256": "ab77a3c574e7caf8a5f4be50521320c7f2d7859b17049d39fc5b3a22960f4e46"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000725-16-19304-17909-v1.json",
+      "byteSize": 34930,
+      "checksumSha256": "f5b976e806253fcfaa1ae878b77315ebeeee6bd046ed0d4fb6bea4d250c416bb"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000726-17-38610-35819-v1.json",
+      "byteSize": 25877,
+      "checksumSha256": "19d16b669c36ceac07e0a35cd59a7759e5169fc7e3d37cdafbf05732c90dc332"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000727-17-38611-35819-v1.json",
+      "byteSize": 10542,
+      "checksumSha256": "60b1f085210f8ad7e089a3e86c24e446f09d2e3a38634e98975b205a3697a615"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000728-17-38612-35819-v1.json",
+      "byteSize": 20962,
+      "checksumSha256": "d9742defd63e36766eb03bd1afcc3f6201fec4a9a604c1dc49ce6aa6b7e268fb"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000729-17-38613-35819-v1.json",
+      "byteSize": 33323,
+      "checksumSha256": "1b25c8d8d2dd95f6fb5f28192cdc5a97caeda0935be5c8fd9adb26f323404a7b"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000730-17-38614-35819-v1.json",
+      "byteSize": 40312,
+      "checksumSha256": "999077f5cc01e563d89de276549fc681945b0e8809e41d685a5cf2e6e2e4d0d9"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000731-17-38615-35819-v1.json",
+      "byteSize": 26296,
+      "checksumSha256": "545415d4ed39abfa624519748667ad8655d4c670977139fad61a0acf9832ba59"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000732-17-38610-35820-v1.json",
+      "byteSize": 30018,
+      "checksumSha256": "d06e44590daaca702444f971ef13227a01eac46528c0400e47559e328ca20dcf"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000733-17-38611-35820-v1.json",
+      "byteSize": 40723,
+      "checksumSha256": "4ef1c7c1bc8b85c1b7d0aede0465a1769781c2e05497574fb978c0663d1d1157"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000734-17-38612-35820-v1.json",
+      "byteSize": 20541,
+      "checksumSha256": "01820458e5ba363cc82a46dd20b1a5688ad17c74ce1b012a4153ebe65c814a07"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000735-17-38613-35820-v1.json",
+      "byteSize": 26713,
+      "checksumSha256": "9fa12e98306c823c358b67d439b1bd74ae2724031259e9afbaef341dffe4b363"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000736-17-38614-35820-v1.json",
+      "byteSize": 45659,
+      "checksumSha256": "85dbbd93c3b0259b979679e5b0e6a4cd94b81c7e46863f71666b72d6fc98fd43"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000737-17-38615-35820-v1.json",
+      "byteSize": 36205,
+      "checksumSha256": "7bb760ff6677ac98d2f5fda488b8e778f66bd5ddc4cd7132f5322504aacb62f6"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000738-16-19304-17910-v1.json",
+      "byteSize": 52640,
+      "checksumSha256": "6f2504b10a19dfca32ca46aa55abe84d5a8db047f55f6fd8b64fed6220bb2175"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000739-17-38610-35821-v1.json",
+      "byteSize": 24651,
+      "checksumSha256": "535316425d6e81d1d751cbf9277df052a03badcb0ba3ec53cc5fb9f7e141c0bd"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000740-17-38611-35821-v1.json",
+      "byteSize": 31233,
+      "checksumSha256": "d4728fa726e406060e5d358330cccecdac9dc11615902b1c2aef20d93fbbeaab"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000741-17-38612-35821-v1.json",
+      "byteSize": 42784,
+      "checksumSha256": "48754d0f8691e2f2c75d12ccd50e1157ccc7d8419b6f65e3e2c255cffe3faf3b"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000742-17-38613-35821-v1.json",
+      "byteSize": 29607,
+      "checksumSha256": "32af58055092dbfd5f19bc4e83ceba8e42c79bd885dea5ec796bcc431c118d39"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000743-17-38614-35821-v1.json",
+      "byteSize": 26714,
+      "checksumSha256": "903c07504b5b4f8aba1ec5d0b74d74ecf54aaf28c35ed9b0fcca298ee955eff6"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000744-17-38615-35821-v1.json",
+      "byteSize": 31238,
+      "checksumSha256": "53996eb234abc0958baa66f8db02ecc36ba9cd438384203af31fa5d91e53deae"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000745-17-38608-35822-v1.json",
+      "byteSize": 14348,
+      "checksumSha256": "bfdbf5fec982818768927c9c174fed64d2febc6187203359a337574e09428aa3"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000746-17-38609-35822-v1.json",
+      "byteSize": 24242,
+      "checksumSha256": "3876540c8c0e14556b789edd075a3d6d78c92d64401168c6f0944a86f7c7cceb"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000747-17-38610-35822-v1.json",
+      "byteSize": 23821,
+      "checksumSha256": "fc7e37e170a8564be52f37e567ecc74425d282dabcb7ad25d2e82898bc27fd87"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000748-17-38611-35822-v1.json",
+      "byteSize": 44002,
+      "checksumSha256": "6d0b2c12318bb7067e862690e17ec3fee83fb0b7fd0577e3db3f9daa7404a3d5"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000749-17-38612-35822-v1.json",
+      "byteSize": 38628,
+      "checksumSha256": "924d6a27ea859c745fbe1ea8be3c84eb83497bba0cf754413cf77bfda4728a56"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000750-17-38613-35822-v1.json",
+      "byteSize": 20943,
+      "checksumSha256": "1db8b27081f99f68bffc77a4a54c54e09b1927bb800f325c1220e78732325fb5"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000751-17-38608-35823-v1.json",
+      "byteSize": 11061,
+      "checksumSha256": "d4ec4c30f3e326d08309337808de30d62d34884242f224696c752c0705e05c37"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000752-17-38609-35823-v1.json",
+      "byteSize": 30855,
+      "checksumSha256": "bf7dd11bf62f01563b73eb65b40e30614bada3acaa2b45fea7b092da7101521c"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000753-17-38610-35823-v1.json",
+      "byteSize": 19704,
+      "checksumSha256": "ac073c154f42b28271495159de6621e6c6bfdb585123a892bcb2f452b7a7bdb2"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000754-17-38611-35823-v1.json",
+      "byteSize": 49361,
+      "checksumSha256": "4f5d1d09f67d986fee0212df4f6b3c2857ca9aa25bc760e835db32427b7e187d"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000755-17-38612-35823-v1.json",
+      "byteSize": 47656,
+      "checksumSha256": "be046e05bbb7f9e3c13337ab3bc4502884a6b6eb75680abf77e237b01f0dd135"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000756-17-38613-35823-v1.json",
+      "byteSize": 13957,
+      "checksumSha256": "233f82835a7921dbf9860cb8ae0fdc2fcf8c14e1c90c00c9a510152339c49962"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000757-16-19307-17911-v1.json",
+      "byteSize": 41954,
+      "checksumSha256": "2f7c155ad73e5f9f68b99acbb33a5c31a490ff43aebf5340298e07b2f5963902"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000758-15-9654-8954-v1.json",
+      "byteSize": 27134,
+      "checksumSha256": "3982a28cd96d90dd0cacba68b7ea21e5782177c0a331dcec28c108d070e0ed4b"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000759-15-9654-8955-v1.json",
+      "byteSize": 37021,
+      "checksumSha256": "013cbe7edea1dc565860b01c68f52d17b2140bd7b3cf75795f295ba48c9cfc85"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000760-14-4825-4476-v1.json",
+      "byteSize": 14345,
+      "checksumSha256": "fa70c2896c6261ecc1f1ddc9074a59db864cb7c702ae7242527ec50b95677860"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000761-17-38610-35808-v1.json",
+      "byteSize": 17219,
+      "checksumSha256": "c28f18e9d592f32958c23a4d47483b5a50f65e50750e390c6d0b9a8ce598c6be"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000762-17-38611-35808-v1.json",
+      "byteSize": 33304,
+      "checksumSha256": "4b0ae05df69ceaaee46825665205d3f50b7ea36fae06c4cff0f1b000a6329b46"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000763-17-38612-35808-v1.json",
+      "byteSize": 39060,
+      "checksumSha256": "c28e68a91fe3213f516509edc18a5e9b0c4a3f33d19ba7154ca0a51a537fae6a"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000764-17-38613-35808-v1.json",
+      "byteSize": 35329,
+      "checksumSha256": "1e78824048d230e7d7e8c7a29cd441287a53ab0e37518216ea9d019a6e8d4420"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000765-17-38614-35808-v1.json",
+      "byteSize": 15595,
+      "checksumSha256": "50e74464861259d0122b2b2057fb24a6594534da9fd65286ff3ee60969356a93"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000766-17-38615-35808-v1.json",
+      "byteSize": 22588,
+      "checksumSha256": "fbfcc74b006289dc0659dfdb52a7149416bc83e286841fd787585b70ae1ea9b2"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000767-16-19304-17904-v1.json",
+      "byteSize": 14775,
+      "checksumSha256": "976b4983d0cf4536364095d5da109855a67bede37f7e73386095622b7cb73baf"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000768-17-38610-35809-v1.json",
+      "byteSize": 19692,
+      "checksumSha256": "ec488eb25928fd3dbc5c16369124fd6400417baeea15484d707c473ce23a583c"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000769-17-38611-35809-v1.json",
+      "byteSize": 29982,
+      "checksumSha256": "6a32b892954ce4d4fd0ec104bc742f98b22b2013ed9aa4107b224c05f4b0f518"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000770-17-38612-35809-v1.json",
+      "byteSize": 48519,
+      "checksumSha256": "c4572f11350fde21aa2a4e6bfd33ceee6b77cf0ffdbed8e62bc83824aab4bb8a"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000771-17-38613-35809-v1.json",
+      "byteSize": 33300,
+      "checksumSha256": "61a4d1861c7b2d978ec33d678cb51bdefd0ec99872a1dff378aae094d52dd6e1"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000772-17-38614-35809-v1.json",
+      "byteSize": 12297,
+      "checksumSha256": "93172ed5214468ffb4b60ab6093cc70edc92e18ac0e9d5337e4dd061e496b5a0"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000773-17-38615-35809-v1.json",
+      "byteSize": 22192,
+      "checksumSha256": "18f756d2345b8b2b0e7b4fdded3b085c573fcedc2a136bb10852dc023e28c519"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000774-17-38612-35810-v1.json",
+      "byteSize": 21766,
+      "checksumSha256": "0b00df2345ea9b2b9d88d090918a839f61619bf85bd9e68b0fbf0040818c231c"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000775-17-38613-35810-v1.json",
+      "byteSize": 23412,
+      "checksumSha256": "3fdc2f1b7f74e933e00f6b129f364fbebee86c0dfe9d6afbf560c655128015a9"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000776-17-38614-35810-v1.json",
+      "byteSize": 16820,
+      "checksumSha256": "d954e268a57caeb62686e6bf6932fbbe258e93ef27bb6fb55840cf5b3861c372"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000777-17-38615-35810-v1.json",
+      "byteSize": 18466,
+      "checksumSha256": "f8ec95007e4d8764e5d927a733b7656c91bd82e70062f0bb88c2c49f3c96defb"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000778-16-19304-17905-v1.json",
+      "byteSize": 36593,
+      "checksumSha256": "f20eade6f9390dd2013dcacca81ecb03dde09094faa59c2ca3a145788edc0fa4"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000779-16-19305-17905-v1.json",
+      "byteSize": 43975,
+      "checksumSha256": "c07d7c3280ac69ea2848b8296048ee7b373a408a4ee8fff7ff81a7b33bf858f3"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000780-17-38612-35811-v1.json",
+      "byteSize": 6951,
+      "checksumSha256": "31c84e0827a2020209cd56636d0ade24330ec84029574bd8d0839db18cfe7f69"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000781-17-38613-35811-v1.json",
+      "byteSize": 26301,
+      "checksumSha256": "145a9958d124449cd21296fc3138b41734cd9c9954f64a89f565033a9b61f58b"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000782-17-38614-35811-v1.json",
+      "byteSize": 9830,
+      "checksumSha256": "39b72dd902d8720eacc9f6d0a2e2cdcd024ad7b1449b8c01cd49e4db4c5abb28"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000783-17-38615-35811-v1.json",
+      "byteSize": 20946,
+      "checksumSha256": "7de67322de8325050fde099d1ca49d453ef9ab7bb5d81145f5933496091d4161"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000784-18-77226-71624-v1.json",
+      "byteSize": 14762,
+      "checksumSha256": "335728e6341122ef7b54e0fd47120d1a10c6a7060e0433ed83377d79386491cc"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000785-18-77227-71624-v1.json",
+      "byteSize": 11877,
+      "checksumSha256": "3e7896b74e067c5a3afe3a8b51bb6d8ccea4f96fa98d4569741c5d6ca337d58a"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000786-17-38612-35812-v1.json",
+      "byteSize": 13525,
+      "checksumSha256": "22d6a9a330cd011f1bb06fcdc76e6bc81ff4e42f4847466907746ed30cd3a30e"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000787-18-77226-71625-v1.json",
+      "byteSize": 14361,
+      "checksumSha256": "56d78f9ee81b500c5d1f4e009e025d3bb6a8d39b037995c2f2081ed1675ac996"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000788-18-77227-71625-v1.json",
+      "byteSize": 26726,
+      "checksumSha256": "5725cea1edebeb1af4f94ac03853eefb62b0404a83a9e027a90f186416e58931"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000789-17-38614-35812-v1.json",
+      "byteSize": 33717,
+      "checksumSha256": "e3e84f7e612e809a0c8776b79ea5f52431a3903d0b60e164ef858c4aa9a9e3c4"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000790-17-38615-35812-v1.json",
+      "byteSize": 22585,
+      "checksumSha256": "3af3bd817701ed41394da3ea8437a645201a0ed461d9c34550564a53d3294220"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000791-18-77226-71626-v1.json",
+      "byteSize": 22661,
+      "checksumSha256": "1dd8068684ed6cd7bdee2ac731ae5a332efe80ce90520d38a6a37300cc02047c"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000792-18-77227-71626-v1.json",
+      "byteSize": 22606,
+      "checksumSha256": "35ce71a4bd8c15ee94ad4233ba129ad17773bed8babfe703dd369dcfaa69f0ec"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000793-16-19304-17906-v1.json",
+      "byteSize": 22600,
+      "checksumSha256": "4364c4ddb132c7f05efb50007888d9f36bac5a1085b7329dc4442cbc6dba5261"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000794-16-19305-17906-v1.json",
+      "byteSize": 35356,
+      "checksumSha256": "8d19817b4f03e61e9206f36dbddcf8f2bac472253d7db258a1d1e12789b50aa5"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000795-17-38612-35813-v1.json",
+      "byteSize": 19291,
+      "checksumSha256": "6c894059df18f1ac32aaf965b5b096f6fc464931b3ce6994397e188e638ee593"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000796-18-77226-71627-v1.json",
+      "byteSize": 13942,
+      "checksumSha256": "4bb894f8aece80b6cb8143ae4825e8d2f619cefa6dd3ee1314dfc91604e68913"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000797-18-77227-71627-v1.json",
+      "byteSize": 20115,
+      "checksumSha256": "229545ca65da3e2a91f6c206217fb2d413ae54c93426bf385606bb19fca40d7e"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000798-17-38614-35813-v1.json",
+      "byteSize": 45693,
+      "checksumSha256": "baffc2f2200af8c43f4e46c7a56bdebfad748d381d27a0d1877cfff16f4b6adf"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000799-17-38615-35813-v1.json",
+      "byteSize": 13522,
+      "checksumSha256": "639fe726dd526ed5f0a6a644a00b14cf98c224d05744f2d12e11b4c06e5528a3"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000800-17-38612-35814-v1.json",
+      "byteSize": 12702,
+      "checksumSha256": "5986391fb24926fcc4331d86784db0b42aaa8b48ce5bf8eab743fc65bc3b49fd"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000801-17-38613-35814-v1.json",
+      "byteSize": 51383,
+      "checksumSha256": "fe29d22bf5063eaf84fdf26498ee644cca60c1e0016b50157be1329afe1a90c1"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000802-17-38614-35814-v1.json",
+      "byteSize": 24236,
+      "checksumSha256": "f1cc055890fdbb6817e8e8c8a8f84c3ffb41ff525c84714156d73ba163c1ad6c"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000803-17-38615-35814-v1.json",
+      "byteSize": 19290,
+      "checksumSha256": "3d325a7110d83730ace401679ca0d849bb9a34d8a9fe0334c01f0684f137ca64"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000804-16-19304-17907-v1.json",
+      "byteSize": 32063,
+      "checksumSha256": "ca1a9a64606b607496383ebf0ed7807f39a167d0e8c90ec14f30e106f5156e35"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000805-16-19305-17907-v1.json",
+      "byteSize": 23022,
+      "checksumSha256": "a8021698030837ab8b8e1f20a48a01f453ad8f7949106571943abaabf49094a9"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000806-17-38612-35815-v1.json",
+      "byteSize": 29580,
+      "checksumSha256": "c58e5190c59685b7b60c0501bd77bcca5b9b2ec84f013d140e052d20ac22879d"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000807-17-38613-35815-v1.json",
+      "byteSize": 29999,
+      "checksumSha256": "d687cc900e7b4b17154ed58c524e86f18ecbbd71a6d56998bda38e8855f088af"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000808-17-38614-35815-v1.json",
+      "byteSize": 32895,
+      "checksumSha256": "ed2467442c2d88aa3699c38c9cf3ac1de283d2495e3ebee6a798df45c66f3d77"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000809-17-38615-35815-v1.json",
+      "byteSize": 13535,
+      "checksumSha256": "3bc1d98556bcf5903f66007e7259c9708d89879c93b149dd4cba448229df0cee"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000810-14-4827-4476-v1.json",
+      "byteSize": 49752,
+      "checksumSha256": "724cd0245727f4e2559db591c2460440b2cce4be3b9cfe1e1d1d964e6abd4676"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000811-17-38614-35800-v1.json",
+      "byteSize": 31238,
+      "checksumSha256": "26b1d6c4e02dfc4cf0e4bdd0cc4e8ff6203a9766672a745c7bf44a1c609e24e1"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000812-17-38615-35800-v1.json",
+      "byteSize": 25035,
+      "checksumSha256": "6bc951300682e4fb9f99bb1f940b42f01b87d88365b53ae8f80575ef84995a5e"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000813-16-19306-17900-v1.json",
+      "byteSize": 32889,
+      "checksumSha256": "1396cbeab5cda5a8248bd0569fd2a86446bfc9610a5c64096b7f69e8f2bddfd8"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000814-17-38614-35801-v1.json",
+      "byteSize": 28362,
+      "checksumSha256": "9a18924bd96b74eca3b5dd2c581b1fe46c848ea666cd2625e0ec7df48b185804"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000815-17-38615-35801-v1.json",
+      "byteSize": 22174,
+      "checksumSha256": "a92452ece0712e945cd6ac7ee5ab39fe4d39cde12fcba07071f18ad09d48f8ef"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000816-15-9652-8950-v1.json",
+      "byteSize": 8166,
+      "checksumSha256": "7ee846abaa4b5d300a06873ae493b5af6b78e140d7342c89739fde5019561184"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000817-16-19306-17901-v1.json",
+      "byteSize": 35374,
+      "checksumSha256": "8cdb8576542ac86db85a191d104c63b69ac936be8901eaea31b6168ec4919eaf"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000818-16-19307-17901-v1.json",
+      "byteSize": 36979,
+      "checksumSha256": "7c0c5fb3b43b87cfe8f1e6fcb1f90a43f079d2bee2dd52872b19b14663020f38"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000819-17-38612-35804-v1.json",
+      "byteSize": 20526,
+      "checksumSha256": "081e82f73930cd03b32fd40cfd1d66d5ddb10e8747dab1dd895b3ee4bad3f988"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000820-17-38613-35804-v1.json",
+      "byteSize": 28764,
+      "checksumSha256": "c5361c217c8252e107336ca8d0b3a27ba2bef4806c1971508f869a2ad251da5e"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000821-17-38614-35804-v1.json",
+      "byteSize": 29985,
+      "checksumSha256": "6abd677bec1c97376c8f1f79fade5007914f56281ae4237a29fc74e0c46d159e"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000822-17-38615-35804-v1.json",
+      "byteSize": 6532,
+      "checksumSha256": "7fde462320b88e14a6c80a299b6dfb7c2b47e426157c554ce8daaf0ca48ee52f"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000823-16-19305-17902-v1.json",
+      "byteSize": 20524,
+      "checksumSha256": "6c6339108078e76ba14027f78c530a401e3d0a2e6e67608fe61da9b7213c61c7"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000824-17-38612-35805-v1.json",
+      "byteSize": 42342,
+      "checksumSha256": "7950f80c118297ac3b252248fa732c103abda25b317844b1f7997f1148000183"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000825-17-38613-35805-v1.json",
+      "byteSize": 25878,
+      "checksumSha256": "da169784162a395cd1c4aac3bd5c57fd2d2cec7d09da04239defaf4cdeb1d3e1"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000826-17-38614-35805-v1.json",
+      "byteSize": 26714,
+      "checksumSha256": "030fd11b75fa581470a3ddb5100cd561aff1736c49c7bf80bd5915bbf15c660c"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000827-17-38615-35805-v1.json",
+      "byteSize": 13943,
+      "checksumSha256": "2f11b5ba36840cfe395a6d492f0a52f081d94c77aaedea83511f9db8cb6bd280"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000828-17-38612-35806-v1.json",
+      "byteSize": 34938,
+      "checksumSha256": "bab90c248a913a8ab93905b6a1b128e93008ee3c16aa14db8d70361fac9cc2d9"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000829-17-38613-35806-v1.json",
+      "byteSize": 30007,
+      "checksumSha256": "39c9e819824340ee98f825fe4617c54572ad679a5ac9e9f30826c8598222e673"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000830-16-19304-17903-v1.json",
+      "byteSize": 7780,
+      "checksumSha256": "ff7d0ee42df4d3e1eefe7b102421354fcbc7483158af1fc24bd6d66e6831bca6"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000831-16-19305-17903-v1.json",
+      "byteSize": 44817,
+      "checksumSha256": "388460bf2c8094a95a6a241efb2cc47125cd5423cd7370a81d1ff728e1ac04c5"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000832-17-38612-35807-v1.json",
+      "byteSize": 23007,
+      "checksumSha256": "a7e3bc499313f50f3f1b5b8c0430e444173e200ece9fef79234f5cdbffa64087"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000833-17-38613-35807-v1.json",
+      "byteSize": 46032,
+      "checksumSha256": "dccee5442c7a17af07aa68cbfb13d27bbbedc4751f776505acc2d5ce3b11bec5"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000834-16-19307-17903-v1.json",
+      "byteSize": 53044,
+      "checksumSha256": "d26e0dc6e6a62b8f5e62b761d52d22a0e828073cd5681fcab276603617c82880"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000835-14-4827-4475-v1.json",
+      "byteSize": 31224,
+      "checksumSha256": "4b0cb78e64d329037f045bbcdda3b17cae0b2b2ef59a5e3bde228564c68d0af9"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000836-16-19306-17896-v1.json",
+      "byteSize": 4469,
+      "checksumSha256": "777f092a374a6b4980b90432bd76a031b059aff22ba4c38c38bc93016e13a4da"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000837-16-19307-17896-v1.json",
+      "byteSize": 27525,
+      "checksumSha256": "576c4050e564b9ba28cd4df8c7ee1422b99fbc6e89b707597efcac7652499d5c"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000838-16-19306-17897-v1.json",
+      "byteSize": 5710,
+      "checksumSha256": "e22a556009ba0fe8326c78b1948bea3c6ddb619a0f89aee650d9f645cb19dbb7"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000839-16-19307-17897-v1.json",
+      "byteSize": 38227,
+      "checksumSha256": "5edbd5787a34d8b6c6989d5c9bec7c4212ec2896e044f415b689edd0ee238ff7"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000840-16-19306-17898-v1.json",
+      "byteSize": 6952,
+      "checksumSha256": "256e7a6329093aa76680354d59868c316772e076dde61c65930824bb6a77c7f6"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000841-16-19307-17898-v1.json",
+      "byteSize": 23428,
+      "checksumSha256": "642d1da436cbd6a8336f0772ed59bf148c2d9666d8bb9f4e300801ec3e029f14"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000842-17-38614-35798-v1.json",
+      "byteSize": 12700,
+      "checksumSha256": "ab397a2ce946b50290b03e191c39742ebd1492bd8876129c9cc2380da9d34e51"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000843-17-38615-35798-v1.json",
+      "byteSize": 15170,
+      "checksumSha256": "3a47584a67076f5cd22227822612086960dee5eb877ac1dac27002c9d6696cf2"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000844-16-19306-17899-v1.json",
+      "byteSize": 26270,
+      "checksumSha256": "c131e068130b870ac1e731d2ac1f5dcaab5dd1d0ea27e5b2b4f565a27dd429f8"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000845-17-38614-35799-v1.json",
+      "byteSize": 25055,
+      "checksumSha256": "e1b872d1ada20a5c71ae2237eafa7345f19c098453345dc7a764f1b40bd79a9c"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000846-17-38615-35799-v1.json",
+      "byteSize": 20533,
+      "checksumSha256": "d7027cad0b4fcbd099866a03000c17fc9eb7793e4de4aa831803352a4a50bbdd"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000847-16-19308-17896-v1.json",
+      "byteSize": 51385,
+      "checksumSha256": "3efca639b3ade92306e5c2c8909e95278068b6bbe92708dd04a401f875d40092"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000848-16-19309-17896-v1.json",
+      "byteSize": 6114,
+      "checksumSha256": "7bc46394d8d327415a1c3cd874c23a99dfa79472341b84aff69e8d4fbfc4a049"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000849-16-19308-17897-v1.json",
+      "byteSize": 51408,
+      "checksumSha256": "e9310828add36cf7c737c85b389167edbd026de71c490f00a54497d0484c9e83"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000850-16-19309-17897-v1.json",
+      "byteSize": 4471,
+      "checksumSha256": "bb6b121c1c634a9e9f3b1bc4510f3adaf3a051fe9ebae20094590b1333e121a2"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000851-15-9654-8949-v1.json",
+      "byteSize": 47713,
+      "checksumSha256": "683bd2c067511f46abad37b8526bb8dbbf074dfce62285f8fc577929074a74c1"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000852-15-9653-8946-v1.json",
+      "byteSize": 17213,
+      "checksumSha256": "a7ee10b2a5840e1d692d20d000f11f9cf06242f63c950691ea6d106fe7c3735b"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000853-15-9653-8947-v1.json",
+      "byteSize": 43147,
+      "checksumSha256": "8a58ebfe02d08eb51377112f3103c94a490f780f0e123c4810b19c657abe0297"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000854-16-19308-17892-v1.json",
+      "byteSize": 23424,
+      "checksumSha256": "23ac93ad923147fd160f6e6cbfff8cb983e9281df4c4ec5c0a53a2d54d8455bd"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000855-16-19309-17892-v1.json",
+      "byteSize": 43592,
+      "checksumSha256": "4d6368087a03b848638b76e5937f82cb88eec4a8ce711843dc57278fbef8bbc8"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000856-16-19308-17893-v1.json",
+      "byteSize": 36197,
+      "checksumSha256": "6b56dc7b05dff85bb643952f41c0665cf46c8cdbd1e87f05bea034e864e3f8ee"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000857-16-19309-17893-v1.json",
+      "byteSize": 50561,
+      "checksumSha256": "e6edb91ebed9de6838c601a804e6075434e07b124d3194135dd49c997d3a35e6"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000858-15-9655-8946-v1.json",
+      "byteSize": 12751,
+      "checksumSha256": "4764985a69c5dd2afbc9f4ff1aa416abfae2b5a2960aee20813c5892c919cf07"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000859-17-38618-35788-v1.json",
+      "byteSize": 18470,
+      "checksumSha256": "59e2b7c4ac84367dd492fb47f1c0b54fad09ea7c37d55a3d18487f7631d33958"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000860-17-38619-35788-v1.json",
+      "byteSize": 15164,
+      "checksumSha256": "3d80085e17ec7de237828215b55f3591faf3f70ab15b87cd0a91b2219b126e26"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000861-16-19308-17894-v1.json",
+      "byteSize": 45631,
+      "checksumSha256": "4c169b8e2eda901661fb0b75af322821e6411d7797dfdf908d327f3c8428ff66"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000862-17-38618-35789-v1.json",
+      "byteSize": 30834,
+      "checksumSha256": "84db6d338264e167c37949c415e6fbe1234ffc491958c60fdce938747f2c62bb"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000863-17-38619-35789-v1.json",
+      "byteSize": 8185,
+      "checksumSha256": "9c51cdf5dc835dd6ae2afb46529200a44f11043daaad32d37552331556c79a06"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000864-16-19308-17895-v1.json",
+      "byteSize": 52197,
+      "checksumSha256": "ad647c91f653916be61aca882cd0bfd3c7315948bdb8891ce920c445cd8e2f18"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000865-16-19309-17895-v1.json",
+      "byteSize": 25472,
+      "checksumSha256": "9164a3c4b563e6d972bc2a680bf5a77fdbe028066bf43b2a97b5f45f61d02b0e"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000866-16-19310-17888-v1.json",
+      "byteSize": 44398,
+      "checksumSha256": "09143ddaf3f429493177f101e200b6a87d5cc27b740ec5a5f4e979a400463290"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000867-16-19311-17888-v1.json",
+      "byteSize": 31220,
+      "checksumSha256": "69a3ae29b5cca0d80dfa22d14373038a4fab6840e0819a66f42af4d67c2f241a"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000868-15-9654-8944-v1.json",
+      "byteSize": 30418,
+      "checksumSha256": "7b4aa7345477132229450d299ea08238a1454956a5d2be665c03e183d3c8e0f4"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000869-16-19310-17889-v1.json",
+      "byteSize": 47713,
+      "checksumSha256": "77fd1eb0c00d9108b955ad7b650680c6ee87e1c129f5c2da22653cacc6ea5dae"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000870-16-19311-17889-v1.json",
+      "byteSize": 32872,
+      "checksumSha256": "e51d88d500a23662388b2eb29c9fbd8661bd1838601cde97383ad398615aa700"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000871-16-19310-17890-v1.json",
+      "byteSize": 40685,
+      "checksumSha256": "7a221974d0f8b612402c2f4ab9768f40e82dbce46d8acda8081724539846c223"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000872-16-19311-17890-v1.json",
+      "byteSize": 23026,
+      "checksumSha256": "7880450bf89a45e282aa959c788b88bc8bd06075ea020e379f677eba67117c80"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000873-15-9654-8945-v1.json",
+      "byteSize": 48934,
+      "checksumSha256": "efe758e09472c8cfdf28bfd88eaacf90546c1c57aeea01ef78674525b794bbc2"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000874-16-19310-17891-v1.json",
+      "byteSize": 12307,
+      "checksumSha256": "3be9b9de533eff94ca2e348559f60a42bbbfffc7cb530f223fdf00d71d0d2ff4"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000875-16-19311-17891-v1.json",
+      "byteSize": 8184,
+      "checksumSha256": "cc62f573f6ed7568f88d59b8137054e86ff21680afcfab3b85acb7a27a1f3748"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000876-14-4828-4472-v1.json",
+      "byteSize": 11880,
+      "checksumSha256": "a3c9baaeee26a34a7fc7c7c0ed40f7ea446f926c9d773959d1a60a37c2e05f9f"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000877-14-4827-4471-v1.json",
+      "byteSize": 41953,
+      "checksumSha256": "639d17d7378b15cdf0d35707f37391bbdeb40bce2db1bc8c3b28657d35a0517d"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000878-16-19312-17884-v1.json",
+      "byteSize": 10638,
+      "checksumSha256": "db016c4b793c3a42ccbc26853abb4818aea21d1bdf709de4802576367fc1fcbb"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000879-16-19313-17884-v1.json",
+      "byteSize": 14782,
+      "checksumSha256": "002bee8a85225877776f6d03cdd8de18027c157d201447cdcc31d6a8c03280cd"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000880-16-19312-17885-v1.json",
+      "byteSize": 48098,
+      "checksumSha256": "9b6a5c5abb61f2f03498956ee6f40fec92005c2a23da79be6d9b57052cac2487"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000881-16-19313-17885-v1.json",
+      "byteSize": 36616,
+      "checksumSha256": "5dc031aee20a7e4f52f59e2e397d4bb08a4cc32552a84e2b6cfe6fc8c443e8a1"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-northern-manhattan-cells-20260812-p1-manhattan-exterior-cell-w05-000882-15-9656-8943-v1.json",
+      "byteSize": 27956,
+      "checksumSha256": "14fa4296e4cc371ded89eb880d368b68ed52b27eaceaf8e5b3e7474955b9a109"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-northern-manhattan-cells-20260812-p1-doitt-1097877.json",
+      "byteSize": 4557,
+      "checksumSha256": "98c249995d3e2a5651e9ec42460668a0654c102615c1b8cdcdb36117cbfbaa22"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-northern-manhattan-cells-20260812-p1-doitt-1114218.json",
+      "byteSize": 4557,
+      "checksumSha256": "daf44e703166cd6056b2c26e24819dcaab59e6aec22286ea82506b49f0a5746f"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-northern-manhattan-cells-20260812-p1-doitt-169205.json",
+      "byteSize": 4551,
+      "checksumSha256": "f5df1bf85f6f9f8bc51604f769e508ebce88b19d63ceac09b5a59e77b575bdf5"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-northern-manhattan-cells-20260812-p1-doitt-207890.json",
+      "byteSize": 4551,
+      "checksumSha256": "18ff3bf6c46ac727b7e4d18b78a873e0a6330197d85c806c7ea393e000654a78"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-northern-manhattan-cells-20260812-p1-doitt-24171.json",
+      "byteSize": 4545,
+      "checksumSha256": "abbc1822e67b76cfd2d053873084a95985aa0f7edd07bda9429b4381bca0c92d"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-northern-manhattan-cells-20260812-p1-doitt-252214.json",
+      "byteSize": 4551,
+      "checksumSha256": "9831d92ae63bd06b3770049d8689702fcccfaf13c3b4ec7655be1edd37b352c2"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-northern-manhattan-cells-20260812-p1-doitt-272678.json",
+      "byteSize": 4551,
+      "checksumSha256": "adb5871d5456c32cc2751baeb7d7dba99e4a6665bc56d8f31d3ab004b08d47d3"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-northern-manhattan-cells-20260812-p1-doitt-275061.json",
+      "byteSize": 4551,
+      "checksumSha256": "9c6e6bf4a60dc897b4e2f95442ed9eeccdf9b13a814b54547d9c1bc651d85a0b"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-northern-manhattan-cells-20260812-p1-doitt-342401.json",
+      "byteSize": 4551,
+      "checksumSha256": "c26137ffcfd1d5e0c3c126bcaa7074a8bd64309deb0aa0ef1edb9fce2b89e70d"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-northern-manhattan-cells-20260812-p1-doitt-365535.json",
+      "byteSize": 4551,
+      "checksumSha256": "e60bbd9f7edc1952ab74b3a4317f01594e1f5167ca5a3ef6c1bff7e6538f0d13"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-northern-manhattan-cells-20260812-p1-doitt-481354.json",
+      "byteSize": 4551,
+      "checksumSha256": "a0e280ff04b7bd1b20736141311a2feab8e0df457b5d10f903792c61481380f4"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-northern-manhattan-cells-20260812-p1-doitt-494791.json",
+      "byteSize": 4551,
+      "checksumSha256": "3b34a225351d79885bb7dae0d07a5827e6b0852099cad2e36962af340363b590"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-northern-manhattan-cells-20260812-p1-doitt-504530.json",
+      "byteSize": 4551,
+      "checksumSha256": "d680a55d3f040a4a890eeca66d992aae93ddce350776a67d51c409797e31d383"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-northern-manhattan-cells-20260812-p1-doitt-514180.json",
+      "byteSize": 4551,
+      "checksumSha256": "a1795865aea14c9f859ca180e7c92ab929a9d510c1c32584781a3b3abb4b6aa8"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-northern-manhattan-cells-20260812-p1-doitt-527486.json",
+      "byteSize": 4551,
+      "checksumSha256": "ccfcaf25f60160e61e8a11728729fa3ee6ce881ce7078ffae10ef8a32181c157"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-northern-manhattan-cells-20260812-p1-doitt-606408.json",
+      "byteSize": 4551,
+      "checksumSha256": "6b4b02eab625b07515ee39062149d659044385935c37c1d16fa3ab9df0cab663"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-northern-manhattan-cells-20260812-p1-doitt-624061.json",
+      "byteSize": 4551,
+      "checksumSha256": "52c61b5d1fa831469af33cd2fa3533f88a2373a5cdbd88e3d66b44caffce3e54"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-northern-manhattan-cells-20260812-p1-doitt-655028.json",
+      "byteSize": 4551,
+      "checksumSha256": "a92dea14cd7057252b523f5cf5235cb6a68c010adb7c65d9ce3784aef73bfa71"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-northern-manhattan-cells-20260812-p1-doitt-668411.json",
+      "byteSize": 4551,
+      "checksumSha256": "ee7f656e1e199f9261fd19d73c600cb22214cb5255b452a58471876e09928a78"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-northern-manhattan-cells-20260812-p1-doitt-728255.json",
+      "byteSize": 4551,
+      "checksumSha256": "3ec5d44cfec3eeea5184f2fcf7db5d39e6236a54f411599c4d811f6560c7e3d6"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-northern-manhattan-cells-20260812-p1-doitt-806389.json",
+      "byteSize": 4551,
+      "checksumSha256": "77872a5c66030c22a0c232de021b77953801be7017d7ed2b3dac2957d31743af"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-northern-manhattan-cells-20260812-p1-doitt-830007.json",
+      "byteSize": 4551,
+      "checksumSha256": "92ca4067a7bcfd961227b93c509faf8a5cf5fbad4c4e6cfabf05dc39b2c6b04a"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-northern-manhattan-cells-20260812-p1-doitt-835362.json",
+      "byteSize": 4551,
+      "checksumSha256": "d74e0e2c6d2338aa47dd7bfe3a364df3f151924aae052eafe8a532699fe6dcea"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-northern-manhattan-cells-20260812-p1-doitt-950553.json",
+      "byteSize": 4551,
+      "checksumSha256": "4337771e932bd35221d8859ba9db26b5586fe4fcce77dfc93eb0671e2a94a653"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-northern-manhattan-cells-20260812-p1-doitt-1097877.json",
+      "byteSize": 14441,
+      "checksumSha256": "62bc2e99b2a568cf5b582be3c17418317585694e0e1c156f16b300c8b2a1b3ed"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-northern-manhattan-cells-20260812-p1-doitt-1114218.json",
+      "byteSize": 14441,
+      "checksumSha256": "b25c286f5f3cbbca167c3b6a8bc02bc3e819cad42b6c56f01602baaf3c378649"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-northern-manhattan-cells-20260812-p1-doitt-169205.json",
+      "byteSize": 14407,
+      "checksumSha256": "2f9c24fc701f459efa4d6537df2fbef946d6b8c91e10d8ee4473baeaba4868f8"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-northern-manhattan-cells-20260812-p1-doitt-207890.json",
+      "byteSize": 14599,
+      "checksumSha256": "2232773e1d1f2dad9e4c20c3804eab0c1b1d6f24bbae1db68c78ae3242e0a10f"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-northern-manhattan-cells-20260812-p1-doitt-24171.json",
+      "byteSize": 14564,
+      "checksumSha256": "f9019a5dc4b07b82b987ad41df7d55034fbbb54b4f1a211fd50851d7898fc750"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-northern-manhattan-cells-20260812-p1-doitt-252214.json",
+      "byteSize": 14599,
+      "checksumSha256": "b8fdc95fb3114d945230a16f5263dccbe335245c91295edb6bd5b403ff469eb1"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-northern-manhattan-cells-20260812-p1-doitt-272678.json",
+      "byteSize": 14599,
+      "checksumSha256": "88b53d376748f21c348a9b0dbff19aa7412079c58f69f5935c87e5f766d99551"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-northern-manhattan-cells-20260812-p1-doitt-275061.json",
+      "byteSize": 14407,
+      "checksumSha256": "bc549a580cf97144de4f4cb67572616cd8f7bdb0af31626ce6a1f3344140a921"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-northern-manhattan-cells-20260812-p1-doitt-342401.json",
+      "byteSize": 14407,
+      "checksumSha256": "1033685c3b99d412d4ed2892334c3debeee92dc8c47fd99b6be65d0817bf5e84"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-northern-manhattan-cells-20260812-p1-doitt-365535.json",
+      "byteSize": 14599,
+      "checksumSha256": "054d1b96c3ae20bf0c11fbcb15e319380447090393ed91ed8b70b4df70190f3b"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-northern-manhattan-cells-20260812-p1-doitt-481354.json",
+      "byteSize": 14599,
+      "checksumSha256": "99ef9ce96c548b1d1e7752a49c5513356a703e7641130a84da37b0fe7b3e556b"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-northern-manhattan-cells-20260812-p1-doitt-494791.json",
+      "byteSize": 14599,
+      "checksumSha256": "9cd91d3c530db25a8ca86cbd14c3715abd80f15ff74e855017f3ba4bb5a4aa88"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-northern-manhattan-cells-20260812-p1-doitt-504530.json",
+      "byteSize": 14599,
+      "checksumSha256": "b4267c646dd2635c0ea7a51ebea70e32dc39898c28963f80d3d7c56a63d49aa1"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-northern-manhattan-cells-20260812-p1-doitt-514180.json",
+      "byteSize": 14599,
+      "checksumSha256": "b64011f438cebd6a4fec6b4492a94eabefd613be5ec16e3c933de0132e9fd0a2"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-northern-manhattan-cells-20260812-p1-doitt-527486.json",
+      "byteSize": 14407,
+      "checksumSha256": "8501294b8e1798937c07a295466b343cda5308fdc5facb0cecf872dff6f07352"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-northern-manhattan-cells-20260812-p1-doitt-606408.json",
+      "byteSize": 14599,
+      "checksumSha256": "e81bf5f66fa3b19e9adf625eb3afb03a12c808d7cd3bf378253a802f6a356c17"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-northern-manhattan-cells-20260812-p1-doitt-624061.json",
+      "byteSize": 14599,
+      "checksumSha256": "62a481af3436f9b85f0a30f3d33e92816425aeabb293325d38f06596a53989a7"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-northern-manhattan-cells-20260812-p1-doitt-655028.json",
+      "byteSize": 14599,
+      "checksumSha256": "847dfead596239173d509b7afc06ead351286e7c8cc5678afee6e9c0cedcbf7c"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-northern-manhattan-cells-20260812-p1-doitt-668411.json",
+      "byteSize": 14599,
+      "checksumSha256": "d3095f1d4dd65f7235349a7575be552a8cbb56ec1b487107586b703928cc8c00"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-northern-manhattan-cells-20260812-p1-doitt-728255.json",
+      "byteSize": 14407,
+      "checksumSha256": "561635e51ae813a3a143881d38be1e8f739f1b05ad897b30a59ee3eb1c146788"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-northern-manhattan-cells-20260812-p1-doitt-806389.json",
+      "byteSize": 14599,
+      "checksumSha256": "f4b2884e6f7cc9a77f2149240651286a2a39bc27a6e1adaaa1097395da96e3a4"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-northern-manhattan-cells-20260812-p1-doitt-830007.json",
+      "byteSize": 14599,
+      "checksumSha256": "fb821f57f76ff3548a5d84a9652bc58033b8d5e4d228f7b40c905de2ff6ae6b6"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-northern-manhattan-cells-20260812-p1-doitt-835362.json",
+      "byteSize": 14599,
+      "checksumSha256": "2949e7792298f4d0bb46f5853b0053556a3396c17162b598fa33006996a6b457"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-northern-manhattan-cells-20260812-p1-doitt-950553.json",
+      "byteSize": 14599,
+      "checksumSha256": "69e450ca231743ead7549b4be53c2e7390a2cd2d0f90963f65b599f9f599394c"
+    },
+    {
+      "path": "public/ownership-ledger/ownership-ledger-manhattan-northern-manhattan-cells-20260812-994417d633bc5e4f.json",
+      "byteSize": 207445,
+      "checksumSha256": "1a4f68aaee16403e53c04bbbdc187efe59e5da054b414e92399d1cc7422665e1"
+    },
+    {
+      "path": "public/rollout-snapshot/snapshot-manhattan-northern-manhattan-cells-20260812-p1-v1.json",
+      "byteSize": 54054,
+      "checksumSha256": "5369464f6b749a7df185bf847dcae6f0fc9031f5167e8238cf44a23c28dc7008"
+    },
+    {
+      "path": "public/tiles/tileset.json",
+      "byteSize": 7883,
+      "checksumSha256": "5704dc783847edfbd405cd6ffc810607ef722ffe6606d8c84bab4f11f1e90ad4"
+    },
+    {
+      "path": "release-graph.json",
+      "byteSize": 6990834,
+      "checksumSha256": "d454b47b254481edaffa0a6206ab54b878db61299d82e0bc6a15cc90f0a3d9ab"
+    }
+  ]
+}

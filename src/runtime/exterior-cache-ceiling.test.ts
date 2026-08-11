@@ -61,6 +61,7 @@ const midtown = inventoryProfile("manhattan-midtown-core-cells-20260811-v3", "da
 const lowerManhattan = inventoryProfile("manhattan-lower-manhattan-cells-20260812-p1", "data/lower-manhattan-20260812-p1/payload-inventory.json");
 const southernRemainder = inventoryProfile("manhattan-southern-remainder-cells-20260812-p1", "data/southern-remainder-20260812-p1/payload-inventory.json");
 const centralUpperManhattan = inventoryProfile("manhattan-central-upper-manhattan-cells-20260812-p1", "data/central-upper-manhattan-20260812-p1/payload-inventory.json");
+const northernManhattan = inventoryProfile("manhattan-northern-manhattan-cells-20260812-p1", "data/northern-manhattan-20260812-p1/payload-inventory.json");
 
 /**
  * Where each promoted release's measured bytes come from, keyed by release id.
@@ -78,6 +79,12 @@ const centralUpperManhattan = inventoryProfile("manhattan-central-upper-manhatta
  * measured byte profile", before its row below existed — which is precisely the
  * behaviour the derivation was written for at T018 and precisely what a
  * hand-listed composition would have done silently.
+ *
+ * AND THE SIXTH-WAVE GUARD FIRED AGAIN AT T022, in exactly the same way and with
+ * exactly the same wording for
+ * `manhattan-northern-manhattan-cells-20260812-p1`. It is recorded a second time
+ * rather than assumed to still work, because a guard that fired once and was then
+ * quietly satisfied is indistinguishable from one that stopped firing.
  */
 const BYTE_PROFILES = new Map<string, ExteriorCacheWaveByteProfile>([
   [block835.releaseId, block835],
@@ -85,6 +92,7 @@ const BYTE_PROFILES = new Map<string, ExteriorCacheWaveByteProfile>([
   [lowerManhattan.releaseId, lowerManhattan],
   [southernRemainder.releaseId, southernRemainder],
   [centralUpperManhattan.releaseId, centralUpperManhattan],
+  [northernManhattan.releaseId, northernManhattan],
 ]);
 
 /** The composition this build actually promotes, in promotion-record order. */
@@ -193,15 +201,18 @@ describe("the byte ceiling re-derived at the raised cap", () => {
 describe("the byte ceiling with the FOURTH wave promoted", () => {
   /**
    * The T018 composition, still DERIVED rather than hand-listed: it is exactly
-   * this build's records with the fifth wave rolled back, which the module
-   * already models as "not resident". That keeps this historical statement on
-   * the same derivation as the live one instead of reintroducing the literal
-   * array the T018 review removed.
+   * this build's records with the fifth AND SIXTH waves rolled back, which the
+   * module already models as "not resident". That keeps this historical statement
+   * on the same derivation as the live one instead of reintroducing the literal
+   * array the T018 review removed. The set of releases to withdraw is named rather
+   * than counted, so a seventh promotion would have to be added here explicitly
+   * instead of silently inflating a historical figure.
    */
+  const AFTER_T018 = new Set([centralUpperManhattan.releaseId, northernManhattan.releaseId]);
   const ceiling = exteriorCacheByteCeiling({
     waves: exteriorPromotedCacheProfiles({
       records: EXTERIOR_DEFAULT_ACTIVATIONS.map((record) => (
-        record.enabled && record.releaseId === centralUpperManhattan.releaseId
+        record.enabled && AFTER_T018.has(record.releaseId)
           ? { enabled: false as const, releaseId: null }
           : record
       )),
@@ -240,10 +251,21 @@ describe("the byte ceiling with the FOURTH wave promoted", () => {
 });
 
 describe("the byte ceiling with the FIFTH wave promoted", () => {
-  // DERIVED from the promotion records, never listed by hand — see
-  // `PROMOTED_PROFILES` and the derivation suite below.
+  /**
+   * The T020 composition, still DERIVED rather than hand-listed: this build's
+   * records with the SIXTH wave rolled back, which the module already models as
+   * "not resident". Same shape as the four-wave statement above, and for the same
+   * reason — a historical arithmetic that stops being derived stops being checked.
+   */
   const ceiling = exteriorCacheByteCeiling({
-    waves: PROMOTED_PROFILES,
+    waves: exteriorPromotedCacheProfiles({
+      records: EXTERIOR_DEFAULT_ACTIVATIONS.map((record) => (
+        record.enabled && record.releaseId === northernManhattan.releaseId
+          ? { enabled: false as const, releaseId: null }
+          : record
+      )),
+      profiles: BYTE_PROFILES,
+    }),
     maxCacheEntries: EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries,
     maxCachedBytes: EXTERIOR_RUNTIME_BUDGETS.maxCachedBytes,
   });
@@ -292,11 +314,70 @@ describe("the byte ceiling with the FIFTH wave promoted", () => {
   });
 });
 
+describe("the byte ceiling with the SIXTH and LAST wave promoted", () => {
+  // DERIVED from the promotion records, never listed by hand — see
+  // `PROMOTED_PROFILES` and the derivation suite below.
+  const ceiling = exteriorCacheByteCeiling({
+    waves: PROMOTED_PROFILES,
+    maxCacheEntries: EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries,
+    maxCachedBytes: EXTERIOR_RUNTIME_BUDGETS.maxCachedBytes,
+  });
+
+  /**
+   * The composition this build actually ships, and the last one the committed
+   * ledger can produce: six waves declared, six promoted.
+   *
+   * Wave `w05`'s curated subset is the LIGHTEST per asset of the four textured
+   * waves — 175,823 B mean against wave `w04`'s 359,234 B — because central
+   * Harlem's stock is smaller-footprint and lower than the Central Park West
+   * wall. Twenty-four assets add 4.02 MiB and the composition stays entry-bound
+   * by the same wide margin.
+   *
+   * 498 of 512 entries is the WHOLE promoted set of the whole ledger, and the 14
+   * entries left over are headroom with no wave left to reserve them for.
+   */
+  it("stays entry-bound, at 498 of 512 entries and 121.81 MiB of 256 MiB", () => {
+    expect(northernManhattan.assetEntries).toBe(24);
+    expect(northernManhattan.totalByteSize).toBe(4_219_756);
+    expect(northernManhattan.meanByteSize).toBe(175_823);
+    expect(ceiling.residentAssetEntries).toBe(498);
+    expect(ceiling.entryHeadroom).toBe(14);
+    expect(ceiling.fitsEntryCap).toBe(true);
+    expect(ceiling.compositionByteCeilingBytes).toBe(127_727_624);
+    expect(ceiling.compositionByteCeilingBytes / MIB).toBeCloseTo(121.81, 2);
+    expect(ceiling.compositionByteCeilingRatio).toBeLessThan(0.48);
+    expect(ceiling.bytesNonBindingForComposition).toBe(true);
+    expect(ceiling.bindingConstraint).toBe("entries");
+  });
+
+  /**
+   * The reservation, closed out in cache arithmetic rather than only in the
+   * release record: T020 promised this wave 36 entries out of the 78 that were
+   * free before its own promotion, and this promotion spent 24 of them. So the
+   * ledger-wide end state is 498 resident and 14 free, and BOTH halves of the
+   * arithmetic are asserted — what the reservation allowed and what was actually
+   * taken — because "it fit" and "it fit with room" are different statements.
+   */
+  it("spends 24 of the 36 reserved entries and closes the ledger with 14 free", () => {
+    const fiveWaveResident = 474;
+    expect(ceiling.residentAssetEntries - northernManhattan.assetEntries).toBe(fiveWaveResident);
+    expect(northernManhattan.assetEntries).toBeLessThanOrEqual(36);
+    expect(36 - northernManhattan.assetEntries).toBe(12);
+    expect(ceiling.entryHeadroom).toBe(EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries - fiveWaveResident - northernManhattan.assetEntries);
+  });
+
+  it("keeps the heaviest per-asset wave, and therefore the modelled fill, unchanged", () => {
+    expect(ceiling.worstMeanReleaseId).toBe("manhattan-lower-manhattan-cells-20260812-p1");
+    expect(ceiling.meanFillByteCeilingBytes).toBe(512 * 580_130);
+    expect(ceiling.largestAssetReleaseId).toBe("manhattan-lower-manhattan-cells-20260812-p1");
+  });
+});
+
 describe("the composition is derived from the promotion records", () => {
   it("resolves exactly the enabled promoted releases, in record order", () => {
     const enabled = EXTERIOR_DEFAULT_ACTIVATIONS.filter((record) => record.enabled).map((record) => record.releaseId);
     expect(PROMOTED_PROFILES.map((profile) => profile.releaseId)).toEqual(enabled);
-    expect(PROMOTED_PROFILES).toHaveLength(5);
+    expect(PROMOTED_PROFILES).toHaveLength(6);
   });
 
   /**
@@ -308,23 +389,25 @@ describe("the composition is derived from the promotion records", () => {
    * than a comment about one.
    */
   it("FAILS on an enabled promoted release with no byte profile, where a hand-listed set passed silently", () => {
-    const unregistered = { enabled: true as const, releaseId: "manhattan-fifth-wave-cells-20260813" };
-    const withFifthWave = [...EXTERIOR_DEFAULT_ACTIVATIONS, unregistered];
+    const unregistered = { enabled: true as const, releaseId: "manhattan-seventh-wave-cells-20260813" };
+    const withSeventhWave = [...EXTERIOR_DEFAULT_ACTIVATIONS, unregistered];
 
     // The OLD shape: a literal list. It ignores the new record entirely and
-    // produces a confident, wrong ceiling — 434 entries for a build that
-    // promotes five waves.
+    // produces a confident, wrong ceiling — 498 entries for a build that
+    // promotes seven waves.
     const handListed = exteriorCacheByteCeiling({
-      waves: [block835, midtown, lowerManhattan, southernRemainder, centralUpperManhattan],
+      waves: [block835, midtown, lowerManhattan, southernRemainder, centralUpperManhattan, northernManhattan],
       maxCacheEntries: EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries,
       maxCachedBytes: EXTERIOR_RUNTIME_BUDGETS.maxCachedBytes,
     });
-    expect(handListed.residentAssetEntries).toBe(474);
-    expect(handListed.waves).toHaveLength(5);
+    expect(handListed.residentAssetEntries).toBe(498);
+    expect(handListed.waves).toHaveLength(6);
 
     // The derived shape refuses, and names the release it could not account for.
-    expect(() => exteriorPromotedCacheProfiles({ records: withFifthWave, profiles: BYTE_PROFILES }))
-      .toThrow(/manhattan-fifth-wave-cells-20260813 has no measured byte profile/u);
+    // THIS IS THE SAME REFUSAL THAT ACTUALLY FIRED AT T022, on the real wave-w05
+    // record, before its byte-profile row existed.
+    expect(() => exteriorPromotedCacheProfiles({ records: withSeventhWave, profiles: BYTE_PROFILES }))
+      .toThrow(/manhattan-seventh-wave-cells-20260813 has no measured byte profile/u);
   });
 
   it("skips a wave rolled back to base, because it is genuinely not resident", () => {
@@ -335,11 +418,11 @@ describe("the composition is derived from the promotion records", () => {
     ));
     const profiles = exteriorPromotedCacheProfiles({ records: rolledBack, profiles: BYTE_PROFILES });
     expect(profiles.map((profile) => profile.releaseId)).not.toContain(southernRemainder.releaseId);
-    expect(profiles).toHaveLength(4);
+    expect(profiles).toHaveLength(5);
     const ceiling = exteriorCacheByteCeiling({ waves: profiles, maxCacheEntries: 512, maxCachedBytes: 256 * MIB });
-    // 474 resident minus the 179 the withdrawn wave occupied. The rollback is
-    // per record, so the fifth wave stays resident.
-    expect(ceiling.residentAssetEntries).toBe(295);
+    // 498 resident minus the 179 the withdrawn wave occupied. The rollback is
+    // per record, so the fifth and sixth waves stay resident.
+    expect(ceiling.residentAssetEntries).toBe(319);
   });
 
   it("refuses a mislabelled profile and an empty composition", () => {

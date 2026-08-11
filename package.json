@@ -98,6 +98,8 @@
     "northern-manhattan:pipeline": "node --max-old-space-size=8192 scripts/northern-manhattan-cli.mjs",
     "northern-manhattan:journeys": "node scripts/northern-manhattan-journeys-cli.mjs",
     "northern-manhattan:blender-record": "node scripts/northern-manhattan-blender-record-cli.mjs",
+    "northern-manhattan:acceptance": "node scripts/northern-manhattan-acceptance-cli.mjs",
+    "northern-manhattan:journeys-p1": "node scripts/northern-manhattan-journeys-p1-cli.mjs",
     "block835-v3t:sampler-plan": "node scripts/block835-v3t-sampler-evidence-cli.mjs plan",
     "block835-v3t:sampler-evidence": "node scripts/block835-v3t-sampler-evidence-cli.mjs evidence",
     "exterior-cells:emit-fixture": "node --experimental-strip-types scripts/emit-exterior-cell-fixture-release.mjs",
