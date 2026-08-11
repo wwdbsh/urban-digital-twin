@@ -1,0 +1,188 @@
+{
+  "schemaVersion": "1.0",
+  "releaseId": "manhattan-lower-manhattan-cells-20260812-p1",
+  "note": "T016 renderer journeys against the production preview and the real pinned citywide base. Each entry records the claim it tests, the URL it used, the DOM text it read, the per-release network measurement, and a checksummed still. `passed` is computed from the readings, not asserted.",
+  "capturedWith": {
+    "viewport": {
+      "width": 1280,
+      "height": 800,
+      "deviceScaleFactor": 1
+    },
+    "previewBase": "http://localhost:4174",
+    "remoteDebuggingPort": 9222
+  },
+  "coveredByTestsInstead": [
+    "Per-wave ROLLBACK rehearsal: no URL expresses a build-time promotion-record swap, so it is proven through the record's own injection seam in src/runtime/exterior-multiwave-activation.test.ts ('rolls the Lower-Manhattan wave back to BASE MASSING without withdrawing the other two').",
+    "Single-cell FAULT isolation: the exterior-cell fault injector is gated behind a VITE_BLOCK835_PROBE=1 build, which is not the production preview a user gets, so it is not exercised here and this record does not claim a browser proved it."
+  ],
+  "journeys": [
+    {
+      "journeyId": "cold-default",
+      "claim": "A clean load with no exterior URL parameter streams all three promoted waves over the real citywide base, and the curated w02 cells render their 71 textured assets.",
+      "url": "http://localhost:4174/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-74.018000&lat=40.707500&height=180.000000&heading=40.000000&pitch=-5.000000&roll=0.000000",
+      "waves": [
+        {
+          "releaseId": "manhattan-exterior-cells-20260811-v3",
+          "origin": "default",
+          "text": "Exterior streaming · Default pinned snapshot snapshot:manhattan-exterior-cells-20260811-v3:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only."
+        },
+        {
+          "releaseId": "manhattan-midtown-core-cells-20260811-v3",
+          "origin": "default",
+          "text": "Exterior streaming · Default pinned snapshot snapshot:manhattan-midtown-core-cells-20260811-v3:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only."
+        },
+        {
+          "releaseId": "manhattan-lower-manhattan-cells-20260812-p1",
+          "origin": "default",
+          "text": "Exterior streaming · Default pinned snapshot snapshot:manhattan-lower-manhattan-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only."
+        }
+      ],
+      "network": {
+        "perRelease": {
+          "manhattan-exterior-cells-20260811-v3": {
+            "glbCount": 14,
+            "encodedBytes": 1934505
+          },
+          "manhattan-midtown-core-cells-20260811-v3": {
+            "glbCount": 144,
+            "encodedBytes": 19654323
+          },
+          "manhattan-lower-manhattan-cells-20260812-p1": {
+            "glbCount": 71,
+            "encodedBytes": 41525305
+          },
+          "manhattan-lower-manhattan-cells-20260812": {
+            "glbCount": 0,
+            "encodedBytes": 0
+          }
+        },
+        "externalHosts": []
+      },
+      "passed": true,
+      "still": {
+        "relativeRef": "journeys/cold-default.png",
+        "byteSize": 440034,
+        "checksumSha256": "a5c4e7b06febeefb4907b17d245354332dec95ce8e2fb74ab1073018faafbfb8"
+      }
+    },
+    {
+      "journeyId": "cross-release-pick",
+      "claim": "A picked Financial District building names the release it came from, its cell and cell release, the checksum of the exact asset on screen, its generated truth tiers, and an uncertainty statement.",
+      "url": "http://localhost:4174/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-74.018000&lat=40.707500&height=180.000000&heading=40.000000&pitch=-5.000000&roll=0.000000",
+      "searchResults": [
+        "BTower 1 World Trade CtrBuilding · Buildings · text"
+      ],
+      "detail": {
+        "badge": "Local · manhattan-lower-manhattan-cells-20260812-p1",
+        "badgeOrigin": "default",
+        "rows": {
+          "Release origin": "Default pinned snapshot snapshot:manhattan-lower-manhattan-cells-20260812-p1:v1",
+          "Render profile": "Exploration (coarsest verified LOD)",
+          "Cell / release": "manhattan-exterior-cell-w02-000157-16-19294-17944 · cell-release:manhattan-lower-manhattan-cells-20260812-p1:manhattan-exterior-cell-w02-000157-16-19294-17944:v1 (v1)",
+          "Active asset": "lod_0 · 6a2c3f99e5b518bf076113d03dee1fbde681ae06d7e6d06ed1d29e8488f51ed1",
+          "Truth tiers": "generated",
+          "Source dates": "captured 2026-08-04T08:25:05.580Z · updated 2026-08-02T02:17:27.174Z",
+          "Uncertainty": "Footprint-faithful procedural exterior in local millimetres with procedural surface detail. The massing follows the sourced building polygon vertex for vertex and the sourced height; nothing else does. Tier subdivision, bay rhythm, openings, attached elements, colour, material and surface pattern are designed by this grammar and assert nothing about the real building's appearance, facade, setbacks, balconies, fire escapes, water tanks or signage, nor any tenant, brand or text. The surface pattern is a designed repeating motif whose construction module was calibrated by human and agent viewing of public reference imagery; no image data was ingested, traced, sampled or reproduced, and no material, colour, age, condition or cladding of the real building is asserted."
+        },
+        "heading": "Tower 1 World Trade Ctr"
+      },
+      "passed": true,
+      "still": {
+        "relativeRef": "journeys/cross-release-pick.png",
+        "byteSize": 550044,
+        "checksumSha256": "a02cdb5dab8e376da2238d63622c86471d20eb77bf1c59cc8ddabd733672df75"
+      }
+    },
+    {
+      "journeyId": "canary-opt-in",
+      "claim": "The T015 canary's promotion-era-independent opt-in link still resolves to the canary ALONE. Promoting the wave's P1 successor did not withdraw the canary, and `?exteriorCells=` still means exactly the release it names.",
+      "url": "http://localhost:4174/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-74.018000&lat=40.707500&height=180.000000&heading=40.000000&pitch=-5.000000&roll=0.000000&exteriorCells=manhattan-lower-manhattan-cells-20260812&exteriorStreaming=on",
+      "waves": [
+        {
+          "releaseId": "manhattan-lower-manhattan-cells-20260812",
+          "origin": "default",
+          "text": "Exterior streaming · Default pinned snapshot snapshot:manhattan-lower-manhattan-cells-20260812:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only."
+        }
+      ],
+      "network": {
+        "perRelease": {
+          "manhattan-exterior-cells-20260811-v3": {
+            "glbCount": 0,
+            "encodedBytes": 0
+          },
+          "manhattan-midtown-core-cells-20260811-v3": {
+            "glbCount": 0,
+            "encodedBytes": 0
+          },
+          "manhattan-lower-manhattan-cells-20260812-p1": {
+            "glbCount": 0,
+            "encodedBytes": 0
+          },
+          "manhattan-lower-manhattan-cells-20260812": {
+            "glbCount": 41,
+            "encodedBytes": 5824561
+          }
+        },
+        "externalHosts": []
+      },
+      "passed": true,
+      "still": {
+        "relativeRef": "journeys/canary-opt-in.png",
+        "byteSize": 233576,
+        "checksumSha256": "a599aca5d884aa90a68d3dfab3642b8d2cc5a952cdf2ab34898777ce56ad9aef"
+      }
+    },
+    {
+      "journeyId": "streaming-off",
+      "claim": "`exteriorStreaming=off` disables ALL three promoted waves, not just the newest, and no exterior GLB is fetched at all.",
+      "url": "http://localhost:4174/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-74.018000&lat=40.707500&height=180.000000&heading=40.000000&pitch=-5.000000&roll=0.000000&exteriorStreaming=off",
+      "waves": [],
+      "unavailableStatements": [],
+      "network": {
+        "perRelease": {
+          "manhattan-exterior-cells-20260811-v3": {
+            "glbCount": 0,
+            "encodedBytes": 0
+          },
+          "manhattan-midtown-core-cells-20260811-v3": {
+            "glbCount": 0,
+            "encodedBytes": 0
+          },
+          "manhattan-lower-manhattan-cells-20260812-p1": {
+            "glbCount": 0,
+            "encodedBytes": 0
+          },
+          "manhattan-lower-manhattan-cells-20260812": {
+            "glbCount": 0,
+            "encodedBytes": 0
+          }
+        },
+        "externalHosts": []
+      },
+      "passed": true,
+      "still": {
+        "relativeRef": "journeys/streaming-off.png",
+        "byteSize": 302806,
+        "checksumSha256": "c07e02646d07514332fc096d6840e0be2b21c8c330d904dfecf5250a6647e0fd"
+      }
+    },
+    {
+      "journeyId": "tombstone-truth",
+      "claim": "The 124 owned w02 cells this release does NOT materialize are reported in words — the release says how many of its cells ship no exterior geometry and that no substitute was selected — rather than going quiet.",
+      "url": "http://localhost:4174/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-74.018000&lat=40.707500&height=180.000000&heading=40.000000&pitch=-5.000000&roll=0.000000",
+      "notices": [
+        "Exterior release manhattan-midtown-core-cells-20260811-v3: 146 of 149 exterior cells ship no exterior geometry in this release; no substitute was selected for them.",
+        "Exterior release manhattan-lower-manhattan-cells-20260812-p1: 124 of 126 exterior cells ship no exterior geometry in this release; no substitute was selected for them.",
+        "Exterior geometry for 170 verified buildings (doitt:1001111, doitt:102705, doitt:105916, doitt:1104532, doitt:1105839, doitt:1106429, doitt:1111726, doitt:1114625, doitt:1115013, doitt:1116162, doitt:111690, doitt:1117425, doitt:1158178, doitt:1191064, doitt:1195535, doitt:1215127, doitt:1221493, doitt:1224763, doitt:1232671, doitt:1256080, doitt:1260400, doitt:1262786, doitt:1263464, doitt:1264335, doitt:1268457, doitt:1268463, doitt:1268618, doitt:1272399, doitt:127864, doitt:1279525, doitt:1279526, doitt:1279527, doitt:1281874, doitt:1282695, doitt:1285662, doitt:1286246, doitt:1287486, doitt:1288650, doitt:1289963, doitt:1289964, doitt:1294316, doitt:1295112, doitt:1296496, doitt:1297513, doitt:1299442, doitt:1299576, doitt:1300185, doitt:1302197, doitt:1302589, doitt:131170, doitt:139071, doitt:147902, doitt:157592, doitt:162071, doitt:166790, doitt:174372, doitt:181184, doitt:194068, doitt:196987, doitt:225670, doitt:227702, doitt:228631, doitt:229752, doitt:241646, doitt:246449, doitt:260361, doitt:261397, doitt:262867, doitt:275393, doitt:297071, doitt:297390, doitt:29844, doitt:316002, doitt:317859, doitt:328864, doitt:347215, doitt:348074, doitt:353265, doitt:360993, doitt:364273, doitt:365764, doitt:36922, doitt:37170, doitt:372755, doitt:373902, doitt:374636, doitt:375025, doitt:377010, doitt:381141, doitt:383893, doitt:39969, doitt:407018, doitt:412072, doitt:418207, doitt:420075, doitt:421971, doitt:428362, doitt:440180, doitt:443409, doitt:447981, doitt:44827, doitt:450560, doitt:453302, doitt:460555, doitt:473907, doitt:487836, doitt:498980, doitt:501878, doitt:502491, doitt:513787, doitt:525090, doitt:528581, doitt:547528, doitt:559204, doitt:563161, doitt:572887, doitt:574826, doitt:584049, doitt:594251, doitt:60572, doitt:623314, doitt:624434, doitt:631125, doitt:645311, doitt:664715, doitt:665924, doitt:674326, doitt:678033, doitt:684855, doitt:688120, doitt:688158, doitt:688202, doitt:688213, doitt:709441, doitt:720315, doitt:743834, doitt:749752, doitt:754187, doitt:755561, doitt:777515, doitt:778052, doitt:787935, doitt:800671, doitt:803147, doitt:804055, doitt:812305, doitt:812702, doitt:817527, doitt:830782, doitt:835659, doitt:842122, doitt:850090, doitt:852472, doitt:91300, doitt:925937, doitt:941537, doitt:945838, doitt:97522, doitt:98082, doitt:982383, doitt:98363, doitt:996627, doitt:996629, doitt:996630, doitt:996631, doitt:996632, doitt:996636, doitt:996688, doitt:996689, doitt:996746) is not drawn: the matching base building record is not loaded, so there is no verified WGS84 anchor for it. It will be drawn once that base record loads."
+      ],
+      "w02Notice": "Exterior release manhattan-lower-manhattan-cells-20260812-p1: 124 of 126 exterior cells ship no exterior geometry in this release; no substitute was selected for them.",
+      "passed": true,
+      "still": {
+        "relativeRef": "journeys/tombstone-truth.png",
+        "byteSize": 440034,
+        "checksumSha256": "a5c4e7b06febeefb4907b17d245354332dec95ce8e2fb74ab1073018faafbfb8"
+      }
+    }
+  ],
+  "allPassed": true
+}

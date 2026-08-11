@@ -61,3 +61,14 @@ artifacts/lower-manhattan-20260812/
 # and kill-switch-verdict.json so the evidence stays checkable after this
 # worktree-local tree is removed.
 artifacts/lower-manhattan-20260812-probe/
+
+# T016 Lower-Manhattan P1 promotion work root: the same full-wave census, the
+# curated subset's Blender sample inputs and renders, and the stage receipts.
+# The hashes that matter are committed in data/lower-manhattan-20260812-p1/.
+artifacts/lower-manhattan-20260812-p1/
+
+# T016 acceptance-measurement scratch root: the uncapped CDP frame-time and
+# heap captures and the station stills. The measurements, the camera stations
+# and every still's checksum are committed in
+# data/lower-manhattan-20260812-p1/acceptance-evidence.json.
+artifacts/lower-manhattan-20260812-p1-acceptance/

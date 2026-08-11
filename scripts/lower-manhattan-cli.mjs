@@ -38,8 +38,26 @@
  * This script acquires nothing, replaces no retained snapshot, never writes into
  * another wave's directories, and writes only under the three it owns.
  *
+ * TWO RELEASES TRAVEL THIS ONE PIPELINE.
+ *
+ *   canary  (default) `manhattan-lower-manhattan-cells-20260812` — T015's
+ *           order-derived renderable subset, cells 150 and 151. Every constant
+ *           it reads is the one it always read, so its emitted bytes cannot move.
+ *   p1      `manhattan-lower-manhattan-cells-20260812-p1` — T016's PROMOTED
+ *           successor, whose renderable subset is the explicit CURATED list in
+ *           `lower-manhattan-curation.ts` (cells 157 and 160, the World Trade
+ *           Center site) rather than the ledger order, per ADR 0034
+ *           precondition (a). Same wave, same ownership ledger, same two hash
+ *           domains from the closed-table registry, same seed/tool/instant and
+ *           therefore the same plan hashes; only the release identity and which
+ *           cells retain their bytes differ.
+ *
+ * A second CLI was not written, for the reason the materializer was not copied:
+ * two copies of a derivation drift. The variant is a table, and the canary is
+ * the default entry of it.
+ *
  * Usage:
- *   node scripts/lower-manhattan-cli.mjs <probe|plans|glbs|gates|graph|sample|all> [--force]
+ *   node scripts/lower-manhattan-cli.mjs <probe|plans|glbs|gates|graph|sample|all> [--release canary|p1] [--force]
  */
 import { existsSync } from "node:fs";
 import { mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
@@ -79,6 +97,21 @@ import {
   lowerManhattanRenderableCells,
   lowerManhattanRenderableEntryBudget,
 } from "../src/release/lower-manhattan-release.ts";
+import {
+  LOWER_MANHATTAN_P1_OUTPUT_DIRECTORY,
+  LOWER_MANHATTAN_P1_PREDECESSOR_RELEASE_ID,
+  LOWER_MANHATTAN_P1_RELEASE_ID,
+  LOWER_MANHATTAN_P1_WAVE_PROFILE,
+  lowerManhattanP1Predecessor,
+  lowerManhattanP1Profile,
+} from "../src/release/lower-manhattan-p1-release.ts";
+import {
+  LOWER_MANHATTAN_CURATED_CELLS,
+  LOWER_MANHATTAN_CURATION_BASIS,
+  LOWER_MANHATTAN_CURATION_STATEMENT,
+  lowerManhattanCuratedCells,
+  lowerManhattanCuratedRefusalCensus,
+} from "../src/release/lower-manhattan-curation.ts";
 import { collectMidtownCoreSources, midtownCoreGlbBounds } from "../src/release/midtown-core-source.ts";
 import { MIDTOWN_CORE_SHIPPED_LOD_ID, buildMidtownCoreRelease } from "../src/release/midtown-core-release.ts";
 import {
@@ -92,20 +125,72 @@ import { materializeMidtownCoreV3Cells, midtownCoreV3StageFingerprint } from "..
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const snapshotRoot = join(repositoryRoot, "public", "data", EXTERIOR_FULLSNAPSHOT_BASE_RELEASE_ID);
 const ledgerRoot = join(repositoryRoot, "data", "normalized", EXTERIOR_WAVE_LEDGER_RELEASE_ID);
-/** The promoted Midtown-core V3 wave's committed inventory. Read-only. */
-const predecessorInventoryPath = join(repositoryRoot, "data", "midtown-core-20260811-v3", "payload-inventory.json");
+/** The PROMOTED Midtown-core V3 wave's committed inventory, for occupancy alone. */
+const promotedMidtownInventoryPath = join(repositoryRoot, "data", "midtown-core-20260811-v3", "payload-inventory.json");
 /** The promoted Block 835 V3 payload, for its shipped asset count alone. */
 const block835AssetsRoot = join(repositoryRoot, "public", "data", "manhattan-exterior-cells-20260811-v3", "public", "assets");
 
 /** Directories this pipeline owns and may replace. */
 export const LOWER_MANHATTAN_WORK_ROOT = "artifacts/lower-manhattan-20260812";
 export const LOWER_MANHATTAN_RECORD_ROOT = "data/lower-manhattan-20260812";
+export const LOWER_MANHATTAN_P1_WORK_ROOT = "artifacts/lower-manhattan-20260812-p1";
+export const LOWER_MANHATTAN_P1_RECORD_ROOT = "data/lower-manhattan-20260812-p1";
 /** Served to the Cesium probe page by the dev/preview middleware; gitignored. */
 export const LOWER_MANHATTAN_PROBE_ROOT = "artifacts/lower-manhattan-20260812-probe";
-const workRoot = join(repositoryRoot, LOWER_MANHATTAN_WORK_ROOT);
-const recordRoot = join(repositoryRoot, LOWER_MANHATTAN_RECORD_ROOT);
 const probeRoot = join(repositoryRoot, LOWER_MANHATTAN_PROBE_ROOT);
-const payloadRoot = join(repositoryRoot, LOWER_MANHATTAN_OUTPUT_DIRECTORY);
+
+/**
+ * The two releases this pipeline emits, and everything that differs between
+ * them. Anything not in this table is shared by construction rather than by
+ * agreement between two copies.
+ *
+ * `renderable` is the whole of ADR 0034 precondition (a): the canary derives its
+ * subset from the ledger's cell order, and the promoted successor resolves an
+ * explicit curated list. The two functions have the same signature so no stage
+ * below has to know which one it is running.
+ */
+const RELEASE_VARIANTS = {
+  canary: {
+    variantId: "canary",
+    releaseId: LOWER_MANHATTAN_RELEASE_ID,
+    outputDirectory: LOWER_MANHATTAN_OUTPUT_DIRECTORY,
+    workRoot: LOWER_MANHATTAN_WORK_ROOT,
+    recordRoot: LOWER_MANHATTAN_RECORD_ROOT,
+    waveProfile: LOWER_MANHATTAN_WAVE_PROFILE,
+    predecessorReleaseId: LOWER_MANHATTAN_PREDECESSOR_RELEASE_ID,
+    predecessorInventoryPath: join(repositoryRoot, "data", "midtown-core-20260811-v3", "payload-inventory.json"),
+    predecessorOf: lowerManhattanPredecessor,
+    releaseProfile: lowerManhattanProfile,
+    renderable: (cells, entryBudget) => lowerManhattanRenderableCells(cells, entryBudget),
+    curation: null,
+    stages: ["probe", "plans", "glbs", "gates", "graph", "sample"],
+    inventoryNote: "The payload directory is intentionally untracked, following the citywide precedent. This inventory is the committed record that keeps every emitted byte checkable after the local tree is removed; `node scripts/lower-manhattan-cli.mjs graph --force` rebuilds it byte-identically.",
+  },
+  p1: {
+    variantId: "p1",
+    releaseId: LOWER_MANHATTAN_P1_RELEASE_ID,
+    outputDirectory: LOWER_MANHATTAN_P1_OUTPUT_DIRECTORY,
+    workRoot: LOWER_MANHATTAN_P1_WORK_ROOT,
+    recordRoot: LOWER_MANHATTAN_P1_RECORD_ROOT,
+    waveProfile: LOWER_MANHATTAN_P1_WAVE_PROFILE,
+    predecessorReleaseId: LOWER_MANHATTAN_P1_PREDECESSOR_RELEASE_ID,
+    predecessorInventoryPath: join(repositoryRoot, "data", "lower-manhattan-20260812", "payload-inventory.json"),
+    predecessorOf: lowerManhattanP1Predecessor,
+    releaseProfile: lowerManhattanP1Profile,
+    renderable: (cells, entryBudget) => {
+      const curated = lowerManhattanCuratedCells(cells, entryBudget);
+      return { cells: curated.cells, ownedBuildingCount: curated.ownedBuildingCount, spareEntries: curated.spareEntries };
+    },
+    curation: { basis: LOWER_MANHATTAN_CURATION_BASIS, statement: LOWER_MANHATTAN_CURATION_STATEMENT, cells: LOWER_MANHATTAN_CURATED_CELLS },
+    // No `probe`: the kill switch is a question about whether tiles are
+    // affordable at all, it was answered on the canary, and re-running it here
+    // would measure the same tiles a second time while pretending to decide
+    // something. Promotion's measurement is the whole promoted composition in
+    // the production preview, which is a different instrument entirely.
+    stages: ["plans", "glbs", "gates", "graph", "sample"],
+    inventoryNote: "The payload directory is intentionally untracked, following the citywide precedent. This inventory is the committed record that keeps every emitted byte checkable after the local tree is removed; `node scripts/lower-manhattan-cli.mjs graph --release p1 --force` rebuilds it byte-identically.",
+  },
+};
 
 const STAGES = ["probe", "plans", "glbs", "gates", "graph", "sample"];
 
@@ -124,7 +209,10 @@ async function readVerifiedText(path, label) {
 // Shared inputs
 // ---------------------------------------------------------------------------
 
-async function loadContext() {
+async function loadContext(variant) {
+  const workRoot = join(repositoryRoot, variant.workRoot);
+  const recordRoot = join(repositoryRoot, variant.recordRoot);
+  const payloadRoot = join(repositoryRoot, variant.outputDirectory);
   const manifestText = await readVerifiedText(join(snapshotRoot, "manifest.json"), "pinned citywide manifest");
   const manifestChecksum = sha256HexSync(manifestText);
   if (manifestChecksum !== EXTERIOR_FULLSNAPSHOT_BASE_MANIFEST_SHA256) {
@@ -149,16 +237,25 @@ async function loadContext() {
   });
   if (subset.ledger.cells.length !== LOWER_MANHATTAN_CELL_COUNT) fail(`subset owns ${subset.ledger.cells.length} cells, not ${LOWER_MANHATTAN_CELL_COUNT}.`);
 
-  const predecessorInventoryText = await readVerifiedText(predecessorInventoryPath, "committed Midtown-core V3 inventory");
-  const predecessorInventory = readJsonText(predecessorInventoryText, "committed Midtown-core V3 inventory");
+  const predecessorLabel = `committed ${variant.predecessorReleaseId} inventory`;
+  const predecessorInventoryText = await readVerifiedText(variant.predecessorInventoryPath, predecessorLabel);
+  const predecessorInventory = readJsonText(predecessorInventoryText, predecessorLabel);
   const predecessorInventoryChecksumSha256 = sha256HexSync(predecessorInventoryText);
-  const predecessor = lowerManhattanPredecessor(predecessorInventory);
+  const predecessor = variant.predecessorOf(predecessorInventory);
 
   // Promoted cache occupancy, counted from what the two promoted waves actually
   // SHIPPED rather than from a remembered number. Every GLB artifact is counted,
   // both LODs included: the runtime cache is keyed per artifact, so a resident
   // coarse level occupies an entry exactly as a fine one does.
-  const midtownAssetEntries = predecessorInventory.files.filter((file) => /^public\/assets\/.*\.glb$/u.test(file.path)).length;
+  //
+  // It is counted from the PROMOTED Midtown-core V3 inventory unconditionally,
+  // never from `variant.predecessorInventoryPath`. For the canary the two happen
+  // to be the same file; for the P1 successor the predecessor is the canary,
+  // whose 41 assets are not what occupies the cache — reading the predecessor
+  // here would have handed the successor a 187-entry budget it does not have.
+  const midtownInventoryText = await readVerifiedText(promotedMidtownInventoryPath, "committed Midtown-core V3 inventory");
+  const midtownInventory = readJsonText(midtownInventoryText, "committed Midtown-core V3 inventory");
+  const midtownAssetEntries = midtownInventory.files.filter((file) => /^public\/assets\/.*\.glb$/u.test(file.path)).length;
   // Counted from the COMMITTED payload directory rather than from the root
   // manifest: that release declares its GLBs in its assembly package, not on the
   // root, so a root-manifest filter silently returns zero — which it did, and
@@ -172,9 +269,10 @@ async function loadContext() {
     maxCacheEntries: EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries,
     promotedAssetEntries,
   });
-  const renderable = lowerManhattanRenderableCells(subset.ledger.cells, entryBudget);
+  const renderable = variant.renderable(subset.ledger.cells, entryBudget);
 
   return {
+    variant, workRoot, recordRoot, payloadRoot,
     manifest, manifestChecksum, capture, parentLedger, parentLedgerChecksumSha256, subset,
     predecessorInventory, predecessorInventoryChecksumSha256, predecessor,
     occupancy: {
@@ -210,28 +308,28 @@ function inputFingerprint(context, stage) {
     predecessorInventoryChecksumSha256: context.predecessorInventoryChecksumSha256,
     renderableCellCount: context.renderable.cells.length,
     shippedLodId: MIDTOWN_CORE_SHIPPED_LOD_ID,
-    profile: LOWER_MANHATTAN_WAVE_PROFILE,
+    profile: context.variant.waveProfile,
   });
 }
 
-async function readReceipt(stage) {
-  const path = join(workRoot, "stages", `${stage}.json`);
+async function readReceipt(context, stage) {
+  const path = join(context.workRoot, "stages", `${stage}.json`);
   if (!existsSync(path)) return null;
   return readJsonText(await readFile(path, "utf8"), `${stage} receipt`);
 }
 
-async function writeReceipt(stage, fingerprint, summary) {
-  const path = join(workRoot, "stages", `${stage}.json`);
+async function writeReceipt(context, stage, fingerprint, summary) {
+  const path = join(context.workRoot, "stages", `${stage}.json`);
   await mkdir(dirname(path), { recursive: true });
-  const receipt = { schemaVersion: "1.0", stage, releaseId: LOWER_MANHATTAN_RELEASE_ID, inputFingerprint: fingerprint, summary };
+  const receipt = { schemaVersion: "1.0", stage, releaseId: context.variant.releaseId, inputFingerprint: fingerprint, summary };
   await writeFile(path, serializeExteriorWaveArtifact(receipt), "utf8");
   return receipt;
 }
 
-async function writeRecord(name, value) {
-  await mkdir(recordRoot, { recursive: true });
+async function writeRecord(context, name, value) {
+  await mkdir(context.recordRoot, { recursive: true });
   const text = serializeExteriorWaveArtifact(value);
-  await writeFile(join(recordRoot, name), text, "utf8");
+  await writeFile(join(context.recordRoot, name), text, "utf8");
   return sha256HexSync(text);
 }
 
@@ -257,7 +355,7 @@ const PROBE_STATIONS = [
 
 async function stageProbe(context, options) {
   const fingerprint = inputFingerprint(context, "probe");
-  const existing = await readReceipt("probe");
+  const existing = await readReceipt(context, "probe");
   if (existing && existing.inputFingerprint === fingerprint && !options.force && existsSync(join(probeRoot, "harness.json"))) {
     return { skipped: true, ...existing.summary };
   }
@@ -271,7 +369,7 @@ async function stageProbe(context, options) {
   const variants = [];
   for (const [variantId, profile, note] of [
     ["untextured-baseline", LOWER_MANHATTAN_CENSUS_PROFILE, "The V3 grammar with no detail tiles: this wave's own untextured baseline."],
-    ["textured-candidate", LOWER_MANHATTAN_WAVE_PROFILE, "The same plans with procedural-texture-v1 detail tiles on LOD 0, LINEAR/LINEAR_MIPMAP_LINEAR."],
+    ["textured-candidate", context.variant.waveProfile, "The same plans with procedural-texture-v1 detail tiles on LOD 0, LINEAR/LINEAR_MIPMAP_LINEAR."],
   ]) {
     const materialized = materializeMidtownCoreV3Cells({
       cells: [cell],
@@ -339,7 +437,7 @@ async function stageProbe(context, options) {
 
   const harness = {
     schemaVersion: "1.0",
-    packageId: LOWER_MANHATTAN_RELEASE_ID,
+    packageId: context.variant.releaseId,
     note: "T015 kill switch: the first textured wave's heaviest renderable cell, in the shipping renderer, against its own untextured baseline. Scratch only; not a release.",
     cellId: cell.cellId,
     textureCatalog: proceduralTextureProvenance(),
@@ -364,7 +462,7 @@ async function stageProbe(context, options) {
     probeDirectory: LOWER_MANHATTAN_PROBE_ROOT,
   };
   summary.texturedByteIncreaseRatio = summary.variants[1].totalByteSize / summary.variants[0].totalByteSize;
-  await writeReceipt("probe", fingerprint, summary);
+  await writeReceipt(context, "probe", fingerprint, summary);
   return { skipped: false, ...summary };
 }
 
@@ -374,7 +472,7 @@ async function stageProbe(context, options) {
 
 async function stagePlans(context, options) {
   const fingerprint = inputFingerprint(context, "plans");
-  const existing = await readReceipt("plans");
+  const existing = await readReceipt(context, "plans");
   if (existing && existing.inputFingerprint === fingerprint && !options.force) return { skipped: true, ...existing.summary };
 
   const { shards, declaredShardCount } = await readVerifiedShards(context.manifest);
@@ -441,9 +539,9 @@ async function stagePlans(context, options) {
   if (summary.ownedBuildingCount !== LOWER_MANHATTAN_BUILDING_COUNT) fail(`the subset owns ${summary.ownedBuildingCount} buildings, not ${LOWER_MANHATTAN_BUILDING_COUNT}.`);
   if (summary.uniquePlanHashCount !== planned) fail(`plan hashes are not unique: ${summary.uniquePlanHashCount} of ${planned}.`);
 
-  await mkdir(workRoot, { recursive: true });
-  await writeFile(join(workRoot, "plan-census.json"), serializeExteriorWaveArtifact({ ...summary, perCell, refusals }), "utf8");
-  await writeReceipt("plans", fingerprint, summary);
+  await mkdir(context.workRoot, { recursive: true });
+  await writeFile(join(context.workRoot, "plan-census.json"), serializeExteriorWaveArtifact({ ...summary, perCell, refusals }), "utf8");
+  await writeReceipt(context, "plans", fingerprint, summary);
   return { skipped: false, ...summary };
 }
 
@@ -451,8 +549,19 @@ async function stagePlans(context, options) {
 // Stage: glbs
 // ---------------------------------------------------------------------------
 
-function assertOwnedPayloadDirectory(directory) {
-  if (basename(directory) !== LOWER_MANHATTAN_RELEASE_ID) fail(`refusing to write ${directory}: only a directory named ${LOWER_MANHATTAN_RELEASE_ID} is writable.`);
+/**
+ * Only the running variant's OWN payload directory is writable.
+ *
+ * The check compares against `context.variant.releaseId` rather than against a
+ * set of known names, so a P1 run can never write into the canary's frozen
+ * payload and a canary run can never write into P1's — the failure the two-
+ * variant table would otherwise have made possible for the first time.
+ */
+function assertOwnedPayloadDirectory(context) {
+  const directory = context.payloadRoot;
+  if (basename(directory) !== context.variant.releaseId) {
+    fail(`refusing to write ${directory}: only a directory named ${context.variant.releaseId} is writable by the ${context.variant.variantId} variant.`);
+  }
 }
 
 async function existingFiles(directory) {
@@ -463,11 +572,11 @@ async function existingFiles(directory) {
 
 async function stageGlbs(context, options) {
   const fingerprint = inputFingerprint(context, "glbs");
-  const existing = await readReceipt("glbs");
-  if (existing && existing.inputFingerprint === fingerprint && !options.force && existsSync(join(payloadRoot, "public", "assets"))) {
+  const existing = await readReceipt(context, "glbs");
+  if (existing && existing.inputFingerprint === fingerprint && !options.force && existsSync(join(context.payloadRoot, "public", "assets"))) {
     return { skipped: true, ...existing.summary };
   }
-  assertOwnedPayloadDirectory(payloadRoot);
+  assertOwnedPayloadDirectory(context);
 
   const { shards } = await readVerifiedShards(context.manifest);
   const sources = collectMidtownCoreSources(shards, new Set(context.subset.buildingIds));
@@ -493,11 +602,11 @@ async function stageGlbs(context, options) {
     sources,
     baseManifestChecksumSha256: EXTERIOR_FULLSNAPSHOT_BASE_MANIFEST_SHA256,
     capture: context.capture,
-    profile: LOWER_MANHATTAN_WAVE_PROFILE,
+    profile: context.variant.waveProfile,
   });
   for (const [relativeRef, bytes] of [...shipped.assetBytes].sort(([left], [right]) => (left < right ? -1 : 1))) {
     if (!relativeRef.startsWith("public/")) fail(`refusing to emit a non-public asset path: ${relativeRef}`);
-    const target = join(payloadRoot, relativeRef);
+    const target = join(context.payloadRoot, relativeRef);
     await mkdir(dirname(target), { recursive: true });
     await writeFile(target, bytes);
   }
@@ -518,8 +627,8 @@ async function stageGlbs(context, options) {
   if (shipped.census.maximumTextureCount > V3T_QUALITY_BUDGETS.maxTextures) fail(`a shipped LOD declares ${shipped.census.maximumTextureCount} textures, above the ${V3T_QUALITY_BUDGETS.maxTextures} budget.`);
   if (full.census.maximumTextureCount !== 0) fail("the untextured wave census emitted a texture.");
 
-  await mkdir(workRoot, { recursive: true });
-  await writeFile(join(workRoot, "asset-census.json"), serializeExteriorWaveArtifact({
+  await mkdir(context.workRoot, { recursive: true });
+  await writeFile(join(context.workRoot, "asset-census.json"), serializeExteriorWaveArtifact({
     ...summary,
     waveRefusalsByCode: full.census.refusalsByCode,
     waveRefusals: [...full.refusalCodes]
@@ -533,7 +642,7 @@ async function stageGlbs(context, options) {
       volumeDeviation: full.census.worstVolumeDeviation,
     },
   }), "utf8");
-  await writeReceipt("glbs", fingerprint, summary);
+  await writeReceipt(context, "glbs", fingerprint, summary);
   return { skipped: false, ...summary };
 }
 
@@ -543,7 +652,7 @@ async function stageGlbs(context, options) {
 
 async function stageGates(context, options) {
   const fingerprint = inputFingerprint(context, "gates");
-  const existing = await readReceipt("gates");
+  const existing = await readReceipt(context, "gates");
   if (existing && existing.inputFingerprint === fingerprint && !options.force) return { skipped: true, ...existing.summary };
 
   const ownership = validateLowerManhattanSubsetLedger(context.subset.ledger);
@@ -553,7 +662,7 @@ async function stageGates(context, options) {
   const reconciliation = reconcileLowerManhattanAgainstDigest(context.subset, digest);
   if (!reconciliation.ok) fail(`digest reconciliation failed: ${stableSerialize(reconciliation.findings.slice(0, 5))}`);
 
-  const glbs = await readReceipt("glbs");
+  const glbs = await readReceipt(context, "glbs");
   if (!glbs) fail("the glbs stage has not run, so the wave statement cannot be derived.");
 
   const summary = {
@@ -586,7 +695,27 @@ async function stageGates(context, options) {
   if ((glbs.summary.shippedAssetCount ?? 0) > context.occupancy.entryBudget) {
     fail(`the renderable subset ships ${glbs.summary.shippedAssetCount} assets, above the ${context.occupancy.entryBudget}-entry budget derived from the runtime cache cap.`);
   }
-  await writeReceipt("gates", fingerprint, summary);
+  // The curated subset carries TWO extra gates the order-derived one cannot,
+  // because they are what ADR 0034's preconditions asked promotion to prove.
+  // Both are recomputed from this run's own shipped census, never recalled.
+  if (context.variant.curation) {
+    const shipped = glbs.summary.shipped ?? {};
+    const refusal = lowerManhattanCuratedRefusalCensus({
+      ownedBuildingCount: context.renderable.ownedBuildingCount,
+      materializedBuildingCount: shipped.materializedBuildingCount ?? 0,
+      refusedBuildingCount: shipped.refusedBuildingCount ?? 0,
+    });
+    if (!refusal.ok) {
+      fail(`the curated subset refuses ${(refusal.localRefusalRate * 100).toFixed(2)}% of what it owns, above the ${(refusal.maxRefusalRate * 100).toFixed(2)}% ceiling ADR 0034 precondition (b) sets against the ${(refusal.waveRefusalRate * 100).toFixed(2)}% wave rate. No tolerance was moved to improve it.`);
+    }
+    summary.curation = {
+      basis: context.variant.curation.basis,
+      statement: context.variant.curation.statement,
+      cells: context.variant.curation.cells.map((record) => ({ ...record })),
+      refusal,
+    };
+  }
+  await writeReceipt(context, "gates", fingerprint, summary);
   return { skipped: false, ...summary };
 }
 
@@ -596,11 +725,11 @@ async function stageGates(context, options) {
 
 async function stageGraph(context, options) {
   const fingerprint = inputFingerprint(context, "graph");
-  const existing = await readReceipt("graph");
-  if (existing && existing.inputFingerprint === fingerprint && !options.force && existsSync(join(payloadRoot, "release-graph.json"))) {
+  const existing = await readReceipt(context, "graph");
+  if (existing && existing.inputFingerprint === fingerprint && !options.force && existsSync(join(context.payloadRoot, "release-graph.json"))) {
     return { skipped: true, ...existing.summary };
   }
-  assertOwnedPayloadDirectory(payloadRoot);
+  assertOwnedPayloadDirectory(context);
 
   const { shards } = await readVerifiedShards(context.manifest);
   const cells = context.renderable.cells;
@@ -610,7 +739,7 @@ async function stageGraph(context, options) {
     sources,
     baseManifestChecksumSha256: EXTERIOR_FULLSNAPSHOT_BASE_MANIFEST_SHA256,
     capture: context.capture,
-    profile: LOWER_MANHATTAN_WAVE_PROFILE,
+    profile: context.variant.waveProfile,
   });
   const release = buildMidtownCoreRelease({
     subset: context.subset,
@@ -618,20 +747,20 @@ async function stageGraph(context, options) {
     materialized: shipped.buildings,
     refusals: shipped.refusals,
     capture: context.capture,
-    profile: lowerManhattanProfile(context.predecessor),
+    profile: context.variant.releaseProfile(context.predecessor),
   });
 
   const payload = new Map([...release.files, ...shipped.assetBytes]);
-  const stale = (await existingFiles(payloadRoot)).filter((path) => !payload.has(path));
-  for (const path of stale) await rm(join(payloadRoot, path));
+  const stale = (await existingFiles(context.payloadRoot)).filter((path) => !payload.has(path));
+  for (const path of stale) await rm(join(context.payloadRoot, path));
   for (const [path, bytes] of [...payload].sort(([left], [right]) => (left < right ? -1 : 1))) {
-    const target = join(payloadRoot, path);
+    const target = join(context.payloadRoot, path);
     await mkdir(dirname(target), { recursive: true });
     await writeFile(target, bytes);
   }
 
   const emitted = new Map();
-  for (const path of await existingFiles(payloadRoot)) emitted.set(path, new Uint8Array(await readFile(join(payloadRoot, path))));
+  for (const path of await existingFiles(context.payloadRoot)) emitted.set(path, new Uint8Array(await readFile(join(context.payloadRoot, path))));
   const declaredBlobs = new Map();
   for (const root of release.graph.roots) for (const artifact of root.artifacts) {
     const bytes = root.audience === "private" ? release.rootArtifactBytes.get(artifact.relativeRef) : emitted.get(artifact.relativeRef);
@@ -668,9 +797,9 @@ async function stageGraph(context, options) {
     .sort((left, right) => (left.path < right.path ? -1 : 1));
   const inventory = {
     schemaVersion: "1.0",
-    releaseId: LOWER_MANHATTAN_RELEASE_ID,
-    payloadDirectory: LOWER_MANHATTAN_OUTPUT_DIRECTORY,
-    note: "The payload directory is intentionally untracked, following the citywide precedent. This inventory is the committed record that keeps every emitted byte checkable after the local tree is removed; `node scripts/lower-manhattan-cli.mjs graph --force` rebuilds it byte-identically.",
+    releaseId: context.variant.releaseId,
+    payloadDirectory: context.variant.outputDirectory,
+    note: context.variant.inventoryNote,
     base: { releaseId: EXTERIOR_FULLSNAPSHOT_BASE_RELEASE_ID, manifestChecksumSha256: context.manifestChecksum },
     parentLedger: { releaseId: EXTERIOR_WAVE_LEDGER_RELEASE_ID, checksumSha256: context.parentLedgerChecksumSha256 },
     predecessor: {
@@ -680,9 +809,28 @@ async function stageGraph(context, options) {
       snapshotChecksumSha256: context.predecessor.snapshot.checksumSha256,
     },
     ownershipLedgerId: context.subset.ledger.ledgerId,
-    textureAdmission: { policy: "procedural-replay", ...proceduralTextureProvenance(), samplerFilter: { ...LOWER_MANHATTAN_WAVE_PROFILE.textureFilter } },
+    textureAdmission: { policy: "procedural-replay", ...proceduralTextureProvenance(), samplerFilter: { ...context.variant.waveProfile.textureFilter } },
     occupancy: context.occupancy,
     renderableCellIds: cells.map((cell) => cell.cellId),
+    // How the renderable subset was chosen, carried in the release's own
+    // committed record rather than only in an ADR.
+    //
+    // The key is SPREAD IN, not set to `null`, for a variant without a
+    // curation. The canary's committed inventory is frozen bytes; emitting an
+    // extra `"curation": null` into it would have moved its checksum — which is
+    // what the first run of this refactor did, and what the canary regression
+    // caught. A release that derived its subset from the ledger order says so
+    // by carrying no curation record at all, exactly as it always did.
+    ...(context.variant.curation
+      ? {
+        curation: {
+          basis: context.variant.curation.basis,
+          statement: context.variant.curation.statement,
+          cells: context.variant.curation.cells.map((record) => ({ ...record })),
+          refusal: (await readReceipt(context, "gates"))?.summary?.curation?.refusal ?? null,
+        },
+      }
+      : {}),
     roots: Object.fromEntries(release.graph.roots.map((root) => [root.audience, { rootId: root.rootId, rootChecksumSha256: root.rootChecksumSha256, artifactCount: root.artifacts.length }])),
     assemblyFingerprintSha256: assemblyReplay.value.fingerprintSha256,
     stats: release.stats,
@@ -692,21 +840,21 @@ async function stageGraph(context, options) {
     totals: { fileCount: files.length, byteSize: files.reduce((total, file) => total + file.byteSize, 0) },
     files,
   };
-  const inventoryChecksum = await writeRecord("payload-inventory.json", inventory);
-  const derivationChecksum = await writeRecord("derivation.json", {
+  const inventoryChecksum = await writeRecord(context, "payload-inventory.json", inventory);
+  const derivationChecksum = await writeRecord(context, "derivation.json", {
     schemaVersion: "1.0",
     derivation: context.subset.derivation,
     reconciliation: reconcileLowerManhattanAgainstDigest(context.subset, readJsonText(await readVerifiedText(join(ledgerRoot, "membership-digest.json"), "committed membership digest"), "membership digest")),
   });
-  const censusChecksum = await writeRecord("wave-census.json", {
+  const censusChecksum = await writeRecord(context, "wave-census.json", {
     schemaVersion: "1.0",
-    releaseId: LOWER_MANHATTAN_RELEASE_ID,
+    releaseId: context.variant.releaseId,
     note: "Wave-scale V3 stop-code census over all 6,425 owned buildings, plus the shipped-subset census over the renderable cells. Committed so the refusal distribution stays checkable without the untracked work root. The wave census is untextured by design; the shipped subset carries procedural-texture-v1 tiles on LOD 0. READ `wave.retention` BEFORE `wave.shippedAssetCount`: the wave pass runs `census-only`, so it generated, gated and measured every asset and then dropped the bytes rather than keeping them. Its `shippedAssetBytes` is therefore a real measurement while its `shippedAssetCount` is zero, which is a retention mode and not a contradiction. The `shipped` object below is the pass that retained bytes.",
     textureCatalog: proceduralTextureProvenance(),
-    samplerFilter: { ...LOWER_MANHATTAN_WAVE_PROFILE.textureFilter },
+    samplerFilter: { ...context.variant.waveProfile.textureFilter },
     occupancy: context.occupancy,
-    wave: (await readReceipt("glbs"))?.summary?.wave ?? null,
-    waveRefusals: (await readReceipt("plans"))?.summary?.refusalsByCode ?? null,
+    wave: (await readReceipt(context, "glbs"))?.summary?.wave ?? null,
+    waveRefusals: (await readReceipt(context, "plans"))?.summary?.refusalsByCode ?? null,
     shipped: shipped.census,
     shippedRefusedBuildingIds: [...shipped.refusalCodes].map(([buildingId, code]) => ({ buildingId, code })).sort((left, right) => (left.buildingId < right.buildingId ? -1 : 1)),
     shippedAbsentSetbackBuildingIds: [...shipped.absentSetbacks.keys()].sort(),
@@ -734,7 +882,7 @@ async function stageGraph(context, options) {
     derivationRecordChecksumSha256: derivationChecksum,
     censusRecordChecksumSha256: censusChecksum,
   };
-  await writeReceipt("graph", fingerprint, summary);
+  await writeReceipt(context, "graph", fingerprint, summary);
   return { skipped: false, ...summary };
 }
 
@@ -780,7 +928,7 @@ function ringAreaMm2(ring) {
 
 async function stageSample(context, options) {
   const fingerprint = inputFingerprint(context, "sample");
-  const existing = await readReceipt("sample");
+  const existing = await readReceipt(context, "sample");
   if (existing && existing.inputFingerprint === fingerprint && !options.force) return { skipped: true, ...existing.summary };
 
   const { shards } = await readVerifiedShards(context.manifest);
@@ -793,14 +941,14 @@ async function stageSample(context, options) {
       const source = sources.get(buildingId);
       if (!source) continue;
       let context3;
-      try { context3 = buildMidtownCoreV3Plan(source, EXTERIOR_FULLSNAPSHOT_BASE_MANIFEST_SHA256, LOWER_MANHATTAN_WAVE_PROFILE); }
+      try { context3 = buildMidtownCoreV3Plan(source, EXTERIOR_FULLSNAPSHOT_BASE_MANIFEST_SHA256, context.variant.waveProfile); }
       catch (error) { if (!(error instanceof MidtownCoreV3Stop)) throw error; continue; }
       const written = writeMidtownCoreV3Assets(context3, {
         ownerCellId: cell.cellId,
         capturedAt: context.capture.capturedAt,
         updatedAt: context.capture.updatedAt,
         predecessor: null,
-        profile: LOWER_MANHATTAN_WAVE_PROFILE,
+        profile: context.variant.waveProfile,
       });
       const shippedAsset = written.assets.find((asset) => asset.lodId === MIDTOWN_CORE_SHIPPED_LOD_ID);
       candidates.push({
@@ -848,7 +996,7 @@ async function stageSample(context, options) {
   const texturedSampleIds = sampleIds.filter((buildingId) => byId.get(buildingId).textureCount > 0);
   if (texturedSampleIds.length < 10) fail(`only ${texturedSampleIds.length} sampled assets carry tiles; the first textured wave must re-import at least 10.`);
 
-  const inputsRoot = join(workRoot, "blender", "inputs");
+  const inputsRoot = join(context.workRoot, "blender", "inputs");
   await rm(inputsRoot, { recursive: true, force: true });
   await mkdir(inputsRoot, { recursive: true });
   for (const buildingId of sampleIds) {
@@ -858,7 +1006,7 @@ async function stageSample(context, options) {
       buildingId,
       cellId: entry.cellId,
       stratum: chosen.get(buildingId),
-      assetPath: join(payloadRoot, entry.relativeRef),
+      assetPath: join(context.payloadRoot, entry.relativeRef),
       checksumSha256: entry.checksumSha256,
       planHashSha256: entry.plan.planHashSha256,
       declared: { triangleCount: entry.triangleCount, materialCount: entry.materialCount, textureCount: entry.textureCount },
@@ -881,10 +1029,10 @@ async function stageSample(context, options) {
     tierCollapseCount: collapse.length,
     strata,
     sampleIds,
-    inputsDirectory: join(LOWER_MANHATTAN_WORK_ROOT, "blender", "inputs"),
+    inputsDirectory: join(context.variant.workRoot, "blender", "inputs"),
   };
-  await writeFile(join(workRoot, "blender-sample.json"), serializeExteriorWaveArtifact(summary), "utf8");
-  await writeReceipt("sample", fingerprint, summary);
+  await writeFile(join(context.workRoot, "blender-sample.json"), serializeExteriorWaveArtifact(summary), "utf8");
+  await writeReceipt(context, "sample", fingerprint, summary);
   return { skipped: false, ...summary };
 }
 
@@ -895,17 +1043,31 @@ const RUNNERS = { probe: stageProbe, plans: stagePlans, glbs: stageGlbs, gates: 
 async function main() {
   const argv = process.argv.slice(2);
   const force = argv.includes("--force");
-  const requested = argv.filter((token) => !token.startsWith("--"));
+  const requested = argv.filter((token, index) => !token.startsWith("--") && argv[index - 1] !== "--release");
   const stage = requested[0] ?? "all";
   if (stage !== "all" && !STAGES.includes(stage)) fail(`unknown stage ${stage}; expected one of ${STAGES.join(", ")} or all.`);
 
-  const context = await loadContext();
+  const variantIndex = argv.indexOf("--release");
+  const variantId = variantIndex >= 0 ? argv[variantIndex + 1] : "canary";
+  const variant = RELEASE_VARIANTS[variantId];
+  if (!variant) fail(`unknown release variant ${variantId}; expected one of ${Object.keys(RELEASE_VARIANTS).join(", ")}.`);
+  if (stage !== "all" && !variant.stages.includes(stage)) {
+    fail(`the ${variant.variantId} variant does not run stage ${stage}; it runs ${variant.stages.join(", ")}.`);
+  }
+
+  const context = await loadContext(variant);
   const report = {};
-  for (const name of stage === "all" ? STAGES : [stage]) {
+  for (const name of stage === "all" ? variant.stages : [stage]) {
     const startedAt = Date.now();
     report[name] = { ...(await RUNNERS[name](context, { force })), elapsedMilliseconds: Date.now() - startedAt };
   }
-  console.log(JSON.stringify({ ok: true, releaseId: LOWER_MANHATTAN_RELEASE_ID, predecessorReleaseId: LOWER_MANHATTAN_PREDECESSOR_RELEASE_ID, stages: report }, null, 2));
+  console.log(JSON.stringify({
+    ok: true,
+    variant: variant.variantId,
+    releaseId: variant.releaseId,
+    predecessorReleaseId: variant.predecessorReleaseId,
+    stages: report,
+  }, null, 2));
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url))) await main();
