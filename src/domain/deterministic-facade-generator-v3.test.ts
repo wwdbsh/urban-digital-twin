@@ -393,3 +393,76 @@ describe("V3 plans are canonical and reproducible", () => {
     }
   });
 });
+
+// (23a) -----------------------------------------------------------------
+/**
+ * The analytic volume identity, checked here in TypeScript so it guards every
+ * run rather than only the Blender pass.
+ *
+ * This is NOT the Blender re-proof: it uses no Blender mesh, normals or
+ * importer, and agreement between this and `tessellateV3Plan` cannot catch an
+ * error they share. It is still the check that caught three real defects —
+ * protrusion boxes left open at the back, rooftop prisms missing from the
+ * identity, and a ground floor whose entrance had a different height from its
+ * storefronts and so tiled the same wall row twice.
+ */
+function divergenceVolumeCubicMeters(tessellation: ReturnType<typeof tessellateV3Plan>): number {
+  let total = 0;
+  const accumulate = (corners: readonly (readonly [number, number, number])[]): void => {
+    const scaled = corners.map((corner) => corner.map((value) => value / 1_000) as [number, number, number]);
+    for (let index = 1; index < scaled.length - 1; index += 1) {
+      const a = scaled[0]!;
+      const b = scaled[index]!;
+      const c = scaled[index + 1]!;
+      total += (a[1] * b[2] - a[2] * b[1]) * c[0] + (a[2] * b[0] - a[0] * b[2]) * c[1] + (a[0] * b[1] - a[1] * b[0]) * c[2];
+    }
+  };
+  for (const quad of tessellation.quads) accumulate(quad.corners);
+  for (const triangle of tessellation.triangles) accumulate([triangle.a, triangle.b, triangle.c]);
+  return total / 6;
+}
+
+function analyticVolumeCubicMeters(plan: V3Plan, includeRecesses: boolean): number {
+  let volume = 0;
+  for (const tier of plan.tiers) volume += (Math.abs(ringSignedAreaMm2(tier.ring)) / 1e6) * ((tier.topZMm - tier.baseZMm) / 1_000);
+  // Rooftop prisms are silhouette, so both levels of detail carry them.
+  for (const prism of plan.prisms) volume += (Math.abs(ringSignedAreaMm2(prism.ring)) / 1e6) * ((prism.topZMm - prism.baseZMm) / 1_000);
+  if (!includeRecesses) return volume;
+  for (const placement of plan.placements) {
+    const area = ((placement.bounds.uMaxMm - placement.bounds.uMinMm) / 1_000) * ((placement.bounds.vMaxMm - placement.bounds.vMinMm) / 1_000);
+    // Corner clearance is what makes this a plain sum: no two placement boxes
+    // can meet inside a corner, so none is double counted.
+    volume += (area * Math.abs(placement.depthMm)) / 1_000 * Math.sign(placement.depthMm);
+  }
+  return volume;
+}
+
+describe("(23a) the tessellated surface bounds exactly the solid the grammar describes", () => {
+  it("matches shoelace tiers, placement boxes and rooftop prisms for all fourteen, at both levels of detail", () => {
+    for (const building of buildings) {
+      const plan = planFor(building.canonicalBuildingId);
+      for (const includeRecesses of [true, false]) {
+        const measured = divergenceVolumeCubicMeters(tessellateV3Plan(plan, { includeRecesses }));
+        const analytic = analyticVolumeCubicMeters(plan, includeRecesses);
+        expect(Math.abs(measured - analytic) / Math.abs(analytic), `${building.canonicalBuildingId} recesses=${includeRecesses}`).toBeLessThan(1e-6);
+      }
+    }
+  });
+
+  it("keeps every opening of a wall row on one shared v-band", () => {
+    // The defect this pins: an opening of a different height inside a row forces
+    // a second tiling of the same wall and silently doubles its volume.
+    for (const building of buildings) {
+      const plan = planFor(building.canonicalBuildingId);
+      const rows = new Map<string, Set<string>>();
+      for (const placement of plan.placements) {
+        if (placement.depthMm >= 0 || placement.floorIndex === null) continue;
+        const key = `${placement.surfaceId}:${placement.floorIndex}`;
+        const bucket = rows.get(key) ?? new Set<string>();
+        bucket.add(`${placement.bounds.vMinMm}:${placement.bounds.vMaxMm}`);
+        rows.set(key, bucket);
+      }
+      for (const [key, bands] of rows) expect(bands.size, `${building.canonicalBuildingId} ${key}`).toBe(1);
+    }
+  });
+});

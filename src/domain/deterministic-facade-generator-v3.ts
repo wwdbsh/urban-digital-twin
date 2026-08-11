@@ -1184,7 +1184,12 @@ function buildPlacements(input: V3Input, tiers: V3Tier[], facades: V3FacadeSurfa
           if (width <= 0) continue;
           const center = cell.startMm + Math.round(cellWidth / 2);
           const uMinMm = center - Math.round(width / 2);
-          const height = primaryEntrance ? Math.min(parameters.entranceHeightMm, openingHeight) : openingHeight;
+          // Every opening in a row shares one v-band. The row is tiled by piers
+          // between openings, so an opening of a different height would force a
+          // second overlapping tiling of the same wall and double-count its
+          // volume — which is exactly what the analytic identity caught. The
+          // entrance is distinguished by its width, material and kind instead.
+          const height = openingHeight;
           placements.push({
             id: `placement:${primaryEntrance ? "entrance" : ground ? "storefront" : "window"}:${tier.index}:${surface.edgeIndex}:${row.floorIndex}:${bayIndex}`,
             kind: primaryEntrance ? "entrance" : ground ? "storefront" : "window",
@@ -1535,10 +1540,20 @@ function recessBox(out: V3Quad[], frame: SurfaceFrame, surface: V3FacadeSurface,
   out.push({ materialId: wallId, corners: [point(uMin, vMax, 0), point(uMin, vMax, depth), point(uMax, vMax, depth), point(uMax, vMax, 0)] });
 }
 
-/** Five faces of an outward box: the front plus its four returns. */
+/**
+ * A CLOSED outward box: front, four returns, and a back face lying in the wall.
+ *
+ * The back face is not decoration. Without it the box is an open shell, the
+ * wall behind it is still emitted, and the surface no longer bounds a solid:
+ * the analytic volume identity comes out several per cent high. Emitting the
+ * box closed makes the shipped surface the union of two closed solids whose
+ * volumes simply add, which is exactly what the identity asserts. The
+ * coincident back face is interior and never seen.
+ */
 function protrusionBox(out: V3Quad[], frame: SurfaceFrame, surface: V3FacadeSurface, materialId: string, uMin: number, vMin: number, uMax: number, vMax: number, depth: number): void {
   const point = (u: number, v: number, d: number): Point3Mm => framePoint(frame, surface.uLengthMm, u, v, d);
   out.push({ materialId, corners: [point(uMin, vMin, depth), point(uMax, vMin, depth), point(uMax, vMax, depth), point(uMin, vMax, depth)] });
+  out.push({ materialId, corners: [point(uMin, vMin, 0), point(uMin, vMax, 0), point(uMax, vMax, 0), point(uMax, vMin, 0)] });
   out.push({ materialId, corners: [point(uMin, vMin, 0), point(uMin, vMin, depth), point(uMin, vMax, depth), point(uMin, vMax, 0)] });
   out.push({ materialId, corners: [point(uMax, vMin, depth), point(uMax, vMin, 0), point(uMax, vMax, 0), point(uMax, vMax, depth)] });
   out.push({ materialId, corners: [point(uMin, vMin, depth), point(uMin, vMin, 0), point(uMax, vMin, 0), point(uMax, vMin, depth)] });
