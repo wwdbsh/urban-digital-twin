@@ -11,11 +11,13 @@ import { stableSerialize } from "./catalog-release";
 import type { ExteriorOwnershipCell, ExteriorOwnershipLedger } from "./exterior-release";
 import {
   EXTERIOR_FULLSNAPSHOT_BYTE_MODEL,
+  EXTERIOR_FULLSNAPSHOT_ESTIMATE_BASIS_V1,
   EXTERIOR_FULLSNAPSHOT_ESTIMATE_BASIS_V2,
   EXTERIOR_FULLSNAPSHOT_LOD_PROFILE,
   EXTERIOR_FULLSNAPSHOT_PILOT_CROSS_CHECK,
   EXTERIOR_FULLSNAPSHOT_RECONCILIATION_CODES,
   EXTERIOR_FULLSNAPSHOT_TEXTURE_BYTE_MODEL,
+  FULLSNAPSHOT_TEXTURED_PLAN_REQUIRES_V2,
   buildFullSnapshotBudgetTable,
   buildFullSnapshotPackagePlan,
   estimateFullSnapshotAssetBytes,
@@ -67,14 +69,18 @@ function plannedMap(entries: Array<[string, number]>) {
   return new Map(entries.map(([buildingId, placementCount]) => [buildingId, { buildingId, placementCount }]));
 }
 
-function samplePlan(): FullSnapshotPackagePlan {
-  return buildFullSnapshotPackagePlan({
+function planInput() {
+  return {
     ledger: SAMPLE_LEDGER,
     ledgerChecksumSha256: LEDGER_CHECKSUM,
     baseReleaseId: "manhattan-citywide-20260804",
     baseManifestChecksumSha256: "d".repeat(64),
     planned: plannedMap([["doitt:1", 39], ["doitt:2", 100], ["doitt:3", 12]]),
-  });
+  };
+}
+
+function samplePlan(): FullSnapshotPackagePlan {
+  return buildFullSnapshotPackagePlan(planInput());
 }
 
 describe("full-snapshot structural byte estimator", () => {
@@ -445,6 +451,25 @@ describe("full-snapshot byte estimate, basis v2", () => {
     expect(threeTiles - oneTile).toBeLessThan(3 * EXTERIOR_FULLSNAPSHOT_TEXTURE_BYTE_MODEL.imageBytes);
     // A thousand times the geometry costs far more than the whole tile catalogue.
     expect(large - small).toBeGreaterThan(10 * EXTERIOR_FULLSNAPSHOT_TEXTURE_BYTE_MODEL.imageBytes);
+  });
+
+  it("defaults the package plan to v1 and refuses a textured plan under it", () => {
+    // Default = v1, byte-for-byte with the frozen dryrun artifact.
+    const plan = samplePlan();
+    expect(plan.estimateBasis).toBe(EXTERIOR_FULLSNAPSHOT_ESTIMATE_BASIS_V1);
+    expect(plan.estimateBasis).toBe("structural-gltf-accessor-arithmetic-v1");
+    expect(buildFullSnapshotPackagePlan({ ...planInput(), estimateBasis: EXTERIOR_FULLSNAPSHOT_ESTIMATE_BASIS_V1 })).toStrictEqual(plan);
+    // Asking for image and UV terms under v1 is refused, not silently ignored:
+    // silently ignoring is exactly the under-report ADR 0032 warned about.
+    expect(() => buildFullSnapshotPackagePlan({ ...planInput(), texture: { "lod-0": { textureCount: 3, texturedPrimitiveCount: 4 }, "lod-1": { textureCount: 0, texturedPrimitiveCount: 0 } } }))
+      .toThrow(FULLSNAPSHOT_TEXTURED_PLAN_REQUIRES_V2);
+    const v2 = buildFullSnapshotPackagePlan({
+      ...planInput(),
+      estimateBasis: EXTERIOR_FULLSNAPSHOT_ESTIMATE_BASIS_V2,
+      texture: { "lod-0": { textureCount: 3, texturedPrimitiveCount: 4 }, "lod-1": { textureCount: 0, texturedPrimitiveCount: 0 } },
+    });
+    expect(v2.estimateBasis).toBe(EXTERIOR_FULLSNAPSHOT_ESTIMATE_BASIS_V2);
+    expect(v2.estimatedTotalBytes).toBeGreaterThan(plan.estimatedTotalBytes);
   });
 
   it("refuses shapes that describe an artifact the writer would never emit", () => {

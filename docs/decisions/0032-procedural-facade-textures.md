@@ -383,9 +383,17 @@ station is the sampler.
 | `far-shaft-repeats` | 620 m | **Decisive.** Wrap-only breaks the shaft into irregular horizontal clumping and speckle — the pattern reads as noise banding rather than coursing. Trilinear resolves it as an even, stable grid. |
 
 **Decision: `PROCEDURAL_TEXTURE_SAMPLER_FILTER = { magFilter: 9729, minFilter: 9987 }`.**
-Any textured package admitted publicly must name that pair in its shipped bytes.
-The constant is exported for the wave chain to consume; it grants no admission by
-itself.
+Any textured package admitted publicly must name that pair in its shipped bytes,
+and that is **enforced, not merely asserted**. The release root declares the pair
+in its generated-texture fact; under `procedural-replay` — and under nothing else
+— `validateProceduralTextureGlb` resolves every drawn texture to its sampler and
+requires both fields to equal the declared pair, refusing with
+`ASSEMBLY_ISSUE_TEXTURE_SAMPLER_FILTER_REQUIRED`. Without that check a successor
+wave could ship the wrap-only samplers whose aliasing was measured here while its
+immutable root asserted trilinear, and every other gate would have passed. The
+rule is deliberately conditional: the private and replay-only paths are
+untouched, so the frozen `-v3t` package — which ships wrap-only samplers and is
+not publicly admitted — stays byte-valid.
 
 `writeCanonicalGlb` takes the filter as an OPTIONAL field on its texture set, and
 absent reproduces the previous sampler exactly. **The frozen `-v3t` package
@@ -484,6 +492,21 @@ is the release-level generated-texture fact, which says only what is true:
 generated in-repo, gated by rasterizer replay, citing **no** evidence basis
 (declared literally `null`, never omitted), and naming the decided sampler filter.
 
+**What this argument does NOT dispose of, stated plainly.** A designed tile drawn
+onto a named, identifiable, selectable building still makes an implicit visual
+assertion: a user looking at the Empire State Building in this application sees a
+surface, and surfaces read as claims whether or not any metadata field says so.
+Nothing in the rights analysis above makes that go away. The containment is not
+that the assertion is absent — it is that **no user-facing claim of facade
+fidelity is made anywhere**: the shipped per-asset uncertainty
+(`DETERMINISTIC_FACADE_V3T_UNCERTAINTY`, and the cited-style variant beside it)
+says the colour, material and detail are designed and derive from no imagery and
+no observation, the details panel shows that text next to the geometry, and ADR
+0033's "What this decision does not claim" says the same in the record. Anyone
+promoting a textured wave inherits the obligation to keep that text visible and
+accurate; if it were ever dropped, the tiles would become an unqualified claim
+about a real building, and the argument in this section would no longer hold.
+
 **`derivative-scope-excludes-texture` on the Empire State Building intake record
 remains correct, untouched, and CONSISTENT with this.** That restriction says a
 measurement-only encyclopaedia fact may not become a texture. The designed tile
@@ -553,7 +576,7 @@ a different budget on a different contract.
 | 4 | UV origin must stay per-building | **Closed by test** (A3). The one precondition that failed silently now fails a suite. |
 | 5 | Runtime cache residency | **Closed** as arithmetic derived from basis v2 (B4). It is a byte-budget model, not a measured eviction trace on a shipped textured wave — no such wave exists to trace. |
 | 6 | `city-asset-manifest.ts` `maxTextures` | **RE-DEFERRED, with scope note.** It is NOT on the exterior-cell-runtime path: it is consumed by the pilot, landmark and fixture asset resolvers, which no exterior release reaches. The same is true of `block835-public-realm-release.ts`'s `assetBudget.maxTextures`, a public-realm budget on a third contract. Both keep their zero and both must be revisited deliberately by whoever first serves a textured asset through those paths. |
-| 7 | Cesium filtering and aliasing | **Closed** by measured evidence (A1). |
+| 7 | Cesium filtering and aliasing | **Closed** by measured evidence (A1), and now ENFORCED on the bytes: under `procedural-replay` only, `validateProceduralTextureGlb` requires every drawn texture to resolve to a sampler naming the exact `magFilter`/`minFilter` pair the release's generated-texture fact declares (`ASSEMBLY_ISSUE_TEXTURE_SAMPLER_FILTER_REQUIRED`). |
 
 `proceduralTextureProfile` stays **DECLARATIVE ONLY**. The F1 security reasoning
 above stands unchanged and unweakened: a flag that gated admission would be a

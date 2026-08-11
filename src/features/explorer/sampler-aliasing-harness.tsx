@@ -143,6 +143,13 @@ export function SamplerAliasingHarness(): React.JSX.Element {
         if (!assetResponse.ok) throw new Error(`Variant asset ${asset.relativeRef} is not being served (${assetResponse.status}).`);
         const bytes = new Uint8Array(await assetResponse.arrayBuffer());
         if (bytes.byteLength !== asset.byteSize) throw new Error(`Variant asset ${asset.relativeRef} returned ${bytes.byteLength} bytes; ${asset.byteSize} were declared.`);
+        // Byte length alone would not tell the two sampler variants apart from
+        // each other, let alone from a stale build left in the scratch root.
+        // The captures are evidence, so the bytes they were taken from are
+        // verified against the checksums the committed record cites.
+        const digest = await crypto.subtle.digest("SHA-256", bytes as Uint8Array<ArrayBuffer>);
+        const checksum = [...new Uint8Array(digest)].map((part) => part.toString(16).padStart(2, "0")).join("");
+        if (checksum !== asset.checksumSha256) throw new Error(`Variant asset ${asset.relativeRef} failed its declared SHA-256; the scratch root does not match the harness input.`);
         loadedBytes += bytes.byteLength;
         if (cancelled) return;
         const objectUrl = exteriorModelObjectUrl(bytes);

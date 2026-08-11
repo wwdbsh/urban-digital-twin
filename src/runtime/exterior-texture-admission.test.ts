@@ -36,11 +36,16 @@ import {
   ASSEMBLY_ISSUE_EMBEDDED_IMAGE_FORBIDDEN,
   ASSEMBLY_ISSUE_TEXTURE_PROVENANCE_REQUIRED,
   ASSEMBLY_ISSUE_TEXTURE_REPLAY_MISMATCH,
+  ASSEMBLY_ISSUE_TEXTURE_SAMPLER_FILTER_REQUIRED,
+  parseGlbV2,
+  publiclyAdmittedSamplerFilter,
   replayMultiLodAssembly,
   requiresTextureFreeAssembly,
+  validateGlbBinding,
   validateMultiLodAssembly,
 } from "../release/multi-lod-assembly.ts";
 import {
+  PROCEDURAL_TEXTURE_PROFILE,
   PROCEDURAL_TEXTURE_SAMPLER_FILTER,
   proceduralTextureProvenance,
   proceduralTextureTile,
@@ -96,7 +101,7 @@ function glbMetadata(bytes: Uint8Array): Record<string, unknown> {
  * elsewhere; what needs proving here is that a legitimate tile gets through when
  * — and only when — a release admits it.
  */
-async function texturedFixture(options: { corruptPixel?: boolean; dropProvenance?: boolean } = {}): Promise<ExteriorCellFixture> {
+async function texturedFixture(options: { corruptPixel?: boolean; dropProvenance?: boolean; wrapOnlySampler?: boolean } = {}): Promise<ExteriorCellFixture> {
   const fixture = await exteriorCellFixture();
   const packageId = fixture.assemblyPackageIds.c1v2;
   const assembly = fixture.assemblies.find((entry) => entry.packageId === packageId)!;
@@ -113,7 +118,13 @@ async function texturedFixture(options: { corruptPixel?: boolean; dropProvenance
     quads: [{ materialIndex: 0, corners: [[0, 0, 0], [2, 0, 0], [2, 2, 0], [0, 2, 0]], uv: [[0, 0], [1, 0], [1, 1], [0, 1]] }],
     materials: [{ baseColorFactor: [0.8, 0.6, 0.5, 1], metallicFactor: 0, roughnessFactor: 0.8 }],
     metadata,
-    textures: { images: [{ mimeType: "image/png", bytes: pngBytes }], materialImage: [0], filter: GLB_SAMPLER_FILTER_TRILINEAR },
+    textures: {
+      images: [{ mimeType: "image/png", bytes: pngBytes }],
+      materialImage: [0],
+      // Omitting the filter is exactly the shape the frozen -v3t package ships
+      // and exactly the shape that measured badly in Cesium.
+      ...(options.wrapOnlySampler ? {} : { filter: GLB_SAMPLER_FILTER_TRILINEAR }),
+    },
   });
   expect(written.counts).toStrictEqual({ triangleCount: 2, materialCount: 1, textureCount: 1 });
   lod.quality = { triangleCount: 2, materialCount: 1, textureCount: 1, budgets: { maxTriangles: 2, maxMaterials: 1, maxTextures: 1 } };
@@ -143,7 +154,7 @@ async function expectRefusedByGate(fixture: ExteriorCellFixture, code: string, g
   expect(outcome.notice).toContain(code);
   const assembly = fixture.assemblies.find((entry) => entry.packageId === fixture.assemblyPackageIds.c1v2)!;
   const contents = new Map(assembly.artifacts.map((artifact) => [artifact.relativeRef, fixture.contents.get(artifact.relativeRef)!]));
-  const replay = await replayMultiLodAssembly(assembly, contents, { textureAdmission: "procedural-replay" });
+  const replay = await replayMultiLodAssembly(assembly, contents, { textureAdmission: "procedural-replay", declaredSamplerFilter: { ...PROCEDURAL_TEXTURE_SAMPLER_FILTER } });
   expect(replay.ok).toBe(false);
   expect(replay.ok === false && replay.issues.some((issue) => issue.message.includes(gateMessage))).toBe(true);
 }
@@ -241,6 +252,44 @@ describe("the runtime refuses a textured package unless its release admits one",
   });
 });
 
+describe("a public admission is only as good as the samplers in the bytes", () => {
+  it("refuses a wrap-only textured GLB under procedural-replay, by name", async () => {
+    // The root's generated-texture fact asserts LINEAR / LINEAR_MIPMAP_LINEAR.
+    // Before this rule existed nothing checked the shipped samplers against it,
+    // so a successor wave could declare trilinear in an immutable root and ship
+    // the wrap-only bytes whose aliasing T028 actually measured.
+    const fixture = admit(await texturedFixture({ wrapOnlySampler: true }), GENERATED_TEXTURE_FACT);
+    await expectRefusedByGate(fixture, "glb-invalid", ASSEMBLY_ISSUE_TEXTURE_SAMPLER_FILTER_REQUIRED);
+  });
+
+  it("still accepts those same bytes on the private replay path", async () => {
+    // The rule is CONDITIONAL and public-only. The frozen -v3t package ships
+    // wrap-only samplers, is byte-frozen, and is not publicly admitted; nothing
+    // about the private or replay-only path may move.
+    const fixture = await texturedFixture({ wrapOnlySampler: true });
+    const assembly = fixture.assemblies.find((entry) => entry.packageId === fixture.assemblyPackageIds.c1v2)!;
+    const asset = assembly.assets[0]!;
+    const lod = asset.lods.find((entry) => entry.lodId === "lod-0")!;
+    const parsed = parseGlbV2(fixture.contents.get(lod.artifactRef)!);
+    // Private/replay-only: no admission in force, so no sampler requirement.
+    expect(publiclyAdmittedSamplerFilter("private", { proceduralTextureProfile: PROCEDURAL_TEXTURE_PROFILE })).toBeNull();
+    expect(publiclyAdmittedSamplerFilter("public", { textureAdmission: "texture-free" })).toBeNull();
+    expect(() => validateGlbBinding(parsed, asset, lod, false, null)).not.toThrow();
+    // ...and the same bytes fail the moment a public admission is in force.
+    expect(() => validateGlbBinding(parsed, asset, lod, false, { ...PROCEDURAL_TEXTURE_SAMPLER_FILTER })).toThrow(ASSEMBLY_ISSUE_TEXTURE_SAMPLER_FILTER_REQUIRED);
+  });
+
+  it("admits a trilinear GLB end to end, and pins where the pair comes from", async () => {
+    const fixture = admit(await texturedFixture(), GENERATED_TEXTURE_FACT);
+    const outcome = await loadCell(fixture);
+    expect(outcome.kind === "rendered" && outcome.representation).toBe("head");
+    // The enforced pair is the one the RELEASE declares, not a constant this
+    // module chose: the root fact and the shipped samplers are the same numbers.
+    expect(publiclyAdmittedSamplerFilter("public", { textureAdmission: "procedural-replay", declaredSamplerFilter: { magFilter: 9729, minFilter: 9987 } })).toStrictEqual({ magFilter: 9729, minFilter: 9987 });
+    expect(GENERATED_TEXTURE_FACT.generatedTextureFact!.samplerFilter).toStrictEqual({ ...PROCEDURAL_TEXTURE_SAMPLER_FILTER });
+  });
+});
+
 describe("procedural-replay opens exactly one door", () => {
   it("still requires provenance on any GLB that embeds an image", async () => {
     const fixture = admit(await texturedFixture({ dropProvenance: true }), GENERATED_TEXTURE_FACT);
@@ -287,13 +336,33 @@ describe("procedural-replay opens exactly one door", () => {
 
   it("keeps the texture-free gate itself byte-untouched for every other release", async () => {
     // A package that is texture-free by lineage stays texture-free under an
-    // admitting release, and the refusal is still the embedded-image gate's own.
+    // admitting release. NOTE what this particular refusal is: it fires at the
+    // MANIFEST, on the declared textureCount, before any GLB is parsed. The
+    // byte-layer half of the same gate is asserted separately below, because a
+    // manifest that LIES about its texture count would sail past this one.
     const fixture = await texturedFixture();
     const assembly = fixture.assemblies.find((entry) => entry.packageId === fixture.assemblyPackageIds.c1v2)!;
     const refused = validateMultiLodAssembly(assembly, { textureAdmission: "procedural-replay", requireTextureFreeAssembly: true });
     expect(refused.ok).toBe(false);
     expect(refused.ok === false && refused.issues.some((issue) => issue.message === ASSEMBLY_ISSUE_DECLARED_TEXTURE_FORBIDDEN)).toBe(true);
-    expect(ASSEMBLY_ISSUE_EMBEDDED_IMAGE_FORBIDDEN).toContain("embedded-image-gate/");
+  });
+
+  it("refuses textured BYTES at the byte layer under texture-free, not merely a textured manifest", async () => {
+    // The negative direction for the runtime's textureFree threading. A manifest
+    // declaring textureCount 0 passes the manifest gate; the payload underneath
+    // still embeds an image, and `validateGlbBinding` -- which is what the
+    // runtime calls per artifact -- must be the thing that refuses it.
+    const fixture = await texturedFixture();
+    const assembly = fixture.assemblies.find((entry) => entry.packageId === fixture.assemblyPackageIds.c1v2)!;
+    const asset = assembly.assets[0]!;
+    const lod = asset.lods.find((entry) => entry.lodId === "lod-0")!;
+    const parsed = parseGlbV2(fixture.contents.get(lod.artifactRef)!);
+    // textureFree = true is exactly what the runtime derives for a release that
+    // declares nothing, and it refuses the payload on the embedded-image gate.
+    expect(() => validateGlbBinding(parsed, asset, lod, true, null)).toThrow(ASSEMBLY_ISSUE_EMBEDDED_IMAGE_FORBIDDEN);
+    // ...and the same bytes are accepted with textureFree = false, so the
+    // refusal is attributable to the threaded flag and to nothing else.
+    expect(() => validateGlbBinding(parsed, asset, lod, false, null)).not.toThrow();
   });
 });
 

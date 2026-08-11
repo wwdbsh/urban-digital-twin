@@ -27,7 +27,15 @@ export const SAMPLER_EVIDENCE_SCRATCH_DIR = join(ROOT, "artifacts", "block835-v3
 const PILOT_RELEASE_PATH = join(ROOT, "public", "data", BLOCK835_PILOT_RELEASE_ID, "release.json");
 const DATA_DIR = join(ROOT, "data", BLOCK835_V3T_PACKAGE_ID);
 const EVIDENCE_PATH = join(DATA_DIR, "cesium-sampler-evidence.json");
-const HARNESS_PATH = join(SAMPLER_EVIDENCE_SCRATCH_DIR, "harness.json");
+/**
+ * Derived from the scratch root in use, never from the default.
+ *
+ * The two commands take `--scratch`, and a harness input bound to the default
+ * root while the variant packages and the captures came from another one would
+ * hash a plan that does not describe the images beside it -- a mixed-root
+ * evidence record that still looks internally consistent.
+ */
+const harnessPathFor = (scratchDir) => join(scratchDir, "harness.json");
 
 /** The two builds compared. `renderer-default` is the shape the committed V3T package ships. */
 export const SAMPLER_VARIANTS = [
@@ -146,12 +154,14 @@ async function plan(scratchDir) {
     variants,
   };
   await mkdir(scratchDir, { recursive: true });
-  await writeFile(HARNESS_PATH, `${stableSerialize(record)}\n`, "utf8");
-  console.log(JSON.stringify({ ok: true, command: "plan", path: HARNESS_PATH, variants: variants.map((entry) => ({ variantId: entry.variantId, assets: entry.assets.length })), stations: record.stations.map((entry) => entry.stationId) }, null, 2));
+  const harnessPath = harnessPathFor(scratchDir);
+  await writeFile(harnessPath, `${stableSerialize(record)}\n`, "utf8");
+  console.log(JSON.stringify({ ok: true, command: "plan", path: harnessPath, variants: variants.map((entry) => ({ variantId: entry.variantId, assets: entry.assets.length })), stations: record.stations.map((entry) => entry.stationId) }, null, 2));
 }
 
 async function evidence(scratchDir, verdictPath) {
-  const harnessBytes = new Uint8Array(await readFile(HARNESS_PATH).catch(() => fail(`Run \`plan\` first; ${HARNESS_PATH} is absent.`)));
+  const harnessPath = harnessPathFor(scratchDir);
+  const harnessBytes = new Uint8Array(await readFile(harnessPath).catch(() => fail(`Run \`plan\` first; ${harnessPath} is absent.`)));
   const harness = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(harnessBytes));
   const verdict = JSON.parse(await readFile(verdictPath, "utf8").catch(() => fail(`A written aliasing/legibility verdict is required at ${verdictPath}.`)));
   for (const key of ["decision", "samplerFilter", "reading", "capturedAt", "renderer", "viewport"]) {

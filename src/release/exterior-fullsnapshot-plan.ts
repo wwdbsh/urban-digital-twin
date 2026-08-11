@@ -171,7 +171,7 @@ export interface FullSnapshotPackagePlan {
    * artifact checksums.
    */
   estimated: true;
-  estimateBasis: "structural-gltf-accessor-arithmetic-v1";
+  estimateBasis: FullSnapshotEstimateBasis;
   baseReleaseId: string;
   baseManifestChecksumSha256: string;
   ledgerId: string;
@@ -195,12 +195,28 @@ export interface FullSnapshotPlannedBuilding {
 }
 
 export interface FullSnapshotPackagePlanInput {
+  /**
+   * OPTIONAL, and defaults to v1 so the frozen dryrun artifact keeps its bytes.
+   *
+   * The basis is explicit rather than inferred because the two are not
+   * interchangeable: v1 charges a fixed 32-byte vertex and no image at all, v2
+   * charges the writer's real attribute sets plus image and UV terms. A plan
+   * that asked for textured buildings and silently got v1 would under-report
+   * exactly the way ADR 0032 precondition 2 warned about, so that combination is
+   * REFUSED rather than estimated.
+   */
+  estimateBasis?: FullSnapshotEstimateBasis;
   ledger: ExteriorOwnershipLedger;
   ledgerChecksumSha256: string;
   baseReleaseId: string;
   baseManifestChecksumSha256: string;
   /** Planned buildings keyed by id; every ledger member must be present. */
   planned: ReadonlyMap<string, FullSnapshotPlannedBuilding>;
+  /**
+   * Per-LOD texture shape for a textured plan. Requires basis v2; supplying it
+   * under v1 is refused rather than ignored.
+   */
+  texture?: Record<ExteriorFullSnapshotLodId, { textureCount: number; texturedPrimitiveCount: number }>;
 }
 
 function comparePlanCells(left: FullSnapshotPackagePlanCell, right: FullSnapshotPackagePlanCell): number {
@@ -212,6 +228,11 @@ function comparePlanCells(left: FullSnapshotPackagePlanCell, right: FullSnapshot
  * document is byte-stable across replays regardless of iteration order.
  */
 export function buildFullSnapshotPackagePlan(input: FullSnapshotPackagePlanInput): FullSnapshotPackagePlan {
+  const estimateBasis = input.estimateBasis ?? EXTERIOR_FULLSNAPSHOT_ESTIMATE_BASIS_V1;
+  const textured = input.texture ?? null;
+  if (textured && estimateBasis !== EXTERIOR_FULLSNAPSHOT_ESTIMATE_BASIS_V2) {
+    throw new Error(FULLSNAPSHOT_TEXTURED_PLAN_REQUIRES_V2);
+  }
   const cells: FullSnapshotPackagePlanCell[] = [];
   let assetCount = 0;
   let estimatedTotalBytes = 0;
@@ -229,7 +250,9 @@ export function buildFullSnapshotPackagePlan(input: FullSnapshotPackagePlanInput
       if (!planned) continue;
       assetCount += 1;
       placementCount += planned.placementCount;
-      const bytes = estimateFullSnapshotBuildingBytes(planned.placementCount);
+      const bytes = estimateBasis === EXTERIOR_FULLSNAPSHOT_ESTIMATE_BASIS_V1
+        ? estimateFullSnapshotBuildingBytes(planned.placementCount)
+        : estimateFullSnapshotTexturedBuildingBytes(planned.placementCount, textured);
       for (const lod of EXTERIOR_FULLSNAPSHOT_LOD_PROFILE) {
         const bucket = perLod[lod.lodId];
         bucket.count += 1;
@@ -265,7 +288,7 @@ export function buildFullSnapshotPackagePlan(input: FullSnapshotPackagePlanInput
     schemaVersion: EXTERIOR_FULLSNAPSHOT_PLAN_SCHEMA_VERSION,
     planId: `exterior-fullsnapshot-package-plan:${input.ledger.ledgerId}`,
     estimated: true,
-    estimateBasis: "structural-gltf-accessor-arithmetic-v1",
+    estimateBasis,
     baseReleaseId: input.baseReleaseId,
     baseManifestChecksumSha256: input.baseManifestChecksumSha256,
     ledgerId: input.ledger.ledgerId,
@@ -311,7 +334,12 @@ export function buildFullSnapshotPackagePlan(input: FullSnapshotPackagePlanInput
  *    without the UV": the two differ in what they assume a vertex costs at all.
  *    v2 states its attribute set explicitly instead of inheriting v1's.
  */
+export const EXTERIOR_FULLSNAPSHOT_ESTIMATE_BASIS_V1 = "structural-gltf-accessor-arithmetic-v1" as const;
 export const EXTERIOR_FULLSNAPSHOT_ESTIMATE_BASIS_V2 = "structural-gltf-accessor-image-uv-arithmetic-v2" as const;
+export type FullSnapshotEstimateBasis = typeof EXTERIOR_FULLSNAPSHOT_ESTIMATE_BASIS_V1 | typeof EXTERIOR_FULLSNAPSHOT_ESTIMATE_BASIS_V2;
+
+/** Named so the refusal is greppable rather than a sentence someone reworded. */
+export const FULLSNAPSHOT_TEXTURED_PLAN_REQUIRES_V2 = "fullsnapshot-estimate/textured-plan-requires-v2: image and UV terms were requested, which basis v1 cannot express; pass estimateBasis v2." as const;
 
 export const EXTERIOR_FULLSNAPSHOT_TEXTURE_BYTE_MODEL = {
   /** POSITION vec3 f32 only, which is what the canonical writer emits untextured. */
@@ -367,7 +395,7 @@ export function estimateFullSnapshotTexturedAssetBytes(shape: FullSnapshotTextur
   // The UV term rides on VERTEX count, not on texture count: it grows with
   // geometric detail and is completely unaffected by tile size. ADR 0032
   // measured it at 76% of the textured delta, and this is where that comes from.
-  const untexturedVertexShare = vertexCount * (primitiveCount === 0 ? 0 : (primitiveCount - shape.texturedPrimitiveCount) / primitiveCount);
+  const untexturedVertexShare = vertexCount * ((primitiveCount - shape.texturedPrimitiveCount) / primitiveCount);
   const texturedVertexShare = vertexCount - untexturedVertexShare;
   const binaryBytes = untexturedVertexShare * texture.untexturedVertexBytes
     + texturedVertexShare * texture.texturedVertexBytes
@@ -383,6 +411,23 @@ export function estimateFullSnapshotTexturedAssetBytes(shape: FullSnapshotTextur
     + shape.textureCount * (texture.jsonBytesPerImage + texture.jsonBytesPerTexture)
     + (shape.textureCount > 0 ? texture.jsonBytesPerSampler : 0);
   return Math.ceil(binaryBytes + jsonBytes + model.containerBytes);
+}
+
+/** Per-LOD v2 estimate for one building, with an optional texture shape. */
+export function estimateFullSnapshotTexturedBuildingBytes(
+  placementCount: number,
+  texture: Record<ExteriorFullSnapshotLodId, { textureCount: number; texturedPrimitiveCount: number }> | null,
+): Record<ExteriorFullSnapshotLodId, number> {
+  const shapes = fullSnapshotLodShapes(placementCount);
+  const shapeFor = (lodId: ExteriorFullSnapshotLodId) => ({
+    ...shapes[lodId],
+    textureCount: texture?.[lodId]?.textureCount ?? 0,
+    texturedPrimitiveCount: texture?.[lodId]?.texturedPrimitiveCount ?? 0,
+  });
+  return {
+    "lod-0": estimateFullSnapshotTexturedAssetBytes(shapeFor("lod-0")),
+    "lod-1": estimateFullSnapshotTexturedAssetBytes(shapeFor("lod-1")),
+  };
 }
 
 export interface FullSnapshotCacheResidency {

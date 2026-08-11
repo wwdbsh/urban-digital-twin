@@ -36,9 +36,12 @@ export interface ExteriorArtifactRef {
  * is five places to disagree, and a seam in one of them would have been
  * worthless: the runtime would have kept refusing on its own derivation.
  *
- * So the policy is declared ONCE, HERE, on the release root — which is
- * checksum-pinned, immutable, and reviewable — and threaded to every site that
- * used to derive it. Two things follow from putting it on the release rather
+ * So the policy is declared ONCE, HERE, on the release root — which is a
+ * reviewable, immutability-declaring artifact whose `rootChecksumSha256` every
+ * assembly package must match by string equality — and threaded to every site
+ * that used to derive it. (The root's digest is declared and cross-checked, not
+ * recomputed from the root's bytes at load time; that is pre-existing behaviour
+ * for this manifest and is unchanged here.) Two things follow from putting it on the release rather
  * than on the package:
  *
  * - **A package cannot widen its own gate.** The assembly manifest carries no

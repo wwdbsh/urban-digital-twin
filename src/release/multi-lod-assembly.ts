@@ -3,6 +3,7 @@ import { isSafeReleaseArtifactReference } from "../runtime/path-security.ts";
 import type { ExteriorTextureAdmissionPolicy } from "./exterior-release.ts";
 import {
   PROCEDURAL_TEXTURE_LIMITS,
+  PROCEDURAL_TEXTURE_SAMPLER_FILTER,
   isProceduralTextureProvenance,
   proceduralTextureReplayIndex,
   type ProceduralTextureProfile,
@@ -46,6 +47,19 @@ export const ASSEMBLY_ISSUE_TEXTURE_BYTES_FORBIDDEN = "procedural-texture-gate/t
 export const ASSEMBLY_ISSUE_TEXTURE_UNREFERENCED_BUFFER_VIEW_FORBIDDEN = "procedural-texture-gate/unreferenced-buffer-view-forbidden: a procedural assembly cannot declare a bufferView no accessor and no image reads." as const;
 export const ASSEMBLY_ISSUE_TEXTURE_BUFFER_GAP_FORBIDDEN = "procedural-texture-gate/buffer-gap-forbidden: a procedural assembly cannot leave an uncovered gap between declared bufferViews." as const;
 export const ASSEMBLY_ISSUE_TEXTURE_BUFFER_TAIL_FORBIDDEN = "procedural-texture-gate/buffer-tail-forbidden: a procedural assembly cannot declare BIN bytes outside its covered bufferView extent." as const;
+/**
+ * The publicly admitted bytes must NAME the filtering their release declares.
+ *
+ * glTF makes `minFilter`/`magFilter` optional, and absent means "the renderer
+ * picks". T028 measured what a renderer picks for these tiles in CesiumJS: at
+ * exploration and far range a ~160-repeat facade breaks into horizontal clumping
+ * and speckle. So a release that declares `procedural-replay` also declares the
+ * sampler pair its evidence chose, and this rule is what stops that declaration
+ * from being a claim the bytes do not keep. Without it a successor wave could
+ * ship wrap-only samplers under an immutable root asserting trilinear, and every
+ * other gate would pass.
+ */
+export const ASSEMBLY_ISSUE_TEXTURE_SAMPLER_FILTER_REQUIRED = "procedural-texture-gate/sampler-filter-required: a publicly admitted textured GLB must name the exact magFilter/minFilter pair its release declares." as const;
 
 export interface MultiLodAssemblyPolicy {
   /**
@@ -93,6 +107,16 @@ export interface MultiLodAssemblyPolicy {
    * textured has no way to say so.
    */
   textureAdmission?: ExteriorTextureAdmissionPolicy;
+  /**
+   * The sampler pair the release's generated-texture fact declares, enforced on
+   * the BYTES under `procedural-replay` and under nothing else.
+   *
+   * It is deliberately not applied to the private or replay-only paths: the
+   * frozen `-v3t` package ships wrap-only samplers, it is byte-frozen, and it is
+   * not publicly admitted. The rule exists for public delivery, which is where
+   * the measured aliasing defect would reach a user.
+   */
+  declaredSamplerFilter?: { magFilter: number; minFilter: number };
 }
 
 export type AssemblyAudience = "private" | "public";
@@ -268,6 +292,20 @@ export function requiresTextureFreeAssembly(audience: AssemblyAudience, policy?:
   if (policy?.requireTextureFreeAssembly === true) return true;
   if (audience !== "public") return false;
   return (policy?.textureAdmission ?? "texture-free") === "texture-free";
+}
+
+/**
+ * The sampler pair a PUBLICLY ADMITTED textured GLB must name, or `null` when no
+ * such admission is in force.
+ *
+ * Null for every private package, every texture-free release, and every caller
+ * that passes no policy -- which keeps the frozen `-v3t` package and the
+ * replay-only operator path byte-valid exactly as they are.
+ */
+export function publiclyAdmittedSamplerFilter(audience: AssemblyAudience, policy?: MultiLodAssemblyPolicy): { magFilter: number; minFilter: number } | null {
+  if (audience !== "public" || policy?.textureAdmission !== "procedural-replay") return null;
+  if (policy.requireTextureFreeAssembly === true) return null;
+  return policy.declaredSamplerFilter ?? { ...PROCEDURAL_TEXTURE_SAMPLER_FILTER };
 }
 
 export function validateMultiLodAssembly(value: unknown, policy?: MultiLodAssemblyPolicy): AssemblyValidation {
@@ -744,7 +782,7 @@ function drawnTextureIds(json: Record<string, unknown>): Set<number> {
  * named constants cannot be satisfied by a photograph, a traced sketch, a
  * re-encode, or a generated tile with one pixel altered.
  */
-function validateProceduralTextureGlb(json: Record<string, unknown>, bin: Uint8Array, provenance: unknown): void {
+function validateProceduralTextureGlb(json: Record<string, unknown>, bin: Uint8Array, provenance: unknown, requiredSamplerFilter: { magFilter: number; minFilter: number } | null): void {
   if (!isProceduralTextureProvenance(provenance)) throw new Error(ASSEMBLY_ISSUE_TEXTURE_PROVENANCE_INVALID);
   const images = (Array.isArray(json.images) ? json.images : []) as Array<Record<string, unknown>>;
   const textures = (Array.isArray(json.textures) ? json.textures : []) as Array<Record<string, unknown>>;
@@ -755,6 +793,25 @@ function validateProceduralTextureGlb(json: Record<string, unknown>, bin: Uint8A
     || drawn.size !== textures.length
     || textures.some((texture, index) => !drawn.has(index) || texture.source !== index)
     || images.some((image) => image.mimeType !== "image/png")) throw new Error(ASSEMBLY_ISSUE_TEXTURE_SHAPE_FORBIDDEN);
+
+  // Conditional, and the only conditional rule in this function. A release that
+  // admits textures publicly names the filtering its own evidence decided, and
+  // every drawn texture must resolve to a sampler carrying exactly that pair --
+  // both fields present, both equal, no "the renderer will probably pick
+  // something sensible". A texture with no sampler at all is refused for the
+  // same reason: absent is precisely the case that measured badly.
+  if (requiredSamplerFilter !== null) {
+    const samplers = (Array.isArray(json.samplers) ? json.samplers : []) as Array<Record<string, unknown>>;
+    for (const index of drawn) {
+      const texture = textures[index];
+      const samplerIndex = texture?.sampler;
+      if (typeof samplerIndex !== "number") throw new Error(ASSEMBLY_ISSUE_TEXTURE_SAMPLER_FILTER_REQUIRED);
+      const sampler = samplers[samplerIndex];
+      if (!rec(sampler) || sampler.magFilter !== requiredSamplerFilter.magFilter || sampler.minFilter !== requiredSamplerFilter.minFilter) {
+        throw new Error(ASSEMBLY_ISSUE_TEXTURE_SAMPLER_FILTER_REQUIRED);
+      }
+    }
+  }
 
   const views = json.bufferViews as Array<Record<string, unknown>>;
   const accessors = json.accessors as Array<Record<string, unknown>>;
@@ -811,11 +868,11 @@ function validateProceduralTextureGlb(json: Record<string, unknown>, bin: Uint8A
  * Nothing frozen is affected: every committed package embeds zero images, and
  * the one textured package declares provenance on every GLB that carries them.
  */
-export function validateGlbBinding(parsed: ParsedGlb, asset: AssemblyAsset, lod: AssemblyLod, textureFree: boolean): void {
+export function validateGlbBinding(parsed: ParsedGlb, asset: AssemblyAsset, lod: AssemblyLod, textureFree: boolean, requiredSamplerFilter: { magFilter: number; minFilter: number } | null = null): void {
   const metadata = glbMetadata(parsed.json);
   if (textureFree) validateTextureFreeGlb(parsed.json);
   const hasImages = Array.isArray(parsed.json.images) && parsed.json.images.length > 0;
-  if (metadata.textureProvenance !== undefined) validateProceduralTextureGlb(parsed.json, parsed.bin, metadata.textureProvenance);
+  if (metadata.textureProvenance !== undefined) validateProceduralTextureGlb(parsed.json, parsed.bin, metadata.textureProvenance, requiredSamplerFilter);
   else if (hasImages) throw new Error(ASSEMBLY_ISSUE_TEXTURE_PROVENANCE_REQUIRED);
   if (metadata.textureProvenance !== undefined && !hasImages) throw new Error(ASSEMBLY_ISSUE_TEXTURE_SHAPE_FORBIDDEN);
   // `textureProvenance` is excluded from the equality below on purpose. The
@@ -886,6 +943,7 @@ async function sha256Bytes(bytes: Uint8Array): Promise<string> { const digest = 
 export async function replayMultiLodAssembly(manifest: MultiLodAssemblyManifest, contents: ReadonlyMap<string, Uint8Array>, policy?: MultiLodAssemblyPolicy): Promise<AssemblyValidation<AssemblyReplay>> {
   const structural = validateMultiLodAssembly(manifest, policy); if (!structural.ok) return structural;
   const textureFree = requiresTextureFreeAssembly(structural.value.audience, policy);
+  const requiredSamplerFilter = publiclyAdmittedSamplerFilter(structural.value.audience, policy);
   const issues: AssemblyIssue[] = []; const declared = new Map(manifest.artifacts.map((artifact) => [artifact.relativeRef, artifact]));
   const lodBindings = new Map<string, { asset: AssemblyAsset; lod: AssemblyLod }>();
   for (const asset of manifest.assets) for (const lod of asset.lods) {
@@ -899,7 +957,7 @@ export async function replayMultiLodAssembly(manifest: MultiLodAssemblyManifest,
     if (bytes.byteLength !== artifact.byteSize || await sha256Bytes(bytes) !== artifact.checksumSha256) { issue(issues, `contents.${artifact.relativeRef}`, "Artifact byte/hash accounting failed."); continue; }
     const next = add(total, bytes.byteLength); if (next === null || next > MULTI_LOD_ASSEMBLY_LIMITS.totalBytes) { issue(issues, "contents", "Verified byte accounting overflowed."); continue; } total = next;
     if (artifact.ownerCellId) { const cellNext = add(cellByteTotals.get(artifact.ownerCellId) ?? 0, bytes.byteLength); if (cellNext === null) issue(issues, `contents.${artifact.relativeRef}`, "Cell bytes overflowed."); else cellByteTotals.set(artifact.ownerCellId, cellNext); }
-    try { if (artifact.role === "tileset-json") tilesetBytes = bytes; else { const binding = lodBindings.get(artifact.relativeRef); if (!binding) throw new Error("GLB has no asset/LOD binding."); validateGlbBinding(parseGlbV2(bytes), binding.asset, binding.lod, textureFree); } } catch (error) { issue(issues, `contents.${artifact.relativeRef}`, error instanceof Error ? error.message : "Artifact validation failed."); }
+    try { if (artifact.role === "tileset-json") tilesetBytes = bytes; else { const binding = lodBindings.get(artifact.relativeRef); if (!binding) throw new Error("GLB has no asset/LOD binding."); validateGlbBinding(parseGlbV2(bytes), binding.asset, binding.lod, textureFree, requiredSamplerFilter); } } catch (error) { issue(issues, `contents.${artifact.relativeRef}`, error instanceof Error ? error.message : "Artifact validation failed."); }
     verified.push({ relativeRef: artifact.relativeRef, byteSize: bytes.byteLength, checksumSha256: artifact.checksumSha256 });
   }
   if (total !== manifest.declaredTotalBytes) issue(issues, "contents", "Verified total differs from the manifest.");
