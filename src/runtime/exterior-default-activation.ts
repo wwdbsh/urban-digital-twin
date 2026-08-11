@@ -1,5 +1,10 @@
 /**
- * Frozen promotion record for the Block 835 exterior wave.
+ * Frozen promotion records for the exterior waves this build activates.
+ *
+ * The build activates an ORDERED SET of waves (`EXTERIOR_DEFAULT_ACTIVATIONS`),
+ * today containing exactly one: Block 835. Each wave is its own record, and the
+ * per-record properties below hold PER RECORD — one wave rolling back neither
+ * withdraws nor implies anything about another.
  *
  * The promoted release, its operator-pinned head, and its cell/building
  * membership are ONE indivisible constant. Rollback is the single edit that
@@ -73,6 +78,36 @@ export const EXTERIOR_DEFAULT_ACTIVATION: ExteriorDefaultActivationRecord = {
 } as const;
 
 /**
+ * The ordered promotion set this build activates, oldest wave first.
+ *
+ * Waves are COMPOSED from their own records instead of being copied into a
+ * second, independently editable constant: each wave keeps exactly one record
+ * and exactly one rollback edit, and composing here means the set can never
+ * disagree with the record that edit actually swapped. The records arrive as
+ * parameters rather than as reads of this module's own bindings, so a caller
+ * holding a record — a build that rolled one back, or a rollback rehearsal —
+ * orders precisely the record it holds.
+ */
+export function exteriorDefaultActivations(
+  blockEight35: ExteriorDefaultActivationRecord = EXTERIOR_DEFAULT_ACTIVATION,
+): readonly ExteriorDefaultActivationRecord[] {
+  return [blockEight35];
+}
+
+/** The composed set, for callers with no substituted record of their own. */
+export const EXTERIOR_DEFAULT_ACTIVATIONS: readonly ExteriorDefaultActivationRecord[] = exteriorDefaultActivations();
+
+/**
+ * One record or a whole set. Every per-record rule below reads the same way for
+ * both, so a single-wave caller never has to know the set exists.
+ */
+export type ExteriorDefaultActivationRecords = ExteriorDefaultActivationRecord | readonly ExteriorDefaultActivationRecord[];
+
+function activationRecordList(input: ExteriorDefaultActivationRecords): readonly ExteriorDefaultActivationRecord[] {
+  return Array.isArray(input) ? input as readonly ExteriorDefaultActivationRecord[] : [input as ExteriorDefaultActivationRecord];
+}
+
+/**
  * URL intent, kept distinct from the resolved activation it feeds.
  *
  * `"off"` is a user's explicit disable. `"off-unpinned"` is the *parse* failing
@@ -94,14 +129,22 @@ export function exteriorStreamingOverrideDisables(override: ExteriorStreamingOve
  * rollback would only have removed the *default* while every promotion-era
  * bookmark kept rendering the withdrawn wave — and rendering it ungated, since
  * the pin and identity gates verify against a record that no longer accepts it.
+ *
+ * The rule is PER WAVE: one withdrawn record refuses opt-ins into ITS release
+ * and says nothing about the other waves, which keep streaming. A build with
+ * several waves therefore rolls one back without withdrawing the rest.
  */
 export function exteriorRolledBackReleaseNotice(
   explicitReleaseId: string | null,
-  record: ExteriorDefaultActivationRecord = EXTERIOR_DEFAULT_ACTIVATION,
+  records: ExteriorDefaultActivationRecords = EXTERIOR_DEFAULT_ACTIVATION,
 ): string | null {
-  if (record.enabled || record.rolledBackReleaseId === null) return null;
-  if (explicitReleaseId === null || explicitReleaseId !== record.rolledBackReleaseId) return null;
-  return `Exterior streaming release ${record.rolledBackReleaseId} was rolled back in this build, so this link streamed no exterior geometry; no substitute exterior release was selected.`;
+  if (explicitReleaseId === null) return null;
+  for (const record of activationRecordList(records)) {
+    if (record.enabled || record.rolledBackReleaseId === null) continue;
+    if (explicitReleaseId !== record.rolledBackReleaseId) continue;
+    return `Exterior streaming release ${record.rolledBackReleaseId} was rolled back in this build, so this link streamed no exterior geometry; no substitute exterior release was selected.`;
+  }
+  return null;
 }
 
 /**
@@ -114,10 +157,11 @@ export function exteriorRolledBackReleaseNotice(
 export function restoresPromotedDefault(input: {
   targetReleaseId: string;
   activeRealBaseReleaseId: string | null;
-  record?: ExteriorDefaultActivationRecord;
+  record?: ExteriorDefaultActivationRecords;
 }): boolean {
-  const record = input.record ?? EXTERIOR_DEFAULT_ACTIVATION;
-  return record.enabled && input.activeRealBaseReleaseId !== null && input.targetReleaseId === record.releaseId;
+  if (input.activeRealBaseReleaseId === null) return false;
+  return activationRecordList(input.record ?? EXTERIOR_DEFAULT_ACTIVATION)
+    .some((record) => record.enabled && input.targetReleaseId === record.releaseId);
 }
 
 export interface ExteriorActivationInput {
@@ -184,6 +228,85 @@ export function resolveExteriorActivation(input: ExteriorActivationInput): Exter
   return { streaming: false, releaseId, promotedDefault: false, reason: record.enabled ? "no-real-base" : "not-promoted" };
 }
 
+/** One record's resolution, carrying the record that governed it. */
+export interface ExteriorReleaseActivation extends ExteriorActivationResolution {
+  record: ExteriorDefaultActivationRecord;
+}
+
+export interface ExteriorActivationSetInput {
+  override: ExteriorStreamingOverride;
+  explicitReleaseId: string | null;
+  activeRealBaseReleaseId: string | null;
+  fallbackReleaseId: string;
+  records?: readonly ExteriorDefaultActivationRecord[];
+}
+
+export interface ExteriorActivationSetResolution {
+  /** One resolution per promotion record, in the set's order. */
+  releases: readonly ExteriorReleaseActivation[];
+  /** The releases a load should actually target, deduplicated, in set order. */
+  targets: readonly ExteriorReleaseActivation[];
+  /** Whether ANY wave streams. */
+  streaming: boolean;
+  /**
+   * The release explicit intent serializes and the toggle re-pins. It is the
+   * first record's resolved release, which for a one-wave build is exactly the
+   * single release this session resolved.
+   */
+  primaryReleaseId: string;
+}
+
+/** A build that promoted nothing has no wave to activate and none to refuse. */
+const NO_PROMOTION: ExteriorDefaultActivationRecord = { enabled: false, releaseId: null, rolledBackReleaseId: null };
+
+/**
+ * Set-level resolution. Two URL rules, stated here because they are what makes
+ * a multi-wave default set safe to link to:
+ *
+ * 1. `exteriorStreaming=off` (and the unpinned-parse variant) disables ALL
+ *    default waves. "Off" has never meant "off except the ones you did not
+ *    know about", and a session that switched exteriors off must not keep
+ *    streaming one because a second wave was promoted later.
+ * 2. `exteriorCells=X` means EXACTLY release X and nothing else. Explicit
+ *    intent replaces the whole default set rather than adding to it: a link
+ *    naming one release must render that release, not that release plus
+ *    whatever else this build happens to promote, or the link would stop
+ *    meaning what it said the day it was taken.
+ *
+ * Under rule 2 the governing record is the one that CLAIMS X — the enabled
+ * record that publishes it, or the withdrawn record that rolled it back — so a
+ * promotion-era bookmark into a wave this build withdrew is refused by that
+ * wave's own record while the other waves stay enabled.
+ */
+export function resolveExteriorActivationSet(input: ExteriorActivationSetInput): ExteriorActivationSetResolution {
+  const records = input.records ?? EXTERIOR_DEFAULT_ACTIVATIONS;
+  let releases: readonly ExteriorReleaseActivation[];
+  if (input.explicitReleaseId === null) {
+    releases = records.map((record) => ({ ...resolveExteriorActivation({ ...input, record }), record }));
+  } else {
+    const claiming = records.find((record) => (
+      record.enabled ? record.releaseId === input.explicitReleaseId : record.rolledBackReleaseId === input.explicitReleaseId
+    )) ?? records[0] ?? NO_PROMOTION;
+    releases = [{ ...resolveExteriorActivation({ ...input, record: claiming }), record: claiming }];
+  }
+  // Records that cannot promote all resolve the same fallback release, so the
+  // target list is deduplicated: an enabled-by-override fixture session must
+  // load one runtime, not one per promotion record.
+  const seen = new Set<string>();
+  const targets: ExteriorReleaseActivation[] = [];
+  for (const entry of releases) {
+    if (!entry.streaming || seen.has(entry.releaseId)) continue;
+    seen.add(entry.releaseId);
+    targets.push(entry);
+  }
+  return {
+    releases,
+    targets,
+    streaming: targets.length > 0,
+    primaryReleaseId: releases[0]?.releaseId ?? input.explicitReleaseId ?? input.fallbackReleaseId,
+  };
+}
+
 export interface ExteriorPinVerificationInput {
   releaseId: string;
   snapshotId: string;
@@ -246,11 +369,12 @@ export function verifyPromotedExteriorMembership(
   if (unexpected.length === 0) return { ok: true };
   return {
     ok: false,
-    message: `Exterior streaming failed closed: the promoted default rendered ${unexpected.join(", ")}, which the accepted Block 835 membership (${record.approvalRef}) does not contain. No exterior geometry was rendered and no substitute release was selected.`,
+    message: `Exterior streaming failed closed: the promoted default rendered ${unexpected.join(", ")}, which the accepted membership of release ${record.releaseId} (${record.approvalRef}) does not contain. No exterior geometry was rendered and no substitute release was selected.`,
   };
 }
 
 export interface ExteriorUnavailableInput {
+  /** Whether THIS wave is streaming. Another wave streaming says nothing here. */
   streaming: boolean;
   override: ExteriorStreamingOverride;
   activeRealBaseReleaseId: string | null;
@@ -279,7 +403,38 @@ export function exteriorUnavailableDetail(input: ExteriorUnavailableInput): stri
     return `The exterior release this link named is not pinned by this build, so exterior streaming stayed off and base massing from release ${input.activeRealBaseReleaseId} is shown; no substitute exterior was selected.`;
   }
   if (!record.enabled) {
-    return `The Block 835 exterior wave is not active in this build, so base massing from release ${input.activeRealBaseReleaseId} is shown; no substitute exterior was selected.`;
+    // Name WHICH wave: with more than one promoted wave, "the exterior wave"
+    // would leave the reader unable to tell which one this build withdrew.
+    return `The ${record.rolledBackReleaseId ?? "promoted"} exterior wave is not active in this build, so base massing from release ${input.activeRealBaseReleaseId} is shown; no substitute exterior was selected.`;
   }
   return null;
+}
+
+/**
+ * The explicit-unavailable rule across the whole set: one statement per wave
+ * that is not streaming, deduplicated because the session-wide reasons ("you
+ * switched exteriors off", "this link named an unpinned release") are true of
+ * every wave at once and must not be repeated once per promotion record.
+ */
+export function exteriorUnavailableStatements(input: {
+  set: ExteriorActivationSetResolution;
+  override: ExteriorStreamingOverride;
+  activeRealBaseReleaseId: string | null;
+  explicitReleaseId?: string | null;
+}): readonly string[] {
+  const seen = new Set<string>();
+  const statements: string[] = [];
+  for (const entry of input.set.releases) {
+    const statement = exteriorUnavailableDetail({
+      streaming: entry.streaming,
+      override: input.override,
+      activeRealBaseReleaseId: input.activeRealBaseReleaseId,
+      explicitReleaseId: input.explicitReleaseId ?? null,
+      record: entry.record,
+    });
+    if (statement === null || seen.has(statement)) continue;
+    seen.add(statement);
+    statements.push(statement);
+  }
+  return statements;
 }
