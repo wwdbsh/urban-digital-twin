@@ -84,7 +84,7 @@ export const V3_REGISTRATION_METHOD = {
   method: "true-footprint-vertex-registration",
   contractual: false,
   referenceGeometry: "The DOITT source footprint ring itself, vertex for vertex. V1 and V2 registered the minimum-area oriented bounding rectangle of that ring instead.",
-  measures: "Per-vertex deviation between each shipped ground-ring vertex and the sourced footprint vertex it was derived from, plus whole-asset horizontal and vertical placement drift.",
+  measures: "Symmetric worst per-vertex deviation between the sourced footprint ring and the shipped tier-0 ring: the larger of (worst sourced vertex to its nearest shipped ring vertex) and (worst shipped ring vertex to its nearest sourced vertex). The candidate set is the ring alone, not every vertex on the ground plane, so an entrance or storefront recess corner can never stand in for a ring vertex; `ringVertexPresenceMeters` separately proves the measured ring is the one written into the shipped bytes. Reported alongside whole-asset horizontal and vertical placement drift, which are different measures and are never summed with it.",
   claim: "The shipped massing reproduces the sourced polygon to within the stated per-vertex tolerance. It does NOT claim that the sourced polygon matches the real building, and it claims nothing at all about facade, appearance, colour or material, all of which are designed.",
   verticalReference: "Roof plane of the topmost tier against the sourced heightMeters.",
   aboveSourcedHeight: "Shipped geometry extends above the sourced heightMeters by the rooftop cluster, which is declared truth tier `generated` and is authored rather than suppressed.",
@@ -224,8 +224,20 @@ export interface V3RegistrationEntry {
   canonicalBuildingId: string;
   sourceVertexCount: number;
   shippedGroundVertexCount: number;
-  /** Worst distance from a sourced footprint vertex to the nearest shipped ground-ring vertex. */
+  /**
+   * Symmetric worst per-vertex distance between the sourced footprint ring and
+   * the shipped tier-0 ring: `max(sourceToRing, ringToSource)`. Taken against
+   * the ring alone, never against every ground-plane vertex.
+   */
   perVertexShapeDeviationMeters: number;
+  /** Worst sourced vertex to its nearest shipped ring vertex. */
+  sourceToRingDeviationMeters: number;
+  /** Worst shipped ring vertex to its nearest sourced vertex. */
+  ringToSourceDeviationMeters: number;
+  /** Worst shipped ring vertex to the nearest ground-plane vertex actually written. */
+  ringVertexPresenceMeters: number;
+  /** Ring vertices compared; equals `sourceVertexCount` because the ring is carried verbatim. */
+  ringVertexCount: number;
   /** Whole-asset placement drift: shipped ground-ring centroid against the sourced centroid. */
   horizontalDeviationMeters: number;
   verticalDeviationMeters: number;
@@ -238,6 +250,19 @@ export interface V3RegistrationEntry {
 
 const GROUND_PLANE_EPSILON_METERS = 1e-4;
 const ENVELOPE_EPSILON_METERS = 1e-3;
+/** One millimetre. The ring and the shipped cap are the same doubles here, so this is slack, not a budget. */
+const RING_PRESENCE_EPSILON_METERS = 1e-3;
+
+/** Worst distance from any point in `from` to its nearest neighbour in `to`. */
+function directedVertexDeviation(from: readonly Point2[], to: readonly Point2[]): number {
+  let worst = 0;
+  for (const point of from) {
+    let nearest = Number.POSITIVE_INFINITY;
+    for (const candidate of to) nearest = Math.min(nearest, Math.hypot(candidate[0] - point[0], candidate[1] - point[1]));
+    worst = Math.max(worst, nearest);
+  }
+  return worst;
+}
 
 /**
  * Measures the shipped ground ring against the SOURCED polygon, vertex for
@@ -245,9 +270,22 @@ const ENVELOPE_EPSILON_METERS = 1e-3;
  * so they measured pipeline drift and disclaimed shape; V3 carries the true
  * ring, so the same report can bound shape error as well.
  *
- * The two numbers are deliberately different measures and are never summed:
- * `perVertexShapeDeviationMeters` is the worst per-vertex shape error, and
- * `horizontalDeviationMeters` is whole-asset placement drift of the centroid.
+ * The shape measure is SYMMETRIC and is taken against the ring alone.
+ *
+ * A one-directional measure over every ground-plane vertex would have been much
+ * weaker than it looks, in two separate ways. It would have searched a candidate
+ * SUPERSET — the ground plane also carries entrance and storefront recess
+ * corners — so a sourced vertex could be "matched" by an unrelated detail vertex
+ * that happens to sit near it. And searching in one direction only bounds how
+ * far a sourced vertex is from SOMETHING shipped; it says nothing about a
+ * shipped ring vertex that wandered away from every sourced one, because that
+ * vertex is never the argument of a minimum. The symmetric form over the ring
+ * bounds both failure modes, and `ringVertexPresenceMeters` proves the ring it
+ * measures is the ring actually written into the bytes.
+ *
+ * `perVertexShapeDeviationMeters` and `horizontalDeviationMeters` remain
+ * different measures and are never summed: the first is worst per-vertex shape
+ * error, the second is whole-asset placement drift of the centroid.
  */
 export function v3RegistrationEntry(context: V3PlanContext, exported: { quads: readonly CanonicalGlbQuad[]; triangles: readonly CanonicalGlbTri[] }): V3RegistrationEntry {
   const sourceVertices: Point2[] = context.building.footprint.map((point) => toEnuMeters(context.frame, point));
@@ -266,17 +304,22 @@ export function v3RegistrationEntry(context: V3PlanContext, exported: { quads: r
   for (const triangle of exported.triangles) for (const corner of [triangle.a, triangle.b, triangle.c]) collect(corner);
   if (observed.length === 0) throw new Error(`Exported V3 geometry for ${context.building.canonicalBuildingId} has no vertex on its ground plane.`);
 
-  let shape = 0;
-  for (const expected of sourceVertices) {
-    let nearest = Number.POSITIVE_INFINITY;
-    for (const point of observed) nearest = Math.min(nearest, Math.hypot(point[0] - expected[0], point[1] - expected[1]));
-    shape = Math.max(shape, nearest);
+  const shippedRing: Point2[] = context.ringMm.map((point) => [point[0] / 1_000, point[1] / 1_000]);
+  // The ring this measure is taken against must be provably the one in the
+  // shipped bytes, or the comparison is against an intention rather than an
+  // artifact. Both sides are pre-quantisation doubles here, so the match is
+  // exact up to binary rounding; the bound is a millimetre and holds far below.
+  const ringPresence = directedVertexDeviation(shippedRing, observed);
+  if (ringPresence > RING_PRESENCE_EPSILON_METERS) {
+    throw new Error(`Shipped V3 ground plane for ${context.building.canonicalBuildingId} does not carry its own tier-0 ring (worst ${ringPresence} m).`);
   }
+  const sourceToRing = directedVertexDeviation(sourceVertices, shippedRing);
+  const ringToSource = directedVertexDeviation(shippedRing, sourceVertices);
+  const shape = Math.max(sourceToRing, ringToSource);
 
-  // Placement drift: the shipped ring's own vertices, deduplicated, against the
-  // sourced ring. Both centroids are plain vertex means of the same polygon, so
-  // any offset between them is pipeline placement error and nothing else.
-  const shippedRing = context.ringMm.map((point) => [point[0] / 1_000, point[1] / 1_000] as Point2);
+  // Placement drift: the shipped ring's own vertices against the sourced ring.
+  // Both centroids are plain vertex means of the same polygon, so any offset
+  // between them is pipeline placement error and nothing else.
   const mean = (points: readonly Point2[]): Point2 => [
     points.reduce((sum, point) => sum + point[0], 0) / points.length,
     points.reduce((sum, point) => sum + point[1], 0) / points.length,
@@ -296,6 +339,10 @@ export function v3RegistrationEntry(context: V3PlanContext, exported: { quads: r
     sourceVertexCount: sourceVertices.length,
     shippedGroundVertexCount: observed.length,
     perVertexShapeDeviationMeters: shape,
+    sourceToRingDeviationMeters: sourceToRing,
+    ringToSourceDeviationMeters: ringToSource,
+    ringVertexPresenceMeters: ringPresence,
+    ringVertexCount: shippedRing.length,
     horizontalDeviationMeters: horizontal,
     verticalDeviationMeters: vertical,
     sourceHeightMeters: context.building.heightMeters,

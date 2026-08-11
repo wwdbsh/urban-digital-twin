@@ -158,11 +158,60 @@ that the claim covers this pipeline's reproduction of the sourced polygon and
 says nothing about how well that polygon matches the real building, and nothing
 at all about appearance.
 
+**The shape measure is symmetric, and its candidate set is the ring alone.**
+The published number is `max(sourceToRing, ringToSource)`: the worse of (worst
+sourced vertex to its nearest shipped ring vertex) and (worst shipped ring
+vertex to its nearest sourced vertex). Both are stated because a one-directional
+measure is weaker than it looks — it bounds only how far a sourced vertex sits
+from *something* shipped, and a shipped vertex that wandered off is never the
+argument of the minimum, so it cannot be seen.
+
+The candidate set is the tier-0 ring, **not** every vertex on the ground plane.
+The ground plane also carries entrance and storefront recess corners, so
+searching it is searching a superset in which an unrelated detail vertex can
+stand in for a ring vertex. `ringVertexPresenceMeters` is reported separately
+and proves the ring being measured is the ring actually written into the bytes,
+so the comparison is against an artifact rather than an intention.
+
+On the fourteen Block 835 footprints both directions agree exactly and the
+presence proof is 0.000 m, so tightening the measure moved no published number.
+That is the data not exercising the failure modes, not the failure modes being
+impossible; the measure is stated in the stronger form regardless.
+
 ## Decision 11 — V2 keeps serving
 
 `src/runtime/exterior-default-activation.ts` and every committed release tree are
 untouched by this work. The canary graph and the promoted activation set continue
 to serve V2 this cycle; re-pointing them is T026.
+
+## Decision 12 — The boundary any future style override must respect
+
+No per-landmark style override exists today, and this paragraph is written
+before one does, because the tempting justification for the first one is exactly
+the one that must never be used.
+
+A per-landmark style override is legitimate **only** as a documented designer
+stylistic choice carrying no real-world assertion — the same standing as every
+other V3 appearance decision, disclosed by the same uncertainty statement.
+
+An override justified by real-world appearance knowledge is a different thing
+entirely. "The real Empire State Building is limestone, so override it to
+`stone-neutral`" is an **unsourced factual claim about a real address**, and
+writing it into a style table launders it into the product as though it were
+designed. If the appearance of a real building is to be asserted, it must enter
+through the ADR 0022 evidence intake with a real source ref, licence and capture
+date, and ship as `evidence-backed` — not as a designer's override.
+
+The distinction is not the geometry that results; both routes can produce the
+same colour. It is what the package then claims, and whether that claim has a
+source behind it.
+
+**Also noted for whoever adds resumability.** The V3 CLI has no stage-receipt
+caching, by design: every stage recomputes from the committed plans, so the
+T013 stale-resume defect class cannot arise here. A future author adding
+resumability inherits that lesson rather than a cache — any receipt must bind
+the plan hash and the input fingerprint it was computed from, or a stale receipt
+will outlive the plan that justified it.
 
 ## Consequences — recorded after P5 and P6 completed (2026-08-11)
 

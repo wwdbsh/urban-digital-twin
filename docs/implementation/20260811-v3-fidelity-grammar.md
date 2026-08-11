@@ -172,9 +172,26 @@ disclaimed shape. V3 carries the true ring, so `registration.json` compares
 
 | Measure | Worst | Tolerance |
 | --- | ---: | ---: |
-| Per-vertex shape deviation | **0.68 mm** | 50 mm |
+| Per-vertex shape deviation (symmetric, ring only) | **0.68 mm** | 50 mm |
 | Whole-asset horizontal placement drift | **0.28 mm** | 250 mm |
 | Vertical | **0.46 mm** | 500 mm |
+| Ring-vertex presence in shipped bytes | **0.000 mm** | 1 mm |
+
+**Direction and candidate set, stated with the number.** The shape figure is
+`max(sourceToRing, ringToSource)` — the worse of (worst sourced vertex to its
+nearest shipped ring vertex) and (worst shipped ring vertex to its nearest
+sourced vertex). Its candidate set is the **tier-0 ring alone**, not every
+vertex on the ground plane; the ground plane also carries entrance and
+storefront recess corners, and searching that superset would let an unrelated
+detail vertex stand in for a ring vertex. `ringVertexPresenceMeters` is reported
+separately and proves the measured ring is the ring written into the bytes.
+
+Both directions agree exactly on all fourteen footprints and the presence proof
+is 0.000 m, so stating the measure in the stronger form changed **no published
+number**. Only `registration.json` changed; every GLB, the manifest, the
+ownership ledger and the tileset are byte-identical and the assembly fingerprint
+is unmoved. The data simply did not exercise the failure modes the weaker form
+allowed.
 
 The two horizontal numbers are different measures and are never summed. Both are
 **pipeline** tolerances: they bound this pipeline's error against the sourced
@@ -269,6 +286,16 @@ present. Defect 8 was found only by executing the pass.
   byte-untouched and continue to serve V2. Re-pointing them, and the rendered
   frame-time run that requires, is T026.
 - **Rendered V3 frame time is unmeasured**, as set out above.
+- **No style override exists, and the first one has a boundary.** ADR 0031
+  Decision 12 draws it before any override table is written: an override is
+  legitimate only as a documented designer stylistic choice asserting nothing
+  about a real address. An override justified by real-world appearance knowledge
+  is an unsourced factual claim and must go through the ADR 0022 evidence intake
+  with a real source ref instead.
+- **The CLI has no stage-receipt caching, by design.** Every stage recomputes
+  from the committed plans, so the T013 stale-resume defect class cannot arise.
+  Anyone adding resumability must bind each receipt to the plan hash and input
+  fingerprint it was computed from.
 - **Style class is drawn, not observed.** The ESB shipping `curtain-cool` is the
   clearest illustration that V3's appearance layer asserts nothing about a real
   address. It is disclosed in every asset's uncertainty statement, but a viewer

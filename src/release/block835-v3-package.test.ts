@@ -224,6 +224,27 @@ describe("Block 835 footprint-faithful V3 package", () => {
     expect(assembled().registration).toHaveLength(14);
   });
 
+  it("measures shape symmetrically, against the ring alone, and proves the ring is shipped", () => {
+    for (const entry of assembled().registration) {
+      // Symmetric: the published number is the worse of the two directions. A
+      // one-directional measure bounds only how far a SOURCED vertex is from
+      // something shipped, and says nothing about a shipped ring vertex that
+      // wandered away from every sourced one.
+      expect(entry.perVertexShapeDeviationMeters, entry.canonicalBuildingId)
+        .toBe(Math.max(entry.sourceToRingDeviationMeters, entry.ringToSourceDeviationMeters));
+      // The ring is carried verbatim, so the two rings have equal cardinality
+      // and there is no unmatched vertex on either side to hide behind a minimum.
+      expect(entry.ringVertexCount, entry.canonicalBuildingId).toBe(entry.sourceVertexCount);
+      // The measured ring is the ring actually written into the bytes, not an
+      // intention: every ring vertex is present on the shipped ground plane.
+      expect(entry.ringVertexPresenceMeters, entry.canonicalBuildingId).toBeLessThanOrEqual(1e-3);
+      // The candidate set is the ring, NOT the ground plane. The ground plane
+      // carries entrance and storefront recess corners too, so it is strictly
+      // larger and would let a detail vertex stand in for a ring vertex.
+      expect(entry.shippedGroundVertexCount).toBeGreaterThan(entry.ringVertexCount);
+    }
+  });
+
   it("keeps every LOD inside the V3 budgets and pins the V2 package as predecessor", () => {
     const previous = committedManifest(V2_ROOT);
     for (const asset of assembled().manifest.assets) {
@@ -257,6 +278,23 @@ describe("Block 835 footprint-faithful V3 package", () => {
       expect(sha256HexBytes(built.contents.get(artifact.relativeRef)!)).toBe(artifact.checksumSha256);
     }
     expect(committed.declaredTotalBytes).toBe(committed.artifacts.reduce((sum, artifact) => sum + artifact.byteSize, 0));
+  });
+
+  it("keeps the committed registration report in step with the assembler", () => {
+    // `registration.json` is a build record, deliberately absent from
+    // `manifest.artifacts[]`, so the checksum drift test above cannot see it.
+    // That gap is real: during this task a stale copy survived a measurement
+    // change precisely because nothing compared it. This does.
+    const committed = JSON.parse(readText(`${V3_ROOT}registration.json`)) as {
+      packageId: string; method: string; measures: string;
+      tolerance: typeof V3_REGISTRATION_TOLERANCE;
+      entries: AssembledV3["registration"];
+    };
+    expect(committed.packageId).toBe("manhattan-esb-block-reference-20260811-v3");
+    expect(committed.method).toBe(V3_REGISTRATION_METHOD.method);
+    expect(committed.measures).toBe(V3_REGISTRATION_METHOD.measures);
+    expect(committed.tolerance).toEqual(V3_REGISTRATION_TOLERANCE);
+    expect(committed.entries).toEqual(assembled().registration);
   });
 
   it("replays through the multi-LOD assembly contract with texture-free enforced", async () => {
