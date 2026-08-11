@@ -637,7 +637,7 @@ describe("exterior streaming profiles and canary state", () => {
   });
 
   it("round-trips the pinned Manhattan release and keeps the fixture as the no-real-base fallback", () => {
-    expect(PINNED_EXTERIOR_CELL_RELEASE_IDS).toEqual(["udt-fixture-exterior-cells", "manhattan-exterior-cells-20260811"]);
+    expect(PINNED_EXTERIOR_CELL_RELEASE_IDS).toEqual(["udt-fixture-exterior-cells", "manhattan-exterior-cells-20260811", "manhattan-midtown-core-cells-20260811"]);
     // Unchanged: this is the fallback for a session with no real base, not the
     // promoted default. The promoted default lives in EXTERIOR_DEFAULT_ACTIVATION.
     expect(EXTERIOR_CELL_STREAMING_RELEASE_ID).toBe("udt-fixture-exterior-cells");

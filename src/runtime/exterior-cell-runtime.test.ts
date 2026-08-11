@@ -558,3 +558,98 @@ describe("emitted local exterior fixture release", () => {
     expect(seen.some((url) => url.includes("private"))).toBe(false);
   });
 });
+
+/**
+ * Bounded availability (ADR 0029). A release may deliberately ship cells that
+ * carry no exterior geometry. Those must never be reported as verification
+ * failures, and a genuine failure must keep its alarming path unchanged.
+ */
+describe("exterior bounded availability", () => {
+  /** Tombstones cell `c2` in place: every detail unavailable, orphan shards removed. */
+  function tombstoneC2(fixture: ExteriorCellFixture): void {
+    const graph = fixture.graph as {
+      cellReleases: { cellId: string; cellReleaseId: string; buildingIds: string[]; buildingDetails: unknown[] }[];
+      inventoryShards: { inventoryId: string }[];
+      evidenceShards: { shardId: string }[];
+      roots: { audience: string; artifacts: { kind: string; logicalId: string; relativeRef: string }[]; artifactAllowlist: string[] }[];
+    };
+    const orphanedInventories = new Set<string>();
+    const orphanedEvidence = new Set<string>();
+    for (const cell of graph.cellReleases) {
+      if (cell.cellId !== "c2") continue;
+      for (const detail of cell.buildingDetails as { status: string; inventoryId?: string; evidenceShardId?: string }[]) {
+        if (detail.status === "available") {
+          if (detail.inventoryId) orphanedInventories.add(detail.inventoryId);
+          if (detail.evidenceShardId) orphanedEvidence.add(detail.evidenceShardId);
+        }
+      }
+      cell.buildingDetails = cell.buildingIds.map((buildingId) => ({
+        buildingId,
+        status: "unavailable",
+        tombstoneId: `tombstone:${cell.cellReleaseId}:${buildingId}`,
+        reason: "Not scheduled for exterior materialization in this release.",
+        previousInventoryId: null,
+      }));
+    }
+    // An unreferenced shard would leave the graph open, so they go too.
+    graph.inventoryShards = graph.inventoryShards.filter((shard) => !orphanedInventories.has(shard.inventoryId));
+    graph.evidenceShards = graph.evidenceShards.filter((shard) => !orphanedEvidence.has(shard.shardId));
+    for (const root of graph.roots) {
+      root.artifacts = root.artifacts.filter((artifact) =>
+        !((artifact.kind === "inventory" && orphanedInventories.has(artifact.logicalId))
+          || (artifact.kind === "evidence" && orphanedEvidence.has(artifact.logicalId))));
+      root.artifactAllowlist = root.artifacts.map((artifact) => artifact.relativeRef);
+    }
+  }
+
+  it("reports a deliberately unshipped cell as a non-failure, without fetching anything", async () => {
+    const fixture = await exteriorCellFixture();
+    tombstoneC2(fixture);
+    expect(validateExteriorReleaseGraph(fixture.graph).ok).toBe(true);
+    const seen: string[] = [];
+    const { runtime } = await runtimeFor(fixture, { onRequest: (ref) => { seen.push(ref); } });
+    const outcome = await runtime.loadCell("c2", "inspection", CLOSE_METERS);
+
+    expect(outcome.kind).toBe("not-shipped");
+    if (outcome.kind !== "not-shipped") throw new Error("expected a bounded-availability outcome");
+    expect(outcome.unavailableBuildingCount).toBeGreaterThan(0);
+    // Truthful, non-alarming, and explicit that nothing was substituted.
+    expect(outcome.notice).toContain("ships no exterior geometry in this release");
+    expect(outcome.notice).not.toContain("failed verification");
+    // Costs no request, so it consumes none of the shared cache budget.
+    expect(seen).toEqual([]);
+
+    const metrics = runtime.getMetrics();
+    expect(metrics.notShippedCellCount).toBe(1);
+    expect(metrics.failedCellCount).toBe(0);
+    expect(metrics.fallbackCellCount).toBe(0);
+    expect(metrics.cacheEntries).toBe(0);
+  });
+
+  it("keeps a genuinely failing cell on the alarming pinned-base path", async () => {
+    const fixture = await exteriorCellFixture();
+    tombstoneC2(fixture);
+    // c1 still ships real geometry, so corrupting it is a real failure.
+    corruptExteriorFixturePackage(fixture, fixture.assemblyPackageIds.c1v2);
+    corruptExteriorFixturePackage(fixture, fixture.assemblyPackageIds.c1v1);
+    const { runtime } = await runtimeFor(fixture);
+    const failed = await runtime.loadCell("c1", "inspection", CLOSE_METERS);
+
+    expect(failed.kind).toBe("failed");
+    if (failed.kind !== "failed") throw new Error("expected an isolated failure");
+    expect(failed.code).toBe("checksum-mismatch");
+    expect(failed.notice).toContain("no exterior geometry is shown");
+    // A real failure and a deliberate tombstone stay distinguishable.
+    expect((await runtime.loadCell("c2", "inspection", CLOSE_METERS)).kind).toBe("not-shipped");
+    expect(runtime.getMetrics().failedCellCount).toBe(1);
+    expect(runtime.getMetrics().notShippedCellCount).toBe(1);
+  });
+
+  it("leaves the unmodified fixture path entirely unchanged", async () => {
+    const fixture = await exteriorCellFixture();
+    const { runtime } = await runtimeFor(fixture);
+    expect(rendered(await runtime.loadCell("c1", "inspection", CLOSE_METERS)).representation).toBe("head");
+    expect(rendered(await runtime.loadCell("c2", "inspection", CLOSE_METERS)).representation).toBe("head");
+    expect(runtime.getMetrics().notShippedCellCount).toBe(0);
+  });
+});

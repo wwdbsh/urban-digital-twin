@@ -499,7 +499,7 @@ export function appendBlock835PublicRealmUrl(baseUrl: string, requested: boolean
  * package. A deep link naming any other exterior release still fails closed
  * rather than resolving something that merely shares a shape.
  */
-export const PINNED_EXTERIOR_CELL_RELEASE_IDS = ["udt-fixture-exterior-cells", "manhattan-exterior-cells-20260811"] as const;
+export const PINNED_EXTERIOR_CELL_RELEASE_IDS = ["udt-fixture-exterior-cells", "manhattan-exterior-cells-20260811", "manhattan-midtown-core-cells-20260811"] as const;
 
 /**
  * The release used when neither a URL nor the promoted default names one: still
@@ -640,6 +640,14 @@ export function exteriorStreamingFailureMessage(error: unknown): string {
  * One user-visible line per cell that did not render its pinned head
  * representation, plus one for verified geometry withheld for want of a base
  * anchor. Nothing is ever withheld silently.
+ *
+ * Bounded-availability exception: a release may deliberately ship a large
+ * number of cells with no exterior geometry (see ADR 0029). Those carry the
+ * runtime's `not-shipped` outcome, which is not a failure, and they are
+ * summarized in a single truthful line instead of one alarming bullet each — a
+ * 149-cell wave would otherwise emit ~146 identical rows claiming verification
+ * failures that never happened. Every genuine failure keeps its own per-cell
+ * line, so nothing that actually went wrong is aggregated away.
  */
 export function exteriorStreamingNotices(
   headNotice: string | null,
@@ -647,9 +655,18 @@ export function exteriorStreamingNotices(
   unanchoredCanonicalFeatureIds: readonly string[] = [],
 ): string[] {
   const notices = headNotice ? [headNotice] : [];
+  const notShipped = cells.filter((cell) => cell.kind === "not-shipped");
   for (const cell of cells) {
     if (cell.kind === "rendered") { if (cell.notice) notices.push(cell.notice); continue; }
+    if (cell.kind === "not-shipped") continue;
     notices.push(cell.notice);
+  }
+  if (notShipped.length > 0) {
+    notices.push(
+      notShipped.length === 1
+        ? notShipped[0]!.notice
+        : `${notShipped.length} of ${cells.length} exterior cells ship no exterior geometry in this release; no substitute was selected for them.`,
+    );
   }
   const unanchored = exteriorUnanchoredNotice(unanchoredCanonicalFeatureIds);
   if (unanchored) notices.push(unanchored);
