@@ -1,0 +1,111 @@
+{
+  "task": "T010",
+  "issue": "#11",
+  "release": "manhattan-exterior-cells-20260811",
+  "capturedAt": "2026-08-11",
+  "runner": "Orca embedded browser CLI against `vite preview` on http://localhost:62878 (loopback only)",
+  "builds": [
+    {
+      "id": "production",
+      "command": "pnpm build",
+      "usedBy": ["a", "b", "c", "d", "f", "g"]
+    },
+    {
+      "id": "harness",
+      "command": "VITE_BLOCK835_PROBE=1 pnpm build",
+      "usedBy": ["e"],
+      "note": "The exteriorCellFault seam is compiled out of the production build, so the fault journey needs the harness branch. Nothing else differs and no release byte is touched."
+    }
+  ],
+  "journeys": [
+    {
+      "id": "a",
+      "name": "Cold load over a real base with NO exterior parameters",
+      "url": "/?data=real-pilot&release=manhattan-citywide-20260804",
+      "observed": {
+        "statusLine": "Exterior streaming · Default pinned snapshot snapshot:manhattan-exterior-cells-20260811:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+        "toggle": "Disable exterior streaming",
+        "urlAfterLoad": "no exteriorCells and no exteriorStreaming parameter",
+        "cleanTabRequests": "index.json, release-graph.json, assemblies.json and exactly 14 lod_1 GLBs, all under /data/manhattan-exterior-cells-20260811/",
+        "fixtureReleaseRequests": "none",
+        "note": "At the overview camera an explicit notice reported 4 verified buildings withheld for want of a loaded base anchor. That is the pre-existing anchor rule, not a promotion regression; all 14 anchor once the block's base shards are resident."
+      },
+      "evidence": ["a-default-cold-load.png", "a-default-network-inventory.json"],
+      "result": "pass"
+    },
+    {
+      "id": "b",
+      "name": "Picking, details and truth labels on a Block 835 building under the default",
+      "url": "/?data=real-pilot&release=manhattan-citywide-20260804&feature=doitt:778052&camera=explore&lon=-73.9866&lat=40.7458&height=430&heading=8&pitch=-18&roll=0",
+      "observed": {
+        "featureId": "doitt:778052",
+        "exteriorSection": "Release origin 'Default pinned snapshot snapshot:manhattan-exterior-cells-20260811:v1'; Cell / release 'cell:manhattan:block-835 · cell-release:manhattan-exterior-cells-20260811:v1 (v1)'; Active asset 'lod_1 · 609f2614669aed888485248422c1a6ea6ee0a2dab9b988a8474281559f919b49'; Truth tiers 'generated'; Source dates 'captured 2026-08-04T08:25:05.580Z · updated unknown'",
+        "uncertainty": "Procedurally generated complete exterior; no real-world facade, tenant, brand or text claim.",
+        "fallbackNotices": "none at this camera"
+      },
+      "evidence": ["b-default-block835-selection.png"],
+      "result": "pass"
+    },
+    {
+      "id": "c",
+      "name": "Deep link plus browser Back/Forward across the off/on boundary",
+      "url": "same as (b), with an exteriorStreaming=off entry pushed into history",
+      "observed": "Four in-document steps: cold default-on, Back to default-on, Forward to off (Enable button, explicit unavailable section), Back to default-on again. Every transition ran through the app's popstate handler.",
+      "evidence": ["c-back-forward-transcript.json", "c-back-forward-restored-default.png"],
+      "result": "pass"
+    },
+    {
+      "id": "d",
+      "name": "Explicit disable sentinel over a real base",
+      "url": "same as (b) plus &exteriorStreaming=off",
+      "observed": {
+        "statusLines": "none",
+        "toggle": "Enable exterior streaming",
+        "detailsSection": "Exterior streaming / Unavailable — 'Exterior streaming is switched off for this session, so base massing from release manhattan-citywide-20260804 is shown; no substitute exterior was selected.'",
+        "exteriorProvenanceSection": "absent (replaced by the explicit statement, not silently dropped)"
+      },
+      "evidence": ["d-exterior-streaming-off.png"],
+      "result": "pass"
+    },
+    {
+      "id": "e",
+      "name": "Injected exterior fault under default-on",
+      "url": "same as (b) plus &exteriorCellFault=head-checksum (harness build)",
+      "observed": {
+        "failureMessage": "Pinned exterior snapshot snapshot:manhattan-exterior-cells-20260811:v1 checksum does not match its public root declaration. Exterior streaming was disabled; the existing base/exterior state was left unchanged.",
+        "baseLayer": "Real NYC citywide release · manhattan-citywide-20260804 · local snapshot-relative coverage",
+        "selection": "Empire State Building (doitt:778052) still selected with full base details",
+        "exteriorGeometry": "none rendered"
+      },
+      "evidence": ["e-fault-isolated-base-intact.png"],
+      "result": "pass"
+    },
+    {
+      "id": "f",
+      "name": "Explicit fixture opt-in still behaves exactly as before",
+      "url": "/?exteriorCells=udt-fixture-exterior-cells",
+      "observed": {
+        "statusLine": "Exterior streaming release udt-fixture-exterior-cells was verified locally but was not activated: it requires an active base release its index declares compatible.",
+        "toggle": "Disable exterior streaming",
+        "deepLinkAlert": "none",
+        "promotedReleaseRequests": "none — an explicit release is never replaced by the promoted one"
+      },
+      "evidence": ["f-explicit-fixture-release.png"],
+      "result": "pass"
+    },
+    {
+      "id": "g",
+      "name": "Fixtures-mode default session stays exterior-quiet",
+      "url": "/",
+      "observed": {
+        "statusLines": "none",
+        "toggle": "Enable exterior streaming",
+        "bodyMentionsExteriorStreaming": false,
+        "exteriorCellRequestsInACleanTab": "none",
+        "banners": "none"
+      },
+      "evidence": ["g-fixture-default-quiet.png"],
+      "result": "pass"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "journey": "c",
+  "description": "Genuine browser Back/Forward across the exterior off/on boundary in one document, driven by the app's popstate handler.",
+  "baseUrl": "http://localhost:62878/?data=real-pilot&release=manhattan-citywide-20260804&feature=doitt:778052&camera=explore&lon=-73.9866&lat=40.7458&height=430&heading=8&pitch=-18&roll=0",
+  "steps": [
+    {"step": "1-cold-default-on", "exteriorParams": "(no exterior params)", "toggle": "Disable exterior streaming", "streamingStatusLine": true, "explicitUnavailableSection": false},
+    {"step": "2-back-to-default-on", "exteriorParams": "(no exterior params)", "toggle": "Disable exterior streaming", "streamingStatusLine": true, "explicitUnavailableSection": false},
+    {"step": "3-forward-to-off", "exteriorParams": "exteriorStreaming=off", "toggle": "Enable exterior streaming", "streamingStatusLine": false, "explicitUnavailableSection": true},
+    {"step": "4-back-to-default-on", "exteriorParams": "(no exterior params)", "toggle": "Disable exterior streaming", "streamingStatusLine": true, "explicitUnavailableSection": false}
+  ]
+}
