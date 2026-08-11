@@ -50,7 +50,11 @@ describe("Block 835 canary release through the exterior cell runtime", () => {
 
       // The regression: a pin mismatch downgrades to the base-massing fallback
       // with a notice and no geometry instead of rendering the cell.
-      expect(outcome.kind === "rendered" ? null : { code: outcome.code, message: outcome.message }).toBeNull();
+      expect(
+        outcome.kind === "rendered" ? null
+          : outcome.kind === "not-shipped" ? { kind: outcome.kind, notice: outcome.notice }
+            : { code: outcome.code, message: outcome.message },
+      ).toBeNull();
       if (outcome.kind !== "rendered") return;
       expect(outcome.representation).toBe("head");
       expect(outcome.notice).toBeNull();

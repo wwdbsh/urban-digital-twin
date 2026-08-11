@@ -23,3 +23,8 @@ artifacts/block835-reference-determinism/
 # data/block835-canary-validation-20260811/evidence-inventory.json so they stay
 # checkable after this worktree-local tree is removed.
 artifacts/block835-canary-validation-20260811/
+# T013 midtown-core canary work root: full-wave censuses, renders, and journey
+# evidence. The hashes are committed in
+# data/midtown-core-20260811/evidence-inventory.json so they stay checkable
+# after this worktree-local tree is removed.
+artifacts/midtown-core-20260811/

@@ -1,0 +1,289 @@
+{
+  "schemaVersion": "1.0",
+  "task": "T013",
+  "issue": 14,
+  "releaseId": "manhattan-midtown-core-cells-20260811",
+  "evidenceRoot": "artifacts/midtown-core-20260811",
+  "note": "The raw T013 evidence tree is intentionally untracked (renders and screenshots are large and regenerable). These hashes are the committed record that keeps every evidence file checkable after the worktree-local tree is removed.",
+  "totals": {
+    "fileCount": 55,
+    "byteSize": 11288469
+  },
+  "files": [
+    {
+      "path": "asset-census.json",
+      "byteSize": 894,
+      "checksumSha256": "0883ea2aedf0a34d968c465b5d6687f1842b4fc494257185f39938776e335925"
+    },
+    {
+      "path": "blender/inspection.json",
+      "byteSize": 40452,
+      "checksumSha256": "f6026f8a09fce3b13e1361e1943ab40c7171a5ce561193af35b09e2caeb70088"
+    },
+    {
+      "path": "blender/renders/doitt-1001111.png",
+      "byteSize": 175825,
+      "checksumSha256": "257d6d45279ac32f6b4a0bd87c7d50b682d76fb2d1ff6bbb12e4a2253bdbb650"
+    },
+    {
+      "path": "blender/renders/doitt-105916.png",
+      "byteSize": 200963,
+      "checksumSha256": "124314e5c97ea8b3032c956f007fd06d7b20095433b1581fde38ab9fd77218a7"
+    },
+    {
+      "path": "blender/renders/doitt-1104532.png",
+      "byteSize": 237118,
+      "checksumSha256": "0ebb398e9ce0a8db77dd329bf3cd39c3abc039f131bafa665a76c167129340a9"
+    },
+    {
+      "path": "blender/renders/doitt-1111726.png",
+      "byteSize": 185970,
+      "checksumSha256": "d0140860b4240e3d626d6d2e1cf5ae0099fc94285f049a0980dfca4bb5794ecd"
+    },
+    {
+      "path": "blender/renders/doitt-1115013.png",
+      "byteSize": 222431,
+      "checksumSha256": "e869f25a2a9dc1f5b3a8bf1ae608cd13d9380a0ea3be91c0fb4de7f0bd2c8a01"
+    },
+    {
+      "path": "blender/renders/doitt-1116162.png",
+      "byteSize": 174050,
+      "checksumSha256": "0124c8d04434ae7bbd5c0728fb683cf30698c0660e73ff0b0ed5ac36be70692c"
+    },
+    {
+      "path": "blender/renders/doitt-1158178.png",
+      "byteSize": 256263,
+      "checksumSha256": "30b2bdcfbe30a34cdc58208c9e43928ff8eb7da00cb57c55aed6991201ebb2f0"
+    },
+    {
+      "path": "blender/renders/doitt-1191064.png",
+      "byteSize": 204417,
+      "checksumSha256": "1cc45f369643338360bb9c1d48683362189f96b31f552ec4c355163c445cfadc"
+    },
+    {
+      "path": "blender/renders/doitt-1215127.png",
+      "byteSize": 206636,
+      "checksumSha256": "fd8e91328919e827ef44d982b1c91b28b61afc3d111c40b19653bd5cd868e080"
+    },
+    {
+      "path": "blender/renders/doitt-1224763.png",
+      "byteSize": 136951,
+      "checksumSha256": "4cf290124e50a553c647867badfe94f813b4f861b5405c3ab1973d49ecc7f0b5"
+    },
+    {
+      "path": "blender/renders/doitt-1232671.png",
+      "byteSize": 156455,
+      "checksumSha256": "17ac3234719346faee4ed42d44519d64e1d4a8ed0673539704eab69efd7ee2e6"
+    },
+    {
+      "path": "blender/renders/doitt-1262786.png",
+      "byteSize": 157643,
+      "checksumSha256": "991124f5ca80d3658c15602eb17a4f9e2589386be04af11939cf8409ac5c6404"
+    },
+    {
+      "path": "blender/renders/doitt-1272399.png",
+      "byteSize": 273311,
+      "checksumSha256": "cecba4a72ce2fb7d730e5e9b959cf6296fb8f04ffeebf0543b7303bd9d26832c"
+    },
+    {
+      "path": "blender/renders/doitt-127864.png",
+      "byteSize": 205398,
+      "checksumSha256": "255c98795a218bd6967c5bc68c49c53dbf4aa080dc08dd1772352605c1d0306a"
+    },
+    {
+      "path": "blender/renders/doitt-1279525.png",
+      "byteSize": 171940,
+      "checksumSha256": "695ccb9fab3365e1d0293aab21d1482aaf03aa68c10f39429b63dc0c60ef02f4"
+    },
+    {
+      "path": "blender/renders/doitt-1286246.png",
+      "byteSize": 211683,
+      "checksumSha256": "9bf21b73766500c5139086d41bd3e158a21bec3523bc4a0575e37f18c65a65b7"
+    },
+    {
+      "path": "blender/renders/doitt-1289963.png",
+      "byteSize": 171519,
+      "checksumSha256": "315a6523ab2d206b2c15cc5ee87b54d417324000b4b8642c7d3bf4e5d95c007d"
+    },
+    {
+      "path": "blender/renders/doitt-1289964.png",
+      "byteSize": 167335,
+      "checksumSha256": "35a10bab36aab666a11e7f48535a29fe07e16b6cb0347b186d01a1f7fe6facea"
+    },
+    {
+      "path": "blender/renders/doitt-1294316.png",
+      "byteSize": 261760,
+      "checksumSha256": "092f9552b90e86c9ef0d633cf57d9d5883763873c24a0b49d68fe101236c2aa2"
+    },
+    {
+      "path": "blender/renders/doitt-1297513.png",
+      "byteSize": 251959,
+      "checksumSha256": "facdae2d3ca60626ee74401cb3008c726f598585ad690432e109005b8c041d06"
+    },
+    {
+      "path": "blender/renders/doitt-1300185.png",
+      "byteSize": 240110,
+      "checksumSha256": "1364729257ec5ef7090988802f61b69d6957dec59e60d2b9484a6716844ab7b2"
+    },
+    {
+      "path": "blender/renders/doitt-1302589.png",
+      "byteSize": 204015,
+      "checksumSha256": "12637ec5701af045fdccfbc2828f4e6c699fdf8b9a323856d723171b5f1ce819"
+    },
+    {
+      "path": "blender/renders/doitt-157592.png",
+      "byteSize": 146342,
+      "checksumSha256": "e08731d47b984e4e5b79591f1ad89299debe9a194d316aa5faa7d1500882bd4e"
+    },
+    {
+      "path": "blender/renders/doitt-166790.png",
+      "byteSize": 145000,
+      "checksumSha256": "c9cc222f913e48b4b693b114a985bd04250eca43057bb5d3ba390044e1f71f51"
+    },
+    {
+      "path": "blender/renders/doitt-227702.png",
+      "byteSize": 125689,
+      "checksumSha256": "ba8b5bbba0c7f47ae1f01d72ca634607d6e698aa9da283f19d9c4b1db2b17355"
+    },
+    {
+      "path": "blender/renders/doitt-316002.png",
+      "byteSize": 160732,
+      "checksumSha256": "d9f494bcac886288bf72224d97a21171c55504472c77848ad16d258db01827f1"
+    },
+    {
+      "path": "blender/renders/doitt-399990.png",
+      "byteSize": 158352,
+      "checksumSha256": "b1d9723cf28ce3029459c3b277822b4d826660b7d53368c1da89659d59a20a0b"
+    },
+    {
+      "path": "blender/renders/doitt-420075.png",
+      "byteSize": 154655,
+      "checksumSha256": "e1f2e026cbf8b3b8d380e532ad6ddd5973222f781d08076972ae9e1e20eb7545"
+    },
+    {
+      "path": "blender/renders/doitt-528581.png",
+      "byteSize": 201574,
+      "checksumSha256": "11ea6cabc4bb5e72293973fce234ef8a61ffc34f51a024290311d30e301d3fdc"
+    },
+    {
+      "path": "blender/renders/doitt-555676.png",
+      "byteSize": 183503,
+      "checksumSha256": "13ca6a13cca6034637ef59fdc31954df1d2ec435837311da2ccd2b4fa18d4fef"
+    },
+    {
+      "path": "blender/renders/doitt-594251.png",
+      "byteSize": 197201,
+      "checksumSha256": "53e36b0724904b51a18f25af293b04d0172780a490ca836c9a3706ca352d7ae7"
+    },
+    {
+      "path": "blender/renders/doitt-631125.png",
+      "byteSize": 181753,
+      "checksumSha256": "863d4fc828d76c9355e97ca6b5fe1a4b2537b82b87bf0a764513db04286075d8"
+    },
+    {
+      "path": "blender/renders/doitt-684855.png",
+      "byteSize": 206511,
+      "checksumSha256": "fed49006b69b742001ba05cd550edb858554578e0b92a501f2cafedfee7ce4f4"
+    },
+    {
+      "path": "blender/renders/doitt-749711.png",
+      "byteSize": 158428,
+      "checksumSha256": "7979a2f4464158a46db8bc93fc90fc559c98c07fe58fd43adcf71964474bc697"
+    },
+    {
+      "path": "blender/renders/doitt-800671.png",
+      "byteSize": 221572,
+      "checksumSha256": "833874f7dc9742702b89f44b0d1ed7a820e0fcc370542fbd45d6020bd025d172"
+    },
+    {
+      "path": "blender/renders/doitt-803147.png",
+      "byteSize": 148663,
+      "checksumSha256": "dddbdff95840e618b2a9968a6e011c7ea288a9c6eba40ec3f9951a001f1e6086"
+    },
+    {
+      "path": "blender/renders/doitt-804055.png",
+      "byteSize": 205742,
+      "checksumSha256": "383f2fb7ae3fa156915c4756b2c16cb42611b8878b890e587eea2130a5745ee0"
+    },
+    {
+      "path": "blender/renders/doitt-88101.png",
+      "byteSize": 147166,
+      "checksumSha256": "22feed96c9818ec8c6c20300820b3bacdc4eca61ca10cacac345f7db0c3d88ae"
+    },
+    {
+      "path": "blender/renders/doitt-941537.png",
+      "byteSize": 227020,
+      "checksumSha256": "b137efcedd8f3cf597a0450d9cb84a35e319c6ae7701f51ec516cfa7069b9a79"
+    },
+    {
+      "path": "blender/renders/doitt-996746.png",
+      "byteSize": 172905,
+      "checksumSha256": "a206a00c2133683ee2ed3238446a0742eb4ba9f2f56b19c9a178b1b2bb465c87"
+    },
+    {
+      "path": "blender/sample-selection.json",
+      "byteSize": 33833,
+      "checksumSha256": "2bb66b2b59a6e16b9633f5f9fd1cb254fd64faf111f4f4384cea8b0910f50b47"
+    },
+    {
+      "path": "journeys/a-midtown-core-overview.png",
+      "byteSize": 836140,
+      "checksumSha256": "2a5ab7dcd7a171793d43bf23a52c1ac73b52df2e755649c560588fa5ca612757"
+    },
+    {
+      "path": "journeys/a-street-level-facade.png",
+      "byteSize": 531674,
+      "checksumSha256": "a4df30c8ce643bf46e204647c7a318dcfee8d2de254e2f6f0fec2ed2c2e314db"
+    },
+    {
+      "path": "journeys/b-selection-details-truth-labels.png",
+      "byteSize": 682803,
+      "checksumSha256": "f6e361183a6bcec7dcfb74c846e0b20e98af04128fa79668823e4c7c98ce9c75"
+    },
+    {
+      "path": "journeys/d-default-session-block835.png",
+      "byteSize": 784405,
+      "checksumSha256": "f159efd65ab57b236321990711dab694021ae1cf392b0afd96b6459a3bf90f09"
+    },
+    {
+      "path": "journeys/d-default-session-network-inventory.json",
+      "byteSize": 6371,
+      "checksumSha256": "b646f1478e2b5bf59939d0a9deaba0448017244e23544d1534d6bd2fac984be9"
+    },
+    {
+      "path": "journeys/e-injected-fault-base-intact.png",
+      "byteSize": 721520,
+      "checksumSha256": "edc422e23f41354045998ffa6e22747fb7ea1a8b83cbe8541756218199dd6050"
+    },
+    {
+      "path": "journeys/journeys.json",
+      "byteSize": 8383,
+      "checksumSha256": "faf8004d73c746c3bf8267a895acb87c30a11dc7b6b08b9d0523ed4dcd759cc2"
+    },
+    {
+      "path": "plan-census.json",
+      "byteSize": 21517,
+      "checksumSha256": "c18206433d44267bdbfc01f6f7680583a24eacc34649be498b069ac22f1fee97"
+    },
+    {
+      "path": "stages/gates.json",
+      "byteSize": 599,
+      "checksumSha256": "6811d43abc5dfd4f1e39c0312316128be60ff814281239955e9eb99773f46ef9"
+    },
+    {
+      "path": "stages/glbs.json",
+      "byteSize": 1154,
+      "checksumSha256": "c388337a065f16b583e467c896676968cbf4647a533b82222207a931640278db"
+    },
+    {
+      "path": "stages/graph.json",
+      "byteSize": 1314,
+      "checksumSha256": "39935d1c8b0f74261086f27a86a245bcd0504bb0ec50fd8881543ae3f1e5b117"
+    },
+    {
+      "path": "stages/plans.json",
+      "byteSize": 850,
+      "checksumSha256": "1e2b165680ec2db8ee10082c82fe1d3c08b5d4d55cc6071f43997132d1c16267"
+    }
+  ]
+}

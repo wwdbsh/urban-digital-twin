@@ -150,6 +150,8 @@ const locatedFeature = runtimeFixtureFeatures.find((feature) => feature.kind ===
 
 const CANARY_EXTERIOR_RELEASE_ID = "manhattan-exterior-cells-20260811";
 const CANARY_EXTERIOR_ROOT = `/data/${CANARY_EXTERIOR_RELEASE_ID}/`;
+const MIDTOWN_CORE_EXTERIOR_RELEASE_ID = "manhattan-midtown-core-cells-20260811";
+const MIDTOWN_CORE_EXTERIOR_ROOT = `/data/${MIDTOWN_CORE_EXTERIOR_RELEASE_ID}/`;
 const BLOCK_835_FEATURE_IDS = [...BLOCK_835_DOITT_IDS].map((id) => `doitt:${id}`);
 
 /**
@@ -637,7 +639,7 @@ describe("exterior streaming profiles and canary state", () => {
   });
 
   it("round-trips the pinned Manhattan release and keeps the fixture as the no-real-base fallback", () => {
-    expect(PINNED_EXTERIOR_CELL_RELEASE_IDS).toEqual(["udt-fixture-exterior-cells", "manhattan-exterior-cells-20260811"]);
+    expect(PINNED_EXTERIOR_CELL_RELEASE_IDS).toEqual(["udt-fixture-exterior-cells", "manhattan-exterior-cells-20260811", "manhattan-midtown-core-cells-20260811"]);
     // Unchanged: this is the fallback for a session with no real base, not the
     // promoted default. The promoted default lives in EXTERIOR_DEFAULT_ACTIVATION.
     expect(EXTERIOR_CELL_STREAMING_RELEASE_ID).toBe("udt-fixture-exterior-cells");
@@ -800,6 +802,42 @@ describe("exterior streaming profiles and canary state", () => {
       expect(document.body.textContent).not.toContain("base-incompatible");
       expect(document.body.textContent).not.toContain("requires an active base release");
       expect(within(document.body).getByRole("button", { name: "Disable exterior streaming" })).toBeInTheDocument();
+    } finally {
+      fetchSpy.mockRestore();
+    }
+  }, 30_000);
+
+  /**
+   * Migration invariant M1 for the midtown-core canary: adding
+   * `manhattan-midtown-core-cells-20260811` to the pinned allowlist must leave
+   * the default session byte-identical in behaviour. A session that names no
+   * exterior parameter resolves the promoted Block 835 default and must issue
+   * no request whatsoever into the midtown-core release root — opt-in is
+   * exclusively `?exteriorCells=manhattan-midtown-core-cells-20260811`.
+   */
+  it("issues no midtown-core request in a default session, so the canary stays strictly opt-in", async () => {
+    const fetchSpy = serveCommittedCanaryRelease();
+    const citywide = lateCitywideBaseAdapter(BLOCK_835_FEATURE_IDS);
+    citywideRuntimeMocks.loadCitywideRelease.mockResolvedValue(citywide.adapter as unknown as CitywideReleaseAdapter);
+    try {
+      window.history.replaceState({}, "", `/?data=${CITYWIDE_RELEASE_ID}&release=${CITYWIDE_RELEASE_ID}`);
+      render(<App />);
+      const requestedPaths = () => fetchSpy.mock.calls.map(([input]) => String(input));
+
+      // The promoted default is what a parameterless session resolves.
+      await waitFor(() => {
+        expect(requestedPaths().some((path) => path.startsWith(CANARY_EXTERIOR_ROOT))).toBe(true);
+      });
+      await waitFor(() => {
+        const viewport = document.querySelector<HTMLElement>(".viewport");
+        expect(viewport?.getAttribute("data-exterior-render-entry-count")).toBe(String(BLOCK_835_FEATURE_IDS.length));
+      }, { timeout: 20_000 });
+
+      expect(requestedPaths().filter((path) => path.startsWith(MIDTOWN_CORE_EXTERIOR_ROOT))).toEqual([]);
+      expect(new URL(window.location.href).searchParams.get("exteriorCells")).toBeNull();
+      const status = [...document.querySelectorAll<HTMLElement>(".runtime-note-overlay")].find((candidate) => candidate.textContent?.startsWith("Exterior streaming ·"));
+      expect(status?.textContent).toContain(CANARY_EXTERIOR_RELEASE_ID);
+      expect(status?.textContent).not.toContain(MIDTOWN_CORE_EXTERIOR_RELEASE_ID);
     } finally {
       fetchSpy.mockRestore();
     }

@@ -210,7 +210,26 @@ export interface ExteriorCellFailureState {
   notice: string;
 }
 
-export type ExteriorCellOutcome = ExteriorCellRenderPlan | ExteriorCellFailureState;
+/**
+ * A cell the release itself declares as carrying no exterior geometry: every
+ * owned building has detail status `unavailable`.
+ *
+ * This is a *bounded-availability* outcome, not a failure. Nothing was fetched,
+ * nothing failed verification, and no substitute was selected. It is kept
+ * distinct from `base-massing` so a deliberately unshipped cell can never be
+ * reported as a verification failure, and so a real failure keeps the alarming
+ * path it needs.
+ */
+export interface ExteriorCellNotShippedState {
+  kind: "not-shipped";
+  cellId: string;
+  cellReleaseId: string;
+  /** Owned buildings the release declares unavailable in this version. */
+  unavailableBuildingCount: number;
+  notice: string;
+}
+
+export type ExteriorCellOutcome = ExteriorCellRenderPlan | ExteriorCellFailureState | ExteriorCellNotShippedState;
 
 export interface ExteriorRuntimeMetrics {
   cacheEntries: number;
@@ -226,6 +245,8 @@ export interface ExteriorRuntimeMetrics {
   failedArtifactCount: number;
   fallbackCellCount: number;
   failedCellCount: number;
+  /** Cells the release declares as shipping no exterior geometry, by design. */
+  notShippedCellCount: number;
 }
 
 export type ExteriorArtifactFetcher = (relativeRef: string, signal?: AbortSignal) => Promise<Uint8Array>;
@@ -312,6 +333,7 @@ export class ExteriorCellRuntime {
   private failedArtifactCount = 0;
   private fallbackCellCount = 0;
   private failedCellCount = 0;
+  private notShippedCellCount = 0;
 
   constructor(source: ExteriorCellRuntimeSource, head: ExteriorHeadResolution, options: ExteriorCellRuntimeOptions) {
     const publicRoot = source.graph.roots.find((root) => root.audience === "public");
@@ -382,6 +404,7 @@ export class ExteriorCellRuntime {
       failedArtifactCount: this.failedArtifactCount,
       fallbackCellCount: this.fallbackCellCount,
       failedCellCount: this.failedCellCount,
+      notShippedCellCount: this.notShippedCellCount,
     };
   }
 
@@ -400,6 +423,20 @@ export class ExteriorCellRuntime {
     if (!cellRelease) {
       this.failedCellCount += 1;
       return { kind: "failed", cellId, cellReleaseId: mapping.cellReleaseId, code: "cell-release-missing", message: `Cell release ${mapping.cellReleaseId} is absent from the public release graph.`, notice: `Exterior cell ${cellId} failed verification and no verified predecessor was available; no exterior geometry is shown for it.` };
+    }
+    // Bounded availability, decided before any fetch. A cell whose every owned
+    // building is declared unavailable has nothing to verify, so treating an
+    // empty render as a verification failure would assert a failure that did
+    // not happen. It costs no request, no cache entry and no fallback.
+    if (cellRelease.buildingDetails.length > 0 && cellRelease.buildingDetails.every((detail) => detail.status === "unavailable")) {
+      this.notShippedCellCount += 1;
+      return {
+        kind: "not-shipped",
+        cellId,
+        cellReleaseId: cellRelease.cellReleaseId,
+        unavailableBuildingCount: cellRelease.buildingDetails.length,
+        notice: `Exterior cell ${cellId} ships no exterior geometry in this release; no substitute was selected.`,
+      };
     }
     let headError: unknown;
     try {
