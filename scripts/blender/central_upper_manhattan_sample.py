@@ -40,11 +40,16 @@ so the waves' renders stay comparable by eye.
 Nothing here is downloaded and no imagery is read: the tiles are generated from
 named constants in this repository, and this pass only ever opens what shipped.
 
-ONE RELEASE OF WAVE w04 EXISTS TODAY. `southern_remainder_sample.py` grew an
-environment-selected variant when its wave gained a promoted successor; this
-pass has no such fork because there is nothing yet to fork for, and the seam a
-successor would slot into lives in the Node pipeline's release-variant table
-rather than being anticipated here as dead code.
+TWO RELEASES OF WAVE w04 TRAVEL THIS PASS. The default is the T019 CANARY,
+unchanged, so every existing invocation and every committed record it produced
+still mean exactly what they meant. T020 promoted a curated SUCCESSOR whose
+assets are a different, disjoint set of cells, and the same pass has to be able
+to measure those bytes without a second copy of 300 lines that would drift from
+this one. The variant is therefore an ENVIRONMENT SELECTION rather than a fork,
+and the release id it writes into the report is selected with it — a report that
+measured the successor's assets while naming the canary would defeat the Node
+writer's cross-check against the committed inventory, which is the check that
+makes this pass about shipped bytes at all.
 """
 
 
@@ -56,12 +61,19 @@ import bpy
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-# The one release of wave w04 that exists. The release id is written into the
-# report and the Node writer cross-checks every measured checksum against THAT
-# release's committed payload inventory, so a report naming the wrong release
-# fails there rather than being quietly recorded.
-WORK_DIRECTORY = "central-upper-manhattan-20260812"
-RELEASE_ID = "manhattan-central-upper-manhattan-cells-20260812"
+# WHICH release of wave w04 this pass measures. The release id is written into
+# the report and the Node writer cross-checks every measured checksum against
+# THAT release's committed payload inventory, so a report naming the wrong
+# release fails there rather than being quietly recorded.
+VARIANT = os.environ.get("UDT_W04_VARIANT", "canary")
+if VARIANT not in ("canary", "p1"):
+    raise SystemExit("UDT_W04_VARIANT must be 'canary' or 'p1'")
+WORK_DIRECTORY = "central-upper-manhattan-20260812" if VARIANT == "canary" else "central-upper-manhattan-20260812-p1"
+RELEASE_ID = (
+    "manhattan-central-upper-manhattan-cells-20260812"
+    if VARIANT == "canary"
+    else "manhattan-central-upper-manhattan-cells-20260812-p1"
+)
 WORK_ROOT = os.path.join(ROOT, "artifacts", WORK_DIRECTORY, "blender")
 INPUT_DIR = os.path.join(WORK_ROOT, "inputs")
 RENDER_DIR = os.path.join(WORK_ROOT, "renders")

@@ -1,0 +1,1234 @@
+{
+  "schemaVersion": "1.0",
+  "releaseId": "manhattan-central-upper-manhattan-cells-20260812-p1",
+  "servedBundle": {
+    "previewBase": "http://localhost:4179",
+    "indexHtmlChecksumSha256": "44074bd71f10efeb848bdd4f9bea8f54cd4b6f8764b73e2e97f4714dfaa1e987",
+    "localDistIndexHtmlChecksumSha256": "44074bd71f10efeb848bdd4f9bea8f54cd4b6f8764b73e2e97f4714dfaa1e987",
+    "matchesLocalDist": true,
+    "entryScriptPath": "/assets/index-BBHz80XT.js",
+    "entryScriptByteSize": 4887066,
+    "entryScriptChecksumSha256": "b90ca96dbae736a64c99cf6ff604d2c03bf8b2c4c1bead99a9855e4d34c9b4e1",
+    "entryScriptNamesRelease": true,
+    "statement": "Measured before any capture. The served index.html is byte-identical to this repository's dist/index.html and the served entry script contains this release id, so every reading below is from THIS build. Any of those failing aborts the run rather than being recorded as a caveat."
+  },
+  "capAtMeasurement": {
+    "maxCacheEntries": 512,
+    "maxCachedBytes": 268435456,
+    "statement": "THE 512-ENTRY CAP WAS IN FORCE FOR EVERY READING BELOW AND THIS PROMOTION DID NOT CHANGE IT. ADR 0036 precondition (a) admitted a further raise as one of three responses; T020 took response 2 — split the 78-entry headroom with the one wave that is still unpromoted — so both cache caps are exactly what T018 left them. The values here are read from EXTERIOR_RUNTIME_BUDGETS in the same tree the served bundle was built from rather than typed into this record, so a reading taken at a different cap cannot be presented as a reading at this one."
+  },
+  "note": "T020 promotion acceptance. The PROMOTED DEFAULT COMPOSITION — Block 835 V3, Midtown-core V3, the Lower-Manhattan P1 successor, the Southern-remainder P1 successor and the Central-and-upper-Manhattan P1 successor streaming together over the pinned manhattan-citywide-20260804 base — measured in the production preview build by the shipping CesiumJS renderer, with Chrome's vsync and frame-rate limit disabled, at the UNCHANGED 512-entry cache cap. A FIVE-wave composition had never been measured before this run, which is what ADR 0036 precondition (d) required. That precondition also asked for the capped control to be captured in a second browser, for GPU texture memory to be labelled COMPUTED if it is computed, and for isolated slow frames to be STATED rather than smoothed: `cappedControl` is the reading that proves this run is uncapped, `gpuTextureArithmetic` is computed and is not measured anywhere in this file, and every station carries `worstObservedFrameMilliseconds` beside its medians.",
+  "promotedReleaseIds": [
+    "manhattan-exterior-cells-20260811-v3",
+    "manhattan-midtown-core-cells-20260811-v3",
+    "manhattan-lower-manhattan-cells-20260812-p1",
+    "manhattan-southern-remainder-cells-20260812-p1",
+    "manhattan-central-upper-manhattan-cells-20260812-p1"
+  ],
+  "baseReleaseId": "manhattan-citywide-20260804",
+  "capturedWith": {
+    "viewport": {
+      "width": 1280,
+      "height": 800,
+      "deviceScaleFactor": 1
+    },
+    "previewBase": "http://localhost:4179",
+    "remoteDebuggingPort": 9251,
+    "settleFrames": 180,
+    "measuredFrames": 240,
+    "repeats": 3,
+    "chromeFlags": [
+      "--disable-gpu-vsync",
+      "--disable-frame-rate-limit"
+    ]
+  },
+  "frameBudgets": {
+    "exploration": {
+      "p50Milliseconds": 16.7,
+      "p95Milliseconds": 25
+    },
+    "inspection": {
+      "p50Milliseconds": 33.3,
+      "p95Milliseconds": 45
+    }
+  },
+  "cappedControl": {
+    "stationId": "centralpark-west-skyline",
+    "remoteDebuggingPort": 9252,
+    "frameMilliseconds": {
+      "frameCount": 240,
+      "meanMilliseconds": 8.336666666467984,
+      "p50Milliseconds": 8.299999952316284,
+      "p95Milliseconds": 10,
+      "p99Milliseconds": 10.600000023841858,
+      "maximumMilliseconds": 11.400000095367432,
+      "minimumMilliseconds": 6.5
+    },
+    "statement": "The same station in a second Chrome launched WITHOUT the uncapping flags. Its p50 is the display's present interval; the uncapped run's p50 sitting far below it is what makes the uncapped numbers a headroom measurement rather than a floor reading."
+  },
+  "stillCapture": {
+    "chromeHiddenForStill": true,
+    "css": ".exploration-notice, .runtime-note, .inspector, nav, header, footer { display: none !important; }",
+    "statement": "The app's overlay chrome and fallback notices are hidden for the SCREENSHOT ONLY, injected after every timed frame was rendered with them on screen. No measured frame had less work in it than a real session's."
+  },
+  "runtimeBudgets": {
+    "maxCacheEntries": 512,
+    "maxCachedBytes": 268435456,
+    "maxConcurrentRequests": 4
+  },
+  "gpuTextureArithmetic": {
+    "basis": "computed-not-measured",
+    "statement": "Decoded-plus-mipmapped texture memory for the shipped subset, computed as width * height * 4 * 1.33 * imageCount from the emitted bytes. GPU texture memory was NOT measured: no instrument reachable from this session reports texture VRAM, and usedJSHeapSize does not stand in for it. This is an upper bound on an all-resident scene and it is arithmetic.",
+    "assetCount": 40,
+    "imageCount": 120,
+    "tileWidthPixels": 128,
+    "tileHeightPixels": 128,
+    "bytesPerTexel": 4,
+    "mipChainFactor": 1.33,
+    "decodedBytes": 7864320,
+    "decodedMebibytes": 7.5,
+    "withMipsBytes": 10459545.600000001,
+    "withMipsMebibytes": 9.975000000000001,
+    "deduplicatedAcrossModels": false,
+    "otherPromotedWavesTextureBytes": null,
+    "otherPromotedWavesNote": "The Block 835 V3 and Midtown-core V3 waves are TEXTURE-FREE releases and contribute nothing. The Lower-Manhattan P1 and Southern-remainder P1 waves are NOT: both are textured LOD 0, over 71 and 179 assets, and each computes its own share in its own T016 and T018 record. The figure above is THIS release's share alone and must not be read as the whole promoted composition's; `promotedCompositionNote` states how the sum is formed.",
+    "promotedCompositionNote": "Three of the five promoted waves carry tiles. Adding this release's computed share to the T016 and T018 records' gives the promoted composition's computed upper bound; all three are arithmetic and none is a measurement."
+  },
+  "cacheResidency": {
+    "basis": "derived-from-network-not-read-from-the-cache-counter",
+    "statement": "One fetched GLB is one LRU entry, so the entry count is the count of GLB responses the session completed and the byte figure is their encoded size. The in-app cache counter is only published to the DOM in a VITE_BLOCK835_PROBE build; this measurement is against the ordinary production preview a user gets, so residency is derived from the fetches instead.",
+    "perRun": [
+      {
+        "stationId": "centralpark-west-facade",
+        "repeatIndex": 0,
+        "entries": 460,
+        "bytes": 123438719
+      },
+      {
+        "stationId": "centralpark-west-skyline",
+        "repeatIndex": 0,
+        "entries": 460,
+        "bytes": 120223169
+      },
+      {
+        "stationId": "fivewave-wide",
+        "repeatIndex": 0,
+        "entries": 350,
+        "bytes": 103399669
+      },
+      {
+        "stationId": "nomad-facade",
+        "repeatIndex": 0,
+        "entries": 451,
+        "bytes": 122507240
+      },
+      {
+        "stationId": "centralpark-west-facade",
+        "repeatIndex": 1,
+        "entries": 460,
+        "bytes": 123438719
+      },
+      {
+        "stationId": "centralpark-west-skyline",
+        "repeatIndex": 1,
+        "entries": 460,
+        "bytes": 120223169
+      },
+      {
+        "stationId": "fivewave-wide",
+        "repeatIndex": 1,
+        "entries": 362,
+        "bytes": 105187707
+      },
+      {
+        "stationId": "nomad-facade",
+        "repeatIndex": 1,
+        "entries": 452,
+        "bytes": 122559427
+      },
+      {
+        "stationId": "centralpark-west-facade",
+        "repeatIndex": 2,
+        "entries": 460,
+        "bytes": 123438719
+      },
+      {
+        "stationId": "centralpark-west-skyline",
+        "repeatIndex": 2,
+        "entries": 460,
+        "bytes": 120223169
+      },
+      {
+        "stationId": "fivewave-wide",
+        "repeatIndex": 2,
+        "entries": 366,
+        "bytes": 106465347
+      },
+      {
+        "stationId": "nomad-facade",
+        "repeatIndex": 2,
+        "entries": 453,
+        "bytes": 122675108
+      }
+    ],
+    "worstObserved": {
+      "stationId": "centralpark-west-facade",
+      "repeatIndex": 0,
+      "entries": 460,
+      "bytes": 123438719
+    },
+    "maxCacheEntries": 512,
+    "maxCachedBytes": 268435456,
+    "withinEntryBudget": true,
+    "withinByteBudget": true,
+    "releaseTimeDerivation": {
+      "maxCacheEntries": 512,
+      "promotedAssetEntriesBeforeThisWave": 434,
+      "thisWaveAssetEntries": 40,
+      "residentAssetEntries": 474,
+      "headroomForFurtherWaves": 38,
+      "reservedForNorthernManhattanEntries": 36,
+      "note": "The RELEASE-TIME derivation counts GLB FILES ON DISK: 28 for Block 835 V3, which ships two LODs per building, 156 for Midtown-core V3, 71 for Lower-Manhattan P1, 179 for Southern-remainder P1 and 40 for this release. At runtime a session fetches fewer, because only the selected LOD is requested — the T016 record measured 14 Block 835 GLBs against 28 on disk — so the disk derivation is CONSERVATIVE rather than wrong, and `worstObserved` above is what this session actually made resident. An immutable release must be sized against the release-time number, which is why both are recorded. ADR 0034's admissible response 3 — counting RESOLVED entries rather than files on disk — was considered at T020 and REJECTED: both canonical levels of detail of Block 835 can be resident in one session under ordinary camera movement, so a resolved count would understate real occupancy by exactly the amount that matters. The 38 entries left are two more than the 36 this promotion's split RESERVED for wave w05, so a T022 promotion that fits its reservation fits this cache without another cap change."
+    }
+  },
+  "stations": [
+    {
+      "stationId": "centralpark-west-facade",
+      "profile": "inspection",
+      "note": "Standing on the PROMOTED PARKLAND of curated cell 491 and looking WEST at the tower wall of curated cell 490, on the inspection profile at a shallow pitch. Shallow and low on purpose: facades are vertical, and the T017 evidence records a station that looked at rooftops and produced byte-identical stills. This is the pose the ground-coverage tie-break was decided for — the viewer is inside the subset looking across it — and the textured LOD 0 wall stands directly beside the untextured base massing of the cells this release tombstones.",
+      "pose": {
+        "lon": -73.974,
+        "lat": 40.7716,
+        "height": 150,
+        "heading": 272,
+        "pitch": -4,
+        "roll": 0
+      },
+      "repeats": 3,
+      "medianOfRunP50Milliseconds": 3.299999952316284,
+      "medianOfRunP95Milliseconds": 6.399999976158142,
+      "worstObservedFrameMilliseconds": 52.90000009536743,
+      "budget": {
+        "p50Milliseconds": 33.3,
+        "p95Milliseconds": 45
+      },
+      "p50WithinBudget": true,
+      "p95WithinBudget": true,
+      "p50HeadroomRatio": 0.09909909766715569,
+      "p95HeadroomRatio": 0.14222222169240314,
+      "heapAfterGcBytes": {
+        "minimum": 246472535,
+        "maximum": 252207982,
+        "median": 249583288
+      },
+      "p50OverCappedControlP50": 0.3975903579849241
+    },
+    {
+      "stationId": "centralpark-west-skyline",
+      "profile": "exploration",
+      "note": "The wide skyline station the curation was chosen for: the whole curated wall read as one silhouette from the south-east, including the tallest sourced structure in any admissible cell of this wave at 219.2 m, past the LOD 0 cut-off where a 128-pixel tile is repeated most per screen pixel and aliasing shows first.",
+      "pose": {
+        "lon": -73.97,
+        "lat": 40.765,
+        "height": 520,
+        "heading": 315,
+        "pitch": -8,
+        "roll": 0
+      },
+      "repeats": 3,
+      "medianOfRunP50Milliseconds": 2.3000000715255737,
+      "medianOfRunP95Milliseconds": 5.5,
+      "worstObservedFrameMilliseconds": 9.400000095367432,
+      "budget": {
+        "p50Milliseconds": 16.7,
+        "p95Milliseconds": 25
+      },
+      "p50WithinBudget": true,
+      "p95WithinBudget": true,
+      "p50HeadroomRatio": 0.13772455518117208,
+      "p95HeadroomRatio": 0.22,
+      "heapAfterGcBytes": {
+        "minimum": 207421578,
+        "maximum": 209677265,
+        "median": 209116833
+      },
+      "p50OverCappedControlP50": 0.277108443944474
+    },
+    {
+      "stationId": "fivewave-wide",
+      "profile": "exploration",
+      "note": "The FIVE-WAVE wide view, and the station this promotion exists to measure. A high pose south of the island looking north up Manhattan, holding the promoted Lower-Manhattan, Southern-remainder, Block 835, Midtown-core and Central-and-upper-Manhattan waves in one frame. ADR 0036 precondition (d) states that a five-wave composition had never been measured; this is the pose where five co-resident waves are simultaneously in view rather than merely simultaneously promoted.",
+      "pose": {
+        "lon": -74.012,
+        "lat": 40.698,
+        "height": 4200,
+        "heading": 22,
+        "pitch": -22,
+        "roll": 0
+      },
+      "repeats": 3,
+      "medianOfRunP50Milliseconds": 2,
+      "medianOfRunP95Milliseconds": 5.800000071525574,
+      "worstObservedFrameMilliseconds": 30.200000047683716,
+      "budget": {
+        "p50Milliseconds": 16.7,
+        "p95Milliseconds": 25
+      },
+      "p50WithinBudget": true,
+      "p95WithinBudget": true,
+      "p50HeadroomRatio": 0.11976047904191617,
+      "p95HeadroomRatio": 0.23200000286102296,
+      "heapAfterGcBytes": {
+        "minimum": 215710219,
+        "maximum": 218758320,
+        "median": 216924955
+      },
+      "p50OverCappedControlP50": 0.24096385680603036
+    },
+    {
+      "stationId": "nomad-facade",
+      "profile": "inspection",
+      "note": "The T018 Southern-remainder station, pose-for-pose UNCHANGED, kept for continuity across the two promotions. Its numbers are directly comparable with the T018 record's, so \"did adding a fifth wave cost the fourth one anything\" is a comparison rather than an assertion.",
+      "pose": {
+        "lon": -73.9925,
+        "lat": 40.7458,
+        "height": 150,
+        "heading": 65,
+        "pitch": -4,
+        "roll": 0
+      },
+      "repeats": 3,
+      "medianOfRunP50Milliseconds": 3.3000000715255737,
+      "medianOfRunP95Milliseconds": 8,
+      "worstObservedFrameMilliseconds": 28.799999952316284,
+      "budget": {
+        "p50Milliseconds": 33.3,
+        "p95Milliseconds": 45
+      },
+      "p50WithinBudget": true,
+      "p95WithinBudget": true,
+      "p50HeadroomRatio": 0.09909910124701424,
+      "p95HeadroomRatio": 0.17777777777777778,
+      "heapAfterGcBytes": {
+        "minimum": 331581003,
+        "maximum": 371759708,
+        "median": 369832093
+      },
+      "p50OverCappedControlP50": 0.3975903723474892
+    }
+  ],
+  "captures": [
+    {
+      "stationId": "centralpark-west-facade",
+      "repeatIndex": 0,
+      "url": "http://localhost:4179/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-73.974000&lat=40.771600&height=150.000000&heading=272.000000&pitch=-4.000000&roll=0.000000&exteriorProfile=inspection",
+      "profile": "inspection",
+      "activeWaves": [
+        "manhattan-central-upper-manhattan-cells-20260812-p1",
+        "manhattan-exterior-cells-20260811-v3",
+        "manhattan-lower-manhattan-cells-20260812-p1",
+        "manhattan-midtown-core-cells-20260811-v3",
+        "manhattan-southern-remainder-cells-20260812-p1"
+      ],
+      "frameMilliseconds": {
+        "frameCount": 240,
+        "meanMilliseconds": 3.9200000002980233,
+        "p50Milliseconds": 3.200000047683716,
+        "p95Milliseconds": 6.399999976158142,
+        "p99Milliseconds": 25.899999976158142,
+        "maximumMilliseconds": 52.90000009536743,
+        "minimumMilliseconds": 0.6000000238418579
+      },
+      "heapAfterGcBytes": 246472535,
+      "network": {
+        "perRelease": {
+          "manhattan-exterior-cells-20260811-v3": {
+            "requestCount": 17,
+            "completedCount": 17,
+            "encodedBytes": 5150055,
+            "glbCount": 14
+          },
+          "manhattan-midtown-core-cells-20260811-v3": {
+            "requestCount": 159,
+            "completedCount": 159,
+            "encodedBytes": 21286267,
+            "glbCount": 156
+          },
+          "manhattan-lower-manhattan-cells-20260812-p1": {
+            "requestCount": 74,
+            "completedCount": 74,
+            "encodedBytes": 41525305,
+            "glbCount": 71
+          },
+          "manhattan-southern-remainder-cells-20260812-p1": {
+            "requestCount": 182,
+            "completedCount": 182,
+            "encodedBytes": 40584210,
+            "glbCount": 179
+          },
+          "manhattan-central-upper-manhattan-cells-20260812-p1": {
+            "requestCount": 43,
+            "completedCount": 43,
+            "encodedBytes": 14892882,
+            "glbCount": 40
+          },
+          "manhattan-central-upper-manhattan-cells-20260812": {
+            "requestCount": 0,
+            "completedCount": 0,
+            "encodedBytes": 0,
+            "glbCount": 0
+          },
+          "manhattan-citywide-20260804": {
+            "requestCount": 7,
+            "completedCount": 7,
+            "encodedBytes": 1352150,
+            "glbCount": 0
+          }
+        },
+        "totalRequestCount": 560,
+        "externalHosts": []
+      },
+      "still": {
+        "relativeRef": "captures/centralpark-west-facade__r0.png",
+        "byteSize": 420738,
+        "checksumSha256": "0b16c6e0890327a9899785cb46e1164c9b5a92b05d8cdf7e3e57ea43f6be6db9"
+      }
+    },
+    {
+      "stationId": "centralpark-west-skyline",
+      "repeatIndex": 0,
+      "url": "http://localhost:4179/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-73.970000&lat=40.765000&height=520.000000&heading=315.000000&pitch=-8.000000&roll=0.000000&exteriorProfile=exploration",
+      "profile": "exploration",
+      "activeWaves": [
+        "manhattan-central-upper-manhattan-cells-20260812-p1",
+        "manhattan-exterior-cells-20260811-v3",
+        "manhattan-lower-manhattan-cells-20260812-p1",
+        "manhattan-midtown-core-cells-20260811-v3",
+        "manhattan-southern-remainder-cells-20260812-p1"
+      ],
+      "frameMilliseconds": {
+        "frameCount": 240,
+        "meanMilliseconds": 2.5929166664679846,
+        "p50Milliseconds": 2.3000000715255737,
+        "p95Milliseconds": 5.100000023841858,
+        "p99Milliseconds": 7.300000071525574,
+        "maximumMilliseconds": 7.5,
+        "minimumMilliseconds": 0.30000007152557373
+      },
+      "heapAfterGcBytes": 209116833,
+      "network": {
+        "perRelease": {
+          "manhattan-exterior-cells-20260811-v3": {
+            "requestCount": 17,
+            "completedCount": 17,
+            "encodedBytes": 1934505,
+            "glbCount": 14
+          },
+          "manhattan-midtown-core-cells-20260811-v3": {
+            "requestCount": 159,
+            "completedCount": 159,
+            "encodedBytes": 21286267,
+            "glbCount": 156
+          },
+          "manhattan-lower-manhattan-cells-20260812-p1": {
+            "requestCount": 74,
+            "completedCount": 74,
+            "encodedBytes": 41525305,
+            "glbCount": 71
+          },
+          "manhattan-southern-remainder-cells-20260812-p1": {
+            "requestCount": 182,
+            "completedCount": 182,
+            "encodedBytes": 40584210,
+            "glbCount": 179
+          },
+          "manhattan-central-upper-manhattan-cells-20260812-p1": {
+            "requestCount": 43,
+            "completedCount": 43,
+            "encodedBytes": 14892882,
+            "glbCount": 40
+          },
+          "manhattan-central-upper-manhattan-cells-20260812": {
+            "requestCount": 0,
+            "completedCount": 0,
+            "encodedBytes": 0,
+            "glbCount": 0
+          },
+          "manhattan-citywide-20260804": {
+            "requestCount": 5,
+            "completedCount": 5,
+            "encodedBytes": 635,
+            "glbCount": 0
+          }
+        },
+        "totalRequestCount": 516,
+        "externalHosts": []
+      },
+      "still": {
+        "relativeRef": "captures/centralpark-west-skyline__r0.png",
+        "byteSize": 429397,
+        "checksumSha256": "3ef31cc403000452ac42431f31ff0ae9e81863ea31476d88633c65ff3eb798df"
+      }
+    },
+    {
+      "stationId": "fivewave-wide",
+      "repeatIndex": 0,
+      "url": "http://localhost:4179/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-74.012000&lat=40.698000&height=4200.000000&heading=22.000000&pitch=-22.000000&roll=0.000000&exteriorProfile=exploration",
+      "profile": "exploration",
+      "activeWaves": [
+        "manhattan-central-upper-manhattan-cells-20260812-p1",
+        "manhattan-exterior-cells-20260811-v3",
+        "manhattan-lower-manhattan-cells-20260812-p1",
+        "manhattan-midtown-core-cells-20260811-v3",
+        "manhattan-southern-remainder-cells-20260812-p1"
+      ],
+      "frameMilliseconds": {
+        "frameCount": 240,
+        "meanMilliseconds": 2.580833333233992,
+        "p50Milliseconds": 2,
+        "p95Milliseconds": 6.199999928474426,
+        "p99Milliseconds": 8.399999976158142,
+        "maximumMilliseconds": 30.200000047683716,
+        "minimumMilliseconds": 0.3999999761581421
+      },
+      "heapAfterGcBytes": 216924955,
+      "network": {
+        "perRelease": {
+          "manhattan-exterior-cells-20260811-v3": {
+            "requestCount": 17,
+            "completedCount": 17,
+            "encodedBytes": 1934505,
+            "glbCount": 14
+          },
+          "manhattan-midtown-core-cells-20260811-v3": {
+            "requestCount": 98,
+            "completedCount": 97,
+            "encodedBytes": 14494051,
+            "glbCount": 94
+          },
+          "manhattan-lower-manhattan-cells-20260812-p1": {
+            "requestCount": 72,
+            "completedCount": 71,
+            "encodedBytes": 39305812,
+            "glbCount": 68
+          },
+          "manhattan-southern-remainder-cells-20260812-p1": {
+            "requestCount": 140,
+            "completedCount": 140,
+            "encodedBytes": 34670226,
+            "glbCount": 137
+          },
+          "manhattan-central-upper-manhattan-cells-20260812-p1": {
+            "requestCount": 40,
+            "completedCount": 40,
+            "encodedBytes": 12995075,
+            "glbCount": 37
+          },
+          "manhattan-central-upper-manhattan-cells-20260812": {
+            "requestCount": 0,
+            "completedCount": 0,
+            "encodedBytes": 0,
+            "glbCount": 0
+          },
+          "manhattan-citywide-20260804": {
+            "requestCount": 27,
+            "completedCount": 27,
+            "encodedBytes": 1879556,
+            "glbCount": 0
+          }
+        },
+        "totalRequestCount": 430,
+        "externalHosts": []
+      },
+      "still": {
+        "relativeRef": "captures/fivewave-wide__r0.png",
+        "byteSize": 599008,
+        "checksumSha256": "03823afbc5dd27533161dadf10cd2f2068377993e1933ade083e5e301b67a8d0"
+      }
+    },
+    {
+      "stationId": "nomad-facade",
+      "repeatIndex": 0,
+      "url": "http://localhost:4179/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-73.992500&lat=40.745800&height=150.000000&heading=65.000000&pitch=-4.000000&roll=0.000000&exteriorProfile=inspection",
+      "profile": "inspection",
+      "activeWaves": [
+        "manhattan-central-upper-manhattan-cells-20260812-p1",
+        "manhattan-exterior-cells-20260811-v3",
+        "manhattan-lower-manhattan-cells-20260812-p1",
+        "manhattan-midtown-core-cells-20260811-v3",
+        "manhattan-southern-remainder-cells-20260812-p1"
+      ],
+      "frameMilliseconds": {
+        "frameCount": 240,
+        "meanMilliseconds": 3.8045833334326744,
+        "p50Milliseconds": 3.3000000715255737,
+        "p95Milliseconds": 7.899999976158142,
+        "p99Milliseconds": 16.600000023841858,
+        "maximumMilliseconds": 28.5,
+        "minimumMilliseconds": 1
+      },
+      "heapAfterGcBytes": 369832093,
+      "network": {
+        "perRelease": {
+          "manhattan-exterior-cells-20260811-v3": {
+            "requestCount": 17,
+            "completedCount": 17,
+            "encodedBytes": 5150055,
+            "glbCount": 14
+          },
+          "manhattan-midtown-core-cells-20260811-v3": {
+            "requestCount": 151,
+            "completedCount": 150,
+            "encodedBytes": 20354788,
+            "glbCount": 147
+          },
+          "manhattan-lower-manhattan-cells-20260812-p1": {
+            "requestCount": 74,
+            "completedCount": 74,
+            "encodedBytes": 41525305,
+            "glbCount": 71
+          },
+          "manhattan-southern-remainder-cells-20260812-p1": {
+            "requestCount": 182,
+            "completedCount": 182,
+            "encodedBytes": 40584210,
+            "glbCount": 179
+          },
+          "manhattan-central-upper-manhattan-cells-20260812-p1": {
+            "requestCount": 43,
+            "completedCount": 43,
+            "encodedBytes": 14892882,
+            "glbCount": 40
+          },
+          "manhattan-central-upper-manhattan-cells-20260812": {
+            "requestCount": 0,
+            "completedCount": 0,
+            "encodedBytes": 0,
+            "glbCount": 0
+          },
+          "manhattan-citywide-20260804": {
+            "requestCount": 8,
+            "completedCount": 8,
+            "encodedBytes": 1799154,
+            "glbCount": 0
+          }
+        },
+        "totalRequestCount": 705,
+        "externalHosts": []
+      },
+      "still": {
+        "relativeRef": "captures/nomad-facade__r0.png",
+        "byteSize": 639039,
+        "checksumSha256": "3199bb64cdea08c500f14d5cc367126e0169b8127759f6537a8c224e73648841"
+      }
+    },
+    {
+      "stationId": "centralpark-west-facade",
+      "repeatIndex": 1,
+      "url": "http://localhost:4179/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-73.974000&lat=40.771600&height=150.000000&heading=272.000000&pitch=-4.000000&roll=0.000000&exteriorProfile=inspection",
+      "profile": "inspection",
+      "activeWaves": [
+        "manhattan-central-upper-manhattan-cells-20260812-p1",
+        "manhattan-exterior-cells-20260811-v3",
+        "manhattan-lower-manhattan-cells-20260812-p1",
+        "manhattan-midtown-core-cells-20260811-v3",
+        "manhattan-southern-remainder-cells-20260812-p1"
+      ],
+      "frameMilliseconds": {
+        "frameCount": 240,
+        "meanMilliseconds": 4.032916666567326,
+        "p50Milliseconds": 3.299999952316284,
+        "p95Milliseconds": 6.300000071525574,
+        "p99Milliseconds": 25.100000023841858,
+        "maximumMilliseconds": 52.700000047683716,
+        "minimumMilliseconds": 0.6999999284744263
+      },
+      "heapAfterGcBytes": 249583288,
+      "network": {
+        "perRelease": {
+          "manhattan-exterior-cells-20260811-v3": {
+            "requestCount": 17,
+            "completedCount": 17,
+            "encodedBytes": 5150055,
+            "glbCount": 14
+          },
+          "manhattan-midtown-core-cells-20260811-v3": {
+            "requestCount": 159,
+            "completedCount": 159,
+            "encodedBytes": 21286267,
+            "glbCount": 156
+          },
+          "manhattan-lower-manhattan-cells-20260812-p1": {
+            "requestCount": 74,
+            "completedCount": 74,
+            "encodedBytes": 41525305,
+            "glbCount": 71
+          },
+          "manhattan-southern-remainder-cells-20260812-p1": {
+            "requestCount": 182,
+            "completedCount": 182,
+            "encodedBytes": 40584210,
+            "glbCount": 179
+          },
+          "manhattan-central-upper-manhattan-cells-20260812-p1": {
+            "requestCount": 43,
+            "completedCount": 43,
+            "encodedBytes": 14892882,
+            "glbCount": 40
+          },
+          "manhattan-central-upper-manhattan-cells-20260812": {
+            "requestCount": 0,
+            "completedCount": 0,
+            "encodedBytes": 0,
+            "glbCount": 0
+          },
+          "manhattan-citywide-20260804": {
+            "requestCount": 7,
+            "completedCount": 7,
+            "encodedBytes": 889,
+            "glbCount": 0
+          }
+        },
+        "totalRequestCount": 559,
+        "externalHosts": []
+      },
+      "still": {
+        "relativeRef": "captures/centralpark-west-facade__r1.png",
+        "byteSize": 420738,
+        "checksumSha256": "0b16c6e0890327a9899785cb46e1164c9b5a92b05d8cdf7e3e57ea43f6be6db9"
+      }
+    },
+    {
+      "stationId": "centralpark-west-skyline",
+      "repeatIndex": 1,
+      "url": "http://localhost:4179/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-73.970000&lat=40.765000&height=520.000000&heading=315.000000&pitch=-8.000000&roll=0.000000&exteriorProfile=exploration",
+      "profile": "exploration",
+      "activeWaves": [
+        "manhattan-central-upper-manhattan-cells-20260812-p1",
+        "manhattan-exterior-cells-20260811-v3",
+        "manhattan-lower-manhattan-cells-20260812-p1",
+        "manhattan-midtown-core-cells-20260811-v3",
+        "manhattan-southern-remainder-cells-20260812-p1"
+      ],
+      "frameMilliseconds": {
+        "frameCount": 240,
+        "meanMilliseconds": 2.63208333303531,
+        "p50Milliseconds": 2.5,
+        "p95Milliseconds": 5.5,
+        "p99Milliseconds": 7,
+        "maximumMilliseconds": 7.5,
+        "minimumMilliseconds": 0.6000000238418579
+      },
+      "heapAfterGcBytes": 209677265,
+      "network": {
+        "perRelease": {
+          "manhattan-exterior-cells-20260811-v3": {
+            "requestCount": 17,
+            "completedCount": 17,
+            "encodedBytes": 1934505,
+            "glbCount": 14
+          },
+          "manhattan-midtown-core-cells-20260811-v3": {
+            "requestCount": 159,
+            "completedCount": 159,
+            "encodedBytes": 21286267,
+            "glbCount": 156
+          },
+          "manhattan-lower-manhattan-cells-20260812-p1": {
+            "requestCount": 74,
+            "completedCount": 74,
+            "encodedBytes": 41525305,
+            "glbCount": 71
+          },
+          "manhattan-southern-remainder-cells-20260812-p1": {
+            "requestCount": 182,
+            "completedCount": 182,
+            "encodedBytes": 40584210,
+            "glbCount": 179
+          },
+          "manhattan-central-upper-manhattan-cells-20260812-p1": {
+            "requestCount": 43,
+            "completedCount": 43,
+            "encodedBytes": 14892882,
+            "glbCount": 40
+          },
+          "manhattan-central-upper-manhattan-cells-20260812": {
+            "requestCount": 0,
+            "completedCount": 0,
+            "encodedBytes": 0,
+            "glbCount": 0
+          },
+          "manhattan-citywide-20260804": {
+            "requestCount": 5,
+            "completedCount": 5,
+            "encodedBytes": 635,
+            "glbCount": 0
+          }
+        },
+        "totalRequestCount": 516,
+        "externalHosts": []
+      },
+      "still": {
+        "relativeRef": "captures/centralpark-west-skyline__r1.png",
+        "byteSize": 429397,
+        "checksumSha256": "3ef31cc403000452ac42431f31ff0ae9e81863ea31476d88633c65ff3eb798df"
+      }
+    },
+    {
+      "stationId": "fivewave-wide",
+      "repeatIndex": 1,
+      "url": "http://localhost:4179/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-74.012000&lat=40.698000&height=4200.000000&heading=22.000000&pitch=-22.000000&roll=0.000000&exteriorProfile=exploration",
+      "profile": "exploration",
+      "activeWaves": [
+        "manhattan-central-upper-manhattan-cells-20260812-p1",
+        "manhattan-exterior-cells-20260811-v3",
+        "manhattan-lower-manhattan-cells-20260812-p1",
+        "manhattan-midtown-core-cells-20260811-v3",
+        "manhattan-southern-remainder-cells-20260812-p1"
+      ],
+      "frameMilliseconds": {
+        "frameCount": 240,
+        "meanMilliseconds": 2.523750000198682,
+        "p50Milliseconds": 1.8000000715255737,
+        "p95Milliseconds": 5.800000071525574,
+        "p99Milliseconds": 8.799999952316284,
+        "maximumMilliseconds": 28.199999928474426,
+        "minimumMilliseconds": 0.2999999523162842
+      },
+      "heapAfterGcBytes": 215710219,
+      "network": {
+        "perRelease": {
+          "manhattan-exterior-cells-20260811-v3": {
+            "requestCount": 17,
+            "completedCount": 17,
+            "encodedBytes": 1934505,
+            "glbCount": 14
+          },
+          "manhattan-midtown-core-cells-20260811-v3": {
+            "requestCount": 101,
+            "completedCount": 101,
+            "encodedBytes": 14689371,
+            "glbCount": 98
+          },
+          "manhattan-lower-manhattan-cells-20260812-p1": {
+            "requestCount": 74,
+            "completedCount": 73,
+            "encodedBytes": 39500046,
+            "glbCount": 70
+          },
+          "manhattan-southern-remainder-cells-20260812-p1": {
+            "requestCount": 146,
+            "completedCount": 144,
+            "encodedBytes": 35156660,
+            "glbCount": 141
+          },
+          "manhattan-central-upper-manhattan-cells-20260812-p1": {
+            "requestCount": 43,
+            "completedCount": 42,
+            "encodedBytes": 13907125,
+            "glbCount": 39
+          },
+          "manhattan-central-upper-manhattan-cells-20260812": {
+            "requestCount": 0,
+            "completedCount": 0,
+            "encodedBytes": 0,
+            "glbCount": 0
+          },
+          "manhattan-citywide-20260804": {
+            "requestCount": 27,
+            "completedCount": 27,
+            "encodedBytes": 3429,
+            "glbCount": 0
+          }
+        },
+        "totalRequestCount": 444,
+        "externalHosts": []
+      },
+      "still": {
+        "relativeRef": "captures/fivewave-wide__r1.png",
+        "byteSize": 599008,
+        "checksumSha256": "03823afbc5dd27533161dadf10cd2f2068377993e1933ade083e5e301b67a8d0"
+      }
+    },
+    {
+      "stationId": "nomad-facade",
+      "repeatIndex": 1,
+      "url": "http://localhost:4179/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-73.992500&lat=40.745800&height=150.000000&heading=65.000000&pitch=-4.000000&roll=0.000000&exteriorProfile=inspection",
+      "profile": "inspection",
+      "activeWaves": [
+        "manhattan-central-upper-manhattan-cells-20260812-p1",
+        "manhattan-exterior-cells-20260811-v3",
+        "manhattan-lower-manhattan-cells-20260812-p1",
+        "manhattan-midtown-core-cells-20260811-v3",
+        "manhattan-southern-remainder-cells-20260812-p1"
+      ],
+      "frameMilliseconds": {
+        "frameCount": 240,
+        "meanMilliseconds": 3.7975000003973642,
+        "p50Milliseconds": 3.200000047683716,
+        "p95Milliseconds": 8,
+        "p99Milliseconds": 15.399999976158142,
+        "maximumMilliseconds": 28.799999952316284,
+        "minimumMilliseconds": 0.9000000953674316
+      },
+      "heapAfterGcBytes": 331581003,
+      "network": {
+        "perRelease": {
+          "manhattan-exterior-cells-20260811-v3": {
+            "requestCount": 17,
+            "completedCount": 17,
+            "encodedBytes": 5150055,
+            "glbCount": 14
+          },
+          "manhattan-midtown-core-cells-20260811-v3": {
+            "requestCount": 152,
+            "completedCount": 151,
+            "encodedBytes": 20406975,
+            "glbCount": 148
+          },
+          "manhattan-lower-manhattan-cells-20260812-p1": {
+            "requestCount": 74,
+            "completedCount": 74,
+            "encodedBytes": 41525305,
+            "glbCount": 71
+          },
+          "manhattan-southern-remainder-cells-20260812-p1": {
+            "requestCount": 182,
+            "completedCount": 182,
+            "encodedBytes": 40584210,
+            "glbCount": 179
+          },
+          "manhattan-central-upper-manhattan-cells-20260812-p1": {
+            "requestCount": 43,
+            "completedCount": 43,
+            "encodedBytes": 14892882,
+            "glbCount": 40
+          },
+          "manhattan-central-upper-manhattan-cells-20260812": {
+            "requestCount": 0,
+            "completedCount": 0,
+            "encodedBytes": 0,
+            "glbCount": 0
+          },
+          "manhattan-citywide-20260804": {
+            "requestCount": 8,
+            "completedCount": 8,
+            "encodedBytes": 1016,
+            "glbCount": 0
+          }
+        },
+        "totalRequestCount": 706,
+        "externalHosts": []
+      },
+      "still": {
+        "relativeRef": "captures/nomad-facade__r1.png",
+        "byteSize": 639039,
+        "checksumSha256": "3199bb64cdea08c500f14d5cc367126e0169b8127759f6537a8c224e73648841"
+      }
+    },
+    {
+      "stationId": "centralpark-west-facade",
+      "repeatIndex": 2,
+      "url": "http://localhost:4179/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-73.974000&lat=40.771600&height=150.000000&heading=272.000000&pitch=-4.000000&roll=0.000000&exteriorProfile=inspection",
+      "profile": "inspection",
+      "activeWaves": [
+        "manhattan-central-upper-manhattan-cells-20260812-p1",
+        "manhattan-exterior-cells-20260811-v3",
+        "manhattan-lower-manhattan-cells-20260812-p1",
+        "manhattan-midtown-core-cells-20260811-v3",
+        "manhattan-southern-remainder-cells-20260812-p1"
+      ],
+      "frameMilliseconds": {
+        "frameCount": 240,
+        "meanMilliseconds": 4.127500000099341,
+        "p50Milliseconds": 3.299999952316284,
+        "p95Milliseconds": 7.399999976158142,
+        "p99Milliseconds": 25.199999928474426,
+        "maximumMilliseconds": 51.200000047683716,
+        "minimumMilliseconds": 0.7999999523162842
+      },
+      "heapAfterGcBytes": 252207982,
+      "network": {
+        "perRelease": {
+          "manhattan-exterior-cells-20260811-v3": {
+            "requestCount": 17,
+            "completedCount": 17,
+            "encodedBytes": 5150055,
+            "glbCount": 14
+          },
+          "manhattan-midtown-core-cells-20260811-v3": {
+            "requestCount": 159,
+            "completedCount": 159,
+            "encodedBytes": 21286267,
+            "glbCount": 156
+          },
+          "manhattan-lower-manhattan-cells-20260812-p1": {
+            "requestCount": 74,
+            "completedCount": 74,
+            "encodedBytes": 41525305,
+            "glbCount": 71
+          },
+          "manhattan-southern-remainder-cells-20260812-p1": {
+            "requestCount": 182,
+            "completedCount": 182,
+            "encodedBytes": 40584210,
+            "glbCount": 179
+          },
+          "manhattan-central-upper-manhattan-cells-20260812-p1": {
+            "requestCount": 43,
+            "completedCount": 43,
+            "encodedBytes": 14892882,
+            "glbCount": 40
+          },
+          "manhattan-central-upper-manhattan-cells-20260812": {
+            "requestCount": 0,
+            "completedCount": 0,
+            "encodedBytes": 0,
+            "glbCount": 0
+          },
+          "manhattan-citywide-20260804": {
+            "requestCount": 7,
+            "completedCount": 7,
+            "encodedBytes": 889,
+            "glbCount": 0
+          }
+        },
+        "totalRequestCount": 559,
+        "externalHosts": []
+      },
+      "still": {
+        "relativeRef": "captures/centralpark-west-facade__r2.png",
+        "byteSize": 420738,
+        "checksumSha256": "0b16c6e0890327a9899785cb46e1164c9b5a92b05d8cdf7e3e57ea43f6be6db9"
+      }
+    },
+    {
+      "stationId": "centralpark-west-skyline",
+      "repeatIndex": 2,
+      "url": "http://localhost:4179/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-73.970000&lat=40.765000&height=520.000000&heading=315.000000&pitch=-8.000000&roll=0.000000&exteriorProfile=exploration",
+      "profile": "exploration",
+      "activeWaves": [
+        "manhattan-central-upper-manhattan-cells-20260812-p1",
+        "manhattan-exterior-cells-20260811-v3",
+        "manhattan-lower-manhattan-cells-20260812-p1",
+        "manhattan-midtown-core-cells-20260811-v3",
+        "manhattan-southern-remainder-cells-20260812-p1"
+      ],
+      "frameMilliseconds": {
+        "frameCount": 240,
+        "meanMilliseconds": 2.5966666663686433,
+        "p50Milliseconds": 2.100000023841858,
+        "p95Milliseconds": 5.5,
+        "p99Milliseconds": 7.200000047683716,
+        "maximumMilliseconds": 9.400000095367432,
+        "minimumMilliseconds": 0.3999999761581421
+      },
+      "heapAfterGcBytes": 207421578,
+      "network": {
+        "perRelease": {
+          "manhattan-exterior-cells-20260811-v3": {
+            "requestCount": 17,
+            "completedCount": 17,
+            "encodedBytes": 1934505,
+            "glbCount": 14
+          },
+          "manhattan-midtown-core-cells-20260811-v3": {
+            "requestCount": 159,
+            "completedCount": 159,
+            "encodedBytes": 21286267,
+            "glbCount": 156
+          },
+          "manhattan-lower-manhattan-cells-20260812-p1": {
+            "requestCount": 74,
+            "completedCount": 74,
+            "encodedBytes": 41525305,
+            "glbCount": 71
+          },
+          "manhattan-southern-remainder-cells-20260812-p1": {
+            "requestCount": 182,
+            "completedCount": 182,
+            "encodedBytes": 40584210,
+            "glbCount": 179
+          },
+          "manhattan-central-upper-manhattan-cells-20260812-p1": {
+            "requestCount": 43,
+            "completedCount": 43,
+            "encodedBytes": 14892882,
+            "glbCount": 40
+          },
+          "manhattan-central-upper-manhattan-cells-20260812": {
+            "requestCount": 0,
+            "completedCount": 0,
+            "encodedBytes": 0,
+            "glbCount": 0
+          },
+          "manhattan-citywide-20260804": {
+            "requestCount": 5,
+            "completedCount": 5,
+            "encodedBytes": 635,
+            "glbCount": 0
+          }
+        },
+        "totalRequestCount": 516,
+        "externalHosts": []
+      },
+      "still": {
+        "relativeRef": "captures/centralpark-west-skyline__r2.png",
+        "byteSize": 429397,
+        "checksumSha256": "3ef31cc403000452ac42431f31ff0ae9e81863ea31476d88633c65ff3eb798df"
+      }
+    },
+    {
+      "stationId": "fivewave-wide",
+      "repeatIndex": 2,
+      "url": "http://localhost:4179/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-74.012000&lat=40.698000&height=4200.000000&heading=22.000000&pitch=-22.000000&roll=0.000000&exteriorProfile=exploration",
+      "profile": "exploration",
+      "activeWaves": [
+        "manhattan-central-upper-manhattan-cells-20260812-p1",
+        "manhattan-exterior-cells-20260811-v3",
+        "manhattan-lower-manhattan-cells-20260812-p1",
+        "manhattan-midtown-core-cells-20260811-v3",
+        "manhattan-southern-remainder-cells-20260812-p1"
+      ],
+      "frameMilliseconds": {
+        "frameCount": 240,
+        "meanMilliseconds": 2.669166666766008,
+        "p50Milliseconds": 2.100000023841858,
+        "p95Milliseconds": 5.5,
+        "p99Milliseconds": 8.299999952316284,
+        "maximumMilliseconds": 28.399999976158142,
+        "minimumMilliseconds": 0.3999999761581421
+      },
+      "heapAfterGcBytes": 218758320,
+      "network": {
+        "perRelease": {
+          "manhattan-exterior-cells-20260811-v3": {
+            "requestCount": 17,
+            "completedCount": 17,
+            "encodedBytes": 1934505,
+            "glbCount": 14
+          },
+          "manhattan-midtown-core-cells-20260811-v3": {
+            "requestCount": 104,
+            "completedCount": 102,
+            "encodedBytes": 14763054,
+            "glbCount": 99
+          },
+          "manhattan-lower-manhattan-cells-20260812-p1": {
+            "requestCount": 74,
+            "completedCount": 73,
+            "encodedBytes": 39500046,
+            "glbCount": 70
+          },
+          "manhattan-southern-remainder-cells-20260812-p1": {
+            "requestCount": 147,
+            "completedCount": 146,
+            "encodedBytes": 35374860,
+            "glbCount": 143
+          },
+          "manhattan-central-upper-manhattan-cells-20260812-p1": {
+            "requestCount": 43,
+            "completedCount": 43,
+            "encodedBytes": 14892882,
+            "glbCount": 40
+          },
+          "manhattan-central-upper-manhattan-cells-20260812": {
+            "requestCount": 0,
+            "completedCount": 0,
+            "encodedBytes": 0,
+            "glbCount": 0
+          },
+          "manhattan-citywide-20260804": {
+            "requestCount": 27,
+            "completedCount": 27,
+            "encodedBytes": 3429,
+            "glbCount": 0
+          }
+        },
+        "totalRequestCount": 448,
+        "externalHosts": []
+      },
+      "still": {
+        "relativeRef": "captures/fivewave-wide__r2.png",
+        "byteSize": 599008,
+        "checksumSha256": "03823afbc5dd27533161dadf10cd2f2068377993e1933ade083e5e301b67a8d0"
+      }
+    },
+    {
+      "stationId": "nomad-facade",
+      "repeatIndex": 2,
+      "url": "http://localhost:4179/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-73.992500&lat=40.745800&height=150.000000&heading=65.000000&pitch=-4.000000&roll=0.000000&exteriorProfile=inspection",
+      "profile": "inspection",
+      "activeWaves": [
+        "manhattan-central-upper-manhattan-cells-20260812-p1",
+        "manhattan-exterior-cells-20260811-v3",
+        "manhattan-lower-manhattan-cells-20260812-p1",
+        "manhattan-midtown-core-cells-20260811-v3",
+        "manhattan-southern-remainder-cells-20260812-p1"
+      ],
+      "frameMilliseconds": {
+        "frameCount": 240,
+        "meanMilliseconds": 3.7991666664679844,
+        "p50Milliseconds": 3.399999976158142,
+        "p95Milliseconds": 8.200000047683716,
+        "p99Milliseconds": 17,
+        "maximumMilliseconds": 25.199999928474426,
+        "minimumMilliseconds": 0.7999999523162842
+      },
+      "heapAfterGcBytes": 371759708,
+      "network": {
+        "perRelease": {
+          "manhattan-exterior-cells-20260811-v3": {
+            "requestCount": 17,
+            "completedCount": 17,
+            "encodedBytes": 5150055,
+            "glbCount": 14
+          },
+          "manhattan-midtown-core-cells-20260811-v3": {
+            "requestCount": 153,
+            "completedCount": 152,
+            "encodedBytes": 20522656,
+            "glbCount": 149
+          },
+          "manhattan-lower-manhattan-cells-20260812-p1": {
+            "requestCount": 74,
+            "completedCount": 74,
+            "encodedBytes": 41525305,
+            "glbCount": 71
+          },
+          "manhattan-southern-remainder-cells-20260812-p1": {
+            "requestCount": 182,
+            "completedCount": 182,
+            "encodedBytes": 40584210,
+            "glbCount": 179
+          },
+          "manhattan-central-upper-manhattan-cells-20260812-p1": {
+            "requestCount": 43,
+            "completedCount": 43,
+            "encodedBytes": 14892882,
+            "glbCount": 40
+          },
+          "manhattan-central-upper-manhattan-cells-20260812": {
+            "requestCount": 0,
+            "completedCount": 0,
+            "encodedBytes": 0,
+            "glbCount": 0
+          },
+          "manhattan-citywide-20260804": {
+            "requestCount": 8,
+            "completedCount": 8,
+            "encodedBytes": 1016,
+            "glbCount": 0
+          }
+        },
+        "totalRequestCount": 707,
+        "externalHosts": []
+      },
+      "still": {
+        "relativeRef": "captures/nomad-facade__r2.png",
+        "byteSize": 639039,
+        "checksumSha256": "3199bb64cdea08c500f14d5cc367126e0169b8127759f6537a8c224e73648841"
+      }
+    }
+  ]
+}

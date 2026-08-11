@@ -429,3 +429,343 @@ named here so it is not improvised at T021; the test carries the same note.
 - **No facade-fidelity claim of any kind.** The tiles are designed motifs. They
   reproduce, resemble and report on nothing real, and the instrument excludes any
   claim that they do.
+
+---
+
+# Promotion of wave `w04` (T020, Issue #21)
+
+- Status: Accepted
+- Date: 2026-08-12
+- Task: T020 (Issue #21)
+- Release: `manhattan-central-upper-manhattan-cells-20260812-p1` (PROMOTED, fifth default record)
+- The canary above is UNCHANGED and still reachable by its own `?exteriorCells=`
+  opt-in. Nothing in this section edits a byte of it.
+
+Everything above this line is the T019 canary's record and is left exactly as it
+was written, including the passages that state a decision had not been taken. It
+was true of the build it described. This section takes it.
+
+## (a) The 78-entry split, DECIDED and recorded by number
+
+**T020 takes ADR 0036 Decision 3's admissible RESPONSE 2** — the two waves that
+are still unpromoted split the headroom at sub-median scale — **in a
+proportional-to-canonical-buildings form rather than the even "roughly 39 each"
+that response sketched:**
+
+```
+78 x 11,721 / (11,721 + 10,230) = 41.65  ->  w04 takes 42 entries
+78 - 42                                  ->  w05 is RESERVED 36 entries
+```
+
+`centralUpperManhattanSplitShares()` computes it; nothing types 42 in. This
+wave's share is ROUNDED and the other's is the REMAINDER, so the two always sum
+to 78 and neither can be quietly enlarged by a rounding choice made twice.
+
+**RESPONSE 1 was not taken.** This promotion does not consume the whole headroom
+and therefore does not decide `w05`'s fate by silence, which is the failure ADR
+0036 (a) named in terms.
+
+**RESPONSE 3 was not taken.** `EXTERIOR_RUNTIME_BUDGETS` is untouched: 512
+entries and 256 MiB, exactly as T018 left them. No byte ceiling had to be
+re-derived because no cap moved, and the cache-ceiling module's five-wave
+arithmetic is recomputed from the promoted records rather than restated.
+
+**42 is BELOW this wave's median cell of 48**, which is what response 2 requires
+a sub-median split to say out loud. 104 of this wave's 249 cells fit the share at
+all; the promoted subset is two of them. The largest wave of the six promotes the
+smallest accepted membership of any wave — 40 buildings — and that is a
+consequence of the split rather than of the wave.
+
+**The 36 reserved entries are BINDING on T022** in the sense (a) asked for: the
+decision is recorded by number in this ADR, in
+`central-upper-manhattan-curation.ts`, and in the release's own
+`payload-inventory.json` under `occupancy.splitStatement`. A T022 promotion that
+needs more than 36 entries must re-open this split explicitly and say that it
+did. The five-wave cache arithmetic leaves 38 entries, two more than the
+reservation, so a T022 promotion that fits its reservation fits this cache with
+no further cap change — asserted in `exterior-cache-ceiling.test.ts`, not
+promised here.
+
+### ADR 0034's response 3 was CONSIDERED AND REJECTED, with its reason
+
+ADR 0034 offered a third response to the cache pressure: count RESOLVED cache
+entries rather than shipped artifacts on disk. Its appeal is real — it would have
+made the promoted set look smaller, because Block 835 ships 28 GLB artifacts for
+14 buildings and is the one release that ships both canonical levels of detail,
+so a resolved count would have recorded it as 14 and handed this promotion 14
+entries it has not earned.
+
+**It is rejected because both of those levels can be resident in one session at
+once.** The exterior cache is keyed per artifact; a camera that approaches and
+then retreats resolves the fine level and then the coarse one, and neither is
+evicted while the entry cap is not met. A resolved count would therefore
+understate real occupancy by exactly the amount that matters. **Disk-based
+counting stands**, and every occupancy figure in this promotion is a count of
+shipped GLB artifacts on disk. The rejection travels in the release's own bytes
+as well as here, because a rejected response that lives only in an ADR is a
+response the next implementer will re-propose.
+
+## (b) The curated subset, and the rule that chose it
+
+Two ownership cells of wave `w04`, **490 and 491**, owning **41 buildings**, of
+which **40 materialize**:
+
+| Cell | Owned | Sourced >= 90 m | Tallest | What it is |
+| --- | --- | --- | --- | --- |
+| `…-w04-000490-16-19300-17923` | 39 | 7 | 219.2 m | The tower wall on the western edge of Central Park |
+| `…-w04-000491-16-19301-17923` | 2 | 0 | 12.8 m | The parkland the wall is seen across |
+
+The canary's cells 452, 453 and 454 are NOT reused; the curation refuses them by
+name.
+
+### The decision rule, stated in the order it was applied
+
+1. **Edge-contiguity is a PRECONDITION, not a tie-break.**
+2. **Fit the 42-entry decided share** — also a precondition, because the share is
+   what makes `w05`'s reservation survive this promotion.
+3. **Maximize skyline value** — owned buildings whose SOURCED height reaches
+   90 m.
+4. **Tie-break on ground covered**: at equal skyline value, admit the larger
+   contiguous ground.
+
+A fifth key exists so the rule is total and is NEVER REACHED; the suite asserts
+that.
+
+### The enumeration ranges over the WHOLE WAVE, and that is a deliberate change
+
+Wave `w03`'s curation ranked inside a stated high-rise band. That is not
+reproduced here, because a maximum over a band drawn after the answer was known
+is a weaker claim than a maximum over all 249 cells, and this claim is the
+latter. The committed `skyline-census.json` profiles every owned cell of the
+wave, and `central-upper-manhattan-curation-optimum.test.ts` re-runs the whole
+rule over those bytes on every test run.
+
+The connectivity-ignoring optimum is computed EXACTLY rather than by a bounded
+search: a cell that scores zero can only consume budget, so the maximum over all
+subsets equals the maximum over subsets of the 18 SCORING candidates, which is
+2^18 and enumerable. That is what makes the cost figures below statements about
+the whole space rather than about a search that stopped somewhere.
+
+### What the rule costs, recorded rather than absorbed
+
+- **Contiguity gives up FOUR skyline buildings** — twice what it cost wave `w03`.
+  Ignoring connectivity, the best admissible 42-entry subset is
+  `{457, 482, 616}` at **11**, exactly on the share, in three separate pieces
+  kilometres apart. The best CONNECTED subset scores **7**, at any size.
+- **A 12-scoring combination exists and is inadmissible TWICE OVER**:
+  `{454, 457, 503, 588, 616}` at 34 owned is five separate pieces AND reuses the
+  canary's cell 454, which precondition (b) excludes independently. It is
+  recorded separately, because attributing `12 - 7` to contiguity would overstate
+  what that precondition costs.
+- **The tie-break costs nothing on score and buys uniqueness.** Exactly two
+  connected subsets reach 7: `{490}` at 39 owned and `{490, 491}` at 41. Key 4
+  admits the second. The judgement is stated as one: at equal skyline value the
+  subset that also owns the open ground the towers are SEEN ACROSS gives a viewer
+  somewhere to stand and look from, and the two extra entries are the share's own
+  rather than wave `w05`'s reserved 36.
+- **`{616}` is named too**: six of its nine owned buildings reach 90 m, the best
+  ratio in the wave. It is refused because the rule ranks on skyline VALUE rather
+  than value per entry — 6 against 7 — and a subset that spends a fifth of its
+  share is a smaller promotion rather than a better one.
+
+### The 90 m threshold was CHECKED against this wave, not reused
+
+Precondition (b) asked whether `w03`'s 90 m is right for a wave north of Midtown.
+Two answers are recorded and the second is the stronger:
+
+- **It still discriminates.** 141 of this wave's 11,703 sourced heights reach
+  90 m — **1.20%** — across 56 of its 249 cells. It separates towers from the
+  pre-war apartment stock that dominates this wave's building COUNT exactly as it
+  separated towers from loft stock in `w03`.
+- **The ranking does not depend on it.** The same cell wins at **60, 75, 90, 100
+  and 120 m**. The optimum suite re-runs the enumeration at all five and asserts
+  it, so the threshold is a stated criterion whose exact value did not choose
+  these cells.
+
+### One adjacency claim, stated at its true strength
+
+Both curated cells share an edge with Midtown-core ownership cell
+`manhattan-exterior-cell-w01-000106-15-9650-8962`, so this subset abuts a
+promoted wave's OWNED ground. **That cell is a TOMBSTONE in the Midtown-core
+release** — Midtown's three renderable cells are 001, 002 and 003, four
+kilometres south — so the two waves' TEXTURED patches do not touch. The curation
+statement says so in its own committed bytes rather than implying otherwise.
+
+## (c) The local refusal rate, recomputed and reported against the wave
+
+**1 of 41 = 2.44%, against the wave's 178 of 11,721 = 1.52%.**
+
+The curated ground refuses at a HIGHER rate than the wave, and the record says
+which way the comparison went: `curation.refusal.localRateExceedsWaveRate` is
+`true` in the committed inventory. A 41-building subset has a refusal granularity
+of 2.44 percentage points, so one refused ring is the smallest non-zero rate it
+can have; that is an explanation and not a defence, and no tolerance was moved.
+
+The single refusal is `doitt:996078`, whose sourced ring exceeds the 64-vertex
+limit the V3 grammar can carry. It ships as an explicit unavailable detail with a
+stated reason and is deliberately OUTSIDE the accepted membership, so a scene
+that somehow drew it fails closed.
+
+The ceiling is twice the wave rate — the rule `w03` stated — written here as
+arithmetic over the wave rate rather than as the rounded constant `w03` used, so
+it cannot drift from the rate it is about.
+
+## The VOLUME-IDENTITY MARGIN of the curated subset
+
+ADR 0036 recorded the wave's worst mesh-versus-analytic volume deviation at
+**0.988 of the tolerance** and made the curated subset's own margin a
+precondition, because "the check passed" and "the check passed comfortably" are
+different statements.
+
+**The curated subset's own worst margin is 0.365 of the tolerance** — 3.6538e-07
+against a 1e-6 tolerance, over all 40 shipped buildings, zero rejected. It is
+BETTER than the wave figure by a factor of 2.7, and both numbers travel together
+in `curation.volumeMargin` so neither can be read without the other. The gate
+fails closed on a rejection or on a margin at or above the tolerance, and the
+`graph` stage refuses to emit the margin as `null`.
+
+**The worst-margin building was Blender-corroborated.** The independent pass
+re-imported all 40 shipped assets and recomputed the identity from the imported
+mesh by a different implementation. Its worst deviation is **3.2744e-07** on
+**`doitt:659449` — the same building the writer's arithmetic flagged**. A narrow
+margin produced by a systematic writer error would have shown here as a
+disagreement; instead the two implementations agree on which asset is worst and
+on its order of magnitude. This is the corroboration ADR 0036 asked for, and it
+covers the SHIPPED SUBSET in full rather than a sample of it.
+
+## (d) Cost, measured OFF the vsync floor on a FIVE-wave composition
+
+A five-wave composition had never been measured. Four stations, three repeats,
+240 timed frames after 180 settle frames, in the production preview with Chrome's
+vsync and frame-rate limit disabled, at the UNCHANGED 512-entry cap.
+
+**The capped control read a p50 of 8.30 ms** — the 120 Hz present interval —
+captured at the same station in a SECOND Chrome launched without the uncapping
+flags. Every uncapped station sits at 0.24 to 0.40 of it, which is what makes
+these headroom readings rather than floor readings.
+
+| Station | Profile | p50 | p95 | Budget p50/p95 | Worst single frame |
+| --- | --- | --- | --- | --- | --- |
+| `centralpark-west-facade` | inspection | 3.30 ms | 6.40 ms | 33.3 / 45 | 52.9 ms |
+| `centralpark-west-skyline` | exploration | 2.30 ms | 5.50 ms | 16.7 / 25 | 9.4 ms |
+| `fivewave-wide` | exploration | 2.00 ms | 5.80 ms | 16.7 / 25 | 30.2 ms |
+| `nomad-facade` | inspection | 3.30 ms | 8.00 ms | 33.3 / 45 | 28.8 ms |
+
+`nomad-facade` is the T018 station kept POSE-FOR-POSE, so "did a fifth wave cost
+the fourth anything" is a comparison rather than an assertion: T018 read
+2.60/8.00 ms there and this run reads 3.30/8.00 ms.
+
+**Isolated slow frames are STATED, not smoothed.** The worst single frames are
+51–53 ms at `centralpark-west-facade` in all three repeats, and 25–30 ms at
+`fivewave-wide` and `nomad-facade`. They are single frames in windows whose p95
+is under 8 ms. The facade station's repeatability across repeats says this is a
+real recurring cost at that pose — most plausibly the first upload of the
+textured wall — and it is recorded as such rather than averaged away.
+
+- **Residency, DERIVED from the network**: worst observed **460 entries and
+  117.72 MiB**, against 512 entries and 256 MiB. The release-time derivation is
+  474 entries on disk; a session fetches fewer because only the selected LOD is
+  requested, so the disk figure is conservative rather than wrong and both are
+  recorded.
+- **Heap, after a FORCED collection**: median 199–353 MiB across the stations.
+- **GPU texture memory: 9.98 MiB, COMPUTED and never presented as measured** —
+  120 embedded images at 128x128, RGBA8, times the 1.33 mip series, not
+  deduplicated across models. No instrument reachable from this session reports
+  texture VRAM.
+- **Zero external hosts** across every capture.
+
+The bundle was identified BEFORE any capture — served index byte-identical to
+this tree's `dist/index.html`, entry script containing this release id — and the
+run aborts rather than recording a caveat if either fails.
+
+## (e) Rollback semantics
+
+The predecessor is the DISABLED base-only record, on the `w02`-p1 and `w03`-p1
+precedent for a wave that has never been promoted in any form. Wave `w04`'s only
+other release is the T019 canary, which was pinned but never a default.
+
+**Rolling this wave back returns its area to BASE MASSING.** A reader looking for
+"the older Central-and-upper-Manhattan exterior" will not find one, because there
+is not one. The rollback is one edit — export `predecessor` instead — and it:
+
+- returns cells 490 and 491 to pinned base massing;
+- refuses promotion-era
+  `?exteriorCells=manhattan-central-upper-manhattan-cells-20260812-p1` links BY
+  NAME;
+- leaves the T019 canary's opt-in honoured, because that release was never
+  promoted and its link is not a promotion-era bookmark;
+- leaves the other four waves streaming, because the rules are per record.
+
+No URL expresses a build-time record swap, so the rehearsal runs through the
+record's own injection seam in
+`exterior-multiwave-activation.test.ts` — "rolls the Central-and-upper-Manhattan
+wave back to BASE MASSING without withdrawing the other four" — and this ADR
+does not claim a browser proved it.
+
+## Journeys
+
+Five, all passed, against the production preview with the served bundle
+identified first.
+
+| Journey | What it establishes |
+| --- | --- |
+| `cold-default` | A clean load streams all FIVE waves — 14/156/71/179/40 GLBs — and ZERO bytes of the T019 canary. |
+| `cross-wave-pick` | The 219.2 m curated building names its release, cell/cell release, active asset checksum, truth tiers, source dates and uncertainty — 7 detail rows — and the badge names the P1 successor. |
+| `canary-opt-in` | The canary's opt-in still resolves to the canary ALONE: 75 canary GLBs and zero from every promoted wave, from a pose derived from that cell's committed bounds. |
+| `streaming-off` | `exteriorStreaming=off` kills all five waves, and its still DIFFERS from the promoted default's at the identical pose — the only evidence here that the tiles are DRAWN rather than downloaded. |
+| `tombstone-truth` | "247 of 249 exterior cells ship no exterior geometry in this release; no substitute was selected for them." |
+
+## The fifth-wave guard fired as designed
+
+`exterior-cache-ceiling.ts` derives its composition from
+`EXTERIOR_DEFAULT_ACTIVATIONS` rather than from a hand-listed array — a shape
+T018 adopted precisely so that a fifth promotion could not go unnoticed. Adding
+the `w04` record made the whole cache-ceiling suite fail to load with
+"promoted release manhattan-central-upper-manhattan-cells-20260812-p1 has no
+measured byte profile", before its row existed. That is recorded here because a
+guard that fires and is quietly satisfied is indistinguishable from a guard that
+never fired.
+
+The five-wave arithmetic that replaced it: **474 of 512 entries, 117.79 MiB of
+256 MiB**, entry-bound, with the heaviest per-asset wave unchanged.
+
+## Preconditions on T021 and T022
+
+### The `w05` reservation is 36 entries and is BINDING
+
+Stated in this ADR, in code, and in the promoted release's own committed bytes. A
+T022 promotion that fits 36 entries fits this cache with no cap change. One that
+does not must RE-OPEN the split by number and record that it did, rather than
+quietly taking the 38 that happen to be free.
+
+### The domain-registry hypothetical must become FICTIONAL at T021
+
+Unchanged from the canary's precondition (f) and repeated because T021 is now
+next. `exterior-wave-subset.test.ts` carries an UNREGISTERED-wave hypothetical
+that has been repointed `w03` -> `w04` -> `w05`. **`w05` is the last real wave**:
+the committed ledger declares exactly six. When T021 registers
+`northern-manhattan` there is nothing left to repoint to, so the hypothetical
+must be replaced with an id that is fictional by construction and can never be
+registered — `hypothetical-wave-w06` or similar — rather than leaving it naming a
+now-registered `w05`, which would give the registry two reasons to refuse the
+identity and make the surfacing error depend on row order.
+
+### The narrow wave-scale volume margin is still 0.988 and is still unexplained
+
+This promotion measured its own subset at 0.365 and corroborated it
+independently. It did NOT explain why the wave as a whole sits at 0.988, and no
+independent check covers all 11,543 materialized buildings. That remains the
+open finding ADR 0036 recorded, and promoting 40 of them does not close it.
+
+## What this promotion does not claim
+
+- **No facade-fidelity claim of any kind.** The tiles are designed motifs. They
+  reproduce, resemble and report on nothing real.
+- **No fault-isolation.** The injector is behind a `VITE_BLOCK835_PROBE=1` build,
+  which is not the production preview.
+- **No fresh signature.** The rights instrument is the canary's, carried
+  UNEDITED — same id, scope, exclusions, note and fingerprint
+  `81ba0879…`. Promotion obtained no new approval and the committed inventory
+  says so in its own bytes.
+- **No claim that the two waves' textured patches meet on the ground.** They
+  abut across a tombstoned ownership cell, which is a different statement.
