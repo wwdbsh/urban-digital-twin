@@ -58,6 +58,7 @@ function block835Profile(): ExteriorCacheWaveByteProfile {
 const block835 = block835Profile();
 const midtown = inventoryProfile("manhattan-midtown-core-cells-20260811-v3", "data/midtown-core-20260811-v3/payload-inventory.json");
 const lowerManhattan = inventoryProfile("manhattan-lower-manhattan-cells-20260812-p1", "data/lower-manhattan-20260812-p1/payload-inventory.json");
+const southernRemainder = inventoryProfile("manhattan-southern-remainder-cells-20260812-p1", "data/southern-remainder-20260812-p1/payload-inventory.json");
 
 describe("the raised exterior entry cap", () => {
   it("is 512, with the byte cap deliberately unchanged at 256 MiB", () => {
@@ -156,6 +157,42 @@ describe("the byte ceiling re-derived at the raised cap", () => {
       { path: "private/assets/d.glb", byteSize: 9 },
       { path: "public/tiles/e.png", byteSize: 9 },
     ])).toEqual([1, 3]);
+  });
+});
+
+describe("the byte ceiling with the FOURTH wave promoted", () => {
+  const ceiling = exteriorCacheByteCeiling({
+    waves: [block835, midtown, lowerManhattan, southernRemainder],
+    maxCacheEntries: EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries,
+    maxCachedBytes: EXTERIOR_RUNTIME_BUDGETS.maxCachedBytes,
+  });
+
+  /**
+   * The composition this build actually ships. Wave w03's curated subset is
+   * LIGHTER per asset than Lower-Manhattan's — 223,618 B mean against 580,130 B
+   * — so promoting 179 more assets adds 38.2 MiB and leaves bytes non-binding by
+   * the same wide margin.
+   */
+  it("stays entry-bound, at 434 of 512 entries and 104.08 MiB of 256 MiB", () => {
+    expect(southernRemainder.assetEntries).toBe(179);
+    expect(southernRemainder.totalByteSize).toBe(40_027_708);
+    expect(southernRemainder.meanByteSize).toBe(223_618);
+    expect(ceiling.residentAssetEntries).toBe(434);
+    expect(ceiling.entryHeadroom).toBe(78);
+    expect(ceiling.fitsEntryCap).toBe(true);
+    expect(ceiling.compositionByteCeilingBytes).toBe(109_138_496);
+    expect(ceiling.compositionByteCeilingBytes / MIB).toBeCloseTo(104.08, 2);
+    expect(ceiling.compositionByteCeilingRatio).toBeLessThan(0.41);
+    expect(ceiling.bytesNonBindingForComposition).toBe(true);
+    expect(ceiling.bindingConstraint).toBe("entries");
+    // Entries, not bytes, is what waves w04 and w05 have left: 78 of 512.
+    expect(ceiling.entryHeadroom / EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries).toBeLessThan(0.16);
+  });
+
+  it("keeps the heaviest per-asset wave, and therefore the modelled fill, unchanged", () => {
+    expect(ceiling.worstMeanReleaseId).toBe("manhattan-lower-manhattan-cells-20260812-p1");
+    expect(ceiling.meanFillByteCeilingBytes).toBe(512 * 580_130);
+    expect(ceiling.largestAssetReleaseId).toBe("manhattan-lower-manhattan-cells-20260812-p1");
   });
 });
 

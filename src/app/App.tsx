@@ -522,8 +522,18 @@ export function appendBlock835PublicRealmUrl(baseUrl: string, requested: boolean
  * 256-entry exterior cache, which admits only the two cells of wave w03 that own
  * a single building each. Raising that cap is a promotion decision with its own
  * evidence, and this pin makes no part of it.
+ *
+ * `manhattan-southern-remainder-cells-20260812-p1` — the T018 successor — IS
+ * promoted, on exactly the terms the T016 successor was: it has an entry in the
+ * promotion record, so both promotion gates run for it on every load, while the
+ * T017 canary above keeps its narrower guarantee because it is still only an
+ * opt-in. The cache blocker quoted in the paragraph above was cleared rather
+ * than worked around: ADR 0034's admissible response 1 was taken and
+ * `EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries` is 512, which is what makes a
+ * fourth promoted wave representable at all. That paragraph is left as it was
+ * written because it was true of the build it described.
  */
-export const PINNED_EXTERIOR_CELL_RELEASE_IDS = ["udt-fixture-exterior-cells", "manhattan-exterior-cells-20260811", "manhattan-exterior-cells-20260811-v3", "manhattan-midtown-core-cells-20260811", "manhattan-midtown-core-cells-20260811-v3", "manhattan-lower-manhattan-cells-20260812", "manhattan-lower-manhattan-cells-20260812-p1", "manhattan-southern-remainder-cells-20260812"] as const;
+export const PINNED_EXTERIOR_CELL_RELEASE_IDS = ["udt-fixture-exterior-cells", "manhattan-exterior-cells-20260811", "manhattan-exterior-cells-20260811-v3", "manhattan-midtown-core-cells-20260811", "manhattan-midtown-core-cells-20260811-v3", "manhattan-lower-manhattan-cells-20260812", "manhattan-lower-manhattan-cells-20260812-p1", "manhattan-southern-remainder-cells-20260812", "manhattan-southern-remainder-cells-20260812-p1"] as const;
 
 /**
  * The release used when neither a URL nor the promoted default names one: still

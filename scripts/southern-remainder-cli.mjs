@@ -100,6 +100,24 @@ import {
   southernRemainderRenderableCells,
   southernRemainderRenderableEntryBudget,
 } from "../src/release/southern-remainder-release.ts";
+import {
+  SOUTHERN_REMAINDER_CURATED_CELLS,
+  SOUTHERN_REMAINDER_CURATION_BASIS,
+  SOUTHERN_REMAINDER_CURATION_STATEMENT,
+  SOUTHERN_REMAINDER_SKYLINE_ENVELOPE,
+  SOUTHERN_REMAINDER_SKYLINE_HEIGHT_METERS,
+  southernRemainderCuratedCells,
+  southernRemainderCuratedEntryBudget,
+  southernRemainderCuratedRefusalCensus,
+} from "../src/release/southern-remainder-curation.ts";
+import {
+  SOUTHERN_REMAINDER_P1_OUTPUT_DIRECTORY,
+  SOUTHERN_REMAINDER_P1_PREDECESSOR_RELEASE_ID,
+  SOUTHERN_REMAINDER_P1_RELEASE_ID,
+  SOUTHERN_REMAINDER_P1_WAVE_PROFILE,
+  southernRemainderP1Predecessor,
+  southernRemainderP1Profile,
+} from "../src/release/southern-remainder-p1-release.ts";
 import { collectMidtownCoreSources, midtownCoreGlbBounds } from "../src/release/midtown-core-source.ts";
 import { MIDTOWN_CORE_SHIPPED_LOD_ID, buildMidtownCoreRelease } from "../src/release/midtown-core-release.ts";
 import {
@@ -129,6 +147,8 @@ const block835AssetsRoot = join(repositoryRoot, "public", "data", "manhattan-ext
 /** Directories this pipeline owns and may replace. */
 export const SOUTHERN_REMAINDER_WORK_ROOT = "artifacts/southern-remainder-20260812";
 export const SOUTHERN_REMAINDER_RECORD_ROOT = "data/southern-remainder-20260812";
+export const SOUTHERN_REMAINDER_P1_WORK_ROOT = "artifacts/southern-remainder-20260812-p1";
+export const SOUTHERN_REMAINDER_P1_RECORD_ROOT = "data/southern-remainder-20260812-p1";
 
 /**
  * The releases this pipeline emits, and everything that differs between them.
@@ -148,9 +168,72 @@ const RELEASE_VARIANTS = {
     predecessorOf: southernRemainderPredecessor,
     releaseProfile: southernRemainderProfile,
     renderable: (cells, entryBudget) => southernRemainderRenderableCells(cells, entryBudget),
+    /**
+     * The CANARY occupancy derivation: what an opt-in-only session may hold,
+     * under a deliberately modest self-imposed ceiling. It also states, in the
+     * release's own bytes, that no subset of this wave fitted beside the
+     * promoted set at the cap that was in force when it was emitted.
+     */
+    occupancyOf: (input) => southernRemainderRenderableEntryBudget({
+      maxCacheEntries: input.maxCacheEntries,
+      block835AssetEntries: input.block835AssetEntries,
+      midtownAssetEntries: input.midtownAssetEntries,
+      lowerManhattanAssetEntries: input.lowerManhattanAssetEntries,
+      modestSubsetCeiling: SOUTHERN_REMAINDER_MODEST_SUBSET_CEILING,
+      cellBuildingCounts: input.cellBuildingCounts,
+    }),
     curation: null,
+    skylineEnvelope: null,
     stages: ["plans", "glbs", "gates", "graph", "sample"],
     inventoryNote: "The payload directory is intentionally untracked, following the citywide precedent. This inventory is the committed record that keeps every emitted byte checkable after the local tree is removed; `node scripts/southern-remainder-cli.mjs graph --force` rebuilds it byte-identically. This release is a CANARY: it is pinned for `?exteriorCells=` opt-in and is absent from the promotion record, so an ordinary session never loads it.",
+  },
+  p1: {
+    variantId: "p1",
+    releaseId: SOUTHERN_REMAINDER_P1_RELEASE_ID,
+    outputDirectory: SOUTHERN_REMAINDER_P1_OUTPUT_DIRECTORY,
+    workRoot: SOUTHERN_REMAINDER_P1_WORK_ROOT,
+    recordRoot: SOUTHERN_REMAINDER_P1_RECORD_ROOT,
+    waveProfile: SOUTHERN_REMAINDER_P1_WAVE_PROFILE,
+    predecessorReleaseId: SOUTHERN_REMAINDER_P1_PREDECESSOR_RELEASE_ID,
+    predecessorInventoryPath: join(repositoryRoot, "data", "southern-remainder-20260812", "payload-inventory.json"),
+    predecessorOf: southernRemainderP1Predecessor,
+    releaseProfile: southernRemainderP1Profile,
+    renderable: (cells, entryBudget) => {
+      const curated = southernRemainderCuratedCells(cells, entryBudget);
+      return { cells: curated.cells, ownedBuildingCount: curated.ownedBuildingCount, spareEntries: curated.spareEntries };
+    },
+    /**
+     * The PROMOTED occupancy derivation, against the RAISED cache cap. ADR 0034
+     * admissible response 1 moved `maxCacheEntries` from 256 to 512; the
+     * headroom beside the three already-promoted waves is read from THEIR
+     * committed inventories on every run, never remembered, and the curated
+     * ceiling is the smaller self-imposed bound that keeps this promotion from
+     * spending the whole raise on itself.
+     */
+    occupancyOf: (input) => southernRemainderCuratedEntryBudget({
+      maxCacheEntries: input.maxCacheEntries,
+      promotedAssetEntries: input.block835AssetEntries + input.midtownAssetEntries + input.lowerManhattanAssetEntries,
+    }),
+    curation: {
+      basis: SOUTHERN_REMAINDER_CURATION_BASIS,
+      statement: SOUTHERN_REMAINDER_CURATION_STATEMENT,
+      cells: SOUTHERN_REMAINDER_CURATED_CELLS,
+      refusalCensus: southernRemainderCuratedRefusalCensus,
+    },
+    /**
+     * The candidate envelope the curation chose from. Its per-cell sourced-height
+     * profile is committed alongside the release so the optimality claim can be
+     * re-enumerated from committed bytes rather than trusted.
+     */
+    skylineEnvelope: SOUTHERN_REMAINDER_SKYLINE_ENVELOPE,
+    // No `probe`: the kill switch is a question about whether tiles are
+    // affordable at all, it was answered on the T015 canary and re-measured off
+    // the vsync floor at T016, and re-running it here would measure the same
+    // catalogue a third time while pretending to decide something. Promotion's
+    // measurement is the whole four-wave composition in the production preview
+    // at the RAISED cap, which is a different instrument entirely.
+    stages: ["plans", "glbs", "gates", "graph", "sample"],
+    inventoryNote: "The payload directory is intentionally untracked, following the citywide precedent. This inventory is the committed record that keeps every emitted byte checkable after the local tree is removed; `node scripts/southern-remainder-cli.mjs graph --release p1 --force` rebuilds it byte-identically. RIGHTS: this successor ships under the CANARY's approval instrument, carried unedited — same approval id, scope text, exclusions and note, and therefore the same fingerprint — because amending it would move the fingerprint the canary's own committed release graph pins and would falsify what was approved. That instrument's opening sentence names the release it was authored for, `manhattan-southern-remainder-cells-20260812`, and is the only part of it that is about that release rather than about wave w03; every operative clause was checked against this release and holds, including the bounded-subset clause that is exactly what differs here. This release adds no source, no verb and no envelope to it, and it rests on no fresh signature: the authority is the two recorded items the canary's note names and no others. CACHE: the occupancy below is derived against the RAISED 512-entry cap (ADR 0034 admissible response 1, executed at T018); the canary's own committed inventory records the 256-entry cap that was in force when IT was emitted, and that record is frozen rather than restated.",
   },
 };
 
@@ -229,12 +312,11 @@ async function loadContext(variant) {
   const block835AssetEntries = (await readdir(block835AssetsRoot)).filter((name) => name.endsWith(".glb")).length;
   if (block835AssetEntries === 0) fail("the promoted Block 835 V3 payload declares no GLB assets; the occupancy derivation would understate the promoted set.");
 
-  const occupancy = southernRemainderRenderableEntryBudget({
+  const occupancy = variant.occupancyOf({
     maxCacheEntries: EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries,
     block835AssetEntries,
     midtownAssetEntries,
     lowerManhattanAssetEntries,
-    modestSubsetCeiling: SOUTHERN_REMAINDER_MODEST_SUBSET_CEILING,
     cellBuildingCounts: subset.ledger.cells.map((cell) => cell.buildingIds.length),
   });
   const renderable = variant.renderable(subset.ledger.cells, occupancy.entryBudget);
@@ -378,6 +460,40 @@ async function stagePlans(context, options) {
     perCell.push({ cellId: cell.cellId, order: cell.order, owned: cell.buildingIds.length, planned: cellPlanned, refused: cellRefused });
   }
 
+  // The SKYLINE CENSUS, for a variant whose subset was curated on visible height.
+  //
+  // It profiles every candidate cell in the stated envelope, not only the four
+  // that were chosen, because an optimality claim over a set of one is not a
+  // claim. Heights are the SOURCED `heightMeters` of the pinned citywide base;
+  // a building whose source carries no height contributes to `owned` and to
+  // nothing else, which is why the two counts are reported separately rather
+  // than being reconciled into a single number that hides the unknowns.
+  const skyline = [];
+  if (context.variant.skylineEnvelope) {
+    const envelope = context.variant.skylineEnvelope;
+    for (const cell of context.subset.ledger.cells) {
+      const inside = cell.bounds.west >= envelope.west && cell.bounds.east <= envelope.east
+        && cell.bounds.south >= envelope.south && cell.bounds.north <= envelope.north;
+      if (!inside) continue;
+      const heights = cell.buildingIds
+        .map((buildingId) => sources.get(buildingId)?.heightMeters)
+        .filter((height) => typeof height === "number")
+        .sort((left, right) => right - left);
+      skyline.push({
+        cellId: cell.cellId,
+        parentOrder: Number(/-w03-(\d{6})-/u.exec(cell.cellId)[1]),
+        bounds: { ...cell.bounds },
+        ownedBuildingCount: cell.buildingIds.length,
+        sourcedHeightCount: heights.length,
+        skylineBuildingCount: heights.filter((height) => height >= SOUTHERN_REMAINDER_SKYLINE_HEIGHT_METERS).length,
+        tallestSourcedHeightMeters: heights[0] ?? null,
+        topSourcedHeightMeters: heights.slice(0, 5),
+      });
+    }
+    if (skyline.length === 0) fail("the stated skyline envelope contains no owned cell; the curation was written against a different ledger.");
+    skyline.sort((left, right) => left.parentOrder - right.parentOrder);
+  }
+
   const summary = {
     declaredShardCount,
     ownedBuildingCount: context.subset.buildingIds.length,
@@ -393,6 +509,7 @@ async function stagePlans(context, options) {
     maximumRingVertexCount,
     maximumFloorCount,
     styleClassCounts,
+    ...(context.variant.skylineEnvelope ? { skylineEnvelope: { ...context.variant.skylineEnvelope }, skylineThresholdMeters: SOUTHERN_REMAINDER_SKYLINE_HEIGHT_METERS, skyline } : {}),
   };
   if (summary.ownedBuildingCount !== SOUTHERN_REMAINDER_BUILDING_COUNT) fail(`the subset owns ${summary.ownedBuildingCount} buildings, not ${SOUTHERN_REMAINDER_BUILDING_COUNT}.`);
   if (summary.uniquePlanHashCount !== planned) fail(`plan hashes are not unique: ${summary.uniquePlanHashCount} of ${planned}.`);
@@ -750,8 +867,34 @@ async function stageGraph(context, options) {
     })).sort((left, right) => (left.buildingId < right.buildingId ? -1 : 1)),
   });
 
+  // The skyline census, committed for a curated variant so the optimality claim
+  // is re-enumerable from committed bytes. Same fail-closed rule as everything
+  // else this stage writes: a missing or stale `plans` receipt refuses rather
+  // than emitting `null`, which would read as "not applicable" instead of
+  // "never run".
+  let skylineChecksum = null;
+  if (context.variant.skylineEnvelope) {
+    const plans = await requireFreshReceipt(context, "plans", "the skyline census the curation was chosen on");
+    if (!Array.isArray(plans.summary?.skyline) || plans.summary.skyline.length === 0) {
+      fail("the plans receipt carries no skyline census; the curated subset's optimality claim cannot be emitted as null.");
+    }
+    skylineChecksum = await writeRecord(context, "skyline-census.json", {
+      schemaVersion: "1.0",
+      releaseId: context.variant.releaseId,
+      note: "Per-cell SOURCED height profile of every wave-w03 ownership cell inside the stated skyline envelope — the candidate set the promoted renderable subset was curated from, not only the cells that were chosen. `skylineBuildingCount` counts owned buildings whose sourced heightMeters reaches the stated threshold; it is the primary key the curation's optimality claim is ranked on, and `southern-remainder-curation-optimum.test.ts` re-runs that enumeration over these bytes on every run. Heights are the pinned manhattan-citywide-20260804 base's own sourced values and assert nothing about any named building: the NYC OTI footprint dataset carries no building names. `sourcedHeightCount` is reported beside `ownedBuildingCount` rather than reconciled with it, because a building whose source states no height is a building this census cannot rank and must not silently drop.",
+      base: { releaseId: EXTERIOR_FULLSNAPSHOT_BASE_RELEASE_ID, manifestChecksumSha256: context.manifestChecksum },
+      parentLedger: { releaseId: EXTERIOR_WAVE_LEDGER_RELEASE_ID, checksumSha256: context.parentLedgerChecksumSha256 },
+      envelope: { ...context.variant.skylineEnvelope },
+      skylineThresholdMeters: SOUTHERN_REMAINDER_SKYLINE_HEIGHT_METERS,
+      entryBudget: context.occupancy.entryBudget,
+      curatedCellIds: cells.map((cell) => cell.cellId),
+      candidates: plans.summary.skyline,
+    });
+  }
+
   const summary = {
     ...release.stats,
+    ...(skylineChecksum ? { skylineCensusChecksumSha256: skylineChecksum } : {}),
     emittedFileCount: files.length,
     removedStaleCount: stale.length,
     payloadByteSize: inventory.totals.byteSize,

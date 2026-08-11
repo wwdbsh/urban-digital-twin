@@ -1,0 +1,209 @@
+{
+  "schemaVersion": "1.0",
+  "stage": "plans",
+  "releaseId": "manhattan-southern-remainder-cells-20260812-p1",
+  "inputFingerprint": "8639e975cc6f2659ce9d6b11c05e266a2b4b4eb6ab737976a3c4f76f0790db27",
+  "summary": {
+    "declaredShardCount": 56,
+    "ownedBuildingCount": 9603,
+    "resolvedBuildingCount": 9603,
+    "plannedBuildingCount": 9518,
+    "refusedBuildingCount": 85,
+    "refusalRatio": 0.008851400603977924,
+    "refusalsByCode": {
+      "source-height-below-grammar-minimum": 33,
+      "ring-vertex-count-unsupported": 22,
+      "ring-neck-below-grammar-minimum": 10,
+      "ring-area-below-floor": 20
+    },
+    "tierCollapseAbsentSetbackCount": 3970,
+    "uniquePlanHashCount": 9518,
+    "fallbackHeightCount": 6,
+    "reversedRingCount": 9518,
+    "maximumRingVertexCount": 64,
+    "maximumFloorCount": 68,
+    "styleClassCounts": {
+      "curtain-cool": 1017,
+      "masonry-warm": 3725,
+      "masonry-light": 3057,
+      "stone-neutral": 1719
+    },
+    "skylineEnvelope": {
+      "west": -73.993,
+      "south": 40.7442,
+      "east": -73.9819,
+      "north": 40.7483
+    },
+    "skylineThresholdMeters": 90,
+    "skyline": [
+      {
+        "cellId": "manhattan-exterior-cell-w03-000378-17-38596-35864",
+        "parentOrder": 378,
+        "bounds": {
+          "west": -73.992919921875,
+          "south": 40.746917724609375,
+          "east": -73.99017333984375,
+          "north": 40.748291015625
+        },
+        "ownedBuildingCount": 44,
+        "sourcedHeightCount": 44,
+        "skylineBuildingCount": 1,
+        "tallestSourcedHeightMeters": 97.179384,
+        "topSourcedHeightMeters": [
+          97.179384,
+          86.182691523528,
+          80.35442400000001,
+          78.01356,
+          75.8952
+        ]
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w03-000379-17-38597-35864",
+        "parentOrder": 379,
+        "bounds": {
+          "west": -73.99017333984375,
+          "south": 40.746917724609375,
+          "east": -73.9874267578125,
+          "north": 40.748291015625
+        },
+        "ownedBuildingCount": 29,
+        "sourcedHeightCount": 29,
+        "skylineBuildingCount": 6,
+        "tallestSourcedHeightMeters": 189.95426209833602,
+        "topSourcedHeightMeters": [
+          189.95426209833602,
+          151.4856,
+          137.16,
+          106.60075200000001,
+          106.3752
+        ]
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w03-000380-17-38598-35864",
+        "parentOrder": 380,
+        "bounds": {
+          "west": -73.9874267578125,
+          "south": 40.746917724609375,
+          "east": -73.98468017578125,
+          "north": 40.748291015625
+        },
+        "ownedBuildingCount": 36,
+        "sourcedHeightCount": 36,
+        "skylineBuildingCount": 2,
+        "tallestSourcedHeightMeters": 145.6944,
+        "topSourcedHeightMeters": [
+          145.6944,
+          124.0536,
+          66.608480896056,
+          66.074544,
+          65.30949600000001
+        ]
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w03-000381-17-38599-35864",
+        "parentOrder": 381,
+        "bounds": {
+          "west": -73.98468017578125,
+          "south": 40.746917724609375,
+          "east": -73.98193359375,
+          "north": 40.748291015625
+        },
+        "ownedBuildingCount": 38,
+        "sourcedHeightCount": 38,
+        "skylineBuildingCount": 2,
+        "tallestSourcedHeightMeters": 138.9888,
+        "topSourcedHeightMeters": [
+          138.9888,
+          111.25200000000001,
+          86.56320000000001,
+          76.25750346436801,
+          73.44765600000001
+        ]
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w03-000385-17-38596-35865",
+        "parentOrder": 385,
+        "bounds": {
+          "west": -73.992919921875,
+          "south": 40.74554443359375,
+          "east": -73.99017333984375,
+          "north": 40.746917724609375
+        },
+        "ownedBuildingCount": 65,
+        "sourcedHeightCount": 65,
+        "skylineBuildingCount": 4,
+        "tallestSourcedHeightMeters": 137.16,
+        "topSourcedHeightMeters": [
+          137.16,
+          124.968,
+          94.488,
+          90.22080000000001,
+          70.60996800000001
+        ]
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w03-000386-17-38597-35865",
+        "parentOrder": 386,
+        "bounds": {
+          "west": -73.99017333984375,
+          "south": 40.74554443359375,
+          "east": -73.9874267578125,
+          "north": 40.746917724609375
+        },
+        "ownedBuildingCount": 50,
+        "sourcedHeightCount": 50,
+        "skylineBuildingCount": 2,
+        "tallestSourcedHeightMeters": 155.7528,
+        "topSourcedHeightMeters": [
+          155.7528,
+          154.8384,
+          67.6656,
+          66.333624,
+          56.778144000000005
+        ]
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w03-000387-17-38598-35865",
+        "parentOrder": 387,
+        "bounds": {
+          "west": -73.9874267578125,
+          "south": 40.74554443359375,
+          "east": -73.98468017578125,
+          "north": 40.746917724609375
+        },
+        "ownedBuildingCount": 36,
+        "sourcedHeightCount": 36,
+        "skylineBuildingCount": 4,
+        "tallestSourcedHeightMeters": 245.364,
+        "topSourcedHeightMeters": [
+          245.364,
+          202.0824,
+          130.00591434782402,
+          91.7448,
+          80.095344
+        ]
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w03-000388-17-38599-35865",
+        "parentOrder": 388,
+        "bounds": {
+          "west": -73.98468017578125,
+          "south": 40.74554443359375,
+          "east": -73.98193359375,
+          "north": 40.746917724609375
+        },
+        "ownedBuildingCount": 30,
+        "sourcedHeightCount": 30,
+        "skylineBuildingCount": 2,
+        "tallestSourcedHeightMeters": 105.20940799173601,
+        "topSourcedHeightMeters": [
+          105.20940799173601,
+          90.213976280856,
+          85.958957801832,
+          67.9704,
+          65.147952
+        ]
+      }
+    ]
+  }
+}

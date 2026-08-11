@@ -2,7 +2,8 @@
  * Frozen promotion records for the exterior waves this build activates.
  *
  * The build activates an ORDERED SET of waves (`EXTERIOR_DEFAULT_ACTIVATIONS`),
- * today Block 835, then Midtown-core, then Lower-Manhattan. Each wave is its own
+ * today Block 835, then Midtown-core, then Lower-Manhattan, then
+ * Southern-remainder. Each wave is its own
  * record, and the per-record properties below hold PER RECORD — one wave rolling
  * back neither withdraws nor implies anything about another.
  *
@@ -474,6 +475,138 @@ export const LOWER_MANHATTAN_EXTERIOR_ACTIVATION: ExteriorDefaultActivationRecor
 } as const;
 
 /**
+ * The base-only predecessor of the Southern-remainder promotion.
+ *
+ * It is DISABLED, for the same reason wave `w02`'s was and by the same
+ * precedent. Wave `w03` has never been promoted in any form: its only other
+ * release is the T017 canary, which was pinned but never a default and whose
+ * single renderable cell is nine tile rows south of the cells this promotion
+ * ships. There is no untextured `w03` release and no earlier `w03` default, so
+ * the previous verified representation of this area IS the pinned base massing.
+ *
+ * ROLLING BACK THIS WAVE THEREFORE RETURNS ITS AREA TO BASE MASSING. A reader
+ * looking for "the older Southern-remainder exterior" will not find one, because
+ * there is not one. Block 835, Midtown-core and Lower-Manhattan keep streaming —
+ * the rules in this module are per record — so the rollback is local to this
+ * wave.
+ *
+ * `rolledBackReleaseId` names the P1 successor, which is what makes a rollback
+ * also refuse promotion-era `?exteriorCells=manhattan-southern-remainder-cells-20260812-p1`
+ * bookmarks. It deliberately does NOT name the T017 canary: that release was
+ * never promoted, its opt-in link is not a promotion-era bookmark, and it stays
+ * reachable exactly as it was before this promotion and after a rollback of it.
+ */
+export const SOUTHERN_REMAINDER_BASE_ONLY_PREDECESSOR: ExteriorDefaultActivationDisabled = {
+  enabled: false,
+  releaseId: null,
+  rolledBackReleaseId: "manhattan-southern-remainder-cells-20260812-p1",
+} as const;
+
+/**
+ * The 179 accepted Southern-remainder identities: every building the curated
+ * subset materializes, and no other.
+ *
+ * They are the buildings of ownership cells 379, 385, 386 and 387 of wave `w03`
+ * — the high-rise band immediately south of the Midtown-core wave boundary —
+ * which the curation in `southern-remainder-curation.ts` chose explicitly on
+ * skyline value rather than inheriting from the ledger's cell order. One owned
+ * building of those four cells, `doitt:938827`, is absent from this list because
+ * the V3 grammar refused its sourced height as below one floor; it ships as an
+ * explicit unavailable detail naming that refusal, and it must stay outside the
+ * accepted membership so a scene that somehow drew it fails closed.
+ */
+export const SOUTHERN_REMAINDER_MEMBERSHIP_BUILDING_IDS: readonly string[] = [
+      "doitt:100137", "doitt:1012053", "doitt:1021817", "doitt:1072143", "doitt:1085729",
+      "doitt:1106424", "doitt:1106425", "doitt:1113304", "doitt:1206431", "doitt:1240332",
+      "doitt:1268240", "doitt:1268437", "doitt:1272517", "doitt:1273275", "doitt:1281401",
+      "doitt:1282260", "doitt:1282288", "doitt:1284464", "doitt:1284964", "doitt:1284998",
+      "doitt:1286464", "doitt:1290459", "doitt:1290754", "doitt:1292118", "doitt:1293615",
+      "doitt:1296557", "doitt:1296932", "doitt:1299111", "doitt:130031", "doitt:1303290",
+      "doitt:133660", "doitt:136743", "doitt:149787", "doitt:150091", "doitt:159101",
+      "doitt:163766", "doitt:166332", "doitt:168270", "doitt:175606", "doitt:181957",
+      "doitt:188152", "doitt:189331", "doitt:200650", "doitt:202839", "doitt:206957",
+      "doitt:207924", "doitt:212149", "doitt:232855", "doitt:238423", "doitt:240020",
+      "doitt:243315", "doitt:250874", "doitt:256107", "doitt:25911", "doitt:264238",
+      "doitt:281972", "doitt:292640", "doitt:292676", "doitt:295593", "doitt:298689",
+      "doitt:304169", "doitt:314518", "doitt:315609", "doitt:316978", "doitt:321474",
+      "doitt:323165", "doitt:331334", "doitt:332702", "doitt:333035", "doitt:34513",
+      "doitt:346291", "doitt:35128", "doitt:356734", "doitt:359052", "doitt:370817",
+      "doitt:377258", "doitt:38133", "doitt:394235", "doitt:394394", "doitt:39955",
+      "doitt:403173", "doitt:41081", "doitt:412686", "doitt:412688", "doitt:428363",
+      "doitt:428632", "doitt:43049", "doitt:431553", "doitt:432111", "doitt:434786",
+      "doitt:437622", "doitt:443957", "doitt:446221", "doitt:45134", "doitt:459668",
+      "doitt:485174", "doitt:485351", "doitt:486327", "doitt:498981", "doitt:502082",
+      "doitt:512701", "doitt:513546", "doitt:51360", "doitt:513856", "doitt:516828",
+      "doitt:518823", "doitt:518958", "doitt:524030", "doitt:526644", "doitt:527657",
+      "doitt:532009", "doitt:533124", "doitt:534695", "doitt:540182", "doitt:540233",
+      "doitt:542690", "doitt:560679", "doitt:567495", "doitt:567590", "doitt:567620",
+      "doitt:568172", "doitt:571788", "doitt:572024", "doitt:574706", "doitt:594074",
+      "doitt:601762", "doitt:606146", "doitt:607489", "doitt:615", "doitt:61531",
+      "doitt:621388", "doitt:637993", "doitt:648192", "doitt:653033", "doitt:658810",
+      "doitt:673292", "doitt:676232", "doitt:680234", "doitt:68605", "doitt:691310",
+      "doitt:692541", "doitt:693884", "doitt:700420", "doitt:705961", "doitt:710785",
+      "doitt:714780", "doitt:71883", "doitt:7231", "doitt:72945", "doitt:733612",
+      "doitt:747891", "doitt:750372", "doitt:756976", "doitt:758128", "doitt:761288",
+      "doitt:770787", "doitt:770894", "doitt:771923", "doitt:791096", "doitt:794287",
+      "doitt:797718", "doitt:799105", "doitt:809141", "doitt:813596", "doitt:814320",
+      "doitt:814505", "doitt:814567", "doitt:816554", "doitt:818193", "doitt:819374",
+      "doitt:821465", "doitt:826955", "doitt:87830", "doitt:8973", "doitt:94988",
+      "doitt:950033", "doitt:978327", "doitt:990186", "doitt:99861",
+];
+
+/**
+ * Rollback: export `SOUTHERN_REMAINDER_EXTERIOR_ACTIVATION.predecessor` from
+ * here.
+ *
+ * The FOURTH promoted wave, and the second to ship procedural facade detail
+ * tiles by default. The release is the P1 successor
+ * `manhattan-southern-remainder-cells-20260812-p1`, not the T017 canary: ADR 0035
+ * precondition (b) forbids promoting the canary's order-derived renderable
+ * subset, an immutable release cannot be re-cut, and so the promoted bytes are a
+ * successor whose renderable subset is the explicit curated list.
+ *
+ * THIS RECORD COULD NOT HAVE EXISTED AT THE OLD CACHE CAP, and that is worth
+ * stating where the record lives rather than only in an ADR. Three promoted
+ * waves occupy 255 of what used to be 256 exterior cache entries; ADR 0034 named
+ * three admissible responses and T018 took response 1, raising
+ * `EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries` to 512. The 179 assets below bring
+ * the promoted composition to 434 of 512 entries, and the byte ceiling was
+ * re-derived at the raised cap rather than assumed — see
+ * `exterior-cache-ceiling.ts`.
+ *
+ * Membership is stated in DIGEST form. The wave owns 176 cells and every one of
+ * them is a cell release — 172 of them truthful tombstones — so the literal form
+ * would be twenty-five kilobytes of triples that nobody reads. The 179 accepted
+ * building identities stay literal, because the identity gate compares them by
+ * name.
+ *
+ * `verifyPromotedExteriorPin` RUNS FOR THIS WAVE, because this record is the
+ * entry it reads. The T017 canary is unchanged and still carries the narrower
+ * guarantee, because it is still not promoted.
+ *
+ * `exterior-southern-remainder-promotion-record.test.ts` recomputes every pin
+ * below from the committed `data/southern-remainder-20260812-p1/payload-inventory.json`
+ * on every run — no payload directory required, so the drift gate is never
+ * skipped.
+ */
+export const SOUTHERN_REMAINDER_EXTERIOR_ACTIVATION: ExteriorDefaultActivationRecord = {
+  enabled: true,
+  releaseId: "manhattan-southern-remainder-cells-20260812-p1",
+  snapshotId: "snapshot:manhattan-southern-remainder-cells-20260812-p1:v1",
+  snapshotChecksumSha256: "9d6a1d3d7931c648406e1c7461d791894365f79ba5ce2f5a5efae9783707a025",
+  assemblyPackageIds: ["assembly:manhattan-southern-remainder-cells-20260812-p1:v1"],
+  membership: {
+    cells: [],
+    cellsDigestSha256: "8220025ddaf4b1f888d5eb90d2d08fc63fdde6c5e2f1d3e5c572b7b068726102",
+    cellCount: 176,
+    buildingIds: SOUTHERN_REMAINDER_MEMBERSHIP_BUILDING_IDS,
+  },
+  approvalRef: "Issue #19 gate approval 2026-08-12 (T018 Southern-remainder curated promotion)",
+  rolledBackReleaseId: null,
+  predecessor: SOUTHERN_REMAINDER_BASE_ONLY_PREDECESSOR,
+} as const;
+
+/**
  * The ordered promotion set this build activates, oldest wave first.
  *
  * Waves are COMPOSED from their own records instead of being copied into a
@@ -488,8 +621,9 @@ export function exteriorDefaultActivations(
   blockEight35: ExteriorDefaultActivationRecord = EXTERIOR_DEFAULT_ACTIVATION,
   midtownCore: ExteriorDefaultActivationRecord = MIDTOWN_CORE_EXTERIOR_ACTIVATION,
   lowerManhattan: ExteriorDefaultActivationRecord = LOWER_MANHATTAN_EXTERIOR_ACTIVATION,
+  southernRemainder: ExteriorDefaultActivationRecord = SOUTHERN_REMAINDER_EXTERIOR_ACTIVATION,
 ): readonly ExteriorDefaultActivationRecord[] {
-  return [blockEight35, midtownCore, lowerManhattan];
+  return [blockEight35, midtownCore, lowerManhattan, southernRemainder];
 }
 
 /** The composed set, for callers with no substituted record of their own. */

@@ -1,0 +1,33 @@
+{
+  "buildingId": "doitt:51360",
+  "cellId": "manhattan-exterior-cell-w03-000387-17-38598-35865",
+  "stratum": "most-ring-vertices",
+  "assetPath": "/Users/sangheonlee/orca/workspaces/urban-digital-twin/ccp-19-southern-remainder-promotion/public/data/manhattan-southern-remainder-cells-20260812-p1/public/assets/doitt-51360__lod_0.glb",
+  "checksumSha256": "aefb901297923a114c7a78420fa16a651ddfe441a61287de2882b37093b24626",
+  "planHashSha256": "0ddb79469b74938d4204aa14cf02eb3b79ddedde95ccb25640c70a11e1e16cc1",
+  "declared": {
+    "triangleCount": 14782,
+    "materialCount": 9,
+    "textureCount": 3
+  },
+  "declaredBoundsYUp": {
+    "minimum": [
+      -47.17752456665039,
+      0,
+      -48.65800094604492
+    ],
+    "maximum": [
+      36.22700119018555,
+      76.08300018310547,
+      28.989999771118164
+    ]
+  },
+  "analyticVolumeCubicMeters": 229549.40302499925,
+  "writerMeshVolumeCubicMeters": 229549.4064361233,
+  "volumeTolerance": 0.000001,
+  "setbacksAbsent": true,
+  "effectiveTierCount": 1,
+  "ringVertexCount": 20,
+  "heightMm": 70683,
+  "heightSource": "source"
+}

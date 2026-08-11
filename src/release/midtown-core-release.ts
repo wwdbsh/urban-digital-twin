@@ -577,7 +577,25 @@ export function buildMidtownCoreRelease(input: MidtownCoreReleaseInput): Midtown
   const evidenceShards: ExteriorEvidenceShard[] = [];
   const assets: AssemblyAsset[] = [];
   const glbArtifacts: AssemblyArtifact[] = [];
-  const tileChains: Array<Record<string, unknown>> = [];
+  /**
+   * One root child per shipped asset, carried WITH the canonical feature id it
+   * belongs to so the tileset can be ordered by that id rather than by its
+   * content URI.
+   *
+   * The two are not the same order, and assuming they were was a real defect.
+   * `validateTileset` requires the root's children to arrive sorted by
+   * `canonicalFeatureId`; this builder sorted them by the content URI instead.
+   * Those agree only while no building id is a strict PREFIX of another, because
+   * the URI appends `__lod_0.glb` and `7` sorts before `_`. Every release emitted
+   * before wave w03's promoted successor happened to satisfy that — Block 835
+   * V3, Midtown-core V3, both Lower-Manhattan releases and the w03 canary all
+   * order identically under either key, so no frozen byte moves with this fix —
+   * and the 179-asset curated w03 subset is the first set that does not:
+   * `doitt:615` is a prefix of `doitt:61531`, and the assembly replay refused the
+   * emitted tileset rather than shipping a chain the validator could not walk.
+   * It failed closed, which is why this is a fix and not an incident.
+   */
+  const tileChains: Array<{ canonicalFeatureId: string; tile: Record<string, unknown> }> = [];
   const cellReleases: ExteriorCellRelease[] = [];
 
   // One package anchor for the whole assembly, so per-building ENU frames can be
@@ -698,11 +716,14 @@ export function buildMidtownCoreRelease(input: MidtownCoreReleaseInput): Midtown
           packageBounds.maximum[axis] = Math.max(packageBounds.maximum[axis]!, asset.bounds.maximum[axis]! + translation[axis]!);
         }
         tileChains.push({
-          boundingVolume: { box: tileBox(asset.bounds) },
-          geometricError: 0,
-          refine: "REPLACE",
-          transform: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, translation[0], translation[1], translation[2], 1],
-          content: { uri: `../assets/${slug(buildingId)}__${asset.lodId}.glb` },
+          canonicalFeatureId: buildingId,
+          tile: {
+            boundingVolume: { box: tileBox(asset.bounds) },
+            geometricError: 0,
+            refine: "REPLACE",
+            transform: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, translation[0], translation[1], translation[2], 1],
+            content: { uri: `../assets/${slug(buildingId)}__${asset.lodId}.glb` },
+          },
         });
       }
 
@@ -869,7 +890,12 @@ export function buildMidtownCoreRelease(input: MidtownCoreReleaseInput): Midtown
       },
       geometricError: 1,
       refine: "REPLACE",
-      children: [...tileChains].sort((left, right) => compareText(String((left.content as { uri: string }).uri), String((right.content as { uri: string }).uri))),
+      // Sorted by CANONICAL FEATURE ID, which is exactly the key
+      // `validateTileset` walks the root children in. See `tileChains` above for
+      // why the content URI is not that key.
+      children: [...tileChains]
+        .sort((left, right) => compareText(left.canonicalFeatureId, right.canonicalFeatureId))
+        .map((chain) => chain.tile),
     },
   };
   const tilesetBytes = encode(JSON.stringify(tileset));
