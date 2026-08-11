@@ -320,8 +320,12 @@ async function replay(measurementPath) {
   if (!accepted.ok) fail(`Procedural replay failed: ${accepted.issues.map((issue) => `${issue.path}: ${issue.message}`).join(" | ")}`);
   const refused = await replayMultiLodAssembly(assembled.manifest, assembled.contents, { requireTextureFreeAssembly: true });
   if (refused.ok) fail("A textured package passed the texture-free gate; the embedded-image gate has been weakened.");
+  // The replay gate does not depend on the policy flag being passed: it is keyed
+  // off each GLB's own declared provenance, so a caller that omits the flag —
+  // the browser runtime omits it — still regenerates and byte-compares every
+  // embedded tile. This third pass proves that, rather than assuming it.
   const undeclared = await replayMultiLodAssembly(assembled.manifest, assembled.contents);
-  if (!undeclared.ok) fail(`Private replay without the policy flag failed: ${undeclared.issues.map((issue) => issue.message).join(" | ")}`);
+  if (!undeclared.ok) fail(`Replay without the policy flag failed: ${undeclared.issues.map((issue) => issue.message).join(" | ")}`);
 
   console.log(JSON.stringify({
     ok: true, command: "replay",

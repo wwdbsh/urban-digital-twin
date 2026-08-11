@@ -4,6 +4,7 @@ import {
   ASSEMBLY_ISSUE_BUFFER_TAIL_FORBIDDEN,
   ASSEMBLY_ISSUE_DECLARED_TEXTURE_FORBIDDEN,
   ASSEMBLY_ISSUE_EMBEDDED_IMAGE_FORBIDDEN,
+  ASSEMBLY_ISSUE_TEXTURE_PROVENANCE_REQUIRED,
   ASSEMBLY_ISSUE_UNREFERENCED_BUFFER_VIEW_FORBIDDEN,
   multiLodAssemblyFingerprint,
   parseGlbV2,
@@ -316,8 +317,21 @@ describe("multi-LOD immutable assembly", () => {
     if (publicReplay.ok) throw new Error("public package with an embedded image must fail closed");
     expect(publicReplay.issues.some((entry) => entry.message === ASSEMBLY_ISSUE_EMBEDDED_IMAGE_FORBIDDEN)).toBe(true);
 
+    // Private packages USED to keep an embedded image, and no longer do.
+    //
+    // That allowance predates any producer of embedded imagery. Now that one
+    // exists, "a private package may carry an image nobody can account for" is
+    // the whole hole: the replay gate only fires on a GLB that DECLARES
+    // procedural provenance, so an image with no declaration would have been
+    // admitted with no regeneration and no check on its contents. The rule is
+    // unconditional instead — an image without provenance is refused whatever
+    // the audience and whatever policy the caller passed, including no policy at
+    // all, which is what the browser runtime passes.
     const privatePackage = await fixture({ lod0: withImage() });
-    expect((await replayMultiLodAssembly(privatePackage.manifest, privatePackage.contents)).ok).toBe(true);
+    const privateReplay = await replayMultiLodAssembly(privatePackage.manifest, privatePackage.contents);
+    expect(privateReplay.ok).toBe(false);
+    if (privateReplay.ok) throw new Error("an image with no provenance must fail closed in every audience");
+    expect(privateReplay.issues.some((entry) => entry.message === ASSEMBLY_ISSUE_TEXTURE_PROVENANCE_REQUIRED)).toBe(true);
 
     const intakeLinked = await fixture({ lod0: withImage() });
     const intakeReplay = await replayMultiLodAssembly(intakeLinked.manifest, intakeLinked.contents, { requireTextureFreeAssembly: true });

@@ -2,7 +2,6 @@ import { domainSeparatedSha256, sha256HexBytes, stableSerialize } from "../domai
 import { isSafeReleaseArtifactReference } from "../runtime/path-security.ts";
 import {
   PROCEDURAL_TEXTURE_LIMITS,
-  PROCEDURAL_TEXTURE_PROFILE,
   isProceduralTextureProvenance,
   proceduralTextureReplayIndex,
   type ProceduralTextureProfile,
@@ -55,16 +54,22 @@ export interface MultiLodAssemblyPolicy {
    */
   requireTextureFreeAssembly?: boolean;
   /**
-   * Opts a package into the procedural detail-tile profile.
+   * Declares that a package is built against the procedural detail-tile profile.
    *
    * This is a POLICY layer, not a schema or profile version. The manifest schema
    * stays 1.0 and the closed glTF profile already validated `images`, `samplers`,
-   * `textures` and `TEXCOORD_0` — it simply had no caller that produced them. So
-   * nothing about the wire format changes here; what changes is which packages
-   * are ALLOWED to use that part of the profile, and what they must prove to do
-   * it. Declaring the profile does not relax the texture-free gate: a package
-   * that is texture-free by audience or by `requireTextureFreeAssembly` stays
-   * texture-free, and the two flags together simply admit nothing.
+   * `textures` and `TEXCOORD_0` — it simply had no caller that produced them, so
+   * nothing about the wire format changes here.
+   *
+   * DECLARATIVE ONLY, deliberately. It grants no admission and relaxes no gate.
+   * Every image rule in `validateGlbBinding` is unconditional and keyed off the
+   * GLB's own bytes, precisely so that a caller which omits this flag — the
+   * browser runtime omits it — still gets the whole gate. The flag records which
+   * profile a package was built against, for the census and for operator
+   * tooling; it is never the reason a byte is accepted. In particular it cannot
+   * relax the texture-free gate: a package that is texture-free by audience or by
+   * `requireTextureFreeAssembly` stays texture-free, and the two flags together
+   * admit nothing.
    */
   proceduralTextureProfile?: ProceduralTextureProfile;
 }
@@ -643,22 +648,26 @@ function validateProceduralTextureGlb(json: Record<string, unknown>, bin: Uint8A
  * replay performs, so the runtime cannot admit a GLB the release pipeline would
  * have rejected.
  *
- * The replay gate is keyed off the GLB's OWN declared `textureProvenance`, not
- * off a parameter, and that is deliberate: it means every caller of this
- * function — offline replay, the browser runtime, any future one — enforces it
- * without having to remember to. A GLB cannot claim procedural provenance and
- * escape being replayed against it.
+ * BOTH image rules here are unconditional, and depend on nothing but the bytes.
  *
- * `policyProfile` closes the other direction. When a package is assembled under
- * the procedural policy, an embedded image with NO provenance record must fail
- * rather than fall back to the older private-package behaviour.
+ * An image WITH a provenance record is replayed against it — regenerated from
+ * named constants and compared byte for byte. An image WITHOUT one is refused
+ * outright. Neither depends on a policy argument, and that is the point: a
+ * caller that forgets to pass one still gets the full gate. An earlier draft
+ * made the second rule conditional on the procedural policy, which left a hole
+ * that was latent only because nothing serves textured GLBs yet — the runtime
+ * passes no policy, so the moment public admission opened, arbitrary image bytes
+ * with no provenance would have ridden through with no replay at all.
+ *
+ * Nothing frozen is affected: every committed package embeds zero images, and
+ * the one textured package declares provenance on every GLB that carries them.
  */
-export function validateGlbBinding(parsed: ParsedGlb, asset: AssemblyAsset, lod: AssemblyLod, textureFree: boolean, policyProfile?: ProceduralTextureProfile): void {
+export function validateGlbBinding(parsed: ParsedGlb, asset: AssemblyAsset, lod: AssemblyLod, textureFree: boolean): void {
   const metadata = glbMetadata(parsed.json);
   if (textureFree) validateTextureFreeGlb(parsed.json);
   const hasImages = Array.isArray(parsed.json.images) && parsed.json.images.length > 0;
   if (metadata.textureProvenance !== undefined) validateProceduralTextureGlb(parsed.json, parsed.bin, metadata.textureProvenance);
-  else if (hasImages && policyProfile === PROCEDURAL_TEXTURE_PROFILE) throw new Error(ASSEMBLY_ISSUE_TEXTURE_PROVENANCE_REQUIRED);
+  else if (hasImages) throw new Error(ASSEMBLY_ISSUE_TEXTURE_PROVENANCE_REQUIRED);
   if (metadata.textureProvenance !== undefined && !hasImages) throw new Error(ASSEMBLY_ISSUE_TEXTURE_SHAPE_FORBIDDEN);
   // `textureProvenance` is excluded from the equality below on purpose. The
   // manifest asset record has no such field, and adding one would rewrite the
@@ -736,7 +745,7 @@ export async function replayMultiLodAssembly(manifest: MultiLodAssemblyManifest,
     if (bytes.byteLength !== artifact.byteSize || await sha256Bytes(bytes) !== artifact.checksumSha256) { issue(issues, `contents.${artifact.relativeRef}`, "Artifact byte/hash accounting failed."); continue; }
     const next = add(total, bytes.byteLength); if (next === null || next > MULTI_LOD_ASSEMBLY_LIMITS.totalBytes) { issue(issues, "contents", "Verified byte accounting overflowed."); continue; } total = next;
     if (artifact.ownerCellId) { const cellNext = add(cellByteTotals.get(artifact.ownerCellId) ?? 0, bytes.byteLength); if (cellNext === null) issue(issues, `contents.${artifact.relativeRef}`, "Cell bytes overflowed."); else cellByteTotals.set(artifact.ownerCellId, cellNext); }
-    try { if (artifact.role === "tileset-json") tilesetBytes = bytes; else { const binding = lodBindings.get(artifact.relativeRef); if (!binding) throw new Error("GLB has no asset/LOD binding."); validateGlbBinding(parseGlbV2(bytes), binding.asset, binding.lod, textureFree, policy?.proceduralTextureProfile); } } catch (error) { issue(issues, `contents.${artifact.relativeRef}`, error instanceof Error ? error.message : "Artifact validation failed."); }
+    try { if (artifact.role === "tileset-json") tilesetBytes = bytes; else { const binding = lodBindings.get(artifact.relativeRef); if (!binding) throw new Error("GLB has no asset/LOD binding."); validateGlbBinding(parseGlbV2(bytes), binding.asset, binding.lod, textureFree); } } catch (error) { issue(issues, `contents.${artifact.relativeRef}`, error instanceof Error ? error.message : "Artifact validation failed."); }
     verified.push({ relativeRef: artifact.relativeRef, byteSize: bytes.byteLength, checksumSha256: artifact.checksumSha256 });
   }
   if (total !== manifest.declaredTotalBytes) issue(issues, "contents", "Verified total differs from the manifest.");

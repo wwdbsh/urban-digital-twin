@@ -45,6 +45,13 @@ must prove to do it.** That is a policy question, and it belongs in
 proceduralTextureProfile?: "procedural-texture-v1"
 ```
 
+The flag is **declarative only**, and that is a deliberate outcome of security
+review rather than an oversight. It records which profile a package was built
+against, for the census and for operator tooling. It grants no admission, relaxes
+no gate, and is not consulted when deciding whether a byte is accepted — because
+every image rule below is unconditional (F8). A flag that gated admission would
+be a flag a caller could forget to pass, and the browser runtime passes none.
+
 Bumping the schema would have forced every frozen manifest — V1, V2, V3, Midtown,
 the exterior cells — through a migration to express a change that touches none of
 them. The manifest of an untextured package is byte-identical before and after
@@ -108,11 +115,26 @@ pure function of named constants is a property a photograph **cannot have**:
   mutating a byte deep inside an IDAT payload *and repairing every checksum in
   the manifest to match*. Only regeneration catches that attack.
 
-The gate is keyed off the GLB's **own** declared `textureProvenance` rather than
-off a function parameter, so every caller enforces it without having to remember
-to — including `exterior-cell-runtime.ts`, which required **no change at all**.
-That preserves the invariant at `multi-lod-assembly.ts:515-519`: the runtime
-cannot admit a GLB the release pipeline would reject.
+Both image rules are keyed off the GLB's **own bytes** rather than off a function
+parameter, so every caller enforces them without having to remember to —
+including `exterior-cell-runtime.ts`, which required **no change at all**. That
+preserves the invariant at `multi-lod-assembly.ts:515-519`: the runtime cannot
+admit a GLB the release pipeline would reject.
+
+An image WITHOUT provenance is refused **unconditionally**, in every audience,
+under every policy including none. An earlier draft of this ADR made that second
+rule conditional on `proceduralTextureProfile` being passed. Security review was
+right to reject it: the hole was latent only because nothing serves textured GLBs
+yet. The runtime passes no policy, so the moment public admission opened,
+arbitrary image bytes carrying no provenance would have ridden through with no
+replay at all — precisely the payload this whole design exists to exclude.
+
+Closing it required changing one pre-existing behaviour, and the change is
+deliberate. `multi-lod-assembly.test.ts` used to assert that a private package
+*keeps* an embedded image no material references. That allowance predates any
+producer of embedded imagery; now that one exists, it is the hole. Private
+packages no longer keep unprovenanced images. Nothing frozen is affected: every
+committed package embeds zero images.
 
 Three supporting narrowings keep the gate cheap and total:
 
@@ -134,6 +156,38 @@ brick running bond (190×57 mm face, 10 mm joint), limestone ashlar (250 mm
 courses, 750 mm blocks, 8 mm joint), curtain mullion grid (1400 mm bay, 3600 mm
 floor-to-floor, 75 mm mullions, 900 mm spandrel) and metal spandrel panel
 (1200×600 mm on a 12 mm reveal).
+
+### What the parameters hash covers, exactly
+
+The replay gate is only as strong as the completeness of
+`proceduralTextureParametersHash()`. If one pixel-affecting constant sat outside
+it, two different rasterizers could declare the same hash, and the validator would
+replay against the wrong constants while reporting a match.
+
+The hashed record is exactly `{ profile, rasterizerVersion, tilePixels,
+jointMinimumPixels, classes, motifs }`, where `motifs` carries all nineteen
+integer fields of every motif. That is the complete set of inputs
+`rasterizeProceduralTexture` reads — it reads no module state, no clock, no
+environment, and no other constant. The class name list is included because the
+per-class variation salt is derived from the class string itself.
+
+Completeness is tested from both ends rather than asserted. Every motif field is
+mutated in turn and must move the hash; each must also move the rasterized
+pixels, except for a **named** set of eight pairs that are inert by construction
+(a spandrel drop on a motif with no spandrel band, a bed shadow with no depth).
+The probe is scaled past two quantisation floors — one pixel spatially, and
+enough levels tonally that a ramp contributes more than one 8-bit step — because
+below those floors a real constant can legitimately round away, and calling that
+a failure would be wrong.
+
+`PROCEDURAL_TEXTURE_MINIMUM_MEAN_MODULATION` is deliberately **outside** the hash:
+it is a build-time refusal threshold, not an input, and cannot change a pixel.
+
+The calibrated palette is outside it too, and this is load-bearing rather than an
+omission: colour lives only in `baseColorFactor`, so no palette value can reach a
+tile. That is tested by mutating the palette wholesale and asserting not one
+rasterized pixel moves, and by asserting the hashed record contains no hex colour
+at all.
 
 ### Calibration method, and what it did and did not touch
 

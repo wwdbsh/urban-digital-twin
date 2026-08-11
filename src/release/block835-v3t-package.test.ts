@@ -248,7 +248,7 @@ describe("Block 835 V3T package", () => {
     expect(replay.issues.some((entry) => entry.message === ASSEMBLY_ISSUE_TEXTURE_REPLAY_MISMATCH)).toBe(true);
   });
 
-  it("rejects an embedded image that declares no provenance under the procedural policy", async () => {
+  it("rejects an embedded image that declares no provenance, with or without a policy", async () => {
     const built = assembled();
     const target = built.manifest.artifacts.find((artifact) => artifact.relativeRef.endsWith("__lod_0.glb"))!;
     const original = built.contents.get(target.relativeRef)!;
@@ -274,10 +274,19 @@ describe("Block 835 V3T package", () => {
     manifest.declaredTotalBytes = manifest.artifacts.reduce((sum, entry) => sum + entry.byteSize, 0);
     const contents = new Map(built.contents); contents.set(target.relativeRef, stripped);
 
-    const replay = await replayMultiLodAssembly(manifest, contents, { proceduralTextureProfile: PROCEDURAL_TEXTURE_PROFILE });
+    // Replayed with NO POLICY ARGUMENT AT ALL, which is the case that matters:
+    // the browser runtime passes none. If this rule were conditional on the
+    // procedural policy, these bytes would be admitted here with no replay and
+    // no account of what the image contains.
+    const replay = await replayMultiLodAssembly(manifest, contents);
     expect(replay.ok).toBe(false);
-    if (replay.ok) throw new Error("an image without provenance must fail under the procedural policy");
+    if (replay.ok) throw new Error("an image without provenance must fail closed with no policy in force");
     expect(replay.issues.some((entry) => entry.message === ASSEMBLY_ISSUE_TEXTURE_PROVENANCE_REQUIRED)).toBe(true);
+
+    // And it fails identically under the procedural policy, so the two paths
+    // cannot diverge later.
+    const underPolicy = await replayMultiLodAssembly(manifest, contents, { proceduralTextureProfile: PROCEDURAL_TEXTURE_PROFILE });
+    expect(underPolicy.ok).toBe(false);
   });
 
   it("leaves V1, V2 and V3 byte-frozen", () => {

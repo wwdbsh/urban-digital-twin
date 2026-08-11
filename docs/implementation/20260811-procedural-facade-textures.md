@@ -113,7 +113,10 @@ and re-derives what it can from live sources rather than from copied numbers.
 | texture set no used material references | image dropped; bytes identical to never passing one |
 | PNG encoder in a separate process | identical hashes, all four tiles |
 | one mutated byte inside an embedded IDAT, all checksums repaired | fails `ASSEMBLY_ISSUE_TEXTURE_REPLAY_MISMATCH` |
-| embedded image with `textureProvenance` stripped | fails `ASSEMBLY_ISSUE_TEXTURE_PROVENANCE_REQUIRED` |
+| embedded image with `textureProvenance` stripped, **no policy argument** | fails `ASSEMBLY_ISSUE_TEXTURE_PROVENANCE_REQUIRED` |
+| private package with an unprovenanced image (previously admitted) | fails `ASSEMBLY_ISSUE_TEXTURE_PROVENANCE_REQUIRED` |
+| every motif constant mutated in turn | hash moves for all; pixels move for all but eight named inert-by-construction pairs |
+| calibrated palette mutated wholesale | zero rasterized pixels move |
 | textured package under the texture-free policy | refused at the manifest AND at the bytes |
 | textured package as a public audience | refused unconditionally |
 | V1 / V2 / V3 fingerprints | unchanged |
