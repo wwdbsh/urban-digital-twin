@@ -7,9 +7,9 @@ Date: 2026-08-11 · Task T026 (Issue #44) · Supersedes nothing; extends
 
 ## Status
 
-Accepted for the Block 835 wave. Extended to the Midtown-core wave in phase P3
-(see Decision E and the P3 addendum below), where the same grammar swap is
-**built and gated but NOT promotable** until a contract limitation is resolved.
+Accepted for the Block 835 wave and, in phase P3, for the Midtown-core wave. See
+Decisions E–G and the P3 addendum below. Both waves are promoted, measured on a
+scene proven to contain their geometry, and rollback-rehearsed.
 
 ## Context
 
@@ -76,6 +76,32 @@ Scope note on the earlier "generative completion, no absent" direction: that
 addressed wholesale ungenerated component kinds. These five are buildings whose
 generated massing geometrically **cannot** carry a setback, which is a different
 claim and one already visible and approved in the T025 package.
+
+### Measured scale, updated in P3
+
+**This decision was accepted on evidence of five buildings in fourteen. At wave
+scale it carries 3,405 of 7,091 — 48 % of everything the Midtown-core wave
+materializes.** The rule is unchanged, the reason requirement is unchanged, and
+every one of those 3,405 buildings genuinely cannot carry an inward tier offset
+on its own sourced polygon. But "a rare disclosed exception" and "half a wave"
+are different claims about the same mechanism, so the number is recorded here
+rather than inherited silently from the Block 835 framing.
+
+**The visual consequence, stated plainly.** Those buildings render as a SINGLE
+massing tier: no setback step, no upper-tier deck, just an extruded footprint
+with the facade grammar on it. Roughly half of Midtown therefore looks
+flat-shouldered where the real city often steps back. That is a limitation of
+this grammar's inward-offset construction on irregular footprints, not an
+observation about the real buildings, and the shipped inventories say so per
+building via the `absent` state and its reason.
+
+**Broader setback support is future grammar work, not a claim.** A construction
+that can step back an irregular ring — a straight skeleton, a medial-axis
+offset, or per-edge offsets with explicit self-intersection resolution — would
+reduce this number. None of that is implemented, none of it is promised here,
+and nothing in the shipped bytes asserts a setback that was not generated. Until
+it exists, the honest output for these buildings is one tier plus a disclosure,
+which is what ships.
 
 ## Decision C — a promotion record may roll back to an ENABLED predecessor
 
@@ -285,43 +311,80 @@ refusal by the analytic volume identity at 1.397e-6 against a 1e-6 bound. The
 tolerance was **not** loosened to admit it. A gate that is relaxed the first time
 it fires is not a gate, and its one refusal is the evidence that this one bites.
 
-## What P3 found that Decision B did not anticipate
+## Decision G — an assembly may package a strict subset of an owned cell
 
-Decision B admitted an absent `setbacks` component on evidence of **five of
-fourteen** Block 835 buildings. At wave scale the same rule admits **3,405 of
-7,091** — 48 % of everything this wave materializes. The rule is unchanged and
-still requires a stated reason per component, and every one of those buildings
-genuinely cannot carry an inward tier offset. But "a rare disclosed exception"
-and "half the wave" are different claims about the same mechanism, and this ADR
-records the number rather than letting Decision B's framing carry over silently.
-
-## What P3 could not decide: renderable cells cannot contain a refusal
-
-Two gates that are individually correct are jointly unsatisfiable for a cell
-that owns a building the grammar refuses:
+Two gates that were individually correct were jointly unsatisfiable for a cell
+owning a building the grammar refuses:
 
 - `multi-lod-assembly.ts` requires every building listed in an assembly cell to
   have a packaged asset;
-- `exterior-cell-runtime.ts` requires an assembly cell's membership to equal the
+- `exterior-cell-runtime.ts` required an assembly cell's membership to equal the
   OWNERSHIP cell's membership exactly.
 
-A cell owning 77 buildings of which 75 are drawable therefore has no legal
-assembly representation, and all three renderable Midtown cells are in that
-state. The emitted release is valid, replays, and is refused at runtime binding,
-so the wave loads no geometry.
+A cell owning 77 buildings of which 75 are drawable therefore had no legal form
+at all, which pushes toward inventing geometry to satisfy a gate. All three
+renderable Midtown cells were in that state: the release validated, replayed,
+and was then refused at runtime binding, so the wave loaded zero GLBs. It was
+caught by the anti-F2 residency check rather than by the frame numbers, which
+looked fine.
 
-This is left OPEN deliberately. The natural refinement — let an assembly package
-a strict subset provided the runtime verifies the remainder is exactly the set
-the cell release marks `unavailable` — is a platform-wide change to two modules
-shared with Block 835, of the same class as Decision B, and it is not within the
-phase that discovered it. The alternative, choosing renderable cells with no
-refusals, abandons the fixed renderable set that makes the V2→V3 availability
-delta attributable to the grammar alone.
+`assemblyCellCoverage` replaces the equality rule with the property that
+equality was always a proxy for: **every owned building is either PACKAGED or
+EXPLICITLY UNAVAILABLE with a stated reason, the two sets are disjoint, and
+together they are exactly the owned set.** Set equality both ways, never subset
+or superset. A building that is neither is precisely the silent omission the old
+rule refused; a building that is both is a package contradicting its own
+release. The membership checksum is re-derived over the packaged list, so it
+always describes the list beside it and a partial package cannot borrow a full
+cell's identity.
+
+This is the same principled-refinement class as Decision B: the guarantee is
+preserved and made explicit, and the machine-readable statement that carries the
+absence — there, a component `reason`; here, an `unavailable` building detail —
+becomes a precondition of admission rather than an afterthought.
+
+It is byte-neutral for every fully packaged cell, because an empty unavailable
+set reduces the rule to the original equality. Block 835 V2 and V3 and the
+exterior fixture releases satisfy it unchanged, with their suites unmodified.
+
+It is also structurally REQUIRED going forward. Waves w02–w05 cover roughly
+38,000 buildings; at the measured 1.53 % refusal rate they will contain refusals
+in many cells. The alternative — choosing only refusal-free cells — does not
+scale, and it would destroy delta attribution by changing which cells render
+whenever the grammar changes.
+
+## Measured evidence
+
+Production build, dedicated desktop Chrome 151 with CDP and `--expose-gc`,
+`vite preview` on `localhost:4311`, viewport 1728x826 CSS px at
+devicePixelRatio 2, ~145 Hz display, 1 s settle, 8 poses x 60 samples x 4
+repeats = 1,920 accepted samples per profile, `documentHasFocus` true before and
+after both runs, 0 console errors, `localhost:4311` the only host contacted.
+
+| Profile | Median | p95 | Budget | Verdict |
+| --- | ---: | ---: | --- | --- |
+| exploration | **8.30 ms** | **10.00 ms** | 16.7 / 25 | pass |
+| inspection | **8.30 ms** | **10.00 ms** | 33.3 / 45 | pass |
+
+**Residency, which is what makes those numbers evidence rather than an empty
+scene measuring fast: 170 cache entries / 22,795,224 B, 0 evictions, stable
+across all four repeats.** That decomposes exactly: 156 Midtown V3 `lod_0`
+assets (20,884,440 B) plus Block 835 V3's 14 `lod_1` assets (1,910,784 B, the
+coarsest verified LOD the exploration profile selects). 157 Midtown GLB requests
+were observed on the wire. The first attempt at this gate measured 14 entries
+and **zero** Midtown requests, and was reported as a non-result rather than a
+pass; Decision G is what changed.
+
+Peak concurrency 4 (limit 8); peak exterior cache 22,795,224 B (limit 256 MiB);
+`droppedFrameRatio` 0.0042 / 0.0036 on a ~145 Hz display; JS heap with forced
+collection shrank across repeats (-9.4 % exploration, -5.2 % inspection).
 
 ## What this addendum does not claim
 
-It does not claim the Midtown V3 wave meets its frame-time budget. The gate was
-run and the measured 8.30 / 10.00 ms is within budget, but the residency check
-shows the scene contained no Midtown geometry, so the measurement certifies
-nothing about this wave and is recorded as a non-result.
+It does not claim the shipped Midtown appearance resembles any real building;
+the uncertainty statements say the opposite, and no building of this wave
+carries a cited facade fact. It does not claim 1440p-class, mobile,
+keyboard-traversal or reduced-motion behaviour. It does not claim the 48 % of
+buildings shipping a single tier are flat-shouldered in reality — only that this
+grammar could not step them back and said so.
 

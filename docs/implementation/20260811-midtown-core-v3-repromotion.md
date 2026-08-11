@@ -15,77 +15,35 @@ Committed records: [`data/midtown-core-20260811-v3/`](../../data/midtown-core-20
 `evidence-inventory.json` (172 files). Raw evidence is untracked under
 `artifacts/midtown-core-20260811-v3/`.
 
-## STOP: this promotion is NOT shippable as it stands
+## The contract refinement this phase required
 
-**The frame gate could not be certified, and the reason is a contract limitation
-rather than a frame-time result.** The measured numbers below are real, but the
-scene they were measured over contained **no Midtown geometry at all**, so they
-certify nothing about this wave. Read the finding before the numbers.
+A renderable cell containing a REFUSED building had no legal representation.
+`multi-lod-assembly.ts:342` forbids listing a building with no packaged asset;
+`exterior-cell-runtime.ts:524` required an assembly cell's membership to equal
+the OWNERSHIP cell's exactly. A cell owning 77 buildings of which 75 are
+drawable satisfied neither together, so all three renderable Midtown cells were
+refused at runtime binding and the wave loaded **zero** GLBs.
 
-### The finding
+**It was caught by the anti-F2 residency check, not by the frame numbers, which
+looked fine** — 8.30 / 10.00 ms over a scene with no Midtown geometry in it. The
+probe reported 14 cache entries / 1,910,784 B, matching neither Block 835 V3's
+fourteen assets nor any plausible Midtown subset; a CDP run with `Network.enable`
+then measured 3 Midtown requests and 0 Midtown GLBs. That first run was reported
+as a **non-result**, not a pass.
 
-A renderable cell that contains a REFUSED building is not representable by the
-current assembly + runtime contract. Two independent gates, each correct on its
-own, are jointly unsatisfiable in that case:
+`assemblyCellCoverage` (new, in `multi-lod-assembly.ts`, applied by
+`exterior-cell-runtime.ts`) replaces equality with the property equality was a
+proxy for: every owned building is either **packaged** or **explicitly
+unavailable with a stated reason**, the two sets are disjoint, and together they
+are exactly the owned set — set equality both ways. The membership checksum is
+re-derived over the packaged list so it always describes the list beside it.
 
-| Gate | Rule | Where |
-| --- | --- | --- |
-| Assembly validator | every building listed in `manifest.cells[].buildingIds` must have a packaged asset | `multi-lod-assembly.ts:342` |
-| Cell runtime | the assembly cell's `buildingIds` and `membershipChecksumSha256` must equal the OWNERSHIP cell's, exactly | `exterior-cell-runtime.ts:524-527` |
-
-The first forbids listing a building with no asset. The second forbids listing
-anything other than the full owned membership. A cell owning 77 buildings of
-which the grammar can draw 75 therefore has no legal assembly representation.
-
-This build lists the packaged membership, which satisfies the assembly validator
-and is refused by the runtime. Measured directly on the emitted bytes:
-
-| Cell | Assembly members | Owned members | Verdict |
-| --- | ---: | ---: | --- |
-| `…w01-000001-14-4823-4482` | 75 | 77 | membership checksum mismatch |
-| `…w01-000002-16-19296-17928` | 21 | 22 | membership checksum mismatch |
-| `…w01-000003-16-19297-17928` | 60 | 61 | membership checksum mismatch |
-
-All three renderable cells are rejected with
-`No assembly package binds cell release … Rejected: … cell membership checksum
-mismatch`, so the wave streams its index, graph and assemblies and then requests
-**zero** GLBs.
-
-### How it was caught
-
-Not by the frame numbers — they looked fine. By the anti-F2 residency check the
-P2 record established as load-bearing. The probe reported **14 cache entries /
-1,910,784 B**, which matches neither Block 835 V3's fourteen assets
-(5,126,332 B) nor any plausible Midtown subset. A CDP run with
-`Network.enable` then measured the fact directly:
-
-| Requests during the probe run | Count |
-| --- | ---: |
-| `manhattan-midtown-core-cells-20260811-v3` — any | 3 (index, graph, assemblies) |
-| `manhattan-midtown-core-cells-20260811-v3` — `.glb` | **0** |
-| `manhattan-exterior-cells-20260811-v3` — `.glb` | 15 |
-
-T014 measured the V2 wave at 15.9 MB / 174 combined cache entries over the same
-camera path, so this is a regression introduced by P3, not a pre-existing
-condition.
-
-### The two ways out, both of which need authorization
-
-1. **Refine the contract** so an assembly may package a strict subset of an
-   owned cell, provided the runtime verifies that the unpackaged remainder is
-   exactly the set the cell release marks `unavailable`. This preserves the
-   guarantee both gates exist for — nothing silently missing — while admitting
-   the honest case. It is a platform-wide change to `multi-lod-assembly.ts` and
-   `exterior-cell-runtime.ts`, both shared with Block 835, and is the same class
-   of decision as ADR 0033 Decision B.
-2. **Choose renderable cells that contain no refusal.** No platform change, but
-   it abandons "the same three priority cells as V2", which is what made the
-   V2→V3 availability delta attributable to the grammar alone, and it changes
-   the cache-safety rationale the bounded renderable set was justified by.
-
-Nothing was papered over to reach a green run: the release is emitted, every
-validator and replay passes, and the defect is a runtime binding refusal that
-only a real browser (or the runtime suite, had it covered this shape) exposes.
+Byte-neutral for fully packaged cells: an empty unavailable set reduces the rule
+to the original equality, so Block 835 V2/V3 and the fixture releases pass with
+their suites unmodified, and re-emitting the Midtown V3 release under the refined
+rule reproduced the **identical** payload inventory checksum
+`435a4bd6a1b351656acfffcf1bcaa68d341f955e72b4af55fe1d83635b924b55`, so no
+promotion pin moved. See ADR 0033 Decision G.
 
 ## The V3 census — the number this phase exists to produce
 
@@ -194,31 +152,62 @@ the frustum at 2.6× its own bounding-sphere radius, so a fit floor was added th
 only ever moves the camera back — every sample T013's scale already framed keeps
 that framing exactly.
 
-## Frame gate — RUN, NOT CERTIFIED
+## Frame gate — CERTIFIED
 
 Production build (`VITE_BLOCK835_PROBE=1`), `vite preview` on `localhost:4311`,
 dedicated desktop Chrome 151 launched with `--remote-debugging-port` /
 `--user-data-dir` / `--js-flags=--expose-gc`, driven over CDP with
-`Page.bringToFront`. Viewport 1728×826 CSS px at devicePixelRatio 2, ~149 Hz.
-1 s settle, 8 poses × 60 samples × 4 repeats = 1,920 accepted samples.
-`documentHasFocus` true before and after, 0 console errors, `localhost:4311` the
-only host contacted. Camera path: `midtown-core-canary-facade-v1-oblique` — the
-T014-era footprint-framed Midtown path, unchanged, since its poses are framed on
-base footprint bounding boxes and sourced heights that V3 does not move.
+`Page.bringToFront`. Viewport 1728x826 CSS px at devicePixelRatio 2, ~145 Hz.
+1 s settle, 8 poses x 60 samples x 4 repeats = **1,920 accepted samples per
+profile**. `documentHasFocus` true before and after both runs, 0 console errors,
+0 window errors, `localhost:4311` the only host contacted. Camera path:
+`midtown-core-canary-facade-v1-oblique` — the T014-era footprint-framed Midtown
+path, unchanged, because its poses are framed on base footprint bounding boxes
+and sourced heights that V3 does not move.
 
-| Profile | Median | p95 | Budget | Frame-time verdict |
-| --- | ---: | ---: | --- | --- |
-| exploration | 8.30 ms | 10.00 ms | 16.7 / 25 | within budget |
+| # | Criterion | Verdict | Evidence |
+| ---: | --- | --- | --- |
+| 1 | Exploration median <=16.7 ms / p95 <=25 ms | **pass — measured** | **8.30 / 10.00 ms**, `droppedFrameRatio` 0.0042 (`json/p0-exploration.json`) |
+| 2 | Inspection median <=33.3 ms / p95 <=45 ms | **pass — measured** | **8.30 / 10.00 ms**, `droppedFrameRatio` 0.0036 (`json/p0-inspection.json`) |
+| 3 | <=8 active exterior requests | **pass** | measured peak **4** |
+| 4 | <=256 MiB exterior cache | **pass** | peak **22,795,224 B**, 0 evictions |
+| 5 | No monotonic retained growth | **pass, with forced collection** | JS heap with `window.gc()` shrank -9.4 % (exploration), -5.2 % (inspection) |
 
-**These numbers are not a pass.** The residency check fails: 14 cache entries /
-1,910,784 B and **0 Midtown GLB requests**, so the camera flew a Midtown path
-over a scene with no Midtown geometry in it. An empty scene measures fast and
-proves nothing. The inspection profile was not run, because a second measurement
-of the same empty scene would add nothing.
+**Residency — the load-bearing anti-F2 check.** 170 cache entries, stable across
+all four repeats of both profiles, decomposing exactly:
 
-Peak concurrency 4 (limit 8); peak exterior cache 1,910,784 B (limit 256 MiB);
-0 evictions; JS heap with forced collection shrank 1.3 % across repeats. All of
-those are also statements about the wrong scene.
+| Contribution | Entries | Bytes |
+| --- | ---: | ---: |
+| Midtown V3 `lod_0` (the promoted wave) | 156 | 20,884,440 |
+| Block 835 V3 `lod_1` (coarsest verified LOD in exploration) | 14 | 1,910,784 |
+| **Total** | **170** | **22,795,224** |
+
+157 Midtown GLB requests were observed on the wire (156 distinct, one repeat).
+An empty scene measures fast and proves nothing; this one contained every
+building the promotion claims.
+
+## Renderer journeys
+
+All against the production build in the same focused Chrome. Screenshots under
+`artifacts/midtown-core-20260811-v3/screenshots/`.
+
+| Journey | Result | Evidence |
+| --- | --- | --- |
+| Default cold load, both V3 waves | 156 Midtown V3 + 14 Block 835 V3 GLBs, 0 console errors; two status lines, each naming its OWN snapshot | `forward-default-cold-load.png` |
+| Cross-release attribution | `?feature=doitt:1294316` shows badge `LOCAL · MANHATTAN-MIDTOWN-CORE-CELLS-20260811-V3`, release origin `snapshot:…-v3:v1`, the `…-v3:…` cell-release id, and active asset `lod_0` with its checksum | `forward-attribution-midtown.png` |
+| Tombstone truthful line | "Exterior release manhattan-midtown-core-cells-20260811-v3: 146 of 149 exterior cells ship no exterior geometry in this release; no substitute was selected for them." | `forward-default-cold-load.png` |
+| Withdrawn building | `?feature=doitt:88101` (refused, >64 ring vertices): "No verified exterior representation is active for this record." — truthful; see the follow-up below | `forward-tombstone-refused.png` |
+| Explicit opt-in narrows to one wave | `?exteriorCells=…midtown…-v3` streams that release **alone** (Block 835 drops to 0 GLBs) | `forward-optin-midtown-v3.png` |
+| Per-wave disable | `?exteriorStreaming=off` → 0 exterior GLBs, no exterior status lines | `forward-disable.png` |
+| Fixture silence | A fixture-mode session claims no exterior wave and reports none; 0 exterior GLBs | `forward-fixture-silence.png` |
+| **Rollback rehearsal** | Exporting the predecessor puts **V2 back on** — 160 V2 GLBs, 0 V3 — with Block 835 V3 unaffected (14 GLBs) | `rollback-v2-default.png` |
+| Rollback refuses the withdrawn link | `?exteriorCells=…-v3` → "Exterior streaming release manhattan-midtown-core-cells-20260811-v3 was rolled back in this build, so this link streamed no exterior geometry; no substitute exterior release was selected." | `rollback-withdrawn-link-refused.png` |
+| Roll forward again | The restored record streams 156 Midtown V3 + 14 Block 835 V3 again | verified after restore |
+
+The rollback rehearsal was performed by actually exporting the predecessor
+record, rebuilding, and driving the browser — then restoring the forward record
+(byte-identical to the committed file) and rebuilding. It is not a simulated
+swap.
 
 ## Gates
 
@@ -236,9 +225,9 @@ those are also statements about the wrong scene.
 | Artifact replay | 623 emitted files verified against their declared checksums and byte sizes |
 | Anti-leak | 0 `private/`-prefixed paths emitted; private root declares exactly 1 artifact, never written |
 | Immutability | `data/midtown-core-20260811/` and every frozen `public/data/` directory untouched; only additions |
-| **Runtime cell binding** | **FAIL — see the STOP section** |
-| Renderer journeys | **Not run** — with no Midtown geometry loading, every journey would document the defect rather than the wave |
-| Rollback rehearsal (browser) | **Not run** — same reason. The record-level rehearsal IS covered by test |
+| Runtime cell binding | Pass — 170 resident cache entries, 157 Midtown GLB requests |
+| Renderer journeys | Pass — 10 journeys, 0 console errors |
+| Rollback rehearsal (browser) | Pass — real record swap, rebuild, drive, restore |
 
 ### Test changes, enumerated
 
@@ -250,13 +239,23 @@ those are also statements about the wrong scene.
 | `App.test.tsx` | Pinned-allowlist assertion gains the successor id; `MIDTOWN_CORE_EXTERIOR_RELEASE_ID` → `-v3` | The promoted default moved; V2 opt-in paths deliberately still tested |
 | `midtown-core-v3-materialization.test.ts` (new) | 15 tests, all synthetic so they run on a fresh clone | New materializer |
 | `midtown-core-v3-release.test.ts` (new) | 20 tests | New release, profile and predecessor derivation |
+| `assembly-cell-coverage.test.ts` (new) | 8 tests | The refined coverage rule: the honest subset is admitted, and every way of losing the anti-silent-omission property is refused — a building neither packaged nor unavailable, a building that is both, a foreign building from either side, a subset, a superset, a repeat, and a checksum describing a different set |
 
 No test was deleted or weakened.
 
 ## Carried forward
 
-1. The runtime cell-binding contract limitation above, which blocks promotion.
-2. The **3,405** wave-scale tier collapses. ADR 0033 Decision B was accepted on
-   evidence of five buildings in fourteen. Whether it should still read the same
-   way at 48 % of a wave is a decision this record raises and does not make.
+1. **A refused building's details panel does not name its refusal reason.** The
+   release graph carries it verbatim, and the cell-level tombstone line is
+   truthful, but `?feature=doitt:88101` says only "No verified exterior
+   representation is active for this record." That is true and not misleading;
+   it is also less than the release knows. Surfacing the per-building reason is
+   a small, self-contained UI follow-up and was left out of this phase rather
+   than bundled into a promotion.
+2. The **3,405** wave-scale tier collapses, now recorded in ADR 0033
+   Decision B with the visual consequence and the note that broader setback
+   support is future grammar work rather than a claim.
 3. Textured public admission (P4) remains unmeasured and ungated.
+4. Waves w02–w05 will exercise Decision G at ~38,000 buildings; at the measured
+   1.53 % refusal rate, refusals in renderable cells become the normal case
+   rather than the exception.

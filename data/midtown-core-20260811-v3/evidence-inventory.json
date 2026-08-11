@@ -826,14 +826,69 @@
       "path": "blender/renders/doitt-996746.png"
     },
     {
-      "byteSize": 4125,
-      "checksumSha256": "21249884b0d70d43b4da5852f6cd63806cc8c580c6b920d37268112fb67ca675",
+      "byteSize": 4156,
+      "checksumSha256": "2f6a2f1661859b598518f8ff9db16b61b5db99977863037de75b07a6d8d709e3",
       "path": "json/p0-exploration.json"
+    },
+    {
+      "byteSize": 4137,
+      "checksumSha256": "81882c04dfde5fcb5b51d701b5ef89fca1851b03202f1aab522e550f162e4f83",
+      "path": "json/p0-inspection.json"
     },
     {
       "byteSize": 58771,
       "checksumSha256": "c673d5d6e7249713a385a3fd525d5db542eaa7d516f4533135814be459e8636d",
       "path": "plan-census.json"
+    },
+    {
+      "byteSize": 1010384,
+      "checksumSha256": "b03813f2c2aec73e38e20768205d1618d9e6318b6f823c0ef8abd7e1f1906640",
+      "path": "screenshots/forward-attribution-midtown.png"
+    },
+    {
+      "byteSize": 887296,
+      "checksumSha256": "f8815435266e54ffcec6001b920671f90135b91dbf3e3e40e2d4e1f243e72657",
+      "path": "screenshots/forward-default-cold-load.png"
+    },
+    {
+      "byteSize": 796624,
+      "checksumSha256": "cfe19a0fa3a387f259ca598e8a551803d453f1dda70b9368257d271dc7d9922d",
+      "path": "screenshots/forward-disable.png"
+    },
+    {
+      "byteSize": 614982,
+      "checksumSha256": "54218d4f9176136ad61e19f0311bcd54efbe18f41beab2f8a1b44aa9e1425b70",
+      "path": "screenshots/forward-fixture-silence.png"
+    },
+    {
+      "byteSize": 12348,
+      "checksumSha256": "4928e5da909ec830360160e1338720e0fa8a6810b10b4f3c3267afe74dbb1ffa",
+      "path": "screenshots/forward-journeys.json"
+    },
+    {
+      "byteSize": 874928,
+      "checksumSha256": "c6dd6106349f1026654cae343711c10675d2fad0af453ce6ddfc60527cddee82",
+      "path": "screenshots/forward-optin-midtown-v3.png"
+    },
+    {
+      "byteSize": 1040897,
+      "checksumSha256": "a5fe255bb018c114167d5b212f1f16bfe067fdb32137ee384dd3107b40c6f342",
+      "path": "screenshots/forward-tombstone-refused.png"
+    },
+    {
+      "byteSize": 1979,
+      "checksumSha256": "2b709009ed85991ce7861bcd3d794adc244d785582bb8a238340d5cbdf3fdf37",
+      "path": "screenshots/rollback-journeys.json"
+    },
+    {
+      "byteSize": 891792,
+      "checksumSha256": "96d2a166d0833f8bd6a6352ebf4bcd552b4f9b2e57a02f7829ec37226ec90d2f",
+      "path": "screenshots/rollback-v2-default.png"
+    },
+    {
+      "byteSize": 804940,
+      "checksumSha256": "f704257a11491d43569eca2ef14533e424bfb35205236136312ff0baafb68e56",
+      "path": "screenshots/rollback-withdrawn-link-refused.png"
     },
     {
       "byteSize": 1320,
@@ -861,12 +916,12 @@
       "path": "stages/sample.json"
     }
   ],
-  "note": "Raw T026 P3 evidence is untracked under artifacts/midtown-core-20260811-v3/. This committed inventory keeps every file checkable after the worktree-local tree is removed. It covers the full-wave plan and asset censuses, the Blender re-import/volume/render pass over the 81-building stratified sample, and the CDP frame-gate probe output.",
+  "note": "Raw T026 P3 evidence is untracked under artifacts/midtown-core-20260811-v3/. This committed inventory keeps every file checkable after the worktree-local tree is removed. It covers the full-wave plan and asset censuses, the Blender re-import/volume/render pass over the 81-building stratified sample, the CDP frame-gate probes for both profiles, and the renderer-journey and rollback-rehearsal screenshots.",
   "releaseId": "manhattan-midtown-core-cells-20260811-v3",
   "schemaVersion": "1.0",
   "totals": {
-    "byteSize": 21187731,
-    "fileCount": 172
+    "byteSize": 28128069,
+    "fileCount": 183
   },
   "workRoot": "artifacts/midtown-core-20260811-v3"
 }

@@ -1,6 +1,7 @@
 import { validateProjectedGraphAudience } from "../domain/exterior-evidence-intake.ts";
 import { CitywideLruCache, CitywideRequestPool } from "../release/citywide-release.ts";
 import {
+  assemblyCellCoverage,
   parseGlbV2,
   requiresTextureFreeAssembly,
   validateGlbBinding,
@@ -521,10 +522,19 @@ export class ExteriorCellRuntime {
       const cell = candidate.cells.find((entry) => entry.cellId === cellRelease.cellId);
       if (!cell) continue;
       if (cell.cellRelease.id !== cellRelease.cellReleaseId || cell.cellRelease.checksumSha256 !== expectedCellReleaseChecksum) { failures.push(`${candidate.packageId}: cell-release pin mismatch.`); continue; }
-      if (cell.membershipChecksumSha256 !== ownerCell.membershipChecksumSha256) { failures.push(`${candidate.packageId}: cell membership checksum mismatch.`); continue; }
-      const declared = [...cell.buildingIds].sort();
-      const owned = [...ownerCell.buildingIds].sort();
-      if (declared.length !== owned.length || declared.some((id, index) => id !== owned[index])) { failures.push(`${candidate.packageId}: cell membership mismatch.`); continue; }
+      // Coverage, not equality. The package may ship geometry for a strict
+      // SUBSET of the owned cell, and only if every building it leaves out is
+      // one this cell release explicitly declares unavailable with a reason.
+      // That is the anti-silent-omission property the old exact-equality rule
+      // was written for, stated as what it always meant; a cell containing a
+      // building the grammar refuses had no legal form under equality.
+      const coverage = assemblyCellCoverage({
+        packagedBuildingIds: cell.buildingIds,
+        ownedBuildingIds: ownerCell.buildingIds,
+        unavailableBuildingIds: cellRelease.buildingDetails.filter((detail) => detail.status === "unavailable").map((detail) => detail.buildingId),
+        declaredMembershipChecksumSha256: cell.membershipChecksumSha256,
+      });
+      if (!coverage.ok) { failures.push(`${candidate.packageId}: ${coverage.message}`); continue; }
       matches.push(candidate);
     }
     // Ambiguity is a pin failure, never a first-match-wins race against file order.

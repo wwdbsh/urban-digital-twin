@@ -339,9 +339,91 @@ export function validateMultiLodAssembly(value: unknown, policy?: MultiLodAssemb
       }
     });
   });
+  // An assembly cell lists the buildings this PACKAGE packages, and every one of
+  // them must carry an asset. What the assembly alone cannot see is whether the
+  // package covers the whole owned cell; that is a cross-artifact property and
+  // lives in `assemblyCellCoverage` below, which the runtime applies.
   for (const [id] of membership) if (!assetIds.has(id)) issue(issues, "$.cells", `Cell member has no packaged asset: ${id}.`);
   for (const artifact of artifacts.values()) if (artifact.role === "glb" && !claimedRefs.has(artifact.relativeRef)) issue(issues, "$.artifacts", `Orphan GLB artifact: ${artifact.relativeRef}.`);
   return issues.length ? { ok: false, issues } : { ok: true, value: value as unknown as MultiLodAssemblyManifest };
+}
+
+
+// ---------------------------------------------------------------------------
+// Cell coverage: the packaged set against the owned cell
+// ---------------------------------------------------------------------------
+
+/**
+ * Whether an assembly cell covers its owned cell honestly.
+ *
+ * The original rule was exact equality: an assembly cell had to list the whole
+ * owned membership. That prevented the failure it was written for — a package
+ * silently covering fewer buildings than the cell claims — but it also made a
+ * cell containing a REFUSED building unrepresentable, because the assembly
+ * validator above independently forbids listing a building with no asset. A cell
+ * owning 77 buildings of which a grammar can draw 75 then had no legal form at
+ * all, which pushed toward inventing geometry to satisfy a gate.
+ *
+ * The refined rule keeps the anti-silent-omission property exactly and states it
+ * as what it always meant: every owned building is either PACKAGED or
+ * EXPLICITLY UNAVAILABLE with a stated reason, and the two sets are disjoint and
+ * together are the owned set. Set equality both ways, never subset or superset —
+ * a building that is neither packaged nor declared unavailable is precisely the
+ * silent omission the original rule refused, and a building that is both is a
+ * package contradicting its own release.
+ *
+ * It is byte-neutral for every package whose cells are fully packaged: an empty
+ * unavailable set reduces the rule to the original equality, so Block 835 V2 and
+ * V3 and the exterior fixture releases satisfy it unchanged.
+ *
+ * The membership checksum is re-derived over the PACKAGED list rather than
+ * compared against the owned cell's, because it must describe the list beside
+ * it. For a fully packaged cell the two derivations produce the same digest —
+ * both are `sha256HexSync(stableSerialize(sorted ids))` — so existing packages
+ * keep their committed bytes.
+ */
+export type AssemblyCellCoverage = { ok: true } | { ok: false; message: string };
+
+export function assemblyCellMembershipChecksum(buildingIds: readonly string[]): string {
+  return sha256HexBytes(new TextEncoder().encode(stableSerialize([...buildingIds].sort())));
+}
+
+export function assemblyCellCoverage(input: {
+  packagedBuildingIds: readonly string[];
+  /** The owned membership, from the ownership ledger's own cell. */
+  ownedBuildingIds: readonly string[];
+  /** Buildings the cell release declares `unavailable`, with a stated reason. */
+  unavailableBuildingIds: readonly string[];
+  declaredMembershipChecksumSha256: string;
+}): AssemblyCellCoverage {
+  const packaged = [...new Set(input.packagedBuildingIds)].sort();
+  if (packaged.length !== input.packagedBuildingIds.length) {
+    return { ok: false, message: "packaged membership repeats a building." };
+  }
+  const owned = [...input.ownedBuildingIds].sort();
+  const unavailable = [...new Set(input.unavailableBuildingIds)].sort();
+  const packagedSet = new Set(packaged);
+  const bothWays = unavailable.filter((id) => packagedSet.has(id));
+  if (bothWays.length > 0) {
+    return { ok: false, message: `package ships geometry for ${bothWays.join(", ")}, which its own cell release declares unavailable.` };
+  }
+  const covered = [...packaged, ...unavailable].sort();
+  if (covered.length !== owned.length || covered.some((id, index) => id !== owned[index])) {
+    const ownedSet = new Set(owned);
+    const missing = owned.filter((id) => !packagedSet.has(id) && !unavailable.includes(id));
+    const foreign = covered.filter((id) => !ownedSet.has(id));
+    return {
+      ok: false,
+      message: missing.length > 0
+        ? `owned building(s) ${missing.join(", ")} are neither packaged nor declared unavailable.`
+        : `package or cell release names ${foreign.join(", ")}, which the owned cell does not contain.`,
+    };
+  }
+  const expected = assemblyCellMembershipChecksum(packaged);
+  if (input.declaredMembershipChecksumSha256 !== expected) {
+    return { ok: false, message: "cell membership checksum does not describe the packaged membership beside it." };
+  }
+  return { ok: true };
 }
 
 function u32(view: DataView, offset: number): number { return view.getUint32(offset, true); }

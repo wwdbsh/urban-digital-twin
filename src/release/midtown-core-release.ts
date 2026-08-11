@@ -873,20 +873,19 @@ export function buildMidtownCoreRelease(input: MidtownCoreReleaseInput): Midtown
       // carry a shipped asset. Owned-but-refused buildings are not a hole here —
       // they are stated in the release graph's cell release, which lists every
       // owned building and carries an `unavailable` detail with its reason for
-      // each one that ships nothing. When the two sets coincide the ledger's own
-      // membership checksum already describes this list and is carried verbatim;
-      // when a building was refused, the checksum is recomputed over the packaged
-      // list through the ledger's own derivation, so it never describes a
-      // different set from the one beside it.
+      // each one that ships nothing, and `assemblyCellCoverage` is what proves at
+      // runtime that those two sets are disjoint and together are the owned cell.
       const packaged = cell.buildingIds.filter((buildingId) => materializedById.has(buildingId));
       return {
         cellId,
         cellRelease: { id: cellReleaseId, checksumSha256: cellReleaseBlobs.get(cellReleaseId)!.ref.checksumSha256 },
         predecessor: null,
         buildingIds: packaged,
-        membershipChecksumSha256: packaged.length === cell.buildingIds.length
-          ? cell.membershipChecksumSha256
-          : membershipChecksum(packaged),
+        // Always re-derived over the packaged list through the ledger's own
+        // derivation, so the checksum describes the list beside it. For a fully
+        // packaged cell this reproduces the ownership cell's own checksum
+        // exactly, which is what keeps the frozen V2 wave byte-identical.
+        membershipChecksumSha256: membershipChecksum(packaged),
       };
     }),
     assets,
