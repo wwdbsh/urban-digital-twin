@@ -1,0 +1,371 @@
+{
+  "schemaVersion": "1.0",
+  "releaseId": "manhattan-lower-manhattan-cells-20260812",
+  "note": "T015 stage-1 kill switch. The heaviest cell of the renderable subset, rendered by the shipping CesiumJS renderer at three fixed stations, in two variants that differ ONLY in whether LOD 0 carries procedural detail tiles. Frame times are measured over 240 post-settle frames, so no asset upload or first-frame texture decode is counted. Stills are the operator-inspectable half of the verdict; the timings are the measurable half. Payload PNGs and GLBs stay gitignored; this record keeps every one of them checkable by checksum.",
+  "harnessInputChecksumSha256": "00be2d5eac8c6f52be4566d2fb6f948166fa02086d5e32a3760b69965d86defe",
+  "cellId": "manhattan-exterior-cell-w02-000151-15-9646-8976",
+  "textureCatalog": {
+    "profile": "procedural-texture-v1",
+    "rasterizerVersion": "1.0.0",
+    "parametersHashSha256": "121fb53e9b3b08ce3b7fa00ec5d370466c5ae2861b8966cccbfa19861ab438ff"
+  },
+  "capturedWith": {
+    "viewport": {
+      "width": 1280,
+      "height": 800,
+      "deviceScaleFactor": 1
+    },
+    "previewBase": "http://localhost:4173",
+    "remoteDebuggingPort": 9222
+  },
+  "stations": [
+    {
+      "stationId": "facade-detail",
+      "note": "Facade at reading distance: the range a detail tile exists for.",
+      "targetBuildingId": "doitt:669521",
+      "groundDistanceMeters": 60,
+      "longitude": -74.02100898876563,
+      "latitude": 40.69035661680151,
+      "heightMeters": 35,
+      "headingDegrees": 45,
+      "pitchDegrees": -6,
+      "rollDegrees": 0
+    },
+    {
+      "stationId": "street-approach",
+      "note": "Street approach: many textured facades at once, the common exploration range.",
+      "targetBuildingId": "doitt:669521",
+      "groundDistanceMeters": 190,
+      "longitude": -74.0220980407556,
+      "latitude": 40.68953085430102,
+      "heightMeters": 55,
+      "headingDegrees": 45,
+      "pitchDegrees": -12,
+      "rollDegrees": 0
+    },
+    {
+      "stationId": "far-silhouette",
+      "note": "Beyond the LOD 0 cut-off: maximum tile repeats per screen pixel, where aliasing shows first.",
+      "targetBuildingId": "doitt:669521",
+      "groundDistanceMeters": 640,
+      "longitude": -74.02586783610548,
+      "latitude": 40.686672445645485,
+      "heightMeters": 260,
+      "headingDegrees": 45,
+      "pitchDegrees": -20,
+      "rollDegrees": 0
+    }
+  ],
+  "variants": [
+    {
+      "variantId": "untextured-baseline",
+      "samplerFilter": null,
+      "note": "The V3 grammar with no detail tiles: this wave's own untextured baseline.",
+      "assetCount": 33,
+      "totalByteSize": 1715704
+    },
+    {
+      "variantId": "textured-candidate",
+      "samplerFilter": {
+        "magFilter": 9729,
+        "minFilter": 9987
+      },
+      "note": "The same plans with procedural-texture-v1 detail tiles on LOD 0, LINEAR/LINEAR_MIPMAP_LINEAR.",
+      "assetCount": 33,
+      "totalByteSize": 4042888
+    }
+  ],
+  "captures": [
+    {
+      "variantId": "untextured-baseline",
+      "stationId": "facade-detail",
+      "measurement": {
+        "packageId": "manhattan-lower-manhattan-cells-20260812",
+        "variantId": "untextured-baseline",
+        "samplerFilter": null,
+        "stationId": "facade-detail",
+        "targetBuildingId": "doitt:669521",
+        "groundDistanceMeters": 60,
+        "assets": 33,
+        "loadedBytes": 1715704,
+        "devicePixelRatio": 1,
+        "viewportCss": {
+          "width": 1280,
+          "height": 800
+        },
+        "settleFrames": 120,
+        "measureFrames": 240,
+        "frameMilliseconds": {
+          "mean": 8.330833333233992,
+          "p50": 8.299999952316284,
+          "p95": 9.899999976158142,
+          "maximum": 10.399999976158142
+        },
+        "heapAfterLoadBytes": 32377555,
+        "heapAfterMeasureBytes": 42928898,
+        "heapAfterGcBytes": 34331219
+      },
+      "still": {
+        "relativeRef": "captures/untextured-baseline__facade-detail.png",
+        "byteSize": 90503,
+        "checksumSha256": "01c7938a6f24eba3174a97581dcf0cfe4ca3099ec98811bc852eb68be226fd87"
+      }
+    },
+    {
+      "variantId": "textured-candidate",
+      "stationId": "facade-detail",
+      "measurement": {
+        "packageId": "manhattan-lower-manhattan-cells-20260812",
+        "variantId": "textured-candidate",
+        "samplerFilter": {
+          "magFilter": 9729,
+          "minFilter": 9987
+        },
+        "stationId": "facade-detail",
+        "targetBuildingId": "doitt:669521",
+        "groundDistanceMeters": 60,
+        "assets": 33,
+        "loadedBytes": 4042888,
+        "devicePixelRatio": 1,
+        "viewportCss": {
+          "width": 1280,
+          "height": 800
+        },
+        "settleFrames": 120,
+        "measureFrames": 240,
+        "frameMilliseconds": {
+          "mean": 8.330416666467984,
+          "p50": 8.200000047683716,
+          "p95": 10.199999928474426,
+          "maximum": 10.5
+        },
+        "heapAfterLoadBytes": 45339394,
+        "heapAfterMeasureBytes": 63738665,
+        "heapAfterGcBytes": 40299208
+      },
+      "still": {
+        "relativeRef": "captures/textured-candidate__facade-detail.png",
+        "byteSize": 233618,
+        "checksumSha256": "9c152941eb88610c06bf4eed8852f085eb85069afd9642f5468e0686f95a8898"
+      }
+    },
+    {
+      "variantId": "untextured-baseline",
+      "stationId": "street-approach",
+      "measurement": {
+        "packageId": "manhattan-lower-manhattan-cells-20260812",
+        "variantId": "untextured-baseline",
+        "samplerFilter": null,
+        "stationId": "street-approach",
+        "targetBuildingId": "doitt:669521",
+        "groundDistanceMeters": 190,
+        "assets": 33,
+        "loadedBytes": 1715704,
+        "devicePixelRatio": 1,
+        "viewportCss": {
+          "width": 1280,
+          "height": 800
+        },
+        "settleFrames": 120,
+        "measureFrames": 240,
+        "frameMilliseconds": {
+          "mean": 8.332083333532015,
+          "p50": 8.299999952316284,
+          "p95": 10.100000023841858,
+          "maximum": 10.5
+        },
+        "heapAfterLoadBytes": 34536298,
+        "heapAfterMeasureBytes": 58326150,
+        "heapAfterGcBytes": 32767118
+      },
+      "still": {
+        "relativeRef": "captures/untextured-baseline__street-approach.png",
+        "byteSize": 88366,
+        "checksumSha256": "481bbd41c4d8029c30360760b4092655b8d1e115f0830801ecb6e06909ff9f6a"
+      }
+    },
+    {
+      "variantId": "textured-candidate",
+      "stationId": "street-approach",
+      "measurement": {
+        "packageId": "manhattan-lower-manhattan-cells-20260812",
+        "variantId": "textured-candidate",
+        "samplerFilter": {
+          "magFilter": 9729,
+          "minFilter": 9987
+        },
+        "stationId": "street-approach",
+        "targetBuildingId": "doitt:669521",
+        "groundDistanceMeters": 190,
+        "assets": 33,
+        "loadedBytes": 4042888,
+        "devicePixelRatio": 1,
+        "viewportCss": {
+          "width": 1280,
+          "height": 800
+        },
+        "settleFrames": 120,
+        "measureFrames": 240,
+        "frameMilliseconds": {
+          "mean": 8.333750000099341,
+          "p50": 8.299999952316284,
+          "p95": 10.199999928474426,
+          "maximum": 10.600000023841858
+        },
+        "heapAfterLoadBytes": 46416506,
+        "heapAfterMeasureBytes": 72995315,
+        "heapAfterGcBytes": 36978556
+      },
+      "still": {
+        "relativeRef": "captures/textured-candidate__street-approach.png",
+        "byteSize": 157501,
+        "checksumSha256": "53c0575a525d90f3e3d6d8b18c85bec4e2220daed70411a206d71fb0538c2424"
+      }
+    },
+    {
+      "variantId": "untextured-baseline",
+      "stationId": "far-silhouette",
+      "measurement": {
+        "packageId": "manhattan-lower-manhattan-cells-20260812",
+        "variantId": "untextured-baseline",
+        "samplerFilter": null,
+        "stationId": "far-silhouette",
+        "targetBuildingId": "doitt:669521",
+        "groundDistanceMeters": 640,
+        "assets": 33,
+        "loadedBytes": 1715704,
+        "devicePixelRatio": 1,
+        "viewportCss": {
+          "width": 1280,
+          "height": 800
+        },
+        "settleFrames": 120,
+        "measureFrames": 240,
+        "frameMilliseconds": {
+          "mean": 8.334166666368644,
+          "p50": 8.299999952316284,
+          "p95": 9.899999976158142,
+          "maximum": 10.300000071525574
+        },
+        "heapAfterLoadBytes": 39581533,
+        "heapAfterMeasureBytes": 59128079,
+        "heapAfterGcBytes": 32174664
+      },
+      "still": {
+        "relativeRef": "captures/untextured-baseline__far-silhouette.png",
+        "byteSize": 83213,
+        "checksumSha256": "e7b7a63ced9614d6aa38e68dd6c5dbf7edaf9e1077c020d85b7d4b902df2fba7"
+      }
+    },
+    {
+      "variantId": "textured-candidate",
+      "stationId": "far-silhouette",
+      "measurement": {
+        "packageId": "manhattan-lower-manhattan-cells-20260812",
+        "variantId": "textured-candidate",
+        "samplerFilter": {
+          "magFilter": 9729,
+          "minFilter": 9987
+        },
+        "stationId": "far-silhouette",
+        "targetBuildingId": "doitt:669521",
+        "groundDistanceMeters": 640,
+        "assets": 33,
+        "loadedBytes": 4042888,
+        "devicePixelRatio": 1,
+        "viewportCss": {
+          "width": 1280,
+          "height": 800
+        },
+        "settleFrames": 120,
+        "measureFrames": 240,
+        "frameMilliseconds": {
+          "mean": 8.333333333333334,
+          "p50": 8.299999952316284,
+          "p95": 10,
+          "maximum": 10.600000023841858
+        },
+        "heapAfterLoadBytes": 45940096,
+        "heapAfterMeasureBytes": 48445424,
+        "heapAfterGcBytes": 36358914
+      },
+      "still": {
+        "relativeRef": "captures/textured-candidate__far-silhouette.png",
+        "byteSize": 94951,
+        "checksumSha256": "5ebc55fea3742c4a63c6fe55c9c37cc053a5ab1384beba421d20367f7f7ce689"
+      }
+    }
+  ],
+  "comparison": [
+    {
+      "stationId": "facade-detail",
+      "groundDistanceMeters": 60,
+      "baselineFrameMs": {
+        "mean": 8.330833333233992,
+        "p50": 8.299999952316284,
+        "p95": 9.899999976158142,
+        "maximum": 10.399999976158142
+      },
+      "candidateFrameMs": {
+        "mean": 8.330416666467984,
+        "p50": 8.200000047683716,
+        "p95": 10.199999928474426,
+        "maximum": 10.5
+      },
+      "p50RatioCandidateOverBaseline": 0.9879518186497506,
+      "p95RatioCandidateOverBaseline": 1.0303030255594712,
+      "baselineHeapAfterGcBytes": 34331219,
+      "candidateHeapAfterGcBytes": 40299208,
+      "heapDeltaBytes": 5967989,
+      "baselineLoadedBytes": 1715704,
+      "candidateLoadedBytes": 4042888
+    },
+    {
+      "stationId": "street-approach",
+      "groundDistanceMeters": 190,
+      "baselineFrameMs": {
+        "mean": 8.332083333532015,
+        "p50": 8.299999952316284,
+        "p95": 10.100000023841858,
+        "maximum": 10.5
+      },
+      "candidateFrameMs": {
+        "mean": 8.333750000099341,
+        "p50": 8.299999952316284,
+        "p95": 10.199999928474426,
+        "maximum": 10.600000023841858
+      },
+      "p50RatioCandidateOverBaseline": 1,
+      "p95RatioCandidateOverBaseline": 1.009900980633318,
+      "baselineHeapAfterGcBytes": 32767118,
+      "candidateHeapAfterGcBytes": 36978556,
+      "heapDeltaBytes": 4211438,
+      "baselineLoadedBytes": 1715704,
+      "candidateLoadedBytes": 4042888
+    },
+    {
+      "stationId": "far-silhouette",
+      "groundDistanceMeters": 640,
+      "baselineFrameMs": {
+        "mean": 8.334166666368644,
+        "p50": 8.299999952316284,
+        "p95": 9.899999976158142,
+        "maximum": 10.300000071525574
+      },
+      "candidateFrameMs": {
+        "mean": 8.333333333333334,
+        "p50": 8.299999952316284,
+        "p95": 10,
+        "maximum": 10.600000023841858
+      },
+      "p50RatioCandidateOverBaseline": 1,
+      "p95RatioCandidateOverBaseline": 1.0101010125336045,
+      "baselineHeapAfterGcBytes": 32174664,
+      "candidateHeapAfterGcBytes": 36358914,
+      "heapDeltaBytes": 4184250,
+      "baselineLoadedBytes": 1715704,
+      "candidateLoadedBytes": 4042888
+    }
+  ],
+  "verdict": null
+}

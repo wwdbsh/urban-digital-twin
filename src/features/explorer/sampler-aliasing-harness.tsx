@@ -77,8 +77,36 @@ interface HarnessInput {
   variants: HarnessVariant[];
 }
 
-/** Frames rendered after the last model is added before the page declares itself ready. */
+/** Frames rendered after the last model is added before measurement starts. */
 const SETTLE_FRAMES = 120;
+
+/**
+ * Frames timed after settling, before the page declares itself ready.
+ *
+ * T028 only ever needed a still, so the harness declared itself ready the moment
+ * the scene stopped changing. T015 asks a second question — what a textured wave
+ * COSTS against its untextured self — and a cost has to be measured in the
+ * shipping renderer rather than inferred from byte sizes. Measurement runs after
+ * settling so it never times asset upload, shader compilation or the first-frame
+ * texture decode, and `ready` still means "scene is stable", just with the
+ * timings attached.
+ */
+const MEASURE_FRAMES = 240;
+
+/** Chrome exposes this only with the precise-memory flag; absent is reported as null, never as zero. */
+interface PerformanceMemory { usedJSHeapSize: number; totalJSHeapSize: number; jsHeapSizeLimit: number }
+
+function usedJsHeapBytes(): number | null {
+  const memory = (performance as Performance & { memory?: PerformanceMemory }).memory;
+  return typeof memory?.usedJSHeapSize === "number" ? memory.usedJSHeapSize : null;
+}
+
+/** Nearest-rank percentile over an already-sorted ascending sample. */
+function percentile(sorted: readonly number[], fraction: number): number {
+  if (sorted.length === 0) return Number.NaN;
+  const rank = Math.min(sorted.length - 1, Math.max(0, Math.ceil(fraction * sorted.length) - 1));
+  return sorted[rank]!;
+}
 
 export function SamplerAliasingHarness(): React.JSX.Element {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -174,13 +202,26 @@ export function SamplerAliasingHarness(): React.JSX.Element {
       });
 
       setState("settling");
+      const heapAfterLoadBytes = usedJsHeapBytes();
       let frames = 0;
+      const frameMilliseconds: number[] = [];
+      let previousFrameAt = 0;
       const scene = viewer.scene;
       const onPostRender = (): void => {
         frames += 1;
         if (frames < SETTLE_FRAMES) return;
+        if (frames === SETTLE_FRAMES) {
+          setState("measuring");
+          previousFrameAt = performance.now();
+          return;
+        }
+        const now = performance.now();
+        frameMilliseconds.push(now - previousFrameAt);
+        previousFrameAt = now;
+        if (frameMilliseconds.length < MEASURE_FRAMES) return;
         scene.postRender.removeEventListener(onPostRender);
         if (cancelled) return;
+        const sorted = [...frameMilliseconds].sort((left, right) => left - right);
         setSummary(JSON.stringify({
           packageId: input.packageId,
           variantId: variant.variantId,
@@ -193,6 +234,17 @@ export function SamplerAliasingHarness(): React.JSX.Element {
           devicePixelRatio: window.devicePixelRatio,
           viewportCss: { width: window.innerWidth, height: window.innerHeight },
           settleFrames: SETTLE_FRAMES,
+          measureFrames: frameMilliseconds.length,
+          frameMilliseconds: {
+            mean: frameMilliseconds.reduce((total, entry) => total + entry, 0) / frameMilliseconds.length,
+            p50: percentile(sorted, 0.5),
+            p95: percentile(sorted, 0.95),
+            maximum: sorted[sorted.length - 1]!,
+          },
+          // Null rather than zero when the browser withholds it: an unmeasured
+          // heap must never read as an empty one.
+          heapAfterLoadBytes,
+          heapAfterMeasureBytes: usedJsHeapBytes(),
         }));
         setState("ready");
       };

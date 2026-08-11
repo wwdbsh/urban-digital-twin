@@ -1,0 +1,50 @@
+{
+  "schemaVersion": "1.0",
+  "releaseId": "manhattan-lower-manhattan-cells-20260812",
+  "note": "The T015 stage-1 kill decision. Kept beside the measurements rather than inside them so re-running the capture cannot silently rewrite a verdict, and so the verdict names the exact bytes it was formed from.",
+  "evidenceRecord": {
+    "path": "data/lower-manhattan-20260812/kill-switch-evidence.json",
+    "checksumSha256": "fabafd2f166f1de630551379d3ef8f543754ee5f5843ed979b2f61e731f12fac"
+  },
+  "decidedAt": "2026-08-12T00:00:00.000Z",
+  "outcome": "proceed-textured",
+  "frameTime": {
+    "statement": "No measurable frame-time cost. Both variants render every measured frame inside the display interval at all three stations, so the median is pinned at the refresh period and carries no information; the tail is what varies and it does not separate the variants.",
+    "p50RatioCandidateOverBaseline": [
+      0.9879518186497506,
+      1,
+      1
+    ],
+    "p95RatioCandidateOverBaseline": [
+      1.0303030255594712,
+      1.009900980633318,
+      1.0101010125336045
+    ],
+    "worstObservedFrameMillisecondsEitherVariant": 10.600000023841858,
+    "sixtyHertzBudgetMilliseconds": 16.67
+  },
+  "heap": {
+    "statement": "Each capture runs in a fresh page target and reads its heap after a forced collection, so the delta is texture residency rather than accumulation. A first attempt reused one tab and reported roughly 35 MB; that figure was an artefact of about 10 MB of per-navigation accumulation and is not the cost.",
+    "deltaBytesByStation": [
+      {
+        "stationId": "facade-detail",
+        "heapDeltaBytes": 5967989
+      },
+      {
+        "stationId": "street-approach",
+        "heapDeltaBytes": 4211438
+      },
+      {
+        "stationId": "far-silhouette",
+        "heapDeltaBytes": 4184250
+      }
+    ],
+    "materializedAssetCount": 33,
+    "shippedByteIncreaseRatio": 2.3564018035745096
+  },
+  "visual": {
+    "statement": "Inspected still by still against the untextured baseline at identical cameras. At facade and street range the textured variant is strictly more legible: courses, reveals and openings read as construction rather than as flat panels. At far-silhouette range, past the LOD 0 cut-off and at maximum tile repeats per screen pixel, the facades stay even — no speckle, no horizontal clumping and no moire, which is the failure T028 measured under unspecified sampler filtering and which LINEAR/LINEAR_MIPMAP_LINEAR is carried here to prevent. No artefact was found that the untextured baseline does not also have.",
+    "knownDifferenceNotADefect": "Roof and ground surfaces read darker in the textured variant. They carry no tile; the change is the committed V3T calibrated palette, which divides each designed colour through its motif mean so a textured wall keeps its intended tone. It is a designed consequence of the profile, not an artefact of texturing."
+  },
+  "consequence": "The wave proceeds TEXTURED: the renderable subset ships procedural-texture-v1 tiles on LOD 0 under the procedural-replay admission. Had any measure failed, the same pipeline would have shipped the identical geometry with LOWER_MANHATTAN_CENSUS_PROFILE and no other change."
+}
