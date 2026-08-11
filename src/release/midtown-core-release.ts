@@ -58,8 +58,10 @@ import {
   type ExteriorInventoryShard,
   type ExteriorReleaseAudience,
   type ExteriorReleaseGraph,
+  exteriorTextureAdmissionPolicyOf,
   type ExteriorRolloutSnapshot,
   type ExteriorRootManifest,
+  type ExteriorTextureAdmission,
 } from "./exterior-release.ts";
 import {
   validateMultiLodAssembly,
@@ -229,6 +231,14 @@ export interface MidtownCoreReleaseProfile {
   inventoryId: (buildingId: string) => string;
   evidenceShardId: (buildingId: string) => string;
   predecessor: MidtownCoreReleasePredecessor | null;
+  /**
+   * The wave's texture admission, carried onto the emitted public root.
+   *
+   * Omitted — which is both committed profiles — emits no `textureAdmission`
+   * key at all, so the V2 and V3 roots keep their exact bytes and their exact
+   * behaviour, and the emitter keeps hard-failing on any declared texture.
+   */
+  textureAdmission?: ExteriorTextureAdmission;
 }
 
 export const MIDTOWN_CORE_V2_PROFILE: MidtownCoreReleaseProfile = {
@@ -520,6 +530,7 @@ function tileBox(bounds: MidtownCoreShippedAsset["bounds"]): number[] {
 
 export function buildMidtownCoreRelease(input: MidtownCoreReleaseInput): MidtownCoreRelease {
   const profile = input.profile ?? MIDTOWN_CORE_V2_PROFILE;
+  const texturePolicy = exteriorTextureAdmissionPolicyOf(profile.textureAdmission ? { textureAdmission: profile.textureAdmission } : null);
   const ids = midtownCoreReleaseIds(profile.releaseId);
   const approval = profile.approval;
   const ledger = input.subset.ledger;
@@ -641,7 +652,14 @@ export function buildMidtownCoreRelease(input: MidtownCoreReleaseInput): Midtown
 
       const lods: AssemblyLod[] = [];
       for (const asset of building.assets) {
-        if (asset.counts.textureCount !== 0) fail(`asset ${buildingId} ${asset.lodId} declares embedded imagery.`);
+        // The emitter refuses embedded imagery unless the wave's own release
+        // profile declares a texture admission that permits it. This used to be
+        // unconditional; it is now the SAME decision the assembly validator and
+        // the runtime make, read from the same declaration, instead of a fourth
+        // independent copy of it. A profile that declares nothing still refuses.
+        if (asset.counts.textureCount !== 0 && texturePolicy !== "procedural-replay") {
+          fail(`asset ${buildingId} ${asset.lodId} declares embedded imagery, which release ${profile.releaseId} does not admit (texture admission: ${texturePolicy}).`);
+        }
         glbArtifacts.push({
           logicalId: `glb:${buildingId}:${asset.lodId}`,
           role: "glb",
@@ -810,6 +828,9 @@ export function buildMidtownCoreRelease(input: MidtownCoreReleaseInput): Midtown
       : null,
     // Path-free citation of private ancestry; the private bytes never ship.
     privatePredecessor: { rootId: privateRoot.rootId, rootChecksumSha256: privateRoot.rootChecksumSha256 },
+    // Omitted entirely when the profile declares nothing, so a frozen root's
+    // canonical bytes are unchanged by this field's existence.
+    ...(profile.textureAdmission ? { textureAdmission: profile.textureAdmission } : {}),
   };
   const publicRoot: ExteriorRootManifest = { ...publicRootDraft, rootChecksumSha256: rootChecksum(publicRootDraft) };
 
@@ -893,7 +914,7 @@ export function buildMidtownCoreRelease(input: MidtownCoreReleaseInput): Midtown
     tilesetRef: MIDTOWN_CORE_TILESET_REF,
     declaredTotalBytes: artifacts.reduce((total, artifact) => total + artifact.byteSize, 0),
   };
-  const assemblyResult = validateMultiLodAssembly(assembly);
+  const assemblyResult = validateMultiLodAssembly(assembly, { textureAdmission: texturePolicy });
   if (!assemblyResult.ok) fail(`emitted public assembly is invalid: ${stableSerialize(assemblyResult.issues.slice(0, 8))}`);
 
   const index: ExteriorCellReleaseIndex = {

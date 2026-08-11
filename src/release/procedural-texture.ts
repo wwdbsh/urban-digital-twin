@@ -37,6 +37,29 @@ export const PROCEDURAL_TEXTURE_PROFILE = "procedural-texture-v1" as const;
 export type ProceduralTextureProfile = typeof PROCEDURAL_TEXTURE_PROFILE;
 
 /**
+ * The sampler filtering any PUBLICLY admitted textured package must name.
+ *
+ * Decided from measured evidence, not from preference. ADR 0032 shipped tiles
+ * whose samplers carry `wrapS`/`wrapT` and nothing else, which leaves mip
+ * selection to whatever renderer opens the file — and ADR 0032 precondition 7
+ * said so, and said it had to be checked in Cesium before public admission.
+ * T028 checked it: two sampler variants of the same fourteen-asset package,
+ * three identical camera stations, CesiumJS in desktop Chrome. With the filters
+ * unspecified the ~160-repeat Empire State Building shaft breaks into horizontal
+ * clumping and speckle at exploration and far range; with LINEAR magnification
+ * and LINEAR_MIPMAP_LINEAR minification it resolves as an even grid, and nothing
+ * legible at inspection range became less legible. The captures, their
+ * checksums, the camera stations and the written verdict are committed in
+ * `data/manhattan-esb-block-reference-20260811-v3t/cesium-sampler-evidence.json`.
+ *
+ * This constant is the DECISION, not an admission: it grants nothing, and the
+ * frozen `-v3t` package deliberately does not adopt it, because adopting it
+ * would move bytes its committed census pins. A successor package that carries
+ * textures into a public release is expected to build with it.
+ */
+export const PROCEDURAL_TEXTURE_SAMPLER_FILTER = { magFilter: 9729, minFilter: 9987 } as const;
+
+/**
  * Bumped whenever the rasterizer's *code* changes in a way that can move a
  * pixel. The parameters hash covers the constants; this covers the algorithm.
  */

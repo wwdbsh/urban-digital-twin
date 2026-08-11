@@ -3,6 +3,7 @@ import { CitywideLruCache, CitywideRequestPool } from "../release/citywide-relea
 import {
   assemblyCellCoverage,
   parseGlbV2,
+  publiclyAdmittedSamplerFilter,
   requiresTextureFreeAssembly,
   validateGlbBinding,
   validateMultiLodAssembly,
@@ -14,12 +15,14 @@ import {
   type MultiLodAssemblyManifest,
 } from "../release/multi-lod-assembly.ts";
 import {
+  exteriorTextureAdmissionPolicyOf,
   validateExteriorReleaseGraph,
   type ExteriorCellRelease,
   type ExteriorEvidenceShard,
   type ExteriorReleaseGraph,
   type ExteriorRolloutSnapshot,
   type ExteriorRootManifest,
+  type ExteriorTextureAdmissionPolicy,
 } from "../release/exterior-release.ts";
 import type { AggregateRequestBudget } from "./composed-release-runtime.ts";
 import { isSafeReleaseArtifactReference } from "./path-security.ts";
@@ -316,6 +319,32 @@ export class ExteriorCellRuntime {
   readonly origin: "default" | "canary";
   private readonly graph: ExteriorReleaseGraph;
   private readonly publicRoot: ExteriorRootManifest;
+  /**
+   * The active release's texture admission, read ONCE from the public root and
+   * threaded to every site that used to derive texture-freeness from
+   * `audience === "public"` on its own.
+   *
+   * On "pinned", precisely: the root DECLARES `rootChecksumSha256`, and the
+   * runtime enforces string equality between that declaration and each assembly
+   * package's `release.rootChecksumSha256`, so a package cannot bind to a root
+   * whose declaration differs. It does NOT recompute the root's digest from the
+   * root's own bytes at load time; that is pre-existing behaviour for every
+   * field on this manifest, not something this field introduces.
+   *
+   * That independent derivation was the real problem. The assembly validator had
+   * a policy parameter; the runtime had none and simply decided for itself, so a
+   * seam opened in the validator alone would have changed nothing here — the
+   * runtime would have kept refusing, and the refusal would have looked like a
+   * bug rather than a policy. Reading it here, from the release, is what makes
+   * the admission one decision instead of two agreeing by luck.
+   */
+  readonly textureAdmission: ExteriorTextureAdmissionPolicy;
+  /**
+   * The sampler pair the active release's generated-texture fact declares, or
+   * null when nothing textured is admitted. Read from the release rather than
+   * defaulted here, so the bytes are checked against what THIS release says.
+   */
+  private readonly declaredSamplerFilter: { magFilter: number; minFilter: number } | undefined;
   /** Structurally validated exactly once at construction (memoized for every loadCell). */
   private readonly assemblies: readonly MultiLodAssemblyManifest[];
   readonly droppedAssemblyPackages: readonly ExteriorDroppedAssemblyPackage[];
@@ -357,6 +386,12 @@ export class ExteriorCellRuntime {
     this.releaseId = source.index.releaseId;
     this.graph = source.graph;
     this.publicRoot = publicRoot;
+    // Fail-closed: absent, unknown or malformed all read as texture-free.
+    const textureAdmission = exteriorTextureAdmissionPolicyOf(publicRoot);
+    this.textureAdmission = textureAdmission;
+    const declaredSamplerFilter = publicRoot.textureAdmission?.generatedTextureFact?.samplerFilter;
+    this.declaredSamplerFilter = declaredSamplerFilter ? { ...declaredSamplerFilter } : undefined;
+    const assemblyPolicy = { textureAdmission };
     // Only packages the resolved head actually pins are hard-validated. A
     // canary-only package that is invalid must not disable the default head.
     const allowed = new Set(head.pin.assemblyPackageIds);
@@ -365,7 +400,7 @@ export class ExteriorCellRuntime {
     for (const [position, candidate] of source.assemblies.entries()) {
       const declaredId = (candidate as { packageId?: unknown } | null)?.packageId;
       const label = typeof declaredId === "string" && declaredId.length > 0 ? declaredId : `<unidentified assembly [${position}]>`;
-      const structural = validateMultiLodAssembly(candidate);
+      const structural = validateMultiLodAssembly(candidate, assemblyPolicy);
       if (!structural.ok) {
         if (typeof declaredId === "string" && allowed.has(declaredId)) throw new ExteriorRuntimeError("assembly-invalid", `Assembly package ${label} pinned by head ${head.pin.snapshotId} failed closed: ${issueText(structural.issues)}`);
         dropped.push({ packageId: label, reason: `structurally invalid and not pinned by the active head: ${issueText(structural.issues)}` });
@@ -556,7 +591,11 @@ export class ExteriorCellRuntime {
     assertPublicExteriorArtifactRef(cellRelease.artifactRef);
 
     const assembly = this.assemblyForCell(cellRelease, expectedCellReleaseChecksum);
-    const textureFree = requiresTextureFreeAssembly(assembly.audience);
+    const assemblyPolicy = { textureAdmission: this.textureAdmission, ...(this.declaredSamplerFilter ? { declaredSamplerFilter: this.declaredSamplerFilter } : {}) };
+    const textureFree = requiresTextureFreeAssembly(assembly.audience, assemblyPolicy);
+    // Under a public procedural-replay admission the shipped samplers must name
+    // the declared pair; null everywhere else, so nothing already admitted moves.
+    const requiredSamplerFilter = publiclyAdmittedSamplerFilter(assembly.audience, assemblyPolicy);
 
     // Evidence-shard audience admission for every building this cell publishes.
     for (const detail of cellRelease.buildingDetails) {
@@ -581,7 +620,7 @@ export class ExteriorCellRuntime {
       const artifact = assembly.artifacts.find((entry) => entry.relativeRef === lod.artifactRef);
       if (!artifact || artifact.role !== "glb" || artifact.ownerCellId !== cellRelease.cellId) throw new ExteriorRuntimeError("assembly-pin-mismatch", `LOD ${lod.lodId} has no owner-cell GLB declaration.`);
       const bytes = await this.loadVerifiedArtifact(artifact.relativeRef, artifact.byteSize, artifact.checksumSha256, signal);
-      this.verifyGlb(bytes, asset, lod, textureFree, artifact.relativeRef);
+      this.verifyGlb(bytes, asset, lod, textureFree, artifact.relativeRef, requiredSamplerFilter);
       rendered.push({
         canonicalFeatureId: asset.canonicalFeatureId,
         ownerCellId: asset.ownerCellId,
@@ -608,9 +647,9 @@ export class ExteriorCellRuntime {
     return { assemblyPackageId: assembly.packageId, assets: rendered };
   }
 
-  private verifyGlb(bytes: Uint8Array, asset: AssemblyAsset, lod: AssemblyLod, textureFree: boolean, relativeRef: string): void {
+  private verifyGlb(bytes: Uint8Array, asset: AssemblyAsset, lod: AssemblyLod, textureFree: boolean, relativeRef: string, requiredSamplerFilter: { magFilter: number; minFilter: number } | null = null): void {
     try {
-      validateGlbBinding(parseGlbV2(bytes), asset, lod, textureFree);
+      validateGlbBinding(parseGlbV2(bytes), asset, lod, textureFree, requiredSamplerFilter);
     } catch (error) {
       throw new ExteriorRuntimeError("glb-invalid", `Exterior GLB ${relativeRef} failed canonical binding: ${error instanceof Error ? error.message : String(error)}`, relativeRef);
     }

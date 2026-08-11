@@ -40,3 +40,10 @@ artifacts/block835-v3t-determinism/
 # journey evidence. The hashes that matter are committed in
 # data/midtown-core-20260811-v3/.
 artifacts/midtown-core-20260811-v3/
+
+# T028 Cesium sampler-aliasing scratch root: the two sampler VARIANTS of the
+# private V3T package and the captured stills. The checksums, the camera
+# stations and the written verdict are committed in
+# data/manhattan-esb-block-reference-20260811-v3t/cesium-sampler-evidence.json
+# so the evidence stays checkable after this worktree-local tree is removed.
+artifacts/block835-v3t-cesium-20260811/

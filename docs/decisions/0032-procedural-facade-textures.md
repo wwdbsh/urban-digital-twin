@@ -349,3 +349,238 @@ no later check could tell it apart from one that could.
 - One more gate to run, and one more constant table whose hash must be pinned.
 - The honesty claim is now structural. It survives a reviewer who does not believe
   the metadata, which is the only kind of honesty claim worth making.
+
+---
+
+# Amendment — T028 (Issue #50), 2026-08-12
+
+This section is added, not substituted. Nothing above it is edited: the decisions
+recorded there were made on the evidence available then, and a later cycle
+changing their wording would destroy the record of what was actually decided.
+What follows is what T028 measured, decided, and left open.
+
+## A1. Sampler filtering, decided from the shipping renderer
+
+Precondition 7 above said the writer emits `wrapS`/`wrapT` only, that mip
+selection is therefore left to whatever renderer opens the file, that the T027
+stills were Blender EEVEE rather than the shipping renderer, and that a LOD 0
+asset repeating a 128-pixel tile ~160 times vertically is exactly where a wrong
+filter produces moire. **It was right, and the defect is real.**
+
+Two sampler variants of the same fourteen-asset V3T package were built from the
+same plans — one with the committed wrap-only sampler, one adding
+`magFilter: LINEAR (9729)` and `minFilter: LINEAR_MIPMAP_LINEAR (9987)` — and
+put in front of CesiumJS 1.143.0 in desktop Chrome 151 at three identical fixed
+camera stations. Same viewport (1440x900 CSS at devicePixelRatio 2), same
+120-frame settle, same object-URL load path, `localhost` the only host
+contacted, zero console errors. The only difference between two captures at one
+station is the sampler.
+
+| station | ground distance from ESB centroid | reading |
+| --- | ---: | --- |
+| `inspection-facade` | 95 m | No legibility difference on the ESB curtain grid. Neighbouring masonry reads as brick under trilinear and as speckle without it. |
+| `exploration-street` | 220 m | Wrap-only shows moire clumping on the upper shaft and an unstable brick field on the neighbours. Trilinear removes both; bay rhythm, spandrel bands and floor lines stay legible. |
+| `far-shaft-repeats` | 620 m | **Decisive.** Wrap-only breaks the shaft into irregular horizontal clumping and speckle — the pattern reads as noise banding rather than coursing. Trilinear resolves it as an even, stable grid. |
+
+**Decision: `PROCEDURAL_TEXTURE_SAMPLER_FILTER = { magFilter: 9729, minFilter: 9987 }`.**
+Any textured package admitted publicly must name that pair in its shipped bytes,
+and that is **enforced, not merely asserted**. The release root declares the pair
+in its generated-texture fact; under `procedural-replay` — and under nothing else
+— `validateProceduralTextureGlb` resolves every drawn texture to its sampler and
+requires both fields to equal the declared pair, refusing with
+`ASSEMBLY_ISSUE_TEXTURE_SAMPLER_FILTER_REQUIRED`. Without that check a successor
+wave could ship the wrap-only samplers whose aliasing was measured here while its
+immutable root asserted trilinear, and every other gate would have passed. The
+rule is deliberately conditional: the private and replay-only paths are
+untouched, so the frozen `-v3t` package — which ships wrap-only samplers and is
+not publicly admitted — stays byte-valid.
+
+`writeCanonicalGlb` takes the filter as an OPTIONAL field on its texture set, and
+absent reproduces the previous sampler exactly. **The frozen `-v3t` package
+deliberately does not adopt it**, because adopting it would move the byte totals
+its committed census pins; the variant builds live in the gitignored
+`artifacts/` scratch root and no V3T byte is committed by this cycle. The
+untextured writer path is untouched and still reproduces
+`QUAD_ONLY_PRE_TRIANGLE_SHA256`.
+
+Captures, their checksums, the camera stations and the written verdict are
+committed in
+`data/manhattan-esb-block-reference-20260811-v3t/cesium-sampler-evidence.json`.
+The PNG payloads themselves are not, for the same reason the GLBs are not.
+
+Two honesty notes. A first inspection station at 28 m ground distance placed the
+camera **inside** the ESB footprint and produced an unlit interior; it was a
+station-design defect and was discarded and replaced rather than reported. And
+capture PNG byte sizes are recorded in the evidence file as an observation only:
+they corroborate the reading at the far station and contradict nothing at the
+near ones, but the verdict rests on the visual comparison, not on them.
+
+## A2. GPU memory, restated with mipmaps in it
+
+Precondition 3 above estimated ~2.7 GB of texture memory for ~14,000 buildings
+x 3 tiles x 128² RGBA, **before mipmaps**. A full mip chain adds the familiar
+one-third, so the decision in A1 moves that estimate to **~3.6 GB**. That is a
+consequence of the decision and is recorded here rather than discovered later.
+
+It does not change the answer: per-GLB embedding does not scale to a citywide
+textured wave at any filter setting, and the **shared four-tile atlas bound once
+for the whole city** remains the named fix. It is a runtime architecture change,
+it is **explicitly out of scope for T028**, and nothing in this cycle assumes it.
+
+## A3. Precondition 4 (UV origin) is closed by test, not by prose
+
+The precondition that "fails silently and catastrophically" is now asserted.
+`block835-v3t-package.test.ts` pins three things: every shipped UV stays inside a
+building-local magnitude band where one float32 step is far below one texel of a
+128-pixel tile; the ECEF-anchored counterfactual is shown numerically to put
+consecutive float32 values half a tile — dozens of texels — apart; and UVs are
+invariant to the file's axis convention, because the projection reads plan-local
+geometry and no anchor is in scope at all. A refactor that merges assets into a
+shared or ECEF frame now fails a test instead of shipping a disintegrated motif.
+
+## B1. One versioned admission policy, declared by the release
+
+The refusal that keeps textures out of public delivery was spelled out
+independently in at least five places: `requiresTextureFreeAssembly` (public
+audience, unconditionally); three points in `exterior-cell-runtime.ts`, which
+derived texture-freeness from the audience with **no policy argument at all**;
+the wave emitters, which hard-failed on any declared texture; and the
+audience-rooted path rule. Five copies of one rule is five places to disagree,
+and — the part that matters — **a seam opened in the validator alone would have
+been worthless**, because the runtime would have gone on refusing on its own
+authority and the refusal would have looked like a bug rather than a policy.
+
+So the policy is declared **once**, on the exterior release root:
+
+```ts
+textureAdmission?: { policy: "texture-free" | "procedural-replay"; generatedTextureFact?: … }
+```
+
+- **The release declares it, never the package.** The assembly manifest has no
+  admission field. A textured package presented to a texture-free release is
+  refused and has no say in it.
+- **Absent, unknown and malformed all mean `texture-free`.** Every committed root
+  predates the field, emits no key, and is byte-unchanged; a release that forgets
+  to declare an admission gets the closed answer.
+- **`requireTextureFreeAssembly` still wins outright.** That flag could only ever
+  ADD enforcement and it still can only add: an intake-linked package stays
+  texture-free whatever a release says.
+- **`procedural-replay` opens exactly one door** — "a public package MAY carry
+  images". Every other rule stays unconditional and keyed off the GLB's own
+  bytes: provenance required whenever an image is present, every image
+  regenerated from named constants and byte-compared, per-image and per-GLB caps,
+  and the 1:1 image/texture/drawn-material shape. All four are test-pinned to
+  keep firing under an admitting release.
+
+`audiencePath` was reviewed and **needs no change**: it is a path-safety rule
+about `public/` versus `private/` roots and is orthogonal to what a GLB contains.
+A publicly admitted textured package writes public-rooted refs like any other.
+
+## B2. The rights boundary: `runtimeTexture` is not the carrier
+
+`runtimeTexture` is a **rights predicate about source-derived texture**: it asks
+whether the evidence a building CITES permits a texture to be derived from it. A
+procedurally rasterized tile cites no evidence record at all — it is a pure
+function of named constants in this repository — so answering that question "yes"
+would assert a permission nobody granted over a fact nobody supplied.
+
+Therefore `runtimeTexture: false` stays intact on every building detail, and
+`validateProjectedGraphAudience` keeps failing closed for any structural
+`runtimeTexture: true`, under every policy — the function takes no admission
+parameter, so no release can open it. What carries a textured admission instead
+is the release-level generated-texture fact, which says only what is true:
+generated in-repo, gated by rasterizer replay, citing **no** evidence basis
+(declared literally `null`, never omitted), and naming the decided sampler filter.
+
+**What this argument does NOT dispose of, stated plainly.** A designed tile drawn
+onto a named, identifiable, selectable building still makes an implicit visual
+assertion: a user looking at the Empire State Building in this application sees a
+surface, and surfaces read as claims whether or not any metadata field says so.
+Nothing in the rights analysis above makes that go away. The containment is not
+that the assertion is absent — it is that **no user-facing claim of facade
+fidelity is made anywhere**: the shipped per-asset uncertainty
+(`DETERMINISTIC_FACADE_V3T_UNCERTAINTY`, and the cited-style variant beside it)
+says the colour, material and detail are designed and derive from no imagery and
+no observation, the details panel shows that text next to the geometry, and ADR
+0033's "What this decision does not claim" says the same in the record. Anyone
+promoting a textured wave inherits the obligation to keep that text visible and
+accurate; if it were ever dropped, the tiles would become an unqualified claim
+about a real building, and the argument in this section would no longer hold.
+
+**`derivative-scope-excludes-texture` on the Empire State Building intake record
+remains correct, untouched, and CONSISTENT with this.** That restriction says a
+measurement-only encyclopaedia fact may not become a texture. The designed tile
+derives nothing whatever from that fact — not its motif, not its module sizes,
+not its tone; the fact selects a designed style class and stops there. Admitting
+the tile therefore does not weaken the restriction, and the two statements are
+not in tension.
+
+## B3. Immutability, and the rollback unit
+
+**No committed release adopts the new policy this cycle.** The seam is inert. The
+promoted V3 waves keep their TEXTURE-FREE approval scope and their
+"runtime textures of any kind, procedural or captured" exclusion, byte for byte,
+and that is asserted literally rather than paraphrased.
+
+Four things are newly tested, and the first is the one that did not exist:
+
+1. **The RUNTIME itself refuses a textured package under a texture-free policy.**
+   Previously only the offline validator was tested; the runtime derived
+   texture-freeness on its own and nothing exercised that derivation against real
+   textured bytes.
+2. A `procedural-replay` release admits a genuine, replayable textured asset end
+   to end, through the same object-URL path the application uses.
+3. Absent policy means texture-free, at the runtime, the validator and the reader.
+4. **Rollback is a release reversion, never a build flag.** The unit is the
+   default-activation record — exactly the V2 to V3 mechanism: exporting the
+   predecessor makes the untextured release the active default AND, through
+   `rolledBackReleaseId`, refuses promotion-era deep links into the withdrawn
+   successor. A "textures off" switch is deliberately absent: it would change
+   what the application draws without changing which checksum-pinned release it
+   claims to be drawing, and the two would then disagree with no record of why.
+
+## B4. Estimate basis v2, and cache residency
+
+Precondition 2 is closed as CODE, not as a regenerated artifact. Basis v2 —
+`structural-gltf-accessor-image-uv-arithmetic-v2` — adds the image term and a
+per-vertex UV term beside v1. **v1 is not edited and the committed dryrun
+artifact is not regenerated**; it still pins
+`gatingBasis: "structural-gltf-accessor-arithmetic-v1"` and its numbers.
+
+Two non-comparability warnings ship with it, because a number without them
+misleads:
+
+- The estimator models the **six-quad grammar**, not V3. V3 carries the sourced
+  polygon vertex for vertex and reaches six figures of triangles on one tower, so
+  a v2 estimate is not a check on a measured V3 or V3T total, in either direction.
+- v1's `vertexAttributeBytes: 32` already assumed POSITION + NORMAL + TEXCOORD_0,
+  while the canonical writer emits POSITION alone untextured and POSITION plus
+  TEXCOORD_0 textured, and never a NORMAL. v2 is therefore not "v1 plus UVs"; it
+  states its attribute set instead of inheriting v1's.
+
+Cache residency (precondition 5) is **derived from v2**, and the ordering is the
+point: no residency figure may be quoted without the v2 estimate it came from,
+just as the GPU-memory figure in A2 may not be quoted without the sampler
+decision in A1. The arithmetic is explicit — a byte-ceilinged cache holds
+`floor(budget / size)` assets and the retained share is the ratio of the two
+counts — and it bounds VERIFIED COMPRESSED GLB BYTES only. Decoded GPU memory is
+a different budget on a different contract.
+
+## B5. Precondition ledger
+
+| # | Precondition | State after T028 |
+| --- | --- | --- |
+| 1 | Public and runtime admission | **Infrastructure closed, admission NOT granted.** The seam exists, is versioned, is declared by the release, and is inert. No committed release adopts it. The rights argument is recorded in B2; a wave that opts in is a separate, reviewable decision. |
+| 2 | Byte estimator has no image term | **Closed** by basis v2 (B4), as new code beside a byte-frozen v1. |
+| 3 | GPU scale | **RE-DEFERRED, named.** ~2.7 GB becomes ~3.6 GB with mipmaps (A2). The shared four-tile atlas remains the named fix and is a runtime architecture change, out of scope here. |
+| 4 | UV origin must stay per-building | **Closed by test** (A3). The one precondition that failed silently now fails a suite. |
+| 5 | Runtime cache residency | **Closed** as arithmetic derived from basis v2 (B4). It is a byte-budget model, not a measured eviction trace on a shipped textured wave — no such wave exists to trace. |
+| 6 | `city-asset-manifest.ts` `maxTextures` | **RE-DEFERRED, with scope note.** It is NOT on the exterior-cell-runtime path: it is consumed by the pilot, landmark and fixture asset resolvers, which no exterior release reaches. The same is true of `block835-public-realm-release.ts`'s `assetBudget.maxTextures`, a public-realm budget on a third contract. Both keep their zero and both must be revisited deliberately by whoever first serves a textured asset through those paths. |
+| 7 | Cesium filtering and aliasing | **Closed** by measured evidence (A1), and now ENFORCED on the bytes: under `procedural-replay` only, `validateProceduralTextureGlb` requires every drawn texture to resolve to a sampler naming the exact `magFilter`/`minFilter` pair the release's generated-texture fact declares (`ASSEMBLY_ISSUE_TEXTURE_SAMPLER_FILTER_REQUIRED`). |
+
+`proceduralTextureProfile` stays **DECLARATIVE ONLY**. The F1 security reasoning
+above stands unchanged and unweakened: a flag that gated admission would be a
+flag a caller could forget to pass. The new `textureAdmission` is not a
+counter-example — it lives on the release rather than on the package, its default
+is closed, and it is checked in addition to every unconditional byte rule rather
+than in place of any of them.

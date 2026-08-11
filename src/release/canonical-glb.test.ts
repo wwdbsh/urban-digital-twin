@@ -3,9 +3,11 @@
  * input must still produce the exact bytes the quad-only writer produced, or
  * every committed package (V1, V2, Midtown) silently drifts.
  */
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { sha256HexBytes } from "../domain/deterministic-hash.ts";
-import { writeCanonicalGlb, type CanonicalGlbMaterial, type CanonicalGlbQuad, type CanonicalGlbTri } from "./canonical-glb.ts";
+import { GLB_SAMPLER_FILTER_TRILINEAR, writeCanonicalGlb, type CanonicalGlbMaterial, type CanonicalGlbQuad, type CanonicalGlbTri } from "./canonical-glb.ts";
+import { PROCEDURAL_TEXTURE_SAMPLER_FILTER } from "./procedural-texture.ts";
 
 const MATERIALS: readonly CanonicalGlbMaterial[] = [
   { baseColorFactor: [0.73, 0.48, 0.38, 1], metallicFactor: 0, roughnessFactor: 0.76 },
@@ -96,5 +98,62 @@ describe("the writer still fails closed", () => {
 
   it("refuses a non-finite triangle coordinate", () => {
     expect(() => writeCanonicalGlb({ quads: [], triangles: [{ materialIndex: 0, a: [0, 0, 0], b: [Number.NaN, 0, 0], c: [0, 1, 0] }], materials: MATERIALS, metadata: {} })).toThrow(/non-finite coordinate/u);
+  });
+});
+
+/**
+ * The optional sampler filter (T028).
+ *
+ * The whole point of the field being optional is that adding it cannot move a
+ * committed byte. These tests pin both halves: absent behaves exactly as before,
+ * and present writes exactly the two keys and nothing else.
+ */
+describe("the optional sampler filter", () => {
+  const IMAGE_BYTES = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3, 4]);
+  const texturedQuad: CanonicalGlbQuad = {
+    materialIndex: 0,
+    corners: [[0, 0, 0], [2, 0, 0], [2, 2, 0], [0, 2, 0]],
+    uv: [[0, 0], [1, 0], [1, 1], [0, 1]],
+  };
+  const textureSetWithout = { images: [{ mimeType: "image/png" as const, bytes: IMAGE_BYTES }], materialImage: [0, null, null] };
+
+  it("leaves the untextured writer byte-identical, which is the frozen claim", () => {
+    const written = writeCanonicalGlb({ quads: [...QUAD_ONLY_FIXTURE], materials: MATERIALS, metadata: QUAD_ONLY_METADATA });
+    expect(sha256(written.bytes)).toBe(QUAD_ONLY_PRE_TRIANGLE_SHA256);
+    expect(written.bytes.byteLength).toBe(QUAD_ONLY_PRE_TRIANGLE_BYTE_LENGTH);
+    expect(glbJson(written.bytes).samplers).toBeUndefined();
+  });
+
+  it("emits wrap modes only when no filter is decided", () => {
+    const written = writeCanonicalGlb({ quads: [texturedQuad], materials: MATERIALS, metadata: {}, textures: textureSetWithout });
+    expect(glbJson(written.bytes).samplers).toStrictEqual([{ wrapS: 10497, wrapT: 10497 }]);
+  });
+
+  it("names both filters when one is decided, and changes nothing else", () => {
+    const without = writeCanonicalGlb({ quads: [texturedQuad], materials: MATERIALS, metadata: {}, textures: textureSetWithout });
+    const withFilter = writeCanonicalGlb({ quads: [texturedQuad], materials: MATERIALS, metadata: {}, textures: { ...textureSetWithout, filter: GLB_SAMPLER_FILTER_TRILINEAR } });
+    expect(glbJson(withFilter.bytes).samplers).toStrictEqual([{ magFilter: 9729, minFilter: 9987, wrapS: 10497, wrapT: 10497 }]);
+    expect(withFilter.counts).toStrictEqual(without.counts);
+    const strip = (json: Record<string, unknown>): Record<string, unknown> => { const copy = { ...json }; delete copy.samplers; return copy; };
+    expect(strip(glbJson(withFilter.bytes))).toStrictEqual(strip(glbJson(without.bytes)));
+  });
+
+  it("refuses a filter outside the closed glTF filter sets", () => {
+    expect(() => writeCanonicalGlb({ quads: [texturedQuad], materials: MATERIALS, metadata: {}, textures: { ...textureSetWithout, filter: { magFilter: 9987, minFilter: 9987 } } })).toThrow(/closed glTF filter sets/u);
+    expect(() => writeCanonicalGlb({ quads: [texturedQuad], materials: MATERIALS, metadata: {}, textures: { ...textureSetWithout, filter: { magFilter: 9729, minFilter: 1234 } } })).toThrow(/closed glTF filter sets/u);
+  });
+
+  it("pins the decided filter to the committed Cesium evidence", () => {
+    expect(GLB_SAMPLER_FILTER_TRILINEAR).toStrictEqual({ magFilter: 9729, minFilter: 9987 });
+    expect(PROCEDURAL_TEXTURE_SAMPLER_FILTER).toStrictEqual(GLB_SAMPLER_FILTER_TRILINEAR);
+    const evidence = JSON.parse(new TextDecoder().decode(readFileSync("data/manhattan-esb-block-reference-20260811-v3t/cesium-sampler-evidence.json"))) as {
+      verdict: { decision: string; samplerFilter: { magFilter: number; minFilter: number } };
+      captures: Array<{ file: string }>;
+      stations: Array<{ stationId: string }>;
+    };
+    expect(evidence.verdict.decision).toBe("adopt-trilinear");
+    expect(evidence.verdict.samplerFilter).toStrictEqual({ ...PROCEDURAL_TEXTURE_SAMPLER_FILTER });
+    // Both variants at every station, or the comparison proves nothing.
+    expect(evidence.captures).toHaveLength(evidence.stations.length * 2);
   });
 });

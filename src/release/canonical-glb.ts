@@ -65,16 +65,49 @@ export interface CanonicalGlbImage {
 }
 
 /**
+ * Explicit sampler filtering for the embedded detail tiles.
+ *
+ * glTF makes `minFilter`/`magFilter` OPTIONAL, and an absent pair means "the
+ * renderer picks". That is not a neutral default: a detail tile repeated tens or
+ * hundreds of times across one facade is exactly the regime where an
+ * unmipmapped, nearest-neighbour or renderer-chosen filter produces moire, and
+ * "whatever the renderer picks" is not a property shipped bytes can be validated
+ * against. Naming the pair makes the filtering a decided, reviewable property of
+ * the artifact rather than a per-renderer accident.
+ *
+ * The closed glTF profile in `multi-lod-assembly.ts` has always validated both
+ * fields against closed value sets, so nothing about the wire format changes.
+ */
+export interface CanonicalGlbSamplerFilter {
+  /** One of the glTF magnification filters: NEAREST (9728) or LINEAR (9729). */
+  magFilter: number;
+  /** One of the six glTF minification filters, including the four mipmapped ones. */
+  minFilter: number;
+}
+
+/** LINEAR magnification with trilinear (LINEAR_MIPMAP_LINEAR) minification. */
+export const GLB_SAMPLER_FILTER_TRILINEAR: CanonicalGlbSamplerFilter = { magFilter: 9729, minFilter: 9987 };
+
+const GLB_MAG_FILTERS = new Set([9728, 9729]);
+const GLB_MIN_FILTERS = new Set([9728, 9729, 9984, 9985, 9986, 9987]);
+
+/**
  * The optional texture set for one GLB.
  *
  * `materialImage` is parallel to `materials`: an entry names the image that
  * material samples through `baseColorTexture`, or `null` for an untextured
  * material. Images no used material references are dropped rather than embedded,
  * so an unreferenced image can never ride along in the bytes.
+ *
+ * `filter` is OPTIONAL and absent by default, which reproduces the wrap-only
+ * sampler this writer emitted before the field existed. Every committed textured
+ * artifact is pinned against that shape, so adding the field cannot move a
+ * frozen byte; a package that wants decided filtering opts in explicitly.
  */
 export interface CanonicalGlbTextureSet {
   images: readonly CanonicalGlbImage[];
   materialImage: readonly (number | null)[];
+  filter?: CanonicalGlbSamplerFilter;
 }
 
 const GLB_MAGIC = 0x46546c67;
@@ -127,6 +160,9 @@ export function writeCanonicalGlb(options: {
     for (const slot of textureSet.materialImage) {
       if (slot === null) continue;
       if (!Number.isSafeInteger(slot) || slot < 0 || slot >= textureSet.images.length) throw new Error("Canonical GLB material cites an undeclared image.");
+    }
+    if (textureSet.filter !== undefined && (!GLB_MAG_FILTERS.has(textureSet.filter.magFilter) || !GLB_MIN_FILTERS.has(textureSet.filter.minFilter))) {
+      throw new Error("Canonical GLB sampler filter is outside the closed glTF filter sets.");
     }
   }
   interface Bucket { quads: CanonicalGlbQuad[]; triangles: CanonicalGlbTri[] }
@@ -282,7 +318,9 @@ export function writeCanonicalGlb(options: {
     // is byte-for-byte what it was before this branch existed.
     ...(imageViewIndexes.length === 0 ? {} : {
       images: imageViewIndexes.map((bufferView) => ({ bufferView, mimeType: "image/png" })),
-      samplers: [{ wrapS: WRAP_REPEAT, wrapT: WRAP_REPEAT }],
+      // Filter keys are emitted only when the caller decided them, so the
+      // wrap-only sampler an existing textured package ships is unchanged.
+      samplers: [{ ...(textureSet?.filter ? { magFilter: textureSet.filter.magFilter, minFilter: textureSet.filter.minFilter } : {}), wrapS: WRAP_REPEAT, wrapT: WRAP_REPEAT }],
       textures: imageViewIndexes.map((_, source) => ({ sampler: 0, source })),
     }),
     nodes: [{ mesh: 0 }],

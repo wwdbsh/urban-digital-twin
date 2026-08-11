@@ -11,13 +11,19 @@ import { stableSerialize } from "./catalog-release";
 import type { ExteriorOwnershipCell, ExteriorOwnershipLedger } from "./exterior-release";
 import {
   EXTERIOR_FULLSNAPSHOT_BYTE_MODEL,
+  EXTERIOR_FULLSNAPSHOT_ESTIMATE_BASIS_V1,
+  EXTERIOR_FULLSNAPSHOT_ESTIMATE_BASIS_V2,
   EXTERIOR_FULLSNAPSHOT_LOD_PROFILE,
   EXTERIOR_FULLSNAPSHOT_PILOT_CROSS_CHECK,
   EXTERIOR_FULLSNAPSHOT_RECONCILIATION_CODES,
+  EXTERIOR_FULLSNAPSHOT_TEXTURE_BYTE_MODEL,
+  FULLSNAPSHOT_TEXTURED_PLAN_REQUIRES_V2,
   buildFullSnapshotBudgetTable,
   buildFullSnapshotPackagePlan,
   estimateFullSnapshotAssetBytes,
   estimateFullSnapshotBuildingBytes,
+  estimateFullSnapshotCacheResidency,
+  estimateFullSnapshotTexturedAssetBytes,
   fullSnapshotLodShapes,
   reconcileFullSnapshotGeneration,
   simulateFullSnapshotCache,
@@ -63,14 +69,18 @@ function plannedMap(entries: Array<[string, number]>) {
   return new Map(entries.map(([buildingId, placementCount]) => [buildingId, { buildingId, placementCount }]));
 }
 
-function samplePlan(): FullSnapshotPackagePlan {
-  return buildFullSnapshotPackagePlan({
+function planInput() {
+  return {
     ledger: SAMPLE_LEDGER,
     ledgerChecksumSha256: LEDGER_CHECKSUM,
     baseReleaseId: "manhattan-citywide-20260804",
     baseManifestChecksumSha256: "d".repeat(64),
     planned: plannedMap([["doitt:1", 39], ["doitt:2", 100], ["doitt:3", 12]]),
-  });
+  };
+}
+
+function samplePlan(): FullSnapshotPackagePlan {
+  return buildFullSnapshotPackagePlan(planInput());
 }
 
 describe("full-snapshot structural byte estimator", () => {
@@ -397,5 +407,88 @@ describe("committed T012 dry-run evidence", () => {
     expect(evidence.summary.ledgerChecksumSha256).toBe(exteriorArtifactChecksum(committedLedger));
     expect(evidence.summary.baseManifestChecksumSha256).toBe(EXTERIOR_FULLSNAPSHOT_BASE_MANIFEST_SHA256);
     expect(evidence.summary.generatedAt).toBe(EXTERIOR_FULLSNAPSHOT_GENERATED_AT);
+  });
+});
+
+/**
+ * Estimate basis v2 (T028): the image and UV terms ADR 0032 precondition 2
+ * said were missing.
+ *
+ * The first thing these assert is what v2 must NOT do: move v1. The committed
+ * dryrun artifact pins the v1 basis string and its numbers, and a "v2 that
+ * happens to also change v1" would silently invalidate committed evidence.
+ */
+describe("full-snapshot byte estimate, basis v2", () => {
+  const SHAPE = fullSnapshotLodShapes(12)["lod-0"];
+
+  it("leaves basis v1 and its identifier untouched", () => {
+    expect(EXTERIOR_FULLSNAPSHOT_ESTIMATE_BASIS_V2).not.toBe("structural-gltf-accessor-arithmetic-v1");
+    // v1's arithmetic is unchanged by v2's existence, which is what keeps the
+    // committed dryrun artifact valid.
+    expect(estimateFullSnapshotAssetBytes(SHAPE)).toBe(estimateFullSnapshotAssetBytes({ ...SHAPE }));
+    expect(EXTERIOR_FULLSNAPSHOT_BYTE_MODEL.vertexAttributeBytes).toBe(32);
+  });
+
+  it("charges for embedded tiles and for the UVs that read them", () => {
+    const untextured = estimateFullSnapshotTexturedAssetBytes({ ...SHAPE, textureCount: 0, texturedPrimitiveCount: 0 });
+    const textured = estimateFullSnapshotTexturedAssetBytes({ ...SHAPE, textureCount: 3, texturedPrimitiveCount: 4 });
+    expect(textured).toBeGreaterThan(untextured);
+    const delta = textured - untextured;
+    const imageShare = 3 * EXTERIOR_FULLSNAPSHOT_TEXTURE_BYTE_MODEL.imageBytes;
+    expect(delta).toBeGreaterThan(imageShare);
+    // The image term alone must not explain the delta: ADR 0032 measured UVs at
+    // the MAJORITY of the real cost, and an estimator that misses that is the
+    // exact failure precondition 2 named.
+    expect(delta - imageShare).toBeGreaterThan(0);
+  });
+
+  it("scales the UV term with vertices and not with tile count", () => {
+    const small = estimateFullSnapshotTexturedAssetBytes({ ...fullSnapshotLodShapes(4)["lod-0"], textureCount: 1, texturedPrimitiveCount: 6 });
+    const large = estimateFullSnapshotTexturedAssetBytes({ ...fullSnapshotLodShapes(4_000)["lod-0"], textureCount: 1, texturedPrimitiveCount: 6 });
+    const oneTile = estimateFullSnapshotTexturedAssetBytes({ ...SHAPE, textureCount: 1, texturedPrimitiveCount: 6 });
+    const threeTiles = estimateFullSnapshotTexturedAssetBytes({ ...SHAPE, textureCount: 3, texturedPrimitiveCount: 6 });
+    // Two more tiles cost about two more tiles.
+    expect(threeTiles - oneTile).toBeLessThan(3 * EXTERIOR_FULLSNAPSHOT_TEXTURE_BYTE_MODEL.imageBytes);
+    // A thousand times the geometry costs far more than the whole tile catalogue.
+    expect(large - small).toBeGreaterThan(10 * EXTERIOR_FULLSNAPSHOT_TEXTURE_BYTE_MODEL.imageBytes);
+  });
+
+  it("defaults the package plan to v1 and refuses a textured plan under it", () => {
+    // Default = v1, byte-for-byte with the frozen dryrun artifact.
+    const plan = samplePlan();
+    expect(plan.estimateBasis).toBe(EXTERIOR_FULLSNAPSHOT_ESTIMATE_BASIS_V1);
+    expect(plan.estimateBasis).toBe("structural-gltf-accessor-arithmetic-v1");
+    expect(buildFullSnapshotPackagePlan({ ...planInput(), estimateBasis: EXTERIOR_FULLSNAPSHOT_ESTIMATE_BASIS_V1 })).toStrictEqual(plan);
+    // Asking for image and UV terms under v1 is refused, not silently ignored:
+    // silently ignoring is exactly the under-report ADR 0032 warned about.
+    expect(() => buildFullSnapshotPackagePlan({ ...planInput(), texture: { "lod-0": { textureCount: 3, texturedPrimitiveCount: 4 }, "lod-1": { textureCount: 0, texturedPrimitiveCount: 0 } } }))
+      .toThrow(FULLSNAPSHOT_TEXTURED_PLAN_REQUIRES_V2);
+    const v2 = buildFullSnapshotPackagePlan({
+      ...planInput(),
+      estimateBasis: EXTERIOR_FULLSNAPSHOT_ESTIMATE_BASIS_V2,
+      texture: { "lod-0": { textureCount: 3, texturedPrimitiveCount: 4 }, "lod-1": { textureCount: 0, texturedPrimitiveCount: 0 } },
+    });
+    expect(v2.estimateBasis).toBe(EXTERIOR_FULLSNAPSHOT_ESTIMATE_BASIS_V2);
+    expect(v2.estimatedTotalBytes).toBeGreaterThan(plan.estimatedTotalBytes);
+  });
+
+  it("refuses shapes that describe an artifact the writer would never emit", () => {
+    expect(() => estimateFullSnapshotTexturedAssetBytes({ ...SHAPE, textureCount: 1, texturedPrimitiveCount: 0 })).toThrow(/nothing draws/u);
+    expect(() => estimateFullSnapshotTexturedAssetBytes({ ...SHAPE, textureCount: -1, texturedPrimitiveCount: 1 })).toThrow(/non-negative/u);
+    expect(() => estimateFullSnapshotTexturedAssetBytes({ ...SHAPE, textureCount: 1, texturedPrimitiveCount: SHAPE.materialCount + 1 })).toThrow(/cannot exceed/u);
+  });
+
+  it("derives cache residency from v2 rather than from a rule of thumb", () => {
+    const untexturedAssetBytes = estimateFullSnapshotTexturedAssetBytes({ ...SHAPE, textureCount: 0, texturedPrimitiveCount: 0 });
+    const texturedAssetBytes = estimateFullSnapshotTexturedAssetBytes({ ...SHAPE, textureCount: 3, texturedPrimitiveCount: 4 });
+    const residency = estimateFullSnapshotCacheResidency({ cacheBytes: 256 * 1024 * 1024, texturedAssetBytes, untexturedAssetBytes });
+    expect(residency.basis).toBe(EXTERIOR_FULLSNAPSHOT_ESTIMATE_BASIS_V2);
+    expect(residency.residentAssets).toBeLessThan(residency.untexturedResidentAssets);
+    expect(residency.retainedPartsPerMillion).toBeLessThan(1_000_000);
+    expect(residency.retainedPartsPerMillion).toBeGreaterThan(0);
+    // The ordering ADR 0032's amendment records: residency is DERIVED from the
+    // v2 estimate, so it cannot be quoted without one.
+    expect(residency.perAssetBytes).toBe(texturedAssetBytes);
+    expect(() => estimateFullSnapshotCacheResidency({ cacheBytes: 0, texturedAssetBytes, untexturedAssetBytes })).toThrow(/positive/u);
   });
 });

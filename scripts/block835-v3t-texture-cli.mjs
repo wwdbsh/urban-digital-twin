@@ -26,6 +26,7 @@ import {
   decidePackageTarget,
   readPilotBuildings,
 } from "../src/release/block835-reference-package.ts";
+import { GLB_SAMPLER_FILTER_TRILINEAR } from "../src/release/canonical-glb.ts";
 import {
   BLOCK835_V3T_PROFILE,
   BLOCK835_V3_GENERATED_AT,
@@ -104,13 +105,37 @@ async function loadPredecessorPins() {
   return v3PredecessorPins(manifest, BLOCK835_V3_PACKAGE_ID);
 }
 
-async function assemble(measurementPath) {
+/**
+ * Sampler-filter variants for the shipping-renderer aliasing evidence.
+ *
+ * `renderer-default` is the committed shape: the writer emits wrap modes only
+ * and mip selection is left to whatever renderer opens the file. `trilinear`
+ * names LINEAR magnification with LINEAR_MIPMAP_LINEAR minification. Building
+ * both from the same plans is what makes the two captures attributable to the
+ * sampler and to nothing else.
+ *
+ * The DEFAULT is `renderer-default`, so every other command in this CLI — census,
+ * replay, determinism — keeps producing the exact bytes the committed census
+ * pins.
+ */
+const SAMPLER_FILTER_VARIANTS = {
+  "renderer-default": undefined,
+  trilinear: GLB_SAMPLER_FILTER_TRILINEAR,
+};
+
+function samplerFilterFor(name) {
+  if (name === undefined) return undefined;
+  if (!Object.hasOwn(SAMPLER_FILTER_VARIANTS, name)) fail(`Unknown --sampler-filter ${name}. Known variants: ${Object.keys(SAMPLER_FILTER_VARIANTS).join(", ")}.`);
+  return SAMPLER_FILTER_VARIANTS[name];
+}
+
+async function assemble(measurementPath, samplerFilter) {
   const { release, releaseChecksumSha256 } = await loadPilot();
   return assembleBlock835V3Package({
     release, releaseChecksumSha256,
     measurements: await loadMeasurements(measurementPath),
     predecessor: await loadPredecessorPins(),
-    profile: BLOCK835_V3T_PROFILE,
+    profile: samplerFilter ? { ...BLOCK835_V3T_PROFILE, textureFilter: samplerFilter } : BLOCK835_V3T_PROFILE,
   });
 }
 
@@ -124,9 +149,9 @@ async function assertWritableTarget(targetDir) {
   if (!decision.allowed) fail(decision.reason);
 }
 
-async function writePackage(targetDir, measurementPath) {
+async function writePackage(targetDir, measurementPath, samplerFilter) {
   await assertWritableTarget(targetDir);
-  const assembled = await assemble(measurementPath);
+  const assembled = await assemble(measurementPath, samplerFilter);
   await rm(targetDir, { recursive: true, force: true });
   await mkdir(join(targetDir, "private", "assets"), { recursive: true });
   await mkdir(join(targetDir, "private", "tiles"), { recursive: true });
@@ -200,10 +225,12 @@ async function authoringInputs(targetDir, measurementPath) {
   console.log(JSON.stringify({ ok: true, command: "authoring", buildings: index.length, dir: targetDir }, null, 2));
 }
 
-async function build(target, measurementPath) {
-  const assembled = await writePackage(target, measurementPath);
+async function build(target, measurementPath, samplerFilterName) {
+  const samplerFilter = samplerFilterFor(samplerFilterName);
+  const assembled = await writePackage(target, measurementPath, samplerFilter);
   console.log(JSON.stringify({
     ok: true, command: "build", packageId: assembled.manifest.packageId, dir: target,
+    samplerFilter: samplerFilterName ?? "renderer-default",
     assets: assembled.manifest.assets.length, artifacts: assembled.manifest.artifacts.length,
     declaredTotalBytes: assembled.manifest.declaredTotalBytes,
     fingerprintSha256: multiLodAssemblyFingerprint(assembled.manifest),
@@ -392,12 +419,12 @@ async function main() {
   switch (command) {
     case "tiles": return tiles(resolve(parsed.out ?? join(EVIDENCE_ROOT, "tiles")));
     case "authoring": return authoringInputs(resolve(parsed.out ?? join(EVIDENCE_ROOT, "inputs")), measurements);
-    case "build": return build(parsed.out ? resolve(parsed.out) : PACKAGE_DIR, measurements);
+    case "build": return build(parsed.out ? resolve(parsed.out) : PACKAGE_DIR, measurements, parsed["sampler-filter"]);
     case "census": return census(measurements);
     case "replay": return replay(measurements);
     case "determinism": return determinism(resolve(parsed.scratch ?? join(ROOT, "artifacts", "block835-v3t-determinism")), measurements);
     case "evidence": return promoteEvidenceInventory(resolve(parsed.evidence ?? join(EVIDENCE_ROOT, "evidence-inventory.json")));
-    default: return fail(`Usage: block835-v3t-texture-cli.mjs <tiles|authoring|build|census|replay|determinism|evidence> [--out DIR] [--scratch DIR] [--measurements FILE] [--evidence FILE]. Known classes: ${PROCEDURAL_TEXTURE_CLASSES.join(", ")}`);
+    default: return fail(`Usage: block835-v3t-texture-cli.mjs <tiles|authoring|build|census|replay|determinism|evidence> [--out DIR] [--scratch DIR] [--measurements FILE] [--evidence FILE] [--sampler-filter renderer-default|trilinear]. Known classes: ${PROCEDURAL_TEXTURE_CLASSES.join(", ")}`);
   }
 }
 
