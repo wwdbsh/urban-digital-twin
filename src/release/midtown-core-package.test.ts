@@ -154,10 +154,35 @@ describe("midtown-core derived-subset ownership ledger", () => {
     };
     expect(() => buildMidtownCoreSubsetLedger({
       parentLedger: truncated as never,
-      parentLedgerChecksumSha256,
+      // The truncated ledger is paired with its OWN checksum, so this exercises
+      // the wave-shape guard rather than the attestation guard below.
+      parentLedgerChecksumSha256: midtownCoreArtifactChecksum(truncated),
       baseReleaseId: EXTERIOR_FULLSNAPSHOT_BASE_RELEASE_ID,
       baseManifestChecksumSha256: EXTERIOR_FULLSNAPSHOT_BASE_MANIFEST_SHA256,
     })).toThrow(/holds 148 cells/u);
+  });
+
+  /**
+   * The subset inherits cell ids, bounds, and membership verbatim from a parent
+   * the committed `ledger.sha256` attests to. That inheritance is only worth
+   * anything if the supplied ledger really is the attested one, so the pairing
+   * is recomputed inside the builder rather than trusted from the caller.
+   */
+  it("recomputes the parent ledger checksum instead of trusting the caller", () => {
+    const mutated = {
+      ...(parentLedger as object),
+      cells: (parentLedger as { cells: unknown[] }).cells.filter((cell) => !(cell as { cellId: string }).cellId.includes("-w01-000149-")),
+    };
+    expect(() => buildMidtownCoreSubsetLedger({
+      parentLedger: mutated as never,
+      // The attested checksum of the untruncated ledger, paired with bytes it
+      // does not describe: exactly the substitution the guard exists for.
+      parentLedgerChecksumSha256,
+      baseReleaseId: EXTERIOR_FULLSNAPSHOT_BASE_RELEASE_ID,
+      baseManifestChecksumSha256: EXTERIOR_FULLSNAPSHOT_BASE_MANIFEST_SHA256,
+    })).toThrow(/does not describe the supplied parent ledger/u);
+    // The attested pairing still builds.
+    expect(build().ledger.cells).toHaveLength(MIDTOWN_CORE_CELL_COUNT);
   });
 
   it("keeps the subset ledger small enough to ship inside a release graph", () => {

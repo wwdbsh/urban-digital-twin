@@ -78,6 +78,16 @@ const ROOFTOP_CLEARANCE_MM = 2_000;
 /** Smallest crown that can host a minimum-radius tank under that rule. */
 const MINIMUM_CROWN_MM = ROOFTOP_CLEARANCE_MM + 3;
 
+/**
+ * The two added small-footprint clamps, exported so the offline pipeline can
+ * fingerprint them: editing either changes every plan and every emitted GLB, so
+ * a stage receipt taken before the edit must not be reusable after it.
+ */
+export const MIDTOWN_CORE_PARAMETER_CLAMPS = {
+  rooftopClearanceMm: ROOFTOP_CLEARANCE_MM,
+  minimumCrownMm: MINIMUM_CROWN_MM,
+} as const;
+
 function clamp(value: number, minimum: number, maximum: number): number {
   return Math.min(maximum, Math.max(minimum, value));
 }

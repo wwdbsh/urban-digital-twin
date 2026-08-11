@@ -208,6 +208,19 @@ export function deriveMidtownCoreLedgerId(input: {
  */
 export function buildMidtownCoreSubsetLedger(input: MidtownCoreSubsetInput): MidtownCoreSubset {
   const parent = input.parentLedger;
+  // The whole validation boundary of this module rests on the *pairing* of the
+  // supplied ledger with the supplied checksum: the subset inherits its cell
+  // ids, bounds, and membership verbatim from a parent that its own committed
+  // artifact (`ledger.sha256`) attests to. A caller-supplied checksum that does
+  // not describe the supplied bytes would let an unattested partition through
+  // and would propagate into the derived ledger id and the derivation record,
+  // so it is recomputed here rather than trusted. `midtownCoreArtifactChecksum`
+  // is the serialization the committed `ledger.sha256` records, so this is the
+  // same value the wave-ledger emitter published.
+  const recomputedParentChecksum = midtownCoreArtifactChecksum(parent);
+  if (recomputedParentChecksum !== input.parentLedgerChecksumSha256) {
+    throw new Error(`Parent ledger checksum ${input.parentLedgerChecksumSha256} does not describe the supplied parent ledger (recomputed ${recomputedParentChecksum}).`);
+  }
   const wave = EXTERIOR_WAVE_PLAN[MIDTOWN_CORE_WAVE_INDEX];
   if (!wave || wave.waveId !== MIDTOWN_CORE_WAVE_ID) {
     throw new Error(`Wave index ${MIDTOWN_CORE_WAVE_INDEX} is not ${MIDTOWN_CORE_WAVE_ID} in the declared wave plan.`);

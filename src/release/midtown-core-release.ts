@@ -283,6 +283,65 @@ interface SourceRights {
 }
 
 /**
+ * The exact clauses the 2026-08-11 broadening added to the
+ * `nyc.building-footprints` derivative policy. Each shipped right is derived
+ * from the presence of its own clause, so a right this release asserts is a
+ * restatement of the registry's text, never a literal written here.
+ */
+export const MIDTOWN_CORE_CONVEYANCE_CLAUSES = {
+  publicDisplay: "may be publicly displayed",
+  derivativeConveyance: "conveyed as a derivative",
+  redistribution: "and redistributed",
+} as const;
+
+/**
+ * `sha256HexSync(stableSerialize(entry.derivativePolicy))` of the pinned
+ * generated-geometry conveyance policy. ADR 0027 Decision 6 makes that
+ * broadening independently revertible, so the clause checks above are backed by
+ * an exact-text pin: any edit to the policy — a revert to `openDerivative`, a
+ * narrowing, or a rewording — fails this builder closed instead of leaving 160
+ * evidence shards asserting rights the registry no longer grants.
+ */
+export const MIDTOWN_CORE_DERIVATIVE_POLICY_SHA256 = "3d3e4a802a48d4e6fa595acc73278ff5b9e46fdb00cd8b0d87061918eb2482a6" as const;
+
+export interface MidtownCoreConveyanceRights {
+  publicDisplay: boolean;
+  derivativeConveyance: boolean;
+  redistribution: boolean;
+}
+
+/**
+ * Derives the conveyance rights this release may assert from the registry's own
+ * derivative policy, and fails closed when it no longer grants them.
+ *
+ * Exported so the fail-closed path can be exercised against a mutated registry
+ * entry without mocking the registry module.
+ */
+export function midtownCoreConveyanceRights(entry: {
+  id: string;
+  derivativePolicy: { allowed: string; constraints: string };
+}): MidtownCoreConveyanceRights {
+  const policy = entry.derivativePolicy;
+  if (policy.allowed !== "yes" && policy.allowed !== "conditional") {
+    fail(`source registry entry ${entry.id} declares derivative use ${policy.allowed}; no exterior geometry may be conveyed under it.`);
+  }
+  const granted: MidtownCoreConveyanceRights = {
+    publicDisplay: policy.constraints.includes(MIDTOWN_CORE_CONVEYANCE_CLAUSES.publicDisplay),
+    derivativeConveyance: policy.constraints.includes(MIDTOWN_CORE_CONVEYANCE_CLAUSES.derivativeConveyance),
+    redistribution: policy.constraints.includes(MIDTOWN_CORE_CONVEYANCE_CLAUSES.redistribution),
+  };
+  const missing = (Object.keys(granted) as (keyof MidtownCoreConveyanceRights)[]).filter((right) => !granted[right]);
+  if (missing.length > 0) {
+    fail(`source registry entry ${entry.id} no longer grants ${missing.join(", ")} for exterior geometry generated from it; this release cannot assert those rights.`);
+  }
+  const fingerprint = sha256HexSync(stableSerialize(policy));
+  if (fingerprint !== MIDTOWN_CORE_DERIVATIVE_POLICY_SHA256) {
+    fail(`source registry entry ${entry.id} derivative policy text changed (fingerprint ${fingerprint}, expected ${MIDTOWN_CORE_DERIVATIVE_POLICY_SHA256}); conveyance rights must be re-reviewed rather than inherited.`);
+  }
+  return granted;
+}
+
+/**
  * License and per-building source evidence, read from the approved
  * `nyc.building-footprints` registry entry rather than restated here.
  *
@@ -302,6 +361,9 @@ function sourceRights(): SourceRights {
   if (entry.datasetId !== "jh45-qr5r") fail(`source registry entry ${entry.id} no longer names dataset jh45-qr5r.`);
   if (entry.approval.state !== "approved") fail(`source registry entry ${entry.id} is not approved.`);
   if (entry.retention.maximumDays !== null) fail(`source registry entry ${entry.id} declares a retention expiry this release cannot carry.`);
+  // Public-audience rights are read out of the registry's derivative policy, not
+  // written here; a reverted broadening fails the release closed.
+  const conveyance = midtownCoreConveyanceRights(entry);
 
   const license: ExteriorLicenseEvidence = {
     id: MIDTOWN_CORE_LICENSE_ID,
@@ -310,9 +372,11 @@ function sourceRights(): SourceRights {
     retention: { mode: "conditional", expiresAt: null, conditions: entry.retention.constraints },
     allowedUse: {
       privateDerivative: true,
-      publicDisplay: true,
-      derivativeConveyance: true,
-      redistribution: true,
+      publicDisplay: conveyance.publicDisplay,
+      derivativeConveyance: conveyance.derivativeConveyance,
+      redistribution: conveyance.redistribution,
+      // No shipped asset carries imagery and nothing here is a training or
+      // validation-only input; these stay closed regardless of the policy text.
       runtimeTexture: false,
       trainingInput: false,
       generationInput: true,

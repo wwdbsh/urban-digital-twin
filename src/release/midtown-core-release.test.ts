@@ -2,15 +2,18 @@ import { existsSync, readFileSync } from "node:fs";
 
 import { describe, expect, it } from "vitest";
 
-import { sha256HexBytes } from "../domain/deterministic-hash.ts";
+import { sha256HexBytes, sha256HexSync, stableSerialize } from "../domain/deterministic-hash.ts";
+import { getSourceRegistryEntry } from "../data/source-registry.ts";
 import { EXTERIOR_FULLSNAPSHOT_BASE_MANIFEST_SHA256, EXTERIOR_FULLSNAPSHOT_BASE_RELEASE_ID } from "../domain/exterior-fullsnapshot-input.ts";
 import { validateExteriorReleaseGraph } from "./exterior-release.ts";
 import { validateMultiLodAssembly } from "./multi-lod-assembly.ts";
 import { buildMidtownCoreSubsetLedger, midtownCoreArtifactChecksum } from "./midtown-core-package.ts";
-import { collectMidtownCoreSources, materializeMidtownCoreCells } from "./midtown-core-source.ts";
+import { MIDTOWN_CORE_PARAMETER_CLAMPS } from "./midtown-core-materialization.ts";
+import { collectMidtownCoreSources, materializeMidtownCoreCells, midtownCoreStageFingerprint } from "./midtown-core-source.ts";
 import {
   MIDTOWN_CORE_APPROVAL,
   MIDTOWN_CORE_DEFERRED_REASON,
+  MIDTOWN_CORE_DERIVATIVE_POLICY_SHA256,
   MIDTOWN_CORE_OUTPUT_DIRECTORY,
   MIDTOWN_CORE_PRIVATE_ROOT_ID,
   MIDTOWN_CORE_PUBLIC_ROOT_ID,
@@ -18,6 +21,7 @@ import {
   buildMidtownCoreRelease,
   midtownCoreApprovalFingerprint,
   midtownCoreCellReleaseId,
+  midtownCoreConveyanceRights,
 } from "./midtown-core-release.ts";
 
 const SNAPSHOT_ROOT = "public/data/manhattan-citywide-20260804";
@@ -192,6 +196,88 @@ describe("midtown-core canary release graph", () => {
       expect(sha256HexBytes(again.shipped.assetBytes.get(ref)!)).toBe(sha256HexBytes(bytes));
     }
   }, 30_000);
+});
+
+describe("midtown-core conveyance rights", () => {
+  const entry = getSourceRegistryEntry("nyc.building-footprints")!;
+
+  it("derives public rights from the registry's own derivative policy", () => {
+    expect(midtownCoreConveyanceRights(entry)).toEqual({ publicDisplay: true, derivativeConveyance: true, redistribution: true });
+    const license = built.release.graph.evidenceShards[0]!.graph.licenses[0]!;
+    expect(license.allowedUse).toMatchObject({ publicDisplay: true, derivativeConveyance: true, redistribution: true });
+    // Nothing here is imagery, a training input, or validation-only.
+    expect(license.allowedUse).toMatchObject({ runtimeTexture: false, trainingInput: false, validationOnly: false });
+  });
+
+  /**
+   * ADR 0027 Decision 6 makes the 2026-08-11 jh45-qr5r broadening independently
+   * revertible. A revert must not leave 160 evidence shards asserting rights the
+   * registry no longer grants, so the builder fails closed on the reverted
+   * policy rather than restating hard-coded literals.
+   */
+  it("fails closed when the broadening is reverted to the narrow derivative policy", () => {
+    const reverted = {
+      ...entry,
+      derivativePolicy: {
+        allowed: "conditional",
+        constraints: "Derived indexes/tiles require source attribution, licence review and the source's stated disclaimer/obligations.",
+      },
+    };
+    expect(() => midtownCoreConveyanceRights(reverted)).toThrow(/no longer grants publicDisplay, derivativeConveyance, redistribution/u);
+  });
+
+  it("fails closed when the policy text is reworded without changing its clauses", () => {
+    const reworded = {
+      ...entry,
+      derivativePolicy: { ...entry.derivativePolicy, constraints: `${entry.derivativePolicy.constraints} Additional unreviewed condition.` },
+    };
+    expect(() => midtownCoreConveyanceRights(reworded)).toThrow(/must be re-reviewed rather than inherited/u);
+    expect(MIDTOWN_CORE_DERIVATIVE_POLICY_SHA256).toBe(sha256HexSync(stableSerialize(entry.derivativePolicy)));
+  });
+
+  it("fails closed when derivative use is withdrawn outright", () => {
+    const withdrawn = { ...entry, derivativePolicy: { ...entry.derivativePolicy, allowed: "no" } };
+    expect(() => midtownCoreConveyanceRights(withdrawn)).toThrow(/declares derivative use no/u);
+  });
+});
+
+describe("midtown-core pipeline stage fingerprint", () => {
+  const input = {
+    stage: "glbs",
+    baseManifestChecksumSha256: EXTERIOR_FULLSNAPSHOT_BASE_MANIFEST_SHA256,
+    parentLedgerChecksumSha256: midtownCoreArtifactChecksum(readJson(`${LEDGER_ROOT}/ledger.json`)),
+    subsetLedgerChecksumSha256: midtownCoreArtifactChecksum(built.subset.ledger),
+    renderableCellCount: RENDERABLE_CELL_COUNT,
+    shippedLodId: MIDTOWN_CORE_SHIPPED_LOD_ID,
+  };
+
+  it("separates stages and follows the derived ledger's own checksum, not its id", () => {
+    expect(midtownCoreStageFingerprint(input)).toBe(midtownCoreStageFingerprint({ ...input }));
+    expect(midtownCoreStageFingerprint({ ...input, stage: "plans" })).not.toBe(midtownCoreStageFingerprint(input));
+    expect(midtownCoreStageFingerprint({ ...input, subsetLedgerChecksumSha256: "0".repeat(64) })).not.toBe(midtownCoreStageFingerprint(input));
+    expect(midtownCoreStageFingerprint({ ...input, renderableCellCount: 4 })).not.toBe(midtownCoreStageFingerprint(input));
+  });
+
+  /**
+   * Editing a clamp changes every plan and every emitted GLB, so a receipt taken
+   * before that edit must not be reusable after it without `--force`.
+   */
+  it("invalidates a stage receipt when a V2 parameter clamp changes", () => {
+    const before = midtownCoreStageFingerprint(input);
+    const clamps = MIDTOWN_CORE_PARAMETER_CLAMPS as { minimumCrownMm: number; rooftopClearanceMm: number };
+    const original = { ...clamps };
+    try {
+      clamps.minimumCrownMm = original.minimumCrownMm + 1;
+      expect(midtownCoreStageFingerprint(input)).not.toBe(before);
+      clamps.minimumCrownMm = original.minimumCrownMm;
+      clamps.rooftopClearanceMm = original.rooftopClearanceMm + 1;
+      expect(midtownCoreStageFingerprint(input)).not.toBe(before);
+    } finally {
+      clamps.minimumCrownMm = original.minimumCrownMm;
+      clamps.rooftopClearanceMm = original.rooftopClearanceMm;
+    }
+    expect(midtownCoreStageFingerprint(input)).toBe(before);
+  });
 });
 
 describe("midtown-core emitted payload replay", () => {

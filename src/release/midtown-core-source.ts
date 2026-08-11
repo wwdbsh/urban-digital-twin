@@ -10,16 +10,22 @@
  * independent re-implementations.
  */
 
+import { DETERMINISTIC_FACADE_V2_GENERATOR_VERSION, DETERMINISTIC_FACADE_V2_SCHEMA_VERSION } from "../domain/deterministic-facade-generator-v2.ts";
 import { sha256HexSync, stableSerialize } from "../domain/deterministic-hash.ts";
 import { parseGlbV2 } from "./multi-lod-assembly.ts";
 import type { ExteriorOwnershipCell } from "./exterior-release.ts";
 import {
+  MIDTOWN_CORE_GENERATED_AT,
+  MIDTOWN_CORE_PARAMETER_CLAMPS,
+  MIDTOWN_CORE_SEED,
+  MIDTOWN_CORE_TOOL,
   MidtownCoreStop,
   buildMidtownCorePlan,
   midtownCoreAssetRef,
   writeMidtownCoreAssets,
   type MidtownCoreBuildingSource,
 } from "./midtown-core-materialization.ts";
+import { MIDTOWN_CORE_RELEASE_ID } from "./midtown-core-package.ts";
 import { MIDTOWN_CORE_SHIPPED_LOD_ID, type MidtownCoreMaterializedBuilding, type MidtownCoreShippedAsset } from "./midtown-core-release.ts";
 
 /** The citywide geometry-shard layer this release reads. */
@@ -239,4 +245,50 @@ export function materializeMidtownCoreCells(input: MidtownCoreMaterializeInput):
 /** Stable digest of a materialization census, used to pin CLI stage outputs. */
 export function midtownCoreCensusDigest(census: MidtownCoreMaterializationCensus): string {
   return sha256HexSync(stableSerialize(census));
+}
+
+export interface MidtownCoreStageFingerprintInput {
+  stage: string;
+  /** SHA-256 of the pinned base snapshot's own `manifest.json` bytes. */
+  baseManifestChecksumSha256: string;
+  /** SHA-256 of the committed parent wave ledger's own bytes. */
+  parentLedgerChecksumSha256: string;
+  /**
+   * SHA-256 of the DERIVED subset ledger's own serialization. The ledger id is
+   * a digest of the parent lineage and the partition layout, so it would not
+   * move if a cell's membership changed under a fixed layout; the ledger's own
+   * checksum does.
+   */
+  subsetLedgerChecksumSha256: string;
+  renderableCellCount: number;
+  shippedLodId: string;
+}
+
+/**
+ * Fingerprint of everything a resumable pipeline stage depends on.
+ *
+ * It deliberately covers the *generator* as well as the inputs: the V2 schema
+ * and generator versions, this wave's own tool version, seed and frozen
+ * generation instant, and both added small-footprint parameter clamps. Editing a
+ * clamp changes every plan and every emitted GLB, so a receipt taken before that
+ * edit must not be reusable after it without `--force`.
+ */
+export function midtownCoreStageFingerprint(input: MidtownCoreStageFingerprintInput): string {
+  return sha256HexSync(stableSerialize({
+    releaseId: MIDTOWN_CORE_RELEASE_ID,
+    stage: input.stage,
+    baseManifestChecksumSha256: input.baseManifestChecksumSha256,
+    parentLedgerChecksumSha256: input.parentLedgerChecksumSha256,
+    subsetLedgerChecksumSha256: input.subsetLedgerChecksumSha256,
+    renderableCellCount: input.renderableCellCount,
+    shippedLodId: input.shippedLodId,
+    generator: {
+      schemaVersion: DETERMINISTIC_FACADE_V2_SCHEMA_VERSION,
+      generatorVersion: DETERMINISTIC_FACADE_V2_GENERATOR_VERSION,
+      tool: { ...MIDTOWN_CORE_TOOL },
+      seed: MIDTOWN_CORE_SEED,
+      generatedAt: MIDTOWN_CORE_GENERATED_AT,
+      parameterClamps: { ...MIDTOWN_CORE_PARAMETER_CLAMPS },
+    },
+  }));
 }

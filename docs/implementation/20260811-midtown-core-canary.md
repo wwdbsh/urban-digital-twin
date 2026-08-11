@@ -75,7 +75,7 @@ mismatches and 0 ENU mismatches; largest cell membership 114 of the 256 cap.
 | Assembly fingerprint | `2fc756138639ec8d2c067699d68a628ab72143dd2818da8c8cce099c4877e933` |
 | Payload inventory checksum | `b63944e13bbfc94088c2b47b5c520e47e41d995124ceab15a561580b5f36427b` |
 | Derivation record checksum | `a1509cc267f6bc17609dba71bac74ae18a62b19fedbb8c1247c3bb5a38b8f504` |
-| Evidence inventory checksum | `c9f3c0ee2c64abfe63dfb49ecc11dc7172950dd95983e800d7f334029b077f41` |
+| Evidence inventory checksum | `4796b9f08f16b64bfd066ac5138327fd91d7069797ea9676bf262ae50995f175` |
 
 The `graph` stage replays the emitted bytes — not the in-memory objects —
 through `replayExteriorArtifactIntegrity` (all 472 declared artifacts, private
@@ -208,6 +208,43 @@ scales with the building and the viewpoint never does. 40 renders are in
 | `pnpm build` | pass; private partitions pruned as before |
 | `git diff --check` | clean |
 | Immutability vs `774407c` over `public/data/` and `data/` | additions only |
+
+## Review follow-ups (2026-08-11)
+
+Five nits closed after review; none changed an emitted byte — the payload
+inventory is identical before and after (635 files, 29,107,107 B, inventory
+checksum `b63944e1…` unchanged).
+
+- **N1** `midtownCoreConveyanceRights` derives `publicDisplay`,
+  `derivativeConveyance` and `redistribution` from the registry's own
+  `derivativePolicy` clauses and pins the whole policy by fingerprint
+  (`3d3e4a80…`) instead of hard-coding them. Four fail-closed paths are tested:
+  reverted to the narrow `openDerivative` text, reworded, withdrawn
+  (`allowed: "no"`), and the fingerprint pin itself.
+- **N3** `buildMidtownCoreSubsetLedger` recomputes the parent ledger checksum and
+  throws unless it matches the supplied value, so the Decision-1 inheritance
+  argument rests on an attested pairing rather than a caller's word. Both the
+  attested and the substituted pairing are tested.
+- **N2** Stage fingerprints moved to the shared, testable
+  `midtownCoreStageFingerprint` and extended with the V2 schema/generator
+  versions, this wave's tool version, seed and generation instant, both parameter
+  clamps, and the subset ledger's own checksum in place of its id. A test proves
+  a clamp edit changes the fingerprint (and that restoring it restores the
+  fingerprint).
+- **N4** ADR 0029 Decision 1 now enumerates all eight wave-validator properties
+  the scoping forgoes, states which are structurally impossible (embedded
+  sequence) versus excluded by design (the Block 835 cell) versus **inherited**
+  verbatim from an independently validated parent, and conditions that
+  inheritance explicitly on the N3 check.
+- **N5** ADR 0029 and this record disclose that with one shipped LOD the
+  exploration profile buys no triangle reduction for midtown-core cells this
+  cycle.
+
+Because the fingerprint definition changed, all four stage receipts were
+invalidated and every stage was re-run from scratch. Counts reproduced exactly
+(7,201 / 7,200 / 1 refusal / 23 fallback heights / 14,400 GLBs / 963,059,744 B /
+max 60,812 triangles), and `graph` emitted a byte-identical payload with
+`removedStaleCount: 0` and unchanged root, assembly and inventory checksums.
 
 ## Open items
 

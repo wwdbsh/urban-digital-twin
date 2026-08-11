@@ -38,15 +38,50 @@ contiguously `0..148`, coverage is recomputed as the exact union rectangle, and 
 new `baseIdentitySet` is derived over exactly the 7,201 owned ids.
 
 The subset is validated by `validateExteriorReleaseGraph`, **not** by
-`validateExteriorWaveLedger`. That is a scoping decision, not an exemption. The
-wave validator additionally requires that a cell id's embedded sequence equals
-its `order`, and that exactly one wave-0 (Block 835) cell is present. Both are
-properties of the *parent* full-city partition:
+`validateExteriorWaveLedger`. That is a scoping decision, not an exemption, and
+it is only defensible because of what the subset inherits rather than recomputes.
 
-- renumbering to `0..148` is mandated by the release-graph contract, so the
-  embedded-sequence rule cannot hold for a subset by construction;
-- the Block 835 cell is excluded by design, and the derivation record proves
-  `w00 ∩ w01 = {}` (0 shared buildings) rather than assuming it.
+`validateExteriorWaveLedger` runs the full release-graph validator and then adds
+a set of checks that are properties of the *parent* full-city partition. The
+subset forgoes all of them:
+
+1. **Wave-plan row partition** — `EXTERIOR_WAVE_PLAN` tile-row ranges must
+   partition the occupied level-14 row envelope exactly, with waves 3..5 running
+   strictly northwards. Meaningless for a single wave, which owns one range.
+2. **Cell-id naming pattern** — each id must match
+   `manhattan-exterior-cell-w<wave>-<order>-<tile|block-00835>`.
+3. **Embedded sequence equals order** — the `<order>` field inside the id must
+   equal the cell's `order`.
+4. **Wave-by-wave ordering** — cells must appear in nondecreasing wave index.
+5. **Tile level in the declared split range** — level 14..17.
+6. **`bounds` equals the exact WGS84 tile rectangle** the id names.
+7. **Row containment** — each cell's level-14 ancestor row must fall inside its
+   wave's declared `tileRowRange`.
+8. **Exactly one Block 835 (wave 0) cell**, with the frozen DOITT membership and
+   the frozen public-realm clip bounds.
+
+Only (3) is structurally impossible for a subset: renumbering to `0..148` is
+mandated by the release-graph contract, so the embedded sequence and the order
+cannot agree. Only (8) is excluded by design, and the derivation record proves
+`w00 ∩ w01 = {}` (0 shared buildings) rather than assuming it.
+
+Checks (2) and (4)–(7) are not weakened by the subset — they are **inherited**.
+Every cell id, every `bounds` rectangle and every membership list is copied
+verbatim from the parent ledger; nothing is re-derived, re-named or re-tiled. The
+parent is validated by `validateExteriorWaveLedger` in its own committed test
+(`exterior-wave-ledger.test.ts`), so a cell that satisfies (2), (4)–(7) there
+still satisfies them here by construction. Cell membership is additionally
+reconciled against the committed `membership-digest.json` on every CLI run.
+
+That inheritance argument holds **only if the supplied parent really is the
+attested one**, which is why `buildMidtownCoreSubsetLedger` recomputes
+`midtownCoreArtifactChecksum(parentLedger)` and fails closed unless it equals the
+supplied `parentLedgerChecksumSha256` — the value the committed `ledger.sha256`
+records. A caller-supplied checksum was previously trusted; trusting it would
+have let an unattested partition through and would have propagated into the
+derived ledger id and the derivation record, silently voiding this whole
+paragraph. `midtown-core-package.test.ts` exercises both the attested and the
+substituted pairing.
 
 Preserving parent cell ids while renumbering orders is what lets the full-city
 ledger and the subset ledger both stay true at once. Parent provenance cannot
@@ -54,7 +89,7 @@ live inside the ledger — the release-graph schema is closed — so it is emitt
 beside it as a `MidtownCoreDerivationRecord`, committed at
 `data/midtown-core-20260811/derivation.json`.
 
-Rejected: relaxing either wave-validator rule so the subset could pass it. That
+Rejected: relaxing any wave-validator rule so the subset could pass it. That
 would weaken a validator to fit an artifact, which is exactly backwards.
 
 ## Decision 2 — Availability is bounded, stated, and not a failure
@@ -115,12 +150,15 @@ Two consequences are worth stating plainly:
 - Both LODs are still generated and budget-checked for all 7,200 planned
   buildings in the CLI census (14,400 canonical GLBs, 0.897 GiB, maximum 60,812
   of 75,000 triangles). Only *shipping* the coarse LOD is deferred.
-- With one shipped LOD, the exploration and inspection profiles select the same
-  artifact, so toggling the profile costs nothing. That is not an argument that
-  the second LOD is free: shipping it would make 320 distinct cache keys for 160
-  buildings, and a profile toggle would then exceed the 256-entry ceiling and
-  thrash. Batch silhouette measurement and cache-aware LOD admission have to land
-  together, not separately.
+- With one shipped LOD, the exploration and inspection profiles resolve to the
+  same `lod_0` artifact. **The exploration profile therefore buys no triangle
+  reduction for midtown-core cells this cycle** — the control still works and
+  still reports honestly, but for this release it is a no-op, and that must not
+  be read as a performance claim. Toggling the profile also costs nothing, which
+  is not an argument that the second LOD is free: shipping it would make 320
+  distinct cache keys for 160 buildings, and a profile toggle would then exceed
+  the 256-entry ceiling and thrash. Batch silhouette measurement and cache-aware
+  LOD admission have to land together, not separately.
 
 ## Decision 4 — A footprint the grammar cannot describe is refused, never invented
 
@@ -168,6 +206,17 @@ The approval fingerprint is derived once from the exported scope, exclusions,
 timestamp and note, and the release test asserts it is identical in all 160
 shards. A drifting copy would mean two envelopes inside one release.
 
+The public-audience rights inside each license — `publicDisplay`,
+`derivativeConveyance`, `redistribution` — are **derived from the registry's own
+derivative policy**, not written as literals. ADR 0027 Decision 6 makes the
+2026-08-11 jh45-qr5r broadening independently revertible, and a revert that left
+this builder passing would leave 160 shards asserting rights the registry no
+longer grants. `midtownCoreConveyanceRights` therefore reads each right from its
+own clause in `entry.derivativePolicy.constraints` and additionally pins the
+whole policy by fingerprint, so a revert to the narrow `openDerivative` text, a
+narrowing, a rewording, or a withdrawal of derivative use all fail the release
+closed. All four paths are tested.
+
 Anti-leak is unchanged from ADR 0027: the private root declares exactly one
 artifact — its own audience-scoped ownership-ledger blob — and no private byte is
 written to disk. The audience is part of each blob's hashed body, so the private
@@ -176,10 +225,19 @@ and public ledger blobs share one logical id and can never collide on checksum.
 ## Decision 7 — The pipeline is resumable and re-runs its own census
 
 `scripts/midtown-core-cli.mjs` runs four stages (`plans`, `glbs`, `gates`,
-`graph`), each writing a receipt fingerprinted over the pinned base manifest
-checksum, the parent ledger checksum, the derived ledger id, and the stage's own
-parameters. An unchanged fingerprint makes a stage a no-op unless `--force` is
-given, so an interrupted 75-second asset census resumes instead of restarting.
+`graph`), each writing a receipt fingerprinted by `midtownCoreStageFingerprint`.
+An unchanged fingerprint makes a stage a no-op unless `--force` is given, so an
+interrupted 75-second asset census resumes instead of restarting.
+
+The fingerprint covers the *generator* as well as the inputs, because a resumable
+stage that ignores its own code is a correctness hazard: the pinned base manifest
+checksum, the committed parent ledger checksum, the **derived subset ledger's own
+checksum** (not its id — the id is a digest of lineage and layout, so it would
+not move if a membership changed under a fixed layout), the renderable cell
+count, the shipped LOD id, the V2 schema and generator versions, this wave's tool
+version, seed and frozen generation instant, and both added parameter clamps.
+Editing a clamp changes every plan and every emitted GLB, so it must invalidate
+`plans` and `glbs` without `--force`; that sensitivity is asserted by test.
 
 The census is not a separate estimate from what ships: the same
 `materializeMidtownCoreCells` function produces the censused wave and the shipped

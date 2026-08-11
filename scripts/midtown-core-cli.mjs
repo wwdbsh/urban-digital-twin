@@ -62,7 +62,7 @@ import {
   midtownCoreV2Parameters,
   writeMidtownCoreAssets,
 } from "../src/release/midtown-core-materialization.ts";
-import { collectMidtownCoreSources, materializeMidtownCoreCells } from "../src/release/midtown-core-source.ts";
+import { collectMidtownCoreSources, materializeMidtownCoreCells, midtownCoreStageFingerprint } from "../src/release/midtown-core-source.ts";
 import {
   MIDTOWN_CORE_OUTPUT_DIRECTORY,
   MIDTOWN_CORE_SHIPPED_LOD_ID,
@@ -147,16 +147,15 @@ async function readVerifiedShards(manifest) {
   return { shards, declaredShardCount: declared.length };
 }
 
-function inputFingerprint(context, extra) {
-  return sha256HexSync(stableSerialize({
+function inputFingerprint(context, stage) {
+  return midtownCoreStageFingerprint({
+    stage,
     baseManifestChecksumSha256: context.manifestChecksum,
     parentLedgerChecksumSha256: context.parentLedgerChecksumSha256,
-    subsetLedgerId: context.subset.ledger.ledgerId,
-    releaseId: MIDTOWN_CORE_RELEASE_ID,
+    subsetLedgerChecksumSha256: midtownCoreArtifactChecksum(context.subset.ledger),
     renderableCellCount: RENDERABLE_CELL_COUNT,
     shippedLodId: MIDTOWN_CORE_SHIPPED_LOD_ID,
-    ...extra,
-  }));
+  });
 }
 
 async function readReceipt(stage) {
@@ -185,7 +184,7 @@ async function writeRecord(name, value) {
 // ---------------------------------------------------------------------------
 
 async function stagePlans(context, options) {
-  const fingerprint = inputFingerprint(context, { stage: "plans" });
+  const fingerprint = inputFingerprint(context, "plans");
   const existing = await readReceipt("plans");
   if (existing && existing.inputFingerprint === fingerprint && !options.force) return { skipped: true, ...existing.summary };
 
@@ -254,7 +253,7 @@ async function existingFiles(directory) {
 }
 
 async function stageGlbs(context, options) {
-  const fingerprint = inputFingerprint(context, { stage: "glbs" });
+  const fingerprint = inputFingerprint(context, "glbs");
   const existing = await readReceipt("glbs");
   if (existing && existing.inputFingerprint === fingerprint && !options.force && existsSync(join(payloadRoot, "public", "assets"))) {
     return { skipped: true, ...existing.summary };
@@ -346,7 +345,7 @@ async function stageGlbs(context, options) {
 // ---------------------------------------------------------------------------
 
 async function stageGates(context, options) {
-  const fingerprint = inputFingerprint(context, { stage: "gates" });
+  const fingerprint = inputFingerprint(context, "gates");
   const existing = await readReceipt("gates");
   if (existing && existing.inputFingerprint === fingerprint && !options.force) return { skipped: true, ...existing.summary };
 
@@ -394,7 +393,7 @@ async function stageGates(context, options) {
 // ---------------------------------------------------------------------------
 
 async function stageGraph(context, options) {
-  const fingerprint = inputFingerprint(context, { stage: "graph" });
+  const fingerprint = inputFingerprint(context, "graph");
   const existing = await readReceipt("graph");
   if (existing && existing.inputFingerprint === fingerprint && !options.force && existsSync(join(payloadRoot, "release-graph.json"))) {
     return { skipped: true, ...existing.summary };
@@ -512,4 +511,4 @@ async function main() {
   console.log(JSON.stringify({ ok: true, releaseId: MIDTOWN_CORE_RELEASE_ID, stages: report }, null, 2));
 }
 
-await main();
+if (process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url))) await main();
