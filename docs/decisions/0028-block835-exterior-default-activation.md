@@ -129,6 +129,24 @@ missing.
   are reachable only by explicit opt-in.
 - A future wave promotion is a record swap plus its own membership, not new
   activation code.
+- **Rollback atomicity is scoped per activation resolution, not per session.**
+  Swapping the exported record to its predecessor (a one-line, git-revertable
+  edit) atomically changes what every *subsequent* activation resolution and
+  cold load sees. It does not evict an already-loaded session: exterior GLB
+  object URLs live in the viewport until the page reloads. "Atomic" in this
+  record therefore means atomic-per-load; there is no operator kill switch for
+  in-flight sessions, and none is claimed.
+- **Open residual — memory-growth certification (accepted with approval).**
+  The T009 validation (PR #38) measured frame-time, request and cache budgets as
+  passing, but its bounded JS-heap method observed above-noise heap growth
+  (+29 %/+32 % across four repeats) with no collection opportunity and therefore
+  cannot certify GOAL's "no monotonic retained-memory growth after eviction and
+  collection opportunity" criterion either way. The Issue #11 promotion gate
+  approval (2026-08-11, granted after the measured-budget evidence) explicitly
+  carried this residual. Promotion proceeds with it recorded as an accepted,
+  approval-referenced risk; the follow-up is a GC-controlled re-run (e.g. a
+  Chrome launch with `--js-flags=--expose-gc`) that can distinguish uncollected
+  garbage from retained growth.
 
 ### What this promotion does not claim
 

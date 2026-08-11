@@ -106,6 +106,22 @@ of the production build. Journeys (a)–(d), (f) and (g) ran against the ordinar
 - The Stage 3 performance probe now needs `&exteriorStreaming=off` over a real
   base. See ADR 0028 Consequences.
 
+## Residual risks
+
+- **Rollback is atomic per load, not per session.** Reverting the promotion
+  record changes every subsequent activation resolution; an already-loaded
+  session keeps its exterior scene until reload (GLB object URLs live in the
+  viewport). No in-flight kill switch exists or is claimed. See ADR 0028.
+- **Memory-growth certification remains open (accepted with approval).** T009's
+  bounded JS-heap measurement (PR #38) saw above-noise growth with no collection
+  opportunity and cannot certify the no-monotonic-growth criterion either way.
+  The Issue #11 gate approval explicitly carried this residual; the follow-up is
+  a GC-controlled re-run (`--js-flags=--expose-gc`). See ADR 0028.
+- **Anchor-dependent rendering is now default-visible.** Buildings whose base
+  record is not resident are withheld with the existing explicit notice
+  (pre-existing behavior, ADR 0024 territory deferred to T013+), and a normal
+  session will now see it where canary opt-in users rarely did.
+
 ## What this does not prove
 
 Passing every test and journey shows the promoted release is what a real-base
