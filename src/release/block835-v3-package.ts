@@ -290,6 +290,11 @@ export function v3TextureClassFor(styleClass: V3StyleClass, materialId: string):
 /**
  * Calibrated sRGB targets for the textured package, per style and material.
  *
+ * Covers every material the grammar emits EXCEPT `material:ground`, which keeps
+ * its V3 sidewalk tone on purpose: it is public realm rather than building
+ * fabric, it carries no detail tile, and recolouring it here would change the
+ * street surface as a side effect of a facade decision.
+ *
  * These come from the same written calibration brief as the motif modules —
  * design conclusions in text, transcribed as hex. They are NOT a change to
  * `V3_PALETTE`: that constant feeds `plan.materials`, so editing it would move
@@ -343,8 +348,11 @@ function srgbTriple(hex: string): [number, number, number] {
  * of it. The scale is uniform across the three channels — a per-channel divide
  * would clip one channel first and shift the hue — and is reduced when it would
  * push any channel past 1, which the closed glTF profile forbids.
+ *
+ * Exported so the hue-preservation and range claims can be tested directly
+ * rather than inferred from shipped bytes.
  */
-function calibratedFactor(hex: string, meanModulation: number): [number, number, number, number] {
+export function v3tCalibratedFactor(hex: string, meanModulation: number): [number, number, number, number] {
   const target = srgbTriple(hex);
   const headroom = Math.max(...target);
   const scale = Math.min(1 / meanModulation, headroom > 0 ? 1 / headroom : 1);
@@ -369,12 +377,18 @@ function normalize(vector: Vec3Mm): Vec3Mm {
  * Two properties matter and both are load-bearing.
  *
  * CONTINUITY. The basis depends only on the face NORMAL, never on a corner
- * chosen as an origin, and the UV is `dot(absolute position, axis)`. Two
- * coplanar faces on the same wall therefore land on the same basis and the same
- * absolute offsets, so coursing runs straight across the boundary between them.
- * A per-face origin — the obvious implementation — restarts the pattern at every
- * quad and draws a visible seam at every subdivision line, which on this grammar
- * means one per bay per floor.
+ * chosen as an origin, and the UV is `dot(position, axis)` taken in the
+ * PLAN-LOCAL, building-anchored ENU millimetre frame — absolute with respect to
+ * the building, never with respect to the city. Two coplanar faces on the same
+ * wall therefore land on the same basis and the same offsets, so coursing runs
+ * straight across the boundary between them. A per-face origin — the obvious
+ * implementation — restarts the pattern at every quad and draws a visible seam at
+ * every subdivision line, which on this grammar means one per bay per floor.
+ *
+ * The building-local frame is also a float32 requirement, not just a convention:
+ * UVs peak near 160 tile repeats here, where float32 resolves ~1e-5 of a tile.
+ * The same projection anchored to an ECEF origin would reach ~8e6, where
+ * consecutive float32 values are half a tile apart. See ADR 0032.
  *
  * UPRIGHTNESS. For anything wall-like, +v is world up, so bed joints are level
  * and streaks fall vertically no matter how the facade is oriented. Only when
@@ -431,7 +445,7 @@ export function v3GeometryForGlb(plan: V3Plan, tessellation: V3Tessellation, opt
     if (hex !== undefined && binding) {
       const textureClass = v3TextureClassFor(plan.styleClass, material.id);
       const mean = textureClass === null ? 1 : proceduralTextureTile(textureClass).meanModulation;
-      return { baseColorFactor: calibratedFactor(hex, mean), metallicFactor: material.metallicPermille / 1_000, roughnessFactor: material.roughnessPermille / 1_000 };
+      return { baseColorFactor: v3tCalibratedFactor(hex, mean), metallicFactor: material.metallicPermille / 1_000, roughnessFactor: material.roughnessPermille / 1_000 };
     }
     return {
       baseColorFactor: [material.baseColorSrgb[0] / 255, material.baseColorSrgb[1] / 255, material.baseColorSrgb[2] / 255, material.baseColorSrgb[3] / 255],

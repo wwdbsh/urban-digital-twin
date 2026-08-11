@@ -117,6 +117,9 @@ and re-derives what it can from live sources rather than from copied numbers.
 | private package with an unprovenanced image (previously admitted) | fails `ASSEMBLY_ISSUE_TEXTURE_PROVENANCE_REQUIRED` |
 | every motif constant mutated in turn | hash moves for all; pixels move for all but eight named inert-by-construction pairs |
 | calibrated palette mutated wholesale | zero rasterized pixels move |
+| census `triangleCountUnchanged` / `withinBudget` | re-derived from the frozen V3 manifest and the live budget, not trusted |
+| `V3T_CALIBRATED_PALETTE` vs committed `texture-catalog.json` | pinned; palette drift now fails |
+| calibrated palette key set | derived from `v3StyleMaterials`, so a new grammar material fails rather than shipping uncalibrated |
 | textured package under the texture-free policy | refused at the manifest AND at the bytes |
 | textured package as a public audience | refused unconditionally |
 | V1 / V2 / V3 fingerprints | unchanged |

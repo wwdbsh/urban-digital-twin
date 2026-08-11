@@ -12,6 +12,7 @@ import {
   DETERMINISTIC_FACADE_V3_UNCERTAINTY,
   V3_STYLE_CLASSES,
   tessellateV3Plan,
+  v3StyleMaterials,
 } from "../domain/deterministic-facade-generator-v3.ts";
 import { sha256HexBytes } from "../domain/deterministic-hash.ts";
 import { writeCanonicalGlb, type CanonicalGlbMaterial, type CanonicalGlbQuad } from "./canonical-glb.ts";
@@ -27,6 +28,7 @@ import {
   v3GeometryForGlb,
   v3PredecessorPins,
   v3TextureClassFor,
+  v3tCalibratedFactor,
   type AssembledV3,
 } from "./block835-v3-package.ts";
 import {
@@ -106,7 +108,7 @@ interface V3tCensus {
   packageId: string; predecessorPackageId: string; parametersHashSha256: string;
   budgets: typeof V3T_QUALITY_BUDGETS;
   summary: { buildings: number; planHashesUnchangedFromV3: boolean; distinctTextureClasses: string[]; worstLod0TextureCount: number; worstLod0ImageBytes: number; declaredTotalBytes: number; v3DeclaredTotalBytes: number };
-  buildings: Array<{ canonicalBuildingId: string; planHashSha256: string; styleClass: string; textureClasses: string[]; lods: Array<{ lodId: string; textureCount: number; imageByteTotal: number; triangleCountUnchanged: boolean; withinBudget: boolean }> }>;
+  buildings: Array<{ canonicalBuildingId: string; planHashSha256: string; styleClass: string; textureClasses: string[]; lods: Array<{ lodId: string; triangleCount: number; materialCount: number; textureCount: number; imageByteTotal: number; triangleCountUnchanged: boolean; withinBudget: boolean }> }>;
 }
 const CENSUS = JSON.parse(readText("data/manhattan-esb-block-reference-20260811-v3t/census.json")) as V3tCensus;
 
@@ -144,13 +146,47 @@ describe("the texture mapping is closed and small", () => {
     }
   });
 
+  it("calibrates exactly the materials the grammar emits, ground excepted", () => {
+    // Derived from `v3StyleMaterials`, not copied from the palette, so a new
+    // material in the grammar fails here instead of silently shipping its
+    // uncalibrated V3 tone. `material:ground` is the one deliberate exclusion:
+    // it is public realm rather than building fabric and keeps its V3 sidewalk
+    // colour.
+    for (const style of V3_STYLE_CLASSES) {
+      const emitted = v3StyleMaterials(style).map((material) => material.id);
+      expect(emitted, style).toContain("material:ground");
+      expect(Object.keys(V3T_CALIBRATED_PALETTE[style]).sort(), style)
+        .toEqual(emitted.filter((id) => id !== "material:ground").sort());
+    }
+  });
+
   it("keeps every calibrated factor inside the closed glTF range with its hue intact", () => {
     for (const style of V3_STYLE_CLASSES) {
-      for (const [materialId] of Object.entries(V3T_CALIBRATED_PALETTE[style])) {
-        expect(typeof materialId).toBe("string");
+      for (const [materialId, hex] of Object.entries(V3T_CALIBRATED_PALETTE[style])) {
+        expect(hex, `${style} ${materialId}`).toMatch(/^#[0-9A-F]{6}$/u);
+        const textureClass = v3TextureClassFor(style, materialId);
+        const mean = textureClass === null ? 1 : proceduralTextureCatalog().get(textureClass)!.meanModulation;
+        const factor = v3tCalibratedFactor(hex, mean);
+        // The closed glTF profile rejects a base colour outside [0,1]; a
+        // compensation that overshot would fail validation at write time, so it
+        // is bounded here where the reason is visible.
+        for (const channel of factor) {
+          expect(channel, `${style} ${materialId}`).toBeGreaterThanOrEqual(0);
+          expect(channel, `${style} ${materialId}`).toBeLessThanOrEqual(1);
+        }
+        expect(factor[3]).toBe(1);
+        // Hue survives compensation. The scale is uniform across channels
+        // precisely so the ratios between them are unchanged; a per-channel
+        // divide would clip one channel first and shift the colour.
+        const target = [0, 1, 2].map((index) => Number.parseInt(hex.slice(1 + index * 2, 3 + index * 2), 16) / 255);
+        const scale = Math.max(...target) === 0 ? 1 : factor[0]! / target[0]!;
+        for (const index of [0, 1, 2]) {
+          expect(factor[index], `${style} ${materialId} channel ${index}`).toBeCloseTo(target[index]! * scale, 12);
+        }
+        // Compensation only ever brightens toward the target; it never darkens.
+        expect(scale).toBeGreaterThanOrEqual(1 - 1e-12);
       }
     }
-    for (const asset of assembled().manifest.assets) expect(asset.canonicalFeatureId).toMatch(/^doitt:/u);
   });
 });
 
@@ -338,12 +374,26 @@ describe("the committed V3T census covers the whole block and is not stale", () 
       // against the frozen package rather than taken on trust.
       expect(asset!.source.kind === "facade-plan" ? asset!.source.planHashSha256 : null, row.canonicalBuildingId).toBe(row.planHashSha256);
       for (const lod of row.lods) {
-        expect(lod.triangleCountUnchanged, `${row.canonicalBuildingId} ${lod.lodId}`).toBe(true);
-        expect(lod.withinBudget, `${row.canonicalBuildingId} ${lod.lodId}`).toBe(true);
+        const label = `${row.canonicalBuildingId} ${lod.lodId}`;
+        // `triangleCountUnchanged` and `withinBudget` are the census asserting
+        // things about ITSELF. Re-derive both from sources outside the census:
+        // the frozen V3 manifest, and this build's budget constant. A census
+        // written by a broken build would carry `true` just as happily.
+        const previousLod = asset!.lods.find((entry) => entry.lodId === lod.lodId)!;
+        expect(lod.triangleCount, label).toBe(previousLod.quality.triangleCount);
+        expect(lod.triangleCountUnchanged, label).toBe(true);
+        expect(lod.triangleCount, label).toBeLessThanOrEqual(V3T_QUALITY_BUDGETS.maxTriangles);
+        expect(lod.materialCount, label).toBeLessThanOrEqual(V3T_QUALITY_BUDGETS.maxMaterials);
+        expect(lod.textureCount, label).toBeLessThanOrEqual(V3T_QUALITY_BUDGETS.maxTextures);
+        expect(lod.imageByteTotal, label).toBeLessThanOrEqual(PROCEDURAL_TEXTURE_LIMITS.maxGlbImageBytes);
+        expect(lod.withinBudget, label).toBe(true);
         if (lod.lodId === "lod_1") expect(lod.textureCount).toBe(0);
         else expect(lod.textureCount).toBeGreaterThan(0);
       }
     }
+    // The baseline the whole byte-cost report is measured against must be the
+    // frozen package's own declared total, not a number the census remembers.
+    expect(CENSUS.summary.v3DeclaredTotalBytes).toBe(v3.declaredTotalBytes);
   });
 
   it("was produced by THIS build's rasterizer, not an older one", () => {
@@ -360,6 +410,22 @@ describe("the committed V3T census covers the whole block and is not stale", () 
     for (const row of CENSUS.buildings) {
       const expected = row.textureClasses.reduce((sum, textureClass) => sum + catalog.get(textureClass as never)!.pngBytes.byteLength, 0);
       expect(row.lods.find((lod) => lod.lodId === "lod_0")!.imageByteTotal, row.canonicalBuildingId).toBe(expected);
+    }
+
+    // The committed catalogue record pins the palette the package shipped with.
+    // Without this, the palette could drift and every other check would still
+    // pass, because nothing else in the ledger mentions colour.
+    const committedCatalog = JSON.parse(readText("data/manhattan-esb-block-reference-20260811-v3t/texture-catalog.json")) as {
+      parametersHashSha256: string; tilePixels: number; palette: typeof V3T_CALIBRATED_PALETTE;
+      tiles: Array<{ textureClass: string; pngSha256: string; pngByteLength: number }>;
+    };
+    expect(committedCatalog.palette).toEqual(V3T_CALIBRATED_PALETTE);
+    expect(committedCatalog.parametersHashSha256).toBe(proceduralTextureParametersHash());
+    expect(committedCatalog.tilePixels).toBe(PROCEDURAL_TEXTURE_TILE_PIXELS);
+    for (const tile of committedCatalog.tiles) {
+      const live = catalog.get(tile.textureClass as never)!;
+      expect(tile.pngSha256, tile.textureClass).toBe(live.pngSha256);
+      expect(tile.pngByteLength, tile.textureClass).toBe(live.pngBytes.byteLength);
     }
   });
 

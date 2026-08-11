@@ -61,7 +61,7 @@ export type ProceduralTextureClass = (typeof PROCEDURAL_TEXTURE_CLASSES)[number]
  * which resolves the joint AND decorrelates sixteen units.
  *
  * The cost is bounded and measured: 128x128 grayscale under stored DEFLATE is
- * 16,589 bytes, against a 24 KiB per-image cap and a 96 KiB per-GLB cap, so a
+ * 16,580 bytes, against a 24 KiB per-image cap and a 96 KiB per-GLB cap, so a
  * three-class asset spends about 49 KiB. The size is part of the parameters
  * hash: changing it is a profile change, not a tweak.
  */

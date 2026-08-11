@@ -231,8 +231,18 @@ so the hue survives and no channel exceeds the closed profile's `[0,1]` range.
 
 `deterministic-facade-generator-v3.ts` is untouched except for one additive
 uncertainty constant that no plan reads. UVs are generated in `v3GeometryForGlb`
-by planar projection from each face's own corners using **absolute** millimetre
-coordinates, `u = dot(p, uAxis) / tileUMm`.
+by planar projection from each face's own corners using
+`u = dot(p, uAxis) / tileUMm`, where `p` is the **plan-local, building-anchored
+ENU millimetre** position — the same frame the grammar already works in.
+
+"Absolute" here means *not relative to the face's own corner*. It emphatically
+does **not** mean city-absolute, and the distinction is a hard numerical
+constraint rather than a preference. Measured on the tallest shipped asset, UVs
+reach |u| ≈ 43 and |v| ≈ 160 tile repeats, where float32 resolves roughly 1e-5 of
+a tile — four orders of magnitude below one texel. Re-anchoring the same
+projection to an ECEF origin would put `p` near 6.4e9 mm, so `u` would land near
+8e6, where consecutive float32 values are **half a tile apart**. The motif would
+not degrade; it would disintegrate.
 
 The absolute-coordinate part is the whole point. The obvious implementation —
 project each face from its own first corner — restarts the pattern at every quad,
@@ -282,12 +292,33 @@ any textured package is publicly admitted:
    the order of 2.7 GB of texture memory before mipmaps. The obvious answer is a
    shared four-tile atlas bound once for the whole city rather than per-GLB
    embedding, which is a runtime architecture change, not a writer change.
+4. **UV origin must stay per-building.** Any future merging of assets into a
+   shared or ECEF-anchored coordinate frame must re-derive UVs in a building-local
+   frame first, for the float32 reason above. This is the one precondition that
+   fails silently and catastrophically rather than loudly.
+5. **Runtime cache residency.** Textured assets are ~42% larger, so a fixed
+   artifact cache holds ~30% fewer of them (1 / 1.42 ≈ 0.70). At the current
+   256 MiB budget that is a materially different eviction profile, and it should be
+   measured — not assumed — before textured assets are served.
+6. **`city-asset-manifest.ts` `maxTextures` is an ACTION item, not merely an
+   unaffected surface.** It is untouched by this cycle because nothing public
+   carries a texture, but it is a runtime admission budget on a different contract:
+   the moment a textured asset is served through that path, its value and the
+   validation around it have to be revisited deliberately.
+7. **Cesium-side filtering and aliasing validation.** The writer emits `wrapS` and
+   `wrapT` only — no `minFilter` or `magFilter` — leaving mip selection to the
+   renderer. The stills in this cycle were rendered by Blender EEVEE, which is not
+   the shipping renderer. A LOD 0 asset repeats a 128-pixel tile up to ~160 times
+   vertically and ~43 horizontally, which is exactly the regime where a renderer
+   without mipmapping or with the wrong filter produces moiré. This must be checked
+   in Cesium, at LOD 0 range, on real hardware, before public admission.
 
 ## Explicitly unaffected
 
 - `requiresTextureFreeAssembly` and the public/runtime admission path.
 - `city-asset-manifest.ts` `maxTextures` — a runtime manifest budget field on a
-  different contract, untouched.
+  different contract, untouched **this cycle**; see T026 precondition 6, where it
+  becomes an action item rather than a bystander.
 - `block835-public-realm-release.ts` `assetBudget.maxTextures: 0` — a separate
   public-realm budget, untouched.
 - `V3_QUALITY_BUDGETS` and its zero texture budget, which remains an accurate
