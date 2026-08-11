@@ -72,3 +72,15 @@ artifacts/lower-manhattan-20260812-p1/
 # and every still's checksum are committed in
 # data/lower-manhattan-20260812-p1/acceptance-evidence.json.
 artifacts/lower-manhattan-20260812-p1-acceptance/
+
+# T017 Southern-remainder canary work root: the full-wave census over all 9,603
+# owned buildings, the Blender sample inputs and renders, and the stage
+# receipts. The hashes that matter are committed in
+# data/southern-remainder-20260812/.
+artifacts/southern-remainder-20260812/
+
+# T017 renderer-journey scratch root: the captured stills. Every still's
+# checksum, the URL it was taken at and the DOM text each journey read are
+# committed in data/southern-remainder-20260812/journey-evidence.json so the
+# evidence stays checkable after this worktree-local tree is removed.
+artifacts/southern-remainder-20260812-journeys/

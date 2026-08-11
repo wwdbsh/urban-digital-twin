@@ -513,8 +513,17 @@ export function appendBlock835PublicRealmUrl(baseUrl: string, requested: boolean
  * the promotion record, so both promotion gates run for it on every load. The
  * canary keeps its narrower guarantee because it is still only an opt-in; the
  * gap was never closed for the canary and this comment does not claim it was.
+ *
+ * `manhattan-southern-remainder-cells-20260812` — the T017 canary — is pinned on
+ * exactly the same terms as the T015 one: opt-in reachable, absent from the
+ * promotion record, verified by its release graph and its committed inventory
+ * rather than by `verifyPromotedExteriorPin`. It could not be promoted here even
+ * if that were in scope: the three promoted waves already occupy 255 of the
+ * 256-entry exterior cache, which admits only the two cells of wave w03 that own
+ * a single building each. Raising that cap is a promotion decision with its own
+ * evidence, and this pin makes no part of it.
  */
-export const PINNED_EXTERIOR_CELL_RELEASE_IDS = ["udt-fixture-exterior-cells", "manhattan-exterior-cells-20260811", "manhattan-exterior-cells-20260811-v3", "manhattan-midtown-core-cells-20260811", "manhattan-midtown-core-cells-20260811-v3", "manhattan-lower-manhattan-cells-20260812", "manhattan-lower-manhattan-cells-20260812-p1"] as const;
+export const PINNED_EXTERIOR_CELL_RELEASE_IDS = ["udt-fixture-exterior-cells", "manhattan-exterior-cells-20260811", "manhattan-exterior-cells-20260811-v3", "manhattan-midtown-core-cells-20260811", "manhattan-midtown-core-cells-20260811-v3", "manhattan-lower-manhattan-cells-20260812", "manhattan-lower-manhattan-cells-20260812-p1", "manhattan-southern-remainder-cells-20260812"] as const;
 
 /**
  * The release used when neither a URL nor the promoted default names one: still
