@@ -111,6 +111,54 @@ export function exteriorCacheWaveByteProfile(input: {
   };
 }
 
+/**
+ * The minimum this module needs to recognise a promotion record. Structural on
+ * purpose: the ceiling is a fact about what the build PROMOTES, and taking the
+ * whole activation type would couple an arithmetic module to a record shape it
+ * has no opinion about.
+ */
+export interface ExteriorCachePromotedRecord {
+  readonly enabled: boolean;
+  readonly releaseId: string | null;
+}
+
+/**
+ * The wave profiles a promoted composition is made of, DERIVED from the build's
+ * own promotion records rather than listed by hand.
+ *
+ * A hand-listed set was the previous shape and it was wrong in a way that could
+ * not fail: promoting a fifth wave would have added a record to
+ * `EXTERIOR_DEFAULT_ACTIVATIONS` and left this ceiling silently describing four,
+ * so the arithmetic would have gone stale exactly at the moment it mattered and
+ * nothing would have said so. The list is now a function of the records, and a
+ * promoted release with no measured byte profile is a REFUSAL rather than an
+ * omission — the composition would otherwise be understated by however much that
+ * wave weighs.
+ *
+ * Disabled records contribute nothing and are skipped rather than refused: a
+ * wave rolled back to base massing is genuinely not resident, which is a fact
+ * about the composition and not a gap in the evidence.
+ */
+export function exteriorPromotedCacheProfiles(input: {
+  records: readonly ExteriorCachePromotedRecord[];
+  profiles: ReadonlyMap<string, ExteriorCacheWaveByteProfile>;
+}): readonly ExteriorCacheWaveByteProfile[] {
+  const resolved: ExteriorCacheWaveByteProfile[] = [];
+  for (const record of input.records) {
+    if (!record.enabled || record.releaseId === null) continue;
+    const profile = input.profiles.get(record.releaseId);
+    if (!profile) {
+      fail(`promoted release ${record.releaseId} has no measured byte profile, so the composition ceiling would silently omit it. Every enabled promotion record must resolve to a committed inventory or payload tree before this arithmetic means anything.`);
+    }
+    if (profile.releaseId !== record.releaseId) {
+      fail(`the byte profile registered for ${record.releaseId} describes ${profile.releaseId}; a ceiling built from a mislabelled profile would be arithmetic about the wrong bytes.`);
+    }
+    resolved.push(profile);
+  }
+  if (resolved.length === 0) fail("no enabled promotion record resolved a byte profile; a ceiling over an empty composition is not a ceiling.");
+  return resolved;
+}
+
 export interface ExteriorCacheByteCeiling {
   readonly maxCacheEntries: number;
   readonly maxCachedBytes: number;

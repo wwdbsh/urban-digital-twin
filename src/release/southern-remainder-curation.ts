@@ -19,19 +19,51 @@
  *    (`SOUTHERN_REMAINDER_SKYLINE_ENVELOPE`), so "the high-rise band at the
  *    wave's northern edge" is closed by geometry rather than by the phrase
  *    appearing in a comment;
- *  - the subset is EDGE-CONNECTED, so it renders as one continuous piece of city
- *    rather than as scattered textured islands;
+ *  - the subset is EDGE-CONNECTED and admits at most
+ *    `SOUTHERN_REMAINDER_CURATION_MAX_CELLS` cells;
  *  - it fits the entry budget derived from the RAISED cache cap;
  *  - its LOCAL refusal rate is recomputed from the shipped census and required to
- *    sit near the 1.00% wave rate, which closes precondition (b)'s second half;
- *  - it is the enumerated OPTIMUM on skyline value over every admissible
- *    combination in the envelope — `southern-remainder-curation-optimum.test.ts`
- *    re-runs that enumeration on every test run rather than trusting a number
- *    that was computed once and written into an ADR.
+ *    sit near the 1.00% wave rate, which closes precondition (b)'s second half.
  *
- * What is NOT computed, and is therefore stated as a judgement: that a viewer
- * meeting this wave for the first time should meet it here. The rationale strings
- * below are that judgement, written down.
+ * ## The decision rule, stated exactly, because an earlier draft overclaimed it
+ *
+ * The first version of this module said the curated set is "the enumerated
+ * OPTIMUM on skyline value over every admissible combination in the envelope".
+ * That was FALSE, and review caught it. The enumeration behind it silently
+ * bounded combinations at four cells, and the sentence did not say so. Lift the
+ * bound and `{379, 380, 385, 387, 388}` scores **18** at 196 owned buildings —
+ * inside the envelope, inside the entry budget, and beating the curated set's
+ * 16. So did `{379, 381, 385, 387, 388}` at 18 and 198 owned.
+ *
+ * The rule that was actually applied is a LEXICOGRAPHIC one, and it is now
+ * written down in the order it is applied:
+ *
+ *   1. **Edge-contiguity is a PRECONDITION, not a tie-break.** A promoted subset
+ *      must render as one continuous piece of city; scattered textured islands
+ *      with untextured ground between them read as a rendering fault rather than
+ *      as a skyline. This is the constraint that actually costs something and
+ *      the cost is stated rather than hidden: BOTH 18-scoring sets are
+ *      disconnected — in each, cell 385 touches nothing else in the set — so
+ *      contiguity gives up 2 skyline buildings. Under contiguity the maximum
+ *      reachable score is 16 AT ANY SIZE, which is the fact that makes the give-up
+ *      bounded and knowable rather than open-ended.
+ *   2. **At most four cells**, for the reason `SOUTHERN_REMAINDER_CURATION_MAX_CELLS`
+ *      states. This bound does NOT improve the score — five connected
+ *      combinations also reach 16 — it makes the choice UNIQUE, and it is the
+ *      only thing that does.
+ *   3. **Maximize skyline value** under 1 and 2. `{379, 385, 386, 387}` is then
+ *      the unique maximum at 16.
+ *
+ * `southern-remainder-curation-optimum.test.ts` enumerates WITHOUT hiding the
+ * size bound, pins the rejected 18-scoring alternatives by name together with
+ * their scores and their disconnectedness, and pins the five connected
+ * combinations that tie at 16 once the bound is lifted. The tradeoff is
+ * therefore checked on every run rather than asserted in prose.
+ *
+ * What is NOT computed, and is therefore stated as a judgement: that contiguity
+ * is worth two skyline buildings, that four cells is the right blast radius, and
+ * that a viewer meeting this wave for the first time should meet it here. The
+ * rationale strings below are that judgement, written down.
  */
 
 import { EXTERIOR_WAVE_LEDGER_RELEASE_ID } from "./exterior-wave-ledger.ts";
@@ -86,6 +118,66 @@ export const SOUTHERN_REMAINDER_SKYLINE_HEIGHT_METERS = 90;
  * stated rather than implied: see ADR 0035's next-wave preconditions.
  */
 export const SOUTHERN_REMAINDER_CURATED_SUBSET_CEILING = 200;
+
+/**
+ * The most cells a promoted curated subset may admit.
+ *
+ * It is a STATED CRITERION with a reason, not a property of the data and not a
+ * tie-break dressed up as one. Two reasons, and neither is "it scores better",
+ * because it does not:
+ *
+ *  - **Bounded curation blast radius.** Every admitted cell is a judgement that
+ *    has to be written down, defended and re-checked whenever the base moves.
+ *    Four rationales are readable; a subset that grows to fill whatever the
+ *    entry budget allows stops being a curation and becomes a fill.
+ *  - **A single coherent district.** Four contiguous cells of this ledger's tile
+ *    grid are about four blocks by two — one neighbourhood a viewer reads as one
+ *    place. Beyond that the subset spans places that have nothing to do with each
+ *    other and the word "curated" stops meaning anything.
+ *
+ * What it buys is UNIQUENESS. With contiguity as a precondition the maximum
+ * skyline score is 16 at any size, and lifting this bound leaves FIVE connected
+ * combinations tied at 16 rather than one. This bound is the only thing that
+ * makes the promoted set determined rather than arbitrary among equals.
+ */
+export const SOUTHERN_REMAINDER_CURATION_MAX_CELLS = 4;
+
+/**
+ * The higher-scoring combinations this curation REFUSED, named so the tradeoff
+ * is a record rather than an omission.
+ *
+ * Both beat the curated set on raw skyline value and both are DISCONNECTED: in
+ * each, cell 385 shares only a corner with the rest, so the subset would render
+ * as one block of textured city plus one textured island with untextured ground
+ * between them. Contiguity is a precondition here, so both are refused — and the
+ * two skyline buildings that refusal gives up are stated rather than absorbed.
+ *
+ * `southern-remainder-curation-optimum.test.ts` recomputes each entry's score,
+ * owned count and connectedness from the committed skyline census, so a claim
+ * here cannot drift from the data it is about.
+ */
+export const SOUTHERN_REMAINDER_REJECTED_ALTERNATIVES: readonly {
+  readonly parentOrders: readonly number[];
+  readonly skylineBuildingCount: number;
+  readonly ownedBuildingCount: number;
+  readonly connected: false;
+  readonly reason: string;
+}[] = [
+  {
+    parentOrders: [379, 380, 385, 387, 388],
+    skylineBuildingCount: 18,
+    ownedBuildingCount: 196,
+    connected: false,
+    reason: "Scores 18 against the curated set's 16 and fits the 200-entry budget, and is refused because it is not one piece: cells 379, 380, 387 and 388 form a connected block and cell 385 touches none of them, sharing only the corner point where the two tile rows meet. Promoting it would put a textured island beside a textured block with base massing between them.",
+  },
+  {
+    parentOrders: [379, 381, 385, 387, 388],
+    skylineBuildingCount: 18,
+    ownedBuildingCount: 198,
+    connected: false,
+    reason: "The other combination that reaches 18, and disconnected twice over: cell 385 is isolated for the same reason as above, and cell 381 touches nothing in the set either. It is named because an alternative that is refused for the same reason as another is still an alternative, and leaving it out would make the record look like there was exactly one path not taken.",
+  },
+];
 
 /**
  * The local refusal rate this subset must not exceed, as a fraction.
@@ -172,7 +264,7 @@ export const SOUTHERN_REMAINDER_CURATED_CELLS: readonly SouthernRemainderCurated
 export const SOUTHERN_REMAINDER_CURATION_BASIS = "curated-list" as const;
 
 export const SOUTHERN_REMAINDER_CURATION_STATEMENT =
-  "The promoted renderable subset of wave w03 is an EXPLICIT CURATED LIST of four ownership cells, not a re-derivation of the wave ledger's cell order. The ledger's `order` field is documented as global visual-priority order but is a south-to-north tile-row traversal, so the canary's single order-derived cell is simply the wave's first rather than its best. Visual priority for the promoted subset is therefore a stated property whose value is this list. It was chosen on SKYLINE VALUE — the count of owned buildings whose sourced height reaches 90 m — over every admissible combination of two to four cells inside the stated envelope that fits the entry budget, and it is the unique maximum on that measure among the combinations that are also edge-connected. Contiguity is part of the choice rather than a bonus: the four cells form one connected piece through cell 386, and cell 379's northern edge is shared exactly with a promoted Midtown-core cell, so the promoted waves meet on the ground. The canary's cell 276 is deliberately not reused." as const;
+  "The promoted renderable subset of wave w03 is an EXPLICIT CURATED LIST of four ownership cells, not a re-derivation of the wave ledger's cell order. The ledger's `order` field is documented as global visual-priority order but is a south-to-north tile-row traversal, so the canary's single order-derived cell is simply the wave's first rather than its best. Visual priority for the promoted subset is therefore a stated property whose value is this list. THE DECISION RULE IS LEXICOGRAPHIC AND IS STATED IN THE ORDER IT WAS APPLIED. (1) EDGE-CONTIGUITY IS A PRECONDITION, not a tie-break: a promoted subset must render as one continuous piece of city rather than as scattered textured islands with untextured ground between them. (2) AT MOST FOUR CELLS, a stated criterion whose reason is a bounded curation blast radius and a single coherent district. (3) MAXIMIZE SKYLINE VALUE — the count of owned buildings whose sourced height reaches 90 m — subject to those two constraints, over every admissible combination inside the stated envelope that fits the entry budget. Under that rule these four cells are the UNIQUE maximum at 16. THE RULE IS NOT COST-FREE AND THE COST IS RECORDED: lifting the contiguity precondition admits {379, 380, 385, 387, 388} at 18 and {379, 381, 385, 387, 388} at 18, both inside the envelope and the budget, so contiguity gives up two skyline buildings; in both, cell 385 shares only a corner with the rest. Lifting the four-cell bound does NOT raise the score — under contiguity the maximum is 16 at any size — but it leaves five connected combinations tied at 16 rather than one, so the bound buys uniqueness rather than quality. The four cells form one connected piece through cell 386, and cell 379's northern edge is shared exactly with a promoted Midtown-core cell, so the promoted waves meet on the ground. The canary's cell 276 is deliberately not reused." as const;
 
 /** Cells the promoted subset must NOT silently inherit (ADR 0035 (b)). */
 export const SOUTHERN_REMAINDER_CANARY_RENDERABLE_CELL_IDS: readonly string[] = [
@@ -306,8 +398,14 @@ export function southernRemainderCuratedCells<T extends SouthernRemainderCuratio
     owned += cell.buildingIds.length;
   }
   if (chosen.length === 0) fail("the curated list is empty; a promoted wave with no renderable cell would ship as pure tombstones.");
+  // The two stated constraints, in the order the decision rule applies them.
+  // Both are gates rather than comments, because the statement this release
+  // commits claims each of them by name.
   if (!southernRemainderCellsConnected(chosen)) {
-    fail("the curated cells are not one edge-connected piece; the curation's own statement claims contiguity, and a subset that renders as scattered textured islands would falsify it.");
+    fail("the curated cells are not one edge-connected piece; edge-contiguity is a PRECONDITION of this curation, not a tie-break, and a subset that renders as scattered textured islands would falsify the statement this release commits.");
+  }
+  if (chosen.length > SOUTHERN_REMAINDER_CURATION_MAX_CELLS) {
+    fail(`the curated list admits ${chosen.length} cells, above the stated ${SOUTHERN_REMAINDER_CURATION_MAX_CELLS}-cell bound; that bound is what makes the promoted subset unique among equally-scoring connected combinations, and exceeding it silently would turn a curation into a fill.`);
   }
   if (owned > entryBudget) {
     fail(`the curated subset owns ${owned} buildings, above the ${entryBudget}-entry budget derived from the raised runtime cache cap; a subset that does not fit alongside the promoted waves would have to be re-cut after promotion, which an immutable release cannot do.`);

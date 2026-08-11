@@ -118,6 +118,45 @@ describe("the promoted set", () => {
       .toEqual([EXTERIOR_DEFAULT_ACTIVATION, MIDTOWN_CORE_EXTERIOR_ACTIVATION, LOWER_MANHATTAN_EXTERIOR_ACTIVATION, SOUTHERN_REMAINDER_ROLLED_BACK]);
   });
 
+  /**
+   * A withdrawal and a promotion of the same release cannot coexist in one set.
+   *
+   * `resolveExteriorActivationSet` states a PRECEDENCE for this — a record that
+   * publishes X governs X ahead of a record that withdrew X — and that precedence
+   * exists so the resolution stays deterministic if it ever happened. It is not a
+   * licence for it to happen: a build where one wave withdrew a release another
+   * wave is actively serving would refuse promotion-era links into bytes it is
+   * simultaneously rendering, and no reader of the records could tell which
+   * statement was the intended one. The precedence keeps the resolver total; this
+   * invariant keeps the SET honest, and the two are different jobs.
+   */
+  it("never lets one record withdraw a release another enabled record publishes", () => {
+    const published = new Map<string, number>();
+    EXTERIOR_DEFAULT_ACTIVATIONS.forEach((record, index) => {
+      if (record.enabled) published.set(record.releaseId, index);
+    });
+    const collisions: string[] = [];
+    EXTERIOR_DEFAULT_ACTIVATIONS.forEach((record, index) => {
+      const withdrawn = record.rolledBackReleaseId ?? null;
+      if (withdrawn === null) return;
+      const publisher = published.get(withdrawn);
+      if (publisher !== undefined) collisions.push(`record ${index} withdrew ${withdrawn}, which record ${publisher} publishes`);
+      // A record may never withdraw its OWN release either, which the
+      // per-record suite pins; restated at set level so one loop covers both.
+      if (record.enabled && withdrawn === record.releaseId) collisions.push(`record ${index} withdrew its own release ${withdrawn}`);
+    });
+    expect(collisions).toEqual([]);
+
+    // The invariant is checkable rather than vacuous: a set that DOES collide is
+    // detected by the same loop.
+    const colliding = [
+      EXTERIOR_DEFAULT_ACTIVATION,
+      { enabled: false as const, releaseId: null, rolledBackReleaseId: "manhattan-exterior-cells-20260811-v3" },
+    ];
+    const publishedIds = new Set(colliding.filter((record) => record.enabled).map((record) => record.releaseId));
+    expect(colliding.some((record) => record.rolledBackReleaseId !== null && record.rolledBackReleaseId !== undefined && publishedIds.has(record.rolledBackReleaseId))).toBe(true);
+  });
+
   it("promotes disjoint cell ids, so no wave can claim another wave's cell", () => {
     // Resolves the multi-wave collision risk directly: the scene diffs owned
     // collections by cell id, so two waves sharing one would merge into a

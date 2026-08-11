@@ -90,12 +90,26 @@ promoted waves meet on the ground rather than as separate patches. The one
 refusal is `doitt:938827`, `source-height-below-grammar-minimum`, shipped as an
 explicit unavailable detail and deliberately outside the accepted membership.
 
-Selected on **skyline value** — owned buildings whose sourced height reaches
-90 m — over 154 admissible combinations inside a stated envelope. Four
-combinations tie at the maximum score of 16 and exactly one is edge-connected,
-which is the tie-break. `southern-remainder-curation-optimum.test.ts` re-runs the
-enumeration on every run, over the committed ledger and the committed
-`skyline-census.json` this pipeline now emits.
+Selected under a lexicographic rule over 177 admissible combinations inside a
+stated envelope: **(1)** edge-contiguity as a PRECONDITION, **(2)** at most four
+cells as a stated criterion, **(3)** maximize skyline value — owned buildings whose
+sourced height reaches 90 m — under both. `{379, 385, 386, 387}` is then the
+unique maximum at 16.
+
+Each constraint's cost is recorded rather than absorbed. Contiguity costs two
+skyline buildings: `{379,380,385,387,388}` (196 owned) and
+`{379,381,385,387,388}` (198 owned) both score 18 inside the budget and both are
+disconnected, cell 385 sharing only a corner. Under contiguity the maximum is 16
+at any size. The four-cell bound costs nothing on score — five connected
+combinations tie at 16 once it is lifted — and buys uniqueness, which is the only
+thing it buys. An earlier draft claimed an unqualified "optimum over every
+admissible combination" while its enumeration silently capped size at four;
+review caught it, and both the statement and the suite now state the bound.
+
+`southern-remainder-curation-optimum.test.ts` enumerates without the cap, pins the
+rejected alternatives by name with their scores and disconnectedness, and
+recomputes the census's decisive heights from the pinned base whenever that
+snapshot is present.
 
 Heights quoted anywhere here are the SOURCED `heightMeters` of the pinned
 `manhattan-citywide-20260804` base. The NYC OTI footprint dataset carries no

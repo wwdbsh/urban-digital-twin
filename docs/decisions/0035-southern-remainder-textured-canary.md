@@ -504,25 +504,71 @@ committed inventory, and gated on every emission.
 
 ### How they were chosen, and the enumeration that checks it
 
-The ranking key is **skyline value**: owned buildings whose SOURCED height reaches
-90 m. Not owned-building count — "maximal fill" is explicitly not what this
-promotion is for. The candidate set is every `w03` cell inside a stated envelope
+The candidate set is every `w03` cell inside a stated envelope
 (`-73.9930, 40.7442, -73.9819, 40.7483`), which is the high-rise band immediately
 below the Midtown-core wave boundary and is no larger than that band: the canary's
-cell sits nine tile rows further south and cannot satisfy it.
+cell sits nine tile rows further south and cannot satisfy it. Eight candidates,
+177 admissible combinations under the 200-entry budget.
 
-Eight candidates, 154 admissible two-to-four-cell combinations under the
-200-entry budget. **Four combinations reach the maximum score of 16.** Exactly one
-of them is a single EDGE-CONNECTED piece, and that is the curated set — so
-contiguity is the tie-break, and it is a property the curation claims rather than
-a preference for the biggest set. The three tied alternatives are named in the
-suite: (379, 381, 385, 387), (379, 380, 385, 387), (379, 385, 387, 388). The
-runner-up on score is (378, 379, 385, 387) at 15.
+**The decision rule is LEXICOGRAPHIC, and an earlier draft of this section stated
+it wrongly.** That draft said the curated set was "the enumerated optimum on
+skyline value over every admissible combination". It was not, and review caught
+it: the enumeration behind the claim silently bounded combinations at four cells.
+The rule that was actually applied, in the order it applies:
+
+1. **Edge-contiguity is a PRECONDITION, not a tie-break.** A promoted subset must
+   render as one continuous piece of city; scattered textured islands with
+   untextured ground between them read as a rendering fault, not a skyline.
+2. **At most four cells** — `SOUTHERN_REMAINDER_CURATION_MAX_CELLS` — a stated
+   criterion whose reason is a bounded curation blast radius (four rationales are
+   readable; a set that grows to fill the budget is a fill, not a curation) and a
+   single coherent district.
+3. **Maximize skyline value** — owned buildings whose SOURCED height reaches 90 m
+   — under 1 and 2. Not owned-building count: "maximal fill" is explicitly not
+   what this promotion is for.
+
+Under that rule `{379, 385, 386, 387}` is the **unique maximum at 16**.
+
+**What each constraint costs is recorded, because a constraint whose price is
+unmeasured is indistinguishable from a rationalisation.**
+
+- **Contiguity costs two skyline buildings.** Lift it and two combinations reach
+  **18**, both inside the envelope and inside the budget:
+  `{379, 380, 385, 387, 388}` at 196 owned and `{379, 381, 385, 387, 388}` at 198.
+  Both are DISCONNECTED — in each, cell 385 shares only the corner point where
+  the two tile rows meet — so promoting either would put a textured island beside
+  a textured block with base massing between them. Under contiguity the maximum
+  reachable score is **16 at any size**, which is what makes the give-up bounded
+  and knowable rather than open-ended.
+- **The four-cell bound costs nothing on score and buys uniqueness.** Lift it and
+  five CONNECTED combinations tie at 16 — `{379,380,381,386,387}`,
+  `{379,380,381,387,388}`, `{379,380,386,387,388}`, `{379,381,386,387,388}` and
+  the curated set. Exactly one of the five respects the bound. It is the only
+  thing that makes the promoted set determined rather than arbitrary among
+  equals.
+
+At four cells or fewer, three DISCONNECTED combinations also reach 16 —
+`{379,380,385,387}`, `{379,381,385,387}`, `{379,385,387,388}` — so the
+contiguity precondition is doing visible work at this size too. The best
+CONNECTED alternative under the bound scores 14, so the rule's margin over its own
+runner-up is 2, the same size as what contiguity gave up.
 
 None of that is a number written into this document and left there.
-`southern-remainder-curation-optimum.test.ts` re-runs the enumeration on every
-test run, over the committed wave ledger and a committed per-cell
-`skyline-census.json` that the pipeline now emits from the pinned base.
+`southern-remainder-curation-optimum.test.ts` enumerates WITHOUT hiding the size
+bound, pins the rejected 18-scoring alternatives by name together with their
+scores and their disconnectedness, pins the five connected combinations that tie
+at 16 once the bound is lifted, and re-runs all of it on every test run over the
+committed wave ledger and a committed per-cell `skyline-census.json` the pipeline
+emits from the pinned base. The two refused alternatives are also carried in code
+as `SOUTHERN_REMAINDER_REJECTED_ALTERNATIVES`, with the reason each was refused.
+
+**"Skyline value" is measured rather than trusted.** The census is pinned to the
+exact base it was derived from (`manhattan-citywide-20260804` by manifest
+checksum) and its per-cell counts are checked for internal consistency
+unconditionally; whenever the pinned snapshot is present on the machine, every
+cell the decision turned on — the four curated and every cell named in a rejected
+alternative — has its sourced-height count and tallest height recomputed from
+that snapshot and required to agree exactly.
 
 | cell | owned | materialized | skyline (>= 90 m) | tallest | why |
 | --- | --- | --- | --- | --- | --- |

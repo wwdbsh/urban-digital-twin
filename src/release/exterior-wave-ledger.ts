@@ -61,13 +61,18 @@ export const EXTERIOR_CELL_MAX_TILE_LEVEL = 24 as const;
  * Maximum canonical buildings per ownership cell.
  *
  * Derivation against the accepted runtime budgets in
- * `src/runtime/exterior-cell-runtime.ts` (`maxCacheEntries: 256`,
- * `maxCachedBytes: 256 MiB`):
+ * `src/runtime/exterior-cell-runtime.ts`. The entry cap is deliberately NOT
+ * restated here: it was 256 when this bound was derived and is 512 since T018
+ * took ADR 0034's admissible response 1, and a number copied into prose is
+ * exactly the drift the ADR 0030 eviction disclosure exists to prevent. Read
+ * `EXTERIOR_RUNTIME_BUDGETS` for the live values; what matters to THIS bound is
+ * the relationship below, which holds at either cap and only got slacker:
  *
  * - A cell loads atomically: every available building in the cell contributes
  *   one selected-LOD GLB cache entry per render, so a single cell load costs
- *   `buildings` entries.  120 <= 256 therefore makes one cell individually
- *   loadable with 53% of the cache still free.
+ *   `buildings` entries.  120 is comfortably under the entry cap, so one cell is
+ *   individually loadable with most of the cache still free — 53% at the cap
+ *   this was derived against, and more since.
  * - Bytes are not the binding constraint.  The Stage 3 pilot measured 28 GLBs
  *   (14 buildings x 2 LODs) at 2,457,444 bytes, i.e. ~87.8 KiB per asset and
  *   ~171 KiB per building for both LODs.  120 buildings x both LODs is about
@@ -78,11 +83,14 @@ export const EXTERIOR_CELL_MAX_TILE_LEVEL = 24 as const;
  * - It is not a 16-entry safety margin.  A predecessor-fallback load re-runs
  *   `verifyCellRelease`, so one fallback load of a full cell can approach
  *   `2 x buildings` (~238) entries while the earliest entries are still
- *   resident, leaving the 256-entry cache effectively saturated by a single
- *   cell.
- * - The 256-entry cache is **shared across all cells**.  This cap bounds
- *   per-cell atomicity only; it says nothing about the cache budget once more
- *   than one cell is resident, which is the normal multi-cell case.
+ *   resident.  At the 256-entry cap this bound was derived against, that left
+ *   the cache effectively saturated by a single cell; at the raised cap it is
+ *   under half of it.  The COST did not change — the headroom did.
+ * - The entry cache is **shared across all cells**, at whatever cap
+ *   `EXTERIOR_RUNTIME_BUDGETS` states.  This cap bounds per-cell atomicity only;
+ *   it says nothing about the cache budget once more than one cell is resident,
+ *   which is the normal multi-cell case, and nothing about the shared LRU's
+ *   recency-only eviction across promoted waves.
  *
  * Cache pressure in multi-cell operation is therefore a runtime scheduling
  * concern for T013+, not something a per-cell membership cap can solve.

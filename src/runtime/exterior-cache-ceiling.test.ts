@@ -20,10 +20,11 @@ import {
   exteriorCacheAssetByteSizes,
   exteriorCacheByteCeiling,
   exteriorCacheWaveByteProfile,
+  exteriorPromotedCacheProfiles,
   type ExteriorCacheWaveByteProfile,
 } from "./exterior-cache-ceiling";
 import { EXTERIOR_RUNTIME_BUDGETS } from "./exterior-cell-runtime";
-import { BLOCK835_MEMBERSHIP_BUILDING_IDS } from "./exterior-default-activation";
+import { BLOCK835_MEMBERSHIP_BUILDING_IDS, EXTERIOR_DEFAULT_ACTIVATIONS } from "./exterior-default-activation";
 
 const MIB = 1024 * 1024;
 
@@ -59,6 +60,26 @@ const block835 = block835Profile();
 const midtown = inventoryProfile("manhattan-midtown-core-cells-20260811-v3", "data/midtown-core-20260811-v3/payload-inventory.json");
 const lowerManhattan = inventoryProfile("manhattan-lower-manhattan-cells-20260812-p1", "data/lower-manhattan-20260812-p1/payload-inventory.json");
 const southernRemainder = inventoryProfile("manhattan-southern-remainder-cells-20260812-p1", "data/southern-remainder-20260812-p1/payload-inventory.json");
+
+/**
+ * Where each promoted release's measured bytes come from, keyed by release id.
+ *
+ * This is a REGISTRY, not the composition. The composition is derived from
+ * `EXTERIOR_DEFAULT_ACTIVATIONS` below, so promoting a fifth wave fails here
+ * until its bytes are registered rather than quietly producing a four-wave
+ * ceiling. Block 835 V3 predates the payload-inventory record and is read from
+ * its committed payload tree; every other wave is read from its committed
+ * inventory. Both are committed bytes, so nothing here needs an untracked tree.
+ */
+const BYTE_PROFILES = new Map<string, ExteriorCacheWaveByteProfile>([
+  [block835.releaseId, block835],
+  [midtown.releaseId, midtown],
+  [lowerManhattan.releaseId, lowerManhattan],
+  [southernRemainder.releaseId, southernRemainder],
+]);
+
+/** The composition this build actually promotes, in promotion-record order. */
+const PROMOTED_PROFILES = exteriorPromotedCacheProfiles({ records: EXTERIOR_DEFAULT_ACTIVATIONS, profiles: BYTE_PROFILES });
 
 describe("the raised exterior entry cap", () => {
   it("is 512, with the byte cap deliberately unchanged at 256 MiB", () => {
@@ -161,8 +182,10 @@ describe("the byte ceiling re-derived at the raised cap", () => {
 });
 
 describe("the byte ceiling with the FOURTH wave promoted", () => {
+  // DERIVED from the promotion records, never listed by hand — see
+  // `PROMOTED_PROFILES` and the derivation suite below.
   const ceiling = exteriorCacheByteCeiling({
-    waves: [block835, midtown, lowerManhattan, southernRemainder],
+    waves: PROMOTED_PROFILES,
     maxCacheEntries: EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries,
     maxCachedBytes: EXTERIOR_RUNTIME_BUDGETS.maxCachedBytes,
   });
@@ -193,6 +216,66 @@ describe("the byte ceiling with the FOURTH wave promoted", () => {
     expect(ceiling.worstMeanReleaseId).toBe("manhattan-lower-manhattan-cells-20260812-p1");
     expect(ceiling.meanFillByteCeilingBytes).toBe(512 * 580_130);
     expect(ceiling.largestAssetReleaseId).toBe("manhattan-lower-manhattan-cells-20260812-p1");
+  });
+});
+
+describe("the composition is derived from the promotion records", () => {
+  it("resolves exactly the enabled promoted releases, in record order", () => {
+    const enabled = EXTERIOR_DEFAULT_ACTIVATIONS.filter((record) => record.enabled).map((record) => record.releaseId);
+    expect(PROMOTED_PROFILES.map((profile) => profile.releaseId)).toEqual(enabled);
+    expect(PROMOTED_PROFILES).toHaveLength(4);
+  });
+
+  /**
+   * THE PRE-FIX REPRO. Before this derivation existed the four waves were a
+   * literal array in this file, so a fifth promoted wave changed
+   * `EXTERIOR_DEFAULT_ACTIVATIONS` and changed NOTHING here: the ceiling kept
+   * describing four waves and stayed green while understating the composition by
+   * a whole release. Both halves are asserted, so the contrast is the test rather
+   * than a comment about one.
+   */
+  it("FAILS on an enabled promoted release with no byte profile, where a hand-listed set passed silently", () => {
+    const unregistered = { enabled: true as const, releaseId: "manhattan-fifth-wave-cells-20260813" };
+    const withFifthWave = [...EXTERIOR_DEFAULT_ACTIVATIONS, unregistered];
+
+    // The OLD shape: a literal list. It ignores the new record entirely and
+    // produces a confident, wrong ceiling — 434 entries for a build that
+    // promotes five waves.
+    const handListed = exteriorCacheByteCeiling({
+      waves: [block835, midtown, lowerManhattan, southernRemainder],
+      maxCacheEntries: EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries,
+      maxCachedBytes: EXTERIOR_RUNTIME_BUDGETS.maxCachedBytes,
+    });
+    expect(handListed.residentAssetEntries).toBe(434);
+    expect(handListed.waves).toHaveLength(4);
+
+    // The derived shape refuses, and names the release it could not account for.
+    expect(() => exteriorPromotedCacheProfiles({ records: withFifthWave, profiles: BYTE_PROFILES }))
+      .toThrow(/manhattan-fifth-wave-cells-20260813 has no measured byte profile/u);
+  });
+
+  it("skips a wave rolled back to base, because it is genuinely not resident", () => {
+    const rolledBack = EXTERIOR_DEFAULT_ACTIVATIONS.map((record) => (
+      record.enabled && record.releaseId === southernRemainder.releaseId
+        ? { enabled: false as const, releaseId: null }
+        : record
+    ));
+    const profiles = exteriorPromotedCacheProfiles({ records: rolledBack, profiles: BYTE_PROFILES });
+    expect(profiles.map((profile) => profile.releaseId)).not.toContain(southernRemainder.releaseId);
+    expect(profiles).toHaveLength(3);
+    const ceiling = exteriorCacheByteCeiling({ waves: profiles, maxCacheEntries: 512, maxCachedBytes: 256 * MIB });
+    expect(ceiling.residentAssetEntries).toBe(255);
+  });
+
+  it("refuses a mislabelled profile and an empty composition", () => {
+    expect(() => exteriorPromotedCacheProfiles({
+      records: [{ enabled: true, releaseId: block835.releaseId }],
+      profiles: new Map([[block835.releaseId, midtown]]),
+    })).toThrow(/describes manhattan-midtown-core-cells-20260811-v3/u);
+    expect(() => exteriorPromotedCacheProfiles({
+      records: [{ enabled: false, releaseId: null }],
+      profiles: BYTE_PROFILES,
+    })).toThrow(/no enabled promotion record resolved a byte profile/u);
   });
 });
 
