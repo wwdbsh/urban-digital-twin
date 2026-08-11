@@ -132,3 +132,15 @@ artifacts/central-upper-manhattan-20260812-p1-acceptance/
 # checksum, the URL it was taken at and the DOM text each journey read are
 # committed in data/central-upper-manhattan-20260812-p1/journey-evidence.json.
 artifacts/central-upper-manhattan-20260812-p1-journeys/
+
+# T021 Northern-Manhattan canary work root: the full-wave census over all 10,230
+# owned buildings — the LAST wave the committed ledger declares — the Blender
+# sample inputs and renders, and the stage receipts. The hashes that matter are
+# committed in data/northern-manhattan-20260812/.
+artifacts/northern-manhattan-20260812/
+
+# T021 renderer-journey scratch root: the captured stills. Every still's
+# checksum, the URL it was taken at and the DOM text each journey read are
+# committed in data/northern-manhattan-20260812/journey-evidence.json so the
+# evidence stays checkable after this worktree-local tree is removed.
+artifacts/northern-manhattan-20260812-journeys/

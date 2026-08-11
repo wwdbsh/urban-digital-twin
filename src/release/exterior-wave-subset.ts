@@ -125,6 +125,20 @@ export const EXTERIOR_WAVE_DOMAIN_REGISTRY: readonly {
     ledgerIdDomain: "udt.central-upper-manhattan.subset-ledger-id.v1",
     baseIdentityDomain: "udt.central-upper-manhattan.subset-base-identity.v1",
   },
+  // The LAST row this table will ever gain from the committed wave ledger. That
+  // ledger declares exactly six waves, `w00` through `w05`, and `w00` is Block 835
+  // — which predates the wave-subset machinery and derives no subset id — so the
+  // five rows above and this one are every wave that can issue a domain under it.
+  //
+  // "Closed table" now means closed in a second sense, and the distinction is
+  // worth keeping: the guard is still open to any wave a FUTURE ledger might
+  // declare, and would refuse it for having no row, exactly as it refuses one
+  // today. What is complete is this ledger's coverage, not the mechanism.
+  {
+    waveId: "northern-manhattan",
+    ledgerIdDomain: "udt.northern-manhattan.subset-ledger-id.v1",
+    baseIdentityDomain: "udt.northern-manhattan.subset-base-identity.v1",
+  },
 ];
 
 /**
@@ -466,6 +480,79 @@ export function buildExteriorWaveSubsetLedger(
   };
 
   return { ledger, derivation, buildingIds };
+}
+
+// ---------------------------------------------------------------------------
+// The order-derived renderable-cell walk
+// ---------------------------------------------------------------------------
+
+export interface ExteriorWaveRenderableSubset<T> {
+  cells: T[];
+  ownedBuildingCount: number;
+  spareEntries: number;
+  /**
+   * The first cell the budget could NOT admit, and what admitting it would have
+   * cost. `null` only when every supplied cell fit.
+   *
+   * Emitted because "the walk stopped" and "the wave ran out of cells" are
+   * different facts that the chosen list alone cannot distinguish, and because a
+   * budget that is one building short of the next cell is worth being able to see.
+   */
+  stoppedAt: { cellId: string; buildingCount: number; wouldHaveTotalled: number } | null;
+}
+
+/**
+ * Chooses a wave's renderable cells: highest visual priority first, admitting a
+ * cell only while the whole subset still fits the entry budget.
+ *
+ * EXTRACTED AT T021 RATHER THAN COPIED A FOURTH TIME. Waves `w02`, `w03` and
+ * `w04` each carry their own private copy of this walk in their own release
+ * module, which is exactly the drift this file's header says the subset builder
+ * was extracted to prevent. Those three copies are NOT edited — they are the code
+ * three shipped releases were emitted by, and rewriting them to call this would
+ * change the modules that describe frozen bytes for no behavioural reason.
+ * Instead `exterior-wave-subset.test.ts` proves this function agrees with all
+ * three over the same inputs, so the copies are pinned to this one rather than
+ * merely coexisting with it.
+ *
+ * Order-derived, and that is a deliberate limit rather than a simplification: a
+ * canary's subset may be order-derived because it is proving that the wave
+ * materializes at all. Choosing cells for what they look like is a curation
+ * decision that belongs to promotion, where it can be recorded and defended as
+ * one.
+ *
+ * Whole cells only, and the walk STOPS at the first cell that does not fit
+ * rather than skipping it. Skipping would reorder the wave's declared visual
+ * priority to fill a budget, which is a curation nobody recorded.
+ */
+export function deriveExteriorWaveRenderableCells<T extends { cellId: string; buildingIds: readonly string[] }>(
+  cells: readonly T[],
+  entryBudget: number,
+  waveId: string,
+): ExteriorWaveRenderableSubset<T> {
+  const chosen: T[] = [];
+  let owned = 0;
+  let stoppedAt: ExteriorWaveRenderableSubset<T>["stoppedAt"] = null;
+  for (const cell of cells) {
+    if (owned + cell.buildingIds.length > entryBudget) {
+      stoppedAt = { cellId: cell.cellId, buildingCount: cell.buildingIds.length, wouldHaveTotalled: owned + cell.buildingIds.length };
+      break;
+    }
+    chosen.push(cell);
+    owned += cell.buildingIds.length;
+  }
+  if (chosen.length === 0) {
+    // The message names the leading cell's size, because "no cell fits" alone
+    // sends a reader looking for a bug in the walk when the actual fact is that
+    // this wave's first cell is larger than the whole budget.
+    const leading = cells[0];
+    throw new Error(
+      leading
+        ? `Wave ${waveId}: no cell fits the ${entryBudget}-entry renderable budget; the first cell in priority order, ${leading.cellId}, owns ${leading.buildingIds.length} buildings.`
+        : `Wave ${waveId}: no cell fits the ${entryBudget}-entry renderable budget; no cell was supplied at all.`,
+    );
+  }
+  return { cells: chosen, ownedBuildingCount: owned, spareEntries: entryBudget - owned, stoppedAt };
 }
 
 // ---------------------------------------------------------------------------
