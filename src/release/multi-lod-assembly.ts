@@ -1,5 +1,12 @@
-import { domainSeparatedSha256, stableSerialize } from "../domain/deterministic-hash.ts";
+import { domainSeparatedSha256, sha256HexBytes, stableSerialize } from "../domain/deterministic-hash.ts";
 import { isSafeReleaseArtifactReference } from "../runtime/path-security.ts";
+import {
+  PROCEDURAL_TEXTURE_LIMITS,
+  PROCEDURAL_TEXTURE_PROFILE,
+  isProceduralTextureProvenance,
+  proceduralTextureReplayIndex,
+  type ProceduralTextureProfile,
+} from "./procedural-texture.ts";
 
 export const MULTI_LOD_ASSEMBLY_SCHEMA_VERSION = "1.0" as const;
 export const MULTI_LOD_ASSEMBLY_LIMITS = {
@@ -22,6 +29,24 @@ export const ASSEMBLY_ISSUE_UNREFERENCED_BUFFER_VIEW_FORBIDDEN = "embedded-image
 export const ASSEMBLY_ISSUE_BUFFER_TAIL_FORBIDDEN = "embedded-image-gate/buffer-tail-forbidden: a texture-free assembly cannot declare BIN bytes outside its covered bufferView extent." as const;
 export const ASSEMBLY_ISSUE_BUFFER_GAP_FORBIDDEN = "embedded-image-gate/buffer-gap-forbidden: a texture-free assembly cannot leave an uncovered gap between declared bufferViews." as const;
 
+/**
+ * Stable issue codes for the procedural-texture gate.
+ *
+ * The texture-free gate answers "is there an image?". This one answers a
+ * strictly harder question — "is this image one THIS repository generates?" —
+ * and answers it by regenerating the tile and comparing bytes. A photograph, a
+ * re-encode of a generated tile, or a single flipped bit all fail it, so the
+ * profile's honesty claim is structural rather than declarative.
+ */
+export const ASSEMBLY_ISSUE_TEXTURE_PROVENANCE_REQUIRED = "procedural-texture-gate/provenance-required: a GLB embedding images under the procedural profile must declare textureProvenance." as const;
+export const ASSEMBLY_ISSUE_TEXTURE_PROVENANCE_INVALID = "procedural-texture-gate/provenance-invalid: textureProvenance must pin this profile, rasterizer version and parameters hash." as const;
+export const ASSEMBLY_ISSUE_TEXTURE_REPLAY_MISMATCH = "procedural-texture-gate/replay-mismatch: an embedded image is not byte-identical to the tile this repository's rasterizer produces from the declared parameters." as const;
+export const ASSEMBLY_ISSUE_TEXTURE_SHAPE_FORBIDDEN = "procedural-texture-gate/texture-shape-forbidden: a procedural assembly requires one PNG image per texture, each drawn by a used material, within the declared image count." as const;
+export const ASSEMBLY_ISSUE_TEXTURE_BYTES_FORBIDDEN = "procedural-texture-gate/texture-bytes-forbidden: embedded image bytes exceed the per-image or per-GLB cap." as const;
+export const ASSEMBLY_ISSUE_TEXTURE_UNREFERENCED_BUFFER_VIEW_FORBIDDEN = "procedural-texture-gate/unreferenced-buffer-view-forbidden: a procedural assembly cannot declare a bufferView no accessor and no image reads." as const;
+export const ASSEMBLY_ISSUE_TEXTURE_BUFFER_GAP_FORBIDDEN = "procedural-texture-gate/buffer-gap-forbidden: a procedural assembly cannot leave an uncovered gap between declared bufferViews." as const;
+export const ASSEMBLY_ISSUE_TEXTURE_BUFFER_TAIL_FORBIDDEN = "procedural-texture-gate/buffer-tail-forbidden: a procedural assembly cannot declare BIN bytes outside its covered bufferView extent." as const;
+
 export interface MultiLodAssemblyPolicy {
   /**
    * Forces the texture-free gate for a package whose lineage includes
@@ -29,6 +54,19 @@ export interface MultiLodAssemblyPolicy {
    * only add enforcement, never remove it.
    */
   requireTextureFreeAssembly?: boolean;
+  /**
+   * Opts a package into the procedural detail-tile profile.
+   *
+   * This is a POLICY layer, not a schema or profile version. The manifest schema
+   * stays 1.0 and the closed glTF profile already validated `images`, `samplers`,
+   * `textures` and `TEXCOORD_0` — it simply had no caller that produced them. So
+   * nothing about the wire format changes here; what changes is which packages
+   * are ALLOWED to use that part of the profile, and what they must prove to do
+   * it. Declaring the profile does not relax the texture-free gate: a package
+   * that is texture-free by audience or by `requireTextureFreeAssembly` stays
+   * texture-free, and the two flags together simply admit nothing.
+   */
+  proceduralTextureProfile?: ProceduralTextureProfile;
 }
 
 export type AssemblyAudience = "private" | "public";
@@ -102,7 +140,12 @@ export interface MultiLodAssemblyManifest {
 }
 export interface AssemblyIssue { path: string; message: string }
 export type AssemblyValidation<T = MultiLodAssemblyManifest> = { ok: true; value: T } | { ok: false; issues: AssemblyIssue[] };
-export interface ParsedGlb { json: Record<string, unknown>; jsonBytes: number; binBytes: number }
+/**
+ * `bin` is carried through because the procedural-texture gate has to HASH the
+ * embedded image bytes, not merely count them. A parser that returns only sizes
+ * can prove an image exists; it cannot prove which image.
+ */
+export interface ParsedGlb { json: Record<string, unknown>; jsonBytes: number; binBytes: number; bin: Uint8Array }
 export interface AssemblyReplay {
   manifest: MultiLodAssemblyManifest;
   fingerprintSha256: string;
@@ -288,8 +331,9 @@ export function parseGlbV2(bytes: Uint8Array): ParsedGlb {
     else throw new Error("Unsupported GLB chunk type.");
   }
   if (!json || offset !== bytes.byteLength) throw new Error("GLB JSON or exact byte closure is missing.");
-  validateGltfJson(json, bin ?? new Uint8Array());
-  return { json, jsonBytes, binBytes: bin?.byteLength ?? 0 };
+  const binary = bin ?? new Uint8Array();
+  validateGltfJson(json, binary);
+  return { json, jsonBytes, binBytes: binary.byteLength, bin: binary };
 }
 const COMPONENT_BYTES: Record<number, number> = { 5121: 1, 5123: 2, 5125: 4, 5126: 4 };
 const TYPE_COMPONENTS: Record<string, number> = { SCALAR: 1, VEC2: 2, VEC3: 3, VEC4: 4 };
@@ -458,13 +502,17 @@ function validateGltfJson(json: Record<string, unknown>, bin: Uint8Array): void 
   if (json.scene !== undefined && !integer(json.scene, scenes.length - 1)) throw new Error("Default scene index is invalid.");
 }
 
-interface UdtGlbMetadata { canonicalFeatureId: string; lodId: string; ownerCellId: string; inventoryId: string; inventoryHashSha256: string; evidenceShardId: string; truthTiers: ComponentTruthTier[]; sourceDates: { capturedAt: string | null; updatedAt: string | null }; predecessor: ImmutablePin | null; uncertainty: string; planHashSha256: string }
+interface UdtGlbMetadata { canonicalFeatureId: string; lodId: string; ownerCellId: string; inventoryId: string; inventoryHashSha256: string; evidenceShardId: string; truthTiers: ComponentTruthTier[]; sourceDates: { capturedAt: string | null; updatedAt: string | null }; predecessor: ImmutablePin | null; uncertainty: string; planHashSha256: string; textureProvenance?: unknown }
 function glbMetadata(json: Record<string, unknown>): UdtGlbMetadata {
   if (!rec(json.extras)) throw new Error("GLB canonical metadata extras are required.");
   closedKeys(json.extras, ["urbanDigitalTwin"], ["urbanDigitalTwin"], "GLB root extras");
   const metadata = json.extras.urbanDigitalTwin;
   if (!rec(metadata)) throw new Error("GLB canonical metadata must be an object.");
-  closedKeys(metadata, ["canonicalFeatureId", "lodId", "ownerCellId", "inventoryId", "inventoryHashSha256", "evidenceShardId", "truthTiers", "sourceDates", "predecessor", "uncertainty", "planHashSha256"], ["canonicalFeatureId", "lodId", "ownerCellId", "inventoryId", "inventoryHashSha256", "evidenceShardId", "truthTiers", "sourceDates", "predecessor", "uncertainty", "planHashSha256"], "GLB canonical metadata");
+  // `textureProvenance` is ALLOWED but never REQUIRED here. Requiring it would
+  // break every frozen untextured package; the requirement is conditional and
+  // lives in `validateProceduralTextureGlb`, which demands it exactly when the
+  // GLB embeds images.
+  closedKeys(metadata, ["canonicalFeatureId", "lodId", "ownerCellId", "inventoryId", "inventoryHashSha256", "evidenceShardId", "truthTiers", "sourceDates", "predecessor", "uncertainty", "planHashSha256", "textureProvenance"], ["canonicalFeatureId", "lodId", "ownerCellId", "inventoryId", "inventoryHashSha256", "evidenceShardId", "truthTiers", "sourceDates", "predecessor", "uncertainty", "planHashSha256"], "GLB canonical metadata");
   for (const key of ["canonicalFeatureId", "lodId", "ownerCellId", "inventoryId", "evidenceShardId", "uncertainty"] as const) if (!text(metadata[key])) throw new Error(`GLB canonical metadata ${key} is invalid.`);
   if (!hash(metadata.inventoryHashSha256) || !hash(metadata.planHashSha256)) throw new Error("GLB canonical metadata source hashes are invalid.");
   if (!Array.isArray(metadata.truthTiers) || metadata.truthTiers.length === 0 || metadata.truthTiers.length > TRUTH.size || metadata.truthTiers.some((tier) => !TRUTH.has(tier as ComponentTruthTier)) || new Set(metadata.truthTiers).size !== metadata.truthTiers.length) throw new Error("GLB canonical metadata truth tiers are invalid.");
@@ -512,17 +560,114 @@ function validateTextureFreeGlb(json: Record<string, unknown>): void {
   if (declared !== Math.ceil(covered / 4) * 4) throw new Error(ASSEMBLY_ISSUE_BUFFER_TAIL_FORBIDDEN);
 }
 
+/** The textures a USED material actually draws; an orphan texture is not among them. */
+function drawnTextureIds(json: Record<string, unknown>): Set<number> {
+  const materialIds = new Set<number>();
+  for (const mesh of json.meshes as Array<{ primitives: Array<{ material?: number }> }>) for (const primitive of mesh.primitives) if (primitive.material !== undefined) materialIds.add(primitive.material);
+  const textureIds = new Set<number>();
+  const collect = (value: unknown, key = ""): void => { if (!rec(value)) return; if (key.endsWith("Texture")) { textureIds.add(value.index as number); return; } for (const [childKey, child] of Object.entries(value)) collect(child, childKey); };
+  const materials = Array.isArray(json.materials) ? json.materials : [];
+  for (const id of materialIds) collect(materials[id]);
+  return textureIds;
+}
+
+/**
+ * The procedural-texture gate: a sibling of `validateTextureFreeGlb`, never a
+ * replacement for it. That function is byte-untouched, and a package gated
+ * texture-free stays gated texture-free.
+ *
+ * Structure is checked the same way — union coverage of the BIN, no
+ * unreferenced view, no tail — with the referenced set widened to accessors
+ * UNION image bufferViews, because an image view is legitimately not read by any
+ * accessor. The coverage rules are restated rather than shared: the texture-free
+ * function is load-bearing for every frozen public package and is deliberately
+ * left alone.
+ *
+ * Then comes the part that actually carries the honesty claim. Every embedded
+ * image is REGENERATED from this repository's rasterizer and its parameters, and
+ * must match BYTE FOR BYTE. A metadata string saying "procedurally generated"
+ * proves nothing — anyone can write it. Byte equality against a pure function of
+ * named constants cannot be satisfied by a photograph, a traced sketch, a
+ * re-encode, or a generated tile with one pixel altered.
+ */
+function validateProceduralTextureGlb(json: Record<string, unknown>, bin: Uint8Array, provenance: unknown): void {
+  if (!isProceduralTextureProvenance(provenance)) throw new Error(ASSEMBLY_ISSUE_TEXTURE_PROVENANCE_INVALID);
+  const images = (Array.isArray(json.images) ? json.images : []) as Array<Record<string, unknown>>;
+  const textures = (Array.isArray(json.textures) ? json.textures : []) as Array<Record<string, unknown>>;
+  const drawn = drawnTextureIds(json);
+  if (images.length === 0
+    || images.length > PROCEDURAL_TEXTURE_LIMITS.maxImagesPerGlb
+    || images.length !== textures.length
+    || drawn.size !== textures.length
+    || textures.some((texture, index) => !drawn.has(index) || texture.source !== index)
+    || images.some((image) => image.mimeType !== "image/png")) throw new Error(ASSEMBLY_ISSUE_TEXTURE_SHAPE_FORBIDDEN);
+
+  const views = json.bufferViews as Array<Record<string, unknown>>;
+  const accessors = json.accessors as Array<Record<string, unknown>>;
+  const referenced = new Set(accessors.map((accessor) => accessor.bufferView as number));
+  for (const image of images) referenced.add(image.bufferView as number);
+  if (views.some((_, index) => !referenced.has(index))) throw new Error(ASSEMBLY_ISSUE_TEXTURE_UNREFERENCED_BUFFER_VIEW_FORBIDDEN);
+  const ordered = [...views].sort((left, right) => (((left.byteOffset as number | undefined) ?? 0) - ((right.byteOffset as number | undefined) ?? 0)));
+  let covered = 0;
+  for (const [index, view] of ordered.entries()) {
+    const offset = (view.byteOffset as number | undefined) ?? 0;
+    if (index === 0 && offset !== 0) throw new Error(ASSEMBLY_ISSUE_TEXTURE_BUFFER_GAP_FORBIDDEN);
+    if (offset - covered > 3) throw new Error(ASSEMBLY_ISSUE_TEXTURE_BUFFER_GAP_FORBIDDEN);
+    covered = Math.max(covered, offset + (view.byteLength as number));
+  }
+  const declared = (json.buffers as Array<Record<string, unknown>>)[0]!.byteLength as number;
+  if (declared !== Math.ceil(covered / 4) * 4) throw new Error(ASSEMBLY_ISSUE_TEXTURE_BUFFER_TAIL_FORBIDDEN);
+
+  const replay = proceduralTextureReplayIndex();
+  const seen = new Set<string>();
+  let imageBytes = 0;
+  for (const image of images) {
+    const view = views[image.bufferView as number]!;
+    const offset = (view.byteOffset as number | undefined) ?? 0;
+    const length = view.byteLength as number;
+    if (length > PROCEDURAL_TEXTURE_LIMITS.maxImageBytes) throw new Error(ASSEMBLY_ISSUE_TEXTURE_BYTES_FORBIDDEN);
+    imageBytes += length;
+    if (imageBytes > PROCEDURAL_TEXTURE_LIMITS.maxGlbImageBytes) throw new Error(ASSEMBLY_ISSUE_TEXTURE_BYTES_FORBIDDEN);
+    const digest = sha256HexBytes(bin.subarray(offset, offset + length));
+    const textureClass = replay.get(digest);
+    // Two textures resolving to one class would mean the same tile embedded
+    // twice, which the writer never emits and which no legitimate asset needs.
+    if (textureClass === undefined || seen.has(textureClass)) throw new Error(ASSEMBLY_ISSUE_TEXTURE_REPLAY_MISMATCH);
+    seen.add(textureClass);
+  }
+}
+
 /**
  * Export-only surface for the runtime loader: the browser must repeat the exact
- * per-artifact binding and texture-free checks the offline replay performs, so
- * the runtime cannot admit a GLB the release pipeline would have rejected.
- * Behavior and signature are unchanged.
+ * per-artifact binding, texture-free and procedural-replay checks the offline
+ * replay performs, so the runtime cannot admit a GLB the release pipeline would
+ * have rejected.
+ *
+ * The replay gate is keyed off the GLB's OWN declared `textureProvenance`, not
+ * off a parameter, and that is deliberate: it means every caller of this
+ * function — offline replay, the browser runtime, any future one — enforces it
+ * without having to remember to. A GLB cannot claim procedural provenance and
+ * escape being replayed against it.
+ *
+ * `policyProfile` closes the other direction. When a package is assembled under
+ * the procedural policy, an embedded image with NO provenance record must fail
+ * rather than fall back to the older private-package behaviour.
  */
-export function validateGlbBinding(parsed: ParsedGlb, asset: AssemblyAsset, lod: AssemblyLod, textureFree: boolean): void {
+export function validateGlbBinding(parsed: ParsedGlb, asset: AssemblyAsset, lod: AssemblyLod, textureFree: boolean, policyProfile?: ProceduralTextureProfile): void {
   const metadata = glbMetadata(parsed.json);
   if (textureFree) validateTextureFreeGlb(parsed.json);
+  const hasImages = Array.isArray(parsed.json.images) && parsed.json.images.length > 0;
+  if (metadata.textureProvenance !== undefined) validateProceduralTextureGlb(parsed.json, parsed.bin, metadata.textureProvenance);
+  else if (hasImages && policyProfile === PROCEDURAL_TEXTURE_PROFILE) throw new Error(ASSEMBLY_ISSUE_TEXTURE_PROVENANCE_REQUIRED);
+  if (metadata.textureProvenance !== undefined && !hasImages) throw new Error(ASSEMBLY_ISSUE_TEXTURE_SHAPE_FORBIDDEN);
+  // `textureProvenance` is excluded from the equality below on purpose. The
+  // manifest asset record has no such field, and adding one would rewrite the
+  // canonical metadata shape every frozen package is pinned against. The record
+  // is bound by REPLAY instead, which is a stronger check than string equality.
+  const bound: Omit<UdtGlbMetadata, "textureProvenance"> & { textureProvenance?: unknown } = { ...metadata };
+  delete bound.textureProvenance;
   const expected = { canonicalFeatureId: asset.canonicalFeatureId, lodId: lod.lodId, ownerCellId: asset.ownerCellId, inventoryId: asset.inventoryId, inventoryHashSha256: asset.inventoryHashSha256, evidenceShardId: asset.evidenceShardId, truthTiers: [...asset.truthTiers].sort(compareText), sourceDates: asset.sourceDates, predecessor: asset.predecessor, uncertainty: asset.uncertainty, planHashSha256: asset.source.kind === "facade-plan" ? asset.source.planHashSha256 : asset.source.assetManifestChecksumSha256 };
-  if (stableSerialize({ ...metadata, truthTiers: [...metadata.truthTiers].sort(compareText) }) !== stableSerialize(expected)) throw new Error("GLB canonical metadata differs from the immutable assembly manifest.");
+  if (stableSerialize({ ...bound, truthTiers: [...bound.truthTiers].sort(compareText) }) !== stableSerialize(expected)) throw new Error("GLB canonical metadata differs from the immutable assembly manifest.");
   if (stableSerialize(counts(parsed.json)) !== stableSerialize({ triangleCount: lod.quality.triangleCount, materialCount: lod.quality.materialCount, textureCount: lod.quality.textureCount })) throw new Error("GLB topology/material/texture counts differ from declared quality.");
 }
 
@@ -591,7 +736,7 @@ export async function replayMultiLodAssembly(manifest: MultiLodAssemblyManifest,
     if (bytes.byteLength !== artifact.byteSize || await sha256Bytes(bytes) !== artifact.checksumSha256) { issue(issues, `contents.${artifact.relativeRef}`, "Artifact byte/hash accounting failed."); continue; }
     const next = add(total, bytes.byteLength); if (next === null || next > MULTI_LOD_ASSEMBLY_LIMITS.totalBytes) { issue(issues, "contents", "Verified byte accounting overflowed."); continue; } total = next;
     if (artifact.ownerCellId) { const cellNext = add(cellByteTotals.get(artifact.ownerCellId) ?? 0, bytes.byteLength); if (cellNext === null) issue(issues, `contents.${artifact.relativeRef}`, "Cell bytes overflowed."); else cellByteTotals.set(artifact.ownerCellId, cellNext); }
-    try { if (artifact.role === "tileset-json") tilesetBytes = bytes; else { const binding = lodBindings.get(artifact.relativeRef); if (!binding) throw new Error("GLB has no asset/LOD binding."); validateGlbBinding(parseGlbV2(bytes), binding.asset, binding.lod, textureFree); } } catch (error) { issue(issues, `contents.${artifact.relativeRef}`, error instanceof Error ? error.message : "Artifact validation failed."); }
+    try { if (artifact.role === "tileset-json") tilesetBytes = bytes; else { const binding = lodBindings.get(artifact.relativeRef); if (!binding) throw new Error("GLB has no asset/LOD binding."); validateGlbBinding(parseGlbV2(bytes), binding.asset, binding.lod, textureFree, policy?.proceduralTextureProfile); } } catch (error) { issue(issues, `contents.${artifact.relativeRef}`, error instanceof Error ? error.message : "Artifact validation failed."); }
     verified.push({ relativeRef: artifact.relativeRef, byteSize: bytes.byteLength, checksumSha256: artifact.checksumSha256 });
   }
   if (total !== manifest.declaredTotalBytes) issue(issues, "contents", "Verified total differs from the manifest.");

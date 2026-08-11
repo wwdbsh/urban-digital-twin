@@ -87,7 +87,7 @@ describe("Block 835 reference build CLI target guard", () => {
     expect(result.failed).toBe(true);
     // The refusal names every package id the builder is allowed to overwrite, so
     // this grows by one each time a successor package is added.
-    expect(result.stderr).toMatch(/manhattan-esb-block-reference-20260810 or manhattan-esb-block-reference-20260811 or manhattan-esb-block-reference-20260811-v3 manifest/u);
+    expect(result.stderr).toMatch(/manhattan-esb-block-reference-20260810 or manhattan-esb-block-reference-20260811 or manhattan-esb-block-reference-20260811-v3 or manhattan-esb-block-reference-20260811-v3t manifest/u);
     expect(result.stderr).toMatch(/remove it first or choose a path that does not exist yet/u);
   });
 

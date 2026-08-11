@@ -31,3 +31,7 @@ artifacts/midtown-core-20260811/
 
 # T025 V3 determinism scratch
 artifacts/block835-v3-determinism/
+
+# T027 V3T textured-package determinism scratch. The hashes that matter are
+# committed in data/manhattan-esb-block-reference-20260811-v3t/.
+artifacts/block835-v3t-determinism/
