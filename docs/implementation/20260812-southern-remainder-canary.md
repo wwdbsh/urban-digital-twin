@@ -49,14 +49,15 @@ Then the renderer journeys, against a production preview on a port **you own**:
 
 ```sh
 pnpm build
-npx vite preview --port 4187 --strictPort
+npx vite preview --port 4193 --strictPort
 # Chrome: --remote-debugging-port=9222 --headless=new
-pnpm southern-remainder:journeys --preview http://localhost:4187 --port 9222
+pnpm southern-remainder:journeys --preview http://localhost:4193 --port 9222
 ```
 
-Verify the served bundle is yours before believing a journey — see "Verification
-gaps, stated". Every stage writes a receipt fingerprinting its inputs, so an
-interrupted run resumes; `--force` re-runs one regardless.
+The suite verifies the served bundle itself and aborts if it is not this build,
+so a shared port cannot silently produce a green run. Every pipeline stage writes
+a receipt fingerprinting its inputs, so an interrupted run resumes; `--force`
+re-runs one regardless.
 
 ## Refusal census (stages `plans` and `glbs`)
 
@@ -84,7 +85,11 @@ no plan field, so every plan hash is identical to the shipped pass.
 The plan stage reports **85** refusals and the asset stage reports **96**. The
 difference is exactly the 11 `volume-identity-failed` — the writer's own
 mesh-versus-analytic identity check failing after a plan was accepted. It is a
-stage boundary, not a discrepancy, and both numbers are committed.
+stage boundary, not a discrepancy; both numbers are committed, the census note
+explains the split, and `southern-remainder-census.test.ts` asserts the two
+distributions differ by exactly that key in both directions. Emitting either
+distribution now fails closed on a missing or stale stage receipt rather than
+publishing `null`.
 
 Wave-scale worst observations, all inside budget: 44,360 triangles (budget
 200,000), 9 materials (budget 12), worst volume deviation 9.66e-07, worst
@@ -154,21 +159,32 @@ fails the record writer rather than being logged as a finding.
 Production preview, real pinned citywide base, Chrome 151 headless, viewport
 1280×800. All four pass; every `passed` is computed from the readings.
 
+Every journey stands at ONE pose, derived in code from the renderable cell's
+bounds in the committed membership digest and asserted to lie inside them before
+any capture: `-74.009070, 40.736096`, 70 m up, heading 45°, pitch -6° — low in
+the cell's south-west quadrant, looking north-east across it so that facades,
+not rooftops, fill the frame.
+
 | journey | reading |
 | --- | --- |
-| `promoted-default-unchanged` | clean load: Block 835 14 GLBs, Midtown 136, Lower-Manhattan P1 71, **this release 0 GLBs / 0 bytes**, 0 external hosts |
-| `canary-opt-in` | opt-in link: **this release 76 GLBs / 9.10 MB**, every promoted wave **0**, 0 external hosts |
+| `promoted-default-unchanged` | clean load: Block 835 14 GLBs, Midtown 156, Lower-Manhattan P1 71, **this release 0 GLBs / 0 bytes**, 0 external hosts |
+| `canary-opt-in` | opt-in link: **this release 76 GLBs / 9.10 MB**, every promoted wave **0**, 0 external hosts, and the still **differs** from the promoted default's still at the identical pose |
 | `textured-pick` | picked `doitt:465469`: badge `Local · manhattan-southern-remainder-cells-20260812`, cell + cell release `…w03-000276…:v1`, active asset `lod_0 · 0b0f0698…5649e`, truth tiers `absent · generated`, source dates, full uncertainty statement |
 | `tombstone-truth` | "Exterior release manhattan-southern-remainder-cells-20260812: 175 of 176 exterior cells ship no exterior geometry in this release; no substitute was selected for them." |
 
-`canary-opt-in` is load-bearing beyond its own claim: the entry budget rests on
-`?exteriorCells=` **selecting** rather than adding, and the zero counts for all
-three promoted waves are what makes that a measurement rather than an assumption.
+`canary-opt-in` is load-bearing beyond its own claim twice over. The entry budget
+rests on `?exteriorCells=` **selecting** rather than adding, and the zero counts
+for all three promoted waves are what makes that a measurement rather than an
+assumption. And the still-difference requirement is what turns "76 assets were
+fetched" into "76 assets were drawn": at this pose the promoted default shows
+flat base massing, while the opt-in shows textured facades, windows, roof plant
+and water tanks in the foreground.
 
-`promoted-default-unchanged` read 136 Midtown GLBs rather than 156 because the
-camera stands in the West Village and the loader is progressive; the criterion is
-"> 0 for each promoted wave, exactly 0 for this one", which is what the claim
-needs.
+`capturedWith.servedBundle` records the served `index.html` checksum, the entry
+script's path, byte size and checksum, and the local `dist/index.html` checksum
+they were compared against. The run aborts if the served bytes cannot be read, if
+they differ from this repository's `dist/`, or if the entry script does not name
+this release.
 
 ## Committed records
 
@@ -198,18 +214,24 @@ the citywide precedent.
 - **`verifyPromotedExteriorPin` does not run for this release.** It reads the
   promotion record, and this release has no entry there. Verification rests on
   the release graph and the committed inventory, which is a narrower guarantee.
-- **Two stills are byte-identical.** `canary-opt-in.png` and
-  `tombstone-truth.png` share checksum `2759c9d1…`: same pose, same content. The
-  tombstone claim is carried by the DOM notice, not the image. Both are kept
-  rather than deduplicated so a reader can see which is evidence and which is
-  corroboration.
-- **A stale preview server was measured once, and that reading was discarded.**
-  The first journey run reached a `vite preview` left on port 4174 by another
-  worktree, serving a bundle without this release pinned;
-  `promoted-default-unchanged` "passed" against it, meaninglessly. Every reading
-  in `journey-evidence.json` is from a re-run against a preview this task started
-  on port 4187 and verified by bundle hash. Check the served bundle before
-  believing a journey.
+- **`tombstone-truth.png` is byte-identical to `canary-opt-in.png`** (`a72fc3cd…`):
+  both opt into the same release at the same pose, and the tombstone claim is
+  carried by the DOM notice rather than by the image, so its still is
+  corroboration and not evidence. It is kept rather than deduplicated so a reader
+  can see which is which. The pair that must differ — promoted default
+  (`a35064e8…`) versus opt-in (`a72fc3cd…`) — is asserted to differ as part of
+  passing.
+- **`textured-pick.png` is unaffected by the pose.** Selecting a building flies
+  the camera to it, so that still is the same image whichever pose the journey
+  started from; its evidence is the details-panel text, which is recorded in
+  full.
+- **Three evidence defects were found and fixed rather than described.** The
+  camera pose was hand-typed 81 m outside the cell it claimed to stand inside; a
+  first correction put it overhead, where opting into 76 textured assets produced
+  a byte-identical still; and a stale preview server on a shared port once
+  produced a vacuous pass. All three are now machine-enforced — derived pose plus
+  containment assertion, required still difference, measured bundle identity —
+  and ADR 0035 records each incident rather than erasing it.
 - **The renderable subset is one cell.** It exercises no cell-boundary behaviour;
   two promoted multi-cell waves and the T015 two-cell canary do. ADR 0035
   Decision 3 records why any two-cell subset of this wave costs 153 entries.

@@ -1,4 +1,4 @@
-/* global console, process, WebSocket, URL, fetch, setTimeout, Buffer */
+/* global console, process, WebSocket, URL, fetch, setTimeout, Buffer, TextDecoder */
 /**
  * T017 renderer journeys: the Southern-remainder canary exercised in a real
  * browser against the real pinned citywide base, one journey per claim the
@@ -37,17 +37,22 @@
  *   node scripts/southern-remainder-journeys-cli.mjs \
  *     --preview http://localhost:4174 --port 9222 [--out <path>]
  */
-import { mkdir, writeFile } from "node:fs/promises";
+import { existsSync } from "node:fs";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { sha256HexBytes, sha256HexSync } from "../src/domain/deterministic-hash.ts";
+import { EXTERIOR_WAVE_LEDGER_RELEASE_ID } from "../src/release/exterior-wave-ledger.ts";
 import { serializeExteriorWaveArtifact } from "../src/release/exterior-wave-subset.ts";
 import { SOUTHERN_REMAINDER_RELEASE_ID } from "../src/release/southern-remainder-package.ts";
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const capturesRoot = join(repositoryRoot, "artifacts", "southern-remainder-20260812-journeys");
-const defaultOutPath = join(repositoryRoot, "data", "southern-remainder-20260812", "journey-evidence.json");
+const recordRoot = join(repositoryRoot, "data", "southern-remainder-20260812");
+const defaultOutPath = join(recordRoot, "journey-evidence.json");
+const ledgerRoot = join(repositoryRoot, "data", "normalized", EXTERIOR_WAVE_LEDGER_RELEASE_ID);
+const distRoot = join(repositoryRoot, "dist");
 
 const BASE_RELEASE_ID = "manhattan-citywide-20260804";
 const BLOCK835_RELEASE_ID = "manhattan-exterior-cells-20260811-v3";
@@ -56,26 +61,183 @@ const LOWER_MANHATTAN_P1_RELEASE_ID = "manhattan-lower-manhattan-cells-20260812-
 const PROMOTED_RELEASE_IDS = [BLOCK835_RELEASE_ID, MIDTOWN_RELEASE_ID, LOWER_MANHATTAN_P1_RELEASE_ID];
 const TRACKED_RELEASE_IDS = [...PROMOTED_RELEASE_IDS, SOUTHERN_REMAINDER_RELEASE_ID];
 
-/** What the canary ships, read from its own committed record by the caller. */
-const CANARY_ASSET_COUNT = 76;
-const CANARY_CELL_ID = "manhattan-exterior-cell-w03-000276-17-38590-35872";
-const CANARY_OWNED_CELL_COUNT = 176;
-const CANARY_TOMBSTONED_CELL_COUNT = 175;
 /** The heaviest shipped asset of the renderable cell; a pick anyone can repeat. */
 const CANARY_PICK_BUILDING_ID = "doitt:465469";
 
 const VIEWPORT = { width: 1280, height: 800, deviceScaleFactor: 1 };
 const READY_TIMEOUT_MS = 180_000;
 const STILL_CHROME_HIDE_CSS = ".exploration-notice, .runtime-note, nav, header, footer { display: none !important; }";
-
-/** A camera inside the renderable cell, looking north-east across it. */
-const CELL_POSE = { lon: -74.00930, lat: 40.73520, height: 170, heading: 35, pitch: -8, roll: 0 };
+/**
+ * Where inside the cell the camera stands, and which way it looks.
+ *
+ * Two things have to hold at once and the first attempt at each got one wrong.
+ * The pose must be INSIDE the cell's committed bounds, which a hand-typed
+ * latitude 81 m south of them was not. And it must show FACADES, because
+ * facades are what a textured wave ships: a first corrected pose stood at the
+ * cell centre 260 m up at pitch -40 and produced three byte-identical stills of
+ * rooftops, in which opting into 76 textured assets was invisible.
+ *
+ * So the camera stands in the cell's south-west quadrant — inside the bounds on
+ * both axes — low, looking north-east across the cell at a shallow pitch.
+ */
+const CELL_VIEW = {
+  /** Fraction of the cell's span, from the west/south edge. Must be in (0, 1). */
+  eastFraction: 0.12,
+  northFraction: 0.12,
+  heightMeters: 70,
+  headingDegrees: 45,
+  pitchDegrees: -6,
+};
 
 function fail(message) { throw new Error(`southern-remainder-journeys: ${message}`); }
 
 function argValue(argv, name, fallback) {
   const index = argv.indexOf(name);
   return index >= 0 && argv[index + 1] ? argv[index + 1] : fallback;
+}
+
+// ---------------------------------------------------------------------------
+// What this release IS, read from its own committed records
+// ---------------------------------------------------------------------------
+
+/**
+ * The subject of every claim below, derived rather than typed.
+ *
+ * The counts in these journeys' claims — 76 assets, 175 of 176 tombstoned, which
+ * cell is renderable — are facts about what the release shipped, and they are
+ * read out of its committed payload inventory. Typing them beside the release
+ * lets a claim keep asserting a number the release stopped shipping.
+ */
+async function readSubject() {
+  const inventory = JSON.parse(await readFile(join(recordRoot, "payload-inventory.json"), "utf8"));
+  if (inventory.releaseId !== SOUTHERN_REMAINDER_RELEASE_ID) {
+    fail(`the committed inventory describes ${inventory.releaseId}, not ${SOUTHERN_REMAINDER_RELEASE_ID}.`);
+  }
+  if (inventory.renderableCellIds.length !== 1) {
+    fail(`this suite frames its camera on a single renderable cell, but the release declares ${inventory.renderableCellIds.length}.`);
+  }
+  return {
+    cellId: inventory.renderableCellIds[0],
+    assetCount: inventory.census.materializedBuildingCount,
+    ownedCellCount: inventory.stats.cellCount,
+    tombstonedCellCount: inventory.stats.notShippedCellCount,
+  };
+}
+
+/**
+ * The renderable cell's bounds, taken from the COMMITTED wave ledger digest.
+ *
+ * Not from the release, and not from a constant: the digest is the independent
+ * record of where a cell is, and it is what the subset ledger's own bounds were
+ * reconciled against.
+ */
+async function readCellBounds(cellId) {
+  const digest = JSON.parse(await readFile(join(ledgerRoot, "membership-digest.json"), "utf8"));
+  const cell = digest.cells.find((entry) => entry.cellId === cellId);
+  if (!cell) fail(`the committed membership digest declares no cell ${cellId}.`);
+  return cell.bounds;
+}
+
+/**
+ * A camera standing INSIDE the cell, derived from the cell's own bounds.
+ *
+ * This exists because the first version of this suite typed a pose by hand and
+ * got it wrong: latitude 40.73520 is about 81 m SOUTH of this cell's committed
+ * south bound, so the journey claiming "the camera standing inside its
+ * renderable cell" was captured from outside it. Review caught it. A derived
+ * pose plus the assertion below is what stops a hand-typed number from
+ * contradicting a committed claim again.
+ */
+function poseInsideCell(bounds) {
+  return {
+    lon: bounds.west + CELL_VIEW.eastFraction * (bounds.east - bounds.west),
+    lat: bounds.south + CELL_VIEW.northFraction * (bounds.north - bounds.south),
+    height: CELL_VIEW.heightMeters,
+    heading: CELL_VIEW.headingDegrees,
+    pitch: CELL_VIEW.pitchDegrees,
+    roll: 0,
+  };
+}
+
+/** Fails the run before a single capture if the pose is not inside the cell. */
+function assertPoseInsideCell(pose, bounds, cellId) {
+  const inside = pose.lon >= bounds.west && pose.lon <= bounds.east
+    && pose.lat >= bounds.south && pose.lat <= bounds.north;
+  if (!inside) {
+    fail(`the camera pose (${pose.lon}, ${pose.lat}) is outside cell ${cellId}, whose committed bounds are west ${bounds.west}, south ${bounds.south}, east ${bounds.east}, north ${bounds.north}. No journey may claim the camera stands inside a cell it stands outside.`);
+  }
+  return {
+    cellId,
+    cellBounds: { ...bounds },
+    containment: "asserted before capture: the pose lies within the cell's committed ledger bounds on both axes",
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Which bundle was actually measured
+// ---------------------------------------------------------------------------
+
+/**
+ * Identifies the bundle the preview server is SERVING, and refuses to proceed if
+ * it is not this build.
+ *
+ * This exists because of a real incident: the first run of this suite reached a
+ * `vite preview` left listening by another worktree, serving a bundle in which
+ * this release was not pinned. The `promoted-default-unchanged` journey passed
+ * against it — correctly, and meaninglessly, because a release that is not
+ * pinned obviously fetches nothing. The evidence record then disclosed the
+ * incident in prose and said the re-run was "verified by bundle hash", which was
+ * true and entirely unfalsifiable from the record.
+ *
+ * So the identity is now MEASURED and RECORDED, and three things fail the run
+ * rather than being noted:
+ *
+ *  - the served index or its entry script cannot be read at all;
+ *  - the served bytes differ from this repository's `dist/`, which is what a
+ *    stale server on a shared port looks like;
+ *  - the served entry script does not name this release, which is what a build
+ *    predating the pin looks like.
+ *
+ * The last two overlap deliberately. The dist comparison catches a server for
+ * some other tree; the release-name check still holds if someone previews a dist
+ * built before `PINNED_EXTERIOR_CELL_RELEASE_IDS` gained this entry.
+ */
+async function servedBundleIdentity(previewBase) {
+  const indexResponse = await fetch(`${previewBase}/`).catch(() => fail(`no preview server answered at ${previewBase}.`));
+  if (!indexResponse.ok) fail(`the preview server answered ${indexResponse.status} for /; the served bundle cannot be identified.`);
+  const indexHtml = await indexResponse.text();
+  const reference = /src="([^"]*index-[^"]*\.js)"/u.exec(indexHtml);
+  if (!reference) fail("the served index.html declares no entry script; the served bundle cannot be identified.");
+  const entryPath = reference[1];
+  const entryResponse = await fetch(new URL(entryPath, `${previewBase}/`)).catch(() => fail(`the served entry script ${entryPath} could not be fetched.`));
+  if (!entryResponse.ok) fail(`the preview server answered ${entryResponse.status} for ${entryPath}; the served bundle cannot be identified.`);
+  const entryBytes = new Uint8Array(await entryResponse.arrayBuffer());
+
+  const indexChecksum = sha256HexSync(indexHtml);
+  const entryChecksum = sha256HexBytes(entryBytes);
+
+  if (!existsSync(join(distRoot, "index.html"))) {
+    fail(`there is no ${distRoot}/index.html to compare the served bundle against. Run \`pnpm build\` before capturing, so the record can state WHICH build was measured.`);
+  }
+  const localIndexChecksum = sha256HexSync(await readFile(join(distRoot, "index.html"), "utf8"));
+  if (localIndexChecksum !== indexChecksum) {
+    fail(`the preview at ${previewBase} is serving an index.html (${indexChecksum}) that is not this repository's build (${localIndexChecksum}). This is the stale-server failure: start a preview on a port you own, from this tree's dist.`);
+  }
+  if (!new TextDecoder().decode(entryBytes).includes(SOUTHERN_REMAINDER_RELEASE_ID)) {
+    fail(`the served entry script ${entryPath} does not name ${SOUTHERN_REMAINDER_RELEASE_ID}, so it predates the pin and every opt-in journey would fail closed for the wrong reason.`);
+  }
+
+  return {
+    previewBase,
+    indexHtmlChecksumSha256: indexChecksum,
+    localDistIndexHtmlChecksumSha256: localIndexChecksum,
+    matchesLocalDist: true,
+    entryScriptPath: entryPath,
+    entryScriptByteSize: entryBytes.byteLength,
+    entryScriptChecksumSha256: entryChecksum,
+    entryScriptNamesRelease: true,
+    statement: "Measured before any capture. The served index.html is byte-identical to this repository's dist/index.html and the served entry script contains this release id, so every reading below is from THIS build. Any of those failing aborts the run rather than being recorded as a caveat.",
+  };
 }
 
 class CdpSession {
@@ -218,10 +380,10 @@ async function settleGlbCount(session, releaseId, expected) {
 // Journeys
 // ---------------------------------------------------------------------------
 
-async function journeyPromotedDefaultUnchanged(port, previewBase) {
+async function journeyPromotedDefaultUnchanged(port, previewBase, subject, pose) {
   const session = await openFreshPage(port);
   try {
-    const url = appUrl(previewBase, { pose: CELL_POSE });
+    const url = appUrl(previewBase, { pose });
     session.events.length = 0;
     await session.send("Page.navigate", { url });
     const waves = await waitFor(
@@ -234,7 +396,7 @@ async function journeyPromotedDefaultUnchanged(port, previewBase) {
     const network = networkPerRelease(session);
     return {
       journeyId: "promoted-default-unchanged",
-      claim: "Pinning this canary changed nothing about what an ordinary session loads. A clean load with no exterior URL parameter still streams the three promoted waves and fetches ZERO bytes of the Southern-remainder release, even with the camera standing inside its renderable cell.",
+      claim: "Pinning this canary changed nothing about what an ordinary session loads. A clean load with no exterior URL parameter still streams the three promoted waves and fetches ZERO bytes of the Southern-remainder release, even with the camera standing inside its renderable cell — a pose derived from that cell's committed ledger bounds and asserted to lie within them before any capture.",
       url,
       waves,
       network,
@@ -247,10 +409,10 @@ async function journeyPromotedDefaultUnchanged(port, previewBase) {
   } finally { await closePage(port, session); }
 }
 
-async function journeyCanaryOptIn(port, previewBase) {
+async function journeyCanaryOptIn(port, previewBase, subject, pose, promotedDefaultStill) {
   const session = await openFreshPage(port);
   try {
-    const url = appUrl(previewBase, { pose: CELL_POSE, params: { exteriorCells: SOUTHERN_REMAINDER_RELEASE_ID, exteriorStreaming: "on" } });
+    const url = appUrl(previewBase, { pose, params: { exteriorCells: SOUTHERN_REMAINDER_RELEASE_ID, exteriorStreaming: "on" } });
     session.events.length = 0;
     await session.send("Page.navigate", { url });
     const waves = await waitFor(
@@ -259,27 +421,38 @@ async function journeyCanaryOptIn(port, previewBase) {
       READ_WAVES,
       "canary-opt-in",
     );
-    await settleGlbCount(session, SOUTHERN_REMAINDER_RELEASE_ID, CANARY_ASSET_COUNT);
+    await settleGlbCount(session, SOUTHERN_REMAINDER_RELEASE_ID, subject.assetCount);
     const network = networkPerRelease(session);
+    const capture = await still(session, "canary-opt-in");
+    // The network count proves the assets were FETCHED. It cannot prove they
+    // were DRAWN — and a top-down pose once produced a still byte-identical to
+    // the promoted default, in which opting into 76 textured assets changed
+    // nothing visible. So the picture from this pose must differ from the
+    // picture the promoted default produced at the SAME pose, and that
+    // difference is part of passing rather than a note beside it.
+    const stillDiffersFromPromotedDefault = capture.checksumSha256 !== promotedDefaultStill.checksumSha256;
     return {
       journeyId: "canary-opt-in",
-      claim: "`?exteriorCells=` SELECTS the named release rather than adding it: the opt-in link streams all 76 textured assets of the Southern-remainder canary and ZERO GLBs of any promoted wave. This is the measurement the canary's entry budget rests on — three promoted waves occupy 255 of 256 cache entries, so an opt-in session that also held them would have no budget to size against.",
+      claim: "`?exteriorCells=` SELECTS the named release rather than adding it: the opt-in link streams all of the Southern-remainder canary's textured assets and ZERO GLBs of any promoted wave. This is the measurement the canary's entry budget rests on — three promoted waves occupy 255 of 256 cache entries, so an opt-in session that also held them would have no budget to size against. The still must also DIFFER from the promoted default's still at the identical pose, so the assets are shown to be drawn rather than merely fetched.",
       url,
       waves,
       network,
-      expectedCanaryGlbCount: CANARY_ASSET_COUNT,
-      passed: network.perRelease[SOUTHERN_REMAINDER_RELEASE_ID].glbCount === CANARY_ASSET_COUNT
+      expectedCanaryGlbCount: subject.assetCount,
+      promotedDefaultStillChecksumSha256: promotedDefaultStill.checksumSha256,
+      stillDiffersFromPromotedDefault,
+      passed: network.perRelease[SOUTHERN_REMAINDER_RELEASE_ID].glbCount === subject.assetCount
         && PROMOTED_RELEASE_IDS.every((releaseId) => network.perRelease[releaseId].glbCount === 0)
-        && network.externalHosts.length === 0,
-      still: await still(session, "canary-opt-in"),
+        && network.externalHosts.length === 0
+        && stillDiffersFromPromotedDefault,
+      still: capture,
     };
   } finally { await closePage(port, session); }
 }
 
-async function journeyTexturedPick(port, previewBase) {
+async function journeyTexturedPick(port, previewBase, subject, pose) {
   const session = await openFreshPage(port);
   try {
-    const url = appUrl(previewBase, { pose: CELL_POSE, params: { exteriorCells: SOUTHERN_REMAINDER_RELEASE_ID, exteriorStreaming: "on" } });
+    const url = appUrl(previewBase, { pose, params: { exteriorCells: SOUTHERN_REMAINDER_RELEASE_ID, exteriorStreaming: "on" } });
     await session.send("Page.navigate", { url });
     await waitFor(
       session,
@@ -287,7 +460,7 @@ async function journeyTexturedPick(port, previewBase) {
       READ_WAVES,
       "textured-pick",
     );
-    await settleGlbCount(session, SOUTHERN_REMAINDER_RELEASE_ID, CANARY_ASSET_COUNT);
+    await settleGlbCount(session, SOUTHERN_REMAINDER_RELEASE_ID, subject.assetCount);
     // Select through the app's own search, so the pick travels the path a
     // user's pick travels rather than a test-only seam.
     await session.evaluate(`(() => {
@@ -336,7 +509,7 @@ async function journeyTexturedPick(port, previewBase) {
       detail,
       passed: Boolean(detail)
         && String(detail.badge ?? "").includes(SOUTHERN_REMAINDER_RELEASE_ID)
-        && String(rows["Cell / release"] ?? "").includes(CANARY_CELL_ID)
+        && String(rows["Cell / release"] ?? "").includes(subject.cellId)
         && /[0-9a-f]{64}/u.test(String(rows["Active asset"] ?? ""))
         && String(rows["Truth tiers"] ?? "").length > 0
         && String(rows["Uncertainty"] ?? "").length > 0,
@@ -345,10 +518,10 @@ async function journeyTexturedPick(port, previewBase) {
   } finally { await closePage(port, session); }
 }
 
-async function journeyTombstoneTruth(port, previewBase) {
+async function journeyTombstoneTruth(port, previewBase, subject, pose) {
   const session = await openFreshPage(port);
   try {
-    const url = appUrl(previewBase, { pose: CELL_POSE, params: { exteriorCells: SOUTHERN_REMAINDER_RELEASE_ID, exteriorStreaming: "on" } });
+    const url = appUrl(previewBase, { pose, params: { exteriorCells: SOUTHERN_REMAINDER_RELEASE_ID, exteriorStreaming: "on" } });
     await session.send("Page.navigate", { url });
     await waitFor(
       session,
@@ -361,12 +534,12 @@ async function journeyTombstoneTruth(port, previewBase) {
     const waveNotice = notices.find((notice) => notice.includes(SOUTHERN_REMAINDER_RELEASE_ID)) ?? null;
     return {
       journeyId: "tombstone-truth",
-      claim: `The ${CANARY_TOMBSTONED_CELL_COUNT} owned w03 cells this release does NOT materialize are reported in words — the release says how many of its ${CANARY_OWNED_CELL_COUNT} cells ship no exterior geometry and that no substitute was selected — rather than going quiet.`,
+      claim: `The ${subject.tombstonedCellCount} owned w03 cells this release does NOT materialize are reported in words — the release says how many of its ${subject.ownedCellCount} cells ship no exterior geometry and that no substitute was selected — rather than going quiet.`,
       url,
       notices,
       waveNotice,
       passed: typeof waveNotice === "string"
-        && waveNotice.includes(`${CANARY_TOMBSTONED_CELL_COUNT} of ${CANARY_OWNED_CELL_COUNT}`)
+        && waveNotice.includes(`${subject.tombstonedCellCount} of ${subject.ownedCellCount}`)
         && waveNotice.includes("no substitute was selected"),
       still: await still(session, "tombstone-truth"),
     };
@@ -381,22 +554,44 @@ async function main() {
   const port = Number(argValue(argv, "--port", "9222"));
   const outPath = resolve(argValue(argv, "--out", defaultOutPath));
 
-  const journeys = [];
+  // Everything the claims are about, before anything is measured: WHICH bundle
+  // is being served, WHAT this release shipped, and WHERE the camera stands.
+  // Each of the three fails the run rather than being recorded as a caveat.
+  const servedBundle = await servedBundleIdentity(previewBase);
+  const subject = await readSubject();
+  const cellBounds = await readCellBounds(subject.cellId);
+  const pose = poseInsideCell(cellBounds);
+  const poseContainment = assertPoseInsideCell(pose, cellBounds, subject.cellId);
+  console.error(`bundle ${servedBundle.entryScriptPath} ${servedBundle.entryScriptChecksumSha256.slice(0, 16)} · pose ${pose.lon.toFixed(6)},${pose.lat.toFixed(6)} inside ${subject.cellId}`);
+
+  // Order matters for the first two: `canary-opt-in` compares its own still with
+  // the one `promoted-default-unchanged` took at the identical pose.
+  console.error("journey promoted-default-unchanged ...");
+  const promotedDefault = await journeyPromotedDefaultUnchanged(port, previewBase, subject, pose);
+  console.error("journey canary-opt-in ...");
+  const canaryOptIn = await journeyCanaryOptIn(port, previewBase, subject, pose, promotedDefault.still);
+  const journeys = [promotedDefault, canaryOptIn];
   for (const [label, run] of [
-    ["promoted-default-unchanged", journeyPromotedDefaultUnchanged],
-    ["canary-opt-in", journeyCanaryOptIn],
     ["textured-pick", journeyTexturedPick],
     ["tombstone-truth", journeyTombstoneTruth],
   ]) {
     console.error(`journey ${label} ...`);
-    journeys.push(await run(port, previewBase));
+    journeys.push(await run(port, previewBase, subject, pose));
   }
 
   const evidence = {
     schemaVersion: "1.0",
     releaseId: SOUTHERN_REMAINDER_RELEASE_ID,
     note: "T017 renderer journeys against the production preview and the real pinned citywide base. Each entry records the claim it tests, the URL it used, the DOM text it read, the per-release network measurement, and a checksummed still. `passed` is computed from the readings, not asserted.",
-    capturedWith: { viewport: VIEWPORT, previewBase, remoteDebuggingPort: port, pose: CELL_POSE },
+    capturedWith: {
+      viewport: VIEWPORT,
+      previewBase,
+      remoteDebuggingPort: port,
+      servedBundle,
+      subject,
+      pose,
+      poseContainment,
+    },
     notMeasuredHere: [
       "Frame time, heap, GPU texture accounting and cache residency. Those are PROMOTION's instrument: they measure a promoted composition under the default activation, and this release is not promoted. The tile system's own cost was measured by T015's kill switch and re-measured off the vsync floor by T016; this wave changes which buildings carry those tiles, not the tiles.",
       "Per-wave ROLLBACK rehearsal. No URL expresses a build-time promotion-record swap, and this release has no promotion record to roll back.",

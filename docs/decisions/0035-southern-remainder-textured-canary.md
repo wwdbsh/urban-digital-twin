@@ -54,6 +54,17 @@ were written first and were watched to fail** with the row removed —
 `expected [Function] to throw an error` for both borrow checks. Before the row
 existed, a fourth wave could have taken either of this wave's strings silently.
 
+**Review then found that the guard did not enforce the table it exists for.**
+`assertDistinctWaveDomains` refused a borrow, a self-collision and a silent
+reassignment, but a wave with **no row at all and perfectly fresh domains
+collided with nothing and passed** — so the closed table's completeness was
+enforced by whoever remembered to add a row, and by nothing else. That is the
+exact case a closed table is chosen over an import-time registry to catch. It now
+fails closed, checked **last** so that a module copied from another wave still
+reports the borrow, which names the wave to fix rather than merely the missing
+row. Pre-fix repro recorded: with the check removed the new test reads
+`expected [Function] to throw an error`.
+
 One test file changed rather than only grew. `exterior-wave-subset.test.ts`
 carried a hypothetical "third wave written by copying the wave above it", and
 that hypothetical was **named `southern-remainder`**. A hypothetical that names a
@@ -126,7 +137,9 @@ browser fact rather than an argument: `?exteriorCells=` **selects** the named
 release rather than adding it. Journey `canary-opt-in` measures exactly that —
 76 GLBs fetched from this release and **zero** from any promoted wave — so an
 opt-in session's cache holds this release alone and the binding ceiling is the
-cache itself.
+cache itself. That journey additionally requires its still to **differ** from the
+promoted default's still at the identical pose, so the assets are shown to be
+drawn and not merely fetched.
 
 The cache alone would admit 235 entries of this wave's leading cells, which would
 make a "canary" occupying 92% of the runtime cache. So a **second, deliberately
@@ -234,6 +247,25 @@ identical between the two passes** and the census is a true statement about the
 buildings that ship. A test pins that field-by-field. Rasterizing tiles for nine
 thousand buildings whose bytes are then discarded would buy nothing but hours.
 
+### The wave census failed open, and now does not
+
+Emitting the committed census read its stage receipts with `?? null`, so a
+missing or stale receipt would have published `"wave": null` — a census that
+reads as "not applicable" rather than "never run" — **twelve lines after** the
+curated path had been made to fail closed for exactly that reason. Both paths now
+go through one `requireFreshReceipt` helper that refuses a missing receipt AND a
+receipt written against different inputs, naming the command that fixes each.
+Repro recorded: removing the `glbs` receipt now errors "the glbs stage has not
+run … would be emitted as null"; corrupting the `plans` fingerprint errors "was
+written against different inputs than this run".
+
+The census note was also extended, because a reader who finds **two refusal
+totals** in one file and no explanation will reasonably conclude one is wrong.
+`waveRefusals` is the plan stage and `wave.refusalsByCode` is the asset stage;
+the second is a superset of the first and the difference is exactly
+`volume-identity-failed`. A committed test asserts that relationship key by key,
+in both directions, rather than trusting the prose.
+
 ## The refusal census, reported rather than tuned
 
 Over all 9,603 owned buildings, untextured, `census-only` retention:
@@ -277,7 +309,9 @@ the renderable cell is re-imported in Blender rather than sampled.
   `PINNED_EXTERIOR_CELL_RELEASE_IDS` and **absent from the promotion record**. It
   resolves by explicit `?exteriorCells=` opt-in and by nothing else. Journey
   `promoted-default-unchanged` measures that a clean load fetches **zero** bytes
-  of it even with the camera standing inside its renderable cell.
+  of it even with the camera standing inside its renderable cell — a pose derived
+  in code from that cell's committed ledger bounds and asserted to lie within
+  them before any capture runs.
 - Because it is not promoted, `verifyPromotedExteriorPin` does not run for it —
   that check reads the promotion record. Its verification rests on the
   release-graph and checksum validation the emitter and its committed inventory
@@ -352,21 +386,45 @@ wave resident at once, which is a composition nobody has measured.
 - cache residency in entries and MiB against whatever cap response (a) settled
   on.
 
-## Known gap worth naming
+## Three things the evidence got wrong before it got them right
 
-Two, because neither is obvious from the evidence:
+None of these is erased, because each is a failure mode a journey suite is
+structurally bad at noticing about itself.
 
-**The stills are not all distinct.** `canary-opt-in.png` and `tombstone-truth.png`
-are byte-identical (`2759c9d1…`): both journeys stand at the same pose with the
-same content loaded, and the tombstone claim is carried by the DOM notice text,
-not by the image. The record keeps both rather than deduplicating them, so a
-reader sees that the still is corroboration and the notice is the evidence.
+**The camera was outside the cell it claimed to stand inside.** The first version
+of this suite typed the pose by hand: latitude `40.73520`, about **81 m SOUTH**
+of this cell's committed south bound `40.735931396484375`. The
+`promoted-default-unchanged` claim — and an earlier draft of this ADR — said "the
+camera standing inside its renderable cell", and it was not. Review caught it.
+The pose is now **derived in code from the cell's bounds in the committed
+membership digest**, and `assertPoseInsideCell` fails the run before a single
+capture if it is not contained on both axes. The assertion and the cell's bounds
+are recorded in `capturedWith.poseContainment`, so the claim is checkable rather
+than trusted.
 
-**A stale preview server was measured once and the reading was discarded.** The
-first journey run reached a `vite preview` left listening on port 4174 by another
-worktree, which served a bundle without this release pinned. The
-`promoted-default-unchanged` journey "passed" against it, and that pass was
-meaningless. Every reading in `journey-evidence.json` comes from a re-run against
-a preview on a port this task started and verified by bundle hash. It is recorded
-because a green result from the wrong build is the failure mode a journey suite
-is least able to notice on its own.
+**Correcting the pose broke the picture, and the fix for that is also a check.**
+The first corrected pose stood at the cell centre, 260 m up, pitched 40° down —
+inside the bounds, and looking at rooftops. Three of the four stills came out
+**byte-identical**, which meant opting into 76 textured assets changed nothing
+visible: facades are vertical, and a top-down view cannot show them. The camera
+now stands low in the cell's south-west quadrant looking north-east at a shallow
+pitch, and `canary-opt-in` **requires its still to differ from the promoted
+default's still at the identical pose** as part of passing. The network count
+proves the assets were fetched; only that difference proves they were drawn — at
+this pose the promoted default shows flat base massing (`a35064e8…`) and the
+opt-in shows textured facades, windows, roof plant and water tanks
+(`a72fc3cd…`).
+
+**A stale preview server was measured once, and its "pass" was meaningless.** The
+first run reached a `vite preview` left listening on port 4174 by another
+worktree, serving a bundle in which this release was not pinned;
+`promoted-default-unchanged` passed against it correctly and vacuously, because a
+release that is not pinned obviously fetches nothing. That reading was discarded.
+An earlier draft of this document then disclosed the incident in prose and said
+the re-run was "verified by bundle hash" — which was true and **entirely
+unfalsifiable from the record**. The served bundle's identity is now MEASURED
+before any capture and recorded in `capturedWith.servedBundle`: the served
+`index.html` checksum, the entry script's path, size and checksum, and the local
+`dist/index.html` checksum they are compared against. Three conditions abort the
+run rather than being noted — the served bytes cannot be read, they differ from
+this repository's `dist/`, or the entry script does not name this release.

@@ -127,6 +127,42 @@ describe("exterior wave hash-domain registry", () => {
     }).toThrow(/for both derived ids/u);
   });
 
+  /**
+   * The case the closed table exists for, and the one it used to miss.
+   *
+   * A new wave module written in isolation, with perfectly fresh domains,
+   * collided with nothing and passed silently — so the table's completeness was
+   * enforced by whoever remembered to add a row and by nothing else. The check
+   * runs LAST, so a module copied from another wave still reports the borrow
+   * rather than the missing row: the borrow names the wave to fix.
+   */
+  it("refuses a wave that has no row at all, however fresh its domains", () => {
+    expect(() => {
+      assertDistinctWaveDomains({
+        ...NEXT_WAVE_BORROWING_MIDTOWN,
+        ledgerIdDomain: "udt.central-upper-manhattan.subset-ledger-id.v1",
+        baseIdentityDomain: "udt.central-upper-manhattan.subset-base-identity.v1",
+      });
+    }).toThrow(/central-upper-manhattan is not in the closed domain registry/u);
+    // And the builder refuses it before it derives anything, as with a borrow.
+    expect(() => buildExteriorWaveSubsetLedger({
+      ...NEXT_WAVE_BORROWING_MIDTOWN,
+      ledgerIdDomain: "udt.central-upper-manhattan.subset-ledger-id.v1",
+      baseIdentityDomain: "udt.central-upper-manhattan.subset-base-identity.v1",
+    }, {
+      parentLedger,
+      parentLedgerChecksumSha256,
+      baseReleaseId: EXTERIOR_FULLSNAPSHOT_BASE_RELEASE_ID,
+      baseManifestChecksumSha256: EXTERIOR_FULLSNAPSHOT_BASE_MANIFEST_SHA256,
+    })).toThrow(/not in the closed domain registry/u);
+  });
+
+  /** A borrow still wins over the missing row, because it names the wave to fix. */
+  it("reports the borrow rather than the missing row when both are true", () => {
+    expect(() => { assertDistinctWaveDomains(NEXT_WAVE_BORROWING_MIDTOWN); })
+      .toThrow(/borrows hash domain/u);
+  });
+
   /** A registered wave may not quietly reassign its own strings either. */
   it("refuses a registered wave that arrives with different domains", () => {
     expect(() => {

@@ -297,6 +297,26 @@ async function writeReceipt(context, stage, fingerprint, summary) {
   return receipt;
 }
 
+/**
+ * Reads a stage receipt and refuses a missing or STALE one.
+ *
+ * Stale matters as much as missing. A receipt written against different inputs
+ * describes different bytes, and copying its numbers into a committed record
+ * would publish a census of a build that no longer exists. Both cases name the
+ * command that fixes them rather than leaving a reader to work it out.
+ */
+async function requireFreshReceipt(context, stage, purpose) {
+  const receipt = await readReceipt(context, stage);
+  const suffix = context.variant.variantId === "canary" ? "" : ` --release ${context.variant.variantId}`;
+  if (!receipt) {
+    fail(`the ${stage} stage has not run for the ${context.variant.variantId} variant, so ${purpose} would be emitted as null — which reads as "not applicable" rather than "never run". Run \`${stage}${suffix}\` first.`);
+  }
+  if (receipt.inputFingerprint !== inputFingerprint(context, stage)) {
+    fail(`the ${stage} receipt for the ${context.variant.variantId} variant was written against different inputs than this run, so ${purpose} does not describe these bytes. Re-run \`${stage}${suffix} --force\`.`);
+  }
+  return receipt;
+}
+
 async function writeRecord(context, name, value) {
   await mkdir(context.recordRoot, { recursive: true });
   const text = serializeExteriorWaveArtifact(value);
@@ -499,8 +519,10 @@ async function stageGates(context, options) {
   const reconciliation = reconcileSouthernRemainderAgainstDigest(context.subset, digest);
   if (!reconciliation.ok) fail(`digest reconciliation failed: ${stableSerialize(reconciliation.findings.slice(0, 5))}`);
 
-  const glbs = await readReceipt(context, "glbs");
-  if (!glbs) fail("the glbs stage has not run, so the wave statement cannot be derived.");
+  // Same rule as the graph stage's: missing OR stale both fail closed. A gates
+  // summary computed from a receipt written against different inputs would state
+  // a refusal ratio and an asset count for bytes this run did not produce.
+  const glbs = await requireFreshReceipt(context, "glbs", "the wave statement");
 
   const summary = {
     ownershipOk: ownership.ok,
@@ -641,11 +663,7 @@ async function stageGraph(context, options) {
   // canary, which carries no curation at all.
   let curationRefusal = null;
   if (context.variant.curation) {
-    const gates = await readReceipt(context, "gates");
-    if (!gates) fail(`the gates stage has not run for the ${context.variant.variantId} variant, so the curated subset's refusal census would be emitted as null. Run \`gates --release ${context.variant.variantId}\` first.`);
-    if (gates.inputFingerprint !== inputFingerprint(context, "gates")) {
-      fail(`the gates receipt for the ${context.variant.variantId} variant was written against different inputs than this run, so its refusal census does not describe these bytes. Re-run \`gates --release ${context.variant.variantId} --force\`.`);
-    }
+    const gates = await requireFreshReceipt(context, "gates", "the curated subset's refusal census");
     curationRefusal = gates.summary?.curation?.refusal ?? null;
     if (curationRefusal === null || curationRefusal.ok !== true) {
       fail(`the gates receipt for the ${context.variant.variantId} variant carries no passing refusal census; the curated subset's precondition result cannot be emitted as null.`);
@@ -703,15 +721,22 @@ async function stageGraph(context, options) {
     derivation: context.subset.derivation,
     reconciliation: reconcileSouthernRemainderAgainstDigest(context.subset, readJsonText(await readVerifiedText(join(ledgerRoot, "membership-digest.json"), "committed membership digest"), "membership digest")),
   });
+  // The wave census is the whole point of the committed record, and it was the
+  // one thing in this stage that FAILED OPEN. `?? null` on a missing or stale
+  // receipt would have emitted `"wave": null` — a census that reads as "not
+  // applicable" rather than "never run" — twelve lines after the curation path
+  // was made to fail closed for exactly that reason. Same rule, same wording.
+  const waveCensus = await requireFreshReceipt(context, "glbs", "the wave-scale census");
+  const planCensus = await requireFreshReceipt(context, "plans", "the plan-stage refusal distribution");
   const censusChecksum = await writeRecord(context, "wave-census.json", {
     schemaVersion: "1.0",
     releaseId: context.variant.releaseId,
-    note: "Wave-scale V3 stop-code census over all 9,603 owned buildings, plus the shipped-subset census over the renderable cells. Committed so the refusal distribution stays checkable without the untracked work root. The wave census is untextured by design; the shipped subset carries procedural-texture-v1 tiles on LOD 0. READ `wave.retention` BEFORE `wave.shippedAssetCount`: the wave pass runs `census-only`, so it generated, gated and measured every asset and then dropped the bytes rather than keeping them. Its `shippedAssetBytes` is therefore a real measurement while its `shippedAssetCount` is zero, which is a retention mode and not a contradiction. The `shipped` object below is the pass that retained bytes.",
+    note: "Wave-scale V3 stop-code census over all 9,603 owned buildings, plus the shipped-subset census over the renderable cells. Committed so the refusal distribution stays checkable without the untracked work root. The wave census is untextured by design; the shipped subset carries procedural-texture-v1 tiles on LOD 0. READ `wave.retention` BEFORE `wave.shippedAssetCount`: the wave pass runs `census-only`, so it generated, gated and measured every asset and then dropped the bytes rather than keeping them. Its `shippedAssetBytes` is therefore a real measurement while its `shippedAssetCount` is zero, which is a retention mode and not a contradiction. The `shipped` object below is the pass that retained bytes. TWO REFUSAL DISTRIBUTIONS ARE RECORDED AND THEY ARE DELIBERATELY DIFFERENT SIZES. `waveRefusals` is the PLAN stage: the grammar reading a sourced polygon and reporting which property of it it cannot carry. `wave.refusalsByCode` is the ASSET stage: the same plans plus the writer's own mesh-versus-analytic volume identity check, which can only fail after a plan has been accepted and geometry has been generated. So `wave.refusalsByCode` is a superset of `waveRefusals`, and the difference is exactly the `volume-identity-failed` entries, which exist in the asset distribution alone. Neither number is the other's correction: a plan-stage total that equalled the asset-stage total would mean the writer's identity check had never run.",
     textureCatalog: proceduralTextureProvenance(),
     samplerFilter: { ...context.variant.waveProfile.textureFilter },
     occupancy: context.occupancy,
-    wave: (await readReceipt(context, "glbs"))?.summary?.wave ?? null,
-    waveRefusals: (await readReceipt(context, "plans"))?.summary?.refusalsByCode ?? null,
+    wave: waveCensus.summary.wave,
+    waveRefusals: planCensus.summary.refusalsByCode,
     shipped: shipped.census,
     shippedRefusedBuildingIds: [...shipped.refusalCodes].map(([buildingId, code]) => ({ buildingId, code })).sort((left, right) => (left.buildingId < right.buildingId ? -1 : 1)),
     shippedAbsentSetbackBuildingIds: [...shipped.absentSetbacks.keys()].sort(),

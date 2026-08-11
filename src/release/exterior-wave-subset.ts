@@ -137,13 +137,22 @@ export const EXTERIOR_WAVE_DOMAIN_REGISTRY: readonly {
  *  - SILENT REASSIGNMENT. A registered wave that arrives with domains other than
  *    its registered ones has moved ids that are already committed. That is not a
  *    collision, it is a rewrite, and it fails just as hard.
+ *  - UNREGISTERED. A wave with no row at all, whatever its domains. This is the
+ *    case the closed table exists for and it was the one case the guard let
+ *    through: a new wave module written in isolation, with perfectly fresh
+ *    strings, collided with nothing and passed silently — so the table's
+ *    completeness was enforced only by whoever remembered to add a row. It is
+ *    checked LAST so that a module copied from another wave still reports the
+ *    borrow, which names the wave to fix rather than merely the missing row.
  */
 export function assertDistinctWaveDomains(identity: ExteriorWaveSubsetIdentity): void {
   if (identity.ledgerIdDomain === identity.baseIdentityDomain) {
     throw new Error(`Wave ${identity.waveId} uses one domain "${identity.ledgerIdDomain}" for both derived ids; the two must be separated.`);
   }
+  let registeredHere = false;
   for (const registered of EXTERIOR_WAVE_DOMAIN_REGISTRY) {
     if (registered.waveId === identity.waveId) {
+      registeredHere = true;
       if (registered.ledgerIdDomain !== identity.ledgerIdDomain || registered.baseIdentityDomain !== identity.baseIdentityDomain) {
         throw new Error(`Wave ${identity.waveId} supplies domains that differ from its registered ones; its committed ids were derived under the registered strings and must not move.`);
       }
@@ -155,6 +164,9 @@ export function assertDistinctWaveDomains(identity: ExteriorWaveSubsetIdentity):
         throw new Error(`Wave ${identity.waveId} borrows hash domain "${domain}", which is issued to wave ${registered.waveId}; every wave must derive its ids under its own domains.`);
       }
     }
+  }
+  if (!registeredHere) {
+    throw new Error(`Wave ${identity.waveId} is not in the closed domain registry; add its row to EXTERIOR_WAVE_DOMAIN_REGISTRY before deriving any id under "${identity.ledgerIdDomain}".`);
   }
 }
 
