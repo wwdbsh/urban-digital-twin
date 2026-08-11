@@ -336,13 +336,41 @@ literal string `Building <id>`, so no rationale here identifies a building by
 name and none is implied. The place names are geographic: the cell bounds
 provably cover that ground.
 
-The choice is also the OPTIMUM, computed rather than asserted. Over every
-combination of Financial District cells that fits the 72-entry budget, the pair
-(157, 160) is the unique maximum at 71 materialized assets; the next best is a
-single cell at 65. Every gate that could make this curation false — a cell the
-ledger does not own, a cell whose bounds leave the stated Financial District
-envelope, a cell the canary already shipped, a subset that overflows the budget —
-refuses the build, and each refusal is exercised by test.
+The choice is also the OPTIMUM, and the enumeration is now COMMITTED rather than
+run once and thrown away. `lower-manhattan-curation-optimum.test.ts` enumerates
+every combination of up to four Financial District cells that fits the 72-entry
+budget, from the committed wave ledger, on every run.
+
+Ranked by OWNED buildings — the quantity the entry budget actually constrains,
+and the only one the ledger states — the pair (157, 160) reaches **72 and is the
+unique maximum**; the runner-up is the pair (157, 179) at 67, and the best single
+cell is 162 at 66. The curated pair materializes 71 of its 72.
+
+Two earlier drafts of this sentence were wrong in the same way and both are named
+here because the mistake is instructive. The first said "the next best is a
+single cell at 65", which is cell 162's MATERIALIZED count quoted as though it
+were the ranking quantity. Review corrected it to "cell 162 at 66 owned", which
+is cell 162's real owned count but is not the runner-up, because the pair
+(157, 179) reaches 67. Both were right about a number and wrong about what that
+number ranked. The test now pins the winner, the runner-up, the best single cell
+and both quantities for the curated pair, so a figure in this ADR cannot drift
+from the ledger again.
+
+Every gate that could make this curation false — a cell the ledger does not own,
+a cell whose bounds leave the stated Financial District envelope, a cell the
+canary already shipped, a subset that overflows the budget, a local refusal rate
+back at the canary's — refuses the build, and each refusal is exercised by test.
+
+The curated list is a CONSTANT rather than a derivation, and that broke the
+pipeline's resumability guarantee until this task fixed it. Every stage is
+fingerprint-gated, and the fingerprint hashed `renderableCellCount` but not WHICH
+cells: editing the list to a different pair of the same length moved nothing it
+hashed, so `plans` and `glbs` would have reported `skipped: true` and the release
+would have kept the previous curation's assets while its committed record
+described the new ones. `renderableCellDigestSha256` closes it, supplied only by
+a variant whose subset is curated — a subset walked from the ledger order is
+already covered by `subsetLedgerChecksumSha256`, so the canary's fingerprints
+stay byte-identical.
 
 Cells 150 and 151 are not reused, and the drift gate proves the two renderable
 sets are disjoint from the two releases' own committed inventories.
@@ -425,6 +453,34 @@ because only the selected LOD is requested. The derivation therefore reserved 14
 more entries than Block 835 occupies. That is conservative, not wrong — it made
 the promoted subset smaller than it strictly had to be — and the curated subset
 fits under either count.
+
+### Precondition on the NEXT wave promotion: the cache ceiling is now the binding constraint
+
+This is named here so a fourth wave cannot inherit it by silence, exactly as the
+canary named its three.
+
+By the disk-based derivation the promoted set now occupies **255 of 256** cache
+entries: 28 (Block 835 V3) + 156 (Midtown-core V3) + 71 (this wave). One entry
+of headroom. Measured at runtime the worst observed residency was 243, because
+Block 835 fetches one LOD rather than two — but 243 is a measurement of one
+session's camera path, and 255 is what the release-time derivation must budget
+against.
+
+**A fourth wave cannot promote, and this wave cannot ship a second LOD, without
+first doing one of these and recording which:**
+
+1. raise `EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries` and re-measure the byte
+   ceiling and the frame budgets against the raised cap — the entry cap is a
+   contract the whole exterior runtime is sized against, not a number to nudge;
+2. reduce occupancy, by re-cutting a promoted wave's renderable subset in a
+   successor release, which is what this task did and is not cheap;
+3. change the derivation so it counts what the runtime resolves rather than what
+   is on disk, which recovers the 14 entries of conservatism above but requires
+   proving the per-camera worst case rather than the per-release one.
+
+Byte residency is nowhere near binding — 62.0 MiB of 256 MiB at the worst
+observed station — so entries remain the constraint, exactly as ADR 0034's
+Decision 4 predicted for a different reason.
 
 ## Rollback semantics: this wave rolls back to BASE MASSING
 

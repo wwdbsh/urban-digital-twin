@@ -19,7 +19,7 @@ it.
 | local refusal rate | 1 of 72 = **1.39%** (wave rate 2.09%; canary subset 34%) |
 | textures | `procedural-texture-v1`, LOD 0 only, `LINEAR` / `LINEAR_MIPMAP_LINEAR` |
 | admission | `procedural-replay` on both emitted roots |
-| rights instrument | `LOWER_MANHATTAN_APPROVAL`, **unedited**, fingerprint `ff8da10f…` |
+| rights instrument | `LOWER_MANHATTAN_APPROVAL`, the CANARY's, carried **unedited**, fingerprint `ff8da10f…`. The carry-over is disclosed in the committed `payload-inventory.json` note, not only in source comments: the instrument's opening sentence names the release it was authored for, and every operative clause was checked against this release and holds. |
 | predecessor | `manhattan-lower-manhattan-cells-20260812` (the T015 canary; root + snapshot + inventory pins) |
 | snapshot checksum | `2d22395668709e6bc616eabce132ce4865dd000d85603bfd48d003ca401ef527` |
 | cells digest | `3d9d0154fe66183d557247815036a0406619d6470b0c24554792070a64bead5d` |
@@ -89,7 +89,7 @@ record are listed in `data/lower-manhattan-20260812-p1/blender-spot-sample.json`
 
 | file | what it pins |
 | --- | --- |
-| `data/lower-manhattan-20260812-p1/payload-inventory.json` | every emitted byte, the predecessor pins, the occupancy derivation, and the curation record |
+| `data/lower-manhattan-20260812-p1/payload-inventory.json` | every emitted byte, the predecessor pins, the occupancy derivation, the curation record, and the rights carry-over disclosure |
 | `data/lower-manhattan-20260812-p1/derivation.json` | the subset derivation and its digest reconciliation |
 | `data/lower-manhattan-20260812-p1/wave-census.json` | the wave-scale stop-code census and the shipped-subset census |
 | `data/lower-manhattan-20260812-p1/acceptance-evidence.json` | the uncapped frame-time, heap, network and residency captures, the capped control, and the GPU arithmetic |
@@ -167,8 +167,17 @@ Blender 5.2.0 LTS through Blender MCP and measured independently of the writer:
 ## Gates
 
 - focused: `lower-manhattan-curation.test.ts` (13),
+  `lower-manhattan-curation-optimum.test.ts` (4),
+  `lower-manhattan-fingerprint.test.ts` (4),
   `exterior-lower-manhattan-promotion-record.test.ts` (14),
   `exterior-multiwave-activation.test.ts` (21);
 - full: `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm build`;
 - canary regression: `git status data/lower-manhattan-20260812/` clean after a
-  forced rebuild through the refactored CLI.
+  forced rebuild through the refactored CLI. **This is MANUAL evidence, not a
+  committed gate.** It is a documented procedure (the three `--force` commands
+  above) that was run once, by hand, and whose result was read out of
+  `git status`. Nothing in `pnpm test` re-runs it, because doing so would
+  require the untracked citywide base and a two-minute rebuild inside the test
+  suite. A future change to the shared pipeline can therefore move the canary's
+  bytes without any automated gate noticing; re-run the procedure when touching
+  `scripts/lower-manhattan-cli.mjs` or anything it imports.

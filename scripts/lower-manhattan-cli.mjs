@@ -188,7 +188,7 @@ const RELEASE_VARIANTS = {
     // something. Promotion's measurement is the whole promoted composition in
     // the production preview, which is a different instrument entirely.
     stages: ["plans", "glbs", "gates", "graph", "sample"],
-    inventoryNote: "The payload directory is intentionally untracked, following the citywide precedent. This inventory is the committed record that keeps every emitted byte checkable after the local tree is removed; `node scripts/lower-manhattan-cli.mjs graph --release p1 --force` rebuilds it byte-identically.",
+    inventoryNote: "The payload directory is intentionally untracked, following the citywide precedent. This inventory is the committed record that keeps every emitted byte checkable after the local tree is removed; `node scripts/lower-manhattan-cli.mjs graph --release p1 --force` rebuilds it byte-identically. RIGHTS: this successor ships under the CANARY's approval instrument, carried unedited — same approval id, scope text, exclusions, note and fingerprint ff8da10f3f4cb7bcb93e58578baea652088b80b3020f0fc1ddc4e088962d120f — because amending it would move the fingerprint the canary's own committed release graph pins and would falsify what was approved. That instrument's opening sentence names the release it was authored for, `manhattan-lower-manhattan-cells-20260812`, and is the only part of it that is about that release rather than about wave w02; every operative clause was checked against this release and holds, including the bounded-subset clause that is exactly what differs here. This release adds no source, no verb and no envelope to it.",
   },
 };
 
@@ -273,6 +273,7 @@ async function loadContext(variant) {
 
   return {
     variant, workRoot, recordRoot, payloadRoot,
+    renderableCellDigestSha256: sha256HexSync(stableSerialize(renderable.cells.map((cell) => cell.cellId))),
     manifest, manifestChecksum, capture, parentLedger, parentLedgerChecksumSha256, subset,
     predecessorInventory, predecessorInventoryChecksumSha256, predecessor,
     occupancy: {
@@ -307,6 +308,14 @@ function inputFingerprint(context, stage) {
     subsetLedgerChecksumSha256: exteriorWaveArtifactChecksum(context.subset.ledger),
     predecessorInventoryChecksumSha256: context.predecessorInventoryChecksumSha256,
     renderableCellCount: context.renderable.cells.length,
+    // WHICH cells, not merely how many, for a CURATED subset. The canary's
+    // subset is a walk of the ledger order under an entry budget, so it moves
+    // whenever `subsetLedgerChecksumSha256` does; the curated list is a
+    // constant in this repository, and editing it to a different pair of the
+    // same length would otherwise leave every stage `skipped: true` on the
+    // previous curation's bytes. The digest is over the RESOLVED cell ids, so
+    // it also covers an occupancy change that re-cut the subset.
+    ...(context.variant.curation ? { renderableCellDigestSha256: context.renderableCellDigestSha256 } : {}),
     shippedLodId: MIDTOWN_CORE_SHIPPED_LOD_ID,
     profile: context.variant.waveProfile,
   });
@@ -792,6 +801,25 @@ async function stageGraph(context, options) {
   const privateLeaks = [...emitted.keys()].filter((path) => path.startsWith("private/") || path.toLowerCase().includes("/private"));
   if (privateLeaks.length > 0) fail(`private-audience bytes reached the browser-reachable root: ${privateLeaks.join(", ")}`);
 
+  // A curated variant may not reach the committed record without its gates
+  // receipt. Without this the inventory emitted `"refusal": null` for the ADR
+  // 0034 precondition (b) result — a curated release whose stated refusal rate
+  // is silently absent, which reads as "not applicable" rather than as "never
+  // checked". `stageGates` hard-fails on a missing `glbs` receipt but nothing
+  // made `graph` require `gates`, so this is the fail-closed edge.
+  let curationRefusal = null;
+  if (context.variant.curation) {
+    const gates = await readReceipt(context, "gates");
+    if (!gates) fail(`the gates stage has not run for the ${context.variant.variantId} variant, so the curated subset's ADR 0034 precondition (b) refusal census would be emitted as null. Run \`gates --release ${context.variant.variantId}\` first.`);
+    if (gates.inputFingerprint !== inputFingerprint(context, "gates")) {
+      fail(`the gates receipt for the ${context.variant.variantId} variant was written against different inputs than this run, so its refusal census does not describe these bytes. Re-run \`gates --release ${context.variant.variantId} --force\`.`);
+    }
+    curationRefusal = gates.summary?.curation?.refusal ?? null;
+    if (curationRefusal === null || curationRefusal.ok !== true) {
+      fail(`the gates receipt for the ${context.variant.variantId} variant carries no passing refusal census; the curated subset's ADR 0034 precondition (b) result cannot be emitted as null.`);
+    }
+  }
+
   const files = [...emitted]
     .map(([path, bytes]) => ({ path, byteSize: bytes.byteLength, checksumSha256: sha256HexBytes(bytes) }))
     .sort((left, right) => (left.path < right.path ? -1 : 1));
@@ -827,7 +855,7 @@ async function stageGraph(context, options) {
           basis: context.variant.curation.basis,
           statement: context.variant.curation.statement,
           cells: context.variant.curation.cells.map((record) => ({ ...record })),
-          refusal: (await readReceipt(context, "gates"))?.summary?.curation?.refusal ?? null,
+          refusal: curationRefusal,
         },
       }
       : {}),
