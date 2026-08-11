@@ -349,3 +349,83 @@ no later check could tell it apart from one that could.
 - One more gate to run, and one more constant table whose hash must be pinned.
 - The honesty claim is now structural. It survives a reviewer who does not believe
   the metadata, which is the only kind of honesty claim worth making.
+
+---
+
+# Amendment — T028 (Issue #50), 2026-08-12
+
+This section is added, not substituted. Nothing above it is edited: the decisions
+recorded there were made on the evidence available then, and a later cycle
+changing their wording would destroy the record of what was actually decided.
+What follows is what T028 measured, decided, and left open.
+
+## A1. Sampler filtering, decided from the shipping renderer
+
+Precondition 7 above said the writer emits `wrapS`/`wrapT` only, that mip
+selection is therefore left to whatever renderer opens the file, that the T027
+stills were Blender EEVEE rather than the shipping renderer, and that a LOD 0
+asset repeating a 128-pixel tile ~160 times vertically is exactly where a wrong
+filter produces moire. **It was right, and the defect is real.**
+
+Two sampler variants of the same fourteen-asset V3T package were built from the
+same plans — one with the committed wrap-only sampler, one adding
+`magFilter: LINEAR (9729)` and `minFilter: LINEAR_MIPMAP_LINEAR (9987)` — and
+put in front of CesiumJS 1.143.0 in desktop Chrome 151 at three identical fixed
+camera stations. Same viewport (1440x900 CSS at devicePixelRatio 2), same
+120-frame settle, same object-URL load path, `localhost` the only host
+contacted, zero console errors. The only difference between two captures at one
+station is the sampler.
+
+| station | ground distance from ESB centroid | reading |
+| --- | ---: | --- |
+| `inspection-facade` | 95 m | No legibility difference on the ESB curtain grid. Neighbouring masonry reads as brick under trilinear and as speckle without it. |
+| `exploration-street` | 220 m | Wrap-only shows moire clumping on the upper shaft and an unstable brick field on the neighbours. Trilinear removes both; bay rhythm, spandrel bands and floor lines stay legible. |
+| `far-shaft-repeats` | 620 m | **Decisive.** Wrap-only breaks the shaft into irregular horizontal clumping and speckle — the pattern reads as noise banding rather than coursing. Trilinear resolves it as an even, stable grid. |
+
+**Decision: `PROCEDURAL_TEXTURE_SAMPLER_FILTER = { magFilter: 9729, minFilter: 9987 }`.**
+Any textured package admitted publicly must name that pair in its shipped bytes.
+The constant is exported for the wave chain to consume; it grants no admission by
+itself.
+
+`writeCanonicalGlb` takes the filter as an OPTIONAL field on its texture set, and
+absent reproduces the previous sampler exactly. **The frozen `-v3t` package
+deliberately does not adopt it**, because adopting it would move the byte totals
+its committed census pins; the variant builds live in the gitignored
+`artifacts/` scratch root and no V3T byte is committed by this cycle. The
+untextured writer path is untouched and still reproduces
+`QUAD_ONLY_PRE_TRIANGLE_SHA256`.
+
+Captures, their checksums, the camera stations and the written verdict are
+committed in
+`data/manhattan-esb-block-reference-20260811-v3t/cesium-sampler-evidence.json`.
+The PNG payloads themselves are not, for the same reason the GLBs are not.
+
+Two honesty notes. A first inspection station at 28 m ground distance placed the
+camera **inside** the ESB footprint and produced an unlit interior; it was a
+station-design defect and was discarded and replaced rather than reported. And
+capture PNG byte sizes are recorded in the evidence file as an observation only:
+they corroborate the reading at the far station and contradict nothing at the
+near ones, but the verdict rests on the visual comparison, not on them.
+
+## A2. GPU memory, restated with mipmaps in it
+
+Precondition 3 above estimated ~2.7 GB of texture memory for ~14,000 buildings
+x 3 tiles x 128² RGBA, **before mipmaps**. A full mip chain adds the familiar
+one-third, so the decision in A1 moves that estimate to **~3.6 GB**. That is a
+consequence of the decision and is recorded here rather than discovered later.
+
+It does not change the answer: per-GLB embedding does not scale to a citywide
+textured wave at any filter setting, and the **shared four-tile atlas bound once
+for the whole city** remains the named fix. It is a runtime architecture change,
+it is **explicitly out of scope for T028**, and nothing in this cycle assumes it.
+
+## A3. Precondition 4 (UV origin) is closed by test, not by prose
+
+The precondition that "fails silently and catastrophically" is now asserted.
+`block835-v3t-package.test.ts` pins three things: every shipped UV stays inside a
+building-local magnitude band where one float32 step is far below one texel of a
+128-pixel tile; the ECEF-anchored counterfactual is shown numerically to put
+consecutive float32 values half a tile — dozens of texels — apart; and UVs are
+invariant to the file's axis convention, because the projection reads plan-local
+geometry and no anchor is in scope at all. A refactor that merges assets into a
+shared or ECEF frame now fails a test instead of shipping a disintegrated motif.

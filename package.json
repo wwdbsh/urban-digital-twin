@@ -85,6 +85,8 @@
     "block835-v3t:replay": "node scripts/block835-v3t-texture-cli.mjs replay",
     "block835-v3t:determinism": "node scripts/block835-v3t-texture-cli.mjs determinism",
     "block835-v3t:evidence": "node scripts/block835-v3t-texture-cli.mjs evidence",
+    "block835-v3t:sampler-plan": "node scripts/block835-v3t-sampler-evidence-cli.mjs plan",
+    "block835-v3t:sampler-evidence": "node scripts/block835-v3t-sampler-evidence-cli.mjs evidence",
     "exterior-cells:emit-fixture": "node --experimental-strip-types scripts/emit-exterior-cell-fixture-release.mjs",
     "exterior-ledger:emit": "node --experimental-strip-types scripts/emit-exterior-wave-ledger.mjs",
     "exterior-fullsnapshot:dryrun": "node --experimental-strip-types scripts/exterior-fullsnapshot-dryrun.mjs",

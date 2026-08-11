@@ -15,7 +15,7 @@ import {
   type V3Tessellation,
 } from "../domain/deterministic-facade-generator-v3.ts";
 import { sha256HexBytes, sha256HexSync, stableSerialize } from "../domain/deterministic-hash.ts";
-import { writeCanonicalGlb, type CanonicalGlbMaterial, type CanonicalGlbQuad, type CanonicalGlbTextureSet, type CanonicalGlbTri, type Vec2, type Vec3 } from "./canonical-glb.ts";
+import { writeCanonicalGlb, type CanonicalGlbMaterial, type CanonicalGlbQuad, type CanonicalGlbSamplerFilter, type CanonicalGlbTextureSet, type CanonicalGlbTri, type Vec2, type Vec3 } from "./canonical-glb.ts";
 import { BLOCK835_V3_STYLE_OVERRIDES, block835CitedStyleFor } from "./block835-facade-material-intake.ts";
 import {
   BLOCK835_CELL_ID,
@@ -182,6 +182,15 @@ export interface V3PackageProfile {
   styleOverrides?: ReadonlyMap<string, V3StyleOverride>;
   /** LOD 0 only. LOD 1 is viewed from beyond 250 m, where a detail tile is invisible cost. */
   texture: ProceduralTextureProfile | null;
+  /**
+   * Optional decided sampler filtering for this package's detail tiles.
+   *
+   * Absent means the writer emits the wrap-only sampler it always emitted and
+   * mip selection is left to the renderer. The frozen `-v3t` package leaves it
+   * absent so its committed census stays byte-exact; a successor package that
+   * adopts textures publicly is expected to set it (see ADR 0032 amendment).
+   */
+  textureFilter?: CanonicalGlbSamplerFilter;
 }
 
 export const BLOCK835_V3_PROFILE: V3PackageProfile = {
@@ -480,7 +489,7 @@ function bindTextures(plan: V3Plan): TextureBinding {
   };
 }
 
-export function v3GeometryForGlb(plan: V3Plan, tessellation: V3Tessellation, options: { yUp: boolean; texture?: ProceduralTextureProfile | null }): V3GlbGeometry {
+export function v3GeometryForGlb(plan: V3Plan, tessellation: V3Tessellation, options: { yUp: boolean; texture?: ProceduralTextureProfile | null; textureFilter?: CanonicalGlbSamplerFilter | null }): V3GlbGeometry {
   const textured = options.texture === PROCEDURAL_TEXTURE_PROFILE;
   const binding = textured ? bindTextures(plan) : null;
   const materialIndexById = new Map(plan.materials.map((material, index) => [material.id, index]));
@@ -515,7 +524,12 @@ export function v3GeometryForGlb(plan: V3Plan, tessellation: V3Tessellation, opt
   };
   return {
     materials,
-    textures: binding === null ? null : { images: binding.images.map((textureClass) => ({ mimeType: "image/png" as const, bytes: proceduralTextureTile(textureClass).pngBytes })), materialImage: binding.materialImage },
+    textures: binding === null ? null : {
+      images: binding.images.map((textureClass) => ({ mimeType: "image/png" as const, bytes: proceduralTextureTile(textureClass).pngBytes })),
+      materialImage: binding.materialImage,
+      // Omitted entirely when undecided, so the shipped V3T bytes are unmoved.
+      ...(options.textureFilter ? { filter: options.textureFilter } : {}),
+    },
     quads: tessellation.quads.map((quad) => {
       const materialIndex = materialIndexOf(quad.materialId);
       const uv = uvFor(materialIndex, quad.corners);
@@ -830,7 +844,7 @@ export function assembleBlock835V3Package(options: {
       const texture = lodIndex === 0 ? profile.texture : null;
       const enu = v3GeometryForGlb(plan, tessellation, { yUp: false });
       if (lodIndex === 0) registration.push(v3RegistrationEntry(context, enu));
-      const file = v3GeometryForGlb(plan, tessellation, { yUp: true, texture });
+      const file = v3GeometryForGlb(plan, tessellation, { yUp: true, texture, textureFilter: texture ? profile.textureFilter ?? null : null });
       const relativeRef = `private/assets/${building.canonicalBuildingId.replace(":", "-")}__${lodId}.glb`;
       const metadata = {
         canonicalFeatureId: building.canonicalBuildingId,

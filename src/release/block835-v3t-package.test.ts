@@ -642,3 +642,78 @@ describe("the writer's untextured path is untouched by the texture branch", () =
     expect(written.counts.textureCount).toBe(1);
   });
 });
+
+/**
+ * The UV ORIGIN invariant (ADR 0032 precondition 4, closed by T028).
+ *
+ * This is the one precondition in ADR 0032 that fails SILENTLY. Every other
+ * failure mode in this pipeline throws, refuses, or moves a hash. Re-anchoring
+ * the UV projection to a shared or ECEF frame — the natural thing to do when
+ * assets are merged for a citywide wave — produces a package that validates,
+ * replays, and hashes cleanly while the motif disintegrates in the renderer,
+ * because float32 cannot resolve a texel at those magnitudes.
+ *
+ * So the invariant is asserted, not described: the shipped UVs must stay in a
+ * building-local magnitude band, and the counterfactual must be shown to be
+ * genuinely unrepresentable rather than merely discouraged.
+ */
+describe("UVs are derived in the building-local frame", () => {
+  /** float32 has a 24-bit significand, so consecutive values near |x| step by 2^-23 * 2^exponent. */
+  function float32StepAt(magnitude: number): number {
+    if (magnitude === 0) return 2 ** -149;
+    const exponent = Math.floor(Math.log2(Math.abs(magnitude)));
+    return 2 ** (exponent - 23);
+  }
+
+  it("keeps every shipped UV inside a band where float32 still resolves a texel", () => {
+    const textured = texturedGeometry().geometry;
+    const values = [
+      ...textured.quads.filter((quad) => quad.uv).flatMap((quad) => quad.uv!.flatMap((uv) => [uv[0], uv[1]])),
+      ...textured.triangles.filter((triangle) => triangle.uv).flatMap((triangle) => triangle.uv!.flatMap((uv) => [uv[0], uv[1]])),
+    ].map((value) => Math.fround(value));
+    expect(values.length).toBeGreaterThan(1_000);
+    const worst = Math.max(...values.map((value) => Math.abs(value)));
+    // A building-local frame keeps this in the hundreds of tile repeats. ADR 0032
+    // measured ~160 on the tallest shipped asset; anything approaching an ECEF
+    // anchoring would be seven orders of magnitude larger.
+    expect(worst).toBeLessThan(1_000);
+    // The claim that actually matters: at the WORST magnitude the package ships,
+    // one float32 step is still far below one texel of a 128-pixel tile.
+    const texel = 1 / PROCEDURAL_TEXTURE_TILE_PIXELS;
+    expect(float32StepAt(worst)).toBeLessThan(texel / 100);
+  });
+
+  it("shows the ECEF-anchored counterfactual is unrepresentable, not merely discouraged", () => {
+    // ~6.4e9 mm is the order of an ECEF coordinate. Divided by a tile module of
+    // a few hundred millimetres, the UV lands near 1e7, where consecutive
+    // float32 values are HALF A TILE apart — dozens of texels. The motif would
+    // not degrade, it would disintegrate. This is asserted so that a future
+    // reader tempted to merge assets into a shared frame finds a number rather
+    // than an adjective.
+    const tile = proceduralTextureCatalog().get("brick-running-bond")!;
+    const ecefUv = 6.4e9 / tile.tileUMm;
+    expect(ecefUv).toBeGreaterThan(1e6);
+    const ecefStep = float32StepAt(ecefUv);
+    expect(ecefStep).toBeGreaterThanOrEqual(0.5);
+    expect(ecefStep * PROCEDURAL_TEXTURE_TILE_PIXELS).toBeGreaterThan(32);
+    // And the shipped path is nowhere near it, by a wide margin.
+    const shipped = Math.max(...texturedGeometry().geometry.quads.filter((quad) => quad.uv).flatMap((quad) => quad.uv!.flatMap((uv) => [Math.abs(uv[0]), Math.abs(uv[1])])));
+    expect(shipped * 1_000).toBeLessThan(ecefUv);
+  });
+
+  it("derives UVs from plan-local geometry alone, so no anchor can reach them", () => {
+    // The projection reads the tessellation and nothing else: there is no WGS84
+    // anchor, no cell origin and no package identity in scope. Translating the
+    // building on the globe therefore cannot move a UV, and this is the property
+    // that a "merge everything into one frame" refactor would break first.
+    const { plan } = texturedGeometry();
+    const tessellation = tessellateV3Plan(plan, { includeRecesses: true });
+    const first = v3GeometryForGlb(plan, tessellation, { yUp: false, texture: PROCEDURAL_TEXTURE_PROFILE });
+    const second = v3GeometryForGlb(plan, tessellation, { yUp: true, texture: PROCEDURAL_TEXTURE_PROFILE });
+    // yUp remaps POSITION and leaves UVs alone: the UV is a function of the
+    // plan-local frame, not of the file's axis convention or of where on Earth
+    // the asset is anchored.
+    expect(second.quads.map((quad) => quad.uv)).toStrictEqual(first.quads.map((quad) => quad.uv));
+    expect(second.quads.map((quad) => quad.corners)).not.toStrictEqual(first.quads.map((quad) => quad.corners));
+  });
+});
