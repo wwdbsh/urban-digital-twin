@@ -85,6 +85,24 @@ clumping, no moiré. That is exactly the defect T028 measured under unspecified
 sampler filtering, and not seeing it here is the amendment A1 filter doing its
 job in a second, independent package.
 
+**Both measures are floor tests, not cost measurements, and the record says so.**
+Every mean across all six captures is 8.33 ms — that is the 120 Hz present
+interval, not a rendering measurement. The scene is vsync-bound in both variants,
+so the p50 comparison carries no information at all and the p95 spread (ratios
+0.99–1.03) is inside run-to-run noise. What the frame-time evidence honestly
+supports is that tiles do not push this scene off the vsync floor. It cannot
+quantify headroom, because a measurement pinned to the presentation clock never
+reveals how much work was left over. That is **adequate for a canary**, whose
+question is only whether tiles make this unusable, and **inadequate for
+promotion**, which needs an uncapped measurement.
+
+Likewise the heap figure is `usedJSHeapSize` and nothing else. **GPU texture
+memory is unmeasured**: decoded images, their mip chains, and the vertex and
+index buffers live in driver memory this instrument cannot see. Four 128×128
+grayscale tiles are small and their mip chains smaller, so the GPU cost is
+expected to be modest — but expected is not measured, and neither this ADR nor
+the committed verdict claims otherwise.
+
 **The first heap measurement was wrong, and the record says so.** Reusing one tab
 across six navigations accumulated roughly 10 MB per load, and a variant-major
 capture order turned three navigations of accumulation into an apparent 35 MB of
@@ -205,6 +223,48 @@ not a refusal, and it is counted separately.
 - No building of this wave was shipped by an earlier wave, so per-building
   predecessor pins are `null`. Inventing a pin for geometry that never existed
   would be false lineage.
+
+## Preconditions on T016 (promotion)
+
+This canary deliberately leaves three things undone. They are named here so
+promotion cannot inherit them by silence.
+
+### (a) Promotion must NOT inherit this renderable subset
+
+This subset was derived from the ledger's cell `order`, which is documented as
+"global visual-priority order" but is in fact a south-to-north tile-row
+traversal. That is a legitimate basis for a canary — it is a derivation, not a
+curation — and it is **not** a legitimate basis for what a user sees first.
+
+Promotion must do one of two things, and record which:
+
+1. **Redefine wave order** so "visual priority" is a stated, computed property —
+   building count, built volume, landmark presence, whatever is chosen — and
+   re-derive the subset from it; or
+2. **Record an explicit curated subset**, with the curation stated as curation
+   and the reason for each admitted cell written down.
+
+Silently reusing cells 150–151 is excluded either way.
+
+### (b) The promoted subset must include Financial District cells and justify its refusal rate
+
+The current subset refuses 21 of 62 (34%), against a wave rate of 2.09%, because
+its two cells are harbour and Governors Island low-rise dominated by
+`source-height-below-grammar-minimum`. A promoted subset must include Financial
+District cells and must demonstrate a local refusal rate **materially closer to
+the 2.09% wave rate**. A promoted set that refuses a third of what it owns is not
+representative of the wave it is promoting, whatever its cells are called.
+
+### (c) Cost must be re-measured off the vsync floor, with GPU memory named
+
+The canary's frame-time evidence is a floor test on a 120 Hz display (see above).
+Promotion needs:
+
+- an **uncapped** frame-time measurement — vsync disabled, or a deliberately
+  oversubscribed scene — so actual headroom is stated rather than inferred from
+  the absence of dropped frames; and
+- **GPU texture memory named explicitly**, not `usedJSHeapSize` standing in for
+  it, at wave scale rather than for one cell.
 
 ## Known gap worth naming
 

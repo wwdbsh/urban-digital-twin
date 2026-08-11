@@ -11,7 +11,11 @@ import {
   proceduralTextureParametersHash,
 } from "./procedural-texture.ts";
 import { MIDTOWN_CORE_V3_APPROVAL_EXCLUSIONS, MIDTOWN_CORE_V3_APPROVAL_SCOPE } from "./midtown-core-v3-release.ts";
+import { BLOCK835_MEMBERSHIP_BUILDING_IDS } from "../runtime/exterior-default-activation.ts";
 import { LOWER_MANHATTAN_RELEASE_ID } from "./lower-manhattan-package.ts";
+
+/** Block 835 ships both LODs per building; Midtown-core and this wave ship one. */
+const BLOCK835_SHIPPED_LOD_COUNT = 2;
 import {
   LOWER_MANHATTAN_APPROVAL,
   LOWER_MANHATTAN_APPROVAL_EXCLUSIONS,
@@ -73,6 +77,21 @@ describe("lower-manhattan rights instrument", () => {
     expect(LOWER_MANHATTAN_APPROVAL_SCOPE).toContain("re-rasterized and required to match byte for byte");
   });
 
+  /**
+   * The tile verbs are narrower than the geometry's, and the operative text has
+   * to SAY so. Geometry may be redistributed because an in-session authorization
+   * broadened that envelope; nothing broadened anything to cover redistributing
+   * generated tiles, so letting the tile clause inherit the geometry's verb list
+   * would assert a permission nobody granted.
+   */
+  it("grants tiles display and conveyance only, never redistribution", () => {
+    expect(LOWER_MANHATTAN_APPROVAL_SCOPE).toContain("FOR LOCAL APPLICATION DISPLAY AND DERIVATIVE CONVEYANCE ONLY AND EXPRESSLY NOT FOR REDISTRIBUTION");
+    expect(LOWER_MANHATTAN_APPROVAL_EXCLUSIONS.some((entry) => entry.startsWith("redistribution of the procedural facade detail tiles"))).toBe(true);
+    // The geometry keeps its own broader verb list; the narrowing is about tiles.
+    expect(LOWER_MANHATTAN_APPROVAL_SCOPE).toContain("redistribution of deterministically generated exterior geometry");
+    expect(LOWER_MANHATTAN_APPROVAL_NOTE).toContain("no recorded item broadened anything to permit redistributing generated tiles");
+  });
+
   /** The two things that stay false, narrowed from the blanket texture exclusion. */
   it("still excludes public deployment, captured imagery and any facade-fidelity claim", () => {
     expect(LOWER_MANHATTAN_APPROVAL_EXCLUSIONS).toContain("public internet deployment");
@@ -93,7 +112,7 @@ describe("lower-manhattan rights instrument", () => {
   /** Pinned exactly as the midtown scope is pinned: a moved word moves the hash. */
   it("pins the approval fingerprint to its own text", () => {
     expect(LOWER_MANHATTAN_APPROVAL.fingerprintSha256).toBe(lowerManhattanApprovalFingerprint());
-    expect(LOWER_MANHATTAN_APPROVAL.fingerprintSha256).toBe("608e6c307d05362f12807545a2c9543ccebe75679a36d4794b052cfe43f15fea");
+    expect(LOWER_MANHATTAN_APPROVAL.fingerprintSha256).toBe("ff8da10f3f4cb7bcb93e58578baea652088b80b3020f0fc1ddc4e088962d120f");
   });
 });
 
@@ -207,6 +226,24 @@ describe("lower-manhattan committed payload inventory", () => {
     // Tiles ride on LOD 0 alone and the catalogue has four classes.
     expect(inventory.census.maximumTextureCount).toBeGreaterThan(0);
     expect(inventory.census.maximumTextureCount).toBeLessThanOrEqual(V3T_QUALITY_BUDGETS.maxTextures);
+  });
+
+  /**
+   * The promoted occupancy is not a remembered number. Block 835 ships both LODs
+   * for each of its fourteen canonical buildings, so its 28 cache entries are a
+   * function of the committed membership constant — and pinning it that way is
+   * what would catch the earlier mistake, where reading that release's ROOT
+   * manifest returned zero because it declares its GLBs in its assembly package.
+   */
+  it("pins the promoted Block 835 occupancy to the committed membership constant", () => {
+    expect(BLOCK835_MEMBERSHIP_BUILDING_IDS).toHaveLength(14);
+    expect(inventory.occupancy.block835AssetEntries).toBe(BLOCK835_MEMBERSHIP_BUILDING_IDS.length * BLOCK835_SHIPPED_LOD_COUNT);
+    expect(inventory.occupancy.block835AssetEntries).toBe(28);
+    // Midtown ships one LOD per materialized building, so its entries are its
+    // committed inventory's own LOD 0 asset count.
+    const midtown = readJson<{ files: { path: string }[] }>("data/midtown-core-20260811-v3/payload-inventory.json");
+    expect(inventory.occupancy.midtownAssetEntries)
+      .toBe(midtown.files.filter((file) => /^public\/assets\/.*\.glb$/u.test(file.path)).length);
   });
 
   it("fits the entry budget it was derived from", () => {

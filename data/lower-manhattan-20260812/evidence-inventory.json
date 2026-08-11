@@ -1,8 +1,8 @@
 {
   "files": [
     {
-      "byteSize": 65265,
-      "checksumSha256": "54a0968ede7794ff2d7a6e5f7dc7bdd9299cdb5389ad139c4bc250c39035ce93",
+      "byteSize": 65331,
+      "checksumSha256": "a652a04c00691cf71f6694f960b51930822797836ac46a75128ae32c1a9128d2",
       "path": "asset-census.json"
     },
     {
@@ -436,13 +436,13 @@
       "path": "stages/gates.json"
     },
     {
-      "byteSize": 4410,
-      "checksumSha256": "4066daa602060ded0039adfc43c59119ca6e63dbcef6bb61d96f69d187ba6594",
+      "byteSize": 4480,
+      "checksumSha256": "ad6a2e10c719ec20f878eb8b2f9e4924496bfcffa27968066d4bb6f38d96c9c2",
       "path": "stages/glbs.json"
     },
     {
       "byteSize": 1417,
-      "checksumSha256": "f8ca79c59352c4254e2c29c5454a93270d9066175b3ded1738b12f181a907c8f",
+      "checksumSha256": "85647a06833e6dd71e32df90fae46914dfc91742f188201370da6097e38b3b10",
       "path": "stages/graph.json"
     },
     {
@@ -466,7 +466,7 @@
   "schemaVersion": "1.0",
   "totals": {
     "fileCount": 92,
-    "byteSize": 13389535
+    "byteSize": 13389671
   },
   "workRoot": "artifacts/lower-manhattan-20260812"
 }

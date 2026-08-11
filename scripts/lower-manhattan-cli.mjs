@@ -701,7 +701,7 @@ async function stageGraph(context, options) {
   const censusChecksum = await writeRecord("wave-census.json", {
     schemaVersion: "1.0",
     releaseId: LOWER_MANHATTAN_RELEASE_ID,
-    note: "Wave-scale V3 stop-code census over all 6,425 owned buildings, plus the shipped-subset census over the renderable cells. Committed so the refusal distribution stays checkable without the untracked work root. The wave census is untextured by design; the shipped subset carries procedural-texture-v1 tiles on LOD 0.",
+    note: "Wave-scale V3 stop-code census over all 6,425 owned buildings, plus the shipped-subset census over the renderable cells. Committed so the refusal distribution stays checkable without the untracked work root. The wave census is untextured by design; the shipped subset carries procedural-texture-v1 tiles on LOD 0. READ `wave.retention` BEFORE `wave.shippedAssetCount`: the wave pass runs `census-only`, so it generated, gated and measured every asset and then dropped the bytes rather than keeping them. Its `shippedAssetBytes` is therefore a real measurement while its `shippedAssetCount` is zero, which is a retention mode and not a contradiction. The `shipped` object below is the pass that retained bytes.",
     textureCatalog: proceduralTextureProvenance(),
     samplerFilter: { ...LOWER_MANHATTAN_WAVE_PROFILE.textureFilter },
     occupancy: context.occupancy,

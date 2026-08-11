@@ -65,6 +65,13 @@ identical cameras, 240 timed frames after a 120-frame settle.
 Worst observed frame either variant: 10.6 ms, against a 16.7 ms 60 Hz budget.
 Shipped bytes for the cell: 1.72 MB untextured, 4.04 MB textured (2.36x).
 
+**Read both columns as floor tests.** Every mean across all six captures is
+8.33 ms, the 120 Hz present interval — the scene is vsync-bound in both variants,
+so the p50 ratio carries no information and the p95 spread is inside noise. The
+heap column is `usedJSHeapSize` only; **GPU texture memory is unmeasured**.
+Adequate for a canary kill switch, inadequate for promotion — see ADR 0034's
+T016 preconditions.
+
 Verdict `proceed-textured`, recorded in
 `data/lower-manhattan-20260812/kill-switch-verdict.json`, which cites
 `kill-switch-evidence.json` by checksum.
@@ -98,7 +105,11 @@ The renderable subset's own rate is far higher — 21 of 62, 34%, almost all
 are low-rise harbour structures. No tolerance was adjusted to improve either
 figure.
 
-Committed at `data/lower-manhattan-20260812/wave-census.json`.
+Committed at `data/lower-manhattan-20260812/wave-census.json`. Read
+`wave.retention` before `wave.shippedAssetCount`: the wave pass runs
+`census-only`, so it generated, gated and measured every asset and then dropped
+the bytes. Its `shippedAssetBytes` is a real measurement while its
+`shippedAssetCount` is zero — a retention mode, not a contradiction.
 
 ## Renderable-subset derivation (stage 3)
 
@@ -147,7 +158,7 @@ Report at `artifacts/lower-manhattan-20260812/blender/inspection.json`, pinned b
 | --- | --- |
 | `derivation.json` | the subset derivation and its digest reconciliation |
 | `payload-inventory.json` | every emitted byte of the untracked payload |
-| `wave-census.json` | the full-wave stop-code census and texture pins |
+| `wave-census.json` | the full-wave stop-code census, retention mode and texture pins |
 | `kill-switch-evidence.json` | the six captures, their stills' checksums, the comparison |
 | `kill-switch-verdict.json` | the decision, citing the evidence by checksum |
 | `evidence-inventory.json` | the gitignored work root |
@@ -169,7 +180,12 @@ Payloads stay ignored: `public/data/` by the existing rule,
   disappears when the payload does is not a drift test.
 - **The wave ledger's "visual priority" is south-to-north tile order.** For this
   wave that puts harbour and Governors Island low-rise ahead of the Financial
-  District. The ordering was followed rather than overridden; see ADR 0034.
+  District. The ordering was followed rather than overridden; see ADR 0034, whose
+  T016 preconditions forbid promotion from inheriting this subset.
+- **Tile rights are narrower than geometry rights.** Geometry may be
+  redistributed; tiles get local application display and derivative conveyance
+  only, and their redistribution is excluded outright. The operative scope text
+  says so rather than letting the tile clause inherit the geometry's verbs.
 - **One pre-existing test flake.** `App.test.tsx > closes details with Escape and
   returns focus to the located-pick trigger` fails under full-suite parallelism
   and passes in isolation. Verified against the pre-task baseline commit

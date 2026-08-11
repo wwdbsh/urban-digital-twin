@@ -54,6 +54,16 @@ export interface MidtownCoreV3Census {
   tierCollapseAbsentSetbackCount: number;
   generatedAssetCount: number;
   generatedAssetBytes: number;
+  /**
+   * Whether this pass RETAINED the bytes it measured.
+   *
+   * `"census-only"` means every asset was still generated, gated and measured
+   * and then dropped instead of kept — so `shippedAssetBytes` is a real
+   * measurement while `shippedAssetCount` is zero, because no shipped asset
+   * record was built. Without this marker those two numbers read as a
+   * contradiction, and a reader would be right to distrust them.
+   */
+  retention: "shipped-bytes" | "census-only";
   shippedAssetCount: number;
   shippedAssetBytes: number;
   maximumTriangleCount: number;
@@ -272,6 +282,7 @@ export function materializeMidtownCoreV3Cells(input: MidtownCoreV3MaterializeInp
       tierCollapseAbsentSetbackCount: absentSetbacks.size,
       generatedAssetCount,
       generatedAssetBytes,
+      retention: censusOnly ? "census-only" : "shipped-bytes",
       shippedAssetCount: buildings.reduce((total, building) => total + building.assets.length, 0),
       shippedAssetBytes,
       maximumTriangleCount,

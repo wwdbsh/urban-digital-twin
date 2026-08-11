@@ -44,7 +44,8 @@
  * and each wave supplies its OWN domain strings through
  * `ExteriorWaveSubsetIdentity`. Reusing another wave's domain would let two
  * different partitions collide in id space, so `assertDistinctWaveDomains`
- * refuses any identity that borrows the midtown strings.
+ * refuses any identity that borrows a domain another wave has issued, and
+ * `buildExteriorWaveSubsetLedger` calls it before it does anything else.
  */
 
 import { domainSeparatedSha256, sha256HexSync, stableSerialize } from "../domain/deterministic-hash.ts";
@@ -85,6 +86,71 @@ export interface ExteriorWaveSubsetIdentity {
    * this subset, so no two releases can ever own the same building.
    */
   exclusionWaveIndexes: readonly number[];
+}
+
+/**
+ * Every domain string this repository has issued, and the wave that owns it.
+ *
+ * A closed table rather than a registry populated at import time: a guard whose
+ * completeness depends on which modules happened to be imported would pass in
+ * exactly the situation it exists to catch — a new wave module written in
+ * isolation. Adding a wave means adding its row here, and the wave's own module
+ * is checked against this table rather than trusted to agree with it.
+ *
+ * A domain that has ever been issued is never reused or reassigned, because both
+ * derived ids of the waves that used it are committed.
+ */
+export const EXTERIOR_WAVE_DOMAIN_REGISTRY: readonly {
+  waveId: string;
+  ledgerIdDomain: string;
+  baseIdentityDomain: string;
+}[] = [
+  {
+    waveId: "midtown-core",
+    ledgerIdDomain: "udt.midtown-core.subset-ledger-id.v1",
+    baseIdentityDomain: "udt.midtown-core.subset-base-identity.v1",
+  },
+  {
+    waveId: "lower-manhattan",
+    ledgerIdDomain: "udt.lower-manhattan.subset-ledger-id.v1",
+    baseIdentityDomain: "udt.lower-manhattan.subset-base-identity.v1",
+  },
+];
+
+/**
+ * Refuses any identity whose domains collide with another wave's, or with each
+ * other, or with what this wave itself has already committed to.
+ *
+ * Three distinct failures, because they fail for three different reasons:
+ *
+ *  - BORROWING. A wave using another wave's domain could derive a colliding
+ *    ledger id from a genuinely different partition. The error names the wave
+ *    that owns the string, so the fix is obvious rather than a puzzle.
+ *  - SELF-COLLISION. One string used for both derived ids collapses the
+ *    separation between them, so a ledger id and a base-identity id computed
+ *    over equal payloads would be equal.
+ *  - SILENT REASSIGNMENT. A registered wave that arrives with domains other than
+ *    its registered ones has moved ids that are already committed. That is not a
+ *    collision, it is a rewrite, and it fails just as hard.
+ */
+export function assertDistinctWaveDomains(identity: ExteriorWaveSubsetIdentity): void {
+  if (identity.ledgerIdDomain === identity.baseIdentityDomain) {
+    throw new Error(`Wave ${identity.waveId} uses one domain "${identity.ledgerIdDomain}" for both derived ids; the two must be separated.`);
+  }
+  for (const registered of EXTERIOR_WAVE_DOMAIN_REGISTRY) {
+    if (registered.waveId === identity.waveId) {
+      if (registered.ledgerIdDomain !== identity.ledgerIdDomain || registered.baseIdentityDomain !== identity.baseIdentityDomain) {
+        throw new Error(`Wave ${identity.waveId} supplies domains that differ from its registered ones; its committed ids were derived under the registered strings and must not move.`);
+      }
+      continue;
+    }
+    const owned = [registered.ledgerIdDomain, registered.baseIdentityDomain];
+    for (const domain of [identity.ledgerIdDomain, identity.baseIdentityDomain]) {
+      if (owned.includes(domain)) {
+        throw new Error(`Wave ${identity.waveId} borrows hash domain "${domain}", which is issued to wave ${registered.waveId}; every wave must derive its ids under its own domains.`);
+      }
+    }
+  }
 }
 
 export interface ExteriorWaveOrderMapping {
@@ -229,6 +295,9 @@ export function buildExteriorWaveSubsetLedger(
   identity: ExteriorWaveSubsetIdentity,
   input: ExteriorWaveSubsetInput,
 ): ExteriorWaveSubset {
+  // Before anything else, and before a single byte is read: an identity that
+  // borrows another wave's domain must never reach the point of deriving an id.
+  assertDistinctWaveDomains(identity);
   const parent = input.parentLedger;
   // The whole validation boundary of this module rests on the *pairing* of the
   // supplied ledger with the supplied checksum: the subset inherits its cell
