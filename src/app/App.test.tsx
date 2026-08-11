@@ -645,7 +645,7 @@ describe("exterior streaming profiles and canary state", () => {
   });
 
   it("round-trips the pinned Manhattan release and keeps the fixture as the no-real-base fallback", () => {
-    expect(PINNED_EXTERIOR_CELL_RELEASE_IDS).toEqual(["udt-fixture-exterior-cells", "manhattan-exterior-cells-20260811", "manhattan-exterior-cells-20260811-v3", "manhattan-midtown-core-cells-20260811", "manhattan-midtown-core-cells-20260811-v3", "manhattan-lower-manhattan-cells-20260812", "manhattan-lower-manhattan-cells-20260812-p1", "manhattan-southern-remainder-cells-20260812", "manhattan-southern-remainder-cells-20260812-p1", "manhattan-central-upper-manhattan-cells-20260812"]);
+    expect(PINNED_EXTERIOR_CELL_RELEASE_IDS).toEqual(["udt-fixture-exterior-cells", "manhattan-exterior-cells-20260811", "manhattan-exterior-cells-20260811-v3", "manhattan-midtown-core-cells-20260811", "manhattan-midtown-core-cells-20260811-v3", "manhattan-lower-manhattan-cells-20260812", "manhattan-lower-manhattan-cells-20260812-p1", "manhattan-southern-remainder-cells-20260812", "manhattan-southern-remainder-cells-20260812-p1", "manhattan-central-upper-manhattan-cells-20260812", "manhattan-central-upper-manhattan-cells-20260812-p1"]);
     // The Lower-Manhattan CANARY stays reachable by explicit opt-in and by
     // nothing else, and this survives its wave's promotion: promoting the P1
     // successor did not promote the canary, and the canary's deep link keeps
@@ -671,6 +671,11 @@ describe("exterior streaming profiles and canary state", () => {
     expect(isPinnedExteriorCellRelease("manhattan-central-upper-manhattan-cells-20260812")).toBe(true);
     expect(EXTERIOR_DEFAULT_ACTIVATION.releaseId).not.toBe("manhattan-central-upper-manhattan-cells-20260812");
     expect(EXTERIOR_DEFAULT_ACTIVATIONS.some((record) => record.releaseId === "manhattan-central-upper-manhattan-cells-20260812")).toBe(false);
+    // The T020 P1 successor IS promoted, and the canary above is untouched by
+    // that: the split the comment above declined to make was made at T020, 42
+    // entries to this wave and 36 reserved for wave w05, with no cap change.
+    expect(isPinnedExteriorCellRelease("manhattan-central-upper-manhattan-cells-20260812-p1")).toBe(true);
+    expect(EXTERIOR_DEFAULT_ACTIVATIONS.some((record) => record.enabled && record.releaseId === "manhattan-central-upper-manhattan-cells-20260812-p1")).toBe(true);
     // Unchanged: this is the fallback for a session with no real base, not the
     // promoted default. The promoted default lives in EXTERIOR_DEFAULT_ACTIVATION.
     expect(EXTERIOR_CELL_STREAMING_RELEASE_ID).toBe("udt-fixture-exterior-cells");

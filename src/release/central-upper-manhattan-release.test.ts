@@ -412,9 +412,24 @@ describe("central-upper-manhattan committed payload inventory", () => {
     const glbCount = (path: string): number =>
       readJson<{ files: { path: string }[] }>(path).files.filter((file) => /^public\/assets\/.*\.glb$/u.test(file.path)).length;
     expect(BLOCK835_MEMBERSHIP_BUILDING_IDS).toHaveLength(14);
-    // The live check. A fifth promotion breaks exactly this line.
+    // THE LIVE CHECK FIRED AT T020, EXACTLY AS IT WAS WRITTEN TO. The fifth
+    // promotion added an enabled record and this line went red, which was the
+    // signal to decide whether to re-derive this release's occupancy or freeze
+    // it. It is FROZEN, deliberately, on the precedent the w03 canary set when
+    // it froze its historical 256-entry cap: this is a CANARY's immutable
+    // record, it counted the four waves that were promoted when it was emitted,
+    // and re-emitting it to mention a wave promoted afterwards would move the
+    // checksum the successor's own predecessor pin is taken over.
+    //
+    // The live comparison is kept, in the only form that stays a real check on
+    // frozen bytes: the four waves this record counted are still enabled and
+    // still occupy what it recorded, and they are the PREFIX of the live set
+    // rather than the whole of it.
+    const liveEnabled = EXTERIOR_DEFAULT_ACTIVATIONS.filter((record) => record.enabled).map((record) => record.releaseId);
     expect(inventory.occupancy.promotedWaves.map((wave) => wave.releaseId))
-      .toEqual(EXTERIOR_DEFAULT_ACTIVATIONS.filter((record) => record.enabled).map((record) => record.releaseId));
+      .toEqual(liveEnabled.slice(0, inventory.occupancy.promotedWaveCount));
+    expect(liveEnabled).toHaveLength(5);
+    expect(liveEnabled[4]).toBe("manhattan-central-upper-manhattan-cells-20260812-p1");
     expect(inventory.occupancy.promotedWaveCount).toBe(4);
     expect(inventory.occupancy.promotedWaves).toHaveLength(4);
     expect(inventory.occupancy.promotedWaves).toEqual([

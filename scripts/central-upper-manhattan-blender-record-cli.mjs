@@ -1,4 +1,4 @@
-/* global console */
+/* global console, process */
 /**
  * Turns the gitignored Blender pass output into the committed evidence record.
  *
@@ -20,7 +20,7 @@
  * re-running this script is a check rather than a fresh assertion.
  *
  * Usage:
- *   node scripts/central-upper-manhattan-blender-record-cli.mjs
+ *   node scripts/central-upper-manhattan-blender-record-cli.mjs [--release canary|p1]
  */
 import { readFile, readdir, writeFile } from "node:fs/promises";
 import { dirname, join, relative, resolve } from "node:path";
@@ -30,25 +30,50 @@ import { sha256HexBytes, sha256HexSync } from "../src/domain/deterministic-hash.
 import { serializeExteriorWaveArtifact } from "../src/release/exterior-wave-subset.ts";
 import { CENTRAL_UPPER_MANHATTAN_RELEASE_ID } from "../src/release/central-upper-manhattan-package.ts";
 import { CENTRAL_UPPER_MANHATTAN_OUTPUT_DIRECTORY } from "../src/release/central-upper-manhattan-release.ts";
+import { CENTRAL_UPPER_MANHATTAN_P1_OUTPUT_DIRECTORY, CENTRAL_UPPER_MANHATTAN_P1_RELEASE_ID } from "../src/release/central-upper-manhattan-p1-release.ts";
 import {
+  CENTRAL_UPPER_MANHATTAN_P1_RECORD_ROOT,
+  CENTRAL_UPPER_MANHATTAN_P1_WORK_ROOT,
   CENTRAL_UPPER_MANHATTAN_RECORD_ROOT,
   CENTRAL_UPPER_MANHATTAN_WORK_ROOT,
 } from "./central-upper-manhattan-cli.mjs";
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
-const NOTE = "T019 Blender re-import, measurement and render pass over the deterministic stratified sample of the Central-and-upper-Manhattan canary's shipped assets. Blender inspects and measures; the Node writer owns the shipped bytes and nothing in the pass authors geometry. Committed because the work root is gitignored. Each sample's checksumSha256 is cross-checked against this release's committed payload inventory before it is recorded, so this report is provably about the bytes that shipped rather than about whatever was on disk. The renders are not committed; each is pinned by SHA-256 so re-running the pass is a check rather than a fresh assertion. READ THE VOLUME NUMBERS AS AN INDEPENDENT CHECK: this wave's committed census records a worst writer-side volume deviation of 0.988 of the accepted tolerance, so the identity passed narrowly. The deviations below are recomputed from the IMPORTED mesh by a different implementation, which is what makes them evidence about the geometry rather than a second reading of the writer's own arithmetic.";
+const VARIANTS = {
+  canary: {
+    releaseId: CENTRAL_UPPER_MANHATTAN_RELEASE_ID,
+    workRoot: CENTRAL_UPPER_MANHATTAN_WORK_ROOT,
+    recordRoot: CENTRAL_UPPER_MANHATTAN_RECORD_ROOT,
+    outputDirectory: CENTRAL_UPPER_MANHATTAN_OUTPUT_DIRECTORY,
+    note: "T019 Blender re-import, measurement and render pass over the deterministic stratified sample of the Central-and-upper-Manhattan canary's shipped assets.",
+  },
+  p1: {
+    releaseId: CENTRAL_UPPER_MANHATTAN_P1_RELEASE_ID,
+    workRoot: CENTRAL_UPPER_MANHATTAN_P1_WORK_ROOT,
+    recordRoot: CENTRAL_UPPER_MANHATTAN_P1_RECORD_ROOT,
+    outputDirectory: CENTRAL_UPPER_MANHATTAN_P1_OUTPUT_DIRECTORY,
+    note: "T020 Blender re-import, measurement and render pass over the PROMOTED curated subset. The subset ships 40 assets and the deterministic stratified sample selects every one of them, so this is a whole-release pass rather than a sample of one — including the asset carrying the subset's WORST writer-side volume margin, which is the one ADR 0036 asked to be corroborated independently.",
+  },
+};
+
+const NOTE_SUFFIX = " Blender inspects and measures; the Node writer owns the shipped bytes and nothing in the pass authors geometry. Committed because the work root is gitignored. Each sample's checksumSha256 is cross-checked against this release's committed payload inventory before it is recorded, so this report is provably about the bytes that shipped rather than about whatever was on disk. The renders are not committed; each is pinned by SHA-256 so re-running the pass is a check rather than a fresh assertion. READ THE VOLUME NUMBERS AS AN INDEPENDENT CHECK: this wave's committed census records a worst writer-side volume deviation of 0.988 of the accepted tolerance across the whole wave, so the identity passed narrowly there. The deviations below are recomputed from the IMPORTED mesh by a different implementation, which is what makes them evidence about the geometry rather than a second reading of the writer's own arithmetic."
 
 function fail(message) { throw new Error(`central-upper-manhattan-blender-record: ${message}`); }
 
 async function main() {
-  const blenderRoot = join(repositoryRoot, CENTRAL_UPPER_MANHATTAN_WORK_ROOT, "blender");
-  const recordRoot = join(repositoryRoot, CENTRAL_UPPER_MANHATTAN_RECORD_ROOT);
-  const payloadRoot = join(repositoryRoot, CENTRAL_UPPER_MANHATTAN_OUTPUT_DIRECTORY);
+  const argv = process.argv.slice(2);
+  const variantIndex = argv.indexOf("--release");
+  const variantId = variantIndex >= 0 ? argv[variantIndex + 1] : "canary";
+  const variant = VARIANTS[variantId];
+  if (!variant) fail(`unknown release variant ${variantId}; expected one of ${Object.keys(VARIANTS).join(", ")}.`);
+  const blenderRoot = join(repositoryRoot, variant.workRoot, "blender");
+  const recordRoot = join(repositoryRoot, variant.recordRoot);
+  const payloadRoot = join(repositoryRoot, variant.outputDirectory);
 
   const report = JSON.parse(await readFile(join(blenderRoot, "inspection.json"), "utf8"));
-  if (report.releaseId !== CENTRAL_UPPER_MANHATTAN_RELEASE_ID) {
-    fail(`the Blender report describes ${report.releaseId}, not ${CENTRAL_UPPER_MANHATTAN_RELEASE_ID}.`);
+  if (report.releaseId !== variant.releaseId) {
+    fail(`the Blender report describes ${report.releaseId}, not ${variant.releaseId}.`);
   }
   const inventory = JSON.parse(await readFile(join(recordRoot, "payload-inventory.json"), "utf8"));
   const declaredByPath = new Map(inventory.files.map((file) => [file.path, file]));
@@ -85,8 +110,8 @@ async function main() {
   const summary = Object.fromEntries(Object.entries(report).filter(([key]) => key !== "samples"));
   const evidence = {
     schemaVersion: "1.0",
-    releaseId: CENTRAL_UPPER_MANHATTAN_RELEASE_ID,
-    note: NOTE,
+    releaseId: variant.releaseId,
+    note: variant.note + NOTE_SUFFIX,
     // Read off the running Blender rather than copied forward. The earlier waves'
     // records say "EEVEE Next on this build"; on the Blender that ran THIS pass
     // the engine enum offers only BLENDER_EEVEE, so the pass's first-available
@@ -107,7 +132,7 @@ async function main() {
   await writeFile(join(recordRoot, "blender-sample.json"), text, "utf8");
   console.log(JSON.stringify({
     ok: true,
-    outPath: join(CENTRAL_UPPER_MANHATTAN_RECORD_ROOT, "blender-sample.json"),
+    outPath: join(variant.recordRoot, "blender-sample.json"),
     outChecksumSha256: sha256HexSync(text),
     sampleCount: samples.length,
     renderCount: renders.length,
