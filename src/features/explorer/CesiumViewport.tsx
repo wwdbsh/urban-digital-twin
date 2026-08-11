@@ -7,6 +7,7 @@ import {
   CameraEventType,
   Color,
   ColorGeometryInstanceAttribute,
+  ConstantProperty,
   EllipsoidTerrainProvider,
   GridImageryProvider,
   HeightReference,
@@ -279,6 +280,53 @@ export function exteriorOverlayRenderEntries(overlay: ExteriorCellOverlaySet): E
         profile: wave.profile,
       }))))
     .sort((left, right) => (left.entityId < right.entityId ? -1 : left.entityId > right.entityId ? 1 : 0));
+}
+
+/**
+ * Base features whose geometry the exterior wave takes over this frame.
+ *
+ * Only `rendered` cells produce render entries, so a cell that failed
+ * verification contributes nothing here and the base representation of its
+ * buildings stays on screen: coverage fails open to the base, never to a hole.
+ */
+export function exteriorCoveredCanonicalFeatureIds(overlay: ExteriorCellOverlaySet): ReadonlySet<string> {
+  return new Set(exteriorOverlayRenderEntries(overlay).map((entry) => entry.canonicalFeatureId));
+}
+
+export type DenseFeatureRenderOwner = "exterior-wave" | "pilot-asset" | "procedural-extrusion";
+
+/**
+ * The single precedence authority for who draws one base building:
+ * exterior wave > pilot asset > procedural extrusion.
+ *
+ * Block 835 buildings sit in the pilot resolver set *and* in the exterior wave,
+ * so without one shared rule each of them is drawn twice — once as verified
+ * exterior geometry and once as the pilot model or the procedural extrusion
+ * underneath it (Issue #41). Every draw path consults this function.
+ */
+export function denseFeatureRenderOwner(
+  featureId: string,
+  exteriorCoveredIds: ReadonlySet<string>,
+  assetBuildingIds: ReadonlySet<string>,
+): DenseFeatureRenderOwner {
+  if (exteriorCoveredIds.has(featureId)) return "exterior-wave";
+  if (assetBuildingIds.has(featureId)) return "pilot-asset";
+  return "procedural-extrusion";
+}
+
+/**
+ * Selection feedback for exterior geometry.
+ *
+ * The base entity that used to carry selection styling is gone once the
+ * exterior wave owns the building, so the exterior model itself has to show the
+ * selection. It is a silhouette rather than a rebuilt entity: selection must not
+ * churn the per-cell collections that own the verified bytes.
+ */
+export const EXTERIOR_SELECTION_SILHOUETTE_CSS_COLOR = "#63f3c5" as const;
+export const EXTERIOR_SELECTION_SILHOUETTE_SIZE_PIXELS = 3 as const;
+
+export function exteriorSelectionSilhouetteSize(canonicalFeatureId: string, selectedFeatureId: string | null | undefined): number {
+  return canonicalFeatureId === selectedFeatureId ? EXTERIOR_SELECTION_SILHOUETTE_SIZE_PIXELS : 0;
 }
 
 /**
@@ -1564,6 +1612,10 @@ export function CesiumViewport({
     const viewer = viewerRef.current;
     if (!viewer) return;
     let cancelled = false;
+    // Read synchronously from the prop, not from a ref updated in another
+    // effect: the base pass and the exterior pass are separate commits, and a
+    // ref would let one render see last render's coverage and draw a duplicate.
+    const exteriorCoveredIds = exteriorCoveredCanonicalFeatureIds(exteriorOverlay);
     const loadVisibleFeatures = async () => {
       const layers = supportedVisibleLayers(adapter, visibleLayers);
       const loaded = await Promise.all(layers.map((layer) => adapter.loadLayerFeatures(layer)));
@@ -1599,7 +1651,8 @@ export function CesiumViewport({
       const assetDistanceMeters = Math.max(0, Number.isFinite(viewer.camera.positionCartographic.height) ? viewer.camera.positionCartographic.height : 240);
       const assetBuildingIds = verifiedAssetBuildingIds(renderedDenseFeatures, assetResolver, assetDistanceMeters);
       const rootDenseCollection = denseCollectionRef.current;
-      const primitiveDenseFeatures = renderedGroups.base.filter((feature) => !assetBuildingIds.has(feature.id));
+      const renderOwner = (feature: Feature): DenseFeatureRenderOwner => denseFeatureRenderOwner(feature.id, exteriorCoveredIds, assetBuildingIds);
+      const primitiveDenseFeatures = renderedGroups.base.filter((feature) => renderOwner(feature) === "procedural-extrusion");
       const telemetry = denseRenderTelemetryRef.current;
       telemetry.selectionMs = performance.now() - selectionStartedAt;
       const keyStartedAt = performance.now();
@@ -1675,11 +1728,20 @@ export function CesiumViewport({
         Object.assign(telemetry, { planBuildCount: 0, planReuseCount: 0, planCancellationCount: 0, planSwapCount: 0, planFingerprint: "", selectionMs: 0, keyMs: 0, allocationMs: undefined, allocationMaxSliceMs: undefined, allocationChunkCount: undefined, workerReadyMs: undefined, totalBuildMs: undefined });
         denseMetricsRef.current = emptyDenseRenderMetrics();
       }
+      // A building the exterior wave owns gets no semantic entity either: the
+      // exterior model carries the pick (via `exteriorPickMapRef`) and, when
+      // selected, the silhouette applied by the selection effect below.
+      const semanticallyRendered = (feature: Feature): boolean => {
+        const owner = renderOwner(feature);
+        if (owner === "exterior-wave") return false;
+        if (feature.kind !== "building" && feature.kind !== "poi") return true;
+        return owner === "pilot-asset";
+      };
       const semanticBaseFeatures = denseRendering
-        ? renderedGroups.base.filter((feature) => (feature.kind !== "building" && feature.kind !== "poi") || assetBuildingIds.has(feature.id))
-        : renderedDenseFeatures;
+        ? renderedGroups.base.filter(semanticallyRendered)
+        : renderedDenseFeatures.filter((feature) => renderOwner(feature) !== "exterior-wave");
       const semanticContextFeatures = denseRendering
-        ? renderedGroups.context.filter((feature) => (feature.kind !== "building" && feature.kind !== "poi") || assetBuildingIds.has(feature.id))
+        ? renderedGroups.context.filter(semanticallyRendered)
         : [];
       const suppressUnselectedLabels = denseRendering || assetDistanceMeters >= 1_200;
       for (const entityId of ownedEntityIdsRef.current) viewer.entities.removeById(entityId);
@@ -1714,6 +1776,14 @@ export function CesiumViewport({
           const buildingId = asset.canonicalFeatureId;
           const resolution = commercialOverlay.resolve(buildingId, assetDistanceMeters, 1);
           if (resolution.kind !== "asset") continue;
+          if (exteriorCoveredIds.has(buildingId)) {
+            // Same precedence rule as the dense paths: the exterior wave draws
+            // this building, so the pilot model must not be drawn over it. The
+            // building still counts as active, because its verified storefront
+            // proxies are separate semantic pick points, not duplicate geometry.
+            activeStage3BuildingIds.add(buildingId);
+            continue;
+          }
           let buildingEntity = viewer.entities.getById(buildingId);
           if (!buildingEntity?.model) {
             if (buildingEntity) viewer.entities.removeById(buildingId);
@@ -1823,7 +1893,9 @@ export function CesiumViewport({
       }
       if (denseRendering && selectedFeatureId) {
         const selectedFeature = renderedDenseFeatures.find((feature) => feature.id === selectedFeatureId);
-        if (selectedFeature && !semanticBaseFeatures.some((feature) => feature.id === selectedFeature.id) && !semanticContextFeatures.some((feature) => feature.id === selectedFeature.id) && selectedFeature.kind !== "poi") {
+        // Selecting an exterior-owned building must not re-add the base entity
+        // the coverage rule just removed; its feedback is the silhouette.
+        if (selectedFeature && renderOwner(selectedFeature) !== "exterior-wave" && !semanticBaseFeatures.some((feature) => feature.id === selectedFeature.id) && !semanticContextFeatures.some((feature) => feature.id === selectedFeature.id) && selectedFeature.kind !== "poi") {
           addOwnedFeatureEntities(selectedFeature, Math.min(assetDistanceMeters, 180), false);
         }
         const selectedPoi = renderedDenseFeatures.find((feature) => feature.id === selectedFeatureId && feature.kind === "poi");
@@ -1847,7 +1919,10 @@ export function CesiumViewport({
     };
     void loadVisibleFeatures();
     return () => { cancelled = true; };
-  }, [adapter, assetResolver, commercialOverlay, denseFeatureGroups, denseFeatureGroupLimits, denseFeatureLimit, denseFeatures, denseRendering, featureFilter, itinerary, publicRealmOverlay, selectedFeatureId, viewportFootprint, visibleLayers.buildings, visibleLayers.pois, visibleLayers.areas, visibleLayers.stations, visibleLayers.entrances, visibleLayers.routes, visibleLayers["statistical-areas"], visibleLayers.parks, visibleLayers.landmarks]);
+    // `exteriorOverlay` is a real dependency: coverage decides which base
+    // geometry this pass may draw, so the base pass has to re-run when the wave
+    // changes or the two passes disagree for one render.
+  }, [adapter, assetResolver, commercialOverlay, denseFeatureGroups, denseFeatureGroupLimits, denseFeatureLimit, denseFeatures, denseRendering, exteriorOverlay, featureFilter, itinerary, publicRealmOverlay, selectedFeatureId, viewportFootprint, visibleLayers.buildings, visibleLayers.pois, visibleLayers.areas, visibleLayers.stations, visibleLayers.entrances, visibleLayers.routes, visibleLayers["statistical-areas"], visibleLayers.parks, visibleLayers.landmarks]);
 
   // Exterior cells own a per-cell collection with diff-and-replace discipline so
   // one cell failing closed removes exactly that cell. Bytes come from the
@@ -1917,6 +1992,24 @@ export function CesiumViewport({
     }
     return undefined;
   }, [exteriorOverlay, viewerReadyGeneration, denseFeatures, adapter]);
+
+  // Selection feedback for exterior geometry lives in its own effect on
+  // purpose. Folding `selectedFeatureId` into the effect above would rebuild the
+  // per-cell collections — revoking object URLs and re-adding models — on every
+  // click, so selection is applied to the entities that pass already owns.
+  useEffect(() => {
+    const viewer = viewerRef.current;
+    if (!viewer) return undefined;
+    const silhouetteColor = Color.fromCssColorString(EXTERIOR_SELECTION_SILHOUETTE_CSS_COLOR);
+    for (const [entityId, canonicalFeatureId] of exteriorPickMapRef.current) {
+      const model = viewer.entities.getById(entityId)?.model;
+      if (!model) continue;
+      model.silhouetteColor = new ConstantProperty(silhouetteColor);
+      model.silhouetteSize = new ConstantProperty(exteriorSelectionSilhouetteSize(canonicalFeatureId, selectedFeatureId));
+    }
+    viewer.scene.requestRender();
+    return undefined;
+  }, [selectedFeatureId, exteriorOverlay, viewerReadyGeneration, denseFeatures, adapter]);
 
   useEffect(() => {
     const container = containerRef.current;
