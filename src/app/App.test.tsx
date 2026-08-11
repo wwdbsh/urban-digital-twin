@@ -154,7 +154,7 @@ const CANARY_EXTERIOR_ROOT = `/data/${CANARY_EXTERIOR_RELEASE_ID}/`;
 /** The V3 successor, which is what this build promotes as the Block 835 default. */
 const PROMOTED_EXTERIOR_RELEASE_ID = "manhattan-exterior-cells-20260811-v3";
 const PROMOTED_EXTERIOR_ROOT = `/data/${PROMOTED_EXTERIOR_RELEASE_ID}/`;
-const MIDTOWN_CORE_EXTERIOR_RELEASE_ID = "manhattan-midtown-core-cells-20260811";
+const MIDTOWN_CORE_EXTERIOR_RELEASE_ID = "manhattan-midtown-core-cells-20260811-v3";
 const MIDTOWN_CORE_EXTERIOR_ROOT = `/data/${MIDTOWN_CORE_EXTERIOR_RELEASE_ID}/`;
 const BLOCK_835_FEATURE_IDS = [...BLOCK_835_DOITT_IDS].map((id) => `doitt:${id}`);
 
@@ -645,7 +645,7 @@ describe("exterior streaming profiles and canary state", () => {
   });
 
   it("round-trips the pinned Manhattan release and keeps the fixture as the no-real-base fallback", () => {
-    expect(PINNED_EXTERIOR_CELL_RELEASE_IDS).toEqual(["udt-fixture-exterior-cells", "manhattan-exterior-cells-20260811", "manhattan-exterior-cells-20260811-v3", "manhattan-midtown-core-cells-20260811"]);
+    expect(PINNED_EXTERIOR_CELL_RELEASE_IDS).toEqual(["udt-fixture-exterior-cells", "manhattan-exterior-cells-20260811", "manhattan-exterior-cells-20260811-v3", "manhattan-midtown-core-cells-20260811", "manhattan-midtown-core-cells-20260811-v3"]);
     // Unchanged: this is the fallback for a session with no real base, not the
     // promoted default. The promoted default lives in EXTERIOR_DEFAULT_ACTIVATION.
     expect(EXTERIOR_CELL_STREAMING_RELEASE_ID).toBe("udt-fixture-exterior-cells");

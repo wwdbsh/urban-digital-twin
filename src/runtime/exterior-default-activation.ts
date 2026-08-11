@@ -214,13 +214,16 @@ export const EXTERIOR_DEFAULT_ACTIVATION: ExteriorDefaultActivationRecord = {
 } as const;
 
 /**
- * Frozen promotion record for the Midtown-core exterior wave.
+ * The V2 Midtown-core promotion record, retained verbatim as the V3 record's
+ * predecessor — the previous VERIFIED representation, not base massing.
  *
- * Same indivisible shape as Block 835, at a different scale: 149 accepted
- * cells of which 3 ship exterior geometry for 160 buildings, the other 146
- * deliberately shipping none (the bounded-availability case ADR 0029 records).
- * Its membership is stated as a digest rather than 149 literal triples; see
- * `ExteriorDefaultActivationMembership` for why that is not a weaker claim.
+ * Every operative field is the byte copy that shipped as the active default
+ * from 2026-08-11: release, snapshot, snapshot checksum, assembly package,
+ * digest-form cell membership over 149 cells, the 160 accepted building
+ * identities, and the approval reference. Nothing here is re-derived or
+ * re-stated; the only field it gains is `rolledBackReleaseId`, which is empty
+ * while this record is only a predecessor and names the withdrawn V3 release in
+ * `MIDTOWN_CORE_V2_EXTERIOR_ROLLBACK` below.
  *
  * `snapshotId`, `snapshotChecksumSha256`, `assemblyPackageIds`,
  * `cellsDigestSha256`, `cellCount`, and `buildingIds` are all recomputable
@@ -229,7 +232,7 @@ export const EXTERIOR_DEFAULT_ACTIVATION: ExteriorDefaultActivationRecord = {
  * of them on every run — no payload directory required, so the drift gate is
  * never skipped.
  */
-export const MIDTOWN_CORE_EXTERIOR_ACTIVATION: ExteriorDefaultActivationRecord = {
+export const MIDTOWN_CORE_V2_EXTERIOR_ACTIVATION: ExteriorDefaultActivationEnabled = {
   enabled: true,
   releaseId: "manhattan-midtown-core-cells-20260811",
   snapshotId: "snapshot:manhattan-midtown-core-cells-20260811:v1",
@@ -275,7 +278,85 @@ export const MIDTOWN_CORE_EXTERIOR_ACTIVATION: ExteriorDefaultActivationRecord =
     ],
   },
   approvalRef: "Issue #15 gate approval 2026-08-11",
+  rolledBackReleaseId: null,
   predecessor: { enabled: false, releaseId: null, rolledBackReleaseId: "manhattan-midtown-core-cells-20260811" },
+} as const;
+
+/**
+ * The rollback target a V3 withdrawal exports: the V2 record above, plus the one
+ * statement a withdrawal has to make. Built FROM that record rather than
+ * retyped, so the two can never disagree about which bytes V2 was.
+ */
+export const MIDTOWN_CORE_V2_EXTERIOR_ROLLBACK: ExteriorDefaultActivationEnabled = {
+  ...MIDTOWN_CORE_V2_EXTERIOR_ACTIVATION,
+  rolledBackReleaseId: "manhattan-midtown-core-cells-20260811-v3",
+} as const;
+
+/**
+ * Rollback: export `MIDTOWN_CORE_EXTERIOR_ACTIVATION.predecessor` from here.
+ *
+ * The Midtown-core wave on its SECOND promotion, onto the footprint-faithful V3
+ * grammar. Unlike Block 835, this promotion DOES carry availability drift, and
+ * the drift is stated rather than smoothed over: the same three renderable cells
+ * own the same 160 buildings, but the V3 grammar refuses four sourced polygons
+ * it cannot carry — `doitt:88101` and `doitt:749711` exceed the 64-vertex ring
+ * limit, `doitt:399990` and `doitt:555676` carry a sourced height below one
+ * floor — so 156 buildings ship geometry and those four ship as explicit
+ * `unavailable` details naming their refusal. A building the successor cannot
+ * honestly draw is withdrawn; none is invented.
+ *
+ * `exterior-midtown-v3-promotion-record.test.ts` recomputes every pin below from
+ * the committed `data/midtown-core-20260811-v3/payload-inventory.json` on every
+ * run — no payload directory required, so the drift gate is never skipped.
+ */
+export const MIDTOWN_CORE_EXTERIOR_ACTIVATION: ExteriorDefaultActivationRecord = {
+  enabled: true,
+  releaseId: "manhattan-midtown-core-cells-20260811-v3",
+  snapshotId: "snapshot:manhattan-midtown-core-cells-20260811-v3:v1",
+  snapshotChecksumSha256: "638be88afb71f3d761af58ccf901c5f375643e9df100d8968549e20f870c167e",
+  assemblyPackageIds: ["assembly:manhattan-midtown-core-cells-20260811-v3:v1"],
+  membership: {
+    cells: [],
+    cellsDigestSha256: "60e0ddaa6276acd3c462f6567fe8bf307455bb3222adccca6e9810e8c1a62273",
+    cellCount: 149,
+    buildingIds: [
+      "doitt:1001111", "doitt:105916", "doitt:1104532", "doitt:1105839", "doitt:1106429",
+      "doitt:1111726", "doitt:1114625", "doitt:1115013", "doitt:1116162", "doitt:111690",
+      "doitt:1117425", "doitt:1158178", "doitt:1191064", "doitt:1195535", "doitt:1215127",
+      "doitt:1221493", "doitt:1224763", "doitt:1232671", "doitt:1256080", "doitt:1260400",
+      "doitt:1262786", "doitt:1263464", "doitt:1264335", "doitt:1268457", "doitt:1268463",
+      "doitt:1268618", "doitt:1272399", "doitt:127864", "doitt:1279525", "doitt:1279526",
+      "doitt:1279527", "doitt:1281874", "doitt:1282695", "doitt:1285662", "doitt:1286246",
+      "doitt:1287486", "doitt:1288650", "doitt:1289963", "doitt:1289964", "doitt:1294316",
+      "doitt:1295112", "doitt:1296496", "doitt:1297513", "doitt:1299442", "doitt:1299576",
+      "doitt:1300185", "doitt:1302197", "doitt:1302589", "doitt:139071", "doitt:157592",
+      "doitt:162071", "doitt:166790", "doitt:174372", "doitt:181184", "doitt:194068",
+      "doitt:196987", "doitt:225670", "doitt:227702", "doitt:228631", "doitt:229752",
+      "doitt:241646", "doitt:246449", "doitt:260361", "doitt:261397", "doitt:275393",
+      "doitt:297071", "doitt:297390", "doitt:29844", "doitt:316002", "doitt:317859",
+      "doitt:328864", "doitt:347215", "doitt:348074", "doitt:353265", "doitt:360993",
+      "doitt:364273", "doitt:365764", "doitt:36922", "doitt:37170", "doitt:372755",
+      "doitt:373902", "doitt:374636", "doitt:375025", "doitt:377010", "doitt:381141",
+      "doitt:383893", "doitt:407018", "doitt:412072", "doitt:418207", "doitt:420075",
+      "doitt:421971", "doitt:428362", "doitt:440180", "doitt:443409", "doitt:447981",
+      "doitt:44827", "doitt:450560", "doitt:453302", "doitt:473907", "doitt:487836",
+      "doitt:501878", "doitt:513787", "doitt:525090", "doitt:528581", "doitt:547528",
+      "doitt:559204", "doitt:563161", "doitt:572887", "doitt:574826", "doitt:594251",
+      "doitt:60572", "doitt:623314", "doitt:624434", "doitt:631125", "doitt:645311",
+      "doitt:664715", "doitt:665924", "doitt:674326", "doitt:678033", "doitt:684855",
+      "doitt:688120", "doitt:688158", "doitt:688202", "doitt:688213", "doitt:709441",
+      "doitt:720315", "doitt:743834", "doitt:749752", "doitt:754187", "doitt:755561",
+      "doitt:777515", "doitt:787935", "doitt:800671", "doitt:803147", "doitt:804055",
+      "doitt:812305", "doitt:817527", "doitt:830782", "doitt:842122", "doitt:850090",
+      "doitt:852472", "doitt:91300", "doitt:941537", "doitt:945838", "doitt:97522",
+      "doitt:98082", "doitt:98363", "doitt:996627", "doitt:996629", "doitt:996630",
+      "doitt:996631", "doitt:996632", "doitt:996636", "doitt:996688", "doitt:996689",
+      "doitt:996746",
+    ],
+  },
+  approvalRef: "Issue #44 gate approval 2026-08-11 (T026 P3 Midtown V3 promotion)",
+  rolledBackReleaseId: null,
+  predecessor: MIDTOWN_CORE_V2_EXTERIOR_ROLLBACK,
 } as const;
 
 /**

@@ -1,5 +1,11 @@
 /**
- * Drift gate for the Midtown-core promotion record.
+ * Drift gate for the RETAINED V2 Midtown-core promotion record.
+ *
+ * Since the P3 V3 repromotion this record is the predecessor rather than the
+ * active default, and it is checked here exactly as it was when it WAS the
+ * default: a rollback target that stopped being verified is a rollback target
+ * nobody can trust. The active V3 record has its own gate in
+ * `exterior-midtown-v3-promotion-record.test.ts`.
  *
  * This test is NEVER skipped. Every value it checks is recomputed from the
  * committed `data/midtown-core-20260811/payload-inventory.json`, which is in
@@ -14,7 +20,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
-  MIDTOWN_CORE_EXTERIOR_ACTIVATION,
+  MIDTOWN_CORE_V2_EXTERIOR_ACTIVATION,
   exteriorAcceptedCellsDigest,
   verifyPromotedExteriorMembership,
   verifyPromotedExteriorPin,
@@ -30,7 +36,7 @@ interface PayloadInventory {
 
 const INVENTORY_PATH = "data/midtown-core-20260811/payload-inventory.json";
 const inventory = JSON.parse(new TextDecoder().decode(readFileSync(INVENTORY_PATH))) as PayloadInventory;
-const RECORD = MIDTOWN_CORE_EXTERIOR_ACTIVATION.enabled ? MIDTOWN_CORE_EXTERIOR_ACTIVATION : null;
+const RECORD = MIDTOWN_CORE_V2_EXTERIOR_ACTIVATION.enabled ? MIDTOWN_CORE_V2_EXTERIOR_ACTIVATION : null;
 
 const CELL_RELEASE_PREFIX = "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-";
 const ASSET_PATTERN = /^public\/assets\/(doitt-\d+)__lod_\d+\.glb$/;
@@ -73,12 +79,14 @@ function buildingIdsFromInventory(): string[] {
  */
 const cellsDigest = exteriorAcceptedCellsDigest;
 
-describe("Midtown-core promotion record versus the committed payload inventory", () => {
+describe("Retained V2 Midtown-core promotion record versus the committed payload inventory", () => {
   it("is enabled and names the inventory's release", () => {
     expect(RECORD).not.toBeNull();
     expect(RECORD!.releaseId).toBe(inventory.releaseId);
     expect(RECORD!.approvalRef).toBe("Issue #15 gate approval 2026-08-11");
     expect(RECORD!.predecessor).toEqual({ enabled: false, releaseId: null, rolledBackReleaseId: RECORD!.releaseId });
+    // Retained verbatim: as a predecessor it withdrew nothing.
+    expect(RECORD!.rolledBackReleaseId).toBeNull();
   });
 
   it("pins the rollout snapshot the inventory recorded", () => {
@@ -170,7 +178,7 @@ describe("Midtown-core promotion record versus the committed payload inventory",
  * above from the committed inventory. It exists to show the two agree.
  */
 const RELEASE_GRAPH = "public/data/manhattan-midtown-core-cells-20260811/release-graph.json";
-describe.skipIf(!existsSync(RELEASE_GRAPH))("Midtown-core record versus the emitted release graph", () => {
+describe.skipIf(!existsSync(RELEASE_GRAPH))("Retained V2 Midtown-core record versus the emitted release graph", () => {
   it("digests the same cell set the published snapshot carries", async () => {
     const graph = JSON.parse(new TextDecoder().decode(readFileSync(RELEASE_GRAPH))) as {
       snapshots: { snapshotId: string; audience: string; cells: ExteriorAcceptedCell[] }[];
