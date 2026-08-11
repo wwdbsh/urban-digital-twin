@@ -1,0 +1,395 @@
+/**
+ * V3 pin tests.
+ *
+ * These were written before the kernel and are deliberately stated against the
+ * fourteen REAL Block 835 footprints rather than fixtures: thirteen of them
+ * carry more than four vertices, one runs to nineteen, one carries a 0.05 m
+ * edge, and the Empire State Building carries fourteen vertices, three
+ * ~270-degree reflex corners and a 415 m perimeter. A rectangle-only grammar
+ * passes any fixture; only the real rings prove the invariants this grammar
+ * claims.
+ *
+ * Two fixture claims in the task contract did not survive measurement and are
+ * corrected in place, at the constants they concern: not all fourteen footprints
+ * are concave (doitt:925937 is a convex quadrilateral), and doitt:131170 carries
+ * one genuine reflex vertex rather than four.
+ */
+import { describe, expect, it } from "vitest";
+import releaseJson from "../../public/data/manhattan-esb-block-exterior-pilot-20260805/release.json";
+import { enuFrame, readPilotBuildings, toEnuMeters, type PilotBuildingSource } from "../release/block835-reference-package.ts";
+import {
+  DETERMINISTIC_FACADE_V3_LIMITS,
+  deriveV3Parameters,
+  earClipRing,
+  generateV3FacadePlan,
+  offsetRingInward,
+  ringInteriorAnglesDegrees,
+  ringIsSimple,
+  ringSignedAreaMm2,
+  V3_REFLEX_ANGLE_TOLERANCE_DEGREES,
+  tessellateV3Plan,
+  validateV3Input,
+  validateV3Plan,
+  type Point2Mm,
+  type V3Input,
+  type V3Plan,
+} from "./deterministic-facade-generator-v3.ts";
+
+const buildings = readPilotBuildings(releaseJson as unknown);
+const byId = new Map(buildings.map((building) => [building.canonicalBuildingId, building]));
+
+/**
+ * ESB: 14 vertices, ~415 m perimeter, and the three genuine ~270-degree reflex
+ * corners of its cross-shaped tower. The worst case for every per-edge cost and
+ * the real subject of the corner-clearance rule.
+ */
+const ESB_ID = "doitt:778052";
+/**
+ * The 19-vertex ring. MEASURED, and it corrects the task's fixture claim: this
+ * footprint has ONE genuine reflex vertex (182.63 degrees), not four. Eleven of
+ * its nineteen vertices sit within 0.02 degrees of straight, and counting those
+ * as reflex is what produces the larger number. Kept as a pin case because a
+ * ring that is mostly near-collinear is the hardest input for the mitered
+ * offset, not because it is the most concave.
+ */
+const REFLEX_ID = "doitt:131170";
+/** Carries edges down to 0.05 m: the zero-bay case. */
+const SHORT_EDGE_ID = "doitt:584049";
+/** MEASURED: a plain convex quadrilateral. Not every Block 835 footprint is concave. */
+const CONVEX_ID = "doitt:925937";
+
+/**
+ * The source ring in building-local integer millimetres, wound
+ * counter-clockwise as the V3 input contract requires. Verbatim otherwise: no
+ * simplification, no vertex budget, no rectangle — exactly the sourced polygon
+ * carried through unit conversion and millimetre rounding.
+ *
+ * Every DOITT ring in the pinned pilot release is clockwise as sourced.
+ */
+export function footprintMm(building: PilotBuildingSource): Point2Mm[] {
+  const frame = enuFrame(building.anchor);
+  const ring = building.footprint.map((point) => {
+    const [east, north] = toEnuMeters(frame, point);
+    return [Math.round(east * 1_000), Math.round(north * 1_000)] as Point2Mm;
+  });
+  return ringSignedAreaMm2(ring) < 0 ? [...ring].reverse() : ring;
+}
+
+function inputFor(building: PilotBuildingSource, overrides: Partial<V3Input> = {}): V3Input {
+  const outer = footprintMm(building);
+  const heightMm = Math.round(building.heightMeters * 1_000);
+  return {
+    schemaVersion: "3.0",
+    buildingId: building.canonicalBuildingId,
+    generatedAt: "2026-08-11T00:00:00.000Z",
+    seed: "block-835-reference-v3",
+    tool: { id: "urban-digital-twin:block835-v3", version: "3.0.0" },
+    geometry: { unit: "millimeter", footprint: { outer }, baseElevationMm: 0, heightMm },
+    sourceAnchors: [
+      { id: "anchor:footprint", kind: "footprint", sourceRefId: "source-ref:jh45-qr5r", fingerprintSha256: "a".repeat(64) },
+      { id: "anchor:height", kind: "height", sourceRefId: "source-ref:oti-height", fingerprintSha256: "b".repeat(64) },
+    ],
+    parameters: deriveV3Parameters({ footprintOuterMm: outer, heightMm }),
+    ...overrides,
+  };
+}
+
+function planFor(id: string, overrides: Partial<V3Input> = {}): V3Plan {
+  const result = generateV3FacadePlan(inputFor(byId.get(id)!, overrides));
+  if (!result.ok) throw new Error(`V3 plan refused for ${id}: ${result.issues.map((issue) => `${issue.path}: ${issue.message}`).join("; ")}`);
+  return result.value;
+}
+
+describe("the real Block 835 footprints are what this grammar is measured against", () => {
+  it("carries fourteen simple single-ring footprints, none of them a rectangle contract", () => {
+    expect(buildings).toHaveLength(14);
+    for (const building of buildings) {
+      const ring = footprintMm(building);
+      expect(ring.length).toBeGreaterThanOrEqual(3);
+      expect(ring.length).toBeLessThanOrEqual(DETERMINISTIC_FACADE_V3_LIMITS.maxRingVertices);
+      expect(ringIsSimple(ring)).toBe(true);
+      expect(ringSignedAreaMm2(ring)).toBeGreaterThan(0);
+    }
+    // Ten of the fourteen carry more than four vertices, which is the whole
+    // reason V2's four-vertex input contract had to be superseded rather than
+    // extended.
+    expect(buildings.filter((building) => footprintMm(building).length > 4)).toHaveLength(13);
+  });
+
+  it("is concave in thirteen of fourteen cases, not all fourteen", () => {
+    // MEASURED, correcting the task's fixture claim. Genuine reflex counts run
+    // 0 to 3, and doitt:925937 is a convex quadrilateral. The grammar must
+    // therefore stay correct on a convex ring too, not only on concave ones.
+    const reflexCounts = buildings.map((building) => {
+      const angles = ringInteriorAnglesDegrees(footprintMm(building));
+      return angles.filter((angle) => angle > 180 + V3_REFLEX_ANGLE_TOLERANCE_DEGREES).length;
+    });
+    expect(Math.min(...reflexCounts)).toBe(0);
+    expect(Math.max(...reflexCounts)).toBe(3);
+    // Seven of the fourteen carry a genuine reflex corner. The other seven are
+    // convex to within a tenth of a degree; their "concavity" is entirely
+    // sub-0.1-degree digitising noise.
+    expect(reflexCounts.filter((count) => count > 0)).toHaveLength(7);
+    // Counted strictly at 180 degrees, thirteen of fourteen look concave. That
+    // difference is measurement tolerance, not shape.
+    const strictlyConcave = buildings.filter((building) => ringInteriorAnglesDegrees(footprintMm(building)).some((angle) => angle > 180));
+    expect(strictlyConcave).toHaveLength(13);
+    expect(ringInteriorAnglesDegrees(footprintMm(byId.get(CONVEX_ID)!)).every((angle) => angle <= 180 + V3_REFLEX_ANGLE_TOLERANCE_DEGREES)).toBe(true);
+  });
+});
+
+// (19) ------------------------------------------------------------------
+describe("(19) the worst-case building fits the V3 triangle budget", () => {
+  it("keeps the Empire State Building under the V3 asset triangle budget at full detail", () => {
+    const plan = planFor(ESB_ID);
+    const tessellation = tessellateV3Plan(plan, { includeRecesses: true });
+    expect(tessellation.triangleCount).toBeGreaterThan(0);
+    expect(tessellation.triangleCount).toBeLessThanOrEqual(DETERMINISTIC_FACADE_V3_LIMITS.maxAssetTriangles);
+  });
+
+  it("keeps every one of the fourteen under the budget at full detail", () => {
+    for (const building of buildings) {
+      const tessellation = tessellateV3Plan(planFor(building.canonicalBuildingId), { includeRecesses: true });
+      expect(tessellation.triangleCount, building.canonicalBuildingId).toBeLessThanOrEqual(DETERMINISTIC_FACADE_V3_LIMITS.maxAssetTriangles);
+    }
+  });
+
+  it("makes the coarse LOD strictly cheaper than the detailed one", () => {
+    const plan = planFor(ESB_ID);
+    const detailed = tessellateV3Plan(plan, { includeRecesses: true });
+    const coarse = tessellateV3Plan(plan, { includeRecesses: false });
+    expect(coarse.triangleCount).toBeLessThan(detailed.triangleCount);
+  });
+});
+
+// (20) ------------------------------------------------------------------
+describe("(20) tier offsets never repair themselves into a bad ring", () => {
+  it("produces simple, positively oriented tier rings for every footprint and tier count", () => {
+    for (const building of buildings) {
+      for (let tierCount = 1; tierCount <= DETERMINISTIC_FACADE_V3_LIMITS.maxTiers; tierCount += 1) {
+        const base = inputFor(building);
+        const plan = generateV3FacadePlan({ ...base, parameters: { ...base.parameters, tierCount } });
+        expect(plan.ok, `${building.canonicalBuildingId} @ ${tierCount}`).toBe(true);
+        if (!plan.ok) continue;
+        for (const tier of plan.value.tiers) {
+          expect(ringIsSimple(tier.ring), `${building.canonicalBuildingId} tier ${tier.index}`).toBe(true);
+          expect(ringSignedAreaMm2(tier.ring), `${building.canonicalBuildingId} tier ${tier.index}`).toBeGreaterThan(0);
+        }
+        // A refused offset must show up as an honest single-tier disclosure,
+        // never as a silently repaired ring. A short building simply has fewer
+        // floors than tiers, which is not a refusal.
+        const expected = Math.min(tierCount, plan.value.massing.floorCount);
+        if (plan.value.tiers.length !== expected) {
+          expect(plan.value.massing.setbackDisclosure).toContain("tier-offset-collapse");
+          expect(plan.value.tiers).toHaveLength(1);
+        }
+      }
+    }
+  });
+
+  it("refuses rather than repairs an offset that would collapse the ring", () => {
+    // A ring offset by more than its own inscribed radius has no inward
+    // solution; the kernel must say so instead of returning something plausible.
+    for (const building of buildings) {
+      const ring = footprintMm(building);
+      const refused = offsetRingInward(ring, 1_000_000);
+      expect(refused.ok, building.canonicalBuildingId).toBe(false);
+      // "not-contained" is the fourth refusal cause, added on measured
+      // evidence: a huge miter turns a ring inside out into a shape that is
+      // still simple and still positively oriented, but sits outside the
+      // building. Area and simplicity alone would have accepted it.
+      if (!refused.ok) expect(["orientation-flip", "area-floor", "self-intersection", "not-contained"]).toContain(refused.reason);
+    }
+  });
+
+  it("keeps the vertex count of the source ring in every tier it does produce", () => {
+    const plan = planFor(ESB_ID);
+    const sourceVertices = plan.input.geometry.footprint.outer.length;
+    for (const tier of plan.tiers) expect(tier.ring.length).toBe(sourceVertices);
+  });
+});
+
+// (21) ------------------------------------------------------------------
+describe("(21) corner clearance holds at the reflex corners of the real footprints", () => {
+  it("reports the measured reflex vertices, not the near-collinear noise", () => {
+    // doitt:131170: one genuine reflex vertex out of nineteen. The task
+    // contract said four; the ring says 182.63 degrees once and eleven vertices
+    // within 0.02 degrees of straight.
+    expect(planFor(REFLEX_ID).massing.reflexVertexIndexes).toHaveLength(1);
+    // The ESB tower's three ~270-degree inside corners: the case the rule is for.
+    expect(planFor(ESB_ID).massing.reflexVertexIndexes).toHaveLength(3);
+    expect(planFor(CONVEX_ID).massing.reflexVertexIndexes).toHaveLength(0);
+  });
+
+  it("keeps every placement clear of both ends of its edge by the corner rule", () => {
+    for (const id of [REFLEX_ID, ESB_ID, SHORT_EDGE_ID, CONVEX_ID]) {
+      const plan = planFor(id);
+      const surfaceById = new Map(plan.surfaces.map((surface) => [surface.id, surface]));
+      for (const placement of plan.placements) {
+        const surface = surfaceById.get(placement.surfaceId);
+        if (!surface || surface.kind !== "facade") continue;
+        expect(placement.bounds.uMinMm, `${id} ${placement.id}`).toBeGreaterThanOrEqual(surface.uStartMm);
+        expect(placement.bounds.uMaxMm, `${id} ${placement.id}`).toBeLessThanOrEqual(surface.uEndMm);
+      }
+    }
+  });
+
+  it("charges a reflex corner the full flat protrusion depth", () => {
+    const plan = planFor(ESB_ID);
+    const reflex = new Set(plan.massing.reflexVertexIndexes);
+    const depth = plan.parameters.recessDepthMm;
+    for (const surface of plan.surfaces) {
+      if (surface.kind !== "facade") continue;
+      if (reflex.has(surface.startVertexIndex)) expect(surface.uStartMm).toBeGreaterThanOrEqual(depth);
+      if (reflex.has(surface.endVertexIndex)) expect(surface.uLengthMm - surface.uEndMm).toBeGreaterThanOrEqual(depth);
+    }
+  });
+});
+
+// (22) ------------------------------------------------------------------
+describe("(22) ear clipping is deterministic", () => {
+  it("produces a byte-identical index list for the same ring twice", () => {
+    for (const building of buildings) {
+      const ring = footprintMm(building);
+      const first = earClipRing(ring);
+      const second = earClipRing(ring);
+      expect(first.ok && second.ok).toBe(true);
+      if (!first.ok || !second.ok) continue;
+      expect(JSON.stringify(second.triangles)).toBe(JSON.stringify(first.triangles));
+      expect(second.triangles).toHaveLength(ring.length - 2);
+    }
+  });
+
+  it("triangulates the 0.05 m edge case without dropping or duplicating a vertex", () => {
+    const ring = footprintMm(byId.get(SHORT_EDGE_ID)!);
+    const shortest = Math.min(...ring.map((point, index) => {
+      const next = ring[(index + 1) % ring.length]!;
+      return Math.hypot(next[0] - point[0], next[1] - point[1]);
+    }));
+    // The measured worst edge on this footprint is well under a tenth of a metre.
+    expect(shortest).toBeLessThan(200);
+    const clipped = earClipRing(ring);
+    expect(clipped.ok).toBe(true);
+    if (!clipped.ok) return;
+    expect(clipped.triangles).toHaveLength(ring.length - 2);
+    const used = new Set(clipped.triangles.flat());
+    expect(used.size).toBe(ring.length);
+  });
+
+  it("keeps a zero-bay blank wall legal on the shortest edges", () => {
+    const plan = planFor(SHORT_EDGE_ID);
+    const facades = plan.surfaces.filter((surface) => surface.kind === "facade");
+    expect(facades.some((surface) => surface.bayCount === 0)).toBe(true);
+    // A blank wall is still a wall: it must be tessellated, not omitted.
+    expect(tessellateV3Plan(plan, { includeRecesses: true }).triangleCount).toBeGreaterThan(0);
+  });
+});
+
+// Input contract ---------------------------------------------------------
+describe("the V3 input contract fails closed", () => {
+  const esb = () => byId.get(ESB_ID)!;
+
+  it("accepts the real concave rings that V2's contract rejects", () => {
+    for (const building of buildings) {
+      const result = validateV3Input(inputFor(building));
+      expect(result.ok, building.canonicalBuildingId).toBe(true);
+    }
+  });
+
+  it("forbids holes outright rather than ignoring them", () => {
+    const base = inputFor(esb());
+    const withHoles = { ...base, geometry: { ...base.geometry, footprint: { ...base.geometry.footprint, holes: [] } } };
+    const result = validateV3Input(withHoles);
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.issues.some((issue) => /hole/iu.test(issue.message))).toBe(true);
+  });
+
+  it("rejects a self-intersecting ring", () => {
+    const base = inputFor(esb());
+    const bowtie: Point2Mm[] = [[0, 0], [10_000, 10_000], [10_000, 0], [0, 10_000]];
+    const result = validateV3Input({ ...base, geometry: { ...base.geometry, footprint: { outer: bowtie } } });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.issues.some((issue) => /self-intersect/iu.test(issue.message))).toBe(true);
+  });
+
+  it("rejects a ring below the area floor", () => {
+    const base = inputFor(esb());
+    const sliver: Point2Mm[] = [[0, 0], [1_000, 0], [1_000, 20], [0, 20]];
+    const result = validateV3Input({ ...base, geometry: { ...base.geometry, footprint: { outer: sliver } } });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.issues.some((issue) => /area/iu.test(issue.message))).toBe(true);
+  });
+
+  it("rejects a neck too thin to carry two opposed recesses", () => {
+    const base = inputFor(esb());
+    // A dumbbell whose waist is 300 mm: two 200 mm recesses plus a wall cannot
+    // fit, so the opposed openings would punch straight through the massing.
+    const waist: Point2Mm[] = [
+      [0, 0], [20_000, 0], [20_000, 9_850], [40_000, 9_850], [40_000, 0], [60_000, 0],
+      [60_000, 20_000], [40_000, 20_000], [40_000, 10_150], [20_000, 10_150], [20_000, 20_000], [0, 20_000],
+    ];
+    const result = validateV3Input({ ...base, geometry: { ...base.geometry, footprint: { outer: waist } } });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.issues.some((issue) => /thick|neck/iu.test(issue.message))).toBe(true);
+  });
+
+  it("normalises winding without changing the shape", () => {
+    const base = inputFor(esb());
+    const reversed = [...base.geometry.footprint.outer].reverse();
+    const forward = validateV3Input(base);
+    const backward = validateV3Input({ ...base, geometry: { ...base.geometry, footprint: { outer: reversed } } });
+    expect(forward.ok && backward.ok).toBe(true);
+    if (!forward.ok || !backward.ok) return;
+    expect(ringSignedAreaMm2(backward.value.geometry.footprint.outer)).toBeGreaterThan(0);
+    expect(Math.abs(ringSignedAreaMm2(backward.value.geometry.footprint.outer))).toBe(Math.abs(ringSignedAreaMm2(forward.value.geometry.footprint.outer)));
+  });
+
+  it("simplifies nothing: only exactly duplicated consecutive vertices collapse", () => {
+    const base = inputFor(esb());
+    const outer = base.geometry.footprint.outer;
+    const duplicated: Point2Mm[] = outer.flatMap((point, index) => (index === 0 ? [point, [...point] as Point2Mm] : [point]));
+    const result = validateV3Input({ ...base, geometry: { ...base.geometry, footprint: { outer: duplicated } } });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.geometry.footprint.outer).toEqual(outer);
+  });
+});
+
+describe("V3 plans are canonical and reproducible", () => {
+  it("re-derives the same plan hash from the same input", () => {
+    const input = inputFor(byId.get(ESB_ID)!);
+    const first = generateV3FacadePlan(input);
+    const second = generateV3FacadePlan(input);
+    expect(first.ok && second.ok).toBe(true);
+    if (!first.ok || !second.ok) return;
+    expect(second.value.planHashSha256).toBe(first.value.planHashSha256);
+  });
+
+  it("declares every required exterior component kind as generated when the massing is tiered", () => {
+    const plan = planFor(ESB_ID);
+    expect(plan.massing.effectiveTierCount).toBeGreaterThan(1);
+    expect(plan.inventory.components.every((component) => component.state === "generated")).toBe(true);
+  });
+
+  it("declares setbacks ABSENT, with the refusal as its reason, on a building whose offset was refused", () => {
+    const collapsed = buildings.map((building) => planFor(building.canonicalBuildingId)).filter((plan) => plan.massing.effectiveTierCount === 1);
+    // Measured: five of the fourteen cannot carry a setback on their real ring.
+    expect(collapsed).toHaveLength(5);
+    for (const plan of collapsed) {
+      const setbacks = plan.inventory.components.find((component) => component.kind === "setbacks")!;
+      expect(setbacks.state).toBe("absent");
+      if (setbacks.state !== "absent") continue;
+      expect(setbacks.reason).toContain("tier-offset-collapse");
+      // Everything else this grammar does build is still generated.
+      expect(plan.inventory.components.filter((component) => component.state !== "generated")).toHaveLength(1);
+    }
+  });
+
+  it("round-trips a plan through its own canonical validator", () => {
+    for (const id of [ESB_ID, REFLEX_ID, SHORT_EDGE_ID, CONVEX_ID]) {
+      const plan = planFor(id);
+      const validated = validateV3Plan(JSON.parse(JSON.stringify(plan)) as unknown);
+      expect(validated.ok, `${id}: ${validated.ok ? "" : JSON.stringify(validated.issues)}`).toBe(true);
+    }
+  });
+});
