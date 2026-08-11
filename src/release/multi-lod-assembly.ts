@@ -1,5 +1,6 @@
 import { domainSeparatedSha256, sha256HexBytes, stableSerialize } from "../domain/deterministic-hash.ts";
 import { isSafeReleaseArtifactReference } from "../runtime/path-security.ts";
+import type { ExteriorTextureAdmissionPolicy } from "./exterior-release.ts";
 import {
   PROCEDURAL_TEXTURE_LIMITS,
   isProceduralTextureProvenance,
@@ -72,6 +73,26 @@ export interface MultiLodAssemblyPolicy {
    * admit nothing.
    */
   proceduralTextureProfile?: ProceduralTextureProfile;
+  /**
+   * The RELEASE's versioned texture-admission policy, threaded in from the
+   * checksum-pinned release root. Absent means `texture-free`.
+   *
+   * Unlike `proceduralTextureProfile` above — which is declarative only, and
+   * deliberately so — this one does decide something: whether a public package
+   * may carry embedded images at all. That is safe precisely because it is the
+   * only thing it decides. Every rule that makes a textured byte acceptable
+   * stays unconditional and keyed off the GLB's own bytes: provenance is still
+   * required whenever an image is present, every image is still regenerated from
+   * named constants and byte-compared, the per-image and per-GLB caps still
+   * apply, and the 1:1 image/texture/drawn-material shape is still enforced. So
+   * `procedural-replay` opens exactly one door — "a public package MAY carry
+   * images" — and every other gate still has to be passed to walk through it.
+   *
+   * It also cannot be set by a package. It arrives from the release root, which
+   * is immutable and checksum-pinned, so a package that would like to be
+   * textured has no way to say so.
+   */
+  textureAdmission?: ExteriorTextureAdmissionPolicy;
 }
 
 export type AssemblyAudience = "private" | "public";
@@ -228,9 +249,25 @@ function canonicalManifest(manifest: MultiLodAssemblyManifest): MultiLodAssembly
 export function serializeMultiLodAssembly(manifest: MultiLodAssemblyManifest): string { return `${stableSerialize(canonicalManifest(manifest))}\n`; }
 export function multiLodAssemblyFingerprint(manifest: MultiLodAssemblyManifest): string { return domainSeparatedSha256("urban-digital-twin/multi-lod-assembly/1.0", canonicalManifest(manifest)); }
 
-/** Public packages are always texture-free; the policy flag can only add enforcement. */
+/**
+ * Whether this assembly must be texture-free.
+ *
+ * The rule used to be "public audience, full stop". It is now "public audience,
+ * unless the RELEASE declares a texture admission that says otherwise" — and the
+ * two orderings below are load-bearing:
+ *
+ * - `requireTextureFreeAssembly` is checked FIRST and wins outright, so a
+ *   lineage-linked package stays texture-free no matter what a release declares.
+ *   That flag could only ever ADD enforcement, and it still can only add.
+ * - The admission default is `texture-free`, so absent, unknown and malformed
+ *   all land on the closed answer. A caller that passes no policy at all — and
+ *   there are several, deliberately — gets exactly the behaviour it got before
+ *   this parameter existed.
+ */
 export function requiresTextureFreeAssembly(audience: AssemblyAudience, policy?: MultiLodAssemblyPolicy): boolean {
-  return audience === "public" || policy?.requireTextureFreeAssembly === true;
+  if (policy?.requireTextureFreeAssembly === true) return true;
+  if (audience !== "public") return false;
+  return (policy?.textureAdmission ?? "texture-free") === "texture-free";
 }
 
 export function validateMultiLodAssembly(value: unknown, policy?: MultiLodAssemblyPolicy): AssemblyValidation {

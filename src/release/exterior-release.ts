@@ -22,6 +22,86 @@ export interface ExteriorArtifactRef {
   checksumSha256: string;
 }
 
+// ---------------------------------------------------------------------------
+// Texture admission: one versioned policy, declared by the RELEASE
+// ---------------------------------------------------------------------------
+
+/**
+ * Which textures a release admits into public delivery.
+ *
+ * Before this existed, the refusal was spelled out independently in at least
+ * five places — the assembly validator, three points in the exterior-cell
+ * runtime, and the wave emitters — each deriving "no textures" from
+ * `audience === "public"` with no policy in scope at all. Five copies of a rule
+ * is five places to disagree, and a seam in one of them would have been
+ * worthless: the runtime would have kept refusing on its own derivation.
+ *
+ * So the policy is declared ONCE, HERE, on the release root — which is
+ * checksum-pinned, immutable, and reviewable — and threaded to every site that
+ * used to derive it. Two things follow from putting it on the release rather
+ * than on the package:
+ *
+ * - **A package cannot widen its own gate.** The assembly manifest carries no
+ *   admission field. A textured package presented to a `texture-free` release is
+ *   refused, and the package has no say in it.
+ * - **Absent means `texture-free`.** Every release committed before this field
+ *   existed keeps its exact bytes and its exact behaviour, and a release that
+ *   forgets to declare an admission gets the closed answer rather than the open
+ *   one.
+ */
+export const EXTERIOR_TEXTURE_ADMISSION_POLICIES = ["texture-free", "procedural-replay"] as const;
+export type ExteriorTextureAdmissionPolicy = (typeof EXTERIOR_TEXTURE_ADMISSION_POLICIES)[number];
+export const DEFAULT_EXTERIOR_TEXTURE_ADMISSION_POLICY: ExteriorTextureAdmissionPolicy = "texture-free";
+
+/**
+ * The package-level statement that carries a textured admission.
+ *
+ * This is the crux of the rights boundary and it is deliberately NOT expressed
+ * through `runtimeTexture`. That field is a RIGHTS predicate about
+ * source-derived texture: it asks whether the evidence a building cites permits
+ * a texture to be derived from it. A procedurally rasterized tile cites no
+ * evidence record at all — it is a pure function of named constants in this
+ * repository — so answering that question "yes" would assert a permission
+ * nobody granted, over a fact nobody supplied.
+ *
+ * `runtimeTexture: false` therefore stays intact on every building detail, and
+ * `validateProjectedGraphAudience` keeps failing closed for any structural
+ * `runtimeTexture: true`. What admits a generated tile is this separate,
+ * release-level fact, which says exactly what is true and nothing more:
+ * generated in-repo, gated by rasterizer replay, and citing no evidence basis.
+ *
+ * In particular the `derivative-scope-excludes-texture` restriction on the
+ * Empire State Building intake record remains correct and untouched. That
+ * restriction says a measurement-only encyclopaedia fact may not become a
+ * texture. The designed tile derives NOTHING from that fact — not its motif,
+ * not its module sizes, not its tone — so admitting the tile does not weaken the
+ * restriction, and the two statements are consistent rather than in tension.
+ */
+export interface ExteriorGeneratedTextureFact {
+  basis: "generated-texture";
+  profile: "procedural-texture-v1";
+  gate: "rasterizer-replay";
+  /** Literally null: a generated tile cites no evidence record, and says so. */
+  evidenceBasis: null;
+  /** The sampler filtering the admitted bytes must name; see ADR 0032 amendment A1. */
+  samplerFilter: { magFilter: number; minFilter: number };
+  statement: string;
+}
+
+export interface ExteriorTextureAdmission {
+  policy: ExteriorTextureAdmissionPolicy;
+  /** Required exactly when the policy is `procedural-replay`, forbidden otherwise. */
+  generatedTextureFact?: ExteriorGeneratedTextureFact;
+}
+
+/** Fail-closed read of a root's declaration: absent, malformed or unknown all mean texture-free. */
+export function exteriorTextureAdmissionPolicyOf(root: { textureAdmission?: ExteriorTextureAdmission } | null | undefined): ExteriorTextureAdmissionPolicy {
+  const declared = root?.textureAdmission?.policy;
+  return typeof declared === "string" && (EXTERIOR_TEXTURE_ADMISSION_POLICIES as readonly string[]).includes(declared)
+    ? declared as ExteriorTextureAdmissionPolicy
+    : DEFAULT_EXTERIOR_TEXTURE_ADMISSION_POLICY;
+}
+
 export interface ExteriorRootManifest {
   schemaVersion: typeof EXTERIOR_RELEASE_SCHEMA_VERSION;
   audience: ExteriorReleaseAudience;
@@ -38,6 +118,11 @@ export interface ExteriorRootManifest {
   predecessor: { rootId: string; rootChecksumSha256: string } | null;
   /** Public roots may cite private ancestry only by immutable logical identity. */
   privatePredecessor: { rootId: string; rootChecksumSha256: string } | null;
+  /**
+   * OPTIONAL, and absent means `texture-free`. Every committed root predates
+   * this field and is byte-unchanged by its existence.
+   */
+  textureAdmission?: ExteriorTextureAdmission;
 }
 
 export interface Wgs84Bounds {
@@ -159,10 +244,45 @@ function timestamp(value: unknown): value is string {
 }
 function checksum(value: unknown): value is string { return typeof value === "string" && /^[a-f0-9]{64}$/u.test(value); }
 function issue(issues: ExteriorReleaseIssue[], path: string, message: string): void { issues.push({ path, message }); }
-function exactKeys(value: Record<string, unknown>, allowed: readonly string[], path: string, issues: ExteriorReleaseIssue[]): void {
-  const allowlist = new Set(allowed);
+function exactKeys(value: Record<string, unknown>, allowed: readonly string[], path: string, issues: ExteriorReleaseIssue[], optional: readonly string[] = []): void {
+  const allowlist = new Set([...allowed, ...optional]);
   for (const key of Object.keys(value)) if (!allowlist.has(key)) issue(issues, `${path}.${key}`, "Unexpected release field.");
   for (const key of allowed) if (!(key in value)) issue(issues, `${path}.${key}`, "Required release field is missing.");
+}
+
+/**
+ * The admission declaration, validated closed.
+ *
+ * A malformed declaration is an ISSUE rather than a silent downgrade: the
+ * fail-closed default in `exteriorTextureAdmissionPolicyOf` protects a caller
+ * that never validated, but a release that reaches this validator and declares
+ * nonsense should be refused outright rather than quietly served texture-free.
+ */
+function validateTextureAdmission(value: unknown, path: string, issues: ExteriorReleaseIssue[]): void {
+  if (!record(value)) return issue(issues, path, "Texture admission must be an object.");
+  exactKeys(value, ["policy"], path, issues, ["generatedTextureFact"]);
+  if (typeof value.policy !== "string" || !(EXTERIOR_TEXTURE_ADMISSION_POLICIES as readonly string[]).includes(value.policy)) {
+    return issue(issues, `${path}.policy`, `Texture admission policy must be one of: ${EXTERIOR_TEXTURE_ADMISSION_POLICIES.join(", ")}.`);
+  }
+  if (value.policy === "texture-free") {
+    if (value.generatedTextureFact !== undefined) issue(issues, `${path}.generatedTextureFact`, "A texture-free release may not carry a generated-texture fact.");
+    return;
+  }
+  const fact = value.generatedTextureFact;
+  if (!record(fact)) return issue(issues, `${path}.generatedTextureFact`, "A procedural-replay release must carry the generated-texture fact that admits it.");
+  exactKeys(fact, ["basis", "profile", "gate", "evidenceBasis", "samplerFilter", "statement"], `${path}.generatedTextureFact`, issues);
+  if (fact.basis !== "generated-texture") issue(issues, `${path}.generatedTextureFact.basis`, "The only admissible basis is generated-texture.");
+  if (fact.profile !== "procedural-texture-v1") issue(issues, `${path}.generatedTextureFact.profile`, "The only admissible profile is procedural-texture-v1.");
+  if (fact.gate !== "rasterizer-replay") issue(issues, `${path}.generatedTextureFact.gate`, "The only admissible gate is rasterizer-replay.");
+  // Explicitly null, never absent and never an id: a generated tile cites no
+  // evidence record, and the record has to SAY that rather than omit it.
+  if (fact.evidenceBasis !== null) issue(issues, `${path}.generatedTextureFact.evidenceBasis`, "A generated tile cites no evidence record; this must be declared null.");
+  if (!record(fact.samplerFilter)) issue(issues, `${path}.generatedTextureFact.samplerFilter`, "The decided sampler filter must be declared.");
+  else {
+    exactKeys(fact.samplerFilter, ["magFilter", "minFilter"], `${path}.generatedTextureFact.samplerFilter`, issues);
+    if (fact.samplerFilter.magFilter !== 9729 || fact.samplerFilter.minFilter !== 9987) issue(issues, `${path}.generatedTextureFact.samplerFilter`, "Publicly admitted tiles must name LINEAR magnification and LINEAR_MIPMAP_LINEAR minification (ADR 0032 amendment A1).");
+  }
+  if (!nonEmpty(fact.statement)) issue(issues, `${path}.generatedTextureFact.statement`, "A plain statement of what the tiles are is required.");
 }
 function ids(value: unknown, path: string, issues: ExteriorReleaseIssue[]): value is string[] {
   if (!Array.isArray(value) || value.some((entry) => !nonEmpty(entry))) { issue(issues, path, "Expected an array of non-empty IDs."); return false; }
@@ -200,7 +320,7 @@ function validateImmutableRef(value: unknown, path: string, issues: ExteriorRele
 
 function validateRoot(value: unknown, path: string, issues: ExteriorReleaseIssue[]): void {
   if (!record(value)) return issue(issues, path, "Exterior root manifest must be an object.");
-  exactKeys(value, ["schemaVersion", "audience", "rootId", "rootChecksumSha256", "releaseId", "cityId", "configId", "generatedAt", "immutable", "artifactAllowlist", "artifacts", "approval", "predecessor", "privatePredecessor"], path, issues);
+  exactKeys(value, ["schemaVersion", "audience", "rootId", "rootChecksumSha256", "releaseId", "cityId", "configId", "generatedAt", "immutable", "artifactAllowlist", "artifacts", "approval", "predecessor", "privatePredecessor"], path, issues, ["textureAdmission"]);
   if (value.schemaVersion !== EXTERIOR_RELEASE_SCHEMA_VERSION) issue(issues, `${path}.schemaVersion`, "Unsupported exterior root schema.");
   if (value.audience !== "private" && value.audience !== "public") issue(issues, `${path}.audience`, "Root audience must be private or public.");
   for (const field of ["rootId", "releaseId", "cityId", "configId"] as const) if (!nonEmpty(value[field])) issue(issues, `${path}.${field}`, "Non-empty root identity field is required.");
@@ -222,6 +342,7 @@ function validateRoot(value: unknown, path: string, issues: ExteriorReleaseIssue
   validateApproval(value.approval, `${path}.approval`, issues);
   if (value.predecessor !== null) validateImmutableRef(value.predecessor, `${path}.predecessor`, issues);
   if (value.privatePredecessor !== null) validateImmutableRef(value.privatePredecessor, `${path}.privatePredecessor`, issues);
+  if (value.textureAdmission !== undefined) validateTextureAdmission(value.textureAdmission, `${path}.textureAdmission`, issues);
 }
 
 function validateLedger(value: unknown, path: string, issues: ExteriorReleaseIssue[]): void {

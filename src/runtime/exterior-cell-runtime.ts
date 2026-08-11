@@ -14,12 +14,14 @@ import {
   type MultiLodAssemblyManifest,
 } from "../release/multi-lod-assembly.ts";
 import {
+  exteriorTextureAdmissionPolicyOf,
   validateExteriorReleaseGraph,
   type ExteriorCellRelease,
   type ExteriorEvidenceShard,
   type ExteriorReleaseGraph,
   type ExteriorRolloutSnapshot,
   type ExteriorRootManifest,
+  type ExteriorTextureAdmissionPolicy,
 } from "../release/exterior-release.ts";
 import type { AggregateRequestBudget } from "./composed-release-runtime.ts";
 import { isSafeReleaseArtifactReference } from "./path-security.ts";
@@ -316,6 +318,19 @@ export class ExteriorCellRuntime {
   readonly origin: "default" | "canary";
   private readonly graph: ExteriorReleaseGraph;
   private readonly publicRoot: ExteriorRootManifest;
+  /**
+   * The active release's texture admission, read ONCE from the checksum-pinned
+   * public root and threaded to every site that used to derive texture-freeness
+   * from `audience === "public"` on its own.
+   *
+   * That independent derivation was the real problem. The assembly validator had
+   * a policy parameter; the runtime had none and simply decided for itself, so a
+   * seam opened in the validator alone would have changed nothing here — the
+   * runtime would have kept refusing, and the refusal would have looked like a
+   * bug rather than a policy. Reading it here, from the release, is what makes
+   * the admission one decision instead of two agreeing by luck.
+   */
+  readonly textureAdmission: ExteriorTextureAdmissionPolicy;
   /** Structurally validated exactly once at construction (memoized for every loadCell). */
   private readonly assemblies: readonly MultiLodAssemblyManifest[];
   readonly droppedAssemblyPackages: readonly ExteriorDroppedAssemblyPackage[];
@@ -357,6 +372,10 @@ export class ExteriorCellRuntime {
     this.releaseId = source.index.releaseId;
     this.graph = source.graph;
     this.publicRoot = publicRoot;
+    // Fail-closed: absent, unknown or malformed all read as texture-free.
+    const textureAdmission = exteriorTextureAdmissionPolicyOf(publicRoot);
+    this.textureAdmission = textureAdmission;
+    const assemblyPolicy = { textureAdmission };
     // Only packages the resolved head actually pins are hard-validated. A
     // canary-only package that is invalid must not disable the default head.
     const allowed = new Set(head.pin.assemblyPackageIds);
@@ -365,7 +384,7 @@ export class ExteriorCellRuntime {
     for (const [position, candidate] of source.assemblies.entries()) {
       const declaredId = (candidate as { packageId?: unknown } | null)?.packageId;
       const label = typeof declaredId === "string" && declaredId.length > 0 ? declaredId : `<unidentified assembly [${position}]>`;
-      const structural = validateMultiLodAssembly(candidate);
+      const structural = validateMultiLodAssembly(candidate, assemblyPolicy);
       if (!structural.ok) {
         if (typeof declaredId === "string" && allowed.has(declaredId)) throw new ExteriorRuntimeError("assembly-invalid", `Assembly package ${label} pinned by head ${head.pin.snapshotId} failed closed: ${issueText(structural.issues)}`);
         dropped.push({ packageId: label, reason: `structurally invalid and not pinned by the active head: ${issueText(structural.issues)}` });
@@ -556,7 +575,7 @@ export class ExteriorCellRuntime {
     assertPublicExteriorArtifactRef(cellRelease.artifactRef);
 
     const assembly = this.assemblyForCell(cellRelease, expectedCellReleaseChecksum);
-    const textureFree = requiresTextureFreeAssembly(assembly.audience);
+    const textureFree = requiresTextureFreeAssembly(assembly.audience, { textureAdmission: this.textureAdmission });
 
     // Evidence-shard audience admission for every building this cell publishes.
     for (const detail of cellRelease.buildingDetails) {

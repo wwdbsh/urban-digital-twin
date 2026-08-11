@@ -284,6 +284,151 @@ export function buildFullSnapshotPackagePlan(input: FullSnapshotPackagePlanInput
 }
 
 // ---------------------------------------------------------------------------
+// Estimate basis v2: image and UV terms (T028)
+// ---------------------------------------------------------------------------
+
+/**
+ * ADR 0032 precondition 2 said this estimator "has no image term", would
+ * under-report a textured citywide snapshot, and would under-report the UV term
+ * far more badly than the image term. Basis v2 adds both.
+ *
+ * It is NEW code beside v1, never an edit of it. The committed dryrun artifact
+ * pins `gatingBasis: "structural-gltf-accessor-arithmetic-v1"`, that artifact is
+ * byte-frozen, and every existing caller keeps producing exactly the numbers it
+ * produced before. A textured plan opts into v2 explicitly.
+ *
+ * TWO NON-COMPARABILITY WARNINGS, because a number without them is misleading:
+ *
+ * 1. **This estimator models the SIX-QUAD grammar, not V3.** Its asset shape is
+ *    six surface quads plus one quad per placement. V3 carries the sourced
+ *    polygon vertex for vertex and runs to six figures of triangles on a single
+ *    tower. A v2 estimate is therefore not comparable with a measured V3 or V3T
+ *    byte total, and neither number should be quoted as a check on the other.
+ * 2. **v1's per-vertex figure already assumed a UV attribute.**
+ *    `vertexAttributeBytes: 32` is POSITION + NORMAL + TEXCOORD_0, while the
+ *    canonical writer emits POSITION alone when untextured and POSITION plus
+ *    TEXCOORD_0 when textured, and never a NORMAL. So v1 is not simply "v2
+ *    without the UV": the two differ in what they assume a vertex costs at all.
+ *    v2 states its attribute set explicitly instead of inheriting v1's.
+ */
+export const EXTERIOR_FULLSNAPSHOT_ESTIMATE_BASIS_V2 = "structural-gltf-accessor-image-uv-arithmetic-v2" as const;
+
+export const EXTERIOR_FULLSNAPSHOT_TEXTURE_BYTE_MODEL = {
+  /** POSITION vec3 f32 only, which is what the canonical writer emits untextured. */
+  untexturedVertexBytes: 12,
+  /** POSITION vec3 f32 + TEXCOORD_0 vec2 f32, which is what it emits textured. */
+  texturedVertexBytes: 20,
+  /**
+   * One measured procedural tile: 128x128 8-bit gray, stored DEFLATE, 16,580 B.
+   * Measured rather than modelled, because the encoder is byte-exact and the
+   * number is therefore a fact about the shipped tiles rather than an estimate.
+   */
+  imageBytes: 16_580,
+  /** One extra accessor and bufferView per textured primitive, for TEXCOORD_0. */
+  accessorsPerTexturedPrimitive: 1,
+  bufferViewsPerTexturedPrimitive: 1,
+  /** One bufferView per embedded image, plus the images/samplers/textures JSON. */
+  bufferViewsPerImage: 1,
+  jsonBytesPerImage: 64,
+  jsonBytesPerTexture: 40,
+  jsonBytesPerSampler: 72,
+  /** Image views are padded to the 4-byte alignment the closed profile allows. */
+  imageAlignmentBytes: 4,
+} as const;
+
+export interface FullSnapshotTexturedShape extends FullSnapshotAssetShape {
+  /** Distinct embedded tiles this LOD draws. Zero reproduces the untextured arithmetic. */
+  textureCount: number;
+  /** Primitives whose material samples a tile, and which therefore carry TEXCOORD_0. */
+  texturedPrimitiveCount: number;
+}
+
+/**
+ * Byte estimate for one GLB under basis v2.
+ *
+ * `textureCount: 0` with `texturedPrimitiveCount: 0` is the untextured case and
+ * is a legitimate v2 estimate in its own right — it is simply v1's model with
+ * the vertex attribute set corrected to what the writer actually emits.
+ */
+export function estimateFullSnapshotTexturedAssetBytes(shape: FullSnapshotTexturedShape): number {
+  const model = EXTERIOR_FULLSNAPSHOT_BYTE_MODEL;
+  const texture = EXTERIOR_FULLSNAPSHOT_TEXTURE_BYTE_MODEL;
+  if (shape.textureCount < 0 || shape.texturedPrimitiveCount < 0) throw new Error("Texture counts must be non-negative.");
+  if (shape.texturedPrimitiveCount > Math.max(1, shape.materialCount)) throw new Error("A textured primitive count cannot exceed the primitive count.");
+  if (shape.textureCount > 0 && shape.texturedPrimitiveCount === 0) throw new Error("A tile nothing draws would be dropped by the writer rather than embedded.");
+  const vertexCount = shape.quadCount * model.verticesPerQuad;
+  const indexCount = shape.quadCount * model.indicesPerQuad;
+  const indexBytes = vertexCount > model.uint16VertexCeiling ? 4 : 2;
+  const primitiveCount = Math.max(1, shape.materialCount);
+  const accessorCount = primitiveCount * model.accessorsPerPrimitive + shape.texturedPrimitiveCount * texture.accessorsPerTexturedPrimitive;
+  const bufferViewCount = primitiveCount * model.bufferViewsPerPrimitive
+    + shape.texturedPrimitiveCount * texture.bufferViewsPerTexturedPrimitive
+    + shape.textureCount * texture.bufferViewsPerImage;
+  // The UV term rides on VERTEX count, not on texture count: it grows with
+  // geometric detail and is completely unaffected by tile size. ADR 0032
+  // measured it at 76% of the textured delta, and this is where that comes from.
+  const untexturedVertexShare = vertexCount * (primitiveCount === 0 ? 0 : (primitiveCount - shape.texturedPrimitiveCount) / primitiveCount);
+  const texturedVertexShare = vertexCount - untexturedVertexShare;
+  const binaryBytes = untexturedVertexShare * texture.untexturedVertexBytes
+    + texturedVertexShare * texture.texturedVertexBytes
+    + indexCount * indexBytes
+    + accessorCount * model.accessorAlignmentBytes
+    + shape.textureCount * (texture.imageBytes + texture.imageAlignmentBytes);
+  const jsonBytes = model.jsonBaseBytes
+    + accessorCount * model.jsonBytesPerAccessor
+    + bufferViewCount * model.jsonBytesPerBufferView
+    + primitiveCount * model.jsonBytesPerPrimitive
+    + shape.materialCount * model.jsonBytesPerMaterial
+    + model.nodesPerAsset * model.jsonBytesPerNode
+    + shape.textureCount * (texture.jsonBytesPerImage + texture.jsonBytesPerTexture)
+    + (shape.textureCount > 0 ? texture.jsonBytesPerSampler : 0);
+  return Math.ceil(binaryBytes + jsonBytes + model.containerBytes);
+}
+
+export interface FullSnapshotCacheResidency {
+  basis: typeof EXTERIOR_FULLSNAPSHOT_ESTIMATE_BASIS_V2;
+  cacheBytes: number;
+  perAssetBytes: number;
+  /** Assets the cache holds before it must evict, floored. */
+  residentAssets: number;
+  /** Same cache, same arithmetic, on the untextured estimate. */
+  untexturedResidentAssets: number;
+  /** Residency retained relative to untextured, in parts per million. */
+  retainedPartsPerMillion: number;
+}
+
+/**
+ * What a textured asset costs a FIXED artifact cache.
+ *
+ * ADR 0032 precondition 5 asked for this to be measured rather than assumed. The
+ * arithmetic is deliberately trivial and deliberately explicit: a cache with a
+ * byte ceiling holds `floor(budget / size)` assets, so a larger asset means
+ * fewer of them, and the retained share is the ratio of the two counts rather
+ * than a rule of thumb about percentages.
+ *
+ * It bounds VERIFIED COMPRESSED GLB BYTES retained by the exterior cache, which
+ * is the only thing that cache holds. Decoded GPU memory is a different budget
+ * on a different contract and is not modelled here; see the ADR 0032 amendment
+ * for the mipmapped GPU figure.
+ */
+export function estimateFullSnapshotCacheResidency(input: { cacheBytes: number; texturedAssetBytes: number; untexturedAssetBytes: number }): FullSnapshotCacheResidency {
+  if (!Number.isFinite(input.cacheBytes) || input.cacheBytes <= 0) throw new Error("Cache budget must be a positive byte count.");
+  for (const bytes of [input.texturedAssetBytes, input.untexturedAssetBytes]) {
+    if (!Number.isFinite(bytes) || bytes <= 0) throw new Error("Asset byte estimates must be positive.");
+  }
+  const residentAssets = Math.floor(input.cacheBytes / input.texturedAssetBytes);
+  const untexturedResidentAssets = Math.floor(input.cacheBytes / input.untexturedAssetBytes);
+  return {
+    basis: EXTERIOR_FULLSNAPSHOT_ESTIMATE_BASIS_V2,
+    cacheBytes: input.cacheBytes,
+    perAssetBytes: input.texturedAssetBytes,
+    residentAssets,
+    untexturedResidentAssets,
+    retainedPartsPerMillion: untexturedResidentAssets === 0 ? 0 : Math.round((residentAssets / untexturedResidentAssets) * 1_000_000),
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Budget table
 // ---------------------------------------------------------------------------
 
