@@ -28,3 +28,6 @@ artifacts/block835-canary-validation-20260811/
 # data/midtown-core-20260811/evidence-inventory.json so they stay checkable
 # after this worktree-local tree is removed.
 artifacts/midtown-core-20260811/
+
+# T025 V3 determinism scratch
+artifacts/block835-v3-determinism/

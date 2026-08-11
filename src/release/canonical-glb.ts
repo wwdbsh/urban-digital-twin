@@ -26,6 +26,23 @@ export interface CanonicalGlbQuad {
   corners: readonly [Vec3, Vec3, Vec3, Vec3];
 }
 
+/**
+ * One triangle, wound counter-clockwise when viewed from its outward face.
+ *
+ * The closed profile has always accepted arbitrary indexed `TRIANGLES`; only
+ * this writer was quad-only, which forced every generated cap to decompose into
+ * quads. A concave footprint cannot: its roof and setback decks triangulate into
+ * an odd, non-quad fan. Triangles are written *after* the quads inside each
+ * material bucket, so a quad-only input still produces the exact bytes it did
+ * before this type existed and every committed package stays byte-frozen.
+ */
+export interface CanonicalGlbTri {
+  materialIndex: number;
+  a: Vec3;
+  b: Vec3;
+  c: Vec3;
+}
+
 export interface CanonicalGlbCounts { triangleCount: number; materialCount: number; textureCount: number }
 
 const GLB_MAGIC = 0x46546c67;
@@ -48,17 +65,24 @@ export interface CanonicalGlbResult { bytes: Uint8Array; counts: CanonicalGlbCou
 
 export function writeCanonicalGlb(options: {
   quads: readonly CanonicalGlbQuad[];
+  /** Optional and appended after the quads of the same material; see `CanonicalGlbTri`. */
+  triangles?: readonly CanonicalGlbTri[];
   materials: readonly CanonicalGlbMaterial[];
   metadata: Readonly<Record<string, unknown>>;
 }): CanonicalGlbResult {
   const { quads, materials, metadata } = options;
-  if (quads.length === 0) throw new Error("Canonical GLB requires at least one quad.");
-  const grouped = new Map<number, CanonicalGlbQuad[]>();
-  for (const quad of quads) {
-    if (!Number.isSafeInteger(quad.materialIndex) || quad.materialIndex < 0 || quad.materialIndex >= materials.length) throw new Error("Canonical GLB quad cites an undeclared material.");
-    const bucket = grouped.get(quad.materialIndex);
-    if (bucket) bucket.push(quad); else grouped.set(quad.materialIndex, [quad]);
-  }
+  const triangles = options.triangles ?? [];
+  if (quads.length === 0 && triangles.length === 0) throw new Error("Canonical GLB requires at least one quad or triangle.");
+  interface Bucket { quads: CanonicalGlbQuad[]; triangles: CanonicalGlbTri[] }
+  const grouped = new Map<number, Bucket>();
+  const bucketFor = (materialIndex: number): Bucket => {
+    if (!Number.isSafeInteger(materialIndex) || materialIndex < 0 || materialIndex >= materials.length) throw new Error("Canonical GLB quad cites an undeclared material.");
+    let bucket = grouped.get(materialIndex);
+    if (!bucket) { bucket = { quads: [], triangles: [] }; grouped.set(materialIndex, bucket); }
+    return bucket;
+  };
+  for (const quad of quads) bucketFor(quad.materialIndex).quads.push(quad);
+  for (const triangle of triangles) bucketFor(triangle.materialIndex).triangles.push(triangle);
   const usedMaterialIndexes = [...grouped.keys()].sort((left, right) => left - right);
 
   const bufferViews: Array<Record<string, number>> = [];
@@ -70,27 +94,37 @@ export function writeCanonicalGlb(options: {
 
   usedMaterialIndexes.forEach((materialIndex, primitiveIndex) => {
     const bucket = grouped.get(materialIndex)!;
-    const vertexCount = bucket.length * 4;
-    const indexCount = bucket.length * 6;
+    const vertexCount = bucket.quads.length * 4 + bucket.triangles.length * 3;
+    const indexCount = bucket.quads.length * 6 + bucket.triangles.length * 3;
     const positions = new Float32Array(vertexCount * 3);
     const indices = new Uint32Array(indexCount);
     const minimum: [number, number, number] = [Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY];
     const maximum: [number, number, number] = [Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY];
-    bucket.forEach((quad, quadIndex) => {
-      quad.corners.forEach((corner, cornerIndex) => {
-        const base = (quadIndex * 4 + cornerIndex) * 3;
-        for (let axis = 0; axis < 3; axis += 1) {
-          const value = f32(corner[axis]!);
-          if (!Number.isFinite(value)) throw new Error("Canonical GLB quad contains a non-finite coordinate.");
-          positions[base + axis] = value;
-          if (value < minimum[axis]!) minimum[axis] = value;
-          if (value > maximum[axis]!) maximum[axis] = value;
-        }
-      });
+    const writeCorner = (corner: Vec3, vertexIndex: number): void => {
+      const base = vertexIndex * 3;
+      for (let axis = 0; axis < 3; axis += 1) {
+        const value = f32(corner[axis]!);
+        if (!Number.isFinite(value)) throw new Error("Canonical GLB quad contains a non-finite coordinate.");
+        positions[base + axis] = value;
+        if (value < minimum[axis]!) minimum[axis] = value;
+        if (value > maximum[axis]!) maximum[axis] = value;
+      }
+    };
+    bucket.quads.forEach((quad, quadIndex) => {
+      quad.corners.forEach((corner, cornerIndex) => writeCorner(corner, quadIndex * 4 + cornerIndex));
       const first = quadIndex * 4;
       indices.set([first, first + 1, first + 2, first, first + 2, first + 3], quadIndex * 6);
     });
-    triangleCount += bucket.length * 2;
+    const triangleVertexBase = bucket.quads.length * 4;
+    const triangleIndexBase = bucket.quads.length * 6;
+    bucket.triangles.forEach((triangle, triangleIndex) => {
+      const first = triangleVertexBase + triangleIndex * 3;
+      writeCorner(triangle.a, first);
+      writeCorner(triangle.b, first + 1);
+      writeCorner(triangle.c, first + 2);
+      indices.set([first, first + 1, first + 2], triangleIndexBase + triangleIndex * 3);
+    });
+    triangleCount += bucket.quads.length * 2 + bucket.triangles.length;
 
     const positionBytes = new Uint8Array(positions.buffer, positions.byteOffset, positions.byteLength);
     const indexBytes = new Uint8Array(indices.buffer, indices.byteOffset, indices.byteLength);

@@ -27,11 +27,19 @@ export const BLOCK835_REFERENCE_PACKAGE_ID = "manhattan-esb-block-reference-2026
 /** Successor package built by the V2 generative-completion grammar. */
 export const BLOCK835_SUCCESSOR_PACKAGE_ID = "manhattan-esb-block-reference-20260811" as const;
 /**
+ * Successor package built by the V3 footprint-faithful grammar.
+ *
+ * The `-v3` discriminator is not decoration: the V2 successor already owns the
+ * plain `20260811` stamp and is byte-frozen, so a same-day V3 package needs its
+ * own directory rather than a collision with a package it must not edit.
+ */
+export const BLOCK835_V3_PACKAGE_ID = "manhattan-esb-block-reference-20260811-v3" as const;
+/**
  * Every package id this builder is allowed to overwrite. The guard refuses any
  * directory owned by anything else, so a pinned immutable release can never be
  * the target of a `--out` typo.
  */
-export const BLOCK835_WRITABLE_PACKAGE_IDS: readonly string[] = [BLOCK835_REFERENCE_PACKAGE_ID, BLOCK835_SUCCESSOR_PACKAGE_ID];
+export const BLOCK835_WRITABLE_PACKAGE_IDS: readonly string[] = [BLOCK835_REFERENCE_PACKAGE_ID, BLOCK835_SUCCESSOR_PACKAGE_ID, BLOCK835_V3_PACKAGE_ID];
 export const BLOCK835_REFERENCE_GENERATED_AT = "2026-08-10T00:00:00.000Z" as const;
 export const BLOCK835_REFERENCE_SEED = "block-835-reference-20260810" as const;
 export const BLOCK835_REFERENCE_TOOL = { id: "urban-digital-twin:block835-reference", version: "1.0.0" } as const;
