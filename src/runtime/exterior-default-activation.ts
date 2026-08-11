@@ -362,6 +362,12 @@ export interface ExteriorActivationSetResolution {
    * The release explicit intent serializes and the toggle re-pins. It is the
    * first record's resolved release, which for a one-wave build is exactly the
    * single release this session resolved.
+   *
+   * It is the URL-SERIALIZATION primary and NOT necessarily a streaming
+   * release: a disabled or non-promotable session still resolves one so a link
+   * write and a re-enable have something to name. Read `targets` (or
+   * `streaming`) to find out what is actually loading; using this as "the
+   * release being streamed" would report a release that is switched off.
    */
   primaryReleaseId: string;
 }

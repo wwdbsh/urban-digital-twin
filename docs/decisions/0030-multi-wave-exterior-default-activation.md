@@ -110,6 +110,17 @@ than summed per runtime; summing would have counted the same bytes once per
 wave and reported a false ceiling. Peak concurrency remains a max across the
 shared aggregate budget and every active wave's pool.
 
+Disclosed limitation: eviction in the shared LRU is recency-only, with NO
+per-wave reservation. Today's promoted set fits with room to spare (174 of 256
+entries, 15.9 MB of 256 MiB), so no wave evicts another. Under future pressure —
+a third wave, or Midtown-core's availability widening beyond 160 buildings — a
+larger or more recently touched wave can evict a smaller wave's entries and
+cause silent re-fetches of already-verified bytes. Nothing renders wrongly if
+that happens (every re-fetch is re-verified against its pin), but the cost is
+invisible in the current metrics. Fixing it properly means per-wave residency
+policy, which belongs with the deferred cell-scheduling and prioritization work
+recorded against ADR 0024 rather than being improvised here.
+
 ## Decision 5 — Large membership is stated as a digest, not as 20 KB of literals
 
 Block 835 lists its single accepted cell literally. Midtown-core states its 149

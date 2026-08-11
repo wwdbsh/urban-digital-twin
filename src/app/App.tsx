@@ -77,6 +77,7 @@ import {
 } from "../runtime/block835-canary-probe";
 import { MIDTOWN_CORE_CANARY_FACADE_PATH } from "../runtime/midtown-core-canary-facade-path";
 import { DEFAULT_EXTERIOR_RENDER_PROFILE, EXTERIOR_RENDER_PROFILES, exteriorRenderProfileLabel, parseExteriorRenderProfile, type ExteriorRenderProfile } from "../runtime/exterior-render-profiles";
+import { exteriorNotShippedSummary, exteriorQualifiedNotice, exteriorWaveForSelection } from "../runtime/exterior-wave-attribution";
 import { fallbackViewportFootprint, type ViewportFootprint } from "../runtime/viewport-footprint";
 
 const navigation = [
@@ -682,19 +683,13 @@ export function exteriorStreamingNotices(
   unanchoredCanonicalFeatureIds: readonly string[] = [],
 ): string[] {
   const notices = headNotice ? [headNotice] : [];
-  const notShipped = cells.filter((cell) => cell.kind === "not-shipped");
   for (const cell of cells) {
     if (cell.kind === "rendered") { if (cell.notice) notices.push(cell.notice); continue; }
     if (cell.kind === "not-shipped") continue;
     notices.push(cell.notice);
   }
-  if (notShipped.length > 0) {
-    notices.push(
-      notShipped.length === 1
-        ? notShipped[0]!.notice
-        : `${notShipped.length} of ${cells.length} exterior cells ship no exterior geometry in this release; no substitute was selected for them.`,
-    );
-  }
+  const notShipped = exteriorNotShippedSummary(cells);
+  if (notShipped) notices.push(notShipped);
   const unanchored = exteriorUnanchoredNotice(unanchoredCanonicalFeatureIds);
   if (unanchored) notices.push(unanchored);
   return notices;
@@ -1159,7 +1154,7 @@ export function App() {
   // which release it is about — so the release is named unconditionally rather
   // than appearing only once a second wave happens to be streaming.
   const exteriorNoticeEntries = exteriorActiveWaves.flatMap((entry) => exteriorStreamingNotices(entry.wave.headNotice, entry.wave.outcomes)
-    .map((notice) => ({ releaseId: entry.target.releaseId, notice: `Exterior release ${entry.target.releaseId}: ${notice}` })));
+    .map((notice) => ({ releaseId: entry.target.releaseId, notice: exteriorQualifiedNotice(entry.target.releaseId, notice) })));
   // Withheld-anchor geometry is reported once for the scene: the viewport
   // resolves anchors across every wave at once and reports one union.
   const exteriorUnanchoredStatement = exteriorStreamingActive ? exteriorUnanchoredNotice(exteriorUnanchoredIds) : null;
@@ -1636,6 +1631,10 @@ export function App() {
       if (unchanged) continue;
       entry.controller.abort();
       running.delete(releaseId);
+      // A wave that is no longer targeted keeps no outcomes: they describe a
+      // load that was just cancelled, and holding their verified GLB bytes
+      // would retain a whole withdrawn wave for the life of the session.
+      if (!next) setExteriorWaveOutcomes((current) => { if (!current.has(releaseId)) return current; const remaining = new Map(current); remaining.delete(releaseId); return remaining; });
     }
     for (const [releaseId, { target, runtime }] of wanted) {
       if (running.has(releaseId)) continue;
@@ -1668,7 +1667,10 @@ export function App() {
         });
     }
     return undefined;
-  }, [exteriorCameraHeightBucketMeters, exteriorProfile, exteriorWaves]);
+    // `exteriorTargetKey` is a dependency even though the targets are read from
+    // a ref: a change to WHICH releases are targeted must always re-run this
+    // reconciliation, and it does not always coincide with a wave-state change.
+  }, [exteriorCameraHeightBucketMeters, exteriorProfile, exteriorTargetKey, exteriorWaves]);
 
   // The only place a live cell load is cancelled wholesale: the component going
   // away. Everything else cancels exactly the wave whose inputs changed.
@@ -3452,10 +3454,10 @@ export function App() {
             picking one of them would be a guess presented as provenance.
           */}
           {exteriorStreamingActive && (() => {
-            const owning = activeSelectionId
-              ? exteriorActiveWaves.find((entry) => entry.wave.outcomes.some((cell) => cell.kind === "rendered" && cell.assets.some((asset) => asset.canonicalFeatureId === activeSelectionId)))
+            const attributed = exteriorWaveForSelection(exteriorActiveWaves.map((entry) => ({ ...entry, outcomes: entry.wave.outcomes })), activeSelectionId);
+            const owning = attributed && attributed.wave.outcomes.some((cell) => cell.kind === "rendered" && cell.assets.some((asset) => asset.canonicalFeatureId === activeSelectionId))
+              ? attributed
               : undefined;
-            const attributed = owning ?? (exteriorActiveWaves.length === 1 ? exteriorActiveWaves[0] : undefined);
             const runtime = attributed?.wave.runtime ?? null;
             const origin = runtime?.origin ?? "default";
             return <section className="inspector-section exterior-streaming-detail" aria-label="Exterior streaming provenance">

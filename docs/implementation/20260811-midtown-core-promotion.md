@@ -177,6 +177,38 @@ above plus the rewritten App test.
 | 7. Record integrity | PASS | Never-skipped drift gate recomputes the pin, the digest, the 160 identities and the stats from the committed inventory. |
 | 8. No release mutation | PASS | `git diff` over `public/data/` and `data/` against `5e5ea00` is empty. |
 
+## Review follow-up
+
+Four review nits and one coverage gap were closed after the promotion commit:
+
+- The shared-LRU limitation is disclosed in ADR 0030: eviction is recency-only
+  with no per-wave reservation, so under future pressure a larger wave can evict
+  a smaller one's entries and cause silent re-fetches. Per-wave residency policy
+  belongs with the deferred cell-scheduling work under ADR 0024.
+- The cell-load reconciliation effect now depends on `exteriorTargetKey`, so a
+  change to WHICH releases are targeted always re-runs reconciliation.
+- A wave leaving the target set drops its cell outcomes alongside its abort,
+  instead of retaining a withdrawn wave's verified bytes for the session.
+- `primaryReleaseId` is documented as the URL-serialization primary, NOT
+  necessarily a streaming release.
+- `src/runtime/exterior-wave-attribution.ts` (new) holds the per-wave
+  attribution rules — which wave answers for a selection, notice qualification,
+  and the bounded-availability aggregate — with
+  `exterior-wave-attribution.test.ts` covering both directions of the
+  cross-release selection, the ambiguous and single-wave fallbacks, and the
+  tombstone line's exact shipped form. All three behaviours were mutation-checked.
+
+Why those rules live outside `App.tsx`: a second test file that merely IMPORTS
+`App` pulls its Cesium-bearing module graph into another vitest worker and
+intermittently fails the pre-existing, timing-sensitive focus test "closes
+details with Escape and returns focus to the located-pick trigger" in
+`App.test.tsx` — measured at roughly one run in four, with a probe file whose
+own body was a single trivial assertion. A trivial file that does not import
+`App` does not perturb it. That existing test could not be modified under this
+task's terms, so the rules were extracted rather than the test adjusted. The
+extraction is recorded here because it is a real, unresolved latent flake in
+that test, not a property of the new coverage.
+
 ## Probe refusal messages
 
 The T009-era canary probe waited on "the pinned exterior-cell release", which
