@@ -102,3 +102,15 @@ artifacts/southern-remainder-20260812-p1-acceptance/
 # checksum, the URL it was taken at and the DOM text each journey read are
 # committed in data/southern-remainder-20260812-p1/journey-evidence.json.
 artifacts/southern-remainder-20260812-p1-journeys/
+
+# T019 Central-and-upper-Manhattan canary work root: the full-wave census over
+# all 11,721 owned buildings — the largest wave of the six — the Blender sample
+# inputs and renders, and the stage receipts. The hashes that matter are
+# committed in data/central-upper-manhattan-20260812/.
+artifacts/central-upper-manhattan-20260812/
+
+# T019 renderer-journey scratch root: the captured stills. Every still's
+# checksum, the URL it was taken at and the DOM text each journey read are
+# committed in data/central-upper-manhattan-20260812/journey-evidence.json so the
+# evidence stays checkable after this worktree-local tree is removed.
+artifacts/central-upper-manhattan-20260812-journeys/

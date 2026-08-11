@@ -532,8 +532,19 @@ export function appendBlock835PublicRealmUrl(baseUrl: string, requested: boolean
  * `EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries` is 512, which is what makes a
  * fourth promoted wave representable at all. That paragraph is left as it was
  * written because it was true of the build it described.
+ *
+ * `manhattan-central-upper-manhattan-cells-20260812` — the T019 canary — is
+ * pinned on exactly the same terms as the T015 and T017 canaries: opt-in
+ * reachable, absent from the promotion record, verified by its release graph and
+ * its committed inventory rather than by `verifyPromotedExteriorPin`. Whether it
+ * COULD be promoted is a different question from the one wave w03's canary faced,
+ * and the answer is not simply "no": the four promoted waves occupy 434 of the
+ * 512 entries, leaving 78, and this wave's median cell owns 48. What stops a
+ * decision here is that wave w05 is unpromoted too and its median cell owns 55,
+ * so the one 78-entry headroom admits an ordinary cell of either wave and not one
+ * of each. That split belongs to promotion, and this pin makes no part of it.
  */
-export const PINNED_EXTERIOR_CELL_RELEASE_IDS = ["udt-fixture-exterior-cells", "manhattan-exterior-cells-20260811", "manhattan-exterior-cells-20260811-v3", "manhattan-midtown-core-cells-20260811", "manhattan-midtown-core-cells-20260811-v3", "manhattan-lower-manhattan-cells-20260812", "manhattan-lower-manhattan-cells-20260812-p1", "manhattan-southern-remainder-cells-20260812", "manhattan-southern-remainder-cells-20260812-p1"] as const;
+export const PINNED_EXTERIOR_CELL_RELEASE_IDS = ["udt-fixture-exterior-cells", "manhattan-exterior-cells-20260811", "manhattan-exterior-cells-20260811-v3", "manhattan-midtown-core-cells-20260811", "manhattan-midtown-core-cells-20260811-v3", "manhattan-lower-manhattan-cells-20260812", "manhattan-lower-manhattan-cells-20260812-p1", "manhattan-southern-remainder-cells-20260812", "manhattan-southern-remainder-cells-20260812-p1", "manhattan-central-upper-manhattan-cells-20260812"] as const;
 
 /**
  * The release used when neither a URL nor the promoted default names one: still
