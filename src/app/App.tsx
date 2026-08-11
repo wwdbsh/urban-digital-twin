@@ -553,8 +553,23 @@ export function appendBlock835PublicRealmUrl(baseUrl: string, requested: boolean
  * and the 78 entries were divided 42 to this wave and 36 reserved for wave w05,
  * proportional to their canonical building counts. That paragraph is left as it
  * was written because it was true of the build it described.
+ *
+ * `manhattan-northern-manhattan-cells-20260812` — the T021 canary, materializing
+ * the LAST wave the committed ledger declares — is pinned on exactly the same
+ * terms as the T015, T017 and T019 canaries: opt-in reachable, absent from the
+ * promotion record, verified by its release graph and its committed inventory
+ * rather than by `verifyPromotedExteriorPin`. Being the last wave changes nothing
+ * about that; it is not promoted for completeness' sake.
+ *
+ * Whether it COULD be promoted is a settled question rather than an open one, and
+ * the answer is a number somebody else already chose: the split above reserved 36
+ * entries for this wave, so T022's subset has 36 to spend and not the 38 that are
+ * momentarily free. This wave's median cell owns 55, so the reservation does not
+ * admit an ordinary cell of it and a promoted subset here has to be curated below
+ * median size. None of that constrains this pin, because `?exteriorCells=` selects
+ * this release ALONE and an opt-in session is budgeted against the whole cache.
  */
-export const PINNED_EXTERIOR_CELL_RELEASE_IDS = ["udt-fixture-exterior-cells", "manhattan-exterior-cells-20260811", "manhattan-exterior-cells-20260811-v3", "manhattan-midtown-core-cells-20260811", "manhattan-midtown-core-cells-20260811-v3", "manhattan-lower-manhattan-cells-20260812", "manhattan-lower-manhattan-cells-20260812-p1", "manhattan-southern-remainder-cells-20260812", "manhattan-southern-remainder-cells-20260812-p1", "manhattan-central-upper-manhattan-cells-20260812", "manhattan-central-upper-manhattan-cells-20260812-p1"] as const;
+export const PINNED_EXTERIOR_CELL_RELEASE_IDS = ["udt-fixture-exterior-cells", "manhattan-exterior-cells-20260811", "manhattan-exterior-cells-20260811-v3", "manhattan-midtown-core-cells-20260811", "manhattan-midtown-core-cells-20260811-v3", "manhattan-lower-manhattan-cells-20260812", "manhattan-lower-manhattan-cells-20260812-p1", "manhattan-southern-remainder-cells-20260812", "manhattan-southern-remainder-cells-20260812-p1", "manhattan-central-upper-manhattan-cells-20260812", "manhattan-central-upper-manhattan-cells-20260812-p1", "manhattan-northern-manhattan-cells-20260812"] as const;
 
 /**
  * The release used when neither a URL nor the promoted default names one: still

@@ -645,7 +645,7 @@ describe("exterior streaming profiles and canary state", () => {
   });
 
   it("round-trips the pinned Manhattan release and keeps the fixture as the no-real-base fallback", () => {
-    expect(PINNED_EXTERIOR_CELL_RELEASE_IDS).toEqual(["udt-fixture-exterior-cells", "manhattan-exterior-cells-20260811", "manhattan-exterior-cells-20260811-v3", "manhattan-midtown-core-cells-20260811", "manhattan-midtown-core-cells-20260811-v3", "manhattan-lower-manhattan-cells-20260812", "manhattan-lower-manhattan-cells-20260812-p1", "manhattan-southern-remainder-cells-20260812", "manhattan-southern-remainder-cells-20260812-p1", "manhattan-central-upper-manhattan-cells-20260812", "manhattan-central-upper-manhattan-cells-20260812-p1"]);
+    expect(PINNED_EXTERIOR_CELL_RELEASE_IDS).toEqual(["udt-fixture-exterior-cells", "manhattan-exterior-cells-20260811", "manhattan-exterior-cells-20260811-v3", "manhattan-midtown-core-cells-20260811", "manhattan-midtown-core-cells-20260811-v3", "manhattan-lower-manhattan-cells-20260812", "manhattan-lower-manhattan-cells-20260812-p1", "manhattan-southern-remainder-cells-20260812", "manhattan-southern-remainder-cells-20260812-p1", "manhattan-central-upper-manhattan-cells-20260812", "manhattan-central-upper-manhattan-cells-20260812-p1", "manhattan-northern-manhattan-cells-20260812"]);
     // The Lower-Manhattan CANARY stays reachable by explicit opt-in and by
     // nothing else, and this survives its wave's promotion: promoting the P1
     // successor did not promote the canary, and the canary's deep link keeps
@@ -676,6 +676,17 @@ describe("exterior streaming profiles and canary state", () => {
     // entries to this wave and 36 reserved for wave w05, with no cap change.
     expect(isPinnedExteriorCellRelease("manhattan-central-upper-manhattan-cells-20260812-p1")).toBe(true);
     expect(EXTERIOR_DEFAULT_ACTIVATIONS.some((record) => record.enabled && record.releaseId === "manhattan-central-upper-manhattan-cells-20260812-p1")).toBe(true);
+    // The Northern-Manhattan CANARY, materializing the LAST wave the committed
+    // ledger declares, on the same canary terms as every canary before it: pinned
+    // so an explicit opt-in resolves, absent from the promotion record so an
+    // ordinary session never loads it. Being last is not a reason to promote it.
+    // Unlike its predecessors this wave's promotion budget is already DECIDED
+    // rather than open — T020 reserved it 36 entries — and 36 is below its median
+    // cell of 55, so T022 has to curate below median size. None of that is this
+    // pin's business: an opt-in session loads this release alone.
+    expect(isPinnedExteriorCellRelease("manhattan-northern-manhattan-cells-20260812")).toBe(true);
+    expect(EXTERIOR_DEFAULT_ACTIVATION.releaseId).not.toBe("manhattan-northern-manhattan-cells-20260812");
+    expect(EXTERIOR_DEFAULT_ACTIVATIONS.some((record) => record.releaseId === "manhattan-northern-manhattan-cells-20260812")).toBe(false);
     // Unchanged: this is the fallback for a session with no real base, not the
     // promoted default. The promoted default lives in EXTERIOR_DEFAULT_ACTIVATION.
     expect(EXTERIOR_CELL_STREAMING_RELEASE_ID).toBe("udt-fixture-exterior-cells");
