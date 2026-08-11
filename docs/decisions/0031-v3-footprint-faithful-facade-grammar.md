@@ -164,15 +164,48 @@ at all about appearance.
 untouched by this work. The canary graph and the promoted activation set continue
 to serve V2 this cycle; re-pointing them is T026.
 
-## Not yet decided
+## Consequences — recorded after P5 and P6 completed (2026-08-11)
 
-- **`V3_QUALITY_BUDGETS` is declared but NOT cleared.** The raise from 75,000 to
-  200,000 triangles is a named gate change and is only legitimate once measured
-  frame time has been re-checked at the higher count. That re-check has not been
-  run. `BLOCK835_QUALITY_BUDGETS` is untouched and remains the gate for every
-  shipped asset.
-- **No V3 package exists.** The successor package, its census gates, its
-  double-run replay and its committed inventory are not built.
-- **The Blender re-proof and renders have not been run.** Blender MCP dropped its
-  connection during the authoring phase. The TypeScript volume identity is
-  interim evidence and does not substitute for an independent mesh measurement.
+**The budget raise is now cleared, with a stated limit.** Blender re-proved the
+volume identity on all 28 shipped meshes (worst relative deviation 1.88e-7
+against a 1e-6 tolerance) and the shipped package's worst asset uses 51.5 % of
+the raised triangle budget. A frame-time run on the served wave shows no
+regression (median 8.3 ms, p95 10.2 ms against 16.7 / 25). **That run measures
+V2, because V2 is what the canary still serves.** `V3_QUALITY_BUDGETS`
+therefore gates the V3 package's own build and nothing that renders; a rendered
+V3 frame-time measurement is T026's, and this ADR claims none.
+
+**Decision 4 (reject, don't repair) has a manifest cost, and it is paid.** Five
+of fourteen buildings refuse their tier offset and ship `setbacks` as `absent`
+with the cause attached. The V2 assembler asserted a lone `generated` truth
+tier; the V3 assembler path accepts `absent` for that one kind and that one
+cause only. Refusing to carry the refusal into the manifest would have been the
+dishonesty the decision exists to prevent.
+
+**Decision 10 is now measured, not just stated.** Worst per-vertex shape
+deviation against the sourced polygon is 0.68 mm against a 50 mm tolerance,
+with whole-asset placement drift reported separately at 0.28 mm. Both remain
+pipeline tolerances and neither says anything about the real building.
+
+**A gate that has never run is not a gate.** The P5 script's up-axis assertion
+was written while Blender MCP was down; executing it showed it tested whether a
+building is taller than it is wide, not what axis the file uses. It was replaced
+with an uncompensated coordinate diff carrying an explicit Z-up control column
+(worst deviation 0.000 m, minimum control deviation 15.455 m). Future authoring
+scripts should not be committed as evidence-producing until they have produced
+evidence.
+
+**Decision 11 holds unchanged.** `src/runtime/exterior-default-activation.ts`,
+the canary release graph and every pre-existing committed release tree are
+byte-identical to the task's base commit. This package is added beside them.
+
+## Still not decided
+
+- **Whether V3 should serve at all, and when.** Nothing points at the V3
+  package. That is T026, and it requires the rendered frame-time run this cycle
+  could not produce.
+- **Whether a drawn style class is acceptable in a product surface.** The ESB
+  shipping `curtain-cool` is faithful to the grammar and disclosed by every
+  asset's uncertainty statement, but it is visibly unlike the real building. If
+  V3 is ever served, that tension needs an explicit product decision rather than
+  reliance on a metadata field.
