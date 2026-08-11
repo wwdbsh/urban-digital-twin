@@ -120,6 +120,11 @@ export const EXTERIOR_WAVE_DOMAIN_REGISTRY: readonly {
     ledgerIdDomain: "udt.southern-remainder.subset-ledger-id.v1",
     baseIdentityDomain: "udt.southern-remainder.subset-base-identity.v1",
   },
+  {
+    waveId: "central-upper-manhattan",
+    ledgerIdDomain: "udt.central-upper-manhattan.subset-ledger-id.v1",
+    baseIdentityDomain: "udt.central-upper-manhattan.subset-base-identity.v1",
+  },
 ];
 
 /**
