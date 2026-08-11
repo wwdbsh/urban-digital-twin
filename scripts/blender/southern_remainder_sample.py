@@ -39,7 +39,29 @@ import os
 import bpy
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-WORK_ROOT = os.path.join(ROOT, "artifacts", "southern-remainder-20260812", "blender")
+
+# WHICH release of wave w03 this pass measures.
+#
+# The default is the T017 CANARY, unchanged, so every existing invocation and
+# every committed record it produced still mean exactly what they meant. T018
+# promoted a curated SUCCESSOR whose assets are a different, disjoint set of
+# cells, and the same pass has to be able to measure those bytes without a
+# second copy of 300 lines that would drift from this one. The variant is
+# therefore an ENVIRONMENT SELECTION rather than a fork, and the release id it
+# writes into the report is selected with it — a report that measured the
+# successor's assets while naming the canary would defeat the Node writer's
+# cross-check against the committed inventory, which is the check that makes
+# this pass about shipped bytes at all.
+VARIANT = os.environ.get("UDT_W03_VARIANT", "canary")
+if VARIANT not in ("canary", "p1"):
+    raise SystemExit("UDT_W03_VARIANT must be 'canary' or 'p1'")
+WORK_DIRECTORY = "southern-remainder-20260812" if VARIANT == "canary" else "southern-remainder-20260812-p1"
+RELEASE_ID = (
+    "manhattan-southern-remainder-cells-20260812"
+    if VARIANT == "canary"
+    else "manhattan-southern-remainder-cells-20260812-p1"
+)
+WORK_ROOT = os.path.join(ROOT, "artifacts", WORK_DIRECTORY, "blender")
 INPUT_DIR = os.path.join(WORK_ROOT, "inputs")
 RENDER_DIR = os.path.join(WORK_ROOT, "renders")
 REPORT_PATH = os.path.join(WORK_ROOT, "inspection.json")
@@ -270,7 +292,7 @@ def run():
     samples = [inspect(entry) for entry in entries]
     report = {
         "schemaVersion": "1.0",
-        "releaseId": "manhattan-southern-remainder-cells-20260812",
+        "releaseId": RELEASE_ID,
         "scene": "udt_t017_southern_remainder_sample",
         "sampleCount": len(samples),
         "tierCollapseSampleCount": sum(1 for sample in samples if sample["setbacksAbsent"]),

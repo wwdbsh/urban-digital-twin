@@ -4,6 +4,7 @@ import {
   EXTERIOR_DEFAULT_ACTIVATIONS,
   LOWER_MANHATTAN_EXTERIOR_ACTIVATION,
   MIDTOWN_CORE_EXTERIOR_ACTIVATION,
+  SOUTHERN_REMAINDER_EXTERIOR_ACTIVATION,
   exteriorDefaultActivations,
   exteriorRolledBackReleaseNotice,
   exteriorUnavailableDetail,
@@ -60,6 +61,18 @@ const LOWER_MANHATTAN_CANARY_RELEASE_ID = "manhattan-lower-manhattan-cells-20260
  * for testing here — it is what this wave genuinely rolls back to.
  */
 const LOWER_MANHATTAN_ROLLED_BACK: ExteriorDefaultActivationRecord = LOWER_MANHATTAN ? LOWER_MANHATTAN.predecessor : LOWER_MANHATTAN_EXTERIOR_ACTIVATION;
+const SOUTHERN_REMAINDER = SOUTHERN_REMAINDER_EXTERIOR_ACTIVATION.enabled ? SOUTHERN_REMAINDER_EXTERIOR_ACTIVATION : null;
+const SOUTHERN_REMAINDER_P1_RELEASE_ID = "manhattan-southern-remainder-cells-20260812-p1";
+const SOUTHERN_REMAINDER_CANARY_RELEASE_ID = "manhattan-southern-remainder-cells-20260812";
+/**
+ * The Southern-remainder rollback this build ships: back to BASE MASSING.
+ *
+ * Same shape and same reason as Lower-Manhattan's. Wave w03 has never been
+ * promoted in any form — its only other release is the T017 canary, pinned but
+ * never a default — so the disabled predecessor is what this wave genuinely
+ * rolls back to rather than a degenerate shape kept for testing.
+ */
+const SOUTHERN_REMAINDER_ROLLED_BACK: ExteriorDefaultActivationRecord = SOUTHERN_REMAINDER ? SOUTHERN_REMAINDER.predecessor : SOUTHERN_REMAINDER_EXTERIOR_ACTIVATION;
 
 /** A second, independent wave, used only to prove the per-wave rules. */
 const SECOND_WAVE: ExteriorDefaultActivationRecord = {
@@ -88,18 +101,60 @@ function matrix(): { override: ExteriorStreamingOverride; explicitReleaseId: str
 }
 
 describe("the promoted set", () => {
-  it("orders Block 835, Midtown-core, then Lower-Manhattan, from the records the build exports", () => {
-    expect(EXTERIOR_DEFAULT_ACTIVATIONS).toHaveLength(3);
+  it("orders Block 835, Midtown-core, Lower-Manhattan, then Southern-remainder, from the records the build exports", () => {
+    expect(EXTERIOR_DEFAULT_ACTIVATIONS).toHaveLength(4);
     expect(EXTERIOR_DEFAULT_ACTIVATIONS[0]).toBe(EXTERIOR_DEFAULT_ACTIVATION);
     expect(EXTERIOR_DEFAULT_ACTIVATIONS[1]).toBe(MIDTOWN_CORE_EXTERIOR_ACTIVATION);
     expect(EXTERIOR_DEFAULT_ACTIVATIONS[2]).toBe(LOWER_MANHATTAN_EXTERIOR_ACTIVATION);
+    expect(EXTERIOR_DEFAULT_ACTIVATIONS[3]).toBe(SOUTHERN_REMAINDER_EXTERIOR_ACTIVATION);
     // Composition, not a second copy: a build that swapped a record orders the
     // swapped record rather than a stale duplicate of the promoted one. Each
     // parameter is independent, which is what makes a per-wave rollback one edit.
-    expect(exteriorDefaultActivations(ROLLED_BACK)).toEqual([ROLLED_BACK, MIDTOWN_CORE_EXTERIOR_ACTIVATION, LOWER_MANHATTAN_EXTERIOR_ACTIVATION]);
-    expect(exteriorDefaultActivations(EXTERIOR_DEFAULT_ACTIVATION, MIDTOWN_ROLLED_BACK)).toEqual([EXTERIOR_DEFAULT_ACTIVATION, MIDTOWN_ROLLED_BACK, LOWER_MANHATTAN_EXTERIOR_ACTIVATION]);
+    expect(exteriorDefaultActivations(ROLLED_BACK)).toEqual([ROLLED_BACK, MIDTOWN_CORE_EXTERIOR_ACTIVATION, LOWER_MANHATTAN_EXTERIOR_ACTIVATION, SOUTHERN_REMAINDER_EXTERIOR_ACTIVATION]);
+    expect(exteriorDefaultActivations(EXTERIOR_DEFAULT_ACTIVATION, MIDTOWN_ROLLED_BACK)).toEqual([EXTERIOR_DEFAULT_ACTIVATION, MIDTOWN_ROLLED_BACK, LOWER_MANHATTAN_EXTERIOR_ACTIVATION, SOUTHERN_REMAINDER_EXTERIOR_ACTIVATION]);
     expect(exteriorDefaultActivations(EXTERIOR_DEFAULT_ACTIVATION, MIDTOWN_CORE_EXTERIOR_ACTIVATION, LOWER_MANHATTAN_ROLLED_BACK))
-      .toEqual([EXTERIOR_DEFAULT_ACTIVATION, MIDTOWN_CORE_EXTERIOR_ACTIVATION, LOWER_MANHATTAN_ROLLED_BACK]);
+      .toEqual([EXTERIOR_DEFAULT_ACTIVATION, MIDTOWN_CORE_EXTERIOR_ACTIVATION, LOWER_MANHATTAN_ROLLED_BACK, SOUTHERN_REMAINDER_EXTERIOR_ACTIVATION]);
+    expect(exteriorDefaultActivations(EXTERIOR_DEFAULT_ACTIVATION, MIDTOWN_CORE_EXTERIOR_ACTIVATION, LOWER_MANHATTAN_EXTERIOR_ACTIVATION, SOUTHERN_REMAINDER_ROLLED_BACK))
+      .toEqual([EXTERIOR_DEFAULT_ACTIVATION, MIDTOWN_CORE_EXTERIOR_ACTIVATION, LOWER_MANHATTAN_EXTERIOR_ACTIVATION, SOUTHERN_REMAINDER_ROLLED_BACK]);
+  });
+
+  /**
+   * A withdrawal and a promotion of the same release cannot coexist in one set.
+   *
+   * `resolveExteriorActivationSet` states a PRECEDENCE for this — a record that
+   * publishes X governs X ahead of a record that withdrew X — and that precedence
+   * exists so the resolution stays deterministic if it ever happened. It is not a
+   * licence for it to happen: a build where one wave withdrew a release another
+   * wave is actively serving would refuse promotion-era links into bytes it is
+   * simultaneously rendering, and no reader of the records could tell which
+   * statement was the intended one. The precedence keeps the resolver total; this
+   * invariant keeps the SET honest, and the two are different jobs.
+   */
+  it("never lets one record withdraw a release another enabled record publishes", () => {
+    const published = new Map<string, number>();
+    EXTERIOR_DEFAULT_ACTIVATIONS.forEach((record, index) => {
+      if (record.enabled) published.set(record.releaseId, index);
+    });
+    const collisions: string[] = [];
+    EXTERIOR_DEFAULT_ACTIVATIONS.forEach((record, index) => {
+      const withdrawn = record.rolledBackReleaseId ?? null;
+      if (withdrawn === null) return;
+      const publisher = published.get(withdrawn);
+      if (publisher !== undefined) collisions.push(`record ${index} withdrew ${withdrawn}, which record ${publisher} publishes`);
+      // A record may never withdraw its OWN release either, which the
+      // per-record suite pins; restated at set level so one loop covers both.
+      if (record.enabled && withdrawn === record.releaseId) collisions.push(`record ${index} withdrew its own release ${withdrawn}`);
+    });
+    expect(collisions).toEqual([]);
+
+    // The invariant is checkable rather than vacuous: a set that DOES collide is
+    // detected by the same loop.
+    const colliding = [
+      EXTERIOR_DEFAULT_ACTIVATION,
+      { enabled: false as const, releaseId: null, rolledBackReleaseId: "manhattan-exterior-cells-20260811-v3" },
+    ];
+    const publishedIds = new Set(colliding.filter((record) => record.enabled).map((record) => record.releaseId));
+    expect(colliding.some((record) => record.rolledBackReleaseId !== null && record.rolledBackReleaseId !== undefined && publishedIds.has(record.rolledBackReleaseId))).toBe(true);
   });
 
   it("promotes disjoint cell ids, so no wave can claim another wave's cell", () => {
@@ -315,53 +370,55 @@ describe("per-wave rules once more than one wave is promoted", () => {
 describe("the promoted set as this build actually ships it", () => {
   const base = { fallbackReleaseId: FIXTURE_RELEASE_ID } as const;
 
-  it("stays completely quiet in a fixture-mode session, with three records promoted", () => {
+  it("stays completely quiet in a fixture-mode session, with four records promoted", () => {
     // No base identity to anchor exterior cells to, so neither wave attempts a
     // load and neither complains about not loading. Promoting a second wave
     // must not turn a fixture session into a failing one.
     const set = resolveExteriorActivationSet({ ...base, override: null, explicitReleaseId: null, activeRealBaseReleaseId: null });
     expect(set.streaming).toBe(false);
     expect(set.targets).toEqual([]);
-    expect(set.releases.map((entry) => entry.reason)).toEqual(["no-real-base", "no-real-base", "no-real-base"]);
+    expect(set.releases.map((entry) => entry.reason)).toEqual(["no-real-base", "no-real-base", "no-real-base", "no-real-base"]);
     expect(exteriorUnavailableStatements({ set, override: null, activeRealBaseReleaseId: null, explicitReleaseId: null })).toEqual([]);
   });
 
-  it("streams all three promoted waves over a real base, each gated by its own record", () => {
+  it("streams all four promoted waves over a real base, each gated by its own record", () => {
     const set = resolveExteriorActivationSet({ ...base, override: null, explicitReleaseId: null, activeRealBaseReleaseId: CITYWIDE_BASE });
     expect(set.targets.map((target) => target.releaseId)).toEqual([
       "manhattan-exterior-cells-20260811-v3",
       MIDTOWN_V3_RELEASE_ID,
       LOWER_MANHATTAN_P1_RELEASE_ID,
+      SOUTHERN_REMAINDER_P1_RELEASE_ID,
     ]);
     expect(set.targets.every((target) => target.promotedDefault)).toBe(true);
     expect(set.targets[0]!.record).toBe(EXTERIOR_DEFAULT_ACTIVATION);
     expect(set.targets[1]!.record).toBe(MIDTOWN_CORE_EXTERIOR_ACTIVATION);
     expect(set.targets[2]!.record).toBe(LOWER_MANHATTAN_EXTERIOR_ACTIVATION);
+    expect(set.targets[3]!.record).toBe(SOUTHERN_REMAINDER_EXTERIOR_ACTIVATION);
     // The URL still serialises nothing: a default-on session's links stay
     // reproducible against whatever the build promotes.
     expect(set.primaryReleaseId).toBe("manhattan-exterior-cells-20260811-v3");
   });
 
   it("narrows to exactly the named release, and off kills every wave", () => {
-    for (const releaseId of ["manhattan-exterior-cells-20260811-v3", MIDTOWN_V3_RELEASE_ID, LOWER_MANHATTAN_P1_RELEASE_ID]) {
+    for (const releaseId of ["manhattan-exterior-cells-20260811-v3", MIDTOWN_V3_RELEASE_ID, LOWER_MANHATTAN_P1_RELEASE_ID, SOUTHERN_REMAINDER_P1_RELEASE_ID]) {
       const set = resolveExteriorActivationSet({ ...base, override: "on", explicitReleaseId: releaseId, activeRealBaseReleaseId: CITYWIDE_BASE });
       expect(set.targets.map((target) => target.releaseId)).toEqual([releaseId]);
       expect(set.targets[0]!.promotedDefault).toBe(true);
     }
     const off = resolveExteriorActivationSet({ ...base, override: "off", explicitReleaseId: null, activeRealBaseReleaseId: CITYWIDE_BASE });
     expect(off.streaming).toBe(false);
-    expect(off.releases.map((entry) => entry.streaming)).toEqual([false, false, false]);
+    expect(off.releases.map((entry) => entry.streaming)).toEqual([false, false, false, false]);
   });
 
   it("re-enabling from off returns to the FULL default set, pinning nothing", () => {
     // The toggle asks whether the release it would re-pin is a promoted one; if
     // it is, it clears the override entirely rather than pinning that release,
-    // which under the exteriorCells rule would have narrowed a three-wave
+    // which under the exteriorCells rule would have narrowed a four-wave
     // session down to one wave every time a user pressed Disable and then Enable.
     const off = resolveExteriorActivationSet({ ...base, override: "off", explicitReleaseId: null, activeRealBaseReleaseId: CITYWIDE_BASE });
     expect(restoresPromotedDefault({ targetReleaseId: off.primaryReleaseId, activeRealBaseReleaseId: CITYWIDE_BASE })).toBe(true);
     const restored = resolveExteriorActivationSet({ ...base, override: null, explicitReleaseId: null, activeRealBaseReleaseId: CITYWIDE_BASE });
-    expect(restored.targets).toHaveLength(3);
+    expect(restored.targets).toHaveLength(4);
     // A genuinely explicit fixture session is NOT a promoted default, so it
     // keeps pinning its own release exactly as before.
     expect(restoresPromotedDefault({ targetReleaseId: FIXTURE_RELEASE_ID, activeRealBaseReleaseId: CITYWIDE_BASE })).toBe(false);
@@ -377,9 +434,11 @@ describe("the promoted set as this build actually ships it", () => {
       "manhattan-exterior-cells-20260811",
       MIDTOWN_V3_RELEASE_ID,
       LOWER_MANHATTAN_P1_RELEASE_ID,
+      SOUTHERN_REMAINDER_P1_RELEASE_ID,
     ]);
     expect(back.targets[1]!.record).toBe(MIDTOWN_CORE_EXTERIOR_ACTIVATION);
     expect(back.targets[2]!.record).toBe(LOWER_MANHATTAN_EXTERIOR_ACTIVATION);
+    expect(back.targets[3]!.record).toBe(SOUTHERN_REMAINDER_EXTERIOR_ACTIVATION);
     // The withdrawn V3 link fails closed, by name, and only for Block 835.
     const refused = resolveExteriorActivationSet({ ...base, override: "on", explicitReleaseId: "manhattan-exterior-cells-20260811-v3", activeRealBaseReleaseId: CITYWIDE_BASE, records: rolledBack });
     expect(refused.streaming).toBe(false);
@@ -391,6 +450,7 @@ describe("the promoted set as this build actually ships it", () => {
       "manhattan-exterior-cells-20260811-v3",
       MIDTOWN_V3_RELEASE_ID,
       LOWER_MANHATTAN_P1_RELEASE_ID,
+      SOUTHERN_REMAINDER_P1_RELEASE_ID,
     ]);
   });
 
@@ -403,6 +463,7 @@ describe("the promoted set as this build actually ships it", () => {
       "manhattan-exterior-cells-20260811-v3",
       MIDTOWN_V2_RELEASE_ID,
       LOWER_MANHATTAN_P1_RELEASE_ID,
+      SOUTHERN_REMAINDER_P1_RELEASE_ID,
     ]);
     expect(set.streaming).toBe(true);
     // The withdrawn successor's own bookmark is refused, by its own record,
@@ -424,10 +485,11 @@ describe("the promoted set as this build actually ships it", () => {
       "manhattan-exterior-cells-20260811-v3",
       MIDTOWN_V3_RELEASE_ID,
       LOWER_MANHATTAN_P1_RELEASE_ID,
+      SOUTHERN_REMAINDER_P1_RELEASE_ID,
     ]);
   });
 
-  it("rolls the Lower-Manhattan wave back to BASE MASSING without withdrawing the other two", () => {
+  it("rolls the Lower-Manhattan wave back to BASE MASSING without withdrawing the other three", () => {
     // The rollback rehearsal ADR 0034 promotion owes, run through the record's
     // own injection seam rather than by editing the module.
     const rolledBack = exteriorDefaultActivations(EXTERIOR_DEFAULT_ACTIVATION, MIDTOWN_CORE_EXTERIOR_ACTIVATION, LOWER_MANHATTAN_ROLLED_BACK);
@@ -437,6 +499,7 @@ describe("the promoted set as this build actually ships it", () => {
     expect(set.targets.map((target) => target.releaseId)).toEqual([
       "manhattan-exterior-cells-20260811-v3",
       MIDTOWN_V3_RELEASE_ID,
+      SOUTHERN_REMAINDER_P1_RELEASE_ID,
     ]);
     expect(set.streaming).toBe(true);
     expect(set.releases[2]!.streaming).toBe(false);
@@ -455,6 +518,7 @@ describe("the promoted set as this build actually ships it", () => {
     // ...and so are the other two waves' links.
     expect(exteriorRolledBackReleaseNotice("manhattan-exterior-cells-20260811-v3", rolledBack)).toBeNull();
     expect(exteriorRolledBackReleaseNotice(MIDTOWN_V3_RELEASE_ID, rolledBack)).toBeNull();
+    expect(exteriorRolledBackReleaseNotice(SOUTHERN_REMAINDER_P1_RELEASE_ID, rolledBack)).toBeNull();
 
     // Exactly ONE statement, naming exactly this wave: the reader can tell which
     // area went back to base without guessing.
@@ -464,12 +528,61 @@ describe("the promoted set as this build actually ships it", () => {
     expect(statements[0]).toContain("not active in this build");
     expect(statements[0]).toContain(`base massing from release ${CITYWIDE_BASE} is shown`);
 
-    // Forward again restores exactly the shipped three-wave set.
+    // Forward again restores exactly the shipped four-wave set.
     const forward = resolveExteriorActivationSet({ ...base, override: null, explicitReleaseId: null, activeRealBaseReleaseId: CITYWIDE_BASE });
     expect(forward.targets.map((target) => target.releaseId)).toEqual([
       "manhattan-exterior-cells-20260811-v3",
       MIDTOWN_V3_RELEASE_ID,
       LOWER_MANHATTAN_P1_RELEASE_ID,
+      SOUTHERN_REMAINDER_P1_RELEASE_ID,
+    ]);
+  });
+
+  it("rolls the Southern-remainder wave back to BASE MASSING without withdrawing the other three", () => {
+    // The rollback rehearsal ADR 0035's promotion owes, run through the record's
+    // own injection seam rather than by editing the module.
+    const rolledBack = exteriorDefaultActivations(EXTERIOR_DEFAULT_ACTIVATION, MIDTOWN_CORE_EXTERIOR_ACTIVATION, LOWER_MANHATTAN_EXTERIOR_ACTIVATION, SOUTHERN_REMAINDER_ROLLED_BACK);
+    const set = resolveExteriorActivationSet({ ...base, override: null, explicitReleaseId: null, activeRealBaseReleaseId: CITYWIDE_BASE, records: rolledBack });
+    // Wave w03's area returns to base massing — there is no older w03 release to
+    // fall back to — while the other three waves keep streaming untouched.
+    expect(set.targets.map((target) => target.releaseId)).toEqual([
+      "manhattan-exterior-cells-20260811-v3",
+      MIDTOWN_V3_RELEASE_ID,
+      LOWER_MANHATTAN_P1_RELEASE_ID,
+    ]);
+    expect(set.streaming).toBe(true);
+    expect(set.releases[3]!.streaming).toBe(false);
+    expect(set.releases[3]!.reason).toBe("not-promoted");
+
+    // The withdrawn opt-in link is refused BY NAME, in the same one-record swap.
+    const refused = resolveExteriorActivationSet({ ...base, override: "on", explicitReleaseId: SOUTHERN_REMAINDER_P1_RELEASE_ID, activeRealBaseReleaseId: CITYWIDE_BASE, records: rolledBack });
+    expect(refused.streaming).toBe(false);
+    expect(refused.releases[0]!.reason).toBe("rolled-back-release");
+    expect(exteriorRolledBackReleaseNotice(SOUTHERN_REMAINDER_P1_RELEASE_ID, rolledBack))
+      .toContain(`${SOUTHERN_REMAINDER_P1_RELEASE_ID} was rolled back in this build`);
+
+    // The T017 CANARY is untouched by this rollback. It was never promoted, so
+    // its opt-in link is not a promotion-era bookmark and stays honoured.
+    expect(exteriorRolledBackReleaseNotice(SOUTHERN_REMAINDER_CANARY_RELEASE_ID, rolledBack)).toBeNull();
+    // ...and so are the other three waves' links.
+    expect(exteriorRolledBackReleaseNotice("manhattan-exterior-cells-20260811-v3", rolledBack)).toBeNull();
+    expect(exteriorRolledBackReleaseNotice(MIDTOWN_V3_RELEASE_ID, rolledBack)).toBeNull();
+    expect(exteriorRolledBackReleaseNotice(LOWER_MANHATTAN_P1_RELEASE_ID, rolledBack)).toBeNull();
+
+    // Exactly ONE statement, naming exactly this wave.
+    const statements = exteriorUnavailableStatements({ set, override: null, activeRealBaseReleaseId: CITYWIDE_BASE, explicitReleaseId: null });
+    expect(statements).toHaveLength(1);
+    expect(statements[0]).toContain(SOUTHERN_REMAINDER_P1_RELEASE_ID);
+    expect(statements[0]).toContain("not active in this build");
+    expect(statements[0]).toContain(`base massing from release ${CITYWIDE_BASE} is shown`);
+
+    // Forward again restores exactly the shipped four-wave set.
+    const forward = resolveExteriorActivationSet({ ...base, override: null, explicitReleaseId: null, activeRealBaseReleaseId: CITYWIDE_BASE });
+    expect(forward.targets.map((target) => target.releaseId)).toEqual([
+      "manhattan-exterior-cells-20260811-v3",
+      MIDTOWN_V3_RELEASE_ID,
+      LOWER_MANHATTAN_P1_RELEASE_ID,
+      SOUTHERN_REMAINDER_P1_RELEASE_ID,
     ]);
   });
 
@@ -480,7 +593,7 @@ describe("the promoted set as this build actually ships it", () => {
     // shape change.
     const midtownDark = exteriorDefaultActivations(EXTERIOR_DEFAULT_ACTIVATION, ROLLED_BACK_MIDTOWN_TO_BASE);
     const set = resolveExteriorActivationSet({ ...base, override: null, explicitReleaseId: null, activeRealBaseReleaseId: CITYWIDE_BASE, records: midtownDark });
-    expect(set.targets.map((target) => target.releaseId)).toEqual(["manhattan-exterior-cells-20260811-v3", LOWER_MANHATTAN_P1_RELEASE_ID]);
+    expect(set.targets.map((target) => target.releaseId)).toEqual(["manhattan-exterior-cells-20260811-v3", LOWER_MANHATTAN_P1_RELEASE_ID, SOUTHERN_REMAINDER_P1_RELEASE_ID]);
     const statements = exteriorUnavailableStatements({ set, override: null, activeRealBaseReleaseId: CITYWIDE_BASE, explicitReleaseId: null });
     expect(statements).toHaveLength(1);
     expect(statements[0]).toContain(MIDTOWN_V3_RELEASE_ID);

@@ -1,0 +1,1148 @@
+{
+  "schemaVersion": "1.0",
+  "releaseId": "manhattan-southern-remainder-cells-20260812-p1",
+  "servedBundle": {
+    "previewBase": "http://localhost:4188",
+    "indexHtmlChecksumSha256": "03ea4d5e8801a1fd30138bc476d020e7fd1f913e3adab1258a985fc95bc33f8b",
+    "localDistIndexHtmlChecksumSha256": "03ea4d5e8801a1fd30138bc476d020e7fd1f913e3adab1258a985fc95bc33f8b",
+    "matchesLocalDist": true,
+    "entryScriptPath": "/assets/index-BLRu1W7M.js",
+    "entryScriptByteSize": 4885717,
+    "entryScriptChecksumSha256": "c09261d2093c3a364c249ccf62682d89e7003a3c65cb914900ea5999b83688be",
+    "entryScriptNamesRelease": true,
+    "statement": "Measured before any capture. The served index.html is byte-identical to this repository's dist/index.html and the served entry script contains this release id, so every reading below is from THIS build. Any of those failing aborts the run rather than being recorded as a caveat."
+  },
+  "capAtMeasurement": {
+    "maxCacheEntries": 512,
+    "maxCachedBytes": 268435456,
+    "statement": "THE RAISED CAP WAS IN FORCE FOR EVERY READING BELOW. ADR 0034 admissible response 1 raised maxCacheEntries from 256 to 512 before this measurement was taken, and the value here is read from EXTERIOR_RUNTIME_BUDGETS in the same tree the served bundle was built from rather than typed into this record, so a reading taken at the old cap cannot be presented as a reading at the new one. maxCachedBytes deliberately did not move."
+  },
+  "note": "T018 promotion acceptance. The PROMOTED DEFAULT COMPOSITION — Block 835 V3, Midtown-core V3, the Lower-Manhattan P1 successor and the Southern-remainder P1 successor streaming together over the pinned manhattan-citywide-20260804 base — measured in the production preview build by the shipping CesiumJS renderer, with Chrome's vsync and frame-rate limit disabled, at the RAISED 512-entry cache cap. ADR 0035 precondition (c) asked for an uncapped measurement with GPU memory named; `cappedControl` is the reading that proves this run is uncapped and `gpuTextureArithmetic` is COMPUTED and is not measured anywhere in this file.",
+  "promotedReleaseIds": [
+    "manhattan-exterior-cells-20260811-v3",
+    "manhattan-midtown-core-cells-20260811-v3",
+    "manhattan-lower-manhattan-cells-20260812-p1",
+    "manhattan-southern-remainder-cells-20260812-p1"
+  ],
+  "baseReleaseId": "manhattan-citywide-20260804",
+  "capturedWith": {
+    "viewport": {
+      "width": 1280,
+      "height": 800,
+      "deviceScaleFactor": 1
+    },
+    "previewBase": "http://localhost:4188",
+    "remoteDebuggingPort": 9333,
+    "settleFrames": 180,
+    "measuredFrames": 240,
+    "repeats": 3,
+    "chromeFlags": [
+      "--disable-gpu-vsync",
+      "--disable-frame-rate-limit"
+    ]
+  },
+  "frameBudgets": {
+    "exploration": {
+      "p50Milliseconds": 16.7,
+      "p95Milliseconds": 25
+    },
+    "inspection": {
+      "p50Milliseconds": 33.3,
+      "p95Milliseconds": 45
+    }
+  },
+  "cappedControl": {
+    "stationId": "nomad-skyline",
+    "remoteDebuggingPort": 9334,
+    "frameMilliseconds": {
+      "frameCount": 240,
+      "meanMilliseconds": 8.316250000397364,
+      "p50Milliseconds": 8.299999952316284,
+      "p95Milliseconds": 9.5,
+      "p99Milliseconds": 10.5,
+      "maximumMilliseconds": 12.299999952316284,
+      "minimumMilliseconds": 5.5
+    },
+    "statement": "The same station in a second Chrome launched WITHOUT the uncapping flags. Its p50 is the display's present interval; the uncapped run's p50 sitting far below it is what makes the uncapped numbers a headroom measurement rather than a floor reading."
+  },
+  "stillCapture": {
+    "chromeHiddenForStill": true,
+    "css": ".exploration-notice, .runtime-note, .inspector, nav, header, footer { display: none !important; }",
+    "statement": "The app's overlay chrome and fallback notices are hidden for the SCREENSHOT ONLY, injected after every timed frame was rendered with them on screen. No measured frame had less work in it than a real session's."
+  },
+  "runtimeBudgets": {
+    "maxCacheEntries": 512,
+    "maxCachedBytes": 268435456,
+    "maxConcurrentRequests": 4
+  },
+  "gpuTextureArithmetic": {
+    "basis": "computed-not-measured",
+    "statement": "Decoded-plus-mipmapped texture memory for the shipped subset, computed as width * height * 4 * 1.33 * imageCount from the emitted bytes. GPU texture memory was NOT measured: no instrument reachable from this session reports texture VRAM, and usedJSHeapSize does not stand in for it. This is an upper bound on an all-resident scene and it is arithmetic.",
+    "assetCount": 179,
+    "imageCount": 536,
+    "tileWidthPixels": 128,
+    "tileHeightPixels": 128,
+    "bytesPerTexel": 4,
+    "mipChainFactor": 1.33,
+    "decodedBytes": 35127296,
+    "decodedMebibytes": 33.5,
+    "withMipsBytes": 46719303.68,
+    "withMipsMebibytes": 44.555,
+    "deduplicatedAcrossModels": false,
+    "otherPromotedWavesTextureBytes": null,
+    "otherPromotedWavesNote": "The Block 835 V3 and Midtown-core V3 waves are TEXTURE-FREE releases and contribute nothing. The Lower-Manhattan P1 wave is NOT: it is textured LOD 0 over 71 assets, and its own T016 record computes its share separately. The figure above is THIS release's share alone and must not be read as the whole promoted composition's; `promotedCompositionNote` states the sum.",
+    "promotedCompositionNote": "Two of the four promoted waves carry tiles. Adding this release's computed share to the T016 record's gives the promoted composition's computed upper bound; both are arithmetic and neither is a measurement."
+  },
+  "cacheResidency": {
+    "basis": "derived-from-network-not-read-from-the-cache-counter",
+    "statement": "One fetched GLB is one LRU entry, so the entry count is the count of GLB responses the session completed and the byte figure is their encoded size. The in-app cache counter is only published to the DOM in a VITE_BLOCK835_PROBE build; this measurement is against the ordinary production preview a user gets, so residency is derived from the fetches instead.",
+    "perRun": [
+      {
+        "stationId": "nomad-facade",
+        "repeatIndex": 0,
+        "entries": 411,
+        "bytes": 107614358
+      },
+      {
+        "stationId": "nomad-skyline",
+        "repeatIndex": 0,
+        "entries": 420,
+        "bytes": 105330287
+      },
+      {
+        "stationId": "crosswave-wide",
+        "repeatIndex": 0,
+        "entries": 420,
+        "bytes": 105330287
+      },
+      {
+        "stationId": "fidi-facade",
+        "repeatIndex": 0,
+        "entries": 420,
+        "bytes": 108545837
+      },
+      {
+        "stationId": "nomad-facade",
+        "repeatIndex": 1,
+        "entries": 412,
+        "bytes": 107666545
+      },
+      {
+        "stationId": "nomad-skyline",
+        "repeatIndex": 1,
+        "entries": 412,
+        "bytes": 104450995
+      },
+      {
+        "stationId": "crosswave-wide",
+        "repeatIndex": 1,
+        "entries": 420,
+        "bytes": 105330287
+      },
+      {
+        "stationId": "fidi-facade",
+        "repeatIndex": 1,
+        "entries": 420,
+        "bytes": 108545837
+      },
+      {
+        "stationId": "nomad-facade",
+        "repeatIndex": 2,
+        "entries": 413,
+        "bytes": 107782226
+      },
+      {
+        "stationId": "nomad-skyline",
+        "repeatIndex": 2,
+        "entries": 420,
+        "bytes": 105330287
+      },
+      {
+        "stationId": "crosswave-wide",
+        "repeatIndex": 2,
+        "entries": 420,
+        "bytes": 105330287
+      },
+      {
+        "stationId": "fidi-facade",
+        "repeatIndex": 2,
+        "entries": 420,
+        "bytes": 108545837
+      }
+    ],
+    "worstObserved": {
+      "stationId": "nomad-skyline",
+      "repeatIndex": 0,
+      "entries": 420,
+      "bytes": 105330287
+    },
+    "maxCacheEntries": 512,
+    "maxCachedBytes": 268435456,
+    "withinEntryBudget": true,
+    "withinByteBudget": true,
+    "releaseTimeDerivation": {
+      "maxCacheEntries": 512,
+      "promotedAssetEntriesBeforeThisWave": 255,
+      "thisWaveAssetEntries": 179,
+      "residentAssetEntries": 434,
+      "headroomForFurtherWaves": 78,
+      "note": "The RELEASE-TIME derivation counts GLB FILES ON DISK: 28 for Block 835 V3, which ships two LODs per building, 156 for Midtown-core V3, 71 for Lower-Manhattan P1 and 179 for this release. At runtime a session fetches fewer, because only the selected LOD is requested — the T016 record measured 14 Block 835 GLBs against 28 on disk — so the disk derivation is CONSERVATIVE rather than wrong, and `worstObserved` below is what this session actually resident. An immutable release must be sized against the release-time number, which is why both are recorded."
+    }
+  },
+  "stations": [
+    {
+      "stationId": "nomad-facade",
+      "profile": "inspection",
+      "note": "Inside the curated w03 block at the closest range the navigation URL can express, on the inspection profile, looking NORTH-EAST at a shallow pitch. Shallow and low on purpose: facades are vertical, and the T017 evidence records a station that looked at rooftops and produced byte-identical stills. Textured LOD 0 facades of cells 385, 386 and 387 stand directly beside untextured base massing of the cells this release tombstones, which is the composition a user actually sees.",
+      "pose": {
+        "lon": -73.9925,
+        "lat": 40.7458,
+        "height": 150,
+        "heading": 65,
+        "pitch": -4,
+        "roll": 0
+      },
+      "repeats": 3,
+      "medianOfRunP50Milliseconds": 2.600000023841858,
+      "medianOfRunP95Milliseconds": 8,
+      "worstObservedFrameMilliseconds": 31.399999976158142,
+      "budget": {
+        "p50Milliseconds": 33.3,
+        "p95Milliseconds": 45
+      },
+      "p50WithinBudget": true,
+      "p95WithinBudget": true,
+      "p50HeadroomRatio": 0.0780780787940498,
+      "p95HeadroomRatio": 0.17777777777777778,
+      "heapAfterGcBytes": {
+        "minimum": 309723708,
+        "maximum": 347360383,
+        "median": 346599613
+      },
+      "p50OverCappedControlP50": 0.3132530167203525
+    },
+    {
+      "stationId": "nomad-skyline",
+      "profile": "exploration",
+      "note": "The wide skyline station the curation was chosen for: the whole curated block read as one silhouette from the south-west, including the wave's tallest sourced structure at 245.4 m, past the LOD 0 cut-off where a 128-pixel tile is repeated most per screen pixel and aliasing shows first.",
+      "pose": {
+        "lon": -73.997,
+        "lat": 40.741,
+        "height": 420,
+        "heading": 40,
+        "pitch": -8,
+        "roll": 0
+      },
+      "repeats": 3,
+      "medianOfRunP50Milliseconds": 2.3000000715255737,
+      "medianOfRunP95Milliseconds": 6.600000023841858,
+      "worstObservedFrameMilliseconds": 140,
+      "budget": {
+        "p50Milliseconds": 16.7,
+        "p95Milliseconds": 25
+      },
+      "p50WithinBudget": true,
+      "p95WithinBudget": true,
+      "p50HeadroomRatio": 0.13772455518117208,
+      "p95HeadroomRatio": 0.2640000009536743,
+      "heapAfterGcBytes": {
+        "minimum": 264834119,
+        "maximum": 327303296,
+        "median": 267362808
+      },
+      "p50OverCappedControlP50": 0.277108443944474
+    },
+    {
+      "stationId": "crosswave-wide",
+      "profile": "exploration",
+      "note": "The CROSS-WAVE wide view. Cell 379's north bound is shared exactly with promoted Midtown-core cell w01-000030, so this pose looks north across that boundary and holds wave w03's curated block and the promoted Midtown-core wave in one frame. It is the station that measures whether four co-resident waves cost more than three, which is a composition nobody had measured before this run.",
+      "pose": {
+        "lon": -73.989,
+        "lat": 40.739,
+        "height": 620,
+        "heading": 0,
+        "pitch": -10,
+        "roll": 0
+      },
+      "repeats": 3,
+      "medianOfRunP50Milliseconds": 1.5999999046325684,
+      "medianOfRunP95Milliseconds": 4.800000071525574,
+      "worstObservedFrameMilliseconds": 14.899999976158142,
+      "budget": {
+        "p50Milliseconds": 16.7,
+        "p95Milliseconds": 25
+      },
+      "p50WithinBudget": true,
+      "p95WithinBudget": true,
+      "p50HeadroomRatio": 0.09580837752290829,
+      "p95HeadroomRatio": 0.19200000286102295,
+      "heapAfterGcBytes": {
+        "minimum": 192394805,
+        "maximum": 196692030,
+        "median": 194618481
+      },
+      "p50OverCappedControlP50": 0.19277107395477222
+    },
+    {
+      "stationId": "fidi-facade",
+      "profile": "inspection",
+      "note": "The T016 Financial District station, pose-for-pose UNCHANGED, kept for continuity across the two promotions. Its numbers are directly comparable with the T016 record's, so \"did adding a fourth wave cost the third one anything\" is a comparison rather than an assertion.",
+      "pose": {
+        "lon": -74.018,
+        "lat": 40.7075,
+        "height": 180,
+        "heading": 40,
+        "pitch": -5,
+        "roll": 0
+      },
+      "repeats": 3,
+      "medianOfRunP50Milliseconds": 3.799999952316284,
+      "medianOfRunP95Milliseconds": 7.900000095367432,
+      "worstObservedFrameMilliseconds": 70.29999995231628,
+      "budget": {
+        "p50Milliseconds": 33.3,
+        "p95Milliseconds": 45
+      },
+      "p50WithinBudget": true,
+      "p95WithinBudget": true,
+      "p50HeadroomRatio": 0.11411411268217071,
+      "p95HeadroomRatio": 0.1755555576748318,
+      "heapAfterGcBytes": {
+        "minimum": 244294638,
+        "maximum": 245594225,
+        "median": 244353212
+      },
+      "p50OverCappedControlP50": 0.4578313221864317
+    }
+  ],
+  "captures": [
+    {
+      "stationId": "nomad-facade",
+      "repeatIndex": 0,
+      "url": "http://localhost:4188/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-73.992500&lat=40.745800&height=150.000000&heading=65.000000&pitch=-4.000000&roll=0.000000&exteriorProfile=inspection",
+      "profile": "inspection",
+      "activeWaves": [
+        "manhattan-exterior-cells-20260811-v3",
+        "manhattan-lower-manhattan-cells-20260812-p1",
+        "manhattan-midtown-core-cells-20260811-v3",
+        "manhattan-southern-remainder-cells-20260812-p1"
+      ],
+      "frameMilliseconds": {
+        "frameCount": 240,
+        "meanMilliseconds": 3.58833333303531,
+        "p50Milliseconds": 2.5,
+        "p95Milliseconds": 9.100000023841858,
+        "p99Milliseconds": 16.699999928474426,
+        "maximumMilliseconds": 29.5,
+        "minimumMilliseconds": 0.7999999523162842
+      },
+      "heapAfterGcBytes": 346599613,
+      "network": {
+        "perRelease": {
+          "manhattan-exterior-cells-20260811-v3": {
+            "requestCount": 17,
+            "completedCount": 17,
+            "encodedBytes": 5150055,
+            "glbCount": 14
+          },
+          "manhattan-midtown-core-cells-20260811-v3": {
+            "requestCount": 151,
+            "completedCount": 150,
+            "encodedBytes": 20354788,
+            "glbCount": 147
+          },
+          "manhattan-lower-manhattan-cells-20260812-p1": {
+            "requestCount": 74,
+            "completedCount": 74,
+            "encodedBytes": 41525305,
+            "glbCount": 71
+          },
+          "manhattan-southern-remainder-cells-20260812-p1": {
+            "requestCount": 182,
+            "completedCount": 182,
+            "encodedBytes": 40584210,
+            "glbCount": 179
+          },
+          "manhattan-southern-remainder-cells-20260812": {
+            "requestCount": 0,
+            "completedCount": 0,
+            "encodedBytes": 0,
+            "glbCount": 0
+          },
+          "manhattan-citywide-20260804": {
+            "requestCount": 8,
+            "completedCount": 8,
+            "encodedBytes": 2046145,
+            "glbCount": 0
+          }
+        },
+        "totalRequestCount": 663,
+        "externalHosts": []
+      },
+      "still": {
+        "relativeRef": "captures/nomad-facade__r0.png",
+        "byteSize": 639039,
+        "checksumSha256": "3199bb64cdea08c500f14d5cc367126e0169b8127759f6537a8c224e73648841"
+      }
+    },
+    {
+      "stationId": "nomad-skyline",
+      "repeatIndex": 0,
+      "url": "http://localhost:4188/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-73.997000&lat=40.741000&height=420.000000&heading=40.000000&pitch=-8.000000&roll=0.000000&exteriorProfile=exploration",
+      "profile": "exploration",
+      "activeWaves": [
+        "manhattan-exterior-cells-20260811-v3",
+        "manhattan-lower-manhattan-cells-20260812-p1",
+        "manhattan-midtown-core-cells-20260811-v3",
+        "manhattan-southern-remainder-cells-20260812-p1"
+      ],
+      "frameMilliseconds": {
+        "frameCount": 240,
+        "meanMilliseconds": 4.377916666865349,
+        "p50Milliseconds": 2.3000000715255737,
+        "p95Milliseconds": 6.600000023841858,
+        "p99Milliseconds": 66.39999997615814,
+        "maximumMilliseconds": 139.5,
+        "minimumMilliseconds": 0.3999999761581421
+      },
+      "heapAfterGcBytes": 267362808,
+      "network": {
+        "perRelease": {
+          "manhattan-exterior-cells-20260811-v3": {
+            "requestCount": 17,
+            "completedCount": 17,
+            "encodedBytes": 1934505,
+            "glbCount": 14
+          },
+          "manhattan-midtown-core-cells-20260811-v3": {
+            "requestCount": 159,
+            "completedCount": 159,
+            "encodedBytes": 21286267,
+            "glbCount": 156
+          },
+          "manhattan-lower-manhattan-cells-20260812-p1": {
+            "requestCount": 74,
+            "completedCount": 74,
+            "encodedBytes": 41525305,
+            "glbCount": 71
+          },
+          "manhattan-southern-remainder-cells-20260812-p1": {
+            "requestCount": 182,
+            "completedCount": 182,
+            "encodedBytes": 40584210,
+            "glbCount": 179
+          },
+          "manhattan-southern-remainder-cells-20260812": {
+            "requestCount": 0,
+            "completedCount": 0,
+            "encodedBytes": 0,
+            "glbCount": 0
+          },
+          "manhattan-citywide-20260804": {
+            "requestCount": 6,
+            "completedCount": 6,
+            "encodedBytes": 762,
+            "glbCount": 0
+          }
+        },
+        "totalRequestCount": 654,
+        "externalHosts": []
+      },
+      "still": {
+        "relativeRef": "captures/nomad-skyline__r0.png",
+        "byteSize": 535283,
+        "checksumSha256": "7db1916bb4a3f2a19cba0bc4d49160cc13ccf24cfc088a7ee3f805fdd65ed369"
+      }
+    },
+    {
+      "stationId": "crosswave-wide",
+      "repeatIndex": 0,
+      "url": "http://localhost:4188/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-73.989000&lat=40.739000&height=620.000000&heading=0.000000&pitch=-10.000000&roll=0.000000&exteriorProfile=exploration",
+      "profile": "exploration",
+      "activeWaves": [
+        "manhattan-exterior-cells-20260811-v3",
+        "manhattan-lower-manhattan-cells-20260812-p1",
+        "manhattan-midtown-core-cells-20260811-v3",
+        "manhattan-southern-remainder-cells-20260812-p1"
+      ],
+      "frameMilliseconds": {
+        "frameCount": 240,
+        "meanMilliseconds": 2.152916666865349,
+        "p50Milliseconds": 1.6999999284744263,
+        "p95Milliseconds": 5,
+        "p99Milliseconds": 12.700000047683716,
+        "maximumMilliseconds": 14.899999976158142,
+        "minimumMilliseconds": 0.3999999761581421
+      },
+      "heapAfterGcBytes": 194618481,
+      "network": {
+        "perRelease": {
+          "manhattan-exterior-cells-20260811-v3": {
+            "requestCount": 17,
+            "completedCount": 17,
+            "encodedBytes": 1934505,
+            "glbCount": 14
+          },
+          "manhattan-midtown-core-cells-20260811-v3": {
+            "requestCount": 159,
+            "completedCount": 159,
+            "encodedBytes": 21286267,
+            "glbCount": 156
+          },
+          "manhattan-lower-manhattan-cells-20260812-p1": {
+            "requestCount": 74,
+            "completedCount": 74,
+            "encodedBytes": 41525305,
+            "glbCount": 71
+          },
+          "manhattan-southern-remainder-cells-20260812-p1": {
+            "requestCount": 182,
+            "completedCount": 182,
+            "encodedBytes": 40584210,
+            "glbCount": 179
+          },
+          "manhattan-southern-remainder-cells-20260812": {
+            "requestCount": 0,
+            "completedCount": 0,
+            "encodedBytes": 0,
+            "glbCount": 0
+          },
+          "manhattan-citywide-20260804": {
+            "requestCount": 27,
+            "completedCount": 27,
+            "encodedBytes": 2469945,
+            "glbCount": 0
+          }
+        },
+        "totalRequestCount": 484,
+        "externalHosts": []
+      },
+      "still": {
+        "relativeRef": "captures/crosswave-wide__r0.png",
+        "byteSize": 388216,
+        "checksumSha256": "3f90518e1d56814e83002708f127df992d4598ea7489af4c4cf63081ab55764b"
+      }
+    },
+    {
+      "stationId": "fidi-facade",
+      "repeatIndex": 0,
+      "url": "http://localhost:4188/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-74.018000&lat=40.707500&height=180.000000&heading=40.000000&pitch=-5.000000&roll=0.000000&exteriorProfile=inspection",
+      "profile": "inspection",
+      "activeWaves": [
+        "manhattan-exterior-cells-20260811-v3",
+        "manhattan-lower-manhattan-cells-20260812-p1",
+        "manhattan-midtown-core-cells-20260811-v3",
+        "manhattan-southern-remainder-cells-20260812-p1"
+      ],
+      "frameMilliseconds": {
+        "frameCount": 240,
+        "meanMilliseconds": 5.164166666567326,
+        "p50Milliseconds": 4,
+        "p95Milliseconds": 7.900000095367432,
+        "p99Milliseconds": 45.39999997615814,
+        "maximumMilliseconds": 70.29999995231628,
+        "minimumMilliseconds": 0.6000000238418579
+      },
+      "heapAfterGcBytes": 244353212,
+      "network": {
+        "perRelease": {
+          "manhattan-exterior-cells-20260811-v3": {
+            "requestCount": 17,
+            "completedCount": 17,
+            "encodedBytes": 5150055,
+            "glbCount": 14
+          },
+          "manhattan-midtown-core-cells-20260811-v3": {
+            "requestCount": 159,
+            "completedCount": 159,
+            "encodedBytes": 21286267,
+            "glbCount": 156
+          },
+          "manhattan-lower-manhattan-cells-20260812-p1": {
+            "requestCount": 74,
+            "completedCount": 74,
+            "encodedBytes": 41525305,
+            "glbCount": 71
+          },
+          "manhattan-southern-remainder-cells-20260812-p1": {
+            "requestCount": 182,
+            "completedCount": 182,
+            "encodedBytes": 40584210,
+            "glbCount": 179
+          },
+          "manhattan-southern-remainder-cells-20260812": {
+            "requestCount": 0,
+            "completedCount": 0,
+            "encodedBytes": 0,
+            "glbCount": 0
+          },
+          "manhattan-citywide-20260804": {
+            "requestCount": 5,
+            "completedCount": 5,
+            "encodedBytes": 357668,
+            "glbCount": 0
+          }
+        },
+        "totalRequestCount": 545,
+        "externalHosts": []
+      },
+      "still": {
+        "relativeRef": "captures/fidi-facade__r0.png",
+        "byteSize": 440034,
+        "checksumSha256": "a5c4e7b06febeefb4907b17d245354332dec95ce8e2fb74ab1073018faafbfb8"
+      }
+    },
+    {
+      "stationId": "nomad-facade",
+      "repeatIndex": 1,
+      "url": "http://localhost:4188/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-73.992500&lat=40.745800&height=150.000000&heading=65.000000&pitch=-4.000000&roll=0.000000&exteriorProfile=inspection",
+      "profile": "inspection",
+      "activeWaves": [
+        "manhattan-exterior-cells-20260811-v3",
+        "manhattan-lower-manhattan-cells-20260812-p1",
+        "manhattan-midtown-core-cells-20260811-v3",
+        "manhattan-southern-remainder-cells-20260812-p1"
+      ],
+      "frameMilliseconds": {
+        "frameCount": 240,
+        "meanMilliseconds": 3.7033333336313565,
+        "p50Milliseconds": 2.600000023841858,
+        "p95Milliseconds": 8,
+        "p99Milliseconds": 16.399999976158142,
+        "maximumMilliseconds": 31.399999976158142,
+        "minimumMilliseconds": 0.6000000238418579
+      },
+      "heapAfterGcBytes": 309723708,
+      "network": {
+        "perRelease": {
+          "manhattan-exterior-cells-20260811-v3": {
+            "requestCount": 17,
+            "completedCount": 17,
+            "encodedBytes": 5150055,
+            "glbCount": 14
+          },
+          "manhattan-midtown-core-cells-20260811-v3": {
+            "requestCount": 152,
+            "completedCount": 151,
+            "encodedBytes": 20406975,
+            "glbCount": 148
+          },
+          "manhattan-lower-manhattan-cells-20260812-p1": {
+            "requestCount": 74,
+            "completedCount": 74,
+            "encodedBytes": 41525305,
+            "glbCount": 71
+          },
+          "manhattan-southern-remainder-cells-20260812-p1": {
+            "requestCount": 182,
+            "completedCount": 182,
+            "encodedBytes": 40584210,
+            "glbCount": 179
+          },
+          "manhattan-southern-remainder-cells-20260812": {
+            "requestCount": 0,
+            "completedCount": 0,
+            "encodedBytes": 0,
+            "glbCount": 0
+          },
+          "manhattan-citywide-20260804": {
+            "requestCount": 8,
+            "completedCount": 8,
+            "encodedBytes": 1016,
+            "glbCount": 0
+          }
+        },
+        "totalRequestCount": 663,
+        "externalHosts": []
+      },
+      "still": {
+        "relativeRef": "captures/nomad-facade__r1.png",
+        "byteSize": 639039,
+        "checksumSha256": "3199bb64cdea08c500f14d5cc367126e0169b8127759f6537a8c224e73648841"
+      }
+    },
+    {
+      "stationId": "nomad-skyline",
+      "repeatIndex": 1,
+      "url": "http://localhost:4188/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-73.997000&lat=40.741000&height=420.000000&heading=40.000000&pitch=-8.000000&roll=0.000000&exteriorProfile=exploration",
+      "profile": "exploration",
+      "activeWaves": [
+        "manhattan-exterior-cells-20260811-v3",
+        "manhattan-lower-manhattan-cells-20260812-p1",
+        "manhattan-midtown-core-cells-20260811-v3",
+        "manhattan-southern-remainder-cells-20260812-p1"
+      ],
+      "frameMilliseconds": {
+        "frameCount": 240,
+        "meanMilliseconds": 2.495833333333333,
+        "p50Milliseconds": 2,
+        "p95Milliseconds": 5.600000023841858,
+        "p99Milliseconds": 6.899999976158142,
+        "maximumMilliseconds": 8.699999928474426,
+        "minimumMilliseconds": 0.3999999761581421
+      },
+      "heapAfterGcBytes": 327303296,
+      "network": {
+        "perRelease": {
+          "manhattan-exterior-cells-20260811-v3": {
+            "requestCount": 17,
+            "completedCount": 17,
+            "encodedBytes": 1934505,
+            "glbCount": 14
+          },
+          "manhattan-midtown-core-cells-20260811-v3": {
+            "requestCount": 151,
+            "completedCount": 151,
+            "encodedBytes": 20406975,
+            "glbCount": 148
+          },
+          "manhattan-lower-manhattan-cells-20260812-p1": {
+            "requestCount": 74,
+            "completedCount": 74,
+            "encodedBytes": 41525305,
+            "glbCount": 71
+          },
+          "manhattan-southern-remainder-cells-20260812-p1": {
+            "requestCount": 182,
+            "completedCount": 182,
+            "encodedBytes": 40584210,
+            "glbCount": 179
+          },
+          "manhattan-southern-remainder-cells-20260812": {
+            "requestCount": 0,
+            "completedCount": 0,
+            "encodedBytes": 0,
+            "glbCount": 0
+          },
+          "manhattan-citywide-20260804": {
+            "requestCount": 6,
+            "completedCount": 6,
+            "encodedBytes": 762,
+            "glbCount": 0
+          }
+        },
+        "totalRequestCount": 646,
+        "externalHosts": []
+      },
+      "still": {
+        "relativeRef": "captures/nomad-skyline__r1.png",
+        "byteSize": 535283,
+        "checksumSha256": "7db1916bb4a3f2a19cba0bc4d49160cc13ccf24cfc088a7ee3f805fdd65ed369"
+      }
+    },
+    {
+      "stationId": "crosswave-wide",
+      "repeatIndex": 1,
+      "url": "http://localhost:4188/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-73.989000&lat=40.739000&height=620.000000&heading=0.000000&pitch=-10.000000&roll=0.000000&exteriorProfile=exploration",
+      "profile": "exploration",
+      "activeWaves": [
+        "manhattan-exterior-cells-20260811-v3",
+        "manhattan-lower-manhattan-cells-20260812-p1",
+        "manhattan-midtown-core-cells-20260811-v3",
+        "manhattan-southern-remainder-cells-20260812-p1"
+      ],
+      "frameMilliseconds": {
+        "frameCount": 240,
+        "meanMilliseconds": 2.0587500000993413,
+        "p50Milliseconds": 1.5999999046325684,
+        "p95Milliseconds": 4.699999928474426,
+        "p99Milliseconds": 11.699999928474426,
+        "maximumMilliseconds": 13.700000047683716,
+        "minimumMilliseconds": 0.2999999523162842
+      },
+      "heapAfterGcBytes": 192394805,
+      "network": {
+        "perRelease": {
+          "manhattan-exterior-cells-20260811-v3": {
+            "requestCount": 17,
+            "completedCount": 17,
+            "encodedBytes": 1934505,
+            "glbCount": 14
+          },
+          "manhattan-midtown-core-cells-20260811-v3": {
+            "requestCount": 159,
+            "completedCount": 159,
+            "encodedBytes": 21286267,
+            "glbCount": 156
+          },
+          "manhattan-lower-manhattan-cells-20260812-p1": {
+            "requestCount": 74,
+            "completedCount": 74,
+            "encodedBytes": 41525305,
+            "glbCount": 71
+          },
+          "manhattan-southern-remainder-cells-20260812-p1": {
+            "requestCount": 182,
+            "completedCount": 182,
+            "encodedBytes": 40584210,
+            "glbCount": 179
+          },
+          "manhattan-southern-remainder-cells-20260812": {
+            "requestCount": 0,
+            "completedCount": 0,
+            "encodedBytes": 0,
+            "glbCount": 0
+          },
+          "manhattan-citywide-20260804": {
+            "requestCount": 27,
+            "completedCount": 27,
+            "encodedBytes": 3429,
+            "glbCount": 0
+          }
+        },
+        "totalRequestCount": 484,
+        "externalHosts": []
+      },
+      "still": {
+        "relativeRef": "captures/crosswave-wide__r1.png",
+        "byteSize": 388216,
+        "checksumSha256": "3f90518e1d56814e83002708f127df992d4598ea7489af4c4cf63081ab55764b"
+      }
+    },
+    {
+      "stationId": "fidi-facade",
+      "repeatIndex": 1,
+      "url": "http://localhost:4188/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-74.018000&lat=40.707500&height=180.000000&heading=40.000000&pitch=-5.000000&roll=0.000000&exteriorProfile=inspection",
+      "profile": "inspection",
+      "activeWaves": [
+        "manhattan-exterior-cells-20260811-v3",
+        "manhattan-lower-manhattan-cells-20260812-p1",
+        "manhattan-midtown-core-cells-20260811-v3",
+        "manhattan-southern-remainder-cells-20260812-p1"
+      ],
+      "frameMilliseconds": {
+        "frameCount": 240,
+        "meanMilliseconds": 4.855416666467985,
+        "p50Milliseconds": 3.600000023841858,
+        "p95Milliseconds": 7.5,
+        "p99Milliseconds": 35.90000009536743,
+        "maximumMilliseconds": 67.89999997615814,
+        "minimumMilliseconds": 0.8999999761581421
+      },
+      "heapAfterGcBytes": 244294638,
+      "network": {
+        "perRelease": {
+          "manhattan-exterior-cells-20260811-v3": {
+            "requestCount": 17,
+            "completedCount": 17,
+            "encodedBytes": 5150055,
+            "glbCount": 14
+          },
+          "manhattan-midtown-core-cells-20260811-v3": {
+            "requestCount": 159,
+            "completedCount": 159,
+            "encodedBytes": 21286267,
+            "glbCount": 156
+          },
+          "manhattan-lower-manhattan-cells-20260812-p1": {
+            "requestCount": 74,
+            "completedCount": 74,
+            "encodedBytes": 41525305,
+            "glbCount": 71
+          },
+          "manhattan-southern-remainder-cells-20260812-p1": {
+            "requestCount": 182,
+            "completedCount": 182,
+            "encodedBytes": 40584210,
+            "glbCount": 179
+          },
+          "manhattan-southern-remainder-cells-20260812": {
+            "requestCount": 0,
+            "completedCount": 0,
+            "encodedBytes": 0,
+            "glbCount": 0
+          },
+          "manhattan-citywide-20260804": {
+            "requestCount": 5,
+            "completedCount": 5,
+            "encodedBytes": 635,
+            "glbCount": 0
+          }
+        },
+        "totalRequestCount": 545,
+        "externalHosts": []
+      },
+      "still": {
+        "relativeRef": "captures/fidi-facade__r1.png",
+        "byteSize": 440034,
+        "checksumSha256": "a5c4e7b06febeefb4907b17d245354332dec95ce8e2fb74ab1073018faafbfb8"
+      }
+    },
+    {
+      "stationId": "nomad-facade",
+      "repeatIndex": 2,
+      "url": "http://localhost:4188/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-73.992500&lat=40.745800&height=150.000000&heading=65.000000&pitch=-4.000000&roll=0.000000&exteriorProfile=inspection",
+      "profile": "inspection",
+      "activeWaves": [
+        "manhattan-exterior-cells-20260811-v3",
+        "manhattan-lower-manhattan-cells-20260812-p1",
+        "manhattan-midtown-core-cells-20260811-v3",
+        "manhattan-southern-remainder-cells-20260812-p1"
+      ],
+      "frameMilliseconds": {
+        "frameCount": 240,
+        "meanMilliseconds": 3.7475000003973644,
+        "p50Milliseconds": 3.5,
+        "p95Milliseconds": 7.399999976158142,
+        "p99Milliseconds": 16.700000047683716,
+        "maximumMilliseconds": 28.90000009536743,
+        "minimumMilliseconds": 0.8000000715255737
+      },
+      "heapAfterGcBytes": 347360383,
+      "network": {
+        "perRelease": {
+          "manhattan-exterior-cells-20260811-v3": {
+            "requestCount": 17,
+            "completedCount": 17,
+            "encodedBytes": 5150055,
+            "glbCount": 14
+          },
+          "manhattan-midtown-core-cells-20260811-v3": {
+            "requestCount": 153,
+            "completedCount": 152,
+            "encodedBytes": 20522656,
+            "glbCount": 149
+          },
+          "manhattan-lower-manhattan-cells-20260812-p1": {
+            "requestCount": 74,
+            "completedCount": 74,
+            "encodedBytes": 41525305,
+            "glbCount": 71
+          },
+          "manhattan-southern-remainder-cells-20260812-p1": {
+            "requestCount": 182,
+            "completedCount": 182,
+            "encodedBytes": 40584210,
+            "glbCount": 179
+          },
+          "manhattan-southern-remainder-cells-20260812": {
+            "requestCount": 0,
+            "completedCount": 0,
+            "encodedBytes": 0,
+            "glbCount": 0
+          },
+          "manhattan-citywide-20260804": {
+            "requestCount": 8,
+            "completedCount": 8,
+            "encodedBytes": 1016,
+            "glbCount": 0
+          }
+        },
+        "totalRequestCount": 664,
+        "externalHosts": []
+      },
+      "still": {
+        "relativeRef": "captures/nomad-facade__r2.png",
+        "byteSize": 639039,
+        "checksumSha256": "3199bb64cdea08c500f14d5cc367126e0169b8127759f6537a8c224e73648841"
+      }
+    },
+    {
+      "stationId": "nomad-skyline",
+      "repeatIndex": 2,
+      "url": "http://localhost:4188/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-73.997000&lat=40.741000&height=420.000000&heading=40.000000&pitch=-8.000000&roll=0.000000&exteriorProfile=exploration",
+      "profile": "exploration",
+      "activeWaves": [
+        "manhattan-exterior-cells-20260811-v3",
+        "manhattan-lower-manhattan-cells-20260812-p1",
+        "manhattan-midtown-core-cells-20260811-v3",
+        "manhattan-southern-remainder-cells-20260812-p1"
+      ],
+      "frameMilliseconds": {
+        "frameCount": 240,
+        "meanMilliseconds": 4.95625,
+        "p50Milliseconds": 2.5,
+        "p95Milliseconds": 7.799999952316284,
+        "p99Milliseconds": 61.200000047683716,
+        "maximumMilliseconds": 140,
+        "minimumMilliseconds": 0.6000000238418579
+      },
+      "heapAfterGcBytes": 264834119,
+      "network": {
+        "perRelease": {
+          "manhattan-exterior-cells-20260811-v3": {
+            "requestCount": 17,
+            "completedCount": 17,
+            "encodedBytes": 1934505,
+            "glbCount": 14
+          },
+          "manhattan-midtown-core-cells-20260811-v3": {
+            "requestCount": 159,
+            "completedCount": 159,
+            "encodedBytes": 21286267,
+            "glbCount": 156
+          },
+          "manhattan-lower-manhattan-cells-20260812-p1": {
+            "requestCount": 74,
+            "completedCount": 74,
+            "encodedBytes": 41525305,
+            "glbCount": 71
+          },
+          "manhattan-southern-remainder-cells-20260812-p1": {
+            "requestCount": 182,
+            "completedCount": 182,
+            "encodedBytes": 40584210,
+            "glbCount": 179
+          },
+          "manhattan-southern-remainder-cells-20260812": {
+            "requestCount": 0,
+            "completedCount": 0,
+            "encodedBytes": 0,
+            "glbCount": 0
+          },
+          "manhattan-citywide-20260804": {
+            "requestCount": 6,
+            "completedCount": 6,
+            "encodedBytes": 762,
+            "glbCount": 0
+          }
+        },
+        "totalRequestCount": 654,
+        "externalHosts": []
+      },
+      "still": {
+        "relativeRef": "captures/nomad-skyline__r2.png",
+        "byteSize": 535283,
+        "checksumSha256": "7db1916bb4a3f2a19cba0bc4d49160cc13ccf24cfc088a7ee3f805fdd65ed369"
+      }
+    },
+    {
+      "stationId": "crosswave-wide",
+      "repeatIndex": 2,
+      "url": "http://localhost:4188/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-73.989000&lat=40.739000&height=620.000000&heading=0.000000&pitch=-10.000000&roll=0.000000&exteriorProfile=exploration",
+      "profile": "exploration",
+      "activeWaves": [
+        "manhattan-exterior-cells-20260811-v3",
+        "manhattan-lower-manhattan-cells-20260812-p1",
+        "manhattan-midtown-core-cells-20260811-v3",
+        "manhattan-southern-remainder-cells-20260812-p1"
+      ],
+      "frameMilliseconds": {
+        "frameCount": 240,
+        "meanMilliseconds": 2.033750000099341,
+        "p50Milliseconds": 1.5,
+        "p95Milliseconds": 4.800000071525574,
+        "p99Milliseconds": 11.700000047683716,
+        "maximumMilliseconds": 12.700000047683716,
+        "minimumMilliseconds": 0.30000007152557373
+      },
+      "heapAfterGcBytes": 196692030,
+      "network": {
+        "perRelease": {
+          "manhattan-exterior-cells-20260811-v3": {
+            "requestCount": 17,
+            "completedCount": 17,
+            "encodedBytes": 1934505,
+            "glbCount": 14
+          },
+          "manhattan-midtown-core-cells-20260811-v3": {
+            "requestCount": 159,
+            "completedCount": 159,
+            "encodedBytes": 21286267,
+            "glbCount": 156
+          },
+          "manhattan-lower-manhattan-cells-20260812-p1": {
+            "requestCount": 74,
+            "completedCount": 74,
+            "encodedBytes": 41525305,
+            "glbCount": 71
+          },
+          "manhattan-southern-remainder-cells-20260812-p1": {
+            "requestCount": 182,
+            "completedCount": 182,
+            "encodedBytes": 40584210,
+            "glbCount": 179
+          },
+          "manhattan-southern-remainder-cells-20260812": {
+            "requestCount": 0,
+            "completedCount": 0,
+            "encodedBytes": 0,
+            "glbCount": 0
+          },
+          "manhattan-citywide-20260804": {
+            "requestCount": 27,
+            "completedCount": 27,
+            "encodedBytes": 3429,
+            "glbCount": 0
+          }
+        },
+        "totalRequestCount": 484,
+        "externalHosts": []
+      },
+      "still": {
+        "relativeRef": "captures/crosswave-wide__r2.png",
+        "byteSize": 388216,
+        "checksumSha256": "3f90518e1d56814e83002708f127df992d4598ea7489af4c4cf63081ab55764b"
+      }
+    },
+    {
+      "stationId": "fidi-facade",
+      "repeatIndex": 2,
+      "url": "http://localhost:4188/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-74.018000&lat=40.707500&height=180.000000&heading=40.000000&pitch=-5.000000&roll=0.000000&exteriorProfile=inspection",
+      "profile": "inspection",
+      "activeWaves": [
+        "manhattan-exterior-cells-20260811-v3",
+        "manhattan-lower-manhattan-cells-20260812-p1",
+        "manhattan-midtown-core-cells-20260811-v3",
+        "manhattan-southern-remainder-cells-20260812-p1"
+      ],
+      "frameMilliseconds": {
+        "frameCount": 240,
+        "meanMilliseconds": 5.015000000099341,
+        "p50Milliseconds": 3.799999952316284,
+        "p95Milliseconds": 8.399999976158142,
+        "p99Milliseconds": 33.10000002384186,
+        "maximumMilliseconds": 69.40000009536743,
+        "minimumMilliseconds": 0.8999999761581421
+      },
+      "heapAfterGcBytes": 245594225,
+      "network": {
+        "perRelease": {
+          "manhattan-exterior-cells-20260811-v3": {
+            "requestCount": 17,
+            "completedCount": 17,
+            "encodedBytes": 5150055,
+            "glbCount": 14
+          },
+          "manhattan-midtown-core-cells-20260811-v3": {
+            "requestCount": 159,
+            "completedCount": 159,
+            "encodedBytes": 21286267,
+            "glbCount": 156
+          },
+          "manhattan-lower-manhattan-cells-20260812-p1": {
+            "requestCount": 74,
+            "completedCount": 74,
+            "encodedBytes": 41525305,
+            "glbCount": 71
+          },
+          "manhattan-southern-remainder-cells-20260812-p1": {
+            "requestCount": 182,
+            "completedCount": 182,
+            "encodedBytes": 40584210,
+            "glbCount": 179
+          },
+          "manhattan-southern-remainder-cells-20260812": {
+            "requestCount": 0,
+            "completedCount": 0,
+            "encodedBytes": 0,
+            "glbCount": 0
+          },
+          "manhattan-citywide-20260804": {
+            "requestCount": 5,
+            "completedCount": 5,
+            "encodedBytes": 635,
+            "glbCount": 0
+          }
+        },
+        "totalRequestCount": 545,
+        "externalHosts": []
+      },
+      "still": {
+        "relativeRef": "captures/fidi-facade__r2.png",
+        "byteSize": 440034,
+        "checksumSha256": "a5c4e7b06febeefb4907b17d245354332dec95ce8e2fb74ab1073018faafbfb8"
+      }
+    }
+  ]
+}

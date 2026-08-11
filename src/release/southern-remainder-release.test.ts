@@ -319,7 +319,17 @@ describe("southern-remainder committed payload inventory", () => {
       readJson<{ files: { path: string }[] }>(path).files.filter((file) => /^public\/assets\/.*\.glb$/u.test(file.path)).length;
     expect(inventory.occupancy.midtownAssetEntries).toBe(glbCount("data/midtown-core-20260811-v3/payload-inventory.json"));
     expect(inventory.occupancy.lowerManhattanAssetEntries).toBe(glbCount("data/lower-manhattan-20260812-p1/payload-inventory.json"));
-    expect(inventory.occupancy.maxCacheEntries).toBe(EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries);
+    // 256, LITERALLY, and no longer compared against the live constant.
+    //
+    // This inventory is FROZEN BYTES: its checksum is what the P1 successor's
+    // predecessor pin is taken over, so re-emitting it to carry a newer cap would
+    // move a pin the successor depends on. The canary was emitted against a
+    // 256-entry cap and that is a true historical statement about it. T018 raised
+    // the live cap to 512 (ADR 0034 admissible response 1), and comparing a frozen
+    // record against a constant that has since moved would have forced exactly the
+    // re-emission the freeze exists to prevent.
+    expect(inventory.occupancy.maxCacheEntries).toBe(256);
+    expect(EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries).toBe(512);
   });
 
   /**

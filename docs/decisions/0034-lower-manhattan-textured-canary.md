@@ -534,3 +534,97 @@ active, and read 7: the loader is progressive and wave activation is not asset
 completion. The journey now waits for the fetch count to reach its shipped total
 or stop growing, so the claim is about what the session streams rather than about
 when it was sampled.
+
+## DISCHARGE (2026-08-12, T018): response 1 was taken
+
+This section is APPENDED. Nothing above it is rewritten, because what is above it
+was true when it was written and the precondition it states is what T018 had to
+answer.
+
+The precondition read: a fourth wave cannot promote without first doing one of
+three things and recording which. **T018 took response 1** —
+`EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries` was raised from **256 to 512** in
+`src/runtime/exterior-cell-runtime.ts`. `maxCachedBytes` was deliberately left at
+256 MiB.
+
+Responses 2 and 3 were available and were not taken, and the reasons are recorded
+so a later reader does not have to reconstruct them. Response 2 buys entries by
+re-cutting a promoted wave's renderable subset in a successor release, which
+withdraws geometry that is already promoted and verified — this ADR's own wave
+paid that price once and the section above records that it "is not cheap".
+Response 3 recovers only the 14 entries of Block 835's second-LOD conservatism
+that the section above quantifies, and it requires proving a per-camera worst
+case, which is a strictly harder claim than the per-release one every release in
+this repository is sized against.
+
+### The byte ceiling, re-derived at the raised cap
+
+Required by this ADR and restated by ADR 0035 precondition (a). It is not prose:
+`src/runtime/exterior-cache-ceiling.ts` computes it and
+`exterior-cache-ceiling.test.ts` recomputes it on every run from the promoted
+waves' own committed records — three `payload-inventory.json` files under `data/`
+and, for Block 835 V3, its committed payload tree under `public/data/`. No
+untracked payload directory is involved, so the arithmetic is checked on a fresh
+clone.
+
+Measured per-asset byte profiles of the three waves promoted before T018:
+
+| release | entries | total | mean | median | max |
+| --- | --- | --- | --- | --- | --- |
+| `manhattan-exterior-cells-20260811-v3` | 28 | 7,037,116 B | 251,326 B | 50,896 B | 3,716,836 B |
+| `manhattan-midtown-core-cells-20260811-v3` | 156 | 20,884,440 B | 133,875 B | 43,812 B | 1,882,048 B |
+| `manhattan-lower-manhattan-cells-20260812-p1` | 71 | 41,189,232 B | 580,130 B | 157,888 B | 4,269,904 B |
+
+Three bounds are computed, and they are deliberately not collapsed into one,
+because only the first is reachable:
+
+- **Reachable — the composition bound.** 255 entries, **69,110,788 B = 65.91 MiB**,
+  which is **26% of the unchanged 256 MiB byte cap**. A cache cannot hold more of
+  a fixed set of releases than all of it, and all of it fits inside 512 entries,
+  so this is the ceiling rather than a model of one. **Bytes are non-binding and
+  entries remain the binding constraint.**
+- **Modelled — the mean fill.** 512 entries times the heaviest wave's MEAN asset
+  (580,130 B, Lower-Manhattan P1) is **283.27 MiB**, which is **above** the
+  256 MiB cap. The honest statement is therefore *not* "bytes can never bind at
+  512 entries". It is "bytes do not bind for this composition, and the byte cap
+  is what stops a heavier future composition from filling all 512 entries" —
+  which is exactly why `maxCachedBytes` was left where it was rather than raised
+  alongside the entry cap.
+- **Modelled and unreachable — the saturation fill.** 512 times the single
+  largest asset (4,269,904 B) is 2.03 GiB. Stated only because it is the answer
+  to "does the entry cap alone bound bytes": it does not.
+
+A correction is recorded rather than smoothed: the task that executed this
+response anticipated roughly 117 MiB at the raised cap, from a per-asset figure
+of about 235 KiB. The measured mean of the heaviest promoted wave is 580 KiB —
+2.5x that — because Lower-Manhattan P1 is textured LOD 0 over the World Trade
+Center site, where the sourced rings are large. The conclusion is unchanged and
+the reasoning that reaches it is not: bytes stay non-binding because the promoted
+composition is bounded by its own 65.91 MiB total, not because a per-entry
+estimate multiplied out below the cap.
+
+### Entry headroom after the raise
+
+255 of 512 occupied, **257 entries free**, against one entry at the old cap. That
+headroom is what ADR 0035's curated `w03` subset is sized against.
+
+### Frame budgets
+
+Re-measured with the raised cap in force, off the vsync floor, in ADR 0035's
+promotion section. The acceptance evidence records `runtimeBudgets` by reading
+`EXTERIOR_RUNTIME_BUDGETS` rather than from a number typed into the measurement,
+so a reading taken at the old cap cannot be presented as a reading at the new one.
+
+### The ADR 0030 eviction disclosure still holds, and is now wider
+
+Eviction in the shared exterior LRU is recency-only, with no per-wave reservation
+and no per-wave residency floor. That is unchanged. Raising the entry cap does
+not repair it — it **widens its blast radius**, because more promoted waves can be
+co-resident and therefore more waves can evict each other's already-verified
+bytes under camera pressure. Nothing renders wrongly when that happens: every
+evicted artifact is re-fetched and re-verified against its pin before it reaches
+the scene. The cost is a silent re-fetch that the published metrics do not
+attribute to the wave that caused it. Per-wave residency policy remains deferred
+against ADR 0024. The statement is carried in code as
+`EXTERIOR_CACHE_EVICTION_DISCLOSURE` and asserted, so it cannot quietly stop
+being restated once the number it was about has moved.

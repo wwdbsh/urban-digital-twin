@@ -42,9 +42,51 @@ export const EXTERIOR_CELL_RUNTIME_SCHEMA_VERSION = "1.0" as const;
  * citywide pool ceiling, and the same permit is shared app-wide through
  * `AggregateRequestBudget`, so the contract's "<= 8 active requests" is
  * satisfied by a stricter, provable 4.
+ *
+ * ## `maxCacheEntries` was RAISED from 256 to 512 on 2026-08-12 (T018)
+ *
+ * This is a runtime contract change, not a nudge, and it is recorded as ADR
+ * 0034's **admissible response 1** — "raise `EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries`
+ * and re-measure the byte ceiling and the frame budgets against the raised cap".
+ * ADR 0034 named three responses and required that whichever is taken be
+ * recorded by number; ADR 0035 precondition (a) repeated the requirement for
+ * this promotion. The other two were available and were not taken: response 2
+ * (re-cut a promoted wave's renderable subset) buys entries by withdrawing
+ * geometry that is already promoted and verified, and response 3 (count what the
+ * runtime resolves rather than what is on disk) recovers only the 14 entries of
+ * Block 835's second-LOD conservatism and requires proving a per-camera worst
+ * case, which is a harder claim than the per-release one this pipeline makes.
+ *
+ * Three quantities changed, and only one of them is this constant:
+ *
+ * 1. **Entries.** Three promoted waves occupy 255 of the old 256 by the
+ *    release-time disk derivation (28 + 156 + 71). A fourth wave could not
+ *    promote at all. 512 restores usable headroom without becoming a number
+ *    nobody sized: it is one doubling, it is stated as a contract, and every
+ *    derivation that reads it re-derives rather than remembering.
+ * 2. **Bytes.** `maxCachedBytes` is deliberately UNCHANGED at 256 MiB. The byte
+ *    ceiling was re-derived at the raised cap from the promoted waves' own
+ *    committed inventories — see `exterior-cache-ceiling.ts`, which computes it
+ *    rather than asserting it — and bytes remain non-binding for the promoted
+ *    composition by a wide margin. Because bytes did not move, the byte cap is
+ *    still a live backstop: a composition whose assets were far heavier than
+ *    today's would evict on bytes before it reached 512 entries, and that is the
+ *    intended behaviour rather than an oversight.
+ * 3. **Blast radius of the ADR 0030 disclosure.** Eviction here is recency-only
+ *    with NO per-wave reservation. That disclosure still holds unchanged, and
+ *    raising the entry cap WIDENS it: more waves can be co-resident, so more
+ *    waves can evict each other's already-verified bytes under camera pressure.
+ *    Nothing renders wrongly when that happens — every re-fetch is re-verified
+ *    against its pin — but the cost stays invisible in the current metrics.
+ *    `EXTERIOR_CACHE_EVICTION_DISCLOSURE` carries the statement in code.
+ *
+ * Frame budgets were re-measured with this raised cap in force; the acceptance
+ * evidence records `runtimeBudgets` from this object rather than from a constant
+ * typed into the measurement, so a reading taken at the old cap cannot be
+ * presented as a reading at the new one.
  */
 export const EXTERIOR_RUNTIME_BUDGETS = {
-  maxCacheEntries: 256,
+  maxCacheEntries: 512,
   maxCachedBytes: 256 * 1024 * 1024,
   maxConcurrentRequests: 4,
 } as const;

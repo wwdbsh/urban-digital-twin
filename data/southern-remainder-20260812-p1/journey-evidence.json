@@ -1,0 +1,248 @@
+{
+  "schemaVersion": "1.0",
+  "releaseId": "manhattan-southern-remainder-cells-20260812-p1",
+  "note": "T018 renderer journeys against the production preview and the real pinned citywide base, with the served bundle identified before any capture. Each entry records the claim it tests, the URL it used, the DOM text it read, the per-release network measurement, and a checksummed still. `passed` is computed from the readings, not asserted.",
+  "servedBundle": {
+    "previewBase": "http://localhost:4188",
+    "indexHtmlChecksumSha256": "03ea4d5e8801a1fd30138bc476d020e7fd1f913e3adab1258a985fc95bc33f8b",
+    "localDistIndexHtmlChecksumSha256": "03ea4d5e8801a1fd30138bc476d020e7fd1f913e3adab1258a985fc95bc33f8b",
+    "matchesLocalDist": true,
+    "entryScriptPath": "/assets/index-BLRu1W7M.js",
+    "entryScriptByteSize": 4885717,
+    "entryScriptChecksumSha256": "c09261d2093c3a364c249ccf62682d89e7003a3c65cb914900ea5999b83688be",
+    "entryScriptNamesRelease": true,
+    "statement": "Measured before any capture. The served index.html is byte-identical to this repository's dist/index.html and the served entry script contains this release id, so every reading below is from THIS build. Any of those failing aborts the run rather than being recorded as a caveat."
+  },
+  "capturedWith": {
+    "viewport": {
+      "width": 1280,
+      "height": 800,
+      "deviceScaleFactor": 1
+    },
+    "previewBase": "http://localhost:4188",
+    "remoteDebuggingPort": 9333,
+    "promotedReleaseIds": [
+      "manhattan-exterior-cells-20260811-v3",
+      "manhattan-midtown-core-cells-20260811-v3",
+      "manhattan-lower-manhattan-cells-20260812-p1",
+      "manhattan-southern-remainder-cells-20260812-p1"
+    ]
+  },
+  "coveredByTestsInstead": [
+    "Per-wave ROLLBACK rehearsal: no URL expresses a build-time promotion-record swap, so it is proven through the record's own injection seam in src/runtime/exterior-multiwave-activation.test.ts ('rolls the Southern-remainder wave back to BASE MASSING without withdrawing the other three') — which also checks that the withdrawn successor's link is refused BY NAME while the T017 canary's opt-in and the other three waves' links are untouched.",
+    "Single-cell FAULT isolation: the exterior-cell fault injector is gated behind a VITE_BLOCK835_PROBE=1 build, which is not the production preview a user gets, so it is not exercised here and this record does not claim a browser proved it."
+  ],
+  "journeys": [
+    {
+      "journeyId": "cold-default",
+      "claim": "A clean load with no exterior URL parameter streams all FOUR promoted waves over the real citywide base, and the curated w03 cells render their 179 textured assets. The T017 canary is NOT loaded, because it is not promoted.",
+      "url": "http://localhost:4188/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-73.992500&lat=40.745800&height=150.000000&heading=65.000000&pitch=-4.000000&roll=0.000000",
+      "waves": [
+        {
+          "releaseId": "manhattan-exterior-cells-20260811-v3",
+          "origin": "default",
+          "text": "Exterior streaming · Default pinned snapshot snapshot:manhattan-exterior-cells-20260811-v3:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only."
+        },
+        {
+          "releaseId": "manhattan-midtown-core-cells-20260811-v3",
+          "origin": "default",
+          "text": "Exterior streaming · Default pinned snapshot snapshot:manhattan-midtown-core-cells-20260811-v3:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only."
+        },
+        {
+          "releaseId": "manhattan-lower-manhattan-cells-20260812-p1",
+          "origin": "default",
+          "text": "Exterior streaming · Default pinned snapshot snapshot:manhattan-lower-manhattan-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only."
+        },
+        {
+          "releaseId": "manhattan-southern-remainder-cells-20260812-p1",
+          "origin": "default",
+          "text": "Exterior streaming · Default pinned snapshot snapshot:manhattan-southern-remainder-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only."
+        }
+      ],
+      "network": {
+        "perRelease": {
+          "manhattan-exterior-cells-20260811-v3": {
+            "glbCount": 14,
+            "encodedBytes": 1934505
+          },
+          "manhattan-midtown-core-cells-20260811-v3": {
+            "glbCount": 156,
+            "encodedBytes": 21286267
+          },
+          "manhattan-lower-manhattan-cells-20260812-p1": {
+            "glbCount": 71,
+            "encodedBytes": 41525305
+          },
+          "manhattan-southern-remainder-cells-20260812-p1": {
+            "glbCount": 179,
+            "encodedBytes": 40584210
+          },
+          "manhattan-southern-remainder-cells-20260812": {
+            "glbCount": 0,
+            "encodedBytes": 0
+          }
+        },
+        "externalHosts": []
+      },
+      "passed": true,
+      "still": {
+        "relativeRef": "journeys/cold-default.png",
+        "byteSize": 638853,
+        "checksumSha256": "6c5360e51d92827ca670cfa3c23fbd2ed3bfbe5afaf13923bed036b5a907b622"
+      }
+    },
+    {
+      "journeyId": "cross-wave-pick",
+      "claim": "A picked w03 skyline building — the tallest sourced structure in the wave — names the release it came from, its cell and cell release, the checksum of the exact asset on screen, its generated truth tiers, and an uncertainty statement. The composition holds four waves at once, so the pick also proves the details panel attributes to the RIGHT wave.",
+      "url": "http://localhost:4188/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-73.992500&lat=40.745800&height=150.000000&heading=65.000000&pitch=-4.000000&roll=0.000000",
+      "buildingId": "doitt:1290754",
+      "searchResults": [
+        "BBuilding 1290754Building · Buildings · text"
+      ],
+      "detail": {
+        "badge": "Local · manhattan-southern-remainder-cells-20260812-p1",
+        "badgeOrigin": "default",
+        "rows": {
+          "Release origin": "Default pinned snapshot snapshot:manhattan-southern-remainder-cells-20260812-p1:v1",
+          "Render profile": "Exploration (coarsest verified LOD)",
+          "Cell / release": "manhattan-exterior-cell-w03-000387-17-38598-35865 · cell-release:manhattan-southern-remainder-cells-20260812-p1:manhattan-exterior-cell-w03-000387-17-38598-35865:v1 (v1)",
+          "Active asset": "lod_0 · f8bd0cb725ce0f90d67b1bf59b404b80f3f5afb2ccb1a4167f95202f083f4adb",
+          "Truth tiers": "generated",
+          "Source dates": "captured 2026-08-04T08:25:05.580Z · updated 2026-08-02T02:17:27.174Z",
+          "Uncertainty": "Footprint-faithful procedural exterior in local millimetres with procedural surface detail. The massing follows the sourced building polygon vertex for vertex and the sourced height; nothing else does. Tier subdivision, bay rhythm, openings, attached elements, colour, material and surface pattern are designed by this grammar and assert nothing about the real building's appearance, facade, setbacks, balconies, fire escapes, water tanks or signage, nor any tenant, brand or text. The surface pattern is a designed repeating motif whose construction module was calibrated by human and agent viewing of public reference imagery; no image data was ingested, traced, sampled or reproduced, and no material, colour, age, condition or cladding of the real building is asserted."
+        },
+        "heading": "Building 1290754"
+      },
+      "passed": true,
+      "still": {
+        "relativeRef": "journeys/cross-wave-pick.png",
+        "byteSize": 449816,
+        "checksumSha256": "81c41b3ea872cc41c5ba5f8a4073ff1304456c082aeffed86c9dcbd4c968dca1"
+      }
+    },
+    {
+      "journeyId": "canary-opt-in",
+      "claim": "The T017 canary's opt-in link still resolves to the canary ALONE, from a camera derived from that canary cell's own committed bounds. Promoting the wave's P1 successor did not withdraw the canary, and `?exteriorCells=` still means exactly the release it names — including excluding the successor that supersedes it.",
+      "url": "http://localhost:4188/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-74.009070&lat=40.736096&height=70.000000&heading=45.000000&pitch=-6.000000&roll=0.000000&exteriorCells=manhattan-southern-remainder-cells-20260812&exteriorStreaming=on",
+      "poseContainment": {
+        "cellId": "manhattan-exterior-cell-w03-000276-17-38590-35872",
+        "cellBounds": {
+          "west": -74.0093994140625,
+          "south": 40.735931396484375,
+          "east": -74.00665283203125,
+          "north": 40.7373046875
+        },
+        "containment": "asserted before capture from the committed ledger bounds, on both axes"
+      },
+      "waves": [
+        {
+          "releaseId": "manhattan-southern-remainder-cells-20260812",
+          "origin": "default",
+          "text": "Exterior streaming · Default pinned snapshot snapshot:manhattan-southern-remainder-cells-20260812:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only."
+        }
+      ],
+      "network": {
+        "perRelease": {
+          "manhattan-exterior-cells-20260811-v3": {
+            "glbCount": 0,
+            "encodedBytes": 0
+          },
+          "manhattan-midtown-core-cells-20260811-v3": {
+            "glbCount": 0,
+            "encodedBytes": 0
+          },
+          "manhattan-lower-manhattan-cells-20260812-p1": {
+            "glbCount": 0,
+            "encodedBytes": 0
+          },
+          "manhattan-southern-remainder-cells-20260812-p1": {
+            "glbCount": 0,
+            "encodedBytes": 0
+          },
+          "manhattan-southern-remainder-cells-20260812": {
+            "glbCount": 76,
+            "encodedBytes": 9103714
+          }
+        },
+        "externalHosts": []
+      },
+      "passed": true,
+      "still": {
+        "relativeRef": "journeys/canary-opt-in.png",
+        "byteSize": 246497,
+        "checksumSha256": "f78626322454e005f93471a71a95271598b178ceb9b376b5a82744f002cb44b6"
+      }
+    },
+    {
+      "journeyId": "streaming-off",
+      "claim": "`exteriorStreaming=off` disables ALL FOUR promoted waves, not just the newest, no exterior GLB is fetched at all, and the resulting still DIFFERS from the promoted default's at the identical pose — which is what proves the curated w03 assets are drawn rather than merely downloaded.",
+      "url": "http://localhost:4188/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-73.992500&lat=40.745800&height=150.000000&heading=65.000000&pitch=-4.000000&roll=0.000000&exteriorStreaming=off",
+      "waves": [],
+      "unavailableStatements": [],
+      "network": {
+        "perRelease": {
+          "manhattan-exterior-cells-20260811-v3": {
+            "glbCount": 0,
+            "encodedBytes": 0
+          },
+          "manhattan-midtown-core-cells-20260811-v3": {
+            "glbCount": 0,
+            "encodedBytes": 0
+          },
+          "manhattan-lower-manhattan-cells-20260812-p1": {
+            "glbCount": 0,
+            "encodedBytes": 0
+          },
+          "manhattan-southern-remainder-cells-20260812-p1": {
+            "glbCount": 0,
+            "encodedBytes": 0
+          },
+          "manhattan-southern-remainder-cells-20260812": {
+            "glbCount": 0,
+            "encodedBytes": 0
+          }
+        },
+        "externalHosts": []
+      },
+      "texturedComparison": {
+        "pose": {
+          "lon": -73.9925,
+          "lat": 40.7458,
+          "height": 150,
+          "heading": 65,
+          "pitch": -4,
+          "roll": 0
+        },
+        "promotedDefaultStillChecksumSha256": "6c5360e51d92827ca670cfa3c23fbd2ed3bfbe5afaf13923bed036b5a907b622",
+        "exteriorsOffStillChecksumSha256": "a0a0bc3ff25b6d7357291547c8cd150c02a88dc3c52883f092df11bdee5f9c7f",
+        "stillsDiffer": true,
+        "statement": "Both stills were captured at the same camera pose in the same build, one with the promoted default active and one with exteriors switched off. A difference is the only evidence in this record that the textured facades reached the screen; the network counts prove only that their bytes arrived."
+      },
+      "passed": true,
+      "still": {
+        "relativeRef": "journeys/streaming-off.png",
+        "byteSize": 143437,
+        "checksumSha256": "a0a0bc3ff25b6d7357291547c8cd150c02a88dc3c52883f092df11bdee5f9c7f"
+      }
+    },
+    {
+      "journeyId": "tombstone-truth",
+      "claim": "The 172 owned w03 cells this release does NOT materialize are reported in words — the release says how many of its cells ship no exterior geometry and that no substitute was selected — rather than going quiet.",
+      "url": "http://localhost:4188/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-73.992500&lat=40.745800&height=150.000000&heading=65.000000&pitch=-4.000000&roll=0.000000",
+      "notices": [
+        "Exterior release manhattan-midtown-core-cells-20260811-v3: 146 of 149 exterior cells ship no exterior geometry in this release; no substitute was selected for them.",
+        "Exterior release manhattan-lower-manhattan-cells-20260812-p1: 124 of 126 exterior cells ship no exterior geometry in this release; no substitute was selected for them.",
+        "Exterior release manhattan-southern-remainder-cells-20260812-p1: 172 of 176 exterior cells ship no exterior geometry in this release; no substitute was selected for them.",
+        "Exterior geometry for 146 verified buildings (doitt:1000469, doitt:104167, doitt:104897, doitt:105916, doitt:1104532, doitt:1106472, doitt:1111726, doitt:1114961, doitt:1115013, doitt:1116162, doitt:1117425, doitt:1191064, doitt:1215127, doitt:1224763, doitt:1232671, doitt:1249756, doitt:1255513, doitt:1255514, doitt:1255672, doitt:1255932, doitt:1256071, doitt:1256080, doitt:1256145, doitt:1256146, doitt:1256148, doitt:1257095, doitt:1257096, doitt:1260400, doitt:1262786, doitt:1263464, doitt:1268457, doitt:1279525, doitt:1279526, doitt:1279527, doitt:1281378, doitt:1281379, doitt:1282695, doitt:1285662, doitt:1286246, doitt:1288191, doitt:1288650, doitt:1289932, doitt:1289963, doitt:1289964, doitt:1294316, doitt:1294690, doitt:1294942, doitt:1295112, doitt:1302197, doitt:1302589, doitt:132386, doitt:139143, doitt:162071, doitt:166790, doitt:181184, doitt:192536, doitt:204256, doitt:211331, doitt:212155, doitt:216520, doitt:217522, doitt:225670, doitt:239857, doitt:240700, doitt:274686, doitt:278753, doitt:280574, doitt:283395, doitt:317859, doitt:321432, doitt:328864, doitt:33170, doitt:334183, doitt:343915, doitt:348074, doitt:353265, doitt:361956, doitt:36922, doitt:373902, doitt:375025, doitt:392003, doitt:397048, doitt:404926, doitt:407018, doitt:418207, doitt:420075, doitt:440180, doitt:441273, doitt:443409, doitt:450560, doitt:450732, doitt:452121, doitt:460339, doitt:460605, doitt:473907, doitt:487836, doitt:501878, doitt:513787, doitt:53268, doitt:547528, doitt:553851, doitt:558110, doitt:559204, doitt:571062, doitt:572887, doitt:576567, doitt:584675, doitt:594251, doitt:602826, doitt:60572, doitt:631125, doitt:635382, doitt:654950, doitt:658930, doitt:662920, doitt:678033, doitt:684855, doitt:688120, doitt:688830, doitt:713164, doitt:743834, doitt:749752, doitt:755561, doitt:760196, doitt:803147, doitt:817527, doitt:838929, doitt:850090, doitt:852472, doitt:91300, doitt:917710, doitt:945838, doitt:95150, doitt:962303, doitt:96672, doitt:97522, doitt:98082, doitt:990113, doitt:990123, doitt:996239, doitt:996627, doitt:996629, doitt:996630, doitt:996631, doitt:996632, doitt:996746) is not drawn: the matching base building record is not loaded, so there is no verified WGS84 anchor for it. It will be drawn once that base record loads."
+      ],
+      "waveNotice": "Exterior release manhattan-southern-remainder-cells-20260812-p1: 172 of 176 exterior cells ship no exterior geometry in this release; no substitute was selected for them.",
+      "passed": true,
+      "still": {
+        "relativeRef": "journeys/tombstone-truth.png",
+        "byteSize": 638853,
+        "checksumSha256": "6c5360e51d92827ca670cfa3c23fbd2ed3bfbe5afaf13923bed036b5a907b622"
+      }
+    }
+  ],
+  "allPassed": true
+}
