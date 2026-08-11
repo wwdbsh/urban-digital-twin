@@ -77,7 +77,11 @@ interface CesiumViewportProps {
   onStorefrontSelected?: (placement: CommercialStorefrontPlacement) => void;
   publicRealmOverlay?: LoadedBlock835PublicRealmRelease | null;
   onPublicRealmSelected?: (feature: Block835PublicRealmFeature) => void;
-  exteriorOverlay?: ExteriorCellOverlay | null;
+  /**
+   * The exterior wave(s) to render. A build may promote more than one, so this
+   * accepts an ordered set; a single overlay stays accepted unchanged.
+   */
+  exteriorOverlay?: ExteriorCellOverlaySet;
   onExteriorUnanchored?: (canonicalFeatureIds: string[]) => void;
   onStage3RenderProof?: (proof: Stage3RenderProof | null) => void;
 }
@@ -94,6 +98,14 @@ export interface ExteriorCellOverlay {
   origin: "default" | "canary";
   profile: ExteriorRenderProfile;
   cells: readonly ExteriorCellOutcome[];
+}
+
+/** One wave or the ordered set of them; `null`/absent is "no exterior wave". */
+export type ExteriorCellOverlaySet = ExteriorCellOverlay | readonly ExteriorCellOverlay[] | null | undefined;
+
+function exteriorOverlayList(overlay: ExteriorCellOverlaySet): readonly ExteriorCellOverlay[] {
+  if (!overlay) return [];
+  return Array.isArray(overlay) ? overlay as readonly ExteriorCellOverlay[] : [overlay as ExteriorCellOverlay];
 }
 
 export interface DenseRenderMetrics {
@@ -231,32 +243,62 @@ export interface ExteriorCellRenderEntry {
   bytes: Uint8Array;
   geometricErrorMeters: number;
   provenance: ExteriorCellRenderPlan["assets"][number]["provenance"];
+  /**
+   * Release attribution of the wave this entry came from. It rides on the ENTRY
+   * rather than on the scene as a whole because a build may render more than
+   * one wave at once, and an entity stamped with a session-wide release id
+   * would then attribute some of its geometry to a release that did not ship
+   * it. Every consumer of this attribution must read it from the entry.
+   */
+  releaseId: string;
+  snapshotId: string;
+  origin: "default" | "canary";
+  profile: ExteriorRenderProfile;
 }
 
 /** Only cells the runtime actually verified reach the scene; failures render nothing. */
-export function exteriorOverlayRenderEntries(overlay: ExteriorCellOverlay | null | undefined): ExteriorCellRenderEntry[] {
-  if (!overlay) return [];
-  return overlay.cells
-    .filter((cell): cell is ExteriorCellRenderPlan => cell.kind === "rendered")
-    .flatMap((cell) => cell.assets.map((asset) => ({
-      entityId: exteriorCellEntityId(cell.cellId, asset.canonicalFeatureId),
-      cellId: cell.cellId,
-      cellReleaseId: cell.cellReleaseId,
-      representation: cell.representation,
-      canonicalFeatureId: asset.canonicalFeatureId,
-      lodId: asset.lodId,
-      checksumSha256: asset.checksumSha256,
-      byteSize: asset.byteSize,
-      bytes: asset.bytes,
-      geometricErrorMeters: asset.geometricErrorMeters,
-      provenance: asset.provenance,
-    })))
+export function exteriorOverlayRenderEntries(overlay: ExteriorCellOverlaySet): ExteriorCellRenderEntry[] {
+  return exteriorOverlayList(overlay)
+    .flatMap((wave) => wave.cells
+      .filter((cell): cell is ExteriorCellRenderPlan => cell.kind === "rendered")
+      .flatMap((cell) => cell.assets.map((asset) => ({
+        entityId: exteriorCellEntityId(cell.cellId, asset.canonicalFeatureId),
+        cellId: cell.cellId,
+        cellReleaseId: cell.cellReleaseId,
+        representation: cell.representation,
+        canonicalFeatureId: asset.canonicalFeatureId,
+        lodId: asset.lodId,
+        checksumSha256: asset.checksumSha256,
+        byteSize: asset.byteSize,
+        bytes: asset.bytes,
+        geometricErrorMeters: asset.geometricErrorMeters,
+        provenance: asset.provenance,
+        releaseId: wave.releaseId,
+        snapshotId: wave.snapshotId,
+        origin: wave.origin,
+        profile: wave.profile,
+      }))))
     .sort((left, right) => (left.entityId < right.entityId ? -1 : left.entityId > right.entityId ? 1 : 0));
 }
 
-/** Diff key for one cell's owned collection; a change replaces exactly that cell. */
-export function exteriorCellSignature(entries: readonly ExteriorCellRenderEntry[]): string {
-  return entries.map((entry) => `${entry.entityId}|${entry.cellReleaseId}|${entry.representation}|${entry.lodId}|${entry.checksumSha256}`).join(";");
+/**
+ * What the owned-collection reducer needs to place geometry. Wave attribution
+ * is optional here and REQUIRED on `ExteriorCellRenderEntry`: everything the
+ * overlay projection actually hands the scene carries its release, while the
+ * reducer stays usable for callers that only describe placements.
+ */
+export type ExteriorCellRenderPlacement =
+  Omit<ExteriorCellRenderEntry, "releaseId" | "snapshotId" | "origin" | "profile">
+  & Partial<Pick<ExteriorCellRenderEntry, "releaseId" | "snapshotId" | "origin" | "profile">>;
+
+/**
+ * Diff key for one cell's owned collection; a change replaces exactly that cell.
+ * Release attribution is part of the key: the same cell resolved from a
+ * different wave, snapshot, or head origin is different scene state, and the
+ * entity properties that carry that attribution have to be rebuilt with it.
+ */
+export function exteriorCellSignature(entries: readonly ExteriorCellRenderPlacement[]): string {
+  return entries.map((entry) => `${entry.entityId}|${entry.cellReleaseId}|${entry.representation}|${entry.lodId}|${entry.checksumSha256}|${entry.releaseId ?? ""}|${entry.snapshotId ?? ""}|${entry.origin ?? ""}|${entry.profile ?? ""}`).join(";");
 }
 
 export interface ExteriorOverlayAnchor {
@@ -277,20 +319,20 @@ export interface ExteriorOwnedCellCollection {
   complete: boolean;
 }
 
-export interface ExteriorOverlayCellPlan {
+export interface ExteriorOverlayCellPlan<T extends ExteriorCellRenderPlacement = ExteriorCellRenderEntry> {
   cellId: string;
   signature: string;
   complete: boolean;
-  adds: Array<{ entry: ExteriorCellRenderEntry; anchor: ExteriorOverlayAnchor }>;
+  adds: Array<{ entry: T; anchor: ExteriorOverlayAnchor }>;
   unanchoredCanonicalFeatureIds: string[];
 }
 
-export interface ExteriorOverlayPlan {
+export interface ExteriorOverlayPlan<T extends ExteriorCellRenderPlacement = ExteriorCellRenderEntry> {
   removeCellIds: string[];
   removeEntityIds: string[];
   revokeObjectUrls: string[];
   retainedCellIds: string[];
-  addCells: ExteriorOverlayCellPlan[];
+  addCells: ExteriorOverlayCellPlan<T>[];
   unanchoredCanonicalFeatureIds: string[];
 }
 
@@ -299,12 +341,12 @@ export interface ExteriorOverlayPlan {
  * entries the runtime produced. Keeping this outside the imperative Cesium
  * effect makes the retry, isolation, and object-URL revocation rules testable.
  */
-export function planExteriorOverlayUpdate(
-  entries: readonly ExteriorCellRenderEntry[],
+export function planExteriorOverlayUpdate<T extends ExteriorCellRenderPlacement>(
+  entries: readonly T[],
   owned: ReadonlyMap<string, ExteriorOwnedCellCollection>,
-  anchorFor: (entry: ExteriorCellRenderEntry) => ExteriorOverlayAnchor | null,
-): ExteriorOverlayPlan {
-  const byCell = new Map<string, ExteriorCellRenderEntry[]>();
+  anchorFor: (entry: T) => ExteriorOverlayAnchor | null,
+): ExteriorOverlayPlan<T> {
+  const byCell = new Map<string, T[]>();
   for (const entry of entries) byCell.set(entry.cellId, [...(byCell.get(entry.cellId) ?? []), entry]);
   const removeCellIds: string[] = [];
   const removeEntityIds: string[] = [];
@@ -318,11 +360,11 @@ export function planExteriorOverlayUpdate(
     revokeObjectUrls.push(...collection.objectUrls);
   }
   const retained = new Set(retainedCellIds);
-  const addCells: ExteriorOverlayCellPlan[] = [];
+  const addCells: ExteriorOverlayCellPlan<T>[] = [];
   const unanchored: string[] = [];
   for (const [cellId, cellEntries] of byCell) {
     if (retained.has(cellId)) continue;
-    const adds: ExteriorOverlayCellPlan["adds"] = [];
+    const adds: ExteriorOverlayCellPlan<T>["adds"] = [];
     const missing: string[] = [];
     for (const entry of cellEntries) {
       const anchor = anchorFor(entry);
@@ -1843,10 +1885,14 @@ export function CesiumViewport({
           model: new ModelGraphics({ uri: objectUrl, scale: 1, minimumPixelSize: 1 }),
           properties: {
             canonicalFeatureId: entry.canonicalFeatureId,
-            exteriorReleaseId: exteriorOverlay?.releaseId ?? null,
-            exteriorSnapshotId: exteriorOverlay?.snapshotId ?? null,
-            exteriorSnapshotOrigin: exteriorOverlay?.origin ?? null,
-            exteriorProfile: exteriorOverlay?.profile ?? null,
+            // Per-entry attribution: the entity names the release that actually
+            // shipped its bytes, not whatever wave the session happens to lead
+            // with. With several waves rendered at once, a scene-level stamp
+            // would misattribute every entity outside the leading wave.
+            exteriorReleaseId: entry.releaseId,
+            exteriorSnapshotId: entry.snapshotId,
+            exteriorSnapshotOrigin: entry.origin,
+            exteriorProfile: entry.profile,
             exteriorCellId: cell.cellId,
             exteriorCellReleaseId: entry.cellReleaseId,
             exteriorRepresentation: entry.representation,

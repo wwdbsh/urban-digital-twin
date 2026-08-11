@@ -45,7 +45,17 @@ export const BLOCK835_CANARY_MAX_CACHED_BYTES = 256 * 1024 * 1024;
  */
 export const BLOCK835_CANARY_HEAP_NOISE_BAND = 0.1;
 
-export interface Block835CanaryFacadePose {
+/**
+ * A camera path over a promoted exterior wave.
+ *
+ * `plan` is optional here and REQUIRED on `Block835CanaryFacadePose`: Block 835
+ * ships per-building tier-0 facade plans and frames its path against them, so
+ * its path can and must carry the plan hash it was framed by. A wave that ships
+ * no such plans has to state its framing some other way, and pretending it had
+ * a plan hash would be the strongest kind of false provenance — so the type
+ * lets it say nothing rather than say something untrue.
+ */
+export interface ExteriorCanaryFacadePose {
   poseId: string;
   buildingId: string;
   facade: string;
@@ -58,16 +68,25 @@ export interface Block835CanaryFacadePose {
   referenceVerticalExtentMeters: number;
   pose: { longitude: number; latitude: number; height: number; heading: number; pitch: number; roll: number };
   anchor: { longitude: number; latitude: number; source: Record<string, unknown> };
-  plan: { file: string; planHashSha256: string; fileSha256: string; tier0BoundsMm: Record<string, number>; heightMm: number };
+  plan?: { file: string; planHashSha256: string; fileSha256: string; tier0BoundsMm: Record<string, number>; heightMm: number };
 }
 
-export interface Block835CanaryFacadePath {
+export interface ExteriorCanaryFacadePath {
   schemaVersion: string;
   pathId: string;
   generator: string;
   minimumCameraToFacadeMeters: number;
   closestCameraToFacadeMeters: number;
   framingReference: { note: string; aspect: string; verticalHalfAngleDegrees: number };
+  poses: ExteriorCanaryFacadePose[];
+}
+
+/** The Block 835 path, which is plan-framed and keeps `plan` mandatory. */
+export interface Block835CanaryFacadePose extends ExteriorCanaryFacadePose {
+  plan: { file: string; planHashSha256: string; fileSha256: string; tier0BoundsMm: Record<string, number>; heightMm: number };
+}
+
+export interface Block835CanaryFacadePath extends ExteriorCanaryFacadePath {
   poses: Block835CanaryFacadePose[];
 }
 
@@ -94,6 +113,35 @@ export function parseBlock835CanaryPathVariant(search: string): Block835CanaryPa
 
 export function block835CanaryFacadePath(variant: Block835CanaryPathVariant): Block835CanaryFacadePath {
   return variant === "oblique" ? BLOCK835_CANARY_FACADE_PATH_OBLIQUE : BLOCK835_CANARY_FACADE_PATH;
+}
+
+/**
+ * Which promoted wave the probe measures.
+ *
+ * The harness is no longer Block-835-only: with more than one wave promoted,
+ * "the exterior scene" is ambiguous, and a measurement that does not say which
+ * release it drove the camera through is not evidence for either. The target
+ * names the release AND the camera path, because a path framed on Block 835
+ * buildings measures nothing about Midtown geometry.
+ */
+export interface ExteriorCanaryTarget {
+  targetId: string;
+  releaseId: string;
+  path: ExteriorCanaryFacadePath;
+}
+
+export const EXTERIOR_CANARY_TARGET_QUERY = "exteriorCanaryWave";
+
+export function exteriorCanaryTarget(search: string, midtownPath: ExteriorCanaryFacadePath): ExteriorCanaryTarget {
+  const params = new URLSearchParams(search);
+  if (params.get(EXTERIOR_CANARY_TARGET_QUERY) === "midtown-core") {
+    return { targetId: "midtown-core", releaseId: "manhattan-midtown-core-cells-20260811", path: midtownPath };
+  }
+  return {
+    targetId: "block835",
+    releaseId: "manhattan-exterior-cells-20260811",
+    path: block835CanaryFacadePath(parseBlock835CanaryPathVariant(search)),
+  };
 }
 
 export function parseBlock835CanaryProbeMode(search: string): Block835CanaryProbeMode | null {
@@ -203,6 +251,8 @@ export interface Block835CanaryHeapVerdict {
   growthRatio: number | null;
   noiseBandRatio: number;
   monotonicGrowthDetected: boolean | null;
+  /** Whether each sample followed an explicit `window.gc()` collection. */
+  forcedCollection: boolean;
   boundedClaim: string;
 }
 
@@ -225,8 +275,14 @@ function median(values: readonly number[]): number | null {
 export function block835CanaryHeapVerdict(
   heapBytesPerRepeat: readonly (number | null)[],
   noiseBandRatio = BLOCK835_CANARY_HEAP_NOISE_BAND,
+  forcedCollection = false,
 ): Block835CanaryHeapVerdict {
-  const boundedClaim = "JS heap only, sampled via performance.memory with no forced collection. Native GPU and decoded-texture retention are not observable here.";
+  // The claim is materially different once a collection was forced: growth that
+  // survives an explicit GC is retention, not the sawtooth of an uncollected
+  // heap. The wording has to say which of the two was measured.
+  const boundedClaim = forcedCollection
+    ? "JS heap only, sampled via performance.memory AFTER an explicit forced collection (window.gc) at each repeat. Growth beyond the noise band here is retained JS memory, not collection lag. Native GPU and decoded-texture retention are still not observable."
+    : "JS heap only, sampled via performance.memory with no forced collection. Native GPU and decoded-texture retention are not observable here.";
   const values = heapBytesPerRepeat.filter((value): value is number => typeof value === "number" && Number.isFinite(value) && value > 0);
   if (values.length < 2) {
     return {
@@ -238,6 +294,7 @@ export function block835CanaryHeapVerdict(
       growthRatio: null,
       noiseBandRatio,
       monotonicGrowthDetected: null,
+      forcedCollection,
       boundedClaim,
     };
   }
@@ -255,6 +312,7 @@ export function block835CanaryHeapVerdict(
     growthRatio,
     noiseBandRatio,
     monotonicGrowthDetected: growthRatio === null ? null : growthRatio > noiseBandRatio,
+    forcedCollection,
     boundedClaim,
   };
 }

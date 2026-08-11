@@ -58,9 +58,9 @@ import { TRAVEL_CONTEXT_BUDGETS, TRAVEL_CONTEXT_RELEASE_ID, TRAVEL_CONTEXT_TILE_
 import { AggregateRequestBudget, ComposedReleaseAdapter, type ComposedReleaseMetrics } from "../runtime/composed-release-runtime";
 import { EXTERIOR_PILOT_RELEASE_ID, createExteriorPilotFaultFetcher, loadExteriorPilotRelease, parseExteriorPilotFault, type CommercialStorefrontPlacement, type LoadedExteriorPilotRelease } from "../runtime/exterior-pilot-release";
 import { BLOCK835_PUBLIC_REALM_RELEASE_ID, createBlock835PublicRealmFaultFetcher, loadBlock835PublicRealmRelease, parseBlock835PublicRealmFault, publicRealmFeatureToFeature, type Block835PublicRealmFeature, type LoadedBlock835PublicRealmRelease } from "../runtime/block835-public-realm-release";
-import { loadExteriorCellRuntime, type ExteriorCellOutcome, type ExteriorCellRuntime, type ExteriorHeadRequest } from "../runtime/exterior-cell-runtime";
-import { createExteriorCellFaultFetcher, parseExteriorCellFault } from "../runtime/exterior-cell-fault";
-import { EXTERIOR_DEFAULT_ACTIVATION, exteriorRolledBackReleaseNotice, exteriorStreamingOverrideDisables, exteriorUnavailableDetail, resolveExteriorActivation, restoresPromotedDefault, verifyPromotedExteriorMembership, verifyPromotedExteriorPin, type ExteriorDefaultActivationRecord, type ExteriorStreamingOverride } from "../runtime/exterior-default-activation";
+import { EXTERIOR_RUNTIME_BUDGETS, loadExteriorCellRuntime, type ExteriorCellOutcome, type ExteriorCellRuntime, type ExteriorHeadRequest } from "../runtime/exterior-cell-runtime";
+import { createExteriorAssetFaultFetcher, createExteriorCellFaultFetcher, parseExteriorAssetFault, parseExteriorCellFault } from "../runtime/exterior-cell-fault";
+import { EXTERIOR_DEFAULT_ACTIVATION, exteriorAcceptedCellsDigest, exteriorDefaultActivations, exteriorRolledBackReleaseNotice, exteriorStreamingOverrideDisables, exteriorUnavailableStatements, resolveExteriorActivationSet, restoresPromotedDefault, verifyPromotedExteriorMembership, verifyPromotedExteriorPin, type ExteriorDefaultActivationRecord, type ExteriorDefaultActivationRecords, type ExteriorReleaseActivation, type ExteriorStreamingOverride } from "../runtime/exterior-default-activation";
 import {
   BLOCK835_CANARY_REPEATS,
   BLOCK835_CANARY_SAMPLES_PER_POSE,
@@ -68,15 +68,16 @@ import {
   block835CanaryBudgetVerdict,
   block835CanaryHeapVerdict,
   block835CanaryRuntimeVerdict,
-  block835CanaryFacadePath,
   estimateCanaryDisplay,
+  exteriorCanaryTarget,
   parseBlock835CanaryProbeMode,
-  parseBlock835CanaryPathVariant,
   summarizeCanaryFrames,
   type Block835CanaryProbeResult,
   type Block835CanaryRepeatSample,
 } from "../runtime/block835-canary-probe";
+import { MIDTOWN_CORE_CANARY_FACADE_PATH } from "../runtime/midtown-core-canary-facade-path";
 import { DEFAULT_EXTERIOR_RENDER_PROFILE, EXTERIOR_RENDER_PROFILES, exteriorRenderProfileLabel, parseExteriorRenderProfile, type ExteriorRenderProfile } from "../runtime/exterior-render-profiles";
+import { exteriorNotShippedSummary, exteriorQualifiedNotice, exteriorWaveForSelection } from "../runtime/exterior-wave-attribution";
 import { fallbackViewportFootprint, type ViewportFootprint } from "../runtime/viewport-footprint";
 
 const navigation = [
@@ -637,6 +638,33 @@ export function exteriorStreamingFailureMessage(error: unknown): string {
 }
 
 /**
+ * Everything one promoted exterior wave owns. Waves are held per release id so
+ * that verification, failure, notices, and provenance stay attributed to the
+ * release they came from — and so a second wave cannot inherit the first one's
+ * acceptance evidence.
+ */
+export interface ExteriorWaveState {
+  runtime: ExteriorCellRuntime | null;
+  loadState: "idle" | "loading" | "ready" | "failed";
+  message: string;
+  headNotice: string | null;
+}
+
+/** A wave plus the cell outcomes it has resolved so far. */
+export interface ExteriorWaveView extends ExteriorWaveState {
+  outcomes: readonly ExteriorCellOutcome[];
+}
+
+export const IDLE_EXTERIOR_WAVE: ExteriorWaveState = { runtime: null, loadState: "idle", message: "", headNotice: null };
+const NO_EXTERIOR_OUTCOMES: readonly ExteriorCellOutcome[] = [];
+const LOADING_EXTERIOR_WAVE: ExteriorWaveState = { ...IDLE_EXTERIOR_WAVE, loadState: "loading", message: "Exterior streaming is loading from the local release…" };
+
+/** A wave that failed closed renders nothing and keeps its own failure words. */
+function failedExteriorWave(message: string): ExteriorWaveState {
+  return { ...IDLE_EXTERIOR_WAVE, loadState: "failed", message };
+}
+
+/**
  * One user-visible line per cell that did not render its pinned head
  * representation, plus one for verified geometry withheld for want of a base
  * anchor. Nothing is ever withheld silently.
@@ -655,19 +683,13 @@ export function exteriorStreamingNotices(
   unanchoredCanonicalFeatureIds: readonly string[] = [],
 ): string[] {
   const notices = headNotice ? [headNotice] : [];
-  const notShipped = cells.filter((cell) => cell.kind === "not-shipped");
   for (const cell of cells) {
     if (cell.kind === "rendered") { if (cell.notice) notices.push(cell.notice); continue; }
     if (cell.kind === "not-shipped") continue;
     notices.push(cell.notice);
   }
-  if (notShipped.length > 0) {
-    notices.push(
-      notShipped.length === 1
-        ? notShipped[0]!.notice
-        : `${notShipped.length} of ${cells.length} exterior cells ship no exterior geometry in this release; no substitute was selected for them.`,
-    );
-  }
+  const notShipped = exteriorNotShippedSummary(cells);
+  if (notShipped) notices.push(notShipped);
   const unanchored = exteriorUnanchoredNotice(unanchoredCanonicalFeatureIds);
   if (unanchored) notices.push(unanchored);
   return notices;
@@ -679,7 +701,7 @@ export function exteriorStreamingNotices(
  * `exteriorProfile`, produces the same kind of explicit notice every other
  * release/mode mismatch in the app produces.
  */
-export function exteriorDeepLinkMessage(href: string, record: ExteriorDefaultActivationRecord = EXTERIOR_DEFAULT_ACTIVATION): string | null {
+export function exteriorDeepLinkMessage(href: string, records: ExteriorDefaultActivationRecords = EXTERIOR_DEFAULT_ACTIVATION): string | null {
   const url = new URL(href, typeof window === "undefined" ? "http://localhost/" : window.location.href);
   const requestedRelease = url.searchParams.get("exteriorCells");
   if (requestedRelease !== null && !isPinnedExteriorCellRelease(requestedRelease)) {
@@ -688,7 +710,10 @@ export function exteriorDeepLinkMessage(href: string, record: ExteriorDefaultAct
   // A withdrawn release stays in the pinned allowlist (its bytes are still on
   // disk), so the refusal has to be stated here rather than inferred from the
   // allowlist.
-  const rolledBack = exteriorRolledBackReleaseNotice(requestedRelease, record);
+  // Checked against the WHOLE promoted set: a link into a wave this build
+  // withdrew must be refused by that wave's record, not silently accepted
+  // because a different wave is still promoted.
+  const rolledBack = exteriorRolledBackReleaseNotice(requestedRelease, records);
   if (rolledBack) return `${rolledBack} The rest of the view was left unchanged.`;
   const requestedStreaming = url.searchParams.get(EXTERIOR_STREAMING_OFF_PARAM);
   if (requestedStreaming !== null && requestedStreaming !== "off") {
@@ -838,7 +863,13 @@ export function App() {
   // canary probe is the inverse: it *requires* the exterior-cell release to be
   // active and measures the Goal's absolute budgets instead of a regression.
   const block835CanaryMode = BLOCK835_CANARY_HARNESS_ENABLED && typeof window !== "undefined" ? parseBlock835CanaryProbeMode(window.location.search) : null;
-  const block835CanaryPathVariant = BLOCK835_CANARY_HARNESS_ENABLED && typeof window !== "undefined" ? parseBlock835CanaryPathVariant(window.location.search) : "level";
+  // Which promoted wave the probe measures, and the camera path it drives.
+  // Defaults to the Block 835 target so every T009-era probe URL still means
+  // exactly what it meant.
+  const exteriorCanaryProbeTarget = exteriorCanaryTarget(
+    BLOCK835_CANARY_HARNESS_ENABLED && typeof window !== "undefined" ? window.location.search : "",
+    MIDTOWN_CORE_CANARY_FACADE_PATH,
+  );
   // A URL cannot activate the real adapter until its immutable release has
   // loaded and passed validation. Start every first render in fixtures so an
   // unknown/loading release never wears a real label over fixture geometry.
@@ -886,15 +917,22 @@ export function App() {
   const [exteriorExplicitReleaseId, setExteriorExplicitReleaseId] = useState<string | null>(initialExteriorStreaming.explicitReleaseId);
   const [exteriorProfile, setExteriorProfile] = useState<ExteriorRenderProfile>(initialExteriorStreaming.profile);
   const [exteriorCanarySnapshotId, setExteriorCanarySnapshotId] = useState<string | null>(initialExteriorStreaming.canarySnapshotId);
-  const [exteriorCellRuntime, setExteriorCellRuntime] = useState<ExteriorCellRuntime | null>(null);
-  const [exteriorCellLoadState, setExteriorCellLoadState] = useState<"idle" | "loading" | "ready" | "failed">(initialExteriorStreaming.override === "on" ? "loading" : "idle");
-  const [exteriorCellMessage, setExteriorCellMessage] = useState(initialExteriorStreaming.override === "on" ? "Exterior streaming is loading from the local release…" : "");
-  const [exteriorHeadNotice, setExteriorHeadNotice] = useState<string | null>(null);
-  const [exteriorCellOutcomes, setExteriorCellOutcomes] = useState<ExteriorCellOutcome[]>([]);
+  // One entry per promoted exterior release. A wave failing closed clears its
+  // own entry and leaves every other wave exactly as it was, so one bad release
+  // can never withdraw a good one.
+  const [exteriorWaves, setExteriorWaves] = useState<ReadonlyMap<string, ExteriorWaveState>>(() => (
+    initialExteriorStreaming.override === "on"
+      ? new Map([[initialExteriorStreaming.explicitReleaseId ?? EXTERIOR_CELL_STREAMING_RELEASE_ID, LOADING_EXTERIOR_WAVE]])
+      : new Map()
+  ));
+  // Cell outcomes live beside the waves, not inside them: publishing an outcome
+  // must not change the identity the load effect watches, or resolving cells
+  // would restart the very load that produced them.
+  const [exteriorWaveOutcomes, setExteriorWaveOutcomes] = useState<ReadonlyMap<string, readonly ExteriorCellOutcome[]>>(() => new Map());
   const [exteriorUnanchoredIds, setExteriorUnanchoredIds] = useState<string[]>([]);
   // Kept separate from `deepLinkMessage`, which the first selection clears.
   const [exteriorDeepLinkNotice, setExteriorDeepLinkNotice] = useState<string | null>(
-    typeof window === "undefined" ? null : exteriorDeepLinkMessage(window.location.href, EXTERIOR_DEFAULT_ACTIVATION),
+    typeof window === "undefined" ? null : exteriorDeepLinkMessage(window.location.href, exteriorDefaultActivations(EXTERIOR_DEFAULT_ACTIVATION)),
   );
   const [stage3RenderProof, setStage3RenderProof] = useState<Stage3RenderProof | null>(null);
   const [block835PerformanceProbe, setBlock835PerformanceProbe] = useState<Block835PerformanceProbeResult | null>(null);
@@ -977,6 +1015,13 @@ export function App() {
   const exteriorProfileRef = useRef(exteriorProfile);
   const exteriorCanarySnapshotIdRef = useRef(exteriorCanarySnapshotId);
   const aggregateBudgetRef = useRef(new AggregateRequestBudget());
+  // ONE exterior cache for every promoted wave. The declared exterior ceiling is
+  // 256 entries / 256 MiB for exterior streaming as a whole, so waves share this
+  // budget instead of each constructing its own and multiplying the ceiling by
+  // the number of promotions. Entries are keyed by artifact ref AND checksum, so
+  // sharing can only ever reuse identical verified bytes.
+  const exteriorCellLoadsRef = useRef(new Map<string, { runtime: ExteriorCellRuntime; profile: ExteriorRenderProfile; bucket: number; controller: AbortController }>());
+  const exteriorCacheRef = useRef<CitywideLruCache<Uint8Array>>(new CitywideLruCache<Uint8Array>(EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries, EXTERIOR_RUNTIME_BUDGETS.maxCachedBytes));
   const aggregateCacheRef = useRef<CitywideLruCache<unknown>>(new CitywideLruCache<unknown>(CITYWIDE_BUDGETS.maxLoadedShards, CITYWIDE_BUDGETS.maxLoadedBytes));
   const citywideModeRef = useRef(false);
   const civicModeRef = useRef(false);
@@ -1040,48 +1085,90 @@ export function App() {
   const publicRealmStatusMessage = publicRealmActivation.prerequisiteMessage ?? publicRealmMessage;
   const activeRealBaseReleaseIdRef = useRef(activeRealBaseReleaseId);
   activeRealBaseReleaseIdRef.current = activeRealBaseReleaseId;
-  // The promotion gate. `exteriorStreamingRequested` is no longer URL-only
-  // state: with the Block 835 wave promoted, an active compatible real base is
-  // itself the request, and a fixture-mode session resolves to quiet.
-  const exteriorActivationResolution = resolveExteriorActivation({
+  // The promotion gate, run over the whole promoted set. `exteriorStreamingRequested`
+  // is no longer URL-only state: with a wave promoted, an active compatible real
+  // base is itself the request, and a fixture-mode session resolves to quiet.
+  // The records are read per render, not captured once, so a build that swaps a
+  // record resolves the record it actually exports.
+  const exteriorActivationRecords = exteriorDefaultActivations(EXTERIOR_DEFAULT_ACTIVATION);
+  const exteriorActivationSet = resolveExteriorActivationSet({
     override: exteriorStreamingOverride,
     explicitReleaseId: exteriorExplicitReleaseId,
     activeRealBaseReleaseId,
     fallbackReleaseId: EXTERIOR_CELL_STREAMING_RELEASE_ID,
-    record: EXTERIOR_DEFAULT_ACTIVATION,
+    records: exteriorActivationRecords,
   });
-  const exteriorStreamingRequested = exteriorActivationResolution.streaming;
-  const exteriorCellReleaseId = exteriorActivationResolution.releaseId;
-  const exteriorPromotedDefault = exteriorActivationResolution.promotedDefault;
+  const exteriorStreamingRequested = exteriorActivationSet.streaming;
+  const exteriorCellReleaseId = exteriorActivationSet.primaryReleaseId;
+  const exteriorTargetsRef = useRef<readonly ExteriorReleaseActivation[]>(exteriorActivationSet.targets);
+  exteriorTargetsRef.current = exteriorActivationSet.targets;
+  const exteriorActivationRecordsRef = useRef<readonly ExteriorDefaultActivationRecord[]>(exteriorActivationRecords);
+  exteriorActivationRecordsRef.current = exteriorActivationRecords;
+  /** Every release this build promotes by default, named for the operator probes. */
+  const exteriorPromotedReleaseIdLabel = exteriorActivationRecords.flatMap((record) => (record.enabled ? [record.releaseId] : [])).join(", ") || "none";
   exteriorStreamingRequestedRef.current = exteriorStreamingRequested;
   exteriorCellReleaseIdRef.current = exteriorCellReleaseId;
-  const exteriorStreamingState = exteriorStreamingActivation({
-    requested: exteriorStreamingRequested,
-    releaseId: exteriorCellReleaseId,
-    loadState: exteriorCellLoadState,
-    hasVerifiedRuntime: exteriorCellRuntime !== null,
-    activeBaseReleaseId: activeRealBaseReleaseId,
-    compatibleWithActiveBase: Boolean(exteriorCellRuntime?.compatibleWith(activeRealBaseReleaseId)),
+  const exteriorWaveState = (releaseId: string): ExteriorWaveView => ({
+    ...(exteriorWaves.get(releaseId) ?? IDLE_EXTERIOR_WAVE),
+    outcomes: exteriorWaveOutcomes.get(releaseId) ?? NO_EXTERIOR_OUTCOMES,
   });
-  const exteriorStreamingActive = exteriorStreamingState.active;
-  const exteriorStreamingStatusMessage = exteriorStreamingState.prerequisiteMessage ?? exteriorCellMessage;
-  const exteriorSnapshotId = exteriorCellRuntime?.snapshot.snapshotId ?? null;
-  const exteriorSnapshotOrigin = exteriorCellRuntime?.origin ?? "default";
-  const exteriorCellOverlay = useMemo<ExteriorCellOverlay | null>(() => (
-    exteriorStreamingActive && exteriorCellRuntime
-      ? { releaseId: exteriorCellRuntime.releaseId, snapshotId: exteriorCellRuntime.snapshot.snapshotId, origin: exteriorCellRuntime.origin, profile: exteriorProfile, cells: exteriorCellOutcomes }
-      : null
-  ), [exteriorCellOutcomes, exteriorCellRuntime, exteriorProfile, exteriorStreamingActive]);
-  const exteriorNotices = exteriorStreamingActive ? exteriorStreamingNotices(exteriorHeadNotice, exteriorCellOutcomes, exteriorUnanchoredIds) : [];
-  // Explicit-unavailable rule: a real-base session whose exterior wave is not
-  // running says so in the details panel instead of letting the exterior
+  // One activation verdict per targeted wave. A wave that has not cleared its
+  // own prerequisites contributes nothing to the scene and says so in its own
+  // words, rather than being covered by a sibling wave that did clear them.
+  const exteriorWaveActivations = exteriorActivationSet.targets.map((target) => {
+    const wave = exteriorWaveState(target.releaseId);
+    return {
+      target,
+      wave,
+      activation: exteriorStreamingActivation({
+        requested: true,
+        releaseId: target.releaseId,
+        loadState: wave.loadState,
+        hasVerifiedRuntime: wave.runtime !== null,
+        activeBaseReleaseId: activeRealBaseReleaseId,
+        compatibleWithActiveBase: Boolean(wave.runtime?.compatibleWith(activeRealBaseReleaseId)),
+      }),
+    };
+  });
+  const exteriorActiveWaves = exteriorWaveActivations.filter((entry) => entry.activation.active);
+  const exteriorStreamingActive = exteriorActiveWaves.length > 0;
+  const exteriorPrimaryRuntime = exteriorWaveActivations[0]?.wave.runtime ?? null;
+  // The wave the canary probe measures, resolved by release id rather than by
+  // position: a probe bound to "whichever wave came first" would report Block
+  // 835's numbers for a Midtown camera path.
+  const exteriorProbeRuntime = exteriorActiveWaves.find((entry) => entry.target.releaseId === exteriorCanaryProbeTarget.releaseId)?.wave.runtime ?? null;
+  // Stable identity of "which releases, gated how". The load effect and the
+  // overlay memo both key off it so a re-render that changed neither the waves
+  // nor the promotion verdicts rebuilds no scene state.
+  const exteriorTargetKey = exteriorActivationSet.targets.map((target) => `${target.releaseId}|${target.promotedDefault ? "gated" : "plain"}`).join(";");
+  const exteriorActiveWavesRef = useRef(exteriorActiveWaves);
+  exteriorActiveWavesRef.current = exteriorActiveWaves;
+  const exteriorCellOverlays = useMemo<readonly ExteriorCellOverlay[]>(() => exteriorActiveWavesRef.current.flatMap((entry) => (
+    entry.wave.runtime
+      ? [{ releaseId: entry.wave.runtime.releaseId, snapshotId: entry.wave.runtime.snapshot.snapshotId, origin: entry.wave.runtime.origin, profile: exteriorProfile, cells: entry.wave.outcomes }]
+      : []
+  )), [activeRealBaseReleaseId, exteriorProfile, exteriorTargetKey, exteriorWaveOutcomes, exteriorWaves]);
+  // Notices stay attributed to the wave that produced them, always. Two waves
+  // produce otherwise-identical lines ("N of M cells ship no exterior
+  // geometry"), and a reader cannot act on a fallback notice without knowing
+  // which release it is about — so the release is named unconditionally rather
+  // than appearing only once a second wave happens to be streaming.
+  const exteriorNoticeEntries = exteriorActiveWaves.flatMap((entry) => exteriorStreamingNotices(entry.wave.headNotice, entry.wave.outcomes)
+    .map((notice) => ({ releaseId: entry.target.releaseId, notice: exteriorQualifiedNotice(entry.target.releaseId, notice) })));
+  // Withheld-anchor geometry is reported once for the scene: the viewport
+  // resolves anchors across every wave at once and reports one union.
+  const exteriorUnanchoredStatement = exteriorStreamingActive ? exteriorUnanchoredNotice(exteriorUnanchoredIds) : null;
+  const exteriorNotices = exteriorUnanchoredStatement
+    ? [...exteriorNoticeEntries, { releaseId: "", notice: exteriorUnanchoredStatement }]
+    : exteriorNoticeEntries;
+  // Explicit-unavailable rule, per wave: a real-base session whose exterior wave
+  // is not running says so in the details panel instead of letting the exterior
   // provenance section disappear as if it had never been promised.
-  const exteriorUnavailableStatement = exteriorUnavailableDetail({
-    streaming: exteriorStreamingRequested,
+  const exteriorUnavailableStatementList = exteriorUnavailableStatements({
+    set: exteriorActivationSet,
     override: exteriorStreamingOverride,
     activeRealBaseReleaseId,
     explicitReleaseId: exteriorExplicitReleaseId,
-    record: EXTERIOR_DEFAULT_ACTIVATION,
   });
   // Bucketed camera *ellipsoid height*, used as the proxy the exterior LOD
   // thresholds are evaluated against. It is not a measured camera-to-asset
@@ -1234,9 +1321,11 @@ export function App() {
   // T009 canary validation probe. Compiled out unless VITE_BLOCK835_PROBE=1.
   useEffect(() => {
     if (!block835CanaryMode || typeof window === "undefined") return undefined;
-    const runtime = exteriorCellRuntime;
+    // The probe measures ONE named wave. Binding it to the leading wave would
+    // silently certify Block 835 while the camera flew a Midtown path.
+    const runtime = exteriorProbeRuntime;
     const buildMode: "development" | "production" = import.meta.env.DEV ? "development" : "production";
-    const facadePath = block835CanaryFacadePath(block835CanaryPathVariant);
+    const facadePath = exteriorCanaryProbeTarget.path;
     const poses = facadePath.poses;
     const pending = (status: Block835CanaryProbeResult["status"], reason: string | null, partial?: Partial<Block835CanaryProbeResult>): Block835CanaryProbeResult => ({
       schemaVersion: "1.0",
@@ -1275,7 +1364,9 @@ export function App() {
     // The canary probe certifies the canary scene, so it starts only once the
     // exterior-cell release is actually streaming over an active real base.
     if (!activeRealBaseReleaseId || !exteriorStreamingActive || !runtime) {
-      setBlock835CanaryProbe(pending("waiting-for-prerequisites", `Waiting for an active compatible real base with the pinned exterior-cell release streaming. Release ${EXTERIOR_DEFAULT_ACTIVATION.releaseId ?? "none"} streams by default over a real base; remove ?${EXTERIOR_STREAMING_OFF_PARAM}=off if this session disabled it.`));
+      // Name the wave being waited for. With several waves promoted, "the
+      // pinned exterior-cell release" sent the reader looking at the wrong one.
+      setBlock835CanaryProbe(pending("waiting-for-prerequisites", `Waiting for an active compatible real base with exterior release ${exteriorCanaryProbeTarget.releaseId} streaming, which this probe measures along path ${facadePath.pathId}. This build streams ${exteriorPromotedReleaseIdLabel} by default over a real base; remove ?${EXTERIOR_STREAMING_OFF_PARAM}=off if this session disabled exterior streaming, and do not pin a different release with ?exteriorCells=, which selects that release ALONE.`));
       return undefined;
     }
 
@@ -1287,7 +1378,24 @@ export function App() {
       const used = (performance as Performance & { memory?: { usedJSHeapSize?: number } }).memory?.usedJSHeapSize;
       return typeof used === "number" && Number.isFinite(used) ? used : null;
     };
-    const peakConcurrency = (): number => Math.max(aggregateBudgetRef.current.peakConcurrency(), runtime.getMetrics().peakConcurrentRequests);
+    // Peak concurrency is a max across every active wave plus the shared budget.
+    const peakConcurrency = (): number => Math.max(
+      aggregateBudgetRef.current.peakConcurrency(),
+      ...exteriorActiveWavesRef.current.map((entry) => entry.wave.runtime?.getMetrics().peakConcurrentRequests ?? 0),
+    );
+    // The exterior cache is SHARED across waves, so it is read once from the
+    // cache itself. Summing per-runtime metrics would count the same bytes and
+    // the same entries once per promoted wave and report a false ceiling.
+    const exteriorCacheSample = () => ({
+      entries: exteriorCacheRef.current.size(),
+      bytes: exteriorCacheRef.current.bytes(),
+      evictions: exteriorCacheRef.current.evictionCount(),
+    });
+    // A6: with --js-flags=--expose-gc the probe forces a collection before each
+    // heap sample, so growth across repeats is retention rather than collection
+    // lag. Without it the sample keeps its weaker, explicitly-labelled claim.
+    const forcedCollection = typeof (window as Window & { gc?: () => void }).gc === "function";
+    const collectGarbage = () => { (window as Window & { gc?: () => void }).gc?.(); };
     const run = async () => {
       if (!isCurrent()) return;
       const beforeFocus = document.hasFocus();
@@ -1330,15 +1438,16 @@ export function App() {
             if (reason) break;
           }
           allSamples.push(...repeatSamples);
-          const exteriorMetrics = runtime.getMetrics();
-          const cachedBytes = exteriorMetrics.cachedBytes + composedMetricsRef.current.aggregate.cachedBytes;
+          const exteriorCache = exteriorCacheSample();
+          const cachedBytes = exteriorCache.bytes + composedMetricsRef.current.aggregate.cachedBytes;
           peakCachedBytes = Math.max(peakCachedBytes, cachedBytes);
+          collectGarbage();
           perRepeat.push({
             repeatIndex,
             summary: summarizeCanaryFrames(repeatSamples),
-            cacheEntries: exteriorMetrics.cacheEntries + composedMetricsRef.current.aggregate.cacheEntries,
+            cacheEntries: exteriorCache.entries + composedMetricsRef.current.aggregate.cacheEntries,
             cachedBytes,
-            cacheEvictions: exteriorMetrics.cacheEvictions + composedMetricsRef.current.aggregate.cacheEvictions,
+            cacheEvictions: exteriorCache.evictions + composedMetricsRef.current.aggregate.cacheEvictions,
             peakConcurrentRequests: peakConcurrency(),
             jsHeapBytes: jsHeapBytes(),
           });
@@ -1361,7 +1470,7 @@ export function App() {
         aggregate,
         display: estimateCanaryDisplay(allSamples),
         budget: block835CanaryBudgetVerdict(block835CanaryMode, aggregate),
-        heap: block835CanaryHeapVerdict(perRepeat.map((entry) => entry.jsHeapBytes)),
+        heap: block835CanaryHeapVerdict(perRepeat.map((entry) => entry.jsHeapBytes), undefined, forcedCollection),
         runtime: block835CanaryRuntimeVerdict(peakConcurrency(), peakCachedBytes || null),
         disclosures: {
           buildMode,
@@ -1393,30 +1502,37 @@ export function App() {
       window.removeEventListener("focus", startWhenFocused);
       document.removeEventListener("visibilitychange", startWhenFocused);
     };
-  }, [activeRealBaseReleaseId, block835CanaryMode, block835CanaryPathVariant, exteriorCellRuntime, exteriorStreamingActive]);
+  }, [activeRealBaseReleaseId, block835CanaryMode, exteriorCanaryProbeTarget.path, exteriorCanaryProbeTarget.targetId, exteriorProbeRuntime, exteriorStreamingActive]);
 
   useEffect(() => {
-    if (!exteriorStreamingRequested) {
-      setExteriorCellRuntime(null);
+    const targets = exteriorTargetsRef.current;
+    if (targets.length === 0) {
       setExteriorUnanchoredIds([]);
-      setExteriorCellOutcomes([]);
-      setExteriorHeadNotice(null);
-      setExteriorCellLoadState("idle");
-      setExteriorCellMessage("");
+      setExteriorWaves((current) => (current.size === 0 ? current : new Map()));
+      setExteriorWaveOutcomes((current) => (current.size === 0 ? current : new Map()));
       return undefined;
     }
-    const controller = new AbortController();
-    setExteriorCellLoadState("loading");
-    setExteriorCellMessage("Exterior streaming is loading from the local release…");
+    // One controller per wave: aborting a superseded load must not cancel a
+    // sibling wave that is still resolving its own release.
+    const controllers = new Map<string, AbortController>(targets.map((target) => [target.releaseId, new AbortController()]));
+    setExteriorWaves(new Map(targets.map((target) => [target.releaseId, LOADING_EXTERIOR_WAVE])));
+    setExteriorWaveOutcomes((current) => (current.size === 0 ? current : new Map()));
     const request: ExteriorHeadRequest = exteriorCanarySnapshotId ? { kind: "canary", snapshotId: exteriorCanarySnapshotId } : { kind: "default" };
     // Harness-only failure-boundary seam. It is compiled out unless the build
     // opted in, is query-driven with no user-facing control, and corrupts only
     // a cloned response body in memory: the pinned release files on disk are
     // never rewritten, so the fault journey cannot disturb an immutable byte.
-    const cellFault = BLOCK835_CANARY_HARNESS_ENABLED && typeof window !== "undefined"
-      ? parseExteriorCellFault(new URL(window.location.href).searchParams.get("exteriorCellFault"), true)
-      : null;
-    const cellFetcher = cellFault ? createExteriorCellFaultFetcher(cellFault) : undefined;
+    const harnessParams = BLOCK835_CANARY_HARNESS_ENABLED && typeof window !== "undefined" ? new URL(window.location.href).searchParams : null;
+    const cellFault = harnessParams ? parseExteriorCellFault(harnessParams.get("exteriorCellFault"), true) : null;
+    // Wave-agnostic per-asset seam: names one GLB by file name so a single
+    // asset of a single wave can fail its checksum while every other wave and
+    // the base scene are left alone.
+    const assetFault = harnessParams ? parseExteriorAssetFault(harnessParams.get("exteriorAssetFault"), true) : null;
+    const cellFetcher = cellFault
+      ? createExteriorCellFaultFetcher(cellFault)
+      : assetFault
+        ? createExteriorAssetFaultFetcher(assetFault)
+        : undefined;
     // Depend on the adapter STATE, not the ref. `exteriorStreamingRequested` is
     // URL-derived and true on the very first render, while the citywide adapter
     // arrives asynchronously afterwards. Reading the ref captured the
@@ -1433,84 +1549,135 @@ export function App() {
     // base-incompatible. Adapters that publish a checksum-verified identity
     // index resolve it once here; fully-resident adapters keep working
     // unchanged through the `getFeature` fallback inside `hasIdentityMember`.
-    void ensureExteriorBaseIdentity(adapter, controller.signal)
-      .then(() => loadExteriorCellRuntime(exteriorCellBasePath(exteriorCellReleaseId), {
-        signal: controller.signal,
-        request,
-        fetcher: cellFetcher,
-        sharedBudget: aggregateBudgetRef.current,
-        baseIdentity: { releaseId: activeRealBaseReleaseId ?? "no-active-base", has: (featureId) => exteriorBaseIdentityHas(adapter, featureId) },
-      })).then(({ runtime, head }) => {
-      if (controller.signal.aborted) return;
-      // Acceptance gate for the promoted default: what the runtime resolved must
-      // be the accepted hashes and the accepted cell membership. A same-named
-      // release that resolved different bytes renders nothing.
-      if (exteriorPromotedDefault) {
-        const verification = verifyPromotedExteriorPin({
-          releaseId: runtime.releaseId,
-          snapshotId: head.pin.snapshotId,
-          snapshotChecksumSha256: head.pin.checksumSha256,
-          assemblyPackageIds: head.pin.assemblyPackageIds,
-          cells: runtime.snapshot.cells,
-        }, EXTERIOR_DEFAULT_ACTIVATION);
-        if (!verification.ok) {
-          setExteriorCellRuntime(null);
-          setExteriorCellOutcomes([]);
-          setExteriorHeadNotice(null);
-          setExteriorCellLoadState("failed");
-          setExteriorCellMessage(verification.message);
-          return;
-        }
-      }
-      setExteriorCellRuntime(runtime);
-      setExteriorHeadNotice(head.notice);
-      setExteriorCellLoadState("ready");
-      setExteriorCellMessage("");
-      // Only the loaded index knows which canary heads exist, so an
-      // unresolvable canary deep link is reported here rather than at parse time.
-      const requestedCanary = exteriorCanarySnapshotIdRef.current;
-      if (requestedCanary) {
-        setExteriorDeepLinkNotice(exteriorCanarySnapshotMessage(exteriorCellReleaseId, requestedCanary, runtime.index.canaryHeads.map((entry) => entry.snapshotId)));
-      }
-    }).catch((error: unknown) => {
-      if (controller.signal.aborted) return;
-      setExteriorCellRuntime(null);
-      setExteriorCellOutcomes([]);
-      setExteriorHeadNotice(null);
-      setExteriorCellLoadState("failed");
-      setExteriorCellMessage(exteriorStreamingFailureMessage(error));
-    });
-    return () => controller.abort();
-  }, [activeAdapter, activeRealBaseReleaseId, exteriorCanarySnapshotId, exteriorCellReleaseId, exteriorPromotedDefault, exteriorStreamingRequested]);
-
-  useEffect(() => {
-    if (!exteriorCellRuntime) return undefined;
-    const controller = new AbortController();
-    let cancelled = false;
-    void Promise.all(exteriorCellRuntime.cellIds().map((cellId) => exteriorCellRuntime.loadCell(cellId, exteriorProfile, exteriorCameraHeightBucketMeters, controller.signal)))
-      .then((outcomes) => {
-        if (cancelled) return;
-        // Identity gate: exterior assets reuse canonical base identities, so an
-        // identity outside the accepted membership means these are not the
-        // accepted bytes. A cell that degraded to base massing renders no asset
-        // and is reported by the existing per-cell notices instead.
-        if (exteriorPromotedDefault) {
-          const renderedIds = outcomes.flatMap((outcome) => outcome.kind === "rendered" ? outcome.assets.map((asset) => asset.canonicalFeatureId) : []);
-          const membership = verifyPromotedExteriorMembership(renderedIds, EXTERIOR_DEFAULT_ACTIVATION);
-          if (!membership.ok) {
-            setExteriorCellRuntime(null);
-            setExteriorCellOutcomes([]);
-            setExteriorHeadNotice(null);
-            setExteriorCellLoadState("failed");
-            setExteriorCellMessage(membership.message);
+    for (const target of targets) {
+      const controller = controllers.get(target.releaseId)!;
+      const setWave = (state: ExteriorWaveState) => setExteriorWaves((current) => {
+        // A wave no longer targeted has already been replaced; a late resolution
+        // must not resurrect it beside the set this session actually resolved.
+        if (!current.has(target.releaseId)) return current;
+        return new Map(current).set(target.releaseId, state);
+      });
+      void ensureExteriorBaseIdentity(adapter, controller.signal)
+        .then(() => loadExteriorCellRuntime(exteriorCellBasePath(target.releaseId), {
+          signal: controller.signal,
+          request,
+          fetcher: cellFetcher,
+          sharedBudget: aggregateBudgetRef.current,
+          cache: exteriorCacheRef.current,
+          baseIdentity: { releaseId: activeRealBaseReleaseId ?? "no-active-base", has: (featureId) => exteriorBaseIdentityHas(adapter, featureId) },
+        })).then(async ({ runtime, head }) => {
+        if (controller.signal.aborted) return;
+        // Digest-form membership is recomputed from what the runtime resolved,
+        // never read from the release. Computed before the gate because Web
+        // Crypto is async and the gate is not.
+        const resolvedCellsDigest = target.record.enabled && target.record.membership.cellsDigestSha256 !== null
+          ? await exteriorAcceptedCellsDigest(runtime.snapshot.cells)
+          : null;
+        if (controller.signal.aborted) return;
+        // Acceptance gate for the promoted default: what the runtime resolved must
+        // be the accepted hashes and the accepted cell membership. A same-named
+        // release that resolved different bytes renders nothing. The gate runs
+        // against THIS wave's record, so no wave can borrow another's acceptance.
+        if (target.promotedDefault) {
+          const verification = verifyPromotedExteriorPin({
+            releaseId: runtime.releaseId,
+            snapshotId: head.pin.snapshotId,
+            snapshotChecksumSha256: head.pin.checksumSha256,
+            assemblyPackageIds: head.pin.assemblyPackageIds,
+            cells: runtime.snapshot.cells,
+            cellsDigestSha256: resolvedCellsDigest,
+          }, target.record);
+          if (!verification.ok) {
+            setWave(failedExteriorWave(verification.message));
             return;
           }
         }
-        setExteriorCellOutcomes(outcomes);
-      })
-      .catch(() => { if (!cancelled) setExteriorCellOutcomes([]); });
-    return () => { cancelled = true; controller.abort(); };
-  }, [exteriorCameraHeightBucketMeters, exteriorCellRuntime, exteriorPromotedDefault, exteriorProfile]);
+        setWave({ runtime, loadState: "ready", message: "", headNotice: head.notice });
+        // Only the loaded index knows which canary heads exist, so an
+        // unresolvable canary deep link is reported here rather than at parse time.
+        const requestedCanary = exteriorCanarySnapshotIdRef.current;
+        if (requestedCanary) {
+          setExteriorDeepLinkNotice(exteriorCanarySnapshotMessage(target.releaseId, requestedCanary, runtime.index.canaryHeads.map((entry) => entry.snapshotId)));
+        }
+      }).catch((error: unknown) => {
+        if (controller.signal.aborted) return;
+        setWave(failedExteriorWave(exteriorStreamingFailureMessage(error)));
+      });
+    }
+    return () => { for (const controller of controllers.values()) controller.abort(); };
+  }, [activeAdapter, activeRealBaseReleaseId, exteriorCanarySnapshotId, exteriorTargetKey]);
+
+  /**
+   * Per-wave cell loading.
+   *
+   * The loads are keyed by release and OUTLIVE the effect run that started
+   * them. An effect-scoped controller looked correct and was not: this effect
+   * re-runs whenever ANY wave changes state, so the moment a second wave
+   * finished loading its index, the cleanup aborted the first wave's in-flight
+   * asset requests and that wave's cell failed closed with a request error it
+   * had no reason to have. A load is therefore cancelled only when its OWN
+   * inputs change — its runtime, the render profile, or the camera LOD bucket —
+   * or when the whole component goes away.
+   */
+  useEffect(() => {
+    const running = exteriorCellLoadsRef.current;
+    const wanted = new Map(exteriorTargetsRef.current.flatMap((target) => {
+      const runtime = exteriorWaves.get(target.releaseId)?.runtime ?? null;
+      return runtime ? [[target.releaseId, { target, runtime }] as const] : [];
+    }));
+    for (const [releaseId, entry] of [...running]) {
+      const next = wanted.get(releaseId);
+      const unchanged = next && next.runtime === entry.runtime && entry.profile === exteriorProfile && entry.bucket === exteriorCameraHeightBucketMeters;
+      if (unchanged) continue;
+      entry.controller.abort();
+      running.delete(releaseId);
+      // A wave that is no longer targeted keeps no outcomes: they describe a
+      // load that was just cancelled, and holding their verified GLB bytes
+      // would retain a whole withdrawn wave for the life of the session.
+      if (!next) setExteriorWaveOutcomes((current) => { if (!current.has(releaseId)) return current; const remaining = new Map(current); remaining.delete(releaseId); return remaining; });
+    }
+    for (const [releaseId, { target, runtime }] of wanted) {
+      if (running.has(releaseId)) continue;
+      const controller = new AbortController();
+      const entry = { runtime, profile: exteriorProfile, bucket: exteriorCameraHeightBucketMeters, controller };
+      running.set(releaseId, entry);
+      const isCurrent = () => exteriorCellLoadsRef.current.get(releaseId) === entry && !controller.signal.aborted;
+      void Promise.all(runtime.cellIds().map((cellId) => runtime.loadCell(cellId, exteriorProfile, exteriorCameraHeightBucketMeters, controller.signal)))
+        .then((outcomes) => {
+          if (!isCurrent()) return;
+          // Identity gate: exterior assets reuse canonical base identities, so an
+          // identity outside the accepted membership means these are not the
+          // accepted bytes. A cell that degraded to base massing renders no asset
+          // and is reported by the existing per-cell notices instead. The gate
+          // runs against THIS wave's accepted membership.
+          if (target.promotedDefault) {
+            const renderedIds = outcomes.flatMap((outcome) => outcome.kind === "rendered" ? outcome.assets.map((asset) => asset.canonicalFeatureId) : []);
+            const membership = verifyPromotedExteriorMembership(renderedIds, target.record);
+            if (!membership.ok) {
+              setExteriorWaveOutcomes((current) => { const next = new Map(current); next.delete(releaseId); return next; });
+              setExteriorWaves((current) => (current.has(releaseId) ? new Map(current).set(releaseId, failedExteriorWave(membership.message)) : current));
+              return;
+            }
+          }
+          setExteriorWaveOutcomes((current) => new Map(current).set(releaseId, outcomes));
+        })
+        .catch(() => {
+          if (!isCurrent()) return;
+          setExteriorWaveOutcomes((current) => { const next = new Map(current); next.delete(releaseId); return next; });
+        });
+    }
+    return undefined;
+    // `exteriorTargetKey` is a dependency even though the targets are read from
+    // a ref: a change to WHICH releases are targeted must always re-run this
+    // reconciliation, and it does not always coincide with a wave-state change.
+  }, [exteriorCameraHeightBucketMeters, exteriorProfile, exteriorTargetKey, exteriorWaves]);
+
+  // The only place a live cell load is cancelled wholesale: the component going
+  // away. Everything else cancels exactly the wave whose inputs changed.
+  useEffect(() => () => {
+    for (const entry of exteriorCellLoadsRef.current.values()) entry.controller.abort();
+    exteriorCellLoadsRef.current.clear();
+  }, []);
 
   const publishCitywideMetrics = useCallback((adapter: CitywideReleaseAdapter) => {
     if (citywideAdapterRef.current !== adapter) return;
@@ -2761,7 +2928,7 @@ export function App() {
     const backToPromotedDefault = next && restoresPromotedDefault({
       targetReleaseId: exteriorCellReleaseIdRef.current,
       activeRealBaseReleaseId: activeRealBaseReleaseIdRef.current,
-      record: EXTERIOR_DEFAULT_ACTIVATION,
+      record: exteriorActivationRecordsRef.current,
     });
     const nextOverride: ExteriorStreamingOverride = !next ? "off" : backToPromotedDefault ? null : "on";
     exteriorStreamingRequestedRef.current = next;
@@ -2893,7 +3060,7 @@ export function App() {
           onStorefrontSelected={selectStorefront}
           publicRealmOverlay={publicRealmActive && publicRealmOverlay ? publicRealmOverlay : null}
           onPublicRealmSelected={(feature) => selectPublicRealm(feature)}
-          exteriorOverlay={exteriorCellOverlay}
+          exteriorOverlay={exteriorCellOverlays}
           onExteriorUnanchored={setExteriorUnanchoredIds}
           onStage3RenderProof={stage3RenderProofRequested ? setStage3RenderProof : undefined}
           onFeatureOverlap={selectOverlapFeatures}
@@ -2955,7 +3122,7 @@ export function App() {
                 onClick={() => switchExteriorProfile(profile)}
               >{profile === "inspection" ? "Inspection profile" : "Exploration profile"}</button>
             ))}
-            {exteriorStreamingRequested && exteriorCellRuntime && exteriorCellRuntime.index.canaryHeads.map((canary) => (
+            {exteriorStreamingRequested && exteriorPrimaryRuntime && exteriorPrimaryRuntime.index.canaryHeads.map((canary) => (
               <button
                 key={canary.snapshotId}
                 data-exterior-canary={canary.snapshotId}
@@ -2966,8 +3133,10 @@ export function App() {
               >{exteriorCanarySnapshotId === canary.snapshotId ? `Leave canary ${canary.snapshotId}` : `Try canary ${canary.snapshotId}`}</button>
             ))}
           </div>
-          {exteriorStreamingActive && exteriorSnapshotId && <span className="runtime-note-overlay" data-exterior-snapshot-origin={exteriorSnapshotOrigin} role="status">Exterior streaming · {exteriorSnapshotOriginLabel(exteriorSnapshotOrigin, exteriorSnapshotId)} · {exteriorRenderProfileLabel(exteriorProfile)} · verified local GLB bytes only.</span>}
-          {exteriorStreamingRequested && !exteriorStreamingActive && <span className="runtime-note-overlay" role="status">{exteriorCellLoadState === "loading" ? "Exterior streaming · loading local release…" : exteriorStreamingStatusMessage || "Exterior streaming unavailable; the existing base state was left unchanged."}</span>}
+          {/* One status line per wave: a session streaming two waves must not
+              report one wave's snapshot as if it covered the other. */}
+          {exteriorActiveWaves.map((entry) => entry.wave.runtime && <span key={entry.target.releaseId} className="runtime-note-overlay" data-exterior-release={entry.target.releaseId} data-exterior-snapshot-origin={entry.wave.runtime.origin} role="status">Exterior streaming · {exteriorSnapshotOriginLabel(entry.wave.runtime.origin, entry.wave.runtime.snapshot.snapshotId)} · {exteriorRenderProfileLabel(exteriorProfile)} · verified local GLB bytes only.</span>)}
+          {exteriorWaveActivations.filter((entry) => !entry.activation.active).map((entry) => <span key={entry.target.releaseId} className="runtime-note-overlay" data-exterior-release={entry.target.releaseId} role="status">{entry.wave.loadState === "loading" ? "Exterior streaming · loading local release…" : (entry.activation.prerequisiteMessage ?? entry.wave.message) || "Exterior streaming unavailable; the existing base state was left unchanged."}</span>)}
           {exteriorActive && <a className="runtime-note-attribution" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">Map data © OpenStreetMap contributors.</a>}
         </div>
         {stage3RenderProofRequested && <output data-stage3-render-proof-summary role="status">{stage3RenderProof
@@ -2989,7 +3158,7 @@ export function App() {
         </div>}
         {exteriorNotices.length > 0 && <div className="exploration-notice" role="alert" data-exterior-notices={exteriorNotices.length}>
           <strong>Exterior streaming fallback</strong>
-          <ul>{exteriorNotices.map((notice) => <li key={notice}>{notice}</li>)}</ul>
+          <ul>{exteriorNotices.map((entry) => <li key={`${entry.releaseId}|${entry.notice}`}>{entry.notice}</li>)}</ul>
         </div>}
         {shareMessage && <div className="share-notice" role="status">{shareMessage}</div>}
         <section className={`tile-diagnostics ${diagnosticsOpen ? "is-open" : "is-collapsed"}`} aria-label="Tile diagnostics">
@@ -3268,37 +3437,56 @@ export function App() {
             </dl>
           </section>}
 
-          {exteriorUnavailableStatement && <section className="inspector-section exterior-streaming-detail" aria-label="Exterior streaming provenance" data-exterior-unavailable>
+          {exteriorUnavailableStatementList.map((statement) => <section key={statement} className="inspector-section exterior-streaming-detail" aria-label="Exterior streaming provenance" data-exterior-unavailable>
             <div className="place-truth-heading">
               <h2>Exterior streaming</h2>
               <span className="truth-badge">Unavailable</span>
             </div>
-            <p className="section-label">{exteriorUnavailableStatement}</p>
-          </section>}
-          {exteriorStreamingActive && exteriorCellOverlay && exteriorSnapshotId && <section className="inspector-section exterior-streaming-detail" aria-label="Exterior streaming provenance">
-            <div className="place-truth-heading">
-              <h2>Exterior streaming</h2>
-              <span className="truth-badge real-badge" data-exterior-snapshot-origin={exteriorSnapshotOrigin}>Local · {exteriorCellOverlay.releaseId}</span>
-            </div>
-            <p className="section-label">Exterior cells reuse the canonical base building identity. The render profile changes only which verified LOD is drawn; identity, provenance, and the pinned release origin do not change.</p>
-            <dl>
-              <div><dt>Release origin</dt><dd data-exterior-release-origin={exteriorSnapshotOrigin}>{exteriorSnapshotOriginLabel(exteriorSnapshotOrigin, exteriorSnapshotId)}</dd></div>
-              <div><dt>Render profile</dt><dd data-exterior-profile={exteriorProfile}>{exteriorRenderProfileLabel(exteriorProfile)}</dd></div>
-              {(() => {
-                const selectedId = activeSelectionId;
-                const owner = selectedId ? exteriorCellOutcomes.find((cell) => cell.kind === "rendered" && cell.assets.some((asset) => asset.canonicalFeatureId === selectedId)) : undefined;
-                if (!owner || owner.kind !== "rendered") return <div><dt>Selected feature</dt><dd>No verified exterior representation is active for this record.</dd></div>;
-                const asset = owner.assets.find((entry) => entry.canonicalFeatureId === selectedId)!;
-                return <>
-                  <div><dt>Cell / release</dt><dd>{owner.cellId} · {owner.cellReleaseId} ({owner.cellReleaseVersion}){owner.representation === "predecessor" ? " · pinned predecessor fallback" : ""}</dd></div>
-                  <div><dt>Active asset</dt><dd>{asset.lodId} · {asset.checksumSha256}</dd></div>
-                  <div><dt>Truth tiers</dt><dd>{asset.provenance.truthTiers.join(" · ")}</dd></div>
-                  <div><dt>Source dates</dt><dd>captured {asset.provenance.sourceDates.capturedAt ?? "unknown"} · updated {asset.provenance.sourceDates.updatedAt ?? "unknown"}</dd></div>
-                  <div><dt>Uncertainty</dt><dd>{asset.provenance.uncertainty}</dd></div>
-                </>;
-              })()}
-            </dl>
-          </section>}
+            <p className="section-label">{statement}</p>
+          </section>)}
+          {/*
+            Attribution follows the SELECTED feature. With more than one wave
+            rendered, a session-level release badge would attribute the selected
+            building's geometry to whichever wave the session happened to lead
+            with. The selection's own wave answers instead; a selection with no
+            exterior representation falls back to the session's single wave, and
+            says nothing release-specific when several are streaming, because
+            picking one of them would be a guess presented as provenance.
+          */}
+          {exteriorStreamingActive && (() => {
+            const attributed = exteriorWaveForSelection(exteriorActiveWaves.map((entry) => ({ ...entry, outcomes: entry.wave.outcomes })), activeSelectionId);
+            const owning = attributed && attributed.wave.outcomes.some((cell) => cell.kind === "rendered" && cell.assets.some((asset) => asset.canonicalFeatureId === activeSelectionId))
+              ? attributed
+              : undefined;
+            const runtime = attributed?.wave.runtime ?? null;
+            const origin = runtime?.origin ?? "default";
+            return <section className="inspector-section exterior-streaming-detail" aria-label="Exterior streaming provenance">
+              <div className="place-truth-heading">
+                <h2>Exterior streaming</h2>
+                {runtime
+                  ? <span className="truth-badge real-badge" data-exterior-snapshot-origin={origin}>Local · {runtime.releaseId}</span>
+                  : <span className="truth-badge real-badge">Local · {exteriorActiveWaves.length} exterior releases</span>}
+              </div>
+              <p className="section-label">Exterior cells reuse the canonical base building identity. The render profile changes only which verified LOD is drawn; identity, provenance, and the pinned release origin do not change.</p>
+              <dl>
+                {runtime && <div><dt>Release origin</dt><dd data-exterior-release-origin={origin}>{exteriorSnapshotOriginLabel(origin, runtime.snapshot.snapshotId)}</dd></div>}
+                <div><dt>Render profile</dt><dd data-exterior-profile={exteriorProfile}>{exteriorRenderProfileLabel(exteriorProfile)}</dd></div>
+                {(() => {
+                  const selectedId = activeSelectionId;
+                  const owner = selectedId ? owning?.wave.outcomes.find((cell) => cell.kind === "rendered" && cell.assets.some((asset) => asset.canonicalFeatureId === selectedId)) : undefined;
+                  if (!owner || owner.kind !== "rendered") return <div><dt>Selected feature</dt><dd>No verified exterior representation is active for this record.</dd></div>;
+                  const asset = owner.assets.find((entry) => entry.canonicalFeatureId === selectedId)!;
+                  return <>
+                    <div><dt>Cell / release</dt><dd>{owner.cellId} · {owner.cellReleaseId} ({owner.cellReleaseVersion}){owner.representation === "predecessor" ? " · pinned predecessor fallback" : ""}</dd></div>
+                    <div><dt>Active asset</dt><dd>{asset.lodId} · {asset.checksumSha256}</dd></div>
+                    <div><dt>Truth tiers</dt><dd>{asset.provenance.truthTiers.join(" · ")}</dd></div>
+                    <div><dt>Source dates</dt><dd>captured {asset.provenance.sourceDates.capturedAt ?? "unknown"} · updated {asset.provenance.sourceDates.updatedAt ?? "unknown"}</dd></div>
+                    <div><dt>Uncertainty</dt><dd>{asset.provenance.uncertainty}</dd></div>
+                  </>;
+                })()}
+              </dl>
+            </section>;
+          })()}
 
           <section className="inspector-section asset-detail" aria-label="3D asset diagnostics">
             <h2>3D asset diagnostics</h2>
