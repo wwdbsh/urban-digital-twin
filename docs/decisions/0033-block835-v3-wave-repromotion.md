@@ -7,8 +7,9 @@ Date: 2026-08-11 · Task T026 (Issue #44) · Supersedes nothing; extends
 
 ## Status
 
-Accepted for the Block 835 wave only. Midtown-core is untouched by this decision
-and stays on its V2 promotion.
+Accepted for the Block 835 wave. Extended to the Midtown-core wave in phase P3
+(see Decision E and the P3 addendum below), where the same grammar swap is
+**built and gated but NOT promotable** until a contract limitation is resolved.
 
 ## Context
 
@@ -244,3 +245,83 @@ Empire State Building it claims only this: a documented material list selected
 which of four designed style classes is drawn. The tones, coursing and geometry
 expressing that class are still designed, and nothing here claims the shipped
 surface reproduces the real facade.
+
+---
+
+# P3 addendum — the Midtown-core wave
+
+Date: 2026-08-11 · Task T026 phase P3 · Implementation record:
+[20260811-midtown-core-v3-repromotion](../implementation/20260811-midtown-core-v3-repromotion.md)
+
+## Decision E — a NEW materializer, not a regeneration
+
+`midtown-core-v3-materialization.ts` is a sibling of the byte-pinned V2 module,
+never an edit of it. The distinction is not bookkeeping: V2 planned over the
+oriented bounding RECTANGLE of the sourced ring, so every footprint was
+representable and its 8-fail / 7-clamped / 1-tombstone census was a statement
+about a rectangle. V3 carries the sourced polygon vertex for vertex, so a real
+DOITT ring can be refused for properties a rectangle cannot have — too many
+vertices, self-intersection after millimetre rounding, an area below the
+footprint floor, a neck too thin to place an opening in. The census was
+therefore re-derived from scratch rather than transferred.
+
+`buildMidtownCoreRelease` is parameterised by a profile with V2 as the default,
+so the frozen wave keeps its bytes; the V2 committed-inventory replay test
+passes unchanged and is what proves it.
+
+Cross-release lineage is cited on the public ROOT alone. `ExteriorCellRelease.predecessor`
+and `ExteriorRolloutSnapshot.predecessor` are both intra-graph version links —
+the contract requires the referent to exist in the same graph and requires a
+versioned cell's fallback to BE its predecessor — so pointing either at another
+release would be unresolvable, or would promise a runtime substitution into
+bytes this release never verified. A successor release is the initial version of
+its own lineage, falling back to pinned base massing.
+
+## Decision F — refuse, and say so, at wave scale
+
+110 of 7,201 buildings (1.53 %) are refused with a closed stop code derived from
+the generator's own `issue.path` values. One of those, `doitt:627278`, is a
+refusal by the analytic volume identity at 1.397e-6 against a 1e-6 bound. The
+tolerance was **not** loosened to admit it. A gate that is relaxed the first time
+it fires is not a gate, and its one refusal is the evidence that this one bites.
+
+## What P3 found that Decision B did not anticipate
+
+Decision B admitted an absent `setbacks` component on evidence of **five of
+fourteen** Block 835 buildings. At wave scale the same rule admits **3,405 of
+7,091** — 48 % of everything this wave materializes. The rule is unchanged and
+still requires a stated reason per component, and every one of those buildings
+genuinely cannot carry an inward tier offset. But "a rare disclosed exception"
+and "half the wave" are different claims about the same mechanism, and this ADR
+records the number rather than letting Decision B's framing carry over silently.
+
+## What P3 could not decide: renderable cells cannot contain a refusal
+
+Two gates that are individually correct are jointly unsatisfiable for a cell
+that owns a building the grammar refuses:
+
+- `multi-lod-assembly.ts` requires every building listed in an assembly cell to
+  have a packaged asset;
+- `exterior-cell-runtime.ts` requires an assembly cell's membership to equal the
+  OWNERSHIP cell's membership exactly.
+
+A cell owning 77 buildings of which 75 are drawable therefore has no legal
+assembly representation, and all three renderable Midtown cells are in that
+state. The emitted release is valid, replays, and is refused at runtime binding,
+so the wave loads no geometry.
+
+This is left OPEN deliberately. The natural refinement — let an assembly package
+a strict subset provided the runtime verifies the remainder is exactly the set
+the cell release marks `unavailable` — is a platform-wide change to two modules
+shared with Block 835, of the same class as Decision B, and it is not within the
+phase that discovered it. The alternative, choosing renderable cells with no
+refusals, abandons the fixed renderable set that makes the V2→V3 availability
+delta attributable to the grammar alone.
+
+## What this addendum does not claim
+
+It does not claim the Midtown V3 wave meets its frame-time budget. The gate was
+run and the measured 8.30 / 10.00 ms is within budget, but the residency check
+shows the scene contained no Midtown geometry, so the measurement certifies
+nothing about this wave and is recorded as a non-result.
+
