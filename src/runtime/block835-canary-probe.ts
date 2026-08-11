@@ -139,7 +139,10 @@ export function exteriorCanaryTarget(search: string, midtownPath: ExteriorCanary
   }
   return {
     targetId: "block835",
-    releaseId: "manhattan-exterior-cells-20260811",
+    // The V3 successor. The camera path is unchanged and stays framed on the
+    // same fourteen sourced footprints and heights; V3 changes how each building
+    // is drawn, not where it stands, so the poses still frame their targets.
+    releaseId: "manhattan-exterior-cells-20260811-v3",
     path: block835CanaryFacadePath(parseBlock835CanaryPathVariant(search)),
   };
 }

@@ -1,0 +1,55 @@
+{
+  "fileCount": 12,
+  "files": [
+    {
+      "path": "json/p0-exploration.json",
+      "sha256": "d0614abef09fbfa3afd10a3942471886b31876d2ec0a8e0183f8f954989ea75c"
+    },
+    {
+      "path": "json/p0-inspection.json",
+      "sha256": "d3de7e81d9df255303d5b61ab62bce5763f78e02525a91392635d1ecacf6dc47"
+    },
+    {
+      "path": "screenshots/j-details-esb.png",
+      "sha256": "c6939dc7d16bff841003a61d76fc453598e5ee31f86a731c2f91943d9c47ac56"
+    },
+    {
+      "path": "screenshots/j-disable.png",
+      "sha256": "b2f407a734b81444c8bdedf91797dd877b1da27d1ba6c889d510e4921e5fa1b0"
+    },
+    {
+      "path": "screenshots/j-fixture.png",
+      "sha256": "a3c9f48d5df91ac3933b0bbeedddcde7774184334da19d931537225311804848"
+    },
+    {
+      "path": "screenshots/j-forward-again.png",
+      "sha256": "5b29219e82023dc61a20f4861899fb6d5fda544e0be2ad8cb07d8e8372e9eebd"
+    },
+    {
+      "path": "screenshots/j-optin-v3.png",
+      "sha256": "9088e35ab112f8449dd8156d36e9cd3c623539bb936c200f14f528fda4c85e67"
+    },
+    {
+      "path": "screenshots/j-rollback-refused.png",
+      "sha256": "5223de6094a38a3915bd10107e57d6f144a7afcbbffcc7f7be00989b3b9631c4"
+    },
+    {
+      "path": "screenshots/j-rollback-v2.png",
+      "sha256": "2e7c18881ecdc5961bda76ca1c8fe9f55ea920e23a043cac81e88dd76a402139"
+    },
+    {
+      "path": "screenshots/j-v3-block-overview.png",
+      "sha256": "5b29219e82023dc61a20f4861899fb6d5fda544e0be2ad8cb07d8e8372e9eebd"
+    },
+    {
+      "path": "screenshots/j-v3-esb-200m.png",
+      "sha256": "b2002d3082b17ec4421edf78f69b0983e69924070943581fefb7af01247beca0"
+    },
+    {
+      "path": "screenshots/j-v3-esb-facade.png",
+      "sha256": "efa94e7aa9eae2f3c0f16c1157628b6e86755cbfc9769bc74fc02483fc4236af"
+    }
+  ],
+  "inventoryId": "block835-v3-repromotion-20260811",
+  "note": "Raw evidence for T026 lives untracked under artifacts/block835-v3-repromotion-20260811/; these hashes keep it checkable after that tree is removed."
+}

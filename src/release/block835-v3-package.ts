@@ -10,6 +10,7 @@ import {
   type Point2Mm,
   type V3Plan,
   type V3StyleClass,
+  type V3StyleOverride,
   type V3Tessellation,
 } from "../domain/deterministic-facade-generator-v3.ts";
 import { sha256HexBytes, sha256HexSync, stableSerialize } from "../domain/deterministic-hash.ts";
@@ -218,7 +219,7 @@ export interface V3PlanContext {
  * clockwise, a reversal to the counter-clockwise orientation the grammar
  * requires. Both are recorded so registration can measure them.
  */
-export function buildV3Plan(building: PilotBuildingSource): V3PlanContext {
+export function buildV3Plan(building: PilotBuildingSource, styleOverride?: V3StyleOverride): V3PlanContext {
   const frame = enuFrame(building.anchor);
   const raw = building.footprint.map((point) => {
     const [east, north] = toEnuMeters(frame, point);
@@ -240,6 +241,10 @@ export function buildV3Plan(building: PilotBuildingSource): V3PlanContext {
       { id: `${building.canonicalBuildingId}:anchor:height`, kind: "height", sourceRefId, fingerprintSha256: sha256HexSync(stableSerialize({ heightMeters: building.heightMeters })) },
     ],
     parameters: deriveV3Parameters({ footprintOuterMm: outer, heightMm }),
+    // Omitted rather than set to `undefined`: `stableSerialize` writes a present
+    // undefined key as `null`, which would move all fourteen V3 plan hashes
+    // instead of only the overridden building's.
+    ...(styleOverride ? { styleOverride: { ...styleOverride } } : {}),
   });
   if (!generated.ok) throw new Error(`V3 facade plan failed for ${building.canonicalBuildingId}: ${generated.issues.map((issue) => `${issue.path}: ${issue.message}`).join("; ")}`);
   // Generation alone does not run the plan validator. The shipped plan must

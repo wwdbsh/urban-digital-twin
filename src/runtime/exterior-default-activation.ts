@@ -91,13 +91,67 @@ export interface ExteriorDefaultActivationEnabled {
   readonly assemblyPackageIds: readonly string[];
   readonly membership: ExteriorDefaultActivationMembership;
   readonly approvalRef: string;
-  readonly predecessor: ExteriorDefaultActivationDisabled;
+  /**
+   * The release THIS record withdrew, or `null` for a forward promotion.
+   *
+   * A rollback used to be expressible only as "off": the predecessor of a first
+   * promotion is base massing, so `enabled: false` said everything. A wave on its
+   * SECOND promotion has a different previous verified representation — the wave
+   * itself, one version back — and rolling back to base would discard verified
+   * geometry that was never withdrawn. So an enabled record may also name a
+   * withdrawn successor, and `exteriorRolledBackReleaseNotice` reads the field on
+   * both shapes: rolling back to the predecessor restores the older release as
+   * the active default AND refuses promotion-era `?exteriorCells=` links into the
+   * withdrawn one, still in a single record swap.
+   *
+   * A record may never name its own `releaseId` here; `exterior-default-activation.test.ts`
+   * pins that, because a release cannot both be the active default and be refused.
+   *
+   * Optional, and absent means "withdrew nothing". A forward promotion — which
+   * every record in this build except a rollback target is — genuinely has
+   * nothing to say here, and making it optional is what keeps every existing
+   * promotion record and every existing test literally unchanged.
+   */
+  readonly rolledBackReleaseId?: string | null;
+  /**
+   * The previous verified representation this record rolls back to.
+   *
+   * It may itself be ENABLED. Per-record indivisibility is preserved exactly:
+   * the rollback is still the one edit that exports `predecessor` instead, and
+   * the predecessor is still one indivisible constant carrying its own release,
+   * pin and membership together.
+   */
+  readonly predecessor: ExteriorDefaultActivationRecord;
 }
 
 export type ExteriorDefaultActivationRecord = ExteriorDefaultActivationEnabled | ExteriorDefaultActivationDisabled;
 
-/** Rollback: export `EXTERIOR_DEFAULT_ACTIVATION.predecessor` from here instead. */
-export const EXTERIOR_DEFAULT_ACTIVATION: ExteriorDefaultActivationRecord = {
+/** The fourteen canonical Block 835 identities. Unchanged across V2 and V3. */
+const BLOCK835_MEMBERSHIP_BUILDING_IDS: readonly string[] = [
+  "doitt:102705", "doitt:131170", "doitt:147902", "doitt:262867", "doitt:39969",
+  "doitt:460555", "doitt:498980", "doitt:502491", "doitt:584049", "doitt:778052",
+  "doitt:812702", "doitt:835659", "doitt:925937", "doitt:982383",
+];
+
+/**
+ * The V2 Block 835 promotion record, retained verbatim as the V3 record's
+ * predecessor — the previous VERIFIED representation, not base massing.
+ *
+ * Every operative field is the byte copy that shipped as the active default from
+ * 2026-08-11: release, snapshot, snapshot checksum, assembly package, literal
+ * cell membership and approval reference. The single field it gains is
+ * `rolledBackReleaseId`, which is empty while this record is only a predecessor
+ * and names the withdrawn V3 release when a rollback exports it as the active
+ * default. That field is what makes the rollback complete in one edit rather
+ * than two: without it the V3 release would stop being the default while every
+ * promotion-era `?exteriorCells=manhattan-exterior-cells-20260811-v3` bookmark
+ * kept rendering the withdrawn wave, ungated.
+ *
+ * `block835-v3-promotion-record.test.ts` derives the V2 pins from the committed
+ * `public/data/manhattan-exterior-cells-20260811/` bytes, so this copy cannot
+ * drift from the release it names.
+ */
+export const BLOCK835_V2_EXTERIOR_ACTIVATION: ExteriorDefaultActivationEnabled = {
   enabled: true,
   releaseId: "manhattan-exterior-cells-20260811",
   snapshotId: "snapshot:manhattan-exterior-cells-20260811:v1",
@@ -111,14 +165,52 @@ export const EXTERIOR_DEFAULT_ACTIVATION: ExteriorDefaultActivationRecord = {
     }],
     cellsDigestSha256: null,
     cellCount: 1,
-    buildingIds: [
-      "doitt:102705", "doitt:131170", "doitt:147902", "doitt:262867", "doitt:39969",
-      "doitt:460555", "doitt:498980", "doitt:502491", "doitt:584049", "doitt:778052",
-      "doitt:812702", "doitt:835659", "doitt:925937", "doitt:982383",
-    ],
+    buildingIds: BLOCK835_MEMBERSHIP_BUILDING_IDS,
   },
   approvalRef: "Issue #11 gate approval 2026-08-11 + perf evidence PR #38",
+  rolledBackReleaseId: null,
   predecessor: { enabled: false, releaseId: null, rolledBackReleaseId: "manhattan-exterior-cells-20260811" },
+} as const;
+
+/**
+ * The rollback target a V3 withdrawal exports: the V2 record above, plus the one
+ * statement a withdrawal has to make. It is built FROM that record rather than
+ * retyped, so the two can never disagree about which bytes V2 was.
+ */
+export const BLOCK835_V2_EXTERIOR_ROLLBACK: ExteriorDefaultActivationEnabled = {
+  ...BLOCK835_V2_EXTERIOR_ACTIVATION,
+  rolledBackReleaseId: "manhattan-exterior-cells-20260811-v3",
+} as const;
+
+/**
+ * Rollback: export `EXTERIOR_DEFAULT_ACTIVATION.predecessor` from here instead.
+ *
+ * The Block 835 wave on its SECOND promotion. Membership is byte-identical to
+ * V2's fourteen identities — the V3 grammar changes how each building is drawn,
+ * never which buildings the wave owns — so this promotion carries no
+ * availability drift, and `block835-v3-promotion-record.test.ts` derives every
+ * pin below from the committed `public/data/manhattan-exterior-cells-20260811-v3/`
+ * bytes on every run.
+ */
+export const EXTERIOR_DEFAULT_ACTIVATION: ExteriorDefaultActivationRecord = {
+  enabled: true,
+  releaseId: "manhattan-exterior-cells-20260811-v3",
+  snapshotId: "snapshot:manhattan-exterior-cells-20260811-v3:v1",
+  snapshotChecksumSha256: "73e112f4080710f8a351c5cc22a826603e69af42d7b040e1769aa6e0540869cd",
+  assemblyPackageIds: ["manhattan-esb-block-reference-20260811-v3"],
+  membership: {
+    cells: [{
+      cellId: "cell:manhattan:block-835",
+      cellReleaseId: "cell-release:manhattan-exterior-cells-20260811-v3:v1",
+      checksumSha256: "f167ae91def794ae1654667d27fa1ab9a722d1004798eb3c1c1d3cce5adf51d5",
+    }],
+    cellsDigestSha256: null,
+    cellCount: 1,
+    buildingIds: BLOCK835_MEMBERSHIP_BUILDING_IDS,
+  },
+  approvalRef: "Issue #44 gate approval 2026-08-11 (T026 V3 promotion)",
+  rolledBackReleaseId: null,
+  predecessor: BLOCK835_V2_EXTERIOR_ROLLBACK,
 } as const;
 
 /**
@@ -250,9 +342,13 @@ export function exteriorRolledBackReleaseNotice(
 ): string | null {
   if (explicitReleaseId === null) return null;
   for (const record of activationRecordList(records)) {
-    if (record.enabled || record.rolledBackReleaseId === null) continue;
-    if (explicitReleaseId !== record.rolledBackReleaseId) continue;
-    return `Exterior streaming release ${record.rolledBackReleaseId} was rolled back in this build, so this link streamed no exterior geometry; no substitute exterior release was selected.`;
+    // Read on BOTH shapes. A wave rolled back to base states its withdrawal on a
+    // disabled record; a wave rolled back to its own previous verified release
+    // states it on the enabled predecessor that became the default again. The
+    // link has to fail closed either way.
+    const withdrawn = record.rolledBackReleaseId ?? null;
+    if (withdrawn === null || explicitReleaseId !== withdrawn) continue;
+    return `Exterior streaming release ${withdrawn} was rolled back in this build, so this link streamed no exterior geometry; no substitute exterior release was selected.`;
   }
   return null;
 }
@@ -400,9 +496,12 @@ export function resolveExteriorActivationSet(input: ExteriorActivationSetInput):
   if (input.explicitReleaseId === null) {
     releases = records.map((record) => ({ ...resolveExteriorActivation({ ...input, record }), record }));
   } else {
-    const claiming = records.find((record) => (
-      record.enabled ? record.releaseId === input.explicitReleaseId : record.rolledBackReleaseId === input.explicitReleaseId
-    )) ?? records[0] ?? NO_PROMOTION;
+    // A record that PUBLISHES X governs X ahead of any record that withdrew X.
+    // The two cannot both be true of one release in a valid set, and stating the
+    // precedence keeps the resolution deterministic rather than order-dependent.
+    const claiming = records.find((record) => record.enabled && record.releaseId === input.explicitReleaseId)
+      ?? records.find((record) => (record.rolledBackReleaseId ?? null) === input.explicitReleaseId)
+      ?? records[0] ?? NO_PROMOTION;
     releases = [{ ...resolveExteriorActivation({ ...input, record: claiming }), record: claiming }];
   }
   // Records that cannot promote all resolve the same fallback release, so the

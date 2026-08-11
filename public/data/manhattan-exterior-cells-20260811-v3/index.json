@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "1.0",
+  "releaseId": "manhattan-exterior-cells-20260811-v3",
+  "audience": "public",
+  "cityId": "manhattan",
+  "configId": "manhattan-esb-block-835",
+  "defaultHead": {
+    "snapshotId": "snapshot:manhattan-exterior-cells-20260811-v3:v1",
+    "checksumSha256": "73e112f4080710f8a351c5cc22a826603e69af42d7b040e1769aa6e0540869cd",
+    "assemblyPackageIds": [
+      "manhattan-esb-block-reference-20260811-v3"
+    ]
+  },
+  "canaryHeads": [],
+  "baseCompatibility": {
+    "baseReleaseIds": [
+      "manhattan-citywide-20260804",
+      "manhattan-civic-context-20260804"
+    ]
+  },
+  "localOnly": true,
+  "runtimeExternalNetwork": false
+}

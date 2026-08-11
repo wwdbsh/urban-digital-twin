@@ -1,6 +1,8 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
+  BLOCK835_V2_EXTERIOR_ACTIVATION,
+  BLOCK835_V2_EXTERIOR_ROLLBACK,
   EXTERIOR_DEFAULT_ACTIVATION,
   exteriorRolledBackReleaseNotice,
   exteriorUnavailableDetail,
@@ -19,8 +21,17 @@ const ROLLED_BACK: ExteriorDefaultActivationRecord = PROMOTED ? PROMOTED.predece
 /** A build that never promoted anything has no withdrawn release to refuse. */
 const NEVER_PROMOTED: ExteriorDefaultActivationRecord = { enabled: false, releaseId: null, rolledBackReleaseId: null };
 
+/**
+ * Read from the release the record actually names, not from a path spelled out
+ * here. A drift test that hard-codes a directory stops testing the record the
+ * moment the record is repromoted onto a successor release — it would keep
+ * proving the OLD bytes were internally consistent while the build shipped new
+ * ones. Deriving the path from `PROMOTED.releaseId` keeps the gate pointed at
+ * whatever this build promoted, so it can never be skipped by a swap.
+ */
 function committed(fileName: string): Record<string, unknown> {
-  return JSON.parse(new TextDecoder().decode(readFileSync(`public/data/manhattan-exterior-cells-20260811/${fileName}`))) as Record<string, unknown>;
+  if (!PROMOTED) throw new Error("This build is rolled back; there is no promoted release to read.");
+  return JSON.parse(new TextDecoder().decode(readFileSync(`public/data/${PROMOTED.releaseId}/${fileName}`))) as Record<string, unknown>;
 }
 
 function resolved(overrides: Partial<Parameters<typeof verifyPromotedExteriorPin>[0]> = {}) {
@@ -36,13 +47,50 @@ function resolved(overrides: Partial<Parameters<typeof verifyPromotedExteriorPin
 }
 
 describe("Block 835 exterior promotion record", () => {
-  it("is one indivisible record whose rollback target carries no release", () => {
+  it("is one indivisible record whose rollback target is the previous VERIFIED representation", () => {
     expect(EXTERIOR_DEFAULT_ACTIVATION.enabled).toBe(true);
     expect(PROMOTED).not.toBeNull();
-    // A partial rollback must be unrepresentable: the predecessor is the whole
-    // disabled state, not a flag that can be flipped beside a surviving pin.
-    expect(PROMOTED!.predecessor).toEqual({ enabled: false, releaseId: null, rolledBackReleaseId: PROMOTED!.releaseId });
-    expect(PROMOTED!.approvalRef).toBe("Issue #11 gate approval 2026-08-11 + perf evidence PR #38");
+    expect(PROMOTED!.releaseId).toBe("manhattan-exterior-cells-20260811-v3");
+    expect(PROMOTED!.approvalRef).toBe("Issue #44 gate approval 2026-08-11 (T026 V3 promotion)");
+    // A partial rollback stays unrepresentable: the predecessor is one whole
+    // record carrying its own release, pin and membership together, never a flag
+    // that can be flipped beside a surviving pin.
+    expect(PROMOTED!.predecessor).toBe(BLOCK835_V2_EXTERIOR_ROLLBACK);
+    // On a SECOND promotion the previous verified representation is the wave one
+    // version back, not base massing. Rolling back to base would discard
+    // verified geometry that was never withdrawn.
+    expect(ROLLED_BACK.enabled).toBe(true);
+    expect(ROLLED_BACK.releaseId).toBe("manhattan-exterior-cells-20260811");
+    // ...and the rollback withdraws the successor in the SAME record swap, so a
+    // promotion-era opt-in link into it cannot keep rendering the withdrawn wave.
+    expect(ROLLED_BACK.rolledBackReleaseId).toBe(PROMOTED!.releaseId);
+    // A forward promotion withdraws nothing, and no record may ever refuse the
+    // release it is simultaneously publishing.
+    expect(PROMOTED!.rolledBackReleaseId ?? null).toBeNull();
+    for (const record of [PROMOTED!, ROLLED_BACK, BLOCK835_V2_EXTERIOR_ACTIVATION]) {
+      if (record.enabled) expect(record.rolledBackReleaseId ?? null).not.toBe(record.releaseId);
+    }
+  });
+
+  it("keeps the V2 predecessor byte-identical to the release it names", () => {
+    const index = JSON.parse(new TextDecoder().decode(readFileSync("public/data/manhattan-exterior-cells-20260811/index.json"))) as {
+      releaseId: string;
+      defaultHead: { snapshotId: string; checksumSha256: string; assemblyPackageIds: string[] };
+    };
+    expect(index.releaseId).toBe(BLOCK835_V2_EXTERIOR_ACTIVATION.releaseId);
+    expect(index.defaultHead).toEqual({
+      snapshotId: BLOCK835_V2_EXTERIOR_ACTIVATION.snapshotId,
+      checksumSha256: BLOCK835_V2_EXTERIOR_ACTIVATION.snapshotChecksumSha256,
+      assemblyPackageIds: [...BLOCK835_V2_EXTERIOR_ACTIVATION.assemblyPackageIds],
+    });
+    // The rollback target differs from the retained V2 record in exactly one
+    // field, so "the V2 record verbatim, plus its withdrawal" is checkable.
+    expect({ ...BLOCK835_V2_EXTERIOR_ROLLBACK, rolledBackReleaseId: null }).toEqual({ ...BLOCK835_V2_EXTERIOR_ACTIVATION, rolledBackReleaseId: null });
+  });
+
+  it("promotes without availability drift: the successor owns exactly V2's fourteen identities", () => {
+    expect([...PROMOTED!.membership.buildingIds].sort()).toEqual([...BLOCK835_V2_EXTERIOR_ACTIVATION.membership.buildingIds].sort());
+    expect(PROMOTED!.membership.cellCount).toBe(BLOCK835_V2_EXTERIOR_ACTIVATION.membership.cellCount);
   });
 
   it("pins the committed index defaultHead byte for byte", () => {
@@ -137,15 +185,25 @@ describe("promoted exterior activation resolution", () => {
       .toEqual({ streaming: true, releaseId: PROMOTED!.releaseId, promotedDefault: true, reason: "promoted-default" });
   });
 
-  it("restores the base-only predecessor atomically when the record is rolled back", () => {
-    for (const activeRealBaseReleaseId of [CITYWIDE_BASE, null]) {
-      expect(resolveExteriorActivation({ ...base, override: null, activeRealBaseReleaseId, record: ROLLED_BACK }))
-        .toEqual({ streaming: false, releaseId: FIXTURE_RELEASE_ID, promotedDefault: false, reason: "not-promoted" });
-    }
-    // Rollback removes the DEFAULT only. An explicit opt-in link keeps behaving
-    // exactly as it did before the promotion, which is the predecessor state.
+  it("restores the previous VERIFIED release atomically when the record is rolled back, and rolls forward again", () => {
+    // Rehearsal, in the direction the swap actually goes. Exporting the
+    // predecessor must put V2 back on as the default over a real base — not turn
+    // the wave off, which would discard verified geometry nobody withdrew.
+    expect(resolveExteriorActivation({ ...base, override: null, activeRealBaseReleaseId: CITYWIDE_BASE, record: ROLLED_BACK }))
+      .toEqual({ streaming: true, releaseId: "manhattan-exterior-cells-20260811", promotedDefault: true, reason: "promoted-default" });
+    // The promotion gate is unchanged by the rollback: no real base, no wave.
+    expect(resolveExteriorActivation({ ...base, override: null, activeRealBaseReleaseId: null, record: ROLLED_BACK }))
+      .toEqual({ streaming: false, releaseId: FIXTURE_RELEASE_ID, promotedDefault: false, reason: "no-real-base" });
+    // The withdrawn successor is refused by name in the same swap.
+    expect(resolveExteriorActivation({ ...base, explicitReleaseId: PROMOTED!.releaseId, override: "on", activeRealBaseReleaseId: CITYWIDE_BASE, record: ROLLED_BACK }))
+      .toMatchObject({ streaming: false, promotedDefault: false, reason: "rolled-back-release" });
+    // An explicit opt-in into anything else keeps behaving as it always did.
     expect(resolveExteriorActivation({ ...base, explicitReleaseId: FIXTURE_RELEASE_ID, override: "on", activeRealBaseReleaseId: CITYWIDE_BASE, record: ROLLED_BACK }))
       .toMatchObject({ streaming: true, releaseId: FIXTURE_RELEASE_ID });
+    // Forward again: the shipped record streams the successor and refuses nothing.
+    expect(resolveExteriorActivation({ ...base, override: null, activeRealBaseReleaseId: CITYWIDE_BASE, record: PROMOTED! }))
+      .toEqual({ streaming: true, releaseId: PROMOTED!.releaseId, promotedDefault: true, reason: "promoted-default" });
+    expect(exteriorRolledBackReleaseNotice("manhattan-exterior-cells-20260811", PROMOTED!)).toBeNull();
   });
 
   it("refuses an explicit opt-in into the release the build rolled back", () => {
@@ -203,10 +261,24 @@ describe("promoted exterior pin verification", () => {
     expect(missing.ok).toBe(false);
   });
 
-  it("verifies nothing at all once the build is rolled back", () => {
-    const result = verifyPromotedExteriorPin(resolved(), ROLLED_BACK);
-    expect(result.ok).toBe(false);
-    expect(result.ok === false && result.message).toContain("not promoted in this build");
+  it("moves the accepted pin with the rollback instead of accepting either release", () => {
+    // The successor's pins are no longer accepted once the build rolled back...
+    const withdrawn = verifyPromotedExteriorPin(resolved(), ROLLED_BACK);
+    expect(withdrawn.ok).toBe(false);
+    expect(withdrawn.ok === false && withdrawn.message).toContain(PROMOTED!.releaseId);
+    // ...and the restored V2 pins are, so the rolled-back build renders exactly
+    // the bytes it accepted rather than failing closed on everything.
+    expect(verifyPromotedExteriorPin({
+      releaseId: ROLLED_BACK.enabled ? ROLLED_BACK.releaseId : "",
+      snapshotId: ROLLED_BACK.enabled ? ROLLED_BACK.snapshotId : "",
+      snapshotChecksumSha256: ROLLED_BACK.enabled ? ROLLED_BACK.snapshotChecksumSha256 : "",
+      assemblyPackageIds: ROLLED_BACK.enabled ? [...ROLLED_BACK.assemblyPackageIds] : [],
+      cells: ROLLED_BACK.enabled ? ROLLED_BACK.membership.cells.map((cell) => ({ ...cell })) : [],
+    }, ROLLED_BACK)).toEqual({ ok: true });
+    // A build that promoted nothing still verifies nothing at all.
+    const never = verifyPromotedExteriorPin(resolved(), NEVER_PROMOTED);
+    expect(never.ok).toBe(false);
+    expect(never.ok === false && never.message).toContain("not promoted in this build");
   });
 });
 
@@ -227,8 +299,11 @@ describe("promoted exterior membership verification", () => {
 });
 
 describe("explicit-unavailable statement", () => {
-  it("states the rolled-back build in words instead of dropping the section", () => {
-    const statement = exteriorUnavailableDetail({ streaming: false, override: null, activeRealBaseReleaseId: CITYWIDE_BASE, record: ROLLED_BACK });
+  it("states a base-only rolled-back build in words instead of dropping the section", () => {
+    // The base-only rollback shape is still reachable and still says so: it is
+    // the predecessor of the FIRST Block 835 promotion, which the V2 record
+    // retains unchanged.
+    const statement = exteriorUnavailableDetail({ streaming: false, override: null, activeRealBaseReleaseId: CITYWIDE_BASE, record: BLOCK835_V2_EXTERIOR_ACTIVATION.predecessor });
     expect(statement).toContain("not active in this build");
     expect(statement).toContain(CITYWIDE_BASE);
     expect(statement).toContain("no substitute exterior was selected");
