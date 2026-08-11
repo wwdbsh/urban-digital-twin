@@ -1,0 +1,190 @@
+import { readFileSync } from "node:fs";
+import { describe, expect, it } from "vitest";
+import {
+  EXTERIOR_DEFAULT_ACTIVATION,
+  exteriorUnavailableDetail,
+  resolveExteriorActivation,
+  verifyPromotedExteriorMembership,
+  verifyPromotedExteriorPin,
+  type ExteriorDefaultActivationRecord,
+} from "./exterior-default-activation";
+
+const FIXTURE_RELEASE_ID = "udt-fixture-exterior-cells";
+const CITYWIDE_BASE = "manhattan-citywide-20260804";
+const PROMOTED = EXTERIOR_DEFAULT_ACTIVATION.enabled ? EXTERIOR_DEFAULT_ACTIVATION : null;
+const ROLLED_BACK: ExteriorDefaultActivationRecord = { enabled: false, releaseId: null };
+
+function committed(fileName: string): Record<string, unknown> {
+  return JSON.parse(new TextDecoder().decode(readFileSync(`public/data/manhattan-exterior-cells-20260811/${fileName}`))) as Record<string, unknown>;
+}
+
+function resolved(overrides: Partial<Parameters<typeof verifyPromotedExteriorPin>[0]> = {}) {
+  if (!PROMOTED) throw new Error("This build is rolled back; the promoted fixtures do not apply.");
+  return {
+    releaseId: PROMOTED.releaseId,
+    snapshotId: PROMOTED.snapshotId,
+    snapshotChecksumSha256: PROMOTED.snapshotChecksumSha256,
+    assemblyPackageIds: [...PROMOTED.assemblyPackageIds],
+    cells: PROMOTED.membership.cells.map((cell) => ({ ...cell })),
+    ...overrides,
+  };
+}
+
+describe("Block 835 exterior promotion record", () => {
+  it("is one indivisible record whose rollback target carries no release", () => {
+    expect(EXTERIOR_DEFAULT_ACTIVATION.enabled).toBe(true);
+    expect(PROMOTED).not.toBeNull();
+    // A partial rollback must be unrepresentable: the predecessor is the whole
+    // disabled state, not a flag that can be flipped beside a surviving pin.
+    expect(PROMOTED!.predecessor).toEqual({ enabled: false, releaseId: null });
+    expect(PROMOTED!.approvalRef).toBe("Issue #11 gate approval 2026-08-11 + perf evidence PR #38");
+  });
+
+  it("pins the committed index defaultHead byte for byte", () => {
+    const index = committed("index.json");
+    expect(index.releaseId).toBe(PROMOTED!.releaseId);
+    expect(index.defaultHead).toEqual({
+      snapshotId: PROMOTED!.snapshotId,
+      checksumSha256: PROMOTED!.snapshotChecksumSha256,
+      assemblyPackageIds: [...PROMOTED!.assemblyPackageIds],
+    });
+  });
+
+  it("records exactly the public cell membership and the 14 accepted building identities", () => {
+    const graph = committed("release-graph.json") as {
+      snapshots: { snapshotId: string; audience: string; cells: { cellId: string; cellReleaseId: string; checksumSha256: string }[] }[];
+      cellReleases: { cellReleaseId: string; audience: string; buildingIds: string[] }[];
+    };
+    const snapshot = graph.snapshots.find((entry) => entry.snapshotId === PROMOTED!.snapshotId && entry.audience === "public");
+    expect(snapshot).toBeDefined();
+    expect(snapshot!.cells).toEqual(PROMOTED!.membership.cells.map((cell) => ({ ...cell })));
+
+    const buildingIds = snapshot!.cells.flatMap((cell) => graph.cellReleases.find((entry) => entry.cellReleaseId === cell.cellReleaseId)?.buildingIds ?? []);
+    expect(buildingIds).toHaveLength(14);
+    expect([...buildingIds].sort()).toEqual([...PROMOTED!.membership.buildingIds].sort());
+  });
+});
+
+describe("promoted exterior activation resolution", () => {
+  const base = { explicitReleaseId: null, fallbackReleaseId: FIXTURE_RELEASE_ID } as const;
+
+  it("activates the promoted release with no URL parameters once a real base is active", () => {
+    expect(resolveExteriorActivation({ ...base, override: null, activeRealBaseReleaseId: CITYWIDE_BASE }))
+      .toEqual({ streaming: true, releaseId: PROMOTED!.releaseId, promotedDefault: true, reason: "promoted-default" });
+  });
+
+  it("stays quiet in a fixture-mode default session instead of attempting a load it must fail", () => {
+    expect(resolveExteriorActivation({ ...base, override: null, activeRealBaseReleaseId: null }))
+      .toEqual({ streaming: false, releaseId: FIXTURE_RELEASE_ID, promotedDefault: false, reason: "no-real-base" });
+  });
+
+  it("honours the explicit disable sentinel over an active real base", () => {
+    expect(resolveExteriorActivation({ ...base, override: "off", activeRealBaseReleaseId: CITYWIDE_BASE }))
+      .toMatchObject({ streaming: false, promotedDefault: false, reason: "url-disabled" });
+  });
+
+  it("targets the promoted release when a disabled real-base session is switched back on", () => {
+    // Reverses the pre-promotion expectation: enabling with no explicit release
+    // over a real base used to resolve the synthetic fixture package.
+    expect(resolveExteriorActivation({ ...base, override: "on", activeRealBaseReleaseId: CITYWIDE_BASE }))
+      .toEqual({ streaming: true, releaseId: PROMOTED!.releaseId, promotedDefault: false, reason: "url-explicit" });
+    // ...but a fixture-mode session still enables the fixture package.
+    expect(resolveExteriorActivation({ ...base, override: "on", activeRealBaseReleaseId: null }))
+      .toEqual({ streaming: true, releaseId: FIXTURE_RELEASE_ID, promotedDefault: false, reason: "url-explicit" });
+  });
+
+  it("keeps an explicit URL release exactly as it behaved before the promotion", () => {
+    expect(resolveExteriorActivation({ ...base, explicitReleaseId: FIXTURE_RELEASE_ID, override: "on", activeRealBaseReleaseId: CITYWIDE_BASE }))
+      .toEqual({ streaming: true, releaseId: FIXTURE_RELEASE_ID, promotedDefault: false, reason: "url-explicit" });
+    // An explicitly named release is never verified as "the promoted default",
+    // so an opt-in link cannot borrow the promotion's acceptance gate.
+    expect(resolveExteriorActivation({ ...base, explicitReleaseId: PROMOTED!.releaseId, override: "on", activeRealBaseReleaseId: CITYWIDE_BASE }).promotedDefault).toBe(false);
+  });
+
+  it("restores the base-only predecessor atomically when the record is rolled back", () => {
+    for (const activeRealBaseReleaseId of [CITYWIDE_BASE, null]) {
+      expect(resolveExteriorActivation({ ...base, override: null, activeRealBaseReleaseId, record: ROLLED_BACK }))
+        .toEqual({ streaming: false, releaseId: FIXTURE_RELEASE_ID, promotedDefault: false, reason: "not-promoted" });
+    }
+    // Rollback removes the DEFAULT only. An explicit opt-in link keeps behaving
+    // exactly as it did before the promotion, which is the predecessor state.
+    expect(resolveExteriorActivation({ ...base, explicitReleaseId: FIXTURE_RELEASE_ID, override: "on", activeRealBaseReleaseId: CITYWIDE_BASE, record: ROLLED_BACK }))
+      .toMatchObject({ streaming: true, releaseId: FIXTURE_RELEASE_ID });
+  });
+});
+
+describe("promoted exterior pin verification", () => {
+  it("accepts exactly the accepted hashes and cell membership", () => {
+    expect(verifyPromotedExteriorPin(resolved())).toEqual({ ok: true });
+  });
+
+  it("fails closed on every field of the pinned head", () => {
+    const cases: [string, Parameters<typeof verifyPromotedExteriorPin>[0], string][] = [
+      ["release", resolved({ releaseId: "manhattan-exterior-cells-20270101" }), "manhattan-exterior-cells-20270101"],
+      ["snapshot", resolved({ snapshotId: "snapshot:manhattan-exterior-cells-20260811:v2" }), "snapshot:manhattan-exterior-cells-20260811:v2"],
+      ["snapshot checksum", resolved({ snapshotChecksumSha256: "0".repeat(64) }), "0".repeat(64)],
+      ["assembly packages", resolved({ assemblyPackageIds: ["manhattan-esb-block-reference-20260810"] }), "manhattan-esb-block-reference-20260810"],
+    ];
+    for (const [label, input, expectedFragment] of cases) {
+      const result = verifyPromotedExteriorPin(input);
+      expect(result.ok, label).toBe(false);
+      expect(result.ok === false && result.message).toContain(expectedFragment);
+      expect(result.ok === false && result.message).toContain("No exterior geometry was rendered and no substitute release was selected.");
+    }
+  });
+
+  it("fails closed when the resolved snapshot carries different cell bytes", () => {
+    const swapped = verifyPromotedExteriorPin(resolved({ cells: [{ ...PROMOTED!.membership.cells[0]!, checksumSha256: "f".repeat(64) }] }));
+    expect(swapped.ok).toBe(false);
+    expect(swapped.ok === false && swapped.message).toContain("cell membership");
+    const extra = verifyPromotedExteriorPin(resolved({ cells: [...PROMOTED!.membership.cells, { cellId: "cell:manhattan:block-836", cellReleaseId: "cell-release:extra:v1", checksumSha256: "a".repeat(64) }] }));
+    expect(extra.ok).toBe(false);
+    const missing = verifyPromotedExteriorPin(resolved({ cells: [] }));
+    expect(missing.ok).toBe(false);
+  });
+
+  it("verifies nothing at all once the build is rolled back", () => {
+    const result = verifyPromotedExteriorPin(resolved(), ROLLED_BACK);
+    expect(result.ok).toBe(false);
+    expect(result.ok === false && result.message).toContain("not promoted in this build");
+  });
+});
+
+describe("promoted exterior membership verification", () => {
+  it("accepts the accepted identities and an empty degraded render", () => {
+    expect(verifyPromotedExteriorMembership(PROMOTED!.membership.buildingIds)).toEqual({ ok: true });
+    expect(verifyPromotedExteriorMembership([])).toEqual({ ok: true });
+    expect(verifyPromotedExteriorMembership(["doitt:778052", "doitt:778052"])).toEqual({ ok: true });
+  });
+
+  it("fails closed when an identity outside the accepted wave reaches the scene", () => {
+    const result = verifyPromotedExteriorMembership(["doitt:778052", "doitt:999999"]);
+    expect(result.ok).toBe(false);
+    expect(result.ok === false && result.message).toContain("doitt:999999");
+    expect(result.ok === false && result.message).not.toContain("doitt:778052,");
+    expect(result.ok === false && result.message).toContain("no substitute release was selected");
+  });
+});
+
+describe("explicit-unavailable statement", () => {
+  it("states the rolled-back build in words instead of dropping the section", () => {
+    const statement = exteriorUnavailableDetail({ streaming: false, override: null, activeRealBaseReleaseId: CITYWIDE_BASE, record: ROLLED_BACK });
+    expect(statement).toContain("not active in this build");
+    expect(statement).toContain(CITYWIDE_BASE);
+    expect(statement).toContain("no substitute exterior was selected");
+  });
+
+  it("distinguishes a session the user switched off from a build that never promoted the wave", () => {
+    const off = exteriorUnavailableDetail({ streaming: false, override: "off", activeRealBaseReleaseId: CITYWIDE_BASE });
+    expect(off).toContain("switched off for this session");
+    expect(off).toContain("no substitute exterior was selected");
+  });
+
+  it("stays silent where no exterior wave was ever promised", () => {
+    // Fixture-mode default: quiet, no failure banner, nothing to report missing.
+    expect(exteriorUnavailableDetail({ streaming: false, override: null, activeRealBaseReleaseId: null })).toBeNull();
+    expect(exteriorUnavailableDetail({ streaming: false, override: null, activeRealBaseReleaseId: null, record: ROLLED_BACK })).toBeNull();
+    // An active wave speaks through its own provenance section.
+    expect(exteriorUnavailableDetail({ streaming: true, override: null, activeRealBaseReleaseId: CITYWIDE_BASE })).toBeNull();
+  });
+});

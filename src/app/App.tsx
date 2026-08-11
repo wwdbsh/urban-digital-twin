@@ -60,6 +60,7 @@ import { EXTERIOR_PILOT_RELEASE_ID, createExteriorPilotFaultFetcher, loadExterio
 import { BLOCK835_PUBLIC_REALM_RELEASE_ID, createBlock835PublicRealmFaultFetcher, loadBlock835PublicRealmRelease, parseBlock835PublicRealmFault, publicRealmFeatureToFeature, type Block835PublicRealmFeature, type LoadedBlock835PublicRealmRelease } from "../runtime/block835-public-realm-release";
 import { loadExteriorCellRuntime, type ExteriorCellOutcome, type ExteriorCellRuntime, type ExteriorHeadRequest } from "../runtime/exterior-cell-runtime";
 import { createExteriorCellFaultFetcher, parseExteriorCellFault } from "../runtime/exterior-cell-fault";
+import { EXTERIOR_DEFAULT_ACTIVATION, exteriorUnavailableDetail, resolveExteriorActivation, verifyPromotedExteriorMembership, verifyPromotedExteriorPin, type ExteriorStreamingOverride } from "../runtime/exterior-default-activation";
 import {
   BLOCK835_CANARY_REPEATS,
   BLOCK835_CANARY_SAMPLES_PER_POSE,
@@ -500,7 +501,13 @@ export function appendBlock835PublicRealmUrl(baseUrl: string, requested: boolean
  */
 export const PINNED_EXTERIOR_CELL_RELEASE_IDS = ["udt-fixture-exterior-cells", "manhattan-exterior-cells-20260811"] as const;
 
-/** The release used when a URL pins none: still the synthetic fixture package. */
+/**
+ * The release used when neither a URL nor the promoted default names one: still
+ * the synthetic fixture package. Since the Block 835 promotion, a session with
+ * an active compatible real base resolves `EXTERIOR_DEFAULT_ACTIVATION` instead;
+ * this fallback covers fixture-mode sessions, where it is only reachable through
+ * an explicit opt-in because the promoted default stays quiet without a base.
+ */
 export const EXTERIOR_CELL_STREAMING_RELEASE_ID = PINNED_EXTERIOR_CELL_RELEASE_IDS[0];
 
 export function isPinnedExteriorCellRelease(releaseId: string | null | undefined): boolean {
@@ -513,10 +520,29 @@ export function exteriorCellBasePath(releaseId: string): string {
 
 export const EXTERIOR_CELL_STREAMING_BASE_PATH = exteriorCellBasePath(EXTERIOR_CELL_STREAMING_RELEASE_ID);
 
+/** The one accepted value of the explicit-disable parameter. */
+export const EXTERIOR_STREAMING_OFF_PARAM = "exteriorStreaming" as const;
+
+/**
+ * URL *intent*, not resolved state. `exteriorCells` keeps meaning "which pinned
+ * release", and the distinct `exteriorStreaming=off` sentinel means "no exterior
+ * wave at all". Absent parameters mean "no opinion", which the promotion record
+ * resolves: default-on over an active real base, quiet in fixture mode.
+ */
 export interface ExteriorStreamingUrlState {
-  requested: boolean;
-  /** A pinned release id; falls back to the default when the URL pins none. */
+  override: ExteriorStreamingOverride;
+  /** A pinned release id named by the URL, or `null` when the URL names none. */
+  explicitReleaseId: string | null;
+  profile: ExteriorRenderProfile;
+  canarySnapshotId: string | null;
+}
+
+/** What a URL write needs: the intent plus the activation it resolved to. */
+export interface ExteriorStreamingUrlWrite {
+  override: ExteriorStreamingOverride;
+  /** The release actually streaming, so an explicit link is never ambiguous. */
   releaseId: string;
+  streaming: boolean;
   profile: ExteriorRenderProfile;
   canarySnapshotId: string | null;
 }
@@ -525,30 +551,47 @@ export interface ExteriorStreamingUrlState {
  * App-local URL wrapper chained after `navigationUrl`, exactly like the Block
  * 835 public-realm wrapper. The canonical navigation contract in
  * `domain/visitor-navigation` is deliberately untouched.
+ *
+ * Only explicit intent is serialized: a default-on session carries no
+ * `exteriorCells`, so its links stay reproducible against whatever this build
+ * promotes rather than freezing a release id into every shared URL.
  */
-export function appendExteriorProfileUrl(baseUrl: string, state: ExteriorStreamingUrlState): string {
+export function appendExteriorProfileUrl(baseUrl: string, state: ExteriorStreamingUrlWrite): string {
   const url = new URL(baseUrl, typeof window === "undefined" ? "http://localhost/" : window.location.href);
-  if (state.requested) {
-    url.searchParams.set("exteriorCells", state.releaseId);
-    url.searchParams.set("exteriorProfile", state.profile);
-  } else {
+  if (state.override === "off") {
+    url.searchParams.set(EXTERIOR_STREAMING_OFF_PARAM, "off");
     url.searchParams.delete("exteriorCells");
     url.searchParams.delete("exteriorProfile");
+    url.searchParams.delete("exteriorCanary");
+    return url.toString();
   }
-  if (state.requested && state.canarySnapshotId) url.searchParams.set("exteriorCanary", state.canarySnapshotId);
+  url.searchParams.delete(EXTERIOR_STREAMING_OFF_PARAM);
+  if (state.override === "on") url.searchParams.set("exteriorCells", state.releaseId);
+  else url.searchParams.delete("exteriorCells");
+  if (state.streaming) url.searchParams.set("exteriorProfile", state.profile);
+  else url.searchParams.delete("exteriorProfile");
+  if (state.override === "on" && state.canarySnapshotId) url.searchParams.set("exteriorCanary", state.canarySnapshotId);
   else url.searchParams.delete("exteriorCanary");
   return url.toString();
 }
 
 export function parseExteriorStreamingUrl(href: string): ExteriorStreamingUrlState {
   const url = new URL(href, typeof window === "undefined" ? "http://localhost/" : window.location.href);
+  // An explicit disable outranks every other exterior parameter: a link that
+  // says "off" must never resolve to a wave because it also carries a release.
   const requestedRelease = url.searchParams.get("exteriorCells");
-  const requested = isPinnedExteriorCellRelease(requestedRelease);
-  const canary = requested ? url.searchParams.get("exteriorCanary") : null;
+  // A URL that names a release this build does not pin fails closed to "off",
+  // never to the promoted default: asking for an unknown release must not be
+  // answered with a different one.
+  const disabled = url.searchParams.get(EXTERIOR_STREAMING_OFF_PARAM) === "off"
+    || (requestedRelease !== null && !isPinnedExteriorCellRelease(requestedRelease));
+  const explicitReleaseId = !disabled && isPinnedExteriorCellRelease(requestedRelease) ? requestedRelease : null;
+  const override: ExteriorStreamingOverride = disabled ? "off" : explicitReleaseId !== null ? "on" : null;
+  const canary = override === "on" ? url.searchParams.get("exteriorCanary") : null;
   return {
-    requested,
-    releaseId: requested && requestedRelease ? requestedRelease : EXTERIOR_CELL_STREAMING_RELEASE_ID,
-    profile: (requested ? parseExteriorRenderProfile(url.searchParams.get("exteriorProfile")) : null) ?? DEFAULT_EXTERIOR_RENDER_PROFILE,
+    override,
+    explicitReleaseId,
+    profile: (disabled ? null : parseExteriorRenderProfile(url.searchParams.get("exteriorProfile"))) ?? DEFAULT_EXTERIOR_RENDER_PROFILE,
     canarySnapshotId: canary && canary.trim().length > 0 ? canary : null,
   };
 }
@@ -617,8 +660,12 @@ export function exteriorDeepLinkMessage(href: string): string | null {
   if (requestedRelease !== null && !isPinnedExteriorCellRelease(requestedRelease)) {
     return `Exterior streaming release ${requestedRelease} is not pinned by this build; exterior streaming stayed off and the rest of the view was left unchanged. The pinned exterior-cell releases here are ${PINNED_EXTERIOR_CELL_RELEASE_IDS.join(", ")}.`;
   }
+  const requestedStreaming = url.searchParams.get(EXTERIOR_STREAMING_OFF_PARAM);
+  if (requestedStreaming !== null && requestedStreaming !== "off") {
+    return `Exterior streaming parameter ${EXTERIOR_STREAMING_OFF_PARAM}=${requestedStreaming} is not supported; only ${EXTERIOR_STREAMING_OFF_PARAM}=off disables the exterior wave, so this link resolved the build default instead.`;
+  }
   const requestedProfile = url.searchParams.get("exteriorProfile");
-  if (isPinnedExteriorCellRelease(requestedRelease) && requestedProfile !== null && parseExteriorRenderProfile(requestedProfile) === null) {
+  if (requestedStreaming !== "off" && requestedProfile !== null && parseExteriorRenderProfile(requestedProfile) === null) {
     return `Exterior render profile ${requestedProfile} is not supported; the ${DEFAULT_EXTERIOR_RENDER_PROFILE} profile was used instead.`;
   }
   return null;
@@ -751,7 +798,7 @@ export function App() {
   const initialPublicRealmRequested = typeof window !== "undefined" && new URL(window.location.href).searchParams.get("publicRealm") === BLOCK835_PUBLIC_REALM_RELEASE_ID;
   const initialPublicRealmFeatureId = typeof window !== "undefined" ? new URL(window.location.href).searchParams.get("publicRealmFeature") : null;
   const initialExteriorStreaming: ExteriorStreamingUrlState = typeof window === "undefined"
-    ? { requested: false, releaseId: EXTERIOR_CELL_STREAMING_RELEASE_ID, profile: DEFAULT_EXTERIOR_RENDER_PROFILE, canarySnapshotId: null }
+    ? { override: null, explicitReleaseId: null, profile: DEFAULT_EXTERIOR_RENDER_PROFILE, canarySnapshotId: null }
     : parseExteriorStreamingUrl(window.location.href);
   const stage3RenderProofRequested = import.meta.env.DEV && typeof window !== "undefined" && new URL(window.location.href).searchParams.get("stage3Proof") === "storefront-picks";
   const block835PerformanceMode = import.meta.env.DEV && typeof window !== "undefined" ? block835PerformanceProbeMode(window.location.search) : null;
@@ -800,15 +847,18 @@ export function App() {
   const [publicRealmLoadState, setPublicRealmLoadState] = useState<"idle" | "loading" | "ready" | "failed">(initialPublicRealmRequested ? "loading" : "idle");
   const [publicRealmMessage, setPublicRealmMessage] = useState(initialPublicRealmRequested ? "Block 835 public-realm overlay is loading from the local release…" : "");
   const [selectedPublicRealmId, setSelectedPublicRealmId] = useState<string | null>(initialPublicRealmFeatureId);
-  const [exteriorStreamingRequested, setExteriorStreamingRequested] = useState(initialExteriorStreaming.requested);
-  // The pinned release a deep link selected. It is fixed for the session: only
-  // a new URL can move streaming to a different pinned exterior-cell release.
-  const [exteriorCellReleaseId] = useState(initialExteriorStreaming.releaseId);
+  // Explicit URL/toggle intent only. Whether streaming actually runs, and which
+  // release it targets, is resolved from this plus the promotion record and the
+  // live base release, so a promoted default cannot be half-applied.
+  const [exteriorStreamingOverride, setExteriorStreamingOverride] = useState<ExteriorStreamingOverride>(initialExteriorStreaming.override);
+  // The pinned release a deep link or a toggle named. A session with no explicit
+  // release follows whatever this build promotes.
+  const [exteriorExplicitReleaseId, setExteriorExplicitReleaseId] = useState<string | null>(initialExteriorStreaming.explicitReleaseId);
   const [exteriorProfile, setExteriorProfile] = useState<ExteriorRenderProfile>(initialExteriorStreaming.profile);
   const [exteriorCanarySnapshotId, setExteriorCanarySnapshotId] = useState<string | null>(initialExteriorStreaming.canarySnapshotId);
   const [exteriorCellRuntime, setExteriorCellRuntime] = useState<ExteriorCellRuntime | null>(null);
-  const [exteriorCellLoadState, setExteriorCellLoadState] = useState<"idle" | "loading" | "ready" | "failed">(initialExteriorStreaming.requested ? "loading" : "idle");
-  const [exteriorCellMessage, setExteriorCellMessage] = useState(initialExteriorStreaming.requested ? "Exterior streaming is loading from the local release…" : "");
+  const [exteriorCellLoadState, setExteriorCellLoadState] = useState<"idle" | "loading" | "ready" | "failed">(initialExteriorStreaming.override === "on" ? "loading" : "idle");
+  const [exteriorCellMessage, setExteriorCellMessage] = useState(initialExteriorStreaming.override === "on" ? "Exterior streaming is loading from the local release…" : "");
   const [exteriorHeadNotice, setExteriorHeadNotice] = useState<string | null>(null);
   const [exteriorCellOutcomes, setExteriorCellOutcomes] = useState<ExteriorCellOutcome[]>([]);
   const [exteriorUnanchoredIds, setExteriorUnanchoredIds] = useState<string[]>([]);
@@ -890,8 +940,10 @@ export function App() {
   const selectedStorefrontIdRef = useRef(selectedStorefrontId);
   const publicRealmRequestedRef = useRef(publicRealmRequested);
   const selectedPublicRealmIdRef = useRef(selectedPublicRealmId);
-  const exteriorStreamingRequestedRef = useRef(exteriorStreamingRequested);
-  const exteriorCellReleaseIdRef = useRef(exteriorCellReleaseId);
+  const exteriorStreamingRequestedRef = useRef(false);
+  const exteriorStreamingOverrideRef = useRef(exteriorStreamingOverride);
+  const exteriorExplicitReleaseIdRef = useRef(exteriorExplicitReleaseId);
+  const exteriorCellReleaseIdRef = useRef<string>(EXTERIOR_CELL_STREAMING_RELEASE_ID);
   const exteriorProfileRef = useRef(exteriorProfile);
   const exteriorCanarySnapshotIdRef = useRef(exteriorCanarySnapshotId);
   const aggregateBudgetRef = useRef(new AggregateRequestBudget());
@@ -929,14 +981,14 @@ export function App() {
   selectedStorefrontIdRef.current = selectedStorefrontId;
   publicRealmRequestedRef.current = publicRealmRequested;
   selectedPublicRealmIdRef.current = selectedPublicRealmId;
-  exteriorStreamingRequestedRef.current = exteriorStreamingRequested;
-  exteriorCellReleaseIdRef.current = exteriorCellReleaseId;
+  exteriorStreamingOverrideRef.current = exteriorStreamingOverride;
+  exteriorExplicitReleaseIdRef.current = exteriorExplicitReleaseId;
   exteriorProfileRef.current = exteriorProfile;
   exteriorCanarySnapshotIdRef.current = exteriorCanarySnapshotId;
   const getOverlayUrlFields = useCallback(() => navigationOverlayFields(exteriorRequestedRef.current, selectedStorefrontIdRef.current), []);
   const navigationUrlForApp = useCallback((value: Parameters<typeof navigationUrl>[0], base: string) => appendExteriorProfileUrl(
     appendBlock835PublicRealmUrl(navigationUrl(value, base), publicRealmRequestedRef.current, selectedPublicRealmIdRef.current),
-    { requested: exteriorStreamingRequestedRef.current, releaseId: exteriorCellReleaseIdRef.current, profile: exteriorProfileRef.current, canarySnapshotId: exteriorCanarySnapshotIdRef.current },
+    { override: exteriorStreamingOverrideRef.current, releaseId: exteriorCellReleaseIdRef.current, streaming: exteriorStreamingRequestedRef.current, profile: exteriorProfileRef.current, canarySnapshotId: exteriorCanarySnapshotIdRef.current },
   ), []);
   const updateSelectedStorefront = useCallback((storefrontId: string | null) => {
     selectedStorefrontIdRef.current = storefrontId;
@@ -958,6 +1010,21 @@ export function App() {
   const publicRealmStatusMessage = publicRealmActivation.prerequisiteMessage ?? publicRealmMessage;
   const activeRealBaseReleaseIdRef = useRef(activeRealBaseReleaseId);
   activeRealBaseReleaseIdRef.current = activeRealBaseReleaseId;
+  // The promotion gate. `exteriorStreamingRequested` is no longer URL-only
+  // state: with the Block 835 wave promoted, an active compatible real base is
+  // itself the request, and a fixture-mode session resolves to quiet.
+  const exteriorActivationResolution = resolveExteriorActivation({
+    override: exteriorStreamingOverride,
+    explicitReleaseId: exteriorExplicitReleaseId,
+    activeRealBaseReleaseId,
+    fallbackReleaseId: EXTERIOR_CELL_STREAMING_RELEASE_ID,
+    record: EXTERIOR_DEFAULT_ACTIVATION,
+  });
+  const exteriorStreamingRequested = exteriorActivationResolution.streaming;
+  const exteriorCellReleaseId = exteriorActivationResolution.releaseId;
+  const exteriorPromotedDefault = exteriorActivationResolution.promotedDefault;
+  exteriorStreamingRequestedRef.current = exteriorStreamingRequested;
+  exteriorCellReleaseIdRef.current = exteriorCellReleaseId;
   const exteriorStreamingState = exteriorStreamingActivation({
     requested: exteriorStreamingRequested,
     releaseId: exteriorCellReleaseId,
@@ -976,6 +1043,15 @@ export function App() {
       : null
   ), [exteriorCellOutcomes, exteriorCellRuntime, exteriorProfile, exteriorStreamingActive]);
   const exteriorNotices = exteriorStreamingActive ? exteriorStreamingNotices(exteriorHeadNotice, exteriorCellOutcomes, exteriorUnanchoredIds) : [];
+  // Explicit-unavailable rule: a real-base session whose exterior wave is not
+  // running says so in the details panel instead of letting the exterior
+  // provenance section disappear as if it had never been promised.
+  const exteriorUnavailableStatement = exteriorUnavailableDetail({
+    streaming: exteriorStreamingRequested,
+    override: exteriorStreamingOverride,
+    activeRealBaseReleaseId,
+    record: EXTERIOR_DEFAULT_ACTIVATION,
+  });
   // Bucketed camera *ellipsoid height*, used as the proxy the exterior LOD
   // thresholds are evaluated against. It is not a measured camera-to-asset
   // distance, and bucketing keeps a continuous camera move from restarting LOD
@@ -1019,7 +1095,7 @@ export function App() {
     });
     if (!prerequisitesReady) {
       setBlock835PerformanceProbe(pending("waiting-for-prerequisites", exteriorStreamingRequested
-        ? "Exterior streaming is requested; this probe only measures the declared Stage 3 conditions and will not certify a scene with the additional exterior overlay."
+        ? `Exterior streaming is active; this probe only measures the declared Stage 3 conditions and will not certify a scene with the additional exterior overlay. Since the Block 835 exterior wave became the default over a real base, add &${EXTERIOR_STREAMING_OFF_PARAM}=off to measure the Stage-3-only scene.`
         : expectedPublicRealm
           ? "Waiting for an active compatible real base, active Stage 3 exterior, and active public-realm overlay."
           : "Waiting for an active compatible real base and active Stage 3 exterior with public realm disabled."));
@@ -1168,7 +1244,7 @@ export function App() {
     // The canary probe certifies the canary scene, so it starts only once the
     // exterior-cell release is actually streaming over an active real base.
     if (!activeRealBaseReleaseId || !exteriorStreamingActive || !runtime) {
-      setBlock835CanaryProbe(pending("waiting-for-prerequisites", "Waiting for an active compatible real base with the pinned exterior-cell release streaming. Add ?exteriorCells=manhattan-exterior-cells-20260811 to opt in."));
+      setBlock835CanaryProbe(pending("waiting-for-prerequisites", `Waiting for an active compatible real base with the pinned exterior-cell release streaming. Release ${EXTERIOR_DEFAULT_ACTIVATION.releaseId ?? "none"} streams by default over a real base; remove ?${EXTERIOR_STREAMING_OFF_PARAM}=off if this session disabled it.`));
       return undefined;
     }
 
@@ -1335,6 +1411,26 @@ export function App() {
         baseIdentity: { releaseId: activeRealBaseReleaseId ?? "no-active-base", has: (featureId) => exteriorBaseIdentityHas(adapter, featureId) },
       })).then(({ runtime, head }) => {
       if (controller.signal.aborted) return;
+      // Acceptance gate for the promoted default: what the runtime resolved must
+      // be the accepted hashes and the accepted cell membership. A same-named
+      // release that resolved different bytes renders nothing.
+      if (exteriorPromotedDefault) {
+        const verification = verifyPromotedExteriorPin({
+          releaseId: runtime.releaseId,
+          snapshotId: head.pin.snapshotId,
+          snapshotChecksumSha256: head.pin.checksumSha256,
+          assemblyPackageIds: head.pin.assemblyPackageIds,
+          cells: runtime.snapshot.cells,
+        }, EXTERIOR_DEFAULT_ACTIVATION);
+        if (!verification.ok) {
+          setExteriorCellRuntime(null);
+          setExteriorCellOutcomes([]);
+          setExteriorHeadNotice(null);
+          setExteriorCellLoadState("failed");
+          setExteriorCellMessage(verification.message);
+          return;
+        }
+      }
       setExteriorCellRuntime(runtime);
       setExteriorHeadNotice(head.notice);
       setExteriorCellLoadState("ready");
@@ -1354,17 +1450,36 @@ export function App() {
       setExteriorCellMessage(exteriorStreamingFailureMessage(error));
     });
     return () => controller.abort();
-  }, [activeAdapter, activeRealBaseReleaseId, exteriorCanarySnapshotId, exteriorCellReleaseId, exteriorStreamingRequested]);
+  }, [activeAdapter, activeRealBaseReleaseId, exteriorCanarySnapshotId, exteriorCellReleaseId, exteriorPromotedDefault, exteriorStreamingRequested]);
 
   useEffect(() => {
     if (!exteriorCellRuntime) return undefined;
     const controller = new AbortController();
     let cancelled = false;
     void Promise.all(exteriorCellRuntime.cellIds().map((cellId) => exteriorCellRuntime.loadCell(cellId, exteriorProfile, exteriorCameraHeightBucketMeters, controller.signal)))
-      .then((outcomes) => { if (!cancelled) setExteriorCellOutcomes(outcomes); })
+      .then((outcomes) => {
+        if (cancelled) return;
+        // Identity gate: exterior assets reuse canonical base identities, so an
+        // identity outside the accepted membership means these are not the
+        // accepted bytes. A cell that degraded to base massing renders no asset
+        // and is reported by the existing per-cell notices instead.
+        if (exteriorPromotedDefault) {
+          const renderedIds = outcomes.flatMap((outcome) => outcome.kind === "rendered" ? outcome.assets.map((asset) => asset.canonicalFeatureId) : []);
+          const membership = verifyPromotedExteriorMembership(renderedIds, EXTERIOR_DEFAULT_ACTIVATION);
+          if (!membership.ok) {
+            setExteriorCellRuntime(null);
+            setExteriorCellOutcomes([]);
+            setExteriorHeadNotice(null);
+            setExteriorCellLoadState("failed");
+            setExteriorCellMessage(membership.message);
+            return;
+          }
+        }
+        setExteriorCellOutcomes(outcomes);
+      })
       .catch(() => { if (!cancelled) setExteriorCellOutcomes([]); });
     return () => { cancelled = true; controller.abort(); };
-  }, [exteriorCameraHeightBucketMeters, exteriorCellRuntime, exteriorProfile]);
+  }, [exteriorCameraHeightBucketMeters, exteriorCellRuntime, exteriorPromotedDefault, exteriorProfile]);
 
   const publishCitywideMetrics = useCallback((adapter: CitywideReleaseAdapter) => {
     if (citywideAdapterRef.current !== adapter) return;
@@ -1909,6 +2024,19 @@ export function App() {
       const url = new URL(window.location.href);
       const requestedPublicRealm = url.searchParams.get("publicRealm") === BLOCK835_PUBLIC_REALM_RELEASE_ID;
       const requestedPublicRealmFeature = requestedPublicRealm ? url.searchParams.get("publicRealmFeature") : null;
+      // Exterior streaming intent is part of history state. Before the Block 835
+      // promotion it was read once at mount and never restored, so Back/Forward
+      // silently kept whatever the session last had; now every entry restores
+      // its own explicit on/off intent, release, profile, and canary.
+      const requestedExteriorStreaming = parseExteriorStreamingUrl(window.location.href);
+      exteriorStreamingOverrideRef.current = requestedExteriorStreaming.override;
+      exteriorExplicitReleaseIdRef.current = requestedExteriorStreaming.explicitReleaseId;
+      exteriorProfileRef.current = requestedExteriorStreaming.profile;
+      exteriorCanarySnapshotIdRef.current = requestedExteriorStreaming.canarySnapshotId;
+      setExteriorStreamingOverride(requestedExteriorStreaming.override);
+      setExteriorExplicitReleaseId(requestedExteriorStreaming.explicitReleaseId);
+      setExteriorProfile(requestedExteriorStreaming.profile);
+      setExteriorCanarySnapshotId(requestedExteriorStreaming.canarySnapshotId);
       exteriorRequestedRef.current = requestedExterior;
       publicRealmRequestedRef.current = requestedPublicRealm;
       selectedPublicRealmIdRef.current = requestedPublicRealmFeature;
@@ -2573,15 +2701,35 @@ export function App() {
     if (snapshotId === exteriorCanarySnapshotIdRef.current) return;
     exteriorCanarySnapshotIdRef.current = snapshotId;
     setExteriorCanarySnapshotId(snapshotId);
+    // Selecting a canary pins the release explicitly, so the shared link names
+    // both the release and the alternate head it was taken against.
+    if (snapshotId) {
+      exteriorStreamingOverrideRef.current = "on";
+      exteriorExplicitReleaseIdRef.current = exteriorCellReleaseIdRef.current;
+      setExteriorStreamingOverride("on");
+      setExteriorExplicitReleaseId(exteriorCellReleaseIdRef.current);
+    }
     if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrlForApp({ featureId: activeSelectionRef.current, query: queryRef.current, cameraMode: cameraModeRef.current, pose: cameraPoseRef.current, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(layerVisibilityRef.current).filter(([, visible]) => visible).map(([layer]) => layer), facets: civicModeRef.current ? selectedCivicFacetsRef.current : selectedCategoriesRef.current, ...getOverlayUrlFields() }, window.location.href));
   };
 
+  /**
+   * The toggle writes explicit intent in both directions. Disabling clears the
+   * explicit release too, so re-enabling over a real base targets whatever this
+   * build promotes rather than resurrecting a release the URL no longer names.
+   */
   const toggleExteriorStreaming = () => {
     const next = !exteriorStreamingRequestedRef.current;
+    const nextOverride: ExteriorStreamingOverride = next ? "on" : "off";
     exteriorStreamingRequestedRef.current = next;
-    setExteriorStreamingRequested(next);
-    if (!next) {
+    exteriorStreamingOverrideRef.current = nextOverride;
+    setExteriorStreamingOverride(nextOverride);
+    if (next) {
+      exteriorExplicitReleaseIdRef.current = exteriorCellReleaseIdRef.current;
+      setExteriorExplicitReleaseId(exteriorCellReleaseIdRef.current);
+    } else {
+      exteriorExplicitReleaseIdRef.current = null;
       exteriorCanarySnapshotIdRef.current = null;
+      setExteriorExplicitReleaseId(null);
       setExteriorCanarySnapshotId(null);
     }
     if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrlForApp({ featureId: activeSelectionRef.current, query: queryRef.current, cameraMode: cameraModeRef.current, pose: cameraPoseRef.current, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(layerVisibilityRef.current).filter(([, visible]) => visible).map(([layer]) => layer), facets: civicModeRef.current ? selectedCivicFacetsRef.current : selectedCategoriesRef.current, ...getOverlayUrlFields() }, window.location.href));
@@ -3073,6 +3221,13 @@ export function App() {
             </dl>
           </section>}
 
+          {exteriorUnavailableStatement && <section className="inspector-section exterior-streaming-detail" aria-label="Exterior streaming provenance" data-exterior-unavailable>
+            <div className="place-truth-heading">
+              <h2>Exterior streaming</h2>
+              <span className="truth-badge">Unavailable</span>
+            </div>
+            <p className="section-label">{exteriorUnavailableStatement}</p>
+          </section>}
           {exteriorStreamingActive && exteriorCellOverlay && exteriorSnapshotId && <section className="inspector-section exterior-streaming-detail" aria-label="Exterior streaming provenance">
             <div className="place-truth-heading">
               <h2>Exterior streaming</h2>
