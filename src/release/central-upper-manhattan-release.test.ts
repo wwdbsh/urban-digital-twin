@@ -14,7 +14,7 @@ import {
 import { MIDTOWN_CORE_V3_APPROVAL_EXCLUSIONS, MIDTOWN_CORE_V3_APPROVAL_SCOPE } from "./midtown-core-v3-release.ts";
 import { LOWER_MANHATTAN_APPROVAL, LOWER_MANHATTAN_APPROVAL_SCOPE } from "./lower-manhattan-release.ts";
 import { SOUTHERN_REMAINDER_APPROVAL, SOUTHERN_REMAINDER_APPROVAL_SCOPE } from "./southern-remainder-release.ts";
-import { BLOCK835_MEMBERSHIP_BUILDING_IDS } from "../runtime/exterior-default-activation.ts";
+import { BLOCK835_MEMBERSHIP_BUILDING_IDS, EXTERIOR_DEFAULT_ACTIVATIONS } from "../runtime/exterior-default-activation.ts";
 import { EXTERIOR_RUNTIME_BUDGETS } from "../runtime/exterior-cell-runtime.ts";
 import { CENTRAL_UPPER_MANHATTAN_RELEASE_ID } from "./central-upper-manhattan-package.ts";
 
@@ -388,15 +388,33 @@ describe("central-upper-manhattan committed payload inventory", () => {
    * function of the committed membership constant; the other three are their own
    * committed inventories' shipped GLB counts.
    *
-   * The list is checked for COMPLETENESS as well as for values: four promoted
-   * waves exist and four rows are recorded, so a fifth promotion that forgot to
-   * update this pipeline would fail here rather than silently understating the
-   * occupied cache.
+   * COMPLETENESS IS CHECKED AGAINST THE LIVE PROMOTION RECORD, NOT AGAINST THIS
+   * INVENTORY'S OWN ROW COUNT.
+   *
+   * An earlier version of this comment claimed a fifth promotion that forgot to
+   * update the pipeline "would fail here". It would not have. Every assertion
+   * below reads `payload-inventory.json`, which is immutable committed bytes:
+   * `promotedWaveCount === 4` is a true statement about a frozen record and stays
+   * green forever, however many waves are promoted afterwards. The claim was the
+   * one untrue sentence in this suite.
+   *
+   * The assertion that DOES fail on a fifth promotion is the one added here: the
+   * release ids this inventory counted, compared against the enabled records of
+   * the LIVE `EXTERIOR_DEFAULT_ACTIVATIONS`. Promoting a wave adds an enabled
+   * record there, so the two lists diverge and this test goes red — which is the
+   * signal to re-derive this release's occupancy or to freeze it deliberately,
+   * the way the w03 canary froze its historical 256-entry cap.
+   *
+   * The immutable-side assertions are kept beside it. They pin what the committed
+   * record says; the live comparison pins that the record is still current.
    */
   it("pins each promoted wave's occupancy to that wave's own committed record", () => {
     const glbCount = (path: string): number =>
       readJson<{ files: { path: string }[] }>(path).files.filter((file) => /^public\/assets\/.*\.glb$/u.test(file.path)).length;
     expect(BLOCK835_MEMBERSHIP_BUILDING_IDS).toHaveLength(14);
+    // The live check. A fifth promotion breaks exactly this line.
+    expect(inventory.occupancy.promotedWaves.map((wave) => wave.releaseId))
+      .toEqual(EXTERIOR_DEFAULT_ACTIVATIONS.filter((record) => record.enabled).map((record) => record.releaseId));
     expect(inventory.occupancy.promotedWaveCount).toBe(4);
     expect(inventory.occupancy.promotedWaves).toHaveLength(4);
     expect(inventory.occupancy.promotedWaves).toEqual([

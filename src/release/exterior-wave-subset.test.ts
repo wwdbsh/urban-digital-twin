@@ -42,6 +42,24 @@ const parentLedgerChecksumSha256 = exteriorWaveArtifactChecksum(parentLedger);
  * module is checked against: 182 cells and 10,230 buildings. A hypothetical that
  * carried the previous wave's counts would be a second copy-paste defect sitting
  * inside the test for copy-paste defects.
+ *
+ * `w05` IS THE LAST REAL WAVE, SO THIS PATTERN ENDS HERE. The committed ledger
+ * declares exactly six waves, `w00` through `w05`. "Move the hypothetical to the
+ * next real wave" has worked three times and has nothing left to move to once
+ * `northern-manhattan` registers its own row at T021.
+ *
+ * At that point the hypothetical MUST become a wave id that is fictional by
+ * construction and can never be registered — `hypothetical-wave-w06` or the like
+ * — rather than being repointed to a seventh wave that does not exist or, worse,
+ * left naming `w05` after `w05` becomes real. Leaving it on a registered wave is
+ * the exact failure this comment has warned about twice: the registry would then
+ * have two reasons to refuse the identity, and which error surfaced would depend
+ * on row order rather than on the defect under test.
+ *
+ * A fictional id changes nothing structurally. `assertDistinctWaveDomains` never
+ * consults the wave plan, and the builder-level assertions in this suite all
+ * throw inside that guard before any ledger work begins, so a `waveIndex` with no
+ * plan entry is never reached.
  */
 const NEXT_WAVE_BORROWING_MIDTOWN: ExteriorWaveSubsetIdentity = {
   releaseId: "manhattan-northern-manhattan-cells-20260813",

@@ -402,6 +402,21 @@ area to base massing and refuses the successor's link by name while leaving the
 canary's opt-in alone. `w04` has never been promoted in any form, so the same
 precedent applies and must be recorded rather than assumed.
 
+### (f) The domain-registry hypothetical runs out at T021, and must be made fictional
+
+`exterior-wave-subset.test.ts` carries an UNREGISTERED-wave hypothetical whose
+whole job is to make a borrowed hash domain the only defect under test. It has
+been repointed each time the wave it named became real: `w03` → `w04` → `w05`.
+
+**`w05` is the last real wave.** The committed ledger declares exactly six,
+`w00`–`w05`, so when T021 registers `northern-manhattan` there is nothing left to
+repoint to. The next implementer must replace it with an id that is fictional by
+construction and can never be registered — `hypothetical-wave-w06` or similar —
+rather than inventing a seventh wave or leaving it naming a now-registered `w05`.
+Leaving it registered gives the registry two reasons to refuse the identity, and
+which error surfaces then depends on row order rather than on the defect. This is
+named here so it is not improvised at T021; the test carries the same note.
+
 ## What this ADR does not claim
 
 - **No frame-time, heap, GPU or residency measurement was taken for this wave.**
