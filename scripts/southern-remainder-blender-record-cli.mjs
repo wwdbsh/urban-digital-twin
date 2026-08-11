@@ -1,4 +1,4 @@
-/* global console */
+/* global console, process */
 /**
  * Turns the gitignored Blender pass output into the committed evidence record.
  *
@@ -19,8 +19,15 @@
  * checksummed — but each one is pinned by SHA-256, so re-running the pass and
  * re-running this script is a check rather than a fresh assertion.
  *
+ * TWO RELEASES OF WAVE w03 TRAVEL THIS SCRIPT. The default is the T017 CANARY,
+ * unchanged, so the record it already produced still means what it meant. T018
+ * promoted a curated SUCCESSOR over a disjoint set of cells, and `--release p1`
+ * points the same cross-check at that release's work root, payload and committed
+ * inventory. The variant selects all three together, because a report checked
+ * against the wrong release's inventory would be checked against nothing.
+ *
  * Usage:
- *   node scripts/southern-remainder-blender-record-cli.mjs
+ *   node scripts/southern-remainder-blender-record-cli.mjs [--release canary|p1]
  */
 import { readFile, readdir, writeFile } from "node:fs/promises";
 import { dirname, join, relative, resolve } from "node:path";
@@ -30,19 +37,48 @@ import { sha256HexBytes, sha256HexSync } from "../src/domain/deterministic-hash.
 import { serializeExteriorWaveArtifact } from "../src/release/exterior-wave-subset.ts";
 import { SOUTHERN_REMAINDER_RELEASE_ID } from "../src/release/southern-remainder-package.ts";
 import { SOUTHERN_REMAINDER_OUTPUT_DIRECTORY } from "../src/release/southern-remainder-release.ts";
-import { SOUTHERN_REMAINDER_RECORD_ROOT, SOUTHERN_REMAINDER_WORK_ROOT } from "./southern-remainder-cli.mjs";
+import { SOUTHERN_REMAINDER_P1_OUTPUT_DIRECTORY, SOUTHERN_REMAINDER_P1_RELEASE_ID } from "../src/release/southern-remainder-p1-release.ts";
+import {
+  SOUTHERN_REMAINDER_P1_RECORD_ROOT,
+  SOUTHERN_REMAINDER_P1_WORK_ROOT,
+  SOUTHERN_REMAINDER_RECORD_ROOT,
+  SOUTHERN_REMAINDER_WORK_ROOT,
+} from "./southern-remainder-cli.mjs";
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const blenderRoot = join(repositoryRoot, SOUTHERN_REMAINDER_WORK_ROOT, "blender");
-const recordRoot = join(repositoryRoot, SOUTHERN_REMAINDER_RECORD_ROOT);
-const payloadRoot = join(repositoryRoot, SOUTHERN_REMAINDER_OUTPUT_DIRECTORY);
+
+const VARIANTS = {
+  canary: {
+    releaseId: SOUTHERN_REMAINDER_RELEASE_ID,
+    workRoot: SOUTHERN_REMAINDER_WORK_ROOT,
+    recordRoot: SOUTHERN_REMAINDER_RECORD_ROOT,
+    outputDirectory: SOUTHERN_REMAINDER_OUTPUT_DIRECTORY,
+    note: "T017 Blender re-import, measurement and render pass over EVERY shipped asset of the renderable cell.",
+  },
+  p1: {
+    releaseId: SOUTHERN_REMAINDER_P1_RELEASE_ID,
+    workRoot: SOUTHERN_REMAINDER_P1_WORK_ROOT,
+    recordRoot: SOUTHERN_REMAINDER_P1_RECORD_ROOT,
+    outputDirectory: SOUTHERN_REMAINDER_P1_OUTPUT_DIRECTORY,
+    note: "T018 Blender re-import, measurement and render pass over the deterministic stratified sample of the PROMOTED curated subset — 86 of its 179 shipped assets, every one of them textured.",
+  },
+};
 
 function fail(message) { throw new Error(`southern-remainder-blender-record: ${message}`); }
 
 async function main() {
+  const argv = process.argv.slice(2);
+  const variantIndex = argv.indexOf("--release");
+  const variantId = variantIndex >= 0 ? argv[variantIndex + 1] : "canary";
+  const variant = VARIANTS[variantId];
+  if (!variant) fail(`unknown release variant ${variantId}; expected one of ${Object.keys(VARIANTS).join(", ")}.`);
+  const blenderRoot = join(repositoryRoot, variant.workRoot, "blender");
+  const recordRoot = join(repositoryRoot, variant.recordRoot);
+  const payloadRoot = join(repositoryRoot, variant.outputDirectory);
+
   const report = JSON.parse(await readFile(join(blenderRoot, "inspection.json"), "utf8"));
-  if (report.releaseId !== SOUTHERN_REMAINDER_RELEASE_ID) {
-    fail(`the Blender report describes ${report.releaseId}, not ${SOUTHERN_REMAINDER_RELEASE_ID}.`);
+  if (report.releaseId !== variant.releaseId) {
+    fail(`the Blender report describes ${report.releaseId}, not ${variant.releaseId}.`);
   }
   const inventory = JSON.parse(await readFile(join(recordRoot, "payload-inventory.json"), "utf8"));
   const declaredByPath = new Map(inventory.files.map((file) => [file.path, file]));
@@ -79,8 +115,8 @@ async function main() {
   const summary = Object.fromEntries(Object.entries(report).filter(([key]) => key !== "samples"));
   const evidence = {
     schemaVersion: "1.0",
-    releaseId: SOUTHERN_REMAINDER_RELEASE_ID,
-    note: "T017 Blender re-import, measurement and render pass over EVERY shipped asset of the renderable cell. Blender inspects and measures; the Node writer owns the shipped bytes and nothing in the pass authors geometry. Committed because the work root is gitignored. Each sample's checksumSha256 is cross-checked against this release's committed payload inventory before it is recorded, so this report is provably about the bytes that shipped rather than about whatever was on disk. The renders are not committed; each is pinned by SHA-256 so re-running the pass is a check rather than a fresh assertion.",
+    releaseId: variant.releaseId,
+    note: variant.note + " Blender inspects and measures; the Node writer owns the shipped bytes and nothing in the pass authors geometry. Committed because the work root is gitignored. Each sample's checksumSha256 is cross-checked against this release's committed payload inventory before it is recorded, so this report is provably about the bytes that shipped rather than about whatever was on disk. The renders are not committed; each is pinned by SHA-256 so re-running the pass is a check rather than a fresh assertion.",
     blender: { version: "5.2.0 LTS", python: "3.13.13", renderEngine: "first available real-time engine (EEVEE Next on this build)" },
     crossCheck: {
       samplesMatchedToInventory: samples.length,
@@ -96,7 +132,7 @@ async function main() {
   await writeFile(join(recordRoot, "blender-sample.json"), text, "utf8");
   console.log(JSON.stringify({
     ok: true,
-    outPath: join(SOUTHERN_REMAINDER_RECORD_ROOT, "blender-sample.json"),
+    outPath: join(variant.recordRoot, "blender-sample.json"),
     outChecksumSha256: sha256HexSync(text),
     sampleCount: samples.length,
     renderCount: renders.length,

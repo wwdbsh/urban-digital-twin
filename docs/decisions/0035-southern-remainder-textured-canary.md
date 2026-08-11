@@ -428,3 +428,330 @@ before any capture and recorded in `capturedWith.servedBundle`: the served
 `dist/index.html` checksum they are compared against. Three conditions abort the
 run rather than being noted — the served bytes cannot be read, they differ from
 this repository's `dist/`, or the entry script does not name this release.
+
+---
+
+# PROMOTION (T018, 2026-08-12): wave `w03` is promoted as a curated successor
+
+This section is APPENDED. Nothing above it is rewritten, because what is above it
+was true of the canary it describes and its three preconditions are what this
+promotion had to answer.
+
+The promoted release is
+**`manhattan-southern-remainder-cells-20260812-p1`**, the FOURTH wave in
+`EXTERIOR_DEFAULT_ACTIVATIONS`. The T017 canary is untouched, still pinned, still
+opt-in only, and still absent from the promotion record.
+
+## Precondition (a): the cache ceiling — ADR 0034 response 1, executed
+
+**Response 1 was taken.** `EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries` moved from
+**256 to 512**; `maxCachedBytes` deliberately did not move. ADR 0034's own
+discharge section carries the full record, including why responses 2 and 3 were
+not taken. It is repeated here only far enough that this wave's reader does not
+have to leave: response 2 buys entries by withdrawing already-verified promoted
+geometry, and response 3 recovers 14 entries of conservatism in exchange for
+having to prove a per-camera worst case.
+
+### The byte ceiling, re-derived at the raised cap
+
+Required by this precondition in stronger terms than ADR 0034's, because this
+wave's assets are heavier per asset than Lower-Manhattan's. That premise turned
+out to be **false and the conclusion survived anyway**, which is recorded because
+a precondition that was right for the wrong reason is worth naming: `w03`'s
+curated assets average **223,618 B**, and Lower-Manhattan P1's average **580,130 B**
+— two and a half times more, because that release is textured LOD 0 over the
+World Trade Center site where the sourced rings are large.
+
+The derivation is code, not prose: `src/runtime/exterior-cache-ceiling.ts`
+computes it and its suite recomputes it on every run from the four waves' own
+committed records. Three bounds, deliberately not collapsed into one:
+
+| bound | value | of 256 MiB |
+| --- | --- | --- |
+| **Reachable** — all four promoted waves resident at once | **109,138,496 B = 104.08 MiB** | 41% |
+| Modelled — 512 entries of the heaviest wave's MEAN asset | 283.27 MiB | 111% |
+| Modelled, unreachable — 512 of the largest single asset | 2.03 GiB | 813% |
+
+Only the first is a fact. A cache cannot hold more of a fixed set of releases
+than all of it, and all of it fits inside 512 entries, so **bytes are non-binding
+and entries remain the binding constraint**. The second is why `maxCachedBytes`
+was left at 256 MiB rather than raised alongside: a heavier future composition
+would evict on bytes before reaching 512 entries, and that is the intended
+behaviour.
+
+The occupancy that matters, re-derived from the four committed inventories rather
+than remembered: 28 (Block 835 V3) + 156 (Midtown-core V3) + 71 (Lower-Manhattan
+P1) = **255**, plus this release's **179**, = **434 of 512**.
+
+### The eviction disclosure still holds, and is now wider
+
+Eviction in the shared exterior LRU is recency-only, with no per-wave reservation
+— ADR 0030, unchanged. Raising the entry cap does not repair it; it **widens its
+blast radius**, because four promoted waves can now be co-resident and therefore
+four waves can evict each other's already-verified bytes under camera pressure.
+Nothing renders wrongly: every evicted artifact is re-fetched and re-verified
+against its pin. The cost is a silent re-fetch the published metrics do not
+attribute. The statement is carried in code as
+`EXTERIOR_CACHE_EVICTION_DISCLOSURE` and asserted, so it cannot quietly stop
+being restated now that the number it was about has moved.
+
+## Precondition (b): the promoted subset is an explicit CURATED list
+
+The canary's cell 276 is **not** promoted. The promoted subset is four cells —
+**379, 385, 386, 387** — recorded as curation in
+`src/release/southern-remainder-curation.ts`, carried into the release's own
+committed inventory, and gated on every emission.
+
+### How they were chosen, and the enumeration that checks it
+
+The ranking key is **skyline value**: owned buildings whose SOURCED height reaches
+90 m. Not owned-building count — "maximal fill" is explicitly not what this
+promotion is for. The candidate set is every `w03` cell inside a stated envelope
+(`-73.9930, 40.7442, -73.9819, 40.7483`), which is the high-rise band immediately
+below the Midtown-core wave boundary and is no larger than that band: the canary's
+cell sits nine tile rows further south and cannot satisfy it.
+
+Eight candidates, 154 admissible two-to-four-cell combinations under the
+200-entry budget. **Four combinations reach the maximum score of 16.** Exactly one
+of them is a single EDGE-CONNECTED piece, and that is the curated set — so
+contiguity is the tie-break, and it is a property the curation claims rather than
+a preference for the biggest set. The three tied alternatives are named in the
+suite: (379, 381, 385, 387), (379, 380, 385, 387), (379, 385, 387, 388). The
+runner-up on score is (378, 379, 385, 387) at 15.
+
+None of that is a number written into this document and left there.
+`southern-remainder-curation-optimum.test.ts` re-runs the enumeration on every
+test run, over the committed wave ledger and a committed per-cell
+`skyline-census.json` that the pipeline now emits from the pinned base.
+
+| cell | owned | materialized | skyline (>= 90 m) | tallest | why |
+| --- | --- | --- | --- | --- | --- |
+| 379 | 29 | 29 | 6 | 190.0 m | the wave's northern edge; its north bound `40.748291015625` is shared EXACTLY with promoted Midtown-core cell `w01-000030` |
+| 385 | 65 | 65 | 4 | 137.2 m | the street wall; without it the subset ends in mid-air at a tile edge |
+| 386 | 50 | 49 | 2 | 155.8 m | the hub — every other curated cell is edge-adjacent to this one |
+| 387 | 36 | 36 | 4 | **245.4 m** | the tallest sourced structure in the whole of wave `w03`, and the second at 202.1 m |
+
+The cross-wave adjacency is the part worth stating twice: the promoted waves now
+**meet on the ground**, so a camera crossing `40.748291015625` crosses from one
+promoted wave into another with no untextured gap between them.
+
+### The local refusal rate, recomputed and not tuned
+
+**180 owned, 179 materialized, 1 refused = 0.556%**, against the **1.00%** wave
+rate (96 of 9,603, the asset-stage census). Below the wave rate, and below the
+canary's own cell at 1 of 77 = 1.30%. **No tolerance was moved to reach it.** The
+single refusal is `doitt:938827`, whose sourced height falls below the one-floor
+minimum the V3 grammar can carry; it ships as an explicit unavailable detail and
+is deliberately OUTSIDE the accepted membership, so a scene that somehow drew it
+fails closed.
+
+### The rights instrument is the canary's, unedited
+
+Same approval id, scope text, exclusions, note and therefore the same
+fingerprint. Amending it would move the fingerprint the canary's own committed
+release graph pins and would falsify what was approved. Every operative clause
+was checked against this release and holds — including the bounded-subset clause,
+which is exactly what differs here and exactly what the instrument left bounded
+rather than enumerated. The carry-over is stated in the release's own committed
+inventory bytes, not only in a source comment, so a reader holding the record
+learns that the instrument is borrowed rather than fresh. It rests on no fresh
+signature; the authority is the two recorded items the canary's note names.
+
+## Precondition (c): cost measured OFF the vsync floor, at the RAISED cap
+
+`scripts/southern-remainder-acceptance-cli.mjs`, against the production preview,
+Chrome with `--disable-gpu-vsync --disable-frame-rate-limit`, three repeats per
+station, 240 timed frames after 180 settle frames.
+
+**The served bundle was identified before any capture** — the T017 fail-closed
+pattern, carried here because an acceptance measurement against the wrong bundle
+is worse than none. The served `index.html` was byte-identical to this tree's
+`dist/index.html` and the entry script `/assets/index-BLRu1W7M.js` named this
+release.
+
+**The raised cap was in force.** `capAtMeasurement` and `runtimeBudgets` are both
+read from `EXTERIOR_RUNTIME_BUDGETS` in the tree the served bundle was built
+from, so a reading taken at 256 cannot be presented as a reading at 512.
+
+### The capped control, and therefore the floor
+
+A **second Chrome without the uncapping flags**, same station, read a p50 of
+**8.30 ms** — a 120 Hz present interval. Every uncapped station sits far below it,
+which is what makes the numbers below headroom rather than floor readings.
+
+| station | profile | p50 | budget | p95 | budget | worst frame | p50 / control |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `nomad-facade` | inspection | **2.60 ms** | 33.3 | **8.00 ms** | 45 | 31.4 ms | 0.313 |
+| `nomad-skyline` | exploration | **2.30 ms** | 16.7 | **6.60 ms** | 25 | **140.0 ms** | 0.277 |
+| `crosswave-wide` | exploration | **1.60 ms** | 16.7 | **4.80 ms** | 25 | 14.9 ms | 0.193 |
+| `fidi-facade` | inspection | **3.80 ms** | 33.3 | **7.90 ms** | 45 | **70.3 ms** | 0.458 |
+
+Every p50 and every p95 is inside both profile budgets. `fidi-facade` is the T016
+station kept pose-for-pose UNCHANGED, so the fourth wave's cost to the third is a
+comparison rather than an assertion. `crosswave-wide` is the station that holds
+wave `w03`'s curated block and the promoted Midtown-core wave in one frame — a
+four-wave composition nobody had measured before this run.
+
+**Isolated slow frames are STATED, not smoothed.** The worst observed frames are
+140.0 ms at `nomad-skyline` and 70.3 ms at `fidi-facade`. They are single frames
+inside 240-frame windows whose p95 is 6.6 ms and 7.9 ms respectively, so they are
+asset-upload and first-texture-decode spikes rather than sustained cost — but they
+are real frames a user could see, and reporting only the percentiles would hide
+them.
+
+### Heap, residency, GPU, hosts
+
+- **JS heap after forced GC**: 185.6 MiB (`crosswave-wide`) to 330.5 MiB
+  (`nomad-facade`), medians across three repeats. `usedJSHeapSize` is a JS heap
+  reading and stands in for nothing else.
+- **Cache residency, worst observed: 420 entries and 100.45 MiB**, against the
+  512-entry and 256 MiB caps. DERIVED per release from the network measurement —
+  one fetched GLB is one LRU entry — because the in-app cache counter only
+  reaches the DOM in a `VITE_BLOCK835_PROBE` build and this measurement is
+  against the ordinary production preview. Per release at the worst station:
+  14 / 156 / 71 / 179 GLBs. The release-time derivation budgets **434** because it
+  counts Block 835's 28 files on disk rather than the 14 LODs a session resolves;
+  it is conservative, not wrong, and both numbers are recorded.
+- **GPU texture memory: 44.55 MiB, COMPUTED AND NOT MEASURED.**
+  `128 * 128 * 4 * 1.33 * 536` over the 536 images embedded across this release's
+  179 shipped GLBs, not deduplicated across models. No instrument reachable from
+  this session reports texture VRAM. This figure is this release's share ALONE:
+  Block 835 V3 and Midtown-core V3 are texture-free, but Lower-Manhattan P1 is
+  not, and its own T016 record computes its share separately.
+- **Zero external hosts** were contacted in any capture.
+
+## Journeys
+
+`scripts/southern-remainder-journeys-p1-cli.mjs`, five journeys, all passed,
+against a bundle verified before the first capture.
+
+- **`cold-default`** — a clean no-parameter load streams all four promoted waves
+  and fetches all **179** curated `w03` assets, and **zero** bytes of the T017
+  canary. The wait is on the fetch count reaching its shipped total or ceasing to
+  grow, not on wave activation, because T017 records a journey that sampled at
+  activation and read 7 of 71.
+- **`cross-wave-pick`** — the tallest sourced structure in the wave,
+  `doitt:1290754`, selected through the app's own search. The details panel names
+  the release `manhattan-southern-remainder-cells-20260812-p1`, the cell and cell
+  release `manhattan-exterior-cell-w03-000387-…`, the active asset's 64-hex
+  checksum, truth tier `generated`, the source capture and update dates, and an
+  uncertainty statement. With four waves resident this also proves the panel
+  attributes to the RIGHT wave.
+- **`canary-opt-in`** — the T017 canary's link still resolves to the canary
+  ALONE: 76 canary GLBs, zero from the successor and zero from the other three
+  waves, from a camera derived in code from that canary cell's own committed
+  bounds and asserted inside them before capture.
+- **`streaming-off`** — `exteriorStreaming=off` disables all four waves and
+  fetches no exterior GLB at all. **Its still DIFFERS from `cold-default`'s at
+  the identical pose** (`6c5360e5…` against `a0a0bc3f…`), which is the only
+  evidence in this record that the curated assets are DRAWN rather than merely
+  downloaded — the T017 discipline, kept, because network counts prove bytes
+  arrived and nothing more.
+- **`tombstone-truth`** — the notice reads "172 of 176 exterior cells ship no
+  exterior geometry in this release; no substitute was selected for them."
+
+**Rollback is not a browser journey and this record does not pretend it is.** No
+URL expresses a build-time promotion-record swap, so it runs through the record's
+own injection seam in `exterior-multiwave-activation.test.ts`: wave `w03` returns
+to base massing, the other three keep streaming untouched, the withdrawn
+successor's link is refused BY NAME, and the T017 canary's opt-in is deliberately
+NOT refused because it was never promoted.
+
+One reading is recorded as empty rather than dressed up: `streaming-off`'s
+`unavailableStatements` array is `[]`, exactly as it was in the T016 record. That
+selector does not capture the panel text in this flow; the journey's pass is
+computed from the wave and network readings, not from that array, and the array
+is left in the record showing what it actually returned.
+
+## Blender
+
+86 of the 179 curated assets re-imported, measured and rendered — the
+deterministic stratified sample, every one of them textured, against a required
+minimum of 10. Blender 5.2.0 LTS, Python 3.13.13, EEVEE Next.
+
+Triangle delta 0, material mismatches 0, bounds deviation 0.0 m against a
+**5.67 m** Z-up control hypothesis, worst volume deviation 5.92e-7, non-solid
+meshes 0. On the texture side: **257 embedded images**, image-count mismatches 0,
+**textures-unreachable 0**, minimum UV layer count 1 — an asset can embed a
+perfectly good PNG, declare it, pass every byte gate and still render flat if
+nothing samples it, and that is what those last two check. Every measured
+checksum was cross-checked against this release's committed payload inventory
+before it was recorded; a mismatch fails the writer rather than being reported.
+
+## Rollback semantics: this wave rolls back to BASE MASSING
+
+`SOUTHERN_REMAINDER_EXTERIOR_ACTIVATION.predecessor` is the DISABLED base-only
+record — the `w02-p1` precedent for a first-promotion wave. Wave `w03` has never
+been promoted in any form: its only other release is the T017 canary, which was
+pinned but never a default. There is no untextured `w03` release and no earlier
+`w03` default, so the previous verified representation of this area IS the pinned
+base massing, and rolling back returns it there.
+
+Two consequences, neither obvious:
+
+- the rollback names the **P1 successor** as withdrawn, so promotion-era
+  `?exteriorCells=manhattan-southern-remainder-cells-20260812-p1` bookmarks fail
+  closed in the same single record swap;
+- it deliberately does **not** name the canary, which was never promoted and
+  stays reachable exactly as it was.
+
+The other three waves keep streaming through a `w03` rollback; the per-record
+rules were already per wave.
+
+## Preconditions on the NEXT wave promotion (w04, w05)
+
+Named here so a fifth wave cannot inherit them by silence, exactly as ADR 0034
+named this wave's and this wave discharged them.
+
+### (a) The headroom arithmetic, and it is tight
+
+    512 - (255 + 179) = 78 entries
+
+**78 entries remain for waves `w04` and `w05` together.** Wave `w04` owns 249
+cells and `w05` owns 182; `w03`'s median cell alone owns 50. So 78 entries is
+roughly one and a half ordinary cells, split between two waves — enough for a
+token subset of one of them and not enough for both to promote anything anyone
+would call a skyline.
+
+**A fifth wave therefore faces the same decision this one did, one doubling
+later.** ADR 0034's three responses are all still available and all still cost
+what they cost. Response 1 again (512 to 1024) is the cheapest to execute and the
+one that should be justified hardest, because it is now a pattern rather than a
+one-off: the byte ceiling would have to be re-derived a THIRD time, and at 1024
+entries the modelled mean fill is 566 MiB against an unchanged 256 MiB byte cap,
+so bytes would very plausibly become binding and the cap would start evicting
+inside the entry budget. Response 3 — counting what the runtime resolves rather
+than what is on disk — is worth more than it was: the disk derivation now
+over-reserves by 14 entries on Block 835 alone, and the T018 measurement puts
+actual worst-observed residency at 420 against a budgeted 434.
+
+### (b) Residual conditions carried forward unresolved
+
+- **Per-wave residency policy is still deferred** against ADR 0024, and the ADR
+  0030 disclosure is wider than it was. At four co-resident waves nothing evicts
+  anything at the stations measured; at five or six on a smaller cache, it will,
+  and the metrics will not say which wave paid.
+- **A curated subset is a constant in this repository**, so it is covered by the
+  stage fingerprint only through `renderableCellDigestSha256`. That seam is now
+  load-bearing for `w03` as it already was for `w02`;
+  `southern-remainder-fingerprint.test.ts` is what fails if it is removed.
+- **The skyline threshold of 90 m is a judgement**, not a discovery. It is stated
+  in `SOUTHERN_REMAINDER_SKYLINE_HEIGHT_METERS` and the enumeration is ranked on
+  it and nothing else. A later wave choosing a different threshold must say so
+  rather than quietly reusing this one where it does not fit.
+
+## One thing that went wrong, kept because it is worth naming
+
+**A latent tileset ordering defect surfaced, and it failed closed.**
+`validateTileset` walks the assembly's root children in `canonicalFeatureId`
+order; `buildMidtownCoreRelease` sorted them by the content URI instead. The two
+agree only while no building id is a strict PREFIX of another, because the URI
+appends `__lod_0.glb` and `7` sorts before `_`. Every release emitted before this
+one happened to satisfy that. This 179-asset subset is the first that does not —
+`doitt:615` is a prefix of `doitt:61531` — and the assembly replay REFUSED the
+emitted tileset rather than shipping a chain the validator could not walk.
+
+The fix sorts by the key the validator uses. No frozen byte moves with it, and
+that is checked rather than asserted: `exterior-tileset-ordering.test.ts`
+verifies that every already-emitted release's asset id set orders identically
+under either key, and that this one does not.
