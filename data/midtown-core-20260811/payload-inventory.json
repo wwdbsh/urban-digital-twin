@@ -1,0 +1,3225 @@
+{
+  "schemaVersion": "1.0",
+  "releaseId": "manhattan-midtown-core-cells-20260811",
+  "payloadDirectory": "public/data/manhattan-midtown-core-cells-20260811",
+  "note": "The payload directory is intentionally untracked, following the citywide precedent. This inventory is the committed record that keeps every emitted byte checkable after the local tree is removed; `node scripts/midtown-core-cli.mjs graph --force` rebuilds it byte-identically.",
+  "base": {
+    "releaseId": "manhattan-citywide-20260804",
+    "manifestChecksumSha256": "acb5a9b52014f86535c8478e7d4e516efc03f6dff95c17e9896dfea4413c203c"
+  },
+  "parentLedger": {
+    "releaseId": "manhattan-exterior-wave-ledger-20260804",
+    "checksumSha256": "62e093d2ca50b54b49fd8bbad9d0b11f6301b2b197623deb343f9ea915e59016"
+  },
+  "ownershipLedgerId": "ownership-ledger:manhattan-midtown-core-cells-20260811:aad83fe4a9350353",
+  "roots": {
+    "private": {
+      "rootId": "root:manhattan-midtown-core-cells-20260811:private",
+      "rootChecksumSha256": "78b43c55c04a5f22d76fa33e04901fdfe27718c1aa62868076f7e6732e471e45",
+      "artifactCount": 1
+    },
+    "public": {
+      "rootId": "root:manhattan-midtown-core-cells-20260811:public",
+      "rootChecksumSha256": "895c156ca1f1133960cda8b7e928741c16a7d3b3d66fa54e1bb6a50b0dcd50da",
+      "artifactCount": 471
+    }
+  },
+  "assemblyFingerprintSha256": "2fc756138639ec8d2c067699d68a628ab72143dd2818da8c8cce099c4877e933",
+  "stats": {
+    "cellCount": 149,
+    "renderableCellCount": 3,
+    "notShippedCellCount": 146,
+    "ownedBuildingCount": 7201,
+    "availableBuildingCount": 160,
+    "unavailableBuildingCount": 7041,
+    "refusedBuildingCount": 0,
+    "shippedAssetCount": 160,
+    "shippedAssetBytes": 15388572,
+    "graphBytes": 7497300,
+    "indexBytes": 674,
+    "assembliesBytes": 341781,
+    "artifactBytes": 5826556,
+    "totalPayloadBytes": 29107107
+  },
+  "totals": {
+    "fileCount": 635,
+    "byteSize": 29107107
+  },
+  "files": [
+    {
+      "path": "assemblies.json",
+      "byteSize": 341781,
+      "checksumSha256": "1f5075e0687e478c6b9f02a394a3af41b8878017f5b1c52e39ca87fc415f9c1c"
+    },
+    {
+      "path": "index.json",
+      "byteSize": 674,
+      "checksumSha256": "47bed329b2c096db1e6d1c1bd3dfc1f7d0c5aeac8cba5437193d22e05d84bcc0"
+    },
+    {
+      "path": "public/assets/doitt-1001111__lod_0.glb",
+      "byteSize": 16800,
+      "checksumSha256": "debe6ce5e3d9a305873b9ecf5fddebc8675b0c284b44dfb98a643fac7f355d00"
+    },
+    {
+      "path": "public/assets/doitt-105916__lod_0.glb",
+      "byteSize": 178984,
+      "checksumSha256": "27cf50baf7405edf4b9e54dda52c97bcf0e0059370c68724568b8e3cb6aaa3b2"
+    },
+    {
+      "path": "public/assets/doitt-1104532__lod_0.glb",
+      "byteSize": 216588,
+      "checksumSha256": "bdfadded16fa6ef6d9695c6b0ee680f99091db4ed84b6de7c1794484d2479316"
+    },
+    {
+      "path": "public/assets/doitt-1105839__lod_0.glb",
+      "byteSize": 25312,
+      "checksumSha256": "f3f30cdd06a1312989b75ba5fbc24c9b37494a2b9c22a4c3030582ce5746af0a"
+    },
+    {
+      "path": "public/assets/doitt-1106429__lod_0.glb",
+      "byteSize": 69120,
+      "checksumSha256": "323b29051f7372296696d1bbfab81afa3bde5976210fb808d38dcae867963998"
+    },
+    {
+      "path": "public/assets/doitt-1111726__lod_0.glb",
+      "byteSize": 57152,
+      "checksumSha256": "cef529b40f06235f971b1636bb2f1d76172df6fb17589697bd1b5ee0a87c6be8"
+    },
+    {
+      "path": "public/assets/doitt-1114625__lod_0.glb",
+      "byteSize": 379732,
+      "checksumSha256": "a1475d92ae5a390b211158750f11145a641dc495343c3bd057bb0096f070fd62"
+    },
+    {
+      "path": "public/assets/doitt-1115013__lod_0.glb",
+      "byteSize": 81748,
+      "checksumSha256": "705ccd3fa39b453fd96bd943d68bebb26ca386edc4a7b885d9b3bbc0483103c8"
+    },
+    {
+      "path": "public/assets/doitt-1116162__lod_0.glb",
+      "byteSize": 29208,
+      "checksumSha256": "f01a2503e8950ef17402bf069818d67d65f1b062616009578793ebe1ee61da18"
+    },
+    {
+      "path": "public/assets/doitt-111690__lod_0.glb",
+      "byteSize": 28060,
+      "checksumSha256": "1df2214049bdf04495e8c23990359e15f35ebb7e0b9976a668fe7cf0a707ad83"
+    },
+    {
+      "path": "public/assets/doitt-1117425__lod_0.glb",
+      "byteSize": 86820,
+      "checksumSha256": "8ba9bbd6938bfcdc25785505dcdc3dbd0e4e95d84331e4acc2ce99d588a51ff5"
+    },
+    {
+      "path": "public/assets/doitt-1158178__lod_0.glb",
+      "byteSize": 866604,
+      "checksumSha256": "a34aeccb0189d5888d2c74c32a64bd20b80bed402d892f16f3aed7a49450b6d0"
+    },
+    {
+      "path": "public/assets/doitt-1191064__lod_0.glb",
+      "byteSize": 16812,
+      "checksumSha256": "bebcfd05d122426b4c821275396f6a5ea5cf196f8b5ead1999bf20083a61fce9"
+    },
+    {
+      "path": "public/assets/doitt-1195535__lod_0.glb",
+      "byteSize": 21140,
+      "checksumSha256": "bb00d7854abb3ca65bdc7e3e97363f1d1047dcaa9ca52127e69cee0b95d8587c"
+    },
+    {
+      "path": "public/assets/doitt-1215127__lod_0.glb",
+      "byteSize": 16784,
+      "checksumSha256": "d95cff5e4b3e254053b709c81215f4f0350f3878a949c3a42a62ecaeb8c74ee5"
+    },
+    {
+      "path": "public/assets/doitt-1221493__lod_0.glb",
+      "byteSize": 634544,
+      "checksumSha256": "6dae60d6faa1eaae54bae3de173deb114e19d720034a2d3ffd6b066e2ef898f2"
+    },
+    {
+      "path": "public/assets/doitt-1224763__lod_0.glb",
+      "byteSize": 44760,
+      "checksumSha256": "c25bed266380fb7dbb23b70880d4b119fa1606da998bc9452b2259145130d8ee"
+    },
+    {
+      "path": "public/assets/doitt-1232671__lod_0.glb",
+      "byteSize": 16796,
+      "checksumSha256": "04352d28c01c9da0cee0056abe64c6f8856f24cfb5a5514a80528515d3e4fd7c"
+    },
+    {
+      "path": "public/assets/doitt-1256080__lod_0.glb",
+      "byteSize": 40736,
+      "checksumSha256": "b89ff13aabf49230be162a414999c461c94dabac1b2e263c387dac348cd0ced1"
+    },
+    {
+      "path": "public/assets/doitt-1260400__lod_0.glb",
+      "byteSize": 18980,
+      "checksumSha256": "315f81feaca58c6a3596dd1f41b64d0733d9e5b6f011775a1a8a177433818ce9"
+    },
+    {
+      "path": "public/assets/doitt-1262786__lod_0.glb",
+      "byteSize": 16808,
+      "checksumSha256": "77d873e88e88a54d1232e046557877aec2ba198fb29c43b5c77f1c423aa3c88d"
+    },
+    {
+      "path": "public/assets/doitt-1263464__lod_0.glb",
+      "byteSize": 125128,
+      "checksumSha256": "700bacf91bc128f9969dce7380988b5e002e315688a20ac8dcb336aac3265701"
+    },
+    {
+      "path": "public/assets/doitt-1264335__lod_0.glb",
+      "byteSize": 457000,
+      "checksumSha256": "698668f02df4f154deaa4c71804620609e84c03e1b55194b073d3ef8fda1630f"
+    },
+    {
+      "path": "public/assets/doitt-1268457__lod_0.glb",
+      "byteSize": 41020,
+      "checksumSha256": "9a4df1dfee923bdc80f3f2c4f74e3b1618c9e5006e2742b55526991bc34c222b"
+    },
+    {
+      "path": "public/assets/doitt-1268463__lod_0.glb",
+      "byteSize": 41016,
+      "checksumSha256": "ac9d3ffd542302205a8e9c68a647a133238f4dc0d265b7fe00e2ae95c636cc4d"
+    },
+    {
+      "path": "public/assets/doitt-1268618__lod_0.glb",
+      "byteSize": 18972,
+      "checksumSha256": "c95e58ef2d37fa64ab0eb8c68ba16e0f1ddc99cf1df158b5b9adc77443e4513c"
+    },
+    {
+      "path": "public/assets/doitt-1272399__lod_0.glb",
+      "byteSize": 767684,
+      "checksumSha256": "2e72f8f2d3378dac8b0f1f99003b3c7cb460c99c5d23f26a016954eeeca74e58"
+    },
+    {
+      "path": "public/assets/doitt-127864__lod_0.glb",
+      "byteSize": 16792,
+      "checksumSha256": "63d42b514ab292d90752c9f47912403e8ebf4a6ea1233f67ae2b7d0d578f6273"
+    },
+    {
+      "path": "public/assets/doitt-1279525__lod_0.glb",
+      "byteSize": 18976,
+      "checksumSha256": "8f80319689a331c90f17c7a65a826ec7a7a88aefa122231ba930043a8dda21c4"
+    },
+    {
+      "path": "public/assets/doitt-1279526__lod_0.glb",
+      "byteSize": 115484,
+      "checksumSha256": "0dd7b47ed83ed83c39a1bf223437609bd025cfba51efe25b5d5ca1739d0ba767"
+    },
+    {
+      "path": "public/assets/doitt-1279527__lod_0.glb",
+      "byteSize": 18972,
+      "checksumSha256": "02e439d99252e7f751b7d01c12fc4cb70fa65bc612a409afb735fa1c02a4f341"
+    },
+    {
+      "path": "public/assets/doitt-1281874__lod_0.glb",
+      "byteSize": 81768,
+      "checksumSha256": "af116cd34d5ca8f83b26fbd5166c3a9724d6b619a77a431bd82b8e1a8f45ee99"
+    },
+    {
+      "path": "public/assets/doitt-1282695__lod_0.glb",
+      "byteSize": 68820,
+      "checksumSha256": "ff37cb13a2b5d5d490ae8ed25d4f94e5f5ff8d445b354c64a29435762568b692"
+    },
+    {
+      "path": "public/assets/doitt-1285662__lod_0.glb",
+      "byteSize": 165736,
+      "checksumSha256": "d0455aaacc2486416c2687cd546dc4557dfea6f30653386e35ef9bb41069c606"
+    },
+    {
+      "path": "public/assets/doitt-1286246__lod_0.glb",
+      "byteSize": 25312,
+      "checksumSha256": "ac39044ec3848672eae9ee8bf171db1d10aaf660bf8e88347637f4556d4895c9"
+    },
+    {
+      "path": "public/assets/doitt-1287486__lod_0.glb",
+      "byteSize": 44748,
+      "checksumSha256": "6765ffb9d01dcb18980ecd7431ea2de402ba104a1f76fb2f1b8c1ddbfe25c9cc"
+    },
+    {
+      "path": "public/assets/doitt-1288650__lod_0.glb",
+      "byteSize": 165740,
+      "checksumSha256": "055146f23abeb51aefa511d65a76c0951abe9153ecb7b9128274cd5b9852fdc2"
+    },
+    {
+      "path": "public/assets/doitt-1289963__lod_0.glb",
+      "byteSize": 16788,
+      "checksumSha256": "ea92dcc06a9aff78eb1d05b4b8bcf301f0b60e666100964a16b8345d74162ed9"
+    },
+    {
+      "path": "public/assets/doitt-1289964__lod_0.glb",
+      "byteSize": 16792,
+      "checksumSha256": "1809b53aec6d8d64b032fee1cc02fc67a803ca3becbc7d7501fa6f43a5968cbd"
+    },
+    {
+      "path": "public/assets/doitt-1294316__lod_0.glb",
+      "byteSize": 903608,
+      "checksumSha256": "0be94f0140747ae5b3eddaf0fefe7db96b4e55dbbcfd19c665aac13980f78a73"
+    },
+    {
+      "path": "public/assets/doitt-1295112__lod_0.glb",
+      "byteSize": 18980,
+      "checksumSha256": "5a5b533482a2d7880afc58653fdc221a8442a97dd91504659db66418a6ab3d87"
+    },
+    {
+      "path": "public/assets/doitt-1296496__lod_0.glb",
+      "byteSize": 36988,
+      "checksumSha256": "0e0e6d331aa208e8a54f2eca2c1c7e8eb227d4f3d825f0606893bc0ea402f325"
+    },
+    {
+      "path": "public/assets/doitt-1297513__lod_0.glb",
+      "byteSize": 525620,
+      "checksumSha256": "86bc3c3394c1c6440d3154b24eb6708173956e2e8f5fe9bf42499d3ae74d655f"
+    },
+    {
+      "path": "public/assets/doitt-1299442__lod_0.glb",
+      "byteSize": 65364,
+      "checksumSha256": "135b5aced9036d929f2f096ba857d85ef6970fdf53ce65050b591b694bd69fc1"
+    },
+    {
+      "path": "public/assets/doitt-1299576__lod_0.glb",
+      "byteSize": 648236,
+      "checksumSha256": "90a31840cee50c7d65b5eec23b56f1e3e6659f393a96e6076214844e341ad3c0"
+    },
+    {
+      "path": "public/assets/doitt-1300185__lod_0.glb",
+      "byteSize": 731604,
+      "checksumSha256": "b7db83c41fa806eebd44f803f8eeb03f28bde9dae1aa8526bd9c834d6b1c960b"
+    },
+    {
+      "path": "public/assets/doitt-1302197__lod_0.glb",
+      "byteSize": 244812,
+      "checksumSha256": "952565aa7a75ccbc37e9b5399c4cac9163e3bf3182950b8cf98dbb5d331c6b6c"
+    },
+    {
+      "path": "public/assets/doitt-1302589__lod_0.glb",
+      "byteSize": 16796,
+      "checksumSha256": "d0355db9b481883a428fcedbd7ba58c981e4ee79716d7a92c321560940494ecd"
+    },
+    {
+      "path": "public/assets/doitt-139071__lod_0.glb",
+      "byteSize": 48944,
+      "checksumSha256": "f8f77189471d6531fe47dd7d84eae625fe1d73c4666d57b72ab17187965c7595"
+    },
+    {
+      "path": "public/assets/doitt-157592__lod_0.glb",
+      "byteSize": 16812,
+      "checksumSha256": "7863b1dd195313e35e14a0a1ac490dd4715b6946cf18d5eb257e15af576f1cb2"
+    },
+    {
+      "path": "public/assets/doitt-162071__lod_0.glb",
+      "byteSize": 21428,
+      "checksumSha256": "79667ab179a6948028e8d233e84976c8a92baee9a1a7160855c646c97e202652"
+    },
+    {
+      "path": "public/assets/doitt-166790__lod_0.glb",
+      "byteSize": 44748,
+      "checksumSha256": "eef5beda4329b05d0c69dffbe74b9f0eb3baecd805650cfbb80e88693c485727"
+    },
+    {
+      "path": "public/assets/doitt-174372__lod_0.glb",
+      "byteSize": 28040,
+      "checksumSha256": "823f9a9b29f801c2ee3b07a99fe472d4f9a16dfdb4bc2408c4c26f9838483e6d"
+    },
+    {
+      "path": "public/assets/doitt-181184__lod_0.glb",
+      "byteSize": 201020,
+      "checksumSha256": "055a23397d62f4a69586afe64da09af58b3462bdf65f4539b052fbf81a7d1500"
+    },
+    {
+      "path": "public/assets/doitt-194068__lod_0.glb",
+      "byteSize": 18968,
+      "checksumSha256": "fbe522f04c0f47e342ad1cede109ceb75a140738d1bf6890c575fcaa13e3ff62"
+    },
+    {
+      "path": "public/assets/doitt-196987__lod_0.glb",
+      "byteSize": 37108,
+      "checksumSha256": "2374633f66a672ec52298cbdfceafb9ce0f25453d05af0f7b702d67f569b9109"
+    },
+    {
+      "path": "public/assets/doitt-225670__lod_0.glb",
+      "byteSize": 18976,
+      "checksumSha256": "79e8811c14e674ddbf9079a1f85f922236f9737048128a0ddba7dc07a6a7610c"
+    },
+    {
+      "path": "public/assets/doitt-227702__lod_0.glb",
+      "byteSize": 27628,
+      "checksumSha256": "52ac6eac008f8783997d1fe86289eb7acadbe9ae6d040dd125a2b279c3c0fdf9"
+    },
+    {
+      "path": "public/assets/doitt-228631__lod_0.glb",
+      "byteSize": 28040,
+      "checksumSha256": "905b2d5845075413b71145de8cc277b9564be46c3944f617d634eae559e72898"
+    },
+    {
+      "path": "public/assets/doitt-229752__lod_0.glb",
+      "byteSize": 28052,
+      "checksumSha256": "ccd549c64e140534451bffe5dfff3158b9808a1470d7e253419720626f056b9e"
+    },
+    {
+      "path": "public/assets/doitt-241646__lod_0.glb",
+      "byteSize": 28052,
+      "checksumSha256": "f49c58f6a21940cd0548c1ae83fbf187aa1be942951c434c194ffb383420082c"
+    },
+    {
+      "path": "public/assets/doitt-246449__lod_0.glb",
+      "byteSize": 32520,
+      "checksumSha256": "2e621d997fb176c73038bf5b11ef236ece562570e192f56c58e6416f9d0cd101"
+    },
+    {
+      "path": "public/assets/doitt-260361__lod_0.glb",
+      "byteSize": 48504,
+      "checksumSha256": "b3482dcfc3474b1c398e042d8fc843c202803a4c93f542bc117fb1fe52f8eb1d"
+    },
+    {
+      "path": "public/assets/doitt-261397__lod_0.glb",
+      "byteSize": 18968,
+      "checksumSha256": "75e6787629ee4db289691f20cc637d11a6f568e8b4587e2d5d1abb5249e9057d"
+    },
+    {
+      "path": "public/assets/doitt-275393__lod_0.glb",
+      "byteSize": 21432,
+      "checksumSha256": "9ca89f6c6b3490e5e5592786f286fe28385e609a3afe5d9b70e8f9681403d60c"
+    },
+    {
+      "path": "public/assets/doitt-297071__lod_0.glb",
+      "byteSize": 21424,
+      "checksumSha256": "0b47a0b687060097e4e8c0badf10f6d94b8240b83e900b545d19ebd3ab8ed409"
+    },
+    {
+      "path": "public/assets/doitt-297390__lod_0.glb",
+      "byteSize": 40740,
+      "checksumSha256": "9ab3455c686ddbc45e96dfdce374e43495badb11163c89c8354ceef174467803"
+    },
+    {
+      "path": "public/assets/doitt-29844__lod_0.glb",
+      "byteSize": 32504,
+      "checksumSha256": "d6e955581b1a54df678d64dc1abd8d56bfa59a7c52e17f909e9a9ee7df9f48e2"
+    },
+    {
+      "path": "public/assets/doitt-316002__lod_0.glb",
+      "byteSize": 18964,
+      "checksumSha256": "e707c263f22cefecccf8d61ea64789dc19ab10ca08b1aa0f7a4208309abce142"
+    },
+    {
+      "path": "public/assets/doitt-317859__lod_0.glb",
+      "byteSize": 134060,
+      "checksumSha256": "99cbf1661f32b027a405f3e72ad047f14622b24f759bcc8af162d6d17c4cbee9"
+    },
+    {
+      "path": "public/assets/doitt-328864__lod_0.glb",
+      "byteSize": 198716,
+      "checksumSha256": "58471fd6a6fc7e6cd95d7ccd992fb756652763c396b4a2d70af9e5ea813b8ac7"
+    },
+    {
+      "path": "public/assets/doitt-347215__lod_0.glb",
+      "byteSize": 16808,
+      "checksumSha256": "280569880bd4921edad725c09f966531539ea9b1edaa42e4f3f4093ca6b17cfa"
+    },
+    {
+      "path": "public/assets/doitt-348074__lod_0.glb",
+      "byteSize": 21432,
+      "checksumSha256": "fb46d34afb86307d0598421643a5fbbe8bdd9c9f679f91dd4b661457b9a9f772"
+    },
+    {
+      "path": "public/assets/doitt-353265__lod_0.glb",
+      "byteSize": 21132,
+      "checksumSha256": "4351a7e8a79e0d03bbc7930b6c3869c7765d250aa44fbc6b6998c7fd4010447d"
+    },
+    {
+      "path": "public/assets/doitt-360993__lod_0.glb",
+      "byteSize": 43896,
+      "checksumSha256": "30ef1a232e227cf5dfbf72c8a877b225070761608572e0870281b0b668b1377d"
+    },
+    {
+      "path": "public/assets/doitt-364273__lod_0.glb",
+      "byteSize": 134056,
+      "checksumSha256": "2af4d55cab4e16505736b05a3e1cd1bae99b7d11c41269ac9da9a219cee925f2"
+    },
+    {
+      "path": "public/assets/doitt-365764__lod_0.glb",
+      "byteSize": 16796,
+      "checksumSha256": "2d1328bf8d1437796f3e8fcbc93c41fc116f8dd8bbfe76aa307af87d018bbeb0"
+    },
+    {
+      "path": "public/assets/doitt-36922__lod_0.glb",
+      "byteSize": 18968,
+      "checksumSha256": "927b3f6a206e8e63b1fdbeb3828130c944e1e9f3ba461e4a75ace2140d77662c"
+    },
+    {
+      "path": "public/assets/doitt-37170__lod_0.glb",
+      "byteSize": 62764,
+      "checksumSha256": "bf674e02d8fc8dfe41f8d7e2280af170aa5c5e10cc3fa2256f072150a44cdbfc"
+    },
+    {
+      "path": "public/assets/doitt-372755__lod_0.glb",
+      "byteSize": 133044,
+      "checksumSha256": "ea5ad9974eec5748e317c643237e8c52f790e36625c77a03ef97ddbdb99d8d50"
+    },
+    {
+      "path": "public/assets/doitt-373902__lod_0.glb",
+      "byteSize": 43888,
+      "checksumSha256": "ec9c554beddff2ab3ec57ed92c4d741b3095a9d1f22822ef5b7fc7c5cf3d5f35"
+    },
+    {
+      "path": "public/assets/doitt-374636__lod_0.glb",
+      "byteSize": 28032,
+      "checksumSha256": "6b264f90cf11f52ff44afd435832c28e22db6900ff162cf6648a170270e4dd5c"
+    },
+    {
+      "path": "public/assets/doitt-375025__lod_0.glb",
+      "byteSize": 28056,
+      "checksumSha256": "51b8d1765eefaa566cfe600bf40792a0983f01a5a2ea26622c53a526dc8d18d5"
+    },
+    {
+      "path": "public/assets/doitt-377010__lod_0.glb",
+      "byteSize": 28056,
+      "checksumSha256": "5d1d8a311fb2cc32e2471b8c63a07adc9d05b23d9956dabfe37c8d1e43ff3faa"
+    },
+    {
+      "path": "public/assets/doitt-381141__lod_0.glb",
+      "byteSize": 28052,
+      "checksumSha256": "63c4818aa873d859aa624d55cf1bf29cb9e078e89f3a88ea4139f80bde5f1400"
+    },
+    {
+      "path": "public/assets/doitt-383893__lod_0.glb",
+      "byteSize": 134052,
+      "checksumSha256": "5c08166d710e7b10c435ef9176550c8c5564dd2c7ed38fcca7244066fc287254"
+    },
+    {
+      "path": "public/assets/doitt-399990__lod_0.glb",
+      "byteSize": 18972,
+      "checksumSha256": "fb27985dc86fbd45a5f5e7c5759363123816d903a005b2ac539b6e675ed5f37a"
+    },
+    {
+      "path": "public/assets/doitt-407018__lod_0.glb",
+      "byteSize": 27620,
+      "checksumSha256": "b84cb5d350051f36eaace5040734aba813de592f378e9b0e486a8d11b2f4bf64"
+    },
+    {
+      "path": "public/assets/doitt-412072__lod_0.glb",
+      "byteSize": 28036,
+      "checksumSha256": "575a0e9e99b59a69570cbc511baa1fec74152c6db4e304c77d78e4725b4c588d"
+    },
+    {
+      "path": "public/assets/doitt-418207__lod_0.glb",
+      "byteSize": 33100,
+      "checksumSha256": "e7b5895e04c7f74abeee62487fd234ce011ed589972531919ddf7922a99a9fec"
+    },
+    {
+      "path": "public/assets/doitt-420075__lod_0.glb",
+      "byteSize": 134048,
+      "checksumSha256": "e159131767e60cf7a0ee78361b9c6d3699f8b7406c9817b87f957a4319e2c98a"
+    },
+    {
+      "path": "public/assets/doitt-421971__lod_0.glb",
+      "byteSize": 57148,
+      "checksumSha256": "52d5d6c103592574f13810bf56581b88374c8fd2a49dff65f2bf9b6e1dbe979c"
+    },
+    {
+      "path": "public/assets/doitt-428362__lod_0.glb",
+      "byteSize": 32500,
+      "checksumSha256": "344aafd7d96044cac56b1a841ef430ef1a5ca1fd744877f11658c7116f9d097f"
+    },
+    {
+      "path": "public/assets/doitt-440180__lod_0.glb",
+      "byteSize": 77028,
+      "checksumSha256": "e3bf1934c059eb9830b5db3f0bf73f3c0393bc0064a5ec8424384e05149ad0a2"
+    },
+    {
+      "path": "public/assets/doitt-443409__lod_0.glb",
+      "byteSize": 47068,
+      "checksumSha256": "e25521f5a8486c8ecfbafb8f5354a99998329a949cb9a97036f1757d1a3439cc"
+    },
+    {
+      "path": "public/assets/doitt-447981__lod_0.glb",
+      "byteSize": 27612,
+      "checksumSha256": "076e5bee2cc8ede4daa4cddd1158f15dfafe635e7c2f2f20f0636388e0bd36dd"
+    },
+    {
+      "path": "public/assets/doitt-44827__lod_0.glb",
+      "byteSize": 28056,
+      "checksumSha256": "b0a89eae291178455ee25f6712e7dca0d834e2e4167eb1b830436e892d52f75b"
+    },
+    {
+      "path": "public/assets/doitt-450560__lod_0.glb",
+      "byteSize": 27616,
+      "checksumSha256": "b779aba4b00f6d388065e43b6b99bc18ccd0bf289a02f7473c1cd6948537247c"
+    },
+    {
+      "path": "public/assets/doitt-453302__lod_0.glb",
+      "byteSize": 48512,
+      "checksumSha256": "2c1dfec4e083e7139776f819f8d02d779b971eb959a4162b4a34650cae4de7ba"
+    },
+    {
+      "path": "public/assets/doitt-473907__lod_0.glb",
+      "byteSize": 65356,
+      "checksumSha256": "19e9e946ec2296c0cc75c5af71d149d7ac225055607b987c646a94be8ea9eeb2"
+    },
+    {
+      "path": "public/assets/doitt-487836__lod_0.glb",
+      "byteSize": 81492,
+      "checksumSha256": "fbaa5c4d2011dc02a1c50a6b5fb90ee8262485e2b1105c12f8ca676bd6a86fe4"
+    },
+    {
+      "path": "public/assets/doitt-501878__lod_0.glb",
+      "byteSize": 86816,
+      "checksumSha256": "739d5ff10fee650a3b3761ba6391e8e3d7ca3c459b31a93fd28b2332f1067bd2"
+    },
+    {
+      "path": "public/assets/doitt-513787__lod_0.glb",
+      "byteSize": 40860,
+      "checksumSha256": "1ece142f5e9ce594c0adf7ddc2a545f6c6dbef9f8f8831bc36d74e5caa6f8124"
+    },
+    {
+      "path": "public/assets/doitt-525090__lod_0.glb",
+      "byteSize": 32512,
+      "checksumSha256": "385d74de937bf4ee2b6354eaac2c7d146986105596570c1ea2740e0d3e2cf4c4"
+    },
+    {
+      "path": "public/assets/doitt-528581__lod_0.glb",
+      "byteSize": 119808,
+      "checksumSha256": "989770ac051d18c90e17f69c4a6187aab8ee660dd5a69186890c307240fac53b"
+    },
+    {
+      "path": "public/assets/doitt-547528__lod_0.glb",
+      "byteSize": 21420,
+      "checksumSha256": "1c7e795c6980fbf90f7fe7f6a9b9db815e77d9d2ac6b0527698fe8eea45aa618"
+    },
+    {
+      "path": "public/assets/doitt-555676__lod_0.glb",
+      "byteSize": 16796,
+      "checksumSha256": "40878573da3364e3ff5560df61e282c61bdd793bfc91ad50d4a22a860bf90dfa"
+    },
+    {
+      "path": "public/assets/doitt-559204__lod_0.glb",
+      "byteSize": 106536,
+      "checksumSha256": "40a56f38994fd420f2acbee8385958e866cd6f09fafcf49b3d5d3c0c85047c8a"
+    },
+    {
+      "path": "public/assets/doitt-563161__lod_0.glb",
+      "byteSize": 28060,
+      "checksumSha256": "e7432e635de36232a7b45c365bbecbe746e7fc30f0c1626bee23ea3853c93d75"
+    },
+    {
+      "path": "public/assets/doitt-572887__lod_0.glb",
+      "byteSize": 81772,
+      "checksumSha256": "06cf8931b09c580f0e7c026db81f6928c3d070b35bf8d848295b02407f1b2280"
+    },
+    {
+      "path": "public/assets/doitt-574826__lod_0.glb",
+      "byteSize": 27624,
+      "checksumSha256": "67557c44193e390c63516e5a673fec73a67aa05860fc988a2db8f70d0a94f544"
+    },
+    {
+      "path": "public/assets/doitt-594251__lod_0.glb",
+      "byteSize": 418228,
+      "checksumSha256": "7d9f54f3fb5770c4f3e4c103722292da3b1ef1c576adc34d47e4a64ae0bb443f"
+    },
+    {
+      "path": "public/assets/doitt-60572__lod_0.glb",
+      "byteSize": 73568,
+      "checksumSha256": "262c78b1b0759afb0d48ec116ae60fc61b55fbe9c969d1e17c230f72afd6f495"
+    },
+    {
+      "path": "public/assets/doitt-623314__lod_0.glb",
+      "byteSize": 32528,
+      "checksumSha256": "d4c7233414ac17f83b70eadb5e9412587e2176ddf7270f65b2b6ba6747d4064e"
+    },
+    {
+      "path": "public/assets/doitt-624434__lod_0.glb",
+      "byteSize": 28048,
+      "checksumSha256": "8b06588b0247b143ccc4d21943506c7572e10051420b6e5e36908354046a22b2"
+    },
+    {
+      "path": "public/assets/doitt-631125__lod_0.glb",
+      "byteSize": 16792,
+      "checksumSha256": "becbda06baa3af5e7c6a203356a6a98cefc4481f4684ce328477136063cf0fe7"
+    },
+    {
+      "path": "public/assets/doitt-645311__lod_0.glb",
+      "byteSize": 33092,
+      "checksumSha256": "bb93ac896349e924d9489483a66dd63f75c5882e8fa85a0ac23a9c439e7fc459"
+    },
+    {
+      "path": "public/assets/doitt-664715__lod_0.glb",
+      "byteSize": 28044,
+      "checksumSha256": "8076dc165bd956f34287077d950374bc1af1a6255727fd5bcfd37d479714274b"
+    },
+    {
+      "path": "public/assets/doitt-665924__lod_0.glb",
+      "byteSize": 149016,
+      "checksumSha256": "290d4e5e3ca6494e32408b6a184ed451b1958439891bac0485f5bc4020f677b3"
+    },
+    {
+      "path": "public/assets/doitt-674326__lod_0.glb",
+      "byteSize": 78320,
+      "checksumSha256": "2739f596e375200ea71d211bc413b177f0ba06d46124c4dd5d5f2db9a8d492d5"
+    },
+    {
+      "path": "public/assets/doitt-678033__lod_0.glb",
+      "byteSize": 76880,
+      "checksumSha256": "8354ca1e31618a101d1b50fb8a0ef726ba7e5249efc307d6ce639f7097abea5a"
+    },
+    {
+      "path": "public/assets/doitt-684855__lod_0.glb",
+      "byteSize": 16792,
+      "checksumSha256": "7b608090813d20ea3803387f1ed6561b5dd1e5b01ae94f0da2c6e8d5327786ab"
+    },
+    {
+      "path": "public/assets/doitt-688120__lod_0.glb",
+      "byteSize": 77028,
+      "checksumSha256": "14d4607885d72d2860a2d56b2e91503d87807372ae1310e6ce4ef451e270c18a"
+    },
+    {
+      "path": "public/assets/doitt-688158__lod_0.glb",
+      "byteSize": 28036,
+      "checksumSha256": "77f01fc3a7d7d76f8833974c87c48dfdb24e573542b42a4409d1112b2c85e580"
+    },
+    {
+      "path": "public/assets/doitt-688202__lod_0.glb",
+      "byteSize": 16792,
+      "checksumSha256": "7984bdbf3bbe248e199ba639ff347f9a486049a10eea5c61a2a73fd151a8269c"
+    },
+    {
+      "path": "public/assets/doitt-688213__lod_0.glb",
+      "byteSize": 34548,
+      "checksumSha256": "e9c274ce3af59bcbdeedbb130dda25fe8a3c68305c8ee408defef01ae8d53f89"
+    },
+    {
+      "path": "public/assets/doitt-709441__lod_0.glb",
+      "byteSize": 28056,
+      "checksumSha256": "2a854e6d3641874e727ed1bd1866cf702c1096b4dc75f4d73e28c88bc54a4455"
+    },
+    {
+      "path": "public/assets/doitt-720315__lod_0.glb",
+      "byteSize": 28052,
+      "checksumSha256": "a4126d26daa50b5907107c415e0954e3390dce876ad7a5f12888bc7eb217db9b"
+    },
+    {
+      "path": "public/assets/doitt-743834__lod_0.glb",
+      "byteSize": 34536,
+      "checksumSha256": "3521a63db3f3f8d24ac6e722c1fa7dc3adb3bd3ce5089e5cb4218c1e5c5d75c0"
+    },
+    {
+      "path": "public/assets/doitt-749711__lod_0.glb",
+      "byteSize": 253300,
+      "checksumSha256": "8e5c140ae7dc605392e9d1198f01ee9c9fef2c499f6366d3fa9b4c35fae4f05e"
+    },
+    {
+      "path": "public/assets/doitt-749752__lod_0.glb",
+      "byteSize": 119796,
+      "checksumSha256": "fbea9273c51f37422ab828e7ac05c00391bbf025b4bdbb15c9dcfb63a6e85b08"
+    },
+    {
+      "path": "public/assets/doitt-754187__lod_0.glb",
+      "byteSize": 21420,
+      "checksumSha256": "8422b5604786ee19300da709df35df9eaa271901d7c933bb208ccba326e4bfdf"
+    },
+    {
+      "path": "public/assets/doitt-755561__lod_0.glb",
+      "byteSize": 40868,
+      "checksumSha256": "34322662bfbefa7904c81be91dcb52a26d1ee03f8bf09239b6d779be15ca99a3"
+    },
+    {
+      "path": "public/assets/doitt-777515__lod_0.glb",
+      "byteSize": 28040,
+      "checksumSha256": "22c54f65abf89dc1b6a286ccd934bff7d2996914b0021ce36e17bf257c1d16a5"
+    },
+    {
+      "path": "public/assets/doitt-787935__lod_0.glb",
+      "byteSize": 28036,
+      "checksumSha256": "e679616248dc6f16ec2b935bfdc1344bff58d18560eba78f3622d35274123fa9"
+    },
+    {
+      "path": "public/assets/doitt-800671__lod_0.glb",
+      "byteSize": 28036,
+      "checksumSha256": "ad3fe8dc58105398cd6cf9f973ccc7c45e70ced6777ea9095a486cc80e348d23"
+    },
+    {
+      "path": "public/assets/doitt-803147__lod_0.glb",
+      "byteSize": 149028,
+      "checksumSha256": "de750a4046bd76bcb740c4c7cc1fdff5a786a1002d83cbb53fe5b43d0834ff48"
+    },
+    {
+      "path": "public/assets/doitt-804055__lod_0.glb",
+      "byteSize": 16796,
+      "checksumSha256": "d00a545757c3851ec69517a108c1cb1cf8ae985ca153b39a272e3b21ff7aef59"
+    },
+    {
+      "path": "public/assets/doitt-812305__lod_0.glb",
+      "byteSize": 28040,
+      "checksumSha256": "629d5c62a22c25ff1e70a67814178827b0cda57ca6db8c0e00025bfe2273b2ca"
+    },
+    {
+      "path": "public/assets/doitt-817527__lod_0.glb",
+      "byteSize": 16804,
+      "checksumSha256": "13c3ef7c45b8a721e0c188750dbd8fcd7170c087dc42143dd17e0a441d80aa2c"
+    },
+    {
+      "path": "public/assets/doitt-830782__lod_0.glb",
+      "byteSize": 21420,
+      "checksumSha256": "029ad181118e0aff38cf53c76ecc8be67ef312a181d97be76b35e1ef0f3f07ba"
+    },
+    {
+      "path": "public/assets/doitt-842122__lod_0.glb",
+      "byteSize": 28048,
+      "checksumSha256": "c17ff1b398760a27a402869146a0af04e72518c89d17113f6f4f3e7b60792a18"
+    },
+    {
+      "path": "public/assets/doitt-850090__lod_0.glb",
+      "byteSize": 238320,
+      "checksumSha256": "9356c0276e67babed33247f5c9248884f57c88014c0ec5517d231246527fecd7"
+    },
+    {
+      "path": "public/assets/doitt-852472__lod_0.glb",
+      "byteSize": 18972,
+      "checksumSha256": "3b3d683dd50e7972bee69aeaf6cda4482053098026e5aa44f5794ae0e173032e"
+    },
+    {
+      "path": "public/assets/doitt-88101__lod_0.glb",
+      "byteSize": 119064,
+      "checksumSha256": "986e539687fa7106b0d77017fcfb964a002d7f5f104d24a4b170acb52461109c"
+    },
+    {
+      "path": "public/assets/doitt-91300__lod_0.glb",
+      "byteSize": 125132,
+      "checksumSha256": "3915edbd68d9a4b3169ab88931080a0b461225a3182f9c0ec5e8aa10e18e9bee"
+    },
+    {
+      "path": "public/assets/doitt-941537__lod_0.glb",
+      "byteSize": 84512,
+      "checksumSha256": "9e8afdf893d304cf9f6e7dd39ff953c7335b47f5023a140a45d51d0a763f1943"
+    },
+    {
+      "path": "public/assets/doitt-945838__lod_0.glb",
+      "byteSize": 40880,
+      "checksumSha256": "c2d91928ba7ea257331bfae7b8d6adaf917f03ed1bba33697e916ae92c5bb81b"
+    },
+    {
+      "path": "public/assets/doitt-97522__lod_0.glb",
+      "byteSize": 90848,
+      "checksumSha256": "d564f35e770c88ef278edfc0510c2fc795ce9848235083a2e5437b7dbf0510d3"
+    },
+    {
+      "path": "public/assets/doitt-98082__lod_0.glb",
+      "byteSize": 21428,
+      "checksumSha256": "cb6279e00ae67e8c1444b222821ba48cbe51d1a39dfca9dc83ebf68f4e755361"
+    },
+    {
+      "path": "public/assets/doitt-98363__lod_0.glb",
+      "byteSize": 28060,
+      "checksumSha256": "896ea89f3baa4e303bd731684cab413d5efb2975ee1a5d03a7eda62c36b51e13"
+    },
+    {
+      "path": "public/assets/doitt-996627__lod_0.glb",
+      "byteSize": 18972,
+      "checksumSha256": "2f4f76e1daafe655a85aabdd659e49db9ee4ea9db468e0604f6dde582ec19403"
+    },
+    {
+      "path": "public/assets/doitt-996629__lod_0.glb",
+      "byteSize": 106552,
+      "checksumSha256": "0ad1fc87d00d48769367a549c79954e129f393fae0e6bfcff0c76eafb6f365f3"
+    },
+    {
+      "path": "public/assets/doitt-996630__lod_0.glb",
+      "byteSize": 186032,
+      "checksumSha256": "0e2c537bcc04ed0c72095ee00dcc95a772c180a5292ec12e13df426209d47c41"
+    },
+    {
+      "path": "public/assets/doitt-996631__lod_0.glb",
+      "byteSize": 29200,
+      "checksumSha256": "c02e7590d5570c30aa065cc805b73afa20a9d707154616b22cbb2f7c16ca03a3"
+    },
+    {
+      "path": "public/assets/doitt-996632__lod_0.glb",
+      "byteSize": 251432,
+      "checksumSha256": "ff3345f1b71f70bb1db3ad10288deef24aa3877f90e3f9bf73bd11c745fe5dd3"
+    },
+    {
+      "path": "public/assets/doitt-996636__lod_0.glb",
+      "byteSize": 18972,
+      "checksumSha256": "f0021ecd1131c074f21b51a345cb104b77c2f633899b3df4acc714f0b31b3d8e"
+    },
+    {
+      "path": "public/assets/doitt-996688__lod_0.glb",
+      "byteSize": 47496,
+      "checksumSha256": "824a9597b999c7ac503818ba8fcdb247881a6617599eff644c99547e6fc72270"
+    },
+    {
+      "path": "public/assets/doitt-996689__lod_0.glb",
+      "byteSize": 530292,
+      "checksumSha256": "ba33b0375b6c32a1280e111fb43c723ddf565d5fe2f6ea3567acdca5b6fbe78e"
+    },
+    {
+      "path": "public/assets/doitt-996746__lod_0.glb",
+      "byteSize": 21128,
+      "checksumSha256": "60de358f40fdf0980716a71af4522b61cd86f0babc677099806f80437e01a7a6"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000001-14-4823-4482-v1.json",
+      "byteSize": 22119,
+      "checksumSha256": "8e676816da62bc3b73ddf795b827f88ea5233dfa7545ed8f6ef73d6099e69e3a"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000002-16-19296-17928-v1.json",
+      "byteSize": 8199,
+      "checksumSha256": "d34129d5a4314dd244a6e0bb339b1bb35e4e4b0e485fcf55f52954e5256c452e"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000003-16-19297-17928-v1.json",
+      "byteSize": 18063,
+      "checksumSha256": "67e5527175e72da7906c4fa9f38b3b2fe4896c0eb269d3ff655f9e71b8dd1320"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000004-16-19298-17928-v1.json",
+      "byteSize": 42968,
+      "checksumSha256": "09ab597553722ae47bb4179090a6fee175a6a428ea84e72bb4b7c85ba2336650"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000005-16-19299-17928-v1.json",
+      "byteSize": 33683,
+      "checksumSha256": "817bf1bbc2d27ea637ed250ee01093c4b94ad73738945ab5fde52fd5059dc027"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000006-17-38594-35858-v1.json",
+      "byteSize": 17158,
+      "checksumSha256": "eebbdcd57d1d4f4709e217f3e64499d68b857847e08defa790fd8c19a87fc6fa"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000007-17-38595-35858-v1.json",
+      "byteSize": 20017,
+      "checksumSha256": "25926f3defc63bc104fcf36f48c8f321a7549ce2c7fcbd950ac9ef58f15aaf02"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000008-17-38596-35858-v1.json",
+      "byteSize": 17554,
+      "checksumSha256": "9fe1d715f475c5f2cb7e3920aa6b92e8394d53563bfe419295026b012bf269d8"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000009-17-38597-35858-v1.json",
+      "byteSize": 10710,
+      "checksumSha256": "cb5f8c52c5af820e27c9a967c408ddbaf207a4641e81a3dcc44d80e5777c833c"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000010-16-19296-17929-v1.json",
+      "byteSize": 9929,
+      "checksumSha256": "5d0b1f12a66c43a4c7000497b127be0dfeaf72a2c809d415d55d85348569cf44"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000011-17-38594-35859-v1.json",
+      "byteSize": 10288,
+      "checksumSha256": "273af513d4b2fcdbce8fd91b7d9a0864689d9188467a6fd0af92c3f5ea0630d2"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000012-17-38595-35859-v1.json",
+      "byteSize": 20801,
+      "checksumSha256": "6870647ea09658d9d638718340f0ac7865fcf6742ba8b92d9ff551774fe79692"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000013-17-38596-35859-v1.json",
+      "byteSize": 16747,
+      "checksumSha256": "cd5382f0e1b41bc897d55b5e52b509f30841467564d8dcb502d2acb8a0b75bd5"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000014-17-38597-35859-v1.json",
+      "byteSize": 14733,
+      "checksumSha256": "b93cb15618c5d7561ac8b61de382583abfbfb188ce3d329fa7ee860a873b8c70"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000015-16-19299-17929-v1.json",
+      "byteSize": 27234,
+      "checksumSha256": "4ec1c6c7948bcd335f5f88c253abe5f8edd8b31d37e23c916ac25549d0489892"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000016-17-38598-35860-v1.json",
+      "byteSize": 12709,
+      "checksumSha256": "c0c64bc40bab00aa16cc86077f5b8fe775ee142ca00b119905e163564b3dfc4d"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000017-17-38599-35860-v1.json",
+      "byteSize": 12334,
+      "checksumSha256": "10c7431335c87ae6aed1725fc44f7cb568a28ad5d4673081d459eb0bcb4317ac"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000018-16-19296-17930-v1.json",
+      "byteSize": 16798,
+      "checksumSha256": "e95c3e151060d74a414cc054ce6d53f3539784c4fef86e3aa8151b3b72e0f105"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000019-16-19297-17930-v1.json",
+      "byteSize": 21184,
+      "checksumSha256": "f1e62bb393846653bd168471c997179995e43b953b312ab25c8805a625827b4a"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000020-16-19298-17930-v1.json",
+      "byteSize": 42922,
+      "checksumSha256": "aa774a03a44cb48139cd19dc9d0c1b19aab2a28e85d1b233d3a1e0ec593f440a"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000021-17-38598-35861-v1.json",
+      "byteSize": 19173,
+      "checksumSha256": "c15c8d05319b08fc89012a799de5f3bc8f1b22d4671e14a73d8a9675294785c8"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000022-17-38599-35861-v1.json",
+      "byteSize": 17971,
+      "checksumSha256": "ce979afe3981444ba3eb1b7056292ed1e4b2d59a9e40a50d8c06e959b81b2bc2"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000023-17-38594-35862-v1.json",
+      "byteSize": 28021,
+      "checksumSha256": "1422c10478772203b5ec1f070a110e98372d62d265a605ce230e3d7cd662ccd2"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000024-17-38595-35862-v1.json",
+      "byteSize": 10309,
+      "checksumSha256": "5d5e66be8c53537c0124bbe08178b0ce0ffaf4d3c2c5be3e1e0ad99a7a1c42ae"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000025-17-38598-35862-v1.json",
+      "byteSize": 25230,
+      "checksumSha256": "62d41afc6e16bf683888c297668580ebe291a93edc167140eb703513915a8d8f"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000026-17-38599-35862-v1.json",
+      "byteSize": 15144,
+      "checksumSha256": "c442a622d8c49c9881d16c978573f487276f691faad9b9c0e1a792f0eb7a096b"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000027-16-19296-17931-v1.json",
+      "byteSize": 30463,
+      "checksumSha256": "33d72a293cf1bc3b1682658acb0c08436c2e260180197813cb4d93583d7194b2"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000028-17-38594-35863-v1.json",
+      "byteSize": 10705,
+      "checksumSha256": "54880db973f185bb5c25119983ec325a36493b48cf1feb4612a45eb342ab3be6"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000029-17-38595-35863-v1.json",
+      "byteSize": 22391,
+      "checksumSha256": "8436bc44d22ca7c2dab08e9ee665dcb307161d493cc04dc4981e92046c772d04"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000030-16-19298-17931-v1.json",
+      "byteSize": 29249,
+      "checksumSha256": "359b15a0ea9954b98591dc6d5d2ce3f73bec50ad68101b4e10844c44f9c5e4bc"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000031-17-38598-35863-v1.json",
+      "byteSize": 8302,
+      "checksumSha256": "66e1f6620826345214033e1537d2b1c9eab47c471289c834a04dd63e92ff4a7d"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000032-17-38599-35863-v1.json",
+      "byteSize": 12315,
+      "checksumSha256": "cc307edaf58b97b47e134633e2c650a0ebc8877da14533af376bd4bd21cc29e4"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000033-17-38604-35856-v1.json",
+      "byteSize": 9097,
+      "checksumSha256": "caa4433f981cdff75d52499ff9919cf85b5950c1bce9ac0ddc286f86787327d3"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000034-17-38605-35856-v1.json",
+      "byteSize": 11516,
+      "checksumSha256": "ae62013974a568212bf30fb6932b668b62e99d5ea65fdeaf622a0ee309089f14"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000035-17-38606-35856-v1.json",
+      "byteSize": 17140,
+      "checksumSha256": "3a7b9f23eb62f4eb02e9841efd295a3ee26590dbceed0957ba883b46e434203b"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000036-17-38607-35856-v1.json",
+      "byteSize": 18764,
+      "checksumSha256": "13138362f5f050b5798330a06c88114faf9a799b99c2c8c2399e491d4a01078a"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000037-16-19300-17928-v1.json",
+      "byteSize": 45767,
+      "checksumSha256": "7e870a7a461cfd8aedf162dcaabef4f2f841c8042de7182015cdca3a71bea55b"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000038-16-19301-17928-v1.json",
+      "byteSize": 21991,
+      "checksumSha256": "37353cc564d9466b4eb4e1a71a0ef8d2c8aeffe36375eb5d1939030740c3d1c3"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000039-17-38604-35857-v1.json",
+      "byteSize": 14736,
+      "checksumSha256": "fee8430e441f529060856a8b8038827942f86feb31f7b249adf6ef25d9dc9e2b"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000040-17-38605-35857-v1.json",
+      "byteSize": 25621,
+      "checksumSha256": "10a9c0712257b22c4da12eea866fa88c937b777aab87cb697ae04c1dd85ef1df"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000041-17-38606-35857-v1.json",
+      "byteSize": 17558,
+      "checksumSha256": "6c692067068f844b0e6de455ec8b58d091369c106a9aa02492dc2202a7316d85"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000042-17-38607-35857-v1.json",
+      "byteSize": 13919,
+      "checksumSha256": "40faa0ac8f1160d98b02c4606439aa833af5d9b958494df7946c00917bb2a1d8"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000043-17-38604-35858-v1.json",
+      "byteSize": 29241,
+      "checksumSha256": "d3a2a8df7ed0bf5073af836e1e798ae70fccca93443052879e2130051deeae05"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000044-17-38605-35858-v1.json",
+      "byteSize": 34042,
+      "checksumSha256": "f5d66e62d3b7799c73883ed67268c87d40441d4c153cba984675f4d60c473511"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000045-16-19300-17929-v1.json",
+      "byteSize": 40912,
+      "checksumSha256": "067aaf4b2f75dbd90e33b2ec7d453da6a48caaa5350b320686d868bd45197d9a"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000046-16-19301-17929-v1.json",
+      "byteSize": 21578,
+      "checksumSha256": "bc91da7bf8b931cc5e152463d1d1d454c181ae03b09bbd138287205e293caebc"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000047-17-38604-35859-v1.json",
+      "byteSize": 36482,
+      "checksumSha256": "c3abfc48eb03804fcd2da19d997633c84b66fc4a21770fd357f53619ff836089"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000048-17-38605-35859-v1.json",
+      "byteSize": 34477,
+      "checksumSha256": "7e38e4068b9637e2fa90be50009f2aa3d6692d7a5bb5cf671ba856ac18f5dc2d"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000049-16-19303-17929-v1.json",
+      "byteSize": 27597,
+      "checksumSha256": "5587ab14fbd1884b1dca97dbd3a931965a32893be00c444c806e969b46b7718b"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000050-16-19300-17930-v1.json",
+      "byteSize": 26431,
+      "checksumSha256": "c2dcbc3c3aaa4a912ab9e4a16c25241d8b83e0f6197e6de5b6d40c80bf8cacca"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000051-16-19301-17930-v1.json",
+      "byteSize": 41710,
+      "checksumSha256": "d26a355b83d06d9da0348473fdcd190a7a2b08c647bc0645e6bdcbefd0c0258c"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000052-16-19302-17930-v1.json",
+      "byteSize": 36507,
+      "checksumSha256": "d3a54f564c29e29499cfbb93c3b896bc86bceacb649c215eeae39f9fac4aef28"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000053-16-19303-17930-v1.json",
+      "byteSize": 12716,
+      "checksumSha256": "cdcab5d49113e00922229f699e4ad74c05b31925d947182951ce648d860c708f"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000054-17-38600-35862-v1.json",
+      "byteSize": 19159,
+      "checksumSha256": "d3d15f400ae4d72728d8a7dec5d9d1ed0c760769a3e0c702e4f08cf8213f8731"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000055-17-38601-35862-v1.json",
+      "byteSize": 16746,
+      "checksumSha256": "84b9a2a1945ec4fc09ea390a901d7c26e117bef605f2096d6f45acf6e9fe50ad"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000056-17-38600-35863-v1.json",
+      "byteSize": 16345,
+      "checksumSha256": "3cd2cc7cbba02a441faf8c587ba759780f2bd51161dba97c5e63c34cd27c6bc7"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000057-17-38601-35863-v1.json",
+      "byteSize": 35261,
+      "checksumSha256": "45559b1f94cc8dbc6485685de7d64e9ee3101440bcefa5fcbea41c6225127594"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000058-16-19301-17931-v1.json",
+      "byteSize": 31664,
+      "checksumSha256": "bc4efc238f1f7f017f76f8685eca1aae7dae5490aa8d6b292415b2fbd22e0d11"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000059-16-19302-17931-v1.json",
+      "byteSize": 14726,
+      "checksumSha256": "338e90e35d8a136a0a18c58b95eeb55579c835c7d17fb784e4a49d958b050fdb"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000060-16-19303-17931-v1.json",
+      "byteSize": 3052,
+      "checksumSha256": "bbfc868412d33305c1781ba8198aca086973ff88878326963e8df70bb16ab1b1"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000061-14-4826-4482-v1.json",
+      "byteSize": 18377,
+      "checksumSha256": "3138448184201fb3eed75c5fc87536aca388362185e1a94cd99cbcabfd60c4cb"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000062-14-4823-4481-v1.json",
+      "byteSize": 3440,
+      "checksumSha256": "1d302205423eceed300ed0f51673c605e248a395cf1b7f5047004b1b19a24e53"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000063-16-19298-17924-v1.json",
+      "byteSize": 35282,
+      "checksumSha256": "dbd3e3871c49017d2471727b3aacf74d1340f3d9d1feafb558f0b3d350540bf7"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000064-16-19299-17924-v1.json",
+      "byteSize": 28415,
+      "checksumSha256": "3a68901914cf23fa124303bfa611c1cd5f6998b724249162b0e0647f32732f95"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000065-17-38596-35850-v1.json",
+      "byteSize": 7097,
+      "checksumSha256": "5c8a101a11b5500e9ab074f868fb25f016307d536011ff67fdce5ce375c4f03c"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000066-17-38597-35850-v1.json",
+      "byteSize": 21197,
+      "checksumSha256": "7b8dc36f1139dbf383a4a6eee8a5569fe426d7234496c0d601ab62f542976ee2"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000067-17-38598-35850-v1.json",
+      "byteSize": 17961,
+      "checksumSha256": "fc2883ea4e6c371a2e7c5de98f7774e0156117fd76a25d96cfd65718e509c3d8"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000068-17-38599-35850-v1.json",
+      "byteSize": 9499,
+      "checksumSha256": "3f84d06f9603c89ebc9d2b24314064a1034168330207413066a7647662f634ab"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000069-15-9648-8962-v1.json",
+      "byteSize": 42146,
+      "checksumSha256": "a1f63e35382c2ec56f098ebb6b1421a00f92144a00e3e7b887174ea7d2a6b64b"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000070-17-38596-35851-v1.json",
+      "byteSize": 17562,
+      "checksumSha256": "9a32afff989dca301985cbdcb959429f08c6e8fa3c166d5e28e2d66c8be30e5f"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000071-17-38597-35851-v1.json",
+      "byteSize": 22396,
+      "checksumSha256": "0ec297e90116f66d4e9fb16a154e7354a1e8000564780adde96e6dc6415003cc"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000072-17-38598-35851-v1.json",
+      "byteSize": 21190,
+      "checksumSha256": "a164cb87e78a4281c2851990295ceb15c1f71786627a1f98979344c36b3084d6"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000073-17-38599-35851-v1.json",
+      "byteSize": 18361,
+      "checksumSha256": "ed1059db8e9c7fd11a19fd27a02ea8c8268ea6daca36680716cc5d518ffd9120"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000074-17-38594-35852-v1.json",
+      "byteSize": 14339,
+      "checksumSha256": "2c1febb55b0bd5712443c3b448bceffcaaa1cb8a2bb3189abe601b429d2edae0"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000075-17-38595-35852-v1.json",
+      "byteSize": 16365,
+      "checksumSha256": "cf86acf0729016676846e6100f5773252c50141e9296fb82ea1c13b39add0526"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000076-17-38596-35852-v1.json",
+      "byteSize": 31237,
+      "checksumSha256": "e94aece1df632d465c4ec35f334ba8aace63d6ae7ce693ad6870c01007775188"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000077-17-38597-35852-v1.json",
+      "byteSize": 34862,
+      "checksumSha256": "487d1119af89ee14ef36b6062e3a3f8736b53258b1166a6a2ecdd2ca3cf31783"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000078-16-19296-17926-v1.json",
+      "byteSize": 5875,
+      "checksumSha256": "3ac0d097c745ba974e87a7e7582c20bb66b6d7eb6b3df98c7b9bb57d34f3f958"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000079-17-38594-35853-v1.json",
+      "byteSize": 10310,
+      "checksumSha256": "5535494243a0a70937524a9521a119ab0f5ca7f4aa170e24b8456a01c20d4a34"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000080-17-38595-35853-v1.json",
+      "byteSize": 26826,
+      "checksumSha256": "a5b2d4048f0bb2708fbfcfb745c36e9739ac99a0a01ddf11a4926a9efa6e5b7f"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000081-17-38596-35853-v1.json",
+      "byteSize": 41307,
+      "checksumSha256": "236c4b27577c3fc49f5b51d642b6d1308660533c835dd5ae9a14aa8e744e2f56"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000082-17-38597-35853-v1.json",
+      "byteSize": 27627,
+      "checksumSha256": "7c2fb8632701e0a4e9767951b461adcf84e18b442836e0262a1b8ff5cc1c835d"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000083-16-19299-17926-v1.json",
+      "byteSize": 48578,
+      "checksumSha256": "a1390500676a75d08a5d8cc0259b7a8ea4eec4b703a3dc5ea4d34d3f0fd229ec"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000084-17-38594-35854-v1.json",
+      "byteSize": 8304,
+      "checksumSha256": "2b1d9be70bbbe4b755d57622d5e9e99eae9bdf8b5228265791b504e916c74053"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000085-17-38595-35854-v1.json",
+      "byteSize": 22002,
+      "checksumSha256": "2afb38994548ffc8665c4b51b42b334fe1a95bc5b9ea1e86a12fc86b4c593353"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000086-17-38596-35854-v1.json",
+      "byteSize": 44510,
+      "checksumSha256": "10a739299175e611b6d407c17c955d45a716b3afac9176a62199d74c6c6b9bf9"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000087-17-38597-35854-v1.json",
+      "byteSize": 39287,
+      "checksumSha256": "385fffdb0db99762ba9b32c1f3b3cba6fd9be77150b68aae13ec1cbb5039f180"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000088-16-19296-17927-v1.json",
+      "byteSize": 8712,
+      "checksumSha256": "1e36b1f1d6dcfe8381f3cc007d4d07e6b44fe138548b000aa1dbec09bb7ee31b"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000089-17-38594-35855-v1.json",
+      "byteSize": 9910,
+      "checksumSha256": "6c36dc26f0fc3f3ba386097592809cf4e1c8a61e93ae1a8185b0ded3b60d837f"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000090-17-38595-35855-v1.json",
+      "byteSize": 24814,
+      "checksumSha256": "f51414b4a2d1285dc76a4c28821d419347a962de252309bf6ce74074d3f14f80"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000091-17-38596-35855-v1.json",
+      "byteSize": 36480,
+      "checksumSha256": "be95e2c1e6d21c2133ecc4c92b4ab6c2dbb8c5c9ff20cb8a119700ec06886db8"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000092-17-38597-35855-v1.json",
+      "byteSize": 28866,
+      "checksumSha256": "0778e6cdb705e2296cfefed0c9ad28bef51da233a753812ce605eebc8df39cf8"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000093-16-19299-17927-v1.json",
+      "byteSize": 37295,
+      "checksumSha256": "35043a56fa766c65d01d5fd59b81467d8ac94664fbda8a059c60156b8b6ff5fb"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000094-17-38604-35848-v1.json",
+      "byteSize": 8280,
+      "checksumSha256": "f9358693914f913917ac576ce9f79b6052432bd1ec3138b72a2e6324cc57318d"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000095-17-38605-35848-v1.json",
+      "byteSize": 31619,
+      "checksumSha256": "5a25c382599a134fffa58af5cd44b773f5fdeb311fe4f6e2588e5846f9d8aa85"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000096-17-38606-35848-v1.json",
+      "byteSize": 30825,
+      "checksumSha256": "4667778b08b95b316855ea7725883426911def52647ef0d25d224913c4e7aae3"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000097-17-38607-35848-v1.json",
+      "byteSize": 26010,
+      "checksumSha256": "107fdbc6bcd4e223f6004508bc783e5608bb8fe5cd31749a3dfb3b26adaa60ad"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000098-17-38604-35849-v1.json",
+      "byteSize": 18354,
+      "checksumSha256": "7523f973130c420966f0167bdefd6e12b476c2750db2cad7d44bf219df426e37"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000099-17-38605-35849-v1.json",
+      "byteSize": 26000,
+      "checksumSha256": "f5ae76a8d87f02ccf344dd172e95f96705f11c9e6955dff410840c30cf833368"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000100-17-38606-35849-v1.json",
+      "byteSize": 10716,
+      "checksumSha256": "f3dcb931d45b2c0362ecceb6a595f0e78e334a34b83bb2efe500992c04678dc6"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000101-17-38607-35849-v1.json",
+      "byteSize": 17949,
+      "checksumSha256": "27374075ec2be27ec53e27a6deec8b51e0beb89e58f085a21ef079a1574db782"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000102-17-38604-35850-v1.json",
+      "byteSize": 30832,
+      "checksumSha256": "344077385a7e779c81341846954800282895c15c7098e9020956c87c9a310139"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000103-17-38605-35850-v1.json",
+      "byteSize": 25606,
+      "checksumSha256": "d52e482034f406271fb7bf06445e012b886afc62c3d38ece4e5cb9645710ccdc"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000104-17-38606-35850-v1.json",
+      "byteSize": 12313,
+      "checksumSha256": "94b5309a6f4c250f3a03f67fe790e31a8a546a056e0417724179b8d9cf70581c"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000105-17-38607-35850-v1.json",
+      "byteSize": 16343,
+      "checksumSha256": "c011f9fd8e9c60eadcd30befa11e066cab80ecc20c8d67703772b25828fcc1c1"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000106-15-9650-8962-v1.json",
+      "byteSize": 44597,
+      "checksumSha256": "6db6274c03c3180b5256a78fecec67bc6a39b9dbc14e0a30df9e5103a8da63a2"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000107-17-38604-35851-v1.json",
+      "byteSize": 29234,
+      "checksumSha256": "bd1528b4a3bb7cf35ea64703d7f997356bdfdcc227de3e5b7c8d9845b57ef20f"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000108-17-38605-35851-v1.json",
+      "byteSize": 32035,
+      "checksumSha256": "93e2f94ee95650d9ce10645e351e7f06e2a6a5d45072d3efe7505dc168281e59"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000109-17-38606-35851-v1.json",
+      "byteSize": 26817,
+      "checksumSha256": "47f516e45505414348dc65c7d89b6b70a937be633cf5a32a77f082fe0a8f2bb4"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000110-17-38607-35851-v1.json",
+      "byteSize": 15133,
+      "checksumSha256": "1779e8df3a369fe3b134bcf4eb78a48aa9132d23873cc1f8dae2d0bcab00936e"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000111-17-38604-35852-v1.json",
+      "byteSize": 17150,
+      "checksumSha256": "c328bd306db50af5c511bea5c3fdce34aa4a87af9aea98d8a1c325cbea783260"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000112-17-38605-35852-v1.json",
+      "byteSize": 48549,
+      "checksumSha256": "70b1f72e0b0fef5f3ceeff7c809eccba0b456b856ac36fe3d44394d5a79ba5c2"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000113-17-38606-35852-v1.json",
+      "byteSize": 13945,
+      "checksumSha256": "bf0f5149bb8fc69867efce333b7bce307d42ac21e7c44ed6f74766cc02b7cf73"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000114-17-38607-35852-v1.json",
+      "byteSize": 16751,
+      "checksumSha256": "2d8772a08aa063fb76f205f4f3be62779d8c20066b046e0a400df0de3af89aba"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000115-16-19300-17926-v1.json",
+      "byteSize": 41712,
+      "checksumSha256": "dc0c99da6a30114b51f2cd38a30dde331501ce304afd06163afd4cfdba1d9764"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000116-16-19301-17926-v1.json",
+      "byteSize": 37692,
+      "checksumSha256": "e2bed086e709845721fab524f4d917464a84be754e7463f3b6555a6c4b4da0c6"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000117-17-38604-35853-v1.json",
+      "byteSize": 10709,
+      "checksumSha256": "2299dd361329c8670939ecdbb5ef49de9990b1050480605ee0fe1d87bb65da08"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000118-17-38605-35853-v1.json",
+      "byteSize": 14334,
+      "checksumSha256": "d44b1acb1e57d0e5ec237c123864d36837f90296528ce0bab1efd1760d78017d"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000119-17-38606-35853-v1.json",
+      "byteSize": 42099,
+      "checksumSha256": "86d19891c6285dbbe83b52156c9d853e1b6acd74166802ffe07f40a7085e62dc"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000120-17-38607-35853-v1.json",
+      "byteSize": 12737,
+      "checksumSha256": "78ea083f61da2189d552ee3d9cd25857c795b5ae3c1039b97a6f31ba41723835"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000121-17-38604-35854-v1.json",
+      "byteSize": 16357,
+      "checksumSha256": "33386175368b52cb914763c15150d35653ab273c1deb524ec71ca1dde58d037b"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000122-17-38605-35854-v1.json",
+      "byteSize": 14728,
+      "checksumSha256": "9847f6126b8672baae3a1b9e9d7dbc174c6cf3f46a63d6a78d62b4c7b1bfdb15"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000123-17-38606-35854-v1.json",
+      "byteSize": 23606,
+      "checksumSha256": "15fa29cfebce233db2da2c5262d9e02f79c4fbb5e79bfc776f05600644bd7fcb"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000124-17-38607-35854-v1.json",
+      "byteSize": 29236,
+      "checksumSha256": "3c03d1be66de77c3141fa45eee63353c1cc6ed84a76f6bffd7ca3db352aa6e12"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000125-16-19300-17927-v1.json",
+      "byteSize": 15536,
+      "checksumSha256": "605452654282e2f1ddd212fe7c30f2db59a6ca8828977bb681249542dfb81f3a"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000126-16-19301-17927-v1.json",
+      "byteSize": 39296,
+      "checksumSha256": "9331a07aa997c73bb112193b77e195ad68e8087f37704a6a4a81d0f3649dac14"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000127-17-38604-35855-v1.json",
+      "byteSize": 18772,
+      "checksumSha256": "e26cd109ac0e57e984a83f3eaec9963a557e36cb3407e40e792e1e2f24976500"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000128-17-38605-35855-v1.json",
+      "byteSize": 16337,
+      "checksumSha256": "35aa76f11231217ec9def20bee4c6dcac44d53690a810e4856cfee43482be3e1"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000129-17-38606-35855-v1.json",
+      "byteSize": 23191,
+      "checksumSha256": "4567e910d87d821f764eb0517c3e8e9dd046178babcf20aebe5472c75c8b1f6f"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000130-17-38607-35855-v1.json",
+      "byteSize": 10704,
+      "checksumSha256": "0f66064869bade5c674ed1f07a41aa858f42cf8725d325c43a18b345b0288e7f"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000131-17-38608-35848-v1.json",
+      "byteSize": 23595,
+      "checksumSha256": "16028945f041da0ac2b634b3e2ed31df2b125489ebac332564fe79331da28d99"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000132-17-38609-35848-v1.json",
+      "byteSize": 19965,
+      "checksumSha256": "8fae6506a641775b12ba620ed3b1845c3bced61678d03899eceeae24c9187472"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000133-17-38610-35848-v1.json",
+      "byteSize": 29234,
+      "checksumSha256": "c64f4e1cf16b23cb6437dddd1dc57e7d5d49f03d02c21afd729b4b5d478972f6"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000134-17-38611-35848-v1.json",
+      "byteSize": 7892,
+      "checksumSha256": "a16c74b734c66ddd9f03856bcf7b889ee4e43e88b8aaa13d9668769c3bee4500"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000135-17-38608-35849-v1.json",
+      "byteSize": 16749,
+      "checksumSha256": "b7e9f9d6b98d5dfde8ca4c842123df0568ac0d34ab38c75dd6c189a979a5df2f"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000136-17-38609-35849-v1.json",
+      "byteSize": 23603,
+      "checksumSha256": "b2fadd040702135eba606bb29c8c44c8b0a8b310f36c7014f38fc2153359734e"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000137-17-38610-35849-v1.json",
+      "byteSize": 22406,
+      "checksumSha256": "76eab239b2a62edf9dc076b49dce60207379dc3be9afdd4917e5faf7ee4f2b09"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000138-17-38611-35849-v1.json",
+      "byteSize": 8697,
+      "checksumSha256": "71439fc3d4d2436795f3e9356004d7dc7cf0b9095cb4c2ff36aedf0390a2e55c"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000139-17-38608-35850-v1.json",
+      "byteSize": 25191,
+      "checksumSha256": "be89a77a31a26bcd869342a79f2bb9e9e920640c02a86b96962ed3cdbb2067d7"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000140-17-38609-35850-v1.json",
+      "byteSize": 13128,
+      "checksumSha256": "55419a365a28bd907075da19c8457917262defbd4abed2a0c8955945c30575cf"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000141-17-38608-35851-v1.json",
+      "byteSize": 15533,
+      "checksumSha256": "12d99f6e6bb19c2c5f683f0eece2f03cc5bae709ebc10a156b473d7365263ded"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000142-17-38609-35851-v1.json",
+      "byteSize": 10709,
+      "checksumSha256": "482ffffbcd97b5dafb5f9568d070f6daebd7e8eaa83daa5b4371073513b78086"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000143-16-19305-17925-v1.json",
+      "byteSize": 19984,
+      "checksumSha256": "4117e361d7cb4bdacc51345a07df92115f43f2980afe496d3c5209c0be6c458f"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000144-15-9653-8962-v1.json",
+      "byteSize": 9488,
+      "checksumSha256": "0a900b8ebf68381644a553e69d3a019d93e5ce2e0ddb8f6e17598491cc1d84bf"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000145-16-19304-17926-v1.json",
+      "byteSize": 41729,
+      "checksumSha256": "79666e41704a571c405055c8fa0ac2eb2f2abd181410e0ce7c6dbb88372672b8"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000146-16-19305-17926-v1.json",
+      "byteSize": 7497,
+      "checksumSha256": "5cb81a97975948993413caa96af55df08baed31e3ffe20a12dd962cef4f147eb"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000147-16-19304-17927-v1.json",
+      "byteSize": 15977,
+      "checksumSha256": "bf8e3cf954926c364322a7411dbc1e5442da9cb69f4a908344b537bdf04c5b99"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000148-16-19305-17927-v1.json",
+      "byteSize": 8307,
+      "checksumSha256": "98412ba08db3091522128d38d95c894360be7412c6ba53f55bac528abff4c10c"
+    },
+    {
+      "path": "public/cell-release/cell-release-manhattan-midtown-core-cells-20260811-manhattan-exterior-cell-w01-000149-15-9653-8963-v1.json",
+      "byteSize": 5457,
+      "checksumSha256": "49751f2efcc88230a8127c9983e08f7e30d5588da49408628d272e1b65118000"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-1001111.json",
+      "byteSize": 3138,
+      "checksumSha256": "e5e206c2ab6ad5ccfe33942b2ea147a1f979a6f1cbe974cd73229a7a265adb6c"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-105916.json",
+      "byteSize": 3132,
+      "checksumSha256": "ab6c03cdb08f7ea7c66eeb527a899cfe02533a0bf466b4a960da3f7bbf8a1587"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-1104532.json",
+      "byteSize": 3138,
+      "checksumSha256": "c541e7871682091a69fd430648fd51b25bf11150266eff40a6581d2ee719e9b7"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-1105839.json",
+      "byteSize": 3138,
+      "checksumSha256": "b269b9578a32eed3bbcedb829e7f6fb7dd9e5cead03771347e038cdff8b98593"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-1106429.json",
+      "byteSize": 3138,
+      "checksumSha256": "cd77de26e4ad959c222ebf8aa3fee972b6d063e6c30df1c2856249812d39cb84"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-1111726.json",
+      "byteSize": 3138,
+      "checksumSha256": "6664d0a3b871e9c9642ce9d0e64c9e3eea24647282b4442820946885e672b7d1"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-1114625.json",
+      "byteSize": 3138,
+      "checksumSha256": "b20b8666899667329d543ef28aa59b60ae897b7e59f1a8d0a97ecd8f3b841700"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-1115013.json",
+      "byteSize": 3138,
+      "checksumSha256": "8be0ffd31fa35a450263ed628714bb9881304b74a75878c8cfec070e8426c8a2"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-1116162.json",
+      "byteSize": 3138,
+      "checksumSha256": "f8fb173ca777714fe6f650aae71f2cc228e2ddbcfc04b46d5183694b50011ffd"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-111690.json",
+      "byteSize": 3132,
+      "checksumSha256": "32c0c30757e169ee4c5829f52b479fcf480b29c8d9d04c5d9e4ca65481a84809"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-1117425.json",
+      "byteSize": 3138,
+      "checksumSha256": "a2c7a63a02be76bde26dcbc222d0f218ee2e7ad57fd8395d1dcdb02726716103"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-1158178.json",
+      "byteSize": 3138,
+      "checksumSha256": "73dd01679fff0c44c3d5062d161dddf9fdf4f658a5117a7e33d324dc53c7e2a6"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-1191064.json",
+      "byteSize": 3138,
+      "checksumSha256": "a6da2e025309895bd7165bdd46c164d9a447986e4e97f066a43bd9e34c06330a"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-1195535.json",
+      "byteSize": 3138,
+      "checksumSha256": "6f82566b4cf375cb4dd8a91b4a778adf3e707e2ca8df8e792c4db175f9342273"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-1215127.json",
+      "byteSize": 3138,
+      "checksumSha256": "aeb98288c22a9ac0a2d97fcf17f38c9d688f44d167f59455f72d3da016735c0c"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-1221493.json",
+      "byteSize": 3138,
+      "checksumSha256": "3cb3508cff0de94ad8102a77d6f5e5a6db4f4b79a425f0e4128b38fca856aed4"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-1224763.json",
+      "byteSize": 3138,
+      "checksumSha256": "e835845057392e6e711d1453c3a849694fefc2a123fc07701a1d28a3e7808e29"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-1232671.json",
+      "byteSize": 3138,
+      "checksumSha256": "673ba3a686f2a2841bfd9f64f3035f50119c72cc78663f9d88943612cc6c5668"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-1256080.json",
+      "byteSize": 3138,
+      "checksumSha256": "8c7183353e8a53d2a12d71927766f2fa4dd3b8c7c9945950a55bbb819b2ca08e"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-1260400.json",
+      "byteSize": 3138,
+      "checksumSha256": "db685f5773feeda5b5aea8b5fd3ac7b5788ab5255f6e69a90236f5c40495eb21"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-1262786.json",
+      "byteSize": 3138,
+      "checksumSha256": "71182e5ed7248a3a04758511ddcb47ad2ad1f790e82dc5af0a5e495f1e798869"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-1263464.json",
+      "byteSize": 3138,
+      "checksumSha256": "305f25ac669f868a973c253051170db9e9691b891ef06169c776c1eb6dee0dcb"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-1264335.json",
+      "byteSize": 3138,
+      "checksumSha256": "2721bab69c84d43d13313d5b8cdfdf09fe7e9da5fee28744e2030c030c68d164"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-1268457.json",
+      "byteSize": 3138,
+      "checksumSha256": "8cf28ec0f4fbe8de277a38e2ff64ae39d6096feda248b326b2d6eb12a498a55a"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-1268463.json",
+      "byteSize": 3138,
+      "checksumSha256": "78367a3067860e4f3cc8829de26b946930dcc3098331882a32b7104b1f6221da"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-1268618.json",
+      "byteSize": 3138,
+      "checksumSha256": "3ba9a60bfb1adf9cc05a6270a2ec47732982523117730ea6953b89d6271abe7e"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-1272399.json",
+      "byteSize": 3138,
+      "checksumSha256": "be611eabddb4d0c73d4280c4202babf00e8925d9e2fc2fbbe5a1e6fcc11020e9"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-127864.json",
+      "byteSize": 3132,
+      "checksumSha256": "50e6633952403be68c3460bcb1bc01e2836bae708f60e7de68e6af26b2b483a0"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-1279525.json",
+      "byteSize": 3138,
+      "checksumSha256": "45e130ef22e1ea7cb9499f796b93fcabdbd28a2a08518e6448d23a2271bf3f59"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-1279526.json",
+      "byteSize": 3138,
+      "checksumSha256": "20388a1d3277a0f295955ff99733f548d76a026d4005bd3ca0f0aa0ae75816cc"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-1279527.json",
+      "byteSize": 3138,
+      "checksumSha256": "da87204a243c2c11508e0c72d97161ea3b35131cea400007e74518234b49d216"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-1281874.json",
+      "byteSize": 3138,
+      "checksumSha256": "49d7a11dea8df4a6beda42599eb2188098f90c87348e3ce2cb5615b8a298724a"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-1282695.json",
+      "byteSize": 3138,
+      "checksumSha256": "d45fe0de0646e0598447e99a8bda5c9bbf8aa87859330f18a15ec8f680e8c4c8"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-1285662.json",
+      "byteSize": 3138,
+      "checksumSha256": "8ffc521d0d9a372d103c58338e11af7e6171aac9a609912e1938cc369148f67e"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-1286246.json",
+      "byteSize": 3138,
+      "checksumSha256": "479d717df8738bc0bde7f01358661173b716ea2d9292ec7f7e2a890251efbc34"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-1287486.json",
+      "byteSize": 3138,
+      "checksumSha256": "188d69f0a757b2abbdb839546464915e5d72dbb67b30a03dc7029b6d8cc5e84f"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-1288650.json",
+      "byteSize": 3138,
+      "checksumSha256": "36d4258f9046258ce1e149c3b764e7e5c3bfd939d130f9cd9777b7337c34c701"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-1289963.json",
+      "byteSize": 3138,
+      "checksumSha256": "95076f080f402f3cab0d2970b866ba1788d64d36b91070d24e2fb27dea5bab85"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-1289964.json",
+      "byteSize": 3138,
+      "checksumSha256": "e94161d3501582769fcb6cf74046fe14905e3452e9d9c0af115590425ad17349"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-1294316.json",
+      "byteSize": 3138,
+      "checksumSha256": "d8759bedb440927996019653c91d22e8d5693380c7cf5493c1cdf1349c6a6b5c"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-1295112.json",
+      "byteSize": 3138,
+      "checksumSha256": "0c9fa9c559d935d88184af3ffda238ed6db64d6d9dcf305af97bf1ea3df37675"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-1296496.json",
+      "byteSize": 3138,
+      "checksumSha256": "d42590c333e3c772e96a49e8cc95b3e4a84091169a551043715db02a932782e8"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-1297513.json",
+      "byteSize": 3138,
+      "checksumSha256": "890100574d24607fc1c5b40b9c490c88ee7c6d1cb5e150941420c97b1e404702"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-1299442.json",
+      "byteSize": 3138,
+      "checksumSha256": "b9f534bc9baf4da2582018b7c3f933f9db207b67d62c940edf8e49de1cdd2ef1"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-1299576.json",
+      "byteSize": 3138,
+      "checksumSha256": "e1d499c28944a3f12f6253c24b61ac3a1537e82a63199d51a34c621fd07f06d0"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-1300185.json",
+      "byteSize": 3138,
+      "checksumSha256": "5d4ebe573c74198ea52bf9411b5e0849a227a40fdb0d0ab6cbeb92927858e638"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-1302197.json",
+      "byteSize": 3138,
+      "checksumSha256": "a72f9984aa63fe8e256409f5508f324c700f34fe9ba2bf2a934e5e418e49bb3f"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-1302589.json",
+      "byteSize": 3138,
+      "checksumSha256": "16884be74b952bbcc39370485cda26104d02bcface09c448772f94dbd7f6ea20"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-139071.json",
+      "byteSize": 3132,
+      "checksumSha256": "d5aee5889f69893f93be49e871e2f1b66d77af8f649e8637d7752853198ea77c"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-157592.json",
+      "byteSize": 3132,
+      "checksumSha256": "80169639c13fbb289ffa7045c4aba6b6386d6614a8ab693888a3e0245ba7420c"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-162071.json",
+      "byteSize": 3132,
+      "checksumSha256": "fb6627f267a0a4146ad37a0be11c9872c0400c6c735a7d9265d71734f1b576b5"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-166790.json",
+      "byteSize": 3132,
+      "checksumSha256": "5c44e3c872a0d57818d8dea526e1ad41aea14488ef4506f72b00c1c6d0d4fd29"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-174372.json",
+      "byteSize": 3132,
+      "checksumSha256": "47ac64b1b3b7dffcd20f67189d679886f5b07ee76cc8aedf6e4555f47b0f77bd"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-181184.json",
+      "byteSize": 3132,
+      "checksumSha256": "4d53cd99ffd5bd0c2b6e10eea9b144e67cf5885c11fa848caf72337fc33227b8"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-194068.json",
+      "byteSize": 3132,
+      "checksumSha256": "8cbe626938fd70786293a052f4489049647f7043f444d55b9cadb0fdf06aadb8"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-196987.json",
+      "byteSize": 3132,
+      "checksumSha256": "9684b71586932c7fc231aed27f3694106d4d6ecadb87e9fde29ad9bc5c71b406"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-225670.json",
+      "byteSize": 3132,
+      "checksumSha256": "8ef0d323676e0de24c37c7e9270c7bff428319d0f1b5899f086d3f1929d1008e"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-227702.json",
+      "byteSize": 3132,
+      "checksumSha256": "fc11baa94f9ca577a1f34cc906668e1e41880549291b5bcade880ab7c53d00bb"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-228631.json",
+      "byteSize": 3132,
+      "checksumSha256": "a77be9f19d867f730342a5d5e490bd005b4e125d5d50a9ceb4166bcf96d29d2e"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-229752.json",
+      "byteSize": 3132,
+      "checksumSha256": "787a3e841c9d7276e754d44fd61bf5a3577173516236f2943acb6f7f922fdf17"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-241646.json",
+      "byteSize": 3132,
+      "checksumSha256": "679710ddb32cd2a9ee7cb3cd87fe5b292d330f0829a1f7a83064bd75c17f4f7d"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-246449.json",
+      "byteSize": 3132,
+      "checksumSha256": "1b0208bc94e90476c2af761ca9577a16f93acdc57c5d74f1ad218c12afd2d65e"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-260361.json",
+      "byteSize": 3132,
+      "checksumSha256": "19baa8ea092c2757556b4cd00fd95a7c470a7f2afd505c51816a1263eabc01d8"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-261397.json",
+      "byteSize": 3132,
+      "checksumSha256": "fcc782b5a5a26e3a98598381bc1c1370c328677728dc66de93a8d8c7231bbe7a"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-275393.json",
+      "byteSize": 3132,
+      "checksumSha256": "14a530b819fa54d34fc5cffa76eac0deefffcf1dfbd5e2adf4832c094532e80d"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-297071.json",
+      "byteSize": 3132,
+      "checksumSha256": "74308dcefc55ac50b0b256164243748e8989c521480bd5c6d4b765f842298711"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-297390.json",
+      "byteSize": 3132,
+      "checksumSha256": "05c94fabcf0f7484c7fcd7e3afbbd71bf3b7d2021eef6891a25277091df0d2ee"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-29844.json",
+      "byteSize": 3126,
+      "checksumSha256": "2517a58cdab48f78acfd180b90b55938b2fd4ac163c7abfc999b6b2a13f609bb"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-316002.json",
+      "byteSize": 3132,
+      "checksumSha256": "eaa9bf6edb90b0e582b7a3ab21fb8caadb33ad0e9839c3d88bcdd9bda7abb532"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-317859.json",
+      "byteSize": 3132,
+      "checksumSha256": "77214f25c4880fe68d1d028faddd58a98d84018ee97aabcbdc73253fb2afa527"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-328864.json",
+      "byteSize": 3132,
+      "checksumSha256": "6576d8faf6b6aefc9e89c075be036c70da256171a6616922694f18270e4ef233"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-347215.json",
+      "byteSize": 3132,
+      "checksumSha256": "0b5e2b54189f874dc05bbedcb87ca9f839594d9cb6703fe82b12c0c9b67abdd2"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-348074.json",
+      "byteSize": 3132,
+      "checksumSha256": "ce810c00a4a029ae5beba9da1d607389a6b11a18ad705427418f1f2e4d64515a"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-353265.json",
+      "byteSize": 3132,
+      "checksumSha256": "aac8050f283ab7b582576fe7457d3635a27baee93a975efd6dce3a79426cbf4d"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-360993.json",
+      "byteSize": 3132,
+      "checksumSha256": "541c37b9d90e9b54855858edfa4ee5426aa0a96634d33f8c2c156f5171f296ab"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-364273.json",
+      "byteSize": 3132,
+      "checksumSha256": "03a1c78ffed6542d009712b809973fc393abb3ae855cfd3bbdde0b8c1e1c83e9"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-365764.json",
+      "byteSize": 3132,
+      "checksumSha256": "f1fd67204e12c6d658a971d8023007e21eac4d0137eda457b1ea3bfd5727675e"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-36922.json",
+      "byteSize": 3126,
+      "checksumSha256": "ac9155b95401563c25005ae60c57966dce4d33708faee0b8881df66f9c16176d"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-37170.json",
+      "byteSize": 3126,
+      "checksumSha256": "72b1d9374e5f217d14635d3166e8aa2da61e4b89ae6a846d8d06dee4d156ab51"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-372755.json",
+      "byteSize": 3132,
+      "checksumSha256": "b3f80ecbc846e435bbd79418a6216b4ec704ce09b5d7a06976a28dde112efc04"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-373902.json",
+      "byteSize": 3132,
+      "checksumSha256": "697b47daf1a763d8e528fd83cdc2644674865eb90dadbc719cab6f6fb43368eb"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-374636.json",
+      "byteSize": 3132,
+      "checksumSha256": "87c860764344e593feb7a053b80c0dfa31357ff40905f282702f3cd6c1c899a6"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-375025.json",
+      "byteSize": 3132,
+      "checksumSha256": "d04a12412df2d24f4600dadcc736a608d6be021611214dae7ac4d914c63baab9"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-377010.json",
+      "byteSize": 3132,
+      "checksumSha256": "d112a88ba2aa384d0e373e07fc02128d0d83da790758e0c488a175ac4119240c"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-381141.json",
+      "byteSize": 3132,
+      "checksumSha256": "fc904d261e4abd12fd2fddbd7f567999c6c7f81efc3e45f157a04e8968cda84b"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-383893.json",
+      "byteSize": 3132,
+      "checksumSha256": "484a1f6b8b1f224f21abd740cd12607bd588575ecdd311f75c6d8c65ee637c16"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-399990.json",
+      "byteSize": 3132,
+      "checksumSha256": "b4a6f48b69f50c0be5ae6f465659de061b0a68c529e0ee27a99afdf7cc9145c4"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-407018.json",
+      "byteSize": 3132,
+      "checksumSha256": "ce4c3d055ec1dc728bb1c5d319b80f801f6fa97058de694296ed9c47b2f76010"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-412072.json",
+      "byteSize": 3132,
+      "checksumSha256": "2f125dccd033b7555cc393e54efebfe27b80381fbe17e55047cdb0da64c3ac97"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-418207.json",
+      "byteSize": 3132,
+      "checksumSha256": "900e0b061fe4c25ef1c03e5d36657689c7670f977df4f89b49177c8cff70d7ce"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-420075.json",
+      "byteSize": 3132,
+      "checksumSha256": "b69a7863405bb165219f675da8a1ec9c8f0d5ea748412a1013fe8d364078d2e1"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-421971.json",
+      "byteSize": 3132,
+      "checksumSha256": "a71eb2198a3484238d5af17b2e53f9d53477aa3718f5fe634a33ad6d614a8f37"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-428362.json",
+      "byteSize": 3132,
+      "checksumSha256": "2952893c2a82942fe7235db36c4f953ce8003a7138a3c65138cc66e2a6b51ad1"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-440180.json",
+      "byteSize": 3132,
+      "checksumSha256": "f05da05c009b672a6f4cea2f2209089b22dcb212afe06d8bd2006743e77245e9"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-443409.json",
+      "byteSize": 3132,
+      "checksumSha256": "230cc5415c9ae4aa04a4408e16dbecb0c8943a3cc8e82e0b5df7c022c75ba335"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-447981.json",
+      "byteSize": 3132,
+      "checksumSha256": "8db9451fa0bc3b7718b04481a2e478989871362661844bcfd455b728c4294187"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-44827.json",
+      "byteSize": 3126,
+      "checksumSha256": "a6ce086923ce528815f633c57b4a252eb33c5f1781305790bfec062384729978"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-450560.json",
+      "byteSize": 3132,
+      "checksumSha256": "fe7f29ff078fb60e497c477c8d047161689a3550402a6931c43df7291450ca9d"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-453302.json",
+      "byteSize": 3132,
+      "checksumSha256": "6e4b9dc60688dbe5356b0e3b28d7a916c7a5b338689a2842e8fb5f69da13625f"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-473907.json",
+      "byteSize": 3132,
+      "checksumSha256": "c8f07e573c1b5812efb87e8d73d4c9e248f2a51e00895ea54eaa1a82306290ef"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-487836.json",
+      "byteSize": 3132,
+      "checksumSha256": "b2dbac50e6f1d01a5f381c9be71bcd5409c493032f67525107259cb00e1e724f"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-501878.json",
+      "byteSize": 3132,
+      "checksumSha256": "bd857e5284a430f4aa8f84dac2f9fdab6b4b354b8625ba69df45f5e5c61e09e9"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-513787.json",
+      "byteSize": 3132,
+      "checksumSha256": "ad64a60a59066b23f1bfb5f6fc9f0fb63cfaa8fc928173813a263f523ef4a0c1"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-525090.json",
+      "byteSize": 3132,
+      "checksumSha256": "8f394820e0d0e58def4d33d9464ed57cf508e1e991b071a19505e2d984bb87e8"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-528581.json",
+      "byteSize": 3132,
+      "checksumSha256": "21d28c402c31ef84e3312762f6988303740a29131203a78b418585bf18cc7285"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-547528.json",
+      "byteSize": 3132,
+      "checksumSha256": "6d88c6fda0effeaf5e5c1b91a99a658bee7e05a954312dc5cd008bf0dce7331f"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-555676.json",
+      "byteSize": 3132,
+      "checksumSha256": "6fe6486c97ad1c8cc3ece7640ad3d9d601ee36d9312552c856714a3cd136c4fb"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-559204.json",
+      "byteSize": 3132,
+      "checksumSha256": "47abc821d8d1d2258ef6b1594873de639af5f22b36a430cdc1b5c2ac044b26cb"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-563161.json",
+      "byteSize": 3132,
+      "checksumSha256": "213be8d951ac2e7b02e849f62c3ab6675ec6dafc2b61c8b5cb2756c3b83122f1"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-572887.json",
+      "byteSize": 3132,
+      "checksumSha256": "7fabefa0b0255386fb909d93509b11478336d6dbfd06e3da09fbbd2161fe6c88"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-574826.json",
+      "byteSize": 3132,
+      "checksumSha256": "2b9ffce03fa2d53240dbe194cfc5f656f484e6213b94611c315b75e4f098ad6b"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-594251.json",
+      "byteSize": 3132,
+      "checksumSha256": "abcc862e67ba4264efee683d2a1fa1ac57c5672a60d59f814612a3dbd6d807f8"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-60572.json",
+      "byteSize": 3126,
+      "checksumSha256": "e4ee48f6ff0933c435d84cd6f97baba1b912663867456601aa4f23eaac4c80cd"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-623314.json",
+      "byteSize": 3132,
+      "checksumSha256": "6c9430eeb049d1c81cbc1f1df2a75d075040db3ae8cf69be07efe777f82daeb5"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-624434.json",
+      "byteSize": 3132,
+      "checksumSha256": "9d45c50c2e190c1936b13eaaa1e472b67001b019c3dd25406430bd23f9b595a5"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-631125.json",
+      "byteSize": 3132,
+      "checksumSha256": "bf937f4b99c6fd37df66fbebf83e698113a9d3d6e7a8618b01b14993506ca52e"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-645311.json",
+      "byteSize": 3132,
+      "checksumSha256": "6cc46ea157d26d74237b1b20b90eade3ff9d0f0fefa8cbac5c754c284873bf78"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-664715.json",
+      "byteSize": 3132,
+      "checksumSha256": "0de77b7507993a4b20d68c3c93018f13dc3e4bea2251b642ec3e272990d5db7d"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-665924.json",
+      "byteSize": 3132,
+      "checksumSha256": "71282b0ef00fd4958bd63251b0dd4b786b57fdd6d5e5ca249acd25f6396cf302"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-674326.json",
+      "byteSize": 3132,
+      "checksumSha256": "afb2880518049b24a34a0bd7ed77a844a925fa3eb457d0fe52f5a5187f3579aa"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-678033.json",
+      "byteSize": 3132,
+      "checksumSha256": "36bca860a08daf8860e8376e380eba7226f7dd91b48e60f40b18fe972d54832b"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-684855.json",
+      "byteSize": 3132,
+      "checksumSha256": "51e2ed455940e438ed62a82f4cf82c88118ad32998817d2a5bcf9d099a66c08a"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-688120.json",
+      "byteSize": 3132,
+      "checksumSha256": "fbdfa9d738390dda4d7d72f101d56067683c36f0e252e27959cbb329747ac182"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-688158.json",
+      "byteSize": 3132,
+      "checksumSha256": "f12a0a8bf3b73da4b7708c0325e395e4f55a82972a344dc3224512de73bc26be"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-688202.json",
+      "byteSize": 3132,
+      "checksumSha256": "e78da71e3f5d19adfabef2974a190a06ae9c78da16550d621b33160b33a42af2"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-688213.json",
+      "byteSize": 3132,
+      "checksumSha256": "c72cfbe939d93867ce688b82dbfd65efecca105fc04d31952340a92b25f30f8f"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-709441.json",
+      "byteSize": 3132,
+      "checksumSha256": "54b1de5d5c25df0d0a2be86f5342b2a598fa2a49ab743d5dd3496d29c616567c"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-720315.json",
+      "byteSize": 3132,
+      "checksumSha256": "b8bb680bb4b0e80869ad9f54e70327ac918a53e9da2c6d00cb0d50d2a0214358"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-743834.json",
+      "byteSize": 3132,
+      "checksumSha256": "19cdf0b4a9296e793702abe6dbc9bf15e36e105e76c090ef656e0b2950d99171"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-749711.json",
+      "byteSize": 3132,
+      "checksumSha256": "39aee1ea8d1504b40932ba0277ce989b2a901bcf8049b4440b6073b8b9f1966d"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-749752.json",
+      "byteSize": 3132,
+      "checksumSha256": "644162bf20f898fabcda40d5ef9b5650160c12f8b1c1de338c1f0946c6cfb1de"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-754187.json",
+      "byteSize": 3132,
+      "checksumSha256": "4aa7aa31d8c2806500b005e4a594cbf42ae11ad0d4a974e49e723bd8bf1346a8"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-755561.json",
+      "byteSize": 3132,
+      "checksumSha256": "ff660aa1563d4011a3b58ba060546bf9fb4c47898c63e9e70c7b6dd30c250cce"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-777515.json",
+      "byteSize": 3132,
+      "checksumSha256": "efd247af635eafb7f8a5d634fd9e2596670f65bac5d10dbb98d4187fe1452b7e"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-787935.json",
+      "byteSize": 3132,
+      "checksumSha256": "97bf3009c72c4c0dbfaf58dd0710dd04e6277b85492473a6e1aa44504a63e2f8"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-800671.json",
+      "byteSize": 3132,
+      "checksumSha256": "6420347cda55b3a002f7f0d8ba55a8fc8cf4c82f6e56142f1664c5ca7da7bd97"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-803147.json",
+      "byteSize": 3132,
+      "checksumSha256": "ef58fe683dc0e4c9ea059523fe83b617404f66b97f97cacf9503627f3f0a02dc"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-804055.json",
+      "byteSize": 3132,
+      "checksumSha256": "a1a09593f2ba50098c2967b04acc212a08ee29f853499c101d8dadf9354ea782"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-812305.json",
+      "byteSize": 3132,
+      "checksumSha256": "78403a1275ea0a2b7023aaf7032db7f248b53303fb591d6dc4790f8f44ddce67"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-817527.json",
+      "byteSize": 3132,
+      "checksumSha256": "81aae51ff17e4ed6ca1517056b673e9a5afe82d53b9760add4c47e8af765bb71"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-830782.json",
+      "byteSize": 3132,
+      "checksumSha256": "44cd5ed19710c1e22b6a17d01e4442257fa8745d42b22f35ca8ba650f7489a92"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-842122.json",
+      "byteSize": 3132,
+      "checksumSha256": "7fa3e31f84dc06f24e44c79cdf9134082dca453f03e627aff7fd93fdf0f80bf9"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-850090.json",
+      "byteSize": 3132,
+      "checksumSha256": "83d364d1b336d86bd536d4e1cca38e57f2f9e818d40210aa5fa4ebb9c23ebb72"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-852472.json",
+      "byteSize": 3132,
+      "checksumSha256": "7378c57ddb4887cc54d45168ede69c9a7150b9689d840dc7a5d6492457b849f3"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-88101.json",
+      "byteSize": 3126,
+      "checksumSha256": "4d41a7f59e3ec252240a35e9d371557d9636a8f7041bdd6596898e5333e6bedd"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-91300.json",
+      "byteSize": 3126,
+      "checksumSha256": "fad555e4eeee14960cd449b340101d866628fe8d1952c3dc509a5b8c8b06303c"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-941537.json",
+      "byteSize": 3132,
+      "checksumSha256": "0a91adcf591c78ebb7b1f089967fefa833f601fb9983b15e3f989998c9919539"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-945838.json",
+      "byteSize": 3132,
+      "checksumSha256": "a1f827f8e949a8c87bda49bec53c6b9473917bf31dda09443c79675b0837342b"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-97522.json",
+      "byteSize": 3126,
+      "checksumSha256": "9651ca75c546225b2cf0bb608234a32990e47f7efe3000e22968ca1e36584052"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-98082.json",
+      "byteSize": 3126,
+      "checksumSha256": "f792b2a7f060d5bd213ec50ee284b2985db6765f941155765a315bb5f2c21fca"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-98363.json",
+      "byteSize": 3126,
+      "checksumSha256": "a4f3b4bb16be0ae14e11e76aa6965275db944df83520fc2bef2bbf3e1af7da11"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-996627.json",
+      "byteSize": 3132,
+      "checksumSha256": "58ec949ae38f2f1d14f0e5acd661f2820e07ecfc25f7720307b84c65fd772e81"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-996629.json",
+      "byteSize": 3132,
+      "checksumSha256": "1ac47aeaf8e4d85ac9e9a16c17b9665f0816d4845036608f37c4753935ed2b70"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-996630.json",
+      "byteSize": 3132,
+      "checksumSha256": "c0f197932070ad956962cac3e1b3e534836c07fa61e573425d31987f500636c0"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-996631.json",
+      "byteSize": 3132,
+      "checksumSha256": "35e5120cd2842c7f87cee197d9f9a1319f5ed68a5d78e206f1e5264d1d988470"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-996632.json",
+      "byteSize": 3132,
+      "checksumSha256": "a2b8e852b486813a1bc140ca72351e6249058baf937af005089531ca0f40f08b"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-996636.json",
+      "byteSize": 3132,
+      "checksumSha256": "ed5df0db800f2bb6e34fdd1e8e86476d261b6e0cf4a93fbf95e38846cd430c92"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-996688.json",
+      "byteSize": 3132,
+      "checksumSha256": "2df3a1fc9d09025f486d08f59d889dd1e3b510ff2dfb6ee825ab52359d93f18b"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-996689.json",
+      "byteSize": 3132,
+      "checksumSha256": "a08d181e4b8ab6a7b0277fa364f8352562ab3dcf0f658a445826da755d71e193"
+    },
+    {
+      "path": "public/evidence/evidence-shard-manhattan-midtown-core-cells-20260811-doitt-996746.json",
+      "byteSize": 3132,
+      "checksumSha256": "5e1093efee507a777c638871513d08513c0b631614a692fb6ed82a8259d1dedc"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-1001111.json",
+      "byteSize": 11644,
+      "checksumSha256": "2c089598c2194c8ef8fb2a678dd1a40348ebc0827e82f6aa71d643319cac64fc"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-105916.json",
+      "byteSize": 11609,
+      "checksumSha256": "828f3a16d5142e7d07d076d3315f28912fe3e4f9fbfa59f71e7a094232c39577"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-1104532.json",
+      "byteSize": 11644,
+      "checksumSha256": "5904082b4b0bd3adfc1c97908868d5a9c289c9ba7501002b6ff1c37fbaa7aa1d"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-1105839.json",
+      "byteSize": 11644,
+      "checksumSha256": "babcdb83107ad05f45b2da443d2726a2a022d39b539a3d4fd7ba2771b33efd95"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-1106429.json",
+      "byteSize": 11644,
+      "checksumSha256": "bddd0ba327f802188adc6c9bfb23ead1b94aad1012e10bb19a42b4c11de86d52"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-1111726.json",
+      "byteSize": 11644,
+      "checksumSha256": "efa30410bbe52ecc65a9f3e61aff783fdfa7c6f81c3d77117df9823a5089771d"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-1114625.json",
+      "byteSize": 11644,
+      "checksumSha256": "0d903ae88e1875751d62f1fd0b3824e986fb7d7c4bd712bdf9ef1942da927078"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-1115013.json",
+      "byteSize": 11644,
+      "checksumSha256": "04b6e18dceee7c6540a31307510ad95a7615181f5d03d04e90d49f4dbf7c37ee"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-1116162.json",
+      "byteSize": 11644,
+      "checksumSha256": "b1ffb68b73c1adc391fb97dbbcd4e9c1e9b2cdc0020cf1a9137caad3b9ff56b0"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-111690.json",
+      "byteSize": 11609,
+      "checksumSha256": "3e6813d7d946f9fa4a031d1673c96c330af8caeda1a65903cba10cb83db4ba0c"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-1117425.json",
+      "byteSize": 11644,
+      "checksumSha256": "0d282e1a7fd3fa9066e81373c59c037d9b8782bfec8edb683ede8961cfc21095"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-1158178.json",
+      "byteSize": 11644,
+      "checksumSha256": "a5c63662d40c80f51cda07f477d3acb3598af08ae2200829b8ef68b254781328"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-1191064.json",
+      "byteSize": 11644,
+      "checksumSha256": "24a6048568cb6007eeecb5a7e829fc1eeff21441b9e1e8b8594325b64e00a88b"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-1195535.json",
+      "byteSize": 11644,
+      "checksumSha256": "756dca319d5bfefc90d9c1a6cbf286e817e925cf3adebc965e14345a3f41a190"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-1215127.json",
+      "byteSize": 11644,
+      "checksumSha256": "8043dc0f235b1afa86026036b4967a73c3beb0284a99d5710063e5f9fdcbbadf"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-1221493.json",
+      "byteSize": 11644,
+      "checksumSha256": "959b93225c8e00dad0e9bd13c5f3819a0c2a437802ac7edab22c331c63c32869"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-1224763.json",
+      "byteSize": 11644,
+      "checksumSha256": "d6b6b2990d0a45f25b371147d24b3537e2cd86868cf6a41314b69daff363892f"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-1232671.json",
+      "byteSize": 11644,
+      "checksumSha256": "dd0700c7b5b70cecdf1143fc073a65cc040cebb6896424e3e722577489b26e69"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-1256080.json",
+      "byteSize": 11644,
+      "checksumSha256": "7221cea770c6f02485d578ccae00f5ac5f721901c5fc373203168bbc37be91bb"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-1260400.json",
+      "byteSize": 11644,
+      "checksumSha256": "1a6b328e3ab756f08bbe9155253cc9d44889fdca6b7789e7c5d75bc3d8e6834b"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-1262786.json",
+      "byteSize": 11644,
+      "checksumSha256": "7fbe6b41af0d1c124c9f044b923c3b30382a44eb49a0c0a00597fa59f6b4395b"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-1263464.json",
+      "byteSize": 11644,
+      "checksumSha256": "64cd30b2fe0c6ec08ceeb5fa2d768fdf7358a61883937fa1e8ed81487e44dbbb"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-1264335.json",
+      "byteSize": 11644,
+      "checksumSha256": "df1049c1c190c58f2d0e1ea41148a3bf592b9538886ddb4c97cfb0e71802b23c"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-1268457.json",
+      "byteSize": 11644,
+      "checksumSha256": "479ba8bf20016fcb0c2c731c547fbe4c93f945ff70a72ace8737468464cfa2b4"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-1268463.json",
+      "byteSize": 11644,
+      "checksumSha256": "8551290aa0439584b3f59e98bde6d556da31f23cbba964fb5ac9ff66f2491945"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-1268618.json",
+      "byteSize": 11644,
+      "checksumSha256": "9f6b94a004fccf58fd954d5e038ff6eb8dc68510a27d2101734d014df351bb80"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-1272399.json",
+      "byteSize": 11644,
+      "checksumSha256": "fe72dfe5244cf79bef0dff227a96949ba3a823214069a24b22253ead1131a5b9"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-127864.json",
+      "byteSize": 11609,
+      "checksumSha256": "20e5d305b33e57b71d1b3525144c912e78108e2de9afa8b3fe6b3b49abafe72d"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-1279525.json",
+      "byteSize": 11644,
+      "checksumSha256": "eb19e0b828363ca19bb58a2eea2088d8bc7f7e90fecd5954f8764b413f93e405"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-1279526.json",
+      "byteSize": 11644,
+      "checksumSha256": "33bbe4d09a18143c00879ab4d2aa09d77230bd204fc711f2361c04ac795dbe6b"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-1279527.json",
+      "byteSize": 11644,
+      "checksumSha256": "af3e27d1060c0330405907d4c3abd954ad4303b97afe9977e94a6dc8aed38069"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-1281874.json",
+      "byteSize": 11644,
+      "checksumSha256": "a8dce17f107154aaa4d54eb5f45122cce6a17b20f2d91f3fa69523c1ae27c266"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-1282695.json",
+      "byteSize": 11644,
+      "checksumSha256": "3f73e40674ce89dd04ebc09e44cb8d85989eca452b942393949f287f5e437c61"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-1285662.json",
+      "byteSize": 11644,
+      "checksumSha256": "bd7bbaec8f22baadc30b84fc7f04ababa3ec07227de9bdc83551b8872a8672be"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-1286246.json",
+      "byteSize": 11644,
+      "checksumSha256": "4f382cc3af8f114b4bceb45e36e0a4505de3c095e83fef4f125e5779eff6b249"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-1287486.json",
+      "byteSize": 11644,
+      "checksumSha256": "23689255569e5352125a8f16b2a48c5848a614c38908557567d1087836474553"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-1288650.json",
+      "byteSize": 11644,
+      "checksumSha256": "1163c8225a52ef503d49b60b4a4f2de64ecbc99b34a1643ca1baa28bbf582daf"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-1289963.json",
+      "byteSize": 11644,
+      "checksumSha256": "8c7f34cd6bff3f1a45bfc96b30c3e6e2bcfbf3524188542da18cd4b8642f0827"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-1289964.json",
+      "byteSize": 11644,
+      "checksumSha256": "6d1af3a5ba8c1adc52709a30b3f3b8c31febb0209b95c3db30e7499eb3722387"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-1294316.json",
+      "byteSize": 11644,
+      "checksumSha256": "5e59fb29fd2957df3a4b678efbd8515a0a88efed878d2196b29a662558d917b4"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-1295112.json",
+      "byteSize": 11644,
+      "checksumSha256": "530ba73bfced0b50b218d69b4d1c64c5fed183e31107a3e4cba44edaa38fda20"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-1296496.json",
+      "byteSize": 11644,
+      "checksumSha256": "3a2942a42b23edccb0e50739a11fd98ccdf63d19bc5f799a7eb482d5c0f6e8fc"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-1297513.json",
+      "byteSize": 11644,
+      "checksumSha256": "e3323861313caec3da6284623c4076cfb68655c9da7523e47fdcc6b332cf1f7d"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-1299442.json",
+      "byteSize": 11644,
+      "checksumSha256": "0aa3d333d2ca54fce88017d34906faca364acfd004a28dd6cd432a69e766421d"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-1299576.json",
+      "byteSize": 11644,
+      "checksumSha256": "688bb2d385560dff3f4ee8c5b8141d2b6cd15d06c3ffd75ed7cf5968e2ef8de3"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-1300185.json",
+      "byteSize": 11644,
+      "checksumSha256": "226cca7a02ac1ef0ddd88758f27b75b1b2c1c4f74fad640fe5ddbb3f44eb5907"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-1302197.json",
+      "byteSize": 11644,
+      "checksumSha256": "13fda37c113220398783e76e7742050a98aa8e92ea784917cce739509479a522"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-1302589.json",
+      "byteSize": 11644,
+      "checksumSha256": "8b2f27d0fea470ec1cd3224c4c83ef9874404ea4d4ca320885d7e5c6dda4629b"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-139071.json",
+      "byteSize": 11609,
+      "checksumSha256": "70eacc8933f58eb5661536b99c83a4d97acdd57cf712a4c5a4619004c3629e10"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-157592.json",
+      "byteSize": 11609,
+      "checksumSha256": "f0b4d55b691d07a4af8a8eb0bf0b521f48d26c42bf8697cec9cbd289c84aed9d"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-162071.json",
+      "byteSize": 11609,
+      "checksumSha256": "2950a6b2f905d50140a1cde2997a2433331b4bd6235c5835fbbbfd285ca81ef2"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-166790.json",
+      "byteSize": 11609,
+      "checksumSha256": "edcfd0420066ed492574a03b286155b4ff7fb76baf5e52299be0c1038c2e6645"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-174372.json",
+      "byteSize": 11609,
+      "checksumSha256": "d0aed6bb975b6e7b62bbdb8cb2d5b9579d3a7ba82d44f7af97d9680be373a6f4"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-181184.json",
+      "byteSize": 11609,
+      "checksumSha256": "e4c91c388d8ad60507bfd655818e2c296326535a716530977fdaefc03c35d363"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-194068.json",
+      "byteSize": 11609,
+      "checksumSha256": "a1836961a9b93570864e0f0e3e1504d0aa21a538cceebbc34f89ab03344578a8"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-196987.json",
+      "byteSize": 11609,
+      "checksumSha256": "849327b781b956b08b8bdf3f3a1a28eabc48cdd0159dbc6baa25bf56244137a9"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-225670.json",
+      "byteSize": 11609,
+      "checksumSha256": "ff922399b218c0207d68f3c9d1a139afb4da247ba7512ec91c75f592cb384f8b"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-227702.json",
+      "byteSize": 11609,
+      "checksumSha256": "ab30fa1ca9187f26d4f8e3cb37ea29e2460395350e540e61e882a1c335f336f6"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-228631.json",
+      "byteSize": 11609,
+      "checksumSha256": "facb99b703d497eba0afc114a4363289f2db17de4f2dcd12d2e043f2878eaef9"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-229752.json",
+      "byteSize": 11609,
+      "checksumSha256": "54f3c58a9fd35fe3699431b38497648bc147e4f79bc72c20099b64c1518e1a2f"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-241646.json",
+      "byteSize": 11609,
+      "checksumSha256": "656f301e230db39f541a97a5a4557645c161adf82ae803299de09543cc34ba48"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-246449.json",
+      "byteSize": 11609,
+      "checksumSha256": "85ff78edb2428d8616de2fc04e3e9fd8f0e2f77948527d144d616b35e1938d0a"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-260361.json",
+      "byteSize": 11609,
+      "checksumSha256": "29e479fb466e1eed4ef540cc28a737dbc722c568c8a91efe29b52df05730384c"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-261397.json",
+      "byteSize": 11609,
+      "checksumSha256": "57b6e8ce8fe94e3c0f8b35c7de0a530f01da55921554a6cf378a3d2061417d6a"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-275393.json",
+      "byteSize": 11609,
+      "checksumSha256": "a100b52ac997768371cecf9665da95fdfbf4eba9218f6fd6f84713d8fc8d2543"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-297071.json",
+      "byteSize": 11609,
+      "checksumSha256": "4481f4103910c8f4432ce91b193a73bfe485ba5b9bc6e15b2082d379efce2ca7"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-297390.json",
+      "byteSize": 11609,
+      "checksumSha256": "986889cc2f8d19d1bc59969fe2f9c99669bf54763fa5eba1f2ff2b6a5a2b0a36"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-29844.json",
+      "byteSize": 11574,
+      "checksumSha256": "6735bbec2ab00afa7229a37a380d71ff06ea0f74a29bdceecb283b9321cc3192"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-316002.json",
+      "byteSize": 11609,
+      "checksumSha256": "1c211740fbf211a039c48b3a4c28f323bf4d9fe917406016c4f0474269798245"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-317859.json",
+      "byteSize": 11609,
+      "checksumSha256": "796fadbe67abf13dce352099efef199c7c7965de71632def74d195c63b35ba3f"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-328864.json",
+      "byteSize": 11609,
+      "checksumSha256": "26b0fc96554e2f2a213f34757cb9f69e7725f0d7e009e36228b290af61425bbe"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-347215.json",
+      "byteSize": 11609,
+      "checksumSha256": "d59bd0d0677fced24aab340cfa1442ae2b5b6ad2a06936f12050806bc7647f0a"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-348074.json",
+      "byteSize": 11609,
+      "checksumSha256": "2337287eedf9adfc82a0f496a192b65ab7776a8125fef78ff8dfb92f8bef80b0"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-353265.json",
+      "byteSize": 11609,
+      "checksumSha256": "43688b038d0dc204457e7382306b52cd520b942a22e1624beadb33b195976539"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-360993.json",
+      "byteSize": 11609,
+      "checksumSha256": "08b203629f249e326715a17c7858ae0000f38ae78ade4f88ec3e84a4bf1acf82"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-364273.json",
+      "byteSize": 11609,
+      "checksumSha256": "8d4f9c14c8276d37650dcef4c18b6b475d2af90f94971209334d161eae5379a6"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-365764.json",
+      "byteSize": 11609,
+      "checksumSha256": "045eb1cd2ca104f7894d0eff2650ff00a713135c2016e0e7213241aab1685508"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-36922.json",
+      "byteSize": 11574,
+      "checksumSha256": "61218a6fabc886ce9e49e2775fbe2105c5440cf0c6bfae3a5ccb8396c4881432"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-37170.json",
+      "byteSize": 11574,
+      "checksumSha256": "fcf607ff9fcb468a9bda2da2a17e35eb8603971ea05611d70a532a48db8dfb96"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-372755.json",
+      "byteSize": 11609,
+      "checksumSha256": "9107318cc0d63b78743123e85dd87e655298a55cefd7fdfbb805902621ebe933"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-373902.json",
+      "byteSize": 11609,
+      "checksumSha256": "425b6b33c0d5a3b4a41300c8cd5575b46cdf1a831bfd898ca98f4fa60a16e143"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-374636.json",
+      "byteSize": 11609,
+      "checksumSha256": "8157bad34b3bcdd55e80dadece765f3bf7d851233a623ec6c7b0142d984d289d"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-375025.json",
+      "byteSize": 11609,
+      "checksumSha256": "3ff5033d2bd6ba6994a36cb8fbb517bb82624455d06def29e82bab1e29a28957"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-377010.json",
+      "byteSize": 11609,
+      "checksumSha256": "d322c17b115b5238fa02c746df388b9812468c67a173495d19eaca46af1be9fd"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-381141.json",
+      "byteSize": 11609,
+      "checksumSha256": "a7fe7638d329999a99edf50cd92359624de9ca069e6f2781064543bcfcffc247"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-383893.json",
+      "byteSize": 11609,
+      "checksumSha256": "648fd1c8e1d09325d57dfcad8609573f8b7a0a3e13b51b795be43ba1367e8fdf"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-399990.json",
+      "byteSize": 11609,
+      "checksumSha256": "55f4b8219ff1717fa7b67e8d00cfb5a3417c94fa07d5229f4164a89f02963b9d"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-407018.json",
+      "byteSize": 11609,
+      "checksumSha256": "f8e6bdd582a7ef8e943bb4fb63f76e09809f6bbb5b1dd13640d38cbb95cdb58d"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-412072.json",
+      "byteSize": 11609,
+      "checksumSha256": "c8808318704a796ed40994cf5bab5727155089c214aa28c9f9ac42d25007c1bc"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-418207.json",
+      "byteSize": 11609,
+      "checksumSha256": "4ae40afdc1925303bb8dab5b407ce08d77e84d63f8dd873589bc3d6b1d933724"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-420075.json",
+      "byteSize": 11609,
+      "checksumSha256": "6b94187ce9ddf3e1f8702dd416f0885c19707f9ea0a279a3836ec1c19c154ab1"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-421971.json",
+      "byteSize": 11609,
+      "checksumSha256": "19d666abec3c3d382a32f5dc1da2d6beb6d85053142913f6a54e780c99775851"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-428362.json",
+      "byteSize": 11609,
+      "checksumSha256": "3f7a8b7fecde5c08479295d2392ef9667007217dd2fb6254d8783afee4fb2caf"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-440180.json",
+      "byteSize": 11609,
+      "checksumSha256": "3afe89f39d8690da6e37ba139c3dd550aaee0eea69491052de00b2153a332659"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-443409.json",
+      "byteSize": 11609,
+      "checksumSha256": "443a105ddb7eadff214732c77d08138445397317fe5d484a55fcfb52c07b098c"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-447981.json",
+      "byteSize": 11609,
+      "checksumSha256": "bab321d093cb14c35ac609f2dd3507013c2be77c60857f403e8586ef32038236"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-44827.json",
+      "byteSize": 11574,
+      "checksumSha256": "ec4a36f3c757584b1a1fad04f5ccec00c23db963e688874268ffe4ed44aa42a7"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-450560.json",
+      "byteSize": 11609,
+      "checksumSha256": "c8821e8698e54b8b7b66bf1ee6f31ff199779c992395eb862e471787c9bb0e4b"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-453302.json",
+      "byteSize": 11609,
+      "checksumSha256": "596f0c2d23181b312c65a33a7fcbf754fe1e4216263e6ad4958881443378ffe3"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-473907.json",
+      "byteSize": 11609,
+      "checksumSha256": "95ac60a6c52b82d877cd40d2fc3a9d37c92f7c78ad5efc072983353d346c59a0"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-487836.json",
+      "byteSize": 11609,
+      "checksumSha256": "74ab3485668888efc50d5cb79dd1f638ae9d9fcee4c77121fa679ca6e3ac7818"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-501878.json",
+      "byteSize": 11609,
+      "checksumSha256": "d9d41f75a9aca5367dc35527f872c416c35ae6c08b94eb1fcaebd71d1bc7c16b"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-513787.json",
+      "byteSize": 11609,
+      "checksumSha256": "2e96dad86d3c173625834f8461fc105b44a508f6c3762f6de6f41c9442f5ba6f"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-525090.json",
+      "byteSize": 11609,
+      "checksumSha256": "17418fca4573f93d0992908ad4cf89febdbd0dafe06f9c9194623d4024f2f7e7"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-528581.json",
+      "byteSize": 11609,
+      "checksumSha256": "8dd3895b0cc105b5491a3dd1cb71a31d25370f539e596dc065ba09d4587be391"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-547528.json",
+      "byteSize": 11609,
+      "checksumSha256": "2a80f60c229570748822eb53878df380deeb52d342555f8a6ed60f7972801b17"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-555676.json",
+      "byteSize": 11609,
+      "checksumSha256": "63664f68b2984aefc46facd195ad073f8394e94dfa0115189feb0e9361d5f6ec"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-559204.json",
+      "byteSize": 11609,
+      "checksumSha256": "fd9d455dfcbfb0c12fa5db65dbb54af86380279c2edf325976aab5900183a02a"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-563161.json",
+      "byteSize": 11609,
+      "checksumSha256": "df1c7f9d1d2d210b438ef1340172058cfd3928b13151dfb9f206a275974c3205"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-572887.json",
+      "byteSize": 11609,
+      "checksumSha256": "b3189cd64611c8c48e88dc596fcc8b6c64ee0a6f94beebe36701465246432da7"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-574826.json",
+      "byteSize": 11609,
+      "checksumSha256": "db877d4bb27a3717ed995784a55194984603b57d2e5a49a43885fc7880e5e2cb"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-594251.json",
+      "byteSize": 11609,
+      "checksumSha256": "559011a78078f1e33a30cd473feabccec6b21c2e75c9f52605a778584ffaa3a5"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-60572.json",
+      "byteSize": 11574,
+      "checksumSha256": "0cb7a9ad28df59dadfe5c113690aa41feb15ebdc1cfcb5f325ce2e877d9a4286"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-623314.json",
+      "byteSize": 11609,
+      "checksumSha256": "3a1685d6b018347bbaec69489c41244e504a605569c14ab69fec0118652c540d"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-624434.json",
+      "byteSize": 11609,
+      "checksumSha256": "0125a80cdb85c30cb657403fc43eb262b286e34a21381775ef7c50db7a7b4445"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-631125.json",
+      "byteSize": 11609,
+      "checksumSha256": "1564f59cbf99f019aab3dfc635333a0f6241e88f45dbbd67b82e006797b56395"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-645311.json",
+      "byteSize": 11609,
+      "checksumSha256": "7f0c734b1dda7865c5f996a27d962b3e24c8fdeb9b61b0f9f7508c6f56571056"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-664715.json",
+      "byteSize": 11609,
+      "checksumSha256": "5a5f7b948841a196edb3b7ac89b86f18acca9547f5d803c27df5e3f021831d4f"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-665924.json",
+      "byteSize": 11609,
+      "checksumSha256": "27540df826b9ae4faa7012e5fbf4eabbcf5c482af406dfdd5b0d5ff8d833a1b3"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-674326.json",
+      "byteSize": 11609,
+      "checksumSha256": "8467fb5c2de429fd9f962466b6a7ec9a7232f01f06a2b20879516f671efb7a2c"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-678033.json",
+      "byteSize": 11609,
+      "checksumSha256": "a6112e1b6501b7e4d4ba33746bb45015fa99bf4d5f2845cda72489475ed936fd"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-684855.json",
+      "byteSize": 11609,
+      "checksumSha256": "580d83ef3416a987d9c05c237ccabd4cf6a70e71aabb7377c78804d841231665"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-688120.json",
+      "byteSize": 11609,
+      "checksumSha256": "0ebd2a0c5bb4330e0f50a06c2020d31ac67f6f53b600a6f4553a363220a88590"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-688158.json",
+      "byteSize": 11609,
+      "checksumSha256": "ad006d4cc34f0a8002ad631c484cacc2681ebf09b70d1fcfebc96fda4cc3aead"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-688202.json",
+      "byteSize": 11609,
+      "checksumSha256": "e1b377b665176928f72d9c405103d1665aa40f67732883d98a5d81e074a0001e"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-688213.json",
+      "byteSize": 11609,
+      "checksumSha256": "6b07c15d2faece939b9751ecfc37b6bd7832025d870c19aa449f9f39a02a5c0f"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-709441.json",
+      "byteSize": 11609,
+      "checksumSha256": "fd5ce46e80ef45b2433c658c3c643270565a43c2f9fdd95f51a42ca816f47f8c"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-720315.json",
+      "byteSize": 11609,
+      "checksumSha256": "a739db02693a04241e37cc7eae8627955d8fc829eb4142f0d7be9ad270e5541b"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-743834.json",
+      "byteSize": 11609,
+      "checksumSha256": "6c5ba0fb036a615c6eb0a4f0c1b471a421a275e08236bd03a1ffb8b49cc84eee"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-749711.json",
+      "byteSize": 11609,
+      "checksumSha256": "1a091077040cfd448891fcaf6afbafff27acccfb4b2909af476022a5ddbe8918"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-749752.json",
+      "byteSize": 11609,
+      "checksumSha256": "17c705a784e6749860032832a1bbecfce0ff430e57b3b3c81438fe8e4e899ba7"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-754187.json",
+      "byteSize": 11609,
+      "checksumSha256": "a863ee72936d0c01b8629192df02ba40e730ccd77c37b40198953294aac4a077"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-755561.json",
+      "byteSize": 11609,
+      "checksumSha256": "2b6a3a71fb48adfd5fe746fbe6f33020658b7383c09023f1fa0fbacec976ae03"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-777515.json",
+      "byteSize": 11609,
+      "checksumSha256": "0a8c95829a878e9f3ab6139dd9a3ace5c1c3a6eb7871b7eb36aaf3e9c5c88baa"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-787935.json",
+      "byteSize": 11609,
+      "checksumSha256": "5c43aedc6a0540f2210ef176142168d0459075482d5e5948bc1cefc2c2a3ecce"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-800671.json",
+      "byteSize": 11609,
+      "checksumSha256": "1012a84d84855c5a71e3dfefc803ee05c29feb68066fc26db9430b1afa6624a3"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-803147.json",
+      "byteSize": 11609,
+      "checksumSha256": "335d182b9585563d13d9eb2e4a755c882069efaf08a8634fb3eddfc6f79ad20c"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-804055.json",
+      "byteSize": 11609,
+      "checksumSha256": "3d2bec1b545514bb2dcade143d2dff727bbc2edc99246adeba8b58fe2877bbe3"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-812305.json",
+      "byteSize": 11609,
+      "checksumSha256": "ae5c8aad0f54a2b163c9722249d2a7ae98f2cf127f43df56de9ca9627d9533f9"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-817527.json",
+      "byteSize": 11609,
+      "checksumSha256": "20e869b6180b833c84f515374bbfaa2fc1e4f24925b2d29377f2169ec3c5e9ec"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-830782.json",
+      "byteSize": 11609,
+      "checksumSha256": "480c5a321648c9950361e9e6eb49761267f8e35ff5163105097bea7d2c6b4bed"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-842122.json",
+      "byteSize": 11609,
+      "checksumSha256": "a706c23afa570e2b5d38a7aecb95a5cae980a77708d0e1b4ba3736ec858d4ff2"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-850090.json",
+      "byteSize": 11609,
+      "checksumSha256": "504cfdbd4a3793d9bbcafcf87a731fd534f34fb2f612c80ead05117fb813709e"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-852472.json",
+      "byteSize": 11609,
+      "checksumSha256": "f889ea45877daaac135d5a7081eff030acba2a67110ddabac560e5d40e773582"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-88101.json",
+      "byteSize": 11574,
+      "checksumSha256": "00d2a1780aa6eb51aaef36bcc3e5916699c5ce7626afac58d932b91b37a5e1f0"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-91300.json",
+      "byteSize": 11574,
+      "checksumSha256": "78e839203d7b1ac9029ca1d3118f4caae70f7fce957fe26c14e96a8c82e3cbb0"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-941537.json",
+      "byteSize": 11609,
+      "checksumSha256": "cd601dd33dcb2476c558b36ab327f55ecf4a4f97f019d55a2744950616cc9ac2"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-945838.json",
+      "byteSize": 11609,
+      "checksumSha256": "fa9256dc0f50f551a7cc00bd6c0020999959eb73f71a0c44d7be41c2fcf14233"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-97522.json",
+      "byteSize": 11574,
+      "checksumSha256": "24a77ebe1e76f41001d50331ecedd954bef7854e001a590a06ce1ab76933f21c"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-98082.json",
+      "byteSize": 11574,
+      "checksumSha256": "41458d0bc38d1609716e10b17ec24c441adb54230ecd3c462e370b01871e0b86"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-98363.json",
+      "byteSize": 11574,
+      "checksumSha256": "3c3929e429b699b85a9b9c2560e5b2c98e904cf613ff42684626bb975a202f91"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-996627.json",
+      "byteSize": 11609,
+      "checksumSha256": "04983c35b7d9fd95f44006fe4ae64f8612bd4948936bb32904dffe80d9adadbf"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-996629.json",
+      "byteSize": 11609,
+      "checksumSha256": "5726fa3afd8d5eb5bb460230e01600856f5a9e69b3f0a6a1f8273cfdde10ccce"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-996630.json",
+      "byteSize": 11609,
+      "checksumSha256": "abb6a2ae3f84078fa144fa7d3dd285b8f189611f28d169b50afaa489635d205b"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-996631.json",
+      "byteSize": 11609,
+      "checksumSha256": "bc53c04c8c438df870b16e9849ae53620a5dc2af3b660f138075800e8945c2ec"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-996632.json",
+      "byteSize": 11609,
+      "checksumSha256": "c5650fa4cebaf644f73941cb12f486783ac49aaf8283e469e568d203fe3d0cc6"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-996636.json",
+      "byteSize": 11609,
+      "checksumSha256": "bec8c07a43550bdba76916c0dd9ad9556ce34fa4c8fd102085e365e8146545c0"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-996688.json",
+      "byteSize": 11609,
+      "checksumSha256": "9c2affe9e46b70a7931d8989554c100950477c891be571be6789ef876a24b2f4"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-996689.json",
+      "byteSize": 11609,
+      "checksumSha256": "12acf91f18a9231f50d958556ec7656050103310295a3d021654d37985cc88ec"
+    },
+    {
+      "path": "public/inventory/inventory-manhattan-midtown-core-cells-20260811-doitt-996746.json",
+      "byteSize": 11609,
+      "checksumSha256": "57ae1404c785860ea47e7ec034c43fa2d6ea1f619c6f0a746d7ae4c3544fa0d6"
+    },
+    {
+      "path": "public/ownership-ledger/ownership-ledger-manhattan-midtown-core-cells-20260811-aad83fe4a9350353.json",
+      "byteSize": 152535,
+      "checksumSha256": "60cbdce8194acfe40fc410820f59178490fd703a77542a11e99089d3a71f1f53"
+    },
+    {
+      "path": "public/rollout-snapshot/snapshot-manhattan-midtown-core-cells-20260811-v1.json",
+      "byteSize": 42174,
+      "checksumSha256": "2b9be277663d4c5f06f44f8a5084ecacabd122641d536c22daa45c35e244518d"
+    },
+    {
+      "path": "public/tiles/tileset.json",
+      "byteSize": 52224,
+      "checksumSha256": "e6ca001dfbf82a2afbb4f33ef5bb4443df6ae6b096d09096bea92c2b441d311b"
+    },
+    {
+      "path": "release-graph.json",
+      "byteSize": 7497300,
+      "checksumSha256": "e7b2607de190812cd9ba455bcd00db13edf8132bc7dfa5a8a7a8692633ed847d"
+    }
+  ]
+}

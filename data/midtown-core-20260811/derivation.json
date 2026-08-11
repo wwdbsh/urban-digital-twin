@@ -1,0 +1,956 @@
+{
+  "schemaVersion": "1.0",
+  "derivation": {
+    "schemaVersion": "1.0",
+    "subsetLedgerId": "ownership-ledger:manhattan-midtown-core-cells-20260811:aad83fe4a9350353",
+    "waveIndex": 1,
+    "waveId": "midtown-core",
+    "parent": {
+      "ledgerReleaseId": "manhattan-exterior-wave-ledger-20260804",
+      "ledgerId": "manhattan-exterior-wave-ledger-20260804-a3382ef4cac213a2",
+      "ledgerChecksumSha256": "62e093d2ca50b54b49fd8bbad9d0b11f6301b2b197623deb343f9ea915e59016",
+      "baseIdentitySetId": "manhattan-citywide-20260804:exterior-base-identity:fecff2cf008fd86d",
+      "baseIdentitySetChecksumSha256": "17d28c8355a8a062d19a9e79f2aa5d08a5a02e7bb72126a98f4750a656b78e7f",
+      "cellCount": 883,
+      "buildingCount": 45194
+    },
+    "base": {
+      "releaseId": "manhattan-citywide-20260804",
+      "manifestChecksumSha256": "acb5a9b52014f86535c8478e7d4e516efc03f6dff95c17e9896dfea4413c203c"
+    },
+    "subset": {
+      "cellCount": 149,
+      "buildingCount": 7201,
+      "maxCellBuildings": 120,
+      "maxObservedCellBuildings": 114,
+      "coverage": {
+        "west": -74.02587890625,
+        "south": 40.748291015625,
+        "east": -73.93798828125,
+        "north": 40.770263671875
+      },
+      "baseIdentitySetId": "manhattan-citywide-20260804:exterior-base-identity:midtown-core:4180e8e082eb9ca6",
+      "baseIdentitySetChecksumSha256": "92002b9044355e2f92504b8ab728f959e95b5908924b2d2971d5126422bc326c"
+    },
+    "exclusions": [
+      {
+        "cellId": "manhattan-exterior-cell-w00-000000-block-00835",
+        "buildingCount": 14,
+        "overlapWithSubset": 0
+      }
+    ],
+    "orderMap": [
+      {
+        "cellId": "manhattan-exterior-cell-w01-000001-14-4823-4482",
+        "parentOrder": 1,
+        "order": 0,
+        "buildingCount": 77
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000002-16-19296-17928",
+        "parentOrder": 2,
+        "order": 1,
+        "buildingCount": 22
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000003-16-19297-17928",
+        "parentOrder": 3,
+        "order": 2,
+        "buildingCount": 61
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000004-16-19298-17928",
+        "parentOrder": 4,
+        "order": 3,
+        "buildingCount": 100
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000005-16-19299-17928",
+        "parentOrder": 5,
+        "order": 4,
+        "buildingCount": 77
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000006-17-38594-35858",
+        "parentOrder": 6,
+        "order": 5,
+        "buildingCount": 36
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000007-17-38595-35858",
+        "parentOrder": 7,
+        "order": 6,
+        "buildingCount": 43
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000008-17-38596-35858",
+        "parentOrder": 8,
+        "order": 7,
+        "buildingCount": 37
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000009-17-38597-35858",
+        "parentOrder": 9,
+        "order": 8,
+        "buildingCount": 20
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000010-16-19296-17929",
+        "parentOrder": 10,
+        "order": 9,
+        "buildingCount": 18
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000011-17-38594-35859",
+        "parentOrder": 11,
+        "order": 10,
+        "buildingCount": 19
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000012-17-38595-35859",
+        "parentOrder": 12,
+        "order": 11,
+        "buildingCount": 45
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000013-17-38596-35859",
+        "parentOrder": 13,
+        "order": 12,
+        "buildingCount": 35
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000014-17-38597-35859",
+        "parentOrder": 14,
+        "order": 13,
+        "buildingCount": 30
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000015-16-19299-17929",
+        "parentOrder": 15,
+        "order": 14,
+        "buildingCount": 61
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000016-17-38598-35860",
+        "parentOrder": 16,
+        "order": 15,
+        "buildingCount": 25
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000017-17-38599-35860",
+        "parentOrder": 17,
+        "order": 16,
+        "buildingCount": 24
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000018-16-19296-17930",
+        "parentOrder": 18,
+        "order": 17,
+        "buildingCount": 35
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000019-16-19297-17930",
+        "parentOrder": 19,
+        "order": 18,
+        "buildingCount": 46
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000020-16-19298-17930",
+        "parentOrder": 20,
+        "order": 19,
+        "buildingCount": 100
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000021-17-38598-35861",
+        "parentOrder": 21,
+        "order": 20,
+        "buildingCount": 41
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000022-17-38599-35861",
+        "parentOrder": 22,
+        "order": 21,
+        "buildingCount": 38
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000023-17-38594-35862",
+        "parentOrder": 23,
+        "order": 22,
+        "buildingCount": 63
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000024-17-38595-35862",
+        "parentOrder": 24,
+        "order": 23,
+        "buildingCount": 19
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000025-17-38598-35862",
+        "parentOrder": 25,
+        "order": 24,
+        "buildingCount": 56
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000026-17-38599-35862",
+        "parentOrder": 26,
+        "order": 25,
+        "buildingCount": 31
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000027-16-19296-17931",
+        "parentOrder": 27,
+        "order": 26,
+        "buildingCount": 69
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000028-17-38594-35863",
+        "parentOrder": 28,
+        "order": 27,
+        "buildingCount": 20
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000029-17-38595-35863",
+        "parentOrder": 29,
+        "order": 28,
+        "buildingCount": 49
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000030-16-19298-17931",
+        "parentOrder": 30,
+        "order": 29,
+        "buildingCount": 66
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000031-17-38598-35863",
+        "parentOrder": 31,
+        "order": 30,
+        "buildingCount": 14
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000032-17-38599-35863",
+        "parentOrder": 32,
+        "order": 31,
+        "buildingCount": 24
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000033-17-38604-35856",
+        "parentOrder": 33,
+        "order": 32,
+        "buildingCount": 16
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000034-17-38605-35856",
+        "parentOrder": 34,
+        "order": 33,
+        "buildingCount": 22
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000035-17-38606-35856",
+        "parentOrder": 35,
+        "order": 34,
+        "buildingCount": 36
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000036-17-38607-35856",
+        "parentOrder": 36,
+        "order": 35,
+        "buildingCount": 40
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000037-16-19300-17928",
+        "parentOrder": 37,
+        "order": 36,
+        "buildingCount": 107
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000038-16-19301-17928",
+        "parentOrder": 38,
+        "order": 37,
+        "buildingCount": 48
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000039-17-38604-35857",
+        "parentOrder": 39,
+        "order": 38,
+        "buildingCount": 30
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000040-17-38605-35857",
+        "parentOrder": 40,
+        "order": 39,
+        "buildingCount": 57
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000041-17-38606-35857",
+        "parentOrder": 41,
+        "order": 40,
+        "buildingCount": 37
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000042-17-38607-35857",
+        "parentOrder": 42,
+        "order": 41,
+        "buildingCount": 28
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000043-17-38604-35858",
+        "parentOrder": 43,
+        "order": 42,
+        "buildingCount": 66
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000044-17-38605-35858",
+        "parentOrder": 44,
+        "order": 43,
+        "buildingCount": 78
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000045-16-19300-17929",
+        "parentOrder": 45,
+        "order": 44,
+        "buildingCount": 95
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000046-16-19301-17929",
+        "parentOrder": 46,
+        "order": 45,
+        "buildingCount": 47
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000047-17-38604-35859",
+        "parentOrder": 47,
+        "order": 46,
+        "buildingCount": 84
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000048-17-38605-35859",
+        "parentOrder": 48,
+        "order": 47,
+        "buildingCount": 79
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000049-16-19303-17929",
+        "parentOrder": 49,
+        "order": 48,
+        "buildingCount": 62
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000050-16-19300-17930",
+        "parentOrder": 50,
+        "order": 49,
+        "buildingCount": 59
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000051-16-19301-17930",
+        "parentOrder": 51,
+        "order": 50,
+        "buildingCount": 97
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000052-16-19302-17930",
+        "parentOrder": 52,
+        "order": 51,
+        "buildingCount": 84
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000053-16-19303-17930",
+        "parentOrder": 53,
+        "order": 52,
+        "buildingCount": 25
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000054-17-38600-35862",
+        "parentOrder": 54,
+        "order": 53,
+        "buildingCount": 41
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000055-17-38601-35862",
+        "parentOrder": 55,
+        "order": 54,
+        "buildingCount": 35
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000056-17-38600-35863",
+        "parentOrder": 56,
+        "order": 55,
+        "buildingCount": 34
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000057-17-38601-35863",
+        "parentOrder": 57,
+        "order": 56,
+        "buildingCount": 81
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000058-16-19301-17931",
+        "parentOrder": 58,
+        "order": 57,
+        "buildingCount": 72
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000059-16-19302-17931",
+        "parentOrder": 59,
+        "order": 58,
+        "buildingCount": 30
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000060-16-19303-17931",
+        "parentOrder": 60,
+        "order": 59,
+        "buildingCount": 1
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000061-14-4826-4482",
+        "parentOrder": 61,
+        "order": 60,
+        "buildingCount": 39
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000062-14-4823-4481",
+        "parentOrder": 62,
+        "order": 61,
+        "buildingCount": 2
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000063-16-19298-17924",
+        "parentOrder": 63,
+        "order": 62,
+        "buildingCount": 81
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000064-16-19299-17924",
+        "parentOrder": 64,
+        "order": 63,
+        "buildingCount": 64
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000065-17-38596-35850",
+        "parentOrder": 65,
+        "order": 64,
+        "buildingCount": 11
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000066-17-38597-35850",
+        "parentOrder": 66,
+        "order": 65,
+        "buildingCount": 46
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000067-17-38598-35850",
+        "parentOrder": 67,
+        "order": 66,
+        "buildingCount": 38
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000068-17-38599-35850",
+        "parentOrder": 68,
+        "order": 67,
+        "buildingCount": 17
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000069-15-9648-8962",
+        "parentOrder": 69,
+        "order": 68,
+        "buildingCount": 98
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000070-17-38596-35851",
+        "parentOrder": 70,
+        "order": 69,
+        "buildingCount": 37
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000071-17-38597-35851",
+        "parentOrder": 71,
+        "order": 70,
+        "buildingCount": 49
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000072-17-38598-35851",
+        "parentOrder": 72,
+        "order": 71,
+        "buildingCount": 46
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000073-17-38599-35851",
+        "parentOrder": 73,
+        "order": 72,
+        "buildingCount": 39
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000074-17-38594-35852",
+        "parentOrder": 74,
+        "order": 73,
+        "buildingCount": 29
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000075-17-38595-35852",
+        "parentOrder": 75,
+        "order": 74,
+        "buildingCount": 34
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000076-17-38596-35852",
+        "parentOrder": 76,
+        "order": 75,
+        "buildingCount": 71
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000077-17-38597-35852",
+        "parentOrder": 77,
+        "order": 76,
+        "buildingCount": 80
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000078-16-19296-17926",
+        "parentOrder": 78,
+        "order": 77,
+        "buildingCount": 8
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000079-17-38594-35853",
+        "parentOrder": 79,
+        "order": 78,
+        "buildingCount": 19
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000080-17-38595-35853",
+        "parentOrder": 80,
+        "order": 79,
+        "buildingCount": 60
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000081-17-38596-35853",
+        "parentOrder": 81,
+        "order": 80,
+        "buildingCount": 96
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000082-17-38597-35853",
+        "parentOrder": 82,
+        "order": 81,
+        "buildingCount": 62
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000083-16-19299-17926",
+        "parentOrder": 83,
+        "order": 82,
+        "buildingCount": 114
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000084-17-38594-35854",
+        "parentOrder": 84,
+        "order": 83,
+        "buildingCount": 14
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000085-17-38595-35854",
+        "parentOrder": 85,
+        "order": 84,
+        "buildingCount": 48
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000086-17-38596-35854",
+        "parentOrder": 86,
+        "order": 85,
+        "buildingCount": 104
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000087-17-38597-35854",
+        "parentOrder": 87,
+        "order": 86,
+        "buildingCount": 91
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000088-16-19296-17927",
+        "parentOrder": 88,
+        "order": 87,
+        "buildingCount": 15
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000089-17-38594-35855",
+        "parentOrder": 89,
+        "order": 88,
+        "buildingCount": 18
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000090-17-38595-35855",
+        "parentOrder": 90,
+        "order": 89,
+        "buildingCount": 55
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000091-17-38596-35855",
+        "parentOrder": 91,
+        "order": 90,
+        "buildingCount": 84
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000092-17-38597-35855",
+        "parentOrder": 92,
+        "order": 91,
+        "buildingCount": 65
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000093-16-19299-17927",
+        "parentOrder": 93,
+        "order": 92,
+        "buildingCount": 86
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000094-17-38604-35848",
+        "parentOrder": 94,
+        "order": 93,
+        "buildingCount": 14
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000095-17-38605-35848",
+        "parentOrder": 95,
+        "order": 94,
+        "buildingCount": 72
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000096-17-38606-35848",
+        "parentOrder": 96,
+        "order": 95,
+        "buildingCount": 70
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000097-17-38607-35848",
+        "parentOrder": 97,
+        "order": 96,
+        "buildingCount": 58
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000098-17-38604-35849",
+        "parentOrder": 98,
+        "order": 97,
+        "buildingCount": 39
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000099-17-38605-35849",
+        "parentOrder": 99,
+        "order": 98,
+        "buildingCount": 58
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000100-17-38606-35849",
+        "parentOrder": 100,
+        "order": 99,
+        "buildingCount": 20
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000101-17-38607-35849",
+        "parentOrder": 101,
+        "order": 100,
+        "buildingCount": 38
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000102-17-38604-35850",
+        "parentOrder": 102,
+        "order": 101,
+        "buildingCount": 70
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000103-17-38605-35850",
+        "parentOrder": 103,
+        "order": 102,
+        "buildingCount": 57
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000104-17-38606-35850",
+        "parentOrder": 104,
+        "order": 103,
+        "buildingCount": 24
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000105-17-38607-35850",
+        "parentOrder": 105,
+        "order": 104,
+        "buildingCount": 34
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000106-15-9650-8962",
+        "parentOrder": 106,
+        "order": 105,
+        "buildingCount": 104
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000107-17-38604-35851",
+        "parentOrder": 107,
+        "order": 106,
+        "buildingCount": 66
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000108-17-38605-35851",
+        "parentOrder": 108,
+        "order": 107,
+        "buildingCount": 73
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000109-17-38606-35851",
+        "parentOrder": 109,
+        "order": 108,
+        "buildingCount": 60
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000110-17-38607-35851",
+        "parentOrder": 110,
+        "order": 109,
+        "buildingCount": 31
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000111-17-38604-35852",
+        "parentOrder": 111,
+        "order": 110,
+        "buildingCount": 36
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000112-17-38605-35852",
+        "parentOrder": 112,
+        "order": 111,
+        "buildingCount": 114
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000113-17-38606-35852",
+        "parentOrder": 113,
+        "order": 112,
+        "buildingCount": 28
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000114-17-38607-35852",
+        "parentOrder": 114,
+        "order": 113,
+        "buildingCount": 35
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000115-16-19300-17926",
+        "parentOrder": 115,
+        "order": 114,
+        "buildingCount": 97
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000116-16-19301-17926",
+        "parentOrder": 116,
+        "order": 115,
+        "buildingCount": 87
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000117-17-38604-35853",
+        "parentOrder": 117,
+        "order": 116,
+        "buildingCount": 20
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000118-17-38605-35853",
+        "parentOrder": 118,
+        "order": 117,
+        "buildingCount": 29
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000119-17-38606-35853",
+        "parentOrder": 119,
+        "order": 118,
+        "buildingCount": 98
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000120-17-38607-35853",
+        "parentOrder": 120,
+        "order": 119,
+        "buildingCount": 25
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000121-17-38604-35854",
+        "parentOrder": 121,
+        "order": 120,
+        "buildingCount": 34
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000122-17-38605-35854",
+        "parentOrder": 122,
+        "order": 121,
+        "buildingCount": 30
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000123-17-38606-35854",
+        "parentOrder": 123,
+        "order": 122,
+        "buildingCount": 52
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000124-17-38607-35854",
+        "parentOrder": 124,
+        "order": 123,
+        "buildingCount": 66
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000125-16-19300-17927",
+        "parentOrder": 125,
+        "order": 124,
+        "buildingCount": 32
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000126-16-19301-17927",
+        "parentOrder": 126,
+        "order": 125,
+        "buildingCount": 91
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000127-17-38604-35855",
+        "parentOrder": 127,
+        "order": 126,
+        "buildingCount": 40
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000128-17-38605-35855",
+        "parentOrder": 128,
+        "order": 127,
+        "buildingCount": 34
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000129-17-38606-35855",
+        "parentOrder": 129,
+        "order": 128,
+        "buildingCount": 51
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000130-17-38607-35855",
+        "parentOrder": 130,
+        "order": 129,
+        "buildingCount": 20
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000131-17-38608-35848",
+        "parentOrder": 131,
+        "order": 130,
+        "buildingCount": 52
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000132-17-38609-35848",
+        "parentOrder": 132,
+        "order": 131,
+        "buildingCount": 43
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000133-17-38610-35848",
+        "parentOrder": 133,
+        "order": 132,
+        "buildingCount": 66
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000134-17-38611-35848",
+        "parentOrder": 134,
+        "order": 133,
+        "buildingCount": 13
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000135-17-38608-35849",
+        "parentOrder": 135,
+        "order": 134,
+        "buildingCount": 35
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000136-17-38609-35849",
+        "parentOrder": 136,
+        "order": 135,
+        "buildingCount": 52
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000137-17-38610-35849",
+        "parentOrder": 137,
+        "order": 136,
+        "buildingCount": 49
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000138-17-38611-35849",
+        "parentOrder": 138,
+        "order": 137,
+        "buildingCount": 15
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000139-17-38608-35850",
+        "parentOrder": 139,
+        "order": 138,
+        "buildingCount": 56
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000140-17-38609-35850",
+        "parentOrder": 140,
+        "order": 139,
+        "buildingCount": 26
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000141-17-38608-35851",
+        "parentOrder": 141,
+        "order": 140,
+        "buildingCount": 32
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000142-17-38609-35851",
+        "parentOrder": 142,
+        "order": 141,
+        "buildingCount": 20
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000143-16-19305-17925",
+        "parentOrder": 143,
+        "order": 142,
+        "buildingCount": 43
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000144-15-9653-8962",
+        "parentOrder": 144,
+        "order": 143,
+        "buildingCount": 17
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000145-16-19304-17926",
+        "parentOrder": 145,
+        "order": 144,
+        "buildingCount": 97
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000146-16-19305-17926",
+        "parentOrder": 146,
+        "order": 145,
+        "buildingCount": 12
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000147-16-19304-17927",
+        "parentOrder": 147,
+        "order": 146,
+        "buildingCount": 33
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000148-16-19305-17927",
+        "parentOrder": 148,
+        "order": 147,
+        "buildingCount": 14
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000149-15-9653-8963",
+        "parentOrder": 149,
+        "order": 148,
+        "buildingCount": 7
+      }
+    ]
+  },
+  "reconciliation": {
+    "schemaVersion": "1.0",
+    "subsetLedgerId": "ownership-ledger:manhattan-midtown-core-cells-20260811:aad83fe4a9350353",
+    "digestLedgerId": "manhattan-exterior-wave-ledger-20260804-a3382ef4cac213a2",
+    "digestLedgerChecksumSha256": "62e093d2ca50b54b49fd8bbad9d0b11f6301b2b197623deb343f9ea915e59016",
+    "waveId": "midtown-core",
+    "counts": {
+      "digestCells": 149,
+      "subsetCells": 149,
+      "digestBuildings": 7201,
+      "subsetBuildings": 7201,
+      "missingOwners": 0,
+      "duplicateOwners": 0
+    },
+    "ok": true,
+    "findings": []
+  }
+}
