@@ -59,8 +59,8 @@ import { AggregateRequestBudget, ComposedReleaseAdapter, type ComposedReleaseMet
 import { EXTERIOR_PILOT_RELEASE_ID, createExteriorPilotFaultFetcher, loadExteriorPilotRelease, parseExteriorPilotFault, type CommercialStorefrontPlacement, type LoadedExteriorPilotRelease } from "../runtime/exterior-pilot-release";
 import { BLOCK835_PUBLIC_REALM_RELEASE_ID, createBlock835PublicRealmFaultFetcher, loadBlock835PublicRealmRelease, parseBlock835PublicRealmFault, publicRealmFeatureToFeature, type Block835PublicRealmFeature, type LoadedBlock835PublicRealmRelease } from "../runtime/block835-public-realm-release";
 import { EXTERIOR_RUNTIME_BUDGETS, loadExteriorCellRuntime, type ExteriorCellOutcome, type ExteriorCellRuntime, type ExteriorHeadRequest } from "../runtime/exterior-cell-runtime";
-import { createExteriorCellFaultFetcher, parseExteriorCellFault } from "../runtime/exterior-cell-fault";
-import { EXTERIOR_DEFAULT_ACTIVATION, exteriorDefaultActivations, exteriorRolledBackReleaseNotice, exteriorStreamingOverrideDisables, exteriorUnavailableStatements, resolveExteriorActivationSet, restoresPromotedDefault, verifyPromotedExteriorMembership, verifyPromotedExteriorPin, type ExteriorDefaultActivationRecord, type ExteriorReleaseActivation, type ExteriorStreamingOverride } from "../runtime/exterior-default-activation";
+import { createExteriorAssetFaultFetcher, createExteriorCellFaultFetcher, parseExteriorAssetFault, parseExteriorCellFault } from "../runtime/exterior-cell-fault";
+import { EXTERIOR_DEFAULT_ACTIVATION, exteriorAcceptedCellsDigest, exteriorDefaultActivations, exteriorRolledBackReleaseNotice, exteriorStreamingOverrideDisables, exteriorUnavailableStatements, resolveExteriorActivationSet, restoresPromotedDefault, verifyPromotedExteriorMembership, verifyPromotedExteriorPin, type ExteriorDefaultActivationRecord, type ExteriorDefaultActivationRecords, type ExteriorReleaseActivation, type ExteriorStreamingOverride } from "../runtime/exterior-default-activation";
 import {
   BLOCK835_CANARY_REPEATS,
   BLOCK835_CANARY_SAMPLES_PER_POSE,
@@ -68,14 +68,14 @@ import {
   block835CanaryBudgetVerdict,
   block835CanaryHeapVerdict,
   block835CanaryRuntimeVerdict,
-  block835CanaryFacadePath,
   estimateCanaryDisplay,
+  exteriorCanaryTarget,
   parseBlock835CanaryProbeMode,
-  parseBlock835CanaryPathVariant,
   summarizeCanaryFrames,
   type Block835CanaryProbeResult,
   type Block835CanaryRepeatSample,
 } from "../runtime/block835-canary-probe";
+import { MIDTOWN_CORE_CANARY_FACADE_PATH } from "../runtime/midtown-core-canary-facade-path";
 import { DEFAULT_EXTERIOR_RENDER_PROFILE, EXTERIOR_RENDER_PROFILES, exteriorRenderProfileLabel, parseExteriorRenderProfile, type ExteriorRenderProfile } from "../runtime/exterior-render-profiles";
 import { fallbackViewportFootprint, type ViewportFootprint } from "../runtime/viewport-footprint";
 
@@ -706,7 +706,7 @@ export function exteriorStreamingNotices(
  * `exteriorProfile`, produces the same kind of explicit notice every other
  * release/mode mismatch in the app produces.
  */
-export function exteriorDeepLinkMessage(href: string, record: ExteriorDefaultActivationRecord = EXTERIOR_DEFAULT_ACTIVATION): string | null {
+export function exteriorDeepLinkMessage(href: string, records: ExteriorDefaultActivationRecords = EXTERIOR_DEFAULT_ACTIVATION): string | null {
   const url = new URL(href, typeof window === "undefined" ? "http://localhost/" : window.location.href);
   const requestedRelease = url.searchParams.get("exteriorCells");
   if (requestedRelease !== null && !isPinnedExteriorCellRelease(requestedRelease)) {
@@ -715,7 +715,10 @@ export function exteriorDeepLinkMessage(href: string, record: ExteriorDefaultAct
   // A withdrawn release stays in the pinned allowlist (its bytes are still on
   // disk), so the refusal has to be stated here rather than inferred from the
   // allowlist.
-  const rolledBack = exteriorRolledBackReleaseNotice(requestedRelease, record);
+  // Checked against the WHOLE promoted set: a link into a wave this build
+  // withdrew must be refused by that wave's record, not silently accepted
+  // because a different wave is still promoted.
+  const rolledBack = exteriorRolledBackReleaseNotice(requestedRelease, records);
   if (rolledBack) return `${rolledBack} The rest of the view was left unchanged.`;
   const requestedStreaming = url.searchParams.get(EXTERIOR_STREAMING_OFF_PARAM);
   if (requestedStreaming !== null && requestedStreaming !== "off") {
@@ -865,7 +868,13 @@ export function App() {
   // canary probe is the inverse: it *requires* the exterior-cell release to be
   // active and measures the Goal's absolute budgets instead of a regression.
   const block835CanaryMode = BLOCK835_CANARY_HARNESS_ENABLED && typeof window !== "undefined" ? parseBlock835CanaryProbeMode(window.location.search) : null;
-  const block835CanaryPathVariant = BLOCK835_CANARY_HARNESS_ENABLED && typeof window !== "undefined" ? parseBlock835CanaryPathVariant(window.location.search) : "level";
+  // Which promoted wave the probe measures, and the camera path it drives.
+  // Defaults to the Block 835 target so every T009-era probe URL still means
+  // exactly what it meant.
+  const exteriorCanaryProbeTarget = exteriorCanaryTarget(
+    BLOCK835_CANARY_HARNESS_ENABLED && typeof window !== "undefined" ? window.location.search : "",
+    MIDTOWN_CORE_CANARY_FACADE_PATH,
+  );
   // A URL cannot activate the real adapter until its immutable release has
   // loaded and passed validation. Start every first render in fixtures so an
   // unknown/loading release never wears a real label over fixture geometry.
@@ -928,7 +937,7 @@ export function App() {
   const [exteriorUnanchoredIds, setExteriorUnanchoredIds] = useState<string[]>([]);
   // Kept separate from `deepLinkMessage`, which the first selection clears.
   const [exteriorDeepLinkNotice, setExteriorDeepLinkNotice] = useState<string | null>(
-    typeof window === "undefined" ? null : exteriorDeepLinkMessage(window.location.href, EXTERIOR_DEFAULT_ACTIVATION),
+    typeof window === "undefined" ? null : exteriorDeepLinkMessage(window.location.href, exteriorDefaultActivations(EXTERIOR_DEFAULT_ACTIVATION)),
   );
   const [stage3RenderProof, setStage3RenderProof] = useState<Stage3RenderProof | null>(null);
   const [block835PerformanceProbe, setBlock835PerformanceProbe] = useState<Block835PerformanceProbeResult | null>(null);
@@ -1016,6 +1025,7 @@ export function App() {
   // budget instead of each constructing its own and multiplying the ceiling by
   // the number of promotions. Entries are keyed by artifact ref AND checksum, so
   // sharing can only ever reuse identical verified bytes.
+  const exteriorCellLoadsRef = useRef(new Map<string, { runtime: ExteriorCellRuntime; profile: ExteriorRenderProfile; bucket: number; controller: AbortController }>());
   const exteriorCacheRef = useRef<CitywideLruCache<Uint8Array>>(new CitywideLruCache<Uint8Array>(EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries, EXTERIOR_RUNTIME_BUDGETS.maxCachedBytes));
   const aggregateCacheRef = useRef<CitywideLruCache<unknown>>(new CitywideLruCache<unknown>(CITYWIDE_BUDGETS.maxLoadedShards, CITYWIDE_BUDGETS.maxLoadedBytes));
   const citywideModeRef = useRef(false);
@@ -1128,6 +1138,10 @@ export function App() {
   const exteriorActiveWaves = exteriorWaveActivations.filter((entry) => entry.activation.active);
   const exteriorStreamingActive = exteriorActiveWaves.length > 0;
   const exteriorPrimaryRuntime = exteriorWaveActivations[0]?.wave.runtime ?? null;
+  // The wave the canary probe measures, resolved by release id rather than by
+  // position: a probe bound to "whichever wave came first" would report Block
+  // 835's numbers for a Midtown camera path.
+  const exteriorProbeRuntime = exteriorActiveWaves.find((entry) => entry.target.releaseId === exteriorCanaryProbeTarget.releaseId)?.wave.runtime ?? null;
   // Stable identity of "which releases, gated how". The load effect and the
   // overlay memo both key off it so a re-render that changed neither the waves
   // nor the promotion verdicts rebuilds no scene state.
@@ -1139,12 +1153,13 @@ export function App() {
       ? [{ releaseId: entry.wave.runtime.releaseId, snapshotId: entry.wave.runtime.snapshot.snapshotId, origin: entry.wave.runtime.origin, profile: exteriorProfile, cells: entry.wave.outcomes }]
       : []
   )), [activeRealBaseReleaseId, exteriorProfile, exteriorTargetKey, exteriorWaveOutcomes, exteriorWaves]);
-  // Notices stay attributed to the wave that produced them. With more than one
-  // wave rendered, otherwise-identical lines ("N of M cells ship no exterior
-  // geometry") would be indistinguishable, so each is qualified by its release;
-  // a single-wave session reads exactly as it did before.
+  // Notices stay attributed to the wave that produced them, always. Two waves
+  // produce otherwise-identical lines ("N of M cells ship no exterior
+  // geometry"), and a reader cannot act on a fallback notice without knowing
+  // which release it is about — so the release is named unconditionally rather
+  // than appearing only once a second wave happens to be streaming.
   const exteriorNoticeEntries = exteriorActiveWaves.flatMap((entry) => exteriorStreamingNotices(entry.wave.headNotice, entry.wave.outcomes)
-    .map((notice) => ({ releaseId: entry.target.releaseId, notice: exteriorActiveWaves.length > 1 ? `Exterior release ${entry.target.releaseId}: ${notice}` : notice })));
+    .map((notice) => ({ releaseId: entry.target.releaseId, notice: `Exterior release ${entry.target.releaseId}: ${notice}` })));
   // Withheld-anchor geometry is reported once for the scene: the viewport
   // resolves anchors across every wave at once and reports one union.
   const exteriorUnanchoredStatement = exteriorStreamingActive ? exteriorUnanchoredNotice(exteriorUnanchoredIds) : null;
@@ -1311,10 +1326,11 @@ export function App() {
   // T009 canary validation probe. Compiled out unless VITE_BLOCK835_PROBE=1.
   useEffect(() => {
     if (!block835CanaryMode || typeof window === "undefined") return undefined;
-    // The probe certifies the Block 835 canary scene, which is the leading wave.
-    const runtime = exteriorPrimaryRuntime;
+    // The probe measures ONE named wave. Binding it to the leading wave would
+    // silently certify Block 835 while the camera flew a Midtown path.
+    const runtime = exteriorProbeRuntime;
     const buildMode: "development" | "production" = import.meta.env.DEV ? "development" : "production";
-    const facadePath = block835CanaryFacadePath(block835CanaryPathVariant);
+    const facadePath = exteriorCanaryProbeTarget.path;
     const poses = facadePath.poses;
     const pending = (status: Block835CanaryProbeResult["status"], reason: string | null, partial?: Partial<Block835CanaryProbeResult>): Block835CanaryProbeResult => ({
       schemaVersion: "1.0",
@@ -1353,7 +1369,9 @@ export function App() {
     // The canary probe certifies the canary scene, so it starts only once the
     // exterior-cell release is actually streaming over an active real base.
     if (!activeRealBaseReleaseId || !exteriorStreamingActive || !runtime) {
-      setBlock835CanaryProbe(pending("waiting-for-prerequisites", `Waiting for an active compatible real base with the pinned exterior-cell release streaming. Release ${exteriorPromotedReleaseIdLabel} streams by default over a real base; remove ?${EXTERIOR_STREAMING_OFF_PARAM}=off if this session disabled it.`));
+      // Name the wave being waited for. With several waves promoted, "the
+      // pinned exterior-cell release" sent the reader looking at the wrong one.
+      setBlock835CanaryProbe(pending("waiting-for-prerequisites", `Waiting for an active compatible real base with exterior release ${exteriorCanaryProbeTarget.releaseId} streaming, which this probe measures along path ${facadePath.pathId}. This build streams ${exteriorPromotedReleaseIdLabel} by default over a real base; remove ?${EXTERIOR_STREAMING_OFF_PARAM}=off if this session disabled exterior streaming, and do not pin a different release with ?exteriorCells=, which selects that release ALONE.`));
       return undefined;
     }
 
@@ -1365,7 +1383,24 @@ export function App() {
       const used = (performance as Performance & { memory?: { usedJSHeapSize?: number } }).memory?.usedJSHeapSize;
       return typeof used === "number" && Number.isFinite(used) ? used : null;
     };
-    const peakConcurrency = (): number => Math.max(aggregateBudgetRef.current.peakConcurrency(), runtime.getMetrics().peakConcurrentRequests);
+    // Peak concurrency is a max across every active wave plus the shared budget.
+    const peakConcurrency = (): number => Math.max(
+      aggregateBudgetRef.current.peakConcurrency(),
+      ...exteriorActiveWavesRef.current.map((entry) => entry.wave.runtime?.getMetrics().peakConcurrentRequests ?? 0),
+    );
+    // The exterior cache is SHARED across waves, so it is read once from the
+    // cache itself. Summing per-runtime metrics would count the same bytes and
+    // the same entries once per promoted wave and report a false ceiling.
+    const exteriorCacheSample = () => ({
+      entries: exteriorCacheRef.current.size(),
+      bytes: exteriorCacheRef.current.bytes(),
+      evictions: exteriorCacheRef.current.evictionCount(),
+    });
+    // A6: with --js-flags=--expose-gc the probe forces a collection before each
+    // heap sample, so growth across repeats is retention rather than collection
+    // lag. Without it the sample keeps its weaker, explicitly-labelled claim.
+    const forcedCollection = typeof (window as Window & { gc?: () => void }).gc === "function";
+    const collectGarbage = () => { (window as Window & { gc?: () => void }).gc?.(); };
     const run = async () => {
       if (!isCurrent()) return;
       const beforeFocus = document.hasFocus();
@@ -1408,15 +1443,16 @@ export function App() {
             if (reason) break;
           }
           allSamples.push(...repeatSamples);
-          const exteriorMetrics = runtime.getMetrics();
-          const cachedBytes = exteriorMetrics.cachedBytes + composedMetricsRef.current.aggregate.cachedBytes;
+          const exteriorCache = exteriorCacheSample();
+          const cachedBytes = exteriorCache.bytes + composedMetricsRef.current.aggregate.cachedBytes;
           peakCachedBytes = Math.max(peakCachedBytes, cachedBytes);
+          collectGarbage();
           perRepeat.push({
             repeatIndex,
             summary: summarizeCanaryFrames(repeatSamples),
-            cacheEntries: exteriorMetrics.cacheEntries + composedMetricsRef.current.aggregate.cacheEntries,
+            cacheEntries: exteriorCache.entries + composedMetricsRef.current.aggregate.cacheEntries,
             cachedBytes,
-            cacheEvictions: exteriorMetrics.cacheEvictions + composedMetricsRef.current.aggregate.cacheEvictions,
+            cacheEvictions: exteriorCache.evictions + composedMetricsRef.current.aggregate.cacheEvictions,
             peakConcurrentRequests: peakConcurrency(),
             jsHeapBytes: jsHeapBytes(),
           });
@@ -1439,7 +1475,7 @@ export function App() {
         aggregate,
         display: estimateCanaryDisplay(allSamples),
         budget: block835CanaryBudgetVerdict(block835CanaryMode, aggregate),
-        heap: block835CanaryHeapVerdict(perRepeat.map((entry) => entry.jsHeapBytes)),
+        heap: block835CanaryHeapVerdict(perRepeat.map((entry) => entry.jsHeapBytes), undefined, forcedCollection),
         runtime: block835CanaryRuntimeVerdict(peakConcurrency(), peakCachedBytes || null),
         disclosures: {
           buildMode,
@@ -1471,7 +1507,7 @@ export function App() {
       window.removeEventListener("focus", startWhenFocused);
       document.removeEventListener("visibilitychange", startWhenFocused);
     };
-  }, [activeRealBaseReleaseId, block835CanaryMode, block835CanaryPathVariant, exteriorPrimaryRuntime, exteriorStreamingActive]);
+  }, [activeRealBaseReleaseId, block835CanaryMode, exteriorCanaryProbeTarget.path, exteriorCanaryProbeTarget.targetId, exteriorProbeRuntime, exteriorStreamingActive]);
 
   useEffect(() => {
     const targets = exteriorTargetsRef.current;
@@ -1491,10 +1527,17 @@ export function App() {
     // opted in, is query-driven with no user-facing control, and corrupts only
     // a cloned response body in memory: the pinned release files on disk are
     // never rewritten, so the fault journey cannot disturb an immutable byte.
-    const cellFault = BLOCK835_CANARY_HARNESS_ENABLED && typeof window !== "undefined"
-      ? parseExteriorCellFault(new URL(window.location.href).searchParams.get("exteriorCellFault"), true)
-      : null;
-    const cellFetcher = cellFault ? createExteriorCellFaultFetcher(cellFault) : undefined;
+    const harnessParams = BLOCK835_CANARY_HARNESS_ENABLED && typeof window !== "undefined" ? new URL(window.location.href).searchParams : null;
+    const cellFault = harnessParams ? parseExteriorCellFault(harnessParams.get("exteriorCellFault"), true) : null;
+    // Wave-agnostic per-asset seam: names one GLB by file name so a single
+    // asset of a single wave can fail its checksum while every other wave and
+    // the base scene are left alone.
+    const assetFault = harnessParams ? parseExteriorAssetFault(harnessParams.get("exteriorAssetFault"), true) : null;
+    const cellFetcher = cellFault
+      ? createExteriorCellFaultFetcher(cellFault)
+      : assetFault
+        ? createExteriorAssetFaultFetcher(assetFault)
+        : undefined;
     // Depend on the adapter STATE, not the ref. `exteriorStreamingRequested` is
     // URL-derived and true on the very first render, while the citywide adapter
     // arrives asynchronously afterwards. Reading the ref captured the
@@ -1527,7 +1570,14 @@ export function App() {
           sharedBudget: aggregateBudgetRef.current,
           cache: exteriorCacheRef.current,
           baseIdentity: { releaseId: activeRealBaseReleaseId ?? "no-active-base", has: (featureId) => exteriorBaseIdentityHas(adapter, featureId) },
-        })).then(({ runtime, head }) => {
+        })).then(async ({ runtime, head }) => {
+        if (controller.signal.aborted) return;
+        // Digest-form membership is recomputed from what the runtime resolved,
+        // never read from the release. Computed before the gate because Web
+        // Crypto is async and the gate is not.
+        const resolvedCellsDigest = target.record.enabled && target.record.membership.cellsDigestSha256 !== null
+          ? await exteriorAcceptedCellsDigest(runtime.snapshot.cells)
+          : null;
         if (controller.signal.aborted) return;
         // Acceptance gate for the promoted default: what the runtime resolved must
         // be the accepted hashes and the accepted cell membership. A same-named
@@ -1540,6 +1590,7 @@ export function App() {
             snapshotChecksumSha256: head.pin.checksumSha256,
             assemblyPackageIds: head.pin.assemblyPackageIds,
             cells: runtime.snapshot.cells,
+            cellsDigestSha256: resolvedCellsDigest,
           }, target.record);
           if (!verification.ok) {
             setWave(failedExteriorWave(verification.message));
@@ -1561,17 +1612,40 @@ export function App() {
     return () => { for (const controller of controllers.values()) controller.abort(); };
   }, [activeAdapter, activeRealBaseReleaseId, exteriorCanarySnapshotId, exteriorTargetKey]);
 
+  /**
+   * Per-wave cell loading.
+   *
+   * The loads are keyed by release and OUTLIVE the effect run that started
+   * them. An effect-scoped controller looked correct and was not: this effect
+   * re-runs whenever ANY wave changes state, so the moment a second wave
+   * finished loading its index, the cleanup aborted the first wave's in-flight
+   * asset requests and that wave's cell failed closed with a request error it
+   * had no reason to have. A load is therefore cancelled only when its OWN
+   * inputs change — its runtime, the render profile, or the camera LOD bucket —
+   * or when the whole component goes away.
+   */
   useEffect(() => {
-    const loading = exteriorTargetsRef.current
-      .map((target) => ({ target, runtime: exteriorWaves.get(target.releaseId)?.runtime ?? null }))
-      .filter((entry): entry is { target: ExteriorReleaseActivation; runtime: ExteriorCellRuntime } => entry.runtime !== null);
-    if (loading.length === 0) return undefined;
-    const controller = new AbortController();
-    let cancelled = false;
-    for (const { target, runtime } of loading) {
+    const running = exteriorCellLoadsRef.current;
+    const wanted = new Map(exteriorTargetsRef.current.flatMap((target) => {
+      const runtime = exteriorWaves.get(target.releaseId)?.runtime ?? null;
+      return runtime ? [[target.releaseId, { target, runtime }] as const] : [];
+    }));
+    for (const [releaseId, entry] of [...running]) {
+      const next = wanted.get(releaseId);
+      const unchanged = next && next.runtime === entry.runtime && entry.profile === exteriorProfile && entry.bucket === exteriorCameraHeightBucketMeters;
+      if (unchanged) continue;
+      entry.controller.abort();
+      running.delete(releaseId);
+    }
+    for (const [releaseId, { target, runtime }] of wanted) {
+      if (running.has(releaseId)) continue;
+      const controller = new AbortController();
+      const entry = { runtime, profile: exteriorProfile, bucket: exteriorCameraHeightBucketMeters, controller };
+      running.set(releaseId, entry);
+      const isCurrent = () => exteriorCellLoadsRef.current.get(releaseId) === entry && !controller.signal.aborted;
       void Promise.all(runtime.cellIds().map((cellId) => runtime.loadCell(cellId, exteriorProfile, exteriorCameraHeightBucketMeters, controller.signal)))
         .then((outcomes) => {
-          if (cancelled) return;
+          if (!isCurrent()) return;
           // Identity gate: exterior assets reuse canonical base identities, so an
           // identity outside the accepted membership means these are not the
           // accepted bytes. A cell that degraded to base massing renders no asset
@@ -1581,20 +1655,27 @@ export function App() {
             const renderedIds = outcomes.flatMap((outcome) => outcome.kind === "rendered" ? outcome.assets.map((asset) => asset.canonicalFeatureId) : []);
             const membership = verifyPromotedExteriorMembership(renderedIds, target.record);
             if (!membership.ok) {
-              setExteriorWaveOutcomes((current) => { const next = new Map(current); next.delete(target.releaseId); return next; });
-              setExteriorWaves((current) => (current.has(target.releaseId) ? new Map(current).set(target.releaseId, failedExteriorWave(membership.message)) : current));
+              setExteriorWaveOutcomes((current) => { const next = new Map(current); next.delete(releaseId); return next; });
+              setExteriorWaves((current) => (current.has(releaseId) ? new Map(current).set(releaseId, failedExteriorWave(membership.message)) : current));
               return;
             }
           }
-          setExteriorWaveOutcomes((current) => new Map(current).set(target.releaseId, outcomes));
+          setExteriorWaveOutcomes((current) => new Map(current).set(releaseId, outcomes));
         })
         .catch(() => {
-          if (cancelled) return;
-          setExteriorWaveOutcomes((current) => { const next = new Map(current); next.delete(target.releaseId); return next; });
+          if (!isCurrent()) return;
+          setExteriorWaveOutcomes((current) => { const next = new Map(current); next.delete(releaseId); return next; });
         });
     }
-    return () => { cancelled = true; controller.abort(); };
+    return undefined;
   }, [exteriorCameraHeightBucketMeters, exteriorProfile, exteriorWaves]);
+
+  // The only place a live cell load is cancelled wholesale: the component going
+  // away. Everything else cancels exactly the wave whose inputs changed.
+  useEffect(() => () => {
+    for (const entry of exteriorCellLoadsRef.current.values()) entry.controller.abort();
+    exteriorCellLoadsRef.current.clear();
+  }, []);
 
   const publishCitywideMetrics = useCallback((adapter: CitywideReleaseAdapter) => {
     if (citywideAdapterRef.current !== adapter) return;

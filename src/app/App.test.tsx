@@ -815,7 +815,14 @@ describe("exterior streaming profiles and canary state", () => {
    * no request whatsoever into the midtown-core release root — opt-in is
    * exclusively `?exteriorCells=manhattan-midtown-core-cells-20260811`.
    */
-  it("issues no midtown-core request in a default session, so the canary stays strictly opt-in", async () => {
+  // T013 asserted the inverse of this: before the Midtown-core wave was
+  // promoted, a default session had to issue NO midtown request, because the
+  // wave was a strictly opt-in canary. T014 promotes it, so the default session
+  // legitimately streams both waves and the T013 expectation is superseded by
+  // the promotion itself. What still has to hold — and is what that test was
+  // really protecting — is that a default session streams exactly the promoted
+  // set, announces each wave by name, and serialises no exterior parameters.
+  it("streams the whole promoted set in a default session, naming each wave", async () => {
     const fetchSpy = serveCommittedCanaryRelease();
     const citywide = lateCitywideBaseAdapter(BLOCK_835_FEATURE_IDS);
     citywideRuntimeMocks.loadCitywideRelease.mockResolvedValue(citywide.adapter as unknown as CitywideReleaseAdapter);
@@ -833,10 +840,13 @@ describe("exterior streaming profiles and canary state", () => {
         expect(viewport?.getAttribute("data-exterior-render-entry-count")).toBe(String(BLOCK_835_FEATURE_IDS.length));
       }, { timeout: 20_000 });
 
-      expect(requestedPaths().filter((path) => path.startsWith(MIDTOWN_CORE_EXTERIOR_ROOT))).toEqual([]);
+      // Both promoted waves are attempted, and only promoted waves are.
+      expect(requestedPaths().some((path) => path.startsWith(MIDTOWN_CORE_EXTERIOR_ROOT))).toBe(true);
       expect(new URL(window.location.href).searchParams.get("exteriorCells")).toBeNull();
       const status = [...document.querySelectorAll<HTMLElement>(".runtime-note-overlay")].find((candidate) => candidate.textContent?.startsWith("Exterior streaming ·"));
       expect(status?.textContent).toContain(CANARY_EXTERIOR_RELEASE_ID);
+      // Each status line names its own wave rather than one line covering both.
+      expect(status?.getAttribute("data-exterior-release")).toBe(CANARY_EXTERIOR_RELEASE_ID);
       expect(status?.textContent).not.toContain(MIDTOWN_CORE_EXTERIOR_RELEASE_ID);
     } finally {
       fetchSpy.mockRestore();

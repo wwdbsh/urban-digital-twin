@@ -2,7 +2,7 @@
  * Frozen promotion records for the exterior waves this build activates.
  *
  * The build activates an ORDERED SET of waves (`EXTERIOR_DEFAULT_ACTIVATIONS`),
- * today containing exactly one: Block 835. Each wave is its own record, and the
+ * today Block 835 followed by Midtown-core. Each wave is its own record, and the
  * per-record properties below hold PER RECORD — one wave rolling back neither
  * withdraws nor implies anything about another.
  *
@@ -22,9 +22,51 @@
  * `exterior-default-activation.test.ts` fails closed on any drift.
  */
 
+export interface ExteriorAcceptedCell {
+  readonly cellId: string;
+  readonly cellReleaseId: string;
+  readonly checksumSha256: string;
+}
+
+/**
+ * Accepted cell membership, stated in exactly ONE of two forms.
+ *
+ * A small wave lists its cells literally: fourteen buildings in one cell is
+ * reviewable as text, and the reviewer can see the accepted bytes. A 149-cell
+ * wave cannot be: twenty kilobytes of triples in a source file is not read by
+ * anybody, and pasting it does not make the acceptance stronger — the gate
+ * still only compares it against what the runtime resolved. So a large wave
+ * states the same fact as ONE digest over the canonical join, which the pin
+ * gate RECOMPUTES from the resolved cells and compares. The digest is exactly
+ * as strict (any cell id, cell-release id, or checksum differing changes it)
+ * and is reviewable, which the literal form stops being at this size.
+ *
+ * `cellCount` is stated in both forms so a resolve that returned a truncated
+ * or padded cell set fails closed even before the digest is compared.
+ */
 export interface ExteriorDefaultActivationMembership {
-  readonly cells: readonly { readonly cellId: string; readonly cellReleaseId: string; readonly checksumSha256: string }[];
+  /** The literal accepted cells. Empty exactly when `cellsDigestSha256` is set. */
+  readonly cells: readonly ExteriorAcceptedCell[];
+  /** SHA-256 over `exteriorAcceptedCellsJoin`, or `null` for the literal form. */
+  readonly cellsDigestSha256: string | null;
+  readonly cellCount: number;
   readonly buildingIds: readonly string[];
+}
+
+/**
+ * The canonical, order-independent text form of a cell set. Both membership
+ * forms compare against this exact string, so the digest form is a digest of
+ * precisely what the literal form compares.
+ */
+export function exteriorAcceptedCellsJoin(cells: readonly ExteriorAcceptedCell[]): string {
+  return cells.map((cell) => `${cell.cellId}|${cell.cellReleaseId}|${cell.checksumSha256}`).sort().join(", ");
+}
+
+/** SHA-256 hex of the canonical join. Async because Web Crypto is. */
+export async function exteriorAcceptedCellsDigest(cells: readonly ExteriorAcceptedCell[]): Promise<string> {
+  if (!globalThis.crypto?.subtle) throw new Error("Web Crypto SHA-256 is unavailable; the exterior membership digest could not be computed.");
+  const digest = await globalThis.crypto.subtle.digest("SHA-256", new TextEncoder().encode(exteriorAcceptedCellsJoin(cells)));
+  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
 /**
@@ -67,6 +109,8 @@ export const EXTERIOR_DEFAULT_ACTIVATION: ExteriorDefaultActivationRecord = {
       cellReleaseId: "cell-release:manhattan-exterior-cells-20260811:v1",
       checksumSha256: "418ec17d40cdbe89be781367df5cf4d47dc4fba3bf3902b019c6431e05ce4a87",
     }],
+    cellsDigestSha256: null,
+    cellCount: 1,
     buildingIds: [
       "doitt:102705", "doitt:131170", "doitt:147902", "doitt:262867", "doitt:39969",
       "doitt:460555", "doitt:498980", "doitt:502491", "doitt:584049", "doitt:778052",
@@ -75,6 +119,71 @@ export const EXTERIOR_DEFAULT_ACTIVATION: ExteriorDefaultActivationRecord = {
   },
   approvalRef: "Issue #11 gate approval 2026-08-11 + perf evidence PR #38",
   predecessor: { enabled: false, releaseId: null, rolledBackReleaseId: "manhattan-exterior-cells-20260811" },
+} as const;
+
+/**
+ * Frozen promotion record for the Midtown-core exterior wave.
+ *
+ * Same indivisible shape as Block 835, at a different scale: 149 accepted
+ * cells of which 3 ship exterior geometry for 160 buildings, the other 146
+ * deliberately shipping none (the bounded-availability case ADR 0029 records).
+ * Its membership is stated as a digest rather than 149 literal triples; see
+ * `ExteriorDefaultActivationMembership` for why that is not a weaker claim.
+ *
+ * `snapshotId`, `snapshotChecksumSha256`, `assemblyPackageIds`,
+ * `cellsDigestSha256`, `cellCount`, and `buildingIds` are all recomputable
+ * from the committed `data/midtown-core-20260811/payload-inventory.json`
+ * alone, and `exterior-midtown-promotion-record.test.ts` recomputes every one
+ * of them on every run — no payload directory required, so the drift gate is
+ * never skipped.
+ */
+export const MIDTOWN_CORE_EXTERIOR_ACTIVATION: ExteriorDefaultActivationRecord = {
+  enabled: true,
+  releaseId: "manhattan-midtown-core-cells-20260811",
+  snapshotId: "snapshot:manhattan-midtown-core-cells-20260811:v1",
+  snapshotChecksumSha256: "2b9be277663d4c5f06f44f8a5084ecacabd122641d536c22daa45c35e244518d",
+  assemblyPackageIds: ["assembly:manhattan-midtown-core-cells-20260811:v1"],
+  membership: {
+    cells: [],
+    cellsDigestSha256: "9b3edcc16395bee44395a8b90647bee0a40e9bc67ca83dd1ce45d0fc92db3074",
+    cellCount: 149,
+    buildingIds: [
+      "doitt:1001111", "doitt:105916", "doitt:1104532", "doitt:1105839", "doitt:1106429",
+      "doitt:1111726", "doitt:1114625", "doitt:1115013", "doitt:1116162", "doitt:111690",
+      "doitt:1117425", "doitt:1158178", "doitt:1191064", "doitt:1195535", "doitt:1215127",
+      "doitt:1221493", "doitt:1224763", "doitt:1232671", "doitt:1256080", "doitt:1260400",
+      "doitt:1262786", "doitt:1263464", "doitt:1264335", "doitt:1268457", "doitt:1268463",
+      "doitt:1268618", "doitt:1272399", "doitt:127864", "doitt:1279525", "doitt:1279526",
+      "doitt:1279527", "doitt:1281874", "doitt:1282695", "doitt:1285662", "doitt:1286246",
+      "doitt:1287486", "doitt:1288650", "doitt:1289963", "doitt:1289964", "doitt:1294316",
+      "doitt:1295112", "doitt:1296496", "doitt:1297513", "doitt:1299442", "doitt:1299576",
+      "doitt:1300185", "doitt:1302197", "doitt:1302589", "doitt:139071", "doitt:157592",
+      "doitt:162071", "doitt:166790", "doitt:174372", "doitt:181184", "doitt:194068",
+      "doitt:196987", "doitt:225670", "doitt:227702", "doitt:228631", "doitt:229752",
+      "doitt:241646", "doitt:246449", "doitt:260361", "doitt:261397", "doitt:275393",
+      "doitt:297071", "doitt:297390", "doitt:29844", "doitt:316002", "doitt:317859",
+      "doitt:328864", "doitt:347215", "doitt:348074", "doitt:353265", "doitt:360993",
+      "doitt:364273", "doitt:365764", "doitt:36922", "doitt:37170", "doitt:372755",
+      "doitt:373902", "doitt:374636", "doitt:375025", "doitt:377010", "doitt:381141",
+      "doitt:383893", "doitt:399990", "doitt:407018", "doitt:412072", "doitt:418207",
+      "doitt:420075", "doitt:421971", "doitt:428362", "doitt:440180", "doitt:443409",
+      "doitt:447981", "doitt:44827", "doitt:450560", "doitt:453302", "doitt:473907",
+      "doitt:487836", "doitt:501878", "doitt:513787", "doitt:525090", "doitt:528581",
+      "doitt:547528", "doitt:555676", "doitt:559204", "doitt:563161", "doitt:572887",
+      "doitt:574826", "doitt:594251", "doitt:60572", "doitt:623314", "doitt:624434",
+      "doitt:631125", "doitt:645311", "doitt:664715", "doitt:665924", "doitt:674326",
+      "doitt:678033", "doitt:684855", "doitt:688120", "doitt:688158", "doitt:688202",
+      "doitt:688213", "doitt:709441", "doitt:720315", "doitt:743834", "doitt:749711",
+      "doitt:749752", "doitt:754187", "doitt:755561", "doitt:777515", "doitt:787935",
+      "doitt:800671", "doitt:803147", "doitt:804055", "doitt:812305", "doitt:817527",
+      "doitt:830782", "doitt:842122", "doitt:850090", "doitt:852472", "doitt:88101",
+      "doitt:91300", "doitt:941537", "doitt:945838", "doitt:97522", "doitt:98082",
+      "doitt:98363", "doitt:996627", "doitt:996629", "doitt:996630", "doitt:996631",
+      "doitt:996632", "doitt:996636", "doitt:996688", "doitt:996689", "doitt:996746",
+    ],
+  },
+  approvalRef: "Issue #15 gate approval 2026-08-11",
+  predecessor: { enabled: false, releaseId: null, rolledBackReleaseId: "manhattan-midtown-core-cells-20260811" },
 } as const;
 
 /**
@@ -90,8 +199,9 @@ export const EXTERIOR_DEFAULT_ACTIVATION: ExteriorDefaultActivationRecord = {
  */
 export function exteriorDefaultActivations(
   blockEight35: ExteriorDefaultActivationRecord = EXTERIOR_DEFAULT_ACTIVATION,
+  midtownCore: ExteriorDefaultActivationRecord = MIDTOWN_CORE_EXTERIOR_ACTIVATION,
 ): readonly ExteriorDefaultActivationRecord[] {
-  return [blockEight35];
+  return [blockEight35, midtownCore];
 }
 
 /** The composed set, for callers with no substituted record of their own. */
@@ -312,14 +422,16 @@ export interface ExteriorPinVerificationInput {
   snapshotId: string;
   snapshotChecksumSha256: string;
   assemblyPackageIds: readonly string[];
-  cells: readonly { cellId: string; cellReleaseId: string; checksumSha256: string }[];
+  cells: readonly ExteriorAcceptedCell[];
+  /**
+   * `exteriorAcceptedCellsDigest(cells)`, computed by the caller because Web
+   * Crypto is async and this gate is not. A digest-form record with no digest
+   * here fails closed rather than skipping the membership comparison.
+   */
+  cellsDigestSha256?: string | null;
 }
 
 export type ExteriorPinVerification = { ok: true } | { ok: false; message: string };
-
-function cellKey(cell: { cellId: string; cellReleaseId: string; checksumSha256: string }): string {
-  return `${cell.cellId}|${cell.cellReleaseId}|${cell.checksumSha256}`;
-}
 
 /**
  * Acceptance gate for the promoted default: the release the runtime actually
@@ -344,9 +456,29 @@ export function verifyPromotedExteriorPin(
   const expectedPackages = [...record.assemblyPackageIds].sort().join(", ");
   const actualPackages = [...resolved.assemblyPackageIds].sort().join(", ");
   if (expectedPackages !== actualPackages) return mismatch("assembly packages", expectedPackages, actualPackages);
-  const expectedCells = record.membership.cells.map(cellKey).sort().join(", ");
-  const actualCells = resolved.cells.map(cellKey).sort().join(", ");
-  if (expectedCells !== actualCells) return mismatch("cell membership", expectedCells, actualCells);
+  // Count first: a truncated or padded resolve is named as such instead of
+  // producing an unreadable diff of two long joins.
+  if (resolved.cells.length !== record.membership.cellCount) {
+    return mismatch("cell count", String(record.membership.cellCount), String(resolved.cells.length));
+  }
+  if (record.membership.cellsDigestSha256 === null) {
+    const expectedCells = exteriorAcceptedCellsJoin(record.membership.cells);
+    const actualCells = exteriorAcceptedCellsJoin(resolved.cells);
+    if (expectedCells !== actualCells) return mismatch("cell membership", expectedCells, actualCells);
+    return { ok: true };
+  }
+  // Digest form. The caller recomputes the digest from what the runtime
+  // actually resolved; a caller that did not compute one has not verified
+  // membership at all, so this is a failure, never a pass by omission.
+  if (typeof resolved.cellsDigestSha256 !== "string" || resolved.cellsDigestSha256.length === 0) {
+    return {
+      ok: false,
+      message: `Exterior streaming failed closed: release ${record.releaseId} states its accepted cell membership as a digest, but no digest was computed for the resolved cells, so membership was never verified (${record.approvalRef}). No exterior geometry was rendered and no substitute release was selected.`,
+    };
+  }
+  if (resolved.cellsDigestSha256 !== record.membership.cellsDigestSha256) {
+    return mismatch("cell membership digest", record.membership.cellsDigestSha256, resolved.cellsDigestSha256);
+  }
   return { ok: true };
 }
 

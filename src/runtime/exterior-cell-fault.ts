@@ -100,5 +100,44 @@ export function createExteriorCellFaultFetcher(
   };
 }
 
+/**
+ * Wave-agnostic per-asset fault seam.
+ *
+ * `one-glb` above names one Block 835 asset outright, which cannot prove
+ * anything about a second promoted wave. This variant takes the asset FILE NAME
+ * from the harness URL, so the same seam can corrupt any single verified GLB in
+ * any promoted release — which is exactly what an isolation proof needs: one
+ * asset of one cell of one wave fails its checksum while every other cell,
+ * every other wave, and the base scene continue untouched.
+ *
+ * The name is validated to a strict shape and matched only as a path SUFFIX
+ * under `/data/`, so it can neither escape the release tree nor be pointed at a
+ * document that would change verification semantics rather than bytes.
+ */
+const EXTERIOR_ASSET_FAULT_NAME = /^[a-z0-9][a-z0-9._-]{0,120}\.glb$/i;
+
+export function parseExteriorAssetFault(value: unknown, harnessEnabled: boolean): string | null {
+  if (!harnessEnabled || typeof value !== "string") return null;
+  const name = value.trim();
+  return EXTERIOR_ASSET_FAULT_NAME.test(name) && !name.includes("..") ? name : null;
+}
+
+export function createExteriorAssetFaultFetcher(
+  assetFileName: string,
+  fetcher: ExteriorRuntimeFetcher = globalThis.fetch.bind(globalThis),
+): ExteriorRuntimeFetcher {
+  const suffix = `/${assetFileName}`;
+  return async (input, init) => {
+    const path = exteriorCellFaultPath(input);
+    if (!path) throw new Error("Exterior asset fault fetcher permits only current app-origin release files.");
+    const response = await fetcher(input, init);
+    if (!response.ok || !path.endsWith(suffix)) return response;
+    const bytes = new Uint8Array(await response.clone().arrayBuffer());
+    if (bytes.length === 0) throw new Error("Exterior asset fault expected non-empty GLB content.");
+    bytes[0] = bytes[0]! ^ 0xff;
+    return new Response(bytes, { status: response.status, statusText: response.statusText, headers: new Headers(response.headers) });
+  };
+}
+
 /** Re-exported so a caller cannot construct an unsafe artifact ref through this seam. */
 export { assertPublicExteriorArtifactRef };
