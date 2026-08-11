@@ -193,16 +193,39 @@ function unconstrainedOptima(cells: readonly SkylineCandidate[], threshold: numb
   return { best, witnesses };
 }
 
-/** The rule, applied in the order the curation states it. */
+/**
+ * The rule, applied in the order the curation states it.
+ *
+ * KEY 4 IS A COUNT OF WHOLE CELLS. `central-upper-manhattan-curation.ts` states
+ * it in exactly those words; the string this release SHIPPED says "the larger
+ * contiguous ground", which reads as a ranking on area. The two are the same
+ * ranking here only because this ledger's cells are equal-area tiles at a fixed
+ * zoom, and they select the SAME subset at every threshold this suite runs — which
+ * `returns the same winner at 60, 75, 90, 100 and 120 metres` checks. The shipped
+ * string is immutable, so the module carries the precise wording and this comment
+ * records the equivalence rather than the code being changed to rank on area.
+ *
+ * KEY 5 is the total-order fallback below: lexicographic on the parent-order
+ * sequence. It exists only so the rule is a function rather than a relation, and
+ * `key 5 is never reached, at any threshold` asserts it never decides anything.
+ */
 function ruleWinner(candidates: readonly SkylineCandidate[], threshold: number): Combination {
+  return ruleMaxima(candidates, threshold)
+    .sort((left, right) => left.orders.join(",").localeCompare(right.orders.join(",")))[0]!;
+}
+
+/**
+ * Everything that survives keys 1 to 4. More than one entry here means key 5 —
+ * the arbitrary tie-break — decided the promoted subset, which is the thing the
+ * curation must never rest on.
+ */
+function ruleMaxima(candidates: readonly SkylineCandidate[], threshold: number): Combination[] {
   const admissible = candidates.filter((cell) => !CANARY.has(cell.cellId));
   const connected = connectedCombinations(admissible, threshold);
   const best = Math.max(...connected.map((entry) => entry.skyline));
   const maxima = connected.filter((entry) => entry.skyline === best);
-  const widest = Math.max(...maxima.map((entry) => entry.size));
-  const byGround = maxima.filter((entry) => entry.size === widest);
-  // Key 5 exists so the rule is total, and the suite asserts it is never reached.
-  return byGround.sort((left, right) => left.orders.join(",").localeCompare(right.orders.join(",")))[0]!;
+  const mostCells = Math.max(...maxima.map((entry) => entry.size));
+  return maxima.filter((entry) => entry.size === mostCells);
 }
 
 describe("the curated subset under the stated decision rule", () => {
@@ -317,19 +340,29 @@ describe("the curated subset under the stated decision rule", () => {
   });
 
   /** Step 3 and step 4: the maximum, the tie, and what breaks it. */
-  it("reaches 7 with exactly two connected subsets, and the ground tie-break makes the curated one unique", () => {
+  it("reaches 7 with exactly two connected subsets, and the whole-cell tie-break makes the curated one unique", () => {
     const maxima = connected.filter((entry) => entry.skyline === 7);
     expect(maxima.map((entry) => entry.orders.join(",")).sort()).toEqual(["490", "490,491"]);
-    const widest = Math.max(...maxima.map((entry) => entry.size));
-    const byGround = maxima.filter((entry) => entry.size === widest);
-    expect(byGround).toHaveLength(1);
-    expect([...byGround[0]!.cellIds].sort()).toEqual(curatedIds);
-    expect(byGround[0]!.owned).toBe(41);
-    // Key 5 is defined so the rule is total and is NEVER REACHED here: key 4
-    // already left one candidate.
-    expect(byGround.length).toBe(1);
-    // And the winner spends 41 of the 42-entry share, leaving one spare.
-    expect(ENTRY_BUDGET - byGround[0]!.owned).toBe(1);
+    const survivors = ruleMaxima(skyline.candidates, CENTRAL_UPPER_MANHATTAN_SKYLINE_HEIGHT_METERS);
+    expect(survivors).toHaveLength(1);
+    expect([...survivors[0]!.cellIds].sort()).toEqual(curatedIds);
+    expect(survivors[0]!.owned).toBe(41);
+    // The winner spends 41 of the 42-entry share, leaving one spare.
+    expect(ENTRY_BUDGET - survivors[0]!.owned).toBe(1);
+  });
+
+  /**
+   * Key 5 is the arbitrary one, and a curation that rested on it would be
+   * choosing between equals by string order. Keys 1 to 4 must leave exactly one
+   * candidate — and must do so at every threshold, not only at the one the
+   * curation names, or the claim would hold by coincidence at 90 m.
+   */
+  it("never reaches key 5, at any of the five thresholds", () => {
+    for (const threshold of [60, 75, 90, 100, 120]) {
+      const survivors = ruleMaxima(skyline.candidates, threshold);
+      expect({ threshold, survivors: survivors.map((entry) => entry.orders.join(",")) })
+        .toEqual({ threshold, survivors: ["490,491"] });
+    }
   });
 
   /**

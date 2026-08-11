@@ -589,7 +589,20 @@ Both curated cells share an edge with Midtown-core ownership cell
 promoted wave's OWNED ground. **That cell is a TOMBSTONE in the Midtown-core
 release** — Midtown's three renderable cells are 001, 002 and 003, four
 kilometres south — so the two waves' TEXTURED patches do not touch. The curation
-statement says so in its own committed bytes rather than implying otherwise.
+statement says so in its own committed bytes rather than implying otherwise, and
+`exterior-central-upper-manhattan-promotion-record.test.ts` proves both halves
+computationally from the committed ledger and Midtown's own inventory rather than
+by matching the sentence: the neighbour's north bound is exactly each curated
+cell's south bound over that cell's full longitude span, and not one of the 104
+buildings it owns appears among the 156 Midtown-core shipped.
+
+**The same relationship was OVERSTATED for wave `w03` and the correction lives
+here.** `southern-remainder-curation.ts`'s shipped statement says cell 379's
+northern edge is shared with Midtown-core cell `w01-000030` "so the four promoted
+waves meet on the ground rather than being four separate textured patches" —
+but `w01-000030` is a tombstone in the Midtown-core release too, exactly as
+`w01-000106` is, so those textured patches do not touch either. The `w03` release
+is immutable and its bytes are not edited; this paragraph is the correction.
 
 ## (c) The local refusal rate, recomputed and reported against the wave
 

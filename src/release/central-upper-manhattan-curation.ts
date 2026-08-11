@@ -58,7 +58,7 @@
  *      height reaches `CENTRAL_UPPER_MANHATTAN_SKYLINE_HEIGHT_METERS` — under 1
  *      and 2. The maximum is 7, and it is reached by exactly two connected
  *      subsets: `{490}` at 39 owned and `{490, 491}` at 41.
- *   4. **Tie-break: at equal skyline value, admit the larger contiguous ground.**
+ *   4. **Tie-break: at equal skyline value, admit MORE WHOLE CELLS.**
  *      `{490, 491}` is then unique. This is a JUDGEMENT and is recorded as one:
  *      at equal skyline value the subset that also owns the open ground the towers
  *      are SEEN ACROSS is the better promotion, because a viewer who walks into
@@ -68,7 +68,23 @@
  *      wave `w05` nothing at all, because that wave's 36 entries are reserved
  *      separately and are not the remainder of this share.
  *
- * A fifth key is defined below and is never reached; the suite asserts that.
+ *      **THE KEY IS A COUNT OF CELLS, AND THE WORDING IS NOW PRECISE ABOUT
+ *      THAT.** An earlier draft of this rule said "admit the larger contiguous
+ *      GROUND", which reads as a ranking on AREA; the executable rule in
+ *      `central-upper-manhattan-curation-optimum.test.ts` ranks on the number of
+ *      whole cells, and the two are only the same thing because this ledger's
+ *      cells are equal-area tiles at a fixed zoom. The looser phrase survives
+ *      verbatim in `CENTRAL_UPPER_MANHATTAN_CURATION_STATEMENT` below, because
+ *      that string is embedded in the emitted `payload-inventory.json` and the
+ *      release is immutable — so the correction is made here rather than by
+ *      re-emitting bytes. The two formulations select the SAME subset at every
+ *      threshold the optimum suite runs (60, 75, 90, 100 and 120 m), so nothing
+ *      about the promoted set depends on which of them is read.
+ *
+ * A FIFTH KEY EXISTS AND IS NOT IN THIS MODULE. It is the total-order fallback
+ * in that suite's `ruleWinner` — lexicographic on the parent-order sequence —
+ * and it exists only so the rule is a function rather than a relation. The suite
+ * asserts it is never reached, at all five thresholds.
  *
  * `central-upper-manhattan-curation-optimum.test.ts` re-runs the whole rule over
  * the committed ledger and the committed per-cell skyline census on every test
@@ -234,7 +250,7 @@ export const CENTRAL_UPPER_MANHATTAN_REJECTED_ALTERNATIVES: readonly {
     ownedBuildingCount: 39,
     connected: true,
     refusedBy: "ground-coverage-tie-break",
-    reason: "The other connected subset that reaches the maximum of 7, and the only alternative refused by a JUDGEMENT rather than by a precondition. It is the curated set minus the park cell: same seven skyline buildings, same tower wall, 39 owned rather than 41, and three entries of the share left unspent. It is refused by decision key 4 — at equal skyline value, admit the larger contiguous ground — because the subset that also owns the open ground the towers are seen across gives a viewer somewhere to stand and look from, and the two entries it costs are the share's own and are not wave w05's reserved 36.",
+    reason: "The other connected subset that reaches the maximum of 7, and the only alternative refused by a JUDGEMENT rather than by a precondition. It is the curated set minus the park cell: same seven skyline buildings, same tower wall, 39 owned rather than 41, and three entries of the share left unspent. It is refused by decision key 4 — at equal skyline value, admit MORE WHOLE CELLS — because the subset that also owns the open ground the towers are seen across gives a viewer somewhere to stand and look from, and the two entries it costs are the share's own and are not wave w05's reserved 36.",
   },
   {
     parentOrders: [616],
@@ -484,6 +500,23 @@ export function centralUpperManhattanCuratedCells<T extends CentralUpperManhatta
   if (!centralUpperManhattanCellsConnected(chosen)) {
     fail("the curated cells are not one edge-connected piece; edge-contiguity is a PRECONDITION of this curation, not a tie-break, and a subset that renders as scattered textured islands would falsify the statement this release commits.");
   }
+  // BUILDINGS ARE COMPARED AGAINST ENTRIES HERE, AND THAT IS AN ASSUMPTION.
+  //
+  // `owned` counts OWNED BUILDINGS; `entryBudget` counts CACHE ENTRIES, and one
+  // cache entry is one shipped GLB artifact. The two are the same number only
+  // for a release that ships exactly one level of detail per building, which
+  // this one does — every wave release since Midtown-core ships LOD 0 alone, and
+  // Block 835 is the single exception that ships both. So the comparison is
+  // CONSERVATIVE rather than exact in the direction that matters: `owned` is an
+  // upper bound on entries here, because a refused building owns nothing and
+  // ships nothing, and 41 owned became 40 shipped.
+  //
+  // It would stop being conservative if a future wave shipped two LODs, and this
+  // gate could not tell: the entry count is not knowable at this point, because
+  // nothing has been materialized yet. The release-level check that closes it is
+  // in `exterior-central-upper-manhattan-promotion-record.test.ts`, which
+  // compares the SHIPPED asset count from the committed inventory against this
+  // same budget after the bytes exist.
   if (owned > entryBudget) {
     fail(`the curated subset owns ${owned} buildings, above the ${entryBudget}-entry share ADR 0036's headroom split allots this wave; taking more would consume entries this promotion reserved for wave w05, which is precisely the decision response 2 was chosen to avoid.`);
   }

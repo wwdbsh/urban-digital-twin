@@ -79,6 +79,10 @@ const RELEASE_ID = "manhattan-central-upper-manhattan-cells-20260812-p1";
 const CANARY_RELEASE_ID = "manhattan-central-upper-manhattan-cells-20260812";
 const INVENTORY_PATH = "data/central-upper-manhattan-20260812-p1/payload-inventory.json";
 const CANARY_INVENTORY_PATH = "data/central-upper-manhattan-20260812/payload-inventory.json";
+const LEDGER_PATH = "data/normalized/manhattan-exterior-wave-ledger-20260804/ledger.json";
+const MIDTOWN_INVENTORY_PATH = "data/midtown-core-20260811-v3/payload-inventory.json";
+/** The promoted Midtown-core ownership cell both curated cells share an edge with. */
+const MIDTOWN_NEIGHBOUR_CELL_ID = "manhattan-exterior-cell-w01-000106-15-9650-8962";
 
 const inventoryText = new TextDecoder().decode(readFileSync(INVENTORY_PATH));
 const inventory = JSON.parse(inventoryText) as PayloadInventory;
@@ -234,10 +238,70 @@ describe("ADR 0036 preconditions on promotion, checked rather than asserted", ()
     expect(inventory.curation.statement).toContain("EXPLICIT CURATED LIST");
     // The 90 m threshold question ADR 0036 (b) asked, answered in the bytes.
     expect(inventory.curation.statement).toMatch(/CHECKED AGAINST THIS WAVE RATHER THAN REUSED/u);
-    // The textured-adjacency claim is stated at its true strength: the two
-    // curated cells abut a promoted wave's OWNED ground, and that cell is a
-    // tombstone, so the textured patches do not touch.
+    // The textured-adjacency claim is stated at its true strength in the shipped
+    // bytes; the sentence is checked here and the FACT it asserts is checked
+    // computationally in its own case below.
     expect(inventory.curation.statement).toMatch(/TOMBSTONE IN THE MIDTOWN-CORE RELEASE/u);
+  });
+
+  /**
+   * THE ADJACENCY CLAIM, COMPUTED RATHER THAN SPELLED.
+   *
+   * The curation statement makes one claim about ANOTHER release's geometry: that
+   * both curated cells share an edge with Midtown-core ownership cell
+   * `w01-000106`, and that this cell is a TOMBSTONE there — so the two waves abut
+   * on owned ground while their TEXTURED patches do not touch. A regex over the
+   * statement proves the release says it; it cannot prove it is true, and this was
+   * the only factual claim in the release bytes with no gate behind it.
+   *
+   * Both halves are derived here from committed bytes alone: the shared edge from
+   * the committed wave ledger, and the tombstone from the Midtown-core V3
+   * inventory's own shipped assets. Neither needs a payload directory, so this
+   * gate is never skipped.
+   */
+  it("proves the shared edge and the tombstone, from the committed ledger and Midtown's own inventory", () => {
+    interface LedgerCell { cellId: string; bounds: { west: number; south: number; east: number; north: number }; buildingIds: string[] }
+    const ledger = JSON.parse(new TextDecoder().decode(readFileSync(LEDGER_PATH))) as { cells: LedgerCell[] };
+    const neighbour = ledger.cells.find((cell) => cell.cellId === MIDTOWN_NEIGHBOUR_CELL_ID);
+    expect(neighbour).toBeDefined();
+    expect(inventory.curation.statement).toContain(MIDTOWN_NEIGHBOUR_CELL_ID);
+
+    // (1) A FULL-SPAN shared edge, not a corner and not a partial overlap: the
+    // neighbour's north bound is exactly each curated cell's south bound, and the
+    // longitude overlap is the whole of that curated cell's longitude span.
+    for (const record of CENTRAL_UPPER_MANHATTAN_CURATED_CELLS) {
+      const curated = ledger.cells.find((cell) => cell.cellId === record.cellId)!;
+      const overlap = Math.min(neighbour!.bounds.east, curated.bounds.east) - Math.max(neighbour!.bounds.west, curated.bounds.west);
+      expect({
+        cell: record.parentOrder,
+        sharesLatitudeEdge: neighbour!.bounds.north === curated.bounds.south,
+        overlapIsFullSpan: overlap === curated.bounds.east - curated.bounds.west,
+      }).toEqual({ cell: record.parentOrder, sharesLatitudeEdge: true, overlapIsFullSpan: true });
+    }
+    // The two curated cells together cover the neighbour's whole northern edge,
+    // which is what makes "this subset abuts a promoted wave's owned ground" a
+    // statement about the boundary rather than about a fragment of it.
+    const curatedBounds = CENTRAL_UPPER_MANHATTAN_CURATED_CELLS
+      .map((record) => ledger.cells.find((cell) => cell.cellId === record.cellId)!.bounds);
+    expect(Math.min(...curatedBounds.map((bounds) => bounds.west))).toBe(neighbour!.bounds.west);
+    expect(Math.max(...curatedBounds.map((bounds) => bounds.east))).toBe(neighbour!.bounds.east);
+
+    // (2) The neighbour is a TOMBSTONE in the Midtown-core release. Its
+    // renderable cells are derived from the assets that release actually
+    // shipped — one GLB per accepted building — rather than from a list, so a
+    // Midtown release that later materialized this cell would fail here.
+    const midtown = JSON.parse(new TextDecoder().decode(readFileSync(MIDTOWN_INVENTORY_PATH))) as PayloadInventory;
+    const shipped = new Set(buildingIdsFrom(midtown.files));
+    expect(shipped.size).toBe(156);
+    const midtownRenderable = ledger.cells
+      .filter((cell) => cell.cellId.startsWith("manhattan-exterior-cell-w01-") && cell.buildingIds.some((buildingId) => shipped.has(buildingId)))
+      .map((cell) => cell.cellId);
+    expect(midtownRenderable).toHaveLength(3);
+    expect(midtownRenderable).not.toContain(MIDTOWN_NEIGHBOUR_CELL_ID);
+    // It owns buildings — it is a real cell that ships none, which is what a
+    // tombstone IS — so the claim is not true merely because the cell is empty.
+    expect(neighbour!.buildingIds.length).toBeGreaterThan(0);
+    expect(neighbour!.buildingIds.every((buildingId) => !shipped.has(buildingId))).toBe(true);
   });
 
   it("(c) recomputes the local refusal rate and reports that it EXCEEDS the wave rate", () => {
