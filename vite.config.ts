@@ -17,16 +17,27 @@ const cesiumBaseUrl = "cesiumStatic";
  * none of it exists: no route, no extra bundle, and no path by which a browser
  * can read anything out of `artifacts/`.
  *
- * The scratch root holds the two sampler VARIANTS of the private V3T package.
+ * The scratch root holds the sampler or cost VARIANTS of one private package.
  * Nothing under `public/data` is exposed by this plugin, in particular no
  * `private/`-rooted release partition, and the exterior-cell runtime is not
  * involved at all.
+ *
+ * `VITE_SAMPLER_PROBE_DIRECTORY` selects WHICH gitignored `artifacts/`
+ * subdirectory is served, defaulting to T028's. T015 reuses this same harness to
+ * measure what the first textured wave costs against its untextured self, and two
+ * investigations must not overwrite each other's scratch trees. The value is a
+ * single path segment under `artifacts/` and is validated as such, so it cannot
+ * widen what this middleware can reach.
  */
 const SAMPLER_PROBE_ENABLED = process.env.VITE_T028_SAMPLER_PROBE === "1";
 const SAMPLER_PROBE_PREFIX = "/__t028-sampler/";
+const SAMPLER_PROBE_DIRECTORY = process.env.VITE_SAMPLER_PROBE_DIRECTORY ?? "block835-v3t-cesium-20260811";
 
 function samplerProbeScratchPlugin(): Plugin {
-  const scratchRoot = resolve(process.cwd(), "artifacts", "block835-v3t-cesium-20260811");
+  if (!/^[A-Za-z0-9][A-Za-z0-9._-]*$/u.test(SAMPLER_PROBE_DIRECTORY)) {
+    throw new Error(`VITE_SAMPLER_PROBE_DIRECTORY must be one plain segment under artifacts/, not ${SAMPLER_PROBE_DIRECTORY}.`);
+  }
+  const scratchRoot = resolve(process.cwd(), "artifacts", SAMPLER_PROBE_DIRECTORY);
   const mimeType = (path: string): string => (path.endsWith(".json") ? "application/json" : path.endsWith(".glb") ? "model/gltf-binary" : "application/octet-stream");
   const middleware: Connect.NextHandleFunction = (request, response, next) => {
     // `@types/node` is deliberately absent here, so `IncomingMessage` carries no

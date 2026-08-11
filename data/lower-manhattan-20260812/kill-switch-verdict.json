@@ -1,0 +1,60 @@
+{
+  "schemaVersion": "1.0",
+  "releaseId": "manhattan-lower-manhattan-cells-20260812",
+  "note": "The T015 stage-1 kill decision. Kept beside the measurements rather than inside them so re-running the capture cannot silently rewrite a verdict, and so the verdict names the exact bytes it was formed from.",
+  "evidenceRecord": {
+    "path": "data/lower-manhattan-20260812/kill-switch-evidence.json",
+    "checksumSha256": "fabafd2f166f1de630551379d3ef8f543754ee5f5843ed979b2f61e731f12fac"
+  },
+  "decidedAt": "2026-08-12T00:00:00.000Z",
+  "outcome": "proceed-textured",
+  "frameTime": {
+    "statement": "No measurable frame-time cost, WITHIN THE LIMITS OF WHAT THIS RIG CAN RESOLVE. Both variants render every measured frame inside the display interval at all three stations, so both means sit on the 8.33 ms present cap of a 120 Hz display and the median carries no information at all: it is the refresh period, not the cost of drawing. The tail is what varies and it does not separate the variants (p95 ratios 0.99-1.03, inside run-to-run noise). What this measurement can honestly support is that tiles do not push this scene off the vsync floor. It cannot quantify headroom, because a measurement pinned to the presentation clock never reveals how much work was left over.",
+    "p50RatioCandidateOverBaseline": [
+      0.9879518186497506,
+      1,
+      1
+    ],
+    "p95RatioCandidateOverBaseline": [
+      1.0303030255594712,
+      1.009900980633318,
+      1.0101010125336045
+    ],
+    "worstObservedFrameMillisecondsEitherVariant": 10.600000023841858,
+    "sixtyHertzBudgetMilliseconds": 16.67,
+    "vsyncFloor": {
+      "displayPresentIntervalMilliseconds": 8.33,
+      "statement": "Every mean across all six captures is 8.33 ms, which is the 120 Hz present interval and not a rendering measurement. The scene is vsync-bound in both variants, so the frame-time comparison is a floor test rather than a cost measurement.",
+      "adequacy": "Adequate for a CANARY kill switch, whose question is only whether tiles make this unusable. INADEQUATE for promotion, which needs an uncapped measurement (vsync disabled or a deliberately oversubscribed scene) to state actual headroom."
+    }
+  },
+  "visual": {
+    "statement": "Inspected still by still against the untextured baseline at identical cameras. At facade and street range the textured variant is strictly more legible: courses, reveals and openings read as construction rather than as flat panels. At far-silhouette range, past the LOD 0 cut-off and at maximum tile repeats per screen pixel, the facades stay even — no speckle, no horizontal clumping and no moire, which is the failure T028 measured under unspecified sampler filtering and which LINEAR/LINEAR_MIPMAP_LINEAR is carried here to prevent. No artefact was found that the untextured baseline does not also have. This half of the verdict is an inspection, not a metric, and is recorded as such.",
+    "knownDifferenceNotADefect": "Roof and ground surfaces read darker in the textured variant. They carry no tile; the change is the committed V3T calibrated palette, which divides each designed colour through its motif mean so a textured wall keeps its intended tone. It is a designed consequence of the profile, not an artefact of texturing."
+  },
+  "consequence": "The wave proceeds TEXTURED: the renderable subset ships procedural-texture-v1 tiles on LOD 0 under the procedural-replay admission. Had any measure failed, the same pipeline would have shipped the identical geometry with LOWER_MANHATTAN_CENSUS_PROFILE and no other change.",
+  "jsHeap": {
+    "statement": "JS-heap delta only. Each capture runs in a fresh page target and reads performance.memory.usedJSHeapSize after a forced collection, so the delta is attributable to the variant rather than to accumulation. A first attempt reused one tab and reported roughly 35 MB; that figure was an artefact of about 10 MB of per-navigation accumulation and is not the cost.",
+    "measure": "performance.memory.usedJSHeapSize",
+    "jsHeapDeltaBytesByStation": [
+      {
+        "stationId": "facade-detail",
+        "jsHeapDeltaBytes": 5967989
+      },
+      {
+        "stationId": "street-approach",
+        "jsHeapDeltaBytes": 4211438
+      },
+      {
+        "stationId": "far-silhouette",
+        "jsHeapDeltaBytes": 4184250
+      }
+    ],
+    "materializedAssetCount": 33,
+    "shippedByteIncreaseRatio": 2.3564018035745096
+  },
+  "gpuMemory": {
+    "statement": "UNMEASURED. usedJSHeapSize reports the JavaScript heap and says nothing about GPU-side residency: decoded texture images, their mip chains, and the vertex and index buffers all live in driver memory this instrument cannot see. Four 128x128 grayscale tiles are small, and their mip chains are smaller still, so the GPU cost is expected to be modest — but expected is not measured, and this record does not claim otherwise.",
+    "consequence": "A canary bounded to one cell can proceed on an unmeasured GPU footprint. Promotion cannot: a wave-scale textured set must name GPU texture memory explicitly before it is promoted."
+  }
+}

@@ -192,6 +192,29 @@ describe("midtown-core derived-subset ownership ledger", () => {
     expect(bytes).toBeLessThan(300_000);
   });
 
+  /**
+   * The extraction guard.
+   *
+   * `buildMidtownCoreSubsetLedger` now delegates to the wave-generic core in
+   * `exterior-wave-subset.ts`, which wave `w02` also calls. This test proves the
+   * extraction moved no byte of THIS wave: it re-derives the whole derivation
+   * record from the committed parent ledger and compares it against the record
+   * committed at `data/midtown-core-20260811-v3/derivation.json` — the ledger id,
+   * both base identity set ids, the coverage rectangle, the wave-0 exclusion and
+   * all 149 order mappings. Nothing here is a hand-typed expectation, so a
+   * parameterization that silently changed a hash domain, an excluded wave, or a
+   * key order would fail rather than be asserted away.
+   */
+  it("re-derives the committed V3 derivation record byte for byte", () => {
+    const committed = JSON.parse(readText("data/midtown-core-20260811-v3/derivation.json")) as {
+      derivation: unknown;
+    };
+    expect(build().derivation).toEqual(committed.derivation);
+    // Serialized identity, not just structural equality: the committed record is
+    // a FILE, and key order is part of what was committed.
+    expect(JSON.stringify(build().derivation, null, 2)).toBe(JSON.stringify(committed.derivation, null, 2));
+  });
+
   it("is rejected by the full graph validator until roots and snapshots exist", () => {
     // Guards the Phase C contract: the ledger alone is not a release.
     const result = validateExteriorReleaseGraph({

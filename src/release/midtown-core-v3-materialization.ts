@@ -41,9 +41,10 @@ import {
   type V3Plan,
 } from "../domain/deterministic-facade-generator-v3.ts";
 import { sha256HexBytes, sha256HexSync, stableSerialize } from "../domain/deterministic-hash.ts";
-import { writeCanonicalGlb, type CanonicalGlbQuad, type CanonicalGlbTri, type Vec3 } from "./canonical-glb.ts";
+import { writeCanonicalGlb, type CanonicalGlbQuad, type CanonicalGlbSamplerFilter, type CanonicalGlbTri, type Vec3 } from "./canonical-glb.ts";
 import { enuFrame, toEnuMeters, type EnuFrame, type Point2 } from "./block835-reference-package.ts";
 import { V3_QUALITY_BUDGETS, v3GeometryForGlb, v3TruthTiers, type V3GlbGeometry } from "./block835-v3-package.ts";
+import { proceduralTextureProvenance, type ProceduralTextureProfile } from "./procedural-texture.ts";
 import type { ImmutablePin } from "./multi-lod-assembly.ts";
 import {
   MIDTOWN_CORE_FALLBACK_HEIGHT_METERS,
@@ -98,6 +99,57 @@ export const MIDTOWN_CORE_V3_REGISTRATION_TOLERANCE = {
 
 /** Relative tolerance of the analytic volume identity, matching the Blender pass. */
 export const MIDTOWN_CORE_V3_VOLUME_TOLERANCE = 1e-6;
+
+// ---------------------------------------------------------------------------
+// Wave profile
+//
+// This materializer began as wave `w01`'s alone and hard-coded that wave's
+// identity, seed, budgets and its texture-free emission. Wave `w02` needs the
+// same grammar with a different identity and WITH detail tiles, so everything
+// that differs between waves is collected here and nowhere else — the same
+// device `V3PackageProfile` uses in `block835-v3-package.ts`, for the same
+// reason: "the midtown path is unchanged" stays checkable by reading.
+//
+// Every function below defaults to `MIDTOWN_CORE_V3_WAVE_PROFILE`, so wave
+// `w01` travels the identical code path with the identical constants it always
+// did and its emitted bytes cannot move.
+// ---------------------------------------------------------------------------
+
+export interface V3WaveProfile {
+  /** Release id the inventory and evidence-shard ids are namespaced under. */
+  releaseId: string;
+  generatedAt: string;
+  seed: string;
+  tool: { id: string; version: string };
+  /** The asset-level uncertainty statement every asset of this wave carries. */
+  uncertainty: string;
+  budgets: { maxTriangles: number; maxMaterials: number; maxTextures: number };
+  /**
+   * Procedural detail tiles, or `null` for a texture-free wave.
+   *
+   * Tiles ride on LOD 0 ALONE. LOD 1 is selected beyond 250 m, where a
+   * 128-pixel joint is far below a screen pixel: the bytes would buy nothing.
+   * That is the committed Block 835 `-v3t` decision, carried here unchanged.
+   */
+  texture: ProceduralTextureProfile | null;
+  /** Decided sampler filtering for this wave's detail tiles, when textured. */
+  textureFilter?: CanonicalGlbSamplerFilter;
+}
+
+/**
+ * Wave `w01`'s profile: exactly the constants this module hard-coded before the
+ * parameterization, including its texture-free emission and the zero-texture
+ * `V3_QUALITY_BUDGETS` its committed manifest pins.
+ */
+export const MIDTOWN_CORE_V3_WAVE_PROFILE: V3WaveProfile = {
+  releaseId: MIDTOWN_CORE_V3_RELEASE_ID,
+  generatedAt: MIDTOWN_CORE_V3_GENERATED_AT,
+  seed: MIDTOWN_CORE_V3_SEED,
+  tool: { ...MIDTOWN_CORE_V3_TOOL },
+  uncertainty: MIDTOWN_CORE_V3_UNCERTAINTY,
+  budgets: { ...V3_QUALITY_BUDGETS },
+  texture: null,
+};
 
 // ---------------------------------------------------------------------------
 // Refusal vocabulary
@@ -238,6 +290,7 @@ export interface MidtownCoreV3PlanContext {
 export function buildMidtownCoreV3Plan(
   source: MidtownCoreBuildingSource,
   baseManifestChecksumSha256: string,
+  profile: V3WaveProfile = MIDTOWN_CORE_V3_WAVE_PROFILE,
 ): MidtownCoreV3PlanContext {
   const closed = source.outerRing.length > 1
     && source.outerRing[0]![0] === source.outerRing[source.outerRing.length - 1]![0]
@@ -258,9 +311,9 @@ export function buildMidtownCoreV3Plan(
   const generated = generateV3FacadePlan({
     schemaVersion: DETERMINISTIC_FACADE_V3_SCHEMA_VERSION,
     buildingId: source.buildingId,
-    generatedAt: MIDTOWN_CORE_V3_GENERATED_AT,
-    seed: MIDTOWN_CORE_V3_SEED,
-    tool: { ...MIDTOWN_CORE_V3_TOOL },
+    generatedAt: profile.generatedAt,
+    seed: profile.seed,
+    tool: { ...profile.tool },
     geometry: { unit: "millimeter", footprint: { outer }, baseElevationMm: 0, heightMm },
     sourceAnchors: [
       {
@@ -452,11 +505,11 @@ export function midtownCoreV3Registration(
 export function midtownCoreV3AssetRef(buildingId: string, lodId: MidtownCoreV3LodId): string {
   return `public/assets/${buildingId.replace(":", "-")}__${lodId}.glb`;
 }
-export function midtownCoreV3InventoryId(buildingId: string): string {
-  return `inventory:${MIDTOWN_CORE_V3_RELEASE_ID}:${buildingId}`;
+export function midtownCoreV3InventoryId(buildingId: string, releaseId: string = MIDTOWN_CORE_V3_RELEASE_ID): string {
+  return `inventory:${releaseId}:${buildingId}`;
 }
-export function midtownCoreV3EvidenceShardId(buildingId: string): string {
-  return `evidence-shard:${MIDTOWN_CORE_V3_RELEASE_ID}:${buildingId}`;
+export function midtownCoreV3EvidenceShardId(buildingId: string, releaseId: string = MIDTOWN_CORE_V3_RELEASE_ID): string {
+  return `evidence-shard:${releaseId}:${buildingId}`;
 }
 
 export interface MidtownCoreV3AssetBytes {
@@ -497,11 +550,14 @@ export function writeMidtownCoreV3Assets(
     updatedAt: string | null;
     /** V2 asset pin for this building, when the predecessor wave shipped one. */
     predecessor: ImmutablePin | null;
+    /** Wave identity, budgets and texture policy. Defaults to wave `w01`'s. */
+    profile?: V3WaveProfile;
   },
 ): MidtownCoreV3AssetResult {
+  const profile = options.profile ?? MIDTOWN_CORE_V3_WAVE_PROFILE;
   const plan = context.plan;
   const buildingId = context.source.buildingId;
-  const inventoryId = midtownCoreV3InventoryId(buildingId);
+  const inventoryId = midtownCoreV3InventoryId(buildingId, profile.releaseId);
   const inventoryHashSha256 = sha256HexSync(stableSerialize(plan.inventory));
   let truthTiers: readonly string[];
   try {
@@ -538,7 +594,15 @@ export function writeMidtownCoreV3Assets(
         `${lodId} signed mesh volume ${meshVolume} m³ against analytic ${analyticVolume} m³ (deviation ${volumeDeviation}).`,
       );
     }
-    const file = v3GeometryForGlb(plan, tessellation, { yUp: true });
+    // Detail tiles ride on LOD 0 alone: LOD 1 is selected beyond 250 m, where a
+    // 128-pixel joint is far below a screen pixel. A texture-free profile passes
+    // null at both levels and emits exactly the bytes it always did.
+    const texture = lodIndex === 0 ? profile.texture : null;
+    const file = v3GeometryForGlb(plan, tessellation, {
+      yUp: true,
+      texture,
+      textureFilter: texture ? profile.textureFilter ?? null : null,
+    });
     const written = writeCanonicalGlb({
       quads: file.quads,
       triangles: file.triangles,
@@ -549,20 +613,24 @@ export function writeMidtownCoreV3Assets(
         ownerCellId: options.ownerCellId,
         inventoryId,
         inventoryHashSha256,
-        evidenceShardId: midtownCoreV3EvidenceShardId(buildingId),
+        evidenceShardId: midtownCoreV3EvidenceShardId(buildingId, profile.releaseId),
         truthTiers,
         sourceDates: { capturedAt: options.capturedAt, updatedAt: options.updatedAt },
         // The V2 asset this one supersedes, pinned by checksum and never edited.
         // Explicitly null when the predecessor wave shipped nothing for it.
         predecessor: options.predecessor,
-        uncertainty: MIDTOWN_CORE_V3_UNCERTAINTY,
+        uncertainty: profile.uncertainty,
         planHashSha256: plan.planHashSha256,
+        // Present exactly when the GLB carries images, which is the condition
+        // the release validator uses to decide whether to demand a replay.
+        ...(file.textures ? { textureProvenance: proceduralTextureProvenance() } : {}),
       },
+      ...(file.textures ? { textures: file.textures } : {}),
     });
     if (
-      written.counts.triangleCount > V3_QUALITY_BUDGETS.maxTriangles
-      || written.counts.materialCount > V3_QUALITY_BUDGETS.maxMaterials
-      || written.counts.textureCount > V3_QUALITY_BUDGETS.maxTextures
+      written.counts.triangleCount > profile.budgets.maxTriangles
+      || written.counts.materialCount > profile.budgets.maxMaterials
+      || written.counts.textureCount > profile.budgets.maxTextures
     ) {
       throw new MidtownCoreV3Stop(
         buildingId,

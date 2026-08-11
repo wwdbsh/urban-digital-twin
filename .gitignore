@@ -47,3 +47,17 @@ artifacts/midtown-core-20260811-v3/
 # data/manhattan-esb-block-reference-20260811-v3t/cesium-sampler-evidence.json
 # so the evidence stays checkable after this worktree-local tree is removed.
 artifacts/block835-v3t-cesium-20260811/
+
+# T015 Lower-Manhattan canary work root: the full-wave census over all 6,425
+# owned buildings, the Blender sample inputs and renders, and the stage
+# receipts. The hashes that matter are committed in
+# data/lower-manhattan-20260812/.
+artifacts/lower-manhattan-20260812/
+
+# T015 kill-switch scratch root: the untextured baseline and textured candidate
+# variants of the heaviest renderable cell, plus the captured stills. The
+# measurements, the camera stations, every still's checksum and the written
+# verdict are committed in data/lower-manhattan-20260812/kill-switch-evidence.json
+# and kill-switch-verdict.json so the evidence stays checkable after this
+# worktree-local tree is removed.
+artifacts/lower-manhattan-20260812-probe/

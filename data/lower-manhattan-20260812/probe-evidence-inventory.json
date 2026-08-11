@@ -1,0 +1,377 @@
+{
+  "files": [
+    {
+      "byteSize": 233618,
+      "checksumSha256": "9c152941eb88610c06bf4eed8852f085eb85069afd9642f5468e0686f95a8898",
+      "path": "captures/textured-candidate__facade-detail.png"
+    },
+    {
+      "byteSize": 94951,
+      "checksumSha256": "5ebc55fea3742c4a63c6fe55c9c37cc053a5ab1384beba421d20367f7f7ce689",
+      "path": "captures/textured-candidate__far-silhouette.png"
+    },
+    {
+      "byteSize": 157501,
+      "checksumSha256": "53c0575a525d90f3e3d6d8b18c85bec4e2220daed70411a206d71fb0538c2424",
+      "path": "captures/textured-candidate__street-approach.png"
+    },
+    {
+      "byteSize": 90503,
+      "checksumSha256": "01c7938a6f24eba3174a97581dcf0cfe4ca3099ec98811bc852eb68be226fd87",
+      "path": "captures/untextured-baseline__facade-detail.png"
+    },
+    {
+      "byteSize": 83213,
+      "checksumSha256": "e7b7a63ced9614d6aa38e68dd6c5dbf7edaf9e1077c020d85b7d4b902df2fba7",
+      "path": "captures/untextured-baseline__far-silhouette.png"
+    },
+    {
+      "byteSize": 88366,
+      "checksumSha256": "481bbd41c4d8029c30360760b4092655b8d1e115f0830801ecb6e06909ff9f6a",
+      "path": "captures/untextured-baseline__street-approach.png"
+    },
+    {
+      "byteSize": 26888,
+      "checksumSha256": "00be2d5eac8c6f52be4566d2fb6f948166fa02086d5e32a3760b69965d86defe",
+      "path": "harness.json"
+    },
+    {
+      "byteSize": 106392,
+      "checksumSha256": "7c1c9114fece1e97235bc4bc9de3c1b4f8e2e1af8b97fa3f55f5ec413136e72f",
+      "path": "textured-candidate/public/assets/doitt-118553__lod_0.glb"
+    },
+    {
+      "byteSize": 101660,
+      "checksumSha256": "eeec863e51f422a6d048136d492b4dfa221bfe78071788fc3e8622f3dd505587",
+      "path": "textured-candidate/public/assets/doitt-124471__lod_0.glb"
+    },
+    {
+      "byteSize": 146084,
+      "checksumSha256": "f6d6b9ca2cee577bdfcd1bc2197e394b09bd324470c425c4302980faf9eaef17",
+      "path": "textured-candidate/public/assets/doitt-130981__lod_0.glb"
+    },
+    {
+      "byteSize": 114156,
+      "checksumSha256": "e61ba1046f962de22388e2cc47e90da3fa6bdbc9163e8de8f62bae0e524bc90d",
+      "path": "textured-candidate/public/assets/doitt-152904__lod_0.glb"
+    },
+    {
+      "byteSize": 165672,
+      "checksumSha256": "03ecfc1d44e4a5972600fcc79c85024cf6d86628c8b0e96f2d997044ee7008ee",
+      "path": "textured-candidate/public/assets/doitt-197765__lod_0.glb"
+    },
+    {
+      "byteSize": 97492,
+      "checksumSha256": "7c412c15e3b1be4cda5678df223a57f329858efa0fc4e32e4bf50e8169dc61cb",
+      "path": "textured-candidate/public/assets/doitt-216268__lod_0.glb"
+    },
+    {
+      "byteSize": 120148,
+      "checksumSha256": "1f6787119e0c5ece9a3313b9045d3cff135f4181ff6fc2a186170c39c8148ac4",
+      "path": "textured-candidate/public/assets/doitt-246260__lod_0.glb"
+    },
+    {
+      "byteSize": 55164,
+      "checksumSha256": "171e77cdcf9082b473898e3803ffece02b0256ea6cbc57e5c76bb7f7e0269fd6",
+      "path": "textured-candidate/public/assets/doitt-251807__lod_0.glb"
+    },
+    {
+      "byteSize": 74344,
+      "checksumSha256": "df18994a47d705401f9c81868358838898ccdad8489373a8cee025836a3a66e8",
+      "path": "textured-candidate/public/assets/doitt-264674__lod_0.glb"
+    },
+    {
+      "byteSize": 127252,
+      "checksumSha256": "48d260ace42f10b11b034b7740aa12e5fcde90a5a19f83efa07acd3c51e4da52",
+      "path": "textured-candidate/public/assets/doitt-360714__lod_0.glb"
+    },
+    {
+      "byteSize": 111412,
+      "checksumSha256": "35e3e3de3add9a9f1c0b0a777e570b482bd213be70571bc15dd558888134822f",
+      "path": "textured-candidate/public/assets/doitt-377418__lod_0.glb"
+    },
+    {
+      "byteSize": 93120,
+      "checksumSha256": "3b4832f222319b7781c7aac610b43d10ea5efc77671c7e06da2137f60a4e403c",
+      "path": "textured-candidate/public/assets/doitt-389890__lod_0.glb"
+    },
+    {
+      "byteSize": 124992,
+      "checksumSha256": "c9ca2d9b9f435d6db32f9c614a605b19c2f63d6480c00a86800820ae0b9afd61",
+      "path": "textured-candidate/public/assets/doitt-391617__lod_0.glb"
+    },
+    {
+      "byteSize": 107240,
+      "checksumSha256": "88f07b5a5504e457e98e621a51d110453c4f8c66196de66d56d8bd9bc17bee58",
+      "path": "textured-candidate/public/assets/doitt-489386__lod_0.glb"
+    },
+    {
+      "byteSize": 128904,
+      "checksumSha256": "536863f2327809b231dd7897ff269770df2e7b0f2caca3dd05d25fcf8cd61a83",
+      "path": "textured-candidate/public/assets/doitt-534350__lod_0.glb"
+    },
+    {
+      "byteSize": 99120,
+      "checksumSha256": "f8daac031eab0349d361a4fe491eeb371ba16211e22e6b2d9481baf2c8ceaa81",
+      "path": "textured-candidate/public/assets/doitt-538141__lod_0.glb"
+    },
+    {
+      "byteSize": 102876,
+      "checksumSha256": "f73201e5fccbf82e19ca500ce98a8f0a97082d24347060b47e67d0b1e9f92d59",
+      "path": "textured-candidate/public/assets/doitt-539185__lod_0.glb"
+    },
+    {
+      "byteSize": 114508,
+      "checksumSha256": "e9db5474819a1cc296246719960f578fe1eda1f62a66b9137350c1ea618be530",
+      "path": "textured-candidate/public/assets/doitt-599290__lod_0.glb"
+    },
+    {
+      "byteSize": 132100,
+      "checksumSha256": "94535045c7b8cc19e294eeb83a01faf573b355bcf9d791366794de3ac053ff94",
+      "path": "textured-candidate/public/assets/doitt-605315__lod_0.glb"
+    },
+    {
+      "byteSize": 89140,
+      "checksumSha256": "223b9a57b9c6c7ccc29db342de040e671cda31e4e1f4a5fbf22e91a6255505c8",
+      "path": "textured-candidate/public/assets/doitt-610801__lod_0.glb"
+    },
+    {
+      "byteSize": 264144,
+      "checksumSha256": "722cbf8073a280c1d1f10af743b9a9eb2b888db874368e91dcb11dfa0ff659f1",
+      "path": "textured-candidate/public/assets/doitt-669521__lod_0.glb"
+    },
+    {
+      "byteSize": 78768,
+      "checksumSha256": "f5d834395b2ed764c034767ed3af8a894ad64ef72d8a9dc9c6aea74eaf391bb0",
+      "path": "textured-candidate/public/assets/doitt-72351__lod_0.glb"
+    },
+    {
+      "byteSize": 147724,
+      "checksumSha256": "e121965c494257f0328723eee4d6b9bafafd76879567c15aa63ff6128d958a8e",
+      "path": "textured-candidate/public/assets/doitt-747497__lod_0.glb"
+    },
+    {
+      "byteSize": 118152,
+      "checksumSha256": "1ca5555dfe1368689ae27a48382a49662aac70add2646753fbbbb348219f42ca",
+      "path": "textured-candidate/public/assets/doitt-773600__lod_0.glb"
+    },
+    {
+      "byteSize": 169072,
+      "checksumSha256": "fb18cd1855d556ff00b26243004b314ba396d3528c37e052c62398e3390db865",
+      "path": "textured-candidate/public/assets/doitt-775286__lod_0.glb"
+    },
+    {
+      "byteSize": 121576,
+      "checksumSha256": "fc2bdac82481ea1dc80ec1ce535141a0039a52a3abe0795c0c54e69b0d99cbed",
+      "path": "textured-candidate/public/assets/doitt-798573__lod_0.glb"
+    },
+    {
+      "byteSize": 220004,
+      "checksumSha256": "ce91e2a4556874339c135fff2aa82559e3a19824e1fc3fdfa4bb9a1a93028bee",
+      "path": "textured-candidate/public/assets/doitt-838729__lod_0.glb"
+    },
+    {
+      "byteSize": 112332,
+      "checksumSha256": "0fc40c6ba32d5130c07e82d861687cea88f715cef2e155f2a8fd5fe492e03574",
+      "path": "textured-candidate/public/assets/doitt-984373__lod_0.glb"
+    },
+    {
+      "byteSize": 72344,
+      "checksumSha256": "53551b13c4595d5dee2adaf210b9659cf9b40785a30041c1bc0486dc545d77f1",
+      "path": "textured-candidate/public/assets/doitt-984612__lod_0.glb"
+    },
+    {
+      "byteSize": 234180,
+      "checksumSha256": "8d2de34ec4ea01f17f40eee2212177a35e6864e71228500a7dabd892032ff179",
+      "path": "textured-candidate/public/assets/doitt-984660__lod_0.glb"
+    },
+    {
+      "byteSize": 111448,
+      "checksumSha256": "0ac66f92afabc66e7f83034647a5a01956a379f53afba79a5886fa2f93f74a9b",
+      "path": "textured-candidate/public/assets/doitt-984740__lod_0.glb"
+    },
+    {
+      "byteSize": 69676,
+      "checksumSha256": "0899dedb719925135ebfae2f6fcee7dd7350a32dc8922097b35b16d0838af333",
+      "path": "textured-candidate/public/assets/doitt-985031__lod_0.glb"
+    },
+    {
+      "byteSize": 111692,
+      "checksumSha256": "705be0ab10683c197b195f9ce3328056b01c46ce5db4e1b9cc6350614fa86c81",
+      "path": "textured-candidate/public/assets/doitt-985375__lod_0.glb"
+    },
+    {
+      "byteSize": 41020,
+      "checksumSha256": "2a77444fbdaa3e21ed53150fe6e5bada0db24478b7c73de7783f99760cb73035",
+      "path": "untextured-baseline/public/assets/doitt-118553__lod_0.glb"
+    },
+    {
+      "byteSize": 37560,
+      "checksumSha256": "e76b97730ae527397f4539763242cdba9c30f1bc22013b79e59ce54d8bcd8cba",
+      "path": "untextured-baseline/public/assets/doitt-124471__lod_0.glb"
+    },
+    {
+      "byteSize": 68232,
+      "checksumSha256": "c1acebed8a891fb46b2542cac3640f5a8e025bc746dad24ccd02d30e89be4962",
+      "path": "untextured-baseline/public/assets/doitt-130981__lod_0.glb"
+    },
+    {
+      "byteSize": 46372,
+      "checksumSha256": "1db51b6577695ee549c15551dc81fb13876501abbd553e8b26125c4c8a705c95",
+      "path": "untextured-baseline/public/assets/doitt-152904__lod_0.glb"
+    },
+    {
+      "byteSize": 81304,
+      "checksumSha256": "63dbd19c4d2796fe3f4047dd3b4beae7db566b77a2d9144871163412f9859d2c",
+      "path": "untextured-baseline/public/assets/doitt-197765__lod_0.glb"
+    },
+    {
+      "byteSize": 34108,
+      "checksumSha256": "a36cb59a7cdba913fea906e752f6065314e247fedc461e2b637ee31f62c65769",
+      "path": "untextured-baseline/public/assets/doitt-216268__lod_0.glb"
+    },
+    {
+      "byteSize": 49932,
+      "checksumSha256": "b43da2ef5ab3342e9be725e9e2b069de953e586bd1ac3b31b75d2d0c41fd9d5b",
+      "path": "untextured-baseline/public/assets/doitt-246260__lod_0.glb"
+    },
+    {
+      "byteSize": 16256,
+      "checksumSha256": "f3b97e636ed5e78343a2d94b41799106255a53cf6e09cb8f5438812e24ddf2fc",
+      "path": "untextured-baseline/public/assets/doitt-251807__lod_0.glb"
+    },
+    {
+      "byteSize": 17648,
+      "checksumSha256": "a4e3b9af484ea589c9fb6e9f1cfcb0d44ba7c59350bb0a703497aef1563abe4b",
+      "path": "untextured-baseline/public/assets/doitt-264674__lod_0.glb"
+    },
+    {
+      "byteSize": 54776,
+      "checksumSha256": "b508baa0cdec467e1c1a8898bb43eff0a31671e28919a1eb2efa3c58ab4596e3",
+      "path": "untextured-baseline/public/assets/doitt-360714__lod_0.glb"
+    },
+    {
+      "byteSize": 43516,
+      "checksumSha256": "3f0f307482be9396d1b1a11440a3b1ae84d4816f5a2a1829fe9e92164cb39b27",
+      "path": "untextured-baseline/public/assets/doitt-377418__lod_0.glb"
+    },
+    {
+      "byteSize": 31244,
+      "checksumSha256": "0ec474f851c0fa3e32b95aba22e964e821c0deeff852e424b3197f40a41eada6",
+      "path": "untextured-baseline/public/assets/doitt-389890__lod_0.glb"
+    },
+    {
+      "byteSize": 53528,
+      "checksumSha256": "cc15d2ffa1f330414218f00d58cf90370a349471dd60d5ea3a92edbe20f6830a",
+      "path": "untextured-baseline/public/assets/doitt-391617__lod_0.glb"
+    },
+    {
+      "byteSize": 41168,
+      "checksumSha256": "f9567273f12712cb8097f58d2c14721c56bfedb231fdbb73b17d690560ac5457",
+      "path": "untextured-baseline/public/assets/doitt-489386__lod_0.glb"
+    },
+    {
+      "byteSize": 55968,
+      "checksumSha256": "6a1a1aefb28f6673eefe14ba05691eb3be3b23303dfe26b1af77ed149115d12b",
+      "path": "untextured-baseline/public/assets/doitt-534350__lod_0.glb"
+    },
+    {
+      "byteSize": 35368,
+      "checksumSha256": "d5d646f4e905f984a562b03cbe0bd009d498a43d5889dc67986836efc000258d",
+      "path": "untextured-baseline/public/assets/doitt-538141__lod_0.glb"
+    },
+    {
+      "byteSize": 37972,
+      "checksumSha256": "97def9abde5cbdd2ce8b954ee26a35824d180b2dd28ba4fcb7fdf512420373c1",
+      "path": "untextured-baseline/public/assets/doitt-539185__lod_0.glb"
+    },
+    {
+      "byteSize": 46468,
+      "checksumSha256": "0dab34d2765897c9dcece82b0d8441e2050cf4aeb8717db62c78208957fa149e",
+      "path": "untextured-baseline/public/assets/doitt-599290__lod_0.glb"
+    },
+    {
+      "byteSize": 58760,
+      "checksumSha256": "e8ac8046f3e5deb854986be8cbc50e9080465660c406a7e0f00fbf4746162e97",
+      "path": "untextured-baseline/public/assets/doitt-605315__lod_0.glb"
+    },
+    {
+      "byteSize": 28252,
+      "checksumSha256": "4fd80960faa4d73a9a3feb7d907f3ee89d819a4c32f4612df0af210de88e01b2",
+      "path": "untextured-baseline/public/assets/doitt-610801__lod_0.glb"
+    },
+    {
+      "byteSize": 150676,
+      "checksumSha256": "d7f3b4616cf9a71087a04a5fe383034e0c7ba1f50431b62d7336cfc828d8390b",
+      "path": "untextured-baseline/public/assets/doitt-669521__lod_0.glb"
+    },
+    {
+      "byteSize": 21108,
+      "checksumSha256": "07b4b52034699b4b659c6b6c42f5e9041fe143a06e2dadfb0ccc38f5ef679ddb",
+      "path": "untextured-baseline/public/assets/doitt-72351__lod_0.glb"
+    },
+    {
+      "byteSize": 69548,
+      "checksumSha256": "c0c2d93f383170ee12a1d9a08bc97a74728287018790c53cb8f37df871424b34",
+      "path": "untextured-baseline/public/assets/doitt-747497__lod_0.glb"
+    },
+    {
+      "byteSize": 48640,
+      "checksumSha256": "cc38dbe1cfc21c4f7cc094d0a56b0fb262d5c330b0d15ba4457f589d9d8473e6",
+      "path": "untextured-baseline/public/assets/doitt-773600__lod_0.glb"
+    },
+    {
+      "byteSize": 83736,
+      "checksumSha256": "faebc66a27dfafcfac14e77c46d20270dbf5087fdc7a5654a1e44e4687489503",
+      "path": "untextured-baseline/public/assets/doitt-775286__lod_0.glb"
+    },
+    {
+      "byteSize": 51052,
+      "checksumSha256": "7b805e2e5e06e27ea5601faf7f2021edf340ced2a0895e3df4c915beb0365258",
+      "path": "untextured-baseline/public/assets/doitt-798573__lod_0.glb"
+    },
+    {
+      "byteSize": 119496,
+      "checksumSha256": "e5889eacd6876ffa7d2be3563d0568409f8d2164275e26735e33c745c23ee682",
+      "path": "untextured-baseline/public/assets/doitt-838729__lod_0.glb"
+    },
+    {
+      "byteSize": 44240,
+      "checksumSha256": "745365a6e06474f2383fc8881c415300f9b6c4d051646b4fa957650e59fe4c0c",
+      "path": "untextured-baseline/public/assets/doitt-984373__lod_0.glb"
+    },
+    {
+      "byteSize": 16324,
+      "checksumSha256": "1acb4bde8d1cd073ee9c39ffb0ba484bb14089ebd696a9ab3c89b621cbe90bb6",
+      "path": "untextured-baseline/public/assets/doitt-984612__lod_0.glb"
+    },
+    {
+      "byteSize": 129572,
+      "checksumSha256": "e68a77558d38037d804f22e1dc27745efc30607e969dd7d32399f284128ba9ed",
+      "path": "untextured-baseline/public/assets/doitt-984660__lod_0.glb"
+    },
+    {
+      "byteSize": 43520,
+      "checksumSha256": "bf2b85452af64ca97ec03cb40b6a7dc3189c74ff96c2c0d92d89d3adee2faf4c",
+      "path": "untextured-baseline/public/assets/doitt-984740__lod_0.glb"
+    },
+    {
+      "byteSize": 14564,
+      "checksumSha256": "3f9f410cc3c52dad45be0385f96ffce125a4041d72ba7763d9e2ef1dfa3ffbc7",
+      "path": "untextured-baseline/public/assets/doitt-985031__lod_0.glb"
+    },
+    {
+      "byteSize": 43776,
+      "checksumSha256": "ebfe8859a23d1a920c782cfa2e0068d9c3b353daff11f78bb49a2d1f6d57c71a",
+      "path": "untextured-baseline/public/assets/doitt-985375__lod_0.glb"
+    }
+  ],
+  "note": "T015 kill-switch scratch root: the untextured baseline and textured candidate variants of the heaviest renderable cell, the harness input the Cesium probe page reads, and the six captured stills. Intentionally untracked; this inventory keeps every byte the kill decision was formed from checkable after the local tree is removed.",
+  "releaseId": "manhattan-lower-manhattan-cells-20260812",
+  "schemaVersion": "1.0",
+  "totals": {
+    "fileCount": 73,
+    "byteSize": 6533632
+  },
+  "workRoot": "artifacts/lower-manhattan-20260812-probe"
+}

@@ -126,8 +126,14 @@ export interface ExteriorDefaultActivationEnabled {
 
 export type ExteriorDefaultActivationRecord = ExteriorDefaultActivationEnabled | ExteriorDefaultActivationDisabled;
 
-/** The fourteen canonical Block 835 identities. Unchanged across V2 and V3. */
-const BLOCK835_MEMBERSHIP_BUILDING_IDS: readonly string[] = [
+/**
+ * The fourteen canonical Block 835 identities. Unchanged across V2 and V3.
+ *
+ * Exported because the Lower-Manhattan wave sizes its renderable subset against
+ * the shared runtime cache, and the entries the promoted Block 835 wave occupies
+ * are a function of THIS membership rather than of a remembered number.
+ */
+export const BLOCK835_MEMBERSHIP_BUILDING_IDS: readonly string[] = [
   "doitt:102705", "doitt:131170", "doitt:147902", "doitt:262867", "doitt:39969",
   "doitt:460555", "doitt:498980", "doitt:502491", "doitt:584049", "doitt:778052",
   "doitt:812702", "doitt:835659", "doitt:925937", "doitt:982383",

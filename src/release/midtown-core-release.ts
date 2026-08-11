@@ -177,7 +177,15 @@ export function midtownCoreTombstoneId(buildingId: string, releaseId: string = M
 // ---------------------------------------------------------------------------
 
 /** Every logical identity a midtown-core wave release derives from its id. */
-export function midtownCoreReleaseIds(releaseId: string): {
+/**
+ * Every id a wave release derives from its own release id.
+ *
+ * `approvalSlug` names the approval instrument rather than the wave: wave `w01`
+ * has always emitted `approval:<releaseId>:midtown-core-canary`, so that stays
+ * the default and its committed bytes are unmoved, while a later wave passes its
+ * own slug instead of inheriting a predecessor's name.
+ */
+export function midtownCoreReleaseIds(releaseId: string, approvalSlug: string = "midtown-core-canary"): {
   releaseId: string;
   privateRootId: string;
   publicRootId: string;
@@ -193,7 +201,7 @@ export function midtownCoreReleaseIds(releaseId: string): {
     publicRootId: `root:${releaseId}:public`,
     privateReleaseId: `${releaseId}-private`,
     snapshotId: `snapshot:${releaseId}:v1`,
-    approvalId: `approval:${releaseId}:midtown-core-canary`,
+    approvalId: `approval:${releaseId}:${approvalSlug}`,
     assemblyPackageId: `assembly:${releaseId}:v1`,
     outputDirectory: `public/data/${releaseId}`,
   };
