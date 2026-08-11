@@ -60,7 +60,7 @@ import { EXTERIOR_PILOT_RELEASE_ID, createExteriorPilotFaultFetcher, loadExterio
 import { BLOCK835_PUBLIC_REALM_RELEASE_ID, createBlock835PublicRealmFaultFetcher, loadBlock835PublicRealmRelease, parseBlock835PublicRealmFault, publicRealmFeatureToFeature, type Block835PublicRealmFeature, type LoadedBlock835PublicRealmRelease } from "../runtime/block835-public-realm-release";
 import { loadExteriorCellRuntime, type ExteriorCellOutcome, type ExteriorCellRuntime, type ExteriorHeadRequest } from "../runtime/exterior-cell-runtime";
 import { createExteriorCellFaultFetcher, parseExteriorCellFault } from "../runtime/exterior-cell-fault";
-import { EXTERIOR_DEFAULT_ACTIVATION, exteriorUnavailableDetail, resolveExteriorActivation, verifyPromotedExteriorMembership, verifyPromotedExteriorPin, type ExteriorStreamingOverride } from "../runtime/exterior-default-activation";
+import { EXTERIOR_DEFAULT_ACTIVATION, exteriorRolledBackReleaseNotice, exteriorStreamingOverrideDisables, exteriorUnavailableDetail, resolveExteriorActivation, restoresPromotedDefault, verifyPromotedExteriorMembership, verifyPromotedExteriorPin, type ExteriorDefaultActivationRecord, type ExteriorStreamingOverride } from "../runtime/exterior-default-activation";
 import {
   BLOCK835_CANARY_REPEATS,
   BLOCK835_CANARY_SAMPLES_PER_POSE,
@@ -554,11 +554,15 @@ export interface ExteriorStreamingUrlWrite {
  *
  * Only explicit intent is serialized: a default-on session carries no
  * `exteriorCells`, so its links stay reproducible against whatever this build
- * promotes rather than freezing a release id into every shared URL.
+ * promotes rather than freezing a release id into every shared URL. The render
+ * profile follows the same rule — it is written for an explicit opt-in, and in a
+ * default-on session only once the user has actually chosen a non-default
+ * profile, so an untouched default-on session serializes no exterior parameter
+ * at all while a chosen profile still survives sharing.
  */
 export function appendExteriorProfileUrl(baseUrl: string, state: ExteriorStreamingUrlWrite): string {
   const url = new URL(baseUrl, typeof window === "undefined" ? "http://localhost/" : window.location.href);
-  if (state.override === "off") {
+  if (exteriorStreamingOverrideDisables(state.override)) {
     url.searchParams.set(EXTERIOR_STREAMING_OFF_PARAM, "off");
     url.searchParams.delete("exteriorCells");
     url.searchParams.delete("exteriorProfile");
@@ -568,7 +572,7 @@ export function appendExteriorProfileUrl(baseUrl: string, state: ExteriorStreami
   url.searchParams.delete(EXTERIOR_STREAMING_OFF_PARAM);
   if (state.override === "on") url.searchParams.set("exteriorCells", state.releaseId);
   else url.searchParams.delete("exteriorCells");
-  if (state.streaming) url.searchParams.set("exteriorProfile", state.profile);
+  if (state.streaming && (state.override === "on" || state.profile !== DEFAULT_EXTERIOR_RENDER_PROFILE)) url.searchParams.set("exteriorProfile", state.profile);
   else url.searchParams.delete("exteriorProfile");
   if (state.override === "on" && state.canarySnapshotId) url.searchParams.set("exteriorCanary", state.canarySnapshotId);
   else url.searchParams.delete("exteriorCanary");
@@ -583,10 +587,13 @@ export function parseExteriorStreamingUrl(href: string): ExteriorStreamingUrlSta
   // A URL that names a release this build does not pin fails closed to "off",
   // never to the promoted default: asking for an unknown release must not be
   // answered with a different one.
-  const disabled = url.searchParams.get(EXTERIOR_STREAMING_OFF_PARAM) === "off"
-    || (requestedRelease !== null && !isPinnedExteriorCellRelease(requestedRelease));
+  const switchedOff = url.searchParams.get(EXTERIOR_STREAMING_OFF_PARAM) === "off";
+  const unpinnedRelease = !switchedOff && requestedRelease !== null && !isPinnedExteriorCellRelease(requestedRelease);
+  const disabled = switchedOff || unpinnedRelease;
   const explicitReleaseId = !disabled && isPinnedExteriorCellRelease(requestedRelease) ? requestedRelease : null;
-  const override: ExteriorStreamingOverride = disabled ? "off" : explicitReleaseId !== null ? "on" : null;
+  // The two kinds of "off" stay distinct all the way to the details panel: a
+  // typo is a link this build could not honour, not a session anyone disabled.
+  const override: ExteriorStreamingOverride = unpinnedRelease ? "off-unpinned" : switchedOff ? "off" : explicitReleaseId !== null ? "on" : null;
   const canary = override === "on" ? url.searchParams.get("exteriorCanary") : null;
   return {
     override,
@@ -651,15 +658,21 @@ export function exteriorStreamingNotices(
 
 /**
  * Deep links degrade loudly. An `exteriorCells` value this build does not pin,
- * or an unsupported `exteriorProfile`, produces the same kind of explicit
- * notice every other release/mode mismatch in the app produces.
+ * one naming a release this build rolled back, or an unsupported
+ * `exteriorProfile`, produces the same kind of explicit notice every other
+ * release/mode mismatch in the app produces.
  */
-export function exteriorDeepLinkMessage(href: string): string | null {
+export function exteriorDeepLinkMessage(href: string, record: ExteriorDefaultActivationRecord = EXTERIOR_DEFAULT_ACTIVATION): string | null {
   const url = new URL(href, typeof window === "undefined" ? "http://localhost/" : window.location.href);
   const requestedRelease = url.searchParams.get("exteriorCells");
   if (requestedRelease !== null && !isPinnedExteriorCellRelease(requestedRelease)) {
     return `Exterior streaming release ${requestedRelease} is not pinned by this build; exterior streaming stayed off and the rest of the view was left unchanged. The pinned exterior-cell releases here are ${PINNED_EXTERIOR_CELL_RELEASE_IDS.join(", ")}.`;
   }
+  // A withdrawn release stays in the pinned allowlist (its bytes are still on
+  // disk), so the refusal has to be stated here rather than inferred from the
+  // allowlist.
+  const rolledBack = exteriorRolledBackReleaseNotice(requestedRelease, record);
+  if (rolledBack) return `${rolledBack} The rest of the view was left unchanged.`;
   const requestedStreaming = url.searchParams.get(EXTERIOR_STREAMING_OFF_PARAM);
   if (requestedStreaming !== null && requestedStreaming !== "off") {
     return `Exterior streaming parameter ${EXTERIOR_STREAMING_OFF_PARAM}=${requestedStreaming} is not supported; only ${EXTERIOR_STREAMING_OFF_PARAM}=off disables the exterior wave, so this link resolved the build default instead.`;
@@ -864,7 +877,7 @@ export function App() {
   const [exteriorUnanchoredIds, setExteriorUnanchoredIds] = useState<string[]>([]);
   // Kept separate from `deepLinkMessage`, which the first selection clears.
   const [exteriorDeepLinkNotice, setExteriorDeepLinkNotice] = useState<string | null>(
-    typeof window === "undefined" ? null : exteriorDeepLinkMessage(window.location.href),
+    typeof window === "undefined" ? null : exteriorDeepLinkMessage(window.location.href, EXTERIOR_DEFAULT_ACTIVATION),
   );
   const [stage3RenderProof, setStage3RenderProof] = useState<Stage3RenderProof | null>(null);
   const [block835PerformanceProbe, setBlock835PerformanceProbe] = useState<Block835PerformanceProbeResult | null>(null);
@@ -1050,6 +1063,7 @@ export function App() {
     streaming: exteriorStreamingRequested,
     override: exteriorStreamingOverride,
     activeRealBaseReleaseId,
+    explicitReleaseId: exteriorExplicitReleaseId,
     record: EXTERIOR_DEFAULT_ACTIVATION,
   });
   // Bucketed camera *ellipsoid height*, used as the proxy the exterior LOD
@@ -2716,16 +2730,32 @@ export function App() {
    * The toggle writes explicit intent in both directions. Disabling clears the
    * explicit release too, so re-enabling over a real base targets whatever this
    * build promotes rather than resurrecting a release the URL no longer names.
+   *
+   * Re-enabling in a session the promotion record itself would turn on returns
+   * to the *unqualified* default — no override, no explicit release — rather
+   * than pinning the promoted release as an explicit opt-in. Pinning it made a
+   * default-on session serialize a release id it never asked for, and (before
+   * the resolver also gated explicitly-named promoted releases) skipped both
+   * promotion gates for the rest of that session. Fixture-mode and genuinely
+   * explicit release sessions keep pinning their release as before.
    */
   const toggleExteriorStreaming = () => {
     const next = !exteriorStreamingRequestedRef.current;
-    const nextOverride: ExteriorStreamingOverride = next ? "on" : "off";
+    const backToPromotedDefault = next && restoresPromotedDefault({
+      targetReleaseId: exteriorCellReleaseIdRef.current,
+      activeRealBaseReleaseId: activeRealBaseReleaseIdRef.current,
+      record: EXTERIOR_DEFAULT_ACTIVATION,
+    });
+    const nextOverride: ExteriorStreamingOverride = !next ? "off" : backToPromotedDefault ? null : "on";
     exteriorStreamingRequestedRef.current = next;
     exteriorStreamingOverrideRef.current = nextOverride;
     setExteriorStreamingOverride(nextOverride);
-    if (next) {
+    if (next && !backToPromotedDefault) {
       exteriorExplicitReleaseIdRef.current = exteriorCellReleaseIdRef.current;
       setExteriorExplicitReleaseId(exteriorCellReleaseIdRef.current);
+    } else if (next) {
+      exteriorExplicitReleaseIdRef.current = null;
+      setExteriorExplicitReleaseId(null);
     } else {
       exteriorExplicitReleaseIdRef.current = null;
       exteriorCanarySnapshotIdRef.current = null;

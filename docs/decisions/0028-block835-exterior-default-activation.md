@@ -44,6 +44,19 @@ public snapshot's cell membership and 14 `buildingIds`.
 **Rollback is swapping the exported record for `.predecessor`.** One edit, one
 line, no other file.
 
+For that to be a *complete* rollback, the predecessor names the release it
+withdrew (`rolledBackReleaseId`). The withdrawn bytes stay on disk and stay in
+the pinned allowlist, so without it the swap would have removed only the
+default: every bookmark taken during the promotion
+(`?exteriorCells=manhattan-exterior-cells-20260811`) would have kept rendering
+the withdrawn wave in full, and rendered it with no promotion gate behind it,
+because the gates verify against a record that no longer accepts those bytes.
+An explicit opt-in whose release equals the withdrawn release therefore resolves
+to off (reason `rolled-back-release`) and states that the release was rolled back
+in this build and that no substitute was selected. This gap was found in review
+of the promotion and is closed in code; the one-line swap is again the whole
+rollback.
+
 ## Decision 2 — The activation gate is the record *plus* an active real base
 
 `resolveExteriorActivation` turns URL intent, the record and the live base
@@ -72,22 +85,33 @@ Consequences of the split, all deliberate:
 - A URL naming an unpinned release fails closed to **off**, never to the promoted
   release: asking for a release this build does not have must not be answered
   with a different one. The existing "is not pinned by this build" notice stays
-  accurate.
+  accurate. That fail-closed state is its own value (`off-unpinned`), distinct
+  from a user's `off`: the details panel says the link named a release this build
+  does not pin, rather than telling a user with a typo that they switched
+  streaming off for the session.
 - Only explicit intent is serialized. A default-on session carries no
   `exteriorCells`, so its links stay reproducible against whatever the build
-  promotes instead of freezing today's release id into every shared URL.
+  promotes instead of freezing today's release id into every shared URL. The
+  render profile follows the same rule: written for an explicit opt-in, and in a
+  default-on session only once a non-default profile was actually chosen, so an
+  untouched default-on session serializes no exterior parameter at all while a
+  chosen profile still survives sharing.
 - Exterior intent is now restored on Back/Forward. The old parse ran once at
   mount, so history navigation silently kept the session's last exterior state.
 
 Toggling off clears the explicit release too, so re-enabling over a real base
 targets what the build promotes rather than resurrecting a release the URL no
 longer names. This reverses the pre-promotion expectation that enabling resolves
-the synthetic fixture package.
+the synthetic fixture package. Re-enabling returns to the *unqualified* default —
+no override, no explicit release — whenever the promotion record would have
+turned the wave on anyway. Pinning the promoted release as an explicit opt-in
+instead (the first implementation, corrected in review) made a default-on session
+serialize a release id it never asked for.
 
 ## Decision 4 — The promoted default is verified before it renders
 
-Being the default is not a reason to trust less. When — and only when — the
-promoted record (not an explicit URL) selected the release, two gates run:
+Being the default is not a reason to trust less. Whenever the release being
+streamed *is* the promoted release — however it was selected — two gates run:
 
 1. **Pin gate**, after load: the resolved release id, snapshot id, snapshot
    checksum, assembly packages and cell membership must equal the record. Any
@@ -100,9 +124,12 @@ Both fail closed with an explicit message and no substitute release. A cell that
 degrades to base massing renders no asset, so the identity gate treats an empty
 render as valid and leaves that reporting to the existing per-cell notices.
 
-An explicitly opted-in release is *not* checked against these gates — it is a
-different release, and borrowing the promotion's acceptance would be a false
-claim about it.
+An opt-in link naming a *different* release is not checked against these gates —
+it is a different release, and borrowing the promotion's acceptance would be a
+false claim about it. An opt-in naming the promoted release is gated, because it
+is the promoted wave: review found that the toggle could produce exactly that
+state and skip both gates for the rest of a session, so the gate condition is now
+"this is the promoted release", not "a URL did not name it".
 
 ## Decision 5 — A real-base session without the wave says so
 
@@ -112,6 +139,10 @@ explicit statement instead of dropping the exterior section:
 - rolled back → "The Block 835 exterior wave is not active in this build, so base
   massing from release … is shown; no substitute exterior was selected."
 - switched off → "Exterior streaming is switched off for this session, …".
+- link named an unpinned release → "The exterior release this link named is not
+  pinned by this build, …" — a parse that failed closed, not a user's disable.
+- link named the withdrawn release → "Exterior streaming release … was rolled
+  back in this build, …".
 
 Fixture-mode sessions stay silent: nothing was promised, so nothing is reported
 missing.

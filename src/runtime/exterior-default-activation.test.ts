@@ -2,8 +2,10 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   EXTERIOR_DEFAULT_ACTIVATION,
+  exteriorRolledBackReleaseNotice,
   exteriorUnavailableDetail,
   resolveExteriorActivation,
+  restoresPromotedDefault,
   verifyPromotedExteriorMembership,
   verifyPromotedExteriorPin,
   type ExteriorDefaultActivationRecord,
@@ -12,7 +14,10 @@ import {
 const FIXTURE_RELEASE_ID = "udt-fixture-exterior-cells";
 const CITYWIDE_BASE = "manhattan-citywide-20260804";
 const PROMOTED = EXTERIOR_DEFAULT_ACTIVATION.enabled ? EXTERIOR_DEFAULT_ACTIVATION : null;
-const ROLLED_BACK: ExteriorDefaultActivationRecord = { enabled: false, releaseId: null };
+/** The rehearsed rollback is exactly the record's own predecessor. */
+const ROLLED_BACK: ExteriorDefaultActivationRecord = PROMOTED ? PROMOTED.predecessor : EXTERIOR_DEFAULT_ACTIVATION;
+/** A build that never promoted anything has no withdrawn release to refuse. */
+const NEVER_PROMOTED: ExteriorDefaultActivationRecord = { enabled: false, releaseId: null, rolledBackReleaseId: null };
 
 function committed(fileName: string): Record<string, unknown> {
   return JSON.parse(new TextDecoder().decode(readFileSync(`public/data/manhattan-exterior-cells-20260811/${fileName}`))) as Record<string, unknown>;
@@ -36,7 +41,7 @@ describe("Block 835 exterior promotion record", () => {
     expect(PROMOTED).not.toBeNull();
     // A partial rollback must be unrepresentable: the predecessor is the whole
     // disabled state, not a flag that can be flipped beside a surviving pin.
-    expect(PROMOTED!.predecessor).toEqual({ enabled: false, releaseId: null });
+    expect(PROMOTED!.predecessor).toEqual({ enabled: false, releaseId: null, rolledBackReleaseId: PROMOTED!.releaseId });
     expect(PROMOTED!.approvalRef).toBe("Issue #11 gate approval 2026-08-11 + perf evidence PR #38");
   });
 
@@ -87,7 +92,7 @@ describe("promoted exterior activation resolution", () => {
     // Reverses the pre-promotion expectation: enabling with no explicit release
     // over a real base used to resolve the synthetic fixture package.
     expect(resolveExteriorActivation({ ...base, override: "on", activeRealBaseReleaseId: CITYWIDE_BASE }))
-      .toEqual({ streaming: true, releaseId: PROMOTED!.releaseId, promotedDefault: false, reason: "url-explicit" });
+      .toEqual({ streaming: true, releaseId: PROMOTED!.releaseId, promotedDefault: true, reason: "url-explicit" });
     // ...but a fixture-mode session still enables the fixture package.
     expect(resolveExteriorActivation({ ...base, override: "on", activeRealBaseReleaseId: null }))
       .toEqual({ streaming: true, releaseId: FIXTURE_RELEASE_ID, promotedDefault: false, reason: "url-explicit" });
@@ -96,9 +101,40 @@ describe("promoted exterior activation resolution", () => {
   it("keeps an explicit URL release exactly as it behaved before the promotion", () => {
     expect(resolveExteriorActivation({ ...base, explicitReleaseId: FIXTURE_RELEASE_ID, override: "on", activeRealBaseReleaseId: CITYWIDE_BASE }))
       .toEqual({ streaming: true, releaseId: FIXTURE_RELEASE_ID, promotedDefault: false, reason: "url-explicit" });
-    // An explicitly named release is never verified as "the promoted default",
-    // so an opt-in link cannot borrow the promotion's acceptance gate.
-    expect(resolveExteriorActivation({ ...base, explicitReleaseId: PROMOTED!.releaseId, override: "on", activeRealBaseReleaseId: CITYWIDE_BASE }).promotedDefault).toBe(false);
+    // A link naming a DIFFERENT release is never verified as the promoted wave:
+    // borrowing the promotion's acceptance for other bytes would be a false claim.
+    expect(resolveExteriorActivation({ ...base, explicitReleaseId: FIXTURE_RELEASE_ID, override: "on", activeRealBaseReleaseId: null }).promotedDefault).toBe(false);
+    // A link naming the promoted release IS the promoted wave, so it carries the
+    // promotion's gates rather than escaping them by being explicit.
+    expect(resolveExteriorActivation({ ...base, explicitReleaseId: PROMOTED!.releaseId, override: "on", activeRealBaseReleaseId: CITYWIDE_BASE }).promotedDefault).toBe(true);
+    expect(resolveExteriorActivation({ ...base, explicitReleaseId: PROMOTED!.releaseId, override: "on", activeRealBaseReleaseId: null }).promotedDefault).toBe(true);
+  });
+
+  it("names an explicit release with no on/off override accurately instead of calling it the promoted default", () => {
+    // Not reachable from URL parsing, where a named release always implies "on".
+    expect(resolveExteriorActivation({ ...base, explicitReleaseId: FIXTURE_RELEASE_ID, override: null, activeRealBaseReleaseId: CITYWIDE_BASE }))
+      .toEqual({ streaming: true, releaseId: FIXTURE_RELEASE_ID, promotedDefault: false, reason: "explicit-release" });
+  });
+
+  it("distinguishes a parse that failed closed on an unpinned release from a session someone switched off", () => {
+    expect(resolveExteriorActivation({ ...base, override: "off-unpinned", activeRealBaseReleaseId: CITYWIDE_BASE }))
+      .toEqual({ streaming: false, releaseId: PROMOTED!.releaseId, promotedDefault: false, reason: "url-unpinned-release" });
+    const statement = exteriorUnavailableDetail({ streaming: false, override: "off-unpinned", activeRealBaseReleaseId: CITYWIDE_BASE });
+    expect(statement).toContain("not pinned by this build");
+    expect(statement).not.toContain("switched off for this session");
+    expect(statement).toContain("no substitute exterior was selected");
+  });
+
+  it("returns to the gated promoted default when a real-base session re-enables, and pins nothing otherwise", () => {
+    expect(restoresPromotedDefault({ targetReleaseId: PROMOTED!.releaseId, activeRealBaseReleaseId: CITYWIDE_BASE })).toBe(true);
+    // Fixture mode has no base to anchor to, and a different release is a
+    // genuine opt-in that must stay pinned in the link.
+    expect(restoresPromotedDefault({ targetReleaseId: PROMOTED!.releaseId, activeRealBaseReleaseId: null })).toBe(false);
+    expect(restoresPromotedDefault({ targetReleaseId: FIXTURE_RELEASE_ID, activeRealBaseReleaseId: CITYWIDE_BASE })).toBe(false);
+    expect(restoresPromotedDefault({ targetReleaseId: PROMOTED!.releaseId, activeRealBaseReleaseId: CITYWIDE_BASE, record: ROLLED_BACK })).toBe(false);
+    // What the toggle then resolves: the gated default, serializing no params.
+    expect(resolveExteriorActivation({ ...base, override: null, activeRealBaseReleaseId: CITYWIDE_BASE }))
+      .toEqual({ streaming: true, releaseId: PROMOTED!.releaseId, promotedDefault: true, reason: "promoted-default" });
   });
 
   it("restores the base-only predecessor atomically when the record is rolled back", () => {
@@ -110,6 +146,30 @@ describe("promoted exterior activation resolution", () => {
     // exactly as it did before the promotion, which is the predecessor state.
     expect(resolveExteriorActivation({ ...base, explicitReleaseId: FIXTURE_RELEASE_ID, override: "on", activeRealBaseReleaseId: CITYWIDE_BASE, record: ROLLED_BACK }))
       .toMatchObject({ streaming: true, releaseId: FIXTURE_RELEASE_ID });
+  });
+
+  it("refuses an explicit opt-in into the release the build rolled back", () => {
+    // The withdrawn bytes are still on disk and still in the pinned allowlist,
+    // so without this refusal every promotion-era bookmark would keep rendering
+    // the withdrawn wave — and render it with no promotion gate behind it.
+    for (const activeRealBaseReleaseId of [CITYWIDE_BASE, null]) {
+      expect(resolveExteriorActivation({ ...base, explicitReleaseId: PROMOTED!.releaseId, override: "on", activeRealBaseReleaseId, record: ROLLED_BACK }))
+        .toMatchObject({ streaming: false, promotedDefault: false, reason: "rolled-back-release" });
+    }
+    const notice = exteriorRolledBackReleaseNotice(PROMOTED!.releaseId, ROLLED_BACK);
+    expect(notice).toContain(`${PROMOTED!.releaseId} was rolled back in this build`);
+    expect(notice).toContain("no substitute exterior release was selected");
+    const statement = exteriorUnavailableDetail({ streaming: false, override: "on", activeRealBaseReleaseId: CITYWIDE_BASE, explicitReleaseId: PROMOTED!.releaseId, record: ROLLED_BACK });
+    expect(statement).toContain("was rolled back in this build");
+    expect(statement).toContain(CITYWIDE_BASE);
+
+    // Only that release is refused, and only by a build that withdrew it.
+    expect(exteriorRolledBackReleaseNotice(FIXTURE_RELEASE_ID, ROLLED_BACK)).toBeNull();
+    expect(exteriorRolledBackReleaseNotice(null, ROLLED_BACK)).toBeNull();
+    expect(exteriorRolledBackReleaseNotice(PROMOTED!.releaseId, NEVER_PROMOTED)).toBeNull();
+    expect(exteriorRolledBackReleaseNotice(PROMOTED!.releaseId, EXTERIOR_DEFAULT_ACTIVATION)).toBeNull();
+    expect(resolveExteriorActivation({ ...base, explicitReleaseId: PROMOTED!.releaseId, override: "on", activeRealBaseReleaseId: CITYWIDE_BASE, record: NEVER_PROMOTED }))
+      .toMatchObject({ streaming: true, reason: "url-explicit" });
   });
 });
 

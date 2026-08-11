@@ -604,10 +604,25 @@ describe("exterior streaming profiles and canary state", () => {
     expect(disabled.searchParams.get("feature")).toBe("doitt:778052");
   });
 
+  it("serializes no exterior parameter for an untouched default-on session, and still shares a chosen profile", () => {
+    // The promoted default is not URL state, so a default-on session must not
+    // acquire exterior parameters just by streaming.
+    const untouched = new URL(canonicalUrl({ requested: true, override: null, releaseId: CANARY_EXTERIOR_RELEASE_ID, profile: "exploration", canarySnapshotId: null }));
+    expect(untouched.searchParams.has("exteriorCells")).toBe(false);
+    expect(untouched.searchParams.has("exteriorStreaming")).toBe(false);
+    expect(untouched.searchParams.has("exteriorProfile")).toBe(false);
+
+    // A profile the user actually chose is still explicit intent, so it round-trips.
+    const chosen = new URL(canonicalUrl({ requested: true, override: null, releaseId: CANARY_EXTERIOR_RELEASE_ID, profile: "inspection", canarySnapshotId: null }));
+    expect(chosen.searchParams.get("exteriorProfile")).toBe("inspection");
+    expect(chosen.searchParams.has("exteriorCells")).toBe(false);
+    expect(parseExteriorStreamingUrl(chosen.toString())).toEqual({ override: null, explicitReleaseId: null, profile: "inspection", canarySnapshotId: null });
+  });
+
   it("ignores an unknown exterior release ID and an unsupported profile instead of guessing", () => {
     // An unpinned release fails closed to an explicit off, so a link naming a
     // release this build does not have is never answered with the promoted one.
-    expect(parseExteriorStreamingUrl("/?exteriorCells=manhattan-exterior-production&exteriorProfile=inspection")).toEqual({ override: "off", explicitReleaseId: null, profile: "exploration", canarySnapshotId: null });
+    expect(parseExteriorStreamingUrl("/?exteriorCells=manhattan-exterior-production&exteriorProfile=inspection")).toEqual({ override: "off-unpinned", explicitReleaseId: null, profile: "exploration", canarySnapshotId: null });
     expect(parseExteriorStreamingUrl("/?exteriorCells=udt-fixture-exterior-cells&exteriorProfile=cinematic")).toEqual({ override: "on", explicitReleaseId: "udt-fixture-exterior-cells", profile: "exploration", canarySnapshotId: null });
     expect(parseExteriorStreamingUrl("/?exteriorCanary=snapshot:v3")).toEqual({ override: null, explicitReleaseId: null, profile: "exploration", canarySnapshotId: null });
   });
@@ -642,7 +657,9 @@ describe("exterior streaming profiles and canary state", () => {
 
   it("fails closed and stays loud when the URL names a release outside the allowlist", () => {
     const state = parseExteriorStreamingUrl("/?exteriorCells=manhattan-exterior-cells-20270101&exteriorProfile=inspection");
-    expect(state.override).toBe("off");
+    // A parse that failed closed is its own state: no wave, but nobody switched
+    // anything off, so the details panel must not report it as a user's disable.
+    expect(state.override).toBe("off-unpinned");
     expect(state.explicitReleaseId).toBeNull();
     const message = exteriorDeepLinkMessage("/?exteriorCells=manhattan-exterior-cells-20270101&exteriorProfile=inspection");
     expect(message).toContain("manhattan-exterior-cells-20270101");
@@ -846,7 +863,9 @@ describe("exterior streaming deep-link and anchor honesty", () => {
  */
 describe("promoted Block 835 exterior default activation", () => {
   const REAL_BASE_URL = `/?data=real-pilot&release=${CITYWIDE_RELEASE_ID}`;
-  const ROLLED_BACK_RECORD = { enabled: false, releaseId: null };
+  // The real predecessor: it names the release the build withdrew, which is what
+  // makes promotion-era `?exteriorCells=` bookmarks fail closed.
+  const ROLLED_BACK_RECORD = { enabled: false, releaseId: null, rolledBackReleaseId: CANARY_EXTERIOR_RELEASE_ID };
 
   /** A base adapter that owns the Block 835 identities as ordinary base features. */
   function residentCitywideBaseAdapter() {
@@ -979,7 +998,7 @@ describe("promoted Block 835 exterior default activation", () => {
     }
   }, 30_000);
 
-  it("targets the promoted release when a disabled real-base session is switched back on", async () => {
+  it("returns a re-enabled real-base session to the gated default instead of pinning the promoted release", async () => {
     const fetchSpy = serveCommittedCanaryRelease();
     citywideRuntimeMocks.loadCitywideRelease.mockResolvedValue(lateCitywideBaseAdapter(BLOCK_835_FEATURE_IDS).adapter);
     try {
@@ -990,10 +1009,130 @@ describe("promoted Block 835 exterior default activation", () => {
       await waitFor(() => expect(document.body.textContent).toContain(`Real NYC citywide release · ${CITYWIDE_RELEASE_ID}`), { timeout: 20_000 });
       fireEvent.click(within(document.body).getByRole("button", { name: "Enable exterior streaming" }));
       // Reverses the pre-promotion expectation: this used to enable the fixture.
-      await waitFor(() => expect(new URL(window.location.href).searchParams.get("exteriorCells")).toBe(promoted!.releaseId));
-      expect(new URL(window.location.href).searchParams.has("exteriorStreaming")).toBe(false);
       await waitFor(() => expect(exteriorPaths(fetchSpy).some((path) => path.startsWith(CANARY_EXTERIOR_ROOT))).toBe(true));
       expect(exteriorPaths(fetchSpy).some((path) => path.startsWith("/data/udt-fixture-exterior-cells/"))).toBe(false);
+      // ...and it re-enters the DEFAULT, not an explicit opt-in that happens to
+      // name the promoted release: a default-on session serializes no exterior
+      // parameters, and the promotion gates stay in force for the rest of it.
+      const url = new URL(window.location.href);
+      expect(url.searchParams.has("exteriorCells")).toBe(false);
+      expect(url.searchParams.has("exteriorStreaming")).toBe(false);
+    } finally {
+      fetchSpy.mockRestore();
+    }
+  }, 30_000);
+
+  it("keeps the promotion gates in force after an off/on toggle, so a drifted record still fails closed", async () => {
+    // The regression: re-enabling used to pin the promoted release as an
+    // explicit opt-in, which resolved `promotedDefault: false` and skipped both
+    // gates for the rest of the session. A drifted record is the cheapest proof
+    // the gates ran: the committed bytes no longer match what the build accepts.
+    promotionMocks.record = { ...promoted!, snapshotChecksumSha256: "0".repeat(64) };
+    const fetchSpy = serveCommittedCanaryRelease();
+    citywideRuntimeMocks.loadCitywideRelease.mockResolvedValue(lateCitywideBaseAdapter(BLOCK_835_FEATURE_IDS).adapter);
+    try {
+      window.history.replaceState({}, "", REAL_BASE_URL);
+      render(<App />);
+      const failedNotice = () => [...document.querySelectorAll<HTMLElement>(".runtime-note-overlay")].find((candidate) => candidate.textContent?.includes("Exterior streaming failed closed"));
+      // Cold load fails closed on the drift.
+      await waitFor(() => expect(failedNotice()).toBeDefined(), { timeout: 20_000 });
+      expect(failedNotice()!.textContent).toContain("snapshot checksum");
+      expect(document.querySelector<HTMLElement>(".viewport")?.getAttribute("data-exterior-render-entry-count")).toBe("0");
+
+      // Off, then on again: the re-enabled session is gated exactly as the cold
+      // load was, so the drifted record still renders nothing.
+      fireEvent.click(within(document.body).getByRole("button", { name: "Disable exterior streaming" }));
+      await waitFor(() => expect(within(document.body).getByRole("button", { name: "Enable exterior streaming" })).toBeInTheDocument());
+      // The disable clears the failure state, so its return is the gate rerunning.
+      await waitFor(() => expect(failedNotice()).toBeUndefined());
+      fireEvent.click(within(document.body).getByRole("button", { name: "Enable exterior streaming" }));
+      await waitFor(() => expect(failedNotice()).toBeDefined(), { timeout: 20_000 });
+      expect(failedNotice()!.textContent).toContain("no substitute release was selected");
+      expect(document.querySelector<HTMLElement>(".viewport")?.getAttribute("data-exterior-render-entry-count")).toBe("0");
+    } finally {
+      fetchSpy.mockRestore();
+    }
+  }, 30_000);
+
+  it("refuses a promotion-era opt-in link once the build is rolled back, and still honours the fixture opt-in", async () => {
+    promotionMocks.record = ROLLED_BACK_RECORD;
+    const fetchSpy = serveCommittedCanaryRelease();
+    citywideRuntimeMocks.loadCitywideRelease.mockResolvedValue(residentCitywideBaseAdapter());
+    try {
+      // The withdrawn release is still pinned and still on disk, so only the
+      // refusal rule stops this bookmark from rendering the rolled-back wave.
+      window.history.replaceState({}, "", `${REAL_BASE_URL}&exteriorCells=${CANARY_EXTERIOR_RELEASE_ID}`);
+      render(<App />);
+      await waitFor(() => expect(document.querySelector(".viewport")).not.toBeNull());
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      expect(exteriorPaths(fetchSpy)).toEqual([]);
+      expect(document.querySelector<HTMLElement>(".viewport")?.getAttribute("data-exterior-render-entry-count")).toBe("0");
+
+      const alert = await waitFor(() => {
+        const element = document.querySelector<HTMLElement>("[data-exterior-deep-link-notice]");
+        expect(element).not.toBeNull();
+        return element!;
+      });
+      expect(alert.textContent).toContain(`${CANARY_EXTERIOR_RELEASE_ID} was rolled back in this build`);
+      expect(alert.textContent).toContain("no substitute exterior release was selected");
+
+      await waitFor(() => expect(document.body.textContent).toContain(`Real NYC citywide release · ${CITYWIDE_RELEASE_ID}`), { timeout: 20_000 });
+      fireEvent.click(within(document.body).getByRole("button", { name: "Open details" }));
+      const section = await waitFor(() => {
+        const element = document.querySelector<HTMLElement>("[data-exterior-unavailable]");
+        expect(element).not.toBeNull();
+        return element!;
+      });
+      expect(section.textContent).toContain("was rolled back in this build");
+      expect(section.textContent).not.toContain("switched off for this session");
+    } finally {
+      fetchSpy.mockRestore();
+    }
+  }, 30_000);
+
+  it("keeps the fixture opt-in working in a rolled-back build", async () => {
+    promotionMocks.record = ROLLED_BACK_RECORD;
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockImplementation(async () => new Response(null, { status: 404 }));
+    try {
+      window.history.replaceState({}, "", "/?exteriorCells=udt-fixture-exterior-cells");
+      render(<App />);
+      // Rollback withdraws the promoted wave only: the pre-promotion opt-in is
+      // still attempted from its own base path, exactly as before.
+      await waitFor(() => expect(fetchSpy.mock.calls.map((call) => String(call[0])).some((path) => path.startsWith("/data/udt-fixture-exterior-cells/"))).toBe(true));
+      expect(new URL(window.location.href).searchParams.get("exteriorCells")).toBe("udt-fixture-exterior-cells");
+    } finally {
+      fetchSpy.mockRestore();
+    }
+  }, 20_000);
+
+  it("says a link named a release this build does not pin instead of claiming the session was switched off", async () => {
+    const fetchSpy = serveCommittedCanaryRelease();
+    citywideRuntimeMocks.loadCitywideRelease.mockResolvedValue(residentCitywideBaseAdapter());
+    try {
+      window.history.replaceState({}, "", `${REAL_BASE_URL}&exteriorCells=manhattan-exterior-production-20270101`);
+      render(<App />);
+      await waitFor(() => expect(within(document.body).getByRole("button", { name: "Enable exterior streaming" })).toBeInTheDocument(), { timeout: 20_000 });
+      expect(exteriorPaths(fetchSpy)).toEqual([]);
+
+      // The existing not-pinned banner is unchanged...
+      const alert = await waitFor(() => {
+        const element = document.querySelector<HTMLElement>("[data-exterior-deep-link-notice]");
+        expect(element).not.toBeNull();
+        return element!;
+      });
+      expect(alert.textContent).toContain("is not pinned by this build");
+
+      // ...and the details panel no longer reports a typo as a user's disable.
+      await waitFor(() => expect(document.body.textContent).toContain(`Real NYC citywide release · ${CITYWIDE_RELEASE_ID}`), { timeout: 20_000 });
+      fireEvent.click(within(document.body).getByRole("button", { name: "Open details" }));
+      const section = await waitFor(() => {
+        const element = document.querySelector<HTMLElement>("[data-exterior-unavailable]");
+        expect(element).not.toBeNull();
+        return element!;
+      });
+      expect(section.textContent).toContain("not pinned by this build");
+      expect(section.textContent).not.toContain("switched off for this session");
+      expect(section.textContent).toContain("no substitute exterior was selected");
     } finally {
       fetchSpy.mockRestore();
     }
