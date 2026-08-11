@@ -395,36 +395,89 @@ def author_building(canonical_building_id):
 # ---------------------------------------------------------------------------
 
 
-def reimport_up_axis_diff(glb_path, expected_height_meters):
-    """Imports shipped bytes with NO up-axis compensation and reports what it sees.
+REIMPORT_TOLERANCE_METERS = 1e-3
 
-    The shipped GLB is Y-up. Blender is Z-up. Importing with the default
-    conversion and then asserting that the tall axis came back as Z is the
-    assertion: if the writer had emitted Z-up bytes, the model would arrive lying
-    on its side and this diff would say so instead of quietly agreeing.
+
+def _bounds_of_points(points):
+    return [
+        [min(point[axis] for point in points) for axis in range(3)],
+        [max(point[axis] for point in points) for axis in range(3)],
+    ]
+
+
+def reimport_up_axis_diff(canonical_building_id, lod_id, package_dir):
+    """Imports shipped bytes with NO compensation and diffs them against the authoring.
+
+    An earlier draft of this function asserted that the tallest world extent came
+    back as Z. That is not an up-axis test at all: most of Block 835 is wider
+    than it is tall, so a low-rise satisfies or fails it for reasons that have
+    nothing to do with the file's axis convention. It is replaced here.
+
+    The real assertion is a coordinate diff. The shipped file is +Y-up (east,
+    height, -north) and Blender's importer applies its own Y-up-to-Z-up
+    conversion (x, y, z) -> (x, -z, y). Composing the two recovers the authored
+    ENU frame EXACTLY, so imported world coordinates must equal the authored
+    ones. `zUpHypothesisDeviationMeters` is the control: it reports how far off
+    the same bytes would land had the writer emitted Z-up, and a large value is
+    what proves the diff discriminates rather than agreeing with anything.
     """
+    slug = canonical_building_id.replace(":", "-")
+    authored = bpy.data.objects[slug + "__" + lod_id]
+    path = os.path.join(package_dir, "private", "assets", slug + "__" + lod_id + ".glb")
     before = set(bpy.data.objects.keys())
-    bpy.ops.import_scene.gltf(filepath=glb_path)
-    imported = [bpy.data.objects[name] for name in bpy.data.objects.keys() if name not in before]
+    bpy.ops.import_scene.gltf(filepath=path)
+    imported = [bpy.data.objects[name] for name in set(bpy.data.objects.keys()) - before]
     if not imported:
-        raise RuntimeError("Re-import produced no object: " + glb_path)
-    xs, ys, zs = [], [], []
-    for obj in imported:
-        for corner in obj.bound_box:
-            world = obj.matrix_world @ __import__("mathutils").Vector(corner)
-            xs.append(world.x)
-            ys.append(world.y)
-            zs.append(world.z)
-    extents = [max(xs) - min(xs), max(ys) - min(ys), max(zs) - min(zs)]
-    tall_axis = extents.index(max(extents))
-    return {
-        "path": os.path.relpath(glb_path, ROOT),
-        "worldExtentsMeters": extents,
-        "tallestAxis": ["x", "y", "z"][tall_axis],
-        "expectedHeightMeters": expected_height_meters,
-        "heightDeviationMeters": abs(extents[2] - expected_height_meters),
-        "upAxisIsYUpInFile": tall_axis == 2,
-    }
+        raise RuntimeError("Re-import produced no object: " + path)
+    try:
+        points = []
+        for obj in imported:
+            if obj.type != "MESH":
+                continue
+            matrix = obj.matrix_world
+            for vertex in obj.data.vertices:
+                world = matrix @ vertex.co
+                points.append((world[0], world[1], world[2]))
+        if not points:
+            raise RuntimeError("Re-imported GLB contained no mesh vertices: " + path)
+        authored_points = [tuple(vertex.co) for vertex in authored.data.vertices]
+        authored_keys = {(round(p[0], 3), round(p[1], 3), round(p[2], 3)) for p in authored_points}
+        imported_keys = {(round(p[0], 3), round(p[1], 3), round(p[2], 3)) for p in points}
+        authored_bounds = _bounds_of_points(authored_points)
+        imported_bounds = _bounds_of_points(points)
+        deviation = max(abs(authored_bounds[side][axis] - imported_bounds[side][axis]) for side in range(2) for axis in range(3))
+        # Control hypothesis: had the file been written Z-up, the importer's
+        # conversion would have landed every vertex at (x, -z, y) of the authored
+        # point instead of at the authored point itself.
+        z_up_points = [(p[0], -p[2], p[1]) for p in authored_points]
+        z_up_bounds = _bounds_of_points(z_up_points)
+        z_up_deviation = max(abs(z_up_bounds[side][axis] - imported_bounds[side][axis]) for side in range(2) for axis in range(3))
+        return {
+            "canonicalBuildingId": canonical_building_id,
+            "lodId": lod_id,
+            "path": os.path.relpath(path, ROOT),
+            "authoredVertices": len(authored_points),
+            "importedVertices": len(points),
+            "authoredUniquePositions": len(authored_keys),
+            "importedUniquePositions": len(imported_keys),
+            "positionsOnlyInAuthored": len(authored_keys - imported_keys),
+            "positionsOnlyInImported": len(imported_keys - authored_keys),
+            "authoredBoundsMeters": authored_bounds,
+            "importedBoundsMeters": imported_bounds,
+            "maxBoundsDeviationMeters": deviation,
+            "toleranceMeters": REIMPORT_TOLERANCE_METERS,
+            "zUpHypothesisDeviationMeters": z_up_deviation,
+            "upAxisIsYUpInFile": deviation <= REIMPORT_TOLERANCE_METERS and z_up_deviation > REIMPORT_TOLERANCE_METERS,
+        }
+    finally:
+        for obj in imported:
+            data = obj.data
+            bpy.data.objects.remove(obj, do_unlink=True)
+            if getattr(data, "users", 1) == 0:
+                try:
+                    bpy.data.meshes.remove(data, do_unlink=True)
+                except (RuntimeError, TypeError):
+                    pass
 
 
 def _setup_render():
@@ -463,3 +516,127 @@ def render_views(obj, name):
         bpy.ops.render.render(write_still=True)
         written.append(os.path.relpath(path, ROOT))
     return written
+
+
+# ---------------------------------------------------------------------------
+# Silhouette measurement (LOD 1 transition evidence)
+# ---------------------------------------------------------------------------
+
+
+def _silhouette_camera():
+    _setup_render()
+    camera_data = bpy.data.cameras.get("udt3-silhouette-camera") or bpy.data.cameras.new("udt3-silhouette-camera")
+    camera_data.type = "ORTHO"
+    camera = bpy.data.objects.get("udt3-silhouette-camera")
+    if camera is None:
+        camera = bpy.data.objects.new("udt3-silhouette-camera", camera_data)
+        bpy.context.scene.collection.objects.link(camera)
+    bpy.context.scene.camera = camera
+    return camera
+
+
+def _place_ortho_camera(camera, bounds, view):
+    centre = [(bounds["min"][axis] + bounds["max"][axis]) / 2.0 for axis in range(3)]
+    span = [bounds["max"][axis] - bounds["min"][axis] for axis in range(3)]
+    radius = max(span) * 2.0 + 10.0
+    camera.data.ortho_scale = max(span) * 1.2 + 1.0
+    directions = {
+        "view:south": (0.0, -1.0, math.radians(90), 0.0),
+        "view:north": (0.0, 1.0, math.radians(90), math.radians(180)),
+        "view:east": (1.0, 0.0, math.radians(90), math.radians(90)),
+        "view:west": (-1.0, 0.0, math.radians(90), math.radians(-90)),
+    }
+    dx, dy, pitch, yaw = directions[view]
+    camera.location = (centre[0] + dx * radius, centre[1] + dy * radius, centre[2])
+    camera.rotation_euler = (pitch, 0.0, yaw)
+
+
+def _render_alpha(path):
+    bpy.context.scene.render.filepath = path
+    bpy.ops.render.render(write_still=True)
+    image = bpy.data.images.load(path)
+    try:
+        pixels = list(image.pixels)
+    finally:
+        bpy.data.images.remove(image)
+    return [1 if pixels[index] > 0.5 else 0 for index in range(3, len(pixels), 4)]
+
+
+def measure_silhouette(canonical_building_id):
+    """Orthographic coverage difference between the two shipped levels of detail.
+
+    LOD 1 drops recesses and keeps every protrusion, so the expectation is an
+    exactly zero difference; measuring it rather than declaring it is what makes
+    the manifest's transition metadata evidence instead of an assertion.
+    """
+    slug = canonical_building_id.replace(":", "-")
+    fine = bpy.data.objects[slug + "__lod_0"]
+    coarse = bpy.data.objects[slug + "__lod_1"]
+    camera = _silhouette_camera()
+    for obj in bpy.data.objects:
+        obj.hide_render = obj.type == "MESH"
+    bounds = _bounds(fine.data)
+    ratios, pixels = {}, {}
+    for view in VIEWS:
+        _place_ortho_camera(camera, bounds, view)
+        fine.hide_render = False
+        alpha_fine = _render_alpha(os.path.join(RENDER_DIR, slug + "__lod_0__" + view.replace(":", "-") + ".png"))
+        fine.hide_render = True
+        coarse.hide_render = False
+        alpha_coarse = _render_alpha(os.path.join(RENDER_DIR, slug + "__lod_1__" + view.replace(":", "-") + ".png"))
+        coarse.hide_render = True
+        covered = sum(alpha_fine)
+        if covered == 0:
+            raise RuntimeError("Empty silhouette render for " + canonical_building_id + " " + view)
+        difference = sum(1 for index in range(len(alpha_fine)) if alpha_fine[index] != alpha_coarse[index])
+        ratios[view] = difference / covered
+        pixels[view] = {"lod0Covered": covered, "lod1Covered": sum(alpha_coarse), "symmetricDifference": difference}
+    for obj in bpy.data.objects:
+        obj.hide_render = False
+    return {"canonicalBuildingId": canonical_building_id, "viewIds": list(VIEWS), "perView": ratios, "pixels": pixels, "deviationRatio": max(ratios.values())}
+
+
+# ---------------------------------------------------------------------------
+# Drivers
+# ---------------------------------------------------------------------------
+
+
+def drop_building(canonical_building_id):
+    """Removes one building's authored meshes so the next one starts clean.
+
+    Fourteen concave tiered prisms at full detail do not all fit comfortably in
+    one scene, and nothing downstream needs them to: every measurement is taken
+    while the building is present and written out before it is dropped.
+    """
+    slug = canonical_building_id.replace(":", "-")
+    removed = 0
+    for lod_id in ("lod_0", "lod_1"):
+        obj = bpy.data.objects.get(slug + "__" + lod_id)
+        if obj is not None:
+            mesh = obj.data
+            bpy.data.objects.remove(obj, do_unlink=True)
+            if mesh.users == 0:
+                bpy.data.meshes.remove(mesh, do_unlink=True)
+            removed += 1
+    for material in list(bpy.data.materials):
+        if material.users == 0:
+            bpy.data.materials.remove(material, do_unlink=True)
+    return removed
+
+
+def author_and_measure(canonical_building_id):
+    """Authors both LODs, proves the volume identity, measures and renders."""
+    report = author_building(canonical_building_id)
+    report["silhouette"] = measure_silhouette(canonical_building_id)
+    report["renders"] = render_views(bpy.data.objects[canonical_building_id.replace(":", "-") + "__lod_0"], canonical_building_id.replace(":", "-"))
+    report["volumeToleranceRelative"] = VOLUME_TOLERANCE
+    return report
+
+
+def write_evidence(name, payload):
+    os.makedirs(EVIDENCE_DIR, exist_ok=True)
+    path = os.path.join(EVIDENCE_DIR, name)
+    with open(path, "w", encoding="utf-8") as handle:
+        json.dump(payload, handle, indent=1, sort_keys=True)
+        handle.write("\n")
+    return path
