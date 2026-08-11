@@ -1,0 +1,25 @@
+{
+ "status": [
+  "Exterior streaming \u00b7 Default pinned snapshot snapshot:manhattan-exterior-cells-20260811:v1 \u00b7 Exploration (coarsest verified LOD) \u00b7 verified local GLB bytes only."
+ ],
+ "exterior_requests": [
+  "/data/manhattan-exterior-cells-20260811/assemblies.json",
+  "/data/manhattan-exterior-cells-20260811/index.json",
+  "/data/manhattan-exterior-cells-20260811/public/assets/doitt-102705__lod_1.glb",
+  "/data/manhattan-exterior-cells-20260811/public/assets/doitt-131170__lod_1.glb",
+  "/data/manhattan-exterior-cells-20260811/public/assets/doitt-147902__lod_1.glb",
+  "/data/manhattan-exterior-cells-20260811/public/assets/doitt-262867__lod_1.glb",
+  "/data/manhattan-exterior-cells-20260811/public/assets/doitt-39969__lod_1.glb",
+  "/data/manhattan-exterior-cells-20260811/public/assets/doitt-460555__lod_1.glb",
+  "/data/manhattan-exterior-cells-20260811/public/assets/doitt-498980__lod_1.glb",
+  "/data/manhattan-exterior-cells-20260811/public/assets/doitt-502491__lod_1.glb",
+  "/data/manhattan-exterior-cells-20260811/public/assets/doitt-584049__lod_1.glb",
+  "/data/manhattan-exterior-cells-20260811/public/assets/doitt-778052__lod_1.glb",
+  "/data/manhattan-exterior-cells-20260811/public/assets/doitt-812702__lod_1.glb",
+  "/data/manhattan-exterior-cells-20260811/public/assets/doitt-835659__lod_1.glb",
+  "/data/manhattan-exterior-cells-20260811/public/assets/doitt-925937__lod_1.glb",
+  "/data/manhattan-exterior-cells-20260811/public/assets/doitt-982383__lod_1.glb",
+  "/data/manhattan-exterior-cells-20260811/release-graph.json"
+ ],
+ "glb_count": 14
+}

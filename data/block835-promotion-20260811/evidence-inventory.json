@@ -1,0 +1,62 @@
+{
+ "approvalRef": "Issue #11 gate approval 2026-08-11 + perf evidence PR #38",
+ "artifactRoot": "artifacts/block835-promotion-20260811",
+ "capturedAt": "2026-08-11",
+ "fileCount": 10,
+ "files": [
+  {
+   "bytes": 631089,
+   "path": "a-default-cold-load.png",
+   "sha256": "edcd7bb63fe3f9b1bb1520a8e6a5d25d5247346bf21a54acf390755aab71cf73"
+  },
+  {
+   "bytes": 1588,
+   "path": "a-default-network-inventory.json",
+   "sha256": "99838df72fb1f95e972ee5b6d43faaf7e8590603782ef9dffbc014dc3fefd41f"
+  },
+  {
+   "bytes": 633167,
+   "path": "b-default-block835-selection.png",
+   "sha256": "b64c8104ce4acabc426753d9722183c625e34f07e0ae1fd42f0f675b847b92ae"
+  },
+  {
+   "bytes": 633156,
+   "path": "c-back-forward-restored-default.png",
+   "sha256": "c903317dee645687d753d2104dbd5d211a05298699ce4b20bc5be76518276738"
+  },
+  {
+   "bytes": 1106,
+   "path": "c-back-forward-transcript.json",
+   "sha256": "f52529a584227ff5eed205c0321dd670eecaae8d466db8967d5cbc98e53d26af"
+  },
+  {
+   "bytes": 582073,
+   "path": "d-exterior-streaming-off.png",
+   "sha256": "82aff171f0fef43570d6aeac2a3c7a92e00a838e457037c8228b57dad4eba85d"
+  },
+  {
+   "bytes": 576369,
+   "path": "e-fault-isolated-base-intact.png",
+   "sha256": "6bc55017e04c5b8afc04a3c7f59abb48842e534a326d9e225e9edfc270d10f18"
+  },
+  {
+   "bytes": 520221,
+   "path": "f-explicit-fixture-release.png",
+   "sha256": "38db1500f837910c0b634c44b62978703b06ae17a91a0b488bab0d62b55044ee"
+  },
+  {
+   "bytes": 510746,
+   "path": "g-fixture-default-quiet.png",
+   "sha256": "38c873aa9ddc48b2ebada1dfcab08e4978b621fb01a2a829205542f2ad87e84a"
+  },
+  {
+   "bytes": 5799,
+   "path": "journeys.json",
+   "sha256": "c9fb2d8ace66d4606cfbe0534e9c3a7fa0a0f9abf1713d08cae0ae3971f01894"
+  }
+ ],
+ "issue": "#11",
+ "release": "manhattan-exterior-cells-20260811",
+ "scope": "Renderer-journey evidence for promoting the Block 835 exterior wave to the default over an active real base, and for its base-only rollback.",
+ "task": "T010"
+}

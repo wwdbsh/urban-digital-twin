@@ -1,0 +1,192 @@
+# 0028 — Block 835 exterior wave as the default over a real base
+
+- Status: Accepted
+- Date: 2026-08-11
+- Related: 0019 (provider-neutral exterior contracts), 0021 (multi-LOD assembly
+  packages), 0023 (exterior streaming dual profiles), 0024 (exterior wave
+  ledger), 0027 (Block 835 generative exterior completion and canary release)
+
+## Context
+
+`manhattan-exterior-cells-20260811` shipped in ADR 0027 as a browser-reachable
+**canary**: it rendered only when a URL asked for it by name
+(`?exteriorCells=manhattan-exterior-cells-20260811`). T009 measured it and the
+Issue #11 gate accepted it. A release nobody reaches by default is not a
+delivered wave, so the remaining decision was how it becomes what a normal
+session sees, and how it stops being that if it must be withdrawn.
+
+Three properties had to survive the change:
+
+- The runtime is fail-closed and pinned. Promotion must not become a second,
+  softer path into rendering exterior geometry.
+- A fixture-mode session has no real base identity to anchor exterior cells to.
+  Turning the wave on there would produce a guaranteed loud failure for a user
+  who asked for nothing.
+- Rollback must be a single reviewable edit, not a hunt through URL parsing,
+  activation, verification and UI.
+
+## Decision 1 — The promotion is one indivisible frozen record
+
+`src/runtime/exterior-default-activation.ts` holds the whole promotion as one
+constant: release id, pinned snapshot id, snapshot checksum, assembly package
+ids, the cell membership (`cellId` → `cellReleaseId` → `checksumSha256`), the 14
+accepted building identities, an approval reference, and the base-only
+predecessor. Its type is a discriminated union: the disabled variant carries
+`releaseId: null` and nothing else, so "default on, but with no pin" and "pinned,
+but with no membership" are unrepresentable rather than merely discouraged.
+
+The values are data-in-code, not fetched. A runtime-fetched promotion document
+could disagree with the bytes the build was reviewed against; a constant cannot.
+`exterior-default-activation.test.ts` reads the committed `index.json` and
+`release-graph.json` and fails closed on any drift from `defaultHead` or from the
+public snapshot's cell membership and 14 `buildingIds`.
+
+**Rollback is swapping the exported record for `.predecessor`.** One edit, one
+line, no other file.
+
+For that to be a *complete* rollback, the predecessor names the release it
+withdrew (`rolledBackReleaseId`). The withdrawn bytes stay on disk and stay in
+the pinned allowlist, so without it the swap would have removed only the
+default: every bookmark taken during the promotion
+(`?exteriorCells=manhattan-exterior-cells-20260811`) would have kept rendering
+the withdrawn wave in full, and rendered it with no promotion gate behind it,
+because the gates verify against a record that no longer accepts those bytes.
+An explicit opt-in whose release equals the withdrawn release therefore resolves
+to off (reason `rolled-back-release`) and states that the release was rolled back
+in this build and that no substitute was selected. This gap was found in review
+of the promotion and is closed in code; the one-line swap is again the whole
+rollback.
+
+## Decision 2 — The activation gate is the record *plus* an active real base
+
+`resolveExteriorActivation` turns URL intent, the record and the live base
+release into one resolution. With no URL opinion:
+
+- an active compatible real base → stream the promoted release;
+- no real base (fixture mode) → **quiet**: no load, no notice, no banner.
+
+This is deliberately not "attempt and report". The activation prerequisite
+(exterior cells reuse canonical base building identities) is known before any
+request, so a fixture session that never asked for an exterior wave is never
+shown its failure. The pre-existing explicit opt-in
+(`?exteriorCells=udt-fixture-exterior-cells`) is untouched and still reports its
+prerequisite message, because there the user did ask.
+
+## Decision 3 — `exteriorStreaming=off` is a distinct parameter
+
+`exteriorCells` keeps meaning *which* pinned release. The new
+`exteriorStreaming=off` sentinel means *no exterior wave at all*. Overloading
+`exteriorCells` with an "off" value would have conflated identity with presence
+and made a shared link ambiguous once the default changed.
+
+Consequences of the split, all deliberate:
+
+- An explicit disable outranks every other exterior parameter.
+- A URL naming an unpinned release fails closed to **off**, never to the promoted
+  release: asking for a release this build does not have must not be answered
+  with a different one. The existing "is not pinned by this build" notice stays
+  accurate. That fail-closed state is its own value (`off-unpinned`), distinct
+  from a user's `off`: the details panel says the link named a release this build
+  does not pin, rather than telling a user with a typo that they switched
+  streaming off for the session.
+- Only explicit intent is serialized. A default-on session carries no
+  `exteriorCells`, so its links stay reproducible against whatever the build
+  promotes instead of freezing today's release id into every shared URL. The
+  render profile follows the same rule: written for an explicit opt-in, and in a
+  default-on session only once a non-default profile was actually chosen, so an
+  untouched default-on session serializes no exterior parameter at all while a
+  chosen profile still survives sharing.
+- Exterior intent is now restored on Back/Forward. The old parse ran once at
+  mount, so history navigation silently kept the session's last exterior state.
+
+Toggling off clears the explicit release too, so re-enabling over a real base
+targets what the build promotes rather than resurrecting a release the URL no
+longer names. This reverses the pre-promotion expectation that enabling resolves
+the synthetic fixture package. Re-enabling returns to the *unqualified* default —
+no override, no explicit release — whenever the promotion record would have
+turned the wave on anyway. Pinning the promoted release as an explicit opt-in
+instead (the first implementation, corrected in review) made a default-on session
+serialize a release id it never asked for.
+
+## Decision 4 — The promoted default is verified before it renders
+
+Being the default is not a reason to trust less. Whenever the release being
+streamed *is* the promoted release — however it was selected — two gates run:
+
+1. **Pin gate**, after load: the resolved release id, snapshot id, snapshot
+   checksum, assembly packages and cell membership must equal the record. Any
+   mismatch renders nothing and states which field disagreed.
+2. **Identity gate**, after cells resolve: every rendered canonical feature id
+   must be inside the accepted 14. An exterior asset that reuses an identity
+   outside the accepted wave means the bytes are not the accepted wave.
+
+Both fail closed with an explicit message and no substitute release. A cell that
+degrades to base massing renders no asset, so the identity gate treats an empty
+render as valid and leaves that reporting to the existing per-cell notices.
+
+An opt-in link naming a *different* release is not checked against these gates —
+it is a different release, and borrowing the promotion's acceptance would be a
+false claim about it. An opt-in naming the promoted release is gated, because it
+is the promoted wave: review found that the toggle could produce exactly that
+state and skip both gates for the rest of a session, so the gate condition is now
+"this is the promoted release", not "a URL did not name it".
+
+## Decision 5 — A real-base session without the wave says so
+
+When a real base is active and the wave is not, the details panel renders an
+explicit statement instead of dropping the exterior section:
+
+- rolled back → "The Block 835 exterior wave is not active in this build, so base
+  massing from release … is shown; no substitute exterior was selected."
+- switched off → "Exterior streaming is switched off for this session, …".
+- link named an unpinned release → "The exterior release this link named is not
+  pinned by this build, …" — a parse that failed closed, not a user's disable.
+- link named the withdrawn release → "Exterior streaming release … was rolled
+  back in this build, …".
+
+Fixture-mode sessions stay silent: nothing was promised, so nothing is reported
+missing.
+
+## Consequences
+
+- The Stage 3 performance probe (`?block835Performance=…`) refuses to certify a
+  scene that streams exterior cells. Over a real base that is now the default, so
+  operators must add `&exteriorStreaming=off` to measure the Stage-3-only scene.
+  The probe message names that escape hatch. This is a real cost of the
+  promotion, accepted because certifying a Stage-3-only budget against a scene
+  that renders an extra wave would compare two different scenes.
+- `EXTERIOR_CELL_STREAMING_RELEASE_ID` (the synthetic fixture package) is no
+  longer "the default"; it is the fallback for sessions with no real base, which
+  are reachable only by explicit opt-in.
+- A future wave promotion is a record swap plus its own membership, not new
+  activation code.
+- **Rollback atomicity is scoped per activation resolution, not per session.**
+  Swapping the exported record to its predecessor (a one-line, git-revertable
+  edit) atomically changes what every *subsequent* activation resolution and
+  cold load sees. It does not evict an already-loaded session: exterior GLB
+  object URLs live in the viewport until the page reloads. "Atomic" in this
+  record therefore means atomic-per-load; there is no operator kill switch for
+  in-flight sessions, and none is claimed.
+- **Open residual — memory-growth certification (accepted with approval).**
+  The T009 validation (PR #38) measured frame-time, request and cache budgets as
+  passing, but its bounded JS-heap method observed above-noise heap growth
+  (+29 %/+32 % across four repeats) with no collection opportunity and therefore
+  cannot certify GOAL's "no monotonic retained-memory growth after eviction and
+  collection opportunity" criterion either way. The Issue #11 promotion gate
+  approval (2026-08-11, granted after the measured-budget evidence) explicitly
+  carried this residual. Promotion proceeds with it recorded as an accepted,
+  approval-referenced risk; the follow-up is a GC-controlled re-run (e.g. a
+  Chrome launch with `--js-flags=--expose-gc`) that can distinguish uncollected
+  garbage from retained growth.
+
+### What this promotion does not claim
+
+- Nothing about the geometry changed. The wave is still the procedurally
+  generated, truth-tier `generated` package of ADR 0027, with no real-world
+  facade, tenant, brand or text claim, and the details panel still says so.
+- Default activation is not a fidelity statement. It states that the accepted
+  release is what a normal real-base session sees, and that what it sees was
+  verified against the accepted pin and membership before rendering.
+- The renderer journeys are functional evidence captured on loopback
+  `vite preview`. They are not a performance, accessibility or visual-accuracy
+  certification; T009's measurements remain the performance evidence.
