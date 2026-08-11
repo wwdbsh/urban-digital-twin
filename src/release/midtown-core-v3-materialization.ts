@@ -1,0 +1,591 @@
+/**
+ * Midtown-core **V3** offline materialization.
+ *
+ * This is a NEW SIBLING of `midtown-core-materialization.ts`, not a revision of
+ * it. That module owns the byte-pinned V2 wave and is never edited; this one
+ * owns the footprint-faithful V3 wave. The two share nothing but the source
+ * adapter's building record shape, which is geometry-independent.
+ *
+ * What actually differs, and why it makes this a NEW materializer rather than a
+ * regeneration:
+ *
+ * - V2 planned over an **oriented bounding rectangle** derived from the sourced
+ *   ring. Its plan-local footprint was always a four-vertex box, so every
+ *   footprint was representable and the only refusals were size-driven.
+ * - V3 plans over the **sourced ring itself**, vertex for vertex. A real DOITT
+ *   polygon can carry more vertices than the grammar admits, can be
+ *   self-intersecting after millimetre rounding, or can be below the footprint
+ *   area floor — none of which a rectangle could ever be. The refusal census
+ *   therefore does not transfer from V2 and is re-derived here.
+ * - V3 **refuses rather than repairs** the inward tier offset, so a building
+ *   whose ring cannot carry a setback ships with `setbacks` declared `absent`
+ *   and a stated reason. That is a materialized building with a disclosed hole,
+ *   not a refusal, and it is counted separately.
+ *
+ * Nothing here invents geometry. Every building that cannot be described is
+ * refused with a deterministic stop code and ships as an explicit unavailable
+ * detail carrying the refusal text.
+ */
+
+import {
+  DETERMINISTIC_FACADE_V3_LIMITS,
+  DETERMINISTIC_FACADE_V3_SCHEMA_VERSION,
+  DETERMINISTIC_FACADE_V3_UNCERTAINTY,
+  generateV3FacadePlan,
+  deriveV3Parameters,
+  ringIsSimple,
+  ringSignedAreaMm2,
+  tessellateV3Plan,
+  validateV3Plan,
+  type Point2Mm,
+  type V3Plan,
+} from "../domain/deterministic-facade-generator-v3.ts";
+import { sha256HexBytes, sha256HexSync, stableSerialize } from "../domain/deterministic-hash.ts";
+import { writeCanonicalGlb, type CanonicalGlbQuad, type CanonicalGlbTri, type Vec3 } from "./canonical-glb.ts";
+import { enuFrame, toEnuMeters, type EnuFrame, type Point2 } from "./block835-reference-package.ts";
+import { V3_QUALITY_BUDGETS, v3GeometryForGlb, v3TruthTiers, type V3GlbGeometry } from "./block835-v3-package.ts";
+import type { ImmutablePin } from "./multi-lod-assembly.ts";
+import {
+  MIDTOWN_CORE_FALLBACK_HEIGHT_METERS,
+  type MidtownCoreBuildingSource,
+} from "./midtown-core-materialization.ts";
+
+// ---------------------------------------------------------------------------
+// Declared identity
+// ---------------------------------------------------------------------------
+
+/**
+ * The V3 successor release id.
+ *
+ * A `-v3` discriminator rather than the plain date stamp, for the same reason
+ * the Block 835 V3 package took one: the V2 release already owns
+ * `manhattan-midtown-core-cells-20260811` and that directory is byte-frozen.
+ * A successor pins its predecessor; it never overwrites it.
+ */
+export const MIDTOWN_CORE_V3_RELEASE_ID = "manhattan-midtown-core-cells-20260811-v3" as const;
+/** The V2 wave release this one succeeds. Pinned, never edited. */
+export const MIDTOWN_CORE_V3_PREDECESSOR_RELEASE_ID = "manhattan-midtown-core-cells-20260811" as const;
+
+export const MIDTOWN_CORE_V3_GENERATED_AT = "2026-08-11T00:00:00.000Z" as const;
+export const MIDTOWN_CORE_V3_SEED = "manhattan-midtown-core-20260811-v3" as const;
+export const MIDTOWN_CORE_V3_TOOL = { id: "urban-digital-twin:midtown-core-v3-materialization", version: "3.0.0" } as const;
+
+/** Two LODs per building, matching the accepted exterior LOD profile. */
+export const MIDTOWN_CORE_V3_LOD_IDS = ["lod_0", "lod_1"] as const;
+export type MidtownCoreV3LodId = (typeof MIDTOWN_CORE_V3_LOD_IDS)[number];
+export const MIDTOWN_CORE_V3_LOD1_GEOMETRIC_ERROR_METERS = 0.2 as const;
+
+/**
+ * The V3 uncertainty statement every asset of this wave carries.
+ *
+ * Unlike the Block 835 `-v3e` package, no building of this wave carries a cited
+ * style override: there is no rights-cleared facade-material record for any
+ * Midtown-core building, so every style class here is the grammar's own designed
+ * draw and the uncited statement is the true one for all of them.
+ */
+export const MIDTOWN_CORE_V3_UNCERTAINTY = DETERMINISTIC_FACADE_V3_UNCERTAINTY;
+
+/**
+ * Per-vertex shape and placement tolerances, identical to the Block 835 V3
+ * package's. They bound THIS pipeline's error against the sourced polygon and
+ * assert nothing about how well that polygon matches the real building.
+ */
+export const MIDTOWN_CORE_V3_REGISTRATION_TOLERANCE = {
+  horizontalMeters: 0.25,
+  verticalMeters: 0.5,
+  perVertexShapeMeters: 0.05,
+} as const;
+
+/** Relative tolerance of the analytic volume identity, matching the Blender pass. */
+export const MIDTOWN_CORE_V3_VOLUME_TOLERANCE = 1e-6;
+
+// ---------------------------------------------------------------------------
+// Refusal vocabulary
+// ---------------------------------------------------------------------------
+
+/**
+ * Closed refusal vocabulary.
+ *
+ * The first four are footprint-shape refusals that V2 could not experience at
+ * all, because V2 planned over a rectangle. They are named individually rather
+ * than folded into one `plan-generation-failed` bucket so the census can state
+ * WHICH property of the sourced polygon the grammar could not carry.
+ */
+export const MIDTOWN_CORE_V3_STOP_CODES = [
+  "absent-from-base-shards",
+  "degenerate-footprint",
+  "ring-vertex-count-unsupported",
+  "ring-not-simple",
+  "ring-area-below-floor",
+  "ring-neck-below-grammar-minimum",
+  "source-height-below-grammar-minimum",
+  "plan-generation-failed",
+  "plan-validation-failed",
+  "asset-budget-exceeded",
+  "volume-identity-failed",
+  "registration-out-of-tolerance",
+] as const;
+export type MidtownCoreV3StopCode = (typeof MIDTOWN_CORE_V3_STOP_CODES)[number];
+
+export class MidtownCoreV3Stop extends Error {
+  readonly code: MidtownCoreV3StopCode;
+  readonly buildingId: string;
+  /** The refusal text alone, without the id and code the message repeats. */
+  readonly detail: string;
+  constructor(buildingId: string, code: MidtownCoreV3StopCode, detail: string) {
+    super(`${buildingId} [${code}]: ${detail}`);
+    this.name = "MidtownCoreV3Stop";
+    this.code = code;
+    this.buildingId = buildingId;
+    this.detail = detail;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Ring preparation
+// ---------------------------------------------------------------------------
+
+/**
+ * Collapses exactly duplicated consecutive millimetre vertices and the repeated
+ * closing vertex.
+ *
+ * A faithful copy of the generator's own private rule. It is used ONLY to LABEL
+ * a refusal the generator already made, never to refuse on its own: every
+ * building is put through `generateV3FacadePlan`, and this classifier is
+ * consulted afterwards. A divergence between the two could therefore only
+ * change a refusal's code, never turn an acceptance into a refusal.
+ */
+function collapseExactDuplicates(points: readonly Point2Mm[]): Point2Mm[] {
+  const collapsed: Point2Mm[] = [];
+  for (const point of points) {
+    const last = collapsed[collapsed.length - 1];
+    if (last && last[0] === point[0] && last[1] === point[1]) continue;
+    collapsed.push([point[0], point[1]]);
+  }
+  while (collapsed.length > 1) {
+    const first = collapsed[0]!;
+    const last = collapsed[collapsed.length - 1]!;
+    if (first[0] === last[0] && first[1] === last[1]) collapsed.pop(); else break;
+  }
+  return collapsed;
+}
+
+/**
+ * Names which of the generator's own ring-admission rules a sourced ring fails,
+ * or `null` when the ring is admissible and the refusal came from later in
+ * generation.
+ */
+export function classifyMidtownCoreV3Ring(ringMm: readonly Point2Mm[]): MidtownCoreV3StopCode | null {
+  const collapsed = collapseExactDuplicates(ringMm);
+  if (collapsed.length < DETERMINISTIC_FACADE_V3_LIMITS.minRingVertices) return "degenerate-footprint";
+  if (collapsed.length > DETERMINISTIC_FACADE_V3_LIMITS.maxRingVertices) return "ring-vertex-count-unsupported";
+  const oriented = ringSignedAreaMm2(collapsed) < 0 ? [...collapsed].reverse() : collapsed;
+  if (!ringIsSimple(oriented)) return "ring-not-simple";
+  if (Math.abs(ringSignedAreaMm2(oriented)) < DETERMINISTIC_FACADE_V3_LIMITS.minRingAreaMm2) return "ring-area-below-floor";
+  return null;
+}
+
+/**
+ * Names a generation refusal from the generator's OWN issue paths.
+ *
+ * Classification is keyed on `issue.path`, never on message text: paths are part
+ * of the generator's validation contract, wording is not, and a census whose
+ * buckets depend on a sentence would silently re-bucket itself the day somebody
+ * improved an error message.
+ *
+ * The ring rules are consulted first because they are the admission rules the
+ * generator applies before anything else; only when the ring was admissible does
+ * a `geometry.footprint.outer` issue mean the different thing it names here —
+ * that the polygon is legal but too pinched for this grammar to place openings
+ * on without punching through the massing.
+ */
+export function classifyMidtownCoreV3Generation(
+  ringMm: readonly Point2Mm[],
+  issues: readonly { path: string; message: string }[],
+): MidtownCoreV3StopCode {
+  const ring = classifyMidtownCoreV3Ring(ringMm);
+  if (ring !== null) return ring;
+  const paths = new Set(issues.map((issue) => issue.path));
+  if (paths.has("geometry.heightMm")) return "source-height-below-grammar-minimum";
+  if (paths.has("geometry.footprint.outer")) return "ring-neck-below-grammar-minimum";
+  return "plan-generation-failed";
+}
+
+// ---------------------------------------------------------------------------
+// Plan construction
+// ---------------------------------------------------------------------------
+
+export interface MidtownCoreV3PlanContext {
+  source: MidtownCoreBuildingSource;
+  frame: EnuFrame;
+  /** The sourced ring in plan-local millimetres, exactly as the plan carries it. */
+  ringMm: Point2Mm[];
+  /** True when the sourced ring was clockwise and had to be reversed to CCW. */
+  reversed: boolean;
+  plan: V3Plan;
+  heightSource: "source" | "fallback";
+}
+
+/**
+ * Builds and fully validates the V3 plan for one Midtown-core building.
+ *
+ * There is no oriented rectangle and no rotation: the plan-local frame IS the
+ * building-anchored ENU frame in millimetres, so the sourced polygon travels
+ * through the pipeline as itself. The only transforms are a metre-to-millimetre
+ * rounding and, when the sourced ring is clockwise, a reversal to the
+ * counter-clockwise orientation the grammar requires. Both are recorded.
+ */
+export function buildMidtownCoreV3Plan(
+  source: MidtownCoreBuildingSource,
+  baseManifestChecksumSha256: string,
+): MidtownCoreV3PlanContext {
+  const closed = source.outerRing.length > 1
+    && source.outerRing[0]![0] === source.outerRing[source.outerRing.length - 1]![0]
+    && source.outerRing[0]![1] === source.outerRing[source.outerRing.length - 1]![1]
+    ? source.outerRing.slice(0, -1)
+    : [...source.outerRing];
+  const frame = enuFrame({ longitude: source.representative[0], latitude: source.representative[1] });
+  const raw: Point2Mm[] = closed.map((point) => {
+    const [east, north] = toEnuMeters(frame, point);
+    return [Math.round(east * 1_000), Math.round(north * 1_000)];
+  });
+  const reversed = ringSignedAreaMm2(raw) < 0;
+  const outer = reversed ? [...raw].reverse() : raw;
+
+  const heightSource: "source" | "fallback" = source.heightMeters === null || source.heightUnknown ? "fallback" : "source";
+  const heightMm = Math.round((heightSource === "fallback" ? MIDTOWN_CORE_FALLBACK_HEIGHT_METERS : source.heightMeters!) * 1_000);
+
+  const generated = generateV3FacadePlan({
+    schemaVersion: DETERMINISTIC_FACADE_V3_SCHEMA_VERSION,
+    buildingId: source.buildingId,
+    generatedAt: MIDTOWN_CORE_V3_GENERATED_AT,
+    seed: MIDTOWN_CORE_V3_SEED,
+    tool: { ...MIDTOWN_CORE_V3_TOOL },
+    geometry: { unit: "millimeter", footprint: { outer }, baseElevationMm: 0, heightMm },
+    sourceAnchors: [
+      {
+        id: `${source.buildingId}:anchor:footprint`,
+        kind: "footprint",
+        sourceRefId: source.sourceRefId,
+        // Bound to the pinned base manifest, so a plan can never silently claim
+        // provenance from a different snapshot.
+        fingerprintSha256: sha256HexSync(stableSerialize({ outerRing: source.outerRing, baseManifestChecksumSha256 })),
+      },
+      {
+        id: `${source.buildingId}:anchor:height`,
+        kind: "height",
+        sourceRefId: source.sourceRefId,
+        fingerprintSha256: sha256HexSync(stableSerialize({ heightMeters: source.heightMeters, heightUnknown: source.heightUnknown, heightSource, baseManifestChecksumSha256 })),
+      },
+    ],
+    parameters: deriveV3Parameters({ footprintOuterMm: outer, heightMm }),
+  });
+  if (!generated.ok) {
+    const detail = generated.issues.map((issue) => `${issue.path}: ${issue.message}`).join("; ");
+    throw new MidtownCoreV3Stop(source.buildingId, classifyMidtownCoreV3Generation(raw, generated.issues), detail);
+  }
+  // Generation alone does not run the plan validator, which carries the
+  // containment, local-thickness and corner-clearance guards.
+  const validated = validateV3Plan(generated.value);
+  if (!validated.ok) {
+    throw new MidtownCoreV3Stop(source.buildingId, "plan-validation-failed", validated.issues.map((issue) => `${issue.path}: ${issue.message}`).join("; "));
+  }
+  return { source, frame, ringMm: outer, reversed, plan: validated.value, heightSource };
+}
+
+// ---------------------------------------------------------------------------
+// Analytic volume identity
+// ---------------------------------------------------------------------------
+
+function ringAreaMm2(ring: readonly Point2Mm[]): number {
+  let twice = 0;
+  for (let index = 0; index < ring.length; index += 1) {
+    const current = ring[index]!;
+    const next = ring[(index + 1) % ring.length]!;
+    twice += current[0] * next[1] - next[0] * current[1];
+  }
+  return Math.abs(twice) / 2;
+}
+
+/** Everything the grammar cuts INTO the wall; everything else is glued onto it. */
+const RECESS_KINDS = new Set(["window", "entrance", "storefront"]);
+
+/**
+ * Analytic solid volume of the planned massing, in cubic metres.
+ *
+ * A transliteration of the Blender pass's `expected_volume`, kept here so the
+ * identity can be applied to all 7,201 buildings offline rather than only to the
+ * Blender sample. Shoelace area of each tier ring times its height, plus every
+ * rooftop prism, less every recess box and plus every protrusion box. Corner
+ * clearance is what makes the box terms a plain sum: no two placement boxes can
+ * meet inside a corner, so none is double counted.
+ */
+export function midtownCoreV3AnalyticVolumeCubicMeters(plan: V3Plan, includeRecesses: boolean): number {
+  let volume = 0;
+  for (const tier of plan.tiers) volume += (ringAreaMm2(tier.ring) / 1e6) * ((tier.topZMm - tier.baseZMm) / 1_000);
+  // Rooftop prisms are emitted at BOTH levels of detail — they are silhouette,
+  // not detail — so the identity counts them at both.
+  for (const prism of plan.prisms) volume += (ringAreaMm2(prism.ring) / 1e6) * ((prism.topZMm - prism.baseZMm) / 1_000);
+  if (!includeRecesses) return volume;
+  for (const placement of plan.placements) {
+    const bounds = placement.bounds;
+    const area = ((bounds.uMaxMm - bounds.uMinMm) / 1_000) * ((bounds.vMaxMm - bounds.vMinMm) / 1_000);
+    const depth = Math.abs(placement.depthMm / 1_000);
+    volume += RECESS_KINDS.has(placement.kind) ? -area * depth : area * depth;
+  }
+  return volume;
+}
+
+/**
+ * Signed volume of the emitted surface, by the divergence theorem.
+ *
+ * Positive means outward-consistent normals; agreement with the analytic volume
+ * means the surface is closed. A mesh with a hole, an inverted normal, a
+ * self-overlapping tier ring or a placement that punched through a neck cannot
+ * satisfy the identity.
+ */
+export function midtownCoreV3MeshVolumeCubicMeters(geometry: { quads: readonly CanonicalGlbQuad[]; triangles: readonly CanonicalGlbTri[] }): number {
+  let sixTimes = 0;
+  const accumulate = (a: Vec3, b: Vec3, c: Vec3): void => {
+    sixTimes += a[0] * (b[1] * c[2] - b[2] * c[1])
+      - a[1] * (b[0] * c[2] - b[2] * c[0])
+      + a[2] * (b[0] * c[1] - b[1] * c[0]);
+  };
+  for (const quad of geometry.quads) {
+    accumulate(quad.corners[0], quad.corners[1], quad.corners[2]);
+    accumulate(quad.corners[0], quad.corners[2], quad.corners[3]);
+  }
+  for (const triangle of geometry.triangles) accumulate(triangle.a, triangle.b, triangle.c);
+  return sixTimes / 6;
+}
+
+// ---------------------------------------------------------------------------
+// True-footprint-vertex registration
+// ---------------------------------------------------------------------------
+
+export interface MidtownCoreV3Registration {
+  buildingId: string;
+  sourceVertexCount: number;
+  ringVertexCount: number;
+  /** Symmetric worst per-vertex distance between sourced ring and shipped ring. */
+  perVertexShapeDeviationMeters: number;
+  /** Worst shipped ring vertex to the nearest ground-plane vertex actually written. */
+  ringVertexPresenceMeters: number;
+  horizontalDeviationMeters: number;
+  verticalDeviationMeters: number;
+  ringOrientationReversed: boolean;
+  withinTolerance: boolean;
+}
+
+const GROUND_PLANE_EPSILON_METERS = 1e-4;
+
+function directedVertexDeviation(from: readonly Point2[], to: readonly Point2[]): number {
+  let worst = 0;
+  for (const point of from) {
+    let nearest = Number.POSITIVE_INFINITY;
+    for (const candidate of to) nearest = Math.min(nearest, Math.hypot(candidate[0] - point[0], candidate[1] - point[1]));
+    worst = Math.max(worst, nearest);
+  }
+  return worst;
+}
+
+/**
+ * Measures the shipped ground ring against the SOURCED polygon, vertex for
+ * vertex, exactly as the Block 835 V3 package does. The measure is SYMMETRIC and
+ * is taken against the ring alone, never against every ground-plane vertex — the
+ * ground plane also carries entrance and storefront recess corners, and a one
+ * directional measure over that superset would let an unrelated detail vertex
+ * stand in for a ring vertex.
+ */
+export function midtownCoreV3Registration(
+  context: MidtownCoreV3PlanContext,
+  exported: { quads: readonly CanonicalGlbQuad[]; triangles: readonly CanonicalGlbTri[] },
+): MidtownCoreV3Registration {
+  const closedSource = context.source.outerRing.length > 1
+    && context.source.outerRing[0]![0] === context.source.outerRing[context.source.outerRing.length - 1]![0]
+    && context.source.outerRing[0]![1] === context.source.outerRing[context.source.outerRing.length - 1]![1]
+    ? context.source.outerRing.slice(0, -1)
+    : [...context.source.outerRing];
+  const sourceVertices: Point2[] = closedSource.map((point) => toEnuMeters(context.frame, point));
+  let minimumZ = Number.POSITIVE_INFINITY;
+  const visit = (corner: Vec3): void => { if (corner[2] < minimumZ) minimumZ = corner[2]; };
+  for (const quad of exported.quads) for (const corner of quad.corners) visit(corner);
+  for (const triangle of exported.triangles) for (const corner of [triangle.a, triangle.b, triangle.c]) visit(corner);
+  const observed: Point2[] = [];
+  const collect = (corner: Vec3): void => { if (Math.abs(corner[2] - minimumZ) <= GROUND_PLANE_EPSILON_METERS) observed.push([corner[0], corner[1]]); };
+  for (const quad of exported.quads) for (const corner of quad.corners) collect(corner);
+  for (const triangle of exported.triangles) for (const corner of [triangle.a, triangle.b, triangle.c]) collect(corner);
+
+  const shippedRing: Point2[] = context.ringMm.map((point) => [point[0] / 1_000, point[1] / 1_000]);
+  const ringPresence = observed.length === 0 ? Number.POSITIVE_INFINITY : directedVertexDeviation(shippedRing, observed);
+  const shape = Math.max(directedVertexDeviation(sourceVertices, shippedRing), directedVertexDeviation(shippedRing, sourceVertices));
+  const mean = (points: readonly Point2[]): Point2 => [
+    points.reduce((sum, point) => sum + point[0], 0) / points.length,
+    points.reduce((sum, point) => sum + point[1], 0) / points.length,
+  ];
+  const sourceCentroid = mean(sourceVertices);
+  const shippedCentroid = mean(shippedRing);
+  const horizontal = Math.hypot(shippedCentroid[0] - sourceCentroid[0], shippedCentroid[1] - sourceCentroid[1]);
+  const roofElevation = context.plan.input.geometry.heightMm / 1_000;
+  const sourcedHeight = context.heightSource === "fallback" ? MIDTOWN_CORE_FALLBACK_HEIGHT_METERS : context.source.heightMeters!;
+  const vertical = Math.abs(roofElevation - minimumZ - sourcedHeight);
+  return {
+    buildingId: context.source.buildingId,
+    sourceVertexCount: sourceVertices.length,
+    ringVertexCount: shippedRing.length,
+    perVertexShapeDeviationMeters: shape,
+    ringVertexPresenceMeters: ringPresence,
+    horizontalDeviationMeters: horizontal,
+    verticalDeviationMeters: vertical,
+    ringOrientationReversed: context.reversed,
+    withinTolerance: shape <= MIDTOWN_CORE_V3_REGISTRATION_TOLERANCE.perVertexShapeMeters
+      && horizontal <= MIDTOWN_CORE_V3_REGISTRATION_TOLERANCE.horizontalMeters
+      && vertical <= MIDTOWN_CORE_V3_REGISTRATION_TOLERANCE.verticalMeters
+      && ringPresence <= 1e-3,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Canonical GLB emission
+// ---------------------------------------------------------------------------
+
+export function midtownCoreV3AssetRef(buildingId: string, lodId: MidtownCoreV3LodId): string {
+  return `public/assets/${buildingId.replace(":", "-")}__${lodId}.glb`;
+}
+export function midtownCoreV3InventoryId(buildingId: string): string {
+  return `inventory:${MIDTOWN_CORE_V3_RELEASE_ID}:${buildingId}`;
+}
+export function midtownCoreV3EvidenceShardId(buildingId: string): string {
+  return `evidence-shard:${MIDTOWN_CORE_V3_RELEASE_ID}:${buildingId}`;
+}
+
+export interface MidtownCoreV3AssetBytes {
+  lodId: MidtownCoreV3LodId;
+  relativeRef: string;
+  bytes: Uint8Array;
+  checksumSha256: string;
+  counts: { triangleCount: number; materialCount: number; textureCount: number };
+  /** Relative deviation of the emitted surface from the analytic solid volume. */
+  volumeDeviation: number;
+  meshVolumeCubicMeters: number;
+  analyticVolumeCubicMeters: number;
+}
+
+export interface MidtownCoreV3AssetResult {
+  assets: MidtownCoreV3AssetBytes[];
+  registration: MidtownCoreV3Registration;
+  truthTiers: readonly string[];
+  /** True when the tier offset was refused and `setbacks` ships `absent`. */
+  setbacksAbsent: boolean;
+  setbackDisclosure: string;
+}
+
+/**
+ * Writes both canonical GLBs for one planned building and runs every per-asset
+ * census gate on the bytes it just produced.
+ *
+ * The gates are applied HERE rather than in a later pass so a building that
+ * fails one is refused with a stop code and never reaches a release: an asset
+ * that missed its analytic volume is not a warning, it is geometry nobody can
+ * vouch for.
+ */
+export function writeMidtownCoreV3Assets(
+  context: MidtownCoreV3PlanContext,
+  options: {
+    ownerCellId: string;
+    capturedAt: string | null;
+    updatedAt: string | null;
+    /** V2 asset pin for this building, when the predecessor wave shipped one. */
+    predecessor: ImmutablePin | null;
+  },
+): MidtownCoreV3AssetResult {
+  const plan = context.plan;
+  const buildingId = context.source.buildingId;
+  const inventoryId = midtownCoreV3InventoryId(buildingId);
+  const inventoryHashSha256 = sha256HexSync(stableSerialize(plan.inventory));
+  let truthTiers: readonly string[];
+  try {
+    truthTiers = v3TruthTiers(plan);
+  } catch (error) {
+    throw new MidtownCoreV3Stop(buildingId, "plan-validation-failed", error instanceof Error ? error.message : String(error));
+  }
+  const setbacksComponent = plan.inventory.components.find((component) => component.kind === "setbacks");
+  const setbacksAbsent = setbacksComponent?.state === "absent";
+
+  const assets: MidtownCoreV3AssetBytes[] = [];
+  let registration: MidtownCoreV3Registration | null = null;
+  for (const [lodIndex, lodId] of MIDTOWN_CORE_V3_LOD_IDS.entries()) {
+    const includeRecesses = lodIndex === 0;
+    const tessellation = tessellateV3Plan(plan, { includeRecesses });
+    const enu: V3GlbGeometry = v3GeometryForGlb(plan, tessellation, { yUp: false });
+    if (lodIndex === 0) {
+      registration = midtownCoreV3Registration(context, enu);
+      if (!registration.withinTolerance) {
+        throw new MidtownCoreV3Stop(
+          buildingId,
+          "registration-out-of-tolerance",
+          `shape ${registration.perVertexShapeDeviationMeters} m / horizontal ${registration.horizontalDeviationMeters} m / vertical ${registration.verticalDeviationMeters} m / ring presence ${registration.ringVertexPresenceMeters} m.`,
+        );
+      }
+    }
+    const analyticVolume = midtownCoreV3AnalyticVolumeCubicMeters(plan, includeRecesses);
+    const meshVolume = midtownCoreV3MeshVolumeCubicMeters(enu);
+    const volumeDeviation = analyticVolume === 0 ? Number.POSITIVE_INFINITY : Math.abs(meshVolume - analyticVolume) / Math.abs(analyticVolume);
+    if (!(volumeDeviation < MIDTOWN_CORE_V3_VOLUME_TOLERANCE) || !(meshVolume > 0)) {
+      throw new MidtownCoreV3Stop(
+        buildingId,
+        "volume-identity-failed",
+        `${lodId} signed mesh volume ${meshVolume} m³ against analytic ${analyticVolume} m³ (deviation ${volumeDeviation}).`,
+      );
+    }
+    const file = v3GeometryForGlb(plan, tessellation, { yUp: true });
+    const written = writeCanonicalGlb({
+      quads: file.quads,
+      triangles: file.triangles,
+      materials: file.materials,
+      metadata: {
+        canonicalFeatureId: buildingId,
+        lodId,
+        ownerCellId: options.ownerCellId,
+        inventoryId,
+        inventoryHashSha256,
+        evidenceShardId: midtownCoreV3EvidenceShardId(buildingId),
+        truthTiers,
+        sourceDates: { capturedAt: options.capturedAt, updatedAt: options.updatedAt },
+        // The V2 asset this one supersedes, pinned by checksum and never edited.
+        // Explicitly null when the predecessor wave shipped nothing for it.
+        predecessor: options.predecessor,
+        uncertainty: MIDTOWN_CORE_V3_UNCERTAINTY,
+        planHashSha256: plan.planHashSha256,
+      },
+    });
+    if (
+      written.counts.triangleCount > V3_QUALITY_BUDGETS.maxTriangles
+      || written.counts.materialCount > V3_QUALITY_BUDGETS.maxMaterials
+      || written.counts.textureCount > V3_QUALITY_BUDGETS.maxTextures
+    ) {
+      throw new MidtownCoreV3Stop(
+        buildingId,
+        "asset-budget-exceeded",
+        `${lodId} declares ${written.counts.triangleCount} triangles / ${written.counts.materialCount} materials / ${written.counts.textureCount} textures against the V3 budgets.`,
+      );
+    }
+    assets.push({
+      lodId,
+      relativeRef: midtownCoreV3AssetRef(buildingId, lodId),
+      bytes: written.bytes,
+      checksumSha256: sha256HexBytes(written.bytes),
+      counts: written.counts,
+      volumeDeviation,
+      meshVolumeCubicMeters: meshVolume,
+      analyticVolumeCubicMeters: analyticVolume,
+    });
+  }
+  return {
+    assets,
+    registration: registration!,
+    truthTiers,
+    setbacksAbsent,
+    setbackDisclosure: plan.massing.setbackDisclosure,
+  };
+}

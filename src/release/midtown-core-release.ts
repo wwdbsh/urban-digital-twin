@@ -34,6 +34,7 @@
 import { sha256HexBytes, sha256HexSync, stableSerialize } from "../domain/deterministic-hash.ts";
 import {
   EXTERIOR_COMPONENT_SCHEMA_VERSION,
+  isExteriorComponentReleaseEligible,
   type ExteriorApprovalEvidence,
   type ExteriorComponentInventory,
   type ExteriorEvidenceGraph,
@@ -65,9 +66,11 @@ import {
   type AssemblyArtifact,
   type AssemblyAsset,
   type AssemblyLod,
+  type ImmutablePin,
   type MultiLodAssemblyManifest,
 } from "./multi-lod-assembly.ts";
 import { BLOCK835_QUALITY_BUDGETS, enuFrame, toEnuMeters } from "./block835-reference-package.ts";
+import { membershipChecksum } from "./exterior-wave-ledger.ts";
 import { MIDTOWN_CORE_RELEASE_ID, type MidtownCoreSubset } from "./midtown-core-package.ts";
 import {
   MIDTOWN_CORE_GENERATED_AT,
@@ -148,13 +151,95 @@ export const MIDTOWN_CORE_APPROVAL: ExteriorApprovalEvidence = {
 export const MIDTOWN_CORE_DEFERRED_REASON =
   "Owned by this release but not materialized in this cycle: exterior geometry ships only for the bounded set of cells named by the release record, so this building carries no exterior asset and no substitute was selected." as const;
 
-export function midtownCoreCellReleaseId(cellId: string): string {
-  return `cell-release:${MIDTOWN_CORE_RELEASE_ID}:${cellId}:${MIDTOWN_CORE_CELL_RELEASE_VERSION}`;
+export function midtownCoreCellReleaseId(cellId: string, releaseId: string = MIDTOWN_CORE_RELEASE_ID): string {
+  return `cell-release:${releaseId}:${cellId}:${MIDTOWN_CORE_CELL_RELEASE_VERSION}`;
 }
 
-export function midtownCoreTombstoneId(buildingId: string): string {
-  return `tombstone:${MIDTOWN_CORE_RELEASE_ID}:${buildingId}`;
+export function midtownCoreTombstoneId(buildingId: string, releaseId: string = MIDTOWN_CORE_RELEASE_ID): string {
+  return `tombstone:${releaseId}:${buildingId}`;
 }
+
+// ---------------------------------------------------------------------------
+// Release profile
+//
+// The emitter is parameterised so a SUCCESSOR wave can reuse it without a
+// second copy and without touching a byte of the release above. Every logical
+// id derives from the profile's release id, so the two releases can never
+// collide on an artifact path, an inventory id or a cell-release id.
+//
+// The V2 profile below is the default, and `buildMidtownCoreRelease(input)`
+// keeps its original call shape. `midtown-core-release.test.ts` re-emits the V2
+// release through the now-two-profile emitter and compares it against the
+// committed checksum inventory, so "V2 bytes are unchanged" is asserted rather
+// than asserted-by-intent.
+// ---------------------------------------------------------------------------
+
+/** Every logical identity a midtown-core wave release derives from its id. */
+export function midtownCoreReleaseIds(releaseId: string): {
+  releaseId: string;
+  privateRootId: string;
+  publicRootId: string;
+  privateReleaseId: string;
+  snapshotId: string;
+  approvalId: string;
+  assemblyPackageId: string;
+  outputDirectory: string;
+} {
+  return {
+    releaseId,
+    privateRootId: `root:${releaseId}:private`,
+    publicRootId: `root:${releaseId}:public`,
+    privateReleaseId: `${releaseId}-private`,
+    snapshotId: `snapshot:${releaseId}:v1`,
+    approvalId: `approval:${releaseId}:midtown-core-canary`,
+    assemblyPackageId: `assembly:${releaseId}:v1`,
+    outputDirectory: `public/data/${releaseId}`,
+  };
+}
+
+/**
+ * Pins of the wave release a successor supersedes without editing it.
+ *
+ * Cross-release lineage is expressed at the ROOT and SNAPSHOT level only, and
+ * deliberately NOT on the cell releases. `ExteriorCellRelease.predecessor` is an
+ * intra-graph version link — the contract requires the predecessor cell release
+ * to exist in the same graph and requires a versioned cell's fallback to BE that
+ * predecessor — so pointing it at another release's cell would either be
+ * unresolvable or would promise a runtime substitution into bytes this release
+ * never verified. Each cell of a successor release is therefore the initial
+ * version of its own lineage, falling back to pinned base massing, exactly as
+ * the Block 835 V3 successor does.
+ */
+export interface MidtownCoreReleasePredecessor {
+  releaseId: string;
+  /** The predecessor's public root manifest. */
+  publicRoot: { rootId: string; rootChecksumSha256: string };
+  /** The predecessor's public rollout snapshot. */
+  snapshot: { snapshotId: string; checksumSha256: string };
+  /** Predecessor cell-release pins, keyed by cell id. Recorded, never emitted as a cell predecessor. */
+  cellReleases: ReadonlyMap<string, { cellReleaseId: string; checksumSha256: string }>;
+}
+
+export interface MidtownCoreReleaseProfile {
+  releaseId: string;
+  generatedAt: string;
+  approval: ExteriorApprovalEvidence;
+  /** Asset quality budgets this wave's shipped LODs are measured against. */
+  budgets: { maxTriangles: number; maxMaterials: number; maxTextures: number };
+  inventoryId: (buildingId: string) => string;
+  evidenceShardId: (buildingId: string) => string;
+  predecessor: MidtownCoreReleasePredecessor | null;
+}
+
+export const MIDTOWN_CORE_V2_PROFILE: MidtownCoreReleaseProfile = {
+  releaseId: MIDTOWN_CORE_RELEASE_ID,
+  generatedAt: MIDTOWN_CORE_GENERATED_AT,
+  approval: MIDTOWN_CORE_APPROVAL,
+  budgets: { ...BLOCK835_QUALITY_BUDGETS },
+  inventoryId: midtownCoreInventoryId,
+  evidenceShardId: midtownCoreEvidenceShardId,
+  predecessor: null,
+};
 
 // ---------------------------------------------------------------------------
 // Inputs
@@ -186,6 +271,12 @@ export interface MidtownCoreMaterializedBuilding {
   uncertainty: string;
   inventory: ExteriorComponentInventory;
   assets: readonly MidtownCoreShippedAsset[];
+  /**
+   * The predecessor wave's asset this one supersedes, pinned by checksum.
+   * Absent or `null` means the predecessor shipped nothing for this building,
+   * which is the honest statement for a first-generation wave.
+   */
+  predecessor?: ImmutablePin | null;
 }
 
 export interface MidtownCoreReleaseInput {
@@ -197,6 +288,8 @@ export interface MidtownCoreReleaseInput {
   refusals?: ReadonlyMap<string, string>;
   /** Real capture chronology of the pinned base snapshot. */
   capture: { capturedAt: string; updatedAt: string };
+  /** Omitted selects the V2 profile and reproduces its bytes exactly. */
+  profile?: MidtownCoreReleaseProfile;
 }
 
 export interface MidtownCoreReleaseStats {
@@ -355,7 +448,7 @@ export function midtownCoreConveyanceRights(entry: {
  * ids are taken from the same field, so the evidence graph and the inventory
  * cite one identity.
  */
-function sourceRights(): SourceRights {
+function sourceRights(approvalId: string): SourceRights {
   const entry = getSourceRegistryEntry(MIDTOWN_CORE_SOURCE_REGISTRY_ID);
   if (!entry) fail(`source registry entry ${MIDTOWN_CORE_SOURCE_REGISTRY_ID} is absent.`);
   if (entry.datasetId !== "jh45-qr5r") fail(`source registry entry ${entry.id} no longer names dataset jh45-qr5r.`);
@@ -402,7 +495,7 @@ function sourceRights(): SourceRights {
         updatedAt,
         attribution: entry.attribution,
         licenseId: license.id,
-        approvalId: MIDTOWN_CORE_APPROVAL.id,
+        approvalId,
       };
     },
   };
@@ -426,6 +519,9 @@ function tileBox(bounds: MidtownCoreShippedAsset["bounds"]): number[] {
 // ---------------------------------------------------------------------------
 
 export function buildMidtownCoreRelease(input: MidtownCoreReleaseInput): MidtownCoreRelease {
+  const profile = input.profile ?? MIDTOWN_CORE_V2_PROFILE;
+  const ids = midtownCoreReleaseIds(profile.releaseId);
+  const approval = profile.approval;
   const ledger = input.subset.ledger;
   const refusals = input.refusals ?? new Map<string, string>();
   const cellById = new Map(ledger.cells.map((cell) => [cell.cellId, cell]));
@@ -434,9 +530,9 @@ export function buildMidtownCoreRelease(input: MidtownCoreReleaseInput): Midtown
   if (new Set(renderableCellIds).size !== renderableCellIds.length) fail("renderable cell ids must be unique.");
   for (const cellId of renderableCellIds) if (!cellById.has(cellId)) fail(`renderable cell ${cellId} is outside canonical ownership.`);
 
-  const capturedAt = requireNotAfter(canonicalTimestamp(input.capture.capturedAt, "base capture timestamp"), MIDTOWN_CORE_APPROVED_AT, "base capture timestamp");
-  const updatedAt = requireNotAfter(canonicalTimestamp(input.capture.updatedAt, "base source update timestamp"), MIDTOWN_CORE_APPROVED_AT, "base source update timestamp");
-  const rights = sourceRights();
+  const capturedAt = requireNotAfter(canonicalTimestamp(input.capture.capturedAt, "base capture timestamp"), approval.approvedAt, "base capture timestamp");
+  const updatedAt = requireNotAfter(canonicalTimestamp(input.capture.updatedAt, "base source update timestamp"), approval.approvedAt, "base source update timestamp");
+  const rights = sourceRights(approval.id);
 
   const materializedById = new Map(input.materialized.map((building) => [building.buildingId, building]));
   if (materializedById.size !== input.materialized.length) fail("a materialized building was supplied more than once.");
@@ -490,20 +586,27 @@ export function buildMidtownCoreRelease(input: MidtownCoreReleaseInput): Midtown
         details.push({
           buildingId,
           status: "unavailable",
-          tombstoneId: midtownCoreTombstoneId(buildingId),
+          tombstoneId: midtownCoreTombstoneId(buildingId, profile.releaseId),
           reason: refusal ?? MIDTOWN_CORE_DEFERRED_REASON,
-          // First generation of this cell lineage: there is no predecessor
-          // inventory a tombstone could cite.
+          // The predecessor wave's inventory for this building, when it shipped
+          // one. A first-generation wave has no predecessor inventory to cite
+          // and states `null` rather than inventing a lineage.
           previousInventoryId: null,
         });
         continue;
       }
-      const inventoryId = midtownCoreInventoryId(buildingId);
-      const evidenceShardId = midtownCoreEvidenceShardId(buildingId);
+      const inventoryId = profile.inventoryId(buildingId);
+      const evidenceShardId = profile.evidenceShardId(buildingId);
       if (building.inventory.buildingId !== buildingId) fail(`inventory for ${buildingId} names building ${building.inventory.buildingId}.`);
       const inventoryHashSha256 = sha256HexSync(stableSerialize(building.inventory));
       const truthTiers = [...new Set(building.inventory.components.map((component) => component.state))].sort(compareText);
-      if (truthTiers.length !== 1 || truthTiers[0] !== "generated") fail(`asset ${buildingId} is not entirely generated (${truthTiers.join(", ")}).`);
+      // The contract's own promotion gate, not a local restatement of it. It
+      // still refuses every absent kind except the conditionally-applicable
+      // ones, and refuses those unless the absence carries a stated reason.
+      const ineligible = building.inventory.components.filter((component) => !isExteriorComponentReleaseEligible(component));
+      if (ineligible.length > 0) {
+        fail(`asset ${buildingId} declares components no release may promote: ${ineligible.map((component) => `${component.kind} is ${component.state}`).join(", ")}.`);
+      }
       const source = rights.source(building, capturedAt, updatedAt);
       const constraintIds = [...new Set(building.inventory.components.flatMap((component) => component.state === "generated" ? component.generator.constraintSourceIds : []))];
       if (constraintIds.length !== 1 || constraintIds[0] !== source.id) fail(`inventory for ${buildingId} does not constrain exactly the ${source.id} source.`);
@@ -512,7 +615,7 @@ export function buildMidtownCoreRelease(input: MidtownCoreReleaseInput): Midtown
         schemaVersion: EXTERIOR_COMPONENT_SCHEMA_VERSION,
         sources: [source],
         licenses: [{ ...rights.license, allowedUse: { ...rights.license.allowedUse }, retention: { ...rights.license.retention } }],
-        approvals: [{ ...MIDTOWN_CORE_APPROVAL, exclusions: [...MIDTOWN_CORE_APPROVAL.exclusions] }],
+        approvals: [{ ...approval, exclusions: [...approval.exclusions] }],
         // Every component ships at the generated tier, so there is no claim
         // evidence to cite and the list is explicitly empty.
         evidence: [],
@@ -557,7 +660,7 @@ export function buildMidtownCoreRelease(input: MidtownCoreReleaseInput): Midtown
           // asset without an eligible representation.
           maxDistanceMeters: null,
           eligible: true,
-          quality: { ...asset.counts, budgets: { ...BLOCK835_QUALITY_BUDGETS } },
+          quality: { ...asset.counts, budgets: { ...profile.budgets } },
           silhouette: null,
         });
         const offset = toEnuMeters(packageFrame, building.representative);
@@ -585,14 +688,14 @@ export function buildMidtownCoreRelease(input: MidtownCoreReleaseInput): Midtown
         evidenceShardId,
         truthTiers: truthTiers as AssemblyAsset["truthTiers"],
         sourceDates: { capturedAt, updatedAt },
-        predecessor: null,
+        predecessor: building.predecessor ?? null,
         uncertainty: building.uncertainty,
         source: { kind: "facade-plan", planId: building.planId, planHashSha256: building.planHashSha256 },
         lods,
       });
     }
 
-    const cellReleaseId = midtownCoreCellReleaseId(cell.cellId);
+    const cellReleaseId = midtownCoreCellReleaseId(cell.cellId, profile.releaseId);
     cellReleases.push({
       schemaVersion: EXTERIOR_RELEASE_SCHEMA_VERSION,
       cellReleaseId,
@@ -607,10 +710,16 @@ export function buildMidtownCoreRelease(input: MidtownCoreReleaseInput): Midtown
       baseIdentitySetId: ledger.baseIdentitySet.id,
       baseIdentitySetChecksumSha256: ledger.baseIdentitySet.checksumSha256,
       buildingIds: [...cell.buildingIds],
+      // Intra-graph version link only; see `MidtownCoreReleasePredecessor`.
       predecessor: null,
-      promotion: { ...MIDTOWN_CORE_APPROVAL, exclusions: [...MIDTOWN_CORE_APPROVAL.exclusions] },
-      // No public predecessor exists for any cell of this wave, so the only
-      // honest fallback is the pinned base identity set.
+      promotion: { ...approval, exclusions: [...approval.exclusions] },
+      // The fallback stays the pinned base identity set even for a successor
+      // wave. A cell-release fallback is what the runtime degrades to when THIS
+      // release fails verification, and degrading to a predecessor release the
+      // runtime has not verified in the same session would substitute bytes
+      // nobody checked; base massing is the representation that is always
+      // verified. The lineage is pinned on the root and the snapshot instead,
+      // which records it without promising a silent substitution.
       fallback: { mode: "pinned-base", baseIdentitySetId: ledger.baseIdentitySet.id, checksumSha256: ledger.baseIdentitySet.checksumSha256 },
       buildingDetails: details,
       immutable: true,
@@ -632,19 +741,27 @@ export function buildMidtownCoreRelease(input: MidtownCoreReleaseInput): Midtown
 
   const snapshot: ExteriorRolloutSnapshot = {
     schemaVersion: EXTERIOR_RELEASE_SCHEMA_VERSION,
-    snapshotId: MIDTOWN_CORE_SNAPSHOT_ID,
+    snapshotId: ids.snapshotId,
     audience: "public",
-    artifactRef: artifactRefFor("public", "rollout-snapshot", MIDTOWN_CORE_SNAPSHOT_ID),
+    artifactRef: artifactRefFor("public", "rollout-snapshot", ids.snapshotId),
     cityId: ledger.cityId,
     configId: ledger.configId,
     ownershipLedgerId: ledger.ledgerId,
     baseIdentitySetId: ledger.baseIdentitySet.id,
     baseIdentitySetChecksumSha256: ledger.baseIdentitySet.checksumSha256,
+    // Both are intra-graph links, exactly like the cell-release predecessor:
+    // the contract requires a snapshot predecessor to exist in this graph, and
+    // requires each audience to carry exactly one initial complete snapshot. A
+    // successor RELEASE is a new lineage, so its only snapshot is that initial
+    // one. The cross-release ancestry is cited on the public root, and the
+    // rollback a second promotion actually needs is the promotion-record swap in
+    // `exterior-default-activation.ts`, which restores the predecessor RELEASE
+    // rather than an ancestor snapshot inside this one.
     predecessor: null,
     rollbackTarget: null,
     cells: cellReleases.map((cell) => ({ cellId: cell.cellId, cellReleaseId: cell.cellReleaseId, checksumSha256: cellReleaseBlobs.get(cell.cellReleaseId)!.ref.checksumSha256 })),
-    promotion: { ...MIDTOWN_CORE_APPROVAL, exclusions: [...MIDTOWN_CORE_APPROVAL.exclusions] },
-    generatedAt: MIDTOWN_CORE_GENERATED_AT,
+    promotion: { ...approval, exclusions: [...approval.exclusions] },
+    generatedAt: profile.generatedAt,
     immutable: true,
   };
   const snapshotBlob = artifactBlob("public", "rollout-snapshot", snapshot.snapshotId, snapshot);
@@ -656,15 +773,15 @@ export function buildMidtownCoreRelease(input: MidtownCoreReleaseInput): Midtown
   const privateRootDraft = {
     schemaVersion: EXTERIOR_RELEASE_SCHEMA_VERSION,
     audience: "private" as const,
-    rootId: MIDTOWN_CORE_PRIVATE_ROOT_ID,
-    releaseId: MIDTOWN_CORE_PRIVATE_RELEASE_ID,
+    rootId: ids.privateRootId,
+    releaseId: ids.privateReleaseId,
     cityId: ledger.cityId,
     configId: ledger.configId,
-    generatedAt: MIDTOWN_CORE_GENERATED_AT,
+    generatedAt: profile.generatedAt,
     immutable: true as const,
     artifactAllowlist: privateArtifacts.map((artifact) => artifact.relativeRef),
     artifacts: privateArtifacts,
-    approval: { ...MIDTOWN_CORE_APPROVAL, exclusions: [...MIDTOWN_CORE_APPROVAL.exclusions] },
+    approval: { ...approval, exclusions: [...approval.exclusions] },
     predecessor: null,
     privatePredecessor: null,
   };
@@ -673,16 +790,24 @@ export function buildMidtownCoreRelease(input: MidtownCoreReleaseInput): Midtown
   const publicRootDraft = {
     schemaVersion: EXTERIOR_RELEASE_SCHEMA_VERSION,
     audience: "public" as const,
-    rootId: MIDTOWN_CORE_PUBLIC_ROOT_ID,
-    releaseId: MIDTOWN_CORE_RELEASE_ID,
+    rootId: ids.publicRootId,
+    releaseId: ids.releaseId,
     cityId: ledger.cityId,
     configId: ledger.configId,
-    generatedAt: MIDTOWN_CORE_GENERATED_AT,
+    generatedAt: profile.generatedAt,
     immutable: true as const,
     artifactAllowlist: publicArtifacts.map((artifact) => artifact.relativeRef),
     artifacts: publicArtifacts,
-    approval: { ...MIDTOWN_CORE_APPROVAL, exclusions: [...MIDTOWN_CORE_APPROVAL.exclusions] },
-    predecessor: null,
+    approval: { ...approval, exclusions: [...approval.exclusions] },
+    // Path-free citation of the public wave release this one supersedes, by
+    // immutable logical identity and checksum — the same citation form the
+    // contract defines for `privatePredecessor`, and the only level at which
+    // cross-release ancestry is representable: cell-release and snapshot
+    // predecessors are both intra-graph version links. The predecessor's own
+    // bytes are untouched and remain on disk.
+    predecessor: profile.predecessor
+      ? { rootId: profile.predecessor.publicRoot.rootId, rootChecksumSha256: profile.predecessor.publicRoot.rootChecksumSha256 }
+      : null,
     // Path-free citation of private ancestry; the private bytes never ship.
     privatePredecessor: { rootId: privateRoot.rootId, rootChecksumSha256: privateRoot.rootChecksumSha256 },
   };
@@ -721,14 +846,14 @@ export function buildMidtownCoreRelease(input: MidtownCoreReleaseInput): Midtown
   const tilesetBytes = encode(JSON.stringify(tileset));
   const artifacts: AssemblyArtifact[] = [
     ...glbArtifacts,
-    { logicalId: `tileset:${MIDTOWN_CORE_ASSEMBLY_PACKAGE_ID}`, role: "tileset-json" as const, relativeRef: MIDTOWN_CORE_TILESET_REF, byteSize: tilesetBytes.byteLength, checksumSha256: sha256HexBytes(tilesetBytes), ownerCellId: null },
+    { logicalId: `tileset:${ids.assemblyPackageId}`, role: "tileset-json" as const, relativeRef: MIDTOWN_CORE_TILESET_REF, byteSize: tilesetBytes.byteLength, checksumSha256: sha256HexBytes(tilesetBytes), ownerCellId: null },
   ].sort((left, right) => compareText(left.relativeRef, right.relativeRef));
 
   const assembly: MultiLodAssemblyManifest = {
     schemaVersion: "1.0",
-    packageId: MIDTOWN_CORE_ASSEMBLY_PACKAGE_ID,
+    packageId: ids.assemblyPackageId,
     audience: "public",
-    generatedAt: MIDTOWN_CORE_GENERATED_AT,
+    generatedAt: profile.generatedAt,
     immutable: true,
     release: {
       rootId: publicRoot.rootId,
@@ -742,13 +867,26 @@ export function buildMidtownCoreRelease(input: MidtownCoreReleaseInput): Midtown
     ownershipLedger: { id: ledger.ledgerId, checksumSha256: ledgerBlobs.public.ref.checksumSha256 },
     cells: renderableCellIds.map((cellId) => {
       const cell = cellById.get(cellId)!;
-      const cellReleaseId = midtownCoreCellReleaseId(cellId);
+      const cellReleaseId = midtownCoreCellReleaseId(cellId, profile.releaseId);
+      // The ASSEMBLY states the membership this package actually packages, and
+      // the assembly validator enforces exactly that: every listed member must
+      // carry a shipped asset. Owned-but-refused buildings are not a hole here —
+      // they are stated in the release graph's cell release, which lists every
+      // owned building and carries an `unavailable` detail with its reason for
+      // each one that ships nothing. When the two sets coincide the ledger's own
+      // membership checksum already describes this list and is carried verbatim;
+      // when a building was refused, the checksum is recomputed over the packaged
+      // list through the ledger's own derivation, so it never describes a
+      // different set from the one beside it.
+      const packaged = cell.buildingIds.filter((buildingId) => materializedById.has(buildingId));
       return {
         cellId,
         cellRelease: { id: cellReleaseId, checksumSha256: cellReleaseBlobs.get(cellReleaseId)!.ref.checksumSha256 },
         predecessor: null,
-        buildingIds: [...cell.buildingIds],
-        membershipChecksumSha256: cell.membershipChecksumSha256,
+        buildingIds: packaged,
+        membershipChecksumSha256: packaged.length === cell.buildingIds.length
+          ? cell.membershipChecksumSha256
+          : membershipChecksum(packaged),
       };
     }),
     assets,
@@ -761,7 +899,7 @@ export function buildMidtownCoreRelease(input: MidtownCoreReleaseInput): Midtown
 
   const index: ExteriorCellReleaseIndex = {
     schemaVersion: EXTERIOR_CELL_RUNTIME_SCHEMA_VERSION,
-    releaseId: MIDTOWN_CORE_RELEASE_ID,
+    releaseId: ids.releaseId,
     audience: "public",
     cityId: ledger.cityId,
     configId: ledger.configId,

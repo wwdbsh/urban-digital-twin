@@ -35,3 +35,8 @@ artifacts/block835-v3-determinism/
 # T027 V3T textured-package determinism scratch. The hashes that matter are
 # committed in data/manhattan-esb-block-reference-20260811-v3t/.
 artifacts/block835-v3t-determinism/
+
+# T026 P3 midtown-core V3 work root: full-wave censuses, Blender renders, and
+# journey evidence. The hashes that matter are committed in
+# data/midtown-core-20260811-v3/.
+artifacts/midtown-core-20260811-v3/
