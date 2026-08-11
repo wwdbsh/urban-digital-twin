@@ -278,3 +278,259 @@ renderable subset a curated choice. But "visual priority" currently means
 "southernmost first", and a wave whose south end is water gets a weaker visual
 canary than the label promises. Defining visual priority properly is a decision
 for promotion, not for this canary.
+
+---
+
+# Promotion decision (T016), 2026-08-12
+
+The three preconditions above were the whole of what promotion owed. This
+section records what was done about each, what was measured, and the two things
+promotion changed that the canary did not anticipate.
+
+## The promoted release is a SUCCESSOR, and it had to be
+
+Precondition (a) forbids promoting the canary's renderable subset. A release is
+immutable and its renderable subset is baked into its snapshot, its 126 cell
+releases, its assembly package and every asset checksum, so "ship different
+cells" is not an edit an immutable release can absorb. The promoted bytes are
+therefore `manhattan-lower-manhattan-cells-20260812-p1`, built by the same wave
+CLI from the same immutable plans, on the Midtown-core V3 successor mechanics:
+same wave, same wave-scoped ownership ledger
+(`ownership-ledger:manhattan-lower-manhattan-cells-20260812:44ec889a556ece19`,
+unchanged), same two hash domains from the closed-table registry, new release
+id, predecessor pinned by the canary's own committed inventory checksum.
+
+"The same immutable plans" is checkable rather than asserted: the release id is
+not an input to any plan hash, and the P1 wave profile differs from the canary's
+in the `releaseId` field and in nothing else — `lower-manhattan-curation.test.ts`
+diffs the two profiles and requires exactly that one key. The P1 plans stage
+reproduced the canary's plan census byte for byte: 6,298 planned, 127 refused,
+identical per-cell and per-building refusal lists.
+
+The canary keeps every byte it had. It was rebuilt through the refactored CLI as
+a regression and its committed inventory, derivation and wave census came back
+identical. The one thing that did move, and was reverted, is recorded below.
+
+## (a) — an explicit CURATED subset, recorded as curation
+
+Promotion took the ADR's **second** option. `lower-manhattan-curation.ts` states
+the subset as a list with a written reason per cell, and
+`LOWER_MANHATTAN_CURATION_STATEMENT` says in terms that visual priority for the
+promoted subset is a stated property whose value is that list, not a
+re-derivation of the ledger order under a new name.
+
+| cell | full-city order | owned | materialized | refused |
+| --- | --- | --- | --- | --- |
+| `manhattan-exterior-cell-w02-000160-16-19294-17945` | 160 | 32 | 32 | 0 |
+| `manhattan-exterior-cell-w02-000157-16-19294-17944` | 157 | 40 | 39 | 1 |
+| **total** | | **72** | **71** | **1** |
+
+The two cells are vertically adjacent and share their full east–west extent, so
+the promoted subset renders as one contiguous column over the World Trade Center
+site rather than two textured islands. Cell 157 owns the tallest sourced
+structure in the entire wave at 429.3 m, 105.0 m taller than anything else `w02`
+owns; cell 160 owns the wave's second and third tallest at 324.3 m and 298.2 m.
+Those are sourced `heightMeters` of the pinned citywide base and nothing more —
+the NYC OTI footprint dataset carries no building names, its `name` field is the
+literal string `Building <id>`, so no rationale here identifies a building by
+name and none is implied. The place names are geographic: the cell bounds
+provably cover that ground.
+
+The choice is also the OPTIMUM, and the enumeration is now COMMITTED rather than
+run once and thrown away. `lower-manhattan-curation-optimum.test.ts` enumerates
+every combination of up to four Financial District cells that fits the 72-entry
+budget, from the committed wave ledger, on every run.
+
+Ranked by OWNED buildings — the quantity the entry budget actually constrains,
+and the only one the ledger states — the pair (157, 160) reaches **72 and is the
+unique maximum**; the runner-up is the pair (157, 179) at 67, and the best single
+cell is 162 at 66. The curated pair materializes 71 of its 72.
+
+Two earlier drafts of this sentence were wrong in the same way and both are named
+here because the mistake is instructive. The first said "the next best is a
+single cell at 65", which is cell 162's MATERIALIZED count quoted as though it
+were the ranking quantity. Review corrected it to "cell 162 at 66 owned", which
+is cell 162's real owned count but is not the runner-up, because the pair
+(157, 179) reaches 67. Both were right about a number and wrong about what that
+number ranked. The test now pins the winner, the runner-up, the best single cell
+and both quantities for the curated pair, so a figure in this ADR cannot drift
+from the ledger again.
+
+Every gate that could make this curation false — a cell the ledger does not own,
+a cell whose bounds leave the stated Financial District envelope, a cell the
+canary already shipped, a subset that overflows the budget, a local refusal rate
+back at the canary's — refuses the build, and each refusal is exercised by test.
+
+The curated list is a CONSTANT rather than a derivation, and that broke the
+pipeline's resumability guarantee until this task fixed it. Every stage is
+fingerprint-gated, and the fingerprint hashed `renderableCellCount` but not WHICH
+cells: editing the list to a different pair of the same length moved nothing it
+hashed, so `plans` and `glbs` would have reported `skipped: true` and the release
+would have kept the previous curation's assets while its committed record
+described the new ones. `renderableCellDigestSha256` closes it, supplied only by
+a variant whose subset is curated — a subset walked from the ledger order is
+already covered by `subsetLedgerChecksumSha256`, so the canary's fingerprints
+stay byte-identical.
+
+Cells 150 and 151 are not reused, and the drift gate proves the two renderable
+sets are disjoint from the two releases' own committed inventories.
+
+## (b) — a local refusal rate near the wave rate
+
+**1 refusal in 72 owned buildings: 1.39%**, against the 2.09% wave rate and the
+canary's 34%. The distance from the wave rate is a fortieth of the canary's. The
+single refusal is `doitt:602678`, whose sourced ring carries more than the 64
+distinct vertices the V3 grammar supports; it ships as an explicit unavailable
+detail naming that refusal, is outside the accepted membership, and no tolerance
+was moved to admit it.
+
+The ceiling the gate enforces is 4.18%, twice the wave rate. It is stated as a
+ceiling rather than as a distance because the defect the precondition names is a
+promoted set that refuses a third of what it owns; refusing *less* than the wave
+does is not that defect.
+
+## (c) — measured OFF the vsync floor, with GPU memory named
+
+The canary's evidence was a floor test and said so. This measurement is not, and
+it proves it rather than claiming it.
+
+**The control is a second browser, not a blank page.** The first attempt spun the
+same rAF loop on an empty page in the same uncapped Chrome, on the theory that an
+empty page would read the present interval. It read 18 ms — slower than every
+loaded station — because Chrome throttles rAF on a page with nothing to draw. It
+would have been published as a vsync reading. The control that answers the
+question is the same station in a second Chrome launched **without**
+`--disable-gpu-vsync --disable-frame-rate-limit`.
+
+**Capped control: p50 8.30 ms.** That is the 120 Hz present interval, and it is
+exactly the floor the canary was pinned to. Every station below sits far under
+it, so these are headroom measurements.
+
+Measured over 3 repeats × 240 timed frames after a 180-frame settle, at 1280×800,
+on the promoted composition — Block 835 V3, Midtown-core V3 and the P1 successor
+streaming together over the pinned citywide base:
+
+| station | profile | p50 | p95 | worst frame | budget p50/p95 | p50 used | JS heap after GC |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `fidi-facade` | inspection | 3.6 ms | 9.7 ms | 73.3 ms | 33.3 / 45 | 11% | 185.8 MB |
+| `fidi-street` | exploration | 3.6 ms | 9.3 ms | 39.7 ms | 16.7 / 25 | 22% | 183.6 MB |
+| `harbour-skyline` | exploration | 3.3 ms | 9.0 ms | 39.3 ms | 16.7 / 25 | 20% | 181.6 MB |
+| `midtown-cross` | exploration | 1.5 ms | 3.9 ms | 15.9 ms | 16.7 / 25 | 9% | 146.9 MB |
+
+Every p50 and every p95 is inside its budget with large margin. **The worst
+single frames are not**, and that is stated rather than smoothed: isolated frames
+of 39–73 ms occur at the Financial District stations. They are single outliers in
+720 timed frames per station, they sit after the settle window, and this record
+does not claim to have attributed them. What the p95 shows is that they are rare;
+what the maximum shows is that they exist.
+
+**GPU texture memory is NAMED and COMPUTED, not measured.** Following the ADR
+0032 precedent: the shipped subset embeds 213 images (3 per GLB × 71 assets), all
+128×128, so decoded at RGBA8 with a full mip chain the arithmetic is
+`128 × 128 × 4 × 1.33 × 213` = **17.71 MiB** (13.31 MiB before mips). Every term
+is stated in the evidence file, including that the count is NOT deduplicated
+across models — the catalogue has four motifs, but each GLB is its own glTF and
+CesiumJS uploads per model, so an all-resident scene holds one upload per
+embedded image and deduplicating would understate the ceiling. The other two
+promoted waves are texture-free, so this is the whole of the composition's
+texture memory. It is an upper bound and it is arithmetic. No instrument
+reachable from this session reports texture VRAM, `usedJSHeapSize` does not stand
+in for it, and neither this ADR nor the committed evidence claims a measurement.
+
+**Cache residency, worst observed: 243 entries and 62.0 MiB**, against the
+256-entry and 256 MiB runtime caps. It is DERIVED from the per-release network
+measurement — one fetched GLB is one LRU entry — rather than read from the cache
+counter, because that counter only reaches the DOM in a `VITE_BLOCK835_PROBE`
+build and this measurement is deliberately against the ordinary production
+preview a user gets. **Zero external hosts** were contacted in any capture.
+
+### The entry budget was conservative, and here is by how much
+
+The release-time budget of 72 counts GLB *files on disk* for the promoted waves:
+28 for Block 835 V3, which ships two LODs per building, and 156 for Midtown-core
+V3, which ships one. At runtime the session fetched **14** Block 835 GLBs,
+because only the selected LOD is requested. The derivation therefore reserved 14
+more entries than Block 835 occupies. That is conservative, not wrong — it made
+the promoted subset smaller than it strictly had to be — and the curated subset
+fits under either count.
+
+### Precondition on the NEXT wave promotion: the cache ceiling is now the binding constraint
+
+This is named here so a fourth wave cannot inherit it by silence, exactly as the
+canary named its three.
+
+By the disk-based derivation the promoted set now occupies **255 of 256** cache
+entries: 28 (Block 835 V3) + 156 (Midtown-core V3) + 71 (this wave). One entry
+of headroom. Measured at runtime the worst observed residency was 243, because
+Block 835 fetches one LOD rather than two — but 243 is a measurement of one
+session's camera path, and 255 is what the release-time derivation must budget
+against.
+
+**A fourth wave cannot promote, and this wave cannot ship a second LOD, without
+first doing one of these and recording which:**
+
+1. raise `EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries` and re-measure the byte
+   ceiling and the frame budgets against the raised cap — the entry cap is a
+   contract the whole exterior runtime is sized against, not a number to nudge;
+2. reduce occupancy, by re-cutting a promoted wave's renderable subset in a
+   successor release, which is what this task did and is not cheap;
+3. change the derivation so it counts what the runtime resolves rather than what
+   is on disk, which recovers the 14 entries of conservatism above but requires
+   proving the per-camera worst case rather than the per-release one.
+
+Byte residency is nowhere near binding — 62.0 MiB of 256 MiB at the worst
+observed station — so entries remain the constraint, exactly as ADR 0034's
+Decision 4 predicted for a different reason.
+
+## Rollback semantics: this wave rolls back to BASE MASSING
+
+Block 835 and Midtown-core each roll back to a previously promoted release,
+because each has one. Wave `w02` does not. Its only other release is the T015
+canary, which was pinned but never a default, and there is no untextured `w02`
+release at all. So `LOWER_MANHATTAN_EXTERIOR_ACTIVATION.predecessor` is the
+DISABLED base-only record — the T010 shape — and rolling this wave back returns
+its area to the pinned base massing. A reader looking for "the older
+Lower-Manhattan exterior" will not find one, because there is not one.
+
+Two consequences are recorded because neither is obvious:
+
+- The rollback names the **P1 successor** as withdrawn, so promotion-era
+  `?exteriorCells=manhattan-lower-manhattan-cells-20260812-p1` bookmarks fail
+  closed in the same single record swap.
+- It deliberately does **not** name the canary. That release was never promoted,
+  its opt-in link is not a promotion-era bookmark, and it stays reachable exactly
+  as it was before this promotion and after a rollback of it. A browser journey
+  confirms the canary link still resolves to the canary alone, streaming its 41
+  assets and no P1 asset.
+
+Block 835 and Midtown-core keep streaming through a `w02` rollback; the per-record
+rules were already per-wave, and the rehearsal exercises that through the
+record's own injection seam.
+
+## The stated gap closes, for the successor only
+
+ADR 0034's consequences recorded that `verifyPromotedExteriorPin` does not run
+for the canary, because that check reads the promotion record and the canary has
+no entry there, and named closing it as promotion's job. **The P1 successor has
+an entry, so both the pin gate and the identity gate now run for it on every
+load.** The canary keeps its narrower guarantee, because it is still only an
+opt-in and still has no promotion record. The gap was closed for the promoted
+release; it was not closed for the canary, and the comment in
+`PINNED_EXTERIOR_CELL_RELEASE_IDS` says exactly that.
+
+## Two things that went wrong, kept because they are worth naming
+
+**The inventory schema nearly moved a frozen byte.** Adding the `curation` field
+to the payload inventory first emitted `"curation": null` for the canary too. The
+canary's committed inventory is frozen bytes and its checksum is what the P1
+predecessor pin is taken over, so the extra key moved both. The canary
+regression caught it. The field is now spread in only for a release that has a
+curation, and a release that derived its subset from the ledger order carries no
+curation record at all — which is also the truer statement.
+
+**The first cold-load journey failed on a sampling mistake, not a defect.** It
+asserted all 71 `w02` assets had been fetched at the instant the third wave went
+active, and read 7: the loader is progressive and wave activation is not asset
+completion. The journey now waits for the fetch count to reach its shipped total
+or stop growing, so the claim is about what the session streams rather than about
+when it was sampled.

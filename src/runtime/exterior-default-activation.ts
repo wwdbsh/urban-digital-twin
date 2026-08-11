@@ -2,9 +2,9 @@
  * Frozen promotion records for the exterior waves this build activates.
  *
  * The build activates an ORDERED SET of waves (`EXTERIOR_DEFAULT_ACTIVATIONS`),
- * today Block 835 followed by Midtown-core. Each wave is its own record, and the
- * per-record properties below hold PER RECORD — one wave rolling back neither
- * withdraws nor implies anything about another.
+ * today Block 835, then Midtown-core, then Lower-Manhattan. Each wave is its own
+ * record, and the per-record properties below hold PER RECORD — one wave rolling
+ * back neither withdraws nor implies anything about another.
  *
  * The promoted release, its operator-pinned head, and its cell/building
  * membership are ONE indivisible constant. Rollback is the single edit that
@@ -366,6 +366,114 @@ export const MIDTOWN_CORE_EXTERIOR_ACTIVATION: ExteriorDefaultActivationRecord =
 } as const;
 
 /**
+ * The base-only predecessor of the Lower-Manhattan promotion.
+ *
+ * It is DISABLED, and that is the honest previous representation rather than a
+ * shortcut. Block 835 and Midtown-core each had a previously promoted release to
+ * fall back to on their second promotion, so their predecessors are enabled
+ * records. Wave w02 has never been promoted in any form: the only other release
+ * it has is the T015 canary, which was pinned but never a default and whose
+ * renderable cells are the harbour cells this promotion exists to replace. There
+ * is no untextured w02 release and no earlier w02 default, so the previous
+ * verified representation of this area IS the pinned base massing.
+ *
+ * ROLLING BACK THIS WAVE THEREFORE RETURNS ITS AREA TO BASE MASSING. That is the
+ * T010 rollback semantic, and it is stated here rather than left to be inferred:
+ * a reader looking for "the older Lower-Manhattan exterior" will not find one,
+ * because there is not one. Block 835 and Midtown-core keep streaming — the
+ * rules in this module are per record — so the rollback is local to this wave.
+ *
+ * `rolledBackReleaseId` names the P1 successor, which is what makes a rollback
+ * also refuse promotion-era `?exteriorCells=manhattan-lower-manhattan-cells-20260812-p1`
+ * bookmarks. It deliberately does NOT name the T015 canary: that release was
+ * never promoted, its opt-in link is not a promotion-era bookmark, and it stays
+ * reachable exactly as it was before this promotion and after a rollback of it.
+ */
+export const LOWER_MANHATTAN_BASE_ONLY_PREDECESSOR: ExteriorDefaultActivationDisabled = {
+  enabled: false,
+  releaseId: null,
+  rolledBackReleaseId: "manhattan-lower-manhattan-cells-20260812-p1",
+} as const;
+
+/**
+ * The 71 accepted Lower-Manhattan identities: every building the curated subset
+ * materializes, and no other.
+ *
+ * They are the buildings of ownership cells 157 and 160 of wave w02 — the World
+ * Trade Center site — which the curation in `lower-manhattan-curation.ts` chose
+ * explicitly rather than inheriting from the ledger's cell order. One owned
+ * building of those two cells, `doitt:602678`, is absent from this list because
+ * the V3 grammar refused its sourced ring; it ships as an explicit unavailable
+ * detail naming that refusal, and it must stay outside the accepted membership
+ * so a scene that somehow drew it fails closed.
+ */
+export const LOWER_MANHATTAN_MEMBERSHIP_BUILDING_IDS: readonly string[] = [
+  "doitt:1000469", "doitt:104167", "doitt:104897", "doitt:1106472", "doitt:1114961",
+  "doitt:1249756", "doitt:1255513", "doitt:1255514", "doitt:1255672", "doitt:1255932",
+  "doitt:1256071", "doitt:1256145", "doitt:1256146", "doitt:1256148", "doitt:1257095",
+  "doitt:1257096", "doitt:1281378", "doitt:1281379", "doitt:1288191", "doitt:1289932",
+  "doitt:1294690", "doitt:1294942", "doitt:132386", "doitt:139143", "doitt:192536",
+  "doitt:204256", "doitt:211331", "doitt:212155", "doitt:216520", "doitt:217522",
+  "doitt:239857", "doitt:240700", "doitt:274686", "doitt:278753", "doitt:280574",
+  "doitt:283395", "doitt:321432", "doitt:33170", "doitt:334183", "doitt:343915",
+  "doitt:361956", "doitt:392003", "doitt:397048", "doitt:404926", "doitt:441273",
+  "doitt:450732", "doitt:452121", "doitt:460339", "doitt:460605", "doitt:53268",
+  "doitt:553851", "doitt:558110", "doitt:571062", "doitt:576567", "doitt:584675",
+  "doitt:602826", "doitt:635382", "doitt:654950", "doitt:658930", "doitt:662920",
+  "doitt:688830", "doitt:713164", "doitt:760196", "doitt:838929", "doitt:917710",
+  "doitt:95150", "doitt:962303", "doitt:96672", "doitt:990113", "doitt:990123",
+  "doitt:996239",
+];
+
+/**
+ * Rollback: export `LOWER_MANHATTAN_EXTERIOR_ACTIVATION.predecessor` from here.
+ *
+ * The THIRD promoted wave, and the first that ships procedural facade detail
+ * tiles by default. The release is the P1 successor
+ * `manhattan-lower-manhattan-cells-20260812-p1`, not the T015 canary: ADR 0034
+ * precondition (a) forbids promoting the canary's order-derived renderable
+ * subset, an immutable release cannot be re-cut, and so the promoted bytes are a
+ * successor whose renderable subset is the explicit curated list.
+ *
+ * Membership is stated in DIGEST form. The wave owns 126 cells and every one of
+ * them is a cell release — 124 of them truthful tombstones — so the literal form
+ * would be eighteen kilobytes of triples that nobody reads, which is the exact
+ * threshold the two forms were separated at. The 71 accepted building identities
+ * stay literal, because the identity gate compares them by name and 71 names are
+ * readable.
+ *
+ * `verifyPromotedExteriorPin` NOW RUNS FOR THIS WAVE. ADR 0034's consequences
+ * section recorded that it did not run for the canary — that check reads the
+ * promotion record and the canary has no entry there — and named closing the gap
+ * as promotion's job. This record is the entry, so the promoted successor is
+ * verified against accepted hashes and accepted cell membership on every load,
+ * which is the guarantee the canary explicitly did not have. The canary itself
+ * is unchanged and still carries the narrower guarantee, because it is still not
+ * promoted.
+ *
+ * `exterior-lower-manhattan-promotion-record.test.ts` recomputes every pin below
+ * from the committed `data/lower-manhattan-20260812-p1/payload-inventory.json`
+ * on every run — no payload directory required, so the drift gate is never
+ * skipped.
+ */
+export const LOWER_MANHATTAN_EXTERIOR_ACTIVATION: ExteriorDefaultActivationRecord = {
+  enabled: true,
+  releaseId: "manhattan-lower-manhattan-cells-20260812-p1",
+  snapshotId: "snapshot:manhattan-lower-manhattan-cells-20260812-p1:v1",
+  snapshotChecksumSha256: "2d22395668709e6bc616eabce132ce4865dd000d85603bfd48d003ca401ef527",
+  assemblyPackageIds: ["assembly:manhattan-lower-manhattan-cells-20260812-p1:v1"],
+  membership: {
+    cells: [],
+    cellsDigestSha256: "3d9d0154fe66183d557247815036a0406619d6470b0c24554792070a64bead5d",
+    cellCount: 126,
+    buildingIds: LOWER_MANHATTAN_MEMBERSHIP_BUILDING_IDS,
+  },
+  approvalRef: "Issue #17 gate approval 2026-08-12 (T016 Lower-Manhattan curated promotion)",
+  rolledBackReleaseId: null,
+  predecessor: LOWER_MANHATTAN_BASE_ONLY_PREDECESSOR,
+} as const;
+
+/**
  * The ordered promotion set this build activates, oldest wave first.
  *
  * Waves are COMPOSED from their own records instead of being copied into a
@@ -379,8 +487,9 @@ export const MIDTOWN_CORE_EXTERIOR_ACTIVATION: ExteriorDefaultActivationRecord =
 export function exteriorDefaultActivations(
   blockEight35: ExteriorDefaultActivationRecord = EXTERIOR_DEFAULT_ACTIVATION,
   midtownCore: ExteriorDefaultActivationRecord = MIDTOWN_CORE_EXTERIOR_ACTIVATION,
+  lowerManhattan: ExteriorDefaultActivationRecord = LOWER_MANHATTAN_EXTERIOR_ACTIVATION,
 ): readonly ExteriorDefaultActivationRecord[] {
-  return [blockEight35, midtownCore];
+  return [blockEight35, midtownCore, lowerManhattan];
 }
 
 /** The composed set, for callers with no substituted record of their own. */

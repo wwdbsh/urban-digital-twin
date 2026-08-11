@@ -1,0 +1,726 @@
+{
+  "schemaVersion": "1.0",
+  "releaseId": "manhattan-lower-manhattan-cells-20260812-p1",
+  "note": "Wave-scale V3 stop-code census over all 6,425 owned buildings, plus the shipped-subset census over the renderable cells. Committed so the refusal distribution stays checkable without the untracked work root. The wave census is untextured by design; the shipped subset carries procedural-texture-v1 tiles on LOD 0. READ `wave.retention` BEFORE `wave.shippedAssetCount`: the wave pass runs `census-only`, so it generated, gated and measured every asset and then dropped the bytes rather than keeping them. Its `shippedAssetBytes` is therefore a real measurement while its `shippedAssetCount` is zero, which is a retention mode and not a contradiction. The `shipped` object below is the pass that retained bytes.",
+  "textureCatalog": {
+    "profile": "procedural-texture-v1",
+    "rasterizerVersion": "1.0.0",
+    "parametersHashSha256": "121fb53e9b3b08ce3b7fa00ec5d370466c5ae2861b8966cccbfa19861ab438ff"
+  },
+  "samplerFilter": {
+    "magFilter": 9729,
+    "minFilter": 9987
+  },
+  "occupancy": {
+    "maxCacheEntries": 256,
+    "block835AssetEntries": 28,
+    "midtownAssetEntries": 156,
+    "promotedAssetEntries": 184,
+    "entryBudget": 72
+  },
+  "wave": {
+    "requestedBuildingCount": 6425,
+    "resolvedBuildingCount": 6425,
+    "materializedBuildingCount": 6291,
+    "refusedBuildingCount": 134,
+    "tierCollapseAbsentSetbackCount": 2545,
+    "generatedAssetCount": 12582,
+    "generatedAssetBytes": 736617400,
+    "retention": "census-only",
+    "shippedAssetCount": 0,
+    "shippedAssetBytes": 507182644,
+    "maximumTriangleCount": 80976,
+    "maximumMaterialCount": 9,
+    "triangleBudget": 200000,
+    "materialBudget": 12,
+    "textureBudget": 0,
+    "maximumTextureCount": 0,
+    "textureCatalog": null,
+    "totalShippedTriangleCount": 12805554,
+    "fallbackHeightCount": 9,
+    "uniquePlanHashCount": 6291,
+    "reversedRingCount": 6291,
+    "worstVolumeDeviation": 9.419335417857599e-7,
+    "worstPerVertexShapeDeviationMeters": 0.0007036799420954409,
+    "worstHorizontalDeviationMeters": 0.000471404334356511,
+    "worstVerticalDeviationMeters": 0.0004999592240046979,
+    "maximumRingVertexCount": 64,
+    "refusalsByCode": {
+      "source-height-below-grammar-minimum": 61,
+      "ring-area-below-floor": 25,
+      "ring-vertex-count-unsupported": 33,
+      "ring-neck-below-grammar-minimum": 7,
+      "volume-identity-failed": 7,
+      "ring-not-simple": 1
+    },
+    "styleClassCounts": {
+      "stone-neutral": 1209,
+      "masonry-light": 2005,
+      "masonry-warm": 2413,
+      "curtain-cool": 664
+    }
+  },
+  "waveRefusals": {
+    "source-height-below-grammar-minimum": 61,
+    "ring-area-below-floor": 25,
+    "ring-vertex-count-unsupported": 33,
+    "ring-neck-below-grammar-minimum": 7,
+    "ring-not-simple": 1
+  },
+  "shipped": {
+    "requestedBuildingCount": 72,
+    "resolvedBuildingCount": 72,
+    "materializedBuildingCount": 71,
+    "refusedBuildingCount": 1,
+    "tierCollapseAbsentSetbackCount": 37,
+    "generatedAssetCount": 142,
+    "generatedAssetBytes": 51086500,
+    "retention": "shipped-bytes",
+    "shippedAssetCount": 71,
+    "shippedAssetBytes": 41189232,
+    "maximumTriangleCount": 80976,
+    "maximumMaterialCount": 9,
+    "triangleBudget": 200000,
+    "materialBudget": 12,
+    "textureBudget": 4,
+    "maximumTextureCount": 3,
+    "textureCatalog": {
+      "profile": "procedural-texture-v1",
+      "rasterizerVersion": "1.0.0",
+      "parametersHashSha256": "121fb53e9b3b08ce3b7fa00ec5d370466c5ae2861b8966cccbfa19861ab438ff"
+    },
+    "totalShippedTriangleCount": 711718,
+    "fallbackHeightCount": 0,
+    "uniquePlanHashCount": 71,
+    "reversedRingCount": 71,
+    "worstVolumeDeviation": 5.212926914890705e-7,
+    "worstPerVertexShapeDeviationMeters": 0.0006938644534520764,
+    "worstHorizontalDeviationMeters": 0.0003333327337989048,
+    "worstVerticalDeviationMeters": 0.0004960000000018283,
+    "maximumRingVertexCount": 51,
+    "refusalsByCode": {
+      "ring-vertex-count-unsupported": 1
+    },
+    "styleClassCounts": {
+      "stone-neutral": 21,
+      "masonry-warm": 21,
+      "masonry-light": 15,
+      "curtain-cool": 14
+    }
+  },
+  "shippedRefusedBuildingIds": [
+    {
+      "buildingId": "doitt:602678",
+      "code": "ring-vertex-count-unsupported"
+    }
+  ],
+  "shippedAbsentSetbackBuildingIds": [
+    "doitt:104167",
+    "doitt:104897",
+    "doitt:1255513",
+    "doitt:1256071",
+    "doitt:1256145",
+    "doitt:1257095",
+    "doitt:1281378",
+    "doitt:1281379",
+    "doitt:1288191",
+    "doitt:1289932",
+    "doitt:132386",
+    "doitt:192536",
+    "doitt:211331",
+    "doitt:212155",
+    "doitt:216520",
+    "doitt:217522",
+    "doitt:280574",
+    "doitt:321432",
+    "doitt:343915",
+    "doitt:392003",
+    "doitt:397048",
+    "doitt:450732",
+    "doitt:452121",
+    "doitt:460339",
+    "doitt:460605",
+    "doitt:553851",
+    "doitt:584675",
+    "doitt:602826",
+    "doitt:635382",
+    "doitt:654950",
+    "doitt:662920",
+    "doitt:688830",
+    "doitt:917710",
+    "doitt:95150",
+    "doitt:96672",
+    "doitt:990123",
+    "doitt:996239"
+  ],
+  "registration": [
+    {
+      "buildingId": "doitt:1000469",
+      "sourceVertexCount": 14,
+      "perVertexShapeDeviationMeters": 0.0006259580591683652,
+      "horizontalDeviationMeters": 0.00010101578149113866,
+      "verticalDeviationMeters": 0.0004000000000132786,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:104167",
+      "sourceVertexCount": 4,
+      "perVertexShapeDeviationMeters": 0.0005974651519539048,
+      "horizontalDeviationMeters": 2.997651016301006e-10,
+      "verticalDeviationMeters": 0,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:104897",
+      "sourceVertexCount": 11,
+      "perVertexShapeDeviationMeters": 0.0005195949863146918,
+      "horizontalDeviationMeters": 0.00009090876389237788,
+      "verticalDeviationMeters": 0.00005600000000072214,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:1106472",
+      "sourceVertexCount": 8,
+      "perVertexShapeDeviationMeters": 0.0005948106084432821,
+      "horizontalDeviationMeters": 5.165801445836535e-10,
+      "verticalDeviationMeters": 0.0001999999999782176,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:1114961",
+      "sourceVertexCount": 4,
+      "perVertexShapeDeviationMeters": 0.00042159938962100293,
+      "horizontalDeviationMeters": 0.0002499997002266349,
+      "verticalDeviationMeters": 0.0004157751999400716,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:1249756",
+      "sourceVertexCount": 10,
+      "perVertexShapeDeviationMeters": 0.0005421512597308585,
+      "horizontalDeviationMeters": 0.0000999997601829903,
+      "verticalDeviationMeters": 0.00045793117598691424,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:1255513",
+      "sourceVertexCount": 8,
+      "perVertexShapeDeviationMeters": 0.0006456366616318484,
+      "horizontalDeviationMeters": 1.0262616701236099e-9,
+      "verticalDeviationMeters": 0.00047400640799910576,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:1255514",
+      "sourceVertexCount": 8,
+      "perVertexShapeDeviationMeters": 0.0006484092824435171,
+      "horizontalDeviationMeters": 0.00012500000000051223,
+      "verticalDeviationMeters": 0.000025974368000447612,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:1255672",
+      "sourceVertexCount": 24,
+      "perVertexShapeDeviationMeters": 0.0006188176165619703,
+      "horizontalDeviationMeters": 0.000041666699627349886,
+      "verticalDeviationMeters": 0.0002000000000066393,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:1255932",
+      "sourceVertexCount": 9,
+      "perVertexShapeDeviationMeters": 0.0004780375711333235,
+      "horizontalDeviationMeters": 0.000111110408024783,
+      "verticalDeviationMeters": 0.00034638400001085756,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:1256071",
+      "sourceVertexCount": 8,
+      "perVertexShapeDeviationMeters": 0.0006244129563208545,
+      "horizontalDeviationMeters": 0.00012500089934439686,
+      "verticalDeviationMeters": 0.00007416825600259358,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:1256145",
+      "sourceVertexCount": 51,
+      "perVertexShapeDeviationMeters": 0.0006459778528967075,
+      "horizontalDeviationMeters": 0.00008768895728393175,
+      "verticalDeviationMeters": 0,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:1256146",
+      "sourceVertexCount": 19,
+      "perVertexShapeDeviationMeters": 0.000654283524513981,
+      "horizontalDeviationMeters": 0.00010526311627673913,
+      "verticalDeviationMeters": 0.0002141434160005673,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:1256148",
+      "sourceVertexCount": 51,
+      "perVertexShapeDeviationMeters": 0.0006507615751123363,
+      "horizontalDeviationMeters": 0.00008084304401695914,
+      "verticalDeviationMeters": 0.0002057071679999467,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:1257095",
+      "sourceVertexCount": 10,
+      "perVertexShapeDeviationMeters": 0.0006246494815448223,
+      "horizontalDeviationMeters": 0.00014142203278282055,
+      "verticalDeviationMeters": 0.0004000000000026205,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:1257096",
+      "sourceVertexCount": 7,
+      "perVertexShapeDeviationMeters": 0.0006017860810017986,
+      "horizontalDeviationMeters": 0.00014285782808292952,
+      "verticalDeviationMeters": 0.00002296365599718797,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:1281378",
+      "sourceVertexCount": 44,
+      "perVertexShapeDeviationMeters": 0.0006253155995827713,
+      "horizontalDeviationMeters": 0.000022727596308357592,
+      "verticalDeviationMeters": 0.00039999999999906777,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:1281379",
+      "sourceVertexCount": 4,
+      "perVertexShapeDeviationMeters": 0.0005950813411137474,
+      "horizontalDeviationMeters": 0.00025000059957817504,
+      "verticalDeviationMeters": 0.00039999999999906777,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:1288191",
+      "sourceVertexCount": 39,
+      "perVertexShapeDeviationMeters": 0.0006482957445886401,
+      "horizontalDeviationMeters": 0.00008108361831594708,
+      "verticalDeviationMeters": 0.0004244472000038968,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:1289932",
+      "sourceVertexCount": 9,
+      "perVertexShapeDeviationMeters": 0.0005957387338170923,
+      "horizontalDeviationMeters": 0.00011111151080667514,
+      "verticalDeviationMeters": 0.0004000000000132786,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:1294690",
+      "sourceVertexCount": 4,
+      "perVertexShapeDeviationMeters": 0.0005435406568426881,
+      "horizontalDeviationMeters": 2.9977709204008225e-10,
+      "verticalDeviationMeters": 7.105427357601002e-15,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:1294942",
+      "sourceVertexCount": 14,
+      "perVertexShapeDeviationMeters": 0.0006194137395326284,
+      "horizontalDeviationMeters": 1.7130690516932407e-10,
+      "verticalDeviationMeters": 0,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:132386",
+      "sourceVertexCount": 18,
+      "perVertexShapeDeviationMeters": 0.0004984402872828216,
+      "horizontalDeviationMeters": 0.00012422554738521934,
+      "verticalDeviationMeters": 0.00047999999999603915,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:139143",
+      "sourceVertexCount": 12,
+      "perVertexShapeDeviationMeters": 0.0005483225410485769,
+      "horizontalDeviationMeters": 0.00011785134515796367,
+      "verticalDeviationMeters": 0.000167999999995061,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:192536",
+      "sourceVertexCount": 28,
+      "perVertexShapeDeviationMeters": 0.0006458277856413631,
+      "horizontalDeviationMeters": 0.000035713042756422875,
+      "verticalDeviationMeters": 0.0003694372639984067,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:204256",
+      "sourceVertexCount": 12,
+      "perVertexShapeDeviationMeters": 0.0006092699942752809,
+      "horizontalDeviationMeters": 0.0001863384637393929,
+      "verticalDeviationMeters": 0.00019999999999953388,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:211331",
+      "sourceVertexCount": 8,
+      "perVertexShapeDeviationMeters": 0.0005706184658610059,
+      "horizontalDeviationMeters": 0.00012499940047046903,
+      "verticalDeviationMeters": 0.000256000000000256,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:212155",
+      "sourceVertexCount": 8,
+      "perVertexShapeDeviationMeters": 0.0005899941110843831,
+      "horizontalDeviationMeters": 6.312984810087681e-10,
+      "verticalDeviationMeters": 0.00026399999999782153,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:216520",
+      "sourceVertexCount": 8,
+      "perVertexShapeDeviationMeters": 0.0006288889383846666,
+      "horizontalDeviationMeters": 5.932321300862012e-10,
+      "verticalDeviationMeters": 0.0002079999999970994,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:217522",
+      "sourceVertexCount": 7,
+      "perVertexShapeDeviationMeters": 0.0005377262486152795,
+      "horizontalDeviationMeters": 0.00028571372073236674,
+      "verticalDeviationMeters": 0.00039999999999906777,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:239857",
+      "sourceVertexCount": 4,
+      "perVertexShapeDeviationMeters": 0.00034220213149116664,
+      "horizontalDeviationMeters": 1.9774404336216053e-10,
+      "verticalDeviationMeters": 0.00012162999199993862,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:240700",
+      "sourceVertexCount": 6,
+      "perVertexShapeDeviationMeters": 0.0004901264826793001,
+      "horizontalDeviationMeters": 0.0001666660671332135,
+      "verticalDeviationMeters": 0.0003760000000028185,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:274686",
+      "sourceVertexCount": 6,
+      "perVertexShapeDeviationMeters": 0.000501584515802262,
+      "horizontalDeviationMeters": 0.0001666662711785616,
+      "verticalDeviationMeters": 0.0002880000000011762,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:278753",
+      "sourceVertexCount": 12,
+      "perVertexShapeDeviationMeters": 0.0006094481536865576,
+      "horizontalDeviationMeters": 0.00008333399248054244,
+      "verticalDeviationMeters": 0.00039999999999906777,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:280574",
+      "sourceVertexCount": 27,
+      "perVertexShapeDeviationMeters": 0.0006254479892886769,
+      "horizontalDeviationMeters": 0.00007407442935983428,
+      "verticalDeviationMeters": 0.00026400000000137425,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:283395",
+      "sourceVertexCount": 6,
+      "perVertexShapeDeviationMeters": 0.0005120831968948215,
+      "horizontalDeviationMeters": 0.00016666706635441768,
+      "verticalDeviationMeters": 0.00047999999999959186,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:321432",
+      "sourceVertexCount": 10,
+      "perVertexShapeDeviationMeters": 0.0004762784808084145,
+      "horizontalDeviationMeters": 8.209744348367061e-10,
+      "verticalDeviationMeters": 0.00043199999999998795,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:33170",
+      "sourceVertexCount": 7,
+      "perVertexShapeDeviationMeters": 0.0006472808854486345,
+      "horizontalDeviationMeters": 0.00020203131300857729,
+      "verticalDeviationMeters": 0.00047199999999847364,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:334183",
+      "sourceVertexCount": 16,
+      "perVertexShapeDeviationMeters": 0.0006925001788458819,
+      "horizontalDeviationMeters": 0.00013975356182465147,
+      "verticalDeviationMeters": 0.0001605182719970344,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:343915",
+      "sourceVertexCount": 11,
+      "perVertexShapeDeviationMeters": 0.0006647767384035621,
+      "horizontalDeviationMeters": 0.00012856410172375134,
+      "verticalDeviationMeters": 0.000016000000002236447,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:361956",
+      "sourceVertexCount": 7,
+      "perVertexShapeDeviationMeters": 0.0004621289628533485,
+      "horizontalDeviationMeters": 3.7980995453929463e-10,
+      "verticalDeviationMeters": 0.0001679999999986137,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:392003",
+      "sourceVertexCount": 14,
+      "perVertexShapeDeviationMeters": 0.00047437931213317904,
+      "horizontalDeviationMeters": 0.00007142891401965253,
+      "verticalDeviationMeters": 0.0004479999999986717,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:397048",
+      "sourceVertexCount": 7,
+      "perVertexShapeDeviationMeters": 0.0005874556800502328,
+      "horizontalDeviationMeters": 3.6074346587401316e-10,
+      "verticalDeviationMeters": 0.0004000000000026205,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:404926",
+      "sourceVertexCount": 10,
+      "perVertexShapeDeviationMeters": 0.0004984304258923786,
+      "horizontalDeviationMeters": 0.00010000071946609077,
+      "verticalDeviationMeters": 0.00034399999999834563,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:441273",
+      "sourceVertexCount": 6,
+      "perVertexShapeDeviationMeters": 0.00045365122928700134,
+      "horizontalDeviationMeters": 0.0001666667984963524,
+      "verticalDeviationMeters": 0.00007199999999940587,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:450732",
+      "sourceVertexCount": 7,
+      "perVertexShapeDeviationMeters": 0.0006512420241863804,
+      "horizontalDeviationMeters": 0.00014285868462111346,
+      "verticalDeviationMeters": 0.0003200000000020964,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:452121",
+      "sourceVertexCount": 6,
+      "perVertexShapeDeviationMeters": 0.0005677659944990135,
+      "horizontalDeviationMeters": 0.00016666732581582065,
+      "verticalDeviationMeters": 0.0004000000000026205,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:460339",
+      "sourceVertexCount": 21,
+      "perVertexShapeDeviationMeters": 0.0006328968830969418,
+      "horizontalDeviationMeters": 0.00009523649643224856,
+      "verticalDeviationMeters": 0.00048000000001025,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:460605",
+      "sourceVertexCount": 10,
+      "perVertexShapeDeviationMeters": 0.000602953628087414,
+      "horizontalDeviationMeters": 0.00014142067794421957,
+      "verticalDeviationMeters": 0.0004960000000018283,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:53268",
+      "sourceVertexCount": 8,
+      "perVertexShapeDeviationMeters": 0.0006914421387877892,
+      "horizontalDeviationMeters": 0.00012499970022208037,
+      "verticalDeviationMeters": 0.0003679999999945949,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:553851",
+      "sourceVertexCount": 18,
+      "perVertexShapeDeviationMeters": 0.0006105592246573576,
+      "horizontalDeviationMeters": 0.0001571339632665572,
+      "verticalDeviationMeters": 0.00008196891201350809,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:558110",
+      "sourceVertexCount": 6,
+      "perVertexShapeDeviationMeters": 0.0005982886132620071,
+      "horizontalDeviationMeters": 5.273173009356976e-10,
+      "verticalDeviationMeters": 0.00013600000000124624,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:571062",
+      "sourceVertexCount": 7,
+      "perVertexShapeDeviationMeters": 0.0005021439234372619,
+      "horizontalDeviationMeters": 0.00014285669087090846,
+      "verticalDeviationMeters": 0.0002080000000006521,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:576567",
+      "sourceVertexCount": 6,
+      "perVertexShapeDeviationMeters": 0.0006659552328936549,
+      "horizontalDeviationMeters": 0.0003333327337989048,
+      "verticalDeviationMeters": 0.0003679999999945949,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:584675",
+      "sourceVertexCount": 10,
+      "perVertexShapeDeviationMeters": 0.000567205275841483,
+      "horizontalDeviationMeters": 1.0820553249413139e-9,
+      "verticalDeviationMeters": 0.00011200000000144428,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:602826",
+      "sourceVertexCount": 6,
+      "perVertexShapeDeviationMeters": 0.0005736819610185964,
+      "horizontalDeviationMeters": 0.00016666586728354818,
+      "verticalDeviationMeters": 0.00018400000000085015,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:635382",
+      "sourceVertexCount": 7,
+      "perVertexShapeDeviationMeters": 0.0005263788115902814,
+      "horizontalDeviationMeters": 7.596312711529507e-10,
+      "verticalDeviationMeters": 0.00026400000000137425,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:654950",
+      "sourceVertexCount": 10,
+      "perVertexShapeDeviationMeters": 0.0005665274969313719,
+      "horizontalDeviationMeters": 0.00014142214643613114,
+      "verticalDeviationMeters": 0.00021599999999821762,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:658930",
+      "sourceVertexCount": 9,
+      "perVertexShapeDeviationMeters": 0.0006424547166236283,
+      "horizontalDeviationMeters": 0.00024845207358862025,
+      "verticalDeviationMeters": 0.00042399999998110616,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:662920",
+      "sourceVertexCount": 10,
+      "perVertexShapeDeviationMeters": 0.00046947277780629465,
+      "horizontalDeviationMeters": 2.0399723915212054e-9,
+      "verticalDeviationMeters": 0.0004160000000013042,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:688830",
+      "sourceVertexCount": 42,
+      "perVertexShapeDeviationMeters": 0.0006033391919002039,
+      "horizontalDeviationMeters": 0.000023808431522796825,
+      "verticalDeviationMeters": 0.0001224548959726235,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:713164",
+      "sourceVertexCount": 10,
+      "perVertexShapeDeviationMeters": 0.0006717596361281738,
+      "horizontalDeviationMeters": 0.00009999920902366539,
+      "verticalDeviationMeters": 0.0004880000000007101,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:760196",
+      "sourceVertexCount": 12,
+      "perVertexShapeDeviationMeters": 0.0006159890588466356,
+      "horizontalDeviationMeters": 0.00018633980155193024,
+      "verticalDeviationMeters": 0.000256000000000256,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:838929",
+      "sourceVertexCount": 6,
+      "perVertexShapeDeviationMeters": 0.000490428584991984,
+      "horizontalDeviationMeters": 0.00016666726624438915,
+      "verticalDeviationMeters": 0.00040800000000196235,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:917710",
+      "sourceVertexCount": 6,
+      "perVertexShapeDeviationMeters": 0.0005125802125332632,
+      "horizontalDeviationMeters": 0.00016666627118015802,
+      "verticalDeviationMeters": 0.00019999999999953388,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:95150",
+      "sourceVertexCount": 9,
+      "perVertexShapeDeviationMeters": 0.0004898333954824082,
+      "horizontalDeviationMeters": 0.00011111017850811638,
+      "verticalDeviationMeters": 0.00008799999999986596,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:962303",
+      "sourceVertexCount": 9,
+      "perVertexShapeDeviationMeters": 0.0005860625789141008,
+      "horizontalDeviationMeters": 1.1039052747338204e-9,
+      "verticalDeviationMeters": 0.00019999999999953388,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:96672",
+      "sourceVertexCount": 23,
+      "perVertexShapeDeviationMeters": 0.0006583671671893894,
+      "horizontalDeviationMeters": 0.00008695707199940127,
+      "verticalDeviationMeters": 0.00048000000001025,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:990113",
+      "sourceVertexCount": 7,
+      "perVertexShapeDeviationMeters": 0.0005391395628070125,
+      "horizontalDeviationMeters": 1.1227712858188404e-9,
+      "verticalDeviationMeters": 0.0004399999999993298,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:990123",
+      "sourceVertexCount": 26,
+      "perVertexShapeDeviationMeters": 0.0006938644534520764,
+      "horizontalDeviationMeters": 0.00008600229544851321,
+      "verticalDeviationMeters": 0.0001440000000005881,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:996239",
+      "sourceVertexCount": 12,
+      "perVertexShapeDeviationMeters": 0.000497973805602956,
+      "horizontalDeviationMeters": 0.00008333313558881715,
+      "verticalDeviationMeters": 2.842170943040401e-14,
+      "ringOrientationReversed": true
+    }
+  ]
+}

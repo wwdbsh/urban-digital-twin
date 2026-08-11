@@ -320,6 +320,21 @@ export interface MidtownCoreV3StageFingerprintInput {
   /** Checksum of the predecessor wave's committed inventory, which supplies every pin. */
   predecessorInventoryChecksumSha256: string;
   renderableCellCount: number;
+  /**
+   * Digest over WHICH cells are renderable, for a wave whose renderable subset
+   * is not a pure function of the hashed inputs above.
+   *
+   * A subset derived by walking the ledger order under an entry budget is
+   * already covered: change the ledger and `subsetLedgerChecksumSha256` moves.
+   * A subset stated as an explicit CURATED LIST is not — editing the list to a
+   * different pair of cells of the same length moves nothing else in this
+   * fingerprint, so every resumable stage would report `skipped: true` and the
+   * emitted release would keep the previous curation's bytes.
+   *
+   * Optional, and omitted means "the subset is derived, not curated", which
+   * keeps every existing wave's fingerprints byte-identical.
+   */
+  renderableCellDigestSha256?: string;
   shippedLodId: string;
   /** Wave identity, budgets and texture policy. Defaults to wave `w01`'s. */
   profile?: V3WaveProfile;
@@ -351,6 +366,7 @@ export function midtownCoreV3StageFingerprint(input: MidtownCoreV3StageFingerpri
     subsetLedgerChecksumSha256: input.subsetLedgerChecksumSha256,
     predecessorInventoryChecksumSha256: input.predecessorInventoryChecksumSha256,
     renderableCellCount: input.renderableCellCount,
+    ...(input.renderableCellDigestSha256 === undefined ? {} : { renderableCellDigestSha256: input.renderableCellDigestSha256 }),
     shippedLodId: input.shippedLodId,
     generator: {
       schemaVersion: DETERMINISTIC_FACADE_V3_SCHEMA_VERSION,

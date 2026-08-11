@@ -500,16 +500,21 @@ export function appendBlock835PublicRealmUrl(baseUrl: string, requested: boolean
  * packages. A deep link naming any other exterior release still fails closed
  * rather than resolving something that merely shares a shape.
  *
- * `manhattan-lower-manhattan-cells-20260812` is pinned but NOT promoted. Pinning
- * makes it reachable by an explicit `?exteriorCells=` opt-in and nothing else:
- * the promoted default is untouched, so an ordinary session never loads it.
- * Because it is not promoted, `verifyPromotedExteriorPin` does not run for it —
- * that check reads the promotion record, and this release has no entry there.
- * Its verification therefore rests on the release-graph and checksum validation
- * the emitter and its committed inventory carry, which is a narrower guarantee,
- * and closing that gap is promotion's job rather than this pin's.
+ * `manhattan-lower-manhattan-cells-20260812` — the T015 canary — is pinned but
+ * NOT promoted, and stays that way. Pinning makes it reachable by an explicit
+ * `?exteriorCells=` opt-in and nothing else, so an ordinary session never loads
+ * it. Because it is not promoted, `verifyPromotedExteriorPin` does not run for
+ * it: that check reads the promotion record, and this release has no entry
+ * there. Its verification rests on the release-graph and checksum validation the
+ * emitter and its committed inventory carry, which is a narrower guarantee.
+ *
+ * `manhattan-lower-manhattan-cells-20260812-p1` — the T016 successor — IS
+ * promoted, and that is where ADR 0034's stated gap closes. It has an entry in
+ * the promotion record, so both promotion gates run for it on every load. The
+ * canary keeps its narrower guarantee because it is still only an opt-in; the
+ * gap was never closed for the canary and this comment does not claim it was.
  */
-export const PINNED_EXTERIOR_CELL_RELEASE_IDS = ["udt-fixture-exterior-cells", "manhattan-exterior-cells-20260811", "manhattan-exterior-cells-20260811-v3", "manhattan-midtown-core-cells-20260811", "manhattan-midtown-core-cells-20260811-v3", "manhattan-lower-manhattan-cells-20260812"] as const;
+export const PINNED_EXTERIOR_CELL_RELEASE_IDS = ["udt-fixture-exterior-cells", "manhattan-exterior-cells-20260811", "manhattan-exterior-cells-20260811-v3", "manhattan-midtown-core-cells-20260811", "manhattan-midtown-core-cells-20260811-v3", "manhattan-lower-manhattan-cells-20260812", "manhattan-lower-manhattan-cells-20260812-p1"] as const;
 
 /**
  * The release used when neither a URL nor the promoted default names one: still

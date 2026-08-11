@@ -1,0 +1,536 @@
+{
+  "allImageCountsMatchDeclaredTextures": true,
+  "allMaterialCountsMatchDeclared": true,
+  "allTriangleCountsMatchDeclared": true,
+  "allVolumesWithinTolerance": true,
+  "note": "T016 Blender spot sample over the CURATED textured subset. Twelve shipped LOD 0 assets \u2014 the first entry of every geometry stratum of the deterministic sample plus a second texture-stratum entry \u2014 were re-imported into Blender 5.2.0 LTS through Blender MCP and measured independently of the writer. The comparison is against what the release DECLARES, so a writer that mis-stated its own counts or volume fails here rather than shipping. Volume is the signed bmesh volume of the triangulated world-space mesh, compared with the analytic volume the plan states, at the same 1e-6 relative tolerance the materializer gates on.",
+  "releaseId": "manhattan-lower-manhattan-cells-20260812-p1",
+  "sampleCount": 12,
+  "samples": [
+    {
+      "analyticVolumeCubicMeters": 150.46007107150012,
+      "buildingId": "doitt:104167",
+      "checksumSha256": "b8a9e29200e0d3d4b9552ba5933b58d03f6f78c8c894bec356c9c205b2b989ed",
+      "declaredBoundsYUp": {
+        "maximum": [
+          3.9119999408721924,
+          7.4730000495910645,
+          3.2890000343322754
+        ],
+        "minimum": [
+          -3.9119999408721924,
+          0,
+          -3.2890000343322754
+        ]
+      },
+      "declaredMaterialCount": 7,
+      "declaredTextureCount": 3,
+      "declaredTriangleCount": 268,
+      "importedBoundsYUp": {
+        "max": [
+          3.9119999408721924,
+          3.2890000343322754,
+          7.4730000495910645
+        ],
+        "min": [
+          -3.9119999408721924,
+          -3.2890000343322754,
+          0.0
+        ]
+      },
+      "importedImageCount": 3,
+      "importedMaterialCount": 7,
+      "importedTriangleCount": 268,
+      "importedVolumeCubicMeters": 150.45999537117527,
+      "meshObjectCount": 1,
+      "relativeVolumeDeviation": 5.031256752538978e-07,
+      "setbacksAbsent": true,
+      "stratum": "fewest-ring-vertices",
+      "volumeTolerance": 1e-06,
+      "volumeWithinTolerance": true,
+      "writerMeshVolumeCubicMeters": 150.4599926377647
+    },
+    {
+      "analyticVolumeCubicMeters": 6705.468449318998,
+      "buildingId": "doitt:104897",
+      "checksumSha256": "7174b52d4fd8cee0a75b5f6835c284137a22ef875303a07eee5252e0a8e1a802",
+      "declaredBoundsYUp": {
+        "maximum": [
+          11.26200008392334,
+          20.326000213623047,
+          20.334999084472656
+        ],
+        "minimum": [
+          -16.854999542236328,
+          0,
+          -13.366999626159668
+        ]
+      },
+      "declaredMaterialCount": 9,
+      "declaredTextureCount": 3,
+      "declaredTriangleCount": 1090,
+      "importedBoundsYUp": {
+        "max": [
+          11.26200008392334,
+          13.366999626159668,
+          20.326000213623047
+        ],
+        "min": [
+          -16.854999542236328,
+          -20.334999084472656,
+          0.0
+        ]
+      },
+      "importedImageCount": 3,
+      "importedMaterialCount": 9,
+      "importedTriangleCount": 1090,
+      "importedVolumeCubicMeters": 6705.4681895716585,
+      "meshObjectCount": 1,
+      "relativeVolumeDeviation": 3.87366432941838e-08,
+      "setbacksAbsent": true,
+      "stratum": "fallback-height",
+      "volumeTolerance": 1e-06,
+      "volumeWithinTolerance": true,
+      "writerMeshVolumeCubicMeters": 6705.468352386215
+    },
+    {
+      "analyticVolumeCubicMeters": 144323.7064166751,
+      "buildingId": "doitt:1249756",
+      "checksumSha256": "dedb972392a0c816e5a03df6e9b7281529d106a18b89d9f8adaf9b4c807597e7",
+      "declaredBoundsYUp": {
+        "maximum": [
+          38.08300018310547,
+          74.46700286865234,
+          41.7239990234375
+        ],
+        "minimum": [
+          -25.970796585083008,
+          0,
+          -32.0989990234375
+        ]
+      },
+      "declaredMaterialCount": 9,
+      "declaredTextureCount": 3,
+      "declaredTriangleCount": 10680,
+      "importedBoundsYUp": {
+        "max": [
+          38.08300018310547,
+          32.0989990234375,
+          74.46700286865234
+        ],
+        "min": [
+          -25.970796585083008,
+          -41.7239990234375,
+          0.0
+        ]
+      },
+      "importedImageCount": 3,
+      "importedMaterialCount": 9,
+      "importedTriangleCount": 10680,
+      "importedVolumeCubicMeters": 144323.7092408688,
+      "meshObjectCount": 1,
+      "relativeVolumeDeviation": 1.9568467168798983e-08,
+      "setbacksAbsent": false,
+      "stratum": "most-tiers",
+      "volumeTolerance": 1e-06,
+      "volumeWithinTolerance": true,
+      "writerMeshVolumeCubicMeters": 144323.70645312776
+    },
+    {
+      "analyticVolumeCubicMeters": 2006.729305429001,
+      "buildingId": "doitt:1255513",
+      "checksumSha256": "b12cb2e5301943b75b722a2fa134d69ae2ced7460b972ae646dda0ebfb47a92b",
+      "declaredBoundsYUp": {
+        "maximum": [
+          8.02400016784668,
+          9.555999755859375,
+          17.972000122070312
+        ],
+        "minimum": [
+          -5.852275848388672,
+          0,
+          -13.08899974822998
+        ]
+      },
+      "declaredMaterialCount": 7,
+      "declaredTextureCount": 3,
+      "declaredTriangleCount": 474,
+      "importedBoundsYUp": {
+        "max": [
+          8.02400016784668,
+          13.08899974822998,
+          9.555999755859375
+        ],
+        "min": [
+          -5.852275848388672,
+          -17.972000122070312,
+          0.0
+        ]
+      },
+      "importedImageCount": 3,
+      "importedMaterialCount": 7,
+      "importedTriangleCount": 474,
+      "importedVolumeCubicMeters": 2006.7293351854455,
+      "meshObjectCount": 1,
+      "relativeVolumeDeviation": 1.4828330078489952e-08,
+      "setbacksAbsent": true,
+      "stratum": "shortest",
+      "volumeTolerance": 1e-06,
+      "volumeWithinTolerance": true,
+      "writerMeshVolumeCubicMeters": 2006.7293209841664
+    },
+    {
+      "analyticVolumeCubicMeters": 1453610.8947890413,
+      "buildingId": "doitt:1255672",
+      "checksumSha256": "5f9860ed8b696e0f9509cb7e9a1cbf6f26f1f215cae0a5c6eab0ad8d986d2353",
+      "declaredBoundsYUp": {
+        "maximum": [
+          44.275001525878906,
+          329.7070007324219,
+          43.04100036621094
+        ],
+        "minimum": [
+          -55.45661163330078,
+          0,
+          -51.02399826049805
+        ]
+      },
+      "declaredMaterialCount": 9,
+      "declaredTextureCount": 3,
+      "declaredTriangleCount": 64518,
+      "importedBoundsYUp": {
+        "max": [
+          44.275001525878906,
+          51.02399826049805,
+          329.7070007324219
+        ],
+        "min": [
+          -55.45661163330078,
+          -43.04100036621094,
+          0.0
+        ]
+      },
+      "importedImageCount": 3,
+      "importedMaterialCount": 9,
+      "importedTriangleCount": 64518,
+      "importedVolumeCubicMeters": 1453610.9344265698,
+      "meshObjectCount": 1,
+      "relativeVolumeDeviation": 2.7268321071900825e-08,
+      "setbacksAbsent": false,
+      "stratum": "tallest",
+      "volumeTolerance": 1e-06,
+      "volumeWithinTolerance": true,
+      "writerMeshVolumeCubicMeters": 1453610.897006082
+    },
+    {
+      "analyticVolumeCubicMeters": 10204.825096920018,
+      "buildingId": "doitt:1256145",
+      "checksumSha256": "9a06a331319ccbee45f84f31987618cd2f0d6e7c6669fa50255db3bf5206d959",
+      "declaredBoundsYUp": {
+        "maximum": [
+          21.231000900268555,
+          13.020000457763672,
+          39.96900177001953
+        ],
+        "minimum": [
+          -26.031999588012695,
+          0,
+          -26.979000091552734
+        ]
+      },
+      "declaredMaterialCount": 7,
+      "declaredTextureCount": 3,
+      "declaredTriangleCount": 1332,
+      "importedBoundsYUp": {
+        "max": [
+          21.231000900268555,
+          26.979000091552734,
+          13.020000457763672
+        ],
+        "min": [
+          -26.031999588012695,
+          -39.96900177001953,
+          0.0
+        ]
+      },
+      "importedImageCount": 3,
+      "importedMaterialCount": 7,
+      "importedTriangleCount": 1332,
+      "importedVolumeCubicMeters": 10204.824598701452,
+      "meshObjectCount": 1,
+      "relativeVolumeDeviation": 4.8821862287861614e-08,
+      "setbacksAbsent": true,
+      "stratum": "most-ring-vertices",
+      "volumeTolerance": 1e-06,
+      "volumeWithinTolerance": true,
+      "writerMeshVolumeCubicMeters": 10204.824731892126
+    },
+    {
+      "analyticVolumeCubicMeters": 207145.3068428502,
+      "buildingId": "doitt:280574",
+      "checksumSha256": "f3d4747fa75037367e7216a672eded824f7ea2c19b61b20068511c29a743f0b0",
+      "declaredBoundsYUp": {
+        "maximum": [
+          39.35100173950195,
+          73.04399871826172,
+          38.051998138427734
+        ],
+        "minimum": [
+          -49.73500061035156,
+          0,
+          -50.00400161743164
+        ]
+      },
+      "declaredMaterialCount": 9,
+      "declaredTextureCount": 3,
+      "declaredTriangleCount": 13550,
+      "importedBoundsYUp": {
+        "max": [
+          39.35100173950195,
+          50.00400161743164,
+          73.04399871826172
+        ],
+        "min": [
+          -49.73500061035156,
+          -38.051998138427734,
+          0.0
+        ]
+      },
+      "importedImageCount": 3,
+      "importedMaterialCount": 9,
+      "importedTriangleCount": 13550,
+      "importedVolumeCubicMeters": 207145.30289260004,
+      "meshObjectCount": 1,
+      "relativeVolumeDeviation": 1.906994766437824e-08,
+      "setbacksAbsent": true,
+      "stratum": "most-textures",
+      "volumeTolerance": 1e-06,
+      "volumeWithinTolerance": true,
+      "writerMeshVolumeCubicMeters": 207145.31094065285
+    },
+    {
+      "analyticVolumeCubicMeters": 1533.4812983915015,
+      "buildingId": "doitt:361956",
+      "checksumSha256": "0093165ed5b7f0b7e4b40948272e153a4ff6a2f2652c5398c4a470cf14ebdbb0",
+      "declaredBoundsYUp": {
+        "maximum": [
+          8.720999717712402,
+          22.0310001373291,
+          6.697999954223633
+        ],
+        "minimum": [
+          -7.093999862670898,
+          0,
+          -7.021999835968018
+        ]
+      },
+      "declaredMaterialCount": 9,
+      "declaredTextureCount": 3,
+      "declaredTriangleCount": 678,
+      "importedBoundsYUp": {
+        "max": [
+          8.720999717712402,
+          7.021999835968018,
+          22.0310001373291
+        ],
+        "min": [
+          -7.093999862670898,
+          -6.697999954223633,
+          0.0
+        ]
+      },
+      "importedImageCount": 3,
+      "importedMaterialCount": 9,
+      "importedTriangleCount": 678,
+      "importedVolumeCubicMeters": 1533.482020547224,
+      "meshObjectCount": 1,
+      "relativeVolumeDeviation": 4.709256795629442e-07,
+      "setbacksAbsent": false,
+      "stratum": "smallest-footprint-area",
+      "volumeTolerance": 1e-06,
+      "volumeWithinTolerance": true,
+      "writerMeshVolumeCubicMeters": 1533.4820294636709
+    },
+    {
+      "analyticVolumeCubicMeters": 584186.5597288526,
+      "buildingId": "doitt:460339",
+      "checksumSha256": "a6373be2d81a2edbd0e0fc7e518513660f47c94fca8a66aea111cc1ec72de956",
+      "declaredBoundsYUp": {
+        "maximum": [
+          59.4900016784668,
+          89.63099670410156,
+          42.84700012207031
+        ],
+        "minimum": [
+          -72.18900299072266,
+          0,
+          -65.53800201416016
+        ]
+      },
+      "declaredMaterialCount": 9,
+      "declaredTextureCount": 3,
+      "declaredTriangleCount": 20554,
+      "importedBoundsYUp": {
+        "max": [
+          59.4900016784668,
+          65.53800201416016,
+          89.63099670410156
+        ],
+        "min": [
+          -72.18900299072266,
+          -42.84700012207031,
+          0.0
+        ]
+      },
+      "importedImageCount": 3,
+      "importedMaterialCount": 9,
+      "importedTriangleCount": 20554,
+      "importedVolumeCubicMeters": 584186.5769718619,
+      "meshObjectCount": 1,
+      "relativeVolumeDeviation": 2.9516271824971744e-08,
+      "setbacksAbsent": true,
+      "stratum": "largest-footprint-area",
+      "volumeTolerance": 1e-06,
+      "volumeWithinTolerance": true,
+      "writerMeshVolumeCubicMeters": 584186.5591436097
+    },
+    {
+      "analyticVolumeCubicMeters": 692059.2674625996,
+      "buildingId": "doitt:662920",
+      "checksumSha256": "9d6039994f3055510462cdda3a65d5f0026e43292dafc4d7a3755916d6cbc4de",
+      "declaredBoundsYUp": {
+        "maximum": [
+          44.31778335571289,
+          152.18600463867188,
+          59.81694793701172
+        ],
+        "minimum": [
+          -34.59336853027344,
+          0,
+          -43.67300033569336
+        ]
+      },
+      "declaredMaterialCount": 9,
+      "declaredTextureCount": 3,
+      "declaredTriangleCount": 32648,
+      "importedBoundsYUp": {
+        "max": [
+          44.31778335571289,
+          43.67300033569336,
+          152.18600463867188
+        ],
+        "min": [
+          -34.59336853027344,
+          -59.81694793701172,
+          0.0
+        ]
+      },
+      "importedImageCount": 3,
+      "importedMaterialCount": 9,
+      "importedTriangleCount": 32648,
+      "importedVolumeCubicMeters": 692059.2361176371,
+      "meshObjectCount": 1,
+      "relativeVolumeDeviation": 4.529230933885289e-08,
+      "setbacksAbsent": true,
+      "stratum": "most-triangles",
+      "volumeTolerance": 1e-06,
+      "volumeWithinTolerance": true,
+      "writerMeshVolumeCubicMeters": 692059.2724155533
+    },
+    {
+      "analyticVolumeCubicMeters": 147034.71749877714,
+      "buildingId": "doitt:96672",
+      "checksumSha256": "e7ea0dc53e93ed6974981e58971dafb2ecefdd0201de3a814561fb434ab1399a",
+      "declaredBoundsYUp": {
+        "maximum": [
+          16.570999145507812,
+          98.39399719238281,
+          29.322999954223633
+        ],
+        "minimum": [
+          -30.971803665161133,
+          0,
+          -34.308998107910156
+        ]
+      },
+      "declaredMaterialCount": 9,
+      "declaredTextureCount": 3,
+      "declaredTriangleCount": 12292,
+      "importedBoundsYUp": {
+        "max": [
+          16.570999145507812,
+          34.308998107910156,
+          98.39399719238281
+        ],
+        "min": [
+          -30.971803665161133,
+          -29.322999954223633,
+          0.0
+        ]
+      },
+      "importedImageCount": 3,
+      "importedMaterialCount": 9,
+      "importedTriangleCount": 12292,
+      "importedVolumeCubicMeters": 147034.7216044286,
+      "meshObjectCount": 1,
+      "relativeVolumeDeviation": 2.792300709631018e-08,
+      "setbacksAbsent": true,
+      "stratum": "most-textures",
+      "volumeTolerance": 1e-06,
+      "volumeWithinTolerance": true,
+      "writerMeshVolumeCubicMeters": 147034.71733560608
+    },
+    {
+      "analyticVolumeCubicMeters": 1747.793701151001,
+      "buildingId": "doitt:990113",
+      "checksumSha256": "e6e1935ab8741204871570a45caeb481824087ac502e2acf1c38ab0f880f923f",
+      "declaredBoundsYUp": {
+        "maximum": [
+          6.9679999351501465,
+          13.710000038146973,
+          15.809000015258789
+        ],
+        "minimum": [
+          -12.418999671936035,
+          0,
+          -10.083000183105469
+        ]
+      },
+      "declaredMaterialCount": 9,
+      "declaredTextureCount": 3,
+      "declaredTriangleCount": 736,
+      "importedBoundsYUp": {
+        "max": [
+          6.9679999351501465,
+          10.083000183105469,
+          13.710000038146973
+        ],
+        "min": [
+          -12.418999671936035,
+          -15.809000015258789,
+          0.0
+        ]
+      },
+      "importedImageCount": 3,
+      "importedMaterialCount": 9,
+      "importedTriangleCount": 736,
+      "importedVolumeCubicMeters": 1747.794034415284,
+      "meshObjectCount": 1,
+      "relativeVolumeDeviation": 1.9067712782830054e-07,
+      "setbacksAbsent": false,
+      "stratum": "fewest-triangles",
+      "volumeTolerance": 1e-06,
+      "volumeWithinTolerance": true,
+      "writerMeshVolumeCubicMeters": 1747.7939901143282
+    }
+  ],
+  "schemaVersion": "1.0",
+  "texturedSampleCount": 12,
+  "tool": {
+    "driver": "blender-mcp",
+    "id": "blender",
+    "version": "5.2.0 LTS"
+  },
+  "volumeTolerance": 1e-06,
+  "worstRelativeVolumeDeviation": 5.031256752538978e-07
+}
