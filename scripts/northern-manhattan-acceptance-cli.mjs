@@ -397,11 +397,20 @@ async function captureStation(port, previewBase, station, repeatIndex, extraPara
     for (const releaseId of [...PROMOTED_RELEASE_IDS, NORTHERN_MANHATTAN_RELEASE_ID, BASE_RELEASE_ID]) {
       const marker = `/data/${releaseId}/`;
       const matched = encoded.filter((entry) => entry.url.includes(marker));
+      const glbs = matched.filter((entry) => entry.url.endsWith(".glb"));
+      // RESPONSES AND DISTINCT ARTIFACTS ARE DIFFERENT NUMBERS at six waves, and
+      // the difference is a real runtime behaviour rather than noise: the shared
+      // LRU cache holds 512 entries, a six-wave session gets close to that, and an
+      // evicted artifact that comes back into view is fetched again. Residency is
+      // a question about ENTRIES, so it is derived below from the DISTINCT count;
+      // the response count is kept beside it because network cost is a different
+      // question and this record must not answer one with the other.
       perRelease[releaseId] = {
         requestCount: requests.filter((url) => url.includes(marker)).length,
         completedCount: matched.length,
         encodedBytes: matched.reduce((total, entry) => total + entry.bytes, 0),
-        glbCount: matched.filter((entry) => entry.url.endsWith(".glb")).length,
+        glbCount: glbs.length,
+        distinctGlbCount: new Set(glbs.map((entry) => entry.url)).size,
       };
     }
     const externalHosts = [...new Set(requests
@@ -583,14 +592,15 @@ async function main() {
    */
   const residencyRuns = captures.map((capture) => {
     const perRelease = capture.network.perRelease;
-    const entries = PROMOTED_RELEASE_IDS.reduce((total, releaseId) => total + perRelease[releaseId].glbCount, 0);
+    const entries = PROMOTED_RELEASE_IDS.reduce((total, releaseId) => total + perRelease[releaseId].distinctGlbCount, 0);
+    const responses = PROMOTED_RELEASE_IDS.reduce((total, releaseId) => total + perRelease[releaseId].glbCount, 0);
     const bytes = PROMOTED_RELEASE_IDS.reduce((total, releaseId) => total + perRelease[releaseId].encodedBytes, 0);
-    return { stationId: capture.stationId, repeatIndex: capture.repeatIndex, entries, bytes };
+    return { stationId: capture.stationId, repeatIndex: capture.repeatIndex, entries, glbResponses: responses, bytes };
   });
   const worstResidency = residencyRuns.reduce((worst, run) => (run.entries > worst.entries ? run : worst), residencyRuns[0]);
   const cacheResidency = {
     basis: "derived-from-network-not-read-from-the-cache-counter",
-    statement: "One fetched GLB is one LRU entry, so the entry count is the count of GLB responses the session completed and the byte figure is their encoded size. The in-app cache counter is only published to the DOM in a VITE_BLOCK835_PROBE build; this measurement is against the ordinary production preview a user gets, so residency is derived from the fetches instead.",
+    statement: "One DISTINCT fetched GLB is one LRU entry, so the entry count is the count of distinct GLB URLs the session completed and the byte figure is the encoded size of every response. AT SIX WAVES THOSE ARE NO LONGER THE SAME NUMBER, and this is the first record where they differ: the cache holds 512 entries, a six-wave session gets close to that, and an evicted artifact that comes back into view is fetched a second time. `glbResponses` is kept beside `entries` in every run so the gap is visible rather than absorbed — counting responses would OVERSTATE residency, which is the safe direction but not the true one. The in-app cache counter is only published to the DOM in a VITE_BLOCK835_PROBE build; this measurement is against the ordinary production preview a user gets, so residency is derived from the fetches instead.",
     perRun: residencyRuns,
     worstObserved: worstResidency,
     maxCacheEntries: EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries,

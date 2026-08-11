@@ -30,7 +30,13 @@ import { sha256HexBytes, sha256HexSync } from "../src/domain/deterministic-hash.
 import { serializeExteriorWaveArtifact } from "../src/release/exterior-wave-subset.ts";
 import { NORTHERN_MANHATTAN_RELEASE_ID } from "../src/release/northern-manhattan-package.ts";
 import { NORTHERN_MANHATTAN_OUTPUT_DIRECTORY } from "../src/release/northern-manhattan-release.ts";
-import { NORTHERN_MANHATTAN_RECORD_ROOT, NORTHERN_MANHATTAN_WORK_ROOT } from "./northern-manhattan-cli.mjs";
+import { NORTHERN_MANHATTAN_P1_RELEASE_ID, NORTHERN_MANHATTAN_P1_OUTPUT_DIRECTORY } from "../src/release/northern-manhattan-p1-release.ts";
+import {
+  NORTHERN_MANHATTAN_P1_RECORD_ROOT,
+  NORTHERN_MANHATTAN_P1_WORK_ROOT,
+  NORTHERN_MANHATTAN_RECORD_ROOT,
+  NORTHERN_MANHATTAN_WORK_ROOT,
+} from "./northern-manhattan-cli.mjs";
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -41,6 +47,13 @@ const VARIANTS = {
     recordRoot: NORTHERN_MANHATTAN_RECORD_ROOT,
     outputDirectory: NORTHERN_MANHATTAN_OUTPUT_DIRECTORY,
     note: "T021 Blender re-import, measurement and render pass over the deterministic stratified sample of the Northern-Manhattan canary's shipped assets: 69 of the 76 the single renderable cell ships, drawn from twelve strata.",
+  },
+  p1: {
+    releaseId: NORTHERN_MANHATTAN_P1_RELEASE_ID,
+    workRoot: NORTHERN_MANHATTAN_P1_WORK_ROOT,
+    recordRoot: NORTHERN_MANHATTAN_P1_RECORD_ROOT,
+    outputDirectory: NORTHERN_MANHATTAN_P1_OUTPUT_DIRECTORY,
+    note: "T022 Blender re-import, measurement and render pass over the PROMOTED Northern-Manhattan P1 successor's shipped assets: ALL 24 of them. The curated cell owns 24 buildings and the grammar refused none, so the deterministic strata select every shipped asset and this is a census rather than a sample — which is stated plainly because every earlier wave's record had to explain a gap and this one does not have one.",
   },
 };
 
