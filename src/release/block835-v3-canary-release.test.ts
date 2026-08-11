@@ -6,6 +6,8 @@ import { validateExteriorReleaseGraph, type ExteriorReleaseGraph } from "./exter
 import { validateExteriorCellReleaseIndex } from "../runtime/exterior-cell-runtime.ts";
 import { validateMultiLodAssembly } from "./multi-lod-assembly.ts";
 import { BLOCK835_CANARY_PILOT_RELEASE_PATH, BLOCK835_CANARY_V2_PROFILE, buildBlock835CanaryRelease } from "./block835-canary-release.ts";
+import { BLOCK835_V3_STYLE_OVERRIDES, ESB_FACADE_MATERIAL_RECORD_ID } from "./block835-facade-material-intake.ts";
+import { DETERMINISTIC_FACADE_V3_CITED_STYLE_UNCERTAINTY, DETERMINISTIC_FACADE_V3_UNCERTAINTY } from "../domain/deterministic-facade-generator-v3.ts";
 import {
   BLOCK835_V3_CANARY_APPROVAL,
   BLOCK835_V3_CANARY_INPUT_PACKAGE_ID,
@@ -93,6 +95,45 @@ describe("Block 835 V3 successor exterior release", () => {
     }
   });
 
+  it("ships the cited facade-material citation on exactly one asset, and the standard statement on the other thirteen", () => {
+    const assembly = buildBlock835CanaryRelease(input(), BLOCK835_V3_CANARY_PROFILE).assemblies[0]!;
+    const cited = assembly.assets.filter((asset) => asset.citedStyle !== undefined);
+    expect(cited.map((asset) => asset.canonicalFeatureId)).toEqual(["doitt:778052"]);
+    expect([...BLOCK835_V3_STYLE_OVERRIDES.keys()]).toEqual(cited.map((asset) => asset.canonicalFeatureId));
+    const esb = cited[0]!;
+    expect(esb.citedStyle!.evidenceRecordId).toBe(ESB_FACADE_MATERIAL_RECORD_ID);
+    expect(esb.citedStyle!.styleClass).toBe("stone-neutral");
+    expect(esb.citedStyle!.fact).toContain("Indiana limestone");
+    expect(esb.citedStyle!.provider).toBe("wikipedia");
+    // The uncertainty statement follows the citation, per asset, so the cited
+    // asset cannot wear the "derived from no observation" wording.
+    expect(esb.uncertainty).toBe(DETERMINISTIC_FACADE_V3_CITED_STYLE_UNCERTAINTY);
+    for (const asset of assembly.assets) {
+      if (asset.canonicalFeatureId === "doitt:778052") continue;
+      expect(asset.citedStyle, `${asset.canonicalFeatureId} must carry no citation`).toBeUndefined();
+      expect(asset.uncertainty).toBe(DETERMINISTIC_FACADE_V3_UNCERTAINTY);
+    }
+    // A cited style class is not a texture, and the release still ships none.
+    expect(assembly.assets.every((asset) => asset.lods.every((lod) => lod.quality.textureCount === 0))).toBe(true);
+  });
+
+  it("changed materials only: the cited override moved no geometry, so the measured frame gate still holds", () => {
+    // The V3 package is the pre-override lineage this one supersedes. Per-LOD
+    // triangle, quad and vertex counts must be identical across all fourteen,
+    // which is what makes the P0 frame measurement valid for these bytes.
+    const before = JSON.parse(new TextDecoder().decode(read("public/data/manhattan-esb-block-reference-20260811-v3/manifest.json"))) as {
+      assets: { canonicalFeatureId: string; lods: { lodId: string; quality: Record<string, number> }[] }[];
+    };
+    const after = buildBlock835CanaryRelease(input(), BLOCK835_V3_CANARY_PROFILE).assemblies[0]!;
+    const key = (asset: { canonicalFeatureId: string; lods: { lodId: string; quality: Record<string, number> }[] }) =>
+      asset.lods.map((lod) => `${lod.lodId}:${lod.quality.triangleCount}:${lod.quality.materialCount}:${lod.quality.textureCount}`).join("|");
+    const beforeById = new Map(before.assets.map((asset) => [asset.canonicalFeatureId, key(asset)]));
+    for (const asset of after.assets) {
+      expect(key(asset as never), `${asset.canonicalFeatureId} geometry cost changed`).toBe(beforeById.get(asset.canonicalFeatureId));
+    }
+    expect(after.assets).toHaveLength(before.assets.length);
+  });
+
   it("writes no private byte and pins its private ancestry by checksum alone", () => {
     const built = buildBlock835CanaryRelease(input(), BLOCK835_V3_CANARY_PROFILE);
     const privateRoot = built.graph.roots.find((root) => root.audience === "private")!;
@@ -117,7 +158,7 @@ describe("Block 835 V3 successor exterior release", () => {
 
   it("refuses an input package that is not the one this profile promotes", () => {
     expect(() => buildBlock835CanaryRelease(input(BLOCK835_CANARY_V2_PROFILE), BLOCK835_V3_CANARY_PROFILE)).toThrow(/input package is manhattan-esb-block-reference-20260811,/);
-    expect(() => buildBlock835CanaryRelease(input(), BLOCK835_CANARY_V2_PROFILE)).toThrow(/input package is manhattan-esb-block-reference-20260811-v3,/);
+    expect(() => buildBlock835CanaryRelease(input(), BLOCK835_CANARY_V2_PROFILE)).toThrow(/input package is manhattan-esb-block-reference-20260811-v3e,/);
   });
 
   it("declares every emitted public artifact at its emitted checksum", () => {

@@ -22,12 +22,15 @@ import { fileURLToPath } from "node:url";
 import {
   BLOCK835_PILOT_RELEASE_ID,
   BLOCK835_V3_PACKAGE_ID,
+  BLOCK835_V3E_PACKAGE_ID,
   decidePackageTarget,
   readPilotBuildings,
 } from "../src/release/block835-reference-package.ts";
 import {
   BLOCK835_V3_GENERATED_AT,
   BLOCK835_V3_PREDECESSOR_PACKAGE_ID,
+  BLOCK835_V3E_PROFILE,
+  BLOCK835_V3_PROFILE,
   V3_QUALITY_BUDGETS,
   V3_REGISTRATION_METHOD,
   V3_REGISTRATION_TOLERANCE,
@@ -41,12 +44,39 @@ import { sha256HexBytes, stableSerialize } from "../src/domain/deterministic-has
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const PILOT_RELEASE_PATH = join(ROOT, "public", "data", BLOCK835_PILOT_RELEASE_ID, "release.json");
-const DATA_DIR = join(ROOT, "data", BLOCK835_V3_PACKAGE_ID);
+/**
+ * Which package this invocation operates on.
+ *
+ * `v3` is the merged, byte-frozen untextured package and stays the default, so
+ * every existing command line keeps meaning exactly what it meant. `v3e` is its
+ * evidence-cited successor: the same grammar and the same budgets, with the
+ * cited facade-material style overrides applied and its own directories, so a
+ * `v3e` build can never write a `v3` byte.
+ */
+const PROFILES = {
+  v3: { profile: BLOCK835_V3_PROFILE, packageId: BLOCK835_V3_PACKAGE_ID },
+  v3e: { profile: BLOCK835_V3E_PROFILE, packageId: BLOCK835_V3E_PACKAGE_ID },
+};
+
+function selectProfile(argv) {
+  const index = argv.indexOf("--package");
+  const name = index >= 0 ? argv[index + 1] : "v3";
+  const selected = PROFILES[name ?? "v3"];
+  if (!selected) throw new Error(`Unknown --package ${name}. Known: ${Object.keys(PROFILES).join(", ")}.`);
+  return selected;
+}
+
+const SELECTED = selectProfile(process.argv.slice(2));
+const PACKAGE_ID = SELECTED.packageId;
+const PROFILE = SELECTED.profile;
+const DATA_DIR = join(ROOT, "data", PACKAGE_ID);
 const PLAN_DIR = join(DATA_DIR, "plans");
 const MEASUREMENT_PATH = join(DATA_DIR, "silhouette-measurements.json");
 const CENSUS_PATH = join(DATA_DIR, "census.json");
-const PACKAGE_DIR = join(ROOT, "public", "data", BLOCK835_V3_PACKAGE_ID);
-const EVIDENCE_ROOT = join(ROOT, "artifacts", "blender", BLOCK835_V3_PACKAGE_ID);
+const PACKAGE_DIR = join(ROOT, "public", "data", PACKAGE_ID);
+const EVIDENCE_ROOT = join(ROOT, "artifacts", "blender", PACKAGE_ID);
+const STYLE_OVERRIDES = PROFILE.styleOverrides ?? new Map();
+const overrideFor = (building) => STYLE_OVERRIDES.get(building.canonicalBuildingId);
 
 function fail(message) { throw new Error(message); }
 function options(argv) {
@@ -67,7 +97,7 @@ async function loadPilot() {
 async function loadMeasurements(path = MEASUREMENT_PATH) {
   const raw = await readFile(path, "utf8").catch(() => fail(`Blender silhouette measurements are required at ${path}. Run the Blender authoring pass first.`));
   const parsed = JSON.parse(raw);
-  if (parsed.packageId !== BLOCK835_V3_PACKAGE_ID || parsed.method !== "projected-silhouette-ratio" || parsed.metricVersion !== "1.0") fail("Silhouette measurement file does not match the approved package/metric identity.");
+  if (parsed.packageId !== PACKAGE_ID || parsed.method !== "projected-silhouette-ratio" || parsed.metricVersion !== "1.0") fail("Silhouette measurement file does not match the approved package/metric identity.");
   if (!Array.isArray(parsed.buildings) || parsed.buildings.length === 0) fail("Silhouette measurement file declares no buildings.");
   return parsed;
 }
@@ -80,13 +110,18 @@ async function writePlans() {
   await mkdir(PLAN_DIR, { recursive: true });
   const summary = [];
   for (const building of readPilotBuildings(release)) {
-    const { plan } = buildV3Plan(building);
+    const { plan } = buildV3Plan(building, overrideFor(building));
     await writeFile(join(PLAN_DIR, planFileName(building.canonicalBuildingId)), `${stableSerialize(plan)}\n`, "utf8");
     summary.push({
       canonicalBuildingId: plan.buildingId,
       planId: plan.planId,
       planHashSha256: plan.planHashSha256,
       styleClass: plan.styleClass,
+      // Present only where a citation exists. Emitting a marker on every row
+      // would have rewritten the frozen -v3 build records for no new fact.
+      ...(plan.input.styleOverride
+        ? { styleSource: "cited", citedEvidenceRecordId: plan.input.styleOverride.evidenceRecordId, citedFact: plan.input.styleOverride.fact, uncertainty: plan.uncertainty }
+        : {}),
       sourceRingVertexCount: plan.input.geometry.footprint.outer.length,
       reflexVertexCount: plan.massing.reflexVertexIndexes.length,
       effectiveTierCount: plan.massing.effectiveTierCount,
@@ -97,7 +132,7 @@ async function writePlans() {
   }
   const hashes = summary.map((entry) => entry.planHashSha256);
   if (new Set(hashes).size !== hashes.length) fail("Two V3 plans share a plan hash; the grammar is not building distinct assets.");
-  await writeFile(join(DATA_DIR, "plan-index.json"), `${stableSerialize({ packageId: BLOCK835_V3_PACKAGE_ID, plans: summary })}\n`, "utf8");
+  await writeFile(join(DATA_DIR, "plan-index.json"), `${stableSerialize({ packageId: PACKAGE_ID, plans: summary })}\n`, "utf8");
   console.log(JSON.stringify({ ok: true, command: "plans", plans: summary.length, planDir: PLAN_DIR }, null, 2));
 }
 
@@ -112,7 +147,7 @@ async function authoringInputs(targetDir) {
   await mkdir(targetDir, { recursive: true });
   const index = [];
   for (const building of readPilotBuildings(release)) {
-    const { plan } = buildV3Plan(building);
+    const { plan } = buildV3Plan(building, overrideFor(building));
     const entry = {
       canonicalBuildingId: building.canonicalBuildingId,
       planPath: join(PLAN_DIR, planFileName(building.canonicalBuildingId)),
@@ -123,13 +158,13 @@ async function authoringInputs(targetDir) {
     await writeFile(join(targetDir, planFileName(building.canonicalBuildingId)), `${stableSerialize(entry)}\n`, "utf8");
     index.push({ canonicalBuildingId: entry.canonicalBuildingId, planHashSha256: entry.planHashSha256 });
   }
-  await writeFile(join(targetDir, "index.json"), `${stableSerialize({ packageId: BLOCK835_V3_PACKAGE_ID, generatedAt: BLOCK835_V3_GENERATED_AT, buildings: index })}\n`, "utf8");
+  await writeFile(join(targetDir, "index.json"), `${stableSerialize({ packageId: PACKAGE_ID, generatedAt: BLOCK835_V3_GENERATED_AT, buildings: index })}\n`, "utf8");
   console.log(JSON.stringify({ ok: true, command: "authoring", buildings: index.length, dir: targetDir }, null, 2));
 }
 
 async function promoteMeasurements(evidencePath) {
   const evidence = JSON.parse(await readFile(evidencePath, "utf8").catch(() => fail(`Blender silhouette evidence is required at ${evidencePath}.`)));
-  if (evidence.packageId !== BLOCK835_V3_PACKAGE_ID || evidence.method !== "projected-silhouette-ratio" || evidence.metricVersion !== "1.0") fail("Blender silhouette evidence does not match the approved package/metric identity.");
+  if (evidence.packageId !== PACKAGE_ID || evidence.method !== "projected-silhouette-ratio" || evidence.metricVersion !== "1.0") fail("Blender silhouette evidence does not match the approved package/metric identity.");
   const { release } = await loadPilot();
   const measuredById = new Map(evidence.buildings.map((entry) => [entry.canonicalBuildingId, entry]));
   const buildings = readPilotBuildings(release).map((building) => {
@@ -138,14 +173,14 @@ async function promoteMeasurements(evidencePath) {
     if (!(measured.deviationRatio >= 0) || measured.deviationRatio > 0.02) fail(`Measured silhouette deviation for ${building.canonicalBuildingId} is outside the approved 2% bound.`);
     return {
       canonicalBuildingId: building.canonicalBuildingId,
-      planHashSha256: buildV3Plan(building).plan.planHashSha256,
+      planHashSha256: buildV3Plan(building, overrideFor(building)).plan.planHashSha256,
       viewIds: [...measured.viewIds].sort(),
       deviationRatio: measured.deviationRatio,
     };
   });
   const file = {
     schemaVersion: "1.0",
-    packageId: BLOCK835_V3_PACKAGE_ID,
+    packageId: PACKAGE_ID,
     method: "projected-silhouette-ratio",
     metricVersion: "1.0",
     tool: "blender-mcp:BLENDER_WORKBENCH:orthographic-512",
@@ -164,7 +199,7 @@ async function promoteMeasurements(evidencePath) {
  */
 async function promoteEvidenceInventory(sourcePath) {
   const inventory = JSON.parse(await readFile(sourcePath, "utf8").catch(() => fail(`Blender evidence inventory is required at ${sourcePath}.`)));
-  if (inventory.packageId !== BLOCK835_V3_PACKAGE_ID || !Array.isArray(inventory.files) || inventory.files.length === 0) fail("Blender evidence inventory does not match the approved package identity.");
+  if (inventory.packageId !== PACKAGE_ID || !Array.isArray(inventory.files) || inventory.files.length === 0) fail("Blender evidence inventory does not match the approved package identity.");
   await mkdir(DATA_DIR, { recursive: true });
   const written = [join(DATA_DIR, "blender-evidence-inventory.json")];
   await writeFile(written[0], `${stableSerialize(inventory)}\n`, "utf8");
@@ -178,7 +213,7 @@ async function promoteEvidenceInventory(sourcePath) {
     ["reimport-up-axis-diff.json", "blender-reimport-up-axis.json", (payload) => payload.files.every((entry) => entry.upAxisIsYUpInFile)],
   ]) {
     const payload = JSON.parse(await readFile(join(evidenceRoot, name), "utf8").catch(() => fail(`Blender ${name} is required next to the evidence inventory.`)));
-    if (payload.packageId !== BLOCK835_V3_PACKAGE_ID) fail(`Blender ${name} does not match the approved package identity.`);
+    if (payload.packageId !== PACKAGE_ID) fail(`Blender ${name} does not match the approved package identity.`);
     if (!gate(payload)) fail(`Blender ${name} does not pass its own stated gate; refusing to promote it.`);
     const path = join(DATA_DIR, target);
     await writeFile(path, `${stableSerialize(payload)}\n`, "utf8");
@@ -189,9 +224,10 @@ async function promoteEvidenceInventory(sourcePath) {
 
 /** Predecessor pins come from the frozen V2 manifest, which is never edited. */
 async function loadPredecessorPins() {
-  const path = join(ROOT, "public", "data", BLOCK835_V3_PREDECESSOR_PACKAGE_ID, "manifest.json");
-  const manifest = JSON.parse(await readFile(path, "utf8").catch(() => fail(`The frozen ${BLOCK835_V3_PREDECESSOR_PACKAGE_ID} manifest is required at ${path}.`)));
-  return v3PredecessorPins(manifest);
+  const predecessorId = PROFILE.predecessorPackageId ?? BLOCK835_V3_PREDECESSOR_PACKAGE_ID;
+  const path = join(ROOT, "public", "data", predecessorId, "manifest.json");
+  const manifest = JSON.parse(await readFile(path, "utf8").catch(() => fail(`The frozen ${predecessorId} manifest is required at ${path}.`)));
+  return v3PredecessorPins(manifest, predecessorId);
 }
 
 async function assemble(measurementPath) {
@@ -201,6 +237,7 @@ async function assemble(measurementPath) {
     releaseChecksumSha256,
     measurements: await loadMeasurements(measurementPath),
     predecessor: await loadPredecessorPins(),
+    profile: PROFILE,
   });
 }
 
@@ -229,7 +266,7 @@ async function writePackage(targetDir, measurementPath) {
   }
   await writeFile(join(targetDir, "manifest.json"), serializeMultiLodAssembly(assembled.manifest), "utf8");
   await writeFile(join(targetDir, "ownership-ledger.json"), `${stableSerialize(assembled.ownershipLedger)}\n`, "utf8");
-  await writeFile(join(targetDir, "registration.json"), `${stableSerialize({ packageId: BLOCK835_V3_PACKAGE_ID, ...V3_REGISTRATION_METHOD, tolerance: V3_REGISTRATION_TOLERANCE, entries: assembled.registration })}\n`, "utf8");
+  await writeFile(join(targetDir, "registration.json"), `${stableSerialize({ packageId: PACKAGE_ID, ...V3_REGISTRATION_METHOD, tolerance: V3_REGISTRATION_TOLERANCE, entries: assembled.registration })}\n`, "utf8");
   return assembled;
 }
 
@@ -268,7 +305,7 @@ async function census(measurementPath) {
   const assembled = await assemble(measurementPath);
   const registrationById = new Map(assembled.registration.map((entry) => [entry.canonicalBuildingId, entry]));
   const rows = buildings.map((building) => {
-    const { plan } = buildV3Plan(building);
+    const { plan } = buildV3Plan(building, overrideFor(building));
     const asset = assembled.manifest.assets.find((entry) => entry.canonicalFeatureId === building.canonicalBuildingId);
     if (!asset) fail(`Census is missing a shipped asset for ${building.canonicalBuildingId}.`);
     const entry = registrationById.get(building.canonicalBuildingId);
@@ -276,6 +313,11 @@ async function census(measurementPath) {
       canonicalBuildingId: building.canonicalBuildingId,
       planHashSha256: plan.planHashSha256,
       styleClass: plan.styleClass,
+      // Present only where a citation exists. Emitting a marker on every row
+      // would have rewritten the frozen -v3 build records for no new fact.
+      ...(plan.input.styleOverride
+        ? { styleSource: "cited", citedEvidenceRecordId: plan.input.styleOverride.evidenceRecordId, citedFact: plan.input.styleOverride.fact, uncertainty: plan.uncertainty }
+        : {}),
       sourceRingVertexCount: plan.input.geometry.footprint.outer.length,
       reflexVertexCount: plan.massing.reflexVertexIndexes.length,
       requestedTierCount: plan.massing.requestedTierCount,
@@ -310,7 +352,7 @@ async function census(measurementPath) {
   if (offending.length > 0) fail(`Census gate failed for: ${offending.map((row) => row.canonicalBuildingId).join(", ")}`);
   const file = {
     schemaVersion: "1.0",
-    packageId: BLOCK835_V3_PACKAGE_ID,
+    packageId: PACKAGE_ID,
     generatedAt: BLOCK835_V3_GENERATED_AT,
     budgets: V3_QUALITY_BUDGETS,
     registrationMethod: V3_REGISTRATION_METHOD,
@@ -367,7 +409,7 @@ async function main() {
     case "registration": return registration(measurements);
     case "census": return census(measurements);
     case "determinism": return determinism(resolve(parsed.scratch ?? join(ROOT, "artifacts", "block835-v3-determinism")), measurements);
-    default: return fail("Usage: block835-v3-plan-cli.mjs <plans|authoring|measurements|evidence|build|registration|census|determinism> [--out DIR] [--scratch DIR] [--measurements FILE] [--evidence FILE]");
+    default: return fail("Usage: block835-v3-plan-cli.mjs <plans|authoring|measurements|evidence|build|registration|census|determinism> [--package v3|v3e] [--out DIR] [--scratch DIR] [--measurements FILE] [--evidence FILE]");
   }
 }
 

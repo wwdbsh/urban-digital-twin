@@ -6,6 +6,7 @@ import {
   validateGlbBinding,
   validateMultiLodAssembly,
   type AssemblyAsset,
+  type AssemblyCitedStyle,
   type AssemblyLod,
   type ComponentTruthTier,
   type ImmutablePin,
@@ -173,6 +174,12 @@ export interface ExteriorAssetProvenance {
   sourceDates: { capturedAt: string | null; updatedAt: string | null };
   predecessor: ImmutablePin | null;
   uncertainty: string;
+  /**
+   * Present only where a rights-cleared record displaced this asset's designed
+   * facade style class. Absence is the ordinary case and means the appearance is
+   * entirely designed.
+   */
+  citedStyle?: AssemblyCitedStyle;
 }
 
 export interface ExteriorRenderedAsset {
@@ -580,6 +587,7 @@ export class ExteriorCellRuntime {
           inventoryHashSha256: asset.inventoryHashSha256,
           evidenceShardId: asset.evidenceShardId,
           truthTiers: [...asset.truthTiers],
+          ...(asset.citedStyle ? { citedStyle: { ...asset.citedStyle } } : {}),
           sourceDates: { ...asset.sourceDates },
           predecessor: asset.predecessor,
           uncertainty: asset.uncertainty,

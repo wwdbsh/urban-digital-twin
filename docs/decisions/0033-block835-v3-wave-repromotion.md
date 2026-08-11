@@ -128,15 +128,68 @@ Constraints, all test-pinned:
   **correct and must remain**: the fact may drive the style class, never a
   texture.
 
-The ESB limestone override is **not applied in this decision**. Applying it moves
-ESB's plan hash, which requires a successor private package and a Blender
-re-measure of ESB's two assets under the new hash; that is carried forward. The
-uncertainty question it raises is decided in advance: a sibling constant
-`DETERMINISTIC_FACADE_V3_CITED_STYLE_UNCERTAINTY` will be added and
-`validateV3Plan` will accept exactly the two constants keyed on override
-presence, because the frozen V3 statement ("colour and material … derived from no
-imagery and no observation") becomes contradictory inside a plan that carries a
-cited material fact.
+### The ESB limestone override, as applied
+
+The one override this build ships maps `doitt:778052` to `stone-neutral`, cited
+from intake record `intake:wikipedia:doitt-778052:facade-material`. Before it,
+the Empire State Building drew `curtain-cool` — a glass curtain wall.
+
+The admitted evidence is encyclopaedia article **TEXT** about documented
+exterior materials, classification `compatible-licensed`, provider `wikipedia`,
+`derivativeScope: "measurement-only"`, `privacyReview: "reviewed-no-identifiers"`.
+The evaluator therefore raises `derivative-scope-excludes-texture` and
+`runtime-texture-not-permitted`, and the record is admitted `publicEligible: true`,
+`runtimeTextureEligible: false`. **Those restrictions are correct and are pinned
+by test**: the fact may drive a designed style class and may never become a
+texture. No imagery was ingested, traced, sampled or reproduced.
+
+**The projection is deliberately not spliced into the release evidence graph.**
+`validateExteriorInventoryEvidence` closes its graph: every evidence node must be
+referenced by a component that is `evidence-backed`, or `not-applicable` with an
+evidence basis. V3's components are `generated` (or `absent` for a refused
+setback), and that is the honest description — a sourced material fact does not
+make a generated bay rhythm evidence-backed. Splicing a claim node in would have
+forced either relabelling generated components as evidence-backed, or leaving the
+orphan node the closure rule exists to forbid. So the citation travels where it
+is true: in the PLAN, whose hash covers it, and from there into per-asset
+provenance and the details panel. The release's evidence graph keeps stating what
+it always stated — the rights basis for the geometry is the NYC footprint
+dataset.
+
+### Uncertainty: a sibling constant, not an edit
+
+`DETERMINISTIC_FACADE_V3_UNCERTAINTY` says colour and material are "derived from
+no imagery and no observation". Inside a plan carrying a cited override that
+sentence is false. `DETERMINISTIC_FACADE_V3_CITED_STYLE_UNCERTAINTY` states the
+narrower truth, and `validateV3Plan` accepts **exactly** the two constants, keyed
+on the presence of `styleOverride` in the plan's own embedded input — a cited
+plan wearing the uncited wording, and an uncited plan wearing the cited wording,
+are both refused. The V3 constant is not edited, so the fourteen committed V3
+plans keep their bytes.
+
+Component-level uncertainty follows the same precision: only the `materials`
+component of the cited plan carries the cited statement. A facade-material fact
+says nothing about that building's bay rhythm, roof form or water tanks, so those
+components keep the standard statement rather than inheriting a citation they are
+not covered by.
+
+### Package mechanics
+
+`-v3` is merged and frozen, so the cited plan needs a successor:
+`manhattan-esb-block-reference-20260811-v3e`, with per-asset predecessor pins to
+`-v3`. All fourteen assets get new bytes, because package identity (`inventoryId`,
+`evidenceShardId`) is embedded in every asset's GLB metadata — but **thirteen
+plan hashes are byte-identical to `-v3`** and only `doitt:778052` moves
+(`cc65ce6e…` to `861811019f…`). That is the integrity claim that matters and it
+is asserted rather than described.
+
+The public release directory `manhattan-exterior-cells-20260811-v3` is **rebuilt
+in place** rather than stacked behind a second successor. It is unmerged on this
+branch and therefore not yet immutable; nothing is frozen until it merges. The
+release id is kept because the pins update coherently — snapshot checksum,
+cell-release checksum and `assemblyPackageIds` all move together in one record
+swap — and a second successor release id would have implied a supersession that
+never publicly happened.
 
 ## Consequences
 
@@ -163,6 +216,13 @@ after both runs, 0 console errors, `localhost:4310` the only host contacted.
 | exploration | **8.30 ms** | **9.30 ms** | 16.7 / 25 | pass |
 | inspection | **8.30 ms** | **9.30 ms** | 33.3 / 45 | pass |
 
+Those numbers were measured on the pre-override assembly and **remain valid for
+the shipped bytes**, which is asserted rather than assumed: a test compares
+per-LOD triangle, material and texture counts for all fourteen assets against the
+`-v3` manifest and requires equality, and Blender independently re-measured the
+same volumes and the same silhouette ratios under the new plan hash. The override
+changed material factors only.
+
 `droppedFrameRatio` 0 on a ~135 Hz display, so the margin is real headroom rather
 than refresh quantization. Peak concurrent requests 4 (limit 8); peak exterior
 cache 1,910,044 bytes (limit 256 MiB); 14 cache entries, 0 evictions — direct
@@ -179,6 +239,8 @@ hardware was also 8.3 ms.
 It does not claim textured public admission is safe — that is deliberately
 unmeasured here. It does not claim 1440p-class, mobile, keyboard-traversal or
 reduced-motion behaviour. It does not claim the designed V3 appearance resembles
-any real building; the shipped uncertainty statement says the opposite, and the
-Empire State Building currently renders in the designed `curtain-cool` class,
-which is precisely the mismatch Decision D exists to correct later.
+any real building; the shipped uncertainty statements say the opposite. For the
+Empire State Building it claims only this: a documented material list selected
+which of four designed style classes is drawn. The tones, coursing and geometry
+expressing that class are still designed, and nothing here claims the shipped
+surface reproduces the real facade.

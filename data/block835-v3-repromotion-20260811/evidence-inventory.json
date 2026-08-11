@@ -1,5 +1,5 @@
 {
-  "fileCount": 12,
+  "fileCount": 14,
   "files": [
     {
       "path": "json/p0-exploration.json",
@@ -48,6 +48,14 @@
     {
       "path": "screenshots/j-v3-esb-facade.png",
       "sha256": "efa94e7aa9eae2f3c0f16c1157628b6e86755cbfc9769bc74fc02483fc4236af"
+    },
+    {
+      "path": "screenshots/j-v3e-esb-cited.png",
+      "sha256": "dc624f42a82ae01bfc240a56c4e84ffdd5139b3c8f88d0d61b44988a89fdb69e"
+    },
+    {
+      "path": "screenshots/j-v3e-limestone-facade.png",
+      "sha256": "17e8e9e2fa3d01cb0aefa0fe69fa78df70664fb5c8479787ed83d7a10736aafe"
     }
   ],
   "inventoryId": "block835-v3-repromotion-20260811",

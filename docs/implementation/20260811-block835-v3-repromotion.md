@@ -5,14 +5,16 @@ Date: 2026-08-11 (Asia/Seoul) · Task T026 — Issue #44 · Decision record:
 
 Release promoted: `manhattan-exterior-cells-20260811-v3`
 (`defaultHead` = `snapshot:manhattan-exterior-cells-20260811-v3:v1`,
-`73e112f4080710f8a351c5cc22a826603e69af42d7b040e1769aa6e0540869cd`)
+`6ade605778c5e2700930029a94354b4b86a8d905eb7fde67665fff84d03449e1`), assembled
+from the private package `manhattan-esb-block-reference-20260811-v3e`
+(fingerprint `7acd2a1585518be556fe4ae63a7cd546e9b726d6162b009149d67cea7382c54e`).
 
 Predecessor, retained and byte-untouched: `manhattan-exterior-cells-20260811`.
 
 Committed evidence inventory:
 [`data/block835-v3-repromotion-20260811/evidence-inventory.json`](../../data/block835-v3-repromotion-20260811/evidence-inventory.json)
-(SHA-256 `1c8d0ee5b2f39275cf9eb51c2b74752814c2565eef5a4eeb35d3bb601ad5426e`,
-12 files). Raw evidence is untracked under
+(SHA-256 `2f9d2cbd74b1f32dcbcf2d649098624848ee0a334f91d9d8e523c5c81b7ee4ca`,
+14 files). Raw evidence is untracked under
 `artifacts/block835-v3-repromotion-20260811/`.
 
 ## Order of work: the frame gate came first
@@ -75,6 +77,11 @@ a simulated swap.
 | --- | --- |
 | `src/release/block835-canary-release.ts` | Parameterised by a `Block835CanaryReleaseProfile`. Every logical id derives from the release id; the V2 profile is the default, so `buildBlock835CanaryRelease(input)` keeps its original call shape and its bytes. |
 | `src/release/block835-v3-canary-release.ts` (new) | V3 successor identity, approval scope/exclusions/note/fingerprint, profile instance. |
+| `src/release/block835-facade-material-intake.ts` (new) | The rights-cleared intake ledger for the Wikipedia facade-material fact, its admission, and the hand-listed override map — in one module so a citation cannot point at a record that does not exist. |
+| `src/domain/deterministic-facade-generator-v3.ts` | `DETERMINISTIC_FACADE_V3_CITED_STYLE_UNCERTAINTY`; `validateV3Plan` accepts exactly the two statements, keyed on override presence. |
+| `src/release/multi-lod-assembly.ts` | Optional `AssemblyAsset.citedStyle`, validated closed, and bound into GLB canonical metadata. |
+| `src/runtime/exterior-cell-runtime.ts`, `src/app/App.tsx` | Carry `citedStyle` into asset provenance and render the cited fact line. |
+| `scripts/block835-v3-plan-cli.mjs` | `--package v3\|v3e`; `v3` stays the default so every existing command line is unchanged. |
 | `src/domain/exterior-contract.ts` | `CONDITIONALLY_APPLICABLE_EXTERIOR_COMPONENT_KINDS`; `isExteriorComponentReleaseEligible` admits an absent `setbacks` **with a reason**. Platform-wide — see ADR 0033 Decision B. |
 | `src/domain/deterministic-facade-generator-v3.ts` | Optional cited `V3Input.styleOverride`; `selectV3StyleClass` untouched. |
 | `src/release/block835-v3-package.ts` | `buildV3Plan(building, styleOverride?)`. |
@@ -100,8 +107,8 @@ a simulated swap.
 | --- | --- |
 | `pnpm typecheck` | Pass |
 | `pnpm lint` | Pass, 0 problems |
-| `pnpm test` | 84 files / **890 tests**; 889 pass. Baseline before this task: 83 files / 874 tests. |
-| Known failure | `App.test.tsx > closes details with Escape and returns focus to the located-pick trigger` — **pre-existing flake**, proven by stashing every change and failing 2/2 full runs at clean HEAD, while passing 3/3 in isolation. Not caused by this task and not repaired here. |
+| `pnpm test` | 85 files / **899 tests**, **899 pass**. Baseline before this task: 83 files / 874 tests. |
+| Known flake | `App.test.tsx > closes details with Escape…` failed on some full-suite runs earlier in this task and was proven **pre-existing** (2/2 failures at clean HEAD with every change stashed; 3/3 passes in isolation). It passes in the final run; it is load-sensitive, not caused by this task, and not repaired here. |
 | `pnpm build` (default) | Pass; probe absent |
 | `VITE_BLOCK835_PROBE=1 pnpm build` | Pass; 3 private partitions pruned from `dist/` |
 | `git diff --check` | Clean |
@@ -130,19 +137,90 @@ a simulated swap.
 No test was deleted or weakened; every existing assertion either survived
 unchanged or was re-pointed at the release this build actually promotes.
 
+## The ESB cited facade-material override
+
+### Package mechanics chosen
+
+`-v3` is merged and frozen, so the cited plan needed a successor:
+`manhattan-esb-block-reference-20260811-v3e`, per-asset predecessor pins to
+`-v3`. All fourteen assets carry new bytes because package identity is embedded
+in every GLB's metadata; **thirteen plan hashes are byte-identical to `-v3`** and
+only `doitt:778052` moves, `cc65ce6e529d…` to `861811019f28…`. Its style class
+goes `curtain-cool` to `stone-neutral`.
+
+The public release `manhattan-exterior-cells-20260811-v3` was **rebuilt in place**
+rather than stacked behind a second successor: it is unmerged on this branch and
+therefore not yet immutable, the pins update coherently in one record swap, and a
+new release id would have implied a supersession that never publicly happened.
+
+The intake projection is deliberately **not** spliced into the release evidence
+graph — see ADR 0033 for why that would have required either relabelling
+generated components as evidence-backed or leaving an orphan node. The citation
+lives in the plan, whose hash covers it, and travels into per-asset provenance.
+
+### Blender re-measure
+
+All fourteen buildings were re-authored and re-measured against the `-v3e` plans;
+the two ESB assets are the ones whose plan hash moved.
+
+| Measure | ESB result |
+| --- | --- |
+| Plan hash measured under | `861811019f2885faf349adff8199ee9d40dde7dc7472708ada095d7d69c34b9f` (new) |
+| Silhouette deviation ratio | **8.062240496634014e-05** — **bit-identical** to the frozen `-v3` value |
+| LOD 0 volume | signed 2,597,231.775527669 m³ vs analytic 2,597,231.9192306465 m³, deviation **5.53e-08** |
+| LOD 1 volume | signed 2,600,779.0996733885 m³ vs analytic 2,600,779.1682959674 m³, deviation **2.64e-08** |
+| Triangles | 102,988 (LOD 0) / 36,032 (LOD 1) — **unchanged** |
+| Solid / normals | `boundsASolid` true, `outwardNormalsConsistent` true, both LODs |
+
+Package-wide: worst volume deviation **1.8848e-07** against a 1e-06 tolerance;
+worst silhouette deviation **0.00183** against the 2 % bound; all fourteen
+silhouette ratios bit-identical to `-v3`. The GLB reimport diff over all
+**28** shipped assets returns **0.0 m** worst bounds deviation against the
+authored ENU frame, with the Z-up control hypothesis at **15.455 m** — so the
+diff discriminates rather than agreeing with anything.
+
+Blender evidence inventory: 186 files, promoted to
+`data/manhattan-esb-block-reference-20260811-v3e/`.
+
+### P0 carry-forward
+
+The frame gate was **not** re-run, and does not need to be. The override changes
+`materials` only — `buildPlan` derives tiers, surfaces, placements, prisms and
+the inventory without reading `styleClass`. This is asserted twice rather than
+argued: a release test compares per-LOD triangle, material and texture counts for
+all fourteen assets against the `-v3` manifest and requires equality, and
+Blender independently re-measured identical volumes and identical silhouette
+ratios under the new plan hash. The measured 8.30 ms / 9.30 ms therefore stands
+for the shipped bytes.
+
+### Renderer journey
+
+`screenshots/j-v3e-esb-cited.png` — the details panel for `doitt:778052` shows,
+verbatim:
+
+> **Facade material** — Indiana limestone facade with stainless steel window
+> frames, aluminium spandrels and a black granite base. (source: wikipedia,
+> `https://en.wikipedia.org/wiki/Empire_State_Building`; intake record
+> `intake:wikipedia:doitt-778052:facade-material`). This sourced fact selected the
+> designed style class `stone-neutral`. The tones, coursing and geometry
+> expressing it are still designed, and no imagery was ingested, traced or
+> reproduced. Wikipedia contributors, "Empire State Building", Wikipedia,
+> licensed CC BY-SA 4.0.
+
+`screenshots/j-v3e-limestone-facade.png` — the tower now renders in the warm pale
+limestone class instead of the cool blue-grey curtain wall of
+`j-v3-block-overview.png`, with Midtown V2 still default beside it.
+
+The other thirteen buildings show no citation line and keep the standard V3
+uncertainty statement.
+
 ## Carried forward
 
-1. **The ESB cited limestone override is not applied.** The grammar accepts it
-   and it is fully test-pinned, but no plan uses it. Applying it needs: the
-   rights-cleared intake record; a successor private package (it moves ESB's plan
-   hash); a **Blender re-measure of ESB's two assets** under the new hash; the
-   sibling `DETERMINISTIC_FACADE_V3_CITED_STYLE_UNCERTAINTY` with
-   `validateV3Plan` accepting exactly the two constants; and a details-panel
-   cited-fact line. Until then the Empire State Building renders in the designed
-   `curtain-cool` class, which is visibly wrong for a limestone building — the
-   mismatch is disclosed, not hidden.
-2. **Midtown V3 (P3)** is untouched, as scoped.
-3. **Textured public admission (P4)** remains unmeasured and ungated.
+1. **Midtown V3 (P3)** is untouched, as scoped.
+2. **Textured public admission (P4)** remains unmeasured and ungated.
+3. Only ONE building carries a cited style class. The other thirteen keep the
+   designed draw, and there is no mechanism to infer a citation — an override
+   exists only where a rights-cleared record exists.
 4. Midtown-core's pre-existing 146-of-149 empty-cell notice and one
    `request-failed` cell were observed during these journeys. They predate this
    task and are unrelated to it; they are recorded, not adopted.

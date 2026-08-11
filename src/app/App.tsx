@@ -3481,6 +3481,10 @@ export function App() {
                     <div><dt>Active asset</dt><dd>{asset.lodId} · {asset.checksumSha256}</dd></div>
                     <div><dt>Truth tiers</dt><dd>{asset.provenance.truthTiers.join(" · ")}</dd></div>
                     <div><dt>Source dates</dt><dd>captured {asset.provenance.sourceDates.capturedAt ?? "unknown"} · updated {asset.provenance.sourceDates.updatedAt ?? "unknown"}</dd></div>
+                    {asset.provenance.citedStyle && <div data-exterior-cited-style><dt>Facade material</dt><dd>
+                      {asset.provenance.citedStyle.fact} (source: {asset.provenance.citedStyle.provider}, <a href={asset.provenance.citedStyle.sourceUrl} target="_blank" rel="noreferrer">{asset.provenance.citedStyle.sourceUrl}</a>; intake record {asset.provenance.citedStyle.evidenceRecordId}).
+                      {" "}This sourced fact selected the designed style class <code>{asset.provenance.citedStyle.styleClass}</code>. The tones, coursing and geometry expressing it are still designed, and no imagery was ingested, traced or reproduced. {asset.provenance.citedStyle.attribution}
+                    </dd></div>}
                     <div><dt>Uncertainty</dt><dd>{asset.provenance.uncertainty}</dd></div>
                   </>;
                 })()}

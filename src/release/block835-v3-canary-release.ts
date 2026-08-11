@@ -22,10 +22,11 @@ import {
   block835CanaryV3Profile,
   type Block835CanaryReleaseProfile,
 } from "./block835-canary-release.ts";
+import { BLOCK835_V3_STYLE_OVERRIDES } from "./block835-facade-material-intake.ts";
 import {
-  BLOCK835_V3_BASE_IDENTITY_SET_ID,
+  BLOCK835_V3E_BASE_IDENTITY_SET_ID,
+  BLOCK835_V3E_PACKAGE_ID,
   BLOCK835_V3_GENERATED_AT,
-  BLOCK835_V3_PACKAGE_ID,
 } from "./block835-v3-package.ts";
 
 export const BLOCK835_V3_CANARY_RELEASE_ID = "manhattan-exterior-cells-20260811-v3" as const;
@@ -59,8 +60,18 @@ export const BLOCK835_V3_CANARY_APPROVAL_EXCLUSIONS: readonly string[] = [
   "any claim that a designed style class reproduces a real building's material",
 ];
 
+/**
+ * The cited facade-material fact this release conveys, and the reason it is not
+ * a second rights basis for the GEOMETRY.
+ *
+ * The geometry's rights basis is unchanged and remains the NYC footprint
+ * dataset. What the Wikipedia intake record adds is one designed style class on
+ * one building, cited in that building's plan. The approval note below states
+ * that plainly rather than implying the release is now partly derived from
+ * encyclopaedia content.
+ */
 export const BLOCK835_V3_CANARY_APPROVAL_NOTE =
-  "In-session user authorization dated 2026-08-11 broadened the NYC OTI Building Footprints (jh45-qr5r) envelope so exterior geometry generated from those footprints may additionally be publicly displayed, conveyed as a derivative, and redistributed, provided NYC OTI attribution, the City modified-data disclaimer, source IDs, capture timestamp, checksum, CRS, and height uncertainty travel with it. The broadened envelope covers that generated geometry only, never the raw jh45-qr5r source dataset, and public deployment remains excluded. This successor release promotes the V3 footprint-faithful grammar under that same envelope and adds no source: the V3 massing follows the same sourced polygon and height, at higher fidelity, and remains texture-free." as const;
+  "In-session user authorization dated 2026-08-11 broadened the NYC OTI Building Footprints (jh45-qr5r) envelope so exterior geometry generated from those footprints may additionally be publicly displayed, conveyed as a derivative, and redistributed, provided NYC OTI attribution, the City modified-data disclaimer, source IDs, capture timestamp, checksum, CRS, and height uncertainty travel with it. The broadened envelope covers that generated geometry only, never the raw jh45-qr5r source dataset, and public deployment remains excluded. This successor release promotes the V3 footprint-faithful grammar under that same envelope and adds no source: the V3 massing follows the same sourced polygon and height, at higher fidelity, and remains texture-free. One building, the Empire State Building (doitt:778052), additionally carries a designed facade STYLE CLASS selected from a rights-cleared intake record of compatible-licensed encyclopaedia article TEXT about its documented exterior materials, cited by record id in that building's own plan. No imagery was ingested, traced, sampled or reproduced, that record is admitted for measurement only and is explicitly not admitted for any texture, and the selected class remains a designed look rather than a reproduction of the real facade." as const;
 
 export const BLOCK835_V3_CANARY_APPROVAL: ExteriorApprovalEvidence = block835CanaryApprovalOf({
   id: BLOCK835_V3_CANARY_IDS.approvalId,
@@ -73,13 +84,20 @@ export const BLOCK835_V3_CANARY_APPROVAL: ExteriorApprovalEvidence = block835Can
 /** The base releases the running app loads underneath this exterior release. */
 export const BLOCK835_V3_CANARY_BASE_RELEASE_IDS = BLOCK835_CANARY_BASE_RELEASE_IDS;
 
-/** The private input package this release promotes. */
-export const BLOCK835_V3_CANARY_INPUT_PACKAGE_ID: string = BLOCK835_V3_PACKAGE_ID;
+/**
+ * The private input package this release promotes: the evidence-cited successor
+ * of the merged `-v3` package, which it pins per asset and never edits.
+ */
+export const BLOCK835_V3_CANARY_INPUT_PACKAGE_ID: string = BLOCK835_V3E_PACKAGE_ID;
 
 export const BLOCK835_V3_CANARY_PROFILE: Block835CanaryReleaseProfile = block835CanaryV3Profile({
   releaseId: BLOCK835_V3_CANARY_RELEASE_ID,
   inputPackageId: BLOCK835_V3_CANARY_INPUT_PACKAGE_ID,
-  baseIdentitySetId: BLOCK835_V3_BASE_IDENTITY_SET_ID,
+  baseIdentitySetId: BLOCK835_V3E_BASE_IDENTITY_SET_ID,
   generatedAt: BLOCK835_V3_CANARY_GENERATED_AT,
   approval: BLOCK835_V3_CANARY_APPROVAL,
+  // The emitter rebuilds each plan inventory to check it against the package's
+  // pinned hash, so it must apply the same citations the package was built with
+  // or the overridden building's hash check fails closed.
+  styleOverrides: BLOCK835_V3_STYLE_OVERRIDES,
 });

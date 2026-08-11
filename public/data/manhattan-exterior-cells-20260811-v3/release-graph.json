@@ -18,13 +18,13 @@
           "logicalId": "ownership-ledger:manhattan-exterior-cells-20260811-v3",
           "kind": "ownership-ledger",
           "relativeRef": "private/ownership-ledger/ownership-ledger-manhattan-exterior-cells-20260811-v3.json",
-          "byteSize": 1094,
-          "checksumSha256": "7ab115f83f87e634bb18ba6dc86d08d9553fee78d0f88ebacbcb76923904284a"
+          "byteSize": 1095,
+          "checksumSha256": "24d581af3ef4b318531d5aa40c73a1211ef12b42d79c48a09e5346968bd7df2e"
         }
       ],
       "approval": {
         "id": "approval:manhattan-exterior-cells-20260811-v3:public-canary",
-        "fingerprintSha256": "6114e2901d2672656b7745a99ce43da600b6fab31ac56855e7d6589ba40424c8",
+        "fingerprintSha256": "16c19c1383e3cd023923137225fd91195ad295d16f37050a0047416fdc27f4d3",
         "scope": "Public-audience successor exterior-cell release manhattan-exterior-cells-20260811-v3, promoting the private footprint-faithful V3 generated-exterior package for Manhattan Block 835 (config manhattan-esb-block-835) in place of the V2 release manhattan-exterior-cells-20260811. It covers local-only delivery, public display, derivative conveyance, and redistribution of deterministically generated, TEXTURE-FREE exterior geometry derived from NYC OTI Building Footprints (jh45-qr5r), with NYC OTI attribution, the City modified-data disclaimer, source IDs, capture timestamps, checksums, CRS, and height uncertainty retained.",
         "exclusions": [
           "public deployment",
@@ -39,7 +39,7 @@
       },
       "predecessor": null,
       "privatePredecessor": null,
-      "rootChecksumSha256": "bcae72e036cdb10bfec2eb8214b46f9e5025c6be8662b936b47fcab1696ce517"
+      "rootChecksumSha256": "42c17fb44d14370d4d4669500b30d8cd792f22e012f0f582dc924e0ca2bf8933"
     },
     {
       "schemaVersion": "1.0",
@@ -53,34 +53,34 @@
       "artifactAllowlist": [
         "public/ownership-ledger/ownership-ledger-manhattan-exterior-cells-20260811-v3.json",
         "public/cell-release/cell-release-manhattan-exterior-cells-20260811-v3-v1.json",
-        "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3-doitt-102705.json",
-        "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3-doitt-131170.json",
-        "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3-doitt-147902.json",
-        "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3-doitt-262867.json",
-        "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3-doitt-39969.json",
-        "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3-doitt-460555.json",
-        "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3-doitt-498980.json",
-        "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3-doitt-502491.json",
-        "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3-doitt-584049.json",
-        "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3-doitt-778052.json",
-        "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3-doitt-812702.json",
-        "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3-doitt-835659.json",
-        "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3-doitt-925937.json",
-        "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3-doitt-982383.json",
-        "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3-doitt-102705.json",
-        "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3-doitt-131170.json",
-        "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3-doitt-147902.json",
-        "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3-doitt-262867.json",
-        "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3-doitt-39969.json",
-        "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3-doitt-460555.json",
-        "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3-doitt-498980.json",
-        "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3-doitt-502491.json",
-        "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3-doitt-584049.json",
-        "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3-doitt-778052.json",
-        "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3-doitt-812702.json",
-        "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3-doitt-835659.json",
-        "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3-doitt-925937.json",
-        "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3-doitt-982383.json",
+        "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3e-doitt-102705.json",
+        "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3e-doitt-131170.json",
+        "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3e-doitt-147902.json",
+        "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3e-doitt-262867.json",
+        "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3e-doitt-39969.json",
+        "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3e-doitt-460555.json",
+        "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3e-doitt-498980.json",
+        "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3e-doitt-502491.json",
+        "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3e-doitt-584049.json",
+        "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3e-doitt-778052.json",
+        "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3e-doitt-812702.json",
+        "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3e-doitt-835659.json",
+        "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3e-doitt-925937.json",
+        "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3e-doitt-982383.json",
+        "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3e-doitt-102705.json",
+        "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3e-doitt-131170.json",
+        "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3e-doitt-147902.json",
+        "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3e-doitt-262867.json",
+        "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3e-doitt-39969.json",
+        "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3e-doitt-460555.json",
+        "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3e-doitt-498980.json",
+        "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3e-doitt-502491.json",
+        "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3e-doitt-584049.json",
+        "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3e-doitt-778052.json",
+        "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3e-doitt-812702.json",
+        "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3e-doitt-835659.json",
+        "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3e-doitt-925937.json",
+        "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3e-doitt-982383.json",
         "public/rollout-snapshot/snapshot-manhattan-exterior-cells-20260811-v3-v1.json"
       ],
       "artifacts": [
@@ -88,223 +88,223 @@
           "logicalId": "ownership-ledger:manhattan-exterior-cells-20260811-v3",
           "kind": "ownership-ledger",
           "relativeRef": "public/ownership-ledger/ownership-ledger-manhattan-exterior-cells-20260811-v3.json",
-          "byteSize": 1093,
-          "checksumSha256": "0a96ea6f9d33bf6c781777ef0fc69e1e1e1029d358d3bd3f82300bf1fdd64626"
+          "byteSize": 1094,
+          "checksumSha256": "c0f9e8909468c88ec5a28d4d7ab91d910fe6987086eb90d99fd3f12a3d1a2df2"
         },
         {
           "logicalId": "cell-release:manhattan-exterior-cells-20260811-v3:v1",
           "kind": "cell-release",
           "relativeRef": "public/cell-release/cell-release-manhattan-exterior-cells-20260811-v3-v1.json",
-          "byteSize": 5947,
-          "checksumSha256": "f167ae91def794ae1654667d27fa1ab9a722d1004798eb3c1c1d3cce5adf51d5"
+          "byteSize": 5977,
+          "checksumSha256": "b5cb68f703f24db5d8f71e170d5de3a2b7fc0a372f853cdf8d48f0e194994d0d"
         },
         {
-          "logicalId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:102705",
+          "logicalId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:102705",
           "kind": "inventory",
-          "relativeRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3-doitt-102705.json",
-          "byteSize": 14369,
-          "checksumSha256": "24bcc2261a933d4953e4e8a07e3cb90918e10c31f4df6ad4e46d9f532b610d6e"
+          "relativeRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3e-doitt-102705.json",
+          "byteSize": 14373,
+          "checksumSha256": "926c9dc8ae7248ac260124fde05f16d733819606c334110ec10c8e963dabf8a4"
         },
         {
-          "logicalId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:131170",
+          "logicalId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:131170",
           "kind": "inventory",
-          "relativeRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3-doitt-131170.json",
-          "byteSize": 14191,
-          "checksumSha256": "dace37f282de0779aae1dd147bb0554d911a15ac5dd96c9a16dbdf56c7a0161c"
+          "relativeRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3e-doitt-131170.json",
+          "byteSize": 14195,
+          "checksumSha256": "05dfab1d25fb345df3631392daf0b576adbe6de8249a81959a462660c367a756"
         },
         {
-          "logicalId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:147902",
+          "logicalId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:147902",
           "kind": "inventory",
-          "relativeRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3-doitt-147902.json",
-          "byteSize": 14369,
-          "checksumSha256": "bdc13b1c45c9743863da9333b039c3a02f1ab290038e73ef24d285b9ac86669b"
+          "relativeRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3e-doitt-147902.json",
+          "byteSize": 14373,
+          "checksumSha256": "927d76662e5f68388a4237d2c9b52c459afbcefd1e4996a539329ddeb5dea6a6"
         },
         {
-          "logicalId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:262867",
+          "logicalId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:262867",
           "kind": "inventory",
-          "relativeRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3-doitt-262867.json",
-          "byteSize": 14191,
-          "checksumSha256": "d6143dd5bbd0cd61e68060fd506dadbd9c0456d9fbe896c80064892c34669c31"
+          "relativeRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3e-doitt-262867.json",
+          "byteSize": 14195,
+          "checksumSha256": "ef5df145f47b25098c20bfa605920b9dcb82df84c099c87471fd3f67570811fe"
         },
         {
-          "logicalId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:39969",
+          "logicalId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:39969",
           "kind": "inventory",
-          "relativeRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3-doitt-39969.json",
-          "byteSize": 14157,
-          "checksumSha256": "cd80c5520ffc344dbfcd95c232685071214bed56a76fefc97b2c4a73885c5472"
+          "relativeRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3e-doitt-39969.json",
+          "byteSize": 14161,
+          "checksumSha256": "833399fbfdb1face8a7fd2d1bfb253d401c905eb06542eb0e84715473ae94695"
         },
         {
-          "logicalId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:460555",
+          "logicalId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:460555",
           "kind": "inventory",
-          "relativeRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3-doitt-460555.json",
-          "byteSize": 14369,
-          "checksumSha256": "59a3dc0dab9974c6fbff3db5fe0f4881b8b68a6825bbef80ed3244bd5cac23b0"
+          "relativeRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3e-doitt-460555.json",
+          "byteSize": 14373,
+          "checksumSha256": "5ba509c83d3a87672e1ee85efb6177737fcda7dd3bcff637d3c6cef57dd29283"
         },
         {
-          "logicalId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:498980",
+          "logicalId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:498980",
           "kind": "inventory",
-          "relativeRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3-doitt-498980.json",
-          "byteSize": 14369,
-          "checksumSha256": "81ad5637429b99e5a9595d0eb17b813833b400ed5283f41b1ffe0daecc09c7bb"
+          "relativeRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3e-doitt-498980.json",
+          "byteSize": 14373,
+          "checksumSha256": "05c0d12943b0114b1aac91407d56f63bc67a7d34b2d03b4972f2dc1a5ee9306c"
         },
         {
-          "logicalId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:502491",
+          "logicalId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:502491",
           "kind": "inventory",
-          "relativeRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3-doitt-502491.json",
-          "byteSize": 14369,
-          "checksumSha256": "8f00610ad8e0310e01de2a5f8c750c9572a349ea395ddbb25eea2501b81b3d1c"
+          "relativeRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3e-doitt-502491.json",
+          "byteSize": 14373,
+          "checksumSha256": "a77a73fb4d739276cd7108c38f73192e76c3764ac51dace504267e23e0b7ca4c"
         },
         {
-          "logicalId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:584049",
+          "logicalId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:584049",
           "kind": "inventory",
-          "relativeRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3-doitt-584049.json",
-          "byteSize": 14369,
-          "checksumSha256": "f8ee896eb1a55d6468a4a23c677ae37d9be00e55fd8b22485433cf8c2dd08a02"
+          "relativeRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3e-doitt-584049.json",
+          "byteSize": 14373,
+          "checksumSha256": "4cd45d86c1144e9f106d95591329905f31ca63dc9fc9297265e4c238c607bba5"
         },
         {
-          "logicalId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:778052",
+          "logicalId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:778052",
           "kind": "inventory",
-          "relativeRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3-doitt-778052.json",
-          "byteSize": 14369,
-          "checksumSha256": "6f51b1940a81de3d2f617e17977ee6d95ccbb2f500efc97467ea54abafa4195c"
+          "relativeRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3e-doitt-778052.json",
+          "byteSize": 14632,
+          "checksumSha256": "bb1a8992efa1f53bfda24dc6387d13ba3b96d39786ab8d6c4681a45a93854837"
         },
         {
-          "logicalId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:812702",
+          "logicalId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:812702",
           "kind": "inventory",
-          "relativeRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3-doitt-812702.json",
-          "byteSize": 14191,
-          "checksumSha256": "fe0820f72c4e4b20017687e96196137f5a48039d508672e725a4fc614d345391"
+          "relativeRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3e-doitt-812702.json",
+          "byteSize": 14195,
+          "checksumSha256": "526d1ce9cacbff42ac6c7119948b9f85f486b133e720d7b39efdc5539cbef618"
         },
         {
-          "logicalId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:835659",
+          "logicalId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:835659",
           "kind": "inventory",
-          "relativeRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3-doitt-835659.json",
-          "byteSize": 14191,
-          "checksumSha256": "8b021be4e6d5abdf1b781ae8db2b050c56e311d5f59ac3adce21d8e81fbd6db6"
+          "relativeRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3e-doitt-835659.json",
+          "byteSize": 14195,
+          "checksumSha256": "e58ae33f5a79c45ae2a761a6a1415e40c736c5662a20c73ba0672b3e4e567c86"
         },
         {
-          "logicalId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:925937",
+          "logicalId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:925937",
           "kind": "inventory",
-          "relativeRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3-doitt-925937.json",
-          "byteSize": 14369,
-          "checksumSha256": "b8f5bfef771d84d63455017aaae925f5630b8f2cb0f74fafd1795e7aa9680140"
+          "relativeRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3e-doitt-925937.json",
+          "byteSize": 14373,
+          "checksumSha256": "51270dcdd38869ed392f57fe7f0f3881a4b142e8fe530427ff94e98b2252e281"
         },
         {
-          "logicalId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:982383",
+          "logicalId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:982383",
           "kind": "inventory",
-          "relativeRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3-doitt-982383.json",
-          "byteSize": 14369,
-          "checksumSha256": "0ed4dd757d442de658a60a8fa7368a3140841c850c2021b47806d354f369f8f4"
+          "relativeRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3e-doitt-982383.json",
+          "byteSize": 14373,
+          "checksumSha256": "4f1fe2dd6413fea099a59011072fec27be9f91127baa82b9cea38cb0544f630f"
         },
         {
-          "logicalId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:102705",
+          "logicalId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:102705",
           "kind": "evidence",
-          "relativeRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3-doitt-102705.json",
-          "byteSize": 3055,
-          "checksumSha256": "ee264588f3be696fdbd393001480fb728a3b88d5d6d36e1994b0abbdc3c97688"
+          "relativeRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3e-doitt-102705.json",
+          "byteSize": 3059,
+          "checksumSha256": "aa65cd23459e382625bf37a8db2180d59f4f5dd26ffd5257953dd63375c6132b"
         },
         {
-          "logicalId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:131170",
+          "logicalId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:131170",
           "kind": "evidence",
-          "relativeRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3-doitt-131170.json",
-          "byteSize": 3055,
-          "checksumSha256": "f1a4c72e0ef63e2e02b2564c13492c62b7b6fbc2e5ec3f2707081d22b697540a"
+          "relativeRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3e-doitt-131170.json",
+          "byteSize": 3059,
+          "checksumSha256": "7909e01c378d69bc1c7c4dcb78692a6e6853c15d53766790f9c0c4add58ae4ed"
         },
         {
-          "logicalId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:147902",
+          "logicalId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:147902",
           "kind": "evidence",
-          "relativeRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3-doitt-147902.json",
-          "byteSize": 3055,
-          "checksumSha256": "dd10600198fa63942879383e5a29c0c5dfa1d23ae280d78fe9f77af70df3ade4"
+          "relativeRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3e-doitt-147902.json",
+          "byteSize": 3059,
+          "checksumSha256": "fae5ea4b888009557760fa6c71f89ab633d7dbe5693a044cbf9a208b7978801e"
         },
         {
-          "logicalId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:262867",
+          "logicalId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:262867",
           "kind": "evidence",
-          "relativeRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3-doitt-262867.json",
-          "byteSize": 3055,
-          "checksumSha256": "62a78e3cc0e90fb03d95360711aff060f76b14654097603489b2d1bc5d790d18"
+          "relativeRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3e-doitt-262867.json",
+          "byteSize": 3059,
+          "checksumSha256": "bffe8ed4e41f8e953e83cd5b00a30dba1068191cf0dc8053f16c8d30dca2eb49"
         },
         {
-          "logicalId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:39969",
+          "logicalId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:39969",
           "kind": "evidence",
-          "relativeRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3-doitt-39969.json",
-          "byteSize": 3049,
-          "checksumSha256": "a27dc31f1b0f6b123ff60b14659ca1343f3800eff44f06df17d64acb7a92e412"
+          "relativeRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3e-doitt-39969.json",
+          "byteSize": 3053,
+          "checksumSha256": "e67b71728888263f8a2b8831c53828dc1375734f85639227df274133e3ac92dc"
         },
         {
-          "logicalId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:460555",
+          "logicalId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:460555",
           "kind": "evidence",
-          "relativeRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3-doitt-460555.json",
-          "byteSize": 3055,
-          "checksumSha256": "dcff174deeca0664f45f6c1341d569742069421b2f281b1b68f67765eec5b40f"
+          "relativeRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3e-doitt-460555.json",
+          "byteSize": 3059,
+          "checksumSha256": "804ae852c2b00c528eee5df9327f79714956ec305373dd4712ca9c87b26e81fa"
         },
         {
-          "logicalId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:498980",
+          "logicalId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:498980",
           "kind": "evidence",
-          "relativeRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3-doitt-498980.json",
-          "byteSize": 3055,
-          "checksumSha256": "8025143bfca8a0f9f88c7b05c55ae8fcfdf3d169dd4ad4c888950caceade92db"
+          "relativeRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3e-doitt-498980.json",
+          "byteSize": 3059,
+          "checksumSha256": "45d69b4d31297afa504f174fa53ae2b91fac7ab6bc33f3c47b94174fbefdc1f9"
         },
         {
-          "logicalId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:502491",
+          "logicalId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:502491",
           "kind": "evidence",
-          "relativeRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3-doitt-502491.json",
-          "byteSize": 3055,
-          "checksumSha256": "4cee2038f42f5f3f8da0c66e4e7155dd5b5984a92245af46dc3a05dd413aae6b"
+          "relativeRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3e-doitt-502491.json",
+          "byteSize": 3059,
+          "checksumSha256": "d9a96850408b21bd620329685a203bf67e5f1c1349b852c63f355a9c6e92e972"
         },
         {
-          "logicalId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:584049",
+          "logicalId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:584049",
           "kind": "evidence",
-          "relativeRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3-doitt-584049.json",
-          "byteSize": 3055,
-          "checksumSha256": "f95bdaca955bd02d9503ee9f1c79093b9a415c598a355040dd73afd666e1b5b2"
+          "relativeRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3e-doitt-584049.json",
+          "byteSize": 3059,
+          "checksumSha256": "70fe7829793c16c03788e501ec88c127b7954b6fc9f0b08bbcc6b59ad819bd93"
         },
         {
-          "logicalId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:778052",
+          "logicalId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:778052",
           "kind": "evidence",
-          "relativeRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3-doitt-778052.json",
-          "byteSize": 3055,
-          "checksumSha256": "f3d2b194a167323a0ee563152c26346ae3ebfc385d2f341e48274355ad302fe8"
+          "relativeRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3e-doitt-778052.json",
+          "byteSize": 3059,
+          "checksumSha256": "96960e8a8f880ed9e8b1c1e4f13ff46825ec1ff542a14231b4dcc279eee8b11d"
         },
         {
-          "logicalId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:812702",
+          "logicalId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:812702",
           "kind": "evidence",
-          "relativeRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3-doitt-812702.json",
-          "byteSize": 3055,
-          "checksumSha256": "4912a48a8998ba86bf0b337ab89a5ab7ab3ac84dabcd9a031b743ada509a8d47"
+          "relativeRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3e-doitt-812702.json",
+          "byteSize": 3059,
+          "checksumSha256": "2a6f0c658049a4714e69fa36b456b624d0d2bfdb8f396a3e465bb183440459a4"
         },
         {
-          "logicalId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:835659",
+          "logicalId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:835659",
           "kind": "evidence",
-          "relativeRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3-doitt-835659.json",
-          "byteSize": 3055,
-          "checksumSha256": "56d711b670604ab018f2c213ae46a32485370e03122161d5a71379100816d87e"
+          "relativeRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3e-doitt-835659.json",
+          "byteSize": 3059,
+          "checksumSha256": "b90bf16869053f4286c37afc786282e9787c058807e94695d3f4b991934df90a"
         },
         {
-          "logicalId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:925937",
+          "logicalId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:925937",
           "kind": "evidence",
-          "relativeRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3-doitt-925937.json",
-          "byteSize": 3055,
-          "checksumSha256": "84f3683f6d9a99e14fef1e1392cca8f91b9164f6c622994ebc4637f548844516"
+          "relativeRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3e-doitt-925937.json",
+          "byteSize": 3059,
+          "checksumSha256": "ba7b110673a254b177214a9de4252a45aaa7c74fa239edeb4632b6f33022225f"
         },
         {
-          "logicalId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:982383",
+          "logicalId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:982383",
           "kind": "evidence",
-          "relativeRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3-doitt-982383.json",
-          "byteSize": 3055,
-          "checksumSha256": "cd6d3bcabf1cb984756c2c14a263f7056bf3b1e6ea428b35ad9f0a770c608cb5"
+          "relativeRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3e-doitt-982383.json",
+          "byteSize": 3059,
+          "checksumSha256": "20b84ac4a3af4886d8a9f4b69ac4309681199837c3c2884d408a622652c5dd0c"
         },
         {
           "logicalId": "snapshot:manhattan-exterior-cells-20260811-v3:v1",
           "kind": "rollout-snapshot",
           "relativeRef": "public/rollout-snapshot/snapshot-manhattan-exterior-cells-20260811-v3-v1.json",
-          "byteSize": 2183,
-          "checksumSha256": "73e112f4080710f8a351c5cc22a826603e69af42d7b040e1769aa6e0540869cd"
+          "byteSize": 2184,
+          "checksumSha256": "6ade605778c5e2700930029a94354b4b86a8d905eb7fde67665fff84d03449e1"
         }
       ],
       "approval": {
         "id": "approval:manhattan-exterior-cells-20260811-v3:public-canary",
-        "fingerprintSha256": "6114e2901d2672656b7745a99ce43da600b6fab31ac56855e7d6589ba40424c8",
+        "fingerprintSha256": "16c19c1383e3cd023923137225fd91195ad295d16f37050a0047416fdc27f4d3",
         "scope": "Public-audience successor exterior-cell release manhattan-exterior-cells-20260811-v3, promoting the private footprint-faithful V3 generated-exterior package for Manhattan Block 835 (config manhattan-esb-block-835) in place of the V2 release manhattan-exterior-cells-20260811. It covers local-only delivery, public display, derivative conveyance, and redistribution of deterministically generated, TEXTURE-FREE exterior geometry derived from NYC OTI Building Footprints (jh45-qr5r), with NYC OTI attribution, the City modified-data disclaimer, source IDs, capture timestamps, checksums, CRS, and height uncertainty retained.",
         "exclusions": [
           "public deployment",
@@ -320,9 +320,9 @@
       "predecessor": null,
       "privatePredecessor": {
         "rootId": "root:manhattan-exterior-cells-20260811-v3:private",
-        "rootChecksumSha256": "bcae72e036cdb10bfec2eb8214b46f9e5025c6be8662b936b47fcab1696ce517"
+        "rootChecksumSha256": "42c17fb44d14370d4d4669500b30d8cd792f22e012f0f582dc924e0ca2bf8933"
       },
-      "rootChecksumSha256": "a7b44d1e942e2d95a8bb7048f2dcaa2c700285081a5843ae336cd8f7b837e054"
+      "rootChecksumSha256": "3eb584b5106d6cf4574b98d9992b9246a0dcd176ea1ad03c691e1c54615680ba"
     }
   ],
   "ownershipLedger": {
@@ -332,7 +332,7 @@
     "configId": "manhattan-esb-block-835",
     "immutable": true,
     "baseIdentitySet": {
-      "id": "base-identity-set:manhattan:block-835:20260811-v3",
+      "id": "base-identity-set:manhattan:block-835:20260811-v3e",
       "checksumSha256": "98a7c50abc157fb4f2e52f23e2a129274b7273cace496929406bbbff448a8dfa",
       "buildingCount": 14
     },
@@ -389,7 +389,7 @@
         "north": 40.7496180318712
       },
       "ownershipLedgerId": "ownership-ledger:manhattan-exterior-cells-20260811-v3",
-      "baseIdentitySetId": "base-identity-set:manhattan:block-835:20260811-v3",
+      "baseIdentitySetId": "base-identity-set:manhattan:block-835:20260811-v3e",
       "baseIdentitySetChecksumSha256": "98a7c50abc157fb4f2e52f23e2a129274b7273cace496929406bbbff448a8dfa",
       "buildingIds": [
         "doitt:102705",
@@ -410,7 +410,7 @@
       "predecessor": null,
       "promotion": {
         "id": "approval:manhattan-exterior-cells-20260811-v3:public-canary",
-        "fingerprintSha256": "6114e2901d2672656b7745a99ce43da600b6fab31ac56855e7d6589ba40424c8",
+        "fingerprintSha256": "16c19c1383e3cd023923137225fd91195ad295d16f37050a0047416fdc27f4d3",
         "scope": "Public-audience successor exterior-cell release manhattan-exterior-cells-20260811-v3, promoting the private footprint-faithful V3 generated-exterior package for Manhattan Block 835 (config manhattan-esb-block-835) in place of the V2 release manhattan-exterior-cells-20260811. It covers local-only delivery, public display, derivative conveyance, and redistribution of deterministically generated, TEXTURE-FREE exterior geometry derived from NYC OTI Building Footprints (jh45-qr5r), with NYC OTI attribution, the City modified-data disclaimer, source IDs, capture timestamps, checksums, CRS, and height uncertainty retained.",
         "exclusions": [
           "public deployment",
@@ -425,106 +425,106 @@
       },
       "fallback": {
         "mode": "pinned-base",
-        "baseIdentitySetId": "base-identity-set:manhattan:block-835:20260811-v3",
+        "baseIdentitySetId": "base-identity-set:manhattan:block-835:20260811-v3e",
         "checksumSha256": "98a7c50abc157fb4f2e52f23e2a129274b7273cace496929406bbbff448a8dfa"
       },
       "buildingDetails": [
         {
           "buildingId": "doitt:102705",
           "status": "available",
-          "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:102705",
-          "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:102705",
+          "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:102705",
+          "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:102705",
           "runtimeTexture": false
         },
         {
           "buildingId": "doitt:131170",
           "status": "available",
-          "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:131170",
-          "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:131170",
+          "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:131170",
+          "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:131170",
           "runtimeTexture": false
         },
         {
           "buildingId": "doitt:147902",
           "status": "available",
-          "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:147902",
-          "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:147902",
+          "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:147902",
+          "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:147902",
           "runtimeTexture": false
         },
         {
           "buildingId": "doitt:262867",
           "status": "available",
-          "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:262867",
-          "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:262867",
+          "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:262867",
+          "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:262867",
           "runtimeTexture": false
         },
         {
           "buildingId": "doitt:39969",
           "status": "available",
-          "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:39969",
-          "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:39969",
+          "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:39969",
+          "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:39969",
           "runtimeTexture": false
         },
         {
           "buildingId": "doitt:460555",
           "status": "available",
-          "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:460555",
-          "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:460555",
+          "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:460555",
+          "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:460555",
           "runtimeTexture": false
         },
         {
           "buildingId": "doitt:498980",
           "status": "available",
-          "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:498980",
-          "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:498980",
+          "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:498980",
+          "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:498980",
           "runtimeTexture": false
         },
         {
           "buildingId": "doitt:502491",
           "status": "available",
-          "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:502491",
-          "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:502491",
+          "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:502491",
+          "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:502491",
           "runtimeTexture": false
         },
         {
           "buildingId": "doitt:584049",
           "status": "available",
-          "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:584049",
-          "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:584049",
+          "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:584049",
+          "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:584049",
           "runtimeTexture": false
         },
         {
           "buildingId": "doitt:778052",
           "status": "available",
-          "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:778052",
-          "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:778052",
+          "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:778052",
+          "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:778052",
           "runtimeTexture": false
         },
         {
           "buildingId": "doitt:812702",
           "status": "available",
-          "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:812702",
-          "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:812702",
+          "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:812702",
+          "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:812702",
           "runtimeTexture": false
         },
         {
           "buildingId": "doitt:835659",
           "status": "available",
-          "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:835659",
-          "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:835659",
+          "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:835659",
+          "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:835659",
           "runtimeTexture": false
         },
         {
           "buildingId": "doitt:925937",
           "status": "available",
-          "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:925937",
-          "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:925937",
+          "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:925937",
+          "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:925937",
           "runtimeTexture": false
         },
         {
           "buildingId": "doitt:982383",
           "status": "available",
-          "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:982383",
-          "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:982383",
+          "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:982383",
+          "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:982383",
           "runtimeTexture": false
         }
       ],
@@ -534,10 +534,10 @@
   "inventoryShards": [
     {
       "schemaVersion": "1.0",
-      "shardId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:102705",
+      "shardId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:102705",
       "audience": "public",
-      "artifactRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3-doitt-102705.json",
-      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:102705",
+      "artifactRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3e-doitt-102705.json",
+      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:102705",
       "inventory": {
         "schemaVersion": "1.0",
         "buildingId": "doitt:102705",
@@ -787,10 +787,10 @@
     },
     {
       "schemaVersion": "1.0",
-      "shardId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:131170",
+      "shardId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:131170",
       "audience": "public",
-      "artifactRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3-doitt-131170.json",
-      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:131170",
+      "artifactRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3e-doitt-131170.json",
+      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:131170",
       "inventory": {
         "schemaVersion": "1.0",
         "buildingId": "doitt:131170",
@@ -1032,10 +1032,10 @@
     },
     {
       "schemaVersion": "1.0",
-      "shardId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:147902",
+      "shardId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:147902",
       "audience": "public",
-      "artifactRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3-doitt-147902.json",
-      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:147902",
+      "artifactRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3e-doitt-147902.json",
+      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:147902",
       "inventory": {
         "schemaVersion": "1.0",
         "buildingId": "doitt:147902",
@@ -1285,10 +1285,10 @@
     },
     {
       "schemaVersion": "1.0",
-      "shardId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:262867",
+      "shardId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:262867",
       "audience": "public",
-      "artifactRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3-doitt-262867.json",
-      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:262867",
+      "artifactRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3e-doitt-262867.json",
+      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:262867",
       "inventory": {
         "schemaVersion": "1.0",
         "buildingId": "doitt:262867",
@@ -1530,10 +1530,10 @@
     },
     {
       "schemaVersion": "1.0",
-      "shardId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:39969",
+      "shardId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:39969",
       "audience": "public",
-      "artifactRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3-doitt-39969.json",
-      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:39969",
+      "artifactRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3e-doitt-39969.json",
+      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:39969",
       "inventory": {
         "schemaVersion": "1.0",
         "buildingId": "doitt:39969",
@@ -1775,10 +1775,10 @@
     },
     {
       "schemaVersion": "1.0",
-      "shardId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:460555",
+      "shardId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:460555",
       "audience": "public",
-      "artifactRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3-doitt-460555.json",
-      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:460555",
+      "artifactRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3e-doitt-460555.json",
+      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:460555",
       "inventory": {
         "schemaVersion": "1.0",
         "buildingId": "doitt:460555",
@@ -2028,10 +2028,10 @@
     },
     {
       "schemaVersion": "1.0",
-      "shardId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:498980",
+      "shardId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:498980",
       "audience": "public",
-      "artifactRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3-doitt-498980.json",
-      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:498980",
+      "artifactRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3e-doitt-498980.json",
+      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:498980",
       "inventory": {
         "schemaVersion": "1.0",
         "buildingId": "doitt:498980",
@@ -2281,10 +2281,10 @@
     },
     {
       "schemaVersion": "1.0",
-      "shardId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:502491",
+      "shardId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:502491",
       "audience": "public",
-      "artifactRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3-doitt-502491.json",
-      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:502491",
+      "artifactRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3e-doitt-502491.json",
+      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:502491",
       "inventory": {
         "schemaVersion": "1.0",
         "buildingId": "doitt:502491",
@@ -2534,10 +2534,10 @@
     },
     {
       "schemaVersion": "1.0",
-      "shardId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:584049",
+      "shardId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:584049",
       "audience": "public",
-      "artifactRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3-doitt-584049.json",
-      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:584049",
+      "artifactRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3e-doitt-584049.json",
+      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:584049",
       "inventory": {
         "schemaVersion": "1.0",
         "buildingId": "doitt:584049",
@@ -2787,10 +2787,10 @@
     },
     {
       "schemaVersion": "1.0",
-      "shardId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:778052",
+      "shardId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:778052",
       "audience": "public",
-      "artifactRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3-doitt-778052.json",
-      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:778052",
+      "artifactRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3e-doitt-778052.json",
+      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:778052",
       "inventory": {
         "schemaVersion": "1.0",
         "buildingId": "doitt:778052",
@@ -2803,7 +2803,7 @@
             "generator": {
               "id": "urban-digital-twin:deterministic-facade-plan-v3",
               "version": "3.0.0",
-              "inputFingerprintSha256": "41b5672ff7fab0579c871eaf4004578cb9c11b4b86aeb6bed93cca1f67e4a118",
+              "inputFingerprintSha256": "68c63f8dd3087227aed629a17b44c3b779ae89e4d9e74e1df41a97e4bac042f5",
               "parametersHashSha256": "5ee813be9432b1a41c8e0c06235483495b905c71cc944a782a62697f3ce048a7",
               "generatedAt": "2026-08-11T00:00:00.000Z",
               "constraintSourceIds": [
@@ -2819,7 +2819,7 @@
             "generator": {
               "id": "urban-digital-twin:deterministic-facade-plan-v3",
               "version": "3.0.0",
-              "inputFingerprintSha256": "41b5672ff7fab0579c871eaf4004578cb9c11b4b86aeb6bed93cca1f67e4a118",
+              "inputFingerprintSha256": "68c63f8dd3087227aed629a17b44c3b779ae89e4d9e74e1df41a97e4bac042f5",
               "parametersHashSha256": "5ee813be9432b1a41c8e0c06235483495b905c71cc944a782a62697f3ce048a7",
               "generatedAt": "2026-08-11T00:00:00.000Z",
               "constraintSourceIds": [
@@ -2835,7 +2835,7 @@
             "generator": {
               "id": "urban-digital-twin:deterministic-facade-plan-v3",
               "version": "3.0.0",
-              "inputFingerprintSha256": "41b5672ff7fab0579c871eaf4004578cb9c11b4b86aeb6bed93cca1f67e4a118",
+              "inputFingerprintSha256": "68c63f8dd3087227aed629a17b44c3b779ae89e4d9e74e1df41a97e4bac042f5",
               "parametersHashSha256": "5ee813be9432b1a41c8e0c06235483495b905c71cc944a782a62697f3ce048a7",
               "generatedAt": "2026-08-11T00:00:00.000Z",
               "constraintSourceIds": [
@@ -2851,7 +2851,7 @@
             "generator": {
               "id": "urban-digital-twin:deterministic-facade-plan-v3",
               "version": "3.0.0",
-              "inputFingerprintSha256": "41b5672ff7fab0579c871eaf4004578cb9c11b4b86aeb6bed93cca1f67e4a118",
+              "inputFingerprintSha256": "68c63f8dd3087227aed629a17b44c3b779ae89e4d9e74e1df41a97e4bac042f5",
               "parametersHashSha256": "5ee813be9432b1a41c8e0c06235483495b905c71cc944a782a62697f3ce048a7",
               "generatedAt": "2026-08-11T00:00:00.000Z",
               "constraintSourceIds": [
@@ -2867,7 +2867,7 @@
             "generator": {
               "id": "urban-digital-twin:deterministic-facade-plan-v3",
               "version": "3.0.0",
-              "inputFingerprintSha256": "41b5672ff7fab0579c871eaf4004578cb9c11b4b86aeb6bed93cca1f67e4a118",
+              "inputFingerprintSha256": "68c63f8dd3087227aed629a17b44c3b779ae89e4d9e74e1df41a97e4bac042f5",
               "parametersHashSha256": "5ee813be9432b1a41c8e0c06235483495b905c71cc944a782a62697f3ce048a7",
               "generatedAt": "2026-08-11T00:00:00.000Z",
               "constraintSourceIds": [
@@ -2883,7 +2883,7 @@
             "generator": {
               "id": "urban-digital-twin:deterministic-facade-plan-v3",
               "version": "3.0.0",
-              "inputFingerprintSha256": "41b5672ff7fab0579c871eaf4004578cb9c11b4b86aeb6bed93cca1f67e4a118",
+              "inputFingerprintSha256": "68c63f8dd3087227aed629a17b44c3b779ae89e4d9e74e1df41a97e4bac042f5",
               "parametersHashSha256": "5ee813be9432b1a41c8e0c06235483495b905c71cc944a782a62697f3ce048a7",
               "generatedAt": "2026-08-11T00:00:00.000Z",
               "constraintSourceIds": [
@@ -2899,7 +2899,7 @@
             "generator": {
               "id": "urban-digital-twin:deterministic-facade-plan-v3",
               "version": "3.0.0",
-              "inputFingerprintSha256": "41b5672ff7fab0579c871eaf4004578cb9c11b4b86aeb6bed93cca1f67e4a118",
+              "inputFingerprintSha256": "68c63f8dd3087227aed629a17b44c3b779ae89e4d9e74e1df41a97e4bac042f5",
               "parametersHashSha256": "5ee813be9432b1a41c8e0c06235483495b905c71cc944a782a62697f3ce048a7",
               "generatedAt": "2026-08-11T00:00:00.000Z",
               "constraintSourceIds": [
@@ -2915,7 +2915,7 @@
             "generator": {
               "id": "urban-digital-twin:deterministic-facade-plan-v3",
               "version": "3.0.0",
-              "inputFingerprintSha256": "41b5672ff7fab0579c871eaf4004578cb9c11b4b86aeb6bed93cca1f67e4a118",
+              "inputFingerprintSha256": "68c63f8dd3087227aed629a17b44c3b779ae89e4d9e74e1df41a97e4bac042f5",
               "parametersHashSha256": "5ee813be9432b1a41c8e0c06235483495b905c71cc944a782a62697f3ce048a7",
               "generatedAt": "2026-08-11T00:00:00.000Z",
               "constraintSourceIds": [
@@ -2931,7 +2931,7 @@
             "generator": {
               "id": "urban-digital-twin:deterministic-facade-plan-v3",
               "version": "3.0.0",
-              "inputFingerprintSha256": "41b5672ff7fab0579c871eaf4004578cb9c11b4b86aeb6bed93cca1f67e4a118",
+              "inputFingerprintSha256": "68c63f8dd3087227aed629a17b44c3b779ae89e4d9e74e1df41a97e4bac042f5",
               "parametersHashSha256": "5ee813be9432b1a41c8e0c06235483495b905c71cc944a782a62697f3ce048a7",
               "generatedAt": "2026-08-11T00:00:00.000Z",
               "constraintSourceIds": [
@@ -2947,7 +2947,7 @@
             "generator": {
               "id": "urban-digital-twin:deterministic-facade-plan-v3",
               "version": "3.0.0",
-              "inputFingerprintSha256": "41b5672ff7fab0579c871eaf4004578cb9c11b4b86aeb6bed93cca1f67e4a118",
+              "inputFingerprintSha256": "68c63f8dd3087227aed629a17b44c3b779ae89e4d9e74e1df41a97e4bac042f5",
               "parametersHashSha256": "5ee813be9432b1a41c8e0c06235483495b905c71cc944a782a62697f3ce048a7",
               "generatedAt": "2026-08-11T00:00:00.000Z",
               "constraintSourceIds": [
@@ -2963,7 +2963,7 @@
             "generator": {
               "id": "urban-digital-twin:deterministic-facade-plan-v3",
               "version": "3.0.0",
-              "inputFingerprintSha256": "41b5672ff7fab0579c871eaf4004578cb9c11b4b86aeb6bed93cca1f67e4a118",
+              "inputFingerprintSha256": "68c63f8dd3087227aed629a17b44c3b779ae89e4d9e74e1df41a97e4bac042f5",
               "parametersHashSha256": "5ee813be9432b1a41c8e0c06235483495b905c71cc944a782a62697f3ce048a7",
               "generatedAt": "2026-08-11T00:00:00.000Z",
               "constraintSourceIds": [
@@ -2979,7 +2979,7 @@
             "generator": {
               "id": "urban-digital-twin:deterministic-facade-plan-v3",
               "version": "3.0.0",
-              "inputFingerprintSha256": "41b5672ff7fab0579c871eaf4004578cb9c11b4b86aeb6bed93cca1f67e4a118",
+              "inputFingerprintSha256": "68c63f8dd3087227aed629a17b44c3b779ae89e4d9e74e1df41a97e4bac042f5",
               "parametersHashSha256": "5ee813be9432b1a41c8e0c06235483495b905c71cc944a782a62697f3ce048a7",
               "generatedAt": "2026-08-11T00:00:00.000Z",
               "constraintSourceIds": [
@@ -2995,7 +2995,7 @@
             "generator": {
               "id": "urban-digital-twin:deterministic-facade-plan-v3",
               "version": "3.0.0",
-              "inputFingerprintSha256": "41b5672ff7fab0579c871eaf4004578cb9c11b4b86aeb6bed93cca1f67e4a118",
+              "inputFingerprintSha256": "68c63f8dd3087227aed629a17b44c3b779ae89e4d9e74e1df41a97e4bac042f5",
               "parametersHashSha256": "5ee813be9432b1a41c8e0c06235483495b905c71cc944a782a62697f3ce048a7",
               "generatedAt": "2026-08-11T00:00:00.000Z",
               "constraintSourceIds": [
@@ -3007,11 +3007,11 @@
             "componentId": "doitt:778052:materials",
             "kind": "materials",
             "state": "generated",
-            "uncertainty": "Footprint-faithful procedural exterior in local millimetres. The massing follows the sourced building polygon vertex for vertex and the sourced height; nothing else does. Tier subdivision, bay rhythm, openings, attached elements, colour and material are designed by this grammar, derived from no imagery and no observation, and assert nothing about the real building's appearance, facade, setbacks, balconies, fire escapes, water tanks or signage, nor any tenant, brand or text.",
+            "uncertainty": "Footprint-faithful procedural exterior in local millimetres. The massing follows the sourced building polygon vertex for vertex and the sourced height; nothing else does. Tier subdivision, bay rhythm, openings and attached elements are designed by this grammar and derived from no observation. The facade material CLASS follows a cited public documentary source, recorded by intake record id in this plan; the specific tones, coursing and geometry expressing that class are still designed. No imagery was ingested, traced, sampled or reproduced, and no other real-world appearance claim is made. This plan asserts nothing about the real building's setbacks, balconies, fire escapes, water tanks or signage, nor any tenant, brand or text.",
             "generator": {
               "id": "urban-digital-twin:deterministic-facade-plan-v3",
               "version": "3.0.0",
-              "inputFingerprintSha256": "41b5672ff7fab0579c871eaf4004578cb9c11b4b86aeb6bed93cca1f67e4a118",
+              "inputFingerprintSha256": "68c63f8dd3087227aed629a17b44c3b779ae89e4d9e74e1df41a97e4bac042f5",
               "parametersHashSha256": "5ee813be9432b1a41c8e0c06235483495b905c71cc944a782a62697f3ce048a7",
               "generatedAt": "2026-08-11T00:00:00.000Z",
               "constraintSourceIds": [
@@ -3027,7 +3027,7 @@
             "generator": {
               "id": "urban-digital-twin:deterministic-facade-plan-v3",
               "version": "3.0.0",
-              "inputFingerprintSha256": "41b5672ff7fab0579c871eaf4004578cb9c11b4b86aeb6bed93cca1f67e4a118",
+              "inputFingerprintSha256": "68c63f8dd3087227aed629a17b44c3b779ae89e4d9e74e1df41a97e4bac042f5",
               "parametersHashSha256": "5ee813be9432b1a41c8e0c06235483495b905c71cc944a782a62697f3ce048a7",
               "generatedAt": "2026-08-11T00:00:00.000Z",
               "constraintSourceIds": [
@@ -3040,10 +3040,10 @@
     },
     {
       "schemaVersion": "1.0",
-      "shardId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:812702",
+      "shardId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:812702",
       "audience": "public",
-      "artifactRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3-doitt-812702.json",
-      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:812702",
+      "artifactRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3e-doitt-812702.json",
+      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:812702",
       "inventory": {
         "schemaVersion": "1.0",
         "buildingId": "doitt:812702",
@@ -3285,10 +3285,10 @@
     },
     {
       "schemaVersion": "1.0",
-      "shardId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:835659",
+      "shardId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:835659",
       "audience": "public",
-      "artifactRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3-doitt-835659.json",
-      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:835659",
+      "artifactRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3e-doitt-835659.json",
+      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:835659",
       "inventory": {
         "schemaVersion": "1.0",
         "buildingId": "doitt:835659",
@@ -3530,10 +3530,10 @@
     },
     {
       "schemaVersion": "1.0",
-      "shardId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:925937",
+      "shardId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:925937",
       "audience": "public",
-      "artifactRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3-doitt-925937.json",
-      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:925937",
+      "artifactRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3e-doitt-925937.json",
+      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:925937",
       "inventory": {
         "schemaVersion": "1.0",
         "buildingId": "doitt:925937",
@@ -3783,10 +3783,10 @@
     },
     {
       "schemaVersion": "1.0",
-      "shardId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:982383",
+      "shardId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:982383",
       "audience": "public",
-      "artifactRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3-doitt-982383.json",
-      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:982383",
+      "artifactRef": "public/inventory/inventory-manhattan-esb-block-reference-20260811-v3e-doitt-982383.json",
+      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:982383",
       "inventory": {
         "schemaVersion": "1.0",
         "buildingId": "doitt:982383",
@@ -4038,10 +4038,10 @@
   "evidenceShards": [
     {
       "schemaVersion": "1.0",
-      "shardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:102705",
+      "shardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:102705",
       "audience": "public",
-      "artifactRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3-doitt-102705.json",
-      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:102705",
+      "artifactRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3e-doitt-102705.json",
+      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:102705",
       "graph": {
         "schemaVersion": "1.0",
         "sources": [
@@ -4086,7 +4086,7 @@
         "approvals": [
           {
             "id": "approval:manhattan-exterior-cells-20260811-v3:public-canary",
-            "fingerprintSha256": "6114e2901d2672656b7745a99ce43da600b6fab31ac56855e7d6589ba40424c8",
+            "fingerprintSha256": "16c19c1383e3cd023923137225fd91195ad295d16f37050a0047416fdc27f4d3",
             "scope": "Public-audience successor exterior-cell release manhattan-exterior-cells-20260811-v3, promoting the private footprint-faithful V3 generated-exterior package for Manhattan Block 835 (config manhattan-esb-block-835) in place of the V2 release manhattan-exterior-cells-20260811. It covers local-only delivery, public display, derivative conveyance, and redistribution of deterministically generated, TEXTURE-FREE exterior geometry derived from NYC OTI Building Footprints (jh45-qr5r), with NYC OTI attribution, the City modified-data disclaimer, source IDs, capture timestamps, checksums, CRS, and height uncertainty retained.",
             "exclusions": [
               "public deployment",
@@ -4105,10 +4105,10 @@
     },
     {
       "schemaVersion": "1.0",
-      "shardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:131170",
+      "shardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:131170",
       "audience": "public",
-      "artifactRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3-doitt-131170.json",
-      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:131170",
+      "artifactRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3e-doitt-131170.json",
+      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:131170",
       "graph": {
         "schemaVersion": "1.0",
         "sources": [
@@ -4153,7 +4153,7 @@
         "approvals": [
           {
             "id": "approval:manhattan-exterior-cells-20260811-v3:public-canary",
-            "fingerprintSha256": "6114e2901d2672656b7745a99ce43da600b6fab31ac56855e7d6589ba40424c8",
+            "fingerprintSha256": "16c19c1383e3cd023923137225fd91195ad295d16f37050a0047416fdc27f4d3",
             "scope": "Public-audience successor exterior-cell release manhattan-exterior-cells-20260811-v3, promoting the private footprint-faithful V3 generated-exterior package for Manhattan Block 835 (config manhattan-esb-block-835) in place of the V2 release manhattan-exterior-cells-20260811. It covers local-only delivery, public display, derivative conveyance, and redistribution of deterministically generated, TEXTURE-FREE exterior geometry derived from NYC OTI Building Footprints (jh45-qr5r), with NYC OTI attribution, the City modified-data disclaimer, source IDs, capture timestamps, checksums, CRS, and height uncertainty retained.",
             "exclusions": [
               "public deployment",
@@ -4172,10 +4172,10 @@
     },
     {
       "schemaVersion": "1.0",
-      "shardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:147902",
+      "shardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:147902",
       "audience": "public",
-      "artifactRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3-doitt-147902.json",
-      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:147902",
+      "artifactRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3e-doitt-147902.json",
+      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:147902",
       "graph": {
         "schemaVersion": "1.0",
         "sources": [
@@ -4220,7 +4220,7 @@
         "approvals": [
           {
             "id": "approval:manhattan-exterior-cells-20260811-v3:public-canary",
-            "fingerprintSha256": "6114e2901d2672656b7745a99ce43da600b6fab31ac56855e7d6589ba40424c8",
+            "fingerprintSha256": "16c19c1383e3cd023923137225fd91195ad295d16f37050a0047416fdc27f4d3",
             "scope": "Public-audience successor exterior-cell release manhattan-exterior-cells-20260811-v3, promoting the private footprint-faithful V3 generated-exterior package for Manhattan Block 835 (config manhattan-esb-block-835) in place of the V2 release manhattan-exterior-cells-20260811. It covers local-only delivery, public display, derivative conveyance, and redistribution of deterministically generated, TEXTURE-FREE exterior geometry derived from NYC OTI Building Footprints (jh45-qr5r), with NYC OTI attribution, the City modified-data disclaimer, source IDs, capture timestamps, checksums, CRS, and height uncertainty retained.",
             "exclusions": [
               "public deployment",
@@ -4239,10 +4239,10 @@
     },
     {
       "schemaVersion": "1.0",
-      "shardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:262867",
+      "shardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:262867",
       "audience": "public",
-      "artifactRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3-doitt-262867.json",
-      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:262867",
+      "artifactRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3e-doitt-262867.json",
+      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:262867",
       "graph": {
         "schemaVersion": "1.0",
         "sources": [
@@ -4287,7 +4287,7 @@
         "approvals": [
           {
             "id": "approval:manhattan-exterior-cells-20260811-v3:public-canary",
-            "fingerprintSha256": "6114e2901d2672656b7745a99ce43da600b6fab31ac56855e7d6589ba40424c8",
+            "fingerprintSha256": "16c19c1383e3cd023923137225fd91195ad295d16f37050a0047416fdc27f4d3",
             "scope": "Public-audience successor exterior-cell release manhattan-exterior-cells-20260811-v3, promoting the private footprint-faithful V3 generated-exterior package for Manhattan Block 835 (config manhattan-esb-block-835) in place of the V2 release manhattan-exterior-cells-20260811. It covers local-only delivery, public display, derivative conveyance, and redistribution of deterministically generated, TEXTURE-FREE exterior geometry derived from NYC OTI Building Footprints (jh45-qr5r), with NYC OTI attribution, the City modified-data disclaimer, source IDs, capture timestamps, checksums, CRS, and height uncertainty retained.",
             "exclusions": [
               "public deployment",
@@ -4306,10 +4306,10 @@
     },
     {
       "schemaVersion": "1.0",
-      "shardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:39969",
+      "shardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:39969",
       "audience": "public",
-      "artifactRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3-doitt-39969.json",
-      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:39969",
+      "artifactRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3e-doitt-39969.json",
+      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:39969",
       "graph": {
         "schemaVersion": "1.0",
         "sources": [
@@ -4354,7 +4354,7 @@
         "approvals": [
           {
             "id": "approval:manhattan-exterior-cells-20260811-v3:public-canary",
-            "fingerprintSha256": "6114e2901d2672656b7745a99ce43da600b6fab31ac56855e7d6589ba40424c8",
+            "fingerprintSha256": "16c19c1383e3cd023923137225fd91195ad295d16f37050a0047416fdc27f4d3",
             "scope": "Public-audience successor exterior-cell release manhattan-exterior-cells-20260811-v3, promoting the private footprint-faithful V3 generated-exterior package for Manhattan Block 835 (config manhattan-esb-block-835) in place of the V2 release manhattan-exterior-cells-20260811. It covers local-only delivery, public display, derivative conveyance, and redistribution of deterministically generated, TEXTURE-FREE exterior geometry derived from NYC OTI Building Footprints (jh45-qr5r), with NYC OTI attribution, the City modified-data disclaimer, source IDs, capture timestamps, checksums, CRS, and height uncertainty retained.",
             "exclusions": [
               "public deployment",
@@ -4373,10 +4373,10 @@
     },
     {
       "schemaVersion": "1.0",
-      "shardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:460555",
+      "shardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:460555",
       "audience": "public",
-      "artifactRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3-doitt-460555.json",
-      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:460555",
+      "artifactRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3e-doitt-460555.json",
+      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:460555",
       "graph": {
         "schemaVersion": "1.0",
         "sources": [
@@ -4421,7 +4421,7 @@
         "approvals": [
           {
             "id": "approval:manhattan-exterior-cells-20260811-v3:public-canary",
-            "fingerprintSha256": "6114e2901d2672656b7745a99ce43da600b6fab31ac56855e7d6589ba40424c8",
+            "fingerprintSha256": "16c19c1383e3cd023923137225fd91195ad295d16f37050a0047416fdc27f4d3",
             "scope": "Public-audience successor exterior-cell release manhattan-exterior-cells-20260811-v3, promoting the private footprint-faithful V3 generated-exterior package for Manhattan Block 835 (config manhattan-esb-block-835) in place of the V2 release manhattan-exterior-cells-20260811. It covers local-only delivery, public display, derivative conveyance, and redistribution of deterministically generated, TEXTURE-FREE exterior geometry derived from NYC OTI Building Footprints (jh45-qr5r), with NYC OTI attribution, the City modified-data disclaimer, source IDs, capture timestamps, checksums, CRS, and height uncertainty retained.",
             "exclusions": [
               "public deployment",
@@ -4440,10 +4440,10 @@
     },
     {
       "schemaVersion": "1.0",
-      "shardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:498980",
+      "shardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:498980",
       "audience": "public",
-      "artifactRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3-doitt-498980.json",
-      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:498980",
+      "artifactRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3e-doitt-498980.json",
+      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:498980",
       "graph": {
         "schemaVersion": "1.0",
         "sources": [
@@ -4488,7 +4488,7 @@
         "approvals": [
           {
             "id": "approval:manhattan-exterior-cells-20260811-v3:public-canary",
-            "fingerprintSha256": "6114e2901d2672656b7745a99ce43da600b6fab31ac56855e7d6589ba40424c8",
+            "fingerprintSha256": "16c19c1383e3cd023923137225fd91195ad295d16f37050a0047416fdc27f4d3",
             "scope": "Public-audience successor exterior-cell release manhattan-exterior-cells-20260811-v3, promoting the private footprint-faithful V3 generated-exterior package for Manhattan Block 835 (config manhattan-esb-block-835) in place of the V2 release manhattan-exterior-cells-20260811. It covers local-only delivery, public display, derivative conveyance, and redistribution of deterministically generated, TEXTURE-FREE exterior geometry derived from NYC OTI Building Footprints (jh45-qr5r), with NYC OTI attribution, the City modified-data disclaimer, source IDs, capture timestamps, checksums, CRS, and height uncertainty retained.",
             "exclusions": [
               "public deployment",
@@ -4507,10 +4507,10 @@
     },
     {
       "schemaVersion": "1.0",
-      "shardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:502491",
+      "shardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:502491",
       "audience": "public",
-      "artifactRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3-doitt-502491.json",
-      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:502491",
+      "artifactRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3e-doitt-502491.json",
+      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:502491",
       "graph": {
         "schemaVersion": "1.0",
         "sources": [
@@ -4555,7 +4555,7 @@
         "approvals": [
           {
             "id": "approval:manhattan-exterior-cells-20260811-v3:public-canary",
-            "fingerprintSha256": "6114e2901d2672656b7745a99ce43da600b6fab31ac56855e7d6589ba40424c8",
+            "fingerprintSha256": "16c19c1383e3cd023923137225fd91195ad295d16f37050a0047416fdc27f4d3",
             "scope": "Public-audience successor exterior-cell release manhattan-exterior-cells-20260811-v3, promoting the private footprint-faithful V3 generated-exterior package for Manhattan Block 835 (config manhattan-esb-block-835) in place of the V2 release manhattan-exterior-cells-20260811. It covers local-only delivery, public display, derivative conveyance, and redistribution of deterministically generated, TEXTURE-FREE exterior geometry derived from NYC OTI Building Footprints (jh45-qr5r), with NYC OTI attribution, the City modified-data disclaimer, source IDs, capture timestamps, checksums, CRS, and height uncertainty retained.",
             "exclusions": [
               "public deployment",
@@ -4574,10 +4574,10 @@
     },
     {
       "schemaVersion": "1.0",
-      "shardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:584049",
+      "shardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:584049",
       "audience": "public",
-      "artifactRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3-doitt-584049.json",
-      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:584049",
+      "artifactRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3e-doitt-584049.json",
+      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:584049",
       "graph": {
         "schemaVersion": "1.0",
         "sources": [
@@ -4622,7 +4622,7 @@
         "approvals": [
           {
             "id": "approval:manhattan-exterior-cells-20260811-v3:public-canary",
-            "fingerprintSha256": "6114e2901d2672656b7745a99ce43da600b6fab31ac56855e7d6589ba40424c8",
+            "fingerprintSha256": "16c19c1383e3cd023923137225fd91195ad295d16f37050a0047416fdc27f4d3",
             "scope": "Public-audience successor exterior-cell release manhattan-exterior-cells-20260811-v3, promoting the private footprint-faithful V3 generated-exterior package for Manhattan Block 835 (config manhattan-esb-block-835) in place of the V2 release manhattan-exterior-cells-20260811. It covers local-only delivery, public display, derivative conveyance, and redistribution of deterministically generated, TEXTURE-FREE exterior geometry derived from NYC OTI Building Footprints (jh45-qr5r), with NYC OTI attribution, the City modified-data disclaimer, source IDs, capture timestamps, checksums, CRS, and height uncertainty retained.",
             "exclusions": [
               "public deployment",
@@ -4641,10 +4641,10 @@
     },
     {
       "schemaVersion": "1.0",
-      "shardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:778052",
+      "shardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:778052",
       "audience": "public",
-      "artifactRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3-doitt-778052.json",
-      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:778052",
+      "artifactRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3e-doitt-778052.json",
+      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:778052",
       "graph": {
         "schemaVersion": "1.0",
         "sources": [
@@ -4689,7 +4689,7 @@
         "approvals": [
           {
             "id": "approval:manhattan-exterior-cells-20260811-v3:public-canary",
-            "fingerprintSha256": "6114e2901d2672656b7745a99ce43da600b6fab31ac56855e7d6589ba40424c8",
+            "fingerprintSha256": "16c19c1383e3cd023923137225fd91195ad295d16f37050a0047416fdc27f4d3",
             "scope": "Public-audience successor exterior-cell release manhattan-exterior-cells-20260811-v3, promoting the private footprint-faithful V3 generated-exterior package for Manhattan Block 835 (config manhattan-esb-block-835) in place of the V2 release manhattan-exterior-cells-20260811. It covers local-only delivery, public display, derivative conveyance, and redistribution of deterministically generated, TEXTURE-FREE exterior geometry derived from NYC OTI Building Footprints (jh45-qr5r), with NYC OTI attribution, the City modified-data disclaimer, source IDs, capture timestamps, checksums, CRS, and height uncertainty retained.",
             "exclusions": [
               "public deployment",
@@ -4708,10 +4708,10 @@
     },
     {
       "schemaVersion": "1.0",
-      "shardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:812702",
+      "shardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:812702",
       "audience": "public",
-      "artifactRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3-doitt-812702.json",
-      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:812702",
+      "artifactRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3e-doitt-812702.json",
+      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:812702",
       "graph": {
         "schemaVersion": "1.0",
         "sources": [
@@ -4756,7 +4756,7 @@
         "approvals": [
           {
             "id": "approval:manhattan-exterior-cells-20260811-v3:public-canary",
-            "fingerprintSha256": "6114e2901d2672656b7745a99ce43da600b6fab31ac56855e7d6589ba40424c8",
+            "fingerprintSha256": "16c19c1383e3cd023923137225fd91195ad295d16f37050a0047416fdc27f4d3",
             "scope": "Public-audience successor exterior-cell release manhattan-exterior-cells-20260811-v3, promoting the private footprint-faithful V3 generated-exterior package for Manhattan Block 835 (config manhattan-esb-block-835) in place of the V2 release manhattan-exterior-cells-20260811. It covers local-only delivery, public display, derivative conveyance, and redistribution of deterministically generated, TEXTURE-FREE exterior geometry derived from NYC OTI Building Footprints (jh45-qr5r), with NYC OTI attribution, the City modified-data disclaimer, source IDs, capture timestamps, checksums, CRS, and height uncertainty retained.",
             "exclusions": [
               "public deployment",
@@ -4775,10 +4775,10 @@
     },
     {
       "schemaVersion": "1.0",
-      "shardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:835659",
+      "shardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:835659",
       "audience": "public",
-      "artifactRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3-doitt-835659.json",
-      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:835659",
+      "artifactRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3e-doitt-835659.json",
+      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:835659",
       "graph": {
         "schemaVersion": "1.0",
         "sources": [
@@ -4823,7 +4823,7 @@
         "approvals": [
           {
             "id": "approval:manhattan-exterior-cells-20260811-v3:public-canary",
-            "fingerprintSha256": "6114e2901d2672656b7745a99ce43da600b6fab31ac56855e7d6589ba40424c8",
+            "fingerprintSha256": "16c19c1383e3cd023923137225fd91195ad295d16f37050a0047416fdc27f4d3",
             "scope": "Public-audience successor exterior-cell release manhattan-exterior-cells-20260811-v3, promoting the private footprint-faithful V3 generated-exterior package for Manhattan Block 835 (config manhattan-esb-block-835) in place of the V2 release manhattan-exterior-cells-20260811. It covers local-only delivery, public display, derivative conveyance, and redistribution of deterministically generated, TEXTURE-FREE exterior geometry derived from NYC OTI Building Footprints (jh45-qr5r), with NYC OTI attribution, the City modified-data disclaimer, source IDs, capture timestamps, checksums, CRS, and height uncertainty retained.",
             "exclusions": [
               "public deployment",
@@ -4842,10 +4842,10 @@
     },
     {
       "schemaVersion": "1.0",
-      "shardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:925937",
+      "shardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:925937",
       "audience": "public",
-      "artifactRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3-doitt-925937.json",
-      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:925937",
+      "artifactRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3e-doitt-925937.json",
+      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:925937",
       "graph": {
         "schemaVersion": "1.0",
         "sources": [
@@ -4890,7 +4890,7 @@
         "approvals": [
           {
             "id": "approval:manhattan-exterior-cells-20260811-v3:public-canary",
-            "fingerprintSha256": "6114e2901d2672656b7745a99ce43da600b6fab31ac56855e7d6589ba40424c8",
+            "fingerprintSha256": "16c19c1383e3cd023923137225fd91195ad295d16f37050a0047416fdc27f4d3",
             "scope": "Public-audience successor exterior-cell release manhattan-exterior-cells-20260811-v3, promoting the private footprint-faithful V3 generated-exterior package for Manhattan Block 835 (config manhattan-esb-block-835) in place of the V2 release manhattan-exterior-cells-20260811. It covers local-only delivery, public display, derivative conveyance, and redistribution of deterministically generated, TEXTURE-FREE exterior geometry derived from NYC OTI Building Footprints (jh45-qr5r), with NYC OTI attribution, the City modified-data disclaimer, source IDs, capture timestamps, checksums, CRS, and height uncertainty retained.",
             "exclusions": [
               "public deployment",
@@ -4909,10 +4909,10 @@
     },
     {
       "schemaVersion": "1.0",
-      "shardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:982383",
+      "shardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:982383",
       "audience": "public",
-      "artifactRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3-doitt-982383.json",
-      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:982383",
+      "artifactRef": "public/evidence/evidence-shard-manhattan-esb-block-reference-20260811-v3e-doitt-982383.json",
+      "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:982383",
       "graph": {
         "schemaVersion": "1.0",
         "sources": [
@@ -4957,7 +4957,7 @@
         "approvals": [
           {
             "id": "approval:manhattan-exterior-cells-20260811-v3:public-canary",
-            "fingerprintSha256": "6114e2901d2672656b7745a99ce43da600b6fab31ac56855e7d6589ba40424c8",
+            "fingerprintSha256": "16c19c1383e3cd023923137225fd91195ad295d16f37050a0047416fdc27f4d3",
             "scope": "Public-audience successor exterior-cell release manhattan-exterior-cells-20260811-v3, promoting the private footprint-faithful V3 generated-exterior package for Manhattan Block 835 (config manhattan-esb-block-835) in place of the V2 release manhattan-exterior-cells-20260811. It covers local-only delivery, public display, derivative conveyance, and redistribution of deterministically generated, TEXTURE-FREE exterior geometry derived from NYC OTI Building Footprints (jh45-qr5r), with NYC OTI attribution, the City modified-data disclaimer, source IDs, capture timestamps, checksums, CRS, and height uncertainty retained.",
             "exclusions": [
               "public deployment",
@@ -4984,7 +4984,7 @@
       "cityId": "manhattan",
       "configId": "manhattan-esb-block-835",
       "ownershipLedgerId": "ownership-ledger:manhattan-exterior-cells-20260811-v3",
-      "baseIdentitySetId": "base-identity-set:manhattan:block-835:20260811-v3",
+      "baseIdentitySetId": "base-identity-set:manhattan:block-835:20260811-v3e",
       "baseIdentitySetChecksumSha256": "98a7c50abc157fb4f2e52f23e2a129274b7273cace496929406bbbff448a8dfa",
       "predecessor": null,
       "rollbackTarget": null,
@@ -4992,12 +4992,12 @@
         {
           "cellId": "cell:manhattan:block-835",
           "cellReleaseId": "cell-release:manhattan-exterior-cells-20260811-v3:v1",
-          "checksumSha256": "f167ae91def794ae1654667d27fa1ab9a722d1004798eb3c1c1d3cce5adf51d5"
+          "checksumSha256": "b5cb68f703f24db5d8f71e170d5de3a2b7fc0a372f853cdf8d48f0e194994d0d"
         }
       ],
       "promotion": {
         "id": "approval:manhattan-exterior-cells-20260811-v3:public-canary",
-        "fingerprintSha256": "6114e2901d2672656b7745a99ce43da600b6fab31ac56855e7d6589ba40424c8",
+        "fingerprintSha256": "16c19c1383e3cd023923137225fd91195ad295d16f37050a0047416fdc27f4d3",
         "scope": "Public-audience successor exterior-cell release manhattan-exterior-cells-20260811-v3, promoting the private footprint-faithful V3 generated-exterior package for Manhattan Block 835 (config manhattan-esb-block-835) in place of the V2 release manhattan-exterior-cells-20260811. It covers local-only delivery, public display, derivative conveyance, and redistribution of deterministically generated, TEXTURE-FREE exterior geometry derived from NYC OTI Building Footprints (jh45-qr5r), with NYC OTI attribution, the City modified-data disclaimer, source IDs, capture timestamps, checksums, CRS, and height uncertainty retained.",
         "exclusions": [
           "public deployment",

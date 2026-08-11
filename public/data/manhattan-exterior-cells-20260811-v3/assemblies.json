@@ -2,224 +2,224 @@
   {
     "artifacts": [
       {
-        "byteSize": 44372,
-        "checksumSha256": "3e551206f48b0277111e7c85137ddeff2a7e674c8149f868c91f9e4caf6d930f",
+        "byteSize": 44376,
+        "checksumSha256": "af89dae42ee3516a7dfbe1f3c91baabe9a263428c9d958a5356c623c3ec9eb4c",
         "logicalId": "glb:doitt:102705:lod_0",
         "ownerCellId": "cell:manhattan:block-835",
         "relativeRef": "public/assets/doitt-102705__lod_0.glb",
         "role": "glb"
       },
       {
-        "byteSize": 20848,
-        "checksumSha256": "baecf087afd50a13346c317b168e38514d43a11de3b4c6e3b4d4447b2db5f978",
+        "byteSize": 20852,
+        "checksumSha256": "32e7024822114d0980bf7e1ff7f854ce83b417b518a9f87fdddf3f655a44f904",
         "logicalId": "glb:doitt:102705:lod_1",
         "ownerCellId": "cell:manhattan:block-835",
         "relativeRef": "public/assets/doitt-102705__lod_1.glb",
         "role": "glb"
       },
       {
-        "byteSize": 592052,
-        "checksumSha256": "3e59ec44f4a1798e594df134b10fe63b153c3f00c41245d35798f2139cb26871",
+        "byteSize": 592056,
+        "checksumSha256": "314827e91ce8f11eee65fc48958029b9355eb67af52bd513c5ff293c7a9999b4",
         "logicalId": "glb:doitt:131170:lod_0",
         "ownerCellId": "cell:manhattan:block-835",
         "relativeRef": "public/assets/doitt-131170__lod_0.glb",
         "role": "glb"
       },
       {
-        "byteSize": 235300,
-        "checksumSha256": "3d07afa94e283f8184f4da515af0a9a2704e875f5c556ad46dde007c9eab5af8",
+        "byteSize": 235308,
+        "checksumSha256": "4acc4227c0493268b5299036475a3b24fbbae308e3c5f701b8c2b77f3ecac022",
         "logicalId": "glb:doitt:131170:lod_1",
         "ownerCellId": "cell:manhattan:block-835",
         "relativeRef": "public/assets/doitt-131170__lod_1.glb",
         "role": "glb"
       },
       {
-        "byteSize": 78148,
-        "checksumSha256": "abf10cb8f4e49d3b1c861ae9f2f7ad989acd9faee4efdeb98f78224f0f8f0c39",
+        "byteSize": 78152,
+        "checksumSha256": "369a34697c553b586fc9c662a9777d06f6ec5f603d8467143d39329db4d4c135",
         "logicalId": "glb:doitt:147902:lod_0",
         "ownerCellId": "cell:manhattan:block-835",
         "relativeRef": "public/assets/doitt-147902__lod_0.glb",
         "role": "glb"
       },
       {
-        "byteSize": 35180,
-        "checksumSha256": "aad9c3f8c5726a01ecad6474f76c29abec6c629bcf593a3f85bc009685a2f6cb",
+        "byteSize": 35188,
+        "checksumSha256": "9746423c7895c4fb292b7701028dd28fcaf6056356877c0f591779107df041c0",
         "logicalId": "glb:doitt:147902:lod_1",
         "ownerCellId": "cell:manhattan:block-835",
         "relativeRef": "public/assets/doitt-147902__lod_1.glb",
         "role": "glb"
       },
       {
-        "byteSize": 28976,
-        "checksumSha256": "27e5b6a9408f5d3eaef0c75ac453f9fae8699dc9ebd00bbb7d5f7b8ceec10259",
+        "byteSize": 28980,
+        "checksumSha256": "5a8b74c108aa5f70beabc46c7e134012f7c461882761dd8d8477ece106eedb7b",
         "logicalId": "glb:doitt:262867:lod_0",
         "ownerCellId": "cell:manhattan:block-835",
         "relativeRef": "public/assets/doitt-262867__lod_0.glb",
         "role": "glb"
       },
       {
-        "byteSize": 15956,
-        "checksumSha256": "7be3e701f33774a52b14a0c2cf079ec57bb9398cba40855ad1bfac037233f7e9",
+        "byteSize": 15960,
+        "checksumSha256": "849c4408b05799082debc573a52466c1852b7ce04da9b6aa7f9cb47f75f7499a",
         "logicalId": "glb:doitt:262867:lod_1",
         "ownerCellId": "cell:manhattan:block-835",
         "relativeRef": "public/assets/doitt-262867__lod_1.glb",
         "role": "glb"
       },
       {
-        "byteSize": 78688,
-        "checksumSha256": "004324817da542af4cca717693fa5470284067d00e9f1f3ba8164d32380d038f",
+        "byteSize": 78692,
+        "checksumSha256": "6b47acd0fe286b82e7842b596d0076db9c5f8b4bd709bb6a3825c1f8501fc5f5",
         "logicalId": "glb:doitt:39969:lod_0",
         "ownerCellId": "cell:manhattan:block-835",
         "relativeRef": "public/assets/doitt-39969__lod_0.glb",
         "role": "glb"
       },
       {
-        "byteSize": 35144,
-        "checksumSha256": "762e7d34b15617878d4c6c3f8f5dac140e2e39d4854755962dc7abc8088fe76e",
+        "byteSize": 35148,
+        "checksumSha256": "2e1f5c3d63105ffcb99adeccb8da7a70bd40ea082014045b8690ce43ba241693",
         "logicalId": "glb:doitt:39969:lod_1",
         "ownerCellId": "cell:manhattan:block-835",
         "relativeRef": "public/assets/doitt-39969__lod_1.glb",
         "role": "glb"
       },
       {
-        "byteSize": 63776,
-        "checksumSha256": "3ccdf28292fb2317b3848b141240a361c16f5b540a1f1ff03477050f1102882f",
+        "byteSize": 63784,
+        "checksumSha256": "cb05749c0019afa024df0a4edae7bdb72965afbd1a2e8d9cd59e44109a769a06",
         "logicalId": "glb:doitt:460555:lod_0",
         "ownerCellId": "cell:manhattan:block-835",
         "relativeRef": "public/assets/doitt-460555__lod_0.glb",
         "role": "glb"
       },
       {
-        "byteSize": 31176,
-        "checksumSha256": "63152ccc009fa0027bf044a52ceb40245694485988fff86e65d7e0b7e77b99b7",
+        "byteSize": 31180,
+        "checksumSha256": "7f60cce2aaffc51460f4dbaec83c2a254a98eb15d2fcf600b561c1c19b21317c",
         "logicalId": "glb:doitt:460555:lod_1",
         "ownerCellId": "cell:manhattan:block-835",
         "relativeRef": "public/assets/doitt-460555__lod_1.glb",
         "role": "glb"
       },
       {
-        "byteSize": 43968,
-        "checksumSha256": "1300ab8a8562c1ca7d8af4e807c959ac93423348ab751a1ba6c202e7220f7d29",
+        "byteSize": 43972,
+        "checksumSha256": "ac136268c0ff55c4058336fae6fd9a4417ebfa7bbcb2615b0ae1ef91fcc210d2",
         "logicalId": "glb:doitt:498980:lod_0",
         "ownerCellId": "cell:manhattan:block-835",
         "relativeRef": "public/assets/doitt-498980__lod_0.glb",
         "role": "glb"
       },
       {
-        "byteSize": 21164,
-        "checksumSha256": "11ac4d1abc164d39d9b9005a45c5323065cdc27a2be587bf3a6a84ee3bb65275",
+        "byteSize": 21168,
+        "checksumSha256": "08ab64ca7685d4c6074580d49fbf3dcccc17789f95fcfdac847fd4b3a4a76470",
         "logicalId": "glb:doitt:498980:lod_1",
         "ownerCellId": "cell:manhattan:block-835",
         "relativeRef": "public/assets/doitt-498980__lod_1.glb",
         "role": "glb"
       },
       {
-        "byteSize": 52764,
-        "checksumSha256": "80f24e12934759df7b7d58465140ccac8d456cf329af04364252fcefc99f0a6d",
+        "byteSize": 52768,
+        "checksumSha256": "eb3ab11a6f46917b9690edad789d8f3ad594bea7a97e217ee5a547446d06f1e3",
         "logicalId": "glb:doitt:502491:lod_0",
         "ownerCellId": "cell:manhattan:block-835",
         "relativeRef": "public/assets/doitt-502491__lod_0.glb",
         "role": "glb"
       },
       {
-        "byteSize": 24780,
-        "checksumSha256": "8888d2496e321b9c0c439dccc0aaf459e54a2d0be0957c420080bdbaa7422036",
+        "byteSize": 24788,
+        "checksumSha256": "6be620ed6b04e555c5c1f102613e5fb37e61c2a93cb12426e78476502677a468",
         "logicalId": "glb:doitt:502491:lod_1",
         "ownerCellId": "cell:manhattan:block-835",
         "relativeRef": "public/assets/doitt-502491__lod_1.glb",
         "role": "glb"
       },
       {
-        "byteSize": 73464,
-        "checksumSha256": "5bb9dc44434caa0c90cab5eadfa7a58d8f203431eb929a3c7e2c763f204911fc",
+        "byteSize": 73472,
+        "checksumSha256": "92ba0b91f9f6f4c1f28004caff6cb9e5e9edc3601385e5545e489f136cda44e1",
         "logicalId": "glb:doitt:584049:lod_0",
         "ownerCellId": "cell:manhattan:block-835",
         "relativeRef": "public/assets/doitt-584049__lod_0.glb",
         "role": "glb"
       },
       {
-        "byteSize": 33096,
-        "checksumSha256": "bc91162e4e1c66075c44c4a7caa4981fe93be51a55e1ea34d903cc0240804ab0",
+        "byteSize": 33100,
+        "checksumSha256": "a6e64b81aac0a02747b3271636c3297b9eba33f857dab61cb1c4781d559e25b2",
         "logicalId": "glb:doitt:584049:lod_1",
         "ownerCellId": "cell:manhattan:block-835",
         "relativeRef": "public/assets/doitt-584049__lod_1.glb",
         "role": "glb"
       },
       {
-        "byteSize": 3716176,
-        "checksumSha256": "31df630efdac9cfc3d31c63b48826771841dcf1a7ed7636b7889dd9d8fbfeff1",
+        "byteSize": 3716836,
+        "checksumSha256": "df4ca50a533bc4db16a28da6607eed1559ec7b31ac5f6d40da7aa8ee5886d39f",
         "logicalId": "glb:doitt:778052:lod_0",
         "ownerCellId": "cell:manhattan:block-835",
         "relativeRef": "public/assets/doitt-778052__lod_0.glb",
         "role": "glb"
       },
       {
-        "byteSize": 1305116,
-        "checksumSha256": "22b0d0717ad71a8c06c5a1ae8b4cdffe704a33bb5aabe71760cf0455e0467fa1",
+        "byteSize": 1305780,
+        "checksumSha256": "8397c16d946de1912a0ec17fb7d750833bd9888be99b8e298832f6960f139bc3",
         "logicalId": "glb:doitt:778052:lod_1",
         "ownerCellId": "cell:manhattan:block-835",
         "relativeRef": "public/assets/doitt-778052__lod_1.glb",
         "role": "glb"
       },
       {
-        "byteSize": 53092,
-        "checksumSha256": "83262cf8fa1bb6844ccae6d2191d097ea39809a72d6c36e480f5460da7cdada4",
+        "byteSize": 53100,
+        "checksumSha256": "a0162b00c5e30c1eff2357427c17d2c3c08e0c64ff340787f4149af04b52c034",
         "logicalId": "glb:doitt:812702:lod_0",
         "ownerCellId": "cell:manhattan:block-835",
         "relativeRef": "public/assets/doitt-812702__lod_0.glb",
         "role": "glb"
       },
       {
-        "byteSize": 26400,
-        "checksumSha256": "87515cd66f0ca014166af94b89043e1f90a7fb846fcb48c6ac7c577bc70cf42f",
+        "byteSize": 26408,
+        "checksumSha256": "4be737461dc3b1b09c1f35455bca6cea13325b576491d33a65f90f8f591b2af0",
         "logicalId": "glb:doitt:812702:lod_1",
         "ownerCellId": "cell:manhattan:block-835",
         "relativeRef": "public/assets/doitt-812702__lod_1.glb",
         "role": "glb"
       },
       {
-        "byteSize": 60732,
-        "checksumSha256": "c3c7eaec114134e37c0da27b1e41d1865d4b65bae89be8afb52007f94a492b0e",
+        "byteSize": 60736,
+        "checksumSha256": "a07845205282aa36a4e7e6ccb00b0b0d4ba324e9b6061f297164baacddfc9804",
         "logicalId": "glb:doitt:835659:lod_0",
         "ownerCellId": "cell:manhattan:block-835",
         "relativeRef": "public/assets/doitt-835659__lod_0.glb",
         "role": "glb"
       },
       {
-        "byteSize": 28132,
-        "checksumSha256": "5c78fc02a8080088be01d034fa36b3b91c586796ddab0d4b43d93eff462f1bb8",
+        "byteSize": 28140,
+        "checksumSha256": "d1bce9069ba81c2168fa9275c966345d498ea16c94c1426b6004b05219f4a641",
         "logicalId": "glb:doitt:835659:lod_1",
         "ownerCellId": "cell:manhattan:block-835",
         "relativeRef": "public/assets/doitt-835659__lod_1.glb",
         "role": "glb"
       },
       {
-        "byteSize": 50892,
-        "checksumSha256": "b4327ba6bedf5877cc631aa0dccd2d8f0642a5034b01a30057fab44782c227cf",
+        "byteSize": 50896,
+        "checksumSha256": "1cf0b1a881abe0dec316a596b0245999113910596f8ead6de1f618f5d2841ef0",
         "logicalId": "glb:doitt:925937:lod_0",
         "ownerCellId": "cell:manhattan:block-835",
         "relativeRef": "public/assets/doitt-925937__lod_0.glb",
         "role": "glb"
       },
       {
-        "byteSize": 24216,
-        "checksumSha256": "46a09e3e04fa2ac81bd8807e64b8308cfc5cdaa9d4f67810e87224aa95f0fc9d",
+        "byteSize": 24224,
+        "checksumSha256": "fcaac10d6ef527722728cbe6a51d50008c0e5c73398eff665de4ff7a536a58e5",
         "logicalId": "glb:doitt:925937:lod_1",
         "ownerCellId": "cell:manhattan:block-835",
         "relativeRef": "public/assets/doitt-925937__lod_1.glb",
         "role": "glb"
       },
       {
-        "byteSize": 188508,
-        "checksumSha256": "a4e4e4f068afe8acc4fc145ec93514865c34adf2b41221b1e6724a2b50175e14",
+        "byteSize": 188512,
+        "checksumSha256": "d1865e3a0b95a745b9f7439b5c92924afce72d7a88f78a6b4599965c2a2c5b1b",
         "logicalId": "glb:doitt:982383:lod_0",
         "ownerCellId": "cell:manhattan:block-835",
         "relativeRef": "public/assets/doitt-982383__lod_0.glb",
         "role": "glb"
       },
       {
-        "byteSize": 73536,
-        "checksumSha256": "a41ef37c1d3cbf524c2db6aea2a894bbf4a6e9f5acf9a07287f91f4906c6fb14",
+        "byteSize": 73540,
+        "checksumSha256": "0480096c4d573ed4eb10fd72c17dddec679cf698119bb7effafa9bae301838a0",
         "logicalId": "glb:doitt:982383:lod_1",
         "ownerCellId": "cell:manhattan:block-835",
         "relativeRef": "public/assets/doitt-982383__lod_1.glb",
@@ -228,7 +228,7 @@
       {
         "byteSize": 7285,
         "checksumSha256": "b1537ae673b59adef46a1339dbef308a46da9447fd1752d18bf174b8edcbc671",
-        "logicalId": "tileset:manhattan-esb-block-reference-20260811-v3",
+        "logicalId": "tileset:manhattan-esb-block-reference-20260811-v3e",
         "ownerCellId": null,
         "relativeRef": "public/tiles/tileset.json",
         "role": "tileset-json"
@@ -237,9 +237,9 @@
     "assets": [
       {
         "canonicalFeatureId": "doitt:102705",
-        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:102705",
+        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:102705",
         "inventoryHashSha256": "f69da324ef6c75f3556112aba6fe904858a8d8c26d932a8db9de2448b3c61af3",
-        "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:102705",
+        "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:102705",
         "lods": [
           {
             "artifactRef": "public/assets/doitt-102705__lod_0.glb",
@@ -293,8 +293,8 @@
         ],
         "ownerCellId": "cell:manhattan:block-835",
         "predecessor": {
-          "checksumSha256": "16046eaea8335a20cf5672d3ba3ae567ee2780cc59dc5566768fbd2a47f47004",
-          "id": "manhattan-esb-block-reference-20260811:doitt:102705:lod_0"
+          "checksumSha256": "3e551206f48b0277111e7c85137ddeff2a7e674c8149f868c91f9e4caf6d930f",
+          "id": "manhattan-esb-block-reference-20260811-v3:doitt:102705:lod_0"
         },
         "source": {
           "kind": "facade-plan",
@@ -312,9 +312,9 @@
       },
       {
         "canonicalFeatureId": "doitt:131170",
-        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:131170",
+        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:131170",
         "inventoryHashSha256": "65377c4d426b1612ca635b7ce645d47bf40edacba6c8b31934169768028a1472",
-        "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:131170",
+        "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:131170",
         "lods": [
           {
             "artifactRef": "public/assets/doitt-131170__lod_0.glb",
@@ -368,8 +368,8 @@
         ],
         "ownerCellId": "cell:manhattan:block-835",
         "predecessor": {
-          "checksumSha256": "0fb22da368e85512989977d84db5f0b5499cffa32f40fd1e7941884911b647be",
-          "id": "manhattan-esb-block-reference-20260811:doitt:131170:lod_0"
+          "checksumSha256": "3e59ec44f4a1798e594df134b10fe63b153c3f00c41245d35798f2139cb26871",
+          "id": "manhattan-esb-block-reference-20260811-v3:doitt:131170:lod_0"
         },
         "source": {
           "kind": "facade-plan",
@@ -388,9 +388,9 @@
       },
       {
         "canonicalFeatureId": "doitt:147902",
-        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:147902",
+        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:147902",
         "inventoryHashSha256": "091a799053e639129d7c2ac97c0737238eea645de16061b878e33934c4b09952",
-        "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:147902",
+        "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:147902",
         "lods": [
           {
             "artifactRef": "public/assets/doitt-147902__lod_0.glb",
@@ -444,8 +444,8 @@
         ],
         "ownerCellId": "cell:manhattan:block-835",
         "predecessor": {
-          "checksumSha256": "8e51b05ea005160174e62df3bc9693e66b3575d262bbcd7912ede65ae1be96bc",
-          "id": "manhattan-esb-block-reference-20260811:doitt:147902:lod_0"
+          "checksumSha256": "abf10cb8f4e49d3b1c861ae9f2f7ad989acd9faee4efdeb98f78224f0f8f0c39",
+          "id": "manhattan-esb-block-reference-20260811-v3:doitt:147902:lod_0"
         },
         "source": {
           "kind": "facade-plan",
@@ -463,9 +463,9 @@
       },
       {
         "canonicalFeatureId": "doitt:262867",
-        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:262867",
+        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:262867",
         "inventoryHashSha256": "4dcd70dbada283e420e1e04f3fec096b18a42410483bbb1652a30a83a48a105f",
-        "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:262867",
+        "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:262867",
         "lods": [
           {
             "artifactRef": "public/assets/doitt-262867__lod_0.glb",
@@ -519,8 +519,8 @@
         ],
         "ownerCellId": "cell:manhattan:block-835",
         "predecessor": {
-          "checksumSha256": "5a72444226ef733ad8a1a2422c0a692e421511779642d30d97af016958923817",
-          "id": "manhattan-esb-block-reference-20260811:doitt:262867:lod_0"
+          "checksumSha256": "27e5b6a9408f5d3eaef0c75ac453f9fae8699dc9ebd00bbb7d5f7b8ceec10259",
+          "id": "manhattan-esb-block-reference-20260811-v3:doitt:262867:lod_0"
         },
         "source": {
           "kind": "facade-plan",
@@ -539,9 +539,9 @@
       },
       {
         "canonicalFeatureId": "doitt:39969",
-        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:39969",
+        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:39969",
         "inventoryHashSha256": "d77e266f06accef6839ab0717c8476b0a9dfde0726e8f2319ba5c12b3fdbb63b",
-        "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:39969",
+        "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:39969",
         "lods": [
           {
             "artifactRef": "public/assets/doitt-39969__lod_0.glb",
@@ -595,8 +595,8 @@
         ],
         "ownerCellId": "cell:manhattan:block-835",
         "predecessor": {
-          "checksumSha256": "1726d46a59ff905850ab8b2e9bb1ddc36b5bff1d2bc0d8d393d00586893485b4",
-          "id": "manhattan-esb-block-reference-20260811:doitt:39969:lod_0"
+          "checksumSha256": "004324817da542af4cca717693fa5470284067d00e9f1f3ba8164d32380d038f",
+          "id": "manhattan-esb-block-reference-20260811-v3:doitt:39969:lod_0"
         },
         "source": {
           "kind": "facade-plan",
@@ -615,9 +615,9 @@
       },
       {
         "canonicalFeatureId": "doitt:460555",
-        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:460555",
+        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:460555",
         "inventoryHashSha256": "643546a83837a0d22758150c22aa28a26c88d224ab8112558b39cc0eb0aaf94f",
-        "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:460555",
+        "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:460555",
         "lods": [
           {
             "artifactRef": "public/assets/doitt-460555__lod_0.glb",
@@ -671,8 +671,8 @@
         ],
         "ownerCellId": "cell:manhattan:block-835",
         "predecessor": {
-          "checksumSha256": "610aac4ab8b9f46f9a8e636b3c0423d710f31c1a0e658b8919ee4b39d2e9987d",
-          "id": "manhattan-esb-block-reference-20260811:doitt:460555:lod_0"
+          "checksumSha256": "3ccdf28292fb2317b3848b141240a361c16f5b540a1f1ff03477050f1102882f",
+          "id": "manhattan-esb-block-reference-20260811-v3:doitt:460555:lod_0"
         },
         "source": {
           "kind": "facade-plan",
@@ -690,9 +690,9 @@
       },
       {
         "canonicalFeatureId": "doitt:498980",
-        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:498980",
+        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:498980",
         "inventoryHashSha256": "bc4586c963d0b9a35df1035639e5d227948cab420f9ebcd3adc7580fcf351771",
-        "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:498980",
+        "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:498980",
         "lods": [
           {
             "artifactRef": "public/assets/doitt-498980__lod_0.glb",
@@ -746,8 +746,8 @@
         ],
         "ownerCellId": "cell:manhattan:block-835",
         "predecessor": {
-          "checksumSha256": "56edc9006228eabc9d163b46f589dd01c4a94afcb53c186a5ce5b0ad5f5250b9",
-          "id": "manhattan-esb-block-reference-20260811:doitt:498980:lod_0"
+          "checksumSha256": "1300ab8a8562c1ca7d8af4e807c959ac93423348ab751a1ba6c202e7220f7d29",
+          "id": "manhattan-esb-block-reference-20260811-v3:doitt:498980:lod_0"
         },
         "source": {
           "kind": "facade-plan",
@@ -765,9 +765,9 @@
       },
       {
         "canonicalFeatureId": "doitt:502491",
-        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:502491",
+        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:502491",
         "inventoryHashSha256": "f9f70282fad1410c673b964ac44faace0e58156c8169166c9a0afa87efac9806",
-        "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:502491",
+        "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:502491",
         "lods": [
           {
             "artifactRef": "public/assets/doitt-502491__lod_0.glb",
@@ -821,8 +821,8 @@
         ],
         "ownerCellId": "cell:manhattan:block-835",
         "predecessor": {
-          "checksumSha256": "b1de5b52ee2b4333dc7e84329bc7b42006bec2918b769fb8537343d4d6beb945",
-          "id": "manhattan-esb-block-reference-20260811:doitt:502491:lod_0"
+          "checksumSha256": "80f24e12934759df7b7d58465140ccac8d456cf329af04364252fcefc99f0a6d",
+          "id": "manhattan-esb-block-reference-20260811-v3:doitt:502491:lod_0"
         },
         "source": {
           "kind": "facade-plan",
@@ -840,9 +840,9 @@
       },
       {
         "canonicalFeatureId": "doitt:584049",
-        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:584049",
+        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:584049",
         "inventoryHashSha256": "01d8b9eb4227561c797a804ac0a86969801c01b38237bc4a27ff0e7ac006f689",
-        "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:584049",
+        "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:584049",
         "lods": [
           {
             "artifactRef": "public/assets/doitt-584049__lod_0.glb",
@@ -896,8 +896,8 @@
         ],
         "ownerCellId": "cell:manhattan:block-835",
         "predecessor": {
-          "checksumSha256": "5c0fb688960ac5781f0573c31c5c3fdd298f85479c4de5024de417850c2772da",
-          "id": "manhattan-esb-block-reference-20260811:doitt:584049:lod_0"
+          "checksumSha256": "5bb9dc44434caa0c90cab5eadfa7a58d8f203431eb929a3c7e2c763f204911fc",
+          "id": "manhattan-esb-block-reference-20260811-v3:doitt:584049:lod_0"
         },
         "source": {
           "kind": "facade-plan",
@@ -915,9 +915,17 @@
       },
       {
         "canonicalFeatureId": "doitt:778052",
-        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:778052",
-        "inventoryHashSha256": "986be5a74fa0f410228d7ffa78ffb26d4b9a40a44342cf8d9824f5315d6eeb58",
-        "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:778052",
+        "citedStyle": {
+          "attribution": "Wikipedia contributors, \"Empire State Building\", Wikipedia, licensed CC BY-SA 4.0.",
+          "evidenceRecordId": "intake:wikipedia:doitt-778052:facade-material",
+          "fact": "Indiana limestone facade with stainless steel window frames, aluminium spandrels and a black granite base.",
+          "provider": "wikipedia",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Empire_State_Building",
+          "styleClass": "stone-neutral"
+        },
+        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:778052",
+        "inventoryHashSha256": "c0fb1095a57f856e98df2636018c1b59450840a41daa75bddb63a8d36ba7df47",
+        "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:778052",
         "lods": [
           {
             "artifactRef": "public/assets/doitt-778052__lod_0.glb",
@@ -958,7 +966,7 @@
               "maximumRatio": 0.02,
               "method": "projected-silhouette-ratio",
               "metricVersion": "1.0",
-              "planHashSha256": "cc65ce6e529d56d18a54b8637349e30cbbc4e73b87bbe68d82c6a5d2394e040b",
+              "planHashSha256": "861811019f2885faf349adff8199ee9d40dde7dc7472708ada095d7d69c34b9f",
               "status": "authoring-declared",
               "viewIds": [
                 "view:east",
@@ -971,13 +979,13 @@
         ],
         "ownerCellId": "cell:manhattan:block-835",
         "predecessor": {
-          "checksumSha256": "d91c2404c2874aa2cc43c84a7093766a2a5997492cae7e91500c0601a81d6299",
-          "id": "manhattan-esb-block-reference-20260811:doitt:778052:lod_0"
+          "checksumSha256": "31df630efdac9cfc3d31c63b48826771841dcf1a7ed7636b7889dd9d8fbfeff1",
+          "id": "manhattan-esb-block-reference-20260811-v3:doitt:778052:lod_0"
         },
         "source": {
           "kind": "facade-plan",
-          "planHashSha256": "cc65ce6e529d56d18a54b8637349e30cbbc4e73b87bbe68d82c6a5d2394e040b",
-          "planId": "facade-plan-v3:41b5672ff7fab0579c871eaf"
+          "planHashSha256": "861811019f2885faf349adff8199ee9d40dde7dc7472708ada095d7d69c34b9f",
+          "planId": "facade-plan-v3:68c63f8dd3087227aed629a1"
         },
         "sourceDates": {
           "capturedAt": "2026-08-04T08:25:05.580Z",
@@ -986,13 +994,13 @@
         "truthTiers": [
           "generated"
         ],
-        "uncertainty": "Footprint-faithful procedural exterior in local millimetres. The massing follows the sourced building polygon vertex for vertex and the sourced height; nothing else does. Tier subdivision, bay rhythm, openings, attached elements, colour and material are designed by this grammar, derived from no imagery and no observation, and assert nothing about the real building's appearance, facade, setbacks, balconies, fire escapes, water tanks or signage, nor any tenant, brand or text."
+        "uncertainty": "Footprint-faithful procedural exterior in local millimetres. The massing follows the sourced building polygon vertex for vertex and the sourced height; nothing else does. Tier subdivision, bay rhythm, openings and attached elements are designed by this grammar and derived from no observation. The facade material CLASS follows a cited public documentary source, recorded by intake record id in this plan; the specific tones, coursing and geometry expressing that class are still designed. No imagery was ingested, traced, sampled or reproduced, and no other real-world appearance claim is made. This plan asserts nothing about the real building's setbacks, balconies, fire escapes, water tanks or signage, nor any tenant, brand or text."
       },
       {
         "canonicalFeatureId": "doitt:812702",
-        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:812702",
+        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:812702",
         "inventoryHashSha256": "0913de8bc4d314fd74d3de3948f9225307dd97dd3dc8e85fa9c789c620ed7044",
-        "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:812702",
+        "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:812702",
         "lods": [
           {
             "artifactRef": "public/assets/doitt-812702__lod_0.glb",
@@ -1046,8 +1054,8 @@
         ],
         "ownerCellId": "cell:manhattan:block-835",
         "predecessor": {
-          "checksumSha256": "39e31ec248b61e903a6b8f10716f45899f1f2c141c34353c36a82f53e74e60bf",
-          "id": "manhattan-esb-block-reference-20260811:doitt:812702:lod_0"
+          "checksumSha256": "83262cf8fa1bb6844ccae6d2191d097ea39809a72d6c36e480f5460da7cdada4",
+          "id": "manhattan-esb-block-reference-20260811-v3:doitt:812702:lod_0"
         },
         "source": {
           "kind": "facade-plan",
@@ -1066,9 +1074,9 @@
       },
       {
         "canonicalFeatureId": "doitt:835659",
-        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:835659",
+        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:835659",
         "inventoryHashSha256": "4e5e8a11b1a3a6bf13b1721074650bb46044db4d7a6328abd664ca4cf595ff45",
-        "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:835659",
+        "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:835659",
         "lods": [
           {
             "artifactRef": "public/assets/doitt-835659__lod_0.glb",
@@ -1122,8 +1130,8 @@
         ],
         "ownerCellId": "cell:manhattan:block-835",
         "predecessor": {
-          "checksumSha256": "10a7433b86382424c46b2b923f532b086c8ca71ed2547504b63ee0ef5b6550af",
-          "id": "manhattan-esb-block-reference-20260811:doitt:835659:lod_0"
+          "checksumSha256": "c3c7eaec114134e37c0da27b1e41d1865d4b65bae89be8afb52007f94a492b0e",
+          "id": "manhattan-esb-block-reference-20260811-v3:doitt:835659:lod_0"
         },
         "source": {
           "kind": "facade-plan",
@@ -1142,9 +1150,9 @@
       },
       {
         "canonicalFeatureId": "doitt:925937",
-        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:925937",
+        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:925937",
         "inventoryHashSha256": "3d392c8670b5f8df909208f8df218f116e5d4f2b9fb9f9681e80ebbf71be892f",
-        "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:925937",
+        "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:925937",
         "lods": [
           {
             "artifactRef": "public/assets/doitt-925937__lod_0.glb",
@@ -1198,8 +1206,8 @@
         ],
         "ownerCellId": "cell:manhattan:block-835",
         "predecessor": {
-          "checksumSha256": "6f52bbd1b84f32835c18043bcf1c648cf32495972a729d84d2c332be566728e3",
-          "id": "manhattan-esb-block-reference-20260811:doitt:925937:lod_0"
+          "checksumSha256": "b4327ba6bedf5877cc631aa0dccd2d8f0642a5034b01a30057fab44782c227cf",
+          "id": "manhattan-esb-block-reference-20260811-v3:doitt:925937:lod_0"
         },
         "source": {
           "kind": "facade-plan",
@@ -1217,9 +1225,9 @@
       },
       {
         "canonicalFeatureId": "doitt:982383",
-        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3:doitt:982383",
+        "evidenceShardId": "evidence-shard:manhattan-esb-block-reference-20260811-v3e:doitt:982383",
         "inventoryHashSha256": "4157c864d1f770047a25fa67c6897a79ad70a67cd49c8f4619a6af886fcf46f8",
-        "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3:doitt:982383",
+        "inventoryId": "inventory:manhattan-esb-block-reference-20260811-v3e:doitt:982383",
         "lods": [
           {
             "artifactRef": "public/assets/doitt-982383__lod_0.glb",
@@ -1273,8 +1281,8 @@
         ],
         "ownerCellId": "cell:manhattan:block-835",
         "predecessor": {
-          "checksumSha256": "b465584f2ab0a4d01292530d1d2fc7809330228e0e475adafab63cd996aa32bf",
-          "id": "manhattan-esb-block-reference-20260811:doitt:982383:lod_0"
+          "checksumSha256": "a4e4e4f068afe8acc4fc145ec93514865c34adf2b41221b1e6724a2b50175e14",
+          "id": "manhattan-esb-block-reference-20260811-v3:doitt:982383:lod_0"
         },
         "source": {
           "kind": "facade-plan",
@@ -1293,7 +1301,7 @@
     ],
     "audience": "public",
     "baseIdentitySet": {
-      "id": "base-identity-set:manhattan:block-835:20260811-v3",
+      "id": "base-identity-set:manhattan:block-835:20260811-v3e",
       "checksumSha256": "98a7c50abc157fb4f2e52f23e2a129274b7273cace496929406bbbff448a8dfa"
     },
     "cells": [
@@ -1317,32 +1325,32 @@
         "cellId": "cell:manhattan:block-835",
         "cellRelease": {
           "id": "cell-release:manhattan-exterior-cells-20260811-v3:v1",
-          "checksumSha256": "f167ae91def794ae1654667d27fa1ab9a722d1004798eb3c1c1d3cce5adf51d5"
+          "checksumSha256": "b5cb68f703f24db5d8f71e170d5de3a2b7fc0a372f853cdf8d48f0e194994d0d"
         },
         "membershipChecksumSha256": "98a7c50abc157fb4f2e52f23e2a129274b7273cace496929406bbbff448a8dfa",
         "predecessor": {
-          "checksumSha256": "a99e3773c1c0cc5df50a2480a9a46e7f4ca446fd8aec1187d86c481167fbd3fe",
-          "id": "manhattan-esb-block-reference-20260811"
+          "checksumSha256": "868705fa0ba1d5b03b084e793023c319c518bdfa0473dd54db2998404b1b2005",
+          "id": "manhattan-esb-block-reference-20260811-v3"
         }
       }
     ],
-    "declaredTotalBytes": 7042937,
+    "declaredTotalBytes": 7044401,
     "generatedAt": "2026-08-11T00:00:00.000Z",
     "immutable": true,
     "ownershipLedger": {
       "id": "ownership-ledger:manhattan-exterior-cells-20260811-v3",
-      "checksumSha256": "0a96ea6f9d33bf6c781777ef0fc69e1e1e1029d358d3bd3f82300bf1fdd64626"
+      "checksumSha256": "c0f9e8909468c88ec5a28d4d7ab91d910fe6987086eb90d99fd3f12a3d1a2df2"
     },
-    "packageId": "manhattan-esb-block-reference-20260811-v3",
+    "packageId": "manhattan-esb-block-reference-20260811-v3e",
     "release": {
       "rootId": "root:manhattan-exterior-cells-20260811-v3:public",
-      "rootChecksumSha256": "a7b44d1e942e2d95a8bb7048f2dcaa2c700285081a5843ae336cd8f7b837e054",
+      "rootChecksumSha256": "3eb584b5106d6cf4574b98d9992b9246a0dcd176ea1ad03c691e1c54615680ba",
       "releaseId": "manhattan-exterior-cells-20260811-v3",
       "cityId": "manhattan",
       "configId": "manhattan-esb-block-835",
       "privatePredecessor": {
         "id": "root:manhattan-exterior-cells-20260811-v3:private",
-        "checksumSha256": "bcae72e036cdb10bfec2eb8214b46f9e5025c6be8662b936b47fcab1696ce517"
+        "checksumSha256": "42c17fb44d14370d4d4669500b30d8cd792f22e012f0f582dc924e0ca2bf8933"
       }
     },
     "schemaVersion": "1.0",

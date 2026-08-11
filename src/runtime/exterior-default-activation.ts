@@ -196,13 +196,13 @@ export const EXTERIOR_DEFAULT_ACTIVATION: ExteriorDefaultActivationRecord = {
   enabled: true,
   releaseId: "manhattan-exterior-cells-20260811-v3",
   snapshotId: "snapshot:manhattan-exterior-cells-20260811-v3:v1",
-  snapshotChecksumSha256: "73e112f4080710f8a351c5cc22a826603e69af42d7b040e1769aa6e0540869cd",
-  assemblyPackageIds: ["manhattan-esb-block-reference-20260811-v3"],
+  snapshotChecksumSha256: "6ade605778c5e2700930029a94354b4b86a8d905eb7fde67665fff84d03449e1",
+  assemblyPackageIds: ["manhattan-esb-block-reference-20260811-v3e"],
   membership: {
     cells: [{
       cellId: "cell:manhattan:block-835",
       cellReleaseId: "cell-release:manhattan-exterior-cells-20260811-v3:v1",
-      checksumSha256: "f167ae91def794ae1654667d27fa1ab9a722d1004798eb3c1c1d3cce5adf51d5",
+      checksumSha256: "b5cb68f703f24db5d8f71e170d5de3a2b7fc0a372f853cdf8d48f0e194994d0d",
     }],
     cellsDigestSha256: null,
     cellCount: 1,
