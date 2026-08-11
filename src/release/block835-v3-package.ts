@@ -1,6 +1,7 @@
 import {
   DETERMINISTIC_FACADE_V3_SCHEMA_VERSION,
   DETERMINISTIC_FACADE_V3_UNCERTAINTY,
+  DETERMINISTIC_FACADE_V3T_UNCERTAINTY,
   deriveV3Parameters,
   generateV3FacadePlan,
   ringSignedAreaMm2,
@@ -8,10 +9,11 @@ import {
   validateV3Plan,
   type Point2Mm,
   type V3Plan,
+  type V3StyleClass,
   type V3Tessellation,
 } from "../domain/deterministic-facade-generator-v3.ts";
 import { sha256HexBytes, sha256HexSync, stableSerialize } from "../domain/deterministic-hash.ts";
-import { writeCanonicalGlb, type CanonicalGlbMaterial, type CanonicalGlbQuad, type CanonicalGlbTri, type Vec3 } from "./canonical-glb.ts";
+import { writeCanonicalGlb, type CanonicalGlbMaterial, type CanonicalGlbQuad, type CanonicalGlbTextureSet, type CanonicalGlbTri, type Vec2, type Vec3 } from "./canonical-glb.ts";
 import {
   BLOCK835_CELL_ID,
   BLOCK835_CITY_ID,
@@ -19,6 +21,7 @@ import {
   BLOCK835_LOD0_MAX_DISTANCE_METERS,
   BLOCK835_PILOT_RELEASE_ID,
   BLOCK835_V3_PACKAGE_ID,
+  BLOCK835_V3T_PACKAGE_ID,
   deriveBaseIdentityChecksum,
   enuFrame,
   readPilotBuildings,
@@ -29,6 +32,14 @@ import {
   type SilhouetteMeasurementFile,
 } from "./block835-reference-package.ts";
 import type { AssemblyAsset, AssemblyLod, ComponentTruthTier, ImmutablePin, MultiLodAssemblyManifest } from "./multi-lod-assembly.ts";
+import {
+  PROCEDURAL_TEXTURE_CLASSES,
+  PROCEDURAL_TEXTURE_PROFILE,
+  proceduralTextureProvenance,
+  proceduralTextureTile,
+  type ProceduralTextureClass,
+  type ProceduralTextureProfile,
+} from "./procedural-texture.ts";
 
 /**
  * V3 asset quality budgets.
@@ -52,6 +63,22 @@ import type { AssemblyAsset, AssemblyLod, ComponentTruthTier, ImmutablePin, Mult
  * derives nothing from imagery, so there is nothing to sample.
  */
 export const V3_QUALITY_BUDGETS = { maxTriangles: 200_000, maxMaterials: 12, maxTextures: 0 } as const;
+
+/**
+ * V3T asset quality budgets: a THIRD, separately versioned gate.
+ *
+ * `V3_QUALITY_BUDGETS` above is byte-frozen into the committed V3 manifest and
+ * pinned by its drift test, so it is never edited — including its zero texture
+ * budget, which was an accurate statement about a package that samples no
+ * imagery and stays accurate for that package.
+ *
+ * Four is the profile ceiling, not a guess: the catalogue has four motif classes
+ * and a GLB may embed at most one image per class. In practice no style reaches
+ * it — every V3 style resolves to three classes at most — so the budget has one
+ * class of headroom and still fails closed if a future style mapping widens.
+ * Triangles and materials are unchanged from V3: texturing adds no geometry.
+ */
+export const V3T_QUALITY_BUDGETS = { maxTriangles: 200_000, maxMaterials: 12, maxTextures: 4 } as const;
 
 /**
  * Registration semantics change in V3, and the change is the point of the task.
@@ -112,13 +139,59 @@ export const BLOCK835_V3_LOD1_GEOMETRIC_ERROR_METERS = 0.2 as const;
 /** The V2 package this one supersedes without editing a byte of it. */
 export const BLOCK835_V3_PREDECESSOR_PACKAGE_ID = "manhattan-esb-block-reference-20260811" as const;
 
+export { BLOCK835_V3T_PACKAGE_ID };
+export const BLOCK835_V3T_BASE_IDENTITY_SET_ID = "base-identity-set:manhattan:block-835:20260811-v3t" as const;
+export const BLOCK835_V3T_OWNERSHIP_LEDGER_ID = "ownership-ledger:manhattan:block-835:20260811-v3t" as const;
+/** The untextured V3 package V3T supersedes without editing a byte of it. */
+export const BLOCK835_V3T_PREDECESSOR_PACKAGE_ID = BLOCK835_V3_PACKAGE_ID;
+
+/**
+ * The two package identities this assembler can emit.
+ *
+ * Everything the grammar produces is shared: the same plans, the same plan
+ * hashes, the same massing, the same tessellation. What the profile selects is
+ * the package's IDENTITY, its quality gate, its uncertainty statement, and
+ * whether LOD 0 carries detail tiles. Keeping them in one record is what makes
+ * "the untextured path is unchanged" checkable by reading rather than by hoping.
+ */
+export interface V3PackageProfile {
+  packageId: string;
+  baseIdentitySetId: string;
+  ownershipLedgerId: string;
+  predecessorPackageId: string;
+  budgets: { maxTriangles: number; maxMaterials: number; maxTextures: number };
+  uncertainty: string;
+  /** LOD 0 only. LOD 1 is viewed from beyond 250 m, where a detail tile is invisible cost. */
+  texture: ProceduralTextureProfile | null;
+}
+
+export const BLOCK835_V3_PROFILE: V3PackageProfile = {
+  packageId: BLOCK835_V3_PACKAGE_ID,
+  baseIdentitySetId: BLOCK835_V3_BASE_IDENTITY_SET_ID,
+  ownershipLedgerId: BLOCK835_V3_OWNERSHIP_LEDGER_ID,
+  predecessorPackageId: BLOCK835_V3_PREDECESSOR_PACKAGE_ID,
+  budgets: { ...V3_QUALITY_BUDGETS },
+  uncertainty: DETERMINISTIC_FACADE_V3_UNCERTAINTY,
+  texture: null,
+};
+
+export const BLOCK835_V3T_PROFILE: V3PackageProfile = {
+  packageId: BLOCK835_V3T_PACKAGE_ID,
+  baseIdentitySetId: BLOCK835_V3T_BASE_IDENTITY_SET_ID,
+  ownershipLedgerId: BLOCK835_V3T_OWNERSHIP_LEDGER_ID,
+  predecessorPackageId: BLOCK835_V3T_PREDECESSOR_PACKAGE_ID,
+  budgets: { ...V3T_QUALITY_BUDGETS },
+  uncertainty: DETERMINISTIC_FACADE_V3T_UNCERTAINTY,
+  texture: PROCEDURAL_TEXTURE_PROFILE,
+};
+
 function compareText(left: string, right: string): number { return left < right ? -1 : left > right ? 1 : 0; }
 
-export function v3EvidenceShardId(canonicalBuildingId: string): string {
-  return `evidence-shard:${BLOCK835_V3_PACKAGE_ID}:${canonicalBuildingId}`;
+export function v3EvidenceShardId(canonicalBuildingId: string, packageId: string = BLOCK835_V3_PACKAGE_ID): string {
+  return `evidence-shard:${packageId}:${canonicalBuildingId}`;
 }
-export function v3InventoryId(canonicalBuildingId: string): string {
-  return `inventory:${BLOCK835_V3_PACKAGE_ID}:${canonicalBuildingId}`;
+export function v3InventoryId(canonicalBuildingId: string, packageId: string = BLOCK835_V3_PACKAGE_ID): string {
+  return `inventory:${packageId}:${canonicalBuildingId}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -180,20 +253,206 @@ export function buildV3Plan(building: PilotBuildingSource): V3PlanContext {
 // Tessellation to canonical GLB input
 // ---------------------------------------------------------------------------
 
-export interface V3GlbGeometry { quads: CanonicalGlbQuad[]; triangles: CanonicalGlbTri[]; materials: CanonicalGlbMaterial[] }
+export interface V3GlbGeometry { quads: CanonicalGlbQuad[]; triangles: CanonicalGlbTri[]; materials: CanonicalGlbMaterial[]; textures: CanonicalGlbTextureSet | null }
 
 /** Plan-local millimetres to the building-anchored ENU metre frame. No rotation. */
 function toEnuVec(corner: readonly [number, number, number]): Vec3 { return [corner[0] / 1_000, corner[1] / 1_000, corner[2] / 1_000]; }
 /** Same +Y-up file mapping the V1/V2 writers use; determinant +1, so winding survives. */
 function toYUp(corner: Vec3): Vec3 { return [corner[0], corner[2], -corner[1]]; }
 
-export function v3GeometryForGlb(plan: V3Plan, tessellation: V3Tessellation, options: { yUp: boolean }): V3GlbGeometry {
+// ---------------------------------------------------------------------------
+// Procedural detail tiles (V3T)
+//
+// Nothing in this section touches the grammar. `deterministic-facade-generator-v3.ts`
+// is untouched, no plan field moves, and every V3 plan hash is unchanged — the
+// V3T tests assert exactly that. Texturing is a WRITER-stage concern here: UVs
+// are projected from geometry the grammar already produced, and colour is
+// re-expressed in the GLB material factors the grammar already declared.
+// ---------------------------------------------------------------------------
+
+/**
+ * Which detail tile a designed material wears.
+ *
+ * Roof and ground stay untextured: the tiles are facade motifs, and stretching a
+ * brick bond across a roof deck would be a claim about a surface nobody has
+ * looked at. At most three classes are reachable for any one style, comfortably
+ * inside the profile's four-image ceiling.
+ */
+export function v3TextureClassFor(styleClass: V3StyleClass, materialId: string): ProceduralTextureClass | null {
+  if (materialId === "material:roof" || materialId === "material:ground") return null;
+  if (materialId === "material:metal" || materialId.startsWith("material:trim")) return "spandrel-panel";
+  if (materialId.startsWith("material:glazing")) return "curtain-mullion-grid";
+  if (styleClass === "curtain-cool") return materialId === "material:facade:base" ? "limestone-ashlar" : "curtain-mullion-grid";
+  if (styleClass === "stone-neutral") return "limestone-ashlar";
+  return "brick-running-bond";
+}
+
+/**
+ * Calibrated sRGB targets for the textured package, per style and material.
+ *
+ * Covers every material the grammar emits EXCEPT `material:ground`, which keeps
+ * its V3 sidewalk tone on purpose: it is public realm rather than building
+ * fabric, it carries no detail tile, and recolouring it here would change the
+ * street surface as a side effect of a facade decision.
+ *
+ * These come from the same written calibration brief as the motif modules —
+ * design conclusions in text, transcribed as hex. They are NOT a change to
+ * `V3_PALETTE`: that constant feeds `plan.materials`, so editing it would move
+ * every plan hash and break the byte-frozen V3 package. The plan keeps its own
+ * designed palette; V3T re-expresses colour at the GLB material factor, which no
+ * hash covers.
+ *
+ * Base-course weathering lives here rather than in the tiles, and that placement
+ * is the honest one: a repeating tile has no idea which storey it is on, so
+ * "the base is dirtier than the shaft" can only be said by giving the base zone
+ * — which the grammar already separates — its own weathered tone.
+ *
+ * The hexes remain designed plausible tones. They assert nothing about the
+ * colour, material, age or condition of any real building.
+ */
+export const V3T_CALIBRATED_PALETTE: Readonly<Record<V3StyleClass, Readonly<Record<string, string>>>> = {
+  "masonry-warm": {
+    "material:facade:base": "#7A3A2C", "material:facade:shaft": "#9C4A34",
+    "material:glazing:base": "#5C4A32", "material:glazing:shaft": "#5C4A32",
+    "material:trim:base": "#5A4326", "material:trim:shaft": "#8A6B3E",
+    "material:roof": "#1C1B19", "material:metal": "#8E9092",
+  },
+  "masonry-light": {
+    "material:facade:base": "#B7B0A0", "material:facade:shaft": "#D8D3C4",
+    "material:glazing:base": "#6B6F72", "material:glazing:shaft": "#6B6F72",
+    "material:trim:base": "#8A6B3E", "material:trim:shaft": "#C4834F",
+    "material:roof": "#1C1B19", "material:metal": "#B8BAB8",
+  },
+  "stone-neutral": {
+    "material:facade:base": "#B8AC94", "material:facade:shaft": "#D9CFB8",
+    "material:glazing:base": "#3E5A57", "material:glazing:shaft": "#3E5A57",
+    "material:trim:base": "#C9BC9E", "material:trim:shaft": "#C9BC9E",
+    "material:roof": "#8A8478", "material:metal": "#8E9092",
+  },
+  "curtain-cool": {
+    "material:facade:base": "#8F8A7C", "material:facade:shaft": "#3E5A57",
+    "material:glazing:base": "#6B6F72", "material:glazing:shaft": "#6B6F72",
+    "material:trim:base": "#B8BAB8", "material:trim:shaft": "#B8BAB8",
+    "material:roof": "#B9BBBC", "material:metal": "#8E9092",
+  },
+};
+
+function srgbTriple(hex: string): [number, number, number] {
+  const value = Number.parseInt(hex.slice(1), 16);
+  return [((value >> 16) & 0xff) / 255, ((value >> 8) & 0xff) / 255, (value & 0xff) / 255];
+}
+
+/**
+ * Divides the calibrated target through the tile's mean modulation so the
+ * TEXTURED surface averages the intended tone rather than the tile's darkening
+ * of it. The scale is uniform across the three channels — a per-channel divide
+ * would clip one channel first and shift the hue — and is reduced when it would
+ * push any channel past 1, which the closed glTF profile forbids.
+ *
+ * Exported so the hue-preservation and range claims can be tested directly
+ * rather than inferred from shipped bytes.
+ */
+export function v3tCalibratedFactor(hex: string, meanModulation: number): [number, number, number, number] {
+  const target = srgbTriple(hex);
+  const headroom = Math.max(...target);
+  const scale = Math.min(1 / meanModulation, headroom > 0 ? 1 / headroom : 1);
+  return [target[0] * scale, target[1] * scale, target[2] * scale, 1];
+}
+
+type Vec3Mm = readonly [number, number, number];
+function subtract(left: Vec3Mm, right: Vec3Mm): Vec3Mm { return [left[0] - right[0], left[1] - right[1], left[2] - right[2]]; }
+function cross(left: Vec3Mm, right: Vec3Mm): Vec3Mm {
+  return [left[1] * right[2] - left[2] * right[1], left[2] * right[0] - left[0] * right[2], left[0] * right[1] - left[1] * right[0]];
+}
+function dot(left: Vec3Mm, right: Vec3Mm): number { return left[0] * right[0] + left[1] * right[1] + left[2] * right[2]; }
+/** `Math.sqrt` is correctly rounded by IEEE 754; `Math.hypot` is not specified to be, and these bytes ship. */
+function normalize(vector: Vec3Mm): Vec3Mm {
+  const length = Math.sqrt(dot(vector, vector));
+  return length === 0 ? [0, 0, 1] : [vector[0] / length, vector[1] / length, vector[2] / length];
+}
+
+/**
+ * The projection basis for one face, derived from the face's own corners.
+ *
+ * Two properties matter and both are load-bearing.
+ *
+ * CONTINUITY. The basis depends only on the face NORMAL, never on a corner
+ * chosen as an origin, and the UV is `dot(position, axis)` taken in the
+ * PLAN-LOCAL, building-anchored ENU millimetre frame — absolute with respect to
+ * the building, never with respect to the city. Two coplanar faces on the same
+ * wall therefore land on the same basis and the same offsets, so coursing runs
+ * straight across the boundary between them. A per-face origin — the obvious
+ * implementation — restarts the pattern at every quad and draws a visible seam at
+ * every subdivision line, which on this grammar means one per bay per floor.
+ *
+ * The building-local frame is also a float32 requirement, not just a convention:
+ * UVs peak near 160 tile repeats here, where float32 resolves ~1e-5 of a tile.
+ * The same projection anchored to an ECEF origin would reach ~8e6, where
+ * consecutive float32 values are half a tile apart. See ADR 0032.
+ *
+ * UPRIGHTNESS. For anything wall-like, +v is world up, so bed joints are level
+ * and streaks fall vertically no matter how the facade is oriented. Only when
+ * the face is within 45 degrees of horizontal — roof decks, ground — does the
+ * basis fall back to the world X/Y axes, and those surfaces are untextured
+ * anyway.
+ */
+function projectionBasis(corners: readonly Vec3Mm[]): { uAxis: Vec3Mm; vAxis: Vec3Mm } {
+  // Newell's method: uses every corner, so it is stable on a near-degenerate
+  // triangle fan where a three-point cross product would collapse.
+  let normal: Vec3Mm = [0, 0, 0];
+  for (let index = 0; index < corners.length; index += 1) {
+    const current = corners[index]!;
+    const next = corners[(index + 1) % corners.length]!;
+    normal = [
+      normal[0] + (current[1] - next[1]) * (current[2] + next[2]),
+      normal[1] + (current[2] - next[2]) * (current[0] + next[0]),
+      normal[2] + (current[0] - next[0]) * (current[1] + next[1]),
+    ];
+  }
+  const unit = normalize(normal);
+  if (Math.abs(unit[2]) < Math.SQRT1_2) {
+    const vAxis = normalize(subtract([0, 0, 1], [unit[0] * unit[2], unit[1] * unit[2], unit[2] * unit[2]]));
+    return { uAxis: normalize(cross(vAxis, unit)), vAxis };
+  }
+  const uAxis = normalize(subtract([1, 0, 0], [unit[0] * unit[0], unit[1] * unit[0], unit[2] * unit[0]]));
+  return { uAxis, vAxis: normalize(cross(unit, uAxis)) };
+}
+
+interface TextureBinding { materialImage: (number | null)[]; images: ProceduralTextureClass[]; tileFor: (materialIndex: number) => { uAxisMm: number; vAxisMm: number } | null }
+
+function bindTextures(plan: V3Plan): TextureBinding {
+  const classPerMaterial = plan.materials.map((material) => v3TextureClassFor(plan.styleClass, material.id));
+  const images = PROCEDURAL_TEXTURE_CLASSES.filter((textureClass) => classPerMaterial.includes(textureClass));
+  const materialImage = classPerMaterial.map((textureClass) => (textureClass === null ? null : images.indexOf(textureClass)));
+  return {
+    materialImage, images: [...images],
+    tileFor: (materialIndex) => {
+      const textureClass = classPerMaterial[materialIndex] ?? null;
+      if (textureClass === null) return null;
+      const tile = proceduralTextureTile(textureClass);
+      return { uAxisMm: tile.tileUMm, vAxisMm: tile.tileVMm };
+    },
+  };
+}
+
+export function v3GeometryForGlb(plan: V3Plan, tessellation: V3Tessellation, options: { yUp: boolean; texture?: ProceduralTextureProfile | null }): V3GlbGeometry {
+  const textured = options.texture === PROCEDURAL_TEXTURE_PROFILE;
+  const binding = textured ? bindTextures(plan) : null;
   const materialIndexById = new Map(plan.materials.map((material, index) => [material.id, index]));
-  const materials: CanonicalGlbMaterial[] = plan.materials.map((material) => ({
-    baseColorFactor: [material.baseColorSrgb[0] / 255, material.baseColorSrgb[1] / 255, material.baseColorSrgb[2] / 255, material.baseColorSrgb[3] / 255],
-    metallicFactor: material.metallicPermille / 1_000,
-    roughnessFactor: material.roughnessPermille / 1_000,
-  }));
+  const palette = textured ? V3T_CALIBRATED_PALETTE[plan.styleClass] : null;
+  const materials: CanonicalGlbMaterial[] = plan.materials.map((material) => {
+    const hex = palette?.[material.id];
+    if (hex !== undefined && binding) {
+      const textureClass = v3TextureClassFor(plan.styleClass, material.id);
+      const mean = textureClass === null ? 1 : proceduralTextureTile(textureClass).meanModulation;
+      return { baseColorFactor: v3tCalibratedFactor(hex, mean), metallicFactor: material.metallicPermille / 1_000, roughnessFactor: material.roughnessPermille / 1_000 };
+    }
+    return {
+      baseColorFactor: [material.baseColorSrgb[0] / 255, material.baseColorSrgb[1] / 255, material.baseColorSrgb[2] / 255, material.baseColorSrgb[3] / 255],
+      metallicFactor: material.metallicPermille / 1_000,
+      roughnessFactor: material.roughnessPermille / 1_000,
+    };
+  });
   const materialIndexOf = (id: string): number => {
     const index = materialIndexById.get(id);
     if (index === undefined) throw new Error(`V3 plan cites an undeclared material: ${id}`);
@@ -203,16 +462,33 @@ export function v3GeometryForGlb(plan: V3Plan, tessellation: V3Tessellation, opt
     const enu = toEnuVec(corner);
     return options.yUp ? toYUp(enu) : enu;
   };
+  const uvFor = (materialIndex: number, corners: readonly Vec3Mm[]): Vec2[] | null => {
+    const tile = binding?.tileFor(materialIndex);
+    if (!tile) return null;
+    const { uAxis, vAxis } = projectionBasis(corners);
+    return corners.map((corner) => [dot(corner, uAxis) / tile.uAxisMm, dot(corner, vAxis) / tile.vAxisMm] as Vec2);
+  };
   return {
     materials,
-    quads: tessellation.quads.map((quad) => ({
-      materialIndex: materialIndexOf(quad.materialId),
-      corners: [map(quad.corners[0]), map(quad.corners[1]), map(quad.corners[2]), map(quad.corners[3])] as const,
-    })),
-    triangles: tessellation.triangles.map((triangle) => ({
-      materialIndex: materialIndexOf(triangle.materialId),
-      a: map(triangle.a), b: map(triangle.b), c: map(triangle.c),
-    })),
+    textures: binding === null ? null : { images: binding.images.map((textureClass) => ({ mimeType: "image/png" as const, bytes: proceduralTextureTile(textureClass).pngBytes })), materialImage: binding.materialImage },
+    quads: tessellation.quads.map((quad) => {
+      const materialIndex = materialIndexOf(quad.materialId);
+      const uv = uvFor(materialIndex, quad.corners);
+      return {
+        materialIndex,
+        corners: [map(quad.corners[0]), map(quad.corners[1]), map(quad.corners[2]), map(quad.corners[3])] as const,
+        ...(uv ? { uv: [uv[0]!, uv[1]!, uv[2]!, uv[3]!] as const } : {}),
+      };
+    }),
+    triangles: tessellation.triangles.map((triangle) => {
+      const materialIndex = materialIndexOf(triangle.materialId);
+      const uv = uvFor(materialIndex, [triangle.a, triangle.b, triangle.c]);
+      return {
+        materialIndex,
+        a: map(triangle.a), b: map(triangle.b), c: map(triangle.c),
+        ...(uv ? { uv: [uv[0]!, uv[1]!, uv[2]!] as const } : {}),
+      };
+    }),
   };
 }
 
@@ -374,10 +650,16 @@ export interface AssembledV3 {
   ownershipLedger: Record<string, unknown>;
 }
 
-/** Reads the frozen V2 manifest and derives this package's predecessor pins. */
-export function v3PredecessorPins(previousManifest: MultiLodAssemblyManifest): V3PredecessorPins {
-  if (previousManifest.packageId !== BLOCK835_V3_PREDECESSOR_PACKAGE_ID) {
-    throw new Error(`V3 predecessor pins must come from ${BLOCK835_V3_PREDECESSOR_PACKAGE_ID}, not ${previousManifest.packageId}.`);
+/**
+ * Reads a frozen predecessor manifest and derives this package's pins.
+ *
+ * The expected id is a parameter rather than a constant so V3T can pin V3 the
+ * same way V3 pins V2, and so neither can accidentally pin the wrong ancestor:
+ * the check is still exact, it is simply parameterised.
+ */
+export function v3PredecessorPins(previousManifest: MultiLodAssemblyManifest, expectedPackageId: string = BLOCK835_V3_PREDECESSOR_PACKAGE_ID): V3PredecessorPins {
+  if (previousManifest.packageId !== expectedPackageId) {
+    throw new Error(`V3 predecessor pins must come from ${expectedPackageId}, not ${previousManifest.packageId}.`);
   }
   const assets = new Map<string, ImmutablePin>();
   for (const asset of previousManifest.assets) {
@@ -441,7 +723,13 @@ export function assembleBlock835V3Package(options: {
   releaseChecksumSha256: string;
   measurements: SilhouetteMeasurementFile;
   predecessor: V3PredecessorPins;
+  /**
+   * Omitted or `null` selects the untextured V3 package and reproduces its bytes
+   * exactly; the V3 drift test asserts the committed fingerprint is unchanged.
+   */
+  profile?: V3PackageProfile;
 }): AssembledV3 {
+  const profile = options.profile ?? BLOCK835_V3_PROFILE;
   const buildings = readPilotBuildings(options.release);
   const buildingIds = buildings.map((building) => building.canonicalBuildingId);
   const baseChecksum = deriveBaseIdentityChecksum(buildingIds);
@@ -465,7 +753,7 @@ export function assembleBlock835V3Package(options: {
     const context = buildV3Plan(building);
     const plan = context.plan;
     plans.push(plan);
-    const inventoryId = v3InventoryId(building.canonicalBuildingId);
+    const inventoryId = v3InventoryId(building.canonicalBuildingId, profile.packageId);
     const inventoryHashSha256 = sha256HexSync(stableSerialize(plan.inventory));
     const truthTiers = v3TruthTiers(plan);
     const measurement = measurementById.get(building.canonicalBuildingId);
@@ -479,9 +767,13 @@ export function assembleBlock835V3Package(options: {
     const chain: Array<Record<string, unknown>> = [];
     for (const [lodIndex, lodId] of ["lod_0", "lod_1"].entries()) {
       const tessellation = tessellateV3Plan(plan, { includeRecesses: lodIndex === 0 });
+      // Detail tiles ride on LOD 0 alone. LOD 1 is selected beyond 250 m, where a
+      // 128-pixel joint is far below a screen pixel: the bytes would buy nothing
+      // and the coarse level stays byte-comparable with its V3 predecessor.
+      const texture = lodIndex === 0 ? profile.texture : null;
       const enu = v3GeometryForGlb(plan, tessellation, { yUp: false });
       if (lodIndex === 0) registration.push(v3RegistrationEntry(context, enu));
-      const file = v3GeometryForGlb(plan, tessellation, { yUp: true });
+      const file = v3GeometryForGlb(plan, tessellation, { yUp: true, texture });
       const relativeRef = `private/assets/${building.canonicalBuildingId.replace(":", "-")}__${lodId}.glb`;
       const metadata = {
         canonicalFeatureId: building.canonicalBuildingId,
@@ -489,16 +781,19 @@ export function assembleBlock835V3Package(options: {
         ownerCellId: BLOCK835_CELL_ID,
         inventoryId,
         inventoryHashSha256,
-        evidenceShardId: v3EvidenceShardId(building.canonicalBuildingId),
+        evidenceShardId: v3EvidenceShardId(building.canonicalBuildingId, profile.packageId),
         truthTiers,
         sourceDates: { capturedAt: building.capturedAt, updatedAt: building.updatedAt },
         predecessor,
-        uncertainty: DETERMINISTIC_FACADE_V3_UNCERTAINTY,
+        uncertainty: profile.uncertainty,
         planHashSha256: plan.planHashSha256,
+        // Present exactly when the GLB carries images, which is the condition
+        // the release validator uses to decide whether to demand a replay.
+        ...(file.textures ? { textureProvenance: proceduralTextureProvenance() } : {}),
       };
-      const written = writeCanonicalGlb({ quads: file.quads, triangles: file.triangles, materials: file.materials, metadata });
-      if (written.counts.triangleCount > V3_QUALITY_BUDGETS.maxTriangles || written.counts.materialCount > V3_QUALITY_BUDGETS.maxMaterials || written.counts.textureCount !== 0) {
-        throw new Error(`V3 ${building.canonicalBuildingId} ${lodId} exceeds the V3 asset budgets (${written.counts.triangleCount} triangles, ${written.counts.materialCount} materials).`);
+      const written = writeCanonicalGlb({ quads: file.quads, triangles: file.triangles, materials: file.materials, metadata, ...(file.textures ? { textures: file.textures } : {}) });
+      if (written.counts.triangleCount > profile.budgets.maxTriangles || written.counts.materialCount > profile.budgets.maxMaterials || written.counts.textureCount > profile.budgets.maxTextures) {
+        throw new Error(`V3 ${building.canonicalBuildingId} ${lodId} exceeds the ${profile.packageId} asset budgets (${written.counts.triangleCount} triangles, ${written.counts.materialCount} materials, ${written.counts.textureCount} textures).`);
       }
       contents.set(relativeRef, written.bytes);
       artifacts.push({ logicalId: `glb:${building.canonicalBuildingId}:${lodId}`, role: "glb", relativeRef, byteSize: written.bytes.byteLength, checksumSha256: sha256HexBytes(written.bytes), ownerCellId: BLOCK835_CELL_ID });
@@ -507,7 +802,7 @@ export function assembleBlock835V3Package(options: {
         geometricErrorMeters: lodIndex === 0 ? 0 : BLOCK835_V3_LOD1_GEOMETRIC_ERROR_METERS,
         maxDistanceMeters: lodIndex === 0 ? BLOCK835_LOD0_MAX_DISTANCE_METERS : null,
         eligible: true,
-        quality: { ...written.counts, budgets: { ...V3_QUALITY_BUDGETS } },
+        quality: { ...written.counts, budgets: { ...profile.budgets } },
         silhouette: lodIndex === 0 ? null : {
           status: "authoring-declared", method: "projected-silhouette-ratio", metricVersion: "1.0",
           planHashSha256: plan.planHashSha256, viewIds: [...measurement.viewIds].sort(compareText), deviationRatio: measurement.deviationRatio, maximumRatio: 0.02,
@@ -530,11 +825,11 @@ export function assembleBlock835V3Package(options: {
       canonicalFeatureId: building.canonicalBuildingId,
       ownerCellId: BLOCK835_CELL_ID,
       inventoryId, inventoryHashSha256,
-      evidenceShardId: v3EvidenceShardId(building.canonicalBuildingId),
+      evidenceShardId: v3EvidenceShardId(building.canonicalBuildingId, profile.packageId),
       truthTiers,
       sourceDates: { capturedAt: building.capturedAt, updatedAt: building.updatedAt },
       predecessor,
-      uncertainty: DETERMINISTIC_FACADE_V3_UNCERTAINTY,
+      uncertainty: profile.uncertainty,
       source: { kind: "facade-plan", planId: plan.planId, planHashSha256: plan.planHashSha256 },
       lods,
     });
@@ -548,36 +843,36 @@ export function assembleBlock835V3Package(options: {
   };
   const tilesetBytes = new TextEncoder().encode(JSON.stringify(tileset));
   contents.set(tilesetRef, tilesetBytes);
-  artifacts.push({ logicalId: `tileset:${BLOCK835_V3_PACKAGE_ID}`, role: "tileset-json", relativeRef: tilesetRef, byteSize: tilesetBytes.byteLength, checksumSha256: sha256HexBytes(tilesetBytes), ownerCellId: null });
+  artifacts.push({ logicalId: `tileset:${profile.packageId}`, role: "tileset-json", relativeRef: tilesetRef, byteSize: tilesetBytes.byteLength, checksumSha256: sha256HexBytes(tilesetBytes), ownerCellId: null });
 
   const ownershipLedger = {
-    ledgerId: BLOCK835_V3_OWNERSHIP_LEDGER_ID,
+    ledgerId: profile.ownershipLedgerId,
     cityId: BLOCK835_CITY_ID,
     configId: BLOCK835_CONFIG_ID,
-    baseIdentitySet: { id: BLOCK835_V3_BASE_IDENTITY_SET_ID, buildingCount: buildingIds.length, checksumSha256: baseChecksum },
+    baseIdentitySet: { id: profile.baseIdentitySetId, buildingCount: buildingIds.length, checksumSha256: baseChecksum },
     cells: [{ cellId: BLOCK835_CELL_ID, order: 0, buildingIds: [...buildingIds].sort(), membershipChecksumSha256: baseChecksum }],
     derivedFrom: { releaseId: BLOCK835_PILOT_RELEASE_ID, checksumSha256: options.releaseChecksumSha256 },
   };
 
   const manifest: MultiLodAssemblyManifest = {
     schemaVersion: "1.0",
-    packageId: BLOCK835_V3_PACKAGE_ID,
+    packageId: profile.packageId,
     audience: "private",
     generatedAt: BLOCK835_V3_GENERATED_AT,
     immutable: true,
     release: {
-      rootId: `private:${BLOCK835_V3_PACKAGE_ID}`,
+      rootId: `private:${profile.packageId}`,
       rootChecksumSha256: options.releaseChecksumSha256,
       releaseId: BLOCK835_PILOT_RELEASE_ID,
       cityId: BLOCK835_CITY_ID,
       configId: BLOCK835_CONFIG_ID,
       privatePredecessor: null,
     },
-    baseIdentitySet: { id: BLOCK835_V3_BASE_IDENTITY_SET_ID, checksumSha256: baseChecksum },
-    ownershipLedger: { id: BLOCK835_V3_OWNERSHIP_LEDGER_ID, checksumSha256: sha256HexSync(stableSerialize(ownershipLedger)) },
+    baseIdentitySet: { id: profile.baseIdentitySetId, checksumSha256: baseChecksum },
+    ownershipLedger: { id: profile.ownershipLedgerId, checksumSha256: sha256HexSync(stableSerialize(ownershipLedger)) },
     cells: [{
       cellId: BLOCK835_CELL_ID,
-      cellRelease: { id: BLOCK835_V3_PACKAGE_ID, checksumSha256: sha256HexSync(stableSerialize(ownershipLedger)) },
+      cellRelease: { id: profile.packageId, checksumSha256: sha256HexSync(stableSerialize(ownershipLedger)) },
       predecessor: { ...options.predecessor.cellRelease },
       buildingIds: [...buildingIds].sort(),
       membershipChecksumSha256: baseChecksum,

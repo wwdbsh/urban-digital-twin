@@ -58,6 +58,26 @@ export const DETERMINISTIC_FACADE_V3_GENERATOR_VERSION = "3.0.0" as const;
 export const DETERMINISTIC_FACADE_V3_UNCERTAINTY =
   "Footprint-faithful procedural exterior in local millimetres. The massing follows the sourced building polygon vertex for vertex and the sourced height; nothing else does. Tier subdivision, bay rhythm, openings, attached elements, colour and material are designed by this grammar, derived from no imagery and no observation, and assert nothing about the real building's appearance, facade, setbacks, balconies, fire escapes, water tanks or signage, nor any tenant, brand or text." as const;
 
+/**
+ * Successor statement for an asset that additionally carries procedural detail
+ * tiles. Versioned, never an edit: `DETERMINISTIC_FACADE_V3_UNCERTAINTY` above
+ * is byte-frozen into every committed V3 plan and manifest and is pinned by the
+ * V3 plan validator, so a textured package states its own successor instead.
+ *
+ * It adds exactly one thing to the V3 statement — what the surface pattern is
+ * and, more importantly, what it is not. The calibration sentence is the whole
+ * point: an agent looked at public photographs of Midtown street walls and wrote
+ * down conclusions in words. No pixel of any photograph was ingested, decoded,
+ * traced, sampled or reproduced, and the shipped tiles are regenerated from
+ * named constants by the release validator on every replay.
+ *
+ * The generator itself is untouched by this constant: it appears here so the two
+ * statements stay adjacent and comparable, and it changes no plan and no plan
+ * hash.
+ */
+export const DETERMINISTIC_FACADE_V3T_UNCERTAINTY =
+  "Footprint-faithful procedural exterior in local millimetres with procedural surface detail. The massing follows the sourced building polygon vertex for vertex and the sourced height; nothing else does. Tier subdivision, bay rhythm, openings, attached elements, colour, material and surface pattern are designed by this grammar and assert nothing about the real building's appearance, facade, setbacks, balconies, fire escapes, water tanks or signage, nor any tenant, brand or text. The surface pattern is a designed repeating motif whose construction module was calibrated by human and agent viewing of public reference imagery; no image data was ingested, traced, sampled or reproduced, and no material, colour, age, condition or cladding of the real building is asserted." as const;
+
 /** Kept verbatim from V2: the signage honesty rule did not change in V3. */
 export const DETERMINISTIC_FACADE_V3_SIGNAGE_UNCERTAINTY =
   "Generated blank sign-band and blade massing only. No real-world sign presence, size, position, orientation, text, brand or tenant is asserted, and no glyph, logo or lettering is generated." as const;
