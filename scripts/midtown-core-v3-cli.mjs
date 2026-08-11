@@ -20,6 +20,10 @@
  *   graph  assemble and emit the successor release graph, runtime index,
  *          assembly package and artifact blobs, replay the emitted bytes, and
  *          write the committed checksum inventory.
+ *   sample select the deterministic Blender inspection sample and emit one
+ *          authoring input per sampled building, carrying the plan, the shipped
+ *          asset's declared counts and bounds, and the analytic volume the
+ *          re-import has to reproduce.
  *
  * Each stage writes a receipt carrying the fingerprint of its inputs, so an
  * interrupted run resumes rather than restarting. The payload directory is
@@ -31,7 +35,7 @@
  * the V2 wave's directories, and writes only under the three it owns.
  *
  * Usage:
- *   node scripts/midtown-core-v3-cli.mjs <plans|glbs|gates|graph|all> [--force]
+ *   node scripts/midtown-core-v3-cli.mjs <plans|glbs|gates|graph|sample|all> [--force]
  */
 import { existsSync } from "node:fs";
 import { mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
@@ -56,12 +60,14 @@ import {
   serializeMidtownCoreArtifact,
   validateMidtownCoreSubsetLedger,
 } from "../src/release/midtown-core-package.ts";
-import { collectMidtownCoreSources } from "../src/release/midtown-core-source.ts";
+import { collectMidtownCoreSources, midtownCoreGlbBounds } from "../src/release/midtown-core-source.ts";
 import { MIDTOWN_CORE_SHIPPED_LOD_ID, buildMidtownCoreRelease } from "../src/release/midtown-core-release.ts";
 import {
   MIDTOWN_CORE_V3_RELEASE_ID,
+  MIDTOWN_CORE_V3_VOLUME_TOLERANCE,
   MidtownCoreV3Stop,
   buildMidtownCoreV3Plan,
+  writeMidtownCoreV3Assets,
 } from "../src/release/midtown-core-v3-materialization.ts";
 import {
   MIDTOWN_CORE_V3_OUTPUT_DIRECTORY,
@@ -93,7 +99,7 @@ const payloadRoot = join(repositoryRoot, MIDTOWN_CORE_V3_OUTPUT_DIRECTORY);
  */
 const RENDERABLE_CELL_COUNT = 3;
 
-const STAGES = ["plans", "glbs", "gates", "graph"];
+const STAGES = ["plans", "glbs", "gates", "graph", "sample"];
 
 function fail(message) { throw new Error(`midtown-core-v3: ${message}`); }
 
@@ -558,9 +564,169 @@ async function stageGraph(context, options) {
   return { skipped: false, ...summary };
 }
 
+
+// ---------------------------------------------------------------------------
+// Stage: sample
 // ---------------------------------------------------------------------------
 
-const RUNNERS = { plans: stagePlans, glbs: stageGlbs, gates: stageGates, graph: stageGraph };
+/**
+ * The V3 inspection strata.
+ *
+ * The T013 rule cannot be carried over verbatim: half of it was stated in V2's
+ * own vocabulary — bay count clamped to a global minimum or cap, oriented
+ * rectangle area, the rectangle's axis sine — and V3 has no oriented rectangle
+ * and derives bays per edge. What the rule WAS for carries over exactly: cover
+ * the extremes of every dimension the grammar actually varies over, in a total
+ * order fixed by the release bytes, so the sample is a derivation rather than a
+ * choice. Each stratum takes four, in listed order, skipping a building an
+ * earlier stratum already took; every ordering ends in ascending building id.
+ */
+const V3_SAMPLE_STRATA = [
+  { id: "most-ring-vertices", order: (entry) => [-entry.ringVertexCount] },
+  { id: "fewest-ring-vertices", order: (entry) => [entry.ringVertexCount] },
+  { id: "tallest", order: (entry) => [-entry.heightMm] },
+  { id: "shortest", order: (entry) => [entry.heightMm] },
+  { id: "largest-footprint-area", order: (entry) => [-entry.footprintAreaMm2] },
+  { id: "smallest-footprint-area", order: (entry) => [entry.footprintAreaMm2] },
+  { id: "most-triangles", order: (entry) => [-entry.triangleCount] },
+  { id: "fewest-triangles", order: (entry) => [entry.triangleCount] },
+  { id: "fallback-height", order: (entry) => [entry.heightSource === "fallback" ? 0 : 1, entry.heightMm] },
+  { id: "most-tiers", order: (entry) => [-entry.effectiveTierCount] },
+];
+const V3_SAMPLES_PER_STRATUM = 4;
+
+function compareBy(order) {
+  return (left, right) => {
+    const a = order(left);
+    const b = order(right);
+    for (let index = 0; index < a.length; index += 1) if (a[index] !== b[index]) return a[index] - b[index];
+    return left.buildingId < right.buildingId ? -1 : left.buildingId > right.buildingId ? 1 : 0;
+  };
+}
+
+function ringAreaMm2(ring) {
+  let twice = 0;
+  for (let index = 0; index < ring.length; index += 1) {
+    const current = ring[index];
+    const next = ring[(index + 1) % ring.length];
+    twice += current[0] * next[1] - next[0] * current[1];
+  }
+  return Math.abs(twice) / 2;
+}
+
+async function stageSample(context, options) {
+  const fingerprint = inputFingerprint(context, "sample");
+  const existing = await readReceipt("sample");
+  if (existing && existing.inputFingerprint === fingerprint && !options.force) return { skipped: true, ...existing.summary };
+
+  const { shards } = await readVerifiedShards(context.manifest);
+  const cells = renderableCells(context);
+  const sources = collectMidtownCoreSources(shards, new Set(cells.flatMap((cell) => cell.buildingIds)));
+
+  const candidates = [];
+  for (const cell of cells) {
+    for (const buildingId of cell.buildingIds) {
+      const source = sources.get(buildingId);
+      if (!source) continue;
+      let context3;
+      try { context3 = buildMidtownCoreV3Plan(source, EXTERIOR_FULLSNAPSHOT_BASE_MANIFEST_SHA256); }
+      catch (error) { if (!(error instanceof MidtownCoreV3Stop)) throw error; continue; }
+      const written = writeMidtownCoreV3Assets(context3, {
+        ownerCellId: cell.cellId,
+        capturedAt: context.capture.capturedAt,
+        updatedAt: context.capture.updatedAt,
+        predecessor: context.predecessorAssets.get(buildingId) ?? null,
+      });
+      const shippedAsset = written.assets.find((asset) => asset.lodId === MIDTOWN_CORE_SHIPPED_LOD_ID);
+      candidates.push({
+        buildingId,
+        cellId: cell.cellId,
+        plan: context3.plan,
+        ringVertexCount: context3.ringMm.length,
+        heightMm: context3.plan.input.geometry.heightMm,
+        heightSource: context3.heightSource,
+        footprintAreaMm2: ringAreaMm2(context3.plan.tiers[0].ring),
+        effectiveTierCount: context3.plan.massing.effectiveTierCount,
+        setbacksAbsent: written.setbacksAbsent,
+        triangleCount: shippedAsset.counts.triangleCount,
+        materialCount: shippedAsset.counts.materialCount,
+        textureCount: shippedAsset.counts.textureCount,
+        analyticVolumeCubicMeters: shippedAsset.analyticVolumeCubicMeters,
+        meshVolumeCubicMeters: shippedAsset.meshVolumeCubicMeters,
+        // Declared Y-up POSITION extent of the shipped bytes, so the re-import
+        // diff compares against what actually shipped rather than a recompute.
+        boundsYUp: midtownCoreGlbBounds(shippedAsset.bytes),
+        checksumSha256: shippedAsset.checksumSha256,
+        relativeRef: shippedAsset.relativeRef,
+      });
+    }
+  }
+
+  const byId = new Map(candidates.map((entry) => [entry.buildingId, entry]));
+  const chosen = new Map();
+  const strata = [];
+  for (const stratum of V3_SAMPLE_STRATA) {
+    const ordered = [...candidates].sort(compareBy(stratum.order));
+    const taken = [];
+    for (const entry of ordered) {
+      if (taken.length >= V3_SAMPLES_PER_STRATUM) break;
+      if (chosen.has(entry.buildingId)) continue;
+      chosen.set(entry.buildingId, stratum.id);
+      taken.push(entry.buildingId);
+    }
+    strata.push({ stratum: stratum.id, buildingIds: taken });
+  }
+  // EVERY disclosed tier collapse in the renderable cells, not a sample of them.
+  // The absent `setbacks` component is the one claim this promotion makes that
+  // no previous wave made, and a sampled subset would leave most of those
+  // claims unmeasured.
+  const collapse = candidates.filter((entry) => entry.setbacksAbsent).map((entry) => entry.buildingId).sort();
+  for (const buildingId of collapse) if (!chosen.has(buildingId)) chosen.set(buildingId, "tier-collapse-absent-setbacks");
+  strata.push({ stratum: "tier-collapse-absent-setbacks", buildingIds: collapse });
+
+  const sampleIds = [...chosen.keys()].sort();
+  const inputsRoot = join(workRoot, "blender", "inputs");
+  await rm(inputsRoot, { recursive: true, force: true });
+  await mkdir(inputsRoot, { recursive: true });
+  for (const buildingId of sampleIds) {
+    const entry = byId.get(buildingId);
+    const slug = buildingId.replace(":", "-");
+    await writeFile(join(inputsRoot, `${slug}.json`), serializeMidtownCoreArtifact({
+      buildingId,
+      cellId: entry.cellId,
+      stratum: chosen.get(buildingId),
+      assetPath: join(payloadRoot, entry.relativeRef),
+      checksumSha256: entry.checksumSha256,
+      planHashSha256: entry.plan.planHashSha256,
+      declared: { triangleCount: entry.triangleCount, materialCount: entry.materialCount, textureCount: entry.textureCount },
+      declaredBoundsYUp: entry.boundsYUp,
+      analyticVolumeCubicMeters: entry.analyticVolumeCubicMeters,
+      writerMeshVolumeCubicMeters: entry.meshVolumeCubicMeters,
+      volumeTolerance: MIDTOWN_CORE_V3_VOLUME_TOLERANCE,
+      setbacksAbsent: entry.setbacksAbsent,
+      effectiveTierCount: entry.effectiveTierCount,
+      ringVertexCount: entry.ringVertexCount,
+      heightMm: entry.heightMm,
+      heightSource: entry.heightSource,
+    }), "utf8");
+  }
+
+  const summary = {
+    candidateCount: candidates.length,
+    sampleCount: sampleIds.length,
+    tierCollapseCount: collapse.length,
+    strata,
+    sampleIds,
+    inputsDirectory: join(MIDTOWN_CORE_V3_WORK_ROOT, "blender", "inputs"),
+  };
+  await writeFile(join(workRoot, "blender-sample.json"), serializeMidtownCoreArtifact(summary), "utf8");
+  await writeReceipt("sample", fingerprint, summary);
+  return { skipped: false, ...summary };
+}
+
+// ---------------------------------------------------------------------------
+
+const RUNNERS = { plans: stagePlans, glbs: stageGlbs, gates: stageGates, graph: stageGraph, sample: stageSample };
 
 async function main() {
   const argv = process.argv.slice(2);
