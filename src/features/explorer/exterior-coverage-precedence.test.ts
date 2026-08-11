@@ -10,6 +10,7 @@ import { describe, expect, it } from "vitest";
 import {
   denseFeatureRenderOwner,
   exteriorCoveredCanonicalFeatureIds,
+  exteriorRenderedCanonicalFeatureIds,
   exteriorSelectionSilhouetteSize,
   EXTERIOR_SELECTION_SILHOUETTE_SIZE_PIXELS,
   type ExteriorCellOverlay,
@@ -104,28 +105,67 @@ describe("exterior coverage fails open to the base representation", () => {
   });
 });
 
+/** The live scene map: entity id -> canonical feature id, as `exteriorPickMapRef` holds it. */
+function pickMap(canonicalFeatureIds: readonly string[]): ReadonlyMap<string, string> {
+  return new Map(canonicalFeatureIds.map((featureId) => [`exterior-cell:cell:manhattan:block-835:${featureId}`, featureId]));
+}
+
+describe("suppression keys on exterior geometry that is in the scene, not merely verified", () => {
+  it("keeps the base for a VERIFIED BUT UNANCHORED building", () => {
+    // The regression. A verified entry is withheld while its base building
+    // record has not streamed, because there is no verified WGS84 anchor for
+    // it. Suppressing on coverage removed the base of every such building while
+    // its exterior was still withheld, and both vanished.
+    const overlay = renderedWave(["doitt:778052", "doitt:982383"]);
+    expect(exteriorCoveredCanonicalFeatureIds(overlay).size).toBe(2);
+    const rendered = exteriorRenderedCanonicalFeatureIds(overlay, pickMap([]));
+    expect(rendered.size).toBe(0);
+    expect(denseFeatureRenderOwner("doitt:778052", rendered, PILOT_IDS)).toBe("pilot-asset");
+    expect(denseFeatureRenderOwner("doitt:131170", rendered, PILOT_IDS)).toBe("procedural-extrusion");
+  });
+
+  it("suppresses only the buildings whose exterior entity was actually added", () => {
+    const overlay = renderedWave(["doitt:778052", "doitt:982383"]);
+    const rendered = exteriorRenderedCanonicalFeatureIds(overlay, pickMap(["doitt:778052"]));
+    expect([...rendered]).toEqual(["doitt:778052"]);
+    expect(denseFeatureRenderOwner("doitt:778052", rendered, PILOT_IDS)).toBe("exterior-wave");
+    // Still withheld: its base must keep drawing.
+    expect(denseFeatureRenderOwner("doitt:982383", rendered, PILOT_IDS)).toBe("pilot-asset");
+  });
+
+  it("ignores a stale entity from a wave that is no longer in the overlay", () => {
+    const rendered = exteriorRenderedCanonicalFeatureIds(renderedWave(["doitt:778052"]), pickMap(["doitt:778052", "doitt:111111"]));
+    expect([...rendered]).toEqual(["doitt:778052"]);
+  });
+
+  it("suppresses nothing at all when the wave failed, even if entities linger", () => {
+    expect(exteriorRenderedCanonicalFeatureIds(failedWave(), pickMap(["doitt:778052"])).size).toBe(0);
+    expect(exteriorRenderedCanonicalFeatureIds(null, pickMap(["doitt:778052"])).size).toBe(0);
+  });
+});
+
 describe("draw precedence is exterior wave over pilot asset over procedural extrusion", () => {
   it("gives the exterior wave a building that is also in the pilot asset set", () => {
     // The Block 835 duplicate: `doitt:778052` is resolvable as a pilot asset AND
     // shipped by the wave. Exactly one path may draw it.
-    const covered = exteriorCoveredCanonicalFeatureIds(renderedWave(["doitt:778052"]));
-    expect(denseFeatureRenderOwner("doitt:778052", covered, PILOT_IDS)).toBe("exterior-wave");
+    const rendered = exteriorRenderedCanonicalFeatureIds(renderedWave(["doitt:778052"]), pickMap(["doitt:778052"]));
+    expect(denseFeatureRenderOwner("doitt:778052", rendered, PILOT_IDS)).toBe("exterior-wave");
   });
 
   it("gives the pilot asset a building the wave does not ship", () => {
-    const covered = exteriorCoveredCanonicalFeatureIds(renderedWave(["doitt:778052"]));
-    expect(denseFeatureRenderOwner("doitt:982383", covered, PILOT_IDS)).toBe("pilot-asset");
+    const rendered = exteriorRenderedCanonicalFeatureIds(renderedWave(["doitt:778052"]), pickMap(["doitt:778052"]));
+    expect(denseFeatureRenderOwner("doitt:982383", rendered, PILOT_IDS)).toBe("pilot-asset");
   });
 
   it("leaves every other building on the procedural extrusion path", () => {
-    const covered = exteriorCoveredCanonicalFeatureIds(renderedWave(["doitt:778052"]));
-    expect(denseFeatureRenderOwner("doitt:131170", covered, PILOT_IDS)).toBe("procedural-extrusion");
+    const rendered = exteriorRenderedCanonicalFeatureIds(renderedWave(["doitt:778052"]), pickMap(["doitt:778052"]));
+    expect(denseFeatureRenderOwner("doitt:131170", rendered, PILOT_IDS)).toBe("procedural-extrusion");
     expect(denseFeatureRenderOwner("doitt:131170", new Set(), new Set())).toBe("procedural-extrusion");
   });
 
   it("assigns exactly one owner to every building", () => {
-    const covered = exteriorCoveredCanonicalFeatureIds(renderedWave(["doitt:778052", "doitt:982383"]));
-    const owners = ["doitt:778052", "doitt:982383", "doitt:584049"].map((id) => denseFeatureRenderOwner(id, covered, PILOT_IDS));
+    const rendered = exteriorRenderedCanonicalFeatureIds(renderedWave(["doitt:778052", "doitt:982383"]), pickMap(["doitt:778052", "doitt:982383"]));
+    const owners = ["doitt:778052", "doitt:982383", "doitt:584049"].map((id) => denseFeatureRenderOwner(id, rendered, PILOT_IDS));
     expect(owners).toEqual(["exterior-wave", "exterior-wave", "procedural-extrusion"]);
   });
 });
@@ -145,9 +185,9 @@ describe("exterior selection feedback", () => {
   });
 
   it("does not change which path draws a building when the selection changes", () => {
-    const covered = exteriorCoveredCanonicalFeatureIds(renderedWave(["doitt:778052"]));
-    const before = denseFeatureRenderOwner("doitt:778052", covered, PILOT_IDS);
+    const rendered = exteriorRenderedCanonicalFeatureIds(renderedWave(["doitt:778052"]), pickMap(["doitt:778052"]));
+    const before = denseFeatureRenderOwner("doitt:778052", rendered, PILOT_IDS);
     expect(exteriorSelectionSilhouetteSize("doitt:778052", "doitt:778052")).toBeGreaterThan(0);
-    expect(denseFeatureRenderOwner("doitt:778052", covered, PILOT_IDS)).toBe(before);
+    expect(denseFeatureRenderOwner("doitt:778052", rendered, PILOT_IDS)).toBe(before);
   });
 });

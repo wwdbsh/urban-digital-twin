@@ -94,9 +94,23 @@ function inputFor(building: PilotBuildingSource, overrides: Partial<V3Input> = {
   };
 }
 
+/**
+ * Memoised. Generating a plan walks O(n^2) ring predicates and a full
+ * tessellation; these tests ask for the same fourteen plans many times over, and
+ * regenerating each one starved the shared worker pool badly enough to push
+ * unrelated five-second tests over their timeout.
+ */
+const planCache = new Map<string, V3Plan>();
+
 function planFor(id: string, overrides: Partial<V3Input> = {}): V3Plan {
+  const cacheKey = Object.keys(overrides).length === 0 ? id : null;
+  if (cacheKey) {
+    const cached = planCache.get(cacheKey);
+    if (cached) return cached;
+  }
   const result = generateV3FacadePlan(inputFor(byId.get(id)!, overrides));
   if (!result.ok) throw new Error(`V3 plan refused for ${id}: ${result.issues.map((issue) => `${issue.path}: ${issue.message}`).join("; ")}`);
+  if (cacheKey) planCache.set(cacheKey, result.value);
   return result.value;
 }
 

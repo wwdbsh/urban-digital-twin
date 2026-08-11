@@ -293,6 +293,37 @@ export function exteriorCoveredCanonicalFeatureIds(overlay: ExteriorCellOverlayS
   return new Set(exteriorOverlayRenderEntries(overlay).map((entry) => entry.canonicalFeatureId));
 }
 
+/**
+ * Base features whose exterior geometry is ACTUALLY IN THE SCENE right now.
+ *
+ * Coverage alone is not enough to suppress a building's base representation,
+ * and the difference is not academic. A verified entry is withheld when its
+ * base building record has not streamed yet, because there is no verified WGS84
+ * anchor for it — that is the `unanchoredCanonicalFeatureIds` path, and it is
+ * the normal state of a wave the moment it loads. Suppressing on coverage
+ * removed the base for every one of those buildings while their exterior was
+ * still being withheld, so both disappeared and the viewport went black.
+ *
+ * Suppression therefore keys on the live exterior pick map, which holds exactly
+ * the entities the exterior pass added to the scene. Intersecting it with
+ * coverage keeps it honest in the other direction too: an entity left over from
+ * a wave that is no longer in the overlay suppresses nothing.
+ *
+ * Both failure modes now fail open to the base: a failed cell contributes no
+ * coverage, and a withheld cell contributes no entity.
+ */
+export function exteriorRenderedCanonicalFeatureIds(
+  overlay: ExteriorCellOverlaySet,
+  liveExteriorPickMap: ReadonlyMap<string, string>,
+): ReadonlySet<string> {
+  const covered = exteriorCoveredCanonicalFeatureIds(overlay);
+  const rendered = new Set<string>();
+  for (const canonicalFeatureId of liveExteriorPickMap.values()) {
+    if (covered.has(canonicalFeatureId)) rendered.add(canonicalFeatureId);
+  }
+  return rendered;
+}
+
 export type DenseFeatureRenderOwner = "exterior-wave" | "pilot-asset" | "procedural-extrusion";
 
 /**
@@ -303,13 +334,18 @@ export type DenseFeatureRenderOwner = "exterior-wave" | "pilot-asset" | "procedu
  * so without one shared rule each of them is drawn twice — once as verified
  * exterior geometry and once as the pilot model or the procedural extrusion
  * underneath it (Issue #41). Every draw path consults this function.
+ *
+ * `exteriorRenderedIds` must be geometry that IS IN THE SCENE, not geometry
+ * that was verified — see `exteriorRenderedCanonicalFeatureIds`. Passing
+ * coverage here removes the base for buildings whose exterior is still withheld
+ * for want of an anchor, and leaves nothing drawn at all.
  */
 export function denseFeatureRenderOwner(
   featureId: string,
-  exteriorCoveredIds: ReadonlySet<string>,
+  exteriorRenderedIds: ReadonlySet<string>,
   assetBuildingIds: ReadonlySet<string>,
 ): DenseFeatureRenderOwner {
-  if (exteriorCoveredIds.has(featureId)) return "exterior-wave";
+  if (exteriorRenderedIds.has(featureId)) return "exterior-wave";
   if (assetBuildingIds.has(featureId)) return "pilot-asset";
   return "procedural-extrusion";
 }
@@ -1612,10 +1648,6 @@ export function CesiumViewport({
     const viewer = viewerRef.current;
     if (!viewer) return;
     let cancelled = false;
-    // Read synchronously from the prop, not from a ref updated in another
-    // effect: the base pass and the exterior pass are separate commits, and a
-    // ref would let one render see last render's coverage and draw a duplicate.
-    const exteriorCoveredIds = exteriorCoveredCanonicalFeatureIds(exteriorOverlay);
     const loadVisibleFeatures = async () => {
       const layers = supportedVisibleLayers(adapter, visibleLayers);
       const loaded = await Promise.all(layers.map((layer) => adapter.loadLayerFeatures(layer)));
@@ -1651,7 +1683,13 @@ export function CesiumViewport({
       const assetDistanceMeters = Math.max(0, Number.isFinite(viewer.camera.positionCartographic.height) ? viewer.camera.positionCartographic.height : 240);
       const assetBuildingIds = verifiedAssetBuildingIds(renderedDenseFeatures, assetResolver, assetDistanceMeters);
       const rootDenseCollection = denseCollectionRef.current;
-      const renderOwner = (feature: Feature): DenseFeatureRenderOwner => denseFeatureRenderOwner(feature.id, exteriorCoveredIds, assetBuildingIds);
+      // Read the exterior pick map HERE, not at the top of the effect. This
+      // continuation resumes after the exterior pass of the same commit has
+      // already added its entities, so the map is the current scene, and
+      // suppression can key on geometry that exists rather than on geometry
+      // that was merely verified.
+      const exteriorRenderedIds = exteriorRenderedCanonicalFeatureIds(exteriorOverlay, exteriorPickMapRef.current);
+      const renderOwner = (feature: Feature): DenseFeatureRenderOwner => denseFeatureRenderOwner(feature.id, exteriorRenderedIds, assetBuildingIds);
       const primitiveDenseFeatures = renderedGroups.base.filter((feature) => renderOwner(feature) === "procedural-extrusion");
       const telemetry = denseRenderTelemetryRef.current;
       telemetry.selectionMs = performance.now() - selectionStartedAt;
@@ -1728,8 +1766,8 @@ export function CesiumViewport({
         Object.assign(telemetry, { planBuildCount: 0, planReuseCount: 0, planCancellationCount: 0, planSwapCount: 0, planFingerprint: "", selectionMs: 0, keyMs: 0, allocationMs: undefined, allocationMaxSliceMs: undefined, allocationChunkCount: undefined, workerReadyMs: undefined, totalBuildMs: undefined });
         denseMetricsRef.current = emptyDenseRenderMetrics();
       }
-      // A building the exterior wave owns gets no semantic entity either: the
-      // exterior model carries the pick (via `exteriorPickMapRef`) and, when
+      // A building whose exterior model is in the scene gets no semantic entity
+      // either: that model carries the pick (via `exteriorPickMapRef`) and, when
       // selected, the silhouette applied by the selection effect below.
       const semanticallyRendered = (feature: Feature): boolean => {
         const owner = renderOwner(feature);
@@ -1776,7 +1814,7 @@ export function CesiumViewport({
           const buildingId = asset.canonicalFeatureId;
           const resolution = commercialOverlay.resolve(buildingId, assetDistanceMeters, 1);
           if (resolution.kind !== "asset") continue;
-          if (exteriorCoveredIds.has(buildingId)) {
+          if (exteriorRenderedIds.has(buildingId)) {
             // Same precedence rule as the dense paths: the exterior wave draws
             // this building, so the pilot model must not be drawn over it. The
             // building still counts as active, because its verified storefront
