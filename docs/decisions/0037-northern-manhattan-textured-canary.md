@@ -561,3 +561,301 @@ must leave the hypothetical exactly where it is.
 - It does not claim that completing the ledger's coverage grants any permission
   that no single wave's instrument carries.
 - It does not claim the narrow volume margin is understood.
+
+---
+
+# T022 — PROMOTION of wave `w05` (amendment, 2026-08-12)
+
+Wave `w05` is promoted as `manhattan-northern-manhattan-cells-20260812-p1`, the
+SIXTH and last default exterior record. Everything above stays as written: it
+describes the canary, and the canary is unchanged, byte-frozen and still opt-in
+only. This section records what the promotion decided, what it measured, and what
+it does not claim.
+
+## The curation, and the enumeration behind it
+
+The promoted renderable subset is ONE ownership cell — 727, a roughly 231 by
+152 metre block band in central Harlem whose bounds cover the West 125th Street
+corridor between approximately Frederick Douglass Boulevard and Adam Clayton
+Powell Jr. Boulevard. It owns 24 buildings; all 24 materialize; none is refused.
+
+The decision rule is wave `w04`'s, applied unchanged and stated in the order it
+was applied:
+
+1. **Edge-contiguity**, a PRECONDITION.
+2. **Fit the 36-entry inherited reservation**, a PRECONDITION.
+3. **Maximize skyline value** — owned buildings whose SOURCED height reaches 90 m.
+4. **Tie-break: more whole cells.** NEVER REACHED here.
+5. **Lexicographic fallback on the parent-order sequence.** Never reached at the
+   stated threshold.
+
+`northern-manhattan-curation-optimum.test.ts` re-runs the whole rule over the
+committed ledger and the committed 182-cell skyline census on every test run. It
+enumerates every connected admissible subset by expansion with no size bound,
+computes the connectivity-ignoring optimum exactly, and pins each rejected
+alternative by name, score, owned count, connectedness and budget fit.
+
+### What each precondition costs, measured separately
+
+Wave `w04` recorded contiguity as its expensive precondition. **On this wave
+contiguity costs NOTHING on score.** Dropping key 1 and applying keys 3 to 5
+unchanged selects `{711, 727, 836, 838, 850}` — the same score of 1, on 35 of the
+36 reserved entries, in FIVE separate pieces scattered from central Harlem to
+Washington Heights. Contiguity gave up four skyline buildings for `w04` and two
+for `w03`; here it gives up none and decides only the shape.
+
+**THE RESERVATION IS WHAT COSTS.** The wave's best skyline cell is 778, which
+carries FIVE owned buildings at 90 m or more — every one of them at 102.4 m — and
+is refused for one reason: it owns 79 buildings against a 36-entry reservation. So
+the reservation gives up FOUR skyline buildings, and that is stated at full
+strength rather than folded into a general remark about small subsets.
+
+The canary's own cell 701 is inadmissible TWICE OVER — precondition (b) forbids
+inheriting it, and it owns 86 against a 36-entry reservation — and is recorded
+with both reasons so neither constraint's cost is overstated.
+
+### The 90 m threshold: the answer is WEAKER than `w04`'s and is not borrowed
+
+ADR 0036 precondition (b) made each wave state whether 90 m is right for it. Wave
+`w04` could answer that the ranking did not depend on the threshold at all. **That
+answer is not available here and was not taken.**
+
+- The threshold still discriminates, thinly: 19 of this wave's 10,214 sourced
+  heights reach 90 m — 0.19%, against 1.20% for `w04` — across 9 of 182 cells and
+  exactly ONE of the 50 cells that fit the reservation. Northern Manhattan is
+  genuinely lower-rise; its tallest sourced structure is 123.1 m against `w04`'s
+  219.2 m in a single admissible cell.
+- **The ranking DOES depend on it**, and every other answer is named and pinned:
+  `{714, 715}` at 30 m, `{852}` at 45 m, `{707}` at 60 and 75 m, `{727}` at 90 and
+  100 m, and nothing at all at 120 m.
+- **The threshold was NOT moved after the answer was known.** Choosing a threshold
+  because of which cell it selects is the same defect as moving a tolerance to
+  pass a gate, and it would be harder to see. 90 m is carried forward unchanged
+  and the sensitivity is disclosed instead.
+- **A threshold-free key agrees.** Cell 727 also carries the tallest sourced
+  structure of any cell that fits the reservation — 101.5 m against 79.8 m for the
+  next — so the selection is the maximum on a second criterion with no threshold
+  in it. That is corroboration, not the rule.
+- **Key 5 is reached at two of the seven thresholds**, which `w04` could say of
+  none: a genuine two-way tie between cells 707 and 782 at 60 m, and nothing
+  scoring at 120 m. Both are recorded rather than omitted. At the stated 90 m,
+  key 3 alone leaves one candidate, so neither key 4 nor key 5 decides this
+  promotion.
+
+## The reservation: consumed, and recorded as consumed
+
+Precondition (a) said the 36-entry reservation is the budget and that it binds.
+This promotion **opens no split; it consumes one.**
+
+- Both halves of T020's split are READ BACK out of that release's committed
+  `payload-inventory.json` and required to reconstitute the 78-entry headroom they
+  were split out of. A predecessor re-emitted with a different share, a different
+  headroom, or a reservation edited on its own fails this build rather than
+  quietly re-sizing this promotion.
+- The derivation additionally refuses a reservation that disagrees with the 36 this
+  curation was enumerated against, one read from a release that did not make it,
+  one that no longer fits what is free, and a build in which this is not the last
+  unpromoted wave.
+- **The entry budget applied is 36, the subset ships 24, and 12 entries are left
+  unspent.** That is not an oversight: cell 727's four edge-neighbours own 40, 41,
+  53 and 89 buildings — proven from the committed ledger in the promotion-record
+  suite, not merely asserted — so no second cell fits inside the reservation, and
+  the only way to spend the remainder is a second, non-adjacent island that key 1
+  refuses.
+- **The 2-entry surplus is named and NOT taken.** 38 entries are free against 36
+  promised. It would have bought nothing in any case, and that is measured rather
+  than assumed: the four cells owning 37 or 38 buildings (753, 768, 795, 803) carry
+  zero buildings at the stated threshold, so a 38-entry budget selects the same
+  cell.
+
+### The ledger-wide occupancy END STATE
+
+The six promoted waves occupy **28 + 156 + 71 + 179 + 40 + 24 = 498 of 512**
+exterior cache entries, leaving **14 entries** of headroom and **no unpromoted
+wave to reserve them for**. The cache cap is UNCHANGED at 512 entries and 256 MiB;
+`EXTERIOR_RUNTIME_BUDGETS` is not edited by this promotion. Every figure is a count
+of shipped GLB artifacts on disk, on the accounting T020 adopted when it considered
+and rejected ADR 0034's response 3.
+
+The byte ceiling re-derived at six waves: 121.81 MiB of 256 MiB, still
+entry-bound, heaviest per-asset wave unchanged. Wave `w05`'s curated subset is the
+LIGHTEST per asset of the four textured waves — 175,823 B mean against `w04`'s
+359,234 B — because central Harlem's stock is smaller-footprint and lower.
+
+**The sixth-wave cache guard fired as designed.** Adding the record made
+`exterior-cache-ceiling.test.ts` fail to load with "promoted release
+manhattan-northern-manhattan-cells-20260812-p1 has no measured byte profile"
+before its byte-profile row existed. It is recorded a second time rather than
+assumed to still work, because a guard that fires once and is then quietly
+satisfied is indistinguishable from one that stopped firing.
+
+## The refusal rate and the volume margin
+
+**Local refusal: 0 of 24 = 0%**, against the 3.72% wave rate — the OPPOSITE
+direction from `w04`, whose curated ground refused more than its wave did. It is
+not presented as an achievement: 24 buildings is a small sample and this wave
+refuses 381 of 10,230 elsewhere. The record carries the granularity so the pass is
+not read as comfort: at 24 buildings one refusal would be 4.17% and would still
+pass the twice-the-wave-rate ceiling; **two would be 8.33% and would fail it.**
+
+**Volume-identity margin (precondition (c)): 0.1818 of tolerance**, on 24 checked
+and 0 rejected, against the WAVE's 0.9895 — the narrowest the identity has ever
+passed. The denominator is the T021 F1 form, accepted + rejected, applied at the
+curated site so it could not inherit the wrong one.
+
+**The corroboration.** A margin measured by the implementation that produced the
+geometry is the writer grading its own arithmetic, so the shipped bytes were
+re-imported into Blender and the identity recomputed by an independent
+implementation. It lands on the same order of magnitude — worst 1.6285e-07 against
+the writer's 1.8182e-07 — and picks out the SAME TWO worst buildings,
+`doitt:514180` and `doitt:365535`. It does **not** agree on their order, and that
+is stated rather than smoothed: the writer ranks 514180 worst and Blender ranks
+365535 worst, by a margin far below either measurement's own noise floor. Claiming
+agreement on the ranking would be claiming precision neither has.
+
+Precondition (e) — the wave-scale 0.9895 margin and the 16 buildings that fell the
+other side of it — is **NOT closed by this promotion and is not claimed to be.**
+The curated subset simply does not contain any of the narrow cases. The
+explanation is still owed.
+
+## The six-wave acceptance measurement (precondition (d))
+
+Measured in the production preview build by the shipping CesiumJS renderer, with
+Chrome's vsync and frame-rate limit disabled, at the UNCHANGED 512-entry cap.
+Three repeats, 240 timed frames after 180 settle frames, 1280x800.
+
+A second Chrome without the uncapping flags read a capped-control p50 of
+**8.30 ms** — a 120 Hz present interval — and every uncapped station sits at 0.28
+to 0.44 of it, which is what makes these headroom readings rather than floor
+readings.
+
+| Station | Profile | p50 | p95 | Budget p50/p95 | Worst frame |
+| --- | --- | --- | --- | --- | --- |
+| `harlem-125th-facade` | inspection | 3.60 ms | 13.00 ms | 33.3 / 45 | 40.2 ms |
+| `harlem-125th-skyline` | exploration | 3.40 ms | 10.40 ms | 16.7 / 25 | 55.7 ms |
+| `sixwave-wide` | exploration | 2.30 ms | 5.60 ms | 16.7 / 25 | 116.2 ms |
+| `centralpark-west-facade` | inspection | 3.60 ms | 12.90 ms | 33.3 / 45 | 64.2 ms |
+
+Every station is inside both budgets on p50 and p95. **The isolated slow frames
+are STATED, not smoothed.** The 116.2 ms frame at `sixwave-wide` is the largest any
+promotion has recorded; it is a single frame in a window whose p95 is 5.60 ms, and
+it occurs at the station that brings the most simultaneously-visible geometry into
+one frustum. It is reported because a p95 inside budget and a 116 ms frame are both
+true and a reader deciding whether this composition is smooth needs both.
+
+`centralpark-west-facade` is the T020 station kept POSE-FOR-POSE, so the sixth
+wave's cost to the fifth is a comparison rather than an assertion.
+
+**Residency**: worst observed **484 entries and 122.78 MiB** against 512 and
+256 MiB. It is DERIVED from the network, per release, because the in-app cache
+counter only reaches the DOM in a probe build — and it is derived from DISTINCT
+ARTIFACTS rather than from responses, because a six-wave session runs close enough
+to the cap that an artifact can be evicted and re-fetched, which would otherwise
+inflate occupancy. **Whether that happened is a reading, not an assumption**: both
+numbers ship for every capture, the record derives the observation rather than
+asserting it, and in this run 1 of the 12 captures showed a re-fetch — at most
+three responses over entries.
+
+**The entry figure is an UPPER BOUND on occupancy, not a measurement of concurrent
+residency**, and the record says so: distinct-over-the-whole-session counts an
+artifact that was fetched early and evicted later, which is not resident at the
+end. The honest statement is that occupancy stayed inside the cap, not that the
+cache held exactly 484 entries at any instant.
+
+**GPU texture memory: 5.99 MiB, COMPUTED and never presented as measured** — 72
+embedded images at 128x128, four bytes per texel, 1.33 mip factor, not
+deduplicated across models. No instrument reachable from this session reports
+texture VRAM.
+
+Heap after forced GC: 178–243 MiB across stations. **Zero external hosts** in every
+capture.
+
+## Journeys, all five passed
+
+- **cold-default** — a clean load streams all SIX waves, and every wave's delivered
+  count is NAMED rather than summarised: 14 / 91 / 66 / 130 / 36 / 24 distinct
+  artifacts, each equal to its response count in this capture. The curated `w05`
+  cell delivers all 24 of its assets — the only exact count asserted, because the
+  other waves fetch the level of detail the camera selected rather than everything
+  on disk; the T021 canary delivers zero, because it is not promoted; zero external
+  hosts.
+- **cross-wave-pick** — the curated cell's tallest building, `doitt:342401` at a
+  sourced 101.5 m, names its release, cell and cell release, the checksum of the
+  exact asset on screen, its truth tiers, source dates and uncertainty across
+  SEVEN detail rows.
+- **canary-opt-in** — the T021 canary's `?exteriorCells=` link still resolves to
+  the canary ALONE at 76 assets, from a camera derived from that cell's own
+  committed bounds, with every promoted wave at zero.
+- **streaming-off** — `exteriorStreaming=off` disables all six, fetches no exterior
+  GLB, and its still DIFFERS from the promoted default's at the identical pose,
+  which is the only evidence here that the tiles are drawn rather than downloaded.
+- **tombstone-truth** — the notice reads "181 of 182 exterior cells ship no
+  exterior geometry in this release; no substitute was selected for them."
+
+**The Blender pass re-imported ALL 24 shipped assets**, not a sample: the curated
+cell owns 24 and the grammar refused none, so the deterministic strata select every
+one and this is a census. Triangle delta 0, material mismatches 0, bounds deviation
+0.0 m against a 13.097 m Z-up control hypothesis, non-solid 0, 72 embedded images
+with 0 unreachable and a minimum of one UV layer.
+
+## Rollback semantics
+
+The predecessor is the DISABLED base-only record, on the `w02`, `w03` and `w04`
+precedent: wave `w05` has never been promoted in any form, so **rolling it back
+returns its area to base massing.** The rollback refuses the successor's link BY
+NAME, leaves the T021 canary's opt-in honoured — that release was never promoted,
+so its link is not a promotion-era bookmark — and leaves the other five waves
+streaming. It is rehearsed through the record's own injection seam in
+`exterior-multiwave-activation.test.ts`, because no URL expresses a build-time
+record swap.
+
+It is the one rollback in this build that also **un-completes the ledger's promoted
+coverage**, and the mechanics are unchanged by that: five of six waves keep
+streaming, exactly one statement names exactly this wave, and the swap is still a
+single record.
+
+## Goal-level completion, and exactly what remains bounded
+
+**With this record every wave the committed exterior ledger declares has promoted
+default coverage — six of six.** No wave is left with no default at all. That is
+the whole of the claim.
+
+**What it is NOT.** It is completeness of COVERAGE, not of the city, and the
+arithmetic is asserted rather than described: the six promoted waves accept **484
+canonical buildings** — shipping 498 GLB assets, because Block 835 alone ships both
+canonical levels of detail for its 14 — against a pinned base of **45,194**
+canonical buildings. That is roughly **one building in ninety-three** textured by
+default. Assets and buildings are different counts and this section keeps them
+apart: `exterior-northern-manhattan-promotion-record.test.ts` sums the accepted
+memberships to 484 and the cache arithmetic sums the shipped artifacts to 498.
+What remains bounded, and by what:
+
+- **Per-wave renderable subsets are bounded by the 512-entry cache contract.**
+  Every promoted wave ships a curated or order-derived subset of its own partition,
+  and the sum of those subsets is 498 of 512. Breadth inside a wave cannot grow
+  without either raising the cap or evicting another wave's ground.
+- **ADR 0024's cell scheduling is the structural follow-up** that would change
+  that. It is what makes breadth a function of what the camera can see rather than
+  of a fixed all-resident budget, and until it exists "promote more of a wave" and
+  "raise the cache cap" are the same decision.
+- **The narrow wave-scale volume margin (precondition (e)) is still unexplained.**
+  Completing coverage does not close it.
+
+No gate was relaxed because this is the last wave.
+
+## What this amendment does not claim
+
+- It does not claim Manhattan is textured. **484 of 45,194 canonical buildings**
+  carry generated exterior detail by default, shipped as 498 GLB assets.
+- It does not claim the promoted subset is representative of wave `w05`. It is one
+  cell of 182, chosen on a stated rule, and its 0% refusal rate is not the wave's
+  3.72%.
+- It does not claim the 90 m threshold is the right one for this wave. It claims
+  the threshold was carried forward unchanged, that the ranking depends on it, and
+  that a threshold-free key selects the same cell.
+- It does not claim any tile resembles, reproduces or reports on a real building's
+  facade.
+- It does not claim the narrow wave-scale volume margin is understood.
+- It does not claim that completing the ledger's coverage grants any permission no
+  single wave's instrument carries. The verbs, the source and the audience are
+  unchanged, and public internet deployment stays excluded.

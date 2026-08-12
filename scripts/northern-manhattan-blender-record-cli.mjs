@@ -30,7 +30,13 @@ import { sha256HexBytes, sha256HexSync } from "../src/domain/deterministic-hash.
 import { serializeExteriorWaveArtifact } from "../src/release/exterior-wave-subset.ts";
 import { NORTHERN_MANHATTAN_RELEASE_ID } from "../src/release/northern-manhattan-package.ts";
 import { NORTHERN_MANHATTAN_OUTPUT_DIRECTORY } from "../src/release/northern-manhattan-release.ts";
-import { NORTHERN_MANHATTAN_RECORD_ROOT, NORTHERN_MANHATTAN_WORK_ROOT } from "./northern-manhattan-cli.mjs";
+import { NORTHERN_MANHATTAN_P1_RELEASE_ID, NORTHERN_MANHATTAN_P1_OUTPUT_DIRECTORY } from "../src/release/northern-manhattan-p1-release.ts";
+import {
+  NORTHERN_MANHATTAN_P1_RECORD_ROOT,
+  NORTHERN_MANHATTAN_P1_WORK_ROOT,
+  NORTHERN_MANHATTAN_RECORD_ROOT,
+  NORTHERN_MANHATTAN_WORK_ROOT,
+} from "./northern-manhattan-cli.mjs";
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -41,10 +47,40 @@ const VARIANTS = {
     recordRoot: NORTHERN_MANHATTAN_RECORD_ROOT,
     outputDirectory: NORTHERN_MANHATTAN_OUTPUT_DIRECTORY,
     note: "T021 Blender re-import, measurement and render pass over the deterministic stratified sample of the Northern-Manhattan canary's shipped assets: 69 of the 76 the single renderable cell ships, drawn from twelve strata.",
+    volumeNote: " READ THE VOLUME NUMBERS AS AN INDEPENDENT CHECK, AND THIS WAVE NEEDS ONE MORE THAN ANY BEFORE IT: its committed census records a worst ACCEPTED writer-side volume deviation of 0.9895 of the tolerance and SIXTEEN buildings refused for exceeding it, which is the narrowest the identity has ever passed. The deviations below are recomputed from the IMPORTED mesh by a different implementation, which is what makes them evidence about the geometry rather than a second reading of the writer's own arithmetic.",
+    coverageNote: " THE SAMPLE IS 69 OF 76 SHIPPED ASSETS AND THAT IS NOT A GAP IN THE EVIDENCE: the deterministic strata select 69 distinct buildings, every one of the cell's 53 disclosed tier collapses among them, and the 7 unsampled assets differ from sampled ones in no property the strata rank on. It is a SAMPLE and is described as one; the release's own gates ran on all 76.",
+  },
+  p1: {
+    releaseId: NORTHERN_MANHATTAN_P1_RELEASE_ID,
+    workRoot: NORTHERN_MANHATTAN_P1_WORK_ROOT,
+    recordRoot: NORTHERN_MANHATTAN_P1_RECORD_ROOT,
+    outputDirectory: NORTHERN_MANHATTAN_P1_OUTPUT_DIRECTORY,
+    note: "T022 Blender re-import, measurement and render pass over the PROMOTED Northern-Manhattan P1 successor's shipped assets: ALL 24 of them. The curated cell owns 24 buildings and the grammar refused none, so the deterministic strata select every shipped asset and this is a census rather than a sample — which is stated plainly because every earlier wave's record had to explain a gap and this one does not have one.",
+    volumeNote: " READ THE VOLUME NUMBERS AS AN INDEPENDENT CHECK. TWO SCALES ARE IN PLAY AND THIS RECORD DOES NOT MIX THEM. The WAVE's committed census records a worst accepted writer-side volume deviation of 0.9895 of the tolerance and 16 buildings refused for exceeding it, which is the narrowest the identity has ever passed; those are figures about all 10230 owned buildings of wave w05 and are stated here only because they are why an independent check was worth running at all. THIS RECORD's own numbers are in `summary` beneath it and are not those: the curated subset refused 0 buildings, and the worst deviation Blender recomputed across its 24 assets is orders of magnitude inside the tolerance. The deviations below are recomputed from the IMPORTED mesh by a different implementation, which is what makes them evidence about the geometry rather than a second reading of the writer's own arithmetic.",
+    coverageNote: " THIS IS A CENSUS RATHER THAN A SAMPLE, AND THAT IS THE ONE THING EVERY EARLIER WAVE'S RECORD HAD TO EXPLAIN AWAY. The curated cell owns 24 buildings, the grammar refused none of them, so 24 shipped and the deterministic strata select all 24. There is no unsampled remainder to account for and none is claimed: `crossCheck.sampledShareOfShipped` is 1.",
   },
 };
 
-const NOTE_SUFFIX = " Blender inspects and measures; the Node writer owns the shipped bytes and nothing in the pass authors geometry. Committed because the work root is gitignored. Each sample's checksumSha256 is cross-checked against this release's committed payload inventory before it is recorded, so this report is provably about the bytes that shipped rather than about whatever was on disk. The renders are not committed; each is pinned by SHA-256 so re-running the pass is a check rather than a fresh assertion. READ THE VOLUME NUMBERS AS AN INDEPENDENT CHECK, AND THIS WAVE NEEDS ONE MORE THAN ANY BEFORE IT: its committed census records a worst ACCEPTED writer-side volume deviation of 0.9895 of the tolerance and SIXTEEN buildings refused for exceeding it, which is the narrowest the identity has ever passed. The deviations below are recomputed from the IMPORTED mesh by a different implementation, which is what makes them evidence about the geometry rather than a second reading of the writer's own arithmetic. THE SAMPLE IS 69 OF 76 SHIPPED ASSETS AND THAT IS NOT A GAP IN THE EVIDENCE: the deterministic strata select 69 distinct buildings, every one of the cell's 53 disclosed tier collapses among them, and the 7 unsampled assets differ from sampled ones in no property the strata rank on. It is a SAMPLE and is described as one; the release's own gates ran on all 76."
+/**
+ * The part of the note that is true of EVERY variant, and only that part.
+ *
+ * IT USED TO CARRY MORE. A single shared suffix carried this wave's CANARY
+ * sentences — its 69-of-76 sampling gap, and a volume paragraph phrased as though
+ * the wave-scale figures beside it were the record's own — into whichever record
+ * was emitted. That was invisible while only the canary existed and became false
+ * the moment the promoted successor emitted one: its own summary states 24
+ * samples, zero refusals and a worst deviation of 1.63e-07, beside prose claiming
+ * a 69-asset sample and sixteen refusals. Prose that contradicts the numbers
+ * printed under it is worse than no prose, so the variant-specific sentences moved
+ * to the variants and `northern-manhattan-p1-evidence-consistency.test.ts` now
+ * refuses any count in this record's prose that the record does not itself carry.
+ *
+ * The canary's concatenation is UNCHANGED byte for byte — shared, then volume,
+ * then coverage, in that order — because its committed record is frozen and
+ * re-emitting it would move the checksum this successor's predecessor pin is taken
+ * over.
+ */
+const SHARED_NOTE_SUFFIX = " Blender inspects and measures; the Node writer owns the shipped bytes and nothing in the pass authors geometry. Committed because the work root is gitignored. Each sample's checksumSha256 is cross-checked against this release's committed payload inventory before it is recorded, so this report is provably about the bytes that shipped rather than about whatever was on disk. The renders are not committed; each is pinned by SHA-256 so re-running the pass is a check rather than a fresh assertion.";
 
 /**
  * The Blender that ran the pass, read off it rather than copied forward.
@@ -109,7 +145,7 @@ async function main() {
   const evidence = {
     schemaVersion: "1.0",
     releaseId: variant.releaseId,
-    note: variant.note + NOTE_SUFFIX,
+    note: variant.note + SHARED_NOTE_SUFFIX + variant.volumeNote + variant.coverageNote,
     // Read off the running Blender rather than copied forward. The earlier waves'
     // records say "EEVEE Next on this build"; on the Blender that ran THIS pass
     // the engine enum offers only BLENDER_EEVEE, so the pass's first-available
@@ -122,7 +158,15 @@ async function main() {
       renderCount: renders.length,
       shippedAssetCount: inventory.stats.shippedAssetCount,
       sampledShareOfShipped: samples.length / inventory.stats.shippedAssetCount,
-      statement: "Every measured asset resolved to a path the committed payload inventory declares, and every measured checksum equalled the declared one. A mismatch fails this script rather than being recorded. `sampledShareOfShipped` is stated because this is a SAMPLE of the shipped assets rather than all of them, and a reader should not have to divide two numbers in different files to learn that.",
+      // The statement is DERIVED from the share rather than written for one
+      // variant, because the sentence "this is a SAMPLE rather than all of them"
+      // is false of a release whose strata select every shipped asset — and it
+      // shipped in exactly that false form once, on a record whose own share was
+      // 1. A reader should not have to divide two numbers in different files, and
+      // should not be told the answer to that division by a constant either.
+      statement: samples.length === inventory.stats.shippedAssetCount
+        ? `Every measured asset resolved to a path the committed payload inventory declares, and every measured checksum equalled the declared one. A mismatch fails this script rather than being recorded. \`sampledShareOfShipped\` is 1: the deterministic strata selected ALL ${samples.length} shipped assets, so this is a CENSUS of what the release ships rather than a sample of it, and there is no unsampled remainder to account for.`
+        : `Every measured asset resolved to a path the committed payload inventory declares, and every measured checksum equalled the declared one. A mismatch fails this script rather than being recorded. \`sampledShareOfShipped\` is stated because this is a SAMPLE of the shipped assets rather than all of them, and a reader should not have to divide two numbers in different files to learn that.`,
     },
     summary,
     renders,

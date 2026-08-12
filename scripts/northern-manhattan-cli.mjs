@@ -41,19 +41,28 @@
  * This script acquires nothing, replaces no retained snapshot, never writes into
  * another wave's directories, and writes only under the ones it owns.
  *
- * ONE RELEASE TRAVELS THIS PIPELINE TODAY, AND THE SEAM FOR THE SECOND IS ALREADY
- * HERE. `RELEASE_VARIANTS`, the optional `renderableCellDigestSha256` fingerprint
+ * TWO RELEASES TRAVEL THIS PIPELINE.
+ *
+ *   canary  (default) `manhattan-northern-manhattan-cells-20260812` — the
+ *           order-derived renderable subset under a deliberately modest entry
+ *           ceiling. Opt-in only; nothing about it promotes it.
+ *   p1      `manhattan-northern-manhattan-cells-20260812-p1` — the PROMOTED
+ *           successor, whose renderable subset is the explicit curated list in
+ *           `northern-manhattan-curation.ts` under the 36-entry RESERVATION T020's
+ *           split committed to this wave.
+ *
+ * `RELEASE_VARIANTS`, the optional `renderableCellDigestSha256` fingerprint
  * component and the fail-closed gates-receipt rule were carried forward from the
- * Central-and-upper-Manhattan pipeline UNUSED by this canary, exactly as they were
- * carried into that one before its own successor existed. Both exist because their
- * absence was a real defect the T016 review found: a curated subset that is a
- * constant in this repository moves nothing hashed when it is edited, and a curated
- * variant that reaches its committed inventory without a gates receipt emits its
- * refusal census as `null`. Adding the seam after the successor exists would repeat
- * both. T022's promoted successor is what makes it load-bearing.
+ * Central-and-upper-Manhattan pipeline UNUSED by the canary. They are the seam the
+ * promoted successor slots into, and both exist because their absence was a real
+ * defect the T016 review found: a curated subset that is a constant in this
+ * repository moves nothing hashed when it is edited, and a curated variant that
+ * reaches its committed inventory without a gates receipt emits its refusal census
+ * as `null`. The p1 variant below is what makes the seam load-bearing rather than
+ * decorative.
  *
  * Usage:
- *   node scripts/northern-manhattan-cli.mjs <plans|glbs|gates|graph|sample|all> [--release canary] [--force]
+ *   node scripts/northern-manhattan-cli.mjs <plans|glbs|gates|graph|sample|all> [--release canary|p1] [--force]
  */
 import { existsSync } from "node:fs";
 import { mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
@@ -96,6 +105,26 @@ import {
   northernManhattanRenderableEntryBudget,
   northernManhattanReservation,
 } from "../src/release/northern-manhattan-release.ts";
+import {
+  NORTHERN_MANHATTAN_CANDIDATE_ENVELOPE,
+  NORTHERN_MANHATTAN_CURATED_CELLS,
+  NORTHERN_MANHATTAN_CURATION_BASIS,
+  NORTHERN_MANHATTAN_CURATION_STATEMENT,
+  NORTHERN_MANHATTAN_SKYLINE_HEIGHT_METERS,
+  NORTHERN_MANHATTAN_SKYLINE_THRESHOLDS_METERS,
+  northernManhattanCuratedCells,
+  northernManhattanCuratedEntryBudget,
+  northernManhattanCuratedRefusalCensus,
+  northernManhattanCuratedVolumeMargin,
+} from "../src/release/northern-manhattan-curation.ts";
+import {
+  NORTHERN_MANHATTAN_P1_OUTPUT_DIRECTORY,
+  NORTHERN_MANHATTAN_P1_PREDECESSOR_RELEASE_ID,
+  NORTHERN_MANHATTAN_P1_RELEASE_ID,
+  NORTHERN_MANHATTAN_P1_WAVE_PROFILE,
+  northernManhattanP1Predecessor,
+  northernManhattanP1Profile,
+} from "../src/release/northern-manhattan-p1-release.ts";
 import { collectMidtownCoreSources, midtownCoreGlbBounds } from "../src/release/midtown-core-source.ts";
 import { MIDTOWN_CORE_SHIPPED_LOD_ID, buildMidtownCoreRelease } from "../src/release/midtown-core-release.ts";
 import {
@@ -156,9 +185,22 @@ const PROMOTED_WAVES = [
   },
 ];
 
+/**
+ * The committed record the 36-entry RESERVATION is read from, for every variant.
+ *
+ * It is the promoted wave-w04 successor's own `payload-inventory.json` — the
+ * release that took ADR 0036 Decision 3's response 2 and wrote both halves of the
+ * split into its bytes. It is a constant rather than a per-variant path because a
+ * reservation belongs to the release that MADE it, not to whatever release a
+ * variant happens to pin as its graph predecessor.
+ */
+const RESERVATION_INVENTORY_PATH = join(repositoryRoot, "data", "central-upper-manhattan-20260812-p1", "payload-inventory.json");
+
 /** Directories this pipeline owns and may replace. */
 export const NORTHERN_MANHATTAN_WORK_ROOT = "artifacts/northern-manhattan-20260812";
 export const NORTHERN_MANHATTAN_RECORD_ROOT = "data/northern-manhattan-20260812";
+export const NORTHERN_MANHATTAN_P1_WORK_ROOT = "artifacts/northern-manhattan-20260812-p1";
+export const NORTHERN_MANHATTAN_P1_RECORD_ROOT = "data/northern-manhattan-20260812-p1";
 
 /**
  * The releases this pipeline emits, and everything that differs between them.
@@ -197,6 +239,63 @@ const RELEASE_VARIANTS = {
     skylineEnvelope: null,
     stages: ["plans", "glbs", "gates", "graph", "sample"],
     inventoryNote: "The payload directory is intentionally untracked, following the citywide precedent. This inventory is the committed record that keeps every emitted byte checkable after the local tree is removed; `node scripts/northern-manhattan-cli.mjs graph --force` rebuilds it byte-identically. This release is a CANARY: it is pinned for `?exteriorCells=` opt-in and is absent from the promotion record, so an ordinary session never loads it. CACHE: the occupancy below is derived against the 512-entry cap raised at T018 and unchanged since. FIVE waves are promoted now and this is the LAST unpromoted wave the committed ledger declares, so there is no headroom left to contest — there is a RESERVATION. T020's promotion of wave w04 took ADR 0036 Decision 3's response 2 and reserved 36 entries for this wave in its own committed bytes, which is where `occupancy.reservation` is read from. TWO NUMBERS ARE RECORDED BECAUSE THEY DIFFER: 38 entries are actually free (512 minus the 474 the five promoted waves ship), while 36 were reserved. The 2-entry surplus is what wave w04's promotion did not spend of its 42-entry share, and T022 is bound by the 36 it was promised rather than by the 38 that happen to be free. THE RESERVATION DOES NOT ADMIT AN ORDINARY CELL OF THIS WAVE: the median cell owns 55 buildings, so `admitsMedianCellWithinReservation` is false and only 50 of the 182 cells fit the reservation whole. THIS CANARY'S OWN BUDGET IS LARGER THAN THE RESERVATION AND IS NOT A PROMOTION REHEARSAL: `entryBudgetFitsReservation` is false by construction, because an opt-in session loads this release alone and is budgeted against the cache rather than against a promoted composition.",
+  },
+  p1: {
+    variantId: "p1",
+    releaseId: NORTHERN_MANHATTAN_P1_RELEASE_ID,
+    outputDirectory: NORTHERN_MANHATTAN_P1_OUTPUT_DIRECTORY,
+    workRoot: NORTHERN_MANHATTAN_P1_WORK_ROOT,
+    recordRoot: NORTHERN_MANHATTAN_P1_RECORD_ROOT,
+    waveProfile: NORTHERN_MANHATTAN_P1_WAVE_PROFILE,
+    predecessorReleaseId: NORTHERN_MANHATTAN_P1_PREDECESSOR_RELEASE_ID,
+    predecessorInventoryPath: join(repositoryRoot, "data", "northern-manhattan-20260812", "payload-inventory.json"),
+    predecessorOf: northernManhattanP1Predecessor,
+    releaseProfile: northernManhattanP1Profile,
+    renderable: (cells, entryBudget) => {
+      const curated = northernManhattanCuratedCells(cells, entryBudget);
+      return { cells: curated.cells, ownedBuildingCount: curated.ownedBuildingCount, spareEntries: curated.spareEntries };
+    },
+    /**
+     * The PROMOTED occupancy derivation, at the UNCHANGED 512-entry cap.
+     *
+     * The headroom beside the five already-promoted waves is read from THEIR
+     * committed records on every run, never remembered. What this variant adds
+     * over the canary's derivation is that the reservation is CONSUMED rather
+     * than merely reported: the budget applied here is the 36 entries T020's
+     * split promised this wave, and the derivation refuses a reservation that
+     * disagrees with the one this curation was enumerated against, that no longer
+     * fits what is free, or that arrives in a build where this is not the last
+     * unpromoted wave.
+     */
+    occupancyOf: (input) => northernManhattanCuratedEntryBudget({
+      maxCacheEntries: input.maxCacheEntries,
+      promotedWaves: input.promotedWaves,
+      remainingUnpromotedWaveIds: input.remainingUnpromotedWaveIds,
+      reservation: input.reservation,
+      declaredWaveCount: input.declaredWaveCount,
+    }),
+    curation: {
+      basis: NORTHERN_MANHATTAN_CURATION_BASIS,
+      statement: NORTHERN_MANHATTAN_CURATION_STATEMENT,
+      cells: NORTHERN_MANHATTAN_CURATED_CELLS,
+      refusalCensus: northernManhattanCuratedRefusalCensus,
+      volumeMargin: northernManhattanCuratedVolumeMargin,
+    },
+    /**
+     * The candidate envelope the curation chose from: the WHOLE WAVE, so the
+     * committed skyline census profiles all 182 owned cells and the optimality
+     * claim can be re-enumerated over every one of them rather than over a band
+     * drawn after the answer was known.
+     */
+    skylineEnvelope: NORTHERN_MANHATTAN_CANDIDATE_ENVELOPE,
+    // No `probe`: the kill switch is a question about whether tiles are
+    // affordable at all, it was answered on the T015 canary and re-measured off
+    // the vsync floor at T016, at the raised cap at T018, and on a five-wave
+    // composition at T020. Promotion's measurement here is the whole SIX-WAVE
+    // composition in the production preview, which is a different instrument
+    // entirely and lives in `northern-manhattan-acceptance-cli.mjs`.
+    stages: ["plans", "glbs", "gates", "graph", "sample"],
+    inventoryNote: "The payload directory is intentionally untracked, following the citywide precedent. This inventory is the committed record that keeps every emitted byte checkable after the local tree is removed; `node scripts/northern-manhattan-cli.mjs graph --release p1 --force` rebuilds it byte-identically. RIGHTS: this successor ships under the CANARY's approval instrument, carried unedited — same approval id, scope text, exclusions and note, and therefore the same fingerprint — because amending it would move the fingerprint the canary's own committed release graph pins and would falsify what was approved. That instrument's opening sentence names the release it was authored for, `manhattan-northern-manhattan-cells-20260812`, and is the only part of it that is about that release rather than about wave w05; every operative clause was checked against this release and holds, including the bounded-subset clause that is exactly what differs here. This release adds no source, no verb and no envelope to it, AND IT RESTS ON NO FRESH SIGNATURE: promotion did not obtain one, nobody was asked to approve wave w05 for default activation, and the authority is the two recorded items the canary's note names and no others. THE INSTRUMENT'S LAST-WAVE CLAUSE APPLIES AT FULL FORCE AND STILL BROADENS NOTHING: with this release completed coverage becomes a fact about the promoted DEFAULT rather than only about approved releases, and that is still an arithmetic property of the partition rather than a verb, a source or an audience — the verbs are the 2026-08-11 verbs, the source is the same pinned jh45-qr5r snapshot, public internet deployment stays excluded, and nothing here authorizes assembling the six waves into a redistributable whole that no single wave's instrument would permit. CACHE: the occupancy below is derived against the UNCHANGED 512-entry cap. The 36-entry reservation T020 recorded is CONSUMED by this promotion and recorded as consumed — see `occupancy.reservationStatement` for the decision it inherits, the arithmetic that produced 42 and 36, what the 2-entry surplus is and why it is not taken, and the ledger-wide occupancy end-state this promotion produces.",
   },
 };
 
@@ -279,10 +378,20 @@ async function loadContext(variant) {
   const predecessorInventory = readJsonText(predecessorInventoryText, predecessorLabel);
   const predecessorInventoryChecksumSha256 = sha256HexSync(predecessorInventoryText);
   const predecessor = variant.predecessorOf(predecessorInventory);
-  // The reservation is read from the SAME committed bytes the lineage pin comes
-  // from, so a promotion record that moved would move both together rather than
-  // leaving a stale number beside a fresh checksum.
-  const reservation = northernManhattanReservation(predecessorInventory);
+  // THE RESERVATION IS ALWAYS READ FROM THE RELEASE THAT MADE IT, WHICHEVER
+  // VARIANT IS RUNNING.
+  //
+  // For the canary those bytes are also its lineage predecessor, so the two reads
+  // coincided and one path served both. They do NOT coincide for the promoted
+  // successor: its graph predecessor is the canary, while the reservation still
+  // belongs to the promoted wave-w04 release that recorded it. Reading the
+  // reservation from whatever a variant happens to pin would have made the
+  // successor inherit its budget from a release that never reserved anything,
+  // which `northernManhattanReservation` refuses by release id rather than
+  // accepting silently.
+  const reservationLabel = `committed ${NORTHERN_MANHATTAN_PREDECESSOR_RELEASE_ID} inventory (reservation)`;
+  const reservationInventory = readJsonText(await readVerifiedText(RESERVATION_INVENTORY_PATH, reservationLabel), reservationLabel);
+  const reservation = northernManhattanReservation(reservationInventory);
 
   const promotedWaves = await readPromotedWaveEntries();
 
@@ -305,6 +414,10 @@ async function loadContext(variant) {
     cellBuildingCounts: subset.ledger.cells.map((cell) => cell.buildingIds.length),
     remainingUnpromotedWaveIds,
     reservation,
+    // How many waves the committed plan declares, so "this promotion completes the
+    // ledger's coverage" is an arithmetic result rather than a sentence. It is the
+    // plan's own length, never a literal six.
+    declaredWaveCount: EXTERIOR_WAVE_PLAN.length,
   });
   const renderable = variant.renderable(subset.ledger.cells, occupancy.entryBudget);
 
@@ -447,6 +560,50 @@ async function stagePlans(context, options) {
     perCell.push({ cellId: cell.cellId, order: cell.order, owned: cell.buildingIds.length, planned: cellPlanned, refused: cellRefused });
   }
 
+  // The SKYLINE CENSUS, for a variant whose subset was curated on visible height.
+  //
+  // It profiles every candidate cell in the stated envelope, not only the one that
+  // was chosen — and for this wave the stated envelope is the WHOLE WAVE, so the
+  // candidate set is all 182 owned cells. Heights are the SOURCED `heightMeters` of
+  // the pinned citywide base; a building whose source carries no height contributes
+  // to `owned` and to nothing else, which is why the two counts are reported
+  // separately rather than being reconciled into a single number that hides the
+  // unknowns.
+  //
+  // SEVEN THRESHOLDS ARE RECORDED, not the five wave `w04` recorded, and the two
+  // extra ones are the low end. This wave's ranking DOES depend on the threshold,
+  // so the census has to carry enough of the curve for the optimum suite to say
+  // which cell every threshold would have selected rather than only that the
+  // chosen one wins at the chosen bar.
+  const skyline = [];
+  if (context.variant.skylineEnvelope) {
+    const envelope = context.variant.skylineEnvelope;
+    for (const cell of context.subset.ledger.cells) {
+      const inside = cell.bounds.west >= envelope.west && cell.bounds.east <= envelope.east
+        && cell.bounds.south >= envelope.south && cell.bounds.north <= envelope.north;
+      if (!inside) continue;
+      const heights = cell.buildingIds
+        .map((buildingId) => sources.get(buildingId)?.heightMeters)
+        .filter((height) => typeof height === "number")
+        .sort((left, right) => right - left);
+      skyline.push({
+        cellId: cell.cellId,
+        parentOrder: Number(/-w05-(\d{6})-/u.exec(cell.cellId)[1]),
+        bounds: { ...cell.bounds },
+        ownedBuildingCount: cell.buildingIds.length,
+        sourcedHeightCount: heights.length,
+        skylineBuildingCount: heights.filter((height) => height >= NORTHERN_MANHATTAN_SKYLINE_HEIGHT_METERS).length,
+        skylineBuildingCountByThresholdMeters: Object.fromEntries(
+          NORTHERN_MANHATTAN_SKYLINE_THRESHOLDS_METERS.map((threshold) => [threshold, heights.filter((height) => height >= threshold).length]),
+        ),
+        tallestSourcedHeightMeters: heights[0] ?? null,
+        topSourcedHeightMeters: heights.slice(0, 5),
+      });
+    }
+    if (skyline.length === 0) fail("the stated skyline envelope contains no owned cell; the curation was written against a different ledger.");
+    skyline.sort((left, right) => left.parentOrder - right.parentOrder);
+  }
+
   const summary = {
     declaredShardCount,
     ownedBuildingCount: context.subset.buildingIds.length,
@@ -462,6 +619,14 @@ async function stagePlans(context, options) {
     maximumRingVertexCount,
     maximumFloorCount,
     styleClassCounts,
+    ...(context.variant.skylineEnvelope
+      ? {
+        skylineEnvelope: { ...context.variant.skylineEnvelope },
+        skylineThresholdMeters: NORTHERN_MANHATTAN_SKYLINE_HEIGHT_METERS,
+        skylineThresholdsMeters: [...NORTHERN_MANHATTAN_SKYLINE_THRESHOLDS_METERS],
+        skyline,
+      }
+      : {}),
   };
   if (summary.ownedBuildingCount !== NORTHERN_MANHATTAN_BUILDING_COUNT) fail(`the subset owns ${summary.ownedBuildingCount} buildings, not ${NORTHERN_MANHATTAN_BUILDING_COUNT}.`);
   if (summary.uniquePlanHashCount !== planned) fail(`plan hashes are not unique: ${summary.uniquePlanHashCount} of ${planned}.`);
@@ -609,7 +774,7 @@ async function stageGates(context, options) {
       cellIds: context.renderable.cells.map((cell) => cell.cellId),
       ownedBuildingCount: context.renderable.ownedBuildingCount,
       spareEntries: context.renderable.spareEntries,
-      stoppedAt: context.renderable.stoppedAt,
+      stoppedAt: context.renderable.stoppedAt ?? null,
       shippedAssetCount: glbs.summary.shippedAssetCount ?? null,
     },
     tombstonedCellCount: context.subset.ledger.cells.length - context.renderable.cells.length,
@@ -830,13 +995,23 @@ async function stageGraph(context, options) {
      * cannot say whether the budget ran out or the wave did. For this wave that
      * distinction is the whole story of its size, so the first cell the budget
      * could not admit is recorded beside the cells that were.
+     *
+     * A CURATED variant carries no walk at all, and the key is SPREAD IN rather
+     * than emitted with a null `stoppedAt`: a curated list is not a walk, so a
+     * record that described one would be answering a question nobody asked of it.
+     * The curated subset's own spare-entry story lives in `curation.statement`,
+     * which says why the remainder is unspent instead of where a walk halted.
      */
-    renderableWalk: {
-      entryBudget: context.occupancy.entryBudget,
-      ownedBuildingCount: context.renderable.ownedBuildingCount,
-      spareEntries: context.renderable.spareEntries,
-      stoppedAt: context.renderable.stoppedAt,
-    },
+    ...(context.variant.curation
+      ? {}
+      : {
+        renderableWalk: {
+          entryBudget: context.occupancy.entryBudget,
+          ownedBuildingCount: context.renderable.ownedBuildingCount,
+          spareEntries: context.renderable.spareEntries,
+          stoppedAt: context.renderable.stoppedAt,
+        },
+      }),
     // How the renderable subset was chosen, carried in the release's own committed
     // record rather than only in an ADR. The key is SPREAD IN, not set to `null`,
     // for a variant without a curation: a release that derived its subset from the
@@ -935,6 +1110,31 @@ async function stageGraph(context, options) {
     })).sort((left, right) => (left.buildingId < right.buildingId ? -1 : 1)),
   });
 
+  // The skyline census, committed for a curated variant so the optimality claim is
+  // re-enumerable from committed bytes. Same fail-closed rule as everything else
+  // this stage writes: a missing or stale `plans` receipt refuses rather than
+  // emitting `null`, which would read as "not applicable" instead of "never run".
+  let skylineChecksum = null;
+  if (context.variant.skylineEnvelope) {
+    const plans = await requireFreshReceipt(context, "plans", "the skyline census the curation was chosen on");
+    if (!Array.isArray(plans.summary?.skyline) || plans.summary.skyline.length === 0) {
+      fail("the plans receipt carries no skyline census; the curated subset's optimality claim cannot be emitted as null.");
+    }
+    skylineChecksum = await writeRecord(context, "skyline-census.json", {
+      schemaVersion: "1.0",
+      releaseId: context.variant.releaseId,
+      note: "Per-cell SOURCED height profile of EVERY wave-w05 ownership cell — the candidate set the promoted renderable subset was curated from, not only the cell that was chosen, and not a band drawn around it. The envelope recorded here is simply this wave's own bounding box. `skylineBuildingCount` counts owned buildings whose sourced heightMeters reaches the stated threshold; it is the primary key the curation's optimality claim is ranked on, and `northern-manhattan-curation-optimum.test.ts` re-runs that enumeration over these bytes on every run. `skylineBuildingCountByThresholdMeters` carries the same count at 30, 45, 60, 75, 90, 100 and 120 m — SEVEN thresholds rather than the five wave w04 recorded, and the two extra ones are the low end. THAT IS BECAUSE THIS WAVE'S ANSWER TO THE THRESHOLD QUESTION IS WEAKER THAN WAVE w04'S AND IS NOT BORROWED FROM IT. That wave could report that the same cell won at every threshold it tried; this one cannot, because northern Manhattan is genuinely lower-rise — 19 of 10,206 sourced heights reach 90 m against 141 of 11,703 there — and under the identical rule this wave would promote a DIFFERENT cell at 45, 60 and 75 m. The census carries enough of the curve for that sensitivity to be re-enumerated and pinned rather than described. The 90 m threshold itself was NOT moved after the answer was known: choosing a threshold for the cell it selects is the same defect as moving a tolerance to pass a gate. Heights are the pinned manhattan-citywide-20260804 base's own sourced values and assert nothing about any named building: the NYC OTI footprint dataset carries no building names. `sourcedHeightCount` is reported beside `ownedBuildingCount` rather than reconciled with it, because a building whose source states no height is a building this census cannot rank and must not silently drop.",
+      base: { releaseId: EXTERIOR_FULLSNAPSHOT_BASE_RELEASE_ID, manifestChecksumSha256: context.manifestChecksum },
+      parentLedger: { releaseId: EXTERIOR_WAVE_LEDGER_RELEASE_ID, checksumSha256: context.parentLedgerChecksumSha256 },
+      envelope: { ...context.variant.skylineEnvelope },
+      skylineThresholdMeters: NORTHERN_MANHATTAN_SKYLINE_HEIGHT_METERS,
+      skylineThresholdsMeters: [...NORTHERN_MANHATTAN_SKYLINE_THRESHOLDS_METERS],
+      entryBudget: context.occupancy.entryBudget,
+      curatedCellIds: cells.map((cell) => cell.cellId),
+      candidates: plans.summary.skyline,
+    });
+  }
+
   const summary = {
     ...release.stats,
     emittedFileCount: files.length,
@@ -948,6 +1148,7 @@ async function stageGraph(context, options) {
     payloadInventoryChecksumSha256: inventoryChecksum,
     derivationRecordChecksumSha256: derivationChecksum,
     censusRecordChecksumSha256: censusChecksum,
+    ...(skylineChecksum ? { skylineCensusChecksumSha256: skylineChecksum } : {}),
   };
   await writeReceipt(context, "graph", fingerprint, summary);
   return { skipped: false, ...summary };

@@ -3,9 +3,11 @@
  *
  * The build activates an ORDERED SET of waves (`EXTERIOR_DEFAULT_ACTIVATIONS`),
  * today Block 835, then Midtown-core, then Lower-Manhattan, then
- * Southern-remainder, then Central-and-upper-Manhattan. Each wave is its own
- * record, and the per-record properties below hold PER RECORD — one wave rolling
- * back neither withdraws nor implies anything about another.
+ * Southern-remainder, then Central-and-upper-Manhattan, then Northern-Manhattan —
+ * every wave the committed exterior ledger declares. Each wave is its own record,
+ * and the per-record properties below hold PER RECORD — one wave rolling back
+ * neither withdraws nor implies anything about another, which is exactly as true
+ * now that the set is complete as it was when it held one entry.
  *
  * The promoted release, its operator-pinned head, and its cell/building
  * membership are ONE indivisible constant. Rollback is the single edit that
@@ -721,6 +723,132 @@ export const CENTRAL_UPPER_MANHATTAN_EXTERIOR_ACTIVATION: ExteriorDefaultActivat
 } as const;
 
 /**
+ * The base-only predecessor of the Northern-Manhattan promotion.
+ *
+ * It is DISABLED, for the same reason waves `w02`, `w03` and `w04` were and by
+ * the same precedent. Wave `w05` has never been promoted in any form: its only
+ * other release is the T021 canary, which was pinned but never a default and
+ * whose single renderable cell is a different tile in a different tile row from
+ * the cell this promotion ships. There is no untextured `w05` release and no
+ * earlier `w05` default, so the previous verified representation of this area IS
+ * the pinned base massing.
+ *
+ * ROLLING BACK THIS WAVE THEREFORE RETURNS ITS AREA TO BASE MASSING. A reader
+ * looking for "the older Northern-Manhattan exterior" will not find one, because
+ * there is not one. The other five waves keep streaming — the rules in this
+ * module are per record — so the rollback is local to this wave, and it is the
+ * one rollback in this build that also un-completes the ledger's promoted
+ * coverage. That is a consequence worth naming and it changes nothing about the
+ * mechanics: the record swap is still one edit and it still says nothing about
+ * any other wave.
+ *
+ * `rolledBackReleaseId` names the P1 successor, which is what makes a rollback
+ * also refuse promotion-era
+ * `?exteriorCells=manhattan-northern-manhattan-cells-20260812-p1` bookmarks. It
+ * deliberately does NOT name the T021 canary: that release was never promoted,
+ * its opt-in link is not a promotion-era bookmark, and it stays reachable exactly
+ * as it was before this promotion and after a rollback of it.
+ */
+export const NORTHERN_MANHATTAN_BASE_ONLY_PREDECESSOR: ExteriorDefaultActivationDisabled = {
+  enabled: false,
+  releaseId: null,
+  rolledBackReleaseId: "manhattan-northern-manhattan-cells-20260812-p1",
+} as const;
+
+/**
+ * The 24 accepted Northern-Manhattan identities: every building the curated
+ * subset materializes, and no other.
+ *
+ * They are the buildings of ownership cell 727 of wave `w05` — a block band in
+ * central Harlem covering the West 125th Street corridor — which the curation in
+ * `northern-manhattan-curation.ts` chose explicitly on skyline value rather than
+ * inheriting from the ledger's cell order. NO OWNED BUILDING OF THAT CELL IS
+ * ABSENT FROM THIS LIST: the V3 grammar refused none of its 24, so unlike waves
+ * `w02`, `w03` and `w04` this promotion ships no explicit unavailable detail for
+ * a refused building of its own curated ground. Every other building of the wave
+ * is unavailable because it is outside the renderable subset, which is a
+ * different statement and is carried by the 181 truthful tombstones.
+ *
+ * TWENTY-FOUR IS THE SMALLEST ACCEPTED MEMBERSHIP OF ANY PROMOTED WAVE, and that
+ * is a consequence of the 36-entry reservation meeting this wave's cell sizes
+ * rather than of the wave being small: `w05` owns 10,230 buildings, and it
+ * promotes 24 because ADR 0036's split reserved 36 entries for it and cell 727 is
+ * the only admissible cell that carries a building at the stated skyline
+ * threshold. See `northern-manhattan-curation.ts`.
+ */
+export const NORTHERN_MANHATTAN_MEMBERSHIP_BUILDING_IDS: readonly string[] = [
+  "doitt:1097877", "doitt:1114218", "doitt:169205", "doitt:207890", "doitt:24171",
+  "doitt:252214", "doitt:272678", "doitt:275061", "doitt:342401", "doitt:365535",
+  "doitt:481354", "doitt:494791", "doitt:504530", "doitt:514180", "doitt:527486",
+  "doitt:606408", "doitt:624061", "doitt:655028", "doitt:668411", "doitt:728255",
+  "doitt:806389", "doitt:830007", "doitt:835362", "doitt:950553",
+];
+
+/**
+ * Rollback: export `NORTHERN_MANHATTAN_EXTERIOR_ACTIVATION.predecessor` from
+ * here.
+ *
+ * The SIXTH promoted wave, the fourth to ship procedural facade detail tiles by
+ * default, and THE LAST THE COMMITTED LEDGER DECLARES. The release is the P1
+ * successor `manhattan-northern-manhattan-cells-20260812-p1`, not the T021
+ * canary: ADR 0037 precondition (b) forbids promoting the canary's order-derived
+ * renderable subset, an immutable release cannot be re-cut, and so the promoted
+ * bytes are a successor whose renderable subset is the explicit curated list.
+ *
+ * WITH THIS RECORD EVERY WAVE THE LEDGER DECLARES HAS PROMOTED DEFAULT COVERAGE.
+ * That is an arithmetic property of the promotion set and nothing more: it does
+ * not mean the city is fully textured, and the numbers in this build say so
+ * plainly — the six promoted waves ship 498 assets against 45,194 canonical base
+ * buildings. What is complete is that no wave is left with no default at all.
+ * Breadth inside each wave stays bounded by the 512-entry cache contract, and
+ * ADR 0024's cell scheduling remains the structural follow-up that would change
+ * that. No gate is relaxed because this is the last wave.
+ *
+ * THIS RECORD CONSUMES A RESERVATION RATHER THAN CUTTING A SHARE, and that is
+ * worth stating where the record lives rather than only in an ADR. The five
+ * earlier records occupy 474 of 512 exterior cache entries. T020 took ADR 0036
+ * Decision 3's response 2 and RESERVED 36 of the then-free 78 entries for this
+ * wave in its own committed bytes; this promotion spends 24 of those 36 and
+ * leaves 12 unspent, because cell 727's edge-neighbours own 40, 41, 53 and 89
+ * buildings and the contiguity precondition refuses a second, non-adjacent
+ * island. The 24 assets below bring the promoted composition to 498 of 512
+ * entries, leaving 14 entries of headroom and no unpromoted wave to reserve them
+ * for. The cache cap is NOT raised by this promotion, and
+ * `EXTERIOR_RUNTIME_BUDGETS` is untouched.
+ *
+ * Membership is stated in DIGEST form. The wave owns 182 cells and every one of
+ * them is a cell release — 181 of them truthful tombstones — so the literal form
+ * would be twenty-six kilobytes of triples that nobody reads. The 24 accepted
+ * building identities stay literal, because the identity gate compares them by
+ * name and 24 names are readable.
+ *
+ * `verifyPromotedExteriorPin` RUNS FOR THIS WAVE, because this record is the
+ * entry it reads. The T021 canary is unchanged and still carries the narrower
+ * guarantee, because it is still not promoted.
+ *
+ * `exterior-northern-manhattan-promotion-record.test.ts` recomputes every pin
+ * below from the committed `data/northern-manhattan-20260812-p1/payload-inventory.json`
+ * on every run — no payload directory required, so the drift gate is never
+ * skipped.
+ */
+export const NORTHERN_MANHATTAN_EXTERIOR_ACTIVATION: ExteriorDefaultActivationRecord = {
+  enabled: true,
+  releaseId: "manhattan-northern-manhattan-cells-20260812-p1",
+  snapshotId: "snapshot:manhattan-northern-manhattan-cells-20260812-p1:v1",
+  snapshotChecksumSha256: "5369464f6b749a7df185bf847dcae6f0fc9031f5167e8238cf44a23c28dc7008",
+  assemblyPackageIds: ["assembly:manhattan-northern-manhattan-cells-20260812-p1:v1"],
+  membership: {
+    cells: [],
+    cellsDigestSha256: "54b439058e1c47b5bb4f536735367355c6f6b8e76ee97a864db9436691433a33",
+    cellCount: 182,
+    buildingIds: NORTHERN_MANHATTAN_MEMBERSHIP_BUILDING_IDS,
+  },
+  approvalRef: "Issue #23 gate approval 2026-08-12 (T022 Northern-Manhattan curated promotion)",
+  rolledBackReleaseId: null,
+  predecessor: NORTHERN_MANHATTAN_BASE_ONLY_PREDECESSOR,
+} as const;
+
+/**
  * The ordered promotion set this build activates, oldest wave first.
  *
  * Waves are COMPOSED from their own records instead of being copied into a
@@ -730,6 +858,12 @@ export const CENTRAL_UPPER_MANHATTAN_EXTERIOR_ACTIVATION: ExteriorDefaultActivat
  * parameters rather than as reads of this module's own bindings, so a caller
  * holding a record — a build that rolled one back, or a rollback rehearsal —
  * orders precisely the record it holds.
+ *
+ * THE SET IS NOW COMPLETE with respect to the committed wave ledger: six waves
+ * declared, six records here. Nothing in this function knows that or depends on
+ * it, and it deliberately stays a plain ordered composition — a seventh wave
+ * would be a seventh parameter, and the completeness claim lives where it can be
+ * checked against the ledger rather than in a comment that would silently rot.
  */
 export function exteriorDefaultActivations(
   blockEight35: ExteriorDefaultActivationRecord = EXTERIOR_DEFAULT_ACTIVATION,
@@ -737,8 +871,9 @@ export function exteriorDefaultActivations(
   lowerManhattan: ExteriorDefaultActivationRecord = LOWER_MANHATTAN_EXTERIOR_ACTIVATION,
   southernRemainder: ExteriorDefaultActivationRecord = SOUTHERN_REMAINDER_EXTERIOR_ACTIVATION,
   centralUpperManhattan: ExteriorDefaultActivationRecord = CENTRAL_UPPER_MANHATTAN_EXTERIOR_ACTIVATION,
+  northernManhattan: ExteriorDefaultActivationRecord = NORTHERN_MANHATTAN_EXTERIOR_ACTIVATION,
 ): readonly ExteriorDefaultActivationRecord[] {
-  return [blockEight35, midtownCore, lowerManhattan, southernRemainder, centralUpperManhattan];
+  return [blockEight35, midtownCore, lowerManhattan, southernRemainder, centralUpperManhattan, northernManhattan];
 }
 
 /** The composed set, for callers with no substituted record of their own. */

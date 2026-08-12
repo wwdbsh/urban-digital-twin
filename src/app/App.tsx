@@ -568,8 +568,21 @@ export function appendBlock835PublicRealmUrl(baseUrl: string, requested: boolean
  * admit an ordinary cell of it and a promoted subset here has to be curated below
  * median size. None of that constrains this pin, because `?exteriorCells=` selects
  * this release ALONE and an opt-in session is budgeted against the whole cache.
+ *
+ * `manhattan-northern-manhattan-cells-20260812-p1` — the T022 successor — IS
+ * promoted, on exactly the terms the T016, T018 and T020 successors were: it has
+ * an entry in the promotion record, so both promotion gates run for it on every
+ * load, while the T021 canary above keeps its narrower guarantee because it is
+ * still only an opt-in. The reservation the paragraph above described as somebody
+ * else's number was SPENT: 24 of the 36 reserved entries, with no cap change and
+ * without re-opening the split to take the 2 that were momentarily free. WITH
+ * THIS PIN EVERY WAVE THE LEDGER DECLARES HAS A PROMOTED DEFAULT — six of six —
+ * and nothing about this list is different because of it: an unpinned release is
+ * still refused, a promoted release is still gated, and the canaries are still
+ * opt-in only. The paragraphs above are left as they were written because they
+ * were true of the builds they described.
  */
-export const PINNED_EXTERIOR_CELL_RELEASE_IDS = ["udt-fixture-exterior-cells", "manhattan-exterior-cells-20260811", "manhattan-exterior-cells-20260811-v3", "manhattan-midtown-core-cells-20260811", "manhattan-midtown-core-cells-20260811-v3", "manhattan-lower-manhattan-cells-20260812", "manhattan-lower-manhattan-cells-20260812-p1", "manhattan-southern-remainder-cells-20260812", "manhattan-southern-remainder-cells-20260812-p1", "manhattan-central-upper-manhattan-cells-20260812", "manhattan-central-upper-manhattan-cells-20260812-p1", "manhattan-northern-manhattan-cells-20260812"] as const;
+export const PINNED_EXTERIOR_CELL_RELEASE_IDS = ["udt-fixture-exterior-cells", "manhattan-exterior-cells-20260811", "manhattan-exterior-cells-20260811-v3", "manhattan-midtown-core-cells-20260811", "manhattan-midtown-core-cells-20260811-v3", "manhattan-lower-manhattan-cells-20260812", "manhattan-lower-manhattan-cells-20260812-p1", "manhattan-southern-remainder-cells-20260812", "manhattan-southern-remainder-cells-20260812-p1", "manhattan-central-upper-manhattan-cells-20260812", "manhattan-central-upper-manhattan-cells-20260812-p1", "manhattan-northern-manhattan-cells-20260812", "manhattan-northern-manhattan-cells-20260812-p1"] as const;
 
 /**
  * The release used when neither a URL nor the promoted default names one: still

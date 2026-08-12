@@ -144,3 +144,21 @@ artifacts/northern-manhattan-20260812/
 # committed in data/northern-manhattan-20260812/journey-evidence.json so the
 # evidence stays checkable after this worktree-local tree is removed.
 artifacts/northern-manhattan-20260812-journeys/
+
+# T022 Northern-Manhattan P1 promotion work root: the same full-wave census over
+# all 10,230 owned buildings, the curated subset's Blender sample inputs and
+# renders, and the stage receipts. The hashes that matter are committed in
+# data/northern-manhattan-20260812-p1/, including the skyline census the
+# curation's optimality claim is enumerated over.
+artifacts/northern-manhattan-20260812-p1/
+
+# T022 acceptance-measurement scratch root: the uncapped CDP frame-time and heap
+# captures and the station stills, taken on the SIX-wave composition. The
+# measurements, the camera stations and every still's checksum are committed in
+# data/northern-manhattan-20260812-p1/acceptance-evidence.json.
+artifacts/northern-manhattan-20260812-p1-acceptance/
+
+# T022 renderer-journey scratch root: the captured stills. Every still's
+# checksum, the URL it was taken at and the DOM text each journey read are
+# committed in data/northern-manhattan-20260812-p1/journey-evidence.json.
+artifacts/northern-manhattan-20260812-p1-journeys/

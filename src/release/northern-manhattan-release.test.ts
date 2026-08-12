@@ -502,19 +502,31 @@ describe("northern-manhattan committed payload inventory", () => {
    * function of the committed membership constant; the other four are their own
    * committed inventories' shipped GLB counts.
    *
-   * THIS RECORD IS THE FIRST WHOSE PROMOTED LIST IS THE WHOLE LIVE SET, so the
-   * comparison against `EXTERIOR_DEFAULT_ACTIVATIONS` is an equality rather than a
-   * prefix. A sixth promotion — or a rollback — makes this go red, which is the
-   * signal to re-derive this release's occupancy or freeze it deliberately, the way
-   * the w03 canary froze its historical 256-entry cap and the w04 canary froze its
-   * four-wave prefix.
+   * THIS RECORD IS THE FIRST WHOSE PROMOTED LIST WAS THE WHOLE LIVE SET, and the
+   * equality it used to assert WENT RED AT T022 exactly as it was written to. The
+   * sixth promotion added an enabled record, which was the signal to decide whether
+   * to re-derive this release's occupancy or freeze it.
+   *
+   * IT IS FROZEN, deliberately, on the precedent the w03 canary set when it froze
+   * its historical 256-entry cap and the w04 canary set when it froze its four-wave
+   * prefix: this is a CANARY's immutable record, it counted the five waves that were
+   * promoted when it was emitted, and re-emitting it to mention a wave promoted
+   * afterwards would move the checksum the T022 successor's own predecessor pin is
+   * taken over.
+   *
+   * The live comparison is kept, in the only form that stays a real check on frozen
+   * bytes: those five are still enabled, still occupy what this record recorded, and
+   * are still the PREFIX of the live six-record set rather than the whole of it.
    */
   it("pins each promoted wave's occupancy to that wave's own committed record", () => {
     const glbCount = (path: string): number =>
       readJson<{ files: { path: string }[] }>(path).files.filter((file) => /^public\/assets\/.*\.glb$/u.test(file.path)).length;
     expect(BLOCK835_MEMBERSHIP_BUILDING_IDS).toHaveLength(14);
     const liveEnabled = EXTERIOR_DEFAULT_ACTIVATIONS.filter((record) => record.enabled).map((record) => record.releaseId);
-    expect(inventory.occupancy.promotedWaves.map((wave) => wave.releaseId)).toEqual(liveEnabled);
+    expect(inventory.occupancy.promotedWaves.map((wave) => wave.releaseId))
+      .toEqual(liveEnabled.slice(0, inventory.occupancy.promotedWaveCount));
+    expect(liveEnabled).toHaveLength(6);
+    expect(liveEnabled[5]).toBe("manhattan-northern-manhattan-cells-20260812-p1");
     expect(inventory.occupancy.promotedWaveCount).toBe(5);
     expect(inventory.occupancy.promotedWaves).toEqual([
       { releaseId: "manhattan-exterior-cells-20260811-v3", assetEntries: BLOCK835_MEMBERSHIP_BUILDING_IDS.length * BLOCK835_SHIPPED_LOD_COUNT },

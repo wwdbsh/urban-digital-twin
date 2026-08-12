@@ -45,13 +45,20 @@ the waves' renders stay comparable by eye.
 Nothing here is downloaded and no imagery is read: the tiles are generated from
 named constants in this repository, and this pass only ever opens what shipped.
 
-ONE RELEASE OF WAVE w05 TRAVELS THIS PASS TODAY. The `UDT_W05_VARIANT`
-environment selection is carried forward from the w04 pass with only the canary
-defined, because T022's promoted successor will need exactly the seam that pass
-had to grow after the fact: the release id written into the report is selected
-with the variant, and a report that measured one release's assets while naming
-another would defeat the Node writer's cross-check against the committed
-inventory — the check that makes this pass about shipped bytes at all.
+TWO RELEASES OF WAVE w05 TRAVEL THIS PASS. `UDT_W05_VARIANT` selects between the
+T021 canary and the T022 promoted P1 successor, and it selects the release id
+written into the report as well as the work root the inputs are read from. The
+seam was carried forward from the w04 pass with only the canary defined; the p1
+variant is what makes it load-bearing. A report that measured one release's assets
+while naming another would defeat the Node writer's cross-check against the
+committed inventory — the check that makes this pass about shipped bytes at all —
+so the two travel together rather than being set independently.
+
+THE p1 SAMPLE IS ALL 24 SHIPPED ASSETS, not a sample of them. The curated cell
+owns 24 buildings and the grammar refused none, so the deterministic strata select
+every one and the "sample" and the shipped set coincide. That is stated rather
+than implied: the paragraph above about two unsampled writer-refused ids is a fact
+about the CANARY variant and is not true of p1, which has no refusals at all.
 """
 
 
@@ -68,10 +75,14 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 # THAT release's committed payload inventory, so a report naming the wrong
 # release fails there rather than being quietly recorded.
 VARIANT = os.environ.get("UDT_W05_VARIANT", "canary")
-if VARIANT not in ("canary",):
-    raise SystemExit("UDT_W05_VARIANT must be 'canary'; T022's promoted successor adds its own")
-WORK_DIRECTORY = "northern-manhattan-20260812"
-RELEASE_ID = "manhattan-northern-manhattan-cells-20260812"
+if VARIANT not in ("canary", "p1"):
+    raise SystemExit("UDT_W05_VARIANT must be 'canary' or 'p1'")
+# The work root and the release id move TOGETHER. Selecting one without the other
+# would produce a report about one release's bytes carrying another's name, which
+# the Node writer's inventory cross-check would then reject — correctly, and after
+# a whole Blender pass had already run.
+WORK_DIRECTORY = "northern-manhattan-20260812" if VARIANT == "canary" else "northern-manhattan-20260812-p1"
+RELEASE_ID = "manhattan-northern-manhattan-cells-20260812" if VARIANT == "canary" else "manhattan-northern-manhattan-cells-20260812-p1"
 WORK_ROOT = os.path.join(ROOT, "artifacts", WORK_DIRECTORY, "blender")
 INPUT_DIR = os.path.join(WORK_ROOT, "inputs")
 RENDER_DIR = os.path.join(WORK_ROOT, "renders")

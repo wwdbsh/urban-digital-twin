@@ -1,0 +1,363 @@
+{
+  "schemaVersion": "1.0",
+  "releaseId": "manhattan-northern-manhattan-cells-20260812-p1",
+  "note": "Wave-scale V3 stop-code census over all 10,230 owned buildings of wave w05 — the LAST wave the committed ledger declares — plus the shipped-subset census over the renderable cells. Committed so the refusal distribution stays checkable without the untracked work root. The wave census is untextured by design; the shipped subset carries procedural-texture-v1 tiles on LOD 0. READ `wave.retention` BEFORE `wave.shippedAssetCount`: the wave pass runs `census-only`, so it generated, gated and measured every asset and then dropped the bytes rather than keeping them. Its `shippedAssetBytes` is therefore a real measurement while its `shippedAssetCount` is zero, which is a retention mode and not a contradiction. The `shipped` object below is the pass that retained bytes. TWO REFUSAL DISTRIBUTIONS ARE RECORDED AND FOR THIS WAVE THEY DIFFER: 365 at the plan stage and 381 at the asset stage, a difference of 16, all of it `volume-identity-failed`. `waveRefusals` is the PLAN stage: the grammar reading a sourced polygon and reporting which property of it it cannot carry. `wave.refusalsByCode` is the ASSET stage: the same plans plus the writer's own mesh-versus-analytic volume identity check, which can only fail after a plan has been accepted and geometry has been generated. The asset distribution is therefore always a superset of the plan distribution and the only key that can appear in it alone is `volume-identity-failed`. NEITHER EQUALITY NOR INEQUALITY OF THE TWO TOTALS IS EVIDENCE THAT THE WRITER'S CHECK RAN, and this note does not treat it as such: ADR 0035 inferred one thing from equal totals and ADR 0036 had to retract it. The check is recorded as a MEASUREMENT instead — `volumeIdentity` below carries the count checked (9,865), the count accepted (9,849), the count rejected (16), the worst deviation observed across the whole wave and the tolerance it was compared against. THE COUNT CHECKED IS ACCEPTED PLUS REJECTED, NOT `wave.materializedBuildingCount`: a building this check rejects never materializes, so the materialized count is the count that PASSED and using it as the denominator would say the check ran on a set that excludes the buildings it refused — so a run in which the check silently did not execute is distinguishable from a run in which it executed and passed. THE VOLUME MARGIN IS NARROW AND IS REPORTED RATHER THAN ROUNDED AWAY: the worst deviation across this wave sits at 0.9895 of the tolerance, more than nine tenths of it. This note is GENERATED from those measurements rather than written beside them, so it cannot keep asserting a previous wave's finding.",
+  "volumeIdentity": {
+    "stage": "asset-writer",
+    "stopCode": "volume-identity-failed",
+    "buildingsChecked": 9865,
+    "buildingsAccepted": 9849,
+    "buildingsRejected": 16,
+    "worstVolumeDeviation": 9.89500294880465e-7,
+    "tolerance": 0.000001,
+    "worstDeviationAsFractionOfTolerance": 0.989500294880465,
+    "statement": "Every building whose plan the grammar accepted had its generated mesh volume compared against the analytic volume that plan declares. READ THE DENOMINATOR: the check ran on 9,865 buildings, which is the 9,849 that went on to materialize PLUS the 16 this check itself refused. A building it rejects never becomes a materialized building, so `materializedBuildingCount` is the count of buildings that PASSED and is the wrong denominator for a rate — an earlier draft of this record used it and produced the contradiction \"ran on N, rejected 16 of them\" where the 16 were not in N. It ACCEPTED 9,849 and REJECTED 16, which is why those 16 ship as unavailable with a stated reason instead of as geometry; the deviation recorded below is the worst among the buildings it ACCEPTED, not among the ones it refused. THE MARGIN IS NARROW AND IS REPORTED RATHER THAN ROUNDED AWAY: the worst accepted case sits at 0.9895 of the tolerance, more than nine tenths of it. \"Inside tolerance\" is therefore true and is not the same as \"comfortably inside\", and a reader deciding whether this wave's geometry is sound should read `worstDeviationAsFractionOfTolerance` and not only `buildingsRejected`. The worst deviation is recorded beside the tolerance it was compared against, so a run in which the check silently did not execute is distinguishable from a run in which it executed. No tolerance was moved; the recorded value is the accepted MIDTOWN_CORE_V3_VOLUME_TOLERANCE unchanged."
+  },
+  "textureCatalog": {
+    "profile": "procedural-texture-v1",
+    "rasterizerVersion": "1.0.0",
+    "parametersHashSha256": "121fb53e9b3b08ce3b7fa00ec5d370466c5ae2861b8966cccbfa19861ab438ff"
+  },
+  "samplerFilter": {
+    "magFilter": 9729,
+    "minFilter": 9987
+  },
+  "occupancy": {
+    "maxCacheEntries": 512,
+    "promotedWaves": [
+      {
+        "releaseId": "manhattan-exterior-cells-20260811-v3",
+        "assetEntries": 28
+      },
+      {
+        "releaseId": "manhattan-midtown-core-cells-20260811-v3",
+        "assetEntries": 156
+      },
+      {
+        "releaseId": "manhattan-lower-manhattan-cells-20260812-p1",
+        "assetEntries": 71
+      },
+      {
+        "releaseId": "manhattan-southern-remainder-cells-20260812-p1",
+        "assetEntries": 179
+      },
+      {
+        "releaseId": "manhattan-central-upper-manhattan-cells-20260812-p1",
+        "assetEntries": 40
+      }
+    ],
+    "promotedWaveCount": 5,
+    "promotedAssetEntries": 474,
+    "alongsidePromotedHeadroom": 38,
+    "reservation": {
+      "fromReleaseId": "manhattan-central-upper-manhattan-cells-20260812-p1",
+      "forWaveId": "northern-manhattan",
+      "entries": 36,
+      "splitResponse": 2,
+      "splitFromHeadroomEntries": 78,
+      "splitTakenByPredecessorEntries": 42
+    },
+    "reservationStatement": "THIS PROMOTION OPENS NO SPLIT; IT CONSUMES ONE. ADR 0036 Decision 3 named three admissible responses to a 78-entry headroom two unpromoted waves had to share, and T020 took RESPONSE 2 — the two remaining waves split it at sub-median scale — proportional to canonical buildings: 78 x 11,721 / (11,721 + 10,230) = 41.65, so wave w04 took 42 entries and wave w05 was RESERVED the remaining 36. That reservation is recorded in manhattan-central-upper-manhattan-cells-20260812-p1's own committed payload-inventory.json, and this release reads both halves back out of those bytes and requires them to reconstitute the 78-entry headroom they were split out of; a predecessor re-emitted with a different share, a different headroom, or a reservation edited on its own fails this build rather than quietly re-sizing this promotion. THE RESERVATION IS CONSUMED AND RECORDED AS CONSUMED. The entry budget applied here is 36, the promoted subset ships 24 assets, and 12 of the reserved entries are left unspent. TWO NUMBERS DIFFER AND BOTH ARE RECORDED: 38 entries are actually free — 512 minus the 474 the five promoted waves ship — while 36 were promised, and the 2-entry surplus is what wave w04's promotion did not spend of its own 42-entry share. This release is bound by the 36 it was PROMISED rather than by the 38 that happen to be free, and it does not re-open the split to take them. THE SURPLUS WOULD HAVE BOUGHT NOTHING: no cell of this wave owning 37 or 38 buildings carries a single building at the 90 m skyline threshold, so a 38-entry budget selects the same cell as a 36-entry one. THE 12 UNSPENT ENTRIES ARE NOT AN OVERSIGHT. Cell 727 owns 24 and its four edge-neighbours own 40, 41, 53 and 89, so no second cell can join it inside the reservation; the only way to spend the remainder is a second, non-adjacent island, and edge-contiguity is a precondition of this curation rather than a tie-break. THE LEDGER-WIDE END STATE, stated in full because this is the LAST wave: the six promoted waves occupy 28 + 156 + 71 + 179 + 40 + 24 = 498 of 512 exterior cache entries, leaving 14 entries of headroom and no unpromoted wave to reserve them for. The cache cap is UNCHANGED at 512 entries and 256 MiB, and EXTERIOR_RUNTIME_BUDGETS is not edited by this release. Every occupancy figure here is a count of shipped GLB artifacts on disk, on the accounting T020 adopted when it considered and rejected ADR 0034's response 3.",
+    "headroomExceedsReservationBy": 2,
+    "reservationConsumed": true,
+    "isLastUnpromotedWave": true,
+    "remainingUnpromotedWaveIds": [
+      "northern-manhattan"
+    ],
+    "promotedWaveCountAfterThisRelease": 6,
+    "completesLedgerCoverage": true,
+    "entryBudget": 36
+  },
+  "wave": {
+    "requestedBuildingCount": 10230,
+    "resolvedBuildingCount": 10230,
+    "materializedBuildingCount": 9849,
+    "refusedBuildingCount": 381,
+    "tierCollapseAbsentSetbackCount": 5880,
+    "generatedAssetCount": 19698,
+    "generatedAssetBytes": 755460568,
+    "retention": "census-only",
+    "shippedAssetCount": 0,
+    "shippedAssetBytes": 499130820,
+    "maximumTriangleCount": 23698,
+    "maximumMaterialCount": 9,
+    "triangleBudget": 200000,
+    "materialBudget": 12,
+    "textureBudget": 0,
+    "maximumTextureCount": 0,
+    "textureCatalog": null,
+    "totalShippedTriangleCount": 11839356,
+    "fallbackHeightCount": 16,
+    "uniquePlanHashCount": 9849,
+    "reversedRingCount": 9849,
+    "worstVolumeDeviation": 9.89500294880465e-7,
+    "worstPerVertexShapeDeviationMeters": 0.0007058342374861426,
+    "worstHorizontalDeviationMeters": 0.0004714043343565633,
+    "worstVerticalDeviationMeters": 0.0004999019999996079,
+    "maximumRingVertexCount": 64,
+    "refusalsByCode": {
+      "ring-vertex-count-unsupported": 164,
+      "source-height-below-grammar-minimum": 164,
+      "ring-area-below-floor": 26,
+      "volume-identity-failed": 16,
+      "ring-neck-below-grammar-minimum": 10,
+      "ring-not-simple": 1
+    },
+    "styleClassCounts": {
+      "stone-neutral": 1690,
+      "masonry-warm": 4060,
+      "masonry-light": 3178,
+      "curtain-cool": 921
+    }
+  },
+  "waveRefusals": {
+    "ring-vertex-count-unsupported": 164,
+    "source-height-below-grammar-minimum": 164,
+    "ring-area-below-floor": 26,
+    "ring-neck-below-grammar-minimum": 10,
+    "ring-not-simple": 1
+  },
+  "shipped": {
+    "requestedBuildingCount": 24,
+    "resolvedBuildingCount": 24,
+    "materializedBuildingCount": 24,
+    "refusedBuildingCount": 0,
+    "tierCollapseAbsentSetbackCount": 7,
+    "generatedAssetCount": 48,
+    "generatedAssetBytes": 5154580,
+    "retention": "shipped-bytes",
+    "shippedAssetCount": 24,
+    "shippedAssetBytes": 4219756,
+    "maximumTriangleCount": 12554,
+    "maximumMaterialCount": 9,
+    "triangleBudget": 200000,
+    "materialBudget": 12,
+    "textureBudget": 4,
+    "maximumTextureCount": 3,
+    "textureCatalog": {
+      "profile": "procedural-texture-v1",
+      "rasterizerVersion": "1.0.0",
+      "parametersHashSha256": "121fb53e9b3b08ce3b7fa00ec5d370466c5ae2861b8966cccbfa19861ab438ff"
+    },
+    "totalShippedTriangleCount": 54076,
+    "fallbackHeightCount": 0,
+    "uniquePlanHashCount": 24,
+    "reversedRingCount": 24,
+    "worstVolumeDeviation": 1.8181954616596268e-7,
+    "worstPerVertexShapeDeviationMeters": 0.000682824829448748,
+    "worstHorizontalDeviationMeters": 0.00024999980225698685,
+    "worstVerticalDeviationMeters": 0.0004800000000013682,
+    "maximumRingVertexCount": 30,
+    "refusalsByCode": {},
+    "styleClassCounts": {
+      "masonry-warm": 13,
+      "masonry-light": 6,
+      "stone-neutral": 2,
+      "curtain-cool": 3
+    }
+  },
+  "shippedRefusedBuildingIds": [],
+  "shippedAbsentSetbackBuildingIds": [
+    "doitt:1097877",
+    "doitt:1114218",
+    "doitt:169205",
+    "doitt:275061",
+    "doitt:342401",
+    "doitt:527486",
+    "doitt:728255"
+  ],
+  "registration": [
+    {
+      "buildingId": "doitt:1097877",
+      "sourceVertexCount": 9,
+      "perVertexShapeDeviationMeters": 0.0005236123459834051,
+      "horizontalDeviationMeters": 0.00011111137477492087,
+      "verticalDeviationMeters": 0.00039999999999906777,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:1114218",
+      "sourceVertexCount": 30,
+      "perVertexShapeDeviationMeters": 0.0006622533499522616,
+      "horizontalDeviationMeters": 0.0000745369217280104,
+      "verticalDeviationMeters": 0.0004633267919942341,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:169205",
+      "sourceVertexCount": 10,
+      "perVertexShapeDeviationMeters": 0.0006261168536930709,
+      "horizontalDeviationMeters": 0.00009999880264574082,
+      "verticalDeviationMeters": 0.00027199999999893976,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:207890",
+      "sourceVertexCount": 4,
+      "perVertexShapeDeviationMeters": 0.00045510121768406773,
+      "horizontalDeviationMeters": 4.960001257616703e-10,
+      "verticalDeviationMeters": 0.00011199999999789156,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:24171",
+      "sourceVertexCount": 6,
+      "perVertexShapeDeviationMeters": 0.0005549696026103762,
+      "horizontalDeviationMeters": 0.00016666666666779754,
+      "verticalDeviationMeters": 0.00011199999999789156,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:252214",
+      "sourceVertexCount": 7,
+      "perVertexShapeDeviationMeters": 0.0005841464173218619,
+      "horizontalDeviationMeters": 0.00020203078966217768,
+      "verticalDeviationMeters": 0.00021599999999999397,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:272678",
+      "sourceVertexCount": 6,
+      "perVertexShapeDeviationMeters": 0.000508279065112546,
+      "horizontalDeviationMeters": 5.986785881859029e-10,
+      "verticalDeviationMeters": 0.000408000000000186,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:275061",
+      "sourceVertexCount": 6,
+      "perVertexShapeDeviationMeters": 0.000490772494003242,
+      "horizontalDeviationMeters": 8.908457020043687e-10,
+      "verticalDeviationMeters": 0.00027999999999650527,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:342401",
+      "sourceVertexCount": 29,
+      "perVertexShapeDeviationMeters": 0.0006172158900880451,
+      "horizontalDeviationMeters": 0.00012433094813604312,
+      "verticalDeviationMeters": 0.00039999999999906777,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:365535",
+      "sourceVertexCount": 9,
+      "perVertexShapeDeviationMeters": 0.0005839637398575211,
+      "horizontalDeviationMeters": 8.888756423821285e-10,
+      "verticalDeviationMeters": 0.00015200000000170633,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:481354",
+      "sourceVertexCount": 4,
+      "perVertexShapeDeviationMeters": 0.0003393548750864101,
+      "horizontalDeviationMeters": 3.587580985333458e-10,
+      "verticalDeviationMeters": 0.0002080000000006521,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:494791",
+      "sourceVertexCount": 8,
+      "perVertexShapeDeviationMeters": 0.0006410413131841106,
+      "horizontalDeviationMeters": 0.00012500019774742185,
+      "verticalDeviationMeters": 0.0003759999999992658,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:504530",
+      "sourceVertexCount": 6,
+      "perVertexShapeDeviationMeters": 0.0005019576617574379,
+      "horizontalDeviationMeters": 0.0001666660679859742,
+      "verticalDeviationMeters": 0.0003520000000012402,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:514180",
+      "sourceVertexCount": 4,
+      "perVertexShapeDeviationMeters": 0.00038346161867142115,
+      "horizontalDeviationMeters": 6.304926440460285e-10,
+      "verticalDeviationMeters": 0.00019999999999953388,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:527486",
+      "sourceVertexCount": 6,
+      "perVertexShapeDeviationMeters": 0.0006102437628843581,
+      "horizontalDeviationMeters": 3.306664697745828e-10,
+      "verticalDeviationMeters": 0.00030399999999985994,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:606408",
+      "sourceVertexCount": 6,
+      "perVertexShapeDeviationMeters": 0.0005844308750416299,
+      "horizontalDeviationMeters": 0.0001666664671073903,
+      "verticalDeviationMeters": 0.00011199999999966792,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:624061",
+      "sourceVertexCount": 4,
+      "perVertexShapeDeviationMeters": 0.000682824829448748,
+      "horizontalDeviationMeters": 0.00024999980225698685,
+      "verticalDeviationMeters": 0.00012000000000078614,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:655028",
+      "sourceVertexCount": 8,
+      "perVertexShapeDeviationMeters": 0.0005010932381580743,
+      "horizontalDeviationMeters": 0.00017677679727561956,
+      "verticalDeviationMeters": 0.0004800000000013682,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:668411",
+      "sourceVertexCount": 11,
+      "perVertexShapeDeviationMeters": 0.0005007894405970086,
+      "horizontalDeviationMeters": 0.00009090985286823406,
+      "verticalDeviationMeters": 0.00038400000000393675,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:728255",
+      "sourceVertexCount": 17,
+      "perVertexShapeDeviationMeters": 0.0006155544319907613,
+      "horizontalDeviationMeters": 0.00017647137921254804,
+      "verticalDeviationMeters": 0.00011484645600035037,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:806389",
+      "sourceVertexCount": 10,
+      "perVertexShapeDeviationMeters": 0.000649111736168655,
+      "horizontalDeviationMeters": 7.639698823868739e-10,
+      "verticalDeviationMeters": 0.00005235632800193457,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:830007",
+      "sourceVertexCount": 7,
+      "perVertexShapeDeviationMeters": 0.0006374418793341186,
+      "horizontalDeviationMeters": 0.00014285748184853075,
+      "verticalDeviationMeters": 0.0004639999999991318,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:835362",
+      "sourceVertexCount": 8,
+      "perVertexShapeDeviationMeters": 0.0006360621735015701,
+      "horizontalDeviationMeters": 5.77922704983412e-10,
+      "verticalDeviationMeters": 0.000023999999999801958,
+      "ringOrientationReversed": true
+    },
+    {
+      "buildingId": "doitt:950553",
+      "sourceVertexCount": 16,
+      "perVertexShapeDeviationMeters": 0.0005149235162725987,
+      "horizontalDeviationMeters": 0.00006249980225669436,
+      "verticalDeviationMeters": 0.00019999999999953388,
+      "ringOrientationReversed": true
+    }
+  ]
+}

@@ -428,8 +428,12 @@ describe("central-upper-manhattan committed payload inventory", () => {
     const liveEnabled = EXTERIOR_DEFAULT_ACTIVATIONS.filter((record) => record.enabled).map((record) => record.releaseId);
     expect(inventory.occupancy.promotedWaves.map((wave) => wave.releaseId))
       .toEqual(liveEnabled.slice(0, inventory.occupancy.promotedWaveCount));
-    expect(liveEnabled).toHaveLength(5);
+    expect(liveEnabled).toHaveLength(6);
     expect(liveEnabled[4]).toBe("manhattan-central-upper-manhattan-cells-20260812-p1");
+    // T022 promoted a sixth wave and appended it, so the prefix comparison above
+    // is what stays true of this frozen record; the length is the LIVE set's and
+    // is asserted here rather than in the prefix.
+    expect(liveEnabled[5]).toBe("manhattan-northern-manhattan-cells-20260812-p1");
     expect(inventory.occupancy.promotedWaveCount).toBe(4);
     expect(inventory.occupancy.promotedWaves).toHaveLength(4);
     expect(inventory.occupancy.promotedWaves).toEqual([

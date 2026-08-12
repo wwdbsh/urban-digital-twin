@@ -123,7 +123,11 @@ describe("Central-and-upper-Manhattan promotion record versus the committed payl
     expect(RECORD!.releaseId).not.toBe(CANARY_RELEASE_ID);
     expect(RECORD!.approvalRef).toBe("Issue #21 gate approval 2026-08-12 (T020 Central-and-upper-Manhattan curated promotion)");
     expect(RECORD!.rolledBackReleaseId ?? null).toBeNull();
-    expect(EXTERIOR_DEFAULT_ACTIVATIONS).toHaveLength(5);
+    // Its POSITION is what this record owns, not the length of the set: T022
+    // promoted a sixth wave and appended it, so the assertion that stays true of
+    // this record is that it is still the fifth and still the same object. Same
+    // correction the southern-remainder gate took at T020, for the same reason.
+    expect(EXTERIOR_DEFAULT_ACTIVATIONS.length).toBeGreaterThanOrEqual(5);
     expect(EXTERIOR_DEFAULT_ACTIVATIONS[4]).toBe(CENTRAL_UPPER_MANHATTAN_EXTERIOR_ACTIVATION);
     // The four earlier records are untouched by this promotion, and the one
     // immediately before it is asserted by identity rather than by shape.
