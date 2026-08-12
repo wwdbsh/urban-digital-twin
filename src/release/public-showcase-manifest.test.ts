@@ -33,6 +33,8 @@ import {
   assertShowcasePackageId,
   assertShowcasePublicRootId,
   classifyShowcaseRequestPath,
+  PUBLIC_SHOWCASE_BASE_URL_PREFIXES,
+  PUBLIC_SHOWCASE_BROWSER_IMPLICIT_PATHS,
   computePublicShowcaseDigest,
   showcaseApprovalFingerprint,
   showcaseApprovalId,
@@ -289,7 +291,7 @@ describe("the candidate digest pins the enumeration", () => {
   it("moves when a base package is added, dropped or renamed", () => {
     const baseline = computePublicShowcaseDigest();
     expect(computePublicShowcaseDigest(PUBLIC_SHOWCASE_WAVES, PUBLIC_SHOWCASE_BASE_PACKAGES.slice(0, 2))).not.toBe(baseline);
-    expect(computePublicShowcaseDigest(PUBLIC_SHOWCASE_WAVES, [...PUBLIC_SHOWCASE_BASE_PACKAGES, { packageId: "manhattan-smuggled-base", role: "x", declaredByWaveBaseCompatibility: false, deploymentExcluded: true, deploymentExclusionSource: "imposed-by-this-showcase-manifest" as const, deploymentExclusionBasis: "x" }])).not.toBe(baseline);
+    expect(computePublicShowcaseDigest(PUBLIC_SHOWCASE_WAVES, [...PUBLIC_SHOWCASE_BASE_PACKAGES, { packageId: "manhattan-smuggled-base", role: "x", declaredByWaveBaseCompatibility: false, deploymentExcluded: true, deploymentExclusionSource: "imposed-by-this-showcase-manifest" as const, deploymentExclusionBasis: "x", publicPathAnchors: ["manifest.json"] }])).not.toBe(baseline);
   });
 
   it("moves when a wave is dropped or reordered", () => {
@@ -327,5 +329,93 @@ describe("request classification keeps a session inside the candidate", () => {
     expect(() => classifyShowcaseRequestPath("/data/manhattan-northern-manhattan-cells-20260812-p1/derivation.json")).toThrow(/neither a declared package entry point/u);
     expect(() => classifyShowcaseRequestPath("/somewhere-else/x.json")).toThrow(/neither app shell nor enumerated wave payload/u);
     expect(() => classifyShowcaseRequestPath("https://example.com/x.json")).toThrow(/rooted same-origin path/u);
+  });
+});
+
+/**
+ * T029 repair of the T023 reproducibility finding.
+ *
+ * The committed `six-wave-default` smoke journey passed on the browser profile
+ * it was captured with and failed on every fresh one, because a fresh Chrome
+ * asks for `/favicon.ico` and the classifier had no category for it. These
+ * tests pin the repair AND the two ways it could have been made too wide.
+ */
+describe("browser-implicit requests are classified, not exempted", () => {
+  it("classifies the paths a browser issues on its own", () => {
+    // Pre-fix this threw `request-outside-candidate`, which is exactly what made
+    // the committed journey depend on browser-profile state.
+    for (const path of PUBLIC_SHOWCASE_BROWSER_IMPLICIT_PATHS) {
+      expect(classifyShowcaseRequestPath(path)).toEqual({ kind: "browser-implicit", path });
+    }
+    expect(PUBLIC_SHOWCASE_BROWSER_IMPLICIT_PATHS).toContain("/favicon.ico");
+  });
+
+  it("matches EXACTLY, so nothing is admitted by resembling one", () => {
+    for (const near of ["/favicon.ico.map", "/favicon.icon", "/x/favicon.ico", "/favicon.ico/", "/FAVICON.ICO"]) {
+      expect(() => classifyShowcaseRequestPath(near)).toThrow(/neither app shell nor enumerated wave payload|private-partition/u);
+    }
+  });
+
+  it("cannot shadow a payload path that happens to end in the same name", () => {
+    const wave = PUBLIC_SHOWCASE_WAVES[0]!;
+    const classified = classifyShowcaseRequestPath(`/data/${wave.packageId}/public/favicon.ico`);
+    expect(classified.kind).toBe("wave-payload");
+  });
+
+  it("still refuses a real unclassified request", () => {
+    // The repair must not turn the classifier into a pass-through. A foreign
+    // same-origin path is the thing the journey exists to catch.
+    expect(() => classifyShowcaseRequestPath("/telemetry/collect")).toThrow(/neither app shell nor enumerated wave payload/u);
+    expect(() => classifyShowcaseRequestPath("/data/manhattan-smuggled-20260901/manifest.json")).toThrow(/outside the enumerated public roots and base packages/u);
+  });
+});
+
+describe("base-package requests are anchored the same way wave requests are", () => {
+  it("derives the base prefixes from the package list rather than rebuilding them", () => {
+    expect(PUBLIC_SHOWCASE_BASE_URL_PREFIXES).toEqual(PUBLIC_SHOWCASE_BASE_PACKAGES.map((entry) => `/data/${entry.packageId}/`));
+    for (const prefix of PUBLIC_SHOWCASE_BASE_URL_PREFIXES) expect(prefix.endsWith("/")).toBe(true);
+  });
+
+  it("admits the LITERAL entry points and directories each base package really serves", () => {
+    // Written out rather than derived from `publicPathAnchors`, because a test
+    // that loops over the constant it is checking passes whatever the constant
+    // says — including after someone adds `""` or `"/"` to it.
+    const admitted = [
+      "/data/manhattan-citywide-20260804/manifest.json",
+      "/data/manhattan-citywide-20260804/manifest.sha256",
+      "/data/manhattan-citywide-20260804/geometry/buildings/buildings-wgs84-geodetic-14-4824-4482-000.json",
+      "/data/manhattan-citywide-20260804/details/shard-000.json",
+      "/data/manhattan-citywide-20260804/search/index.json",
+      "/data/manhattan-civic-context-20260804/manifest.json",
+      "/data/manhattan-civic-context-20260804/geometry/parks.json",
+      "/data/real-wave-20260804/manifest.json",
+      "/data/real-wave-20260804/buildings.json",
+      "/data/real-wave-20260804/restaurants.json",
+    ];
+    for (const path of admitted) {
+      expect({ path, kind: classifyShowcaseRequestPath(path).kind }).toEqual({ path, kind: "base-payload" });
+    }
+  });
+
+  it("puts the anchors inside the candidate digest, so widening one is visible", () => {
+    const baseline = computePublicShowcaseDigest();
+    const widened = PUBLIC_SHOWCASE_BASE_PACKAGES.map((entry, index) => (
+      index === 0 ? { ...entry, publicPathAnchors: [...entry.publicPathAnchors, "scratch/"] } : entry
+    ));
+    expect(computePublicShowcaseDigest(PUBLIC_SHOWCASE_WAVES, widened)).not.toBe(baseline);
+  });
+
+  it("refuses a base-package path outside every declared anchor", () => {
+    // Pre-fix this CLASSIFIED: the base branch was admitted on the package
+    // prefix alone, with no second anchor, while the wave branch had one.
+    expect(() => classifyShowcaseRequestPath("/data/manhattan-citywide-20260804/scratch/notes.json"))
+      .toThrow(/neither a declared entry point nor under a declared public directory/u);
+    expect(() => classifyShowcaseRequestPath("/data/real-wave-20260804/geometry/x.json"))
+      .toThrow(/neither a declared entry point nor under a declared public directory/u);
+  });
+
+  it("refuses a bare directory prefix with nothing after it", () => {
+    expect(() => classifyShowcaseRequestPath("/data/manhattan-citywide-20260804/geometry/"))
+      .toThrow(/neither a declared entry point nor under a declared public directory/u);
   });
 });

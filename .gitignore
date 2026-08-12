@@ -168,3 +168,11 @@ artifacts/northern-manhattan-20260812-p1-journeys/
 # committed in data/public-showcase-20260812/smoke-evidence.json so the
 # evidence stays checkable after this worktree-local tree is removed.
 artifacts/public-showcase-20260812/
+
+# T029 bounded-gap closure work root: the 1440p facade stills, the keyboard and
+# reduced-motion captures, the six-wave heap/concurrency still and the mobile
+# journey stills. Every still's checksum, the viewport it was taken at, the URL
+# and the DOM readings each capture made are committed in
+# data/goal-bounded-gaps-20260812/ so the evidence stays checkable after this
+# worktree-local tree is removed.
+artifacts/goal-bounded-gaps-20260812/

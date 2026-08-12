@@ -196,15 +196,62 @@ describe("the verdict table obeys its own rules", () => {
   });
 
   it("pins the headline split, so a quiet re-grading shows up as a failing test", () => {
-    // 17 / 8 / 6. Written as literals rather than derived, because the whole
-    // point of the number is that it is the one a reader will quote.
-    expect(record.verdictCounts).toEqual({ MET: 17, "MET-AS-ADJUDICATED": 8, "NOT-MET": 6 });
+    // 17 / 12 / 2, after T029 closed criteria 7, 8, 24 and 30. It was 17 / 8 / 6
+    // when T024 wrote the record. Written as literals rather than derived,
+    // because the whole point of the number is that it is the one a reader will
+    // quote — and moving it has to be a deliberate, reviewed edit to this line.
+    expect(record.verdictCounts).toEqual({ MET: 17, "MET-AS-ADJUDICATED": 12, "NOT-MET": 2 });
     expect(record.verdicts).toHaveLength(31);
   });
 
-  it("names the six unmet criteria explicitly, so a later edit cannot quietly promote one", () => {
+  it("names the two remaining unmet criteria explicitly, so a later edit cannot quietly promote one", () => {
     const unmet = record.verdicts.filter((entry) => entry.verdict === "NOT-MET").map((entry) => entry.index);
-    expect(unmet).toEqual([1, 7, 8, 22, 24, 30]);
+    // The structural pair, and nothing else. Criterion 1 (missing exteriors)
+    // and criterion 22 (the coverage envelope) are one problem wearing two
+    // criteria, and closing them is a Goal-level decision rather than an
+    // implementer's.
+    expect(unmet).toEqual([1, 22]);
+    expect(record.closures.remainingNotMet).toEqual([1, 22]);
+  });
+
+  /**
+   * The closure history is part of the record, not a changelog entry that can
+   * be dropped. A criterion that was refused and is now adjudicated has to keep
+   * saying so, together with the stop report that named what would close it —
+   * otherwise the table becomes the completion narrative ADR 0039 refused to
+   * write.
+   */
+  it("keeps every closed criterion's prior refusal and its stop report legible", () => {
+    expect(record.closures.closedCriteria).toEqual([7, 8, 24, 30]);
+    for (const index of record.closures.closedCriteria) {
+      const entry = record.verdicts.find((candidate) => candidate.index === index);
+      expect({ index, verdict: entry.verdict }).toEqual({ index, verdict: "MET-AS-ADJUDICATED" });
+      expect({ index, prior: entry.priorVerdict }).toEqual({ index, prior: "NOT-MET" });
+      expect(entry.closedBy, `criterion ${index}`).toBe("T029 (Issue #62)");
+      // The original stop report survives under its own name. The suite's
+      // shape rules forbid a `stopReport` on a non-NOT-MET entry, which is why
+      // it is carried as `priorStopReport` rather than deleted.
+      expect(entry.priorStopReport?.length ?? 0, `criterion ${index}`).toBeGreaterThan(20);
+      expect(entry.adjudicationDelta?.length ?? 0, `criterion ${index}`).toBeGreaterThan(20);
+    }
+    // And a criterion that was never refused must not pretend it was.
+    for (const entry of record.verdicts) {
+      if (record.closures.closedCriteria.includes(entry.index)) continue;
+      expect(entry).not.toHaveProperty("priorStopReport");
+      expect(entry).not.toHaveProperty("priorVerdict");
+    }
+  });
+
+  it("cites a committed, checksummed evidence record for every closure", () => {
+    const cited = record.closures.evidenceRecords.map((entry) => entry.criterion).sort((left, right) => left - right);
+    expect(cited).toEqual([...record.closures.closedCriteria].sort((left, right) => left - right));
+    for (const entry of record.closures.evidenceRecords) {
+      expect(entry.path, `criterion ${entry.criterion}`).toMatch(/^data\/goal-bounded-gaps-20260812\//u);
+      expect(entry.sha256, `criterion ${entry.criterion}`).toMatch(/^[0-9a-f]{64}$/u);
+      // The record must be on disk and must still hash to what is cited here.
+      const bytes = readFileSync(entry.path);
+      expect(createHash("sha256").update(bytes).digest("hex"), `criterion ${entry.criterion}`).toBe(entry.sha256);
+    }
   });
 
   it("digests the criterion texts it judged, so a reworded criterion is visible", () => {
@@ -222,6 +269,41 @@ describe("the verdict table obeys its own rules", () => {
 
   it("records residual risks rather than closing the Goal silently", () => {
     expect(record.residualRisks.length).toBeGreaterThanOrEqual(5);
+    // Every risk is a STRING. One was briefly a nested array, which serialized
+    // as a JSON list and read as a risk with no text at all.
+    for (const risk of record.residualRisks) expect(typeof risk).toBe("string");
     expect(record.residualRisks.join(" ")).toContain("volume-identity");
+  });
+
+  it("keeps the two repaired T023 risks visible as repairs rather than deleting them", () => {
+    // A risk that is simply removed leaves no trace that it was ever found. The
+    // finding stays; what changes is that it now says how it was closed.
+    const joined = record.residualRisks.join(" ");
+    expect(joined).toContain("REPAIRED IN T029");
+    expect(joined).toContain("favicon.ico");
+    expect(joined).toContain("AUDITED_WORKING_RECORD_DIRECTORIES");
+    // And the closures do not get to be described as clean.
+    expect(joined).toContain("ADJUDICATED, NOT CLEAN");
+  });
+
+  /**
+   * Every number this record quotes about the closures has to be findable in
+   * the checksummed artifact it cites. A figure that appears only here is a
+   * figure nobody can check, and one such figure — a cache peak belonging to an
+   * overwritten run — is exactly what review found.
+   */
+  it("quotes only figures that appear in the checksummed record it cites", () => {
+    const heap = JSON.parse(readFileSync("data/goal-bounded-gaps-20260812/heap-concurrency-evidence.json", "utf8"));
+    const criterion30 = record.verdicts.find((entry) => entry.index === 30);
+    const evidence = criterion30.evidence.join(" ");
+    const withSeparators = (value) => value.toLocaleString("en-US");
+    expect(evidence).toContain(withSeparators(heap.cache.peakCachedBytes));
+    expect(evidence).toContain(String(heap.heapVerdict.growthRatio.toFixed(3)));
+    expect(evidence).toContain(String(heap.peakConcurrency.measuredPeakConcurrentRequests));
+    // The uncommitted earlier run may be mentioned, but only while it is
+    // labelled as having no checksummed artifact.
+    if (evidence.includes("+0.0228")) {
+      expect(evidence).toContain("no checksummed artifact");
+    }
   });
 });

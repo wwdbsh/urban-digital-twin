@@ -411,3 +411,168 @@ how a record stops being the thing that gets checked.
   cites. It is arithmetic over committed records plus a reading of them.
 - It does not authorize deployment, publication, acquisition, or any widening of
   an approval envelope.
+
+---
+
+## Addendum — T029 (Issue #62), 2026-08-12: four of the six closed, and why the STOP still stands
+
+Nothing above this line has been edited. The verdict table, the six stop
+reports and the STOP recommendation are the record as T024 wrote them, and they
+stay legible because a reader has to be able to see what was refused before
+seeing what closed it. This addendum states what moved.
+
+**17 MET · 12 MET-AS-ADJUDICATED · 2 NOT-MET.** It was 17 / 8 / 6. Criteria
+**7, 8, 24 and 30** are closed; criteria **1 and 22** are not, and they are the
+same structural problem the table already described twice.
+
+`data/goal-integration-acceptance-20260812/reconciliation.json` carries each
+closure with `priorVerdict`, `priorStopReport` and `closedBy`, so the original
+refusal and the stop report that named it sit beside the closure rather than
+being overwritten by it. `scripts/goal-integration-reconciliation.test.mjs`
+asserts that they do, and asserts that a criterion which was never refused does
+not acquire a fake history.
+
+### Every closure is MET-AS-ADJUDICATED, and that is the finding
+
+None of the four is graded MET. That is not caution for its own sake — each one
+inherits a specific bound that the criterion, read literally, asks about:
+
+| # | What closed it | The delta that kept it off MET |
+| --- | --- | --- |
+| 7 | The committed 8-pose path re-captured at a true **2560×1440 CSS** viewport, plus its oblique variant: **16/16 poses**, **14/14** Block 835 GLBs each, zero external hosts | The deep-link **height clamp** is inherited, exactly as in T009, so the fixture's 13 m standoff is not what a URL delivers. The composition reading is a **human reading of 3 of 16 stills**, not a machine metric |
+| 8 | `overlayLayoutPolicy` now has a production caller, a `matchMedia` signal pinned to the stylesheet's own 680 px breakpoint, an exploration-profile LOD clamp, an on-screen no-parity disclosure, and **4/4** emulated journey legs | **Emulated, not a device.** Selection is deep-link-driven, not a touch pick. The truthful fallback notice still covers much of a 390px map, named per leg |
+| 24 | A **real keyboard traversal**: Tab → search → 8 results → Enter → details → Escape → **focus restored**, with the DOM focus path recorded per step. `prefers-reduced-motion` reaches the app and is consumed by `cameraDuration()` | Focus is **emulated** by CDP, not OS-level. The mobile class is emulated. No individual animated surface was *timed* |
+| 30 | `block835CanaryHeapVerdict` over **4 repeats** of the deterministic path on the six-wave default composition with **forced collection**: growth **−0.134**, `monotonicGrowthDetected: false`. Measured **peak concurrency 4**, peak cache **1,910,784 B** | The **resident working set was 14 entries of 512, with zero evictions**, so nothing is certified at peak residency. It needed a **probe-harness build**. JS heap only |
+
+### What unblocked three of the four, and it was not new instrumentation
+
+T009 recorded a CDP focus limitation — the tab took no OS focus, so
+`document.hasFocus()` was false, and both the in-app canary probe and any
+keyboard traversal refused to start. `Emulation.setFocusEmulationEnabled` is the
+protocol's answer to exactly that, and every record that relies on it says so
+and calls the focus emulated. The heap and keyboard closures existed as
+capabilities the whole time; what was missing was one protocol call.
+
+Two bugs in the new harness are worth recording because both would have
+produced a confident wrong answer. The probe reports its state under `status`,
+not `state`, so the first heap run polled for fifteen minutes and timed out
+against a probe that had finished. And the harness gate grepped the bundle for
+`block835CanaryPerformance` — a string present whether or not the harness flag
+was set, so it was a gate that always passed. It now asks the **running page**
+whether the probe mounted, which is the difference a bundle grep cannot see.
+
+### Two heap runs, reported — but only one of them is auditable
+
+The committed, checksummed run read **−0.134**. An earlier run of the same
+subcommand, taken before the residency disclosure was added to the CLI, read
+**+0.0228** — and its record was *overwritten by the re-run*, so **there is no
+checksummed artifact for it**. Both returned `monotonicGrowthDetected: false`,
+which is worth stating because it means the verdict did not turn on a single
+sample of a noisy quantity; but the record now says plainly that only the −0.134
+reading can be checked, and nothing rests on the other.
+
+Review caught a related error and it is corrected: this addendum's first draft
+quoted a peak cache of **47,319,772 bytes**, which belonged to that overwritten
+run and appeared in no committed artifact. The cited record says **1,910,784
+bytes**, and a test now asserts that every figure criterion 30 quotes is present
+in the checksummed record it cites.
+
+### The two T023 reproducibility findings are repaired
+
+Both were registered as follow-ups above and both are closed, with the findings
+left standing as findings.
+
+**The smoke journey now passes from a clean profile.** A fresh Chrome issues
+`/favicon.ico`; the classifier had no category for it and `everyRequestClassified`
+read false. The repair adds a **classification, not an exemption**:
+`PUBLIC_SHOWCASE_BROWSER_IMPLICIT_PATHS` is a closed, **exact-match** set, each
+such request is reported with the answer it received, and the journey separately
+requires that none was answered with a payload — the observed `/favicon.ico`
+returned **404**. Re-run fresh from a new profile: **554 observed, 554
+classified, 3/3 journeys passed**. A planted foreign path still refuses, which
+is a test.
+
+One naming defect was caught while writing it: the field was first called
+`servedNoBytes`, and the 404 transferred **157 bytes**. A field called
+`servedNoBytes` sitting next to `encodedDataLength: 157` is a false name for a
+true measurement, so it is `answeredWithoutPayload` and the rule it encodes —
+refusal status *or* zero bytes — is stated.
+
+**The audit no longer rewrites itself.** `workingRecordDirectories` counted
+whatever sat under `data/`, so T024 committing its own record directory moved
+the count 19 → 20 and broke reproduction. The repair is **exclude-by-declared-set**:
+`AUDITED_WORKING_RECORD_DIRECTORIES` is declared in the CLI and the scan is
+intersected with it, so a later task's directory cannot move these bytes — while
+a **declared directory that is absent or empty fails the audit** rather than
+quietly shrinking the count, so the constant cannot rot in the other direction.
+Proven empirically: a planted sibling record directory left the re-emitted
+record **byte-identical**
+(`d9c4ec94f87cdcd7e533ae4fa0241f140d7fa01322dac58e5df6ed255f0346ca` before and
+after). Widening the scope is now a reviewable edit to a constant.
+
+The three deferred symmetry nits are also closed: the private-probe list is
+built from the **union of `artifacts` and `artifactAllowlist`** (a journey that
+exists to catch a broken contract should not derive its inputs from one side of
+that contract); the network counts are named `observedRequests` /
+`glbObservedRequests` / `appShellObservedRequests` because they are taken over
+attempted ∪ received and `responses` named the smaller set; and base-package
+requests are now anchored to **declared per-package entry points and public
+directories**, symmetric with the wave branch, so
+`/data/manhattan-citywide-20260804/scratch/notes.json` — which used to classify —
+refuses.
+
+### What did NOT change: the STOP
+
+**The open set is now exactly criteria 1 and 22, and the STOP recommendation
+stands on that pair alone.** Nothing in this addendum touched them, and nothing
+in it should be read as progress toward them.
+
+They remain one problem: **484 of 45,194 parents ship a retained exterior**
+(1.07%), the six promoted subsets occupy **498 of the 512-entry all-resident
+cache**, and ADR 0024's cell scheduling is the named structural prerequisite.
+Until it exists, "promote more of a wave" and "raise the cache cap" are the same
+decision. The 899 grammar refusals are the other half, and closing or
+adjudicating them is the user's choice rather than an implementer's.
+
+This addendum does not recommend declaring the Goal complete, does not authorize
+deployment, publication or acquisition, and does not claim that four adjudicated
+closures make the remaining two smaller than ADR 0039 said they were.
+
+### The defect this task created, and then actually fixed
+
+The first cut of the mobile path shipped a disclosure that was **structurally
+unreadable**. `.runtime-note span` clamps the lane to one ellipsised row and the
+680 px breakpoint caps the lane at `calc(100% - 160px)`, so a ~300-character
+sentence could never render — whatever the DOM said. The record nonetheless
+passed leg 1 on `disclosurePresent`, which is the precise failure mode this
+project exists to refuse: **DOM presence and on-screen legibility are different
+claims, and the record asserted the second from the first.**
+
+Both halves are repaired.
+
+The journey now **measures legibility** rather than presence: the disclosure
+must have area, sit inside the viewport, not be clamped to a single line, fit
+its own box, and survive a nine-point hit test with nothing painted over it.
+Under that instrument the unfixed build **failed legs 1 and 4 and said why** —
+`white-space: nowrap`, 9 px, `scroll 1221×25 against client 368×13`.
+
+The stylesheet is fixed in three steps, each found by a failing re-capture: the
+clamp is released for this line at `(0,2,1)` specificity (the first attempt was
+a bare attribute selector at `(0,1,0)` and **lost to the rule it was written to
+override**); the lane's `max-height` clip is removed for it (the text then
+wrapped correctly and *still* failed, because the clipped lower two-thirds
+hit-tested onto the canvas behind); and its width is capped at
+`calc(100vw - 56px)` (a plain `100%` left it 8 px past the right edge). Measured
+after the fix: **7 wrapped lines at 11 px, inside the viewport, 0 of 9 points
+occluded.**
+
+`aria-pressed` on the render-profile controls also followed the *requested*
+profile, so a screen-reader user was told the finest LOD was in force while the
+coarsest rendered. It now follows the **effective** profile, and the
+requested-but-not-rendered state is disclosed in the control's title rather than
+discarded.
+
+What remains on screen is the **"Exterior streaming fallback" notice** — the
+truthful tombstone for the 870 of 883 cells that ship no exterior geometry. It
+is large on a 390 px viewport and it does cover much of the map. It is named per
+leg in the journey record rather than cropped out of the stills.

@@ -1,0 +1,1114 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "goal-bounded-gaps-20260812:facade-1440p",
+  "task": "T029 (Issue #62)",
+  "criterion": 7,
+  "capturedAt": "2026-08-12T03:31:31.263Z",
+  "claim": "The committed Block 835 facade path, re-captured at a 2560x1440 CSS viewport — the 1440p-class desktop target criterion 7 names and that no capture in this Goal had ever used. Every reading is per pose and every pose carries its own verdict.",
+  "clampDisclosure": "The committed path's poses are delivered as deep links, so the application's navigation parser clamps each camera height to its floor exactly as it did for the T009 capture of the same path. The pose longitude, latitude, heading, pitch and roll are the committed fixture's; the height is the clamped one, and the record carries both. This capture changes the VIEWPORT and nothing else, which is the single variable criterion 7 names.",
+  "servedBundle": {
+    "previewBase": "http://localhost:4176",
+    "indexHtmlChecksumSha256": "add0b894af9665516a784de762b98c548266137d2644363811ff37160d280d1f",
+    "localDistIndexHtmlChecksumSha256": "add0b894af9665516a784de762b98c548266137d2644363811ff37160d280d1f",
+    "matchesLocalDist": true,
+    "entryScriptPath": "/assets/index-C5JY29QU.js",
+    "entryScriptByteSize": 4890391,
+    "entryScriptChecksumSha256": "dad94ea72e799f433bd8d51d1487c4bc887d652c518ff4090e7ca86f350886cd",
+    "entryScriptNamesAllSixPromotedReleases": true,
+    "statement": "Measured before any capture. The served index.html is byte-identical to this repository's dist/index.html and the served entry script names all 6 promoted releases, so every reading below is from THIS build. Any of those failing aborts the run rather than being recorded as a caveat."
+  },
+  "targetViewport": {
+    "width": 2560,
+    "height": 1440,
+    "deviceScaleFactor": 1,
+    "mobile": false
+  },
+  "committedPaths": [
+    {
+      "setId": "block835-canary-facade-v1",
+      "framing": "level",
+      "poseCount": 8
+    },
+    {
+      "setId": "block835-canary-facade-v1-oblique",
+      "framing": "oblique",
+      "poseCount": 8
+    }
+  ],
+  "visualReading": {
+    "method": "Human visual reading of the captured 2560x1440 stills. No automated facade-composition metric exists in this repository and none is invented here; the per-pose MACHINE verdict is viewport, artifact count, host containment and labelling, and this block is separate from it.",
+    "stillsRead": [
+      "captures/facade-1440p__level__canary-facade-03.png",
+      "captures/facade-1440p__level__canary-facade-08.png",
+      "captures/facade-1440p__oblique__canary-facade-03-oblique.png"
+    ],
+    "stillsCaptured": 16,
+    "observed": [
+      "Facade bays with regular, recessed window openings resolved individually at this viewport, across both the near-field level pose and the oblique pose.",
+      "Floor banding and spandrel divisions continuous across each facade, with no interruption at a bay boundary.",
+      "Setback massing with its deck surfaces and the cornice band at each setback, read on the tiered tower in canary-facade-08.",
+      "Roof equipment as discrete masses, and a water-tank prism on legs visible in canary-facade-03.",
+      "Four distinguishable material classes in one frame - masonry-warm terracotta, masonry-light cream, curtain-cool teal and stone-neutral grey - so the material-class assignment is legible as variation rather than as a single tone.",
+      "Ground-plane divisions at the base of the near-field facades."
+    ],
+    "notObserved": [
+      "No blank placeholder wall on any visible surface in any of the three stills.",
+      "No visibly broken LOD transition, and no missing geometry where a building was streamed.",
+      "No tenant name, logo, glyph or signage text anywhere, consistent with the packages being glyph-free by construction."
+    ],
+    "disclosedOcclusion": "The truthful 'Exterior streaming fallback' notice - the tombstone statement for the 870 of 883 cells that ship no exterior geometry - occupies a large central region of every 1440p still. It occludes scene content. It is honest and it is not cropped, and it means each still shows less of the facade than the viewport could have.",
+    "bound": "Three of sixteen stills were read. No per-pose composition claim is made for the other thirteen, whose verdicts rest on the machine readings alone. The reading is qualitative and is not a measurement."
+  },
+  "minimumCameraToFacadeMeters": 10,
+  "closestCameraToFacadeMeters": 13,
+  "captures": [
+    {
+      "setId": "block835-canary-facade-v1",
+      "framing": "level",
+      "poseId": "canary-facade-01",
+      "buildingId": "doitt:262867",
+      "facade": "south",
+      "committedCameraToFacadeMeters": 13,
+      "committedPose": {
+        "longitude": -73.986754421,
+        "latitude": 40.748802244,
+        "height": 4.086,
+        "heading": 0,
+        "pitch": 0,
+        "roll": 0
+      },
+      "planHashSha256": "c6b3da2e7110db0dbac8219dfd33f7947a936cd0b53ba69f41e8ee671f8a8e2f",
+      "url": "http://localhost:4176/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-73.986754421&lat=40.748802244&height=4.086&heading=0.000&pitch=0.000&roll=0.000",
+      "viewport": {
+        "innerWidth": 2560,
+        "innerHeight": 1440,
+        "devicePixelRatio": 1,
+        "documentHasFocus": true,
+        "prefersReducedMotion": false,
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36"
+      },
+      "viewportIs1440p": true,
+      "activeWaves": [
+        "manhattan-central-upper-manhattan-cells-20260812-p1",
+        "manhattan-exterior-cells-20260811-v3",
+        "manhattan-lower-manhattan-cells-20260812-p1",
+        "manhattan-midtown-core-cells-20260811-v3",
+        "manhattan-northern-manhattan-cells-20260812-p1",
+        "manhattan-southern-remainder-cells-20260812-p1"
+      ],
+      "block835DistinctGlbCount": 14,
+      "expectedBlock835GlbCount": 14,
+      "renderedAll14": true,
+      "perReleaseDistinctGlbCount": {
+        "manhattan-exterior-cells-20260811-v3": 14,
+        "manhattan-midtown-core-cells-20260811-v3": 156,
+        "manhattan-lower-manhattan-cells-20260812-p1": 71,
+        "manhattan-southern-remainder-cells-20260812-p1": 179,
+        "manhattan-central-upper-manhattan-cells-20260812-p1": 40,
+        "manhattan-northern-manhattan-cells-20260812-p1": 24
+      },
+      "externalHosts": [],
+      "labeling": {
+        "runtimeNotes": [
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-exterior-cells-20260811-v3:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-midtown-core-cells-20260811-v3:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-lower-manhattan-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-southern-remainder-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-central-upper-manhattan-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-northern-manhattan-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only."
+        ],
+        "statesGeneratedOnly": true,
+        "statesVerifiedLocalBytes": true
+      },
+      "still": {
+        "relativeRef": "captures/facade-1440p__level__canary-facade-01.png",
+        "byteSize": 848781,
+        "checksumSha256": "17905ac301ddc1fe0d6067a403dbcd1da78f800c43874c95937e551a00ca0963"
+      },
+      "passed": true
+    },
+    {
+      "setId": "block835-canary-facade-v1",
+      "framing": "level",
+      "poseId": "canary-facade-02",
+      "buildingId": "doitt:102705",
+      "facade": "west",
+      "committedCameraToFacadeMeters": 23,
+      "committedPose": {
+        "longitude": -73.987701731,
+        "latitude": 40.748996179,
+        "height": 7.394,
+        "heading": 90,
+        "pitch": 0,
+        "roll": 0
+      },
+      "planHashSha256": "a67b3479a5c612701dd0474772169913076cd7dd0f4c20c8201027f5f848d1e3",
+      "url": "http://localhost:4176/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-73.987701731&lat=40.748996179&height=7.394&heading=90.000&pitch=0.000&roll=0.000",
+      "viewport": {
+        "innerWidth": 2560,
+        "innerHeight": 1440,
+        "devicePixelRatio": 1,
+        "documentHasFocus": true,
+        "prefersReducedMotion": false,
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36"
+      },
+      "viewportIs1440p": true,
+      "activeWaves": [
+        "manhattan-central-upper-manhattan-cells-20260812-p1",
+        "manhattan-exterior-cells-20260811-v3",
+        "manhattan-lower-manhattan-cells-20260812-p1",
+        "manhattan-midtown-core-cells-20260811-v3",
+        "manhattan-northern-manhattan-cells-20260812-p1",
+        "manhattan-southern-remainder-cells-20260812-p1"
+      ],
+      "block835DistinctGlbCount": 14,
+      "expectedBlock835GlbCount": 14,
+      "renderedAll14": true,
+      "perReleaseDistinctGlbCount": {
+        "manhattan-exterior-cells-20260811-v3": 14,
+        "manhattan-midtown-core-cells-20260811-v3": 156,
+        "manhattan-lower-manhattan-cells-20260812-p1": 71,
+        "manhattan-southern-remainder-cells-20260812-p1": 179,
+        "manhattan-central-upper-manhattan-cells-20260812-p1": 40,
+        "manhattan-northern-manhattan-cells-20260812-p1": 24
+      },
+      "externalHosts": [],
+      "labeling": {
+        "runtimeNotes": [
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-exterior-cells-20260811-v3:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-midtown-core-cells-20260811-v3:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-lower-manhattan-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-southern-remainder-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-central-upper-manhattan-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-northern-manhattan-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only."
+        ],
+        "statesGeneratedOnly": true,
+        "statesVerifiedLocalBytes": true
+      },
+      "still": {
+        "relativeRef": "captures/facade-1440p__level__canary-facade-02.png",
+        "byteSize": 420518,
+        "checksumSha256": "d21271ade7ff4073059361966d6f6990bd6136ae6752bc23869b8695d4584bb1"
+      },
+      "passed": true
+    },
+    {
+      "setId": "block835-canary-facade-v1",
+      "framing": "level",
+      "poseId": "canary-facade-03",
+      "buildingId": "doitt:498980",
+      "facade": "north",
+      "committedCameraToFacadeMeters": 28,
+      "committedPose": {
+        "longitude": -73.98680811,
+        "latitude": 40.749364603,
+        "height": 8.803,
+        "heading": 180,
+        "pitch": 0,
+        "roll": 0
+      },
+      "planHashSha256": "f2634386609e3c8a346264fb35ac0df8c556af678627e312eb3ed99a7977cdb7",
+      "url": "http://localhost:4176/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-73.986808110&lat=40.749364603&height=8.803&heading=180.000&pitch=0.000&roll=0.000",
+      "viewport": {
+        "innerWidth": 2560,
+        "innerHeight": 1440,
+        "devicePixelRatio": 1,
+        "documentHasFocus": true,
+        "prefersReducedMotion": false,
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36"
+      },
+      "viewportIs1440p": true,
+      "activeWaves": [
+        "manhattan-central-upper-manhattan-cells-20260812-p1",
+        "manhattan-exterior-cells-20260811-v3",
+        "manhattan-lower-manhattan-cells-20260812-p1",
+        "manhattan-midtown-core-cells-20260811-v3",
+        "manhattan-northern-manhattan-cells-20260812-p1",
+        "manhattan-southern-remainder-cells-20260812-p1"
+      ],
+      "block835DistinctGlbCount": 14,
+      "expectedBlock835GlbCount": 14,
+      "renderedAll14": true,
+      "perReleaseDistinctGlbCount": {
+        "manhattan-exterior-cells-20260811-v3": 14,
+        "manhattan-midtown-core-cells-20260811-v3": 156,
+        "manhattan-lower-manhattan-cells-20260812-p1": 71,
+        "manhattan-southern-remainder-cells-20260812-p1": 179,
+        "manhattan-central-upper-manhattan-cells-20260812-p1": 40,
+        "manhattan-northern-manhattan-cells-20260812-p1": 24
+      },
+      "externalHosts": [],
+      "labeling": {
+        "runtimeNotes": [
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-exterior-cells-20260811-v3:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-midtown-core-cells-20260811-v3:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-lower-manhattan-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-southern-remainder-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-central-upper-manhattan-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-northern-manhattan-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only."
+        ],
+        "statesGeneratedOnly": true,
+        "statesVerifiedLocalBytes": true
+      },
+      "still": {
+        "relativeRef": "captures/facade-1440p__level__canary-facade-03.png",
+        "byteSize": 1317171,
+        "checksumSha256": "6c069dcc2a6fc0a3800fd5eb2c90ddcb9dde96325a0d5be9a6055536cdd5013c"
+      },
+      "passed": true
+    },
+    {
+      "setId": "block835-canary-facade-v1",
+      "framing": "level",
+      "poseId": "canary-facade-04",
+      "buildingId": "doitt:39969",
+      "facade": "east",
+      "committedCameraToFacadeMeters": 37,
+      "committedPose": {
+        "longitude": -73.985958708,
+        "latitude": 40.748923527,
+        "height": 11.75,
+        "heading": 270,
+        "pitch": 0,
+        "roll": 0
+      },
+      "planHashSha256": "e4e013da18931299b2750d0f99d7254d5deaf9607295ecc0dfecf5b331b92ad9",
+      "url": "http://localhost:4176/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-73.985958708&lat=40.748923527&height=11.750&heading=270.000&pitch=0.000&roll=0.000",
+      "viewport": {
+        "innerWidth": 2560,
+        "innerHeight": 1440,
+        "devicePixelRatio": 1,
+        "documentHasFocus": true,
+        "prefersReducedMotion": false,
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36"
+      },
+      "viewportIs1440p": true,
+      "activeWaves": [
+        "manhattan-central-upper-manhattan-cells-20260812-p1",
+        "manhattan-exterior-cells-20260811-v3",
+        "manhattan-lower-manhattan-cells-20260812-p1",
+        "manhattan-midtown-core-cells-20260811-v3",
+        "manhattan-northern-manhattan-cells-20260812-p1",
+        "manhattan-southern-remainder-cells-20260812-p1"
+      ],
+      "block835DistinctGlbCount": 14,
+      "expectedBlock835GlbCount": 14,
+      "renderedAll14": true,
+      "perReleaseDistinctGlbCount": {
+        "manhattan-exterior-cells-20260811-v3": 14,
+        "manhattan-midtown-core-cells-20260811-v3": 156,
+        "manhattan-lower-manhattan-cells-20260812-p1": 71,
+        "manhattan-southern-remainder-cells-20260812-p1": 179,
+        "manhattan-central-upper-manhattan-cells-20260812-p1": 40,
+        "manhattan-northern-manhattan-cells-20260812-p1": 24
+      },
+      "externalHosts": [],
+      "labeling": {
+        "runtimeNotes": [
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-exterior-cells-20260811-v3:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-midtown-core-cells-20260811-v3:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-lower-manhattan-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-southern-remainder-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-central-upper-manhattan-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-northern-manhattan-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only."
+        ],
+        "statesGeneratedOnly": true,
+        "statesVerifiedLocalBytes": true
+      },
+      "still": {
+        "relativeRef": "captures/facade-1440p__level__canary-facade-04.png",
+        "byteSize": 837950,
+        "checksumSha256": "c177bc517540226720ffa9476dc436d2119c597cbf8c840b94145ad57416da65"
+      },
+      "passed": true
+    },
+    {
+      "setId": "block835-canary-facade-v1",
+      "framing": "level",
+      "poseId": "canary-facade-05",
+      "buildingId": "doitt:835659",
+      "facade": "south",
+      "committedCameraToFacadeMeters": 36,
+      "committedPose": {
+        "longitude": -73.986906301,
+        "latitude": 40.748726009,
+        "height": 11.568,
+        "heading": 0,
+        "pitch": 0,
+        "roll": 0
+      },
+      "planHashSha256": "6bfc10b2fd9e7c41c47ffb8a2655b15b66066ae728d57dd55b6624012367ec2c",
+      "url": "http://localhost:4176/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-73.986906301&lat=40.748726009&height=11.568&heading=0.000&pitch=0.000&roll=0.000",
+      "viewport": {
+        "innerWidth": 2560,
+        "innerHeight": 1440,
+        "devicePixelRatio": 1,
+        "documentHasFocus": true,
+        "prefersReducedMotion": false,
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36"
+      },
+      "viewportIs1440p": true,
+      "activeWaves": [
+        "manhattan-central-upper-manhattan-cells-20260812-p1",
+        "manhattan-exterior-cells-20260811-v3",
+        "manhattan-lower-manhattan-cells-20260812-p1",
+        "manhattan-midtown-core-cells-20260811-v3",
+        "manhattan-northern-manhattan-cells-20260812-p1",
+        "manhattan-southern-remainder-cells-20260812-p1"
+      ],
+      "block835DistinctGlbCount": 14,
+      "expectedBlock835GlbCount": 14,
+      "renderedAll14": true,
+      "perReleaseDistinctGlbCount": {
+        "manhattan-exterior-cells-20260811-v3": 14,
+        "manhattan-midtown-core-cells-20260811-v3": 156,
+        "manhattan-lower-manhattan-cells-20260812-p1": 71,
+        "manhattan-southern-remainder-cells-20260812-p1": 179,
+        "manhattan-central-upper-manhattan-cells-20260812-p1": 40,
+        "manhattan-northern-manhattan-cells-20260812-p1": 24
+      },
+      "externalHosts": [],
+      "labeling": {
+        "runtimeNotes": [
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-exterior-cells-20260811-v3:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-midtown-core-cells-20260811-v3:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-lower-manhattan-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-southern-remainder-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-central-upper-manhattan-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-northern-manhattan-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only."
+        ],
+        "statesGeneratedOnly": true,
+        "statesVerifiedLocalBytes": true
+      },
+      "still": {
+        "relativeRef": "captures/facade-1440p__level__canary-facade-05.png",
+        "byteSize": 699647,
+        "checksumSha256": "002a62b42cfa544f47b48577b434f03f9d51a3127456a7d37a8e94934d9efc09"
+      },
+      "passed": true
+    },
+    {
+      "setId": "block835-canary-facade-v1",
+      "framing": "level",
+      "poseId": "canary-facade-06",
+      "buildingId": "doitt:584049",
+      "facade": "west",
+      "committedCameraToFacadeMeters": 36,
+      "committedPose": {
+        "longitude": -73.987753944,
+        "latitude": 40.748862003,
+        "height": 11.67,
+        "heading": 90,
+        "pitch": 0,
+        "roll": 0
+      },
+      "planHashSha256": "e0330a72d9f82ba790f034c1fe917bca7b5689a61f452459c49de9fb21cb0ee8",
+      "url": "http://localhost:4176/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-73.987753944&lat=40.748862003&height=11.670&heading=90.000&pitch=0.000&roll=0.000",
+      "viewport": {
+        "innerWidth": 2560,
+        "innerHeight": 1440,
+        "devicePixelRatio": 1,
+        "documentHasFocus": true,
+        "prefersReducedMotion": false,
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36"
+      },
+      "viewportIs1440p": true,
+      "activeWaves": [
+        "manhattan-central-upper-manhattan-cells-20260812-p1",
+        "manhattan-exterior-cells-20260811-v3",
+        "manhattan-lower-manhattan-cells-20260812-p1",
+        "manhattan-midtown-core-cells-20260811-v3",
+        "manhattan-northern-manhattan-cells-20260812-p1",
+        "manhattan-southern-remainder-cells-20260812-p1"
+      ],
+      "block835DistinctGlbCount": 14,
+      "expectedBlock835GlbCount": 14,
+      "renderedAll14": true,
+      "perReleaseDistinctGlbCount": {
+        "manhattan-exterior-cells-20260811-v3": 14,
+        "manhattan-midtown-core-cells-20260811-v3": 156,
+        "manhattan-lower-manhattan-cells-20260812-p1": 71,
+        "manhattan-southern-remainder-cells-20260812-p1": 179,
+        "manhattan-central-upper-manhattan-cells-20260812-p1": 40,
+        "manhattan-northern-manhattan-cells-20260812-p1": 24
+      },
+      "externalHosts": [],
+      "labeling": {
+        "runtimeNotes": [
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-exterior-cells-20260811-v3:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-midtown-core-cells-20260811-v3:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-lower-manhattan-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-southern-remainder-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-central-upper-manhattan-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-northern-manhattan-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only."
+        ],
+        "statesGeneratedOnly": true,
+        "statesVerifiedLocalBytes": true
+      },
+      "still": {
+        "relativeRef": "captures/facade-1440p__level__canary-facade-06.png",
+        "byteSize": 554089,
+        "checksumSha256": "ba59d52fc6a1ea192a73a0c57feff77f518c623a4d8e6b676b9a7efecbbdaaa4"
+      },
+      "passed": true
+    },
+    {
+      "setId": "block835-canary-facade-v1",
+      "framing": "level",
+      "poseId": "canary-facade-07",
+      "buildingId": "doitt:982383",
+      "facade": "east",
+      "committedCameraToFacadeMeters": 25,
+      "committedPose": {
+        "longitude": -73.986310494,
+        "latitude": 40.748832536,
+        "height": 12,
+        "heading": 270,
+        "pitch": 25,
+        "roll": 0
+      },
+      "planHashSha256": "7095305269e5294e3156ccd04de4116bc2f18b3743f4f62f379da392bb4bd504",
+      "url": "http://localhost:4176/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-73.986310494&lat=40.748832536&height=12.000&heading=270.000&pitch=25.000&roll=0.000",
+      "viewport": {
+        "innerWidth": 2560,
+        "innerHeight": 1440,
+        "devicePixelRatio": 1,
+        "documentHasFocus": true,
+        "prefersReducedMotion": false,
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36"
+      },
+      "viewportIs1440p": true,
+      "activeWaves": [
+        "manhattan-central-upper-manhattan-cells-20260812-p1",
+        "manhattan-exterior-cells-20260811-v3",
+        "manhattan-lower-manhattan-cells-20260812-p1",
+        "manhattan-midtown-core-cells-20260811-v3",
+        "manhattan-northern-manhattan-cells-20260812-p1",
+        "manhattan-southern-remainder-cells-20260812-p1"
+      ],
+      "block835DistinctGlbCount": 14,
+      "expectedBlock835GlbCount": 14,
+      "renderedAll14": true,
+      "perReleaseDistinctGlbCount": {
+        "manhattan-exterior-cells-20260811-v3": 14,
+        "manhattan-midtown-core-cells-20260811-v3": 156,
+        "manhattan-lower-manhattan-cells-20260812-p1": 71,
+        "manhattan-southern-remainder-cells-20260812-p1": 179,
+        "manhattan-central-upper-manhattan-cells-20260812-p1": 40,
+        "manhattan-northern-manhattan-cells-20260812-p1": 24
+      },
+      "externalHosts": [],
+      "labeling": {
+        "runtimeNotes": [
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-exterior-cells-20260811-v3:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-midtown-core-cells-20260811-v3:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-lower-manhattan-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-southern-remainder-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-central-upper-manhattan-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-northern-manhattan-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only."
+        ],
+        "statesGeneratedOnly": true,
+        "statesVerifiedLocalBytes": true
+      },
+      "still": {
+        "relativeRef": "captures/facade-1440p__level__canary-facade-07.png",
+        "byteSize": 448768,
+        "checksumSha256": "b56ac27b97929b88a7574f5720e92cbdf1ac2685ebefaff6e1fddb99e750f665"
+      },
+      "passed": true
+    },
+    {
+      "setId": "block835-canary-facade-v1",
+      "framing": "level",
+      "poseId": "canary-facade-08",
+      "buildingId": "doitt:778052",
+      "facade": "north",
+      "committedCameraToFacadeMeters": 25,
+      "committedPose": {
+        "longitude": -73.98597876,
+        "latitude": 40.749046448,
+        "height": 12,
+        "heading": 180,
+        "pitch": 25,
+        "roll": 0
+      },
+      "planHashSha256": "7f4dee8b532fb04a4ec3bda2f3b36aa5315f237148b2bab6aea5f2dfa9a86618",
+      "url": "http://localhost:4176/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-73.985978760&lat=40.749046448&height=12.000&heading=180.000&pitch=25.000&roll=0.000",
+      "viewport": {
+        "innerWidth": 2560,
+        "innerHeight": 1440,
+        "devicePixelRatio": 1,
+        "documentHasFocus": true,
+        "prefersReducedMotion": false,
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36"
+      },
+      "viewportIs1440p": true,
+      "activeWaves": [
+        "manhattan-central-upper-manhattan-cells-20260812-p1",
+        "manhattan-exterior-cells-20260811-v3",
+        "manhattan-lower-manhattan-cells-20260812-p1",
+        "manhattan-midtown-core-cells-20260811-v3",
+        "manhattan-northern-manhattan-cells-20260812-p1",
+        "manhattan-southern-remainder-cells-20260812-p1"
+      ],
+      "block835DistinctGlbCount": 14,
+      "expectedBlock835GlbCount": 14,
+      "renderedAll14": true,
+      "perReleaseDistinctGlbCount": {
+        "manhattan-exterior-cells-20260811-v3": 14,
+        "manhattan-midtown-core-cells-20260811-v3": 156,
+        "manhattan-lower-manhattan-cells-20260812-p1": 71,
+        "manhattan-southern-remainder-cells-20260812-p1": 179,
+        "manhattan-central-upper-manhattan-cells-20260812-p1": 40,
+        "manhattan-northern-manhattan-cells-20260812-p1": 24
+      },
+      "externalHosts": [],
+      "labeling": {
+        "runtimeNotes": [
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-exterior-cells-20260811-v3:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-midtown-core-cells-20260811-v3:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-lower-manhattan-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-southern-remainder-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-central-upper-manhattan-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-northern-manhattan-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only."
+        ],
+        "statesGeneratedOnly": true,
+        "statesVerifiedLocalBytes": true
+      },
+      "still": {
+        "relativeRef": "captures/facade-1440p__level__canary-facade-08.png",
+        "byteSize": 1918160,
+        "checksumSha256": "5f6dbd41ef52cad6f0202f66d866878f1476871933db736a7082f92dc6fc60a9"
+      },
+      "passed": true
+    },
+    {
+      "setId": "block835-canary-facade-v1-oblique",
+      "framing": "oblique",
+      "poseId": "canary-facade-01-oblique",
+      "buildingId": "doitt:262867",
+      "facade": "south",
+      "committedCameraToFacadeMeters": 13,
+      "committedPose": {
+        "longitude": -73.986754421,
+        "latitude": 40.748802244,
+        "height": 11.592,
+        "heading": 0,
+        "pitch": -30,
+        "roll": 0
+      },
+      "planHashSha256": "c6b3da2e7110db0dbac8219dfd33f7947a936cd0b53ba69f41e8ee671f8a8e2f",
+      "url": "http://localhost:4176/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-73.986754421&lat=40.748802244&height=11.592&heading=0.000&pitch=-30.000&roll=0.000",
+      "viewport": {
+        "innerWidth": 2560,
+        "innerHeight": 1440,
+        "devicePixelRatio": 1,
+        "documentHasFocus": true,
+        "prefersReducedMotion": false,
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36"
+      },
+      "viewportIs1440p": true,
+      "activeWaves": [
+        "manhattan-central-upper-manhattan-cells-20260812-p1",
+        "manhattan-exterior-cells-20260811-v3",
+        "manhattan-lower-manhattan-cells-20260812-p1",
+        "manhattan-midtown-core-cells-20260811-v3",
+        "manhattan-northern-manhattan-cells-20260812-p1",
+        "manhattan-southern-remainder-cells-20260812-p1"
+      ],
+      "block835DistinctGlbCount": 14,
+      "expectedBlock835GlbCount": 14,
+      "renderedAll14": true,
+      "perReleaseDistinctGlbCount": {
+        "manhattan-exterior-cells-20260811-v3": 14,
+        "manhattan-midtown-core-cells-20260811-v3": 156,
+        "manhattan-lower-manhattan-cells-20260812-p1": 71,
+        "manhattan-southern-remainder-cells-20260812-p1": 179,
+        "manhattan-central-upper-manhattan-cells-20260812-p1": 40,
+        "manhattan-northern-manhattan-cells-20260812-p1": 24
+      },
+      "externalHosts": [],
+      "labeling": {
+        "runtimeNotes": [
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-exterior-cells-20260811-v3:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-midtown-core-cells-20260811-v3:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-lower-manhattan-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-southern-remainder-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-central-upper-manhattan-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-northern-manhattan-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only."
+        ],
+        "statesGeneratedOnly": true,
+        "statesVerifiedLocalBytes": true
+      },
+      "still": {
+        "relativeRef": "captures/facade-1440p__oblique__canary-facade-01-oblique.png",
+        "byteSize": 751928,
+        "checksumSha256": "a8e22c8207b34caed7fb2dd76921a315cc6f9c4ff4478c486dc720e1ba81ecac"
+      },
+      "passed": true
+    },
+    {
+      "setId": "block835-canary-facade-v1-oblique",
+      "framing": "oblique",
+      "poseId": "canary-facade-02-oblique",
+      "buildingId": "doitt:102705",
+      "facade": "west",
+      "committedCameraToFacadeMeters": 23,
+      "committedPose": {
+        "longitude": -73.987701731,
+        "latitude": 40.748996179,
+        "height": 20.673,
+        "heading": 90,
+        "pitch": -30,
+        "roll": 0
+      },
+      "planHashSha256": "a67b3479a5c612701dd0474772169913076cd7dd0f4c20c8201027f5f848d1e3",
+      "url": "http://localhost:4176/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-73.987701731&lat=40.748996179&height=20.673&heading=90.000&pitch=-30.000&roll=0.000",
+      "viewport": {
+        "innerWidth": 2560,
+        "innerHeight": 1440,
+        "devicePixelRatio": 1,
+        "documentHasFocus": true,
+        "prefersReducedMotion": false,
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36"
+      },
+      "viewportIs1440p": true,
+      "activeWaves": [
+        "manhattan-central-upper-manhattan-cells-20260812-p1",
+        "manhattan-exterior-cells-20260811-v3",
+        "manhattan-lower-manhattan-cells-20260812-p1",
+        "manhattan-midtown-core-cells-20260811-v3",
+        "manhattan-northern-manhattan-cells-20260812-p1",
+        "manhattan-southern-remainder-cells-20260812-p1"
+      ],
+      "block835DistinctGlbCount": 14,
+      "expectedBlock835GlbCount": 14,
+      "renderedAll14": true,
+      "perReleaseDistinctGlbCount": {
+        "manhattan-exterior-cells-20260811-v3": 14,
+        "manhattan-midtown-core-cells-20260811-v3": 156,
+        "manhattan-lower-manhattan-cells-20260812-p1": 71,
+        "manhattan-southern-remainder-cells-20260812-p1": 179,
+        "manhattan-central-upper-manhattan-cells-20260812-p1": 40,
+        "manhattan-northern-manhattan-cells-20260812-p1": 24
+      },
+      "externalHosts": [],
+      "labeling": {
+        "runtimeNotes": [
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-exterior-cells-20260811-v3:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-midtown-core-cells-20260811-v3:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-lower-manhattan-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-southern-remainder-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-central-upper-manhattan-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-northern-manhattan-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only."
+        ],
+        "statesGeneratedOnly": true,
+        "statesVerifiedLocalBytes": true
+      },
+      "still": {
+        "relativeRef": "captures/facade-1440p__oblique__canary-facade-02-oblique.png",
+        "byteSize": 635305,
+        "checksumSha256": "b494d14c58e44eead8ec4815ec6f7e25b80c6d5f6d69259a3524b7c71d22a2f3"
+      },
+      "passed": true
+    },
+    {
+      "setId": "block835-canary-facade-v1-oblique",
+      "framing": "oblique",
+      "poseId": "canary-facade-03-oblique",
+      "buildingId": "doitt:498980",
+      "facade": "north",
+      "committedCameraToFacadeMeters": 28,
+      "committedPose": {
+        "longitude": -73.98680811,
+        "latitude": 40.749364603,
+        "height": 24.968,
+        "heading": 180,
+        "pitch": -30,
+        "roll": 0
+      },
+      "planHashSha256": "f2634386609e3c8a346264fb35ac0df8c556af678627e312eb3ed99a7977cdb7",
+      "url": "http://localhost:4176/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-73.986808110&lat=40.749364603&height=24.968&heading=180.000&pitch=-30.000&roll=0.000",
+      "viewport": {
+        "innerWidth": 2560,
+        "innerHeight": 1440,
+        "devicePixelRatio": 1,
+        "documentHasFocus": true,
+        "prefersReducedMotion": false,
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36"
+      },
+      "viewportIs1440p": true,
+      "activeWaves": [
+        "manhattan-central-upper-manhattan-cells-20260812-p1",
+        "manhattan-exterior-cells-20260811-v3",
+        "manhattan-lower-manhattan-cells-20260812-p1",
+        "manhattan-midtown-core-cells-20260811-v3",
+        "manhattan-northern-manhattan-cells-20260812-p1",
+        "manhattan-southern-remainder-cells-20260812-p1"
+      ],
+      "block835DistinctGlbCount": 14,
+      "expectedBlock835GlbCount": 14,
+      "renderedAll14": true,
+      "perReleaseDistinctGlbCount": {
+        "manhattan-exterior-cells-20260811-v3": 14,
+        "manhattan-midtown-core-cells-20260811-v3": 156,
+        "manhattan-lower-manhattan-cells-20260812-p1": 71,
+        "manhattan-southern-remainder-cells-20260812-p1": 179,
+        "manhattan-central-upper-manhattan-cells-20260812-p1": 40,
+        "manhattan-northern-manhattan-cells-20260812-p1": 24
+      },
+      "externalHosts": [],
+      "labeling": {
+        "runtimeNotes": [
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-exterior-cells-20260811-v3:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-midtown-core-cells-20260811-v3:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-lower-manhattan-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-southern-remainder-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-central-upper-manhattan-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-northern-manhattan-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only."
+        ],
+        "statesGeneratedOnly": true,
+        "statesVerifiedLocalBytes": true
+      },
+      "still": {
+        "relativeRef": "captures/facade-1440p__oblique__canary-facade-03-oblique.png",
+        "byteSize": 1045692,
+        "checksumSha256": "7543d5acdc18c5296b3ad2b7840b0134569f970ec2a79ea879510c8ac3def684"
+      },
+      "passed": true
+    },
+    {
+      "setId": "block835-canary-facade-v1-oblique",
+      "framing": "oblique",
+      "poseId": "canary-facade-04-oblique",
+      "buildingId": "doitt:39969",
+      "facade": "east",
+      "committedCameraToFacadeMeters": 37,
+      "committedPose": {
+        "longitude": -73.985958708,
+        "latitude": 40.748923527,
+        "height": 33.111,
+        "heading": 270,
+        "pitch": -30,
+        "roll": 0
+      },
+      "planHashSha256": "e4e013da18931299b2750d0f99d7254d5deaf9607295ecc0dfecf5b331b92ad9",
+      "url": "http://localhost:4176/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-73.985958708&lat=40.748923527&height=33.111&heading=270.000&pitch=-30.000&roll=0.000",
+      "viewport": {
+        "innerWidth": 2560,
+        "innerHeight": 1440,
+        "devicePixelRatio": 1,
+        "documentHasFocus": true,
+        "prefersReducedMotion": false,
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36"
+      },
+      "viewportIs1440p": true,
+      "activeWaves": [
+        "manhattan-central-upper-manhattan-cells-20260812-p1",
+        "manhattan-exterior-cells-20260811-v3",
+        "manhattan-lower-manhattan-cells-20260812-p1",
+        "manhattan-midtown-core-cells-20260811-v3",
+        "manhattan-northern-manhattan-cells-20260812-p1",
+        "manhattan-southern-remainder-cells-20260812-p1"
+      ],
+      "block835DistinctGlbCount": 14,
+      "expectedBlock835GlbCount": 14,
+      "renderedAll14": true,
+      "perReleaseDistinctGlbCount": {
+        "manhattan-exterior-cells-20260811-v3": 14,
+        "manhattan-midtown-core-cells-20260811-v3": 156,
+        "manhattan-lower-manhattan-cells-20260812-p1": 71,
+        "manhattan-southern-remainder-cells-20260812-p1": 179,
+        "manhattan-central-upper-manhattan-cells-20260812-p1": 40,
+        "manhattan-northern-manhattan-cells-20260812-p1": 24
+      },
+      "externalHosts": [],
+      "labeling": {
+        "runtimeNotes": [
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-exterior-cells-20260811-v3:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-midtown-core-cells-20260811-v3:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-lower-manhattan-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-southern-remainder-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-central-upper-manhattan-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-northern-manhattan-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only."
+        ],
+        "statesGeneratedOnly": true,
+        "statesVerifiedLocalBytes": true
+      },
+      "still": {
+        "relativeRef": "captures/facade-1440p__oblique__canary-facade-04-oblique.png",
+        "byteSize": 947357,
+        "checksumSha256": "de6df66c44dc0af060f32d8a1cb542ae5aafcd8c9af22d0e240142a72a040148"
+      },
+      "passed": true
+    },
+    {
+      "setId": "block835-canary-facade-v1-oblique",
+      "framing": "oblique",
+      "poseId": "canary-facade-05-oblique",
+      "buildingId": "doitt:835659",
+      "facade": "south",
+      "committedCameraToFacadeMeters": 36,
+      "committedPose": {
+        "longitude": -73.986906301,
+        "latitude": 40.748726009,
+        "height": 32.353,
+        "heading": 0,
+        "pitch": -30,
+        "roll": 0
+      },
+      "planHashSha256": "6bfc10b2fd9e7c41c47ffb8a2655b15b66066ae728d57dd55b6624012367ec2c",
+      "url": "http://localhost:4176/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-73.986906301&lat=40.748726009&height=32.353&heading=0.000&pitch=-30.000&roll=0.000",
+      "viewport": {
+        "innerWidth": 2560,
+        "innerHeight": 1440,
+        "devicePixelRatio": 1,
+        "documentHasFocus": true,
+        "prefersReducedMotion": false,
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36"
+      },
+      "viewportIs1440p": true,
+      "activeWaves": [
+        "manhattan-central-upper-manhattan-cells-20260812-p1",
+        "manhattan-exterior-cells-20260811-v3",
+        "manhattan-lower-manhattan-cells-20260812-p1",
+        "manhattan-midtown-core-cells-20260811-v3",
+        "manhattan-northern-manhattan-cells-20260812-p1",
+        "manhattan-southern-remainder-cells-20260812-p1"
+      ],
+      "block835DistinctGlbCount": 14,
+      "expectedBlock835GlbCount": 14,
+      "renderedAll14": true,
+      "perReleaseDistinctGlbCount": {
+        "manhattan-exterior-cells-20260811-v3": 14,
+        "manhattan-midtown-core-cells-20260811-v3": 156,
+        "manhattan-lower-manhattan-cells-20260812-p1": 71,
+        "manhattan-southern-remainder-cells-20260812-p1": 179,
+        "manhattan-central-upper-manhattan-cells-20260812-p1": 40,
+        "manhattan-northern-manhattan-cells-20260812-p1": 24
+      },
+      "externalHosts": [],
+      "labeling": {
+        "runtimeNotes": [
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-exterior-cells-20260811-v3:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-midtown-core-cells-20260811-v3:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-lower-manhattan-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-southern-remainder-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-central-upper-manhattan-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-northern-manhattan-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only."
+        ],
+        "statesGeneratedOnly": true,
+        "statesVerifiedLocalBytes": true
+      },
+      "still": {
+        "relativeRef": "captures/facade-1440p__oblique__canary-facade-05-oblique.png",
+        "byteSize": 672089,
+        "checksumSha256": "ed2074d730d01fcf93b4a62820e9c21b637ae6ec4f9aa8efe51d527514f3a421"
+      },
+      "passed": true
+    },
+    {
+      "setId": "block835-canary-facade-v1-oblique",
+      "framing": "oblique",
+      "poseId": "canary-facade-06-oblique",
+      "buildingId": "doitt:584049",
+      "facade": "west",
+      "committedCameraToFacadeMeters": 36,
+      "committedPose": {
+        "longitude": -73.987753944,
+        "latitude": 40.748862003,
+        "height": 32.455,
+        "heading": 90,
+        "pitch": -30,
+        "roll": 0
+      },
+      "planHashSha256": "e0330a72d9f82ba790f034c1fe917bca7b5689a61f452459c49de9fb21cb0ee8",
+      "url": "http://localhost:4176/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-73.987753944&lat=40.748862003&height=32.455&heading=90.000&pitch=-30.000&roll=0.000",
+      "viewport": {
+        "innerWidth": 2560,
+        "innerHeight": 1440,
+        "devicePixelRatio": 1,
+        "documentHasFocus": true,
+        "prefersReducedMotion": false,
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36"
+      },
+      "viewportIs1440p": true,
+      "activeWaves": [
+        "manhattan-central-upper-manhattan-cells-20260812-p1",
+        "manhattan-exterior-cells-20260811-v3",
+        "manhattan-lower-manhattan-cells-20260812-p1",
+        "manhattan-midtown-core-cells-20260811-v3",
+        "manhattan-northern-manhattan-cells-20260812-p1",
+        "manhattan-southern-remainder-cells-20260812-p1"
+      ],
+      "block835DistinctGlbCount": 14,
+      "expectedBlock835GlbCount": 14,
+      "renderedAll14": true,
+      "perReleaseDistinctGlbCount": {
+        "manhattan-exterior-cells-20260811-v3": 14,
+        "manhattan-midtown-core-cells-20260811-v3": 156,
+        "manhattan-lower-manhattan-cells-20260812-p1": 71,
+        "manhattan-southern-remainder-cells-20260812-p1": 179,
+        "manhattan-central-upper-manhattan-cells-20260812-p1": 40,
+        "manhattan-northern-manhattan-cells-20260812-p1": 24
+      },
+      "externalHosts": [],
+      "labeling": {
+        "runtimeNotes": [
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-exterior-cells-20260811-v3:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-midtown-core-cells-20260811-v3:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-lower-manhattan-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-southern-remainder-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-central-upper-manhattan-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-northern-manhattan-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only."
+        ],
+        "statesGeneratedOnly": true,
+        "statesVerifiedLocalBytes": true
+      },
+      "still": {
+        "relativeRef": "captures/facade-1440p__oblique__canary-facade-06-oblique.png",
+        "byteSize": 766960,
+        "checksumSha256": "4a7af0b37b7c0412b378d015381b472b750d2551aaf9ea757fab148b9d6bc250"
+      },
+      "passed": true
+    },
+    {
+      "setId": "block835-canary-facade-v1-oblique",
+      "framing": "oblique",
+      "poseId": "canary-facade-07-oblique",
+      "buildingId": "doitt:982383",
+      "facade": "east",
+      "committedCameraToFacadeMeters": 25,
+      "committedPose": {
+        "longitude": -73.986310494,
+        "latitude": 40.748832536,
+        "height": 72.274,
+        "heading": 270,
+        "pitch": -30,
+        "roll": 0
+      },
+      "planHashSha256": "7095305269e5294e3156ccd04de4116bc2f18b3743f4f62f379da392bb4bd504",
+      "url": "http://localhost:4176/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-73.986310494&lat=40.748832536&height=72.274&heading=270.000&pitch=-30.000&roll=0.000",
+      "viewport": {
+        "innerWidth": 2560,
+        "innerHeight": 1440,
+        "devicePixelRatio": 1,
+        "documentHasFocus": true,
+        "prefersReducedMotion": false,
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36"
+      },
+      "viewportIs1440p": true,
+      "activeWaves": [
+        "manhattan-central-upper-manhattan-cells-20260812-p1",
+        "manhattan-exterior-cells-20260811-v3",
+        "manhattan-lower-manhattan-cells-20260812-p1",
+        "manhattan-midtown-core-cells-20260811-v3",
+        "manhattan-northern-manhattan-cells-20260812-p1",
+        "manhattan-southern-remainder-cells-20260812-p1"
+      ],
+      "block835DistinctGlbCount": 14,
+      "expectedBlock835GlbCount": 14,
+      "renderedAll14": true,
+      "perReleaseDistinctGlbCount": {
+        "manhattan-exterior-cells-20260811-v3": 14,
+        "manhattan-midtown-core-cells-20260811-v3": 156,
+        "manhattan-lower-manhattan-cells-20260812-p1": 71,
+        "manhattan-southern-remainder-cells-20260812-p1": 179,
+        "manhattan-central-upper-manhattan-cells-20260812-p1": 40,
+        "manhattan-northern-manhattan-cells-20260812-p1": 24
+      },
+      "externalHosts": [],
+      "labeling": {
+        "runtimeNotes": [
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-exterior-cells-20260811-v3:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-midtown-core-cells-20260811-v3:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-lower-manhattan-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-southern-remainder-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-central-upper-manhattan-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-northern-manhattan-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only."
+        ],
+        "statesGeneratedOnly": true,
+        "statesVerifiedLocalBytes": true
+      },
+      "still": {
+        "relativeRef": "captures/facade-1440p__oblique__canary-facade-07-oblique.png",
+        "byteSize": 683033,
+        "checksumSha256": "3216bfd1864b5bf1f9bd82a7fba4b7936296ccabfbffbd3f44a42188ddecdc1e"
+      },
+      "passed": true
+    },
+    {
+      "setId": "block835-canary-facade-v1-oblique",
+      "framing": "oblique",
+      "poseId": "canary-facade-08-oblique",
+      "buildingId": "doitt:778052",
+      "facade": "north",
+      "committedCameraToFacadeMeters": 25,
+      "committedPose": {
+        "longitude": -73.98597876,
+        "latitude": 40.749046448,
+        "height": 203.224,
+        "heading": 180,
+        "pitch": -30,
+        "roll": 0
+      },
+      "planHashSha256": "7f4dee8b532fb04a4ec3bda2f3b36aa5315f237148b2bab6aea5f2dfa9a86618",
+      "url": "http://localhost:4176/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-73.985978760&lat=40.749046448&height=203.224&heading=180.000&pitch=-30.000&roll=0.000",
+      "viewport": {
+        "innerWidth": 2560,
+        "innerHeight": 1440,
+        "devicePixelRatio": 1,
+        "documentHasFocus": true,
+        "prefersReducedMotion": false,
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36"
+      },
+      "viewportIs1440p": true,
+      "activeWaves": [
+        "manhattan-central-upper-manhattan-cells-20260812-p1",
+        "manhattan-exterior-cells-20260811-v3",
+        "manhattan-lower-manhattan-cells-20260812-p1",
+        "manhattan-midtown-core-cells-20260811-v3",
+        "manhattan-northern-manhattan-cells-20260812-p1",
+        "manhattan-southern-remainder-cells-20260812-p1"
+      ],
+      "block835DistinctGlbCount": 14,
+      "expectedBlock835GlbCount": 14,
+      "renderedAll14": true,
+      "perReleaseDistinctGlbCount": {
+        "manhattan-exterior-cells-20260811-v3": 14,
+        "manhattan-midtown-core-cells-20260811-v3": 156,
+        "manhattan-lower-manhattan-cells-20260812-p1": 71,
+        "manhattan-southern-remainder-cells-20260812-p1": 179,
+        "manhattan-central-upper-manhattan-cells-20260812-p1": 40,
+        "manhattan-northern-manhattan-cells-20260812-p1": 24
+      },
+      "externalHosts": [],
+      "labeling": {
+        "runtimeNotes": [
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-exterior-cells-20260811-v3:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-midtown-core-cells-20260811-v3:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-lower-manhattan-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-southern-remainder-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-central-upper-manhattan-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only.",
+          "Exterior streaming · Default pinned snapshot snapshot:manhattan-northern-manhattan-cells-20260812-p1:v1 · Exploration (coarsest verified LOD) · verified local GLB bytes only."
+        ],
+        "statesGeneratedOnly": true,
+        "statesVerifiedLocalBytes": true
+      },
+      "still": {
+        "relativeRef": "captures/facade-1440p__oblique__canary-facade-08-oblique.png",
+        "byteSize": 1445287,
+        "checksumSha256": "8a3156af3e5f43b6016ef9124a50e9d06d2cdecedf9738812074de9bbf92861d"
+      },
+      "passed": true
+    }
+  ],
+  "totals": {
+    "poseCount": 16,
+    "posesAt1440p": 16,
+    "posesRenderingAll14": 16,
+    "posesPassed": 16,
+    "failedPoses": []
+  },
+  "allPassed": true
+}

@@ -19,6 +19,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   PUBLIC_SHOWCASE_BASE_PACKAGE_IDS,
+  PUBLIC_SHOWCASE_BROWSER_IMPLICIT_PATHS,
   PUBLIC_SHOWCASE_CANDIDATE_ID,
   PUBLIC_SHOWCASE_DIGEST_SHA256,
   PUBLIC_SHOWCASE_STANDING_REFUSALS,
@@ -76,8 +77,12 @@ const smoke = readRecord("smoke-evidence.json") as unknown as {
       receivedDistinctUrls: number;
       failedRequestUrls: string[];
       classifiedTotal: number;
-      perWave: Record<string, { responses: number }>;
-      perBasePackage: Record<string, number>;
+      perWave: Record<string, { observedRequests: number; distinctArtifacts: number; glbObservedRequests: number }>;
+      perBasePackage: Record<string, { observedRequests: number }>;
+      appShellObservedRequests: number;
+      browserImplicit: { path: string; status: number | null; encodedDataLength: number; answeredWithoutPayload: boolean }[];
+      browserImplicitCount: number;
+      browserImplicitAnsweredWithPayload: unknown[];
     };
     waves?: string[];
     servedPrivateBytes?: unknown[];
@@ -229,8 +234,36 @@ describe("the smoke record still reports what it claims", () => {
     expect(journey.network!.failedRequestUrls).toEqual([]);
     // Every enumerated wave actually served bytes: a "contained" session that
     // fetched nothing would satisfy containment and prove nothing.
-    for (const wave of PUBLIC_SHOWCASE_WAVES) expect(journey.network!.perWave[wave.publicReleaseId]!.responses).toBeGreaterThan(0);
+    for (const wave of PUBLIC_SHOWCASE_WAVES) expect(journey.network!.perWave[wave.publicReleaseId]!.observedRequests).toBeGreaterThan(0);
     expect(Object.keys(journey.network!.perBasePackage)).toEqual([...PUBLIC_SHOWCASE_BASE_PACKAGE_IDS]);
+    for (const packageId of PUBLIC_SHOWCASE_BASE_PACKAGE_IDS) {
+      expect(journey.network!.perBasePackage[packageId]!.observedRequests).toBeGreaterThanOrEqual(0);
+    }
+  });
+
+  /**
+   * The T029 repair of the T023 reproducibility finding, asserted on the
+   * COMMITTED record rather than only in the classifier's unit tests.
+   */
+  it("classifies the browser-implicit requests a fresh profile issues, and none of them served bytes", () => {
+    const journey = smoke.journeys.find((entry) => entry.journeyId === "six-wave-default")!;
+    const network = journey.network!;
+    // The record must carry the field at all: an older record that predates the
+    // repair would silently satisfy an `undefined`-tolerant assertion.
+    expect(Array.isArray(network.browserImplicit)).toBe(true);
+    expect(network.browserImplicitCount).toBe(network.browserImplicit.length);
+    // Classification is not exemption: every one is reported WITH its answer,
+    // and the candidate ships no such file, so none may have served bytes.
+    for (const entry of network.browserImplicit) {
+      expect({ path: entry.path, answeredWithoutPayload: entry.answeredWithoutPayload }).toEqual({ path: entry.path, answeredWithoutPayload: true });
+      // A refusal status is what makes it admissible; the byte count is
+      // recorded beside it because a 404 body is not zero bytes on the wire.
+      expect(entry.status === null || entry.status >= 400 || entry.encodedDataLength === 0).toBe(true);
+      expect(PUBLIC_SHOWCASE_BROWSER_IMPLICIT_PATHS).toContain(entry.path);
+    }
+    expect(network.browserImplicitAnsweredWithPayload).toEqual([]);
+    // And they are inside the accounting, not beside it.
+    expect(network.classifiedTotal).toBe(network.observedDistinctUrls);
   });
 
   it("reports that no declared private path served its private bytes", () => {

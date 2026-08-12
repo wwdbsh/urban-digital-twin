@@ -1,0 +1,170 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "goal-bounded-gaps-20260812:heap-concurrency",
+  "task": "T029 (Issue #62)",
+  "criterion": 30,
+  "capturedAt": "2026-08-12T03:03:23.569Z",
+  "claim": "The retained-heap conjunct of criterion 30, measured where it had never been measured: a REPEATED deterministic camera path over the SIX-WAVE DEFAULT composition, with a forced collection before every heap sample, plus the MEASURED peak concurrent request count from the same session.",
+  "servedBundle": {
+    "previewBase": "http://localhost:4176",
+    "indexHtmlChecksumSha256": "14c0f73f2b9d812f52ccd1041d770469b2de07261c40bbf08464a07423d047f8",
+    "localDistIndexHtmlChecksumSha256": "14c0f73f2b9d812f52ccd1041d770469b2de07261c40bbf08464a07423d047f8",
+    "matchesLocalDist": true,
+    "entryScriptPath": "/assets/index-DdpdaSvA.js",
+    "entryScriptByteSize": 4902036,
+    "entryScriptChecksumSha256": "70c956f53abc790d8a088d7742097610b21140b20e0be3190adacb379b02e1e4",
+    "entryScriptNamesAllSixPromotedReleases": true,
+    "statement": "Measured before any capture. The served index.html is byte-identical to this repository's dist/index.html and the served entry script names all 6 promoted releases, so every reading below is from THIS build. Any of those failing aborts the run rather than being recorded as a caveat."
+  },
+  "probeHarnessLive": true,
+  "harnessDisclosure": "The in-app canary probe is compiled out of an ordinary production build and this measurement therefore ran against a bundle built with VITE_BLOCK835_PROBE=1. The two builds differ by that flag alone; the probe observes the runtime and does not change which releases are pinned, which artifacts are eligible, or how a cell is loaded. The served-bundle gate above records the exact bytes measured.",
+  "focusEmulation": {
+    "enabled": true,
+    "method": "Emulation.setFocusEmulationEnabled",
+    "disclosure": "The probe refuses to start unless the page is focused and visible. Focus here is EMULATED by the DevTools protocol, not taken from the window manager."
+  },
+  "viewport": {
+    "innerWidth": 2560,
+    "innerHeight": 1440,
+    "devicePixelRatio": 1,
+    "documentHasFocus": true,
+    "prefersReducedMotion": false,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36"
+  },
+  "composition": {
+    "activeWaves": [
+      "manhattan-exterior-cells-20260811-v3",
+      "manhattan-midtown-core-cells-20260811-v3",
+      "manhattan-lower-manhattan-cells-20260812-p1",
+      "manhattan-southern-remainder-cells-20260812-p1",
+      "manhattan-central-upper-manhattan-cells-20260812-p1",
+      "manhattan-northern-manhattan-cells-20260812-p1"
+    ],
+    "perReleaseDistinctGlbCount": {
+      "manhattan-exterior-cells-20260811-v3": 14,
+      "manhattan-midtown-core-cells-20260811-v3": 3,
+      "manhattan-lower-manhattan-cells-20260812-p1": 1,
+      "manhattan-southern-remainder-cells-20260812-p1": 0,
+      "manhattan-central-upper-manhattan-cells-20260812-p1": 0,
+      "manhattan-northern-manhattan-cells-20260812-p1": 0
+    },
+    "totalDistinctGlb": 18
+  },
+  "method": {
+    "pathId": "block835-canary-facade-v1",
+    "poseCount": 8,
+    "repeats": 4,
+    "settleMs": 1000,
+    "samplesPerPose": 60,
+    "forcedCollection": true,
+    "noiseBandRatio": 0.1,
+    "statement": "block835CanaryHeapVerdict: first-half versus second-half MEDIAN of the per-repeat heap samples, judged against a 0.1 noise band. Each sample is taken after an explicit window.gc(), which is what makes surviving growth retention rather than collection lag."
+  },
+  "heapPerRepeat": [
+    {
+      "repeatIndex": 0,
+      "jsHeapBytes": 151647614,
+      "cacheEntries": 14,
+      "cachedBytes": 1910784,
+      "cacheEvictions": 0,
+      "peakConcurrentRequests": 4
+    },
+    {
+      "repeatIndex": 1,
+      "jsHeapBytes": 131075165,
+      "cacheEntries": 14,
+      "cachedBytes": 1910784,
+      "cacheEvictions": 0,
+      "peakConcurrentRequests": 4
+    },
+    {
+      "repeatIndex": 2,
+      "jsHeapBytes": 122259504,
+      "cacheEntries": 14,
+      "cachedBytes": 1910784,
+      "cacheEvictions": 0,
+      "peakConcurrentRequests": 4
+    },
+    {
+      "repeatIndex": 3,
+      "jsHeapBytes": 122518540,
+      "cacheEntries": 14,
+      "cachedBytes": 1910784,
+      "cacheEvictions": 0,
+      "peakConcurrentRequests": 4
+    }
+  ],
+  "heapVerdict": {
+    "available": true,
+    "sampleCount": 4,
+    "firstHalfMedianBytes": 141361389.5,
+    "secondHalfMedianBytes": 122389022,
+    "growthBytes": -18972367.5,
+    "growthRatio": -0.13421180682438044,
+    "noiseBandRatio": 0.1,
+    "monotonicGrowthDetected": false,
+    "forcedCollection": true,
+    "boundedClaim": "JS heap only, sampled via performance.memory AFTER an explicit forced collection (window.gc) at each repeat. Growth beyond the noise band here is retained JS memory, not collection lag. Native GPU and decoded-texture retention are still not observable."
+  },
+  "monotonicGrowthDetected": false,
+  "peakConcurrency": {
+    "measuredPeakConcurrentRequests": 4,
+    "configuredRuntimeCeiling": 4,
+    "criterionCeiling": 8,
+    "withinConfiguredCeiling": true,
+    "withinCriterionCeiling": true,
+    "statement": "MEASURED from the aggregate request budget's own peak counter over the whole session, which includes the cold load. It is not the configured maxConcurrentRequests, which is what the four wave acceptance records carry."
+  },
+  "cache": {
+    "peakCachedBytes": 1910784,
+    "maxCachedBytes": 268435456,
+    "cachePass": true
+  },
+  "residency": {
+    "activeWaveCount": 6,
+    "residentCacheEntriesPerRepeat": [
+      14,
+      14,
+      14,
+      14
+    ],
+    "cacheEvictionsPerRepeat": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "maxCacheEntries": 512,
+    "distinctGlbStreamedThisSession": 18,
+    "statement": "All six promoted waves were active and the verdict is over the six-wave DEFAULT composition. The camera path is the committed Block 835 facade path, which stays inside one midtown block, so the resident working set is a fraction of the 512-entry ceiling and no eviction was forced. This record therefore certifies retention ACROSS REPEATS OF A DETERMINISTIC PATH, which is the criterion's wording, and does NOT certify behaviour at peak residency or under eviction pressure."
+  },
+  "externalHosts": [],
+  "still": {
+    "relativeRef": "captures/heap-concurrency-sixwave.png",
+    "byteSize": 700214,
+    "checksumSha256": "3e9c06876d59ceb79187f56c4e970bf612c7027eb73728427721367e433f2af6"
+  },
+  "disclosures": {
+    "buildMode": "production",
+    "viewportCss": {
+      "width": 2560,
+      "height": 1440
+    },
+    "devicePixelRatio": 1,
+    "documentHasFocus": {
+      "before": true,
+      "after": true
+    },
+    "visibilityState": {
+      "before": "visible",
+      "after": "visible"
+    },
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36",
+    "consoleErrors": [],
+    "windowErrors": [],
+    "networkHosts": [
+      "localhost:4176"
+    ]
+  },
+  "passed": true
+}

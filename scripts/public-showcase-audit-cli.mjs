@@ -510,19 +510,78 @@ export function auditWave(wave, options) {
 }
 
 /**
+ * THE DECLARED SET OF WORKING-RECORD DIRECTORIES THIS AUDIT COVERS.
+ *
+ * This constant exists to repair a self-invalidating record, and the repair is
+ * EXCLUDE-BY-DECLARED-SET rather than record-the-set-at-audit-time. The reason
+ * is that only one of the two actually fixes the defect.
+ *
+ * The defect, measured during T024: `auditWorkingRecords` enumerated whatever
+ * directories happened to exist under `data/`, so the count — and therefore the
+ * record's checksum — moved the moment ANY later task committed a sibling
+ * evidence directory. T024 created `data/goal-integration-acceptance-20260812/`,
+ * the count went 19 → 20, and the committed record stopped reproducing. An
+ * evidence record whose contents depend on the PRESENCE OF LATER EVIDENCE
+ * RECORDS is self-invalidating by construction, and recording the set observed
+ * at audit time would have made the drift legible without making it stop.
+ *
+ * So the audited scope is DECLARED here and the scan is intersected with it.
+ * Two consequences, both intended:
+ *
+ *  1. A later task's record directory does NOT move these bytes. Re-running the
+ *     audit after this task, or after the next five, reproduces it.
+ *  2. Adding a directory to the audited scope is an EXPLICIT, reviewed edit to
+ *     this list, not a side effect of committing a file. A directory named here
+ *     that has gone missing FAILS the audit rather than silently shrinking the
+ *     count, so the list cannot rot in the other direction either.
+ *
+ * What it deliberately does not do: report directories it was not asked to
+ * audit. Counting them would reintroduce exactly the dependency this removes.
+ * The scope statement in the record says so in the record's own words.
+ */
+export const AUDITED_WORKING_RECORD_DIRECTORIES = Object.freeze([
+  "block835-canary-validation-20260811",
+  "block835-promotion-20260811",
+  "block835-v3-repromotion-20260811",
+  "central-upper-manhattan-20260812",
+  "central-upper-manhattan-20260812-p1",
+  "goal-bounded-gaps-20260812",
+  "goal-integration-acceptance-20260812",
+  "lower-manhattan-20260812",
+  "lower-manhattan-20260812-p1",
+  "manhattan-esb-block-reference-20260810",
+  "manhattan-esb-block-reference-20260811",
+  "manhattan-esb-block-reference-20260811-v3",
+  "manhattan-esb-block-reference-20260811-v3e",
+  "manhattan-esb-block-reference-20260811-v3t",
+  "midtown-core-20260811",
+  "midtown-core-20260811-v3",
+  "northern-manhattan-20260812",
+  "northern-manhattan-20260812-p1",
+  "public-showcase-20260812",
+  "southern-remainder-20260812",
+  "southern-remainder-20260812-p1",
+]);
+
+/**
  * Committed working records under `data/`. They are private in the sense that
  * matters here — never served — and the audit names them so the exclusion is
  * enumerated rather than implied by their absence from a list.
+ *
+ * Scoped to `AUDITED_WORKING_RECORD_DIRECTORIES`; see the note there for why.
  */
-export function auditWorkingRecords(dataDir) {
-  const directories = existsSync(dataDir)
-    ? readdirSync(dataDir, { withFileTypes: true }).filter((entry) => entry.isDirectory() && entry.name !== "raw" && entry.name !== "generated" && entry.name !== "normalized").map((entry) => entry.name).sort()
-    : [];
+export function auditWorkingRecords(dataDir, declaredDirectories = AUDITED_WORKING_RECORD_DIRECTORIES) {
   const records = [];
-  for (const directory of directories) {
-    const files = walkFiles(join(dataDir, directory)).map((path) => toRelative(dataDir, path));
-    if (files.length === 0) continue;
+  const missing = [];
+  for (const directory of [...declaredDirectories].sort()) {
+    const absolute = join(dataDir, directory);
+    if (!existsSync(absolute)) { missing.push(directory); continue; }
+    const files = walkFiles(absolute).map((path) => toRelative(dataDir, path));
+    if (files.length === 0) { missing.push(directory); continue; }
     records.push({ directory, fileCount: files.length, reason: EXCLUSION_REASONS.workingEvidenceRecord });
+  }
+  if (missing.length > 0) {
+    throw new Error(`public-showcase-audit: ${missing.length} declared working-record director${missing.length === 1 ? "y is" : "ies are"} absent or empty: ${missing.join(", ")}. The declared scope in AUDITED_WORKING_RECORD_DIRECTORIES no longer matches the tree; fix the tree or edit the declared set deliberately.`);
   }
   return records;
 }
@@ -560,6 +619,11 @@ export function runPublicShowcaseAudit(options = {}) {
   // `waves` is a test seam. Production callers never pass it, so the committed
   // record is always the audit of the real, pinned candidate.
   const manifestWaves = options.waves ?? PUBLIC_SHOWCASE_WAVES;
+  // The audited working-record scope. A test seam for the same reason `waves`
+  // is one: a synthetic fixture tree carries none of this repository's evidence
+  // directories, and the production caller never passes it, so the committed
+  // record is always the audit of the real declared set.
+  const declaredWorkingRecordDirectories = options.workingRecordDirectories ?? AUDITED_WORKING_RECORD_DIRECTORIES;
 
   const digest = computePublicShowcaseDigest(manifestWaves);
   if (!options.waves && digest !== PUBLIC_SHOWCASE_DIGEST_SHA256) {
@@ -568,7 +632,7 @@ export function runPublicShowcaseAudit(options = {}) {
 
   const waves = manifestWaves.map((wave) => auditWave(wave, { publicDataDir }));
   const privateReferencePackages = auditPrivateReferencePackages(publicDataDir);
-  const workingRecords = auditWorkingRecords(dataDir);
+  const workingRecords = auditWorkingRecords(dataDir, declaredWorkingRecordDirectories);
 
   const totals = {
     declaredArtifacts: waves.reduce((total, wave) => total + wave.resolution.declaredArtifacts, 0),
@@ -600,6 +664,16 @@ export function runPublicShowcaseAudit(options = {}) {
     standingRefusals: PUBLIC_SHOWCASE_STANDING_REFUSALS,
     waves,
     excludedPrivateReferencePackages: privateReferencePackages,
+    /**
+     * The audited scope, stated so a reader knows this enumeration is BOUNDED
+     * and why. Without it the count below silently depended on which evidence
+     * directories happened to exist when the audit ran.
+     */
+    workingRecordScope: {
+      basis: "exclude-by-declared-set",
+      declaredDirectoryCount: declaredWorkingRecordDirectories.length,
+      statement: "The working-record enumeration is intersected with the declared set in scripts/public-showcase-audit-cli.mjs (AUDITED_WORKING_RECORD_DIRECTORIES). A working-record directory committed by a LATER task does not appear here and does not move these bytes, which is what makes this record reproducible after the task that emitted it; widening the scope is a deliberate edit to that constant. A declared directory that is absent or empty fails the audit rather than shrinking the count. THE STABILITY IS ON THE DIRECTORY AXIS ONLY: `fileCount` below is still counted from the tree, so ADDING A FILE to an already-declared directory does move these bytes. That is intended - a declared directory is in scope and its contents are part of what this audit reports - but it means this record is reproducible against a given tree, not permanently frozen.",
+    },
     excludedWorkingRecords: workingRecords,
     totals,
     allPassed:

@@ -3,7 +3,7 @@
   "recordId": "goal-integration-acceptance-20260812",
   "goalSlug": "manhattan-high-fidelity-exteriors",
   "task": "T024 (Issue #25)",
-  "note": "Criterion-by-criterion reconciliation of the approved Goal's 31 acceptance criteria against committed evidence, plus the computed coverage reconciliation the Goal's criterion 12 asks for. Every verdict is drawn from a closed set of three: MET (direct evidence cited), MET-AS-ADJUDICATED (the criterion as literally written was narrowed or made vacuous by a recorded decision, with the delta stated), NOT-MET (with a stop report naming what would close it). The `coverage` block is COMPUTED from the committed ledger and the six committed wave censuses by scripts/goal-integration-reconciliation-cli.mjs and re-checked on every test run; it is not restated prose. This record proves no visual, geographic, architectural or performance claim of its own - it cites the wave records that measured those.",
+  "note": "Criterion-by-criterion reconciliation of the approved Goal's 31 acceptance criteria against committed evidence, plus the computed coverage reconciliation the Goal's criterion 12 asks for. Every verdict is drawn from a closed set of three: MET (direct evidence cited), MET-AS-ADJUDICATED (the criterion as literally written was narrowed or made vacuous by a recorded decision, with the delta stated), NOT-MET (with a stop report naming what would close it). The `coverage` block is COMPUTED from the committed ledger and the six committed wave censuses by scripts/goal-integration-reconciliation-cli.mjs and re-checked on every test run; it is not restated prose. This record proves no visual, geographic, architectural or performance claim of its own - it cites the wave records that measured those. T029 (Issue #62) UPDATE. Four of the six NOT-MET criteria - 7, 8, 24 and 30 - were closed by measurement and, for criterion 8, by a build. Each carries `priorVerdict`, `priorStopReport` and `closedBy` so the original refusal and the stop report that named it stay readable beside the closure; nothing was rewritten to look as though it had always passed. The open set is now exactly the structural pair, criteria 1 and 22, and the ADR's STOP recommendation stands on that pair alone.",
   "criteriaSha256": "2ffd46691bb3982e1e0b47c2139a8f8221611d34630c091a9d52498d3402f61c",
   "criteriaDerivation": {
     "source": ".codex/codex-control-plane/goals/manhattan-high-fidelity-exteriors/goal.json",
@@ -20,11 +20,11 @@
     "NOT-MET"
   ],
   "verdictCounts": {
-    "NOT-MET": 6,
-    "MET-AS-ADJUDICATED": 8,
+    "NOT-MET": 2,
+    "MET-AS-ADJUDICATED": 12,
     "MET": 17
   },
-  "stopReportCount": 6,
+  "stopReportCount": 2,
   "verdicts": [
     {
       "index": 1,
@@ -102,27 +102,45 @@
     {
       "index": 7,
       "criterion": "At approved Block 835 reference viewpoints approximately 10 meters or farther from visible facades, the 1440p-class desktop target preserves the accepted facade composition, openings, entrances, material classes, roofline, and generated-versus-real labeling without missing geometry or visibly broken LOD transitions",
-      "verdict": "NOT-MET",
+      "verdict": "MET-AS-ADJUDICATED",
+      "priorVerdict": "NOT-MET",
+      "closedBy": "T029 (Issue #62)",
       "evidence": [
         "The 10-metre half IS evidenced: data/block835-canary-validation-20260811/facade-path.json declares minimumCameraToFacadeMeters 10 with a closest pose at 13 m over 8 poses; T009 row 2 records all 8/8 poses rendering 14/14 buildings, and row 6 records no grammar-required placeholder blank wall on any visible surface.",
         "Generated-versus-real labeling at those views is evidenced by the profile-switch and pick captures (truth tier 'generated', no accuracy score).",
         "The 1440p-class device target was NEVER captured. docs/implementation/20260811-block835-canary-validation.md states the attainable CSS viewport was 1097x894 and later 1728x920 at dpr 2, and says in its own words 'This is not a 1440p-class 2560x1440 CSS viewport' and 'every scale-dependent row is marked partial'. Every wave CDP capture used VIEWPORT 1280x800 at deviceScaleFactor 1.",
-        "The single 1440-wide record, data/manhattan-esb-block-reference-20260811-v3t/cesium-sampler-evidence.json, is 1440x900 CSS - a sampler/aliasing inspection at 95/220/620 m, not a 1440p facade acceptance."
+        "The single 1440-wide record, data/manhattan-esb-block-reference-20260811-v3t/cesium-sampler-evidence.json, is 1440x900 CSS - a sampler/aliasing inspection at 95/220/620 m, not a 1440p facade acceptance.",
+        "T029 CLOSURE. data/goal-bounded-gaps-20260812/facade-1440p-evidence.json (sha256 f8d5a8e980543edd1019f5b25e62d62ea5ea7038a2c862fc9d5773034cf6477a): the committed path re-captured at a 2560x1440 CSS viewport - the exact target this criterion names and that no capture in this Goal had used. 16 of 16 poses passed: the 8 committed level poses of block835-canary-facade-v1 and the 8 of its oblique variant.",
+        "Every pose read innerWidth 2560 x innerHeight 1440 at devicePixelRatio 1 FROM THE PAGE rather than from the override that was requested, and each pose ran on a FRESH page so its artifact count is its own rather than the session's.",
+        "Every pose streamed 14 of 14 distinct Block 835 GLB artifacts - the same 14/14 reading T009 row 2 recorded at 1097x894 - with zero external hosts, and every pose's runtime notes stated 'verified local GLB bytes only' with no evidence-backed, photographic or survey-grade wording anywhere.",
+        "Visual reading, made by opening the captured stills rather than inferred from counters, over 3 of the 16 named stills (facade-1440p__level__canary-facade-03, facade-1440p__level__canary-facade-08, facade-1440p__oblique__canary-facade-03-oblique; checksums in the record): facade bays with regular recessed openings, floor banding and spandrel divisions, setback decks and their cornice bands, roof equipment and a water-tank prism on legs, and four distinguishable material classes (masonry-light, masonry-warm, curtain-cool, stone-neutral). No blank placeholder wall appears on any visible surface and no LOD transition is visibly broken in any of the three. The reading is now carried in the checksummed record itself, as `visualReading`, with the three stills it was made from named and its three-of-sixteen scope stated there."
       ],
-      "stopReport": "Re-capture the committed 8-pose block835-canary-facade-v1 path at a 2560x1440 CSS viewport on a 1440p-class desktop and record the composition, opening, entrance, material-class, roofline and labeling readings at that scale. This is a bounded capture task: the path, the poses and the reading procedure are already committed."
+      "adjudicationDelta": "Two narrowings, both stated rather than absorbed. (a) THE HEIGHT CLAMP IS INHERITED, NOT REMOVED. The committed poses sit 4 to 40 m above the ellipsoid and the navigation parser clamps a deep-linked camera height to its floor, so the fixture's own 13 m closest standoff is not what a URL delivers - exactly as in the T009 capture of the same path, whose row 2 carries the same bound and makes no per-pose composition claim from the close poses. This capture changed the VIEWPORT and nothing else, which is the single variable the criterion is about, and it therefore closes the viewport gap rather than the near-field-standoff one. (b) THE COMPOSITION READING IS A HUMAN READING OF 3 NAMED STILLS OF 16, not a per-pose machine metric; the machine verdict per pose is viewport, artifact count, host containment and labelling. There is still no automated facade-composition measurement in this repository, and this record does not invent one.",
+      "priorStopReport": "Re-capture the committed 8-pose block835-canary-facade-v1 path at a 2560x1440 CSS viewport on a 1440p-class desktop and record the composition, opening, entrance, material-class, roofline and labeling readings at that scale. This is a bounded capture task: the path, the poses and the reading procedure are already committed."
     },
     {
       "index": 8,
       "criterion": "The mobile path retains navigation, picking, selection, details, provenance, deep links, and explicit lower-LOD status without claiming desktop visual parity",
-      "verdict": "NOT-MET",
+      "verdict": "MET-AS-ADJUDICATED",
+      "priorVerdict": "NOT-MET",
+      "closedBy": "T029 (Issue #62)",
       "evidence": [
         "Exhaustive search of src/, scripts/, docs/, data/ and public/ finds NO mobile device class, NO mobile viewport capture, NO mobile journey record and NO lower-LOD mobile disclosure anywhere in this Goal's evidence.",
         "All 14 CDP drivers set Emulation.setDeviceMetricsOverride with mobile: false at 1280x800 dpr 1.",
         "src/app/App.tsx exports overlayLayoutPolicy(inspectorOpen, mobile) but it has NO production caller and there is no matchMedia in App.tsx; the only exercise is three pure-function assertions in src/app/App.test.tsx.",
         "The project already recorded this as a failure: docs/implementation/20260811-block835-canary-validation.md row 3 reads 'EXPLICIT FAILURE - unmet, not implemented ... No mobile LOD policy or disclosure exists', and line 456 says 'Treat row 3 (mobile lower-LOD disclosure) as an unstarted Goal obligation'.",
-        "Responsive CSS exists (src/styles.css @media max-width 900px and 680px) but was never measured in this Goal."
+        "Responsive CSS exists (src/styles.css @media max-width 900px and 680px) but was never measured in this Goal.",
+        "T029 CLOSURE, and it is a BUILD as well as a capture. src/app/App.tsx now carries useMobileViewport(), whose media query MOBILE_VIEWPORT_MEDIA_QUERY is pinned to the shipped stylesheet's own '(max-width: 680px)' breakpoint rather than to a second number that could drift from it. overlayLayoutPolicy(inspectorOpen, mobileViewport) now has a PRODUCTION CALLER and its result is stamped on the map region as data-overlay-desktop-right-inset and data-overlay-mobile-bottom-inset; T024 recorded that it had none.",
+        "The lower-LOD policy is mobileExteriorLodPolicy(): a mobile viewport is pinned to the exploration render profile, which selectExteriorLod resolves to the COARSEST eligible LOD. It is a rendering clamp only - the URL keeps the REQUESTED profile, so a link copied from a phone still means on a desktop what it meant when it was made, and criterion 10's profile-switch identity evidence is untouched.",
+        "The disclosure is rendered as a role=status line reading 'Mobile viewport - exterior geometry is pinned to the Exploration (coarsest verified LOD)... This is a LOWER level of detail than a desktop inspection session and no desktop visual parity is claimed. Feature identity, selection, details, provenance and deep links are unchanged.' The details panel's Render profile row reports the EFFECTIVE profile and names the requested one beside it when they differ.",
+        "data/goal-bounded-gaps-20260812/mobile-journey-evidence.json (sha256 68558958065e5facf27f9ee1aa2141859c18fd2ee1287eb396d808a7ed1f0c7b): 4 of 4 legs passed at 390x844 dpr 3 with an iOS user agent and touch emulation - navigation with all six waves streaming, search returning 8 results, a resolved canonical feature with its provenance panel, and a deep link carrying exteriorProfile=inspection that restores with data-mobile-profile-clamped=true while the URL keeps 'inspection'. Zero external hosts.",
+        "src/app/App.test.tsx gains 8 tests covering the breakpoint pin, all four mobileExteriorLodPolicy inputs, the previously untested overlayLayoutPolicy(false, true), the rendered desktop and mobile viewport classes, the disclosure's attributes and wording, and the URL-not-rewritten property.",
+        "LEGIBILITY IS MEASURED, NOT ASSUMED. Legs 1 and 4 pass only if the disclosure has area, sits inside the viewport, is NOT clamped to a single line, fits its own box, and survives a nine-point hit test with nothing painted over it. The first re-capture under this instrument FAILED both legs, which is how the defect below was found and fixed rather than described.",
+        "THE OCCLUSION DEFECT IS REPAIRED, and it was a stylesheet defect rather than a wiring one. `.runtime-note span` clamps the lane to one ellipsised row and the 680px breakpoint caps the lane at calc(100% - 160px), so a ~300-character sentence could never render whatever the DOM said. src/styles.css now releases the clamp for this line at (0,2,1) specificity, lifts it off the notices lane's z-index, removes the lane's max-height clip for it, and caps its width at calc(100vw - 56px). Measured after the fix: white-space normal, 11px, 7 wrapped lines, textFitsItsBox true, insideViewport true, occludedPoints 0 of 9.",
+        "aria-pressed on the render-profile controls now follows the EFFECTIVE profile rather than the requested one. Reporting the requested profile pressed told a screen-reader user that the finest LOD was in force while the coarsest was rendering; the requested-but-not-rendered state is disclosed in the control's title and in data-profile-requested rather than discarded."
       ],
-      "stopReport": "Implement the mobile lower-LOD policy and its explicit lower-LOD status disclosure, wire overlayLayoutPolicy to a real viewport signal, and capture one mobile-emulated journey (e.g. 390x844 dpr 3) proving navigation, picking, selection, details, provenance and deep links survive with the lower-LOD status shown and no desktop-parity claim."
+      "adjudicationDelta": "Three deltas, one of which is a real defect found by looking at the capture rather than at the counters. (a) EMULATED, NOT A DEVICE. Chrome's device metrics override with mobile: true, touch emulation and an iOS user-agent string measures the application's response to a mobile viewport, touch capability and user agent. It says nothing about a real phone's GPU, memory ceiling, thermal behaviour, browser engine or network, and no such claim is made. (b) SELECTION IS DEEP-LINK-DRIVEN, NOT A TOUCH PICK. A tap dispatched at a guessed canvas pixel would not identify WHICH feature was picked, so the leg claims deep-link selection and details; native Cesium picking is evidenced on the desktop class by criterion 10. (c) THE TRUTHFUL FALLBACK NOTICE STILL OCCLUDES THE MAP. The 'Exterior streaming fallback' notice - the tombstone statement for the 870 of 883 cells shipping no exterior geometry - is large on a 390px viewport and covers much of the scene in every leg's still. It is honest, it is not cropped out, and it is named per leg in the record's visualState. The lower-LOD disclosure itself is no longer occluded: that defect was found by this task's own legibility instrument, fixed in the stylesheet, and re-captured.",
+      "priorStopReport": "Implement the mobile lower-LOD policy and its explicit lower-LOD status disclosure, wire overlayLayoutPolicy to a real viewport signal, and capture one mobile-emulated journey (e.g. 390x844 dpr 3) proving navigation, picking, selection, details, provenance and deep links survive with the lower-LOD status shown and no desktop-parity claim."
     },
     {
       "index": 9,
@@ -299,14 +317,22 @@
     {
       "index": 24,
       "criterion": "Representative visual comparison, native Cesium picking, accessibility, streaming, memory, and frame-time gates pass on user-approved device classes and viewpoints",
-      "verdict": "NOT-MET",
+      "verdict": "MET-AS-ADJUDICATED",
+      "priorVerdict": "NOT-MET",
+      "closedBy": "T029 (Issue #62)",
       "evidence": [
         "Visual comparison, native Cesium picking, streaming and frame time all pass on the measured desktop class (see criteria 5, 9, 10, 16 and 30).",
         "ACCESSIBILITY is partial by the project's own record. T009 row 11: json/accessibility-probe.json found 26 focusable elements, 23 buttons, 0 unlabeled buttons, 8 landmarks, correctly toggling aria-pressed on the profile controls, and a prefers-reduced-motion rule in the shipped stylesheet - but 'Not proven: real keyboard traversal and reduced-motion behaviour, both blocked by the focus limitation'.",
         "MEMORY is not certified for the shipped composition - see criterion 30.",
-        "DEVICE CLASSES: the user-approved classes are a 1440p-class desktop and a mobile class. Neither was measured: every capture is 1280x800 dpr 1 or 1728x920 dpr 2, and the mobile class has no evidence at all (criteria 7 and 8)."
+        "DEVICE CLASSES: the user-approved classes are a 1440p-class desktop and a mobile class. Neither was measured: every capture is 1280x800 dpr 1 or 1728x920 dpr 2, and the mobile class has no evidence at all (criteria 7 and 8).",
+        "T029 CLOSURE of item (a), the one the stop report called independent. data/goal-bounded-gaps-20260812/accessibility-evidence.json (sha256 8d6192f3ea3ce0f6aed1cca5fe347af7ee45731948e62c1ef2d1433c7f3f30c9): a REAL keyboard traversal, driven with Input.dispatchKeyEvent and with the DOM focus path recorded at every step. Tab from document.body reached the search input (accessible name 'Search Manhattan'); typing 'empire' with real key events returned 8 results; Enter opened the details surface and moved focus to its h1 ('EMPIRE SZECHUAN KYOTO'); Escape closed the surface and focus was RESTORED to the search input. No pointer event of any kind was dispatched.",
+        "Structural readings taken in the same session: 23 focusable elements, 20 buttons, 0 UNLABELED buttons, 8 landmarks - consistent with the T009 probe that could enumerate but not traverse.",
+        "prefers-reduced-motion is respected BY BEHAVIOUR, not merely present in a stylesheet: src/features/explorer/CesiumViewport.tsx cameraDuration() reads the preference and returns a 0.01 s camera flight instead of the requested seconds. Two otherwise identical sessions differing only in the emulated media feature confirm the preference reaches the running application (matches false / true) and that the shipped stylesheet carries its rule.",
+        "The other two items of this criterion's stop report are closed by criteria 7 and 8 above: the 1440p-class desktop viewport is now captured, and the mobile device class now exists and has one emulated journey.",
+        "The memory conjunct this criterion inherits from criterion 30 is closed below."
       ],
-      "stopReport": "Three bounded items: (a) prove real keyboard traversal and reduced-motion behaviour in a browser that can hold focus - the probe already enumerates the elements; (b) add the mobile device class (criterion 8); (c) capture at the 1440p-class viewport (criterion 7). Item (a) is independent of the other two."
+      "adjudicationDelta": "The three items are closed at three different strengths, and the criterion is graded at the weakest. (a) FOCUS IS EMULATED. The traversal ran with Emulation.setFocusEmulationEnabled, which is what unblocks the T009 limitation; it is a DevTools-protocol focus and not the operating system's, and every reading inherits that. (b) THE DEVICE CLASSES ARE NOW MEASURED BUT NOT BOTH REAL: the 1440p-class viewport is a genuine 2560x1440 CSS viewport, while the mobile class is emulated (criterion 8). (c) REDUCED MOTION is proven to reach the application and to be implemented in the source that consumes it, and a still is captured under each condition, but no individual animated surface was TIMED in the browser - a camera flight is not triggered by this journey and timing one would have required a synthetic interaction. Additionally, the criterion's own phrase 'user-approved device classes' is satisfied by an emulated mobile class rather than an approved physical device, which no evidence in this repository can supply.",
+      "priorStopReport": "Three bounded items: (a) prove real keyboard traversal and reduced-motion behaviour in a browser that can hold focus - the probe already enumerates the elements; (b) add the mobile device class (criterion 8); (c) capture at the 1440p-class viewport (criterion 7). Item (a) is independent of the other two."
     },
     {
       "index": 25,
@@ -368,7 +394,9 @@
     {
       "index": 30,
       "criterion": "Security validation proves the public build cannot resolve private roots or undeclared assets, all content paths and hashes fail closed, active exterior requests never exceed 8, compressed exterior cache stays <=256 MiB, and repeated camera paths do not exhibit monotonic retained-memory growth",
-      "verdict": "NOT-MET",
+      "verdict": "MET-AS-ADJUDICATED",
+      "priorVerdict": "NOT-MET",
+      "closedBy": "T029 (Issue #62)",
       "evidence": [
         "Four of the five conjuncts are directly evidenced, three of them re-run fresh on 2026-08-12. PRIVATE ROOTS: 10 declared private probes all returned the SPA-shell hash, never a declared private checksum. UNDECLARED ASSETS: undeclaredPrivateReferences 0 and privateBytesReachable 0 over 2,385 scanned public files and 6,070 dist files; zero external hosts in a default six-wave session.",
         "PATHS AND HASHES FAIL CLOSED: src/runtime/path-security.ts admits only a canonical segment grammar; src/runtime/exterior-cell-runtime.ts fails closed when Web Crypto is unavailable, rejects a GLB whose bytes fail the declared checksum, never follows more than one fallback hop, and refuses a path pinned to two checksums.",
@@ -377,9 +405,14 @@
         "THE FIRST READING OF THIS CONJUNCT FAILED, AND IS RECORDED HERE BEFORE THE LATER ONES SO THE SEQUENCE IS NOT READ BACKWARDS. T009 row 18 measured retained heap GROWING 28.8% and 32.4% across repeated deterministic camera paths and recorded the conjunct as NOT SATISFIED AS WRITTEN. The row carries its own method caveat - the readings were taken WITHOUT a forced collection, so a rising usedJSHeapSize is consistent with garbage that had not yet been collected and does not by itself prove retention. That caveat is why the reading was superseded rather than treated as a defect, and it is also why the superseding readings had to force collection to say anything at all.",
         "The SUPERSEDING readings, both with forced collection: Block 835 V3 (T026) heap SHRANK 13.3% and 12.0%, and Midtown -0.107 and -0.105 against a 0.10 band. Both are prose over untracked raw files rather than committed records, and both predate the four textured waves.",
         "RETAINED MEMORY IS NOT CERTIFIED FOR WHAT SHIPS. grep -rn 'monoton' over data/ returns zero hits: no committed record for any of the six waves carries a first-half/second-half growth ratio, a noise-band comparison, or a pass/fail. The 12 heapAfterGcBytes readings in each acceptance record are 3 repeats across 4 DIFFERENT camera stations, not repeats of one deterministic camera path. The only monotonic-growth verdicts are the two superseding readings named above, and nothing covers the four textured waves or the six-wave composition.",
-        "Also unmeasured: there is no committed peak-concurrency measurement for the six-wave composition (grep -rn 'peakConcurren' over data/ returns zero); the four acceptance records carry maxConcurrentRequests as a CONFIGURATION value, not a measured peak."
+        "Also unmeasured: there is no committed peak-concurrency measurement for the six-wave composition (grep -rn 'peakConcurren' over data/ returns zero); the four acceptance records carry maxConcurrentRequests as a CONFIGURATION value, not a measured peak.",
+        "T029 CLOSURE of the retained-memory conjunct, measured where it had never been measured. data/goal-bounded-gaps-20260812/heap-concurrency-evidence.json (sha256 625a8d62fe0a78405a03923f2a80c4da788a5b6d1943243cb4237116d65bfa12): the existing block835CanaryHeapVerdict method - first-half versus second-half MEDIAN against a 0.1 noise band - over 4 REPEATS of the committed deterministic 8-pose path on the SIX-WAVE DEFAULT composition, with forcedCollection TRUE (window.gc via --js-flags=--expose-gc) before every sample. growthRatio -0.134: the heap SHRANK. monotonicGrowthDetected FALSE.",
+        "TWO runs are reported rather than only the committed one, and they are NOT equally evidenced. The COMMITTED, CHECKSUMMED run is the one cited above: growthRatio -0.134. An EARLIER run of the same subcommand, taken before the residency disclosure was added to the CLI, read growthRatio +0.0228; its record was OVERWRITTEN by the re-run and there is no checksummed artifact for it, so it is reported here as an uncommitted prior reading and nothing rests on it. Both returned monotonicGrowthDetected false, which is why it is worth stating that the verdict did not depend on a single sample of a noisy quantity - but only the -0.134 reading is auditable.",
+        "THE MEASURED PEAK CONCURRENCY, which grep -rn 'peakConcurren' data/ previously returned zero hits for: 4, read from the aggregate request budget's own peak counter across the whole session including the cold load - not the configured maxConcurrentRequests the four wave acceptance records carry. It is inside the runtime's own ceiling of 4 and well inside the criterion's 8.",
+        "Cache in the same session, restated from the cited record rather than from a console line: peak 1,910,784 bytes against the 256 MiB budget, cachePass true, zero external hosts. (An earlier draft of this entry carried 47,319,772 bytes, which belonged to the uncommitted prior run and appeared in no checksummed artifact; it is corrected here.)"
       ],
-      "stopReport": "One bounded measurement closes the memory conjunct: run the existing block835CanaryHeapVerdict method - first-half versus second-half medians against a 0.1 noise band - over a REPEATED deterministic camera path on the six-wave composition with HeapProfiler.collectGarbage between repeats, and commit the ratio. The acceptance CLIs already force collection and read usedJSHeapSize; only the repeated-single-path shape and the growth verdict are missing. A second, smaller item: record the measured peak concurrent exterior request count for the six-wave session alongside it."
+      "adjudicationDelta": "Two narrowings, both recorded in the evidence record itself rather than only here. (a) THE RESIDENT WORKING SET IS SMALL, AND VARIABLE. All six waves are ACTIVE - this is the promoted default composition - but the committed camera path stays inside one midtown block, so the resident exterior cache held 14 entries in every one of the four repeats of the committed run - and 109 in the uncommitted earlier one - against a 512-entry ceiling, with ZERO evictions throughout. This record therefore certifies retention ACROSS REPEATS OF A DETERMINISTIC PATH, which is the criterion's own wording, and does NOT certify behaviour at peak residency or under eviction pressure. (b) THE MEASUREMENT REQUIRED A PROBE-HARNESS BUILD. The in-app canary probe is compiled out of an ordinary production bundle, so this ran against a build differing from production by the VITE_BLOCK835_PROBE flag alone; the probe observes the runtime and changes no pin, no eligibility and no load path, and the served-bundle gate records the exact bytes measured. The reading remains JS-heap-only: native GPU and decoded-texture retention are not observable from this instrument, as the method's own bounded claim states.",
+      "priorStopReport": "One bounded measurement closes the memory conjunct: run the existing block835CanaryHeapVerdict method - first-half versus second-half medians against a 0.1 noise band - over a REPEATED deterministic camera path on the six-wave composition with HeapProfiler.collectGarbage between repeats, and commit the ratio. The acceptance CLIs already force collection and read usedJSHeapSize; only the repeated-single-path shape and the growth verdict are missing. A second, smaller item: record the measured peak concurrent exterior request count for the six-wave session alongside it."
     },
     {
       "index": 31,
@@ -396,11 +429,13 @@
   "residualRisks": [
     "THE VOLUME-MARGIN PATTERN IS STILL UNEXPLAINED. The wave-scale worst accepted volume-identity deviation sat at 0.988 of tolerance for central-upper-Manhattan and 0.9895 for northern-Manhattan, and the latter refused 16 buildings for exceeding it. Two waves in a row above ninety-eight hundredths of the tolerance is a pattern, not a coincidence. No tolerance was moved and no task has explained it; ADR 0037 precondition (e) records that the explanation is still owed.",
     "LOAD-DEPENDENT TEST FLAKES. src/release/midtown-core-v3-release.test.ts and src/app/App.test.tsx time out under concurrent CPU load (vitest's 5,000 ms default) and pass in isolation and on an unloaded machine. midtown-core-v3-release.test.ts alone takes about 20 s for 20 tests. These are timeouts, not assertion failures. The isolating measurement: `npx vitest run --no-file-parallelism` passed 1,535 of 1,535 twice in a row at about 72 s, while the default parallel run intermittently drops exactly one of these two files. So the trigger is worker CPU contention, not test order or shared state, and `--no-file-parallelism` is a reliable workaround for a loaded machine. A raised `testTimeout` would close it properly.",
-    "THE T023 SMOKE JOURNEY six-wave-default IS NOT REPRODUCIBLE FROM A CLEAN BROWSER PROFILE. A fresh Chrome profile issues /favicon.ico, which the showcase allowlist classifier does not categorise, so everyRequestClassified reads false and the journey fails. Verified 2026-08-12 in both headless and headed Chrome with fresh profiles (554 distinct URLs against the committed record's 553). The SUBSTANCE is unaffected - zero external hosts, all six waves streaming their exact expected GLB counts, private paths unreachable by checksum - and the preview answers /favicon.ico with a 404 of zero bytes, which is failing closed. But the committed pass depended on browser-profile state. Not repaired here: the classifier is T023's, and editing it would make the committed record non-reproducible in the other direction. Registered as a follow-up task.",
-    "THE SHOWCASE DIFFERENTIAL AUDIT REWRITES ITS OWN COMMITTED RECORD AND IS SELF-INVALIDATING. pnpm showcase:audit writes data/public-showcase-20260812/differential-audit.json in place, and its workingRecordDirectories total counts the working-record directories under data/. A fresh re-run at the start of T024 reproduced the committed bytes EXACTLY; a re-run after T024 created data/goal-integration-acceptance-20260812/ raised the count from 19 to 20 and changed the record checksum. The file was restored to its committed bytes and was NOT re-emitted, and no drift suite broke - src/release/public-showcase-evidence-consistency.test.ts reads the record but does not recompute that total. An evidence record whose contents depend on the presence of later evidence records is self-invalidating by construction.",
+    "REPAIRED IN T029 - THE T023 SMOKE JOURNEY IS NOW REPRODUCIBLE FROM A CLEAN BROWSER PROFILE. The finding stands as recorded: a fresh Chrome profile issues /favicon.ico, the showcase allowlist classifier had no category for it, and everyRequestClassified read false (554 distinct URLs against the committed record's 553). The repair adds a CLASSIFICATION, not an exemption: PUBLIC_SHOWCASE_BROWSER_IMPLICIT_PATHS is a closed, exact-match set, a browser-implicit request is reported in the record with the answer it received, and the journey additionally requires that none of them was answered with a payload - the observed /favicon.ico returned 404. Re-run fresh on 2026-08-12 from a NEW profile: 554 observed, 554 classified, all three journeys passed. The classifier still refuses a planted foreign path, which is asserted by a test.",
+    "REPAIRED IN T029 - THE SHOWCASE DIFFERENTIAL AUDIT NO LONGER DEPENDS ON WHICH EVIDENCE DIRECTORIES EXIST. The finding stands as recorded: workingRecordDirectories counted whatever sat under data/, so T024 creating its own record directory moved the count from 19 to 20 and changed the record's checksum. The repair is exclude-by-declared-set: scripts/public-showcase-audit-cli.mjs declares AUDITED_WORKING_RECORD_DIRECTORIES and intersects the scan with it, so a directory committed by a later task cannot move these bytes, while a DECLARED directory that is absent or empty fails the audit rather than shrinking the count. Verified empirically: a planted sibling record directory left the re-emitted record byte-identical (sha256 d9c4ec94f87cdcd7e533ae4fa0241f140d7fa01322dac58e5df6ed255f0346ca before and after). Widening the scope is now a deliberate, reviewable edit to a constant.",
     "THE WAVE LEDGER'S eligibility.json IS IMMUTABLE AND NOW READS STALE. It declares all 883 cells private-eligible and 0 public-eligible, with a basis stating no cell is public-eligible until a promotion task supplies per-cell rights-cleared evidence. Six promotions have since shipped public roots under per-wave instruments. The artifact is v1, pinned to the ledger checksum, and correctly was not mutated; the live eligibility authority is the six approval instruments, not this file.",
     "STRUCTURAL VALIDATION IS NOT VISUAL, GEOGRAPHIC OR PRODUCTION PROOF. A signed-volume identity, a checksum and a passing suite do not prove that a facade looks right, that a building sits where the real one does, or that the composition is smooth. The near-field visual reading is Block-835-scoped, and the isolated slow frames of 116.2 ms and 140.0 ms are recorded rather than smoothed.",
-    "THE PRIVACY AND EVIDENCE MACHINERY HAS ONLY EVER RUN ON SYNTHETIC FIXTURES. No self-captured evidence exists in the repository, no committed record carries a redactedArtifactRef, and ADR 0022 records that the privacy review is attestation-only and that a missed face or plate is not detected."
+    "THE PRIVACY AND EVIDENCE MACHINERY HAS ONLY EVER RUN ON SYNTHETIC FIXTURES. No self-captured evidence exists in the repository, no committed record carries a redactedArtifactRef, and ADR 0022 records that the privacy review is attestation-only and that a missed face or plate is not detected.",
+    "THE FOUR T029 CLOSURES ARE ADJUDICATED, NOT CLEAN. The 1440p capture inherits the deep-link camera-height clamp and its composition reading is a human reading of 3 of 16 stills; the mobile journey is emulated and its selection leg is deep-link-driven rather than a touch pick; the keyboard traversal runs on DevTools-emulated focus rather than OS focus; and the heap verdict covers a camera path whose resident working set was 14 entries of a 512-entry ceiling with zero evictions in the committed run, so nothing is certified at peak residency or under eviction pressure. Each delta is stated on its own criterion.",
+    "REPAIRED IN T029 - THE MOBILE LOWER-LOD DISCLOSURE IS NOW LEGIBLE AT 390 CSS PX. The finding stands as recorded: the disclosure was in the DOM with role=status and structurally unreadable, clamped to one ellipsised row by `.runtime-note span` inside a calc(100% - 160px) lane. It was a stylesheet defect. The repair releases the clamp for this line only, lifts it above the notices lane, removes the lane's max-height clip for it and caps its width to the viewport; measured after the fix, it renders on 7 wrapped lines at 11px, fits its box, sits inside the viewport and survives a nine-point hit test unoccluded. The mobile journey now measures legibility rather than DOM presence, and FAILED both affected legs before the fix. What remains is the large truthful fallback notice, which is named per leg."
   ],
   "coverage": {
     "ledger": {
@@ -781,5 +816,42 @@
     "allZero": true,
     "refusalRatePercent": 1.9892,
     "promotedSharePercent": 1.0709
+  },
+  "closures": {
+    "task": "T029 (Issue #62)",
+    "closedCriteria": [
+      7,
+      8,
+      24,
+      30
+    ],
+    "remainingNotMet": [
+      1,
+      22
+    ],
+    "statement": "Every closure is graded MET-AS-ADJUDICATED rather than MET, and each states its own delta. That is not modesty: a 1440p capture inherits the deep-link height clamp, a mobile journey is emulated, a keyboard traversal runs on emulated focus, and a heap verdict over a one-block camera path does not speak for peak residency. Grading any of them MET would have claimed more than was measured.",
+    "evidenceRecords": [
+      {
+        "criterion": 7,
+        "path": "data/goal-bounded-gaps-20260812/facade-1440p-evidence.json",
+        "sha256": "5d7ab5808dffcb3e6159f3ac5c95452de8a9a049d00f4e6f18c080ee29ed1362"
+      },
+      {
+        "criterion": 8,
+        "path": "data/goal-bounded-gaps-20260812/mobile-journey-evidence.json",
+        "sha256": "68558958065e5facf27f9ee1aa2141859c18fd2ee1287eb396d808a7ed1f0c7b"
+      },
+      {
+        "criterion": 24,
+        "path": "data/goal-bounded-gaps-20260812/accessibility-evidence.json",
+        "sha256": "8d6192f3ea3ce0f6aed1cca5fe347af7ee45731948e62c1ef2d1433c7f3f30c9"
+      },
+      {
+        "criterion": 30,
+        "path": "data/goal-bounded-gaps-20260812/heap-concurrency-evidence.json",
+        "sha256": "625a8d62fe0a78405a03923f2a80c4da788a5b6d1943243cb4237116d65bfa12"
+      }
+    ],
+    "layoutDefectResolution": "RESOLVED during this task. The mobile lower-LOD disclosure was structurally unreadable at 390 CSS px - a stylesheet clamp, not a wiring gap - and the first mobile re-capture under the new legibility instrument failed legs 1 and 4 and said why. It is fixed in src/styles.css and re-captured: 7 wrapped lines at 11px, inside the viewport, unoccluded at all nine hit-tested points. The remaining on-screen occlusion is the truthful 'Exterior streaming fallback' notice, which is named per leg in the journey record rather than cropped out of the stills."
   }
 }
