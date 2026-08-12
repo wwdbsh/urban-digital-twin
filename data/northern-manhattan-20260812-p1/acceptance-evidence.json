@@ -58,12 +58,12 @@
     "remoteDebuggingPort": 9335,
     "frameMilliseconds": {
       "frameCount": 240,
-      "meanMilliseconds": 8.333333333333334,
+      "meanMilliseconds": 8.333749999602636,
       "p50Milliseconds": 8.300000071525574,
       "p95Milliseconds": 9.5,
-      "p99Milliseconds": 10.200000047683716,
-      "maximumMilliseconds": 10.5,
-      "minimumMilliseconds": 6.200000047683716
+      "p99Milliseconds": 10.199999928474426,
+      "maximumMilliseconds": 10.200000047683716,
+      "minimumMilliseconds": 6
     },
     "statement": "The same station in a second Chrome launched WITHOUT the uncapping flags. Its p50 is the display's present interval; the uncapped run's p50 sitting far below it is what makes the uncapped numbers a headroom measurement rather than a floor reading."
   },
@@ -97,28 +97,30 @@
   },
   "cacheResidency": {
     "basis": "derived-from-network-not-read-from-the-cache-counter",
-    "statement": "One DISTINCT fetched GLB is one LRU entry, so the entry count is the count of distinct GLB URLs the session completed and the byte figure is the encoded size of every response. AT SIX WAVES THOSE ARE NO LONGER THE SAME NUMBER, and this is the first record where they differ: the cache holds 512 entries, a six-wave session gets close to that, and an evicted artifact that comes back into view is fetched a second time. `glbResponses` is kept beside `entries` in every run so the gap is visible rather than absorbed — counting responses would OVERSTATE residency, which is the safe direction but not the true one. The in-app cache counter is only published to the DOM in a VITE_BLOCK835_PROBE build; this measurement is against the ordinary production preview a user gets, so residency is derived from the fetches instead.",
+    "refetchCaptureCount": 1,
+    "captureCount": 12,
+    "statement": "One DISTINCT fetched GLB is one LRU entry, so the entry count is the count of distinct GLB URLs the session completed and the byte figure is the encoded size of every response. RESPONSES AND DISTINCT ARTIFACTS ARE COUNTED SEPARATELY BECAUSE AT SIX WAVES THEY CAN DIFFER: the cache holds 512 entries, a six-wave session gets close to that, and an evicted artifact that comes back into view is fetched a second time, which would show up as two responses for one entry. WHETHER THEY DID DIFFER IS A READING RATHER THAN AN ASSUMPTION, and `perRun` carries both numbers for every capture so it can be read off rather than inferred. In THIS run they differed in 1 of 12 captures, by at most 3 response(s) — so eviction and re-fetch inside a single session is observed here rather than hypothesised. Two things this figure is NOT. It is not the in-app cache counter, which only reaches the DOM in a VITE_BLOCK835_PROBE build, and this measurement is deliberately against the ordinary production preview a user gets. And it is not a measurement of CONCURRENT residency: distinct-over-the-whole-session is itself an upper bound, because an artifact fetched early and evicted later is counted here and is not resident at the end. So the entry figure bounds occupancy from above by construction, and the honest statement is that it stayed inside the cap, not that the cache held exactly that many at any instant.",
     "perRun": [
       {
         "stationId": "harlem-125th-facade",
         "repeatIndex": 0,
         "entries": 484,
-        "glbResponses": 484,
-        "bytes": 128099070
+        "glbResponses": 487,
+        "bytes": 128747055
       },
       {
         "stationId": "harlem-125th-skyline",
         "repeatIndex": 0,
-        "entries": 475,
-        "glbResponses": 475,
-        "bytes": 123952041
+        "entries": 484,
+        "glbResponses": 484,
+        "bytes": 124883520
       },
       {
         "stationId": "sixwave-wide",
         "repeatIndex": 0,
-        "entries": 287,
-        "glbResponses": 287,
-        "bytes": 88498007
+        "entries": 276,
+        "glbResponses": 276,
+        "bytes": 84777686
       },
       {
         "stationId": "centralpark-west-facade",
@@ -137,16 +139,16 @@
       {
         "stationId": "harlem-125th-skyline",
         "repeatIndex": 1,
-        "entries": 458,
-        "glbResponses": 458,
-        "bytes": 121073396
+        "entries": 484,
+        "glbResponses": 484,
+        "bytes": 124883520
       },
       {
         "stationId": "sixwave-wide",
         "repeatIndex": 1,
-        "entries": 256,
-        "glbResponses": 256,
-        "bytes": 80012562
+        "entries": 478,
+        "glbResponses": 478,
+        "bytes": 124158276
       },
       {
         "stationId": "centralpark-west-facade",
@@ -165,16 +167,16 @@
       {
         "stationId": "harlem-125th-skyline",
         "repeatIndex": 2,
-        "entries": 468,
-        "glbResponses": 468,
-        "bytes": 122866724
+        "entries": 484,
+        "glbResponses": 484,
+        "bytes": 124883520
       },
       {
         "stationId": "sixwave-wide",
         "repeatIndex": 2,
-        "entries": 288,
-        "glbResponses": 288,
-        "bytes": 88622256
+        "entries": 484,
+        "glbResponses": 484,
+        "bytes": 124883520
       },
       {
         "stationId": "centralpark-west-facade",
@@ -188,8 +190,8 @@
       "stationId": "harlem-125th-facade",
       "repeatIndex": 0,
       "entries": 484,
-      "glbResponses": 484,
-      "bytes": 128099070
+      "glbResponses": 487,
+      "bytes": 128747055
     },
     "maxCacheEntries": 512,
     "maxCachedBytes": 268435456,
@@ -220,23 +222,23 @@
         "roll": 0
       },
       "repeats": 3,
-      "medianOfRunP50Milliseconds": 3.600000023841858,
-      "medianOfRunP95Milliseconds": 11.799999952316284,
-      "worstObservedFrameMilliseconds": 41.200000047683716,
+      "medianOfRunP50Milliseconds": 3.5999999046325684,
+      "medianOfRunP95Milliseconds": 13,
+      "worstObservedFrameMilliseconds": 40.200000047683716,
       "budget": {
         "p50Milliseconds": 33.3,
         "p95Milliseconds": 45
       },
       "p50WithinBudget": true,
       "p95WithinBudget": true,
-      "p50HeadroomRatio": 0.10810810882407983,
-      "p95HeadroomRatio": 0.2622222211625841,
+      "p50HeadroomRatio": 0.10810810524422128,
+      "p95HeadroomRatio": 0.28888888888888886,
       "heapAfterGcBytes": {
-        "minimum": 231666252,
-        "maximum": 232230468,
-        "median": 231977632
+        "minimum": 232176043,
+        "maximum": 235603573,
+        "median": 232239090
       },
-      "p50OverCappedControlP50": 0.4337349388938214
+      "p50OverCappedControlP50": 0.4337349245312565
     },
     {
       "stationId": "harlem-125th-skyline",
@@ -251,23 +253,23 @@
         "roll": 0
       },
       "repeats": 3,
-      "medianOfRunP50Milliseconds": 3.4000000953674316,
-      "medianOfRunP95Milliseconds": 10.600000023841858,
-      "worstObservedFrameMilliseconds": 40.5,
+      "medianOfRunP50Milliseconds": 3.399999976158142,
+      "medianOfRunP95Milliseconds": 10.399999976158142,
+      "worstObservedFrameMilliseconds": 55.700000047683716,
       "budget": {
         "p50Milliseconds": 16.7,
         "p95Milliseconds": 25
       },
       "p50WithinBudget": true,
       "p95WithinBudget": true,
-      "p50HeadroomRatio": 0.20359282008188215,
-      "p95HeadroomRatio": 0.4240000009536743,
+      "p50HeadroomRatio": 0.20359281294360132,
+      "p95HeadroomRatio": 0.4159999990463257,
       "heapAfterGcBytes": {
-        "minimum": 233006044,
-        "maximum": 237196139,
-        "median": 234638753
+        "minimum": 226519331,
+        "maximum": 230015060,
+        "median": 227447838
       },
-      "p50OverCappedControlP50": 0.4096385621768432
+      "p50OverCappedControlP50": 0.40963854781427833
     },
     {
       "stationId": "sixwave-wide",
@@ -282,23 +284,23 @@
         "roll": 0
       },
       "repeats": 3,
-      "medianOfRunP50Milliseconds": 2.200000047683716,
-      "medianOfRunP95Milliseconds": 5.299999952316284,
-      "worstObservedFrameMilliseconds": 119.39999997615814,
+      "medianOfRunP50Milliseconds": 2.3000000715255737,
+      "medianOfRunP95Milliseconds": 5.600000023841858,
+      "worstObservedFrameMilliseconds": 116.19999992847443,
       "budget": {
         "p50Milliseconds": 16.7,
         "p95Milliseconds": 25
       },
       "p50WithinBudget": true,
       "p95WithinBudget": true,
-      "p50HeadroomRatio": 0.13173652980142012,
-      "p95HeadroomRatio": 0.21199999809265135,
+      "p50HeadroomRatio": 0.13772455518117208,
+      "p95HeadroomRatio": 0.2240000009536743,
       "heapAfterGcBytes": {
-        "minimum": 183293287,
-        "maximum": 195115237,
-        "median": 191261293
+        "minimum": 186239385,
+        "maximum": 233003809,
+        "median": 229407037
       },
-      "p50OverCappedControlP50": 0.26506024442471443
+      "p50OverCappedControlP50": 0.277108439964486
     },
     {
       "stationId": "centralpark-west-facade",
@@ -313,23 +315,23 @@
         "roll": 0
       },
       "repeats": 3,
-      "medianOfRunP50Milliseconds": 3.5,
-      "medianOfRunP95Milliseconds": 12.400000095367432,
-      "worstObservedFrameMilliseconds": 65.5,
+      "medianOfRunP50Milliseconds": 3.600000023841858,
+      "medianOfRunP95Milliseconds": 12.899999976158142,
+      "worstObservedFrameMilliseconds": 64.20000004768372,
       "budget": {
         "p50Milliseconds": 33.3,
         "p95Milliseconds": 45
       },
       "p50WithinBudget": true,
       "p95WithinBudget": true,
-      "p50HeadroomRatio": 0.10510510510510511,
-      "p95HeadroomRatio": 0.2755555576748318,
+      "p50HeadroomRatio": 0.10810810882407983,
+      "p95HeadroomRatio": 0.2866666661368476,
       "heapAfterGcBytes": {
-        "minimum": 250285903,
-        "maximum": 252528403,
-        "median": 250674139
+        "minimum": 249609923,
+        "maximum": 255124819,
+        "median": 250745938
       },
-      "p50OverCappedControlP50": 0.4216867433540499
+      "p50OverCappedControlP50": 0.4337349388938214
     }
   ],
   "captures": [
@@ -348,25 +350,116 @@
       ],
       "frameMilliseconds": {
         "frameCount": 240,
-        "meanMilliseconds": 5.098333333432675,
-        "p50Milliseconds": 3.6999999284744263,
-        "p95Milliseconds": 12.299999952316284,
-        "p99Milliseconds": 33.199999928474426,
-        "maximumMilliseconds": 40.89999997615814,
-        "minimumMilliseconds": 0.9000000953674316
+        "meanMilliseconds": 4.934166666865349,
+        "p50Milliseconds": 3.5999999046325684,
+        "p95Milliseconds": 13.800000071525574,
+        "p99Milliseconds": 33.39999997615814,
+        "maximumMilliseconds": 40.200000047683716,
+        "minimumMilliseconds": 1.2999999523162842
       },
-      "heapAfterGcBytes": 232230468,
+      "heapAfterGcBytes": 232239090,
       "network": {
         "perRelease": {
           "manhattan-exterior-cells-20260811-v3": {
-            "requestCount": 18,
+            "requestCount": 17,
             "completedCount": 17,
             "encodedBytes": 5150055,
             "glbCount": 14,
             "distinctGlbCount": 14
           },
           "manhattan-midtown-core-cells-20260811-v3": {
-            "requestCount": 162,
+            "requestCount": 159,
+            "completedCount": 159,
+            "encodedBytes": 21286267,
+            "glbCount": 156,
+            "distinctGlbCount": 156
+          },
+          "manhattan-lower-manhattan-cells-20260812-p1": {
+            "requestCount": 74,
+            "completedCount": 74,
+            "encodedBytes": 41525305,
+            "glbCount": 71,
+            "distinctGlbCount": 71
+          },
+          "manhattan-southern-remainder-cells-20260812-p1": {
+            "requestCount": 183,
+            "completedCount": 183,
+            "encodedBytes": 41044535,
+            "glbCount": 180,
+            "distinctGlbCount": 179
+          },
+          "manhattan-central-upper-manhattan-cells-20260812-p1": {
+            "requestCount": 45,
+            "completedCount": 45,
+            "encodedBytes": 15080542,
+            "glbCount": 42,
+            "distinctGlbCount": 40
+          },
+          "manhattan-northern-manhattan-cells-20260812-p1": {
+            "requestCount": 28,
+            "completedCount": 27,
+            "encodedBytes": 4660351,
+            "glbCount": 24,
+            "distinctGlbCount": 24
+          },
+          "manhattan-northern-manhattan-cells-20260812": {
+            "requestCount": 0,
+            "completedCount": 0,
+            "encodedBytes": 0,
+            "glbCount": 0,
+            "distinctGlbCount": 0
+          },
+          "manhattan-citywide-20260804": {
+            "requestCount": 6,
+            "completedCount": 6,
+            "encodedBytes": 987912,
+            "glbCount": 0,
+            "distinctGlbCount": 0
+          }
+        },
+        "totalRequestCount": 573,
+        "externalHosts": []
+      },
+      "still": {
+        "relativeRef": "captures/harlem-125th-facade__r0.png",
+        "byteSize": 315770,
+        "checksumSha256": "e987c56878abd57c4e1b2a66be303fc9ea9be2e38cdf123877e6b75d1cce3501"
+      }
+    },
+    {
+      "stationId": "harlem-125th-skyline",
+      "repeatIndex": 0,
+      "url": "http://localhost:4176/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-73.943000&lat=40.802000&height=520.000000&heading=320.000000&pitch=-8.000000&roll=0.000000&exteriorProfile=exploration",
+      "profile": "exploration",
+      "activeWaves": [
+        "manhattan-central-upper-manhattan-cells-20260812-p1",
+        "manhattan-exterior-cells-20260811-v3",
+        "manhattan-lower-manhattan-cells-20260812-p1",
+        "manhattan-midtown-core-cells-20260811-v3",
+        "manhattan-northern-manhattan-cells-20260812-p1",
+        "manhattan-southern-remainder-cells-20260812-p1"
+      ],
+      "frameMilliseconds": {
+        "frameCount": 240,
+        "meanMilliseconds": 3.841249999900659,
+        "p50Milliseconds": 3.3000000715255737,
+        "p95Milliseconds": 8.200000047683716,
+        "p99Milliseconds": 12.700000047683716,
+        "maximumMilliseconds": 29.40000009536743,
+        "minimumMilliseconds": 1.100000023841858
+      },
+      "heapAfterGcBytes": 226519331,
+      "network": {
+        "perRelease": {
+          "manhattan-exterior-cells-20260811-v3": {
+            "requestCount": 17,
+            "completedCount": 17,
+            "encodedBytes": 1934505,
+            "glbCount": 14,
+            "distinctGlbCount": 14
+          },
+          "manhattan-midtown-core-cells-20260811-v3": {
+            "requestCount": 159,
             "completedCount": 159,
             "encodedBytes": 21286267,
             "glbCount": 156,
@@ -408,111 +501,20 @@
             "distinctGlbCount": 0
           },
           "manhattan-citywide-20260804": {
-            "requestCount": 6,
-            "completedCount": 6,
-            "encodedBytes": 762,
-            "glbCount": 0,
-            "distinctGlbCount": 0
-          }
-        },
-        "totalRequestCount": 573,
-        "externalHosts": []
-      },
-      "still": {
-        "relativeRef": "captures/harlem-125th-facade__r0.png",
-        "byteSize": 321940,
-        "checksumSha256": "e89c17fd66e53ec55c99490cbce16113d8765efe4fb4cbec330f006b4b9fdce7"
-      }
-    },
-    {
-      "stationId": "harlem-125th-skyline",
-      "repeatIndex": 0,
-      "url": "http://localhost:4176/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-73.943000&lat=40.802000&height=520.000000&heading=320.000000&pitch=-8.000000&roll=0.000000&exteriorProfile=exploration",
-      "profile": "exploration",
-      "activeWaves": [
-        "manhattan-central-upper-manhattan-cells-20260812-p1",
-        "manhattan-exterior-cells-20260811-v3",
-        "manhattan-lower-manhattan-cells-20260812-p1",
-        "manhattan-midtown-core-cells-20260811-v3",
-        "manhattan-northern-manhattan-cells-20260812-p1",
-        "manhattan-southern-remainder-cells-20260812-p1"
-      ],
-      "frameMilliseconds": {
-        "frameCount": 240,
-        "meanMilliseconds": 4.490000000099341,
-        "p50Milliseconds": 3.4000000953674316,
-        "p95Milliseconds": 10.600000023841858,
-        "p99Milliseconds": 32.60000002384186,
-        "maximumMilliseconds": 35.59999990463257,
-        "minimumMilliseconds": 0.3999999761581421
-      },
-      "heapAfterGcBytes": 237196139,
-      "network": {
-        "perRelease": {
-          "manhattan-exterior-cells-20260811-v3": {
-            "requestCount": 17,
-            "completedCount": 17,
-            "encodedBytes": 1934505,
-            "glbCount": 14,
-            "distinctGlbCount": 14
-          },
-          "manhattan-midtown-core-cells-20260811-v3": {
-            "requestCount": 150,
-            "completedCount": 150,
-            "encodedBytes": 20354788,
-            "glbCount": 147,
-            "distinctGlbCount": 147
-          },
-          "manhattan-lower-manhattan-cells-20260812-p1": {
-            "requestCount": 74,
-            "completedCount": 74,
-            "encodedBytes": 41525305,
-            "glbCount": 71,
-            "distinctGlbCount": 71
-          },
-          "manhattan-southern-remainder-cells-20260812-p1": {
-            "requestCount": 182,
-            "completedCount": 182,
-            "encodedBytes": 40584210,
-            "glbCount": 179,
-            "distinctGlbCount": 179
-          },
-          "manhattan-central-upper-manhattan-cells-20260812-p1": {
-            "requestCount": 43,
-            "completedCount": 43,
-            "encodedBytes": 14892882,
-            "glbCount": 40,
-            "distinctGlbCount": 40
-          },
-          "manhattan-northern-manhattan-cells-20260812-p1": {
-            "requestCount": 27,
-            "completedCount": 27,
-            "encodedBytes": 4660351,
-            "glbCount": 24,
-            "distinctGlbCount": 24
-          },
-          "manhattan-northern-manhattan-cells-20260812": {
-            "requestCount": 0,
-            "completedCount": 0,
-            "encodedBytes": 0,
-            "glbCount": 0,
-            "distinctGlbCount": 0
-          },
-          "manhattan-citywide-20260804": {
             "requestCount": 8,
             "completedCount": 8,
-            "encodedBytes": 1016,
+            "encodedBytes": 37892,
             "glbCount": 0,
             "distinctGlbCount": 0
           }
         },
-        "totalRequestCount": 562,
+        "totalRequestCount": 571,
         "externalHosts": []
       },
       "still": {
         "relativeRef": "captures/harlem-125th-skyline__r0.png",
-        "byteSize": 450331,
-        "checksumSha256": "36d1edc50ce16287c02bea417011376c471e36c448b586e6a93018e3ca6d5791"
+        "byteSize": 450928,
+        "checksumSha256": "158ceaa62e5e6d036cc24e6482b90f9a2a2cd7eb78b398a443a9e80b4f21b04b"
       }
     },
     {
@@ -530,14 +532,14 @@
       ],
       "frameMilliseconds": {
         "frameCount": 240,
-        "meanMilliseconds": 3.125,
-        "p50Milliseconds": 2.200000047683716,
-        "p95Milliseconds": 5.299999952316284,
-        "p99Milliseconds": 11.100000023841858,
-        "maximumMilliseconds": 116.79999995231628,
+        "meanMilliseconds": 3.0195833335320157,
+        "p50Milliseconds": 2,
+        "p95Milliseconds": 5.399999976158142,
+        "p99Milliseconds": 11.699999928474426,
+        "maximumMilliseconds": 116.19999992847443,
         "minimumMilliseconds": 0.3999999761581421
       },
-      "heapAfterGcBytes": 191261293,
+      "heapAfterGcBytes": 186239385,
       "network": {
         "perRelease": {
           "manhattan-exterior-cells-20260811-v3": {
@@ -548,32 +550,32 @@
             "distinctGlbCount": 14
           },
           "manhattan-midtown-core-cells-20260811-v3": {
-            "requestCount": 75,
-            "completedCount": 75,
-            "encodedBytes": 12734739,
-            "glbCount": 72,
-            "distinctGlbCount": 72
+            "requestCount": 74,
+            "completedCount": 73,
+            "encodedBytes": 12662265,
+            "glbCount": 70,
+            "distinctGlbCount": 70
           },
           "manhattan-lower-manhattan-cells-20260812-p1": {
-            "requestCount": 55,
-            "completedCount": 54,
-            "encodedBytes": 31176907,
-            "glbCount": 51,
-            "distinctGlbCount": 51
+            "requestCount": 51,
+            "completedCount": 50,
+            "encodedBytes": 28460393,
+            "glbCount": 47,
+            "distinctGlbCount": 47
           },
           "manhattan-southern-remainder-cells-20260812-p1": {
-            "requestCount": 105,
-            "completedCount": 103,
-            "encodedBytes": 27330419,
-            "glbCount": 100,
-            "distinctGlbCount": 100
+            "requestCount": 100,
+            "completedCount": 99,
+            "encodedBytes": 26563511,
+            "glbCount": 96,
+            "distinctGlbCount": 96
           },
           "manhattan-central-upper-manhattan-cells-20260812-p1": {
-            "requestCount": 30,
-            "completedCount": 29,
-            "encodedBytes": 10661086,
-            "glbCount": 26,
-            "distinctGlbCount": 26
+            "requestCount": 29,
+            "completedCount": 28,
+            "encodedBytes": 10496661,
+            "glbCount": 25,
+            "distinctGlbCount": 25
           },
           "manhattan-northern-manhattan-cells-20260812-p1": {
             "requestCount": 27,
@@ -592,12 +594,12 @@
           "manhattan-citywide-20260804": {
             "requestCount": 27,
             "completedCount": 27,
-            "encodedBytes": 3429,
+            "encodedBytes": 1842680,
             "glbCount": 0,
             "distinctGlbCount": 0
           }
         },
-        "totalRequestCount": 372,
+        "totalRequestCount": 361,
         "externalHosts": []
       },
       "still": {
@@ -621,14 +623,14 @@
       ],
       "frameMilliseconds": {
         "frameCount": 240,
-        "meanMilliseconds": 5.109166666865349,
-        "p50Milliseconds": 3.5,
-        "p95Milliseconds": 11.199999928474426,
-        "p99Milliseconds": 43.800000071525574,
-        "maximumMilliseconds": 65.5,
-        "minimumMilliseconds": 0.6999999284744263
+        "meanMilliseconds": 4.882500000298023,
+        "p50Milliseconds": 3.600000023841858,
+        "p95Milliseconds": 7.899999976158142,
+        "p99Milliseconds": 46.300000071525574,
+        "maximumMilliseconds": 64.20000004768372,
+        "minimumMilliseconds": 0.8999999761581421
       },
-      "heapAfterGcBytes": 252528403,
+      "heapAfterGcBytes": 255124819,
       "network": {
         "perRelease": {
           "manhattan-exterior-cells-20260811-v3": {
@@ -683,7 +685,7 @@
           "manhattan-citywide-20260804": {
             "requestCount": 7,
             "completedCount": 7,
-            "encodedBytes": 889,
+            "encodedBytes": 1105159,
             "glbCount": 0,
             "distinctGlbCount": 0
           }
@@ -693,8 +695,8 @@
       },
       "still": {
         "relativeRef": "captures/centralpark-west-facade__r0.png",
-        "byteSize": 427244,
-        "checksumSha256": "b2ec9f3e30a9c3b0016a052aa81b6f1fe994b3a6d05acb3a4dbc7e6558148ce8"
+        "byteSize": 420989,
+        "checksumSha256": "e2caf32212b4d31d1c85611afa03dd1e9f3046484bfaa970e9256442e01eb3b4"
       }
     },
     {
@@ -712,39 +714,39 @@
       ],
       "frameMilliseconds": {
         "frameCount": 240,
-        "meanMilliseconds": 4.825,
-        "p50Milliseconds": 3.600000023841858,
-        "p95Milliseconds": 11.799999952316284,
-        "p99Milliseconds": 27.799999952316284,
-        "maximumMilliseconds": 41.200000047683716,
-        "minimumMilliseconds": 0.9000000953674316
+        "meanMilliseconds": 4.917500000198682,
+        "p50Milliseconds": 3.5999999046325684,
+        "p95Milliseconds": 13,
+        "p99Milliseconds": 30.799999952316284,
+        "maximumMilliseconds": 37,
+        "minimumMilliseconds": 1
       },
-      "heapAfterGcBytes": 231666252,
+      "heapAfterGcBytes": 232176043,
       "network": {
         "perRelease": {
           "manhattan-exterior-cells-20260811-v3": {
-            "requestCount": 18,
+            "requestCount": 17,
             "completedCount": 17,
             "encodedBytes": 5150055,
             "glbCount": 14,
             "distinctGlbCount": 14
           },
           "manhattan-midtown-core-cells-20260811-v3": {
-            "requestCount": 161,
+            "requestCount": 159,
             "completedCount": 159,
             "encodedBytes": 21286267,
             "glbCount": 156,
             "distinctGlbCount": 156
           },
           "manhattan-lower-manhattan-cells-20260812-p1": {
-            "requestCount": 74,
+            "requestCount": 76,
             "completedCount": 74,
             "encodedBytes": 41525305,
             "glbCount": 71,
             "distinctGlbCount": 71
           },
           "manhattan-southern-remainder-cells-20260812-p1": {
-            "requestCount": 182,
+            "requestCount": 183,
             "completedCount": 182,
             "encodedBytes": 40584210,
             "glbCount": 179,
@@ -784,8 +786,8 @@
       },
       "still": {
         "relativeRef": "captures/harlem-125th-facade__r1.png",
-        "byteSize": 321885,
-        "checksumSha256": "d15d4316f48f9860896385238d94249b85c62e7e93aa2ba23be5726314d1736d"
+        "byteSize": 315698,
+        "checksumSha256": "e95e2ed7c39a5a07c86fb27b116394390900b15fec5d5487df267f7de865ef9b"
       }
     },
     {
@@ -803,14 +805,14 @@
       ],
       "frameMilliseconds": {
         "frameCount": 240,
-        "meanMilliseconds": 4.376666666567326,
-        "p50Milliseconds": 3.299999952316284,
-        "p95Milliseconds": 11.900000095367432,
-        "p99Milliseconds": 35,
-        "maximumMilliseconds": 40.5,
-        "minimumMilliseconds": 0.5
+        "meanMilliseconds": 4.74458333303531,
+        "p50Milliseconds": 3.5999999046325684,
+        "p95Milliseconds": 10.399999976158142,
+        "p99Milliseconds": 36.39999997615814,
+        "maximumMilliseconds": 55.700000047683716,
+        "minimumMilliseconds": 0.7999999523162842
       },
-      "heapAfterGcBytes": 233006044,
+      "heapAfterGcBytes": 230015060,
       "network": {
         "perRelease": {
           "manhattan-exterior-cells-20260811-v3": {
@@ -821,11 +823,11 @@
             "distinctGlbCount": 14
           },
           "manhattan-midtown-core-cells-20260811-v3": {
-            "requestCount": 142,
-            "completedCount": 140,
-            "encodedBytes": 18326768,
-            "glbCount": 137,
-            "distinctGlbCount": 137
+            "requestCount": 159,
+            "completedCount": 159,
+            "encodedBytes": 21286267,
+            "glbCount": 156,
+            "distinctGlbCount": 156
           },
           "manhattan-lower-manhattan-cells-20260812-p1": {
             "requestCount": 74,
@@ -835,11 +837,11 @@
             "distinctGlbCount": 71
           },
           "manhattan-southern-remainder-cells-20260812-p1": {
-            "requestCount": 176,
-            "completedCount": 175,
-            "encodedBytes": 39733585,
-            "glbCount": 172,
-            "distinctGlbCount": 172
+            "requestCount": 182,
+            "completedCount": 182,
+            "encodedBytes": 40584210,
+            "glbCount": 179,
+            "distinctGlbCount": 179
           },
           "manhattan-central-upper-manhattan-cells-20260812-p1": {
             "requestCount": 43,
@@ -870,13 +872,13 @@
             "distinctGlbCount": 0
           }
         },
-        "totalRequestCount": 548,
+        "totalRequestCount": 571,
         "externalHosts": []
       },
       "still": {
         "relativeRef": "captures/harlem-125th-skyline__r1.png",
-        "byteSize": 450331,
-        "checksumSha256": "36d1edc50ce16287c02bea417011376c471e36c448b586e6a93018e3ca6d5791"
+        "byteSize": 450843,
+        "checksumSha256": "254189d05d9f6472b3eba2205beaff90ad5f498f732bd11098ad7314fe1ae66d"
       }
     },
     {
@@ -894,14 +896,14 @@
       ],
       "frameMilliseconds": {
         "frameCount": 240,
-        "meanMilliseconds": 3.0883333335320153,
-        "p50Milliseconds": 2.299999952316284,
-        "p95Milliseconds": 4.799999952316284,
-        "p99Milliseconds": 17.40000009536743,
-        "maximumMilliseconds": 119.39999997615814,
-        "minimumMilliseconds": 0.40000009536743164
+        "meanMilliseconds": 2.9108333334326746,
+        "p50Milliseconds": 2.5999999046325684,
+        "p95Milliseconds": 5.700000047683716,
+        "p99Milliseconds": 17.100000023841858,
+        "maximumMilliseconds": 19.200000047683716,
+        "minimumMilliseconds": 0.5
       },
-      "heapAfterGcBytes": 183293287,
+      "heapAfterGcBytes": 233003809,
       "network": {
         "perRelease": {
           "manhattan-exterior-cells-20260811-v3": {
@@ -912,39 +914,39 @@
             "distinctGlbCount": 14
           },
           "manhattan-midtown-core-cells-20260811-v3": {
-            "requestCount": 69,
-            "completedCount": 69,
-            "encodedBytes": 10691857,
-            "glbCount": 66,
-            "distinctGlbCount": 66
+            "requestCount": 154,
+            "completedCount": 153,
+            "encodedBytes": 20561023,
+            "glbCount": 150,
+            "distinctGlbCount": 150
           },
           "manhattan-lower-manhattan-cells-20260812-p1": {
-            "requestCount": 48,
-            "completedCount": 46,
-            "encodedBytes": 27866189,
-            "glbCount": 43,
-            "distinctGlbCount": 43
+            "requestCount": 74,
+            "completedCount": 74,
+            "encodedBytes": 41525305,
+            "glbCount": 71,
+            "distinctGlbCount": 71
           },
           "manhattan-southern-remainder-cells-20260812-p1": {
-            "requestCount": 92,
-            "completedCount": 91,
-            "encodedBytes": 25161979,
-            "glbCount": 88,
-            "distinctGlbCount": 88
+            "requestCount": 182,
+            "completedCount": 182,
+            "encodedBytes": 40584210,
+            "glbCount": 179,
+            "distinctGlbCount": 179
           },
           "manhattan-central-upper-manhattan-cells-20260812-p1": {
-            "requestCount": 27,
-            "completedCount": 26,
-            "encodedBytes": 9923299,
-            "glbCount": 23,
-            "distinctGlbCount": 23
+            "requestCount": 43,
+            "completedCount": 43,
+            "encodedBytes": 14892882,
+            "glbCount": 40,
+            "distinctGlbCount": 40
           },
           "manhattan-northern-manhattan-cells-20260812-p1": {
-            "requestCount": 25,
-            "completedCount": 25,
-            "encodedBytes": 4434733,
-            "glbCount": 22,
-            "distinctGlbCount": 22
+            "requestCount": 27,
+            "completedCount": 27,
+            "encodedBytes": 4660351,
+            "glbCount": 24,
+            "distinctGlbCount": 24
           },
           "manhattan-northern-manhattan-cells-20260812": {
             "requestCount": 0,
@@ -961,7 +963,7 @@
             "distinctGlbCount": 0
           }
         },
-        "totalRequestCount": 341,
+        "totalRequestCount": 560,
         "externalHosts": []
       },
       "still": {
@@ -985,14 +987,14 @@
       ],
       "frameMilliseconds": {
         "frameCount": 240,
-        "meanMilliseconds": 5.271250000099341,
-        "p50Milliseconds": 3.3000000715255737,
-        "p95Milliseconds": 13.299999952316284,
-        "p99Milliseconds": 58.800000071525574,
-        "maximumMilliseconds": 63,
-        "minimumMilliseconds": 1.100000023841858
+        "meanMilliseconds": 5.277500000099341,
+        "p50Milliseconds": 3.5,
+        "p95Milliseconds": 12.899999976158142,
+        "p99Milliseconds": 55.199999928474426,
+        "maximumMilliseconds": 55.39999997615814,
+        "minimumMilliseconds": 0.7999999523162842
       },
-      "heapAfterGcBytes": 250285903,
+      "heapAfterGcBytes": 249609923,
       "network": {
         "perRelease": {
           "manhattan-exterior-cells-20260811-v3": {
@@ -1057,8 +1059,8 @@
       },
       "still": {
         "relativeRef": "captures/centralpark-west-facade__r1.png",
-        "byteSize": 427228,
-        "checksumSha256": "9fb95ca17854af5877c832e8fd64b5bcd0eec49a993d82a6ea75e8c11a3a278f"
+        "byteSize": 420931,
+        "checksumSha256": "fe21d95fabcec06c70c8495659b0184e831a698eee72dfb146d982cbfb17bb29"
       }
     },
     {
@@ -1076,14 +1078,14 @@
       ],
       "frameMilliseconds": {
         "frameCount": 240,
-        "meanMilliseconds": 4.109583333134651,
-        "p50Milliseconds": 3.399999976158142,
-        "p95Milliseconds": 8.800000071525574,
-        "p99Milliseconds": 12.799999952316284,
-        "maximumMilliseconds": 35.39999997615814,
-        "minimumMilliseconds": 0.8999999761581421
+        "meanMilliseconds": 3.9566666667660075,
+        "p50Milliseconds": 3.200000047683716,
+        "p95Milliseconds": 8.5,
+        "p99Milliseconds": 12,
+        "maximumMilliseconds": 33.5,
+        "minimumMilliseconds": 1.2999999523162842
       },
-      "heapAfterGcBytes": 231977632,
+      "heapAfterGcBytes": 235603573,
       "network": {
         "perRelease": {
           "manhattan-exterior-cells-20260811-v3": {
@@ -1094,7 +1096,7 @@
             "distinctGlbCount": 14
           },
           "manhattan-midtown-core-cells-20260811-v3": {
-            "requestCount": 161,
+            "requestCount": 162,
             "completedCount": 159,
             "encodedBytes": 21286267,
             "glbCount": 156,
@@ -1122,7 +1124,7 @@
             "distinctGlbCount": 40
           },
           "manhattan-northern-manhattan-cells-20260812-p1": {
-            "requestCount": 28,
+            "requestCount": 27,
             "completedCount": 27,
             "encodedBytes": 4660351,
             "glbCount": 24,
@@ -1148,8 +1150,8 @@
       },
       "still": {
         "relativeRef": "captures/harlem-125th-facade__r2.png",
-        "byteSize": 322016,
-        "checksumSha256": "a6e3c9758609e3b7cebf97b545fc5e65206f3ffa6ae0de8dbda46ee445890b18"
+        "byteSize": 315657,
+        "checksumSha256": "d81dfad42d18ab703eb8d5f67226c84066330301712ac24bc8d44419ddd052af"
       }
     },
     {
@@ -1167,14 +1169,14 @@
       ],
       "frameMilliseconds": {
         "frameCount": 240,
-        "meanMilliseconds": 4.508333333333334,
-        "p50Milliseconds": 3.5999999046325684,
-        "p95Milliseconds": 10.100000023841858,
-        "p99Milliseconds": 28.300000071525574,
-        "maximumMilliseconds": 33.699999928474426,
-        "minimumMilliseconds": 0.7999999523162842
+        "meanMilliseconds": 4.5841666668653485,
+        "p50Milliseconds": 3.399999976158142,
+        "p95Milliseconds": 10.799999952316284,
+        "p99Milliseconds": 30.09999990463257,
+        "maximumMilliseconds": 37.10000002384186,
+        "minimumMilliseconds": 1.100000023841858
       },
-      "heapAfterGcBytes": 234638753,
+      "heapAfterGcBytes": 227447838,
       "network": {
         "perRelease": {
           "manhattan-exterior-cells-20260811-v3": {
@@ -1185,11 +1187,11 @@
             "distinctGlbCount": 14
           },
           "manhattan-midtown-core-cells-20260811-v3": {
-            "requestCount": 147,
-            "completedCount": 146,
-            "encodedBytes": 19625108,
-            "glbCount": 143,
-            "distinctGlbCount": 143
+            "requestCount": 159,
+            "completedCount": 159,
+            "encodedBytes": 21286267,
+            "glbCount": 156,
+            "distinctGlbCount": 156
           },
           "manhattan-lower-manhattan-cells-20260812-p1": {
             "requestCount": 74,
@@ -1199,11 +1201,11 @@
             "distinctGlbCount": 71
           },
           "manhattan-southern-remainder-cells-20260812-p1": {
-            "requestCount": 180,
-            "completedCount": 179,
-            "encodedBytes": 40228573,
-            "glbCount": 176,
-            "distinctGlbCount": 176
+            "requestCount": 182,
+            "completedCount": 182,
+            "encodedBytes": 40584210,
+            "glbCount": 179,
+            "distinctGlbCount": 179
           },
           "manhattan-central-upper-manhattan-cells-20260812-p1": {
             "requestCount": 43,
@@ -1234,13 +1236,13 @@
             "distinctGlbCount": 0
           }
         },
-        "totalRequestCount": 557,
+        "totalRequestCount": 571,
         "externalHosts": []
       },
       "still": {
         "relativeRef": "captures/harlem-125th-skyline__r2.png",
-        "byteSize": 450331,
-        "checksumSha256": "36d1edc50ce16287c02bea417011376c471e36c448b586e6a93018e3ca6d5791"
+        "byteSize": 450755,
+        "checksumSha256": "67dae867ebf1033c433abbd5e8a0be9c6993ca8749525df264effb8a59f64f1f"
       }
     },
     {
@@ -1258,14 +1260,14 @@
       ],
       "frameMilliseconds": {
         "frameCount": 240,
-        "meanMilliseconds": 3.157499999801318,
-        "p50Milliseconds": 2.200000047683716,
+        "meanMilliseconds": 2.80083333303531,
+        "p50Milliseconds": 2.3000000715255737,
         "p95Milliseconds": 5.600000023841858,
-        "p99Milliseconds": 12.100000023841858,
-        "maximumMilliseconds": 107.39999997615814,
-        "minimumMilliseconds": 0.5
+        "p99Milliseconds": 16.399999976158142,
+        "maximumMilliseconds": 20.800000071525574,
+        "minimumMilliseconds": 0.2999999523162842
       },
-      "heapAfterGcBytes": 195115237,
+      "heapAfterGcBytes": 229407037,
       "network": {
         "perRelease": {
           "manhattan-exterior-cells-20260811-v3": {
@@ -1276,32 +1278,32 @@
             "distinctGlbCount": 14
           },
           "manhattan-midtown-core-cells-20260811-v3": {
-            "requestCount": 76,
-            "completedCount": 76,
-            "encodedBytes": 12766294,
-            "glbCount": 73,
-            "distinctGlbCount": 73
+            "requestCount": 159,
+            "completedCount": 159,
+            "encodedBytes": 21286267,
+            "glbCount": 156,
+            "distinctGlbCount": 156
           },
           "manhattan-lower-manhattan-cells-20260812-p1": {
-            "requestCount": 54,
-            "completedCount": 53,
-            "encodedBytes": 31086396,
-            "glbCount": 50,
-            "distinctGlbCount": 50
+            "requestCount": 74,
+            "completedCount": 74,
+            "encodedBytes": 41525305,
+            "glbCount": 71,
+            "distinctGlbCount": 71
           },
           "manhattan-southern-remainder-cells-20260812-p1": {
-            "requestCount": 105,
-            "completedCount": 103,
-            "encodedBytes": 27330419,
-            "glbCount": 100,
-            "distinctGlbCount": 100
+            "requestCount": 182,
+            "completedCount": 182,
+            "encodedBytes": 40584210,
+            "glbCount": 179,
+            "distinctGlbCount": 179
           },
           "manhattan-central-upper-manhattan-cells-20260812-p1": {
-            "requestCount": 30,
-            "completedCount": 30,
-            "encodedBytes": 10844291,
-            "glbCount": 27,
-            "distinctGlbCount": 27
+            "requestCount": 43,
+            "completedCount": 43,
+            "encodedBytes": 14892882,
+            "glbCount": 40,
+            "distinctGlbCount": 40
           },
           "manhattan-northern-manhattan-cells-20260812-p1": {
             "requestCount": 27,
@@ -1325,7 +1327,7 @@
             "distinctGlbCount": 0
           }
         },
-        "totalRequestCount": 372,
+        "totalRequestCount": 565,
         "externalHosts": []
       },
       "still": {
@@ -1349,14 +1351,14 @@
       ],
       "frameMilliseconds": {
         "frameCount": 240,
-        "meanMilliseconds": 5.145416667064031,
-        "p50Milliseconds": 3.5,
-        "p95Milliseconds": 12.400000095367432,
-        "p99Milliseconds": 43.799999952316284,
-        "maximumMilliseconds": 64.10000002384186,
-        "minimumMilliseconds": 0.5999999046325684
+        "meanMilliseconds": 5.322916666666667,
+        "p50Milliseconds": 3.600000023841858,
+        "p95Milliseconds": 15.200000047683716,
+        "p99Milliseconds": 43,
+        "maximumMilliseconds": 62.5,
+        "minimumMilliseconds": 0.8999999761581421
       },
-      "heapAfterGcBytes": 250674139,
+      "heapAfterGcBytes": 250745938,
       "network": {
         "perRelease": {
           "manhattan-exterior-cells-20260811-v3": {
@@ -1421,8 +1423,8 @@
       },
       "still": {
         "relativeRef": "captures/centralpark-west-facade__r2.png",
-        "byteSize": 427206,
-        "checksumSha256": "3c8dbf329c4513230a92ea25c6b543ace53baf7f3d4a7efe29dfd8af64ca7594"
+        "byteSize": 420869,
+        "checksumSha256": "62fe0653e00d3849a496d7495cad31618d7fee312f135921d0066d2d1ac36fbe"
       }
     }
   ]

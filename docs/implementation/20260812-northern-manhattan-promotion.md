@@ -117,6 +117,43 @@ because occupancy is a question about entries, and the response count ships besi
 it so the gap is visible rather than absorbed. Counting responses would have
 overstated residency — the safe direction, but not the true one.
 
+### Three prose defects in committed evidence, found by review
+
+Every one of these was in text a human reads, beside machine-readable fields that
+were correct. None was reachable by a checksum.
+
+1. **The Blender record shipped the CANARY's sentences.** A single shared
+   `NOTE_SUFFIX` carried "THE SAMPLE IS 69 OF 76 SHIPPED ASSETS" and a volume
+   paragraph phrased as though its wave-scale figures were the record's own into
+   the promoted successor's `blender-sample.json` — beside a summary stating 24
+   samples, zero refusals and a worst deviation of 1.63e-07. The variant-specific
+   sentences moved into the variants (the canary's concatenation is byte-identical
+   and that is verified), `crossCheck.statement` is now derived from
+   `sampledShareOfShipped` rather than written for one variant, and a new gate in
+   `northern-manhattan-p1-evidence-consistency.test.ts` refuses ANY number in the
+   record's prose that the record, its inventory or its census does not carry. Run
+   against the old shared prose that gate reports the unsupported tokens `69`,
+   `76`, `53`.
+2. **"The first record where they differ" was not true of any committed row.** The
+   responses-versus-distinct-artifacts statement claimed a difference that the
+   observed run did not contain. It is now DERIVED — the record counts the captures
+   in which responses exceeded entries and says what it found — because a constant
+   sentence about a run that has not happened yet is a guess. The re-run reports 1
+   of 12 captures with a re-fetch, at most three responses over entries. The
+   "counting responses would overstate residency" line was also softened: distinct
+   over a whole session is ITSELF an upper bound on concurrent residency, because
+   an artifact fetched early and evicted later is counted and is not resident at
+   the end.
+3. **Assets were substituted for buildings** in the ADR's completion arithmetic:
+   "498 of 45,194 buildings". The promoted set accepts 484 canonical buildings and
+   ships 498 GLB assets, because Block 835 alone ships both levels of detail for
+   its 14. Corrected in both places, with the two counts kept apart.
+
+A fourth, smaller item: the threshold-winner table pinned the 120 m entry by
+calling the rule on both sides of the comparison, which pinned nothing. It carries
+the literal now, with a note saying why 120 m is the one threshold whose "winner"
+is only the fallback's output.
+
 ### The sixth-wave cache guard fired
 
 Adding the promotion record made `exterior-cache-ceiling.test.ts` fail to LOAD

@@ -37,7 +37,7 @@
   "journeys": [
     {
       "journeyId": "cold-default",
-      "claim": "A clean load with no exterior URL parameter streams all SIX promoted waves over the real citywide base — every wave the committed ledger declares — and the curated w05 cell delivers all 24 of its distinct textured assets. The T021 canary is NOT loaded, because it is not promoted. `perWaveGlbCounts` names each wave's RESPONSES and DISTINCT ARTIFACTS separately: this six-wave session runs close enough to the 512-entry cache cap that an artifact can be evicted and re-fetched, so the two numbers are not always equal and the record does not pretend they are.",
+      "claim": "A clean load with no exterior URL parameter streams all SIX promoted waves over the real citywide base — every wave the committed ledger declares — and the curated w05 cell delivers all 24 of its distinct textured assets. The T021 canary is NOT loaded, because it is not promoted. `perWaveGlbCounts` names each wave's RESPONSES and DISTINCT ARTIFACTS separately, because a six-wave session runs close enough to the 512-entry cache cap that an artifact can be evicted and re-fetched, which would show up as two responses for one asset. The two numbers are therefore not guaranteed equal and this record does not assume they are; what they were in THIS run is in the counts themselves rather than in this sentence.",
       "url": "http://localhost:4176/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-73.945500&lat=40.809400&height=150.000000&heading=270.000000&pitch=-4.000000&roll=0.000000",
       "waves": [
         {
@@ -79,24 +79,24 @@
             "encodedBytes": 1934505
           },
           "manhattan-midtown-core-cells-20260811-v3": {
-            "glbCount": 110,
-            "distinctGlbCount": 110,
-            "encodedBytes": 15869315
+            "glbCount": 91,
+            "distinctGlbCount": 91,
+            "encodedBytes": 14395382
           },
           "manhattan-lower-manhattan-cells-20260812-p1": {
-            "glbCount": 71,
-            "distinctGlbCount": 71,
-            "encodedBytes": 41525305
+            "glbCount": 66,
+            "distinctGlbCount": 66,
+            "encodedBytes": 39001722
           },
           "manhattan-southern-remainder-cells-20260812-p1": {
-            "glbCount": 154,
-            "distinctGlbCount": 154,
-            "encodedBytes": 37018287
+            "glbCount": 130,
+            "distinctGlbCount": 130,
+            "encodedBytes": 33589627
           },
           "manhattan-central-upper-manhattan-cells-20260812-p1": {
-            "glbCount": 40,
-            "distinctGlbCount": 40,
-            "encodedBytes": 14892882
+            "glbCount": 36,
+            "distinctGlbCount": 36,
+            "encodedBytes": 12800370
           },
           "manhattan-northern-manhattan-cells-20260812-p1": {
             "glbCount": 24,
@@ -117,20 +117,20 @@
           "distinctArtifacts": 14
         },
         "manhattan-midtown-core-cells-20260811-v3": {
-          "responses": 110,
-          "distinctArtifacts": 110
+          "responses": 91,
+          "distinctArtifacts": 91
         },
         "manhattan-lower-manhattan-cells-20260812-p1": {
-          "responses": 71,
-          "distinctArtifacts": 71
+          "responses": 66,
+          "distinctArtifacts": 66
         },
         "manhattan-southern-remainder-cells-20260812-p1": {
-          "responses": 154,
-          "distinctArtifacts": 154
+          "responses": 130,
+          "distinctArtifacts": 130
         },
         "manhattan-central-upper-manhattan-cells-20260812-p1": {
-          "responses": 40,
-          "distinctArtifacts": 40
+          "responses": 36,
+          "distinctArtifacts": 36
         },
         "manhattan-northern-manhattan-cells-20260812-p1": {
           "responses": 24,
@@ -140,8 +140,8 @@
       "passed": true,
       "still": {
         "relativeRef": "journeys/cold-default.png",
-        "byteSize": 321898,
-        "checksumSha256": "77a176e71b2d77f97db2725c832158ad7347c9481588d20ada85af09932484b1"
+        "byteSize": 315590,
+        "checksumSha256": "900c1e123a7094ae100ffdeef2002dbe4886d47c11224afc3210ba7b169b701f"
       }
     },
     {
@@ -296,7 +296,7 @@
           "pitch": -4,
           "roll": 0
         },
-        "promotedDefaultStillChecksumSha256": "77a176e71b2d77f97db2725c832158ad7347c9481588d20ada85af09932484b1",
+        "promotedDefaultStillChecksumSha256": "900c1e123a7094ae100ffdeef2002dbe4886d47c11224afc3210ba7b169b701f",
         "exteriorsOffStillChecksumSha256": "f84a1b986530be9c89595c9aa84d6de4577bf2ea6f93db68526dfd0374546f98",
         "stillsDiffer": true,
         "statement": "Both stills were captured at the same camera pose in the same build, one with the promoted default active and one with exteriors switched off. A difference is the only evidence in this record that the textured facades reached the screen; the network counts prove only that their bytes arrived."
@@ -324,8 +324,8 @@
       "passed": true,
       "still": {
         "relativeRef": "journeys/tombstone-truth.png",
-        "byteSize": 321852,
-        "checksumSha256": "42fe4db0423a7ef2a31c0e74068bcb92b87b985fb956faae9264e54eb6a3728f"
+        "byteSize": 315541,
+        "checksumSha256": "147cd130ff3b441fc22509dbedd65c809b60fbe8c5d2041905d98b30a655fead"
       }
     }
   ],

@@ -398,13 +398,15 @@ async function captureStation(port, previewBase, station, repeatIndex, extraPara
       const marker = `/data/${releaseId}/`;
       const matched = encoded.filter((entry) => entry.url.includes(marker));
       const glbs = matched.filter((entry) => entry.url.endsWith(".glb"));
-      // RESPONSES AND DISTINCT ARTIFACTS ARE DIFFERENT NUMBERS at six waves, and
-      // the difference is a real runtime behaviour rather than noise: the shared
-      // LRU cache holds 512 entries, a six-wave session gets close to that, and an
-      // evicted artifact that comes back into view is fetched again. Residency is
-      // a question about ENTRIES, so it is derived below from the DISTINCT count;
-      // the response count is kept beside it because network cost is a different
-      // question and this record must not answer one with the other.
+      // RESPONSES AND DISTINCT ARTIFACTS ARE COUNTED SEPARATELY, because at six
+      // waves they can differ: the shared LRU cache holds 512 entries, a six-wave
+      // session gets close to that, and an evicted artifact that comes back into
+      // view is fetched again. Residency is a question about ENTRIES, so it is
+      // derived below from the DISTINCT count; the response count is kept beside
+      // it because network cost is a different question and this record must not
+      // answer one with the other. Whether they actually differed in any given
+      // run is a reading, not an assumption — `cacheResidency.perRun` carries
+      // both numbers for every capture and the record states what was observed.
       perRelease[releaseId] = {
         requestCount: requests.filter((url) => url.includes(marker)).length,
         completedCount: matched.length,
@@ -598,9 +600,19 @@ async function main() {
     return { stationId: capture.stationId, repeatIndex: capture.repeatIndex, entries, glbResponses: responses, bytes };
   });
   const worstResidency = residencyRuns.reduce((worst, run) => (run.entries > worst.entries ? run : worst), residencyRuns[0]);
+  // WHETHER THE TWO COUNTS DIFFERED IS DERIVED, NEVER WRITTEN DOWN. A constant
+  // sentence claiming they were equal — or that they differed — is a claim about
+  // a run that had not happened when the sentence was written, and the first
+  // draft of this record carried exactly such a sentence and was wrong about it.
+  const refetchRuns = residencyRuns.filter((run) => run.glbResponses > run.entries);
+  const observedRefetch = refetchRuns.length === 0
+    ? `In THIS run they were equal in all ${residencyRuns.length} captures: no artifact was evicted and re-fetched.`
+    : `In THIS run they differed in ${refetchRuns.length} of ${residencyRuns.length} captures, by at most ${Math.max(...refetchRuns.map((run) => run.glbResponses - run.entries))} response(s) — so eviction and re-fetch inside a single session is observed here rather than hypothesised.`;
   const cacheResidency = {
     basis: "derived-from-network-not-read-from-the-cache-counter",
-    statement: "One DISTINCT fetched GLB is one LRU entry, so the entry count is the count of distinct GLB URLs the session completed and the byte figure is the encoded size of every response. AT SIX WAVES THOSE ARE NO LONGER THE SAME NUMBER, and this is the first record where they differ: the cache holds 512 entries, a six-wave session gets close to that, and an evicted artifact that comes back into view is fetched a second time. `glbResponses` is kept beside `entries` in every run so the gap is visible rather than absorbed — counting responses would OVERSTATE residency, which is the safe direction but not the true one. The in-app cache counter is only published to the DOM in a VITE_BLOCK835_PROBE build; this measurement is against the ordinary production preview a user gets, so residency is derived from the fetches instead.",
+    refetchCaptureCount: refetchRuns.length,
+    captureCount: residencyRuns.length,
+    statement: "One DISTINCT fetched GLB is one LRU entry, so the entry count is the count of distinct GLB URLs the session completed and the byte figure is the encoded size of every response. RESPONSES AND DISTINCT ARTIFACTS ARE COUNTED SEPARATELY BECAUSE AT SIX WAVES THEY CAN DIFFER: the cache holds 512 entries, a six-wave session gets close to that, and an evicted artifact that comes back into view is fetched a second time, which would show up as two responses for one entry. WHETHER THEY DID DIFFER IS A READING RATHER THAN AN ASSUMPTION, and `perRun` carries both numbers for every capture so it can be read off rather than inferred. " + observedRefetch + " Two things this figure is NOT. It is not the in-app cache counter, which only reaches the DOM in a VITE_BLOCK835_PROBE build, and this measurement is deliberately against the ordinary production preview a user gets. And it is not a measurement of CONCURRENT residency: distinct-over-the-whole-session is itself an upper bound, because an artifact fetched early and evicted later is counted here and is not resident at the end. So the entry figure bounds occupancy from above by construction, and the honest statement is that it stayed inside the cap, not that the cache held exactly that many at any instant.",
     perRun: residencyRuns,
     worstObserved: worstResidency,
     maxCacheEntries: EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries,

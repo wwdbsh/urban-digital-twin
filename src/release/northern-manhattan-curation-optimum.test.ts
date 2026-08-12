@@ -422,6 +422,11 @@ describe("the curated subset under the stated decision rule", () => {
   it("selects a DIFFERENT cell at four of the seven recorded thresholds", () => {
     const winners = Object.fromEntries(NORTHERN_MANHATTAN_SKYLINE_THRESHOLDS_METERS
       .map((threshold) => [threshold, ruleWinner(skyline.candidates, threshold).orders.join(",")]));
+    // 120 m is deliberately ABSENT from this table. Every admissible subset scores
+    // zero there, so the "winner" is whatever key 5 happens to reach and pinning
+    // it would pin the fallback's output rather than a ranking. An earlier draft
+    // listed it by calling `ruleWinner` on both sides, which pinned nothing at
+    // all. What 120 m actually shows is asserted in its own case below.
     expect(winners).toEqual({
       30: "714,715",
       45: "852",
@@ -429,7 +434,7 @@ describe("the curated subset under the stated decision rule", () => {
       75: "707",
       90: "727",
       100: "727",
-      120: ruleWinner(skyline.candidates, 120).orders.join(","),
+      120: "711,718,809",
     });
     // The stated threshold and the one above it agree; everything below does not.
     expect(winners[90]).toBe("727");

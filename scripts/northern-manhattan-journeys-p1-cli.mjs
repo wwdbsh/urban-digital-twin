@@ -306,13 +306,14 @@ function networkPerRelease(session) {
   for (const releaseId of [...PROMOTED_RELEASE_IDS, NORTHERN_MANHATTAN_RELEASE_ID]) {
     const matched = finished.filter((entry) => entry.url.includes(`/data/${releaseId}/`));
     const glbs = matched.filter((entry) => entry.url.endsWith(".glb"));
-    // RESPONSES AND DISTINCT ARTIFACTS ARE DIFFERENT NUMBERS, and this run is the
-    // first where they differ. The shared LRU cache holds 512 entries and a
+    // RESPONSES AND DISTINCT ARTIFACTS ARE COUNTED SEPARATELY, because at six
+    // waves they can differ. The shared LRU cache holds 512 entries and a
     // six-wave session gets close to that, so an artifact can be evicted and
     // re-fetched inside one session — which shows up as two responses for one
     // asset. A claim about WHICH assets a cell rendered is a claim about distinct
     // artifacts; a claim about network cost is a claim about responses. Both are
-    // recorded, and the assertions use the one they are actually about.
+    // recorded per wave, and the assertions use the one they are actually about;
+    // whether the two differed in a given run is left to the reading.
     perRelease[releaseId] = {
       glbCount: glbs.length,
       distinctGlbCount: new Set(glbs.map((entry) => entry.url)).size,
@@ -366,7 +367,7 @@ async function journeyColdDefault(port, previewBase) {
     }]));
     return {
       journeyId: "cold-default",
-      claim: "A clean load with no exterior URL parameter streams all SIX promoted waves over the real citywide base — every wave the committed ledger declares — and the curated w05 cell delivers all 24 of its distinct textured assets. The T021 canary is NOT loaded, because it is not promoted. `perWaveGlbCounts` names each wave's RESPONSES and DISTINCT ARTIFACTS separately: this six-wave session runs close enough to the 512-entry cache cap that an artifact can be evicted and re-fetched, so the two numbers are not always equal and the record does not pretend they are.",
+      claim: "A clean load with no exterior URL parameter streams all SIX promoted waves over the real citywide base — every wave the committed ledger declares — and the curated w05 cell delivers all 24 of its distinct textured assets. The T021 canary is NOT loaded, because it is not promoted. `perWaveGlbCounts` names each wave's RESPONSES and DISTINCT ARTIFACTS separately, because a six-wave session runs close enough to the 512-entry cache cap that an artifact can be evicted and re-fetched, which would show up as two responses for one asset. The two numbers are therefore not guaranteed equal and this record does not assume they are; what they were in THIS run is in the counts themselves rather than in this sentence.",
       url,
       waves,
       network,

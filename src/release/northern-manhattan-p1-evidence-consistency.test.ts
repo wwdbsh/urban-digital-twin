@@ -92,6 +92,8 @@ interface Journeys {
 }
 interface BlenderRecord {
   releaseId: string;
+  note: string;
+  crossCheck: { samplesMatchedToInventory: number; checksumMismatchCount: number; renderCount: number; shippedAssetCount: number; sampledShareOfShipped: number; statement: string };
   summary: { sampleCount: number; texturedSampleCount: number; maximumTriangleDelta: number; materialMismatchCount: number; notSolidCount: number; texturesUnreachableCount: number; minimumUvLayerCount: number; maximumVolumeDeviation: number };
   samples: { buildingId: string; volumeDeviation: number }[];
 }
@@ -100,7 +102,7 @@ const inventory = readJson<Inventory>(`${RECORD_ROOT}/payload-inventory.json`);
 const acceptance = readJson<Acceptance>(`${RECORD_ROOT}/acceptance-evidence.json`);
 const journeys = readJson<Journeys>(`${RECORD_ROOT}/journey-evidence.json`);
 const blender = readJson<BlenderRecord>(`${RECORD_ROOT}/blender-sample.json`);
-const census = readJson<{ releaseId: string; volumeIdentity: { worstDeviationAsFractionOfTolerance: number } }>(`${RECORD_ROOT}/wave-census.json`);
+const census = readJson<{ releaseId: string; volumeIdentity: Record<string, number | string> }>(`${RECORD_ROOT}/wave-census.json`);
 
 describe("every committed evidence record is about THIS release", () => {
   it("names the same release id in all four records", () => {
@@ -243,6 +245,63 @@ describe("the journey evidence describes the shipped bytes", () => {
 });
 
 describe("the Blender pass measured the assets this release shipped", () => {
+  /**
+   * THE PROSE MAY NOT NAME A COUNT THE RECORD DOES NOT CARRY.
+   *
+   * This record's note used to be assembled from a suffix shared with the canary,
+   * so the promoted successor shipped with prose claiming a 69-of-76 sample and
+   * SIXTEEN refusals beside a summary stating 24 samples and zero refusals. Every
+   * machine-readable field was correct; the sentences a human actually reads were
+   * about a different release. Checksums cannot see that, and neither could any
+   * gate that existed.
+   *
+   * So every number in the human-readable prose is required to be a number this
+   * record — or the committed inventory and census it is about — actually carries.
+   * Identifier-shaped tokens are stripped first and named here rather than
+   * silently skipped: `T022`, `w05`, `LOD 0`, `SHA-256`, `P1`, and the schema
+   * version, and any `…Sha256` field name. What is left is claims, and claims
+   * must be checkable.
+   */
+  it("names no count in its prose that its own numbers do not support", () => {
+    const prose = `${blender.note} ${blender.crossCheck.statement}`;
+    const stripped = prose
+      .replace(/\bT\d+\b/gu, "")
+      .replace(/\bw\d+\b/gu, "")
+      .replace(/SHA-256/gu, "")
+      .replace(/[A-Za-z]*[Ss]ha256/gu, "")
+      .replace(/\bP\d\b/gu, "")
+      .replace(/\bLOD \d\b/gu, "")
+      .replace(/\bv?\d+\.\d+\.\d+\b/gu, "");
+    const allowed = new Set<string>();
+    const admit = (value: unknown) => {
+      if (typeof value !== "number" || !Number.isFinite(value)) return;
+      allowed.add(String(value));
+      allowed.add(String(Math.round(value)));
+      allowed.add(value.toFixed(4));
+      allowed.add(value.toFixed(4).replace(/0+$/u, "").replace(/\.$/u, ""));
+    };
+    for (const value of Object.values(blender.summary)) admit(value);
+    for (const value of Object.values(blender.crossCheck)) admit(value);
+    for (const value of Object.values(inventory.stats)) admit(value);
+    for (const value of Object.values(census.volumeIdentity)) admit(value);
+    admit(1);
+
+    const named = stripped.match(/\d+(?:\.\d+)?/gu) ?? [];
+    expect(named.length).toBeGreaterThan(0);
+    for (const token of named) {
+      expect({ token, supported: allowed.has(token) }).toEqual({ token, supported: true });
+    }
+
+    // And the sampling language must match the share the record computed. A
+    // record whose strata selected everything must not describe a remainder.
+    expect(blender.crossCheck.sampledShareOfShipped).toBe(1);
+    // Not the WORD — this record uses it to say there is no remainder — but a
+    // COUNTED remainder, which is what a record whose share is 1 cannot have.
+    expect(prose).not.toMatch(/\d+ unsampled/u);
+    expect(prose).not.toMatch(/is a SAMPLE and is described as one/u);
+    expect(prose).toMatch(/CENSUS/u);
+  });
+
   it("re-imported EVERY shipped asset, not a sample of them", () => {
     expect(blender.summary.sampleCount).toBe(inventory.stats.shippedAssetCount);
     expect(blender.summary.sampleCount).toBe(24);
@@ -278,7 +337,7 @@ describe("the Blender pass measured the assets this release shipped", () => {
     expect(blender.summary.maximumVolumeDeviation).toBeLessThan(tolerance);
     // Same order of magnitude as the writer's, and far below the WAVE's 0.9895.
     expect(blender.summary.maximumVolumeDeviation / tolerance).toBeLessThan(0.25);
-    expect(census.volumeIdentity.worstDeviationAsFractionOfTolerance).toBeGreaterThan(0.9);
+    expect(census.volumeIdentity.worstDeviationAsFractionOfTolerance as number).toBeGreaterThan(0.9);
 
     const worstTwo = [...blender.samples]
       .sort((left, right) => Math.abs(right.volumeDeviation) - Math.abs(left.volumeDeviation))

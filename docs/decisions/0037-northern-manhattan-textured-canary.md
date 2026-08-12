@@ -725,48 +725,60 @@ Chrome's vsync and frame-rate limit disabled, at the UNCHANGED 512-entry cap.
 Three repeats, 240 timed frames after 180 settle frames, 1280x800.
 
 A second Chrome without the uncapping flags read a capped-control p50 of
-**8.30 ms** — a 120 Hz present interval — and every uncapped station sits at 0.27
-to 0.43 of it, which is what makes these headroom readings rather than floor
+**8.30 ms** — a 120 Hz present interval — and every uncapped station sits at 0.28
+to 0.44 of it, which is what makes these headroom readings rather than floor
 readings.
 
 | Station | Profile | p50 | p95 | Budget p50/p95 | Worst frame |
 | --- | --- | --- | --- | --- | --- |
-| `harlem-125th-facade` | inspection | 3.60 ms | 11.80 ms | 33.3 / 45 | 41.2 ms |
-| `harlem-125th-skyline` | exploration | 3.40 ms | 10.60 ms | 16.7 / 25 | 40.5 ms |
-| `sixwave-wide` | exploration | 2.20 ms | 5.30 ms | 16.7 / 25 | 119.4 ms |
-| `centralpark-west-facade` | inspection | 3.50 ms | 12.40 ms | 33.3 / 45 | 65.5 ms |
+| `harlem-125th-facade` | inspection | 3.60 ms | 13.00 ms | 33.3 / 45 | 40.2 ms |
+| `harlem-125th-skyline` | exploration | 3.40 ms | 10.40 ms | 16.7 / 25 | 55.7 ms |
+| `sixwave-wide` | exploration | 2.30 ms | 5.60 ms | 16.7 / 25 | 116.2 ms |
+| `centralpark-west-facade` | inspection | 3.60 ms | 12.90 ms | 33.3 / 45 | 64.2 ms |
 
 Every station is inside both budgets on p50 and p95. **The isolated slow frames
-are STATED, not smoothed.** The 119.4 ms frame at `sixwave-wide` is the largest any
-promotion has recorded; it is a single frame in a window whose p95 is 5.30 ms, and
+are STATED, not smoothed.** The 116.2 ms frame at `sixwave-wide` is the largest any
+promotion has recorded; it is a single frame in a window whose p95 is 5.60 ms, and
 it occurs at the station that brings the most simultaneously-visible geometry into
-one frustum. It is reported because a p95 inside budget and a 119 ms frame are both
+one frustum. It is reported because a p95 inside budget and a 116 ms frame are both
 true and a reader deciding whether this composition is smooth needs both.
 
 `centralpark-west-facade` is the T020 station kept POSE-FOR-POSE, so the sixth
 wave's cost to the fifth is a comparison rather than an assertion.
 
-**Residency**: worst observed **484 entries and 122.16 MiB** against 512 and
+**Residency**: worst observed **484 entries and 122.78 MiB** against 512 and
 256 MiB. It is DERIVED from the network, per release, because the in-app cache
-counter only reaches the DOM in a probe build — and at six waves it is derived
-from DISTINCT ARTIFACTS rather than from responses, because a session this close
-to the cap can evict and re-fetch an artifact, which would otherwise inflate
-occupancy. Both numbers ship per run so the gap is visible.
+counter only reaches the DOM in a probe build — and it is derived from DISTINCT
+ARTIFACTS rather than from responses, because a six-wave session runs close enough
+to the cap that an artifact can be evicted and re-fetched, which would otherwise
+inflate occupancy. **Whether that happened is a reading, not an assumption**: both
+numbers ship for every capture, the record derives the observation rather than
+asserting it, and in this run 1 of the 12 captures showed a re-fetch — at most
+three responses over entries.
+
+**The entry figure is an UPPER BOUND on occupancy, not a measurement of concurrent
+residency**, and the record says so: distinct-over-the-whole-session counts an
+artifact that was fetched early and evicted later, which is not resident at the
+end. The honest statement is that occupancy stayed inside the cap, not that the
+cache held exactly 484 entries at any instant.
 
 **GPU texture memory: 5.99 MiB, COMPUTED and never presented as measured** — 72
 embedded images at 128x128, four bytes per texel, 1.33 mip factor, not
 deduplicated across models. No instrument reachable from this session reports
 texture VRAM.
 
-Heap after forced GC: 216–241 MiB across stations. **Zero external hosts** in every
+Heap after forced GC: 178–243 MiB across stations. **Zero external hosts** in every
 capture.
 
 ## Journeys, all five passed
 
 - **cold-default** — a clean load streams all SIX waves, and every wave's delivered
-  count is NAMED rather than summarised: 14 / 110 / 71 / 154 / 40 / 24 distinct
-  artifacts. The curated `w05` cell delivers all 24 of its assets; the T021 canary
-  delivers zero, because it is not promoted; zero external hosts.
+  count is NAMED rather than summarised: 14 / 91 / 66 / 130 / 36 / 24 distinct
+  artifacts, each equal to its response count in this capture. The curated `w05`
+  cell delivers all 24 of its assets — the only exact count asserted, because the
+  other waves fetch the level of detail the camera selected rather than everything
+  on disk; the T021 canary delivers zero, because it is not promoted; zero external
+  hosts.
 - **cross-wave-pick** — the curated cell's tallest building, `doitt:342401` at a
   sourced 101.5 m, names its release, cell and cell release, the checksum of the
   exact asset on screen, its truth tiers, source dates and uncertainty across
@@ -809,9 +821,14 @@ default coverage — six of six.** No wave is left with no default at all. That 
 the whole of the claim.
 
 **What it is NOT.** It is completeness of COVERAGE, not of the city, and the
-arithmetic is asserted rather than described: the six promoted waves ship 498
-assets against a pinned base of **45,194** canonical buildings, so roughly one
-building in ninety is textured by default. What remains bounded, and by what:
+arithmetic is asserted rather than described: the six promoted waves accept **484
+canonical buildings** — shipping 498 GLB assets, because Block 835 alone ships both
+canonical levels of detail for its 14 — against a pinned base of **45,194**
+canonical buildings. That is roughly **one building in ninety-three** textured by
+default. Assets and buildings are different counts and this section keeps them
+apart: `exterior-northern-manhattan-promotion-record.test.ts` sums the accepted
+memberships to 484 and the cache arithmetic sums the shipped artifacts to 498.
+What remains bounded, and by what:
 
 - **Per-wave renderable subsets are bounded by the 512-entry cache contract.**
   Every promoted wave ships a curated or order-derived subset of its own partition,
@@ -828,8 +845,8 @@ No gate was relaxed because this is the last wave.
 
 ## What this amendment does not claim
 
-- It does not claim Manhattan is textured. 498 of 45,194 buildings carry generated
-  exterior detail by default.
+- It does not claim Manhattan is textured. **484 of 45,194 canonical buildings**
+  carry generated exterior detail by default, shipped as 498 GLB assets.
 - It does not claim the promoted subset is representative of wave `w05`. It is one
   cell of 182, chosen on a stated rule, and its 0% refusal rate is not the wave's
   3.72%.
