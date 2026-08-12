@@ -13,13 +13,19 @@
  * and touches `node:fs` on a throwaway tree.
  */
 import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { describe, expect, it } from "vitest";
 
+/** This repository's own data/ tree, resolved from this file rather than from the process cwd. */
+const repositoryDataDir = join(dirname(fileURLToPath(import.meta.url)), "..", "data");
+
 import {
   ACCEPTED_DISCLOSURE_IDENTIFIER_KINDS,
+  AUDITED_WORKING_RECORD_DIRECTORIES,
+  auditWorkingRecords,
   DECLARED_PRIVATE_ROOT_KEYS,
   EXCLUSION_REASONS,
   auditPrivateReferencePackages,
@@ -30,6 +36,7 @@ import {
   scanArtifactForRestricted,
   walkFiles,
 } from "./public-showcase-audit-cli.mjs";
+import { answeredWithoutPayload } from "./public-showcase-smoke-cli.mjs";
 
 const PRIVATE_ROOT_ID = "root:fixture-showcase-wave:private";
 const PUBLIC_ROOT_ID = "root:fixture-showcase-wave:public";
@@ -266,7 +273,9 @@ describe("the audit refuses a manifest that disagrees with the bytes", () => {
 
   it("runs end to end through the CLI entry point with an injected wave", () => {
     withFixture(undefined, ({ wave, publicDataDir }) => {
-      const report = runPublicShowcaseAudit({ waves: [wave], publicDataDir, dataDir: join(publicDataDir, "no-data") });
+      // The fixture tree carries none of this repository's evidence
+      // directories, so the audited working-record scope is empty for it.
+      const report = runPublicShowcaseAudit({ waves: [wave], publicDataDir, dataDir: join(publicDataDir, "no-data"), workingRecordDirectories: [] });
       expect(report.allPassed).toBe(true);
       expect(report.totals.declaredArtifacts).toBe(1);
       expect(report.totals.undeclaredPrivateReferences).toBe(0);
@@ -397,5 +406,112 @@ describe("the scanning primitives are narrow", () => {
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
+  });
+});
+
+/**
+ * T029 repair of the T024 self-invalidation finding.
+ *
+ * `workingRecordDirectories` used to be a count of whatever existed under
+ * `data/` when the audit ran, so committing ANY later evidence directory
+ * changed this record's checksum. These tests pin the property that repairs it
+ * — a sibling directory must not move the enumeration — and the two ways the
+ * declared scope could rot.
+ */
+describe("the working-record enumeration is stable under sibling record directories", () => {
+  function dataTreeWith(directories) {
+    const root = mkdtempSync(join(tmpdir(), "showcase-working-records-"));
+    for (const name of directories) {
+      mkdirSync(join(root, name), { recursive: true });
+      writeFileSync(join(root, name, "record.json"), JSON.stringify({ name }));
+    }
+    return root;
+  }
+
+  it("enumerates exactly the declared set and ignores an undeclared sibling", () => {
+    const declared = ["alpha-record", "beta-record"];
+    const root = dataTreeWith([...declared, "gamma-record-committed-by-a-later-task"]);
+    try {
+      const records = auditWorkingRecords(root, declared);
+      // Pre-fix this returned THREE, and the count was the record's checksum.
+      expect(records.map((entry) => entry.directory)).toEqual(declared);
+      expect(records).toHaveLength(2);
+      for (const entry of records) expect(entry.reason).toBe(EXCLUSION_REASONS.workingEvidenceRecord);
+    } finally { rmSync(root, { recursive: true, force: true }); }
+  });
+
+  it("returns byte-identical results before and after a sibling appears", () => {
+    const declared = ["alpha-record", "beta-record"];
+    const root = dataTreeWith(declared);
+    try {
+      const before = JSON.stringify(auditWorkingRecords(root, declared));
+      mkdirSync(join(root, "zeta-record-from-the-next-task"), { recursive: true });
+      writeFileSync(join(root, "zeta-record-from-the-next-task", "record.json"), "{}");
+      expect(JSON.stringify(auditWorkingRecords(root, declared))).toBe(before);
+    } finally { rmSync(root, { recursive: true, force: true }); }
+  });
+
+  it("fails closed when a declared directory is absent, rather than shrinking the count", () => {
+    // The scope cannot rot in the other direction either: a declared directory
+    // that vanished must break the audit, not quietly reduce the total.
+    const root = dataTreeWith(["alpha-record"]);
+    try {
+      expect(() => auditWorkingRecords(root, ["alpha-record", "missing-record"]))
+        .toThrow(/declared working-record director(y is|ies are) absent or empty: missing-record/u);
+    } finally { rmSync(root, { recursive: true, force: true }); }
+  });
+
+  it("treats an empty declared directory as absent", () => {
+    const root = dataTreeWith(["alpha-record"]);
+    try {
+      mkdirSync(join(root, "empty-record"), { recursive: true });
+      expect(() => auditWorkingRecords(root, ["alpha-record", "empty-record"])).toThrow(/empty-record/u);
+    } finally { rmSync(root, { recursive: true, force: true }); }
+  });
+
+  it("keeps the declared set sorted, unique, and matching this repository's data/ tree", () => {
+    const declared = [...AUDITED_WORKING_RECORD_DIRECTORIES];
+    expect(new Set(declared).size).toBe(declared.length);
+    expect(declared).toEqual([...declared].sort());
+    // Every declared directory really exists here, so the constant cannot drift
+    // into naming a directory this repository does not carry.
+    expect(() => auditWorkingRecords(repositoryDataDir)).not.toThrow();
+  });
+});
+
+/**
+ * The browser-implicit admission rule, tested without a browser.
+ *
+ * It is a separate conjunct from classification: classifying `/favicon.ico`
+ * says the browser asked for it, and this says the server did not answer with
+ * a payload. Only both together make the request admissible.
+ */
+describe("a browser-implicit request is admitted only while the server answers with nothing", () => {
+  it("admits a refusal status whatever its error body weighs", () => {
+    // The real measurement: the preview answers /favicon.ico with a 404 that
+    // still carries 157 bytes of error body. A rule written as "zero bytes"
+    // would have failed the journey it was written to fix.
+    expect(answeredWithoutPayload({ status: 404, encodedDataLength: 157 })).toBe(true);
+    expect(answeredWithoutPayload({ status: 410, encodedDataLength: 2_048 })).toBe(true);
+  });
+
+  it("admits a zero-byte success", () => {
+    expect(answeredWithoutPayload({ status: 200, encodedDataLength: 0 })).toBe(true);
+    expect(answeredWithoutPayload({ status: 204, encodedDataLength: 0 })).toBe(true);
+  });
+
+  it("treats a request that produced no response at all as serving nothing", () => {
+    // Blocked, aborted or DNS-failed. The absence of a response is the
+    // strongest form of "served nothing" and must not read as unmeasured.
+    expect(answeredWithoutPayload(null)).toBe(true);
+    expect(answeredWithoutPayload(undefined)).toBe(true);
+  });
+
+  it("REFUSES a build that started actually serving one", () => {
+    // The whole point of keeping this conjunct: the candidate ships no favicon,
+    // so a 200 with bytes is a change in what the release contains.
+    expect(answeredWithoutPayload({ status: 200, encodedDataLength: 1 })).toBe(false);
+    expect(answeredWithoutPayload({ status: 200, encodedDataLength: 15_406 })).toBe(false);
+    expect(answeredWithoutPayload({ status: 304, encodedDataLength: 900 })).toBe(false);
   });
 });

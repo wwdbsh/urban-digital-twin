@@ -1,0 +1,259 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "goal-bounded-gaps-20260812:mobile-journey",
+  "task": "T029 (Issue #62)",
+  "criterion": 8,
+  "capturedAt": "2026-08-12T03:27:33.949Z",
+  "claim": "One mobile-emulated journey over the newly wired mobile path: navigation, search, selection, details with provenance, and deep-link restore at 390x844 dpr 3.",
+  "emulationDisclosure": "EMULATED, not a device. Chrome's Emulation.setDeviceMetricsOverride with mobile: true, touch emulation enabled and an iOS user-agent string. It measures the application's response to a mobile viewport, touch capability and user agent. It does NOT measure a real phone's GPU, memory ceiling, thermal behaviour, browser engine or network, and no claim about any of those is made here.",
+  "parityDisclosure": "No desktop visual parity is claimed. The mobile path deliberately renders the COARSEST verified LOD, and the product says so on screen.",
+  "servedBundle": {
+    "previewBase": "http://localhost:4176",
+    "indexHtmlChecksumSha256": "add0b894af9665516a784de762b98c548266137d2644363811ff37160d280d1f",
+    "localDistIndexHtmlChecksumSha256": "add0b894af9665516a784de762b98c548266137d2644363811ff37160d280d1f",
+    "matchesLocalDist": true,
+    "entryScriptPath": "/assets/index-C5JY29QU.js",
+    "entryScriptByteSize": 4890391,
+    "entryScriptChecksumSha256": "dad94ea72e799f433bd8d51d1487c4bc887d652c518ff4090e7ca86f350886cd",
+    "entryScriptNamesAllSixPromotedReleases": true,
+    "statement": "Measured before any capture. The served index.html is byte-identical to this repository's dist/index.html and the served entry script names all 6 promoted releases, so every reading below is from THIS build. Any of those failing aborts the run rather than being recorded as a caveat."
+  },
+  "viewport": {
+    "width": 390,
+    "height": 844,
+    "deviceScaleFactor": 3,
+    "mobile": true
+  },
+  "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1",
+  "legs": [
+    {
+      "legId": "navigation",
+      "claim": "A default mobile session navigates, streams all six promoted waves, reports a mobile viewport class, and RENDERS the explicit lower-LOD disclosure legibly — not merely carries it in the DOM.",
+      "viewport": {
+        "innerWidth": 390,
+        "innerHeight": 844,
+        "devicePixelRatio": 3,
+        "documentHasFocus": true,
+        "prefersReducedMotion": false,
+        "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1"
+      },
+      "activeWaves": [
+        "manhattan-central-upper-manhattan-cells-20260812-p1",
+        "manhattan-exterior-cells-20260811-v3",
+        "manhattan-lower-manhattan-cells-20260812-p1",
+        "manhattan-midtown-core-cells-20260811-v3",
+        "manhattan-northern-manhattan-cells-20260812-p1",
+        "manhattan-southern-remainder-cells-20260812-p1"
+      ],
+      "lowerLod": {
+        "disclosurePresent": true,
+        "disclosureText": "Mobile viewport · exterior geometry is pinned to the Exploration (coarsest verified LOD). This is a LOWER level of detail than a desktop inspection session and no desktop visual parity is claimed. Feature identity, selection, details, provenance and deep links are unchanged.",
+        "role": "status",
+        "effectiveProfile": "exploration",
+        "requestedProfile": "exploration",
+        "clamped": "false",
+        "viewportClass": "mobile",
+        "overlayDesktopRightInset": "none",
+        "overlayMobileBottomInset": "none"
+      },
+      "disclosureLegibility": {
+        "present": true,
+        "boundingBox": {
+          "top": 186,
+          "left": 28,
+          "width": 314,
+          "height": 109.625
+        },
+        "hasArea": true,
+        "insideViewport": true,
+        "whiteSpace": "normal",
+        "overflow": "visible",
+        "textOverflow": "clip",
+        "fontSizePx": "11px",
+        "singleLineClamped": false,
+        "scrollWidth": 312,
+        "clientWidth": 312,
+        "scrollHeight": 108,
+        "clientHeight": 108,
+        "textFitsItsBox": true,
+        "renderedLineCount": 7,
+        "sampledPoints": 9,
+        "occludedPoints": 0,
+        "occludedByElements": []
+      },
+      "visualState": {
+        "exteriorFallbackNoticePresent": true,
+        "exteriorFallbackNoticeViewportFraction": 1.99,
+        "overlayPanelCount": 2,
+        "overlayPanels": [
+          {
+            "element": "runtime-note runtime-note--mobile-disclosure",
+            "width": 334,
+            "height": 311
+          },
+          {
+            "element": "exploration-notice",
+            "width": 195,
+            "height": 3359
+          }
+        ],
+        "notes": [
+          "The 'Exterior streaming fallback' notice is on screen, covering 199.0% of the viewport. It is the truthful tombstone statement for the 870 of 883 cells that ship no exterior geometry, and it is also occlusion; it is named here rather than cropped out of the still.",
+          "2 control-lane overlay panel(s) were painted at capture time.",
+          "The lower-LOD disclosure was hit-tested at 9 points across its rendered box and nothing was painted over it; it rendered on 7 wrapped line(s) at 11px, with its full text inside its box."
+        ]
+      },
+      "still": {
+        "relativeRef": "captures/mobile-01-navigation.png",
+        "byteSize": 515296,
+        "checksumSha256": "b60314086dae5ae4454268d36c08be7cba8ebfadd32f37278ec36899a9b95a2b"
+      },
+      "passed": true
+    },
+    {
+      "legId": "search",
+      "claim": "Search remains available and returns results on the mobile layout.",
+      "reading": {
+        "found": true,
+        "resultCount": 8,
+        "firstResultText": "REMPIRE SZECHUAN KYOTORestaurant · Places · text"
+      },
+      "visualState": {
+        "exteriorFallbackNoticePresent": true,
+        "exteriorFallbackNoticeViewportFraction": 1.99,
+        "overlayPanelCount": 2,
+        "overlayPanels": [
+          {
+            "element": "runtime-note runtime-note--mobile-disclosure",
+            "width": 334,
+            "height": 311
+          },
+          {
+            "element": "exploration-notice",
+            "width": 195,
+            "height": 3359
+          }
+        ],
+        "notes": [
+          "The 'Exterior streaming fallback' notice is on screen, covering 199.0% of the viewport. It is the truthful tombstone statement for the 870 of 883 cells that ship no exterior geometry, and it is also occlusion; it is named here rather than cropped out of the still.",
+          "2 control-lane overlay panel(s) were painted at capture time."
+        ]
+      },
+      "still": {
+        "relativeRef": "captures/mobile-02-search.png",
+        "byteSize": 357684,
+        "checksumSha256": "7137e89009e0514637e73c9530997d00c60b387b5c92dfd8059aebf5882c49f6"
+      },
+      "passed": true
+    },
+    {
+      "legId": "selection-and-details",
+      "claim": "A mobile session resolves a named canonical feature, opens its details surface, and shows the exterior provenance section with the render profile the session is actually getting.",
+      "selectionBound": "Driven through the application's deep-link seam, not through a synthetic canvas tap. A tap at a guessed pixel would not identify WHICH feature was picked, so this leg claims deep-link selection and details, and does not claim an OS-level pointer pick. Native Cesium picking on the desktop class is evidenced separately by criterion 10.",
+      "reading": {
+        "panelPresent": true,
+        "panelText": "Empire State BuildingOverviewLocationManhattan, New YorkCoordinates40.7486, -73.9860 (377.6 m)GeometryPolygon · normalized EPSG:4326Feature IDdoitt:778052Confidencehigh (0.96)UncertaintySnapshot-relative source record; no unsourced hours, ratings, routing, imagery, or facade claim.Freshness2026-08-04T08:25:05.580ZExterior streamingLocal · manhattan-exterior-cells-20260811-v3Exterior cells reuse the canonical base building identity. The render profile changes only which verified LOD is drawn; identity, provenance, and the pinned release origin do not change.Release originDefault pinned snapshot",
+        "exteriorSectionPresent": true,
+        "exteriorText": "Exterior streamingLocal · manhattan-exterior-cells-20260811-v3Exterior cells reuse the canonical base building identity. The render profile changes only which verified LOD is drawn; identity, provenance, and the pinned release origin do not change.Release originDefault pinned snapshot snapshot:manhattan-exterior-cells-20260811-v3:v1Render profileExploration (coarsest verified LOD)Cell / releasecell:manhattan:block-835 · cell-release:manhattan-exterior-cells-20260811-v3:v1 (v1)Active assetlod_1 · 8397c16d946de1912a0ec17fb7d750833bd9888be99b8e298832f6960f139bc3Truth tiersgeneratedSource datescap",
+        "renderProfileAttribute": "exploration",
+        "requestedProfileAttribute": "exploration",
+        "urlFeature": "doitt:778052"
+      },
+      "visualState": {
+        "exteriorFallbackNoticePresent": true,
+        "exteriorFallbackNoticeViewportFraction": 3.696,
+        "overlayPanelCount": 2,
+        "overlayPanels": [
+          {
+            "element": "runtime-note runtime-note--mobile-disclosure",
+            "width": 334,
+            "height": 311
+          },
+          {
+            "element": "exploration-notice",
+            "width": 195,
+            "height": 6239
+          }
+        ],
+        "notes": [
+          "The 'Exterior streaming fallback' notice is on screen, covering 369.6% of the viewport. It is the truthful tombstone statement for the 870 of 883 cells that ship no exterior geometry, and it is also occlusion; it is named here rather than cropped out of the still.",
+          "2 control-lane overlay panel(s) were painted at capture time."
+        ]
+      },
+      "still": {
+        "relativeRef": "captures/mobile-03-details.png",
+        "byteSize": 436687,
+        "checksumSha256": "737ec5ef1b4aa8bbe4b916906352876e2e5e33fc202e8a8d3b3417d23421847d"
+      },
+      "passed": true
+    },
+    {
+      "legId": "deep-link-restore",
+      "claim": "A deep link naming both a feature and the inspection profile restores on mobile: the feature resolves, the URL keeps the REQUESTED profile so the link means the same thing on a desktop, and the clamp is disclosed LEGIBLY rather than applied silently.",
+      "reading": {
+        "urlFeature": "doitt:778052",
+        "urlExteriorProfile": "inspection",
+        "effectiveProfile": "exploration",
+        "requestedProfile": "inspection",
+        "clamped": "true",
+        "renderProfileAttribute": "exploration",
+        "renderProfileText": "Exploration (coarsest verified LOD) · mobile lower-LOD clamp in force; Inspection (finest verified LOD) was requested and is not being rendered"
+      },
+      "disclosureLegibility": {
+        "present": true,
+        "boundingBox": {
+          "top": 186,
+          "left": 28,
+          "width": 314,
+          "height": 125.5625
+        },
+        "hasArea": true,
+        "insideViewport": true,
+        "whiteSpace": "normal",
+        "overflow": "visible",
+        "textOverflow": "clip",
+        "fontSizePx": "11px",
+        "singleLineClamped": false,
+        "scrollWidth": 312,
+        "clientWidth": 312,
+        "scrollHeight": 124,
+        "clientHeight": 124,
+        "textFitsItsBox": true,
+        "renderedLineCount": 8,
+        "sampledPoints": 9,
+        "occludedPoints": 0,
+        "occludedByElements": []
+      },
+      "visualState": {
+        "exteriorFallbackNoticePresent": true,
+        "exteriorFallbackNoticeViewportFraction": 3.696,
+        "overlayPanelCount": 2,
+        "overlayPanels": [
+          {
+            "element": "runtime-note runtime-note--mobile-disclosure",
+            "width": 334,
+            "height": 327
+          },
+          {
+            "element": "exploration-notice",
+            "width": 195,
+            "height": 6239
+          }
+        ],
+        "notes": [
+          "The 'Exterior streaming fallback' notice is on screen, covering 369.6% of the viewport. It is the truthful tombstone statement for the 870 of 883 cells that ship no exterior geometry, and it is also occlusion; it is named here rather than cropped out of the still.",
+          "2 control-lane overlay panel(s) were painted at capture time.",
+          "The lower-LOD disclosure was hit-tested at 9 points across its rendered box and nothing was painted over it; it rendered on 8 wrapped line(s) at 11px, with its full text inside its box."
+        ]
+      },
+      "still": {
+        "relativeRef": "captures/mobile-04-deep-link.png",
+        "byteSize": 429103,
+        "checksumSha256": "42a53f65cbb5bbb9e3e5728511e40f6f633b5981f0928619e84dad3784a16a09"
+      },
+      "passed": true
+    }
+  ],
+  "externalHosts": [],
+  "allPassed": true
+}

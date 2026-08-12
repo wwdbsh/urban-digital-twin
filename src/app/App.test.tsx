@@ -104,7 +104,7 @@ vi.mock("../runtime/exterior-default-activation", async (importOriginal) => {
   };
 });
 
-import { App, EXTERIOR_CELL_STREAMING_RELEASE_ID, PINNED_EXTERIOR_CELL_RELEASE_IDS, appendBlock835PublicRealmUrl, appendExteriorProfileUrl, exteriorCellBasePath, exteriorCanarySnapshotMessage, exteriorDeepLinkMessage, exteriorSnapshotOriginLabel, isPinnedExteriorCellRelease, exteriorStreamingActivation, exteriorStreamingFailureMessage, exteriorStreamingNotices, parseExteriorStreamingUrl, applyStorefrontResolution, block835PerformanceGate, block835PerformanceProbeMode, block835PublicRealmActivation, block835PublicRealmFailureMessage, isCurrentStorefrontResolution, overlayLayoutPolicy, preserveFeatureSequence, resolveStorefrontBuilding, selectionFocusTransaction, summarizeBlock835Frames, type StorefrontResolutionState } from "./App";
+import { App, EXTERIOR_CELL_STREAMING_RELEASE_ID, PINNED_EXTERIOR_CELL_RELEASE_IDS, appendBlock835PublicRealmUrl, appendExteriorProfileUrl, exteriorCellBasePath, exteriorCanarySnapshotMessage, exteriorDeepLinkMessage, exteriorSnapshotOriginLabel, isPinnedExteriorCellRelease, exteriorStreamingActivation, exteriorStreamingFailureMessage, exteriorStreamingNotices, parseExteriorStreamingUrl, applyStorefrontResolution, block835PerformanceGate, block835PerformanceProbeMode, block835PublicRealmActivation, block835PublicRealmFailureMessage, isCurrentStorefrontResolution, MOBILE_VIEWPORT_MEDIA_QUERY, mobileExteriorLodPolicy, overlayLayoutPolicy, preserveFeatureSequence, resolveStorefrontBuilding, selectionFocusTransaction, summarizeBlock835Frames, type StorefrontResolutionState } from "./App";
 import { EXTERIOR_DEFAULT_ACTIVATION, EXTERIOR_DEFAULT_ACTIVATIONS } from "../runtime/exterior-default-activation";
 import { navigationUrl, parseNavigationUrl } from "../domain/visitor-navigation";
 import { BLOCK_835_DOITT_IDS } from "../domain/commercial-frontage";
@@ -1301,4 +1301,190 @@ describe("promoted Block 835 exterior default activation", () => {
       fetchSpy.mockRestore();
     }
   }, 30_000);
+});
+
+/**
+ * The mobile path (Goal criterion 8).
+ *
+ * Before this suite, `overlayLayoutPolicy` had no production caller, there was
+ * no `matchMedia` anywhere in `App.tsx`, and there was no lower-LOD policy or
+ * disclosure of any kind. These tests exist to make each of those three a
+ * regression rather than a rediscovery.
+ *
+ * The stub is deliberately a real `MediaQueryList` shape with working
+ * listeners: a stub that only answered `matches` would pass a component that
+ * never subscribed, and "the app noticed the viewport" is precisely the claim.
+ */
+describe("the mobile path: viewport signal, lower-LOD clamp, and its disclosure", () => {
+  const REAL_BASE_URL = `/?data=real-pilot&release=${CITYWIDE_RELEASE_ID}`;
+
+  function stubMatchMedia(mobile: boolean) {
+    const listeners = new Set<() => void>();
+    const original = Object.getOwnPropertyDescriptor(window, "matchMedia");
+    const list = {
+      matches: mobile,
+      media: MOBILE_VIEWPORT_MEDIA_QUERY,
+      addEventListener: (_type: string, listener: () => void) => { listeners.add(listener); },
+      removeEventListener: (_type: string, listener: () => void) => { listeners.delete(listener); },
+    };
+    Object.defineProperty(window, "matchMedia", {
+      configurable: true,
+      writable: true,
+      value: (query: string) => (query === MOBILE_VIEWPORT_MEDIA_QUERY ? list : { matches: false, media: query, addEventListener: () => {}, removeEventListener: () => {} }),
+    });
+    return {
+      restore: () => {
+        if (original) Object.defineProperty(window, "matchMedia", original);
+        else Reflect.deleteProperty(window as unknown as Record<string, unknown>, "matchMedia");
+      },
+    };
+  }
+
+  it("pins the JS breakpoint to the stylesheet's own mobile breakpoint", () => {
+    // Not a cosmetic assertion. Two independent numbers would let the layout a
+    // user sees and the policy this module reports disagree about "mobile".
+    expect(MOBILE_VIEWPORT_MEDIA_QUERY).toBe("(max-width: 680px)");
+  });
+
+  it("leaves a desktop viewport with no clamp, no disclosure and the requested profile", () => {
+    expect(mobileExteriorLodPolicy(false, "inspection")).toEqual({
+      active: false,
+      requestedProfile: "inspection",
+      effectiveProfile: "inspection",
+      clamped: false,
+      disclosure: null,
+    });
+    expect(mobileExteriorLodPolicy(false, "exploration").effectiveProfile).toBe("exploration");
+  });
+
+  it("clamps a mobile viewport to the coarsest-LOD profile and says so without claiming parity", () => {
+    const clamped = mobileExteriorLodPolicy(true, "inspection");
+    expect(clamped.active).toBe(true);
+    expect(clamped.effectiveProfile).toBe("exploration");
+    expect(clamped.requestedProfile).toBe("inspection");
+    expect(clamped.clamped).toBe(true);
+    // The wording is the claim. It must say LOWER, must name the override, and
+    // must refuse parity in the product's own words rather than by omission.
+    expect(clamped.disclosure).toContain("LOWER level of detail");
+    expect(clamped.disclosure).toContain("no desktop visual parity is claimed");
+    expect(clamped.disclosure).toContain("Exploration (coarsest verified LOD)");
+    expect(clamped.disclosure).toContain("Inspection (finest verified LOD)");
+    // And it must NOT promise the things a lower LOD does not cost.
+    expect(clamped.disclosure).toContain("Feature identity, selection, details, provenance and deep links are unchanged");
+  });
+
+  it("still discloses on mobile when the session never asked for inspection", () => {
+    // A session that defaulted to exploration is not "unclamped": it is still
+    // getting the coarsest LOD, and a user is owed that statement either way.
+    const unclamped = mobileExteriorLodPolicy(true, "exploration");
+    expect(unclamped.active).toBe(true);
+    expect(unclamped.clamped).toBe(false);
+    expect(unclamped.disclosure).toContain("LOWER level of detail");
+    expect(unclamped.disclosure).not.toContain("overriding the requested");
+  });
+
+  it("covers the overlay placement combination that had no test", () => {
+    // `overlayLayoutPolicy(false, true)` — mobile, inspector closed — was the
+    // one of four inputs the original suite never asserted.
+    expect(overlayLayoutPolicy(false, true)).toEqual({
+      mapOwnsMainRegion: true,
+      inspectorPosition: "overlay",
+      desktopRightInset: "none",
+      mobileBottomInset: "none",
+      runtimeNoteLane: "left-control-lane",
+      cameraControlsLane: "centered-control-lane",
+    });
+  });
+
+  it("reports a desktop viewport class and no mobile disclosure in the rendered app", () => {
+    const media = stubMatchMedia(false);
+    try {
+      window.history.replaceState({}, "", REAL_BASE_URL);
+      render(<App />);
+      const region = document.querySelector<HTMLElement>(".map-region");
+      expect(region).not.toBeNull();
+      expect(region!.getAttribute("data-viewport-class")).toBe("desktop");
+      expect(document.querySelector("[data-mobile-lower-lod]")).toBeNull();
+    } finally {
+      media.restore();
+    }
+  });
+
+  it("wires overlayLayoutPolicy to the real viewport signal and shows the lower-LOD disclosure", () => {
+    const media = stubMatchMedia(true);
+    try {
+      window.history.replaceState({}, "", `${REAL_BASE_URL}&exteriorProfile=inspection`);
+      render(<App />);
+      const region = document.querySelector<HTMLElement>(".map-region");
+      expect(region).not.toBeNull();
+      expect(region!.getAttribute("data-viewport-class")).toBe("mobile");
+      // The placement contract is now produced by the function, not restated in
+      // a literal: with the inspector closed both insets read "none".
+      expect(region!.getAttribute("data-overlay-desktop-right-inset")).toBe("none");
+      expect(region!.getAttribute("data-overlay-mobile-bottom-inset")).toBe("none");
+
+      const disclosure = document.querySelector<HTMLElement>("[data-mobile-lower-lod]");
+      expect(disclosure).not.toBeNull();
+      expect(disclosure!.getAttribute("data-mobile-effective-profile")).toBe("exploration");
+      expect(disclosure!.getAttribute("data-mobile-requested-profile")).toBe("inspection");
+      expect(disclosure!.getAttribute("data-mobile-profile-clamped")).toBe("true");
+      expect(disclosure!.getAttribute("role")).toBe("status");
+      expect(disclosure!.textContent).toContain("no desktop visual parity is claimed");
+    } finally {
+      media.restore();
+    }
+  });
+
+  it("presses the profile control that is IN FORCE, not the one that was requested", () => {
+    const media = stubMatchMedia(true);
+    try {
+      window.history.replaceState({}, "", `${REAL_BASE_URL}&exteriorProfile=inspection`);
+      render(<App />);
+      const buttons = [...document.querySelectorAll<HTMLButtonElement>(".exterior-streaming-controls button")]
+        .filter((node) => /profile$/u.test(node.textContent ?? ""));
+      expect(buttons).toHaveLength(2);
+      const inspection = buttons.find((node) => node.textContent === "Inspection profile")!;
+      const exploration = buttons.find((node) => node.textContent === "Exploration profile")!;
+      // A toggle's pressed state is a statement about what is in force. Under
+      // the mobile clamp the requested profile is NOT in force, and reporting
+      // it pressed told a screen-reader user the finest LOD was rendering.
+      expect(inspection.getAttribute("aria-pressed")).toBe("false");
+      expect(exploration.getAttribute("aria-pressed")).toBe("true");
+      // The requested state is disclosed rather than discarded.
+      expect(inspection.getAttribute("data-profile-requested")).toBe("true");
+      expect(inspection.getAttribute("data-profile-effective")).toBe("false");
+      expect(inspection.getAttribute("title")).toContain("requested by this session but NOT in force");
+    } finally {
+      media.restore();
+    }
+  });
+
+  it("leaves the desktop profile controls exactly as they were", () => {
+    const media = stubMatchMedia(false);
+    try {
+      window.history.replaceState({}, "", `${REAL_BASE_URL}&exteriorProfile=inspection`);
+      render(<App />);
+      const inspection = [...document.querySelectorAll<HTMLButtonElement>(".exterior-streaming-controls button")]
+        .find((node) => node.textContent === "Inspection profile")!;
+      // On a desktop viewport requested and effective are the same value, so
+      // nothing about the measured desktop behaviour moves.
+      expect(inspection.getAttribute("aria-pressed")).toBe("true");
+      expect(inspection.getAttribute("title")).not.toContain("NOT in force");
+    } finally {
+      media.restore();
+    }
+  });
+
+  it("keeps the requested profile in the URL, so a clamp never rewrites a deep link", () => {
+    const media = stubMatchMedia(true);
+    try {
+      window.history.replaceState({}, "", `${REAL_BASE_URL}&exteriorProfile=inspection`);
+      render(<App />);
+      // The clamp is a RENDERING decision. Rewriting the URL would silently
+      // change what a link copied from a phone means on a desktop.
+      expect(new URL(window.location.href).searchParams.get("exteriorProfile")).toBe("inspection");
+    } finally {
+      media.restore();
+    }
+  });
 });

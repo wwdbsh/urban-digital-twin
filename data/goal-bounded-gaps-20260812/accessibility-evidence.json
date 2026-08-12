@@ -1,0 +1,217 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "goal-bounded-gaps-20260812:accessibility",
+  "task": "T029 (Issue #62)",
+  "criterion": 24,
+  "capturedAt": "2026-08-12T02:41:57.337Z",
+  "claim": "The two accessibility halves T009 recorded as 'not proven, blocked by the focus limitation': a real keyboard traversal with the DOM focus path recorded at every step, and a prefers-reduced-motion reading under emulated media.",
+  "servedBundle": {
+    "previewBase": "http://localhost:4176",
+    "indexHtmlChecksumSha256": "62c5ebf071b713fe8e872b20981ef8811a386364d08c48764921dc410626ff34",
+    "localDistIndexHtmlChecksumSha256": "62c5ebf071b713fe8e872b20981ef8811a386364d08c48764921dc410626ff34",
+    "matchesLocalDist": true,
+    "entryScriptPath": "/assets/index-CsMbhorl.js",
+    "entryScriptByteSize": 4888212,
+    "entryScriptChecksumSha256": "501237f7dc8d666ab94fcc32594a76198ab8bb6d9a7f5320303ec8e12e5fe7ac",
+    "entryScriptNamesAllSixPromotedReleases": true,
+    "probeHarnessPresent": false,
+    "statement": "Measured before any capture. The served index.html is byte-identical to this repository's dist/index.html and the served entry script names all 6 promoted releases, so every reading below is from THIS build. Any of those failing aborts the run rather than being recorded as a caveat."
+  },
+  "keyboard": {
+    "focusEmulation": {
+      "enabled": true,
+      "method": "Emulation.setFocusEmulationEnabled",
+      "disclosure": "Focus is EMULATED by the DevTools protocol, not taken from the operating system's window manager. It unblocks the traversal T009 could not run and it is not the same thing as a user's OS-level focus; every reading below inherits that bound."
+    },
+    "viewport": {
+      "innerWidth": 2560,
+      "innerHeight": 1440,
+      "devicePixelRatio": 1,
+      "documentHasFocus": true,
+      "prefersReducedMotion": false,
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36"
+    },
+    "structure": {
+      "focusableCount": 23,
+      "buttonCount": 20,
+      "unlabeledButtonCount": 0,
+      "landmarkCount": 8
+    },
+    "steps": [
+      {
+        "stepId": "tab-into-app",
+        "note": "First Tab from the document body.",
+        "focus": {
+          "tagName": "input",
+          "type": null,
+          "role": "combobox",
+          "accessibleName": "Search Manhattan",
+          "id": null,
+          "className": "",
+          "attributes": {
+            "aria-autocomplete": "list",
+            "aria-controls": "unified-search-results",
+            "aria-expanded": "false",
+            "aria-label": "Search Manhattan"
+          },
+          "isBody": false
+        }
+      },
+      {
+        "stepId": "tab-to-search",
+        "note": "Tabbed forward until the search input held focus.",
+        "focus": {
+          "tagName": "input",
+          "type": null,
+          "role": "combobox",
+          "accessibleName": "Search Manhattan",
+          "id": null,
+          "className": "",
+          "attributes": {
+            "aria-autocomplete": "list",
+            "aria-controls": "unified-search-results",
+            "aria-expanded": "false",
+            "aria-label": "Search Manhattan"
+          },
+          "isBody": false
+        }
+      },
+      {
+        "stepId": "type-query",
+        "note": "Typed 'empire' into the focused search field with real key events.",
+        "focus": {
+          "tagName": "input",
+          "type": null,
+          "role": "combobox",
+          "accessibleName": "Search Manhattan",
+          "id": null,
+          "className": "",
+          "attributes": {
+            "aria-autocomplete": "list",
+            "aria-controls": "unified-search-results",
+            "aria-expanded": "true",
+            "aria-label": "Search Manhattan"
+          },
+          "isBody": false
+        },
+        "reading": {
+          "hasResultsContainer": true,
+          "resultCount": 8,
+          "firstResultText": "REMPIRE SZECHUAN KYOTORestaurant · Places · text"
+        }
+      },
+      {
+        "stepId": "arrow-into-results",
+        "note": "ArrowDown from the search field.",
+        "focus": {
+          "tagName": "input",
+          "type": null,
+          "role": "combobox",
+          "accessibleName": "Search Manhattan",
+          "id": null,
+          "className": "",
+          "attributes": {
+            "aria-autocomplete": "list",
+            "aria-controls": "unified-search-results",
+            "aria-expanded": "true",
+            "aria-label": "Search Manhattan",
+            "aria-activedescendant": "search-result-0"
+          },
+          "isBody": false
+        }
+      },
+      {
+        "stepId": "activate-result",
+        "note": "Enter on the highlighted result, with no pointer event of any kind.",
+        "focus": {
+          "tagName": "h1",
+          "type": null,
+          "role": null,
+          "accessibleName": "EMPIRE SZECHUAN KYOTO",
+          "id": null,
+          "className": "",
+          "attributes": {},
+          "isBody": false
+        },
+        "reading": {
+          "inspectorPresent": true,
+          "detailsText": "EMPIRE SZECHUAN KYOTOOverviewLocationManhattan, New YorkCoordinates40.7752, -73.9804 (0.0 m)GeometryPoint · normalized EPSG:4326Feature IDdohmh:camis:41149373Confidencehigh (0.96)UncertaintySnapshot-relative source record; no unsourced hours, ratings, routing, imagery, or facade claim.Freshness2026-08-04T07:41:56.726ZExterior streamingLocal · 6 exterior releasesExterior cells reuse the canonical b",
+          "urlFeature": "dohmh:camis:41149373"
+        }
+      },
+      {
+        "stepId": "escape-close",
+        "note": "Escape pressed while the details surface was open.",
+        "focusBefore": {
+          "tagName": "h1",
+          "type": null,
+          "role": null,
+          "accessibleName": "EMPIRE SZECHUAN KYOTO",
+          "id": null,
+          "className": "",
+          "attributes": {},
+          "isBody": false
+        },
+        "focus": {
+          "tagName": "input",
+          "type": null,
+          "role": "combobox",
+          "accessibleName": "Search Manhattan",
+          "id": null,
+          "className": "",
+          "attributes": {
+            "aria-autocomplete": "list",
+            "aria-controls": "unified-search-results",
+            "aria-expanded": "true",
+            "aria-label": "Search Manhattan"
+          },
+          "isBody": false
+        },
+        "reading": {
+          "inspectorPresent": false,
+          "urlFeature": "dohmh:camis:41149373"
+        }
+      }
+    ],
+    "focusEverLeftBody": true,
+    "reachedSearch": true,
+    "activatedWithoutPointer": true,
+    "detailsOpenedFromKeyboard": true,
+    "escapeClosedDetails": true,
+    "focusRestoredAfterEscape": true,
+    "still": {
+      "relativeRef": "captures/accessibility-keyboard-traversal.png",
+      "byteSize": 933367,
+      "checksumSha256": "6b57469e0f245970344e8af402e3250154ffe0def85411c21bfb13a1d5941e14"
+    }
+  },
+  "reducedMotion": {
+    "finding": "respected-by-behaviour",
+    "noPreference": {
+      "matchesReduceQuery": false,
+      "stylesheetCarriesRule": true,
+      "still": {
+        "relativeRef": "captures/accessibility-reduced-motion-no-preference.png",
+        "byteSize": 1369120,
+        "checksumSha256": "f5ce20c07b21619fad8350259b30e6c5517f67214be440d19d52b3222784f398"
+      }
+    },
+    "reduce": {
+      "matchesReduceQuery": true,
+      "stylesheetCarriesRule": true,
+      "still": {
+        "relativeRef": "captures/accessibility-reduced-motion-reduce.png",
+        "byteSize": 1369146,
+        "checksumSha256": "0b248ee7fef53954226cb97fd02c272b677f87f0daf3d816cce60afc1231858c"
+      }
+    },
+    "behaviouralBasis": "src/features/explorer/CesiumViewport.tsx cameraDuration() reads window.matchMedia('(prefers-reduced-motion: reduce)').matches and returns a 0.01 s flight instead of the requested seconds, and the same file reads the preference again when composing its camera transitions. Motion-dependent behaviour therefore EXISTS and is conditioned on the preference; this is not a case of there being no motion to reduce.",
+    "measured": {
+      "preferenceReachesThePage": true,
+      "shippedStylesheetCarriesTheRule": true
+    },
+    "bound": "What is measured here is that the preference REACHES the running application and that the shipped stylesheet carries its rule, plus a still under each condition. The camera-flight shortening is read from the source that implements it rather than timed in the browser: a deterministic camera flight is not triggered by this journey, and timing one would have required a synthetic interaction that the record would then have had to explain. No claim is made that every animated surface was individually measured.",
+    "passed": true
+  },
+  "allPassed": true
+}

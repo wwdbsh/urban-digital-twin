@@ -358,6 +358,20 @@ export interface PublicShowcaseBasePackage {
   readonly deploymentExclusionSource: PublicShowcaseDeploymentExclusionSource;
   /** Stated in the record's own words, so a reader can check the claim against the release. */
   readonly deploymentExclusionBasis: string;
+  /**
+   * The declared top-level entry points and public directory prefixes of this
+   * base package. A prefix ends in `/`; anything else is an exact file name.
+   *
+   * This exists for SYMMETRY with the wave branch of the classifier. A wave
+   * request is anchored twice — once to an enumerated `/data/<id>/` prefix and
+   * again to a declared entry point or the wave's `public/` partition — while a
+   * base-package request used to be admitted on the package prefix ALONE, so
+   * `/data/manhattan-citywide-20260804/anything/at/all` classified. Declaring
+   * the anchors per package restores the second half of that check without
+   * pretending the three base packages share a layout: they do not, and the
+   * constant says so one package at a time.
+   */
+  readonly publicPathAnchors: readonly string[];
 }
 
 export const PUBLIC_SHOWCASE_BASE_PACKAGES: readonly PublicShowcaseBasePackage[] = [
@@ -368,6 +382,7 @@ export const PUBLIC_SHOWCASE_BASE_PACKAGES: readonly PublicShowcaseBasePackage[]
     deploymentExcluded: true,
     deploymentExclusionSource: "release-approval-instrument",
     deploymentExclusionBasis: "public/data/manhattan-citywide-20260804/manifest.json `approval.exclusions` names \"public deployment\".",
+    publicPathAnchors: ["manifest.json", "manifest.sha256", "details/", "geometry/", "search/"],
   },
   {
     packageId: "manhattan-civic-context-20260804",
@@ -376,6 +391,7 @@ export const PUBLIC_SHOWCASE_BASE_PACKAGES: readonly PublicShowcaseBasePackage[]
     deploymentExcluded: true,
     deploymentExclusionSource: "release-approval-instrument",
     deploymentExclusionBasis: "public/data/manhattan-civic-context-20260804/manifest.json `approval.exclusions` names \"public deployment\".",
+    publicPathAnchors: ["manifest.json", "manifest.sha256", "details/", "geometry/", "search/"],
   },
   {
     packageId: "real-wave-20260804",
@@ -384,6 +400,7 @@ export const PUBLIC_SHOWCASE_BASE_PACKAGES: readonly PublicShowcaseBasePackage[]
     deploymentExcluded: true,
     deploymentExclusionSource: "imposed-by-this-showcase-manifest",
     deploymentExclusionBasis: "public/data/real-wave-20260804/manifest.json carries NO `approval` key. Nothing in that release excludes deployment, and nothing here claims it does; this candidate imposes the exclusion on it because the candidate is local-only, and that restriction is inherited from nothing.",
+    publicPathAnchors: ["manifest.json", "buildings.json", "restaurants.json"],
   },
 ];
 
@@ -396,6 +413,50 @@ export const PUBLIC_SHOWCASE_BASE_PACKAGE_IDS: readonly string[] = PUBLIC_SHOWCA
  * the ones that are not release payload.
  */
 export const PUBLIC_SHOWCASE_APP_URL_PREFIXES: readonly string[] = ["/", "/assets/", "/cesiumStatic/"];
+
+/**
+ * Anchored `/data/<packageId>/` prefixes for the three base packages, derived
+ * from the package list rather than rebuilt inline at the call site.
+ *
+ * The sibling `PUBLIC_SHOWCASE_DATA_URL_PREFIXES` has always existed for the
+ * six waves; the base branch used to build its prefix with a template literal
+ * inside the classifier, which is the same value written a second time in a
+ * second place. One derivation, one place.
+ */
+export const PUBLIC_SHOWCASE_BASE_URL_PREFIXES: readonly string[] = PUBLIC_SHOWCASE_BASE_PACKAGES.map((entry) => `/data/${entry.packageId}/`);
+
+/**
+ * Paths a BROWSER issues on its own, that no application code requests and no
+ * release declares.
+ *
+ * This exists because of a measured reproducibility failure, and its shape is
+ * chosen to repair that failure without weakening the check that found it. The
+ * T023 `six-wave-default` smoke journey passed on the profile it was captured
+ * with and FAILED on any fresh Chrome profile, because a fresh profile issues
+ * `/favicon.ico` for a document that declares no icon, the classifier had no
+ * category for it, and `everyRequestClassified` therefore read `false`. The
+ * substance was never in doubt — zero external hosts, every wave streaming its
+ * exact expected GLB count, every private probe returning the shell — but a
+ * pass that depends on browser-profile state is not a property of the release.
+ *
+ * Three deliberate narrowings keep this from becoming a hole:
+ *
+ *  1. EXACT MATCH ONLY. These are compared with `===`, never as prefixes, so
+ *     nothing is admitted by resembling one of them.
+ *  2. IT IS A CLASSIFICATION, NOT AN EXEMPTION. A browser-implicit request is
+ *     reported in the record with its own count. It is not dropped from the
+ *     observed set, and an unrecognised path still refuses.
+ *  3. THE SERVER STILL HAS TO FAIL CLOSED. Classifying the path says only that
+ *     the browser asked; the smoke audit separately requires that no
+ *     browser-implicit request was ANSWERED with bytes, because the candidate
+ *     ships no such file. A build that started serving one would fail the
+ *     journey even though the path classifies.
+ */
+export const PUBLIC_SHOWCASE_BROWSER_IMPLICIT_PATHS: readonly string[] = [
+  "/favicon.ico",
+  "/apple-touch-icon.png",
+  "/apple-touch-icon-precomposed.png",
+];
 
 /**
  * The exclusions restated across the whole candidate. This is the UNION, kept
@@ -492,6 +553,12 @@ export function computePublicShowcaseDigest(
       deploymentExcluded: entry.deploymentExcluded,
       deploymentExclusionSource: entry.deploymentExclusionSource,
       packageId: entry.packageId,
+      // The anchors are part of WHAT THE CANDIDATE ADMITS, so they belong in
+      // the identity of the candidate. Leaving them out would let someone
+      // widen a base package's reachable surface — the exact thing the anchor
+      // list exists to bound — without the digest moving, which is how a pinned
+      // identity stops meaning anything.
+      publicPathAnchors: [...entry.publicPathAnchors],
     })),
     candidateId: PUBLIC_SHOWCASE_CANDIDATE_ID,
     schemaVersion: PUBLIC_SHOWCASE_SCHEMA_VERSION,
@@ -500,7 +567,7 @@ export function computePublicShowcaseDigest(
 }
 
 /** Pinned value of `computePublicShowcaseDigest()`. */
-export const PUBLIC_SHOWCASE_DIGEST_SHA256 = "c242ec4357d1dda46712c65f7e667453036c04fe8dca426bd285c9fb50db7cc2";
+export const PUBLIC_SHOWCASE_DIGEST_SHA256 = "8b54d4b1cd87b940340b29e580774fbc2683882f3d37c02703bcb0b61cd95646";
 
 export class PublicShowcaseRefusal extends Error {
   readonly code: string;
@@ -543,7 +610,8 @@ export function assertShowcasePackageId(packageId: unknown): PublicShowcaseWaveE
 export type ShowcaseRequestClassification =
   | { readonly kind: "wave-payload"; readonly wave: PublicShowcaseWaveEntry; readonly path: string }
   | { readonly kind: "base-payload"; readonly base: PublicShowcaseBasePackage; readonly path: string }
-  | { readonly kind: "app-shell"; readonly path: string };
+  | { readonly kind: "app-shell"; readonly path: string }
+  | { readonly kind: "browser-implicit"; readonly path: string };
 
 /**
  * Classify one same-origin request path issued by a showcase session. Used by
@@ -557,11 +625,24 @@ export function classifyShowcaseRequestPath(path: unknown): ShowcaseRequestClass
   if (path.toLowerCase().includes("private")) {
     throw new PublicShowcaseRefusal("private-path-forbidden", path, `Public showcase session requested a private-partition path: ${path}`);
   }
+  // Checked BEFORE `/data/`, and by exact match, so a browser-implicit name can
+  // never shadow a payload path.
+  if (PUBLIC_SHOWCASE_BROWSER_IMPLICIT_PATHS.includes(path)) return { kind: "browser-implicit", path };
   if (path.startsWith("/data/")) {
     const prefix = PUBLIC_SHOWCASE_DATA_URL_PREFIXES.find((candidate) => path.startsWith(candidate));
     if (!prefix) {
-      const base = PUBLIC_SHOWCASE_BASE_PACKAGES.find((candidate) => path.startsWith(`/data/${candidate.packageId}/`));
-      if (base) return { kind: "base-payload", base, path };
+      const baseIndex = PUBLIC_SHOWCASE_BASE_URL_PREFIXES.findIndex((candidate) => path.startsWith(candidate));
+      if (baseIndex >= 0) {
+        const base = PUBLIC_SHOWCASE_BASE_PACKAGES[baseIndex]!;
+        const rest = path.slice(PUBLIC_SHOWCASE_BASE_URL_PREFIXES[baseIndex]!.length);
+        // The second anchor, symmetric with the wave branch below: a declared
+        // top-level entry point (exact) or a declared public directory prefix.
+        const anchored = base.publicPathAnchors.some((anchor) => (anchor.endsWith("/") ? rest.startsWith(anchor) && rest.length > anchor.length : rest === anchor));
+        if (!anchored) {
+          throw new PublicShowcaseRefusal("payload-outside-public-partition", path, `Public showcase session requested ${path}, which is inside base package ${base.packageId} but is neither a declared entry point nor under a declared public directory of that package.`);
+        }
+        return { kind: "base-payload", base, path };
+      }
       throw new PublicShowcaseRefusal("payload-outside-candidate", path, `Public showcase session requested payload outside the enumerated public roots and base packages: ${path}`);
     }
     const wave = assertShowcasePackageId(prefix.slice("/data/".length, -1));

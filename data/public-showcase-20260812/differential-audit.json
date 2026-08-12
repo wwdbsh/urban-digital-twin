@@ -2,7 +2,7 @@
   "schemaVersion": "1.0",
   "auditId": "manhattan-public-showcase-20260812:differential-audit",
   "candidateId": "manhattan-public-showcase-20260812",
-  "manifestDigestSha256": "c242ec4357d1dda46712c65f7e667453036c04fe8dca426bd285c9fb50db7cc2",
+  "manifestDigestSha256": "8b54d4b1cd87b940340b29e580774fbc2683882f3d37c02703bcb0b61cd95646",
   "note": "Private/public differential audit across every completed wave. It proves that each wave's public root resolves fully against its own declarations, that each wave's private side is named with the reason it is excluded, and that no private byte and no undeclared private identifier is reachable from the public candidate. Declared provenance disclosures — the `privatePredecessor` root id and checksum that a public root must state to be able to say what it succeeded — are enumerated individually rather than pattern-matched away; they name no fetchable byte. This audit reports on emitted bytes only. It proves nothing about rendering, about what a user sees, or about what the network requested; that is the smoke evidence.",
   "assemblyPosture": "This candidate is an inventory of six separately approved local releases, not a new redistributable whole. It grants no verb, adds no source, and widens no audience; the narrowest instrument governs anything the six are read as doing together.",
   "standingRefusals": {
@@ -819,6 +819,11 @@
       "inShowcaseCandidate": false
     }
   ],
+  "workingRecordScope": {
+    "basis": "exclude-by-declared-set",
+    "declaredDirectoryCount": 21,
+    "statement": "The working-record enumeration is intersected with the declared set in scripts/public-showcase-audit-cli.mjs (AUDITED_WORKING_RECORD_DIRECTORIES). A working-record directory committed by a LATER task does not appear here and does not move these bytes, which is what makes this record reproducible after the task that emitted it; widening the scope is a deliberate edit to that constant. A declared directory that is absent or empty fails the audit rather than shrinking the count. THE STABILITY IS ON THE DIRECTORY AXIS ONLY: `fileCount` below is still counted from the tree, so ADDING A FILE to an already-declared directory does move these bytes. That is intended - a declared directory is in scope and its contents are part of what this audit reports - but it means this record is reproducible against a given tree, not permanently frozen."
+  },
   "excludedWorkingRecords": [
     {
       "directory": "block835-canary-validation-20260811",
@@ -843,6 +848,16 @@
     {
       "directory": "central-upper-manhattan-20260812-p1",
       "fileCount": 7,
+      "reason": "working-evidence-record: a committed record under `data/` that pins what was built and measured. It is not served by the application at all — `data/` is outside the browser-reachable tree — and is retained so the emitted bytes stay checkable."
+    },
+    {
+      "directory": "goal-bounded-gaps-20260812",
+      "fileCount": 8,
+      "reason": "working-evidence-record: a committed record under `data/` that pins what was built and measured. It is not served by the application at all — `data/` is outside the browser-reachable tree — and is retained so the emitted bytes stay checkable."
+    },
+    {
+      "directory": "goal-integration-acceptance-20260812",
+      "fileCount": 1,
       "reason": "working-evidence-record: a committed record under `data/` that pins what was built and measured. It is not served by the application at all — `data/` is outside the browser-reachable tree — and is retained so the emitted bytes stay checkable."
     },
     {
@@ -924,7 +939,7 @@
     "unresolvedPayloadRefs": 0,
     "privateRootArtifactsExcluded": 6,
     "privateReferencePackageFiles": 116,
-    "workingRecordDirectories": 19,
+    "workingRecordDirectories": 21,
     "scannedPublicFiles": 2385,
     "declaredDisclosures": 24,
     "declaredPrivateRootMetadata": 36,

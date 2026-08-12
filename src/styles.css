@@ -1664,3 +1664,81 @@ button {
     scroll-behavior: auto !important;
   }
 }
+
+/*
+ * THE MOBILE LOWER-LOD DISCLOSURE.
+ *
+ * `.runtime-note span` clamps every status line in this lane to one ellipsised
+ * row, and at the 680px breakpoint `.runtime-note` is additionally capped at
+ * `calc(100% - 160px)`. That is correct for the short per-wave lines it was
+ * written for and structurally wrong for this one: the disclosure is a sentence
+ * naming the effective profile, the overridden profile, and the refusal of any
+ * desktop-parity claim, and under `white-space: nowrap` it could never render.
+ * A status a sighted user cannot read is not an explicit status, so the clamp
+ * is released for this line specifically rather than for the lane.
+ *
+ * It is also lifted above its siblings. The control-lane panels in this corner
+ * are painted after it and were covering it at 390px.
+ */
+/*
+ * The selector is `.runtime-note span[...]` and not `[...]` alone for a reason
+ * that cost a capture: `.runtime-note span` is (0,1,1) and a bare attribute
+ * selector is (0,1,0), so the first attempt at this rule LOST to the clamp it
+ * was written to release, and the re-capture measured `white-space: nowrap` at
+ * 9px and failed the leg. It is matched here at (0,2,1).
+ */
+.runtime-note span[data-mobile-lower-lod] {
+  position: relative;
+  z-index: 6;
+  display: block;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+  margin-top: 4px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(120, 200, 220, 0.45);
+  background: rgba(9, 17, 22, 0.96);
+  color: #d8ecf2;
+  line-height: 1.45;
+}
+
+/*
+ * The container has to give the line somewhere to wrap TO, and has to stop
+ * clipping it once it wraps. Scoped to the modifier so no other status lane
+ * changes.
+ *
+ * `.runtime-note` is `max-height: var(--runtime-note-lane-height)` with
+ * `overflow-y: auto`, which is right for a stack of one-line statuses and wrong
+ * for a six-line sentence: the second re-capture measured the text wrapping
+ * correctly and STILL failing, because the lane clipped the lower two thirds
+ * and the hit-test at those points struck the canvas and the fallback-notice
+ * list behind it. Releasing the clamp without releasing the clip fixes nothing.
+ *
+ * The z-index is raised off 6 because the notices lane is also 6 and is later
+ * in DOM order, so it won the tie and painted over the disclosure.
+ */
+.runtime-note--mobile-disclosure {
+  z-index: 12;
+  max-width: calc(100vw - 56px);
+  max-height: none;
+  overflow-y: visible;
+}
+
+@media (max-width: 680px) {
+  .runtime-note--mobile-disclosure {
+    /* Overrides the `calc(100% - 160px)` cap this breakpoint sets. A plain
+       `100%` here was the last thing keeping the box off-screen: it resolves
+       against the map region rather than against the space left of the lane's
+       own 18px inset, so the wrapped text ran 8px past the right edge. */
+    max-width: calc(100vw - 56px);
+  }
+
+  .runtime-note span[data-mobile-lower-lod] {
+    /* The lane's 9px is below the readable floor for a sentence. */
+    font-size: 11px;
+    white-space: normal;
+  }
+}

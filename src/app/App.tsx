@@ -478,6 +478,84 @@ export function overlayLayoutPolicy(inspectorOpen: boolean, mobile: boolean): Ov
   };
 }
 
+/**
+ * The breakpoint the SHIPPED STYLESHEET already treats as mobile.
+ *
+ * `src/styles.css` `@media (max-width: 680px)` is where the navigation rail is
+ * dropped and the inspector becomes a bottom sheet. The JS signal is pinned to
+ * the same query string rather than to a second number that could drift from
+ * it, so the layout a user sees and the policy this module reports cannot
+ * disagree about whether a session is mobile.
+ */
+export const MOBILE_VIEWPORT_MEDIA_QUERY = "(max-width: 680px)";
+
+/**
+ * The mobile exterior LOD policy, as a value.
+ *
+ * A mobile viewport is pinned to the EXPLORATION render profile, which
+ * `selectExteriorLod` resolves to the COARSEST eligible LOD an assembly package
+ * declares. That is deliberately LESS detail than the inspection profile a
+ * desktop session can ask for, and this policy exists so the product states it
+ * rather than quietly serving less.
+ *
+ * Three things it deliberately does NOT do:
+ *
+ *  1. It does not claim desktop visual parity. It claims the opposite, in the
+ *     product's own words, wherever it is shown.
+ *  2. It does not rewrite the URL. `exteriorProfile=` keeps recording what the
+ *     SESSION REQUESTED, so a deep link copied from a phone still means on a
+ *     desktop what it meant when it was made, and the profile-switch identity
+ *     evidence (criterion 10) is untouched. The clamp is a rendering decision
+ *     and is reported as one.
+ *  3. It does not narrow anything else. Feature identity, picking, details,
+ *     provenance, deep links and the explicit failure states are the desktop
+ *     ones; only the resolved LOD changes.
+ */
+export interface MobileExteriorLodPolicy {
+  active: boolean;
+  requestedProfile: ExteriorRenderProfile;
+  effectiveProfile: ExteriorRenderProfile;
+  clamped: boolean;
+  disclosure: string | null;
+}
+
+export function mobileExteriorLodPolicy(mobile: boolean, requestedProfile: ExteriorRenderProfile): MobileExteriorLodPolicy {
+  if (!mobile) {
+    return { active: false, requestedProfile, effectiveProfile: requestedProfile, clamped: false, disclosure: null };
+  }
+  const effectiveProfile = DEFAULT_EXTERIOR_RENDER_PROFILE;
+  const clamped = requestedProfile !== effectiveProfile;
+  return {
+    active: true,
+    requestedProfile,
+    effectiveProfile,
+    clamped,
+    disclosure: `Mobile viewport · exterior geometry is pinned to the ${exteriorRenderProfileLabel(effectiveProfile)}${clamped ? `, overriding the requested ${exteriorRenderProfileLabel(requestedProfile)}` : ""}. This is a LOWER level of detail than a desktop inspection session and no desktop visual parity is claimed. Feature identity, selection, details, provenance and deep links are unchanged.`,
+  };
+}
+
+/**
+ * Subscribes to the shipped mobile breakpoint.
+ *
+ * `matchMedia` is called optionally because jsdom does not implement it, and a
+ * missing implementation must read as "not mobile" rather than throw: a test
+ * environment that cannot answer the question is not evidence that the viewport
+ * is small.
+ */
+export function useMobileViewport(query: string = MOBILE_VIEWPORT_MEDIA_QUERY): boolean {
+  const [mobile, setMobile] = useState(() => (typeof window === "undefined" ? false : window.matchMedia?.(query)?.matches ?? false));
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+    const list = window.matchMedia?.(query);
+    if (!list) return undefined;
+    const apply = () => setMobile(list.matches);
+    apply();
+    list.addEventListener("change", apply);
+    return () => list.removeEventListener("change", apply);
+  }, [query]);
+  return mobile;
+}
+
 function navigationOverlayFields(exteriorRequested: boolean, selectedStorefrontId: string | null) {
   return exteriorRequested
     ? { exteriorReleaseId: EXTERIOR_PILOT_RELEASE_ID, commercial: true, storefrontId: selectedStorefrontId }
@@ -1214,6 +1292,16 @@ export function App() {
   });
   const exteriorActiveWaves = exteriorWaveActivations.filter((entry) => entry.activation.active);
   const exteriorStreamingActive = exteriorActiveWaves.length > 0;
+  // The mobile path. `mobileViewport` is the ONLY environmental signal in this
+  // component, and it feeds exactly two things: the overlay placement contract
+  // and the exterior LOD clamp. `exteriorProfile` stays the REQUESTED profile
+  // and keeps owning the URL; `exteriorEffectiveProfile` is what actually
+  // resolves an LOD and what the product reports. On a desktop viewport the two
+  // are the same value, so nothing about the measured desktop behaviour moves.
+  const mobileViewport = useMobileViewport();
+  const mobileLodPolicy = mobileExteriorLodPolicy(mobileViewport, exteriorProfile);
+  const exteriorEffectiveProfile = mobileLodPolicy.effectiveProfile;
+  const mobileOverlayPolicy = overlayLayoutPolicy(inspectorOpen, mobileViewport);
   const exteriorPrimaryRuntime = exteriorWaveActivations[0]?.wave.runtime ?? null;
   // The wave the canary probe measures, resolved by release id rather than by
   // position: a probe bound to "whichever wave came first" would report Block
@@ -1227,9 +1315,9 @@ export function App() {
   exteriorActiveWavesRef.current = exteriorActiveWaves;
   const exteriorCellOverlays = useMemo<readonly ExteriorCellOverlay[]>(() => exteriorActiveWavesRef.current.flatMap((entry) => (
     entry.wave.runtime
-      ? [{ releaseId: entry.wave.runtime.releaseId, snapshotId: entry.wave.runtime.snapshot.snapshotId, origin: entry.wave.runtime.origin, profile: exteriorProfile, cells: entry.wave.outcomes }]
+      ? [{ releaseId: entry.wave.runtime.releaseId, snapshotId: entry.wave.runtime.snapshot.snapshotId, origin: entry.wave.runtime.origin, profile: exteriorEffectiveProfile, cells: entry.wave.outcomes }]
       : []
-  )), [activeRealBaseReleaseId, exteriorProfile, exteriorTargetKey, exteriorWaveOutcomes, exteriorWaves]);
+  )), [activeRealBaseReleaseId, exteriorEffectiveProfile, exteriorTargetKey, exteriorWaveOutcomes, exteriorWaves]);
   // Notices stay attributed to the wave that produced them, always. Two waves
   // produce otherwise-identical lines ("N of M cells ship no exterior
   // geometry"), and a reader cannot act on a fallback notice without knowing
@@ -1709,7 +1797,7 @@ export function App() {
     }));
     for (const [releaseId, entry] of [...running]) {
       const next = wanted.get(releaseId);
-      const unchanged = next && next.runtime === entry.runtime && entry.profile === exteriorProfile && entry.bucket === exteriorCameraHeightBucketMeters;
+      const unchanged = next && next.runtime === entry.runtime && entry.profile === exteriorEffectiveProfile && entry.bucket === exteriorCameraHeightBucketMeters;
       if (unchanged) continue;
       entry.controller.abort();
       running.delete(releaseId);
@@ -1721,10 +1809,10 @@ export function App() {
     for (const [releaseId, { target, runtime }] of wanted) {
       if (running.has(releaseId)) continue;
       const controller = new AbortController();
-      const entry = { runtime, profile: exteriorProfile, bucket: exteriorCameraHeightBucketMeters, controller };
+      const entry = { runtime, profile: exteriorEffectiveProfile, bucket: exteriorCameraHeightBucketMeters, controller };
       running.set(releaseId, entry);
       const isCurrent = () => exteriorCellLoadsRef.current.get(releaseId) === entry && !controller.signal.aborted;
-      void Promise.all(runtime.cellIds().map((cellId) => runtime.loadCell(cellId, exteriorProfile, exteriorCameraHeightBucketMeters, controller.signal)))
+      void Promise.all(runtime.cellIds().map((cellId) => runtime.loadCell(cellId, exteriorEffectiveProfile, exteriorCameraHeightBucketMeters, controller.signal)))
         .then((outcomes) => {
           if (!isCurrent()) return;
           // Identity gate: exterior assets reuse canonical base identities, so an
@@ -1752,7 +1840,7 @@ export function App() {
     // `exteriorTargetKey` is a dependency even though the targets are read from
     // a ref: a change to WHICH releases are targeted must always re-run this
     // reconciliation, and it does not always coincide with a wave-state change.
-  }, [exteriorCameraHeightBucketMeters, exteriorProfile, exteriorTargetKey, exteriorWaves]);
+  }, [exteriorCameraHeightBucketMeters, exteriorEffectiveProfile, exteriorTargetKey, exteriorWaves]);
 
   // The only place a live cell load is cancelled wholesale: the component going
   // away. Everything else cancels exactly the wave whose inputs changed.
@@ -3130,7 +3218,14 @@ export function App() {
         </div>
       </nav>
 
-      <section className={`map-region${inspectorOpen ? " inspector-open" : ""}`} aria-label="City explorer" data-overlay-policy="map-with-inspector-overlay">
+      <section
+        className={`map-region${inspectorOpen ? " inspector-open" : ""}`}
+        aria-label="City explorer"
+        data-overlay-policy="map-with-inspector-overlay"
+        data-viewport-class={mobileViewport ? "mobile" : "desktop"}
+        data-overlay-desktop-right-inset={mobileOverlayPolicy.desktopRightInset}
+        data-overlay-mobile-bottom-inset={mobileOverlayPolicy.mobileBottomInset}
+      >
         <CesiumViewport
           adapter={activeAdapter}
           assetResolver={exteriorActive && exteriorOverlay ? exteriorOverlay.resolver : activeAdapter.assetResolver}
@@ -3182,7 +3277,12 @@ export function App() {
           <button type="button" onClick={() => setOverlapFeatures([])}>Close choices</button>
         </section>}
         <div
-          className="runtime-note"
+          // The modifier releases the single-line clamp `.runtime-note span`
+          // applies to every other status line in this lane. Those are short
+          // and are meant to truncate; the mobile lower-LOD disclosure is a
+          // sentence, and a sentence under `white-space: nowrap` inside a
+          // `calc(100% - 160px)` box is not a disclosure at all.
+          className={`runtime-note${mobileLodPolicy.active ? " runtime-note--mobile-disclosure" : ""}`}
           aria-label={publicRealmActive ? "Block 835 public-realm overlay status" : exteriorActive ? "Block 835 exterior commercial overlay status" : "Local runtime layer"}
           data-overlay-status={publicRealmRequested ? publicRealmLoadState : exteriorRequested ? exteriorLoadState : undefined}
         >
@@ -3195,12 +3295,24 @@ export function App() {
           <div className="exterior-streaming-controls" role="group" aria-label="Exterior streaming and render profile">
             <button type="button" aria-pressed={exteriorStreamingRequested} onClick={toggleExteriorStreaming}>{exteriorStreamingRequested ? "Disable exterior streaming" : "Enable exterior streaming"}</button>
             {EXTERIOR_RENDER_PROFILES.map((profile) => (
+              // `aria-pressed` follows the EFFECTIVE profile, not the requested
+              // one. A toggle's pressed state is a statement about what is in
+              // force, and under the mobile clamp the requested profile is not
+              // in force — reporting it pressed told a screen-reader user that
+              // the finest LOD was rendering while the coarsest was. The
+              // requested-but-not-rendered state is not thrown away: it is
+              // named in the control's own title and carried as a data
+              // attribute, so the substitution is disclosed rather than hidden.
               <button
                 key={profile}
                 type="button"
-                aria-pressed={exteriorProfile === profile}
+                aria-pressed={exteriorEffectiveProfile === profile}
                 disabled={!exteriorStreamingActive}
-                title={exteriorRenderProfileLabel(profile)}
+                data-profile-requested={mobileLodPolicy.requestedProfile === profile ? "true" : "false"}
+                data-profile-effective={exteriorEffectiveProfile === profile ? "true" : "false"}
+                title={mobileLodPolicy.clamped && mobileLodPolicy.requestedProfile === profile
+                  ? `${exteriorRenderProfileLabel(profile)} — requested by this session but NOT in force: the mobile viewport pins exterior geometry to ${exteriorRenderProfileLabel(exteriorEffectiveProfile)}.`
+                  : exteriorRenderProfileLabel(profile)}
                 onClick={() => switchExteriorProfile(profile)}
               >{profile === "inspection" ? "Inspection profile" : "Exploration profile"}</button>
             ))}
@@ -3217,7 +3329,20 @@ export function App() {
           </div>
           {/* One status line per wave: a session streaming two waves must not
               report one wave's snapshot as if it covered the other. */}
-          {exteriorActiveWaves.map((entry) => entry.wave.runtime && <span key={entry.target.releaseId} className="runtime-note-overlay" data-exterior-release={entry.target.releaseId} data-exterior-snapshot-origin={entry.wave.runtime.origin} role="status">Exterior streaming · {exteriorSnapshotOriginLabel(entry.wave.runtime.origin, entry.wave.runtime.snapshot.snapshotId)} · {exteriorRenderProfileLabel(exteriorProfile)} · verified local GLB bytes only.</span>)}
+          {/* The mobile lower-LOD disclosure. It is rendered beside the per-wave
+              status lines rather than inside them because the clamp is a
+              session-wide rendering decision, not a property of one wave, and
+              because a reader must be able to find it without a wave streaming
+              successfully. */}
+          {mobileLodPolicy.active && mobileLodPolicy.disclosure && <span
+            className="runtime-note-overlay"
+            data-mobile-lower-lod
+            data-mobile-effective-profile={mobileLodPolicy.effectiveProfile}
+            data-mobile-requested-profile={mobileLodPolicy.requestedProfile}
+            data-mobile-profile-clamped={mobileLodPolicy.clamped ? "true" : "false"}
+            role="status"
+          >{mobileLodPolicy.disclosure}</span>}
+          {exteriorActiveWaves.map((entry) => entry.wave.runtime && <span key={entry.target.releaseId} className="runtime-note-overlay" data-exterior-release={entry.target.releaseId} data-exterior-snapshot-origin={entry.wave.runtime.origin} role="status">Exterior streaming · {exteriorSnapshotOriginLabel(entry.wave.runtime.origin, entry.wave.runtime.snapshot.snapshotId)} · {exteriorRenderProfileLabel(exteriorEffectiveProfile)} · verified local GLB bytes only.</span>)}
           {exteriorWaveActivations.filter((entry) => !entry.activation.active).map((entry) => <span key={entry.target.releaseId} className="runtime-note-overlay" data-exterior-release={entry.target.releaseId} role="status">{entry.wave.loadState === "loading" ? "Exterior streaming · loading local release…" : (entry.activation.prerequisiteMessage ?? entry.wave.message) || "Exterior streaming unavailable; the existing base state was left unchanged."}</span>)}
           {exteriorActive && <a className="runtime-note-attribution" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">Map data © OpenStreetMap contributors.</a>}
         </div>
@@ -3552,7 +3677,11 @@ export function App() {
               <p className="section-label">Exterior cells reuse the canonical base building identity. The render profile changes only which verified LOD is drawn; identity, provenance, and the pinned release origin do not change.</p>
               <dl>
                 {runtime && <div><dt>Release origin</dt><dd data-exterior-release-origin={origin}>{exteriorSnapshotOriginLabel(origin, runtime.snapshot.snapshotId)}</dd></div>}
-                <div><dt>Render profile</dt><dd data-exterior-profile={exteriorProfile}>{exteriorRenderProfileLabel(exteriorProfile)}</dd></div>
+                {/* The EFFECTIVE profile, because this row says what is on
+                    screen. When the mobile clamp is in force the requested
+                    profile is named beside it rather than hidden, so the panel
+                    never reports a level of detail the session is not getting. */}
+                <div><dt>Render profile</dt><dd data-exterior-profile={exteriorEffectiveProfile} data-exterior-requested-profile={mobileLodPolicy.requestedProfile}>{exteriorRenderProfileLabel(exteriorEffectiveProfile)}{mobileLodPolicy.clamped ? ` · mobile lower-LOD clamp in force; ${exteriorRenderProfileLabel(mobileLodPolicy.requestedProfile)} was requested and is not being rendered` : ""}</dd></div>
                 {(() => {
                   const selectedId = activeSelectionId;
                   const owner = selectedId ? owning?.wave.outcomes.find((cell) => cell.kind === "rendered" && cell.assets.some((asset) => asset.canonicalFeatureId === selectedId)) : undefined;

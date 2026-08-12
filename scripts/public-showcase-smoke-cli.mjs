@@ -307,6 +307,21 @@ async function still(session, journeyId) {
  * marks which of those completed, and `loadingFailed` is accounted separately
  * rather than silently dropped.
  */
+/**
+ * Whether a browser-implicit request was answered WITHOUT a payload.
+ *
+ * Exported so the rule is testable without a browser. `response` is null when
+ * the request never produced a `Network.responseReceived` at all — a blocked,
+ * aborted or DNS-failed request — which is the strongest form of "served
+ * nothing" and must not be mistaken for a missing measurement.
+ */
+export function answeredWithoutPayload(response) {
+  if (!response) return true;
+  const status = typeof response.status === "number" ? response.status : 0;
+  const bytes = typeof response.encodedDataLength === "number" ? response.encodedDataLength : 0;
+  return status >= 400 || bytes === 0;
+}
+
 function auditRequests(session, previewBase) {
   const origin = new URL(previewBase).origin;
   const attempted = session.events.filter((event) => event.method === "Network.requestWillBeSent").map((event) => event.params.request?.url).filter((url) => typeof url === "string");
@@ -330,10 +345,33 @@ function auditRequests(session, previewBase) {
     .map((url) => { try { return new URL(url).hostname; } catch { return ""; } })
     .filter((hostname) => hostname !== "" && !LOCAL_HOSTNAMES.has(hostname)))].sort();
 
-  const perWave = Object.fromEntries(PUBLIC_SHOWCASE_WAVES.map((wave) => [wave.publicReleaseId, { responses: 0, distinctArtifacts: 0, glbResponses: 0 }]));
+  // FIELD NAMES SAY WHAT THE SET IS. These counts are taken over the union of
+  // ATTEMPTED and RECEIVED urls, so calling them `responses` named the smaller
+  // set the audit deliberately does not use — an attempted-but-blocked request
+  // counted here was never a response. `observedRequests` is the honest name
+  // for the quantity, and `perBasePackage` becomes an object of the same shape
+  // as `perWave` rather than a bare number, so the two halves of the same
+  // accounting read the same way.
+  const perWave = Object.fromEntries(PUBLIC_SHOWCASE_WAVES.map((wave) => [wave.publicReleaseId, { observedRequests: 0, distinctArtifacts: 0, glbObservedRequests: 0 }]));
   const refusals = [];
   const distinctByWave = new Map(PUBLIC_SHOWCASE_WAVES.map((wave) => [wave.publicReleaseId, new Set()]));
-  const perBase = Object.fromEntries(PUBLIC_SHOWCASE_BASE_PACKAGES.map((entry) => [entry.packageId, 0]));
+  const perBase = Object.fromEntries(PUBLIC_SHOWCASE_BASE_PACKAGES.map((entry) => [entry.packageId, { observedRequests: 0 }]));
+  // Per-URL response facts, so a browser-implicit path can be shown to have
+  // been ANSWERED WITH NOTHING rather than merely asked for. Classifying the
+  // path alone would be an exemption; this is what keeps it a classification.
+  const responseByUrl = new Map();
+  for (const event of session.events) {
+    if (event.method === "Network.responseReceived") {
+      responseByUrl.set(event.params.response.url, { status: event.params.response.status ?? -1, encodedDataLength: 0, requestId: event.params.requestId });
+    }
+  }
+  const finishedById = new Map(session.events
+    .filter((event) => event.method === "Network.loadingFinished")
+    .map((event) => [event.params.requestId, event.params.encodedDataLength ?? 0]));
+  for (const entry of responseByUrl.values()) {
+    if (finishedById.has(entry.requestId)) entry.encodedDataLength = finishedById.get(entry.requestId);
+  }
+  const browserImplicit = [];
   let appShell = 0;
   for (const url of observed) {
     let path;
@@ -342,10 +380,29 @@ function auditRequests(session, previewBase) {
     try {
       const classified = classifyShowcaseRequestPath(path);
       if (classified.kind === "app-shell") { appShell += 1; continue; }
-      if (classified.kind === "base-payload") { perBase[classified.base.packageId] += 1; continue; }
+      if (classified.kind === "browser-implicit") {
+        const response = responseByUrl.get(url) ?? null;
+        browserImplicit.push({
+          path,
+          status: response?.status ?? null,
+          encodedDataLength: response?.encodedDataLength ?? 0,
+          // The candidate ships no such file, so the only admissible answers
+          // are a REFUSAL STATUS or an empty body. A build that STARTED serving
+          // one fails this journey even though the path classifies.
+          //
+          // The name is `answeredWithoutPayload` and not `servedNoBytes`
+          // because a 404 is not zero bytes on the wire: the observed
+          // `/favicon.ico` refusal carries a small error body, and a field
+          // called `servedNoBytes` sitting next to `encodedDataLength: 157`
+          // would be a false name for a true measurement.
+          answeredWithoutPayload: answeredWithoutPayload(response),
+        });
+        continue;
+      }
+      if (classified.kind === "base-payload") { perBase[classified.base.packageId].observedRequests += 1; continue; }
       const entry = perWave[classified.wave.publicReleaseId];
-      entry.responses += 1;
-      if (path.endsWith(".glb")) entry.glbResponses += 1;
+      entry.observedRequests += 1;
+      if (path.endsWith(".glb")) entry.glbObservedRequests += 1;
       distinctByWave.get(classified.wave.publicReleaseId).add(path);
     } catch (error) {
       refusals.push({ url, reason: error.message });
@@ -358,19 +415,31 @@ function auditRequests(session, previewBase) {
   // mean the request was allowed. Folding refusals into an "accounted for"
   // count would let a leaking session report a tidy true.
   const classifiedTotal = appShell
-    + Object.values(perWave).reduce((total, entry) => total + entry.responses, 0)
-    + Object.values(perBase).reduce((total, count) => total + count, 0);
+    + browserImplicit.length
+    + Object.values(perWave).reduce((total, entry) => total + entry.observedRequests, 0)
+    + Object.values(perBase).reduce((total, entry) => total + entry.observedRequests, 0);
   const noRequestDropped = classifiedTotal + refusals.length === observed.length;
   const everyRequestClassified = refusals.length === 0 && classifiedTotal === observed.length;
+  // A browser-implicit path is admitted only while the server keeps failing
+  // closed on it. This is a separate conjunct from classification on purpose.
+  const browserImplicitServedBytes = browserImplicit.filter((entry) => !entry.answeredWithoutPayload);
 
   return {
     observedDistinctUrls: observed.length,
     attemptedDistinctUrls: [...new Set(attempted)].length,
     receivedDistinctUrls: [...new Set(received)].length,
     failedRequestUrls: failedUrls,
-    appShellResponses: appShell,
+    appShellObservedRequests: appShell,
     perWave,
     perBasePackage: perBase,
+    /**
+     * Paths the BROWSER issued that no application code requests and no release
+     * declares (T029 repair of the T023 reproducibility finding). Reported with
+     * the answer each one received, never merely skipped.
+     */
+    browserImplicit,
+    browserImplicitCount: browserImplicit.length,
+    browserImplicitAnsweredWithPayload: browserImplicitServedBytes,
     externalHosts,
     refusals,
     classifiedTotal,
@@ -378,7 +447,7 @@ function auditRequests(session, previewBase) {
     noRequestDropped,
     /** Nothing was refused, and everything observed classified inside the candidate. */
     everyRequestClassified,
-    passed: refusals.length === 0 && externalHosts.length === 0 && noRequestDropped && everyRequestClassified,
+    passed: refusals.length === 0 && externalHosts.length === 0 && noRequestDropped && everyRequestClassified && browserImplicitServedBytes.length === 0,
   };
 }
 
@@ -433,16 +502,29 @@ async function journeyPrivatePathsUnreachable(port, previewBase) {
   try {
     await session.send("Page.navigate", { url: appUrl(previewBase) });
     await new Promise((done) => { setTimeout(done, 2_000); });
+    // THE PROBE SET IS THE UNION OF `artifacts` AND `artifactAllowlist`.
+    //
+    // It used to be the artifact list alone. The release contract requires the
+    // two to be equal, and today they are — but this journey exists to catch a
+    // build that stopped honouring a contract, so deriving its probe list from
+    // one side of that very contract is the wrong place to trust it. A path
+    // named only by the allowlist is exactly the shape of the gap: declared
+    // reachable, carrying no checksum to compare against, and previously never
+    // requested at all. It is probed here with a null declared checksum, so a
+    // response that is not the SPA fallback is still reported as unexplained.
     const probes = [];
     for (const wave of PUBLIC_SHOWCASE_WAVES) {
       const graph = JSON.parse(readFileSync(join(distRoot, "data", wave.packageId, "release-graph.json"), "utf8"));
       const privateRoot = graph.roots.find((root) => root.audience === "private");
-      for (const artifact of privateRoot.artifacts ?? []) {
+      const byRef = new Map((privateRoot.artifacts ?? []).map((artifact) => [artifact.relativeRef, artifact]));
+      const refs = [...new Set([...byRef.keys(), ...(privateRoot.artifactAllowlist ?? [])])].sort();
+      for (const relativeRef of refs) {
+        const artifact = byRef.get(relativeRef) ?? null;
         probes.push({
-          kind: "declared-private-root-artifact",
-          path: `/data/${wave.packageId}/${artifact.relativeRef}`,
-          declaredPrivateChecksumSha256: artifact.checksumSha256,
-          declaredPrivateByteSize: artifact.byteSize,
+          kind: artifact ? "declared-private-root-artifact" : "allowlist-only-private-ref",
+          path: `/data/${wave.packageId}/${relativeRef}`,
+          declaredPrivateChecksumSha256: artifact?.checksumSha256 ?? null,
+          declaredPrivateByteSize: artifact?.byteSize ?? null,
         });
       }
     }
