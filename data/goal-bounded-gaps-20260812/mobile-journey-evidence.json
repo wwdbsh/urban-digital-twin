@@ -3,7 +3,7 @@
   "recordId": "goal-bounded-gaps-20260812:mobile-journey",
   "task": "T029 (Issue #62)",
   "criterion": 8,
-  "capturedAt": "2026-08-12T03:27:33.949Z",
+  "capturedAt": "2026-08-12T03:51:31.997Z",
   "claim": "One mobile-emulated journey over the newly wired mobile path: navigation, search, selection, details with provenance, and deep-link restore at 390x844 dpr 3.",
   "emulationDisclosure": "EMULATED, not a device. Chrome's Emulation.setDeviceMetricsOverride with mobile: true, touch emulation enabled and an iOS user-agent string. It measures the application's response to a mobile viewport, touch capability and user agent. It does NOT measure a real phone's GPU, memory ceiling, thermal behaviour, browser engine or network, and no claim about any of those is made here.",
   "parityDisclosure": "No desktop visual parity is claimed. The mobile path deliberately renders the COARSEST verified LOD, and the product says so on screen.",
@@ -83,7 +83,8 @@
       },
       "visualState": {
         "exteriorFallbackNoticePresent": true,
-        "exteriorFallbackNoticeViewportFraction": 1.99,
+        "exteriorFallbackNoticeViewportFraction": 0.398,
+        "noticeBoxAreaAsViewportMultiple": 1.99,
         "overlayPanelCount": 2,
         "overlayPanels": [
           {
@@ -98,15 +99,15 @@
           }
         ],
         "notes": [
-          "The 'Exterior streaming fallback' notice is on screen, covering 199.0% of the viewport. It is the truthful tombstone statement for the 870 of 883 cells that ship no exterior geometry, and it is also occlusion; it is named here rather than cropped out of the still.",
+          "The 'Exterior streaming fallback' notice is on screen, covering 39.8% of the viewport. It is the truthful tombstone statement for the 870 of 883 cells that ship no exterior geometry, and it is also occlusion; it is named here rather than cropped out of the still.",
           "2 control-lane overlay panel(s) were painted at capture time.",
           "The lower-LOD disclosure was hit-tested at 9 points across its rendered box and nothing was painted over it; it rendered on 7 wrapped line(s) at 11px, with its full text inside its box."
         ]
       },
       "still": {
         "relativeRef": "captures/mobile-01-navigation.png",
-        "byteSize": 515296,
-        "checksumSha256": "b60314086dae5ae4454268d36c08be7cba8ebfadd32f37278ec36899a9b95a2b"
+        "byteSize": 476406,
+        "checksumSha256": "f827f1e8d82bd38951f1381cdd5c81d45d751cfb4f3583e84d2033ab9ec75a7e"
       },
       "passed": true
     },
@@ -120,7 +121,8 @@
       },
       "visualState": {
         "exteriorFallbackNoticePresent": true,
-        "exteriorFallbackNoticeViewportFraction": 1.99,
+        "exteriorFallbackNoticeViewportFraction": 0.398,
+        "noticeBoxAreaAsViewportMultiple": 1.99,
         "overlayPanelCount": 2,
         "overlayPanels": [
           {
@@ -135,14 +137,14 @@
           }
         ],
         "notes": [
-          "The 'Exterior streaming fallback' notice is on screen, covering 199.0% of the viewport. It is the truthful tombstone statement for the 870 of 883 cells that ship no exterior geometry, and it is also occlusion; it is named here rather than cropped out of the still.",
+          "The 'Exterior streaming fallback' notice is on screen, covering 39.8% of the viewport. It is the truthful tombstone statement for the 870 of 883 cells that ship no exterior geometry, and it is also occlusion; it is named here rather than cropped out of the still.",
           "2 control-lane overlay panel(s) were painted at capture time."
         ]
       },
       "still": {
         "relativeRef": "captures/mobile-02-search.png",
-        "byteSize": 357684,
-        "checksumSha256": "7137e89009e0514637e73c9530997d00c60b387b5c92dfd8059aebf5882c49f6"
+        "byteSize": 353954,
+        "checksumSha256": "4f3723be41977f8da3d75dbe30fd675b92bc6a2dcee932c2c7a3d33c388b3218"
       },
       "passed": true
     },
@@ -161,7 +163,8 @@
       },
       "visualState": {
         "exteriorFallbackNoticePresent": true,
-        "exteriorFallbackNoticeViewportFraction": 3.696,
+        "exteriorFallbackNoticeViewportFraction": 0.398,
+        "noticeBoxAreaAsViewportMultiple": 3.696,
         "overlayPanelCount": 2,
         "overlayPanels": [
           {
@@ -176,14 +179,14 @@
           }
         ],
         "notes": [
-          "The 'Exterior streaming fallback' notice is on screen, covering 369.6% of the viewport. It is the truthful tombstone statement for the 870 of 883 cells that ship no exterior geometry, and it is also occlusion; it is named here rather than cropped out of the still.",
+          "The 'Exterior streaming fallback' notice is on screen, covering 39.8% of the viewport. It is the truthful tombstone statement for the 870 of 883 cells that ship no exterior geometry, and it is also occlusion; it is named here rather than cropped out of the still.",
           "2 control-lane overlay panel(s) were painted at capture time."
         ]
       },
       "still": {
         "relativeRef": "captures/mobile-03-details.png",
-        "byteSize": 436687,
-        "checksumSha256": "737ec5ef1b4aa8bbe4b916906352876e2e5e33fc202e8a8d3b3417d23421847d"
+        "byteSize": 419363,
+        "checksumSha256": "eae81dedcf2649cc8da4e9330633cc3e0677057b5817c4135ba5269531086d8f"
       },
       "passed": true
     },
@@ -226,7 +229,8 @@
       },
       "visualState": {
         "exteriorFallbackNoticePresent": true,
-        "exteriorFallbackNoticeViewportFraction": 3.696,
+        "exteriorFallbackNoticeViewportFraction": 0.398,
+        "noticeBoxAreaAsViewportMultiple": 3.696,
         "overlayPanelCount": 2,
         "overlayPanels": [
           {
@@ -241,15 +245,15 @@
           }
         ],
         "notes": [
-          "The 'Exterior streaming fallback' notice is on screen, covering 369.6% of the viewport. It is the truthful tombstone statement for the 870 of 883 cells that ship no exterior geometry, and it is also occlusion; it is named here rather than cropped out of the still.",
+          "The 'Exterior streaming fallback' notice is on screen, covering 39.8% of the viewport. It is the truthful tombstone statement for the 870 of 883 cells that ship no exterior geometry, and it is also occlusion; it is named here rather than cropped out of the still.",
           "2 control-lane overlay panel(s) were painted at capture time.",
           "The lower-LOD disclosure was hit-tested at 9 points across its rendered box and nothing was painted over it; it rendered on 8 wrapped line(s) at 11px, with its full text inside its box."
         ]
       },
       "still": {
         "relativeRef": "captures/mobile-04-deep-link.png",
-        "byteSize": 429103,
-        "checksumSha256": "42a53f65cbb5bbb9e3e5728511e40f6f633b5981f0928619e84dad3784a16a09"
+        "byteSize": 413867,
+        "checksumSha256": "fc5b63998dabb7694c564239bf0d83cdc5cc946d76416bab8c36aacc9d78181a"
       },
       "passed": true
     }

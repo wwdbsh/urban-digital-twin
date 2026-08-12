@@ -364,9 +364,22 @@ const READ_OVERLAY_STATE = `(() => {
       return { element: node.className || node.tagName.toLowerCase(), width: Math.round(box.width), height: Math.round(box.height) };
     })
     .filter((entry) => entry.width > 0 && entry.height > 0);
+  let visibleFraction = 0;
+  let rawMultiple = 0;
+  if (rect && viewportArea > 0) {
+    const visibleLeft = Math.max(rect.left, 0);
+    const visibleTop = Math.max(rect.top, 0);
+    const visibleRight = Math.min(rect.right, window.innerWidth);
+    const visibleBottom = Math.min(rect.bottom, window.innerHeight);
+    const visibleWidth = Math.max(0, visibleRight - visibleLeft);
+    const visibleHeight = Math.max(0, visibleBottom - visibleTop);
+    visibleFraction = Number(((visibleWidth * visibleHeight) / viewportArea).toFixed(3));
+    rawMultiple = Number(((rect.width * rect.height) / viewportArea).toFixed(3));
+  }
   return {
     exteriorFallbackNoticePresent: notices !== null,
-    exteriorFallbackNoticeViewportFraction: rect ? Number(((rect.width * rect.height) / viewportArea).toFixed(3)) : 0,
+    exteriorFallbackNoticeViewportFraction: visibleFraction,
+    noticeBoxAreaAsViewportMultiple: rawMultiple,
     overlayPanelCount: panels.length,
     overlayPanels: panels,
   };

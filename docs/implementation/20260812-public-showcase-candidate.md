@@ -29,6 +29,10 @@ Tests: `public-showcase-manifest.test.ts` (26),
 `manhattan-public-showcase-20260812`, digest
 `c242ec4357d1dda46712c65f7e667453036c04fe8dca426bd285c9fb50db7cc2`.
 
+> Superseded: the committed manifest, audit, and smoke records now pin digest
+> `8b54d4b1cd87b940340b29e580774fbc2683882f3d37c02703bcb0b61cd95646`; the digest
+> above is historical only.
+
 Six waves, in activation order, pinned against
 `EXTERIOR_DEFAULT_ACTIVATIONS`:
 
