@@ -7,7 +7,7 @@
 
 ## Outcome, stated first
 
-**The Goal is NOT complete.** 18 of its 31 acceptance criteria are MET, 7 are
+**The Goal is NOT complete.** 17 of its 31 acceptance criteria are MET, 8 are
 MET-AS-ADJUDICATED with the delta stated, and **6 are NOT-MET with stop
 reports**: criteria 1, 7, 8, 22, 24 and 30.
 
@@ -18,9 +18,10 @@ widened. No immutable release changed.
 
 | File | Purpose |
 | --- | --- |
-| `scripts/goal-integration-reconciliation-cli.mjs` | Recomputes the Goal's coverage reconciliation from the committed ledger and the six committed wave censuses. `--check` compares against the committed record so it cannot drift. |
-| `scripts/goal-integration-reconciliation.test.mjs` | 25 tests: recomputes the coverage block, asserts the four zero-violation counts one at a time plus two closure counts, and enforces the verdict table's own rules. |
-| `data/goal-integration-acceptance-20260812/reconciliation.json` | The committed record: 31 criterion texts, 31 verdicts with evidence, 7 adjudication deltas, 6 stop reports, 6 residual risks, and the computed `coverage` block. |
+| `scripts/goal-integration-reconciliation-cli.mjs` | Recomputes the Goal's coverage reconciliation from the committed ledger and the six committed wave censuses. `--check` compares against the committed record so it cannot drift. Exposed as `pnpm goal:reconcile`. |
+| `package.json` | Adds the `goal:reconcile` alias. |
+| `scripts/goal-integration-reconciliation.test.mjs` | 26 tests: recomputes the coverage block, asserts the four zero-violation counts one at a time plus two closure counts, pins the 17/8/6 split, and enforces the verdict table's own rules. |
+| `data/goal-integration-acceptance-20260812/reconciliation.json` | The committed record: 31 criterion texts, 31 verdicts with evidence, 8 adjudication deltas, 6 stop reports, 7 residual risks, the criterion-digest derivation, and the computed `coverage` block. |
 | `docs/decisions/0039-goal-integration-acceptance.md` | The method, the verdict table, the six stop reports in priority order, three findings, and the residual risks. |
 | `README.md` | New "Manhattan generated building exteriors" section: six promoted waves, 484 of 45,194, tombstoned cells, textured V3, opt-in canaries, rollback, local-only showcase, known gaps. |
 | `docs/PROJECT_BRIEF.md` | New "Generated building exteriors" section: the same facts at brief altitude, including the device-class status. |
@@ -56,7 +57,7 @@ and the six committed wave censuses.
 | Refused parents, all under named stop codes | 899 (1.9892%) |
 | Owned buildings accounted for by neither | 0 |
 | Stop codes outside the closed vocabulary | 0 |
-| **Unclassified exterior components** | **0** |
+| **Buildings without a style class** | **0** (criterion 12's *component* half is carried by criterion 15's contract throw, not by a count) |
 
 Refusals by stop code: `source-height-below-grammar-minimum` 384,
 `ring-vertex-count-unsupported` 324, `ring-area-below-floor` 113,
@@ -83,8 +84,8 @@ Re-run fresh in this worktree on 2026-08-12:
 | `pnpm typecheck` | PASS |
 | `pnpm lint` | PASS |
 | `pnpm build` | PASS; `prune-private-partitions` removed 4 private partition directories |
-| `pnpm test` (full) | 127 files / 1,509 tests — see the flake note below |
-| `scripts/goal-integration-reconciliation.test.mjs` | 1 file / 25 tests PASS |
+| `pnpm test` (full) | **128 files / 1,534 tests PASS** on a quiet machine — see the flake note below |
+| `scripts/goal-integration-reconciliation.test.mjs` | 1 file / 26 tests PASS |
 | `node scripts/audit-partition-tree.mjs` (pre-build) | `AUDIT: clean`; `dist/` absent |
 | `node scripts/audit-partition-tree.mjs` (post-build) | `dist/` F1 private-path findings **0 over 6,070 files**; F2 release-data findings **0**, vendor-runtime 2 (bundled CesiumJS, classified and disclosed) |
 | `pnpm showcase:audit` | Reproduced the committed record **byte-identically** (`git status` clean afterwards). See the self-invalidation finding below. |
@@ -112,6 +113,19 @@ isolation on an unloaded machine — App 58/58 in 3.68 s, midtown-core-v3 20/20 
 20.23 s. These are vitest 5,000 ms default timeouts under CPU contention, not
 assertion failures. `midtown-core-v3-release.test.ts` averages a second per test
 and is the first to go. Carried as a residual risk rather than papered over.
+
+The flake recurred once during the nit-closing pass — `App.test.tsx > closes
+details with Escape and returns focus to the located-pick trigger`, at 1,280 ms
+— and the same file then passed 58/58 in isolation in 2.98 s and the full suite
+passed 128 files / **1,535 tests** on the immediate retry. Recorded because a
+flake that is only ever mentioned once reads as a one-off.
+
+It was then isolated rather than left as an observation: `npx vitest run
+--no-file-parallelism` passed **1,535 / 1,535 twice in a row** at ~72 s each.
+The trigger is worker CPU contention, not test order or shared state.
+`--no-file-parallelism` is a reliable workaround; raising `testTimeout` would
+close it properly. Not changed here — altering the test runner's configuration
+is outside this task's scope.
 
 ### The public-build smoke re-run FAILED one journey, and the reason matters
 

@@ -33,7 +33,7 @@ describe("goal integration reconciliation — the coverage block cannot drift fr
     expect(violations.missingSpatialCells).toBe(0);
     expect(violations.missingAcceptedBuildingParents).toBe(0);
     expect(violations.duplicateCanonicalOwners).toBe(0);
-    expect(violations.unclassifiedExteriorComponents).toBe(0);
+    expect(violations.buildingsWithoutStyleClass).toBe(0);
     // The two closure counts that make the four above meaningful rather than vacuous.
     expect(violations.ownedBuildingsAccountedByNeither).toBe(0);
     expect(violations.stopCodesOutsideClosedVocabulary).toBe(0);
@@ -100,8 +100,12 @@ describe("census closure — every owned building is materialized or refused und
   });
 
   it("gives every materialized building a machine-readable style class", () => {
-    for (const wave of census.waves) expect(wave.unclassifiedMaterializedCount).toBe(0);
-    expect(census.unclassifiedMaterializedCount).toBe(0);
+    // Named for what it counts. Criterion 12's "unclassified COMPONENTS" half
+    // is carried by criterion 15's contract, which throws rather than shipping
+    // a component outside the closed vocabulary — so a census could never find
+    // one to count, and this metric does not claim to have looked.
+    for (const wave of census.waves) expect(wave.buildingsWithoutStyleClass).toBe(0);
+    expect(census.buildingsWithoutStyleClass).toBe(0);
   });
 
   it("does not round the refusal away: 899 of 45,194 parents ARE refused", () => {
@@ -191,14 +195,29 @@ describe("the verdict table obeys its own rules", () => {
     expect(record.stopReportCount).toBe(counts["NOT-MET"]);
   });
 
+  it("pins the headline split, so a quiet re-grading shows up as a failing test", () => {
+    // 17 / 8 / 6. Written as literals rather than derived, because the whole
+    // point of the number is that it is the one a reader will quote.
+    expect(record.verdictCounts).toEqual({ MET: 17, "MET-AS-ADJUDICATED": 8, "NOT-MET": 6 });
+    expect(record.verdicts).toHaveLength(31);
+  });
+
   it("names the six unmet criteria explicitly, so a later edit cannot quietly promote one", () => {
     const unmet = record.verdicts.filter((entry) => entry.verdict === "NOT-MET").map((entry) => entry.index);
     expect(unmet).toEqual([1, 7, 8, 22, 24, 30]);
   });
 
   it("digests the criterion texts it judged, so a reworded criterion is visible", () => {
+    // This detects a criterion text edited INSIDE the record. It cannot detect
+    // a criterion edited in the Goal itself, because `goal.json` lives in the
+    // `.codex` ledger outside this repository and is deliberately not vendored
+    // here. The derivation that ties this digest to the Goal — the exact
+    // command, its path and its output — is recorded in ADR 0039 so it can be
+    // re-run by hand against the live ledger.
     const joined = record.verdicts.map((entry) => entry.criterion).join("\n");
     expect(createHash("sha256").update(joined).digest("hex")).toBe(record.criteriaSha256);
+    expect(record.criteriaSha256).toBe(record.criteriaDerivation.digest);
+    expect(record.criteriaDerivation.source).toContain("goal.json");
   });
 
   it("records residual risks rather than closing the Goal silently", () => {

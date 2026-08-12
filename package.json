@@ -16,6 +16,7 @@
     "test": "vitest run",
     "partitions:prune": "node scripts/prune-private-partitions.mjs",
     "partitions:audit": "node scripts/audit-partition-tree.mjs",
+    "goal:reconcile": "node scripts/goal-integration-reconciliation-cli.mjs",
     "showcase:audit": "node scripts/public-showcase-audit-cli.mjs",
     "showcase:smoke": "node scripts/public-showcase-smoke-cli.mjs",
     "canary:facade-path": "node scripts/block835-canary-facade-path-cli.mjs",

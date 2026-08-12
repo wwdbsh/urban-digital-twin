@@ -19,9 +19,16 @@
  *       vocabulary, and each wave's stop-code distribution sums to its own
  *       refusal count. An owned building accounted for by neither is an
  *       UNCLASSIFIED building and is reported as such.
- *   (4) COMPONENT-CLASS CLOSURE. Each wave's style-class distribution sums to
- *       its materialized count, so no materialized building ships without a
- *       machine-readable class.
+ *   (4) STYLE-CLASS CLOSURE. Each wave's style-class distribution sums to its
+ *       materialized count, so no materialized building ships without a
+ *       machine-readable class. The metric is named `buildingsWithoutStyleClass`
+ *       rather than "unclassified components" because that is what it counts:
+ *       BUILDINGS missing a class, not components. Goal criterion 12's
+ *       component-class half is carried by criterion 15's contract — a component
+ *       outside the closed generated / evidence-backed / absent / not-applicable
+ *       vocabulary makes the release THROW rather than ship an unclassified
+ *       component for a census to count later. A census cannot count what
+ *       cannot exist, and this metric does not pretend to.
  *   (5) PROMOTED DEFAULT COVERAGE. The six default activation records'
  *       renderable memberships, the shipped GLB artifact count, and the
  *       resulting exterior cache occupancy against the 512-entry contract.
@@ -35,7 +42,17 @@
  * `data/goal-integration-acceptance-20260812/reconciliation.json`, so the record
  * cannot drift from the ledgers it summarizes.
  *
+ * RUNTIME. This script imports `.ts` modules directly and relies on Node's
+ * native type stripping, so it requires **Node >= 24** and takes no
+ * `--experimental-strip-types` flag. That is the convention of the newer
+ * scripts here (`public-showcase-audit-cli.mjs`, `northern-manhattan-cli.mjs`);
+ * the older `--experimental-strip-types` aliases in `package.json` predate it
+ * and are deliberately not disturbed. On Node 22 this script fails to load
+ * rather than producing a partial reconciliation.
+ *
  * Usage:
+ *   pnpm goal:reconcile
+ *   pnpm goal:reconcile -- --check
  *   node scripts/goal-integration-reconciliation-cli.mjs [--check] [--out <path>]
  */
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
@@ -183,7 +200,7 @@ export function computeCensusClosure() {
         unknownStopCodes: [],
         styleClassCounts: styleCounts,
         styleClassSum: sumValues(styleCounts),
-        unclassifiedMaterializedCount: buildings.length - sumValues(styleCounts),
+        buildingsWithoutStyleClass: buildings.length - sumValues(styleCounts),
         unaccountedOwnedCount: 0,
       };
     }
@@ -201,7 +218,7 @@ export function computeCensusClosure() {
       unknownStopCodes: Object.keys(refusalsByCode).filter((code) => !closedStopCodes.has(code)),
       styleClassCounts,
       styleClassSum: sumValues(styleClassCounts),
-      unclassifiedMaterializedCount: wave.materializedBuildingCount - sumValues(styleClassCounts),
+      buildingsWithoutStyleClass: wave.materializedBuildingCount - sumValues(styleClassCounts),
       unaccountedOwnedCount: wave.resolvedBuildingCount - wave.materializedBuildingCount - wave.refusedBuildingCount,
     };
   });
@@ -221,7 +238,7 @@ export function computeCensusClosure() {
     materializedBuildingCount: waves.reduce((total, wave) => total + wave.materializedBuildingCount, 0),
     refusedBuildingCount: waves.reduce((total, wave) => total + wave.refusedBuildingCount, 0),
     unaccountedOwnedCount: waves.reduce((total, wave) => total + wave.unaccountedOwnedCount, 0),
-    unclassifiedMaterializedCount: waves.reduce((total, wave) => total + wave.unclassifiedMaterializedCount, 0),
+    buildingsWithoutStyleClass: waves.reduce((total, wave) => total + wave.buildingsWithoutStyleClass, 0),
     unknownStopCodeCount: waves.reduce((total, wave) => total + wave.unknownStopCodes.length, 0),
   };
 }
@@ -288,7 +305,7 @@ export function computeCoverageReconciliation() {
     missingSpatialCells: ledger.missingCells,
     missingAcceptedBuildingParents: ledger.missingAcceptedParents,
     duplicateCanonicalOwners: ledger.duplicateCanonicalOwners,
-    unclassifiedExteriorComponents: census.unclassifiedMaterializedCount,
+    buildingsWithoutStyleClass: census.buildingsWithoutStyleClass,
     ownedBuildingsAccountedByNeither: census.unaccountedOwnedCount,
     stopCodesOutsideClosedVocabulary: census.unknownStopCodeCount,
     censusOwnedVersusLedgerOwned: census.ownedBuildingCount - ledger.observedBuildingIdCount,

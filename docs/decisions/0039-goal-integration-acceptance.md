@@ -52,6 +52,28 @@ meaningful if nothing escaped classification:
 - `stopCodesOutsideClosedVocabulary` — a refusal under a code the grammar does
   not declare.
 
+### Where the criterion texts came from, and how to check them
+
+The Goal ledger lives in `.codex/codex-control-plane/goals/manhattan-high-fidelity-exteriors/`,
+**outside this repository**, and is deliberately not vendored here — a copy
+would become a second authority that could drift from the first. So no test can
+read it, and the record carries the 31 criterion texts itself plus a digest over
+them.
+
+That digest catches a criterion reworded *inside* the record. To catch one
+reworded in the Goal, re-run this against the live ledger and compare with
+`criteriaDerivation.digest` in the record:
+
+```sh
+cd .codex/codex-control-plane/goals/manhattan-high-fidelity-exteriors
+python3 -c "import json,hashlib; print(hashlib.sha256('\n'.join(json.load(open('goal.json'))['acceptanceCriteria']).encode()).hexdigest())"
+# 2ffd46691bb3982e1e0b47c2139a8f8221611d34630c091a9d52498d3402f61c
+```
+
+SHA-256 over the 31 strings joined by single newlines, in declared order, no
+trailing newline. The record states the method, the path, the field and the
+command, so the check is reproducible without reading this ADR.
+
 ### Cheap things were re-run; expensive things were cited
 
 Re-run fresh on 2026-08-12 in this worktree: the full suite, typecheck, lint,
@@ -65,7 +87,7 @@ worse evidence than citing the first.
 
 ## The verdict table
 
-18 MET · 7 MET-AS-ADJUDICATED · 6 NOT-MET. The full evidence lists, deltas and
+17 MET · 8 MET-AS-ADJUDICATED · 6 NOT-MET. The full evidence lists, deltas and
 stop reports are in `data/goal-integration-acceptance-20260812/reconciliation.json`;
 this table is the index.
 
@@ -82,9 +104,9 @@ this table is the index.
 | 9 | Exploration ≤16.7/25 ms, inspection ≤33.3/45 ms | MET | Six-wave p50 2.30–3.60, p95 5.60–13.00, against a capped control of 8.30 |
 | 10 | Profile switch preserves identity, URL, details, provenance, pick owner | MET | Before/after captures identical but for profile and LOD; ambiguous ids are deleted, not overwritten |
 | 11 | Immutable rollout ledger records bounds, membership, deps, status, eligibility | MET | 883 cells, six waves, per-cell membership checksums, `immutable: true` |
-| 12 | Zero missing cells / parents / duplicate owners / unclassified components | MET | Computed, not asserted — all four zero, plus two closure counts |
+| 12 | Zero missing cells / parents / duplicate owners / unclassified components | MET | Computed, not asserted — a ledger-partition reading; all four zero, plus two closure counts |
 | 13 | Deterministic change-impact to exact IDs and cells | MET-AS-ADJ | Implemented and tested over synthetic ledger pairs; no real source update ever occurred |
-| 14 | Unchanged cells byte-identical; changed cells keep predecessors and a diff | MET | Two real V2→V3 refreshes kept their predecessors byte-identical |
+| 14 | Unchanged cells byte-identical; changed cells keep predecessors and a diff | MET-AS-ADJ | Two real V2→V3 refreshes kept their predecessors byte-identical; neither left any cell *unchanged* |
 | 15 | Component inventory with machine-readable status per class | MET | 15 required classes, closed state vocabulary, release throws on an inadmissible state |
 | 16 | No placeholder blank wall at 10 m+ where the grammar requires detail | MET | Block-835-scoped by the Goal's own reference-cell design; PASS at all 8 poses |
 | 17 | Zero unsupported tenant/logo/occupancy/signage claims | MET | Serialized plans assert-free of text/brand/glyph; packages are glyph-free by construction |
@@ -100,8 +122,74 @@ this table is the index.
 | 27 | Rollback disables a wave independently and restores the previous representation | MET | Six per-wave rehearsals, each proving the other five keep streaming |
 | 28 | Every wave opt-in first; default only after acceptance and explicit approval | MET | Six canaries measured at 0 artifacts on a default load; six named approval refs |
 | 29 | Rollback exercise: atomic, identity-preserving, explicit unavailable, no immutable change | MET | 14/14 predecessor pins, `git diff` empty, committed browser journeys |
-| 30 | Security: private roots, undeclared assets, fail-closed, ≤8 requests, ≤256 MiB, no memory growth | **NOT-MET** | Four conjuncts proven fresh; the retained-memory conjunct has no committed verdict at all |
+| 30 | Security: private roots, undeclared assets, fail-closed, ≤8 requests, ≤256 MiB, no memory growth | **NOT-MET** | Four conjuncts proven fresh; the retained-memory conjunct FAILED as first measured and has no committed verdict since |
 | 31 | Documentation impact complete | MET | This ADR, the implementation record, README and the project brief |
+
+## Three verdicts whose reasoning does not fit in a table cell
+
+### Criterion 14 is adjudicated, not MET, and criterion 13 is why
+
+Criterion 14 has two halves. The **changed-cell** half — predecessor links,
+source dates, an auditable diff — is exercised by two real refreshes: Block 835
+V2→V3 and Midtown-core V2→V3, both of which kept their predecessor records
+byte-identical to the releases they name.
+
+The **unchanged-cell** half is not. Both refreshes were *grammar* changes, and a
+grammar change regenerates every renderable cell of the wave by construction, so
+**no committed refresh ever carried a cell across a version untouched.** What
+exists is the contract that would catch it — `exterior-release.ts:660` refuses
+unchanged-hash drift, and four per-wave fingerprint suites prove a derived
+subset re-derives byte-identically — but a contract is not an exercise.
+
+That is exactly the shape of criterion 13, which was adjudicated for exactly
+this reason: the machinery is proven, the real event it exists for never
+happened. Grading 14 as MET while grading 13 as adjudicated would have been an
+inconsistency in the table itself, so 14 moved rather than 13.
+
+### Criterion 12 is MET and criterion 1 is NOT-MET over the same 45,194 parents
+
+This looks like a contradiction and is not, so the record says which question
+each is answering.
+
+Criterion 12 is a **ledger-partition** reading: every declared cell belongs to
+exactly one wave, and every accepted parent is owned exactly once. It is a
+statement about the immutable ownership partition. It says nothing whatever
+about whether a parent's exterior was built, retained, or shipped.
+
+Criterion 1 asks the **missing-exterior** question over the same set, and the
+answer is 484 shipped and 899 refused. Ownership closure and exterior presence
+are different properties of the same 45,194 ids, and both readings are true at
+once.
+
+One further scope note, because the metric name used to overstate itself: the
+computed count is `buildingsWithoutStyleClass`, which is what a census can
+count. Criterion 12's "zero unclassified exterior **components**" half is
+carried by criterion 15's contract instead — a component outside the closed
+`generated` / `evidence-backed` / `absent` / `not-applicable` vocabulary makes
+`v3TruthTiers()` throw, so an unclassified component cannot reach a release for
+a census to find. The zero is enforced upstream rather than measured downstream,
+and the metric no longer claims to have looked for one.
+
+### Criterion 30's memory conjunct FAILED when it was first measured
+
+The evidence for criterion 30 now leads with the reading that failed, because
+listing only the later, kinder numbers would let a reader infer a trajectory
+that the record does not support.
+
+**T009 row 18** measured retained heap **growing 28.8% and 32.4%** across
+repeated deterministic camera paths and recorded the conjunct as **NOT SATISFIED
+AS WRITTEN**. The row carries its own method caveat: the readings were taken
+*without* a forced collection, so a rising `usedJSHeapSize` is equally
+consistent with garbage that had not yet been collected. That caveat is why the
+reading was superseded rather than treated as a defect — and it is also why the
+superseding readings had to force collection to say anything at all.
+
+The superseding readings, both with forced collection: Block 835 V3 heap
+**shrank** 13.3% and 12.0%; Midtown −0.107 and −0.105 against a 0.10 band. Both
+are prose over untracked raw files rather than committed records, and both
+predate the four textured waves. So the sequence is: measured and failed,
+re-measured with a better method and passed on two waves, never measured again
+on the four waves that carry textures or on the composition that ships.
 
 ## The six stop reports, in the order they would be worth doing
 
@@ -113,10 +201,9 @@ pass/fail. The twelve `heapAfterGcBytes` readings in each acceptance record are
 three repeats across four *different* camera stations — not repeats of one
 deterministic path, which is what the criterion asks about.
 
-What exists is prose over untracked raw files for the two oldest waves: Block
-835 V3 (heap *shrank* 13.3% and 12.0% with forced collection) and Midtown
-(−0.107 and −0.105 against a 0.10 band). Nothing covers the four textured waves
-or the six-wave composition.
+The full sequence — the failing T009 reading, its method caveat, and the two
+superseding forced-collection readings — is above. Nothing covers the four
+textured waves or the six-wave composition, which is what ships.
 
 **To close:** run the existing `block835CanaryHeapVerdict` method over a
 *repeated* deterministic camera path on the six-wave composition with
@@ -226,7 +313,8 @@ property of the release.
 
 **Not repaired here.** The classifier is T023's, and editing it would make the
 committed `smoke-evidence.json` non-reproducible in the other direction. It is
-recorded as a residual risk instead.
+recorded as a residual risk and **registered as a follow-up task**, together
+with the audit self-rewrite below.
 
 ### The wave ledger's `eligibility.json` now reads stale, correctly
 
@@ -254,7 +342,8 @@ record but does not recompute that total.
 The general shape is worth naming: an evidence record whose contents depend on
 the *presence* of later evidence records is self-invalidating by construction.
 The committed record is a T023 snapshot and is the authority; the README now
-carries the caveat next to the command.
+carries the caveat next to the command, and the repair is **registered as a
+follow-up task** rather than made here.
 
 ### Two prose drifts between ADR 0038 and its own committed audit
 
@@ -272,12 +361,17 @@ how a record stops being the thing that gets checked.
    buildings for exceeding it. Two waves in a row above ninety-eight hundredths
    is a pattern, not a coincidence. No tolerance was moved; ADR 0037 precondition
    (e) recorded that the explanation is owed, and it is still owed.
-2. **Load-dependent test flakes.** `src/release/midtown-core-v3-release.test.ts`
-   and `src/app/App.test.tsx` time out under concurrent CPU load against
-   vitest's 5,000 ms default and pass in isolation. These are timeouts, not
-   assertion failures; the same tests were observed green on a quiet re-run of
-   the full suite. `midtown-core-v3-release.test.ts` alone takes about 20 s for
-   20 tests, so it is the first to go.
+2. **Load-dependent test flakes, isolated to worker contention.**
+   `src/release/midtown-core-v3-release.test.ts` and `src/app/App.test.tsx` time
+   out against vitest's 5,000 ms default under CPU load and pass in isolation.
+   These are timeouts, not assertion failures. The isolating measurement:
+   `npx vitest run --no-file-parallelism` passed **1,535 of 1,535 twice in a
+   row** at ~72 s, while the default parallel run intermittently drops exactly
+   one of these two files. The trigger is therefore worker CPU contention, not
+   test order or shared state; `--no-file-parallelism` is a reliable workaround
+   and a raised `testTimeout` would close it properly.
+   `midtown-core-v3-release.test.ts` alone takes about 20 s for 20 tests, so it
+   is the first to go.
 3. **The T023 smoke reproducibility gap**, above.
 4. **The stale immutable `eligibility.json`**, above.
 5. **Structural validation is not visual, geographic or production proof.** A
@@ -296,7 +390,8 @@ how a record stops being the thing that gets checked.
   the record's rules are enforced by a suite rather than by review.
 - Criterion 12's four zeroes are computed from the committed ledger and censuses
   on every test run and cannot drift from them.
-- **Six criteria are NOT-MET with stop reports. The Goal is not complete**, and
+- 17 MET, 8 MET-AS-ADJUDICATED. **Six criteria are NOT-MET with stop reports.
+  The Goal is not complete**, and
   this ADR does not recommend declaring it complete. Whether to close the six,
   to re-scope them, or to accept them as recorded gaps is a Goal-level decision
   and is not made here.
@@ -311,7 +406,7 @@ how a record stops being the thing that gets checked.
 - It does not claim Manhattan is modelled. It claims 484 of 45,194 parents carry
   a generated exterior by default and says so wherever the number appears.
 - It does not claim the six unmet criteria are unimportant, or that the
-  adjudicated seven were satisfied in the sense their authors meant.
+  adjudicated eight were satisfied in the sense their authors meant.
 - It does not claim the reconciliation is a substitute for the measurements it
   cites. It is arithmetic over committed records plus a reading of them.
 - It does not authorize deployment, publication, acquisition, or any widening of

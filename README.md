@@ -252,6 +252,10 @@ private path and receives the SPA shell rather than the private bytes.
 
 ### Known gaps
 
+```sh
+pnpm goal:reconcile -- --check   # recomputes the coverage reconciliation and refuses drift
+```
+
 The Goal's own integration acceptance leaves **six criteria unmet**, recorded
 with stop reports in
 [`data/goal-integration-acceptance-20260812/reconciliation.json`](data/goal-integration-acceptance-20260812/reconciliation.json)

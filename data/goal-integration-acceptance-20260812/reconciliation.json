@@ -5,6 +5,14 @@
   "task": "T024 (Issue #25)",
   "note": "Criterion-by-criterion reconciliation of the approved Goal's 31 acceptance criteria against committed evidence, plus the computed coverage reconciliation the Goal's criterion 12 asks for. Every verdict is drawn from a closed set of three: MET (direct evidence cited), MET-AS-ADJUDICATED (the criterion as literally written was narrowed or made vacuous by a recorded decision, with the delta stated), NOT-MET (with a stop report naming what would close it). The `coverage` block is COMPUTED from the committed ledger and the six committed wave censuses by scripts/goal-integration-reconciliation-cli.mjs and re-checked on every test run; it is not restated prose. This record proves no visual, geographic, architectural or performance claim of its own - it cites the wave records that measured those.",
   "criteriaSha256": "2ffd46691bb3982e1e0b47c2139a8f8221611d34630c091a9d52498d3402f61c",
+  "criteriaDerivation": {
+    "source": ".codex/codex-control-plane/goals/manhattan-high-fidelity-exteriors/goal.json",
+    "field": "acceptanceCriteria",
+    "method": "SHA-256 over the 31 criterion strings joined by a single newline, in declared order, with no trailing newline.",
+    "command": "python3 -c \"import json,hashlib; print(hashlib.sha256('\\n'.join(json.load(open('goal.json'))['acceptanceCriteria']).encode()).hexdigest())\"",
+    "digest": "2ffd46691bb3982e1e0b47c2139a8f8221611d34630c091a9d52498d3402f61c",
+    "note": "The Goal ledger lives outside this repository and is deliberately not vendored here, so no test can read it. Re-run the command above against the live ledger to confirm this record judged the criteria the Goal actually declares."
+  },
   "criteriaCount": 31,
   "verdictVocabulary": [
     "MET",
@@ -13,8 +21,8 @@
   ],
   "verdictCounts": {
     "NOT-MET": 6,
-    "MET-AS-ADJUDICATED": 7,
-    "MET": 18
+    "MET-AS-ADJUDICATED": 8,
+    "MET": 17
   },
   "stopReportCount": 6,
   "verdicts": [
@@ -158,8 +166,10 @@
         "missingSpatialCells 0 (883 declared, 883 assigned to a wave, wave cell sum 883).",
         "missingAcceptedBuildingParents 0 (45,194 declared, 45,194 distinct ids across the 883 cells).",
         "duplicateCanonicalOwners 0 (no building id appears in more than one cell).",
-        "unclassifiedExteriorComponents 0 (every wave's style-class distribution sums exactly to its materialized count) and ownedBuildingsAccountedByNeither 0 (owned = materialized + refused in every wave).",
-        "stopCodesOutsideClosedVocabulary 0 (all six observed codes are members of MIDTOWN_CORE_V3_STOP_CODES)."
+        "buildingsWithoutStyleClass 0 (every wave's style-class distribution sums exactly to its materialized count) and ownedBuildingsAccountedByNeither 0 (owned = materialized + refused in every wave).",
+        "stopCodesOutsideClosedVocabulary 0 (all six observed codes are members of MIDTOWN_CORE_V3_STOP_CODES).",
+        "SCOPE OF THE COMPONENT HALF. The computed metric is named buildingsWithoutStyleClass because that is what a census can count: buildings missing a machine-readable class. The criterion's 'zero unclassified exterior COMPONENTS' half is carried by criterion 15's contract rather than by a count - a component outside the closed generated / evidence-backed / absent / not-applicable vocabulary makes v3TruthTiers() THROW, so an unclassified component cannot reach a release for a census to find. The zero is enforced upstream, not measured downstream.",
+        "WHAT THIS CRITERION READS, so that MET here does not contradict NOT-MET at criterion 1. This is a LEDGER-PARTITION reading: every declared cell belongs to exactly one wave and every accepted parent is owned exactly once, which is a statement about the immutable ownership partition and says nothing about whether a parent's exterior was ever built or shipped. Criterion 1 asks the MISSING-EXTERIOR question over the same 45,194 parents and answers 484 shipped, 899 refused. Both are true simultaneously because they count different things: ownership closure versus exterior presence."
       ]
     },
     {
@@ -176,14 +186,15 @@
     {
       "index": 14,
       "criterion": "Unchanged cells remain byte-identical and checksum-identical across an incremental refresh, while changed cells retain predecessor links, source dates, and an auditable release diff",
-      "verdict": "MET",
+      "verdict": "MET-AS-ADJUDICATED",
       "evidence": [
         "Real incremental refreshes occurred: T026 re-promoted Block 835 V2 to V3 and Midtown-core V2 to V3, retaining each V2 record verbatim as the successor's predecessor. src/runtime/exterior-default-activation.test.ts asserts 'keeps the V2 predecessor byte-identical to the release it names'.",
         "Per-wave fingerprint suites assert a derived subset's fingerprint stays byte-identical so an unchanged wave cannot be forced to rebuild (lower-manhattan-fingerprint.test.ts, southern-remainder-fingerprint.test.ts, central-upper-manhattan-fingerprint.test.ts, northern-manhattan-fingerprint.test.ts).",
         "src/release/exterior-release.ts:660 'Unchanged cell mapping must retain its exact checksum' and :663 'Changed cell release must continue exactly from the predecessor snapshot mapping'; exterior-release.test.ts 'rejects incomplete waves, discontinuity, unchanged hash drift, cycles, and invalid rollback'.",
         "Source dates travel per asset (multi-lod-assembly.ts sourceDates{capturedAt, updatedAt}) and are re-verified against the embedded GLB canonical metadata, which throws on divergence.",
         "The auditable diff is the snapshot-to-snapshot per-cell mapping in ExteriorRolloutSnapshot, which carries predecessor and rollbackTarget."
-      ]
+      ],
+      "adjudicationDelta": "NO REFRESH IN THIS GOAL LEFT ANY CELL UNCHANGED. Both real incremental refreshes were V2-to-V3 grammar changes, and a grammar change regenerates every renderable cell of the wave by construction - Block 835's single cell and every renderable cell of Midtown-core. So the changed-cell half (predecessor links, source dates, auditable diff) is exercised on real refreshes, and the UNCHANGED-CELL half is contract-enforced and fingerprint-tested but never exercised on one: exterior-release.ts:660 refuses unchanged-hash drift and four per-wave fingerprint suites prove a derived subset re-derives byte-identically, yet no committed refresh ever carried a cell across a version untouched. This is the same treatment criterion 13 receives, and for the same reason: the machinery is proven, the real event it exists for never happened."
     },
     {
       "index": 15,
@@ -363,7 +374,9 @@
         "PATHS AND HASHES FAIL CLOSED: src/runtime/path-security.ts admits only a canonical segment grammar; src/runtime/exterior-cell-runtime.ts fails closed when Web Crypto is unavailable, rejects a GLB whose bytes fail the declared checksum, never follows more than one fallback hop, and refuses a path pinned to two checksums.",
         "CONCURRENCY: the runtime ceiling is EXTERIOR_RUNTIME_BUDGETS.maxConcurrentRequests = 4, stricter than the criterion's 8, asserted by exterior-cell-runtime.test.ts under aggregate load; the browser-measured peak was 4 (probe counter) and 6 (all release data) on Block 835.",
         "CACHE: the six-wave composition is entry-bound at 498 of 512 entries and 121.81 MiB of 256 MiB (src/runtime/exterior-cache-ceiling.test.ts, derived from the committed payload inventories); the worst browser-derived residency was 484 entries and 128,747,055 bytes, both inside budget.",
-        "RETAINED MEMORY IS NOT CERTIFIED FOR WHAT SHIPS. grep -rn 'monoton' over data/ returns zero hits: no committed record for any of the six waves carries a first-half/second-half growth ratio, a noise-band comparison, or a pass/fail. The 12 heapAfterGcBytes readings in each acceptance record are 3 repeats across 4 DIFFERENT camera stations, not repeats of one deterministic camera path. The only monotonic-growth verdicts are prose over untracked raw files, for Block 835 V3 (heap shrank 13.3% and 12.0% with forced collection) and Midtown (-0.107 and -0.105 against a 0.10 band). Nothing covers the four textured waves or the six-wave composition.",
+        "THE FIRST READING OF THIS CONJUNCT FAILED, AND IS RECORDED HERE BEFORE THE LATER ONES SO THE SEQUENCE IS NOT READ BACKWARDS. T009 row 18 measured retained heap GROWING 28.8% and 32.4% across repeated deterministic camera paths and recorded the conjunct as NOT SATISFIED AS WRITTEN. The row carries its own method caveat - the readings were taken WITHOUT a forced collection, so a rising usedJSHeapSize is consistent with garbage that had not yet been collected and does not by itself prove retention. That caveat is why the reading was superseded rather than treated as a defect, and it is also why the superseding readings had to force collection to say anything at all.",
+        "The SUPERSEDING readings, both with forced collection: Block 835 V3 (T026) heap SHRANK 13.3% and 12.0%, and Midtown -0.107 and -0.105 against a 0.10 band. Both are prose over untracked raw files rather than committed records, and both predate the four textured waves.",
+        "RETAINED MEMORY IS NOT CERTIFIED FOR WHAT SHIPS. grep -rn 'monoton' over data/ returns zero hits: no committed record for any of the six waves carries a first-half/second-half growth ratio, a noise-band comparison, or a pass/fail. The 12 heapAfterGcBytes readings in each acceptance record are 3 repeats across 4 DIFFERENT camera stations, not repeats of one deterministic camera path. The only monotonic-growth verdicts are the two superseding readings named above, and nothing covers the four textured waves or the six-wave composition.",
         "Also unmeasured: there is no committed peak-concurrency measurement for the six-wave composition (grep -rn 'peakConcurren' over data/ returns zero); the four acceptance records carry maxConcurrentRequests as a CONFIGURATION value, not a measured peak."
       ],
       "stopReport": "One bounded measurement closes the memory conjunct: run the existing block835CanaryHeapVerdict method - first-half versus second-half medians against a 0.1 noise band - over a REPEATED deterministic camera path on the six-wave composition with HeapProfiler.collectGarbage between repeats, and commit the ratio. The acceptance CLIs already force collection and read usedJSHeapSize; only the repeated-single-path shape and the growth verdict are missing. A second, smaller item: record the measured peak concurrent exterior request count for the six-wave session alongside it."
@@ -382,8 +395,8 @@
   ],
   "residualRisks": [
     "THE VOLUME-MARGIN PATTERN IS STILL UNEXPLAINED. The wave-scale worst accepted volume-identity deviation sat at 0.988 of tolerance for central-upper-Manhattan and 0.9895 for northern-Manhattan, and the latter refused 16 buildings for exceeding it. Two waves in a row above ninety-eight hundredths of the tolerance is a pattern, not a coincidence. No tolerance was moved and no task has explained it; ADR 0037 precondition (e) records that the explanation is still owed.",
-    "LOAD-DEPENDENT TEST FLAKES. src/release/midtown-core-v3-release.test.ts and src/app/App.test.tsx time out under concurrent CPU load (vitest's 5,000 ms default) and pass in isolation and on an unloaded machine. midtown-core-v3-release.test.ts alone takes about 20 s for 20 tests. These are timeouts, not assertion failures, and the same tests were observed green on a quiet re-run.",
-    "THE T023 SMOKE JOURNEY six-wave-default IS NOT REPRODUCIBLE FROM A CLEAN BROWSER PROFILE. A fresh Chrome profile issues /favicon.ico, which the showcase allowlist classifier does not categorise, so everyRequestClassified reads false and the journey fails. Verified 2026-08-12 in both headless and headed Chrome with fresh profiles (554 distinct URLs against the committed record's 553). The SUBSTANCE is unaffected - zero external hosts, all six waves streaming their exact expected GLB counts, private paths unreachable by checksum - and the preview answers /favicon.ico with a 404 of zero bytes, which is failing closed. But the committed pass depended on browser-profile state. Not repaired here: the classifier is T023's, and editing it would make the committed record non-reproducible in the other direction.",
+    "LOAD-DEPENDENT TEST FLAKES. src/release/midtown-core-v3-release.test.ts and src/app/App.test.tsx time out under concurrent CPU load (vitest's 5,000 ms default) and pass in isolation and on an unloaded machine. midtown-core-v3-release.test.ts alone takes about 20 s for 20 tests. These are timeouts, not assertion failures. The isolating measurement: `npx vitest run --no-file-parallelism` passed 1,535 of 1,535 twice in a row at about 72 s, while the default parallel run intermittently drops exactly one of these two files. So the trigger is worker CPU contention, not test order or shared state, and `--no-file-parallelism` is a reliable workaround for a loaded machine. A raised `testTimeout` would close it properly.",
+    "THE T023 SMOKE JOURNEY six-wave-default IS NOT REPRODUCIBLE FROM A CLEAN BROWSER PROFILE. A fresh Chrome profile issues /favicon.ico, which the showcase allowlist classifier does not categorise, so everyRequestClassified reads false and the journey fails. Verified 2026-08-12 in both headless and headed Chrome with fresh profiles (554 distinct URLs against the committed record's 553). The SUBSTANCE is unaffected - zero external hosts, all six waves streaming their exact expected GLB counts, private paths unreachable by checksum - and the preview answers /favicon.ico with a 404 of zero bytes, which is failing closed. But the committed pass depended on browser-profile state. Not repaired here: the classifier is T023's, and editing it would make the committed record non-reproducible in the other direction. Registered as a follow-up task.",
     "THE SHOWCASE DIFFERENTIAL AUDIT REWRITES ITS OWN COMMITTED RECORD AND IS SELF-INVALIDATING. pnpm showcase:audit writes data/public-showcase-20260812/differential-audit.json in place, and its workingRecordDirectories total counts the working-record directories under data/. A fresh re-run at the start of T024 reproduced the committed bytes EXACTLY; a re-run after T024 created data/goal-integration-acceptance-20260812/ raised the count from 19 to 20 and changed the record checksum. The file was restored to its committed bytes and was NOT re-emitted, and no drift suite broke - src/release/public-showcase-evidence-consistency.test.ts reads the record but does not recompute that total. An evidence record whose contents depend on the presence of later evidence records is self-invalidating by construction.",
     "THE WAVE LEDGER'S eligibility.json IS IMMUTABLE AND NOW READS STALE. It declares all 883 cells private-eligible and 0 public-eligible, with a basis stating no cell is public-eligible until a promotion task supplies per-cell rights-cleared evidence. Six promotions have since shipped public roots under per-wave instruments. The artifact is v1, pinned to the ledger checksum, and correctly was not mutated; the live eligibility authority is the six approval instruments, not this file.",
     "STRUCTURAL VALIDATION IS NOT VISUAL, GEOGRAPHIC OR PRODUCTION PROOF. A signed-volume identity, a checksum and a passing suite do not prove that a facade looks right, that a building sits where the real one does, or that the composition is smooth. The near-field visual reading is Block-835-scoped, and the isolated slow frames of 116.2 ms and 140.0 ms are recorded rather than smoothed.",
@@ -494,7 +507,7 @@
             "curtain-cool": 2
           },
           "styleClassSum": 14,
-          "unclassifiedMaterializedCount": 0,
+          "buildingsWithoutStyleClass": 0,
           "unaccountedOwnedCount": 0
         },
         {
@@ -519,7 +532,7 @@
             "stone-neutral": 1401
           },
           "styleClassSum": 7091,
-          "unclassifiedMaterializedCount": 0,
+          "buildingsWithoutStyleClass": 0,
           "unaccountedOwnedCount": 0
         },
         {
@@ -545,7 +558,7 @@
             "curtain-cool": 664
           },
           "styleClassSum": 6291,
-          "unclassifiedMaterializedCount": 0,
+          "buildingsWithoutStyleClass": 0,
           "unaccountedOwnedCount": 0
         },
         {
@@ -570,7 +583,7 @@
             "stone-neutral": 1716
           },
           "styleClassSum": 9507,
-          "unclassifiedMaterializedCount": 0,
+          "buildingsWithoutStyleClass": 0,
           "unaccountedOwnedCount": 0
         },
         {
@@ -595,7 +608,7 @@
             "curtain-cool": 1198
           },
           "styleClassSum": 11543,
-          "unclassifiedMaterializedCount": 0,
+          "buildingsWithoutStyleClass": 0,
           "unaccountedOwnedCount": 0
         },
         {
@@ -621,7 +634,7 @@
             "curtain-cool": 921
           },
           "styleClassSum": 9849,
-          "unclassifiedMaterializedCount": 0,
+          "buildingsWithoutStyleClass": 0,
           "unaccountedOwnedCount": 0
         }
       ],
@@ -659,7 +672,7 @@
       "materializedBuildingCount": 44295,
       "refusedBuildingCount": 899,
       "unaccountedOwnedCount": 0,
-      "unclassifiedMaterializedCount": 0,
+      "buildingsWithoutStyleClass": 0,
       "unknownStopCodeCount": 0
     },
     "promoted": {
@@ -759,7 +772,7 @@
       "missingSpatialCells": 0,
       "missingAcceptedBuildingParents": 0,
       "duplicateCanonicalOwners": 0,
-      "unclassifiedExteriorComponents": 0,
+      "buildingsWithoutStyleClass": 0,
       "ownedBuildingsAccountedByNeither": 0,
       "stopCodesOutsideClosedVocabulary": 0,
       "censusOwnedVersusLedgerOwned": 0,
