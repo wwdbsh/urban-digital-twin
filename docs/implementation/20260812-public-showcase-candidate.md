@@ -17,15 +17,17 @@ what was measured, and what a reader needs in order to re-run it.
 | `data/public-showcase-20260812/differential-audit.json` | Committed audit record |
 | `data/public-showcase-20260812/smoke-evidence.json` | Committed smoke record |
 | `docs/decisions/0038-public-showcase-candidate.md` | ADR |
+| `package.json` | `showcase:audit` and `showcase:smoke` scripts |
 
-Tests: `public-showcase-manifest.test.ts` (23),
+Tests: `public-showcase-manifest.test.ts` (26),
 `public-showcase-evidence-consistency.test.ts` (14),
-`scripts/public-showcase-audit.test.mjs` (15).
+`scripts/public-showcase-audit.test.mjs` (21). Run them with
+`pnpm showcase:audit` / `pnpm showcase:smoke` to regenerate the records.
 
 ## The manifest
 
 `manhattan-public-showcase-20260812`, digest
-`ca2676e0e1b91febd442b7b72d382462c92527816afd80bddd2d24bda6ad4645`.
+`c242ec4357d1dda46712c65f7e667453036c04fe8dca426bd285c9fb50db7cc2`.
 
 Six waves, in activation order, pinned against
 `EXTERIOR_DEFAULT_ACTIVATIONS`:
@@ -51,14 +53,14 @@ not reuse the release graph's own root-checksum algorithm.
 ## Audit results
 
 `node scripts/public-showcase-audit-cli.mjs` — record checksum
-`a329ae7d8a52e02c4e0c773c8cb26a4e22fdf0ada492554b386752d3991645a1`.
+`b6366c3c2d442aa8e1a47b64745c3d1d70639d6e55f22307d5570267912bada8`.
 
 ```
 declaredArtifacts              1863     resolvedArtifacts            1863
 unresolvedArtifacts               0     declaredPayloadRefs          1387
 unresolvedPayloadRefs             0     scannedPublicFiles           2385
 privateRootArtifactsExcluded      6     privateReferencePackageFiles  116
-workingRecordDirectories         18
+workingRecordDirectories         19
 declaredDisclosures              24     declaredPrivateRootMetadata    36
 undeclaredPrivateReferences       0     privateBytesReachable           0
 declaredPrivatePathsMaterialized  0
@@ -85,7 +87,7 @@ Tombstones by wave (all with stated reasons):
 ## Smoke evidence
 
 `node scripts/public-showcase-smoke-cli.mjs` — record checksum
-`0d44339fc24fd73a2de51e11ad46a7b0ea6c2258bb9ab1d65c707eaa838f92fe`.
+`4617d4667245e345ac4fe37f8e2d930407f0678856a4c47434b68204648c2e15`.
 Served bundle verified byte-identical to this tree's `dist/index.html`; entry
 script `/assets/index-CsMbhorl.js` names all six promoted releases.
 
@@ -95,19 +97,22 @@ reference packages' partitions are removed by `prune-private-partitions.mjs`
 `dist/`: 0. Materialized declared private paths: 0.
 
 **`six-wave-default`.** All six waves streamed with no exterior URL parameter.
-548 distinct URLs, all classified:
+**553 distinct URLs ATTEMPTED** (`Network.requestWillBeSent`, unioned with
+responses), of which 548 produced a response — so five were attempted and never
+completed. All 553 classified:
 
 | class | count |
 | --- | --- |
-| app shell | 14 |
+| app shell | 19 |
 | wave payload | 502 |
 | base payload | 32 |
 | refusals | 0 |
-| external hosts | 0 |
+| external hostnames | 0 |
+| failed requests | 0 |
 
-Per wave responses: block-835 17, midtown-core 159, lower-manhattan 74,
-southern-remainder 182, central-upper 43, northern 27. `everyRequestAccountedFor`
-is asserted, so nothing was skipped rather than classified.
+`noRequestDropped` and `everyRequestClassified` are asserted separately: a
+refusal proves nothing was dropped from the accounting and does NOT count as
+allowed, so a leaking session cannot report a tidy true.
 
 **`private-paths-unreachable`.** 10 probes (6 declared private root artifacts +
 4 pruned reference-package tilesets). 0 served private bytes, 0 unexplained
@@ -142,7 +147,17 @@ version of each looked fine.
 
 A third, smaller: the pick journey initially read an empty search result list
 because the citywide search shards were still streaming when the exterior waves
-had settled. The fixed pause became a wait on the results existing.
+had settled. A wait on the results existing was not enough either — a single
+`input` event dispatched before the index is warm produces nothing and nothing
+re-triggers the search — so the query is now re-typed on every poll.
+
+Review then found two more, both now fixed and both with pre-fix-failing tests:
+the request measurement counted only requests that RECEIVED a response (a
+blocked off-origin request would have been invisible to a claim about requests
+leaving the candidate), and the classifier's accepted headings were wide enough
+to admit a private artifact path at a citation position, an invented key inside
+the private root, and a private id used as an object key. It also caught an
+unbacked rights conclusion for `real-wave-20260804` — see ADR 0038.
 
 ## Reproducing it
 

@@ -166,23 +166,72 @@ export function restrictedIdentifiersFor(graph, wave) {
 }
 
 /**
- * JSON locations at which a public artifact is ALLOWED to name a private
- * identifier, because the schema defines the field for exactly that purpose.
- * Anything outside this closed set is an undeclared reference and fails.
+ * The EXACT normalized JSON paths at which a public root may cite its private
+ * counterpart. Anchored, not suffix-matched.
  *
- * Each entry is a suffix match on the dotted JSON path, so array indexes in the
- * middle of the path do not have to be enumerated.
+ * The earlier form matched any path ENDING in `privatePredecessor.rootId`, which
+ * meant a deeply nested `some.note.privatePredecessor.rootId` earned the
+ * accepted heading. Review also proved the looser form accepted a private
+ * ARTIFACT PATH sitting at a `privatePredecessor.id` position — a path is not a
+ * root id, and accepting it there was accepting the wrong KIND of secret in a
+ * field that exists for a different one.
+ *
+ * So two things are pinned now: WHERE (exact path, after array indexes are
+ * stripped) and WHAT KIND (`ACCEPTED_DISCLOSURE_IDENTIFIER_KINDS`). A citation
+ * is a root's identity and hash; it is never a path, never a release id, and
+ * never an artifact checksum.
  */
-export const DECLARED_DISCLOSURE_PATH_SUFFIXES = [
-  "privatePredecessor.rootId",
-  "privatePredecessor.rootChecksumSha256",
-  "privatePredecessor.id",
-  "privatePredecessor.checksumSha256",
+export const DECLARED_DISCLOSURE_PATHS = [
+  // release-graph.json: roots[N].privatePredecessor.*
+  "roots.privatePredecessor.rootId",
+  "roots.privatePredecessor.rootChecksumSha256",
+  // assemblies.json: [N].release.privatePredecessor.*
   "release.privatePredecessor.id",
   "release.privatePredecessor.checksumSha256",
 ];
 
-/** Every string leaf in a JSON value, with its dotted path. */
+/** Only a root's identity and hash may be cited. Not a path, not a release id. */
+export const ACCEPTED_DISCLOSURE_IDENTIFIER_KINDS = ["private-root-id", "private-root-checksum"];
+
+/**
+ * The keys of the private root object that the release-graph schema requires,
+ * whitelisted individually.
+ *
+ * Accepting the WHOLE `roots[private]` subtree was too generous: review proved
+ * that an invented `roots[0].leakedFetchUrl` carrying a private URL classified
+ * as accepted, because it merely sat under the right prefix. The schema mandates
+ * specific fields, so those are what is accepted; a key the schema never defined
+ * is exactly the thing that should fail.
+ */
+export const DECLARED_PRIVATE_ROOT_KEYS = [
+  "rootId",
+  "releaseId",
+  "rootChecksumSha256",
+  "artifacts.relativeRef",
+  "artifacts.checksumSha256",
+  "artifactAllowlist",
+];
+
+/**
+ * Strip array indexes so `roots[1].x` and `artifacts[7].y` compare structurally.
+ *
+ * The leading-dot trim matters: `assemblies.json` is a top-level ARRAY, so its
+ * paths start `[0].release…` and stripping the index leaves `.release…`, which
+ * would match no anchored path at all. That is how it failed the first time.
+ */
+function normalizePath(path) {
+  return path.replace(/\[\d+\]/gu, "").replace(/^\.+/u, "");
+}
+
+/**
+ * Every string in a JSON value, with its dotted path — VALUES and KEYS both.
+ *
+ * Keys are scanned because review proved an object *keyed* by a private root id
+ * (`{ "root:...:private": {...} }`) produced zero findings: the secret was in
+ * the key, and only values were ever read. A key finding is reported at
+ * `<path>#key` so it can never collide with a declared value path, which means
+ * a private identifier used as a key always fails closed.
+ */
 function* stringLeaves(value, path = "") {
   if (typeof value === "string") {
     yield [path, value];
@@ -193,13 +242,16 @@ function* stringLeaves(value, path = "") {
     return;
   }
   if (value && typeof value === "object") {
-    for (const [key, child] of Object.entries(value)) yield* stringLeaves(child, path === "" ? key : `${path}.${key}`);
+    for (const [key, child] of Object.entries(value)) {
+      const childPath = path === "" ? key : `${path}.${key}`;
+      yield [`${childPath}#key`, key];
+      yield* stringLeaves(child, childPath);
+    }
   }
 }
 
 function isDeclaredDisclosurePath(path) {
-  const normalized = path.replace(/\[\d+\]/gu, "");
-  return DECLARED_DISCLOSURE_PATH_SUFFIXES.some((suffix) => normalized === suffix || normalized.endsWith(`.${suffix}`));
+  return DECLARED_DISCLOSURE_PATHS.includes(normalizePath(path));
 }
 
 /**
@@ -211,6 +263,12 @@ export function privateRootPathPrefix(parsed) {
   if (!parsed || typeof parsed !== "object" || !Array.isArray(parsed.roots)) return null;
   const index = parsed.roots.findIndex((root) => root && typeof root === "object" && root.audience === "private");
   return index >= 0 ? `roots[${index}].` : null;
+}
+
+/** A path inside the private root that names a schema-mandated key, and nothing else. */
+function isDeclaredPrivateRootPath(path, privatePrefix) {
+  if (privatePrefix === null || !path.startsWith(privatePrefix)) return false;
+  return DECLARED_PRIVATE_ROOT_KEYS.includes(normalizePath(path.slice(privatePrefix.length)));
 }
 
 /**
@@ -225,8 +283,8 @@ export function scanArtifactForRestricted(parsed, identifiers) {
     for (const [identifier, kind] of identifiers) {
       if (!leaf.includes(identifier)) continue;
       let classification = "undeclared-private-reference";
-      if (isDeclaredDisclosurePath(path)) classification = "declared-provenance-disclosure";
-      else if (privatePrefix !== null && path.startsWith(privatePrefix)) classification = "declared-private-root-metadata";
+      if (isDeclaredDisclosurePath(path) && ACCEPTED_DISCLOSURE_IDENTIFIER_KINDS.includes(kind)) classification = "declared-provenance-disclosure";
+      else if (isDeclaredPrivateRootPath(path, privatePrefix)) classification = "declared-private-root-metadata";
       findings.push({ jsonPath: path, identifier, identifierKind: kind, classification });
     }
   }
@@ -257,6 +315,9 @@ export function auditWave(wave, options) {
   const publicRoot = graph.roots.find((root) => root.audience === "public");
   const privateRoot = graph.roots.find((root) => root.audience === "private");
   if (!publicRoot) fail(`${wave.packageId} declares no public root.`);
+  // Checked before the first dereference below: a graph with no private root is
+  // a missing audience partition, and saying so beats a TypeError three lines on.
+  if (!privateRoot) fail(`${wave.packageId} declares no private root; the audience partition this audit checks does not exist.`);
 
   // --- Manifest pins vs the graph's own declarations -----------------------
   if (publicRoot.rootId !== wave.publicRootId) fail(`${wave.packageId} public rootId is ${publicRoot.rootId}, but the showcase manifest pins ${wave.publicRootId}.`);
@@ -316,22 +377,48 @@ export function auditWave(wave, options) {
   const unresolvedPayload = payloadRefs.filter((ref) => !existsSync(join(packageRoot, ref)));
 
   // --- (2) EXCLUSION: name every private-side item and why ----------------
+  //
+  // Built over the UNION of `artifacts[].relativeRef` and `artifactAllowlist`,
+  // because those are the two places `restrictedIdentifiersFor` admits a private
+  // path from. Enumerating only `artifacts` happened to cover the allowlist on
+  // these six waves — the two lists agree today — and a proof that holds by
+  // coincidence is not a proof. The invariant is asserted below instead.
+  const identifiers = restrictedIdentifiersFor(graph, wave);
+  const artifactByRef = new Map((privateRoot.artifacts ?? []).map((artifact) => [artifact.relativeRef, artifact]));
+  const declaredPrivatePaths = [...new Set([
+    ...(privateRoot.artifacts ?? []).map((artifact) => artifact.relativeRef),
+    ...(privateRoot.artifactAllowlist ?? []),
+  ].filter((ref) => typeof ref === "string"))].sort();
+
   const exclusions = [];
-  for (const artifact of privateRoot.artifacts ?? []) {
-    const absolute = join(packageRoot, artifact.relativeRef);
-    const present = existsSync(absolute);
+  for (const relativeRef of declaredPrivatePaths) {
+    const artifact = artifactByRef.get(relativeRef) ?? null;
+    const present = existsSync(join(packageRoot, relativeRef));
     exclusions.push({
-      relativeRef: artifact.relativeRef,
-      logicalId: artifact.logicalId,
-      kind: artifact.kind,
-      declaredByteSize: artifact.byteSize,
+      relativeRef,
+      logicalId: artifact?.logicalId ?? null,
+      kind: artifact?.kind ?? null,
+      declaredByteSize: artifact?.byteSize ?? null,
+      declaredIn: artifact ? "private-root-artifacts" : "private-root-artifact-allowlist",
       reason: present ? EXCLUSION_REASONS.privateAudienceRoot : EXCLUSION_REASONS.unmaterializedByDesign,
       reachableInPayloadTree: present,
     });
   }
 
+  // THE INVARIANT, asserted rather than assumed: every private PATH the scanner
+  // treats as restricted must have a byte-absence proof beside it. If these ever
+  // diverge the audit stops, because the alternative is reporting a clean scan
+  // over an identifier nothing proved absent.
+  const provenPaths = new Set(exclusions.map((entry) => entry.relativeRef));
+  const unproven = [...identifiers.entries()]
+    .filter(([, kind]) => kind === "private-artifact-path")
+    .map(([identifier]) => identifier)
+    .filter((identifier) => !provenPaths.has(identifier));
+  if (unproven.length > 0) {
+    fail(`${wave.packageId}: ${unproven.length} private path(s) are treated as restricted but carry no byte-absence proof: ${unproven.join(", ")}`);
+  }
+
   // --- (3) NON-REACHABILITY over every public byte -------------------------
-  const identifiers = restrictedIdentifiersFor(graph, wave);
   const publicFiles = walkFiles(join(packageRoot, "public"));
   const entryPoints = ["index.json", "release-graph.json", "assemblies.json"].map((name) => join(packageRoot, name));
   const declaredDisclosures = [];

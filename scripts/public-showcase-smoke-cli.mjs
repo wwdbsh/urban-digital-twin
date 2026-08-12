@@ -290,16 +290,46 @@ async function still(session, journeyId) {
 }
 
 /**
- * THE CONTAINMENT AUDIT. Every response the page received is classified against
- * the candidate's closed allowlist. A URL that does not classify is recorded
- * with the refusal message and fails the journey — the point is that no request
- * is ignored, not that most of them look right.
+ * THE CONTAINMENT AUDIT.
+ *
+ * Every URL the page ATTEMPTED is classified against the candidate's closed
+ * allowlist — not every URL it successfully received.
+ *
+ * That distinction is the correction review forced. An earlier cut built the
+ * observed set from `Network.responseReceived` alone, so a request that was
+ * blocked, DNS-failed, aborted, or refused by CORS never appeared in it at all.
+ * The claim attached to that set was "no request left the candidate", which is
+ * exactly the claim a *failed* off-origin request would have falsified while
+ * being invisible to the measurement. A blocked request to an external host is
+ * still the page trying to leave.
+ *
+ * So `Network.requestWillBeSent` is the spine of the set, `responseReceived`
+ * marks which of those completed, and `loadingFailed` is accounted separately
+ * rather than silently dropped.
  */
 function auditRequests(session, previewBase) {
   const origin = new URL(previewBase).origin;
-  const responses = session.events.filter((event) => event.method === "Network.responseReceived").map((event) => event.params.response.url);
-  const observed = [...new Set(responses)].sort();
-  const externalHosts = [...new Set(observed.map((url) => { try { return new URL(url).host; } catch { return ""; } }).filter((host) => host !== "" && !host.startsWith("localhost") && !host.startsWith("127.0.0.1")))];
+  const attempted = session.events.filter((event) => event.method === "Network.requestWillBeSent").map((event) => event.params.request?.url).filter((url) => typeof url === "string");
+  const received = session.events.filter((event) => event.method === "Network.responseReceived").map((event) => event.params.response.url);
+  const failedIds = new Set(session.events.filter((event) => event.method === "Network.loadingFailed").map((event) => event.params.requestId));
+  const failedUrls = [...new Set(session.events
+    .filter((event) => event.method === "Network.requestWillBeSent" && failedIds.has(event.params.requestId))
+    .map((event) => event.params.request?.url)
+    .filter((url) => typeof url === "string"))].sort();
+
+  // The union: attempted ∪ received. `received` is folded in because a redirect
+  // or a service-worker response can surface a URL that no requestWillBeSent
+  // named, and this set must never be smaller than what actually happened.
+  const observed = [...new Set([...attempted, ...received])].sort();
+
+  // Exact hostname match. `startsWith("localhost")` would have accepted
+  // `localhost.evil.example`, which is precisely the shape of an exfiltration
+  // host chosen to look local.
+  const LOCAL_HOSTNAMES = new Set(["localhost", "127.0.0.1", "::1", "[::1]"]);
+  const externalHosts = [...new Set(observed
+    .map((url) => { try { return new URL(url).hostname; } catch { return ""; } })
+    .filter((hostname) => hostname !== "" && !LOCAL_HOSTNAMES.has(hostname)))].sort();
+
   const perWave = Object.fromEntries(PUBLIC_SHOWCASE_WAVES.map((wave) => [wave.publicReleaseId, { responses: 0, distinctArtifacts: 0, glbResponses: 0 }]));
   const refusals = [];
   const distinctByWave = new Map(PUBLIC_SHOWCASE_WAVES.map((wave) => [wave.publicReleaseId, new Set()]));
@@ -322,22 +352,33 @@ function auditRequests(session, previewBase) {
     }
   }
   for (const [releaseId, set] of distinctByWave) perWave[releaseId].distinctArtifacts = set.size;
-  // Every response the page received, counted, so a reader can see nothing was
-  // dropped from the classification: shell + wave payload + refusals = observed.
+
+  // Two DIFFERENT properties, deliberately not one flag. A refusal is a URL that
+  // was examined and rejected: it means nothing was dropped, and it does NOT
+  // mean the request was allowed. Folding refusals into an "accounted for"
+  // count would let a leaking session report a tidy true.
   const classifiedTotal = appShell
     + Object.values(perWave).reduce((total, entry) => total + entry.responses, 0)
-    + Object.values(perBase).reduce((total, count) => total + count, 0)
-    + refusals.length;
+    + Object.values(perBase).reduce((total, count) => total + count, 0);
+  const noRequestDropped = classifiedTotal + refusals.length === observed.length;
+  const everyRequestClassified = refusals.length === 0 && classifiedTotal === observed.length;
+
   return {
     observedDistinctUrls: observed.length,
+    attemptedDistinctUrls: [...new Set(attempted)].length,
+    receivedDistinctUrls: [...new Set(received)].length,
+    failedRequestUrls: failedUrls,
     appShellResponses: appShell,
     perWave,
     perBasePackage: perBase,
     externalHosts,
     refusals,
     classifiedTotal,
-    everyRequestAccountedFor: classifiedTotal === observed.length,
-    passed: refusals.length === 0 && externalHosts.length === 0 && classifiedTotal === observed.length,
+    /** Nothing was dropped from the accounting: classified + refused = observed. */
+    noRequestDropped,
+    /** Nothing was refused, and everything observed classified inside the candidate. */
+    everyRequestClassified,
+    passed: refusals.length === 0 && externalHosts.length === 0 && noRequestDropped && everyRequestClassified,
   };
 }
 
@@ -359,7 +400,7 @@ async function journeySixWaveDefault(port, previewBase) {
     const streamingWaves = PROMOTED_RELEASE_IDS.filter((releaseId) => waves.some((wave) => wave.releaseId === releaseId));
     return {
       journeyId: "six-wave-default",
-      claim: "A DEFAULT session — no exterior parameter of any kind — resolves all six promoted waves, and every request it issued classifies against the showcase candidate's closed allowlist. No request left the candidate, and no host outside the local preview was contacted.",
+      claim: "A DEFAULT session — no exterior parameter of any kind — resolves all six promoted waves, and every URL the page ATTEMPTED (Network.requestWillBeSent, unioned with responses, so a blocked or failed request cannot hide) classifies against the showcase candidate's closed allowlist. No request was directed outside the candidate, and no hostname outside the local preview was addressed — including by requests that never completed.",
       url,
       urlDeclaresNoExteriorParameter: !url.includes("exterior"),
       waves: streamingWaves,
@@ -466,23 +507,36 @@ async function journeyPickProvenance(port, previewBase) {
     );
     // Select through the app's OWN search, so the pick travels the path a user's
     // pick travels rather than a path only this script can reach.
-    await session.evaluate(`(() => {
+    //
+    // The query is re-typed on every poll rather than typed once and waited on.
+    // The search index lives in the citywide base's search shards, which are
+    // still streaming when the exterior waves have settled; a single `input`
+    // event dispatched before the index is warm produces an empty result list
+    // and NOTHING ever re-triggers the search, so the wait would time out with
+    // the query sitting in the box. Re-dispatching is what makes this wait
+    // actually a wait.
+    const TYPE_QUERY = `(() => {
       const open = [...document.querySelectorAll('button')].find((node) => (node.textContent || '').trim() === 'Open details');
       if (open) open.click();
       const search = document.querySelector('input[type="search"], input[placeholder*="Search"]');
-      if (search) {
-        const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
-        setter.call(search, ${JSON.stringify(PICK_BUILDING_ID)});
-        search.dispatchEvent(new Event('input', { bubbles: true }));
-      }
+      if (!search) return false;
+      const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+      setter.call(search, '');
+      search.dispatchEvent(new Event('input', { bubbles: true }));
+      setter.call(search, ${JSON.stringify(PICK_BUILDING_ID)});
+      search.dispatchEvent(new Event('input', { bubbles: true }));
       return true;
-    })()`);
-    // The search index lives in the citywide base's search shards, which are
-    // still streaming when the exterior waves have settled. A fixed pause here
-    // read an empty result list and reported a provenance failure that was
-    // really a timing failure, so the wait is on the RESULTS existing.
+    })()`;
     const READ_OPTIONS = `[...document.querySelectorAll('[role="option"], .search-result, li button')].map((node) => (node.textContent || '').trim().slice(0, 120))`;
-    const searchResults = await waitFor(session, (value) => Array.isArray(value) && value.length > 0, READ_OPTIONS, "pick-provenance search results");
+    const searchDeadline = Date.now() + READY_TIMEOUT_MS;
+    let searchResults = [];
+    for (;;) {
+      if (Date.now() > searchDeadline) fail(`pick-provenance search for ${PICK_BUILDING_ID} never returned a result.`);
+      await session.evaluate(TYPE_QUERY);
+      await new Promise((done) => { setTimeout(done, 1_500); });
+      searchResults = await session.evaluate(READ_OPTIONS).catch(() => []);
+      if (Array.isArray(searchResults) && searchResults.length > 0) break;
+    }
     await session.evaluate(`(() => {
       const options = [...document.querySelectorAll('[role="option"], .search-result, li button')];
       if (options[0]) options[0].click();

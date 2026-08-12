@@ -6,6 +6,7 @@
  * root, a moved pin and a weakened exclusion must each fail here rather than in
  * a browser.
  */
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 import { BLOCK835_V3_CANARY_APPROVAL } from "./block835-v3-canary-release.ts";
@@ -115,6 +116,41 @@ describe("the base packages the waves compose over are enumerated too", () => {
 
   it("refuses a private path even under an enumerated base package", () => {
     expect(() => classifyShowcaseRequestPath("/data/manhattan-citywide-20260804/private/x.json")).toThrow(/private-partition path/u);
+  });
+
+  /**
+   * B1. The manifest asserts an exclusion for each base package; this reads the
+   * ACTUAL release manifests rather than trusting that assertion, because an
+   * earlier draft claimed `deploymentExcluded: true` for a release that carries
+   * no instrument at all. Two must carry the text; the third must NOT — and the
+   * absence is asserted, so the day it gains an instrument this test says so.
+   */
+  it("backs each exclusion source against the release manifest it names", () => {
+    const readApproval = (packageId: string): { exclusions?: string[] } | null => {
+      const manifest = JSON.parse(new TextDecoder().decode(readFileSync(`public/data/${packageId}/manifest.json`))) as { approval?: { exclusions?: string[] } };
+      return manifest.approval ?? null;
+    };
+    for (const base of PUBLIC_SHOWCASE_BASE_PACKAGES) {
+      const approval = readApproval(base.packageId);
+      if (base.deploymentExclusionSource === "release-approval-instrument") {
+        expect(approval, `${base.packageId} claims an inherited instrument`).not.toBeNull();
+        expect(approval!.exclusions).toContain("public deployment");
+      } else {
+        expect(base.deploymentExclusionSource).toBe("imposed-by-this-showcase-manifest");
+        // The release carries NO approval. Nothing was inherited, and the
+        // manifest must not imply otherwise.
+        expect(approval).toBeNull();
+        expect(base.deploymentExclusionBasis).toContain("carries NO `approval` key");
+        expect(base.deploymentExclusionBasis).toContain("inherited from nothing");
+      }
+      expect(base.deploymentExcluded).toBe(true);
+      expect(base.deploymentExclusionBasis).toContain(base.packageId);
+    }
+  });
+
+  it("records exactly one imposed exclusion, and it is real-wave", () => {
+    const imposed = PUBLIC_SHOWCASE_BASE_PACKAGES.filter((base) => base.deploymentExclusionSource === "imposed-by-this-showcase-manifest");
+    expect(imposed.map((base) => base.packageId)).toEqual(["real-wave-20260804"]);
   });
 
   it("keeps base packages disjoint from wave packages", () => {
@@ -242,10 +278,18 @@ describe("the candidate digest pins the enumeration", () => {
     expect(computePublicShowcaseDigest(weakened)).not.toBe(baseline);
   });
 
+  it("moves when a base package's deployment-exclusion SOURCE changes", () => {
+    const baseline = computePublicShowcaseDigest();
+    const relabelled = PUBLIC_SHOWCASE_BASE_PACKAGES.map((base) =>
+      base.packageId === "real-wave-20260804" ? { ...base, deploymentExclusionSource: "release-approval-instrument" as const } : base,
+    );
+    expect(computePublicShowcaseDigest(PUBLIC_SHOWCASE_WAVES, relabelled)).not.toBe(baseline);
+  });
+
   it("moves when a base package is added, dropped or renamed", () => {
     const baseline = computePublicShowcaseDigest();
     expect(computePublicShowcaseDigest(PUBLIC_SHOWCASE_WAVES, PUBLIC_SHOWCASE_BASE_PACKAGES.slice(0, 2))).not.toBe(baseline);
-    expect(computePublicShowcaseDigest(PUBLIC_SHOWCASE_WAVES, [...PUBLIC_SHOWCASE_BASE_PACKAGES, { packageId: "manhattan-smuggled-base", role: "x", declaredByWaveBaseCompatibility: false, deploymentExcluded: true }])).not.toBe(baseline);
+    expect(computePublicShowcaseDigest(PUBLIC_SHOWCASE_WAVES, [...PUBLIC_SHOWCASE_BASE_PACKAGES, { packageId: "manhattan-smuggled-base", role: "x", declaredByWaveBaseCompatibility: false, deploymentExcluded: true, deploymentExclusionSource: "imposed-by-this-showcase-manifest" as const, deploymentExclusionBasis: "x" }])).not.toBe(baseline);
   });
 
   it("moves when a wave is dropped or reordered", () => {

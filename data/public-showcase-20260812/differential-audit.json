@@ -2,7 +2,7 @@
   "schemaVersion": "1.0",
   "auditId": "manhattan-public-showcase-20260812:differential-audit",
   "candidateId": "manhattan-public-showcase-20260812",
-  "manifestDigestSha256": "ca2676e0e1b91febd442b7b72d382462c92527816afd80bddd2d24bda6ad4645",
+  "manifestDigestSha256": "c242ec4357d1dda46712c65f7e667453036c04fe8dca426bd285c9fb50db7cc2",
   "note": "Private/public differential audit across every completed wave. It proves that each wave's public root resolves fully against its own declarations, that each wave's private side is named with the reason it is excluded, and that no private byte and no undeclared private identifier is reachable from the public candidate. Declared provenance disclosures — the `privatePredecessor` root id and checksum that a public root must state to be able to say what it succeeded — are enumerated individually rather than pattern-matched away; they name no fetchable byte. This audit reports on emitted bytes only. It proves nothing about rendering, about what a user sees, or about what the network requested; that is the smoke evidence.",
   "assemblyPosture": "This candidate is an inventory of six separately approved local releases, not a new redistributable whole. It grants no verb, adds no source, and widens no audience; the narrowest instrument governs anything the six are read as doing together.",
   "standingRefusals": {
@@ -35,6 +35,7 @@
             "logicalId": "ownership-ledger:manhattan-exterior-cells-20260811-v3",
             "kind": "ownership-ledger",
             "declaredByteSize": 1095,
+            "declaredIn": "private-root-artifacts",
             "reason": "unmaterialized-by-design: the private root declares this artifact, but no byte for it was ever emitted into the browser-reachable payload tree, so there is nothing to prune or serve.",
             "reachableInPayloadTree": false
           }
@@ -156,6 +157,7 @@
             "logicalId": "ownership-ledger:manhattan-midtown-core-cells-20260811:aad83fe4a9350353",
             "kind": "ownership-ledger",
             "declaredByteSize": 152536,
+            "declaredIn": "private-root-artifacts",
             "reason": "unmaterialized-by-design: the private root declares this artifact, but no byte for it was ever emitted into the browser-reachable payload tree, so there is nothing to prune or serve.",
             "reachableInPayloadTree": false
           }
@@ -290,6 +292,7 @@
             "logicalId": "ownership-ledger:manhattan-lower-manhattan-cells-20260812:44ec889a556ece19",
             "kind": "ownership-ledger",
             "declaredByteSize": 134110,
+            "declaredIn": "private-root-artifacts",
             "reason": "unmaterialized-by-design: the private root declares this artifact, but no byte for it was ever emitted into the browser-reachable payload tree, so there is nothing to prune or serve.",
             "reachableInPayloadTree": false
           }
@@ -420,6 +423,7 @@
             "logicalId": "ownership-ledger:manhattan-southern-remainder-cells-20260812:176c0191b7f2cbd3",
             "kind": "ownership-ledger",
             "declaredByteSize": 196376,
+            "declaredIn": "private-root-artifacts",
             "reason": "unmaterialized-by-design: the private root declares this artifact, but no byte for it was ever emitted into the browser-reachable payload tree, so there is nothing to prune or serve.",
             "reachableInPayloadTree": false
           }
@@ -550,6 +554,7 @@
             "logicalId": "ownership-ledger:manhattan-central-upper-manhattan-cells-20260812:4c8c1bd2734b4ce8",
             "kind": "ownership-ledger",
             "declaredByteSize": 249460,
+            "declaredIn": "private-root-artifacts",
             "reason": "unmaterialized-by-design: the private root declares this artifact, but no byte for it was ever emitted into the browser-reachable payload tree, so there is nothing to prune or serve.",
             "reachableInPayloadTree": false
           }
@@ -680,6 +685,7 @@
             "logicalId": "ownership-ledger:manhattan-northern-manhattan-cells-20260812:994417d633bc5e4f",
             "kind": "ownership-ledger",
             "declaredByteSize": 207446,
+            "declaredIn": "private-root-artifacts",
             "reason": "unmaterialized-by-design: the private root declares this artifact, but no byte for it was ever emitted into the browser-reachable payload tree, so there is nothing to prune or serve.",
             "reachableInPayloadTree": false
           }

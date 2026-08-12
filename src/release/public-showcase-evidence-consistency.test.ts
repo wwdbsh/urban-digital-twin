@@ -66,7 +66,19 @@ const smoke = readRecord("smoke-evidence.json") as unknown as {
   journeys: {
     journeyId: string;
     passed: boolean;
-    network?: { externalHosts: string[]; refusals: unknown[]; everyRequestAccountedFor: boolean; perWave: Record<string, { responses: number }>; perBasePackage: Record<string, number> };
+    network?: {
+      externalHosts: string[];
+      refusals: unknown[];
+      noRequestDropped: boolean;
+      everyRequestClassified: boolean;
+      observedDistinctUrls: number;
+      attemptedDistinctUrls: number;
+      receivedDistinctUrls: number;
+      failedRequestUrls: string[];
+      classifiedTotal: number;
+      perWave: Record<string, { responses: number }>;
+      perBasePackage: Record<string, number>;
+    };
     waves?: string[];
     servedPrivateBytes?: unknown[];
     unexplainedResponses?: unknown[];
@@ -205,7 +217,16 @@ describe("the smoke record still reports what it claims", () => {
     expect(journey.waves).toEqual(PUBLIC_SHOWCASE_WAVES.map((wave) => wave.publicReleaseId));
     expect(journey.network!.refusals).toEqual([]);
     expect(journey.network!.externalHosts).toEqual([]);
-    expect(journey.network!.everyRequestAccountedFor).toBe(true);
+    expect(journey.network!.noRequestDropped).toBe(true);
+    expect(journey.network!.everyRequestClassified).toBe(true);
+    // The measurement is over ATTEMPTED requests, not merely received ones, so
+    // a blocked or failed request cannot hide from the containment claim. These
+    // two numbers differ in the committed record, which is the whole reason the
+    // observed set is built from requestWillBeSent.
+    expect(journey.network!.observedDistinctUrls).toBe(journey.network!.attemptedDistinctUrls);
+    expect(journey.network!.observedDistinctUrls).toBeGreaterThanOrEqual(journey.network!.receivedDistinctUrls);
+    expect(journey.network!.classifiedTotal).toBe(journey.network!.observedDistinctUrls);
+    expect(journey.network!.failedRequestUrls).toEqual([]);
     // Every enumerated wave actually served bytes: a "contained" session that
     // fetched nothing would satisfy containment and prove nothing.
     for (const wave of PUBLIC_SHOWCASE_WAVES) expect(journey.network!.perWave[wave.publicReleaseId]!.responses).toBeGreaterThan(0);

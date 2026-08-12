@@ -107,8 +107,20 @@ category that makes a failing audit pass is how an audit gets hollowed out. Thre
 things keep it honest:
 
 - It is resolved from CONTENT, not a path pattern: the audit finds the index of
-  the root whose own `audience` field reads `private` and accepts only that
-  subtree. The same identifier one field away still fails, and a test proves it.
+  the root whose own `audience` field reads `private`, and within it accepts
+  only the keys the schema mandates (`DECLARED_PRIVATE_ROOT_KEYS`). Accepting
+  the whole subtree was too generous — review proved an invented
+  `roots[0].leakedFetchUrl` carrying a private URL classified as accepted merely
+  by sitting under the right prefix. The same identifier one field away still
+  fails, and tests prove both.
+- The provenance citation is ANCHORED to exact paths and restricted by identifier
+  KIND: only a root id or a root checksum may be cited, and only at
+  `roots[N].privatePredecessor.*` or `[N].release.privatePredecessor.*`. The
+  earlier suffix match accepted a private artifact PATH at a
+  `privatePredecessor.id` position — the wrong kind of secret in a field that
+  exists for a different one.
+- Object KEYS are scanned, not only values. A map keyed by a private root id
+  previously produced zero findings, because nothing ever read the keys.
 - The scan is structural (dotted JSON path per string leaf), not a substring
   grep, so `privatePredecessor.rootId` is distinguishable from the same string
   smuggled into a `note`.
@@ -146,8 +158,25 @@ waves is an incomplete description of what the showcase resolves.
 
 `PUBLIC_SHOWCASE_BASE_PACKAGES` names exactly those three. It remains a CLOSED
 set: a fourth base package is refused by name, and adding one moves the
-candidate digest. Each carries its own instrument, and each also excludes
-deployment. None has an audience partition — checked, not assumed.
+candidate digest. None has an audience partition — checked, not assumed.
+
+Deployment is excluded for all three, but **not for the same reason**, and the
+manifest records which:
+
+| base package | `deploymentExclusionSource` |
+| --- | --- |
+| `manhattan-citywide-20260804` | `release-approval-instrument` — its manifest's `approval.exclusions` names "public deployment" |
+| `manhattan-civic-context-20260804` | `release-approval-instrument` — same |
+| `real-wave-20260804` | `imposed-by-this-showcase-manifest` — the release carries **no `approval` key at all** |
+
+An earlier draft asserted `deploymentExcluded: true` for all three flat, which
+for `real-wave-20260804` was an unbacked rights conclusion: it read as though an
+instrument said so when nothing did. Imposing our own restriction on a release
+that carries no instrument is fine and is what this candidate does; claiming to
+have INHERITED one is not, and the two are now different values rather than the
+same boolean. The test reads the three release manifests and asserts the
+approval text is present for the first two and ABSENT for the third, so the
+literal cannot drift away from the releases it describes.
 
 ## Decision 5 — unreachability is proven on CONTENT, because status codes lie here
 
@@ -190,6 +219,21 @@ Against a production build served locally and driven through CDP:
 
 It measures no frame time and no memory; each wave's own acceptance record holds
 those. It is not a deployment and asserts no right to become one.
+
+## Named limitation — the byte scan is UTF-8 only
+
+`scanBytesForRestricted` decodes non-JSON payloads as UTF-8 and looks for the
+identifier as a literal substring. It therefore detects a private identifier
+that appears as plain UTF-8 text in a GLB or tileset, and it does **not** detect
+one that has been base64-encoded, UTF-16-encoded, compressed, chunked across a
+buffer boundary, or otherwise transformed.
+
+This is stated rather than quietly relied upon because the scan's clean result
+is load-bearing evidence. It bounds what that result means: it is a check
+against accidental inclusion — a reference copied into an asset by a generator —
+not a defence against deliberate obfuscation. The JSON path scan, which is
+structural rather than textual, carries the weight for the metadata that
+actually matters.
 
 ## Residual risks
 

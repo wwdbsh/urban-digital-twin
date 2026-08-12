@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0",
   "candidateId": "manhattan-public-showcase-20260812",
-  "manifestDigestSha256": "ca2676e0e1b91febd442b7b72d382462c92527816afd80bddd2d24bda6ad4645",
+  "manifestDigestSha256": "c242ec4357d1dda46712c65f7e667453036c04fe8dca426bd285c9fb50db7cc2",
   "note": "Local public-build smoke for the cross-wave showcase candidate. It measures a production build served by a local `vite preview` on a port the operator owns, driven through CDP in a real Chrome. It is NOT a deployment and makes none: every wave's instrument excludes public (internet) deployment, and this record asserts no right to publish. Readings are computed from what the browser did, never asserted: `passed` on each journey is an expression over the readings beside it.",
   "assemblyPosture": "This candidate is an inventory of six separately approved local releases, not a new redistributable whole. It grants no verb, adds no source, and widens no audience; the narrowest instrument governs anything the six are read as doing together.",
   "standingRefusals": {
@@ -93,7 +93,7 @@
   "journeys": [
     {
       "journeyId": "six-wave-default",
-      "claim": "A DEFAULT session — no exterior parameter of any kind — resolves all six promoted waves, and every request it issued classifies against the showcase candidate's closed allowlist. No request left the candidate, and no host outside the local preview was contacted.",
+      "claim": "A DEFAULT session — no exterior parameter of any kind — resolves all six promoted waves, and every URL the page ATTEMPTED (Network.requestWillBeSent, unioned with responses, so a blocked or failed request cannot hide) classifies against the showcase candidate's closed allowlist. No request was directed outside the candidate, and no hostname outside the local preview was addressed — including by requests that never completed.",
       "url": "http://localhost:4177/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-73.985000&lat=40.748000&height=900.000000&heading=20.000000&pitch=-22.000000&roll=0.000000",
       "urlDeclaresNoExteriorParameter": true,
       "waves": [
@@ -105,8 +105,11 @@
         "manhattan-northern-manhattan-cells-20260812-p1"
       ],
       "network": {
-        "observedDistinctUrls": 548,
-        "appShellResponses": 14,
+        "observedDistinctUrls": 553,
+        "attemptedDistinctUrls": 553,
+        "receivedDistinctUrls": 548,
+        "failedRequestUrls": [],
+        "appShellResponses": 19,
         "perWave": {
           "manhattan-exterior-cells-20260811-v3": {
             "responses": 17,
@@ -146,15 +149,16 @@
         },
         "externalHosts": [],
         "refusals": [],
-        "classifiedTotal": 548,
-        "everyRequestAccountedFor": true,
+        "classifiedTotal": 553,
+        "noRequestDropped": true,
+        "everyRequestClassified": true,
         "passed": true
       },
       "passed": true,
       "still": {
         "relativeRef": "journeys/six-wave-default.png",
-        "byteSize": 608078,
-        "checksumSha256": "4f02aefc84d17c00b7ca4641ef92e825d6ec1f6c75a3115d4eab9508fc119e57"
+        "byteSize": 608170,
+        "checksumSha256": "91bf2694363047b7e46ff3b6c4d3eb06fd03747b6e7d17bd4b9b2880f6e142d6"
       }
     },
     {

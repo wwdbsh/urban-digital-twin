@@ -19,6 +19,8 @@ import { dirname, join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import {
+  ACCEPTED_DISCLOSURE_IDENTIFIER_KINDS,
+  DECLARED_PRIVATE_ROOT_KEYS,
   EXCLUSION_REASONS,
   auditPrivateReferencePackages,
   auditWave,
@@ -69,7 +71,7 @@ function buildFixturePackage(root, { plant } = {}) {
     audience: "private",
     rootId: PRIVATE_ROOT_ID,
     releaseId: "fixture-showcase-wave-private",
-    artifactAllowlist: [PRIVATE_ARTIFACT_PATH],
+    artifactAllowlist: [PRIVATE_ARTIFACT_PATH, ...(plant?.extraAllowlistRef ? [plant.extraAllowlistRef] : [])],
     artifacts: [privateArtifact],
     rootChecksumSha256: "e".repeat(64),
   };
@@ -268,6 +270,91 @@ describe("the audit refuses a manifest that disagrees with the bytes", () => {
       expect(report.allPassed).toBe(true);
       expect(report.totals.declaredArtifacts).toBe(1);
       expect(report.totals.undeclaredPrivateReferences).toBe(0);
+    });
+  });
+});
+
+/**
+ * Every test here plants something review proved the earlier, looser classifier
+ * ACCEPTED. Each is written in the pre-fix-failing form: it asserts the planted
+ * item is classified `undeclared-private-reference`, so a classifier that goes
+ * back to accepting it fails here by name.
+ */
+describe("the accepted headings are narrow enough to still catch a leak", () => {
+  const identifiers = new Map([
+    [PRIVATE_ROOT_ID, "private-root-id"],
+    [PRIVATE_ARTIFACT_PATH, "private-artifact-path"],
+    ["e".repeat(64), "private-root-checksum"],
+  ]);
+  const privateRoot = { audience: "private", rootId: PRIVATE_ROOT_ID };
+
+  /** H1: a private ARTIFACT PATH is not a root citation, wherever it sits. */
+  it("refuses a private artifact path sitting at a privatePredecessor position", () => {
+    const findings = scanArtifactForRestricted({
+      roots: [privateRoot, { audience: "public", privatePredecessor: { rootId: PRIVATE_ROOT_ID, id: PRIVATE_ARTIFACT_PATH } }],
+    }, identifiers);
+    const cited = findings.find((finding) => finding.jsonPath === "roots[1].privatePredecessor.rootId");
+    expect(cited.classification).toBe("declared-provenance-disclosure");
+    const smuggled = findings.find((finding) => finding.identifier === PRIVATE_ARTIFACT_PATH);
+    expect(smuggled).toBeDefined();
+    expect(smuggled.classification).toBe("undeclared-private-reference");
+    expect(ACCEPTED_DISCLOSURE_IDENTIFIER_KINDS).not.toContain("private-artifact-path");
+  });
+
+  /** H1: the citation path is anchored, not suffix-matched. */
+  it("refuses a privatePredecessor nested somewhere the schema never puts one", () => {
+    const findings = scanArtifactForRestricted({
+      roots: [privateRoot, { audience: "public", note: { privatePredecessor: { rootId: PRIVATE_ROOT_ID } } }],
+    }, identifiers);
+    const nested = findings.find((finding) => finding.jsonPath === "roots[1].note.privatePredecessor.rootId");
+    expect(nested).toBeDefined();
+    expect(nested.classification).toBe("undeclared-private-reference");
+  });
+
+  /** H2: an undeclared key inside the private root is not covered by the prefix. */
+  it("refuses an invented key inside the private root subtree", () => {
+    const findings = scanArtifactForRestricted({
+      roots: [{ ...privateRoot, leakedFetchUrl: `https://example.invalid/${PRIVATE_ROOT_ID}` }, { audience: "public" }],
+    }, identifiers);
+    const leaked = findings.find((finding) => finding.jsonPath === "roots[0].leakedFetchUrl");
+    expect(leaked).toBeDefined();
+    expect(leaked.classification).toBe("undeclared-private-reference");
+    // The schema-mandated sibling in the same object is still accepted.
+    const declared = findings.find((finding) => finding.jsonPath === "roots[0].rootId");
+    expect(declared.classification).toBe("declared-private-root-metadata");
+    expect(DECLARED_PRIVATE_ROOT_KEYS).not.toContain("leakedFetchUrl");
+  });
+
+  /** H3: the secret can be the KEY. */
+  it("refuses a private identifier used as an object key", () => {
+    const findings = scanArtifactForRestricted({
+      roots: [privateRoot, { audience: "public", cache: { [PRIVATE_ROOT_ID]: { warm: true } } }],
+    }, identifiers);
+    const keyed = findings.find((finding) => finding.jsonPath.endsWith("#key") && finding.identifier === PRIVATE_ROOT_ID);
+    expect(keyed).toBeDefined();
+    expect(keyed.classification).toBe("undeclared-private-reference");
+  });
+
+  it("accepts the real declared positions in both graph shapes", () => {
+    const graph = scanArtifactForRestricted({ roots: [privateRoot, { audience: "public", privatePredecessor: { rootId: PRIVATE_ROOT_ID } }] }, identifiers);
+    expect(graph.find((finding) => finding.jsonPath === "roots[1].privatePredecessor.rootId").classification).toBe("declared-provenance-disclosure");
+    // assemblies.json is a top-level ARRAY; index stripping must not leave a leading dot.
+    const assemblies = scanArtifactForRestricted([{ audience: "public", release: { privatePredecessor: { id: PRIVATE_ROOT_ID } } }], identifiers);
+    expect(assemblies.find((finding) => finding.jsonPath === "[0].release.privatePredecessor.id").classification).toBe("declared-provenance-disclosure");
+  });
+});
+
+describe("the byte-absence proof covers every admitted private path", () => {
+  /** H4: an allowlisted path with no artifact entry must still be proven absent. */
+  it("proves absence for a path declared only in the artifact allowlist", () => {
+    withFixture({ extraAllowlistRef: "private/tiles/tileset.json" }, ({ wave, publicDataDir }) => {
+      const report = auditWave(wave, { publicDataDir });
+      const refs = report.exclusion.entries.map((entry) => entry.relativeRef);
+      expect(refs).toContain("private/tiles/tileset.json");
+      const allowlisted = report.exclusion.entries.find((entry) => entry.relativeRef === "private/tiles/tileset.json");
+      expect(allowlisted.declaredIn).toBe("private-root-artifact-allowlist");
+      expect(allowlisted.reachableInPayloadTree).toBe(false);
+      expect(report.passed).toBe(true);
     });
   });
 });

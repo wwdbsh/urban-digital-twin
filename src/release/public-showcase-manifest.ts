@@ -322,14 +322,42 @@ export const PUBLIC_SHOWCASE_DATA_URL_PREFIXES: readonly string[] = PUBLIC_SHOWC
  * of them carries an audience partition — each was checked to have no `private/`
  * directory at all — so there is no private counterpart to exclude.
  */
+/**
+ * WHERE a base package's deployment exclusion comes from.
+ *
+ * This distinction is the whole point of the field. Two of the three base
+ * packages carry an approval instrument in their own release manifest that
+ * excludes "public deployment", and for those the showcase INHERITS an existing
+ * restriction. The third carries no `approval` key at all, and an earlier draft
+ * of this manifest still asserted `deploymentExcluded: true` for it — which was
+ * an unbacked rights conclusion: it read as though an instrument said so when
+ * nothing did.
+ *
+ * Imposing our own restriction on it is fine and is what this candidate does.
+ * Claiming to have inherited one is not. The two cases are therefore recorded as
+ * different things, and the test reads the actual release manifests rather than
+ * trusting the literal below.
+ */
+export type PublicShowcaseDeploymentExclusionSource =
+  /** The release's own manifest carries an approval whose exclusions name public deployment. */
+  | "release-approval-instrument"
+  /** No instrument in the release. The exclusion is imposed here and inherited from nothing. */
+  | "imposed-by-this-showcase-manifest";
+
 export interface PublicShowcaseBasePackage {
   readonly packageId: string;
   /** Why a showcase session legitimately requests it. */
   readonly role: string;
   /** Whether the six waves' `index.json` declares it under `baseCompatibility`. */
   readonly declaredByWaveBaseCompatibility: boolean;
-  /** Stated because a reader will ask; each base release carries its own instrument. */
+  /**
+   * True for all three, but NOT for the same reason — read
+   * `deploymentExclusionSource` before quoting this field.
+   */
   readonly deploymentExcluded: boolean;
+  readonly deploymentExclusionSource: PublicShowcaseDeploymentExclusionSource;
+  /** Stated in the record's own words, so a reader can check the claim against the release. */
+  readonly deploymentExclusionBasis: string;
 }
 
 export const PUBLIC_SHOWCASE_BASE_PACKAGES: readonly PublicShowcaseBasePackage[] = [
@@ -337,20 +365,25 @@ export const PUBLIC_SHOWCASE_BASE_PACKAGES: readonly PublicShowcaseBasePackage[]
     packageId: "manhattan-citywide-20260804",
     role: "The pinned citywide base: canonical building identities, base massing geometry, and the detail and search shards a pick reads. Every wave's ownership ledger is a subset of this release's base identity set.",
     declaredByWaveBaseCompatibility: true,
-    // Its own manifest approval excludes "public deployment", consistent with every wave.
     deploymentExcluded: true,
+    deploymentExclusionSource: "release-approval-instrument",
+    deploymentExclusionBasis: "public/data/manhattan-citywide-20260804/manifest.json `approval.exclusions` names \"public deployment\".",
   },
   {
     packageId: "manhattan-civic-context-20260804",
     role: "Civic context layers (neighbourhood tabulation areas, parks, landmark districts) that give the exterior waves their surrounding frame.",
     declaredByWaveBaseCompatibility: true,
     deploymentExcluded: true,
+    deploymentExclusionSource: "release-approval-instrument",
+    deploymentExclusionBasis: "public/data/manhattan-civic-context-20260804/manifest.json `approval.exclusions` names \"public deployment\".",
   },
   {
     packageId: "real-wave-20260804",
     role: "The application's small pilot fallback release. A default session probes it while resolving which base is available; it carries no exterior wave geometry.",
     declaredByWaveBaseCompatibility: false,
     deploymentExcluded: true,
+    deploymentExclusionSource: "imposed-by-this-showcase-manifest",
+    deploymentExclusionBasis: "public/data/real-wave-20260804/manifest.json carries NO `approval` key. Nothing in that release excludes deployment, and nothing here claims it does; this candidate imposes the exclusion on it because the candidate is local-only, and that restriction is inherited from nothing.",
   },
 ];
 
@@ -455,7 +488,11 @@ export function computePublicShowcaseDigest(
     // Base packages are inside the digest because they are inside the closed
     // set: a session resolves them, so a fourth one appearing is a change to
     // what the candidate is, and must move the pin rather than slip in.
-    basePackageIds: basePackages.map((entry) => entry.packageId),
+    basePackages: basePackages.map((entry) => ({
+      deploymentExcluded: entry.deploymentExcluded,
+      deploymentExclusionSource: entry.deploymentExclusionSource,
+      packageId: entry.packageId,
+    })),
     candidateId: PUBLIC_SHOWCASE_CANDIDATE_ID,
     schemaVersion: PUBLIC_SHOWCASE_SCHEMA_VERSION,
     waves: waves.map(digestProjection),
@@ -463,7 +500,7 @@ export function computePublicShowcaseDigest(
 }
 
 /** Pinned value of `computePublicShowcaseDigest()`. */
-export const PUBLIC_SHOWCASE_DIGEST_SHA256 = "ca2676e0e1b91febd442b7b72d382462c92527816afd80bddd2d24bda6ad4645";
+export const PUBLIC_SHOWCASE_DIGEST_SHA256 = "c242ec4357d1dda46712c65f7e667453036c04fe8dca426bd285c9fb50db7cc2";
 
 export class PublicShowcaseRefusal extends Error {
   readonly code: string;
