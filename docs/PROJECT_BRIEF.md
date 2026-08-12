@@ -153,3 +153,61 @@ and [Decision 0015](decisions/0015-manhattan-civic-runtime-composition.md).
 Citywide procedural footprint/height massing remains explicitly distinct from
 real facade imagery, textures, roofs, interiors, entrances, and photorealistic
 models; bounded-pilot GLBs are inactive in the civic composition.
+
+## Generated building exteriors (2026-08-12)
+
+The exterior programme is complete as an accepted release behaviour and is
+**not** complete as a model of Manhattan. Both halves belong in the brief.
+
+**What ships by default.** Six exterior waves are promoted over the unchanged
+immutable `manhattan-citywide-20260804` base, one for each wave the immutable
+`manhattan-exterior-wave-ledger-20260804` declares. The ledger partitions 883
+WGS84 cells and 45,194 canonical building parents with zero missing cells, zero
+missing parents and zero duplicate canonical owners — recomputed on every test
+run from the committed ledger rather than asserted.
+
+**What the six waves actually put on screen: 484 of 45,194 parents (1.07%),
+shipped as 498 GLB artifacts.** 870 of 883 cells ship no exterior geometry and
+render as base source-backed massing, disclosed by an explicit per-release
+tombstone notice rather than substituted. Each wave ships a bounded renderable
+subset of its own partition; the binding constraint is the 512-entry exterior
+cache contract, which the six subsets fill to 498 entries and 121.81 MiB of
+256 MiB. Growing breadth requires the cell-scheduling work of Decision 0024,
+not a larger wave.
+
+**Fidelity claim.** Exteriors are **generated and designed, not observed**. The
+V3 grammar derives structure from the sourced footprint ring and height; four
+waves add procedural facade textures rasterized from named constants and
+re-verified byte-for-byte. No shipped component asserts a real building's
+facade, material, entrance, signage or occupancy. Every component carries a
+machine-readable truth tier and an uncertainty statement; generated components
+carry no real-world accuracy score. The grammar refuses 899 parents outright
+under named stop codes rather than inventing geometry for them.
+
+**Evidence posture.** No rights-cleared building imagery was ever admitted as
+geometry, texture, training or validation input. Zero components are
+evidence-backed. Google Maps, Street View, unlicensed web photographs and
+platform-restricted imagery contribute nothing, enforced by a closed
+classification denylist and a procedural-replay gate that makes a
+photograph-derived tile unreproducible by construction. The shipped geometry's
+rights rest on NYC OTI Building Footprints.
+
+**Conveyance.** The full-fidelity releases are local and private. The
+`manhattan-public-showcase-20260812` candidate is an inventory of the six
+separately approved local releases and is **local only** — every wave's
+approval instrument excludes public internet deployment and so does the
+candidate. Private and public partitions use distinct roots, allowlists,
+checksums and approval envelopes, and the built public bundle carries no
+private byte.
+
+**Device-class status.** The desktop path is measured; the **mobile path is not
+implemented** and has no evidence. Frame-time budgets pass on the measured
+desktop composition (six waves, p50 2.30–3.60 ms, p95 5.60–13.00 ms against
+16.7/25 exploration and 33.3/45 inspection), but the 1440p-class capture the
+Goal names was never taken, and accessibility is proven structurally rather
+than behaviourally.
+
+The Goal's criterion-by-criterion reconciliation, its six unmet criteria and
+their stop reports, and the residual risks are in
+[Decision 0039](decisions/0039-goal-integration-acceptance.md) and
+`data/goal-integration-acceptance-20260812/reconciliation.json`.

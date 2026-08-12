@@ -1,0 +1,772 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "goal-integration-acceptance-20260812",
+  "goalSlug": "manhattan-high-fidelity-exteriors",
+  "task": "T024 (Issue #25)",
+  "note": "Criterion-by-criterion reconciliation of the approved Goal's 31 acceptance criteria against committed evidence, plus the computed coverage reconciliation the Goal's criterion 12 asks for. Every verdict is drawn from a closed set of three: MET (direct evidence cited), MET-AS-ADJUDICATED (the criterion as literally written was narrowed or made vacuous by a recorded decision, with the delta stated), NOT-MET (with a stop report naming what would close it). The `coverage` block is COMPUTED from the committed ledger and the six committed wave censuses by scripts/goal-integration-reconciliation-cli.mjs and re-checked on every test run; it is not restated prose. This record proves no visual, geographic, architectural or performance claim of its own - it cites the wave records that measured those.",
+  "criteriaSha256": "2ffd46691bb3982e1e0b47c2139a8f8221611d34630c091a9d52498d3402f61c",
+  "criteriaCount": 31,
+  "verdictVocabulary": [
+    "MET",
+    "MET-AS-ADJUDICATED",
+    "NOT-MET"
+  ],
+  "verdictCounts": {
+    "NOT-MET": 6,
+    "MET-AS-ADJUDICATED": 7,
+    "MET": 18
+  },
+  "stopReportCount": 6,
+  "verdicts": [
+    {
+      "index": 1,
+      "criterion": "Every accepted building parent in the approved Manhattan snapshot has a detailed, visually complete generated exterior at the target baseline LODs; missing exterior representations are zero",
+      "verdict": "NOT-MET",
+      "evidence": [
+        "data/goal-integration-acceptance-20260812/reconciliation.json coverage.promoted: 484 canonical parents carry a shipped exterior by default, shipped as 498 GLB cache entries, against a pinned base of 45,194.",
+        "data/public-showcase-20260812/differential-audit.json totals.unavailableBuildingDetails = 44710, unexplainedFallbacks = 0 - every parent without an exterior carries an explicit tombstoned unavailable state rather than a substitute.",
+        "src/runtime/exterior-northern-manhattan-promotion-record.test.ts asserts seen.size === 484 and baseBuildings === 45194 on every test run.",
+        "coverage.census: the grammar REFUSES 899 of 45,194 owned parents outright, each under a named stop code from the closed MIDTOWN_CORE_V3_STOP_CODES vocabulary, so the number is not zero even at census scale.",
+        "Positive half: the T012 full-snapshot dry run planned all 45,194 parents with 0 stops (data/normalized/manhattan-exterior-fullsnapshot-dryrun-20260810/evidence.json, runDigest 05a47492ed50c3b9a8c540683d97630c37628608e1750363dea357c09f81bf32), and the six wave censuses MATERIALIZED 44,295 of 45,194 - but with retention 'census-only', so those bytes were measured and discarded rather than released."
+      ],
+      "stopReport": "Two distinct gaps. (a) RETENTION: retain and release exteriors for the 44,295 materialized parents instead of 484. This is bounded today by the 512-entry all-resident exterior cache contract (EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries), and ADR 0037 names ADR 0024 cell scheduling as the structural prerequisite - until it exists, 'promote more of a wave' and 'raise the cache cap' are the same decision. (b) REFUSALS: close or re-classify the 899 grammar refusals (dominated by source-height-below-grammar-minimum 384 and ring-vertex-count-unsupported 324), or record a user-approved adjudication that a tombstoned refusal with a named stop code satisfies this criterion."
+    },
+    {
+      "index": 2,
+      "criterion": "For every building with approved reference material, every evidence-supported exterior component uses the verified real representation and any remaining generated components stay separately labeled",
+      "verdict": "MET-AS-ADJUDICATED",
+      "evidence": [
+        "src/release/block835-facade-material-intake.ts: BLOCK835_FACADE_MATERIAL_INTAKE_LEDGER holds exactly ONE record, intake:wikipedia:doitt-778052:facade-material, derivativeScope 'measurement-only', admitting one sentence of encyclopaedia TEXT and no image.",
+        "src/release/block835-v3-package.ts v3TruthTiers() THROWS unless every component is 'generated' (or 'absent' for setbacks with a stated reason); src/release/block835-reference-package.ts refuses any 'evidence-backed' truth tier outright. Zero shipped components are evidence-backed.",
+        "data/public-showcase-20260812/smoke-evidence.json journey pick-provenance: the details panel reads truth tiers 'absent - generated' with a full uncertainty statement, so the generated components are separately labeled in the product, not only in the manifest.",
+        "src/release/block835-facade-material-intake.test.ts: 'keeps the texture exclusion - the fact may drive a style class, never a texture'."
+      ],
+      "adjudicationDelta": "The antecedent set is EMPTY. No building has approved reference MATERIAL for geometry or texture; the one admitted record is text and is deliberately not spliced into the release evidence graph (ADR 0022; block835-facade-material-intake.ts:23-37, which records that splicing it in would have forced relabelling generated components as evidence-backed or leaving an orphan node). The criterion's substantive obligation was therefore never exercised. What is proven is the refusal machinery, not a real supersession."
+    },
+    {
+      "index": 3,
+      "criterion": "Every evidence-backed real exterior component has durable proof of source ownership or license compatibility for the planned private derivative; public inclusion additionally proves public-display and derivative conveyance rights",
+      "verdict": "MET-AS-ADJUDICATED",
+      "evidence": [
+        "src/domain/exterior-contract.ts ExteriorLicenseEvidence carries allowedUse{privateDerivative, publicDisplay, derivativeConveyance, redistribution, runtimeTexture, trainingInput, generationInput, validationOnly}, personalDataRestricted and retention.",
+        "Six per-wave rights instruments exist as code objects with SHA-256 fingerprints over {scope, exclusions, approvedAt, approvalNote}; src/release/public-showcase-manifest.test.ts asserts the manifest references the very approval OBJECT each release module exports (object identity, not copied text) and restates the union of exclusions without dropping any wave's.",
+        "src/data/source-registry.ts approves commons.empire-state-photo-cc-by-sa-4 and commons.herald-towers-photo-cc-by-sa-4 with approval notes stating the runtime ships no source pixels, texture extraction, photogrammetry, logo, or unseen-side claim."
+      ],
+      "adjudicationDelta": "Vacuous on its face: zero evidence-backed components ship, so no component needs the proof. Two recorded limits keep this from being a stronger claim. ADR 0022 records that the projection bindings and private ledger checksum needed to re-verify integrity are 'Neither is persisted in any shipped artifact today', and that 'Ownership and permission attestation is operator-asserted. This repository cannot verify that an attester actually owns an artifact.' The shipped geometry's rights rest on NYC OTI Building Footprints, not on any photograph."
+    },
+    {
+      "index": 4,
+      "criterion": "Google Maps, Street View, unlicensed web photographs, and platform-restricted imagery contribute zero source pixels, extracted geometry, textures, training inputs, or acceptance evidence",
+      "verdict": "MET",
+      "evidence": [
+        "src/domain/exterior-evidence-intake.ts:35-41 DISALLOWED_EXTERIOR_SOURCE_CLASSIFICATIONS = google-maps, street-view, unlicensed-web-photo, platform-restricted; line 421 rejects with 'classification-disallowed' and an unknown free-text classification is rejected without echoing the operator string.",
+        "scripts/audit-partition-tree.mjs re-run fresh on 2026-08-12 against this tree's own production build: F2 prohibited-evidence findings over dist/ = 2, both classified vendor-runtime (bundled CesiumJS), release-data findings = 0, which is the criterion verdict. PROHIBITED_EVIDENCE_ALLOWANCES is empty by design.",
+        "src/runtime/exterior-texture-admission.test.ts: the procedural-replay gate re-rasterizes every embedded tile from declared parameters and refuses one altered pixel, so a photograph-derived tile is unreproducible by construction and cannot ship.",
+        "Two of six promoted packages are texture-free at the byte layer (multi-lod-assembly.ts refuses embedded imagery, unreferenced bufferViews, BIN tails and interior gaps); four ship procedural-replay tiles generated from named constants."
+      ]
+    },
+    {
+      "index": 5,
+      "criterion": "The Block 835 reference cell demonstrates the complete private/public partitioning, generated-versus-real component model, multi-LOD release, native Cesium selection, visual comparison, performance, and independent rollback contract",
+      "verdict": "MET-AS-ADJUDICATED",
+      "evidence": [
+        "Private/public partitioning: 0 private paths in dist/ (fresh 2026-08-12 run over 6,070 files); public root and private root separately checksum-pinned in the release graph.",
+        "Generated-versus-real component model: 14 assets, all components generated or absent-with-reason; a component carrying evidenceIds plus realWorldAccuracyClaim 'exact' is refused (src/domain/exterior-contract.test.ts:112).",
+        "Multi-LOD release: 14 buildings x lod_0/lod_1 = 28 artifacts (data/manhattan-esb-block-reference-20260811-v3t/census.json).",
+        "Native Cesium selection: real ScreenSpaceEventHandler pick, T009 row 10.",
+        "Visual comparison: 8-pose facade path, closest camera-to-facade 13 m against a 10 m contract floor, 14/14 buildings rendered, screenshot checksums in data/block835-canary-validation-20260811/evidence-inventory.json.",
+        "Performance: exploration 8.30/9.30 ms and inspection 8.30/9.30 ms, droppedFrameRatio 0 (T026 re-promotion).",
+        "Independent rollback: 14/14 predecessor pins verified against the 20260810 bytes, 0 mismatches, git diff over public/data and data empty."
+      ],
+      "adjudicationDelta": "The project's own T009 criteria table marks this umbrella row 'partial - decomposed', blocked by its row 3 (mobile, carried here as criterion 8) and by the T009 memory third. The memory third was later closed for Block 835 with forced collection in T026 (heap SHRANK 13.3% / 12.0%); the mobile blocker was never closed and is a separate NOT-MET below. The pick was driven by script-dispatched pointer events, not an OS-level pointer."
+    },
+    {
+      "index": 6,
+      "criterion": "The all-Manhattan generation path replays deterministically over the accepted citywide building identity set before any broad geographic exterior release is approved",
+      "verdict": "MET",
+      "evidence": [
+        "data/normalized/manhattan-exterior-fullsnapshot-dryrun-20260810/evidence.json: enumerated 45,194 / planned 45,194 / stopped 0 across 883 cells; runDigestSha256 05a47492ed50c3b9a8c540683d97630c37628608e1750363dea357c09f81bf32; evidence.sha256 f4907661dba1e4f384e0808d233008bed533c6af151d0a6bf3026cbb2484d8c9.",
+        "Replay: diff -qr run-a run-b empty over an 889-file tree, both run-digest.json carrying the same digest (docs/implementation/20260810-exterior-fullsnapshot-dryrun.md).",
+        "src/release/exterior-fullsnapshot-plan.test.ts pins the committed evidence to its checksum sidecar, asserts every accepted parent is planned exactly once with no stop and no clamp, and asserts the run activated and published nothing.",
+        "Ordering: T012 completed before T013, the first geographic wave canary."
+      ]
+    },
+    {
+      "index": 7,
+      "criterion": "At approved Block 835 reference viewpoints approximately 10 meters or farther from visible facades, the 1440p-class desktop target preserves the accepted facade composition, openings, entrances, material classes, roofline, and generated-versus-real labeling without missing geometry or visibly broken LOD transitions",
+      "verdict": "NOT-MET",
+      "evidence": [
+        "The 10-metre half IS evidenced: data/block835-canary-validation-20260811/facade-path.json declares minimumCameraToFacadeMeters 10 with a closest pose at 13 m over 8 poses; T009 row 2 records all 8/8 poses rendering 14/14 buildings, and row 6 records no grammar-required placeholder blank wall on any visible surface.",
+        "Generated-versus-real labeling at those views is evidenced by the profile-switch and pick captures (truth tier 'generated', no accuracy score).",
+        "The 1440p-class device target was NEVER captured. docs/implementation/20260811-block835-canary-validation.md states the attainable CSS viewport was 1097x894 and later 1728x920 at dpr 2, and says in its own words 'This is not a 1440p-class 2560x1440 CSS viewport' and 'every scale-dependent row is marked partial'. Every wave CDP capture used VIEWPORT 1280x800 at deviceScaleFactor 1.",
+        "The single 1440-wide record, data/manhattan-esb-block-reference-20260811-v3t/cesium-sampler-evidence.json, is 1440x900 CSS - a sampler/aliasing inspection at 95/220/620 m, not a 1440p facade acceptance."
+      ],
+      "stopReport": "Re-capture the committed 8-pose block835-canary-facade-v1 path at a 2560x1440 CSS viewport on a 1440p-class desktop and record the composition, opening, entrance, material-class, roofline and labeling readings at that scale. This is a bounded capture task: the path, the poses and the reading procedure are already committed."
+    },
+    {
+      "index": 8,
+      "criterion": "The mobile path retains navigation, picking, selection, details, provenance, deep links, and explicit lower-LOD status without claiming desktop visual parity",
+      "verdict": "NOT-MET",
+      "evidence": [
+        "Exhaustive search of src/, scripts/, docs/, data/ and public/ finds NO mobile device class, NO mobile viewport capture, NO mobile journey record and NO lower-LOD mobile disclosure anywhere in this Goal's evidence.",
+        "All 14 CDP drivers set Emulation.setDeviceMetricsOverride with mobile: false at 1280x800 dpr 1.",
+        "src/app/App.tsx exports overlayLayoutPolicy(inspectorOpen, mobile) but it has NO production caller and there is no matchMedia in App.tsx; the only exercise is three pure-function assertions in src/app/App.test.tsx.",
+        "The project already recorded this as a failure: docs/implementation/20260811-block835-canary-validation.md row 3 reads 'EXPLICIT FAILURE - unmet, not implemented ... No mobile LOD policy or disclosure exists', and line 456 says 'Treat row 3 (mobile lower-LOD disclosure) as an unstarted Goal obligation'.",
+        "Responsive CSS exists (src/styles.css @media max-width 900px and 680px) but was never measured in this Goal."
+      ],
+      "stopReport": "Implement the mobile lower-LOD policy and its explicit lower-LOD status disclosure, wire overlayLayoutPolicy to a real viewport signal, and capture one mobile-emulated journey (e.g. 390x844 dpr 3) proving navigation, picking, selection, details, provenance and deep links survive with the lower-LOD status shown and no desktop-parity claim."
+    },
+    {
+      "index": 9,
+      "criterion": "On approved reference hardware and deterministic Block 835 camera paths after one second of settling, exploration mode meets median frame interval <=16.7 ms and p95 <=25 ms, while inspection mode meets median <=33.3 ms and p95 <=45 ms at the highest verified eligible LOD",
+      "verdict": "MET",
+      "evidence": [
+        "Six-wave composition, T022, real Chrome against the production preview with vsync and frame-rate limit disabled and a separately launched capped control reading p50 8.30 ms: harlem-125th-facade inspection 3.60/13.00, harlem-125th-skyline exploration 3.40/10.40, sixwave-wide exploration 2.30/5.60, centralpark-west-facade inspection 3.60/12.90 (data/northern-manhattan-20260812-p1/acceptance-evidence.json). Every station inside both budgets on p50 and p95.",
+        "The criterion's own instrument - deterministic Block 835 camera paths - measured at exploration 8.30/9.30 ms and inspection 8.30/9.30 ms with droppedFrameRatio 0 (T026), and earlier at 8.3/8.9 and 8.3/8.7 over 1,920 accepted samples per profile (T009).",
+        "Every capture used 3 repeats of 240 timed frames after 180 settle frames, budgets pinned literally as {exploration 16.7/25, inspection 33.3/45}.",
+        "Honest tail, recorded not smoothed: worst single frames of 116.2 ms (sixwave-wide) and 140.0 ms (nomad-skyline, T018). The criterion is median and p95, which both pass."
+      ]
+    },
+    {
+      "index": 10,
+      "criterion": "Switching between exploration and inspection modes preserves the exact canonical feature, URL, details, provenance, and release identity and produces no missing or ambiguous pick owner",
+      "verdict": "MET",
+      "evidence": [
+        "data/block835-canary-validation-20260811/evidence-inventory.json pins json/profile-switch-before-exploration.json (4e9efe6b222d691c92e32a5f6b1589b6dd003d7047b1d814ac948799ff607614) and json/profile-switch-after-inspection.json (46969bf3ca81e671d46593e463961409475981edc40eccf1b8f616e11148c726): featureId doitt:102705, release origin, cell and cell release, truth tier and confidence all IDENTICAL across the switch; only the profile and the resolved LOD changed.",
+        "src/features/explorer/CesiumViewport.tsx buildCollisionCheckedFeatureMap DELETES an ambiguous id rather than letting a later feature overwrite the owner; CesiumViewport.test.ts:239 asserts the collided id is absent, and canonicalExteriorPickId resolves the same canonical id in both profiles.",
+        "src/runtime/exterior-render-profiles.test.ts: five tests pinning profile parsing, finest-covering versus coarsest LOD selection, deterministic tie resolution and refusal of malformed requests.",
+        "src/runtime/exterior-cell-runtime.ts:618 refuses an asset bound by more than one assembly package as an ambiguous binding."
+      ]
+    },
+    {
+      "index": 11,
+      "criterion": "The immutable rollout ledger records Block 835, Midtown-core, Lower-Manhattan, and remaining south-to-north WGS84 cell waves with exact bounds, canonical building membership, dependencies, status, and private/public release eligibility",
+      "verdict": "MET",
+      "evidence": [
+        "data/normalized/manhattan-exterior-wave-ledger-20260804/ledger.json, ledger.sha256 62e093d2ca50b54b49fd8bbad9d0b11f6301b2b197623deb343f9ea915e59016, immutable: true, 883 cells, baseIdentitySet buildingCount 45,194 with checksum 17d28c8355a8a062d19a9e79f2aa5d08a5a02e7bb72126a98f4750a656b78e7f.",
+        "membership-digest.json declares the six waves in the required order with exact cell and building counts: block-835 1/14, midtown-core 149/7,201, lower-manhattan 126/6,425, southern-remainder 176/9,603, central-upper-manhattan 249/11,721, northern-manhattan 182/10,230; each cell carries its own bounds and membershipChecksumSha256.",
+        "eligibility.json declares all 883 cells privateEligible and 0 publicEligible, with the basis text stating no cell is public-eligible until a promotion task supplies per-cell rights-cleared evidence.",
+        "Dependencies and status are carried by the six default activation records in src/runtime/exterior-default-activation.ts, each naming its predecessor and its approvalRef (Issues #44, #44, #17, #19, #21, #23)."
+      ]
+    },
+    {
+      "index": 12,
+      "criterion": "Final Manhattan coverage reconciliation reports zero missing spatial cells, zero missing accepted building parents, zero duplicate canonical owners, and zero unclassified exterior components",
+      "verdict": "MET",
+      "evidence": [
+        "Computed in this record's coverage block by scripts/goal-integration-reconciliation-cli.mjs from the committed ledger and the six committed censuses, and re-checked on every test run by scripts/goal-integration-reconciliation.test.mjs.",
+        "missingSpatialCells 0 (883 declared, 883 assigned to a wave, wave cell sum 883).",
+        "missingAcceptedBuildingParents 0 (45,194 declared, 45,194 distinct ids across the 883 cells).",
+        "duplicateCanonicalOwners 0 (no building id appears in more than one cell).",
+        "unclassifiedExteriorComponents 0 (every wave's style-class distribution sums exactly to its materialized count) and ownedBuildingsAccountedByNeither 0 (owned = materialized + refused in every wave).",
+        "stopCodesOutsideClosedVocabulary 0 (all six observed codes are members of MIDTOWN_CORE_V3_STOP_CODES)."
+      ]
+    },
+    {
+      "index": 13,
+      "criterion": "A deterministic change-impact calculation maps each accepted source or evidence update to exact canonical building IDs and spatial cells and emits a new version without modifying prior approved releases",
+      "verdict": "MET-AS-ADJUDICATED",
+      "evidence": [
+        "src/release/exterior-wave-reconciliation.ts: exteriorLedgerOwnerIndex maps every building id to its owning cell; diffExteriorWaveLedgers emits addedBuildingIds, removedBuildingIds, movedBuildings{from,to}, addedCellIds, removedCellIds and impactedCellIds, and flags a cell whose membership checksum moved with no id crossing a boundary.",
+        "src/release/exterior-wave-reconciliation.test.ts 'change-impact index v1': six tests covering unchanged, added, removed, moved and checksum-only-drift cases; plus 'reproduces the committed zero-finding result from the committed ledger alone'.",
+        "New versions never modify prior approved releases: src/release/exterior-release.ts refuses unchanged-hash drift, discontinuous predecessors and cross-audience predecessor links; T026 re-promoted two waves while keeping their V2 records byte-identical."
+      ],
+      "adjudicationDelta": "Proven over SYNTHETIC v1-to-v2 fixture ledger pairs only. No accepted source or evidence update occurred during this Goal, so there is no committed change-impact run over a real update. ADR 0024 D10 records the related limit in its own words: a ledger has no predecessor field and none was invented, so there is no predecessor-graph-over-ledgers claim."
+    },
+    {
+      "index": 14,
+      "criterion": "Unchanged cells remain byte-identical and checksum-identical across an incremental refresh, while changed cells retain predecessor links, source dates, and an auditable release diff",
+      "verdict": "MET",
+      "evidence": [
+        "Real incremental refreshes occurred: T026 re-promoted Block 835 V2 to V3 and Midtown-core V2 to V3, retaining each V2 record verbatim as the successor's predecessor. src/runtime/exterior-default-activation.test.ts asserts 'keeps the V2 predecessor byte-identical to the release it names'.",
+        "Per-wave fingerprint suites assert a derived subset's fingerprint stays byte-identical so an unchanged wave cannot be forced to rebuild (lower-manhattan-fingerprint.test.ts, southern-remainder-fingerprint.test.ts, central-upper-manhattan-fingerprint.test.ts, northern-manhattan-fingerprint.test.ts).",
+        "src/release/exterior-release.ts:660 'Unchanged cell mapping must retain its exact checksum' and :663 'Changed cell release must continue exactly from the predecessor snapshot mapping'; exterior-release.test.ts 'rejects incomplete waves, discontinuity, unchanged hash drift, cycles, and invalid rollback'.",
+        "Source dates travel per asset (multi-lod-assembly.ts sourceDates{capturedAt, updatedAt}) and are re-verified against the embedded GLB canonical metadata, which throws on divergence.",
+        "The auditable diff is the snapshot-to-snapshot per-cell mapping in ExteriorRolloutSnapshot, which carries predecessor and rollbackTarget."
+      ]
+    },
+    {
+      "index": 15,
+      "criterion": "Every accepted building exterior passes a component inventory requiring applicable comprehensive street-visible structure and machine-readable generated, evidence-backed, absent, or not-applicable status for each component class",
+      "verdict": "MET",
+      "evidence": [
+        "src/domain/exterior-contract.ts REQUIRED_EXTERIOR_COMPONENT_KINDS declares 15 street-visible classes (massing, setbacks, facade-bays, windows, entrances, ground-floor-divisions, storefronts, cornices, roof-form, balconies, fire-escapes, roof-equipment, water-tanks, materials, signage) and requires exactly one unique class-level entry for the complete vocabulary.",
+        "The state vocabulary is machine-readable and closed: generated | evidence-backed | absent | not-applicable, with absent requiring a reason and not-applicable requiring a basis of 'grammar' or 'evidence'; only setbacks is conditionally applicable.",
+        "src/release/block835-v3-package.ts v3TruthTiers() throws on any inadmissible component state, so an incomplete inventory cannot be released.",
+        "Census evidence per wave enumerates absent setbacks as a first-class count and by building id, e.g. data/northern-manhattan-20260812-p1/wave-census.json tierCollapseAbsentSetbackCount 5,880 wave-scale and 7 shipped with shippedAbsentSetbackBuildingIds listed."
+      ]
+    },
+    {
+      "index": 16,
+      "criterion": "At approved 10-meter-or-farther reference views, generated facades show no placeholder blank wall where the component grammar requires bays, openings, ground-floor division, roofline, or material variation",
+      "verdict": "MET",
+      "evidence": [
+        "The approved reference views are Block 835's by the Goal's own dual-track design. docs/implementation/20260811-block835-canary-validation.md row 6 records PASS: facade bands, window recesses, setback decks, cornices, roof equipment and a water-tank prism are visible, and 'No blank placeholder wall appears on any visible surface in either' of the two committed views.",
+        "The 10 m floor is a code constant, not prose: scripts/block835-canary-facade-path-cli.mjs MINIMUM_CAMERA_TO_FACADE_METERS = 10, emitted into the committed path fixture; scripts/block835-canary-facade-path.test.mjs asserts the perpendicular distance is reported, the floor holds even for a very short building, and every pose is pinned to a committed plan hash and a named anchor source.",
+        "A blank wall is legal only where the grammar requires none: src/domain/deterministic-facade-generator-v3.test.ts 'keeps a zero-bay blank wall legal on the shortest edges'.",
+        "Scope disclosure: no per-wave 10-metre blank-wall census exists for waves w01 to w05; their acceptance stations are 150 to 1000 m camera heights. The grammar is shared and deterministic and each wave's census asserts grammar conformance for every materialized building, but the near-field visual reading is Block-835-scoped."
+      ]
+    },
+    {
+      "index": 17,
+      "criterion": "Generated storefronts expose zero unsupported tenant names, logos, trade dress, occupancy, operating-status, or current-signage claims",
+      "verdict": "MET",
+      "evidence": [
+        "src/domain/deterministic-facade-generator-v3.ts DETERMINISTIC_FACADE_V3_SIGNAGE_UNCERTAINTY: 'Generated blank sign-band and blade massing only. No real-world sign presence, size, position, orientation, text, brand or tenant is asserted, and no glyph, logo or lettering is generated.' validateV3Plan refuses any plan whose uncertainty statement does not match one of the two admitted strings.",
+        "src/domain/deterministic-facade-generator-v2.test.ts 'states signage honestly and carries zero text, brand or tenant content' asserts the SERIALIZED plan contains none of text, label, brand, tenant, glyph, logo or caption.",
+        "The six rights instruments exclude real-world facade, tenant, brand, signage and survey-grade accuracy claims, asserted per wave.",
+        "T009 row 7 PASS: the packages are texture-free and glyph-free by construction and no tenant or sign text appears in any screenshot."
+      ]
+    },
+    {
+      "index": 18,
+      "criterion": "Geographic validation proves pipeline-added registration error <=0.25 m horizontal and <=0.5 m vertical against accepted source anchors without claiming tighter accuracy than the source",
+      "verdict": "MET",
+      "evidence": [
+        "src/release/block835-v3-package.ts V3_REGISTRATION_TOLERANCE = {horizontalMeters 0.25, verticalMeters 0.5, perVertexShapeMeters 0.05}; a breach raises the hard stop code registration-out-of-tolerance in src/release/midtown-core-v3-materialization.ts.",
+        "public/data/manhattan-esb-block-reference-20260811-v3/registration.json: all 14 buildings withinTolerance, worst horizontal 0.000277 m, worst vertical 0.000456 m, worst per-vertex shape 0.000626 m.",
+        "Wave scale: data/northern-manhattan-20260812-p1/wave-census.json worstHorizontalDeviationMeters 0.00047 and worstVerticalDeviationMeters 0.00050 over the wave's 9,849 materialized buildings.",
+        "The 'no tighter than source' half is explicit in the record itself: registration.json carries contractual: false and a claim stating it does NOT claim the sourced polygon matches the real building and claims nothing about facade, appearance, colour or material."
+      ]
+    },
+    {
+      "index": 19,
+      "criterion": "For evidence-backed components with approved calibrated references, key facade features project within 2 percent of facade width or height, and eligible LOD transitions keep key silhouette deviation <=2 percent at approved views",
+      "verdict": "MET-AS-ADJUDICATED",
+      "evidence": [
+        "The silhouette half is directly measured. scripts/blender/block835_v3_author.py measure_silhouette renders lod_0 and lod_1 alpha masks through an orthographic camera at four views and reports symmetricDifference / lod0Covered. Committed maxima: 0.0 (data/manhattan-esb-block-reference-20260810 and -20260811) and 0.0018340422908575303 (-v3 and -v3e), against a bound of 0.02.",
+        "The 2% bound is a literal in the schema, not a variable: src/release/multi-lod-assembly.ts requires method 'projected-silhouette-ratio', maximumRatio exactly 0.02 and deviationRatio <= 0.02, and binds silhouette.planHashSha256 to the immutable asset source; multi-lod-assembly.test.ts fails a 0.021 ratio. Three CLIs gate on the same bound."
+      ],
+      "adjudicationDelta": "The facade-feature half is VACUOUS. There are zero evidence-backed components and zero approved calibrated references in this repository; the sole approved intake is derivativeScope 'measurement-only' encyclopaedia text that is expressly barred from being used as a visual reference. A search for a facade-width or facade-height projection metric returns nothing. Additionally, the silhouette metric compares the pipeline's own two LODs to each other and is schema-labelled status 'authoring-declared' - it is a self-referential LOD-transition measurement, not an external verification."
+    },
+    {
+      "index": 20,
+      "criterion": "Asset validation reports zero contract-violating non-manifold defects, open holes, inverted normals, floating components, and visible z-fighting; generated components expose no real-world accuracy score",
+      "verdict": "MET-AS-ADJUDICATED",
+      "evidence": [
+        "The defect classes are proven by a signed-volume identity against the analytic plan volume rather than by an edge count: scripts/blender/block835_v3_author.py boundsASolid, whose own comment records that a mesh with a hole, an inverted normal, an overlapping tier ring, a placement punched through a neck, or a doubly tiled wall row cannot land inside the tolerance by accident.",
+        "Independent corroboration by re-import: data/northern-manhattan-20260812-p1/blender-sample.json re-imported ALL 24 shipped assets (a census, not a sample) and reports notSolidCount 0, maximumTriangleDelta 0, materialMismatchCount 0, imageCountMismatchCount 0, texturesUnreachableCount 0, maximumBoundsDeviationMeters 0.0 against a 13.097 m Z-up control hypothesis, worst volume deviation 1.6284564642600631e-07, and checksumMismatchCount 0 against the committed payload inventory.",
+        "No accuracy score on generated components: src/domain/exterior-contract.test.ts:112 refuses a component carrying evidenceIds together with realWorldAccuracyClaim 'exact'; T009 row 8 records that the only numeric confidence shown is on the base source record and the exterior section shows a truth tier and an uncertainty statement with no accuracy score."
+      ],
+      "adjudicationDelta": "Two honest narrowings, both stated by the pipeline itself. (a) NON-MANIFOLD: the pipeline deliberately does NOT claim a combinatorial 2-manifold. Row strips meet at T-junctions by construction, tJunctionEdgeCount is reported as an observation and is not a gate, and shipped GLBs duplicate every vertex per face. 'Zero contract-violating' is therefore read against the asset contract's own volume-identity definition. (b) Z-FIGHTING is never named as a check anywhere. The closest evidence is the T028 Cesium sampler inspection (data/manhattan-esb-block-reference-20260811-v3t/cesium-sampler-evidence.json) which adopted trilinear filtering after a visual reading of moire and speckle at three stations, and whose verdict explicitly rests on the visual reading rather than on its own numbers."
+    },
+    {
+      "index": 21,
+      "criterion": "Every included building and exterior component is assigned a machine-readable fidelity and evidence tier; unsupported real-world claims are zero",
+      "verdict": "MET",
+      "evidence": [
+        "Component level: src/domain/exterior-contract.ts exteriorComponentFidelity() returns generated | evidence-backed | no-representation | not-applicable, derived from the full state discriminant.",
+        "Asset level: src/release/multi-lod-assembly.ts requires a non-empty unique ComponentTruthTier set per asset and binds it into the GLB canonical metadata, re-verifying it against the immutable manifest and throwing on divergence.",
+        "Building level: src/release/exterior-release.ts ExteriorBuildingDetail is either available{inventoryId, evidenceShardId, runtimeTexture} or unavailable{tombstoneId, reason, previousInventoryId}.",
+        "Release level: src/release/public-showcase-manifest.ts PublicShowcaseFidelityLabels gives all six waves geometryTier 'generated'; public-showcase-manifest.test.ts 'states no fidelity claim that the instruments refuse'.",
+        "Unsupported real-world claims are zero as measured: data/public-showcase-20260812/differential-audit.json unexplainedFallbacks 0 over 44,710 unavailable building details."
+      ]
+    },
+    {
+      "index": 22,
+      "criterion": "The approved Manhattan coverage envelope reaches its user-approved exterior tier without stable-ID, selection, deep-link, provenance, or failure-state regressions",
+      "verdict": "NOT-MET",
+      "evidence": [
+        "What was reached is ledger COVERAGE completeness, not the exterior tier over the envelope: all six declared waves have a promoted default record, and 870 of 883 cells ship no exterior geometry at all.",
+        "coverage.promoted: 484 of 45,194 canonical parents carry a default exterior - 1.07%, roughly one building in ninety-three - shipped as 498 GLB entries against a 512-entry cache.",
+        "ADR 0037 states this in its own words: 'It is completeness of COVERAGE, not of the city' and 'It does not claim Manhattan is textured.'",
+        "The 'without regressions' half IS evidenced: stable ids, selection, deep links, provenance and explicit failure states survive every promotion, and the T022 cold-default journey streams 14/91/66/130/36/24 distinct artifacts from the six waves with zero external hosts and zero from the unpromoted canary."
+      ],
+      "stopReport": "Same structural gap as criterion 1. Per-wave renderable subsets are bounded by the 512-entry all-resident exterior cache contract; the sum of the six subsets is 498 of 512. ADR 0024 cell scheduling is the named prerequisite that would make breadth a function of what the camera can see rather than of a fixed resident budget. Until it exists, 'promote more of a wave' and 'raise the cache cap' are the same decision, and the envelope cannot reach the approved exterior tier."
+    },
+    {
+      "index": 23,
+      "criterion": "Release assembly produces immutable checksum-pinned multi-LOD artifacts with deterministic replay and geographic validation",
+      "verdict": "MET",
+      "evidence": [
+        "src/release/multi-lod-assembly.ts validates GLB 2 and 3D Tiles 1.1 packages against MULTI_LOD_ASSEMBLY_LIMITS with exact artifact and cell accounting, LOD and partition closure, and raw-byte replay; multi-lod-assembly.test.ts 'replays raw GLB and 3D Tiles bytes deterministically with complete accounting' and 'fails closed on missing content and byte/hash drift'.",
+        "Deterministic replay in practice: src/release/block835-v3-canary-release.test.ts 'builds byte-identical output on repeated runs'; src/release/procedural-texture.test.ts 'reproduces the exact same bytes in a SEPARATE process'.",
+        "Checksum pinning: each promoted payload inventory carries an assemblyFingerprintSha256 and private/public root checksums, and each default activation record carries a snapshotChecksumSha256 recomputed from the committed inventory by its own promotion-record suite.",
+        "Geographic validation: src/release/exterior-release.ts validBounds/withinBounds enforce 'Cell bounds must be contained by exact WGS84 coverage' and 'Cell release bounds drift from canonical ownership' against the ledger's coverage envelope."
+      ]
+    },
+    {
+      "index": 24,
+      "criterion": "Representative visual comparison, native Cesium picking, accessibility, streaming, memory, and frame-time gates pass on user-approved device classes and viewpoints",
+      "verdict": "NOT-MET",
+      "evidence": [
+        "Visual comparison, native Cesium picking, streaming and frame time all pass on the measured desktop class (see criteria 5, 9, 10, 16 and 30).",
+        "ACCESSIBILITY is partial by the project's own record. T009 row 11: json/accessibility-probe.json found 26 focusable elements, 23 buttons, 0 unlabeled buttons, 8 landmarks, correctly toggling aria-pressed on the profile controls, and a prefers-reduced-motion rule in the shipped stylesheet - but 'Not proven: real keyboard traversal and reduced-motion behaviour, both blocked by the focus limitation'.",
+        "MEMORY is not certified for the shipped composition - see criterion 30.",
+        "DEVICE CLASSES: the user-approved classes are a 1440p-class desktop and a mobile class. Neither was measured: every capture is 1280x800 dpr 1 or 1728x920 dpr 2, and the mobile class has no evidence at all (criteria 7 and 8)."
+      ],
+      "stopReport": "Three bounded items: (a) prove real keyboard traversal and reduced-motion behaviour in a browser that can hold focus - the probe already enumerates the elements; (b) add the mobile device class (criterion 8); (c) capture at the 1440p-class viewport (criterion 7). Item (a) is independent of the other two."
+    },
+    {
+      "index": 25,
+      "criterion": "Licensing and public-conveyance evidence is complete for every shipped source and derivative partition",
+      "verdict": "MET-AS-ADJUDICATED",
+      "evidence": [
+        "Six per-wave approval instruments, each with a SHA-256 fingerprint over its scope, exclusions, approval instant and note, pinned into the showcase manifest BY OBJECT REFERENCE and restated in the committed differential audit as approvalFingerprintSha256.",
+        "src/release/public-showcase-manifest.test.ts asserts the union of exclusions is restated without dropping any wave's, that public deployment is excluded in EVERY wave in that wave's own wording, and that the candidate digest moves when an exclusion is weakened or a base package's deployment-exclusion source changes.",
+        "data/public-showcase-20260812/differential-audit.json, reproduced BYTE-IDENTICALLY by a fresh 2026-08-12 re-run taken BEFORE this task created its own data/ record (see residual risks): declaredArtifacts 1,863 / resolved 1,863 / unresolved 0, declaredPayloadRefs 1,387 / unresolved 0, privateBytesReachable 0, undeclaredPrivateReferences 0, declaredDisclosures 24 across six waves.",
+        "The shipped geometry's source rights rest on NYC OTI Building Footprints; four private reference packages (116 files) are excluded from the candidate by name and pruned from the build output."
+      ],
+      "adjudicationDelta": "'Complete' means completely RECORDED, not independently verified. Every textured wave's instrument says in its own text that it RESTS ON NO FRESH SIGNATURE - its authority is the user's recorded texture direction of 2026-08-11 plus a standing autonomy directive, and neither is a licence grant from a third party. ADR 0022 records that ownership and permission attestation is operator-asserted and unverifiable by this repository. Two minor prose drifts exist between ADR 0038 and the committed audit (18 versus 19 working-record directories; a 14 versus 19 app-shell request split); the committed records are authoritative and the ADR text is the stale side."
+    },
+    {
+      "index": 26,
+      "criterion": "The private full-fidelity release and any public showcase have separate manifests, asset allowlists, checksums, approval envelopes, and deployment gates; restricted artifacts cannot be requested from the public build",
+      "verdict": "MET",
+      "evidence": [
+        "src/release/exterior-release.ts requires exactly one private and one public root with distinct ids, refuses cross-audience predecessor links, requires artifactAllowlist to EXACTLY equal the declared artifact refs, refuses any artifact whose path crosses its root boundary, refuses aliased checksums, and requires each root to checksum-pin its ownership ledger.",
+        "scripts/prune-private-partitions.mjs runs as the last step of pnpm build and throws before any traversal unless the target resolves to this repository's own dist/, so it cannot delete committed release partitions. Fresh 2026-08-12 build removed 4 private partition directories.",
+        "Fresh 2026-08-12 scripts/audit-partition-tree.mjs run: dist/ F1 private-path findings 0 over 6,070 files.",
+        "Fresh 2026-08-12 scripts/public-showcase-smoke-cli.mjs run against this tree's own build: journey private-paths-unreachable PASSED - all 10 declared private probes returned the SPA-shell body hash 62c5ebf071b713fe8e872b20981ef8811a386364d08c48764921dc410626ff34 and never a declared private artifact checksum.",
+        "src/release/public-showcase-manifest.ts classifyShowcaseRequestPath refuses with named codes including private-root-forbidden, private-path-forbidden, package-not-in-candidate and payload-outside-public-partition; src/runtime/exterior-cell-runtime.ts:647 refuses a non-public shard before any fetch."
+      ]
+    },
+    {
+      "index": 27,
+      "criterion": "Rollback can disable or remove an exterior wave independently and restore the previous verified city representation",
+      "verdict": "MET",
+      "evidence": [
+        "Six per-wave rollback rehearsals in src/runtime/exterior-multiwave-activation.test.ts, each proving the other five waves stay enabled and unwithdrawn: Block 835 V3 rolls back to its V2 predecessor and forward again; Midtown V3 rolls back to its V2 predecessor; and lower-manhattan, southern-remainder, central-upper-manhattan and northern-manhattan each roll back to BASE MASSING.",
+        "Per-wave duplicates in each promotion-record suite assert the same rollback is PER-RECORD.",
+        "A withdrawn release's promotion-era ?exteriorCells= link fails closed by name via rolledBackReleaseId, so a bookmark cannot keep rendering the withdrawn wave.",
+        "Disclosure: the swap is a build-time record change and no URL expresses it, so five of the six are proven through the record's own injection seam rather than in a browser; the journey records state this themselves. Block 835's T010 rollback is the one with committed browser bytes."
+      ]
+    },
+    {
+      "index": 28,
+      "criterion": "Every wave begins as an opt-in canary; default activation occurs only after criterion-by-criterion acceptance and explicit promotion approval, and the canonical URL truthfully records the active exterior release mapping",
+      "verdict": "MET",
+      "evidence": [
+        "Six canaries, each opt-in only through ?exteriorCells= and each measured in a real browser to deliver ZERO artifacts on a default load: the T021 journey promoted-default-unchanged streams 14/156/71/179/40 from the five promoted waves and 0 from the canary at a pose inside the canary's own framed cell.",
+        "Six promotions, each with a named approval reference recorded in the activation record: Issues #44 (Block 835 V3), #44 (Midtown V3), #17, #19, #21, #23.",
+        "Truthful default URL: src/app/App.test.tsx asserts a promoted default session serializes NO exteriorCells and NO exteriorStreaming parameter, reports data-exterior-snapshot-origin 'default' and names the pinned snapshot id in its status text; an unpinned exteriorCells value degrades loudly and names the pinned set.",
+        "src/runtime/exterior-default-activation.test.ts 'names an explicit release with no on/off override accurately instead of calling it the promoted default' and 'distinguishes a parse that failed closed on an unpinned release from a session someone switched off'."
+      ]
+    },
+    {
+      "index": 29,
+      "criterion": "A rollback exercise restores the predecessor cell mapping atomically, preserves building identity and history behavior, exposes an explicit unavailable state for removed-only details, and makes no immutable data change",
+      "verdict": "MET",
+      "evidence": [
+        "T010 Block 835 rollback exercise: 14/14 predecessor pins verified against the 20260810 bytes with 0 mismatches, and git diff over public/data and data empty - no immutable data change.",
+        "Committed browser bytes: artifacts/block835-promotion-20260811/journeys.json with 7 PNGs, a default network inventory and a Back/Forward transcript, all hashed into data/block835-promotion-20260811/evidence-inventory.json; journey (d) is the explicit disable sentinel and journey (e) the injected fault under default-on with the base intact.",
+        "Explicit unavailable state for removed-only details: the tombstone-truth journey of every wave reads a notice of the form '181 of 182 exterior cells ship no exterior geometry in this release; no substitute was selected for them'.",
+        "src/release/exterior-release.ts requires a versioned cell fallback to be its EXACT predecessor and a removed-detail tombstone to identify its predecessor inventory, and requires a rollback target to be a complete immutable ancestor snapshot with a matching checksum."
+      ]
+    },
+    {
+      "index": 30,
+      "criterion": "Security validation proves the public build cannot resolve private roots or undeclared assets, all content paths and hashes fail closed, active exterior requests never exceed 8, compressed exterior cache stays <=256 MiB, and repeated camera paths do not exhibit monotonic retained-memory growth",
+      "verdict": "NOT-MET",
+      "evidence": [
+        "Four of the five conjuncts are directly evidenced, three of them re-run fresh on 2026-08-12. PRIVATE ROOTS: 10 declared private probes all returned the SPA-shell hash, never a declared private checksum. UNDECLARED ASSETS: undeclaredPrivateReferences 0 and privateBytesReachable 0 over 2,385 scanned public files and 6,070 dist files; zero external hosts in a default six-wave session.",
+        "PATHS AND HASHES FAIL CLOSED: src/runtime/path-security.ts admits only a canonical segment grammar; src/runtime/exterior-cell-runtime.ts fails closed when Web Crypto is unavailable, rejects a GLB whose bytes fail the declared checksum, never follows more than one fallback hop, and refuses a path pinned to two checksums.",
+        "CONCURRENCY: the runtime ceiling is EXTERIOR_RUNTIME_BUDGETS.maxConcurrentRequests = 4, stricter than the criterion's 8, asserted by exterior-cell-runtime.test.ts under aggregate load; the browser-measured peak was 4 (probe counter) and 6 (all release data) on Block 835.",
+        "CACHE: the six-wave composition is entry-bound at 498 of 512 entries and 121.81 MiB of 256 MiB (src/runtime/exterior-cache-ceiling.test.ts, derived from the committed payload inventories); the worst browser-derived residency was 484 entries and 128,747,055 bytes, both inside budget.",
+        "RETAINED MEMORY IS NOT CERTIFIED FOR WHAT SHIPS. grep -rn 'monoton' over data/ returns zero hits: no committed record for any of the six waves carries a first-half/second-half growth ratio, a noise-band comparison, or a pass/fail. The 12 heapAfterGcBytes readings in each acceptance record are 3 repeats across 4 DIFFERENT camera stations, not repeats of one deterministic camera path. The only monotonic-growth verdicts are prose over untracked raw files, for Block 835 V3 (heap shrank 13.3% and 12.0% with forced collection) and Midtown (-0.107 and -0.105 against a 0.10 band). Nothing covers the four textured waves or the six-wave composition.",
+        "Also unmeasured: there is no committed peak-concurrency measurement for the six-wave composition (grep -rn 'peakConcurren' over data/ returns zero); the four acceptance records carry maxConcurrentRequests as a CONFIGURATION value, not a measured peak."
+      ],
+      "stopReport": "One bounded measurement closes the memory conjunct: run the existing block835CanaryHeapVerdict method - first-half versus second-half medians against a 0.1 noise band - over a REPEATED deterministic camera path on the six-wave composition with HeapProfiler.collectGarbage between repeats, and commit the ratio. The acceptance CLIs already force collection and read usedJSHeapSize; only the repeated-single-path shape and the growth verdict are missing. A second, smaller item: record the measured peak concurrent exterior request count for the six-wave session alongside it."
+    },
+    {
+      "index": 31,
+      "criterion": "Documentation impact is complete: product/setup, architecture decisions, implementation evidence, data/licensing research, operating procedures, visual fidelity claims, and rollback instructions agree with the accepted release behavior",
+      "verdict": "MET",
+      "evidence": [
+        "This task closed the documentation impact: README.md and docs/PROJECT_BRIEF.md now describe the six promoted default exterior waves, the textured V3 grammar, the bounded renderable subsets and their 484-of-45,194 headline, the opt-in canaries, per-wave rollback, and the local-only public showcase candidate.",
+        "docs/decisions/0039-goal-integration-acceptance.md records the reconciliation method, the verdict table, the six stop-report items and the residual risks.",
+        "docs/implementation/20260812-goal-integration-acceptance.md records what was re-run, what was cited, and the exact outcomes.",
+        "Fidelity claims agree with the accepted release behaviour: generated and designed, with no facade-accuracy assertion, and the public candidate stated as local-only with public internet deployment excluded by every wave's instrument."
+      ]
+    }
+  ],
+  "residualRisks": [
+    "THE VOLUME-MARGIN PATTERN IS STILL UNEXPLAINED. The wave-scale worst accepted volume-identity deviation sat at 0.988 of tolerance for central-upper-Manhattan and 0.9895 for northern-Manhattan, and the latter refused 16 buildings for exceeding it. Two waves in a row above ninety-eight hundredths of the tolerance is a pattern, not a coincidence. No tolerance was moved and no task has explained it; ADR 0037 precondition (e) records that the explanation is still owed.",
+    "LOAD-DEPENDENT TEST FLAKES. src/release/midtown-core-v3-release.test.ts and src/app/App.test.tsx time out under concurrent CPU load (vitest's 5,000 ms default) and pass in isolation and on an unloaded machine. midtown-core-v3-release.test.ts alone takes about 20 s for 20 tests. These are timeouts, not assertion failures, and the same tests were observed green on a quiet re-run.",
+    "THE T023 SMOKE JOURNEY six-wave-default IS NOT REPRODUCIBLE FROM A CLEAN BROWSER PROFILE. A fresh Chrome profile issues /favicon.ico, which the showcase allowlist classifier does not categorise, so everyRequestClassified reads false and the journey fails. Verified 2026-08-12 in both headless and headed Chrome with fresh profiles (554 distinct URLs against the committed record's 553). The SUBSTANCE is unaffected - zero external hosts, all six waves streaming their exact expected GLB counts, private paths unreachable by checksum - and the preview answers /favicon.ico with a 404 of zero bytes, which is failing closed. But the committed pass depended on browser-profile state. Not repaired here: the classifier is T023's, and editing it would make the committed record non-reproducible in the other direction.",
+    "THE SHOWCASE DIFFERENTIAL AUDIT REWRITES ITS OWN COMMITTED RECORD AND IS SELF-INVALIDATING. pnpm showcase:audit writes data/public-showcase-20260812/differential-audit.json in place, and its workingRecordDirectories total counts the working-record directories under data/. A fresh re-run at the start of T024 reproduced the committed bytes EXACTLY; a re-run after T024 created data/goal-integration-acceptance-20260812/ raised the count from 19 to 20 and changed the record checksum. The file was restored to its committed bytes and was NOT re-emitted, and no drift suite broke - src/release/public-showcase-evidence-consistency.test.ts reads the record but does not recompute that total. An evidence record whose contents depend on the presence of later evidence records is self-invalidating by construction.",
+    "THE WAVE LEDGER'S eligibility.json IS IMMUTABLE AND NOW READS STALE. It declares all 883 cells private-eligible and 0 public-eligible, with a basis stating no cell is public-eligible until a promotion task supplies per-cell rights-cleared evidence. Six promotions have since shipped public roots under per-wave instruments. The artifact is v1, pinned to the ledger checksum, and correctly was not mutated; the live eligibility authority is the six approval instruments, not this file.",
+    "STRUCTURAL VALIDATION IS NOT VISUAL, GEOGRAPHIC OR PRODUCTION PROOF. A signed-volume identity, a checksum and a passing suite do not prove that a facade looks right, that a building sits where the real one does, or that the composition is smooth. The near-field visual reading is Block-835-scoped, and the isolated slow frames of 116.2 ms and 140.0 ms are recorded rather than smoothed.",
+    "THE PRIVACY AND EVIDENCE MACHINERY HAS ONLY EVER RUN ON SYNTHETIC FIXTURES. No self-captured evidence exists in the repository, no committed record carries a redactedArtifactRef, and ADR 0022 records that the privacy review is attestation-only and that a missed face or plate is not detected."
+  ],
+  "coverage": {
+    "ledger": {
+      "ledgerId": "manhattan-exterior-wave-ledger-20260804-a3382ef4cac213a2",
+      "ledgerChecksumSha256": "62e093d2ca50b54b49fd8bbad9d0b11f6301b2b197623deb343f9ea915e59016",
+      "baseIdentitySetId": "manhattan-citywide-20260804:exterior-base-identity:fecff2cf008fd86d",
+      "baseIdentitySetChecksumSha256": "17d28c8355a8a062d19a9e79f2aa5d08a5a02e7bb72126a98f4750a656b78e7f",
+      "declaredBaseBuildingCount": 45194,
+      "declaredCellCount": 883,
+      "observedCellCount": 883,
+      "missingCells": 0,
+      "duplicateCells": 0,
+      "observedBuildingIdCount": 45194,
+      "distinctBuildingIdCount": 45194,
+      "missingAcceptedParents": 0,
+      "duplicateCanonicalOwners": 0,
+      "waves": [
+        {
+          "waveIndex": 0,
+          "waveId": "block-835",
+          "declaredCellCount": 1,
+          "declaredBuildingCount": 14,
+          "observedCellCount": 1,
+          "observedBuildingCount": 14,
+          "agrees": true
+        },
+        {
+          "waveIndex": 1,
+          "waveId": "midtown-core",
+          "declaredCellCount": 149,
+          "declaredBuildingCount": 7201,
+          "observedCellCount": 149,
+          "observedBuildingCount": 7201,
+          "agrees": true
+        },
+        {
+          "waveIndex": 2,
+          "waveId": "lower-manhattan",
+          "declaredCellCount": 126,
+          "declaredBuildingCount": 6425,
+          "observedCellCount": 126,
+          "observedBuildingCount": 6425,
+          "agrees": true
+        },
+        {
+          "waveIndex": 3,
+          "waveId": "southern-remainder",
+          "declaredCellCount": 176,
+          "declaredBuildingCount": 9603,
+          "observedCellCount": 176,
+          "observedBuildingCount": 9603,
+          "agrees": true
+        },
+        {
+          "waveIndex": 4,
+          "waveId": "central-upper-manhattan",
+          "declaredCellCount": 249,
+          "declaredBuildingCount": 11721,
+          "observedCellCount": 249,
+          "observedBuildingCount": 11721,
+          "agrees": true
+        },
+        {
+          "waveIndex": 5,
+          "waveId": "northern-manhattan",
+          "declaredCellCount": 182,
+          "declaredBuildingCount": 10230,
+          "observedCellCount": 182,
+          "observedBuildingCount": 10230,
+          "agrees": true
+        }
+      ],
+      "waveCellSum": 883,
+      "waveBuildingSum": 45194,
+      "committedReport": {
+        "observedBuildingCount": 45194,
+        "ownedBuildingCount": 45194,
+        "cellCount": 883,
+        "counts": {
+          "missing": 0,
+          "duplicate": 0,
+          "cross-cell-duplicate": 0,
+          "stale": 0,
+          "changed": 0
+        },
+        "ok": true
+      }
+    },
+    "census": {
+      "waves": [
+        {
+          "waveId": "block-835",
+          "censusPath": "data/manhattan-esb-block-reference-20260811-v3t/census.json",
+          "ownedBuildingCount": 14,
+          "materializedBuildingCount": 14,
+          "refusedBuildingCount": 0,
+          "refusalsByCode": {},
+          "refusalCodeSum": 0,
+          "unknownStopCodes": [],
+          "styleClassCounts": {
+            "stone-neutral": 4,
+            "masonry-light": 7,
+            "masonry-warm": 1,
+            "curtain-cool": 2
+          },
+          "styleClassSum": 14,
+          "unclassifiedMaterializedCount": 0,
+          "unaccountedOwnedCount": 0
+        },
+        {
+          "waveId": "midtown-core",
+          "censusPath": "data/midtown-core-20260811-v3/v3-census.json",
+          "ownedBuildingCount": 7201,
+          "materializedBuildingCount": 7091,
+          "refusedBuildingCount": 110,
+          "refusalsByCode": {
+            "source-height-below-grammar-minimum": 49,
+            "ring-vertex-count-unsupported": 41,
+            "ring-area-below-floor": 17,
+            "volume-identity-failed": 1,
+            "ring-neck-below-grammar-minimum": 2
+          },
+          "refusalCodeSum": 110,
+          "unknownStopCodes": [],
+          "styleClassCounts": {
+            "curtain-cool": 1045,
+            "masonry-light": 2204,
+            "masonry-warm": 2441,
+            "stone-neutral": 1401
+          },
+          "styleClassSum": 7091,
+          "unclassifiedMaterializedCount": 0,
+          "unaccountedOwnedCount": 0
+        },
+        {
+          "waveId": "lower-manhattan",
+          "censusPath": "data/lower-manhattan-20260812-p1/wave-census.json",
+          "ownedBuildingCount": 6425,
+          "materializedBuildingCount": 6291,
+          "refusedBuildingCount": 134,
+          "refusalsByCode": {
+            "source-height-below-grammar-minimum": 61,
+            "ring-area-below-floor": 25,
+            "ring-vertex-count-unsupported": 33,
+            "ring-neck-below-grammar-minimum": 7,
+            "volume-identity-failed": 7,
+            "ring-not-simple": 1
+          },
+          "refusalCodeSum": 134,
+          "unknownStopCodes": [],
+          "styleClassCounts": {
+            "stone-neutral": 1209,
+            "masonry-light": 2005,
+            "masonry-warm": 2413,
+            "curtain-cool": 664
+          },
+          "styleClassSum": 6291,
+          "unclassifiedMaterializedCount": 0,
+          "unaccountedOwnedCount": 0
+        },
+        {
+          "waveId": "southern-remainder",
+          "censusPath": "data/southern-remainder-20260812-p1/wave-census.json",
+          "ownedBuildingCount": 9603,
+          "materializedBuildingCount": 9507,
+          "refusedBuildingCount": 96,
+          "refusalsByCode": {
+            "source-height-below-grammar-minimum": 33,
+            "volume-identity-failed": 11,
+            "ring-vertex-count-unsupported": 22,
+            "ring-neck-below-grammar-minimum": 10,
+            "ring-area-below-floor": 20
+          },
+          "refusalCodeSum": 96,
+          "unknownStopCodes": [],
+          "styleClassCounts": {
+            "curtain-cool": 1017,
+            "masonry-warm": 3719,
+            "masonry-light": 3055,
+            "stone-neutral": 1716
+          },
+          "styleClassSum": 9507,
+          "unclassifiedMaterializedCount": 0,
+          "unaccountedOwnedCount": 0
+        },
+        {
+          "waveId": "central-upper-manhattan",
+          "censusPath": "data/central-upper-manhattan-20260812-p1/wave-census.json",
+          "ownedBuildingCount": 11721,
+          "materializedBuildingCount": 11543,
+          "refusedBuildingCount": 178,
+          "refusalsByCode": {
+            "ring-vertex-count-unsupported": 64,
+            "ring-area-below-floor": 25,
+            "source-height-below-grammar-minimum": 77,
+            "ring-not-simple": 2,
+            "ring-neck-below-grammar-minimum": 10
+          },
+          "refusalCodeSum": 178,
+          "unknownStopCodes": [],
+          "styleClassCounts": {
+            "stone-neutral": 2147,
+            "masonry-warm": 4580,
+            "masonry-light": 3618,
+            "curtain-cool": 1198
+          },
+          "styleClassSum": 11543,
+          "unclassifiedMaterializedCount": 0,
+          "unaccountedOwnedCount": 0
+        },
+        {
+          "waveId": "northern-manhattan",
+          "censusPath": "data/northern-manhattan-20260812-p1/wave-census.json",
+          "ownedBuildingCount": 10230,
+          "materializedBuildingCount": 9849,
+          "refusedBuildingCount": 381,
+          "refusalsByCode": {
+            "ring-vertex-count-unsupported": 164,
+            "source-height-below-grammar-minimum": 164,
+            "ring-area-below-floor": 26,
+            "volume-identity-failed": 16,
+            "ring-neck-below-grammar-minimum": 10,
+            "ring-not-simple": 1
+          },
+          "refusalCodeSum": 381,
+          "unknownStopCodes": [],
+          "styleClassCounts": {
+            "stone-neutral": 1690,
+            "masonry-warm": 4060,
+            "masonry-light": 3178,
+            "curtain-cool": 921
+          },
+          "styleClassSum": 9849,
+          "unclassifiedMaterializedCount": 0,
+          "unaccountedOwnedCount": 0
+        }
+      ],
+      "closedStopCodeVocabulary": [
+        "absent-from-base-shards",
+        "degenerate-footprint",
+        "ring-vertex-count-unsupported",
+        "ring-not-simple",
+        "ring-area-below-floor",
+        "ring-neck-below-grammar-minimum",
+        "source-height-below-grammar-minimum",
+        "plan-generation-failed",
+        "plan-validation-failed",
+        "asset-budget-exceeded",
+        "volume-identity-failed",
+        "registration-out-of-tolerance"
+      ],
+      "observedStopCodes": [
+        "ring-area-below-floor",
+        "ring-neck-below-grammar-minimum",
+        "ring-not-simple",
+        "ring-vertex-count-unsupported",
+        "source-height-below-grammar-minimum",
+        "volume-identity-failed"
+      ],
+      "refusalsByCode": {
+        "ring-area-below-floor": 113,
+        "ring-neck-below-grammar-minimum": 39,
+        "ring-not-simple": 4,
+        "ring-vertex-count-unsupported": 324,
+        "source-height-below-grammar-minimum": 384,
+        "volume-identity-failed": 35
+      },
+      "ownedBuildingCount": 45194,
+      "materializedBuildingCount": 44295,
+      "refusedBuildingCount": 899,
+      "unaccountedOwnedCount": 0,
+      "unclassifiedMaterializedCount": 0,
+      "unknownStopCodeCount": 0
+    },
+    "promoted": {
+      "promotedWaveCount": 6,
+      "releases": [
+        {
+          "waveId": "block-835",
+          "releaseId": "manhattan-exterior-cells-20260811-v3",
+          "approvalRef": "Issue #44 gate approval 2026-08-11 (T026 V3 promotion)",
+          "predecessorReleaseId": "manhattan-exterior-cells-20260811",
+          "predecessorEnabled": true,
+          "predecessorIsBaseMassing": false,
+          "declaredCellCount": 1,
+          "renderableCellCount": 1,
+          "notShippedCellCount": 0,
+          "promotedBuildingCount": 14,
+          "shippedAssetCount": 28
+        },
+        {
+          "waveId": "midtown-core",
+          "releaseId": "manhattan-midtown-core-cells-20260811-v3",
+          "approvalRef": "Issue #44 gate approval 2026-08-11 (T026 P3 Midtown V3 promotion)",
+          "predecessorReleaseId": "manhattan-midtown-core-cells-20260811",
+          "predecessorEnabled": true,
+          "predecessorIsBaseMassing": false,
+          "declaredCellCount": 149,
+          "renderableCellCount": 3,
+          "notShippedCellCount": 146,
+          "promotedBuildingCount": 156,
+          "shippedAssetCount": 156
+        },
+        {
+          "waveId": "lower-manhattan",
+          "releaseId": "manhattan-lower-manhattan-cells-20260812-p1",
+          "approvalRef": "Issue #17 gate approval 2026-08-12 (T016 Lower-Manhattan curated promotion)",
+          "predecessorReleaseId": null,
+          "predecessorEnabled": false,
+          "predecessorIsBaseMassing": true,
+          "declaredCellCount": 126,
+          "renderableCellCount": 2,
+          "notShippedCellCount": 124,
+          "promotedBuildingCount": 71,
+          "shippedAssetCount": 71
+        },
+        {
+          "waveId": "southern-remainder",
+          "releaseId": "manhattan-southern-remainder-cells-20260812-p1",
+          "approvalRef": "Issue #19 gate approval 2026-08-12 (T018 Southern-remainder curated promotion)",
+          "predecessorReleaseId": null,
+          "predecessorEnabled": false,
+          "predecessorIsBaseMassing": true,
+          "declaredCellCount": 176,
+          "renderableCellCount": 4,
+          "notShippedCellCount": 172,
+          "promotedBuildingCount": 179,
+          "shippedAssetCount": 179
+        },
+        {
+          "waveId": "central-upper-manhattan",
+          "releaseId": "manhattan-central-upper-manhattan-cells-20260812-p1",
+          "approvalRef": "Issue #21 gate approval 2026-08-12 (T020 Central-and-upper-Manhattan curated promotion)",
+          "predecessorReleaseId": null,
+          "predecessorEnabled": false,
+          "predecessorIsBaseMassing": true,
+          "declaredCellCount": 249,
+          "renderableCellCount": 2,
+          "notShippedCellCount": 247,
+          "promotedBuildingCount": 40,
+          "shippedAssetCount": 40
+        },
+        {
+          "waveId": "northern-manhattan",
+          "releaseId": "manhattan-northern-manhattan-cells-20260812-p1",
+          "approvalRef": "Issue #23 gate approval 2026-08-12 (T022 Northern-Manhattan curated promotion)",
+          "predecessorReleaseId": null,
+          "predecessorEnabled": false,
+          "predecessorIsBaseMassing": true,
+          "declaredCellCount": 182,
+          "renderableCellCount": 1,
+          "notShippedCellCount": 181,
+          "promotedBuildingCount": 24,
+          "shippedAssetCount": 24
+        }
+      ],
+      "promotedBuildingCount": 484,
+      "distinctPromotedBuildingCount": 484,
+      "shippedAssetCount": 498,
+      "renderableCellCount": 13,
+      "tombstonedCellCount": 870,
+      "declaredCellCount": 883,
+      "maxCacheEntries": 512,
+      "maxCachedBytes": 268435456,
+      "maxConcurrentRequests": 4,
+      "cacheEntryHeadroom": 14
+    },
+    "violations": {
+      "missingSpatialCells": 0,
+      "missingAcceptedBuildingParents": 0,
+      "duplicateCanonicalOwners": 0,
+      "unclassifiedExteriorComponents": 0,
+      "ownedBuildingsAccountedByNeither": 0,
+      "stopCodesOutsideClosedVocabulary": 0,
+      "censusOwnedVersusLedgerOwned": 0,
+      "waveCellSumVersusLedgerCells": 0
+    },
+    "allZero": true,
+    "refusalRatePercent": 1.9892,
+    "promotedSharePercent": 1.0709
+  }
+}

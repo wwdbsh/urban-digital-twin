@@ -136,6 +136,138 @@ the exact files. This is a source-constrained, local-only validation baseline,
 not a claim of photorealism, current occupancy, survey-grade geometry, or a
 complete Manhattan model; no public deployment or conveyance is included.
 
+## Manhattan generated building exteriors (2026-08-12)
+
+Six exterior waves are now promoted as the **default** composition over the
+unchanged, immutable `manhattan-citywide-20260804` base. An ordinary session —
+no URL parameter of any kind — streams all six.
+
+| wave | promoted release | cells | owned buildings | shipped |
+| --- | --- | --- | --- | --- |
+| Block 835 | `manhattan-exterior-cells-20260811-v3` | 1 | 14 | 14 buildings / 28 GLBs |
+| Midtown core | `manhattan-midtown-core-cells-20260811-v3` | 149 | 7,201 | 156 |
+| Lower Manhattan | `manhattan-lower-manhattan-cells-20260812-p1` | 126 | 6,425 | 71 |
+| Southern remainder | `manhattan-southern-remainder-cells-20260812-p1` | 176 | 9,603 | 179 |
+| Central & upper | `manhattan-central-upper-manhattan-cells-20260812-p1` | 249 | 11,721 | 40 |
+| Northern Manhattan | `manhattan-northern-manhattan-cells-20260812-p1` | 182 | 10,230 | 24 |
+
+**Read the last column before the third.** Coverage is complete in the sense
+that every wave the immutable ledger declares has a promoted default record.
+It is **not** complete in the sense that Manhattan is modelled:
+
+- **484 of 45,194 canonical building parents — 1.07%, about one in ninety-three
+  — carry a generated exterior by default**, shipped as 498 GLB artifacts.
+- **870 of the 883 spatial cells ship no exterior geometry at all.** Their
+  buildings render as the base source-backed footprint/height massing and the
+  runtime says so: each release carries a tombstone notice of the form
+  "181 of 182 exterior cells ship no exterior geometry in this release; no
+  substitute was selected for them."
+- Each promoted wave ships a **bounded renderable subset** of its own
+  partition, curated or order-derived. The bound is the 512-entry exterior
+  cache contract: the six subsets occupy 498 of 512 entries and 121.81 MiB of
+  256 MiB. Breadth inside a wave cannot grow without raising the cap or
+  evicting another wave's ground.
+
+### What the geometry is, and what it is not
+
+Every shipped exterior is **generated and designed, not observed**. The V3
+footprint-faithful grammar derives setbacks, facade bays, windows, entrances,
+ground-floor divisions, cornices, roof form, roof equipment and water-tank
+classes from the sourced OTI footprint ring and height. Four waves additionally
+carry **procedural facade textures** rasterized from named constants and
+re-verified byte-for-byte by the release validator.
+
+**No shipped component asserts a real building's facade.** Component presence
+is style- and geometry-derived; every component carries a machine-readable
+truth tier (`generated`, or `absent` with a stated reason) and an uncertainty
+statement, and generated components carry no real-world accuracy score. No
+tenant name, logo, trade dress, occupancy, operating status or signage text is
+generated — the packages are glyph-free by construction. Zero pixels, geometry,
+textures, training inputs or acceptance evidence come from Google Maps, Street
+View, unlicensed web photographs, or platform-restricted imagery.
+
+The grammar **refuses** 899 of the 45,194 owned parents outright rather than
+inventing geometry for them, each under a named stop code
+(`source-height-below-grammar-minimum` 384, `ring-vertex-count-unsupported`
+324, `ring-area-below-floor` 113, `ring-neck-below-grammar-minimum` 39,
+`volume-identity-failed` 35, `ring-not-simple` 4).
+
+### Opt-in canaries
+
+Every wave shipped first as an **opt-in canary** that an ordinary session never
+loads. A canary is selected — not added — by naming its release explicitly:
+
+```text
+/?exteriorCells=manhattan-northern-manhattan-cells-20260812
+```
+
+`?exteriorStreaming=off` disables all six promoted waves and returns the city
+to base massing without touching identity, selection, details or deep links.
+
+### Rollback
+
+Each wave is withdrawn **independently** by swapping its one default activation
+record in `src/runtime/exterior-default-activation.ts` for its recorded
+predecessor:
+
+- Block 835 and Midtown core roll back to their **V2 predecessor releases**,
+  which stay byte-identical to the releases they name.
+- Lower Manhattan, southern remainder, central & upper, and northern Manhattan
+  roll back to **base massing** — they have never been promoted in any earlier
+  form.
+
+A rollback deletes and modifies no immutable release, never substitutes a
+same-name or fixture feature, restores the predecessor cell mapping atomically,
+leaves the other five waves streaming, and makes any promotion-era
+`?exteriorCells=` bookmark into the withdrawn release fail closed by name. The
+six rehearsals live in `src/runtime/exterior-multiwave-activation.test.ts`; the
+Block 835 rollback additionally has committed browser journeys.
+
+### Public showcase candidate — assembled, and LOCAL ONLY
+
+`manhattan-public-showcase-20260812` is an **inventory** of the six separately
+approved local releases, not a new redistributable whole. It grants no verb,
+adds no source and widens no audience. **Every wave's approval instrument
+excludes public internet deployment, and so does the candidate.** It has not
+been deployed and this repository does not authorize deploying it.
+
+```sh
+pnpm build             # prunes every private partition from dist/
+pnpm partitions:audit  # proves dist/ carries no private byte
+pnpm showcase:audit    # differential audit — see the caveat below before running
+```
+
+`showcase:audit` **overwrites** its own committed record
+`data/public-showcase-20260812/differential-audit.json`, and one of the totals it
+counts is the number of working-record directories under `data/`. Any later task
+that adds a `data/` record therefore changes that count on the next run. The
+committed record is a snapshot taken at T023 and is the authority; re-run the
+audit only when you intend to re-emit it, and check `git status` afterwards.
+
+The private full-fidelity releases and the public candidate use **distinct
+roots, allowlists, checksums and approval envelopes**. Restricted artifacts
+cannot be requested from the public build: a fresh audit finds zero private-path
+findings over 6,070 built files, and a real-browser smoke fetches every declared
+private path and receives the SPA shell rather than the private bytes.
+
+### Known gaps
+
+The Goal's own integration acceptance leaves **six criteria unmet**, recorded
+with stop reports in
+[`data/goal-integration-acceptance-20260812/reconciliation.json`](data/goal-integration-acceptance-20260812/reconciliation.json)
+and summarized in [`Decision 0039`](docs/decisions/0039-goal-integration-acceptance.md):
+Manhattan-wide exterior coverage (484 of 45,194), the 1440p-class capture, the
+**mobile path (not implemented)**, the coverage envelope's exterior tier,
+accessibility keyboard/reduced-motion behaviour, and a retained-memory
+growth verdict for the shipped six-wave composition.
+
+The decisions are [`0031`](docs/decisions/0031-v3-footprint-faithful-facade-grammar.md)
+(grammar), [`0032`](docs/decisions/0032-procedural-facade-textures.md)
+(textures), [`0033`](docs/decisions/0033-block835-v3-wave-repromotion.md)–[`0037`](docs/decisions/0037-northern-manhattan-textured-canary.md)
+(the six waves), [`0038`](docs/decisions/0038-public-showcase-candidate.md)
+(showcase candidate) and [`0039`](docs/decisions/0039-goal-integration-acceptance.md)
+(integration acceptance).
+
 ## Prerequisites and setup
 
 - Node.js `>=22.12.0`
