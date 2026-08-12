@@ -34,6 +34,7 @@ import { rankOverlapCandidates, searchMixedReleaseFeatures, searchRealPlaceCatal
 import { buildCatalogRelease } from "../release/catalog-release";
 import { buildSyntheticCatalogArtifacts } from "../release/fixtures";
 import { CesiumViewport, exteriorUnanchoredNotice, medianFrameInterval, shouldFocusFeature, type DenseRenderMetrics, type ExteriorCellOverlay, type Stage3RenderProof } from "../features/explorer/CesiumViewport";
+import { ExteriorFallbackNotice } from "./ExteriorFallbackNotice";
 import { LocalFixtureCityAdapter, type RuntimeCityAdapter } from "../runtime/fixture-adapter";
 import { RouteGraphSnapshotAdapter } from "../ingestion/route-graph-snapshot";
 import { sha256Hex } from "../ingestion/offline";
@@ -3363,10 +3364,11 @@ export function App() {
         {exteriorDeepLinkNotice && <div className="exploration-notice" role="alert" data-exterior-deep-link-notice>
           {exteriorDeepLinkNotice} <button type="button" onClick={() => setExteriorDeepLinkNotice(null)}>Dismiss</button>
         </div>}
-        {exteriorNotices.length > 0 && <div className="exploration-notice" role="alert" data-exterior-notices={exteriorNotices.length}>
-          <strong>Exterior streaming fallback</strong>
-          <ul>{exteriorNotices.map((entry) => <li key={`${entry.releaseId}|${entry.notice}`}>{entry.notice}</li>)}</ul>
-        </div>}
+        {/* Every notice this set carries stays in the document; the component
+            digests the two recognized shapes into a collapsed summary with the
+            full wording behind an expander, so the disclosure stops covering
+            the city it is describing. */}
+        <ExteriorFallbackNotice entries={exteriorNotices} />
         {shareMessage && <div className="share-notice" role="status">{shareMessage}</div>}
         <section className={`tile-diagnostics ${diagnosticsOpen ? "is-open" : "is-collapsed"}`} aria-label="Tile diagnostics">
           <button className="overlay-launcher" type="button" aria-expanded={diagnosticsOpen} onClick={() => { setDiagnosticsOpen((open) => !open); setDirectionsOpen(false); setLayersOpen(false); }}><strong>Diagnostics</strong><span>{diagnosticsOpen ? "Collapse" : "Runtime health"}</span></button>
