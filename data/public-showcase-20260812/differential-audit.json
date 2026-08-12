@@ -1,0 +1,932 @@
+{
+  "schemaVersion": "1.0",
+  "auditId": "manhattan-public-showcase-20260812:differential-audit",
+  "candidateId": "manhattan-public-showcase-20260812",
+  "manifestDigestSha256": "ca2676e0e1b91febd442b7b72d382462c92527816afd80bddd2d24bda6ad4645",
+  "note": "Private/public differential audit across every completed wave. It proves that each wave's public root resolves fully against its own declarations, that each wave's private side is named with the reason it is excluded, and that no private byte and no undeclared private identifier is reachable from the public candidate. Declared provenance disclosures — the `privatePredecessor` root id and checksum that a public root must state to be able to say what it succeeded — are enumerated individually rather than pattern-matched away; they name no fetchable byte. This audit reports on emitted bytes only. It proves nothing about rendering, about what a user sees, or about what the network requested; that is the smoke evidence.",
+  "assemblyPosture": "This candidate is an inventory of six separately approved local releases, not a new redistributable whole. It grants no verb, adds no source, and widens no audience; the narrowest instrument governs anything the six are read as doing together.",
+  "standingRefusals": {
+    "publicInternetDeployment": "This candidate is a LOCAL build only. Every wave's instrument excludes public deployment, and nothing here asserts a right to deploy it to the public internet.",
+    "tileRedistribution": "Redistribution of the procedural facade detail tiles, or of any package carrying them, is NOT asserted by any wave that ships them, whether or not the underlying generated geometry is separately redistributable.",
+    "crossWaveAssembly": "nothing in this instrument authorizes assembling the six waves into a redistributable whole that no single wave's instrument would permit"
+  },
+  "waves": [
+    {
+      "waveId": "block-835",
+      "packageId": "manhattan-exterior-cells-20260811-v3",
+      "publicRootId": "root:manhattan-exterior-cells-20260811-v3:public",
+      "privateRootId": "root:manhattan-exterior-cells-20260811-v3:private",
+      "approvalId": "approval:manhattan-exterior-cells-20260811-v3:public-canary",
+      "approvalFingerprintSha256": "16c19c1383e3cd023923137225fd91195ad295d16f37050a0047416fdc27f4d3",
+      "textureAdmission": "texture-free",
+      "resolution": {
+        "declaredArtifacts": 31,
+        "resolvedArtifacts": 31,
+        "unresolved": [],
+        "artifactChecksumDigestSha256": "d79cdd799a55e75f0983fefd4e1adffd46c9d61400479edff6538f7c1a409447",
+        "declaredPayloadRefs": 30,
+        "unresolvedPayloadRefs": []
+      },
+      "exclusion": {
+        "privateRootArtifacts": 1,
+        "entries": [
+          {
+            "relativeRef": "private/ownership-ledger/ownership-ledger-manhattan-exterior-cells-20260811-v3.json",
+            "logicalId": "ownership-ledger:manhattan-exterior-cells-20260811-v3",
+            "kind": "ownership-ledger",
+            "declaredByteSize": 1095,
+            "reason": "unmaterialized-by-design: the private root declares this artifact, but no byte for it was ever emitted into the browser-reachable payload tree, so there is nothing to prune or serve.",
+            "reachableInPayloadTree": false
+          }
+        ],
+        "byReason": {
+          "unmaterialized-by-design": 1
+        }
+      },
+      "nonReachability": {
+        "restrictedIdentifierCount": 5,
+        "scannedFiles": 63,
+        "privateBytesReachable": [],
+        "declaredDisclosures": [
+          {
+            "relativeRef": "release-graph.json",
+            "jsonPath": "roots[1].privatePredecessor.rootId",
+            "identifier": "root:manhattan-exterior-cells-20260811-v3:private",
+            "identifierKind": "private-root-id",
+            "classification": "declared-provenance-disclosure"
+          },
+          {
+            "relativeRef": "release-graph.json",
+            "jsonPath": "roots[1].privatePredecessor.rootChecksumSha256",
+            "identifier": "42c17fb44d14370d4d4669500b30d8cd792f22e012f0f582dc924e0ca2bf8933",
+            "identifierKind": "private-root-checksum",
+            "classification": "declared-provenance-disclosure"
+          },
+          {
+            "relativeRef": "assemblies.json",
+            "jsonPath": "[0].release.privatePredecessor.id",
+            "identifier": "root:manhattan-exterior-cells-20260811-v3:private",
+            "identifierKind": "private-root-id",
+            "classification": "declared-provenance-disclosure"
+          },
+          {
+            "relativeRef": "assemblies.json",
+            "jsonPath": "[0].release.privatePredecessor.checksumSha256",
+            "identifier": "42c17fb44d14370d4d4669500b30d8cd792f22e012f0f582dc924e0ca2bf8933",
+            "identifierKind": "private-root-checksum",
+            "classification": "declared-provenance-disclosure"
+          }
+        ],
+        "declaredPrivateRootMetadata": [
+          {
+            "relativeRef": "release-graph.json",
+            "jsonPath": "roots[0].rootId",
+            "identifier": "root:manhattan-exterior-cells-20260811-v3:private",
+            "identifierKind": "private-root-id",
+            "classification": "declared-private-root-metadata"
+          },
+          {
+            "relativeRef": "release-graph.json",
+            "jsonPath": "roots[0].releaseId",
+            "identifier": "manhattan-exterior-cells-20260811-v3-private",
+            "identifierKind": "private-release-id",
+            "classification": "declared-private-root-metadata"
+          },
+          {
+            "relativeRef": "release-graph.json",
+            "jsonPath": "roots[0].artifactAllowlist[0]",
+            "identifier": "private/ownership-ledger/ownership-ledger-manhattan-exterior-cells-20260811-v3.json",
+            "identifierKind": "private-artifact-path",
+            "classification": "declared-private-root-metadata"
+          },
+          {
+            "relativeRef": "release-graph.json",
+            "jsonPath": "roots[0].artifacts[0].relativeRef",
+            "identifier": "private/ownership-ledger/ownership-ledger-manhattan-exterior-cells-20260811-v3.json",
+            "identifierKind": "private-artifact-path",
+            "classification": "declared-private-root-metadata"
+          },
+          {
+            "relativeRef": "release-graph.json",
+            "jsonPath": "roots[0].artifacts[0].checksumSha256",
+            "identifier": "24d581af3ef4b318531d5aa40c73a1211ef12b42d79c48a09e5346968bd7df2e",
+            "identifierKind": "private-artifact-checksum",
+            "classification": "declared-private-root-metadata"
+          },
+          {
+            "relativeRef": "release-graph.json",
+            "jsonPath": "roots[0].rootChecksumSha256",
+            "identifier": "42c17fb44d14370d4d4669500b30d8cd792f22e012f0f582dc924e0ca2bf8933",
+            "identifierKind": "private-root-checksum",
+            "classification": "declared-private-root-metadata"
+          }
+        ],
+        "undeclaredReferences": [],
+        "declaredPrivatePathsMaterialized": []
+      },
+      "fallbacks": {
+        "availableBuildingDetails": 14,
+        "unavailableBuildingDetails": 0,
+        "distinctReasons": [],
+        "unexplainedFallbacks": 0
+      },
+      "passed": true
+    },
+    {
+      "waveId": "midtown-core",
+      "packageId": "manhattan-midtown-core-cells-20260811-v3",
+      "publicRootId": "root:manhattan-midtown-core-cells-20260811-v3:public",
+      "privateRootId": "root:manhattan-midtown-core-cells-20260811-v3:private",
+      "approvalId": "approval:manhattan-midtown-core-cells-20260811-v3:midtown-core-canary",
+      "approvalFingerprintSha256": "589f22e75a81709ee3520ed29d068c7ab67f5dbcb474ae379e9532b170d96581",
+      "textureAdmission": "texture-free",
+      "resolution": {
+        "declaredArtifacts": 463,
+        "resolvedArtifacts": 463,
+        "unresolved": [],
+        "artifactChecksumDigestSha256": "41a4e413b08a97f89c75cc3d60660e597eb16d0b637a49e7d9027356880dac30",
+        "declaredPayloadRefs": 306,
+        "unresolvedPayloadRefs": []
+      },
+      "exclusion": {
+        "privateRootArtifacts": 1,
+        "entries": [
+          {
+            "relativeRef": "private/ownership-ledger/ownership-ledger-manhattan-midtown-core-cells-20260811-aad83fe4a9350353.json",
+            "logicalId": "ownership-ledger:manhattan-midtown-core-cells-20260811:aad83fe4a9350353",
+            "kind": "ownership-ledger",
+            "declaredByteSize": 152536,
+            "reason": "unmaterialized-by-design: the private root declares this artifact, but no byte for it was ever emitted into the browser-reachable payload tree, so there is nothing to prune or serve.",
+            "reachableInPayloadTree": false
+          }
+        ],
+        "byReason": {
+          "unmaterialized-by-design": 1
+        }
+      },
+      "nonReachability": {
+        "restrictedIdentifierCount": 5,
+        "scannedFiles": 623,
+        "privateBytesReachable": [],
+        "declaredDisclosures": [
+          {
+            "relativeRef": "release-graph.json",
+            "jsonPath": "roots[1].privatePredecessor.rootId",
+            "identifier": "root:manhattan-midtown-core-cells-20260811-v3:private",
+            "identifierKind": "private-root-id",
+            "classification": "declared-provenance-disclosure"
+          },
+          {
+            "relativeRef": "release-graph.json",
+            "jsonPath": "roots[1].privatePredecessor.rootChecksumSha256",
+            "identifier": "9bb3f29439b202501235cdf2e07b0671a4ec9c530a6511bde0fb7b095096ee2c",
+            "identifierKind": "private-root-checksum",
+            "classification": "declared-provenance-disclosure"
+          },
+          {
+            "relativeRef": "assemblies.json",
+            "jsonPath": "[0].release.privatePredecessor.id",
+            "identifier": "root:manhattan-midtown-core-cells-20260811-v3:private",
+            "identifierKind": "private-root-id",
+            "classification": "declared-provenance-disclosure"
+          },
+          {
+            "relativeRef": "assemblies.json",
+            "jsonPath": "[0].release.privatePredecessor.checksumSha256",
+            "identifier": "9bb3f29439b202501235cdf2e07b0671a4ec9c530a6511bde0fb7b095096ee2c",
+            "identifierKind": "private-root-checksum",
+            "classification": "declared-provenance-disclosure"
+          }
+        ],
+        "declaredPrivateRootMetadata": [
+          {
+            "relativeRef": "release-graph.json",
+            "jsonPath": "roots[0].rootId",
+            "identifier": "root:manhattan-midtown-core-cells-20260811-v3:private",
+            "identifierKind": "private-root-id",
+            "classification": "declared-private-root-metadata"
+          },
+          {
+            "relativeRef": "release-graph.json",
+            "jsonPath": "roots[0].releaseId",
+            "identifier": "manhattan-midtown-core-cells-20260811-v3-private",
+            "identifierKind": "private-release-id",
+            "classification": "declared-private-root-metadata"
+          },
+          {
+            "relativeRef": "release-graph.json",
+            "jsonPath": "roots[0].artifactAllowlist[0]",
+            "identifier": "private/ownership-ledger/ownership-ledger-manhattan-midtown-core-cells-20260811-aad83fe4a9350353.json",
+            "identifierKind": "private-artifact-path",
+            "classification": "declared-private-root-metadata"
+          },
+          {
+            "relativeRef": "release-graph.json",
+            "jsonPath": "roots[0].artifacts[0].relativeRef",
+            "identifier": "private/ownership-ledger/ownership-ledger-manhattan-midtown-core-cells-20260811-aad83fe4a9350353.json",
+            "identifierKind": "private-artifact-path",
+            "classification": "declared-private-root-metadata"
+          },
+          {
+            "relativeRef": "release-graph.json",
+            "jsonPath": "roots[0].artifacts[0].checksumSha256",
+            "identifier": "c0e2e6938c0f4f6545325701d4576c3aa707d9dfa2f1cc7863f1e7c56c48febb",
+            "identifierKind": "private-artifact-checksum",
+            "classification": "declared-private-root-metadata"
+          },
+          {
+            "relativeRef": "release-graph.json",
+            "jsonPath": "roots[0].rootChecksumSha256",
+            "identifier": "9bb3f29439b202501235cdf2e07b0671a4ec9c530a6511bde0fb7b095096ee2c",
+            "identifierKind": "private-root-checksum",
+            "classification": "declared-private-root-metadata"
+          }
+        ],
+        "undeclaredReferences": [],
+        "declaredPrivatePathsMaterialized": []
+      },
+      "fallbacks": {
+        "availableBuildingDetails": 156,
+        "unavailableBuildingDetails": 7045,
+        "distinctReasons": [
+          {
+            "reason": "Owned by this release but not materialized in this cycle: exterior geometry ships only for the bounded set of cells named by the release record, so this building carries no exterior asset and no substitute was selected.",
+            "count": 7041
+          },
+          {
+            "reason": "Refused by the footprint-faithful V3 exterior grammar [source-height-below-grammar-minimum]: geometry.heightMm: Sourced height is below one floor of the requested floor height.. No geometry was invented for this building, and no substitute representation was selected; base massing from the pinned citywide release is what remains on screen.",
+            "count": 2
+          },
+          {
+            "reason": "Refused by the footprint-faithful V3 exterior grammar [ring-vertex-count-unsupported]: geometry.footprint.outer: V3 ring must carry 3 to 64 distinct vertices.. No geometry was invented for this building, and no substitute representation was selected; base massing from the pinned citywide release is what remains on screen.",
+            "count": 2
+          }
+        ],
+        "unexplainedFallbacks": 0
+      },
+      "passed": true
+    },
+    {
+      "waveId": "lower-manhattan",
+      "packageId": "manhattan-lower-manhattan-cells-20260812-p1",
+      "publicRootId": "root:manhattan-lower-manhattan-cells-20260812-p1:public",
+      "privateRootId": "root:manhattan-lower-manhattan-cells-20260812-p1:private",
+      "approvalId": "approval:manhattan-lower-manhattan-cells-20260812:lower-manhattan-textured-canary",
+      "approvalFingerprintSha256": "ff8da10f3f4cb7bcb93e58578baea652088b80b3020f0fc1ddc4e088962d120f",
+      "textureAdmission": "procedural-replay",
+      "resolution": {
+        "declaredArtifacts": 270,
+        "resolvedArtifacts": 270,
+        "unresolved": [],
+        "artifactChecksumDigestSha256": "c4fc86ae5b59cb4f86e4b8fd65b5ee6d5def8f2c1350d9fd06bbb96e6e9df2d5",
+        "declaredPayloadRefs": 198,
+        "unresolvedPayloadRefs": []
+      },
+      "exclusion": {
+        "privateRootArtifacts": 1,
+        "entries": [
+          {
+            "relativeRef": "private/ownership-ledger/ownership-ledger-manhattan-lower-manhattan-cells-20260812-44ec889a556ece19.json",
+            "logicalId": "ownership-ledger:manhattan-lower-manhattan-cells-20260812:44ec889a556ece19",
+            "kind": "ownership-ledger",
+            "declaredByteSize": 134110,
+            "reason": "unmaterialized-by-design: the private root declares this artifact, but no byte for it was ever emitted into the browser-reachable payload tree, so there is nothing to prune or serve.",
+            "reachableInPayloadTree": false
+          }
+        ],
+        "byReason": {
+          "unmaterialized-by-design": 1
+        }
+      },
+      "nonReachability": {
+        "restrictedIdentifierCount": 5,
+        "scannedFiles": 345,
+        "privateBytesReachable": [],
+        "declaredDisclosures": [
+          {
+            "relativeRef": "release-graph.json",
+            "jsonPath": "roots[1].privatePredecessor.rootId",
+            "identifier": "root:manhattan-lower-manhattan-cells-20260812-p1:private",
+            "identifierKind": "private-root-id",
+            "classification": "declared-provenance-disclosure"
+          },
+          {
+            "relativeRef": "release-graph.json",
+            "jsonPath": "roots[1].privatePredecessor.rootChecksumSha256",
+            "identifier": "26c0edf969a3cf2d2d9dba2c8bb10f2b583c89c966c5d033542b4a8785e5c2cd",
+            "identifierKind": "private-root-checksum",
+            "classification": "declared-provenance-disclosure"
+          },
+          {
+            "relativeRef": "assemblies.json",
+            "jsonPath": "[0].release.privatePredecessor.id",
+            "identifier": "root:manhattan-lower-manhattan-cells-20260812-p1:private",
+            "identifierKind": "private-root-id",
+            "classification": "declared-provenance-disclosure"
+          },
+          {
+            "relativeRef": "assemblies.json",
+            "jsonPath": "[0].release.privatePredecessor.checksumSha256",
+            "identifier": "26c0edf969a3cf2d2d9dba2c8bb10f2b583c89c966c5d033542b4a8785e5c2cd",
+            "identifierKind": "private-root-checksum",
+            "classification": "declared-provenance-disclosure"
+          }
+        ],
+        "declaredPrivateRootMetadata": [
+          {
+            "relativeRef": "release-graph.json",
+            "jsonPath": "roots[0].rootId",
+            "identifier": "root:manhattan-lower-manhattan-cells-20260812-p1:private",
+            "identifierKind": "private-root-id",
+            "classification": "declared-private-root-metadata"
+          },
+          {
+            "relativeRef": "release-graph.json",
+            "jsonPath": "roots[0].releaseId",
+            "identifier": "manhattan-lower-manhattan-cells-20260812-p1-private",
+            "identifierKind": "private-release-id",
+            "classification": "declared-private-root-metadata"
+          },
+          {
+            "relativeRef": "release-graph.json",
+            "jsonPath": "roots[0].artifactAllowlist[0]",
+            "identifier": "private/ownership-ledger/ownership-ledger-manhattan-lower-manhattan-cells-20260812-44ec889a556ece19.json",
+            "identifierKind": "private-artifact-path",
+            "classification": "declared-private-root-metadata"
+          },
+          {
+            "relativeRef": "release-graph.json",
+            "jsonPath": "roots[0].artifacts[0].relativeRef",
+            "identifier": "private/ownership-ledger/ownership-ledger-manhattan-lower-manhattan-cells-20260812-44ec889a556ece19.json",
+            "identifierKind": "private-artifact-path",
+            "classification": "declared-private-root-metadata"
+          },
+          {
+            "relativeRef": "release-graph.json",
+            "jsonPath": "roots[0].artifacts[0].checksumSha256",
+            "identifier": "104fa42538f221af6e7d4114f04eba56de15624d613e307df4d9605e1aa1f709",
+            "identifierKind": "private-artifact-checksum",
+            "classification": "declared-private-root-metadata"
+          },
+          {
+            "relativeRef": "release-graph.json",
+            "jsonPath": "roots[0].rootChecksumSha256",
+            "identifier": "26c0edf969a3cf2d2d9dba2c8bb10f2b583c89c966c5d033542b4a8785e5c2cd",
+            "identifierKind": "private-root-checksum",
+            "classification": "declared-private-root-metadata"
+          }
+        ],
+        "undeclaredReferences": [],
+        "declaredPrivatePathsMaterialized": []
+      },
+      "fallbacks": {
+        "availableBuildingDetails": 71,
+        "unavailableBuildingDetails": 6354,
+        "distinctReasons": [
+          {
+            "reason": "Owned by this release but not materialized in this cycle: exterior geometry ships only for the bounded set of cells named by the release record, so this building carries no exterior asset and no substitute was selected.",
+            "count": 6353
+          },
+          {
+            "reason": "Refused by the footprint-faithful V3 exterior grammar [ring-vertex-count-unsupported]: geometry.footprint.outer: V3 ring must carry 3 to 64 distinct vertices.. No geometry was invented for this building, and no substitute representation was selected; base massing from the pinned citywide release is what remains on screen.",
+            "count": 1
+          }
+        ],
+        "unexplainedFallbacks": 0
+      },
+      "passed": true
+    },
+    {
+      "waveId": "southern-remainder",
+      "packageId": "manhattan-southern-remainder-cells-20260812-p1",
+      "publicRootId": "root:manhattan-southern-remainder-cells-20260812-p1:public",
+      "privateRootId": "root:manhattan-southern-remainder-cells-20260812-p1:private",
+      "approvalId": "approval:manhattan-southern-remainder-cells-20260812:southern-remainder-textured-canary",
+      "approvalFingerprintSha256": "c4ba50b33490e619fa2662e312d796fb82db47c3561a73c65da9f8fef6054ac4",
+      "textureAdmission": "procedural-replay",
+      "resolution": {
+        "declaredArtifacts": 536,
+        "resolvedArtifacts": 536,
+        "unresolved": [],
+        "artifactChecksumDigestSha256": "cb96cdecf98754f7892f90ae3da3666b31fa4d0c39e984ca6939b464f9b83a80",
+        "declaredPayloadRefs": 356,
+        "unresolvedPayloadRefs": []
+      },
+      "exclusion": {
+        "privateRootArtifacts": 1,
+        "entries": [
+          {
+            "relativeRef": "private/ownership-ledger/ownership-ledger-manhattan-southern-remainder-cells-20260812-176c0191b7f2cbd3.json",
+            "logicalId": "ownership-ledger:manhattan-southern-remainder-cells-20260812:176c0191b7f2cbd3",
+            "kind": "ownership-ledger",
+            "declaredByteSize": 196376,
+            "reason": "unmaterialized-by-design: the private root declares this artifact, but no byte for it was ever emitted into the browser-reachable payload tree, so there is nothing to prune or serve.",
+            "reachableInPayloadTree": false
+          }
+        ],
+        "byReason": {
+          "unmaterialized-by-design": 1
+        }
+      },
+      "nonReachability": {
+        "restrictedIdentifierCount": 5,
+        "scannedFiles": 719,
+        "privateBytesReachable": [],
+        "declaredDisclosures": [
+          {
+            "relativeRef": "release-graph.json",
+            "jsonPath": "roots[1].privatePredecessor.rootId",
+            "identifier": "root:manhattan-southern-remainder-cells-20260812-p1:private",
+            "identifierKind": "private-root-id",
+            "classification": "declared-provenance-disclosure"
+          },
+          {
+            "relativeRef": "release-graph.json",
+            "jsonPath": "roots[1].privatePredecessor.rootChecksumSha256",
+            "identifier": "b23318c56531712633910f49beffd88ba47e22eacbcc14a59b3a28ed1721ba64",
+            "identifierKind": "private-root-checksum",
+            "classification": "declared-provenance-disclosure"
+          },
+          {
+            "relativeRef": "assemblies.json",
+            "jsonPath": "[0].release.privatePredecessor.id",
+            "identifier": "root:manhattan-southern-remainder-cells-20260812-p1:private",
+            "identifierKind": "private-root-id",
+            "classification": "declared-provenance-disclosure"
+          },
+          {
+            "relativeRef": "assemblies.json",
+            "jsonPath": "[0].release.privatePredecessor.checksumSha256",
+            "identifier": "b23318c56531712633910f49beffd88ba47e22eacbcc14a59b3a28ed1721ba64",
+            "identifierKind": "private-root-checksum",
+            "classification": "declared-provenance-disclosure"
+          }
+        ],
+        "declaredPrivateRootMetadata": [
+          {
+            "relativeRef": "release-graph.json",
+            "jsonPath": "roots[0].rootId",
+            "identifier": "root:manhattan-southern-remainder-cells-20260812-p1:private",
+            "identifierKind": "private-root-id",
+            "classification": "declared-private-root-metadata"
+          },
+          {
+            "relativeRef": "release-graph.json",
+            "jsonPath": "roots[0].releaseId",
+            "identifier": "manhattan-southern-remainder-cells-20260812-p1-private",
+            "identifierKind": "private-release-id",
+            "classification": "declared-private-root-metadata"
+          },
+          {
+            "relativeRef": "release-graph.json",
+            "jsonPath": "roots[0].artifactAllowlist[0]",
+            "identifier": "private/ownership-ledger/ownership-ledger-manhattan-southern-remainder-cells-20260812-176c0191b7f2cbd3.json",
+            "identifierKind": "private-artifact-path",
+            "classification": "declared-private-root-metadata"
+          },
+          {
+            "relativeRef": "release-graph.json",
+            "jsonPath": "roots[0].artifacts[0].relativeRef",
+            "identifier": "private/ownership-ledger/ownership-ledger-manhattan-southern-remainder-cells-20260812-176c0191b7f2cbd3.json",
+            "identifierKind": "private-artifact-path",
+            "classification": "declared-private-root-metadata"
+          },
+          {
+            "relativeRef": "release-graph.json",
+            "jsonPath": "roots[0].artifacts[0].checksumSha256",
+            "identifier": "8592840ff46edb6b95c9a9775240ef302a96ff12e720735d5c79ce2106d95d93",
+            "identifierKind": "private-artifact-checksum",
+            "classification": "declared-private-root-metadata"
+          },
+          {
+            "relativeRef": "release-graph.json",
+            "jsonPath": "roots[0].rootChecksumSha256",
+            "identifier": "b23318c56531712633910f49beffd88ba47e22eacbcc14a59b3a28ed1721ba64",
+            "identifierKind": "private-root-checksum",
+            "classification": "declared-private-root-metadata"
+          }
+        ],
+        "undeclaredReferences": [],
+        "declaredPrivatePathsMaterialized": []
+      },
+      "fallbacks": {
+        "availableBuildingDetails": 179,
+        "unavailableBuildingDetails": 9424,
+        "distinctReasons": [
+          {
+            "reason": "Owned by this release but not materialized in this cycle: exterior geometry ships only for the bounded set of cells named by the release record, so this building carries no exterior asset and no substitute was selected.",
+            "count": 9423
+          },
+          {
+            "reason": "Refused by the footprint-faithful V3 exterior grammar [source-height-below-grammar-minimum]: geometry.heightMm: Sourced height is below one floor of the requested floor height.. No geometry was invented for this building, and no substitute representation was selected; base massing from the pinned citywide release is what remains on screen.",
+            "count": 1
+          }
+        ],
+        "unexplainedFallbacks": 0
+      },
+      "passed": true
+    },
+    {
+      "waveId": "central-upper-manhattan",
+      "packageId": "manhattan-central-upper-manhattan-cells-20260812-p1",
+      "publicRootId": "root:manhattan-central-upper-manhattan-cells-20260812-p1:public",
+      "privateRootId": "root:manhattan-central-upper-manhattan-cells-20260812-p1:private",
+      "approvalId": "approval:manhattan-central-upper-manhattan-cells-20260812:central-upper-manhattan-textured-canary",
+      "approvalFingerprintSha256": "81ba0879fbc956c912db7548ff7650a3364fd0bf1ab117a7926cf75d0714df5e",
+      "textureAdmission": "procedural-replay",
+      "resolution": {
+        "declaredArtifacts": 331,
+        "resolvedArtifacts": 331,
+        "unresolved": [],
+        "artifactChecksumDigestSha256": "3e83669e2999ac2da58682b972c3c7dce148043564be7ea41965d1bac06cf7d1",
+        "declaredPayloadRefs": 290,
+        "unresolvedPayloadRefs": []
+      },
+      "exclusion": {
+        "privateRootArtifacts": 1,
+        "entries": [
+          {
+            "relativeRef": "private/ownership-ledger/ownership-ledger-manhattan-central-upper-manhattan-cells-20260812-4c8c1bd2734b4ce8.json",
+            "logicalId": "ownership-ledger:manhattan-central-upper-manhattan-cells-20260812:4c8c1bd2734b4ce8",
+            "kind": "ownership-ledger",
+            "declaredByteSize": 249460,
+            "reason": "unmaterialized-by-design: the private root declares this artifact, but no byte for it was ever emitted into the browser-reachable payload tree, so there is nothing to prune or serve.",
+            "reachableInPayloadTree": false
+          }
+        ],
+        "byReason": {
+          "unmaterialized-by-design": 1
+        }
+      },
+      "nonReachability": {
+        "restrictedIdentifierCount": 5,
+        "scannedFiles": 375,
+        "privateBytesReachable": [],
+        "declaredDisclosures": [
+          {
+            "relativeRef": "release-graph.json",
+            "jsonPath": "roots[1].privatePredecessor.rootId",
+            "identifier": "root:manhattan-central-upper-manhattan-cells-20260812-p1:private",
+            "identifierKind": "private-root-id",
+            "classification": "declared-provenance-disclosure"
+          },
+          {
+            "relativeRef": "release-graph.json",
+            "jsonPath": "roots[1].privatePredecessor.rootChecksumSha256",
+            "identifier": "9b454691d0fea8a656752cac01fb52e28cf2caa4d10a3889931c923cbd1ba6bb",
+            "identifierKind": "private-root-checksum",
+            "classification": "declared-provenance-disclosure"
+          },
+          {
+            "relativeRef": "assemblies.json",
+            "jsonPath": "[0].release.privatePredecessor.id",
+            "identifier": "root:manhattan-central-upper-manhattan-cells-20260812-p1:private",
+            "identifierKind": "private-root-id",
+            "classification": "declared-provenance-disclosure"
+          },
+          {
+            "relativeRef": "assemblies.json",
+            "jsonPath": "[0].release.privatePredecessor.checksumSha256",
+            "identifier": "9b454691d0fea8a656752cac01fb52e28cf2caa4d10a3889931c923cbd1ba6bb",
+            "identifierKind": "private-root-checksum",
+            "classification": "declared-provenance-disclosure"
+          }
+        ],
+        "declaredPrivateRootMetadata": [
+          {
+            "relativeRef": "release-graph.json",
+            "jsonPath": "roots[0].rootId",
+            "identifier": "root:manhattan-central-upper-manhattan-cells-20260812-p1:private",
+            "identifierKind": "private-root-id",
+            "classification": "declared-private-root-metadata"
+          },
+          {
+            "relativeRef": "release-graph.json",
+            "jsonPath": "roots[0].releaseId",
+            "identifier": "manhattan-central-upper-manhattan-cells-20260812-p1-private",
+            "identifierKind": "private-release-id",
+            "classification": "declared-private-root-metadata"
+          },
+          {
+            "relativeRef": "release-graph.json",
+            "jsonPath": "roots[0].artifactAllowlist[0]",
+            "identifier": "private/ownership-ledger/ownership-ledger-manhattan-central-upper-manhattan-cells-20260812-4c8c1bd2734b4ce8.json",
+            "identifierKind": "private-artifact-path",
+            "classification": "declared-private-root-metadata"
+          },
+          {
+            "relativeRef": "release-graph.json",
+            "jsonPath": "roots[0].artifacts[0].relativeRef",
+            "identifier": "private/ownership-ledger/ownership-ledger-manhattan-central-upper-manhattan-cells-20260812-4c8c1bd2734b4ce8.json",
+            "identifierKind": "private-artifact-path",
+            "classification": "declared-private-root-metadata"
+          },
+          {
+            "relativeRef": "release-graph.json",
+            "jsonPath": "roots[0].artifacts[0].checksumSha256",
+            "identifier": "e980fc3d4f50603f4a611a88561139b894832e1b8da3be2e34ccfe3d31dc289e",
+            "identifierKind": "private-artifact-checksum",
+            "classification": "declared-private-root-metadata"
+          },
+          {
+            "relativeRef": "release-graph.json",
+            "jsonPath": "roots[0].rootChecksumSha256",
+            "identifier": "9b454691d0fea8a656752cac01fb52e28cf2caa4d10a3889931c923cbd1ba6bb",
+            "identifierKind": "private-root-checksum",
+            "classification": "declared-private-root-metadata"
+          }
+        ],
+        "undeclaredReferences": [],
+        "declaredPrivatePathsMaterialized": []
+      },
+      "fallbacks": {
+        "availableBuildingDetails": 40,
+        "unavailableBuildingDetails": 11681,
+        "distinctReasons": [
+          {
+            "reason": "Owned by this release but not materialized in this cycle: exterior geometry ships only for the bounded set of cells named by the release record, so this building carries no exterior asset and no substitute was selected.",
+            "count": 11680
+          },
+          {
+            "reason": "Refused by the footprint-faithful V3 exterior grammar [ring-vertex-count-unsupported]: geometry.footprint.outer: V3 ring must carry 3 to 64 distinct vertices.. No geometry was invented for this building, and no substitute representation was selected; base massing from the pinned citywide release is what remains on screen.",
+            "count": 1
+          }
+        ],
+        "unexplainedFallbacks": 0
+      },
+      "passed": true
+    },
+    {
+      "waveId": "northern-manhattan",
+      "packageId": "manhattan-northern-manhattan-cells-20260812-p1",
+      "publicRootId": "root:manhattan-northern-manhattan-cells-20260812-p1:public",
+      "privateRootId": "root:manhattan-northern-manhattan-cells-20260812-p1:private",
+      "approvalId": "approval:manhattan-northern-manhattan-cells-20260812:northern-manhattan-textured-canary",
+      "approvalFingerprintSha256": "05d375588e7fc19f58719b83f6a1392e185892f79c31e8d1eb982d29348719e3",
+      "textureAdmission": "procedural-replay",
+      "resolution": {
+        "declaredArtifacts": 232,
+        "resolvedArtifacts": 232,
+        "unresolved": [],
+        "artifactChecksumDigestSha256": "0edf7bbddb375001c72044e4cae2c2a7ce9ca952a9f338d7cdce0f7f65eb28a5",
+        "declaredPayloadRefs": 207,
+        "unresolvedPayloadRefs": []
+      },
+      "exclusion": {
+        "privateRootArtifacts": 1,
+        "entries": [
+          {
+            "relativeRef": "private/ownership-ledger/ownership-ledger-manhattan-northern-manhattan-cells-20260812-994417d633bc5e4f.json",
+            "logicalId": "ownership-ledger:manhattan-northern-manhattan-cells-20260812:994417d633bc5e4f",
+            "kind": "ownership-ledger",
+            "declaredByteSize": 207446,
+            "reason": "unmaterialized-by-design: the private root declares this artifact, but no byte for it was ever emitted into the browser-reachable payload tree, so there is nothing to prune or serve.",
+            "reachableInPayloadTree": false
+          }
+        ],
+        "byReason": {
+          "unmaterialized-by-design": 1
+        }
+      },
+      "nonReachability": {
+        "restrictedIdentifierCount": 5,
+        "scannedFiles": 260,
+        "privateBytesReachable": [],
+        "declaredDisclosures": [
+          {
+            "relativeRef": "release-graph.json",
+            "jsonPath": "roots[1].privatePredecessor.rootId",
+            "identifier": "root:manhattan-northern-manhattan-cells-20260812-p1:private",
+            "identifierKind": "private-root-id",
+            "classification": "declared-provenance-disclosure"
+          },
+          {
+            "relativeRef": "release-graph.json",
+            "jsonPath": "roots[1].privatePredecessor.rootChecksumSha256",
+            "identifier": "8bc2d5ca7f3bc99c29636cc924bef9f4e14da3d69b2c217609d1a73f659ec3de",
+            "identifierKind": "private-root-checksum",
+            "classification": "declared-provenance-disclosure"
+          },
+          {
+            "relativeRef": "assemblies.json",
+            "jsonPath": "[0].release.privatePredecessor.id",
+            "identifier": "root:manhattan-northern-manhattan-cells-20260812-p1:private",
+            "identifierKind": "private-root-id",
+            "classification": "declared-provenance-disclosure"
+          },
+          {
+            "relativeRef": "assemblies.json",
+            "jsonPath": "[0].release.privatePredecessor.checksumSha256",
+            "identifier": "8bc2d5ca7f3bc99c29636cc924bef9f4e14da3d69b2c217609d1a73f659ec3de",
+            "identifierKind": "private-root-checksum",
+            "classification": "declared-provenance-disclosure"
+          }
+        ],
+        "declaredPrivateRootMetadata": [
+          {
+            "relativeRef": "release-graph.json",
+            "jsonPath": "roots[0].rootId",
+            "identifier": "root:manhattan-northern-manhattan-cells-20260812-p1:private",
+            "identifierKind": "private-root-id",
+            "classification": "declared-private-root-metadata"
+          },
+          {
+            "relativeRef": "release-graph.json",
+            "jsonPath": "roots[0].releaseId",
+            "identifier": "manhattan-northern-manhattan-cells-20260812-p1-private",
+            "identifierKind": "private-release-id",
+            "classification": "declared-private-root-metadata"
+          },
+          {
+            "relativeRef": "release-graph.json",
+            "jsonPath": "roots[0].artifactAllowlist[0]",
+            "identifier": "private/ownership-ledger/ownership-ledger-manhattan-northern-manhattan-cells-20260812-994417d633bc5e4f.json",
+            "identifierKind": "private-artifact-path",
+            "classification": "declared-private-root-metadata"
+          },
+          {
+            "relativeRef": "release-graph.json",
+            "jsonPath": "roots[0].artifacts[0].relativeRef",
+            "identifier": "private/ownership-ledger/ownership-ledger-manhattan-northern-manhattan-cells-20260812-994417d633bc5e4f.json",
+            "identifierKind": "private-artifact-path",
+            "classification": "declared-private-root-metadata"
+          },
+          {
+            "relativeRef": "release-graph.json",
+            "jsonPath": "roots[0].artifacts[0].checksumSha256",
+            "identifier": "00bb8a07ab96a7d13368413ee4b238dbf44a24a0e7ba8ae3428015840db00fab",
+            "identifierKind": "private-artifact-checksum",
+            "classification": "declared-private-root-metadata"
+          },
+          {
+            "relativeRef": "release-graph.json",
+            "jsonPath": "roots[0].rootChecksumSha256",
+            "identifier": "8bc2d5ca7f3bc99c29636cc924bef9f4e14da3d69b2c217609d1a73f659ec3de",
+            "identifierKind": "private-root-checksum",
+            "classification": "declared-private-root-metadata"
+          }
+        ],
+        "undeclaredReferences": [],
+        "declaredPrivatePathsMaterialized": []
+      },
+      "fallbacks": {
+        "availableBuildingDetails": 24,
+        "unavailableBuildingDetails": 10206,
+        "distinctReasons": [
+          {
+            "reason": "Owned by this release but not materialized in this cycle: exterior geometry ships only for the bounded set of cells named by the release record, so this building carries no exterior asset and no substitute was selected.",
+            "count": 10206
+          }
+        ],
+        "unexplainedFallbacks": 0
+      },
+      "passed": true
+    }
+  ],
+  "excludedPrivateReferencePackages": [
+    {
+      "packageId": "manhattan-esb-block-reference-20260810",
+      "privateFileCount": 29,
+      "reason": "private-reference-package: an authoring/reference package whose every artifact lives under a `private/` partition; it reaches the public audience only as a named provenance ancestor, never as bytes.",
+      "prunedFromBuildOutputBy": "scripts/prune-private-partitions.mjs",
+      "inShowcaseCandidate": false
+    },
+    {
+      "packageId": "manhattan-esb-block-reference-20260811",
+      "privateFileCount": 29,
+      "reason": "private-reference-package: an authoring/reference package whose every artifact lives under a `private/` partition; it reaches the public audience only as a named provenance ancestor, never as bytes.",
+      "prunedFromBuildOutputBy": "scripts/prune-private-partitions.mjs",
+      "inShowcaseCandidate": false
+    },
+    {
+      "packageId": "manhattan-esb-block-reference-20260811-v3",
+      "privateFileCount": 29,
+      "reason": "private-reference-package: an authoring/reference package whose every artifact lives under a `private/` partition; it reaches the public audience only as a named provenance ancestor, never as bytes.",
+      "prunedFromBuildOutputBy": "scripts/prune-private-partitions.mjs",
+      "inShowcaseCandidate": false
+    },
+    {
+      "packageId": "manhattan-esb-block-reference-20260811-v3e",
+      "privateFileCount": 29,
+      "reason": "private-reference-package: an authoring/reference package whose every artifact lives under a `private/` partition; it reaches the public audience only as a named provenance ancestor, never as bytes.",
+      "prunedFromBuildOutputBy": "scripts/prune-private-partitions.mjs",
+      "inShowcaseCandidate": false
+    }
+  ],
+  "excludedWorkingRecords": [
+    {
+      "directory": "block835-canary-validation-20260811",
+      "fileCount": 3,
+      "reason": "working-evidence-record: a committed record under `data/` that pins what was built and measured. It is not served by the application at all — `data/` is outside the browser-reachable tree — and is retained so the emitted bytes stay checkable."
+    },
+    {
+      "directory": "block835-promotion-20260811",
+      "fileCount": 1,
+      "reason": "working-evidence-record: a committed record under `data/` that pins what was built and measured. It is not served by the application at all — `data/` is outside the browser-reachable tree — and is retained so the emitted bytes stay checkable."
+    },
+    {
+      "directory": "block835-v3-repromotion-20260811",
+      "fileCount": 1,
+      "reason": "working-evidence-record: a committed record under `data/` that pins what was built and measured. It is not served by the application at all — `data/` is outside the browser-reachable tree — and is retained so the emitted bytes stay checkable."
+    },
+    {
+      "directory": "central-upper-manhattan-20260812",
+      "fileCount": 5,
+      "reason": "working-evidence-record: a committed record under `data/` that pins what was built and measured. It is not served by the application at all — `data/` is outside the browser-reachable tree — and is retained so the emitted bytes stay checkable."
+    },
+    {
+      "directory": "central-upper-manhattan-20260812-p1",
+      "fileCount": 7,
+      "reason": "working-evidence-record: a committed record under `data/` that pins what was built and measured. It is not served by the application at all — `data/` is outside the browser-reachable tree — and is retained so the emitted bytes stay checkable."
+    },
+    {
+      "directory": "lower-manhattan-20260812",
+      "fileCount": 7,
+      "reason": "working-evidence-record: a committed record under `data/` that pins what was built and measured. It is not served by the application at all — `data/` is outside the browser-reachable tree — and is retained so the emitted bytes stay checkable."
+    },
+    {
+      "directory": "lower-manhattan-20260812-p1",
+      "fileCount": 6,
+      "reason": "working-evidence-record: a committed record under `data/` that pins what was built and measured. It is not served by the application at all — `data/` is outside the browser-reachable tree — and is retained so the emitted bytes stay checkable."
+    },
+    {
+      "directory": "manhattan-esb-block-reference-20260810",
+      "fileCount": 17,
+      "reason": "working-evidence-record: a committed record under `data/` that pins what was built and measured. It is not served by the application at all — `data/` is outside the browser-reachable tree — and is retained so the emitted bytes stay checkable."
+    },
+    {
+      "directory": "manhattan-esb-block-reference-20260811",
+      "fileCount": 17,
+      "reason": "working-evidence-record: a committed record under `data/` that pins what was built and measured. It is not served by the application at all — `data/` is outside the browser-reachable tree — and is retained so the emitted bytes stay checkable."
+    },
+    {
+      "directory": "manhattan-esb-block-reference-20260811-v3",
+      "fileCount": 20,
+      "reason": "working-evidence-record: a committed record under `data/` that pins what was built and measured. It is not served by the application at all — `data/` is outside the browser-reachable tree — and is retained so the emitted bytes stay checkable."
+    },
+    {
+      "directory": "manhattan-esb-block-reference-20260811-v3e",
+      "fileCount": 20,
+      "reason": "working-evidence-record: a committed record under `data/` that pins what was built and measured. It is not served by the application at all — `data/` is outside the browser-reachable tree — and is retained so the emitted bytes stay checkable."
+    },
+    {
+      "directory": "manhattan-esb-block-reference-20260811-v3t",
+      "fileCount": 7,
+      "reason": "working-evidence-record: a committed record under `data/` that pins what was built and measured. It is not served by the application at all — `data/` is outside the browser-reachable tree — and is retained so the emitted bytes stay checkable."
+    },
+    {
+      "directory": "midtown-core-20260811",
+      "fileCount": 3,
+      "reason": "working-evidence-record: a committed record under `data/` that pins what was built and measured. It is not served by the application at all — `data/` is outside the browser-reachable tree — and is retained so the emitted bytes stay checkable."
+    },
+    {
+      "directory": "midtown-core-20260811-v3",
+      "fileCount": 4,
+      "reason": "working-evidence-record: a committed record under `data/` that pins what was built and measured. It is not served by the application at all — `data/` is outside the browser-reachable tree — and is retained so the emitted bytes stay checkable."
+    },
+    {
+      "directory": "northern-manhattan-20260812",
+      "fileCount": 5,
+      "reason": "working-evidence-record: a committed record under `data/` that pins what was built and measured. It is not served by the application at all — `data/` is outside the browser-reachable tree — and is retained so the emitted bytes stay checkable."
+    },
+    {
+      "directory": "northern-manhattan-20260812-p1",
+      "fileCount": 7,
+      "reason": "working-evidence-record: a committed record under `data/` that pins what was built and measured. It is not served by the application at all — `data/` is outside the browser-reachable tree — and is retained so the emitted bytes stay checkable."
+    },
+    {
+      "directory": "public-showcase-20260812",
+      "fileCount": 2,
+      "reason": "working-evidence-record: a committed record under `data/` that pins what was built and measured. It is not served by the application at all — `data/` is outside the browser-reachable tree — and is retained so the emitted bytes stay checkable."
+    },
+    {
+      "directory": "southern-remainder-20260812",
+      "fileCount": 5,
+      "reason": "working-evidence-record: a committed record under `data/` that pins what was built and measured. It is not served by the application at all — `data/` is outside the browser-reachable tree — and is retained so the emitted bytes stay checkable."
+    },
+    {
+      "directory": "southern-remainder-20260812-p1",
+      "fileCount": 7,
+      "reason": "working-evidence-record: a committed record under `data/` that pins what was built and measured. It is not served by the application at all — `data/` is outside the browser-reachable tree — and is retained so the emitted bytes stay checkable."
+    }
+  ],
+  "totals": {
+    "declaredArtifacts": 1863,
+    "resolvedArtifacts": 1863,
+    "unresolvedArtifacts": 0,
+    "declaredPayloadRefs": 1387,
+    "unresolvedPayloadRefs": 0,
+    "privateRootArtifactsExcluded": 6,
+    "privateReferencePackageFiles": 116,
+    "workingRecordDirectories": 19,
+    "scannedPublicFiles": 2385,
+    "declaredDisclosures": 24,
+    "declaredPrivateRootMetadata": 36,
+    "declaredPrivatePathsMaterialized": 0,
+    "undeclaredPrivateReferences": 0,
+    "privateBytesReachable": 0,
+    "unavailableBuildingDetails": 44710,
+    "unexplainedFallbacks": 0
+  },
+  "allPassed": true
+}

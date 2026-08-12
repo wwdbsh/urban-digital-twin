@@ -162,3 +162,9 @@ artifacts/northern-manhattan-20260812-p1-acceptance/
 # checksum, the URL it was taken at and the DOM text each journey read are
 # committed in data/northern-manhattan-20260812-p1/journey-evidence.json.
 artifacts/northern-manhattan-20260812-p1-journeys/
+
+# T023 public-showcase smoke work root: the captured stills. Every still's
+# checksum, the URL it was taken at and the readings each journey made are
+# committed in data/public-showcase-20260812/smoke-evidence.json so the
+# evidence stays checkable after this worktree-local tree is removed.
+artifacts/public-showcase-20260812/
