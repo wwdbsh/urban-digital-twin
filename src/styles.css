@@ -299,6 +299,64 @@ button {
   cursor: pointer;
 }
 
+/*
+ * The exterior fallback notice is the only notice whose LENGTH is data-driven:
+ * one tombstone line per promoted wave plus a withheld-anchor list that named
+ * hundreds of buildings inline. Collapsed it is three lines, but a reader who
+ * opens both expanders must still be able to see the map, so the box is capped
+ * and scrolls internally instead of growing without bound. `z-index` is
+ * inherited from the shared rule (5) on purpose: the mobile lower-LOD
+ * disclosure sits above this lane at 12 and must keep winning that overlap.
+ */
+.exploration-notice--exterior {
+  max-height: min(38vh, 320px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.exploration-notice--exterior ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+
+.exploration-notice--exterior li + li,
+.exploration-notice--exterior details {
+  margin-top: 4px;
+}
+
+.exploration-notice--exterior summary {
+  color: #313b3f;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.exploration-notice--exterior .exterior-notice-ids {
+  margin: 4px 0 0;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 680px) {
+  /*
+   * Less viewport to spend, so a tighter cap. The move off the shared `top`
+   * is the second half of the same problem: on a phone the runtime-note lane
+   * grows to ~380px (the mobile lower-LOD disclosure releases its clamp) and
+   * paints at a higher z-index, so a capped notice held at 112px would be
+   * almost entirely BEHIND that lane — compact and unreadable. Anchoring it to
+   * the bottom band, which carries only the two overlay launchers, keeps the
+   * whole disclosure legible without touching the lane's stacking order.
+   *
+   * Matched at (0,2,0): this breakpoint later sets `.exploration-notice { top:
+   * 112px }`, and a single-class selector here would tie and LOSE on source
+   * order — the first attempt did exactly that and measured the notice still
+   * parked behind the lane.
+   */
+  .exploration-notice.exploration-notice--exterior {
+    top: auto;
+    bottom: 108px;
+    max-height: min(32vh, 240px);
+  }
+}
+
 .share-notice {
   top: 124px;
   border-color: #69c9a8;

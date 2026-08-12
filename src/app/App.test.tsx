@@ -105,6 +105,10 @@ vi.mock("../runtime/exterior-default-activation", async (importOriginal) => {
 });
 
 import { App, EXTERIOR_CELL_STREAMING_RELEASE_ID, PINNED_EXTERIOR_CELL_RELEASE_IDS, appendBlock835PublicRealmUrl, appendExteriorProfileUrl, exteriorCellBasePath, exteriorCanarySnapshotMessage, exteriorDeepLinkMessage, exteriorSnapshotOriginLabel, isPinnedExteriorCellRelease, exteriorStreamingActivation, exteriorStreamingFailureMessage, exteriorStreamingNotices, parseExteriorStreamingUrl, applyStorefrontResolution, block835PerformanceGate, block835PerformanceProbeMode, block835PublicRealmActivation, block835PublicRealmFailureMessage, isCurrentStorefrontResolution, MOBILE_VIEWPORT_MEDIA_QUERY, mobileExteriorLodPolicy, overlayLayoutPolicy, preserveFeatureSequence, resolveStorefrontBuilding, selectionFocusTransaction, summarizeBlock835Frames, type StorefrontResolutionState } from "./App";
+import { ExteriorFallbackNotice, digestExteriorNotices, type ExteriorNoticeEntry } from "./ExteriorFallbackNotice";
+import { exteriorQualifiedNotice } from "../runtime/exterior-wave-attribution";
+import { exteriorUnanchoredNotice } from "../features/explorer/CesiumViewport";
+import type { ExteriorCellOutcome } from "../runtime/exterior-cell-runtime";
 import { EXTERIOR_DEFAULT_ACTIVATION, EXTERIOR_DEFAULT_ACTIVATIONS } from "../runtime/exterior-default-activation";
 import { navigationUrl, parseNavigationUrl } from "../domain/visitor-navigation";
 import { BLOCK_835_DOITT_IDS } from "../domain/commercial-frontage";
@@ -955,6 +959,142 @@ describe("exterior streaming deep-link and anchor honesty", () => {
       .toContain("Available canary snapshots are snapshot:canary-a");
     // A resolvable canary snapshot produces no notice at all.
     expect(exteriorCanarySnapshotMessage("udt-fixture-exterior-cells", "snapshot:canary-a", ["snapshot:canary-a"])).toBeNull();
+  });
+});
+
+/**
+ * How the fallback notice is PRESENTED. The truthfulness invariant is the fixed
+ * point of every case here: the digest may reshape a notice, never delete one,
+ * and a shape it does not recognize must survive word for word.
+ *
+ * The inputs are composed by the real producers (`exteriorStreamingNotices` and
+ * `exteriorQualifiedNotice`) rather than by hand, so a wording change in the
+ * runtime that the digest stopped recognizing fails here instead of silently
+ * falling back to the six-wave wall of text this notice used to be.
+ */
+describe("exterior fallback notice presentation", () => {
+  /** A wave that ships geometry for `total - notShipped` of its cells. */
+  const waveEntry = (releaseId: string, notShipped: number, total: number): ExteriorNoticeEntry => {
+    const cells: ExteriorCellOutcome[] = [
+      ...Array.from({ length: notShipped }, (_, index) => ({
+        kind: "not-shipped" as const,
+        cellId: `${releaseId}-ns-${index}`,
+        cellReleaseId: `cell:${releaseId}-ns-${index}:v1`,
+        unavailableBuildingCount: 3,
+        notice: `Exterior cell ${releaseId}-ns-${index} ships no exterior geometry in this release; no substitute was selected.`,
+      })),
+      ...Array.from({ length: total - notShipped }, (_, index) => ({
+        kind: "rendered" as const,
+        cellId: `${releaseId}-ok-${index}`,
+        cellReleaseId: `cell:${releaseId}-ok-${index}:v1`,
+        cellReleaseVersion: "v1",
+        assemblyPackageId: `assembly:cell:${releaseId}-ok-${index}:v1`,
+        representation: "head" as const,
+        assets: [],
+        notice: null,
+      })),
+    ];
+    const [notice] = exteriorStreamingNotices(null, cells);
+    return { releaseId, notice: exteriorQualifiedNotice(releaseId, notice!) };
+  };
+
+  const MIDTOWN = "manhattan-midtown-core-cells-20260811-v3";
+  const LOWER = "manhattan-lower-manhattan-cells-20260812-p1";
+  const WITHHELD_IDS = ["doitt:778052", "doitt:778053", "doitt:778054"];
+  const residencyEntry: ExteriorNoticeEntry = { releaseId: "", notice: exteriorUnanchoredNotice(WITHHELD_IDS)! };
+
+  it("sums the per-release tombstones into one truthful aggregate", () => {
+    const digest = digestExteriorNotices([waveEntry(MIDTOWN, 146, 149), waveEntry(LOWER, 124, 126)]);
+    expect(digest.notShipped?.cellCount).toBe(270);
+    expect(digest.notShipped?.totalCellCount).toBe(275);
+    expect(digest.notShipped?.summary).toBe("270 of 275 exterior cells ship no exterior geometry in this build (by design; no substitute was selected).");
+    // Nothing was invented and nothing was lost: both original lines survive.
+    expect(digest.notShipped?.lines.map((line) => line.text)).toEqual([
+      `Exterior release ${MIDTOWN}: 146 of 149 exterior cells ship no exterior geometry in this release; no substitute was selected for them.`,
+      `Exterior release ${LOWER}: 124 of 126 exterior cells ship no exterior geometry in this release; no substitute was selected for them.`,
+    ]);
+    expect(digest.verbatim).toEqual([]);
+    expect(digest.entryCount).toBe(2);
+  });
+
+  it("keeps every per-release line reachable behind the expander", () => {
+    render(<ExteriorFallbackNotice entries={[waveEntry(MIDTOWN, 146, 149), waveEntry(LOWER, 124, 126)]} />);
+    const notice = document.querySelector<HTMLElement>("[data-exterior-notices]")!;
+    expect(notice.getAttribute("data-exterior-notices")).toBe("2");
+    expect(notice.querySelector("[data-exterior-notice-not-shipped]")?.textContent).toContain("270 of 275");
+
+    // Collapsed by default, and the release lines are inside the collapsed
+    // region rather than on screen.
+    const expander = within(notice).getByText("Details by release").closest("details")!;
+    expect(expander.open).toBe(false);
+    expect(within(notice).queryAllByText(/146 of 149/u)).toHaveLength(1);
+    expect(expander.textContent).toContain("146 of 149");
+    expect(expander.textContent).toContain("124 of 126");
+
+    fireEvent.click(within(notice).getByText("Details by release"));
+    expect(notice.querySelectorAll("[data-exterior-notice-release-line]")).toHaveLength(2);
+  });
+
+  it("reports withheld-anchor geometry as a count and keeps the IDs one click away", () => {
+    render(<ExteriorFallbackNotice entries={[residencyEntry]} />);
+    const line = document.querySelector<HTMLElement>("[data-exterior-notice-residency]")!;
+    expect(line.getAttribute("data-exterior-notice-residency")).toBe("3");
+    expect(line.firstChild?.textContent).toBe("Exterior geometry for 3 verified buildings is not drawn: the matching base building record is not loaded, so there is no verified WGS84 anchor for it. It will be drawn once that base record loads.");
+    // The reason survives in the summary; only the ID list moved.
+    expect(line.firstChild?.textContent).not.toContain("doitt:778052");
+    const ids = line.querySelector("details")!;
+    expect(ids.open).toBe(false);
+    expect(within(line).getByText("Show the 3 building IDs")).toBeInTheDocument();
+    expect(ids.querySelector(".exterior-notice-ids")?.textContent).toBe(WITHHELD_IDS.join(", "));
+  });
+
+  it("shows an unrecognized notice verbatim rather than dropping it", () => {
+    const failure: ExteriorNoticeEntry = {
+      releaseId: MIDTOWN,
+      notice: `Exterior release ${MIDTOWN}: Exterior cell w01-c07 failed verification and no verified predecessor was available; no exterior geometry is shown for it.`,
+    };
+    // A single unshipped cell states itself in its own words; that sentence is
+    // not the aggregate shape and must not be restated as an aggregate of one.
+    const singleCell = waveEntry("manhattan-one-cell", 1, 1);
+    const digest = digestExteriorNotices([failure, singleCell, residencyEntry]);
+    expect(digest.notShipped).toBeNull();
+    expect(digest.verbatim.map((line) => line.text)).toEqual([failure.notice, singleCell.notice]);
+
+    render(<ExteriorFallbackNotice entries={[failure, singleCell, residencyEntry]} />);
+    const verbatim = [...document.querySelectorAll("[data-exterior-notice-verbatim]")].map((node) => node.textContent);
+    expect(verbatim).toEqual([failure.notice, singleCell.notice]);
+    expect(document.querySelector("[data-exterior-notices]")?.getAttribute("data-exterior-notices")).toBe("3");
+  });
+
+  it("dismisses the notice set the reader read, and shows again when that set changes", () => {
+    const first = [waveEntry(MIDTOWN, 146, 149)];
+    const view = render(<ExteriorFallbackNotice entries={first} />);
+    fireEvent.click(within(document.querySelector<HTMLElement>("[data-exterior-notices]")!).getByRole("button", { name: "Dismiss" }));
+    expect(document.querySelector("[data-exterior-notices]")).toBeNull();
+
+    // A re-render of the SAME set stays dismissed: dismissal is not defeated by
+    // the parent recomputing an equal array on every frame.
+    view.rerender(<ExteriorFallbackNotice entries={[waveEntry(MIDTOWN, 146, 149)]} />);
+    expect(document.querySelector("[data-exterior-notices]")).toBeNull();
+
+    // A CHANGED set is new information and is shown.
+    view.rerender(<ExteriorFallbackNotice entries={[...first, waveEntry(LOWER, 124, 126)]} />);
+    const reshown = document.querySelector<HTMLElement>("[data-exterior-notices]")!;
+    expect(reshown.getAttribute("data-exterior-notices")).toBe("2");
+    expect(reshown.querySelector("[data-exterior-notice-not-shipped]")?.textContent).toContain("270 of 275");
+  });
+
+  it("announces politely instead of alerting on a permanent by-design condition", () => {
+    render(<ExteriorFallbackNotice entries={[waveEntry(MIDTOWN, 146, 149), residencyEntry]} />);
+    const notice = document.querySelector<HTMLElement>("[data-exterior-notices]")!;
+    expect(notice.getAttribute("role")).toBe("status");
+    expect(within(notice).getByText("Exterior streaming fallback")).toBeInTheDocument();
+    expect(document.querySelectorAll("[role='alert']")).toHaveLength(0);
+  });
+
+  it("renders nothing when no wave produced a notice", () => {
+    render(<ExteriorFallbackNotice entries={[]} />);
+    expect(document.querySelector("[data-exterior-notices]")).toBeNull();
   });
 });
 

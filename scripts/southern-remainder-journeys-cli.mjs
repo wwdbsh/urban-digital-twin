@@ -530,7 +530,11 @@ async function journeyTombstoneTruth(port, previewBase, subject, pose) {
       "tombstone-truth",
     );
     await new Promise((done) => { setTimeout(done, 4_000); });
-    const notices = await session.evaluate(`(() => [...document.querySelectorAll('[data-exterior-notices] li')].map((node) => (node.textContent || '').trim()))()`);
+    // Leaf list items only. The notice now leads with an aggregate line that
+    // carries the per-release lines inside a collapsed `<details>`, so an
+    // unfiltered sweep would read the summary and its children as one blob.
+    // The per-release sentences themselves are unchanged and still in the DOM.
+    const notices = await session.evaluate(`(() => [...document.querySelectorAll('[data-exterior-notices] li')].filter((node) => node.querySelector('li') === null).map((node) => (node.textContent || '').trim()))()`);
     const waveNotice = notices.find((notice) => notice.includes(SOUTHERN_REMAINDER_RELEASE_ID)) ?? null;
     return {
       journeyId: "tombstone-truth",
