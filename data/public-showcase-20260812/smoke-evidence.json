@@ -1,0 +1,344 @@
+{
+  "schemaVersion": "1.0",
+  "candidateId": "manhattan-public-showcase-20260812",
+  "manifestDigestSha256": "c242ec4357d1dda46712c65f7e667453036c04fe8dca426bd285c9fb50db7cc2",
+  "note": "Local public-build smoke for the cross-wave showcase candidate. It measures a production build served by a local `vite preview` on a port the operator owns, driven through CDP in a real Chrome. It is NOT a deployment and makes none: every wave's instrument excludes public (internet) deployment, and this record asserts no right to publish. Readings are computed from what the browser did, never asserted: `passed` on each journey is an expression over the readings beside it.",
+  "assemblyPosture": "This candidate is an inventory of six separately approved local releases, not a new redistributable whole. It grants no verb, adds no source, and widens no audience; the narrowest instrument governs anything the six are read as doing together.",
+  "standingRefusals": {
+    "publicInternetDeployment": "This candidate is a LOCAL build only. Every wave's instrument excludes public deployment, and nothing here asserts a right to deploy it to the public internet.",
+    "tileRedistribution": "Redistribution of the procedural facade detail tiles, or of any package carrying them, is NOT asserted by any wave that ships them, whether or not the underlying generated geometry is separately redistributable.",
+    "crossWaveAssembly": "nothing in this instrument authorizes assembling the six waves into a redistributable whole that no single wave's instrument would permit"
+  },
+  "servedBundle": {
+    "previewBase": "http://localhost:4177",
+    "indexHtmlChecksumSha256": "62c5ebf071b713fe8e872b20981ef8811a386364d08c48764921dc410626ff34",
+    "localDistIndexHtmlChecksumSha256": "62c5ebf071b713fe8e872b20981ef8811a386364d08c48764921dc410626ff34",
+    "matchesLocalDist": true,
+    "entryScriptPath": "/assets/index-CsMbhorl.js",
+    "entryScriptByteSize": 4888212,
+    "entryScriptChecksumSha256": "501237f7dc8d666ab94fcc32594a76198ab8bb6d9a7f5320303ec8e12e5fe7ac",
+    "entryScriptNamesEveryPromotedRelease": true,
+    "statement": "Measured before any capture. The served index.html is byte-identical to this repository's dist/index.html and the served entry script names all six promoted releases, so every reading below is from THIS build."
+  },
+  "buildPartition": {
+    "distDir": "/Users/sangheonlee/orca/workspaces/urban-digital-twin/ccp-24-public-showcase/dist",
+    "privateDirectories": [],
+    "packages": [
+      {
+        "packageId": "manhattan-exterior-cells-20260811-v3",
+        "scannedFiles": 63,
+        "undeclaredPrivateReferences": []
+      },
+      {
+        "packageId": "manhattan-midtown-core-cells-20260811-v3",
+        "scannedFiles": 623,
+        "undeclaredPrivateReferences": []
+      },
+      {
+        "packageId": "manhattan-lower-manhattan-cells-20260812-p1",
+        "scannedFiles": 345,
+        "undeclaredPrivateReferences": []
+      },
+      {
+        "packageId": "manhattan-southern-remainder-cells-20260812-p1",
+        "scannedFiles": 719,
+        "undeclaredPrivateReferences": []
+      },
+      {
+        "packageId": "manhattan-central-upper-manhattan-cells-20260812-p1",
+        "scannedFiles": 375,
+        "undeclaredPrivateReferences": []
+      },
+      {
+        "packageId": "manhattan-northern-manhattan-cells-20260812-p1",
+        "scannedFiles": 260,
+        "undeclaredPrivateReferences": []
+      }
+    ],
+    "materializedPrivatePaths": [],
+    "dataByteTotal": 752016250,
+    "passed": true,
+    "statement": "Measured on the build output after `pnpm build` ran `prune-private-partitions.mjs`. `privateDirectories` empty is the pruning proven by its effect; `undeclaredPrivateReferences` empty is the same structural scan the differential audit runs, re-run on the bytes a browser can actually fetch."
+  },
+  "capturedWith": {
+    "viewport": {
+      "width": 1280,
+      "height": 800,
+      "deviceScaleFactor": 1
+    },
+    "previewBase": "http://localhost:4177",
+    "remoteDebuggingPort": 9225,
+    "promotedReleaseIds": [
+      "manhattan-exterior-cells-20260811-v3",
+      "manhattan-midtown-core-cells-20260811-v3",
+      "manhattan-lower-manhattan-cells-20260812-p1",
+      "manhattan-southern-remainder-cells-20260812-p1",
+      "manhattan-central-upper-manhattan-cells-20260812-p1",
+      "manhattan-northern-manhattan-cells-20260812-p1"
+    ],
+    "pose": {
+      "lon": -73.985,
+      "lat": 40.748,
+      "height": 900,
+      "heading": 20,
+      "pitch": -22,
+      "roll": 0
+    }
+  },
+  "coveredByTestsInstead": [
+    "That the candidate refuses a seventh root, a private root and an unenumerated package BY NAME is proven in src/release/public-showcase-manifest.test.ts, not by a browser.",
+    "That the differential audit detects a planted private reference is proven in scripts/public-showcase-audit.test.mjs against a synthetic package, because the six real waves do not leak and a passing audit over them proves only that they do not.",
+    "Frame time, heap and cache residency are NOT measured here; each wave's own acceptance-evidence.json holds those, and the six-wave measurement is data/northern-manhattan-20260812-p1/acceptance-evidence.json."
+  ],
+  "journeys": [
+    {
+      "journeyId": "six-wave-default",
+      "claim": "A DEFAULT session — no exterior parameter of any kind — resolves all six promoted waves, and every URL the page ATTEMPTED (Network.requestWillBeSent, unioned with responses, so a blocked or failed request cannot hide) classifies against the showcase candidate's closed allowlist. No request was directed outside the candidate, and no hostname outside the local preview was addressed — including by requests that never completed.",
+      "url": "http://localhost:4177/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-73.985000&lat=40.748000&height=900.000000&heading=20.000000&pitch=-22.000000&roll=0.000000",
+      "urlDeclaresNoExteriorParameter": true,
+      "waves": [
+        "manhattan-exterior-cells-20260811-v3",
+        "manhattan-midtown-core-cells-20260811-v3",
+        "manhattan-lower-manhattan-cells-20260812-p1",
+        "manhattan-southern-remainder-cells-20260812-p1",
+        "manhattan-central-upper-manhattan-cells-20260812-p1",
+        "manhattan-northern-manhattan-cells-20260812-p1"
+      ],
+      "network": {
+        "observedDistinctUrls": 553,
+        "attemptedDistinctUrls": 553,
+        "receivedDistinctUrls": 548,
+        "failedRequestUrls": [],
+        "appShellResponses": 19,
+        "perWave": {
+          "manhattan-exterior-cells-20260811-v3": {
+            "responses": 17,
+            "distinctArtifacts": 17,
+            "glbResponses": 14
+          },
+          "manhattan-midtown-core-cells-20260811-v3": {
+            "responses": 159,
+            "distinctArtifacts": 159,
+            "glbResponses": 156
+          },
+          "manhattan-lower-manhattan-cells-20260812-p1": {
+            "responses": 74,
+            "distinctArtifacts": 74,
+            "glbResponses": 71
+          },
+          "manhattan-southern-remainder-cells-20260812-p1": {
+            "responses": 182,
+            "distinctArtifacts": 182,
+            "glbResponses": 179
+          },
+          "manhattan-central-upper-manhattan-cells-20260812-p1": {
+            "responses": 43,
+            "distinctArtifacts": 43,
+            "glbResponses": 40
+          },
+          "manhattan-northern-manhattan-cells-20260812-p1": {
+            "responses": 27,
+            "distinctArtifacts": 27,
+            "glbResponses": 24
+          }
+        },
+        "perBasePackage": {
+          "manhattan-citywide-20260804": 27,
+          "manhattan-civic-context-20260804": 2,
+          "real-wave-20260804": 3
+        },
+        "externalHosts": [],
+        "refusals": [],
+        "classifiedTotal": 553,
+        "noRequestDropped": true,
+        "everyRequestClassified": true,
+        "passed": true
+      },
+      "passed": true,
+      "still": {
+        "relativeRef": "journeys/six-wave-default.png",
+        "byteSize": 608170,
+        "checksumSha256": "91bf2694363047b7e46ff3b6c4d3eb06fd03747b6e7d17bd4b9b2880f6e142d6"
+      }
+    },
+    {
+      "journeyId": "private-paths-unreachable",
+      "claim": "Every private path the release graphs DECLARE, and the tileset of every private reference package the build prunes, is fetched from the running server by the page itself. None of them returns the private artifact's bytes. Because `vite preview` answers unmatched paths with the SPA shell at status 200, the assertion is on the response's SHA-256 — matched against this build's index.html and against the private artifact's own declared checksum — rather than on the status code, which here carries no information.",
+      "spaFallbackChecksumSha256": "62c5ebf071b713fe8e872b20981ef8811a386364d08c48764921dc410626ff34",
+      "probes": [
+        {
+          "kind": "declared-private-root-artifact",
+          "path": "/data/manhattan-exterior-cells-20260811-v3/private/ownership-ledger/ownership-ledger-manhattan-exterior-cells-20260811-v3.json",
+          "declaredPrivateChecksumSha256": "24d581af3ef4b318531d5aa40c73a1211ef12b42d79c48a09e5346968bd7df2e",
+          "declaredPrivateByteSize": 1095,
+          "status": 200,
+          "contentType": "text/html",
+          "byteSize": 518,
+          "bodyChecksumSha256": "62c5ebf071b713fe8e872b20981ef8811a386364d08c48764921dc410626ff34",
+          "bodyIsSpaFallback": true,
+          "bodyIsDeclaredPrivateArtifact": false
+        },
+        {
+          "kind": "declared-private-root-artifact",
+          "path": "/data/manhattan-midtown-core-cells-20260811-v3/private/ownership-ledger/ownership-ledger-manhattan-midtown-core-cells-20260811-aad83fe4a9350353.json",
+          "declaredPrivateChecksumSha256": "c0e2e6938c0f4f6545325701d4576c3aa707d9dfa2f1cc7863f1e7c56c48febb",
+          "declaredPrivateByteSize": 152536,
+          "status": 200,
+          "contentType": "text/html",
+          "byteSize": 518,
+          "bodyChecksumSha256": "62c5ebf071b713fe8e872b20981ef8811a386364d08c48764921dc410626ff34",
+          "bodyIsSpaFallback": true,
+          "bodyIsDeclaredPrivateArtifact": false
+        },
+        {
+          "kind": "declared-private-root-artifact",
+          "path": "/data/manhattan-lower-manhattan-cells-20260812-p1/private/ownership-ledger/ownership-ledger-manhattan-lower-manhattan-cells-20260812-44ec889a556ece19.json",
+          "declaredPrivateChecksumSha256": "104fa42538f221af6e7d4114f04eba56de15624d613e307df4d9605e1aa1f709",
+          "declaredPrivateByteSize": 134110,
+          "status": 200,
+          "contentType": "text/html",
+          "byteSize": 518,
+          "bodyChecksumSha256": "62c5ebf071b713fe8e872b20981ef8811a386364d08c48764921dc410626ff34",
+          "bodyIsSpaFallback": true,
+          "bodyIsDeclaredPrivateArtifact": false
+        },
+        {
+          "kind": "declared-private-root-artifact",
+          "path": "/data/manhattan-southern-remainder-cells-20260812-p1/private/ownership-ledger/ownership-ledger-manhattan-southern-remainder-cells-20260812-176c0191b7f2cbd3.json",
+          "declaredPrivateChecksumSha256": "8592840ff46edb6b95c9a9775240ef302a96ff12e720735d5c79ce2106d95d93",
+          "declaredPrivateByteSize": 196376,
+          "status": 200,
+          "contentType": "text/html",
+          "byteSize": 518,
+          "bodyChecksumSha256": "62c5ebf071b713fe8e872b20981ef8811a386364d08c48764921dc410626ff34",
+          "bodyIsSpaFallback": true,
+          "bodyIsDeclaredPrivateArtifact": false
+        },
+        {
+          "kind": "declared-private-root-artifact",
+          "path": "/data/manhattan-central-upper-manhattan-cells-20260812-p1/private/ownership-ledger/ownership-ledger-manhattan-central-upper-manhattan-cells-20260812-4c8c1bd2734b4ce8.json",
+          "declaredPrivateChecksumSha256": "e980fc3d4f50603f4a611a88561139b894832e1b8da3be2e34ccfe3d31dc289e",
+          "declaredPrivateByteSize": 249460,
+          "status": 200,
+          "contentType": "text/html",
+          "byteSize": 518,
+          "bodyChecksumSha256": "62c5ebf071b713fe8e872b20981ef8811a386364d08c48764921dc410626ff34",
+          "bodyIsSpaFallback": true,
+          "bodyIsDeclaredPrivateArtifact": false
+        },
+        {
+          "kind": "declared-private-root-artifact",
+          "path": "/data/manhattan-northern-manhattan-cells-20260812-p1/private/ownership-ledger/ownership-ledger-manhattan-northern-manhattan-cells-20260812-994417d633bc5e4f.json",
+          "declaredPrivateChecksumSha256": "00bb8a07ab96a7d13368413ee4b238dbf44a24a0e7ba8ae3428015840db00fab",
+          "declaredPrivateByteSize": 207446,
+          "status": 200,
+          "contentType": "text/html",
+          "byteSize": 518,
+          "bodyChecksumSha256": "62c5ebf071b713fe8e872b20981ef8811a386364d08c48764921dc410626ff34",
+          "bodyIsSpaFallback": true,
+          "bodyIsDeclaredPrivateArtifact": false
+        },
+        {
+          "kind": "pruned-private-reference-package",
+          "path": "/data/manhattan-esb-block-reference-20260810/private/tiles/tileset.json",
+          "declaredPrivateChecksumSha256": null,
+          "declaredPrivateByteSize": null,
+          "status": 200,
+          "contentType": "text/html",
+          "byteSize": 518,
+          "bodyChecksumSha256": "62c5ebf071b713fe8e872b20981ef8811a386364d08c48764921dc410626ff34",
+          "bodyIsSpaFallback": true,
+          "bodyIsDeclaredPrivateArtifact": false
+        },
+        {
+          "kind": "pruned-private-reference-package",
+          "path": "/data/manhattan-esb-block-reference-20260811/private/tiles/tileset.json",
+          "declaredPrivateChecksumSha256": null,
+          "declaredPrivateByteSize": null,
+          "status": 200,
+          "contentType": "text/html",
+          "byteSize": 518,
+          "bodyChecksumSha256": "62c5ebf071b713fe8e872b20981ef8811a386364d08c48764921dc410626ff34",
+          "bodyIsSpaFallback": true,
+          "bodyIsDeclaredPrivateArtifact": false
+        },
+        {
+          "kind": "pruned-private-reference-package",
+          "path": "/data/manhattan-esb-block-reference-20260811-v3/private/tiles/tileset.json",
+          "declaredPrivateChecksumSha256": null,
+          "declaredPrivateByteSize": null,
+          "status": 200,
+          "contentType": "text/html",
+          "byteSize": 518,
+          "bodyChecksumSha256": "62c5ebf071b713fe8e872b20981ef8811a386364d08c48764921dc410626ff34",
+          "bodyIsSpaFallback": true,
+          "bodyIsDeclaredPrivateArtifact": false
+        },
+        {
+          "kind": "pruned-private-reference-package",
+          "path": "/data/manhattan-esb-block-reference-20260811-v3e/private/tiles/tileset.json",
+          "declaredPrivateChecksumSha256": null,
+          "declaredPrivateByteSize": null,
+          "status": 200,
+          "contentType": "text/html",
+          "byteSize": 518,
+          "bodyChecksumSha256": "62c5ebf071b713fe8e872b20981ef8811a386364d08c48764921dc410626ff34",
+          "bodyIsSpaFallback": true,
+          "bodyIsDeclaredPrivateArtifact": false
+        }
+      ],
+      "probeCount": 10,
+      "servedPrivateBytes": [],
+      "unexplainedResponses": [],
+      "passed": true
+    },
+    {
+      "journeyId": "pick-provenance",
+      "claim": "A building picked through the application's own search in a DEFAULT six-wave session opens an exterior details panel that names the release the geometry came from, carries a checksum, states a GENERATED truth tier, carries an uncertainty statement, and attributes the source. Nothing on the page asserts real-world facade accuracy.",
+      "url": "http://localhost:4177/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-73.945500&lat=40.809400&height=150.000000&heading=270.000000&pitch=-4.000000&roll=0.000000",
+      "buildingId": "doitt:342401",
+      "searchResults": [
+        "BBuilding 342401Building · Buildings · text"
+      ],
+      "detailRows": {
+        "Release origin": "Default pinned snapshot snapshot:manhattan-northern-manhattan-cells-20260812-p1:v1",
+        "Render profile": "Exploration (coarsest verified LOD)",
+        "Cell / release": "manhattan-exterior-cell-w05-000727-17-38611-35819 · cell-release:manhattan-northern-manhattan-cells-20260812-p1:manhattan-exterior-cell-w05-000727-17-38611-35819:v1 (v1)",
+        "Active asset": "lod_0 · 6b5d3cecaa6cc2a3499fcf6e0a109576537a8fb5f4228a620ef0b5594e548d1e",
+        "Truth tiers": "absent · generated",
+        "Source dates": "captured 2026-08-04T08:25:05.580Z · updated 2026-08-02T02:17:27.174Z",
+        "Uncertainty": "Footprint-faithful procedural exterior in local millimetres with procedural surface detail. The massing follows the sourced building polygon vertex for vertex and the sourced height; nothing else does. Tier subdivision, bay rhythm, openings, attached elements, colour, material and surface pattern are designed by this grammar and assert nothing about the real building's appearance, facade, setbacks, balconies, fire escapes, water tanks or signage, nor any tenant, brand or text. The surface pattern is a designed repeating motif whose construction module was calibrated by human and agent viewing of public reference imagery; no image data was ingested, traced, sampled or reproduced, and no material, colour, age, condition or cladding of the real building is asserted."
+      },
+      "attributionLine": [
+        "NYC Office of Technology and Innovation (OTI) GIS · origin release manhattan-citywide-20260804; source attribution retained",
+        "https://data.cityofnewyork.us/resource/jh45-qr5r.json"
+      ],
+      "pageTextLength": 12287,
+      "badge": "Local · manhattan-northern-manhattan-cells-20260812-p1",
+      "badgeOrigin": "default",
+      "readings": {
+        "namesAWave": [
+          "manhattan-exterior-cells-20260811-v3",
+          "manhattan-midtown-core-cells-20260811-v3",
+          "manhattan-lower-manhattan-cells-20260812-p1",
+          "manhattan-southern-remainder-cells-20260812-p1",
+          "manhattan-central-upper-manhattan-cells-20260812-p1",
+          "manhattan-northern-manhattan-cells-20260812-p1"
+        ],
+        "carriesChecksum": true,
+        "namesGeneratedTier": true,
+        "carriesUncertainty": true,
+        "namesAttribution": true,
+        "claimsRealFacadeAccuracy": false
+      },
+      "exteriorDetailSectionPresent": true,
+      "passed": true,
+      "still": {
+        "relativeRef": "journeys/pick-provenance.png",
+        "byteSize": 450327,
+        "checksumSha256": "c787fcf98198132fa39762eaa8a76ccd8053321cffc1cbaf52f1185939f06149"
+      }
+    }
+  ],
+  "allPassed": true
+}
