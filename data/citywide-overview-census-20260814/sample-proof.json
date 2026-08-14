@@ -1,0 +1,182 @@
+{
+  "schemaVersion": "1.0",
+  "censusId": "citywide-overview-census-20260814",
+  "taskId": "T001",
+  "artifact": "overview-tier-sample-proof",
+  "note": "SCHEMA COMPLIANCE IS NOT VISUAL ACCEPTANCE. Everything below is arithmetic over committed geometry: a deviation ratio, a pixel count and an aggregate profile. None of it is a rendered frame, none of it was looked at, and none of it can tell you whether the result reads correctly on screen. The visual gate for whichever tier is adopted still requires rendered stills at the activation distance, and this task did not produce them.",
+  "base": {
+    "releaseId": "manhattan-citywide-20260804",
+    "manifestChecksumSha256": "acb5a9b52014f86535c8478e7d4e516efc03f6dff95c17e9896dfea4413c203c"
+  },
+  "ledger": {
+    "releaseId": "manhattan-exterior-wave-ledger-20260804",
+    "ledgerId": "manhattan-exterior-wave-ledger-20260804-a3382ef4cac213a2",
+    "checksumSha256": "62e093d2ca50b54b49fd8bbad9d0b11f6301b2b197623deb343f9ea915e59016"
+  },
+  "silhouetteMetric": {
+    "metricId": "prism-vs-tiered-orthographic-staircase-v1",
+    "viewIds": [
+      "north",
+      "north-east",
+      "east",
+      "south-east",
+      "south",
+      "south-west",
+      "west",
+      "north-west"
+    ],
+    "azimuthDegrees": [
+      0,
+      45,
+      90,
+      135,
+      180,
+      225,
+      270,
+      315
+    ]
+  },
+  "overviewView": {
+    "distanceMeters": 8000,
+    "verticalFieldOfViewDegrees": 60,
+    "viewportHeightPixels": 1080,
+    "pixelBudget": 1,
+    "note": "8,000 m puts the island's ~21.6 km extent inside a 60-degree vertical field of view. The pixel budget of 1 device pixel is a STATED bar, not an inherited one."
+  },
+  "schemaCap": {
+    "maximumRatio": 0.02,
+    "source": "MULTI_LOD_ASSEMBLY multi-lod schema, `lods[].silhouette.maximumRatio`"
+  },
+  "cellLocalFrameDisclosure": "Cell skylines re-anchor each building's own ENU plan frame into a cell-local frame with the frozen ADR 0025 scale pair. Over a cell at most ~300 m across the ADR 0025 residual (<=1,463 ppm) is under 0.44 m of relative placement error — well below the setback steps being judged, and disclosed rather than hidden.",
+  "sampleCells": [
+    {
+      "label": "block-835",
+      "cellId": "manhattan-exterior-cell-w00-000000-block-00835",
+      "buildingCount": 14,
+      "plannedCount": 14,
+      "singleTierCount": 6,
+      "perBuildingDeviation": {
+        "median": 0.075644,
+        "max": 0.15157,
+        "withinSchemaCapCount": 6
+      },
+      "aggregateSkylineDeviation": {
+        "note": "The cell's COMBINED rendered profile, coarse against V3, unioned across members so mutual occlusion counts. This is the number an overview viewer is actually exposed to; the per-building distribution above is not.",
+        "deviationRatio": 0.066791,
+        "worstViewId": "south-east",
+        "withinSchemaCap": false
+      },
+      "screenSpaceError": {
+        "maxHorizontalErrorMeters": 7.351,
+        "pixelsAtOverview": 0.859
+      }
+    },
+    {
+      "label": "midtown-core-densest",
+      "cellId": "manhattan-exterior-cell-w01-000083-16-19299-17926",
+      "buildingCount": 114,
+      "plannedCount": 110,
+      "singleTierCount": 51,
+      "perBuildingDeviation": {
+        "median": 0.051306,
+        "max": 0.294975,
+        "withinSchemaCapCount": 51
+      },
+      "aggregateSkylineDeviation": {
+        "note": "The cell's COMBINED rendered profile, coarse against V3, unioned across members so mutual occlusion counts. This is the number an overview viewer is actually exposed to; the per-building distribution above is not.",
+        "deviationRatio": 0.024507,
+        "worstViewId": "west",
+        "withinSchemaCap": false
+      },
+      "screenSpaceError": {
+        "maxHorizontalErrorMeters": 8.172,
+        "pixelsAtOverview": 0.955
+      }
+    },
+    {
+      "label": "northern-highest-tier-collapse",
+      "cellId": "manhattan-exterior-cell-w05-000858-15-9655-8946",
+      "buildingCount": 21,
+      "plannedCount": 20,
+      "singleTierCount": 20,
+      "perBuildingDeviation": {
+        "median": 0,
+        "max": 0,
+        "withinSchemaCapCount": 20
+      },
+      "aggregateSkylineDeviation": {
+        "note": "The cell's COMBINED rendered profile, coarse against V3, unioned across members so mutual occlusion counts. This is the number an overview viewer is actually exposed to; the per-building distribution above is not.",
+        "deviationRatio": 0,
+        "worstViewId": "north",
+        "withinSchemaCap": true
+      },
+      "screenSpaceError": {
+        "maxHorizontalErrorMeters": 0,
+        "pixelsAtOverview": 0
+      }
+    }
+  ],
+  "worstCaseBuildings": [
+    {
+      "label": "widest-ring",
+      "buildingId": "doitt:171911",
+      "cellId": "manhattan-exterior-cell-w01-000064-16-19299-17924",
+      "ringVertexCount": 64,
+      "topMeters": 23.774,
+      "effectiveTierCount": 1,
+      "deviationRatio": 0,
+      "worstViewId": "north",
+      "maxHorizontalErrorMeters": 0,
+      "coarseGeometry": {
+        "ringVertexCount": 64,
+        "quadCount": 64,
+        "triangleCount": 62,
+        "vertexCount": 442,
+        "totalTriangleCount": 190
+      },
+      "withinSchemaCap": true,
+      "screenSpaceErrorPixelsAtOverview": 0
+    },
+    {
+      "label": "tallest",
+      "buildingId": "doitt:1277275",
+      "cellId": "manhattan-exterior-cell-w01-000106-15-9650-8962",
+      "ringVertexCount": 14,
+      "topMeters": 472.44,
+      "effectiveTierCount": 4,
+      "deviationRatio": 0.101698,
+      "worstViewId": "south-east",
+      "maxHorizontalErrorMeters": 7.375,
+      "coarseGeometry": {
+        "ringVertexCount": 14,
+        "quadCount": 14,
+        "triangleCount": 12,
+        "vertexCount": 92,
+        "totalTriangleCount": 40
+      },
+      "withinSchemaCap": false,
+      "screenSpaceErrorPixelsAtOverview": 0.862
+    },
+    {
+      "label": "worst-silhouette-deviation",
+      "buildingId": "doitt:118472",
+      "cellId": "manhattan-exterior-cell-w03-000426-17-38592-35871",
+      "ringVertexCount": 5,
+      "topMeters": 16.097,
+      "effectiveTierCount": 2,
+      "deviationRatio": 0.628806,
+      "worstViewId": "north",
+      "maxHorizontalErrorMeters": 2.5455844122715727,
+      "coarseGeometry": {
+        "ringVertexCount": 5,
+        "quadCount": 5,
+        "triangleCount": 3,
+        "vertexCount": 29,
+        "totalTriangleCount": 13
+      },
+      "withinSchemaCap": false,
+      "screenSpaceErrorPixelsAtOverview": 0.298
+    }
+  ],
+  "retention": "census-only"
+}

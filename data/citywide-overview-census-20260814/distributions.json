@@ -1,0 +1,1473 @@
+{
+  "schemaVersion": "1.0",
+  "censusId": "citywide-overview-census-20260814",
+  "taskId": "T001",
+  "artifact": "citywide-plan-stage-distributions",
+  "note": "Distributions over every accepted parent of the pinned base, produced by a CENSUS-ONLY pass through the same V3 plan stage the wave CLIs run. No geometry was retained: the pass generated plans, counted, and dropped them. `sourceOuterRingVertexCount` counts DISTINCT outer-ring vertices (the closing duplicate is dropped, as the grammar drops it). `effectiveTierCount` is the massing the grammar actually produced, which is 1 whenever a setback was refused rather than repaired — so the tier distribution is a distribution of REALISED massing, not of requested massing.",
+  "base": {
+    "releaseId": "manhattan-citywide-20260804",
+    "manifestChecksumSha256": "acb5a9b52014f86535c8478e7d4e516efc03f6dff95c17e9896dfea4413c203c"
+  },
+  "ledger": {
+    "releaseId": "manhattan-exterior-wave-ledger-20260804",
+    "ledgerId": "manhattan-exterior-wave-ledger-20260804-a3382ef4cac213a2",
+    "checksumSha256": "62e093d2ca50b54b49fd8bbad9d0b11f6301b2b197623deb343f9ea915e59016"
+  },
+  "counts": {
+    "enumerated": 45194,
+    "planned": 44330,
+    "refused": 864,
+    "plannedPlusRefused": 45194,
+    "block835Materialized": 14,
+    "materializedIslandTotal": 44330
+  },
+  "sourceOuterRingVertexCount": {
+    "note": "Over all enumerated parents, including the ones the grammar later refuses. This is the input distribution a coarse-prism tier would have to carry.",
+    "histogram": {
+      "buckets": [
+        {
+          "value": 3,
+          "count": 18
+        },
+        {
+          "value": 4,
+          "count": 4244
+        },
+        {
+          "value": 5,
+          "count": 2120
+        },
+        {
+          "value": 6,
+          "count": 5883
+        },
+        {
+          "value": 7,
+          "count": 3398
+        },
+        {
+          "value": 8,
+          "count": 4359
+        },
+        {
+          "value": 9,
+          "count": 2589
+        },
+        {
+          "value": 10,
+          "count": 2737
+        },
+        {
+          "value": 11,
+          "count": 1701
+        },
+        {
+          "value": 12,
+          "count": 1944
+        },
+        {
+          "value": 13,
+          "count": 1299
+        },
+        {
+          "value": 14,
+          "count": 1555
+        },
+        {
+          "value": 15,
+          "count": 1020
+        },
+        {
+          "value": 16,
+          "count": 1318
+        },
+        {
+          "value": 17,
+          "count": 866
+        },
+        {
+          "value": 18,
+          "count": 1209
+        },
+        {
+          "value": 19,
+          "count": 739
+        },
+        {
+          "value": 20,
+          "count": 1027
+        },
+        {
+          "value": 21,
+          "count": 597
+        },
+        {
+          "value": 22,
+          "count": 973
+        },
+        {
+          "value": 23,
+          "count": 524
+        },
+        {
+          "value": 24,
+          "count": 639
+        },
+        {
+          "value": 25,
+          "count": 384
+        },
+        {
+          "value": 26,
+          "count": 472
+        },
+        {
+          "value": 27,
+          "count": 270
+        },
+        {
+          "value": 28,
+          "count": 333
+        },
+        {
+          "value": 29,
+          "count": 230
+        },
+        {
+          "value": 30,
+          "count": 255
+        },
+        {
+          "value": 31,
+          "count": 176
+        },
+        {
+          "value": 32,
+          "count": 208
+        },
+        {
+          "value": 33,
+          "count": 135
+        },
+        {
+          "value": 34,
+          "count": 158
+        },
+        {
+          "value": 35,
+          "count": 105
+        },
+        {
+          "value": 36,
+          "count": 142
+        },
+        {
+          "value": 37,
+          "count": 108
+        },
+        {
+          "value": 38,
+          "count": 117
+        },
+        {
+          "value": 39,
+          "count": 62
+        },
+        {
+          "value": 40,
+          "count": 97
+        },
+        {
+          "value": 41,
+          "count": 68
+        },
+        {
+          "value": 42,
+          "count": 71
+        },
+        {
+          "value": 43,
+          "count": 61
+        },
+        {
+          "value": 44,
+          "count": 68
+        },
+        {
+          "value": 45,
+          "count": 43
+        },
+        {
+          "value": 46,
+          "count": 58
+        },
+        {
+          "value": 47,
+          "count": 35
+        },
+        {
+          "value": 48,
+          "count": 39
+        },
+        {
+          "value": 49,
+          "count": 36
+        },
+        {
+          "value": 50,
+          "count": 46
+        },
+        {
+          "value": 51,
+          "count": 24
+        },
+        {
+          "value": 52,
+          "count": 48
+        },
+        {
+          "value": 53,
+          "count": 19
+        },
+        {
+          "value": 54,
+          "count": 27
+        },
+        {
+          "value": 55,
+          "count": 22
+        },
+        {
+          "value": 56,
+          "count": 24
+        },
+        {
+          "value": 57,
+          "count": 31
+        },
+        {
+          "value": 58,
+          "count": 28
+        },
+        {
+          "value": 59,
+          "count": 19
+        },
+        {
+          "value": 60,
+          "count": 23
+        },
+        {
+          "value": 61,
+          "count": 11
+        },
+        {
+          "value": 62,
+          "count": 22
+        },
+        {
+          "value": 63,
+          "count": 15
+        },
+        {
+          "value": 64,
+          "count": 21
+        },
+        {
+          "value": 65,
+          "count": 14
+        },
+        {
+          "value": 66,
+          "count": 10
+        },
+        {
+          "value": 67,
+          "count": 9
+        },
+        {
+          "value": 68,
+          "count": 14
+        },
+        {
+          "value": 69,
+          "count": 6
+        },
+        {
+          "value": 70,
+          "count": 10
+        },
+        {
+          "value": 71,
+          "count": 12
+        },
+        {
+          "value": 72,
+          "count": 12
+        },
+        {
+          "value": 73,
+          "count": 3
+        },
+        {
+          "value": 74,
+          "count": 9
+        },
+        {
+          "value": 75,
+          "count": 5
+        },
+        {
+          "value": 76,
+          "count": 9
+        },
+        {
+          "value": 77,
+          "count": 11
+        },
+        {
+          "value": 78,
+          "count": 7
+        },
+        {
+          "value": 79,
+          "count": 5
+        },
+        {
+          "value": 80,
+          "count": 2
+        },
+        {
+          "value": 81,
+          "count": 4
+        },
+        {
+          "value": 82,
+          "count": 8
+        },
+        {
+          "value": 83,
+          "count": 4
+        },
+        {
+          "value": 84,
+          "count": 4
+        },
+        {
+          "value": 85,
+          "count": 11
+        },
+        {
+          "value": 86,
+          "count": 4
+        },
+        {
+          "value": 87,
+          "count": 2
+        },
+        {
+          "value": 88,
+          "count": 1
+        },
+        {
+          "value": 89,
+          "count": 5
+        },
+        {
+          "value": 90,
+          "count": 3
+        },
+        {
+          "value": 91,
+          "count": 5
+        },
+        {
+          "value": 92,
+          "count": 6
+        },
+        {
+          "value": 93,
+          "count": 4
+        },
+        {
+          "value": 94,
+          "count": 2
+        },
+        {
+          "value": 95,
+          "count": 2
+        },
+        {
+          "value": 96,
+          "count": 3
+        },
+        {
+          "value": 97,
+          "count": 1
+        },
+        {
+          "value": 98,
+          "count": 3
+        },
+        {
+          "value": 99,
+          "count": 1
+        },
+        {
+          "value": 100,
+          "count": 4
+        },
+        {
+          "value": 101,
+          "count": 4
+        },
+        {
+          "value": 102,
+          "count": 2
+        },
+        {
+          "value": 103,
+          "count": 2
+        },
+        {
+          "value": 104,
+          "count": 1
+        },
+        {
+          "value": 105,
+          "count": 1
+        },
+        {
+          "value": 106,
+          "count": 2
+        },
+        {
+          "value": 107,
+          "count": 2
+        },
+        {
+          "value": 108,
+          "count": 2
+        },
+        {
+          "value": 109,
+          "count": 2
+        },
+        {
+          "value": 111,
+          "count": 1
+        },
+        {
+          "value": 112,
+          "count": 1
+        },
+        {
+          "value": 113,
+          "count": 1
+        },
+        {
+          "value": 114,
+          "count": 5
+        },
+        {
+          "value": 115,
+          "count": 2
+        },
+        {
+          "value": 116,
+          "count": 2
+        },
+        {
+          "value": 117,
+          "count": 1
+        },
+        {
+          "value": 118,
+          "count": 1
+        },
+        {
+          "value": 119,
+          "count": 4
+        },
+        {
+          "value": 121,
+          "count": 2
+        },
+        {
+          "value": 122,
+          "count": 1
+        },
+        {
+          "value": 123,
+          "count": 2
+        },
+        {
+          "value": 124,
+          "count": 1
+        },
+        {
+          "value": 125,
+          "count": 3
+        },
+        {
+          "value": 126,
+          "count": 1
+        },
+        {
+          "value": 127,
+          "count": 3
+        },
+        {
+          "value": 128,
+          "count": 2
+        },
+        {
+          "value": 129,
+          "count": 2
+        },
+        {
+          "value": 130,
+          "count": 1
+        },
+        {
+          "value": 131,
+          "count": 2
+        },
+        {
+          "value": 133,
+          "count": 2
+        },
+        {
+          "value": 134,
+          "count": 3
+        },
+        {
+          "value": 137,
+          "count": 1
+        },
+        {
+          "value": 139,
+          "count": 1
+        },
+        {
+          "value": 140,
+          "count": 2
+        },
+        {
+          "value": 141,
+          "count": 1
+        },
+        {
+          "value": 144,
+          "count": 1
+        },
+        {
+          "value": 145,
+          "count": 2
+        },
+        {
+          "value": 146,
+          "count": 1
+        },
+        {
+          "value": 147,
+          "count": 1
+        },
+        {
+          "value": 149,
+          "count": 2
+        },
+        {
+          "value": 151,
+          "count": 1
+        },
+        {
+          "value": 154,
+          "count": 1
+        },
+        {
+          "value": 155,
+          "count": 1
+        },
+        {
+          "value": 157,
+          "count": 4
+        },
+        {
+          "value": 161,
+          "count": 1
+        },
+        {
+          "value": 164,
+          "count": 2
+        },
+        {
+          "value": 165,
+          "count": 1
+        },
+        {
+          "value": 166,
+          "count": 2
+        },
+        {
+          "value": 173,
+          "count": 1
+        },
+        {
+          "value": 177,
+          "count": 1
+        },
+        {
+          "value": 178,
+          "count": 1
+        },
+        {
+          "value": 189,
+          "count": 1
+        },
+        {
+          "value": 195,
+          "count": 1
+        },
+        {
+          "value": 196,
+          "count": 2
+        },
+        {
+          "value": 197,
+          "count": 1
+        },
+        {
+          "value": 199,
+          "count": 1
+        },
+        {
+          "value": 206,
+          "count": 2
+        },
+        {
+          "value": 210,
+          "count": 1
+        },
+        {
+          "value": 225,
+          "count": 1
+        },
+        {
+          "value": 226,
+          "count": 1
+        },
+        {
+          "value": 233,
+          "count": 1
+        },
+        {
+          "value": 235,
+          "count": 1
+        },
+        {
+          "value": 259,
+          "count": 1
+        },
+        {
+          "value": 263,
+          "count": 1
+        },
+        {
+          "value": 297,
+          "count": 1
+        },
+        {
+          "value": 303,
+          "count": 1
+        },
+        {
+          "value": 309,
+          "count": 1
+        },
+        {
+          "value": 359,
+          "count": 1
+        },
+        {
+          "value": 362,
+          "count": 1
+        }
+      ],
+      "count": 45194,
+      "min": 3,
+      "max": 362,
+      "median": 9,
+      "p95": 32,
+      "p99": 58,
+      "mean": 13.1779
+    }
+  },
+  "plannedOuterRingVertexCount": {
+    "note": "Over planned buildings only. Differs from the source distribution exactly by the refused set, which includes every ring above the grammar's 64-vertex cap.",
+    "histogram": {
+      "buckets": [
+        {
+          "value": 3,
+          "count": 14
+        },
+        {
+          "value": 4,
+          "count": 4042
+        },
+        {
+          "value": 5,
+          "count": 2078
+        },
+        {
+          "value": 6,
+          "count": 5796
+        },
+        {
+          "value": 7,
+          "count": 3380
+        },
+        {
+          "value": 8,
+          "count": 4304
+        },
+        {
+          "value": 9,
+          "count": 2578
+        },
+        {
+          "value": 10,
+          "count": 2723
+        },
+        {
+          "value": 11,
+          "count": 1694
+        },
+        {
+          "value": 12,
+          "count": 1930
+        },
+        {
+          "value": 13,
+          "count": 1294
+        },
+        {
+          "value": 14,
+          "count": 1542
+        },
+        {
+          "value": 15,
+          "count": 1015
+        },
+        {
+          "value": 16,
+          "count": 1310
+        },
+        {
+          "value": 17,
+          "count": 860
+        },
+        {
+          "value": 18,
+          "count": 1208
+        },
+        {
+          "value": 19,
+          "count": 734
+        },
+        {
+          "value": 20,
+          "count": 1020
+        },
+        {
+          "value": 21,
+          "count": 597
+        },
+        {
+          "value": 22,
+          "count": 970
+        },
+        {
+          "value": 23,
+          "count": 523
+        },
+        {
+          "value": 24,
+          "count": 633
+        },
+        {
+          "value": 25,
+          "count": 382
+        },
+        {
+          "value": 26,
+          "count": 470
+        },
+        {
+          "value": 27,
+          "count": 265
+        },
+        {
+          "value": 28,
+          "count": 332
+        },
+        {
+          "value": 29,
+          "count": 228
+        },
+        {
+          "value": 30,
+          "count": 255
+        },
+        {
+          "value": 31,
+          "count": 175
+        },
+        {
+          "value": 32,
+          "count": 208
+        },
+        {
+          "value": 33,
+          "count": 133
+        },
+        {
+          "value": 34,
+          "count": 158
+        },
+        {
+          "value": 35,
+          "count": 105
+        },
+        {
+          "value": 36,
+          "count": 142
+        },
+        {
+          "value": 37,
+          "count": 108
+        },
+        {
+          "value": 38,
+          "count": 117
+        },
+        {
+          "value": 39,
+          "count": 62
+        },
+        {
+          "value": 40,
+          "count": 96
+        },
+        {
+          "value": 41,
+          "count": 68
+        },
+        {
+          "value": 42,
+          "count": 69
+        },
+        {
+          "value": 43,
+          "count": 60
+        },
+        {
+          "value": 44,
+          "count": 66
+        },
+        {
+          "value": 45,
+          "count": 43
+        },
+        {
+          "value": 46,
+          "count": 57
+        },
+        {
+          "value": 47,
+          "count": 35
+        },
+        {
+          "value": 48,
+          "count": 38
+        },
+        {
+          "value": 49,
+          "count": 36
+        },
+        {
+          "value": 50,
+          "count": 46
+        },
+        {
+          "value": 51,
+          "count": 23
+        },
+        {
+          "value": 52,
+          "count": 47
+        },
+        {
+          "value": 53,
+          "count": 19
+        },
+        {
+          "value": 54,
+          "count": 27
+        },
+        {
+          "value": 55,
+          "count": 22
+        },
+        {
+          "value": 56,
+          "count": 24
+        },
+        {
+          "value": 57,
+          "count": 30
+        },
+        {
+          "value": 58,
+          "count": 28
+        },
+        {
+          "value": 59,
+          "count": 19
+        },
+        {
+          "value": 60,
+          "count": 23
+        },
+        {
+          "value": 61,
+          "count": 11
+        },
+        {
+          "value": 62,
+          "count": 22
+        },
+        {
+          "value": 63,
+          "count": 15
+        },
+        {
+          "value": 64,
+          "count": 21
+        }
+      ],
+      "count": 44330,
+      "min": 3,
+      "max": 64,
+      "median": 9,
+      "p95": 30,
+      "p99": 48,
+      "mean": 12.5866
+    }
+  },
+  "effectiveTierCount": {
+    "note": "1 means the grammar refused a setback for this lot and produced a single tier. A coarse tier that collapses massing to one prism loses NOTHING for these buildings and loses the setback steps for the rest.",
+    "histogram": {
+      "buckets": [
+        {
+          "value": 1,
+          "count": 21203
+        },
+        {
+          "value": 2,
+          "count": 22467
+        },
+        {
+          "value": 4,
+          "count": 660
+        }
+      ],
+      "count": 44330,
+      "min": 1,
+      "max": 4,
+      "median": 2,
+      "p95": 2,
+      "p99": 4,
+      "mean": 1.5515
+    },
+    "singleTierCount": 21203,
+    "singleTierShare": 0.478299
+  },
+  "floorCount": {
+    "histogram": {
+      "buckets": [
+        {
+          "value": 1,
+          "count": 964
+        },
+        {
+          "value": 2,
+          "count": 1582
+        },
+        {
+          "value": 3,
+          "count": 4014
+        },
+        {
+          "value": 4,
+          "count": 9414
+        },
+        {
+          "value": 5,
+          "count": 13319
+        },
+        {
+          "value": 6,
+          "count": 5546
+        },
+        {
+          "value": 7,
+          "count": 2012
+        },
+        {
+          "value": 8,
+          "count": 934
+        },
+        {
+          "value": 9,
+          "count": 651
+        },
+        {
+          "value": 10,
+          "count": 595
+        },
+        {
+          "value": 11,
+          "count": 493
+        },
+        {
+          "value": 12,
+          "count": 538
+        },
+        {
+          "value": 13,
+          "count": 735
+        },
+        {
+          "value": 14,
+          "count": 622
+        },
+        {
+          "value": 15,
+          "count": 376
+        },
+        {
+          "value": 16,
+          "count": 332
+        },
+        {
+          "value": 17,
+          "count": 248
+        },
+        {
+          "value": 18,
+          "count": 240
+        },
+        {
+          "value": 19,
+          "count": 182
+        },
+        {
+          "value": 20,
+          "count": 135
+        },
+        {
+          "value": 21,
+          "count": 96
+        },
+        {
+          "value": 22,
+          "count": 110
+        },
+        {
+          "value": 23,
+          "count": 81
+        },
+        {
+          "value": 24,
+          "count": 84
+        },
+        {
+          "value": 25,
+          "count": 100
+        },
+        {
+          "value": 26,
+          "count": 76
+        },
+        {
+          "value": 27,
+          "count": 78
+        },
+        {
+          "value": 28,
+          "count": 65
+        },
+        {
+          "value": 29,
+          "count": 61
+        },
+        {
+          "value": 30,
+          "count": 35
+        },
+        {
+          "value": 31,
+          "count": 41
+        },
+        {
+          "value": 32,
+          "count": 39
+        },
+        {
+          "value": 33,
+          "count": 49
+        },
+        {
+          "value": 34,
+          "count": 30
+        },
+        {
+          "value": 35,
+          "count": 27
+        },
+        {
+          "value": 36,
+          "count": 49
+        },
+        {
+          "value": 37,
+          "count": 32
+        },
+        {
+          "value": 38,
+          "count": 21
+        },
+        {
+          "value": 39,
+          "count": 26
+        },
+        {
+          "value": 40,
+          "count": 19
+        },
+        {
+          "value": 41,
+          "count": 27
+        },
+        {
+          "value": 42,
+          "count": 17
+        },
+        {
+          "value": 43,
+          "count": 20
+        },
+        {
+          "value": 44,
+          "count": 9
+        },
+        {
+          "value": 45,
+          "count": 22
+        },
+        {
+          "value": 46,
+          "count": 14
+        },
+        {
+          "value": 47,
+          "count": 11
+        },
+        {
+          "value": 48,
+          "count": 14
+        },
+        {
+          "value": 49,
+          "count": 7
+        },
+        {
+          "value": 50,
+          "count": 12
+        },
+        {
+          "value": 51,
+          "count": 9
+        },
+        {
+          "value": 52,
+          "count": 9
+        },
+        {
+          "value": 53,
+          "count": 10
+        },
+        {
+          "value": 54,
+          "count": 7
+        },
+        {
+          "value": 55,
+          "count": 5
+        },
+        {
+          "value": 56,
+          "count": 7
+        },
+        {
+          "value": 57,
+          "count": 7
+        },
+        {
+          "value": 58,
+          "count": 3
+        },
+        {
+          "value": 59,
+          "count": 6
+        },
+        {
+          "value": 60,
+          "count": 4
+        },
+        {
+          "value": 61,
+          "count": 4
+        },
+        {
+          "value": 62,
+          "count": 5
+        },
+        {
+          "value": 63,
+          "count": 6
+        },
+        {
+          "value": 64,
+          "count": 3
+        },
+        {
+          "value": 65,
+          "count": 1
+        },
+        {
+          "value": 66,
+          "count": 6
+        },
+        {
+          "value": 68,
+          "count": 5
+        },
+        {
+          "value": 69,
+          "count": 2
+        },
+        {
+          "value": 71,
+          "count": 1
+        },
+        {
+          "value": 73,
+          "count": 2
+        },
+        {
+          "value": 75,
+          "count": 1
+        },
+        {
+          "value": 76,
+          "count": 2
+        },
+        {
+          "value": 77,
+          "count": 2
+        },
+        {
+          "value": 78,
+          "count": 2
+        },
+        {
+          "value": 80,
+          "count": 1
+        },
+        {
+          "value": 81,
+          "count": 1
+        },
+        {
+          "value": 83,
+          "count": 1
+        },
+        {
+          "value": 84,
+          "count": 1
+        },
+        {
+          "value": 86,
+          "count": 2
+        },
+        {
+          "value": 87,
+          "count": 1
+        },
+        {
+          "value": 88,
+          "count": 1
+        },
+        {
+          "value": 89,
+          "count": 1
+        },
+        {
+          "value": 90,
+          "count": 1
+        },
+        {
+          "value": 105,
+          "count": 1
+        },
+        {
+          "value": 107,
+          "count": 1
+        },
+        {
+          "value": 118,
+          "count": 1
+        },
+        {
+          "value": 119,
+          "count": 2
+        },
+        {
+          "value": 121,
+          "count": 1
+        },
+        {
+          "value": 131,
+          "count": 1
+        }
+      ],
+      "count": 44330,
+      "min": 1,
+      "max": 131,
+      "median": 5,
+      "p95": 16,
+      "p99": 35,
+      "mean": 6.5195
+    }
+  },
+  "refusals": {
+    "byCode": {
+      "source-height-below-grammar-minimum": 384,
+      "ring-vertex-count-unsupported": 324,
+      "ring-area-below-floor": 113,
+      "ring-neck-below-grammar-minimum": 39,
+      "ring-not-simple": 4
+    },
+    "total": 864
+  },
+  "waveReconciliation": [
+    {
+      "waveIndex": 0,
+      "waveId": "block-835",
+      "releaseId": "manhattan-exterior-cells-20260811-v3",
+      "committedRefusedBuildingCount": null,
+      "observedRefusedBuildingCount": 0,
+      "agrees": null,
+      "note": "Wave w00 (Block 835) shipped through the reference/authoring path and committed no wave-scale plan census, so there is nothing to reconcile against."
+    },
+    {
+      "waveIndex": 1,
+      "waveId": "midtown-core",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3",
+      "committedOwnedBuildingCount": 7201,
+      "observedOwnedBuildingCount": 7201,
+      "committedPlanStageRefusedBuildingCount": 109,
+      "observedPlanStageRefusedBuildingCount": 109,
+      "committedAssetStageRefusedBuildingCount": 110,
+      "committedVolumeIdentityFailedCount": 1,
+      "committedMaterializedBuildingCount": 7091,
+      "observedPlannedBuildingCount": 7092,
+      "committedTierCollapseAbsentSetbackCount": 3405,
+      "observedSingleTierCount": 3406,
+      "agrees": true,
+      "note": "Ownership, plan-stage refusals and the plan/asset stage boundary all reconcile exactly."
+    },
+    {
+      "waveIndex": 2,
+      "waveId": "lower-manhattan",
+      "releaseId": "manhattan-lower-manhattan-cells-20260812-p1",
+      "committedOwnedBuildingCount": 6425,
+      "observedOwnedBuildingCount": 6425,
+      "committedPlanStageRefusedBuildingCount": 127,
+      "observedPlanStageRefusedBuildingCount": 127,
+      "committedAssetStageRefusedBuildingCount": 134,
+      "committedVolumeIdentityFailedCount": 7,
+      "committedMaterializedBuildingCount": 6291,
+      "observedPlannedBuildingCount": 6298,
+      "committedTierCollapseAbsentSetbackCount": 2545,
+      "observedSingleTierCount": 2551,
+      "agrees": true,
+      "note": "Ownership, plan-stage refusals and the plan/asset stage boundary all reconcile exactly."
+    },
+    {
+      "waveIndex": 3,
+      "waveId": "southern-remainder",
+      "releaseId": "manhattan-southern-remainder-cells-20260812-p1",
+      "committedOwnedBuildingCount": 9603,
+      "observedOwnedBuildingCount": 9603,
+      "committedPlanStageRefusedBuildingCount": 85,
+      "observedPlanStageRefusedBuildingCount": 85,
+      "committedAssetStageRefusedBuildingCount": 96,
+      "committedVolumeIdentityFailedCount": 11,
+      "committedMaterializedBuildingCount": 9507,
+      "observedPlannedBuildingCount": 9518,
+      "committedTierCollapseAbsentSetbackCount": 3960,
+      "observedSingleTierCount": 3970,
+      "agrees": true,
+      "note": "Ownership, plan-stage refusals and the plan/asset stage boundary all reconcile exactly."
+    },
+    {
+      "waveIndex": 4,
+      "waveId": "central-upper-manhattan",
+      "releaseId": "manhattan-central-upper-manhattan-cells-20260812-p1",
+      "committedOwnedBuildingCount": 11721,
+      "observedOwnedBuildingCount": 11721,
+      "committedPlanStageRefusedBuildingCount": 178,
+      "observedPlanStageRefusedBuildingCount": 178,
+      "committedAssetStageRefusedBuildingCount": 178,
+      "committedVolumeIdentityFailedCount": 0,
+      "committedMaterializedBuildingCount": 11543,
+      "observedPlannedBuildingCount": 11543,
+      "committedTierCollapseAbsentSetbackCount": 5374,
+      "observedSingleTierCount": 5374,
+      "agrees": true,
+      "note": "Ownership, plan-stage refusals and the plan/asset stage boundary all reconcile exactly."
+    },
+    {
+      "waveIndex": 5,
+      "waveId": "northern-manhattan",
+      "releaseId": "manhattan-northern-manhattan-cells-20260812-p1",
+      "committedOwnedBuildingCount": 10230,
+      "observedOwnedBuildingCount": 10230,
+      "committedPlanStageRefusedBuildingCount": 365,
+      "observedPlanStageRefusedBuildingCount": 365,
+      "committedAssetStageRefusedBuildingCount": 381,
+      "committedVolumeIdentityFailedCount": 16,
+      "committedMaterializedBuildingCount": 9849,
+      "observedPlannedBuildingCount": 9865,
+      "committedTierCollapseAbsentSetbackCount": 5880,
+      "observedSingleTierCount": 5896,
+      "agrees": true,
+      "note": "Ownership, plan-stage refusals and the plan/asset stage boundary all reconcile exactly."
+    }
+  ],
+  "retention": "census-only",
+  "hostObservationsLocation": "artifacts/citywide-overview-census-20260814/stages/plans.json and docs/implementation/20260814-citywide-overview-tier-decision.md — wall clock and RSS are host facts, so they are deliberately kept OUT of this artifact's deterministic body (the ADR 0025 D8 precedent). Every field above is a function of the pinned snapshot, the committed ledger and this repository's code, so a replay rewrites byte-identical content and the recorded checksum stays valid."
+}
