@@ -51,7 +51,7 @@ import {
 import { loadRealPilot } from "../runtime/real-pilot-manifest";
 import { parseRealPlaceFeature, REAL_PILOT_RELEASE_ID, type RealPlaceView } from "../runtime/real-place-view";
 import { loadLandmarkAssets } from "../runtime/landmark-assets";
-import { CITYWIDE_BUDGETS, CITYWIDE_RELEASE_ID, CitywideLruCache } from "../release/citywide-release";
+import { CITYWIDE_BUDGETS, CITYWIDE_OVERVIEW_CACHE_FLOORS, CITYWIDE_RELEASE_ID, CitywideLruCache, resolveCitywideBudgets } from "../release/citywide-release";
 import { loadCitywideRelease } from "../runtime/citywide-release-runtime";
 import type { CitywideReleaseAdapter, CitywideRuntimeMetrics } from "../runtime/citywide-release-runtime";
 import { loadTravelContextRelease, type TravelContextFault, type TravelContextReleaseAdapter, type TravelContextRuntimeMetrics } from "../runtime/travel-context-release-runtime";
@@ -129,6 +129,31 @@ const BLOCK835_CANARY_HARNESS_ENABLED = import.meta.env.VITE_BLOCK835_PROBE === 
 const EXTERIOR_SCHEDULER_PROBE_ENABLED = import.meta.env.VITE_EXTERIOR_SCHEDULER_PROBE === "1";
 /** Bounded so a long session cannot grow the DOM payload without limit. */
 const EXTERIOR_SCHEDULER_TRACE_LIMIT = 800;
+
+/**
+ * T004 overview-streaming probe. Same discipline as the scheduler probe above:
+ * compiled out unless `VITE_CITYWIDE_OVERVIEW_PROBE=1`, reads only state the
+ * app already holds, and decides nothing. It exists because the pan-path
+ * acceptance criteria are per-move numbers — refresh cost, whether the feature
+ * sequence was retained, plan build/reuse, allocation slice, frames to swap,
+ * cancellations and per-class cache evictions — and a number read off a
+ * screenshot is not evidence anybody can replay.
+ */
+const CITYWIDE_OVERVIEW_PROBE_ENABLED = import.meta.env.VITE_CITYWIDE_OVERVIEW_PROBE === "1";
+const CITYWIDE_OVERVIEW_PROBE_LIMIT = 400;
+
+type CitywideOverviewMoveSample = {
+  moveIndex: number;
+  signature: string;
+  refreshMs: number;
+  featureCount: number;
+  /** True when the adapter handed back the previous sequence unchanged. */
+  sequenceRetained: boolean;
+  cacheEntries: number;
+  cacheBytes: number;
+  classSizes: Record<string, number>;
+  classEvictions: Record<string, number>;
+};
 
 const BLOCK835_PERFORMANCE_PROBE_QUERY = "block835Performance";
 const BLOCK835_PERFORMANCE_CAMERA_PATH_ID = "block835-stage3-six-pose-v1";
@@ -1130,6 +1155,9 @@ export function App() {
   // no scheduler control, only the URL flag, so the value cannot change within a
   // session and no setter exists to change it by accident.
   const exteriorSchedulerRequested = initialExteriorStreaming.scheduler;
+  // The overview budget record rides the same single flag. Resolved once, read
+  // everywhere: nothing here writes `CITYWIDE_BUDGETS`.
+  const citywideBudgets = resolveCitywideBudgets(exteriorSchedulerRequested);
   // One entry per promoted exterior release. A wave failing closed clears its
   // own entry and leaves every other wave exactly as it was, so one bad release
   // can never withdraw a good one.
@@ -1248,7 +1276,21 @@ export function App() {
   // is where they are tested.
   const exteriorCellLoadsRef = useRef(new Map<string, { runtime: ExteriorCellRuntime; profile: ExteriorRenderProfile; bucket: number; controller: AbortController; load: ExteriorCellLoadState<ExteriorCellOutcome> }>());
   const exteriorCacheRef = useRef<CitywideLruCache<Uint8Array>>(new CitywideLruCache<Uint8Array>(EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries, EXTERIOR_RUNTIME_BUDGETS.maxCachedBytes));
-  const aggregateCacheRef = useRef<CitywideLruCache<unknown>>(new CitywideLruCache<unknown>(CITYWIDE_BUDGETS.maxLoadedShards, CITYWIDE_BUDGETS.maxLoadedBytes));
+  // T004: one resolved record for the session, selected by the same opt-in flag
+  // the scheduler uses. The shared constant is never mutated, so a civic or
+  // composed session that did not ask for citywide overview residency keeps the
+  // budgets it always had. Floors are eviction-choice only and are attached to
+  // the same flag.
+  const aggregateCacheRef = useRef<CitywideLruCache<unknown>>(new CitywideLruCache<unknown>(
+    citywideBudgets.maxLoadedShards,
+    citywideBudgets.maxLoadedBytes,
+    exteriorSchedulerRequested ? CITYWIDE_OVERVIEW_CACHE_FLOORS : {},
+  ));
+  const citywideBudgetsRef = useRef(citywideBudgets);
+  const citywideOverviewProbeRef = useRef<{ moves: CitywideOverviewMoveSample[]; dense: DenseRenderMetrics[] }>({ moves: [], dense: [] });
+  const citywideOverviewMoveIndexRef = useRef(0);
+  const citywideSequenceRef = useRef<readonly Feature[] | null>(null);
+  const [citywideOverviewProbeLength, setCitywideOverviewProbeLength] = useState(0);
   const citywideModeRef = useRef(false);
   const civicModeRef = useRef(false);
   const dataModeRef = useRef(dataMode);
@@ -2136,6 +2178,10 @@ export function App() {
   }, []);
 
   const publishCitywideDenseMetrics = useCallback((next: DenseRenderMetrics) => {
+    if (CITYWIDE_OVERVIEW_PROBE_ENABLED) {
+      const dense = citywideOverviewProbeRef.current.dense;
+      if (dense.length < CITYWIDE_OVERVIEW_PROBE_LIMIT && dense.at(-1)?.planFingerprint !== next.planFingerprint) dense.push(next);
+    }
     setCitywideDenseMetrics((previous) => (
       previous.featureCount === next.featureCount &&
       previous.primitiveCount === next.primitiveCount &&
@@ -2196,7 +2242,7 @@ export function App() {
     const loadCitywide = async () => {
       try {
         if (injectedFault === "citywide-root") throw new Error("Injected citywide root failure; immutable release was not modified.");
-        const adapter = await loadCitywideRelease("/data/manhattan-citywide-20260804/", controller.signal, undefined, { sharedBudget: aggregateBudgetRef.current, sharedCache: aggregateCacheRef.current, cacheNamespace: "citywide" });
+        const adapter = await loadCitywideRelease("/data/manhattan-citywide-20260804/", controller.signal, undefined, { sharedBudget: aggregateBudgetRef.current, sharedCache: aggregateCacheRef.current, cacheNamespace: "citywide", budgets: citywideBudgetsRef.current });
         if (!active) { adapter.destroy(); return; }
         setCitywideAdapter(adapter);
         setCitywideLoadState("ready");
@@ -2423,6 +2469,22 @@ export function App() {
     setTileMetrics(stream.getMetrics());
   }, []);
 
+  const recordCitywideOverviewMove = useCallback((sample: Pick<CitywideOverviewMoveSample, "signature" | "refreshMs" | "featureCount" | "sequenceRetained">) => {
+    if (!CITYWIDE_OVERVIEW_PROBE_ENABLED) return;
+    const probe = citywideOverviewProbeRef.current;
+    if (probe.moves.length >= CITYWIDE_OVERVIEW_PROBE_LIMIT) return;
+    const cache = aggregateCacheRef.current;
+    probe.moves.push({
+      moveIndex: citywideOverviewMoveIndexRef.current++,
+      ...sample,
+      cacheEntries: cache.size(),
+      cacheBytes: cache.bytes(),
+      classSizes: cache.classSizes(),
+      classEvictions: cache.classEvictionCounts(),
+    });
+    setCitywideOverviewProbeLength(probe.moves.length);
+  }, []);
+
   const onTileCameraChanged = useCallback((camera: CameraPose, receivedFootprint?: ViewportFootprint) => {
     const intent = stressCameraIntentRef.current;
     if (intent && Date.now() < intent.expiresAt) camera = { longitude: intent.camera.longitude, latitude: intent.camera.latitude, height: intent.camera.distanceMeters, heading: 0, pitch: -45, roll: 0 };
@@ -2451,8 +2513,15 @@ export function App() {
     if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrlForApp({ featureId: activeSelectionRef.current ?? initialNavigation.featureId, query: queryRef.current || initialNavigation.query, cameraMode: cameraModeRef.current, pose: normalizedCamera, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(layerVisibilityRef.current).filter(([, visible]) => visible).map(([layer]) => layer), facets: civicModeRef.current ? selectedCivicFacetsRef.current : selectedCategoriesRef.current, ...getOverlayUrlFields() }, window.location.href));
     const citywide = citywideAdapterRef.current;
     if (citywideModeRef.current && citywide) {
+      const refreshStartedAt = performance.now();
       void citywide.refreshViewport({ camera: normalizedCamera, footprint: nextFootprint }).then((features) => {
+        const refreshMs = performance.now() - refreshStartedAt;
         if (citywideAdapterRef.current === citywide && citywideModeRef.current) {
+          // Recorded outside the state updater: React invokes the updater twice
+          // under StrictMode, and a probe that double-counts its own moves is
+          // not a measurement.
+          recordCitywideOverviewMove({ signature: nextFootprint.signature, refreshMs, featureCount: features.length, sequenceRetained: citywideSequenceRef.current === features });
+          citywideSequenceRef.current = features;
           setCitywideFeatures((previous) => preserveFeatureSequence(previous, features));
           publishCitywideMetrics(citywide);
         }
@@ -2474,7 +2543,7 @@ export function App() {
     const stream = stressStreamRef.current;
     if (!stream) return;
     void stream.refresh(tileCamera).then(() => publishStressState(stream));
-  }, [getOverlayUrlFields, navigationUrlForApp, publishCitywideMetrics, publishComposedMetrics, publishStressState]);
+  }, [getOverlayUrlFields, navigationUrlForApp, publishCitywideMetrics, publishComposedMetrics, publishStressState, recordCitywideOverviewMove]);
 
   const moveStressCamera = (anchorIndex: number, distanceMeters: number) => {
     const anchor = SYNTHETIC_TILE_ANCHORS[anchorIndex];
@@ -2643,7 +2712,17 @@ export function App() {
     ? searchRealPlaceCatalog(activeAdapter.getFeatures(), query, selectedCategories)
     : searchUnifiedCatalog(activeAdapter.getFeatures(), syntheticCatalog, query).filter((result) => selectedCategories.length === 0 || result.feature.kind !== "poi" || selectedCategories.some((category) => placeCategoriesFromFeature(result.feature).includes(category))), [activeAdapter, civicMode, civicSearchResults, citywideMode, citywideSearchResults, dataMode, query, selectedCategories]);
   const composedDenseGroups = useMemo(() => civicMode && composedAdapter ? composedAdapter.getVisibleFeatureGroups() : undefined, [civicFeatures, civicMode, composedAdapter]);
-  const composedDenseGroupLimits = useMemo(() => civicMode ? { base: CITYWIDE_BUDGETS.maxRenderedDenseFeatures, context: TRAVEL_CONTEXT_BUDGETS.maxAreaRenderParts } : undefined, [civicMode]);
+  // DEV-only residency evidence. Read at render from the live shared cache
+  // (it re-renders whenever the metrics above change), because the reservation
+  // acceptance criterion needs per-class numbers and the aggregate counters
+  // cannot show which class an eviction came from.
+  const citywideCacheResidency = {
+    entries: aggregateCacheRef.current.size(),
+    bytes: aggregateCacheRef.current.bytes(),
+    classSizes: aggregateCacheRef.current.classSizes(),
+    classEvictions: aggregateCacheRef.current.classEvictionCounts(),
+  };
+  const composedDenseGroupLimits = useMemo(() => civicMode ? { base: citywideBudgets.maxRenderedDenseFeatures, context: TRAVEL_CONTEXT_BUDGETS.maxAreaRenderParts } : undefined, [citywideBudgets, civicMode]);
 
   useEffect(() => {
     if (typeof window === "undefined") return undefined;
@@ -3509,7 +3588,7 @@ export function App() {
           previewRequest={previewRequest}
           denseRendering={stressMode || dataMode === "real-pilot" || dataMode === "civic-context"}
           denseFeatures={citywideMode ? citywideFeatures : civicMode ? civicFeatures : stressFeatures}
-          denseFeatureLimit={citywideMode ? CITYWIDE_BUDGETS.maxRenderedDenseFeatures : undefined}
+          denseFeatureLimit={citywideMode ? citywideBudgets.maxRenderedDenseFeatures : undefined}
           denseFeatureGroups={composedDenseGroups}
           denseFeatureGroupLimits={composedDenseGroupLimits}
           onDenseMetrics={citywideMode || civicMode ? publishCitywideDenseMetrics : undefined}
@@ -3631,6 +3710,17 @@ export function App() {
           trace: exteriorSchedulerTraceRef.current,
           waves: exteriorActiveWaves.map((entry) => ({ releaseId: entry.target.releaseId, declaredCellCount: entry.wave.runtime?.snapshot.cells.length ?? 0, metrics: entry.wave.runtime?.getMetrics() ?? null })),
         })}</div>}
+        {CITYWIDE_OVERVIEW_PROBE_ENABLED && citywideMode && <div hidden data-citywide-overview-probe data-move-count={citywideOverviewProbeLength}>{JSON.stringify({
+          schemaVersion: "1.0",
+          schedulerRequested: exteriorSchedulerRequested,
+          budgets: citywideBudgets,
+          floors: exteriorSchedulerRequested ? CITYWIDE_OVERVIEW_CACHE_FLOORS : {},
+          adapterMetrics: citywideMetrics,
+          denseMetrics: citywideDenseMetrics,
+          cache: citywideCacheResidency,
+          moves: citywideOverviewProbeRef.current.moves,
+          denseSamples: citywideOverviewProbeRef.current.dense,
+        })}</div>}
         {deepLinkMessage && <div className="exploration-notice" role="alert">{deepLinkMessage} <button type="button" onClick={() => { terminalRealFallbackNoticeRef.current = null; setDeepLinkMessage(null); setPoseInvalid(false); window.history.replaceState({}, "", navigationUrlForApp({ featureId: activeSelectionRef.current, query, cameraMode, pose: cameraPose, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(layerVisibility).filter(([, visible]) => visible).map(([layer]) => layer), facets: civicMode ? selectedCivicFacets : selectedCategories, ...getOverlayUrlFields() }, window.location.href)); }}>Dismiss</button></div>}
         {exteriorDeepLinkNotice && <div className="exploration-notice" role="alert" data-exterior-deep-link-notice>
           {exteriorDeepLinkNotice} <button type="button" onClick={() => setExteriorDeepLinkNotice(null)}>Dismiss</button>
@@ -3646,8 +3736,8 @@ export function App() {
           {diagnosticsOpen && <div className="tile-diagnostics-content">
           <div><strong>Tile diagnostics</strong><button type="button" aria-pressed={stressMode} onClick={() => setStressMode((enabled) => !enabled)}>{stressMode ? "Normal mode" : "Stress harness"}</button></div>
           <span>{civicMode ? `Composed ${TRAVEL_CONTEXT_RELEASE_ID} over ${CITYWIDE_RELEASE_ID} · one aggregate streaming budget · search/detail shards remain on demand` : citywideMode ? "Citywide viewport shards loaded lazily · global search/detail shards remain on demand" : dataMode === "real-pilot" ? "Partitioned real pilot loaded · not full-Manhattan performance" : "Fixture-only synthetic harness · not full-Manhattan performance"}</span>
-          {civicMode && <span>Aggregate cache / bytes / active / evictions: {composedMetrics.aggregate.cacheEntries.toLocaleString()} / {composedMetrics.aggregate.cachedBytes.toLocaleString()} / {composedMetrics.aggregate.activeRequests} / {composedMetrics.aggregate.cacheEvictions} · max 24 / 50,331,648 / 4</span>}
-          {civicMode && <span>Base/context decoded summaries: {composedMetrics.base.retainedSummaryCount.toLocaleString()} / {composedMetrics.context.retainedSummaryCount.toLocaleString()} · render groups: {citywideDenseMetrics.baseFeatureCount?.toLocaleString() ?? "0"} / {citywideDenseMetrics.contextPartCount?.toLocaleString() ?? "0"} (caps 6,000 / 128 parts)</span>}
+          {civicMode && <span>Aggregate cache / bytes / active / evictions: {composedMetrics.aggregate.cacheEntries.toLocaleString()} / {composedMetrics.aggregate.cachedBytes.toLocaleString()} / {composedMetrics.aggregate.activeRequests} / {composedMetrics.aggregate.cacheEvictions} · max {composedMetrics.aggregate.maxCacheEntries.toLocaleString()} / {composedMetrics.aggregate.maxCachedBytes.toLocaleString()} / {composedMetrics.aggregate.maxConcurrentRequests}</span>}
+          {civicMode && <span>Base/context decoded summaries: {composedMetrics.base.retainedSummaryCount.toLocaleString()} / {composedMetrics.context.retainedSummaryCount.toLocaleString()} · render groups: {citywideDenseMetrics.baseFeatureCount?.toLocaleString() ?? "0"} / {citywideDenseMetrics.contextPartCount?.toLocaleString() ?? "0"} (caps {composedMetrics.render.baseLimit.toLocaleString()} / {composedMetrics.render.contextLimit} parts)</span>}
           {civicMode && (composedMetrics.failedRoles.length > 0 || composedMetrics.context.failedLayers.length > 0) && <span role="status">Degraded layers isolated: {[...composedMetrics.failedRoles, ...composedMetrics.context.failedLayers].join(", ")}</span>}
           {citywideMode && <span>Decoded summaries / features / details: {citywideMetrics.retainedSummaryCount.toLocaleString()} / {citywideMetrics.retainedFeatureCount.toLocaleString()} / {citywideMetrics.retainedDetailCount.toLocaleString()} · detail index: {citywideMetrics.detailIndexEntryCount.toLocaleString()}</span>}
           <span>Assets: {activeAdapter.getAssetDiagnostics?.().registered ?? 0} registered · {activeAdapter.getAssetDiagnostics?.().approved ?? 0} approved · {activeAdapter.getAssetDiagnostics?.().verified ?? 0} verified · procedural fallback retained when unavailable</span>
@@ -3673,6 +3763,7 @@ export function App() {
             {CITYWIDE_DEBUG_ANCHORS.map((anchor) => <button key={anchor.label} type="button" onClick={() => measureCitywideDebugAnchor(anchor)}>Debug {anchor.label}</button>)}
             <span data-citywide-render-metrics>Rendered dense features / instances / primitives: {citywideDenseMetrics.featureCount} / {citywideDenseMetrics.instanceCount} / {citywideDenseMetrics.primitiveCount}</span>
             <span data-citywide-dense-build-metrics>Dense plans build / reuse / cancelled / swapped: {citywideDenseMetrics.planBuildCount ?? 0} / {citywideDenseMetrics.planReuseCount ?? 0} / {citywideDenseMetrics.planCancellationCount ?? 0} / {citywideDenseMetrics.planSwapCount ?? 0} · fingerprint {citywideDenseMetrics.planFingerprint || "pending"} · select / key / allocation / max slice / worker-ready / total: {formatDenseTiming(citywideDenseMetrics.selectionMs)} / {formatDenseTiming(citywideDenseMetrics.keyMs)} / {formatDenseTiming(citywideDenseMetrics.allocationMs)} / {formatDenseTiming(citywideDenseMetrics.allocationMaxSliceMs)} / {formatDenseTiming(citywideDenseMetrics.workerReadyMs)} / {formatDenseTiming(citywideDenseMetrics.totalBuildMs)} ms · allocation chunks {citywideDenseMetrics.allocationChunkCount ?? 0}</span>
+            <span data-citywide-cache-class-metrics>Shared cache {citywideCacheResidency.entries} / {citywideBudgets.maxLoadedShards} entries · {citywideCacheResidency.bytes.toLocaleString()} / {citywideBudgets.maxLoadedBytes.toLocaleString()} bytes · resident by class {JSON.stringify(citywideCacheResidency.classSizes)} · evictions by class {JSON.stringify(citywideCacheResidency.classEvictions)}</span>
             <span data-citywide-browser-baseline>Pre-citywide initial-mount baseline heap {citywideBrowserBaseline.heapBytes?.toLocaleString() ?? "unsupported"} · citywide resources {citywideBrowserBaseline.citywideResourceCount} / {citywideBrowserBaseline.citywideResourceBytes.toLocaleString()} bytes</span>
             {citywideDebugMeasurement.status !== "idle" && <span data-citywide-debug-measurement role="status">Debug {citywideDebugMeasurement.anchor} · {citywideDebugMeasurement.status} · frames {citywideDebugMeasurement.frameCount} · avg/median/p95/max {citywideDebugMeasurement.frameAverageMs?.toFixed(2) ?? "unsupported"}/{citywideDebugMeasurement.frameMedianMs?.toFixed(2) ?? "unsupported"}/{citywideDebugMeasurement.frameP95Ms?.toFixed(2) ?? "unsupported"}/{citywideDebugMeasurement.frameMaxMs?.toFixed(2) ?? "unsupported"} ms · heap {citywideDebugMeasurement.heapBytes?.toLocaleString() ?? "unsupported"} · citywide resources {citywideDebugMeasurement.citywideResourceCount} / {citywideDebugMeasurement.citywideResourceBytes.toLocaleString()} bytes</span>}
           </div>}

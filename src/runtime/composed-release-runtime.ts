@@ -271,12 +271,15 @@ export class ComposedReleaseAdapter implements RuntimeCityAdapter {
     return [...groups.base, ...groups.context];
   }
 
+  // Copy before sorting: an adapter is entitled to return a retained array
+  // (the citywide runtime memoizes its visible sequence so unchanged shards
+  // stay reference-identical), and composition must not sort in place.
   getBaseFeatures(visibility: LayerVisibility = {}): Feature[] {
-    return visibleFor(this.base, visibility).sort((left, right) => left.id.localeCompare(right.id));
+    return [...visibleFor(this.base, visibility)].sort((left, right) => left.id.localeCompare(right.id));
   }
 
   getContextFeatures(visibility: LayerVisibility = {}): Feature[] {
-    return visibleFor(this.context, visibility).sort((left, right) => left.id.localeCompare(right.id));
+    return [...visibleFor(this.context, visibility)].sort((left, right) => left.id.localeCompare(right.id));
   }
 
   getVisibleFeatureGroups(): ComposedFeatureGroups {
@@ -415,8 +418,12 @@ export class ComposedReleaseAdapter implements RuntimeCityAdapter {
       cacheEntries: sharedCache?.entries ?? base.cacheEntries + context.cacheEntries,
       cachedBytes: sharedCache?.bytes ?? base.loadedBytes + context.loadedBytes,
       cacheEvictions: this.sharedCache?.evictionCount() ?? base.cacheEvictions + context.cacheEvictions,
-      maxCacheEntries: CITYWIDE_BUDGETS.maxLoadedShards,
-      maxCachedBytes: CITYWIDE_BUDGETS.maxLoadedBytes,
+      // Report the cache the session actually has. A shared cache constructed
+      // from a resolved overview budget record has caps the shared constant
+      // does not describe, and a metric that contradicts the live cache is not
+      // evidence.
+      maxCacheEntries: this.sharedCache?.maxEntries ?? CITYWIDE_BUDGETS.maxLoadedShards,
+      maxCachedBytes: this.sharedCache?.maxBytes ?? CITYWIDE_BUDGETS.maxLoadedBytes,
       activeRequests: this.sharedBudget?.activeCount() ?? Math.max(base.activeRequests, context.activeRequests),
       maxConcurrentRequests: this.sharedBudget?.maxConcurrent ?? CITYWIDE_BUDGETS.maxConcurrentRequests,
       peakConcurrentRequests: this.sharedBudget?.peakConcurrency() ?? Math.max(base.maxConcurrentRequests, context.maxConcurrentRequests),
@@ -431,7 +438,7 @@ export class ComposedReleaseAdapter implements RuntimeCityAdapter {
       context,
       aggregate,
       failedRoles: [...this.failedRoles].sort(),
-      render: { baseFeatureCount: this.baseFeatures.length, contextFeatureCount: this.contextFeatures.length, baseLimit: CITYWIDE_BUDGETS.maxRenderedDenseFeatures, contextLimit: TRAVEL_CONTEXT_BUDGETS.maxAreaRenderParts },
+      render: { baseFeatureCount: this.baseFeatures.length, contextFeatureCount: this.contextFeatures.length, baseLimit: this.base.budgets.maxRenderedDenseFeatures, contextLimit: TRAVEL_CONTEXT_BUDGETS.maxAreaRenderParts },
     };
   }
 

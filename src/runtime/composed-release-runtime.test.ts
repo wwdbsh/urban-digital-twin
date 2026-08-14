@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { runtimeFixtureFeatures } from "../domain/features.ts";
 import type { Feature } from "../domain/schema.ts";
-import { CITYWIDE_RELEASE_ID, CitywideLruCache } from "../release/citywide-release.ts";
+import { CITYWIDE_BUDGETS, CITYWIDE_RELEASE_ID, CitywideLruCache } from "../release/citywide-release.ts";
 import { TRAVEL_CONTEXT_RELEASE_ID } from "../release/travel-context-release.ts";
 import { AggregateRequestBudget, ComposedReleaseAdapter, ComposedReleaseCollisionError, ComposedReleaseMismatchError, ownerForFeatureId, validateComposedReleaseIdentity } from "./composed-release-runtime.ts";
 import type { CitywideReleaseAdapter, CitywideRuntimeMetrics } from "./citywide-release-runtime.ts";
@@ -24,6 +24,7 @@ function fakeBase(features: Feature[] = [base], refresh: (signal: AbortSignal) =
     city: building as never,
     fixtureOnly: false,
     releaseId: CITYWIDE_RELEASE_ID,
+    budgets: CITYWIDE_BUDGETS,
     manifest: {} as never,
     assetResolver: undefined,
     getLayerManifest: () => ({ schemaVersion: "1.0", id: "buildings", version: CITYWIDE_RELEASE_ID, label: "Buildings", fixtureOnly: false, featureKinds: ["building"], featureIds: [], tileLevel: 14, tileKeys: [], sourceRegistryEntryIds: [], acceptedCount: 0, generatedAt: "2026-08-04T00:00:00Z" }),
@@ -112,7 +113,9 @@ describe("composed release runtime", () => {
       return first;
     });
     const contextAdapter = fakeContext([civic]);
-    const cache = new CitywideLruCache<unknown>(24, 48);
+    // The caps asserted below are now read from this cache rather than from
+    // the shared constant, so the fixture has to declare the real byte cap.
+    const cache = new CitywideLruCache<unknown>(24, 48 * 1024 * 1024);
     cache.set("base:one", {}, 8);
     const budget = new AggregateRequestBudget();
     const adapter = new ComposedReleaseAdapter(baseAdapter, contextAdapter, { sharedBudget: budget, sharedCache: cache });
