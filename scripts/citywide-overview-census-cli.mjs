@@ -1223,7 +1223,8 @@ async function stageDecide(context) {
         allShardBytes,
         buildingShareOfSharedByteCeiling: Math.round((denseRawBytes / CITYWIDE_BUDGETS.maxLoadedBytes) * 1e6) / 1e6,
         headroomBytesLeftForOtherClasses: CITYWIDE_BUDGETS.maxLoadedBytes - denseRawBytes,
-        consequence: `Island-wide building residency alone consumes ${Math.round((denseRawBytes / CITYWIDE_BUDGETS.maxLoadedBytes) * 1000) / 10}% of the shared byte ceiling and 100% of it in entries (56 shards against a ${CITYWIDE_BUDGETS.maxLoadedShards}-entry cap), leaving ${CITYWIDE_BUDGETS.maxLoadedBytes - denseRawBytes} B for the search and detail shards the very first query or building selection needs. Under global recency eviction those loads evict building shards, which re-fetch and force a Cesium Primitive rebuild.`,
+        buildingShareOfSharedEntryCeiling: Math.round((shardNames.length / CITYWIDE_BUDGETS.maxLoadedShards) * 1e6) / 1e6,
+        consequence: `Island-wide building residency alone consumes ${Math.round((denseRawBytes / CITYWIDE_BUDGETS.maxLoadedBytes) * 1000) / 10}% of the shared byte ceiling and ${Math.round((shardNames.length / CITYWIDE_BUDGETS.maxLoadedShards) * 1000) / 10}% of the shared ENTRY ceiling (${shardNames.length} shards against a ${CITYWIDE_BUDGETS.maxLoadedShards}-entry cap — it does not fit at all, let alone alongside anything else), leaving ${CITYWIDE_BUDGETS.maxLoadedBytes - denseRawBytes} B for the search and detail shards the very first query or building selection needs. Under global recency eviction those loads evict building shards, which re-fetch and force a Cesium Primitive rebuild.`,
         status: "OPEN T002 CONTRACT CHANGE. This is not a constant bump: the shared cache has no reservation mechanism at all today, so guaranteeing island-wide building residency is a DESIGN change to the cache, not a raised number. The same 'recency-only, no reservation' disclosure ADR 0030 made for the exterior loader applies here and is widened by anything that makes one class permanently resident.",
         proposalToBeDecidedInT002: [
           `A reserved building-class budget of at least ${denseRawBytes} B and ${shardNames.length} entries, so search and detail cannot evict the overview.`,
@@ -1264,7 +1265,24 @@ async function stageDecide(context) {
   const recommendation = {
     recommended: "c-no-new-tier-dense-citywide-shards",
     killSwitchFired: false,
-    statement: "Candidate (c). The overview representation the goal asks for — real building shapes island-wide — is a flat extrusion of the sourced footprint to the sourced height, and the shipping renderer ALREADY draws exactly that from bytes that already exist. Candidates (a) and (b) generate new artifacts whose rendered silhouette is IDENTICAL to what (c) draws for free, and pay for it in cache entries, container overhead, a closed-profile extension, a silhouette-cap exemption and a per-cell rights envelope. There is no fidelity argument for (a) or (b) at overview distance, because there is no fidelity difference.",
+    // READ THIS BEFORE `recommended`. A downstream task that reads this JSON and
+    // not ADR 0040 would otherwise treat the recommendation as settled. It is
+    // not: it contradicts acceptance criteria the USER approved, and no record
+    // written inside a task can repeal those. Carried here in the same shape as
+    // `rightsGate` on each candidate, for the same reason.
+    approvalGate: {
+      status: "RECOMMENDED, NOT IN FORCE",
+      blockedOn: "a goal-contract amendment to acceptance criteria #2 and #4, plus renewed user approval",
+      why: "Goal acceptance criteria #2 and #4 were approved by the user through planning decision Q1 (2026-08-14), which chose 'overview must show real shapes from the start -> coarse-LOD regeneration for all six waves is in scope (option 2)'. This recommendation says that regeneration buys no fidelity the shipping renderer does not already produce. That is evidence submitted AGAINST those criteria; it is not their repeal.",
+      requiredBeforeExecution: [
+        "the user is shown this candidate table, the shared-cache correction and the screen-space-error table",
+        "acceptance criteria #2 and #4 are amended by a recorded goal-contract change",
+        "the user re-approves the amended goal",
+      ],
+      untilThen: "The goal's approved scope stands as written. T002 must treat this recommendation as an open question, and T004/T005 must plan against acceptance criteria #2 and #4 as approved.",
+      decisionRecord: "docs/decisions/0040-citywide-overview-tier-decision.md D1",
+    },
+    statement: "RECOMMENDED PENDING A GOAL AMENDMENT AND RENEWED USER APPROVAL (see `approvalGate`; this is not in force). Candidate (c). The overview representation the goal asks for — real building shapes island-wide — is a flat extrusion of the sourced footprint to the sourced height, and the shipping renderer ALREADY draws exactly that from bytes that already exist. Candidates (a) and (b) generate new artifacts whose rendered silhouette is IDENTICAL to what (c) draws for free, and pay for it in cache entries, container overhead, a closed-profile extension, a silhouette-cap exemption and a per-cell rights envelope. There is no fidelity argument for (a) or (b) at overview distance, because there is no fidelity difference.",
     boundsAndConditions: [
       `(c) is bounded by four recorded count raises PLUS an unresolved shared-cache question: ${CITYWIDE_BUDGETS.maxRenderedDenseFeatures} -> 45,194 rendered dense features and three decode/shard ceilings, and then a cache that holds all four shard classes in ONE recency-evicted map with no reservation. See candidate (c) \`sharedCacheBound\`: island-wide building residency needs a reservation the cache does not have, which is an open T002 contract change and not a constant bump.`,
       "The Cesium Primitive rebuild triggered by every shard stream-in or eviction-driven refetch is NOT modelled in any figure here, and a shared cache without reservation is exactly what multiplies it. T002 must measure it.",

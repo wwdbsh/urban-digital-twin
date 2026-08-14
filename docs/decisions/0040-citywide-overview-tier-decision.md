@@ -290,7 +290,7 @@ resident. What T002 has to decide, recorded so it starts from measured numbers:
 - a **reserved** building-class budget of at least 45,903,404 B and 56 entries,
   so search and detail cannot evict the overview;
 - a shared ceiling above that reservation for the other three classes, whose full
-  extent is 255.62 MiB across 395 demand-loaded shards;
+  extent is 243.78 MiB (255,619,340 B) across 395 demand-loaded shards;
 - `maxShards` (512) is *not* the binding constraint: the release declares 451
   shards in total.
 

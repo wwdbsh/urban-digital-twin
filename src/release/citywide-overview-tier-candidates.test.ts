@@ -102,6 +102,24 @@ describe("screenSpaceErrorPixels", () => {
     expect(pixels).toBeCloseTo(0.234, 3);
   });
 
+  it("is exactly linear in 1/distance, which is what makes a crossing distance a division", () => {
+    // `buildScreenSpaceErrorTable` derives `crossesPixelBudgetAtMeters` as the
+    // error's pixel count at 1 m divided by the pixel budget. That shortcut is
+    // only valid if pixels * distance is invariant, so pin it rather than assume
+    // it: the ADR's ~1,234 m / ~2,364 m / ~10,366 m crossings all rest on it.
+    const view = { verticalFieldOfViewDegrees: 60, viewportHeightPixels: 1_080 };
+    const geometricErrorMeters = 11.083;
+    const atOneMetre = screenSpaceErrorPixels({ geometricErrorMeters, distanceMeters: 1, ...view });
+    for (const distanceMeters of [500, 1_000, 2_000, 3_000, 8_000]) {
+      expect(screenSpaceErrorPixels({ geometricErrorMeters, distanceMeters, ...view }) * distanceMeters).toBeCloseTo(atOneMetre, 6);
+    }
+    // The island's worst horizontal error reaches the 1-pixel budget at ~10,366 m
+    // and is therefore 1.296 px at the 8,000 m overview distance — over budget.
+    expect(atOneMetre / 1).toBeCloseTo(10_366.1, 0);
+    expect(screenSpaceErrorPixels({ geometricErrorMeters, distanceMeters: atOneMetre, ...view })).toBeCloseTo(1, 12);
+    expect(screenSpaceErrorPixels({ geometricErrorMeters, distanceMeters: 8_000, ...view })).toBeCloseTo(1.296, 3);
+  });
+
   it("is infinite at zero distance rather than dividing by zero silently", () => {
     expect(screenSpaceErrorPixels({ geometricErrorMeters: 1, distanceMeters: 0, verticalFieldOfViewDegrees: 60, viewportHeightPixels: 1_080 })).toBe(Number.POSITIVE_INFINITY);
   });
