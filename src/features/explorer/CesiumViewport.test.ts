@@ -7,7 +7,7 @@ import type { Feature } from "../../domain/schema";
 import type { CityAssetResolver } from "../../runtime/city-asset-manifest";
 import { LocalFixtureCityAdapter } from "../../runtime/fixture-adapter";
 import { DEFAULT_LAYER_VISIBILITY } from "../../runtime/layers";
-import { STAGE3_RENDER_PROOF_ATTRIBUTE, STAGE3_STOREFRONT_PROJECTIONS_ATTRIBUTE, buildCollisionCheckedFeatureMap, canonicalPickId, clearStorefrontProjectionRecords, collectStage3RenderProof, collectStorefrontProjectionRecords, commercialStorefrontProxyId, denseFeatureIntersectsBounds, densePoiMarkerStyle, denseRenderPlanDelta, denseRenderPlanDeltaSize, denseRenderPlanKey, drillPickedEntityId, featureForPickedId, fixtureOnlyForFeature, focusCameraCoordinatesForFeature, focusCoordinatesForFeature, focusHeightForFeature, focusPoseForFeature, focusPoseForFeatureWithOcclusion, medianFrameInterval, nativeCameraControlBindings, normalizeFocusCameraPose, poiRenderMode, publicRealmAssetEntityId, publicRealmProxyId, publicRealmRepresentative, publishStage3RenderProof, publishStorefrontProjectionRecords, selectDenseFeatureGroups, selectDenseFeatures, shouldApplyCameraPoseRequest, shouldFocusFeature, shouldReplaceDenseRenderPlan, shouldShowFeatureLabel, shouldStartFocusFlight, stage3StorefrontProofRequested, storefrontProjectionCameraSignature, supportedVisibleLayers, canonicalExteriorPickId, exteriorCellEntityId, exteriorCellSignature, exteriorOverlayRenderEntries, exteriorUnanchoredNotice, planExteriorOverlayUpdate, type ExteriorCellOverlay } from "./CesiumViewport";
+import { STAGE3_RENDER_PROOF_ATTRIBUTE, STAGE3_STOREFRONT_PROJECTIONS_ATTRIBUTE, buildCollisionCheckedFeatureMap, canonicalPickId, clearStorefrontProjectionRecords, collectStage3RenderProof, collectStorefrontProjectionRecords, commercialStorefrontProxyId, denseFeatureIntersectsBounds, densePoiMarkerStyle, applyDenseSuppressionDelta, denseAppliedSuppressionSet, denseRenderPlanDelta, denseRenderPlanDeltaSize, denseRenderPlanKey, emptyDenseInstanceIndex, drillPickedEntityId, featureForPickedId, fixtureOnlyForFeature, focusCameraCoordinatesForFeature, focusCoordinatesForFeature, focusHeightForFeature, focusPoseForFeature, focusPoseForFeatureWithOcclusion, medianFrameInterval, nativeCameraControlBindings, normalizeFocusCameraPose, poiRenderMode, publicRealmAssetEntityId, publicRealmProxyId, publicRealmRepresentative, publishStage3RenderProof, publishStorefrontProjectionRecords, selectDenseFeatureGroups, selectDenseFeatures, shouldApplyCameraPoseRequest, shouldFocusFeature, shouldReplaceDenseRenderPlan, shouldShowFeatureLabel, shouldStartFocusFlight, stage3StorefrontProofRequested, storefrontProjectionCameraSignature, supportedVisibleLayers, canonicalExteriorPickId, exteriorCellEntityId, exteriorCellSignature, exteriorOverlayRenderEntries, exteriorUnanchoredNotice, planExteriorOverlayUpdate, type ExteriorCellOverlay } from "./CesiumViewport";
 import type { Block835PublicRealmFeature } from "../../runtime/block835-public-realm-release";
 
 describe("Cesium POI render seam", () => {
@@ -311,6 +311,137 @@ describe("Cesium POI render seam", () => {
     // change is still a rebuild, by the same reference compare as before.
     const oneLeft = [...island.slice(0, 22_000), ...island.slice(22_001)];
     expect(shouldReplaceDenseRenderPlan(island, oneLeft)).toBe(true);
+  });
+
+  /**
+   * T006 B1/B2: the commit gate's highest-risk logic, which shipped with no
+   * automated coverage at all.
+   *
+   * A synthetic `featureId -> Primitive` index stands in for the live layer.
+   * Cesium's real `Primitive` is not constructible without a GPU context, but
+   * everything under test here is the bookkeeping around the write — which id
+   * is written, whether the write landed, and what the caller then records —
+   * and that is exactly what a fake exercises honestly.
+   */
+  const fakeIndex = (ids: readonly string[], options: { ready?: boolean; withShow?: boolean } = {}) => {
+    const index = emptyDenseInstanceIndex();
+    const state = new Map<string, { show: Uint8Array }>();
+    for (const id of ids) {
+      const attributes = { show: new Uint8Array([1]) };
+      state.set(id, attributes);
+      index.buildings.set(id, {
+        ready: options.ready ?? true,
+        getGeometryInstanceAttributes: () => (options.withShow === false ? {} : attributes),
+      } as unknown as Parameters<typeof applyDenseSuppressionDelta>[0]["buildings"] extends Map<string, infer P> ? P : never);
+    }
+    return { index, shown: (id: string) => state.get(id)!.show[0] === 1 };
+  };
+
+  it("flips show, counter-flips it back, and returns the hidden count to zero", () => {
+    const { index, shown } = fakeIndex(["doitt:a", "doitt:b", "doitt:c"]);
+    // A V3 cell goes live over two of the three buildings.
+    const forward = applyDenseSuppressionDelta(index, denseRenderPlanDelta(new Set(), new Set(["doitt:a", "doitt:b"])));
+    expect(forward.flips).toBe(2);
+    expect(forward.hiddenBuildingChange).toBe(2);
+    expect(forward.skipped).toEqual([]);
+    expect(shown("doitt:a")).toBe(false);
+    expect(shown("doitt:b")).toBe(false);
+    expect(shown("doitt:c")).toBe(true);
+
+    // The cell is evicted. The instances are still there, so the extrusions
+    // come back — the direction that could not be expressed at all before the
+    // layer was built over its membership.
+    const back = applyDenseSuppressionDelta(index, denseRenderPlanDelta(new Set(["doitt:a", "doitt:b"]), new Set()));
+    expect(back.flips).toBe(2);
+    // The counts return to zero. A sign error here would leak one hidden
+    // instance per crossing into `buildingFeatureCount`, forever.
+    expect(forward.hiddenBuildingChange + back.hiddenBuildingChange).toBe(0);
+    expect(shown("doitt:a")).toBe(true);
+    expect(shown("doitt:b")).toBe(true);
+  });
+
+  /**
+   * B2. A write can be skipped — the primitive is not ready, the batch table
+   * has no `show`, or the id is not in the index at all. Recording it as
+   * applied anyway is a three-way corruption: the id is never retried, the
+   * reverse delta un-flips an instance that was never flipped, and the hidden
+   * count drifts by one per skipped write for the life of the layer.
+   *
+   * PRE-FIX DEMONSTRATION: `denseAppliedSuppressionSet` did not exist and the
+   * caller assigned `nextSuppressed` unconditionally. Reverting that one line
+   * (`denseAppliedSuppressedIdsRef.current = nextSuppressed`) makes the third
+   * and fourth assertions below fail — the applied set claims `doitt:a` is
+   * suppressed, and the follow-up delta is then empty instead of retrying it.
+   */
+  it("does not record a write that never landed, so the id is retried instead of corrupting the next delta", () => {
+    const notReady = fakeIndex(["doitt:a"], { ready: false });
+    const intended = new Set(["doitt:a"]);
+    const result = applyDenseSuppressionDelta(notReady.index, denseRenderPlanDelta(new Set(), intended));
+    expect(result.flips).toBe(0);
+    expect(result.skipped).toEqual(["doitt:a"]);
+    // Nothing was drawn differently, so nothing may be recorded.
+    expect(notReady.shown("doitt:a")).toBe(true);
+    const applied = denseAppliedSuppressionSet(new Set(), intended, result.skipped);
+    expect([...applied]).toEqual([]);
+    // And because the record did not advance, the NEXT pass still sees work to
+    // do rather than a no-op diff against a state that never existed.
+    expect(denseRenderPlanDeltaSize(denseRenderPlanDelta(applied, intended))).toBe(1);
+
+    // A missing batch-table attribute is the same class of skip.
+    const noShow = fakeIndex(["doitt:b"], { withShow: false });
+    const missing = applyDenseSuppressionDelta(noShow.index, denseRenderPlanDelta(new Set(), new Set(["doitt:b"])));
+    expect(missing.skipped).toEqual(["doitt:b"]);
+    expect(missing.hiddenBuildingChange).toBe(0);
+    // An id outside the current membership writes nothing and is not counted.
+    const absent = applyDenseSuppressionDelta(emptyDenseInstanceIndex(), denseRenderPlanDelta(new Set(), new Set(["doitt:z"])));
+    expect(absent.skipped).toEqual(["doitt:z"]);
+    expect(denseAppliedSuppressionSet(new Set(), new Set(["doitt:z"]), absent.skipped).size).toBe(0);
+    // The no-skip path returns the intended set BY REFERENCE, so the common
+    // case allocates nothing.
+    const clean = new Set(["doitt:q"]);
+    expect(denseAppliedSuppressionSet(new Set(), clean, [])).toBe(clean);
+  });
+
+  /**
+   * B1(ii): the mid-build reconciliation at the commit gate.
+   *
+   * Instances are created with the ownership set captured at BUILD START, but
+   * a V3 cell can go live while the build is still running. The commit
+   * reconciles the difference as flips — never as another build, because the
+   * instances are already correct. This models that sequence exactly.
+   *
+   * PRE-FIX DEMONSTRATION: deleting the commit-path
+   * `applyDenseOwnership(denseDesiredSuppressedIdsRef.current)` call leaves the
+   * layer at its build-start snapshot; the two assertions on `doitt:c` and
+   * `doitt:a` below then fail, because `doitt:c` never gets hidden and
+   * `doitt:a` is never brought back.
+   */
+  it("reconciles an ownership change that arrived while the build was running", () => {
+    const membership = ["doitt:a", "doitt:b", "doitt:c", "doitt:d"];
+    // Build start: a and b are owned by the V3 overlay, so their instances are
+    // created hidden.
+    const builtSuppressed = new Set(["doitt:a", "doitt:b"]);
+    const { index, shown } = fakeIndex(membership);
+    applyDenseSuppressionDelta(index, denseRenderPlanDelta(new Set(), builtSuppressed));
+    let hidden = 2;
+
+    // Mid-build: a's cell was evicted and c's cell went live. Membership never
+    // moved, so this must NOT become another build.
+    const desired = new Set(["doitt:b", "doitt:c"]);
+    const reconciliation = applyDenseSuppressionDelta(index, denseRenderPlanDelta(builtSuppressed, desired));
+    hidden += reconciliation.hiddenBuildingChange;
+
+    expect(reconciliation.flips).toBe(2);
+    expect(shown("doitt:a")).toBe(true);
+    expect(shown("doitt:b")).toBe(false);
+    expect(shown("doitt:c")).toBe(false);
+    expect(shown("doitt:d")).toBe(true);
+    // The hidden count tracks the DESIRED set, not the built one.
+    expect(hidden).toBe(desired.size);
+    expect(denseAppliedSuppressionSet(builtSuppressed, desired, reconciliation.skipped)).toBe(desired);
+    // And the drawn count reconciles with what was allocated: four instances
+    // built, two hidden, two drawn.
+    expect(membership.length - hidden).toBe(2);
   });
 
   it("refines boundary-shard records by feature bounds before applying the dense cap", () => {

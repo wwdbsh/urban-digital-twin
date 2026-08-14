@@ -136,6 +136,15 @@ describe("aggregated bounded-availability notice attribution", () => {
     expect(exteriorNotShippedSummary(street, declared)).toBe(exteriorNotShippedSummary(reconciled, declared));
     expect(exteriorNotShippedSummary(street, declared)).not.toContain("11 of 149");
 
+    // O2: the LINE is a release fact too. A camera that reconciles NO unshipped
+    // cell still states it — otherwise a permanent property of the build blinks
+    // with the camera, disappearing on the way out and reappearing on return.
+    expect(exteriorNotShippedSummary([midtownWave.outcomes[0]!], declared)).toBe(exteriorNotShippedSummary(reconciled, declared));
+    expect(exteriorNotShippedSummary([], declared)).toBe(exteriorNotShippedSummary(reconciled, declared));
+    // And a release that declares nothing unshipped stays silent, so the line
+    // is not structurally always-on.
+    expect(exteriorNotShippedSummary(reconciled, { cellCount: 149, notShippedCellCount: 0 })).toBeNull();
+
     // Absent declared facts keeps the pre-existing camera-scoped behaviour
     // exactly, in BOTH terms, rather than mixing scopes.
     expect(exteriorNotShippedSummary(reconciled)).toContain("146 of 147");

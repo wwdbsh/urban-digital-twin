@@ -48,21 +48,31 @@ export function exteriorNotShippedSummary(
   cells: readonly ExteriorCellOutcome[],
   declared?: { cellCount: number; notShippedCellCount: number },
 ): string | null {
-  const notShipped = cells.filter((cell) => cell.kind === "not-shipped");
-  if (notShipped.length === 0) return null;
-  if (notShipped.length === 1 && !declared) return notShipped[0]!.notice;
-  // BOTH TERMS ARE RELEASE FACTS, or neither is.
+  // BOTH TERMS ARE RELEASE FACTS, or neither is — and the LINE ITSELF is a
+  // release fact too, so `cells` is not consulted at all when the release can
+  // answer.
   //
   // `cells` is what the last reconciliation touched, which under the visibility
   // scheduler is a CAMERA fact in both terms: the same release read "121 of
   // 123" at one pose and "11 of 12" at the next. Anchoring only the
-  // denominator to the declared count would be worse than leaving it alone —
-  // "11 of 149" states that 138 declared cells DO ship geometry, which is
-  // false for a release that declares 146 of its 149 empty. So the summary
-  // takes both terms from the release or neither.
-  if (declared && declared.cellCount > 0 && declared.notShippedCellCount >= 0) {
-    return `${declared.notShippedCellCount} of ${declared.cellCount} exterior cells declared by this release ship no exterior geometry; no substitute was selected for them.`;
+  // denominator would be worse than leaving it alone — "11 of 149" states that
+  // 138 declared cells DO ship geometry, which is false for a release that
+  // declares 146 of its 149 empty.
+  //
+  // Deriving only the NUMBERS from the release while still gating the line's
+  // EXISTENCE on the reconciliation would keep the same defect in a quieter
+  // form: at a camera that happens to reconcile no unshipped cell the line
+  // disappears and then reappears on the way back, so a permanent property of
+  // the build would blink with the camera. A release fact is stated whenever it
+  // is true.
+  if (declared && declared.cellCount > 0) {
+    return declared.notShippedCellCount > 0
+      ? `${declared.notShippedCellCount} of ${declared.cellCount} exterior cells declared by this release ship no exterior geometry; no substitute was selected for them.`
+      : null;
   }
+  const notShipped = cells.filter((cell) => cell.kind === "not-shipped");
+  if (notShipped.length === 0) return null;
+  if (notShipped.length === 1) return notShipped[0]!.notice;
   return `${notShipped.length} of ${cells.length} exterior cells declared by this release ship no exterior geometry; no substitute was selected for them.`;
 }
 

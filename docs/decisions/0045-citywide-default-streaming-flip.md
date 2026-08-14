@@ -151,6 +151,19 @@ Each states its own recovery in its own sentence. ADR 0044 D-3 recorded that the
 old line "reports a data fact in the register of a fault"; the two populations a
 reader can actually act on were not reported at all.
 
+**One consequence, recorded rather than discovered later: a single-cell
+not-shipped notice loses its cell identity.** Before this change a release with
+exactly one unshipped cell stated it by name ("Exterior cell w01-c07 ships no
+exterior geometry…"); now that release reports "1 of N exterior cells declared
+by this release…" like any other. That is intentional — the numerator and
+denominator have to come from the same scope, and the per-cell sentence is
+camera-scoped — but it is a real loss of specificity for small releases. The
+per-cell text is NOT recoverable from the aggregate, because the aggregate is
+computed from the release and not from the reconciled outcomes. Restoring it
+would mean emitting the release-scoped aggregate plus a named line for the one
+declared cell, which is a notice-shape decision and belongs with T007's notice
+work (D-15).
+
 `releasedArtifactCount` is session-wide and is read from the FIRST active wave
 only — the app sets the same session totals on every live runtime, so summing
 across waves would multiply one pool by the number of promotions.
@@ -303,12 +316,22 @@ not a rounding.** Two things follow, and neither is hidden:
    uncommitted chain and survives cancellations, so this 5,746.2 ms is the
    window, not a build-duration proxy known to undercount it. ADR 0044's open
    question is closed — with a number above the bar.
-2. **It still does not revive the coarse GLB, and the reason is structural.**
-   The AND clause asks whether a cheaper fix exists. A per-cell coarse GLB does
-   not fix this: the rebuild happens because the camera FOOTPRINT changed and
-   the dense shard membership changed with it, and a coarse-GLB tier streamed by
-   the same footprint would be rebuilt by the same event. Reviving it here would
-   be reviving it for a cost it does not remove.
+2. **It still does not revive the coarse GLB, and the reason is the AND
+   clause.** An earlier draft argued the point structurally — that a coarse
+   tier streamed by the same footprint is rebuilt by the same event. **That
+   argument is wrong and is withdrawn:** a pre-baked per-cell GLB is LOADED,
+   not tessellated, so a membership change would swap already-built meshes
+   rather than re-extruding 41,881 polygons, and the cost profile genuinely
+   would differ.
+
+   The clause that actually decides it is the one ADR 0044 §1.3 pre-registered
+   and that §5.2 D-11 names: **a strictly cheaper, named, un-attempted fix
+   exists** — an incremental MEMBERSHIP reconciliation (add/remove batches
+   against the live layer, instead of building a whole replacement layer and
+   swapping it). It attacks the same cost, inside the renderer, without
+   reviving an asset pipeline. Reviving one while that is untried would be
+   reviving it for the wrong reason, which is exactly what the AND clause is
+   for. The verdict is unchanged; only its justification is.
 
 **What this bounds series does NOT do is violate the flip's acceptance.** The
 fixed budgets are frame-time percentiles and they pass at every station,
@@ -566,11 +589,17 @@ the footprint — so a content-stable decision costs no additional load work.
   the three-population split it was contracted for and deliberately did not also
   decide whether a not-shipped exterior cell is a tombstone at all in a session
   where the dense shard draws the building.
-- **D-16: the D-10 control was captured on the Step-1 bundle**
-  (`eede9d2e…`), before the Step-2 URL inversion. The radius semantics under an
-  enabled scheduler are unchanged by that inversion, but the record names a
-  different bundle from the station and crossing records and that is stated
-  rather than smoothed.
+- **D-16: two committed records were captured on the Step-1 bundle**
+  (`eede9d2e…`), before the Step-2 URL inversion: `radius-control.json` (D-10,
+  §3.4) and **`stations-scheduler-on.json`**. The radius semantics under an
+  enabled scheduler are unchanged by the inversion, so §3.4 is cited as
+  measured. **`stations-scheduler-on.json` is SUPERSEDED and is cited nowhere
+  in this ADR**: it is the same station set under the pre-flip
+  `?exteriorScheduler=on` spelling, retained only because deleting captured
+  evidence to tidy a bundle list is the wrong direction. §3.2's sentence
+  ("the station, crossing, dense-only and rollback records were all captured on
+  `5c71eb62a05…`") refers to the records this ADR cites; the superseded file is
+  named here so the directory listing does not contradict it.
 - **D-4 (from ADR 0044): band-internal ranking prefers wave order over
   distance.** §3.4 now shows the cap DOES bind at 2–3 km without a radius
   (`deferredCount` 76 and 175), which is exactly the condition under which that

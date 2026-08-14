@@ -1268,48 +1268,87 @@ function denseBuildingInstance(feature: DenseBuildingFeature, show: boolean): Ge
  * instance; POIs resolve to their own point primitive, which carries `show`
  * directly.
  */
-interface DenseInstanceIndex {
+export interface DenseInstanceIndex {
   buildings: Map<string, Primitive>;
   points: Map<string, { show: boolean }>;
 }
 
-function emptyDenseInstanceIndex(): DenseInstanceIndex {
+export function emptyDenseInstanceIndex(): DenseInstanceIndex {
   return { buildings: new Map(), points: new Map() };
+}
+
+export interface DenseSuppressionWriteResult {
+  flips: number;
+  hiddenBuildingChange: number;
+  hiddenPointChange: number;
+  /**
+   * Ids whose write did NOT land — the index does not hold them, the primitive
+   * is not ready, or the batch table has no `show` attribute.
+   *
+   * This is returned rather than swallowed because the caller records what it
+   * believes it applied. Advancing that record over a write that never happened
+   * makes the recorded state a lie in three compounding ways: the id never gets
+   * retried, the REVERSE delta later "un-flips" an instance that was never
+   * flipped, and the hidden-instance count — which feeds
+   * `buildingFeatureCount` through `liveDenseMetrics` — drifts by one per
+   * skipped write, permanently, for the life of the layer.
+   */
+  skipped: readonly string[];
 }
 
 /**
  * Flip `show` for the ids in a delta. Returns the number of instances actually
- * written, which is the honest flip count: an id the index does not hold (a
- * suppression that arrived for a building outside the current membership)
- * writes nothing and is not counted.
+ * written, which is the honest flip count, plus the ids that did not write so
+ * the caller can leave them out of its applied set.
  */
-function applyDenseSuppressionDelta(index: DenseInstanceIndex, delta: DenseRenderPlanDelta): { flips: number; hiddenBuildingChange: number; hiddenPointChange: number } {
+export function applyDenseSuppressionDelta(index: DenseInstanceIndex, delta: DenseRenderPlanDelta): DenseSuppressionWriteResult {
   let flips = 0;
   let hiddenBuildingChange = 0;
   let hiddenPointChange = 0;
+  const skipped: string[] = [];
   const write = (id: string, show: boolean): void => {
     const primitive = index.buildings.get(id);
     if (primitive) {
       // `getGeometryInstanceAttributes` requires at least one `update`; the
       // commit gate already waits for `primitiveLayerReady`, and this guard
       // keeps a not-yet-ready layer from throwing if that ever changes.
-      if (primitive.ready !== true) return;
+      if (primitive.ready !== true) { skipped.push(id); return; }
       const attributes = primitive.getGeometryInstanceAttributes(id) as { show?: Uint8Array } | undefined;
-      if (!attributes?.show) return;
+      if (!attributes?.show) { skipped.push(id); return; }
       attributes.show = ShowGeometryInstanceAttribute.toValue(show, attributes.show);
       flips += 1;
       hiddenBuildingChange += show ? -1 : 1;
       return;
     }
     const point = index.points.get(id);
-    if (!point) return;
+    if (!point) { skipped.push(id); return; }
     point.show = show;
     flips += 1;
     hiddenPointChange += show ? -1 : 1;
   };
   for (const id of delta.added) write(id, true);
   for (const id of delta.removed) write(id, false);
-  return { flips, hiddenBuildingChange, hiddenPointChange };
+  return { flips, hiddenBuildingChange, hiddenPointChange, skipped };
+}
+
+/**
+ * The set the caller may now claim it has applied: the intended set, with every
+ * SKIPPED id put back to whatever was true before. An id that did not write is
+ * still in its old state, so recording the new one would guarantee it is never
+ * retried and would corrupt the next reverse delta.
+ */
+export function denseAppliedSuppressionSet(
+  previousSuppressedIds: ReadonlySet<string>,
+  nextSuppressedIds: ReadonlySet<string>,
+  skipped: readonly string[],
+): ReadonlySet<string> {
+  if (skipped.length === 0) return nextSuppressedIds;
+  const applied = new Set(nextSuppressedIds);
+  for (const id of skipped) {
+    if (previousSuppressedIds.has(id)) applied.add(id);
+    else applied.delete(id);
+  }
+  return applied;
 }
 
 /**
@@ -2003,10 +2042,15 @@ export function CesiumViewport({
        * and cannot re-tessellate.
        */
       const applyDenseOwnership = (nextSuppressed: ReadonlySet<string>): boolean => {
-        const delta = denseRenderPlanDelta(denseAppliedSuppressedIdsRef.current, nextSuppressed);
-        denseAppliedSuppressedIdsRef.current = nextSuppressed;
+        const previousSuppressed = denseAppliedSuppressedIdsRef.current;
+        const delta = denseRenderPlanDelta(previousSuppressed, nextSuppressed);
         if (denseRenderPlanDeltaSize(delta) === 0) return false;
         const applied = applyDenseSuppressionDelta(denseActiveIndexRef.current, delta);
+        // Only what actually WROTE advances the record. A skipped id stays at
+        // its old value so the next pass retries it, instead of being recorded
+        // as flipped and then un-flipped by a reverse delta that never had a
+        // matching forward write.
+        denseAppliedSuppressedIdsRef.current = denseAppliedSuppressionSet(previousSuppressed, nextSuppressed, applied.skipped);
         if (applied.flips === 0) return false;
         telemetry.planSuppressionUpdateCount += 1;
         telemetry.planSuppressionFlipCount += applied.flips;
