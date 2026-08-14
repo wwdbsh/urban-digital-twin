@@ -367,11 +367,18 @@ describe("Cesium POI render seam", () => {
    * reverse delta un-flips an instance that was never flipped, and the hidden
    * count drifts by one per skipped write for the life of the layer.
    *
-   * PRE-FIX DEMONSTRATION: `denseAppliedSuppressionSet` did not exist and the
-   * caller assigned `nextSuppressed` unconditionally. Reverting that one line
-   * (`denseAppliedSuppressedIdsRef.current = nextSuppressed`) makes the third
-   * and fourth assertions below fail — the applied set claims `doitt:a` is
-   * suppressed, and the follow-up delta is then empty instead of retrying it.
+   * PRE-FIX DEMONSTRATION, stated as what THIS test can observe: stubbing
+   * `denseAppliedSuppressionSet` to `return nextSuppressedIds` — the pre-fix
+   * behaviour, and a pure function this test calls directly — fails the
+   * assertions below; the applied set claims `doitt:a` is suppressed and the
+   * follow-up delta is empty instead of retrying it. Demonstrated, observed as
+   * `expected [ 'doitt:a' ] to deeply equal []`.
+   *
+   * The matching production line is
+   * `denseAppliedSuppressedIdsRef.current = denseAppliedSuppressionSet(...)`
+   * inside the React component. Reverting THAT line is not detectable here:
+   * this file renders nothing. It is covered only in the sense that the
+   * function it calls is covered.
    */
   it("does not record a write that never landed, so the id is retried instead of corrupting the next delta", () => {
     const notReady = fakeIndex(["doitt:a"], { ready: false });
@@ -410,11 +417,23 @@ describe("Cesium POI render seam", () => {
    * reconciles the difference as flips — never as another build, because the
    * instances are already correct. This models that sequence exactly.
    *
-   * PRE-FIX DEMONSTRATION: deleting the commit-path
-   * `applyDenseOwnership(denseDesiredSuppressedIdsRef.current)` call leaves the
-   * layer at its build-start snapshot; the two assertions on `doitt:c` and
-   * `doitt:a` below then fail, because `doitt:c` never gets hidden and
-   * `doitt:a` is never brought back.
+   * WHAT THIS TEST DOES NOT COVER, stated plainly: **no production line is
+   * under test here.** The sequence below is assembled by the test itself out
+   * of the same pure functions the commit gate calls, so it pins the
+   * pure-function CONTRACT — that reconciling built-set against desired-set
+   * yields the desired `show` states and a hidden count matching the desired
+   * set — and nothing about whether the component actually performs that
+   * reconciliation. Deleting the commit-path call would not fail this file.
+   *
+   * The demonstration that was run (replacing the reconciliation step below
+   * with a no-op, observed as `expected +0 to be 2`) shows the assertions are
+   * load-bearing, not that any wiring is guarded.
+   *
+   * The unguarded wiring is `applyDenseOwnership` (defined at
+   * `CesiumViewport.tsx:2044`) and its two call sites — the commit-path
+   * reconciliation at `:2132` and the settled-camera flip at `:2144`. Closing
+   * it needs the React harness carried as ADR 0044 D-6; the gap is recorded as
+   * ADR 0045 D-17.
    */
   it("reconciles an ownership change that arrived while the build was running", () => {
     const membership = ["doitt:a", "doitt:b", "doitt:c", "doitt:d"];

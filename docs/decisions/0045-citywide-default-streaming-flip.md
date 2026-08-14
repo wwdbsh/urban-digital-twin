@@ -606,6 +606,28 @@ the footprint — so a content-stable decision costs no additional load work.
   ranking defect becomes reachable. It was unreachable when ADR 0044 handed it
   on; it is reachable now. Not taken here — it changes `compareRanked`, which
   both frozen thrash baselines were measured against.
+- **D-17: the commit gate's WIRING is unguarded, only its arithmetic is.** The
+  three tests added for the review (`CesiumViewport.test.ts`) exercise the same
+  pure functions the commit gate calls — `denseRenderPlanDelta`,
+  `applyDenseSuppressionDelta`, `denseAppliedSuppressionSet` — over a synthetic
+  `featureId -> Primitive` index, and they pin those functions' contracts. They
+  never render the component, so they cannot observe whether the component still
+  CALLS them. Deleting the commit-path reconciliation would leave the suite
+  green.
+
+  The unguarded surface is `applyDenseOwnership`, defined at
+  `src/features/explorer/CesiumViewport.tsx:2044`, and its two call sites: the
+  commit-path reconciliation at **`:2132`** (ownership that moved while a build
+  was running) and the settled-camera flip at **`:2144`**. Between them they are
+  the entire path by which a V3 cell going live or being evicted reaches the
+  screen without a rebuild — the mechanism this whole ADR rests on.
+
+  The closing instrument already exists as an obligation: **ADR 0044 D-6, the
+  React harness**, whose stated condition was "needed only if a cycle changes
+  the cell-loading effect's call order". This cycle did not change that order,
+  but it did add a new effect-resident decision with no way to test it, which is
+  the same need arriving by a different route. **Routed to T007.**
+
 - **D-8: the 484 / 474 discrepancy remains unresolved**, carried unchanged.
 
 ## Rollback
