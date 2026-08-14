@@ -439,6 +439,16 @@ the flag is opt-in and off, so no default session can encounter it. **Deciding t
 wording and the threshold remains with T006**, which would ship it as a default,
 and it must not become a default without an answer.
 
+One further item shares that boundary (review finding, recorded here): the
+release-pass **placement in `App.tsx` is proven to matter (238 vs 0 partially
+applied passes in the replay) but is not itself pinned by a test** — moving the
+call back inside the wave loop leaves every suite green, because pinning the real
+effect's call order needs a React harness for the cell-loading effect that no
+test in this area has had since T002. The same missing harness blocks the
+`reachedScene` observation signal proposed above. **Building that harness (or an
+equivalent structural pin) belongs to T005/T006**, before the flag becomes a
+default.
+
 ## Deferred to T004, by number
 
 - **The citywide four-class reservation** (ADR 0040's building / restaurant /
