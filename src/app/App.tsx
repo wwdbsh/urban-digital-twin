@@ -82,7 +82,7 @@ import {
 } from "../runtime/block835-canary-probe";
 import { MIDTOWN_CORE_CANARY_FACADE_PATH } from "../runtime/midtown-core-canary-facade-path";
 import { DEFAULT_EXTERIOR_RENDER_PROFILE, EXTERIOR_RENDER_PROFILES, exteriorRenderProfileLabel, parseExteriorRenderProfile, type ExteriorRenderProfile } from "../runtime/exterior-render-profiles";
-import { exteriorNotShippedSummary, exteriorQualifiedNotice, exteriorWaveForSelection } from "../runtime/exterior-wave-attribution";
+import { exteriorDeferredCellNotice, exteriorNotShippedSummary, exteriorQualifiedNotice, exteriorReleasedArtifactNotice, exteriorWaveForSelection } from "../runtime/exterior-wave-attribution";
 import { fallbackViewportFootprint, type ViewportFootprint } from "../runtime/viewport-footprint";
 
 const navigation = [
@@ -971,10 +971,20 @@ function failedExteriorWave(message: string): ExteriorWaveState {
  * failures that never happened. Every genuine failure keeps its own per-cell
  * line, so nothing that actually went wrong is aggregated away.
  */
+export interface ExteriorNoticePopulations {
+  /** The release's own declared cell count — the not-shipped denominator. */
+  declaredCellCount?: number;
+  /** `ExteriorRuntimeMetrics.deferredCellCount` for THIS camera. */
+  deferredCellCount?: number;
+  /** `ExteriorRuntimeMetrics.releasedArtifactCount` for this session. */
+  releasedArtifactCount?: number;
+}
+
 export function exteriorStreamingNotices(
   headNotice: string | null,
   cells: readonly ExteriorCellOutcome[],
   unanchoredCanonicalFeatureIds: readonly string[] = [],
+  populations: ExteriorNoticePopulations = {},
 ): string[] {
   const notices = headNotice ? [headNotice] : [];
   for (const cell of cells) {
@@ -982,8 +992,18 @@ export function exteriorStreamingNotices(
     if (cell.kind === "not-shipped") continue;
     notices.push(cell.notice);
   }
-  const notShipped = exteriorNotShippedSummary(cells);
+  const notShipped = exteriorNotShippedSummary(cells, populations.declaredCellCount);
   if (notShipped) notices.push(notShipped);
+  // Three populations, three sentences, three fixed meanings. `not-shipped` is
+  // a RELEASE fact against the declared denominator; `deferred` is a fact about
+  // THIS camera and is recoverable by moving it; `evicted` is a fact about the
+  // byte budget and is recoverable on re-entry. Before this split the first
+  // line's denominator moved with the camera and the other two were invisible,
+  // so the only visible population was the one that could not be acted on.
+  const deferred = exteriorDeferredCellNotice(populations.deferredCellCount ?? 0);
+  if (deferred) notices.push(deferred);
+  const evicted = exteriorReleasedArtifactNotice(populations.releasedArtifactCount ?? 0);
+  if (evicted) notices.push(evicted);
   const unanchored = exteriorUnanchoredNotice(unanchoredCanonicalFeatureIds);
   if (unanchored) notices.push(unanchored);
   return notices;
@@ -1495,8 +1515,19 @@ export function App() {
   // geometry"), and a reader cannot act on a fallback notice without knowing
   // which release it is about — so the release is named unconditionally rather
   // than appearing only once a second wave happens to be streaming.
-  const exteriorNoticeEntries = exteriorActiveWaves.flatMap((entry) => exteriorStreamingNotices(entry.wave.headNotice, entry.wave.outcomes)
-    .map((notice) => ({ releaseId: entry.target.releaseId, notice: exteriorQualifiedNotice(entry.target.releaseId, notice) })));
+  const exteriorNoticeEntries = exteriorActiveWaves.flatMap((entry) => {
+    const runtimeMetrics = entry.wave.runtime?.getMetrics();
+    return exteriorStreamingNotices(entry.wave.headNotice, entry.wave.outcomes, [], {
+      declaredCellCount: entry.wave.runtime?.snapshot.cells.length,
+      deferredCellCount: runtimeMetrics?.deferredCellCount,
+      // Session-wide, not per wave (see `ExteriorRuntimeMetrics`): the app sets
+      // the same session totals on every live runtime, so this is read from the
+      // wave and must never be summed across them. Taking it from the FIRST
+      // active wave only is what keeps one pool from being multiplied by the
+      // number of promotions.
+      releasedArtifactCount: entry === exteriorActiveWaves[0] ? runtimeMetrics?.releasedArtifactCount : 0,
+    }).map((notice) => ({ releaseId: entry.target.releaseId, notice: exteriorQualifiedNotice(entry.target.releaseId, notice) }));
+  });
   // Withheld-anchor geometry is reported once for the scene: the viewport
   // resolves anchors across every wave at once and reports one union.
   const exteriorUnanchoredStatement = exteriorStreamingActive ? exteriorUnanchoredNotice(exteriorUnanchoredIds) : null;
@@ -2275,10 +2306,21 @@ export function App() {
       // until the dense plan is rebuilt, so omitting it here would let the
       // details panel and the probe hold a stale exterior count.
       previous.exteriorSuppressedFeatureCount === next.exteriorSuppressedFeatureCount &&
+      previous.denseSuppressedInstanceCount === next.denseSuppressedInstanceCount &&
       previous.planBuildCount === next.planBuildCount &&
       previous.planReuseCount === next.planReuseCount &&
       previous.planCancellationCount === next.planCancellationCount &&
       previous.planSwapCount === next.planSwapCount &&
+      // The show-attribute suppression path (ADR 0045) resolves an ownership
+      // change without a rebuild, so these two counters are the ONLY evidence
+      // that a crossing happened at all. Omitting them would make the cheap
+      // path invisible to the probe that has to prove it ran.
+      previous.planSuppressionUpdateCount === next.planSuppressionUpdateCount &&
+      previous.planSuppressionFlipCount === next.planSuppressionFlipCount &&
+      previous.pendingLayerAddedAt === next.pendingLayerAddedAt &&
+      previous.doubleDrawOpenedAt === next.doubleDrawOpenedAt &&
+      previous.previousLayerRemovedAt === next.previousLayerRemovedAt &&
+      previous.doubleDrawMs === next.doubleDrawMs &&
       previous.planFingerprint === next.planFingerprint &&
       previous.selectionMs === next.selectionMs &&
       previous.keyMs === next.keyMs &&

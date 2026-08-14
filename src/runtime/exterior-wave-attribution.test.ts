@@ -20,7 +20,7 @@
  * COMMITTED ones, so they run on a fresh clone with no payload present.
  */
 import { describe, expect, it } from "vitest";
-import { exteriorNotShippedSummary, exteriorQualifiedNotice, exteriorWaveForSelection } from "./exterior-wave-attribution";
+import { exteriorDeferredCellNotice, exteriorNotShippedSummary, exteriorQualifiedNotice, exteriorReleasedArtifactNotice, exteriorWaveForSelection } from "./exterior-wave-attribution";
 import { EXTERIOR_DEFAULT_ACTIVATION, MIDTOWN_CORE_EXTERIOR_ACTIVATION, type ExteriorDefaultActivationEnabled } from "./exterior-default-activation";
 import type { ExteriorCellOutcome } from "./exterior-cell-runtime";
 
@@ -102,7 +102,7 @@ describe("aggregated bounded-availability notice attribution", () => {
       ...Array.from({ length: 146 }, (_, index) => notShipped(`midtown-cell-${index}`, `cell-release:${midtown.releaseId}:midtown-cell-${index}:v1`)),
     ];
     const line = exteriorQualifiedNotice(midtown.releaseId, exteriorNotShippedSummary(cells)!);
-    expect(line).toBe(`Exterior release ${midtown.releaseId}: 146 of 147 exterior cells ship no exterior geometry in this release; no substitute was selected for them.`);
+    expect(line).toBe(`Exterior release ${midtown.releaseId}: 146 of 147 exterior cells declared by this release ship no exterior geometry; no substitute was selected for them.`);
     expect(line).not.toContain(block835.releaseId);
     // A wave that ships every cell contributes no aggregate line at all.
     expect(exteriorNotShippedSummary(block835Wave.outcomes)).toBeNull();
@@ -111,10 +111,51 @@ describe("aggregated bounded-availability notice attribution", () => {
       .toBe("Exterior cell solo ships no exterior geometry in this release; no substitute was selected.");
   });
 
+  /**
+   * T006 E1: the denominator is a RELEASE fact and must not move with the camera.
+   *
+   * Under the visibility scheduler `cells` is what the last reconciliation
+   * touched, so before this fix the same release read "146 of 147" at one pose
+   * and "146 of 149" at the next — a release fact that changed when the user
+   * panned. The declared count is passed explicitly and pinned here.
+   */
+  it("anchors the not-shipped denominator to the declared cell count, not the reconciled one", () => {
+    const reconciled = [
+      midtownWave.outcomes[0]!,
+      ...Array.from({ length: 146 }, (_, index) => notShipped(`midtown-cell-${index}`, `cell-release:${midtown.releaseId}:midtown-cell-${index}:v1`)),
+    ];
+    // Same 147 reconciled cells, two different cameras' worth of declared scope.
+    expect(exteriorNotShippedSummary(reconciled, 149)).toBe("146 of 149 exterior cells declared by this release ship no exterior geometry; no substitute was selected for them.");
+    // And the SAME answer when a later pose reconciles fewer cells: only the
+    // declared denominator is quoted, so the sentence does not move.
+    const fewer = [midtownWave.outcomes[0]!, ...Array.from({ length: 146 }, (_, index) => notShipped(`midtown-cell-${index}`, `cell-release:${midtown.releaseId}:midtown-cell-${index}:v1`))];
+    expect(exteriorNotShippedSummary(fewer, 149)).toBe(exteriorNotShippedSummary(reconciled, 149));
+    // A declared count smaller than the tombstone count is not believed: it
+    // would produce "146 of 3", so the reconciled count is used instead.
+    expect(exteriorNotShippedSummary(reconciled, 3)).toContain("146 of 147");
+    // Absent declared count keeps the pre-existing behaviour exactly.
+    expect(exteriorNotShippedSummary(reconciled)).toContain("146 of 147");
+  });
+
+  it("states the deferred and evicted populations in their own recoverable register", () => {
+    // Deferred: nobody asked for it at this camera. Evicted: it was resident.
+    // Neither is a coverage gap, and both say how they recover.
+    expect(exteriorDeferredCellNotice(53)).toBe("53 exterior cells are not loaded for this camera; they load when the camera reaches them.");
+    expect(exteriorDeferredCellNotice(1)).toBe("1 exterior cell is not loaded for this camera; they load when the camera reaches them.");
+    expect(exteriorReleasedArtifactNotice(12)).toBe("12 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.");
+    expect(exteriorReleasedArtifactNotice(1)).toBe("1 exterior artifact was released to stay within the session cache budget; it reloads on re-entry.");
+    // Zero is silence, not "0 cells deferred": a population with no members is
+    // not a disclosure, and emitting it would put a permanent line in the box.
+    expect(exteriorDeferredCellNotice(0)).toBeNull();
+    expect(exteriorReleasedArtifactNotice(0)).toBeNull();
+    expect(exteriorDeferredCellNotice(Number.NaN)).toBeNull();
+    expect(exteriorReleasedArtifactNotice(-1)).toBeNull();
+  });
+
   it("keeps two waves' identical notices distinguishable", () => {
     // The reason qualification is unconditional: the same text from two waves
     // must not collapse into one indistinguishable line.
-    const shared = "146 of 147 exterior cells ship no exterior geometry in this release; no substitute was selected for them.";
+    const shared = "146 of 147 exterior cells declared by this release ship no exterior geometry; no substitute was selected for them.";
     const lines = [exteriorQualifiedNotice(block835.releaseId, shared), exteriorQualifiedNotice(midtown.releaseId, shared)];
     expect(new Set(lines).size).toBe(2);
     expect(lines[0]).toContain(block835.releaseId);

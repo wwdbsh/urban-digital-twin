@@ -7,7 +7,7 @@ import type { Feature } from "../../domain/schema";
 import type { CityAssetResolver } from "../../runtime/city-asset-manifest";
 import { LocalFixtureCityAdapter } from "../../runtime/fixture-adapter";
 import { DEFAULT_LAYER_VISIBILITY } from "../../runtime/layers";
-import { STAGE3_RENDER_PROOF_ATTRIBUTE, STAGE3_STOREFRONT_PROJECTIONS_ATTRIBUTE, buildCollisionCheckedFeatureMap, canonicalPickId, clearStorefrontProjectionRecords, collectStage3RenderProof, collectStorefrontProjectionRecords, commercialStorefrontProxyId, denseFeatureIntersectsBounds, densePoiMarkerStyle, denseRenderPlanKey, drillPickedEntityId, featureForPickedId, fixtureOnlyForFeature, focusCameraCoordinatesForFeature, focusCoordinatesForFeature, focusHeightForFeature, focusPoseForFeature, focusPoseForFeatureWithOcclusion, medianFrameInterval, nativeCameraControlBindings, normalizeFocusCameraPose, poiRenderMode, publicRealmAssetEntityId, publicRealmProxyId, publicRealmRepresentative, publishStage3RenderProof, publishStorefrontProjectionRecords, selectDenseFeatureGroups, selectDenseFeatures, shouldApplyCameraPoseRequest, shouldFocusFeature, shouldReplaceDenseRenderPlan, shouldShowFeatureLabel, shouldStartFocusFlight, stage3StorefrontProofRequested, storefrontProjectionCameraSignature, supportedVisibleLayers, canonicalExteriorPickId, exteriorCellEntityId, exteriorCellSignature, exteriorOverlayRenderEntries, exteriorUnanchoredNotice, planExteriorOverlayUpdate, type ExteriorCellOverlay } from "./CesiumViewport";
+import { STAGE3_RENDER_PROOF_ATTRIBUTE, STAGE3_STOREFRONT_PROJECTIONS_ATTRIBUTE, buildCollisionCheckedFeatureMap, canonicalPickId, clearStorefrontProjectionRecords, collectStage3RenderProof, collectStorefrontProjectionRecords, commercialStorefrontProxyId, denseFeatureIntersectsBounds, densePoiMarkerStyle, denseRenderPlanDelta, denseRenderPlanDeltaSize, denseRenderPlanKey, drillPickedEntityId, featureForPickedId, fixtureOnlyForFeature, focusCameraCoordinatesForFeature, focusCoordinatesForFeature, focusHeightForFeature, focusPoseForFeature, focusPoseForFeatureWithOcclusion, medianFrameInterval, nativeCameraControlBindings, normalizeFocusCameraPose, poiRenderMode, publicRealmAssetEntityId, publicRealmProxyId, publicRealmRepresentative, publishStage3RenderProof, publishStorefrontProjectionRecords, selectDenseFeatureGroups, selectDenseFeatures, shouldApplyCameraPoseRequest, shouldFocusFeature, shouldReplaceDenseRenderPlan, shouldShowFeatureLabel, shouldStartFocusFlight, stage3StorefrontProofRequested, storefrontProjectionCameraSignature, supportedVisibleLayers, canonicalExteriorPickId, exteriorCellEntityId, exteriorCellSignature, exteriorOverlayRenderEntries, exteriorUnanchoredNotice, planExteriorOverlayUpdate, type ExteriorCellOverlay } from "./CesiumViewport";
 import type { Block835PublicRealmFeature } from "../../runtime/block835-public-realm-release";
 
 describe("Cesium POI render seam", () => {
@@ -266,6 +266,51 @@ describe("Cesium POI render seam", () => {
     // the identical array does NOT rebuild, so the trigger really is the
     // one-element difference and not "any call rebuilds".
     expect(shouldReplaceDenseRenderPlan(island, island)).toBe(false);
+  });
+
+  /**
+   * T006 D-2 (A1): the show-attribute suppression path, and its trigger taxonomy.
+   *
+   * The test above pins what a MEMBERSHIP change costs and is deliberately left
+   * unchanged — the frozen thrash and reuse baselines were measured against
+   * that compare. What changes is which quantity the compare is fed. The layer
+   * is now built over the membership and hides what it does not own, so an
+   * OWNERSHIP change (a V3 cell arriving or being evicted) leaves the
+   * membership reference-identical and resolves as `show` writes.
+   *
+   * Written to fail if anyone ever routes an ownership change back through the
+   * rebuild trigger, because that silently restores the multi-second
+   * double-draw ADR 0044 §4.1 measured.
+   */
+  it("resolves a V3 ownership change as show flips, and still rebuilds when membership moves", () => {
+    const island = Array.from({ length: 45_154 }, (_, index) => ({
+      ...realRestaurant,
+      id: `doitt:${String(index).padStart(7, "0")}`,
+    }));
+    // The V3 overlay takes over ONE building. The membership — every base
+    // feature the camera admits — is the same array, element for element.
+    const before = new Set<string>();
+    const after = new Set<string>(["doitt:0022000"]);
+    expect(shouldReplaceDenseRenderPlan(island, island)).toBe(false);
+    const takeover = denseRenderPlanDelta(before, after);
+    expect(takeover).toEqual({ added: [], removed: ["doitt:0022000"] });
+    expect(denseRenderPlanDeltaSize(takeover)).toBe(1);
+
+    // And the reverse — the cell is evicted, the extrusion comes back — is the
+    // same single write in the other direction. Before this path existed the
+    // return direction could not be expressed at all: the instance was absent
+    // from the built layer, so only a rebuild could restore it.
+    const handback = denseRenderPlanDelta(after, before);
+    expect(handback).toEqual({ added: ["doitt:0022000"], removed: [] });
+
+    // An unchanged ownership set is not an update: zero writes, and the
+    // caller's reuse branch stays a reuse.
+    expect(denseRenderPlanDeltaSize(denseRenderPlanDelta(after, new Set(after)))).toBe(0);
+
+    // The counterfactual that makes the above mean something: a MEMBERSHIP
+    // change is still a rebuild, by the same reference compare as before.
+    const oneLeft = [...island.slice(0, 22_000), ...island.slice(22_001)];
+    expect(shouldReplaceDenseRenderPlan(island, oneLeft)).toBe(true);
   });
 
   it("refines boundary-shard records by feature bounds before applying the dense cap", () => {

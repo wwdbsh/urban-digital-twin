@@ -44,10 +44,39 @@ export function exteriorQualifiedNotice(releaseId: string, notice: string): stri
  * failures, and one alarming bullet each would drown the genuine failures that
  * keep their own per-cell lines. One cell states itself.
  */
-export function exteriorNotShippedSummary(cells: readonly ExteriorCellOutcome[]): string | null {
+export function exteriorNotShippedSummary(cells: readonly ExteriorCellOutcome[], declaredCellCount?: number): string | null {
   const notShipped = cells.filter((cell) => cell.kind === "not-shipped");
   if (notShipped.length === 0) return null;
-  return notShipped.length === 1
-    ? notShipped[0]!.notice
-    : `${notShipped.length} of ${cells.length} exterior cells ship no exterior geometry in this release; no substitute was selected for them.`;
+  if (notShipped.length === 1) return notShipped[0]!.notice;
+  // FIXED DENOMINATOR. `cells` is what the last reconciliation touched, which
+  // under the visibility scheduler is a CAMERA fact: the same release read
+  // "121 of 123" at one pose and something else at the next, so a release fact
+  // moved when the user panned. The denominator is the release's DECLARED cell
+  // count, which does not move, and the sentence says which cells it counts.
+  const denominator = declaredCellCount != null && declaredCellCount >= notShipped.length ? declaredCellCount : cells.length;
+  return `${notShipped.length} of ${denominator} exterior cells declared by this release ship no exterior geometry; no substitute was selected for them.`;
+}
+
+/**
+ * The two camera-scoped populations, kept OUT of the release fact above.
+ *
+ * A deferred cell is one nobody asked for at this camera; an evicted artifact
+ * is one that was resident and was released to stay inside the session's byte
+ * budget. Neither is a defect and neither is permanent — both recover by
+ * moving the camera — so both state their recovery in their own sentence
+ * rather than borrowing the tombstone's register.
+ *
+ * They are separate functions, and separately pattern-matched, so the notice
+ * digest can update them in place without re-arming a dismissed notice: a
+ * count that changes with every pan must never resurrect a disclosure the
+ * reader already read.
+ */
+export function exteriorDeferredCellNotice(deferredCellCount: number): string | null {
+  if (!Number.isFinite(deferredCellCount) || deferredCellCount <= 0) return null;
+  return `${deferredCellCount} exterior cell${deferredCellCount === 1 ? " is" : "s are"} not loaded for this camera; they load when the camera reaches them.`;
+}
+
+export function exteriorReleasedArtifactNotice(releasedArtifactCount: number): string | null {
+  if (!Number.isFinite(releasedArtifactCount) || releasedArtifactCount <= 0) return null;
+  return `${releasedArtifactCount} exterior artifact${releasedArtifactCount === 1 ? " was" : "s were"} released to stay within the session cache budget; ${releasedArtifactCount === 1 ? "it reloads" : "they reload"} on re-entry.`;
 }

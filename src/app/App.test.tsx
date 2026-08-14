@@ -106,7 +106,7 @@ vi.mock("../runtime/exterior-default-activation", async (importOriginal) => {
 
 import { App, EXTERIOR_CELL_STREAMING_RELEASE_ID, PINNED_EXTERIOR_CELL_RELEASE_IDS, appendBlock835PublicRealmUrl, appendExteriorProfileUrl, exteriorCellBasePath, exteriorCanarySnapshotMessage, exteriorDeepLinkMessage, exteriorSnapshotOriginLabel, isPinnedExteriorCellRelease, exteriorStreamingActivation, exteriorStreamingFailureMessage, exteriorStreamingNotices, parseExteriorDetailRadiusMeters, parseExteriorStreamingUrl, applyStorefrontResolution, block835PerformanceGate, block835PerformanceProbeMode, block835PublicRealmActivation, block835PublicRealmFailureMessage, isCurrentStorefrontResolution, MOBILE_VIEWPORT_MEDIA_QUERY, mobileExteriorLodPolicy, overlayLayoutPolicy, preserveFeatureSequence, resolveCitywideOverviewResidency, resolveStorefrontBuilding, selectionFocusTransaction, summarizeBlock835Frames, type StorefrontResolutionState } from "./App";
 import { ExteriorFallbackNotice, digestExteriorNotices, type ExteriorNoticeEntry } from "./ExteriorFallbackNotice";
-import { exteriorQualifiedNotice } from "../runtime/exterior-wave-attribution";
+import { exteriorDeferredCellNotice, exteriorQualifiedNotice, exteriorReleasedArtifactNotice } from "../runtime/exterior-wave-attribution";
 import { exteriorUnanchoredNotice } from "../features/explorer/CesiumViewport";
 import type { ExteriorCellOutcome } from "../runtime/exterior-cell-runtime";
 import { EXTERIOR_DEFAULT_ACTIVATION, EXTERIOR_DEFAULT_ACTIVATIONS } from "../runtime/exterior-default-activation";
@@ -1121,11 +1121,11 @@ describe("exterior fallback notice presentation", () => {
     const digest = digestExteriorNotices([waveEntry(MIDTOWN, 146, 149), waveEntry(LOWER, 124, 126)]);
     expect(digest.notShipped?.cellCount).toBe(270);
     expect(digest.notShipped?.totalCellCount).toBe(275);
-    expect(digest.notShipped?.summary).toBe("270 of 275 exterior cells ship no exterior geometry in this build (by design; no substitute was selected).");
+    expect(digest.notShipped?.summary).toBe("270 of 275 exterior cells declared by this build ship no exterior geometry (by design; no substitute was selected).");
     // Nothing was invented and nothing was lost: both original lines survive.
     expect(digest.notShipped?.lines.map((line) => line.text)).toEqual([
-      `Exterior release ${MIDTOWN}: 146 of 149 exterior cells ship no exterior geometry in this release; no substitute was selected for them.`,
-      `Exterior release ${LOWER}: 124 of 126 exterior cells ship no exterior geometry in this release; no substitute was selected for them.`,
+      `Exterior release ${MIDTOWN}: 146 of 149 exterior cells declared by this release ship no exterior geometry; no substitute was selected for them.`,
+      `Exterior release ${LOWER}: 124 of 126 exterior cells declared by this release ship no exterior geometry; no substitute was selected for them.`,
     ]);
     expect(digest.verbatim).toEqual([]);
     expect(digest.entryCount).toBe(2);
@@ -1196,6 +1196,76 @@ describe("exterior fallback notice presentation", () => {
     const reshown = document.querySelector<HTMLElement>("[data-exterior-notices]")!;
     expect(reshown.getAttribute("data-exterior-notices")).toBe("2");
     expect(reshown.querySelector("[data-exterior-notice-not-shipped]")?.textContent).toContain("270 of 275");
+  });
+
+  /**
+   * T006 E1/E2: three populations, fixed denominators, and a dismiss that stays
+   * dismissed while the camera moves.
+   *
+   * The default session's notice previously reported ONE population — the
+   * not-shipped tombstone — against a denominator that moved with the camera,
+   * and said nothing at all about the two populations a user can act on. These
+   * pin the split and, more importantly, pin that the two camera-scoped counts
+   * update IN PLACE inside an undismissed notice and cannot re-arm a dismissed
+   * one.
+   */
+  const deferredEntry = (releaseId: string, cellCount: number): ExteriorNoticeEntry => ({
+    releaseId,
+    notice: exteriorQualifiedNotice(releaseId, exteriorDeferredCellNotice(cellCount)!),
+  });
+  const evictedEntry = (releaseId: string, artifactCount: number): ExteriorNoticeEntry => ({
+    releaseId,
+    notice: exteriorQualifiedNotice(releaseId, exteriorReleasedArtifactNotice(artifactCount)!),
+  });
+
+  it("separates the not-shipped, deferred and evicted populations instead of one conflated line", () => {
+    const digest = digestExteriorNotices([waveEntry(MIDTOWN, 146, 149), deferredEntry(MIDTOWN, 53), evictedEntry(MIDTOWN, 12)]);
+    expect(digest.notShipped?.cellCount).toBe(146);
+    expect(digest.deferred?.cellCount).toBe(53);
+    expect(digest.evicted?.artifactCount).toBe(12);
+    // None of the three leaked into the "unrecognized" bucket, which is what
+    // would happen if a wording change silently unhooked a pattern.
+    expect(digest.verbatim).toEqual([]);
+
+    render(<ExteriorFallbackNotice entries={[waveEntry(MIDTOWN, 146, 149), deferredEntry(MIDTOWN, 53), evictedEntry(MIDTOWN, 12)]} />);
+    const notice = document.querySelector<HTMLElement>("[data-exterior-notices]")!;
+    expect(notice.querySelector("[data-exterior-notice-not-shipped]")?.getAttribute("data-exterior-notice-not-shipped")).toBe("146");
+    expect(notice.querySelector("[data-exterior-notice-deferred]")?.getAttribute("data-exterior-notice-deferred")).toBe("53");
+    expect(notice.querySelector("[data-exterior-notice-evicted]")?.getAttribute("data-exterior-notice-evicted")).toBe("12");
+    // Each states its own recovery. A deferred cell is not a coverage gap.
+    expect(notice.querySelector("[data-exterior-notice-deferred]")?.textContent).toContain("they load when the camera reaches them");
+    expect(notice.querySelector("[data-exterior-notice-evicted]")?.textContent).toContain("they reload on re-entry");
+  });
+
+  it("keeps a dismissed notice dismissed while the camera-scoped counts move", () => {
+    const release = [waveEntry(MIDTOWN, 146, 149)];
+    const view = render(<ExteriorFallbackNotice entries={[...release, deferredEntry(MIDTOWN, 53)]} />);
+    fireEvent.click(within(document.querySelector<HTMLElement>("[data-exterior-notices]")!).getByRole("button", { name: "Dismiss" }));
+    expect(document.querySelector("[data-exterior-notices]")).toBeNull();
+
+    // Pan: the deferred count changes on nearly every settled camera move. A
+    // dismissal keyed on the whole set would resurrect the box here, on every
+    // pan, forever.
+    view.rerender(<ExteriorFallbackNotice entries={[...release, deferredEntry(MIDTOWN, 91)]} />);
+    expect(document.querySelector("[data-exterior-notices]")).toBeNull();
+    // Same for an eviction arriving, and for the camera-scoped lines vanishing.
+    view.rerender(<ExteriorFallbackNotice entries={[...release, deferredEntry(MIDTOWN, 91), evictedEntry(MIDTOWN, 12)]} />);
+    expect(document.querySelector("[data-exterior-notices]")).toBeNull();
+    view.rerender(<ExteriorFallbackNotice entries={release} />);
+    expect(document.querySelector("[data-exterior-notices]")).toBeNull();
+
+    // The counterfactual: a RELEASE fact changing is new information and still
+    // re-arms, so this is not a dismissal that silences everything forever.
+    view.rerender(<ExteriorFallbackNotice entries={[...release, waveEntry(LOWER, 124, 126)]} />);
+    expect(document.querySelector("[data-exterior-notices]")).not.toBeNull();
+  });
+
+  it("shows the camera-scoped counts in place inside an undismissed notice", () => {
+    const release = [waveEntry(MIDTOWN, 146, 149)];
+    const view = render(<ExteriorFallbackNotice entries={[...release, deferredEntry(MIDTOWN, 53)]} />);
+    expect(document.querySelector("[data-exterior-notice-deferred]")?.getAttribute("data-exterior-notice-deferred")).toBe("53");
+    view.rerender(<ExteriorFallbackNotice entries={[...release, deferredEntry(MIDTOWN, 91)]} />);
+    expect(document.querySelector("[data-exterior-notice-deferred]")?.getAttribute("data-exterior-notice-deferred")).toBe("91");
   });
 
   it("announces politely instead of alerting on a permanent by-design condition", () => {
