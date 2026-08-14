@@ -42,6 +42,21 @@ import type { ViewportFootprint } from "../runtime/viewport-footprint";
  *     -> `publishedExteriorCellOutcomes` -> `exteriorOverlayRenderEntries`
  *     -> the viewport's retirement -> `planExteriorCacheRelease` / commit
  *
+ * ## WHERE the release pass runs is modelled, because it is load-bearing
+ *
+ * An earlier version of this file ran the release pass only AFTER the wave
+ * loop while the App ran it INSIDE, and that gap is exactly why the defect
+ * below survived review of both. `releaseTiming` now models both placements and
+ * the suite asserts on each:
+ *
+ *   `"after-loop"`  what the App ships. The pass never observes a decision that
+ *                   is only partially applied.
+ *   `"mid-loop"`    what the App used to do. Gate 1 (re-admission) reads the
+ *                   APPLIED per-wave `requested` sets, so a pass firing during
+ *                   an early wave's iteration cannot see that the same decision
+ *                   re-admits a cell belonging to a LATER wave — and releases a
+ *                   key that wave asks for microseconds afterwards.
+ *
  * What it does NOT include is React: no component renders, no effect is
  * scheduled by the reconciler, and no Cesium viewer exists. Six real promoted
  * releases are also not loadable in a unit test, so the wave runtimes are
@@ -57,7 +72,9 @@ import type { ViewportFootprint } from "../runtime/viewport-footprint";
  *   2. what the overlay would draw names only published cells;
  *   3. every artifact a published outcome names is still IN the cache — the
  *      release seam never frees bytes something is still rendering;
- *   4. residency stays inside the global cap, so one pool really is one bound.
+ *   4. residency stays inside the global cap, so one pool really is one bound;
+ *   5. **no key released at decision N is requested by any wave at decision N.**
+ *      This is the invariant the mid-loop placement violates.
  */
 
 const ROAM_TRACE_PATH = "data/exterior-cache-governance-20260814/roam-trace.json";
@@ -115,8 +132,56 @@ interface WaveState {
   published: ExteriorCellOutcome[];
 }
 
-describe("the App cell-loading effect under one global decision", () => {
-  it("never renders a cell the scheduler evicted, and never frees bytes something still renders", async () => {
+/** The stub's cell-to-artifact mapping, so a requested CELL implies a known KEY. */
+function cacheKeyForCell(cellId: string): string {
+  return exteriorArtifactCacheKey(`public/assets/${cellId}__lod_0.glb`, "c".repeat(64));
+}
+
+type ReleaseTiming = "after-loop" | "mid-loop";
+
+interface ReplayResult {
+  peakResident: number;
+  peakCacheEntries: number;
+  releasedKeys: number;
+  cacheEvictions: number;
+  releasedArtifactBytes: number;
+  /**
+   * Keys released UNDER decision N — by the reconciliation or the retirement —
+   * that some wave still wants at the end of decision N. This is B1's metric,
+   * and the shipped placement holds it at zero.
+   */
+  releasedThenImmediatelyRequested: { decisionIndex: number; cacheKey: string }[];
+  /**
+   * Keys released by a SETTLING BATCH, which runs after decision N-1 was fully
+   * applied and before decision N was taken, that decision N then asked for.
+   *
+   * A different thing entirely, and NOT fixed: at the moment the batch settles
+   * the current decision genuinely does not want the cell, and no ordering of
+   * the release pass can consult a decision that has not been taken. The cost
+   * is one refetch, priced by ADR 0042's latency table. Counted so the number
+   * is known rather than assumed to be zero.
+   */
+  releasedWhileSettlingThenRequested: { decisionIndex: number; cacheKey: string }[];
+  /**
+   * Release passes invoked while a decision was only PARTIALLY applied — some
+   * waves had reconciled against it and some had not.
+   *
+   * This is B1 as a structural property rather than as a symptom count. Gate 1
+   * reads the applied per-wave `requested` sets, so a pass invoked here is
+   * reading a union that does not yet cover the session, and whether that
+   * releases something depends on what happens to be queued at that instant.
+   * The shipped placement holds this at zero; the mid-loop placement does not.
+   */
+  partiallyAppliedReleasePasses: number;
+}
+
+/**
+ * The effect's sequence, with the release pass placed where `releaseTiming`
+ * says. Every assertion the shipping configuration must hold runs inline; the
+ * mid-loop variant is replayed by the same code so the two differ in exactly
+ * one thing.
+ */
+async function replayEffect(releaseTiming: ReleaseTiming, options: { assertInvariants: boolean }): Promise<ReplayResult> {
     const cache = new CitywideLruCache<Uint8Array>(1_024, 64 * 1024 * 1024);
     const releaseState = createExteriorCacheReleaseState();
     const waves: WaveState[] = WAVES.map((wave) => ({ ...wave, load: createExteriorCellLoadState<ExteriorCellOutcome>(), published: [] }));
@@ -128,9 +193,19 @@ describe("the App cell-loading effect under one global decision", () => {
     let peakResident = 0;
     let peakCacheEntries = 0;
     let releasedKeys = 0;
+    let releasedThisDecision: string[] = [];
+    const releasedThenImmediatelyRequested: ReplayResult["releasedThenImmediatelyRequested"] = [];
+    const releasedWhileSettlingThenRequested: ReplayResult["releasedWhileSettlingThenRequested"] = [];
+
+    /** How many waves have applied the decision currently being applied, or null between decisions. */
+    let wavesAppliedThisDecision: number | null = null;
+    let partiallyAppliedReleasePasses = 0;
 
     // The App's release pass, gates (b) (c) (d) against live state.
     const runRelease = () => {
+      // Checked before the early return: the hazard is that the pass RUNS at
+      // this point at all, not that this particular queue happened to be empty.
+      if (wavesAppliedThisDecision !== null && wavesAppliedThisDecision < waves.length) partiallyAppliedReleasePasses += 1;
       if (releaseState.pending.size === 0) return;
       const inFlightCellIds = new Set<string>();
       const requestedCellIds = new Set<string>();
@@ -143,9 +218,14 @@ describe("the App cell-loading effect under one global decision", () => {
       const plan = planExteriorCacheRelease(releaseState, { inFlightCellIds, requestedCellIds, publishedCacheKeys });
       commitExteriorCacheRelease(releaseState, plan, (key) => { cache.delete(key); });
       releasedKeys += plan.releaseKeys.length;
+      releasedThisDecision.push(...plan.releaseKeys);
     };
 
     for (const [decisionIndex, sample] of SAMPLES.entries()) {
+      // Releases from the settling batches below belong to the PREVIOUS
+      // decision — they run while it is still the current one — so they are
+      // accumulated separately from the ones the decision taken below causes.
+      releasedThisDecision = [];
       // 1. Settle whatever landed. This is the App's `.then`.
       for (const batch of pending.filter((entry) => entry.landsAt === decisionIndex)) {
         const wave = waves.find((candidate) => candidate.releaseId === batch.releaseId)!;
@@ -164,6 +244,10 @@ describe("the App cell-loading effect under one global decision", () => {
         runRelease();
       }
       pending.splice(0, pending.length, ...pending.filter((entry) => entry.landsAt > decisionIndex));
+      // Everything released so far this iteration came from a SETTLING batch,
+      // which ran while the previous decision was still the current one.
+      const releasedWhileSettling = releasedThisDecision;
+      releasedThisDecision = [];
 
       // 2. ONE decision over the static census table.
       const schedule = scheduleExteriorCellsGlobally(waves, { enabled: true, footprint: sample.footprint, camera: sample.camera, heightBucket: sample.heightBucket, previous: carry });
@@ -171,6 +255,7 @@ describe("the App cell-loading effect under one global decision", () => {
       peakResident = Math.max(peakResident, schedule.residentCellIds.length);
 
       // 3. Per-wave reconciliation, with the drops queued into the seam.
+      wavesAppliedThisDecision = 0;
       for (const wave of waves) {
         const waveSchedule = schedule.byRelease.get(wave.releaseId)!;
         const outcomesBeforeDrop = new Map(wave.load.outcomes);
@@ -183,7 +268,14 @@ describe("the App cell-loading effect under one global decision", () => {
         }
         if (fresh.length > 0) pending.push({ landsAt: decisionIndex + LOAD_LATENCY_DECISIONS, releaseId: wave.releaseId, cellIds: fresh });
         wave.published = publishedExteriorCellOutcomes(wave.load, wave.declaredCellIds);
+        wavesAppliedThisDecision += 1;
+        // THE DEFECT, modelled. The App used to call the release pass in here,
+        // where the waves after this one have not applied the decision yet.
+        if (releaseTiming === "mid-loop" && fresh.length === 0) runRelease();
       }
+      wavesAppliedThisDecision = null;
+      // What the App ships: one pass, after every wave has applied the decision.
+      if (releaseTiming === "after-loop") runRelease();
 
       // 4. The viewport pass: build the overlay, retire what left the scene.
       const overlays: ExteriorCellOverlay[] = waves.map((wave) => ({ releaseId: wave.releaseId, snapshotId: "snapshot:v1", origin: "default", profile: "exploration", cells: wave.published } as ExteriorCellOverlay));
@@ -195,38 +287,110 @@ describe("the App cell-loading effect under one global decision", () => {
       noteExteriorSceneRetired(releaseState, retired);
       runRelease();
 
-      // --- invariants, every decision ---
-      const publishedCells = new Set(waves.flatMap((wave) => wave.published.map((outcome) => outcome.cellId)));
-      for (const wave of waves) {
-        for (const outcome of wave.published) {
-          // (1) nothing renders because a request that predates its eviction landed.
-          expect(wave.load.requested.has(outcome.cellId), `decision ${decisionIndex} published unrequested ${outcome.cellId}`).toBe(true);
-        }
+      // (5) nothing released this decision is wanted by this decision. Computed
+      // at the END of the decision, when every wave has applied it — which is
+      // exactly the state the mid-loop pass could not see.
+      const requestedKeysNow = new Set<string>();
+      for (const wave of waves) for (const cellId of wave.load.requested) requestedKeysNow.add(cacheKeyForCell(cellId));
+      for (const cacheKey of releasedThisDecision) {
+        if (requestedKeysNow.has(cacheKey)) releasedThenImmediatelyRequested.push({ decisionIndex, cacheKey });
       }
-      // (2) the overlay draws only published cells.
-      for (const cellId of renderedCells) expect(publishedCells.has(cellId), `decision ${decisionIndex} drew unpublished ${cellId}`).toBe(true);
-      // (3) every artifact a published outcome names is still cached.
-      for (const wave of waves) {
-        for (const outcome of wave.published) {
-          for (const key of exteriorOutcomeCacheKeys(outcome).keys) {
-            expect(cache.has(key), `decision ${decisionIndex} released bytes still rendered by ${outcome.cellId}`).toBe(true);
+      for (const cacheKey of releasedWhileSettling) {
+        if (requestedKeysNow.has(cacheKey)) releasedWhileSettlingThenRequested.push({ decisionIndex, cacheKey });
+      }
+
+      // --- invariants, every decision ---
+      if (options.assertInvariants) {
+        const publishedCells = new Set(waves.flatMap((wave) => wave.published.map((outcome) => outcome.cellId)));
+        for (const wave of waves) {
+          for (const outcome of wave.published) {
+            // (1) nothing renders because a request that predates its eviction landed.
+            expect(wave.load.requested.has(outcome.cellId), `decision ${decisionIndex} published unrequested ${outcome.cellId}`).toBe(true);
           }
         }
+        // (2) the overlay draws only published cells.
+        for (const cellId of renderedCells) expect(publishedCells.has(cellId), `decision ${decisionIndex} drew unpublished ${cellId}`).toBe(true);
+        // (3) every artifact a published outcome names is still cached.
+        for (const wave of waves) {
+          for (const outcome of wave.published) {
+            for (const key of exteriorOutcomeCacheKeys(outcome).keys) {
+              expect(cache.has(key), `decision ${decisionIndex} released bytes still rendered by ${outcome.cellId}`).toBe(true);
+            }
+          }
+        }
+        // (4) one pool, one bound.
+        expect(schedule.residentCellIds.length).toBeLessThanOrEqual(EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY.maxResidentUnits);
       }
-      // (4) one pool, one bound.
-      expect(schedule.residentCellIds.length).toBeLessThanOrEqual(EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY.maxResidentUnits);
       peakCacheEntries = Math.max(peakCacheEntries, cache.size());
       await Promise.resolve();
     }
 
+  return { peakResident, peakCacheEntries, releasedKeys, cacheEvictions: cache.evictionCount(), releasedArtifactBytes: releaseState.releasedArtifactBytes, releasedThenImmediatelyRequested, releasedWhileSettlingThenRequested, partiallyAppliedReleasePasses };
+}
+
+describe("the App cell-loading effect under one global decision", () => {
+  it("never renders a cell the scheduler evicted, and never frees bytes something still renders", async () => {
+    const result = await replayEffect("after-loop", { assertInvariants: true });
     // The seam did real work over the session rather than sitting inert.
-    expect(releasedKeys).toBeGreaterThan(100);
-    expect(releaseState.releasedArtifactBytes).toBe(releasedKeys * ARTIFACT_BYTES);
-    expect(peakResident).toBe(EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY.maxResidentUnits);
+    expect(result.releasedKeys).toBeGreaterThan(100);
+    expect(result.releasedArtifactBytes).toBe(result.releasedKeys * ARTIFACT_BYTES);
+    expect(result.peakResident).toBe(EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY.maxResidentUnits);
     // And the cache stayed governed BY THE SCHEDULER rather than by the LRU:
     // the ceilings were never approached, and no recency eviction ever fired.
-    expect(cache.evictionCount()).toBe(0);
-    expect(peakCacheEntries).toBeLessThanOrEqual(EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY.maxResidentUnits * 2);
+    expect(result.cacheEvictions).toBe(0);
+    expect(result.peakCacheEntries).toBeLessThanOrEqual(EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY.maxResidentUnits * 2);
+  });
+
+  /**
+   * B1's gate, and the reason the placement of the release pass is a decision
+   * rather than an accident.
+   *
+   * Gate 1 reads the APPLIED per-wave `requested` sets. Run the pass after the
+   * whole loop and it sees the decision the session actually took; run it
+   * inside, and a candidate whose cell belongs to a wave later in iteration
+   * order is released microseconds before that wave asks for it — a redundant
+   * refetch, and `releasedArtifactBytes` counting bytes that came straight back.
+   */
+  it("never runs a release pass while a decision is only partially applied, which the mid-loop placement did", async () => {
+    const shipped = await replayEffect("after-loop", { assertInvariants: true });
+    // The structural property: no pass ever reads a `requested` union that
+    // covers only the waves iterated so far.
+    expect(shipped.partiallyAppliedReleasePasses).toBe(0);
+    // And the symptom it rules out, over 58 real camera samples.
+    expect(shipped.releasedThenImmediatelyRequested).toEqual([]);
+
+    // The pre-fix placement, replayed by the same code. It reads a partially
+    // applied decision hundreds of times per session.
+    const midLoop = await replayEffect("mid-loop", { assertInvariants: false });
+    expect(midLoop.partiallyAppliedReleasePasses).toBe(238);
+
+    // HONEST LIMIT, stated rather than papered over: on THIS trace the mid-loop
+    // placement produces no observed symptom, because the retirement pass at
+    // the end of each decision drains the queue before the next decision's loop
+    // begins, so no candidate survives into a loop for the early pass to get
+    // wrong. That makes the symptom trace-dependent and the hazard structural,
+    // which is why the assertion above is on the structure. The seam-level
+    // demonstration that a partially applied `requestedCellIds` really does
+    // release a candidate the complete one keeps lives in
+    // `exterior-cache-release.test.ts`.
+    expect(midLoop.releasedThenImmediatelyRequested).toEqual([]);
+  });
+
+  /**
+   * The residual race, counted rather than claimed to be absent.
+   *
+   * A batch that settles between two decisions is discarded against the
+   * CURRENT decision, which genuinely does not want the cell; the next decision
+   * may re-admit it. No placement of the release pass can consult a decision
+   * that has not been taken, so this is not fixable by ordering and is not
+   * fixed. Over 58 real camera samples it costs 2 refetches, which at ADR
+   * 0042's measured p50 is about 44 ms of localhost transport.
+   */
+  it("pays a bounded refetch for loads that settle between two decisions", async () => {
+    const shipped = await replayEffect("after-loop", { assertInvariants: false });
+    expect(shipped.releasedWhileSettlingThenRequested).toHaveLength(2);
+    // Small against the session's total release volume rather than merely small.
+    expect(shipped.releasedWhileSettlingThenRequested.length / shipped.releasedKeys).toBeLessThan(0.01);
   });
 
   /**

@@ -200,6 +200,36 @@ describe("re-admission: a cell the camera came back to leaves the queue without 
     expect(state.sceneRetired.has("cell-a")).toBe(false);
   });
 
+  /**
+   * WHY THE CALLER MUST NOT PLAN MID-LOOP (B1).
+   *
+   * Gate 1 reads `requestedCellIds`, which the App builds by unioning the
+   * APPLIED per-wave `requested` sets. A plan computed while only some waves
+   * have applied the current decision therefore sees a smaller union — and
+   * releases a candidate that the complete union would have kept, moments
+   * before its own wave asks for the key again.
+   *
+   * The App now runs exactly one pass, after every wave has applied the
+   * decision. This is the property that makes that placement load-bearing
+   * rather than stylistic.
+   */
+  it("releases a candidate under a partially applied requested set that a complete one keeps", () => {
+    const state = createExteriorCacheReleaseState();
+    queued(state, "cell-in-late-wave", [A0], true);
+    noteExteriorSceneRetired(state, ["cell-in-late-wave"]);
+
+    // Mid-loop: waves w00..w04 have reconciled, w05 — which owns this cell —
+    // has not, so the union does not contain it yet.
+    const partial = planExteriorCacheRelease(state, { ...NOTHING, requestedCellIds: new Set(["cell-in-early-wave"]) });
+    expect(partial.releaseKeys).toEqual([exteriorArtifactCacheKey(A0.artifactRef, A0.checksumSha256)]);
+
+    // After the loop: the union covers the session, and the same decision's
+    // re-admission is visible, so the candidate leaves the queue intact.
+    const complete = planExteriorCacheRelease(state, { ...NOTHING, requestedCellIds: new Set(["cell-in-early-wave", "cell-in-late-wave"]) });
+    expect(complete.releaseKeys).toEqual([]);
+    expect(complete.readmittedCells).toEqual([{ releaseId: "wave-1", cellId: "cell-in-late-wave" }]);
+  });
+
   it("makes the next eviction of the same cell wait for its own revoke", () => {
     const state = createExteriorCacheReleaseState();
     queued(state, "cell-a", [A0], true);

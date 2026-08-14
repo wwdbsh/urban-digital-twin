@@ -17,8 +17,8 @@ no wave was materialized, and **no runtime budget constant changed**.
 | global cap | `src/runtime/exterior-visibility-scheduler.ts` | `EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY` (128); T002's policy untouched |
 | cache | `src/release/citywide-release.ts` | incremental byte counter; the desync warning |
 | app wiring | `src/app/App.tsx` | one global decision, one carry, the release passes, the retirement handler |
-| viewport | `src/features/explorer/CesiumViewport.tsx` | `onExteriorCellsRetired`, fired after the revoke |
-| capture | `scripts/exterior-scheduler-trace-capture-cli.mjs` | `roam`, `latency`, `governance-evidence` commands |
+| viewport | `src/features/explorer/CesiumViewport.tsx` | `onExteriorCellsRetired` + the exported `exteriorRetirementSteps` applier |
+| capture | `scripts/exterior-scheduler-trace-capture-cli.mjs` | `roam`, `latency`, `governance-evidence`, `roam-evidence` commands |
 
 ## The defect a measurement caught, recorded rather than smoothed over
 
@@ -49,16 +49,51 @@ New suites:
 
 | suite | tests | proves |
 | --- | --- | --- |
-| `src/runtime/exterior-cache-release.test.ts` | 17 | the four gates, re-admission, plan/commit purity, key-derivation anti-drift |
+| `src/runtime/exterior-cache-release.test.ts` | 18 | the four gates, re-admission, plan/commit purity, key-derivation anti-drift |
 | `src/runtime/exterior-cache-eviction-correctness.test.ts` | 7 | (a) evict shrinks bytes and the seamless case does not, (b) refetch re-verifies, (c) predecessor double cost |
-| `src/runtime/exterior-cache-governance-gate.test.ts` | 8 | the separately-named single-pool baseline over three traces incl. the roam |
-| `src/app/exterior-global-residency.test.ts` | 2 | no stale render / no premature release through the effect's own module sequence over 58 real camera samples |
-| `src/features/explorer/exterior-eviction-pick-identity.test.ts` | 3 | entity + pick-map removal, revoke-before-retire, selection and deep-link survival, re-admission |
+| `src/runtime/exterior-cache-governance-gate.test.ts` | 13 | the separately-named single-pool baseline over three traces incl. the roam |
+| `src/app/exterior-global-residency.test.ts` | 4 | no stale render / no premature release through the effect's own module sequence over 58 real camera samples |
+| `src/features/explorer/exterior-eviction-pick-identity.test.ts` | 6 | entity + pick-map removal, revoke-before-retire, selection and deep-link survival, re-admission |
 
 Extended: `exterior-cell-scheduling.test.ts` (+9, incl. the alias regression and
 the T005 ranking finding), `citywide-release.test.ts` (+2, the byte-counter
 invariant and the desync warning), `exterior-scheduler-thrash-gate.test.ts`
 (policy frozen field by field).
+
+## Review round 2: two blocking findings closed
+
+**B1 — the release pass ran inside the per-wave loop.** Gate 1 reads the applied
+per-wave `requested` sets, so a pass firing during an early wave's iteration
+could release a candidate the same decision re-admits for a later wave. Hoisted
+to one pass after the loop (chosen over feeding the decision into the plan
+input; ADR 0042 states why, and now names which state the gate reads).
+
+**B2 — the replay modelled the release after the loop while the App ran it
+inside**, which is why B1 survived both reviews. `replayEffect` is now
+parameterised by `releaseTiming` and the suite asserts on both placements. The
+gate is the *structural* property — **0 partially-applied release passes** for
+the shipped placement, **238** for the mid-loop one.
+
+An honest limit came out of B2 and is recorded in the test and the ADR rather
+than smoothed over: on the committed roam trace the mid-loop placement produces
+**no observed symptom**, because the retirement pass at the end of each decision
+drains the queue before the next loop begins. The symptom is trace-dependent;
+the hazard is structural. The seam-level demonstration that a partially applied
+`requestedCellIds` releases a candidate the complete one keeps is in
+`exterior-cache-release.test.ts`.
+
+A **residual race** surfaced while measuring B2 and is counted, not fixed: a
+batch settling *between* two decisions is discarded against a decision that
+genuinely does not want the cell, and the next decision may re-admit it. Two
+occurrences over 58 samples, <1% of session releases. Pinned by a test.
+
+Nits adopted: N1 the residue is restated as *any dropped outcome that never
+reached the scene*, with `reachedScene: true` labelled as asserted-not-observed
+and the closing signal named; N2 the viewport's four retirement mutations are
+now the exported pure `exteriorRetirementSteps`, executed verbatim by the effect
+(ordering test verified failing when the steps are reordered); N3 the byte
+figure is aligned on the test-derived 43,246,075; N4 gate (b) cell-scoped vs
+artifact-scoped keys noted; N5 the O(k²) `includes` is a `Set`.
 
 ### Tests that fail against the pre-fix code
 

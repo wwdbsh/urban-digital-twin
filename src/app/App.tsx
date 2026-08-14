@@ -2012,6 +2012,14 @@ export function App() {
           // load settles and `acceptExteriorCellOutcomes` DISCARDS it.
           if (!outcome) continue;
           const { keys, byteSize } = exteriorOutcomeCacheKeys(outcome);
+          // `reachedScene: true` is ASSERTED here, not observed. The app knows
+          // the outcome was published; it does not know the viewport actually
+          // built a Blob for it, and it has no signal that would tell it. The
+          // assertion is the conservative direction — it waits for a revoke
+          // rather than freeing bytes a live Blob might hold — and its cost is
+          // the residue ADR 0042 records: ANY dropped outcome that never
+          // reached the scene waits for a retirement that will never arrive,
+          // and its bytes stay cached until recency evicts them.
           queueExteriorCacheRelease(exteriorCacheReleaseRef.current, { releaseId, cellId, cacheKeys: keys, byteSize, reachedScene: true });
         }
       }
@@ -2034,7 +2042,16 @@ export function App() {
         }
         setExteriorWaveOutcomes((current) => new Map(current).set(releaseId, outcomes));
       };
-      if (fresh.length === 0) { if (dropped.length > 0) publish(); runExteriorCacheRelease(); continue; }
+      // NO release pass here. It used to run inside this loop, and that was a
+      // real defect: gate 1 (re-admission) reads the APPLIED per-wave
+      // `requested` sets, so a release firing during wave `w00`'s iteration
+      // cannot see that the same global decision re-admits a cell belonging to
+      // `w05`, whose reconciliation has not run yet. The candidate was released
+      // milliseconds before its own wave asked for the key again — a redundant
+      // refetch, and `releasedArtifactBytes` counting bytes that were
+      // immediately re-fetched. The pass is hoisted below the loop so it never
+      // observes a decision that is only partially applied.
+      if (fresh.length === 0) { if (dropped.length > 0) publish(); continue; }
       void Promise.all(fresh.map((cellId) => runtime.loadCell(cellId, exteriorEffectiveProfile, exteriorCameraHeightBucketMeters, controller.signal)))
         .then((loaded) => {
           if (!isCurrent()) return;
@@ -2065,6 +2082,16 @@ export function App() {
           setExteriorWaveOutcomes((current) => { const next = new Map(current); next.delete(releaseId); return next; });
         });
     }
+    // ONE release pass for the decision, after EVERY wave has applied it. This
+    // is the invariant the seam depends on: the pass never runs while a
+    // decision is partially applied, so gate 1 reads a `requested` union that
+    // covers the whole session rather than the waves iterated so far.
+    //
+    // The other two call sites hold the same invariant for the same reason:
+    // the settled-batch `.then` and the viewport's retirement callback both run
+    // as separate tasks, and JavaScript cannot interleave either with this
+    // synchronous loop.
+    runExteriorCacheRelease();
     return undefined;
     // `exteriorTargetKey` is a dependency even though the targets are read from
     // a ref: a change to WHICH releases are targeted must always re-run this

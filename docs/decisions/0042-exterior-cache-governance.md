@@ -91,11 +91,62 @@ A cache key is releasable only when all four hold:
   `onExteriorCellsRetired`, fired **after** `URL.revokeObjectURL` for exactly the
   cells the pass removed. Reported after the revoke, never before: a
   notification sent ahead of the revoke would be a promise rather than evidence.
+  The four mutations a retirement performs are emitted as an ordered step list
+  by the exported `exteriorRetirementSteps`, which the effect executes verbatim,
+  so the revoke-before-report ordering is asserted against the viewport itself
+  rather than against a test's restatement of it.
+
+Gate (b) is **cell-scoped** while the thing released is **artifact-scoped**: a
+key is held when the cell that queued it is in flight, not when some other
+in-flight cell wants the same artifact. Owner-cell enforcement makes that
+sharing effectively impossible today, and the worst case if it ever arose is a
+redundant refetch — never a wrong render, since the refetch re-verifies against
+the same pin.
 
 **A candidate is checked for RE-ADMISSION first**, ahead of gate (c), so a cell
 the camera came back to leaves the queue rather than being held forever by its
 own republished outcome. Its scene-retired marker leaves with it, so the next
 eviction of the same cell waits for its own revoke.
+
+**That gate reads the APPLIED per-wave `requested` sets, not the decision** —
+and naming which state it reads is the whole of the correction below.
+
+### WHERE the release pass runs, and why it is a decision
+
+The pass used to run **inside** the per-wave loop. That was wrong. Gate 1 unions
+the `requested` sets the waves have already applied, so a pass firing during
+wave `w00`'s iteration cannot see that the same global decision re-admits a cell
+belonging to `w05`. The candidate was released microseconds before its own wave
+asked for the key back: a redundant refetch, `releasedArtifactBytes` counting
+bytes that came straight back, and the "re-admission first" property above true
+only *within one wave*.
+
+**Fixed by hoisting to ONE pass after the loop**, rather than by feeding the
+just-computed decision into the plan input. Both were available; hoisting was
+chosen because the invariant it establishes — *the release pass never observes a
+partially applied decision* — also covers the other two call sites for free. The
+settled-batch `.then` and the viewport's retirement callback are separate tasks
+that JavaScript cannot interleave with a synchronous loop, so they already read
+a complete state. Feeding the decision in would instead have required a second
+rule about how long that decision stays authoritative, since those two callbacks
+fire later and could be handed a stale one.
+
+`exterior-global-residency.test.ts` gates the structural property directly —
+**zero release passes under a partially applied decision** for the shipped
+placement, 238 for the mid-loop one. Its honest limit is recorded in the
+test: on the committed roam trace the mid-loop placement produces no observed
+*symptom*, because the retirement pass at the end of each decision drains the
+queue before the next loop begins. The hazard is structural and the symptom is
+trace-dependent, so the gate is on the structure; the seam-level demonstration
+that a partially applied `requestedCellIds` really does release a candidate the
+complete one keeps is in `exterior-cache-release.test.ts`.
+
+**One residual race is counted, not fixed.** A batch that settles *between* two
+decisions is discarded against the current decision, which genuinely does not
+want the cell, and the next decision may re-admit it. No placement can consult a
+decision that has not been taken. Over the 58-sample roam this costs **2
+refetches** — under 1% of the session's releases, about 44 ms of localhost
+transport at the measured p50 — and is pinned by a test.
 
 ### The second door: discarded outcomes
 
@@ -107,14 +158,31 @@ published, so they never became a Blob, and `reachedScene: false` is a fact abou
 that path rather than an optimistic reading of it. It is the only way a discarded
 outcome can exist.
 
-### One known residue, bounded and named
+### One known residue, stated as what it actually is
 
-A cell accepted into `outcomes` whose wave then fails its promoted-membership
-gate in the same `publish()` call never reaches the scene and is never reported
-retired, so its candidate is held on gate (d) indefinitely and its bytes stay
-cached until recency evicts them. It is bounded (one wave, once, on a wave that
-has already failed closed) and it fails in the safe direction — bytes retained,
-never bytes freed while live. It is recorded rather than engineered around.
+On the drop path the app queues candidates with `reachedScene: true`. **That is
+ASSERTED, not observed.** The app knows the outcome was published; it has no
+signal telling it the viewport actually built a Blob, and it does not track
+scene membership. The assertion is the conservative direction — wait for a
+revoke rather than free bytes a live Blob might hold — and its cost is precise:
+
+> **Any dropped outcome that never reached the scene waits on gate (d) for a
+> retirement that will never arrive, and its bytes stay cached until recency
+> evicts them.**
+
+The known way that happens is a cell accepted into `outcomes` whose wave then
+fails its promoted-membership gate inside the same `publish()` call: it is never
+drawn, so the viewport never owns it and never retires it. That instance is
+bounded — one wave, once, on a wave that has already failed closed — but the
+statement above is the general one and is the one to carry forward. It fails in
+the safe direction (bytes retained, never freed while live).
+
+Closing it does not need new plumbing, only use of plumbing that now exists:
+`onExteriorCellsRetired` tells the app which cells left the scene, and a
+symmetrical signal for which cells *entered* it would let `reachedScene` be
+observed instead of asserted. `exterior-global-residency.test.ts` already models
+exactly that with its `sceneCells` set. Not done here; named for whoever needs
+the last of these bytes.
 
 ### The seam is tied to the T002 flag
 
@@ -146,11 +214,11 @@ evidence at the 2,400 m overview camera:
 | --- | --- | --- |
 | six-pool residency at the measured overview camera | **110 cells** | measured |
 | entries per resident cell | 210 / 110 = **1.909** | measured |
-| bytes per resident cell | 37,164,596 / 110 = **337,860 B** | measured |
+| bytes per resident cell | 37,164,596 / 110 = **337,859.96 B** | measured |
 | cap floor | 110 | one pool must not hold fewer than six pools did |
 | **chosen cap** | **128** | next power of two above the floor — a stated rounding convention, not a measurement |
 | entries at the cap | 128 x 1.909 = **244** of 512 (47.7%) | derived |
-| bytes at the cap | 128 x 337,860 = **43,246,075 B** of 256 MiB (16.1%) | derived |
+| bytes at the cap | 128 x the unrounded ratio = **43,246,075 B** of 256 MiB (16.1%) | derived |
 | entry ceiling would bind at | **268 cells** | derived |
 | byte ceiling would bind at | **794 cells** | derived, above the 883 the ledger declares |
 | session bound before | 6 x 96 = **576** | ADR 0041 |
@@ -402,8 +470,9 @@ addition to ADR 0041's rollback list, delete:
 - `runExteriorCacheRelease`, `handleExteriorCellsRetired` and
   `exteriorCacheReleaseRef` from `App.tsx`, the `schedulerEnabled` enqueue blocks
   in the cell-loading effect, and the `outcomesBeforeDrop` snapshot;
-- `onExteriorCellsRetired` from `CesiumViewportProps`, its ref, and the call
-  after `URL.revokeObjectURL`;
+- `onExteriorCellsRetired` from `CesiumViewportProps`, its ref, and the
+  `report-retired` step of `exteriorRetirementSteps` (the applier itself may
+  stay: it is a faithful extraction of loops the effect already ran);
 - `releasedArtifactCount` / `releasedArtifactBytes` and `noteArtifactRelease` on
   `ExteriorRuntimeMetrics` (additive; read only by the probe);
 - `EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY`, `scheduleExteriorCellsGlobally` and

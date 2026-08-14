@@ -172,9 +172,12 @@ export const EXTERIOR_CELL_SCHEDULER_POLICY = {
  *      entries: 1.909 entries per cell. 128 x 1.909 = 244 entries, 47.7% of
  *      `EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries` (512). The entry ceiling would
  *      bind at 512 / 1.909 = 268 cells, more than twice this cap.
- *   3. **Byte cost.** The same 110 cells cost 37,164,596 B: 337,860 B per cell.
- *      128 x 337,860 = 43,246,080 B, 16.1% of the 256 MiB byte cap. The byte
- *      ceiling would bind at 794 cells — beyond the 883 the ledger declares.
+ *   3. **Byte cost.** The same 110 cells cost 37,164,596 B: 337,859.96 B per
+ *      cell. 128 x that is **43,246,075 B**, 16.1% of the 256 MiB byte cap. The
+ *      byte ceiling would bind at 794 cells — beyond the 883 the ledger
+ *      declares. (The figure is derived from the unrounded ratio, which is what
+ *      `exterior-cache-governance-gate.test.ts` computes; rounding the per-cell
+ *      figure to 337,860 first gives 43,246,080 and is not the pinned value.)
  *   4. **It is still a bound.** 128 is 4.5x tighter than the 576 it replaces and
  *      6.9x below the 883 the default loads unconditionally.
  *

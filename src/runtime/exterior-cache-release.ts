@@ -35,7 +35,13 @@
  *   (b) NO IN-FLIGHT LOAD references it. `reconcileExteriorCellLoads` leaves
  *       `inFlight` deliberately uncleared on a drop, precisely because the load
  *       is still on the wire; a release racing a settling load must not delete
- *       bytes a `Promise.all` is about to verify;
+ *       bytes a `Promise.all` is about to verify. **Gate (b) is CELL-scoped
+ *       while the thing released is ARTIFACT-scoped**: a key is held only when
+ *       the cell that queued it is in flight, not when some other in-flight
+ *       cell happens to want the same artifact. Owner-cell enforcement makes
+ *       that sharing effectively impossible today, and the worst case if it
+ *       ever happened is a redundant refetch — never a wrong render, because
+ *       the refetch re-verifies against the same pin;
  *   (c) its outcome is UNPUBLISHED — no live wave outcome anywhere still names
  *       the key. This is the refcount, computed rather than tracked, over a set
  *       small enough (hundreds of assets) that computing it is cheaper than
@@ -156,6 +162,8 @@ export function noteExteriorSceneRetired(state: ExteriorCacheReleaseState, cellI
  */
 export function planExteriorCacheRelease(state: ExteriorCacheReleaseState, input: ExteriorCacheReleaseInput): ExteriorCacheReleasePlan {
   const releaseKeys: string[] = [];
+  /** Deduplication set, so a k-key plan is O(k) rather than an O(k^2) `includes` scan. */
+  const releaseKeySet = new Set<string>();
   const releasedCells: { releaseId: string; cellId: string; byteSize: number }[] = [];
   const readmittedCells: { releaseId: string; cellId: string }[] = [];
   const held: { releaseId: string; cellId: string; reason: ExteriorReleaseHoldReason }[] = [];
@@ -167,8 +175,11 @@ export function planExteriorCacheRelease(state: ExteriorCacheReleaseState, input
     if (input.inFlightCellIds.has(cellId)) { held.push({ releaseId, cellId, reason: "in-flight" }); continue; }
     if (candidate.reachedScene && !state.sceneRetired.has(cellId)) { held.push({ releaseId, cellId, reason: "blob-url-live" }); continue; }
     if (candidate.cacheKeys.some((key) => input.publishedCacheKeys.has(key))) { held.push({ releaseId, cellId, reason: "outcome-published" }); continue; }
-    const fresh = candidate.cacheKeys.filter((key) => !releaseKeys.includes(key));
-    releaseKeys.push(...fresh);
+    for (const key of candidate.cacheKeys) {
+      if (releaseKeySet.has(key)) continue;
+      releaseKeySet.add(key);
+      releaseKeys.push(key);
+    }
     releasedCells.push({ releaseId, cellId, byteSize: candidate.byteSize });
     releasedByteSize += candidate.byteSize;
   }

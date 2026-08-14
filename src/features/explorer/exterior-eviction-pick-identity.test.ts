@@ -6,6 +6,7 @@ import {
   exteriorCellEntityId,
   exteriorCellSignature,
   exteriorOverlayRenderEntries,
+  exteriorRetirementSteps,
   exteriorSelectionSilhouetteSize,
   planExteriorOverlayUpdate,
   type ExteriorCellOverlay,
@@ -94,10 +95,10 @@ function overlay(cells: readonly ExteriorCellOutcome[]): ExteriorCellOverlay {
 /**
  * The viewport effect's own sequence, minus Cesium.
  *
- * `removeEntityIds` -> delete pick-map entries; `revokeObjectUrls` -> revoke;
- * THEN report the retirement. Written in this order on purpose: reporting the
- * retirement before the revoke would make gate (d) a promise instead of
- * evidence, and this replay would not catch it if it inlined the plan.
+ * The retirement half is NOT restated here: it runs `exteriorRetirementSteps`,
+ * the same exported applier the effect executes, so the ordering that makes
+ * gate (d) evidence is asserted against the real file rather than against this
+ * test's memory of it.
  */
 function applyOverlayPass(
   entries: readonly ExteriorCellRenderEntry[],
@@ -105,12 +106,16 @@ function applyOverlayPass(
   pickMap: Map<string, string>,
   revoked: string[],
   retired: string[],
+  removedEntities: string[] = [],
 ): void {
   const plan = planExteriorOverlayUpdate(entries, owned, (entry) => ({ longitude: -73.98, latitude: 40.755, name: entry.canonicalFeatureId }));
-  for (const entityId of plan.removeEntityIds) pickMap.delete(entityId);
-  for (const objectUrl of plan.revokeObjectUrls) revoked.push(objectUrl);
-  for (const cellId of plan.removeCellIds) owned.delete(cellId);
-  if (plan.removeCellIds.length > 0) retired.push(...plan.removeCellIds);
+  for (const step of exteriorRetirementSteps(plan)) {
+    if (step.op === "remove-entity") removedEntities.push(step.entityId);
+    else if (step.op === "forget-pick") pickMap.delete(step.entityId);
+    else if (step.op === "revoke-object-url") revoked.push(step.objectUrl);
+    else if (step.op === "forget-cell") owned.delete(step.cellId);
+    else retired.push(...step.cellIds);
+  }
   for (const cell of plan.addCells) {
     const entityIds: string[] = [];
     const objectUrls: string[] = [];
@@ -122,6 +127,44 @@ function applyOverlayPass(
     owned.set(cell.cellId, { entityIds, objectUrls, signature: cell.signature, complete: cell.complete });
   }
 }
+
+describe("the retirement applier the viewport executes", () => {
+  it("revokes every object URL strictly before it reports the retirement", () => {
+    // Gate (d) of the cache release seam is only evidence if this holds. It is
+    // asserted on the exported applier, which the effect executes step for
+    // step, so reordering the effect cannot leave this test passing.
+    const steps = exteriorRetirementSteps({
+      removeCellIds: ["cell-a", "cell-b"],
+      removeEntityIds: ["entity-a", "entity-b"],
+      revokeObjectUrls: ["blob:a", "blob:b"],
+    });
+    const report = steps.findIndex((step) => step.op === "report-retired");
+    const lastRevoke = steps.map((step) => step.op).lastIndexOf("revoke-object-url");
+    const lastForgetPick = steps.map((step) => step.op).lastIndexOf("forget-pick");
+    expect(report).toBeGreaterThan(-1);
+    expect(lastRevoke).toBeLessThan(report);
+    // The pick map is emptied before the report too: a retirement that arrived
+    // while a stale entity id still resolved would let a pick name geometry the
+    // scene has stopped drawing.
+    expect(lastForgetPick).toBeLessThan(report);
+    expect(steps.filter((step) => step.op === "report-retired")).toHaveLength(1);
+    expect(steps.at(-1)).toEqual({ op: "report-retired", cellIds: ["cell-a", "cell-b"] });
+  });
+
+  it("reports nothing when no cell was removed", () => {
+    expect(exteriorRetirementSteps({ removeCellIds: [], removeEntityIds: [], revokeObjectUrls: [] })).toEqual([]);
+  });
+
+  it("removes an entity and forgets its pick in the same pair, never one without the other", () => {
+    const steps = exteriorRetirementSteps({ removeCellIds: ["cell-a"], removeEntityIds: ["e1", "e2"], revokeObjectUrls: [] });
+    expect(steps.slice(0, 4)).toEqual([
+      { op: "remove-entity", entityId: "e1" },
+      { op: "forget-pick", entityId: "e1" },
+      { op: "remove-entity", entityId: "e2" },
+      { op: "forget-pick", entityId: "e2" },
+    ]);
+  });
+});
 
 describe("evicting a selected cell", () => {
   it("removes the entity and its pick-map entry, revokes before reporting retirement, and restores both on re-admission", () => {

@@ -432,6 +432,42 @@ export interface ExteriorOverlayPlan<T extends ExteriorCellRenderPlacement = Ext
 }
 
 /**
+ * The four mutations retiring an exterior cell performs, AS AN ORDERED LIST.
+ *
+ * These used to be four loops inlined in the effect, and their ORDER carried a
+ * contract that nothing checked: the retirement notification must come after
+ * the object URLs are revoked, because T003's cache release seam treats it as
+ * evidence that the Blob copies of the bytes are gone. A notification sent
+ * ahead of the revoke would be a promise, and the seam would free cache bytes
+ * while a live Blob still held an independent copy of them.
+ *
+ * Emitting the steps instead of performing them lets that ordering be asserted
+ * against THIS file rather than against a test's re-statement of it. The effect
+ * below executes exactly what this returns, in exactly this order.
+ */
+export type ExteriorRetirementStep =
+  | { op: "remove-entity"; entityId: string }
+  | { op: "forget-pick"; entityId: string }
+  | { op: "revoke-object-url"; objectUrl: string }
+  | { op: "forget-cell"; cellId: string }
+  | { op: "report-retired"; cellIds: readonly string[] };
+
+export function exteriorRetirementSteps(plan: Pick<ExteriorOverlayPlan<ExteriorCellRenderPlacement>, "removeCellIds" | "removeEntityIds" | "revokeObjectUrls">): ExteriorRetirementStep[] {
+  const steps: ExteriorRetirementStep[] = [];
+  for (const entityId of plan.removeEntityIds) {
+    steps.push({ op: "remove-entity", entityId });
+    // The pick map entry goes with the entity, always in the same step pair: a
+    // surviving entry would resolve a stale entity id to a canonical feature
+    // the scene is no longer drawing.
+    steps.push({ op: "forget-pick", entityId });
+  }
+  for (const objectUrl of plan.revokeObjectUrls) steps.push({ op: "revoke-object-url", objectUrl });
+  for (const cellId of plan.removeCellIds) steps.push({ op: "forget-cell", cellId });
+  if (plan.removeCellIds.length > 0) steps.push({ op: "report-retired", cellIds: plan.removeCellIds });
+  return steps;
+}
+
+/**
  * Pure diff between the currently owned per-cell collections and the verified
  * entries the runtime produced. Keeping this outside the imperative Cesium
  * effect makes the retry, isolation, and object-URL revocation rules testable.
@@ -1989,16 +2025,17 @@ export function CesiumViewport({
       const baseFeature = featureForPickedId(entry.canonicalFeatureId, denseFeatureMapRef.current, adapterRef.current);
       return baseFeature ? { longitude: baseFeature.coordinates[0], latitude: baseFeature.coordinates[1], name: baseFeature.name } : null;
     });
-    for (const entityId of plan.removeEntityIds) {
-      viewer.entities.removeById(entityId);
-      exteriorPickMapRef.current.delete(entityId);
+    // Executed exactly as `exteriorRetirementSteps` emits them, so the ordering
+    // that makes `onExteriorCellsRetired` EVIDENCE rather than a promise — the
+    // revoke strictly before the report — is a property of that function and is
+    // asserted against this file rather than restated in a test.
+    for (const step of exteriorRetirementSteps(plan)) {
+      if (step.op === "remove-entity") viewer.entities.removeById(step.entityId);
+      else if (step.op === "forget-pick") exteriorPickMapRef.current.delete(step.entityId);
+      else if (step.op === "revoke-object-url") URL.revokeObjectURL(step.objectUrl);
+      else if (step.op === "forget-cell") owned.delete(step.cellId);
+      else onExteriorCellsRetiredRef.current?.(step.cellIds);
     }
-    for (const objectUrl of plan.revokeObjectUrls) URL.revokeObjectURL(objectUrl);
-    for (const cellId of plan.removeCellIds) owned.delete(cellId);
-    // Reported AFTER the revoke, never before: the whole value of this callback
-    // is that it is evidence the Blob copies are gone, and a notification sent
-    // ahead of the revoke would be a promise rather than evidence.
-    if (plan.removeCellIds.length > 0) onExteriorCellsRetiredRef.current?.(plan.removeCellIds);
     for (const cell of plan.addCells) {
       const entityIds: string[] = [];
       const objectUrls: string[] = [];
