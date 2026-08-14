@@ -329,3 +329,41 @@ describe("FINDING for T005: band-internal ranking prefers wave order over distan
     expect(victim.distance).toBeLessThan(inversion!.distance);
   });
 });
+
+/**
+ * T005: the detail radius reaches the decision through this binding, and the
+ * identity guarantee survives it.
+ */
+describe("scheduleExteriorCellsGlobally: the detail radius (T005)", () => {
+  const view = { enabled: true as const, footprint: footprintAround(-73.98, 40.758, 0.05), camera: pose(-73.98, 40.758, 5_000), heightBucket: 5_000, previous: null };
+
+  it("still returns each wave's own array by reference when disabled, radius or not", () => {
+    const schedule = scheduleExteriorCellsGlobally(WAVES, { ...view, enabled: false, maxUnitDistanceMeters: 250 });
+    for (const wave of WAVES) expect(schedule.byRelease.get(wave.releaseId)!.cellIds).toBe(wave.declaredCellIds);
+    expect(schedule.decision).toBeNull();
+  });
+
+  it("passes the radius through: a tighter radius is a strict subset of a wider one", () => {
+    const wide = scheduleExteriorCellsGlobally(WAVES, view);
+    const tight = scheduleExteriorCellsGlobally(WAVES, { ...view, maxUnitDistanceMeters: 1_000 });
+    expect(tight.residentCellIds.length).toBeLessThan(wide.residentCellIds.length);
+    for (const cellId of tight.residentCellIds) expect(wide.residentCellIds).toContain(cellId);
+    expect(tight.decision!.visibleCount).toBeLessThan(wide.decision!.visibleCount);
+  });
+
+  it("treats an absent radius and an explicit null as the same decision", () => {
+    const absent = scheduleExteriorCellsGlobally(WAVES, view);
+    const nulled = scheduleExteriorCellsGlobally(WAVES, { ...view, maxUnitDistanceMeters: null });
+    expect(nulled.residentCellIds).toEqual(absent.residentCellIds);
+  });
+
+  it("keeps Block 835 resident at its own camera at any radius", () => {
+    const block835 = "manhattan-exterior-cell-w00-000000-block-00835";
+    const extent = CITYWIDE_OVERVIEW_CELL_EXTENTS.find((entry) => entry.cellId === block835)!;
+    const centre = { longitude: (extent.renderBounds.west + extent.renderBounds.east) / 2, latitude: (extent.renderBounds.south + extent.renderBounds.north) / 2 };
+    const schedule = scheduleExteriorCellsGlobally(WAVES, {
+      enabled: true, footprint: footprintAround(centre.longitude, centre.latitude, 0.01), camera: pose(centre.longitude, centre.latitude, 120), heightBucket: 100, previous: null, maxUnitDistanceMeters: 1,
+    });
+    expect(schedule.residentCellIds).toContain(block835);
+  });
+});

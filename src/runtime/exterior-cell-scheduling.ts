@@ -28,6 +28,12 @@ export interface ExteriorCellScheduleInput {
   readonly camera: CameraPose;
   readonly heightBucket: number;
   readonly previous: SchedulerCarry | null;
+  /**
+   * The T005 detail radius in metres, or `null`/absent for no radius. Passed
+   * straight through to the policy; this binding adds no default of its own, so
+   * "the caller said nothing" and "today's behaviour" stay the same statement.
+   */
+  readonly maxUnitDistanceMeters?: number | null;
 }
 
 export interface ExteriorCellSchedule {
@@ -70,6 +76,7 @@ export function scheduleExteriorCells(declaredCellIds: readonly string[], input:
     metersPerDegreeLongitude: CITYWIDE_OVERVIEW_CELL_EXTENTS_SOURCE.metersPerDegreeLongitude,
     metersPerDegreeLatitude: CITYWIDE_OVERVIEW_CELL_EXTENTS_SOURCE.metersPerDegreeLatitude,
     previous: input.previous,
+    maxUnitDistanceMeters: input.maxUnitDistanceMeters ?? null,
   });
   const resident = new Set([...decision.resident, ...unschedulable]);
   // The runtime's own declared order is preserved so the load array stays
@@ -149,6 +156,7 @@ export function scheduleExteriorCellsGlobally(waves: readonly ExteriorWaveCells[
     metersPerDegreeLongitude: CITYWIDE_OVERVIEW_CELL_EXTENTS_SOURCE.metersPerDegreeLongitude,
     metersPerDegreeLatitude: CITYWIDE_OVERVIEW_CELL_EXTENTS_SOURCE.metersPerDegreeLatitude,
     previous: input.previous,
+    maxUnitDistanceMeters: input.maxUnitDistanceMeters ?? null,
   });
   const resident = new Set(decision.resident);
   const byRelease = new Map<string, ExteriorCellSchedule>();

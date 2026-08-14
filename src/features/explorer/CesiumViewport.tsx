@@ -129,6 +129,15 @@ export interface DenseRenderMetrics {
   baseFeatureCount?: number;
   contextFeatureCount?: number;
   contextPartCount?: number;
+  /**
+   * `exteriorRenderedCanonicalFeatureIds(...).size` — the canonical features
+   * that are LIVE exterior entities in this scene and are therefore suppressed
+   * from the dense pass. It is the honest rendered unit for a detail-radius
+   * measurement: scheduled cell counts describe residency intent, and
+   * `buildingFeatureCount` describes what the dense pass drew, but only this
+   * number says how many buildings the V3 overlay is actually showing.
+   */
+  exteriorSuppressedFeatureCount?: number;
   /** Counters make repeated dense-plan work observable in the local diagnostics. */
   planBuildCount?: number;
   planReuseCount?: number;
@@ -1538,7 +1547,7 @@ export function CesiumViewport({
   const denseBuildGenerationRef = useRef(0);
   const denseRenderTelemetryRef = useRef<DenseRenderTelemetry>({ planBuildCount: 0, planReuseCount: 0, planCancellationCount: 0, planSwapCount: 0, planFingerprint: "", selectionMs: 0, keyMs: 0 });
   const denseMetricsRef = useRef<DenseRenderMetrics>(emptyDenseRenderMetrics());
-  const denseGroupMetricsRef = useRef({ baseFeatureCount: 0, contextFeatureCount: 0, contextPartCount: 0 });
+  const denseGroupMetricsRef = useRef({ baseFeatureCount: 0, contextFeatureCount: 0, contextPartCount: 0, exteriorSuppressedFeatureCount: 0 });
   const ownedEntityIdsRef = useRef(new Set<string>());
   const storefrontPickMapRef = useRef(new Map<string, CommercialStorefrontPlacement>());
   const publicRealmPickMapRef = useRef(new Map<string, Block835PublicRealmFeature>());
@@ -1747,7 +1756,7 @@ export function CesiumViewport({
       const nextDensePlanKey = denseRenderPlanKey(primitiveDenseFeatures);
       telemetry.keyMs = performance.now() - keyStartedAt;
       telemetry.planFingerprint = nextDensePlanKey;
-      const groupMetrics = { baseFeatureCount: renderedGroups.base.length, contextFeatureCount: renderedGroups.context.length, contextPartCount: renderedGroups.context.reduce((sum, feature) => sum + denseRenderPartCount(feature), 0) };
+      const groupMetrics = { baseFeatureCount: renderedGroups.base.length, contextFeatureCount: renderedGroups.context.length, contextPartCount: renderedGroups.context.reduce((sum, feature) => sum + denseRenderPartCount(feature), 0), exteriorSuppressedFeatureCount: exteriorRenderedIds.size };
       denseGroupMetricsRef.current = groupMetrics;
       const publishDenseMetrics = (metrics: DenseRenderMetrics): void => {
         onDenseMetricsRef.current?.({ ...withDenseRenderTelemetry(metrics, telemetry), ...denseGroupMetricsRef.current });
