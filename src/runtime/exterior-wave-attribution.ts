@@ -44,17 +44,26 @@ export function exteriorQualifiedNotice(releaseId: string, notice: string): stri
  * failures, and one alarming bullet each would drown the genuine failures that
  * keep their own per-cell lines. One cell states itself.
  */
-export function exteriorNotShippedSummary(cells: readonly ExteriorCellOutcome[], declaredCellCount?: number): string | null {
+export function exteriorNotShippedSummary(
+  cells: readonly ExteriorCellOutcome[],
+  declared?: { cellCount: number; notShippedCellCount: number },
+): string | null {
   const notShipped = cells.filter((cell) => cell.kind === "not-shipped");
   if (notShipped.length === 0) return null;
-  if (notShipped.length === 1) return notShipped[0]!.notice;
-  // FIXED DENOMINATOR. `cells` is what the last reconciliation touched, which
-  // under the visibility scheduler is a CAMERA fact: the same release read
-  // "121 of 123" at one pose and something else at the next, so a release fact
-  // moved when the user panned. The denominator is the release's DECLARED cell
-  // count, which does not move, and the sentence says which cells it counts.
-  const denominator = declaredCellCount != null && declaredCellCount >= notShipped.length ? declaredCellCount : cells.length;
-  return `${notShipped.length} of ${denominator} exterior cells declared by this release ship no exterior geometry; no substitute was selected for them.`;
+  if (notShipped.length === 1 && !declared) return notShipped[0]!.notice;
+  // BOTH TERMS ARE RELEASE FACTS, or neither is.
+  //
+  // `cells` is what the last reconciliation touched, which under the visibility
+  // scheduler is a CAMERA fact in both terms: the same release read "121 of
+  // 123" at one pose and "11 of 12" at the next. Anchoring only the
+  // denominator to the declared count would be worse than leaving it alone —
+  // "11 of 149" states that 138 declared cells DO ship geometry, which is
+  // false for a release that declares 146 of its 149 empty. So the summary
+  // takes both terms from the release or neither.
+  if (declared && declared.cellCount > 0 && declared.notShippedCellCount >= 0) {
+    return `${declared.notShippedCellCount} of ${declared.cellCount} exterior cells declared by this release ship no exterior geometry; no substitute was selected for them.`;
+  }
+  return `${notShipped.length} of ${cells.length} exterior cells declared by this release ship no exterior geometry; no substitute was selected for them.`;
 }
 
 /**

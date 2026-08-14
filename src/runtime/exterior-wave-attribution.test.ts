@@ -124,17 +124,22 @@ describe("aggregated bounded-availability notice attribution", () => {
       midtownWave.outcomes[0]!,
       ...Array.from({ length: 146 }, (_, index) => notShipped(`midtown-cell-${index}`, `cell-release:${midtown.releaseId}:midtown-cell-${index}:v1`)),
     ];
-    // Same 147 reconciled cells, two different cameras' worth of declared scope.
-    expect(exteriorNotShippedSummary(reconciled, 149)).toBe("146 of 149 exterior cells declared by this release ship no exterior geometry; no substitute was selected for them.");
-    // And the SAME answer when a later pose reconciles fewer cells: only the
-    // declared denominator is quoted, so the sentence does not move.
-    const fewer = [midtownWave.outcomes[0]!, ...Array.from({ length: 146 }, (_, index) => notShipped(`midtown-cell-${index}`, `cell-release:${midtown.releaseId}:midtown-cell-${index}:v1`))];
-    expect(exteriorNotShippedSummary(fewer, 149)).toBe(exteriorNotShippedSummary(reconciled, 149));
-    // A declared count smaller than the tombstone count is not believed: it
-    // would produce "146 of 3", so the reconciled count is used instead.
-    expect(exteriorNotShippedSummary(reconciled, 3)).toContain("146 of 147");
-    // Absent declared count keeps the pre-existing behaviour exactly.
+    const declared = { cellCount: 149, notShippedCellCount: 146 };
+    expect(exteriorNotShippedSummary(reconciled, declared)).toBe("146 of 149 exterior cells declared by this release ship no exterior geometry; no substitute was selected for them.");
+
+    // THE DEFECT THIS PINS. A street camera reconciles a handful of cells, so
+    // the camera-scoped numerator collapses while the release's answer does
+    // not. Both terms come from the release, so the sentence is identical at
+    // both cameras — and in particular the street camera does NOT report
+    // "11 of 149", which would assert that 138 declared cells ship geometry.
+    const street = [midtownWave.outcomes[0]!, ...Array.from({ length: 11 }, (_, index) => notShipped(`midtown-cell-${index}`, `cell-release:${midtown.releaseId}:midtown-cell-${index}:v1`))];
+    expect(exteriorNotShippedSummary(street, declared)).toBe(exteriorNotShippedSummary(reconciled, declared));
+    expect(exteriorNotShippedSummary(street, declared)).not.toContain("11 of 149");
+
+    // Absent declared facts keeps the pre-existing camera-scoped behaviour
+    // exactly, in BOTH terms, rather than mixing scopes.
     expect(exteriorNotShippedSummary(reconciled)).toContain("146 of 147");
+    expect(exteriorNotShippedSummary(street)).toContain("11 of 12");
   });
 
   it("states the deferred and evicted populations in their own recoverable register", () => {

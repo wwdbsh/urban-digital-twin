@@ -104,7 +104,7 @@ vi.mock("../runtime/exterior-default-activation", async (importOriginal) => {
   };
 });
 
-import { App, EXTERIOR_CELL_STREAMING_RELEASE_ID, PINNED_EXTERIOR_CELL_RELEASE_IDS, appendBlock835PublicRealmUrl, appendExteriorProfileUrl, exteriorCellBasePath, exteriorCanarySnapshotMessage, exteriorDeepLinkMessage, exteriorSnapshotOriginLabel, isPinnedExteriorCellRelease, exteriorStreamingActivation, exteriorStreamingFailureMessage, exteriorStreamingNotices, parseExteriorDetailRadiusMeters, parseExteriorStreamingUrl, applyStorefrontResolution, block835PerformanceGate, block835PerformanceProbeMode, block835PublicRealmActivation, block835PublicRealmFailureMessage, isCurrentStorefrontResolution, MOBILE_VIEWPORT_MEDIA_QUERY, mobileExteriorLodPolicy, overlayLayoutPolicy, preserveFeatureSequence, resolveCitywideOverviewResidency, resolveStorefrontBuilding, selectionFocusTransaction, summarizeBlock835Frames, type StorefrontResolutionState } from "./App";
+import { App, EXTERIOR_CELL_STREAMING_RELEASE_ID, EXTERIOR_SCHEDULER_DEFAULT_ON, PINNED_EXTERIOR_CELL_RELEASE_IDS, appendBlock835PublicRealmUrl, appendExteriorProfileUrl, exteriorCellBasePath, exteriorCanarySnapshotMessage, exteriorDeepLinkMessage, exteriorSnapshotOriginLabel, isPinnedExteriorCellRelease, exteriorStreamingActivation, exteriorStreamingFailureMessage, exteriorStreamingNotices, parseExteriorDetailRadiusMeters, parseExteriorStreamingUrl, applyStorefrontResolution, block835PerformanceGate, block835PerformanceProbeMode, block835PublicRealmActivation, block835PublicRealmFailureMessage, isCurrentStorefrontResolution, MOBILE_VIEWPORT_MEDIA_QUERY, mobileExteriorLodPolicy, overlayLayoutPolicy, preserveFeatureSequence, resolveCitywideOverviewResidency, resolveStorefrontBuilding, selectionFocusTransaction, summarizeBlock835Frames, type StorefrontResolutionState } from "./App";
 import { ExteriorFallbackNotice, digestExteriorNotices, type ExteriorNoticeEntry } from "./ExteriorFallbackNotice";
 import { exteriorDeferredCellNotice, exteriorQualifiedNotice, exteriorReleasedArtifactNotice } from "../runtime/exterior-wave-attribution";
 import { exteriorUnanchoredNotice } from "../features/explorer/CesiumViewport";
@@ -112,7 +112,7 @@ import type { ExteriorCellOutcome } from "../runtime/exterior-cell-runtime";
 import { EXTERIOR_DEFAULT_ACTIVATION, EXTERIOR_DEFAULT_ACTIVATIONS } from "../runtime/exterior-default-activation";
 import { navigationUrl, parseNavigationUrl } from "../domain/visitor-navigation";
 import { BLOCK_835_DOITT_IDS } from "../domain/commercial-frontage";
-import { CITYWIDE_BUDGETS, CITYWIDE_OVERVIEW_BUDGETS, CITYWIDE_OVERVIEW_CACHE_FLOORS, CITYWIDE_RELEASE_ID } from "../release/citywide-release";
+import { CITYWIDE_BUDGETS, CITYWIDE_NO_CACHE_FLOORS, CITYWIDE_OVERVIEW_BUDGETS, CITYWIDE_OVERVIEW_CACHE_FLOORS, CITYWIDE_RELEASE_ID } from "../release/citywide-release";
 import type { CitywideReleaseAdapter, CitywideRuntimeMetrics } from "../runtime/citywide-release-runtime";
 
 const initialTestUrl = window.location.href;
@@ -662,54 +662,127 @@ describe("exterior streaming profiles and canary state", () => {
   });
 
   /**
-   * The T002 opt-in flag, tested for the failure the architecture review found
-   * before it could ship: a parameter read at boot but not written back by the
-   * URL appender chain survives the first render and is dropped by the first
-   * camera move, because every settled move rewrites the whole URL through
-   * `navigationUrlForApp` -> `replaceState`. So the flag has to round-trip
-   * through the SAME chain that would otherwise erase it.
+   * T006 B1/B3: the polarity inversion, and the defect it inherits.
+   *
+   * The T002 shape is preserved because the failure it was written for is
+   * unchanged: a parameter read at boot but not written back by the URL
+   * appender chain survives the first render and is dropped by the first camera
+   * move, because every settled move rewrites the whole URL through
+   * `navigationUrlForApp` -> `replaceState`. What inverts is WHICH session
+   * carries a parameter. The default now carries none; the OPT-OUT is the thing
+   * that must survive the rewrite, and it is the same defect in the mirror.
    */
-  it("round-trips the scheduler flag through the appender chain a camera move rewrites", () => {
-    const on = canonicalUrl({ requested: true, override: null, releaseId: CANARY_EXTERIOR_RELEASE_ID, profile: "exploration", canarySnapshotId: null, scheduler: true });
-    expect(new URL(on).searchParams.get("exteriorScheduler")).toBe("on");
-    expect(parseExteriorStreamingUrl(on).scheduler).toBe(true);
-    // The second pass is the camera move: parse what the URL says, write it back
-    // through the same chain, and the flag must still be there.
-    const rewritten = canonicalUrl({ requested: true, override: null, releaseId: CANARY_EXTERIOR_RELEASE_ID, profile: "exploration", canarySnapshotId: null, scheduler: parseExteriorStreamingUrl(on).scheduler });
-    expect(rewritten).toBe(on);
-    expect(parseExteriorStreamingUrl(rewritten).scheduler).toBe(true);
+  it("round-trips the scheduler OPT-OUT through the appender chain a camera move rewrites", () => {
+    const off = canonicalUrl({ requested: true, override: null, releaseId: CANARY_EXTERIOR_RELEASE_ID, profile: "exploration", canarySnapshotId: null, scheduler: false });
+    expect(new URL(off).searchParams.get("exteriorScheduler")).toBe("off");
+    expect(parseExteriorStreamingUrl(off).scheduler).toBe(false);
+    // The second pass is the camera move: parse what the URL says, write it
+    // back through the same chain, and the opt-out must still be there. A
+    // session that stops being opted out halfway through is worse than one that
+    // never was, because the reader is no longer looking at what they asked for.
+    const rewritten = canonicalUrl({ requested: true, override: null, releaseId: CANARY_EXTERIOR_RELEASE_ID, profile: "exploration", canarySnapshotId: null, scheduler: parseExteriorStreamingUrl(off).scheduler });
+    expect(rewritten).toBe(off);
+    expect(parseExteriorStreamingUrl(rewritten).scheduler).toBe(false);
   });
 
   /**
-   * The byte-identity claim for the default session's URL, as a character
-   * comparison rather than a parameter-by-parameter one: a default session must
-   * produce the exact same string it produced before this parameter existed.
+   * The byte-identity claim, inverted: a DEFAULT session must produce a URL with
+   * no scheduler parameter at all, so a shared default link stays reproducible
+   * against whatever this build defaults to rather than freezing today's answer
+   * into every URL anyone copies.
    */
-  it("writes a character-identical default-session URL when the flag is absent", () => {
-    const withoutFlag = canonicalUrl({ requested: true, override: null, releaseId: CANARY_EXTERIOR_RELEASE_ID, profile: "exploration", canarySnapshotId: null });
-    const explicitlyOff = canonicalUrl({ requested: true, override: null, releaseId: CANARY_EXTERIOR_RELEASE_ID, profile: "exploration", canarySnapshotId: null, scheduler: false });
-    expect(explicitlyOff).toBe(withoutFlag);
-    expect(withoutFlag).not.toContain("exteriorScheduler");
-    expect(parseExteriorStreamingUrl(withoutFlag).scheduler).toBe(false);
-    // Absent means absent, and only the one accepted value is an opt-in.
-    for (const query of ["/", "/?exteriorScheduler=", "/?exteriorScheduler=1", "/?exteriorScheduler=true", "/?exteriorScheduler=ON"]) {
-      expect(parseExteriorStreamingUrl(query).scheduler, query).toBe(false);
+  it("writes a character-identical default-session URL when the session takes the default", () => {
+    const defaultSession = canonicalUrl({ requested: true, override: null, releaseId: CANARY_EXTERIOR_RELEASE_ID, profile: "exploration", canarySnapshotId: null, scheduler: EXTERIOR_SCHEDULER_DEFAULT_ON });
+    const silent = canonicalUrl({ requested: true, override: null, releaseId: CANARY_EXTERIOR_RELEASE_ID, profile: "exploration", canarySnapshotId: null });
+    expect(defaultSession).not.toContain("exteriorScheduler");
+    expect(parseExteriorStreamingUrl(defaultSession).scheduler).toBe(EXTERIOR_SCHEDULER_DEFAULT_ON);
+    // A writer that says nothing about the scheduler writes the OPT-OUT, because
+    // `scheduler` is a required member of the write state and `undefined` is not
+    // the default — this is the one place the inversion is deliberately loud.
+    expect(new URL(silent).searchParams.get("exteriorScheduler")).toBe("off");
+    // Absent means the DEFAULT, and exactly two spellings are accepted. Anything
+    // else is silence, which is the default — never a third answer.
+    for (const query of ["/", "/?exteriorScheduler=", "/?exteriorScheduler=1", "/?exteriorScheduler=true", "/?exteriorScheduler=ON", "/?exteriorScheduler=OFF"]) {
+      expect(parseExteriorStreamingUrl(query).scheduler, query).toBe(EXTERIOR_SCHEDULER_DEFAULT_ON);
     }
+    expect(parseExteriorStreamingUrl("/?exteriorScheduler=off").scheduler).toBe(false);
+    expect(parseExteriorStreamingUrl("/?exteriorScheduler=on").scheduler).toBe(true);
   });
 
   /**
-   * T005 detail radius. The A/B this task runs depends on ONE property: the
-   * same build serves both arms and only the URL differs. So the parameter has
-   * to survive the URL rewrite that every settled camera move performs, and an
-   * absent parameter has to be indistinguishable from the build that never had
-   * it.
+   * T006 B3: THE ROLLBACK, pinned as a value rather than as a procedure.
+   *
+   * One constant restores the promoted-subset behaviour. Both halves are pinned
+   * because a rollback that restores the scheduler but leaves the raised budgets
+   * in place is not a rollback — it is a third configuration nobody measured.
    */
-  it("carries the detail radius beside the scheduler flag and nowhere else", () => {
+  it("routes the default and the citywide budgets through ONE rollback constant", () => {
+    // Half 1: the URL default IS the constant. Not a copy of its current value.
+    expect(parseExteriorStreamingUrl("/").scheduler).toBe(EXTERIOR_SCHEDULER_DEFAULT_ON);
+    // Half 2: the residency gate resolves from the same boolean, and with the
+    // constant off a URL-silent citywide session gets the UNRAISED budgets,
+    // byte-identically to `CITYWIDE_BUDGETS`.
+    const rolledBack = resolveCitywideOverviewResidency(false, true);
+    expect(rolledBack.active).toBe(false);
+    expect(rolledBack.budgets).toEqual(CITYWIDE_BUDGETS);
+    expect(rolledBack.floors).toEqual(CITYWIDE_NO_CACHE_FLOORS);
+    // And with it on, the raise applies — so the constant is load-bearing in
+    // both directions and the test cannot pass by the gate being dead.
+    const flipped = resolveCitywideOverviewResidency(true, true);
+    expect(flipped.active).toBe(true);
+    expect(flipped.budgets).not.toEqual(CITYWIDE_BUDGETS);
+    // The gate stays live-gated on citywide: every other mode keeps the
+    // byte-identical budgets and no floors, default or not.
+    expect(resolveCitywideOverviewResidency(true, false).budgets).toEqual(CITYWIDE_BUDGETS);
+    expect(resolveCitywideOverviewResidency(true, false).floors).toEqual(CITYWIDE_NO_CACHE_FLOORS);
+  });
+
+  /**
+   * T006 B2: the split. `exteriorStreaming=off` and `exteriorScheduler=off` are
+   * two escape hatches for two different things, and neither implies the other.
+   */
+  it("separates the exterior-wave hatch from the citywide-overview hatch", () => {
+    // No exterior wave, but the citywide overview is the BASE MAP and keeps its
+    // scheduling. This is what makes a clean dense-only arm at the raised
+    // budgets reachable at all (ADR 0044 D-5).
+    const denseOnly = parseExteriorStreamingUrl("/?exteriorStreaming=off");
+    expect(denseOnly.override).toBe("off");
+    expect(denseOnly.scheduler).toBe(EXTERIOR_SCHEDULER_DEFAULT_ON);
+    // The other hatch, alone: the wave still streams, the overview does not
+    // schedule. That is the rollback, expressed per session.
+    const unscheduled = parseExteriorStreamingUrl("/?exteriorScheduler=off");
+    expect(unscheduled.override).toBeNull();
+    expect(unscheduled.scheduler).toBe(false);
+    // Both together is a coherent third session, not a contradiction.
+    expect(parseExteriorStreamingUrl("/?exteriorStreaming=off&exteriorScheduler=off").scheduler).toBe(false);
+    // F4: a MISTYPED release is a link this build could not honour. It fails
+    // closed on the WAVE and says nothing about the budget — before the split
+    // it silently downgraded the render budget as well, which no link author
+    // ever meant. A pinned single-release link is likewise default-scheduled:
+    // it names which wave to stream, not how to budget.
+    const typo = parseExteriorStreamingUrl("/?exteriorCells=manhattan-exterior-production");
+    expect(typo.override).toBe("off-unpinned");
+    expect(typo.scheduler).toBe(EXTERIOR_SCHEDULER_DEFAULT_ON);
+    const pinned = parseExteriorStreamingUrl("/?exteriorCells=udt-fixture-exterior-cells");
+    expect(pinned.override).toBe("on");
+    expect(pinned.scheduler).toBe(EXTERIOR_SCHEDULER_DEFAULT_ON);
+    // The opt-out survives being written beside a disabled wave, which is the
+    // durability half of the same rule.
+    const written = new URL(appendExteriorProfileUrl("/", { override: "off", streaming: false, releaseId: "udt-fixture-exterior-cells", profile: "exploration", canarySnapshotId: null, scheduler: false }));
+    expect(written.searchParams.get("exteriorScheduler")).toBe("off");
+    expect(written.searchParams.get("exteriorStreaming")).toBe("off");
+    expect(parseExteriorStreamingUrl(written.toString()).scheduler).toBe(false);
+  });
+
+  /**
+   * T005 detail radius, T006 F5: the gate inverts with the flag it rides on.
+   */
+  it("carries the detail radius beside the scheduler and nowhere else", () => {
+    expect(parseExteriorStreamingUrl("/?exteriorDetailRadius=1200").detailRadiusMeters).toBe(1_200);
     expect(parseExteriorStreamingUrl("/?exteriorScheduler=on&exteriorDetailRadius=1200").detailRadiusMeters).toBe(1_200);
-    // Absent is absent, and the radius means nothing without the scheduler.
-    expect(parseExteriorStreamingUrl("/?exteriorScheduler=on").detailRadiusMeters).toBeNull();
-    expect(parseExteriorStreamingUrl("/?exteriorDetailRadius=1200").detailRadiusMeters).toBeNull();
-    expect(parseExteriorStreamingUrl("/?exteriorStreaming=off&exteriorScheduler=on&exteriorDetailRadius=1200").detailRadiusMeters).toBeNull();
+    // The radius means nothing without scheduling, so an opt-out kills it.
+    expect(parseExteriorStreamingUrl("/?exteriorScheduler=off&exteriorDetailRadius=1200").detailRadiusMeters).toBeNull();
+    expect(parseExteriorStreamingUrl("/").detailRadiusMeters).toBeNull();
     // A radius this build cannot honour resolves to "no radius", never to a
     // different one. Zero is refused rather than clamped: a radius of 0 would
     // defer every non-reserved cell, and keeping geometry is the safe direction.
@@ -722,40 +795,34 @@ describe("exterior streaming profiles and canary state", () => {
     expect(parseExteriorDetailRadiusMeters("1200.5")).toBe(1_200.5);
   });
 
-  it("writes the radius back on every camera move, so a flagged session stays flagged", () => {
+  it("writes the radius back on every camera move, so a radiused session stays radiused", () => {
     const written = new URL(appendExteriorProfileUrl("/", { override: null, streaming: true, releaseId: CANARY_EXTERIOR_RELEASE_ID, profile: "exploration", canarySnapshotId: null, scheduler: true, detailRadiusMeters: 1_200 }));
-    expect(written.searchParams.get("exteriorScheduler")).toBe("on");
+    expect(written.searchParams.has("exteriorScheduler")).toBe(false);
     expect(written.searchParams.get("exteriorDetailRadius")).toBe("1200");
     expect(parseExteriorStreamingUrl(written.toString()).detailRadiusMeters).toBe(1_200);
-    // No scheduler, no radius: the parameter never outlives the flag it qualifies.
-    const unflagged = new URL(appendExteriorProfileUrl("/?exteriorScheduler=on&exteriorDetailRadius=1200", { override: null, streaming: true, releaseId: CANARY_EXTERIOR_RELEASE_ID, profile: "exploration", canarySnapshotId: null, scheduler: false, detailRadiusMeters: 1_200 }));
+    // No scheduling, no radius: the parameter never outlives the flag it qualifies.
+    const unflagged = new URL(appendExteriorProfileUrl("/?exteriorDetailRadius=1200", { override: null, streaming: true, releaseId: CANARY_EXTERIOR_RELEASE_ID, profile: "exploration", canarySnapshotId: null, scheduler: false, detailRadiusMeters: 1_200 }));
     expect(unflagged.searchParams.has("exteriorDetailRadius")).toBe(false);
-    // And a writer that says nothing writes nothing, so a default session's URL
-    // is character-identical to what it was before this parameter existed.
+    expect(unflagged.searchParams.get("exteriorScheduler")).toBe("off");
+    // And a writer that says nothing about the radius writes none.
     const silent = new URL(appendExteriorProfileUrl("/", { override: null, streaming: true, releaseId: CANARY_EXTERIOR_RELEASE_ID, profile: "exploration", canarySnapshotId: null, scheduler: true }));
     expect(silent.searchParams.has("exteriorDetailRadius")).toBe(false);
-  });
-
-  it("drops the scheduler flag from a session with no exterior wave at all", () => {
-    const disabled = new URL(appendExteriorProfileUrl("/?exteriorScheduler=on", { override: "off", streaming: false, releaseId: "udt-fixture-exterior-cells", profile: "exploration", canarySnapshotId: null, scheduler: true }));
-    expect(disabled.searchParams.has("exteriorScheduler")).toBe(false);
-    expect(disabled.searchParams.get("exteriorStreaming")).toBe("off");
-    // And an explicit disable outranks the flag on the way back in, so a link
-    // carrying both never resolves to a scheduled wave.
-    expect(parseExteriorStreamingUrl("/?exteriorStreaming=off&exteriorScheduler=on").scheduler).toBe(false);
   });
 
   it("ignores an unknown exterior release ID and an unsupported profile instead of guessing", () => {
     // An unpinned release fails closed to an explicit off, so a link naming a
     // release this build does not have is never answered with the promoted one.
-    expect(parseExteriorStreamingUrl("/?exteriorCells=manhattan-exterior-production&exteriorProfile=inspection")).toEqual({ override: "off-unpinned", explicitReleaseId: null, profile: "exploration", canarySnapshotId: null, scheduler: false, detailRadiusMeters: null });
-    expect(parseExteriorStreamingUrl("/?exteriorCells=udt-fixture-exterior-cells&exteriorProfile=cinematic")).toEqual({ override: "on", explicitReleaseId: "udt-fixture-exterior-cells", profile: "exploration", canarySnapshotId: null, scheduler: false, detailRadiusMeters: null });
-    expect(parseExteriorStreamingUrl("/?exteriorCanary=snapshot:v3")).toEqual({ override: null, explicitReleaseId: null, profile: "exploration", canarySnapshotId: null, scheduler: false, detailRadiusMeters: null });
+    expect(parseExteriorStreamingUrl("/?exteriorCells=manhattan-exterior-production&exteriorProfile=inspection")).toEqual({ override: "off-unpinned", explicitReleaseId: null, profile: "exploration", canarySnapshotId: null, scheduler: EXTERIOR_SCHEDULER_DEFAULT_ON, detailRadiusMeters: null });
+    expect(parseExteriorStreamingUrl("/?exteriorCells=udt-fixture-exterior-cells&exteriorProfile=cinematic")).toEqual({ override: "on", explicitReleaseId: "udt-fixture-exterior-cells", profile: "exploration", canarySnapshotId: null, scheduler: EXTERIOR_SCHEDULER_DEFAULT_ON, detailRadiusMeters: null });
+    expect(parseExteriorStreamingUrl("/?exteriorCanary=snapshot:v3")).toEqual({ override: null, explicitReleaseId: null, profile: "exploration", canarySnapshotId: null, scheduler: EXTERIOR_SCHEDULER_DEFAULT_ON, detailRadiusMeters: null });
   });
 
   it("keeps an explicit disable dominant over every other exterior parameter", () => {
+    // Dominant over every WAVE parameter. It is deliberately NOT dominant over
+    // the scheduler any more: that is the B2 split, and the citywide overview
+    // is not an exterior wave.
     expect(parseExteriorStreamingUrl("/?exteriorStreaming=off&exteriorCells=manhattan-exterior-cells-20260811&exteriorProfile=inspection&exteriorCanary=snapshot:v3"))
-      .toEqual({ override: "off", explicitReleaseId: null, profile: "exploration", canarySnapshotId: null, scheduler: false, detailRadiusMeters: null });
+      .toEqual({ override: "off", explicitReleaseId: null, profile: "exploration", canarySnapshotId: null, scheduler: EXTERIOR_SCHEDULER_DEFAULT_ON, detailRadiusMeters: null });
     const message = exteriorDeepLinkMessage("/?exteriorStreaming=on");
     expect(message).toContain("exteriorStreaming=on is not supported");
     expect(message).toContain("only exteriorStreaming=off disables the exterior wave");

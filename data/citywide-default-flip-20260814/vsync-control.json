@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "1.0",
+  "taskId": "T006",
+  "artifact": "citywide-default-flip-vsync-control",
+  "note": "A bare rAF loop on about:blank in the SAME browser as every station below. This is the display cap, not a rendering measurement, and every station percentile must be read against it: a p50 at the cap means the renderer was never the limit.",
+  "capturedAtIso": "2026-08-14T13:39:54.349Z",
+  "viewport": {
+    "width": 1440,
+    "height": 900,
+    "deviceScaleFactor": 1
+  },
+  "windowMs": 10000,
+  "frame": {
+    "sampleCount": 1201,
+    "p50Ms": 7.8,
+    "p95Ms": 12.4,
+    "p99Ms": 14,
+    "maxMs": 15.5
+  },
+  "impliedRefreshHz": 128.21,
+  "budgets": {
+    "p50Ms": 16.7,
+    "p95Ms": 25,
+    "relaxedP50Ms": 33.3,
+    "relaxedP95Ms": 45
+  }
+}

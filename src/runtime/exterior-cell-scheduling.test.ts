@@ -52,6 +52,48 @@ describe("scheduleExteriorCells: the default path", () => {
   });
 });
 
+/**
+ * T006 B4: the mirror.
+ *
+ * `enabled: false` was the DEFAULT path, and the `toBe` identity test above
+ * pinned that a default session allocated nothing. That claim now describes the
+ * OPT-OUT, and "runs exactly as often as before" inverts with it: the question
+ * is no longer whether the disabled path is free, but whether the ENABLED path
+ * is stable enough that a settled camera does not churn the effect.
+ *
+ * The honest answer, pinned here rather than asserted: the enabled path
+ * allocates a new array per call by construction — it is a filter — so it is
+ * NOT reference-identical. What it is, and what the effect actually depends on,
+ * is CONTENT-stable across repeated calls at one settled camera. The effect
+ * reconciles on `exteriorCellLoadInputsUnchanged`, which compares runtime,
+ * profile and height bucket and is deliberately blind to the footprint, so a
+ * content-stable decision produces no additional load work.
+ */
+describe("scheduleExteriorCells: the default path is now the enabled path", () => {
+  const settled = () => ({ enabled: true, footprint: footprintAround(-73.98, 40.755, 0.004), camera: pose(-73.98, 40.755, 250), heightBucket: 300, previous: null });
+
+  it("is content-stable, and NOT reference-identical, at a settled camera", () => {
+    const first = scheduleExteriorCells(ALL_CELL_IDS, settled());
+    const second = scheduleExteriorCells(ALL_CELL_IDS, settled());
+    expect(second.cellIds).toEqual(first.cellIds);
+    expect(second.deferredCellIds).toEqual(first.deferredCellIds);
+    // Stated rather than hidden: the enabled path is a filter and allocates.
+    // A future change that made it identity would be an improvement, not a
+    // requirement, and this line is what would notice.
+    expect(second.cellIds).not.toBe(first.cellIds);
+    // And it is a real filter, so the stability claim is not vacuous.
+    expect(first.cellIds.length).toBeLessThan(ALL_CELL_IDS.length);
+  });
+
+  it("keeps the opt-out identity guarantee available as the rollback", () => {
+    // The rollback restores exactly the array the caller passed in — the
+    // property the promoted-subset behaviour depended on.
+    const rolledBack = scheduleExteriorCells(ALL_CELL_IDS, { ...settled(), enabled: false });
+    expect(rolledBack.cellIds).toBe(ALL_CELL_IDS);
+    expect(rolledBack.decision).toBeNull();
+  });
+});
+
 describe("scheduleExteriorCells: the opt-in path", () => {
   it("defers the overwhelming majority of the island at a street-level camera", () => {
     const schedule = scheduleExteriorCells(ALL_CELL_IDS, { enabled: true, footprint: footprintAround(-73.98, 40.755, 0.004), camera: pose(-73.98, 40.755, 250), heightBucket: 300, previous: null });
