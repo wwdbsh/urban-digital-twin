@@ -182,7 +182,10 @@ describe("reconcileExteriorCellLoads: a drop while the load is in flight", () =>
     expect(state.inFlight.size).toBe(0);
     expect(state.outcomes.size).toBe(0);
     // Still requested — the scheduler's decision did not change because a
-    // request failed — so a re-reconciliation retries rather than forgetting it.
+    // request failed. NOTE what this asserts: a failed cell is NOT retried by
+    // re-reconciliation (fresh stays empty); it stays requested with no outcome
+    // until the scheduler drops and later re-admits it. This matches the
+    // pre-T002 behavior (a failed cell was not auto-retried either).
     expect([...state.requested].sort()).toEqual(["a", "b"]);
     expect(reconcileExteriorCellLoads(state, ["a", "b"]).fresh).toEqual([]);
   });
