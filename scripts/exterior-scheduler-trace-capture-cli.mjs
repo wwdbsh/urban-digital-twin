@@ -432,7 +432,8 @@ async function main() {
         poses: evidencePoses(),
         settleMs,
         capturedAtIso: new Date().toISOString(),
-        note: "Both variants ran the real promoted default at ONE pose with a fixed settle window. These are artifact-request and cache-residency numbers only. Nothing here is a frame-time, GPU-memory or rendered-fidelity claim (ADR 0040 D7).",
+        note: "Both variants ran the real promoted default at each pose with a fixed settle window. These are artifact-request and cache-residency numbers only. Nothing here is a frame-time, GPU-memory or rendered-fidelity claim (ADR 0040 D7).",
+        httpCacheCaveat: "`Network.setCacheDisabled` is not called and the sessions share one Chrome profile; a fresh page target is not a fresh cache. The `.glb` columns are usable regardless because the exterior fetcher passes `cache: \"no-store\"`, so an exterior artifact cannot be served from the HTTP cache, and the columns filter to `.glb` only. Non-exterior resources in the same session may well be cache hits and are counted by no figure here. `requestedArtifactCount`, `cacheEntries` and `cachedBytes` come from the runtime\u2019s own counters and are unaffected.",
       },
       variants,
     });

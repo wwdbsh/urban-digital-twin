@@ -77,6 +77,21 @@ empty); with none there is nothing to hold, so the decision is computed and
 marked `"bootstrap-untrusted-footprint"`. Both cases are test-pinned, and both
 occur in the committed camera traces.
 
+**Two properties of the hold that are stated rather than fixed this cycle.**
+First, **there is no bound on consecutive holds**: a session whose ground rays
+stop reaching the globe holds its last resident set indefinitely, and nothing
+in the scheduler notices that the held set is old. Second, **the camera
+reservation does not run during a hold** — the held set is returned verbatim, so
+if the camera has meanwhile travelled into a cell the previous decision did not
+admit, that cell is not reserved. That is the T009 F2 shape again, one level up:
+a street-level view could sit over a cell nothing loaded. Neither is a defect
+introduced here — a held decision is by definition the last decision that had
+evidence — and both are bounded in practice by the app supplying a ground-ray
+footprint on essentially every settled camera move. A bound on hold length, or a
+reservation that runs even while holding, is a code change this cycle
+deliberately did not make; it is recorded so the next task starts from it rather
+than rediscovering it.
+
 **The height bucket does not change WHICH cells are resident.** It rides in the
 carry so a bucket flip is visible to the scheduler and changes nothing about
 residency — which is precisely what makes the abort-and-reload path (App.tsx,
@@ -197,6 +212,20 @@ No external host was contacted in any of the four sessions. The default is
 identical at both cameras, which is the point: it has never known where the
 camera is.
 
+**The `.glb` columns are network observations and carry an HTTP-cache caveat the
+app-level columns do not.** `Network.setCacheDisabled` was never called and all
+four sessions shared one Chrome profile — each variant ran in a fresh page
+target, which is not the same thing as a fresh cache. What makes the columns
+usable anyway is that the exterior fetcher passes `cache: "no-store"`
+(`exterior-cell-runtime.ts`), so an exterior `.glb` cannot be served from the
+HTTP cache, and the columns filter to `.glb` only. Non-exterior resources in the
+same sessions — the base release, Cesium's own assets — could well have been
+cache hits, and no number here counts them. The two headline rows, artifacts
+requested and cache entries/bytes, are read from the runtime's own counters and
+are unaffected by any of this. The committed evidence record is left exactly as
+the capture tool wrote it; this caveat is stated here and in the tool, not
+back-edited into a capture.
+
 **These are artifact-request and cache-residency numbers and nothing else. No
 frame-time, GPU-memory or rendered-fidelity claim is made or implied** (ADR 0040
 D7). At street level the four waves outside the camera's view requested zero
@@ -235,6 +264,17 @@ camera genuinely came back. **Both budgets are stated at the measured value with
 no headroom, so any policy change that makes either path worse fails the gate.**
 Re-entry is reported alongside peak resident count against a residency ceiling,
 so a policy cannot buy a zero by never evicting.
+
+**The gate replays ONE pool of 883 units; the app runs SIX pools.** The offline
+replay hands every ledger cell to a single decision with a single cap, while the
+app reconciles each wave separately against its own cap and its own carry. The
+two differ, and the difference runs in the conservative direction for this gate:
+one pool of 883 against a cap of 96 truncates harder than six pools do, so it
+churns at least as much as the app does at the same camera. The gate therefore
+bounds the app's thrash rather than reproducing it, and the numbers above should
+be read as an upper bound and not as a measurement of the shipped configuration.
+Making the app match the replay — one decision over all six waves' units — is the
+same call-site change the per-wave cap disclosure above hands to T003.
 
 **The zoom-out does not reach zero, and the reason is a finding about the cap,
 not about hysteresis.** Up to ~1.2 km the visible set fits under the cap and
@@ -289,6 +329,22 @@ wrong.
   record is measured AT those values and moves if they move.
 - **A session-wide residency budget.** The cap is per wave today; see the
   overview measurement above. Owned by **T003**.
+- **A user-visible notice for deferred cells, unresolved and named.** At 2,400 m
+  the midtown wave deferred **53 cells that were inside the footprint** — visible
+  ground the session decided not to load — and the UI says nothing about it. Every
+  other way exterior geometry can be missing has words attached: a wave that
+  fails closed, a cell the release ships empty, an anchor withheld. A cell the
+  scheduler declined is currently indistinguishable from a cell that has no
+  geometry, and that sits against the project invariant that failure states are
+  explicit. Nothing is built for it this cycle, deliberately: the flag is opt-in
+  and off, so no default session can encounter it, and inventing notice wording
+  for a behaviour whose residency policy T003 is about to change would be
+  wording written twice. The plumbing is in place —
+  `ExteriorRuntimeMetrics.deferredCellCount` is set per wave on every
+  reconciliation, and it is the value a notice would read. **Deciding the wording
+  and the threshold belongs to T003 (which changes the residency policy) and to
+  T006 (which would ship it as a default).** It must not become a default without
+  an answer.
 
 ## Rollback
 
@@ -299,9 +355,14 @@ lines in `appendExteriorProfileUrl` — the URL appender field is part of the
 rollback and leaving it behind would keep writing a parameter nothing reads** —
 the `exteriorSchedulerRequested`/`Ref`/`CarryRef` bindings,
 `exteriorSchedulerSignature` from the effect's dependency array, and the
-`scheduleExteriorCells` call. The per-cell reconciliation may stay or go: with
-the flag gone, `fresh` is the whole declared list on the first run and empty
-after, which is the batch it replaced.
+`scheduleExteriorCells` call. **The trace probe goes with them**:
+`EXTERIOR_SCHEDULER_PROBE_ENABLED`, `EXTERIOR_SCHEDULER_TRACE_LIMIT`, the trace
+effect and its two bindings, and the hidden `data-exterior-scheduler-probe`
+element — it is already absent from a normal build, but a flag nobody can set
+has nothing to trace. The per-cell reconciliation may stay or go: with the flag
+gone, `fresh` is the whole declared list on the first run and empty after, which
+is the batch it replaced. `exterior-cell-reconciliation.ts` is pure and keeps
+its own suite either way.
 
 `src/runtime/exterior-visibility-scheduler.ts`,
 `src/runtime/exterior-cell-scheduling.ts` and

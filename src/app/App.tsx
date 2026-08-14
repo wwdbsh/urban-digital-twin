@@ -60,6 +60,7 @@ import { AggregateRequestBudget, ComposedReleaseAdapter, type ComposedReleaseMet
 import { EXTERIOR_PILOT_RELEASE_ID, createExteriorPilotFaultFetcher, loadExteriorPilotRelease, parseExteriorPilotFault, type CommercialStorefrontPlacement, type LoadedExteriorPilotRelease } from "../runtime/exterior-pilot-release";
 import { BLOCK835_PUBLIC_REALM_RELEASE_ID, createBlock835PublicRealmFaultFetcher, loadBlock835PublicRealmRelease, parseBlock835PublicRealmFault, publicRealmFeatureToFeature, type Block835PublicRealmFeature, type LoadedBlock835PublicRealmRelease } from "../runtime/block835-public-realm-release";
 import { EXTERIOR_RUNTIME_BUDGETS, loadExteriorCellRuntime, type ExteriorCellOutcome, type ExteriorCellRuntime, type ExteriorHeadRequest } from "../runtime/exterior-cell-runtime";
+import { acceptExteriorCellOutcomes, createExteriorCellLoadState, exteriorCellLoadInputsUnchanged, failExteriorCellBatch, publishedExteriorCellOutcomes, reconcileExteriorCellLoads, type ExteriorCellLoadState } from "../runtime/exterior-cell-reconciliation";
 import { scheduleExteriorCells } from "../runtime/exterior-cell-scheduling";
 import type { SchedulerCarry } from "../runtime/exterior-visibility-scheduler";
 import { createExteriorAssetFaultFetcher, createExteriorCellFaultFetcher, parseExteriorAssetFault, parseExteriorCellFault } from "../runtime/exterior-cell-fault";
@@ -1233,10 +1234,12 @@ export function App() {
   // budget instead of each constructing its own and multiplying the ceiling by
   // the number of promotions. Entries are keyed by artifact ref AND checksum, so
   // sharing can only ever reuse identical verified bytes.
-  // `requested`/`outcomes` make cell loading a per-cell reconciliation rather
-  // than a whole-wave batch: the scheduler adds and removes cells against a live
-  // entry without aborting the loads already in flight for it.
-  const exteriorCellLoadsRef = useRef(new Map<string, { runtime: ExteriorCellRuntime; profile: ExteriorRenderProfile; bucket: number; controller: AbortController; requested: Set<string>; outcomes: Map<string, ExteriorCellOutcome> }>());
+  // `load` makes cell loading a per-cell reconciliation rather than a whole-wave
+  // batch: the scheduler adds and removes cells against a live entry without
+  // aborting the loads already in flight for it. The three sets it carries and
+  // the orderings between them live in `exterior-cell-reconciliation.ts`, which
+  // is where they are tested.
+  const exteriorCellLoadsRef = useRef(new Map<string, { runtime: ExteriorCellRuntime; profile: ExteriorRenderProfile; bucket: number; controller: AbortController; load: ExteriorCellLoadState<ExteriorCellOutcome> }>());
   const exteriorCacheRef = useRef<CitywideLruCache<Uint8Array>>(new CitywideLruCache<Uint8Array>(EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries, EXTERIOR_RUNTIME_BUDGETS.maxCachedBytes));
   const aggregateCacheRef = useRef<CitywideLruCache<unknown>>(new CitywideLruCache<unknown>(CITYWIDE_BUDGETS.maxLoadedShards, CITYWIDE_BUDGETS.maxLoadedBytes));
   const citywideModeRef = useRef(false);
@@ -1876,11 +1879,13 @@ export function App() {
    * of the wave's declared cells to ask for. Three properties keep the default
    * path exactly where it was.
    *
-   *   1. The abort test is untouched. It still fires only on a runtime, profile
-   *      or bucket change, so a camera move never aborts an in-flight load. The
-   *      scheduler re-decides by ADDING and REMOVING cells against a live entry
-   *      — a per-cell reconciliation — which is why a height-bucket flip costs
-   *      only the reload it already cost and not a residency churn on top.
+   *   1. The abort test is unchanged in meaning. It still fires only on a
+   *      runtime, profile or bucket change, so a camera move never aborts an
+   *      in-flight load; it is now `exteriorCellLoadInputsUnchanged`, which is
+   *      the same three comparisons behind an assertable name. The scheduler
+   *      re-decides by ADDING and REMOVING cells against a live entry — a
+   *      per-cell reconciliation — which is why a height-bucket flip costs only
+   *      the reload it already cost and not a residency churn on top.
    *   2. `exteriorSchedulerSignature` is the constant empty string whenever the
    *      flag is off, so the dependency array of a default session never changes
    *      value on a camera move and this effect runs exactly as often as before.
@@ -1900,8 +1905,10 @@ export function App() {
     }));
     for (const [releaseId, entry] of [...running]) {
       const next = wanted.get(releaseId);
-      const unchanged = next && next.runtime === entry.runtime && entry.profile === exteriorEffectiveProfile && entry.bucket === exteriorCameraHeightBucketMeters;
-      if (unchanged) continue;
+      // The cross-wave abort property, as a value rather than as a comment.
+      // Deliberately blind to the scheduler's footprint signature: a camera move
+      // re-decides residency and must never abort a load.
+      if (exteriorCellLoadInputsUnchanged(entry, next && { runtime: next.runtime, profile: exteriorEffectiveProfile, bucket: exteriorCameraHeightBucketMeters })) continue;
       entry.controller.abort();
       running.delete(releaseId);
       // A wave that is no longer targeted keeps no outcomes: they describe a
@@ -1917,24 +1924,17 @@ export function App() {
       const schedule = scheduleExteriorCells(declaredCellIds, { ...schedulerView, enabled: schedulerEnabled, previous: exteriorSchedulerCarryRef.current.get(releaseId) ?? null });
       if (schedule.carry) exteriorSchedulerCarryRef.current = new Map(exteriorSchedulerCarryRef.current).set(releaseId, schedule.carry);
       runtime.noteCellSchedule(schedule.cellIds.length, schedule.deferredCellIds.length);
-      const entry = live ?? { runtime, profile: exteriorEffectiveProfile, bucket: exteriorCameraHeightBucketMeters, controller: new AbortController(), outcomes: new Map<string, ExteriorCellOutcome>(), requested: new Set<string>() };
+      const entry = live ?? { runtime, profile: exteriorEffectiveProfile, bucket: exteriorCameraHeightBucketMeters, controller: new AbortController(), load: createExteriorCellLoadState<ExteriorCellOutcome>() };
       if (!live) running.set(releaseId, entry);
       const controller = entry.controller;
       const isCurrent = () => exteriorCellLoadsRef.current.get(releaseId) === entry && !controller.signal.aborted;
-      // Only cells this entry has not already asked for. On a default session
-      // this is the whole declared list on the first run and nothing after, so
-      // the requests, their order and their count are what they have always been.
-      const scheduledSet = new Set(schedule.cellIds);
-      const fresh = schedule.cellIds.filter((cellId) => !entry.requested.has(cellId));
-      const dropped = [...entry.requested].filter((cellId) => !scheduledSet.has(cellId));
-      for (const cellId of dropped) { entry.requested.delete(cellId); entry.outcomes.delete(cellId); }
-      if (fresh.length === 0 && dropped.length === 0 && live) continue;
-      for (const cellId of fresh) entry.requested.add(cellId);
+      // On a default session this admits the whole declared list on the first
+      // run and nothing after, so the requests, their order and their count are
+      // what they have always been.
+      const { fresh, dropped, idle } = reconcileExteriorCellLoads(entry.load, schedule.cellIds);
+      if (idle && live) continue;
       const publish = () => {
-        // Outcomes are published in the runtime's own declared order, so the
-        // array the overlay receives is element-for-element what a single
-        // whole-wave `Promise.all` produced before this change.
-        const outcomes = declaredCellIds.flatMap((cellId) => { const outcome = entry.outcomes.get(cellId); return outcome ? [outcome] : []; });
+        const outcomes = publishedExteriorCellOutcomes(entry.load, declaredCellIds);
         if (target.promotedDefault) {
           // Identity gate: exterior assets reuse canonical base identities, so an
           // identity outside the accepted membership means these are not the
@@ -1951,15 +1951,18 @@ export function App() {
         }
         setExteriorWaveOutcomes((current) => new Map(current).set(releaseId, outcomes));
       };
-      if (fresh.length === 0) { publish(); continue; }
+      if (fresh.length === 0) { if (dropped.length > 0) publish(); continue; }
       void Promise.all(fresh.map((cellId) => runtime.loadCell(cellId, exteriorEffectiveProfile, exteriorCameraHeightBucketMeters, controller.signal)))
         .then((loaded) => {
           if (!isCurrent()) return;
-          fresh.forEach((cellId, index) => { const outcome = loaded[index]; if (outcome) entry.outcomes.set(cellId, outcome); });
+          // Guarded, not unconditional: a cell the scheduler evicted while its
+          // bytes were in flight stays evicted and its outcome is discarded.
+          acceptExteriorCellOutcomes(entry.load, fresh, loaded);
           publish();
         })
         .catch(() => {
           if (!isCurrent()) return;
+          failExteriorCellBatch(entry.load, fresh);
           setExteriorWaveOutcomes((current) => { const next = new Map(current); next.delete(releaseId); return next; });
         });
     }

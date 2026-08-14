@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import { sha256HexBytes } from "../domain/deterministic-hash";
 import type { CameraPose } from "../domain/visitor-navigation";
 import { CITYWIDE_OVERVIEW_CELL_EXTENTS, CITYWIDE_OVERVIEW_CELL_EXTENTS_SOURCE } from "./citywide-overview-cell-extents";
+import { acceptExteriorCellOutcomes, createExteriorCellLoadState, publishedExteriorCellOutcomes, reconcileExteriorCellLoads } from "./exterior-cell-reconciliation";
 import { EXTERIOR_CELL_SCHEDULER_POLICY, selectResidentUnits, type SchedulableUnit, type SchedulerCarry } from "./exterior-visibility-scheduler";
 import type { ViewportFootprint } from "./viewport-footprint";
 
@@ -215,6 +216,75 @@ describe("exterior scheduler thrash gate", () => {
       const second = replay(path);
       expect(second).toEqual(first);
     }
+  });
+
+  /**
+   * The reviewer's repro, kept as a gate.
+   *
+   * The offline replay above decides residency instantly. The app does not: a
+   * cell admitted at decision N has its bytes arrive some decisions later, and
+   * the scheduler can evict it in between. Replaying the same committed trace
+   * through the scheduler AND the real reconciliation with a two-decision load
+   * latency is what exposed the resurrection defect — 16 cells written back into
+   * residency after eviction, 13 of them permanently un-evictable, and a
+   * rendered set of 97 against a cap of 96.
+   *
+   * The invariant is simple and absolute: what is rendered is a subset of what
+   * the last decision asked for. Nothing may render because a request that
+   * predates its eviction happened to land.
+   */
+  it("never renders a cell the scheduler evicted, at a two-decision load latency", () => {
+    const path = trace.paths.find((candidate) => candidate.pathId === "midtown-zoom-out-v1")!;
+    const state = createExteriorCellLoadState<string>();
+    const declared = CITYWIDE_OVERVIEW_CELL_EXTENTS.map((entry) => entry.cellId).sort((left, right) => (left < right ? -1 : left > right ? 1 : 0));
+    const pending: Array<{ landsAt: number; cellIds: readonly string[] }> = [];
+    let carry: SchedulerCarry | null = null;
+    let peakRendered = 0;
+    let resurrected = 0;
+
+    path.samples.forEach((sample, decisionIndex) => {
+      for (const batch of pending.filter((entry) => entry.landsAt === decisionIndex)) {
+        const verdict = acceptExteriorCellOutcomes(state, batch.cellIds, batch.cellIds.map((cellId) => cellId));
+        resurrected += verdict.accepted.filter((cellId) => !state.requested.has(cellId)).length;
+      }
+      const decision = selectResidentUnits(UNITS, { footprint: sample.footprint, camera: sample.camera, heightBucket: sample.heightBucket }, {
+        ...EXTERIOR_CELL_SCHEDULER_POLICY,
+        metersPerDegreeLongitude: CITYWIDE_OVERVIEW_CELL_EXTENTS_SOURCE.metersPerDegreeLongitude,
+        metersPerDegreeLatitude: CITYWIDE_OVERVIEW_CELL_EXTENTS_SOURCE.metersPerDegreeLatitude,
+        previous: carry,
+      });
+      carry = decision.carry;
+      const scheduled = declared.filter((cellId) => decision.resident.includes(cellId));
+      const { fresh } = reconcileExteriorCellLoads(state, scheduled);
+      if (fresh.length > 0) pending.push({ landsAt: decisionIndex + 2, cellIds: fresh });
+
+      const rendered = publishedExteriorCellOutcomes(state, declared);
+      peakRendered = Math.max(peakRendered, rendered.length);
+      // The invariant, checked at every decision rather than at the end.
+      for (const cellId of rendered) expect(state.requested.has(cellId), `decision ${decisionIndex} rendered unrequested ${cellId}`).toBe(true);
+      expect(rendered.length, `decision ${decisionIndex}`).toBeLessThanOrEqual(scheduled.length);
+    });
+
+    expect(resurrected).toBe(0);
+    expect(peakRendered).toBeLessThanOrEqual(EXTERIOR_CELL_SCHEDULER_POLICY.maxResidentUnits);
+    // A latency replay that never rendered anything would satisfy the above for
+    // free. It renders most of the resident set most of the time.
+    expect(peakRendered).toBeGreaterThan(EXTERIOR_CELL_SCHEDULER_POLICY.maxResidentUnits / 2);
+  });
+
+  /**
+   * ADR 0041 discloses that the cap is applied per wave, so a six-wave session
+   * is bounded by 6 x `maxResidentUnits` and not by `maxResidentUnits`. Pinned
+   * as a number here so the disclosure is a test and not only prose.
+   */
+  it("pins the six-wave session bound the ADR discloses", () => {
+    const waveCount = 6;
+    expect(EXTERIOR_CELL_SCHEDULER_POLICY.maxResidentUnits).toBe(96);
+    expect(waveCount * EXTERIOR_CELL_SCHEDULER_POLICY.maxResidentUnits).toBe(576);
+    // Still strictly below the ledger, which is the only reason the bound is a
+    // bound at all rather than a restatement of "load everything".
+    expect(waveCount * EXTERIOR_CELL_SCHEDULER_POLICY.maxResidentUnits).toBeLessThan(CITYWIDE_OVERVIEW_CELL_EXTENTS.length);
+    expect(CITYWIDE_OVERVIEW_CELL_EXTENTS).toHaveLength(883);
   });
 
   it("never evicts on the untrusted bootstrap samples the capture recorded", () => {

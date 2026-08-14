@@ -110,7 +110,13 @@ export interface SchedulerDecision {
   readonly hold: SchedulerHold;
   /** Units containing the camera ground point. Always resident, never truncated. */
   readonly reserved: readonly string[];
-  /** Units whose rectangle intersects the footprint, before the cap. */
+  /**
+   * Units the camera could see before the cap was applied: the reserved units
+   * PLUS the ones whose rectangle intersects the footprint. Reserved units are
+   * counted here because a unit containing the camera is visible by any reading;
+   * they are excluded from the intersection tier only so the reservation cannot
+   * be truncated, which is a priority decision and not a visibility one.
+   */
   readonly visibleCount: number;
   /** Visible-or-retained units the cap refused. */
   readonly deferredCount: number;

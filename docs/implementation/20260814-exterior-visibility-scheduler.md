@@ -11,6 +11,8 @@ built, what it measured, and what it did not do.
 | `src/runtime/exterior-visibility-scheduler.ts` | The pure decision. Generic over bounded units, no Cesium imports, no I/O. |
 | `src/runtime/exterior-visibility-scheduler.test.ts` | 17 tests: the frozen policy order, overlap, the render-extent fixture, the invariants, untrusted footprints, hysteresis. |
 | `src/runtime/exterior-cell-scheduling.ts` | The exterior-cell binding. The only module that knows a unit is a cell. |
+| `src/runtime/exterior-cell-reconciliation.ts` | Per-cell load reconciliation: the three sets, the drop-during-flight ordering, and the cross-wave abort predicate. Synchronous, no React, no I/O. |
+| `src/runtime/exterior-cell-reconciliation.test.ts` | 17 tests: add / remove / remove-during-flight / re-admit-during-flight / publish order / batch failure / the abort property. |
 | `src/runtime/exterior-cell-scheduling.test.ts` | 9 tests: the identity-by-reference claim, the alias, the unschedulable fail-closed rule, the pin-gate separation. |
 | `src/runtime/citywide-overview-cell-extents.ts` | GENERATED. 883 render extents and the ledger alias, from the committed T001 census. |
 | `src/runtime/citywide-overview-cell-extents.test.ts` | 7 tests: the census digest gate, verbatim re-derivation, the absence of `assignmentBounds`, the alias proof. |
@@ -25,7 +27,7 @@ built, what it measured, and what it did not do.
 
 | path | change |
 | --- | --- |
-| `src/app/App.tsx` | `?exteriorScheduler=on` added to the exterior URL state (parse and append); the flag, its refs and the scheduler carry; `exteriorSchedulerSignature` as a conditional effect dependency; the cell-loading effect turned into a per-cell reconciliation; a build-time-gated trace probe. |
+| `src/app/App.tsx` | `?exteriorScheduler=on` added to the exterior URL state (parse and append); the flag, its refs and the scheduler carry; `exteriorSchedulerSignature` as a conditional effect dependency; the cell-loading effect turned into a per-cell reconciliation delegating to `exterior-cell-reconciliation.ts`; a build-time-gated trace probe. |
 | `src/runtime/exterior-cell-runtime.ts` | `scheduledCellCount` / `deferredCellCount` on `ExteriorRuntimeMetrics`, set by `noteCellSchedule`. Purely additive. |
 | `src/app/App.test.tsx` | Three new URL tests; six existing assertions extended with the new `scheduler` field. |
 | `package.json` | Three scripts. |
@@ -90,10 +92,45 @@ main chunk, essentially all of it the 883-row extents table.
   at 2,400 m the midtown wave alone hit the cap of 96 exactly. The session bound
   is 6 x 96, not 96. Disclosed in ADR 0041 and owned by T003.
 
+## The defect review found, and how it was closed
+
+The first version of per-cell reconciliation had a real ordering bug. A cell
+admitted at decision N and evicted at decision N+1 had its outcome written back
+**unconditionally** when the load issued at N settled. Replaying the committed
+`midtown-zoom-out-v1` trace with a two-decision load latency: **16 cells
+resurrected into residency after eviction, 13 of them permanently un-evictable**
+(absent from `requested`, so no later reconciliation could list them as dropped),
+and a rendered set of **97 against a cap of 96**. A re-visible cell in that state
+also issued a duplicate `loadCell`.
+
+The logic was extracted to `exterior-cell-reconciliation.ts` — where an ordering
+can be written down as a test instead of reasoned about in an effect — and fixed
+in two places: an outcome is accepted only for a cell that is **still requested**
+when its load returns, and a third set, `inFlight`, stops a cell re-admitted
+before its original load settles from being requested twice. Five tests fail
+against the pre-fix logic and pass against this one; they are listed in the final
+report.
+
 ## Known-failing before this task, still failing
 
-`src/app/App.test.tsx` "restores focus to the trigger when the details panel is
-closed with Escape" (line 486) fails at the branch point commit `3c4e67d` and
-fails now, identically. It is unrelated to T002 — verified by stashing the T002
-changes and re-running the same test — and was not fixed here because doing so
-would put an unrelated repair inside this diff.
+**Zero deterministic failures. One flaky test, and the flakiness is measured
+rather than assumed.**
+
+`src/app/App.test.tsx` "closes details with Escape and returns focus to the
+located-pick trigger" (line 486) fails under FULL-SUITE PARALLELISM on this host
+and passes on its own. Measured at HEAD: the whole file alone, 78/78 pass; the
+test alone, passes; three consecutive full-suite runs gave 1686/1686 pass,
+1685/1686, 1685/1686. It also failed in a full-suite run at the branch point
+commit `3c4e67d` with every T002 change stashed, so it is not introduced here.
+
+An earlier draft of this record called it deterministic. That was wrong, and the
+reason is worth recording because it would mislead anyone repeating the check:
+`pnpm test -- <path>` does NOT filter to that path — it runs the whole suite —
+so what looked like an isolation run was another full-suite run. Isolating
+requires `npx vitest run <path>`.
+
+`src/release/midtown-core-v3-release.test.ts` and
+`src/domain/deterministic-facade-generator.test.ts` behave the same way, and
+`midtown-core-v3` takes 20.85 s against a 5 s timeout when run alone, which is
+what the failures are. None of the three was fixed here and no test timeout was
+changed, because either would put an unrelated repair inside this diff.
