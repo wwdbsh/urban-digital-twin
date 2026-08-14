@@ -176,7 +176,7 @@ function mergeFeatureGroups(base: readonly Feature[], context: readonly Feature[
   };
 }
 
-function visibleFor(adapter: RuntimeCityAdapter, visibility: LayerVisibility): Feature[] {
+function visibleFor(adapter: RuntimeCityAdapter, visibility: LayerVisibility): readonly Feature[] {
   return adapter.getFeatures(visibility === undefined || Object.keys(visibility).length === 0 ? DEFAULT_LAYER_VISIBILITY : visibility);
 }
 

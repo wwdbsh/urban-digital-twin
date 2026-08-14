@@ -30,16 +30,18 @@ Measured in the shipping renderer, on the recorded pan path (headless Chrome
 
 | move | shard set | `refreshViewport` | sequence |
 | --- | --- | --- | --- |
-| 0 | cold, 0 resident | 73.0 ms | rebuilt |
-| 1 | 15 entries | 520.7 ms | retained |
-| 2 | 101 entries, 54,840 features | 1,653.8 ms | rebuilt |
-| 3 | 105 entries, 57,313 features | 365.9 ms | rebuilt |
-| 4 | unchanged | **2.9 ms** | **retained** |
-| 5 | unchanged | **2.6 ms** | **retained** |
+| 0 | cold, 0 resident | 40.4 ms | rebuilt |
+| 1 | 14 entries | 461.4 ms | retained (trivially — 0 features) |
+| 2 | 101 entries, 54,066 features | 1,241.2 ms | rebuilt |
+| 3 | 105 entries, 57,313 features | 352.1 ms | rebuilt |
+| 4 | unchanged | **2.1 ms** | **retained** |
+| 5 | unchanged | **2.0 ms** | **retained** |
 
-Moves 4 and 5 are the fix: a settled camera move over an unchanged shard set
-costs ~2.7 ms and hands the renderer the same array, so `planReuseCount`
-increments instead of a rebuild. `planReuseCount` was 6–12 at every station of
+Move 1's retention is trivial — the sequence was still empty — so moves 4 and
+5 are the only non-vacuous retentions in the table. They are the fix: a settled
+camera move over an unchanged shard set
+costs ~2 ms and hands the renderer the same array, so `planReuseCount`
+increments instead of a rebuild. `planReuseCount` was 6–11 at every station of
 the pan path and never zero.
 
 ## The memoization, and why shard identity is the right key
@@ -51,10 +53,22 @@ Two levels, both keyed on object identity rather than on a hash:
    hands back the *same* `LoadedShard` object for as long as the entry is
    resident. A re-fetch after eviction produces a new object and correctly
    misses. `WeakMap` means an evicted shard's decoded features become
-   collectable with it, so the memo adds no second bound to reason about.
-2. **Per plan.** The ordered list of visible `LoadedShard` objects that
-   produced the current `visibleFeatures`. Reference-equal list ⇒ skip the
-   merge, the id sort and the decoded-feature LRU writes entirely.
+   collectable with it **as long as nothing else holds the shard**. That
+   qualifier is real: `committedVisibleShards` holds strong references to the
+   shard objects of the last committed visible set, so up to
+   `maxLoadedShards` parsed payloads and their decoded features stay reachable
+   after the LRU has evicted them, until the next commit replaces the list.
+   The retention is bounded by the same cap the cache is bounded by, and it is
+   a second bound, not none.
+2. **Per plan.** The list of visible `LoadedShard` objects that produced the
+   current `visibleFeatures`. Equal **as a set** means skip the merge, the id
+   sort and the decoded-feature LRU writes entirely. Order-insensitive on
+   purpose: the visible list is distance-ranked, so a camera nudge can permute
+   an unchanged set, and an order-sensitive comparison paid the full ~352 ms
+   class rebuild for a set that had not changed. Sound because the merge is
+   keyed by parent id and the release carries exactly one geometry part per
+   building parent (45,194 parts for 45,194 parents), so no permutation can
+   change which record wins.
 
 `getFeatures` is memoized on `visibleFeatures` identity plus the visibility
 key, so two consecutive calls return the *same* array. The historical re-sort
@@ -111,6 +125,43 @@ through `CitywideRuntimeOptions.budgets`. Nothing writes the constant.
 raised**, against the census CLI's suggestion. The render source is the
 adapter's visible-feature sequence, not those maps; raising them buys no
 rendered building and costs the heap expansion recorded below.
+
+## The residency gate: why the flag alone is not the condition
+
+The shared `aggregateCacheRef` has several tenants — the citywide adapter, the
+civic-context adapter, and `ComposedReleaseAdapter` over both — and the
+citywide adapter is itself the composed session's **base**. Applying the
+overview record on the flag alone therefore reconfigured sessions that never
+asked for it, in three measurable ways:
+
+1. **Cache floors starved the tenant on screen.** Civic refs derive to class
+   `other`, which has no floor, so a civic session with the flag on pinned 103
+   citywide shards nobody was looking at and evicted the most recently used
+   civic shards. Reproduced by review and now pinned by a test.
+2. **The composed base dense cap** rose 6,000 to 57,547 in a civic mode that
+   has never been measured at the overview census.
+3. **The base shard-selection bound** rose 24 to 112 for composed refreshes,
+   because the adapter's record was fixed at construction.
+
+**Mode gating was chosen over namespace-qualified floors.** Qualifying the
+floors by namespace fixes none of the three: a `citywide:`-qualified floor
+still pins 103 entries while civic is on screen, and (2) and (3) are not cache
+concerns at all. The condition is not "whose refs are these" but "which mode is
+this session actually in", so that is what is gated and what is tested.
+
+`resolveCitywideOverviewResidency(schedulerRequested, citywideMode)` is the one
+place the condition lives, and it feeds all three sites. Two mechanisms make it
+live rather than mount-time:
+
+- `CitywideRuntimeOptions.budgets` accepts a **supplier**, so the adapter reads
+  the record the active mode is entitled to per access rather than the one the
+  session happened to boot in.
+- `CitywideLruCache.configure` re-points the shared cache between the two
+  **recorded** configurations as the mode changes. Only those two are ever
+  applied, and both byte caps exceed every declared shard size (2 MiB geometry,
+  1 MiB search/detail), so no re-configuration can make an already-legal
+  artifact inadmissible — the admission invariant below is preserved across
+  reconfiguration, not merely at construction.
 
 ## Per-class cache floors: a permission to keep, not a reservation
 
@@ -181,9 +232,11 @@ eviction. That is the weaker of the two claims and it is the one the live
 evidence supports.
 
 **Build cadence — measured, chosen, recorded.** At `DENSE_BUILD_CHUNK_SIZE`
-120 the island build takes 478 chunks with `allocationMaxSliceMs` 8.1–14.5 ms
-per slice. **The chunk size is not raised.** A slice already consumes most of a
-16.7 ms frame; 240 instances/rAF would put it over. The recorded cold-build
+120 the island build takes 478 chunks with `allocationMaxSliceMs` 6.1–7.8 ms
+per slice across the re-run stations (8.1–14.5 ms in an earlier run on the same
+host). **The chunk size is not raised.** A slice already consumes a
+significant part of a 16.7 ms frame and was measured as high as 14.5 ms;
+240 instances/rAF would put it over. The recorded cold-build
 latency is therefore 478 rAF ≈ **8.0 s on a display-locked 60 Hz session**, and
 any camera move during it restarts the build (2 cancellations were observed per
 overview station). Measured `totalBuildMs` in the capture environment was
@@ -239,11 +292,13 @@ for no rendered building. That is the arithmetic behind not raising them.
 
 ## Rollback
 
-Removing `?exteriorScheduler=on` selects `CITYWIDE_BUDGETS` and an unfloored
-cache; nothing else in this decision is reachable. To remove it from the build,
+Removing `?exteriorScheduler=on` — **or simply not being in citywide mode** —
+selects `CITYWIDE_BUDGETS` and an unfloored cache; nothing else in this
+decision is reachable. To remove it from the build,
 delete `CITYWIDE_OVERVIEW_BUDGETS`, `CITYWIDE_OVERVIEW_CACHE_FLOORS`,
-`resolveCitywideBudgets`, the `floors` constructor argument and the class
-counters on `CitywideLruCache`, the `budgets` option on the citywide runtime,
+`resolveCitywideBudgets`, `resolveCitywideOverviewResidency`, the `floors`
+constructor argument, `configure` and the class counters on
+`CitywideLruCache`, the `budgets` option on the citywide runtime,
 `scripts/citywide-overview-streaming-evidence-cli.mjs`, and the
 `VITE_CITYWIDE_OVERVIEW_PROBE` block in `App.tsx`. The feature memoization is
 **not** flag-gated and is not part of the rollback: it is a correctness-neutral

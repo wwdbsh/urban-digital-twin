@@ -3,6 +3,7 @@ import {
   buildSyntheticCitywideRelease,
   CITYWIDE_BUDGETS,
   CITYWIDE_OVERVIEW_BUDGETS,
+  CITYWIDE_NO_CACHE_FLOORS,
   CITYWIDE_OVERVIEW_CACHE_FLOORS,
   citywideCacheClass,
   CitywideLruCache,
@@ -323,5 +324,53 @@ describe("citywide budget records and per-class cache floors", () => {
     expect(cache.classEvictionCounts()["geometry/restaurants"]).toBeUndefined();
     expect(cache.size()).toBeLessThanOrEqual(CITYWIDE_OVERVIEW_BUDGETS.maxLoadedShards);
     expect(cache.bytes()).toBeLessThanOrEqual(CITYWIDE_OVERVIEW_BUDGETS.maxLoadedBytes);
+  });
+  /**
+   * The B1 hazard, as an executable statement.
+   *
+   * The aggregate cache has several tenants. Civic-context refs derive to
+   * class `other`, which has no floor, so overview floors applied while civic
+   * is the mode on screen pin 103 citywide shards nobody is looking at and
+   * evict the civic shards that are. The floors are therefore live-gated on
+   * citywide being the active mode (see `resolveCitywideOverviewResidency`),
+   * and withdrawing them has to actually restore plain recency.
+   */
+  it("starves an unfloored tenant while floored, and stops when the floors are withdrawn", () => {
+    const cache = new CitywideLruCache<string>(CITYWIDE_OVERVIEW_BUDGETS.maxLoadedShards, CITYWIDE_OVERVIEW_BUDGETS.maxLoadedBytes, CITYWIDE_OVERVIEW_CACHE_FLOORS);
+    for (let index = 0; index < 56; index += 1) cache.set(`citywide:geometry/buildings/${index}.json`, "B", 800_000);
+    for (let index = 0; index < 47; index += 1) cache.set(`citywide:geometry/restaurants/${index}.json`, "R", 300_000);
+    // Civic geometry, loaded AFTER every citywide shard, so plain recency would
+    // never choose it.
+    for (let index = 0; index < 20; index += 1) cache.set(`civic:areas/${index}.json`, "C", 300_000);
+    expect(cache.classSizes()["geometry/buildings"]).toBe(56);
+    expect(cache.classEvictionCounts().other).toBeGreaterThan(0);
+    expect(cache.classSizes().other ?? 0).toBeLessThan(20);
+
+    // Withdrawing the record restores the default caps and plain recency.
+    cache.configure(CITYWIDE_BUDGETS.maxLoadedShards, CITYWIDE_BUDGETS.maxLoadedBytes, CITYWIDE_NO_CACHE_FLOORS);
+    expect(cache.maxEntries).toBe(CITYWIDE_BUDGETS.maxLoadedShards);
+    expect(cache.maxBytes).toBe(CITYWIDE_BUDGETS.maxLoadedBytes);
+    expect(cache.floors).toEqual({});
+    expect(cache.size()).toBeLessThanOrEqual(CITYWIDE_BUDGETS.maxLoadedShards);
+    // With no floors the coldest entries go, and the citywide geometry loaded
+    // first is the coldest thing in the cache: the shrink itself evicts the
+    // building shards the floors had been pinning.
+    expect(cache.classEvictionCounts()["geometry/buildings"] ?? 0).toBeGreaterThan(0);
+    expect(cache.classSizes()["geometry/buildings"] ?? 0).toBeLessThan(56);
+  });
+
+  it("keeps both recorded configurations admissible for every declared shard size", () => {
+    // Reconfiguration must never make an already-legal artifact inadmissible;
+    // the largest declared shard is a 2 MiB geometry chunk.
+    for (const record of [CITYWIDE_BUDGETS, CITYWIDE_OVERVIEW_BUDGETS]) {
+      expect(record.maxLoadedBytes).toBeGreaterThan(record.geometryShardBytes);
+      expect(record.maxLoadedBytes).toBeGreaterThan(record.searchDetailShardBytes);
+    }
+  });
+
+  it("freezes both exported records", () => {
+    expect(Object.isFrozen(CITYWIDE_BUDGETS)).toBe(true);
+    expect(Object.isFrozen(CITYWIDE_OVERVIEW_BUDGETS)).toBe(true);
+    expect(Object.isFrozen(CITYWIDE_OVERVIEW_CACHE_FLOORS)).toBe(true);
   });
 });

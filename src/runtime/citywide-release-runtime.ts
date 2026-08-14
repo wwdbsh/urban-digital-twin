@@ -116,10 +116,16 @@ export interface CitywideRuntimeOptions {
   sharedCache?: CitywideLruCache<unknown>;
   cacheNamespace?: string;
   /**
-   * The session's resolved budget record. Defaults to the shared constant, so
-   * an unflagged session behaves exactly as before.
+   * The session's resolved budget record, or a supplier of it. Defaults to the
+   * shared constant, so an unflagged session behaves exactly as before.
+   *
+   * A supplier exists because this adapter is ALSO the base of the composed
+   * civic runtime. A record fixed at construction would let an overview
+   * session raise the shard-selection bound for a civic session that never
+   * asked for it, so the caller supplies the record the ACTIVE mode is
+   * entitled to and the adapter reads it per access.
    */
-  budgets?: CitywideBudgetRecord;
+  budgets?: CitywideBudgetRecord | (() => CitywideBudgetRecord);
 }
 
 interface SourceSnapshot {
@@ -316,8 +322,9 @@ export class CitywideReleaseAdapter implements RuntimeCityAdapter {
   private readonly fetcher: Fetcher;
   private readonly pool: CitywideRequestPool<LoadedShard>;
   private readonly cacheNamespace: string;
+  private readonly resolveBudgets: () => CitywideBudgetRecord;
   /** Public so a composed session can report the caps it actually runs under. */
-  readonly budgets: CitywideBudgetRecord;
+  get budgets(): CitywideBudgetRecord { return this.resolveBudgets(); }
   private readonly sourceSnapshots: ReadonlyMap<string, SourceSnapshot>;
   /**
    * Decoded features per cached shard, keyed on the shard object itself.
@@ -370,7 +377,11 @@ export class CitywideReleaseAdapter implements RuntimeCityAdapter {
     this.basePath = basePath.replace(/\/$/, "");
     this.fetcher = fetcher;
     this.cacheNamespace = options.cacheNamespace ?? manifest.releaseId;
-    this.budgets = options.budgets ?? CITYWIDE_BUDGETS;
+    const budgets = options.budgets ?? CITYWIDE_BUDGETS;
+    this.resolveBudgets = typeof budgets === "function" ? budgets : () => budgets;
+    // Concurrency and the private cache caps are structural and are read once;
+    // both records declare the same concurrency, and a private cache has no
+    // second tenant whose mode could disagree with this one.
     const sharedCache = options.sharedCache as unknown as CitywideLruCache<LoadedShard> | undefined;
     this.pool = new CitywideRequestPool<LoadedShard>(this.budgets.maxConcurrentRequests, sharedCache ?? new CitywideLruCache<LoadedShard>(this.budgets.maxLoadedShards, this.budgets.maxLoadedBytes), options.sharedBudget ?? null);
     this.sourceSnapshots = new Map(manifest.sourceSnapshots.map((source) => [source.registryEntryId, source]));
@@ -647,10 +658,22 @@ export class CitywideReleaseAdapter implements RuntimeCityAdapter {
     this.pool.abortExcept([]);
   }
 
-  /** Reference equality over the ordered visible shard objects. */
+  /**
+   * Set equality over the visible shard objects, deliberately order-insensitive.
+   *
+   * The visible list is produced in distance-ranked order, so a camera nudge
+   * can permute an otherwise unchanged set, and an order-sensitive comparison
+   * would pay the full class rebuild for a set that did not change. Comparing
+   * as a set is sound here because the merge that builds `visibleFeatures` is
+   * keyed by parent id and the committed release carries exactly one geometry
+   * part per building parent (45,194 parts for 45,194 parents), so no parent
+   * is served by two shards and no permutation can change which record wins.
+   */
   private sameVisibleShards(visible: readonly LoadedShard[]): boolean {
     const committed = this.committedVisibleShards;
-    return committed !== null && committed.length === visible.length && committed.every((shard, index) => shard === visible[index]);
+    if (committed === null || committed.length !== visible.length) return false;
+    const resident = new Set(committed);
+    return visible.every((shard) => resident.has(shard));
   }
 
   /**

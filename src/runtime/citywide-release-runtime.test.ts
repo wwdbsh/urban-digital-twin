@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildSyntheticCitywideRelease, CITYWIDE_BUDGETS, CITYWIDE_OVERVIEW_BUDGETS, CITYWIDE_RELEASE_ID, citywideExactIdBucket, CitywideLruCache, CitywideRequestPool, type CitywideReleaseManifest } from "../release/citywide-release.ts";
+import { buildSyntheticCitywideRelease, CITYWIDE_BUDGETS, CITYWIDE_OVERVIEW_BUDGETS, CITYWIDE_RELEASE_ID, citywideExactIdBucket, CitywideLruCache, CitywideRequestPool, type CitywideBudgetRecord, type CitywideReleaseManifest } from "../release/citywide-release.ts";
 import { sha256HexSync, stableSerialize } from "../release/catalog-release.ts";
 import { CitywideReleaseAdapter, loadCitywideRelease } from "./citywide-release-runtime.ts";
 
@@ -464,11 +464,51 @@ describe("citywide release runtime", () => {
       return response(files.get(ref) ?? "{}", files.has(ref) ? 200 : 404);
     }, { budgets: CITYWIDE_OVERVIEW_BUDGETS });
     expect(adapter.budgets).toBe(CITYWIDE_OVERVIEW_BUDGETS);
+    // A supplier, so the record can follow the ACTIVE mode: this adapter is
+    // also the composed civic session's base, and a record fixed at
+    // construction would let a citywide flag raise a civic selection bound.
+    let active: CitywideBudgetRecord = CITYWIDE_BUDGETS;
+    const supplied = new CitywideReleaseAdapter(manifest, "/data/citywide", async (input) => {
+      const ref = input.replace("/data/citywide/", "");
+      return response(files.get(ref) ?? "{}", files.has(ref) ? 200 : 404);
+    }, { budgets: () => active });
+    expect(supplied.budgets).toBe(CITYWIDE_BUDGETS);
+    active = CITYWIDE_OVERVIEW_BUDGETS;
+    expect(supplied.budgets).toBe(CITYWIDE_OVERVIEW_BUDGETS);
     expect(CITYWIDE_BUDGETS.maxLoadedShards).toBe(24);
     const defaulted = new CitywideReleaseAdapter(manifest, "/data/citywide", async (input) => {
       const ref = input.replace("/data/citywide/", "");
       return response(files.get(ref) ?? "{}", files.has(ref) ? 200 : 404);
     });
     expect(defaulted.budgets).toBe(CITYWIDE_BUDGETS);
+  });
+  it("treats a reordered but unchanged visible shard set as unchanged", async () => {
+    const { manifest, files } = productionLikeFixture();
+    const adapter = new CitywideReleaseAdapter(manifest, "/data/citywide", async (input) => {
+      const ref = input.replace("/data/citywide/", "");
+      return response(files.get(ref) ?? "{}", files.has(ref) ? 200 : 404);
+    });
+    const bounds = manifest.geometryShards[0]!.bounds;
+    // Two ground centres inside the same bounds. The shard ranking is by
+    // distance from the ground centre, so this permutes the visible order
+    // without changing the set; an order-sensitive memo would pay the full
+    // class rebuild for a set that did not change.
+    const move = async (signature: string, groundCenter: { longitude: number; latitude: number }) => adapter.refreshViewport({
+      camera: { longitude: groundCenter.longitude, latitude: groundCenter.latitude, height: 900, heading: 0, pitch: -40, roll: 0 },
+      footprint: { bounds, groundCenter, valid: true, source: "ground-rays" as const, signature },
+    });
+    const first = await move("order-a", { longitude: bounds.west + (bounds.east - bounds.west) * 0.2, latitude: bounds.south + (bounds.north - bounds.south) * 0.2 });
+    const second = await move("order-b", { longitude: bounds.west + (bounds.east - bounds.west) * 0.8, latitude: bounds.south + (bounds.north - bounds.south) * 0.8 });
+    expect(first.length).toBeGreaterThan(0);
+    expect(second).toBe(first);
+    // The fixture's two same-tile chunks share bounds, so the above cannot by
+    // itself permute the ranking. Assert the comparison directly on a
+    // permuted list, which is the property the ranking can produce in the
+    // field and which an order-sensitive comparison fails.
+    const sameSet = (adapter as unknown as { sameVisibleShards(visible: readonly unknown[]): boolean; committedVisibleShards: readonly unknown[] | null });
+    const committed = sameSet.committedVisibleShards ?? [];
+    expect(committed.length).toBeGreaterThan(1);
+    expect(sameSet.sameVisibleShards([...committed].reverse())).toBe(true);
+    expect(sameSet.sameVisibleShards(committed.slice(1))).toBe(false);
   });
 });

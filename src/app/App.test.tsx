@@ -104,7 +104,7 @@ vi.mock("../runtime/exterior-default-activation", async (importOriginal) => {
   };
 });
 
-import { App, EXTERIOR_CELL_STREAMING_RELEASE_ID, PINNED_EXTERIOR_CELL_RELEASE_IDS, appendBlock835PublicRealmUrl, appendExteriorProfileUrl, exteriorCellBasePath, exteriorCanarySnapshotMessage, exteriorDeepLinkMessage, exteriorSnapshotOriginLabel, isPinnedExteriorCellRelease, exteriorStreamingActivation, exteriorStreamingFailureMessage, exteriorStreamingNotices, parseExteriorStreamingUrl, applyStorefrontResolution, block835PerformanceGate, block835PerformanceProbeMode, block835PublicRealmActivation, block835PublicRealmFailureMessage, isCurrentStorefrontResolution, MOBILE_VIEWPORT_MEDIA_QUERY, mobileExteriorLodPolicy, overlayLayoutPolicy, preserveFeatureSequence, resolveStorefrontBuilding, selectionFocusTransaction, summarizeBlock835Frames, type StorefrontResolutionState } from "./App";
+import { App, EXTERIOR_CELL_STREAMING_RELEASE_ID, PINNED_EXTERIOR_CELL_RELEASE_IDS, appendBlock835PublicRealmUrl, appendExteriorProfileUrl, exteriorCellBasePath, exteriorCanarySnapshotMessage, exteriorDeepLinkMessage, exteriorSnapshotOriginLabel, isPinnedExteriorCellRelease, exteriorStreamingActivation, exteriorStreamingFailureMessage, exteriorStreamingNotices, parseExteriorStreamingUrl, applyStorefrontResolution, block835PerformanceGate, block835PerformanceProbeMode, block835PublicRealmActivation, block835PublicRealmFailureMessage, isCurrentStorefrontResolution, MOBILE_VIEWPORT_MEDIA_QUERY, mobileExteriorLodPolicy, overlayLayoutPolicy, preserveFeatureSequence, resolveCitywideOverviewResidency, resolveStorefrontBuilding, selectionFocusTransaction, summarizeBlock835Frames, type StorefrontResolutionState } from "./App";
 import { ExteriorFallbackNotice, digestExteriorNotices, type ExteriorNoticeEntry } from "./ExteriorFallbackNotice";
 import { exteriorQualifiedNotice } from "../runtime/exterior-wave-attribution";
 import { exteriorUnanchoredNotice } from "../features/explorer/CesiumViewport";
@@ -112,7 +112,7 @@ import type { ExteriorCellOutcome } from "../runtime/exterior-cell-runtime";
 import { EXTERIOR_DEFAULT_ACTIVATION, EXTERIOR_DEFAULT_ACTIVATIONS } from "../runtime/exterior-default-activation";
 import { navigationUrl, parseNavigationUrl } from "../domain/visitor-navigation";
 import { BLOCK_835_DOITT_IDS } from "../domain/commercial-frontage";
-import { CITYWIDE_RELEASE_ID } from "../release/citywide-release";
+import { CITYWIDE_BUDGETS, CITYWIDE_OVERVIEW_BUDGETS, CITYWIDE_OVERVIEW_CACHE_FLOORS, CITYWIDE_RELEASE_ID } from "../release/citywide-release";
 import type { CitywideReleaseAdapter, CitywideRuntimeMetrics } from "../runtime/citywide-release-runtime";
 
 const initialTestUrl = window.location.href;
@@ -345,6 +345,35 @@ describe("explorer overlay policy", () => {
     const retained = preserveFeatureSequence(previous, [revised]);
     expect(retained).not.toBe(previous);
     expect(retained).toEqual([revised]);
+  });
+
+  /**
+   * B1: `?exteriorScheduler=on` must not reconfigure a civic-context session.
+   *
+   * The shared aggregate cache and the citywide adapter are also the composed
+   * civic session's base, and civic refs derive to class `other`, which has no
+   * floor. A flag-only gate pinned 103 citywide shards while evicting the
+   * civic shards actually on screen.
+   */
+  it("gates citywide overview residency on citywide mode, not on the flag alone", () => {
+    const off = resolveCitywideOverviewResidency(false, true);
+    expect(off.active).toBe(false);
+    expect(off.budgets).toBe(CITYWIDE_BUDGETS);
+    expect(off.floors).toEqual({});
+
+    // The flag-on civic path: byte-identical budgets, and no floors.
+    const civic = resolveCitywideOverviewResidency(true, false);
+    expect(civic.active).toBe(false);
+    expect(civic.budgets).toBe(CITYWIDE_BUDGETS);
+    expect(civic.budgets.maxLoadedShards).toBe(24);
+    expect(civic.budgets.maxLoadedBytes).toBe(48 * 1024 * 1024);
+    expect(civic.budgets.maxRenderedDenseFeatures).toBe(6_000);
+    expect(civic.floors).toEqual({});
+
+    const overview = resolveCitywideOverviewResidency(true, true);
+    expect(overview.active).toBe(true);
+    expect(overview.budgets).toBe(CITYWIDE_OVERVIEW_BUDGETS);
+    expect(overview.floors).toBe(CITYWIDE_OVERVIEW_CACHE_FLOORS);
   });
 
   it("loads a missing canonical building before resolving a storefront selection", async () => {

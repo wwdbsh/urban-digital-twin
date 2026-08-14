@@ -51,7 +51,7 @@ import {
 import { loadRealPilot } from "../runtime/real-pilot-manifest";
 import { parseRealPlaceFeature, REAL_PILOT_RELEASE_ID, type RealPlaceView } from "../runtime/real-place-view";
 import { loadLandmarkAssets } from "../runtime/landmark-assets";
-import { CITYWIDE_BUDGETS, CITYWIDE_OVERVIEW_CACHE_FLOORS, CITYWIDE_RELEASE_ID, CitywideLruCache, resolveCitywideBudgets } from "../release/citywide-release";
+import { CITYWIDE_BUDGETS, CITYWIDE_NO_CACHE_FLOORS, CITYWIDE_OVERVIEW_CACHE_FLOORS, CITYWIDE_RELEASE_ID, CitywideLruCache, resolveCitywideBudgets, type CitywideBudgetRecord, type CitywideCacheFloors } from "../release/citywide-release";
 import { loadCitywideRelease } from "../runtime/citywide-release-runtime";
 import type { CitywideReleaseAdapter, CitywideRuntimeMetrics } from "../runtime/citywide-release-runtime";
 import { loadTravelContextRelease, type TravelContextFault, type TravelContextReleaseAdapter, type TravelContextRuntimeMetrics } from "../runtime/travel-context-release-runtime";
@@ -318,6 +318,23 @@ const EMPTY_CITYWIDE_BROWSER_BASELINE: CitywideBrowserBaseline = {
   citywideResourceCount: 0,
   citywideResourceBytes: 0,
 };
+
+/**
+ * The overview residency gate.
+ *
+ * `?exteriorScheduler=on` selects the T004 record, but the shared aggregate
+ * cache and the citywide adapter are ALSO the civic/composed session's base.
+ * Applying the raised caps or the class floors while civic is the active mode
+ * pins 103 citywide shards that nobody is looking at and starves the civic
+ * shards that are on screen — civic refs derive to class `other`, which has no
+ * floor. So the flag is necessary but not sufficient: overview residency is
+ * live-gated on citywide actually being the active mode, and every other mode
+ * gets byte-identical budgets and no floors.
+ */
+export function resolveCitywideOverviewResidency(schedulerRequested: boolean, citywideMode: boolean): { active: boolean; budgets: CitywideBudgetRecord; floors: CitywideCacheFloors } {
+  const active = schedulerRequested && citywideMode;
+  return { active, budgets: resolveCitywideBudgets(active), floors: active ? CITYWIDE_OVERVIEW_CACHE_FLOORS : CITYWIDE_NO_CACHE_FLOORS };
+}
 
 /** Retain a stable array only when every immutable feature object is unchanged. */
 export function preserveFeatureSequence(previous: readonly Feature[], next: readonly Feature[]): Feature[] {
@@ -1155,9 +1172,7 @@ export function App() {
   // no scheduler control, only the URL flag, so the value cannot change within a
   // session and no setter exists to change it by accident.
   const exteriorSchedulerRequested = initialExteriorStreaming.scheduler;
-  // The overview budget record rides the same single flag. Resolved once, read
-  // everywhere: nothing here writes `CITYWIDE_BUDGETS`.
-  const citywideBudgets = resolveCitywideBudgets(exteriorSchedulerRequested);
+
   // One entry per promoted exterior release. A wave failing closed clears its
   // own entry and leaves every other wave exactly as it was, so one bad release
   // can never withdraw a good one.
@@ -1276,17 +1291,12 @@ export function App() {
   // is where they are tested.
   const exteriorCellLoadsRef = useRef(new Map<string, { runtime: ExteriorCellRuntime; profile: ExteriorRenderProfile; bucket: number; controller: AbortController; load: ExteriorCellLoadState<ExteriorCellOutcome> }>());
   const exteriorCacheRef = useRef<CitywideLruCache<Uint8Array>>(new CitywideLruCache<Uint8Array>(EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries, EXTERIOR_RUNTIME_BUDGETS.maxCachedBytes));
-  // T004: one resolved record for the session, selected by the same opt-in flag
-  // the scheduler uses. The shared constant is never mutated, so a civic or
-  // composed session that did not ask for citywide overview residency keeps the
-  // budgets it always had. Floors are eviction-choice only and are attached to
-  // the same flag.
-  const aggregateCacheRef = useRef<CitywideLruCache<unknown>>(new CitywideLruCache<unknown>(
-    citywideBudgets.maxLoadedShards,
-    citywideBudgets.maxLoadedBytes,
-    exteriorSchedulerRequested ? CITYWIDE_OVERVIEW_CACHE_FLOORS : {},
-  ));
-  const citywideBudgetsRef = useRef(citywideBudgets);
+  // Constructed at the DEFAULT record. Overview residency is applied, and
+  // withdrawn, by the effect below when citywide is the active mode; the shared
+  // constant is never mutated and a civic session never sees a raised cap or a
+  // class floor.
+  const aggregateCacheRef = useRef<CitywideLruCache<unknown>>(new CitywideLruCache<unknown>(CITYWIDE_BUDGETS.maxLoadedShards, CITYWIDE_BUDGETS.maxLoadedBytes));
+  const citywideResidencyRef = useRef(resolveCitywideOverviewResidency(exteriorSchedulerRequested, false));
   const citywideOverviewProbeRef = useRef<{ moves: CitywideOverviewMoveSample[]; dense: DenseRenderMetrics[] }>({ moves: [], dense: [] });
   const citywideOverviewMoveIndexRef = useRef(0);
   const citywideSequenceRef = useRef<readonly Feature[] | null>(null);
@@ -1339,6 +1349,10 @@ export function App() {
     setSelectedStorefrontId(storefrontId);
   }, []);
   const citywideMode = dataMode === "real-pilot" && activeAdapter === citywideAdapter && citywideAdapter !== null;
+  // Live-gated, not flag-gated: see `resolveCitywideOverviewResidency`.
+  const citywideResidency = resolveCitywideOverviewResidency(exteriorSchedulerRequested, citywideMode);
+  const citywideBudgets = citywideResidency.budgets;
+  citywideResidencyRef.current = citywideResidency;
   const civicMode = dataMode === "civic-context" && activeAdapter === composedAdapter && composedAdapter !== null;
   const exteriorActive = Boolean(exteriorOverlay && exteriorLoadState === "ready" && (citywideMode || civicMode) && exteriorOverlay.compatibleWith(CITYWIDE_RELEASE_ID));
   const activeRealBaseReleaseId = citywideMode ? CITYWIDE_RELEASE_ID : civicMode ? TRAVEL_CONTEXT_RELEASE_ID : null;
@@ -2232,6 +2246,12 @@ export function App() {
     ));
   }, []);
 
+  // Apply and withdraw overview residency on the shared cache as the active
+  // mode changes. Only the two recorded configurations are ever applied.
+  useEffect(() => {
+    aggregateCacheRef.current.configure(citywideResidency.budgets.maxLoadedShards, citywideResidency.budgets.maxLoadedBytes, citywideResidency.floors);
+  }, [citywideResidency.budgets, citywideResidency.floors]);
+
   useEffect(() => { if (typeof window !== "undefined") persistSavedNavigation(window.localStorage, savedNavigation); }, [savedNavigation]);
 
   useEffect(() => {
@@ -2242,7 +2262,7 @@ export function App() {
     const loadCitywide = async () => {
       try {
         if (injectedFault === "citywide-root") throw new Error("Injected citywide root failure; immutable release was not modified.");
-        const adapter = await loadCitywideRelease("/data/manhattan-citywide-20260804/", controller.signal, undefined, { sharedBudget: aggregateBudgetRef.current, sharedCache: aggregateCacheRef.current, cacheNamespace: "citywide", budgets: citywideBudgetsRef.current });
+        const adapter = await loadCitywideRelease("/data/manhattan-citywide-20260804/", controller.signal, undefined, { sharedBudget: aggregateBudgetRef.current, sharedCache: aggregateCacheRef.current, cacheNamespace: "citywide", budgets: () => citywideResidencyRef.current.budgets });
         if (!active) { adapter.destroy(); return; }
         setCitywideAdapter(adapter);
         setCitywideLoadState("ready");
@@ -2521,7 +2541,7 @@ export function App() {
           // under StrictMode, and a probe that double-counts its own moves is
           // not a measurement.
           recordCitywideOverviewMove({ signature: nextFootprint.signature, refreshMs, featureCount: features.length, sequenceRetained: citywideSequenceRef.current === features });
-          citywideSequenceRef.current = features;
+          if (CITYWIDE_OVERVIEW_PROBE_ENABLED) citywideSequenceRef.current = features;
           setCitywideFeatures((previous) => preserveFeatureSequence(previous, features));
           publishCitywideMetrics(citywide);
         }
@@ -2722,7 +2742,10 @@ export function App() {
     classSizes: aggregateCacheRef.current.classSizes(),
     classEvictions: aggregateCacheRef.current.classEvictionCounts(),
   };
-  const composedDenseGroupLimits = useMemo(() => civicMode ? { base: citywideBudgets.maxRenderedDenseFeatures, context: TRAVEL_CONTEXT_BUDGETS.maxAreaRenderParts } : undefined, [citywideBudgets, civicMode]);
+  // Civic composition keeps the default base cap. The composed base group has
+  // never been measured at the overview census and raising it here would be a
+  // civic behaviour change made by a citywide flag.
+  const composedDenseGroupLimits = useMemo(() => civicMode ? { base: CITYWIDE_BUDGETS.maxRenderedDenseFeatures, context: TRAVEL_CONTEXT_BUDGETS.maxAreaRenderParts } : undefined, [civicMode]);
 
   useEffect(() => {
     if (typeof window === "undefined") return undefined;
@@ -3714,7 +3737,8 @@ export function App() {
           schemaVersion: "1.0",
           schedulerRequested: exteriorSchedulerRequested,
           budgets: citywideBudgets,
-          floors: exteriorSchedulerRequested ? CITYWIDE_OVERVIEW_CACHE_FLOORS : {},
+          floors: citywideResidency.floors,
+          overviewResidencyActive: citywideResidency.active,
           adapterMetrics: citywideMetrics,
           denseMetrics: citywideDenseMetrics,
           cache: citywideCacheResidency,

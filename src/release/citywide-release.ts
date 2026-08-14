@@ -6,7 +6,7 @@ import { sha256HexSync, stableSerialize } from "./catalog-release.ts";
 export const CITYWIDE_RELEASE_SCHEMA_VERSION = "1.0" as const;
 export const CITYWIDE_RELEASE_ID = "manhattan-citywide-20260804" as const;
 export const CITYWIDE_TILE_LEVEL = 14 as const;
-export const CITYWIDE_BUDGETS = {
+export const CITYWIDE_BUDGETS = Object.freeze({
   rootBytes: 256 * 1024,
   geometryShardBytes: 2 * 1024 * 1024,
   searchDetailShardBytes: 1024 * 1024,
@@ -20,7 +20,7 @@ export const CITYWIDE_BUDGETS = {
   maxDecodedSummaries: 8_192,
   maxDecodedFeatures: 8_192,
   maxDecodedDetails: 512,
-} as const;
+} as const);
 
 /**
  * A resolved budget record.
@@ -74,12 +74,12 @@ export type CitywideBudgetRecord = { readonly [K in keyof typeof CITYWIDE_BUDGET
  * so raising them buys no rendered building and costs the JS-heap expansion
  * ADR 0043 records.
  */
-export const CITYWIDE_OVERVIEW_BUDGETS: CitywideBudgetRecord = {
+export const CITYWIDE_OVERVIEW_BUDGETS: CitywideBudgetRecord = Object.freeze({
   ...CITYWIDE_BUDGETS,
   maxLoadedShards: 112,
   maxLoadedBytes: 80 * 1024 * 1024,
   maxRenderedDenseFeatures: 57_547,
-};
+});
 
 /** The one flag (`?exteriorScheduler=on`) selects the record; nothing mutates. */
 export function resolveCitywideBudgets(overviewStreaming: boolean): CitywideBudgetRecord {
@@ -120,12 +120,15 @@ export type CitywideCacheFloors = Partial<Record<CitywideCacheClass, number>>;
  * renders; `search` and `details` keep 2 each so an in-flight query and the
  * detail index plus one detail shard survive a geometry sweep.
  */
-export const CITYWIDE_OVERVIEW_CACHE_FLOORS: CitywideCacheFloors = {
+export const CITYWIDE_OVERVIEW_CACHE_FLOORS: CitywideCacheFloors = Object.freeze({
   "geometry/buildings": 56,
   "geometry/restaurants": 47,
   search: 2,
   details: 2,
-};
+});
+
+/** No floors. Named so a caller cannot express "unfloored" by accident. */
+export const CITYWIDE_NO_CACHE_FLOORS: CitywideCacheFloors = Object.freeze({});
 
 export type CitywideLayerId = "buildings" | "restaurants";
 export type CitywideRecordKind = "building" | "restaurant";
@@ -574,20 +577,46 @@ export class CitywideLruCache<T> {
   private clock = 0;
   private evictions = 0;
   private totalBytes = 0;
-  readonly maxEntries: number;
-  readonly maxBytes: number;
-  readonly floors: CitywideCacheFloors;
-  constructor(maxEntries: number = CITYWIDE_BUDGETS.maxLoadedShards, maxBytes: number = CITYWIDE_BUDGETS.maxLoadedBytes, floors: CitywideCacheFloors = {}) {
-    this.maxEntries = maxEntries;
-    this.maxBytes = maxBytes;
+  private currentMaxEntries: number;
+  private currentMaxBytes: number;
+  private currentFloors: CitywideCacheFloors;
+  get maxEntries(): number { return this.currentMaxEntries; }
+  get maxBytes(): number { return this.currentMaxBytes; }
+  get floors(): CitywideCacheFloors { return this.currentFloors; }
+  constructor(maxEntries: number = CITYWIDE_BUDGETS.maxLoadedShards, maxBytes: number = CITYWIDE_BUDGETS.maxLoadedBytes, floors: CitywideCacheFloors = CITYWIDE_NO_CACHE_FLOORS) {
+    this.currentMaxEntries = maxEntries;
+    this.currentMaxBytes = maxBytes;
+    this.currentFloors = floors;
+    this.assertConfiguration(maxEntries, maxBytes, floors);
+  }
+  /**
+   * Re-point one shared cache at a different recorded configuration.
+   *
+   * This exists because the aggregate cache has several tenants and only ONE
+   * of them ever wants overview residency. A flag that pinned the citywide
+   * island while a civic session was the one on screen would starve the
+   * tenant the user is actually looking at, so the caller re-applies the
+   * configuration when the active mode changes rather than choosing once at
+   * mount. Only the two RECORDED configurations are ever applied, and both
+   * byte caps exceed every declared shard size, so no re-configuration can
+   * make an already-legal artifact inadmissible.
+   */
+  configure(maxEntries: number, maxBytes: number, floors: CitywideCacheFloors = CITYWIDE_NO_CACHE_FLOORS): void {
+    this.assertConfiguration(maxEntries, maxBytes, floors);
+    this.currentMaxEntries = maxEntries;
+    this.currentMaxBytes = maxBytes;
+    this.currentFloors = floors;
+    this.evict();
+  }
+  private assertConfiguration(maxEntries: number, maxBytes: number, floors: CitywideCacheFloors): void {
     // A cap that does not exceed the sum of the floors would leave `evict` no
     // legal candidate on a full cache; the floors would then have to be
     // ignored wholesale, which is exactly the residency failure they exist to
     // prevent.  Refuse the configuration instead of silently degrading.
     const floorTotal = Object.values(floors).reduce((sum, value) => sum + (value ?? 0), 0);
+    if (!Number.isSafeInteger(maxEntries) || maxEntries < 1 || !Number.isSafeInteger(maxBytes) || maxBytes < 1) throw new Error("Citywide cache caps must be positive integers.");
     if (Object.values(floors).some((value) => !Number.isSafeInteger(value) || (value ?? 0) < 1)) throw new Error("Citywide cache class floors must be positive integers.");
     if (floorTotal >= maxEntries) throw new Error("Citywide cache class floors must leave at least one evictable entry below the entry cap.");
-    this.floors = floors;
   }
   get(key: string): T | undefined {
     const entry = this.entries.get(key);

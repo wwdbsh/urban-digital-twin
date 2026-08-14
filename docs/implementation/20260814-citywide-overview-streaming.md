@@ -48,27 +48,29 @@ Per-move `refreshViewport`, recorded pan path:
 
 | move | resident | ms | sequence |
 | --- | --- | --- | --- |
-| 0 | 0 entries | 73.0 | rebuilt |
-| 1 | 15 entries | 520.7 | retained |
-| 2 | 101 entries / 54,840 features | 1,653.8 | rebuilt |
-| 3 | 105 entries / 57,313 features | 365.9 | rebuilt |
-| 4 | unchanged | **2.9** | **retained** |
-| 5 | unchanged | **2.6** | **retained** |
+| 0 | 0 entries | 40.4 | rebuilt |
+| 1 | 14 entries | 461.4 | retained (trivially, empty sequence) |
+| 2 | 101 entries / 54,066 features | 1,241.2 | rebuilt |
+| 3 | 105 entries / 57,313 features | 352.1 | rebuilt |
+| 4 | unchanged | **2.1** | **retained** |
+| 5 | unchanged | **2.0** | **retained** |
 
 Per station (`buildings / POIs / primitives`, `planBuild/Reuse/Cancel/Swap`,
-`allocationMaxSliceMs`, chunks, `totalBuildMs`):
+`allocationMaxSliceMs`, chunks):
 
-| station | features | plans | slice | chunks | total |
-| --- | --- | --- | --- | --- | --- |
-| island-overview | 45,154 / 12,119 / 32 | 4 / 7 / 2 / 1 | 9.4 | 478 | 20.8 |
-| overview-nudge-north | 45,154 / 12,119 / 32 | 4 / 10 / 2 / 1 | 14.5 | 478 | 23.2 |
-| overview-nudge-east | 43,267 / 10,759 / 30 | 3 / 12 / 1 / 1 | 10.7 | 451 | 26.0 |
-| overview-nudge-back | 45,154 / 12,119 / 32 | 4 / 8 / 2 / 1 | 9.8 | 478 | 20.7 |
-| descend-midtown | 17,324 / 2,202 / 13 | 3 / 6 / 1 / 1 | 1.5 | 163 | 50.5 |
-| return-overview | 45,154 / 12,119 / 32 | 4 / 11 / 2 / 1 | 8.1 | 478 | 56.4 |
-| search-detail-storm | 45,154 / 12,119 / 32 | 4 / 11 / 2 / 1 | 7.3 | 478 | 55.1 |
+| station | features | plans | slice | chunks |
+| --- | --- | --- | --- | --- |
+| island-overview | 45,154 / 12,119 / 32 | 4 / 7 / 2 / 1 | 7.1 | 478 |
+| overview-nudge-north | 45,154 / 12,119 / 32 | 4 / 7 / 2 / 1 | 7.4 | 478 |
+| overview-nudge-east | 42,029 / 10,747 / 30 | 3 / 6 / 1 / 1 | 6.1 | 440 |
+| overview-nudge-back | 45,154 / 12,119 / 32 | 4 / 7 / 2 / 1 | 7.8 | 478 |
+| descend-midtown | 17,324 / 2,202 / 13 | 3 / 9 / 1 / 1 | 1.6 | 163 |
+| return-overview | 45,154 / 12,119 / 32 | 4 / 6 / 2 / 1 | 6.6 | 478 |
+| search-detail-storm | 45,154 / 12,119 / 32 | 4 / 11 / 2 / 1 | 6.4 | 478 |
 
-`planReuseCount` is non-zero at every station. `totalBuildMs` here is **not** a
+`planReuseCount` is non-zero at every station. The probe also records
+`overviewResidencyActive: true` with caps 112 / 83,886,080 and the four floors,
+confirming the gate resolved for citywide mode. `totalBuildMs` is **not** a
 display-locked number; the recorded cold-build latency is 478 rAF ≈ 8.0 s at
 60 Hz, and the chunk size is deliberately not raised (ADR 0043).
 
@@ -96,10 +98,44 @@ New (API did not exist before):
   configurations, historical eviction order with no floors, and the whole dense
   island surviving a storm.
 - `src/runtime/citywide-release-runtime.test.ts` — memo invalidation on shard
-  re-fetch, and the threaded budget record.
+  re-fetch, the threaded budget record and its supplier form, and
+  "treats a reordered but unchanged visible shard set as unchanged", which
+  fails on the order-sensitive comparison with `expected false to be true`.
+- `src/app/App.test.tsx` — "gates citywide overview residency on citywide
+  mode, not on the flag alone", covering the flag-on civic path and asserting
+  byte-identical civic budgets and empty floors.
+- `src/release/citywide-release.test.ts` — the B1 starvation hazard as an
+  executable statement (floored cache evicts the unfloored civic tenant;
+  withdrawing the record restores plain recency), reconfiguration admissibility
+  and the frozen records.
 - `src/features/explorer/CesiumViewport.test.ts` — dense selection preserves
   element identity so `shouldReplaceDenseRenderPlan` returns false, which is
   the branch that increments `planReuseCount`.
+
+## Review round 2 (B1 blocking + six optionals)
+
+- **B1.** `?exteriorScheduler=on` reconfigured civic-context and composed
+  sessions: floors starved the on-screen civic tenant (civic refs derive to
+  class `other`, floor 0), the composed base dense cap rose 6,000 → 57,547, and
+  the composed base shard-selection bound rose 24 → 112. Overview residency is
+  now **live-gated on citywide being the active mode** through one exported
+  predicate, `resolveCitywideOverviewResidency`, feeding all three sites.
+  `CitywideRuntimeOptions.budgets` accepts a supplier so the adapter follows
+  the active mode; `CitywideLruCache.configure` re-points the shared cache
+  between the two recorded configurations. Mode gating chosen over
+  namespace-qualified floors, which fixes none of the three (ADR 0043).
+- **O1.** `sameVisibleShards` compares as a set, not in order.
+- **O2.** ADR corrected: `committedVisibleShards` strongly retains up to
+  `maxLoadedShards` parsed payloads past LRU eviction — a second bound, not
+  none.
+- **O3.** `CITYWIDE_BUDGETS`, `CITYWIDE_OVERVIEW_BUDGETS` and
+  `CITYWIDE_OVERVIEW_CACHE_FLOORS` are `Object.freeze`d.
+- **O4.** `RuntimeCityAdapter.getFeatures` narrowed to `readonly Feature[]`.
+  Exactly one call site needed adjusting (`visibleFor`), confirming the
+  copy-before-sort fix had already closed the only in-place sort.
+- **O5.** `citywideSequenceRef` assignment moved inside the probe guard.
+- **O6.** Probe move 1 annotated in the ADR as trivial (empty-sequence)
+  retention.
 
 ## The defect found in existing code
 
