@@ -785,9 +785,13 @@ export const EXTERIOR_DETAIL_RADIUS_PARAM = "exteriorDetailRadius" as const;
  * conservative direction (it keeps geometry).
  */
 export function parseExteriorDetailRadiusMeters(value: string | null): number | null {
-  if (value === null || value.trim().length === 0) return null;
+  // An explicit grammar rather than `Number()`, which accepts `1e3`, `0x4b0`,
+  // ` 1200 ` and `Infinity` — four spellings of a radius nobody would type, each
+  // of which would round-trip back into the URL as something different from
+  // what the link said. Decimal metres, or no radius.
+  if (value === null || !/^\d+(\.\d+)?$/u.test(value)) return null;
   const parsed = Number(value);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+  return parsed > 0 ? parsed : null;
 }
 
 /**

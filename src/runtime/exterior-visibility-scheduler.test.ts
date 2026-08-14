@@ -324,6 +324,37 @@ describe("selectResidentUnits: the detail radius (T005)", () => {
     expect(decision.resident).not.toContain("far");
   });
 
+  /**
+   * The one configuration where the exemption is LOAD-BEARING.
+   *
+   * The test above puts the camera inside the footprint, so `home` would have
+   * survived on the intersection test alone and the reservation is not doing
+   * the work. Here the camera stands in a unit that is 8.7 km from the
+   * footprint's ground centre and does NOT intersect the footprint at all: the
+   * intersection tier refuses it, the radius refuses it, and the reservation is
+   * the only thing left holding it. This is the T009 F2 geometry — a steeply
+   * pitched camera whose measured ground footprint lies well away from the
+   * camera's own position — and it is exactly where a distance-ranked cut
+   * dropped the shard the camera was standing on.
+   */
+  it("reserves the camera's own unit when it neither intersects the footprint nor lies inside the radius", () => {
+    const home = unit("home", rect(-73.99, 40.74, -73.98, 40.75), 1);
+    const view = { footprint: centredFootprint(-73.90, 40.80, 0.01, 0.01), camera: pose(-73.985, 40.745), heightBucket: 300 };
+    // Hand-checked against the census metric: 0.08 deg x 84,412.702 east and
+    // 0.05 deg x 111,049.654 north.
+    expect(unitDistanceMeters(home.bounds, -73.90, 40.80, METRIC)).toBeCloseTo(Math.hypot(0.08 * METRIC.metersPerDegreeLongitude, 0.05 * METRIC.metersPerDegreeLatitude), 1);
+    expect(unitDistanceMeters(home.bounds, -73.90, 40.80, METRIC)).toBeGreaterThan(8_000);
+    // Both refusals are real: no intersection, and far outside a 500 m radius.
+    expect(viewportBoundsIntersect(home.bounds, view.footprint.bounds)).toBe(false);
+    const decision = selectResidentUnits([home], view, policy({ maxUnitDistanceMeters: 500 }));
+    expect(decision.reserved).toEqual(["home"]);
+    expect(decision.resident).toEqual(["home"]);
+    // And it is the RESERVATION doing it, not hysteresis: there is no previous
+    // decision for `home` to coast on.
+    expect(decision.retainedCount).toBe(0);
+    expect(decision.load).toEqual(["home"]);
+  });
+
   it("fades a unit out through hysteresis rather than dropping it the instant the radius tightens", () => {
     const wide = selectResidentUnits(units, view, policy({ maxUnitDistanceMeters: 2_000 }));
     expect(wide.resident).toEqual(["near", "far"]);

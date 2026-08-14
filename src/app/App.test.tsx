@@ -713,7 +713,10 @@ describe("exterior streaming profiles and canary state", () => {
     // A radius this build cannot honour resolves to "no radius", never to a
     // different one. Zero is refused rather than clamped: a radius of 0 would
     // defer every non-reserved cell, and keeping geometry is the safe direction.
-    for (const value of ["", "0", "-500", "abc", "NaN", "Infinity"]) {
+    // Decimal metres only. `1e3`, `0x4b0`, ` 1200 ` and `Infinity` are four
+    // spellings `Number()` would have accepted and that would then round-trip
+    // back into the URL as something other than what the link said.
+    for (const value of ["", "0", "-500", "abc", "NaN", "Infinity", "1e3", "0x4b0", " 1200", "1200 ", "+1200", "1,200", "1200m"]) {
       expect(parseExteriorDetailRadiusMeters(value), value).toBeNull();
     }
     expect(parseExteriorDetailRadiusMeters("1200.5")).toBe(1_200.5);

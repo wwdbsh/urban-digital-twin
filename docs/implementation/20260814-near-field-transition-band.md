@@ -56,16 +56,24 @@ influenced any of it. The camera reservation held at every pose. Zero external
 hosts throughout. The Block 835 `lod_0`↔`lod_1` transition at 250 m passes the
 2 % silhouette gate with 10.9× margin (worst 0.001834). The crossing showed
 `planBuildCount` advancing while `planSwapCount` did not, for a double-draw
-window of 2,821–4,084 ms (point estimate 3,557.9 ms), and 21.8 % of the frame
-changing four seconds after the drag ended.
+window bounded at 2,821–4,084 ms (the 3,557.9 ms build-duration proxy
+undercounts it — see D-9), and 21.8 % of the frame changing four seconds after
+the drag ended. The crossing rebuild was **4,803 features in 41 chunks**; the
+5,496-feature / 46-chunk / 6,359.6 ms build in the same record is the **boot**
+build that settled before the first drag, and at 79.5 % of the X bar it is the
+strongest single reason D-9 exists.
 
 ## The verdict, in one paragraph
 
-Revival does not fire: neither X nor Y is exceeded and an incremental
-dense-plan update is an untried cheaper fix, so all three legs of the
-pre-registered condition fail. The no-popping check fails exactly as
-pre-registered, as a defect of `shouldReplaceDenseRenderPlan` rather than of the
-radius. The recommendation for T006's default flip is **`null` — no detail
+Revival does not fire, **on the AND clause**. Leg X does not fire on the
+measured crossing (3,557.9 ms for 4,803 features in 41 chunks). Leg Y is **NOT
+ESTABLISHED**: `totalBuildMs` measures only the committed build, while the §1.4
+window opens at the earlier build's pending-layer add, so the proxy is
+structurally biased low, and the unbiased counter bounds are [2,821 ms,
+4,084 ms] — an upper bound above the 4,000 ms bar. Leg AND fails outright and is
+sufficient alone, so the verdict would be unchanged if Y were later established
+as fired. The no-popping check fails exactly as pre-registered, as a defect of
+`shouldReplaceDenseRenderPlan` rather than of the radius. The recommendation for T006's default flip is **`null` — no detail
 radius in this composition** — because the entire V3 overlay is 484 buildings in
 13 cells, `deferredCount` was 0 everywhere, and adding radius crossings before
 the incremental update exists buys nothing and costs a multi-second double-draw
@@ -74,16 +82,28 @@ behind it.
 
 ## What did not get done, and why
 
-The eight numbered deferrals are in ADR 0044 Part 5. The two that matter to the
+The ten numbered deferrals are in ADR 0044 Part 5. The ones that matter to the
 next cycle:
 
 - **D-1 is a RETIREMENT, not a deferral.** The `refreshViewport` →
   `selectResidentUnits` refactor met ADR 0043's own retirement condition
   ("unless the near-field band needs a mixed unit list") and the near-field band
   did not need one.
-- **D-2 is a PREREQUISITE.** T006 must not flip the default before the
-  incremental dense-plan update exists, because every crossing in a streaming
-  default session pays the measured double-draw.
+- **D-2 is a BLOCKING PREREQUISITE of the flip.** T006 must not flip the default
+  before the incremental dense-plan update exists, because every crossing in a
+  streaming default session pays the measured double-draw.
+- **D-9 is the SECOND BLOCKING PREREQUISITE of the flip, with the same force as
+  D-2.** Every crossing number in this cycle was measured on a **4,803-feature**
+  plan; the island plan is 57,273 features in 478 chunks (**11.9×**), and the
+  boot build immediately before the crossing already reached **79.5 % of the X
+  bar** at only 14.4 % more features. T006 must measure an **island-scale**
+  crossing and re-evaluate legs X and Y against the unchanged §1.3 thresholds,
+  after adding timestamps at the pending-layer add (`CesiumViewport.tsx:1771`)
+  and the commit (`:1797`) so leg Y is measured against its own definition
+  rather than by a build-duration proxy that is known to undercount it.
+- **D-10** is the A/B control this cycle never ran — scheduler on, overlay on,
+  radius `null` — and it must be run first if a radius is ever reconsidered.
+  §3.1's table is explicitly **not** that baseline.
 
 ## Reproducing the evidence
 

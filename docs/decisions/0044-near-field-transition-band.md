@@ -351,6 +351,18 @@ Six readings, in order of importance:
    decoupling the flag from the overlay — a behaviour change outside this
    cycle's frozen scope. It is handed to T006 with the default flip, where the
    flag stops being the discriminator anyway.
+7. **The `V3 drawn` column is TAUTOLOGICAL between arms, and is not a finding.**
+   Arm (ii) reaches its state by disabling the exterior overlay, so `0` is
+   definitional — it is the arm's own construction restated, not a measurement
+   of anything the radius did. What the column *does* carry is the within-arm
+   progression **14 → 14 → 54 → 54** across the four poses, which is a real
+   reading about how much V3 a near-field camera reaches in this composition.
+   The between-arm comparison in that column should be read as a sanity check
+   that the arms were configured as intended, and as nothing more.
+8. **No row here isolates the radius.** Both arms differ in more than the
+   radius, so §3.1 measures "scheduler with a radius" against "no overlay" and
+   not "radius" against "no radius". The missing third arm is recorded as
+   **D-10**.
 
 ### 3.2 — The transition artifact (`data/transition-band-20260814/crossing-evidence.json`)
 
@@ -483,26 +495,63 @@ Against the criteria pre-registered in §1.3, before any capture:
 | condition | bar | measured | fires? |
 | --- | --- | --- | --- |
 | (X) dense plan rebuild at a crossing | > 8,000 ms | **3,557.9 ms** | **no** |
-| (Y) double-draw window | > 4,000 ms | **3,557.9 ms** (interval ≤ 4,084 ms) | **no** |
+| (Y) double-draw window | > 4,000 ms | proxy **3,557.9 ms**; counter bounds **[2,821 ms, 4,084 ms]**, upper bound ABOVE the bar | **NOT ESTABLISHED** |
 | AND not fixable incrementally | — | an incremental update is a named, un-attempted, strictly cheaper fix | **no** |
 
-**Recorded verdict: the per-cell coarse-GLB revival does NOT fire.** All three
-legs fail, and the third would defeat it alone.
+**Recorded verdict: the per-cell coarse-GLB revival does NOT fire — and it does
+so on the AND clause.** Leg X does not fire on the measured crossing. Leg Y is
+**not established either way** (below). Leg AND fails outright, and it alone is
+sufficient: reviving a whole asset pipeline while a strictly cheaper fix for the
+same cost is named and untried would be reviving it for the wrong reason. **The
+verdict would be unchanged if Y were later established as fired.**
 
-Two honesty notes that do not change the verdict:
+#### Correction (post-review): which build is which
 
-- **Y is under its bar by 11 %.** 3,557.9 ms against 4,000 ms is not a
-  comfortable pass, and the measured interval's upper bound (4,084 ms) is above
-  the bar outright. The verdict rests on the point estimate and on the AND
-  clause.
-- **This crossing rebuilt 5,496 features in 46 chunks, not the island's 57,273
-  in 478.** The same pose set measured boot builds of 18,026 ms (2 km, 133
-  chunks) and 27,552 ms (3 km, 212 chunks) in this environment. A crossing at
-  island scale would plausibly exceed X — but **this task did not measure one**,
-  and per the D7 discipline a plausible number is not a measured one. If T006's
-  campaign measures an island-scale crossing above 8,000 ms, condition (X) is
-  met and the revival question returns — still gated by the AND clause, which
-  the incremental update is expected to settle.
+An earlier draft of this section fused two different dense builds. Corrected
+from `crossing-evidence.json`:
+
+| build | committed at | features | chunks | `totalBuildMs` | what it is |
+| --- | --- | --- | --- | --- | --- |
+| swap #1 | before the crossing | 5,496 | 46 | **6,359.6 ms** | a **BOOT** build, settled before the first drag. Not a crossing. |
+| swap #2 | during the crossing | **4,803** | **41** | **3,557.9 ms** | **the crossing rebuild**, and the only build leg X was evaluated against. |
+
+**The crossing rebuilt 4,803 features in 41 chunks**, not 5,496 in 46.
+
+**This materially strengthens the X-leg risk, and the earlier hedge understated
+it.** The boot build at swap #1 reached **6,359.6 ms — 79.5 % of the 8,000 ms X
+bar — for 14.4 % more features** (5,496 vs 4,803) than the crossing build. X is
+not comfortably clear; it is one modest increase in plan size away. And the
+island plan is not modestly larger: 57,273 features in 478 chunks is **11.9×**
+the crossing build's feature count.
+
+The same pose set measured boot builds of **18,026 ms** (2 km, 133 chunks) and
+**27,552 ms** (3 km, 212 chunks) in this environment — both far above X, both
+**boot builds and not crossings**, and all of it software-rasteriser time.
+
+**This task did not measure an island-scale crossing**, and per the D7
+discipline a plausible number is not a measured one. That measurement is a
+numbered, blocking obligation on T006 — see **D-9**.
+
+#### Why leg Y is NOT ESTABLISHED rather than "no"
+
+The §1.4 window opens when the **new empty `PrimitiveCollection` is added to the
+scene** (`CesiumViewport.tsx:1771`), which happens at the START of a build. Two
+builds started inside this crossing: `planBuildCount` went **6 → 8** between
+frames #0 and #1, and `planCancellationCount` went 5 → 6, so build #7 started,
+was cancelled, and build #8 started and committed.
+
+`totalBuildMs` = 3,557.9 ms is **build #8's duration only**. The window as
+defined opens at **build #7's** pending-layer add, which is strictly earlier. So
+the proxy is **structurally biased low** against its own definition, by exactly
+the interval it omits, and it cannot be used to clear a bar it is known to
+undercount.
+
+What is not biased is the counter-derived bound: the window lies in
+**[2,821 ms, 4,084 ms]**, and **its upper bound is above the 4,000 ms bar**. The
+honest reading is that the available instrumentation does not decide leg Y. A
+direct measurement needs a timestamp at the pending-layer add — an
+instrumentation change this cycle did not make, and one T006's campaign should
+carry with **D-9**.
 
 ### 4.3 — The detail radius: recommended value
 
@@ -527,7 +576,10 @@ The reasoning is the arithmetic in §2, confirmed by §3.1:
    URL parameter, its fade-out behaviour and its reservation exemption are all
    in place and measured. When a wave ships its full census (the ADR 0040
    `census-only` retention reversed), the radius is one URL parameter away from
-   being measurable again, and §3.1's table is the baseline to compare against.
+   being measurable again. **§3.1's table is NOT that baseline** — neither of
+   its arms holds the radius as the only variable (§3.1 reading 8), so it cannot
+   serve as the control a future radius measurement is compared against. That
+   control is **D-10**, and it has to be run first.
 
 **If T006 nonetheless needs a radius**, 1,200 m is the value with evidence
 behind it: it is the near edge of ADR 0040's measured 1.2–2.4 km transition band
@@ -551,6 +603,30 @@ hysteresis fade and `hold === "none"` were all confirmed live.
   cancellation and generation guards that the current whole-layer swap gets for
   free), and attempting it inside a measurement cycle would have meant measuring
   a renderer this task had just changed.
+- **D-9: the ISLAND-SCALE crossing must be measured, and it is a BLOCKING
+  PREREQUISITE of the default flip, with the same force as D-2.** Everything
+  this task measured about a crossing was measured on a 4,803-feature plan. The
+  island plan is 57,273 features in 478 chunks — **11.9×** — and the boot build
+  immediately before this crossing already reached 79.5 % of the X bar at only
+  14.4 % more features (§4.2). Leg X was evaluated against the small plan and
+  leg Y could not be established at all. **T006 must measure a crossing on the
+  island plan** and re-evaluate both legs against the §1.3 thresholds, which
+  stay as pre-registered. Two things it needs:
+    1. a **timestamp at the pending-layer add** (`CesiumViewport.tsx:1771`) and
+       at the commit (`:1797`), so leg Y is measured against its own definition
+       instead of by a build-duration proxy that is known to undercount it;
+    2. a crossing driven at island scale rather than at a Block-835-local
+       camera.
+  If that measurement puts either leg over its bar, the revival question
+  returns — still gated by the AND clause, which D-2 is expected to settle.
+  **Recorded as a numbered obligation precisely so it cannot be discharged by
+  satisfying the other numbers.**
+- **D-10: the missing A/B control — scheduler ON, overlay ON, radius `null`.**
+  §3.1 compared "radius at 1,200 m" against "overlay disabled". It never ran the
+  third arm that isolates the radius itself: same flag, same budgets, same
+  overlay, no radius. Without it, no §3.1 row separates what the RADIUS did from
+  what the SCHEDULER did. This is the arm that should be run first if a radius
+  is ever reconsidered.
 - **D-3: the deferred/evicted fallback-notice wording → T006**, unchanged from
   ADR 0043. §3.4's stills show the notice reading *"121 of 123 exterior cells
   ship no exterior geometry in this build (by design; no substitute was
@@ -597,7 +673,20 @@ hysteresis fade and `hold === "none"` were all confirmed live.
   until the plan rebuilds.
 - **`?exteriorDetailRadius` writes nothing when absent.** A default session's
   URL is character-identical to what it was before this parameter existed, and
-  the parameter is deleted whenever the scheduler flag is.
+  the parameter is deleted whenever the scheduler flag is. The accepted grammar
+  is `/^\d+(\.\d+)?$/` — decimal metres only. Anything else (`1e3`, `0x10`,
+  ` 1200`, `Infinity`, a negative, zero) resolves to "no radius", never to a
+  different one, which is the same fail-direction as an unpinned
+  `exteriorCells`.
+- **`ExteriorStreamingUrlWrite.detailRadiusMeters` is OPTIONAL, and that is a
+  measurement-cycle affordance.** It is optional so the existing write sites
+  could stay untouched while the radius was only ever set by a capture URL. **If
+  a radius ever ships as a default, this field must become REQUIRED** — an
+  optional field on the write side means a write site that forgets it silently
+  drops the radius on the next camera move, and a session that stops being
+  radiused halfway through is worse than one that never was. The URL round-trip
+  test in `App.test.tsx` pins the write-back today; the type would have to pin
+  it at the flip.
 
 ## Rollback
 
