@@ -117,6 +117,10 @@
     "citywide-overview:census": "node --experimental-strip-types --max-old-space-size=8192 scripts/citywide-overview-census-cli.mjs",
     "citywide-overview:extents": "node --experimental-strip-types scripts/emit-citywide-overview-cell-extents.mjs",
     "exterior-scheduler:trace": "node --experimental-strip-types scripts/exterior-scheduler-trace-capture-cli.mjs trace",
+    "exterior-scheduler:roam": "node --experimental-strip-types scripts/exterior-scheduler-trace-capture-cli.mjs roam",
+    "exterior-scheduler:latency": "node --experimental-strip-types scripts/exterior-scheduler-trace-capture-cli.mjs latency",
+    "exterior-scheduler:governance-evidence": "node --experimental-strip-types scripts/exterior-scheduler-trace-capture-cli.mjs governance-evidence",
+    "exterior-scheduler:roam-evidence": "node --experimental-strip-types scripts/exterior-scheduler-trace-capture-cli.mjs roam-evidence",
     "exterior-scheduler:evidence": "node --experimental-strip-types scripts/exterior-scheduler-trace-capture-cli.mjs evidence"
   },
   "dependencies": {

@@ -316,6 +316,22 @@ export interface ExteriorRuntimeMetrics {
   scheduledCellCount: number;
   /** Cells the most recent reconciliation withheld. Zero unless the scheduler flag is on. */
   deferredCellCount: number;
+  /**
+   * Artifacts the SESSION's cache release seam has freed, and their declared
+   * bytes.
+   *
+   * Session-wide, not per wave — exactly like `cacheEntries` and `cachedBytes`,
+   * which read the shared cache instance every promoted wave writes into. The
+   * app sets the same session totals on every live runtime, so a reader must
+   * take these from one wave and never sum them, on pain of multiplying one
+   * pool by the number of promotions.
+   *
+   * Both stay 0 for a session without the scheduler flag: the seam only ever
+   * releases what a scheduler eviction dropped, and an unflagged session drops
+   * nothing.
+   */
+  releasedArtifactCount: number;
+  releasedArtifactBytes: number;
 }
 
 export type ExteriorArtifactFetcher = (relativeRef: string, signal?: AbortSignal) => Promise<Uint8Array>;
@@ -367,6 +383,43 @@ export function assertPublicExteriorArtifactRef(relativeRef: unknown): string {
 
 function issueText(issues: readonly { path: string; message: string }[]): string {
   return issues.slice(0, 6).map((entry) => `${entry.path} ${entry.message}`).join("; ");
+}
+
+/**
+ * The exterior cache key, in the ONE place that may derive it.
+ *
+ * Keyed on the DECLARATION and not just the path: two declarations that share a
+ * relative ref but pin different checksums must be verified independently, and a
+ * cache hit must never serve bytes verified against a different pin.
+ *
+ * It is exported because T003 gave the cache a release seam, and a release that
+ * derived its own key would delete nothing the moment either side changed the
+ * format. The loader writes with this function and the release plan reads with
+ * it, so the two cannot drift; `exterior-cache-release.test.ts` pins that the key
+ * a rendered asset resolves to is the key its bytes were stored under.
+ */
+export function exteriorArtifactCacheKey(relativeRef: string, checksumSha256: string): string {
+  return `${relativeRef}#${checksumSha256}`;
+}
+
+/**
+ * The cache keys and declared bytes a settled outcome is holding.
+ *
+ * Only a `rendered` outcome holds bytes at all: `base-massing`, `failed` and
+ * `not-shipped` fetched nothing, so they have nothing to release, and returning
+ * an empty result for them is a fact rather than a default.
+ */
+export function exteriorOutcomeCacheKeys(outcome: ExteriorCellOutcome): { keys: string[]; byteSize: number } {
+  if (outcome.kind !== "rendered") return { keys: [], byteSize: 0 };
+  const keys: string[] = [];
+  let byteSize = 0;
+  for (const asset of outcome.assets) {
+    const key = exteriorArtifactCacheKey(asset.artifactRef, asset.checksumSha256);
+    if (keys.includes(key)) continue;
+    keys.push(key);
+    byteSize += asset.byteSize;
+  }
+  return { keys, byteSize };
 }
 
 export class ExteriorCellRuntime {
@@ -431,6 +484,8 @@ export class ExteriorCellRuntime {
   private notShippedCellCount = 0;
   private scheduledCellCount = 0;
   private deferredCellCount = 0;
+  private releasedArtifactCount = 0;
+  private releasedArtifactBytes = 0;
 
   constructor(source: ExteriorCellRuntimeSource, head: ExteriorHeadResolution, options: ExteriorCellRuntimeOptions) {
     const publicRoot = source.graph.roots.find((root) => root.audience === "public");
@@ -504,6 +559,16 @@ export class ExteriorCellRuntime {
     this.deferredCellCount = deferredCellCount;
   }
 
+  /**
+   * Record the SESSION-wide cache release totals so `getMetrics()` reports them
+   * beside the residency they explain. The runtime does not release and must not
+   * start: the seam lives in the app, which owns the shared cache instance.
+   */
+  noteArtifactRelease(releasedArtifactCount: number, releasedArtifactBytes: number): void {
+    this.releasedArtifactCount = releasedArtifactCount;
+    this.releasedArtifactBytes = releasedArtifactBytes;
+  }
+
   getMetrics(): ExteriorRuntimeMetrics {
     return {
       cacheEntries: this.cache.size(),
@@ -522,6 +587,8 @@ export class ExteriorCellRuntime {
       notShippedCellCount: this.notShippedCellCount,
       scheduledCellCount: this.scheduledCellCount,
       deferredCellCount: this.deferredCellCount,
+      releasedArtifactCount: this.releasedArtifactCount,
+      releasedArtifactBytes: this.releasedArtifactBytes,
     };
   }
 
@@ -737,7 +804,7 @@ export class ExteriorCellRuntime {
     // Key on the declaration, not just the path: two declarations that share a
     // relative ref but pin different checksums must be verified independently,
     // and a cache hit must never serve bytes verified against a different pin.
-    const cacheKey = `${relativeRef}#${expectedChecksum}`;
+    const cacheKey = exteriorArtifactCacheKey(relativeRef, expectedChecksum);
     const cached = this.cache.get(cacheKey);
     if (cached) return cached;
     this.requestedArtifactCount += 1;

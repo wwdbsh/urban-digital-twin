@@ -279,6 +279,14 @@ describe("exterior scheduler thrash gate", () => {
    */
   it("pins the six-wave session bound the ADR discloses", () => {
     const waveCount = 6;
+    // FROZEN. Every budget in this file was measured at exactly this policy, so
+    // the policy is pinned field by field rather than only by its cap. T003
+    // introduced `EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY` as a SEPARATE constant
+    // precisely so this one could stay where the measurements were taken; its
+    // own baseline lives in `exterior-cache-governance-gate.test.ts`, and a
+    // re-baseline of this file would destroy the only regression evidence the
+    // scheduler has.
+    expect(EXTERIOR_CELL_SCHEDULER_POLICY).toEqual({ maxResidentUnits: 96, distanceBandEdgesMeters: [1_200, 2_400], hysteresisDecisions: 3 });
     expect(EXTERIOR_CELL_SCHEDULER_POLICY.maxResidentUnits).toBe(96);
     expect(waveCount * EXTERIOR_CELL_SCHEDULER_POLICY.maxResidentUnits).toBe(576);
     // Still strictly below the ledger, which is the only reason the bound is a

@@ -101,6 +101,71 @@ describe("citywide release contract", () => {
     expect(cache.bytes()).toBe(5);
   });
 
+  /**
+   * The byte counter is now INCREMENTAL, and this is what keeps it honest.
+   *
+   * `bytes()` used to be a full reduce over every entry, and `evict()` called it
+   * inside its own `while` condition, so one saturating `set()` that had to drop
+   * k entries walked the whole map k times. That was tolerable while eviction
+   * was a rare backstop; T003 makes scheduler-driven residency routine and
+   * eviction ordinary, so the counter is maintained by the mutators instead.
+   *
+   * A maintained counter can drift from the thing it counts, which is the whole
+   * risk of the change, so this re-derives the truth by full reduce over the
+   * live keys after a mixed workload — overwrites, deletes, re-inserts and
+   * capacity evictions — rather than trusting that the three mutators agree.
+   */
+  it("keeps its incremental byte total equal to a full reduce over the live entries", () => {
+    const cache = new CitywideLruCache<number>(6, 1_000);
+    const live = new Map<string, number>();
+    const put = (key: string, bytes: number) => { cache.set(key, bytes, bytes); live.set(key, bytes); };
+    const drop = (key: string) => { cache.delete(key); live.delete(key); };
+    const reduceLive = () => [...cache.keys()].reduce((sum, key) => sum + (live.get(key) ?? Number.NaN), 0);
+
+    for (const [key, bytes] of [["a", 10], ["b", 20], ["c", 30], ["d", 40]] as const) put(key, bytes);
+    expect(cache.bytes()).toBe(reduceLive());
+    // An overwrite must subtract the old size before adding the new one.
+    put("b", 200);
+    expect(cache.bytes()).toBe(reduceLive());
+    expect(cache.bytes()).toBe(10 + 200 + 30 + 40);
+    // A delete of a live key subtracts; a delete of an absent key must not.
+    drop("c");
+    expect(cache.delete("not-here")).toBe(false);
+    expect(cache.bytes()).toBe(reduceLive());
+    // Capacity eviction: five more entries against a six-entry cap.
+    for (const [key, bytes] of [["e", 5], ["f", 6], ["g", 7], ["h", 8], ["i", 9]] as const) put(key, bytes);
+    expect(cache.size()).toBe(6);
+    expect(cache.bytes()).toBe(reduceLive());
+    // And a byte-capped eviction, which is the loop the counter made cheap.
+    put("big", 900);
+    expect(cache.bytes()).toBeLessThanOrEqual(1_000);
+    expect(cache.bytes()).toBe(reduceLive());
+    cache.clear();
+    expect(cache.bytes()).toBe(0);
+  });
+
+  /**
+   * The desync warning, as an executable statement rather than only a comment.
+   *
+   * `set()` throws for an entry larger than `maxBytes`; callers precheck the
+   * same condition before fetching (`ExteriorCellRuntime.loadVerifiedArtifact`
+   * fails closed with `artifact-exceeds-cache-budget`). The two agree ONLY
+   * because both read the same `maxBytes`. A future per-class reservation that
+   * gave one class a smaller effective ceiling would break that: the precheck
+   * would pass and `set()` would throw from inside a settled request promise,
+   * surfacing as an unrelated failure code. Any per-class ceiling must be
+   * readable by the precheck, not merely enforced at `set()`.
+   */
+  it("throws rather than silently refusing an entry larger than its byte cap", () => {
+    const cache = new CitywideLruCache<string>(4, 100);
+    expect(() => cache.set("too-big", "X", 101)).toThrow(/entry bytes are invalid/u);
+    expect(cache.bytes()).toBe(0);
+    expect(cache.has("too-big")).toBe(false);
+    // The precheck's own view of the ceiling, which is the value that has to
+    // stay reachable by any future per-class reservation.
+    expect(cache.maxBytes).toBe(100);
+  });
+
   it("bounds request concurrency, deduplicates keys, and cancels stale queued work", async () => {
     const cache = new CitywideLruCache<string>(8, 100);
     const pool = new CitywideRequestPool<string>(2, cache);

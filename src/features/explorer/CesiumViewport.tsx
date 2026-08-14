@@ -84,6 +84,17 @@ interface CesiumViewportProps {
    */
   exteriorOverlay?: ExteriorCellOverlaySet;
   onExteriorUnanchored?: (canonicalFeatureIds: string[]) => void;
+  /**
+   * Cells this pass removed from the scene AND whose object URLs it has just
+   * revoked, reported after the revoke rather than before it.
+   *
+   * The viewport is the only holder of the Blob copy of an exterior cell's
+   * bytes, so it is the only component that can say the copy is gone. T003's
+   * cache release seam treats this as gate (d): until it fires for a cell,
+   * deleting that cell's cache entries would free the cache's reference while a
+   * live Blob still held an independent copy of the same bytes.
+   */
+  onExteriorCellsRetired?: (cellIds: readonly string[]) => void;
   onStage3RenderProof?: (proof: Stage3RenderProof | null) => void;
 }
 
@@ -1455,6 +1466,7 @@ export function CesiumViewport({
   onPublicRealmSelected,
   exteriorOverlay = null,
   onExteriorUnanchored,
+  onExteriorCellsRetired,
   onStage3RenderProof,
 }: CesiumViewportProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -1499,6 +1511,8 @@ export function CesiumViewport({
   const exteriorUnanchoredRef = useRef<string>("");
   const onExteriorUnanchoredRef = useRef(onExteriorUnanchored);
   onExteriorUnanchoredRef.current = onExteriorUnanchored;
+  const onExteriorCellsRetiredRef = useRef(onExteriorCellsRetired);
+  onExteriorCellsRetiredRef.current = onExteriorCellsRetired;
   const suppressCameraEventsUntilRef = useRef(0);
   const lastValidFootprintRef = useRef<ViewportFootprint | null>(viewportFootprint?.valid ? viewportFootprint : null);
   const cameraSettledEmitterRef = useRef<(() => void) | null>(null);
@@ -1981,6 +1995,10 @@ export function CesiumViewport({
     }
     for (const objectUrl of plan.revokeObjectUrls) URL.revokeObjectURL(objectUrl);
     for (const cellId of plan.removeCellIds) owned.delete(cellId);
+    // Reported AFTER the revoke, never before: the whole value of this callback
+    // is that it is evidence the Blob copies are gone, and a notification sent
+    // ahead of the revoke would be a promise rather than evidence.
+    if (plan.removeCellIds.length > 0) onExteriorCellsRetiredRef.current?.(plan.removeCellIds);
     for (const cell of plan.addCells) {
       const entityIds: string[] = [];
       const objectUrls: string[] = [];

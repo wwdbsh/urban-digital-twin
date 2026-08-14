@@ -1,0 +1,182 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "exterior-cache-governance-evidence-20260814",
+  "taskId": "T003",
+  "capture": {
+    "tool": "scripts/exterior-scheduler-trace-capture-cli.mjs governance-evidence",
+    "renderer": "shipping CesiumJS viewport, preview build with VITE_EXTERIOR_SCHEDULER_PROBE=1",
+    "viewport": {
+      "width": 1280,
+      "height": 800,
+      "deviceScaleFactor": 1
+    },
+    "baseReleaseId": "manhattan-citywide-20260804",
+    "poses": [
+      {
+        "poseId": "block835-street-260m",
+        "lon": -73.986359867,
+        "lat": 40.7487748165,
+        "height": 260,
+        "heading": 45,
+        "pitch": -20,
+        "roll": 0
+      },
+      {
+        "poseId": "midtown-overview-2400m",
+        "lon": -73.986359867,
+        "lat": 40.7487748165,
+        "height": 2400,
+        "heading": 0,
+        "pitch": -60,
+        "roll": 0
+      }
+    ],
+    "settleMs": 75000,
+    "capturedAtIso": "2026-08-14T09:51:35.898Z",
+    "configuration": "T003: ONE selectResidentUnits decision over the static 883-row census table at a global cap of 128, plus the refcounted cache release seam. The T002 record at data/exterior-scheduler-traces-20260814/optin-evidence.json measured SIX per-wave decisions at a cap of 96 each and is left untouched for comparison.",
+    "note": "Artifact-request and cache-residency numbers only. Nothing here is a frame-time, GPU-memory or rendered-fidelity claim (ADR 0040 D7).",
+    "httpCacheCaveat": "`Network.setCacheDisabled` is not called. The `.glb` columns are usable regardless because the exterior fetcher passes `cache: \"no-store\"`; the runtime-counter columns are unaffected either way."
+  },
+  "variants": [
+    {
+      "variantId": "scheduler-on-global",
+      "poseId": "block835-street-260m",
+      "url": "http://localhost:4183/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-73.986360&lat=40.748775&height=260.000000&heading=45.000000&pitch=-20.000000&roll=0.000000&exteriorScheduler=on",
+      "settleMs": 75000,
+      "hrefAfterDrag": "http://localhost:4183/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-73.986360&lat=40.748775&height=260.000000&heading=45.000000&pitch=-20.000000&roll=0.000000&exteriorScheduler=on",
+      "schedulerRequested": true,
+      "waves": {
+        "waveCount": 6,
+        "declaredCellCount": 883,
+        "scheduledCellCount": 12,
+        "deferredCellCount": 871,
+        "requestedArtifactCount": 14,
+        "loadedArtifactCount": 14,
+        "releasedArtifactCount": 0,
+        "releasedArtifactBytes": 0,
+        "cacheEntries": 14,
+        "cachedBytes": 1910784,
+        "perWave": [
+          {
+            "releaseId": "manhattan-exterior-cells-20260811-v3",
+            "declaredCellCount": 1,
+            "scheduledCellCount": 1,
+            "deferredCellCount": 0,
+            "requestedArtifactCount": 14
+          },
+          {
+            "releaseId": "manhattan-midtown-core-cells-20260811-v3",
+            "declaredCellCount": 149,
+            "scheduledCellCount": 11,
+            "deferredCellCount": 138,
+            "requestedArtifactCount": 0
+          },
+          {
+            "releaseId": "manhattan-lower-manhattan-cells-20260812-p1",
+            "declaredCellCount": 126,
+            "scheduledCellCount": 0,
+            "deferredCellCount": 126,
+            "requestedArtifactCount": 0
+          },
+          {
+            "releaseId": "manhattan-southern-remainder-cells-20260812-p1",
+            "declaredCellCount": 176,
+            "scheduledCellCount": 0,
+            "deferredCellCount": 176,
+            "requestedArtifactCount": 0
+          },
+          {
+            "releaseId": "manhattan-central-upper-manhattan-cells-20260812-p1",
+            "declaredCellCount": 249,
+            "scheduledCellCount": 0,
+            "deferredCellCount": 249,
+            "requestedArtifactCount": 0
+          },
+          {
+            "releaseId": "manhattan-northern-manhattan-cells-20260812-p1",
+            "declaredCellCount": 182,
+            "scheduledCellCount": 0,
+            "deferredCellCount": 182,
+            "requestedArtifactCount": 0
+          }
+        ]
+      },
+      "network": {
+        "glbResponseCount": 20,
+        "distinctGlbCount": 20,
+        "glbEncodedBytes": 2058296,
+        "externalHosts": []
+      }
+    },
+    {
+      "variantId": "scheduler-on-global",
+      "poseId": "midtown-overview-2400m",
+      "url": "http://localhost:4183/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-73.986360&lat=40.748775&height=2400.000000&heading=0.000000&pitch=-60.000000&roll=0.000000&exteriorScheduler=on",
+      "settleMs": 75000,
+      "hrefAfterDrag": "http://localhost:4183/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-73.986360&lat=40.748775&height=2400.000000&heading=0.000000&pitch=-60.000000&roll=0.000000&exteriorScheduler=on",
+      "schedulerRequested": true,
+      "waves": {
+        "waveCount": 6,
+        "declaredCellCount": 883,
+        "scheduledCellCount": 121,
+        "deferredCellCount": 762,
+        "requestedArtifactCount": 210,
+        "loadedArtifactCount": 210,
+        "releasedArtifactCount": 0,
+        "releasedArtifactBytes": 0,
+        "cacheEntries": 210,
+        "cachedBytes": 37164596,
+        "perWave": [
+          {
+            "releaseId": "manhattan-exterior-cells-20260811-v3",
+            "declaredCellCount": 1,
+            "scheduledCellCount": 1,
+            "deferredCellCount": 0,
+            "requestedArtifactCount": 14
+          },
+          {
+            "releaseId": "manhattan-midtown-core-cells-20260811-v3",
+            "declaredCellCount": 149,
+            "scheduledCellCount": 107,
+            "deferredCellCount": 42,
+            "requestedArtifactCount": 156
+          },
+          {
+            "releaseId": "manhattan-lower-manhattan-cells-20260812-p1",
+            "declaredCellCount": 126,
+            "scheduledCellCount": 0,
+            "deferredCellCount": 126,
+            "requestedArtifactCount": 0
+          },
+          {
+            "releaseId": "manhattan-southern-remainder-cells-20260812-p1",
+            "declaredCellCount": 176,
+            "scheduledCellCount": 0,
+            "deferredCellCount": 176,
+            "requestedArtifactCount": 0
+          },
+          {
+            "releaseId": "manhattan-central-upper-manhattan-cells-20260812-p1",
+            "declaredCellCount": 249,
+            "scheduledCellCount": 13,
+            "deferredCellCount": 236,
+            "requestedArtifactCount": 40
+          },
+          {
+            "releaseId": "manhattan-northern-manhattan-cells-20260812-p1",
+            "declaredCellCount": 182,
+            "scheduledCellCount": 0,
+            "deferredCellCount": 182,
+            "requestedArtifactCount": 0
+          }
+        ]
+      },
+      "network": {
+        "glbResponseCount": 216,
+        "distinctGlbCount": 216,
+        "glbEncodedBytes": 37366170,
+        "externalHosts": []
+      }
+    }
+  ]
+}

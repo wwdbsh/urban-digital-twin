@@ -1,0 +1,1612 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "exterior-cache-governance-roam-20260814",
+  "taskId": "T003",
+  "capture": {
+    "tool": "scripts/exterior-scheduler-trace-capture-cli.mjs roam",
+    "renderer": "shipping CesiumJS viewport, preview build with VITE_EXTERIOR_SCHEDULER_PROBE=1",
+    "transport": "Chrome DevTools Protocol, real Input.dispatchMouseEvent drags",
+    "viewport": {
+      "width": 1280,
+      "height": 800,
+      "deviceScaleFactor": 1
+    },
+    "baseReleaseId": "manhattan-citywide-20260804",
+    "exteriorStreaming": "off",
+    "exteriorStreamingNote": "Camera geometry only, exactly as the T002 capture: pose and the ground-ray footprint Cesium sampled. No exterior wave participates in producing either. The residency this trace certifies is produced by replaying it OFFLINE through the pure scheduler, which is what makes the certification deterministic.",
+    "purpose": "T002 reported peak residency over two monotone single-motion paths from a cold start. Those are cold-window readings and not steady-state bounds. This path roams — out, across, back down, across the other axis, out again — so a peak taken over it is a peak over a session.",
+    "capturedAtIso": "2026-08-14T09:27:19.577Z"
+  },
+  "paths": [
+    {
+      "pathId": "midtown-roam-v1",
+      "capturedAtIso": "2026-08-14T09:27:19.572Z",
+      "startPose": {
+        "lon": -73.98685005484059,
+        "lat": 40.7490159464224,
+        "height": 220,
+        "heading": 0,
+        "pitch": -35,
+        "roll": 0
+      },
+      "finalHref": "http://localhost:4183/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-73.986850&lat=40.749016&height=220.000000&heading=0.000000&pitch=-35.000000&roll=0.000000&exteriorStreaming=off",
+      "sampleCount": 58,
+      "samples": [
+        {
+          "index": 0,
+          "camera": {
+            "longitude": -73.98685,
+            "latitude": 40.749016,
+            "height": 220,
+            "heading": 0,
+            "pitch": -35,
+            "roll": 0
+          },
+          "heightBucket": 200,
+          "footprint": {
+            "bounds": {
+              "west": -73.99284999999998,
+              "east": -73.98085000000003,
+              "south": 40.745115999999996,
+              "north": 40.752916
+            },
+            "groundCenter": {
+              "longitude": -73.98685,
+              "latitude": 40.749016
+            },
+            "valid": false,
+            "source": "camera-fallback",
+            "signature": "-73.992850:40.745116:-73.980850:40.752916:-73.986850:40.749016"
+          }
+        },
+        {
+          "index": 1,
+          "camera": {
+            "longitude": -73.98685,
+            "latitude": 40.749016,
+            "height": 220,
+            "heading": 0,
+            "pitch": -35,
+            "roll": 0
+          },
+          "heightBucket": 200,
+          "footprint": {
+            "bounds": {
+              "west": -73.99192430783523,
+              "east": -73.98177569222116,
+              "south": 40.75047192357647,
+              "north": 40.75578723131924
+            },
+            "groundCenter": {
+              "longitude": -73.9868500000282,
+              "latitude": 40.75312957744785
+            },
+            "valid": false,
+            "source": "view-rectangle",
+            "signature": "-73.991924:40.750472:-73.981776:40.755787:-73.986850:40.753130"
+          }
+        },
+        {
+          "index": 2,
+          "camera": {
+            "longitude": -73.98685,
+            "latitude": 40.749016,
+            "height": 220.00000000071842,
+            "heading": 0,
+            "pitch": -35.000000000000014,
+            "roll": 180
+          },
+          "heightBucket": 200,
+          "footprint": {
+            "bounds": {
+              "west": -73.99194357825968,
+              "east": -73.9817663960821,
+              "south": 40.75047961765494,
+              "north": 40.75581294300283
+            },
+            "groundCenter": {
+              "longitude": -73.98685498717089,
+              "latitude": 40.753146280328885
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.991944:40.750480:-73.981766:40.755813:-73.986855:40.753146"
+          }
+        },
+        {
+          "index": 3,
+          "camera": {
+            "longitude": -73.98468963356383,
+            "latitude": 40.74901599130119,
+            "height": 219.99999678494467,
+            "heading": 0,
+            "pitch": -35.000000000009194,
+            "roll": 180
+          },
+          "heightBucket": 200,
+          "footprint": {
+            "bounds": {
+              "west": -73.98976402841214,
+              "east": -73.97962378182683,
+              "south": 40.7504745859269,
+              "north": 40.75578733877207
+            },
+            "groundCenter": {
+              "longitude": -73.98469390511946,
+              "latitude": 40.75313096234949
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.989764:40.750475:-73.979624:40.755787:-73.984694:40.753131"
+          }
+        },
+        {
+          "index": 4,
+          "camera": {
+            "longitude": -73.98032506211528,
+            "latitude": 40.749015973582495,
+            "height": 219.999990244234,
+            "heading": 359.9999999999998,
+            "pitch": -35.0000000000282,
+            "roll": 6.106664988409952e-13
+          },
+          "heightBucket": 200,
+          "footprint": {
+            "bounds": {
+              "west": -73.98539946318851,
+              "east": -73.97525919976505,
+              "south": 40.75047456788369,
+              "north": 40.75578733508479
+            },
+            "groundCenter": {
+              "longitude": -73.98032933147681,
+              "latitude": 40.75313095148424
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.985399:40.750475:-73.975259:40.755787:-73.980329:40.753131"
+          }
+        },
+        {
+          "index": 5,
+          "camera": {
+            "longitude": -73.97531313822628,
+            "latitude": 40.74901595388048,
+            "height": 219.99998295402074,
+            "heading": 359.9999999999993,
+            "pitch": -35.0000000000493,
+            "roll": 7.124442486478278e-13
+          },
+          "heightBucket": 200,
+          "footprint": {
+            "bounds": {
+              "west": -73.98038754454348,
+              "east": -73.97024728134022,
+              "south": 40.75047454809541,
+              "north": 40.755787316539674
+            },
+            "groundCenter": {
+              "longitude": -73.97531741294188,
+              "latitude": 40.753130932317546
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.980388:40.750475:-73.970247:40.755787:-73.975317:40.753131"
+          }
+        },
+        {
+          "index": 6,
+          "camera": {
+            "longitude": -73.97529418106808,
+            "latitude": 40.74875037734111,
+            "height": 240.31145404036388,
+            "heading": 359.9999999999993,
+            "pitch": -35.000000000049525,
+            "roll": 8.142219984546603e-13
+          },
+          "heightBucket": 200,
+          "footprint": {
+            "bounds": {
+              "west": -73.9808372249542,
+              "east": -73.96976046960435,
+              "south": 40.75034363634248,
+              "north": 40.756147045806166
+            },
+            "groundCenter": {
+              "longitude": -73.9752988472793,
+              "latitude": 40.75324534107432
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.980837:40.750344:-73.969760:40.756147:-73.975299:40.753245"
+          }
+        },
+        {
+          "index": 7,
+          "camera": {
+            "longitude": -73.97527434024195,
+            "latitude": 40.74847241895657,
+            "height": 261.57018134071626,
+            "heading": 359.9999999999991,
+            "pitch": -35.00000000004978,
+            "roll": 8.651108733580766e-13
+          },
+          "heightBucket": 300,
+          "footprint": {
+            "bounds": {
+              "west": -73.9813078958644,
+              "east": -73.96925093786103,
+              "south": 40.75020662695907,
+              "north": 40.75652357682747
+            },
+            "groundCenter": {
+              "longitude": -73.97527941686269,
+              "latitude": 40.753365101893266
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.981308:40.750207:-73.969251:40.756524:-73.975279:40.753365"
+          }
+        },
+        {
+          "index": 8,
+          "camera": {
+            "longitude": -73.97525180157835,
+            "latitude": 40.74815666263674,
+            "height": 285.7201116090347,
+            "heading": 359.9999999999991,
+            "pitch": -35.000000000050164,
+            "roll": 9.66888623164909e-13
+          },
+          "heightBucket": 300,
+          "footprint": {
+            "bounds": {
+              "west": -73.98184265327211,
+              "east": -73.96867203668887,
+              "south": 40.75005098925257,
+              "north": 40.756951407995224
+            },
+            "groundCenter": {
+              "longitude": -73.97525734498049,
+              "latitude": 40.753501198623894
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.981843:40.750051:-73.968672:40.756951:-73.975257:40.753501"
+          }
+        },
+        {
+          "index": 9,
+          "camera": {
+            "longitude": -73.97522718233989,
+            "latitude": 40.7478117549768,
+            "height": 312.1000474268018,
+            "heading": 359.999999999999,
+            "pitch": -35.000000000050136,
+            "roll": 1.3739996223922392e-12
+          },
+          "heightBucket": 300,
+          "footprint": {
+            "bounds": {
+              "west": -73.98242685464339,
+              "east": -73.96803964187501,
+              "south": 40.74988097993805,
+              "north": 40.75741880241463
+            },
+            "groundCenter": {
+              "longitude": -73.9752332482592,
+              "latitude": 40.75364989117634
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.982427:40.749881:-73.968040:40.757419:-73.975233:40.753650"
+          }
+        },
+        {
+          "index": 10,
+          "camera": {
+            "longitude": -73.97520029046764,
+            "latitude": 40.747435004364725,
+            "height": 340.9159731973295,
+            "heading": 359.99999999999886,
+            "pitch": -35.000000000050164,
+            "roll": 1.3739996223922392e-12
+          },
+          "heightBucket": 300,
+          "footprint": {
+            "bounds": {
+              "west": -73.98306504347204,
+              "east": -73.96734878321405,
+              "south": 40.74969527918467,
+              "north": 40.75792941432232
+            },
+            "groundCenter": {
+              "longitude": -73.97520691334307,
+              "latitude": 40.75381234675349
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.983065:40.749695:-73.967349:40.757929:-73.975207:40.753812"
+          }
+        },
+        {
+          "index": 11,
+          "camera": {
+            "longitude": -73.97517091617804,
+            "latitude": 40.74702347061114,
+            "height": 372.3929127926691,
+            "heading": 359.99999999999886,
+            "pitch": -35.00000000005042,
+            "roll": 1.4248884972956555e-12
+          },
+          "heightBucket": 400,
+          "footprint": {
+            "bounds": {
+              "west": -73.98376220658997,
+              "east": -73.96659409047504,
+              "south": 40.74949244066806,
+              "north": 40.75848721979714
+            },
+            "groundCenter": {
+              "longitude": -73.9751781485325,
+              "latitude": 40.7539898302326
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.983762:40.749492:-73.966594:40.758487:-73.975178:40.753990"
+          }
+        },
+        {
+          "index": 12,
+          "camera": {
+            "longitude": -73.97510378233162,
+            "latitude": 40.746082906408276,
+            "height": 444.33614431219024,
+            "heading": 359.9999999999984,
+            "pitch": -35.0000000000509,
+            "roll": 2.3408882455571482e-12
+          },
+          "heightBucket": 400,
+          "footprint": {
+            "bounds": {
+              "west": -73.98535591012012,
+              "east": -73.9648689726863,
+              "south": 40.74902886912682,
+              "north": 40.759762450783406
+            },
+            "groundCenter": {
+              "longitude": -73.97511244140321,
+              "latitude": 40.75439565995511
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.985356:40.749029:-73.964869:40.759762:-73.975112:40.754396"
+          }
+        },
+        {
+          "index": 13,
+          "camera": {
+            "longitude": -73.97502717468909,
+            "latitude": 40.745009579115106,
+            "height": 526.4384212207929,
+            "heading": 359.99999999999807,
+            "pitch": -35.00000000005113,
+            "roll": 1.1704441227785741e-12
+          },
+          "heightBucket": 500,
+          "footprint": {
+            "bounds": {
+              "west": -73.98717512555845,
+              "east": -73.9628996018015,
+              "south": 40.748499891014895,
+              "north": 40.7612183899492
+            },
+            "groundCenter": {
+              "longitude": -73.97503736367997,
+              "latitude": 40.75485914048205
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.987175:40.748500:-73.962900:40.761218:-73.975037:40.754859"
+          }
+        },
+        {
+          "index": 14,
+          "camera": {
+            "longitude": -73.9749837172671,
+            "latitude": 40.74440069446741,
+            "height": 573.0159067507656,
+            "heading": 359.99999999999807,
+            "pitch": -35.00000000005136,
+            "roll": 1.0686663729717417e-12
+          },
+          "heightBucket": 600,
+          "footprint": {
+            "bounds": {
+              "west": -73.98820742373653,
+              "east": -73.96178224185599,
+              "south": 40.74819982342853,
+              "north": 40.76204452318602
+            },
+            "groundCenter": {
+              "longitude": -73.97499483279626,
+              "latitude": 40.75512217330727
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.988207:40.748200:-73.961782:40.762045:-73.974995:40.755122"
+          }
+        },
+        {
+          "index": 15,
+          "camera": {
+            "longitude": -73.97488268335691,
+            "latitude": 40.742985058963264,
+            "height": 681.3123287371775,
+            "heading": 359.99999999999795,
+            "pitch": -35.00000000005136,
+            "roll": 2.3917771204605646e-12
+          },
+          "heightBucket": 700,
+          "footprint": {
+            "bounds": {
+              "west": -73.99060804104624,
+              "east": -73.9591838575729,
+              "south": 40.7475022260812,
+              "north": 40.76396590633525
+            },
+            "groundCenter": {
+              "longitude": -73.9748959493096,
+              "latitude": 40.75573406620823
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.990608:40.747502:-73.959184:40.763966:-73.974896:40.755734"
+          }
+        },
+        {
+          "index": 16,
+          "camera": {
+            "longitude": -73.97482644601989,
+            "latitude": 40.74219706403532,
+            "height": 741.5973813659798,
+            "heading": 359.99999999999784,
+            "pitch": -35.00000000005139,
+            "roll": 2.442665995363981e-12
+          },
+          "heightBucket": 700,
+          "footprint": {
+            "bounds": {
+              "west": -73.99194472789134,
+              "east": -73.95773701803353,
+              "south": 40.74711393572167,
+              "north": 40.76503588710559
+            },
+            "groundCenter": {
+              "longitude": -73.97484087296243,
+              "latitude": 40.756074911413634
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.991945:40.747114:-73.957737:40.765036:-73.974841:40.756075"
+          }
+        },
+        {
+          "index": 17,
+          "camera": {
+            "longitude": -73.97476256202225,
+            "latitude": 40.741301901799275,
+            "height": 810.0840387840312,
+            "heading": 359.9999999999977,
+            "pitch": -35.000000000051536,
+            "roll": 2.442665995363981e-12
+          },
+          "heightBucket": 800,
+          "footprint": {
+            "bounds": {
+              "west": -73.99346369532907,
+              "east": -73.95609275772739,
+              "south": 40.74667285378707,
+              "north": 40.766252156869044
+            },
+            "groundCenter": {
+              "longitude": -73.9747782265282,
+              "latitude": 40.75646250532806
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.993464:40.746673:-73.956093:40.766252:-73.974778:40.756463"
+          }
+        },
+        {
+          "index": 18,
+          "camera": {
+            "longitude": -73.97469570031028,
+            "latitude": 40.74036498909462,
+            "height": 881.768154919692,
+            "heading": 359.9999999999975,
+            "pitch": -35.00000000005171,
+            "roll": 2.442665995363981e-12
+          },
+          "heightBucket": 900,
+          "footprint": {
+            "bounds": {
+              "west": -73.99505381489757,
+              "east": -73.9543717697232,
+              "south": 40.746211226423746,
+              "north": 40.76752514732146
+            },
+            "groundCenter": {
+              "longitude": -73.97471279231036,
+              "latitude": 40.7568681868726
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.995054:40.746211:-73.954372:40.767525:-73.974713:40.756868"
+          }
+        },
+        {
+          "index": 19,
+          "camera": {
+            "longitude": -73.96594826014164,
+            "latitude": 40.74036484677305,
+            "height": 881.7681024387634,
+            "heading": 359.99999999999727,
+            "pitch": -35.0000000001967,
+            "roll": 2.7479992447844784e-12
+          },
+          "heightBucket": 900,
+          "footprint": {
+            "bounds": {
+              "west": -73.98630646456974,
+              "east": -73.94562438970979,
+              "south": 40.74621108744794,
+              "north": 40.7675250000674
+            },
+            "groundCenter": {
+              "longitude": -73.96596542713974,
+              "latitude": 40.75686804375767
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.986306:40.746211:-73.945624:40.767525:-73.965965:40.756868"
+          }
+        },
+        {
+          "index": 20,
+          "camera": {
+            "longitude": -73.94859457465313,
+            "latitude": 40.74036456525756,
+            "height": 881.7679986449473,
+            "heading": 359.99999999999693,
+            "pitch": -35.00000000048422,
+            "roll": 3.867554492659636e-12
+          },
+          "heightBucket": 900,
+          "footprint": {
+            "bounds": {
+              "west": -73.9689526348738,
+              "east": -73.92827072492327,
+              "south": 40.74621080595177,
+              "north": 40.767524615699045
+            },
+            "groundCenter": {
+              "longitude": -73.94861167989853,
+              "latitude": 40.756867710825404
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.968953:40.746211:-73.928271:40.767525:-73.948612:40.756868"
+          }
+        },
+        {
+          "index": 21,
+          "camera": {
+            "longitude": -73.93993892422013,
+            "latitude": 40.740364424778484,
+            "height": 881.7679468525909,
+            "heading": 359.9999999999967,
+            "pitch": -35.00000000062762,
+            "roll": 4.121998867176718e-12
+          },
+          "heightBucket": 900,
+          "footprint": {
+            "bounds": {
+              "west": -73.9602972296342,
+              "east": -73.91961504464649,
+              "south": 40.74621066262563,
+              "north": 40.767524712937416
+            },
+            "groundCenter": {
+              "longitude": -73.93995613714037,
+              "latitude": 40.75686768778152
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.960297:40.746211:-73.919615:40.767525:-73.939956:40.756868"
+          }
+        },
+        {
+          "index": 22,
+          "camera": {
+            "longitude": -73.93118071973848,
+            "latitude": 40.7403642821257,
+            "height": 881.7678942484489,
+            "heading": 359.99999999999636,
+            "pitch": -35.000000000772914,
+            "roll": 4.325554366790383e-12
+          },
+          "heightBucket": 900,
+          "footprint": {
+            "bounds": {
+              "west": -73.95153882476677,
+              "east": -73.91085679648609,
+              "south": 40.74621051794573,
+              "north": 40.7675244309286
+            },
+            "groundCenter": {
+              "longitude": -73.93119781062643,
+              "latitude": 40.756867474437165
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.951539:40.746211:-73.910857:40.767524:-73.931198:40.756867"
+          }
+        },
+        {
+          "index": 23,
+          "camera": {
+            "longitude": -73.92241296747504,
+            "latitude": 40.740364139774016,
+            "height": 881.7678417644797,
+            "heading": 359.99999999999613,
+            "pitch": -35.00000000091805,
+            "roll": 4.478220991500631e-12
+          },
+          "heightBucket": 900,
+          "footprint": {
+            "bounds": {
+              "west": -73.94277117544522,
+              "east": -73.90208912797544,
+              "south": 40.74621037585703,
+              "north": 40.76752429800362
+            },
+            "groundCenter": {
+              "longitude": -73.92243015171033,
+              "latitude": 40.75686733693033
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.942771:40.746210:-73.902089:40.767524:-73.922430:40.756867"
+          }
+        },
+        {
+          "index": 24,
+          "camera": {
+            "longitude": -73.92387642823415,
+            "latitude": 40.740682221487226,
+            "height": 857.4153644751347,
+            "heading": 359.9999999999959,
+            "pitch": -35.00000000091799,
+            "roll": 4.936220865631378e-12
+          },
+          "heightBucket": 900,
+          "footprint": {
+            "bounds": {
+              "west": -73.94367173473597,
+              "east": -73.90411455181311,
+              "south": 40.74636699851194,
+              "north": 40.7670916253077
+            },
+            "groundCenter": {
+              "longitude": -73.92389314327454,
+              "latitude": 40.75672931190982
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.943672:40.746367:-73.904115:40.767092:-73.923893:40.756729"
+          }
+        },
+        {
+          "index": 25,
+          "camera": {
+            "longitude": -73.92535785053066,
+            "latitude": 40.74100418512896,
+            "height": 832.7670630749672,
+            "heading": 359.9999999999959,
+            "pitch": -35.00000000091807,
+            "roll": 4.8344431158245454e-12
+          },
+          "heightBucket": 800,
+          "footprint": {
+            "bounds": {
+              "west": -73.94458325334784,
+              "east": -73.90616482819968,
+              "south": 40.74652553195893,
+              "north": 40.76665348294023
+            },
+            "groundCenter": {
+              "longitude": -73.92537404077376,
+              "latitude": 40.756589507449576
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.944583:40.746526:-73.906165:40.766653:-73.925374:40.756590"
+          }
+        },
+        {
+          "index": 26,
+          "camera": {
+            "longitude": -73.92808397564161,
+            "latitude": 40.74159660736596,
+            "height": 787.4171119129021,
+            "heading": 359.9999999999959,
+            "pitch": -35.0000000009183,
+            "roll": 4.427332116597216e-12
+          },
+          "heightBucket": 800,
+          "footprint": {
+            "bounds": {
+              "west": -73.94626119794538,
+              "east": -73.90993742918448,
+              "south": 40.74681727328255,
+              "north": 40.76584786574994
+            },
+            "groundCenter": {
+              "longitude": -73.92809931356493,
+              "latitude": 40.756332569516246
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.946261:40.746817:-73.909937:40.765848:-73.928099:40.756333"
+          }
+        },
+        {
+          "index": 27,
+          "camera": {
+            "longitude": -73.9307137930888,
+            "latitude": 40.742168029699,
+            "height": 743.6791532146804,
+            "heading": 359.9999999999959,
+            "pitch": -35.00000000091858,
+            "roll": 3.7657767428528035e-12
+          },
+          "heightBucket": 700,
+          "footprint": {
+            "bounds": {
+              "west": -73.94788013242771,
+              "east": -73.91357633457727,
+              "south": 40.74709869005673,
+              "north": 40.765070983836786
+            },
+            "groundCenter": {
+              "longitude": -73.93072823350246,
+              "latitude": 40.756084836946755
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.947880:40.747099:-73.913576:40.765071:-73.930728:40.756085"
+          }
+        },
+        {
+          "index": 28,
+          "camera": {
+            "longitude": -73.93194808383276,
+            "latitude": 40.74243619966959,
+            "height": 723.1543230903451,
+            "heading": 359.9999999999959,
+            "pitch": -35.00000000091863,
+            "roll": 3.81666561775622e-12
+          },
+          "heightBucket": 700,
+          "footprint": {
+            "bounds": {
+              "west": -73.94864027059879,
+              "east": -73.91528400628931,
+              "south": 40.747230785827995,
+              "north": 40.76470667738117
+            },
+            "groundCenter": {
+              "longitude": -73.93196213844408,
+              "latitude": 40.75596873160458
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.948640:40.747231:-73.915284:40.764707:-73.931962:40.755969"
+          }
+        },
+        {
+          "index": 29,
+          "camera": {
+            "longitude": -73.93436328793825,
+            "latitude": 40.74296089806805,
+            "height": 682.9984511844043,
+            "heading": 359.9999999999957,
+            "pitch": -35.00000000091886,
+            "roll": 3.1042213691083922e-12
+          },
+          "heightBucket": 700,
+          "footprint": {
+            "bounds": {
+              "west": -73.9501275692121,
+              "east": -73.91862552420253,
+              "south": 40.74748924392036,
+              "north": 40.763993698548894
+            },
+            "groundCenter": {
+              "longitude": -73.93437654670731,
+              "latitude": 40.75574147123463
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.950128:40.747489:-73.918626:40.763994:-73.934377:40.755741"
+          }
+        },
+        {
+          "index": 30,
+          "camera": {
+            "longitude": -73.9365991582997,
+            "latitude": 40.74344658413947,
+            "height": 645.8315292895545,
+            "heading": 359.99999999999545,
+            "pitch": -35.00000000091889,
+            "roll": 4.0711099922733015e-12
+          },
+          "heightBucket": 600,
+          "footprint": {
+            "bounds": {
+              "west": -73.95150485559697,
+              "east": -73.92171864695086,
+              "south": 40.747728503751176,
+              "north": 40.76333407803329
+            },
+            "groundCenter": {
+              "longitude": -73.93661175127392,
+              "latitude": 40.755531290892236
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.951505:40.747729:-73.921719:40.763334:-73.936612:40.755531"
+          }
+        },
+        {
+          "index": 31,
+          "camera": {
+            "longitude": -73.93767104124821,
+            "latitude": 40.743679405625784,
+            "height": 628.0160829384387,
+            "heading": 359.99999999999545,
+            "pitch": -35.00000000091899,
+            "roll": 4.020221117369885e-12
+          },
+          "heightBucket": 600,
+          "footprint": {
+            "bounds": {
+              "west": -73.95216519686005,
+              "east": -73.92320130735675,
+              "south": 40.747843198690305,
+              "north": 40.763017929820634
+            },
+            "groundCenter": {
+              "longitude": -73.9376832521084,
+              "latitude": 40.75543056425547
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.952165:40.747843:-73.923201:40.763018:-73.937683:40.755431"
+          }
+        },
+        {
+          "index": 32,
+          "camera": {
+            "longitude": -73.93871335123235,
+            "latitude": 40.743905792522476,
+            "height": 610.6937057877826,
+            "heading": 359.9999999999952,
+            "pitch": -35.000000000919115,
+            "roll": 4.0711099922733015e-12
+          },
+          "heightBucket": 600,
+          "footprint": {
+            "bounds": {
+              "west": -73.95280736109055,
+              "east": -73.92464306368669,
+              "south": 40.747954733504194,
+              "north": 40.76271055137395
+            },
+            "groundCenter": {
+              "longitude": -73.93872521238859,
+              "latitude": 40.75533264243907
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.952807:40.747955:-73.924643:40.762711:-73.938725:40.755333"
+          }
+        },
+        {
+          "index": 33,
+          "camera": {
+            "longitude": -73.93972690794673,
+            "latitude": 40.74412592378419,
+            "height": 593.8506472755853,
+            "heading": 359.9999999999951,
+            "pitch": -35.000000000919265,
+            "roll": 4.020221117369885e-12
+          },
+          "heightBucket": 600,
+          "footprint": {
+            "bounds": {
+              "west": -73.953431851076,
+              "east": -73.92604504896326,
+              "south": 40.74806319191677,
+              "north": 40.76241167078933
+            },
+            "groundCenter": {
+              "longitude": -73.9397384500196,
+              "latitude": 40.75523743135305
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.953432:40.748063:-73.926045:40.762412:-73.939738:40.755237"
+          }
+        },
+        {
+          "index": 34,
+          "camera": {
+            "longitude": -73.94071250489506,
+            "latitude": 40.74433997261874,
+            "height": 577.473600014638,
+            "heading": 359.999999999995,
+            "pitch": -35.000000000919215,
+            "roll": 4.121998867176718e-12
+          },
+          "heightBucket": 600,
+          "footprint": {
+            "bounds": {
+              "west": -73.95403914987736,
+              "east": -73.92740830444882,
+              "south": 40.74816865974321,
+              "north": 40.762121076883766
+            },
+            "groundCenter": {
+              "longitude": -73.94072372716312,
+              "latitude": 40.75514486831349
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.954039:40.748169:-73.927408:40.762121:-73.940724:40.755145"
+          }
+        },
+        {
+          "index": 35,
+          "camera": {
+            "longitude": -73.94167091543419,
+            "latitude": 40.744548107803986,
+            "height": 561.5495991819901,
+            "heading": 359.999999999995,
+            "pitch": -35.00000000091934,
+            "roll": 4.172887742080134e-12
+          },
+          "heightBucket": 600,
+          "footprint": {
+            "bounds": {
+              "west": -73.9546297550445,
+              "east": -73.92873382638345,
+              "south": 40.74827120727917,
+              "north": 40.76183865121511
+            },
+            "groundCenter": {
+              "longitude": -73.94168179071397,
+              "latitude": 40.75505492924714
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.954630:40.748271:-73.928734:40.761839:-73.941682:40.755055"
+          }
+        },
+        {
+          "index": 36,
+          "camera": {
+            "longitude": -73.9419398698141,
+            "latitude": 40.75014434187393,
+            "height": 563.6127392429511,
+            "heading": 359.99999999999477,
+            "pitch": -34.99999432087294,
+            "roll": 4.376443241693799e-12
+          },
+          "heightBucket": 600,
+          "footprint": {
+            "bounds": {
+              "west": -73.95494748122417,
+              "east": -73.92895410618286,
+              "south": 40.75388112218581,
+              "north": 40.76749844782691
+            },
+            "groundCenter": {
+              "longitude": -73.94195079370354,
+              "latitude": 40.76068978500636
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.954947:40.753881:-73.928954:40.767498:-73.941951:40.760690"
+          }
+        },
+        {
+          "index": 37,
+          "camera": {
+            "longitude": -73.94221166853016,
+            "latitude": 40.755799273290464,
+            "height": 565.697583592203,
+            "heading": 359.99999999999443,
+            "pitch": -34.99998858861242,
+            "roll": 4.579998741307464e-12
+          },
+          "heightBucket": 600,
+          "footprint": {
+            "bounds": {
+              "west": -73.95526856897033,
+              "east": -73.9291767123442,
+              "south": 40.75954987684775,
+              "north": 40.77321760693955
+            },
+            "groundCenter": {
+              "longitude": -73.94222264065729,
+              "latitude": 40.76638374189365
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.955269:40.759550:-73.929177:40.773218:-73.942223:40.766384"
+          }
+        },
+        {
+          "index": 38,
+          "camera": {
+            "longitude": -73.94248277174725,
+            "latitude": 40.761439254737304,
+            "height": 567.7769808200707,
+            "heading": 359.9999999999943,
+            "pitch": -34.99998287887786,
+            "roll": 4.6817764911142965e-12
+          },
+          "heightBucket": 600,
+          "footprint": {
+            "bounds": {
+              "west": -73.95558883624551,
+              "east": -73.92939874641542,
+              "south": 40.76520364197456,
+              "north": 40.7789216435278
+            },
+            "groundCenter": {
+              "longitude": -73.94249379133043,
+              "latitude": 40.77206264275118
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.955589:40.765204:-73.929399:40.778922:-73.942494:40.772063"
+          }
+        },
+        {
+          "index": 39,
+          "camera": {
+            "longitude": -73.94257346625072,
+            "latitude": 40.76332590539269,
+            "height": 568.4725819095336,
+            "heading": 359.9999999999943,
+            "pitch": -34.99998097053703,
+            "roll": 4.478220991500631e-12
+          },
+          "heightBucket": 600,
+          "footprint": {
+            "bounds": {
+              "west": -73.95569586249707,
+              "east": -73.92947314051673,
+              "south": 40.767094897951026,
+              "north": 40.78082956667691
+            },
+            "groundCenter": {
+              "longitude": -73.94258450150687,
+              "latitude": 40.77396223231396
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.955696:40.767095:-73.929473:40.780830:-73.942585:40.773962"
+          }
+        },
+        {
+          "index": 40,
+          "camera": {
+            "longitude": -73.94284499919263,
+            "latitude": 40.768974182960314,
+            "height": 570.5551239286377,
+            "heading": 359.9999999999942,
+            "pitch": -34.99997526224804,
+            "roll": 4.63088761621088e-12
+          },
+          "heightBucket": 600,
+          "footprint": {
+            "bounds": {
+              "west": -73.95601662111608,
+              "east": -73.92969554072323,
+              "south": 40.77275698520956,
+              "north": 40.78654196671275
+            },
+            "groundCenter": {
+              "longitude": -73.94285608091968,
+              "latitude": 40.77964947596115
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.956017:40.772757:-73.929696:40.786542:-73.942856:40.779649"
+          }
+        },
+        {
+          "index": 41,
+          "camera": {
+            "longitude": -73.94311379157827,
+            "latitude": 40.77456497423111,
+            "height": 572.616534040824,
+            "heading": 359.9999999999941,
+            "pitch": -34.99996961932867,
+            "roll": 4.732665366017713e-12
+          },
+          "heightBucket": 600,
+          "footprint": {
+            "bounds": {
+              "west": -73.95633415114372,
+              "east": -73.92991568663587,
+              "south": 40.778361441117724,
+              "north": 40.79219623486628
+            },
+            "groundCenter": {
+              "longitude": -73.9431249188898,
+              "latitude": 40.785278837992
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.956334:40.778361:-73.929916:40.792196:-73.943125:40.785279"
+          }
+        },
+        {
+          "index": 42,
+          "camera": {
+            "longitude": -73.94306443095824,
+            "latitude": 40.77387373299717,
+            "height": 625.4861937716433,
+            "heading": 359.99999999999386,
+            "pitch": -34.99996961932867,
+            "roll": 4.478220991500631e-12
+          },
+          "heightBucket": 600,
+          "footprint": {
+            "bounds": {
+              "west": -73.95750664911918,
+              "east": -73.92864654973567,
+              "south": 40.77802073475133,
+              "north": 40.79313416519634
+            },
+            "groundCenter": {
+              "longitude": -73.9430765994274,
+              "latitude": 40.785577449973836
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.957507:40.778021:-73.928647:40.793134:-73.943077:40.785577"
+          }
+        },
+        {
+          "index": 43,
+          "camera": {
+            "longitude": -73.94301051346275,
+            "latitude": 40.77311866946688,
+            "height": 683.2378141054572,
+            "heading": 359.99999999999386,
+            "pitch": -34.99996961932867,
+            "roll": 4.478220991500631e-12
+          },
+          "heightBucket": 700,
+          "footprint": {
+            "bounds": {
+              "west": -73.95878755997632,
+              "east": -73.92726008612897,
+              "south": 40.77764858170193,
+              "north": 40.794158840359096
+            },
+            "groundCenter": {
+              "longitude": -73.94302382305261,
+              "latitude": 40.785903711030514
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.958788:40.777649:-73.927260:40.794159:-73.943024:40.785904"
+          }
+        },
+        {
+          "index": 44,
+          "camera": {
+            "longitude": -73.9429540823623,
+            "latitude": 40.772328395995444,
+            "height": 743.6830618892656,
+            "heading": 359.99999999999375,
+            "pitch": -34.99996961932854,
+            "roll": 4.63088761621088e-12
+          },
+          "heightBucket": 700,
+          "footprint": {
+            "bounds": {
+              "west": -73.9601286229497,
+              "east": -73.92580861298211,
+              "south": 40.777259070982375,
+              "north": 40.795231782448454
+            },
+            "groundCenter": {
+              "longitude": -73.9429686179659,
+              "latitude": 40.78624542671541
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.960129:40.777259:-73.925809:40.795232:-73.942969:40.786245"
+          }
+        },
+        {
+          "index": 45,
+          "camera": {
+            "longitude": -73.94289265973086,
+            "latitude": 40.77146820927378,
+            "height": 809.4763865102967,
+            "heading": 359.99999999999363,
+            "pitch": -34.99996961932851,
+            "roll": 4.5291098664040475e-12
+          },
+          "heightBucket": 800,
+          "footprint": {
+            "bounds": {
+              "west": -73.96158825685075,
+              "east": -73.92422845462607,
+              "south": 40.77683511283106,
+              "north": 40.79639957934495
+            },
+            "groundCenter": {
+              "longitude": -73.94290835573838,
+              "latitude": 40.78661734608801
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.961588:40.776835:-73.924228:40.796400:-73.942908:40.786617"
+          }
+        },
+        {
+          "index": 46,
+          "camera": {
+            "longitude": -73.94282580394612,
+            "latitude": 40.77053192176107,
+            "height": 881.0912309533619,
+            "heading": 359.9999999999934,
+            "pitch": -34.99996961932849,
+            "roll": 4.63088761621088e-12
+          },
+          "heightBucket": 900,
+          "footprint": {
+            "bounds": {
+              "west": -73.96317771923964,
+              "east": -73.9225081742278,
+              "south": 40.77637364894254,
+              "north": 40.79767127279792
+            },
+            "groundCenter": {
+              "longitude": -73.94284294673372,
+              "latitude": 40.78702246087023
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.963178:40.776374:-73.922508:40.797671:-73.942843:40.787022"
+          }
+        },
+        {
+          "index": 47,
+          "camera": {
+            "longitude": -73.94275303443077,
+            "latitude": 40.769512799812034,
+            "height": 959.042846008562,
+            "heading": 359.9999999999934,
+            "pitch": -34.99996961932849,
+            "roll": 4.6817764911142965e-12
+          },
+          "heightBucket": 1000,
+          "footprint": {
+            "bounds": {
+              "west": -73.96490807093585,
+              "east": -73.92063532324141,
+              "south": 40.77587135780796,
+              "north": 40.79905583092018
+            },
+            "groundCenter": {
+              "longitude": -73.94277169708863,
+              "latitude": 40.78746359436407
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.964908:40.775871:-73.920635:40.799056:-73.942772:40.787464"
+          }
+        },
+        {
+          "index": 48,
+          "camera": {
+            "longitude": -73.94267382810663,
+            "latitude": 40.76840351378155,
+            "height": 1043.8921144395715,
+            "heading": 359.9999999999933,
+            "pitch": -34.99996961932836,
+            "roll": 4.732665366017713e-12
+          },
+          "heightBucket": 1000,
+          "footprint": {
+            "bounds": {
+              "west": -73.96679182545512,
+              "east": -73.91859654444983,
+              "south": 40.7753246637681,
+              "north": 40.80056315650893
+            },
+            "groundCenter": {
+              "longitude": -73.94269418495247,
+              "latitude": 40.787943910138516
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.966792:40.775325:-73.918597:40.800563:-73.942694:40.787944"
+          }
+        },
+        {
+          "index": 49,
+          "camera": {
+            "longitude": -73.94258761562806,
+            "latitude": 40.76719608524011,
+            "height": 1136.2495969017791,
+            "heading": 359.9999999999932,
+            "pitch": -34.99996961932839,
+            "roll": 4.8344431158245454e-12
+          },
+          "heightBucket": 1100,
+          "footprint": {
+            "bounds": {
+              "west": -73.96884304919774,
+              "east": -73.91637638445923,
+              "south": 40.774729610173026,
+              "north": 40.80220474907452
+            },
+            "groundCenter": {
+              "longitude": -73.94260971682849,
+              "latitude": 40.78846717962377
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.968843:40.774730:-73.916376:40.802205:-73.942610:40.788467"
+          }
+        },
+        {
+          "index": 50,
+          "camera": {
+            "longitude": -73.9424937772977,
+            "latitude": 40.76588182949847,
+            "height": 1236.779938963544,
+            "heading": 359.9999999999932,
+            "pitch": -34.99996961932864,
+            "roll": 4.885331990727962e-12
+          },
+          "heightBucket": 1200,
+          "footprint": {
+            "bounds": {
+              "west": -73.97107647812783,
+              "east": -73.91395934704093,
+              "south": 40.77408191196399,
+              "north": 40.80399232095884
+            },
+            "groundCenter": {
+              "longitude": -73.94251791258438,
+              "latitude": 40.789037116461415
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.971076:40.774082:-73.913959:40.803992:-73.942518:40.789037"
+          }
+        },
+        {
+          "index": 51,
+          "camera": {
+            "longitude": -73.94239163860907,
+            "latitude": 40.764451293055124,
+            "height": 1346.206668619319,
+            "heading": 359.9999999999932,
+            "pitch": -34.999969619328745,
+            "roll": 4.885331990727962e-12
+          },
+          "heightBucket": 1300,
+          "footprint": {
+            "bounds": {
+              "west": -73.973508103467,
+              "east": -73.91132718497533,
+              "south": 40.773376949769556,
+              "north": 40.805939112814855
+            },
+            "groundCenter": {
+              "longitude": -73.94241764422117,
+              "latitude": 40.789658031292205
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.973508:40.773377:-73.911327:40.805939:-73.942418:40.789658"
+          }
+        },
+        {
+          "index": 52,
+          "camera": {
+            "longitude": -73.94228046527398,
+            "latitude": 40.76289418370126,
+            "height": 1465.3175565030676,
+            "heading": 359.99999999999307,
+            "pitch": -34.99996961932892,
+            "roll": 4.783554240921129e-12
+          },
+          "heightBucket": 1500,
+          "footprint": {
+            "bounds": {
+              "west": -73.97615646039338,
+              "east": -73.90846161363027,
+              "south": 40.77260960273278,
+              "north": 40.808058903906804
+            },
+            "groundCenter": {
+              "longitude": -73.9423090370118,
+              "latitude": 40.79033425331979
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.976156:40.772610:-73.908462:40.808059:-73.942309:40.790334"
+          }
+        },
+        {
+          "index": 53,
+          "camera": {
+            "longitude": -73.94169474838192,
+            "latitude": 40.761631925845506,
+            "height": 1595.4847405407866,
+            "heading": 359.99999999999295,
+            "pitch": -34.99996961932905,
+            "roll": 4.8344431158245454e-12
+          },
+          "heightBucket": 1600,
+          "footprint": {
+            "bounds": {
+              "west": -73.9785872894708,
+              "east": -73.90486423861381,
+              "south": 40.772210422959816,
+              "north": 40.8108160140952
+            },
+            "groundCenter": {
+              "longitude": -73.9417257640423,
+              "latitude": 40.79151321852751
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.978587:40.772210:-73.904864:40.810816:-73.941726:40.791513"
+          }
+        },
+        {
+          "index": 54,
+          "camera": {
+            "longitude": -73.93926655106652,
+            "latitude": 40.762330606497336,
+            "height": 1710.0932708067253,
+            "heading": 359.99999999999295,
+            "pitch": -34.99996961932907,
+            "roll": 4.8344431158245454e-12
+          },
+          "heightBucket": 1700,
+          "footprint": {
+            "bounds": {
+              "west": -73.97881678642386,
+              "east": -73.89978252227479,
+              "south": 40.77366905236516,
+              "north": 40.81505441740827
+            },
+            "groundCenter": {
+              "longitude": -73.93929965434933,
+              "latitude": 40.794361734886714
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.978817:40.773669:-73.899783:40.815054:-73.939300:40.794362"
+          }
+        },
+        {
+          "index": 55,
+          "camera": {
+            "longitude": -73.93666391930412,
+            "latitude": 40.76307940510948,
+            "height": 1832.9451968118399,
+            "heading": 359.99999999999295,
+            "pitch": -34.99996961932923,
+            "roll": 4.732665366017713e-12
+          },
+          "heightBucket": 1800,
+          "footprint": {
+            "bounds": {
+              "west": -73.97906503464418,
+              "east": -73.8943342181417,
+              "south": 40.77523240164219,
+              "north": 40.819598710631894
+            },
+            "groundCenter": {
+              "longitude": -73.93669962639297,
+              "latitude": 40.79741555613704
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.979065:40.775232:-73.894334:40.819599:-73.936700:40.797416"
+          }
+        },
+        {
+          "index": 56,
+          "camera": {
+            "longitude": -73.93387428751706,
+            "latitude": 40.763881921109025,
+            "height": 1964.6358666816868,
+            "heading": 359.99999999999284,
+            "pitch": -34.999969619329555,
+            "roll": 4.63088761621088e-12
+          },
+          "heightBucket": 2000,
+          "footprint": {
+            "bounds": {
+              "west": -73.9793325882946,
+              "east": -73.88849294593393,
+              "south": 40.77690814415451,
+              "north": 40.82447128815023
+            },
+            "groundCenter": {
+              "longitude": -73.9339127671143,
+              "latitude": 40.80068971615237
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.979333:40.776908:-73.888493:40.824471:-73.933913:40.800690"
+          }
+        },
+        {
+          "index": 57,
+          "camera": {
+            "longitude": -73.93088421590625,
+            "latitude": 40.76474200268696,
+            "height": 2105.8022814102233,
+            "heading": 359.9999999999925,
+            "pitch": -34.99996961932973,
+            "roll": 4.579998741307464e-12
+          },
+          "heightBucket": 2100,
+          "footprint": {
+            "bounds": {
+              "west": -73.97962103287261,
+              "east": -73.88222945418346,
+              "south": 40.778704268203484,
+              "north": 40.82969536153231
+            },
+            "groundCenter": {
+              "longitude": -73.93092524352801,
+              "latitude": 40.8041998148679
+            },
+            "valid": true,
+            "source": "ground-rays",
+            "signature": "-73.979621:40.778704:-73.882229:40.829695:-73.930925:40.804200"
+          }
+        }
+      ],
+      "roam": {
+        "settledSampleCount": 58,
+        "minHeightMeters": 219.99998295402074,
+        "maxHeightMeters": 2105.8022814102233,
+        "longitudeSpanMeters": 5451.3729516119465,
+        "latitudeSpanMeters": 3796.292624737617,
+        "groundRaySampleCount": 56
+      }
+    }
+  ]
+}
