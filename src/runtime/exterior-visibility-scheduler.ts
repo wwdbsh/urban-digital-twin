@@ -93,6 +93,36 @@ export interface SchedulerPolicy {
   readonly metersPerDegreeLongitude: number;
   readonly metersPerDegreeLatitude: number;
   readonly previous: SchedulerCarry | null;
+  /**
+   * The DETAIL RADIUS (T005), in metres, or `null` for no radius.
+   *
+   * Absent and `null` both mean "today's behaviour", exactly: the field is only
+   * ever read in the footprint-intersection branch below, so a policy that omits
+   * it produces the decision it produced before this field existed.
+   *
+   * It is the ONLY knob in this module that can bound residency by distance,
+   * and it exists because the other two candidates do not work:
+   *
+   *   1. **The band edges are sort keys, not admission tests.** `bandIndexOf`
+   *      feeds `compareRanked`; a unit in band 2 is ranked last, not refused.
+   *      Bands change WHO gets cut only once the cap binds, and at the near-field
+   *      poses this task measures the cap does not bind — the footprint does.
+   *      Moving 1,200/2,400 therefore cannot move a near-field decision at all.
+   *   2. **The manifest `maxDistanceMeters` is a different quantity.** It selects
+   *      WHICH LOD of an admitted asset to fetch, it is keyed on a bucketed
+   *      camera ellipsoid HEIGHT rather than on a camera-to-unit distance
+   *      (`exterior-cell-runtime.ts` `loadCell`), and it lives inside
+   *      checksum-pinned immutable release manifests that this goal may not edit.
+   *
+   * Applied ONLY to the intersection tier. The camera reservation is exempt by
+   * construction — it is decided first and `continue`s — so no radius, however
+   * small, can drop the unit the camera is standing in (the T009 F2 defect).
+   * A unit that falls outside the radius is not deleted from the decision: if it
+   * was resident it drops through to the retained tier and decays over
+   * `hysteresisDecisions`, so tightening the radius costs a fade-out and not a
+   * cliff.
+   */
+  readonly maxUnitDistanceMeters?: number | null;
 }
 
 export type SchedulerHold = "none" | "held-previous" | "bootstrap-untrusted-footprint";
@@ -322,6 +352,9 @@ export function selectResidentUnits(units: readonly SchedulableUnit[], view: Sch
   const visible: RankedUnit[] = [];
   const retained: RankedUnit[] = [];
   const remainingAfter = new Map<string, number>();
+  // Absent and null are the same policy: no radius. Anything else is a metre
+  // distance the intersection tier is bounded by.
+  const maxUnitDistanceMeters = policy.maxUnitDistanceMeters ?? null;
 
   for (const unit of byId.values()) {
     const distance = unitDistanceMeters(unit.bounds, view.footprint.groundCenter.longitude, view.footprint.groundCenter.latitude, policy);
@@ -331,7 +364,7 @@ export function selectResidentUnits(units: readonly SchedulableUnit[], view: Sch
       remainingAfter.set(unit.unitId, policy.hysteresisDecisions);
       continue;
     }
-    if (viewportBoundsIntersect(unit.bounds, view.footprint.bounds)) {
+    if (viewportBoundsIntersect(unit.bounds, view.footprint.bounds) && (maxUnitDistanceMeters === null || distance <= maxUnitDistanceMeters)) {
       visible.push({ unit, tier: 1, band });
       remainingAfter.set(unit.unitId, policy.hysteresisDecisions);
       continue;

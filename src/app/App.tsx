@@ -764,6 +764,33 @@ export const EXTERIOR_SCHEDULER_PARAM = "exteriorScheduler" as const;
 export const EXTERIOR_SCHEDULER_ON_VALUE = "on" as const;
 
 /**
+ * T005 detail radius: `?exteriorDetailRadius=<metres>`, measured on the same
+ * footprint-centre-to-cell-rectangle metric the scheduler already ranks by.
+ *
+ * It is a MEASUREMENT knob in this cycle, not a shipped default. Absent means
+ * absent: `null` reaches `selectResidentUnits` as "no radius" and the decision
+ * is the one T003 froze, which is what keeps the A/B honest — the same build
+ * serves both arms and only the URL differs.
+ *
+ * It is meaningless without the scheduler, so it is only read when
+ * `exteriorScheduler=on` is present and only written back beside it.
+ */
+export const EXTERIOR_DETAIL_RADIUS_PARAM = "exteriorDetailRadius" as const;
+
+/**
+ * A radius this build cannot honour resolves to "no radius", never to a
+ * different one — the same fail-direction as an unpinned `exteriorCells`.
+ * Zero and negatives are refused rather than clamped: a radius of 0 would
+ * defer every non-reserved cell, and answering "0" with "no radius" is the
+ * conservative direction (it keeps geometry).
+ */
+export function parseExteriorDetailRadiusMeters(value: string | null): number | null {
+  if (value === null || value.trim().length === 0) return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
+/**
  * URL *intent*, not resolved state. `exteriorCells` keeps meaning "which pinned
  * release", and the distinct `exteriorStreaming=off` sentinel means "no exterior
  * wave at all". Absent parameters mean "no opinion", which the promotion record
@@ -777,6 +804,8 @@ export interface ExteriorStreamingUrlState {
   canarySnapshotId: string | null;
   /** Whether this session opted in to the T002 visibility-driven scheduler. */
   scheduler: boolean;
+  /** The T005 detail radius in metres, or `null` when the URL names none. */
+  detailRadiusMeters: number | null;
 }
 
 /** What a URL write needs: the intent plus the activation it resolved to. */
@@ -788,6 +817,8 @@ export interface ExteriorStreamingUrlWrite {
   profile: ExteriorRenderProfile;
   canarySnapshotId: string | null;
   scheduler: boolean;
+  /** Optional: a writer that has no radius says nothing, and nothing is written. */
+  detailRadiusMeters?: number | null;
 }
 
 /**
@@ -813,10 +844,15 @@ export function appendExteriorProfileUrl(baseUrl: string, state: ExteriorStreami
     // A session with no exterior wave has nothing to schedule, so the flag is
     // dropped rather than carried as an opinion about a wave that is not running.
     url.searchParams.delete(EXTERIOR_SCHEDULER_PARAM);
+    url.searchParams.delete(EXTERIOR_DETAIL_RADIUS_PARAM);
     return url.toString();
   }
   if (state.scheduler) url.searchParams.set(EXTERIOR_SCHEDULER_PARAM, EXTERIOR_SCHEDULER_ON_VALUE);
   else url.searchParams.delete(EXTERIOR_SCHEDULER_PARAM);
+  // The radius rides with the flag it qualifies, and dies with it: a URL that
+  // carries a radius but no scheduler describes a session that cannot exist.
+  if (state.scheduler && state.detailRadiusMeters != null) url.searchParams.set(EXTERIOR_DETAIL_RADIUS_PARAM, String(state.detailRadiusMeters));
+  else url.searchParams.delete(EXTERIOR_DETAIL_RADIUS_PARAM);
   url.searchParams.delete(EXTERIOR_STREAMING_OFF_PARAM);
   if (state.override === "on") url.searchParams.set("exteriorCells", state.releaseId);
   else url.searchParams.delete("exteriorCells");
@@ -829,6 +865,7 @@ export function appendExteriorProfileUrl(baseUrl: string, state: ExteriorStreami
 
 export function parseExteriorStreamingUrl(href: string): ExteriorStreamingUrlState {
   const url = new URL(href, typeof window === "undefined" ? "http://localhost/" : window.location.href);
+  const schedulerOn = url.searchParams.get(EXTERIOR_SCHEDULER_PARAM) === EXTERIOR_SCHEDULER_ON_VALUE;
   // An explicit disable outranks every other exterior parameter: a link that
   // says "off" must never resolve to a wave because it also carries a release.
   const requestedRelease = url.searchParams.get("exteriorCells");
@@ -851,7 +888,9 @@ export function parseExteriorStreamingUrl(href: string): ExteriorStreamingUrlSta
     // Exactly one accepted value. `?exteriorScheduler=1` or `=true` is not an
     // opt-in, for the same reason `exteriorCells=` refuses an unpinned release:
     // a link this build cannot honour must not resolve to something else.
-    scheduler: !disabled && url.searchParams.get(EXTERIOR_SCHEDULER_PARAM) === EXTERIOR_SCHEDULER_ON_VALUE,
+    scheduler: !disabled && schedulerOn,
+    // Only meaningful under the scheduler, so it is not even parsed without it.
+    detailRadiusMeters: !disabled && schedulerOn ? parseExteriorDetailRadiusMeters(url.searchParams.get(EXTERIOR_DETAIL_RADIUS_PARAM)) : null,
   };
 }
 
@@ -1104,7 +1143,7 @@ export function App() {
   const initialPublicRealmRequested = typeof window !== "undefined" && new URL(window.location.href).searchParams.get("publicRealm") === BLOCK835_PUBLIC_REALM_RELEASE_ID;
   const initialPublicRealmFeatureId = typeof window !== "undefined" ? new URL(window.location.href).searchParams.get("publicRealmFeature") : null;
   const initialExteriorStreaming: ExteriorStreamingUrlState = typeof window === "undefined"
-    ? { override: null, explicitReleaseId: null, profile: DEFAULT_EXTERIOR_RENDER_PROFILE, canarySnapshotId: null, scheduler: false }
+    ? { override: null, explicitReleaseId: null, profile: DEFAULT_EXTERIOR_RENDER_PROFILE, canarySnapshotId: null, scheduler: false, detailRadiusMeters: null }
     : parseExteriorStreamingUrl(window.location.href);
   const stage3RenderProofRequested = import.meta.env.DEV && typeof window !== "undefined" && new URL(window.location.href).searchParams.get("stage3Proof") === "storefront-picks";
   const block835PerformanceMode = import.meta.env.DEV && typeof window !== "undefined" ? block835PerformanceProbeMode(window.location.search) : null;
@@ -1172,6 +1211,9 @@ export function App() {
   // no scheduler control, only the URL flag, so the value cannot change within a
   // session and no setter exists to change it by accident.
   const exteriorSchedulerRequested = initialExteriorStreaming.scheduler;
+  // T005 detail radius, read once at boot beside the flag it qualifies and for
+  // the same reason: this build has no radius control, only the URL parameter.
+  const exteriorDetailRadiusMeters = initialExteriorStreaming.detailRadiusMeters;
 
   // One entry per promoted exterior release. A wave failing closed clears its
   // own entry and leaves every other wave exactly as it was, so one bad release
@@ -1270,6 +1312,7 @@ export function App() {
   const exteriorCellReleaseIdRef = useRef<string>(EXTERIOR_CELL_STREAMING_RELEASE_ID);
   const exteriorProfileRef = useRef(exteriorProfile);
   const exteriorSchedulerRequestedRef = useRef(exteriorSchedulerRequested);
+  const exteriorDetailRadiusMetersRef = useRef(exteriorDetailRadiusMeters);
   // ONE carry for the session, not one per wave. T003 replaced six per-wave
   // decisions with a single decision over the static 883-row census table, so
   // there is exactly one residency to carry forward. (T002 kept a map here.)
@@ -1339,10 +1382,11 @@ export function App() {
   exteriorProfileRef.current = exteriorProfile;
   exteriorCanarySnapshotIdRef.current = exteriorCanarySnapshotId;
   exteriorSchedulerRequestedRef.current = exteriorSchedulerRequested;
+  exteriorDetailRadiusMetersRef.current = exteriorDetailRadiusMeters;
   const getOverlayUrlFields = useCallback(() => navigationOverlayFields(exteriorRequestedRef.current, selectedStorefrontIdRef.current), []);
   const navigationUrlForApp = useCallback((value: Parameters<typeof navigationUrl>[0], base: string) => appendExteriorProfileUrl(
     appendBlock835PublicRealmUrl(navigationUrl(value, base), publicRealmRequestedRef.current, selectedPublicRealmIdRef.current),
-    { override: exteriorStreamingOverrideRef.current, releaseId: exteriorCellReleaseIdRef.current, streaming: exteriorStreamingRequestedRef.current, profile: exteriorProfileRef.current, canarySnapshotId: exteriorCanarySnapshotIdRef.current, scheduler: exteriorSchedulerRequestedRef.current },
+    { override: exteriorStreamingOverrideRef.current, releaseId: exteriorCellReleaseIdRef.current, streaming: exteriorStreamingRequestedRef.current, profile: exteriorProfileRef.current, canarySnapshotId: exteriorCanarySnapshotIdRef.current, scheduler: exteriorSchedulerRequestedRef.current, detailRadiusMeters: exteriorDetailRadiusMetersRef.current },
   ), []);
   const updateSelectedStorefront = useCallback((storefrontId: string | null) => {
     selectedStorefrontIdRef.current = storefrontId;
@@ -1478,6 +1522,8 @@ export function App() {
   // then it only reads state the app already computed: it never schedules, never
   // requests anything, and never influences a decision it is recording.
   const exteriorSchedulerTraceRef = useRef<Array<Record<string, unknown>>>([]);
+  /** The last decision's own counters, for the probe only. Never read by the app. */
+  const exteriorSchedulerDecisionRef = useRef<Record<string, unknown> | null>(null);
   const [exteriorSchedulerTraceLength, setExteriorSchedulerTraceLength] = useState(0);
   useEffect(() => {
     if (!EXTERIOR_SCHEDULER_PROBE_ENABLED) return;
@@ -2038,9 +2084,24 @@ export function App() {
     const declaredByRelease = new Map([...wanted].map(([releaseId, { runtime }]) => [releaseId, runtime.cellIds()] as const));
     const globalSchedule = scheduleExteriorCellsGlobally(
       [...declaredByRelease].map(([releaseId, declaredCellIds]) => ({ releaseId, declaredCellIds })),
-      { ...schedulerView, enabled: schedulerEnabled, previous: exteriorSchedulerCarryRef.current },
+      { ...schedulerView, enabled: schedulerEnabled, previous: exteriorSchedulerCarryRef.current, maxUnitDistanceMeters: exteriorDetailRadiusMetersRef.current },
     );
     if (globalSchedule.carry) exteriorSchedulerCarryRef.current = globalSchedule.carry;
+    // Probe-only. The decision object is otherwise dropped here, so
+    // `visibleCount`/`deferredCount`/`reserved`/`hold` — the four numbers that
+    // say whether the CAP or the FOOTPRINT bound a pose — were unreadable from a
+    // live session. Recording them changes nothing about the decision.
+    if (EXTERIOR_SCHEDULER_PROBE_ENABLED) exteriorSchedulerDecisionRef.current = globalSchedule.decision && {
+      hold: globalSchedule.decision.hold,
+      visibleCount: globalSchedule.decision.visibleCount,
+      deferredCount: globalSchedule.decision.deferredCount,
+      retainedCount: globalSchedule.decision.retainedCount,
+      residentCount: globalSchedule.decision.resident.length,
+      reserved: [...globalSchedule.decision.reserved],
+      decisionIndex: globalSchedule.decision.carry.decisionIndex,
+      footprintSignature: globalSchedule.decision.carry.footprintSignature,
+      heightBucket: globalSchedule.decision.carry.heightBucket,
+    };
     for (const [releaseId, { target, runtime }] of wanted) {
       const live = running.get(releaseId);
       const declaredCellIds = declaredByRelease.get(releaseId) ?? runtime.cellIds();
@@ -2206,6 +2267,10 @@ export function App() {
       previous.baseFeatureCount === next.baseFeatureCount &&
       previous.contextFeatureCount === next.contextFeatureCount &&
       previous.contextPartCount === next.contextPartCount &&
+      // A building entering or leaving the V3 overlay moves ONLY this number
+      // until the dense plan is rebuilt, so omitting it here would let the
+      // details panel and the probe hold a stale exterior count.
+      previous.exteriorSuppressedFeatureCount === next.exteriorSuppressedFeatureCount &&
       previous.planBuildCount === next.planBuildCount &&
       previous.planReuseCount === next.planReuseCount &&
       previous.planCancellationCount === next.planCancellationCount &&
@@ -3734,7 +3799,10 @@ export function App() {
         {EXTERIOR_SCHEDULER_PROBE_ENABLED && <div hidden data-exterior-scheduler-probe data-trace-length={exteriorSchedulerTraceLength}>{JSON.stringify({
           schemaVersion: "1.0",
           schedulerRequested: exteriorSchedulerRequested,
+          detailRadiusMeters: exteriorDetailRadiusMeters,
           exteriorStreamingActive,
+          decision: exteriorSchedulerDecisionRef.current,
+          denseMetrics: citywideDenseMetrics,
           traceLength: exteriorSchedulerTraceRef.current.length,
           trace: exteriorSchedulerTraceRef.current,
           waves: exteriorActiveWaves.map((entry) => ({ releaseId: entry.target.releaseId, declaredCellCount: entry.wave.runtime?.snapshot.cells.length ?? 0, metrics: entry.wave.runtime?.getMetrics() ?? null })),

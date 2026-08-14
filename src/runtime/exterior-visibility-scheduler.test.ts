@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { CameraPose } from "../domain/visitor-navigation";
 import { CITYWIDE_OVERVIEW_CELL_EXTENTS, CITYWIDE_OVERVIEW_CELL_EXTENTS_SOURCE } from "./citywide-overview-cell-extents";
 import { EMPTY_SCHEDULER_CARRY, EXTERIOR_CELL_SCHEDULER_POLICY, selectResidentUnits, unitDistanceMeters, type SchedulableUnit, type SchedulerCarry, type SchedulerPolicy } from "./exterior-visibility-scheduler";
-import { viewportFootprintFromGroundPoints, fallbackViewportFootprint, type ViewportBounds, type ViewportFootprint } from "./viewport-footprint";
+import { viewportBoundsIntersect, viewportFootprintFromGroundPoints, fallbackViewportFootprint, type ViewportBounds, type ViewportFootprint } from "./viewport-footprint";
 
 /**
  * Expectations here are derived from the committed census and from hand-checked
@@ -259,6 +259,118 @@ describe("selectResidentUnits: untrusted footprints", () => {
     expect(decision.hold).toBe("bootstrap-untrusted-footprint");
     expect(decision.resident.length).toBeGreaterThan(0);
     expect(decision.evict).toEqual([]);
+  });
+});
+
+/**
+ * T005: the detail radius.
+ *
+ * The arithmetic these tests are checked against, all in the census planar
+ * metric (84,412.702 m/deg longitude, 111,049.654 m/deg latitude):
+ *
+ *   - A rectangle spanning longitudes -73.9575..-73.9565 has its nearest edge
+ *     0.0225 deg east of -73.98, which is 0.0225 x 84,412.702 = 1,899.29 m.
+ *   - A rectangle spanning -73.9705..-73.9695 is 0.0095 deg east, which is
+ *     801.92 m.
+ *
+ * So a radius of 1,000 m admits the second and refuses the first, and a radius
+ * of 2,000 m admits both. Neither number was read off the implementation.
+ */
+describe("selectResidentUnits: the detail radius (T005)", () => {
+  const near = unit("near", rect(-73.9705, 40.7495, -73.9695, 40.7505), 1);
+  const far = unit("far", rect(-73.9575, 40.7495, -73.9565, 40.7505), 2);
+  const units = [near, far];
+  // Wide enough that BOTH rectangles intersect it, so the radius is the only
+  // thing that can separate them. Camera parked far away so nothing is reserved.
+  const view = { footprint: centredFootprint(-73.98, 40.75, 0.05, 0.05), camera: pose(-73.80, 40.60), heightBucket: 600 };
+
+  it("measures the two fixture distances as the census metric says", () => {
+    expect(unitDistanceMeters(near.bounds, -73.98, 40.75, METRIC)).toBeCloseTo(801.92, 1);
+    expect(unitDistanceMeters(far.bounds, -73.98, 40.75, METRIC)).toBeCloseTo(1_899.29, 1);
+  });
+
+  it("is today's decision when the field is absent, and when it is explicitly null", () => {
+    const absent = selectResidentUnits(units, view, policy());
+    expect(absent.resident).toEqual(["near", "far"]);
+    const explicitNull = selectResidentUnits(units, view, policy({ maxUnitDistanceMeters: null }));
+    expect(explicitNull.resident).toEqual(absent.resident);
+    expect(explicitNull.visibleCount).toBe(absent.visibleCount);
+    expect(explicitNull.order).toEqual(absent.order);
+  });
+
+  it("refuses a unit whose nearest edge is beyond the radius, even though it intersects the footprint", () => {
+    const decision = selectResidentUnits(units, view, policy({ maxUnitDistanceMeters: 1_000 }));
+    // The refusal is a VISIBILITY refusal, not a cap truncation: the cap is 96
+    // and only two units exist, so nothing here is contested.
+    expect(decision.resident).toEqual(["near"]);
+    expect(decision.visibleCount).toBe(1);
+    expect(decision.deferredCount).toBe(0);
+    expect(viewportBoundsIntersect(far.bounds, view.footprint.bounds)).toBe(true);
+  });
+
+  it("admits on the boundary, so the radius is inclusive", () => {
+    const exact = unitDistanceMeters(far.bounds, -73.98, 40.75, METRIC);
+    expect(selectResidentUnits(units, view, policy({ maxUnitDistanceMeters: exact })).resident).toContain("far");
+    expect(selectResidentUnits(units, view, policy({ maxUnitDistanceMeters: exact - 0.001 })).resident).not.toContain("far");
+  });
+
+  it("never drops the unit the camera is standing in, at any radius", () => {
+    // A radius of one metre with the camera inside `near`. The reservation is
+    // decided before the intersection tier and is exempt by construction.
+    const inside = { footprint: centredFootprint(-73.97, 40.75, 0.05, 0.05), camera: pose(-73.97, 40.75), heightBucket: 300 };
+    const decision = selectResidentUnits(units, inside, policy({ maxUnitDistanceMeters: 1 }));
+    expect(decision.reserved).toEqual(["near"]);
+    expect(decision.resident).toContain("near");
+    expect(decision.resident).not.toContain("far");
+  });
+
+  it("fades a unit out through hysteresis rather than dropping it the instant the radius tightens", () => {
+    const wide = selectResidentUnits(units, view, policy({ maxUnitDistanceMeters: 2_000 }));
+    expect(wide.resident).toEqual(["near", "far"]);
+    // Same camera, tighter radius: `far` leaves the visible tier and lands in
+    // the retained tier, which is what makes a radius change a fade and not a cliff.
+    const first = selectResidentUnits(units, view, policy({ maxUnitDistanceMeters: 1_000, previous: wide.carry }));
+    expect(first.resident).toContain("far");
+    expect(first.retainedCount).toBe(1);
+    expect(first.evict).toEqual([]);
+    const second = selectResidentUnits(units, view, policy({ maxUnitDistanceMeters: 1_000, previous: first.carry }));
+    expect(second.resident).toContain("far");
+    const third = selectResidentUnits(units, view, policy({ maxUnitDistanceMeters: 1_000, previous: second.carry }));
+    expect(third.resident).not.toContain("far");
+    expect(third.evict).toEqual(["far"]);
+  });
+
+  it("leaves the band edges and the cap untouched: it is a filter, not a re-rank", () => {
+    // Both fixtures sit in band 0 and band 1 respectively; the radius removes
+    // one, and the surviving order is the order the un-radiused decision had.
+    const none = selectResidentUnits(units, view, policy());
+    const radiused = selectResidentUnits(units, view, policy({ maxUnitDistanceMeters: 1_000 }));
+    expect(none.order).toEqual(["near", "far"]);
+    expect(radiused.order).toEqual(none.order.filter((id) => id !== "far"));
+  });
+
+  it("bounds the island decision monotonically: a wider radius is never a smaller resident set", () => {
+    const overview = { footprint: centredFootprint(-73.98, 40.76, 0.2, 0.2), camera: pose(-73.98, 40.76, 6_000), heightBucket: 6_000 };
+    // The island's own reach from this centre, measured rather than assumed:
+    // 12 km is NOT enough (the northern cells sit beyond it), which is itself
+    // the reason a "generous" radius has to be checked against the census.
+    const reach = Math.max(...CENSUS_UNITS.map((entry) => unitDistanceMeters(entry.bounds, -73.98, 40.76, METRIC)));
+    expect(reach).toBeGreaterThan(12_000);
+    expect(reach).toBeLessThan(15_000);
+    const counts = [500, 1_000, 2_000, 3_000, 12_000, Math.ceil(reach)].map((radius) => selectResidentUnits(CENSUS_UNITS, overview, policy({ maxUnitDistanceMeters: radius })).visibleCount);
+    for (let index = 1; index < counts.length; index += 1) expect(counts[index]!).toBeGreaterThanOrEqual(counts[index - 1]!);
+    // A radius at the island's own reach must reproduce the un-radiused visible
+    // count exactly, which is the "null is the limit case" property.
+    expect(counts.at(-1)).toBe(selectResidentUnits(CENSUS_UNITS, overview, policy()).visibleCount);
+    expect(counts[0]!).toBeLessThan(counts.at(-1)!);
+  });
+
+  it("still holds the previous set verbatim on an untrusted footprint, radius or not", () => {
+    const previous: SchedulerCarry = { ...EMPTY_SCHEDULER_CARRY, resident: [BLOCK_835, OVERHANG_CELL], retained: new Map([[BLOCK_835, 3], [OVERHANG_CELL, 3]]) };
+    const held = selectResidentUnits(CENSUS_UNITS, { footprint: fallbackViewportFootprint(pose(-73.98, 40.75, 900)), camera: pose(-73.98, 40.75), heightBucket: 300 }, policy({ previous, maxUnitDistanceMeters: 1 }));
+    expect(held.hold).toBe("held-previous");
+    expect(held.evict).toEqual([]);
+    expect([...held.resident].sort()).toEqual([BLOCK_835, OVERHANG_CELL].sort());
   });
 });
 
