@@ -112,7 +112,9 @@
     "exterior-cells:emit-fixture": "node --experimental-strip-types scripts/emit-exterior-cell-fixture-release.mjs",
     "exterior-ledger:emit": "node --experimental-strip-types scripts/emit-exterior-wave-ledger.mjs",
     "exterior-fullsnapshot:dryrun": "node --experimental-strip-types scripts/exterior-fullsnapshot-dryrun.mjs",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "citywide:snapshot-gate": "node --experimental-strip-types scripts/citywide-snapshot-gate.mjs",
+    "citywide-overview:census": "node --experimental-strip-types --max-old-space-size=8192 scripts/citywide-overview-census-cli.mjs"
   },
   "dependencies": {
     "cesium": "1.143.0",

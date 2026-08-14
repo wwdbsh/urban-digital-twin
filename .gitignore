@@ -176,3 +176,10 @@ artifacts/public-showcase-20260812/
 # data/goal-bounded-gaps-20260812/ so the evidence stays checkable after this
 # worktree-local tree is removed.
 artifacts/goal-bounded-gaps-20260812/
+
+# T001 citywide overview-tier census work root: stage receipts only. Every
+# measurement the decision rests on is committed under
+# data/citywide-overview-census-20260814/ with its own checksum sidecar, so the
+# evidence stays checkable after this worktree-local tree is removed. The census
+# is census-only and retains no geometry, so there is nothing else here.
+artifacts/citywide-overview-census-20260814/

@@ -1,0 +1,313 @@
+{
+  "schemaVersion": "1.0",
+  "censusId": "citywide-overview-census-20260814",
+  "taskId": "T001",
+  "artifact": "overview-tier-candidate-costs-and-recommendation",
+  "note": "Every wire and GPU figure here comes from a MEASUREMENT recorded in a sibling artifact of this census, except the two that are labelled as assumptions (the per-request rate) or as structural floors (decoded GPU bytes inside Cesium). Nothing was estimated where it could be measured.",
+  "base": {
+    "releaseId": "manhattan-citywide-20260804",
+    "manifestChecksumSha256": "acb5a9b52014f86535c8478e7d4e516efc03f6dff95c17e9896dfea4413c203c"
+  },
+  "ledger": {
+    "releaseId": "manhattan-exterior-wave-ledger-20260804",
+    "ledgerId": "manhattan-exterior-wave-ledger-20260804-a3382ef4cac213a2",
+    "checksumSha256": "62e093d2ca50b54b49fd8bbad9d0b11f6301b2b197623deb343f9ea915e59016"
+  },
+  "requestRateAssumptionsMilliseconds": [
+    5,
+    20
+  ],
+  "islandBuildingCounts": {
+    "enumerated": 45194,
+    "planned": 44330,
+    "materializedByWaves": 44295
+  },
+  "existingTierCosts": {
+    "note": "What the island would cost with the tiers that already exist, for scale.",
+    "lod0TotalBytes": 3215901404,
+    "lod0MeanBytesPerBuilding": 72625,
+    "lod1TotalBytes": 1490123460,
+    "lod1MeanBytesPerBuilding": 33652,
+    "lod1AsShareOfLod0": 0.463361,
+    "finding": "lod_1 is not a coarse tier. It is lod_0 without wall recesses and without texture, and it costs 46% of lod_0. An island-wide lod_1 overview would be 1.49 GB, which is why 'ship the tier that already exists' is not an option and why this task exists."
+  },
+  "candidates": [
+    {
+      "candidateId": "a-per-cell-aggregated-coarse-glb",
+      "label": "Per-cell aggregated coarse GLB (883 assets)",
+      "cost": {
+        "candidateId": "a-per-cell-aggregated-coarse-glb",
+        "wireBytes": 61053487,
+        "gpuBytes": 106377216,
+        "drawCalls": 883,
+        "requestCount": 883,
+        "perRequestMilliseconds": 20,
+        "concurrency": 4,
+        "cacheEntries": 883,
+        "timeToCompleteOverviewSeconds": 4.4,
+        "wireMebibytes": 58.23,
+        "gpuMebibytes": 101.45
+      },
+      "pickStrategies": [
+        {
+          "id": "a1-model-per-cell-no-feature-ids",
+          "drawCalls": 883,
+          "verdict": "REJECTED",
+          "why": "One Model per cell gives 883 draw calls but NO per-building pick id, so selection, deep links and the details panel all break. The product contract requires selecting a building."
+        },
+        {
+          "id": "a2-model-per-building",
+          "drawCalls": 44330,
+          "verdict": "REJECTED",
+          "why": "44,330 Cesium Models is 1478x the draw calls of the batched path already shipping, for the same pixels."
+        },
+        {
+          "id": "a3-feature-ids-via-profile-change",
+          "drawCalls": 883,
+          "verdict": "POSSIBLE, NOT FREE",
+          "why": "Per-feature ids inside one GLB need EXT_mesh_features or an equivalent. The multi-LOD glTF profile is CLOSED and validates an exact key set; admitting an extension is a schema change that widens what every future artifact may carry, and it must be argued on its own rather than smuggled in as a rendering detail."
+        }
+      ],
+      "requiredContractChanges": [
+        "EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries 512 -> at least 1357 (883 overview cells alongside the 474 promoted entries)",
+        "multi-LOD glTF profile: admit a per-feature-id extension (closed profile change)",
+        "multi-LOD schema: exempt this tier from `silhouette.maximumRatio = 0.02`, or declare no silhouette for it"
+      ],
+      "rightsGate": "883 cells, every one `publicEligible: false` pending per-cell rights evidence. A NAMED USER GATE before any mass shipping.",
+      "validatorExemptions": [
+        "volume identity (mesh is not closed)",
+        "silhouette maximumRatio 0.02",
+        "non-increasing triangles (a new coarsest tier is fine, but it must be declared LAST in the chain)"
+      ],
+      "budgetChecks": [
+        {
+          "id": "draw-calls",
+          "limit": 1000,
+          "observed": 883,
+          "ok": true,
+          "overBy": 0
+        },
+        {
+          "id": "cache-entries",
+          "limit": 512,
+          "observed": 883,
+          "ok": false,
+          "overBy": 1.725
+        }
+      ],
+      "timeToCompleteOverviewSecondsByRate": {
+        "5ms": 1.1,
+        "20ms": 4.4
+      }
+    },
+    {
+      "candidateId": "b-per-building-coarse-glb",
+      "label": "Per-building coarse GLB (44,330 assets)",
+      "cost": {
+        "candidateId": "b-per-building-coarse-glb",
+        "wireBytes": 113569712,
+        "gpuBytes": 106377216,
+        "drawCalls": 44330,
+        "requestCount": 44330,
+        "perRequestMilliseconds": 20,
+        "concurrency": 4,
+        "cacheEntries": 44330,
+        "timeToCompleteOverviewSeconds": 221.7,
+        "wireMebibytes": 108.31,
+        "gpuMebibytes": 101.45
+      },
+      "containerOverhead": {
+        "note": "The measured price of the per-file container and metadata, paid once per building instead of once per cell.",
+        "perBuildingTotalBytes": 113569712,
+        "aggregatedProjectedBytes": 61053487,
+        "overheadBytes": 52516225,
+        "overheadShare": 0.462414,
+        "meanBytesPerBuilding": 2562,
+        "medianBytesPerBuilding": 2132,
+        "p95BytesPerBuilding": 4656,
+        "maxBytesPerBuilding": 8740
+      },
+      "pickStrategies": [
+        {
+          "id": "b1-model-per-building",
+          "drawCalls": 44330,
+          "verdict": "REJECTED",
+          "why": "Pick identity is free, and everything else is not."
+        }
+      ],
+      "requiredContractChanges": [
+        "EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries 512 -> 44804, an 88x raise",
+        "MULTI_LOD_ASSEMBLY_LIMITS.assets 50000: ADR 0025 measured 9.61% headroom at one asset per parent and named a multi-asset-per-building scheme as the thing that breaches it. This is that scheme.",
+        "the same silhouette and volume-identity exemptions as candidate (a)"
+      ],
+      "rightsGate": "Same 883-cell rights gate, plus per-building evidence at 44,330 assets.",
+      "validatorExemptions": [
+        "volume identity",
+        "silhouette maximumRatio 0.02"
+      ],
+      "budgetChecks": [
+        {
+          "id": "draw-calls",
+          "limit": 1000,
+          "observed": 44330,
+          "ok": false,
+          "overBy": 44.33
+        },
+        {
+          "id": "cache-entries",
+          "limit": 512,
+          "observed": 44330,
+          "ok": false,
+          "overBy": 86.582
+        }
+      ],
+      "timeToCompleteOverviewSecondsByRate": {
+        "5ms": 55.4,
+        "20ms": 221.7
+      }
+    },
+    {
+      "candidateId": "c-no-new-tier-dense-citywide-shards",
+      "label": "NO NEW TIER: visibility-stream the existing citywide dense shards",
+      "cost": {
+        "candidateId": "c-no-new-tier-dense-citywide-shards",
+        "wireBytes": 45903404,
+        "gpuBytes": 62700000,
+        "drawCalls": 30,
+        "requestCount": 56,
+        "perRequestMilliseconds": 20,
+        "concurrency": 4,
+        "cacheEntries": 56,
+        "timeToCompleteOverviewSeconds": 0.3,
+        "wireMebibytes": 43.78,
+        "gpuMebibytes": 59.8
+      },
+      "wireDetail": {
+        "note": "These bytes ALREADY EXIST, are already checksum-pinned in the manifest this task's gate verifies, and are already the published, rights-cleared base. Nothing is generated.",
+        "shardCount": 56,
+        "rawBytes": 45903404,
+        "gzipBytes": 11030061,
+        "maxShardRawBytes": 2096314,
+        "rawBytesPerBuilding": 1016,
+        "gzipBytesPerBuilding": 244
+      },
+      "pickStrategies": [
+        {
+          "id": "c1-batched-geometryinstance-per-instance-pick-id",
+          "drawCalls": 30,
+          "verdict": "ALREADY SHIPPING",
+          "why": "`denseBuildingInstance` already sets `id: feature.id` on every GeometryInstance and the runtime already sets `Feature.id = summary.parentId`, which is the SAME `doitt:NNNNNN` identity the exterior cell assets carry as `canonicalFeatureId`. Selection, deep links and provenance survive unchanged; nothing new has to be invented."
+        }
+      ],
+      "requiredContractChanges": [
+        "CITYWIDE_BUDGETS.maxRenderedDenseFeatures 6000 -> 45194",
+        "CITYWIDE_BUDGETS.maxDecodedFeatures 8192 -> 45194",
+        "CITYWIDE_BUDGETS.maxDecodedSummaries 8192 -> 45194",
+        "CITYWIDE_BUDGETS.maxLoadedShards 24 -> 56"
+      ],
+      "sharedCacheBound": {
+        "note": "CORRECTION. An earlier draft of this record claimed the byte ceiling already admitted island-wide residency because the building shards are 43.78 MiB against a 48 MiB cap. That was WRONG, and the error was measuring one shard class against a ceiling that is shared by four. `CitywideLruCache` is constructed once per runtime with `maxLoadedShards` entries and `maxLoadedBytes` bytes; building geometry, restaurant geometry, search shards and detail shards all load through the same pool into the same map, evicted by global recency with NO per-class reservation, over `cache: \"no-store\"` fetches that cannot be served again from the browser.",
+        "maxLoadedShards": 24,
+        "maxLoadedBytes": 50331648,
+        "classes": {
+          "geometry:buildings": {
+            "shardCount": 56,
+            "totalBytes": 45903404,
+            "maxShardBytes": 2096314
+          },
+          "geometry:restaurants": {
+            "shardCount": 47,
+            "totalBytes": 14279876,
+            "maxShardBytes": 1487908
+          },
+          "search": {
+            "shardCount": 214,
+            "totalBytes": 102932848,
+            "maxShardBytes": 558788
+          },
+          "detail": {
+            "shardCount": 134,
+            "totalBytes": 138406616,
+            "maxShardBytes": 1048527
+          }
+        },
+        "allShardCount": 451,
+        "allShardBytes": 301522744,
+        "buildingShareOfSharedByteCeiling": 0.912019,
+        "headroomBytesLeftForOtherClasses": 4428244,
+        "buildingShareOfSharedEntryCeiling": 2.333333,
+        "consequence": "Island-wide building residency alone consumes 91.2% of the shared byte ceiling and 233.3% of the shared ENTRY ceiling (56 shards against a 24-entry cap — it does not fit at all, let alone alongside anything else), leaving 4428244 B for the search and detail shards the very first query or building selection needs. Under global recency eviction those loads evict building shards, which re-fetch and force a Cesium Primitive rebuild.",
+        "status": "OPEN T002 CONTRACT CHANGE. This is not a constant bump: the shared cache has no reservation mechanism at all today, so guaranteeing island-wide building residency is a DESIGN change to the cache, not a raised number. The same 'recency-only, no reservation' disclosure ADR 0030 made for the exterior loader applies here and is widened by anything that makes one class permanently resident.",
+        "proposalToBeDecidedInT002": [
+          "A reserved building-class budget of at least 45903404 B and 56 entries, so search and detail cannot evict the overview.",
+          "A shared ceiling above that reservation for the remaining three classes, whose full extent is 255619340 B across 395 shards and which are demand-loaded rather than island-resident.",
+          "maxShards (512) is not the binding constraint: the release declares 451 shards in total."
+        ]
+      },
+      "unmodelledCost": {
+        "id": "cesium-primitive-rebuild-on-shard-stream",
+        "note": "NOT MODELLED ANYWHERE IN THIS TASK. Every shard stream-in or eviction-driven refetch changes the dense feature set, and `scheduleDensePrimitiveBuild` responds by rebuilding GeometryInstances and re-creating Primitives — asynchronous polygon tessellation in Cesium's workers, plus GPU re-upload. None of the wire, GPU or draw-call figures above include it, and it is precisely the cost that a thrashing shared cache multiplies. T002 MUST measure it; it is the most likely way candidate (c) fails in practice while looking free on paper."
+      },
+      "rightsGate": "NONE. The base snapshot is the already-published, already-approved citywide release; this candidate ships no new artifact and needs no new per-cell rights evidence.",
+      "validatorExemptions": [
+        "NONE. No release is assembled, no LOD is declared, so no multi-LOD gate applies to it at all."
+      ],
+      "fidelityLoss": {
+        "note": "STATED HONESTLY. The dense path extrudes the sourced outer ring flat to the sourced height — which is EXACTLY the same shape as the coarse prism of candidates (a) and (b). It is not a weaker representation than them; it is the same representation, reached without shipping anything. What it loses against V3 tiered massing is the setback steps, measured below.",
+        "medianSilhouetteDeviation": 0.045221,
+        "p95SilhouetteDeviation": 0.248387,
+        "maxSilhouetteDeviation": 0.628806,
+        "worstSampleCellSkylineDeviation": 0.066791,
+        "worstSampleScreenSpaceErrorPixels": 0.955,
+        "alsoLost": "Procedural facade texture and openings, which LOD 1 already drops and which are far below a pixel at overview distance in any case.",
+        "notRendered": "NO A/B STILL WAS RENDERED. This task produced arithmetic, not frames. A rendered comparison at the overview distance is an unmet gate, named for T002."
+      },
+      "budgetChecks": [
+        {
+          "id": "draw-calls",
+          "limit": 1000,
+          "observed": 30,
+          "ok": true,
+          "overBy": 0
+        },
+        {
+          "id": "cache-entries",
+          "limit": 512,
+          "observed": 56,
+          "ok": true,
+          "overBy": 0
+        }
+      ],
+      "timeToCompleteOverviewSecondsByRate": {
+        "5ms": 0.1,
+        "20ms": 0.3
+      }
+    }
+  ],
+  "recommendation": {
+    "recommended": "c-no-new-tier-dense-citywide-shards",
+    "killSwitchFired": false,
+    "approvalGate": {
+      "status": "RECOMMENDED, NOT IN FORCE",
+      "blockedOn": "a goal-contract amendment to acceptance criteria #2 and #4, plus renewed user approval",
+      "why": "Goal acceptance criteria #2 and #4 were approved by the user through planning decision Q1 (2026-08-14), which chose 'overview must show real shapes from the start -> coarse-LOD regeneration for all six waves is in scope (option 2)'. This recommendation says that regeneration buys no fidelity the shipping renderer does not already produce. That is evidence submitted AGAINST those criteria; it is not their repeal.",
+      "requiredBeforeExecution": [
+        "the user is shown this candidate table, the shared-cache correction and the screen-space-error table",
+        "acceptance criteria #2 and #4 are amended by a recorded goal-contract change",
+        "the user re-approves the amended goal"
+      ],
+      "untilThen": "The goal's approved scope stands as written. T002 must treat this recommendation as an open question, and T004/T005 must plan against acceptance criteria #2 and #4 as approved.",
+      "decisionRecord": "docs/decisions/0040-citywide-overview-tier-decision.md D1"
+    },
+    "statement": "RECOMMENDED PENDING A GOAL AMENDMENT AND RENEWED USER APPROVAL (see `approvalGate`; this is not in force). Candidate (c). The overview representation the goal asks for — real building shapes island-wide — is a flat extrusion of the sourced footprint to the sourced height, and the shipping renderer ALREADY draws exactly that from bytes that already exist. Candidates (a) and (b) generate new artifacts whose rendered silhouette is IDENTICAL to what (c) draws for free, and pay for it in cache entries, container overhead, a closed-profile extension, a silhouette-cap exemption and a per-cell rights envelope. There is no fidelity argument for (a) or (b) at overview distance, because there is no fidelity difference.",
+    "boundsAndConditions": [
+      "(c) is bounded by four recorded count raises PLUS an unresolved shared-cache question: 6000 -> 45,194 rendered dense features and three decode/shard ceilings, and then a cache that holds all four shard classes in ONE recency-evicted map with no reservation. See candidate (c) `sharedCacheBound`: island-wide building residency needs a reservation the cache does not have, which is an open T002 contract change and not a constant bump.",
+      "The Cesium Primitive rebuild triggered by every shard stream-in or eviction-driven refetch is NOT modelled in any figure here, and a shared cache without reservation is exactly what multiplies it. T002 must measure it.",
+      "Draw calls at overview are 30 batched Primitives, against 44,330 if the same geometry were drawn as per-building Models.",
+      "Decoded GPU bytes inside Cesium are NOT observable from this task and are explicitly out of scope for the exterior loader's own byte ceiling. The figure quoted for (c) is a POSITION-only structural floor, not a measurement, and T002 must measure the real one before the frame budgets can be claimed.",
+      "The per-request rate is an assumption, not a measurement. The request COUNT is exact and is the part that separates the candidates by two orders of magnitude.",
+      "A coarse GLB tier is NOT dead as a near-field idea; it is rejected as the OVERVIEW answer. If a future need appears for a mid-distance tier between V3 lod_1 and the dense path, this measurement stands ready and the kill switch does not apply to it."
+    ],
+    "killSwitchCondition": "If a measured decoded-GPU or frame-time result in T002 shows (c) cannot hold the 16.7/25 ms budget island-wide even with the dense feature cap raised, the fallback is NOT candidate (a) or (b) — their GPU cost is the same or higher for the same pixels. The fallback is to bound (c) by visibility rather than by a flat cap, and the kill switch fires only if a visibility-bounded (c) also fails."
+  }
+}

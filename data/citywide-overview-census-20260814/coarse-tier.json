@@ -1,0 +1,115 @@
+{
+  "schemaVersion": "1.0",
+  "censusId": "citywide-overview-census-20260814",
+  "taskId": "T001",
+  "artifact": "coarse-overview-tier-measurement",
+  "note": "CENSUS ONLY: every prism below was written through the REAL canonical GLB writer and its bytes were then dropped. No artifact was retained, no release was assembled and nothing was published. `deviationRatio` is this task's own analytic projected-silhouette measurement of the prism against the V3 massing it would replace (metric `prism-vs-tiered-orthographic-staircase-v1`, eight horizontal azimuths); it is NOT the schema's `authoring-declared` silhouette field and must not be copied into one. Schema compliance is also not visual acceptance: a shape can sit inside a 2% area ratio and still read wrongly on screen.",
+  "base": {
+    "releaseId": "manhattan-citywide-20260804",
+    "manifestChecksumSha256": "acb5a9b52014f86535c8478e7d4e516efc03f6dff95c17e9896dfea4413c203c"
+  },
+  "ledger": {
+    "releaseId": "manhattan-exterior-wave-ledger-20260804",
+    "ledgerId": "manhattan-exterior-wave-ledger-20260804-a3382ef4cac213a2",
+    "checksumSha256": "62e093d2ca50b54b49fd8bbad9d0b11f6301b2b197623deb343f9ea915e59016"
+  },
+  "coarseProfile": {
+    "representation": "sourced outer ring extruded from grade to the sourced top; roof cap only, no floor cap; one designed grey material; texture-free",
+    "capsEmitted": "roof",
+    "floorCapOmittedNote": "A floor cap is invisible from every camera above grade and would cost n-2 triangles per building, roughly 500,000 island-wide. It is omitted deliberately, which also means the mesh is NOT closed and the analytic volume identity cannot apply to it.",
+    "materialCount": 1,
+    "textureCount": 0
+  },
+  "silhouetteMetric": {
+    "metricId": "prism-vs-tiered-orthographic-staircase-v1",
+    "viewIds": [
+      "north",
+      "north-east",
+      "east",
+      "south-east",
+      "south",
+      "south-west",
+      "west",
+      "north-west"
+    ],
+    "azimuthDegrees": [
+      0,
+      45,
+      90,
+      135,
+      180,
+      225,
+      270,
+      315
+    ]
+  },
+  "counts": {
+    "measured": 44330,
+    "refusedAndNotShipped": 864
+  },
+  "perBuildingArtifact": {
+    "note": "Candidate (b): one coarse GLB per building. Measured bytes.",
+    "totalBytes": 113569712,
+    "meanBytes": 2562,
+    "medianBytes": 2132,
+    "p95Bytes": 4656,
+    "maxBytes": 8740
+  },
+  "aggregatedArtifact": {
+    "note": "Candidate (a): one aggregated coarse GLB per ledger cell. Two cells were written in full and measured; the island projection applies the measured container-overhead share to the per-building total.",
+    "samples": [
+      {
+        "label": "largest",
+        "cellId": "manhattan-exterior-cell-w03-000415-16-19298-17934",
+        "buildingCount": 119,
+        "aggregatedBytes": 121312,
+        "perBuildingBytesForSameCell": 256908,
+        "containerOverheadSavedBytes": 135596,
+        "containerOverheadSavedShare": 0.5278,
+        "aggregatedBytesPerBuilding": 1019,
+        "triangleCount": 3056
+      },
+      {
+        "label": "median",
+        "cellId": "manhattan-exterior-cell-w05-000747-17-38610-35822",
+        "buildingCount": 48,
+        "aggregatedBytes": 82284,
+        "perBuildingBytesForSameCell": 136464,
+        "containerOverheadSavedBytes": 54180,
+        "containerOverheadSavedShare": 0.397028,
+        "aggregatedBytesPerBuilding": 1714,
+        "triangleCount": 2052
+      }
+    ],
+    "measuredContainerOverheadShare": 0.462414,
+    "projectedIslandBytes": 61053487,
+    "artifactCount": 883
+  },
+  "gpu": {
+    "note": "Decoded GPU bytes for the coarse tier, counted as the canonical writer emits: unshared vertices carrying POSITION and NORMAL as float32 (24 B) plus uint32 indices (4 B each). This is the floor; a renderer may add per-instance attributes and pick metadata on top.",
+    "totalTriangleCount": 1585232,
+    "totalVertexCount": 3639768,
+    "vertexBytes": 87354432,
+    "indexBytes": 19022784,
+    "totalBytes": 106377216
+  },
+  "silhouetteDeviation": {
+    "note": "THE DECISIVE MEASUREMENT. The multi-LOD schema pins `maximumRatio` at 0.02 and rejects any declared LOD above it. This is the distribution of the coarse prism's own deviation from the massing it replaces.",
+    "buildingsMeasured": 44330,
+    "withinSchemaCapCount": 21361,
+    "withinSchemaCapShare": 0.481863,
+    "aboveSchemaCapCount": 22969,
+    "median": 0.045221,
+    "p95": 0.248387,
+    "p99": 0.307097,
+    "max": 0.628806
+  },
+  "horizontalError": {
+    "note": "Largest setback inset the prism fills in, in metres. This is the geometric error a screen-space-error statement must be made against.",
+    "medianMeters": 1.319,
+    "p95Meters": 2.527,
+    "maxMeters": 11.083
+  },
+  "retention": "census-only",
+  "hostObservationsLocation": "artifacts/citywide-overview-census-20260814/stages/coarse.json and docs/implementation/20260814-citywide-overview-tier-decision.md — kept out of this artifact's deterministic body so a replay rewrites byte-identical content."
+}
