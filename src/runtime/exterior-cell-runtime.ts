@@ -486,6 +486,7 @@ export class ExteriorCellRuntime {
   private deferredCellCount = 0;
   private releasedArtifactCount = 0;
   private releasedArtifactBytes = 0;
+  private declaredNotShippedCellCountCache: number | null = null;
 
   constructor(source: ExteriorCellRuntimeSource, head: ExteriorHeadResolution, options: ExteriorCellRuntimeOptions) {
     const publicRoot = source.graph.roots.find((root) => root.audience === "public");
@@ -567,6 +568,33 @@ export class ExteriorCellRuntime {
   noteArtifactRelease(releasedArtifactCount: number, releasedArtifactBytes: number): void {
     this.releasedArtifactCount = releasedArtifactCount;
     this.releasedArtifactBytes = releasedArtifactBytes;
+  }
+
+  /**
+   * The RELEASE-scoped not-shipped count: how many of this release's declared
+   * cells would return `not-shipped`, decided over the whole snapshot and not
+   * over whatever the current camera happened to reconcile.
+   *
+   * It exists because `notShippedCellCount` is camera-scoped by construction —
+   * it counts the cells `loadCell` was actually asked about — and pairing a
+   * camera-scoped numerator with a release-scoped denominator produces a
+   * sentence that is false in both directions ("11 of 149" at a street camera
+   * for a release that declares 146 of its 149 cells empty).
+   *
+   * Costs no request: the same `buildingDetails` the not-shipped branch reads
+   * are already resident in the verified release graph, so this is the same
+   * decision evaluated over every declared cell instead of one.
+   */
+  declaredNotShippedCellCount(): number {
+    if (this.declaredNotShippedCellCountCache !== null) return this.declaredNotShippedCellCountCache;
+    let count = 0;
+    for (const mapping of this.snapshot.cells) {
+      const cellRelease = this.cellById.get(mapping.cellReleaseId);
+      if (!cellRelease) continue;
+      if (cellRelease.buildingDetails.length > 0 && cellRelease.buildingDetails.every((detail) => detail.status === "unavailable")) count += 1;
+    }
+    this.declaredNotShippedCellCountCache = count;
+    return count;
   }
 
   getMetrics(): ExteriorRuntimeMetrics {

@@ -82,7 +82,7 @@ import {
 } from "../runtime/block835-canary-probe";
 import { MIDTOWN_CORE_CANARY_FACADE_PATH } from "../runtime/midtown-core-canary-facade-path";
 import { DEFAULT_EXTERIOR_RENDER_PROFILE, EXTERIOR_RENDER_PROFILES, exteriorRenderProfileLabel, parseExteriorRenderProfile, type ExteriorRenderProfile } from "../runtime/exterior-render-profiles";
-import { exteriorNotShippedSummary, exteriorQualifiedNotice, exteriorWaveForSelection } from "../runtime/exterior-wave-attribution";
+import { exteriorDeferredCellNotice, exteriorNotShippedSummary, exteriorQualifiedNotice, exteriorReleasedArtifactNotice, exteriorWaveForSelection } from "../runtime/exterior-wave-attribution";
 import { fallbackViewportFootprint, type ViewportFootprint } from "../runtime/viewport-footprint";
 
 const navigation = [
@@ -332,6 +332,11 @@ const EMPTY_CITYWIDE_BROWSER_BASELINE: CitywideBrowserBaseline = {
  * gets byte-identical budgets and no floors.
  */
 export function resolveCitywideOverviewResidency(schedulerRequested: boolean, citywideMode: boolean): { active: boolean; budgets: CitywideBudgetRecord; floors: CitywideCacheFloors } {
+  // The rollback constant seeds the URL parse default, so `schedulerRequested`
+  // already carries it. It is named again here only in the test that pins the
+  // rollback: with `EXTERIOR_SCHEDULER_DEFAULT_ON` false, a URL-silent session
+  // arrives with `schedulerRequested` false and this resolves the unraised
+  // budgets, byte-identically.
   const active = schedulerRequested && citywideMode;
   return { active, budgets: resolveCitywideBudgets(active), floors: active ? CITYWIDE_OVERVIEW_CACHE_FLOORS : CITYWIDE_NO_CACHE_FLOORS };
 }
@@ -762,6 +767,36 @@ export const EXTERIOR_STREAMING_OFF_PARAM = "exteriorStreaming" as const;
  */
 export const EXTERIOR_SCHEDULER_PARAM = "exteriorScheduler" as const;
 export const EXTERIOR_SCHEDULER_ON_VALUE = "on" as const;
+export const EXTERIOR_SCHEDULER_OFF_VALUE = "off" as const;
+
+/**
+ * THE ROLLBACK SWITCH (T006 B3).
+ *
+ * One constant, read in exactly two places — the URL parse default and
+ * `resolveCitywideOverviewResidency` — so that restoring the promoted-subset
+ * behaviour is a one-token edit and not an archaeology exercise across a parser,
+ * a writer, a residency gate and a budget resolver that could drift apart.
+ *
+ * Flipping it back to `false` must restore BOTH halves: the visibility
+ * scheduler stops filtering loads (every declared cell is asked for, which is
+ * the promoted-subset behaviour), and `resolveCitywideOverviewResidency`
+ * resolves `CITYWIDE_BUDGETS` byte-identically to what it resolved before this
+ * goal raised anything. `App.test.tsx` pins both, because a rollback that
+ * restores the scheduler but leaves the raised budgets in place is not a
+ * rollback — it is a third configuration nobody measured.
+ */
+export const EXTERIOR_SCHEDULER_DEFAULT_ON = true;
+
+/**
+ * Which spelling a URL carries is decided by the default, not hardcoded: the
+ * URL states the OPT-OUT and stays silent about the default. A default-on
+ * session therefore serializes no scheduler parameter at all, and flipping
+ * `EXTERIOR_SCHEDULER_DEFAULT_ON` inverts which sessions are silent without
+ * touching the parser or the writer.
+ */
+export function exteriorSchedulerOptOutValue(): string {
+  return EXTERIOR_SCHEDULER_DEFAULT_ON ? EXTERIOR_SCHEDULER_OFF_VALUE : EXTERIOR_SCHEDULER_ON_VALUE;
+}
 
 /**
  * T005 detail radius: `?exteriorDetailRadius=<metres>`, measured on the same
@@ -840,19 +875,22 @@ export interface ExteriorStreamingUrlWrite {
  */
 export function appendExteriorProfileUrl(baseUrl: string, state: ExteriorStreamingUrlWrite): string {
   const url = new URL(baseUrl, typeof window === "undefined" ? "http://localhost/" : window.location.href);
+  // Written FIRST and unconditionally, because the scheduler now governs the
+  // citywide overview and not the exterior wave (T006 B2). A session that
+  // opted out of scheduling must keep saying so even with the wave disabled:
+  // dropping the parameter here is what silently re-armed the default on the
+  // first camera-driven `replaceState`, which is the mirror of the T002 defect.
+  const schedulerOptedOut = state.scheduler !== EXTERIOR_SCHEDULER_DEFAULT_ON;
+  if (schedulerOptedOut) url.searchParams.set(EXTERIOR_SCHEDULER_PARAM, exteriorSchedulerOptOutValue());
+  else url.searchParams.delete(EXTERIOR_SCHEDULER_PARAM);
   if (exteriorStreamingOverrideDisables(state.override)) {
     url.searchParams.set(EXTERIOR_STREAMING_OFF_PARAM, "off");
     url.searchParams.delete("exteriorCells");
     url.searchParams.delete("exteriorProfile");
     url.searchParams.delete("exteriorCanary");
-    // A session with no exterior wave has nothing to schedule, so the flag is
-    // dropped rather than carried as an opinion about a wave that is not running.
-    url.searchParams.delete(EXTERIOR_SCHEDULER_PARAM);
     url.searchParams.delete(EXTERIOR_DETAIL_RADIUS_PARAM);
     return url.toString();
   }
-  if (state.scheduler) url.searchParams.set(EXTERIOR_SCHEDULER_PARAM, EXTERIOR_SCHEDULER_ON_VALUE);
-  else url.searchParams.delete(EXTERIOR_SCHEDULER_PARAM);
   // The radius rides with the flag it qualifies, and dies with it: a URL that
   // carries a radius but no scheduler describes a session that cannot exist.
   if (state.scheduler && state.detailRadiusMeters != null) url.searchParams.set(EXTERIOR_DETAIL_RADIUS_PARAM, String(state.detailRadiusMeters));
@@ -869,7 +907,15 @@ export function appendExteriorProfileUrl(baseUrl: string, state: ExteriorStreami
 
 export function parseExteriorStreamingUrl(href: string): ExteriorStreamingUrlState {
   const url = new URL(href, typeof window === "undefined" ? "http://localhost/" : window.location.href);
-  const schedulerOn = url.searchParams.get(EXTERIOR_SCHEDULER_PARAM) === EXTERIOR_SCHEDULER_ON_VALUE;
+  // POLARITY INVERSION (T006 B1). Absent means the DEFAULT, which the one
+  // rollback constant decides. Exactly two spellings are accepted and anything
+  // else is silence, i.e. the default — the same fail-direction the "on"-only
+  // parser had: a link this build cannot honour resolves to the build's own
+  // answer, never to a third one.
+  const schedulerParam = url.searchParams.get(EXTERIOR_SCHEDULER_PARAM);
+  const schedulerOn = schedulerParam === EXTERIOR_SCHEDULER_ON_VALUE ? true
+    : schedulerParam === EXTERIOR_SCHEDULER_OFF_VALUE ? false
+    : EXTERIOR_SCHEDULER_DEFAULT_ON;
   // An explicit disable outranks every other exterior parameter: a link that
   // says "off" must never resolve to a wave because it also carries a release.
   const requestedRelease = url.searchParams.get("exteriorCells");
@@ -889,12 +935,25 @@ export function parseExteriorStreamingUrl(href: string): ExteriorStreamingUrlSta
     explicitReleaseId,
     profile: (disabled ? null : parseExteriorRenderProfile(url.searchParams.get("exteriorProfile"))) ?? DEFAULT_EXTERIOR_RENDER_PROFILE,
     canarySnapshotId: canary && canary.trim().length > 0 ? canary : null,
-    // Exactly one accepted value. `?exteriorScheduler=1` or `=true` is not an
-    // opt-in, for the same reason `exteriorCells=` refuses an unpinned release:
-    // a link this build cannot honour must not resolve to something else.
-    scheduler: !disabled && schedulerOn,
+    // THE SPLIT (T006 B2). `exteriorStreaming=off` used to disable the exterior
+    // wave AND, through this `!disabled`, silently withdraw visibility
+    // scheduling and with it T004's citywide overview residency raise. Two
+    // unrelated things hung off one boolean, which is why ADR 0044 §3.1 could
+    // not build a clean dense-only arm at the raised budgets (D-5) and why a
+    // MISTYPED `exteriorCells` — a link nobody meant as a performance
+    // instruction — silently downgraded the render budget (F4).
+    //
+    // They are now separate escape hatches with separate meanings:
+    //   `exteriorStreaming=off`  — no exterior V3 wave. Says nothing about the
+    //                              citywide overview, which is the base map.
+    //   `exteriorScheduler=off`  — no visibility scheduling and no overview
+    //                              residency raise: the promoted-subset
+    //                              behaviour, i.e. the rollback.
+    // A pinned single-release link (`exteriorCells=<pinned>`) is therefore
+    // DEFAULT-SCHEDULED: it names which wave to stream, not how to budget.
+    scheduler: schedulerOn,
     // Only meaningful under the scheduler, so it is not even parsed without it.
-    detailRadiusMeters: !disabled && schedulerOn ? parseExteriorDetailRadiusMeters(url.searchParams.get(EXTERIOR_DETAIL_RADIUS_PARAM)) : null,
+    detailRadiusMeters: schedulerOn ? parseExteriorDetailRadiusMeters(url.searchParams.get(EXTERIOR_DETAIL_RADIUS_PARAM)) : null,
   };
 }
 
@@ -971,10 +1030,25 @@ function failedExteriorWave(message: string): ExteriorWaveState {
  * failures that never happened. Every genuine failure keeps its own per-cell
  * line, so nothing that actually went wrong is aggregated away.
  */
+export interface ExteriorNoticePopulations {
+  /**
+   * The release's own declared cells and, of those, how many declare no
+   * exterior geometry. BOTH terms, because anchoring only the denominator to
+   * the release while the numerator stays camera-scoped states something false
+   * about the cells it does not count.
+   */
+  declared?: { cellCount: number; notShippedCellCount: number };
+  /** `ExteriorRuntimeMetrics.deferredCellCount` for THIS camera. */
+  deferredCellCount?: number;
+  /** `ExteriorRuntimeMetrics.releasedArtifactCount` for this session. */
+  releasedArtifactCount?: number;
+}
+
 export function exteriorStreamingNotices(
   headNotice: string | null,
   cells: readonly ExteriorCellOutcome[],
   unanchoredCanonicalFeatureIds: readonly string[] = [],
+  populations: ExteriorNoticePopulations = {},
 ): string[] {
   const notices = headNotice ? [headNotice] : [];
   for (const cell of cells) {
@@ -982,8 +1056,18 @@ export function exteriorStreamingNotices(
     if (cell.kind === "not-shipped") continue;
     notices.push(cell.notice);
   }
-  const notShipped = exteriorNotShippedSummary(cells);
+  const notShipped = exteriorNotShippedSummary(cells, populations.declared);
   if (notShipped) notices.push(notShipped);
+  // Three populations, three sentences, three fixed meanings. `not-shipped` is
+  // a RELEASE fact against the declared denominator; `deferred` is a fact about
+  // THIS camera and is recoverable by moving it; `evicted` is a fact about the
+  // byte budget and is recoverable on re-entry. Before this split the first
+  // line's denominator moved with the camera and the other two were invisible,
+  // so the only visible population was the one that could not be acted on.
+  const deferred = exteriorDeferredCellNotice(populations.deferredCellCount ?? 0);
+  if (deferred) notices.push(deferred);
+  const evicted = exteriorReleasedArtifactNotice(populations.releasedArtifactCount ?? 0);
+  if (evicted) notices.push(evicted);
   const unanchored = exteriorUnanchoredNotice(unanchoredCanonicalFeatureIds);
   if (unanchored) notices.push(unanchored);
   return notices;
@@ -1495,8 +1579,21 @@ export function App() {
   // geometry"), and a reader cannot act on a fallback notice without knowing
   // which release it is about — so the release is named unconditionally rather
   // than appearing only once a second wave happens to be streaming.
-  const exteriorNoticeEntries = exteriorActiveWaves.flatMap((entry) => exteriorStreamingNotices(entry.wave.headNotice, entry.wave.outcomes)
-    .map((notice) => ({ releaseId: entry.target.releaseId, notice: exteriorQualifiedNotice(entry.target.releaseId, notice) })));
+  const exteriorNoticeEntries = exteriorActiveWaves.flatMap((entry) => {
+    const runtimeMetrics = entry.wave.runtime?.getMetrics();
+    return exteriorStreamingNotices(entry.wave.headNotice, entry.wave.outcomes, [], {
+      declared: entry.wave.runtime
+        ? { cellCount: entry.wave.runtime.snapshot.cells.length, notShippedCellCount: entry.wave.runtime.declaredNotShippedCellCount() }
+        : undefined,
+      deferredCellCount: runtimeMetrics?.deferredCellCount,
+      // Session-wide, not per wave (see `ExteriorRuntimeMetrics`): the app sets
+      // the same session totals on every live runtime, so this is read from the
+      // wave and must never be summed across them. Taking it from the FIRST
+      // active wave only is what keeps one pool from being multiplied by the
+      // number of promotions.
+      releasedArtifactCount: entry === exteriorActiveWaves[0] ? runtimeMetrics?.releasedArtifactCount : 0,
+    }).map((notice) => ({ releaseId: entry.target.releaseId, notice: exteriorQualifiedNotice(entry.target.releaseId, notice) }));
+  });
   // Withheld-anchor geometry is reported once for the scene: the viewport
   // resolves anchors across every wave at once and reports one union.
   const exteriorUnanchoredStatement = exteriorStreamingActive ? exteriorUnanchoredNotice(exteriorUnanchoredIds) : null;
@@ -1521,7 +1618,17 @@ export function App() {
   // constant empty string unless the T002 flag is on. A default session's cell
   // reconciliation therefore still runs on exactly the four inputs it ran on
   // before — nothing about its cadence depends on where the camera is looking.
-  const exteriorSchedulerSignature = exteriorSchedulerRequested ? viewportFootprint.signature : "";
+  /**
+   * F3, and the same gate as F2 by construction.
+   *
+   * With the scheduler on by DEFAULT, an ungated signature would become the
+   * live footprint in every session — including fixture mode and the civic
+   * composition, whose cell-load cadence this goal never measured and
+   * deliberately does not change. Gating on citywide mode keeps their
+   * dependency array at the constant empty string, so their effect runs exactly
+   * as often as it did before the flip.
+   */
+  const exteriorSchedulerSignature = exteriorSchedulerRequested && citywideMode ? viewportFootprint.signature : "";
   // Trace probe. Compiled out unless VITE_EXTERIOR_SCHEDULER_PROBE=1, and even
   // then it only reads state the app already computed: it never schedules, never
   // requests anything, and never influences a decision it is recording.
@@ -2049,12 +2156,17 @@ export function App() {
    *      re-decides by ADDING and REMOVING cells against a live entry — a
    *      per-cell reconciliation — which is why a height-bucket flip costs only
    *      the reload it already cost and not a residency churn on top.
-   *   2. `exteriorSchedulerSignature` is the constant empty string whenever the
-   *      flag is off, so the dependency array of a default session never changes
-   *      value on a camera move and this effect runs exactly as often as before.
+   *   2. `exteriorSchedulerSignature` is the constant empty string whenever
+   *      scheduling is off OR the session is not citywide, so fixture and civic
+   *      sessions keep a dependency array that never changes value on a camera
+   *      move and this effect runs exactly as often as it did before the flip.
+   *      T006 note: this claim INVERTED at the default flip. A default citywide
+   *      session now re-runs this effect on every settled camera move, which is
+   *      the intended cost of visibility scheduling and is what the campaign
+   *      measured; it is the non-citywide sessions the gate protects.
    *   3. `scheduleExteriorCells` returns the runtime's own array by reference
-   *      when the flag is off. Not a filtered copy that happens to keep
-   *      everything — the same array.
+   *      when scheduling is off. Not a filtered copy that happens to keep
+   *      everything — the same array. That is now the ROLLBACK path.
    *
    * The scheduler filters LOADS. It never touches `runtime.snapshot.cells`, so
    * `verifyPromotedExteriorPin` still gates the whole resolved membership and a
@@ -2079,7 +2191,13 @@ export function App() {
       // would retain a whole withdrawn wave for the life of the session.
       if (!next) setExteriorWaveOutcomes((current) => { if (!current.has(releaseId)) return current; const remaining = new Map(current); remaining.delete(releaseId); return remaining; });
     }
-    const schedulerEnabled = exteriorSchedulerRequestedRef.current;
+    // F2: gated on citywide mode as well as on the flag, for the same reason
+    // `resolveCitywideOverviewResidency` is. Now that the scheduler is ON by
+    // default, an ungated flag would start filtering the CIVIC session's cell
+    // loads too — a mode this goal never measured and whose load behaviour is
+    // deliberately unchanged. The flag is necessary but not sufficient in both
+    // places, and the two gates are the same expression on purpose.
+    const schedulerEnabled = exteriorSchedulerRequestedRef.current && citywideModeRef.current;
     const schedulerView = { footprint: viewportFootprintRef.current, camera: cameraPoseRef.current, heightBucket: exteriorCameraHeightBucketMeters };
     // ONE decision for the session, over the STATIC 883-row census table. Not
     // "the cells of the waves loaded so far": a pool built from loaded waves
@@ -2275,10 +2393,21 @@ export function App() {
       // until the dense plan is rebuilt, so omitting it here would let the
       // details panel and the probe hold a stale exterior count.
       previous.exteriorSuppressedFeatureCount === next.exteriorSuppressedFeatureCount &&
+      previous.denseSuppressedInstanceCount === next.denseSuppressedInstanceCount &&
       previous.planBuildCount === next.planBuildCount &&
       previous.planReuseCount === next.planReuseCount &&
       previous.planCancellationCount === next.planCancellationCount &&
       previous.planSwapCount === next.planSwapCount &&
+      // The show-attribute suppression path (ADR 0045) resolves an ownership
+      // change without a rebuild, so these two counters are the ONLY evidence
+      // that a crossing happened at all. Omitting them would make the cheap
+      // path invisible to the probe that has to prove it ran.
+      previous.planSuppressionUpdateCount === next.planSuppressionUpdateCount &&
+      previous.planSuppressionFlipCount === next.planSuppressionFlipCount &&
+      previous.pendingLayerAddedAt === next.pendingLayerAddedAt &&
+      previous.doubleDrawOpenedAt === next.doubleDrawOpenedAt &&
+      previous.previousLayerRemovedAt === next.previousLayerRemovedAt &&
+      previous.doubleDrawMs === next.doubleDrawMs &&
       previous.planFingerprint === next.planFingerprint &&
       previous.selectionMs === next.selectionMs &&
       previous.keyMs === next.keyMs &&
@@ -3863,7 +3992,12 @@ export function App() {
           </dl>
           {import.meta.env.DEV && citywideMode && <div className="citywide-debug-anchors" aria-label="Citywide debug anchors">
             {CITYWIDE_DEBUG_ANCHORS.map((anchor) => <button key={anchor.label} type="button" onClick={() => measureCitywideDebugAnchor(anchor)}>Debug {anchor.label}</button>)}
-            <span data-citywide-render-metrics>Rendered dense features / instances / primitives: {citywideDenseMetrics.featureCount} / {citywideDenseMetrics.instanceCount} / {citywideDenseMetrics.primitiveCount}</span>
+            {/* The suppressed count is shown beside the pair it reconciles:
+                `featureCount` is what the dense pass DRAWS and `instanceCount`
+                is what it ALLOCATED, and since ADR 0045 those differ by the
+                instances an exterior wave or pilot asset currently owns. Left
+                out, the two numbers read as an unexplained discrepancy. */}
+            <span data-citywide-render-metrics>Rendered dense features / instances / primitives: {citywideDenseMetrics.featureCount} / {citywideDenseMetrics.instanceCount} / {citywideDenseMetrics.primitiveCount}{citywideDenseMetrics.denseSuppressedInstanceCount ? ` (${citywideDenseMetrics.denseSuppressedInstanceCount} allocated but not drawn: an exterior wave or pilot asset owns them)` : ""}</span>
             <span data-citywide-dense-build-metrics>Dense plans build / reuse / cancelled / swapped: {citywideDenseMetrics.planBuildCount ?? 0} / {citywideDenseMetrics.planReuseCount ?? 0} / {citywideDenseMetrics.planCancellationCount ?? 0} / {citywideDenseMetrics.planSwapCount ?? 0} · fingerprint {citywideDenseMetrics.planFingerprint || "pending"} · select / key / allocation / max slice / worker-ready / total: {formatDenseTiming(citywideDenseMetrics.selectionMs)} / {formatDenseTiming(citywideDenseMetrics.keyMs)} / {formatDenseTiming(citywideDenseMetrics.allocationMs)} / {formatDenseTiming(citywideDenseMetrics.allocationMaxSliceMs)} / {formatDenseTiming(citywideDenseMetrics.workerReadyMs)} / {formatDenseTiming(citywideDenseMetrics.totalBuildMs)} ms · allocation chunks {citywideDenseMetrics.allocationChunkCount ?? 0}</span>
             <span data-citywide-cache-class-metrics>Shared cache {citywideCacheResidency.entries} / {citywideBudgets.maxLoadedShards} entries · {citywideCacheResidency.bytes.toLocaleString()} / {citywideBudgets.maxLoadedBytes.toLocaleString()} bytes · resident by class {JSON.stringify(citywideCacheResidency.classSizes)} · evictions by class {JSON.stringify(citywideCacheResidency.classEvictions)}</span>
             <span data-citywide-browser-baseline>Pre-citywide initial-mount baseline heap {citywideBrowserBaseline.heapBytes?.toLocaleString() ?? "unsupported"} · citywide resources {citywideBrowserBaseline.citywideResourceCount} / {citywideBrowserBaseline.citywideResourceBytes.toLocaleString()} bytes</span>

@@ -22,6 +22,7 @@ import {
   PerInstanceColorAppearance,
   Primitive,
   PointPrimitiveCollection,
+  ShowGeometryInstanceAttribute,
   PrimitiveCollection,
   KeyboardEventModifier,
   ScreenSpaceEventType,
@@ -138,11 +139,23 @@ export interface DenseRenderMetrics {
    * number says how many buildings the V3 overlay is actually showing.
    */
   exteriorSuppressedFeatureCount?: number;
+  /**
+   * Instances the built layer holds but does not draw, because the exterior
+   * wave or a pilot asset owns them right now. The layer is built over the
+   * whole membership so that suppression is a `show` flip; this field is the
+   * difference between what was tessellated and what `buildingFeatureCount`
+   * reports as drawn.
+   */
+  denseSuppressedInstanceCount?: number;
   /** Counters make repeated dense-plan work observable in the local diagnostics. */
   planBuildCount?: number;
   planReuseCount?: number;
   planCancellationCount?: number;
   planSwapCount?: number;
+  /** Suppression-only updates served by `show` flips instead of a rebuild. */
+  planSuppressionUpdateCount?: number;
+  /** Individual instances whose `show` was flipped, summed over the session. */
+  planSuppressionFlipCount?: number;
   planFingerprint?: string;
   selectionMs?: number;
   keyMs?: number;
@@ -151,6 +164,17 @@ export interface DenseRenderMetrics {
   allocationChunkCount?: number;
   workerReadyMs?: number;
   totalBuildMs?: number;
+  /**
+   * The double-draw window, measured against its own definition rather than by
+   * a build-duration proxy (ADR 0044 D-9 leg Y). `doubleDrawOpenedAt` is the
+   * moment the FIRST pending layer of the current uncommitted chain entered
+   * `rootDenseCollection` — including chains whose earlier builds were
+   * cancelled, which is exactly what a `totalBuildMs` proxy undercounts.
+   */
+  pendingLayerAddedAt?: number;
+  doubleDrawOpenedAt?: number;
+  previousLayerRemovedAt?: number;
+  doubleDrawMs?: number;
 }
 
 /**
@@ -190,6 +214,15 @@ const DENSE_PRIMITIVE_GROUP_SIZE = 1_500;
 
 interface DenseBuildResult {
   metrics: DenseRenderMetrics;
+  /** Where each built instance lives, so a later ownership change is a write. */
+  index: DenseInstanceIndex;
+  /** The ownership set the instances were CREATED with, so the commit can reconcile. */
+  builtSuppressedIds: ReadonlySet<string>;
+  builtBuildingCount: number;
+  builtPointCount: number;
+  primitiveCount: number;
+  hiddenBuildingCount: number;
+  hiddenPointCount: number;
   startedAt: number;
   allocationMs: number;
   allocationMaxSliceMs: number;
@@ -202,6 +235,8 @@ interface DenseRenderTelemetry {
   planReuseCount: number;
   planCancellationCount: number;
   planSwapCount: number;
+  planSuppressionUpdateCount: number;
+  planSuppressionFlipCount: number;
   planFingerprint: string;
   selectionMs: number;
   keyMs: number;
@@ -210,7 +245,24 @@ interface DenseRenderTelemetry {
   allocationChunkCount?: number;
   workerReadyMs?: number;
   totalBuildMs?: number;
+  denseSuppressedInstanceCount?: number;
+  pendingLayerAddedAt?: number;
+  doubleDrawOpenedAt?: number;
+  previousLayerRemovedAt?: number;
+  doubleDrawMs?: number;
 }
+
+const EMPTY_DENSE_RENDER_TELEMETRY: DenseRenderTelemetry = {
+  planBuildCount: 0,
+  planReuseCount: 0,
+  planCancellationCount: 0,
+  planSwapCount: 0,
+  planSuppressionUpdateCount: 0,
+  planSuppressionFlipCount: 0,
+  planFingerprint: "",
+  selectionMs: 0,
+  keyMs: 0,
+};
 
 export interface DenseFeatureGroups {
   base: Feature[];
@@ -732,6 +784,49 @@ export function shouldReplaceDenseRenderPlan(previousFeatures: readonly Feature[
 }
 
 /**
+ * The narrow delta, and the trigger taxonomy it belongs to.
+ *
+ * A dense layer is built over its MEMBERSHIP — every base feature the camera
+ * footprint and the group caps admit — and each instance carries a `show`
+ * attribute. Two different things can then change:
+ *
+ *  1. **Membership** changes (the camera moved, a shard arrived, a cap bound).
+ *     The instance set itself is wrong, so the layer is rebuilt.
+ *     `shouldReplaceDenseRenderPlan` decides this, unchanged, by reference
+ *     sequence — the frozen thrash and reuse baselines are measured against it.
+ *  2. **Ownership** changes (a V3 exterior cell became live, was evicted, or a
+ *     pilot asset swapped in or out). The same instances are still correct;
+ *     only which of them may draw has moved. That is a `show` flip per affected
+ *     instance — O(1) each, no rebuild, no re-tessellation, no second layer in
+ *     the scene and therefore no double-draw.
+ *
+ * This function computes case 2 and is consulted ONLY when case 1 says the
+ * membership is identical. It never decides a rebuild, so it cannot retain
+ * stale geometry: the reference compare remains the sole authority for that.
+ */
+export interface DenseRenderPlanDelta {
+  /** Ids that must start drawing again (their exterior/pilot owner went away). */
+  added: readonly string[];
+  /** Ids that must stop drawing (an exterior or pilot owner took them over). */
+  removed: readonly string[];
+}
+
+export function denseRenderPlanDelta(
+  previousSuppressedIds: ReadonlySet<string>,
+  nextSuppressedIds: ReadonlySet<string>,
+): DenseRenderPlanDelta {
+  const added: string[] = [];
+  const removed: string[] = [];
+  for (const id of previousSuppressedIds) if (!nextSuppressedIds.has(id)) added.push(id);
+  for (const id of nextSuppressedIds) if (!previousSuppressedIds.has(id)) removed.push(id);
+  return { added, removed };
+}
+
+export function denseRenderPlanDeltaSize(delta: DenseRenderPlanDelta): number {
+  return delta.added.length + delta.removed.length;
+}
+
+/**
  * Compact O(n) diagnostic fingerprint for dense-plan observations. Rendering
  * reuse is intentionally decided by reference sequence above, so a hash
  * collision can never retain stale geometry or content.
@@ -765,6 +860,13 @@ function withDenseRenderTelemetry(metrics: DenseRenderMetrics, telemetry: DenseR
     planReuseCount: telemetry.planReuseCount,
     planCancellationCount: telemetry.planCancellationCount,
     planSwapCount: telemetry.planSwapCount,
+    planSuppressionUpdateCount: telemetry.planSuppressionUpdateCount,
+    planSuppressionFlipCount: telemetry.planSuppressionFlipCount,
+    denseSuppressedInstanceCount: telemetry.denseSuppressedInstanceCount,
+    pendingLayerAddedAt: telemetry.pendingLayerAddedAt,
+    doubleDrawOpenedAt: telemetry.doubleDrawOpenedAt,
+    previousLayerRemovedAt: telemetry.previousLayerRemovedAt,
+    doubleDrawMs: telemetry.doubleDrawMs,
     planFingerprint: telemetry.planFingerprint,
     selectionMs: telemetry.selectionMs,
     keyMs: telemetry.keyMs,
@@ -1135,7 +1237,7 @@ function isDenseBuildingFeature(feature: Feature): feature is DenseBuildingFeatu
   return feature.kind === "building" && feature.geometry.type === "Polygon";
 }
 
-function denseBuildingInstance(feature: DenseBuildingFeature): GeometryInstance {
+function denseBuildingInstance(feature: DenseBuildingFeature, show: boolean): GeometryInstance {
   return new GeometryInstance({
     id: feature.id,
     geometry: new PolygonGeometry({
@@ -1147,39 +1249,175 @@ function denseBuildingInstance(feature: DenseBuildingFeature): GeometryInstance 
       // upload work without changing the flat-colored visual contract.
       vertexFormat: VertexFormat.POSITION_ONLY,
     }),
-    attributes: { color: ColorGeometryInstanceAttribute.fromColor(Color.fromCssColorString("#d7a85d").withAlpha(0.82)) },
+    attributes: {
+      color: ColorGeometryInstanceAttribute.fromColor(Color.fromCssColorString("#d7a85d").withAlpha(0.82)),
+      // The per-instance `show` is what makes exterior-wave takeover an O(1)
+      // attribute write instead of a whole-island rebuild. Cesium compiles it
+      // into the single shader program used by BOTH the color and the pick
+      // pass (`Primitive._appendShowToShader` runs before
+      // `appendPickToVertexShader`), so a hidden instance is also unpickable
+      // and cannot compete with the exterior model for the same click.
+      show: new ShowGeometryInstanceAttribute(show),
+    },
   });
+}
+
+/**
+ * Where one feature's drawable lives, so ownership changes are a write and not
+ * a search. Buildings resolve to the batched `Primitive` that owns their
+ * instance; POIs resolve to their own point primitive, which carries `show`
+ * directly.
+ */
+export interface DenseInstanceIndex {
+  buildings: Map<string, Primitive>;
+  points: Map<string, { show: boolean }>;
+}
+
+export function emptyDenseInstanceIndex(): DenseInstanceIndex {
+  return { buildings: new Map(), points: new Map() };
+}
+
+export interface DenseSuppressionWriteResult {
+  flips: number;
+  hiddenBuildingChange: number;
+  hiddenPointChange: number;
+  /**
+   * Ids whose write did NOT land — the index does not hold them, the primitive
+   * is not ready, or the batch table has no `show` attribute.
+   *
+   * This is returned rather than swallowed because the caller records what it
+   * believes it applied. Advancing that record over a write that never happened
+   * makes the recorded state a lie in three compounding ways: the id never gets
+   * retried, the REVERSE delta later "un-flips" an instance that was never
+   * flipped, and the hidden-instance count — which feeds
+   * `buildingFeatureCount` through `liveDenseMetrics` — drifts by one per
+   * skipped write, permanently, for the life of the layer.
+   */
+  skipped: readonly string[];
+}
+
+/**
+ * Flip `show` for the ids in a delta. Returns the number of instances actually
+ * written, which is the honest flip count, plus the ids that did not write so
+ * the caller can leave them out of its applied set.
+ */
+export function applyDenseSuppressionDelta(index: DenseInstanceIndex, delta: DenseRenderPlanDelta): DenseSuppressionWriteResult {
+  let flips = 0;
+  let hiddenBuildingChange = 0;
+  let hiddenPointChange = 0;
+  const skipped: string[] = [];
+  const write = (id: string, show: boolean): void => {
+    const primitive = index.buildings.get(id);
+    if (primitive) {
+      // `getGeometryInstanceAttributes` requires at least one `update`; the
+      // commit gate already waits for `primitiveLayerReady`, and this guard
+      // keeps a not-yet-ready layer from throwing if that ever changes.
+      if (primitive.ready !== true) { skipped.push(id); return; }
+      const attributes = primitive.getGeometryInstanceAttributes(id) as { show?: Uint8Array } | undefined;
+      if (!attributes?.show) { skipped.push(id); return; }
+      attributes.show = ShowGeometryInstanceAttribute.toValue(show, attributes.show);
+      flips += 1;
+      hiddenBuildingChange += show ? -1 : 1;
+      return;
+    }
+    const point = index.points.get(id);
+    if (!point) { skipped.push(id); return; }
+    point.show = show;
+    flips += 1;
+    hiddenPointChange += show ? -1 : 1;
+  };
+  for (const id of delta.added) write(id, true);
+  for (const id of delta.removed) write(id, false);
+  return { flips, hiddenBuildingChange, hiddenPointChange, skipped };
+}
+
+/**
+ * The set the caller may now claim it has applied: the intended set, with every
+ * SKIPPED id put back to whatever was true before. An id that did not write is
+ * still in its old state, so recording the new one would guarantee it is never
+ * retried and would corrupt the next reverse delta.
+ */
+export function denseAppliedSuppressionSet(
+  previousSuppressedIds: ReadonlySet<string>,
+  nextSuppressedIds: ReadonlySet<string>,
+  skipped: readonly string[],
+): ReadonlySet<string> {
+  if (skipped.length === 0) return nextSuppressedIds;
+  const applied = new Set(nextSuppressedIds);
+  for (const id of skipped) {
+    if (previousSuppressedIds.has(id)) applied.add(id);
+    else applied.delete(id);
+  }
+  return applied;
+}
+
+/**
+ * `hiddenCount` is the number of allocated instances the ownership set hides,
+ * so `featureCount`/`buildingFeatureCount`/`pointFeatureCount` keep their
+ * established meaning — what the dense pass DRAWS — while `instanceCount`
+ * reports what was allocated. The two reconcile through
+ * `denseSuppressedInstanceCount`.
+ */
+function denseRenderMetricsFor(
+  builtBuildingCount: number,
+  builtPointCount: number,
+  primitiveCount: number,
+  hiddenBuildingCount: number,
+  hiddenPointCount: number,
+): DenseRenderMetrics {
+  const drawnBuildings = builtBuildingCount - hiddenBuildingCount;
+  const drawnPoints = builtPointCount - hiddenPointCount;
+  return {
+    featureCount: drawnBuildings + drawnPoints,
+    primitiveCount,
+    instanceCount: builtBuildingCount + builtPointCount,
+    buildingFeatureCount: drawnBuildings,
+    pointFeatureCount: drawnPoints,
+    denseSuppressedInstanceCount: hiddenBuildingCount + hiddenPointCount,
+  };
 }
 
 function addDensePrimitives(
   collection: PrimitiveCollection,
   buildingInstances: readonly GeometryInstance[],
   points: readonly Feature[],
-): DenseRenderMetrics {
+  suppressedIds: ReadonlySet<string>,
+): { metrics: DenseRenderMetrics; index: DenseInstanceIndex; hiddenBuildingCount: number; hiddenPointCount: number } {
   let primitiveCount = 0;
+  const index = emptyDenseInstanceIndex();
+  let hiddenBuildingCount = 0;
   for (let start = 0; start < buildingInstances.length; start += DENSE_PRIMITIVE_GROUP_SIZE) {
+    const group = buildingInstances.slice(start, start + DENSE_PRIMITIVE_GROUP_SIZE);
     const primitive = new Primitive({
-      geometryInstances: buildingInstances.slice(start, start + DENSE_PRIMITIVE_GROUP_SIZE),
+      geometryInstances: group,
       appearance: new PerInstanceColorAppearance({ flat: true, translucent: true }),
       asynchronous: true,
     });
+    for (const instance of group) {
+      if (typeof instance.id !== "string") continue;
+      index.buildings.set(instance.id, primitive);
+      if (suppressedIds.has(instance.id)) hiddenBuildingCount += 1;
+    }
     collection.add(primitive);
     primitiveCount += 1;
   }
+  let hiddenPointCount = 0;
   if (points.length) {
     const pointCollection = collection.add(new PointPrimitiveCollection());
     const style = densePoiMarkerStyle(false);
     for (const feature of points) {
-      pointCollection.add({ id: feature.id, position: Cartesian3.fromDegrees(feature.coordinates[0], feature.coordinates[1], 14), pixelSize: style.pixelSize, color: Color.fromCssColorString(style.color).withAlpha(style.opacity), outlineColor: Color.WHITE, outlineWidth: style.outlineWidth });
+      const hidden = suppressedIds.has(feature.id);
+      if (hidden) hiddenPointCount += 1;
+      const point = pointCollection.add({ id: feature.id, position: Cartesian3.fromDegrees(feature.coordinates[0], feature.coordinates[1], 14), pixelSize: style.pixelSize, color: Color.fromCssColorString(style.color).withAlpha(style.opacity), outlineColor: Color.WHITE, outlineWidth: style.outlineWidth, show: !hidden });
+      index.points.set(feature.id, point);
     }
     primitiveCount += 1;
   }
   return {
-    featureCount: buildingInstances.length + points.length,
-    primitiveCount,
-    instanceCount: buildingInstances.length + points.length,
-    buildingFeatureCount: buildingInstances.length,
-    pointFeatureCount: points.length,
+    metrics: denseRenderMetricsFor(buildingInstances.length, points.length, primitiveCount, hiddenBuildingCount, hiddenPointCount),
+    index,
+    hiddenBuildingCount,
+    hiddenPointCount,
   };
 }
 
@@ -1192,6 +1430,7 @@ function scheduleDensePrimitiveBuild(
   viewer: Viewer,
   collection: PrimitiveCollection,
   features: readonly Feature[],
+  suppressedIds: ReadonlySet<string>,
   onComplete: (result: DenseBuildResult) => void,
 ): PendingDenseBuild {
   let cursor = 0;
@@ -1219,7 +1458,7 @@ function scheduleDensePrimitiveBuild(
     const sliceEnd = Math.min(features.length, cursor + DENSE_BUILD_CHUNK_SIZE);
     while (cursor < sliceEnd) {
       const feature = features[cursor]!;
-      if (isDenseBuildingFeature(feature)) buildingInstances.push(denseBuildingInstance(feature));
+      if (isDenseBuildingFeature(feature)) buildingInstances.push(denseBuildingInstance(feature, !suppressedIds.has(feature.id)));
       else if (feature.kind === "poi") points.push(feature);
       cursor += 1;
     }
@@ -1235,12 +1474,19 @@ function scheduleDensePrimitiveBuild(
     // Primitive construction only groups the already-created descriptors;
     // Cesium performs polygon geometry work asynchronously after this frame.
     const finalizeStartedAt = performance.now();
-    const metrics = addDensePrimitives(collection, buildingInstances, points);
+    const added = addDensePrimitives(collection, buildingInstances, points, suppressedIds);
     const finalizeMs = performance.now() - finalizeStartedAt;
     allocationMs += finalizeMs;
     allocationMaxSliceMs = Math.max(allocationMaxSliceMs, finalizeMs);
     build.result = {
-      metrics,
+      metrics: added.metrics,
+      index: added.index,
+      builtSuppressedIds: suppressedIds,
+      builtBuildingCount: buildingInstances.length,
+      builtPointCount: points.length,
+      primitiveCount: added.metrics.primitiveCount,
+      hiddenBuildingCount: added.hiddenBuildingCount,
+      hiddenPointCount: added.hiddenPointCount,
       startedAt,
       allocationMs,
       allocationMaxSliceMs,
@@ -1543,9 +1789,20 @@ export function CesiumViewport({
   const activeDenseLayerRef = useRef<PrimitiveCollection | null>(null);
   const pendingDenseLayerRef = useRef<PrimitiveCollection | null>(null);
   const pendingDenseBuildRef = useRef<PendingDenseBuild | null>(null);
+  /** The MEMBERSHIP the live layer was built over — the rebuild trigger's input. */
   const denseRenderPlanFeaturesRef = useRef<readonly Feature[] | null>(null);
+  /** Where the live layer's instances are, so an ownership change is a write. */
+  const denseActiveIndexRef = useRef<DenseInstanceIndex>(emptyDenseInstanceIndex());
+  /** The ownership set currently APPLIED to the live layer. */
+  const denseAppliedSuppressedIdsRef = useRef<ReadonlySet<string>>(new Set<string>());
+  /** The ownership set the scene WANTS, reconciled at commit if a build is in flight. */
+  const denseDesiredSuppressedIdsRef = useRef<ReadonlySet<string>>(new Set<string>());
+  const denseBuiltCountsRef = useRef({ buildings: 0, points: 0, primitives: 0 });
+  const denseHiddenCountsRef = useRef({ buildings: 0, points: 0 });
+  /** Non-null while an old and a new layer are both in `rootDenseCollection`. */
+  const denseDoubleDrawOpenedAtRef = useRef<number | null>(null);
   const denseBuildGenerationRef = useRef(0);
-  const denseRenderTelemetryRef = useRef<DenseRenderTelemetry>({ planBuildCount: 0, planReuseCount: 0, planCancellationCount: 0, planSwapCount: 0, planFingerprint: "", selectionMs: 0, keyMs: 0 });
+  const denseRenderTelemetryRef = useRef<DenseRenderTelemetry>({ ...EMPTY_DENSE_RENDER_TELEMETRY });
   const denseMetricsRef = useRef<DenseRenderMetrics>(emptyDenseRenderMetrics());
   const denseGroupMetricsRef = useRef({ baseFeatureCount: 0, contextFeatureCount: 0, contextPartCount: 0, exteriorSuppressedFeatureCount: 0 });
   const ownedEntityIdsRef = useRef(new Set<string>());
@@ -1692,6 +1949,9 @@ export function CesiumViewport({
       pendingDenseBuildRef.current = null;
       denseRenderPlanFeaturesRef.current = null;
       denseBuildGenerationRef.current += 1;
+      denseActiveIndexRef.current = emptyDenseInstanceIndex();
+      denseAppliedSuppressedIdsRef.current = new Set<string>();
+      denseDoubleDrawOpenedAtRef.current = null;
       ownedEntityIdsRef.current.clear();
       storefrontPickMapRef.current.clear();
       publicRealmPickMapRef.current.clear();
@@ -1750,6 +2010,13 @@ export function CesiumViewport({
       const exteriorRenderedIds = exteriorRenderedCanonicalFeatureIds(exteriorOverlay, exteriorPickMapRef.current);
       const renderOwner = (feature: Feature): DenseFeatureRenderOwner => denseFeatureRenderOwner(feature.id, exteriorRenderedIds, assetBuildingIds);
       const primitiveDenseFeatures = renderedGroups.base.filter((feature) => renderOwner(feature) === "procedural-extrusion");
+      // The layer is built over the MEMBERSHIP and hides what it does not own.
+      // `renderedGroups.base` is the membership; `denseSuppressedIds` is the
+      // ownership set. Splitting the two is what lets an exterior cell arriving
+      // or being evicted be a `show` write instead of a whole-island rebuild.
+      const denseRenderBasis = renderedGroups.base;
+      const denseSuppressedIds = new Set<string>();
+      for (const feature of denseRenderBasis) if (renderOwner(feature) !== "procedural-extrusion") denseSuppressedIds.add(feature.id);
       const telemetry = denseRenderTelemetryRef.current;
       telemetry.selectionMs = performance.now() - selectionStartedAt;
       const keyStartedAt = performance.now();
@@ -1761,7 +2028,41 @@ export function CesiumViewport({
       const publishDenseMetrics = (metrics: DenseRenderMetrics): void => {
         onDenseMetricsRef.current?.({ ...withDenseRenderTelemetry(metrics, telemetry), ...denseGroupMetricsRef.current });
       };
-      if (denseRendering && rootDenseCollection && shouldReplaceDenseRenderPlan(denseRenderPlanFeaturesRef.current, primitiveDenseFeatures)) {
+      const liveDenseMetrics = (): DenseRenderMetrics => denseRenderMetricsFor(
+        denseBuiltCountsRef.current.buildings,
+        denseBuiltCountsRef.current.points,
+        denseBuiltCountsRef.current.primitives,
+        denseHiddenCountsRef.current.buildings,
+        denseHiddenCountsRef.current.points,
+      );
+      /**
+       * TRIGGER 2 of the taxonomy: ownership moved, membership did not. Every
+       * affected instance is one `show` write against the live layer — no new
+       * `PrimitiveCollection` enters the scene, so this path cannot double-draw
+       * and cannot re-tessellate.
+       */
+      const applyDenseOwnership = (nextSuppressed: ReadonlySet<string>): boolean => {
+        const previousSuppressed = denseAppliedSuppressedIdsRef.current;
+        const delta = denseRenderPlanDelta(previousSuppressed, nextSuppressed);
+        if (denseRenderPlanDeltaSize(delta) === 0) return false;
+        const applied = applyDenseSuppressionDelta(denseActiveIndexRef.current, delta);
+        // Only what actually WROTE advances the record. A skipped id stays at
+        // its old value so the next pass retries it, instead of being recorded
+        // as flipped and then un-flipped by a reverse delta that never had a
+        // matching forward write.
+        denseAppliedSuppressedIdsRef.current = denseAppliedSuppressionSet(previousSuppressed, nextSuppressed, applied.skipped);
+        if (applied.flips === 0) return false;
+        telemetry.planSuppressionUpdateCount += 1;
+        telemetry.planSuppressionFlipCount += applied.flips;
+        denseHiddenCountsRef.current = {
+          buildings: denseHiddenCountsRef.current.buildings + applied.hiddenBuildingChange,
+          points: denseHiddenCountsRef.current.points + applied.hiddenPointChange,
+        };
+        telemetry.denseSuppressedInstanceCount = denseHiddenCountsRef.current.buildings + denseHiddenCountsRef.current.points;
+        return true;
+      };
+      denseDesiredSuppressedIdsRef.current = denseSuppressedIds;
+      if (denseRendering && rootDenseCollection && shouldReplaceDenseRenderPlan(denseRenderPlanFeaturesRef.current, denseRenderBasis)) {
         const pending = pendingDenseLayerRef.current;
         if (pendingDenseBuildRef.current) telemetry.planCancellationCount += 1;
         pendingDenseBuildRef.current?.cancel();
@@ -1770,12 +2071,22 @@ export function CesiumViewport({
         const nextDenseLayer = new PrimitiveCollection();
         rootDenseCollection.add(nextDenseLayer);
         const previousDenseLayer = activeDenseLayerRef.current;
+        // The double-draw window opens HERE, at the pending-layer add, and only
+        // when there is an old layer to draw alongside. A cancelled build keeps
+        // the chain open: measuring from the surviving build's start is exactly
+        // the undercount ADR 0044 §4.2 could not clear leg Y through.
+        const pendingLayerAddedAt = performance.now();
+        telemetry.pendingLayerAddedAt = pendingLayerAddedAt;
+        if (previousDenseLayer && denseDoubleDrawOpenedAtRef.current === null) {
+          denseDoubleDrawOpenedAtRef.current = pendingLayerAddedAt;
+          telemetry.doubleDrawOpenedAt = pendingLayerAddedAt;
+        }
         const buildGeneration = denseBuildGenerationRef.current + 1;
         denseBuildGenerationRef.current = buildGeneration;
-        denseRenderPlanFeaturesRef.current = primitiveDenseFeatures;
+        denseRenderPlanFeaturesRef.current = denseRenderBasis;
         telemetry.planBuildCount += 1;
         pendingDenseLayerRef.current = nextDenseLayer;
-        const pendingBuild = scheduleDensePrimitiveBuild(viewer, nextDenseLayer, primitiveDenseFeatures, (result) => {
+        const pendingBuild = scheduleDensePrimitiveBuild(viewer, nextDenseLayer, denseRenderBasis, denseSuppressedIds, (result) => {
           if (viewerRef.current !== viewer || denseBuildGenerationRef.current !== buildGeneration) return;
           telemetry.allocationMs = result.allocationMs;
           telemetry.allocationMaxSliceMs = result.allocationMaxSliceMs;
@@ -1794,7 +2105,15 @@ export function CesiumViewport({
             return;
           }
           if (!pendingBuild.complete || !primitiveLayerReady(nextDenseLayer)) return;
-          if (previousDenseLayer && previousDenseLayer !== nextDenseLayer) rootDenseCollection.remove(previousDenseLayer);
+          if (previousDenseLayer && previousDenseLayer !== nextDenseLayer) {
+            rootDenseCollection.remove(previousDenseLayer);
+            const previousLayerRemovedAt = performance.now();
+            telemetry.previousLayerRemovedAt = previousLayerRemovedAt;
+            if (denseDoubleDrawOpenedAtRef.current !== null) {
+              telemetry.doubleDrawMs = previousLayerRemovedAt - denseDoubleDrawOpenedAtRef.current;
+              denseDoubleDrawOpenedAtRef.current = null;
+            }
+          }
           activeDenseLayerRef.current = nextDenseLayer;
           if (pendingDenseLayerRef.current === nextDenseLayer) pendingDenseLayerRef.current = null;
           if (pendingDenseBuildRef.current === pendingBuild) pendingDenseBuildRef.current = null;
@@ -1803,8 +2122,16 @@ export function CesiumViewport({
             telemetry.workerReadyMs = performance.now() - result.allocationCompletedAt;
             telemetry.totalBuildMs = performance.now() - result.startedAt;
             telemetry.planSwapCount += 1;
-            denseMetricsRef.current = result.metrics;
-            publishDenseMetrics(result.metrics);
+            denseActiveIndexRef.current = result.index;
+            denseBuiltCountsRef.current = { buildings: result.builtBuildingCount, points: result.builtPointCount, primitives: result.primitiveCount };
+            denseHiddenCountsRef.current = { buildings: result.hiddenBuildingCount, points: result.hiddenPointCount };
+            denseAppliedSuppressedIdsRef.current = result.builtSuppressedIds;
+            telemetry.denseSuppressedInstanceCount = result.hiddenBuildingCount + result.hiddenPointCount;
+            // Ownership that moved while the build ran is reconciled as flips,
+            // never as another build: the instances are already correct.
+            applyDenseOwnership(denseDesiredSuppressedIdsRef.current);
+            denseMetricsRef.current = liveDenseMetrics();
+            publishDenseMetrics(denseMetricsRef.current);
           }
           viewer.scene.postRender.removeEventListener(commitDenseLayer);
         };
@@ -1812,6 +2139,13 @@ export function CesiumViewport({
         viewer.scene.requestRender();
       } else if (denseRendering && rootDenseCollection) {
         telemetry.planReuseCount += 1;
+        // A build in flight owns the reconciliation; it will read the desired
+        // set at commit. With no build in flight the flip lands immediately.
+        if (!pendingDenseBuildRef.current && applyDenseOwnership(denseSuppressedIds)) {
+          denseMetricsRef.current = liveDenseMetrics();
+          publishDenseMetrics(denseMetricsRef.current);
+          viewer.scene.requestRender();
+        }
       } else if (!denseRendering && rootDenseCollection) {
         if (pendingDenseBuildRef.current) telemetry.planCancellationCount += 1;
         pendingDenseBuildRef.current?.cancel();
@@ -1822,7 +2156,12 @@ export function CesiumViewport({
         pendingDenseLayerRef.current = null;
         denseRenderPlanFeaturesRef.current = null;
         denseBuildGenerationRef.current += 1;
-        Object.assign(telemetry, { planBuildCount: 0, planReuseCount: 0, planCancellationCount: 0, planSwapCount: 0, planFingerprint: "", selectionMs: 0, keyMs: 0, allocationMs: undefined, allocationMaxSliceMs: undefined, allocationChunkCount: undefined, workerReadyMs: undefined, totalBuildMs: undefined });
+        denseActiveIndexRef.current = emptyDenseInstanceIndex();
+        denseAppliedSuppressedIdsRef.current = new Set<string>();
+        denseBuiltCountsRef.current = { buildings: 0, points: 0, primitives: 0 };
+        denseHiddenCountsRef.current = { buildings: 0, points: 0 };
+        denseDoubleDrawOpenedAtRef.current = null;
+        Object.assign(telemetry, EMPTY_DENSE_RENDER_TELEMETRY, { allocationMs: undefined, allocationMaxSliceMs: undefined, allocationChunkCount: undefined, workerReadyMs: undefined, totalBuildMs: undefined, denseSuppressedInstanceCount: undefined, pendingLayerAddedAt: undefined, doubleDrawOpenedAt: undefined, previousLayerRemovedAt: undefined, doubleDrawMs: undefined });
         denseMetricsRef.current = emptyDenseRenderMetrics();
       }
       // A building whose exterior model is in the scene gets no semantic entity

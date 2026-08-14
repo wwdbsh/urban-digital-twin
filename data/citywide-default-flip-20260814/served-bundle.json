@@ -1,0 +1,16 @@
+{
+  "schemaVersion": "1.0",
+  "taskId": "T006",
+  "artifact": "citywide-default-flip-served-bundle",
+  "note": "The bytes the preview server SERVES. The double-draw timestamps this campaign reads are UNCONDITIONAL telemetry fields, not probe-gated, precisely so the measured bundle is the served bundle.",
+  "origin": "http://localhost:4212",
+  "indexSha256": "5c71eb62a056ab423cc8a5db49e47773e24bf9437927a219ddbd67b401301350",
+  "indexByteSize": 518,
+  "assets": [
+    {
+      "ref": "/assets/index-h9OtCiw5.js",
+      "byteSize": 5072384,
+      "sha256": "5d55f60944a2766c6566c65de1caae35b14407703b13b1d69ee730a9721177c3"
+    }
+  ]
+}

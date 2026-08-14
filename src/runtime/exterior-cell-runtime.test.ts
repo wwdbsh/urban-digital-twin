@@ -630,6 +630,43 @@ describe("exterior bounded availability", () => {
     expect(metrics.cacheEntries).toBe(0);
   });
 
+  /**
+   * T006 E1: the RELEASE-scoped count, and why `notShippedCellCount` cannot be
+   * used for the same sentence.
+   *
+   * `notShippedCellCount` counts the cells `loadCell` was actually asked about,
+   * so under the visibility scheduler it is a CAMERA fact. A street camera
+   * reconciles a handful of cells and the count collapses; the release's own
+   * answer does not move. Pairing the camera-scoped numerator with a
+   * release-scoped denominator produced "11 of 149" in a live capture, which
+   * asserts that 138 declared cells ship geometry.
+   */
+  it("counts declared not-shipped cells over the whole release, before any cell is asked for", async () => {
+    const fixture = await exteriorCellFixture();
+    tombstoneC2(fixture);
+    const seen: string[] = [];
+    const { runtime } = await runtimeFor(fixture, { onRequest: (ref) => { seen.push(ref); } });
+
+    // Answered with no reconciliation at all: the camera has asked for nothing.
+    expect(runtime.getMetrics().notShippedCellCount).toBe(0);
+    expect(runtime.declaredNotShippedCellCount()).toBe(1);
+    // And it costs no request, because the same `buildingDetails` the
+    // not-shipped branch reads are already resident in the verified graph.
+    expect(seen).toEqual([]);
+
+    // It does not move when a camera reconciles one cell, or when it
+    // reconciles a different one. The camera-scoped counter does.
+    await runtime.loadCell("c2", "inspection", CLOSE_METERS);
+    expect(runtime.getMetrics().notShippedCellCount).toBe(1);
+    expect(runtime.declaredNotShippedCellCount()).toBe(1);
+
+    // A release that tombstones nothing reports nothing, so the count is not
+    // structurally stuck at a non-zero answer.
+    const intact = await exteriorCellFixture();
+    const { runtime: intactRuntime } = await runtimeFor(intact);
+    expect(intactRuntime.declaredNotShippedCellCount()).toBe(0);
+  });
+
   it("keeps a genuinely failing cell on the alarming pinned-base path", async () => {
     const fixture = await exteriorCellFixture();
     tombstoneC2(fixture);

@@ -44,10 +44,58 @@ export function exteriorQualifiedNotice(releaseId: string, notice: string): stri
  * failures, and one alarming bullet each would drown the genuine failures that
  * keep their own per-cell lines. One cell states itself.
  */
-export function exteriorNotShippedSummary(cells: readonly ExteriorCellOutcome[]): string | null {
+export function exteriorNotShippedSummary(
+  cells: readonly ExteriorCellOutcome[],
+  declared?: { cellCount: number; notShippedCellCount: number },
+): string | null {
+  // BOTH TERMS ARE RELEASE FACTS, or neither is — and the LINE ITSELF is a
+  // release fact too, so `cells` is not consulted at all when the release can
+  // answer.
+  //
+  // `cells` is what the last reconciliation touched, which under the visibility
+  // scheduler is a CAMERA fact in both terms: the same release read "121 of
+  // 123" at one pose and "11 of 12" at the next. Anchoring only the
+  // denominator would be worse than leaving it alone — "11 of 149" states that
+  // 138 declared cells DO ship geometry, which is false for a release that
+  // declares 146 of its 149 empty.
+  //
+  // Deriving only the NUMBERS from the release while still gating the line's
+  // EXISTENCE on the reconciliation would keep the same defect in a quieter
+  // form: at a camera that happens to reconcile no unshipped cell the line
+  // disappears and then reappears on the way back, so a permanent property of
+  // the build would blink with the camera. A release fact is stated whenever it
+  // is true.
+  if (declared && declared.cellCount > 0) {
+    return declared.notShippedCellCount > 0
+      ? `${declared.notShippedCellCount} of ${declared.cellCount} exterior cells declared by this release ship no exterior geometry; no substitute was selected for them.`
+      : null;
+  }
   const notShipped = cells.filter((cell) => cell.kind === "not-shipped");
   if (notShipped.length === 0) return null;
-  return notShipped.length === 1
-    ? notShipped[0]!.notice
-    : `${notShipped.length} of ${cells.length} exterior cells ship no exterior geometry in this release; no substitute was selected for them.`;
+  if (notShipped.length === 1) return notShipped[0]!.notice;
+  return `${notShipped.length} of ${cells.length} exterior cells declared by this release ship no exterior geometry; no substitute was selected for them.`;
+}
+
+/**
+ * The two camera-scoped populations, kept OUT of the release fact above.
+ *
+ * A deferred cell is one nobody asked for at this camera; an evicted artifact
+ * is one that was resident and was released to stay inside the session's byte
+ * budget. Neither is a defect and neither is permanent — both recover by
+ * moving the camera — so both state their recovery in their own sentence
+ * rather than borrowing the tombstone's register.
+ *
+ * They are separate functions, and separately pattern-matched, so the notice
+ * digest can update them in place without re-arming a dismissed notice: a
+ * count that changes with every pan must never resurrect a disclosure the
+ * reader already read.
+ */
+export function exteriorDeferredCellNotice(deferredCellCount: number): string | null {
+  if (!Number.isFinite(deferredCellCount) || deferredCellCount <= 0) return null;
+  return `${deferredCellCount} exterior cell${deferredCellCount === 1 ? " is" : "s are"} not loaded for this camera; they load when the camera reaches them.`;
+}
+
+export function exteriorReleasedArtifactNotice(releasedArtifactCount: number): string | null {
+  if (!Number.isFinite(releasedArtifactCount) || releasedArtifactCount <= 0) return null;
+  return `${releasedArtifactCount} exterior artifact${releasedArtifactCount === 1 ? " was" : "s were"} released to stay within the session cache budget; ${releasedArtifactCount === 1 ? "it reloads" : "they reload"} on re-entry.`;
 }

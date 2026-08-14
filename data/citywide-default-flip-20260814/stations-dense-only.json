@@ -1,0 +1,468 @@
+{
+  "schemaVersion": "1.0",
+  "taskId": "T006",
+  "artifact": "citywide-default-flip-stations",
+  "note": "Steady-state percentiles only. Boot builds and storm transients are reported in their own fields and are never folded into a percentile the fixed budgets are applied to.",
+  "servedBundle": {
+    "indexSha256": "5c71eb62a056ab423cc8a5db49e47773e24bf9437927a219ddbd67b401301350",
+    "assets": [
+      "5d55f60944a2766c6566c65de1caae35b14407703b13b1d69ee730a9721177c3"
+    ]
+  },
+  "viewport": {
+    "width": 1440,
+    "height": 900,
+    "deviceScaleFactor": 1
+  },
+  "arm": "dense-only",
+  "armUrl": "http://localhost:4212/?data=real-pilot&release=manhattan-citywide-20260804&view=free&exteriorStreaming=off&lon=-73.986360&lat=40.748775&height=260.000000&heading=45.000000&pitch=-25.000000&roll=0.000000",
+  "budgets": {
+    "p50Ms": 16.7,
+    "p95Ms": 25,
+    "relaxedP50Ms": 33.3,
+    "relaxedP95Ms": 45
+  },
+  "settleMs": 45000,
+  "frameWindowMs": 10000,
+  "capturedAtIso": "2026-08-14T14:15:40.178Z",
+  "captures": [
+    {
+      "stationId": "street-260m",
+      "arm": "dense-only",
+      "url": "http://localhost:4212/?data=real-pilot&release=manhattan-citywide-20260804&view=free&exteriorStreaming=off&lon=-73.986360&lat=40.748775&height=260.000000&heading=45.000000&pitch=-25.000000&roll=0.000000",
+      "settleMs": 45000,
+      "bootToFirstDenseMs": 543,
+      "bootBuild": {
+        "totalBuildMs": 7.400000095367432,
+        "allocationMs": 1.600000023841858,
+        "note": "A BOOT build, reported as a duration against the leg-X bar. It is never folded into the steady-state percentiles above."
+      },
+      "frame": {
+        "sampleCount": 1199,
+        "p50Ms": 8.3,
+        "p95Ms": 9,
+        "p99Ms": 9.3,
+        "maxMs": 9.4
+      },
+      "dense": {
+        "featureCount": 395,
+        "primitiveCount": 2,
+        "instanceCount": 395,
+        "buildingFeatureCount": 235,
+        "pointFeatureCount": 160,
+        "denseSuppressedInstanceCount": 0,
+        "planBuildCount": 4,
+        "planReuseCount": 1,
+        "planCancellationCount": 1,
+        "planSwapCount": 3,
+        "planSuppressionUpdateCount": 0,
+        "planSuppressionFlipCount": 0,
+        "pendingLayerAddedAt": 5674.299999952316,
+        "doubleDrawOpenedAt": 5674.299999952316,
+        "previousLayerRemovedAt": 5720.100000023842,
+        "doubleDrawMs": 45.800000071525574,
+        "planFingerprint": "395:776e3c78",
+        "selectionMs": 6.200000047683716,
+        "keyMs": 1.100000023841858,
+        "allocationMs": 1.100000023841858,
+        "allocationMaxSliceMs": 0.5,
+        "allocationChunkCount": 4,
+        "workerReadyMs": 25.200000047683716,
+        "totalBuildMs": 45.800000071525574,
+        "baseFeatureCount": 395,
+        "contextFeatureCount": 0,
+        "contextPartCount": 0,
+        "exteriorSuppressedFeatureCount": 0
+      },
+      "adapter": {
+        "visibleShardCount": 4,
+        "requestedShardCount": 4,
+        "loadedFeatureCount": 5216,
+        "loadedBytes": 5193845,
+        "maxConcurrentRequests": 4,
+        "activeRequests": 0,
+        "failedRequestCount": 0,
+        "cancelledRequestCount": 0,
+        "staleResultCount": 0,
+        "retainedSummaryCount": 5216,
+        "retainedFeatureCount": 5216,
+        "retainedDetailCount": 0,
+        "detailIndexEntryCount": 0,
+        "cacheEntries": 4,
+        "cacheEvictions": 0,
+        "dedupedRefreshCount": 0
+      },
+      "cache": {
+        "entries": 4,
+        "bytes": 5193845,
+        "classSizes": {
+          "geometry/buildings": 2,
+          "geometry/restaurants": 2
+        },
+        "classEvictions": {}
+      },
+      "budgets": {
+        "rootBytes": 262144,
+        "geometryShardBytes": 2097152,
+        "searchDetailShardBytes": 1048576,
+        "totalBytes": 314572800,
+        "maxShards": 512,
+        "maxFeaturesPerGeometryShard": 2000,
+        "maxLoadedShards": 112,
+        "maxLoadedBytes": 83886080,
+        "maxConcurrentRequests": 4,
+        "maxRenderedDenseFeatures": 57547,
+        "maxDecodedSummaries": 8192,
+        "maxDecodedFeatures": 8192,
+        "maxDecodedDetails": 512
+      },
+      "overviewResidencyActive": true,
+      "decision": {
+        "hold": "none",
+        "visibleCount": 12,
+        "deferredCount": 0,
+        "retainedCount": 0,
+        "residentCount": 12,
+        "reserved": [
+          "manhattan-exterior-cell-w00-000000-block-00835",
+          "manhattan-exterior-cell-w01-000031-17-38598-35863"
+        ],
+        "decisionIndex": 3,
+        "footprintSignature": "-73.985808:40.749197:-73.980360:40.752675:-73.983084:40.750936",
+        "heightBucket": 300
+      },
+      "waves": [],
+      "notice": null,
+      "heapAfterGcBytes": 61810843,
+      "network": {
+        "externalHosts": [],
+        "responseCount": 25
+      },
+      "stillSha256": "724ec6c8f4f3832809c20de2ad588bffb993a9c5f8b32516647c8f00cebd5b9f"
+    },
+    {
+      "stationId": "transition-1200m",
+      "arm": "dense-only",
+      "url": "http://localhost:4212/?data=real-pilot&release=manhattan-citywide-20260804&view=free&exteriorStreaming=off&lon=-73.986360&lat=40.748775&height=1200.000000&heading=45.000000&pitch=-45.000000&roll=0.000000",
+      "settleMs": 45000,
+      "bootToFirstDenseMs": 1799,
+      "bootBuild": {
+        "totalBuildMs": 956.8999999761581,
+        "allocationMs": 24.90000009536743,
+        "note": "A BOOT build, reported as a duration against the leg-X bar. It is never folded into the steady-state percentiles above."
+      },
+      "frame": {
+        "sampleCount": 1199,
+        "p50Ms": 8.3,
+        "p95Ms": 9.3,
+        "p99Ms": 10,
+        "maxMs": 10.3
+      },
+      "dense": {
+        "featureCount": 8554,
+        "primitiveCount": 5,
+        "instanceCount": 8554,
+        "buildingFeatureCount": 5716,
+        "pointFeatureCount": 2838,
+        "denseSuppressedInstanceCount": 0,
+        "planBuildCount": 3,
+        "planReuseCount": 1,
+        "planCancellationCount": 1,
+        "planSwapCount": 2,
+        "planSuppressionUpdateCount": 0,
+        "planSuppressionFlipCount": 0,
+        "pendingLayerAddedAt": 791.5,
+        "doubleDrawOpenedAt": 760.3999999761581,
+        "previousLayerRemovedAt": 1748.3999999761581,
+        "doubleDrawMs": 988,
+        "planFingerprint": "8554:5c9c0025",
+        "selectionMs": 13.800000071525574,
+        "keyMs": 8.699999928474426,
+        "allocationMs": 24.90000009536743,
+        "allocationMaxSliceMs": 3.899999976158142,
+        "allocationChunkCount": 72,
+        "workerReadyMs": 372.39999997615814,
+        "totalBuildMs": 956.8999999761581,
+        "baseFeatureCount": 8554,
+        "contextFeatureCount": 0,
+        "contextPartCount": 0,
+        "exteriorSuppressedFeatureCount": 0
+      },
+      "adapter": {
+        "visibleShardCount": 24,
+        "requestedShardCount": 24,
+        "loadedFeatureCount": 21303,
+        "loadedBytes": 21556219,
+        "maxConcurrentRequests": 4,
+        "activeRequests": 0,
+        "failedRequestCount": 0,
+        "cancelledRequestCount": 0,
+        "staleResultCount": 0,
+        "retainedSummaryCount": 8192,
+        "retainedFeatureCount": 8192,
+        "retainedDetailCount": 0,
+        "detailIndexEntryCount": 0,
+        "cacheEntries": 24,
+        "cacheEvictions": 0,
+        "dedupedRefreshCount": 0
+      },
+      "cache": {
+        "entries": 24,
+        "bytes": 21556219,
+        "classSizes": {
+          "geometry/buildings": 13,
+          "geometry/restaurants": 11
+        },
+        "classEvictions": {}
+      },
+      "budgets": {
+        "rootBytes": 262144,
+        "geometryShardBytes": 2097152,
+        "searchDetailShardBytes": 1048576,
+        "totalBytes": 314572800,
+        "maxShards": 512,
+        "maxFeaturesPerGeometryShard": 2000,
+        "maxLoadedShards": 112,
+        "maxLoadedBytes": 83886080,
+        "maxConcurrentRequests": 4,
+        "maxRenderedDenseFeatures": 57547,
+        "maxDecodedSummaries": 8192,
+        "maxDecodedFeatures": 8192,
+        "maxDecodedDetails": 512
+      },
+      "overviewResidencyActive": true,
+      "decision": {
+        "hold": "none",
+        "visibleCount": 141,
+        "deferredCount": 13,
+        "retainedCount": 0,
+        "residentCount": 128,
+        "reserved": [
+          "manhattan-exterior-cell-w00-000000-block-00835",
+          "manhattan-exterior-cell-w01-000031-17-38598-35863"
+        ],
+        "decisionIndex": 2,
+        "footprintSignature": "-73.987534:40.747889:-73.953469:40.773800:-73.970501:40.760844",
+        "heightBucket": 1200
+      },
+      "waves": [],
+      "notice": null,
+      "heapAfterGcBytes": 99225081,
+      "network": {
+        "externalHosts": [],
+        "responseCount": 45
+      },
+      "stillSha256": "eeb522deb79a529bc2a9468c9c6663baf751bd9afb620c1b4a438afa104bcfcd"
+    },
+    {
+      "stationId": "overview-52km",
+      "arm": "dense-only",
+      "url": "http://localhost:4212/?data=real-pilot&release=manhattan-citywide-20260804&view=free&exteriorStreaming=off&lon=-73.971200&lat=40.783100&height=52000.000000&heading=0.000000&pitch=-90.000000&roll=0.000000",
+      "settleMs": 45000,
+      "bootToFirstDenseMs": 5452,
+      "bootBuild": {
+        "totalBuildMs": 18.799999952316284,
+        "allocationMs": 177.59999930858612,
+        "note": "A BOOT build, reported as a duration against the leg-X bar. It is never folded into the steady-state percentiles above."
+      },
+      "frame": {
+        "sampleCount": 1200,
+        "p50Ms": 8.3,
+        "p95Ms": 8.9,
+        "p99Ms": 9.2,
+        "maxMs": 9.3
+      },
+      "dense": {
+        "featureCount": 54024,
+        "primitiveCount": 30,
+        "instanceCount": 54024,
+        "buildingFeatureCount": 43021,
+        "pointFeatureCount": 11003,
+        "denseSuppressedInstanceCount": 0,
+        "planBuildCount": 2,
+        "planReuseCount": 2,
+        "planCancellationCount": 0,
+        "planSwapCount": 2,
+        "planSuppressionUpdateCount": 0,
+        "planSuppressionFlipCount": 0,
+        "pendingLayerAddedAt": 1420.2999999523163,
+        "doubleDrawOpenedAt": 1420.2999999523163,
+        "previousLayerRemovedAt": 7065,
+        "doubleDrawMs": 5644.700000047684,
+        "planFingerprint": "54024:f60c251a",
+        "selectionMs": 48.699999928474426,
+        "keyMs": 46.89999997615814,
+        "allocationMs": 177.59999930858612,
+        "allocationMaxSliceMs": 11.5,
+        "allocationChunkCount": 451,
+        "workerReadyMs": 1890.6000000238419,
+        "totalBuildMs": 5644.700000047684,
+        "baseFeatureCount": 54024,
+        "contextFeatureCount": 0,
+        "contextPartCount": 0,
+        "exteriorSuppressedFeatureCount": 0
+      },
+      "adapter": {
+        "visibleShardCount": 102,
+        "requestedShardCount": 102,
+        "loadedFeatureCount": 54024,
+        "loadedBytes": 56470052,
+        "maxConcurrentRequests": 4,
+        "activeRequests": 0,
+        "failedRequestCount": 0,
+        "cancelledRequestCount": 4,
+        "staleResultCount": 2,
+        "retainedSummaryCount": 8192,
+        "retainedFeatureCount": 8192,
+        "retainedDetailCount": 0,
+        "detailIndexEntryCount": 0,
+        "cacheEntries": 98,
+        "cacheEvictions": 0,
+        "dedupedRefreshCount": 1
+      },
+      "cache": {
+        "entries": 98,
+        "bytes": 56470052,
+        "classSizes": {
+          "geometry/buildings": 54,
+          "geometry/restaurants": 44
+        },
+        "classEvictions": {}
+      },
+      "budgets": {
+        "rootBytes": 262144,
+        "geometryShardBytes": 2097152,
+        "searchDetailShardBytes": 1048576,
+        "totalBytes": 314572800,
+        "maxShards": 512,
+        "maxFeaturesPerGeometryShard": 2000,
+        "maxLoadedShards": 112,
+        "maxLoadedBytes": 83886080,
+        "maxConcurrentRequests": 4,
+        "maxRenderedDenseFeatures": 57547,
+        "maxDecodedSummaries": 8192,
+        "maxDecodedFeatures": 8192,
+        "maxDecodedDetails": 512
+      },
+      "overviewResidencyActive": true,
+      "decision": {
+        "hold": "none",
+        "visibleCount": 883,
+        "deferredCount": 755,
+        "retainedCount": 0,
+        "residentCount": 128,
+        "reserved": [
+          "manhattan-exterior-cell-w04-000584-17-38603-35838"
+        ],
+        "decisionIndex": 2,
+        "footprintSignature": "-74.328383:40.622998:-73.614548:40.942804:-73.971466:40.782901",
+        "heightBucket": 52000
+      },
+      "waves": [],
+      "notice": null,
+      "heapAfterGcBytes": 187121454,
+      "network": {
+        "externalHosts": [],
+        "responseCount": 123
+      },
+      "stillSha256": "314d2733c9d3e56001087606c3f809f33efe909ad378df0cd88c254ffbadd6ae"
+    },
+    {
+      "stationId": "pan-storm",
+      "arm": "dense-only",
+      "url": "http://localhost:4212/?data=real-pilot&release=manhattan-citywide-20260804&view=free&exteriorStreaming=off&lon=-73.986360&lat=40.748775&height=1200.000000&heading=45.000000&pitch=-45.000000&roll=0.000000",
+      "dragCount": 12,
+      "stormMs": 4796,
+      "duringStormFrame": {
+        "sampleCount": 575,
+        "p50Ms": 8.3,
+        "p95Ms": 9,
+        "p99Ms": 9.3,
+        "maxMs": 9.4,
+        "note": "DURING a 12-drag storm. This is a transient and the fixed budgets do NOT apply to it; it is reported as its own series."
+      },
+      "frame": {
+        "sampleCount": 2399,
+        "p50Ms": 8.3,
+        "p95Ms": 8.9,
+        "p99Ms": 9.3,
+        "maxMs": 9.4
+      },
+      "denseBefore": {
+        "featureCount": 8556,
+        "primitiveCount": 5,
+        "instanceCount": 8556,
+        "buildingFeatureCount": 5717,
+        "pointFeatureCount": 2839,
+        "denseSuppressedInstanceCount": 0,
+        "planBuildCount": 2,
+        "planReuseCount": 1,
+        "planCancellationCount": 0,
+        "planSwapCount": 2,
+        "planSuppressionUpdateCount": 0,
+        "planSuppressionFlipCount": 0,
+        "pendingLayerAddedAt": 771.5,
+        "doubleDrawOpenedAt": 771.5,
+        "previousLayerRemovedAt": 1729.2999999523163,
+        "doubleDrawMs": 957.7999999523163,
+        "planFingerprint": "8556:e0a2ec95",
+        "selectionMs": 16.600000023841858,
+        "keyMs": 8,
+        "allocationMs": 26.100000858306885,
+        "allocationMaxSliceMs": 4.399999976158142,
+        "allocationChunkCount": 72,
+        "workerReadyMs": 371.1999999284744,
+        "totalBuildMs": 957.7999999523163,
+        "baseFeatureCount": 8556,
+        "contextFeatureCount": 0,
+        "contextPartCount": 0,
+        "exteriorSuppressedFeatureCount": 0
+      },
+      "dense": {
+        "featureCount": 9487,
+        "primitiveCount": 5,
+        "instanceCount": 9487,
+        "buildingFeatureCount": 5943,
+        "pointFeatureCount": 3544,
+        "denseSuppressedInstanceCount": 0,
+        "planBuildCount": 3,
+        "planReuseCount": 1,
+        "planCancellationCount": 0,
+        "planSwapCount": 3,
+        "planSuppressionUpdateCount": 0,
+        "planSuppressionFlipCount": 0,
+        "pendingLayerAddedAt": 53403.10000002384,
+        "doubleDrawOpenedAt": 53403.10000002384,
+        "previousLayerRemovedAt": 54204.799999952316,
+        "doubleDrawMs": 801.6999999284744,
+        "planFingerprint": "9487:99fc3983",
+        "selectionMs": 20.40000009536743,
+        "keyMs": 10.899999976158142,
+        "allocationMs": 26.5,
+        "allocationMaxSliceMs": 4,
+        "allocationChunkCount": 80,
+        "workerReadyMs": 147.09999990463257,
+        "totalBuildMs": 801.6999999284744,
+        "baseFeatureCount": 9487,
+        "contextFeatureCount": 0,
+        "contextPartCount": 0,
+        "exteriorSuppressedFeatureCount": 0
+      },
+      "cache": {
+        "entries": 24,
+        "bytes": 21556219,
+        "classSizes": {
+          "geometry/buildings": 13,
+          "geometry/restaurants": 11
+        },
+        "classEvictions": {}
+      },
+      "heapAfterGcBytes": 103814698,
+      "network": {
+        "externalHosts": [],
+        "responseCount": 45
+      },
+      "stillSha256": "9b2e2b2d9bc7cd64726aab868573062399408d429562c087159cd3a836d087e4"
+    }
+  ]
+}

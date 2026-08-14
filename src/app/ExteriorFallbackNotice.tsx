@@ -36,6 +36,19 @@ type DigestLine = {
 export type ExteriorNoticeDigest = {
   /** Identity of THIS notice set, so a dismissal cannot silence a different one. */
   readonly key: string;
+  /**
+   * The DISMISSAL key, and the reason it is not `key`.
+   *
+   * `key` moves whenever any line moves, and two of the three populations are
+   * camera-scoped: the deferred count changes on every pan and the evicted
+   * count changes on every budget release. Keying dismissal on `key` would
+   * re-open a notice the reader dismissed, every time they moved — a dismiss
+   * button that does not stay dismissed. So dismissal is keyed on the RELEASE
+   * facts only (not-shipped, residency, verbatim), which change when the build
+   * or the wave set changes and not when the camera does. The camera-scoped
+   * counts still update in place inside an undismissed notice.
+   */
+  readonly dismissalKey: string;
   readonly entryCount: number;
   /** The bounded-availability aggregate (ADR 0029), summed across releases. */
   readonly notShipped: {
@@ -44,6 +57,10 @@ export type ExteriorNoticeDigest = {
     readonly totalCellCount: number;
     readonly lines: readonly DigestLine[];
   } | null;
+  /** Cells nobody asked for at THIS camera. Recoverable by moving the camera. */
+  readonly deferred: { readonly key: string; readonly cellCount: number; readonly lines: readonly DigestLine[] } | null;
+  /** Artifacts that WERE resident and were released to stay inside the budget. */
+  readonly evicted: { readonly key: string; readonly artifactCount: number; readonly lines: readonly DigestLine[] } | null;
   /** Verified geometry withheld for want of a resident base anchor. */
   readonly residency: readonly {
     readonly key: string;
@@ -61,7 +78,17 @@ export type ExteriorNoticeDigest = {
  * states itself in its own words and deliberately does NOT match — it falls
  * through to verbatim rather than being restated as an aggregate of one.
  */
-const NOT_SHIPPED_PATTERN = /^(?:Exterior release (.+?): )?(\d+) of (\d+) exterior cells ship no exterior geometry in this release; no substitute was selected for them\.$/u;
+const NOT_SHIPPED_PATTERN = /^(?:Exterior release (.+?): )?(\d+) of (\d+) exterior cells declared by this release ship no exterior geometry; no substitute was selected for them\.$/u;
+
+/**
+ * `exteriorDeferredCellNotice` / `exteriorReleasedArtifactNotice`. Kept as two
+ * patterns rather than one because the two populations mean different things:
+ * a deferred cell was never fetched, an evicted artifact was fetched, drawn,
+ * and released. Collapsing them would report a cache decision as a coverage
+ * gap — the exact conflation the not-shipped denominator fix removes.
+ */
+const DEFERRED_PATTERN = /^(?:Exterior release (.+?): )?(\d+) exterior cells? (?:is|are) not loaded for this camera; they load when the camera reaches them\.$/u;
+const EVICTED_PATTERN = /^(?:Exterior release (.+?): )?(\d+) exterior artifacts? (?:was|were) released to stay within the session cache budget; (?:it reloads|they reload) on re-entry\.$/u;
 
 /** `exteriorUnanchoredNotice`: count, inline ID list, then the reason. */
 const RESIDENCY_PATTERN = /^Exterior geometry for (\d+) verified buildings? \(([^()]*)\) is not drawn: (.+)$/u;
@@ -81,8 +108,12 @@ export function digestExteriorNotices(entries: readonly ExteriorNoticeEntry[]): 
   const notShippedLines: DigestLine[] = [];
   const residency: { key: string; summary: string; buildingIds: readonly string[] }[] = [];
   const verbatim: DigestLine[] = [];
+  const deferredLines: DigestLine[] = [];
+  const evictedLines: DigestLine[] = [];
   let notShippedCells = 0;
   let notShippedTotal = 0;
+  let deferredCells = 0;
+  let evictedArtifacts = 0;
 
   for (const entry of entries) {
     const key = exteriorNoticeEntryKey(entry);
@@ -91,6 +122,18 @@ export function digestExteriorNotices(entries: readonly ExteriorNoticeEntry[]): 
       notShippedCells += Number(tombstone[2]);
       notShippedTotal += Number(tombstone[3]);
       notShippedLines.push({ key, text: entry.notice });
+      continue;
+    }
+    const deferred = DEFERRED_PATTERN.exec(entry.notice);
+    if (deferred) {
+      deferredCells += Number(deferred[2]);
+      deferredLines.push({ key, text: entry.notice });
+      continue;
+    }
+    const evicted = EVICTED_PATTERN.exec(entry.notice);
+    if (evicted) {
+      evictedArtifacts += Number(evicted[2]);
+      evictedLines.push({ key, text: entry.notice });
       continue;
     }
     const withheld = RESIDENCY_PATTERN.exec(entry.notice);
@@ -113,14 +156,23 @@ export function digestExteriorNotices(entries: readonly ExteriorNoticeEntry[]): 
 
   return {
     key: entries.map(exteriorNoticeEntryKey).join("\n"),
+    // Release facts only. The two camera-scoped populations are deliberately
+    // absent so a pan cannot re-arm a dismissed notice (E2).
+    dismissalKey: [...notShippedLines, ...verbatim].map((line) => line.key).concat(residency.map((entry) => entry.key)).join("\n"),
     entryCount: entries.length,
     notShipped: notShippedLines.length > 0
       ? {
-        summary: `${notShippedCells} of ${notShippedTotal} exterior cells ship no exterior geometry in this build (by design; no substitute was selected).`,
+        summary: `${notShippedCells} of ${notShippedTotal} exterior cells declared by this build ship no exterior geometry (by design; no substitute was selected).`,
         cellCount: notShippedCells,
         totalCellCount: notShippedTotal,
         lines: notShippedLines,
       }
+      : null,
+    deferred: deferredLines.length > 0
+      ? { key: deferredLines.map((line) => line.key).join("\n"), cellCount: deferredCells, lines: deferredLines }
+      : null,
+    evicted: evictedLines.length > 0
+      ? { key: evictedLines.map((line) => line.key).join("\n"), artifactCount: evictedArtifacts, lines: evictedLines }
       : null,
     residency,
     verbatim,
@@ -143,9 +195,9 @@ export function ExteriorFallbackNotice({ entries }: { entries: readonly Exterior
   // changes a notice produces a different key and shows again.
   const [dismissedKey, setDismissedKey] = useState<string | null>(null);
   const digest = digestExteriorNotices(entries);
-  if (digest.entryCount === 0 || digest.key === dismissedKey) return null;
+  if (digest.entryCount === 0 || digest.dismissalKey === dismissedKey) return null;
   return <div className="exploration-notice exploration-notice--exterior" role="status" data-exterior-notices={digest.entryCount}>
-    <strong>Exterior streaming fallback</strong> <button type="button" onClick={() => setDismissedKey(digest.key)}>Dismiss</button>
+    <strong>Exterior streaming fallback</strong> <button type="button" onClick={() => setDismissedKey(digest.dismissalKey)}>Dismiss</button>
     <ul>
       {digest.verbatim.map((line) => <li key={line.key} data-exterior-notice-verbatim>{line.text}</li>)}
       {digest.notShipped && <li data-exterior-notice-not-shipped={digest.notShipped.cellCount}>
@@ -153,6 +205,20 @@ export function ExteriorFallbackNotice({ entries }: { entries: readonly Exterior
         <details>
           <summary>Details by release</summary>
           <ul>{digest.notShipped.lines.map((line) => <li key={line.key} data-exterior-notice-release-line>{line.text}</li>)}</ul>
+        </details>
+      </li>}
+      {digest.deferred && <li data-exterior-notice-deferred={digest.deferred.cellCount}>
+        {`${digest.deferred.cellCount} exterior cell${digest.deferred.cellCount === 1 ? " is" : "s are"} not loaded for this camera; they load when the camera reaches them.`}
+        <details>
+          <summary>Details by release</summary>
+          <ul>{digest.deferred.lines.map((line) => <li key={line.key} data-exterior-notice-release-line>{line.text}</li>)}</ul>
+        </details>
+      </li>}
+      {digest.evicted && <li data-exterior-notice-evicted={digest.evicted.artifactCount}>
+        {`${digest.evicted.artifactCount} exterior artifact${digest.evicted.artifactCount === 1 ? " was" : "s were"} released to stay within the session cache budget; ${digest.evicted.artifactCount === 1 ? "it reloads" : "they reload"} on re-entry.`}
+        <details>
+          <summary>Details by release</summary>
+          <ul>{digest.evicted.lines.map((line) => <li key={line.key} data-exterior-notice-release-line>{line.text}</li>)}</ul>
         </details>
       </li>}
       {digest.residency.map((withheld) => <li key={withheld.key} data-exterior-notice-residency={withheld.buildingIds.length}>
