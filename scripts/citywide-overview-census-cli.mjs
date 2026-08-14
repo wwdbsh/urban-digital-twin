@@ -377,7 +377,8 @@ async function stagePlans(context) {
   const ownedByWave = {};
   let planned = 0;
   let refused = 0;
-  let peakRssBytes = 0;
+  // SAMPLED once per ledger cell, not a continuous peak.
+  let sampledPeakRssBytes = 0;
 
   for (const cell of context.cells) {
     const waveIndex = waveIndexOf(cell.cellId);
@@ -401,7 +402,7 @@ async function stagePlans(context) {
         refusalsByWave[waveIndex] = (refusalsByWave[waveIndex] ?? 0) + 1;
       }
     }
-    peakRssBytes = Math.max(peakRssBytes, process.memoryUsage().rss);
+    sampledPeakRssBytes = Math.max(sampledPeakRssBytes, process.memoryUsage().rss);
   }
 
   // Reconcile against the waves' OWN committed plan-stage refusal counts. The
@@ -410,6 +411,7 @@ async function stagePlans(context) {
   // refusal is a function of the sourced polygon alone and not of the wave's
   // seed — which is the claim the tier distribution below depends on.
   const waveReconciliation = [];
+  let assetStageVolumeIdentityFailed = 0;
   for (const record of WAVE_RECORDS) {
     if (!record.censusFile) {
       waveReconciliation.push({
@@ -432,6 +434,7 @@ async function stagePlans(context) {
     const committedPlanRefusals = Object.values(committed.waveRefusals ?? {}).reduce((total, count) => total + count, 0);
     const committedAssetRefused = wave.refusedBuildingCount;
     const committedVolumeIdentityFailed = wave.refusalsByCode?.["volume-identity-failed"] ?? committed.volumeIdentity?.buildingsRejected ?? 0;
+    assetStageVolumeIdentityFailed += committedVolumeIdentityFailed;
     const observed = refusalsByWave[record.waveIndex] ?? 0;
     const ownedAgrees = wave.requestedBuildingCount === (ownedByWave[record.waveIndex] ?? 0);
     const planAgrees = committedPlanRefusals === observed;
@@ -469,7 +472,12 @@ async function stagePlans(context) {
       refused,
       plannedPlusRefused: planned + refused,
       block835Materialized: 14,
-      materializedIslandTotal: planned - refused === 0 ? planned : planned,
+      // The plan stage is not the last gate. `volume-identity-failed` fires in
+      // the ASSET writer, after a plan has already been accepted, so the
+      // materialized island total is the planned total less the waves' own
+      // committed count of that code. Derived, not asserted.
+      assetStageVolumeIdentityFailed: assetStageVolumeIdentityFailed,
+      materializedIslandTotal: planned - assetStageVolumeIdentityFailed,
     },
     sourceOuterRingVertexCount: {
       note: "Over all enumerated parents, including the ones the grammar later refuses. This is the input distribution a coarse-prism tier would have to carry.",
@@ -498,7 +506,7 @@ async function stagePlans(context) {
     refused,
     singleTierShare: artifact.effectiveTierCount.singleTierShare,
     wallClockSeconds: Math.round((Date.now() - startedAt) / 100) / 10,
-    peakRssMebibytes: Math.round(peakRssBytes / 1048576),
+    sampledPeakRssMebibytes: Math.round(sampledPeakRssBytes / 1048576),
     checksumSha256: checksum,
   };
   await writeReceipt(name, print, summary);
@@ -645,7 +653,8 @@ async function stageCoarse(context) {
   if (existing && existing.inputFingerprint === print && !force) return { skipped: true, ...existing.summary };
 
   const startedAt = Date.now();
-  let peakRssBytes = 0;
+  // SAMPLED once per ledger cell, not a continuous peak.
+  let sampledPeakRssBytes = 0;
   let measured = 0;
   let perBuildingBytesTotal = 0;
   let maxPerBuildingBytes = 0;
@@ -704,7 +713,7 @@ async function stageCoarse(context) {
       cellPerBuildingBytes += written.bytes.byteLength;
     }
     perCell.set(cell.cellId, { cellId: cell.cellId, buildings: cellBuildings, quads: cellQuadCount, triangles: cellTriangleCount, perBuildingBytes: cellPerBuildingBytes });
-    peakRssBytes = Math.max(peakRssBytes, process.memoryUsage().rss);
+    sampledPeakRssBytes = Math.max(sampledPeakRssBytes, process.memoryUsage().rss);
   }
 
   // Candidate (a): ONE aggregated GLB per cell. Its buffer content is the same
@@ -817,7 +826,7 @@ async function stageCoarse(context) {
     deviationMedian: artifact.silhouetteDeviation.median,
     deviationMax: artifact.silhouetteDeviation.max,
     wallClockSeconds: Math.round((Date.now() - startedAt) / 100) / 10,
-    peakRssMebibytes: Math.round(peakRssBytes / 1048576),
+    sampledPeakRssMebibytes: Math.round(sampledPeakRssBytes / 1048576),
     checksumSha256: checksum,
   };
   await writeReceipt(name, print, summary);
@@ -849,11 +858,50 @@ function toCellLocalMeters(origin, longitude, latitude) {
   ];
 }
 
+/**
+ * Screen-space error of the coarse collapse across the distances a tier swap
+ * could plausibly sit at, for the median, p95 and worst of the committed
+ * horizontal-error distribution.
+ *
+ * One number at one distance was not enough to decide anything: the pixel cost
+ * is linear in 1/distance, so the question "is this sub-pixel" has a different
+ * answer at 8 km and at 1 km, and the detail radius is exactly the knob T002
+ * has to choose. The crossing distance — where each statistic reaches the
+ * stated 1-pixel budget — is recorded beside the table so the choice is made
+ * against a number rather than a feeling.
+ */
+function buildScreenSpaceErrorTable(horizontalError) {
+  const statistics = [
+    ["median", horizontalError.medianMeters],
+    ["p95", horizontalError.p95Meters],
+    ["max", horizontalError.maxMeters],
+  ];
+  const view = { verticalFieldOfViewDegrees: OVERVIEW_VIEW.verticalFieldOfViewDegrees, viewportHeightPixels: OVERVIEW_VIEW.viewportHeightPixels };
+  return {
+    note: "Pixels of screen-space error for the coarse collapse, from the committed island-wide horizontal-error distribution in coarse-tier.json. The overview row (8,000 m) is the one the recommendation is stated at; the nearer rows exist because the distance a coarse representation is swapped out at is T002's choice and this is the arithmetic that choice has to be made against.",
+    view: { ...view, pixelBudget: OVERVIEW_VIEW.pixelBudget },
+    distancesMeters: [500, 1_000, 2_000, 3_000, 8_000],
+    rows: statistics.map(([statistic, meters]) => ({
+      statistic,
+      horizontalErrorMeters: meters,
+      pixelsByDistanceMeters: Object.fromEntries([500, 1_000, 2_000, 3_000, 8_000].map((distanceMeters) => [
+        distanceMeters,
+        Math.round(screenSpaceErrorPixels({ geometricErrorMeters: meters, distanceMeters, ...view }) * 1000) / 1000,
+      ])),
+      // Distance at which this statistic falls to the stated pixel budget.
+      crossesPixelBudgetAtMeters: Math.round(screenSpaceErrorPixels({ geometricErrorMeters: meters, distanceMeters: 1, ...view }) / OVERVIEW_VIEW.pixelBudget),
+    })),
+    finding: "The island's WORST horizontal error does not fall below one device pixel until about 10.4 km, so it is NOT sub-pixel at the 8,000 m overview distance this task states: it is 1.30 px. The honest claim is sub-pixel at p95 (0.30 px), not sub-pixel everywhere.",
+    openQuestionForT002: "At what camera distance does the coarse representation stop being acceptable? The p95 statistic crosses one pixel at about 2.4 km and the median at about 1.2 km. That band, not the overview distance, is where the detail radius has to be chosen — and the goal's own 2% transition gate cannot be met inside it by 51.81% of the island (committed in coarse-tier.json), so the swap band and the transition gate have to be decided together.",
+  };
+}
+
 async function stageSample(context) {
   const name = "sample";
   const print = fingerprint(context, name);
   const existing = await readReceipt(name);
   if (existing && existing.inputFingerprint === print && !force) return { skipped: true, ...existing.summary };
+  const coarseHorizontalError = JSON.parse(await readFile(join(recordRoot, "coarse-tier.json"), "utf8")).horizontalError;
 
   // --- Worst-case individual buildings, SELECTED BY MEASUREMENT ------------
   // Not hand-picked: each is the extremum of a stated property over the whole
@@ -861,6 +909,11 @@ async function stageSample(context) {
   let widestRing = null;
   let tallest = null;
   let worstDeviation = null;
+  // Selected on ABSOLUTE horizontal error, not on the area ratio. The two pick
+  // different buildings, and the screen-space-error statement is made against
+  // metres — so a sample set chosen only by ratio, ring size and height never
+  // contains the building that costs the most pixels. It does now.
+  let worstHorizontalError = null;
   for (const cell of context.cells) {
     for (const buildingId of cell.buildingIds) {
       const source = context.sources.get(buildingId);
@@ -880,6 +933,7 @@ async function stageSample(context) {
       if (!widestRing || ringVertexCount > widestRing.ringVertexCount) widestRing = row;
       if (!tallest || topMeters > tallest.topMeters) tallest = row;
       if (!worstDeviation || deviation.deviationRatio > worstDeviation.deviationRatio) worstDeviation = row;
+      if (!worstHorizontalError || deviation.maxHorizontalErrorMeters > worstHorizontalError.maxHorizontalErrorMeters) worstHorizontalError = row;
     }
   }
 
@@ -958,6 +1012,7 @@ async function stageSample(context) {
     { label: "widest-ring", ...widestRing },
     { label: "tallest", ...tallest },
     { label: "worst-silhouette-deviation", ...worstDeviation },
+    { label: "worst-horizontal-error", ...worstHorizontalError },
   ].map((row) => ({
     ...row,
     deviationRatio: Math.round(row.deviationRatio * 1e6) / 1e6,
@@ -979,12 +1034,14 @@ async function stageSample(context) {
     cellLocalFrameDisclosure: "Cell skylines re-anchor each building's own ENU plan frame into a cell-local frame with the frozen ADR 0025 scale pair. Over a cell at most ~300 m across the ADR 0025 residual (<=1,463 ppm) is under 0.44 m of relative placement error — well below the setback steps being judged, and disclosed rather than hidden.",
     sampleCells,
     worstCaseBuildings: worstCases,
+    screenSpaceErrorByDistance: buildScreenSpaceErrorTable(coarseHorizontalError),
     retention: "census-only",
   };
   const checksum = await writeRecord("sample-proof.json", artifact);
   const summary = {
     sampleCells: sampleCells.map((cell) => ({ label: cell.label, cellId: cell.cellId, skyline: cell.aggregateSkylineDeviation.deviationRatio, withinCap: cell.aggregateSkylineDeviation.withinSchemaCap, ssePixels: cell.screenSpaceError.pixelsAtOverview })),
     worstCases: worstCases.map((row) => ({ label: row.label, buildingId: row.buildingId, deviationRatio: row.deviationRatio, withinCap: row.withinSchemaCap, ssePixels: row.screenSpaceErrorPixelsAtOverview })),
+    islandMaxScreenSpaceErrorPixelsAtOverview: artifact.screenSpaceErrorByDistance.rows.find((row) => row.statistic === "max").pixelsByDistanceMeters[8000],
     checksumSha256: checksum,
   };
   await writeReceipt(name, print, summary);
@@ -1030,6 +1087,27 @@ async function stageDecide(context) {
     denseMaxShardRawBytes = Math.max(denseMaxShardRawBytes, bytes.byteLength);
     denseGzipBytes += gzipSync(bytes, { level: 9 }).byteLength;
   }
+
+  // ONE cache holds ALL FOUR shard classes. `CitywideLruCache` is constructed
+  // once per runtime with `maxLoadedShards` entries and `maxLoadedBytes` bytes,
+  // and every `loadRef` — building geometry, restaurant geometry, search and
+  // detail — goes through the same pool into the same map, with global
+  // recency-only eviction and NO per-class reservation. Measuring the building
+  // class against the shared ceiling in isolation is the mistake this block
+  // exists to stop.
+  const shardClasses = {};
+  const addShardClass = (id, ref) => {
+    const size = statSync(join(snapshotRoot, ref)).size;
+    const entry = shardClasses[id] ?? (shardClasses[id] = { shardCount: 0, totalBytes: 0, maxShardBytes: 0 });
+    entry.shardCount += 1;
+    entry.totalBytes += size;
+    entry.maxShardBytes = Math.max(entry.maxShardBytes, size);
+  };
+  for (const shard of context.manifest.geometryShards) addShardClass(`geometry:${shard.layer}`, shard.relativeContentRef);
+  for (const shard of context.manifest.searchShards) addShardClass("search", shard.relativeContentRef);
+  for (const shard of context.manifest.detailShards) addShardClass("detail", shard.relativeContentRef);
+  const allShardBytes = Object.values(shardClasses).reduce((total, entry) => total + entry.totalBytes, 0);
+  const allShardCount = Object.values(shardClasses).reduce((total, entry) => total + entry.shardCount, 0);
 
   const planned = distributions.counts.planned;
   const coarseGpuBytes = coarseRecord.gpu.totalBytes;
@@ -1136,10 +1214,27 @@ async function stageDecide(context) {
         `CITYWIDE_BUDGETS.maxDecodedSummaries ${CITYWIDE_BUDGETS.maxDecodedSummaries} -> ${45194}`,
         `CITYWIDE_BUDGETS.maxLoadedShards ${CITYWIDE_BUDGETS.maxLoadedShards} -> ${shardNames.length}`,
       ],
-      alreadyWithinBudget: [
-        `CITYWIDE_BUDGETS.maxLoadedBytes is ${CITYWIDE_BUDGETS.maxLoadedBytes} B and the whole island's building shards are ${denseRawBytes} B. The BYTE ceiling already fits island-wide residency; only the SHARD-COUNT ceiling binds.`,
-        `CITYWIDE_BUDGETS.maxShards is ${CITYWIDE_BUDGETS.maxShards} against ${shardNames.length} building shards.`,
-      ],
+      sharedCacheBound: {
+        note: "CORRECTION. An earlier draft of this record claimed the byte ceiling already admitted island-wide residency because the building shards are 43.78 MiB against a 48 MiB cap. That was WRONG, and the error was measuring one shard class against a ceiling that is shared by four. `CitywideLruCache` is constructed once per runtime with `maxLoadedShards` entries and `maxLoadedBytes` bytes; building geometry, restaurant geometry, search shards and detail shards all load through the same pool into the same map, evicted by global recency with NO per-class reservation, over `cache: \"no-store\"` fetches that cannot be served again from the browser.",
+        maxLoadedShards: CITYWIDE_BUDGETS.maxLoadedShards,
+        maxLoadedBytes: CITYWIDE_BUDGETS.maxLoadedBytes,
+        classes: shardClasses,
+        allShardCount,
+        allShardBytes,
+        buildingShareOfSharedByteCeiling: Math.round((denseRawBytes / CITYWIDE_BUDGETS.maxLoadedBytes) * 1e6) / 1e6,
+        headroomBytesLeftForOtherClasses: CITYWIDE_BUDGETS.maxLoadedBytes - denseRawBytes,
+        consequence: `Island-wide building residency alone consumes ${Math.round((denseRawBytes / CITYWIDE_BUDGETS.maxLoadedBytes) * 1000) / 10}% of the shared byte ceiling and 100% of it in entries (56 shards against a ${CITYWIDE_BUDGETS.maxLoadedShards}-entry cap), leaving ${CITYWIDE_BUDGETS.maxLoadedBytes - denseRawBytes} B for the search and detail shards the very first query or building selection needs. Under global recency eviction those loads evict building shards, which re-fetch and force a Cesium Primitive rebuild.`,
+        status: "OPEN T002 CONTRACT CHANGE. This is not a constant bump: the shared cache has no reservation mechanism at all today, so guaranteeing island-wide building residency is a DESIGN change to the cache, not a raised number. The same 'recency-only, no reservation' disclosure ADR 0030 made for the exterior loader applies here and is widened by anything that makes one class permanently resident.",
+        proposalToBeDecidedInT002: [
+          `A reserved building-class budget of at least ${denseRawBytes} B and ${shardNames.length} entries, so search and detail cannot evict the overview.`,
+          `A shared ceiling above that reservation for the remaining three classes, whose full extent is ${allShardBytes - denseRawBytes} B across ${allShardCount - shardNames.length} shards and which are demand-loaded rather than island-resident.`,
+          `maxShards (${CITYWIDE_BUDGETS.maxShards}) is not the binding constraint: the release declares ${allShardCount} shards in total.`,
+        ],
+      },
+      unmodelledCost: {
+        id: "cesium-primitive-rebuild-on-shard-stream",
+        note: "NOT MODELLED ANYWHERE IN THIS TASK. Every shard stream-in or eviction-driven refetch changes the dense feature set, and `scheduleDensePrimitiveBuild` responds by rebuilding GeometryInstances and re-creating Primitives — asynchronous polygon tessellation in Cesium's workers, plus GPU re-upload. None of the wire, GPU or draw-call figures above include it, and it is precisely the cost that a thrashing shared cache multiplies. T002 MUST measure it; it is the most likely way candidate (c) fails in practice while looking free on paper.",
+      },
       rightsGate: "NONE. The base snapshot is the already-published, already-approved citywide release; this candidate ships no new artifact and needs no new per-cell rights evidence.",
       validatorExemptions: ["NONE. No release is assembled, no LOD is declared, so no multi-LOD gate applies to it at all."],
       fidelityLoss: {
@@ -1171,7 +1266,8 @@ async function stageDecide(context) {
     killSwitchFired: false,
     statement: "Candidate (c). The overview representation the goal asks for — real building shapes island-wide — is a flat extrusion of the sourced footprint to the sourced height, and the shipping renderer ALREADY draws exactly that from bytes that already exist. Candidates (a) and (b) generate new artifacts whose rendered silhouette is IDENTICAL to what (c) draws for free, and pay for it in cache entries, container overhead, a closed-profile extension, a silhouette-cap exemption and a per-cell rights envelope. There is no fidelity argument for (a) or (b) at overview distance, because there is no fidelity difference.",
     boundsAndConditions: [
-      `(c) is bounded by four recorded budget raises, not by data: ${CITYWIDE_BUDGETS.maxRenderedDenseFeatures} -> 45,194 rendered dense features and three decode/shard ceilings. The BYTE ceiling already fits.`,
+      `(c) is bounded by four recorded count raises PLUS an unresolved shared-cache question: ${CITYWIDE_BUDGETS.maxRenderedDenseFeatures} -> 45,194 rendered dense features and three decode/shard ceilings, and then a cache that holds all four shard classes in ONE recency-evicted map with no reservation. See candidate (c) \`sharedCacheBound\`: island-wide building residency needs a reservation the cache does not have, which is an open T002 contract change and not a constant bump.`,
+      "The Cesium Primitive rebuild triggered by every shard stream-in or eviction-driven refetch is NOT modelled in any figure here, and a shared cache without reservation is exactly what multiplies it. T002 must measure it.",
       `Draw calls at overview are ${denseDrawCalls} batched Primitives, against ${planned.toLocaleString("en-US")} if the same geometry were drawn as per-building Models.`,
       "Decoded GPU bytes inside Cesium are NOT observable from this task and are explicitly out of scope for the exterior loader's own byte ceiling. The figure quoted for (c) is a POSITION-only structural floor, not a measurement, and T002 must measure the real one before the frame budgets can be claimed.",
       "The per-request rate is an assumption, not a measurement. The request COUNT is exact and is the part that separates the candidates by two orders of magnitude.",

@@ -2,10 +2,21 @@
 
 Date: 2026-08-14
 
-Status: accepted as a **decision about which representation the island's overview
-zoom uses**, and as the measurement base for T002/T004/T005. No release was
-assembled, no artifact was published, no wave was materialized, and no runtime
-budget was changed by this task.
+Status: **accepted as the measurement base** for T002/T004/T005 — the
+distributions, extents, candidate costs and sample proof below are committed
+evidence and stand on their own.
+
+The representation choice in D1 is **RECOMMENDED, PENDING A GOAL AMENDMENT AND
+RENEWED USER APPROVAL**. It is not in force. Goal acceptance criteria #2 and #4
+were approved by the user (planning decision Q1, 2026-08-14, which chose
+"overview must show real shapes from the start -> coarse-LOD regeneration for all
+six waves is in scope"), and no ADR written inside a task can repeal a
+user-approved acceptance criterion. D1 is a recommendation to amend those
+criteria, handled the way D6 handles the rights envelope: named, routed to the
+user, and blocking until answered.
+
+No release was assembled, no artifact was published, no wave was materialized,
+and no runtime budget was changed by this task.
 
 ## Context
 
@@ -75,16 +86,21 @@ Verified in this worktree, through the symlink: PASS, 56 building shards.
 parents through the **same V3 plan stage the wave CLIs run**, counts, and drops
 the plans. Committed to `data/citywide-overview-census-20260814/distributions.json`.
 
-**Cost, re-derived honestly.** The pass is 254 s of wall clock at a **501 MiB
-peak RSS**. Earlier full passes were invoked with `--max-old-space-size=8192`;
-that was never necessary and this task does not pretend it was. The T001 stop
-condition was ~3 hours; the whole six-stage census is under 20 minutes.
+**Cost, re-derived honestly.** The pass is 225-254 s of wall clock at a
+**sampled peak RSS of 501-661 MiB** (RSS is read once per ledger cell, so it is
+the largest of 883 samples and not a continuous peak). Earlier full passes were
+invoked with `--max-old-space-size=8192`. The measured requirement is under
+700 MiB, so that flag is insurance rather than a requirement — and the
+`citywide-overview:census` script in `package.json` still passes it, because
+leaving a working invocation alone is cheaper than proving a tighter one is safe
+on every host. The T001 stop condition was ~3 hours; the whole seven-stage census
+is about 14 minutes.
 
 | distribution | count | min | median | p95 | p99 | max | mean |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | source outer-ring vertices | 45,194 | 3 | 9 | 32 | 58 | 362 | 13.18 |
 | planned outer-ring vertices | 44,330 | 3 | 9 | 30 | 48 | 64 | 12.59 |
-| floors | 44,330 | 1 | 5 | 16 | — | 131 | 6.52 |
+| floors | 44,330 | 1 | 5 | 16 | 35 | 131 | 6.52 |
 
 Ring vertex counts are **distinct** vertices: the closing duplicate is dropped,
 as the grammar drops it. Counting it would have added ~45,000 phantom vertices to
@@ -196,7 +212,7 @@ and the bytes were then dropped; nothing was modelled.
 | requests | 883 | 44,330 | **56** |
 | concurrency-4 waves | 221 | 11,083 | **14** |
 | cache entries | 883 | 44,330 | 56 |
-| vs `maxCacheEntries` 512 | **FAILS** | **FAILS (86.6x)** | passes |
+| vs the cap it meets | `maxCacheEntries` 512 — **FAILS** | `maxCacheEntries` 512 — **FAILS 86.6×** | `maxLoadedShards` 24 — **FAILS; shared byte ceiling contended** |
 | validator exemptions needed | 3 | 3 | **none** |
 | rights envelope | 883 cells | 883 cells + 44,330 assets | **none** |
 
@@ -229,17 +245,64 @@ runtime already sets `Feature.id = summary.parentId`, which is the same
 selection, deep links, provenance and attribution survive **unchanged**; nothing
 has to be invented.
 
-Four recorded budget raises bound it, and they are all counts:
+Four recorded count raises bound it:
 
 - `maxRenderedDenseFeatures` 6,000 → 45,194
 - `maxDecodedFeatures` 8,192 → 45,194
 - `maxDecodedSummaries` 8,192 → 45,194
 - `maxLoadedShards` 24 → 56
 
-`maxLoadedBytes` is already 48 MiB and the island's building shards are 43.78 MiB
-**in total**. The byte ceiling already admits island-wide residency; only the
-shard-count ceiling binds. That is the single most surprising result of this
-task.
+### The shared cache, corrected
+
+**An earlier draft of this record claimed the byte ceiling already admitted
+island-wide residency, because the building shards are 43.78 MiB against a 48 MiB
+cap. That claim was wrong, and the error was measuring one shard class against a
+ceiling shared by four.**
+
+`CitywideLruCache` is constructed once per runtime with `maxLoadedShards` entries
+and `maxLoadedBytes` bytes (`citywide-release.ts:436-471`). Building geometry,
+restaurant geometry, search shards and detail shards all load through the same
+pool into the same map (`citywide-release-runtime.ts:343, 417-425, 538-544,
+758`), evicted by **global recency with no per-class reservation**, over
+`cache: "no-store"` fetches the browser cannot serve again.
+
+| shard class | shards | bytes | largest shard |
+| --- | --- | --- | --- |
+| geometry: buildings | 56 | 43.78 MiB | 2,096,314 B |
+| geometry: restaurants | 47 | 13.62 MiB | 1,487,908 B |
+| search | 214 | 98.16 MiB | 558,788 B |
+| detail | 134 | 131.99 MiB | 1,048,527 B |
+| **all four** | **451** | **287.55 MiB** | |
+
+Island-wide building residency alone consumes **91.20%** of the shared byte
+ceiling and **233%** of the entry ceiling (56 shards against 24), leaving
+**4.22 MiB** for the search and detail shards the very first query or building
+selection needs. Under global recency eviction those loads evict building shards,
+which re-fetch and force a Cesium Primitive rebuild.
+
+**This is an open T002 contract change, and it is not a constant bump.** The
+shared cache has no reservation mechanism at all today, so guaranteeing
+island-wide building residency is a *design* change to the cache. The
+"recency-only, no reservation" disclosure ADR 0030 made for the exterior loader
+applies here and is widened by anything that makes one class permanently
+resident. What T002 has to decide, recorded so it starts from measured numbers:
+
+- a **reserved** building-class budget of at least 45,903,404 B and 56 entries,
+  so search and detail cannot evict the overview;
+- a shared ceiling above that reservation for the other three classes, whose full
+  extent is 255.62 MiB across 395 demand-loaded shards;
+- `maxShards` (512) is *not* the binding constraint: the release declares 451
+  shards in total.
+
+### The un-modelled cost
+
+**Cesium Primitive rebuild on shard stream-in and eviction-driven refetch is not
+modelled in any figure in this record.** Every change to the dense feature set
+sends `scheduleDensePrimitiveBuild` around again: new `GeometryInstance`
+allocation, asynchronous polygon tessellation in Cesium's workers, and GPU
+re-upload. A shared cache without reservation is exactly what multiplies it.
+**T002 must measure it** — it is the most likely way candidate (c) fails in
+practice while looking free on paper.
 
 ## The fidelity claim, stated honestly
 
@@ -258,7 +321,7 @@ unions of axis-aligned rectangles in every such view:
 | buildings within the schema's 0.02 cap | **21,361 of 44,330 (48.19%)** |
 | median deviation ratio | **0.0452** |
 | p95 / p99 / max | 0.248 / 0.307 / 0.629 |
-| median / p95 / max horizontal error | 1.32 m / 2.53 m / 11.08 m |
+| median / p95 / max horizontal error | 1.319 m / 2.527 m / **11.083 m** |
 
 **More than half the island cannot satisfy the multi-LOD schema's
 `maximumRatio: 0.02` as a declared coarse LOD.** That is not a detail to be
@@ -272,11 +335,20 @@ Two-part gate, plus an aggregate. Committed in `sample-proof.json`.
 Worst-case buildings, **selected by measurement** over the whole island rather
 than hand-picked:
 
-| case | building | what makes it extreme | deviation ratio | within 0.02 | screen-space error at overview |
-| --- | --- | --- | --- | --- | --- |
-| widest ring | `doitt:171911` | 64-gon ring, the grammar's cap, 23.8 m tall, 1 tier | **0.000** | **yes** | 0.000 px |
-| tallest | `doitt:1277275` | 472.4 m, 4 tiers — the maximum-tier case | 0.102 | no | 0.862 px |
-| worst deviation | `doitt:118472` | 5-gon, 16.1 m, 2 tiers with a deep setback | 0.629 | no | 0.298 px |
+| case | building | what makes it extreme | deviation ratio | horiz. error | within 0.02 | SSE at overview |
+| --- | --- | --- | --- | --- | --- | --- |
+| widest ring | `doitt:171911` | 64-gon ring, the grammar's cap, 23.8 m tall, 1 tier | **0.000** | 0.00 m | **yes** | 0.000 px |
+| tallest | `doitt:1277275` | 472.4 m, 4 tiers — the maximum-tier case | 0.102 | 7.35 m | no | 0.862 px |
+| worst deviation | `doitt:118472` | 5-gon, 16.1 m, 2 tiers with a deep setback | 0.629 | 2.54 m | no | 0.298 px |
+| **worst horizontal error** | **`doitt:1269947`** | 11-gon, 111.6 m, 4 tiers — the island's largest absolute setback inset | 0.236 | **11.083 m** | no | **1.296 px** |
+
+The last row was **added after review**. The first three extrema were selected by
+area ratio, ring size and height, and none of them is the building that costs the
+most pixels: an area ratio is dimensionless and the screen-space statement is
+made in metres, so a sample set chosen only by ratio cannot contain the
+worst-pixel case by construction. Selecting on absolute horizontal error finds
+`doitt:1269947` at 11.083 m, which is **1.296 px at the stated overview view —
+over the 1-pixel budget.**
 
 The 64-gon case is worth naming: the building with the most ring vertices on the
 island deviates by **exactly zero**, because ring complexity is carried vertex
@@ -301,13 +373,43 @@ overstated what a viewer is exposed to by a factor of two.
 The screen-space-error statement, with its inputs named: at an **8,000 m**
 overview distance (the height at which the island's ~21.6 km extent fits a
 60-degree vertical field of view), on a **1,080** device-pixel viewport, against
-a stated budget of **1 device pixel**. Every case measured is **under one
-pixel**, worst 0.955 px.
+a stated budget of **1 device pixel**.
+
+**Corrected claim: the collapse is sub-pixel at p95, not sub-pixel everywhere.**
+The island's worst horizontal error is 1.296 px at the overview distance, over
+budget. Every *sample cell* is under a pixel (worst 0.955 px), and the p95 of the
+island distribution is 0.295 px, but a single-building worst case exceeds the
+bar.
+
+### Screen-space error against distance
+
+From the committed island-wide horizontal-error distribution, at 60 degrees
+vertical FOV and 1,080 device pixels. Pixels, with the 1-pixel budget in bold
+where it is exceeded:
+
+| statistic | error | 500 m | 1 km | 2 km | 3 km | 8 km | crosses 1 px at |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| median | 1.319 m | **2.467** | **1.234** | 0.617 | 0.411 | 0.154 | ~1,234 m |
+| p95 | 2.527 m | **4.727** | **2.364** | **1.182** | 0.788 | 0.295 | ~2,364 m |
+| max | 11.083 m | **20.732** | **10.366** | **5.183** | **3.455** | **1.296** | ~10,366 m |
+
+**Open question for T002, named rather than answered here: at what camera
+distance does the coarse representation stop being acceptable?** The p95 crosses
+one pixel at about 2.4 km and the median at about 1.2 km. That band — not the
+overview distance — is where the detail radius has to be chosen.
+
+And it cannot be chosen in isolation from the goal's own transition gate.
+Acceptance criterion #3 asks for a 2% transition bar, and **51.81% of the island
+exceeds a 0.02 silhouette deviation** (committed in `coarse-tier.json`). So the
+swap band and the transition gate constrain each other: any radius inside which
+the transition must meet 2% must lie where the coarse representation is not yet
+in use. The two have to be decided together, with numbers, in T002.
 
 So the two halves of the gate disagree, and that disagreement is the finding:
-**the geometry deviates by up to 6.7% of a cell's profile and the deviation is
-sub-pixel at the distance it would be seen.** The 0.02 area-ratio cap is a
-near-field instrument being read at 8 km.
+**the geometry deviates by up to 6.7% of a cell's profile and by up to 62.9% of a
+single building's, and at overview distance that is sub-pixel for the p95 and
+1.30 px for the worst case.** The 0.02 area-ratio cap is a near-field instrument
+being read at 8 km — and the near field is precisely where it will bind.
 
 **Schema compliance is not visual acceptance, and neither is this.** Everything
 above is arithmetic over committed geometry. No frame was rendered and nothing
@@ -316,14 +418,49 @@ and it is named for T002 rather than quietly dropped.
 
 ## Decision
 
-**D1 — Adopt candidate (c). The island's overview representation is the existing
-citywide dense path, bounded by visibility rather than by a flat feature cap.**
-No new coarse tier is generated for overview. Goal scope item 2 is superseded by
-this decision: the "missing distance tier" it names is not what stands between
-the product and island-wide shapes.
+**D1 — RECOMMEND candidate (c), PENDING A GOAL AMENDMENT AND RENEWED USER
+APPROVAL. This decision does not put it in force.**
 
-**D2 — The kill switch did not fire.** A candidate fits, comfortably, inside
-budgets that are mostly already met.
+The recommendation is that the island's overview representation become the
+existing citywide dense path, bounded by visibility rather than by a flat feature
+cap, and that no new coarse tier be generated for overview.
+
+**This contradicts goal acceptance criteria #2 and #4, which the user approved.**
+Planning decision Q1 (user, 2026-08-14) chose "overview must show real shapes
+from the start → coarse-LOD regeneration for all six waves is in scope (option
+2)". This task's measurements say that regeneration buys no fidelity the shipping
+renderer does not already produce — but an ADR written inside a task cannot
+repeal a user-approved acceptance criterion, and this one does not try to. D1 is
+a **request to amend** AC #2 and AC #4, routed to the user exactly the way D6
+routes the rights envelope.
+
+Required before any work proceeds on D1's basis:
+
+1. The user is shown this record's candidate table, the shared-cache correction
+   and the screen-space table.
+2. AC #2 and AC #4 are amended by a recorded goal-contract change.
+3. The user re-approves the amended goal.
+
+Until all three happen, the goal's approved scope stands as written, and T002
+must treat D1 as an open question rather than as settled.
+
+**D2 — The kill switch did not fire.** A candidate fits. It does not fit
+"comfortably": candidate (c) meets every ceiling this task priced it against
+except the shared shard cache, where island-wide building residency needs a
+reservation mechanism that does not exist yet (see "The shared cache,
+corrected"). That is an open T002 contract change, not a passed gate.
+
+**D2a — The silhouette figures are an eight-azimuth sampled maximum, not a
+true supremum.** `prism-vs-tiered-orthographic-staircase-v1` is exact *at each
+view it evaluates*: both shapes are unions of axis-aligned rectangles there, so
+the symmetric difference is computed and not rasterized. But it evaluates eight
+horizontal azimuths, and the worst azimuth for a given footprint need not be one
+of them. Every deviation ratio and horizontal error in this record is therefore a
+lower bound on the true worst case over all azimuths, tight to the sampling
+interval. Denser sampling can only move these numbers **up**, which means it can
+only strengthen the finding that the 0.02 cap is exceeded and weaken the
+sub-pixel claim — so the direction of the residual error is stated rather than
+left for a reader to work out.
 
 **D3 — A coarse GLB tier is rejected as the OVERVIEW answer, not killed as an
 idea.** If a mid-distance need appears between V3 `lod_1` and the dense path,
@@ -338,8 +475,8 @@ fails.
 
 **D5 — Validator exemptions, stated rather than omitted.**
 
-Candidate (c) as adopted needs **none**: it assembles no release and declares no
-LOD, so no multi-LOD gate applies to it at all. What it does inherit is the
+Candidate (c) as recommended needs **none**: it assembles no release and declares
+no LOD, so no multi-LOD gate applies to it at all. What it does inherit is the
 citywide release's own validators, which already pass on the pinned snapshot.
 
 Had (a) or (b) been adopted, these would have been required, and they are
@@ -384,18 +521,42 @@ to make the gate look resolved.
 
 ## Consequences
 
-- **T002 (scheduler)** can now be built: `cell-extents.json` gives it the render
-  extents the ledger never carried, and D1 tells it what it is scheduling. It
-  must schedule *shard* residency, not cell-asset residency, for overview.
-- **T004/T005** should assume there is **no overview tier to build**, and that
-  their promotion work concerns near-field V3 detail only. They must also assume
-  the corrected premise: nothing is one copy away from shipping; every wave
-  regenerates from the pinned snapshot behind the gate this task added.
+**Unconditional — these hold whatever the user decides about D1:**
+
+- **T002 (scheduler)** can now be built against committed evidence:
+  `cell-extents.json` gives it the render extents the ledger never carried. Cull
+  on `renderBounds`, never on `assignmentBounds`.
+- **T002 inherits four measurement obligations** this task could not discharge:
+  decoded GPU bytes inside Cesium; per-request latency; Cesium Primitive rebuild
+  cost on shard stream-in and eviction-driven refetch; and a rendered A/B still
+  at overview distance.
+- **T002 inherits two open contract questions**: the shared-cache reservation
+  (above), and the detail-radius / transition-gate pair — the p95 crosses one
+  pixel at ~2.4 km while AC #3's 2% transition bar is exceeded by 51.81% of the
+  island, so neither can be chosen alone.
 - **The 899 refusals stay disclosed**, and this task added their exact stage
   split: 864 at the plan stage, 35 at the asset stage.
+- **The corrected premises hold regardless**: there is no committed plan corpus
+  (474 promoted entries), and extents were not previously committed.
+
+**Conditional on D1 being approved through a goal amendment:**
+
+- T002 would schedule *shard* residency for overview rather than cell-asset
+  residency.
+- **T004/T005** would assume there is no overview tier to build and that their
+  promotion work concerns near-field V3 detail only. **Until the amendment
+  lands, they must plan against the approved goal as written** — AC #2 and AC #4,
+  coarse-LOD regeneration for all six waves — and treat this record as evidence
+  submitted against those criteria, not as their repeal.
 
 ## Reversal
 
-D1 is reversed by a recorded decision citing a measured result — a frame-time or
-GPU figure that a visibility-bounded candidate (c) cannot meet. It is not
-reversed by preference for a tier that has been built before.
+D1 is not in force, so there is nothing to reverse until the goal amendment it
+asks for is approved. Once it is, D1 is reversed by a recorded decision citing a
+measured result — a frame-time, GPU or cache-thrash figure that a
+visibility-bounded candidate (c) cannot meet. It is not reversed by preference
+for a tier that has been built before.
+
+If the user declines the amendment, this record stands as the measurement base
+and AC #2 and AC #4 proceed as approved; the numbers here then become the cost
+estimate for building the tier rather than the argument against it.

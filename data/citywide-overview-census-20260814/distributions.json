@@ -19,7 +19,8 @@
     "refused": 864,
     "plannedPlusRefused": 45194,
     "block835Materialized": 14,
-    "materializedIslandTotal": 44330
+    "assetStageVolumeIdentityFailed": 35,
+    "materializedIslandTotal": 44295
   },
   "sourceOuterRingVertexCount": {
     "note": "Over all enumerated parents, including the ones the grammar later refuses. This is the input distribution a coarse-prism tier would have to carry.",

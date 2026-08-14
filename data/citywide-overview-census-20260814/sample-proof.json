@@ -176,7 +176,82 @@
       },
       "withinSchemaCap": false,
       "screenSpaceErrorPixelsAtOverview": 0.298
+    },
+    {
+      "label": "worst-horizontal-error",
+      "buildingId": "doitt:1269947",
+      "cellId": "manhattan-exterior-cell-w04-000460-15-9649-8961",
+      "ringVertexCount": 11,
+      "topMeters": 111.557,
+      "effectiveTierCount": 4,
+      "deviationRatio": 0.235879,
+      "worstViewId": "north-east",
+      "maxHorizontalErrorMeters": 11.083,
+      "coarseGeometry": {
+        "ringVertexCount": 11,
+        "quadCount": 11,
+        "triangleCount": 9,
+        "vertexCount": 71,
+        "totalTriangleCount": 31
+      },
+      "withinSchemaCap": false,
+      "screenSpaceErrorPixelsAtOverview": 1.296
     }
   ],
+  "screenSpaceErrorByDistance": {
+    "note": "Pixels of screen-space error for the coarse collapse, from the committed island-wide horizontal-error distribution in coarse-tier.json. The overview row (8,000 m) is the one the recommendation is stated at; the nearer rows exist because the distance a coarse representation is swapped out at is T002's choice and this is the arithmetic that choice has to be made against.",
+    "view": {
+      "verticalFieldOfViewDegrees": 60,
+      "viewportHeightPixels": 1080,
+      "pixelBudget": 1
+    },
+    "distancesMeters": [
+      500,
+      1000,
+      2000,
+      3000,
+      8000
+    ],
+    "rows": [
+      {
+        "statistic": "median",
+        "horizontalErrorMeters": 1.319,
+        "pixelsByDistanceMeters": {
+          "500": 2.467,
+          "1000": 1.234,
+          "2000": 0.617,
+          "3000": 0.411,
+          "8000": 0.154
+        },
+        "crossesPixelBudgetAtMeters": 1234
+      },
+      {
+        "statistic": "p95",
+        "horizontalErrorMeters": 2.527,
+        "pixelsByDistanceMeters": {
+          "500": 4.727,
+          "1000": 2.364,
+          "2000": 1.182,
+          "3000": 0.788,
+          "8000": 0.295
+        },
+        "crossesPixelBudgetAtMeters": 2364
+      },
+      {
+        "statistic": "max",
+        "horizontalErrorMeters": 11.083,
+        "pixelsByDistanceMeters": {
+          "500": 20.732,
+          "1000": 10.366,
+          "2000": 5.183,
+          "3000": 3.455,
+          "8000": 1.296
+        },
+        "crossesPixelBudgetAtMeters": 10366
+      }
+    ],
+    "finding": "The island's WORST horizontal error does not fall below one device pixel until about 10.4 km, so it is NOT sub-pixel at the 8,000 m overview distance this task states: it is 1.30 px. The honest claim is sub-pixel at p95 (0.30 px), not sub-pixel everywhere.",
+    "openQuestionForT002": "At what camera distance does the coarse representation stop being acceptable? The p95 statistic crosses one pixel at about 2.4 km and the median at about 1.2 km. That band, not the overview distance, is where the detail radius has to be chosen — and the goal's own 2% transition gate cannot be met inside it by 51.81% of the island (committed in coarse-tier.json), so the swap band and the transition gate have to be decided together."
+  },
   "retention": "census-only"
 }

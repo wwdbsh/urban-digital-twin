@@ -34,7 +34,7 @@ Not part of any committed artifact's deterministic body. Apple Silicon, Node wit
 | `plans` | 225–254 s | 501–661 MiB | 45,194 buildings through the V3 plan stage. |
 | `bytes` | ~2 s | — | Six waves' committed records; 28 tracked GLBs stat'd. |
 | `coarse` | 227–261 s | 629 MiB | 44,330 coarse prisms written through the real GLB writer and dropped, plus 2 full aggregated cells. |
-| `sample` | 308 s | — | Two full island passes for extremum selection and three cell skylines. |
+| `sample` | 308 s | — | Two full island passes for four extrema and three cell skylines. |
 | `decide` | ~8 s | — | Costing; gzips all 56 shards. |
 | **total** | **~14 min** | **≤661 MiB** | |
 
@@ -87,6 +87,58 @@ the island projection uses their mean, 46.24%. That spread is disclosed rather
 than averaged away silently, because a projection from one cell would have been
 a guess with a decimal point.
 
+## Post-review corrections
+
+Ten verification checks passed; review returned four blocking findings and five
+nits. All were computable from committed data; no new mass pass was invented for
+them, though `plans`, `sample` and `decide` were re-run to regenerate the records
+the fixes touch.
+
+**B1 — the decisive arithmetic was wrong.** The first draft claimed candidate
+(c)'s "byte ceiling already fits", having measured the building shard class
+(43.78 MiB) against `maxLoadedBytes` (48 MiB). One `CitywideLruCache` is shared
+by all four shard classes — buildings 43.78, restaurants 13.62, search 98.16,
+detail 131.99 MiB, 451 shards, 287.55 MiB — with global recency eviction, no
+per-class reservation, over `cache: "no-store"`. Island-wide building residency
+takes 91.20% of the shared byte ceiling and 233% of the entry ceiling, leaving
+4.22 MiB for the search and detail shards the first query needs. Restated as an
+**open T002 contract change** with a re-derived reservation proposal, in
+`candidate-costs.json` (`sharedCacheBound`) and the ADR. The Cesium Primitive
+rebuild on shard stream-in and eviction-driven refetch is now named as a T002
+measurement item (`unmodelledCost`); it was modelled nowhere.
+
+**B2 — the sub-pixel claim was too strong, and the sample set could not have
+caught it.** The three worst-case extrema were selected by area ratio, ring size
+and height. An area ratio is dimensionless and the screen-space statement is made
+in metres, so no ratio-selected sample can contain the worst-pixel building. A
+fourth extremum selected on absolute horizontal error was added:
+`doitt:1269947`, 11.083 m, **1.296 px at the stated overview view — over the
+1-pixel budget**. The claim is now "sub-pixel at p95 (0.295 px), worst case
+1.30 px".
+
+**B3 — D1 read as a self-executing repeal.** Goal AC #2 and AC #4 were approved
+by the user (planning decision Q1). D1 is now a **recommendation pending a goal
+amendment and renewed user approval**, modelled on D6's rights-gate pattern; the
+ADR status says so, and the T004/T005 consequence is split into unconditional and
+conditional halves.
+
+**B4 — one distance was not enough.** An SSE-vs-distance table
+(500 m / 1 / 2 / 3 / 8 km at median / p95 / max) is committed in
+`sample-proof.json` with the crossing distances: median ~1,234 m, p95 ~2,364 m,
+max ~10,366 m. The detail radius is recorded as an open T002 question, together
+with the note that AC #3's 2% transition gate is exceeded by 51.81% of the island
+— so the swap band and the transition gate constrain each other.
+
+**Nits.** N1: a dead ternary produced `materializedIslandTotal: 44,330` under a
+name that means 44,295; it now derives 44,295 as planned less the waves' own
+committed `volume-identity-failed` count, with `assetStageVolumeIdentityFailed`
+reported beside it. N2: the ADR now states that the measured requirement is under
+700 MiB and that `--max-old-space-size=8192` in `package.json` is insurance, so
+prose and script agree. N3: floors p99 is 35, not an em-dash. N4: D2a bounds the
+silhouette figures as an eight-azimuth **sampled** maximum and names the residual
+error's direction (denser sampling can only raise them). N5: RSS is labelled
+`sampledPeakRss*` everywhere, because it is read once per ledger cell.
+
 ## Contradictions and corrections recorded
 
 1. **The goal's "44,295 already exist" is census-only retention.** Reconciled
@@ -100,7 +152,8 @@ a guess with a decimal point.
 3. **`lod_1` is not a coarse tier.** 46% of `lod_0`, 1.49 GB island-wide.
 4. **The dense citywide path already renders the shape the goal asks for.** Its
    silhouette is identical to any coarse prism tier, at 30 draw calls and zero
-   new bytes.
+   new bytes. It is not free: island-wide residency contends for a shard cache
+   shared by four classes with no reservation (see B1 above).
 5. **A coarse prism tier fails the multi-LOD schema's 0.02 silhouette cap for
    51.81% of the island.** Measured, not asserted.
 
@@ -113,6 +166,10 @@ a guess with a decimal point.
 - **No decoded-GPU measurement inside Cesium.** Not observable from a Node
   census; the figure quoted for candidate (c) is a POSITION-only structural
   floor. Named for T002.
+- **No Cesium Primitive rebuild measurement.** The cost of rebuilding
+  GeometryInstances and Primitives on every shard stream-in or eviction-driven
+  refetch is modelled nowhere in this task. Named for T002 as the most likely way
+  candidate (c) fails in practice while looking free on paper.
 - **No per-request latency measurement.** No committed acceptance evidence in
   this repository records one. Completion times are stated at two assumed rates
   and labelled; the request counts are exact.
@@ -130,8 +187,11 @@ and to this record, following ADR 0025 D8. Verified afterwards by replay:
 
 - `cell-extents.json` — byte-identical on `extents --force`.
 - `distributions.json` — byte-identical on `plans --force`.
-- `candidate-costs.json` — unchanged checksum across a `coarse` rewrite,
-  because the fields it quotes are the deterministic ones.
+- `candidate-costs.json` — unchanged checksum across a `coarse` rewrite that
+  moved only host observations, because the fields it quotes are the
+  deterministic ones. (Its checksum did move when the post-review shared-cache
+  and un-modelled-cost blocks were added, which is the intended behaviour: the
+  record changed.)
 
 All six records' committed `.sha256` sidecars verify against their bytes.
 
