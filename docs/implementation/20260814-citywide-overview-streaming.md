@@ -137,6 +137,23 @@ New (API did not exist before):
 - **O6.** Probe move 1 annotated in the ADR as trivial (empty-sequence)
   retention.
 
+Round 3 (approve-with-nits):
+
+- **N1.** The residency ref is published from the reconfiguration effect, not
+  during render; the residency value is memoized so its identity changes only
+  with the mode.
+- **N2.** ADR discloses the one-tick supplier-vs-cache disagreement window on a
+  mode transition as self-correcting and invariant-preserving.
+- **N3.** `sameVisibleShards` checks both sides for distinctness rather than
+  inheriting it from the selection's de-duplication.
+- **N4.** `readonly Feature[]` completed through `CitywideReleaseAdapter`'s
+  `getFeatures`, `refreshViewport` and `loadLayerFeatures`, the
+  `RuntimeCityAdapter` interface, and the composed runtime's `baseFeatures`
+  and `loadLayerFeatures`.
+- **N5.** Cross-shard parent uniqueness re-verified and recorded for **both**
+  layers: buildings 45,194 parts / 45,194 parents, restaurants 12,353 parts /
+  12,353 parents, zero parents served by more than one shard in either.
+
 ## The defect found in existing code
 
 `ComposedReleaseAdapter.getMetrics` reported the shared **constant** as

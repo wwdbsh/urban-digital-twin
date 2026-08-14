@@ -26,7 +26,7 @@ export interface RuntimeCityAdapter {
    */
   getFeatures(visibility?: LayerVisibility): readonly Feature[];
   search(query: string): Feature[];
-  loadLayerFeatures(layer: RuntimeLayerId): Promise<Feature[]>;
+  loadLayerFeatures(layer: RuntimeLayerId): Promise<readonly Feature[]>;
   getAssetResolution?(featureId: string, distanceMeters?: number, screenSpaceError?: number): CityAssetResolution;
   getAssetDiagnostics?(): { registered: number; approved: number; verified: number; fallback: number };
   readonly assetResolver?: CityAssetResolver;

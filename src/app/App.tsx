@@ -1350,9 +1350,10 @@ export function App() {
   }, []);
   const citywideMode = dataMode === "real-pilot" && activeAdapter === citywideAdapter && citywideAdapter !== null;
   // Live-gated, not flag-gated: see `resolveCitywideOverviewResidency`.
-  const citywideResidency = resolveCitywideOverviewResidency(exteriorSchedulerRequested, citywideMode);
+  // Memoized so its identity changes only when the mode does, which is what
+  // makes it a safe dependency for the reconfiguration effect below.
+  const citywideResidency = useMemo(() => resolveCitywideOverviewResidency(exteriorSchedulerRequested, citywideMode), [exteriorSchedulerRequested, citywideMode]);
   const citywideBudgets = citywideResidency.budgets;
-  citywideResidencyRef.current = citywideResidency;
   const civicMode = dataMode === "civic-context" && activeAdapter === composedAdapter && composedAdapter !== null;
   const exteriorActive = Boolean(exteriorOverlay && exteriorLoadState === "ready" && (citywideMode || civicMode) && exteriorOverlay.compatibleWith(CITYWIDE_RELEASE_ID));
   const activeRealBaseReleaseId = citywideMode ? CITYWIDE_RELEASE_ID : civicMode ? TRAVEL_CONTEXT_RELEASE_ID : null;
@@ -2248,9 +2249,14 @@ export function App() {
 
   // Apply and withdraw overview residency on the shared cache as the active
   // mode changes. Only the two recorded configurations are ever applied.
+  //
+  // The ref the adapter's budget supplier reads is published HERE rather than
+  // during render: a render that React discards must not be able to leave the
+  // supplier pointing at a mode that never committed.
   useEffect(() => {
+    citywideResidencyRef.current = citywideResidency;
     aggregateCacheRef.current.configure(citywideResidency.budgets.maxLoadedShards, citywideResidency.budgets.maxLoadedBytes, citywideResidency.floors);
-  }, [citywideResidency.budgets, citywideResidency.floors]);
+  }, [citywideResidency]);
 
   useEffect(() => { if (typeof window !== "undefined") persistSavedNavigation(window.localStorage, savedNavigation); }, [savedNavigation]);
 

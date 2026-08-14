@@ -66,9 +66,15 @@ Two levels, both keyed on object identity rather than on a hash:
    purpose: the visible list is distance-ranked, so a camera nudge can permute
    an unchanged set, and an order-sensitive comparison paid the full ~352 ms
    class rebuild for a set that had not changed. Sound because the merge is
-   keyed by parent id and the release carries exactly one geometry part per
-   building parent (45,194 parts for 45,194 parents), so no permutation can
-   change which record wins.
+   keyed by parent id and **neither layer** has a parent served by two shards:
+   the release carries 45,194 building parts for 45,194 building parents and
+   12,353 restaurant parts for 12,353 restaurant parents, with zero parents
+   appearing in more than one shard in either layer. Both layers matter — the
+   fast path merges them together — so no permutation can change which record
+   wins. The comparison also checks both sides for distinctness rather than
+   inheriting it from the selection's de-duplication, so a future selection
+   change that admitted a repeat takes the slow path instead of comparing
+   equal on a shorter set.
 
 `getFeatures` is memoized on `visibleFeatures` identity plus the visibility
 key, so two consecutive calls return the *same* array. The historical re-sort
@@ -155,7 +161,15 @@ live rather than mount-time:
 
 - `CitywideRuntimeOptions.budgets` accepts a **supplier**, so the adapter reads
   the record the active mode is entitled to per access rather than the one the
-  session happened to boot in.
+  session happened to boot in. The supplier's ref is published from the same
+  effect that reconfigures the cache, never during render, so a render React
+  discards cannot leave it pointing at a mode that never committed. That
+  leaves a **one-tick window on a mode transition** in which a refresh already
+  in flight can read the outgoing record while the cache already holds the
+  incoming configuration. It is self-correcting and breaks no invariant: both
+  records are legal configurations of the same cache, the disagreement can
+  only change how many shards one in-flight refresh selects, and the next
+  refresh reads the committed record.
 - `CitywideLruCache.configure` re-points the shared cache between the two
   **recorded** configurations as the mode changes. Only those two are ever
   applied, and both byte caps exceed every declared shard size (2 MiB geometry,

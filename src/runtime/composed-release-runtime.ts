@@ -210,7 +210,7 @@ export class ComposedReleaseAdapter implements RuntimeCityAdapter {
   private readonly context: TravelContextReleaseAdapter;
   private readonly sharedBudget: AggregateRequestBudget | null;
   private readonly sharedCache: CitywideLruCache<unknown> | null;
-  private baseFeatures: Feature[] = [];
+  private baseFeatures: readonly Feature[] = [];
   private contextFeatures: Feature[] = [];
   private viewportAbortController: AbortController | null = null;
   private activeViewportSignature: string | null = null;
@@ -322,7 +322,7 @@ export class ComposedReleaseAdapter implements RuntimeCityAdapter {
     }
   }
 
-  async loadLayerFeatures(layer: RuntimeLayerId): Promise<Feature[]> {
+  async loadLayerFeatures(layer: RuntimeLayerId): Promise<readonly Feature[]> {
     if (layer === "buildings" || layer === "pois") return this.base.loadLayerFeatures(layer);
     if (layer === "statistical-areas" || layer === "parks" || layer === "landmarks") return this.context.loadLayerFeatures(layer);
     return [];

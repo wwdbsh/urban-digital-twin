@@ -361,7 +361,7 @@ export class CitywideReleaseAdapter implements RuntimeCityAdapter {
   private generation = 0;
   private viewportAbortController: AbortController | null = null;
   private activeViewportSignature: string | null = null;
-  private activeViewportPromise: Promise<Feature[]> | null = null;
+  private activeViewportPromise: Promise<readonly Feature[]> | null = null;
   private committedViewportSignature: string | null = null;
   private dedupedRefreshCount = 0;
   private staleResultCount = 0;
@@ -439,7 +439,7 @@ export class CitywideReleaseAdapter implements RuntimeCityAdapter {
     return (this.identityIndex?.has(featureId) ?? false) || this.getFeature(featureId) !== undefined;
   }
 
-  getFeatures(visibility: LayerVisibility = DEFAULT_LAYER_VISIBILITY): Feature[] {
+  getFeatures(visibility: LayerVisibility = DEFAULT_LAYER_VISIBILITY): readonly Feature[] {
     // `visibleFeatures` is already id-sorted where it is assigned, and `filter`
     // preserves order, so the historical re-sort here only re-paid an
     // O(n log n) `localeCompare` pass per call. Memoizing on the source array
@@ -503,11 +503,11 @@ export class CitywideReleaseAdapter implements RuntimeCityAdapter {
     });
   }
 
-  async loadLayerFeatures(layer: RuntimeLayerId): Promise<Feature[]> {
+  async loadLayerFeatures(layer: RuntimeLayerId): Promise<readonly Feature[]> {
     return this.getFeatures({ ...DEFAULT_LAYER_VISIBILITY, buildings: layer === "buildings", pois: layer === "pois", areas: false, stations: false, entrances: false, routes: false });
   }
 
-  refreshViewport(input: ViewportRefreshInput, signal?: AbortSignal): Promise<Feature[]> {
+  refreshViewport(input: ViewportRefreshInput, signal?: AbortSignal): Promise<readonly Feature[]> {
     if (this.destroyed) return Promise.resolve([]);
     const request = normalizeViewportRefreshRequest(input);
     const viewport = request.footprint.bounds;
@@ -542,7 +542,7 @@ export class CitywideReleaseAdapter implements RuntimeCityAdapter {
     const generation = ++this.generation;
     this.visibleShardCount = visibleRefs.size;
     this.requestedShardCount = bounded.length;
-    const run = async (): Promise<Feature[]> => {
+    const run = async (): Promise<readonly Feature[]> => {
       try {
         const values = await Promise.all(bounded.map((shard) => this.loadRef(shard.relativeContentRef, shard.checksumSha256, viewportController.signal)));
         if (viewportController.signal.aborted || generation !== this.generation || this.destroyed) {
@@ -672,7 +672,15 @@ export class CitywideReleaseAdapter implements RuntimeCityAdapter {
   private sameVisibleShards(visible: readonly LoadedShard[]): boolean {
     const committed = this.committedVisibleShards;
     if (committed === null || committed.length !== visible.length) return false;
+    // Set equality needs both sides distinct, and the caller's distinctness is
+    // an upstream property (`unique` de-duplicates by ref before ranking)
+    // rather than something visible here. Check it instead of inheriting it,
+    // so a future selection change that admitted a repeat would take the slow
+    // path rather than silently comparing equal on a shorter set.
     const resident = new Set(committed);
+    if (resident.size !== committed.length) return false;
+    const incoming = new Set(visible);
+    if (incoming.size !== visible.length) return false;
     return visible.every((shard) => resident.has(shard));
   }
 
