@@ -300,6 +300,22 @@ export interface ExteriorRuntimeMetrics {
   failedCellCount: number;
   /** Cells the release declares as shipping no exterior geometry, by design. */
   notShippedCellCount: number;
+  /**
+   * Cells the most recent reconciliation asked this runtime to load.
+   *
+   * A new counter rather than a re-reading of `notShippedCellCount` or
+   * `failedCellCount`, which mean what they have always meant: a cell the
+   * RELEASE declares empty, and a cell whose load FAILED. A deferred cell is
+   * neither — it is a cell nobody asked for yet. Conflating the three would make
+   * every existing exterior notice count a scheduling decision as a defect.
+   *
+   * On the default path the app records every declared cell as scheduled and
+   * none as deferred, so the pair reads as "no scheduler ran" rather than as
+   * zeroes of unknown meaning.
+   */
+  scheduledCellCount: number;
+  /** Cells the most recent reconciliation withheld. Zero unless the scheduler flag is on. */
+  deferredCellCount: number;
 }
 
 export type ExteriorArtifactFetcher = (relativeRef: string, signal?: AbortSignal) => Promise<Uint8Array>;
@@ -413,6 +429,8 @@ export class ExteriorCellRuntime {
   private fallbackCellCount = 0;
   private failedCellCount = 0;
   private notShippedCellCount = 0;
+  private scheduledCellCount = 0;
+  private deferredCellCount = 0;
 
   constructor(source: ExteriorCellRuntimeSource, head: ExteriorHeadResolution, options: ExteriorCellRuntimeOptions) {
     const publicRoot = source.graph.roots.find((root) => root.audience === "public");
@@ -474,6 +492,18 @@ export class ExteriorCellRuntime {
     return this.snapshot.cells.map((entry) => entry.cellId).sort((left, right) => (left < right ? -1 : left > right ? 1 : 0));
   }
 
+  /**
+   * Record what the caller's most recent residency reconciliation decided.
+   *
+   * The runtime does not schedule and must not start: it is handed the two
+   * numbers so `getMetrics()` can report them beside the request counters they
+   * explain. Purely additive — nothing else in the runtime reads them.
+   */
+  noteCellSchedule(scheduledCellCount: number, deferredCellCount: number): void {
+    this.scheduledCellCount = scheduledCellCount;
+    this.deferredCellCount = deferredCellCount;
+  }
+
   getMetrics(): ExteriorRuntimeMetrics {
     return {
       cacheEntries: this.cache.size(),
@@ -490,6 +520,8 @@ export class ExteriorCellRuntime {
       fallbackCellCount: this.fallbackCellCount,
       failedCellCount: this.failedCellCount,
       notShippedCellCount: this.notShippedCellCount,
+      scheduledCellCount: this.scheduledCellCount,
+      deferredCellCount: this.deferredCellCount,
     };
   }
 

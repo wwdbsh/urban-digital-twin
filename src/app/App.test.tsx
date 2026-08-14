@@ -566,7 +566,7 @@ describe("App overlay and selection regressions", () => {
 });
 
 describe("exterior streaming profiles and canary state", () => {
-  const canonicalUrl = (overlayState: { requested: boolean; override?: "on" | "off" | null; releaseId?: string; profile: "exploration" | "inspection"; canarySnapshotId: string | null }) =>
+  const canonicalUrl = (overlayState: { requested: boolean; override?: "on" | "off" | null; releaseId?: string; profile: "exploration" | "inspection"; canarySnapshotId: string | null; scheduler?: boolean }) =>
     appendExteriorProfileUrl(
       appendBlock835PublicRealmUrl(
         navigationUrl({ featureId: "doitt:778052", query: "empire", cameraMode: "explore", pose: { longitude: -73.99, latitude: 40.748, height: 700, heading: 15, pitch: -35, roll: 0 }, poseInvalid: false, dataMode: "civic-context", releaseId: "manhattan-civic-context-20260804" }, initialTestUrl),
@@ -579,6 +579,7 @@ describe("exterior streaming profiles and canary state", () => {
         releaseId: overlayState.releaseId ?? "udt-fixture-exterior-cells",
         profile: overlayState.profile,
         canarySnapshotId: overlayState.canarySnapshotId,
+        scheduler: overlayState.scheduler ?? false,
       },
     );
 
@@ -603,15 +604,15 @@ describe("exterior streaming profiles and canary state", () => {
 
   it("round-trips profile and canary state and clears all three when streaming is explicitly disabled", () => {
     const enabled = canonicalUrl({ requested: true, profile: "inspection", canarySnapshotId: "snapshot:v3" });
-    expect(parseExteriorStreamingUrl(enabled)).toEqual({ override: "on", explicitReleaseId: "udt-fixture-exterior-cells", profile: "inspection", canarySnapshotId: "snapshot:v3" });
-    const disabled = new URL(appendExteriorProfileUrl(enabled, { override: "off", streaming: false, releaseId: "udt-fixture-exterior-cells", profile: "inspection", canarySnapshotId: "snapshot:v3" }));
+    expect(parseExteriorStreamingUrl(enabled)).toEqual({ override: "on", explicitReleaseId: "udt-fixture-exterior-cells", profile: "inspection", canarySnapshotId: "snapshot:v3", scheduler: false });
+    const disabled = new URL(appendExteriorProfileUrl(enabled, { override: "off", streaming: false, releaseId: "udt-fixture-exterior-cells", profile: "inspection", canarySnapshotId: "snapshot:v3", scheduler: false }));
     expect(disabled.searchParams.has("exteriorCells")).toBe(false);
     expect(disabled.searchParams.has("exteriorProfile")).toBe(false);
     expect(disabled.searchParams.has("exteriorCanary")).toBe(false);
     // The distinct disable sentinel: "which release" and "no release at all" are
     // different questions, so an explicit off is not an absent parameter.
     expect(disabled.searchParams.get("exteriorStreaming")).toBe("off");
-    expect(parseExteriorStreamingUrl(disabled.toString())).toEqual({ override: "off", explicitReleaseId: null, profile: "exploration", canarySnapshotId: null });
+    expect(parseExteriorStreamingUrl(disabled.toString())).toEqual({ override: "off", explicitReleaseId: null, profile: "exploration", canarySnapshotId: null, scheduler: false });
     expect(disabled.searchParams.get("publicRealm")).toBe("manhattan-esb-block-public-realm-20260806");
     expect(disabled.searchParams.get("feature")).toBe("doitt:778052");
   });
@@ -628,20 +629,65 @@ describe("exterior streaming profiles and canary state", () => {
     const chosen = new URL(canonicalUrl({ requested: true, override: null, releaseId: CANARY_EXTERIOR_RELEASE_ID, profile: "inspection", canarySnapshotId: null }));
     expect(chosen.searchParams.get("exteriorProfile")).toBe("inspection");
     expect(chosen.searchParams.has("exteriorCells")).toBe(false);
-    expect(parseExteriorStreamingUrl(chosen.toString())).toEqual({ override: null, explicitReleaseId: null, profile: "inspection", canarySnapshotId: null });
+    expect(parseExteriorStreamingUrl(chosen.toString())).toEqual({ override: null, explicitReleaseId: null, profile: "inspection", canarySnapshotId: null, scheduler: false });
+  });
+
+  /**
+   * The T002 opt-in flag, tested for the failure the architecture review found
+   * before it could ship: a parameter read at boot but not written back by the
+   * URL appender chain survives the first render and is dropped by the first
+   * camera move, because every settled move rewrites the whole URL through
+   * `navigationUrlForApp` -> `replaceState`. So the flag has to round-trip
+   * through the SAME chain that would otherwise erase it.
+   */
+  it("round-trips the scheduler flag through the appender chain a camera move rewrites", () => {
+    const on = canonicalUrl({ requested: true, override: null, releaseId: CANARY_EXTERIOR_RELEASE_ID, profile: "exploration", canarySnapshotId: null, scheduler: true });
+    expect(new URL(on).searchParams.get("exteriorScheduler")).toBe("on");
+    expect(parseExteriorStreamingUrl(on).scheduler).toBe(true);
+    // The second pass is the camera move: parse what the URL says, write it back
+    // through the same chain, and the flag must still be there.
+    const rewritten = canonicalUrl({ requested: true, override: null, releaseId: CANARY_EXTERIOR_RELEASE_ID, profile: "exploration", canarySnapshotId: null, scheduler: parseExteriorStreamingUrl(on).scheduler });
+    expect(rewritten).toBe(on);
+    expect(parseExteriorStreamingUrl(rewritten).scheduler).toBe(true);
+  });
+
+  /**
+   * The byte-identity claim for the default session's URL, as a character
+   * comparison rather than a parameter-by-parameter one: a default session must
+   * produce the exact same string it produced before this parameter existed.
+   */
+  it("writes a character-identical default-session URL when the flag is absent", () => {
+    const withoutFlag = canonicalUrl({ requested: true, override: null, releaseId: CANARY_EXTERIOR_RELEASE_ID, profile: "exploration", canarySnapshotId: null });
+    const explicitlyOff = canonicalUrl({ requested: true, override: null, releaseId: CANARY_EXTERIOR_RELEASE_ID, profile: "exploration", canarySnapshotId: null, scheduler: false });
+    expect(explicitlyOff).toBe(withoutFlag);
+    expect(withoutFlag).not.toContain("exteriorScheduler");
+    expect(parseExteriorStreamingUrl(withoutFlag).scheduler).toBe(false);
+    // Absent means absent, and only the one accepted value is an opt-in.
+    for (const query of ["/", "/?exteriorScheduler=", "/?exteriorScheduler=1", "/?exteriorScheduler=true", "/?exteriorScheduler=ON"]) {
+      expect(parseExteriorStreamingUrl(query).scheduler, query).toBe(false);
+    }
+  });
+
+  it("drops the scheduler flag from a session with no exterior wave at all", () => {
+    const disabled = new URL(appendExteriorProfileUrl("/?exteriorScheduler=on", { override: "off", streaming: false, releaseId: "udt-fixture-exterior-cells", profile: "exploration", canarySnapshotId: null, scheduler: true }));
+    expect(disabled.searchParams.has("exteriorScheduler")).toBe(false);
+    expect(disabled.searchParams.get("exteriorStreaming")).toBe("off");
+    // And an explicit disable outranks the flag on the way back in, so a link
+    // carrying both never resolves to a scheduled wave.
+    expect(parseExteriorStreamingUrl("/?exteriorStreaming=off&exteriorScheduler=on").scheduler).toBe(false);
   });
 
   it("ignores an unknown exterior release ID and an unsupported profile instead of guessing", () => {
     // An unpinned release fails closed to an explicit off, so a link naming a
     // release this build does not have is never answered with the promoted one.
-    expect(parseExteriorStreamingUrl("/?exteriorCells=manhattan-exterior-production&exteriorProfile=inspection")).toEqual({ override: "off-unpinned", explicitReleaseId: null, profile: "exploration", canarySnapshotId: null });
-    expect(parseExteriorStreamingUrl("/?exteriorCells=udt-fixture-exterior-cells&exteriorProfile=cinematic")).toEqual({ override: "on", explicitReleaseId: "udt-fixture-exterior-cells", profile: "exploration", canarySnapshotId: null });
-    expect(parseExteriorStreamingUrl("/?exteriorCanary=snapshot:v3")).toEqual({ override: null, explicitReleaseId: null, profile: "exploration", canarySnapshotId: null });
+    expect(parseExteriorStreamingUrl("/?exteriorCells=manhattan-exterior-production&exteriorProfile=inspection")).toEqual({ override: "off-unpinned", explicitReleaseId: null, profile: "exploration", canarySnapshotId: null, scheduler: false });
+    expect(parseExteriorStreamingUrl("/?exteriorCells=udt-fixture-exterior-cells&exteriorProfile=cinematic")).toEqual({ override: "on", explicitReleaseId: "udt-fixture-exterior-cells", profile: "exploration", canarySnapshotId: null, scheduler: false });
+    expect(parseExteriorStreamingUrl("/?exteriorCanary=snapshot:v3")).toEqual({ override: null, explicitReleaseId: null, profile: "exploration", canarySnapshotId: null, scheduler: false });
   });
 
   it("keeps an explicit disable dominant over every other exterior parameter", () => {
     expect(parseExteriorStreamingUrl("/?exteriorStreaming=off&exteriorCells=manhattan-exterior-cells-20260811&exteriorProfile=inspection&exteriorCanary=snapshot:v3"))
-      .toEqual({ override: "off", explicitReleaseId: null, profile: "exploration", canarySnapshotId: null });
+      .toEqual({ override: "off", explicitReleaseId: null, profile: "exploration", canarySnapshotId: null, scheduler: false });
     const message = exteriorDeepLinkMessage("/?exteriorStreaming=on");
     expect(message).toContain("exteriorStreaming=on is not supported");
     expect(message).toContain("only exteriorStreaming=off disables the exterior wave");
@@ -708,7 +754,7 @@ describe("exterior streaming profiles and canary state", () => {
 
     const canary = new URL(canonicalUrl({ requested: true, releaseId: "manhattan-exterior-cells-20260811", profile: "inspection", canarySnapshotId: "snapshot:v3" }));
     expect(canary.searchParams.get("exteriorCells")).toBe("manhattan-exterior-cells-20260811");
-    expect(parseExteriorStreamingUrl(canary.toString())).toEqual({ override: "on", explicitReleaseId: "manhattan-exterior-cells-20260811", profile: "inspection", canarySnapshotId: "snapshot:v3" });
+    expect(parseExteriorStreamingUrl(canary.toString())).toEqual({ override: "on", explicitReleaseId: "manhattan-exterior-cells-20260811", profile: "inspection", canarySnapshotId: "snapshot:v3", scheduler: false });
     expect(canary.searchParams.get("feature")).toBe("doitt:778052");
     expect(canary.searchParams.get("publicRealm")).toBe("manhattan-esb-block-public-realm-20260806");
     expect(exteriorDeepLinkMessage(canary.toString())).toBeNull();

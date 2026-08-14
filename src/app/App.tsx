@@ -60,6 +60,9 @@ import { AggregateRequestBudget, ComposedReleaseAdapter, type ComposedReleaseMet
 import { EXTERIOR_PILOT_RELEASE_ID, createExteriorPilotFaultFetcher, loadExteriorPilotRelease, parseExteriorPilotFault, type CommercialStorefrontPlacement, type LoadedExteriorPilotRelease } from "../runtime/exterior-pilot-release";
 import { BLOCK835_PUBLIC_REALM_RELEASE_ID, createBlock835PublicRealmFaultFetcher, loadBlock835PublicRealmRelease, parseBlock835PublicRealmFault, publicRealmFeatureToFeature, type Block835PublicRealmFeature, type LoadedBlock835PublicRealmRelease } from "../runtime/block835-public-realm-release";
 import { EXTERIOR_RUNTIME_BUDGETS, loadExteriorCellRuntime, type ExteriorCellOutcome, type ExteriorCellRuntime, type ExteriorHeadRequest } from "../runtime/exterior-cell-runtime";
+import { acceptExteriorCellOutcomes, createExteriorCellLoadState, exteriorCellLoadInputsUnchanged, failExteriorCellBatch, publishedExteriorCellOutcomes, reconcileExteriorCellLoads, type ExteriorCellLoadState } from "../runtime/exterior-cell-reconciliation";
+import { scheduleExteriorCells } from "../runtime/exterior-cell-scheduling";
+import type { SchedulerCarry } from "../runtime/exterior-visibility-scheduler";
 import { createExteriorAssetFaultFetcher, createExteriorCellFaultFetcher, parseExteriorAssetFault, parseExteriorCellFault } from "../runtime/exterior-cell-fault";
 import { EXTERIOR_DEFAULT_ACTIVATION, exteriorAcceptedCellsDigest, exteriorDefaultActivations, exteriorRolledBackReleaseNotice, exteriorStreamingOverrideDisables, exteriorUnavailableStatements, resolveExteriorActivationSet, restoresPromotedDefault, verifyPromotedExteriorMembership, verifyPromotedExteriorPin, type ExteriorDefaultActivationRecord, type ExteriorDefaultActivationRecords, type ExteriorReleaseActivation, type ExteriorStreamingOverride } from "../runtime/exterior-default-activation";
 import {
@@ -110,6 +113,21 @@ const CITYWIDE_DEBUG_ANCHORS = [
  * fault fetcher are untouched.
  */
 const BLOCK835_CANARY_HARNESS_ENABLED = import.meta.env.VITE_BLOCK835_PROBE === "1";
+
+/**
+ * Build-time opt-in for the T002 scheduler trace probe, on the same terms as the
+ * canary harness above: a normal `pnpm build` leaves `VITE_EXTERIOR_SCHEDULER_PROBE`
+ * unset, this constant folds to `false`, and the probe leaves the shipped bundle.
+ *
+ * It exists to record what a REAL Cesium camera did — the ground-ray footprint
+ * it sampled, frame by frame, alongside the pose that produced it — so the
+ * thrash gate can replay a genuine camera path through the pure scheduler
+ * offline. A synthetic path would only ever prove the scheduler agrees with the
+ * model that generated it.
+ */
+const EXTERIOR_SCHEDULER_PROBE_ENABLED = import.meta.env.VITE_EXTERIOR_SCHEDULER_PROBE === "1";
+/** Bounded so a long session cannot grow the DOM payload without limit. */
+const EXTERIOR_SCHEDULER_TRACE_LIMIT = 800;
 
 const BLOCK835_PERFORMANCE_PROBE_QUERY = "block835Performance";
 const BLOCK835_PERFORMANCE_CAMERA_PATH_ID = "block835-stage3-six-pose-v1";
@@ -686,6 +704,23 @@ export const EXTERIOR_CELL_STREAMING_BASE_PATH = exteriorCellBasePath(EXTERIOR_C
 export const EXTERIOR_STREAMING_OFF_PARAM = "exteriorStreaming" as const;
 
 /**
+ * T002 opt-in: the visibility-driven cell scheduler. `?exteriorScheduler=on`.
+ *
+ * It is a member of the exterior URL state, not a parameter read once at boot,
+ * for a reason that cost a review to find: every settled camera move rewrites
+ * the whole URL through `navigationUrlForApp` -> `replaceState`, and a parameter
+ * that is not written back by that chain is silently dropped on the first mouse
+ * drag. A flag that survives boot and dies on the first pan is worse than no
+ * flag, because the session that measures it is no longer the session that was
+ * flagged.
+ *
+ * Absent means absent. `appendExteriorProfileUrl` writes nothing when the flag
+ * is off, so a default session's URL is character-identical to what it is today.
+ */
+export const EXTERIOR_SCHEDULER_PARAM = "exteriorScheduler" as const;
+export const EXTERIOR_SCHEDULER_ON_VALUE = "on" as const;
+
+/**
  * URL *intent*, not resolved state. `exteriorCells` keeps meaning "which pinned
  * release", and the distinct `exteriorStreaming=off` sentinel means "no exterior
  * wave at all". Absent parameters mean "no opinion", which the promotion record
@@ -697,6 +732,8 @@ export interface ExteriorStreamingUrlState {
   explicitReleaseId: string | null;
   profile: ExteriorRenderProfile;
   canarySnapshotId: string | null;
+  /** Whether this session opted in to the T002 visibility-driven scheduler. */
+  scheduler: boolean;
 }
 
 /** What a URL write needs: the intent plus the activation it resolved to. */
@@ -707,6 +744,7 @@ export interface ExteriorStreamingUrlWrite {
   streaming: boolean;
   profile: ExteriorRenderProfile;
   canarySnapshotId: string | null;
+  scheduler: boolean;
 }
 
 /**
@@ -729,8 +767,13 @@ export function appendExteriorProfileUrl(baseUrl: string, state: ExteriorStreami
     url.searchParams.delete("exteriorCells");
     url.searchParams.delete("exteriorProfile");
     url.searchParams.delete("exteriorCanary");
+    // A session with no exterior wave has nothing to schedule, so the flag is
+    // dropped rather than carried as an opinion about a wave that is not running.
+    url.searchParams.delete(EXTERIOR_SCHEDULER_PARAM);
     return url.toString();
   }
+  if (state.scheduler) url.searchParams.set(EXTERIOR_SCHEDULER_PARAM, EXTERIOR_SCHEDULER_ON_VALUE);
+  else url.searchParams.delete(EXTERIOR_SCHEDULER_PARAM);
   url.searchParams.delete(EXTERIOR_STREAMING_OFF_PARAM);
   if (state.override === "on") url.searchParams.set("exteriorCells", state.releaseId);
   else url.searchParams.delete("exteriorCells");
@@ -762,6 +805,10 @@ export function parseExteriorStreamingUrl(href: string): ExteriorStreamingUrlSta
     explicitReleaseId,
     profile: (disabled ? null : parseExteriorRenderProfile(url.searchParams.get("exteriorProfile"))) ?? DEFAULT_EXTERIOR_RENDER_PROFILE,
     canarySnapshotId: canary && canary.trim().length > 0 ? canary : null,
+    // Exactly one accepted value. `?exteriorScheduler=1` or `=true` is not an
+    // opt-in, for the same reason `exteriorCells=` refuses an unpinned release:
+    // a link this build cannot honour must not resolve to something else.
+    scheduler: !disabled && url.searchParams.get(EXTERIOR_SCHEDULER_PARAM) === EXTERIOR_SCHEDULER_ON_VALUE,
   };
 }
 
@@ -1014,7 +1061,7 @@ export function App() {
   const initialPublicRealmRequested = typeof window !== "undefined" && new URL(window.location.href).searchParams.get("publicRealm") === BLOCK835_PUBLIC_REALM_RELEASE_ID;
   const initialPublicRealmFeatureId = typeof window !== "undefined" ? new URL(window.location.href).searchParams.get("publicRealmFeature") : null;
   const initialExteriorStreaming: ExteriorStreamingUrlState = typeof window === "undefined"
-    ? { override: null, explicitReleaseId: null, profile: DEFAULT_EXTERIOR_RENDER_PROFILE, canarySnapshotId: null }
+    ? { override: null, explicitReleaseId: null, profile: DEFAULT_EXTERIOR_RENDER_PROFILE, canarySnapshotId: null, scheduler: false }
     : parseExteriorStreamingUrl(window.location.href);
   const stage3RenderProofRequested = import.meta.env.DEV && typeof window !== "undefined" && new URL(window.location.href).searchParams.get("stage3Proof") === "storefront-picks";
   const block835PerformanceMode = import.meta.env.DEV && typeof window !== "undefined" ? block835PerformanceProbeMode(window.location.search) : null;
@@ -1078,6 +1125,10 @@ export function App() {
   const [exteriorExplicitReleaseId, setExteriorExplicitReleaseId] = useState<string | null>(initialExteriorStreaming.explicitReleaseId);
   const [exteriorProfile, setExteriorProfile] = useState<ExteriorRenderProfile>(initialExteriorStreaming.profile);
   const [exteriorCanarySnapshotId, setExteriorCanarySnapshotId] = useState<string | null>(initialExteriorStreaming.canarySnapshotId);
+  // T002 opt-in. Read once at boot and never written by the UI: this build has
+  // no scheduler control, only the URL flag, so the value cannot change within a
+  // session and no setter exists to change it by accident.
+  const exteriorSchedulerRequested = initialExteriorStreaming.scheduler;
   // One entry per promoted exterior release. A wave failing closed clears its
   // own entry and leaves every other wave exactly as it was, so one bad release
   // can never withdraw a good one.
@@ -1174,6 +1225,8 @@ export function App() {
   const exteriorExplicitReleaseIdRef = useRef(exteriorExplicitReleaseId);
   const exteriorCellReleaseIdRef = useRef<string>(EXTERIOR_CELL_STREAMING_RELEASE_ID);
   const exteriorProfileRef = useRef(exteriorProfile);
+  const exteriorSchedulerRequestedRef = useRef(exteriorSchedulerRequested);
+  const exteriorSchedulerCarryRef = useRef<ReadonlyMap<string, SchedulerCarry>>(new Map());
   const exteriorCanarySnapshotIdRef = useRef(exteriorCanarySnapshotId);
   const aggregateBudgetRef = useRef(new AggregateRequestBudget());
   // ONE exterior cache for every promoted wave. The declared exterior ceiling is
@@ -1181,7 +1234,12 @@ export function App() {
   // budget instead of each constructing its own and multiplying the ceiling by
   // the number of promotions. Entries are keyed by artifact ref AND checksum, so
   // sharing can only ever reuse identical verified bytes.
-  const exteriorCellLoadsRef = useRef(new Map<string, { runtime: ExteriorCellRuntime; profile: ExteriorRenderProfile; bucket: number; controller: AbortController }>());
+  // `load` makes cell loading a per-cell reconciliation rather than a whole-wave
+  // batch: the scheduler adds and removes cells against a live entry without
+  // aborting the loads already in flight for it. The three sets it carries and
+  // the orderings between them live in `exterior-cell-reconciliation.ts`, which
+  // is where they are tested.
+  const exteriorCellLoadsRef = useRef(new Map<string, { runtime: ExteriorCellRuntime; profile: ExteriorRenderProfile; bucket: number; controller: AbortController; load: ExteriorCellLoadState<ExteriorCellOutcome> }>());
   const exteriorCacheRef = useRef<CitywideLruCache<Uint8Array>>(new CitywideLruCache<Uint8Array>(EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries, EXTERIOR_RUNTIME_BUDGETS.maxCachedBytes));
   const aggregateCacheRef = useRef<CitywideLruCache<unknown>>(new CitywideLruCache<unknown>(CITYWIDE_BUDGETS.maxLoadedShards, CITYWIDE_BUDGETS.maxLoadedBytes));
   const citywideModeRef = useRef(false);
@@ -1221,10 +1279,11 @@ export function App() {
   exteriorExplicitReleaseIdRef.current = exteriorExplicitReleaseId;
   exteriorProfileRef.current = exteriorProfile;
   exteriorCanarySnapshotIdRef.current = exteriorCanarySnapshotId;
+  exteriorSchedulerRequestedRef.current = exteriorSchedulerRequested;
   const getOverlayUrlFields = useCallback(() => navigationOverlayFields(exteriorRequestedRef.current, selectedStorefrontIdRef.current), []);
   const navigationUrlForApp = useCallback((value: Parameters<typeof navigationUrl>[0], base: string) => appendExteriorProfileUrl(
     appendBlock835PublicRealmUrl(navigationUrl(value, base), publicRealmRequestedRef.current, selectedPublicRealmIdRef.current),
-    { override: exteriorStreamingOverrideRef.current, releaseId: exteriorCellReleaseIdRef.current, streaming: exteriorStreamingRequestedRef.current, profile: exteriorProfileRef.current, canarySnapshotId: exteriorCanarySnapshotIdRef.current },
+    { override: exteriorStreamingOverrideRef.current, releaseId: exteriorCellReleaseIdRef.current, streaming: exteriorStreamingRequestedRef.current, profile: exteriorProfileRef.current, canarySnapshotId: exteriorCanarySnapshotIdRef.current, scheduler: exteriorSchedulerRequestedRef.current },
   ), []);
   const updateSelectedStorefront = useCallback((storefrontId: string | null) => {
     selectedStorefrontIdRef.current = storefrontId;
@@ -1346,6 +1405,30 @@ export function App() {
   // distance, and bucketing keeps a continuous camera move from restarting LOD
   // selection on every frame.
   const exteriorCameraHeightBucketMeters = Math.max(50, Math.round(Math.max(0, cameraPose.height) / 100) * 100);
+  // The one dependency that makes cell loading camera-driven, and it is the
+  // constant empty string unless the T002 flag is on. A default session's cell
+  // reconciliation therefore still runs on exactly the four inputs it ran on
+  // before — nothing about its cadence depends on where the camera is looking.
+  const exteriorSchedulerSignature = exteriorSchedulerRequested ? viewportFootprint.signature : "";
+  // Trace probe. Compiled out unless VITE_EXTERIOR_SCHEDULER_PROBE=1, and even
+  // then it only reads state the app already computed: it never schedules, never
+  // requests anything, and never influences a decision it is recording.
+  const exteriorSchedulerTraceRef = useRef<Array<Record<string, unknown>>>([]);
+  const [exteriorSchedulerTraceLength, setExteriorSchedulerTraceLength] = useState(0);
+  useEffect(() => {
+    if (!EXTERIOR_SCHEDULER_PROBE_ENABLED) return;
+    const trace = exteriorSchedulerTraceRef.current;
+    if (trace.length >= EXTERIOR_SCHEDULER_TRACE_LIMIT) return;
+    const last = trace[trace.length - 1] as { footprint?: { signature?: string } } | undefined;
+    if (last?.footprint?.signature === viewportFootprint.signature) return;
+    trace.push({
+      index: trace.length,
+      camera: { longitude: cameraPose.longitude, latitude: cameraPose.latitude, height: cameraPose.height, heading: cameraPose.heading, pitch: cameraPose.pitch, roll: cameraPose.roll },
+      heightBucket: exteriorCameraHeightBucketMeters,
+      footprint: { bounds: viewportFootprint.bounds, groundCenter: viewportFootprint.groundCenter, valid: viewportFootprint.valid, source: viewportFootprint.source, signature: viewportFootprint.signature },
+    });
+    setExteriorSchedulerTraceLength(trace.length);
+  }, [cameraPose, exteriorCameraHeightBucketMeters, viewportFootprint]);
   citywideModeRef.current = citywideMode;
   civicModeRef.current = civicMode;
   if (dataMode === "fixtures") releaseIdRef.current = null;
@@ -1789,6 +1872,30 @@ export function App() {
    * had no reason to have. A load is therefore cancelled only when its OWN
    * inputs change — its runtime, the render profile, or the camera LOD bucket —
    * or when the whole component goes away.
+   *
+   * ## What T002 added, and what it deliberately did not
+   *
+   * With `?exteriorScheduler=on` this reconciliation gains a second axis: WHICH
+   * of the wave's declared cells to ask for. Three properties keep the default
+   * path exactly where it was.
+   *
+   *   1. The abort test is unchanged in meaning. It still fires only on a
+   *      runtime, profile or bucket change, so a camera move never aborts an
+   *      in-flight load; it is now `exteriorCellLoadInputsUnchanged`, which is
+   *      the same three comparisons behind an assertable name. The scheduler
+   *      re-decides by ADDING and REMOVING cells against a live entry — a
+   *      per-cell reconciliation — which is why a height-bucket flip costs only
+   *      the reload it already cost and not a residency churn on top.
+   *   2. `exteriorSchedulerSignature` is the constant empty string whenever the
+   *      flag is off, so the dependency array of a default session never changes
+   *      value on a camera move and this effect runs exactly as often as before.
+   *   3. `scheduleExteriorCells` returns the runtime's own array by reference
+   *      when the flag is off. Not a filtered copy that happens to keep
+   *      everything — the same array.
+   *
+   * The scheduler filters LOADS. It never touches `runtime.snapshot.cells`, so
+   * `verifyPromotedExteriorPin` still gates the whole resolved membership and a
+   * deferred cell can never look like a release that resolved fewer cells.
    */
   useEffect(() => {
     const running = exteriorCellLoadsRef.current;
@@ -1798,8 +1905,10 @@ export function App() {
     }));
     for (const [releaseId, entry] of [...running]) {
       const next = wanted.get(releaseId);
-      const unchanged = next && next.runtime === entry.runtime && entry.profile === exteriorEffectiveProfile && entry.bucket === exteriorCameraHeightBucketMeters;
-      if (unchanged) continue;
+      // The cross-wave abort property, as a value rather than as a comment.
+      // Deliberately blind to the scheduler's footprint signature: a camera move
+      // re-decides residency and must never abort a load.
+      if (exteriorCellLoadInputsUnchanged(entry, next && { runtime: next.runtime, profile: exteriorEffectiveProfile, bucket: exteriorCameraHeightBucketMeters })) continue;
       entry.controller.abort();
       running.delete(releaseId);
       // A wave that is no longer targeted keeps no outcomes: they describe a
@@ -1807,33 +1916,53 @@ export function App() {
       // would retain a whole withdrawn wave for the life of the session.
       if (!next) setExteriorWaveOutcomes((current) => { if (!current.has(releaseId)) return current; const remaining = new Map(current); remaining.delete(releaseId); return remaining; });
     }
+    const schedulerEnabled = exteriorSchedulerRequestedRef.current;
+    const schedulerView = { footprint: viewportFootprintRef.current, camera: cameraPoseRef.current, heightBucket: exteriorCameraHeightBucketMeters };
     for (const [releaseId, { target, runtime }] of wanted) {
-      if (running.has(releaseId)) continue;
-      const controller = new AbortController();
-      const entry = { runtime, profile: exteriorEffectiveProfile, bucket: exteriorCameraHeightBucketMeters, controller };
-      running.set(releaseId, entry);
+      const live = running.get(releaseId);
+      const declaredCellIds = runtime.cellIds();
+      const schedule = scheduleExteriorCells(declaredCellIds, { ...schedulerView, enabled: schedulerEnabled, previous: exteriorSchedulerCarryRef.current.get(releaseId) ?? null });
+      if (schedule.carry) exteriorSchedulerCarryRef.current = new Map(exteriorSchedulerCarryRef.current).set(releaseId, schedule.carry);
+      runtime.noteCellSchedule(schedule.cellIds.length, schedule.deferredCellIds.length);
+      const entry = live ?? { runtime, profile: exteriorEffectiveProfile, bucket: exteriorCameraHeightBucketMeters, controller: new AbortController(), load: createExteriorCellLoadState<ExteriorCellOutcome>() };
+      if (!live) running.set(releaseId, entry);
+      const controller = entry.controller;
       const isCurrent = () => exteriorCellLoadsRef.current.get(releaseId) === entry && !controller.signal.aborted;
-      void Promise.all(runtime.cellIds().map((cellId) => runtime.loadCell(cellId, exteriorEffectiveProfile, exteriorCameraHeightBucketMeters, controller.signal)))
-        .then((outcomes) => {
-          if (!isCurrent()) return;
+      // On a default session this admits the whole declared list on the first
+      // run and nothing after, so the requests, their order and their count are
+      // what they have always been.
+      const { fresh, dropped, idle } = reconcileExteriorCellLoads(entry.load, schedule.cellIds);
+      if (idle && live) continue;
+      const publish = () => {
+        const outcomes = publishedExteriorCellOutcomes(entry.load, declaredCellIds);
+        if (target.promotedDefault) {
           // Identity gate: exterior assets reuse canonical base identities, so an
           // identity outside the accepted membership means these are not the
           // accepted bytes. A cell that degraded to base massing renders no asset
           // and is reported by the existing per-cell notices instead. The gate
           // runs against THIS wave's accepted membership.
-          if (target.promotedDefault) {
-            const renderedIds = outcomes.flatMap((outcome) => outcome.kind === "rendered" ? outcome.assets.map((asset) => asset.canonicalFeatureId) : []);
-            const membership = verifyPromotedExteriorMembership(renderedIds, target.record);
-            if (!membership.ok) {
-              setExteriorWaveOutcomes((current) => { const next = new Map(current); next.delete(releaseId); return next; });
-              setExteriorWaves((current) => (current.has(releaseId) ? new Map(current).set(releaseId, failedExteriorWave(membership.message)) : current));
-              return;
-            }
+          const renderedIds = outcomes.flatMap((outcome) => outcome.kind === "rendered" ? outcome.assets.map((asset) => asset.canonicalFeatureId) : []);
+          const membership = verifyPromotedExteriorMembership(renderedIds, target.record);
+          if (!membership.ok) {
+            setExteriorWaveOutcomes((current) => { const next = new Map(current); next.delete(releaseId); return next; });
+            setExteriorWaves((current) => (current.has(releaseId) ? new Map(current).set(releaseId, failedExteriorWave(membership.message)) : current));
+            return;
           }
-          setExteriorWaveOutcomes((current) => new Map(current).set(releaseId, outcomes));
+        }
+        setExteriorWaveOutcomes((current) => new Map(current).set(releaseId, outcomes));
+      };
+      if (fresh.length === 0) { if (dropped.length > 0) publish(); continue; }
+      void Promise.all(fresh.map((cellId) => runtime.loadCell(cellId, exteriorEffectiveProfile, exteriorCameraHeightBucketMeters, controller.signal)))
+        .then((loaded) => {
+          if (!isCurrent()) return;
+          // Guarded, not unconditional: a cell the scheduler evicted while its
+          // bytes were in flight stays evicted and its outcome is discarded.
+          acceptExteriorCellOutcomes(entry.load, fresh, loaded);
+          publish();
         })
         .catch(() => {
           if (!isCurrent()) return;
+          failExteriorCellBatch(entry.load, fresh);
           setExteriorWaveOutcomes((current) => { const next = new Map(current); next.delete(releaseId); return next; });
         });
     }
@@ -1841,7 +1970,7 @@ export function App() {
     // `exteriorTargetKey` is a dependency even though the targets are read from
     // a ref: a change to WHICH releases are targeted must always re-run this
     // reconciliation, and it does not always coincide with a wave-state change.
-  }, [exteriorCameraHeightBucketMeters, exteriorEffectiveProfile, exteriorTargetKey, exteriorWaves]);
+  }, [exteriorCameraHeightBucketMeters, exteriorEffectiveProfile, exteriorSchedulerSignature, exteriorTargetKey, exteriorWaves]);
 
   // The only place a live cell load is cancelled wholesale: the component going
   // away. Everything else cancels exactly the wave whose inputs changed.
@@ -3360,6 +3489,16 @@ export function App() {
           role="status"
           style={{ position: "fixed", zIndex: 100, left: 8, bottom: 8, maxWidth: "min(960px, calc(100vw - 16px))", maxHeight: "40vh", overflow: "auto", overflowWrap: "anywhere", whiteSpace: "pre-wrap", padding: 8, background: "rgba(13, 21, 27, 0.94)", color: "#d5ffff", font: "11px ui-monospace, SFMono-Regular, Menlo, monospace" }}
         >{block835CanaryProbe ? JSON.stringify(block835CanaryProbe) : "Block 835 canary probe is initializing."}</output>}
+        {/* T002 trace/metrics probe. Tree-shaken out of a normal build; it reads
+            state the app already holds and decides nothing. */}
+        {EXTERIOR_SCHEDULER_PROBE_ENABLED && <div hidden data-exterior-scheduler-probe data-trace-length={exteriorSchedulerTraceLength}>{JSON.stringify({
+          schemaVersion: "1.0",
+          schedulerRequested: exteriorSchedulerRequested,
+          exteriorStreamingActive,
+          traceLength: exteriorSchedulerTraceRef.current.length,
+          trace: exteriorSchedulerTraceRef.current,
+          waves: exteriorActiveWaves.map((entry) => ({ releaseId: entry.target.releaseId, declaredCellCount: entry.wave.runtime?.snapshot.cells.length ?? 0, metrics: entry.wave.runtime?.getMetrics() ?? null })),
+        })}</div>}
         {deepLinkMessage && <div className="exploration-notice" role="alert">{deepLinkMessage} <button type="button" onClick={() => { terminalRealFallbackNoticeRef.current = null; setDeepLinkMessage(null); setPoseInvalid(false); window.history.replaceState({}, "", navigationUrlForApp({ featureId: activeSelectionRef.current, query, cameraMode, pose: cameraPose, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(layerVisibility).filter(([, visible]) => visible).map(([layer]) => layer), facets: civicMode ? selectedCivicFacets : selectedCategories, ...getOverlayUrlFields() }, window.location.href)); }}>Dismiss</button></div>}
         {exteriorDeepLinkNotice && <div className="exploration-notice" role="alert" data-exterior-deep-link-notice>
           {exteriorDeepLinkNotice} <button type="button" onClick={() => setExteriorDeepLinkNotice(null)}>Dismiss</button>
