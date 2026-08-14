@@ -148,6 +148,55 @@ export const EXTERIOR_CELL_SCHEDULER_POLICY = {
   hysteresisDecisions: 3,
 } as const;
 
+/**
+ * The T003 SESSION-WIDE policy: one pool, one cap, one decision.
+ *
+ * T002 applied `EXTERIOR_CELL_SCHEDULER_POLICY` once PER WAVE, so a six-wave
+ * session was bounded by 6 x 96 = 576 of 883 and not by 96 — a limitation ADR
+ * 0041 disclosed and handed here. T003 replaces that with a single
+ * `selectResidentUnits` call over the static 883-row census table, and this is
+ * the cap that call uses. `EXTERIOR_CELL_SCHEDULER_POLICY` is kept unchanged
+ * because the T002 thrash baseline was measured at it and a frozen baseline that
+ * moves with the code it gates is not a baseline.
+ *
+ * ## Why 128, with the arithmetic
+ *
+ * Anchors, all from ADR 0041's committed opt-in evidence at the two measured
+ * cameras (`data/exterior-scheduler-traces-20260814/optin-evidence.json`):
+ *
+ *   1. **Floor: 110.** The six-pool configuration held 110 cells at the
+ *      2,400 m overview camera. One pool must not hold fewer at the same
+ *      camera, so 110 is a hard floor. 128 is the next power of two above it —
+ *      a stated rounding convention, not a measurement, and named as one.
+ *   2. **Entry cost.** At that camera 110 resident cells cost 210 cache
+ *      entries: 1.909 entries per cell. 128 x 1.909 = 244 entries, 47.7% of
+ *      `EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries` (512). The entry ceiling would
+ *      bind at 512 / 1.909 = 268 cells, more than twice this cap.
+ *   3. **Byte cost.** The same 110 cells cost 37,164,596 B: 337,859.96 B per
+ *      cell. 128 x that is **43,246,075 B**, 16.1% of the 256 MiB byte cap. The
+ *      byte ceiling would bind at 794 cells — beyond the 883 the ledger
+ *      declares. (The figure is derived from the unrounded ratio, which is what
+ *      `exterior-cache-governance-gate.test.ts` computes; rounding the per-cell
+ *      figure to 337,860 first gives 43,246,080 and is not the pinned value.)
+ *   4. **It is still a bound.** 128 is 4.5x tighter than the 576 it replaces and
+ *      6.9x below the 883 the default loads unconditionally.
+ *
+ * **Residency at the measured overview camera RISES, from 110 to at most 128,
+ * and that is the intended direction.** The per-wave cap was deferring 53 cells
+ * that were inside the footprint while four other waves held unused budget; one
+ * pool spends that budget where the camera is looking. What FALLS is the session
+ * bound, from 576 to 128.
+ *
+ * Neither cache ceiling binds at this cap, and neither binds without it: the
+ * whole promoted composition resident at once measures 484 entries and
+ * 122,601,292 B, inside both. ADR 0042 states that plainly rather than implying
+ * the caps are doing work they are not.
+ */
+export const EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY = {
+  ...EXTERIOR_CELL_SCHEDULER_POLICY,
+  maxResidentUnits: 128,
+} as const;
+
 export const EMPTY_SCHEDULER_CARRY: SchedulerCarry = {
   resident: [],
   retained: new Map<string, number>(),

@@ -1,0 +1,40 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "exterior-cache-governance-latency-20260814",
+  "taskId": "T003",
+  "capture": {
+    "tool": "scripts/exterior-scheduler-trace-capture-cli.mjs latency",
+    "renderer": "shipping CesiumJS viewport, preview build with VITE_EXTERIOR_SCHEDULER_PROBE=1",
+    "transport": "Chrome DevTools Protocol Network domain timestamps",
+    "viewport": {
+      "width": 1280,
+      "height": 800,
+      "deviceScaleFactor": 1
+    },
+    "baseReleaseId": "manhattan-citywide-20260804",
+    "settleMs": 75000,
+    "capturedAtIso": "2026-08-14T09:48:24.512Z",
+    "pricing": "LOCALHOST AND DISK ONLY. `transportMs` is the wall time from Network.requestWillBeSent to Network.loadingFinished for exterior .glb responses served by a local vite preview from a local disk. It is NOT a deployment latency: there is no CDN, no TLS handshake, no contended link and no cold cache tier in it, and a deployed figure would be dominated by terms that are absent here. `sha256` is the separate app-side price the network timing excludes — every artifact is digested in the page before admission — measured in the same browser over the median artifact size.",
+    "httpCacheNote": "The exterior fetcher passes cache: \"no-store\", so an exterior .glb cannot be served from the HTTP cache and every measured request is a real fetch."
+  },
+  "measurement": {
+    "poseId": "block835-street-260m",
+    "requestCount": 20,
+    "transportMs": {
+      "min": 2.410000073723495,
+      "p50": 21.95600001141429,
+      "p95": 55.964000057429075,
+      "max": 55.964000057429075
+    },
+    "encodedBytes": {
+      "min": 2733,
+      "median": 28335,
+      "max": 1306059
+    },
+    "sha256": {
+      "bytes": 28335,
+      "runs": 20,
+      "meanMs": 0.019999998807907104
+    }
+  }
+}

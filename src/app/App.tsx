@@ -59,9 +59,10 @@ import { TRAVEL_CONTEXT_BUDGETS, TRAVEL_CONTEXT_RELEASE_ID, TRAVEL_CONTEXT_TILE_
 import { AggregateRequestBudget, ComposedReleaseAdapter, type ComposedReleaseMetrics } from "../runtime/composed-release-runtime";
 import { EXTERIOR_PILOT_RELEASE_ID, createExteriorPilotFaultFetcher, loadExteriorPilotRelease, parseExteriorPilotFault, type CommercialStorefrontPlacement, type LoadedExteriorPilotRelease } from "../runtime/exterior-pilot-release";
 import { BLOCK835_PUBLIC_REALM_RELEASE_ID, createBlock835PublicRealmFaultFetcher, loadBlock835PublicRealmRelease, parseBlock835PublicRealmFault, publicRealmFeatureToFeature, type Block835PublicRealmFeature, type LoadedBlock835PublicRealmRelease } from "../runtime/block835-public-realm-release";
-import { EXTERIOR_RUNTIME_BUDGETS, loadExteriorCellRuntime, type ExteriorCellOutcome, type ExteriorCellRuntime, type ExteriorHeadRequest } from "../runtime/exterior-cell-runtime";
+import { EXTERIOR_RUNTIME_BUDGETS, exteriorOutcomeCacheKeys, loadExteriorCellRuntime, type ExteriorCellOutcome, type ExteriorCellRuntime, type ExteriorHeadRequest } from "../runtime/exterior-cell-runtime";
 import { acceptExteriorCellOutcomes, createExteriorCellLoadState, exteriorCellLoadInputsUnchanged, failExteriorCellBatch, publishedExteriorCellOutcomes, reconcileExteriorCellLoads, type ExteriorCellLoadState } from "../runtime/exterior-cell-reconciliation";
-import { scheduleExteriorCells } from "../runtime/exterior-cell-scheduling";
+import { scheduleExteriorCellsGlobally } from "../runtime/exterior-cell-scheduling";
+import { commitExteriorCacheRelease, createExteriorCacheReleaseState, noteExteriorSceneRetired, planExteriorCacheRelease, queueExteriorCacheRelease } from "../runtime/exterior-cache-release";
 import type { SchedulerCarry } from "../runtime/exterior-visibility-scheduler";
 import { createExteriorAssetFaultFetcher, createExteriorCellFaultFetcher, parseExteriorAssetFault, parseExteriorCellFault } from "../runtime/exterior-cell-fault";
 import { EXTERIOR_DEFAULT_ACTIVATION, exteriorAcceptedCellsDigest, exteriorDefaultActivations, exteriorRolledBackReleaseNotice, exteriorStreamingOverrideDisables, exteriorUnavailableStatements, resolveExteriorActivationSet, restoresPromotedDefault, verifyPromotedExteriorMembership, verifyPromotedExteriorPin, type ExteriorDefaultActivationRecord, type ExteriorDefaultActivationRecords, type ExteriorReleaseActivation, type ExteriorStreamingOverride } from "../runtime/exterior-default-activation";
@@ -1226,7 +1227,13 @@ export function App() {
   const exteriorCellReleaseIdRef = useRef<string>(EXTERIOR_CELL_STREAMING_RELEASE_ID);
   const exteriorProfileRef = useRef(exteriorProfile);
   const exteriorSchedulerRequestedRef = useRef(exteriorSchedulerRequested);
-  const exteriorSchedulerCarryRef = useRef<ReadonlyMap<string, SchedulerCarry>>(new Map());
+  // ONE carry for the session, not one per wave. T003 replaced six per-wave
+  // decisions with a single decision over the static 883-row census table, so
+  // there is exactly one residency to carry forward. (T002 kept a map here.)
+  const exteriorSchedulerCarryRef = useRef<SchedulerCarry | null>(null);
+  // The cache release seam. Empty and inert unless the scheduler flag is on:
+  // nothing enqueues, because an unflagged session's reconciliation drops no cell.
+  const exteriorCacheReleaseRef = useRef(createExteriorCacheReleaseState());
   const exteriorCanarySnapshotIdRef = useRef(exteriorCanarySnapshotId);
   const aggregateBudgetRef = useRef(new AggregateRequestBudget());
   // ONE exterior cache for every promoted wave. The declared exterior ceiling is
@@ -1862,6 +1869,55 @@ export function App() {
   }, [activeAdapter, activeRealBaseReleaseId, exteriorCanarySnapshotId, exteriorTargetKey]);
 
   /**
+   * The release pass: gates (b), (c) and (d) evaluated against live state.
+   *
+   * Reads only refs, mutates only the release queue and the cache, and sets no
+   * React state, so it is safe to call from an effect, from a settled promise,
+   * and from the viewport's own retirement callback without risking a render
+   * loop. It returns early when nothing is queued, which is every pass of every
+   * session that never turned the scheduler on.
+   *
+   * The published-key set is recomputed each pass rather than tracked as a
+   * refcount. That is deliberate: the set is a few hundred assets, recomputing
+   * it is cheap, and a recomputed refcount cannot drift out of agreement with
+   * the outcomes it is supposed to be counting — which a maintained one can, and
+   * which is exactly the class of bug the T002 review found in the outcome
+   * ordering.
+   */
+  const runExteriorCacheRelease = useCallback(() => {
+    const state = exteriorCacheReleaseRef.current;
+    if (state.pending.size === 0) return;
+    const inFlightCellIds = new Set<string>();
+    const requestedCellIds = new Set<string>();
+    const publishedCacheKeys = new Set<string>();
+    for (const entry of exteriorCellLoadsRef.current.values()) {
+      for (const cellId of entry.load.inFlight) inFlightCellIds.add(cellId);
+      for (const cellId of entry.load.requested) requestedCellIds.add(cellId);
+      for (const outcome of entry.load.outcomes.values()) for (const key of exteriorOutcomeCacheKeys(outcome).keys) publishedCacheKeys.add(key);
+    }
+    const plan = planExteriorCacheRelease(state, { inFlightCellIds, requestedCellIds, publishedCacheKeys });
+    if (plan.releaseKeys.length === 0 && plan.readmittedCells.length === 0) return;
+    const cache = exteriorCacheRef.current;
+    commitExteriorCacheRelease(state, plan, (cacheKey) => { cache.delete(cacheKey); });
+    // Session-wide totals, set identically on every live runtime. A reader takes
+    // them from one wave and never sums them; the field comment says so.
+    for (const entry of exteriorCellLoadsRef.current.values()) entry.runtime.noteArtifactRelease(state.releasedArtifactCount, state.releasedArtifactBytes);
+  }, []);
+
+  /**
+   * Gate (d)'s evidence, from the only component that can supply it.
+   *
+   * The viewport revokes an exterior cell's object URLs inside the same effect
+   * pass that removes its entities, and then tells us which cells those were.
+   * Until that has happened the Blob is a live, independent copy of the bytes,
+   * and releasing the cache entry would free nothing while looking like it had.
+   */
+  const handleExteriorCellsRetired = useCallback((cellIds: readonly string[]) => {
+    noteExteriorSceneRetired(exteriorCacheReleaseRef.current, cellIds);
+    runExteriorCacheRelease();
+  }, [runExteriorCacheRelease]);
+
+  /**
    * Per-wave cell loading.
    *
    * The loads are keyed by release and OUTLIVE the effect run that started
@@ -1918,20 +1974,55 @@ export function App() {
     }
     const schedulerEnabled = exteriorSchedulerRequestedRef.current;
     const schedulerView = { footprint: viewportFootprintRef.current, camera: cameraPoseRef.current, heightBucket: exteriorCameraHeightBucketMeters };
+    // ONE decision for the session, over the STATIC 883-row census table. Not
+    // "the cells of the waves loaded so far": a pool built from loaded waves
+    // would hand the first wave to arrive the whole cap, and a wave's residency
+    // would then depend on the order its index happened to come back.
+    const declaredByRelease = new Map([...wanted].map(([releaseId, { runtime }]) => [releaseId, runtime.cellIds()] as const));
+    const globalSchedule = scheduleExteriorCellsGlobally(
+      [...declaredByRelease].map(([releaseId, declaredCellIds]) => ({ releaseId, declaredCellIds })),
+      { ...schedulerView, enabled: schedulerEnabled, previous: exteriorSchedulerCarryRef.current },
+    );
+    if (globalSchedule.carry) exteriorSchedulerCarryRef.current = globalSchedule.carry;
     for (const [releaseId, { target, runtime }] of wanted) {
       const live = running.get(releaseId);
-      const declaredCellIds = runtime.cellIds();
-      const schedule = scheduleExteriorCells(declaredCellIds, { ...schedulerView, enabled: schedulerEnabled, previous: exteriorSchedulerCarryRef.current.get(releaseId) ?? null });
-      if (schedule.carry) exteriorSchedulerCarryRef.current = new Map(exteriorSchedulerCarryRef.current).set(releaseId, schedule.carry);
+      const declaredCellIds = declaredByRelease.get(releaseId) ?? runtime.cellIds();
+      const schedule = globalSchedule.byRelease.get(releaseId) ?? { cellIds: declaredCellIds, deferredCellIds: [], unschedulableCellIds: [], carry: null, decision: null };
       runtime.noteCellSchedule(schedule.cellIds.length, schedule.deferredCellIds.length);
       const entry = live ?? { runtime, profile: exteriorEffectiveProfile, bucket: exteriorCameraHeightBucketMeters, controller: new AbortController(), load: createExteriorCellLoadState<ExteriorCellOutcome>() };
       if (!live) running.set(releaseId, entry);
       const controller = entry.controller;
       const isCurrent = () => exteriorCellLoadsRef.current.get(releaseId) === entry && !controller.signal.aborted;
+      // The outcomes a drop is about to discard, captured BEFORE the
+      // reconciliation deletes them: they are the only record of which cache
+      // keys the evicted cell was holding. Snapshotted only under the flag, so
+      // a default session does not pay a Map copy per reconciliation.
+      const outcomesBeforeDrop = schedulerEnabled ? new Map(entry.load.outcomes) : null;
       // On a default session this admits the whole declared list on the first
       // run and nothing after, so the requests, their order and their count are
       // what they have always been.
       const { fresh, dropped, idle } = reconcileExteriorCellLoads(entry.load, schedule.cellIds);
+      // Gate (a) of the release seam: ONLY a scheduler eviction enqueues, and
+      // only under the flag. Removing the flag removes the seam.
+      if (schedulerEnabled && outcomesBeforeDrop) {
+        for (const cellId of dropped) {
+          const outcome = outcomesBeforeDrop.get(cellId);
+          // A cell dropped while its load was in flight has no outcome yet, so
+          // it holds no keys to release. Its bytes are queued instead when the
+          // load settles and `acceptExteriorCellOutcomes` DISCARDS it.
+          if (!outcome) continue;
+          const { keys, byteSize } = exteriorOutcomeCacheKeys(outcome);
+          // `reachedScene: true` is ASSERTED here, not observed. The app knows
+          // the outcome was published; it does not know the viewport actually
+          // built a Blob for it, and it has no signal that would tell it. The
+          // assertion is the conservative direction — it waits for a revoke
+          // rather than freeing bytes a live Blob might hold — and its cost is
+          // the residue ADR 0042 records: ANY dropped outcome that never
+          // reached the scene waits for a retirement that will never arrive,
+          // and its bytes stay cached until recency evicts them.
+          queueExteriorCacheRelease(exteriorCacheReleaseRef.current, { releaseId, cellId, cacheKeys: keys, byteSize, reachedScene: true });
+        }
+      }
       if (idle && live) continue;
       const publish = () => {
         const outcomes = publishedExteriorCellOutcomes(entry.load, declaredCellIds);
@@ -1951,14 +2042,39 @@ export function App() {
         }
         setExteriorWaveOutcomes((current) => new Map(current).set(releaseId, outcomes));
       };
+      // NO release pass here. It used to run inside this loop, and that was a
+      // real defect: gate 1 (re-admission) reads the APPLIED per-wave
+      // `requested` sets, so a release firing during wave `w00`'s iteration
+      // cannot see that the same global decision re-admits a cell belonging to
+      // `w05`, whose reconciliation has not run yet. The candidate was released
+      // milliseconds before its own wave asked for the key again — a redundant
+      // refetch, and `releasedArtifactBytes` counting bytes that were
+      // immediately re-fetched. The pass is hoisted below the loop so it never
+      // observes a decision that is only partially applied.
       if (fresh.length === 0) { if (dropped.length > 0) publish(); continue; }
       void Promise.all(fresh.map((cellId) => runtime.loadCell(cellId, exteriorEffectiveProfile, exteriorCameraHeightBucketMeters, controller.signal)))
         .then((loaded) => {
           if (!isCurrent()) return;
           // Guarded, not unconditional: a cell the scheduler evicted while its
           // bytes were in flight stays evicted and its outcome is discarded.
-          acceptExteriorCellOutcomes(entry.load, fresh, loaded);
+          const verdict = acceptExteriorCellOutcomes(entry.load, fresh, loaded);
+          // A DISCARDED outcome is the second door into the release queue, and
+          // the exact one: these bytes were verified, cached, and then found to
+          // belong to a cell the scheduler had already evicted. They were never
+          // published, so they never became a Blob URL — `reachedScene: false`
+          // is a fact about the path, not an optimistic reading of it.
+          if (schedulerEnabled) {
+            for (const cellId of verdict.discarded) {
+              const outcome = loaded[fresh.indexOf(cellId)];
+              if (!outcome) continue;
+              const { keys, byteSize } = exteriorOutcomeCacheKeys(outcome);
+              queueExteriorCacheRelease(exteriorCacheReleaseRef.current, { releaseId, cellId, cacheKeys: keys, byteSize, reachedScene: false });
+            }
+          }
           publish();
+          // Gate (b) can only clear once a batch has settled, so the release
+          // pass runs here as well as on the reconciliation and the retirement.
+          runExteriorCacheRelease();
         })
         .catch(() => {
           if (!isCurrent()) return;
@@ -1966,11 +2082,26 @@ export function App() {
           setExteriorWaveOutcomes((current) => { const next = new Map(current); next.delete(releaseId); return next; });
         });
     }
+    // ONE release pass for the decision, after EVERY wave has applied it. This
+    // is the invariant the seam depends on: the pass never runs while a
+    // decision is partially applied, so gate 1 reads a `requested` union that
+    // covers the whole session rather than the waves iterated so far.
+    //
+    // The other two call sites hold the same invariant for the same reason:
+    // the settled-batch `.then` and the viewport's retirement callback both run
+    // as separate tasks, and JavaScript cannot interleave either with this
+    // synchronous loop.
+    runExteriorCacheRelease();
     return undefined;
     // `exteriorTargetKey` is a dependency even though the targets are read from
     // a ref: a change to WHICH releases are targeted must always re-run this
     // reconciliation, and it does not always coincide with a wave-state change.
-  }, [exteriorCameraHeightBucketMeters, exteriorEffectiveProfile, exteriorSchedulerSignature, exteriorTargetKey, exteriorWaves]);
+    // `runExteriorCacheRelease` has an empty dependency list and is therefore
+    // referentially stable for the life of the component; it is listed because
+    // the effect calls it, and its stability is what keeps the T002 identity
+    // claim — a default session's cell reconciliation runs exactly as often as
+    // it did — true after T003.
+  }, [exteriorCameraHeightBucketMeters, exteriorEffectiveProfile, exteriorSchedulerSignature, exteriorTargetKey, exteriorWaves, runExteriorCacheRelease]);
 
   // The only place a live cell load is cancelled wholesale: the component going
   // away. Everything else cancels exactly the wave whose inputs changed.
@@ -3369,6 +3500,7 @@ export function App() {
           onPublicRealmSelected={(feature) => selectPublicRealm(feature)}
           exteriorOverlay={exteriorCellOverlays}
           onExteriorUnanchored={setExteriorUnanchoredIds}
+          onExteriorCellsRetired={handleExteriorCellsRetired}
           onStage3RenderProof={stage3RenderProofRequested ? setStage3RenderProof : undefined}
           onFeatureOverlap={selectOverlapFeatures}
           featureFilter={featureFilter}

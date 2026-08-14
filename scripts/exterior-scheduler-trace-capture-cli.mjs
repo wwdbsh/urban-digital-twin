@@ -19,6 +19,18 @@
  *   `midtown-zoom-out-v1`     zoom out from street level through the 1.2-2.4 km
  *                             band ADR 0040 named, to citywide altitude.
  *
+ * T003 adds a third, captured by the `roam` command into its own record:
+ *
+ *   `midtown-roam-v1`         a MULTI-CAMERA roam: pan, zoom out, pan at
+ *                             altitude, zoom back in, pan on the other axis,
+ *                             zoom out again. The two T002 paths are each one
+ *                             monotone motion from a cold start, so their peak
+ *                             residency is a COLD-WINDOW reading and not a
+ *                             steady-state bound. A path that leaves a
+ *                             neighbourhood and comes back is what makes "peak
+ *                             residency over a session" a number rather than an
+ *                             extrapolation.
+ *
  * The trace is captured with `exteriorStreaming=off`. What is being recorded is
  * camera geometry — pose and the footprint Cesium sampled — and no exterior wave
  * participates in producing either. Capturing with six waves streaming would add
@@ -35,6 +47,7 @@
  *
  * Usage:
  *   node scripts/exterior-scheduler-trace-capture-cli.mjs trace   --preview http://127.0.0.1:4173 --port 9222
+ *   node scripts/exterior-scheduler-trace-capture-cli.mjs roam    --preview http://127.0.0.1:4173 --port 9222
  *   node scripts/exterior-scheduler-trace-capture-cli.mjs evidence --preview http://127.0.0.1:4173 --port 9222
  */
 import { mkdir, writeFile } from "node:fs/promises";
@@ -46,6 +59,13 @@ import { CITYWIDE_OVERVIEW_CELL_EXTENTS } from "../src/runtime/citywide-overview
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const traceRoot = join(repositoryRoot, "data", "exterior-scheduler-traces-20260814");
+/**
+ * T003's own record root. The T002 directory is left byte-identical: its two
+ * records are the frozen baseline this task's regression gate replays, and
+ * writing a new file beside them would make one directory carry two tasks'
+ * provenance.
+ */
+const governanceRoot = join(repositoryRoot, "data", "exterior-cache-governance-20260814");
 
 const BASE_RELEASE_ID = "manhattan-citywide-20260804";
 const VIEWPORT = { width: 1280, height: 800, deviceScaleFactor: 1 };
@@ -281,6 +301,66 @@ async function captureTraces(port, previewBase) {
   return { pan, zoom };
 }
 
+/**
+ * The T003 roam: six legs, two axes of motion, one continuous session.
+ *
+ * The legs are chosen so the camera LEAVES a neighbourhood and COMES BACK to
+ * altitude over it, which is the only shape under which "peak residency" and
+ * "re-entry past the hysteresis horizon" mean anything. A monotone pan can never
+ * re-enter, and a monotone zoom-out never returns to the ground it left.
+ */
+async function driveRoam(session) {
+  const legs = [
+    // The right-drag counts are not round: one right-drag of 12 px multiplies the
+    // camera height by roughly 1.17 in this viewport, so reaching the 2.4 km band
+    // edge from a 220 m start takes about 15 of them. Eight were tried first and
+    // the refusal below fired at 757 m, which is what the refusal is for.
+    { label: "street-pan-east", count: 6, dx: -150, dy: 0, button: "left" },
+    { label: "zoom-out-through-band", count: 16, dx: 0, dy: -12, button: "right" },
+    { label: "altitude-pan-east", count: 6, dx: -150, dy: 0, button: "left" },
+    { label: "zoom-back-in", count: 16, dx: 0, dy: 12, button: "right" },
+    { label: "street-pan-north", count: 6, dx: 0, dy: 150, button: "left" },
+    { label: "zoom-out-again", count: 16, dx: 0, dy: -12, button: "right" },
+  ];
+  for (const leg of legs) {
+    for (let step = 0; step < leg.count; step += 1) await drag(session, leg.dx, leg.dy, leg.button);
+  }
+  return legs.map((leg) => ({ label: leg.label, dragCount: leg.count, button: leg.button }));
+}
+
+/**
+ * Refuse a roam that is not a roam.
+ *
+ * Three properties, all checked against the recording rather than against the
+ * script that drove it: it has to sample enough distinct settled cameras to be a
+ * session; it has to move on BOTH axes rather than being a long pan; and it has
+ * to change altitude by an order of magnitude so the residency it certifies
+ * spans street level and overview rather than one band.
+ */
+function assertRoamed(path) {
+  const samples = path.samples;
+  if (samples.length < 12) fail(`${path.pathId} recorded only ${samples.length} settled camera samples; at least 12 are required for a steady-state reading.`);
+  const heights = samples.map((sample) => sample.camera.height);
+  const minHeight = Math.min(...heights);
+  const maxHeight = Math.max(...heights);
+  if (maxHeight / Math.max(1, minHeight) < 4) fail(`${path.pathId} spans only ${minHeight.toFixed(0)}-${maxHeight.toFixed(0)} m; a roam has to change altitude by at least 4x.`);
+  const longitudes = samples.map((sample) => sample.camera.longitude);
+  const latitudes = samples.map((sample) => sample.camera.latitude);
+  const longitudeSpanMeters = (Math.max(...longitudes) - Math.min(...longitudes)) * 84_600;
+  const latitudeSpanMeters = (Math.max(...latitudes) - Math.min(...latitudes)) * 111_000;
+  if (longitudeSpanMeters < 150 || latitudeSpanMeters < 150) {
+    fail(`${path.pathId} moved ${longitudeSpanMeters.toFixed(0)} m east-west and ${latitudeSpanMeters.toFixed(0)} m north-south; a roam has to move on both axes.`);
+  }
+  return {
+    settledSampleCount: samples.length,
+    minHeightMeters: minHeight,
+    maxHeightMeters: maxHeight,
+    longitudeSpanMeters,
+    latitudeSpanMeters,
+    groundRaySampleCount: samples.filter((sample) => sample.footprint.source === "ground-rays").length,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Evidence: the opt-in's two measured numbers at one recorded pose
 // ---------------------------------------------------------------------------
@@ -333,6 +413,12 @@ function summarizeWaves(probe) {
     deferredCellCount: total("deferredCellCount"),
     requestedArtifactCount: total("requestedArtifactCount"),
     loadedArtifactCount: total("loadedArtifactCount"),
+    // Session-wide, like cacheEntries/cachedBytes: the app writes the same
+    // totals to every runtime, so these are READ from the first wave and never
+    // summed. Absent on a pre-T003 bundle, which reads as 0 rather than as a
+    // missing field.
+    releasedArtifactCount: waves[0]?.metrics.releasedArtifactCount ?? 0,
+    releasedArtifactBytes: waves[0]?.metrics.releasedArtifactBytes ?? 0,
     // The exterior waves share ONE cache instance, so these are read from the
     // first wave rather than summed: summing would multiply one pool by six.
     cacheEntries: waves[0]?.metrics.cacheEntries ?? 0,
@@ -374,8 +460,8 @@ async function captureVariant(port, previewBase, variantId, params, settleMs, po
 
 // ---------------------------------------------------------------------------
 
-async function writeRecord(relativeName, body) {
-  const path = join(traceRoot, relativeName);
+async function writeRecord(relativeName, body, root = traceRoot) {
+  const path = join(root, relativeName);
   await mkdir(dirname(path), { recursive: true });
   const serialized = `${JSON.stringify(body, null, 2)}\n`;
   await writeFile(path, serialized);
@@ -413,6 +499,191 @@ async function main() {
     return;
   }
 
+  if (command === "roam") {
+    const roam = await capturePath(port, previewBase, "midtown-roam-v1", { ...panStartPose(), pitch: -35 }, driveRoam);
+    roam.roam = assertRoamed(roam);
+    await writeRecord("roam-trace.json", {
+      schemaVersion: "1.0",
+      recordId: "exterior-cache-governance-roam-20260814",
+      taskId: "T003",
+      capture: {
+        tool: "scripts/exterior-scheduler-trace-capture-cli.mjs roam",
+        renderer: "shipping CesiumJS viewport, preview build with VITE_EXTERIOR_SCHEDULER_PROBE=1",
+        transport: "Chrome DevTools Protocol, real Input.dispatchMouseEvent drags",
+        viewport: VIEWPORT,
+        baseReleaseId: BASE_RELEASE_ID,
+        exteriorStreaming: "off",
+        exteriorStreamingNote: "Camera geometry only, exactly as the T002 capture: pose and the ground-ray footprint Cesium sampled. No exterior wave participates in producing either. The residency this trace certifies is produced by replaying it OFFLINE through the pure scheduler, which is what makes the certification deterministic.",
+        purpose: "T002 reported peak residency over two monotone single-motion paths from a cold start. Those are cold-window readings and not steady-state bounds. This path roams — out, across, back down, across the other axis, out again — so a peak taken over it is a peak over a session.",
+        capturedAtIso: new Date().toISOString(),
+      },
+      paths: [roam],
+    }, governanceRoot);
+    return;
+  }
+
+  if (command === "roam-evidence") {
+    /**
+     * The release seam, observed in a REAL browser session rather than replayed.
+     *
+     * `governance-evidence` holds one pose, so its scheduler never evicts
+     * anything that had settled and the seam correctly releases nothing. That
+     * reads like a broken seam and is not one. This command drives the roam legs
+     * with exterior streaming ON and samples the runtime's own counters after
+     * every leg, so cache residency and released bytes are observed moving.
+     */
+    const settleMs = Number(argValue(argv, "--settle", "60000"));
+    const pose = evidencePoses()[0];
+    const session = await openFreshPage(port);
+    const samples = [];
+    try {
+      const cameraPose = { lon: pose.lon, lat: pose.lat, height: pose.height, heading: pose.heading, pitch: pose.pitch, roll: pose.roll };
+      await session.send("Page.navigate", { url: appUrl(previewBase, { pose: cameraPose, params: { exteriorScheduler: "on" } }) });
+      await waitForProbe(session, (probe) => probe.waves.length >= 6 && probe.waves.every((wave) => wave.metrics !== null), "roam-evidence waves");
+      await sleep(settleMs);
+      const sample = async (label) => {
+        const probe = await waitForProbe(session, () => true, `roam-evidence ${label}`);
+        samples.push({ label, ...summarizeWaves(probe) });
+      };
+      await sample("settled-at-street");
+      const legs = [
+        { label: "zoom-out-through-band", count: 16, dx: 0, dy: -12, button: "right" },
+        { label: "altitude-pan-east", count: 6, dx: -150, dy: 0, button: "left" },
+        { label: "zoom-back-in", count: 16, dx: 0, dy: 12, button: "right" },
+        { label: "street-pan-north", count: 6, dx: 0, dy: 150, button: "left" },
+      ];
+      for (const leg of legs) {
+        for (let step = 0; step < leg.count; step += 1) await drag(session, leg.dx, leg.dy, leg.button);
+        // A settle window after each leg so the loads the leg triggered can
+        // land; a counter read mid-flight would understate residency.
+        await sleep(20_000);
+        await sample(leg.label);
+      }
+    } finally {
+      await closePage(port, session);
+    }
+    await writeRecord("roam-evidence.json", {
+      schemaVersion: "1.0",
+      recordId: "exterior-cache-governance-roam-evidence-20260814",
+      taskId: "T003",
+      capture: {
+        tool: "scripts/exterior-scheduler-trace-capture-cli.mjs roam-evidence",
+        renderer: "shipping CesiumJS viewport, preview build with VITE_EXTERIOR_SCHEDULER_PROBE=1",
+        transport: "Chrome DevTools Protocol, real Input.dispatchMouseEvent drags",
+        viewport: VIEWPORT,
+        baseReleaseId: BASE_RELEASE_ID,
+        startPose: pose,
+        settleMs,
+        capturedAtIso: new Date().toISOString(),
+        note: "Exterior streaming ON, scheduler ON, real drags. `cacheEntries`, `cachedBytes`, `releasedArtifactCount` and `releasedArtifactBytes` are the runtime's own counters, read from the FIRST wave because the exterior cache is shared across all six; summing them would multiply one pool by six. Artifact-request and residency numbers only — no frame-time, GPU-memory or fidelity claim (ADR 0040 D7).",
+      },
+      samples,
+    }, governanceRoot);
+    return;
+  }
+
+  if (command === "governance-evidence") {
+    // A SEPARATE record from T002's `optin-evidence.json`, which is frozen: it
+    // is the baseline this task's regression gate replays, and re-running the
+    // `evidence` command would overwrite it with numbers from a different
+    // configuration and destroy the comparison.
+    const settleMs = Number(argValue(argv, "--settle", "75000"));
+    const variants = [];
+    for (const pose of evidencePoses()) {
+      variants.push(await captureVariant(port, previewBase, "scheduler-on-global", { exteriorScheduler: "on" }, settleMs, pose));
+    }
+    await writeRecord("governance-evidence.json", {
+      schemaVersion: "1.0",
+      recordId: "exterior-cache-governance-evidence-20260814",
+      taskId: "T003",
+      capture: {
+        tool: "scripts/exterior-scheduler-trace-capture-cli.mjs governance-evidence",
+        renderer: "shipping CesiumJS viewport, preview build with VITE_EXTERIOR_SCHEDULER_PROBE=1",
+        viewport: VIEWPORT,
+        baseReleaseId: BASE_RELEASE_ID,
+        poses: evidencePoses(),
+        settleMs,
+        capturedAtIso: new Date().toISOString(),
+        configuration: "T003: ONE selectResidentUnits decision over the static 883-row census table at a global cap of 128, plus the refcounted cache release seam. The T002 record at data/exterior-scheduler-traces-20260814/optin-evidence.json measured SIX per-wave decisions at a cap of 96 each and is left untouched for comparison.",
+        note: "Artifact-request and cache-residency numbers only. Nothing here is a frame-time, GPU-memory or rendered-fidelity claim (ADR 0040 D7).",
+        httpCacheCaveat: "`Network.setCacheDisabled` is not called. The `.glb` columns are usable regardless because the exterior fetcher passes `cache: \"no-store\"`; the runtime-counter columns are unaffected either way.",
+      },
+      variants,
+    }, governanceRoot);
+    return;
+  }
+
+  if (command === "latency") {
+    const settleMs = Number(argValue(argv, "--settle", "60000"));
+    const pose = evidencePoses()[0];
+    const session = await openFreshPage(port);
+    let record;
+    try {
+      session.events.length = 0;
+      const { poseId, ...cameraPose } = pose;
+      await session.send("Page.navigate", { url: appUrl(previewBase, { pose: cameraPose, params: { exteriorScheduler: "on" } }) });
+      await waitForProbe(session, (probe) => probe.waves.length >= 6 && probe.waves.every((wave) => wave.metrics !== null), "latency waves");
+      await sleep(settleMs);
+      // Per-request wall time for exterior GLBs, from the request being issued
+      // to its body finishing. This is a LOCALHOST + DISK price and nothing
+      // else: no deployment, no CDN, no cold TLS, no contended network.
+      const sent = new Map(session.events.filter((event) => event.method === "Network.requestWillBeSent").map((event) => [event.params.requestId, { url: event.params.request.url, at: event.params.timestamp }]));
+      const durations = session.events
+        .filter((event) => event.method === "Network.loadingFinished")
+        .flatMap((event) => {
+          const start = sent.get(event.params.requestId);
+          if (!start || !start.url.endsWith(".glb")) return [];
+          return [{ ms: (event.params.timestamp - start.at) * 1_000, bytes: event.params.encodedDataLength ?? 0 }];
+        })
+        .sort((left, right) => left.ms - right.ms);
+      if (durations.length === 0) fail("no exterior .glb request completed; there is no latency to report.");
+      const at = (quantile) => durations[Math.min(durations.length - 1, Math.floor(quantile * durations.length))].ms;
+      // The app-side price the network timing does NOT include: every artifact
+      // is SHA-256'd in the page before it is admitted. Measured in the same
+      // browser, on the same Web Crypto, over the median artifact size.
+      // Sorted by BYTES, separately from the by-duration sort above. Reading a
+      // byte extremum out of a duration-sorted array reports the size of the
+      // slowest request and calls it the largest, which is a different fact.
+      const bySize = durations.map((entry) => entry.bytes).sort((left, right) => left - right);
+      const medianBytes = bySize[Math.floor(bySize.length / 2)];
+      const hash = await session.evaluate(`(async () => {
+        const buffer = new Uint8Array(${medianBytes});
+        crypto.getRandomValues(buffer.subarray(0, Math.min(65536, buffer.length)));
+        const runs = 20;
+        const started = performance.now();
+        for (let index = 0; index < runs; index += 1) await crypto.subtle.digest("SHA-256", buffer.buffer.slice(0));
+        return JSON.stringify({ bytes: ${medianBytes}, runs, meanMs: (performance.now() - started) / runs });
+      })()`);
+      record = {
+        poseId,
+        requestCount: durations.length,
+        transportMs: { min: durations[0].ms, p50: at(0.5), p95: at(0.95), max: durations[durations.length - 1].ms },
+        encodedBytes: { min: bySize[0], median: medianBytes, max: bySize[bySize.length - 1] },
+        sha256: JSON.parse(typeof hash === "string" ? hash : "null"),
+      };
+    } finally {
+      await closePage(port, session);
+    }
+    await writeRecord("request-latency.json", {
+      schemaVersion: "1.0",
+      recordId: "exterior-cache-governance-latency-20260814",
+      taskId: "T003",
+      capture: {
+        tool: "scripts/exterior-scheduler-trace-capture-cli.mjs latency",
+        renderer: "shipping CesiumJS viewport, preview build with VITE_EXTERIOR_SCHEDULER_PROBE=1",
+        transport: "Chrome DevTools Protocol Network domain timestamps",
+        viewport: VIEWPORT,
+        baseReleaseId: BASE_RELEASE_ID,
+        settleMs,
+        capturedAtIso: new Date().toISOString(),
+        pricing: "LOCALHOST AND DISK ONLY. `transportMs` is the wall time from Network.requestWillBeSent to Network.loadingFinished for exterior .glb responses served by a local vite preview from a local disk. It is NOT a deployment latency: there is no CDN, no TLS handshake, no contended link and no cold cache tier in it, and a deployed figure would be dominated by terms that are absent here. `sha256` is the separate app-side price the network timing excludes — every artifact is digested in the page before admission — measured in the same browser over the median artifact size.",
+        httpCacheNote: "The exterior fetcher passes cache: \"no-store\", so an exterior .glb cannot be served from the HTTP cache and every measured request is a real fetch.",
+      },
+      measurement: record,
+    }, governanceRoot);
+    return;
+  }
+
   if (command === "evidence") {
     const settleMs = Number(argValue(argv, "--settle", "60000"));
     const variants = [];
@@ -440,7 +711,7 @@ async function main() {
     return;
   }
 
-  fail(`unknown command ${String(command)}. Use \`trace\` or \`evidence\`.`);
+  fail(`unknown command ${String(command)}. Use \`trace\`, \`roam\` or \`evidence\`.`);
 }
 
 main().catch((error) => { console.error(error instanceof Error ? error.message : String(error)); process.exit(1); });

@@ -1,0 +1,315 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "exterior-cache-governance-roam-evidence-20260814",
+  "taskId": "T003",
+  "capture": {
+    "tool": "scripts/exterior-scheduler-trace-capture-cli.mjs roam-evidence",
+    "renderer": "shipping CesiumJS viewport, preview build with VITE_EXTERIOR_SCHEDULER_PROBE=1",
+    "transport": "Chrome DevTools Protocol, real Input.dispatchMouseEvent drags",
+    "viewport": {
+      "width": 1280,
+      "height": 800,
+      "deviceScaleFactor": 1
+    },
+    "baseReleaseId": "manhattan-citywide-20260804",
+    "startPose": {
+      "poseId": "block835-street-260m",
+      "lon": -73.986359867,
+      "lat": 40.7487748165,
+      "height": 260,
+      "heading": 45,
+      "pitch": -20,
+      "roll": 0
+    },
+    "settleMs": 60000,
+    "capturedAtIso": "2026-08-14T09:56:38.245Z",
+    "note": "Exterior streaming ON, scheduler ON, real drags. `cacheEntries`, `cachedBytes`, `releasedArtifactCount` and `releasedArtifactBytes` are the runtime's own counters, read from the FIRST wave because the exterior cache is shared across all six; summing them would multiply one pool by six. Artifact-request and residency numbers only — no frame-time, GPU-memory or fidelity claim (ADR 0040 D7)."
+  },
+  "samples": [
+    {
+      "label": "settled-at-street",
+      "waveCount": 6,
+      "declaredCellCount": 883,
+      "scheduledCellCount": 12,
+      "deferredCellCount": 871,
+      "requestedArtifactCount": 14,
+      "loadedArtifactCount": 14,
+      "releasedArtifactCount": 0,
+      "releasedArtifactBytes": 0,
+      "cacheEntries": 14,
+      "cachedBytes": 1910784,
+      "perWave": [
+        {
+          "releaseId": "manhattan-exterior-cells-20260811-v3",
+          "declaredCellCount": 1,
+          "scheduledCellCount": 1,
+          "deferredCellCount": 0,
+          "requestedArtifactCount": 14
+        },
+        {
+          "releaseId": "manhattan-midtown-core-cells-20260811-v3",
+          "declaredCellCount": 149,
+          "scheduledCellCount": 11,
+          "deferredCellCount": 138,
+          "requestedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-lower-manhattan-cells-20260812-p1",
+          "declaredCellCount": 126,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 126,
+          "requestedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-southern-remainder-cells-20260812-p1",
+          "declaredCellCount": 176,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 176,
+          "requestedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-central-upper-manhattan-cells-20260812-p1",
+          "declaredCellCount": 249,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 249,
+          "requestedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-northern-manhattan-cells-20260812-p1",
+          "declaredCellCount": 182,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 182,
+          "requestedArtifactCount": 0
+        }
+      ]
+    },
+    {
+      "label": "zoom-out-through-band",
+      "waveCount": 6,
+      "declaredCellCount": 883,
+      "scheduledCellCount": 12,
+      "deferredCellCount": 871,
+      "requestedArtifactCount": 43,
+      "loadedArtifactCount": 43,
+      "releasedArtifactCount": 0,
+      "releasedArtifactBytes": 0,
+      "cacheEntries": 43,
+      "cachedBytes": 11144780,
+      "perWave": [
+        {
+          "releaseId": "manhattan-exterior-cells-20260811-v3",
+          "declaredCellCount": 1,
+          "scheduledCellCount": 1,
+          "deferredCellCount": 0,
+          "requestedArtifactCount": 14
+        },
+        {
+          "releaseId": "manhattan-midtown-core-cells-20260811-v3",
+          "declaredCellCount": 149,
+          "scheduledCellCount": 9,
+          "deferredCellCount": 140,
+          "requestedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-lower-manhattan-cells-20260812-p1",
+          "declaredCellCount": 126,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 126,
+          "requestedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-southern-remainder-cells-20260812-p1",
+          "declaredCellCount": 176,
+          "scheduledCellCount": 2,
+          "deferredCellCount": 174,
+          "requestedArtifactCount": 29
+        },
+        {
+          "releaseId": "manhattan-central-upper-manhattan-cells-20260812-p1",
+          "declaredCellCount": 249,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 249,
+          "requestedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-northern-manhattan-cells-20260812-p1",
+          "declaredCellCount": 182,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 182,
+          "requestedArtifactCount": 0
+        }
+      ]
+    },
+    {
+      "label": "altitude-pan-east",
+      "waveCount": 6,
+      "declaredCellCount": 883,
+      "scheduledCellCount": 16,
+      "deferredCellCount": 867,
+      "requestedArtifactCount": 79,
+      "loadedArtifactCount": 79,
+      "releasedArtifactCount": 79,
+      "releasedArtifactBytes": 22258480,
+      "cacheEntries": 0,
+      "cachedBytes": 0,
+      "perWave": [
+        {
+          "releaseId": "manhattan-exterior-cells-20260811-v3",
+          "declaredCellCount": 1,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 1,
+          "requestedArtifactCount": 14
+        },
+        {
+          "releaseId": "manhattan-midtown-core-cells-20260811-v3",
+          "declaredCellCount": 149,
+          "scheduledCellCount": 4,
+          "deferredCellCount": 145,
+          "requestedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-lower-manhattan-cells-20260812-p1",
+          "declaredCellCount": 126,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 126,
+          "requestedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-southern-remainder-cells-20260812-p1",
+          "declaredCellCount": 176,
+          "scheduledCellCount": 12,
+          "deferredCellCount": 164,
+          "requestedArtifactCount": 65
+        },
+        {
+          "releaseId": "manhattan-central-upper-manhattan-cells-20260812-p1",
+          "declaredCellCount": 249,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 249,
+          "requestedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-northern-manhattan-cells-20260812-p1",
+          "declaredCellCount": 182,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 182,
+          "requestedArtifactCount": 0
+        }
+      ]
+    },
+    {
+      "label": "zoom-back-in",
+      "waveCount": 6,
+      "declaredCellCount": 883,
+      "scheduledCellCount": 11,
+      "deferredCellCount": 872,
+      "requestedArtifactCount": 93,
+      "loadedArtifactCount": 93,
+      "releasedArtifactCount": 79,
+      "releasedArtifactBytes": 22258480,
+      "cacheEntries": 14,
+      "cachedBytes": 1910784,
+      "perWave": [
+        {
+          "releaseId": "manhattan-exterior-cells-20260811-v3",
+          "declaredCellCount": 1,
+          "scheduledCellCount": 1,
+          "deferredCellCount": 0,
+          "requestedArtifactCount": 28
+        },
+        {
+          "releaseId": "manhattan-midtown-core-cells-20260811-v3",
+          "declaredCellCount": 149,
+          "scheduledCellCount": 10,
+          "deferredCellCount": 139,
+          "requestedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-lower-manhattan-cells-20260812-p1",
+          "declaredCellCount": 126,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 126,
+          "requestedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-southern-remainder-cells-20260812-p1",
+          "declaredCellCount": 176,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 176,
+          "requestedArtifactCount": 65
+        },
+        {
+          "releaseId": "manhattan-central-upper-manhattan-cells-20260812-p1",
+          "declaredCellCount": 249,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 249,
+          "requestedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-northern-manhattan-cells-20260812-p1",
+          "declaredCellCount": 182,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 182,
+          "requestedArtifactCount": 0
+        }
+      ]
+    },
+    {
+      "label": "street-pan-north",
+      "waveCount": 6,
+      "declaredCellCount": 883,
+      "scheduledCellCount": 11,
+      "deferredCellCount": 872,
+      "requestedArtifactCount": 93,
+      "loadedArtifactCount": 93,
+      "releasedArtifactCount": 79,
+      "releasedArtifactBytes": 22258480,
+      "cacheEntries": 14,
+      "cachedBytes": 1910784,
+      "perWave": [
+        {
+          "releaseId": "manhattan-exterior-cells-20260811-v3",
+          "declaredCellCount": 1,
+          "scheduledCellCount": 1,
+          "deferredCellCount": 0,
+          "requestedArtifactCount": 28
+        },
+        {
+          "releaseId": "manhattan-midtown-core-cells-20260811-v3",
+          "declaredCellCount": 149,
+          "scheduledCellCount": 10,
+          "deferredCellCount": 139,
+          "requestedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-lower-manhattan-cells-20260812-p1",
+          "declaredCellCount": 126,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 126,
+          "requestedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-southern-remainder-cells-20260812-p1",
+          "declaredCellCount": 176,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 176,
+          "requestedArtifactCount": 65
+        },
+        {
+          "releaseId": "manhattan-central-upper-manhattan-cells-20260812-p1",
+          "declaredCellCount": 249,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 249,
+          "requestedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-northern-manhattan-cells-20260812-p1",
+          "declaredCellCount": 182,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 182,
+          "requestedArtifactCount": 0
+        }
+      ]
+    }
+  ]
+}

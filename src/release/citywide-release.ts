@@ -433,10 +433,40 @@ export function stableCitywidePickId(parentId: string): string {
   return `citywide-parent:${parentId}`;
 }
 
+/**
+ * The shared recency cache behind every release runtime.
+ *
+ * ## The byte counter is incremental, and that is a T003 change
+ *
+ * `bytes()` used to be a full reduce over every entry, and `evict()` called it
+ * inside its own `while` condition — so one saturating `set()` that had to drop
+ * k entries walked the whole map k times, and a cache holding n entries did
+ * O(n * k) work to admit one artifact. That was tolerable while eviction was a
+ * rare backstop nobody expected to fire. T003 makes scheduler-driven residency
+ * routine, so eviction stops being rare, and the counter is now maintained
+ * incrementally by the three mutators. `bytes()` reads the running total.
+ *
+ * The running total is an INVARIANT rather than a cache of a computation, so a
+ * test re-derives it by full reduce after a mixed workload rather than trusting
+ * that the three mutators agree.
+ *
+ * ## A desync warning for whoever adds a per-class ceiling
+ *
+ * `set()` THROWS for an entry larger than `maxBytes`, and callers precheck the
+ * same condition before fetching — `ExteriorCellRuntime.loadVerifiedArtifact`
+ * reads `cache.maxBytes` and fails closed with `artifact-exceeds-cache-budget`.
+ * The two agree today only because both read the SAME `maxBytes`. A future
+ * per-class reservation that gave one class a smaller effective ceiling would
+ * break that: the precheck would pass against the pool ceiling and `set()` would
+ * throw against the class ceiling, from inside a settled request promise, and
+ * the failure would surface as an unrelated code. Any per-class ceiling must
+ * therefore be readable by the precheck, not only enforced at `set()`.
+ */
 export class CitywideLruCache<T> {
   private readonly entries = new Map<string, { value: T; bytes: number; used: number }>();
   private clock = 0;
   private evictions = 0;
+  private totalBytes = 0;
   readonly maxEntries: number;
   readonly maxBytes: number;
   constructor(maxEntries: number = CITYWIDE_BUDGETS.maxLoadedShards, maxBytes: number = CITYWIDE_BUDGETS.maxLoadedBytes) {
@@ -451,22 +481,31 @@ export class CitywideLruCache<T> {
   }
   set(key: string, value: T, bytes: number): void {
     if (!Number.isSafeInteger(bytes) || bytes < 0 || bytes > this.maxBytes) throw new Error("Citywide cache entry bytes are invalid.");
-    this.entries.delete(key);
+    this.dropEntry(key);
     this.entries.set(key, { value, bytes, used: ++this.clock });
+    this.totalBytes += bytes;
     this.evict();
   }
-  delete(key: string): boolean { return this.entries.delete(key); }
-  clear(): void { this.entries.clear(); }
+  delete(key: string): boolean { return this.dropEntry(key); }
+  clear(): void { this.entries.clear(); this.totalBytes = 0; }
   has(key: string): boolean { return this.entries.has(key); }
   size(): number { return this.entries.size; }
-  bytes(): number { return [...this.entries.values()].reduce((sum, entry) => sum + entry.bytes, 0); }
+  bytes(): number { return this.totalBytes; }
   evictionCount(): number { return this.evictions; }
   keys(): string[] { return [...this.entries.keys()]; }
+  /** The single place an entry leaves the map, so the running total cannot drift. */
+  private dropEntry(key: string): boolean {
+    const entry = this.entries.get(key);
+    if (!entry) return false;
+    this.entries.delete(key);
+    this.totalBytes -= entry.bytes;
+    return true;
+  }
   private evict(): void {
-    while (this.entries.size > this.maxEntries || this.bytes() > this.maxBytes) {
+    while (this.entries.size > this.maxEntries || this.totalBytes > this.maxBytes) {
       const oldest = [...this.entries.entries()].sort((left, right) => left[1].used - right[1].used || left[0].localeCompare(right[0]))[0];
       if (!oldest) break;
-      this.entries.delete(oldest[0]);
+      this.dropEntry(oldest[0]);
       this.evictions += 1;
     }
   }
