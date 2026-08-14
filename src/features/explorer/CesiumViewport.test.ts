@@ -231,6 +231,43 @@ describe("Cesium POI render seam", () => {
     expect(shouldReplaceDenseRenderPlan(first, second)).toBe(false);
   });
 
+  /**
+   * T005: the transition artifact, isolated from the browser.
+   *
+   * A detail radius crossing removes ONE building from the dense pass — the
+   * V3 overlay takes over drawing it. This is the deterministic half of the
+   * measurement in ADR 0044 §3.2: it pins the *mechanism* exactly (one element
+   * of 45,154 is enough), while the browser capture measures what that costs.
+   *
+   * The test is written to fail if the compare is ever weakened to a length
+   * check or a fingerprint, because both would silently retain stale geometry.
+   */
+  it("rebuilds the whole dense plan when exactly one of 45,154 features changes", () => {
+    const island = Array.from({ length: 45_154 }, (_, index) => ({
+      ...realRestaurant,
+      id: `doitt:${String(index).padStart(7, "0")}`,
+    }));
+    // The V3 overlay takes over one building: the dense pass sees the same
+    // array minus one element, in the same order.
+    const oneLeft = [...island.slice(0, 22_000), ...island.slice(22_001)];
+    expect(oneLeft).toHaveLength(island.length - 1);
+    expect(shouldReplaceDenseRenderPlan(island, oneLeft)).toBe(true);
+
+    // And a same-length change is caught too, so the trigger is not merely the
+    // length: substituting one element for a DIFFERENT OBJECT with identical
+    // content still rebuilds, because the compare is by reference.
+    const oneSwapped = island.map((feature, index) => (index === 22_000 ? { ...feature } : feature));
+    expect(oneSwapped).toHaveLength(island.length);
+    expect(oneSwapped[22_000]).toEqual(island[22_000]);
+    expect(oneSwapped[22_000]).not.toBe(island[22_000]);
+    expect(shouldReplaceDenseRenderPlan(island, oneSwapped)).toBe(true);
+
+    // The counterfactual that makes the two assertions above mean something:
+    // the identical array does NOT rebuild, so the trigger really is the
+    // one-element difference and not "any call rebuilds".
+    expect(shouldReplaceDenseRenderPlan(island, island)).toBe(false);
+  });
+
   it("refines boundary-shard records by feature bounds before applying the dense cap", () => {
     const inViewport = { ...realRestaurant, id: "citywide:in-viewport", coordinates: [-73.99, 40.748] as Feature["coordinates"], geometry: { type: "Point" as const, coordinates: [-73.99, 40.748] as Feature["coordinates"] } };
     const outsideViewport = { ...realRestaurant, id: "citywide:outside-viewport", coordinates: [-73.8, 40.9] as Feature["coordinates"], geometry: { type: "Point" as const, coordinates: [-73.8, 40.9] as Feature["coordinates"] } };

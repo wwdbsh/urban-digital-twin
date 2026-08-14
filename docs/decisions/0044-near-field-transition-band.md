@@ -273,3 +273,335 @@ govern is not there yet. §3 records what the captures then measured, and §4
 records the verdict that follows.
 
 ---
+
+## Part 2b — what the promoted composition means for the poses
+
+Two consequences of §2 shape every number below, and both are properties of the
+data rather than of the scheduler:
+
+1. **The V3 overlay is small and coarse-grained.** 484 buildings in 13 cells,
+   and those 13 are z14–z16 tiles up to ~2.2 km across. A radius measured to a
+   rectangle's NEAREST EDGE therefore has very little to discriminate: a z14
+   cell 2 km wide has its nearest edge inside 1.2 km from a great many camera
+   positions.
+2. **Fetched is not drawn.** At the 1 km pose 54 artifacts are fetched and only
+   14 buildings are suppressed from the dense pass. The app says why, in its own
+   notice: *"Exterior geometry for 40 verified buildings is not drawn: the
+   matching base building record is not loaded, so there is no verified WGS84
+   anchor for it."* That is the 40 central-upper assets. It is the reason
+   `exteriorSuppressedFeatureCount` and not `requestedArtifactCount` is the
+   honest rendered unit.
+
+## Part 3 — measurements
+
+Captured 2026-08-14 on the served bundle
+`cd8920d38f36a5d8ccfbbae09afa05eae1373b84010836719585cf176fdd89dd`
+(`data/transition-band-20260814/served-bundle.json`), Chrome 151 headless,
+1440×900 @1, ANGLE/SwiftShader.
+
+> **Environment label, applied to every millisecond below.** This is a SOFTWARE
+> rasteriser. Frame times and build times are not reference-MacBook numbers and
+> are not offered as any. What transfers is the ORDERING of events —
+> `planBuildCount` advancing while `planSwapCount` does not — because that
+> ordering is a property of the code, not of the renderer. Per ADR 0040 D7,
+> decoded GPU bytes remain unobservable and nothing here claims them.
+
+### 3.1 — The A/B (`data/transition-band-20260814/ab-evidence.json`)
+
+Candidate radius **1,200 m**. Settle 45 s per capture. Each pose is a fresh tab.
+
+| pose | arm | `hold` | visible | deferred | retained | resident | reserved | V3 drawn | dense buildings | artifacts | ext. hosts |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 500 m | radius | `none` | 66 | **0** | 0 | 66 | 2 | **14** | 3,064 | 14 | none |
+| 500 m | dense-only | — | — | — | — | — | — | **0** | 2,981 | 0 | none |
+| 1 km | radius | `none` | 95 | **0** | 29 | 124 | 2 | **14** | 5,197 | 54 | none |
+| 1 km | dense-only | — | — | — | — | — | — | **0** | 4,163 | 0 | none |
+| 2 km | radius | `none` | 102 | **0** | 13 | 115 | 2 | **54** | 11,315 | 54 | none |
+| 2 km | dense-only | — | — | — | — | — | — | **0** | 4,123 | 0 | none |
+| 3 km | radius | `none` | **2** | **0** | 91 | 93 | 2 | **54** | 19,004 | 54 | none |
+| 3 km | dense-only | — | — | — | — | — | — | **0** | 4,563 | 0 | none |
+
+Six readings, in order of importance:
+
+1. **`hold === "none"` in all four radius-arm decisions**, on `ground-rays`
+   footprints. The pre-registered assertion holds; no captured decision is a
+   held or bootstrap answer about a footprint the app did not trust.
+2. **`deferredCount === 0` at ALL FOUR poses.** The 128 cap never binds
+   anywhere in the near field. This is the pre-registered dead-end A, now
+   measured rather than argued: the band edges cannot have influenced any of
+   these decisions, because bands only decide who is cut and nothing was cut.
+   **The footprint — and now the radius — is what binds.**
+3. **The radius does bound residency, and the fade-out is visible in the data.**
+   At 3 km the 1,200 m radius admits only the 2 reserved cells (`visibleCount`
+   2) while 91 of the 93 resident cells are hysteresis-retained and decaying.
+   That is exactly the designed behaviour — a tightening radius is a fade, not
+   a cliff — captured live rather than only in a unit test.
+4. **The camera reservation survives every pose** (`reserved` = 2 at all four),
+   so no radius dropped the cell the camera stands in.
+5. **Zero external hosts in every capture.** The local-only invariant holds.
+6. **The A/B has a confound, and it is recorded rather than smoothed.** Arm (ii)
+   is reached by `exteriorStreaming=off`, and `parseExteriorStreamingUrl`
+   deliberately drops the scheduler flag for a session with no exterior wave.
+   That also withdraws T004's citywide overview residency raise, so the
+   `dense buildings` column is **not** comparable between arms — the radius arm
+   is drawing more dense geometry because it has the raised budgets, not because
+   of the radius. The comparable columns are `V3 drawn` (14/54 vs 0) and the
+   artifact/host columns. **A clean dense-only arm at the raised budgets is not
+   reachable from the shipping URL contract**, and building one would mean
+   decoupling the flag from the overlay — a behaviour change outside this
+   cycle's frozen scope. It is handed to T006 with the default flip, where the
+   flag stops being the discriminator anyway.
+
+### 3.2 — The transition artifact (`data/transition-band-20260814/crossing-evidence.json`)
+
+One crossing, driven by **six real 180 px left-drags in ONE document**. (The
+first attempt drove the crossing with a URL change; that is a full page reload
+which destroys the execution context, so it measures a boot and not a
+transition. The finding is recorded because the mistake is easy to repeat.)
+
+| moment | t from drag start | `planBuildCount` | `planSwapCount` | `planCancellationCount` | plan fingerprint | frame diff vs before |
+| --- | --- | --- | --- | --- | --- | --- |
+| before | — | 6 | 1 | 5 | `5496:e3cb3f75` | — |
+| frame #0 | 6,238 ms | 6 | 1 | 5 | `5496:e3cb3f75` | 0.4750 |
+| frame #1 | 6,818 ms | **8** | **1** | **6** | `4803:519ed533` | 0.4750 |
+| frame #2 | 7,455 ms | 8 | 1 | 6 | `4803:519ed533` | 0.4780 |
+| frame #3 | 8,244 ms | 8 | 1 | 6 | `4803:519ed533` | 0.4780 |
+| settle t=0 s | 8,968 ms | 8 | **1** | 6 | `4803:519ed533` | 0.4780 |
+| settle t=1 s | 9,639 ms | 8 | **1** | 6 | `4803:519ed533` | 0.4780 |
+| settle t=2 s | 10,322 ms | 8 | **2** | 6 | `4803:519ed533` | 0.4780 |
+| settle t=4 s | 11,086 ms | 8 | 2 | 6 | `4803:519ed533` | **0.3043** |
+| settle t=8 s | 11,758 ms | 8 | 2 | 6 | `4803:519ed533` | 0.3043 |
+
+`hold === "none"` and `deferredCount === 0` at every settle sample. Zero
+external hosts.
+
+**The double-draw window, read off the counters.** The new plan starts between
+frame #0 and frame #1 (`planBuildCount` 6→8, fingerprint changes), and the swap
+completes between the t=1 s and t=2 s samples (`planSwapCount` 1→2). So the
+window during which the old full-island layer and the new partial one were both
+in `rootDenseCollection` is bounded by
+
+  [9,639 − 6,818, 10,322 − 6,238] = **[2,821 ms, 4,084 ms]**,
+
+and the renderer's own `totalBuildMs` for the committed build — **3,557.9 ms** —
+sits inside that interval and is the point estimate.
+
+**And the frame really does change after the interaction ends.** The pixel diff
+holds at 0.478 through the whole window and then drops to 0.304 at t = 4 s:
+`differenceFromPrevious` = **0.2176**, i.e. **21.8 % of the frame changed ~4
+seconds after the user stopped dragging**. That is not an antialiasing wobble.
+It is the island being redrawn.
+
+**Six builds and five cancellations before the crossing even started.** The
+`before` state already reads `planBuildCount: 6, planSwapCount: 1,
+planCancellationCount: 5`: bootstrapping this session threw away five dense
+plans to commit one.
+
+**The deterministic half of the same finding** is
+`CesiumViewport.test.ts` → *"rebuilds the whole dense plan when exactly one of
+45,154 features changes"*: `shouldReplaceDenseRenderPlan` returns `true` for an
+array differing in one element, and also for one whose element is replaced by an
+equal-but-not-identical object. One building entering or leaving the V3 overlay
+is sufficient. The browser measured what that costs; the test pins that it is
+what happens.
+
+**Memory at the crossing — arithmetic, labelled (ADR 0040 D7).** ADR 0043's
+committed figure: ≈ 97 MB decoded GPU-side for one island layer, and "the layer
+swap holds the old and new layers simultaneously, so the transient is ≈ 190 MB".
+What this task adds is the **frequency**: ADR 0043's swap happened when the
+resident SHARD set changed; a detail radius makes the plan change whenever a
+BUILDING crosses the radius, so the ≈ 190 MB dual-layer transient becomes a
+**per-crossing** cost rather than a per-shard-set-change one. No GPU byte was
+measured; this is arithmetic over a committed arithmetic.
+
+### 3.3 — The 2 % gate, applied to the transition it actually covers
+
+Per pre-registered criterion (a), measured on **Block 835 `lod_0` ↔ `lod_1` at
+250 m** — the only eligible LOD transition in the shipping composition. Block
+835's assembly declares exactly `lod_0` (geometric error 0 m,
+`maxDistanceMeters` 250) and `lod_1` (0.2 m, unbounded) for all 14 assets.
+
+The gate is `projected-silhouette-ratio` v1 over four azimuths
+(`view:east/north/south/west`) against `maximumRatio: 0.02`, and it is enforced
+by `validateMultiLodAssembly` at release time, so these are checksum-pinned
+declarations and not a fresh measurement by this task:
+
+| statistic | deviation ratio | against the 2 % bar |
+| --- | --- | --- |
+| worst (`doitt:925937`) | **0.001834** | **10.9× inside** |
+| mean over 14 assets | 0.000721 | 27.7× inside |
+| best (`doitt:102705`, `doitt:262867`) | 0.000000 | — |
+
+**PASS, with an order of magnitude of margin.** All 14 assets are inside the bar.
+
+For contrast, and confirming why the dense→V3 swap was excluded: ADR 0040
+measured the prism-vs-V3 comparison — which is precisely the dense→V3 pair,
+because the dense shards draw the same prism — and recorded *"Silhouette
+`maximumRatio` 0.02 — EXEMPT for 22,969 of 44,330 assets (51.81 %). Measured,
+not asserted."* Applying the gate there would have been a pre-determined fail.
+
+### 3.4 — Rendered stills, and what they are worth
+
+`data/transition-band-20260814/captures/` holds all 8 pose stills, 4 consecutive
+crossing frames, the 5 settle-series stills, and before/after.
+
+**Honest limit.** The stills are headless-SwiftShader renders at a near-top-down
+framing over an imagery-free globe, so V3 textured roofs are distinguishable
+from plain dense extrusions but building SIDES largely are not. They are
+adequate as evidence of *what is drawn*, and they are the source of the pixel
+diffs above, which are quantitative. They are **not** adequate as a subjective
+"does it look right" judgement, and the verdict below does not rest on one.
+
+## Part 4 — the verdict
+
+### 4.1 — The no-popping check: **FAILS, exactly as pre-registered**
+
+The pre-registered statement was "no double-draw and no island rebuild visible
+at a band crossing". Both halves fail:
+
+- **Double-draw:** measured window **[2,821 ms, 4,084 ms]**, point estimate
+  **3,557.9 ms**, with `planBuildCount` advanced and `planSwapCount` unmoved
+  across four consecutive frames and two settle samples.
+- **Island rebuild visible:** **21.8 % of the frame changed at t = 4 s**, after
+  the drag had ended.
+
+This is a **measured defect of the current renderer**, not a defect of the
+detail radius, and not a reason to reject the radius. The radius is what makes
+the crossing happen at a chosen distance instead of an arbitrary one; the cost
+of the crossing is owned by `shouldReplaceDenseRenderPlan`.
+
+**The named prerequisite for T006 is the incremental dense-plan update.** A
+crossing changes one building's owner. The renderer's answer is to rebuild all
+of them. Until that is an add/remove against the live layer, every crossing —
+and therefore every default session that streams — pays a multi-second
+double-draw. **T006 must not flip the default before this is fixed.**
+
+### 4.2 — The revival clause: **DOES NOT FIRE**
+
+Against the criteria pre-registered in §1.3, before any capture:
+
+| condition | bar | measured | fires? |
+| --- | --- | --- | --- |
+| (X) dense plan rebuild at a crossing | > 8,000 ms | **3,557.9 ms** | **no** |
+| (Y) double-draw window | > 4,000 ms | **3,557.9 ms** (interval ≤ 4,084 ms) | **no** |
+| AND not fixable incrementally | — | an incremental update is a named, un-attempted, strictly cheaper fix | **no** |
+
+**Recorded verdict: the per-cell coarse-GLB revival does NOT fire.** All three
+legs fail, and the third would defeat it alone.
+
+Two honesty notes that do not change the verdict:
+
+- **Y is under its bar by 11 %.** 3,557.9 ms against 4,000 ms is not a
+  comfortable pass, and the measured interval's upper bound (4,084 ms) is above
+  the bar outright. The verdict rests on the point estimate and on the AND
+  clause.
+- **This crossing rebuilt 5,496 features in 46 chunks, not the island's 57,273
+  in 478.** The same pose set measured boot builds of 18,026 ms (2 km, 133
+  chunks) and 27,552 ms (3 km, 212 chunks) in this environment. A crossing at
+  island scale would plausibly exceed X — but **this task did not measure one**,
+  and per the D7 discipline a plausible number is not a measured one. If T006's
+  campaign measures an island-scale crossing above 8,000 ms, condition (X) is
+  met and the revival question returns — still gated by the AND clause, which
+  the incremental update is expected to settle.
+
+### 4.3 — The detail radius: recommended value
+
+**Recommendation for T006's default flip: keep `maxUnitDistanceMeters` at
+`null`, and do not ship a detail radius in this composition.**
+
+The reasoning is the arithmetic in §2, confirmed by §3.1:
+
+1. **There is no cost to bound.** The whole V3 overlay is 484 buildings in 13
+   cells. Wholly resident it measures 484 cache entries / 122,601,292 B, and
+   ADR 0042 already records that neither cache ceiling binds at any camera in
+   Manhattan. `deferredCount` was **0 at all four poses**: nothing was refused
+   for want of budget.
+2. **The knob barely discriminates at this granularity.** The 13 shipping cells
+   are z14–z16 tiles up to ~2.2 km across, and the metric is nearest-edge
+   distance. A 1,200 m radius admitted or refused whole multi-kilometre tiles.
+3. **It costs crossings, and crossings are currently expensive.** Every radius
+   boundary is a place where §3.2's multi-second double-draw fires. Adding
+   crossings before the incremental dense-plan update exists is adding cost for
+   no measured benefit.
+4. **It is ready when there is something to bound.** The field, its tests, its
+   URL parameter, its fade-out behaviour and its reservation exemption are all
+   in place and measured. When a wave ships its full census (the ADR 0040
+   `census-only` retention reversed), the radius is one URL parameter away from
+   being measurable again, and §3.1's table is the baseline to compare against.
+
+**If T006 nonetheless needs a radius**, 1,200 m is the value with evidence
+behind it: it is the near edge of ADR 0040's measured 1.2–2.4 km transition band
+(p95 SSE crossing one pixel at ~2.4 km, median at ~1.2 km), it is the value the
+§3.1 table was captured at, and at that value the camera reservation, the
+hysteresis fade and `hold === "none"` were all confirmed live.
+
+## Part 5 — deferred by number
+
+- **D-1 (from ADR 0041/0043 C-1): the `refreshViewport` → `selectResidentUnits`
+  refactor is RETIRED, not deferred again.** ADR 0043 handed it here with its
+  own retirement condition: *"should be retired outright there unless the
+  near-field band needs a mixed unit list."* The near-field band does not need
+  one. This cycle's lever is a scalar bound inside the existing cell decision;
+  nothing in §3 required ranking cells and shards in one pool, and no
+  measurement was blocked by their being separate. Retired with that reason
+  recorded. Reviving it needs a new finding, not this obligation.
+- **D-2: the incremental dense-plan update → T006, as a NAMED PREREQUISITE of
+  the default flip** (§4.1). Not attempted here: it is not trivial (it needs
+  per-instance add/remove against a live `PrimitiveCollection` plus the
+  cancellation and generation guards that the current whole-layer swap gets for
+  free), and attempting it inside a measurement cycle would have meant measuring
+  a renderer this task had just changed.
+- **D-3: the deferred/evicted fallback-notice wording → T006**, unchanged from
+  ADR 0043. §3.4's stills show the notice reading *"121 of 123 exterior cells
+  ship no exterior geometry in this build (by design; no substitute was
+  selected)"*, which is accurate but reports a data fact in the register of a
+  fault.
+- **D-4: the ADR 0042 band-internal ranking finding is NOT taken here.** The
+  committed test *"FINDING for T005: band-internal ranking prefers wave order
+  over distance"* still documents current behaviour and still passes. Two
+  reasons it is not this cycle's lever: it changes `compareRanked`, which both
+  frozen thrash baselines were measured against; and §3.1 shows it is
+  **unreachable in the near field**, because band-internal ranking only decides
+  who is cut and `deferredCount` was 0 at every pose. It matters where the cap
+  binds — an island-overview concern — and belongs with T006's campaign.
+- **D-5: a clean dense-only arm at the raised citywide budgets** (§3.1 reading
+  6) → T006.
+- **D-6: the React harness was NOT taken.** ADR 0043's condition was that it is
+  needed only if a cycle changes the cell-loading effect's call order. This
+  cycle does not: the radius is one more field on the input object that
+  `scheduleExteriorCellsGlobally` already received, and the effect's dependency
+  array, abort test and reconciliation are untouched.
+- **D-7: the 100 %-of-the-island viewpoint search stays out of the pose set.**
+  It is a framing question about the overview tier and is orthogonal to a
+  near-field radius.
+- **D-8: the 484 / 474 discrepancy is UNRESOLVED.** This task counted 484
+  distinct available buildings across the six promoted waves' committed cell
+  releases, matching ADR 0041's measured `requestedArtifactCount: 484` and 490
+  GLB responses. ADR 0040 states *"only 474 promoted asset entries are
+  committed"*. The 10-entry difference is not explained here and is carried as a
+  discrepancy rather than silently reconciled to whichever number is convenient.
+
+## Part 6 — drift notes
+
+- **`maxUnitDistanceMeters` is optional and unread by default.** No committed
+  policy sets it. `EXTERIOR_CELL_SCHEDULER_POLICY` and
+  `EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY` are byte-identical to T003's, the
+  thrash and cache-governance baselines pass unchanged, and
+  `emit-citywide-overview-cell-extents.mjs --check` reports the 883-cell census
+  up to date at its committed digest.
+- **`exteriorSuppressedFeatureCount` is additive telemetry.** It is
+  `exteriorRenderedCanonicalFeatureIds(...).size`, published through the
+  existing `DenseRenderMetrics` channel and read by the diagnostics and the
+  probe. It is included in `publishCitywideDenseMetrics`'s equality check
+  because a building entering or leaving the V3 overlay moves only that field
+  until the plan rebuilds.
+- **`?exteriorDetailRadius` writes nothing when absent.** A default session's
+  URL is character-identical to what it was before this parameter existed, and
+  the parameter is deleted whenever the scheduler flag is.
+
+## Rollback
+
+Delete `SchedulerPolicy.maxUnitDistanceMeters` and its one use in the
+footprint-intersection branch, `ExteriorCellScheduleInput.maxUnitDistanceMeters`
+and its two pass-throughs, and the `exteriorDetailRadius` URL member. Nothing
+else reads any of them. The default path never did.

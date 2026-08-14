@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "1.0",
+  "taskId": "T005",
+  "artifact": "transition-band-served-bundle",
+  "note": "The bytes the preview server SERVES, not the bytes on disk. Every pose and crossing record below names this bundle hash, so a claim can never drift onto a build it was not measured on.",
+  "origin": "http://localhost:4211",
+  "indexSha256": "cd8920d38f36a5d8ccfbbae09afa05eae1373b84010836719585cf176fdd89dd",
+  "indexByteSize": 518,
+  "probes": {
+    "exteriorScheduler": true,
+    "note": "Probe presence is asserted from the live DOM in the pose stage, not from the HTML."
+  },
+  "assets": [
+    {
+      "ref": "/assets/index-BkdQk_07.js",
+      "byteSize": 5065727,
+      "sha256": "5585571cf54179384fcad7412bf4a01ae52a4c00765d0803e118168cc7e981a9"
+    }
+  ]
+}
