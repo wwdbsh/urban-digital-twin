@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   buildSyntheticCitywideRelease,
+  CITYWIDE_BUDGETS,
+  CITYWIDE_OVERVIEW_BUDGETS,
+  CITYWIDE_NO_CACHE_FLOORS,
+  CITYWIDE_OVERVIEW_CACHE_FLOORS,
+  citywideCacheClass,
   CitywideLruCache,
   CitywideRequestPool,
   citywideExactIdBucket,
@@ -11,6 +16,7 @@ import {
   normalizeCitywideQuery,
   selectCitywideSearchPrefixes,
   selectViewportShards,
+  resolveCitywideBudgets,
   stableCitywidePickId,
   validateCitywideReleaseManifest,
 } from "./citywide-release";
@@ -197,5 +203,174 @@ describe("citywide release contract", () => {
     pool.abortExcept([]);
     await expect(stale).resolves.toBeUndefined();
     expect(pool.pendingCount()).toBe(0);
+  });
+});
+
+describe("citywide budget records and per-class cache floors", () => {
+  /**
+   * The shared constant is read by the build script, the release validator,
+   * the civic and composed runtimes, and the default `CitywideLruCache`
+   * arguments. Nothing in T004 may move it, so its values are pinned here —
+   * there was no such pin before, which is exactly why raising a field on it
+   * looked cheap.
+   */
+  it("pins the shared citywide budget constant", () => {
+    expect(CITYWIDE_BUDGETS).toEqual({
+      rootBytes: 256 * 1024,
+      geometryShardBytes: 2 * 1024 * 1024,
+      searchDetailShardBytes: 1024 * 1024,
+      totalBytes: 300 * 1024 * 1024,
+      maxShards: 512,
+      maxFeaturesPerGeometryShard: 2_000,
+      maxLoadedShards: 24,
+      maxLoadedBytes: 48 * 1024 * 1024,
+      maxConcurrentRequests: 4,
+      maxRenderedDenseFeatures: 6_000,
+      maxDecodedSummaries: 8_192,
+      maxDecodedFeatures: 8_192,
+      maxDecodedDetails: 512,
+    });
+  });
+
+  it("resolves the raised overview record only for the opt-in session", () => {
+    expect(resolveCitywideBudgets(false)).toBe(CITYWIDE_BUDGETS);
+    expect(resolveCitywideBudgets(true)).toBe(CITYWIDE_OVERVIEW_BUDGETS);
+    // The recorded contract raises, each one derived in the record's comment
+    // from the committed release census.
+    expect(CITYWIDE_OVERVIEW_BUDGETS.maxLoadedShards).toBe(112);
+    expect(CITYWIDE_OVERVIEW_BUDGETS.maxLoadedShards).toBeGreaterThanOrEqual(56 + 47);
+    expect(CITYWIDE_OVERVIEW_BUDGETS.maxLoadedBytes).toBe(80 * 1024 * 1024);
+    expect(CITYWIDE_OVERVIEW_BUDGETS.maxLoadedBytes).toBeGreaterThanOrEqual(45_903_404 + 14_279_876 + 2_633_218 + 558_788 + 1_048_527);
+    expect(CITYWIDE_OVERVIEW_BUDGETS.maxRenderedDenseFeatures).toBe(45_194 + 12_353);
+    // Everything else is untouched, including the decoded-map ceilings.
+    for (const key of ["rootBytes", "geometryShardBytes", "searchDetailShardBytes", "totalBytes", "maxShards", "maxFeaturesPerGeometryShard", "maxConcurrentRequests", "maxDecodedSummaries", "maxDecodedFeatures", "maxDecodedDetails"] as const) {
+      expect(CITYWIDE_OVERVIEW_BUDGETS[key]).toBe(CITYWIDE_BUDGETS[key]);
+    }
+  });
+
+  it("derives a cache class from the ref prefix across namespaces", () => {
+    expect(citywideCacheClass("citywide:geometry/buildings/wgs84-geodetic/14/4823/4486/0.json")).toBe("geometry/buildings");
+    expect(citywideCacheClass("citywide:geometry/restaurants/wgs84-geodetic/14/4823/4486/0.json")).toBe("geometry/restaurants");
+    expect(citywideCacheClass("citywide:search/a.json")).toBe("search");
+    expect(citywideCacheClass("citywide:details/index.json")).toBe("details");
+    expect(citywideCacheClass("civic:details/one.json")).toBe("details");
+    expect(citywideCacheClass("civic:areas/one.json")).toBe("other");
+    expect(citywideCacheClass("geometry/buildings/loose.json")).toBe("geometry/buildings");
+  });
+
+  it("keeps a floored class resident while another class is over its own floor", () => {
+    const cache = new CitywideLruCache<string>(10, 1_000, { "geometry/buildings": 4, search: 1 });
+    for (let index = 0; index < 4; index += 1) cache.set(`citywide:geometry/buildings/${index}.json`, "B", 10);
+    for (let index = 0; index < 6; index += 1) cache.set(`citywide:search/${index}.json`, "S", 10);
+    // Ten entries, cap ten: the next search load must evict, and the buildings
+    // are the least recently used. The floor sends the evictor to `search`.
+    cache.set("citywide:search/storm.json", "S", 10);
+    expect(cache.size()).toBe(10);
+    for (let index = 0; index < 4; index += 1) expect(cache.has(`citywide:geometry/buildings/${index}.json`)).toBe(true);
+    expect(cache.classSizes()).toEqual({ "geometry/buildings": 4, search: 6 });
+    expect(cache.classEvictionCounts()).toEqual({ search: 1 });
+  });
+
+  it("yields the floor rather than growing without bound when no class is over its floor", () => {
+    const cache = new CitywideLruCache<string>(4, 1_000, { "geometry/buildings": 2, search: 1 });
+    cache.set("citywide:geometry/buildings/0.json", "B", 10);
+    cache.set("citywide:geometry/buildings/1.json", "B", 10);
+    cache.set("citywide:search/0.json", "S", 10);
+    cache.set("citywide:details/0.json", "D", 10);
+    // Every class is at or below its floor (details has none), yet the cap has
+    // to bind. The oldest entry goes and the cap holds.
+    cache.set("citywide:details/1.json", "D", 10);
+    expect(cache.size()).toBe(4);
+    expect(cache.evictionCount()).toBe(1);
+  });
+
+  it("never lets a floor refuse admission of a legal artifact", () => {
+    const cache = new CitywideLruCache<string>(6, 1_000, CITYWIDE_OVERVIEW_CACHE_FLOORS.search ? { search: 1 } : {});
+    for (let index = 0; index < 6; index += 1) cache.set(`citywide:search/${index}.json`, "S", 10);
+    // Saturated by one floored class. Admission is class-blind, so this must
+    // not throw from inside a settled request promise.
+    expect(() => cache.set("citywide:geometry/buildings/0.json", "B", 10)).not.toThrow();
+    expect(cache.has("citywide:geometry/buildings/0.json")).toBe(true);
+    // The only admission refusal remains the byte cap the precheck can read.
+    expect(() => cache.set("citywide:geometry/buildings/1.json", "B", 1_001)).toThrow(/entry bytes are invalid/u);
+  });
+
+  it("refuses a floor configuration that would leave no evictable entry", () => {
+    expect(() => new CitywideLruCache<string>(3, 1_000, { "geometry/buildings": 2, search: 1 })).toThrow(/evictable entry/u);
+    expect(() => new CitywideLruCache<string>(10, 1_000, { search: 0 })).toThrow(/positive integers/u);
+    // The shipped floors have to fit inside the shipped entry cap.
+    expect(() => new CitywideLruCache<string>(CITYWIDE_OVERVIEW_BUDGETS.maxLoadedShards, CITYWIDE_OVERVIEW_BUDGETS.maxLoadedBytes, CITYWIDE_OVERVIEW_CACHE_FLOORS)).not.toThrow();
+  });
+
+  it("evicts in exactly the historical order when no floors are configured", () => {
+    const floored = new CitywideLruCache<string>(3, 1_000, {});
+    for (const key of ["citywide:search/a.json", "citywide:search/b.json", "citywide:search/c.json"]) floored.set(key, "S", 10);
+    floored.get("citywide:search/a.json");
+    floored.set("citywide:search/d.json", "S", 10);
+    expect(floored.keys().sort()).toEqual(["citywide:search/a.json", "citywide:search/c.json", "citywide:search/d.json"]);
+  });
+
+  it("holds the whole committed dense island against a search and detail storm", () => {
+    const cache = new CitywideLruCache<string>(CITYWIDE_OVERVIEW_BUDGETS.maxLoadedShards, CITYWIDE_OVERVIEW_BUDGETS.maxLoadedBytes, CITYWIDE_OVERVIEW_CACHE_FLOORS);
+    for (let index = 0; index < 56; index += 1) cache.set(`citywide:geometry/buildings/${index}.json`, "B", 819_704);
+    for (let index = 0; index < 47; index += 1) cache.set(`citywide:geometry/restaurants/${index}.json`, "R", 303_827);
+    cache.set("citywide:details/index.json", "I", 2_633_218);
+    for (let index = 0; index < 200; index += 1) cache.set(`citywide:search/${index}.json`, "S", 558_788);
+    for (let index = 0; index < 100; index += 1) cache.set(`citywide:details/${index}.json`, "D", 1_048_527);
+    const sizes = cache.classSizes();
+    expect(sizes["geometry/buildings"]).toBe(56);
+    expect(sizes["geometry/restaurants"]).toBe(47);
+    expect(cache.classEvictionCounts()["geometry/buildings"]).toBeUndefined();
+    expect(cache.classEvictionCounts()["geometry/restaurants"]).toBeUndefined();
+    expect(cache.size()).toBeLessThanOrEqual(CITYWIDE_OVERVIEW_BUDGETS.maxLoadedShards);
+    expect(cache.bytes()).toBeLessThanOrEqual(CITYWIDE_OVERVIEW_BUDGETS.maxLoadedBytes);
+  });
+  /**
+   * The B1 hazard, as an executable statement.
+   *
+   * The aggregate cache has several tenants. Civic-context refs derive to
+   * class `other`, which has no floor, so overview floors applied while civic
+   * is the mode on screen pin 103 citywide shards nobody is looking at and
+   * evict the civic shards that are. The floors are therefore live-gated on
+   * citywide being the active mode (see `resolveCitywideOverviewResidency`),
+   * and withdrawing them has to actually restore plain recency.
+   */
+  it("starves an unfloored tenant while floored, and stops when the floors are withdrawn", () => {
+    const cache = new CitywideLruCache<string>(CITYWIDE_OVERVIEW_BUDGETS.maxLoadedShards, CITYWIDE_OVERVIEW_BUDGETS.maxLoadedBytes, CITYWIDE_OVERVIEW_CACHE_FLOORS);
+    for (let index = 0; index < 56; index += 1) cache.set(`citywide:geometry/buildings/${index}.json`, "B", 800_000);
+    for (let index = 0; index < 47; index += 1) cache.set(`citywide:geometry/restaurants/${index}.json`, "R", 300_000);
+    // Civic geometry, loaded AFTER every citywide shard, so plain recency would
+    // never choose it.
+    for (let index = 0; index < 20; index += 1) cache.set(`civic:areas/${index}.json`, "C", 300_000);
+    expect(cache.classSizes()["geometry/buildings"]).toBe(56);
+    expect(cache.classEvictionCounts().other).toBeGreaterThan(0);
+    expect(cache.classSizes().other ?? 0).toBeLessThan(20);
+
+    // Withdrawing the record restores the default caps and plain recency.
+    cache.configure(CITYWIDE_BUDGETS.maxLoadedShards, CITYWIDE_BUDGETS.maxLoadedBytes, CITYWIDE_NO_CACHE_FLOORS);
+    expect(cache.maxEntries).toBe(CITYWIDE_BUDGETS.maxLoadedShards);
+    expect(cache.maxBytes).toBe(CITYWIDE_BUDGETS.maxLoadedBytes);
+    expect(cache.floors).toEqual({});
+    expect(cache.size()).toBeLessThanOrEqual(CITYWIDE_BUDGETS.maxLoadedShards);
+    // With no floors the coldest entries go, and the citywide geometry loaded
+    // first is the coldest thing in the cache: the shrink itself evicts the
+    // building shards the floors had been pinning.
+    expect(cache.classEvictionCounts()["geometry/buildings"] ?? 0).toBeGreaterThan(0);
+    expect(cache.classSizes()["geometry/buildings"] ?? 0).toBeLessThan(56);
+  });
+
+  it("keeps both recorded configurations admissible for every declared shard size", () => {
+    // Reconfiguration must never make an already-legal artifact inadmissible;
+    // the largest declared shard is a 2 MiB geometry chunk.
+    for (const record of [CITYWIDE_BUDGETS, CITYWIDE_OVERVIEW_BUDGETS]) {
+      expect(record.maxLoadedBytes).toBeGreaterThan(record.geometryShardBytes);
+      expect(record.maxLoadedBytes).toBeGreaterThan(record.searchDetailShardBytes);
+    }
+  });
+
+  it("freezes both exported records", () => {
+    expect(Object.isFrozen(CITYWIDE_BUDGETS)).toBe(true);
+    expect(Object.isFrozen(CITYWIDE_OVERVIEW_BUDGETS)).toBe(true);
+    expect(Object.isFrozen(CITYWIDE_OVERVIEW_CACHE_FLOORS)).toBe(true);
   });
 });

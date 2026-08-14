@@ -13,6 +13,7 @@ import {
   selectViewportShards,
   stableCitywidePickId,
   validateCitywideReleaseManifest,
+  type CitywideBudgetRecord,
   type CitywideBuildingPart,
   type CitywideReleaseManifest,
   type CitywideSearchSummary,
@@ -114,6 +115,17 @@ export interface CitywideRuntimeOptions {
   /** A shared cache is supplied only by an approved composed runtime. */
   sharedCache?: CitywideLruCache<unknown>;
   cacheNamespace?: string;
+  /**
+   * The session's resolved budget record, or a supplier of it. Defaults to the
+   * shared constant, so an unflagged session behaves exactly as before.
+   *
+   * A supplier exists because this adapter is ALSO the base of the composed
+   * civic runtime. A record fixed at construction would let an overview
+   * session raise the shard-selection bound for a civic session that never
+   * asked for it, so the caller supplies the record the ACTIVE mode is
+   * entitled to and the adapter reads it per access.
+   */
+  budgets?: CitywideBudgetRecord | (() => CitywideBudgetRecord);
 }
 
 interface SourceSnapshot {
@@ -310,7 +322,33 @@ export class CitywideReleaseAdapter implements RuntimeCityAdapter {
   private readonly fetcher: Fetcher;
   private readonly pool: CitywideRequestPool<LoadedShard>;
   private readonly cacheNamespace: string;
+  private readonly resolveBudgets: () => CitywideBudgetRecord;
+  /** Public so a composed session can report the caps it actually runs under. */
+  get budgets(): CitywideBudgetRecord { return this.resolveBudgets(); }
   private readonly sourceSnapshots: ReadonlyMap<string, SourceSnapshot>;
+  /**
+   * Decoded features per cached shard, keyed on the shard object itself.
+   *
+   * A settled camera move that does not change the shard set used to rebuild
+   * every visible parent — a fresh `Feature` plus `validateFeature` for each —
+   * even though the bytes behind them had not moved. At island overview that
+   * is a 45,194-parent decode and, because the new objects were never
+   * reference-equal, a full Cesium instance rebuild on every move.
+   *
+   * The cache hands back the SAME `LoadedShard` object while an entry is
+   * resident (`CitywideRequestPool.loadShared` resolves `cache.get`), so shard
+   * identity is exactly the right memo key: a re-fetch after eviction produces
+   * a new object and correctly misses. A `WeakMap` means an evicted shard's
+   * decoded features become collectable with it, with no second bound to keep.
+   */
+  private readonly shardFeatureMemo = new WeakMap<LoadedShard, readonly Feature[]>();
+  /** The visible shard objects that produced `visibleFeatures`, in order. */
+  private committedVisibleShards: readonly LoadedShard[] | null = null;
+  // Keyed by visibility, not a single slot: `loadLayerFeatures` asks for one
+  // layer at a time between viewport refreshes, and a one-slot memo would be
+  // evicted by those calls and hand the render path a fresh array for an
+  // unchanged sequence.
+  private visibleFeatureView: { source: readonly Feature[]; results: Map<string, Feature[]> } | null = null;
   private readonly summaries = new Map<string, CitywideSearchSummary>();
   private readonly features = new Map<string, Feature>();
   private readonly detailFeatures = new Map<string, Feature>();
@@ -323,7 +361,7 @@ export class CitywideReleaseAdapter implements RuntimeCityAdapter {
   private generation = 0;
   private viewportAbortController: AbortController | null = null;
   private activeViewportSignature: string | null = null;
-  private activeViewportPromise: Promise<Feature[]> | null = null;
+  private activeViewportPromise: Promise<readonly Feature[]> | null = null;
   private committedViewportSignature: string | null = null;
   private dedupedRefreshCount = 0;
   private staleResultCount = 0;
@@ -339,8 +377,13 @@ export class CitywideReleaseAdapter implements RuntimeCityAdapter {
     this.basePath = basePath.replace(/\/$/, "");
     this.fetcher = fetcher;
     this.cacheNamespace = options.cacheNamespace ?? manifest.releaseId;
+    const budgets = options.budgets ?? CITYWIDE_BUDGETS;
+    this.resolveBudgets = typeof budgets === "function" ? budgets : () => budgets;
+    // Concurrency and the private cache caps are structural and are read once;
+    // both records declare the same concurrency, and a private cache has no
+    // second tenant whose mode could disagree with this one.
     const sharedCache = options.sharedCache as unknown as CitywideLruCache<LoadedShard> | undefined;
-    this.pool = new CitywideRequestPool<LoadedShard>(CITYWIDE_BUDGETS.maxConcurrentRequests, sharedCache ?? new CitywideLruCache<LoadedShard>(), options.sharedBudget ?? null);
+    this.pool = new CitywideRequestPool<LoadedShard>(this.budgets.maxConcurrentRequests, sharedCache ?? new CitywideLruCache<LoadedShard>(this.budgets.maxLoadedShards, this.budgets.maxLoadedBytes), options.sharedBudget ?? null);
     this.sourceSnapshots = new Map(manifest.sourceSnapshots.map((source) => [source.registryEntryId, source]));
   }
 
@@ -396,11 +439,24 @@ export class CitywideReleaseAdapter implements RuntimeCityAdapter {
     return (this.identityIndex?.has(featureId) ?? false) || this.getFeature(featureId) !== undefined;
   }
 
-  getFeatures(visibility: LayerVisibility = DEFAULT_LAYER_VISIBILITY): Feature[] {
-    return this.visibleFeatures.filter((feature) => {
+  getFeatures(visibility: LayerVisibility = DEFAULT_LAYER_VISIBILITY): readonly Feature[] {
+    // `visibleFeatures` is already id-sorted where it is assigned, and `filter`
+    // preserves order, so the historical re-sort here only re-paid an
+    // O(n log n) `localeCompare` pass per call. Memoizing on the source array
+    // identity plus the visibility key also makes two consecutive calls return
+    // the SAME array, which is what lets the app's sequence check reuse it.
+    const key = (Object.keys(visibility) as RuntimeLayerId[]).sort().map((layer) => `${layer}:${visibility[layer] ? 1 : 0}`).join(",");
+    const cached = this.visibleFeatureView?.source === this.visibleFeatures ? this.visibleFeatureView : null;
+    const existing = cached?.results.get(key);
+    if (existing) return existing;
+    const result = this.visibleFeatures.filter((feature) => {
       const layer = layerForFeature(feature);
       return layer ? visibility[layer] : false;
-    }).sort((left, right) => left.id.localeCompare(right.id));
+    });
+    const view = cached ?? { source: this.visibleFeatures, results: new Map<string, Feature[]>() };
+    view.results.set(key, result);
+    this.visibleFeatureView = view;
+    return result;
   }
 
   search(query: string): Feature[] {
@@ -432,7 +488,7 @@ export class CitywideReleaseAdapter implements RuntimeCityAdapter {
         const summary = compactSummary(value);
         if (summary) {
           loadedSummaries.set(summary.parentId, summary);
-          this.setBounded(this.summaries, summary.parentId, summary, CITYWIDE_BUDGETS.maxDecodedSummaries);
+          this.setBounded(this.summaries, summary.parentId, summary, this.budgets.maxDecodedSummaries);
         }
       });
     }));
@@ -442,16 +498,16 @@ export class CitywideReleaseAdapter implements RuntimeCityAdapter {
     // chunks even though the routing was correct.
     const matches = exactIdentifier ? [...loadedSummaries.values()] : searchSummaryList(loadedSummaries.values(), normalized);
     return matches.map((summary) => {
-      this.setBounded(this.summaries, summary.parentId, summary, CITYWIDE_BUDGETS.maxDecodedSummaries);
+      this.setBounded(this.summaries, summary.parentId, summary, this.budgets.maxDecodedSummaries);
       return this.summaryFeature(summary);
     });
   }
 
-  async loadLayerFeatures(layer: RuntimeLayerId): Promise<Feature[]> {
+  async loadLayerFeatures(layer: RuntimeLayerId): Promise<readonly Feature[]> {
     return this.getFeatures({ ...DEFAULT_LAYER_VISIBILITY, buildings: layer === "buildings", pois: layer === "pois", areas: false, stations: false, entrances: false, routes: false });
   }
 
-  refreshViewport(input: ViewportRefreshInput, signal?: AbortSignal): Promise<Feature[]> {
+  refreshViewport(input: ViewportRefreshInput, signal?: AbortSignal): Promise<readonly Feature[]> {
     if (this.destroyed) return Promise.resolve([]);
     const request = normalizeViewportRefreshRequest(input);
     const viewport = request.footprint.bounds;
@@ -464,7 +520,7 @@ export class CitywideReleaseAdapter implements RuntimeCityAdapter {
     ];
     const unique = [...new Map(requested.map((shard) => [shard.relativeContentRef, shard])).values()];
     const ranked = unique.sort((left, right) => this.shardDistance(left, request.footprint.groundCenter) - this.shardDistance(right, request.footprint.groundCenter) || left.shardId.localeCompare(right.shardId));
-    const bounded = retainCameraShards(ranked, request.camera, CITYWIDE_BUDGETS.maxLoadedShards);
+    const bounded = retainCameraShards(ranked, request.camera, this.budgets.maxLoadedShards);
     const visibleRefs = new Set(bounded.filter((shard) => this.shardIntersectsViewport(shard, viewport)).map((shard) => shard.relativeContentRef));
     const signature = `${request.footprint.signature}|${[...visibleRefs].sort().join(",")}|${bounded.map((shard) => shard.relativeContentRef).sort().join(",")}`;
     if (signature === this.activeViewportSignature && this.activeViewportPromise) {
@@ -486,33 +542,37 @@ export class CitywideReleaseAdapter implements RuntimeCityAdapter {
     const generation = ++this.generation;
     this.visibleShardCount = visibleRefs.size;
     this.requestedShardCount = bounded.length;
-    const run = async (): Promise<Feature[]> => {
+    const run = async (): Promise<readonly Feature[]> => {
       try {
         const values = await Promise.all(bounded.map((shard) => this.loadRef(shard.relativeContentRef, shard.checksumSha256, viewportController.signal)));
         if (viewportController.signal.aborted || generation !== this.generation || this.destroyed) {
           this.staleResultCount += 1;
           return this.getFeatures();
         }
-        const next = new Map<string, Feature>();
+        const visible: LoadedShard[] = [];
         values.forEach((loaded) => {
           if (!loaded || !isRecord(loaded.payload) || loaded.payload.schemaVersion !== "citywide-geometry-1" || !Array.isArray(loaded.payload.features)) return;
           const payload = loaded.payload as GeometryPayload;
           const declared = bounded.find((shard) => shard.relativeContentRef === loaded.ref);
           if (!declared || payload.layer !== declared.layer || payload.tileKey !== declared.tileKey) throw new Error(`Citywide geometry payload ${loaded.ref} does not match its emitted manifest tile/layer.`);
           if (!visibleRefs.has(loaded.ref)) return;
-          const recordsByParent = new Map<string, unknown[]>();
-          payload.features.forEach((value) => {
-            const parentId = isRecord(value) && typeof value.parentId === "string" ? value.parentId : null;
-            if (!parentId) throw new Error(`Geometry shard ${loaded.ref} contains a record without a stable parent ID.`);
-            recordsByParent.set(parentId, [...(recordsByParent.get(parentId) ?? []), value]);
-          });
-          recordsByParent.forEach((records, parentId) => {
-            const feature = payload.layer === "buildings" ? this.buildingFeature(records, parentId, payload.tileKey) : this.restaurantGeometryFeature(records, parentId);
-            if (feature) next.set(feature.id, feature);
-          });
+          visible.push(loaded);
+        });
+        // Nothing about the resident geometry changed, only where the camera
+        // is pointing. Keep the exact feature objects the last commit
+        // produced: the app's sequence check then retains its array and no
+        // Cesium instance is rebuilt.
+        if (this.sameVisibleShards(visible)) {
+          this.committedViewportSignature = signature;
+          return this.getFeatures();
+        }
+        const next = new Map<string, Feature>();
+        visible.forEach((loaded) => {
+          this.shardFeatures(loaded).forEach((feature) => next.set(feature.id, feature));
         });
         this.visibleFeatures = [...next.values()].sort((left, right) => left.id.localeCompare(right.id));
-        this.visibleFeatures.forEach((feature) => this.setBounded(this.features, feature.id, feature, CITYWIDE_BUDGETS.maxDecodedFeatures));
+        this.visibleFeatures.forEach((feature) => this.setBounded(this.features, feature.id, feature, this.budgets.maxDecodedFeatures));
+        this.committedVisibleShards = visible;
         this.committedViewportSignature = signature;
         return this.getFeatures();
       } finally {
@@ -562,8 +622,8 @@ export class CitywideReleaseAdapter implements RuntimeCityAdapter {
       const validation = validateFeature(detailFeature);
       if (!validation.ok) throw new Error(`Citywide detail ${parentId} failed post-geometry validation: ${validation.issues.map((item) => `${item.path} ${item.message}`).join("; ")}`);
     }
-    this.setBounded(this.detailFeatures, parentId, detailFeature, CITYWIDE_BUDGETS.maxDecodedDetails);
-    this.setBounded(this.features, parentId, detailFeature, CITYWIDE_BUDGETS.maxDecodedFeatures);
+    this.setBounded(this.detailFeatures, parentId, detailFeature, this.budgets.maxDecodedDetails);
+    this.setBounded(this.features, parentId, detailFeature, this.budgets.maxDecodedFeatures);
     return detailFeature;
   }
 
@@ -598,13 +658,66 @@ export class CitywideReleaseAdapter implements RuntimeCityAdapter {
     this.pool.abortExcept([]);
   }
 
+  /**
+   * Set equality over the visible shard objects, deliberately order-insensitive.
+   *
+   * The visible list is produced in distance-ranked order, so a camera nudge
+   * can permute an otherwise unchanged set, and an order-sensitive comparison
+   * would pay the full class rebuild for a set that did not change. Comparing
+   * as a set is sound here because the merge that builds `visibleFeatures` is
+   * keyed by parent id and the committed release carries exactly one geometry
+   * part per building parent (45,194 parts for 45,194 parents), so no parent
+   * is served by two shards and no permutation can change which record wins.
+   */
+  private sameVisibleShards(visible: readonly LoadedShard[]): boolean {
+    const committed = this.committedVisibleShards;
+    if (committed === null || committed.length !== visible.length) return false;
+    // Set equality needs both sides distinct, and the caller's distinctness is
+    // an upstream property (`unique` de-duplicates by ref before ranking)
+    // rather than something visible here. Check it instead of inheriting it,
+    // so a future selection change that admitted a repeat would take the slow
+    // path rather than silently comparing equal on a shorter set.
+    const resident = new Set(committed);
+    if (resident.size !== committed.length) return false;
+    const incoming = new Set(visible);
+    if (incoming.size !== visible.length) return false;
+    return visible.every((shard) => resident.has(shard));
+  }
+
+  /**
+   * Decode a geometry shard once per resident copy.
+   *
+   * The decoded features are immutable and are handed out by reference, which
+   * is the whole point: an unchanged shard must yield the same objects so the
+   * render plan can be reused. Validation failures still throw here, on the
+   * first decode, exactly as they did before.
+   */
+  private shardFeatures(loaded: LoadedShard): readonly Feature[] {
+    const memoized = this.shardFeatureMemo.get(loaded);
+    if (memoized) return memoized;
+    const payload = loaded.payload as GeometryPayload;
+    const recordsByParent = new Map<string, unknown[]>();
+    payload.features.forEach((value) => {
+      const parentId = isRecord(value) && typeof value.parentId === "string" ? value.parentId : null;
+      if (!parentId) throw new Error(`Geometry shard ${loaded.ref} contains a record without a stable parent ID.`);
+      recordsByParent.set(parentId, [...(recordsByParent.get(parentId) ?? []), value]);
+    });
+    const features: Feature[] = [];
+    recordsByParent.forEach((records, parentId) => {
+      const feature = payload.layer === "buildings" ? this.buildingFeature(records, parentId, payload.tileKey) : this.restaurantGeometryFeature(records, parentId);
+      if (feature) features.push(feature);
+    });
+    this.shardFeatureMemo.set(loaded, features);
+    return features;
+  }
+
   private summaryFeature(summary: CitywideSearchSummary): Feature {
     const existing = this.features.get(summary.parentId);
     if (existing) return existing;
     const registry = summary.kind === "building" ? "nyc.building-footprints" : "nyc.dohmh-restaurant-inspections";
     const sourceRefs = sourceRefsFor(this.manifest, registry, summary.sourceIdentifiers);
     const feature = citywideFeature(this.manifest, summary, { type: "Point", coordinates: summary.coordinates ?? [0, 0] }, sourceRefs);
-    this.setBounded(this.features, summary.parentId, feature, CITYWIDE_BUDGETS.maxDecodedFeatures);
+    this.setBounded(this.features, summary.parentId, feature, this.budgets.maxDecodedFeatures);
     return feature;
   }
 
@@ -653,7 +766,7 @@ export class CitywideReleaseAdapter implements RuntimeCityAdapter {
     });
     if (records.length > 0) {
       const feature = this.buildingFeature(records, summary.parentId, tileKey);
-      if (feature) this.setBounded(this.features, summary.parentId, feature, CITYWIDE_BUDGETS.maxDecodedFeatures);
+      if (feature) this.setBounded(this.features, summary.parentId, feature, this.budgets.maxDecodedFeatures);
     }
   }
 
@@ -666,7 +779,7 @@ export class CitywideReleaseAdapter implements RuntimeCityAdapter {
     const polygons = valid.flatMap((part) => part.geometry.type === "Polygon" ? [part.geometry.coordinates] : part.geometry.type === "MultiPolygon" ? part.geometry.coordinates : []);
     const geometry: Geometry = polygons.length === 1 ? { type: "Polygon", coordinates: polygons[0]! } : { type: "MultiPolygon", coordinates: polygons };
     const summary: CitywideSearchSummary = { parentId, kind: "building", name: first.name, address: null, cuisine: null, sourceIdentifiers: [first.sourceRecordId, first.bin, first.baseBbl, first.mapPlutoBbl].filter((value): value is string => Boolean(value)), normalizedTokens: citywideQueryTokens(first.name), coordinates: first.coordinates, locationStatus: "located", tileKeys: [first.tileKey], detailRef: `details/${parentId}` };
-    this.setBounded(this.summaries, parentId, summary, CITYWIDE_BUDGETS.maxDecodedSummaries);
+    this.setBounded(this.summaries, parentId, summary, this.budgets.maxDecodedSummaries);
     const sourceRefs = sourceRefsFor(this.manifest, "nyc.building-footprints", valid.flatMap((part) => part.sourceRefIds), valid.map((part) => part.sourceRefIds[0] ?? ""));
     const feature = citywideFeature(this.manifest, summary, geometry, sourceRefs, { citywidePartCount: valid.length, citywidePartIds: JSON.stringify(valid.map((part) => part.partId)), citywideHeightMeters: first.heightMeters, citywideHeightUnknown: first.heightUnknown, citywideDoittId: first.sourceRecordId, citywideBin: first.bin, citywideBaseBbl: first.baseBbl, citywideMapPlutoBbl: first.mapPlutoBbl });
     feature.geometryProvenance.height = {
@@ -689,7 +802,7 @@ export class CitywideReleaseAdapter implements RuntimeCityAdapter {
     const first = records.find(isRecord);
     if (!first || typeof first.name !== "string" || !isPosition(first.coordinates)) throw new Error(`Citywide geometry contains malformed restaurant parent ${parentId}.`);
     const summary: CitywideSearchSummary = { parentId, kind: "restaurant", name: typeof first.name === "string" ? first.name : null, address: typeof first.address === "string" ? first.address : null, cuisine: typeof first.cuisine === "string" ? first.cuisine : null, sourceIdentifiers: Array.isArray(first.sourceRecordIds) ? first.sourceRecordIds.filter((value): value is string => typeof value === "string") : [], normalizedTokens: citywideQueryTokens([first.name, first.address, first.cuisine, ...((first.sourceRecordIds ?? []) as unknown[])].filter((value): value is string => typeof value === "string").join(" ")), coordinates: first.coordinates, locationStatus: first.locationStatus === "location-unavailable" ? "location-unavailable" : "located", tileKeys: Array.isArray(first.tileKeys) ? first.tileKeys.filter((value): value is string => typeof value === "string") : [], detailRef: typeof first.detailRef === "string" ? first.detailRef : `details/${parentId}` };
-    this.setBounded(this.summaries, parentId, summary, CITYWIDE_BUDGETS.maxDecodedSummaries);
+    this.setBounded(this.summaries, parentId, summary, this.budgets.maxDecodedSummaries);
     const sourceRefs = sourceRefsFor(this.manifest, "nyc.dohmh-restaurant-inspections", summary.sourceIdentifiers);
     return citywideFeature(this.manifest, summary, { type: "Point", coordinates: summary.coordinates ?? [0, 0] }, sourceRefs, { citywideObservationCount: typeof first.observationCount === "number" ? first.observationCount : null });
   }

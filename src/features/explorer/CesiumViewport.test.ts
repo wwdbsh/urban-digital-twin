@@ -205,6 +205,32 @@ describe("Cesium POI render seam", () => {
     expect(first).toContainEqual(expect.objectContaining({ id: features[0]!.id }));
   });
 
+  /**
+   * The other half of the T004 viability fix.
+   *
+   * The adapter now hands back reference-identical features when the resident
+   * shard set is unchanged. That only reaches the renderer if selection keeps
+   * the identities: `shouldReplaceDenseRenderPlan` returning false here IS the
+   * branch that increments `planReuseCount` instead of rebuilding 45,194
+   * instances, so a selection that copied its features would silently undo the
+   * fix.
+   */
+  it("keeps dense selection element-identical for a retained feature sequence, so an unchanged shard set reuses the plan", () => {
+    const features = Array.from({ length: 2_000 }, (_, index) => ({
+      ...realRestaurant,
+      id: `citywide:poi:${String(index).padStart(5, "0")}`,
+      coordinates: [-73.99 + index * 0.000001, 40.748 + index * 0.000001] as Feature["coordinates"],
+      geometry: { type: "Point" as const, coordinates: [-73.99 + index * 0.000001, 40.748 + index * 0.000001] as Feature["coordinates"] },
+    }));
+    const bounds = { west: -74.01, east: -73.98, south: 40.73, north: 40.76 };
+    // Two settled camera positions over the same retained sequence.
+    const first = selectDenseFeatures(features, { longitude: -73.99, latitude: 40.748 }, 57_547, null, bounds);
+    const second = selectDenseFeatures(features, { longitude: -73.9902, latitude: 40.7481 }, 57_547, null, bounds);
+    expect(first).toHaveLength(features.length);
+    expect(second.every((feature, index) => feature === first[index])).toBe(true);
+    expect(shouldReplaceDenseRenderPlan(first, second)).toBe(false);
+  });
+
   it("refines boundary-shard records by feature bounds before applying the dense cap", () => {
     const inViewport = { ...realRestaurant, id: "citywide:in-viewport", coordinates: [-73.99, 40.748] as Feature["coordinates"], geometry: { type: "Point" as const, coordinates: [-73.99, 40.748] as Feature["coordinates"] } };
     const outsideViewport = { ...realRestaurant, id: "citywide:outside-viewport", coordinates: [-73.8, 40.9] as Feature["coordinates"], geometry: { type: "Point" as const, coordinates: [-73.8, 40.9] as Feature["coordinates"] } };

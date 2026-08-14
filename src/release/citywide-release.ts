@@ -6,7 +6,7 @@ import { sha256HexSync, stableSerialize } from "./catalog-release.ts";
 export const CITYWIDE_RELEASE_SCHEMA_VERSION = "1.0" as const;
 export const CITYWIDE_RELEASE_ID = "manhattan-citywide-20260804" as const;
 export const CITYWIDE_TILE_LEVEL = 14 as const;
-export const CITYWIDE_BUDGETS = {
+export const CITYWIDE_BUDGETS = Object.freeze({
   rootBytes: 256 * 1024,
   geometryShardBytes: 2 * 1024 * 1024,
   searchDetailShardBytes: 1024 * 1024,
@@ -20,7 +20,115 @@ export const CITYWIDE_BUDGETS = {
   maxDecodedSummaries: 8_192,
   maxDecodedFeatures: 8_192,
   maxDecodedDetails: 512,
-} as const;
+} as const);
+
+/**
+ * A resolved budget record.
+ *
+ * `CITYWIDE_BUDGETS` is read at build, validation, runtime-selection and
+ * cache-construction sites and is the default `CitywideLruCache` argument, so
+ * raising a field on the constant raises it for every session — including the
+ * civic and composed sessions that never asked for citywide overview
+ * residency. T004 therefore resolves a record per session instead of mutating
+ * the constant; the constant itself is pinned byte-for-byte by a test.
+ */
+export type CitywideBudgetRecord = { readonly [K in keyof typeof CITYWIDE_BUDGETS]: number };
+
+/**
+ * Overview-streaming budgets, raised from the committed release census rather
+ * than from preference.  Every number below is arithmetic over
+ * `public/data/manhattan-citywide-20260804/manifest.json`:
+ *
+ *   maxLoadedShards 112
+ *     56 building geometry shards + 47 restaurant geometry shards = 103, the
+ *     whole committed dense island.  At exactly 103 the first search shard or
+ *     detail shard would evict a geometry shard, so the cap carries the four
+ *     class floors (56 + 47 + 2 search + 2 details = 107) plus 5 entries of
+ *     working headroom.  A cap equal to the sum of the floors would leave the
+ *     evictor no legal candidate, so the cap must exceed it.
+ *
+ *   maxLoadedBytes 80 MiB (83,886,080 B)
+ *     geometry 60,183,280 B (buildings 45,903,404 + restaurants 14,279,876)
+ *     + detail index 2,633,218 B
+ *     + largest search shard 558,788 B
+ *     + largest detail shard 1,048,527 B
+ *     = 64,423,813 B is the floor a working overview session cannot go below.
+ *     80 MiB leaves 19,462,267 B — about 18 further search/detail shards —
+ *     so ordinary querying does not push the byte ceiling into the geometry.
+ *     These are WIRE bytes (the cached JSON text). Decoded GPU and JS-heap
+ *     arithmetic is recorded in ADR 0043 and is not measured here.
+ *
+ *   maxRenderedDenseFeatures 57,547
+ *     45,194 building parents + 12,353 restaurant parents present in the
+ *     geometry shards.  Not 57,633: the release declares 12,439 restaurant
+ *     parents, but 86 of them are `location-unavailable` and therefore never
+ *     appear in a geometry shard, so they can never reach the dense path.
+ *     57,547 is the largest set the dense path can actually be handed.
+ *     One combined limit rather than a split building/POI pair: at the full
+ *     renderable census the limit can never truncate, so a split would add a
+ *     second selection axis that no measurement could distinguish from this
+ *     one.
+ *
+ * The decoded-feature and decoded-summary LRUs are deliberately NOT raised.
+ * The render source is the adapter's visible-feature sequence, not those maps,
+ * so raising them buys no rendered building and costs the JS-heap expansion
+ * ADR 0043 records.
+ */
+export const CITYWIDE_OVERVIEW_BUDGETS: CitywideBudgetRecord = Object.freeze({
+  ...CITYWIDE_BUDGETS,
+  maxLoadedShards: 112,
+  maxLoadedBytes: 80 * 1024 * 1024,
+  maxRenderedDenseFeatures: 57_547,
+});
+
+/** The one flag (`?exteriorScheduler=on`) selects the record; nothing mutates. */
+export function resolveCitywideBudgets(overviewStreaming: boolean): CitywideBudgetRecord {
+  return overviewStreaming ? CITYWIDE_OVERVIEW_BUDGETS : CITYWIDE_BUDGETS;
+}
+
+/**
+ * Cache classes, derived from the release ref prefix so the same derivation
+ * works for every namespace the shared cache holds (`citywide:`, `civic:`, and
+ * any later one).  A key is `<namespace>:<relativeContentRef>`.
+ */
+export type CitywideCacheClass = "geometry/buildings" | "geometry/restaurants" | "search" | "details" | "other";
+
+export function citywideCacheClass(key: string): CitywideCacheClass {
+  const separator = key.indexOf(":");
+  const ref = separator >= 0 ? key.slice(separator + 1) : key;
+  if (ref.startsWith("geometry/buildings/")) return "geometry/buildings";
+  if (ref.startsWith("geometry/restaurants/")) return "geometry/restaurants";
+  if (ref.startsWith("search/")) return "search";
+  if (ref.startsWith("details/")) return "details";
+  return "other";
+}
+
+export type CitywideCacheFloors = Partial<Record<CitywideCacheClass, number>>;
+
+/**
+ * Per-class floors for the overview session.
+ *
+ * A floor is a PERMISSION TO KEEP, not a space reservation: it is never
+ * consulted on admission, only when `evict` is choosing which resident entry
+ * to drop.  Nothing is held back for a class that is not using it, so the
+ * building classes shrink naturally as the selection releases their shards.
+ *
+ * Each floor is at least one entry, so the largest single entry of every class
+ * (buildings 2,096,314 B, restaurants 1,487,908 B, search 558,788 B, details
+ * 1,048,527 B) is always keepable.  The geometry floors are the whole
+ * committed dense island (56 and 47) because that is what the overview
+ * renders; `search` and `details` keep 2 each so an in-flight query and the
+ * detail index plus one detail shard survive a geometry sweep.
+ */
+export const CITYWIDE_OVERVIEW_CACHE_FLOORS: CitywideCacheFloors = Object.freeze({
+  "geometry/buildings": 56,
+  "geometry/restaurants": 47,
+  search: 2,
+  details: 2,
+});
+
+/** No floors. Named so a caller cannot express "unfloored" by accident. */
+export const CITYWIDE_NO_CACHE_FLOORS: CitywideCacheFloors = Object.freeze({});
 
 export type CitywideLayerId = "buildings" | "restaurants";
 export type CitywideRecordKind = "building" | "restaurant";
@@ -463,15 +571,52 @@ export function stableCitywidePickId(parentId: string): string {
  * therefore be readable by the precheck, not only enforced at `set()`.
  */
 export class CitywideLruCache<T> {
-  private readonly entries = new Map<string, { value: T; bytes: number; used: number }>();
+  private readonly entries = new Map<string, { value: T; bytes: number; used: number; cacheClass: CitywideCacheClass }>();
+  private readonly classCounts = new Map<CitywideCacheClass, number>();
+  private readonly classEvictions = new Map<CitywideCacheClass, number>();
   private clock = 0;
   private evictions = 0;
   private totalBytes = 0;
-  readonly maxEntries: number;
-  readonly maxBytes: number;
-  constructor(maxEntries: number = CITYWIDE_BUDGETS.maxLoadedShards, maxBytes: number = CITYWIDE_BUDGETS.maxLoadedBytes) {
-    this.maxEntries = maxEntries;
-    this.maxBytes = maxBytes;
+  private currentMaxEntries: number;
+  private currentMaxBytes: number;
+  private currentFloors: CitywideCacheFloors;
+  get maxEntries(): number { return this.currentMaxEntries; }
+  get maxBytes(): number { return this.currentMaxBytes; }
+  get floors(): CitywideCacheFloors { return this.currentFloors; }
+  constructor(maxEntries: number = CITYWIDE_BUDGETS.maxLoadedShards, maxBytes: number = CITYWIDE_BUDGETS.maxLoadedBytes, floors: CitywideCacheFloors = CITYWIDE_NO_CACHE_FLOORS) {
+    this.currentMaxEntries = maxEntries;
+    this.currentMaxBytes = maxBytes;
+    this.currentFloors = floors;
+    this.assertConfiguration(maxEntries, maxBytes, floors);
+  }
+  /**
+   * Re-point one shared cache at a different recorded configuration.
+   *
+   * This exists because the aggregate cache has several tenants and only ONE
+   * of them ever wants overview residency. A flag that pinned the citywide
+   * island while a civic session was the one on screen would starve the
+   * tenant the user is actually looking at, so the caller re-applies the
+   * configuration when the active mode changes rather than choosing once at
+   * mount. Only the two RECORDED configurations are ever applied, and both
+   * byte caps exceed every declared shard size, so no re-configuration can
+   * make an already-legal artifact inadmissible.
+   */
+  configure(maxEntries: number, maxBytes: number, floors: CitywideCacheFloors = CITYWIDE_NO_CACHE_FLOORS): void {
+    this.assertConfiguration(maxEntries, maxBytes, floors);
+    this.currentMaxEntries = maxEntries;
+    this.currentMaxBytes = maxBytes;
+    this.currentFloors = floors;
+    this.evict();
+  }
+  private assertConfiguration(maxEntries: number, maxBytes: number, floors: CitywideCacheFloors): void {
+    // A cap that does not exceed the sum of the floors would leave `evict` no
+    // legal candidate on a full cache; the floors would then have to be
+    // ignored wholesale, which is exactly the residency failure they exist to
+    // prevent.  Refuse the configuration instead of silently degrading.
+    const floorTotal = Object.values(floors).reduce((sum, value) => sum + (value ?? 0), 0);
+    if (!Number.isSafeInteger(maxEntries) || maxEntries < 1 || !Number.isSafeInteger(maxBytes) || maxBytes < 1) throw new Error("Citywide cache caps must be positive integers.");
+    if (Object.values(floors).some((value) => !Number.isSafeInteger(value) || (value ?? 0) < 1)) throw new Error("Citywide cache class floors must be positive integers.");
+    if (floorTotal >= maxEntries) throw new Error("Citywide cache class floors must leave at least one evictable entry below the entry cap.");
   }
   get(key: string): T | undefined {
     const entry = this.entries.get(key);
@@ -479,35 +624,87 @@ export class CitywideLruCache<T> {
     entry.used = ++this.clock;
     return entry.value;
   }
+  /**
+   * Admission is class-blind, deliberately.
+   *
+   * There is no citywide precheck anywhere on the load path: `set` runs inside
+   * the pooled loader promise, after the fetch, the checksum and the JSON
+   * parse.  A throw here surfaces as a failed shard load with the bytes
+   * already paid for, so a class floor must never be able to refuse a legal
+   * artifact.  Floors are consulted only by `evict` below.
+   */
   set(key: string, value: T, bytes: number): void {
     if (!Number.isSafeInteger(bytes) || bytes < 0 || bytes > this.maxBytes) throw new Error("Citywide cache entry bytes are invalid.");
     this.dropEntry(key);
-    this.entries.set(key, { value, bytes, used: ++this.clock });
+    const cacheClass = citywideCacheClass(key);
+    this.entries.set(key, { value, bytes, used: ++this.clock, cacheClass });
+    this.classCounts.set(cacheClass, (this.classCounts.get(cacheClass) ?? 0) + 1);
     this.totalBytes += bytes;
     this.evict();
   }
   delete(key: string): boolean { return this.dropEntry(key); }
-  clear(): void { this.entries.clear(); this.totalBytes = 0; }
+  clear(): void { this.entries.clear(); this.classCounts.clear(); this.totalBytes = 0; }
   has(key: string): boolean { return this.entries.has(key); }
   size(): number { return this.entries.size; }
   bytes(): number { return this.totalBytes; }
   evictionCount(): number { return this.evictions; }
   keys(): string[] { return [...this.entries.keys()]; }
+  /** Resident entries per class, for residency evidence. */
+  classSizes(): Record<string, number> {
+    return Object.fromEntries([...this.classCounts.entries()].filter(([, count]) => count > 0).sort(([left], [right]) => left.localeCompare(right)));
+  }
+  /** Evictions per class. The reservation AC has no per-class evidence without this. */
+  classEvictionCounts(): Record<string, number> {
+    return Object.fromEntries([...this.classEvictions.entries()].sort(([left], [right]) => left.localeCompare(right)));
+  }
   /** The single place an entry leaves the map, so the running total cannot drift. */
   private dropEntry(key: string): boolean {
     const entry = this.entries.get(key);
     if (!entry) return false;
     this.entries.delete(key);
     this.totalBytes -= entry.bytes;
+    const remaining = (this.classCounts.get(entry.cacheClass) ?? 1) - 1;
+    if (remaining > 0) this.classCounts.set(entry.cacheClass, remaining);
+    else this.classCounts.delete(entry.cacheClass);
     return true;
   }
+  /**
+   * Least-recently-used within the classes that are over their own floor.
+   *
+   * Chosen by one linear minimum scan rather than the previous full sort, so a
+   * floor costs strictly less per drop than the code it replaces, not more.
+   * With no floors configured the scan selects exactly the entry the sort's
+   * first element selected — lowest `used`, ties broken by key — so every
+   * unflagged session, including civic and composed, is unchanged.
+   *
+   * When no class is over its floor the floors yield: eviction must still make
+   * progress or the cap would not bound anything.
+   */
   private evict(): void {
     while (this.entries.size > this.maxEntries || this.totalBytes > this.maxBytes) {
-      const oldest = [...this.entries.entries()].sort((left, right) => left[1].used - right[1].used || left[0].localeCompare(right[0]))[0];
-      if (!oldest) break;
-      this.dropEntry(oldest[0]);
+      const restricted = this.hasOverflowingClass();
+      let victimKey: string | null = null;
+      let victim: { used: number } | null = null;
+      for (const [key, entry] of this.entries) {
+        if (restricted && !this.isOverFloor(entry.cacheClass)) continue;
+        if (victim === null || entry.used < victim.used || (entry.used === victim.used && key.localeCompare(victimKey!) < 0)) {
+          victimKey = key;
+          victim = entry;
+        }
+      }
+      if (victimKey === null) break;
+      const cacheClass = this.entries.get(victimKey)!.cacheClass;
+      this.dropEntry(victimKey);
+      this.classEvictions.set(cacheClass, (this.classEvictions.get(cacheClass) ?? 0) + 1);
       this.evictions += 1;
     }
+  }
+  private isOverFloor(cacheClass: CitywideCacheClass): boolean {
+    return (this.classCounts.get(cacheClass) ?? 0) > (this.floors[cacheClass] ?? 0);
+  }
+  private hasOverflowingClass(): boolean {
+    for (const cacheClass of this.classCounts.keys()) if (this.isOverFloor(cacheClass)) return true;
+    return false;
   }
 }
 

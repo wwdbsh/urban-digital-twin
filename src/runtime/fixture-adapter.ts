@@ -18,9 +18,15 @@ export interface RuntimeCityAdapter {
   readonly fixtureOnly: boolean;
   getLayerManifest(layer: RuntimeLayerId): LayerManifest;
   getFeature(featureId: string): Feature | undefined;
-  getFeatures(visibility?: LayerVisibility): Feature[];
+  /**
+   * Readonly by contract: an adapter is entitled to return a RETAINED array
+   * (the citywide runtime memoizes its visible sequence so an unchanged shard
+   * set stays reference-identical), so a caller that sorts in place would
+   * corrupt another caller's view. Narrowed here so that fails to typecheck.
+   */
+  getFeatures(visibility?: LayerVisibility): readonly Feature[];
   search(query: string): Feature[];
-  loadLayerFeatures(layer: RuntimeLayerId): Promise<Feature[]>;
+  loadLayerFeatures(layer: RuntimeLayerId): Promise<readonly Feature[]>;
   getAssetResolution?(featureId: string, distanceMeters?: number, screenSpaceError?: number): CityAssetResolution;
   getAssetDiagnostics?(): { registered: number; approved: number; verified: number; fallback: number };
   readonly assetResolver?: CityAssetResolver;

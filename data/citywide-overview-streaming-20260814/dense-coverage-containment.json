@@ -1,0 +1,30 @@
+{
+  "schemaVersion": "1.0",
+  "taskId": "T004",
+  "artifact": "citywide-overview-dense-coverage-containment",
+  "note": "One set containment over the whole committed cell membership, not 883 separate assertions. The dense path is a SUPERSET of what the exterior facade path can render: the grammar refusals apply to facade generation and never remove a building from the dense extrusion set.",
+  "base": {
+    "releaseId": "manhattan-citywide-20260804",
+    "generatedAt": "2026-08-04T00:00:00.000Z"
+  },
+  "ledger": {
+    "ledgerId": "manhattan-exterior-wave-ledger-20260804-a3382ef4cac213a2",
+    "cellCount": 883
+  },
+  "dense": {
+    "buildingParentCount": 45194,
+    "buildingPartCount": 45194,
+    "restaurantParentCount": 12353,
+    "declaredRestaurantParentCount": 12439,
+    "renderableDenseFeatureCount": 57547
+  },
+  "committed": {
+    "uniqueBuildingIdCount": 45194
+  },
+  "containment": {
+    "holds": true,
+    "missingCount": 0,
+    "missingSample": [],
+    "denseOnlyCount": 0
+  }
+}
