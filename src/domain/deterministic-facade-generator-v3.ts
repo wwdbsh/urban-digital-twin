@@ -873,13 +873,77 @@ export interface V3GrammarOptions {
   maxRingVertices?: number;
   /** Enables the low-rise floor-height derivation below the threshold. Defaults to OFF. */
   lowRiseFloorHeight?: boolean;
+  /**
+   * Drops the water-tank legs whenever the tank itself is dropped (T004 rule 1).
+   *
+   * The crown-containment filter is per prism, so a tank whose ring crosses the
+   * parapet is dropped while its four legs — which sit well inside the tank's
+   * own footprint — are kept, and the asset ships four metal posts holding
+   * nothing. Defaults to OFF, so the shipped grammar is byte-identical.
+   */
+  rooftopGroupContainment?: boolean;
+  /**
+   * Bounds the rooftop cluster to one nominal storey above the crown (T004
+   * rule 2). Defaults to OFF, so the shipped grammar is byte-identical.
+   */
+  rooftopClusterHeightClamp?: boolean;
 }
 
-/** The measured extended envelope, as one value. Not a default anywhere. */
-export const V3_EXTENDED_GRAMMAR_OPTIONS: Required<V3GrammarOptions> = {
+/**
+ * The T003 ADMISSION envelope, as one value. Not a default anywhere.
+ *
+ * It names the two admission rules T003 measured and NOTHING ELSE. The T004
+ * rooftop rules are deliberately absent: this constant is the second half of the
+ * committed differential plan-hash set digest, which asserts that every plan the
+ * SHIPPED envelope accepts is byte-identical under it, and a rule that changes
+ * rooftop geometry on an already-accepted building would break that assertion
+ * rather than be measured by it. The two families are selected together where a
+ * caller wants both (`V3_ROOFTOP_HONESTY_OPTIONS`), never merged here.
+ */
+export const V3_EXTENDED_GRAMMAR_OPTIONS: Required<Pick<V3GrammarOptions, "maxRingVertices" | "lowRiseFloorHeight">> = {
   maxRingVertices: V3_EXTENDED_MAX_RING_VERTICES,
   lowRiseFloorHeight: true,
 };
+
+/** The two T004 rooftop rules, as one value. Not a default anywhere. */
+export const V3_ROOFTOP_HONESTY_OPTIONS: Required<Pick<V3GrammarOptions, "rooftopGroupContainment" | "rooftopClusterHeightClamp">> = {
+  rooftopGroupContainment: true,
+  rooftopClusterHeightClamp: true,
+};
+
+/**
+ * The shipped grammar, written out.
+ *
+ * Every field is the value a caller that passes nothing travels under, so
+ * `v3EffectiveGrammarOptions(undefined)` is deep-equal to it. It exists so a
+ * consumer can ask whether an envelope DIFFERS from the shipped one by value
+ * rather than by reference or by remembering four defaults.
+ */
+export const V3_SHIPPED_GRAMMAR_OPTIONS: Required<V3GrammarOptions> = {
+  maxRingVertices: DETERMINISTIC_FACADE_V3_LIMITS.maxRingVertices,
+  lowRiseFloorHeight: false,
+  rooftopGroupContainment: false,
+  rooftopClusterHeightClamp: false,
+};
+
+/** Fills every unset field with the shipped default, in one place. */
+export function v3EffectiveGrammarOptions(options: V3GrammarOptions | undefined): Required<V3GrammarOptions> {
+  return {
+    maxRingVertices: options?.maxRingVertices ?? V3_SHIPPED_GRAMMAR_OPTIONS.maxRingVertices,
+    lowRiseFloorHeight: options?.lowRiseFloorHeight ?? V3_SHIPPED_GRAMMAR_OPTIONS.lowRiseFloorHeight,
+    rooftopGroupContainment: options?.rooftopGroupContainment ?? V3_SHIPPED_GRAMMAR_OPTIONS.rooftopGroupContainment,
+    rooftopClusterHeightClamp: options?.rooftopClusterHeightClamp ?? V3_SHIPPED_GRAMMAR_OPTIONS.rooftopClusterHeightClamp,
+  };
+}
+
+/** True when `options` selects anything the shipped grammar does not. */
+export function v3GrammarOptionsDifferFromShipped(options: V3GrammarOptions | undefined): boolean {
+  const effective = v3EffectiveGrammarOptions(options);
+  return effective.maxRingVertices !== V3_SHIPPED_GRAMMAR_OPTIONS.maxRingVertices
+    || effective.lowRiseFloorHeight !== V3_SHIPPED_GRAMMAR_OPTIONS.lowRiseFloorHeight
+    || effective.rooftopGroupContainment !== V3_SHIPPED_GRAMMAR_OPTIONS.rooftopGroupContainment
+    || effective.rooftopClusterHeightClamp !== V3_SHIPPED_GRAMMAR_OPTIONS.rooftopClusterHeightClamp;
+}
 
 /**
  * The one canonical parameter policy for V3.
@@ -1542,7 +1606,19 @@ function buildPlacements(input: V3Input, tiers: V3Tier[], facades: V3FacadeSurfa
 // Rooftop prisms
 // ---------------------------------------------------------------------------
 
-function buildPrisms(input: V3Input, tiers: V3Tier[]): V3Prism[] {
+/**
+ * The rooftop cluster's UNSCALED height above the crown.
+ *
+ * The tank stands on its legs, so the tank column is the leg height plus the
+ * tank height; the equipment box is the other candidate. Read from the
+ * parameters rather than written down, so a parameter change cannot leave this
+ * bound behind.
+ */
+function rooftopClusterRawHeightMm(parameters: V3Parameters): number {
+  return Math.max(parameters.roofEquipmentHeightMm, parameters.waterTankLegHeightMm + parameters.waterTankHeightMm);
+}
+
+function buildPrisms(input: V3Input, tiers: V3Tier[], options: V3GrammarOptions = {}): V3Prism[] {
   const parameters = input.parameters;
   const crown = tiers[tiers.length - 1]!;
   const anchor = ringInteriorAnchor(crown.ring);
@@ -1550,7 +1626,19 @@ function buildPrisms(input: V3Input, tiers: V3Tier[]): V3Prism[] {
   const clearance = distanceToRingMm(crown.ring, anchor);
   const desiredHalf = Math.max(parameters.roofEquipmentSizeMm / 2, parameters.waterTankRadiusMm) + parameters.waterTankRadiusMm;
   // One scale for the whole rooftop cluster, so it always sits inside the crown.
-  const scalePermille = Math.max(80, Math.min(1_000, Math.floor((clearance * 800) / Math.max(1, desiredHalf))));
+  const planScalePermille = Math.max(80, Math.min(1_000, Math.floor((clearance * 800) / Math.max(1, desiredHalf))));
+  // T004 rule 2, expressed as a SECOND BOUND ON THE ONE EXISTING SCALE rather
+  // than as a new vertical rule. The cluster already has exactly one scale, so
+  // bounding that scale bounds the cluster's height, keeps its proportions, and
+  // adds no geometry vocabulary — the bound itself is `V3_NOMINAL_FLOOR_HEIGHT_MM`,
+  // the grammar's own designed storey, so no magic number enters either.
+  const heightBoundPermille = Math.max(
+    1,
+    Math.floor((V3_NOMINAL_FLOOR_HEIGHT_MM * 1_000) / Math.max(1, rooftopClusterRawHeightMm(parameters))),
+  );
+  const scalePermille = options.rooftopClusterHeightClamp === true
+    ? Math.min(planScalePermille, heightBoundPermille)
+    : planScalePermille;
   const scale = (value: number): number => Math.max(1, Math.round((value * scalePermille) / 1_000));
 
   const equipmentHalf = scale(Math.round(parameters.roofEquipmentSizeMm / 2));
@@ -1564,10 +1652,13 @@ function buildPrisms(input: V3Input, tiers: V3Tier[]): V3Prism[] {
     return clipped.ok ? { id, kind, materialId, ring, baseZMm, topZMm, triangles: clipped.triangles } : null;
   };
 
-  const prisms: Array<V3Prism | null> = [];
+  // Each candidate carries the CLUSTER MEMBER it belongs to. `null` is a prism
+  // that stands on its own; a named group is a prism that only means anything
+  // while the group's anchor survives containment.
+  const prisms: Array<{ prism: V3Prism | null; dependsOn: string | null }> = [];
   const equipmentCenterX = anchor[0];
   const equipmentCenterY = anchor[1];
-  prisms.push(withTriangles("prism:roof-equipment:0", "roof-equipment", "material:roof", box(equipmentCenterX, equipmentCenterY, equipmentHalf), crown.topZMm, crown.topZMm + scale(parameters.roofEquipmentHeightMm)));
+  prisms.push({ prism: withTriangles("prism:roof-equipment:0", "roof-equipment", "material:roof", box(equipmentCenterX, equipmentCenterY, equipmentHalf), crown.topZMm, crown.topZMm + scale(parameters.roofEquipmentHeightMm)), dependsOn: null });
 
   const tankOffset = equipmentHalf + tankRadius + scale(600);
   const tankX = anchor[0] + tankOffset;
@@ -1579,16 +1670,32 @@ function buildPrisms(input: V3Input, tiers: V3Tier[]): V3Prism[] {
   }
   const legBase = crown.topZMm;
   const tankBase = legBase + scale(parameters.waterTankLegHeightMm);
-  prisms.push(withTriangles("prism:water-tank:0", "water-tank", "material:metal", tankRing, tankBase, tankBase + scale(parameters.waterTankHeightMm)));
+  const tankId = "prism:water-tank:0";
+  prisms.push({ prism: withTriangles(tankId, "water-tank", "material:metal", tankRing, tankBase, tankBase + scale(parameters.waterTankHeightMm)), dependsOn: null });
   const legOffset = Math.round((tankRadius * 7) / 10);
   [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([signX, signY], index) => {
-    prisms.push(withTriangles(`prism:water-tank-leg:${index}`, "water-tank-leg", "material:metal", box(tankX + signX! * legOffset, tankY + signY! * legOffset, Math.max(1, Math.round(legSize / 2))), legBase, tankBase));
+    prisms.push({
+      prism: withTriangles(`prism:water-tank-leg:${index}`, "water-tank-leg", "material:metal", box(tankX + signX! * legOffset, tankY + signY! * legOffset, Math.max(1, Math.round(legSize / 2))), legBase, tankBase),
+      // A leg exists to hold THIS tank up. It is not a rooftop object in its
+      // own right, so it cannot outlive the thing it carries.
+      dependsOn: tankId,
+    });
   });
 
   // Anything that could not be placed inside the crown is dropped rather than
   // clipped: a rooftop object hanging over the parapet is a false claim.
-  const placed = prisms.filter((prism): prism is V3Prism => prism !== null && prism.topZMm > prism.baseZMm);
-  return placed.filter((prism) => prism.ring.every((point) => pointInRing(crown.ring, point[0], point[1])));
+  const contained = prisms
+    .filter((entry): entry is { prism: V3Prism; dependsOn: string | null } => entry.prism !== null && entry.prism.topZMm > entry.prism.baseZMm)
+    .filter((entry) => entry.prism.ring.every((point) => pointInRing(crown.ring, point[0], point[1])));
+  if (options.rooftopGroupContainment !== true) return contained.map((entry) => entry.prism);
+  // T004 rule 1. The filter above is per prism, and the legs sit inside the
+  // tank's own footprint, so a tank clipped by the parapet is dropped while its
+  // legs survive — four metal posts holding nothing, which is the same "false
+  // claim" the comment above already forbids, one level down.
+  const survivingIds = new Set(contained.map((entry) => entry.prism.id));
+  return contained
+    .filter((entry) => entry.dependsOn === null || survivingIds.has(entry.dependsOn))
+    .map((entry) => entry.prism);
 }
 
 // ---------------------------------------------------------------------------
@@ -1638,7 +1745,15 @@ function buildInventory(input: V3Input, massing: V3Massing, inputFingerprintSha2
   };
 }
 
-function buildPlan(input: V3Input): V3Validation<V3Plan> {
+/**
+ * Builds the canonical plan for one admitted input.
+ *
+ * `options` is the SAME grammar state the input was admitted under. It reaches
+ * `buildPrisms` and nothing else, and `validateV3Plan` re-derives the whole plan
+ * through this function — so a rule that reached generation but not validation
+ * would make every successor plan refuse itself.
+ */
+function buildPlan(input: V3Input, options: V3GrammarOptions = {}): V3Validation<V3Plan> {
   const inputFingerprintSha256 = domainSeparatedSha256("udt.facade.input.v3", input);
   const parametersHashSha256 = domainSeparatedSha256("udt.facade.parameters.v3", input.parameters);
   const styleHash = domainSeparatedSha256("udt.facade.style.v3", { inputFingerprintSha256, seed: input.seed });
@@ -1656,7 +1771,7 @@ function buildPlan(input: V3Input): V3Validation<V3Plan> {
   if (surfaces.length > DETERMINISTIC_FACADE_V3_LIMITS.maxSurfaces) return { ok: false, issues: [{ path: "surfaces", message: "V3 plan exceeds its bounded surface cap." }] };
   const placements = buildPlacements(input, tiers, facades, massing.floorCount);
   if (placements.length > DETERMINISTIC_FACADE_V3_LIMITS.maxPlacements) return { ok: false, issues: [{ path: "placements", message: "V3 plan exceeds its bounded placement cap." }] };
-  const prisms = buildPrisms(input, tiers);
+  const prisms = buildPrisms(input, tiers, options);
   const withoutHash: Omit<V3Plan, "planHashSha256"> = {
     schemaVersion: DETERMINISTIC_FACADE_V3_SCHEMA_VERSION,
     planId: `facade-plan-v3:${inputFingerprintSha256.slice(0, 24)}`,
@@ -1688,20 +1803,21 @@ export function calculateV3PlanHash(plan: Omit<V3Plan, "planHashSha256"> | V3Pla
   return domainSeparatedSha256("udt.facade.plan.v3", payload);
 }
 
-export function generateV3FacadePlan(value: unknown, options: Pick<V3GrammarOptions, "maxRingVertices"> = {}): V3Validation<V3Plan> {
+export function generateV3FacadePlan(value: unknown, options: V3GrammarOptions = {}): V3Validation<V3Plan> {
   const input = validateV3Input(value, options);
-  return input.ok ? buildPlan(input.value) : input;
+  return input.ok ? buildPlan(input.value, options) : input;
 }
 
 /**
  * Re-derives the plan from its embedded input and rejects any non-canonical content.
  *
- * `options` must name the SAME admission envelope the plan was generated under.
- * The validator re-runs the input contract, so a plan legitimately generated at a
- * wider cap is otherwise refused here — under `plan-validation-failed`, which
- * would be the wrong word for it — rather than round-tripping.
+ * `options` must name the SAME grammar state the plan was generated under. The
+ * validator re-runs the input contract AND re-derives the plan, so a plan
+ * legitimately generated at a wider cap or under a rooftop rule is otherwise
+ * refused here — under `plan-validation-failed`, which would be the wrong word
+ * for it — rather than round-tripping.
  */
-export function validateV3Plan(value: unknown, options: Pick<V3GrammarOptions, "maxRingVertices"> = {}): V3Validation<V3Plan> {
+export function validateV3Plan(value: unknown, options: V3GrammarOptions = {}): V3Validation<V3Plan> {
   const issues: V3Issue[] = [];
   if (!record(value)) return { ok: false, issues: [{ path: "$", message: "V3 facade plan must be an object." }] };
   if (value.schemaVersion !== DETERMINISTIC_FACADE_V3_SCHEMA_VERSION || value.coordinateSystem !== "local-millimeters") addIssue(issues, "schemaVersion", "Unsupported V3 plan schema or coordinate system.");
@@ -1721,7 +1837,7 @@ export function validateV3Plan(value: unknown, options: Pick<V3GrammarOptions, "
   if (issues.length > 0 || !inputResult.ok) return { ok: false, issues };
 
   const plan = value as unknown as V3Plan;
-  const expected = buildPlan(inputResult.value);
+  const expected = buildPlan(inputResult.value, options);
   if (!expected.ok) return expected;
   if (calculateV3PlanHash(plan) !== plan.planHashSha256) addIssue(issues, "planHashSha256", "Plan hash does not match canonical content with the hash field excluded.");
   if (stableSerialize(plan) !== stableSerialize(expected.value)) addIssue(issues, "$", "Plan is not the canonical deterministic V3 output for its embedded input.");
@@ -1748,8 +1864,14 @@ export function validateV3Plan(value: unknown, options: Pick<V3GrammarOptions, "
   return issues.length === 0 ? { ok: true, value: plan } : { ok: false, issues };
 }
 
-export function serializeV3Plan(value: unknown): V3Validation<string> {
-  const validation = validateV3Plan(value);
+/**
+ * `options` is threaded rather than left at the shipped default so a plan built
+ * under a wider envelope can be serialized at all. Omitting it would make this
+ * entrypoint silently unusable for every successor plan — the exact shape of
+ * the defect the T004 threading exists to close, one function further out.
+ */
+export function serializeV3Plan(value: unknown, options: V3GrammarOptions = {}): V3Validation<string> {
+  const validation = validateV3Plan(value, options);
   return validation.ok ? { ok: true, value: stableSerialize(validation.value) } : validation;
 }
 
