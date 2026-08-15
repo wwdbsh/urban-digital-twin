@@ -39,9 +39,18 @@
  * the series, the verdict the frozen formula returns, and the real monotonicity
  * columns that formula does NOT compute.
  *
+ * NODE VERSION. This CLI needs a Node that (a) strips types from the `.ts`
+ * modules it imports and (b) provides `module.registerHooks`, which is how the
+ * verdict formula is imported rather than copied. That is **Node >= 22.15**;
+ * the capture this file produced ran on **v24.12.0**. The repository's
+ * `engines.node` floor of 22.12 is NOT sufficient for this script alone, which
+ * is why the package script passes `--experimental-strip-types` explicitly and
+ * why the version is stated here rather than assumed.
+ *
  * Usage:
- *   node scripts/citywide-heap-repeat-cli.mjs --dev http://localhost:4213 \
- *     --port 9223 --attempt 1
+ *   pnpm heap:repeat -- --dev http://localhost:4213 --port 9223 --attempt 1
+ *   node --experimental-strip-types scripts/citywide-heap-repeat-cli.mjs \
+ *     --dev http://localhost:4213 --port 9223 --attempt 1
  */
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { registerHooks } from "node:module";
@@ -448,9 +457,12 @@ function poseObservation(pose, scheduler, citywide) {
         footprintSignature: scheduler.decision.footprintSignature,
       }
       : null,
-    // Session-wide totals read off ONE wave. The app writes the same session
-    // totals onto every live runtime, so summing them would multiply one pool
-    // by the number of promotions (ExteriorRuntimeMetrics, exterior-cell-runtime.ts:318-334).
+    // Session-wide totals read off ONE wave: `waves[0]`, unconditionally — the
+    // first entry of the probe's wave array, which is the first ACTIVE wave the
+    // app emitted, not a wave selected by any liveness test performed here. The
+    // app writes the same session totals onto every live runtime, so summing
+    // them would multiply one pool by the number of promotions
+    // (ExteriorRuntimeMetrics, exterior-cell-runtime.ts:318-334).
     exteriorPool: sessionWave
       ? {
         cacheEntries: sessionWave.cacheEntries,
@@ -463,7 +475,7 @@ function poseObservation(pose, scheduler, citywide) {
         peakConcurrentRequests: Math.max(...waves.map((wave) => wave.metrics?.peakConcurrentRequests ?? 0)),
         requestedArtifactCount: waves.reduce((total, wave) => total + (wave.metrics?.requestedArtifactCount ?? 0), 0),
         loadedArtifactCount: waves.reduce((total, wave) => total + (wave.metrics?.loadedArtifactCount ?? 0), 0),
-        note: "cacheEntries/cachedBytes/cacheEvictions/releasedArtifact* are SESSION-wide fields read from the first live wave and must not be summed across waves. requestedArtifactCount/loadedArtifactCount ARE per wave and are summed.",
+        note: "cacheEntries/cachedBytes/cacheEvictions/releasedArtifact* are SESSION-wide fields read from waves[0] unconditionally - the first entry of the probe's active-wave array, not a wave chosen by any liveness test - and must not be summed across waves. requestedArtifactCount/loadedArtifactCount ARE per wave and are summed.",
       }
       : null,
     // The SEPARATE citywide dense shard pool. Conflating it with the exterior

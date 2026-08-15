@@ -170,7 +170,12 @@ run from the committed ledger rather than asserted.
 41,841 real building extrusions at the 52 km island overview, from a URL that
 names nothing.** These are the committed citywide dense shards — real OTI
 footprints extruded to sourced heights, with per-building pick identity —
-streamed by camera visibility. The island is drawn.
+streamed by camera visibility. The island is drawn. That figure is the reading
+**in the captured cold session**; a warmed session that has roamed the island
+records **45,154 of 45,194** at the same camera
+(`data/citywide-heap-repeat-20260815/heap-repeat-evidence.json`), so 41,841 is a
+cold-arrival floor rather than a ceiling — the drawn count follows what the
+session has loaded and how far the dense plan has rebuilt, not the camera alone.
 
 **What carries a generated, textured exterior: 484 of 45,194 parents (1.07%),
 shipped as 498 GLB artifacts.** This is the **textured V3 tier**, promoted on

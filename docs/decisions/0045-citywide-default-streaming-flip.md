@@ -763,3 +763,71 @@ both **MET**, each disclosing the half this campaign did not reach. Where the tw
 documents differ, **the difference is scope, not fact**: §5.1 answers "what did
 T006 measure", the acceptance record answers "what does the goal's evidence base
 support". Neither number was changed to agree with the other.
+
+---
+
+## Addendum (T008, Issue #80) — §5.1 row 7 and §5.2 D-13 are discharged by capture
+
+*Appended by T008. **No section above was rewritten.** §5.1 row 7 still reads
+"NOT discharged" and §5.2 D-13 still reads "not claimed" because that is what
+was true of **this campaign**, and this ADR records what T006 measured. What
+follows is the later evidence those two entries pointed at, recorded here so a
+reader who reaches row 7 is not left at a dead end.*
+
+**The verdict now exists.**
+`data/citywide-heap-repeat-20260815/heap-repeat-evidence.json` (sha256
+`6c3ef7c38118dcc1630a1da73ae2224592b5c4fbd94c60c4488a07ddc925eb9a`) captures the
+repeated-single-path monotonicity reading row 7 declined to claim: one
+deterministic island-scale path — 52 km overview, 2,400 m and 1,200 m on the
+scheduler's band edges, a 260 m midtown street pose, a 260 m lower-Manhattan
+street pose — repeated as one unsampled warmup lap plus **8 sampled laps in a
+single document**, 45 s settle per pose, with an explicit in-page `window.gc()`
+before every heap sample. It **PASSES** the rule that was pre-registered before
+it ran: `growthRatio` **−0.0650829356922181** against a 0.1 noise band,
+`monotonicGrowthDetected` **false**, over 8 repeats ≥ the floor of 6. The
+arithmetic is `block835CanaryHeapVerdict` **imported** from
+`src/runtime/block835-canary-probe.ts`, and a colocated test recomputes it from
+the committed series and demands byte-equality.
+
+**Row 7's own caution is preserved, because the pass is narrow.** Three bounds
+travel with it and are recorded in the capture rather than in prose only:
+
+1. The pass rule's two conjuncts are **one measurement reported twice** —
+   `monotonicGrowthDetected` is literally `growthRatio > noiseBandRatio`
+   (`block835-canary-probe.ts:322`), a restatement of the median ratio test and
+   not an independent monotonicity test. The capture therefore carries real
+   monotonicity columns: a strictly increasing run of **5** of the 8 sampled
+   repeats, rising 1,041,736 B before two collections drop the series, and an
+   OLS slope of −7,373,936 B/lap at `rSquared` 0.431 — that negative slope is
+   the two drops, not a trend.
+2. The **detection floor is 7,952,260.75 B per lap** (`0.10 ×
+   firstHalfMedianBytes / 4`, the two medians being centred four laps apart), so
+   the pass **bounds** retention rather than excluding it.
+3. **Half of the pressure the closure was asked for is structurally
+   unreachable.** The 128-cell exterior pool *is* pressed (`residentCount` 128
+   against `visibleCount` 883, `deferredCount` 755, every lap), and the release
+   seam freed 472 artifacts / 144,610,620 B across the run — where §5.1 row 6
+   and D-12 correctly record that this campaign forced nothing. But the citywide
+   **dense shard** pool cannot be made to evict by any camera: it is capped at
+   112 shards / 83,886,080 B (`src/release/citywide-release.ts:79-80`) and the
+   whole island fits under both, measured here at 103 entries / 62,598,581 B
+   with `cacheEvictions` 0 by design.
+
+**Scope note, in the spirit of the section above this addendum.** Row 6 and D-12
+are *not* discharged by this. What T008 exercised is the scheduler's artifact
+**release** seam on a default path; an **LRU eviction** from the exterior cell
+cache still did not occur (40 entries / 14,369,372 B against 512-entry, 256 MiB
+caps). The goal-level record
+`data/citywide-goal-acceptance-20260815/reconciliation.json` grades criterion 7
+**MET** on this capture and carries the bounds above; where that record and this
+ADR differ, the difference is scope, not fact.
+
+**One finding travelled the other way.** Building the instrument surfaced a
+defect this ADR's campaign could not have seen, because T006 navigated a fresh
+document per station: a routed pose change applies the camera but does **not**
+refresh the viewport footprint, so Back/Forward can leave the scheduler on a
+stale resident set. It is carried as **D-18** in the goal-level record, with the
+symbol, the lines, the mechanism, the observed consequence and the closing
+instrument. It is recorded, not fixed — fixing it is a runtime change to the
+camera commit path, and changing it would have changed the behaviour the capture
+was measuring.

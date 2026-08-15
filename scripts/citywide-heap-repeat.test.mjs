@@ -53,6 +53,48 @@ describe("the heap verdict is what the frozen formula returns for the committed 
     expect(secondary.jsHeapBytes).not.toEqual(verdictSeries);
   });
 
+  it("holds the verdict series to the ONE pose that was pre-declared for it", () => {
+    // The strongest way to launder a heap verdict is to sample it somewhere
+    // else. Every verdict row must name the trough pose, that pose must be the
+    // one the pre-registration names, and the pre-registration must still say
+    // so in words.
+    for (const entry of record.heapPerRepeat) expect(entry.poseId, `repeat ${entry.repeatIndex}`).toBe("street-260m-midtown");
+    expect(record.preRegistered.verdictSeries).toContain("street-260m-midtown");
+    expect(record.preRegistered.verdictSeries).toContain("warmup lap excluded");
+    const declared = record.poses.find((pose) => pose.poseId === "street-260m-midtown");
+    expect(declared, "the pose table does not declare the verdict pose").toBeTruthy();
+    expect(declared.role).toContain("VERDICT SAMPLE POINT");
+    expect(declared.height).toBe(260);
+    // …and the disclosed second series must still be a DIFFERENT pose that the
+    // pose table marks as never carrying the verdict.
+    const secondary = record.poses.find((pose) => pose.poseId === record.disclosedSeries.overviewSecondary.poseId);
+    expect(secondary.role).toContain("NEVER the verdict");
+  });
+
+  it("keeps the pose-landing disclosure and its per-pose dispatch counts", () => {
+    // The instrument re-dispatches a pose until the scheduler's footprint
+    // moves. That is the one place a reader could suspect the harness of
+    // manufacturing the camera, so the disclosure and the evidence for it must
+    // both survive any later edit.
+    const disclosure = record.method.poseLandingDisclosure;
+    expect(disclosure).toContain("RE-DISPATCHED");
+    expect(disclosure).toContain("CesiumViewport.tsx:1923-1928");
+    expect(disclosure).toContain("CesiumViewport.tsx:2534");
+    expect(disclosure).toContain("residentCount 128");
+    expect(record.method.settleStartsAfterLanding).toContain("LANDS");
+    let dispatched = 0;
+    for (const lap of record.perRepeat) {
+      for (const pose of lap.poses) {
+        expect(Number.isInteger(pose.dispatchCount), `${lap.repeatIndex}/${pose.poseId}`).toBe(true);
+        dispatched += pose.dispatchCount;
+      }
+    }
+    // Only the booted first pose may carry 0; everything else was dispatched.
+    expect(record.perRepeat[0].poses[0].dispatchCount).toBe(0);
+    expect(dispatched).toBeGreaterThanOrEqual(record.perRepeat.length * record.poses.length - 1);
+    for (const entry of record.heapPerRepeat) expect(entry.dispatchCount).toBeGreaterThanOrEqual(1);
+  });
+
   it("holds the two conjuncts of the pre-registered pass rule against `passed`", () => {
     const withinBand = record.heapVerdict.growthRatio <= record.heapVerdict.noiseBandRatio;
     const notMonotonic = record.heapVerdict.monotonicGrowthDetected === false;

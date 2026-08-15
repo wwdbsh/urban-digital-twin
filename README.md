@@ -164,7 +164,12 @@ is only the second of them.
   session that names nothing.** They are the committed citywide dense shards —
   real OTI footprints extruded to sourced heights, with per-building pick
   identity — streamed by camera visibility rather than loaded wholesale. The
-  reading is `data/citywide-default-flip-20260814/stations-default.json`.
+  reading is `data/citywide-default-flip-20260814/stations-default.json`, taken
+  **in that captured cold session**; a warmed session that has roamed the island
+  records **45,154 of 45,194** at the same camera
+  (`data/citywide-heap-repeat-20260815/heap-repeat-evidence.json`), because the
+  drawn count depends on what the session has loaded and how far the dense plan
+  has rebuilt. 41,841 is the cold-arrival floor, not a ceiling.
 - **484 of 45,194 canonical building parents — 1.07%, about one in ninety-three
   — carry a generated, textured V3 exterior**, shipped as 498 GLB artifacts.
   **This is the TEXTURED TIER, not "what renders."** It is what the near-camera

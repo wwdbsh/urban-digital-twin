@@ -9,6 +9,7 @@ drift test, and the record amendments the verdict implies.
 | --- | --- | --- |
 | 1 | `[T008] Heap repeat instrument` | new `scripts/citywide-heap-repeat-cli.mjs`, `scripts/citywide-heap-repeat.test.mjs`, `data/citywide-heap-repeat-20260815/heap-repeat-evidence.json` + `.sha256` |
 | 2 | `[T008] Acceptance record amendment` | `data/citywide-goal-acceptance-20260815/reconciliation.json`, `scripts/citywide-goal-acceptance.test.mjs`, `data/goal-integration-acceptance-20260812/reconciliation.json`, `README.md`, `docs/PROJECT_BRIEF.md`, this record |
+| 3 | `[T008] Close review: D-18 carriage, ADR 0045 addendum, drawn-count reconciliation` | D-18 + the drawn-count risk in the acceptance record (and its re-pin), the ADR 0045 append-only addendum, §7's corrected causal claim, both documents' qualifying clause, three more drift assertions, `package.json` |
 
 ---
 
@@ -216,13 +217,36 @@ concurrent requests stayed at 4, against the criterion's ceiling of 8. Both
 probe buffers stayed inside their caps.
 
 **One disclosure a reader will otherwise trip over.** At the 52 km overview this
-warmed session records `buildingFeatureCount` 45,154, where the flip campaign's
-cold single-station capture records 41,841 at the same camera. Neither is wrong
-and this record does **not** amend the 41,841 figure the documentation quotes:
-that figure belongs to a cold session that had loaded 99 dense shards, and this
-one had roamed the island and held 103 shards / 62,598,581 B, so more of the
-island's buildings were available to the plan. The drawn count at a camera is a
-function of what the session has loaded, not only of where the camera is.
+warmed session records `buildingFeatureCount` 45,154 — of 45,194 canonical
+parents — where the flip campaign's cold single-station capture records 41,841 at
+the same camera. Neither is wrong and this record does **not** amend the 41,841
+figure the documentation quotes.
+
+The tempting explanation is shard count: the cold capture held 99 dense shards
+and this session held 103. **That explanation does not carry the difference, and
+this record's own lap 0 is what disproves it.** Lap 0 holds **99** shards — the
+same 99 — and draws **42,981**, which is neither figure:
+
+| lap | dense entries | dense bytes | drawn buildings | instances | planBuildCount |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 0 (warmup) | 99 | 59,103,270 | 42,981 | 54,024 | 2 |
+| 1 | 103 | 62,598,581 | 45,154 | 57,313 | 11 |
+| 2–8 | 103 | 62,598,581 | 45,154 | 57,313 | 18 → 60 |
+
+So the four extra shards do not by themselves account for 3,313 buildings. The
+second variable is **plan-fill state at the moment of reading**: lap 0 is read at
+`planBuildCount` 2, lap 1 onward at 11 and above, and the count stabilises
+exactly when the plan has been rebuilt enough times to have caught up with what
+is loaded. **The drawn count at a camera is a function of what the session has
+loaded *and* how far the dense plan has been rebuilt when the reading is taken —
+not of the camera alone.**
+
+The consequence for a reader is narrow: 41,841 is the honest figure for a **cold**
+default session arriving at the overview, which is what the README and the brief
+quote and what their cited record measured, and it is a **floor** rather than a
+ceiling on what a roamed session draws at the same camera. Both documents now
+carry a qualifying clause, and the discrepancy is carried in the acceptance
+record's residual risks.
 
 ## 8 — What this closes, and what it does not
 
@@ -233,7 +257,7 @@ not NOT-MET, and the closure is recorded in a new `amendments` block instead. Th
 counts become 9 / 3 / 0 and `stopReportCount` 0. The prior goal's record re-pins
 its criterion-22 evidence hash to the amended citywide record.
 
-Two residual risks were rewritten rather than dropped:
+Two residual risks were rewritten rather than dropped, and two were added:
 
 - **D-13** is now a closure, stated with everything the closure does not
   establish.
@@ -242,8 +266,53 @@ Two residual risks were rewritten rather than dropped:
   an **LRU eviction** from the exterior cell cache (40 entries / 14,369,372 B
   against 512-entry, 256 MiB caps), and the dense shard pool cannot be evicted at
   all.
+- **D-18** is new: the Back/Forward camera defect of §3, carried by number with
+  its symbol, lines, mechanism, observed consequence, user-visible failure mode
+  and closing instrument, and held in place by the marker assertion in
+  `scripts/citywide-goal-acceptance.test.mjs`.
+- An **unnumbered drawn-count entry** carries §7's 45,154-versus-41,841 reading
+  difference, per the T007 precedent for documentation-accuracy findings.
+
+`docs/decisions/0045-citywide-default-streaming-flip.md` gains an **append-only
+addendum**: §5.1 row 7 and §5.2 D-13 still read "NOT discharged" and "not
+claimed", because that is what was true of the T006 campaign, and the addendum
+records the later capture those entries pointed at rather than rewriting them.
 
 Not closed, and not touched: the prior goal's criterion 1, the 899 grammar
 refusals, D-17's unguarded commit-path wiring, D-11's 5,746 ms double-draw, and
-the Back/Forward camera defect §3 found — which is now recorded but not fixed.
+D-18 itself — recorded but not fixed.
 
+## 9 — Four things this record does not want a reader to over-read
+
+**Probe accumulation is bounded, and here is the arithmetic rather than an
+invitation to do it.** The two probe buffers did **not** saturate their caps
+during the run — at the verdict pose `traceLength` grew 13 → 55 (cap 800) and
+`denseSampleCount` 19 → 89 (cap 400) across the sampled laps — so probe growth is
+a live contributor and not a settled one. A trace entry and a dense sample are
+flat objects of roughly 10 and 30 numeric/string fields; at a deliberately
+generous 1 kB each, the ~48 objects retained across laps 1–5 are **~48 kB against
+the 1,041,736 B rise** in the same window, under 5%, and ~0.015% of the
+318 MB heap. **The estimate is an upper bound from field counts, not a measured
+retained-size figure** — nothing in this capture measured the objects' actual
+retained size, and a reader who needs that number does not have it here.
+
+**The overview series has an excursion nothing explains.** Lap 4's overview
+sample is 649,252,759 B against a series that otherwise sits near 562–606 MB — a
+~+87 MB excursion with **no correlate in any counter this record captured**:
+resident, visible, deferred, released, dense entries, plan counts and peak
+concurrency are all identical to the neighbouring laps. The peak pose's noise
+amplitude therefore approaches the width of the 0.1 band itself, which is
+precisely why the overview series is published as disclosure and the **trough**
+pose was pre-declared as the verdict point.
+
+**`attemptCount` is operator-supplied, not instrument-derived.** It is the
+`--attempt` argument; the CLI cannot know how many times a human ran it. What
+makes the 1 credible is structural rather than asserted: an aborted run writes
+**no record at all**, so an unwritten attempt cannot become evidence — but the
+field is a statement of good faith and should be read as one.
+
+**"Disjoint street working sets" is geometric inference, not a set comparison.**
+The two 260 m street poses are ~5 km apart and each records a resident set of 12
+and 17 cells respectively, so overlap is implausible — but this record compares
+`residentCount`s and footprint signatures, never the resident cell-ID sets
+themselves, and therefore does not *prove* the sets are disjoint.

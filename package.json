@@ -24,6 +24,7 @@
     "showcase:audit": "node scripts/public-showcase-audit-cli.mjs",
     "showcase:smoke": "node scripts/public-showcase-smoke-cli.mjs",
     "canary:facade-path": "node scripts/block835-canary-facade-path-cli.mjs",
+    "heap:repeat": "node --experimental-strip-types scripts/citywide-heap-repeat-cli.mjs",
     "nyc:building-ingest": "node --experimental-strip-types scripts/run-nyc-building-ingest.mjs",
     "poi:ingest": "node --experimental-strip-types scripts/run-poi-ingest.mjs",
     "area:ingest": "node --experimental-strip-types scripts/run-area-ingest.mjs",

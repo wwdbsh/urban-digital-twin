@@ -213,7 +213,10 @@ describe("residual risks are recorded rather than the goal being closed silently
 
   it("names each carried deferral by its number, so none is closed by omission", () => {
     const joined = record.residualRisks.join(" ");
-    for (const marker of ["D-4", "D-8", "D-11", "D-12", "D-13", "D-14", "D-16", "D-17"]) {
+    // D-18 is new in T008: the Back/Forward camera defect the heap instrument
+    // found. It is listed here so a later edit cannot drop the one risk this
+    // goal discovered while closing its last criterion.
+    for (const marker of ["D-4", "D-8", "D-11", "D-12", "D-13", "D-14", "D-16", "D-17", "D-18"]) {
       expect(joined, `${marker} is not carried`).toContain(marker);
     }
   });
