@@ -164,7 +164,12 @@ is only the second of them.
   session that names nothing.** They are the committed citywide dense shards —
   real OTI footprints extruded to sourced heights, with per-building pick
   identity — streamed by camera visibility rather than loaded wholesale. The
-  reading is `data/citywide-default-flip-20260814/stations-default.json`.
+  reading is `data/citywide-default-flip-20260814/stations-default.json`, taken
+  **in that captured cold session**; a warmed session that has roamed the island
+  records **45,154 of 45,194** at the same camera
+  (`data/citywide-heap-repeat-20260815/heap-repeat-evidence.json`), because the
+  drawn count depends on what the session has loaded and how far the dense plan
+  has rebuilt. 41,841 is the cold-arrival floor, not a ceiling.
 - **484 of 45,194 canonical building parents — 1.07%, about one in ninety-three
   — carry a generated, textured V3 exterior**, shipped as 498 GLB artifacts.
   **This is the TEXTURED TIER, not "what renders."** It is what the near-camera
@@ -332,14 +337,21 @@ that the retention half is now structurally closed and names the two halves that
 are not: producing generated exteriors for the remaining parents, and
 adjudicating the 899 grammar refusals.
 
-**The citywide default streaming goal: 11 of its 12 criteria are MET or
-adjudicated; criterion 7 is open.** The record is
+**The citywide default streaming goal: all 12 of its criteria are MET or
+adjudicated.** The record is
 [`data/citywide-goal-acceptance-20260815/reconciliation.json`](data/citywide-goal-acceptance-20260815/reconciliation.json),
 with its drift instrument at `scripts/citywide-goal-acceptance.test.mjs`.
 Criterion 7 asks for a repeated-camera-path heap verdict at citywide scale under
-forced GC; per-station readings exist but are four different cameras and cannot
-be re-read as one path, so it carries an honest NOT-MET and a stop report naming
-the capture that would close it. Three criteria are graded MET-AS-ADJUDICATED
+forced GC. It was the one open criterion, and T008 closed it by **measuring it**
+rather than by re-reading the four per-station readings that could not be
+substituted for it:
+[`data/citywide-heap-repeat-20260815/heap-repeat-evidence.json`](data/citywide-heap-repeat-20260815/heap-repeat-evidence.json)
+repeats one island-scale path eight times in a single document with an explicit
+`window.gc()` before every sample, and reports `growthRatio` −0.065 against a 0.1
+noise band. The record states what the pass does **not** say: its two conjuncts
+are one measurement reported twice, its detection floor is ~7.95 MB retained per
+lap, and the dense shard pool cannot be forced to evict by any camera. Three
+criteria are graded MET-AS-ADJUDICATED
 with their deltas stated: the only eligible LOD transition is 14 assets of
 45,194; the eviction journeys exist as real-runtime proofs rather than browser
 journeys; and "zero by-design cell tombstones" was answered by making the

@@ -861,7 +861,7 @@
       {
         "criterion": 22,
         "path": "data/citywide-goal-acceptance-20260815/reconciliation.json",
-        "sha256": "256d2c3edacde04a3d75932385d92498f1f9ec49d74754992a9498c6bdc2ed9e"
+        "sha256": "2d4bd14306ecc4f43e15abd1bdcb8bfa28673745e884425dde0233c271bcf924"
       }
     ],
     "layoutDefectResolution": "RESOLVED during this task. The mobile lower-LOD disclosure was structurally unreadable at 390 CSS px - a stylesheet clamp, not a wiring gap - and the first mobile re-capture under the new legibility instrument failed legs 1 and 4 and said why. It is fixed in src/styles.css and re-captured: 7 wrapped lines at 11px, inside the viewport, unoccluded at all nine hit-tested points. The remaining on-screen occlusion is the truthful 'Exterior streaming fallback' notice, which is named per leg in the journey record rather than cropped out of the stills.",

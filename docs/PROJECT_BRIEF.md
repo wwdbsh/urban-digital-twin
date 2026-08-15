@@ -170,7 +170,12 @@ run from the committed ledger rather than asserted.
 41,841 real building extrusions at the 52 km island overview, from a URL that
 names nothing.** These are the committed citywide dense shards — real OTI
 footprints extruded to sourced heights, with per-building pick identity —
-streamed by camera visibility. The island is drawn.
+streamed by camera visibility. The island is drawn. That figure is the reading
+**in the captured cold session**; a warmed session that has roamed the island
+records **45,154 of 45,194** at the same camera
+(`data/citywide-heap-repeat-20260815/heap-repeat-evidence.json`), so 41,841 is a
+cold-arrival floor rather than a ceiling — the drawn count follows what the
+session has loaded and how far the dense plan has rebuilt, not the camera alone.
 
 **What carries a generated, textured exterior: 484 of 45,194 parents (1.07%),
 shipped as 498 GLB artifacts.** This is the **textured V3 tier**, promoted on
@@ -238,7 +243,7 @@ the full opt-out and the rollback — it withdraws visibility scheduling and the
 overview residency raise together, collapsing the drawn island to 5,289, and its
 global form is the single constant `EXTERIOR_SCHEDULER_DEFAULT_ON`.
 
-**Two goals, two records, two open criteria — one each.** The exteriors goal's
+**Two goals, two records, one open criterion.** The exteriors goal's
 reconciliation is in
 [Decision 0039](decisions/0039-goal-integration-acceptance.md) and
 `data/goal-integration-acceptance-20260812/reconciliation.json`: 30 of 31
@@ -247,7 +252,11 @@ criteria are closed, and criterion 1 remains NOT-MET because 41,357 of the
 with the 899 grammar refusals still awaiting their adjudication. The citywide
 default streaming goal's reconciliation is
 `data/citywide-goal-acceptance-20260815/reconciliation.json`, summarized in
-[Decision 0045](decisions/0045-citywide-default-streaming-flip.md): 11 of 12
-criteria are MET or adjudicated, and criterion 7 — a repeated-camera-path heap
-verdict at citywide scale under forced GC — is NOT-MET with a stop report. Both
-records carry residual risks by number rather than closing quietly.
+[Decision 0045](decisions/0045-citywide-default-streaming-flip.md): all 12
+criteria are MET or adjudicated. Its last open one — criterion 7, a
+repeated-camera-path heap verdict at citywide scale under forced GC — was closed
+by capture in T008 (`data/citywide-heap-repeat-20260815/heap-repeat-evidence.json`),
+which repeats one island-scale path eight times in a single document with a
+forced collection before every sample and passes its pre-registered rule while
+stating its own detection floor. Both records carry residual risks by number
+rather than closing quietly.
