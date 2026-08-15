@@ -59,5 +59,12 @@
         }
       }
     }
-  ]
+  ],
+  "labelsSupersededNote": {
+    "appliesTo": "results[].probe.labels",
+    "statement": "The `labels` blocks embedded in each result below are the output of the PRE-CORRECTION build and are preserved unedited, because this file is a capture of what the instrument said at capture time. They are SUPERSEDED. They claim the reading is 'BASE LEVELS ONLY' and that a mip pyramid adds ~1.33x 'on top' of it, 'stated, never measured here', and they quote 65,536 bytes as the per-texture figure. Instrument validation against a known texture count refuted that: `ResourceCache.statistics.texturesByteLength` INCLUDES the mip chain, and the per-texture cost is 87,381 bytes (= 65,536 * 4/3, truncated by Cesium). Both readings in this file divide by 87,381 exactly - 15,204,294 = 174 x 87,381 and 349,524 = 4 x 87,381 - which is the evidence that refuted the labels. ADR 0047 carries the corrected statement and `src/features/explorer/gpu-texture-probe.ts` carries the corrected code. The NUMBERS in this file are unaffected: only the prose describing what they mean was wrong, and it is annotated here rather than rewritten so the correction stays visible.",
+    "supersededBy": "docs/decisions/0047-shared-class-texture-images.md",
+    "measuredBytesPerTexture": 87381,
+    "annotationIsAppendOnly": true
+  }
 }

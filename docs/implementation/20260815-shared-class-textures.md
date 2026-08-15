@@ -41,6 +41,14 @@ exit 1 having touched nothing. `all` still works and still has to be typed.
 This is disclosed as an operational-safety fix taken in scope, not as feature
 work, and it is recorded in ADR 0047 as well.
 
+**Behaviour change operators will notice.** `pnpm lower-manhattan:pipeline`,
+`pnpm southern-remainder:pipeline`, `pnpm central-upper-manhattan:pipeline` and
+`pnpm northern-manhattan:pipeline` forward no arguments, so each of them USED TO
+run the entire pipeline and now prints usage and exits 1. That is the intended
+change and not a regression: the stage must be named, e.g.
+`pnpm southern-remainder:pipeline graph --release t1 --force`. Any runbook,
+note or muscle memory that relied on the bare form has to name a stage.
+
 ## Things that were found rather than assumed
 
 **Cesium's `clone()` does not preserve a subclass.** `Resource.prototype.clone()`
@@ -93,6 +101,41 @@ byte-for-byte against `proceduralTextureCatalog()`; every committed inventory
 entry re-verified against the payload (0 mismatches). The four frozen `-p1`
 payloads were re-verified after every wave: 1,699 files, 0 mismatches.
 
+## Review closure
+
+An independent review of this work raised one HIGH finding and it was a real bug,
+not a documentation defect. The memoized shared-tile verification bound the FIRST
+caller's `AbortSignal`, and `CitywideRequestPool` rejects each caller's await on
+that caller's abort. Two overlapping batches — the ordinary case under a moving
+camera — therefore shared one promise that batch 1's abort could reject out from
+under batch 2, whose outcomes were then deleted with no notice. The reproduction
+failed against the pre-fix code with `AbortError: Request was aborted.` and
+passes against the fix; the tiles now load under a runtime-owned signal, which is
+a deliberate and bounded loss of cancellability for four 16 KB artifacts every
+cell of the release needs anyway.
+
+Two smaller closures are worth recording because they changed a decision rather
+than a comment:
+
+- The shared-tile replay now binds the artifact PATH to the class its BYTES are.
+  Without it, two declared tiles could be swapped and every gate would still
+  pass — both digests replay, both are declared, both are referenced, neither
+  class is duplicated — and every brick wall in the release would render in
+  limestone, verifiably.
+- The two catalogue-mismatch throws are no longer `MidtownCoreV3Stop`s. They were
+  first (wrongly) reported as `asset-budget-exceeded`. The right fix was not a
+  new stop code but to stop calling them refusals: a stop code is a statement
+  that the grammar cannot carry some property of ONE sourced polygon and drops
+  that building, while a catalogue mismatch is this repository contradicting
+  itself and is true of every building. They now stop the run. The closed
+  stop-code vocabulary is pinned byte-equal by a committed goal-completion
+  record, so widening it was not available in any case.
+
+A load-time canary now asserts the subclass survives `Resource.createIfNeeded`
+once per cell add, and fails the cell closed if it does not — defence against a
+future CesiumJS that stops routing through `clone` and would otherwise fetch
+unverified bytes with nothing throwing anywhere.
+
 ## Open items
 
 - **Promotion is not decided.** The `-t1` releases are `?exteriorCells=` opt-in
@@ -102,6 +145,11 @@ payloads were re-verified after every wave: 1,699 files, 0 mismatches.
 - **Close-range facade parity is not claimed.** The committed stills are
   byte-identical between arms at the campaign pose, but that pose frames the
   cells from above rather than a facade at close range.
+- **Frame time on the `-t1` path is unmeasured and is REQUIRED for promotion.**
+  This work measured GPU residency. T005 must compare frame time against the
+  `-p1` sibling before promoting anything.
+- **Midtown and Block 835 were not rebuilt and byte-compared**; their invariance
+  is argued structurally and corroborated by pinned digests. Accepted residual.
 - **The GPU reading is pinned to cesium 1.143.0.** `ResourceCache.statistics` is
   a Cesium-internal export, named in exactly one file. A version bump invalidates
   the reading rather than adjusting it.

@@ -565,6 +565,29 @@ export class ExteriorCellRuntime {
    * a cancelled request.
    */
   private readonly sharedTextureVerification = new Map<string, Promise<ReadonlyMap<string, Uint8Array>>>();
+  /**
+   * The signal the shared tiles are fetched under, owned by the RUNTIME and not
+   * by whichever batch happened to ask first.
+   *
+   * This is the fix for a real defect, and the defect is worth stating because
+   * the shape recurs. `CitywideRequestPool` rejects EACH caller's await when
+   * THAT caller's signal aborts. A memoized promise created under batch 1's
+   * signal is therefore a promise batch 2 can be handed and then have aborted
+   * out from under it: a height-bucket change abandons batch 1, batch 2 receives
+   * batch 1's `AbortError`, `loadCell` re-throws it as an abort, and the wave's
+   * outcomes are deleted — the wave blanks with NO NOTICE until residency moves
+   * again. Serialised batches hide it, because a rejected verification is
+   * forgotten and simply re-runs; it only appears while two batches overlap,
+   * which is the ordinary case under a moving camera.
+   *
+   * Making the tiles uncancellable is a deliberate, bounded choice rather than
+   * an oversight: they are four artifacts of about 16 KB, every cell of the
+   * release needs them, and a camera move that abandons one batch does not make
+   * them less needed. Nothing aborts this controller today — the app drops a
+   * runtime rather than disposing it — so it is a scope marker, not a live
+   * cancellation path, and it is named that way rather than pretending to more.
+   */
+  private readonly sharedTextureLifetime = new AbortController();
   private readonly artifactUrlBase: string;
   private requestedArtifactCount = 0;
   private loadedArtifactCount = 0;
@@ -870,7 +893,7 @@ export class ExteriorCellRuntime {
     // cell of a texture-declaring release whose class tiles are unverified
     // fails closed as a cell rather than rendering untextured.
     const declaredTextureRefs = sharedTextureArtifactRefs(assembly);
-    const verifiedTextures = declaredTextureRefs.size > 0 ? await this.verifiedSharedTextures(assembly, signal) : null;
+    const verifiedTextures = declaredTextureRefs.size > 0 ? await this.verifiedSharedTextures(assembly) : null;
 
     // Evidence-shard audience admission for every building this cell publishes.
     for (const detail of cellRelease.buildingDetails) {
@@ -954,10 +977,11 @@ export class ExteriorCellRuntime {
    * budget — and then through the rasterizer replay that is the honesty claim
    * itself. Nothing here is a weaker check applied to a smaller artifact.
    */
-  private async verifiedSharedTextures(assembly: MultiLodAssemblyManifest, signal?: AbortSignal): Promise<ReadonlyMap<string, Uint8Array>> {
+  private async verifiedSharedTextures(assembly: MultiLodAssemblyManifest): Promise<ReadonlyMap<string, Uint8Array>> {
     const memoized = this.sharedTextureVerification.get(assembly.packageId);
     if (memoized) return memoized;
-    const pending = this.loadSharedTextures(assembly, signal);
+    // Deliberately NOT the caller's signal; see `sharedTextureLifetime`.
+    const pending = this.loadSharedTextures(assembly, this.sharedTextureLifetime.signal);
     this.sharedTextureVerification.set(assembly.packageId, pending);
     pending.catch(() => {
       // Forget a FAILED verification so a later cell can retry it. Only this
@@ -980,7 +1004,7 @@ export class ExteriorCellRuntime {
       const bytes = await this.loadVerifiedArtifact(artifact.relativeRef, artifact.byteSize, artifact.checksumSha256, signal);
       let textureClass: string;
       try {
-        textureClass = replaySharedTextureArtifact(bytes);
+        textureClass = replaySharedTextureArtifact(bytes, artifact.relativeRef);
       } catch (error) {
         throw new ExteriorRuntimeError("shared-texture-invalid", `Shared texture artifact ${artifact.relativeRef} is not byte-identical to the tile this repository's rasterizer produces: ${error instanceof Error ? error.message : String(error)}`, artifact.relativeRef);
       }

@@ -71,6 +71,14 @@ export const ASSEMBLY_ISSUE_TEXTURE_URI_CONTAINMENT_FORBIDDEN = "shared-texture-
 export const ASSEMBLY_ISSUE_TEXTURE_URI_UNDECLARED = "shared-texture-gate/uri-undeclared: an image URI must resolve to a texture artifact this package declares." as const;
 export const ASSEMBLY_ISSUE_TEXTURE_URI_DUPLICATE_CLASS = "shared-texture-gate/uri-duplicate-class: one GLB cannot reference the same shared texture artifact twice." as const;
 export const ASSEMBLY_ISSUE_TEXTURE_ARTIFACT_REPLAY_MISMATCH = "shared-texture-gate/artifact-replay-mismatch: a declared texture artifact is not byte-identical to the tile this repository's rasterizer produces from the declared parameters." as const;
+/**
+ * Where a shared tile lives, as a CONVENTION this gate can check a path against.
+ * `midtown-core-v3-materialization.ts` derives the same two forms from it; it is
+ * restated here rather than imported to keep the validator free of a dependency
+ * on an emitter.
+ */
+export const SHARED_TEXTURE_ARTIFACT_DIRECTORY = "public/textures" as const;
+
 export const ASSEMBLY_ISSUE_TEXTURE_ARTIFACT_ORPHAN = "shared-texture-gate/artifact-orphan: a declared texture artifact that no GLB references cannot ride along in the package." as const;
 
 export interface MultiLodAssemblyPolicy {
@@ -1033,9 +1041,19 @@ function validateProceduralTextureUriGlb(json: Record<string, unknown>, provenan
  * produces. A one-byte mutation anywhere in the PNG -- header, palette, IDAT --
  * changes the digest and fails closed.
  */
-export function replaySharedTextureArtifact(bytes: Uint8Array): string {
+export function replaySharedTextureArtifact(bytes: Uint8Array, relativeRef?: string): string {
   const textureClass = proceduralTextureReplayIndex().get(sha256HexBytes(bytes));
   if (textureClass === undefined) throw new Error(ASSEMBLY_ISSUE_TEXTURE_ARTIFACT_REPLAY_MISMATCH);
+  // The PATH must name the class the BYTES are. Without this, two declared
+  // tiles could be swapped — brick's bytes at the limestone path and the
+  // reverse — and every gate would still pass: both digests replay, both
+  // artifacts are declared, both are referenced, no class is duplicated. Every
+  // brick wall in the release would then be rendered in limestone, honestly
+  // and verifiably. The convention is stated once, in
+  // `sharedTextureArtifactRef`, and enforced here against it.
+  if (relativeRef !== undefined && relativeRef !== `${SHARED_TEXTURE_ARTIFACT_DIRECTORY}/${textureClass}.png`) {
+    throw new Error(`${ASSEMBLY_ISSUE_TEXTURE_ARTIFACT_REPLAY_MISMATCH} Artifact ${relativeRef} carries the bytes of class ${textureClass}, which belongs at ${SHARED_TEXTURE_ARTIFACT_DIRECTORY}/${textureClass}.png.`);
+  }
   // Byte length is implied by the digest, but the per-image cap is a declared
   // property of the profile and is stated rather than inferred.
   if (bytes.byteLength > PROCEDURAL_TEXTURE_LIMITS.maxImageBytes) throw new Error(ASSEMBLY_ISSUE_TEXTURE_BYTES_FORBIDDEN);
@@ -1175,7 +1193,7 @@ export async function replayMultiLodAssembly(manifest: MultiLodAssemblyManifest,
     try {
       if (artifact.role === "tileset-json") tilesetBytes = bytes;
       else if (artifact.role === "texture") {
-        const textureClass = replaySharedTextureArtifact(bytes);
+        const textureClass = replaySharedTextureArtifact(bytes, artifact.relativeRef);
         // One class, one artifact. Declaring the same tile at two paths would
         // hand Cesium two distinct URIs for identical content and quietly undo
         // the deduplication this role exists to produce.

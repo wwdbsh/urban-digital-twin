@@ -27,8 +27,9 @@
  *      (cesium 1.143.0 / @cesium/engine 26.1.0) and a version bump invalidates it
  *      rather than adjusting it.
  *   4. **WIRE BYTES ARE NOT GPU BYTES.** A tile is 16,580 PNG bytes on the wire
- *      and 128 x 128 x 4 = 65,536 bytes as an uncompressed RGBA base level: a
- *      5.3x expansion. Any sentence that mixes the two is wrong.
+ *      128 x 128 x 4 = 65,536 bytes as an uncompressed RGBA base level, and
+ *      87,381 bytes as Cesium accounts for it with mips — a 5.27x expansion
+ *      from the wire. Any sentence that mixes the three is wrong.
  *
  * ADR 0040 D7 recorded that decoded GPU bytes are "not observable from outside
  * Cesium". That is too strong in exactly this one place, and ADR 0047 records the
@@ -71,7 +72,11 @@ export function predictedTextureByteLength(uniqueTextureCount: number, pixels: {
 }
 
 export interface GpuTextureProbeReading {
-  /** Cesium's own CPU-side accounting of uploaded texture bytes: BASE LEVELS ONLY. */
+  /**
+   * Cesium's own CPU-side accounting of uploaded texture bytes, MIP CHAIN
+   * INCLUDED — 87,381 per 128 x 128 RGBA tile, of which 65,536 is the base
+   * level. Established by instrument validation, not assumed; see the header.
+   */
   texturesByteLength: number;
   geometryByteLength: number;
   /** Live entries in the resource cache, as a residency witness. */

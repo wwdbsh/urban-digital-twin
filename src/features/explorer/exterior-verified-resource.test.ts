@@ -28,7 +28,9 @@ import { Resource, getAbsoluteUri } from "cesium";
 import {
   VERIFIED_EXTERIOR_IMAGE_REFUSED,
   VERIFIED_EXTERIOR_MODEL_REFUSED,
+  VERIFIED_EXTERIOR_SUBCLASS_LOST,
   VerifiedExteriorResource,
+  assertVerifiedResourceSurvivesCesium,
   verifiedExteriorModelResource,
 } from "./exterior-verified-resource";
 import { canonicalExteriorPickId, exteriorCellEntityId, exteriorCellSignature, exteriorOverlayRenderEntries, exteriorRetirementSteps, type ExteriorCellOverlay } from "./CesiumViewport";
@@ -122,6 +124,17 @@ describe("the verified exterior resource", () => {
     const firstTile = first.getDerivedResource({ url: TILE_URI });
     const secondTile = second.getDerivedResource({ url: TILE_URI });
     expect(getAbsoluteUri(firstTile.url)).toBe(getAbsoluteUri(secondTile.url));
+  });
+
+  it("canaries the clone round-trip at load time and fails CLOSED if it degrades", () => {
+    // The property everything rests on, asserted on the installed Cesium at
+    // every cell add rather than assumed to hold forever.
+    expect(() => assertVerifiedResourceSurvivesCesium(resource())).not.toThrow();
+    // And what a future Cesium that stopped preserving the subclass would do:
+    // refuse loudly instead of quietly fetching unverified bytes off a real URL.
+    const degraded = resource();
+    Object.defineProperty(degraded, "clone", { value: () => new Resource({ url: `${BASE}${GLB_REF}` }), configurable: true });
+    expect(() => assertVerifiedResourceSurvivesCesium(degraded)).toThrow(VERIFIED_EXTERIOR_SUBCLASS_LOST);
   });
 
   it("retires a shared-texture cell with an EMPTY revoke list and the report still last", () => {

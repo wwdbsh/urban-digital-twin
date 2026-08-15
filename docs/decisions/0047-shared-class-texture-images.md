@@ -186,8 +186,17 @@ Restating the measured per-texture cost over the full population:
 - projected saving: **~80.8 MiB of GPU texture memory**
 
 It assumes every projected texture costs what the measured ones cost, which
-holds for this catalogue because all four tiles share dimensions and format. It
-is arithmetic over a measured unit cost and nothing more.
+holds for this catalogue because all four tiles share dimensions and format.
+
+It also assumes SIMULTANEOUS RESIDENCY, and that assumption is false as stated:
+the measured arm held 174 decoded textures, not 941, because the visibility
+scheduler never makes all 314 textured assets resident at once. The 941 figure is
+therefore the ceiling the embedded arm would reach if every textured asset were
+resident together, not a state any session is expected to occupy; the 16 figure
+is not a ceiling at all, because four tiles per release is the resident count
+whatever the camera does. The honest reading is that the shared arm's texture
+residency is CONSTANT in the number of resident assets while the embedded arm's
+is LINEAR in it, and the projection is the two curves evaluated at the extreme.
 
 ### Payload, separately
 
@@ -248,6 +257,28 @@ it was killed immediately and damaged no artifact. `scripts/wave-cli-arguments.m
 replaces the default with a fail-closed grammar shared by all four pipelines.
 It is in scope as an operational-safety fix and is disclosed rather than folded
 into the feature work.
+
+## Open items routed elsewhere
+
+- **Frame time on the `-t1` path is UNMEASURED, and it is required evidence for
+  promotion.** The verified resource is cloned by `ConstantProperty` on every
+  read of `entity.model.uri` and derived per image URI, and this campaign
+  measured GPU residency only. A shared-texture release could plausibly cost
+  per-frame allocation the embedded path does not. **T005 must not promote a
+  `-t1` release without a frame-time comparison against its `-p1` sibling at the
+  same poses.** This ADR claims a residency win and claims nothing about frame
+  time.
+- **ADR 0046 D1** — see the amendment section above; routed to T004.
+
+## Accepted residuals
+
+- **The midtown and Block 835 waves were not rebuilt and byte-compared.** Their
+  byte-invariance under this change is argued STRUCTURALLY — they are
+  texture-free, they declare no texture artifact, so the package fact that
+  selects the shared-texture gate is false for them and every path they take is
+  the one they took before — and corroborated by their pinned digests still
+  verifying. It is not the same evidence as a rebuild-and-compare, and it is
+  recorded as the weaker claim it is.
 
 ## Consequences
 

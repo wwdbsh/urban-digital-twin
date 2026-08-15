@@ -143,12 +143,13 @@ async function sharedTextureFixture(options: SharedTextureFixtureOptions = {}): 
   return fixture;
 }
 
-function runtimeFor(fixture: ExteriorCellFixture, onRequest?: (relativeRef: string) => void) {
+function runtimeFor(fixture: ExteriorCellFixture, onRequest?: (relativeRef: string) => void, gate?: (relativeRef: string) => Promise<void>) {
+  const hook = gate ?? onRequest;
   return createExteriorCellRuntime(
     { index: fixture.index, graph: fixture.graph, assemblies: fixture.assemblies },
     { kind: "default" },
     {
-      fetchArtifact: exteriorFixtureFetcher(fixture, onRequest ? { onRequest } : {}),
+      fetchArtifact: exteriorFixtureFetcher(fixture, hook ? { onRequest: (relativeRef) => { onRequest?.(relativeRef); return gate?.(relativeRef); } } : {}),
       baseIdentity: exteriorFixtureBaseIdentity(fixture),
       cache: new CitywideLruCache<Uint8Array>(8 * 1024 * 1024),
       artifactUrlBase: "/data/udt-fixture-exterior-cells/",
@@ -287,5 +288,55 @@ describe("a release that declares shared class tiles", () => {
     // package fact is what decides, and it is readable on its own.
     expect(plan.assets.every((asset) => asset.sharedTextures === undefined)).toBe(true);
     expect(sharedTextureArtifactRefs(fixture.assemblies[0]!).size).toBe(0);
+  });
+});
+
+describe("the session-scoped verification is not hostage to its first caller", () => {
+  it("keeps a LIVE batch rendering when the batch that started verification aborts", async () => {
+    // The failure this pins. The memoized verification promise used to be
+    // created under the FIRST caller's AbortSignal, and `CitywideRequestPool`
+    // rejects each caller's await when THAT caller's signal aborts. So:
+    // batch 1 starts the tile fetch; batch 2 arrives and awaits the same
+    // memoized promise; a height-bucket change aborts batch 1; batch 2 receives
+    // batch 1's AbortError, `loadCell` re-throws it, and the wave's outcomes are
+    // deleted — the wave blanks with no notice until residency changes.
+    //
+    // Serialising the two batches hides it, because a rejected verification is
+    // forgotten and the second batch simply re-runs it. The defect only appears
+    // while the two overlap, which is the ordinary case under a moving camera.
+    const fixture = await sharedTextureFixture();
+    let releaseTiles: () => void = () => {};
+    const gate = new Promise<void>((resolve) => { releaseTiles = resolve; });
+    let tileRequested: () => void = () => {};
+    const requested = new Promise<void>((resolve) => { tileRequested = resolve; });
+    const runtime = runtimeFor(fixture, undefined, async (relativeRef) => {
+      if (!relativeRef.startsWith("public/textures/")) return;
+      tileRequested();
+      await gate;
+    });
+
+    const controllerA = new AbortController();
+    const controllerB = new AbortController();
+    const abandoned = runtime.loadCell("c1", "inspection", CLOSE_METERS, controllerA.signal);
+    // The abandoned batch is EXPECTED to reject; that is not the defect, and its
+    // rejection must not surface as an unhandled one.
+    const abandonedOutcome = abandoned.then(() => "settled" as const, (error) => (error instanceof DOMException && error.name === "AbortError" ? "aborted" as const : "failed" as const));
+    await requested;
+    // Batch 2 joins while batch 1's verification is still in flight.
+    // The SAME cell, so the same assembly package and therefore the same
+    // memoized verification. A different package would have its own memo and
+    // would hide the coupling entirely.
+    const live = runtime.loadCell("c1", "inspection", CLOSE_METERS, controllerB.signal);
+    await Promise.resolve();
+    controllerA.abort();
+    releaseTiles();
+    expect(await abandonedOutcome).not.toBe("failed");
+
+    // The live batch, under its OWN signal, must still render.
+    const outcome = await live;
+    expect(outcome.kind).toBe("rendered");
+    if (outcome.kind !== "rendered") return;
+    expect(outcome.representation).toBe("head");
+    expect(outcome.assets[0]!.sharedTextures).toBeDefined();
   });
 });

@@ -1,11 +1,16 @@
 /**
  * The GPU texture probe, validated as an INSTRUMENT before it is used as one.
  *
- * The claim the campaign rests on is arithmetic: an uncompressed 128 x 128 RGBA
- * base level is 65,536 bytes, so N unique tiles are N x 65,536. If the reading
- * disagrees with that on a scene whose N is known, the reading is measuring
- * something other than what this module says it measures, and no delta taken
- * with it means anything.
+ * The claim the campaign rests on is arithmetic: Cesium accounts for a mipmapped
+ * 128 x 128 RGBA tile at 87,381 bytes (65,536 for the base level plus 21,845 for
+ * the pyramid, `65,536 * 4/3` truncated), so N unique tiles are N x 87,381. If
+ * the reading disagrees with that on a scene whose N is known, the reading is
+ * measuring something other than what this module says it measures, and no delta
+ * taken with it means anything.
+ *
+ * The N x 65,536 form was this module's ORIGINAL claim and it was wrong. The
+ * validation below is what refuted it, which is the argument for running the
+ * validation before quoting any delta.
  */
 import { describe, expect, it } from "vitest";
 import {

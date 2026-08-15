@@ -51,6 +51,7 @@ import { Resource, getAbsoluteUri } from "cesium";
 /** Refusal messages, exported so the tests assert the message this file throws. */
 export const VERIFIED_EXTERIOR_MODEL_REFUSED = "verified-exterior-resource/unverified-model: this resource serves exactly one verified GLB and refuses every other URL." as const;
 export const VERIFIED_EXTERIOR_IMAGE_REFUSED = "verified-exterior-resource/unverified-image: an image URI that does not resolve to a verified shared texture of this release is refused." as const;
+export const VERIFIED_EXTERIOR_SUBCLASS_LOST = "verified-exterior-resource/subclass-lost: this CesiumJS build did not preserve the verified resource through its own clone path, so a model would fetch unverified bytes; the cell is failed closed instead." as const;
 
 /**
  * The verified set one exterior artifact may serve, keyed by ABSOLUTE URL.
@@ -156,10 +157,16 @@ export class VerifiedExteriorResource extends Resource {
       return Promise.reject(error instanceof Error ? error : new Error(String(error)));
     }
     const blob = new Blob([bytes as unknown as BlobPart], { type: "image/png" });
+    // The three options are Cesium's `Resource.createImageBitmapFromBlob`
+    // expressions, mirrored token for token rather than paraphrased, with the
+    // same defaulting Cesium applies (`?? false`). `premultiplyAlpha` is
+    // hard-false because that is the only value `GltfImageLoader` ever passes.
+    const flipY = options?.flipY ?? false;
+    const skipColorSpaceConversion = options?.skipColorSpaceConversion ?? false;
     return createImageBitmap(blob, {
-      imageOrientation: options?.flipY ? "flipY" : "none",
+      imageOrientation: flipY ? "flipY" : "none",
       premultiplyAlpha: "none",
-      colorSpaceConversion: options?.skipColorSpaceConversion === false ? "default" : "none",
+      colorSpaceConversion: skipColorSpaceConversion ? "none" : "default",
     });
   }
 }
@@ -172,5 +179,32 @@ export class VerifiedExteriorResource extends Resource {
  * the shared-texture branch of the overlay effect stays one line.
  */
 export function verifiedExteriorModelResource(binding: { modelUrl: string; textureUrls: ReadonlyMap<string, Uint8Array> }, modelBytes: Uint8Array): VerifiedExteriorResource {
-  return new VerifiedExteriorResource({ url: binding.modelUrl, modelBytes, textureUrls: binding.textureUrls });
+  const resource = new VerifiedExteriorResource({ url: binding.modelUrl, modelBytes, textureUrls: binding.textureUrls });
+  assertVerifiedResourceSurvivesCesium(resource);
+  return resource;
+}
+
+/**
+ * The LOAD-TIME CANARY, and the reason it exists.
+ *
+ * Everything here rests on the `clone` override surviving Cesium's internals.
+ * If a future Cesium stopped routing through `clone` — or routed through a
+ * different one — the subclass would be replaced by a plain `Resource` pointed
+ * at a real release path, and the model would start fetching bytes nobody
+ * verified. Nothing would throw. The scene would look right.
+ *
+ * So the round-trip is performed once per resource, through the exact call
+ * `ModelVisualizer` makes on `entity.model.uri`, and a degraded result FAILS
+ * THE CELL CLOSED rather than rendering unverified. The cost is one clone per
+ * cell add; the alternative is a silent loss of the property the whole design
+ * is for.
+ */
+export function assertVerifiedResourceSurvivesCesium(resource: VerifiedExteriorResource): void {
+  // `createIfNeeded` is Cesium-internal and absent from the published typings.
+  // It is what ModelVisualizer calls, and again what `Model.fromGltfAsync`
+  // calls, so it is the round-trip worth asserting rather than a proxy for it.
+  const createIfNeeded = (Resource as unknown as { createIfNeeded?: (value: Resource) => Resource }).createIfNeeded;
+  const roundTripped = typeof createIfNeeded === "function" ? createIfNeeded(resource) : resource.clone();
+  if (!(roundTripped instanceof VerifiedExteriorResource)) throw new Error(`${VERIFIED_EXTERIOR_SUBCLASS_LOST} ${resource.url}`);
+  if (getAbsoluteUri(roundTripped.url) !== getAbsoluteUri(resource.url)) throw new Error(`${VERIFIED_EXTERIOR_SUBCLASS_LOST} URL moved from ${resource.url} to ${roundTripped.url}.`);
 }

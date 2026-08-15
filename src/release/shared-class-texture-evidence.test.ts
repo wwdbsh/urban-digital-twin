@@ -70,6 +70,21 @@ describe("the committed GPU campaign", () => {
   });
 });
 
+describe("the campaign record's superseded labels", () => {
+  it("carries the append-only annotation rather than a rewritten label", () => {
+    const record = campaignRecord as unknown as { labelsSupersededNote?: { statement: string; measuredBytesPerTexture: number; supersededBy: string }; results: Array<{ probe: { labels: { accounting: string } } }> };
+    // The annotation must exist, or the file states a refuted claim with
+    // nothing beside it saying so.
+    expect(record.labelsSupersededNote?.measuredBytesPerTexture).toBe(87_381);
+    expect(record.labelsSupersededNote?.supersededBy).toBe("docs/decisions/0047-shared-class-texture-images.md");
+    expect(record.labelsSupersededNote?.statement).toContain("SUPERSEDED");
+    // And the captured labels must still be the PRE-CORRECTION ones: this file
+    // is a capture, so editing them would destroy the evidence that the
+    // instrument was corrected rather than always right.
+    expect(record.results[0]!.probe.labels.accounting).toContain("BASE LEVELS ONLY");
+  });
+});
+
 describe("the committed rollback rehearsal", () => {
   const rollback = rollbackRecord as unknown as { transcript: Array<{ label: string; state: { probe: { exteriorReleaseIds: string[]; residentAssetCount: number } } }> };
   const byLabel = new Map(rollback.transcript.map((entry) => [entry.label, entry.state.probe]));

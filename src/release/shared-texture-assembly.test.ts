@@ -192,6 +192,22 @@ describe("the shared external detail-tile gate", () => {
     expect(() => replaySharedTextureArtifact(new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))).toThrow(ASSEMBLY_ISSUE_TEXTURE_ARTIFACT_REPLAY_MISMATCH);
   });
 
+  it("refuses a tile whose PATH names a different class than its BYTES", async () => {
+    // Swap two declared tiles and every other gate still passes: both digests
+    // replay, both artifacts are declared, both are referenced, neither class is
+    // duplicated. Every brick wall would render in limestone, verifiably. The
+    // path-to-class binding is the only thing that catches it.
+    const limestone = proceduralTextureCatalog().get(PROCEDURAL_TEXTURE_CLASSES[1])!.pngBytes;
+    expect(() => replaySharedTextureArtifact(limestone, TEXTURE_REF)).toThrow(ASSEMBLY_ISSUE_TEXTURE_ARTIFACT_REPLAY_MISMATCH);
+    // The honest path still passes, and the ref is optional so no existing
+    // caller is forced to supply one.
+    expect(replaySharedTextureArtifact(proceduralTextureCatalog().get(TILE_CLASS)!.pngBytes, TEXTURE_REF)).toBe(TILE_CLASS);
+    const { manifest, contents } = await fixture({ tileBytes: limestone });
+    const replay = await replayMultiLodAssembly(manifest, contents, POLICY);
+    expect(replay.ok).toBe(false);
+    expect(messages(replay)).toContain("which belongs at");
+  });
+
   it("refuses a declared texture artifact no GLB draws", async () => {
     const { manifest, contents } = await fixture({ extraTexture: true });
     const replay = await replayMultiLodAssembly(manifest, contents, POLICY);

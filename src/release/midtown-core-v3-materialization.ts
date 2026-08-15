@@ -576,7 +576,19 @@ function sharedUriTextureSet(
   const index = proceduralTextureReplayIndex();
   const classes = textures.images.map((image) => {
     const textureClass = index.get(sha256HexBytes(image.bytes));
-    if (textureClass === undefined) throw new MidtownCoreV3Stop(buildingId, "asset-budget-exceeded", "a detail tile is not byte-identical to any tile this repository's rasterizer produces, so it cannot be shared by URI.");
+    // NOT a `MidtownCoreV3Stop`. A stop code is a REFUSAL: a statement that this
+    // grammar cannot carry some property of a sourced polygon, and it is
+    // counted as such in a census and drops that one building from the release.
+    // This is not that. It says the tile this repository's rasterizer just
+    // produced is not a tile its own replay index knows, which is the
+    // repository contradicting itself and is true of every building, not this
+    // one. Refusing the building would hide it behind a plausible refusal
+    // count; throwing stops the run. (It was first reported as
+    // `asset-budget-exceeded`, which was simply the wrong word for it, and the
+    // closed stop-code vocabulary is pinned by a committed goal-completion
+    // record, so the fix is to stop calling it a refusal rather than to widen
+    // that vocabulary.)
+    if (textureClass === undefined) throw new Error(`Shared detail tile for ${buildingId} is not byte-identical to any tile this repository's rasterizer produces, so it cannot be referenced by URI.`);
     return textureClass;
   });
   return {
@@ -607,7 +619,10 @@ function emittedSharedTextureClasses(bytes: Uint8Array, buildingId: string): Pro
   const json = JSON.parse(new TextDecoder().decode(bytes.subarray(20, 20 + view.getUint32(12, true)))) as { images?: Array<{ uri?: string }> };
   return (json.images ?? []).map((image) => {
     const textureClass = SHARED_TEXTURE_CLASS_BY_URI.get(image.uri ?? "");
-    if (textureClass === undefined) throw new MidtownCoreV3Stop(buildingId, "asset-budget-exceeded", `emitted image URI ${String(image.uri)} names no shared tile of this catalogue.`);
+    // Same reasoning as `sharedUriTextureSet`: an emitted URI naming no tile of
+    // the catalogue is a writer/emitter contradiction, not a refusal of THIS
+    // building's geometry, and it stops the run rather than being counted.
+    if (textureClass === undefined) throw new Error(`Emitted image URI ${String(image.uri)} for ${buildingId} names no shared tile of this catalogue.`);
     return textureClass;
   });
 }
