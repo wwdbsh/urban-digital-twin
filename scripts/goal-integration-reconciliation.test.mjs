@@ -335,3 +335,45 @@ describe("the verdict table obeys its own rules", () => {
     }
   });
 });
+
+/**
+ * (T003) The six wave censuses are READ-ONLY inputs to this reconciliation.
+ *
+ * `refusedBuildingCount 899` and `materializedBuildingCount 44,295` above are
+ * not literals in this repository: they are summed live out of these six files.
+ * A grammar change that recovered refusals and then rewrote a census would
+ * therefore move the goal's headline refusal figure without a single assertion
+ * failing anywhere. Pinning the bytes makes that impossible: new evidence goes
+ * to a NEW directory, and these six stay exactly as the waves that ran them
+ * left them.
+ */
+describe("(T003) the wave censuses this reconciliation reads are byte-frozen", () => {
+  const COMMITTED_CENSUS_SHA256 = {
+    "block-835": "0c7f49538c1a496c02991c0395ab563f513358b71443ace828736f35270d6516",
+    "midtown-core": "39e0e1a61619adcba7848e39eddd53d0df0a97a447b591a0cc10bf48c9d311dc",
+    "lower-manhattan": "3528f1dfc7dcdbdd3a1e57a42341f6a8c1f976d6b3a55b63d0f12d20123a883c",
+    "southern-remainder": "08f10e488be261e1d8dbd88dec590bde690d3cb4fcfe88cb91a01f0a29fd687b",
+    "central-upper-manhattan": "a0df593b722799050c3b4484f4158746e8a6f9adcfe07fea6ca63a4abd1612fd",
+    "northern-manhattan": "06a1ac1e8faf4c74b88ab798fa269eaefa970bff6bca99c1a80797929e2acab5",
+  };
+
+  it("hashes each of the six to its committed digest, and covers all six", () => {
+    expect(WAVE_CENSUS_SOURCES.map((source) => source.waveId).sort())
+      .toEqual(Object.keys(COMMITTED_CENSUS_SHA256).sort());
+    for (const source of WAVE_CENSUS_SOURCES) {
+      const bytes = readFileSync(join(repositoryRoot, source.path));
+      expect(createHash("sha256").update(bytes).digest("hex"), source.path)
+        .toBe(COMMITTED_CENSUS_SHA256[source.waveId]);
+    }
+  });
+
+  it("keeps the reconciliation record's own refusal figures derived from those bytes", () => {
+    // Stated as the composition it is: 899 refused + 44,295 materialized = the
+    // 45,194 canonical parents the ledger owns. If a census moved, this sum
+    // would still hold while both halves lied, which is why the digests above
+    // are the real guard and this is the arithmetic they protect.
+    expect(record.coverage.census.refusedBuildingCount + record.coverage.census.materializedBuildingCount)
+      .toBe(record.coverage.ledger.declaredBaseBuildingCount);
+    expect(record.coverage.census.refusedBuildingCount).toBe(899);
+  });
+});
