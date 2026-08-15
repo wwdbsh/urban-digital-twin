@@ -63,7 +63,11 @@ describe("the verdict table obeys its own rules", () => {
   });
 
   it("keeps the verdict counts and the stop-report count in agreement with the table", () => {
-    const counts = {};
+    // Seeded from the vocabulary so a verdict with NO entries is counted as an
+    // explicit 0 rather than as an absent key. After T008 closed criterion 7
+    // that matters: "NOT-MET": 0 is a claim the record makes and this test
+    // holds, where a missing key would let the count quietly disappear.
+    const counts = Object.fromEntries(VERDICT_VOCABULARY.map((verdict) => [verdict, 0]));
     for (const entry of record.verdicts) counts[entry.verdict] = (counts[entry.verdict] ?? 0) + 1;
     expect(counts).toEqual(record.verdictCounts);
     expect(record.stopReportCount).toBe(counts["NOT-MET"] ?? 0);
@@ -71,16 +75,32 @@ describe("the verdict table obeys its own rules", () => {
   });
 
   it("pins the headline split, so a quiet re-grading shows up as a failing test", () => {
-    // 8 / 3 / 1. Written as literals rather than derived, because the whole
-    // point of the number is that it is the one a reader will quote — and
-    // moving it has to be a deliberate, reviewed edit to this line.
-    expect(record.verdictCounts).toEqual({ MET: 8, "MET-AS-ADJUDICATED": 3, "NOT-MET": 1 });
+    // 9 / 3 / 0, after T008 closed criterion 7 by capturing the repeated-
+    // camera-path heap series its stop report named. It was 8 / 3 / 1 when
+    // T007 wrote the record. Written as literals rather than derived, because
+    // the whole point of the number is that it is the one a reader will quote —
+    // and moving it has to be a deliberate, reviewed edit to this line.
+    expect(record.verdictCounts).toEqual({ MET: 9, "MET-AS-ADJUDICATED": 3, "NOT-MET": 0 });
   });
 
-  it("names the one unmet criterion explicitly, so a later edit cannot quietly promote it", () => {
+  it("names the unmet criteria explicitly, so a later edit cannot quietly promote one", () => {
     const unmet = record.verdicts.filter((entry) => entry.verdict === "NOT-MET").map((entry) => entry.index);
-    // Criterion 7, the repeated-camera-path heap verdict. It is the only one.
-    expect(unmet).toEqual([7]);
+    // None. Criterion 7 — the repeated-camera-path heap verdict — was the only
+    // one, and T008 closed it by MEASUREMENT, not by re-reading the per-station
+    // readings T007 refused to substitute for it. The empty list is asserted
+    // rather than the test being deleted: a criterion regrading to NOT-MET must
+    // fail here, and the closure must stay legible in the record's own
+    // `amendments` block, which the next assertion holds.
+    expect(unmet).toEqual([]);
+    const amendment = record.amendments?.find((entry) => entry.task === "T008 (Issue #80)");
+    expect(amendment, "no T008 amendment in the record").toBeTruthy();
+    expect(amendment.closedCriteria).toEqual([7]);
+    expect(amendment.capturedRecord.path).toBe("data/citywide-heap-repeat-20260815/heap-repeat-evidence.json");
+    // Re-hashed, not merely shaped: a closure that cited a record by an
+    // unchecked digest would be the one unverifiable citation in a record whose
+    // whole rule is that there are none.
+    expect(createHash("sha256").update(readFileSync(amendment.capturedRecord.path)).digest("hex"))
+      .toBe(amendment.capturedRecord.sha256);
   });
 
   it("makes an adjudication state its delta and a NOT-MET state what would close it", () => {
