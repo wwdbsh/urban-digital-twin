@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 
 import { describe, expect, it } from "vitest";
 
@@ -9,7 +9,7 @@ import {
   validateMultiLodAssembly,
   type MultiLodAssemblyManifest,
 } from "./multi-lod-assembly.ts";
-import { proceduralTextureReplayIndex } from "./procedural-texture.ts";
+import { PROCEDURAL_TEXTURE_CLASSES, proceduralTextureReplayIndex, proceduralTextureTile } from "./procedural-texture.ts";
 
 /**
  * The two fail-closed properties ADR 0046's retain decision rests on.
@@ -26,6 +26,13 @@ import { proceduralTextureReplayIndex } from "./procedural-texture.ts";
  * fresh clone with no local payload build. The textured waves' payload
  * directories are deliberately untracked, which is exactly the fresh-clone
  * condition the first case models.
+ *
+ * NOTE ON THE FIXTURE'S SCOPE: `-v3e` is TEXTURE-FREE. It exercises the
+ * absent-artifact half of the fail-closed contract and nothing about embedded
+ * imagery, because it embeds none. The procedural-texture half is therefore
+ * exercised directly against the rasterizer and its replay index below, not
+ * through this package. No committed package in this repository is both
+ * git-tracked and textured, so the two halves cannot be covered by one fixture.
  */
 const PACKAGE_DIRECTORY = "public/data/manhattan-esb-block-reference-20260811-v3e";
 
@@ -83,19 +90,29 @@ describe("citywide retention fail-closed properties", () => {
     expect(issues.length).toBeGreaterThanOrEqual(manifest.artifacts.length);
   });
 
-  it("resolves every procedural tile this repository ships by regenerating it, so a tampered image cannot resolve", () => {
+  it("resolves a REAL rasterized tile, and refuses the same tile with one byte changed", () => {
     // The honesty gate's whole mechanism: the index is built by RASTERIZING each
     // tile and hashing the result, so membership in it is proof the bytes are
     // ones this repository produces rather than a declaration that they are.
+    //
+    // The tampering is applied to the TILE, then hashed — not to a digest
+    // string. Flipping a character of a hex digest and observing a miss would
+    // only prove the map is a map; flipping a byte of the image proves the gate
+    // rejects an image this repository did not produce.
     const replay = proceduralTextureReplayIndex();
-    expect(replay.size).toBeGreaterThan(0);
+    expect(replay.size).toBe(PROCEDURAL_TEXTURE_CLASSES.length);
 
-    for (const digest of replay.keys()) {
-      expect(replay.get(digest)).toBeTruthy();
-      // A single flipped bit in the digest space is what a re-encoded or
-      // substituted image looks like to the gate.
-      const tampered = `${digest.slice(0, -1)}${digest.endsWith("0") ? "1" : "0"}`;
-      expect(replay.get(tampered)).toBeUndefined();
+    for (const textureClass of PROCEDURAL_TEXTURE_CLASSES) {
+      const tile = proceduralTextureTile(textureClass);
+      expect(replay.get(sha256HexBytes(tile.pngBytes))).toBe(textureClass);
+
+      const tampered = new Uint8Array(tile.pngBytes);
+      // Last byte of the PNG: inside the IEND CRC, so the file is still a
+      // well-formed-looking PNG of identical length — exactly the shape of a
+      // re-encode or a substituted payload.
+      tampered[tampered.length - 1] = (tampered[tampered.length - 1]! + 1) & 0xff;
+      expect(tampered.byteLength).toBe(tile.pngBytes.byteLength);
+      expect(replay.get(sha256HexBytes(tampered))).toBeUndefined();
     }
     expect(ASSEMBLY_ISSUE_TEXTURE_REPLAY_MISMATCH).toContain("byte-identical");
   });
@@ -114,7 +131,19 @@ describe("citywide retention fail-closed properties", () => {
       expect(file.checksumSha256).toMatch(/^[0-9a-f]{64}$/u);
       expect(file.byteSize).toBeGreaterThan(0);
     }
-    // Sanity: the digest format the inventory pins is the one the gate compares.
-    expect(sha256HexBytes(new Uint8Array([0]))).toMatch(/^[0-9a-f]{64}$/u);
+
+    // Hash a REAL file the inventory pins, so this asserts the inventory is
+    // TRUE of the payload rather than merely well-shaped. The payload directory
+    // is untracked by design, so on a fresh clone it is absent — that is the
+    // condition the earlier cases model, and here it means the check is made
+    // only when the payload happens to be present. Its absence is not a
+    // failure; a MISMATCH is.
+    const first = glbs[0]!;
+    const payloadPath = `public/data/manhattan-lower-manhattan-cells-20260812-p1/${first.path}`;
+    if (existsSync(payloadPath)) {
+      const bytes = read(payloadPath);
+      expect(bytes.byteLength, `${first.path} byte size`).toBe(first.byteSize);
+      expect(sha256HexBytes(bytes), `${first.path} checksum`).toBe(first.checksumSha256);
+    }
   });
 });

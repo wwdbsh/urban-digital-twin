@@ -365,7 +365,10 @@ The decisions are [`0031`](docs/decisions/0031-v3-footprint-faithful-facade-gram
 (integration acceptance) and
 [`0040`](docs/decisions/0040-citywide-overview-tier-decision.md)–[`0045`](docs/decisions/0045-citywide-default-streaming-flip.md)
 (the overview tier, the visibility scheduler, cache governance, overview
-streaming, the near-field band, and the citywide default flip).
+streaming, the near-field band, and the citywide default flip) and
+[`0046`](docs/decisions/0046-full-city-retention-and-assembly.md) (full-city
+retention, assembly partitioning, and the generation-replay proof — which also
+carries an append-only correction to `0032`'s citywide UV share).
 
 ## Prerequisites and setup
 

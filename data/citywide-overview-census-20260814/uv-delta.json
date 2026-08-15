@@ -39,7 +39,15 @@
         5
       ],
       "populationCount": 6381,
+      "targetSampleCount": 100,
       "sampledCount": 97,
+      "candidatesVisited": 102,
+      "skippedCandidateCount": 5,
+      "skippedByStopCode": {
+        "ring-area-below-floor": 3,
+        "source-height-below-grammar-minimum": 2
+      },
+      "skipNote": "5 visited candidate(s) produced a stop code and were dropped, which is why the achieved sample is 97 rather than 100. Codes are listed above and are NOT all grammar refusals: the writer's own stop codes can fire here too.",
       "uvAndJsonBytesPerVertex": {
         "min": 8.1385,
         "median": 9.121,
@@ -68,7 +76,14 @@
         9
       ],
       "populationCount": 16219,
+      "targetSampleCount": 100,
       "sampledCount": 100,
+      "candidatesVisited": 101,
+      "skippedCandidateCount": 1,
+      "skippedByStopCode": {
+        "source-height-below-grammar-minimum": 1
+      },
+      "skipNote": "1 visited candidate(s) produced a stop code and were dropped, which is why the achieved sample is 100 rather than 100. Codes are listed above and are NOT all grammar refusals: the writer's own stop codes can fire here too.",
       "uvAndJsonBytesPerVertex": {
         "min": 8.0076,
         "median": 8.6377,
@@ -97,7 +112,12 @@
         15
       ],
       "populationCount": 10254,
+      "targetSampleCount": 100,
       "sampledCount": 100,
+      "candidatesVisited": 100,
+      "skippedCandidateCount": 0,
+      "skippedByStopCode": {},
+      "skipNote": "Every visited candidate was measured.",
       "uvAndJsonBytesPerVertex": {
         "min": 7.9614,
         "median": 8.3229,
@@ -126,7 +146,15 @@
         24
       ],
       "populationCount": 7891,
+      "targetSampleCount": 100,
       "sampledCount": 100,
+      "candidatesVisited": 102,
+      "skippedCandidateCount": 2,
+      "skippedByStopCode": {
+        "ring-not-simple": 1,
+        "source-height-below-grammar-minimum": 1
+      },
+      "skipNote": "2 visited candidate(s) produced a stop code and were dropped, which is why the achieved sample is 100 rather than 100. Codes are listed above and are NOT all grammar refusals: the writer's own stop codes can fire here too.",
       "uvAndJsonBytesPerVertex": {
         "min": 7.6755,
         "median": 8.1098,
@@ -154,7 +182,12 @@
         40
       ],
       "populationCount": 3252,
+      "targetSampleCount": 100,
       "sampledCount": 100,
+      "candidatesVisited": 100,
+      "skippedCandidateCount": 0,
+      "skippedByStopCode": {},
+      "skipNote": "Every visited candidate was measured.",
       "uvAndJsonBytesPerVertex": {
         "min": 7.3104,
         "median": 8.0292,
@@ -182,7 +215,12 @@
         64
       ],
       "populationCount": 859,
+      "targetSampleCount": 100,
       "sampledCount": 100,
+      "candidatesVisited": 100,
+      "skippedCandidateCount": 0,
+      "skippedByStopCode": {},
+      "skipNote": "Every visited candidate was measured.",
       "uvAndJsonBytesPerVertex": {
         "min": 6.8124,
         "median": 7.8766,
@@ -462,11 +500,18 @@
     "islandImageBytesLod0": {
       "lowerBoundBytes": 1468357960,
       "centralBytes": 2192506297,
-      "upperBoundBytes": 2202536940
+      "upperBoundBytes": 2202536940,
+      "lowerBoundReachability": "EFFECTIVELY UNREACHABLE. The lower bound assumes EVERY building emits the minimum tile count observed for its style class, but only 8 of 597 sampled buildings emit two tiles rather than three. The honest reading of this interval is that it sits just under its upper bound; the lower end is an arithmetic floor, not a plausible outcome.",
+      "twoTileSampledBuildings": 8,
+      "sampledBuildings": 597
     }
   },
   "islandUvTerm": {
     "note": "An interval, not a point. `lod0TotalBytes` is committed; the island VERTEX total is not, so it is bounded by the committed island triangle total times the vertices-per-triangle ratio measured on this sample, and the per-vertex UV cost is likewise bounded by the sample.",
+    "intervalProperties": {
+      "endsAreSampleExtremes": "The bounds are the MINIMUM and MAXIMUM observed in a 597-building sample, not a confidence interval. They carry no coverage probability, and a larger sample would widen rather than narrow them. Read them as 'no sampled building was outside this', not as 'the island is inside this with probability p'.",
+      "centralIsUnweightedMedian": "The central figure multiplies the UNWEIGHTED median per-vertex cost by the unweighted median vertices-per-triangle ratio. Per-vertex UV cost FALLS as ring size rises (9.12 B/vertex in the smallest stratum against 7.88 in the largest) while the island's vertices are concentrated in the larger buildings, so an unweighted median over a stratum-balanced sample sits ABOVE the vertex-weighted island mean. The central estimate is therefore a mild CONSERVATIVE OVERESTIMATE, and it is stated that way rather than as a best estimate."
+    },
     "islandTriangleCount": 80253286,
     "verticesPerTriangle": {
       "min": 2.0018,
@@ -481,7 +526,14 @@
     },
     "lowerBoundBytes": 1094397170,
     "centralBytes": 1361644158,
-    "upperBoundBytes": 2061414425
+    "upperBoundBytes": 2061414425,
+    "regressionCorroboration": {
+      "note": "The OLS slope applied to the same island triangle total and median vertices-per-triangle ratio, computed independently of the quantile route above.",
+      "arithmetic": "7.9648 B/vertex x 80253286 triangles x 2.0626 vertices/triangle",
+      "bytes": 1318412369,
+      "quantileRouteCentralBytes": 1361644158,
+      "relativeDifference": 0.03175
+    }
   },
   "byteDecomposition": {
     "note": "FOUR TERMS, and they do not have the same future. The two geometry terms are committed measurements quoted from `wave-bytes.json` and were NOT regenerated here. The UV term rides on LOD 0 alone, scales with vertex count and SURVIVES a shared texture atlas — ADR 0032 measured it as 76% of the texture delta and it is the term that matters for planning. The image term also rides on LOD 0 alone and goes to approximately zero under an atlas, because a shared atlas is bound once for the city instead of embedded once per building.",

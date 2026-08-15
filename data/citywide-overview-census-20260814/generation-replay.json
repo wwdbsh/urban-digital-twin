@@ -1370,6 +1370,11 @@
     "note": "BYTE IDENTITY, not count agreement. Every shipped GLB of every wave is regenerated with that wave's SHIPPED profile and its SHA-256 is compared against the committed checksum record. This is the property the retain-versus-regenerate decision in ADR 0046 rests on.",
     "totalAssetsCompared": 498,
     "totalAssetsMatched": 498,
+    "perBuildingPlanHashCorollary": {
+      "note": "`writeCanonicalGlb` writes `planHashSha256` into every asset's metadata, so a byte-identical GLB is only obtainable from an identical plan hash. Byte identity across the shipped set is therefore ALSO a per-building plan-hash identity proof — and outside Block 835's fourteen buildings it is the ONLY one available, because no wave census commits per-building hashes to compare against.",
+      "buildingsWithProvenPlanHashIdentity": 484,
+      "mechanism": "asset metadata field `planHashSha256`, written by writeCanonicalGlb and covered by the artifact SHA-256"
+    },
     "waves": [
       {
         "waveIndex": 0,
@@ -1387,6 +1392,12 @@
           }
         },
         "promotionIsByteWisePassThrough": true,
+        "closedLoop": {
+          "note": "Wave w00 is the only wave whose payload bytes are git-tracked, so its loop closes on three independent sides rather than two: the bytes this run regenerated, the checksum the committed manifest declares, and the SHA-256 of the file actually on disk. For the other five waves the payload directory is untracked by design, so the committed inventory is the only committed side and the comparison is regenerated-against-recorded.",
+          "trackedFilesHashed": 28,
+          "trackedFilesMatchingManifest": 28,
+          "regeneratedMatchesTrackedFile": true
+        },
         "shippedLodIds": [
           "lod_0",
           "lod_1"
@@ -1401,9 +1412,11 @@
             "committedShippedByteSize": 44376,
             "committedShippedChecksumSha256": "af89dae42ee3516a7dfbe1f3c91baabe9a263428c9d958a5356c623c3ec9eb4c",
             "committedInputPackageChecksumSha256": "af89dae42ee3516a7dfbe1f3c91baabe9a263428c9d958a5356c623c3ec9eb4c",
+            "trackedFileChecksumSha256": "af89dae42ee3516a7dfbe1f3c91baabe9a263428c9d958a5356c623c3ec9eb4c",
             "observedByteSize": 44376,
             "observedChecksumSha256": "af89dae42ee3516a7dfbe1f3c91baabe9a263428c9d958a5356c623c3ec9eb4c",
             "promotionIsPassThrough": true,
+            "trackedFileMatchesManifest": true,
             "agrees": true
           },
           {
@@ -1413,9 +1426,11 @@
             "committedShippedByteSize": 20852,
             "committedShippedChecksumSha256": "32e7024822114d0980bf7e1ff7f854ce83b417b518a9f87fdddf3f655a44f904",
             "committedInputPackageChecksumSha256": "32e7024822114d0980bf7e1ff7f854ce83b417b518a9f87fdddf3f655a44f904",
+            "trackedFileChecksumSha256": "32e7024822114d0980bf7e1ff7f854ce83b417b518a9f87fdddf3f655a44f904",
             "observedByteSize": 20852,
             "observedChecksumSha256": "32e7024822114d0980bf7e1ff7f854ce83b417b518a9f87fdddf3f655a44f904",
             "promotionIsPassThrough": true,
+            "trackedFileMatchesManifest": true,
             "agrees": true
           },
           {
@@ -1425,9 +1440,11 @@
             "committedShippedByteSize": 592056,
             "committedShippedChecksumSha256": "314827e91ce8f11eee65fc48958029b9355eb67af52bd513c5ff293c7a9999b4",
             "committedInputPackageChecksumSha256": "314827e91ce8f11eee65fc48958029b9355eb67af52bd513c5ff293c7a9999b4",
+            "trackedFileChecksumSha256": "314827e91ce8f11eee65fc48958029b9355eb67af52bd513c5ff293c7a9999b4",
             "observedByteSize": 592056,
             "observedChecksumSha256": "314827e91ce8f11eee65fc48958029b9355eb67af52bd513c5ff293c7a9999b4",
             "promotionIsPassThrough": true,
+            "trackedFileMatchesManifest": true,
             "agrees": true
           }
         ],
@@ -1731,7 +1748,9 @@
   "verdict": {
     "allAgree": true,
     "disagreementCount": 0,
-    "statement": "Every committed figure compared here was reproduced by re-running the generator. Regeneration of the full city is byte-exact against the committed record."
+    "statement": "Regeneration is byte-exact on the SHIPPED set (498/498 GLBs match their committed SHA-256) and aggregate-exact on the GENERATED set (88,562 assets totalling 4,706,024,864 B reproduced as committed byte totals, per-wave). The generated set's per-asset bytes were dropped by the census-only wave passes and were never committed, so aggregate identity is the strongest claim available for it, and it is the claim made.",
+    "shippedSetGrain": "byte-identical, per asset",
+    "generatedSetGrain": "aggregate-identical, per wave (counts, refusal maps, byte totals, triangle totals, plan-hash set cardinality)"
   },
   "retention": "census-only — every regenerated GLB was hashed, counted and dropped.",
   "hostObservationsLocation": "artifacts/citywide-overview-census-20260814/stages/replay.json — wall clock and RSS are host facts and are deliberately kept OUT of this artifact's deterministic body (the ADR 0025 D8 precedent)."
