@@ -85,9 +85,19 @@ export function collectMidtownCoreSources(
   return collected;
 }
 
-/** Y-up axis-aligned bounds of the emitted GLB's own POSITION data. */
-export function midtownCoreGlbBounds(bytes: Uint8Array): MidtownCoreShippedAsset["bounds"] {
-  const parsed = parseGlbV2(bytes);
+/**
+ * Y-up axis-aligned bounds of the emitted GLB's own POSITION data.
+ *
+ * `allowExternalImageUri` widens the PARSE and nothing else, and it exists
+ * because a shared-texture wave's GLBs name their tiles by URI: this function
+ * reads POSITION accessors, admits nothing and gates nothing, so refusing to
+ * parse such a GLB would only stop a measurement. The gate that decides whether
+ * those URIs are legitimate is `replayMultiLodAssembly`, which runs over the
+ * emitted package with the release's own admission and is unaffected by this
+ * flag. It defaults to false, so every existing caller parses exactly as before.
+ */
+export function midtownCoreGlbBounds(bytes: Uint8Array, options?: { allowExternalImageUri?: boolean }): MidtownCoreShippedAsset["bounds"] {
+  const parsed = parseGlbV2(bytes, options);
   const accessors = parsed.json.accessors as Array<{ type?: string; min?: number[]; max?: number[] }>;
   const minimum: [number, number, number] = [Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY];
   const maximum: [number, number, number] = [Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY];

@@ -27,6 +27,37 @@
  *      from outside Cesium. Nothing here claims to free them, and nothing here
  *      measures them.
  *
+ *      APPEND-ONLY AMENDMENT (T002, shared class textures; ADR 0047). D7's
+ *      "not observable" is now known to be too strong in one narrow place:
+ *      `ResourceCache.statistics.texturesByteLength` and `.geometryByteLength`
+ *      DO expose Cesium's own CPU-side accounting of what it uploaded. That
+ *      changes nothing here — this seam still frees no GPU byte and still
+ *      measures none — but ADR 0047 records the correction and the measurement
+ *      it enabled, and this comment exists so a reader of gate 4 finds it.
+ *
+ * ## Holder 3 has a SECOND shape since T002
+ *
+ * A release that declares shared class tiles hands Cesium a verified `Resource`
+ * instead of a Blob URL (`exterior-verified-resource.ts`), so it creates NO
+ * object URL: the resource references the very `Uint8Array` the cache holds
+ * rather than copying it into a Blob. Gates (a), (b) and (c) are untouched by
+ * that. Gate (d) is RE-DERIVED rather than weakened, and the derivation is the
+ * point:
+ *
+ *   - `reachedScene` still means "a scene holder was created from these bytes",
+ *     which is still true and still reported by the viewport, because the
+ *     retirement step list emits `report-retired` for the cells whose entities
+ *     it has just removed whether or not any object URL was revoked. Destroying
+ *     the entity destroys the model primitive that held the resource.
+ *   - The `revoke-object-url` steps for such a cell are simply an EMPTY list,
+ *     because `ExteriorOwnedCellCollection.objectUrls` is empty for it. The
+ *     ordering contract — revoke strictly before report — is vacuously true on
+ *     an empty list and unchanged on a non-empty one.
+ *   - What is honestly WEAKER: with no Blob there is no second copy to free, so
+ *     releasing the cache entry for such a cell frees the cache entry only. That
+ *     is a smaller win than on the Blob path, and it is smaller because the Blob
+ *     copy no longer exists at all — the bytes were never duplicated.
+ *
  * A release therefore requires FOUR conditions, and every one of them is a
  * separate gate below rather than an assumption:
  *

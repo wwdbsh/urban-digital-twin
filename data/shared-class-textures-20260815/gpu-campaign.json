@@ -1,0 +1,70 @@
+{
+  "pose": {
+    "lon": -73.9888,
+    "lat": 40.746231,
+    "height": 380,
+    "heading": 20,
+    "pitch": -32,
+    "roll": 0
+  },
+  "cdpVersion": "Chrome/151.0.7922.138",
+  "results": [
+    {
+      "arm": "p1-embedded",
+      "releaseId": "manhattan-southern-remainder-cells-20260812-p1",
+      "url": "http://localhost:4319/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&exteriorCells=manhattan-southern-remainder-cells-20260812-p1&exteriorProfile=inspection&lon=-73.988800&lat=40.746231&height=380.000000&heading=20.000000&pitch=-32.000000&roll=0.000000",
+      "probe": {
+        "schemaVersion": "1.0",
+        "cesiumVersion": "1.143.0",
+        "exteriorReleaseIds": [
+          "manhattan-southern-remainder-cells-20260812-p1"
+        ],
+        "exteriorStreamingActive": true,
+        "residentAssetCount": 78,
+        "reading": {
+          "texturesByteLength": 15204294,
+          "geometryByteLength": 6971032,
+          "resourceCacheEntryCount": 1716
+        },
+        "labels": {
+          "accounting": "Cesium's own CPU-side accounting of uploaded texture bytes, BASE LEVELS ONLY. Not a driver query.",
+          "mipChain": "A full mip pyramid adds roughly 1.3333333333333333x on top of the base level; that is stated, never measured here.",
+          "wireVersusGpu": "A tile is 16580 PNG bytes on the wire and 65536 bytes as an RGBA base level.",
+          "export": "ResourceCache.statistics is a Cesium-internal export, pinned at the installed version; a version bump invalidates this reading rather than adjusting it."
+        }
+      }
+    },
+    {
+      "arm": "t1-shared",
+      "releaseId": "manhattan-southern-remainder-cells-20260812-t1",
+      "url": "http://localhost:4319/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&exteriorCells=manhattan-southern-remainder-cells-20260812-t1&exteriorProfile=inspection&lon=-73.988800&lat=40.746231&height=380.000000&heading=20.000000&pitch=-32.000000&roll=0.000000",
+      "probe": {
+        "schemaVersion": "1.0",
+        "cesiumVersion": "1.143.0",
+        "exteriorReleaseIds": [
+          "manhattan-southern-remainder-cells-20260812-t1"
+        ],
+        "exteriorStreamingActive": true,
+        "residentAssetCount": 78,
+        "reading": {
+          "texturesByteLength": 349524,
+          "geometryByteLength": 6971032,
+          "resourceCacheEntryCount": 1546
+        },
+        "labels": {
+          "accounting": "Cesium's own CPU-side accounting of uploaded texture bytes, BASE LEVELS ONLY. Not a driver query.",
+          "mipChain": "A full mip pyramid adds roughly 1.3333333333333333x on top of the base level; that is stated, never measured here.",
+          "wireVersusGpu": "A tile is 16580 PNG bytes on the wire and 65536 bytes as an RGBA base level.",
+          "export": "ResourceCache.statistics is a Cesium-internal export, pinned at the installed version; a version bump invalidates this reading rather than adjusting it."
+        }
+      }
+    }
+  ],
+  "labelsSupersededNote": {
+    "appliesTo": "results[].probe.labels",
+    "statement": "The `labels` blocks embedded in each result below are the output of the PRE-CORRECTION build and are preserved unedited, because this file is a capture of what the instrument said at capture time. They are SUPERSEDED. They claim the reading is 'BASE LEVELS ONLY' and that a mip pyramid adds ~1.33x 'on top' of it, 'stated, never measured here', and they quote 65,536 bytes as the per-texture figure. Instrument validation against a known texture count refuted that: `ResourceCache.statistics.texturesByteLength` INCLUDES the mip chain, and the per-texture cost is 87,381 bytes (= 65,536 * 4/3, truncated by Cesium). Both readings in this file divide by 87,381 exactly - 15,204,294 = 174 x 87,381 and 349,524 = 4 x 87,381 - which is the evidence that refuted the labels. ADR 0047 carries the corrected statement and `src/features/explorer/gpu-texture-probe.ts` carries the corrected code. The NUMBERS in this file are unaffected: only the prose describing what they mean was wrong, and it is annotated here rather than rewritten so the correction stays visible.",
+    "supersededBy": "docs/decisions/0047-shared-class-texture-images.md",
+    "measuredBytesPerTexture": 87381,
+    "annotationIsAppendOnly": true
+  }
+}

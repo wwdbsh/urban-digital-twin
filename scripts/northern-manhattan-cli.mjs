@@ -69,6 +69,8 @@ import { mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { basename, dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { parseWaveCliArguments, requireWaveCliArguments } from "./wave-cli-arguments.mjs";
+import { NORTHERN_MANHATTAN_T1, exteriorT1InventoryNote } from "../src/release/exterior-t1-variants.ts";
 import { sha256HexBytes, sha256HexSync, stableSerialize } from "../src/domain/deterministic-hash.ts";
 import {
   EXTERIOR_FULLSNAPSHOT_BASE_MANIFEST_SHA256,
@@ -207,6 +209,8 @@ export const NORTHERN_MANHATTAN_P1_RECORD_ROOT = "data/northern-manhattan-202608
  * Anything not in this table is shared by construction rather than by agreement
  * between two copies.
  */
+const SCRIPT_NAME = "scripts/northern-manhattan-cli.mjs";
+
 const RELEASE_VARIANTS = {
   canary: {
     variantId: "canary",
@@ -297,6 +301,35 @@ const RELEASE_VARIANTS = {
     stages: ["plans", "glbs", "gates", "graph", "sample"],
     inventoryNote: "The payload directory is intentionally untracked, following the citywide precedent. This inventory is the committed record that keeps every emitted byte checkable after the local tree is removed; `node scripts/northern-manhattan-cli.mjs graph --release p1 --force` rebuilds it byte-identically. RIGHTS: this successor ships under the CANARY's approval instrument, carried unedited — same approval id, scope text, exclusions and note, and therefore the same fingerprint — because amending it would move the fingerprint the canary's own committed release graph pins and would falsify what was approved. That instrument's opening sentence names the release it was authored for, `manhattan-northern-manhattan-cells-20260812`, and is the only part of it that is about that release rather than about wave w05; every operative clause was checked against this release and holds, including the bounded-subset clause that is exactly what differs here. This release adds no source, no verb and no envelope to it, AND IT RESTS ON NO FRESH SIGNATURE: promotion did not obtain one, nobody was asked to approve wave w05 for default activation, and the authority is the two recorded items the canary's note names and no others. THE INSTRUMENT'S LAST-WAVE CLAUSE APPLIES AT FULL FORCE AND STILL BROADENS NOTHING: with this release completed coverage becomes a fact about the promoted DEFAULT rather than only about approved releases, and that is still an arithmetic property of the partition rather than a verb, a source or an audience — the verbs are the 2026-08-11 verbs, the source is the same pinned jh45-qr5r snapshot, public internet deployment stays excluded, and nothing here authorizes assembling the six waves into a redistributable whole that no single wave's instrument would permit. CACHE: the occupancy below is derived against the UNCHANGED 512-entry cap. The 36-entry reservation T020 recorded is CONSUMED by this promotion and recorded as consumed — see `occupancy.reservationStatement` for the decision it inherits, the arithmetic that produced 42 and 36, what the 2-entry surplus is and why it is not taken, and the ledger-wide occupancy end-state this promotion produces.",
   },
+};
+
+/**
+ * The SHARED-TEXTURE variant of the promoted successor (T002, ADR 0047).
+ *
+ * It is SPREAD from `p1` and overrides six fields and no others. That is
+ * deliberate and load-bearing: the renderable subset, the curation, the
+ * occupancy derivation and the skyline envelope are the promoted release's
+ * own objects, so "the same cells" is a property of this table rather than a
+ * claim two entries have to keep agreeing on. What differs is the release id,
+ * where its bytes go, and the wave profile's `textureDelivery`.
+ *
+ * It runs no `sample` stage: the Blender inspection sample is chosen on
+ * geometry, and this variant's geometry is the promoted release's geometry.
+ */
+RELEASE_VARIANTS.t1 = {
+  ...RELEASE_VARIANTS.p1,
+  variantId: "t1",
+  releaseId: NORTHERN_MANHATTAN_T1.releaseId,
+  outputDirectory: NORTHERN_MANHATTAN_T1.outputDirectory,
+  workRoot: "artifacts/northern-manhattan-20260812-t1",
+  recordRoot: "data/northern-manhattan-20260812-t1",
+  waveProfile: NORTHERN_MANHATTAN_T1.waveProfile,
+  predecessorReleaseId: NORTHERN_MANHATTAN_T1.predecessorReleaseId,
+  predecessorInventoryPath: join(repositoryRoot, "data/northern-manhattan-20260812-p1", "payload-inventory.json"),
+  predecessorOf: NORTHERN_MANHATTAN_T1.predecessorOf,
+  releaseProfile: NORTHERN_MANHATTAN_T1.releaseProfile,
+  stages: ["plans", "glbs", "gates", "graph"],
+  inventoryNote: exteriorT1InventoryNote(NORTHERN_MANHATTAN_T1, SCRIPT_NAME),
 };
 
 const STAGES = ["plans", "glbs", "gates", "graph", "sample"];
@@ -906,6 +939,10 @@ async function stageGraph(context, options) {
     refusals: shipped.refusals,
     capture: context.capture,
     profile: context.variant.releaseProfile(context.predecessor),
+    // Exactly the tiles the emitted GLBs reference by URI, collected from the
+    // bytes this pass just wrote. Empty for every embedded wave, so those
+    // packages declare and emit nothing new.
+    sharedTextureClasses: shipped.sharedTextureClasses,
   });
 
   const payload = new Map([...release.files, ...shipped.assetBytes]);
@@ -1345,19 +1382,19 @@ async function stageSample(context, options) {
 const RUNNERS = { plans: stagePlans, glbs: stageGlbs, gates: stageGates, graph: stageGraph, sample: stageSample };
 
 async function main() {
-  const argv = process.argv.slice(2);
-  const force = argv.includes("--force");
-  const requested = argv.filter((token, index) => !token.startsWith("--") && argv[index - 1] !== "--release");
-  const stage = requested[0] ?? "all";
-  if (stage !== "all" && !STAGES.includes(stage)) fail(`unknown stage ${stage}; expected one of ${STAGES.join(", ")} or all.`);
-
-  const variantIndex = argv.indexOf("--release");
-  const variantId = variantIndex >= 0 ? argv[variantIndex + 1] : "canary";
+  // The stage is REQUIRED and every token is checked before anything runs. The
+  // old parser defaulted a bare or flags-only invocation to `all`, so
+  // `--help` STARTED the five-stage pipeline; see `wave-cli-arguments.mjs`.
+  const parsed = requireWaveCliArguments(parseWaveCliArguments({
+    script: SCRIPT_NAME,
+    argv: process.argv.slice(2),
+    stages: STAGES,
+    variants: Object.keys(RELEASE_VARIANTS),
+    defaultVariant: "canary",
+    variantStages: Object.fromEntries(Object.entries(RELEASE_VARIANTS).map(([id, entry]) => [id, entry.stages])),
+  }), { error: (message) => console.error(message), exit: (code) => process.exit(code) });
+  const { stage, variantId, force } = parsed;
   const variant = RELEASE_VARIANTS[variantId];
-  if (!variant) fail(`unknown release variant ${variantId}; expected one of ${Object.keys(RELEASE_VARIANTS).join(", ")}.`);
-  if (stage !== "all" && !variant.stages.includes(stage)) {
-    fail(`the ${variant.variantId} variant does not run stage ${stage}; it runs ${variant.stages.join(", ")}.`);
-  }
 
   const context = await loadContext(variant);
   const report = {};

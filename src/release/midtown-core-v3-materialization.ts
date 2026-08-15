@@ -44,7 +44,7 @@ import { sha256HexBytes, sha256HexSync, stableSerialize } from "../domain/determ
 import { writeCanonicalGlb, type CanonicalGlbQuad, type CanonicalGlbSamplerFilter, type CanonicalGlbTri, type Vec3 } from "./canonical-glb.ts";
 import { enuFrame, toEnuMeters, type EnuFrame, type Point2 } from "./block835-reference-package.ts";
 import { V3_QUALITY_BUDGETS, v3GeometryForGlb, v3TruthTiers, type V3GlbGeometry } from "./block835-v3-package.ts";
-import { proceduralTextureProvenance, type ProceduralTextureProfile } from "./procedural-texture.ts";
+import { proceduralTextureProvenance, proceduralTextureReplayIndex, type ProceduralTextureClass, type ProceduralTextureProfile } from "./procedural-texture.ts";
 import type { ImmutablePin } from "./multi-lod-assembly.ts";
 import {
   MIDTOWN_CORE_FALLBACK_HEIGHT_METERS,
@@ -134,6 +134,36 @@ export interface V3WaveProfile {
   texture: ProceduralTextureProfile | null;
   /** Decided sampler filtering for this wave's detail tiles, when textured. */
   textureFilter?: CanonicalGlbSamplerFilter;
+  /**
+   * WHERE this wave's detail tiles live. `embedded` — the default and every
+   * frozen wave — puts a copy of each tile inside every GLB that draws it.
+   * `shared-uri` puts the bytes in the release ONCE, as declared `texture`
+   * artifacts, and every GLB names the same relative URI.
+   *
+   * It changes delivery and nothing else: same catalogue, same sampler, same
+   * UVs, same materials, same geometry, same plan hashes. Cesium keys an
+   * embedded image by the OWNING MODEL's absolute URL and an external one by its
+   * own resolved URI, which is why the identical tile decodes once per asset in
+   * the first mode and once per release in the second.
+   */
+  textureDelivery?: "embedded" | "shared-uri";
+}
+
+/**
+ * Where a shared tile lives in the package, and how a GLB reaches it.
+ *
+ * Assets are emitted at `public/assets/<id>__<lod>.glb`, so the URI is one hop
+ * up and into `textures/`. Both halves are derived from the same two constants
+ * so the artifact a release DECLARES and the URI a GLB NAMES cannot drift; the
+ * offline gate resolves the second against the GLB's own ref and demands that it
+ * land on the first.
+ */
+export const SHARED_TEXTURE_DIRECTORY = "public/textures" as const;
+export function sharedTextureArtifactRef(textureClass: ProceduralTextureClass): string {
+  return `${SHARED_TEXTURE_DIRECTORY}/${textureClass}.png`;
+}
+export function sharedTextureUriFromAsset(textureClass: ProceduralTextureClass): string {
+  return `../textures/${textureClass}.png`;
 }
 
 /**
@@ -522,6 +552,51 @@ export interface MidtownCoreV3AssetBytes {
   volumeDeviation: number;
   meshVolumeCubicMeters: number;
   analyticVolumeCubicMeters: number;
+  /**
+   * The RELEASE-scoped tiles this asset references by URI, in emission order.
+   * Empty for every embedded and texture-free asset, so a caller that ignores
+   * it sees exactly the behaviour it saw before this field existed.
+   */
+  sharedTextureClasses: readonly ProceduralTextureClass[];
+}
+
+/**
+ * Recovers each image's catalogue class from its BYTES, by digest.
+ *
+ * The class could have been threaded down from `bindTextures`, and deliberately
+ * is not: recovering it from the bytes means a URI can never name a class the
+ * bytes are not, and the recovery uses the same replay index the release gate
+ * uses. An image this repository's rasterizer did not produce has no class and
+ * fails here rather than being shipped under a plausible name.
+ */
+function sharedUriTextureSet(
+  textures: NonNullable<V3GlbGeometry["textures"]>,
+  buildingId: string,
+): { images: { mimeType: "image/png"; uri: string }[]; materialImage: readonly (number | null)[]; filter?: CanonicalGlbSamplerFilter; classes: ProceduralTextureClass[] } {
+  const index = proceduralTextureReplayIndex();
+  const classes = textures.images.map((image) => {
+    const textureClass = index.get(sha256HexBytes(image.bytes));
+    // NOT a `MidtownCoreV3Stop`. A stop code is a REFUSAL: a statement that this
+    // grammar cannot carry some property of a sourced polygon, and it is
+    // counted as such in a census and drops that one building from the release.
+    // This is not that. It says the tile this repository's rasterizer just
+    // produced is not a tile its own replay index knows, which is the
+    // repository contradicting itself and is true of every building, not this
+    // one. Refusing the building would hide it behind a plausible refusal
+    // count; throwing stops the run. (It was first reported as
+    // `asset-budget-exceeded`, which was simply the wrong word for it, and the
+    // closed stop-code vocabulary is pinned by a committed goal-completion
+    // record, so the fix is to stop calling it a refusal rather than to widen
+    // that vocabulary.)
+    if (textureClass === undefined) throw new Error(`Shared detail tile for ${buildingId} is not byte-identical to any tile this repository's rasterizer produces, so it cannot be referenced by URI.`);
+    return textureClass;
+  });
+  return {
+    images: classes.map((textureClass) => ({ mimeType: "image/png" as const, uri: sharedTextureUriFromAsset(textureClass) })),
+    materialImage: textures.materialImage,
+    ...(textures.filter ? { filter: textures.filter } : {}),
+    classes,
+  };
 }
 
 export interface MidtownCoreV3AssetResult {
@@ -531,6 +606,25 @@ export interface MidtownCoreV3AssetResult {
   /** True when the tier offset was refused and `setbacks` ships `absent`. */
   setbacksAbsent: boolean;
   setbackDisclosure: string;
+}
+
+/** The URI a shared tile is named by, inverted back to its catalogue class. */
+const SHARED_TEXTURE_CLASS_BY_URI = new Map<string, ProceduralTextureClass>();
+
+function emittedSharedTextureClasses(bytes: Uint8Array, buildingId: string): ProceduralTextureClass[] {
+  if (SHARED_TEXTURE_CLASS_BY_URI.size === 0) {
+    for (const textureClass of proceduralTextureReplayIndex().values()) SHARED_TEXTURE_CLASS_BY_URI.set(sharedTextureUriFromAsset(textureClass), textureClass);
+  }
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const json = JSON.parse(new TextDecoder().decode(bytes.subarray(20, 20 + view.getUint32(12, true)))) as { images?: Array<{ uri?: string }> };
+  return (json.images ?? []).map((image) => {
+    const textureClass = SHARED_TEXTURE_CLASS_BY_URI.get(image.uri ?? "");
+    // Same reasoning as `sharedUriTextureSet`: an emitted URI naming no tile of
+    // the catalogue is a writer/emitter contradiction, not a refusal of THIS
+    // building's geometry, and it stops the run rather than being counted.
+    if (textureClass === undefined) throw new Error(`Emitted image URI ${String(image.uri)} for ${buildingId} names no shared tile of this catalogue.`);
+    return textureClass;
+  });
 }
 
 /**
@@ -603,6 +697,8 @@ export function writeMidtownCoreV3Assets(
       texture,
       textureFilter: texture ? profile.textureFilter ?? null : null,
     });
+    // Same tiles, same sampler, same UVs; only WHERE the bytes live differs.
+    const sharedUri = file.textures && profile.textureDelivery === "shared-uri" ? sharedUriTextureSet(file.textures, buildingId) : null;
     const written = writeCanonicalGlb({
       quads: file.quads,
       triangles: file.triangles,
@@ -625,7 +721,7 @@ export function writeMidtownCoreV3Assets(
         // the release validator uses to decide whether to demand a replay.
         ...(file.textures ? { textureProvenance: proceduralTextureProvenance() } : {}),
       },
-      ...(file.textures ? { textures: file.textures } : {}),
+      ...(sharedUri ? { uriTextures: { images: sharedUri.images, materialImage: sharedUri.materialImage, ...(sharedUri.filter ? { filter: sharedUri.filter } : {}) } } : file.textures ? { textures: file.textures } : {}),
     });
     if (
       written.counts.triangleCount > profile.budgets.maxTriangles
@@ -647,6 +743,12 @@ export function writeMidtownCoreV3Assets(
       volumeDeviation,
       meshVolumeCubicMeters: meshVolume,
       analyticVolumeCubicMeters: analyticVolume,
+      // Only the tiles the WRITER KEPT, read back out of the bytes it just
+      // emitted. An image no used material samples is dropped and the rest are
+      // renumbered, so declaring the classes handed IN would declare an orphan
+      // artifact the release gate refuses. Reading the emitted JSON cannot drift
+      // from the writer's rule the way a restatement of that rule could.
+      sharedTextureClasses: sharedUri ? emittedSharedTextureClasses(written.bytes, buildingId) : [],
     });
   }
   return {

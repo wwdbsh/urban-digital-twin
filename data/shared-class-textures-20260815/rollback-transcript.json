@@ -1,0 +1,131 @@
+{
+  "pose": {
+    "lon": -73.9888,
+    "lat": 40.746231,
+    "height": 380,
+    "heading": 20,
+    "pitch": -32,
+    "roll": 0
+  },
+  "transcript": [
+    {
+      "label": "p1-embedded",
+      "url": "http://localhost:4319/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&exteriorProfile=inspection&lon=-73.988800&lat=40.746231&height=380.000000&heading=20.000000&pitch=-32.000000&roll=0.000000&exteriorCells=manhattan-southern-remainder-cells-20260812-p1",
+      "state": {
+        "probe": {
+          "schemaVersion": "1.0",
+          "cesiumVersion": "1.143.0",
+          "exteriorReleaseIds": [
+            "manhattan-southern-remainder-cells-20260812-p1"
+          ],
+          "exteriorStreamingActive": true,
+          "residentAssetCount": 78,
+          "reading": {
+            "texturesByteLength": 15204294,
+            "geometryByteLength": 6971032,
+            "resourceCacheEntryCount": 1716
+          },
+          "labels": {
+            "accounting": "Cesium's own CPU-side accounting of uploaded texture bytes, MIP CHAIN INCLUDED. Not a driver query.",
+            "mipChain": "The reading is 1.3333333333333333x the base level: Cesium adds a third for a mipmapped texture. Established by instrument validation, not assumed.",
+            "wireVersusGpu": "A tile is 16580 PNG bytes on the wire, 65536 as an RGBA base level, and 87381 as Cesium accounts for it with mips.",
+            "export": "ResourceCache.statistics is a Cesium-internal export, pinned at the installed version; a version bump invalidates this reading rather than adjusting it."
+          }
+        },
+        "notices": [
+          "Local runtime layerReal NYC citywide release · manhattan-citywide-20260804 · local snapshot-relative coverageDisable exterior streamingExploration profileInspection profileExterior streaming · Default pinned snapshot snapshot:manhattan-southern-remainder-cells-20260812-p1:v1 · Inspection (finest verified LOD) · verified local GLB bytes only."
+        ]
+      }
+    },
+    {
+      "label": "t1-shared",
+      "url": "http://localhost:4319/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&exteriorProfile=inspection&lon=-73.988800&lat=40.746231&height=380.000000&heading=20.000000&pitch=-32.000000&roll=0.000000&exteriorCells=manhattan-southern-remainder-cells-20260812-t1",
+      "state": {
+        "probe": {
+          "schemaVersion": "1.0",
+          "cesiumVersion": "1.143.0",
+          "exteriorReleaseIds": [
+            "manhattan-southern-remainder-cells-20260812-t1"
+          ],
+          "exteriorStreamingActive": true,
+          "residentAssetCount": 78,
+          "reading": {
+            "texturesByteLength": 349524,
+            "geometryByteLength": 6971032,
+            "resourceCacheEntryCount": 1546
+          },
+          "labels": {
+            "accounting": "Cesium's own CPU-side accounting of uploaded texture bytes, MIP CHAIN INCLUDED. Not a driver query.",
+            "mipChain": "The reading is 1.3333333333333333x the base level: Cesium adds a third for a mipmapped texture. Established by instrument validation, not assumed.",
+            "wireVersusGpu": "A tile is 16580 PNG bytes on the wire, 65536 as an RGBA base level, and 87381 as Cesium accounts for it with mips.",
+            "export": "ResourceCache.statistics is a Cesium-internal export, pinned at the installed version; a version bump invalidates this reading rather than adjusting it."
+          }
+        },
+        "notices": [
+          "Local runtime layerReal NYC citywide release · manhattan-citywide-20260804 · local snapshot-relative coverageDisable exterior streamingExploration profileInspection profileExterior streaming · Default pinned snapshot snapshot:manhattan-southern-remainder-cells-20260812-t1:v1 · Inspection (finest verified LOD) · verified local GLB bytes only."
+        ]
+      }
+    },
+    {
+      "label": "rollback-default",
+      "url": "http://localhost:4319/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&exteriorProfile=inspection&lon=-73.988800&lat=40.746231&height=380.000000&heading=20.000000&pitch=-32.000000&roll=0.000000",
+      "state": {
+        "probe": {
+          "schemaVersion": "1.0",
+          "cesiumVersion": "1.143.0",
+          "exteriorReleaseIds": [
+            "manhattan-exterior-cells-20260811-v3",
+            "manhattan-midtown-core-cells-20260811-v3",
+            "manhattan-lower-manhattan-cells-20260812-p1",
+            "manhattan-southern-remainder-cells-20260812-p1",
+            "manhattan-central-upper-manhattan-cells-20260812-p1",
+            "manhattan-northern-manhattan-cells-20260812-p1"
+          ],
+          "exteriorStreamingActive": true,
+          "residentAssetCount": 92,
+          "reading": {
+            "texturesByteLength": 15204294,
+            "geometryByteLength": 8796016,
+            "resourceCacheEntryCount": 1964
+          },
+          "labels": {
+            "accounting": "Cesium's own CPU-side accounting of uploaded texture bytes, MIP CHAIN INCLUDED. Not a driver query.",
+            "mipChain": "The reading is 1.3333333333333333x the base level: Cesium adds a third for a mipmapped texture. Established by instrument validation, not assumed.",
+            "wireVersusGpu": "A tile is 16580 PNG bytes on the wire, 65536 as an RGBA base level, and 87381 as Cesium accounts for it with mips.",
+            "export": "ResourceCache.statistics is a Cesium-internal export, pinned at the installed version; a version bump invalidates this reading rather than adjusting it."
+          }
+        },
+        "notices": [
+          "Local runtime layerReal NYC citywide release · manhattan-citywide-20260804 · local snapshot-relative coverageDisable exterior streamingExploration profileInspection profileExterior streaming · Default pinned snapshot snapshot:manhattan-exterior-cells-20260811-v3:v1 · Inspection (finest verified LOD) · verified local GLB bytes only.Exterior streaming · Default pinned snapshot snapshot:manhattan-midtown-core-cells-20260811-v3:v1 · Inspection (finest verified LOD) · verified local GLB bytes only.Exterior streaming · Default pinned snapshot snapshot:manhattan-lower-manhattan-cells-20260812-p1:v1 · Inspection (finest verified LOD) · verified local GLB bytes only.Exterior streaming · Default pinned snapshot snapshot:manhattan-southern-remainder-cells-20260812-p1:v1 · Inspection (finest verified LOD) · verified local GLB bytes only.Exterior streaming · Default pinned snapshot snapshot:manhattan-central-upper-manhattan-cells-20260812-p1:v1 · Inspection (finest verified LOD) · verified local GLB bytes only.Exterior streaming · Default pinned snapshot snapshot:manhattan-northern-manhattan-cells-20260812-p1:v1 · Inspection (finest verified LOD) · verified local GLB bytes only."
+        ]
+      }
+    },
+    {
+      "label": "withdrawn-successor",
+      "url": "http://localhost:4319/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&exteriorProfile=inspection&lon=-73.988800&lat=40.746231&height=380.000000&heading=20.000000&pitch=-32.000000&roll=0.000000&exteriorCells=manhattan-southern-remainder-cells-20260812-t9",
+      "state": {
+        "probe": {
+          "schemaVersion": "1.0",
+          "cesiumVersion": "1.143.0",
+          "exteriorReleaseIds": [],
+          "exteriorStreamingActive": false,
+          "residentAssetCount": 0,
+          "reading": {
+            "texturesByteLength": 0,
+            "geometryByteLength": 0,
+            "resourceCacheEntryCount": 0
+          },
+          "labels": {
+            "accounting": "Cesium's own CPU-side accounting of uploaded texture bytes, MIP CHAIN INCLUDED. Not a driver query.",
+            "mipChain": "The reading is 1.3333333333333333x the base level: Cesium adds a third for a mipmapped texture. Established by instrument validation, not assumed.",
+            "wireVersusGpu": "A tile is 16580 PNG bytes on the wire, 65536 as an RGBA base level, and 87381 as Cesium accounts for it with mips.",
+            "export": "ResourceCache.statistics is a Cesium-internal export, pinned at the installed version; a version bump invalidates this reading rather than adjusting it."
+          }
+        },
+        "notices": [
+          "Local runtime layerReal NYC citywide release · manhattan-citywide-20260804 · local snapshot-relative coverageEnable exterior streamingExploration profileInspection profile"
+        ]
+      }
+    }
+  ]
+}
