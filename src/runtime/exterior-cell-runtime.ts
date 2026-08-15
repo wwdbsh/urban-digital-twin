@@ -4,6 +4,7 @@ import {
   assemblyCellCoverage,
   parseGlbV2,
   publiclyAdmittedSamplerFilter,
+  replaySharedTextureArtifact,
   requiresTextureFreeAssembly,
   validateGlbBinding,
   validateMultiLodAssembly,
@@ -13,6 +14,7 @@ import {
   type ComponentTruthTier,
   type ImmutablePin,
   type MultiLodAssemblyManifest,
+  type SharedTextureContext,
 } from "../release/multi-lod-assembly.ts";
 import {
   exteriorTextureAdmissionPolicyOf,
@@ -109,6 +111,16 @@ export const EXTERIOR_RUNTIME_FAILURE_CODES = [
   "cell-missing",
   "cell-release-missing",
   "snapshot-missing",
+  /**
+   * A release that DECLARES shared class tiles could not put verified tile
+   * bytes in front of the GLBs that draw them.
+   *
+   * It is its own code rather than `glb-invalid` because the GLB is not what
+   * failed: the geometry may verify perfectly while the tile it references is
+   * absent, mis-checksummed, or not what this repository's rasterizer produces.
+   * Reporting that as a GLB fault would send an operator to the wrong artifact.
+   */
+  "shared-texture-invalid",
 ] as const;
 export type ExteriorRuntimeFailureCode = (typeof EXTERIOR_RUNTIME_FAILURE_CODES)[number];
 
@@ -228,6 +240,45 @@ export interface ExteriorAssetProvenance {
   citedStyle?: AssemblyCitedStyle;
 }
 
+/**
+ * Everything the scene needs to draw ONE asset of a release that ships its
+ * detail tiles as shared, release-scoped artifacts instead of embedding a copy
+ * of each tile in every GLB.
+ *
+ * Present only on such a release. Its absence is the ordinary case and means
+ * the asset carries whatever images it carries inside its own bytes, which is
+ * every release frozen before this seam existed.
+ *
+ * The runtime hands over BYTES and a URL and stops there. It does not build a
+ * Cesium object, because CesiumJS ownership lives in the viewport; and it does
+ * not hand over a path for the scene to fetch, because a fetched path would be
+ * bytes nobody verified. Both halves here are already verified: the GLB against
+ * its pinned checksum and canonical binding, each tile against its pinned
+ * checksum AND against `procedural-texture.ts`'s rasterizer.
+ */
+export interface ExteriorSharedTextureBinding {
+  /**
+   * The URL this artifact's bytes are served under, and the reason it exists.
+   *
+   * Cesium keys a model's embedded buffers on the OWNING MODEL's absolute URL
+   * (`ResourceCacheKey.getEmbeddedBufferCacheKey`), so two models sharing one
+   * URL share one buffer cache entry and the second silently renders the
+   * first's BIN. The URL therefore has to be UNIQUE PER ARTIFACT, and the
+   * release-relative artifact path already is: it is the same path the bytes
+   * were fetched and verified from.
+   */
+  modelUrl: string;
+  /** This GLB's package-relative ref; its image URIs resolve against it. */
+  glbRef: string;
+  /**
+   * The verified tiles this GLB draws, keyed by the URL each one resolves to
+   * from `modelUrl`. Sharing is the whole point: every asset of a class hands
+   * over the SAME url and the SAME `Uint8Array`, so Cesium's image cache — keyed
+   * on the resolved absolute URI — collapses them to one decoded GPU texture.
+   */
+  textureUrls: ReadonlyMap<string, Uint8Array>;
+}
+
 export interface ExteriorRenderedAsset {
   canonicalFeatureId: string;
   ownerCellId: string;
@@ -239,6 +290,8 @@ export interface ExteriorRenderedAsset {
   geometricErrorMeters: number;
   maxDistanceMeters: number | null;
   provenance: ExteriorAssetProvenance;
+  /** Present only for a release that declares shared texture artifacts. */
+  sharedTextures?: ExteriorSharedTextureBinding;
 }
 
 export interface ExteriorCellRenderPlan {
@@ -347,6 +400,16 @@ export interface ExteriorCellRuntimeOptions {
   baseIdentity: ExteriorBaseIdentity;
   sharedBudget?: AggregateRequestBudget | null;
   cache?: CitywideLruCache<Uint8Array> | null;
+  /**
+   * The local release root every artifact ref is served under, used ONLY to
+   * build the unique per-artifact URLs a shared-texture release needs.
+   *
+   * It is the same root `loadExteriorCellRuntime` fetches from, passed
+   * explicitly rather than reconstructed, so the URL an artifact is identified
+   * by and the URL its bytes came from cannot drift apart. It is never fetched
+   * from here: nothing in the shared-texture path issues a request.
+   */
+  artifactUrlBase?: string;
 }
 
 export interface ExteriorCellRuntimeSource {
@@ -422,6 +485,17 @@ export function exteriorOutcomeCacheKeys(outcome: ExteriorCellOutcome): { keys: 
   return { keys, byteSize };
 }
 
+/**
+ * The refs of every RELEASE-SCOPED shared tile a package declares.
+ *
+ * A non-empty result is the single fact that selects the shared-texture image
+ * gate for every GLB in the package, which is how the runtime and the offline
+ * validator reach the same decision from the same evidence.
+ */
+export function sharedTextureArtifactRefs(assembly: MultiLodAssemblyManifest): ReadonlySet<string> {
+  return new Set(assembly.artifacts.filter((artifact) => artifact.role === "texture").map((artifact) => artifact.relativeRef));
+}
+
 export class ExteriorCellRuntime {
   readonly index: ExteriorCellReleaseIndex;
   readonly head: ExteriorHeadResolution;
@@ -476,6 +550,22 @@ export class ExteriorCellRuntime {
    * therefore contend for one entry in this map.
    */
   private readonly artifactErrors = new Map<string, ExteriorRuntimeError>();
+  /**
+   * SESSION-scoped shared-tile verification, one entry per assembly package.
+   *
+   * A release's four class tiles are the same four bytes for every one of its
+   * cells, so verifying them per cell would replay the rasterizer hundreds of
+   * times for an answer that cannot differ. Memoizing the PROMISE also
+   * collapses the concurrent case: several cells loading at once await one
+   * verification rather than racing four fetches each.
+   *
+   * A rejection is deliberately NOT memoized (see `verifiedSharedTextures`):
+   * an abort or a transport failure is not evidence about the bytes, and a
+   * session that cached it would refuse the release forever on the strength of
+   * a cancelled request.
+   */
+  private readonly sharedTextureVerification = new Map<string, Promise<ReadonlyMap<string, Uint8Array>>>();
+  private readonly artifactUrlBase: string;
   private requestedArtifactCount = 0;
   private loadedArtifactCount = 0;
   private failedArtifactCount = 0;
@@ -537,6 +627,10 @@ export class ExteriorCellRuntime {
     this.cache = options.cache ?? new CitywideLruCache<Uint8Array>(EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries, EXTERIOR_RUNTIME_BUDGETS.maxCachedBytes);
     this.sharedBudget = options.sharedBudget ?? null;
     this.pool = new CitywideRequestPool<Uint8Array>(EXTERIOR_RUNTIME_BUDGETS.maxConcurrentRequests, this.cache, this.sharedBudget);
+    // Defaulted rather than required: every caller that does not ship shared
+    // tiles is unaffected, and the default is exactly what the app computes
+    // (`exteriorCellBasePath`) so the two cannot disagree for a real release.
+    this.artifactUrlBase = options.artifactUrlBase ?? `/data/${source.index.releaseId}/`;
   }
 
   /** Mirrors the accepted overlay compatibility gate; identity is not implied by name. */
@@ -766,6 +860,18 @@ export class ExteriorCellRuntime {
     // the declared pair; null everywhere else, so nothing already admitted moves.
     const requiredSamplerFilter = publiclyAdmittedSamplerFilter(assembly.audience, assemblyPolicy);
 
+    // Which image gate applies is decided by the PACKAGE, exactly as it is
+    // offline in `replayMultiLodAssembly`: a package that declares texture
+    // artifacts is gated by the shared-texture rule, and one that declares none
+    // parses under the byte-identical embedded-only rule it always did. A GLB
+    // cannot elect its own gate by what its bytes happen to contain.
+    //
+    // The verification is awaited BEFORE any GLB of this cell is admitted, so a
+    // cell of a texture-declaring release whose class tiles are unverified
+    // fails closed as a cell rather than rendering untextured.
+    const declaredTextureRefs = sharedTextureArtifactRefs(assembly);
+    const verifiedTextures = declaredTextureRefs.size > 0 ? await this.verifiedSharedTextures(assembly, signal) : null;
+
     // Evidence-shard audience admission for every building this cell publishes.
     for (const detail of cellRelease.buildingDetails) {
       if (detail.status !== "available") continue;
@@ -789,7 +895,10 @@ export class ExteriorCellRuntime {
       const artifact = assembly.artifacts.find((entry) => entry.relativeRef === lod.artifactRef);
       if (!artifact || artifact.role !== "glb" || artifact.ownerCellId !== cellRelease.cellId) throw new ExteriorRuntimeError("assembly-pin-mismatch", `LOD ${lod.lodId} has no owner-cell GLB declaration.`);
       const bytes = await this.loadVerifiedArtifact(artifact.relativeRef, artifact.byteSize, artifact.checksumSha256, signal);
-      this.verifyGlb(bytes, asset, lod, textureFree, artifact.relativeRef, requiredSamplerFilter);
+      const sharedTextureContext: SharedTextureContext | null = verifiedTextures
+        ? { glbRef: artifact.relativeRef, audience: assembly.audience, declaredTextureRefs }
+        : null;
+      const referencedTextureRefs = this.verifyGlb(bytes, asset, lod, textureFree, artifact.relativeRef, requiredSamplerFilter, sharedTextureContext);
       rendered.push({
         canonicalFeatureId: asset.canonicalFeatureId,
         ownerCellId: asset.ownerCellId,
@@ -810,18 +919,98 @@ export class ExteriorCellRuntime {
           predecessor: asset.predecessor,
           uncertainty: asset.uncertainty,
         },
+        ...(verifiedTextures ? { sharedTextures: this.sharedTextureBinding(artifact.relativeRef, referencedTextureRefs, verifiedTextures) } : {}),
       });
     }
     if (rendered.length === 0) throw new ExteriorRuntimeError("assembly-pin-mismatch", `Cell release ${cellRelease.cellReleaseId} published no verifiable exterior asset.`);
     return { assemblyPackageId: assembly.packageId, assets: rendered };
   }
 
-  private verifyGlb(bytes: Uint8Array, asset: AssemblyAsset, lod: AssemblyLod, textureFree: boolean, relativeRef: string, requiredSamplerFilter: { magFilter: number; minFilter: number } | null = null): void {
+  /**
+   * Repeats, in the browser, the exact binding the offline validator applied.
+   *
+   * The returned set names the shared texture artifacts this GLB actually
+   * draws, and is empty for every embedded, texture-free and untextured GLB —
+   * so a caller that ignores it sees precisely the behaviour it saw when this
+   * returned void.
+   */
+  private verifyGlb(bytes: Uint8Array, asset: AssemblyAsset, lod: AssemblyLod, textureFree: boolean, relativeRef: string, requiredSamplerFilter: { magFilter: number; minFilter: number } | null = null, sharedTextures: SharedTextureContext | null = null): ReadonlySet<string> {
     try {
-      validateGlbBinding(parseGlbV2(bytes), asset, lod, textureFree, requiredSamplerFilter);
+      // The opt-in is derived from the same package fact that produced the
+      // context, so a package declaring no texture artifact parses under the
+      // byte-identical rule it always did.
+      const parsed = parseGlbV2(bytes, { allowExternalImageUri: sharedTextures !== null });
+      return validateGlbBinding(parsed, asset, lod, textureFree, requiredSamplerFilter, sharedTextures);
     } catch (error) {
       throw new ExteriorRuntimeError("glb-invalid", `Exterior GLB ${relativeRef} failed canonical binding: ${error instanceof Error ? error.message : String(error)}`, relativeRef);
     }
+  }
+
+  /**
+   * Verify every class tile this package declares, once for the session.
+   *
+   * The tiles go through the SAME verified-artifact path every GLB does —
+   * declared byte size, declared SHA-256, the shared LRU and the shared request
+   * budget — and then through the rasterizer replay that is the honesty claim
+   * itself. Nothing here is a weaker check applied to a smaller artifact.
+   */
+  private async verifiedSharedTextures(assembly: MultiLodAssemblyManifest, signal?: AbortSignal): Promise<ReadonlyMap<string, Uint8Array>> {
+    const memoized = this.sharedTextureVerification.get(assembly.packageId);
+    if (memoized) return memoized;
+    const pending = this.loadSharedTextures(assembly, signal);
+    this.sharedTextureVerification.set(assembly.packageId, pending);
+    pending.catch(() => {
+      // Forget a FAILED verification so a later cell can retry it. Only this
+      // promise is forgotten, so a concurrent success is never discarded.
+      if (this.sharedTextureVerification.get(assembly.packageId) === pending) this.sharedTextureVerification.delete(assembly.packageId);
+    });
+    return pending;
+  }
+
+  private async loadSharedTextures(assembly: MultiLodAssemblyManifest, signal?: AbortSignal): Promise<ReadonlyMap<string, Uint8Array>> {
+    const verified = new Map<string, Uint8Array>();
+    const classes = new Map<string, string>();
+    const declared = assembly.artifacts.filter((artifact) => artifact.role === "texture");
+    for (const artifact of [...declared].sort((left, right) => (left.relativeRef < right.relativeRef ? -1 : left.relativeRef > right.relativeRef ? 1 : 0))) {
+      // Restated here rather than inherited from the structural validator: a
+      // tile charged to a cell would be double-counted against every other cell
+      // that draws it, and this loader must not depend on someone else having
+      // refused that shape first.
+      if (artifact.ownerCellId !== null) throw new ExteriorRuntimeError("shared-texture-invalid", `Shared texture artifact ${artifact.relativeRef} claims owner cell ${artifact.ownerCellId}; a release-scoped tile owns no cell.`, artifact.relativeRef);
+      const bytes = await this.loadVerifiedArtifact(artifact.relativeRef, artifact.byteSize, artifact.checksumSha256, signal);
+      let textureClass: string;
+      try {
+        textureClass = replaySharedTextureArtifact(bytes);
+      } catch (error) {
+        throw new ExteriorRuntimeError("shared-texture-invalid", `Shared texture artifact ${artifact.relativeRef} is not byte-identical to the tile this repository's rasterizer produces: ${error instanceof Error ? error.message : String(error)}`, artifact.relativeRef);
+      }
+      // One class, one artifact. Two paths carrying identical bytes would give
+      // Cesium two cache keys for one tile and quietly halve the deduplication
+      // this whole mechanism exists to produce.
+      const previous = classes.get(textureClass);
+      if (previous !== undefined) throw new ExteriorRuntimeError("shared-texture-invalid", `Shared texture class ${textureClass} is declared twice, at ${previous} and ${artifact.relativeRef}.`, artifact.relativeRef);
+      classes.set(textureClass, artifact.relativeRef);
+      verified.set(artifact.relativeRef, bytes);
+    }
+    return verified;
+  }
+
+  /**
+   * Bind ONE GLB to the verified tiles it draws.
+   *
+   * `referenced` comes from the binding validator, which already refused any
+   * URI that escaped the audience root or named an artifact this package does
+   * not declare. The lookup below is the last of the three: bytes this session
+   * has verified, or nothing at all.
+   */
+  private sharedTextureBinding(glbRef: string, referenced: ReadonlySet<string>, verified: ReadonlyMap<string, Uint8Array>): ExteriorSharedTextureBinding {
+    const textureUrls = new Map<string, Uint8Array>();
+    for (const ref of [...referenced].sort((left, right) => (left < right ? -1 : left > right ? 1 : 0))) {
+      const bytes = verified.get(ref);
+      if (!bytes) throw new ExteriorRuntimeError("shared-texture-invalid", `Exterior GLB ${glbRef} draws shared texture ${ref}, which this session has not verified.`, glbRef);
+      textureUrls.set(`${this.artifactUrlBase}${ref}`, bytes);
+    }
+    return { modelUrl: `${this.artifactUrlBase}${glbRef}`, glbRef, textureUrls };
   }
 
   private async loadVerifiedArtifact(relativeRef: string, byteSize: number, expectedChecksum: string, signal?: AbortSignal): Promise<Uint8Array> {
@@ -918,5 +1107,9 @@ export async function loadExteriorCellRuntime(
     baseIdentity: options.baseIdentity,
     sharedBudget: options.sharedBudget,
     cache: options.cache,
+    // The root the bytes were actually fetched from, so a shared-texture
+    // release identifies an artifact by the URL it came from and not by a
+    // second derivation that could drift from this one.
+    artifactUrlBase: root,
   });
 }

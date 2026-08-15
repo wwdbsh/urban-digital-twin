@@ -43,6 +43,7 @@ import { EXTERIOR_PILOT_RELEASE_ID, type CommercialStorefrontPlacement, type Loa
 import { publicRealmFeatureToFeature, type Block835PublicRealmFeature, type LoadedBlock835PublicRealmRelease } from "../../runtime/block835-public-realm-release";
 import type { ExteriorCellOutcome, ExteriorCellRenderPlan } from "../../runtime/exterior-cell-runtime";
 import type { ExteriorRenderProfile } from "../../runtime/exterior-render-profiles";
+import { verifiedExteriorModelResource } from "./exterior-verified-resource";
 import {
   boundFootprintToCamera,
   viewportFootprintFromGroundPoints,
@@ -327,6 +328,13 @@ export interface ExteriorCellRenderEntry {
   snapshotId: string;
   origin: "default" | "canary";
   profile: ExteriorRenderProfile;
+  /**
+   * Present only when the RELEASE ships its detail tiles as shared artifacts.
+   * Its presence is what selects the verified-resource branch below; its
+   * absence — every release frozen before this seam — keeps the Blob path
+   * byte-identical.
+   */
+  sharedTextures?: ExteriorCellRenderPlan["assets"][number]["sharedTextures"];
 }
 
 /** Only cells the runtime actually verified reach the scene; failures render nothing. */
@@ -346,6 +354,7 @@ export function exteriorOverlayRenderEntries(overlay: ExteriorCellOverlaySet): E
         bytes: asset.bytes,
         geometricErrorMeters: asset.geometricErrorMeters,
         provenance: asset.provenance,
+        ...(asset.sharedTextures ? { sharedTextures: asset.sharedTextures } : {}),
         releaseId: wave.releaseId,
         snapshotId: wave.snapshotId,
         origin: wave.origin,
@@ -2388,8 +2397,18 @@ export function CesiumViewport({
       const entityIds: string[] = [];
       const objectUrls: string[] = [];
       for (const { entry, anchor } of cell.adds) {
-        const objectUrl = exteriorModelObjectUrl(entry.bytes);
-        objectUrls.push(objectUrl);
+        // Two ways to put verified bytes in front of Cesium, chosen by the
+        // RELEASE and never by a toggle. A release that ships its tiles inside
+        // each GLB keeps the Blob URL it has always had, unchanged down to the
+        // revoke bookkeeping. A release that declares SHARED tiles cannot use a
+        // Blob URL at all — an image URI has nothing to resolve against inside
+        // `blob:` — so it hands Cesium a resource that answers for the model
+        // and for its tiles out of the already-verified set, and creates no
+        // object URL to revoke.
+        const modelUri = entry.sharedTextures
+          ? verifiedExteriorModelResource(entry.sharedTextures, entry.bytes)
+          : exteriorModelObjectUrl(entry.bytes);
+        if (typeof modelUri === "string") objectUrls.push(modelUri);
         const position = Cartesian3.fromDegrees(anchor.longitude, anchor.latitude, 0);
         const enuRotation = Matrix4.getMatrix3(Transforms.eastNorthUpToFixedFrame(position), new Matrix3());
         viewer.entities.removeById(entry.entityId);
@@ -2398,7 +2417,7 @@ export function CesiumViewport({
           name: anchor.name,
           position,
           orientation: Quaternion.fromRotationMatrix(enuRotation),
-          model: new ModelGraphics({ uri: objectUrl, scale: 1, minimumPixelSize: 1 }),
+          model: new ModelGraphics({ uri: modelUri, scale: 1, minimumPixelSize: 1 }),
           properties: {
             canonicalFeatureId: entry.canonicalFeatureId,
             // Per-entry attribution: the entity names the release that actually
