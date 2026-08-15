@@ -166,14 +166,30 @@ WGS84 cells and 45,194 canonical building parents with zero missing cells, zero
 missing parents and zero duplicate canonical owners — recomputed on every test
 run from the committed ledger rather than asserted.
 
-**What the six waves actually put on screen: 484 of 45,194 parents (1.07%),
-shipped as 498 GLB artifacts.** 870 of 883 cells ship no exterior geometry and
-render as base source-backed massing, disclosed by an explicit per-release
-tombstone notice rather than substituted. Each wave ships a bounded renderable
-subset of its own partition; the binding constraint is the 512-entry exterior
-cache contract, which the six subsets fill to 498 entries and 121.81 MiB of
-256 MiB. Growing breadth requires the cell-scheduling work of Decision 0024,
-not a larger wave.
+**What a default session puts on screen (since the 2026-08-15 citywide flip):
+41,841 real building extrusions at the 52 km island overview, from a URL that
+names nothing.** These are the committed citywide dense shards — real OTI
+footprints extruded to sourced heights, with per-building pick identity —
+streamed by camera visibility. The island is drawn.
+
+**What carries a generated, textured exterior: 484 of 45,194 parents (1.07%),
+shipped as 498 GLB artifacts.** This is the **textured V3 tier**, promoted on
+top of the massing within the near-camera radius — 14 buildings at a 260 m
+street camera, 66 at 1.2 km, 40 at the overview — and it is **not** the answer
+to "what renders". Conflating the two numbers is the single easiest way to
+overstate this project, and the brief keeps them apart deliberately.
+
+870 of 883 cells ship no *generated* exterior geometry. Their buildings draw as
+sourced base massing rather than being absent, and the runtime's notice says so
+in those words since T007; the pre-flip wording, which said no substitute was
+selected, was true when nothing was drawn for those cells and became false by
+omission once they drew. **The binding constraint is no longer the 512-entry
+all-resident exterior cache contract**: the visibility scheduler of Decision
+0041 holds at most 128 resident cells against 883 visible, certified in Decision
+0042, and it is that cell cap rather than the byte cap that binds — measured
+dense residency at the island overview is 58,243,420 B over 99 entries against a
+256 MiB ceiling. Growing breadth is now a data-production question (materialize
+and retain more generated exteriors), not a runtime-scheduling one.
 
 **Fidelity claim.** Exteriors are **generated and designed, not observed**. The
 V3 grammar derives structure from the sourced footprint ring and height; four
@@ -202,12 +218,29 @@ private byte.
 
 **Device-class status.** The desktop path is measured; the **mobile path is not
 implemented** and has no evidence. Frame-time budgets pass on the measured
-desktop composition (six waves, p50 2.30–3.60 ms, p95 5.60–13.00 ms against
-16.7/25 exploration and 33.3/45 inspection), but the 1440p-class capture the
-Goal names was never taken, and accessibility is proven structurally rather
-than behaviourally.
+desktop composition, and they still pass at citywide scale on the tighter pair:
+worst p50 8.3 ms and worst p95 15.9 ms against 16.7/25, off a measured 7.8 ms
+vsync floor, across street, transition, island-overview and pan-storm stations.
+Accessibility is proven structurally rather than behaviourally.
 
-The Goal's criterion-by-criterion reconciliation, its six unmet criteria and
-their stop reports, and the residual risks are in
+**Escape hatches, separated and separately measured.**
+`?exteriorStreaming=off` disables the six promoted V3 waves and says nothing
+about the citywide overview: the island still draws island-wide as base massing,
+measured at 43,021 buildings at the 52 km overview. `?exteriorScheduler=off` is
+the full opt-out and the rollback — it withdraws visibility scheduling and the
+overview residency raise together, collapsing the drawn island to 5,289, and its
+global form is the single constant `EXTERIOR_SCHEDULER_DEFAULT_ON`.
+
+**Two goals, two records, two open criteria — one each.** The exteriors goal's
+reconciliation is in
 [Decision 0039](decisions/0039-goal-integration-acceptance.md) and
-`data/goal-integration-acceptance-20260812/reconciliation.json`.
+`data/goal-integration-acceptance-20260812/reconciliation.json`: 30 of 31
+criteria are closed, and criterion 1 remains NOT-MET because 41,357 of the
+41,841 buildings drawn are sourced base massing rather than generated exteriors,
+with the 899 grammar refusals still awaiting their adjudication. The citywide
+default streaming goal's reconciliation is
+`data/citywide-goal-acceptance-20260815/reconciliation.json`, summarized in
+[Decision 0045](decisions/0045-citywide-default-streaming-flip.md): 11 of 12
+criteria are MET or adjudicated, and criterion 7 — a repeated-camera-path heap
+verdict at citywide scale under forced GC — is NOT-MET with a stop report. Both
+records carry residual risks by number rather than closing quietly.

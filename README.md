@@ -136,7 +136,7 @@ the exact files. This is a source-constrained, local-only validation baseline,
 not a claim of photorealism, current occupancy, survey-grade geometry, or a
 complete Manhattan model; no public deployment or conveyance is included.
 
-## Manhattan generated building exteriors (2026-08-12)
+## Manhattan generated building exteriors (2026-08-12, citywide default 2026-08-15)
 
 Six exterior waves are now promoted as the **default** composition over the
 unchanged, immutable `manhattan-citywide-20260804` base. An ordinary session —
@@ -153,20 +153,44 @@ no URL parameter of any kind — streams all six.
 
 **Read the last column before the third.** Coverage is complete in the sense
 that every wave the immutable ledger declares has a promoted default record.
-It is **not** complete in the sense that Manhattan is modelled:
+It is **not** complete in the sense that Manhattan is modelled — but since the
+2026-08-15 citywide default flip, what a default session *draws* and what
+carries a *generated exterior* are two different numbers, and the third column
+is only the second of them.
 
+### The default session is two tiers
+
+- **41,841 real building extrusions are drawn at the 52 km island overview of a
+  session that names nothing.** They are the committed citywide dense shards —
+  real OTI footprints extruded to sourced heights, with per-building pick
+  identity — streamed by camera visibility rather than loaded wholesale. The
+  reading is `data/citywide-default-flip-20260814/stations-default.json`.
 - **484 of 45,194 canonical building parents — 1.07%, about one in ninety-three
-  — carry a generated exterior by default**, shipped as 498 GLB artifacts.
-- **870 of the 883 spatial cells ship no exterior geometry at all.** Their
-  buildings render as the base source-backed footprint/height massing and the
-  runtime says so: each release carries a tombstone notice of the form
-  "181 of 182 exterior cells ship no exterior geometry in this release; no
-  substitute was selected for them."
-- Each promoted wave ships a **bounded renderable subset** of its own
-  partition, curated or order-derived. The bound is the 512-entry exterior
-  cache contract: the six subsets occupy 498 of 512 entries and 121.81 MiB of
-  256 MiB. Breadth inside a wave cannot grow without raising the cap or
-  evicting another wave's ground.
+  — carry a generated, textured V3 exterior**, shipped as 498 GLB artifacts.
+  **This is the TEXTURED TIER, not "what renders."** It is what the near-camera
+  radius promotes on top of the massing: 14 V3 buildings at a 260 m street
+  camera, 66 at 1.2 km, 40 at the overview.
+- **870 of the 883 spatial cells ship no *generated* exterior geometry.** Their
+  buildings are not missing from the screen — they draw as sourced base massing
+  — and since T007 the runtime's notice says exactly that. **The wording
+  changed on 2026-08-15**; it now reads "*N of M exterior cells declared by this
+  release ship no generated exterior geometry; their buildings draw as sourced
+  base massing (footprint extruded to sourced height), which is not a generated
+  exterior.*" The earlier wording ("…ship no exterior geometry; no substitute
+  was selected for them") was true before the flip, when nothing was drawn for
+  those cells; it became false by omission once they drew. Historical records
+  and journey scripts quote the old sentence as captured evidence and are left
+  byte-identical.
+- **The 512-entry all-resident cache contract is no longer the binding
+  constraint.** Breadth is now a function of what the camera can see: the
+  visibility scheduler holds at most **128 resident cells** against 883 visible
+  (`EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY`, certified in Decision 0042), and the
+  cell cap — not the byte cap — is what binds. Measured dense residency at the
+  island overview is **58,243,420 B over 99 entries**, well inside the 256 MiB /
+  512-entry ceiling.
+- Frame budgets hold on the **tighter** pair at every measured station: worst
+  p50 8.3 ms and worst p95 15.9 ms against 16.7 ms / 25 ms, off a measured
+  7.8 ms vsync floor, including a 12-drag pan storm.
 
 ### What the geometry is, and what it is not
 
@@ -201,8 +225,30 @@ loads. A canary is selected — not added — by naming its release explicitly:
 /?exteriorCells=manhattan-northern-manhattan-cells-20260812
 ```
 
-`?exteriorStreaming=off` disables all six promoted waves and returns the city
-to base massing without touching identity, selection, details or deep links.
+### The two escape hatches, and what each one was measured to do
+
+They used to be one boolean and are now separate, because "no generated
+exteriors" and "no visibility scheduling" are unrelated requests:
+
+- **`?exteriorStreaming=off` — no exterior V3 wave.** It disables all six
+  promoted waves without touching identity, selection, details or deep links.
+  It says nothing about the citywide overview, which is the base map: the
+  island still draws island-wide as base massing, measured at **43,021
+  buildings at the 52 km overview**
+  (`data/citywide-default-flip-20260814/stations-dense-only.json`).
+- **`?exteriorScheduler=off` — the full opt-out, and the rollback.** It
+  withdraws visibility scheduling *and* the citywide overview residency raise,
+  restoring the prior fixed promoted-subset behaviour. Rehearsed live: the
+  drawn island collapses from 41,841 to **5,289**, `overviewResidencyActive`
+  goes false, and the session resolves the unraised `CITYWIDE_BUDGETS`
+  (`maxRenderedDenseFeatures` 6000 / `maxLoadedShards` 24 /
+  `maxLoadedBytes` 50331648) —
+  `data/citywide-default-flip-20260814/stations-rolled-back.json`. The global
+  form of the same switch is the single constant
+  `EXTERIOR_SCHEDULER_DEFAULT_ON`.
+
+A pinned single-release link (`?exteriorCells=<pinned>`) is **default-scheduled**:
+it names which wave to stream, not how to budget.
 
 ### Rollback
 
@@ -256,21 +302,42 @@ private path and receives the SPA shell rather than the private bytes.
 pnpm goal:reconcile -- --check   # recomputes the coverage reconciliation and refuses drift
 ```
 
-The Goal's own integration acceptance leaves **six criteria unmet**, recorded
-with stop reports in
-[`data/goal-integration-acceptance-20260812/reconciliation.json`](data/goal-integration-acceptance-20260812/reconciliation.json)
-and summarized in [`Decision 0039`](docs/decisions/0039-goal-integration-acceptance.md):
-Manhattan-wide exterior coverage (484 of 45,194), the 1440p-class capture, the
-**mobile path (not implemented)**, the coverage envelope's exterior tier,
-accessibility keyboard/reduced-motion behaviour, and a retained-memory
-growth verdict for the shipped six-wave composition.
+**The exteriors goal: 30 of its 31 criteria are closed; criterion 1 is open.**
+The record is
+[`data/goal-integration-acceptance-20260812/reconciliation.json`](data/goal-integration-acceptance-20260812/reconciliation.json),
+summarized in [`Decision 0039`](docs/decisions/0039-goal-integration-acceptance.md).
+T029 closed four (1440p capture, mobile path, accessibility, retained memory)
+and T007 closed criterion 22 — the coverage envelope reaching its user-approved
+exterior tier — on a user decision recorded 2026-08-15. **Criterion 1 stays
+NOT-MET on purpose**: of the 41,841 buildings a default session draws, 484 carry
+a generated exterior and the other 41,357 draw as sourced base massing, which is
+real geometry but is not what that criterion asks for. Its stop report records
+that the retention half is now structurally closed and names the two halves that
+are not: producing generated exteriors for the remaining parents, and
+adjudicating the 899 grammar refusals.
+
+**The citywide default streaming goal: 11 of its 12 criteria are MET or
+adjudicated; criterion 7 is open.** The record is
+[`data/citywide-goal-acceptance-20260815/reconciliation.json`](data/citywide-goal-acceptance-20260815/reconciliation.json),
+with its drift instrument at `scripts/citywide-goal-acceptance.test.mjs`.
+Criterion 7 asks for a repeated-camera-path heap verdict at citywide scale under
+forced GC; per-station readings exist but are four different cameras and cannot
+be re-read as one path, so it carries an honest NOT-MET and a stop report naming
+the capture that would close it. Three criteria are graded MET-AS-ADJUDICATED
+with their deltas stated: the only eligible LOD transition is 14 assets of
+45,194; the eviction journeys exist as real-runtime proofs rather than browser
+journeys; and "zero by-design cell tombstones" was answered by making the
+tombstone line truthful rather than by deleting it.
 
 The decisions are [`0031`](docs/decisions/0031-v3-footprint-faithful-facade-grammar.md)
 (grammar), [`0032`](docs/decisions/0032-procedural-facade-textures.md)
 (textures), [`0033`](docs/decisions/0033-block835-v3-wave-repromotion.md)–[`0037`](docs/decisions/0037-northern-manhattan-textured-canary.md)
 (the six waves), [`0038`](docs/decisions/0038-public-showcase-candidate.md)
-(showcase candidate) and [`0039`](docs/decisions/0039-goal-integration-acceptance.md)
-(integration acceptance).
+(showcase candidate), [`0039`](docs/decisions/0039-goal-integration-acceptance.md)
+(integration acceptance) and
+[`0040`](docs/decisions/0040-citywide-overview-tier-decision.md)–[`0045`](docs/decisions/0045-citywide-default-streaming-flip.md)
+(the overview tier, the visibility scheduler, cache governance, overview
+streaming, the near-field band, and the citywide default flip).
 
 ## Prerequisites and setup
 
