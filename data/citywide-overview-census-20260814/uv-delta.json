@@ -1,0 +1,608 @@
+{
+  "schemaVersion": "1.0",
+  "censusId": "citywide-overview-census-20260814",
+  "taskId": "T001",
+  "artifact": "uv-delta-measurement-and-byte-decomposition",
+  "note": "CENSUS ONLY. Every sampled building was written through the REAL asset writer TWICE — once texture-free and once with `procedural-texture-v1` tiles, from the SAME plan — and both sets of bytes were measured and dropped. Nothing was retained, no release was assembled and nothing was published. The two writes differ only in the writer-stage texture policy, so their difference is exactly the cost of admitting tiles and nothing else.",
+  "base": {
+    "releaseId": "manhattan-citywide-20260804",
+    "manifestChecksumSha256": "acb5a9b52014f86535c8478e7d4e516efc03f6dff95c17e9896dfea4413c203c"
+  },
+  "ledger": {
+    "releaseId": "manhattan-exterior-wave-ledger-20260804",
+    "ledgerId": "manhattan-exterior-wave-ledger-20260804-a3382ef4cac213a2",
+    "checksumSha256": "62e093d2ca50b54b49fd8bbad9d0b11f6301b2b197623deb343f9ea915e59016"
+  },
+  "generatorIdentity": {
+    "planGenerator": {
+      "id": "urban-digital-twin:deterministic-facade-plan-v3",
+      "version": "3.0.0",
+      "schemaVersion": "3.0"
+    },
+    "proceduralTexture": {
+      "profile": "procedural-texture-v1",
+      "rasterizerVersion": "1.0.0",
+      "parametersHashSha256": "121fb53e9b3b08ce3b7fa00ec5d370466c5ae2861b8966cccbfa19861ab438ff"
+    }
+  },
+  "method": {
+    "statement": "For each sampled building the V3 plan is built ONCE with its own wave's committed census profile, then written twice: with `texture: null` and with `texture: procedural-texture-v1`. The plan, and therefore the geometry, is identical between the two writes. `imageByteTotal` is read back out of the emitted GLB's own `images[]` bufferViews and `lod0VertexCount` out of its POSITION accessors, so both are properties of the bytes rather than of this script's arithmetic.",
+    "counterfactualDisclosure": "Wave w01 (Midtown core) ships texture-free, so its textured write is a COUNTERFACTUAL: it states what tiles would cost that wave, not what that wave shipped. Waves w02-w05 ship textured, and for them the untextured write is the counterfactual instead. Both directions are the same measurement of the same difference.",
+    "samplingBasis": "Stratified on the planned outer-ring vertex count against the committed `distributions.json` histogram, taken at an even stride through ledger order so every stratum's sample spreads across waves and cells instead of clustering in whichever wave sorts first.",
+    "retention": "Sample GLBs were counted and dropped. None was written to disk (the `coarse` stage precedent)."
+  },
+  "strata": [
+    {
+      "stratum": "ring-03-05",
+      "ringVertexRange": [
+        3,
+        5
+      ],
+      "populationCount": 6381,
+      "sampledCount": 97,
+      "uvAndJsonBytesPerVertex": {
+        "min": 8.1385,
+        "median": 9.121,
+        "p95": 9.9247,
+        "max": 11.069
+      },
+      "uvAndJsonByteDelta": {
+        "min": 2568,
+        "median": 10920,
+        "p95": 28380,
+        "max": 80636
+      },
+      "lod0VertexCount": {
+        "min": 232,
+        "max": 9908
+      },
+      "textureCounts": [
+        2,
+        3
+      ]
+    },
+    {
+      "stratum": "ring-06-09",
+      "ringVertexRange": [
+        6,
+        9
+      ],
+      "populationCount": 16219,
+      "sampledCount": 100,
+      "uvAndJsonBytesPerVertex": {
+        "min": 8.0076,
+        "median": 8.6377,
+        "p95": 9.5844,
+        "max": 10.0074
+      },
+      "uvAndJsonByteDelta": {
+        "min": 3756,
+        "median": 13288,
+        "p95": 68428,
+        "max": 248808
+      },
+      "lod0VertexCount": {
+        "min": 392,
+        "max": 31028
+      },
+      "textureCounts": [
+        2,
+        3
+      ]
+    },
+    {
+      "stratum": "ring-10-15",
+      "ringVertexRange": [
+        10,
+        15
+      ],
+      "populationCount": 10254,
+      "sampledCount": 100,
+      "uvAndJsonBytesPerVertex": {
+        "min": 7.9614,
+        "median": 8.3229,
+        "p95": 9.1917,
+        "max": 9.4745
+      },
+      "uvAndJsonByteDelta": {
+        "min": 5248,
+        "median": 19160,
+        "p95": 89476,
+        "max": 333756
+      },
+      "lod0VertexCount": {
+        "min": 574,
+        "max": 41572
+      },
+      "textureCounts": [
+        2,
+        3
+      ]
+    },
+    {
+      "stratum": "ring-16-24",
+      "ringVertexRange": [
+        16,
+        24
+      ],
+      "populationCount": 7891,
+      "sampledCount": 100,
+      "uvAndJsonBytesPerVertex": {
+        "min": 7.6755,
+        "median": 8.1098,
+        "p95": 8.5897,
+        "max": 8.8497
+      },
+      "uvAndJsonByteDelta": {
+        "min": 9240,
+        "median": 19624,
+        "p95": 117480,
+        "max": 616776
+      },
+      "lod0VertexCount": {
+        "min": 1056,
+        "max": 76972
+      },
+      "textureCounts": [
+        3
+      ]
+    },
+    {
+      "stratum": "ring-25-40",
+      "ringVertexRange": [
+        25,
+        40
+      ],
+      "populationCount": 3252,
+      "sampledCount": 100,
+      "uvAndJsonBytesPerVertex": {
+        "min": 7.3104,
+        "median": 8.0292,
+        "p95": 8.2205,
+        "max": 8.3832
+      },
+      "uvAndJsonByteDelta": {
+        "min": 9876,
+        "median": 34004,
+        "p95": 122824,
+        "max": 480692
+      },
+      "lod0VertexCount": {
+        "min": 1220,
+        "max": 60026
+      },
+      "textureCounts": [
+        3
+      ]
+    },
+    {
+      "stratum": "ring-41-64",
+      "ringVertexRange": [
+        41,
+        64
+      ],
+      "populationCount": 859,
+      "sampledCount": 100,
+      "uvAndJsonBytesPerVertex": {
+        "min": 6.8124,
+        "median": 7.8766,
+        "p95": 7.9722,
+        "max": 7.9954
+      },
+      "uvAndJsonByteDelta": {
+        "min": 6608,
+        "median": 42236,
+        "p95": 238900,
+        "max": 425260
+      },
+      "lod0VertexCount": {
+        "min": 970,
+        "max": 53188
+      },
+      "textureCounts": [
+        3
+      ]
+    }
+  ],
+  "perVertexRegression": {
+    "note": "`uvAndJsonByteDelta = slope * lod0VertexCount + intercept`, ordinary least squares over every sampled building. The residual bounds are reported beside it because a slope without them is a claim, not a measurement.",
+    "slopeBytesPerVertex": 7.9648,
+    "interceptBytes": 592.7,
+    "rSquared": 0.999754,
+    "residualBytes": {
+      "min": -6073.3,
+      "p05": -1533.6,
+      "median": 234.4,
+      "p95": 947,
+      "max": 3117.7
+    },
+    "sampleCount": 597
+  },
+  "instrumentValidation": {
+    "note": "The absolute byte SIZES of the `-v3t` package are not reproducible here and are not claimed: that package carries its own metadata (package ids, evidence shard ids, predecessor pins) which this pass does not reconstruct. What IS reproduced is the pair of terms the measurement depends on — the embedded image bytes and the texture count — and the shape of the UV term against them. Rows are reported as measured; a mismatch is a mismatch.",
+    "buildings": [
+      {
+        "canonicalBuildingId": "doitt:102705",
+        "committedImageByteTotal": 49740,
+        "observedImageByteTotal": 49740,
+        "committedTextureCount": 3,
+        "observedTextureCount": 3,
+        "committedUvAndJsonByteDelta": 17820,
+        "observedUvAndJsonByteDelta": 17556,
+        "observedVertexCount": 2108
+      },
+      {
+        "canonicalBuildingId": "doitt:131170",
+        "committedImageByteTotal": 49740,
+        "observedImageByteTotal": 49740,
+        "committedTextureCount": 3,
+        "observedTextureCount": 3,
+        "committedUvAndJsonByteDelta": 261424,
+        "observedUvAndJsonByteDelta": 261160,
+        "observedVertexCount": 32538
+      },
+      {
+        "canonicalBuildingId": "doitt:147902",
+        "committedImageByteTotal": 49740,
+        "observedImageByteTotal": 49740,
+        "committedTextureCount": 3,
+        "observedTextureCount": 3,
+        "committedUvAndJsonByteDelta": 33288,
+        "observedUvAndJsonByteDelta": 33024,
+        "observedVertexCount": 3984
+      },
+      {
+        "canonicalBuildingId": "doitt:262867",
+        "committedImageByteTotal": 49740,
+        "observedImageByteTotal": 49740,
+        "committedTextureCount": 3,
+        "observedTextureCount": 3,
+        "committedUvAndJsonByteDelta": 11756,
+        "observedUvAndJsonByteDelta": 11492,
+        "observedVertexCount": 1318
+      },
+      {
+        "canonicalBuildingId": "doitt:39969",
+        "committedImageByteTotal": 49740,
+        "observedImageByteTotal": 49740,
+        "committedTextureCount": 3,
+        "observedTextureCount": 3,
+        "committedUvAndJsonByteDelta": 33736,
+        "observedUvAndJsonByteDelta": 33472,
+        "observedVertexCount": 4010
+      },
+      {
+        "canonicalBuildingId": "doitt:460555",
+        "committedImageByteTotal": 49740,
+        "observedImageByteTotal": 49740,
+        "committedTextureCount": 3,
+        "observedTextureCount": 3,
+        "committedUvAndJsonByteDelta": 26724,
+        "observedUvAndJsonByteDelta": 26456,
+        "observedVertexCount": 3188
+      },
+      {
+        "canonicalBuildingId": "doitt:498980",
+        "committedImageByteTotal": 49740,
+        "observedImageByteTotal": 49740,
+        "committedTextureCount": 3,
+        "observedTextureCount": 3,
+        "committedUvAndJsonByteDelta": 17980,
+        "observedUvAndJsonByteDelta": 17712,
+        "observedVertexCount": 2080
+      },
+      {
+        "canonicalBuildingId": "doitt:502491",
+        "committedImageByteTotal": 49740,
+        "observedImageByteTotal": 49740,
+        "committedTextureCount": 3,
+        "observedTextureCount": 3,
+        "committedUvAndJsonByteDelta": 21920,
+        "observedUvAndJsonByteDelta": 21652,
+        "observedVertexCount": 2576
+      },
+      {
+        "canonicalBuildingId": "doitt:584049",
+        "committedImageByteTotal": 49740,
+        "observedImageByteTotal": 49740,
+        "committedTextureCount": 3,
+        "observedTextureCount": 3,
+        "committedUvAndJsonByteDelta": 31208,
+        "observedUvAndJsonByteDelta": 30940,
+        "observedVertexCount": 3724
+      },
+      {
+        "canonicalBuildingId": "doitt:778052",
+        "committedImageByteTotal": 49740,
+        "observedImageByteTotal": 49740,
+        "committedTextureCount": 3,
+        "observedTextureCount": 3,
+        "committedUvAndJsonByteDelta": 1648336,
+        "observedUvAndJsonByteDelta": 1648088,
+        "observedVertexCount": 206124
+      },
+      {
+        "canonicalBuildingId": "doitt:812702",
+        "committedImageByteTotal": 49740,
+        "observedImageByteTotal": 49740,
+        "committedTextureCount": 3,
+        "observedTextureCount": 3,
+        "committedUvAndJsonByteDelta": 22276,
+        "observedUvAndJsonByteDelta": 22008,
+        "observedVertexCount": 2590
+      },
+      {
+        "canonicalBuildingId": "doitt:835659",
+        "committedImageByteTotal": 49740,
+        "observedImageByteTotal": 49740,
+        "committedTextureCount": 3,
+        "observedTextureCount": 3,
+        "committedUvAndJsonByteDelta": 25728,
+        "observedUvAndJsonByteDelta": 25464,
+        "observedVertexCount": 3006
+      },
+      {
+        "canonicalBuildingId": "doitt:925937",
+        "committedImageByteTotal": 49740,
+        "observedImageByteTotal": 49740,
+        "committedTextureCount": 3,
+        "observedTextureCount": 3,
+        "committedUvAndJsonByteDelta": 21344,
+        "observedUvAndJsonByteDelta": 21080,
+        "observedVertexCount": 2468
+      },
+      {
+        "canonicalBuildingId": "doitt:982383",
+        "committedImageByteTotal": 49740,
+        "observedImageByteTotal": 49740,
+        "committedTextureCount": 3,
+        "observedTextureCount": 3,
+        "committedUvAndJsonByteDelta": 81432,
+        "observedUvAndJsonByteDelta": 81164,
+        "observedVertexCount": 10120
+      }
+    ],
+    "imageByteTotalAgrees": true,
+    "textureCountAgrees": true,
+    "uvAndJsonByteDeltaOffsets": [
+      248,
+      264,
+      268
+    ],
+    "uvAndJsonByteDeltaOffsetIsConstant": false,
+    "uvAndJsonByteDeltaOffsetRangeBytes": [
+      248,
+      268
+    ],
+    "observedVertexCountRange": [
+      1318,
+      206124
+    ],
+    "offsetAsShareOfSmallestCommittedDelta": 0.022797,
+    "uvAndJsonByteDeltaOffsetFinding": "The instrument reads 248-268 B LOW against the committed record on every one of the fourteen buildings — a spread of 20 B across vertex counts spanning 1318 to 206124, a factor of 156. An offset that stays inside 20 bytes while the vertex count moves by that factor is metadata this pass does not reconstruct, NOT a per-vertex scaling error, so the island slope is unaffected by it. It is reported rather than subtracted."
+  },
+  "imageTerm": {
+    "note": "Tiles per building are a function of the plan's style class, which every wave census commits as an exact count. The mapping is measured on this sample rather than assumed, and whether the style class DETERMINES the tile count is reported rather than presumed.",
+    "tilePngBytes": 16580,
+    "tilePngBytesSource": "docs/decisions/0032-procedural-facade-textures.md byte table (128x128, 8-bit gray, stored DEFLATE)",
+    "styleClassDeterminesTextureCount": false,
+    "styleClassDeterminesTextureCountFinding": "MEASURED FALSE. At least one style class emits different tile counts for different buildings, so the island image term below is an INTERVAL and not an exact figure. The per-class observations are listed so the bound can be checked.",
+    "styleClassTileStatistics": {
+      "curtain-cool": {
+        "observedTileCounts": [
+          {
+            "tiles": 2,
+            "sampledBuildings": 1
+          },
+          {
+            "tiles": 3,
+            "sampledBuildings": 73
+          }
+        ],
+        "min": 2,
+        "max": 3,
+        "sampleWeightedMean": 2.9865,
+        "determinesTileCount": false
+      },
+      "masonry-light": {
+        "observedTileCounts": [
+          {
+            "tiles": 2,
+            "sampledBuildings": 2
+          },
+          {
+            "tiles": 3,
+            "sampledBuildings": 186
+          }
+        ],
+        "min": 2,
+        "max": 3,
+        "sampleWeightedMean": 2.9894,
+        "determinesTileCount": false
+      },
+      "masonry-warm": {
+        "observedTileCounts": [
+          {
+            "tiles": 2,
+            "sampledBuildings": 4
+          },
+          {
+            "tiles": 3,
+            "sampledBuildings": 209
+          }
+        ],
+        "min": 2,
+        "max": 3,
+        "sampleWeightedMean": 2.9812,
+        "determinesTileCount": false
+      },
+      "stone-neutral": {
+        "observedTileCounts": [
+          {
+            "tiles": 2,
+            "sampledBuildings": 1
+          },
+          {
+            "tiles": 3,
+            "sampledBuildings": 121
+          }
+        ],
+        "min": 2,
+        "max": 3,
+        "sampleWeightedMean": 2.9918,
+        "determinesTileCount": false
+      }
+    },
+    "islandStyleClassCounts": {
+      "curtain-cool": 4845,
+      "masonry-light": 14060,
+      "masonry-warm": 17213,
+      "stone-neutral": 8163
+    },
+    "islandImageBytesLod0": {
+      "lowerBoundBytes": 1468357960,
+      "centralBytes": 2192506297,
+      "upperBoundBytes": 2202536940
+    }
+  },
+  "islandUvTerm": {
+    "note": "An interval, not a point. `lod0TotalBytes` is committed; the island VERTEX total is not, so it is bounded by the committed island triangle total times the vertices-per-triangle ratio measured on this sample, and the per-vertex UV cost is likewise bounded by the sample.",
+    "islandTriangleCount": 80253286,
+    "verticesPerTriangle": {
+      "min": 2.0018,
+      "median": 2.0626,
+      "max": 2.3206
+    },
+    "uvAndJsonBytesPerVertex": {
+      "min": 6.8124,
+      "median": 8.226,
+      "p95": 9.4167,
+      "max": 11.069
+    },
+    "lowerBoundBytes": 1094397170,
+    "centralBytes": 1361644158,
+    "upperBoundBytes": 2061414425
+  },
+  "byteDecomposition": {
+    "note": "FOUR TERMS, and they do not have the same future. The two geometry terms are committed measurements quoted from `wave-bytes.json` and were NOT regenerated here. The UV term rides on LOD 0 alone, scales with vertex count and SURVIVES a shared texture atlas — ADR 0032 measured it as 76% of the texture delta and it is the term that matters for planning. The image term also rides on LOD 0 alone and goes to approximately zero under an atlas, because a shared atlas is bound once for the city instead of embedded once per building.",
+    "terms": [
+      {
+        "term": "untextured-geometry-lod_0",
+        "bytes": 3215901404,
+        "source": "committed wave-bytes.json islandGeneratedWaves.lod0TotalBytes",
+        "ridesOn": "lod_0",
+        "survivesAtlas": true
+      },
+      {
+        "term": "untextured-geometry-lod_1",
+        "bytes": 1490123460,
+        "source": "committed wave-bytes.json islandGeneratedWaves.lod1TotalBytes",
+        "ridesOn": "lod_1",
+        "survivesAtlas": true
+      },
+      {
+        "term": "uv-and-json-delta-lod_0",
+        "bytesInterval": [
+          1094397170,
+          1361644158,
+          2061414425
+        ],
+        "source": "measured on this stage's stratified sample, projected on the committed island triangle total",
+        "ridesOn": "lod_0",
+        "survivesAtlas": true
+      },
+      {
+        "term": "embedded-image-bytes-lod_0",
+        "bytesInterval": [
+          1468357960,
+          2192506297,
+          2202536940
+        ],
+        "source": "arithmetic: committed per-wave styleClassCounts x measured tiles per style class x the ADR 0032 tile constant 16580 B",
+        "ridesOn": "lod_0",
+        "survivesAtlas": false
+      }
+    ],
+    "atlasSplit": {
+      "note": "Share of the LOD 0 texture delta that a shared four-tile atlas would remove (the image term) against the share that survives it (the UV term), computed island-wide from the terms above rather than carried over from the fourteen-building table.",
+      "adr0032FourteenBuildingUvShare": 0.76,
+      "adr0032Source": "docs/decisions/0032-procedural-facade-textures.md byte table: 2,259,172 B UV + JSON against 696,360 B images across all fourteen buildings",
+      "islandUvShareOfTextureDelta": {
+        "lower": 0.331944,
+        "central": 0.383114,
+        "upper": 0.584008
+      },
+      "finding": "ISLAND-WIDE THE SPLIT INVERTS. On Block 835's fourteen buildings the UV term is 76% of the texture delta; across the island it is the MINORITY of it at the central estimate, because the per-building image cost is fixed at two or three tiles while the UV cost follows a vertex count whose island median is far below Block 835's. An atlas therefore removes MORE of the citywide texture cost than ADR 0032's table suggests, not less — but the residual it cannot remove is still the larger of the two terms in the tallest, most vertex-dense buildings, which are exactly the ones a near-field camera is pointed at.",
+      "whatSurvivesAnAtlas": "The UV term. TEXCOORD_0 is per-vertex geometry data and an atlas changes which region of a texture a vertex addresses, not whether it addresses one. Any scheme that claims to remove it is proposing to drop the projection, which is a fidelity decision and not a packaging one."
+    },
+    "lod1IsUntexturedByContract": "Detail tiles ride on LOD 0 ALONE, by the committed Block 835 `-v3t` decision carried unchanged into every wave profile: LOD 1 is selected beyond 250 m, where a 128-pixel joint is far below a screen pixel. There is therefore no UV term and no image term for LOD 1, and this is a contract, not an accident.",
+    "islandTotals": {
+      "materializedBuildingCountGeneratedWaves": 44281,
+      "materializedBuildingCountIncludingBlock835": 44295,
+      "plannedButNotYetMaterialized": 49
+    }
+  },
+  "refusalAccounting": {
+    "note": "TWO island totals, reported separately because they answer different questions. 44,295 is what the six waves ACTUALLY materialized. 45,116 is what a full-city retention would carry if the recoverable refusals were recovered, which is the number the assembly limits have to be checked against.",
+    "enumeratedParents": 45194,
+    "materializedToday": 44295,
+    "planStageRefusalsByCode": {
+      "source-height-below-grammar-minimum": 384,
+      "ring-vertex-count-unsupported": 324,
+      "ring-area-below-floor": 113,
+      "ring-neck-below-grammar-minimum": 39,
+      "ring-not-simple": 4
+    },
+    "assetStageVolumeIdentityFailed": 35,
+    "recoverableRefusalCodes": [
+      "source-height-below-grammar-minimum",
+      "ring-vertex-count-unsupported",
+      "ring-area-below-floor"
+    ],
+    "recoverableRefusalCount": 821,
+    "irrecoverableRefusalCount": 43,
+    "fullCityProjectedAssetCount": 45116,
+    "recoverableAreVertexCountHeavy": {
+      "statement": "Of the 821 recoverable refusals, 324 are `ring-vertex-count-unsupported` — rings ABOVE the grammar's 64-vertex cap. Recovering them adds buildings that land in the worst UV stratum, not the average one, so the UV term of a recovered full city grows faster than its building count.",
+      "ringVertexCountUnsupported": 324,
+      "worstStratum": "ring-41-64",
+      "worstStratumUvBytesPerVertex": {
+        "min": 6.8124,
+        "median": 7.8766,
+        "p95": 7.9722,
+        "max": 7.9954
+      },
+      "worstStratumUvByteDelta": {
+        "min": 6608,
+        "median": 42236,
+        "p95": 238900,
+        "max": 425260
+      }
+    }
+  },
+  "generationTiming": {
+    "note": "BOTH committed observations, as a RANGE, with the host difference disclosed. Neither is authoritative over the other and neither belongs in a deterministic artifact body as a single number; they are carried here because the retain-versus-regenerate decision needs a bounded regeneration cost, not a precise one.",
+    "observations": [
+      {
+        "source": "central-upper-manhattan wave census (committed implementation record)",
+        "millisecondsPerAsset": 3.5
+      },
+      {
+        "source": "this census's `coarse` stage (committed implementation record)",
+        "millisecondsPerAssetRange": [
+          5.1,
+          5.9
+        ]
+      }
+    ],
+    "hostDifferenceDisclosure": "The two observations were taken on different hosts and with different writer workloads (a full two-LOD V3 asset against a single coarse prism), so the spread is not measurement noise around one true rate and must not be averaged into one.",
+    "boundedIslandEstimate": {
+      "assetCount": 90232,
+      "lowerBoundMinutes": 5.3,
+      "upperBoundMinutes": 8.9,
+      "statement": "Single-threaded, both LODs, texture-free. A textured pass rasterizes from a four-tile catalog that is built once, so the tiles are not the cost; the second write of every asset is."
+    }
+  },
+  "retention": "census-only",
+  "hostObservationsLocation": "artifacts/citywide-overview-census-20260814/stages/uv.json — wall clock and RSS are host facts and are kept OUT of this artifact's deterministic body (the ADR 0025 D8 precedent)."
+}

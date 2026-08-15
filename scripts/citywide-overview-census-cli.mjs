@@ -102,14 +102,21 @@ import {
   DETERMINISTIC_FACADE_V3_GENERATOR_ID,
   DETERMINISTIC_FACADE_V3_GENERATOR_VERSION,
   DETERMINISTIC_FACADE_V3_SCHEMA_VERSION,
+  tessellateV3Plan,
 } from "../src/domain/deterministic-facade-generator-v3.ts";
-import { proceduralTextureProvenance } from "../src/release/procedural-texture.ts";
+import {
+  PROCEDURAL_TEXTURE_PROFILE,
+  PROCEDURAL_TEXTURE_SAMPLER_FILTER,
+  proceduralTextureProvenance,
+} from "../src/release/procedural-texture.ts";
 import { BLOCK835_PILOT_RELEASE_ID, readPilotBuildings } from "../src/release/block835-reference-package.ts";
 import {
   BLOCK835_V3E_PROFILE,
   BLOCK835_V3_PREDECESSOR_PACKAGE_ID,
+  V3T_QUALITY_BUDGETS,
   assembleBlock835V3Package,
   buildV3Plan,
+  v3GeometryForGlb,
   v3PredecessorPins,
 } from "../src/release/block835-v3-package.ts";
 import { BLOCK835_V3_STYLE_OVERRIDES } from "../src/release/block835-facade-material-intake.ts";
@@ -137,7 +144,7 @@ const CENSUS_ID = "citywide-overview-census-20260814";
  * costs.
  */
 const ALL_STAGES = ["gate", "extents", "plans", "bytes", "coarse", "sample", "decide"];
-const STAGES = [...ALL_STAGES, "replay"];
+const STAGES = [...ALL_STAGES, "replay", "uv"];
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const snapshotRoot = join(repositoryRoot, "public", "data", EXTERIOR_FULLSNAPSHOT_BASE_RELEASE_ID);
@@ -1937,6 +1944,485 @@ async function stageReplay(context) {
 }
 
 // ---------------------------------------------------------------------------
+// Stage: uv — the one NEW measurement this task adds
+// ---------------------------------------------------------------------------
+
+/**
+ * Strata over the PLANNED outer-ring vertex count.
+ *
+ * The UV term scales with vertex count, so a single mean over the island would
+ * hide exactly the variation the decision turns on. The bounds are drawn against
+ * the committed `distributions.json` histogram rather than chosen for roundness:
+ * each stratum carries a materially different share of the planned population.
+ */
+const UV_STRATA = [
+  { id: "ring-03-05", minVertices: 3, maxVertices: 5 },
+  { id: "ring-06-09", minVertices: 6, maxVertices: 9 },
+  { id: "ring-10-15", minVertices: 10, maxVertices: 15 },
+  { id: "ring-16-24", minVertices: 16, maxVertices: 24 },
+  { id: "ring-25-40", minVertices: 25, maxVertices: 40 },
+  { id: "ring-41-64", minVertices: 41, maxVertices: 64 },
+];
+const UV_SAMPLES_PER_STRATUM = 100;
+
+/** The tile PNG constant ADR 0032 measured, quoted rather than re-derived. */
+const PROCEDURAL_TILE_PNG_BYTES = 16_580;
+
+/** POSITION accessor totals and embedded image bytes, read back out of the emitted GLB. */
+function glbGeometryFacts(bytes) {
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const jsonLength = view.getUint32(12, true);
+  const json = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes.subarray(20, 20 + jsonLength)));
+  let vertexCount = 0;
+  let uvAccessorCount = 0;
+  for (const mesh of json.meshes ?? []) {
+    for (const primitive of mesh.primitives ?? []) {
+      const position = primitive.attributes?.POSITION;
+      if (position !== undefined) vertexCount += json.accessors[position].count;
+      if (primitive.attributes?.TEXCOORD_0 !== undefined) uvAccessorCount += 1;
+    }
+  }
+  let imageBytes = 0;
+  for (const image of json.images ?? []) {
+    if (image.bufferView === undefined) continue;
+    imageBytes += json.bufferViews[image.bufferView].byteLength;
+  }
+  return { vertexCount, uvAccessorCount, imageBytes, imageCount: (json.images ?? []).length, jsonByteLength: jsonLength };
+}
+
+/** A textured twin of an untextured wave profile: same identity, writer-stage tiles added. */
+function texturedTwinOf(profile) {
+  return {
+    ...profile,
+    budgets: { ...V3T_QUALITY_BUDGETS },
+    texture: PROCEDURAL_TEXTURE_PROFILE,
+    textureFilter: { ...PROCEDURAL_TEXTURE_SAMPLER_FILTER },
+  };
+}
+
+/** Ordinary least squares through `bytes = slope * vertices + intercept`. */
+function leastSquares(points) {
+  const n = points.length;
+  const meanX = points.reduce((total, point) => total + point.x, 0) / n;
+  const meanY = points.reduce((total, point) => total + point.y, 0) / n;
+  let sxy = 0;
+  let sxx = 0;
+  for (const point of points) {
+    sxy += (point.x - meanX) * (point.y - meanY);
+    sxx += (point.x - meanX) ** 2;
+  }
+  const slope = sxy / sxx;
+  const intercept = meanY - slope * meanX;
+  const residuals = points.map((point) => point.y - (slope * point.x + intercept)).sort((left, right) => left - right);
+  const ssTotal = points.reduce((total, point) => total + (point.y - meanY) ** 2, 0);
+  const ssResidual = points.reduce((total, point) => total + (point.y - (slope * point.x + intercept)) ** 2, 0);
+  return {
+    slopeBytesPerVertex: Math.round(slope * 1e4) / 1e4,
+    interceptBytes: Math.round(intercept * 10) / 10,
+    rSquared: Math.round((1 - ssResidual / ssTotal) * 1e6) / 1e6,
+    residualBytes: {
+      min: Math.round(residuals[0] * 10) / 10,
+      p05: Math.round(residuals[Math.max(0, Math.ceil(0.05 * n) - 1)] * 10) / 10,
+      median: Math.round(residuals[Math.floor((n - 1) / 2)] * 10) / 10,
+      p95: Math.round(residuals[Math.min(n - 1, Math.ceil(0.95 * n) - 1)] * 10) / 10,
+      max: Math.round(residuals[n - 1] * 10) / 10,
+    },
+    sampleCount: n,
+  };
+}
+
+const quantile = (sorted, fraction) => sorted[Math.min(sorted.length - 1, Math.max(0, Math.ceil(fraction * sorted.length) - 1))];
+
+/** Write one building's LOD 0 twice — untextured and textured — and measure the difference. */
+function measureUvDelta(source, ownerCellId, capture, censusProfile) {
+  const plan = buildMidtownCoreV3Plan(source, EXTERIOR_FULLSNAPSHOT_BASE_MANIFEST_SHA256, censusProfile);
+  const options = { ownerCellId, capturedAt: capture.capturedAt, updatedAt: capture.updatedAt, predecessor: null };
+  const plain = writeMidtownCoreV3Assets(plan, { ...options, profile: censusProfile });
+  const tiled = writeMidtownCoreV3Assets(plan, { ...options, profile: texturedTwinOf(censusProfile) });
+  const plainLod0 = plain.assets[0];
+  const tiledLod0 = tiled.assets[0];
+  const plainFacts = glbGeometryFacts(plainLod0.bytes);
+  const tiledFacts = glbGeometryFacts(tiledLod0.bytes);
+  return {
+    buildingId: source.buildingId,
+    styleClass: plan.plan.styleClass,
+    ringVertexCount: plan.ringMm.length,
+    effectiveTierCount: plan.plan.massing.effectiveTierCount,
+    lod0VertexCount: plainFacts.vertexCount,
+    lod0TriangleCount: plainLod0.counts.triangleCount,
+    untexturedByteSize: plainLod0.bytes.byteLength,
+    texturedByteSize: tiledLod0.bytes.byteLength,
+    byteDelta: tiledLod0.bytes.byteLength - plainLod0.bytes.byteLength,
+    imageByteTotal: tiledFacts.imageBytes,
+    textureCount: tiledLod0.counts.textureCount,
+    // The ADR 0032 term, reproduced by construction: everything the tiles cost
+    // that is NOT the PNG payload — TEXCOORD_0 accessors, their bufferViews, the
+    // sampler/texture/material JSON and the texture provenance block.
+    uvAndJsonByteDelta: (tiledLod0.bytes.byteLength - plainLod0.bytes.byteLength) - tiledFacts.imageBytes,
+  };
+}
+
+/**
+ * Instrument validation against Block 835's committed `-v3t` census.
+ *
+ * The census that ADR 0032's byte table came from commits `byteDelta`,
+ * `imageByteTotal` and `uvAndJsonByteDelta` for all fourteen buildings at both
+ * LODs. Reproducing those rows is what makes the island measurement below an
+ * instrument reading rather than a new definition of the same words.
+ */
+async function validateUvInstrument() {
+  const pilotBytes = new Uint8Array(await readFile(join(repositoryRoot, "public", "data", BLOCK835_PILOT_RELEASE_ID, "release.json")));
+  const pilot = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(pilotBytes));
+  const buildings = readPilotBuildings(pilot);
+  const census = JSON.parse(await readFile(join(repositoryRoot, "data", "manhattan-esb-block-reference-20260811-v3t", "census.json"), "utf8"));
+  const committedById = new Map(census.buildings.map((entry) => [entry.canonicalBuildingId, entry]));
+
+  const rows = [];
+  for (const building of buildings) {
+    const id = building.canonicalBuildingId;
+    const plan = buildV3Plan(building, BLOCK835_V3_STYLE_OVERRIDES.get(id)).plan;
+    const tessellation = tessellateV3Plan(plan, { includeRecesses: true });
+    const plain = writeCanonicalGlb(glbInputFor(plan, tessellation, null));
+    const tiled = writeCanonicalGlb(glbInputFor(plan, tessellation, PROCEDURAL_TEXTURE_PROFILE));
+    const observedImageBytes = glbGeometryFacts(tiled.bytes).imageBytes;
+    const committed = committedById.get(id)?.lods?.find((lod) => lod.lodId === "lod_0") ?? null;
+    rows.push({
+      canonicalBuildingId: id,
+      committedImageByteTotal: committed?.imageByteTotal ?? null,
+      observedImageByteTotal: observedImageBytes,
+      committedTextureCount: committed?.textureCount ?? null,
+      observedTextureCount: tiled.counts.textureCount,
+      committedUvAndJsonByteDelta: committed?.uvAndJsonByteDelta ?? null,
+      observedUvAndJsonByteDelta: (tiled.bytes.byteLength - plain.bytes.byteLength) - observedImageBytes,
+      observedVertexCount: glbGeometryFacts(plain.bytes).vertexCount,
+    });
+  }
+  const offsets = [...new Set(rows.map((row) => row.committedUvAndJsonByteDelta - row.observedUvAndJsonByteDelta))].sort((left, right) => left - right);
+  return {
+    note: "The absolute byte SIZES of the `-v3t` package are not reproducible here and are not claimed: that package carries its own metadata (package ids, evidence shard ids, predecessor pins) which this pass does not reconstruct. What IS reproduced is the pair of terms the measurement depends on — the embedded image bytes and the texture count — and the shape of the UV term against them. Rows are reported as measured; a mismatch is a mismatch.",
+    buildings: rows,
+    imageByteTotalAgrees: rows.every((row) => row.committedImageByteTotal === row.observedImageByteTotal),
+    textureCountAgrees: rows.every((row) => row.committedTextureCount === row.observedTextureCount),
+    uvAndJsonByteDeltaOffsets: offsets,
+    // A CONSTANT offset is the signature of a metadata difference; a
+    // vertex-proportional one would be the signature of a broken instrument.
+    // Which of the two it is decides whether the island regression can be
+    // trusted, so it is reported rather than left for a reader to notice.
+    uvAndJsonByteDeltaOffsetIsConstant: offsets.length === 1,
+    uvAndJsonByteDeltaOffsetRangeBytes: [offsets[0], offsets[offsets.length - 1]],
+    observedVertexCountRange: [Math.min(...rows.map((row) => row.observedVertexCount)), Math.max(...rows.map((row) => row.observedVertexCount))],
+    offsetAsShareOfSmallestCommittedDelta: Math.round((offsets[offsets.length - 1] / Math.min(...rows.map((row) => row.committedUvAndJsonByteDelta))) * 1e6) / 1e6,
+    uvAndJsonByteDeltaOffsetFinding: `The instrument reads ${offsets[0]}-${offsets[offsets.length - 1]} B LOW against the committed record on every one of the fourteen buildings — a spread of ${offsets[offsets.length - 1] - offsets[0]} B across vertex counts spanning ${Math.min(...rows.map((row) => row.observedVertexCount))} to ${Math.max(...rows.map((row) => row.observedVertexCount))}, a factor of ${Math.round(Math.max(...rows.map((row) => row.observedVertexCount)) / Math.min(...rows.map((row) => row.observedVertexCount)))}. An offset that stays inside ${offsets[offsets.length - 1] - offsets[0]} bytes while the vertex count moves by that factor is metadata this pass does not reconstruct, NOT a per-vertex scaling error, so the island slope is unaffected by it. It is reported rather than subtracted.`,
+  };
+}
+
+/** The canonical-GLB input for one Block 835 plan, textured or not. */
+function glbInputFor(plan, tessellation, texture) {
+  const geometry = v3GeometryForGlb(plan, tessellation, {
+    yUp: true,
+    texture,
+    textureFilter: texture ? { ...PROCEDURAL_TEXTURE_SAMPLER_FILTER } : null,
+  });
+  return {
+    quads: geometry.quads,
+    triangles: geometry.triangles,
+    materials: geometry.materials,
+    metadata: {
+      canonicalFeatureId: plan.buildingId,
+      lodId: "lod_0",
+      ownerCellId: "cell:manhattan:block-835",
+      planHashSha256: plan.planHashSha256,
+      uncertainty: plan.uncertainty,
+      ...(geometry.textures ? { textureProvenance: proceduralTextureProvenance() } : {}),
+    },
+    ...(geometry.textures ? { textures: geometry.textures } : {}),
+  };
+}
+
+async function stageUv(context) {
+  const name = "uv";
+  const print = fingerprint(context, name);
+  const existing = await readReceipt(name);
+  if (existing && existing.inputFingerprint === print && !force) return { skipped: true, ...existing.summary };
+
+  const startedAt = Date.now();
+  const capture = captureOf(context.manifest);
+  const bytesRecord = JSON.parse(await readFile(join(recordRoot, "wave-bytes.json"), "utf8"));
+  const distributions = JSON.parse(await readFile(join(recordRoot, "distributions.json"), "utf8"));
+
+  // Stratify on the SOURCED ring, which for a planned building is the planned
+  // ring: the grammar reorients and rounds the polygon but never adds or drops a
+  // vertex. That is what makes the sample drawable without planning the island
+  // twice, and it is checked per sampled building below.
+  const censusProfileByWave = new Map(WAVE_RECORDS.filter((record) => record.censusProfile).map((record) => [record.waveIndex, record.censusProfile]));
+  const candidatesByStratum = new Map(UV_STRATA.map((stratum) => [stratum.id, []]));
+  for (const cell of context.cells) {
+    const waveIndex = waveIndexOf(cell.cellId);
+    if (!censusProfileByWave.has(waveIndex)) continue; // wave w00 travels the reference path, measured separately
+    for (const buildingId of cell.buildingIds) {
+      const source = context.sources.get(buildingId);
+      const vertices = openRing(source.outerRing).length;
+      const stratum = UV_STRATA.find((entry) => vertices >= entry.minVertices && vertices <= entry.maxVertices);
+      if (!stratum) continue; // above the grammar's 64-vertex cap: refused, ships nothing
+      candidatesByStratum.get(stratum.id).push({ buildingId, cellId: cell.cellId, waveIndex, vertices });
+    }
+  }
+
+  const rows = [];
+  const strataRows = [];
+  for (const stratum of UV_STRATA) {
+    const candidates = candidatesByStratum.get(stratum.id);
+    // Evenly spaced through the ledger order, so the sample is spread across
+    // every wave and cell rather than clustered in whichever wave sorts first.
+    const step = Math.max(1, Math.floor(candidates.length / UV_SAMPLES_PER_STRATUM));
+    const measured = [];
+    for (let index = 0; index < candidates.length && measured.length < UV_SAMPLES_PER_STRATUM; index += step) {
+      const candidate = candidates[index];
+      const source = context.sources.get(candidate.buildingId);
+      let row;
+      try {
+        row = measureUvDelta(source, candidate.cellId, capture, censusProfileByWave.get(candidate.waveIndex));
+      } catch (error) {
+        if (!(error instanceof MidtownCoreV3Stop)) throw error;
+        continue; // refused by the grammar; it ships no textured asset either
+      }
+      if (row.ringVertexCount !== candidate.vertices) fail(`Planned ring vertex count ${row.ringVertexCount} differs from the sourced ${candidate.vertices} for ${candidate.buildingId}.`);
+      measured.push({ ...row, stratum: stratum.id, waveIndex: candidate.waveIndex });
+    }
+    rows.push(...measured);
+    const perVertex = measured.map((row) => row.uvAndJsonByteDelta / row.lod0VertexCount).sort((left, right) => left - right);
+    const deltas = measured.map((row) => row.uvAndJsonByteDelta).sort((left, right) => left - right);
+    strataRows.push({
+      stratum: stratum.id,
+      ringVertexRange: [stratum.minVertices, stratum.maxVertices],
+      populationCount: candidates.length,
+      sampledCount: measured.length,
+      // NEVER a single mean: the spread is the finding.
+      uvAndJsonBytesPerVertex: {
+        min: Math.round(perVertex[0] * 1e4) / 1e4,
+        median: Math.round(perVertex[Math.floor((perVertex.length - 1) / 2)] * 1e4) / 1e4,
+        p95: Math.round(quantile(perVertex, 0.95) * 1e4) / 1e4,
+        max: Math.round(perVertex[perVertex.length - 1] * 1e4) / 1e4,
+      },
+      uvAndJsonByteDelta: {
+        min: deltas[0],
+        median: deltas[Math.floor((deltas.length - 1) / 2)],
+        p95: quantile(deltas, 0.95),
+        max: deltas[deltas.length - 1],
+      },
+      lod0VertexCount: {
+        min: Math.min(...measured.map((row) => row.lod0VertexCount)),
+        max: Math.max(...measured.map((row) => row.lod0VertexCount)),
+      },
+      textureCounts: [...new Set(measured.map((row) => row.textureCount))].sort(),
+    });
+  }
+
+  const regression = leastSquares(rows.map((row) => ({ x: row.lod0VertexCount, y: row.uvAndJsonByteDelta })));
+
+  // Image bytes per building are a function of the style class, which the six
+  // wave censuses commit as exact counts. Checked here rather than assumed.
+  const textureCountsByStyleClass = new Map();
+  for (const row of rows) {
+    const seen = textureCountsByStyleClass.get(row.styleClass) ?? new Map();
+    seen.set(row.textureCount, (seen.get(row.textureCount) ?? 0) + 1);
+    textureCountsByStyleClass.set(row.styleClass, seen);
+  }
+  // MEASURED, not assumed: the style class does NOT pin the tile count on its
+  // own, so the island image term is an interval whose ends are the minimum and
+  // maximum tile counts observed for each class and whose centre is the
+  // sample-frequency-weighted mean. A point estimate here would be a guess with
+  // the confidence of a measurement.
+  const styleClassTileStatistics = Object.fromEntries([...textureCountsByStyleClass.entries()].sort().map(([styleClass, counts]) => {
+    const entries = [...counts.entries()].sort(([left], [right]) => left - right);
+    const sampled = entries.reduce((total, [, count]) => total + count, 0);
+    return [styleClass, {
+      observedTileCounts: entries.map(([tiles, count]) => ({ tiles, sampledBuildings: count })),
+      min: entries[0][0],
+      max: entries[entries.length - 1][0],
+      sampleWeightedMean: Math.round((entries.reduce((total, [tiles, count]) => total + tiles * count, 0) / sampled) * 1e4) / 1e4,
+      determinesTileCount: entries.length === 1,
+    }];
+  }));
+  const styleClassDeterminesTextureCount = Object.values(styleClassTileStatistics).every((entry) => entry.determinesTileCount);
+  const islandStyleClassCounts = {};
+  for (const record of WAVE_RECORDS) {
+    if (!record.censusFile) continue;
+    const committed = JSON.parse(await readFile(join(repositoryRoot, record.censusFile), "utf8"));
+    for (const [styleClass, count] of Object.entries((committed.wave ?? committed).styleClassCounts ?? {})) {
+      islandStyleClassCounts[styleClass] = (islandStyleClassCounts[styleClass] ?? 0) + count;
+    }
+  }
+  const imageBytesFor = (pick) => Object.entries(islandStyleClassCounts)
+    .reduce((total, [styleClass, count]) => total + count * (styleClassTileStatistics[styleClass] ? pick(styleClassTileStatistics[styleClass]) : 0) * PROCEDURAL_TILE_PNG_BYTES, 0);
+  const islandImageBytesInterval = {
+    lowerBoundBytes: Math.round(imageBytesFor((entry) => entry.min)),
+    centralBytes: Math.round(imageBytesFor((entry) => entry.sampleWeightedMean)),
+    upperBoundBytes: Math.round(imageBytesFor((entry) => entry.max)),
+  };
+  const islandImageBytes = islandImageBytesInterval.centralBytes;
+
+  // The island vertex total is NOT committed anywhere, so the UV term is stated
+  // as an INTERVAL derived from the committed island triangle total and the
+  // vertices-per-triangle ratio measured on this sample. A point estimate here
+  // would be a number with no error bar pretending to be a measurement.
+  const ratios = rows.map((row) => row.lod0VertexCount / row.lod0TriangleCount).sort((left, right) => left - right);
+  const islandTriangles = bytesRecord.islandGeneratedWaves.totalShippedTriangleCount;
+  const perVertexAll = rows.map((row) => row.uvAndJsonByteDelta / row.lod0VertexCount).sort((left, right) => left - right);
+  const uvTermFor = (verticesPerTriangle, bytesPerVertex) => Math.round(islandTriangles * verticesPerTriangle * bytesPerVertex);
+  const islandUvBytes = {
+    note: "An interval, not a point. `lod0TotalBytes` is committed; the island VERTEX total is not, so it is bounded by the committed island triangle total times the vertices-per-triangle ratio measured on this sample, and the per-vertex UV cost is likewise bounded by the sample.",
+    islandTriangleCount: islandTriangles,
+    verticesPerTriangle: {
+      min: Math.round(ratios[0] * 1e4) / 1e4,
+      median: Math.round(ratios[Math.floor((ratios.length - 1) / 2)] * 1e4) / 1e4,
+      max: Math.round(ratios[ratios.length - 1] * 1e4) / 1e4,
+    },
+    uvAndJsonBytesPerVertex: {
+      min: Math.round(perVertexAll[0] * 1e4) / 1e4,
+      median: Math.round(perVertexAll[Math.floor((perVertexAll.length - 1) / 2)] * 1e4) / 1e4,
+      p95: Math.round(quantile(perVertexAll, 0.95) * 1e4) / 1e4,
+      max: Math.round(perVertexAll[perVertexAll.length - 1] * 1e4) / 1e4,
+    },
+    lowerBoundBytes: uvTermFor(ratios[0], perVertexAll[0]),
+    centralBytes: uvTermFor(ratios[Math.floor((ratios.length - 1) / 2)], perVertexAll[Math.floor((perVertexAll.length - 1) / 2)]),
+    upperBoundBytes: uvTermFor(ratios[ratios.length - 1], perVertexAll[perVertexAll.length - 1]),
+  };
+
+  const lod0 = bytesRecord.islandGeneratedWaves.lod0TotalBytes;
+  const lod1 = bytesRecord.islandGeneratedWaves.lod1TotalBytes;
+  const decomposition = {
+    note: "FOUR TERMS, and they do not have the same future. The two geometry terms are committed measurements quoted from `wave-bytes.json` and were NOT regenerated here. The UV term rides on LOD 0 alone, scales with vertex count and SURVIVES a shared texture atlas — ADR 0032 measured it as 76% of the texture delta and it is the term that matters for planning. The image term also rides on LOD 0 alone and goes to approximately zero under an atlas, because a shared atlas is bound once for the city instead of embedded once per building.",
+    terms: [
+      { term: "untextured-geometry-lod_0", bytes: lod0, source: "committed wave-bytes.json islandGeneratedWaves.lod0TotalBytes", ridesOn: "lod_0", survivesAtlas: true },
+      { term: "untextured-geometry-lod_1", bytes: lod1, source: "committed wave-bytes.json islandGeneratedWaves.lod1TotalBytes", ridesOn: "lod_1", survivesAtlas: true },
+      { term: "uv-and-json-delta-lod_0", bytesInterval: [islandUvBytes.lowerBoundBytes, islandUvBytes.centralBytes, islandUvBytes.upperBoundBytes], source: "measured on this stage's stratified sample, projected on the committed island triangle total", ridesOn: "lod_0", survivesAtlas: true },
+      { term: "embedded-image-bytes-lod_0", bytesInterval: [islandImageBytesInterval.lowerBoundBytes, islandImageBytesInterval.centralBytes, islandImageBytesInterval.upperBoundBytes], source: `arithmetic: committed per-wave styleClassCounts x measured tiles per style class x the ADR 0032 tile constant ${PROCEDURAL_TILE_PNG_BYTES} B`, ridesOn: "lod_0", survivesAtlas: false },
+    ],
+    // THE FINDING THAT MOVES. ADR 0032 measured the UV term at 76% of the
+    // texture delta on FOURTEEN buildings, and that ratio does not hold for the
+    // island. It could not: the image term is a FIXED two-or-three tiles per
+    // building whatever the building's size, while the UV term scales with
+    // vertex count — and the island's mean building is far smaller than Block
+    // 835's. The direction of the atlas argument is unchanged and in fact
+    // strengthened; its magnitude is not what the 14-building table implies.
+    atlasSplit: {
+      note: "Share of the LOD 0 texture delta that a shared four-tile atlas would remove (the image term) against the share that survives it (the UV term), computed island-wide from the terms above rather than carried over from the fourteen-building table.",
+      adr0032FourteenBuildingUvShare: 0.76,
+      adr0032Source: "docs/decisions/0032-procedural-facade-textures.md byte table: 2,259,172 B UV + JSON against 696,360 B images across all fourteen buildings",
+      islandUvShareOfTextureDelta: {
+        lower: Math.round((islandUvBytes.lowerBoundBytes / (islandUvBytes.lowerBoundBytes + islandImageBytesInterval.upperBoundBytes)) * 1e6) / 1e6,
+        central: Math.round((islandUvBytes.centralBytes / (islandUvBytes.centralBytes + islandImageBytesInterval.centralBytes)) * 1e6) / 1e6,
+        upper: Math.round((islandUvBytes.upperBoundBytes / (islandUvBytes.upperBoundBytes + islandImageBytesInterval.lowerBoundBytes)) * 1e6) / 1e6,
+      },
+      finding: "ISLAND-WIDE THE SPLIT INVERTS. On Block 835's fourteen buildings the UV term is 76% of the texture delta; across the island it is the MINORITY of it at the central estimate, because the per-building image cost is fixed at two or three tiles while the UV cost follows a vertex count whose island median is far below Block 835's. An atlas therefore removes MORE of the citywide texture cost than ADR 0032's table suggests, not less — but the residual it cannot remove is still the larger of the two terms in the tallest, most vertex-dense buildings, which are exactly the ones a near-field camera is pointed at.",
+      whatSurvivesAnAtlas: "The UV term. TEXCOORD_0 is per-vertex geometry data and an atlas changes which region of a texture a vertex addresses, not whether it addresses one. Any scheme that claims to remove it is proposing to drop the projection, which is a fidelity decision and not a packaging one.",
+    },
+    lod1IsUntexturedByContract: "Detail tiles ride on LOD 0 ALONE, by the committed Block 835 `-v3t` decision carried unchanged into every wave profile: LOD 1 is selected beyond 250 m, where a 128-pixel joint is far below a screen pixel. There is therefore no UV term and no image term for LOD 1, and this is a contract, not an accident.",
+    islandTotals: {
+      materializedBuildingCountGeneratedWaves: bytesRecord.islandGeneratedWaves.materializedBuildingCount,
+      materializedBuildingCountIncludingBlock835: bytesRecord.islandMaterializedBuildingCount,
+      plannedButNotYetMaterialized: distributions.counts.planned - bytesRecord.islandGeneratedWaves.materializedBuildingCount,
+    },
+  };
+
+  // The 821 recoverable refusals, named by code rather than by adjective.
+  const refusalsByCode = distributions.refusals.byCode;
+  const recoverableCodes = ["source-height-below-grammar-minimum", "ring-vertex-count-unsupported", "ring-area-below-floor"];
+  const recoverable = recoverableCodes.reduce((total, code) => total + (refusalsByCode[code] ?? 0), 0);
+  const irrecoverable = distributions.refusals.total - recoverable;
+  const ringVertexUnsupported = refusalsByCode["ring-vertex-count-unsupported"] ?? 0;
+  const worstStratum = strataRows[strataRows.length - 1];
+
+  const artifact = {
+    schemaVersion: CITYWIDE_OVERVIEW_CENSUS_SCHEMA_VERSION,
+    censusId: CENSUS_ID,
+    taskId: "T001",
+    artifact: "uv-delta-measurement-and-byte-decomposition",
+    note: "CENSUS ONLY. Every sampled building was written through the REAL asset writer TWICE — once texture-free and once with `procedural-texture-v1` tiles, from the SAME plan — and both sets of bytes were measured and dropped. Nothing was retained, no release was assembled and nothing was published. The two writes differ only in the writer-stage texture policy, so their difference is exactly the cost of admitting tiles and nothing else.",
+    base: base(context),
+    ledger: ledgerPin(context),
+    generatorIdentity: {
+      planGenerator: { id: DETERMINISTIC_FACADE_V3_GENERATOR_ID, version: DETERMINISTIC_FACADE_V3_GENERATOR_VERSION, schemaVersion: DETERMINISTIC_FACADE_V3_SCHEMA_VERSION },
+      proceduralTexture: proceduralTextureProvenance(),
+    },
+    method: {
+      statement: "For each sampled building the V3 plan is built ONCE with its own wave's committed census profile, then written twice: with `texture: null` and with `texture: procedural-texture-v1`. The plan, and therefore the geometry, is identical between the two writes. `imageByteTotal` is read back out of the emitted GLB's own `images[]` bufferViews and `lod0VertexCount` out of its POSITION accessors, so both are properties of the bytes rather than of this script's arithmetic.",
+      counterfactualDisclosure: "Wave w01 (Midtown core) ships texture-free, so its textured write is a COUNTERFACTUAL: it states what tiles would cost that wave, not what that wave shipped. Waves w02-w05 ship textured, and for them the untextured write is the counterfactual instead. Both directions are the same measurement of the same difference.",
+      samplingBasis: "Stratified on the planned outer-ring vertex count against the committed `distributions.json` histogram, taken at an even stride through ledger order so every stratum's sample spreads across waves and cells instead of clustering in whichever wave sorts first.",
+      retention: "Sample GLBs were counted and dropped. None was written to disk (the `coarse` stage precedent).",
+    },
+    strata: strataRows,
+    perVertexRegression: {
+      note: "`uvAndJsonByteDelta = slope * lod0VertexCount + intercept`, ordinary least squares over every sampled building. The residual bounds are reported beside it because a slope without them is a claim, not a measurement.",
+      ...regression,
+    },
+    instrumentValidation: await validateUvInstrument(),
+    imageTerm: {
+      note: "Tiles per building are a function of the plan's style class, which every wave census commits as an exact count. The mapping is measured on this sample rather than assumed, and whether the style class DETERMINES the tile count is reported rather than presumed.",
+      tilePngBytes: PROCEDURAL_TILE_PNG_BYTES,
+      tilePngBytesSource: "docs/decisions/0032-procedural-facade-textures.md byte table (128x128, 8-bit gray, stored DEFLATE)",
+      styleClassDeterminesTextureCount,
+      styleClassDeterminesTextureCountFinding: styleClassDeterminesTextureCount
+        ? "Each style class emits a fixed tile count, so the island image term is exact arithmetic."
+        : "MEASURED FALSE. At least one style class emits different tile counts for different buildings, so the island image term below is an INTERVAL and not an exact figure. The per-class observations are listed so the bound can be checked.",
+      styleClassTileStatistics,
+      islandStyleClassCounts,
+      islandImageBytesLod0: islandImageBytesInterval,
+    },
+    islandUvTerm: islandUvBytes,
+    byteDecomposition: decomposition,
+    refusalAccounting: {
+      note: "TWO island totals, reported separately because they answer different questions. 44,295 is what the six waves ACTUALLY materialized. 45,116 is what a full-city retention would carry if the recoverable refusals were recovered, which is the number the assembly limits have to be checked against.",
+      enumeratedParents: distributions.counts.enumerated,
+      materializedToday: bytesRecord.islandMaterializedBuildingCount,
+      planStageRefusalsByCode: refusalsByCode,
+      assetStageVolumeIdentityFailed: distributions.counts.assetStageVolumeIdentityFailed,
+      recoverableRefusalCodes: recoverableCodes,
+      recoverableRefusalCount: recoverable,
+      irrecoverableRefusalCount: irrecoverable,
+      fullCityProjectedAssetCount: distributions.counts.enumerated - irrecoverable - distributions.counts.assetStageVolumeIdentityFailed,
+      recoverableAreVertexCountHeavy: {
+        statement: `Of the ${recoverable} recoverable refusals, ${ringVertexUnsupported} are \`ring-vertex-count-unsupported\` — rings ABOVE the grammar's 64-vertex cap. Recovering them adds buildings that land in the worst UV stratum, not the average one, so the UV term of a recovered full city grows faster than its building count.`,
+        ringVertexCountUnsupported: ringVertexUnsupported,
+        worstStratum: worstStratum.stratum,
+        worstStratumUvBytesPerVertex: worstStratum.uvAndJsonBytesPerVertex,
+        worstStratumUvByteDelta: worstStratum.uvAndJsonByteDelta,
+      },
+    },
+    generationTiming: {
+      note: "BOTH committed observations, as a RANGE, with the host difference disclosed. Neither is authoritative over the other and neither belongs in a deterministic artifact body as a single number; they are carried here because the retain-versus-regenerate decision needs a bounded regeneration cost, not a precise one.",
+      observations: [
+        { source: "central-upper-manhattan wave census (committed implementation record)", millisecondsPerAsset: 3.5 },
+        { source: "this census's `coarse` stage (committed implementation record)", millisecondsPerAssetRange: [5.1, 5.9] },
+      ],
+      hostDifferenceDisclosure: "The two observations were taken on different hosts and with different writer workloads (a full two-LOD V3 asset against a single coarse prism), so the spread is not measurement noise around one true rate and must not be averaged into one.",
+      boundedIslandEstimate: {
+        assetCount: 2 * (distributions.counts.enumerated - irrecoverable - distributions.counts.assetStageVolumeIdentityFailed),
+        lowerBoundMinutes: Math.round((2 * (distributions.counts.enumerated - irrecoverable - distributions.counts.assetStageVolumeIdentityFailed) * 3.5) / 60000 * 10) / 10,
+        upperBoundMinutes: Math.round((2 * (distributions.counts.enumerated - irrecoverable - distributions.counts.assetStageVolumeIdentityFailed) * 5.9) / 60000 * 10) / 10,
+        statement: "Single-threaded, both LODs, texture-free. A textured pass rasterizes from a four-tile catalog that is built once, so the tiles are not the cost; the second write of every asset is.",
+      },
+    },
+    retention: "census-only",
+    hostObservationsLocation: "artifacts/citywide-overview-census-20260814/stages/uv.json — wall clock and RSS are host facts and are kept OUT of this artifact's deterministic body (the ADR 0025 D8 precedent).",
+  };
+  const checksum = await writeRecord("uv-delta.json", artifact);
+  const summary = {
+    sampledBuildings: rows.length,
+    strata: strataRows.map((row) => ({ stratum: row.stratum, sampled: row.sampledCount, medianBytesPerVertex: row.uvAndJsonBytesPerVertex.median })),
+    slopeBytesPerVertex: regression.slopeBytesPerVertex,
+    rSquared: regression.rSquared,
+    islandImageBytesLod0: islandImageBytes,
+    islandUvBytesInterval: [islandUvBytes.lowerBoundBytes, islandUvBytes.centralBytes, islandUvBytes.upperBoundBytes],
+    wallClockSeconds: Math.round((Date.now() - startedAt) / 100) / 10,
+    checksumSha256: checksum,
+  };
+  await writeReceipt(name, print, summary);
+  return summary;
+}
+
+// ---------------------------------------------------------------------------
 
 const context = await loadContext();
 console.log(`gate PASS  ${context.gate.expectedReleaseId} @ ${context.gate.observedManifestChecksumSha256}`);
@@ -1951,6 +2437,7 @@ for (const name of selected) {
     : name === "coarse" ? await stageCoarse(context)
     : name === "sample" ? await stageSample(context)
     : name === "replay" ? await stageReplay(context)
+    : name === "uv" ? await stageUv(context)
     : await stageDecide(context);
   console.log(`${name} ${summary.skipped ? "SKIP (fresh receipt)" : "OK"}  ${JSON.stringify(summary)}`);
 }
