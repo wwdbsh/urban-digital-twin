@@ -143,7 +143,7 @@ async function sharedTextureFixture(options: SharedTextureFixtureOptions = {}): 
   return fixture;
 }
 
-function runtimeFor(fixture: ExteriorCellFixture, onRequest?: (relativeRef: string) => void, gate?: (relativeRef: string) => Promise<void>) {
+function runtimeFor(fixture: ExteriorCellFixture, onRequest?: (relativeRef: string) => void, gate?: (relativeRef: string) => Promise<void>, sharedTextureTimeoutMs?: number) {
   const hook = gate ?? onRequest;
   return createExteriorCellRuntime(
     { index: fixture.index, graph: fixture.graph, assemblies: fixture.assemblies },
@@ -153,6 +153,7 @@ function runtimeFor(fixture: ExteriorCellFixture, onRequest?: (relativeRef: stri
       baseIdentity: exteriorFixtureBaseIdentity(fixture),
       cache: new CitywideLruCache<Uint8Array>(8 * 1024 * 1024),
       artifactUrlBase: "/data/udt-fixture-exterior-cells/",
+      ...(sharedTextureTimeoutMs === undefined ? {} : { sharedTextureTimeoutMs }),
     },
   ).runtime;
 }
@@ -338,5 +339,33 @@ describe("the session-scoped verification is not hostage to its first caller", (
     if (outcome.kind !== "rendered") return;
     expect(outcome.representation).toBe("head");
     expect(outcome.assets[0]!.sharedTextures).toBeDefined();
+  });
+});
+
+describe("the uncancellable verification is bounded", () => {
+  it("fails the cell CLOSED rather than hanging when the tiles never settle", async () => {
+    // Uncancellable and untimed is a hang: the memoized promise stays pending,
+    // every later cell load of the package awaits it forever, the wave never
+    // publishes and no notice is ever produced. The bound turns the worst
+    // failure shape this runtime has — nothing happening — into a stated one.
+    const fixture = await sharedTextureFixture();
+    let releaseTiles: () => void = () => {};
+    const forever = new Promise<void>((resolve) => { releaseTiles = resolve; });
+    const runtime = runtimeFor(fixture, undefined, async (relativeRef) => {
+      if (relativeRef.startsWith("public/textures/")) await forever;
+    }, 25);
+    const outcome = await runtime.loadCell("c1", "inspection", CLOSE_METERS);
+    // A typed failure, NOT an abort: an abort would be mistaken for a cancelled
+    // batch and would delete the wave's outcomes silently.
+    expect(outcome.kind).toBe("failed");
+    if (outcome.kind !== "failed") return;
+    expect(outcome.code).toBe("shared-texture-invalid");
+    expect(outcome.message).toContain("did not settle within 25ms");
+    expect(outcome.notice).toContain("no exterior geometry is shown");
+    // The rejection is not memoized, so a later load retries rather than
+    // inheriting the timeout forever.
+    releaseTiles();
+    const retried = await runtime.loadCell("c1", "inspection", CLOSE_METERS);
+    expect(retried.kind).toBe("rendered");
   });
 });

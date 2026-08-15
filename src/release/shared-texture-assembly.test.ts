@@ -177,7 +177,7 @@ describe("the shared external detail-tile gate", () => {
     const tampered = new Uint8Array(clean);
     tampered[clean.byteLength - 8] = tampered[clean.byteLength - 8]! ^ 0x01;
     expect(tampered.byteLength).toBe(clean.byteLength);
-    expect(() => replaySharedTextureArtifact(tampered)).toThrow(ASSEMBLY_ISSUE_TEXTURE_ARTIFACT_REPLAY_MISMATCH);
+    expect(() => replaySharedTextureArtifact(tampered, TEXTURE_REF)).toThrow(ASSEMBLY_ISSUE_TEXTURE_ARTIFACT_REPLAY_MISMATCH);
     const { manifest, contents } = await fixture({ tileBytes: tampered });
     const replay = await replayMultiLodAssembly(manifest, contents, POLICY);
     expect(replay.ok).toBe(false);
@@ -186,10 +186,10 @@ describe("the shared external detail-tile gate", () => {
 
   it("replays every catalogue class and refuses anything else", () => {
     for (const textureClass of PROCEDURAL_TEXTURE_CLASSES) {
-      expect(replaySharedTextureArtifact(proceduralTextureCatalog().get(textureClass)!.pngBytes)).toBe(textureClass);
+      expect(replaySharedTextureArtifact(proceduralTextureCatalog().get(textureClass)!.pngBytes, `public/textures/${textureClass}.png`)).toBe(textureClass);
     }
     // A real, well-formed PNG that this rasterizer did not produce.
-    expect(() => replaySharedTextureArtifact(new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))).toThrow(ASSEMBLY_ISSUE_TEXTURE_ARTIFACT_REPLAY_MISMATCH);
+    expect(() => replaySharedTextureArtifact(new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), TEXTURE_REF)).toThrow(ASSEMBLY_ISSUE_TEXTURE_ARTIFACT_REPLAY_MISMATCH);
   });
 
   it("refuses a tile whose PATH names a different class than its BYTES", async () => {

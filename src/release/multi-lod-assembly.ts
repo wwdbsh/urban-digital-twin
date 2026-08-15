@@ -1040,8 +1040,13 @@ function validateProceduralTextureUriGlb(json: Record<string, unknown>, provenan
  * artifact must be byte-identical to a tile `proceduralTextureCatalog()`
  * produces. A one-byte mutation anywhere in the PNG -- header, palette, IDAT --
  * changes the digest and fails closed.
+ *
+ * `relativeRef` is REQUIRED, not optional. It was optional for one revision and
+ * that was a mistake: an optional binding is one a future caller skips by
+ * omission, and the path-to-class check below is the only thing standing between
+ * this gate and two swapped tiles that satisfy every other rule.
  */
-export function replaySharedTextureArtifact(bytes: Uint8Array, relativeRef?: string): string {
+export function replaySharedTextureArtifact(bytes: Uint8Array, relativeRef: string): string {
   const textureClass = proceduralTextureReplayIndex().get(sha256HexBytes(bytes));
   if (textureClass === undefined) throw new Error(ASSEMBLY_ISSUE_TEXTURE_ARTIFACT_REPLAY_MISMATCH);
   // The PATH must name the class the BYTES are. Without this, two declared
@@ -1051,7 +1056,7 @@ export function replaySharedTextureArtifact(bytes: Uint8Array, relativeRef?: str
   // brick wall in the release would then be rendered in limestone, honestly
   // and verifiably. The convention is stated once, in
   // `sharedTextureArtifactRef`, and enforced here against it.
-  if (relativeRef !== undefined && relativeRef !== `${SHARED_TEXTURE_ARTIFACT_DIRECTORY}/${textureClass}.png`) {
+  if (relativeRef !== `${SHARED_TEXTURE_ARTIFACT_DIRECTORY}/${textureClass}.png`) {
     throw new Error(`${ASSEMBLY_ISSUE_TEXTURE_ARTIFACT_REPLAY_MISMATCH} Artifact ${relativeRef} carries the bytes of class ${textureClass}, which belongs at ${SHARED_TEXTURE_ARTIFACT_DIRECTORY}/${textureClass}.png.`);
   }
   // Byte length is implied by the digest, but the per-image cap is a declared

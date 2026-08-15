@@ -87,6 +87,25 @@ export const EXTERIOR_CELL_RUNTIME_SCHEMA_VERSION = "1.0" as const;
  * typed into the measurement, so a reading taken at the old cap cannot be
  * presented as a reading at the new one.
  */
+/**
+ * How long the SHARED CLASS TILES of one release may take to verify.
+ *
+ * It exists because the tiles are deliberately uncancellable (see
+ * `sharedTextureLifetime`), and uncancellable plus untimed is a hang: a request
+ * that never settles leaves the memoized promise pending forever, and every
+ * later cell load of that package awaits it forever. The wave never publishes,
+ * nothing clears it, and no notice is ever produced — the worst failure shape
+ * this runtime has, because it looks like nothing happening.
+ *
+ * 30 s is generous rather than tuned, and it is allowed to be: these are four
+ * same-origin static files of about 16 KB from the local release root. Anything
+ * approaching this bound is a broken environment, not a slow one. The timeout is
+ * a typed failure rather than an abort, so a cell that hits it fails CLOSED with
+ * a notice instead of being mistaken for a cancelled batch, and the rejection is
+ * not memoized so a later load retries.
+ */
+export const EXTERIOR_SHARED_TEXTURE_TIMEOUT_MS = 30_000;
+
 export const EXTERIOR_RUNTIME_BUDGETS = {
   maxCacheEntries: 512,
   maxCachedBytes: 256 * 1024 * 1024,
@@ -410,6 +429,8 @@ export interface ExteriorCellRuntimeOptions {
    * from here: nothing in the shared-texture path issues a request.
    */
   artifactUrlBase?: string;
+  /** Test seam for `EXTERIOR_SHARED_TEXTURE_TIMEOUT_MS`; the default is the contract. */
+  sharedTextureTimeoutMs?: number;
 }
 
 export interface ExteriorCellRuntimeSource {
@@ -589,6 +610,7 @@ export class ExteriorCellRuntime {
    */
   private readonly sharedTextureLifetime = new AbortController();
   private readonly artifactUrlBase: string;
+  private readonly sharedTextureTimeoutMs: number;
   private requestedArtifactCount = 0;
   private loadedArtifactCount = 0;
   private failedArtifactCount = 0;
@@ -654,6 +676,7 @@ export class ExteriorCellRuntime {
     // tiles is unaffected, and the default is exactly what the app computes
     // (`exteriorCellBasePath`) so the two cannot disagree for a real release.
     this.artifactUrlBase = options.artifactUrlBase ?? `/data/${source.index.releaseId}/`;
+    this.sharedTextureTimeoutMs = options.sharedTextureTimeoutMs ?? EXTERIOR_SHARED_TEXTURE_TIMEOUT_MS;
   }
 
   /** Mirrors the accepted overlay compatibility gate; identity is not implied by name. */
@@ -992,6 +1015,20 @@ export class ExteriorCellRuntime {
   }
 
   private async loadSharedTextures(assembly: MultiLodAssemblyManifest, signal?: AbortSignal): Promise<ReadonlyMap<string, Uint8Array>> {
+    // Bounded, because the tiles are uncancellable. See
+    // `EXTERIOR_SHARED_TEXTURE_TIMEOUT_MS` for why the pair matters.
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const expiry = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => reject(new ExteriorRuntimeError("shared-texture-invalid", `Shared texture verification for assembly package ${assembly.packageId} did not settle within ${this.sharedTextureTimeoutMs}ms.`)), this.sharedTextureTimeoutMs);
+    });
+    try {
+      return await Promise.race([this.verifySharedTextures(assembly, signal), expiry]);
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  private async verifySharedTextures(assembly: MultiLodAssemblyManifest, signal?: AbortSignal): Promise<ReadonlyMap<string, Uint8Array>> {
     const verified = new Map<string, Uint8Array>();
     const classes = new Map<string, string>();
     const declared = assembly.artifacts.filter((artifact) => artifact.role === "texture");

@@ -33,7 +33,7 @@ import {
   assertVerifiedResourceSurvivesCesium,
   verifiedExteriorModelResource,
 } from "./exterior-verified-resource";
-import { canonicalExteriorPickId, exteriorCellEntityId, exteriorCellSignature, exteriorOverlayRenderEntries, exteriorRetirementSteps, type ExteriorCellOverlay } from "./CesiumViewport";
+import { canonicalExteriorPickId, exteriorCellEntityId, exteriorCellModelUris, exteriorCellSignature, exteriorOverlayRenderEntries, exteriorRetirementSteps, type ExteriorCellOverlay } from "./CesiumViewport";
 
 const BASE = "/data/manhattan-southern-remainder-cells-20260812-t1/";
 const GLB_REF = "public/assemblies/cell-a/assets/doitt-778052-lod0.glb";
@@ -135,6 +135,48 @@ describe("the verified exterior resource", () => {
     const degraded = resource();
     Object.defineProperty(degraded, "clone", { value: () => new Resource({ url: `${BASE}${GLB_REF}` }), configurable: true });
     expect(() => assertVerifiedResourceSurvivesCesium(degraded)).toThrow(VERIFIED_EXTERIOR_SUBCLASS_LOST);
+  });
+
+  it("contains a canary refusal to ONE cell, with nothing half-added and nothing leaked", () => {
+    // The failure mode has to match the wording. A throw escaping into the
+    // overlay effect would orphan entities already added for this cell — no
+    // owner record exists to retire them — and would kill every remaining cell
+    // in the plan. So every model URI is built BEFORE the first entity, and the
+    // refusal is RETURNED rather than thrown.
+    const created: string[] = [];
+    const revoked: string[] = [];
+    const createObjectURL = URL.createObjectURL;
+    const revokeObjectURL = URL.revokeObjectURL;
+    const createIfNeeded = (Resource as unknown as Record<string, unknown>).createIfNeeded;
+    URL.createObjectURL = () => { const url = `blob:test/${created.length + 1}`; created.push(url); return url; };
+    URL.revokeObjectURL = (url: string) => { revoked.push(url); };
+    // Exactly the degradation the canary exists for: a CesiumJS that no longer
+    // returns the subclass from its own round-trip.
+    (Resource as unknown as Record<string, unknown>).createIfNeeded = (value: Resource) => new Resource({ url: value.url });
+    try {
+      const blobEntry = { entry: { bytes: GLB_BYTES }, anchor: {} };
+      const sharedEntry = { entry: { bytes: GLB_BYTES, sharedTextures: { modelUrl: `${BASE}${GLB_REF}`, glbRef: GLB_REF, textureUrls: new Map([[`${BASE}${TILE_REF}`, TILE_BYTES]]) } }, anchor: {} };
+      const built = exteriorCellModelUris({ cellId: "c1", adds: [blobEntry, blobEntry, sharedEntry] } as never);
+      // Returned, not thrown: that is the containment, and asserting it here is
+      // what stops a future refactor from "simplifying" the helper back into a
+      // throw that escapes the effect.
+      expect(built.ok).toBe(false);
+      if (built.ok) return;
+      expect(built.cellId).toBe("c1");
+      expect(built.message).toContain(VERIFIED_EXTERIOR_SUBCLASS_LOST);
+      // The two Blob URLs built before the refusal are revoked, so a refused
+      // cell leaks nothing either.
+      expect(created).toHaveLength(2);
+      expect(revoked).toStrictEqual(created);
+    } finally {
+      URL.createObjectURL = createObjectURL;
+      URL.revokeObjectURL = revokeObjectURL;
+      (Resource as unknown as Record<string, unknown>).createIfNeeded = createIfNeeded;
+    }
+    // And with Cesium behaving, the same cell builds every URI.
+    const rebuilt = exteriorCellModelUris({ cellId: "c1", adds: [{ entry: { bytes: GLB_BYTES, sharedTextures: { modelUrl: `${BASE}${GLB_REF}`, glbRef: GLB_REF, textureUrls: new Map() } }, anchor: {} }] } as never);
+    expect(rebuilt.ok).toBe(true);
+    if (rebuilt.ok) expect(rebuilt.objectUrls).toHaveLength(0);
   });
 
   it("retires a shared-texture cell with an EMPTY revoke list and the report still last", () => {

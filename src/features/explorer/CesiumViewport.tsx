@@ -43,7 +43,7 @@ import { EXTERIOR_PILOT_RELEASE_ID, type CommercialStorefrontPlacement, type Loa
 import { publicRealmFeatureToFeature, type Block835PublicRealmFeature, type LoadedBlock835PublicRealmRelease } from "../../runtime/block835-public-realm-release";
 import type { ExteriorCellOutcome, ExteriorCellRenderPlan } from "../../runtime/exterior-cell-runtime";
 import type { ExteriorRenderProfile } from "../../runtime/exterior-render-profiles";
-import { verifiedExteriorModelResource } from "./exterior-verified-resource";
+import { verifiedExteriorModelResource, type VerifiedExteriorResource } from "./exterior-verified-resource";
 import {
   boundFootprintToCamera,
   viewportFootprintFromGroundPoints,
@@ -598,6 +598,44 @@ export function canonicalExteriorPickId(pickedId: string, exteriorPickMap: Reado
 
 export function exteriorModelObjectUrl(bytes: Uint8Array): string {
   return URL.createObjectURL(new Blob([new Uint8Array(bytes) as unknown as BlobPart], { type: "model/gltf-binary" }));
+}
+
+/**
+ * Builds every model URI one cell needs, ALL OF THEM OR NONE.
+ *
+ * Two ways to put verified bytes in front of Cesium, chosen by the RELEASE and
+ * never by a toggle. A release that ships its tiles inside each GLB keeps the
+ * Blob URL it has always had, unchanged down to the revoke bookkeeping. A
+ * release that declares SHARED tiles cannot use a Blob URL at all — an image URI
+ * has nothing to resolve against inside `blob:` — so it hands Cesium a resource
+ * that answers for the model and for its tiles out of the already-verified set,
+ * and creates no object URL to revoke.
+ *
+ * It is all-or-nothing because `verifiedExteriorModelResource` runs a load-time
+ * canary that REFUSES when this CesiumJS build would not preserve the verified
+ * resource through its own clone path. That refusal has to fail the CELL closed,
+ * and a cell is only closed cleanly if the refusal happens before any entity of
+ * it exists. Blob URLs already created for earlier entries are revoked on the
+ * way out, so a refusal leaks nothing either.
+ */
+export function exteriorCellModelUris<T extends ExteriorCellRenderPlacement>(
+  cell: Pick<ExteriorOverlayCellPlan<T>, "cellId" | "adds">,
+): { ok: true; modelUris: Array<string | VerifiedExteriorResource>; objectUrls: string[] } | { ok: false; cellId: string; message: string } {
+  const modelUris: Array<string | VerifiedExteriorResource> = [];
+  const objectUrls: string[] = [];
+  try {
+    for (const { entry } of cell.adds) {
+      const modelUri = entry.sharedTextures
+        ? verifiedExteriorModelResource(entry.sharedTextures, entry.bytes)
+        : exteriorModelObjectUrl(entry.bytes);
+      if (typeof modelUri === "string") objectUrls.push(modelUri);
+      modelUris.push(modelUri);
+    }
+  } catch (error) {
+    for (const objectUrl of objectUrls) URL.revokeObjectURL(objectUrl);
+    return { ok: false, cellId: cell.cellId, message: error instanceof Error ? error.message : String(error) };
+  }
+  return { ok: true, modelUris, objectUrls };
 }
 
 /** Cesium drill picks may expose an Entity object under `id` rather than its string id. */
@@ -1820,6 +1858,17 @@ export function CesiumViewport({
   const exteriorPickMapRef = useRef(new Map<string, string>());
   const exteriorCellCollectionsRef = useRef(new Map<string, ExteriorOwnedCellCollection>());
   const exteriorUnanchoredRef = useRef<string>("");
+  /**
+   * Cells whose verified model resources could not be built, by cell id.
+   *
+   * Populated only when the load-time canary refuses — that is, when this
+   * CesiumJS build did not preserve the verified resource through its own clone
+   * path and a model would otherwise fetch unverified bytes. It is a REF rather
+   * than state because it must not re-render the scene; it exists so the
+   * refusal is inspectable rather than invisible, and so a cell that recovers
+   * clears its entry instead of accumulating one forever.
+   */
+  const exteriorVerifiedResourceFailuresRef = useRef<Map<string, string>>(new Map());
   const onExteriorUnanchoredRef = useRef(onExteriorUnanchored);
   onExteriorUnanchoredRef.current = onExteriorUnanchored;
   const onExteriorCellsRetiredRef = useRef(onExteriorCellsRetired);
@@ -2394,21 +2443,25 @@ export function CesiumViewport({
       else onExteriorCellsRetiredRef.current?.(step.cellIds);
     }
     for (const cell of plan.addCells) {
+      // EVERY model URI for this cell is built BEFORE the first entity is added.
+      // The load-time canary can throw, and its wording — "fails the cell
+      // closed" — has to be true of what actually happens: building first means
+      // a refusal leaves nothing half-added to orphan, because nothing was
+      // added. Ordering is the whole mechanism; a try/catch around the add loop
+      // would still have to unwind entities the scene already owns.
+      const built = exteriorCellModelUris(cell);
+      if (!built.ok) {
+        // The cell is not owned, so the next pass retries it — the same
+        // treatment an incomplete cell already gets. Nothing else is disturbed:
+        // the remaining cells in this plan are still added.
+        exteriorVerifiedResourceFailuresRef.current.set(cell.cellId, built.message);
+        continue;
+      }
+      exteriorVerifiedResourceFailuresRef.current.delete(cell.cellId);
       const entityIds: string[] = [];
-      const objectUrls: string[] = [];
-      for (const { entry, anchor } of cell.adds) {
-        // Two ways to put verified bytes in front of Cesium, chosen by the
-        // RELEASE and never by a toggle. A release that ships its tiles inside
-        // each GLB keeps the Blob URL it has always had, unchanged down to the
-        // revoke bookkeeping. A release that declares SHARED tiles cannot use a
-        // Blob URL at all — an image URI has nothing to resolve against inside
-        // `blob:` — so it hands Cesium a resource that answers for the model
-        // and for its tiles out of the already-verified set, and creates no
-        // object URL to revoke.
-        const modelUri = entry.sharedTextures
-          ? verifiedExteriorModelResource(entry.sharedTextures, entry.bytes)
-          : exteriorModelObjectUrl(entry.bytes);
-        if (typeof modelUri === "string") objectUrls.push(modelUri);
+      const objectUrls: string[] = [...built.objectUrls];
+      for (const [index, { entry, anchor }] of cell.adds.entries()) {
+        const modelUri = built.modelUris[index]!;
         const position = Cartesian3.fromDegrees(anchor.longitude, anchor.latitude, 0);
         const enuRotation = Matrix4.getMatrix3(Transforms.eastNorthUpToFixedFrame(position), new Matrix3());
         viewer.entities.removeById(entry.entityId);
@@ -2444,6 +2497,17 @@ export function CesiumViewport({
         }
       }
       owned.set(cell.cellId, { entityIds, objectUrls, signature: cell.signature, complete: cell.complete });
+    }
+    // Published on the container so a refusal is INSPECTABLE rather than merely
+    // recorded. A written-never-read map would be dead state and would make the
+    // loudest failure this path has — a CesiumJS that stopped preserving the
+    // verified resource — visible only in a debugger. Absent when nothing
+    // refused, so an ordinary session's DOM is unchanged.
+    const failures = exteriorVerifiedResourceFailuresRef.current;
+    const container = containerRef.current;
+    if (container) {
+      if (failures.size === 0) delete container.dataset.exteriorVerifiedResourceFailures;
+      else container.dataset.exteriorVerifiedResourceFailures = [...failures].map(([cellId, message]) => `${cellId}: ${message}`).join(" | ");
     }
     const unanchoredKey = plan.unanchoredCanonicalFeatureIds.join(",");
     if (unanchoredKey !== exteriorUnanchoredRef.current) {
