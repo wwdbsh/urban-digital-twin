@@ -179,11 +179,13 @@ street camera, 66 at 1.2 km, 40 at the overview — and it is **not** the answer
 to "what renders". Conflating the two numbers is the single easiest way to
 overstate this project, and the brief keeps them apart deliberately.
 
-870 of 883 cells ship no *generated* exterior geometry. Their buildings draw as
-sourced base massing rather than being absent, and the runtime's notice says so
-in those words since T007; the pre-flip wording, which said no substitute was
-selected, was true when nothing was drawn for those cells and became false by
-omission once they drew. **The binding constraint is no longer the 512-entry
+870 of 883 cells ship no *generated* exterior geometry. **Where the citywide
+base tier is active** their buildings draw as sourced base massing rather than
+being absent, and since T007 the runtime's notice says exactly that, with the
+condition attached: the rollback arm (`?exteriorScheduler=off`) withdraws the
+base tier, so an unconditional promise would be false there. The pre-flip
+wording, which said no substitute was selected, was true when nothing was drawn
+for those cells and became false by omission once they drew. **The binding constraint is no longer the 512-entry
 all-resident exterior cache contract**: the visibility scheduler of Decision
 0041 holds at most 128 resident cells against 883 visible, certified in Decision
 0042, and it is that **cell cap** that binds. Two separate caches with two

@@ -1221,10 +1221,18 @@ describe("exterior fallback notice presentation", () => {
     // be affirmatively false in that arm rather than merely incomplete.
     expect(entry.notice).toContain("where the citywide base tier is active, their buildings draw as sourced base massing (footprint extruded to sourced height)");
     expect(entry.notice).toContain("which is not a generated exterior");
-    // The condition is WORDS, not plumbing: one stable string, no session flag
-    // read, so the digest has one shape to recognize and `dismissalKey` cannot
-    // change with configuration.
-    expect(entry.notice).toBe(waveEntry(MIDTOWN, 146, 149).notice);
+    // THE WHOLE SHIPPED SENTENCE, as a literal.
+    //
+    // Comparing the producer's output against another call of the same producer
+    // would have been a tautology — it passes for any wording, including a
+    // wrong one. The point being pinned is that the condition is WORDS rather
+    // than plumbing: there is exactly ONE string, it reads the session nowhere,
+    // so the digest has one shape to recognize and `dismissalKey` cannot change
+    // with configuration. Only a literal can hold that.
+    expect(entry.notice).toBe(
+      `Exterior release ${MIDTOWN}: 146 of 149 exterior cells declared by this release ship no generated exterior geometry; `
+      + "where the citywide base tier is active, their buildings draw as sourced base massing (footprint extruded to sourced height), which is not a generated exterior.",
+    );
     // And it is NOT the pre-flip wording, which asserted that nothing at all
     // was there for buildings the reader can now see.
     expect(entry.notice).not.toContain("no substitute was selected for them");

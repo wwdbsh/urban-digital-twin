@@ -170,17 +170,26 @@ is only the second of them.
   **This is the TEXTURED TIER, not "what renders."** It is what the near-camera
   radius promotes on top of the massing: 14 V3 buildings at a 260 m street
   camera, 66 at 1.2 km, 40 at the overview.
-- **870 of the 883 spatial cells ship no *generated* exterior geometry.** Their
-  buildings are not missing from the screen — they draw as sourced base massing
-  — and since T007 the runtime's notice says exactly that. **The wording
-  changed on 2026-08-15**; it now reads "*N of M exterior cells declared by this
-  release ship no generated exterior geometry; their buildings draw as sourced
-  base massing (footprint extruded to sourced height), which is not a generated
-  exterior.*" The earlier wording ("…ship no exterior geometry; no substitute
-  was selected for them") was true before the flip, when nothing was drawn for
-  those cells; it became false by omission once they drew. Historical records
-  and journey scripts quote the old sentence as captured evidence and are left
-  byte-identical.
+- **870 of the 883 spatial cells ship no *generated* exterior geometry.** In a
+  default session their buildings are not missing from the screen — the citywide
+  base tier draws them as sourced base massing. **In the rollback arm
+  (`?exteriorScheduler=off`) it does not**, and the notice says so conditionally
+  rather than promising a screen that arm does not show. **The wording changed
+  on 2026-08-15**; it now reads, verbatim:
+
+  > *N of M exterior cells declared by this release ship no generated exterior
+  > geometry; where the citywide base tier is active, their buildings draw as
+  > sourced base massing (footprint extruded to sourced height), which is not a
+  > generated exterior.*
+
+  The earlier wording ("…ship no exterior geometry; no substitute was selected
+  for them") was true before the flip, when nothing was drawn for those cells;
+  it became false by omission once they drew. **Committed evidence captures and
+  descriptive prose that quote the old sentence are left byte-identical** —
+  rewriting a capture to match today's wording would falsify it. **Executable
+  assertions were not**: seven journey CLIs gated a live run on the removed
+  substring, and all seven predicates were updated to the sentence's
+  arm-independent first clause (`no generated exterior geometry`).
 - **The 512-entry all-resident cache contract is no longer the binding
   constraint.** Breadth is now a function of what the camera can see: the
   visibility scheduler holds at most **128 resident cells** against 883 visible

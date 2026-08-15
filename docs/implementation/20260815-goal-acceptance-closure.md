@@ -342,3 +342,67 @@ footnote at ADR 0045 §1.3 points at the 54,847-vs-53,115 note.
 slot, with Dismiss present. That is a single-arm, single-camera confirmation that
 the reword reaches the screen; it is not a journey campaign and asserts nothing
 about the rollback arm.
+
+---
+
+## 7 — Review nits, and three things recorded rather than fixed
+
+Re-verdict was APPROVE-WITH-NITS. N1–N4 are closed in
+`[T007] Close review nits: README quote, residual pairing, paraphrase, tautological pin`.
+
+**N1 (required) — `README.md` still carried the pre-B3 sentence.** The quoted
+notice was missing "where the citywide base tier is active," and the prose around
+it re-asserted the unconditional claim B3 had just removed ("Their buildings are
+not missing from the screen — they draw as sourced base massing"). The quote is
+now the shipped string verbatim in a block quote, and the prose carries the
+condition and names the rollback arm explicitly. The second half of N1: the claim
+that "historical records and journey scripts … are left byte-identical" had
+survived the B1 fix and was, by then, false about the scripts. It is now scoped —
+**committed captures and descriptive prose are byte-identical; executable
+assertions were not**, and the seven predicate updates are named where the claim
+is made rather than only in this record.
+
+**N2 — two residual dense/exterior pairings.** B2 fixed the four sites review
+found; two more were arguing about the **exterior** byte cap using **dense**
+cache numbers: residual risk D-12 and criterion 9's `adjudicationDelta`. Both now
+read 14,369,372 B over 40 entries — 5.3 % of the 256 MiB cap and 7.8 % of the
+512-entry cap — which makes the same point (the measured paths never approach the
+cap these journeys would exercise) about the cache that actually has that cap,
+and makes it more strongly.
+
+**N3 — `docs/PROJECT_BRIEF.md` paraphrase** now carries the conditional clause.
+
+**N4 — a tautological pin.** The assertion compared the producer's output against
+another call of the same producer, which passes for any wording including a wrong
+one, and its comment claimed to be pinning stability it could not see. It is now
+a comparison against the whole shipped sentence as a **literal**.
+
+### Recorded, not fixed
+
+**N5 — 1813/1813 is a sample, not a stability claim.** Across the full-suite runs
+made for this task, review reports **one of seven failed a single test**, with six
+consecutive green afterwards; the three full runs made during implementation were
+all green. The relevant flake class is not new and is documented in the source:
+`src/runtime/exterior-wave-attribution.ts:5-9` records that a second test file
+importing `App` pulls the Cesium-bearing graph into another worker and
+"intermittently destabilises the timing-sensitive focus tests already in
+`App.test.tsx`", and the prior goal's record carries the same finding as a
+load-dependent timeout under CPU contention with `--no-file-parallelism` as the
+isolating measurement. **No green run in this record should be read as evidence
+that the suite is deterministic under load.**
+
+**N6 — `scripts/goal-bounded-gaps-cli.mjs` still says "ship no exterior
+geometry"** without "generated", at `:352` (a comment), `:485` (a
+`disclosedOcclusion` description) and `:961` (a pushed note). **Accepted and left
+alone**: all three are descriptive prose about a 2026-08-12 capture, **no
+predicate gates on any of them** (verified), and editing them would change the
+text a re-run writes into a record describing stills that were taken under the
+old wording.
+
+**N7 — the conditional clause is accurate but opaque.** "Where the citywide base
+tier is active" is precise engineering language and is not something an end
+reader can be assumed to parse; it names an internal tier by an internal name.
+It is correct in both arms, which is what B3 required, and it is **flagged for a
+human copy read before any public conveyance**. This is a readability debt, not a
+truth defect, and it is recorded here so a future task does not have to
+rediscover that the awkwardness is deliberate.
