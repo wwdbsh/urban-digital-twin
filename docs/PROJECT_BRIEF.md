@@ -186,10 +186,15 @@ selected, was true when nothing was drawn for those cells and became false by
 omission once they drew. **The binding constraint is no longer the 512-entry
 all-resident exterior cache contract**: the visibility scheduler of Decision
 0041 holds at most 128 resident cells against 883 visible, certified in Decision
-0042, and it is that cell cap rather than the byte cap that binds — measured
-dense residency at the island overview is 58,243,420 B over 99 entries against a
-256 MiB ceiling. Growing breadth is now a data-production question (materialize
-and retain more generated exteriors), not a runtime-scheduling one.
+0042, and it is that **cell cap** that binds. Two separate caches with two
+separate ceilings must not be conflated: the **exterior cell cache** (512
+entries / 256 MiB) measured 40 entries and 14,369,372 B at the island overview,
+so its byte cap does not bind; the **citywide dense shard cache**, a different
+pool with a resolved budget of 112 shards / 83,886,080 B, measured 58,243,420 B
+over 99 entries — 69.4% of its bytes and 88.4% of its entries, which is pressure
+rather than headroom and is the tightest reading in the build. Growing breadth
+is now a data-production question (materialize and retain more generated
+exteriors), not a runtime-scheduling one.
 
 **Fidelity claim.** Exteriors are **generated and designed, not observed**. The
 V3 grammar derives structure from the sourced footprint ring and height; four

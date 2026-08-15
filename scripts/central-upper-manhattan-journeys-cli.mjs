@@ -572,13 +572,23 @@ async function journeyTombstoneTruth(port, previewBase, subject, pose) {
     const waveNotice = notices.find((notice) => notice.includes(CENTRAL_UPPER_MANHATTAN_RELEASE_ID)) ?? null;
     return {
       journeyId: "tombstone-truth",
-      claim: `The ${subject.tombstonedCellCount} owned w04 cells this release does NOT materialize are reported in words — the release says how many of its ${subject.ownedCellCount} cells ship no exterior geometry and that no substitute was selected — rather than going quiet.`,
+      claim: `The ${subject.tombstonedCellCount} owned w04 cells this release does NOT materialize are reported in words — the release says how many of its ${subject.ownedCellCount} cells ship no generated exterior geometry, and what draws for them instead — rather than going quiet.`,
       url,
       notices,
       waveNotice,
       passed: typeof waveNotice === "string"
         && waveNotice.includes(`${subject.tombstonedCellCount} of ${subject.ownedCellCount}`)
-        && waveNotice.includes("no substitute was selected"),
+        // T007: asserted on the sentence's FIRST clause, which is a pure release
+        // fact and is therefore ARM-INDEPENDENT — true under the default, under
+        // `?exteriorStreaming=off` and under the rollback `?exteriorScheduler=off`.
+        // The second clause is conditional ("where the citywide base tier is
+        // active, …") because the rollback arm withdraws the overview residency,
+        // and asserting on it would make this journey pass or fail by session
+        // configuration rather than by whether the release told the truth.
+        // The pre-T007 predicate read "no substitute was selected", which the
+        // reword removed; a predicate left behind would have failed every future
+        // live run against a sentence that is more truthful, not less.
+        && waveNotice.includes("no generated exterior geometry"),
       still: await still(session, "tombstone-truth"),
     };
   } finally { await closePage(port, session); }

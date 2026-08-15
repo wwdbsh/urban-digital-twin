@@ -149,6 +149,39 @@ describe("every committed artifact this record cites still exists and still hash
   });
 });
 
+/**
+ * Criterion 12 claims the documentation closure happened. Two of its three
+ * limbs are cheap to check, so they are checked: a criterion that asserts its
+ * own closure and is believed on its word is the weakest entry in the table.
+ *
+ * The prior record is read for STRUCTURE only, never for its hash — the hash
+ * reference runs the other way (that record cites this one), and checking it
+ * from both ends would be an unresolvable cycle on every edit.
+ */
+describe("criterion 12's documentation closure is checked, not taken on trust", () => {
+  it("finds the T007 amendment closing criterion 22 in the prior goal's record", () => {
+    const prior = JSON.parse(readFileSync("data/goal-integration-acceptance-20260812/reconciliation.json", "utf8"));
+    const amendment = prior.closures.amendments?.find((entry) => entry.task === "T007 (Issue #72)");
+    expect(amendment, "no T007 amendment in the prior-goal record").toBeTruthy();
+    expect(amendment.closedCriteria).toEqual([22]);
+    // And the thing that makes the closure honest rather than tidy: criterion 1
+    // did NOT come along with it.
+    expect(prior.closures.remainingNotMet).toEqual([1]);
+  });
+
+  it("finds the two-tier framing in both documents it says it rewrote", () => {
+    // The specific overstatement this goal is most exposed to is quoting 484 of
+    // 45,194 as "what renders". Both documents must carry the drawn count and
+    // must name the 484 figure as the textured tier.
+    for (const path of ["README.md", "docs/PROJECT_BRIEF.md"]) {
+      const text = readFileSync(path, "utf8");
+      expect(text, `${path} does not state the drawn count`).toContain("41,841");
+      expect(text.toLowerCase(), `${path} does not frame 484 as the textured tier`).toContain("textured");
+      expect(text, `${path} does not state the measured dense residency`).toContain("58,243,420");
+    }
+  });
+});
+
 describe("residual risks are recorded rather than the goal being closed silently", () => {
   it("keeps every risk a readable string", () => {
     expect(record.residualRisks.length).toBeGreaterThanOrEqual(8);

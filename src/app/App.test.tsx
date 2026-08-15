@@ -1188,11 +1188,11 @@ describe("exterior fallback notice presentation", () => {
     const digest = digestExteriorNotices([waveEntry(MIDTOWN, 146, 149), waveEntry(LOWER, 124, 126)]);
     expect(digest.notShipped?.cellCount).toBe(270);
     expect(digest.notShipped?.totalCellCount).toBe(275);
-    expect(digest.notShipped?.summary).toBe("270 of 275 exterior cells declared by this build ship no generated exterior geometry (by design); their buildings draw as sourced base massing (footprint extruded to sourced height), which is not a generated exterior.");
+    expect(digest.notShipped?.summary).toBe("270 of 275 exterior cells declared by this build ship no generated exterior geometry (by design); where the citywide base tier is active, their buildings draw as sourced base massing (footprint extruded to sourced height), which is not a generated exterior.");
     // Nothing was invented and nothing was lost: both original lines survive.
     expect(digest.notShipped?.lines.map((line) => line.text)).toEqual([
-      `Exterior release ${MIDTOWN}: 146 of 149 exterior cells declared by this release ship no generated exterior geometry; their buildings draw as sourced base massing (footprint extruded to sourced height), which is not a generated exterior.`,
-      `Exterior release ${LOWER}: 124 of 126 exterior cells declared by this release ship no generated exterior geometry; their buildings draw as sourced base massing (footprint extruded to sourced height), which is not a generated exterior.`,
+      `Exterior release ${MIDTOWN}: 146 of 149 exterior cells declared by this release ship no generated exterior geometry; where the citywide base tier is active, their buildings draw as sourced base massing (footprint extruded to sourced height), which is not a generated exterior.`,
+      `Exterior release ${LOWER}: 124 of 126 exterior cells declared by this release ship no generated exterior geometry; where the citywide base tier is active, their buildings draw as sourced base massing (footprint extruded to sourced height), which is not a generated exterior.`,
     ]);
     expect(digest.verbatim).toEqual([]);
     expect(digest.entryCount).toBe(2);
@@ -1211,11 +1211,20 @@ describe("exterior fallback notice presentation", () => {
    */
   it("keeps the reworded not-shipped sentence recognized by the digest rather than falling through to verbatim", () => {
     const entry = waveEntry(MIDTOWN, 146, 149);
-    // The sentence states BOTH halves: no generated exterior ships, and what
-    // the reader is actually looking at instead.
-    expect(entry.notice).toContain("ship no generated exterior geometry");
-    expect(entry.notice).toContain("draw as sourced base massing (footprint extruded to sourced height)");
+    // CLAUSE 1 — a pure release fact, true in EVERY arm. This exact substring
+    // is what the seven journey CLIs assert on, so it is pinned here: moving
+    // it silently breaks a live predicate no unit test would otherwise reach.
+    expect(entry.notice).toContain("no generated exterior geometry");
+    // CLAUSE 2 — CONDITIONAL, and the condition is the point. Under the
+    // rollback arm (`?exteriorScheduler=off`) overview residency is withdrawn
+    // and those buildings do NOT draw, so an unconditional promise here would
+    // be affirmatively false in that arm rather than merely incomplete.
+    expect(entry.notice).toContain("where the citywide base tier is active, their buildings draw as sourced base massing (footprint extruded to sourced height)");
     expect(entry.notice).toContain("which is not a generated exterior");
+    // The condition is WORDS, not plumbing: one stable string, no session flag
+    // read, so the digest has one shape to recognize and `dismissalKey` cannot
+    // change with configuration.
+    expect(entry.notice).toBe(waveEntry(MIDTOWN, 146, 149).notice);
     // And it is NOT the pre-flip wording, which asserted that nothing at all
     // was there for buildings the reader can now see.
     expect(entry.notice).not.toContain("no substitute was selected for them");

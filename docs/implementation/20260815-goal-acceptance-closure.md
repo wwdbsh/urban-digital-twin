@@ -5,9 +5,9 @@ record, corrects the one user-visible sentence the flip made untrue, and amends
 the prior goal's reconciliation on a user decision. No feature work, no new
 measurement campaign, and no deployment.
 
-Four commits, deliberately separable. The notice reword is a runtime change; the
+Five commits, deliberately separable. The notice reword is a runtime change; the
 two records are evidence; the documentation is prose. Each can be reverted
-without the others.
+without the others. The fifth closes an independent review — see §6.
 
 | # | commit | what it changes |
 | --- | --- | --- |
@@ -15,6 +15,7 @@ without the others.
 | 2 | `[T007] Citywide goal acceptance record` | new `data/citywide-goal-acceptance-20260815/reconciliation.json` + `scripts/citywide-goal-acceptance.test.mjs` |
 | 3 | `[T007] Prior-goal reconciliation: #22 closed by adjudication, #1 honestly retained` | `data/goal-integration-acceptance-20260812/reconciliation.json` + its pinning test |
 | 4 | `[T007] Docs closure: README, PROJECT_BRIEF, residual risks` | `README.md`, `docs/PROJECT_BRIEF.md`, an ADR 0045 addendum, this record |
+| 5 | `[T007] Close review: journey predicates, ceiling pairing, rollback-arm truth` | seven journey CLIs, both records, both documents, the ADR addendum, `exterior-cache-eviction-correctness.test.ts`, and the notice's second clause |
 
 ---
 
@@ -31,16 +32,29 @@ dense shards — so the sentence reads as "nothing is there" about buildings the
 reader can see on screen. It now reads:
 
 > N of M exterior cells declared by this release ship no **generated** exterior
-> geometry; their buildings draw as **sourced base massing (footprint extruded
-> to sourced height)**, which is not a generated exterior.
+> geometry; **where the citywide base tier is active**, their buildings draw as
+> **sourced base massing (footprint extruded to sourced height)**, which is not
+> a generated exterior.
 
 with the build-level aggregate saying the same thing across releases.
 
-**What the fix deliberately is not.** It is not conditioned on dense residency,
-adds no state to `App.tsx`, and takes no camera-dependent input. `notShippedLines`
-feeds the notice's `dismissalKey`, so a residency-conditioned line would blink
-with the camera and re-arm a notice the reader had already dismissed — the defect
-PR #64 fixed. Both counts remain release facts read from the release declaration.
+**Two clauses, load-bearing in different ways.** The **first** —
+"ship no generated exterior geometry" — is a pure release fact, true in every arm
+and at every camera; it is the substring the seven journey CLIs assert on. The
+**second** is **conditional**, and review is why: under the rollback arm
+(`?exteriorScheduler=off`) overview residency is withdrawn and only 5,289
+buildings draw, so an unconditional "their buildings draw as sourced base
+massing" is *affirmatively false* there — it would claim ~41k buildings are on
+screen that are not. "Where the citywide base tier is active" makes one sentence
+true in both arms.
+
+**What the fix deliberately is not.** The condition is **words, not plumbing**:
+no session flag is read, no state is added to `App.tsx`, and nothing is gated on
+dense residency or on the camera. Reading the arm would make the string vary with
+configuration, and `notShippedLines` feeds the notice's `dismissalKey`, so a
+configuration-dependent line re-arms a notice the reader already dismissed (the
+defect PR #64 fixed) and gives the digest two shapes to recognize instead of one.
+Both counts remain release facts read from the release declaration.
 
 **Three sites had to move together**, because a stale pattern does not throw:
 
@@ -86,10 +100,10 @@ records. The test is therefore the whole instrument.
 | 3 | MET-AS-ADJUDICATED | Block 835 `lod_0`↔`lod_1` PASS at 10.9× margin — the only *eligible* transition; the dense→V3 swap carries no 2 % guarantee by pre-registered decision |
 | 4 | MET | ADR 0040 arithmetic re-derived, ADR 0043 raises recorded, rebuild cost measured at two scales, revival clause exercised and did not fire |
 | 5 | MET | every station passes the **tighter** pair (worst p50 8.3 ms, worst p95 15.9 ms), off a measured 7.8 ms vsync floor, pan storm included |
-| 6 | MET | eviction correctness and no-stale-render from T003, hysteresis from T002, byte residency from T006 — and it names which cap binds |
+| 6 | MET | eviction correctness, asserted pick identity and no-stale-render from T003, hysteresis from T002, residency from T006 — and it separates the two caches' ceilings |
 | 7 | **NOT-MET** | the repeated-camera-path heap verdict was never captured at citywide scale |
 | 8 | MET | `peakConcurrentRequests` 4 on the shared aggregate at every settled station, pool-enforced — with the pan-storm hole named inside the verdict |
-| 9 | MET-AS-ADJUDICATED | the journey suite passes; the two extended eviction journeys exist as real-runtime proofs, not as browser journeys |
+| 9 | MET-AS-ADJUDICATED | the committed journeys passed on the pre-reword build; the two extended eviction journeys exist as real-runtime proofs, not as browser journeys |
 | 10 | MET | rollback rehearsed live, shown three independent ways at once |
 | 11 | MET-AS-ADJUDICATED | the notice now says what draws; "zero by-design tombstones" is not literally delivered |
 | 12 | MET | ADRs, README, brief, prior-goal amendment, and this record |
@@ -106,9 +120,10 @@ repeated-path capture shaped like `heap-concurrency-evidence.json`
 the band edges and pressing the 128-cell cap so eviction is actually forced.
 
 **Where the record is deliberately uncomfortable.** #6 states that the scheduler
-**cell** cap binds and produced the observed eviction while the **byte** cap does
-not bind at today's data volume — citing only the byte cap would report a ceiling
-nothing presses against. #8 discloses that the pan-storm capture, the campaign's
+**cell** cap binds and produced the observed eviction, that the **exterior byte**
+cap does not bind at today's data volume, and that the **dense entry** budget —
+a different ceiling belonging to a different cache — sits at 88.4 % and is the
+tightest reading in the build. #8 discloses that the pan-storm capture, the campaign's
 highest-load camera, carries no concurrency reading at all, so the storm's bound
 is structural rather than observed.
 
@@ -187,8 +202,14 @@ reality. The changes that matter:
   figure is re-framed as the **textured V3 tier** rather than as "what renders".
   Conflating those two numbers is the easiest way to overstate this project.
 - The 512-entry bound is replaced by the **scheduler-pool bound** (128 resident
-  cells of 883 visible) plus the measured residency (58,243,420 B / 99 entries
-  against 256 MiB), and the text states that the **cell** cap is what binds.
+  cells of 883 visible), and the text states that the **cell** cap is what binds.
+- **The two caches are separated, because pairing the wrong residency with the
+  wrong ceiling understated the pressure.** The exterior cell cache (512 entries
+  / 256 MiB) measured 40 entries / 14,369,372 B at the overview — 7.8 % and
+  5.3 %, so its byte cap does not bind. The citywide dense shard cache is a
+  different pool with its own resolved budget of 112 shards / 83,886,080 B, and
+  it measured 58,243,420 B / 99 entries — 69.4 % of bytes and **88.4 % of
+  entries**, which is pressure, not headroom.
 - `?exteriorStreaming=off` is corrected to what
   `stations-dense-only.json` **measured**: it disables the six promoted V3 waves
   and says nothing about the citywide overview — the island still draws
@@ -202,16 +223,39 @@ reality. The changes that matter:
   this goal's criteria MET or adjudicated with criterion 7 open.
 - One line records that the notice **wording changed at T007** and why.
 
-**What was deliberately NOT touched.** Historical implementation records under
-`docs/implementation/`, the tombstone quotes in the journey CLIs
-(`scripts/central-upper-manhattan-journeys-p1-cli.mjs:524`,
-`scripts/goal-bounded-gaps-cli.mjs:352` and `:485`, and their siblings), and every
-committed capture that quotes the old sentence are left **byte-identical**. They
-are evidence of what was on screen at the time; rewriting them to match today's
-wording would be falsifying a capture.
+**What was left byte-identical, and what turned out NOT to be inert.** *(This
+paragraph is corrected from its first draft — see §6.)* Historical
+implementation records under `docs/implementation/`, the descriptive tombstone
+prose in `scripts/goal-bounded-gaps-cli.mjs:352` and `:485`, and every committed
+`journey-evidence.json` capture that quotes the old sentence are left
+**byte-identical**. They are evidence of what was on screen at the time, and
+rewriting them to match today's wording would be falsifying a capture.
 
-**ADR 0045** receives an **addendum section** recording the D-15 disposition. No
-existing section was rewritten.
+**But seven of those files also contained an EXECUTABLE assertion, not just
+prose**, and the first draft of this record missed the distinction — it cited
+only the prose `claim:` line and described the whole set as safely inert. Seven
+journey CLIs computed a live pass predicate
+`waveNotice.includes("no substitute was selected")`, which the reword deletes
+from the sentence; left alone they would have failed every future live run
+against a notice that is *more* truthful, not less. All seven predicates now
+assert the sentence's arm-independent **first clause**
+(`no generated exterior geometry`), and the `claim:` prose beside each was
+updated to describe what the predicate now checks:
+
+`lower-manhattan-journeys-cli.mjs`, `northern-manhattan-journeys-cli.mjs`,
+`northern-manhattan-journeys-p1-cli.mjs`,
+`southern-remainder-journeys-cli.mjs`,
+`southern-remainder-journeys-p1-cli.mjs`,
+`central-upper-manhattan-journeys-cli.mjs`,
+`central-upper-manhattan-journeys-p1-cli.mjs`.
+
+The committed captures those CLIs produced are untouched. **No post-reword
+journey campaign was run**, and the acceptance record's criterion 9 says so
+rather than implying the suite was re-captured.
+
+**ADR 0045** receives an **addendum section** recording the D-15 disposition and
+the conditional-wording decision, plus an **append-only footnote** at §1.3
+pointing at the 54,847-vs-53,115 discrepancy. No existing section was rewritten.
 
 ---
 
@@ -241,3 +285,60 @@ existing section was rewritten.
   say 53,115. The evidence supports 53,115; the drawn count of 41,841 is
   unaffected. Recorded rather than silently repaired, because T007 does not
   rewrite ADR sections.
+
+---
+
+## 6 — Review closure (same task, one commit)
+
+Independent review returned REQUEST-CHANGES with three blocking findings. All
+three were real, all three are closed in
+`[T007] Close review: journey predicates, ceiling pairing, rollback-arm truth`.
+
+**B1 — seven live journey predicates, not seven prose quotes.** The first draft
+of §4 treated every old-sentence occurrence as inert captured evidence. Seven of
+them were **executable**: `waveNotice.includes("no substitute was selected")`
+in seven journey CLIs, which the reword breaks. All seven now assert the
+arm-independent first clause; the `claim:` prose beside each was aligned; every
+committed capture is byte-identical; and criterion 9 of the acceptance record was
+rescoped to say the committed journeys were captured *pre*-reword and that **no
+post-reword campaign was run**.
+
+**B2 — the ceiling pairing was wrong in four places.** 58,243,420 B / 99 entries
+was described as "well inside" a 256 MiB / 512-entry ceiling. It is not that
+cache's residency at all: those bytes belong to the **citywide dense shard**
+pool, whose resolved budget is 112 shards / 83,886,080 B — **69.4 % of bytes and
+88.4 % of entries**. The 256 MiB / 512-entry ceiling belongs to the **exterior
+cell** cache, which measured 40 entries / 14,369,372 B (7.8 % / 5.3 %) and is the
+cache the "byte cap does not bind" claim is actually about. ADR 0041 warned in
+its own words that the two pools have separate ceilings and separate eviction and
+that adding them together is wrong; this is that error in the other direction.
+Corrected in the acceptance record's criterion 6, the prior record's criterion 1
+stop report, `README.md` and `docs/PROJECT_BRIEF.md`. The "cell cap binds" fact
+is unchanged and is now stated beside the two byte ceilings rather than in place
+of them.
+
+**B3 — the sentence was false in the rollback arm.** Closed by conditional
+wording rather than session-flag plumbing, for the reasons recorded in the ADR
+0045 addendum. The journey predicates from B1 match the *first* clause precisely
+so that they hold in both arms.
+
+**Optionals, all six taken.** O1 — a pick-identity assertion (release → refetch →
+compare the outcome's canonical feature id set, required equal and non-empty) now
+exists in `exterior-cache-eviction-correctness.test.ts`, and criterion 6's
+disclosure is upgraded from "by construction" to "asserted". O2 — criteria 6 and
+8 each name ADR 0045 §5.1's contrary campaign-scoped grade, and the addendum
+records that §5.1 is campaign-scoped and narrower rather than superseded. O3 —
+"four of the six" waves at `requestedArtifactCount` 0 corrected to **five of
+six** (only central-upper requested anything at 52 km, 40 artifacts). O4 — the
+acceptance test now checks the prior record carries a T007 amendment closing 22
+with `remainingNotMet` `[1]`, and that both documents carry the two-tier framing.
+O5 — the addendum records that the preserved single-cell branch is **dormant**
+with the live runtime (the app always supplies `declared`), so preserving it was
+cheap option value rather than a hard constraint met. O6 — an append-only
+footnote at ADR 0045 §1.3 points at the 54,847-vs-53,115 note.
+
+**Live check, scoped exactly.** A street-level real-release session on the
+**default arm** rendered the new aggregate sentence correctly, in the `notShipped`
+slot, with Dismiss present. That is a single-arm, single-camera confirmation that
+the reword reaches the screen; it is not a journey campaign and asserts nothing
+about the rollback arm.

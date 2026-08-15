@@ -84,7 +84,7 @@ export type ExteriorNoticeDigest = {
  * into `verbatim`, restoring the six-wave wall of text this digest exists to
  * replace.
  */
-const NOT_SHIPPED_PATTERN = /^(?:Exterior release (.+?): )?(\d+) of (\d+) exterior cells declared by this release ship no generated exterior geometry; their buildings draw as sourced base massing \(footprint extruded to sourced height\), which is not a generated exterior\.$/u;
+const NOT_SHIPPED_PATTERN = /^(?:Exterior release (.+?): )?(\d+) of (\d+) exterior cells declared by this release ship no generated exterior geometry; where the citywide base tier is active, their buildings draw as sourced base massing \(footprint extruded to sourced height\), which is not a generated exterior\.$/u;
 
 /**
  * `exteriorDeferredCellNotice` / `exteriorReleasedArtifactNotice`. Kept as two
@@ -168,7 +168,7 @@ export function digestExteriorNotices(entries: readonly ExteriorNoticeEntry[]): 
     entryCount: entries.length,
     notShipped: notShippedLines.length > 0
       ? {
-        summary: `${notShippedCells} of ${notShippedTotal} exterior cells declared by this build ship no generated exterior geometry (by design); their buildings draw as sourced base massing (footprint extruded to sourced height), which is not a generated exterior.`,
+        summary: `${notShippedCells} of ${notShippedTotal} exterior cells declared by this build ship no generated exterior geometry (by design); where the citywide base tier is active, their buildings draw as sourced base massing (footprint extruded to sourced height), which is not a generated exterior.`,
         cellCount: notShippedCells,
         totalCellCount: notShippedTotal,
         lines: notShippedLines,

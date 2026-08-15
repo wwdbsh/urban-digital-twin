@@ -102,7 +102,7 @@ describe("aggregated bounded-availability notice attribution", () => {
       ...Array.from({ length: 146 }, (_, index) => notShipped(`midtown-cell-${index}`, `cell-release:${midtown.releaseId}:midtown-cell-${index}:v1`)),
     ];
     const line = exteriorQualifiedNotice(midtown.releaseId, exteriorNotShippedSummary(cells)!);
-    expect(line).toBe(`Exterior release ${midtown.releaseId}: 146 of 147 exterior cells declared by this release ship no generated exterior geometry; their buildings draw as sourced base massing (footprint extruded to sourced height), which is not a generated exterior.`);
+    expect(line).toBe(`Exterior release ${midtown.releaseId}: 146 of 147 exterior cells declared by this release ship no generated exterior geometry; where the citywide base tier is active, their buildings draw as sourced base massing (footprint extruded to sourced height), which is not a generated exterior.`);
     expect(line).not.toContain(block835.releaseId);
     // A wave that ships every cell contributes no aggregate line at all.
     expect(exteriorNotShippedSummary(block835Wave.outcomes)).toBeNull();
@@ -125,7 +125,7 @@ describe("aggregated bounded-availability notice attribution", () => {
       ...Array.from({ length: 146 }, (_, index) => notShipped(`midtown-cell-${index}`, `cell-release:${midtown.releaseId}:midtown-cell-${index}:v1`)),
     ];
     const declared = { cellCount: 149, notShippedCellCount: 146 };
-    expect(exteriorNotShippedSummary(reconciled, declared)).toBe("146 of 149 exterior cells declared by this release ship no generated exterior geometry; their buildings draw as sourced base massing (footprint extruded to sourced height), which is not a generated exterior.");
+    expect(exteriorNotShippedSummary(reconciled, declared)).toBe("146 of 149 exterior cells declared by this release ship no generated exterior geometry; where the citywide base tier is active, their buildings draw as sourced base massing (footprint extruded to sourced height), which is not a generated exterior.");
 
     // THE DEFECT THIS PINS. A street camera reconciles a handful of cells, so
     // the camera-scoped numerator collapses while the release's answer does
@@ -169,7 +169,7 @@ describe("aggregated bounded-availability notice attribution", () => {
   it("keeps two waves' identical notices distinguishable", () => {
     // The reason qualification is unconditional: the same text from two waves
     // must not collapse into one indistinguishable line.
-    const shared = "146 of 147 exterior cells declared by this release ship no generated exterior geometry; their buildings draw as sourced base massing (footprint extruded to sourced height), which is not a generated exterior.";
+    const shared = "146 of 147 exterior cells declared by this release ship no generated exterior geometry; where the citywide base tier is active, their buildings draw as sourced base massing (footprint extruded to sourced height), which is not a generated exterior.";
     const lines = [exteriorQualifiedNotice(block835.releaseId, shared), exteriorQualifiedNotice(midtown.releaseId, shared)];
     expect(new Set(lines).size).toBe(2);
     expect(lines[0]).toContain(block835.releaseId);

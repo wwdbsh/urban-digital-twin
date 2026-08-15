@@ -71,21 +71,43 @@ export function exteriorNotShippedSummary(
   // and "no substitute was selected" was the truth. After the flip their
   // buildings DO draw, as sourced base massing streamed from the citywide dense
   // shards, so the old wording was false by omission: it read as "nothing is
-  // there" about buildings the reader can see. The reword states both halves —
-  // no GENERATED exterior ships, and what draws instead — and it is stated
-  // UNCONDITIONALLY. It is not gated on dense residency: the counts are release
-  // facts and the line must not blink with the camera, and `notShippedLines`
-  // feeds `dismissalKey`, so a camera-dependent line would re-arm a notice the
-  // reader already dismissed (the defect PR #64 fixed).
+  // there" about buildings the reader can see.
+  //
+  // The sentence therefore has TWO CLAUSES, and they are load-bearing in
+  // different ways.
+  //
+  //   FIRST CLAUSE — "ship no generated exterior geometry". A pure release
+  //   fact, true in EVERY arm and at every camera. This is the clause the
+  //   journey CLIs assert on, precisely because it cannot become false when a
+  //   session is configured differently.
+  //
+  //   SECOND CLAUSE — "WHERE THE CITYWIDE BASE TIER IS ACTIVE, their buildings
+  //   draw as sourced base massing …". Conditional wording, and the condition
+  //   is not decoration. Under `?exteriorScheduler=off` the overview residency
+  //   is withdrawn (`overviewResidencyActive` false, 5,289 drawn rather than
+  //   41,841), so an unconditional "their buildings draw as sourced base
+  //   massing" is affirmatively FALSE in the rollback arm — it would claim
+  //   ~41k buildings are on screen that are not.
+  //
+  // The condition is expressed in WORDS rather than plumbed from a session
+  // flag, deliberately. Reading the arm here would make the string vary with
+  // session state, and `notShippedLines` feeds `dismissalKey`: a line that
+  // changes with configuration re-arms a notice the reader already dismissed
+  // (the defect PR #64 fixed) and gives the digest two strings to recognize
+  // instead of one. One stable sentence, true in both arms, costs a clause.
+  //
+  // The line stays UNCONDITIONAL in the sense that matters: both counts are
+  // release facts, nothing is gated on dense residency or on the camera, and
+  // the line is emitted whenever it is true.
   if (declared && declared.cellCount > 0) {
     return declared.notShippedCellCount > 0
-      ? `${declared.notShippedCellCount} of ${declared.cellCount} exterior cells declared by this release ship no generated exterior geometry; their buildings draw as sourced base massing (footprint extruded to sourced height), which is not a generated exterior.`
+      ? `${declared.notShippedCellCount} of ${declared.cellCount} exterior cells declared by this release ship no generated exterior geometry; where the citywide base tier is active, their buildings draw as sourced base massing (footprint extruded to sourced height), which is not a generated exterior.`
       : null;
   }
   const notShipped = cells.filter((cell) => cell.kind === "not-shipped");
   if (notShipped.length === 0) return null;
   if (notShipped.length === 1) return notShipped[0]!.notice;
-  return `${notShipped.length} of ${cells.length} exterior cells declared by this release ship no generated exterior geometry; their buildings draw as sourced base massing (footprint extruded to sourced height), which is not a generated exterior.`;
+  return `${notShipped.length} of ${cells.length} exterior cells declared by this release ship no generated exterior geometry; where the citywide base tier is active, their buildings draw as sourced base massing (footprint extruded to sourced height), which is not a generated exterior.`;
 }
 
 /**

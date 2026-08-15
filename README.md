@@ -184,10 +184,17 @@ is only the second of them.
 - **The 512-entry all-resident cache contract is no longer the binding
   constraint.** Breadth is now a function of what the camera can see: the
   visibility scheduler holds at most **128 resident cells** against 883 visible
-  (`EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY`, certified in Decision 0042), and the
-  cell cap — not the byte cap — is what binds. Measured dense residency at the
-  island overview is **58,243,420 B over 99 entries**, well inside the 256 MiB /
-  512-entry ceiling.
+  (`EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY`, certified in Decision 0042), and
+  that **cell cap is what binds**.
+- **Two caches, two ceilings — they are easy to conflate and are kept apart
+  here.** The **exterior cell cache** (ceiling 512 entries / 256 MiB) measured
+  **40 entries / 14,369,372 B** at the island overview — 7.8% and 5.3% of its
+  ceilings, so its byte cap does not bind. The **citywide dense shard cache** is
+  a separate pool with its own resolved budget of **112 shards / 83,886,080 B**,
+  and it measured **58,243,420 B over 99 entries** — 69.4% of its bytes and
+  **88.4% of its entries**. That last figure is the closest thing to a ceiling
+  anywhere in this build; it did not evict during the campaign, but it is
+  pressure, not headroom. Adding the two pools together is always wrong.
 - Frame budgets hold on the **tighter** pair at every measured station: worst
   p50 8.3 ms and worst p95 15.9 ms against 16.7 ms / 25 ms, off a measured
   7.8 ms vsync floor, including a 12-drag pan storm.
