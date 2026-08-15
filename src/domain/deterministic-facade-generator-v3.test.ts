@@ -14,6 +14,7 @@
  * are concave (doitt:925937 is a convex quadrilateral), and doitt:131170 carries
  * one genuine reflex vertex rather than four.
  */
+import { readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import releaseJson from "../../public/data/manhattan-esb-block-exterior-pilot-20260805/release.json";
 import { enuFrame, readPilotBuildings, toEnuMeters, type PilotBuildingSource } from "../release/block835-reference-package.ts";
@@ -726,5 +727,59 @@ describe("(T003) grammar extensions are inert by default", () => {
     expect(active.ok && extended.ok).toBe(true);
     if (!active.ok || !extended.ok) return;
     expect(stableSerialize(extended.value)).toBe(stableSerialize(active.value));
+  });
+});
+
+/**
+ * (T003) The extensions stay inert, checked STATICALLY rather than per caller.
+ *
+ * ADR 0048 withholds activation because a wider admission envelope changes what
+ * the already-approved V3 wave releases emit when they are re-derived. That is a
+ * property of the whole repository, not of any one wave, and asserting it wave by
+ * wave would need five tests that a sixth wave could silently escape.
+ *
+ * So it is asserted once, over the source: outside its own definition, its tests
+ * and the census CLI that measures it, NOTHING may name the extended envelope. A
+ * module that starts using it fails here, in the domain suite, with this comment
+ * attached — which is the conversation that should happen before an approved
+ * release quietly grows.
+ */
+describe("(T003) no shipping module reaches for the extended envelope", () => {
+  const ALLOWED = new Set([
+    // Where the extensions are defined.
+    "src/domain/deterministic-facade-generator-v3.ts",
+    // The census that measures them, and the drift gate over its record.
+    "scripts/grammar-extension-census-cli.mjs",
+    "scripts/grammar-extension-census.test.mjs",
+  ]);
+  const SYMBOLS = ["V3_EXTENDED_GRAMMAR_OPTIONS", "V3_EXTENDED_MAX_RING_VERTICES"];
+
+  it("is referenced only by its own definition, its tests, and the census CLI", () => {
+    const decoder = new TextDecoder("utf-8");
+    const offenders: string[] = [];
+    let scanned = 0;
+    for (const root of ["src", "scripts"]) {
+      for (const entry of readdirSync(root, { recursive: true, withFileTypes: true })) {
+        if (!entry.isFile() || !/\.(?:ts|tsx|mjs)$/u.test(entry.name)) continue;
+        const path = `${entry.parentPath}/${entry.name}`.replace(/\\/gu, "/");
+        if (ALLOWED.has(path)) continue;
+        // This file names the symbols in its own assertions.
+        if (path.endsWith("deterministic-facade-generator-v3.test.ts")) continue;
+        scanned += 1;
+        const text = decoder.decode(readFileSync(path));
+        for (const symbol of SYMBOLS) if (text.includes(symbol)) offenders.push(`${path} references ${symbol}`);
+      }
+    }
+    // A walk that silently found nothing would pass this test vacuously.
+    expect(scanned).toBeGreaterThan(100);
+    expect(offenders).toEqual([]);
+  });
+
+  it("keeps the shipped grammar's own defaults at the pre-extension envelope", () => {
+    // The one-line change that activates. Stated as an equality so flipping it
+    // is a deliberate, reviewed edit rather than a side effect.
+    expect(deriveV3Parameters({ footprintOuterMm: [[0, 0], [20_000, 0], [20_000, 15_000], [0, 15_000]], heightMm: 2_400 }).targetFloorHeightMm)
+      .toBe(V3_NOMINAL_FLOOR_HEIGHT_MM);
+    expect(DETERMINISTIC_FACADE_V3_LIMITS.maxRingVertices).toBeLessThan(V3_EXTENDED_MAX_RING_VERTICES);
   });
 });

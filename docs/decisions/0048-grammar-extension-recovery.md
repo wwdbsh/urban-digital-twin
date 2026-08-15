@@ -85,14 +85,21 @@ generically `O(outer.length)`. The superlinear predicates were **timed at the
 observed maximum rather than assumed cheap**, on the 362-vertex ring of
 `doitt:17224`:
 
-| predicate | complexity | measured at n = 362 |
+| predicate | complexity | measured at n = 362, two runs |
 | --- | --- | --- |
-| `ringIsSimple` | O(n²) | 1.05 ms |
-| `earClipRing` | O(n³) worst case | 40.3 ms |
-| `ringLocalThicknessMm` | O(n³) via its interior-midpoint test | 50.0 ms |
+| `ringIsSimple` | O(n²) | 1.05 / 1.41 ms |
+| `earClipRing` | O(n³) worst case | 40.3 / 58.1 ms |
+| `ringLocalThicknessMm` | O(n³) via its interior-midpoint test | 50.0 / 57.1 ms |
+
+Two runs are quoted because these are **host observations, not deterministic
+facts**, and the spread between them is the honest bound. The second run is
+committed in `data/grammar-extension-20260815/sample-observations.json`, which
+labels it as such and is excluded from every replay assertion. Tens of
+milliseconds at the worst ring in the city is the finding; the exact figure is
+not.
 
 End to end, the recovered set's per-building plan wall clock is median 5 ms, p95
-104 ms, max 582 ms. That worst case is the 362-vertex ring, and it is bounded.
+105 ms, max 584 ms. That worst case is the 362-vertex ring, and it is bounded.
 
 A cap is read only by the admission gate and by the text of the refusal that gate
 writes. No plan content depends on it, so it ships **no designed massing**: the
@@ -171,12 +178,33 @@ nothing — but it is a fidelity failure a viewer would read as one.
 A second defect surfaced in the same pass: `buildPrisms` filters each prism for
 crown containment INDIVIDUALLY, so a water tank can be dropped while its legs
 survive. **117 of the 694** recovered buildings ship water-tank legs holding up
-no tank. This is pre-existing and affects the shipped waves too; it is recorded
-here because this is where it was found.
+no tank.
 
-Neither defect is caused by extension B and neither is fixed here — fixing them
-is designed geometry and belongs to its own task. Both are **activation blockers**
-for B: shipping it as-is would put absurd rooftop clusters on 375 real buildings.
+**Both defects are far larger on the SHIPPED population than on the recovered
+one, and neither is caused by extension B.** Measured here under the SHIPPED
+envelope over a 1-in-20 stride through ledger order (2,217 parents planned):
+
+| | shipped stride (n = 2,217) | recovered set (n = 694) |
+| --- | --- | --- |
+| water-tank legs with no tank | **571 (25.8%)** | 117 (16.9%) |
+| silhouette top ÷ sourced height, median | 1.11 | 1.38 |
+| p95 | 1.36 | 2.61 |
+| max | 2.46 | 18.7 |
+
+Roughly **one shipped building in four already renders legs holding up nothing**.
+An independent reviewer stride over the same snapshot reported 656 of 2,215
+(29.6%) and ratios 1.10 / 1.33 / 2.41; the two runs differ only in stride offset
+and agree on the finding. The recovered set is worse on the RATIO because a
+fixed-scale rooftop cluster is proportionally larger on a 2.7 m building, and
+better on the orphan-leg SHARE because low-rise crowns are less likely to clip.
+
+Neither defect is fixed here — fixing them is designed geometry and belongs to a
+task that owns designed massing. **Destination: both are added to the T004
+hand-off items, and T004's architect round must decide fix-before-mass-generation
+versus record-and-defer.** They are recorded as activation blockers for B
+(shipping it as-is puts an out-of-scale rooftop cluster on 375 real low-rise
+buildings) and, independently, as a pre-existing defect of the four promoted
+waves that no task has yet owned.
 
 ### Extension C — sub-20 m² footprints: REFUSED BY DESIGN
 
@@ -190,34 +218,73 @@ that the priority-ordered classifier reports as `ring-vertex-count-unsupported`)
 
 min 4.67 m², median 15.80 m², p95 19.25 m², max 19.82 m².
 
-**The decision is to refuse all 114, and the reason is the shape of that
-distribution.** It is a monotone ramp rising toward the threshold with no gap and
-no second mode — the signature of a cut through a continuum, not of a separable
-population of plausible small structures sitting near the floor. There is no
-boundary anywhere in [4.67, 19.82] m² that the data itself nominates. Choosing
-one — "recover 15–20 m²" — would be asserting where the digitising-artefact
-boundary lies with no source evidence for it, which is precisely the failure the
-invariant "unknown or ambiguous source facts must never become asserted truth"
-forbids.
+(min 4.67 m², median 15.80 m², p95 19.25 m², max 19.82 m². Quantiles are
+nearest-rank, so the median is an observed value and not an interpolation.)
 
-Two further measurements support the refusal rather than contradicting it. The
-neck gate is **not** what blocks these rings — local thickness runs 2,062 mm to
-4,302 mm and **zero** of the 114 are below the grammar's 600 mm minimum — so
-recovery would not be blocked downstream; it would genuinely ship 114 assertions
-that a 4.67 m² polygon is a building. And **68 of the 114 are also below the
-nominal floor height**, i.e. tiny in plan AND under 3.6 m tall, which is what a
-sliver or a traced appurtenance looks like, not a garage.
+**The decision is to refuse all 114, and the reason is that the area density is
+CONTINUOUS ACROSS the floor.** Extending the same 2 m² bands past 20 m², over
+every enumerated parent:
 
-The code's own recorded rationale already says this, at
-`deterministic-facade-generator-v3.ts:156-157`: "Twenty square metres. Below this
-a 'building footprint' is a digitising artefact." Blanket recovery would have
-overridden a documented source judgement with nothing.
+| band (m²) | 14–16 | 16–18 | **18–20** ‖ **20–22** | 22–24 | 24–26 | 26–28 |
+| --- | --- | --- | --- | --- | --- | --- |
+| count | 26 | 26 | **28 ‖ 27** | 27 | 36 | 64 |
+
+The threshold sits in the middle of a smooth rise. 28 buildings in the last band
+below it, 27 in the first band above it — nothing changes at 20 m² except the
+grammar's verdict. There is no gap, no second mode and no boundary anywhere in
+[4.67, 19.82] m² that the data itself nominates. Recovering any sub-band —
+"15–20 m²", "the top half" — would be **pure assertion**: picking where the
+artefact/building line falls with no evidence for that line, which is exactly what
+"unknown or ambiguous source facts must never become asserted truth" forbids.
+
+This rests the refusal on the measured distribution rather than on the authority
+of the 20 m² constant. That constant's own comment
+(`deterministic-facade-generator-v3.ts:156-157`, "Twenty square metres. Below this
+a 'building footprint' is a digitising artefact") is a designed threshold with no
+more derivation behind it than the 64-vertex cap this ADR raises — so it is cited
+as the repository's standing classification, not as proof.
+
+Two further measurements support the refusal. The neck gate is **not** what
+blocks these rings — local thickness runs 2,062 mm to 4,302 mm and **zero** of the
+114 are below the grammar's 600 mm minimum — so recovery would not be caught
+downstream; it would genuinely ship 114 assertions that a 4.67 m² polygon is a
+building. And **68 of the 114 are also below the nominal floor height**, i.e. tiny
+in plan AND under 3.6 m tall.
 
 **Adjudication.** Leaving these 114 tombstoned is CONSISTENT with the goal's
 acceptance criterion, which permits degenerate-data refusals to remain. The
 grammar's own recorded rationale classifies them as data artefacts, so they are
 degenerate-data refusals by the repository's own standing definition. This is
 stated as an adjudication rather than assumed.
+
+**Scope deviation, recorded.** The task contract named three *generating*
+extensions. C generates nothing. The contract's own form for C was
+attempt-and-name-the-outcome — "MEASURE FIRST, DO NOT GENERATE BY FIAT … else
+REFUSE ALL BY DESIGN with the rationale re-stated" — so refusing is a permitted
+outcome and not an unmet deliverable, but the deviation from "three extensions"
+to "two extensions and one measured refusal" is stated here rather than left to be
+inferred from the counts.
+
+### Extension B has no evidenced LOWER bound, and that asymmetry is deliberate
+
+The recovered low-rise set runs down to **305 mm**: 6 recovered parents are under
+1.00 m and 23 are under 2.00 m. **No lower admission bound is evidenced**, and
+none is invented here.
+
+The asymmetry with extension C is not an inconsistency, and the reason is what
+kind of fact each gate rests on. A sourced HEIGHT is a measurement, and the
+full-city dry run proves every one of these 384 carries a real one
+(`invalid-height: 0` over 45,194) — so admitting a 305 mm parent asserts nothing
+beyond what the source states. The 20 m² AREA FLOOR is a plausibility JUDGEMENT
+about whether a polygon denotes a building at all, and no measurement in the
+snapshot decides it. Refusing a judgement-based gate to change while accepting a
+measurement-based one is the consistent position.
+
+That said, a 305 mm "building" is very likely a kerb, a vault light or a traced
+appurtenance, and the grammar would render it with a full storefront, sign band
+and rooftop cluster. **The sub-1 m tail is flagged as an activation-review item
+alongside the rooftop defects below**: it needs a decision (admit, or bound with
+stated evidence), not a silent recovery.
 
 ## Evidence
 
@@ -298,7 +365,7 @@ Texture-free, both canonical LODs, from the real GLB writer.
 | LOD-0 triangles | 512 | 15,000 | 65,260 |
 | LOD-1 triangles | 276 | 6,112 | 25,316 |
 | both-LOD bytes | 40,028 | 783,348 | 3,268,380 |
-| plan wall clock | 5 ms | 104 ms | 582 ms |
+| plan wall clock | 5 ms | 105 ms | 584 ms |
 
 Total 125,738,128 B (≈ 119.9 MiB) across 1,388 assets. The worst LOD-0 triangle
 count, 65,260, is **under a third** of the 200,000 `V3_QUALITY_BUDGETS` ceiling,
@@ -334,6 +401,19 @@ than quietly superseded: the projection assumed the height and vertex refusals
 recovered cleanly and did not account for the 14 reclassifications, the 39
 neck refusals, the 35 asset-stage volume failures, or the 113 sub-area rings this
 ADR refuses by design.
+
+**The corrected full-city ceiling is 44,989 buildings** — 44,295 materialized plus
+694 recovered — not 45,116. ADR 0046's limit table and per-wave byte rows are
+computed against 45,116 and are therefore **conservative by 127 buildings**; a
+forward pointer to this ADR is appended there rather than rewriting a committed
+record.
+
+**The storage conclusions survive.** Measured, not modelled: the 694 recovered
+buildings cost **81.3 MiB** at the shipped single LOD and **119.9 MiB** at both
+LODs — 1.78% and 2.62% respectively of ADR 0046's 4.471 GiB untextured row, which
+was itself sized for 127 more buildings than now exist. Every verdict in that
+table ("fits", "no headroom", "BREACH" for the textured upper bound) is unchanged
+by this task, and the `assets` headroom improves.
 
 ## What is NOT decided here, and why
 
@@ -384,6 +464,17 @@ precedent:
 - **R2 — extended envelope selected per wave at the call site**, exactly as the
   seam already allows, with the frozen waves passing nothing.
 
+Whichever is chosen, one seam gap must be closed at activation: **`serializeV3Plan`
+does not take the envelope.** It calls `validateV3Plan(value)` with the module
+default, so a plan generated under the extended cap cannot be serialized — it is
+refused by its own serializer. `validateV3Plan` was threaded during this task;
+`serializeV3Plan` deliberately was not, because threading it would have been dead
+code while both extensions are inert. It is named here so activation does not
+rediscover it.
+
+**Hand-off.** The R1/R2 choice is an explicit T004 hand-off item, alongside the two
+rooftop defects and the sub-1 m admission tail.
+
 ## Corrections to the task contract
 
 Two premises did not survive measurement and are recorded rather than worked
@@ -400,6 +491,16 @@ around.
    `plan-index.json` and the `planHashSha256` metadata of every shipped GLB.
    **The generator version is NOT bumped.**
 2. **The extensions are release-neutral.** False, as set out above.
+
+Two scope deviations from the contract, both recorded rather than absorbed:
+
+- **Three generating extensions became two, plus one measured refusal.** C
+  generates nothing by adjudicated design; the contract's own form for C admitted
+  that outcome (see "Extension C" above), so the acceptance shape
+  attempt-and-name-the-outcome is met, but the count differs from "three".
+- **Activation is deferred**, as an explicit T004 hand-off item, together with the
+  two rooftop defects, the sub-1 m admission tail and the `serializeV3Plan`
+  envelope gap.
 
 One further finding, from implementation rather than from the contract:
 `validateV3Plan` re-runs the input contract, so a plan legitimately generated

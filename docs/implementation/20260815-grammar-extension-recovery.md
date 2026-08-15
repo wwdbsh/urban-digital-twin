@@ -90,14 +90,19 @@ Per-extension: A recovered 319 of 324; B recovered 375 of 384 (265 of 272 in
 [3.0, 3.6) m, 110 of 112 below 3.0 m); C recovered 0 of 114 by design.
 
 Against T001's projection: 694 measured versus 821 implied by its full-city asset
-count of 45,116 — **T001's projection was optimistic by 127**.
+count of 45,116 — **T001's projection was optimistic by 127**. The corrected
+full-city ceiling is **44,989** buildings. ADR 0046 carries an append-only forward
+note recording this; its byte rows are conservative by 127 buildings and every
+verdict survives. Measured incremental payload of the 694: 81.3 MiB at the shipped
+single LOD, 119.9 MiB at both LODs — 1.78% and 2.62% of the 4.471 GiB untextured
+row.
 
 ### Cost of the 694 (texture-free, both LODs)
 
 median 40,028 B / p95 783,348 B / max 3,268,380 B per building; 125,738,128 B
 total across 1,388 assets. Worst LOD-0 triangle count 65,260, under a third of
 the 200,000 budget, so no recovery refuses under `asset-budget-exceeded`.
-Per-building plan wall clock median 5 ms, p95 104 ms, max 582 ms.
+Per-building plan wall clock median 5 ms, p95 105 ms, max 584 ms.
 
 Ring predicates timed at the observed maximum n = 362 (`doitt:17224`):
 `ringIsSimple` 1.05 ms, `earClipRing` 40.3 ms, `ringLocalThicknessMm` 50.0 ms.
@@ -127,10 +132,16 @@ buildings.
   rather than in the goal-acceptance suite.
 - `goal-integration-reconciliation.test.mjs` — SHA-256 of all six wave censuses,
   so a future recovery cannot rewrite the 899 it is measured against.
-- `grammar-extension-census.test.mjs` — sidecar hash, the CLI's own invariants,
-  the 899 reconciliation, byte-equal digests, no added stop codes, recovery kept
-  separate from reclassification, a gate vector on every refusal, and extension C
-  carried as a decision with its measured basis.
+- `grammar-extension-census.test.mjs` — sidecar hashes for both records, the
+  CLI's own invariants, the 899 reconciliation, byte-equal digests, no added stop
+  codes, recovery recomputed from the per-building rows (not from the record's own
+  summary tables) and proved disjoint from reclassification, a gate vector on every
+  refusal, extension C carried as a decision with its measured basis, and the
+  Blender sample's one-floor/one-tier/crown-at-sourced-height claim.
+- `deterministic-facade-generator-v3.test.ts` — a STATIC inertness guard: no
+  module outside the generator, its tests and the census CLI may reference
+  `V3_EXTENDED_GRAMMAR_OPTIONS` or `V3_EXTENDED_MAX_RING_VERTICES`. One test
+  closes all five waves.
 
 ## Corrections recorded
 
@@ -141,6 +152,9 @@ buildings.
    drift four other frozen wave releases.
 3. The contract's expected ~244 / ~140 low-rise split is **272 / 112** when
    measured against the 384 rather than against the whole island.
+4. Scope: the contract named three *generating* extensions. C generates nothing,
+   by adjudicated design — its contract form was attempt-and-name-the-outcome, so
+   refusal is a permitted result, but the deviation is stated rather than inferred.
 
 ## Not done
 
@@ -148,4 +162,7 @@ buildings.
   NOT-MET.
 - The rooftop-scale and orphan-leg defects are recorded, not fixed.
 - The choice between R1 (envelope in `V3WaveProfile`) and R2 (envelope at the
-  call site) is left to adjudication.
+  call site) is left to adjudication, as a named T004 hand-off item.
+- `serializeV3Plan` still takes no envelope, so a plan generated under the extended
+  cap cannot round-trip through it. Deliberately not threaded while the extensions
+  are inert (it would be dead code); named in ADR 0048 as an activation task.

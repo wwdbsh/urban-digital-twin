@@ -29,14 +29,26 @@ import { MIDTOWN_CORE_V3_STOP_CODES } from "../src/release/midtown-core-v3-mater
 import { V3_EXTENDED_GRAMMAR_OPTIONS } from "../src/domain/deterministic-facade-generator-v3.ts";
 
 const SIDECAR_PATH = RECORD_PATH.replace(/\.json$/u, ".sha256");
+const OBSERVATIONS_PATH = join(repositoryRoot, "data", CENSUS_ID, "sample-observations.json");
 const PRESENT = existsSync(RECORD_PATH);
-const record = PRESENT ? JSON.parse(readFileSync(RECORD_PATH, "utf8")) : null;
+
+/**
+ * The record is committed, so its absence is a FAILURE and not a reason to skip.
+ * It is read once behind a guard rather than at module scope so that a missing
+ * file produces one honest failure below instead of a TypeError in every case.
+ */
+function readRecord() {
+  expect(PRESENT, `${RECORD_PATH} is committed evidence and must be present`).toBe(true);
+  return JSON.parse(readFileSync(RECORD_PATH, "utf8"));
+}
+const record = PRESENT ? readRecord() : null;
 
 describe("T003 grammar-extension census record", () => {
   it("is committed under its own new directory, never inside a frozen one", () => {
     expect(CENSUS_ID).toBe("grammar-extension-20260815");
     expect(RECORD_PATH.startsWith(join(repositoryRoot, "data", CENSUS_ID))).toBe(true);
     expect(PRESENT).toBe(true);
+    expect(existsSync(OBSERVATIONS_PATH)).toBe(true);
   });
 
   it("hashes to the checksum its sidecar records", () => {
@@ -90,14 +102,77 @@ describe("T003 grammar-extension census record", () => {
   });
 
   it("keeps RECOVERY and RECLASSIFICATION as separate numbers", () => {
-    const table = record.reclassificationVersusRecovery;
-    const recovered = Object.values(table.recoveredByShippedStopCode).reduce((total, value) => total + value, 0);
-    const residual = Object.values(table.residualByShippedStopCode).reduce((total, value) => total + value, 0);
-    expect(recovered).toBe(record.counts.recovered);
-    expect(residual).toBe(record.counts.residualRefused);
-    // A reclassified building is still refused: it must never be counted as
-    // recovered, which is what this equality forbids.
-    expect(table.reclassifiedCount).toBeLessThanOrEqual(record.counts.residualRefused);
+    // Recomputed from the per-building rows rather than read off the record's
+    // own summary tables: a summary that agreed only with itself would satisfy
+    // any assertion phrased against it.
+    const rows = record.refusals;
+    const recovered = rows.filter((row) => row.extendedOutcome === "generated");
+    const residual = rows.filter((row) => row.extendedOutcome === "refused");
+    expect(recovered.length + residual.length).toBe(rows.length);
+    expect(recovered.length).toBe(record.counts.recovered);
+    expect(residual.length).toBe(record.counts.residualRefused);
+
+    // A recovered building has no post-extension stop code; a refused one does.
+    for (const row of recovered) expect(row.extendedStopCode).toBeNull();
+    for (const row of residual) expect(typeof row.extendedStopCode).toBe("string");
+
+    // RECLASSIFIED is a strict subset of RESIDUAL — a reclassified building is
+    // still refused and must never be counted as progress.
+    const reclassified = residual.filter((row) => row.extendedStopCode !== row.shippedStopCode);
+    for (const row of reclassified) expect(row.reclassified).toBe(true);
+    expect(reclassified.length).toBe(record.reclassificationVersusRecovery.reclassifiedCount);
+    expect(reclassified.length).toBeLessThanOrEqual(residual.length);
+    expect(recovered.filter((row) => row.reclassified)).toEqual([]);
+
+    // ...and the record's summary tables must agree with the rows they claim to
+    // summarise, checked in that direction.
+    const tally = (subset) => subset.reduce((counts, row) => {
+      counts[row.shippedStopCode] = (counts[row.shippedStopCode] ?? 0) + 1;
+      return counts;
+    }, {});
+    expect(record.reclassificationVersusRecovery.recoveredByShippedStopCode).toEqual(tally(recovered));
+    expect(record.reclassificationVersusRecovery.residualByShippedStopCode).toEqual(tally(residual));
+  });
+
+  /**
+   * The Blender sample and the ring-predicate timings, committed beside the
+   * census so ADR 0048's claims can be checked rather than taken on trust.
+   *
+   * The deterministic half is asserted; the host-observation half is asserted
+   * only to be LABELLED, because a wall clock and an external Blender import do
+   * not replay byte for byte and a gate that pretended otherwise would fail for
+   * the wrong reason.
+   */
+  it("commits the extension-B sample observations, with host facts labelled as such", () => {
+    const bytes = readFileSync(OBSERVATIONS_PATH);
+    expect(readFileSync(OBSERVATIONS_PATH.replace(/\.json$/u, ".sha256"), "utf8"))
+      .toContain(createHash("sha256").update(bytes).digest("hex"));
+    const observations = JSON.parse(bytes.toString("utf8"));
+    expect(observations.censusId).toBe(CENSUS_ID);
+    expect(observations.envelope).toEqual({ ...V3_EXTENDED_GRAMMAR_OPTIONS });
+    expect(observations.hostObservations.note).toContain("NOT REPRODUCIBLE");
+    expect(observations.buildings).toHaveLength(8);
+    // Four per height band, as the sampling basis claims.
+    expect(observations.buildings.filter((row) => row.heightBand === "below-3m")).toHaveLength(4);
+    expect(observations.buildings.filter((row) => row.heightBand === "3.0-3.6m")).toHaveLength(4);
+
+    const recoveredIds = new Set(record.refusals.filter((row) => row.extendedOutcome === "generated").map((row) => row.buildingId));
+    for (const row of observations.buildings) {
+      // Every sampled building really is one the census recovered.
+      expect(recoveredIds.has(row.buildingId), row.buildingId).toBe(true);
+      // THE CLAIM EXTENSION B RESTS ON: one floor, one tier, and a crown at the
+      // sourced height. Deterministic, so it is asserted rather than described.
+      expect(row.floorCount, row.buildingId).toBe(1);
+      expect(row.effectiveTierCount, row.buildingId).toBe(1);
+      expect(row.roofZMm, row.buildingId).toBe(row.planHeightMm);
+      expect(row.planHeightMm, row.buildingId).toBeLessThan(3_600);
+      // And the Blender import found the sourced ring's own plan extents.
+      expect(row.blenderImport.xExtentMatchesSourcedRing, row.buildingId).toBe(true);
+      // The rooftop cluster is what makes the imported Z extent exceed the
+      // building, which is the defect ADR 0048 routes to T004 rather than a
+      // failure of the massing claim above.
+      expect(row.silhouetteTopOverSourcedHeight, row.buildingId).toBeGreaterThan(1);
+    }
   });
 
   it("carries a gate-failure VECTOR for every refusal, not just the priority winner", () => {

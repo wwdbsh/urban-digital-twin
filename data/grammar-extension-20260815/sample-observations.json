@@ -1,0 +1,606 @@
+{
+  "schemaVersion": "1.0",
+  "censusId": "grammar-extension-20260815",
+  "taskId": "T003",
+  "artifact": "extension-b-blender-sample-and-predicate-timings",
+  "note": "Companion to extension-census.json. Two kinds of fact, deliberately kept apart. `buildings[].*` except `blenderImport` are DETERMINISTIC: re-derived from the pinned snapshot through the same grammar entrypoint, so a replay rewrites them byte-identically. `hostObservations` and `buildings[].blenderImport` are HOST OBSERVATIONS — wall-clock timings and an external Blender import — and are NOT reproducible byte for byte. They are recorded rather than restated in prose so the ADR's claims can be checked, and they are excluded from every consistency assertion that a replay must satisfy.",
+  "base": {
+    "releaseId": "manhattan-citywide-20260804",
+    "manifestChecksumSha256": "acb5a9b52014f86535c8478e7d4e516efc03f6dff95c17e9896dfea4413c203c"
+  },
+  "envelope": {
+    "maxRingVertices": 384,
+    "lowRiseFloorHeight": true
+  },
+  "samplingBasis": "Extension B recovered 375 buildings. Eight were taken at an even stride through each of the two height bands (four from [3.0, 3.6) m and four from below 3.0 m), in census row order.",
+  "hostObservations": {
+    "note": "NOT REPRODUCIBLE BYTE FOR BYTE. Single-run wall clock on the task host, and an external Blender MCP import. Recorded for checkability, asserted by no replay gate.",
+    "ringPredicateTimingsAtObservedMaximum": {
+      "buildingId": "doitt:17224",
+      "ringVertexCount": 362,
+      "ringIsSimpleMs": 1.41,
+      "earClipRingMs": 58.05,
+      "ringLocalThicknessMs": 57.11
+    },
+    "blenderMcpUsed": true
+  },
+  "buildings": [
+    {
+      "buildingId": "doitt:1008967",
+      "heightBand": "3.0-3.6m",
+      "sourcedHeightMeters": 3.048,
+      "planHeightMm": 3048,
+      "floorCount": 1,
+      "effectiveTierCount": 1,
+      "ringVertexCount": 8,
+      "roofZMm": 3048,
+      "ringExtentXMeters": [
+        -3.769,
+        3.444
+      ],
+      "ringExtentYMeters": [
+        -3.151,
+        4.012
+      ],
+      "registration": {
+        "perVertexShapeDeviationMeters": 0.0005756473206832204,
+        "ringVertexPresenceMeters": 0,
+        "verticalDeviationMeters": 0
+      },
+      "prisms": [
+        {
+          "kind": "roof-equipment",
+          "heightMm": 451,
+          "topZMm": 3499
+        },
+        {
+          "kind": "water-tank",
+          "heightMm": 1128,
+          "topZMm": 5078
+        },
+        {
+          "kind": "water-tank-leg",
+          "heightMm": 902,
+          "topZMm": 3950
+        },
+        {
+          "kind": "water-tank-leg",
+          "heightMm": 902,
+          "topZMm": 3950
+        },
+        {
+          "kind": "water-tank-leg",
+          "heightMm": 902,
+          "topZMm": 3950
+        }
+      ],
+      "waterTankPresent": true,
+      "waterTankLegCount": 3,
+      "silhouetteTopMm": 5078,
+      "silhouetteTopOverSourcedHeight": 1.666,
+      "blenderImport": {
+        "meshObjects": 1,
+        "vertices": 384,
+        "zExtentMeters": 5.078,
+        "xExtentMeters": [
+          -3.769,
+          3.444
+        ],
+        "yExtentMeters": [
+          -3.151,
+          4.012
+        ],
+        "xExtentMatchesSourcedRing": true,
+        "yExtentMatchesSourcedRing": true
+      }
+    },
+    {
+      "buildingId": "doitt:1246322",
+      "heightBand": "3.0-3.6m",
+      "sourcedHeightMeters": 3.3528000000000002,
+      "planHeightMm": 3353,
+      "floorCount": 1,
+      "effectiveTierCount": 1,
+      "ringVertexCount": 4,
+      "roofZMm": 3353,
+      "ringExtentXMeters": [
+        -3.958,
+        3.958
+      ],
+      "ringExtentYMeters": [
+        -3.138,
+        3.138
+      ],
+      "registration": {
+        "perVertexShapeDeviationMeters": 0.0005202630083130822,
+        "ringVertexPresenceMeters": 0,
+        "verticalDeviationMeters": 0.00019999999999997797
+      },
+      "prisms": [
+        {
+          "kind": "roof-equipment",
+          "heightMm": 344,
+          "topZMm": 3697
+        },
+        {
+          "kind": "water-tank",
+          "heightMm": 861,
+          "topZMm": 4903
+        },
+        {
+          "kind": "water-tank-leg",
+          "heightMm": 689,
+          "topZMm": 4042
+        },
+        {
+          "kind": "water-tank-leg",
+          "heightMm": 689,
+          "topZMm": 4042
+        },
+        {
+          "kind": "water-tank-leg",
+          "heightMm": 689,
+          "topZMm": 4042
+        },
+        {
+          "kind": "water-tank-leg",
+          "heightMm": 689,
+          "topZMm": 4042
+        }
+      ],
+      "waterTankPresent": true,
+      "waterTankLegCount": 4,
+      "silhouetteTopMm": 4903,
+      "silhouetteTopOverSourcedHeight": 1.462,
+      "blenderImport": {
+        "meshObjects": 1,
+        "vertices": 492,
+        "zExtentMeters": 4.903,
+        "xExtentMeters": [
+          -3.958,
+          3.958
+        ],
+        "yExtentMeters": [
+          -3.2265,
+          3.138
+        ],
+        "xExtentMatchesSourcedRing": true,
+        "yExtentMatchesSourcedRing": false
+      }
+    },
+    {
+      "buildingId": "doitt:1290768",
+      "heightBand": "3.0-3.6m",
+      "sourcedHeightMeters": 3.048,
+      "planHeightMm": 3048,
+      "floorCount": 1,
+      "effectiveTierCount": 1,
+      "ringVertexCount": 5,
+      "roofZMm": 3048,
+      "ringExtentXMeters": [
+        -2.859,
+        3.968
+      ],
+      "ringExtentYMeters": [
+        -3.635,
+        4.752
+      ],
+      "registration": {
+        "perVertexShapeDeviationMeters": 0.0004839450834908522,
+        "ringVertexPresenceMeters": 0,
+        "verticalDeviationMeters": 0
+      },
+      "prisms": [
+        {
+          "kind": "roof-equipment",
+          "heightMm": 328,
+          "topZMm": 3376
+        },
+        {
+          "kind": "water-tank",
+          "heightMm": 819,
+          "topZMm": 4522
+        },
+        {
+          "kind": "water-tank-leg",
+          "heightMm": 655,
+          "topZMm": 3703
+        },
+        {
+          "kind": "water-tank-leg",
+          "heightMm": 655,
+          "topZMm": 3703
+        },
+        {
+          "kind": "water-tank-leg",
+          "heightMm": 655,
+          "topZMm": 3703
+        },
+        {
+          "kind": "water-tank-leg",
+          "heightMm": 655,
+          "topZMm": 3703
+        }
+      ],
+      "waterTankPresent": true,
+      "waterTankLegCount": 4,
+      "silhouetteTopMm": 4522,
+      "silhouetteTopOverSourcedHeight": 1.484,
+      "blenderImport": {
+        "meshObjects": 1,
+        "vertices": 502,
+        "zExtentMeters": 4.522,
+        "xExtentMeters": [
+          -2.859,
+          3.968
+        ],
+        "yExtentMeters": [
+          -3.635,
+          4.752
+        ],
+        "xExtentMatchesSourcedRing": true,
+        "yExtentMatchesSourcedRing": true
+      }
+    },
+    {
+      "buildingId": "doitt:589985",
+      "heightBand": "3.0-3.6m",
+      "sourcedHeightMeters": 3.2857439999999998,
+      "planHeightMm": 3286,
+      "floorCount": 1,
+      "effectiveTierCount": 1,
+      "ringVertexCount": 10,
+      "roofZMm": 3286,
+      "ringExtentXMeters": [
+        -9.697,
+        11.756
+      ],
+      "ringExtentYMeters": [
+        -14.347,
+        16.208
+      ],
+      "registration": {
+        "perVertexShapeDeviationMeters": 0.0006713237918693966,
+        "ringVertexPresenceMeters": 0,
+        "verticalDeviationMeters": 0.000256000000000256
+      },
+      "prisms": [
+        {
+          "kind": "roof-equipment",
+          "heightMm": 678,
+          "topZMm": 3964
+        },
+        {
+          "kind": "water-tank",
+          "heightMm": 1695,
+          "topZMm": 6337
+        },
+        {
+          "kind": "water-tank-leg",
+          "heightMm": 1356,
+          "topZMm": 4642
+        },
+        {
+          "kind": "water-tank-leg",
+          "heightMm": 1356,
+          "topZMm": 4642
+        },
+        {
+          "kind": "water-tank-leg",
+          "heightMm": 1356,
+          "topZMm": 4642
+        },
+        {
+          "kind": "water-tank-leg",
+          "heightMm": 1356,
+          "topZMm": 4642
+        }
+      ],
+      "waterTankPresent": true,
+      "waterTankLegCount": 4,
+      "silhouetteTopMm": 6337,
+      "silhouetteTopOverSourcedHeight": 1.928,
+      "blenderImport": {
+        "meshObjects": 1,
+        "vertices": 876,
+        "zExtentMeters": 6.337,
+        "xExtentMeters": [
+          -9.697,
+          11.756
+        ],
+        "yExtentMeters": [
+          -14.347,
+          16.208
+        ],
+        "xExtentMatchesSourcedRing": true,
+        "yExtentMatchesSourcedRing": true
+      }
+    },
+    {
+      "buildingId": "doitt:1015184",
+      "heightBand": "below-3m",
+      "sourcedHeightMeters": 2.929128,
+      "planHeightMm": 2929,
+      "floorCount": 1,
+      "effectiveTierCount": 1,
+      "ringVertexCount": 6,
+      "roofZMm": 2929,
+      "ringExtentXMeters": [
+        -3.464,
+        3.445
+      ],
+      "ringExtentYMeters": [
+        -3.856,
+        4.179
+      ],
+      "registration": {
+        "perVertexShapeDeviationMeters": 0.0005781968338495572,
+        "ringVertexPresenceMeters": 0,
+        "verticalDeviationMeters": 0.000128000000000128
+      },
+      "prisms": [
+        {
+          "kind": "roof-equipment",
+          "heightMm": 367,
+          "topZMm": 3296
+        },
+        {
+          "kind": "water-tank",
+          "heightMm": 918,
+          "topZMm": 4581
+        },
+        {
+          "kind": "water-tank-leg",
+          "heightMm": 734,
+          "topZMm": 3663
+        },
+        {
+          "kind": "water-tank-leg",
+          "heightMm": 734,
+          "topZMm": 3663
+        },
+        {
+          "kind": "water-tank-leg",
+          "heightMm": 734,
+          "topZMm": 3663
+        },
+        {
+          "kind": "water-tank-leg",
+          "heightMm": 734,
+          "topZMm": 3663
+        }
+      ],
+      "waterTankPresent": true,
+      "waterTankLegCount": 4,
+      "silhouetteTopMm": 4581,
+      "silhouetteTopOverSourcedHeight": 1.564,
+      "blenderImport": {
+        "meshObjects": 1,
+        "vertices": 476,
+        "zExtentMeters": 4.581,
+        "xExtentMeters": [
+          -3.464,
+          3.445
+        ],
+        "yExtentMeters": [
+          -3.856,
+          4.179
+        ],
+        "xExtentMatchesSourcedRing": true,
+        "yExtentMatchesSourcedRing": true
+      }
+    },
+    {
+      "buildingId": "doitt:1288665",
+      "heightBand": "below-3m",
+      "sourcedHeightMeters": 2.7432000000000003,
+      "planHeightMm": 2743,
+      "floorCount": 1,
+      "effectiveTierCount": 1,
+      "ringVertexCount": 13,
+      "roofZMm": 2743,
+      "ringExtentXMeters": [
+        -39.152,
+        32.442
+      ],
+      "ringExtentYMeters": [
+        -32.32,
+        19.286
+      ],
+      "registration": {
+        "perVertexShapeDeviationMeters": 0.0006507854798370739,
+        "ringVertexPresenceMeters": 0,
+        "verticalDeviationMeters": 0.00020000000000042206
+      },
+      "prisms": [
+        {
+          "kind": "roof-equipment",
+          "heightMm": 1200,
+          "topZMm": 3943
+        },
+        {
+          "kind": "water-tank",
+          "heightMm": 3000,
+          "topZMm": 8143
+        },
+        {
+          "kind": "water-tank-leg",
+          "heightMm": 2400,
+          "topZMm": 5143
+        },
+        {
+          "kind": "water-tank-leg",
+          "heightMm": 2400,
+          "topZMm": 5143
+        },
+        {
+          "kind": "water-tank-leg",
+          "heightMm": 2400,
+          "topZMm": 5143
+        },
+        {
+          "kind": "water-tank-leg",
+          "heightMm": 2400,
+          "topZMm": 5143
+        }
+      ],
+      "waterTankPresent": true,
+      "waterTankLegCount": 4,
+      "silhouetteTopMm": 8143,
+      "silhouetteTopOverSourcedHeight": 2.969,
+      "blenderImport": {
+        "meshObjects": 1,
+        "vertices": 1626,
+        "zExtentMeters": 8.143,
+        "xExtentMeters": [
+          -39.152,
+          32.442
+        ],
+        "yExtentMeters": [
+          -32.32,
+          19.286
+        ],
+        "xExtentMatchesSourcedRing": true,
+        "yExtentMatchesSourcedRing": true
+      }
+    },
+    {
+      "buildingId": "doitt:326841",
+      "heightBand": "below-3m",
+      "sourcedHeightMeters": 2.8620720000000004,
+      "planHeightMm": 2862,
+      "floorCount": 1,
+      "effectiveTierCount": 1,
+      "ringVertexCount": 4,
+      "roofZMm": 2862,
+      "ringExtentXMeters": [
+        -3.014,
+        2.976
+      ],
+      "ringExtentYMeters": [
+        -3.683,
+        3.75
+      ],
+      "registration": {
+        "perVertexShapeDeviationMeters": 0.0005638733974477748,
+        "ringVertexPresenceMeters": 0,
+        "verticalDeviationMeters": 0.00007200000000029405
+      },
+      "prisms": [
+        {
+          "kind": "roof-equipment",
+          "heightMm": 272,
+          "topZMm": 3134
+        },
+        {
+          "kind": "water-tank",
+          "heightMm": 681,
+          "topZMm": 4088
+        },
+        {
+          "kind": "water-tank-leg",
+          "heightMm": 545,
+          "topZMm": 3407
+        },
+        {
+          "kind": "water-tank-leg",
+          "heightMm": 545,
+          "topZMm": 3407
+        },
+        {
+          "kind": "water-tank-leg",
+          "heightMm": 545,
+          "topZMm": 3407
+        },
+        {
+          "kind": "water-tank-leg",
+          "heightMm": 545,
+          "topZMm": 3407
+        }
+      ],
+      "waterTankPresent": true,
+      "waterTankLegCount": 4,
+      "silhouetteTopMm": 4088,
+      "silhouetteTopOverSourcedHeight": 1.428,
+      "blenderImport": {
+        "meshObjects": 1,
+        "vertices": 492,
+        "zExtentMeters": 4.088,
+        "xExtentMeters": [
+          -3.014,
+          2.976
+        ],
+        "yExtentMeters": [
+          -3.683,
+          3.75
+        ],
+        "xExtentMatchesSourcedRing": true,
+        "yExtentMatchesSourcedRing": true
+      }
+    },
+    {
+      "buildingId": "doitt:692479",
+      "heightBand": "below-3m",
+      "sourcedHeightMeters": 2.7432000000000003,
+      "planHeightMm": 2743,
+      "floorCount": 1,
+      "effectiveTierCount": 1,
+      "ringVertexCount": 4,
+      "roofZMm": 2743,
+      "ringExtentXMeters": [
+        -3.672,
+        3.672
+      ],
+      "ringExtentYMeters": [
+        -4.246,
+        4.246
+      ],
+      "registration": {
+        "perVertexShapeDeviationMeters": 0.0006442284072268423,
+        "ringVertexPresenceMeters": 0,
+        "verticalDeviationMeters": 0.00020000000000042206
+      },
+      "prisms": [
+        {
+          "kind": "roof-equipment",
+          "heightMm": 390,
+          "topZMm": 3133
+        },
+        {
+          "kind": "water-tank-leg",
+          "heightMm": 780,
+          "topZMm": 3523
+        },
+        {
+          "kind": "water-tank-leg",
+          "heightMm": 780,
+          "topZMm": 3523
+        },
+        {
+          "kind": "water-tank-leg",
+          "heightMm": 780,
+          "topZMm": 3523
+        }
+      ],
+      "waterTankPresent": false,
+      "waterTankLegCount": 3,
+      "silhouetteTopMm": 3523,
+      "silhouetteTopOverSourcedHeight": 1.284,
+      "blenderImport": {
+        "meshObjects": 1,
+        "vertices": 332,
+        "zExtentMeters": 3.523,
+        "xExtentMeters": [
+          -3.672,
+          3.672
+        ],
+        "yExtentMeters": [
+          -4.246,
+          4.246
+        ],
+        "xExtentMatchesSourcedRing": true,
+        "yExtentMatchesSourcedRing": true
+      }
+    }
+  ]
+}
