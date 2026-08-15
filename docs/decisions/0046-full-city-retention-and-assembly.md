@@ -677,3 +677,31 @@ match a later reading is exactly what this task's own instrument refuses to do.
   textures — corrected above, and carrying its own append-only
   "Amendment — T001 (Issue #83)" recording the same correction in place),
   ADR 0040 (overview tier decision).
+
+---
+
+## Forward note — T003 (Issue #85): the 821 became 694, and the ceiling 44,989
+
+Append-only, per this repository's convention. Nothing above is rewritten: the
+figures were correct for what they were derived from, and this note says what
+later measurement found.
+
+This ADR instructed T003 to "plan against 821". T003 measured the number instead
+of inheriting it, by planning all 45,194 parents under both admission envelopes
+and running the asset stage:
+
+- **694** of the 899 are recoverable, not 821. The projection was optimistic by
+  127. It did not account for 14 reclassifications (a raised gate exposing the
+  next one), and it counted the 113 `ring-area-below-floor` rings as recoverable
+  when ADR 0048 refuses all of them by design.
+- **The corrected full-city ceiling is 44,989 buildings**, not 45,116.
+
+**Every byte row and limit verdict above is therefore CONSERVATIVE by 127
+buildings and survives unchanged.** The measured incremental payload of the 694 is
+81.3 MiB at the shipped single LOD and 119.9 MiB at both LODs — 1.78% and 2.62% of
+the 4.471 GiB untextured row, which was itself sized for more buildings than now
+exist. The `assets` headroom against the 50,000 cap improves from 9.8% to 10.0%.
+
+The "821, not 899" planning instruction is superseded by **694**. See
+[ADR 0048](0048-grammar-extension-recovery.md) and
+`data/grammar-extension-20260815/extension-census.json`.

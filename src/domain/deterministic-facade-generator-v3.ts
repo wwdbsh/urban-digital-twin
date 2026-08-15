@@ -119,6 +119,21 @@ export const DETERMINISTIC_FACADE_V3_SIGNAGE_UNCERTAINTY =
 
 export const DETERMINISTIC_FACADE_V3_LIMITS = {
   minRingVertices: 3,
+  /**
+   * The ACTIVE ring-vertex cap: what every shipped materializer admits.
+   *
+   * It carries no derivation, and that absence is itself a finding (T003). Every
+   * neighbour in this block states the fact it comes from — `maxRingMillimeters`
+   * from the exactness of the orientation predicate in doubles, `minRingAreaMm2`
+   * from what a footprint has to be to be a building, `maxAssetTriangles` from a
+   * measured frame-time re-check — and this one states nothing. It is not
+   * derived from a measured cost, a budget or a property of the source. It
+   * refuses 324 real DOITT footprints whose only fault is being finely traced.
+   *
+   * `V3_EXTENDED_MAX_RING_VERTICES` is the measured replacement. It is NOT the
+   * default, because raising this number changes what the already-approved V3
+   * wave releases emit when they are re-derived — see that constant.
+   */
   maxRingVertices: 64,
   maxTiers: 6,
   maxFloors: 512,
@@ -736,6 +751,136 @@ const PARAMETER_KEYS = [
 
 const COUNT_PARAMETER_KEYS: ReadonlySet<string> = new Set(["tierCount", "maxBaysPerEdge", "balconyFloorInterval", "waterTankSides"]);
 
+// ---------------------------------------------------------------------------
+// Grammar extensions (T003)
+//
+// Two admission rules of this grammar refuse buildings for reasons that are
+// properties of the GRAMMAR rather than of the source. Both are implemented
+// here, both are measured, and NEITHER is active by default.
+//
+// WHY THEY ARE NOT DEFAULTS. Raising an admission rule is not hash-neutral at
+// the release layer, even though it is hash-neutral at the plan layer. The V3
+// wave releases are re-derived from this grammar and pinned byte for byte
+// against committed payload inventories: `midtown-core-v3-release.test.ts`
+// rebuilds the whole midtown-core V3 release from these constants and asserts
+// its emitted artifact set and every checksum. A wider envelope admits
+// buildings that release refused, so it emits artifacts the frozen inventory
+// does not name. Five committed V3 wave releases carry shipped-subset buildings
+// in exactly that position. Turning either extension on by default therefore
+// breaks "local releases remain checksum-pinned, immutable once approved" and
+// broadens an approved release's contents, which needs an explicit approval and
+// a successor release rather than a constant edit.
+//
+// So the extensions travel through `V3GrammarOptions`, whose defaults are the
+// shipped grammar exactly. Activating either one is a one-token change to the
+// default, reviewable on its own.
+// ---------------------------------------------------------------------------
+
+/**
+ * Ring-vertex cap for the EXTENDED admission envelope (T003 extension A).
+ *
+ * Bounded by measured input rather than chosen. The committed citywide histogram
+ * (`data/citywide-overview-census-20260814/distributions.json`) records exactly
+ * 324 of 45,194 accepted parents above the active 64-vertex cap, with a maximum
+ * of 362 distinct ring vertices; 384 is that observed maximum plus headroom, and
+ * it is still a bounded cap.
+ *
+ * Nothing in the ring pipeline assumes 64. Every stage is generically
+ * O(outer.length), and the superlinear predicates were TIMED at the observed
+ * maximum rather than assumed cheap: on the 362-vertex ring of `doitt:17224`,
+ * `ringIsSimple` (O(n^2)) takes 1.1 ms, `ringLocalThicknessMm` (O(n^3) through
+ * its interior-midpoint test) 50 ms and `earClipRing` (O(n^3) worst case) 40 ms.
+ *
+ * No PLAN content depends on this number — it is read only by the admission gate
+ * in `validateV3Input` and by the text of the refusal that gate writes — so it
+ * moves no plan hash. The massing statement in
+ * `DETERMINISTIC_FACADE_V3_UNCERTAINTY` stays literally true for a ring admitted
+ * under it: the same sourced ring is carried vertex for vertex at the same
+ * sourced height, and this cap ships no designed massing of its own.
+ */
+export const V3_EXTENDED_MAX_RING_VERTICES = 384 as const;
+
+/**
+ * The nominal floor height this grammar designs to. A designed choice, not a
+ * sourced fact, and the number `V3_LOW_RISE_HEIGHT_THRESHOLD_MM` is equal to
+ * because they are the same statement read two ways: below one nominal floor,
+ * the nominal floor cannot describe the building.
+ */
+export const V3_NOMINAL_FLOOR_HEIGHT_MM = 3_600 as const;
+
+/**
+ * Sourced height below which this grammar derives its floor height from the
+ * building instead of from its own nominal floor (T003 extension B).
+ *
+ * A building 2.4 m tall is not a failure of the source. It is a garage, a
+ * pumphouse, a rooftop bulkhead traced as its own parent — 384 of the 45,194
+ * accepted parents, none of them a tombstone (the full-city dry run records
+ * `invalid-height: 0`, so every one of the 384 carries a real sourced height;
+ * the 76 `heightUnknown` parents take the 10 m fallback and are not among them).
+ * With the extension off the grammar asks for a 3.6 m floor, finds the sourced
+ * height below it, and refuses the building under
+ * `source-height-below-grammar-minimum`. That refusal says nothing about the
+ * building and everything about the grammar's own request.
+ *
+ * DISJOINTNESS. `validateV3Input` refuses any input with
+ * `heightMm < parameters.targetFloorHeightMm`, so EVERY input this grammar has
+ * ever accepted satisfies `heightMm >= 3_600` — the only floor height
+ * `deriveV3Parameters` has ever produced. A branch taken only below 3,600 mm
+ * therefore cannot reach a single accepted plan, and every plan hash this
+ * repository has committed is untouched. `deriveV3Parameters` is pinned
+ * byte-identical above the threshold by its own unit test, and the property was
+ * re-proved at city scale by a differential plan-hash set digest over every
+ * accepted parent in both grammar states.
+ */
+export const V3_LOW_RISE_HEIGHT_THRESHOLD_MM = 3_600 as const;
+
+/**
+ * Floor height for a low-rise: the sourced height itself, so the building is one
+ * floor tall.
+ *
+ * `planTiers` computes `floorCount` as `round(heightMm / targetFloorHeightMm)`
+ * clamped to at least 1, so this derivation makes `floorCount` exactly 1 and the
+ * existing clamps produce the single-band massing with no further change:
+ * `requestedTierCount = min(tierCount, floorCount)` collapses to one tier, and
+ * `validateV3Plan` already admits `setbacks: absent` at a single tier.
+ *
+ * It substitutes NO massing. The ring is still carried vertex for vertex and the
+ * extrusion is still the sourced height — `floorBoundaryZMm` divides that height
+ * into `floorCount` bands and one band spans it exactly — so
+ * `DETERMINISTIC_FACADE_V3_UNCERTAINTY` stays literally true for these buildings
+ * and no third uncertainty statement is needed.
+ */
+export function v3LowRiseTargetFloorHeightMm(heightMm: number): number {
+  return heightMm;
+}
+
+/**
+ * The grammar-extension state for one call.
+ *
+ * Every field is optional and every default is exactly the shipped grammar, so a
+ * caller that passes nothing travels the identical path it travelled before this
+ * type existed. It exists for two reasons and no others:
+ *
+ *   - the extensions must be measurable against the shipped grammar in ONE
+ *     process, and a differential that compared them by mutating module state
+ *     would prove nothing about the module anybody ships;
+ *   - a future wave that is approved to carry the extended envelope selects it
+ *     here, per wave, instead of by editing a constant every frozen release is
+ *     re-derived from.
+ */
+export interface V3GrammarOptions {
+  /** Ring-vertex admission cap. Defaults to the active `maxRingVertices` (64). */
+  maxRingVertices?: number;
+  /** Enables the low-rise floor-height derivation below the threshold. Defaults to OFF. */
+  lowRiseFloorHeight?: boolean;
+}
+
+/** The measured extended envelope, as one value. Not a default anywhere. */
+export const V3_EXTENDED_GRAMMAR_OPTIONS: Required<V3GrammarOptions> = {
+  maxRingVertices: V3_EXTENDED_MAX_RING_VERTICES,
+  lowRiseFloorHeight: true,
+};
+
 /**
  * The one canonical parameter policy for V3.
  *
@@ -744,12 +889,23 @@ const COUNT_PARAMETER_KEYS: ReadonlySet<string> = new Set(["tierCount", "maxBays
  * derived from the same numbers. Everything here is a designed choice, not a
  * sourced fact.
  */
-export function deriveV3Parameters(geometry: { footprintOuterMm: readonly Point2Mm[]; heightMm: number }): V3Parameters {
+export function deriveV3Parameters(
+  geometry: { footprintOuterMm: readonly Point2Mm[]; heightMm: number },
+  options: Pick<V3GrammarOptions, "lowRiseFloorHeight"> = {},
+): V3Parameters {
   const area = Math.abs(ringSignedAreaMm2(geometry.footprintOuterMm));
   const tall = geometry.heightMm >= 60_000;
   const large = area >= 1_500_000_000;
+  // The ONE extension-B conditional. The safe-integer and positivity guards are
+  // part of it rather than a second branch: a non-integer or non-positive height
+  // is refused by the input contract under `geometry.heightMm`, and deriving an
+  // invalid parameter from it would re-label that refusal as a parameter fault.
+  const lowRise = options.lowRiseFloorHeight === true
+    && Number.isSafeInteger(geometry.heightMm)
+    && geometry.heightMm >= 1
+    && geometry.heightMm < V3_LOW_RISE_HEIGHT_THRESHOLD_MM;
   return {
-    targetFloorHeightMm: 3_600,
+    targetFloorHeightMm: lowRise ? v3LowRiseTargetFloorHeightMm(geometry.heightMm) : V3_NOMINAL_FLOOR_HEIGHT_MM,
     tierCount: tall ? 4 : 2,
     setbackInsetMm: 1_800,
     bayPitchMm: 4_000,
@@ -802,7 +958,8 @@ function collapseExactDuplicates(points: readonly Point2Mm[]): Point2Mm[] {
   return collapsed;
 }
 
-export function validateV3Input(value: unknown): V3Validation<V3Input> {
+export function validateV3Input(value: unknown, options: Pick<V3GrammarOptions, "maxRingVertices"> = {}): V3Validation<V3Input> {
+  const maxRingVertices = options.maxRingVertices ?? DETERMINISTIC_FACADE_V3_LIMITS.maxRingVertices;
   const issues: V3Issue[] = [];
   if (!record(value)) return { ok: false, issues: [{ path: "$", message: "V3 facade input must be an object." }] };
   if (value.schemaVersion !== DETERMINISTIC_FACADE_V3_SCHEMA_VERSION) addIssue(issues, "schemaVersion", "Unsupported V3 facade input schema.");
@@ -838,8 +995,8 @@ export function validateV3Input(value: unknown): V3Validation<V3Input> {
       });
       if (!malformed) {
         const collapsed = collapseExactDuplicates(parsed);
-        if (collapsed.length < DETERMINISTIC_FACADE_V3_LIMITS.minRingVertices || collapsed.length > DETERMINISTIC_FACADE_V3_LIMITS.maxRingVertices) {
-          addIssue(issues, "geometry.footprint.outer", `V3 ring must carry ${DETERMINISTIC_FACADE_V3_LIMITS.minRingVertices} to ${DETERMINISTIC_FACADE_V3_LIMITS.maxRingVertices} distinct vertices.`);
+        if (collapsed.length < DETERMINISTIC_FACADE_V3_LIMITS.minRingVertices || collapsed.length > maxRingVertices) {
+          addIssue(issues, "geometry.footprint.outer", `V3 ring must carry ${DETERMINISTIC_FACADE_V3_LIMITS.minRingVertices} to ${maxRingVertices} distinct vertices.`);
         } else {
           const oriented = ringSignedAreaMm2(collapsed) < 0 ? [...collapsed].reverse() : collapsed;
           if (!ringIsSimple(oriented)) addIssue(issues, "geometry.footprint.outer", "V3 ring must be simple: it self-intersects or folds back on itself.");
@@ -1531,13 +1688,20 @@ export function calculateV3PlanHash(plan: Omit<V3Plan, "planHashSha256"> | V3Pla
   return domainSeparatedSha256("udt.facade.plan.v3", payload);
 }
 
-export function generateV3FacadePlan(value: unknown): V3Validation<V3Plan> {
-  const input = validateV3Input(value);
+export function generateV3FacadePlan(value: unknown, options: Pick<V3GrammarOptions, "maxRingVertices"> = {}): V3Validation<V3Plan> {
+  const input = validateV3Input(value, options);
   return input.ok ? buildPlan(input.value) : input;
 }
 
-/** Re-derives the plan from its embedded input and rejects any non-canonical content. */
-export function validateV3Plan(value: unknown): V3Validation<V3Plan> {
+/**
+ * Re-derives the plan from its embedded input and rejects any non-canonical content.
+ *
+ * `options` must name the SAME admission envelope the plan was generated under.
+ * The validator re-runs the input contract, so a plan legitimately generated at a
+ * wider cap is otherwise refused here — under `plan-validation-failed`, which
+ * would be the wrong word for it — rather than round-tripping.
+ */
+export function validateV3Plan(value: unknown, options: Pick<V3GrammarOptions, "maxRingVertices"> = {}): V3Validation<V3Plan> {
   const issues: V3Issue[] = [];
   if (!record(value)) return { ok: false, issues: [{ path: "$", message: "V3 facade plan must be an object." }] };
   if (value.schemaVersion !== DETERMINISTIC_FACADE_V3_SCHEMA_VERSION || value.coordinateSystem !== "local-millimeters") addIssue(issues, "schemaVersion", "Unsupported V3 plan schema or coordinate system.");
@@ -1552,7 +1716,7 @@ export function validateV3Plan(value: unknown): V3Validation<V3Plan> {
   } else if (record(value.input) && value.uncertainty !== v3UncertaintyFor((value.input as { styleOverride?: V3StyleOverride }).styleOverride)) {
     addIssue(issues, "uncertainty", "V3 plan uncertainty statement does not match the presence of a cited style override.");
   }
-  const inputResult = validateV3Input(value.input);
+  const inputResult = validateV3Input(value.input, options);
   if (!inputResult.ok) for (const issue of inputResult.issues) addIssue(issues, `input.${issue.path}`, issue.message);
   if (issues.length > 0 || !inputResult.ok) return { ok: false, issues };
 

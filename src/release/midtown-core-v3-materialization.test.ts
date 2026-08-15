@@ -268,3 +268,40 @@ describe("midtown-core V3 tier-collapse disclosure", () => {
     expect(setbacks.state === "absent" && setbacks.reason.trim().length).toBeGreaterThan(0);
   });
 });
+
+/**
+ * (T003) The closed refusal vocabulary is a GOAL-LEVEL contract.
+ *
+ * `computeCensusClosure` in `scripts/goal-integration-reconciliation-cli.mjs`
+ * checks every observed stop code against this array, and the committed
+ * goal-integration reconciliation record asserts that no observed code falls
+ * outside it. A thirteenth code added here would therefore surface first as a
+ * failure of the goal-acceptance suite, which is the wrong place to learn it:
+ * that suite is a record of a completed adjudication, not a design review.
+ *
+ * So the vocabulary is pinned HERE, beside the codes, verbatim and in order. The
+ * twelve cover every residual a wider admission envelope can produce — a
+ * recovered building that then blows the asset budget is
+ * `asset-budget-exceeded`, one whose mesh misses its analytic volume is
+ * `volume-identity-failed` — so widening the envelope needs no new code, and
+ * anything that seems to need one is a design change rather than a constant.
+ */
+describe("(T003) the closed stop-code vocabulary", () => {
+  it("is exactly these twelve codes, in this order", () => {
+    expect(MIDTOWN_CORE_V3_STOP_CODES).toEqual([
+      "absent-from-base-shards",
+      "degenerate-footprint",
+      "ring-vertex-count-unsupported",
+      "ring-not-simple",
+      "ring-area-below-floor",
+      "ring-neck-below-grammar-minimum",
+      "source-height-below-grammar-minimum",
+      "plan-generation-failed",
+      "plan-validation-failed",
+      "asset-budget-exceeded",
+      "volume-identity-failed",
+      "registration-out-of-tolerance",
+    ]);
+    expect(MIDTOWN_CORE_V3_STOP_CODES).toHaveLength(12);
+  });
+});
