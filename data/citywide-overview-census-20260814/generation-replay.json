@@ -1,0 +1,1738 @@
+{
+  "schemaVersion": "1.0",
+  "censusId": "citywide-overview-census-20260814",
+  "taskId": "T001",
+  "artifact": "full-city-generation-replay",
+  "note": "THE RETENTION PROOF. Nothing here is quoted from a record and re-labelled as evidence: every observed figure was produced by re-running this repository's real generator against the pinned base, and every committed figure it is compared against was read from the record that was gated when the bytes were first made. A disagreement anywhere is recorded as a DIFFERS row and this stage exits non-zero; a census is never adjusted until it matches. No GLB was retained: the wave passes run census-only and the shipped replay hashes its bytes and drops them.",
+  "base": {
+    "releaseId": "manhattan-citywide-20260804",
+    "manifestChecksumSha256": "acb5a9b52014f86535c8478e7d4e516efc03f6dff95c17e9896dfea4413c203c"
+  },
+  "ledger": {
+    "releaseId": "manhattan-exterior-wave-ledger-20260804",
+    "ledgerId": "manhattan-exterior-wave-ledger-20260804-a3382ef4cac213a2",
+    "checksumSha256": "62e093d2ca50b54b49fd8bbad9d0b11f6301b2b197623deb343f9ea915e59016"
+  },
+  "adjudicatedContractNote": {
+    "note": "DERIVED, NOT ASSERTED. Every key path of each committed record below was enumerated and every 64-hex string located. The five wave censuses carry NO per-building plan-hash artifact: their only plan-hash key is the scalar `uniquePlanHashCount`, so an acceptance criterion phrased as a comparison against 'committed wave census plan hashes' has no per-building artifact to compare against. The replay below therefore proves the same claim through three real instruments instead, and the cardinality of the replayed per-building hash SET is compared against each committed `uniquePlanHashCount` integer.",
+    "records": [
+      {
+        "role": "wave-census",
+        "waveIndex": 1,
+        "waveId": "midtown-core",
+        "path": "data/midtown-core-20260811-v3/v3-census.json",
+        "checksumSha256": "39e0e1a61619adcba7848e39eddd53d0df0a97a447b591a0cc10bf48c9d311dc",
+        "topLevelKeys": [
+          "note",
+          "registration",
+          "releaseId",
+          "schemaVersion",
+          "shipped",
+          "shippedAbsentSetbackBuildingIds",
+          "shippedRefusedBuildingIds",
+          "wave",
+          "waveRefusals"
+        ],
+        "keyPathsMatchingPlanHash": [
+          {
+            "keyPath": "shipped.uniquePlanHashCount",
+            "kind": "number",
+            "value": 156
+          },
+          {
+            "keyPath": "wave.uniquePlanHashCount",
+            "kind": "number",
+            "value": 7091
+          }
+        ],
+        "sixtyFourHexStringKeyPaths": [],
+        "perBuildingPlanHashArrayPresent": false,
+        "perBuildingPlanHashCount": 0
+      },
+      {
+        "role": "wave-census",
+        "waveIndex": 2,
+        "waveId": "lower-manhattan",
+        "path": "data/lower-manhattan-20260812-p1/wave-census.json",
+        "checksumSha256": "3528f1dfc7dcdbdd3a1e57a42341f6a8c1f976d6b3a55b63d0f12d20123a883c",
+        "topLevelKeys": [
+          "note",
+          "occupancy",
+          "registration",
+          "releaseId",
+          "samplerFilter",
+          "schemaVersion",
+          "shipped",
+          "shippedAbsentSetbackBuildingIds",
+          "shippedRefusedBuildingIds",
+          "textureCatalog",
+          "wave",
+          "waveRefusals"
+        ],
+        "keyPathsMatchingPlanHash": [
+          {
+            "keyPath": "shipped.uniquePlanHashCount",
+            "kind": "number",
+            "value": 71
+          },
+          {
+            "keyPath": "wave.uniquePlanHashCount",
+            "kind": "number",
+            "value": 6291
+          }
+        ],
+        "sixtyFourHexStringKeyPaths": [
+          {
+            "path": "shipped.textureCatalog.parametersHashSha256",
+            "count": 1
+          },
+          {
+            "path": "textureCatalog.parametersHashSha256",
+            "count": 1
+          }
+        ],
+        "perBuildingPlanHashArrayPresent": false,
+        "perBuildingPlanHashCount": 0
+      },
+      {
+        "role": "wave-census",
+        "waveIndex": 3,
+        "waveId": "southern-remainder",
+        "path": "data/southern-remainder-20260812-p1/wave-census.json",
+        "checksumSha256": "08f10e488be261e1d8dbd88dec590bde690d3cb4fcfe88cb91a01f0a29fd687b",
+        "topLevelKeys": [
+          "note",
+          "occupancy",
+          "registration",
+          "releaseId",
+          "samplerFilter",
+          "schemaVersion",
+          "shipped",
+          "shippedAbsentSetbackBuildingIds",
+          "shippedRefusedBuildingIds",
+          "textureCatalog",
+          "wave",
+          "waveRefusals"
+        ],
+        "keyPathsMatchingPlanHash": [
+          {
+            "keyPath": "shipped.uniquePlanHashCount",
+            "kind": "number",
+            "value": 179
+          },
+          {
+            "keyPath": "wave.uniquePlanHashCount",
+            "kind": "number",
+            "value": 9507
+          }
+        ],
+        "sixtyFourHexStringKeyPaths": [
+          {
+            "path": "shipped.textureCatalog.parametersHashSha256",
+            "count": 1
+          },
+          {
+            "path": "textureCatalog.parametersHashSha256",
+            "count": 1
+          }
+        ],
+        "perBuildingPlanHashArrayPresent": false,
+        "perBuildingPlanHashCount": 0
+      },
+      {
+        "role": "wave-census",
+        "waveIndex": 4,
+        "waveId": "central-upper-manhattan",
+        "path": "data/central-upper-manhattan-20260812-p1/wave-census.json",
+        "checksumSha256": "a0df593b722799050c3b4484f4158746e8a6f9adcfe07fea6ca63a4abd1612fd",
+        "topLevelKeys": [
+          "note",
+          "occupancy",
+          "registration",
+          "releaseId",
+          "samplerFilter",
+          "schemaVersion",
+          "shipped",
+          "shippedAbsentSetbackBuildingIds",
+          "shippedRefusedBuildingIds",
+          "textureCatalog",
+          "volumeIdentity",
+          "wave",
+          "waveRefusals"
+        ],
+        "keyPathsMatchingPlanHash": [
+          {
+            "keyPath": "shipped.uniquePlanHashCount",
+            "kind": "number",
+            "value": 40
+          },
+          {
+            "keyPath": "wave.uniquePlanHashCount",
+            "kind": "number",
+            "value": 11543
+          }
+        ],
+        "sixtyFourHexStringKeyPaths": [
+          {
+            "path": "shipped.textureCatalog.parametersHashSha256",
+            "count": 1
+          },
+          {
+            "path": "textureCatalog.parametersHashSha256",
+            "count": 1
+          }
+        ],
+        "perBuildingPlanHashArrayPresent": false,
+        "perBuildingPlanHashCount": 0
+      },
+      {
+        "role": "wave-census",
+        "waveIndex": 5,
+        "waveId": "northern-manhattan",
+        "path": "data/northern-manhattan-20260812-p1/wave-census.json",
+        "checksumSha256": "06a1ac1e8faf4c74b88ab798fa269eaefa970bff6bca99c1a80797929e2acab5",
+        "topLevelKeys": [
+          "note",
+          "occupancy",
+          "registration",
+          "releaseId",
+          "samplerFilter",
+          "schemaVersion",
+          "shipped",
+          "shippedAbsentSetbackBuildingIds",
+          "shippedRefusedBuildingIds",
+          "textureCatalog",
+          "volumeIdentity",
+          "wave",
+          "waveRefusals"
+        ],
+        "keyPathsMatchingPlanHash": [
+          {
+            "keyPath": "shipped.uniquePlanHashCount",
+            "kind": "number",
+            "value": 24
+          },
+          {
+            "keyPath": "wave.uniquePlanHashCount",
+            "kind": "number",
+            "value": 9849
+          }
+        ],
+        "sixtyFourHexStringKeyPaths": [
+          {
+            "path": "shipped.textureCatalog.parametersHashSha256",
+            "count": 1
+          },
+          {
+            "path": "textureCatalog.parametersHashSha256",
+            "count": 1
+          }
+        ],
+        "perBuildingPlanHashArrayPresent": false,
+        "perBuildingPlanHashCount": 0
+      },
+      {
+        "role": "reference-package-census",
+        "waveIndex": 0,
+        "waveId": "block-835",
+        "path": "data/manhattan-esb-block-reference-20260811-v3t/census.json",
+        "checksumSha256": "0c7f49538c1a496c02991c0395ab563f513358b71443ace828736f35270d6516",
+        "topLevelKeys": [
+          "budgets",
+          "buildings",
+          "generatedAt",
+          "imageLimits",
+          "packageId",
+          "parametersHashSha256",
+          "predecessorPackageId",
+          "profile",
+          "schemaVersion",
+          "summary"
+        ],
+        "keyPathsMatchingPlanHash": [
+          {
+            "keyPath": "buildings[].planHashSha256",
+            "kind": "undefined"
+          },
+          {
+            "keyPath": "summary.planHashesUnchangedFromV3",
+            "kind": "boolean",
+            "value": true
+          }
+        ],
+        "sixtyFourHexStringKeyPaths": [
+          {
+            "path": "buildings[].planHashSha256",
+            "count": 14
+          },
+          {
+            "path": "parametersHashSha256",
+            "count": 1
+          }
+        ],
+        "perBuildingPlanHashArrayPresent": true,
+        "perBuildingPlanHashCount": 14
+      },
+      {
+        "role": "reference-package-plan-index",
+        "waveIndex": 0,
+        "waveId": "block-835",
+        "path": "data/manhattan-esb-block-reference-20260811-v3/plan-index.json",
+        "checksumSha256": "26354114063b8390483f6e0e7303ab04e794b578757ba5b9d5d4ed648463cfa2",
+        "topLevelKeys": [
+          "packageId",
+          "plans"
+        ],
+        "keyPathsMatchingPlanHash": [
+          {
+            "keyPath": "plans[].planHashSha256",
+            "kind": "undefined"
+          }
+        ],
+        "sixtyFourHexStringKeyPaths": [
+          {
+            "path": "plans[].planHashSha256",
+            "count": 14
+          }
+        ],
+        "perBuildingPlanHashArrayPresent": true,
+        "perBuildingPlanHashCount": 14
+      }
+    ]
+  },
+  "generatorIdentity": {
+    "note": "Recorded on BOTH sides of every comparison below: the same generator identity produced the committed bytes and the replayed ones, and a version move would be visible here rather than hidden in a checksum.",
+    "planGenerator": {
+      "id": "urban-digital-twin:deterministic-facade-plan-v3",
+      "version": "3.0.0",
+      "schemaVersion": "3.0"
+    },
+    "proceduralTexture": {
+      "profile": "procedural-texture-v1",
+      "rasterizerVersion": "1.0.0",
+      "parametersHashSha256": "121fb53e9b3b08ce3b7fa00ec5d370466c5ae2861b8966cccbfa19861ab438ff"
+    }
+  },
+  "crossWaveHashComparisonNote": "A V3 plan hash covers the wave's seed, generated instant and tool identity as well as the sourced polygon. The six wave seeds are committed constants and they differ, so plan hashes are NOT comparable across waves and no comparison here crosses a wave boundary. Every wave is replayed with its OWN profile; the only cross-wave statement made anywhere is that plan-stage REFUSAL is a function of the sourced polygon alone, which is a statement about counts and is tested by `distributions.json`, not by hashes.",
+  "waveAggregateReplay": {
+    "note": "Each generated wave re-run through `materializeMidtownCoreV3Cells` with `retain: \"census-only\"` and that wave's OWN committed census profile, over the ledger cells the wave owns. `materializedBuildingCount` and `tierCollapseAbsentSetbackCount` are ASSET-stage facts, so they are produced by running the asset writer rather than derived from the plan stage plus a committed correction.",
+    "waves": [
+      {
+        "waveIndex": 0,
+        "waveId": "block-835",
+        "releaseId": "manhattan-exterior-cells-20260811-v3",
+        "censusFile": null,
+        "verdict": "NOT APPLICABLE",
+        "note": "Wave w00 committed no wave-scale census. Its per-building plan hashes are replayed in `block835PlanReplay`, which is a STRONGER comparison than any aggregate: hash for hash rather than count against count."
+      },
+      {
+        "waveIndex": 1,
+        "waveId": "midtown-core",
+        "releaseId": "manhattan-midtown-core-cells-20260811-v3",
+        "censusFile": "data/midtown-core-20260811-v3/v3-census.json",
+        "censusProfile": {
+          "releaseId": "manhattan-midtown-core-cells-20260811-v3",
+          "seed": "manhattan-midtown-core-20260811-v3",
+          "generatedAt": "2026-08-11T00:00:00.000Z",
+          "tool": {
+            "id": "urban-digital-twin:midtown-core-v3-materialization",
+            "version": "3.0.0"
+          },
+          "texture": null,
+          "budgets": {
+            "maxTriangles": 200000,
+            "maxMaterials": 12,
+            "maxTextures": 0
+          }
+        },
+        "ledgerOwnedCellCount": 149,
+        "comparisons": [
+          {
+            "field": "requestedBuildingCount",
+            "committed": 7201,
+            "observed": 7201,
+            "agrees": true
+          },
+          {
+            "field": "resolvedBuildingCount",
+            "committed": 7201,
+            "observed": 7201,
+            "agrees": true
+          },
+          {
+            "field": "materializedBuildingCount",
+            "committed": 7091,
+            "observed": 7091,
+            "agrees": true
+          },
+          {
+            "field": "refusedBuildingCount",
+            "committed": 110,
+            "observed": 110,
+            "agrees": true
+          },
+          {
+            "field": "tierCollapseAbsentSetbackCount",
+            "committed": 3405,
+            "observed": 3405,
+            "agrees": true
+          },
+          {
+            "field": "uniquePlanHashCount",
+            "committed": 7091,
+            "observed": 7091,
+            "agrees": true
+          },
+          {
+            "field": "generatedAssetCount",
+            "committed": 14182,
+            "observed": 14182,
+            "agrees": true
+          },
+          {
+            "field": "generatedAssetBytes",
+            "committed": 1242391552,
+            "observed": 1242391552,
+            "agrees": true
+          },
+          {
+            "field": "shippedAssetBytes",
+            "committed": 872906580,
+            "observed": 872906580,
+            "agrees": true
+          },
+          {
+            "field": "totalShippedTriangleCount",
+            "committed": 22792370,
+            "observed": 22792370,
+            "agrees": true
+          },
+          {
+            "field": "maximumTriangleCount",
+            "committed": 132536,
+            "observed": 132536,
+            "agrees": true
+          },
+          {
+            "field": "maximumRingVertexCount",
+            "committed": 64,
+            "observed": 64,
+            "agrees": true
+          },
+          {
+            "field": "fallbackHeightCount",
+            "committed": 21,
+            "observed": 21,
+            "agrees": true
+          },
+          {
+            "field": "reversedRingCount",
+            "committed": 7091,
+            "observed": 7091,
+            "agrees": true
+          },
+          {
+            "field": "refusalsByCode (ASSET stage)",
+            "committed": {
+              "source-height-below-grammar-minimum": 49,
+              "ring-vertex-count-unsupported": 41,
+              "ring-area-below-floor": 17,
+              "volume-identity-failed": 1,
+              "ring-neck-below-grammar-minimum": 2
+            },
+            "observed": {
+              "source-height-below-grammar-minimum": 49,
+              "ring-vertex-count-unsupported": 41,
+              "ring-area-below-floor": 17,
+              "volume-identity-failed": 1,
+              "ring-neck-below-grammar-minimum": 2
+            },
+            "agrees": true
+          },
+          {
+            "field": "styleClassCounts",
+            "committed": {
+              "curtain-cool": 1045,
+              "masonry-light": 2204,
+              "masonry-warm": 2441,
+              "stone-neutral": 1401
+            },
+            "observed": {
+              "curtain-cool": 1045,
+              "masonry-light": 2204,
+              "masonry-warm": 2441,
+              "stone-neutral": 1401
+            },
+            "agrees": true
+          }
+        ],
+        "hashSpace": {
+          "note": "The committed record carries only a cardinality. This is the replayed SET whose cardinality it claims to be, rebuilt one plan hash per materialized building with this wave's own seed, generated instant and tool identity.",
+          "replayedPlanHashSetSize": 7091,
+          "committedUniquePlanHashCount": 7091,
+          "replayedMaterializedBuildingCount": 7091,
+          "agrees": true
+        },
+        "stageBoundary": {
+          "note": "`waveRefusals` is the PLAN stage and `wave.refusalsByCode` is the ASSET stage, which is the plan stage plus the writer's own stop codes. This checks the committed record against itself, and the replayed plan-stage partition against the committed plan-stage map.",
+          "committedPlanStageMap": {
+            "source-height-below-grammar-minimum": 49,
+            "ring-vertex-count-unsupported": 41,
+            "ring-area-below-floor": 17,
+            "ring-neck-below-grammar-minimum": 2
+          },
+          "committedAssetStageMapMinusAssetStageCodes": {
+            "source-height-below-grammar-minimum": 49,
+            "ring-vertex-count-unsupported": 41,
+            "ring-area-below-floor": 17,
+            "ring-neck-below-grammar-minimum": 2
+          },
+          "observedPlanStageMap": {
+            "source-height-below-grammar-minimum": 49,
+            "ring-vertex-count-unsupported": 41,
+            "ring-area-below-floor": 17,
+            "ring-neck-below-grammar-minimum": 2
+          },
+          "committedRecordSelfConsistent": true,
+          "replayAgreesWithCommittedPlanStageMap": true
+        },
+        "verdict": "AGREES",
+        "differingFields": []
+      },
+      {
+        "waveIndex": 2,
+        "waveId": "lower-manhattan",
+        "releaseId": "manhattan-lower-manhattan-cells-20260812-p1",
+        "censusFile": "data/lower-manhattan-20260812-p1/wave-census.json",
+        "censusProfile": {
+          "releaseId": "manhattan-lower-manhattan-cells-20260812",
+          "seed": "manhattan-lower-manhattan-20260812",
+          "generatedAt": "2026-08-12T00:00:00.000Z",
+          "tool": {
+            "id": "urban-digital-twin:lower-manhattan-materialization",
+            "version": "1.0.0"
+          },
+          "texture": null,
+          "budgets": {
+            "maxTriangles": 200000,
+            "maxMaterials": 12,
+            "maxTextures": 0
+          }
+        },
+        "ledgerOwnedCellCount": 126,
+        "comparisons": [
+          {
+            "field": "requestedBuildingCount",
+            "committed": 6425,
+            "observed": 6425,
+            "agrees": true
+          },
+          {
+            "field": "resolvedBuildingCount",
+            "committed": 6425,
+            "observed": 6425,
+            "agrees": true
+          },
+          {
+            "field": "materializedBuildingCount",
+            "committed": 6291,
+            "observed": 6291,
+            "agrees": true
+          },
+          {
+            "field": "refusedBuildingCount",
+            "committed": 134,
+            "observed": 134,
+            "agrees": true
+          },
+          {
+            "field": "tierCollapseAbsentSetbackCount",
+            "committed": 2545,
+            "observed": 2545,
+            "agrees": true
+          },
+          {
+            "field": "uniquePlanHashCount",
+            "committed": 6291,
+            "observed": 6291,
+            "agrees": true
+          },
+          {
+            "field": "generatedAssetCount",
+            "committed": 12582,
+            "observed": 12582,
+            "agrees": true
+          },
+          {
+            "field": "generatedAssetBytes",
+            "committed": 736617400,
+            "observed": 736617400,
+            "agrees": true
+          },
+          {
+            "field": "shippedAssetBytes",
+            "committed": 507182644,
+            "observed": 507182644,
+            "agrees": true
+          },
+          {
+            "field": "totalShippedTriangleCount",
+            "committed": 12805554,
+            "observed": 12805554,
+            "agrees": true
+          },
+          {
+            "field": "maximumTriangleCount",
+            "committed": 80976,
+            "observed": 80976,
+            "agrees": true
+          },
+          {
+            "field": "maximumRingVertexCount",
+            "committed": 64,
+            "observed": 64,
+            "agrees": true
+          },
+          {
+            "field": "fallbackHeightCount",
+            "committed": 9,
+            "observed": 9,
+            "agrees": true
+          },
+          {
+            "field": "reversedRingCount",
+            "committed": 6291,
+            "observed": 6291,
+            "agrees": true
+          },
+          {
+            "field": "refusalsByCode (ASSET stage)",
+            "committed": {
+              "source-height-below-grammar-minimum": 61,
+              "ring-area-below-floor": 25,
+              "ring-vertex-count-unsupported": 33,
+              "ring-neck-below-grammar-minimum": 7,
+              "volume-identity-failed": 7,
+              "ring-not-simple": 1
+            },
+            "observed": {
+              "source-height-below-grammar-minimum": 61,
+              "ring-area-below-floor": 25,
+              "ring-vertex-count-unsupported": 33,
+              "ring-neck-below-grammar-minimum": 7,
+              "volume-identity-failed": 7,
+              "ring-not-simple": 1
+            },
+            "agrees": true
+          },
+          {
+            "field": "styleClassCounts",
+            "committed": {
+              "stone-neutral": 1209,
+              "masonry-light": 2005,
+              "masonry-warm": 2413,
+              "curtain-cool": 664
+            },
+            "observed": {
+              "stone-neutral": 1209,
+              "masonry-light": 2005,
+              "masonry-warm": 2413,
+              "curtain-cool": 664
+            },
+            "agrees": true
+          }
+        ],
+        "hashSpace": {
+          "note": "The committed record carries only a cardinality. This is the replayed SET whose cardinality it claims to be, rebuilt one plan hash per materialized building with this wave's own seed, generated instant and tool identity.",
+          "replayedPlanHashSetSize": 6291,
+          "committedUniquePlanHashCount": 6291,
+          "replayedMaterializedBuildingCount": 6291,
+          "agrees": true
+        },
+        "stageBoundary": {
+          "note": "`waveRefusals` is the PLAN stage and `wave.refusalsByCode` is the ASSET stage, which is the plan stage plus the writer's own stop codes. This checks the committed record against itself, and the replayed plan-stage partition against the committed plan-stage map.",
+          "committedPlanStageMap": {
+            "source-height-below-grammar-minimum": 61,
+            "ring-area-below-floor": 25,
+            "ring-vertex-count-unsupported": 33,
+            "ring-neck-below-grammar-minimum": 7,
+            "ring-not-simple": 1
+          },
+          "committedAssetStageMapMinusAssetStageCodes": {
+            "source-height-below-grammar-minimum": 61,
+            "ring-area-below-floor": 25,
+            "ring-vertex-count-unsupported": 33,
+            "ring-neck-below-grammar-minimum": 7,
+            "ring-not-simple": 1
+          },
+          "observedPlanStageMap": {
+            "source-height-below-grammar-minimum": 61,
+            "ring-area-below-floor": 25,
+            "ring-vertex-count-unsupported": 33,
+            "ring-neck-below-grammar-minimum": 7,
+            "ring-not-simple": 1
+          },
+          "committedRecordSelfConsistent": true,
+          "replayAgreesWithCommittedPlanStageMap": true
+        },
+        "verdict": "AGREES",
+        "differingFields": []
+      },
+      {
+        "waveIndex": 3,
+        "waveId": "southern-remainder",
+        "releaseId": "manhattan-southern-remainder-cells-20260812-p1",
+        "censusFile": "data/southern-remainder-20260812-p1/wave-census.json",
+        "censusProfile": {
+          "releaseId": "manhattan-southern-remainder-cells-20260812",
+          "seed": "manhattan-southern-remainder-20260812",
+          "generatedAt": "2026-08-12T00:00:00.000Z",
+          "tool": {
+            "id": "urban-digital-twin:southern-remainder-materialization",
+            "version": "1.0.0"
+          },
+          "texture": null,
+          "budgets": {
+            "maxTriangles": 200000,
+            "maxMaterials": 12,
+            "maxTextures": 0
+          }
+        },
+        "ledgerOwnedCellCount": 176,
+        "comparisons": [
+          {
+            "field": "requestedBuildingCount",
+            "committed": 9603,
+            "observed": 9603,
+            "agrees": true
+          },
+          {
+            "field": "resolvedBuildingCount",
+            "committed": 9603,
+            "observed": 9603,
+            "agrees": true
+          },
+          {
+            "field": "materializedBuildingCount",
+            "committed": 9507,
+            "observed": 9507,
+            "agrees": true
+          },
+          {
+            "field": "refusedBuildingCount",
+            "committed": 96,
+            "observed": 96,
+            "agrees": true
+          },
+          {
+            "field": "tierCollapseAbsentSetbackCount",
+            "committed": 3960,
+            "observed": 3960,
+            "agrees": true
+          },
+          {
+            "field": "uniquePlanHashCount",
+            "committed": 9507,
+            "observed": 9507,
+            "agrees": true
+          },
+          {
+            "field": "generatedAssetCount",
+            "committed": 19014,
+            "observed": 19014,
+            "agrees": true
+          },
+          {
+            "field": "generatedAssetBytes",
+            "committed": 888193012,
+            "observed": 888193012,
+            "agrees": true
+          },
+          {
+            "field": "shippedAssetBytes",
+            "committed": 604632232,
+            "observed": 604632232,
+            "agrees": true
+          },
+          {
+            "field": "totalShippedTriangleCount",
+            "committed": 14861432,
+            "observed": 14861432,
+            "agrees": true
+          },
+          {
+            "field": "maximumTriangleCount",
+            "committed": 44360,
+            "observed": 44360,
+            "agrees": true
+          },
+          {
+            "field": "maximumRingVertexCount",
+            "committed": 64,
+            "observed": 64,
+            "agrees": true
+          },
+          {
+            "field": "fallbackHeightCount",
+            "committed": 6,
+            "observed": 6,
+            "agrees": true
+          },
+          {
+            "field": "reversedRingCount",
+            "committed": 9507,
+            "observed": 9507,
+            "agrees": true
+          },
+          {
+            "field": "refusalsByCode (ASSET stage)",
+            "committed": {
+              "source-height-below-grammar-minimum": 33,
+              "volume-identity-failed": 11,
+              "ring-vertex-count-unsupported": 22,
+              "ring-neck-below-grammar-minimum": 10,
+              "ring-area-below-floor": 20
+            },
+            "observed": {
+              "source-height-below-grammar-minimum": 33,
+              "volume-identity-failed": 11,
+              "ring-vertex-count-unsupported": 22,
+              "ring-neck-below-grammar-minimum": 10,
+              "ring-area-below-floor": 20
+            },
+            "agrees": true
+          },
+          {
+            "field": "styleClassCounts",
+            "committed": {
+              "curtain-cool": 1017,
+              "masonry-warm": 3719,
+              "masonry-light": 3055,
+              "stone-neutral": 1716
+            },
+            "observed": {
+              "curtain-cool": 1017,
+              "masonry-warm": 3719,
+              "masonry-light": 3055,
+              "stone-neutral": 1716
+            },
+            "agrees": true
+          }
+        ],
+        "hashSpace": {
+          "note": "The committed record carries only a cardinality. This is the replayed SET whose cardinality it claims to be, rebuilt one plan hash per materialized building with this wave's own seed, generated instant and tool identity.",
+          "replayedPlanHashSetSize": 9507,
+          "committedUniquePlanHashCount": 9507,
+          "replayedMaterializedBuildingCount": 9507,
+          "agrees": true
+        },
+        "stageBoundary": {
+          "note": "`waveRefusals` is the PLAN stage and `wave.refusalsByCode` is the ASSET stage, which is the plan stage plus the writer's own stop codes. This checks the committed record against itself, and the replayed plan-stage partition against the committed plan-stage map.",
+          "committedPlanStageMap": {
+            "source-height-below-grammar-minimum": 33,
+            "ring-vertex-count-unsupported": 22,
+            "ring-neck-below-grammar-minimum": 10,
+            "ring-area-below-floor": 20
+          },
+          "committedAssetStageMapMinusAssetStageCodes": {
+            "source-height-below-grammar-minimum": 33,
+            "ring-vertex-count-unsupported": 22,
+            "ring-neck-below-grammar-minimum": 10,
+            "ring-area-below-floor": 20
+          },
+          "observedPlanStageMap": {
+            "source-height-below-grammar-minimum": 33,
+            "ring-vertex-count-unsupported": 22,
+            "ring-neck-below-grammar-minimum": 10,
+            "ring-area-below-floor": 20
+          },
+          "committedRecordSelfConsistent": true,
+          "replayAgreesWithCommittedPlanStageMap": true
+        },
+        "verdict": "AGREES",
+        "differingFields": []
+      },
+      {
+        "waveIndex": 4,
+        "waveId": "central-upper-manhattan",
+        "releaseId": "manhattan-central-upper-manhattan-cells-20260812-p1",
+        "censusFile": "data/central-upper-manhattan-20260812-p1/wave-census.json",
+        "censusProfile": {
+          "releaseId": "manhattan-central-upper-manhattan-cells-20260812",
+          "seed": "manhattan-central-upper-manhattan-20260812",
+          "generatedAt": "2026-08-12T00:00:00.000Z",
+          "tool": {
+            "id": "urban-digital-twin:central-upper-manhattan-materialization",
+            "version": "1.0.0"
+          },
+          "texture": null,
+          "budgets": {
+            "maxTriangles": 200000,
+            "maxMaterials": 12,
+            "maxTextures": 0
+          }
+        },
+        "ledgerOwnedCellCount": 249,
+        "comparisons": [
+          {
+            "field": "requestedBuildingCount",
+            "committed": 11721,
+            "observed": 11721,
+            "agrees": true
+          },
+          {
+            "field": "resolvedBuildingCount",
+            "committed": 11721,
+            "observed": 11721,
+            "agrees": true
+          },
+          {
+            "field": "materializedBuildingCount",
+            "committed": 11543,
+            "observed": 11543,
+            "agrees": true
+          },
+          {
+            "field": "refusedBuildingCount",
+            "committed": 178,
+            "observed": 178,
+            "agrees": true
+          },
+          {
+            "field": "tierCollapseAbsentSetbackCount",
+            "committed": 5374,
+            "observed": 5374,
+            "agrees": true
+          },
+          {
+            "field": "uniquePlanHashCount",
+            "committed": 11543,
+            "observed": 11543,
+            "agrees": true
+          },
+          {
+            "field": "generatedAssetCount",
+            "committed": 23086,
+            "observed": 23086,
+            "agrees": true
+          },
+          {
+            "field": "generatedAssetBytes",
+            "committed": 1083362332,
+            "observed": 1083362332,
+            "agrees": true
+          },
+          {
+            "field": "shippedAssetBytes",
+            "committed": 732049128,
+            "observed": 732049128,
+            "agrees": true
+          },
+          {
+            "field": "totalShippedTriangleCount",
+            "committed": 17954574,
+            "observed": 17954574,
+            "agrees": true
+          },
+          {
+            "field": "maximumTriangleCount",
+            "committed": 48388,
+            "observed": 48388,
+            "agrees": true
+          },
+          {
+            "field": "maximumRingVertexCount",
+            "committed": 64,
+            "observed": 64,
+            "agrees": true
+          },
+          {
+            "field": "fallbackHeightCount",
+            "committed": 14,
+            "observed": 14,
+            "agrees": true
+          },
+          {
+            "field": "reversedRingCount",
+            "committed": 11543,
+            "observed": 11543,
+            "agrees": true
+          },
+          {
+            "field": "refusalsByCode (ASSET stage)",
+            "committed": {
+              "ring-vertex-count-unsupported": 64,
+              "ring-area-below-floor": 25,
+              "source-height-below-grammar-minimum": 77,
+              "ring-not-simple": 2,
+              "ring-neck-below-grammar-minimum": 10
+            },
+            "observed": {
+              "ring-vertex-count-unsupported": 64,
+              "ring-area-below-floor": 25,
+              "source-height-below-grammar-minimum": 77,
+              "ring-not-simple": 2,
+              "ring-neck-below-grammar-minimum": 10
+            },
+            "agrees": true
+          },
+          {
+            "field": "styleClassCounts",
+            "committed": {
+              "stone-neutral": 2147,
+              "masonry-warm": 4580,
+              "masonry-light": 3618,
+              "curtain-cool": 1198
+            },
+            "observed": {
+              "stone-neutral": 2147,
+              "masonry-warm": 4580,
+              "masonry-light": 3618,
+              "curtain-cool": 1198
+            },
+            "agrees": true
+          }
+        ],
+        "hashSpace": {
+          "note": "The committed record carries only a cardinality. This is the replayed SET whose cardinality it claims to be, rebuilt one plan hash per materialized building with this wave's own seed, generated instant and tool identity.",
+          "replayedPlanHashSetSize": 11543,
+          "committedUniquePlanHashCount": 11543,
+          "replayedMaterializedBuildingCount": 11543,
+          "agrees": true
+        },
+        "stageBoundary": {
+          "note": "`waveRefusals` is the PLAN stage and `wave.refusalsByCode` is the ASSET stage, which is the plan stage plus the writer's own stop codes. This checks the committed record against itself, and the replayed plan-stage partition against the committed plan-stage map.",
+          "committedPlanStageMap": {
+            "ring-vertex-count-unsupported": 64,
+            "ring-area-below-floor": 25,
+            "source-height-below-grammar-minimum": 77,
+            "ring-not-simple": 2,
+            "ring-neck-below-grammar-minimum": 10
+          },
+          "committedAssetStageMapMinusAssetStageCodes": {
+            "ring-vertex-count-unsupported": 64,
+            "ring-area-below-floor": 25,
+            "source-height-below-grammar-minimum": 77,
+            "ring-not-simple": 2,
+            "ring-neck-below-grammar-minimum": 10
+          },
+          "observedPlanStageMap": {
+            "ring-vertex-count-unsupported": 64,
+            "ring-area-below-floor": 25,
+            "source-height-below-grammar-minimum": 77,
+            "ring-not-simple": 2,
+            "ring-neck-below-grammar-minimum": 10
+          },
+          "committedRecordSelfConsistent": true,
+          "replayAgreesWithCommittedPlanStageMap": true
+        },
+        "verdict": "AGREES",
+        "differingFields": []
+      },
+      {
+        "waveIndex": 5,
+        "waveId": "northern-manhattan",
+        "releaseId": "manhattan-northern-manhattan-cells-20260812-p1",
+        "censusFile": "data/northern-manhattan-20260812-p1/wave-census.json",
+        "censusProfile": {
+          "releaseId": "manhattan-northern-manhattan-cells-20260812",
+          "seed": "manhattan-northern-manhattan-20260812",
+          "generatedAt": "2026-08-12T00:00:00.000Z",
+          "tool": {
+            "id": "urban-digital-twin:northern-manhattan-materialization",
+            "version": "1.0.0"
+          },
+          "texture": null,
+          "budgets": {
+            "maxTriangles": 200000,
+            "maxMaterials": 12,
+            "maxTextures": 0
+          }
+        },
+        "ledgerOwnedCellCount": 182,
+        "comparisons": [
+          {
+            "field": "requestedBuildingCount",
+            "committed": 10230,
+            "observed": 10230,
+            "agrees": true
+          },
+          {
+            "field": "resolvedBuildingCount",
+            "committed": 10230,
+            "observed": 10230,
+            "agrees": true
+          },
+          {
+            "field": "materializedBuildingCount",
+            "committed": 9849,
+            "observed": 9849,
+            "agrees": true
+          },
+          {
+            "field": "refusedBuildingCount",
+            "committed": 381,
+            "observed": 381,
+            "agrees": true
+          },
+          {
+            "field": "tierCollapseAbsentSetbackCount",
+            "committed": 5880,
+            "observed": 5880,
+            "agrees": true
+          },
+          {
+            "field": "uniquePlanHashCount",
+            "committed": 9849,
+            "observed": 9849,
+            "agrees": true
+          },
+          {
+            "field": "generatedAssetCount",
+            "committed": 19698,
+            "observed": 19698,
+            "agrees": true
+          },
+          {
+            "field": "generatedAssetBytes",
+            "committed": 755460568,
+            "observed": 755460568,
+            "agrees": true
+          },
+          {
+            "field": "shippedAssetBytes",
+            "committed": 499130820,
+            "observed": 499130820,
+            "agrees": true
+          },
+          {
+            "field": "totalShippedTriangleCount",
+            "committed": 11839356,
+            "observed": 11839356,
+            "agrees": true
+          },
+          {
+            "field": "maximumTriangleCount",
+            "committed": 23698,
+            "observed": 23698,
+            "agrees": true
+          },
+          {
+            "field": "maximumRingVertexCount",
+            "committed": 64,
+            "observed": 64,
+            "agrees": true
+          },
+          {
+            "field": "fallbackHeightCount",
+            "committed": 16,
+            "observed": 16,
+            "agrees": true
+          },
+          {
+            "field": "reversedRingCount",
+            "committed": 9849,
+            "observed": 9849,
+            "agrees": true
+          },
+          {
+            "field": "refusalsByCode (ASSET stage)",
+            "committed": {
+              "ring-vertex-count-unsupported": 164,
+              "source-height-below-grammar-minimum": 164,
+              "ring-area-below-floor": 26,
+              "volume-identity-failed": 16,
+              "ring-neck-below-grammar-minimum": 10,
+              "ring-not-simple": 1
+            },
+            "observed": {
+              "ring-vertex-count-unsupported": 164,
+              "source-height-below-grammar-minimum": 164,
+              "ring-area-below-floor": 26,
+              "volume-identity-failed": 16,
+              "ring-neck-below-grammar-minimum": 10,
+              "ring-not-simple": 1
+            },
+            "agrees": true
+          },
+          {
+            "field": "styleClassCounts",
+            "committed": {
+              "stone-neutral": 1690,
+              "masonry-warm": 4060,
+              "masonry-light": 3178,
+              "curtain-cool": 921
+            },
+            "observed": {
+              "stone-neutral": 1690,
+              "masonry-warm": 4060,
+              "masonry-light": 3178,
+              "curtain-cool": 921
+            },
+            "agrees": true
+          }
+        ],
+        "hashSpace": {
+          "note": "The committed record carries only a cardinality. This is the replayed SET whose cardinality it claims to be, rebuilt one plan hash per materialized building with this wave's own seed, generated instant and tool identity.",
+          "replayedPlanHashSetSize": 9849,
+          "committedUniquePlanHashCount": 9849,
+          "replayedMaterializedBuildingCount": 9849,
+          "agrees": true
+        },
+        "stageBoundary": {
+          "note": "`waveRefusals` is the PLAN stage and `wave.refusalsByCode` is the ASSET stage, which is the plan stage plus the writer's own stop codes. This checks the committed record against itself, and the replayed plan-stage partition against the committed plan-stage map.",
+          "committedPlanStageMap": {
+            "ring-vertex-count-unsupported": 164,
+            "source-height-below-grammar-minimum": 164,
+            "ring-area-below-floor": 26,
+            "ring-neck-below-grammar-minimum": 10,
+            "ring-not-simple": 1
+          },
+          "committedAssetStageMapMinusAssetStageCodes": {
+            "ring-vertex-count-unsupported": 164,
+            "source-height-below-grammar-minimum": 164,
+            "ring-area-below-floor": 26,
+            "ring-neck-below-grammar-minimum": 10,
+            "ring-not-simple": 1
+          },
+          "observedPlanStageMap": {
+            "ring-vertex-count-unsupported": 164,
+            "source-height-below-grammar-minimum": 164,
+            "ring-area-below-floor": 26,
+            "ring-neck-below-grammar-minimum": 10,
+            "ring-not-simple": 1
+          },
+          "committedRecordSelfConsistent": true,
+          "replayAgreesWithCommittedPlanStageMap": true
+        },
+        "verdict": "AGREES",
+        "differingFields": []
+      }
+    ]
+  },
+  "block835PlanReplay": {
+    "note": "Wave w00 committed no wave-scale census, so there is no aggregate to reconcile. What it DOES commit — uniquely in this repository — is a per-building plan hash for each of its 14 buildings, in three independent records. Each is replayed through the reference package's own grammar entrypoint and compared hash for hash. The `-v3t` census reports the same hashes as `-v3` (`summary.planHashesUnchangedFromV3`), and `-v3e` differs on exactly the one building carrying a cited style override.",
+    "buildingCount": 14,
+    "committedRecords": [
+      "data/manhattan-esb-block-reference-20260811-v3/plan-index.json",
+      "data/manhattan-esb-block-reference-20260811-v3e/plan-index.json",
+      "data/manhattan-esb-block-reference-20260811-v3t/census.json"
+    ],
+    "citedStyleOverrideBuildingIds": [
+      "doitt:778052"
+    ],
+    "buildings": [
+      {
+        "canonicalBuildingId": "doitt:102705",
+        "replayedV3PlanHashSha256": "5779f652e2da5c1f8cfeea5dda42995edc665bbc38aad0df58555e0ee8fcda5a",
+        "committedV3PlanHashSha256": "5779f652e2da5c1f8cfeea5dda42995edc665bbc38aad0df58555e0ee8fcda5a",
+        "committedV3tCensusPlanHashSha256": "5779f652e2da5c1f8cfeea5dda42995edc665bbc38aad0df58555e0ee8fcda5a",
+        "replayedV3ePlanHashSha256": "5779f652e2da5c1f8cfeea5dda42995edc665bbc38aad0df58555e0ee8fcda5a",
+        "committedV3ePlanHashSha256": "5779f652e2da5c1f8cfeea5dda42995edc665bbc38aad0df58555e0ee8fcda5a",
+        "styleOverrideCited": false,
+        "agrees": true
+      },
+      {
+        "canonicalBuildingId": "doitt:131170",
+        "replayedV3PlanHashSha256": "88a0ff40c5e26d8dbe257ad7c80e8b28153aafaef53e5b2b1d503f889630d2d4",
+        "committedV3PlanHashSha256": "88a0ff40c5e26d8dbe257ad7c80e8b28153aafaef53e5b2b1d503f889630d2d4",
+        "committedV3tCensusPlanHashSha256": "88a0ff40c5e26d8dbe257ad7c80e8b28153aafaef53e5b2b1d503f889630d2d4",
+        "replayedV3ePlanHashSha256": "88a0ff40c5e26d8dbe257ad7c80e8b28153aafaef53e5b2b1d503f889630d2d4",
+        "committedV3ePlanHashSha256": "88a0ff40c5e26d8dbe257ad7c80e8b28153aafaef53e5b2b1d503f889630d2d4",
+        "styleOverrideCited": false,
+        "agrees": true
+      },
+      {
+        "canonicalBuildingId": "doitt:147902",
+        "replayedV3PlanHashSha256": "2887670eae6d3fffba9cb7e80d8c52a7200cfe66120a22b9960e8b623d25db6f",
+        "committedV3PlanHashSha256": "2887670eae6d3fffba9cb7e80d8c52a7200cfe66120a22b9960e8b623d25db6f",
+        "committedV3tCensusPlanHashSha256": "2887670eae6d3fffba9cb7e80d8c52a7200cfe66120a22b9960e8b623d25db6f",
+        "replayedV3ePlanHashSha256": "2887670eae6d3fffba9cb7e80d8c52a7200cfe66120a22b9960e8b623d25db6f",
+        "committedV3ePlanHashSha256": "2887670eae6d3fffba9cb7e80d8c52a7200cfe66120a22b9960e8b623d25db6f",
+        "styleOverrideCited": false,
+        "agrees": true
+      },
+      {
+        "canonicalBuildingId": "doitt:262867",
+        "replayedV3PlanHashSha256": "7f873bae4ce75da5753f514dc53c9bc6833319b1a0e2634cb47eeb5593b6e38c",
+        "committedV3PlanHashSha256": "7f873bae4ce75da5753f514dc53c9bc6833319b1a0e2634cb47eeb5593b6e38c",
+        "committedV3tCensusPlanHashSha256": "7f873bae4ce75da5753f514dc53c9bc6833319b1a0e2634cb47eeb5593b6e38c",
+        "replayedV3ePlanHashSha256": "7f873bae4ce75da5753f514dc53c9bc6833319b1a0e2634cb47eeb5593b6e38c",
+        "committedV3ePlanHashSha256": "7f873bae4ce75da5753f514dc53c9bc6833319b1a0e2634cb47eeb5593b6e38c",
+        "styleOverrideCited": false,
+        "agrees": true
+      },
+      {
+        "canonicalBuildingId": "doitt:39969",
+        "replayedV3PlanHashSha256": "0ba5e7717196994719112f589b7310366c0223a137fd0dd4133b83ee5aecd4ce",
+        "committedV3PlanHashSha256": "0ba5e7717196994719112f589b7310366c0223a137fd0dd4133b83ee5aecd4ce",
+        "committedV3tCensusPlanHashSha256": "0ba5e7717196994719112f589b7310366c0223a137fd0dd4133b83ee5aecd4ce",
+        "replayedV3ePlanHashSha256": "0ba5e7717196994719112f589b7310366c0223a137fd0dd4133b83ee5aecd4ce",
+        "committedV3ePlanHashSha256": "0ba5e7717196994719112f589b7310366c0223a137fd0dd4133b83ee5aecd4ce",
+        "styleOverrideCited": false,
+        "agrees": true
+      },
+      {
+        "canonicalBuildingId": "doitt:460555",
+        "replayedV3PlanHashSha256": "b828dabad6cb4f39408ed48fca10c5d5331452ab1fea1685d51db9d9ba57b6af",
+        "committedV3PlanHashSha256": "b828dabad6cb4f39408ed48fca10c5d5331452ab1fea1685d51db9d9ba57b6af",
+        "committedV3tCensusPlanHashSha256": "b828dabad6cb4f39408ed48fca10c5d5331452ab1fea1685d51db9d9ba57b6af",
+        "replayedV3ePlanHashSha256": "b828dabad6cb4f39408ed48fca10c5d5331452ab1fea1685d51db9d9ba57b6af",
+        "committedV3ePlanHashSha256": "b828dabad6cb4f39408ed48fca10c5d5331452ab1fea1685d51db9d9ba57b6af",
+        "styleOverrideCited": false,
+        "agrees": true
+      },
+      {
+        "canonicalBuildingId": "doitt:498980",
+        "replayedV3PlanHashSha256": "8fb58e61c8953bec3b180620455cdb091e818b0df3e75e868a13a163f794bafe",
+        "committedV3PlanHashSha256": "8fb58e61c8953bec3b180620455cdb091e818b0df3e75e868a13a163f794bafe",
+        "committedV3tCensusPlanHashSha256": "8fb58e61c8953bec3b180620455cdb091e818b0df3e75e868a13a163f794bafe",
+        "replayedV3ePlanHashSha256": "8fb58e61c8953bec3b180620455cdb091e818b0df3e75e868a13a163f794bafe",
+        "committedV3ePlanHashSha256": "8fb58e61c8953bec3b180620455cdb091e818b0df3e75e868a13a163f794bafe",
+        "styleOverrideCited": false,
+        "agrees": true
+      },
+      {
+        "canonicalBuildingId": "doitt:502491",
+        "replayedV3PlanHashSha256": "5a3d5fc25a53535852388e281f55459d1eaf2d4f9c945d956949f202074c4cf1",
+        "committedV3PlanHashSha256": "5a3d5fc25a53535852388e281f55459d1eaf2d4f9c945d956949f202074c4cf1",
+        "committedV3tCensusPlanHashSha256": "5a3d5fc25a53535852388e281f55459d1eaf2d4f9c945d956949f202074c4cf1",
+        "replayedV3ePlanHashSha256": "5a3d5fc25a53535852388e281f55459d1eaf2d4f9c945d956949f202074c4cf1",
+        "committedV3ePlanHashSha256": "5a3d5fc25a53535852388e281f55459d1eaf2d4f9c945d956949f202074c4cf1",
+        "styleOverrideCited": false,
+        "agrees": true
+      },
+      {
+        "canonicalBuildingId": "doitt:584049",
+        "replayedV3PlanHashSha256": "07d8c9827918fdef58e4e681b760262c207d33b9618dc008e875fd8d3c32da23",
+        "committedV3PlanHashSha256": "07d8c9827918fdef58e4e681b760262c207d33b9618dc008e875fd8d3c32da23",
+        "committedV3tCensusPlanHashSha256": "07d8c9827918fdef58e4e681b760262c207d33b9618dc008e875fd8d3c32da23",
+        "replayedV3ePlanHashSha256": "07d8c9827918fdef58e4e681b760262c207d33b9618dc008e875fd8d3c32da23",
+        "committedV3ePlanHashSha256": "07d8c9827918fdef58e4e681b760262c207d33b9618dc008e875fd8d3c32da23",
+        "styleOverrideCited": false,
+        "agrees": true
+      },
+      {
+        "canonicalBuildingId": "doitt:778052",
+        "replayedV3PlanHashSha256": "cc65ce6e529d56d18a54b8637349e30cbbc4e73b87bbe68d82c6a5d2394e040b",
+        "committedV3PlanHashSha256": "cc65ce6e529d56d18a54b8637349e30cbbc4e73b87bbe68d82c6a5d2394e040b",
+        "committedV3tCensusPlanHashSha256": "cc65ce6e529d56d18a54b8637349e30cbbc4e73b87bbe68d82c6a5d2394e040b",
+        "replayedV3ePlanHashSha256": "861811019f2885faf349adff8199ee9d40dde7dc7472708ada095d7d69c34b9f",
+        "committedV3ePlanHashSha256": "861811019f2885faf349adff8199ee9d40dde7dc7472708ada095d7d69c34b9f",
+        "styleOverrideCited": true,
+        "agrees": true
+      },
+      {
+        "canonicalBuildingId": "doitt:812702",
+        "replayedV3PlanHashSha256": "aa4dfaf9a2b171cfc7b95045b8f43443b0d11e90bec08acdcf86f110c23dd617",
+        "committedV3PlanHashSha256": "aa4dfaf9a2b171cfc7b95045b8f43443b0d11e90bec08acdcf86f110c23dd617",
+        "committedV3tCensusPlanHashSha256": "aa4dfaf9a2b171cfc7b95045b8f43443b0d11e90bec08acdcf86f110c23dd617",
+        "replayedV3ePlanHashSha256": "aa4dfaf9a2b171cfc7b95045b8f43443b0d11e90bec08acdcf86f110c23dd617",
+        "committedV3ePlanHashSha256": "aa4dfaf9a2b171cfc7b95045b8f43443b0d11e90bec08acdcf86f110c23dd617",
+        "styleOverrideCited": false,
+        "agrees": true
+      },
+      {
+        "canonicalBuildingId": "doitt:835659",
+        "replayedV3PlanHashSha256": "cd12d3dc6f8c99cf55300d4f81fb66a560652152563c78de4a98037a34b010c4",
+        "committedV3PlanHashSha256": "cd12d3dc6f8c99cf55300d4f81fb66a560652152563c78de4a98037a34b010c4",
+        "committedV3tCensusPlanHashSha256": "cd12d3dc6f8c99cf55300d4f81fb66a560652152563c78de4a98037a34b010c4",
+        "replayedV3ePlanHashSha256": "cd12d3dc6f8c99cf55300d4f81fb66a560652152563c78de4a98037a34b010c4",
+        "committedV3ePlanHashSha256": "cd12d3dc6f8c99cf55300d4f81fb66a560652152563c78de4a98037a34b010c4",
+        "styleOverrideCited": false,
+        "agrees": true
+      },
+      {
+        "canonicalBuildingId": "doitt:925937",
+        "replayedV3PlanHashSha256": "9121fecd5bc8efb6711d14142b828fe3231c92a121dd801c2f7fafce27d77510",
+        "committedV3PlanHashSha256": "9121fecd5bc8efb6711d14142b828fe3231c92a121dd801c2f7fafce27d77510",
+        "committedV3tCensusPlanHashSha256": "9121fecd5bc8efb6711d14142b828fe3231c92a121dd801c2f7fafce27d77510",
+        "replayedV3ePlanHashSha256": "9121fecd5bc8efb6711d14142b828fe3231c92a121dd801c2f7fafce27d77510",
+        "committedV3ePlanHashSha256": "9121fecd5bc8efb6711d14142b828fe3231c92a121dd801c2f7fafce27d77510",
+        "styleOverrideCited": false,
+        "agrees": true
+      },
+      {
+        "canonicalBuildingId": "doitt:982383",
+        "replayedV3PlanHashSha256": "68f690ed0262bd6a0f3eeb0fe950b305ba0c30e0507a7689bb0645eab3ba3c0b",
+        "committedV3PlanHashSha256": "68f690ed0262bd6a0f3eeb0fe950b305ba0c30e0507a7689bb0645eab3ba3c0b",
+        "committedV3tCensusPlanHashSha256": "68f690ed0262bd6a0f3eeb0fe950b305ba0c30e0507a7689bb0645eab3ba3c0b",
+        "replayedV3ePlanHashSha256": "68f690ed0262bd6a0f3eeb0fe950b305ba0c30e0507a7689bb0645eab3ba3c0b",
+        "committedV3ePlanHashSha256": "68f690ed0262bd6a0f3eeb0fe950b305ba0c30e0507a7689bb0645eab3ba3c0b",
+        "styleOverrideCited": false,
+        "agrees": true
+      }
+    ],
+    "verdict": "AGREES",
+    "differingBuildingIds": []
+  },
+  "shippedAssetByteReplay": {
+    "note": "BYTE IDENTITY, not count agreement. Every shipped GLB of every wave is regenerated with that wave's SHIPPED profile and its SHA-256 is compared against the committed checksum record. This is the property the retain-versus-regenerate decision in ADR 0046 rests on.",
+    "totalAssetsCompared": 498,
+    "totalAssetsMatched": 498,
+    "waves": [
+      {
+        "waveIndex": 0,
+        "waveId": "block-835",
+        "releaseId": "manhattan-exterior-cells-20260811-v3",
+        "note": "Wave w00 has no payload inventory under data/: its bytes are git-tracked, so the committed pin is the emitted release's own assemblies.json. The shipped release promotes the manhattan-esb-block-reference-20260811-v3e package unchanged, so the same bytes are compared against BOTH the shipped pin and the input package manifest.",
+        "inputPackageId": "manhattan-esb-block-reference-20260811-v3e",
+        "shippedProfile": {
+          "packageId": "manhattan-esb-block-reference-20260811-v3e",
+          "texture": null,
+          "budgets": {
+            "maxTriangles": 200000,
+            "maxMaterials": 12,
+            "maxTextures": 0
+          }
+        },
+        "promotionIsByteWisePassThrough": true,
+        "shippedLodIds": [
+          "lod_0",
+          "lod_1"
+        ],
+        "assetsCompared": 28,
+        "assetsMatched": 28,
+        "sampleAgreements": [
+          {
+            "logicalId": "glb:doitt:102705:lod_0",
+            "shippedPath": "public/assets/doitt-102705__lod_0.glb",
+            "inputPackagePath": "private/assets/doitt-102705__lod_0.glb",
+            "committedShippedByteSize": 44376,
+            "committedShippedChecksumSha256": "af89dae42ee3516a7dfbe1f3c91baabe9a263428c9d958a5356c623c3ec9eb4c",
+            "committedInputPackageChecksumSha256": "af89dae42ee3516a7dfbe1f3c91baabe9a263428c9d958a5356c623c3ec9eb4c",
+            "observedByteSize": 44376,
+            "observedChecksumSha256": "af89dae42ee3516a7dfbe1f3c91baabe9a263428c9d958a5356c623c3ec9eb4c",
+            "promotionIsPassThrough": true,
+            "agrees": true
+          },
+          {
+            "logicalId": "glb:doitt:102705:lod_1",
+            "shippedPath": "public/assets/doitt-102705__lod_1.glb",
+            "inputPackagePath": "private/assets/doitt-102705__lod_1.glb",
+            "committedShippedByteSize": 20852,
+            "committedShippedChecksumSha256": "32e7024822114d0980bf7e1ff7f854ce83b417b518a9f87fdddf3f655a44f904",
+            "committedInputPackageChecksumSha256": "32e7024822114d0980bf7e1ff7f854ce83b417b518a9f87fdddf3f655a44f904",
+            "observedByteSize": 20852,
+            "observedChecksumSha256": "32e7024822114d0980bf7e1ff7f854ce83b417b518a9f87fdddf3f655a44f904",
+            "promotionIsPassThrough": true,
+            "agrees": true
+          },
+          {
+            "logicalId": "glb:doitt:131170:lod_0",
+            "shippedPath": "public/assets/doitt-131170__lod_0.glb",
+            "inputPackagePath": "private/assets/doitt-131170__lod_0.glb",
+            "committedShippedByteSize": 592056,
+            "committedShippedChecksumSha256": "314827e91ce8f11eee65fc48958029b9355eb67af52bd513c5ff293c7a9999b4",
+            "committedInputPackageChecksumSha256": "314827e91ce8f11eee65fc48958029b9355eb67af52bd513c5ff293c7a9999b4",
+            "observedByteSize": 592056,
+            "observedChecksumSha256": "314827e91ce8f11eee65fc48958029b9355eb67af52bd513c5ff293c7a9999b4",
+            "promotionIsPassThrough": true,
+            "agrees": true
+          }
+        ],
+        "differingAssets": [],
+        "verdict": "AGREES"
+      },
+      {
+        "waveIndex": 1,
+        "waveId": "midtown-core",
+        "releaseId": "manhattan-midtown-core-cells-20260811-v3",
+        "payloadInventory": "data/midtown-core-20260811-v3/payload-inventory.json",
+        "payloadInventoryChecksumSha256": "435a4bd6a1b351656acfffcf1bcaa68d341f955e72b4af55fe1d83635b924b55",
+        "shippedProfile": {
+          "releaseId": "manhattan-midtown-core-cells-20260811-v3",
+          "seed": "manhattan-midtown-core-20260811-v3",
+          "generatedAt": "2026-08-11T00:00:00.000Z",
+          "tool": {
+            "id": "urban-digital-twin:midtown-core-v3-materialization",
+            "version": "3.0.0"
+          },
+          "texture": null,
+          "textureFilter": null,
+          "budgets": {
+            "maxTriangles": 200000,
+            "maxMaterials": 12,
+            "maxTextures": 0
+          }
+        },
+        "shippedLodIds": [
+          "lod_0"
+        ],
+        "assetsCompared": 156,
+        "assetsMatched": 156,
+        "sampleAgreements": [
+          {
+            "path": "public/assets/doitt-1001111__lod_0.glb",
+            "committedByteSize": 23824,
+            "observedByteSize": 23824,
+            "committedChecksumSha256": "4da32a55ce0659798a929a109479ab41632b6502c364b1159e9d66ec1193f399",
+            "observedChecksumSha256": "4da32a55ce0659798a929a109479ab41632b6502c364b1159e9d66ec1193f399",
+            "agrees": true
+          },
+          {
+            "path": "public/assets/doitt-105916__lod_0.glb",
+            "committedByteSize": 220120,
+            "observedByteSize": 220120,
+            "committedChecksumSha256": "8842a9f887db59bae69b2d8df8b3f17c073238fc73c8499de4bd8e62a09ccad8",
+            "observedChecksumSha256": "8842a9f887db59bae69b2d8df8b3f17c073238fc73c8499de4bd8e62a09ccad8",
+            "agrees": true
+          },
+          {
+            "path": "public/assets/doitt-1104532__lod_0.glb",
+            "committedByteSize": 175216,
+            "observedByteSize": 175216,
+            "committedChecksumSha256": "d64298b1132a86c6b8282d648803de329bbff6df9518a1a416b8a9d78289f44c",
+            "observedChecksumSha256": "d64298b1132a86c6b8282d648803de329bbff6df9518a1a416b8a9d78289f44c",
+            "agrees": true
+          }
+        ],
+        "differingAssets": [],
+        "verdict": "AGREES"
+      },
+      {
+        "waveIndex": 2,
+        "waveId": "lower-manhattan",
+        "releaseId": "manhattan-lower-manhattan-cells-20260812-p1",
+        "payloadInventory": "data/lower-manhattan-20260812-p1/payload-inventory.json",
+        "payloadInventoryChecksumSha256": "f7d9372b7826c8822684c13ce7791c405f6a1ba138cc7e196498778cbe9e8378",
+        "shippedProfile": {
+          "releaseId": "manhattan-lower-manhattan-cells-20260812-p1",
+          "seed": "manhattan-lower-manhattan-20260812",
+          "generatedAt": "2026-08-12T00:00:00.000Z",
+          "tool": {
+            "id": "urban-digital-twin:lower-manhattan-materialization",
+            "version": "1.0.0"
+          },
+          "texture": "procedural-texture-v1",
+          "textureFilter": {
+            "magFilter": 9729,
+            "minFilter": 9987
+          },
+          "budgets": {
+            "maxTriangles": 200000,
+            "maxMaterials": 12,
+            "maxTextures": 4
+          }
+        },
+        "shippedLodIds": [
+          "lod_0"
+        ],
+        "assetsCompared": 71,
+        "assetsMatched": 71,
+        "sampleAgreements": [
+          {
+            "path": "public/assets/doitt-1000469__lod_0.glb",
+            "committedByteSize": 1022868,
+            "observedByteSize": 1022868,
+            "committedChecksumSha256": "8becbd425975936808b6bb5bfbf7584233ff8fc2e63e158c3350247571eb45d3",
+            "observedChecksumSha256": "8becbd425975936808b6bb5bfbf7584233ff8fc2e63e158c3350247571eb45d3",
+            "agrees": true
+          },
+          {
+            "path": "public/assets/doitt-104167__lod_0.glb",
+            "committedByteSize": 71520,
+            "observedByteSize": 71520,
+            "committedChecksumSha256": "b8a9e29200e0d3d4b9552ba5933b58d03f6f78c8c894bec356c9c205b2b989ed",
+            "observedChecksumSha256": "b8a9e29200e0d3d4b9552ba5933b58d03f6f78c8c894bec356c9c205b2b989ed",
+            "agrees": true
+          },
+          {
+            "path": "public/assets/doitt-104897__lod_0.glb",
+            "committedByteSize": 115780,
+            "observedByteSize": 115780,
+            "committedChecksumSha256": "7174b52d4fd8cee0a75b5f6835c284137a22ef875303a07eee5252e0a8e1a802",
+            "observedChecksumSha256": "7174b52d4fd8cee0a75b5f6835c284137a22ef875303a07eee5252e0a8e1a802",
+            "agrees": true
+          }
+        ],
+        "differingAssets": [],
+        "verdict": "AGREES"
+      },
+      {
+        "waveIndex": 3,
+        "waveId": "southern-remainder",
+        "releaseId": "manhattan-southern-remainder-cells-20260812-p1",
+        "payloadInventory": "data/southern-remainder-20260812-p1/payload-inventory.json",
+        "payloadInventoryChecksumSha256": "ec6be6bb9ed927ecc436a6e06bd03a1d045ae4fbf75f172a98febd1153569311",
+        "shippedProfile": {
+          "releaseId": "manhattan-southern-remainder-cells-20260812-p1",
+          "seed": "manhattan-southern-remainder-20260812",
+          "generatedAt": "2026-08-12T00:00:00.000Z",
+          "tool": {
+            "id": "urban-digital-twin:southern-remainder-materialization",
+            "version": "1.0.0"
+          },
+          "texture": "procedural-texture-v1",
+          "textureFilter": {
+            "magFilter": 9729,
+            "minFilter": 9987
+          },
+          "budgets": {
+            "maxTriangles": 200000,
+            "maxMaterials": 12,
+            "maxTextures": 4
+          }
+        },
+        "shippedLodIds": [
+          "lod_0"
+        ],
+        "assetsCompared": 179,
+        "assetsMatched": 179,
+        "sampleAgreements": [
+          {
+            "path": "public/assets/doitt-100137__lod_0.glb",
+            "committedByteSize": 460048,
+            "observedByteSize": 460048,
+            "committedChecksumSha256": "1666265d50bf5e51607b4a240603c4d3007d2722e7ea0b2fbb182f35f88c8761",
+            "observedChecksumSha256": "1666265d50bf5e51607b4a240603c4d3007d2722e7ea0b2fbb182f35f88c8761",
+            "agrees": true
+          },
+          {
+            "path": "public/assets/doitt-1012053__lod_0.glb",
+            "committedByteSize": 111064,
+            "observedByteSize": 111064,
+            "committedChecksumSha256": "f7602c57c979467c6cc960ae2f9e367c9dcdae175e07332a588568968c05f3c5",
+            "observedChecksumSha256": "f7602c57c979467c6cc960ae2f9e367c9dcdae175e07332a588568968c05f3c5",
+            "agrees": true
+          },
+          {
+            "path": "public/assets/doitt-1021817__lod_0.glb",
+            "committedByteSize": 94792,
+            "observedByteSize": 94792,
+            "committedChecksumSha256": "e535e5599b0f3a477b6a81670dbe39ce70acee45d3379ff3ecf0e74cdff86f3e",
+            "observedChecksumSha256": "e535e5599b0f3a477b6a81670dbe39ce70acee45d3379ff3ecf0e74cdff86f3e",
+            "agrees": true
+          }
+        ],
+        "differingAssets": [],
+        "verdict": "AGREES"
+      },
+      {
+        "waveIndex": 4,
+        "waveId": "central-upper-manhattan",
+        "releaseId": "manhattan-central-upper-manhattan-cells-20260812-p1",
+        "payloadInventory": "data/central-upper-manhattan-20260812-p1/payload-inventory.json",
+        "payloadInventoryChecksumSha256": "46e522573488088255cab8907c52eddd931c04608046eed1f7ce2f26da666899",
+        "shippedProfile": {
+          "releaseId": "manhattan-central-upper-manhattan-cells-20260812-p1",
+          "seed": "manhattan-central-upper-manhattan-20260812",
+          "generatedAt": "2026-08-12T00:00:00.000Z",
+          "tool": {
+            "id": "urban-digital-twin:central-upper-manhattan-materialization",
+            "version": "1.0.0"
+          },
+          "texture": "procedural-texture-v1",
+          "textureFilter": {
+            "magFilter": 9729,
+            "minFilter": 9987
+          },
+          "budgets": {
+            "maxTriangles": 200000,
+            "maxMaterials": 12,
+            "maxTextures": 4
+          }
+        },
+        "shippedLodIds": [
+          "lod_0"
+        ],
+        "assetsCompared": 40,
+        "assetsMatched": 40,
+        "sampleAgreements": [
+          {
+            "path": "public/assets/doitt-102891__lod_0.glb",
+            "committedByteSize": 105452,
+            "observedByteSize": 105452,
+            "committedChecksumSha256": "c3e3252df7a368841f398ee36db43d9480b03a41c0c1a93132ee3a63e327f0e9",
+            "observedChecksumSha256": "c3e3252df7a368841f398ee36db43d9480b03a41c0c1a93132ee3a63e327f0e9",
+            "agrees": true
+          },
+          {
+            "path": "public/assets/doitt-1154086__lod_0.glb",
+            "committedByteSize": 81656,
+            "observedByteSize": 81656,
+            "committedChecksumSha256": "fa4067e26712f9dd3abf6bac48908df74f11fca88f5bfbb204a16f9f015fbb9c",
+            "observedChecksumSha256": "fa4067e26712f9dd3abf6bac48908df74f11fca88f5bfbb204a16f9f015fbb9c",
+            "agrees": true
+          },
+          {
+            "path": "public/assets/doitt-1305508__lod_0.glb",
+            "committedByteSize": 1954896,
+            "observedByteSize": 1954896,
+            "committedChecksumSha256": "0ebb33082c9d501d27bbf5b7582bbb5b14f29ac953b954e772bfdf0331884e20",
+            "observedChecksumSha256": "0ebb33082c9d501d27bbf5b7582bbb5b14f29ac953b954e772bfdf0331884e20",
+            "agrees": true
+          }
+        ],
+        "differingAssets": [],
+        "verdict": "AGREES"
+      },
+      {
+        "waveIndex": 5,
+        "waveId": "northern-manhattan",
+        "releaseId": "manhattan-northern-manhattan-cells-20260812-p1",
+        "payloadInventory": "data/northern-manhattan-20260812-p1/payload-inventory.json",
+        "payloadInventoryChecksumSha256": "35d4b7edd83c7b3199596a8ebc6e4a9afd4e304ba472dde928f848622aa0a02b",
+        "shippedProfile": {
+          "releaseId": "manhattan-northern-manhattan-cells-20260812-p1",
+          "seed": "manhattan-northern-manhattan-20260812",
+          "generatedAt": "2026-08-12T00:00:00.000Z",
+          "tool": {
+            "id": "urban-digital-twin:northern-manhattan-materialization",
+            "version": "1.0.0"
+          },
+          "texture": "procedural-texture-v1",
+          "textureFilter": {
+            "magFilter": 9729,
+            "minFilter": 9987
+          },
+          "budgets": {
+            "maxTriangles": 200000,
+            "maxMaterials": 12,
+            "maxTextures": 4
+          }
+        },
+        "shippedLodIds": [
+          "lod_0"
+        ],
+        "assetsCompared": 24,
+        "assetsMatched": 24,
+        "sampleAgreements": [
+          {
+            "path": "public/assets/doitt-1097877__lod_0.glb",
+            "committedByteSize": 102616,
+            "observedByteSize": 102616,
+            "committedChecksumSha256": "ae786531ed5dbf3dba9163cee33b3bf36499defbaf8fd93bbdfdf500595f5622",
+            "observedChecksumSha256": "ae786531ed5dbf3dba9163cee33b3bf36499defbaf8fd93bbdfdf500595f5622",
+            "agrees": true
+          },
+          {
+            "path": "public/assets/doitt-1114218__lod_0.glb",
+            "committedByteSize": 362388,
+            "observedByteSize": 362388,
+            "committedChecksumSha256": "56c64d235bc5646dea002a2b49eb8580983e56f977541548d1a654823dabc8cc",
+            "observedChecksumSha256": "56c64d235bc5646dea002a2b49eb8580983e56f977541548d1a654823dabc8cc",
+            "agrees": true
+          },
+          {
+            "path": "public/assets/doitt-169205__lod_0.glb",
+            "committedByteSize": 203404,
+            "observedByteSize": 203404,
+            "committedChecksumSha256": "86abb04e622e5a573abfaf390e512e6e34a0e9887eada2e88c3071fc745bd7d8",
+            "observedChecksumSha256": "86abb04e622e5a573abfaf390e512e6e34a0e9887eada2e88c3071fc745bd7d8",
+            "agrees": true
+          }
+        ],
+        "differingAssets": [],
+        "verdict": "AGREES"
+      }
+    ]
+  },
+  "verdict": {
+    "allAgree": true,
+    "disagreementCount": 0,
+    "statement": "Every committed figure compared here was reproduced by re-running the generator. Regeneration of the full city is byte-exact against the committed record."
+  },
+  "retention": "census-only — every regenerated GLB was hashed, counted and dropped.",
+  "hostObservationsLocation": "artifacts/citywide-overview-census-20260814/stages/replay.json — wall clock and RSS are host facts and are deliberately kept OUT of this artifact's deterministic body (the ADR 0025 D8 precedent)."
+}
