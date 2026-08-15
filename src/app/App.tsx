@@ -61,6 +61,8 @@ import { EXTERIOR_PILOT_RELEASE_ID, createExteriorPilotFaultFetcher, loadExterio
 import { BLOCK835_PUBLIC_REALM_RELEASE_ID, createBlock835PublicRealmFaultFetcher, loadBlock835PublicRealmRelease, parseBlock835PublicRealmFault, publicRealmFeatureToFeature, type Block835PublicRealmFeature, type LoadedBlock835PublicRealmRelease } from "../runtime/block835-public-realm-release";
 import { EXTERIOR_RUNTIME_BUDGETS, exteriorOutcomeCacheKeys, loadExteriorCellRuntime, type ExteriorCellOutcome, type ExteriorCellRuntime, type ExteriorHeadRequest } from "../runtime/exterior-cell-runtime";
 import { EXTERIOR_T1_RELEASE_IDS } from "../release/exterior-t1-variants";
+import { PROBE_MIP_CHAIN_MULTIPLIER, PROBE_TILE_WIRE_BYTES, baseLevelByteLength, predictedTextureByteLength } from "../features/explorer/gpu-texture-probe";
+import { cesiumGpuTextureReading, cesiumVersion } from "../features/explorer/cesium-resource-cache";
 import { acceptExteriorCellOutcomes, createExteriorCellLoadState, exteriorCellLoadInputsUnchanged, failExteriorCellBatch, publishedExteriorCellOutcomes, reconcileExteriorCellLoads, type ExteriorCellLoadState } from "../runtime/exterior-cell-reconciliation";
 import { scheduleExteriorCellsGlobally } from "../runtime/exterior-cell-scheduling";
 import { commitExteriorCacheRelease, createExteriorCacheReleaseState, noteExteriorSceneRetired, planExteriorCacheRelease, queueExteriorCacheRelease } from "../runtime/exterior-cache-release";
@@ -141,6 +143,20 @@ const EXTERIOR_SCHEDULER_TRACE_LIMIT = 800;
  * screenshot is not evidence anybody can replay.
  */
 const CITYWIDE_OVERVIEW_PROBE_ENABLED = import.meta.env.VITE_CITYWIDE_OVERVIEW_PROBE === "1";
+
+/**
+ * T002 shared-class-texture GPU probe (ADR 0047). Same discipline as the three
+ * probes above: compiled out unless `VITE_EXTERIOR_TEXTURE_PROBE=1`, reads only
+ * what Cesium already accounts for, and decides nothing.
+ *
+ * It exists because the whole shared-texture claim is a GPU-residency claim, and
+ * a residency claim read off a payload size would be a different claim. What it
+ * publishes is Cesium's OWN CPU-side accounting of uploaded BASE-LEVEL bytes; the
+ * labels, the mip statement and the version pin live in `gpu-texture-probe.ts`
+ * and are carried into the published record rather than into a comment nobody
+ * reads beside the number.
+ */
+const EXTERIOR_TEXTURE_PROBE_ENABLED = import.meta.env.VITE_EXTERIOR_TEXTURE_PROBE === "1";
 const CITYWIDE_OVERVIEW_PROBE_LIMIT = 400;
 
 type CitywideOverviewMoveSample = {
@@ -3937,6 +3953,26 @@ export function App() {
           role="status"
           style={{ position: "fixed", zIndex: 100, left: 8, bottom: 8, maxWidth: "min(960px, calc(100vw - 16px))", maxHeight: "40vh", overflow: "auto", overflowWrap: "anywhere", whiteSpace: "pre-wrap", padding: 8, background: "rgba(13, 21, 27, 0.94)", color: "#d5ffff", font: "11px ui-monospace, SFMono-Regular, Menlo, monospace" }}
         >{block835CanaryProbe ? JSON.stringify(block835CanaryProbe) : "Block 835 canary probe is initializing."}</output>}
+        {/* T002 shared-class-texture GPU probe. Tree-shaken out of a normal
+            build. Published as an attribute rather than as text so a campaign
+            reads one value and never scrapes a rendered number. */}
+        {EXTERIOR_TEXTURE_PROBE_ENABLED && <div hidden data-exterior-texture-probe>{JSON.stringify({
+          schemaVersion: "1.0",
+          cesiumVersion: cesiumVersion(),
+          exteriorReleaseIds: exteriorActiveWaves.map((entry) => entry.wave.runtime?.releaseId ?? null),
+          exteriorStreamingActive,
+          // Residency witness: how many verified assets the live waves are
+          // actually holding. Two arms compared at one pose must agree on this
+          // number or the byte delta beside it is comparing two scenes.
+          residentAssetCount: exteriorActiveWaves.reduce((total, entry) => total + entry.wave.outcomes.reduce((cells, cell) => cells + (cell.kind === "rendered" ? cell.assets.length : 0), 0), 0),
+          reading: cesiumGpuTextureReading(),
+          labels: {
+            accounting: "Cesium's own CPU-side accounting of uploaded texture bytes, MIP CHAIN INCLUDED. Not a driver query.",
+            mipChain: `The reading is ${PROBE_MIP_CHAIN_MULTIPLIER}x the base level: Cesium adds a third for a mipmapped texture. Established by instrument validation, not assumed.`,
+            wireVersusGpu: `A tile is ${PROBE_TILE_WIRE_BYTES} PNG bytes on the wire, ${baseLevelByteLength(1)} as an RGBA base level, and ${predictedTextureByteLength(1)} as Cesium accounts for it with mips.`,
+            export: "ResourceCache.statistics is a Cesium-internal export, pinned at the installed version; a version bump invalidates this reading rather than adjusting it.",
+          },
+        })}</div>}
         {/* T002 trace/metrics probe. Tree-shaken out of a normal build; it reads
             state the app already holds and decides nothing. */}
         {EXTERIOR_SCHEDULER_PROBE_ENABLED && <div hidden data-exterior-scheduler-probe data-trace-length={exteriorSchedulerTraceLength}>{JSON.stringify({

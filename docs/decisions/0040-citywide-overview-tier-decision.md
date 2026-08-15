@@ -514,6 +514,17 @@ to make the gate look resolved.
   `exterior-cell-runtime.ts` already declares decoded GPU memory out of scope for
   its byte ceiling. The 59.80 MiB quoted for (c) is a POSITION-only structural
   floor. T002 must measure the real figure before any frame budget is claimed.
+
+  **APPEND-ONLY AMENDMENT (2026-08-15, T002, ADR 0047).** "Not observable" is too
+  strong in one narrow place, and the obligation this bullet set has now been
+  discharged for textures. `ResourceCache.statistics.texturesByteLength` and
+  `.geometryByteLength` DO expose Cesium's own CPU-side accounting of what it
+  uploaded, and ADR 0047 measures the shared-class-texture change with them:
+  15,204,294 bytes against 349,524 at one pose, both validating exactly against
+  87,381 bytes per mipmapped 128 x 128 RGBA texture. The reading is CPU-side
+  accounting rather than a driver query, includes the mip chain, and is a
+  Cesium-internal export pinned at the installed version. This bullet is left as
+  written because it was true of the evidence available when it was written.
 - **The per-request round-trip rate is an assumption.** No committed acceptance
   evidence records one; the recorded network evidence is request *counts*. Times
   are stated at 5 ms and 20 ms. The request *count* — 56 against 883 against
