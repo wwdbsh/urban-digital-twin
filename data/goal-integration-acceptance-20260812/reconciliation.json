@@ -3,7 +3,7 @@
   "recordId": "goal-integration-acceptance-20260812",
   "goalSlug": "manhattan-high-fidelity-exteriors",
   "task": "T024 (Issue #25)",
-  "note": "Criterion-by-criterion reconciliation of the approved Goal's 31 acceptance criteria against committed evidence, plus the computed coverage reconciliation the Goal's criterion 12 asks for. Every verdict is drawn from a closed set of three: MET (direct evidence cited), MET-AS-ADJUDICATED (the criterion as literally written was narrowed or made vacuous by a recorded decision, with the delta stated), NOT-MET (with a stop report naming what would close it). The `coverage` block is COMPUTED from the committed ledger and the six committed wave censuses by scripts/goal-integration-reconciliation-cli.mjs and re-checked on every test run; it is not restated prose. This record proves no visual, geographic, architectural or performance claim of its own - it cites the wave records that measured those. T029 (Issue #62) UPDATE. Four of the six NOT-MET criteria - 7, 8, 24 and 30 - were closed by measurement and, for criterion 8, by a build. Each carries `priorVerdict`, `priorStopReport` and `closedBy` so the original refusal and the stop report that named it stay readable beside the closure; nothing was rewritten to look as though it had always passed. The open set is now exactly the structural pair, criteria 1 and 22, and the ADR's STOP recommendation stands on that pair alone.",
+  "note": "Criterion-by-criterion reconciliation of the approved Goal's 31 acceptance criteria against committed evidence, plus the computed coverage reconciliation the Goal's criterion 12 asks for. Every verdict is drawn from a closed set of three: MET (direct evidence cited), MET-AS-ADJUDICATED (the criterion as literally written was narrowed or made vacuous by a recorded decision, with the delta stated), NOT-MET (with a stop report naming what would close it). The `coverage` block is COMPUTED from the committed ledger and the six committed wave censuses by scripts/goal-integration-reconciliation-cli.mjs and re-checked on every test run; it is not restated prose. This record proves no visual, geographic, architectural or performance claim of its own - it cites the wave records that measured those. T029 (Issue #62) UPDATE. Four of the six NOT-MET criteria - 7, 8, 24 and 30 - were closed by measurement and, for criterion 8, by a build. Each carries `priorVerdict`, `priorStopReport` and `closedBy` so the original refusal and the stop report that named it stay readable beside the closure; nothing was rewritten to look as though it had always passed. The open set is now exactly the structural pair, criteria 1 and 22, and the ADR's STOP recommendation stands on that pair alone. T007 (Issue #72) AMENDMENT. Criterion 22 is closed as MET-AS-ADJUDICATED on a user decision recorded 2026-08-15, and criterion 1 is deliberately NOT closed with it; the open set is now exactly criterion 1. The closing evidence is the manhattan-citywide-default-streaming goal's own acceptance record, cited in `closures.evidenceRecords` with its checksum and carrying a NOT-MET of its own. Criterion 1's stop report is amended rather than replaced in spirit: gap (a), the retention gap that the 512-entry all-resident cache contract bounded, is structurally closed by the shipped visibility scheduler; what remains is the generated-exterior gap for the 41,357 parents that draw as sourced base massing and the still-unadjudicated 899 grammar refusals. The `coverage` block is untouched by this amendment and still recomputes byte-equal from the committed ledger and censuses.",
   "criteriaSha256": "2ffd46691bb3982e1e0b47c2139a8f8221611d34630c091a9d52498d3402f61c",
   "criteriaDerivation": {
     "source": ".codex/codex-control-plane/goals/manhattan-high-fidelity-exteriors/goal.json",
@@ -20,11 +20,11 @@
     "NOT-MET"
   ],
   "verdictCounts": {
-    "NOT-MET": 2,
-    "MET-AS-ADJUDICATED": 12,
+    "NOT-MET": 1,
+    "MET-AS-ADJUDICATED": 13,
     "MET": 17
   },
-  "stopReportCount": 2,
+  "stopReportCount": 1,
   "verdicts": [
     {
       "index": 1,
@@ -37,7 +37,7 @@
         "coverage.census: the grammar REFUSES 899 of 45,194 owned parents outright, each under a named stop code from the closed MIDTOWN_CORE_V3_STOP_CODES vocabulary, so the number is not zero even at census scale.",
         "Positive half: the T012 full-snapshot dry run planned all 45,194 parents with 0 stops (data/normalized/manhattan-exterior-fullsnapshot-dryrun-20260810/evidence.json, runDigest 05a47492ed50c3b9a8c540683d97630c37628608e1750363dea357c09f81bf32), and the six wave censuses MATERIALIZED 44,295 of 45,194 - but with retention 'census-only', so those bytes were measured and discarded rather than released."
       ],
-      "stopReport": "Two distinct gaps. (a) RETENTION: retain and release exteriors for the 44,295 materialized parents instead of 484. This is bounded today by the 512-entry all-resident exterior cache contract (EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries), and ADR 0037 names ADR 0024 cell scheduling as the structural prerequisite - until it exists, 'promote more of a wave' and 'raise the cache cap' are the same decision. (b) REFUSALS: close or re-classify the 899 grammar refusals (dominated by source-height-below-grammar-minimum 384 and ring-vertex-count-unsupported 324), or record a user-approved adjudication that a tombstoned refusal with a named stop code satisfies this criterion."
+      "stopReport": "AMENDED BY T007 (Issue #72). ONE OF THE TWO GAPS IS STRUCTURALLY CLOSED; THE OTHER IS WHAT REMAINS, AND IT IS THE SUBSTANTIVE ONE. (a) RETENTION - CLOSED AS A STRUCTURE. This stop report originally said the gap was bounded by the 512-entry all-resident exterior cache contract (EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries), and that ADR 0024 cell scheduling was the named structural prerequisite, so that until it existed 'promote more of a wave' and 'raise the cache cap' were the same decision. That prerequisite now exists and is on by default: visibility-driven cell scheduling ships (ADR 0041), its residency is certified at a 128-cell pool (ADR 0042), and the 512-entry cap is no longer the binder - the measured default session holds 128 resident cells against 883 visible, and the EXTERIOR cell cache it governs sits at 40 entries and 14,369,372 B, 7.8% of its 512-entry ceiling and 5.3% of its 256 MiB ceiling. Stated precisely, because two caches are easy to conflate: the 58,243,420 B over 99 entries measured at that station belongs to the SEPARATE citywide dense shard cache, whose own resolved budget is 112 shards / 83,886,080 B - that is 69.4% of its bytes and 88.4% of its entries, which is pressure rather than headroom. What closed for this criterion is the exterior cache's entry cap, not a claim of headroom everywhere. Breadth is now a function of what the camera can see, exactly as the prerequisite promised. (b) GENERATED EXTERIORS - OPEN, AND UNCHANGED IN KIND. A default session draws 41,841 buildings at the island overview, but 484 of them carry a GENERATED exterior; the other 41,357 draw as sourced base massing - a real footprint extruded to a sourced height, which is real geometry and is not a generated exterior. This criterion asks for a detailed, visually complete generated exterior at the target baseline LODs for every accepted parent, and that is still 484. Closing it requires materializing and retaining generated exteriors for the remaining parents, which is a data-production task and not a runtime one; the scheduler that used to block it no longer does. (c) REFUSALS - OPEN, AND STILL A USER DECISION. The grammar refuses 899 of 45,194 owned parents outright under named stop codes (864 at the plan stage, 35 at the asset stage; dominated by source-height-below-grammar-minimum 384 and ring-vertex-count-unsupported 324). Either extend the grammar to close them, or record a user adjudication that a tombstoned refusal under a named stop code satisfies this criterion. No such adjudication record exists in this repository, and T007 did not create one: the user's 2026-08-15 decision closed criterion 22 only and left criterion 1 open."
     },
     {
       "index": 2,
@@ -294,14 +294,21 @@
     {
       "index": 22,
       "criterion": "The approved Manhattan coverage envelope reaches its user-approved exterior tier without stable-ID, selection, deep-link, provenance, or failure-state regressions",
-      "verdict": "NOT-MET",
+      "verdict": "MET-AS-ADJUDICATED",
+      "priorVerdict": "NOT-MET",
+      "closedBy": "T007 (Issue #72)",
       "evidence": [
         "What was reached is ledger COVERAGE completeness, not the exterior tier over the envelope: all six declared waves have a promoted default record, and 870 of 883 cells ship no exterior geometry at all.",
         "coverage.promoted: 484 of 45,194 canonical parents carry a default exterior - 1.07%, roughly one building in ninety-three - shipped as 498 GLB entries against a 512-entry cache.",
         "ADR 0037 states this in its own words: 'It is completeness of COVERAGE, not of the city' and 'It does not claim Manhattan is textured.'",
-        "The 'without regressions' half IS evidenced: stable ids, selection, deep links, provenance and explicit failure states survive every promotion, and the T022 cold-default journey streams 14/91/66/130/36/24 distinct artifacts from the six waves with zero external hosts and zero from the unpromoted canary."
+        "The 'without regressions' half IS evidenced: stable ids, selection, deep links, provenance and explicit failure states survive every promotion, and the T022 cold-default journey streams 14/91/66/130/36/24 distinct artifacts from the six waves with zero external hosts and zero from the unpromoted canary.",
+        "T007 CLOSURE, TIER DECISION. The user-approved Goal contract for manhattan-citywide-default-streaming (contract sha256 a7987cfcb27990ce479704c99b248862c84c79e1e7e7d75c0b13a8bcd5817b43, carried by the fcp-goal-contract marker on its Issue) states in its own summary that it closes acceptance criteria #1/#22 left open by manhattan-high-fidelity-exteriors, and defines the exterior tier the envelope was to reach: visibility-streamed committed dense shards at overview zoom with textured V3 detail near the camera. That contract is the user-approved tier decision this criterion was waiting on; it is not an implementer's re-definition.",
+        "T007 CLOSURE, MEASURED DEFAULT. The envelope now reaches that tier in a session that names nothing: 41,841 real building extrusions drawn at the 52 km island overview, against the 484 of 45,194 (1.07%) this record measured when it was written. ADR 0045 records the reading and the campaign; the shipping work is PRs #73 through #78.",
+        "T007 CLOSURE, THE 'WITHOUT REGRESSIONS' HALF RE-EVIDENCED AT THE NEW SCALE. Stable feature ids, selection, deep links, provenance, per-wave attribution and explicit failure states survive the flip: the committed browser journey suite passes unchanged, per-wave attribution still answers nothing rather than guessing when several waves stream, and zero external hosts are recorded at every station of the default campaign.",
+        "T007 CLOSURE, EVIDENCE BASE. The per-criterion reconciliation of the closing goal, with its own artifact checksums and its own NOT-MET, is committed as data/citywide-goal-acceptance-20260815/reconciliation.json and is cited in this record's closures.evidenceRecords with its sha256."
       ],
-      "stopReport": "Same structural gap as criterion 1. Per-wave renderable subsets are bounded by the 512-entry all-resident exterior cache contract; the sum of the six subsets is 498 of 512. ADR 0024 cell scheduling is the named prerequisite that would make breadth a function of what the camera can see rather than of a fixed resident budget. Until it exists, 'promote more of a wave' and 'raise the cache cap' are the same decision, and the envelope cannot reach the approved exterior tier."
+      "adjudicationDelta": "THE ENVELOPE REACHES A TIER, AND THE TIER IS NOT THE ONE A 2026-08-12 READER OF THIS RECORD WOULD HAVE PICTURED. When this criterion was graded NOT-MET, 'the user-approved exterior tier' was read as a generated exterior for every accepted parent, and the gap was stated as 484 of 45,194. What the default session now delivers is a TWO-TIER composition: sourced base massing island-wide - real footprints extruded to sourced heights, with per-building pick identity - plus textured V3 exteriors within the near-camera radius. So the count that closes this criterion (41,841 drawn) and the count that does not close criterion 1 (484 with a generated exterior) are counts of DIFFERENT THINGS, and collapsing them would be the overstatement this record exists to refuse. The adjudication is that the user-approved contract for the closing goal defines that two-tier composition AS the tier the envelope was to reach, and the envelope reaches it without a stable-id, selection, deep-link, provenance or failure-state regression. It is graded MET-AS-ADJUDICATED and not MET because the criterion's own words are ambiguous between the two readings, and the reading that closes it is the one the user approved rather than the one this record originally applied. Criterion 1 is deliberately NOT closed by the same decision: see its stop report.",
+      "priorStopReport": "Same structural gap as criterion 1. Per-wave renderable subsets are bounded by the 512-entry all-resident exterior cache contract; the sum of the six subsets is 498 of 512. ADR 0024 cell scheduling is the named prerequisite that would make breadth a function of what the camera can see rather than of a fixed resident budget. Until it exists, 'promote more of a wave' and 'raise the cache cap' are the same decision, and the envelope cannot reach the approved exterior tier."
     },
     {
       "index": 23,
@@ -822,12 +829,12 @@
     "closedCriteria": [
       7,
       8,
+      22,
       24,
       30
     ],
     "remainingNotMet": [
-      1,
-      22
+      1
     ],
     "statement": "Every closure is graded MET-AS-ADJUDICATED rather than MET, and each states its own delta. That is not modesty: a 1440p capture inherits the deep-link height clamp, a mobile journey is emulated, a keyboard traversal runs on emulated focus, and a heap verdict over a one-block camera path does not speak for peak residency. Grading any of them MET would have claimed more than was measured.",
     "evidenceRecords": [
@@ -850,8 +857,23 @@
         "criterion": 30,
         "path": "data/goal-bounded-gaps-20260812/heap-concurrency-evidence.json",
         "sha256": "625a8d62fe0a78405a03923f2a80c4da788a5b6d1943243cb4237116d65bfa12"
+      },
+      {
+        "criterion": 22,
+        "path": "data/citywide-goal-acceptance-20260815/reconciliation.json",
+        "sha256": "256d2c3edacde04a3d75932385d92498f1f9ec49d74754992a9498c6bdc2ed9e"
       }
     ],
-    "layoutDefectResolution": "RESOLVED during this task. The mobile lower-LOD disclosure was structurally unreadable at 390 CSS px - a stylesheet clamp, not a wiring gap - and the first mobile re-capture under the new legibility instrument failed legs 1 and 4 and said why. It is fixed in src/styles.css and re-captured: 7 wrapped lines at 11px, inside the viewport, unoccluded at all nine hit-tested points. The remaining on-screen occlusion is the truthful 'Exterior streaming fallback' notice, which is named per leg in the journey record rather than cropped out of the stills."
+    "layoutDefectResolution": "RESOLVED during this task. The mobile lower-LOD disclosure was structurally unreadable at 390 CSS px - a stylesheet clamp, not a wiring gap - and the first mobile re-capture under the new legibility instrument failed legs 1 and 4 and said why. It is fixed in src/styles.css and re-captured: 7 wrapped lines at 11px, inside the viewport, unoccluded at all nine hit-tested points. The remaining on-screen occlusion is the truthful 'Exterior streaming fallback' notice, which is named per leg in the journey record rather than cropped out of the stills.",
+    "amendments": [
+      {
+        "task": "T007 (Issue #72)",
+        "closedCriteria": [
+          22
+        ],
+        "decision": "USER DECISION, recorded 2026-08-15: close criterion 22 only. Criterion 1 remains NOT-MET.",
+        "statement": "One criterion closed, one deliberately left open, by a decision that was the user's to make rather than an implementer's. Criterion 22 asks whether the approved coverage envelope reaches its user-approved exterior tier without regressions, and the tier is now defined by a user-approved Goal contract that the shipped default session satisfies and that this record cites by digest. Criterion 1 asks for a generated exterior for every accepted parent, and 41,357 of the 41,841 buildings a default session draws are sourced base massing rather than generated exteriors - so closing 22 does not close 1, and grading them together would have turned a structural change into a claim about data that was never produced. The T029 discipline is kept: criterion 22 carries priorVerdict, priorStopReport and closedBy, so the original refusal and the stop report that named it stay readable beside the closure. Criterion 1's stop report was UPDATED IN PLACE rather than duplicated, because the record's own shape rule forbids a priorStopReport on a criterion that is still NOT-MET; the amended text therefore states what the original said and which half of it closed."
+      }
+    ]
   }
 }

@@ -105,7 +105,7 @@ vi.mock("../runtime/exterior-default-activation", async (importOriginal) => {
 });
 
 import { App, EXTERIOR_CELL_STREAMING_RELEASE_ID, EXTERIOR_SCHEDULER_DEFAULT_ON, PINNED_EXTERIOR_CELL_RELEASE_IDS, appendBlock835PublicRealmUrl, appendExteriorProfileUrl, exteriorCellBasePath, exteriorCanarySnapshotMessage, exteriorDeepLinkMessage, exteriorSnapshotOriginLabel, isPinnedExteriorCellRelease, exteriorStreamingActivation, exteriorStreamingFailureMessage, exteriorStreamingNotices, parseExteriorDetailRadiusMeters, parseExteriorStreamingUrl, applyStorefrontResolution, block835PerformanceGate, block835PerformanceProbeMode, block835PublicRealmActivation, block835PublicRealmFailureMessage, isCurrentStorefrontResolution, MOBILE_VIEWPORT_MEDIA_QUERY, mobileExteriorLodPolicy, overlayLayoutPolicy, preserveFeatureSequence, resolveCitywideOverviewResidency, resolveStorefrontBuilding, selectionFocusTransaction, summarizeBlock835Frames, type StorefrontResolutionState } from "./App";
-import { ExteriorFallbackNotice, digestExteriorNotices, type ExteriorNoticeEntry } from "./ExteriorFallbackNotice";
+import { ExteriorFallbackNotice, digestExteriorNotices, exteriorNoticeEntryKey, type ExteriorNoticeEntry } from "./ExteriorFallbackNotice";
 import { exteriorDeferredCellNotice, exteriorQualifiedNotice, exteriorReleasedArtifactNotice } from "../runtime/exterior-wave-attribution";
 import { exteriorUnanchoredNotice } from "../features/explorer/CesiumViewport";
 import type { ExteriorCellOutcome } from "../runtime/exterior-cell-runtime";
@@ -1188,14 +1188,63 @@ describe("exterior fallback notice presentation", () => {
     const digest = digestExteriorNotices([waveEntry(MIDTOWN, 146, 149), waveEntry(LOWER, 124, 126)]);
     expect(digest.notShipped?.cellCount).toBe(270);
     expect(digest.notShipped?.totalCellCount).toBe(275);
-    expect(digest.notShipped?.summary).toBe("270 of 275 exterior cells declared by this build ship no exterior geometry (by design; no substitute was selected).");
+    expect(digest.notShipped?.summary).toBe("270 of 275 exterior cells declared by this build ship no generated exterior geometry (by design); where the citywide base tier is active, their buildings draw as sourced base massing (footprint extruded to sourced height), which is not a generated exterior.");
     // Nothing was invented and nothing was lost: both original lines survive.
     expect(digest.notShipped?.lines.map((line) => line.text)).toEqual([
-      `Exterior release ${MIDTOWN}: 146 of 149 exterior cells declared by this release ship no exterior geometry; no substitute was selected for them.`,
-      `Exterior release ${LOWER}: 124 of 126 exterior cells declared by this release ship no exterior geometry; no substitute was selected for them.`,
+      `Exterior release ${MIDTOWN}: 146 of 149 exterior cells declared by this release ship no generated exterior geometry; where the citywide base tier is active, their buildings draw as sourced base massing (footprint extruded to sourced height), which is not a generated exterior.`,
+      `Exterior release ${LOWER}: 124 of 126 exterior cells declared by this release ship no generated exterior geometry; where the citywide base tier is active, their buildings draw as sourced base massing (footprint extruded to sourced height), which is not a generated exterior.`,
     ]);
     expect(digest.verbatim).toEqual([]);
     expect(digest.entryCount).toBe(2);
+  });
+
+  /**
+   * T007 LOCKSTEP GUARD.
+   *
+   * The reworded sentence is composed in `exterior-wave-attribution.ts` and
+   * recognized by `NOT_SHIPPED_PATTERN` here. Those two live in different
+   * modules and nothing but this test couples them: if one moves without the
+   * other the digest does not throw, it silently routes every tombstone into
+   * `verbatim` and the aggregate disappears. That failure mode is asserted
+   * directly — the entries below are composed by the REAL producer, so a
+   * pattern that no longer matches the real wording fails here.
+   */
+  it("keeps the reworded not-shipped sentence recognized by the digest rather than falling through to verbatim", () => {
+    const entry = waveEntry(MIDTOWN, 146, 149);
+    // CLAUSE 1 — a pure release fact, true in EVERY arm. This exact substring
+    // is what the seven journey CLIs assert on, so it is pinned here: moving
+    // it silently breaks a live predicate no unit test would otherwise reach.
+    expect(entry.notice).toContain("no generated exterior geometry");
+    // CLAUSE 2 — CONDITIONAL, and the condition is the point. Under the
+    // rollback arm (`?exteriorScheduler=off`) overview residency is withdrawn
+    // and those buildings do NOT draw, so an unconditional promise here would
+    // be affirmatively false in that arm rather than merely incomplete.
+    expect(entry.notice).toContain("where the citywide base tier is active, their buildings draw as sourced base massing (footprint extruded to sourced height)");
+    expect(entry.notice).toContain("which is not a generated exterior");
+    // THE WHOLE SHIPPED SENTENCE, as a literal.
+    //
+    // Comparing the producer's output against another call of the same producer
+    // would have been a tautology — it passes for any wording, including a
+    // wrong one. The point being pinned is that the condition is WORDS rather
+    // than plumbing: there is exactly ONE string, it reads the session nowhere,
+    // so the digest has one shape to recognize and `dismissalKey` cannot change
+    // with configuration. Only a literal can hold that.
+    expect(entry.notice).toBe(
+      `Exterior release ${MIDTOWN}: 146 of 149 exterior cells declared by this release ship no generated exterior geometry; `
+      + "where the citywide base tier is active, their buildings draw as sourced base massing (footprint extruded to sourced height), which is not a generated exterior.",
+    );
+    // And it is NOT the pre-flip wording, which asserted that nothing at all
+    // was there for buildings the reader can now see.
+    expect(entry.notice).not.toContain("no substitute was selected for them");
+
+    const digest = digestExteriorNotices([entry]);
+    expect(digest.verbatim).toEqual([]);
+    expect(digest.notShipped?.cellCount).toBe(146);
+    expect(digest.notShipped?.totalCellCount).toBe(149);
+    expect(digest.notShipped?.lines.map((line) => line.text)).toEqual([entry.notice]);
+    // The line is a release fact, so it is what `dismissalKey` is built from.
+    // A dismissal must silence exactly this, and a pan must not resurrect it.
+    expect(digest.dismissalKey).toBe(exteriorNoticeEntryKey(entry));
   });
 
   it("keeps every per-release line reachable behind the expander", () => {

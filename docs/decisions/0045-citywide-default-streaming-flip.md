@@ -86,6 +86,11 @@ was allocated. The two reconcile through the new
 `denseSuppressedInstanceCount`. Measured at the 52 km overview: 54,847 instances
 allocated, 41,841 buildings drawn, 40 suppressed.
 
+> **Footnote added by T007 (append-only; the paragraph above is unchanged).** The
+> `54,847` figure disagrees with §3.2 and with the committed record, which both
+> read `53,115`. See the T007 addendum at the end of this document. The drawn
+> count of 41,841 is unaffected and agrees in both places.
+
 ### 1.4 — C1: the double-draw window, measured against its own definition
 
 ADR 0044 §4.2 could not decide leg Y because `totalBuildMs` measures only the
@@ -644,3 +649,117 @@ and the notice stay.
 attribute, the layer is rebuilt over the filtered plan again, and the four
 double-draw timestamps and two flip counters disappear from
 `DenseRenderMetrics`. Nothing outside the viewport and the notice reads them.
+
+---
+
+## Addendum (T007, Issue #72) — the D-15 disposition
+
+*Appended by T007. No section above was rewritten; this records what the task
+D-15 was routed to decided.*
+
+**D-15 asked whether a not-shipped exterior cell is a tombstone at all in a
+session where the dense shard draws the building.** The disposition is: **it is
+still a real property of the build, so the line stays — and it was WRONG about
+what the reader sees, so the line was reworded.**
+
+Before the flip, "*N of M exterior cells declared by this release ship no
+exterior geometry; no substitute was selected for them*" was true in both
+halves: nothing was drawn for those cells. After the flip the first half is
+still true and the second is false by omission — those buildings draw, as
+sourced base massing. The reword states both:
+
+> N of M exterior cells declared by this release ship no **generated** exterior
+> geometry; **where the citywide base tier is active**, their buildings draw as
+> **sourced base massing (footprint extruded to sourced height)**, which is not
+> a generated exterior.
+
+**The second clause is CONDITIONAL, and the condition is not hedging.** Review
+caught that an unconditional promise is affirmatively FALSE in the rollback arm:
+under `?exteriorScheduler=off` the overview residency is withdrawn
+(`overviewResidencyActive` false, 5,289 drawn rather than 41,841), so telling the
+reader that those ~41k buildings draw as massing would be a claim about a screen
+that does not show them. "Where the citywide base tier is active" makes one
+sentence true in every arm.
+
+**The condition is expressed in WORDS, not plumbed from a session flag.** That
+choice was frozen deliberately and the reasons are recorded here rather than
+left implicit:
+
+- **No plumbing.** Reading the arm to select a wording adds session state to a
+  pure composer and gives the digest two strings to recognize instead of one.
+- **No camera or configuration dependence.** `notShippedLines` feeds
+  `dismissalKey`; a line that varies with configuration re-arms a notice the
+  reader already dismissed — the same defect class §2.1 fixed.
+- **A single stable string.** The seven journey CLIs assert a live predicate on
+  this sentence. One invariant string means one substring to assert on, which is
+  the sentence's **first clause** — a pure release fact, true in every arm.
+  Those seven predicates previously matched `no substitute was selected`, which
+  the reword removes; T007 updated all seven to `no generated exterior geometry`
+  and left every committed `journey-evidence.json` capture byte-identical.
+
+Three properties were preserved deliberately, and each of them rules out a
+design that looked simpler:
+
+1. **It is UNCONDITIONAL.** The line is not gated on dense residency and takes
+   no camera-dependent input. `notShippedLines` feeds `dismissalKey` (§2.3), so
+   a residency-conditioned line would re-arm a notice the reader had already
+   dismissed — the exact defect §2.1 fixed. Both counts stay release facts.
+2. **Three sites move together or the line falls through to verbatim.** The
+   composer, `NOT_SHIPPED_PATTERN` and the build-level aggregate template are
+   coupled by nothing but a test, and a stale pattern does not throw — it
+   silently restores the six-wave wall of text this digest replaced. That
+   failure mode is now asserted directly.
+3. **The single-cell path is byte-identical.** One not-shipped cell still states
+   itself in its own words and still falls through to verbatim rather than being
+   restated as an aggregate of one, and real per-cell failures still outrank the
+   aggregates in render order.
+
+**Goal AC #11 is therefore graded MET-AS-ADJUDICATED, not MET.** "Zero by-design
+cell tombstones" is not literally delivered: the count of by-design cell lines is
+unchanged, because the cells genuinely ship no generated exterior and deleting
+the line would hide a real property of the build. What changed is the line's
+meaning, not its existence. The full verdict, with its delta, is in
+`data/citywide-goal-acceptance-20260815/reconciliation.json`.
+
+**Records and scripts that quote the OLD sentence are left byte-identical**, in
+this ADR and everywhere else. They are captured evidence of what was on screen
+at the time, and rewriting them to match today's wording would be falsifying a
+capture. `data/citywide-default-flip-20260814/stations-default.json` therefore
+still reads "*146 of 149 exterior cells declared by this build ship no exterior
+geometry (by design; no substitute was selected).*" — and that record is the
+evidence base for why the reword was needed.
+
+**One correction owed, and not made here.** §1.3 states "54,847 instances
+allocated" at the 52 km overview; §3.2 and the committed record it cites both
+state 53,115 (`stations-default.json`: `instanceCount` 53115,
+`buildingFeatureCount` 41841, `denseSuppressedInstanceCount` 40). The evidence
+supports 53,115. T007 did not rewrite §1.3 — it does not rewrite ADR sections —
+and carries the discrepancy as a residual risk in the acceptance record instead.
+The drawn count of 41,841 is unaffected and agrees in both places.
+
+### The single-cell branch is dormant, which is why preserving it is cheap
+
+Point 3 above says the single-cell path is byte-identical. That is worth stating
+accurately rather than as pure virtue: **with the live runtime the branch is
+effectively unreachable.** `exteriorNotShippedSummary` consults `cells` only
+when no `declared` fact is supplied, and the application always supplies one
+(`exterior-cell-runtime.ts` derives the declared not-shipped count per release),
+so the reconciled path — and with it the one-cell branch that returns the cell's
+own notice verbatim — is exercised by tests and by a hypothetical unqualified
+caller rather than by a session. Preserving it therefore cost nothing and proves
+nothing about the shipped notice; it is kept because a dormant branch that still
+compiles and still passes its tests is the cheapest possible option value, not
+because it was a hard constraint the reword had to satisfy.
+
+### §5.1's grades are campaign-scoped; this ADR is not superseded, it is narrower
+
+§5.1 grades goal AC #6 **partial** and AC #8 **not measured here**, and both are
+correct *about this campaign*: `classEvictions` is empty at every station and the
+pan-storm capture carries no concurrency block. The goal-level record
+`data/citywide-goal-acceptance-20260815/reconciliation.json` reads the whole
+committed evidence base — including T003's injected-cap eviction proofs, its live
+browser roam, and the 2026-08-12 cold-load concurrency measurement — and grades
+both **MET**, each disclosing the half this campaign did not reach. Where the two
+documents differ, **the difference is scope, not fact**: §5.1 answers "what did
+T006 measure", the acceptance record answers "what does the goal's evidence base
+support". Neither number was changed to agree with the other.

@@ -77,8 +77,14 @@ export type ExteriorNoticeDigest = {
  * so a future unqualified caller still digests. A single not-shipped cell
  * states itself in its own words and deliberately does NOT match — it falls
  * through to verbatim rather than being restated as an aggregate of one.
+ *
+ * T007 reworded the composed sentence to say what draws for those cells. This
+ * pattern is one of the three sites that had to move with it: a pattern left
+ * behind would not have thrown, it would have quietly routed every tombstone
+ * into `verbatim`, restoring the six-wave wall of text this digest exists to
+ * replace.
  */
-const NOT_SHIPPED_PATTERN = /^(?:Exterior release (.+?): )?(\d+) of (\d+) exterior cells declared by this release ship no exterior geometry; no substitute was selected for them\.$/u;
+const NOT_SHIPPED_PATTERN = /^(?:Exterior release (.+?): )?(\d+) of (\d+) exterior cells declared by this release ship no generated exterior geometry; where the citywide base tier is active, their buildings draw as sourced base massing \(footprint extruded to sourced height\), which is not a generated exterior\.$/u;
 
 /**
  * `exteriorDeferredCellNotice` / `exteriorReleasedArtifactNotice`. Kept as two
@@ -162,7 +168,7 @@ export function digestExteriorNotices(entries: readonly ExteriorNoticeEntry[]): 
     entryCount: entries.length,
     notShipped: notShippedLines.length > 0
       ? {
-        summary: `${notShippedCells} of ${notShippedTotal} exterior cells declared by this build ship no exterior geometry (by design; no substitute was selected).`,
+        summary: `${notShippedCells} of ${notShippedTotal} exterior cells declared by this build ship no generated exterior geometry (by design); where the citywide base tier is active, their buildings draw as sourced base massing (footprint extruded to sourced height), which is not a generated exterior.`,
         cellCount: notShippedCells,
         totalCellCount: notShippedTotal,
         lines: notShippedLines,

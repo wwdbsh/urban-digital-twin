@@ -122,10 +122,22 @@ async function loadInto(
   runtime: ExteriorCellRuntime,
   loadState: ReturnType<typeof createExteriorCellLoadState<ExteriorCellOutcome>>,
   cellIds: readonly string[],
-): Promise<void> {
+): Promise<readonly ExteriorCellOutcome[]> {
   const { fresh } = reconcileExteriorCellLoads(loadState, cellIds);
   const outcomes = await Promise.all(fresh.map((cellId) => runtime.loadCell(cellId, "exploration", CLOSE_METERS)));
   acceptExteriorCellOutcomes(loadState, fresh, outcomes);
+  return outcomes;
+}
+
+/**
+ * The pick identity a details panel would resolve from an outcome: the set of
+ * canonical feature ids its rendered assets carry. Sorted, so the comparison is
+ * about membership rather than about asset ordering.
+ */
+function pickIdentity(outcomes: readonly ExteriorCellOutcome[]): string[] {
+  return outcomes
+    .flatMap((outcome) => (outcome.kind === "rendered" ? outcome.assets.map((asset) => asset.canonicalFeatureId) : []))
+    .sort();
 }
 
 describe("the shipped exterior caps, stated plainly", () => {
@@ -249,7 +261,7 @@ describe("(b) a refetch after a release re-verifies", () => {
     const loadState = createExteriorCellLoadState<ExteriorCellOutcome>();
     const releaseState = createExteriorCacheReleaseState();
 
-    await loadInto(runtime, loadState, ["c1"]);
+    const before = await loadInto(runtime, loadState, ["c1"]);
     const firstKeys = [...cache.keys()];
     const firstBytes = cache.get(firstKeys[0]!)!.slice();
     expect(requests).toHaveLength(1);
@@ -257,12 +269,20 @@ describe("(b) a refetch after a release re-verifies", () => {
     evictAndRelease(releaseState, loadState, [], cache);
     expect(cache.size()).toBe(0);
 
-    await loadInto(runtime, loadState, ["c1"]);
+    const after = await loadInto(runtime, loadState, ["c1"]);
     // A second network request, not a cache hit: the release really removed it.
     expect(requests).toHaveLength(2);
     expect([...cache.keys()]).toEqual(firstKeys);
     expect(cache.get(firstKeys[0]!)).toEqual(firstBytes);
     expect(runtime.getMetrics().requestedArtifactCount).toBe(2);
+
+    // PICK IDENTITY ACROSS EVICT/RELOAD, asserted rather than argued.
+    // Byte-identity says the artifact came back unchanged; it does not by
+    // itself say the reloaded OUTCOME resolves the same canonical features,
+    // which is what a details panel picks on. This compares the identity sets
+    // directly, and refuses a vacuous pass by requiring the set to be non-empty.
+    expect(pickIdentity(after)).toEqual(pickIdentity(before));
+    expect(pickIdentity(after).length).toBeGreaterThan(0);
   });
 
   it("fails the refetch closed when the second response does not match the pinned digest", async () => {

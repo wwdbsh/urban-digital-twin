@@ -1,0 +1,531 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "citywide-goal-acceptance-20260815",
+  "goalSlug": "manhattan-citywide-default-streaming",
+  "task": "T007 (Issue #72)",
+  "note": "Criterion-by-criterion reconciliation of the approved Goal's 12 acceptance criteria against committed evidence. Every verdict is drawn from a closed set of three: MET (direct evidence cited), MET-AS-ADJUDICATED (the criterion as literally written was narrowed by a recorded decision, with the delta stated), NOT-MET (with a stop report naming what would close it). UNLIKE the prior goal's T024 record, this one carries NO computed coverage block: nothing in this goal's completion argument is recomputable arithmetic over a committed ledger, so there is no CLI and the colocated test scripts/citywide-goal-acceptance.test.mjs IS the drift instrument - it re-derives the criteria digest, holds the vocabulary, the order and the counts, and re-hashes every committed artifact this record cites. This record proves no visual, geographic or performance claim of its own; it cites the ADRs and capture records that measured those. One criterion is NOT-MET and says so.",
+  "criteriaSha256": "b16d2ac7b7ccd8668d368236074e670dd85f347ad49e5ff2900728999122a7b4",
+  "criteriaDerivation": {
+    "source": "the approved Fable Control Plane Goal contract for manhattan-citywide-default-streaming (its goal.json acceptanceCriteria array)",
+    "field": "acceptanceCriteria",
+    "method": "SHA-256 over the 12 criterion strings joined by a single newline, in declared order, with no trailing newline.",
+    "command": "python3 -c \"import json,hashlib; print(hashlib.sha256('\\n'.join(json.load(open('goal.json'))['acceptanceCriteria']).encode()).hexdigest())\"",
+    "digest": "b16d2ac7b7ccd8668d368236074e670dd85f347ad49e5ff2900728999122a7b4",
+    "goalContractSha256": "a7987cfcb27990ce479704c99b248862c84c79e1e7e7d75c0b13a8bcd5817b43",
+    "note": "The Goal ledger is NOT vendored in this repository and is untracked on a clean checkout, so no test can read it and no path to it is cited in any field this record's test checks. The approved contract is referenced in prose and pinned by its own digest: goalContractSha256 above is the contract hash carried by the fcp-goal-contract marker on the Goal's GitHub Issue. Re-run the command above against the live ledger to confirm this record judged the criteria the Goal actually declares."
+  },
+  "criteriaCount": 12,
+  "verdictVocabulary": [
+    "MET",
+    "MET-AS-ADJUDICATED",
+    "NOT-MET"
+  ],
+  "verdictCounts": {
+    "MET": 8,
+    "MET-AS-ADJUDICATED": 3,
+    "NOT-MET": 1
+  },
+  "stopReportCount": 1,
+  "verdicts": [
+    {
+      "index": 1,
+      "criterion": "A default session performs no unconditional all-cell load: resident cells are selected by camera visibility and an explicit priority policy, proven by network/cache evidence at multiple camera positions and by deterministic scheduler unit tests (given camera state -> expected resident set)",
+      "verdict": "MET",
+      "evidence": [
+        {
+          "statement": "The scheduler is a pure selection function with a frozen, written priority policy, not an implicit heuristic: ADR 0041 records `selectResidentUnits(units, { footprint, camera, heightBucket }, policy)` in src/runtime/exterior-visibility-scheduler.ts, importing nothing from Cesium, with the order camera-cell reservation (exempt from the cap), footprint intersection on renderBounds, distance band with edges at 1,200 m and 2,400 m, explicit order then tieBreakKey then id, hysteresis over 3 decisions, then the hard cap."
+        },
+        {
+          "statement": "Deterministic given-camera-state -> expected-resident-set unit tests are committed and run on every suite: src/runtime/exterior-visibility-scheduler.test.ts (resident set is a subset of the units given; the camera's own unit is resident at every height; a wider radius is never a smaller resident set; nothing outside the footprint is admitted without prior residency; an untrusted bootstrap footprint holds the previous set and evicts nothing) and src/runtime/exterior-scheduler-thrash-gate.test.ts (the same trace replays to the same decisions)."
+        },
+        {
+          "statement": "The recorded camera traces the scheduler tests replay, with their provenance, are committed as data/exterior-scheduler-traces-20260814/camera-traces.json and the opt-in session evidence as data/exterior-scheduler-traces-20260814/optin-evidence.json.",
+          "artifacts": [
+            {
+              "path": "data/exterior-scheduler-traces-20260814/camera-traces.json",
+              "sha256": "9ce644bd8d749f0625b2887b651c30d8c70b0f88bb2d1c34083b26ea0938a775"
+            },
+            {
+              "path": "data/exterior-scheduler-traces-20260814/optin-evidence.json",
+              "sha256": "c869c01d88cb6d6c568b02b231665ba74baeaba14bd3ce04aab63ec9b7f8647e"
+            }
+          ]
+        },
+        {
+          "statement": "Network and cache evidence at three settled camera positions of one parameter-free default session, in data/citywide-default-flip-20260814/stations-default.json: resident exterior cells and cache residency both track the camera rather than the release - street 260 m 5 entries / 7,827,063 B, transition 1.2 km 25 entries / 24,189,437 B, overview 52 km 99 entries / 58,243,420 B - and the overview decision records residentCount 128 against visibleCount 883 with deferredCount 755, which is the opposite of an all-cell load.",
+          "artifacts": [
+            {
+              "path": "data/citywide-default-flip-20260814/stations-default.json",
+              "sha256": "5c0da73ebf95d8f12f2d1cf92b64d6527343ace9fc0678307b5600d0eea22493"
+            }
+          ]
+        },
+        {
+          "statement": "FIVE of the six promoted waves record requestedArtifactCount 0 at the 52 km overview in the same record - only central-upper-Manhattan requested anything there, 40 artifacts - so cells nobody asked for at that camera were never fetched. External hosts are empty at every station, so the reading is of local streaming and not of a network fallback.",
+          "artifacts": [
+            {
+              "path": "data/citywide-default-flip-20260814/stations-default.json",
+              "sha256": "5c0da73ebf95d8f12f2d1cf92b64d6527343ace9fc0678307b5600d0eea22493"
+            }
+          ]
+        },
+        {
+          "statement": "The session that produced those readings names no exterior parameter of any kind; its URL is quoted verbatim in ADR 0045 section 3.2 and the served bundle it ran against is pinned in data/citywide-default-flip-20260814/served-bundle.json.",
+          "artifacts": [
+            {
+              "path": "data/citywide-default-flip-20260814/served-bundle.json",
+              "sha256": "b50d2e68cefdc65775a1204fedd94f1680a4b465faf260b4c798e64c7472df62"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "index": 2,
+      "criterion": "At approved island-overview viewpoints, every one of the 883 cells renders real building geometry via the visibility-streamed committed citywide dense shards (real footprints extruded to sourced heights) with zero by-design empty cells; the 899 grammar-refused buildings remain tombstoned with named stop codes as the honest floor",
+      "verdict": "MET",
+      "evidence": [
+        {
+          "statement": "41,841 real building extrusions are drawn at the 52 km island overview of a default session that names nothing, with 53,115 instances allocated and 40 suppressed, recorded in data/citywide-default-flip-20260814/stations-default.json and read out in ADR 0045 section 3.2 ('The default session renders the island').",
+          "artifacts": [
+            {
+              "path": "data/citywide-default-flip-20260814/stations-default.json",
+              "sha256": "5c0da73ebf95d8f12f2d1cf92b64d6527343ace9fc0678307b5600d0eea22493"
+            }
+          ]
+        },
+        {
+          "statement": "The geometry is the committed citywide dense shards - real footprints extruded to sourced heights with per-building pick identity - streamed by visibility, not a substitute or a placeholder: ADR 0043 records the live render at the approved island viewpoint as 45,154 building features, 12,119 POI points and 32 primitives over 103 cache entries / 62,598,581 B with zero evictions, and the containment arithmetic is committed as data/citywide-overview-streaming-20260814/dense-coverage-containment.json beside data/citywide-overview-streaming-20260814/overview-probe.json.",
+          "artifacts": [
+            {
+              "path": "data/citywide-overview-streaming-20260814/dense-coverage-containment.json",
+              "sha256": "6af4fc16a90cb29748f46c71b54487cbb8aa0ef577f674f6092392b8e7b81dcb"
+            },
+            {
+              "path": "data/citywide-overview-streaming-20260814/overview-probe.json",
+              "sha256": "df1f825dd253004486fa43b935ce23efe90762a9fe31fdf188192e96913961a5"
+            }
+          ]
+        },
+        {
+          "statement": "No cell is empty by design at the overview: the dense tier is island-wide and is not gated on which exterior cells shipped generated geometry. The three committed drawn-count readings are stated together rather than averaged - 41,841 at the default 52 km overview, 43,021 in the dense-only arm of the same campaign (data/citywide-default-flip-20260814/stations-dense-only.json), and 45,154 at ADR 0043's approved island viewpoint. ADR 0045 section 3.5 attributes the 1,180-building spread between the first two to camera-settle jitter in shard membership at a 52 km footprint and records it rather than explaining it away; none of the three is a by-design empty cell.",
+          "artifacts": [
+            {
+              "path": "data/citywide-default-flip-20260814/stations-dense-only.json",
+              "sha256": "c4a02249ddaa0036c862ebfd3a71755316bdc8ae87bbcac5b833d52555ebf524"
+            }
+          ]
+        },
+        {
+          "statement": "The 899 grammar-refused buildings remain tombstoned under named stop codes from the closed vocabulary, which is what this criterion asks for as the honest floor. ADR 0040 records their exact stage split - 864 at the plan stage and 35 at the asset stage - and ADR 0043 records that the refusals apply to facade generation and remove nothing from the dense extrusion set (45,194 >= 44,295), so a refused building still draws as sourced base massing while its generated exterior stays refused."
+        },
+        {
+          "statement": "The 883-cell extents census the scheduler selects over is checksum-pinned and re-derived by test against its sidecar: data/citywide-overview-census-20260814/cell-extents.json, with the per-candidate costing in data/citywide-overview-census-20260814/candidate-costs.json.",
+          "artifacts": [
+            {
+              "path": "data/citywide-overview-census-20260814/cell-extents.json",
+              "sha256": "9469b9766bbbca589cfee6d669461586167b4fafbffaf57beec44cc0fa1bad24"
+            },
+            {
+              "path": "data/citywide-overview-census-20260814/candidate-costs.json",
+              "sha256": "c14a92d1d2a716a34bc79f0d08d13b89eeaf4830c35e957dd351ae5c7f8b7b59"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "index": 3,
+      "criterion": "Within the near-camera detail radius, textured V3 lod_0 renders; eligible LOD transitions at approved viewpoints keep key silhouette deviation <=2% (prior-goal criterion 19 standard), measured per wave on stratified samples",
+      "verdict": "MET-AS-ADJUDICATED",
+      "evidence": [
+        {
+          "statement": "Textured V3 lod_0 does render within the near-camera radius in the default session: data/citywide-default-flip-20260814/stations-default.json records 14 V3 buildings at the street station, 66 at the transition station, 40 at the overview and 253 across the pan storm, from six promoted waves.",
+          "artifacts": [
+            {
+              "path": "data/citywide-default-flip-20260814/stations-default.json",
+              "sha256": "5c0da73ebf95d8f12f2d1cf92b64d6527343ace9fc0678307b5600d0eea22493"
+            }
+          ]
+        },
+        {
+          "statement": "The 2 % key-silhouette gate is measured on Block 835 lod_0 <-> lod_1 at 250 m, which ADR 0044 section 3.3 records as the only eligible LOD transition in the shipping composition. The gate is projected-silhouette-ratio v1 over four azimuths against maximumRatio 0.02, enforced by validateMultiLodAssembly at release time, so the numbers are checksum-pinned declarations. Worst deviation 0.001834 on doitt:925937 - 10.9x inside the bar; mean over 14 assets 0.000721 (27.7x inside); best 0.000000. PASS on all 14 assets."
+        },
+        {
+          "statement": "The transition band itself was measured rather than asserted: data/transition-band-20260814/ab-evidence.json and data/transition-band-20260814/crossing-evidence.json carry the A/B and crossing captures ADR 0044 reads, and ADR 0045 section 5.1 records criterion 3 as carried from ADR 0044 section 3.3 unchanged because nothing in the flip touched an LOD declaration.",
+          "artifacts": [
+            {
+              "path": "data/transition-band-20260814/ab-evidence.json",
+              "sha256": "88129560e35a5afeac5bcfa87bb8b969002446e77c0e6e704c4e261f671e881a"
+            },
+            {
+              "path": "data/transition-band-20260814/crossing-evidence.json",
+              "sha256": "679943b89f39520832ed4bfa7d13769ed575af298d36cba4f676019f0ffac534"
+            }
+          ]
+        }
+      ],
+      "adjudicationDelta": "THE MEASURED TRANSITION IS NOT THE ONE A READER WOULD ASSUME. The criterion says 'eligible LOD transitions ... measured per wave on stratified samples'. Exactly one eligible transition exists in the shipping composition - Block 835's 14 assets, one wave - so 'per wave on stratified samples' has one wave and a census rather than a sample. The pre-registered reason is recorded in ADR 0044 section 1.2 and is the adjudication itself: the dense -> V3 swap is NOT an eligible LOD transition, because ADR 0040 D5 records that the accepted overview candidate declares no LODs at all, and the gate is defined over a pair of declared LODs of one asset - dense-shard extrusion and V3 lod_0 are two representations from two pipelines, not two LODs of one assembly. The second reason is stated as plainly: applying the gate there would be a pre-determined fail, because ADR 0040 already measured the prism-vs-V3 pair and recorded 'Silhouette maximumRatio 0.02 - EXEMPT for 22,969 of 44,330 assets (51.81 %). Measured, not asserted.' So the visually largest change a user sees at this goal's scale - a dense prism becoming a textured V3 building - carries NO 2 % silhouette guarantee and was never intended to. What is certified is the small, real, eligible transition; what is disclosed is that it is 14 assets of 45,194."
+    },
+    {
+      "index": 4,
+      "criterion": "The overview streaming contract is recorded, tested, and reversible by one switch: four-class shared-cache reservation arithmetic re-derived (ADR 0040 proposal), dense-feature budget raises recorded, Cesium primitive rebuild cost measured; CONDITIONAL REVIVAL CLAUSE: if the measured 1-3km mid-distance band fails the transition acceptance (AC #3 / no-popping / legibility), the per-cell aggregated coarse-GLB candidate from ADR 0040 D3 is revived as a mid-distance tier through a recorded task amendment rather than a silent scope change",
+      "verdict": "MET",
+      "evidence": [
+        {
+          "statement": "The four-class shared-cache reservation arithmetic is re-derived on measured numbers in ADR 0040: all four classes share one CitywideLruCache evicted by global recency with no per-class reservation; buildings 56 shards / 43.78 MiB, restaurants 47 / 13.62 MiB, search 214 / 98.16 MiB, detail 134 / 131.99 MiB, all four 451 shards / 287.55 MiB. Island-wide building residency alone consumes 91.20 % of the shared byte ceiling and 233 % of the entry ceiling, which is the finding that made a reserved building-class budget of at least 45,903,404 B and 56 entries a requirement rather than a preference."
+        },
+        {
+          "statement": "The dense-feature budget raises are recorded, and recorded as a per-session resolution rather than a constant mutation ('Nothing writes the constant'): ADR 0043 raises maxLoadedShards 24 -> 112, maxLoadedBytes 48 MiB -> 80 MiB (83,886,080 B) against a working floor of 64,423,813 B, and maxRenderedDenseFeatures 6,000 -> 57,547, while deliberately NOT raising maxDecodedSummaries, maxDecodedFeatures or maxDecodedDetails. The resolved values are visible in the session budgets block of data/citywide-default-flip-20260814/stations-default.json.",
+          "artifacts": [
+            {
+              "path": "data/citywide-default-flip-20260814/stations-default.json",
+              "sha256": "5c0da73ebf95d8f12f2d1cf92b64d6527343ace9fc0678307b5600d0eea22493"
+            }
+          ]
+        },
+        {
+          "statement": "Cesium primitive rebuild cost is measured twice, at two scales, and both are reported: ADR 0044 measures the crossing rebuild at 4,803 features in 41 chunks / 3,557.9 ms with a double-draw window bounded in [2,821 ms, 4,084 ms], and ADR 0045 measures the island-scale bounds-membership rebuild at 41,881 features in 478 chunks / totalBuildMs 5,746.2 ms. The island crossing capture is committed as data/citywide-default-flip-20260814/island-crossing.json.",
+          "artifacts": [
+            {
+              "path": "data/citywide-default-flip-20260814/island-crossing.json",
+              "sha256": "e454a0324571ae0a4e1e8496e5c251a117590193017b42fefda0a65892c8705f"
+            }
+          ]
+        },
+        {
+          "statement": "The conditional revival clause was exercised against its pre-registered thresholds and did NOT fire, twice. ADR 0044 section 4.2: leg X bar > 8,000 ms measured 3,557.9 ms (no); leg Y bar > 4,000 ms NOT ESTABLISHED because the proxy is structurally biased low; the AND clause 'not fixable incrementally' is no, because an incremental update is a named, un-attempted, strictly cheaper fix - and the ADR states the verdict would be unchanged if Y were later established as fired. ADR 0045 section 3.3 re-ran it at island scale on a 41,881-building plan in 478 chunks: leg X measured 0 ms (no rebuild occurred), leg Y measured 0 ms (no second layer entered the scene), planBuildCountUnchanged true, 80 instance flips - the revival does not fire."
+        },
+        {
+          "statement": "The per-cell aggregated coarse-GLB candidate the revival clause would have revived is priced, not hand-waved: ADR 0040 costs it at 883 artifacts / 58.23 MiB wire (projected) / 101.45 MiB decoded / 883 draw calls / 883 requests / 221 concurrency-4 waves, FAILING maxCacheEntries 512, with all three pick strategies rejected. The costing is committed as data/citywide-overview-census-20260814/coarse-tier.json and data/citywide-overview-census-20260814/candidate-costs.json.",
+          "artifacts": [
+            {
+              "path": "data/citywide-overview-census-20260814/coarse-tier.json",
+              "sha256": "c012704f0668f9b788c4e2249a064bf79a1c2472a553c5ef3530b23c869a5a1d"
+            },
+            {
+              "path": "data/citywide-overview-census-20260814/candidate-costs.json",
+              "sha256": "c14a92d1d2a716a34bc79f0d08d13b89eeaf4830c35e957dd351ae5c7f8b7b59"
+            }
+          ]
+        },
+        {
+          "statement": "Reversibility by one switch is EXTERIOR_SCHEDULER_DEFAULT_ON, read in exactly two places (the URL parse default and, through the parsed value, resolveCitywideOverviewResidency), and its second half - that the budgets resolve byte-identically to CITYWIDE_BUDGETS when the constant is false - is a deterministic test with a live counterfactual rather than a capture, per ADR 0045 section 4.1."
+        }
+      ]
+    },
+    {
+      "index": 5,
+      "criterion": "Frame budgets hold at citywide scale on the reference MacBook, off the vsync floor with a capped control, at island-overview, street-level, and overview-to-street transition camera paths, including a measured pan/zoom storm",
+      "verdict": "MET",
+      "evidence": [
+        {
+          "statement": "Every station of the default campaign passes the TIGHTER pair, p50 <= 16.7 ms and p95 <= 25 ms; the relaxed pair (33.3 / 45) is not needed anywhere. From data/citywide-default-flip-20260814/stations-default.json: street 260 m p50 8.3 / p95 10.0 / p99 10.4 / max 10.4 over 1,200 samples; transition 1.2 km 8.3 / 10.0 / 10.3 / 10.4 over 1,199; overview 52 km 8.3 / 9.8 / 10.2 / 10.4 over 1,199; pan storm settled 8.3 / 15.9 / 16.7 / 16.8 over 2,271. Worst p50 8.3 ms, worst p95 15.9 ms.",
+          "artifacts": [
+            {
+              "path": "data/citywide-default-flip-20260814/stations-default.json",
+              "sha256": "5c0da73ebf95d8f12f2d1cf92b64d6527343ace9fc0678307b5600d0eea22493"
+            }
+          ]
+        },
+        {
+          "statement": "The readings are off the vsync floor and the floor itself is measured as a capped control rather than assumed: data/citywide-default-flip-20260814/vsync-control.json records p50 7.8 / p95 12.4 / p99 14.0 / max 15.5 ms at an impliedRefreshHz of 128.21, so a station p50 of 8.3 ms is the display cap and not the renderer.",
+          "artifacts": [
+            {
+              "path": "data/citywide-default-flip-20260814/vsync-control.json",
+              "sha256": "0a3c4b5dcdea53af8b8c4782e6a2b9687be7704104140bc52f8ca56a524bf4be"
+            }
+          ]
+        },
+        {
+          "statement": "The camera paths the criterion names are all present: island overview (52 km), street level (260 m), the overview-to-street transition station (1.2 km) plus the separately captured island-scale crossing in data/citywide-default-flip-20260814/island-crossing.json, and a measured pan/zoom storm of 12 drags reported in two windows - during the storm (p50 8.3 / p95 8.7 / p99 9.1 / max 9.3) and after it settles (p95 15.9). Both windows are inside the bar.",
+          "artifacts": [
+            {
+              "path": "data/citywide-default-flip-20260814/island-crossing.json",
+              "sha256": "e454a0324571ae0a4e1e8496e5c251a117590193017b42fefda0a65892c8705f"
+            }
+          ]
+        },
+        {
+          "statement": "Boot builds and crossing transients are reported separately as durations and never folded into a percentile - 242.9 ms / 8.8 ms / 7.2 ms totalBuildMs with time-to-first-dense 1.27 s / 2.21 s / 5.81 s - so the passing percentiles are steady-state readings and are not flattered by excluding an unstated warmup."
+        },
+        {
+          "statement": "The radius control ADR 0044 never ran was captured for this campaign as data/citywide-default-flip-20260814/radius-control.json; it is cited by ADR 0045 section 3.4 and is the reading that shows the cell cap binding at 2-3 km with no radius set.",
+          "artifacts": [
+            {
+              "path": "data/citywide-default-flip-20260814/radius-control.json",
+              "sha256": "9b19ae3531edd3f7f08fbba3c0c79bc6386687bcd6d6bf55aa7880ae49bd6944"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "index": 6,
+      "criterion": "Cache governance is byte-based with designed eviction: eviction correctness proven (an evicted cell's re-entry is byte-identical; no stale render; pick identity preserved across evict/reload), boundary hysteresis measured (no thrash along cell edges on a recorded pan path), and peak residency certified against the governing byte cap",
+      "verdict": "MET",
+      "evidence": [
+        {
+          "statement": "EVICTION CORRECTNESS, deterministic half (T003): src/runtime/exterior-cache-eviction-correctness.test.ts proves against the REAL runtime under an injected cap that a scheduler evict actually frees exterior cache bytes ('shrinks cache.bytes() with the seam, and does NOT shrink it without'; 'frees bytes under an injected cap low enough that recency alone would have thrashed'; 'holds the bytes of a cell whose load is still in flight, then frees them when it settles'), and that the predecessor-fallback double cost is charged rather than lost."
+        },
+        {
+          "statement": "EVICTION CORRECTNESS, live half (T003): data/exterior-cache-governance-20260814/roam-evidence.json records a browser roam driven by real drags with a 20 s settle per leg. Residency climbed to 43 entries / 11,144,780 B on the way up, then a lateral move at altitude RELEASED 79 artifacts and 22,258,480 B, and the descent re-fetched (79 -> 93 requested) and settled at exactly Block 835's 14 assets. The driving trace is data/exterior-cache-governance-20260814/roam-trace.json and the governance record is data/exterior-cache-governance-20260814/governance-evidence.json.",
+          "artifacts": [
+            {
+              "path": "data/exterior-cache-governance-20260814/roam-evidence.json",
+              "sha256": "28208b039f9d97b7a4c885ca93f2b1e2cee310831088191162af4d8c39a8ddd5"
+            },
+            {
+              "path": "data/exterior-cache-governance-20260814/roam-trace.json",
+              "sha256": "a5c41aee97e9d85251218dd9072b761fb8fa837af89c1864633ec52049ae2370"
+            },
+            {
+              "path": "data/exterior-cache-governance-20260814/governance-evidence.json",
+              "sha256": "b2281322f8304f7aefec7dc7c515ae5d77bfd33806807f06c25da9c3aca818b1"
+            }
+          ]
+        },
+        {
+          "statement": "BYTE-IDENTICAL RE-ENTRY: the cache key is ref#sha256 and every fetched artifact is hashed against the pinned digest before admission, so re-entry byte-identity is structural; the test exercises it anyway ('re-requests the artifact and admits byte-identical bytes' - a second network request, identical cache keys, identical bytes) and the non-tautological half is asserted separately ('fails the refetch closed when the second response does not match the pinned digest': the tampered head fails its checksum, the pinned predecessor renders, and nothing tampered is cached)."
+        },
+        {
+          "statement": "NO STALE RENDER: src/runtime/exterior-scheduler-thrash-gate.test.ts 'never renders a cell the scheduler evicted, at a two-decision load latency' replays a committed trace and checks the invariant at EVERY decision rather than at the end, with resurrected === 0 and peakRendered bounded by the cap - and guards against a vacuous pass by also requiring peakRendered > cap/2."
+        },
+        {
+          "statement": "PICK IDENTITY across evict/reload is now ASSERTED rather than argued. src/runtime/exterior-cache-eviction-correctness.test.ts drives a real release and a real refetch through the actual runtime and compares the canonical feature id set the reloaded outcome resolves against the set the original resolved, requiring it to be equal and non-empty. Before T007 this rested on byte-identity under identical cache keys - a sound argument, but an argument; the identity a details panel actually picks on is now compared directly. What still does not exist is a BROWSER journey that picks a feature after an eviction - see criterion 9's delta."
+        },
+        {
+          "statement": "BOUNDARY HYSTERESIS is measured on recorded pan paths rather than argued (T002): ADR 0041's thrash gate fixes hysteresisDecisions at 3 and states both budgets at the measured value with no headroom - midtown-street-pan-v1 13 decisions / 0 re-entries within the hysteresis horizon, midtown-zoom-out-v1 17 decisions / 13 re-entries. ADR 0042 re-certifies at the shipped cap of 128 over one pool of 883 units across three paths including a 58-decision roam, and reports the mixed result honestly (zoom-out re-entry@3 got WORSE, 13 -> 15; roam got better, 45 -> 32)."
+        },
+        {
+          "statement": "PEAK RESIDENCY AGAINST THE GOVERNING CAPS - AND THERE ARE TWO CACHES, WITH TWO SEPARATE CEILINGS, WHICH MUST NOT BE CROSSED. ADR 0041 states the separation outright: the exterior pool (EXTERIOR_RUNTIME_BUDGETS) and the citywide shard pool (the CITYWIDE budgets) are separate instances with separate ceilings and separate eviction, and any reading that adds them together is wrong. (i) THE EXTERIOR CELL CACHE, whose ceiling is 512 entries / 256 MiB: measured at the 52 km overview at 40 entries and 14,369,372 B - 7.8 % of its entry ceiling and 5.3 % of its byte ceiling. This is the cache the 'byte cap does not bind' claim is about, and it is the cache whose eviction correctness criterion 6 certifies. (ii) THE CITYWIDE DENSE SHARD CACHE, whose resolved session budget is 112 shards / 83,886,080 B (ADR 0043's raise, visible in the same record's budgets block): measured at 99 entries and 58,243,420 B - 69.4 % of its byte budget and 88.4 % of its ENTRY budget. That is not 'well inside'; 99 of 112 entries is real pressure and is disclosed here rather than softened. It did not evict during the campaign, but it is the reading closest to a ceiling anywhere in this goal. (iii) THE SCHEDULER CELL CAP, and it is what binds: decision.residentCount 128 against visibleCount 883 at the same station, the cap of ADR 0042's EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY, certified there as binding across three replayed paths. THE STRUCTURAL FACT, stated plainly: the scheduler CELL cap binds and is what produced the observed eviction; the EXTERIOR byte cap does not bind at today's data volume; and the DENSE entry budget, which is a different ceiling belonging to a different cache, is the one under genuine pressure.",
+          "artifacts": [
+            {
+              "path": "data/citywide-default-flip-20260814/stations-default.json",
+              "sha256": "5c0da73ebf95d8f12f2d1cf92b64d6527343ace9fc0678307b5600d0eea22493"
+            }
+          ]
+        },
+        {
+          "statement": "Per-request latency, which prices the re-entry the thrash gate counts, is committed as data/exterior-cache-governance-20260814/request-latency.json.",
+          "artifacts": [
+            {
+              "path": "data/exterior-cache-governance-20260814/request-latency.json",
+              "sha256": "97f82695adf3524535de1651ccddbbc6cb1224b6f5327302ba5e4c80cfb3f456"
+            }
+          ]
+        },
+        {
+          "statement": "WHERE THIS DISAGREES WITH ADR 0045, AND WHY. ADR 0045 section 5.1 grades this criterion 'partial', because eviction was never exercised BY THAT CAMPAIGN - classEvictions is empty and releasedArtifactCount is 0 at every station of the flip captures. That grade is CAMPAIGN-SCOPED and correct about the campaign. This record is GOAL-scoped and reads the whole committed evidence base, in which eviction correctness is proven at the runtime under an injected cap (T003) and observed in a live browser roam that released 79 artifacts and 22,258,480 B (T003). The disagreement is a difference of scope, not of fact, and it is named here rather than left for a reader to discover as a contradiction."
+        }
+      ]
+    },
+    {
+      "index": 7,
+      "criterion": "Repeated-camera-path heap is non-monotonic under forced GC at citywide scale; GPU texture memory is stated by arithmetic (and the shared atlas is implemented if the arithmetic exceeds budget, inheriting replay-gated procedural rules)",
+      "verdict": "NOT-MET",
+      "evidence": [
+        {
+          "statement": "THE HEAP HALF WAS NEVER CAPTURED AT CITYWIDE SCALE. data/citywide-default-flip-20260814/stations-default.json carries a forced-GC heap reading at each station - 110,559,952 / 199,042,603 / 266,328,595 / 296,055,002 B - but these are FOUR DIFFERENT CAMERAS, not repeats of one path. They rise with scene size, which is what a growing resident scene should do, and they cannot be re-read as a monotonicity verdict: a series across different stations is monotone by construction and says nothing about retention. ADR 0045 section 3.2 says so in its own words and section 5.2 D-13 declines to claim the verdict.",
+          "artifacts": [
+            {
+              "path": "data/citywide-default-flip-20260814/stations-default.json",
+              "sha256": "5c0da73ebf95d8f12f2d1cf92b64d6527343ace9fc0678307b5600d0eea22493"
+            }
+          ]
+        },
+        {
+          "statement": "The instrument that WOULD close it already exists in a smaller form. data/goal-bounded-gaps-20260812/heap-concurrency-evidence.json captures the committed block835-canary-facade-v1 path over 8 poses x 4 repeats with an explicit window.gc() before every sample, and reports heapVerdict.growthRatio -0.13421180682438044 against a noiseBandRatio of 0.1 with monotonicGrowthDetected false. Its own residency.statement bounds it: the path 'stays inside one midtown block, so the resident working set is a fraction of the 512-entry ceiling and no eviction was forced', and it 'does NOT certify behaviour at peak residency or under eviction pressure'. That is exactly the scale this criterion asks about and exactly the scale it does not reach.",
+          "artifacts": [
+            {
+              "path": "data/goal-bounded-gaps-20260812/heap-concurrency-evidence.json",
+              "sha256": "625a8d62fe0a78405a03923f2a80c4da788a5b6d1943243cb4237116d65bfa12"
+            }
+          ]
+        },
+        {
+          "statement": "THE GPU HALF IS DISCHARGED, and is stated here so the NOT-MET is not read as covering both. ADR 0043 states decoded GPU-side memory by arithmetic under a heading that labels it as arithmetic rather than measurement: at the mean 13.18 outer-ring vertices per building (595,560 vertices over 45,194 buildings) an extruded prism carries POSITION (12 B), the per-instance colour attribute (4 B), the batch id (4 B) and amortised index data (~6 B) at ~26 B/vertex, so ~3.7 M rendered vertices is ~97 MB decoded GPU-side, and the layer swap holds both layers so the transient is ~190 MB. ADR 0040 D7 labels the companion figure honestly too: decoded GPU bytes inside Cesium are not observable from the runtime, and its 59.80 MiB for the accepted candidate is a POSITION-only structural floor. No shared atlas was implemented because no committed arithmetic exceeded a budget; the conditional never fired."
+        }
+      ],
+      "stopReport": "Capture a REPEATED-CAMERA-PATH heap series at citywide scale and judge it against a stated noise band. The shape is already committed and does not need designing: data/goal-bounded-gaps-20260812/heap-concurrency-evidence.json - a single deterministic pose path, N repeats, an explicit forced collection before every sample, a first-half-median versus second-half-median growthRatio against a noiseBandRatio, and monotonicGrowthDetected as a boolean. What must change is the path and the pressure: it must be an island-scale path that crosses the 1,200 m and 2,400 m band edges and reaches the 52 km overview, so the resident set actually presses the 128-cell cap and forces eviction, rather than the one-midtown-block path that never approached it. Until that series exists this criterion has no evidence at all on its heap half - not weak evidence, none - and no per-station reading can be substituted for it. The GPU half needs nothing further."
+    },
+    {
+      "index": 8,
+      "criterion": "Active exterior requests never exceed 8; cold load and camera-motion request storms show bounded in-flight counts and truthful loading states",
+      "verdict": "MET",
+      "evidence": [
+        {
+          "statement": "MEASURED at every settled station of the default campaign: data/citywide-default-flip-20260814/stations-default.json reports peakConcurrentRequests 4 on all six waves at street 260 m, transition 1.2 km and overview 52 km - 18 readings, all 4, all at or below the criterion's ceiling of 8. The number is identical across waves because it IS the shared aggregate: src/runtime/exterior-cell-runtime.ts getMetrics() resolves activeRequests, maxConcurrentRequests and peakConcurrentRequests from the injected shared budget when one is present, so every wave's metrics object reports one session-wide peak rather than six independent ones.",
+          "artifacts": [
+            {
+              "path": "data/citywide-default-flip-20260814/stations-default.json",
+              "sha256": "5c0da73ebf95d8f12f2d1cf92b64d6527343ace9fc0678307b5600d0eea22493"
+            }
+          ]
+        },
+        {
+          "statement": "The bound is STRUCTURAL as well as observed: EXTERIOR_RUNTIME_BUDGETS declares maxConcurrentRequests 4 and the runtime constructs its CitywideRequestPool from exactly that value, so 4 is a pool-enforced ceiling and not an outcome that happened to be small. It is pinned by test in four places - src/runtime/exterior-cache-governance-gate.test.ts, src/runtime/exterior-cache-eviction-correctness.test.ts, src/runtime/exterior-cell-runtime.test.ts (which asserts peakConcurrentRequests <= 4 on the aggregate-budget path) and src/runtime/composed-release-runtime.test.ts."
+        },
+        {
+          "statement": "Cold load is covered by an independent measurement rather than by the same campaign: data/goal-bounded-gaps-20260812/heap-concurrency-evidence.json reports measuredPeakConcurrentRequests 4 against configuredRuntimeCeiling 4 and criterionCeiling 8, taken 'MEASURED from the aggregate request budget's own peak counter over the whole session, which includes the cold load'.",
+          "artifacts": [
+            {
+              "path": "data/goal-bounded-gaps-20260812/heap-concurrency-evidence.json",
+              "sha256": "625a8d62fe0a78405a03923f2a80c4da788a5b6d1943243cb4237116d65bfa12"
+            }
+          ]
+        },
+        {
+          "statement": "Truthful loading states are shipped and pattern-matched rather than implied: the deferred population states '<n> exterior cells are not loaded for this camera; they load when the camera reaches them' and is reported at every station (871 / 755 / 755 cells), separately from the release-fact tombstone and from the evicted population, so a cell that is merely not-yet-requested is never reported as a coverage gap.",
+          "artifacts": [
+            {
+              "path": "data/citywide-default-flip-20260814/stations-default.json",
+              "sha256": "5c0da73ebf95d8f12f2d1cf92b64d6527343ace9fc0678307b5600d0eea22493"
+            }
+          ]
+        },
+        {
+          "statement": "DISCLOSED HOLE, stated here rather than in review. The pan-storm capture - the highest-load station in the campaign, 12 drags - carries NO concurrency reading of any kind: its record has no adapter block, no budgets block and no waves block, so neither maxConcurrentRequests nor peakConcurrentRequests was sampled there. ADR 0045 section 5.2 D-14 records that peak concurrency was not asserted by this campaign though the field is in the probe payload. The storm's bound is therefore STRUCTURAL (the pool cannot admit a fifth request) and not OBSERVED, and this verdict rests on the pool for storms and on the readings above for the settled cameras.",
+          "artifacts": [
+            {
+              "path": "data/citywide-default-flip-20260814/stations-default.json",
+              "sha256": "5c0da73ebf95d8f12f2d1cf92b64d6527343ace9fc0678307b5600d0eea22493"
+            }
+          ]
+        },
+        {
+          "statement": "WHERE THIS DISAGREES WITH ADR 0045, AND WHY. ADR 0045 section 5.1 grades this criterion 'not measured here' and section 5.2 D-14 records that peak concurrency was not asserted by that campaign. Both are true OF THAT CAMPAIGN. This record is goal-scoped: the same captures do carry peakConcurrentRequests 4 on all six waves at all three settled stations, and an independent 2026-08-12 record measured 4 over a session including the cold load. The grade differs because the scope differs, and the half the campaign genuinely did not reach - the pan storm - is disclosed in this verdict rather than absorbed by it."
+        }
+      ]
+    },
+    {
+      "index": 9,
+      "criterion": "Picking, details, provenance, deep links, and per-wave attribution behave identically before and after the change on the committed journey suite, extended with eviction-and-refetch and identity-under-eviction journeys",
+      "verdict": "MET-AS-ADJUDICATED",
+      "evidence": [
+        {
+          "statement": "THE JOURNEY EVIDENCE, SCOPED HONESTLY. The committed browser journey records for the six waves were captured BEFORE the T007 notice reword and stand as evidence for the build they were captured on: picking, details, provenance, deep links and per-wave attribution behaved identically across the citywide flip, which is what ADR 0045 section 5.1 records. NO POST-REWORD JOURNEY CAMPAIGN WAS RUN by this task. What was done instead: the seven journey CLIs computed a live pass predicate on the substring 'no substitute was selected', which the reword removes, so all seven predicates were updated to the sentence's arm-independent first clause ('no generated exterior geometry') and every committed journey-evidence.json capture was left byte-identical. The predicates are therefore correct for future runs and the captures remain honest records of past ones; neither is a claim that the suite was re-captured after the reword."
+        },
+        {
+          "statement": "Per-wave attribution specifically survives the change to a six-wave default session: src/runtime/exterior-wave-attribution.ts resolves a selection to the wave that actually rendered it, falls back to the session's single wave, and answers NOTHING when several are streaming rather than guessing - pinned by src/runtime/exterior-wave-attribution.test.ts, which also pins that two waves' identical notices stay distinguishable."
+        },
+        {
+          "statement": "Eviction-and-refetch and identity-under-eviction ARE proven, against the real runtime rather than a mock: src/runtime/exterior-cache-eviction-correctness.test.ts drives a release and a refetch through the actual ExteriorCellRuntime with a real cache and asserts identical keys and identical bytes, and src/runtime/exterior-scheduler-thrash-gate.test.ts asserts at every decision of a replayed trace that no evicted cell renders."
+        },
+        {
+          "statement": "The live counterpart exists as a browser capture at wave scale but not as a journey with assertions: data/exterior-cache-governance-20260814/roam-evidence.json observed 79 artifacts / 22,258,480 B released and re-fetched in a real browser, which is the behaviour the two missing journeys would exercise.",
+          "artifacts": [
+            {
+              "path": "data/exterior-cache-governance-20260814/roam-evidence.json",
+              "sha256": "28208b039f9d97b7a4c885ca93f2b1e2cee310831088191162af4d8c39a8ddd5"
+            }
+          ]
+        },
+        {
+          "statement": "A LIVE CHECK OF THE REWORDED NOTICE WAS PERFORMED, and its scope is stated exactly. A street-level real-release session on the default arm was opened in a browser and rendered the new aggregate sentence correctly, in the notShipped slot of the exterior fallback notice, with the Dismiss control present. That is a single-arm, single-camera confirmation that the reword reaches the screen in the shape the digest expects. It is NOT a journey campaign, it asserts nothing about the rollback arm, and it is not cited as evidence for the picking, deep-link or provenance behaviours above."
+        }
+      ],
+      "adjudicationDelta": "THE TWO EXTENDED JOURNEYS THE CRITERION NAMES WERE NOT RUN AS JOURNEYS. 'The committed journey suite ... extended with eviction-and-refetch and identity-under-eviction journeys' asks for two additions to the browser journey suite - a driven camera path, a selection made after an eviction, and an asserted identity - and what exists instead is (a) real-runtime unit proofs of the same invariants and (b) a browser roam that observed the release and the refetch but asserted no pick. The gap is not the invariant, it is the LAYER: nothing drives a real browser to evict a cell, re-enter it, click the building, and assert that the details panel names the same canonical feature with the same provenance. ADR 0045 section 5.2 D-12 records why the flip campaign could not supply it - classEvictions was empty at every station and releasedArtifactCount stayed 0, because the exterior cell cache sat at 14,369,372 B over 40 entries at the overview - 5.3% of its 256 MiB cap and 7.8% of its 512-entry cap - so the measured paths never come close to forcing an eviction from the cache these journeys would exercise - so a journey that forces eviction needs a camera path built for that purpose. Graded as adjudicated rather than MET so the missing layer stays legible."
+    },
+    {
+      "index": 10,
+      "criterion": "One recorded rollback switch restores the prior fixed promoted-subset activation, rehearsed with evidence; the streaming contract change is documented as an ADR with the three-bound arithmetic discipline",
+      "verdict": "MET",
+      "evidence": [
+        {
+          "statement": "ONE switch: EXTERIOR_SCHEDULER_DEFAULT_ON, read in exactly two places per ADR 0045 section 4.1 - the URL parse default and, through the parsed value, resolveCitywideOverviewResidency - with ?exteriorScheduler=off as its per-session spelling."
+        },
+        {
+          "statement": "REHEARSED LIVE, not asserted: data/citywide-default-flip-20260814/stations-rolled-back.json is the same four-station campaign captured on the same served bundle with the switch off.",
+          "artifacts": [
+            {
+              "path": "data/citywide-default-flip-20260814/stations-rolled-back.json",
+              "sha256": "c0a8b9b02ff52e0b0399cfc8f193c8b9d9144d4c54939f3b4c41f4581e96e0e4"
+            }
+          ]
+        },
+        {
+          "statement": "The record shows the restoration in THREE INDEPENDENT WAYS at once, which is what makes it a rehearsal rather than a flag check: the drawn island collapses from 41,841 to 5,289 at the overview; overviewResidencyActive goes false; and the session resolves maxRenderedDenseFeatures 6000 / maxLoadedShards 24 / maxLoadedBytes 50331648 - the UNRAISED CITYWIDE_BUDGETS, the exact values T004's raise replaced. ADR 0045 section 3.6 states the point: 'A rollback that only restored the scheduler would show the first and not the third.'",
+          "artifacts": [
+            {
+              "path": "data/citywide-default-flip-20260814/stations-rolled-back.json",
+              "sha256": "c0a8b9b02ff52e0b0399cfc8f193c8b9d9144d4c54939f3b4c41f4581e96e0e4"
+            }
+          ]
+        },
+        {
+          "statement": "The rehearsal also reproduces the promoted-subset behaviour's own signature rather than merely drawing less: the rolled-back session draws MORE V3, not less (95 suppressed at the street pose against 14 in the default arm), because with no visibility scheduling every declared cell is asked for and the whole 484-building overlay is resident."
+        },
+        {
+          "statement": "The half a capture cannot establish is a test: resolveCitywideOverviewResidency(false, true).budgets must toEqual CITYWIDE_BUDGETS, with a live counterfactual asserted so the gate cannot pass by being dead (ADR 0045 section 4.1)."
+        },
+        {
+          "statement": "The streaming contract change is documented as ADRs with the three-bound arithmetic discipline throughout - ADR 0040 (candidate costing and the four-class shared cache), ADR 0041 (the scheduler contract and priority policy), ADR 0042 (three-layer cache governance and the 128-cell certification), ADR 0043 (the budget raises and the decoded arithmetic), ADR 0044 (the near-field band and the 2 % gate), ADR 0045 (the flip, the rehearsal and the deferrals)."
+        }
+      ]
+    },
+    {
+      "index": 11,
+      "criterion": "The exterior fallback notice reflects the new reality (no by-design cell tombstones; refused buildings and true failures only)",
+      "verdict": "MET-AS-ADJUDICATED",
+      "evidence": [
+        {
+          "statement": "THE DEFECT THIS TASK FIXED, stated from the committed captures rather than from memory. data/citywide-default-flip-20260814/stations-default.json records the sentence that was actually on screen in the default session at each station: '146 of 149 exterior cells declared by this build ship no exterior geometry (by design; no substitute was selected).' at street, '565 of 574 ...' at the transition and '393 of 398 ...' at the overview. In a session drawing 41,841 buildings that sentence is false by omission - it reads as 'nothing is there' about buildings the reader can see.",
+          "artifacts": [
+            {
+              "path": "data/citywide-default-flip-20260814/stations-default.json",
+              "sha256": "5c0da73ebf95d8f12f2d1cf92b64d6527343ace9fc0678307b5600d0eea22493"
+            }
+          ]
+        },
+        {
+          "statement": "T007 rewords it. The shipped sentence has TWO CLAUSES and they are load-bearing in different ways. FIRST CLAUSE - 'N of M exterior cells declared by this release ship no generated exterior geometry' - a pure release fact, true in every arm and at every camera; this is the substring the seven journey CLIs assert on. SECOND CLAUSE - 'where the citywide base tier is active, their buildings draw as sourced base massing (footprint extruded to sourced height), which is not a generated exterior' - CONDITIONAL, and the condition is not decoration: under the rollback arm (?exteriorScheduler=off) overview residency is withdrawn and only 5,289 buildings draw, so an unconditional promise that those buildings draw would be affirmatively FALSE in that arm rather than merely incomplete. Both counts remain release facts read from the release declaration."
+        },
+        {
+          "statement": "THE CONDITION IS WORDS, NOT PLUMBING, and that choice is the design. Reading the session arm to pick a wording would make the string vary with configuration, and notShippedLines feeds the notice's dismissalKey - so a configuration-dependent line re-arms a notice the reader already dismissed (the defect the three-population split fixed) and gives the digest two shapes to recognize instead of one. One stable sentence, true in both arms, costs a clause and adds no state to App.tsx, no session-flag read and no camera dependence. The line is still emitted unconditionally in the sense that matters: nothing is gated on dense residency and the line appears whenever it is true."
+        },
+        {
+          "statement": "The true failures and the refused buildings keep their own register, unchanged: a per-cell verification failure still states itself verbatim and still outranks the aggregates in render order, one not-shipped cell still states itself in its own words rather than being restated as an aggregate of one, and the withheld-anchor residency line is still reported with its building IDs one click away."
+        },
+        {
+          "statement": "LOCKSTEP AND LIVE CONFIRMATION. Three sites move together or the aggregate silently falls through to verbatim - the composer's declared and reconciled paths, NOT_SHIPPED_PATTERN, and the build-level template - and a test asserts the real producer's output is still digested, pinning both clauses by exact substring so a change to either breaks a test rather than a live predicate. A street-level real-release session on the default arm was additionally opened in a browser and rendered the new aggregate sentence correctly, in the notShipped slot, with the Dismiss control present."
+        }
+      ],
+      "adjudicationDelta": "'NO BY-DESIGN CELL TOMBSTONES' IS NOT LITERALLY DELIVERED, and the delta is a decision rather than an oversight. The criterion asks the notice to reflect a new reality in which by-design cell tombstones are gone and only refused buildings and true failures remain. After the flip those cells STILL genuinely ship no generated exterior geometry - 146 of 149 in midtown, and so on - so a line about them is still true and removing it would hide a real property of the build. What changed is not whether the cells are empty but what the reader sees where they are: sourced base massing rather than nothing. ADR 0045 section 5.2 D-15 deferred precisely this judgement to T007 ('whether a not-shipped exterior cell is a tombstone at all in a session where the dense shard draws the building'), and the disposition taken here is to KEEP the line and make it truthful rather than to delete it and claim zero tombstones. A second narrowing is disclosed with it: the sentence's second clause is CONDITIONAL ('where the citywide base tier is active'), because the rollback arm withdraws the overview residency and an unconditional claim would be false there - so the notice tells the reader what draws only where something does. The count of by-design cell lines is therefore unchanged; their meaning is corrected."
+    },
+    {
+      "index": 12,
+      "criterion": "Documentation impact closed: scheduler/LOD/cache ADRs, README and project brief updated to the citywide default behavior, prior-goal reconciliation record amended to close #1/#22 with direct evidence",
+      "verdict": "MET",
+      "evidence": [
+        {
+          "statement": "The scheduler, LOD and cache ADRs are committed and are the ones this criterion names: docs/decisions/0040-citywide-overview-tier-decision.md (overview tier and the four-class shared cache), docs/decisions/0041-exterior-visibility-scheduler.md (the scheduler contract and priority policy), docs/decisions/0042-exterior-cache-governance.md (three-layer cache governance, the 128-cell certification and eviction correctness), docs/decisions/0043-citywide-overview-streaming.md (the budget raises and the decoded arithmetic), docs/decisions/0044-near-field-transition-band.md (the near-field band and the 2 % gate) and docs/decisions/0045-citywide-default-streaming-flip.md (the flip, the rollback rehearsal and the numbered deferrals)."
+        },
+        {
+          "statement": "README.md and docs/PROJECT_BRIEF.md are rewritten to the citywide-default reality by this task's documentation commit: the default session drawing 41,841 buildings at overview as a two-tier composition, the 484-of-45,194 figure re-framed as the TEXTURED V3 tier rather than as what renders, the 512-entry bound replaced by the scheduler-pool bound and the measured residency, and the two escape-hatch parameters documented for what they were MEASURED to do."
+        },
+        {
+          "statement": "The prior-goal reconciliation record is amended by this task's third commit, which closes criterion 22 of manhattan-high-fidelity-exteriors as MET-AS-ADJUDICATED on the user's recorded decision while criterion 1 stays NOT-MET with an updated stop report. The amendment is not free-text: its pinned counts, its closure list and its evidence-path rules are asserted by scripts/goal-integration-reconciliation.test.mjs, which had to be edited deliberately for the amendment to pass."
+        },
+        {
+          "statement": "This record and its colocated drift instrument scripts/citywide-goal-acceptance.test.mjs are themselves part of the documentation closure: every criterion of this goal carries either direct evidence or an honest NOT-MET with a stop report, and the test refuses a record whose verdicts drift from their own vocabulary, counts, order or cited artifact hashes."
+        },
+        {
+          "statement": "The task's own narrative record, naming all four commits, the user decision behind the criterion-22 closure and the disposition of each deferral, is docs/implementation/20260815-goal-acceptance-closure.md."
+        }
+      ]
+    }
+  ],
+  "residualRisks": [
+    "D-8: THE 484-VERSUS-474 DISCREPANCY IS STILL UNRESOLVED, carried unchanged through this goal (ADR 0045 section 5.2). Two counts of the promoted default exterior population disagree by ten buildings and no task has explained which is wrong. It is small, it is old, and it is exactly the kind of number a reader quotes; it stays open.",
+    "D-11: THE ISLAND-SCALE BOUNDS-REBUILD DOUBLE-DRAW IS 5,746 ms AND EXCEEDS THE 4,000 ms LEG-Y BAR (ADR 0045 section 3.3 and section 5.2). It does not revive the coarse-GLB tier, it does not breach the frame budgets, and it is not a percentile - but it is the largest measured transient in the system and, since the flip, it is a DEFAULT-session cost rather than an opt-in one. The named candidate fixes are a chunked membership reconciliation (add/remove batches rather than a whole-layer swap) or deferring the pending-layer add until the first batch is ready; neither was attempted because both change the commit path the campaign measured.",
+    "D-4: BAND-INTERNAL RANKING PREFERS WAVE ORDER OVER DISTANCE, AND THE DEFECT IS NOW REACHABLE. ADR 0044 handed this on as unreachable; ADR 0045 section 3.4 changed its status, because the radius control shows the cap DOES bind at 2-3 km without a radius (deferredCount 76 and 175), which is exactly the condition under which a cell nearer the camera can lose its slot to a farther cell from an earlier wave. Not taken, because it changes compareRanked and both frozen thrash baselines were measured against it. The status change is the finding: a latent ordering defect became a live one when the cap started binding.",
+    "D-16: data/citywide-default-flip-20260814/stations-scheduler-on.json IS SUPERSEDED AND IS CITED NOWHERE. It captures the same station set under the pre-flip ?exteriorScheduler=on spelling, on the Step-1 bundle rather than the served default-on bundle. It is RETAINED because deleting captured evidence to tidy a directory listing is the wrong direction, and it is named here and in ADR 0045 section 5.2 so a reader who finds it in the directory is told not to cite it. This acceptance record cites it nowhere.",
+    "D-17: THE COMMIT GATE'S WIRING IS UNGUARDED; ONLY ITS ARITHMETIC IS TESTED. The exact unguarded symbol is applyDenseOwnership, defined at src/features/explorer/CesiumViewport.tsx:2044, with call sites at :2132 (inside the commitDenseLayer postRender listener) and :2144 (the settled-camera flip when no build is in flight). Neither the definition nor either call site is wrapped in any try/catch, and no error boundary stands between them and the effect that begins at :1966. The committed CesiumViewport tests exercise denseRenderPlanDelta, applyDenseSuppressionDelta and denseAppliedSuppressionSet over a synthetic index and never render the component, so deleting the commit-path reconciliation entirely would leave the suite green. The closing instrument is named and already owed: the React harness of ADR 0044 D-6, which renders the component and can observe whether the commit path still CALLS the reconciliation. USER-VISIBLE FAILURE MODE, stated concretely: a V3 cell goes live or is evicted and never reaches the screen - the ownership flip is computed correctly and simply is not applied - so the user sees a textured building that should have appeared missing, or one that should have been suppressed still drawn, with no error anywhere.",
+    "D-13 DISPOSITION: this is criterion 7's NOT-MET. ADR 0045 declined to claim the repeated-camera-path heap verdict; this record does not claim it either, grades the criterion NOT-MET, and carries a stop report naming the exact capture shape that would close it. It is not deferred quietly - it is the one open criterion of this goal.",
+    "D-14 DISPOSITION: this is the hole named inside criterion 8's MET. The settled stations measured peakConcurrentRequests 4 on the shared aggregate and the pool structurally cannot admit a fifth request, so the criterion's ceiling of 8 holds; but the pan-storm station - the campaign's highest-load camera - recorded no concurrency reading at all, so the storm half of the criterion rests on structure rather than observation. Closing it needs only that the existing probe field be sampled at the storm station, which is a capture change and not a code change.",
+    "D-12 CARRIED: EVICTION WAS NEVER EXERCISED BY THE FLIP CAMPAIGN. classEvictions is empty and releasedArtifactCount is 0 at every station of data/citywide-default-flip-20260814/stations-default.json, because the EXTERIOR cell cache - the one whose eviction this is about - sat at 14,369,372 B over 40 entries at the 52 km overview, 5.3% of its 256 MiB byte cap and 7.8% of its 512-entry cap, so the measured paths come nowhere near forcing an eviction from it. (The 58,243,420 B over 99 entries recorded at the same station belongs to the separate citywide dense shard pool and is not this cap). Eviction correctness is proven at the runtime and observed in the T003 browser roam, which is why criterion 6 is MET; what is missing is a DEFAULT-session camera path that forces it, which is also why criterion 9 is graded as adjudicated.",
+    "DOCUMENTATION-ACCURACY FINDING, NEW IN T007 AND NOT PREVIOUSLY RECORDED: ADR 0045 section 1.3 states '54,847 instances allocated' at the 52 km overview, while section 3.2 of the same ADR and the committed record it cites both state 53,115 (data/citywide-default-flip-20260814/stations-default.json reports instanceCount 53115, buildingFeatureCount 41841, denseSuppressedInstanceCount 40). The committed evidence supports 53,115. The drawn count of 41,841 - the figure this record and the rewritten documentation quote - is unaffected and agrees in both places. No ADR section was rewritten by this task to repair it; the discrepancy is recorded here so a reader who finds both numbers knows which one the evidence carries.",
+    "THE 899 GRAMMAR REFUSALS ARE STILL AWAITING THEIR ADJUDICATION AS A SEPARATE CHOICE. This goal's criterion 2 explicitly accepts them as tombstoned with named stop codes, so criterion 2 is MET on its own terms; but ADR 0039's criterion-1 discussion frames the underlying choice as the user's rather than an implementer's - either extend the grammar to close the 899, or record an adjudication that a tombstoned refusal under a named stop code satisfies the prior goal's criterion 1. No such amendment record exists in this repository, and the prior goal's criterion 1 accordingly remains NOT-MET after this task."
+  ]
+}

@@ -196,22 +196,30 @@ describe("the verdict table obeys its own rules", () => {
   });
 
   it("pins the headline split, so a quiet re-grading shows up as a failing test", () => {
-    // 17 / 12 / 2, after T029 closed criteria 7, 8, 24 and 30. It was 17 / 8 / 6
-    // when T024 wrote the record. Written as literals rather than derived,
-    // because the whole point of the number is that it is the one a reader will
-    // quote — and moving it has to be a deliberate, reviewed edit to this line.
-    expect(record.verdictCounts).toEqual({ MET: 17, "MET-AS-ADJUDICATED": 12, "NOT-MET": 2 });
+    // 17 / 13 / 1, after T007 closed criterion 22. It was 17 / 12 / 2 after
+    // T029 closed criteria 7, 8, 24 and 30, and 17 / 8 / 6 when T024 wrote the
+    // record. Written as literals rather than derived, because the whole point
+    // of the number is that it is the one a reader will quote — and moving it
+    // has to be a deliberate, reviewed edit to this line.
+    expect(record.verdictCounts).toEqual({ MET: 17, "MET-AS-ADJUDICATED": 13, "NOT-MET": 1 });
     expect(record.verdicts).toHaveLength(31);
   });
 
-  it("names the two remaining unmet criteria explicitly, so a later edit cannot quietly promote one", () => {
+  it("names the one remaining unmet criterion explicitly, so a later edit cannot quietly promote it", () => {
     const unmet = record.verdicts.filter((entry) => entry.verdict === "NOT-MET").map((entry) => entry.index);
-    // The structural pair, and nothing else. Criterion 1 (missing exteriors)
-    // and criterion 22 (the coverage envelope) are one problem wearing two
-    // criteria, and closing them is a Goal-level decision rather than an
-    // implementer's.
-    expect(unmet).toEqual([1, 22]);
-    expect(record.closures.remainingNotMet).toEqual([1, 22]);
+    // Criterion 1, and nothing else. It and criterion 22 were long described
+    // as one problem wearing two criteria; T007 established that they are not.
+    // The envelope reaching its approved two-tier composition (22) is a
+    // different claim from a generated exterior existing for every accepted
+    // parent (1), and the user's 2026-08-15 decision closed only the first.
+    expect(unmet).toEqual([1]);
+    expect(record.closures.remainingNotMet).toEqual([1]);
+    // Criterion 1's stop report must keep saying which half closed and which
+    // half did not. A stop report that quietly dropped the open half would let
+    // the record read as finished.
+    const criterion1 = record.verdicts.find((entry) => entry.index === 1);
+    expect(criterion1.stopReport).toContain("41,357");
+    expect(criterion1.stopReport).toContain("899");
   });
 
   /**
@@ -222,12 +230,28 @@ describe("the verdict table obeys its own rules", () => {
    * write.
    */
   it("keeps every closed criterion's prior refusal and its stop report legible", () => {
-    expect(record.closures.closedCriteria).toEqual([7, 8, 24, 30]);
+    expect(record.closures.closedCriteria).toEqual([7, 8, 22, 24, 30]);
+    // Closure attribution is PER CRITERION, because two different tasks closed
+    // different criteria and a single task literal would have let the later
+    // closure inherit the earlier one's name. The map is built from the
+    // record's own declarations rather than hard-coded, and then checked to
+    // cover the closed set exactly — so a closure attributed to a task that
+    // declares nothing fails here.
+    const closedBy = new Map();
+    for (const index of record.closures.closedCriteria) {
+      if (!record.closures.amendments?.some((amendment) => amendment.closedCriteria.includes(index))) closedBy.set(index, record.closures.task);
+    }
+    for (const amendment of record.closures.amendments ?? []) {
+      for (const index of amendment.closedCriteria) closedBy.set(index, amendment.task);
+    }
+    expect([...closedBy.keys()].sort((left, right) => left - right)).toEqual(record.closures.closedCriteria);
+    expect(closedBy.get(22)).toBe("T007 (Issue #72)");
+    expect(closedBy.get(30)).toBe("T029 (Issue #62)");
     for (const index of record.closures.closedCriteria) {
       const entry = record.verdicts.find((candidate) => candidate.index === index);
       expect({ index, verdict: entry.verdict }).toEqual({ index, verdict: "MET-AS-ADJUDICATED" });
       expect({ index, prior: entry.priorVerdict }).toEqual({ index, prior: "NOT-MET" });
-      expect(entry.closedBy, `criterion ${index}`).toBe("T029 (Issue #62)");
+      expect(entry.closedBy, `criterion ${index}`).toBe(closedBy.get(index));
       // The original stop report survives under its own name. The suite's
       // shape rules forbid a `stopReport` on a non-NOT-MET entry, which is why
       // it is carried as `priorStopReport` rather than deleted.
@@ -246,7 +270,11 @@ describe("the verdict table obeys its own rules", () => {
     const cited = record.closures.evidenceRecords.map((entry) => entry.criterion).sort((left, right) => left - right);
     expect(cited).toEqual([...record.closures.closedCriteria].sort((left, right) => left - right));
     for (const entry of record.closures.evidenceRecords) {
-      expect(entry.path, `criterion ${entry.criterion}`).toMatch(/^data\/goal-bounded-gaps-20260812\//u);
+      // Two directories, enumerated rather than widened to `data/`: T029's
+      // bounded-gaps captures, and the closing goal's own acceptance record,
+      // which is what closed criterion 22. A third directory has to be added
+      // here deliberately.
+      expect(entry.path, `criterion ${entry.criterion}`).toMatch(/^data\/(?:goal-bounded-gaps-20260812|citywide-goal-acceptance-20260815)\//u);
       expect(entry.sha256, `criterion ${entry.criterion}`).toMatch(/^[0-9a-f]{64}$/u);
       // The record must be on disk and must still hash to what is cited here.
       const bytes = readFileSync(entry.path);
