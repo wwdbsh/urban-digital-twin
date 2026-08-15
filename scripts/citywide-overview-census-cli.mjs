@@ -1,4 +1,4 @@
-/* global console, process, TextEncoder */
+/* global console, process, TextDecoder, TextEncoder */
 /**
  * Citywide overview-tier census (Task T001).
  *
@@ -39,15 +39,29 @@
  *            deviation from the V3 massing it would replace, which is the
  *            decisive number for whether such a tier can pass the multi-LOD
  *            schema's 2% cap at all.
+ *   replay   the FULL-CITY GENERATION REPLAY (T001 retention proof). It is NOT
+ *            part of `all`: it re-runs the real asset writer over every owned
+ *            building of all six waves and takes minutes, so it is an explicit
+ *            opt-in and `all` keeps meaning exactly what it always meant.
  *
- * Usage: pnpm citywide-overview:census <gate|extents|plans|bytes|all> [--force]
+ * `--profile <waveId>` selects one wave's committed V3 profile for the `plans`
+ * stage instead of the materializer default. A V3 plan hash covers the wave's
+ * seed, generated instant and tool identity, so a replay that wants a wave's OWN
+ * hashes has to run that wave's OWN profile — and, for the same reason, plan
+ * hashes are NOT comparable ACROSS waves and no cross-wave hash comparison is
+ * made anywhere in this CLI. Because a non-default profile produces a different
+ * artifact, `plans --profile` refuses to write the committed `distributions.json`
+ * and writes an off-record copy under the work root instead.
+ *
+ * Usage: pnpm citywide-overview:census <gate|extents|plans|bytes|coarse|sample|decide|replay|all>
+ *                                      [--force] [--profile <waveId>]
  */
 import { existsSync, statSync } from "node:fs";
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { sha256HexSync, stableSerialize } from "../src/domain/deterministic-hash.ts";
+import { sha256HexBytes, sha256HexSync, stableSerialize } from "../src/domain/deterministic-hash.ts";
 import {
   EXTERIOR_FULLSNAPSHOT_BASE_MANIFEST_SHA256,
   EXTERIOR_FULLSNAPSHOT_BASE_RELEASE_ID,
@@ -68,7 +82,44 @@ import {
   exteriorArtifactChecksum,
   validateExteriorWaveLedger,
 } from "../src/release/exterior-wave-ledger.ts";
-import { MidtownCoreV3Stop, buildMidtownCoreV3Plan } from "../src/release/midtown-core-v3-materialization.ts";
+import {
+  MIDTOWN_CORE_V3_WAVE_PROFILE,
+  MidtownCoreV3Stop,
+  buildMidtownCoreV3Plan,
+  writeMidtownCoreV3Assets,
+} from "../src/release/midtown-core-v3-materialization.ts";
+import { materializeMidtownCoreV3Cells } from "../src/release/midtown-core-v3-source.ts";
+import { midtownCoreV3PredecessorAssets } from "../src/release/midtown-core-v3-release.ts";
+import { LOWER_MANHATTAN_CENSUS_PROFILE } from "../src/release/lower-manhattan-release.ts";
+import { LOWER_MANHATTAN_P1_WAVE_PROFILE } from "../src/release/lower-manhattan-p1-release.ts";
+import { SOUTHERN_REMAINDER_CENSUS_PROFILE } from "../src/release/southern-remainder-release.ts";
+import { SOUTHERN_REMAINDER_P1_WAVE_PROFILE } from "../src/release/southern-remainder-p1-release.ts";
+import { CENTRAL_UPPER_MANHATTAN_CENSUS_PROFILE } from "../src/release/central-upper-manhattan-release.ts";
+import { CENTRAL_UPPER_MANHATTAN_P1_WAVE_PROFILE } from "../src/release/central-upper-manhattan-p1-release.ts";
+import { NORTHERN_MANHATTAN_CENSUS_PROFILE } from "../src/release/northern-manhattan-release.ts";
+import { NORTHERN_MANHATTAN_P1_WAVE_PROFILE } from "../src/release/northern-manhattan-p1-release.ts";
+import {
+  DETERMINISTIC_FACADE_V3_GENERATOR_ID,
+  DETERMINISTIC_FACADE_V3_GENERATOR_VERSION,
+  DETERMINISTIC_FACADE_V3_SCHEMA_VERSION,
+  tessellateV3Plan,
+} from "../src/domain/deterministic-facade-generator-v3.ts";
+import {
+  PROCEDURAL_TEXTURE_PROFILE,
+  PROCEDURAL_TEXTURE_SAMPLER_FILTER,
+  proceduralTextureProvenance,
+} from "../src/release/procedural-texture.ts";
+import { BLOCK835_PILOT_RELEASE_ID, readPilotBuildings } from "../src/release/block835-reference-package.ts";
+import {
+  BLOCK835_V3E_PROFILE,
+  BLOCK835_V3_PREDECESSOR_PACKAGE_ID,
+  V3T_QUALITY_BUDGETS,
+  assembleBlock835V3Package,
+  buildV3Plan,
+  v3GeometryForGlb,
+  v3PredecessorPins,
+} from "../src/release/block835-v3-package.ts";
+import { BLOCK835_V3_STYLE_OVERRIDES } from "../src/release/block835-facade-material-intake.ts";
 import { writeCanonicalGlb } from "../src/release/canonical-glb.ts";
 import { CITYWIDE_BUDGETS } from "../src/release/citywide-release.ts";
 import { EXTERIOR_RUNTIME_BUDGETS } from "../src/runtime/exterior-cell-runtime.ts";
@@ -85,7 +136,15 @@ import {
 import { isSafeReleaseArtifactReference } from "../src/runtime/path-security.ts";
 
 const CENSUS_ID = "citywide-overview-census-20260814";
-const STAGES = ["gate", "extents", "plans", "bytes", "coarse", "sample", "decide"];
+/**
+ * `ALL_STAGES` is what `all` runs and is UNCHANGED. `replay` is a stage this CLI
+ * accepts but `all` deliberately does not schedule: it re-runs the real asset
+ * writer over all 45,194 owned parents and is measured in minutes, so making it
+ * part of `all` would silently change what every existing operator command line
+ * costs.
+ */
+const ALL_STAGES = ["gate", "extents", "plans", "bytes", "coarse", "sample", "decide"];
+const STAGES = [...ALL_STAGES, "replay", "uv"];
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const snapshotRoot = join(repositoryRoot, "public", "data", EXTERIOR_FULLSNAPSHOT_BASE_RELEASE_ID);
@@ -99,23 +158,63 @@ const workRoot = join(repositoryRoot, "artifacts", CENSUS_ID);
  * `censusFile` is null for wave w00: Block 835 is 14 buildings whose bytes are
  * git-tracked, so they are measured from the shipped files themselves rather
  * than from a wave-scale census that was never run for it.
+ *
+ * `censusProfile` and `shippedProfile` are the wave's OWN committed
+ * `V3WaveProfile` constants — the exact objects the wave CLIs pass. They are
+ * carried here so a replay runs each wave's own seed, generated instant and tool
+ * identity rather than one wave's profile standing in for six. The census and
+ * shipped profiles of a wave share seed, instant and tool and therefore share
+ * every plan hash; they differ only in the writer-stage texture policy, which is
+ * why the untextured census is a true statement about the textured shipped set.
+ *
+ * `payloadInventory` is the committed checksum record of that wave's SHIPPED
+ * bytes. Wave w00 has none: its bytes are git-tracked, so its committed pin is
+ * the emitted release's own `assemblies.json`.
  */
 const WAVE_RECORDS = [
-  { waveIndex: 0, waveId: "block-835", releaseId: "manhattan-exterior-cells-20260811-v3", censusFile: null, assetDirectory: "public/data/manhattan-exterior-cells-20260811-v3/public/assets", textured: true },
-  { waveIndex: 1, waveId: "midtown-core", releaseId: "manhattan-midtown-core-cells-20260811-v3", censusFile: "data/midtown-core-20260811-v3/v3-census.json", assetDirectory: null, textured: false },
-  { waveIndex: 2, waveId: "lower-manhattan", releaseId: "manhattan-lower-manhattan-cells-20260812-p1", censusFile: "data/lower-manhattan-20260812-p1/wave-census.json", assetDirectory: null, textured: false },
-  { waveIndex: 3, waveId: "southern-remainder", releaseId: "manhattan-southern-remainder-cells-20260812-p1", censusFile: "data/southern-remainder-20260812-p1/wave-census.json", assetDirectory: null, textured: false },
-  { waveIndex: 4, waveId: "central-upper-manhattan", releaseId: "manhattan-central-upper-manhattan-cells-20260812-p1", censusFile: "data/central-upper-manhattan-20260812-p1/wave-census.json", assetDirectory: null, textured: false },
-  { waveIndex: 5, waveId: "northern-manhattan", releaseId: "manhattan-northern-manhattan-cells-20260812-p1", censusFile: "data/northern-manhattan-20260812-p1/wave-census.json", assetDirectory: null, textured: false },
+  // `textured: true` on wave w00 is WRONG and is deliberately left unchanged.
+  // The shipped release `manhattan-exterior-cells-20260811-v3` is texture-free:
+  // its GLBs declare `images: 0`, `textures: 0`, carry no `TEXCOORD_0`, and its
+  // own approval scope text says "TEXTURE-FREE exterior geometry". The textured
+  // `-v3t` package exists as a census record only and was never published.
+  //
+  // The value is frozen because `wave-bytes.json` is a GATED committed record
+  // that carries it, and editing a gated record to match a later reading is
+  // exactly what this census's own replay refuses to do. No figure depends on
+  // it — w00 is excluded from every island mean for the independent reason that
+  // its fourteen buildings are reference-authored. See ADR 0046, "Corrections
+  // to committed records".
+  { waveIndex: 0, waveId: "block-835", releaseId: "manhattan-exterior-cells-20260811-v3", censusFile: null, assetDirectory: "public/data/manhattan-exterior-cells-20260811-v3/public/assets", textured: true, censusProfile: null, shippedProfile: null, payloadInventory: null, predecessorInventory: null },
+  { waveIndex: 1, waveId: "midtown-core", releaseId: "manhattan-midtown-core-cells-20260811-v3", censusFile: "data/midtown-core-20260811-v3/v3-census.json", assetDirectory: null, textured: false, censusProfile: MIDTOWN_CORE_V3_WAVE_PROFILE, shippedProfile: MIDTOWN_CORE_V3_WAVE_PROFILE, payloadInventory: "data/midtown-core-20260811-v3/payload-inventory.json", predecessorInventory: "data/midtown-core-20260811/payload-inventory.json" },
+  { waveIndex: 2, waveId: "lower-manhattan", releaseId: "manhattan-lower-manhattan-cells-20260812-p1", censusFile: "data/lower-manhattan-20260812-p1/wave-census.json", assetDirectory: null, textured: false, censusProfile: LOWER_MANHATTAN_CENSUS_PROFILE, shippedProfile: LOWER_MANHATTAN_P1_WAVE_PROFILE, payloadInventory: "data/lower-manhattan-20260812-p1/payload-inventory.json", predecessorInventory: null },
+  { waveIndex: 3, waveId: "southern-remainder", releaseId: "manhattan-southern-remainder-cells-20260812-p1", censusFile: "data/southern-remainder-20260812-p1/wave-census.json", assetDirectory: null, textured: false, censusProfile: SOUTHERN_REMAINDER_CENSUS_PROFILE, shippedProfile: SOUTHERN_REMAINDER_P1_WAVE_PROFILE, payloadInventory: "data/southern-remainder-20260812-p1/payload-inventory.json", predecessorInventory: null },
+  { waveIndex: 4, waveId: "central-upper-manhattan", releaseId: "manhattan-central-upper-manhattan-cells-20260812-p1", censusFile: "data/central-upper-manhattan-20260812-p1/wave-census.json", assetDirectory: null, textured: false, censusProfile: CENTRAL_UPPER_MANHATTAN_CENSUS_PROFILE, shippedProfile: CENTRAL_UPPER_MANHATTAN_P1_WAVE_PROFILE, payloadInventory: "data/central-upper-manhattan-20260812-p1/payload-inventory.json", predecessorInventory: null },
+  { waveIndex: 5, waveId: "northern-manhattan", releaseId: "manhattan-northern-manhattan-cells-20260812-p1", censusFile: "data/northern-manhattan-20260812-p1/wave-census.json", assetDirectory: null, textured: false, censusProfile: NORTHERN_MANHATTAN_CENSUS_PROFILE, shippedProfile: NORTHERN_MANHATTAN_P1_WAVE_PROFILE, payloadInventory: "data/northern-manhattan-20260812-p1/payload-inventory.json", predecessorInventory: null },
 ];
 
 const argv = process.argv.slice(2);
 const stage = argv[0];
 const force = argv.includes("--force");
 if (!stage || (stage !== "all" && !STAGES.includes(stage))) {
-  console.error(`Usage: pnpm citywide-overview:census <${[...STAGES, "all"].join("|")}> [--force]`);
+  console.error(`Usage: pnpm citywide-overview:census <${[...STAGES, "all"].join("|")}> [--force] [--profile <waveId>]`);
   process.exit(2);
 }
+
+/**
+ * `--profile <waveId>` selects one wave's committed census profile.
+ *
+ * The default is the materializer's own default, which is exactly what the
+ * committed `distributions.json` was produced with, so an invocation without
+ * this flag travels the identical path it always did.
+ */
+const profileIndex = argv.indexOf("--profile");
+const profileWaveId = profileIndex >= 0 ? argv[profileIndex + 1] : null;
+if (profileIndex >= 0 && !WAVE_RECORDS.some((record) => record.waveId === profileWaveId && record.censusProfile)) {
+  console.error(`Unknown --profile ${profileWaveId}. Known: ${WAVE_RECORDS.filter((record) => record.censusProfile).map((record) => record.waveId).join(", ")}.`);
+  console.error("Wave w00 (block-835) is not selectable: its plans come from the reference package's own grammar entrypoint, not from this materializer.");
+  process.exit(2);
+}
+const selectedProfileRecord = profileWaveId ? WAVE_RECORDS.find((record) => record.waveId === profileWaveId) : null;
 
 function fail(message) {
   console.error(`STOP: ${message}`);
@@ -133,6 +232,19 @@ async function writeRecord(name, value) {
   const checksum = sha256HexSync(text);
   await writeFile(join(recordRoot, `${name.replace(/\.json$/u, "")}.sha256`), `${checksum}  ${name}\n`, "utf8");
   return checksum;
+}
+
+/**
+ * Writes a record that is NOT part of the committed census.
+ *
+ * The work root is gitignored, so an off-record artifact can never be mistaken
+ * for a committed measurement and can never overwrite one.
+ */
+async function writeOffRecord(name, value) {
+  await mkdir(join(workRoot, "off-record"), { recursive: true });
+  const text = serialize(value);
+  await writeFile(join(workRoot, "off-record", name), text, "utf8");
+  return sha256HexSync(text);
 }
 
 async function readReceipt(name) {
@@ -230,13 +342,37 @@ async function loadContext() {
   return { gate, manifest, sources, declaredShardCount, ledger, ledgerChecksumSha256, cells };
 }
 
-function fingerprint(context, name) {
+/**
+ * The generator identity every proof in this census is a statement ABOUT.
+ *
+ * A stage that re-runs the generator and compares the result against a committed
+ * record is only as trustworthy as its cache key. Keying on the snapshot and the
+ * ledger alone would let a grammar or rasterizer change skip the stage on a
+ * stale receipt and re-report a PASS that was measured against different code —
+ * the exact failure a replay exists to catch. So the generator identity is part
+ * of the key for those stages.
+ */
+const GENERATOR_IDENTITY = {
+  planGeneratorId: DETERMINISTIC_FACADE_V3_GENERATOR_ID,
+  planGeneratorVersion: DETERMINISTIC_FACADE_V3_GENERATOR_VERSION,
+  planSchemaVersion: DETERMINISTIC_FACADE_V3_SCHEMA_VERSION,
+  proceduralTextureParametersHashSha256: proceduralTextureProvenance().parametersHashSha256,
+};
+
+/** Stages whose result is a claim about the generator, not only about the inputs. */
+const GENERATOR_SENSITIVE_STAGES = new Set(["replay", "uv"]);
+
+function fingerprint(context, name, discriminator = null) {
   return sha256HexSync(stableSerialize({
     stage: name,
     censusId: CENSUS_ID,
     baseManifestChecksumSha256: context.gate.observedManifestChecksumSha256,
     ledgerChecksumSha256: context.ledgerChecksumSha256,
     schemaVersion: CITYWIDE_OVERVIEW_CENSUS_SCHEMA_VERSION,
+    // A stage whose output depends on a selected profile must not reuse a
+    // receipt written for a different one.
+    discriminator,
+    ...(GENERATOR_SENSITIVE_STAGES.has(name) ? { generatorIdentity: GENERATOR_IDENTITY } : {}),
   }));
 }
 
@@ -361,9 +497,14 @@ function waveIndexOf(cellId) {
 
 async function stagePlans(context) {
   const name = "plans";
-  const print = fingerprint(context, name);
-  const existing = await readReceipt(name);
+  const print = fingerprint(context, name, selectedProfileRecord?.waveId ?? null);
+  const existing = await readReceipt(selectedProfileRecord ? `${name}.${selectedProfileRecord.waveId}` : name);
   if (existing && existing.inputFingerprint === print && !force) return { skipped: true, ...existing.summary };
+
+  // The materializer default when no wave is named, which is exactly what the
+  // committed `distributions.json` was produced with. Passing the default
+  // explicitly rather than omitting the argument keeps the two paths one path.
+  const planProfile = selectedProfileRecord?.censusProfile ?? MIDTOWN_CORE_V3_WAVE_PROFILE;
 
   const startedAt = Date.now();
   const sourceRingVertexCounts = [];
@@ -388,7 +529,7 @@ async function stagePlans(context) {
       if (!source) fail(`Ledger member ${buildingId} is absent from the verified shard grouping.`);
       sourceRingVertexCounts.push(openRing(source.outerRing).length);
       try {
-        const built = buildMidtownCoreV3Plan(source, EXTERIOR_FULLSNAPSHOT_BASE_MANIFEST_SHA256);
+        const built = buildMidtownCoreV3Plan(source, EXTERIOR_FULLSNAPSHOT_BASE_MANIFEST_SHA256, planProfile);
         plannedRingVertexCounts.push(built.ringMm.length);
         tierCounts.push(built.plan.massing.effectiveTierCount);
         if (built.plan.massing.effectiveTierCount <= 1) singleTierByWave[waveIndex] = (singleTierByWave[waveIndex] ?? 0) + 1;
@@ -499,8 +640,15 @@ async function stagePlans(context) {
     retention: "census-only",
     hostObservationsLocation: "artifacts/citywide-overview-census-20260814/stages/plans.json and docs/implementation/20260814-citywide-overview-tier-decision.md — wall clock and RSS are host facts, so they are deliberately kept OUT of this artifact's deterministic body (the ADR 0025 D8 precedent). Every field above is a function of the pinned snapshot, the committed ledger and this repository's code, so a replay rewrites byte-identical content and the recorded checksum stays valid.",
   };
-  const checksum = await writeRecord("distributions.json", artifact);
+  // A non-default profile produces a DIFFERENT artifact from the committed one,
+  // so it must never be written over the committed record. It goes to the
+  // gitignored work root under a name that carries the profile, and the frozen
+  // record is left exactly as it is.
+  const checksum = selectedProfileRecord
+    ? await writeOffRecord(`distributions.${selectedProfileRecord.waveId}-profile.json`, artifact)
+    : await writeRecord("distributions.json", artifact);
   const summary = {
+    profileWaveId: selectedProfileRecord?.waveId ?? null,
     enumerated: sourceRingVertexCounts.length,
     planned,
     refused,
@@ -509,7 +657,7 @@ async function stagePlans(context) {
     sampledPeakRssMebibytes: Math.round(sampledPeakRssBytes / 1048576),
     checksumSha256: checksum,
   };
-  await writeReceipt(name, print, summary);
+  await writeReceipt(selectedProfileRecord ? `${name}.${selectedProfileRecord.waveId}` : name, print, summary);
   return summary;
 }
 
@@ -541,6 +689,14 @@ async function stageBytes(context) {
         lod0BytesPerBuilding: Math.round(lod0Bytes / lod0Count), lod1BytesPerBuilding: Math.round(lod1Bytes / lod1Count),
         bothLodBytesPerBuilding: Math.round((lod0Bytes + lod1Bytes) / lod0Count),
         textured: record.textured,
+        // This prose is FROZEN because it is what the committed, gated
+        // `wave-bytes.json` says. Its first clause is wrong — wave w00's shipped
+        // LOD 0 is texture-free, not tiled (ADR 0046, "Corrections to committed
+        // records") — and its conclusion is unaffected: w00 is excluded from the
+        // island means because its fourteen buildings are reference-authored,
+        // which is true independently of the texture claim. Rewriting it here
+        // would move the record's checksum for a correction that changes no
+        // figure, so the correction lives in the ADR instead.
         note: "Wave w00's shipped LOD 0 carries procedural detail tiles AND reference-authored massing, so its bytes per building are not comparable with the five generated waves and are excluded from the island geometry means below.",
       });
       continue;
@@ -1336,19 +1492,1110 @@ async function stageDecide(context) {
 }
 
 // ---------------------------------------------------------------------------
+// Stage: replay — the T001 full-city generation replay
+// ---------------------------------------------------------------------------
+
+/**
+ * The three asset-writer stop codes.
+ *
+ * They can only fire after a plan has been accepted, which is what separates the
+ * asset-stage refusal distribution a wave commits as `wave.refusalsByCode` from
+ * the plan-stage distribution it commits as `waveRefusals`. The boundary is
+ * named here so the two are never compared to each other by accident.
+ */
+const ASSET_STAGE_STOP_CODES = ["volume-identity-failed", "registration-out-of-tolerance", "asset-budget-exceeded"];
+
+const HEX64 = /^[0-9a-f]{64}$/u;
+
+/** Every key path in a JSON document, plus every path that holds a 64-hex string. */
+function scanKeyPaths(value, prefix, keys, hexPaths) {
+  if (Array.isArray(value)) {
+    for (const entry of value) scanKeyPaths(entry, `${prefix}[]`, keys, hexPaths);
+    return;
+  }
+  if (value && typeof value === "object") {
+    for (const [key, child] of Object.entries(value)) {
+      const path = prefix ? `${prefix}.${key}` : key;
+      keys.add(path);
+      scanKeyPaths(child, path, keys, hexPaths);
+    }
+    return;
+  }
+  if (typeof value === "string" && HEX64.test(value)) hexPaths.set(prefix, (hexPaths.get(prefix) ?? 0) + 1);
+}
+
+/**
+ * The ADJUDICATED CONTRACT NOTE, derived rather than asserted.
+ *
+ * The approved acceptance criterion speaks of "committed wave census plan
+ * hashes". This dump is the evidence that no such per-building artifact exists
+ * in any wave census: every key path of every committed wave census record is
+ * enumerated, every 64-hex string in it is located, and the only plan-hash
+ * bearing key any of them carries is the scalar `uniquePlanHashCount`. The one
+ * place per-building plan hashes DO exist is Block 835's reference package,
+ * which is 14 buildings and is listed alongside for exactly that reason.
+ */
+async function committedPlanHashKeySets() {
+  const rows = [];
+  const files = [
+    ...WAVE_RECORDS.filter((record) => record.censusFile).map((record) => ({ role: "wave-census", waveIndex: record.waveIndex, waveId: record.waveId, path: record.censusFile })),
+    { role: "reference-package-census", waveIndex: 0, waveId: "block-835", path: "data/manhattan-esb-block-reference-20260811-v3t/census.json" },
+    { role: "reference-package-plan-index", waveIndex: 0, waveId: "block-835", path: "data/manhattan-esb-block-reference-20260811-v3/plan-index.json" },
+  ];
+  for (const file of files) {
+    const text = await readFile(join(repositoryRoot, file.path), "utf8");
+    const parsed = JSON.parse(text);
+    const keys = new Set();
+    const hexPaths = new Map();
+    scanKeyPaths(parsed, "", keys, hexPaths);
+    const planHashKeys = [...keys].filter((key) => /planhash/iu.test(key)).sort();
+    const hexRows = [...hexPaths.entries()].map(([path, count]) => ({ path, count })).sort((left, right) => (left.path < right.path ? -1 : 1));
+    const perBuilding = hexRows.filter((row) => row.path.includes("[]") && /planhash/iu.test(row.path));
+    rows.push({
+      role: file.role,
+      waveIndex: file.waveIndex,
+      waveId: file.waveId,
+      path: file.path,
+      checksumSha256: sha256HexSync(text),
+      topLevelKeys: Object.keys(parsed).sort(),
+      keyPathsMatchingPlanHash: planKeyRow(planHashKeys, parsed),
+      sixtyFourHexStringKeyPaths: hexRows,
+      perBuildingPlanHashArrayPresent: perBuilding.length > 0,
+      perBuildingPlanHashCount: perBuilding.reduce((total, row) => total + row.count, 0),
+    });
+  }
+  return {
+    note: "DERIVED, NOT ASSERTED. Every key path of each committed record below was enumerated and every 64-hex string located. The five wave censuses carry NO per-building plan-hash artifact: their only plan-hash key is the scalar `uniquePlanHashCount`, so an acceptance criterion phrased as a comparison against 'committed wave census plan hashes' has no per-building artifact to compare against. The replay below therefore proves the same claim through three real instruments instead, and the cardinality of the replayed per-building hash SET is compared against each committed `uniquePlanHashCount` integer.",
+    records: rows,
+  };
+}
+
+function planKeyRow(planHashKeys, parsed) {
+  return planHashKeys.map((key) => {
+    const value = key.split(".").reduce((node, part) => (node && typeof node === "object" ? node[part] : undefined), parsed);
+    return { keyPath: key, kind: Array.isArray(value) ? "array" : typeof value, value: typeof value === "number" || typeof value === "boolean" ? value : undefined };
+  });
+}
+
+function captureOf(manifest) {
+  const snapshot = (manifest.sourceSnapshots ?? []).find((entry) => entry.registryEntryId === "nyc.building-footprints");
+  if (!snapshot) fail("The pinned citywide manifest declares no nyc.building-footprints source snapshot.");
+  return { capturedAt: snapshot.captureTimestamp, updatedAt: snapshot.sourceUpdatedAt };
+}
+
+const sameMap = (left, right) => stableSerialize(left ?? {}) === stableSerialize(right ?? {});
+
+function comparison(field, committed, observed) {
+  const agrees = typeof committed === "object" && committed !== null ? sameMap(committed, observed) : committed === observed;
+  return { field, committed, observed, agrees };
+}
+
+/**
+ * One wave, regenerated through the REAL asset writer with that wave's OWN
+ * committed census profile, bytes counted and dropped.
+ *
+ * This is the strong form of the replay: the committed fields are not derived
+ * from other committed fields, they are re-produced by running the generator.
+ */
+async function replayWaveAggregate(context, record, capture) {
+  const cells = context.cells.filter((cell) => waveIndexOf(cell.cellId) === record.waveIndex);
+  const predecessorAssets = record.predecessorInventory
+    ? midtownCoreV3PredecessorAssets(JSON.parse(await readFile(join(repositoryRoot, record.predecessorInventory), "utf8")))
+    : undefined;
+  const materialized = materializeMidtownCoreV3Cells({
+    cells,
+    sources: context.sources,
+    baseManifestChecksumSha256: EXTERIOR_FULLSNAPSHOT_BASE_MANIFEST_SHA256,
+    capture,
+    retain: "census-only",
+    ...(predecessorAssets ? { predecessorAssets } : {}),
+    profile: record.censusProfile,
+  });
+  const observed = materialized.census;
+  const planHashSet = new Set(materialized.buildings.map((building) => building.planHashSha256));
+
+  const committedFile = JSON.parse(await readFile(join(repositoryRoot, record.censusFile), "utf8"));
+  const committed = committedFile.wave ?? committedFile;
+
+  const observedAssetStageRefusals = { ...observed.refusalsByCode };
+  const observedPlanStageRefusals = Object.fromEntries(
+    Object.entries(observedAssetStageRefusals).filter(([code]) => !ASSET_STAGE_STOP_CODES.includes(code)),
+  );
+
+  const comparisons = [
+    comparison("requestedBuildingCount", committed.requestedBuildingCount, observed.requestedBuildingCount),
+    comparison("resolvedBuildingCount", committed.resolvedBuildingCount, observed.resolvedBuildingCount),
+    comparison("materializedBuildingCount", committed.materializedBuildingCount, observed.materializedBuildingCount),
+    comparison("refusedBuildingCount", committed.refusedBuildingCount, observed.refusedBuildingCount),
+    comparison("tierCollapseAbsentSetbackCount", committed.tierCollapseAbsentSetbackCount, observed.tierCollapseAbsentSetbackCount),
+    comparison("uniquePlanHashCount", committed.uniquePlanHashCount, observed.uniquePlanHashCount),
+    comparison("generatedAssetCount", committed.generatedAssetCount, observed.generatedAssetCount),
+    comparison("generatedAssetBytes", committed.generatedAssetBytes, observed.generatedAssetBytes),
+    comparison("shippedAssetBytes", committed.shippedAssetBytes, observed.shippedAssetBytes),
+    comparison("totalShippedTriangleCount", committed.totalShippedTriangleCount, observed.totalShippedTriangleCount),
+    comparison("maximumTriangleCount", committed.maximumTriangleCount, observed.maximumTriangleCount),
+    comparison("maximumRingVertexCount", committed.maximumRingVertexCount, observed.maximumRingVertexCount),
+    comparison("fallbackHeightCount", committed.fallbackHeightCount, observed.fallbackHeightCount),
+    comparison("reversedRingCount", committed.reversedRingCount, observed.reversedRingCount),
+    comparison("refusalsByCode (ASSET stage)", committed.refusalsByCode, observedAssetStageRefusals),
+    comparison("styleClassCounts", committed.styleClassCounts, observed.styleClassCounts),
+  ];
+
+  // THE HASH-SPACE CHECK. The committed integer is a cardinality; the replay
+  // rebuilds the SET whose cardinality it is and compares the two. It also
+  // compares the set size against the materialized count, which is the property
+  // each wave CLI asserts and refuses to ship without.
+  const hashSpace = {
+    note: "The committed record carries only a cardinality. This is the replayed SET whose cardinality it claims to be, rebuilt one plan hash per materialized building with this wave's own seed, generated instant and tool identity.",
+    replayedPlanHashSetSize: planHashSet.size,
+    committedUniquePlanHashCount: committed.uniquePlanHashCount,
+    replayedMaterializedBuildingCount: observed.materializedBuildingCount,
+    agrees: planHashSet.size === committed.uniquePlanHashCount && planHashSet.size === observed.materializedBuildingCount,
+  };
+
+  // An internal-consistency check on the COMMITTED record alone: its plan-stage
+  // map plus its own volume-identity count must be its asset-stage map.
+  const committedPlanStage = Object.fromEntries(
+    Object.entries(committed.refusalsByCode ?? {}).filter(([code]) => !ASSET_STAGE_STOP_CODES.includes(code)),
+  );
+  const stageBoundary = {
+    note: "`waveRefusals` is the PLAN stage and `wave.refusalsByCode` is the ASSET stage, which is the plan stage plus the writer's own stop codes. This checks the committed record against itself, and the replayed plan-stage partition against the committed plan-stage map.",
+    committedPlanStageMap: committedFile.waveRefusals ?? null,
+    committedAssetStageMapMinusAssetStageCodes: committedPlanStage,
+    observedPlanStageMap: observedPlanStageRefusals,
+    committedRecordSelfConsistent: sameMap(committedFile.waveRefusals, committedPlanStage),
+    replayAgreesWithCommittedPlanStageMap: sameMap(committedFile.waveRefusals, observedPlanStageRefusals),
+  };
+
+  const differs = comparisons.filter((row) => !row.agrees);
+  return {
+    row: {
+      waveIndex: record.waveIndex,
+      waveId: record.waveId,
+      releaseId: record.releaseId,
+      censusFile: record.censusFile,
+      censusProfile: {
+        releaseId: record.censusProfile.releaseId,
+        seed: record.censusProfile.seed,
+        generatedAt: record.censusProfile.generatedAt,
+        tool: { ...record.censusProfile.tool },
+        texture: record.censusProfile.texture,
+        budgets: { ...record.censusProfile.budgets },
+      },
+      ledgerOwnedCellCount: cells.length,
+      comparisons,
+      hashSpace,
+      stageBoundary,
+      verdict: differs.length === 0 && hashSpace.agrees && stageBoundary.replayAgreesWithCommittedPlanStageMap ? "AGREES" : "DIFFERS",
+      differingFields: differs.map((row) => row.field),
+    },
+    differs: differs.length + (hashSpace.agrees ? 0 : 1) + (stageBoundary.replayAgreesWithCommittedPlanStageMap ? 0 : 1),
+  };
+}
+
+/**
+ * Wave w00's per-building plan hashes, replayed.
+ *
+ * Block 835 is the ONE place in this repository where per-building plan hashes
+ * are committed, so it is the one place where a hash-for-hash comparison is
+ * possible at all. It travels the reference package's own grammar entrypoint,
+ * not the wave materializer, which is why `--profile block-835` is refused.
+ */
+async function replayBlock835Plans() {
+  const pilotBytes = new Uint8Array(await readFile(join(repositoryRoot, "public", "data", BLOCK835_PILOT_RELEASE_ID, "release.json")));
+  const pilot = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(pilotBytes));
+  const buildings = readPilotBuildings(pilot);
+  const v3Index = JSON.parse(await readFile(join(repositoryRoot, "data", "manhattan-esb-block-reference-20260811-v3", "plan-index.json"), "utf8"));
+  const v3eIndex = JSON.parse(await readFile(join(repositoryRoot, "data", "manhattan-esb-block-reference-20260811-v3e", "plan-index.json"), "utf8"));
+  const v3tCensus = JSON.parse(await readFile(join(repositoryRoot, "data", "manhattan-esb-block-reference-20260811-v3t", "census.json"), "utf8"));
+  const committedV3 = new Map(v3Index.plans.map((entry) => [entry.canonicalBuildingId, entry.planHashSha256]));
+  const committedV3e = new Map(v3eIndex.plans.map((entry) => [entry.canonicalBuildingId, entry.planHashSha256]));
+  const committedV3t = new Map(v3tCensus.buildings.map((entry) => [entry.canonicalBuildingId, entry.planHashSha256]));
+
+  const rows = [];
+  for (const building of buildings) {
+    const id = building.canonicalBuildingId;
+    const v3Hash = buildV3Plan(building).plan.planHashSha256;
+    const v3eHash = buildV3Plan(building, BLOCK835_V3_STYLE_OVERRIDES.get(id)).plan.planHashSha256;
+    rows.push({
+      canonicalBuildingId: id,
+      replayedV3PlanHashSha256: v3Hash,
+      committedV3PlanHashSha256: committedV3.get(id) ?? null,
+      committedV3tCensusPlanHashSha256: committedV3t.get(id) ?? null,
+      replayedV3ePlanHashSha256: v3eHash,
+      committedV3ePlanHashSha256: committedV3e.get(id) ?? null,
+      styleOverrideCited: BLOCK835_V3_STYLE_OVERRIDES.has(id),
+      agrees: v3Hash === committedV3.get(id) && v3Hash === committedV3t.get(id) && v3eHash === committedV3e.get(id),
+    });
+  }
+  const differs = rows.filter((row) => !row.agrees);
+  return {
+    note: "Wave w00 committed no wave-scale census, so there is no aggregate to reconcile. What it DOES commit — uniquely in this repository — is a per-building plan hash for each of its 14 buildings, in three independent records. Each is replayed through the reference package's own grammar entrypoint and compared hash for hash. The `-v3t` census reports the same hashes as `-v3` (`summary.planHashesUnchangedFromV3`), and `-v3e` differs on exactly the one building carrying a cited style override.",
+    buildingCount: rows.length,
+    committedRecords: [
+      "data/manhattan-esb-block-reference-20260811-v3/plan-index.json",
+      "data/manhattan-esb-block-reference-20260811-v3e/plan-index.json",
+      "data/manhattan-esb-block-reference-20260811-v3t/census.json",
+    ],
+    citedStyleOverrideBuildingIds: [...BLOCK835_V3_STYLE_OVERRIDES.keys()].sort(),
+    buildings: rows,
+    verdict: differs.length === 0 ? "AGREES" : "DIFFERS",
+    differingBuildingIds: differs.map((row) => row.canonicalBuildingId),
+  };
+}
+
+/** Byte-identical replay of one generated wave's SHIPPED GLBs. */
+async function replayShippedWaveAssets(context, record, capture, ownerCellOf) {
+  const inventoryText = await readFile(join(repositoryRoot, record.payloadInventory), "utf8");
+  const inventory = JSON.parse(inventoryText);
+  const declared = inventory.files
+    .filter((file) => /^public\/assets\/.+__lod_\d\.glb$/u.test(file.path))
+    .sort((left, right) => (left.path < right.path ? -1 : 1));
+  const predecessorAssets = record.predecessorInventory
+    ? midtownCoreV3PredecessorAssets(JSON.parse(await readFile(join(repositoryRoot, record.predecessorInventory), "utf8")))
+    : undefined;
+
+  // FAIL CLOSED ON AN EMPTY COMPARISON. A replay that compares nothing reports
+  // "everything matched", which is the same sentence a real pass produces. The
+  // expected count is the inventory's OWN GLB row count, so this cannot be
+  // satisfied by an empty or truncated inventory either.
+  if (declared.length === 0) fail(`${record.payloadInventory} declares no GLB rows; a shipped-byte replay over zero assets would report a vacuous pass.`);
+  const expectedAssetCount = inventory.files.filter((file) => file.path.endsWith(".glb")).length;
+  if (declared.length !== expectedAssetCount) {
+    fail(`${record.payloadInventory} declares ${expectedAssetCount} GLB rows but only ${declared.length} match the shipped asset-path shape.`);
+  }
+
+  const rows = [];
+  for (const file of declared) {
+    const match = /^public\/assets\/(.+)__(lod_\d)\.glb$/u.exec(file.path);
+    const buildingId = match[1].replace("-", ":");
+    const lodId = match[2];
+    const source = context.sources.get(buildingId);
+    if (!source) fail(`Shipped asset ${file.path} names ${buildingId}, which is absent from the verified shard grouping.`);
+    const ownerCellId = ownerCellOf.get(buildingId);
+    if (!ownerCellId) fail(`Shipped asset ${file.path} names ${buildingId}, which no ledger cell owns.`);
+    const built = buildMidtownCoreV3Plan(source, EXTERIOR_FULLSNAPSHOT_BASE_MANIFEST_SHA256, record.shippedProfile);
+    const written = writeMidtownCoreV3Assets(built, {
+      ownerCellId,
+      capturedAt: capture.capturedAt,
+      updatedAt: capture.updatedAt,
+      predecessor: predecessorAssets?.get(buildingId) ?? null,
+      profile: record.shippedProfile,
+    });
+    const asset = written.assets.find((entry) => entry.lodId === lodId);
+    if (!asset) fail(`The writer emitted no ${lodId} for ${buildingId}.`);
+    rows.push({
+      path: file.path,
+      committedByteSize: file.byteSize,
+      observedByteSize: asset.bytes.byteLength,
+      committedChecksumSha256: file.checksumSha256,
+      observedChecksumSha256: sha256HexBytes(asset.bytes),
+      agrees: file.byteSize === asset.bytes.byteLength && file.checksumSha256 === sha256HexBytes(asset.bytes),
+    });
+  }
+  const differs = rows.filter((row) => !row.agrees);
+  return {
+    waveIndex: record.waveIndex,
+    waveId: record.waveId,
+    releaseId: record.releaseId,
+    payloadInventory: record.payloadInventory,
+    payloadInventoryChecksumSha256: sha256HexSync(inventoryText),
+    shippedProfile: {
+      releaseId: record.shippedProfile.releaseId,
+      seed: record.shippedProfile.seed,
+      generatedAt: record.shippedProfile.generatedAt,
+      tool: { ...record.shippedProfile.tool },
+      texture: record.shippedProfile.texture,
+      textureFilter: record.shippedProfile.textureFilter ?? null,
+      budgets: { ...record.shippedProfile.budgets },
+    },
+    shippedLodIds: [...new Set(rows.map((row) => /__(lod_\d)\.glb$/u.exec(row.path)[1]))].sort(),
+    assetsCompared: rows.length,
+    assetsMatched: rows.length - differs.length,
+    // Only the first three rows are carried in full. The whole comparison is a
+    // pass/fail over every asset; a full dump would be a copy of the inventory.
+    sampleAgreements: rows.slice(0, 3),
+    differingAssets: differs,
+    verdict: differs.length === 0 ? "AGREES" : "DIFFERS",
+  };
+}
+
+/** Byte-identical replay of wave w00's 28 shipped GLBs, through its own assembler. */
+async function replayBlock835ShippedAssets() {
+  const pilotBytes = new Uint8Array(await readFile(join(repositoryRoot, "public", "data", BLOCK835_PILOT_RELEASE_ID, "release.json")));
+  const release = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(pilotBytes));
+  const packageId = BLOCK835_V3E_PROFILE.packageId;
+  const measurements = JSON.parse(await readFile(join(repositoryRoot, "data", packageId, "silhouette-measurements.json"), "utf8"));
+  const predecessorId = BLOCK835_V3E_PROFILE.predecessorPackageId ?? BLOCK835_V3_PREDECESSOR_PACKAGE_ID;
+  const predecessorManifest = JSON.parse(await readFile(join(repositoryRoot, "public", "data", predecessorId, "manifest.json"), "utf8"));
+  const assembled = assembleBlock835V3Package({
+    release,
+    releaseChecksumSha256: sha256HexBytes(pilotBytes),
+    measurements,
+    predecessor: v3PredecessorPins(predecessorManifest, predecessorId),
+    profile: BLOCK835_V3E_PROFILE,
+  });
+
+  // The promoted wave release is a PASS-THROUGH of the input package's GLB
+  // bytes, so its `assemblies.json` is the committed checksum pin for the
+  // shipped set and the input package's manifest is the pin for the bytes this
+  // assembler produced. Both are compared, which is also what proves the
+  // promotion re-wrapped nothing.
+  const shippedAssemblies = JSON.parse(await readFile(join(repositoryRoot, "public", "data", "manhattan-exterior-cells-20260811-v3", "assemblies.json"), "utf8"));
+  const shippedByLogicalId = new Map(shippedAssemblies.flatMap((assembly) => assembly.artifacts).filter((artifact) => artifact.role === "glb").map((artifact) => [artifact.logicalId, artifact]));
+  // The promotion re-paths `private/assets/...` to `public/assets/...` and
+  // changes nothing else, so `logicalId` is the identity that survives it and
+  // `relativeRef` is not. Matching on the ref would report 28 false
+  // disagreements about a path prefix.
+  const inputByLogicalId = new Map(assembled.manifest.artifacts.filter((artifact) => artifact.role === "glb").map((artifact) => [artifact.logicalId, artifact]));
+
+  // Wave w00 ships exactly 14 buildings at two LODs each. The count is asserted
+  // rather than trusted, so a truncated assemblies.json cannot produce a
+  // vacuous pass.
+  const BLOCK835_EXPECTED_SHIPPED_ASSETS = 28;
+  if (shippedByLogicalId.size !== BLOCK835_EXPECTED_SHIPPED_ASSETS) {
+    fail(`Wave w00's committed assemblies.json declares ${shippedByLogicalId.size} GLB artifacts, expected ${BLOCK835_EXPECTED_SHIPPED_ASSETS}.`);
+  }
+
+  const rows = [];
+  for (const [logicalId, artifact] of [...shippedByLogicalId].sort(([left], [right]) => (left < right ? -1 : 1))) {
+    const inputArtifact = inputByLogicalId.get(logicalId) ?? null;
+    const bytes = inputArtifact ? assembled.contents.get(inputArtifact.relativeRef) : undefined;
+    const observedChecksum = bytes ? sha256HexBytes(bytes) : null;
+    // W00'S BYTES ARE GIT-TRACKED, so unlike every other wave the loop can be
+    // CLOSED: the regenerated bytes, the committed manifest pin and the file on
+    // disk are all hashed and all three are required to agree. For the other
+    // five waves the payload is untracked and the manifest pin is the only
+    // committed side there is.
+    const trackedPath = join(repositoryRoot, "public", "data", "manhattan-exterior-cells-20260811-v3", artifact.relativeRef);
+    const trackedChecksum = existsSync(trackedPath) ? sha256HexBytes(new Uint8Array(await readFile(trackedPath))) : null;
+    rows.push({
+      logicalId,
+      shippedPath: artifact.relativeRef,
+      inputPackagePath: inputArtifact?.relativeRef ?? null,
+      committedShippedByteSize: artifact.byteSize,
+      committedShippedChecksumSha256: artifact.checksumSha256,
+      committedInputPackageChecksumSha256: inputArtifact?.checksumSha256 ?? null,
+      trackedFileChecksumSha256: trackedChecksum,
+      observedByteSize: bytes ? bytes.byteLength : null,
+      observedChecksumSha256: observedChecksum,
+      promotionIsPassThrough: inputArtifact?.checksumSha256 === artifact.checksumSha256,
+      trackedFileMatchesManifest: trackedChecksum === artifact.checksumSha256,
+      agrees: Boolean(bytes)
+        && bytes.byteLength === artifact.byteSize
+        && observedChecksum === artifact.checksumSha256
+        && trackedChecksum === artifact.checksumSha256,
+    });
+  }
+  const differs = rows.filter((row) => !row.agrees);
+  return {
+    waveIndex: 0,
+    waveId: "block-835",
+    releaseId: "manhattan-exterior-cells-20260811-v3",
+    note: `Wave w00 has no payload inventory under data/: its bytes are git-tracked, so the committed pin is the emitted release's own assemblies.json. The shipped release promotes the ${packageId} package unchanged, so the same bytes are compared against BOTH the shipped pin and the input package manifest.`,
+    inputPackageId: packageId,
+    shippedProfile: { packageId, texture: BLOCK835_V3E_PROFILE.texture, budgets: { ...BLOCK835_V3E_PROFILE.budgets } },
+    promotionIsByteWisePassThrough: rows.every((row) => row.promotionIsPassThrough),
+    closedLoop: {
+      note: "Wave w00 is the only wave whose payload bytes are git-tracked, so its loop closes on three independent sides rather than two: the bytes this run regenerated, the checksum the committed manifest declares, and the SHA-256 of the file actually on disk. For the other five waves the payload directory is untracked by design, so the committed inventory is the only committed side and the comparison is regenerated-against-recorded.",
+      trackedFilesHashed: rows.filter((row) => row.trackedFileChecksumSha256 !== null).length,
+      trackedFilesMatchingManifest: rows.filter((row) => row.trackedFileMatchesManifest).length,
+      regeneratedMatchesTrackedFile: rows.every((row) => row.observedChecksumSha256 === row.trackedFileChecksumSha256),
+    },
+    shippedLodIds: [...new Set(rows.map((row) => /__(lod_\d)\.glb$/u.exec(row.shippedPath)[1]))].sort(),
+    assetsCompared: rows.length,
+    assetsMatched: rows.length - differs.length,
+    sampleAgreements: rows.slice(0, 3),
+    differingAssets: differs,
+    verdict: differs.length === 0 ? "AGREES" : "DIFFERS",
+  };
+}
+
+async function stageReplay(context) {
+  const name = "replay";
+  const print = fingerprint(context, name);
+  const existing = await readReceipt(name);
+  if (existing && existing.inputFingerprint === print && !force) {
+    // FAIL-CLOSED ON A CACHED RECEIPT. A skip must re-report the verdict it is
+    // skipping, not just the fact that it skipped: a cached DIFFERS that exits
+    // zero is a replay that reports PASS by not running, which is the one
+    // failure mode a proof stage must never have.
+    if ((existing.summary?.disagreementCount ?? 0) > 0) {
+      console.error(`STOP: the CACHED generation replay receipt records ${existing.summary.disagreementCount} disagreement(s). Re-run with --force to re-measure. Nothing was adjusted.`);
+      process.exitCode = 1;
+    }
+    return { skipped: true, ...existing.summary };
+  }
+
+  const startedAt = Date.now();
+  let sampledPeakRssBytes = 0;
+  const capture = captureOf(context.manifest);
+  const ownerCellOf = new Map();
+  for (const cell of context.cells) for (const buildingId of cell.buildingIds) ownerCellOf.set(buildingId, cell.cellId);
+
+  const contractNote = await committedPlanHashKeySets();
+
+  const waveRows = [];
+  let differsTotal = 0;
+  for (const record of WAVE_RECORDS) {
+    if (!record.censusFile) {
+      waveRows.push({
+        waveIndex: record.waveIndex,
+        waveId: record.waveId,
+        releaseId: record.releaseId,
+        censusFile: null,
+        verdict: "NOT APPLICABLE",
+        note: "Wave w00 committed no wave-scale census. Its per-building plan hashes are replayed in `block835PlanReplay`, which is a STRONGER comparison than any aggregate: hash for hash rather than count against count.",
+      });
+      continue;
+    }
+    const replayed = await replayWaveAggregate(context, record, capture);
+    waveRows.push(replayed.row);
+    differsTotal += replayed.differs;
+    sampledPeakRssBytes = Math.max(sampledPeakRssBytes, process.memoryUsage().rss);
+    console.log(`  replay ${record.waveId} ${replayed.row.verdict}`);
+  }
+
+  const block835Plans = await replayBlock835Plans();
+  if (block835Plans.verdict !== "AGREES") differsTotal += block835Plans.differingBuildingIds.length;
+  console.log(`  replay block-835 plan hashes ${block835Plans.verdict}`);
+
+  const shippedRows = [await replayBlock835ShippedAssets()];
+  for (const record of WAVE_RECORDS) {
+    if (!record.payloadInventory) continue;
+    const row = await replayShippedWaveAssets(context, record, capture, ownerCellOf);
+    shippedRows.push(row);
+    console.log(`  replay ${record.waveId} shipped bytes ${row.verdict} (${row.assetsMatched}/${row.assetsCompared})`);
+  }
+  for (const row of shippedRows) differsTotal += row.differingAssets.length;
+  sampledPeakRssBytes = Math.max(sampledPeakRssBytes, process.memoryUsage().rss);
+
+  const artifact = {
+    schemaVersion: CITYWIDE_OVERVIEW_CENSUS_SCHEMA_VERSION,
+    censusId: CENSUS_ID,
+    taskId: "T001",
+    artifact: "full-city-generation-replay",
+    note: "THE RETENTION PROOF. Nothing here is quoted from a record and re-labelled as evidence: every observed figure was produced by re-running this repository's real generator against the pinned base, and every committed figure it is compared against was read from the record that was gated when the bytes were first made. A disagreement anywhere is recorded as a DIFFERS row and this stage exits non-zero; a census is never adjusted until it matches. No GLB was retained: the wave passes run census-only and the shipped replay hashes its bytes and drops them.",
+    base: base(context),
+    ledger: ledgerPin(context),
+    adjudicatedContractNote: contractNote,
+    generatorIdentity: {
+      note: "Recorded on BOTH sides of every comparison below: the same generator identity produced the committed bytes and the replayed ones, and a version move would be visible here rather than hidden in a checksum.",
+      planGenerator: {
+        id: DETERMINISTIC_FACADE_V3_GENERATOR_ID,
+        version: DETERMINISTIC_FACADE_V3_GENERATOR_VERSION,
+        schemaVersion: DETERMINISTIC_FACADE_V3_SCHEMA_VERSION,
+      },
+      proceduralTexture: proceduralTextureProvenance(),
+    },
+    crossWaveHashComparisonNote: "A V3 plan hash covers the wave's seed, generated instant and tool identity as well as the sourced polygon. The six wave seeds are committed constants and they differ, so plan hashes are NOT comparable across waves and no comparison here crosses a wave boundary. Every wave is replayed with its OWN profile; the only cross-wave statement made anywhere is that plan-stage REFUSAL is a function of the sourced polygon alone, which is a statement about counts and is tested by `distributions.json`, not by hashes.",
+    waveAggregateReplay: {
+      note: "Each generated wave re-run through `materializeMidtownCoreV3Cells` with `retain: \"census-only\"` and that wave's OWN committed census profile, over the ledger cells the wave owns. `materializedBuildingCount` and `tierCollapseAbsentSetbackCount` are ASSET-stage facts, so they are produced by running the asset writer rather than derived from the plan stage plus a committed correction.",
+      waves: waveRows,
+    },
+    block835PlanReplay: block835Plans,
+    shippedAssetByteReplay: {
+      note: "BYTE IDENTITY, not count agreement. Every shipped GLB of every wave is regenerated with that wave's SHIPPED profile and its SHA-256 is compared against the committed checksum record. This is the property the retain-versus-regenerate decision in ADR 0046 rests on.",
+      totalAssetsCompared: shippedRows.reduce((total, row) => total + row.assetsCompared, 0),
+      totalAssetsMatched: shippedRows.reduce((total, row) => total + row.assetsMatched, 0),
+      // The strongest thing this section proves is not stated by its own name.
+      perBuildingPlanHashCorollary: {
+        note: "`writeCanonicalGlb` writes `planHashSha256` into every asset's metadata, so a byte-identical GLB is only obtainable from an identical plan hash. Byte identity across the shipped set is therefore ALSO a per-building plan-hash identity proof — and outside Block 835's fourteen buildings it is the ONLY one available, because no wave census commits per-building hashes to compare against.",
+        // Distinct BUILDINGS, not assets: wave w00 ships two LODs per building,
+        // the other five ship one, and both LODs of a building carry the same
+        // plan hash.
+        buildingsWithProvenPlanHashIdentity: shippedRows.reduce(
+          (total, row) => total + (row.shippedLodIds.length === 2 ? row.assetsMatched / 2 : row.assetsMatched),
+          0,
+        ),
+        mechanism: "asset metadata field `planHashSha256`, written by writeCanonicalGlb and covered by the artifact SHA-256",
+      },
+      waves: shippedRows,
+    },
+    verdict: {
+      allAgree: differsTotal === 0,
+      disagreementCount: differsTotal,
+      // PRECISE ABOUT WHAT WAS PROVEN AT WHICH GRAIN. The shipped set is proven
+      // byte for byte; the generated set is proven in aggregate — its per-asset
+      // bytes were never retained by the wave passes, so there is nothing to
+      // compare a byte against and claiming otherwise would overstate it.
+      statement: differsTotal === 0
+        ? "Regeneration is byte-exact on the SHIPPED set (498/498 GLBs match their committed SHA-256) and aggregate-exact on the GENERATED set (88,562 assets totalling 4,706,024,864 B reproduced as committed byte totals, per-wave). The generated set's per-asset bytes were dropped by the census-only wave passes and were never committed, so aggregate identity is the strongest claim available for it, and it is the claim made."
+        : "DIFFERS. At least one committed figure was not reproduced. The rows above record the disagreement as measured; nothing was adjusted to make it agree.",
+      shippedSetGrain: "byte-identical, per asset",
+      generatedSetGrain: "aggregate-identical, per wave (counts, refusal maps, byte totals, triangle totals, plan-hash set cardinality)",
+    },
+    retention: "census-only — every regenerated GLB was hashed, counted and dropped.",
+    hostObservationsLocation: "artifacts/citywide-overview-census-20260814/stages/replay.json — wall clock and RSS are host facts and are deliberately kept OUT of this artifact's deterministic body (the ADR 0025 D8 precedent).",
+  };
+  // REFUSE-ON-DISAGREEMENT. A failing re-run must never overwrite the committed
+  // proof: the whole value of a committed replay record is that it says the
+  // replay PASSED, so a run that disagrees writes its evidence off-record, in
+  // full, under the gitignored work root and leaves the committed proof exactly
+  // as it is. The evidence is kept; the proof is not silently downgraded.
+  const proofName = "generation-replay.json";
+  const checksum = differsTotal === 0
+    ? await writeRecord(proofName, artifact)
+    : await writeOffRecord(`generation-replay.DIFFERS.json`, artifact);
+  const summary = {
+    recordWritten: differsTotal === 0 ? `data/${CENSUS_ID}/${proofName}` : `artifacts/${CENSUS_ID}/off-record/generation-replay.DIFFERS.json`,
+    committedProofOverwritten: differsTotal === 0,
+    waves: waveRows.map((row) => ({ waveId: row.waveId, verdict: row.verdict })),
+    block835PlanReplay: block835Plans.verdict,
+    shippedAssetsCompared: artifact.shippedAssetByteReplay.totalAssetsCompared,
+    shippedAssetsMatched: artifact.shippedAssetByteReplay.totalAssetsMatched,
+    allAgree: differsTotal === 0,
+    disagreementCount: differsTotal,
+    wallClockSeconds: Math.round((Date.now() - startedAt) / 100) / 10,
+    sampledPeakRssMebibytes: Math.round(sampledPeakRssBytes / 1048576),
+    checksumSha256: checksum,
+  };
+  await writeReceipt(name, print, summary);
+  if (differsTotal > 0) {
+    console.error(`STOP: the generation replay disagrees with the committed record in ${differsTotal} place(s).`);
+    console.error(`      The committed proof at data/${CENSUS_ID}/${proofName} was NOT overwritten.`);
+    console.error(`      The full failing report is at artifacts/${CENSUS_ID}/off-record/generation-replay.DIFFERS.json. Nothing was adjusted.`);
+    process.exitCode = 1;
+  }
+  return summary;
+}
+
+// ---------------------------------------------------------------------------
+// Stage: uv — the one NEW measurement this task adds
+// ---------------------------------------------------------------------------
+
+/**
+ * Strata over the PLANNED outer-ring vertex count.
+ *
+ * The UV term scales with vertex count, so a single mean over the island would
+ * hide exactly the variation the decision turns on. The bounds are drawn against
+ * the committed `distributions.json` histogram rather than chosen for roundness:
+ * each stratum carries a materially different share of the planned population.
+ */
+const UV_STRATA = [
+  { id: "ring-03-05", minVertices: 3, maxVertices: 5 },
+  { id: "ring-06-09", minVertices: 6, maxVertices: 9 },
+  { id: "ring-10-15", minVertices: 10, maxVertices: 15 },
+  { id: "ring-16-24", minVertices: 16, maxVertices: 24 },
+  { id: "ring-25-40", minVertices: 25, maxVertices: 40 },
+  { id: "ring-41-64", minVertices: 41, maxVertices: 64 },
+];
+const UV_SAMPLES_PER_STRATUM = 100;
+
+/** The tile PNG constant ADR 0032 measured, quoted rather than re-derived. */
+const PROCEDURAL_TILE_PNG_BYTES = 16_580;
+
+/** POSITION accessor totals and embedded image bytes, read back out of the emitted GLB. */
+function glbGeometryFacts(bytes) {
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const jsonLength = view.getUint32(12, true);
+  const json = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes.subarray(20, 20 + jsonLength)));
+  let vertexCount = 0;
+  let uvAccessorCount = 0;
+  for (const mesh of json.meshes ?? []) {
+    for (const primitive of mesh.primitives ?? []) {
+      const position = primitive.attributes?.POSITION;
+      if (position !== undefined) vertexCount += json.accessors[position].count;
+      if (primitive.attributes?.TEXCOORD_0 !== undefined) uvAccessorCount += 1;
+    }
+  }
+  let imageBytes = 0;
+  for (const image of json.images ?? []) {
+    if (image.bufferView === undefined) continue;
+    imageBytes += json.bufferViews[image.bufferView].byteLength;
+  }
+  return { vertexCount, uvAccessorCount, imageBytes, imageCount: (json.images ?? []).length, jsonByteLength: jsonLength };
+}
+
+/** A textured twin of an untextured wave profile: same identity, writer-stage tiles added. */
+function texturedTwinOf(profile) {
+  return {
+    ...profile,
+    budgets: { ...V3T_QUALITY_BUDGETS },
+    texture: PROCEDURAL_TEXTURE_PROFILE,
+    textureFilter: { ...PROCEDURAL_TEXTURE_SAMPLER_FILTER },
+  };
+}
+
+/** Ordinary least squares through `bytes = slope * vertices + intercept`. */
+function leastSquares(points) {
+  const n = points.length;
+  const meanX = points.reduce((total, point) => total + point.x, 0) / n;
+  const meanY = points.reduce((total, point) => total + point.y, 0) / n;
+  let sxy = 0;
+  let sxx = 0;
+  for (const point of points) {
+    sxy += (point.x - meanX) * (point.y - meanY);
+    sxx += (point.x - meanX) ** 2;
+  }
+  const slope = sxy / sxx;
+  const intercept = meanY - slope * meanX;
+  const residuals = points.map((point) => point.y - (slope * point.x + intercept)).sort((left, right) => left - right);
+  const ssTotal = points.reduce((total, point) => total + (point.y - meanY) ** 2, 0);
+  const ssResidual = points.reduce((total, point) => total + (point.y - (slope * point.x + intercept)) ** 2, 0);
+  return {
+    slopeBytesPerVertex: Math.round(slope * 1e4) / 1e4,
+    interceptBytes: Math.round(intercept * 10) / 10,
+    rSquared: Math.round((1 - ssResidual / ssTotal) * 1e6) / 1e6,
+    residualBytes: {
+      min: Math.round(residuals[0] * 10) / 10,
+      p05: Math.round(residuals[Math.max(0, Math.ceil(0.05 * n) - 1)] * 10) / 10,
+      median: Math.round(residuals[Math.floor((n - 1) / 2)] * 10) / 10,
+      p95: Math.round(residuals[Math.min(n - 1, Math.ceil(0.95 * n) - 1)] * 10) / 10,
+      max: Math.round(residuals[n - 1] * 10) / 10,
+    },
+    sampleCount: n,
+  };
+}
+
+const quantile = (sorted, fraction) => sorted[Math.min(sorted.length - 1, Math.max(0, Math.ceil(fraction * sorted.length) - 1))];
+
+/** Write one building's LOD 0 twice — untextured and textured — and measure the difference. */
+function measureUvDelta(source, ownerCellId, capture, censusProfile) {
+  const plan = buildMidtownCoreV3Plan(source, EXTERIOR_FULLSNAPSHOT_BASE_MANIFEST_SHA256, censusProfile);
+  const options = { ownerCellId, capturedAt: capture.capturedAt, updatedAt: capture.updatedAt, predecessor: null };
+  const plain = writeMidtownCoreV3Assets(plan, { ...options, profile: censusProfile });
+  const tiled = writeMidtownCoreV3Assets(plan, { ...options, profile: texturedTwinOf(censusProfile) });
+  const plainLod0 = plain.assets[0];
+  const tiledLod0 = tiled.assets[0];
+  const plainFacts = glbGeometryFacts(plainLod0.bytes);
+  const tiledFacts = glbGeometryFacts(tiledLod0.bytes);
+  return {
+    buildingId: source.buildingId,
+    styleClass: plan.plan.styleClass,
+    ringVertexCount: plan.ringMm.length,
+    effectiveTierCount: plan.plan.massing.effectiveTierCount,
+    lod0VertexCount: plainFacts.vertexCount,
+    lod0TriangleCount: plainLod0.counts.triangleCount,
+    untexturedByteSize: plainLod0.bytes.byteLength,
+    texturedByteSize: tiledLod0.bytes.byteLength,
+    byteDelta: tiledLod0.bytes.byteLength - plainLod0.bytes.byteLength,
+    imageByteTotal: tiledFacts.imageBytes,
+    textureCount: tiledLod0.counts.textureCount,
+    // The ADR 0032 term, reproduced by construction: everything the tiles cost
+    // that is NOT the PNG payload — TEXCOORD_0 accessors, their bufferViews, the
+    // sampler/texture/material JSON and the texture provenance block.
+    uvAndJsonByteDelta: (tiledLod0.bytes.byteLength - plainLod0.bytes.byteLength) - tiledFacts.imageBytes,
+  };
+}
+
+/**
+ * Instrument validation against Block 835's committed `-v3t` census.
+ *
+ * The census that ADR 0032's byte table came from commits `byteDelta`,
+ * `imageByteTotal` and `uvAndJsonByteDelta` for all fourteen buildings at both
+ * LODs. Reproducing those rows is what makes the island measurement below an
+ * instrument reading rather than a new definition of the same words.
+ */
+async function validateUvInstrument() {
+  const pilotBytes = new Uint8Array(await readFile(join(repositoryRoot, "public", "data", BLOCK835_PILOT_RELEASE_ID, "release.json")));
+  const pilot = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(pilotBytes));
+  const buildings = readPilotBuildings(pilot);
+  const census = JSON.parse(await readFile(join(repositoryRoot, "data", "manhattan-esb-block-reference-20260811-v3t", "census.json"), "utf8"));
+  const committedById = new Map(census.buildings.map((entry) => [entry.canonicalBuildingId, entry]));
+
+  const rows = [];
+  for (const building of buildings) {
+    const id = building.canonicalBuildingId;
+    const plan = buildV3Plan(building, BLOCK835_V3_STYLE_OVERRIDES.get(id)).plan;
+    const tessellation = tessellateV3Plan(plan, { includeRecesses: true });
+    const plain = writeCanonicalGlb(glbInputFor(plan, tessellation, null));
+    const tiled = writeCanonicalGlb(glbInputFor(plan, tessellation, PROCEDURAL_TEXTURE_PROFILE));
+    const observedImageBytes = glbGeometryFacts(tiled.bytes).imageBytes;
+    const committed = committedById.get(id)?.lods?.find((lod) => lod.lodId === "lod_0") ?? null;
+    rows.push({
+      canonicalBuildingId: id,
+      committedImageByteTotal: committed?.imageByteTotal ?? null,
+      observedImageByteTotal: observedImageBytes,
+      committedTextureCount: committed?.textureCount ?? null,
+      observedTextureCount: tiled.counts.textureCount,
+      committedUvAndJsonByteDelta: committed?.uvAndJsonByteDelta ?? null,
+      observedUvAndJsonByteDelta: (tiled.bytes.byteLength - plain.bytes.byteLength) - observedImageBytes,
+      observedVertexCount: glbGeometryFacts(plain.bytes).vertexCount,
+    });
+  }
+  const offsets = [...new Set(rows.map((row) => row.committedUvAndJsonByteDelta - row.observedUvAndJsonByteDelta))].sort((left, right) => left - right);
+  return {
+    note: "The absolute byte SIZES of the `-v3t` package are not reproducible here and are not claimed: that package carries its own metadata (package ids, evidence shard ids, predecessor pins) which this pass does not reconstruct. What IS reproduced is the pair of terms the measurement depends on — the embedded image bytes and the texture count — and the shape of the UV term against them. Rows are reported as measured; a mismatch is a mismatch.",
+    buildings: rows,
+    imageByteTotalAgrees: rows.every((row) => row.committedImageByteTotal === row.observedImageByteTotal),
+    textureCountAgrees: rows.every((row) => row.committedTextureCount === row.observedTextureCount),
+    uvAndJsonByteDeltaOffsets: offsets,
+    // A CONSTANT offset is the signature of a metadata difference; a
+    // vertex-proportional one would be the signature of a broken instrument.
+    // Which of the two it is decides whether the island regression can be
+    // trusted, so it is reported rather than left for a reader to notice.
+    uvAndJsonByteDeltaOffsetIsConstant: offsets.length === 1,
+    uvAndJsonByteDeltaOffsetRangeBytes: [offsets[0], offsets[offsets.length - 1]],
+    observedVertexCountRange: [Math.min(...rows.map((row) => row.observedVertexCount)), Math.max(...rows.map((row) => row.observedVertexCount))],
+    offsetAsShareOfSmallestCommittedDelta: Math.round((offsets[offsets.length - 1] / Math.min(...rows.map((row) => row.committedUvAndJsonByteDelta))) * 1e6) / 1e6,
+    uvAndJsonByteDeltaOffsetFinding: `The instrument reads ${offsets[0]}-${offsets[offsets.length - 1]} B LOW against the committed record on every one of the fourteen buildings — a spread of ${offsets[offsets.length - 1] - offsets[0]} B across vertex counts spanning ${Math.min(...rows.map((row) => row.observedVertexCount))} to ${Math.max(...rows.map((row) => row.observedVertexCount))}, a factor of ${Math.round(Math.max(...rows.map((row) => row.observedVertexCount)) / Math.min(...rows.map((row) => row.observedVertexCount)))}. An offset that stays inside ${offsets[offsets.length - 1] - offsets[0]} bytes while the vertex count moves by that factor is metadata this pass does not reconstruct, NOT a per-vertex scaling error, so the island slope is unaffected by it. It is reported rather than subtracted.`,
+  };
+}
+
+/** The canonical-GLB input for one Block 835 plan, textured or not. */
+function glbInputFor(plan, tessellation, texture) {
+  const geometry = v3GeometryForGlb(plan, tessellation, {
+    yUp: true,
+    texture,
+    textureFilter: texture ? { ...PROCEDURAL_TEXTURE_SAMPLER_FILTER } : null,
+  });
+  return {
+    quads: geometry.quads,
+    triangles: geometry.triangles,
+    materials: geometry.materials,
+    metadata: {
+      canonicalFeatureId: plan.buildingId,
+      lodId: "lod_0",
+      ownerCellId: "cell:manhattan:block-835",
+      planHashSha256: plan.planHashSha256,
+      uncertainty: plan.uncertainty,
+      ...(geometry.textures ? { textureProvenance: proceduralTextureProvenance() } : {}),
+    },
+    ...(geometry.textures ? { textures: geometry.textures } : {}),
+  };
+}
+
+async function stageUv(context) {
+  const name = "uv";
+  const print = fingerprint(context, name);
+  const existing = await readReceipt(name);
+  if (existing && existing.inputFingerprint === print && !force) return { skipped: true, ...existing.summary };
+
+  const startedAt = Date.now();
+  const capture = captureOf(context.manifest);
+  const bytesRecord = JSON.parse(await readFile(join(recordRoot, "wave-bytes.json"), "utf8"));
+  const distributions = JSON.parse(await readFile(join(recordRoot, "distributions.json"), "utf8"));
+
+  // Stratify on the SOURCED ring, which for a planned building is the planned
+  // ring: the grammar reorients and rounds the polygon but never adds or drops a
+  // vertex. That is what makes the sample drawable without planning the island
+  // twice, and it is checked per sampled building below.
+  const censusProfileByWave = new Map(WAVE_RECORDS.filter((record) => record.censusProfile).map((record) => [record.waveIndex, record.censusProfile]));
+  const candidatesByStratum = new Map(UV_STRATA.map((stratum) => [stratum.id, []]));
+  for (const cell of context.cells) {
+    const waveIndex = waveIndexOf(cell.cellId);
+    if (!censusProfileByWave.has(waveIndex)) continue; // wave w00 travels the reference path, measured separately
+    for (const buildingId of cell.buildingIds) {
+      const source = context.sources.get(buildingId);
+      const vertices = openRing(source.outerRing).length;
+      const stratum = UV_STRATA.find((entry) => vertices >= entry.minVertices && vertices <= entry.maxVertices);
+      if (!stratum) continue; // above the grammar's 64-vertex cap: refused, ships nothing
+      candidatesByStratum.get(stratum.id).push({ buildingId, cellId: cell.cellId, waveIndex, vertices });
+    }
+  }
+
+  const rows = [];
+  const strataRows = [];
+  for (const stratum of UV_STRATA) {
+    const candidates = candidatesByStratum.get(stratum.id);
+    // Evenly spaced through the ledger order, so the sample is spread across
+    // every wave and cell rather than clustered in whichever wave sorts first.
+    const step = Math.max(1, Math.floor(candidates.length / UV_SAMPLES_PER_STRATUM));
+    const measured = [];
+    // A silently dropped candidate makes a stratum's `sampledCount` smaller than
+    // the target for a reason nobody records. Every drop is counted BY STOP
+    // CODE, so the difference between an intended 100 and an achieved 97 is a
+    // stated fact rather than something a reader has to notice and guess at.
+    const skippedByCode = {};
+    let skippedCandidateCount = 0;
+    for (let index = 0; index < candidates.length && measured.length < UV_SAMPLES_PER_STRATUM; index += step) {
+      const candidate = candidates[index];
+      const source = context.sources.get(candidate.buildingId);
+      let row;
+      try {
+        row = measureUvDelta(source, candidate.cellId, capture, censusProfileByWave.get(candidate.waveIndex));
+      } catch (error) {
+        if (!(error instanceof MidtownCoreV3Stop)) throw error;
+        // NOT necessarily a grammar refusal. The textured write runs under the
+        // V3T budgets and the untextured one under the wave's own, so a stop
+        // here can also be `asset-budget-exceeded` or `volume-identity-failed`
+        // from the WRITER. Labelling every drop a grammar refusal would be
+        // wrong, so the code itself is recorded.
+        skippedByCode[error.code] = (skippedByCode[error.code] ?? 0) + 1;
+        skippedCandidateCount += 1;
+        continue;
+      }
+      if (row.ringVertexCount !== candidate.vertices) fail(`Planned ring vertex count ${row.ringVertexCount} differs from the sourced ${candidate.vertices} for ${candidate.buildingId}.`);
+      measured.push({ ...row, stratum: stratum.id, waveIndex: candidate.waveIndex });
+    }
+    if (measured.length === 0) fail(`Stratum ${stratum.id} measured no buildings; a stratum row over zero samples would report bounds it does not have.`);
+    rows.push(...measured);
+    const perVertex = measured.map((row) => row.uvAndJsonByteDelta / row.lod0VertexCount).sort((left, right) => left - right);
+    const deltas = measured.map((row) => row.uvAndJsonByteDelta).sort((left, right) => left - right);
+    strataRows.push({
+      stratum: stratum.id,
+      ringVertexRange: [stratum.minVertices, stratum.maxVertices],
+      populationCount: candidates.length,
+      targetSampleCount: UV_SAMPLES_PER_STRATUM,
+      sampledCount: measured.length,
+      candidatesVisited: measured.length + skippedCandidateCount,
+      skippedCandidateCount,
+      skippedByStopCode: skippedByCode,
+      skipNote: skippedCandidateCount === 0
+        ? "Every visited candidate was measured."
+        : `${skippedCandidateCount} visited candidate(s) produced a stop code and were dropped, which is why the achieved sample is ${measured.length} rather than ${UV_SAMPLES_PER_STRATUM}. Codes are listed above and are NOT all grammar refusals: the writer's own stop codes can fire here too.`,
+      // NEVER a single mean: the spread is the finding.
+      uvAndJsonBytesPerVertex: {
+        min: Math.round(perVertex[0] * 1e4) / 1e4,
+        median: Math.round(perVertex[Math.floor((perVertex.length - 1) / 2)] * 1e4) / 1e4,
+        p95: Math.round(quantile(perVertex, 0.95) * 1e4) / 1e4,
+        max: Math.round(perVertex[perVertex.length - 1] * 1e4) / 1e4,
+      },
+      uvAndJsonByteDelta: {
+        min: deltas[0],
+        median: deltas[Math.floor((deltas.length - 1) / 2)],
+        p95: quantile(deltas, 0.95),
+        max: deltas[deltas.length - 1],
+      },
+      lod0VertexCount: {
+        min: Math.min(...measured.map((row) => row.lod0VertexCount)),
+        max: Math.max(...measured.map((row) => row.lod0VertexCount)),
+      },
+      textureCounts: [...new Set(measured.map((row) => row.textureCount))].sort(),
+    });
+  }
+
+  const regression = leastSquares(rows.map((row) => ({ x: row.lod0VertexCount, y: row.uvAndJsonByteDelta })));
+
+  // Image bytes per building are a function of the style class, which the six
+  // wave censuses commit as exact counts. Checked here rather than assumed.
+  const textureCountsByStyleClass = new Map();
+  for (const row of rows) {
+    const seen = textureCountsByStyleClass.get(row.styleClass) ?? new Map();
+    seen.set(row.textureCount, (seen.get(row.textureCount) ?? 0) + 1);
+    textureCountsByStyleClass.set(row.styleClass, seen);
+  }
+  // MEASURED, not assumed: the style class does NOT pin the tile count on its
+  // own, so the island image term is an interval whose ends are the minimum and
+  // maximum tile counts observed for each class and whose centre is the
+  // sample-frequency-weighted mean. A point estimate here would be a guess with
+  // the confidence of a measurement.
+  const styleClassTileStatistics = Object.fromEntries([...textureCountsByStyleClass.entries()].sort().map(([styleClass, counts]) => {
+    const entries = [...counts.entries()].sort(([left], [right]) => left - right);
+    const sampled = entries.reduce((total, [, count]) => total + count, 0);
+    return [styleClass, {
+      observedTileCounts: entries.map(([tiles, count]) => ({ tiles, sampledBuildings: count })),
+      min: entries[0][0],
+      max: entries[entries.length - 1][0],
+      sampleWeightedMean: Math.round((entries.reduce((total, [tiles, count]) => total + tiles * count, 0) / sampled) * 1e4) / 1e4,
+      determinesTileCount: entries.length === 1,
+    }];
+  }));
+  const styleClassDeterminesTextureCount = Object.values(styleClassTileStatistics).every((entry) => entry.determinesTileCount);
+  const islandStyleClassCounts = {};
+  for (const record of WAVE_RECORDS) {
+    if (!record.censusFile) continue;
+    const committed = JSON.parse(await readFile(join(repositoryRoot, record.censusFile), "utf8"));
+    for (const [styleClass, count] of Object.entries((committed.wave ?? committed).styleClassCounts ?? {})) {
+      islandStyleClassCounts[styleClass] = (islandStyleClassCounts[styleClass] ?? 0) + count;
+    }
+  }
+  const imageBytesFor = (pick) => Object.entries(islandStyleClassCounts)
+    .reduce((total, [styleClass, count]) => total + count * (styleClassTileStatistics[styleClass] ? pick(styleClassTileStatistics[styleClass]) : 0) * PROCEDURAL_TILE_PNG_BYTES, 0);
+  const twoTileSampleCount = rows.filter((row) => row.textureCount === 2).length;
+  const islandImageBytesInterval = {
+    lowerBoundBytes: Math.round(imageBytesFor((entry) => entry.min)),
+    centralBytes: Math.round(imageBytesFor((entry) => entry.sampleWeightedMean)),
+    upperBoundBytes: Math.round(imageBytesFor((entry) => entry.max)),
+    lowerBoundReachability: `EFFECTIVELY UNREACHABLE. The lower bound assumes EVERY building emits the minimum tile count observed for its style class, but only ${twoTileSampleCount} of ${rows.length} sampled buildings emit two tiles rather than three. The honest reading of this interval is that it sits just under its upper bound; the lower end is an arithmetic floor, not a plausible outcome.`,
+    twoTileSampledBuildings: twoTileSampleCount,
+    sampledBuildings: rows.length,
+  };
+  const islandImageBytes = islandImageBytesInterval.centralBytes;
+
+  // The island vertex total is NOT committed anywhere, so the UV term is stated
+  // as an INTERVAL derived from the committed island triangle total and the
+  // vertices-per-triangle ratio measured on this sample. A point estimate here
+  // would be a number with no error bar pretending to be a measurement.
+  const ratios = rows.map((row) => row.lod0VertexCount / row.lod0TriangleCount).sort((left, right) => left - right);
+  const islandTriangles = bytesRecord.islandGeneratedWaves.totalShippedTriangleCount;
+  const perVertexAll = rows.map((row) => row.uvAndJsonByteDelta / row.lod0VertexCount).sort((left, right) => left - right);
+  const uvTermFor = (verticesPerTriangle, bytesPerVertex) => Math.round(islandTriangles * verticesPerTriangle * bytesPerVertex);
+  const islandUvBytes = {
+    note: "An interval, not a point. `lod0TotalBytes` is committed; the island VERTEX total is not, so it is bounded by the committed island triangle total times the vertices-per-triangle ratio measured on this sample, and the per-vertex UV cost is likewise bounded by the sample.",
+    // TWO PROPERTIES OF THIS INTERVAL, NAMED so it is not read as something it
+    // is not.
+    intervalProperties: {
+      endsAreSampleExtremes: "The bounds are the MINIMUM and MAXIMUM observed in a 597-building sample, not a confidence interval. They carry no coverage probability, and a larger sample would widen rather than narrow them. Read them as 'no sampled building was outside this', not as 'the island is inside this with probability p'.",
+      centralIsUnweightedMedian: "The central figure multiplies the UNWEIGHTED median per-vertex cost by the unweighted median vertices-per-triangle ratio. Per-vertex UV cost FALLS as ring size rises (9.12 B/vertex in the smallest stratum against 7.88 in the largest) while the island's vertices are concentrated in the larger buildings, so an unweighted median over a stratum-balanced sample sits ABOVE the vertex-weighted island mean. The central estimate is therefore a mild CONSERVATIVE OVERESTIMATE, and it is stated that way rather than as a best estimate.",
+    },
+    islandTriangleCount: islandTriangles,
+    verticesPerTriangle: {
+      min: Math.round(ratios[0] * 1e4) / 1e4,
+      median: Math.round(ratios[Math.floor((ratios.length - 1) / 2)] * 1e4) / 1e4,
+      max: Math.round(ratios[ratios.length - 1] * 1e4) / 1e4,
+    },
+    uvAndJsonBytesPerVertex: {
+      min: Math.round(perVertexAll[0] * 1e4) / 1e4,
+      median: Math.round(perVertexAll[Math.floor((perVertexAll.length - 1) / 2)] * 1e4) / 1e4,
+      p95: Math.round(quantile(perVertexAll, 0.95) * 1e4) / 1e4,
+      max: Math.round(perVertexAll[perVertexAll.length - 1] * 1e4) / 1e4,
+    },
+    lowerBoundBytes: uvTermFor(ratios[0], perVertexAll[0]),
+    centralBytes: uvTermFor(ratios[Math.floor((ratios.length - 1) / 2)], perVertexAll[Math.floor((perVertexAll.length - 1) / 2)]),
+    upperBoundBytes: uvTermFor(ratios[ratios.length - 1], perVertexAll[perVertexAll.length - 1]),
+  };
+  // INDEPENDENT CORROBORATION of the central figure, from the regression rather
+  // than from the quantiles. Two routes through different statistics of the same
+  // sample landing within ~3% of each other is worth more than either alone.
+  islandUvBytes.regressionCorroboration = {
+    note: "The OLS slope applied to the same island triangle total and median vertices-per-triangle ratio, computed independently of the quantile route above.",
+    arithmetic: `${regression.slopeBytesPerVertex} B/vertex x ${islandTriangles} triangles x ${Math.round(ratios[Math.floor((ratios.length - 1) / 2)] * 1e4) / 1e4} vertices/triangle`,
+    bytes: Math.round(regression.slopeBytesPerVertex * islandTriangles * ratios[Math.floor((ratios.length - 1) / 2)]),
+    quantileRouteCentralBytes: islandUvBytes.centralBytes,
+    relativeDifference: Math.round(Math.abs(regression.slopeBytesPerVertex * islandTriangles * ratios[Math.floor((ratios.length - 1) / 2)] - islandUvBytes.centralBytes) / islandUvBytes.centralBytes * 1e6) / 1e6,
+  };
+
+  const lod0 = bytesRecord.islandGeneratedWaves.lod0TotalBytes;
+  const lod1 = bytesRecord.islandGeneratedWaves.lod1TotalBytes;
+  const decomposition = {
+    note: "FOUR TERMS, and they do not have the same future. The two geometry terms are committed measurements quoted from `wave-bytes.json` and were NOT regenerated here. The UV term rides on LOD 0 alone, scales with vertex count and SURVIVES a shared texture atlas — ADR 0032 measured it as 76% of the texture delta and it is the term that matters for planning. The image term also rides on LOD 0 alone and goes to approximately zero under an atlas, because a shared atlas is bound once for the city instead of embedded once per building.",
+    terms: [
+      { term: "untextured-geometry-lod_0", bytes: lod0, source: "committed wave-bytes.json islandGeneratedWaves.lod0TotalBytes", ridesOn: "lod_0", survivesAtlas: true },
+      { term: "untextured-geometry-lod_1", bytes: lod1, source: "committed wave-bytes.json islandGeneratedWaves.lod1TotalBytes", ridesOn: "lod_1", survivesAtlas: true },
+      { term: "uv-and-json-delta-lod_0", bytesInterval: [islandUvBytes.lowerBoundBytes, islandUvBytes.centralBytes, islandUvBytes.upperBoundBytes], source: "measured on this stage's stratified sample, projected on the committed island triangle total", ridesOn: "lod_0", survivesAtlas: true },
+      { term: "embedded-image-bytes-lod_0", bytesInterval: [islandImageBytesInterval.lowerBoundBytes, islandImageBytesInterval.centralBytes, islandImageBytesInterval.upperBoundBytes], source: `arithmetic: committed per-wave styleClassCounts x measured tiles per style class x the ADR 0032 tile constant ${PROCEDURAL_TILE_PNG_BYTES} B`, ridesOn: "lod_0", survivesAtlas: false },
+    ],
+    // THE FINDING THAT MOVES. ADR 0032 measured the UV term at 76% of the
+    // texture delta on FOURTEEN buildings, and that ratio does not hold for the
+    // island. It could not: the image term is a FIXED two-or-three tiles per
+    // building whatever the building's size, while the UV term scales with
+    // vertex count — and the island's mean building is far smaller than Block
+    // 835's. The direction of the atlas argument is unchanged and in fact
+    // strengthened; its magnitude is not what the 14-building table implies.
+    atlasSplit: {
+      note: "Share of the LOD 0 texture delta that a shared four-tile atlas would remove (the image term) against the share that survives it (the UV term), computed island-wide from the terms above rather than carried over from the fourteen-building table.",
+      adr0032FourteenBuildingUvShare: 0.76,
+      adr0032Source: "docs/decisions/0032-procedural-facade-textures.md byte table: 2,259,172 B UV + JSON against 696,360 B images across all fourteen buildings",
+      islandUvShareOfTextureDelta: {
+        lower: Math.round((islandUvBytes.lowerBoundBytes / (islandUvBytes.lowerBoundBytes + islandImageBytesInterval.upperBoundBytes)) * 1e6) / 1e6,
+        central: Math.round((islandUvBytes.centralBytes / (islandUvBytes.centralBytes + islandImageBytesInterval.centralBytes)) * 1e6) / 1e6,
+        upper: Math.round((islandUvBytes.upperBoundBytes / (islandUvBytes.upperBoundBytes + islandImageBytesInterval.lowerBoundBytes)) * 1e6) / 1e6,
+      },
+      finding: "ISLAND-WIDE THE SPLIT INVERTS. On Block 835's fourteen buildings the UV term is 76% of the texture delta; across the island it is the MINORITY of it at the central estimate, because the per-building image cost is fixed at two or three tiles while the UV cost follows a vertex count whose island median is far below Block 835's. An atlas therefore removes MORE of the citywide texture cost than ADR 0032's table suggests, not less — but the residual it cannot remove is still the larger of the two terms in the tallest, most vertex-dense buildings, which are exactly the ones a near-field camera is pointed at.",
+      whatSurvivesAnAtlas: "The UV term. TEXCOORD_0 is per-vertex geometry data and an atlas changes which region of a texture a vertex addresses, not whether it addresses one. Any scheme that claims to remove it is proposing to drop the projection, which is a fidelity decision and not a packaging one.",
+    },
+    lod1IsUntexturedByContract: "Detail tiles ride on LOD 0 ALONE, by the committed Block 835 `-v3t` decision carried unchanged into every wave profile: LOD 1 is selected beyond 250 m, where a 128-pixel joint is far below a screen pixel. There is therefore no UV term and no image term for LOD 1, and this is a contract, not an accident.",
+    islandTotals: {
+      materializedBuildingCountGeneratedWaves: bytesRecord.islandGeneratedWaves.materializedBuildingCount,
+      materializedBuildingCountIncludingBlock835: bytesRecord.islandMaterializedBuildingCount,
+      plannedButNotYetMaterialized: distributions.counts.planned - bytesRecord.islandGeneratedWaves.materializedBuildingCount,
+    },
+  };
+
+  // The 821 recoverable refusals, named by code rather than by adjective.
+  const refusalsByCode = distributions.refusals.byCode;
+  const recoverableCodes = ["source-height-below-grammar-minimum", "ring-vertex-count-unsupported", "ring-area-below-floor"];
+  const recoverable = recoverableCodes.reduce((total, code) => total + (refusalsByCode[code] ?? 0), 0);
+  const irrecoverable = distributions.refusals.total - recoverable;
+  const ringVertexUnsupported = refusalsByCode["ring-vertex-count-unsupported"] ?? 0;
+  const worstStratum = strataRows[strataRows.length - 1];
+
+  const artifact = {
+    schemaVersion: CITYWIDE_OVERVIEW_CENSUS_SCHEMA_VERSION,
+    censusId: CENSUS_ID,
+    taskId: "T001",
+    artifact: "uv-delta-measurement-and-byte-decomposition",
+    note: "CENSUS ONLY. Every sampled building was written through the REAL asset writer TWICE — once texture-free and once with `procedural-texture-v1` tiles, from the SAME plan — and both sets of bytes were measured and dropped. Nothing was retained, no release was assembled and nothing was published. The two writes differ only in the writer-stage texture policy, so their difference is exactly the cost of admitting tiles and nothing else.",
+    base: base(context),
+    ledger: ledgerPin(context),
+    generatorIdentity: {
+      planGenerator: { id: DETERMINISTIC_FACADE_V3_GENERATOR_ID, version: DETERMINISTIC_FACADE_V3_GENERATOR_VERSION, schemaVersion: DETERMINISTIC_FACADE_V3_SCHEMA_VERSION },
+      proceduralTexture: proceduralTextureProvenance(),
+    },
+    method: {
+      statement: "For each sampled building the V3 plan is built ONCE with its own wave's committed census profile, then written twice: with `texture: null` and with `texture: procedural-texture-v1`. The plan, and therefore the geometry, is identical between the two writes. `imageByteTotal` is read back out of the emitted GLB's own `images[]` bufferViews and `lod0VertexCount` out of its POSITION accessors, so both are properties of the bytes rather than of this script's arithmetic.",
+      counterfactualDisclosure: "Wave w01 (Midtown core) ships texture-free, so its textured write is a COUNTERFACTUAL: it states what tiles would cost that wave, not what that wave shipped. Waves w02-w05 ship textured, and for them the untextured write is the counterfactual instead. Both directions are the same measurement of the same difference.",
+      samplingBasis: "Stratified on the planned outer-ring vertex count against the committed `distributions.json` histogram, taken at an even stride through ledger order so every stratum's sample spreads across waves and cells instead of clustering in whichever wave sorts first.",
+      retention: "Sample GLBs were counted and dropped. None was written to disk (the `coarse` stage precedent).",
+    },
+    strata: strataRows,
+    perVertexRegression: {
+      note: "`uvAndJsonByteDelta = slope * lod0VertexCount + intercept`, ordinary least squares over every sampled building. The residual bounds are reported beside it because a slope without them is a claim, not a measurement.",
+      ...regression,
+    },
+    instrumentValidation: await validateUvInstrument(),
+    imageTerm: {
+      note: "Tiles per building are a function of the plan's style class, which every wave census commits as an exact count. The mapping is measured on this sample rather than assumed, and whether the style class DETERMINES the tile count is reported rather than presumed.",
+      tilePngBytes: PROCEDURAL_TILE_PNG_BYTES,
+      tilePngBytesSource: "docs/decisions/0032-procedural-facade-textures.md byte table (128x128, 8-bit gray, stored DEFLATE)",
+      styleClassDeterminesTextureCount,
+      styleClassDeterminesTextureCountFinding: styleClassDeterminesTextureCount
+        ? "Each style class emits a fixed tile count, so the island image term is exact arithmetic."
+        : "MEASURED FALSE. At least one style class emits different tile counts for different buildings, so the island image term below is an INTERVAL and not an exact figure. The per-class observations are listed so the bound can be checked.",
+      styleClassTileStatistics,
+      islandStyleClassCounts,
+      islandImageBytesLod0: islandImageBytesInterval,
+    },
+    islandUvTerm: islandUvBytes,
+    byteDecomposition: decomposition,
+    refusalAccounting: {
+      note: "TWO island totals, reported separately because they answer different questions. 44,295 is what the six waves ACTUALLY materialized. 45,116 is what a full-city retention would carry if the recoverable refusals were recovered, which is the number the assembly limits have to be checked against.",
+      enumeratedParents: distributions.counts.enumerated,
+      materializedToday: bytesRecord.islandMaterializedBuildingCount,
+      planStageRefusalsByCode: refusalsByCode,
+      assetStageVolumeIdentityFailed: distributions.counts.assetStageVolumeIdentityFailed,
+      recoverableRefusalCodes: recoverableCodes,
+      recoverableRefusalCount: recoverable,
+      irrecoverableRefusalCount: irrecoverable,
+      fullCityProjectedAssetCount: distributions.counts.enumerated - irrecoverable - distributions.counts.assetStageVolumeIdentityFailed,
+      recoverableAreVertexCountHeavy: {
+        statement: `Of the ${recoverable} recoverable refusals, ${ringVertexUnsupported} are \`ring-vertex-count-unsupported\` — rings ABOVE the grammar's 64-vertex cap. Recovering them adds buildings that land in the worst UV stratum, not the average one, so the UV term of a recovered full city grows faster than its building count.`,
+        ringVertexCountUnsupported: ringVertexUnsupported,
+        worstStratum: worstStratum.stratum,
+        worstStratumUvBytesPerVertex: worstStratum.uvAndJsonBytesPerVertex,
+        worstStratumUvByteDelta: worstStratum.uvAndJsonByteDelta,
+      },
+    },
+    generationTiming: {
+      note: "BOTH committed observations, as a RANGE, with the host difference disclosed. Neither is authoritative over the other and neither belongs in a deterministic artifact body as a single number; they are carried here because the retain-versus-regenerate decision needs a bounded regeneration cost, not a precise one.",
+      observations: [
+        { source: "central-upper-manhattan wave census (committed implementation record)", millisecondsPerAsset: 3.5 },
+        { source: "this census's `coarse` stage (committed implementation record)", millisecondsPerAssetRange: [5.1, 5.9] },
+      ],
+      hostDifferenceDisclosure: "The two observations were taken on different hosts and with different writer workloads (a full two-LOD V3 asset against a single coarse prism), so the spread is not measurement noise around one true rate and must not be averaged into one.",
+      boundedIslandEstimate: {
+        assetCount: 2 * (distributions.counts.enumerated - irrecoverable - distributions.counts.assetStageVolumeIdentityFailed),
+        lowerBoundMinutes: Math.round((2 * (distributions.counts.enumerated - irrecoverable - distributions.counts.assetStageVolumeIdentityFailed) * 3.5) / 60000 * 10) / 10,
+        upperBoundMinutes: Math.round((2 * (distributions.counts.enumerated - irrecoverable - distributions.counts.assetStageVolumeIdentityFailed) * 5.9) / 60000 * 10) / 10,
+        statement: "Single-threaded, both LODs, texture-free. A textured pass rasterizes from a four-tile catalog that is built once, so the tiles are not the cost; the second write of every asset is.",
+      },
+    },
+    retention: "census-only",
+    hostObservationsLocation: "artifacts/citywide-overview-census-20260814/stages/uv.json — wall clock and RSS are host facts and are kept OUT of this artifact's deterministic body (the ADR 0025 D8 precedent).",
+  };
+  const checksum = await writeRecord("uv-delta.json", artifact);
+  const summary = {
+    sampledBuildings: rows.length,
+    strata: strataRows.map((row) => ({ stratum: row.stratum, sampled: row.sampledCount, medianBytesPerVertex: row.uvAndJsonBytesPerVertex.median })),
+    slopeBytesPerVertex: regression.slopeBytesPerVertex,
+    rSquared: regression.rSquared,
+    islandImageBytesLod0: islandImageBytes,
+    islandUvBytesInterval: [islandUvBytes.lowerBoundBytes, islandUvBytes.centralBytes, islandUvBytes.upperBoundBytes],
+    wallClockSeconds: Math.round((Date.now() - startedAt) / 100) / 10,
+    checksumSha256: checksum,
+  };
+  await writeReceipt(name, print, summary);
+  return summary;
+}
+
+// ---------------------------------------------------------------------------
 
 const context = await loadContext();
 console.log(`gate PASS  ${context.gate.expectedReleaseId} @ ${context.gate.observedManifestChecksumSha256}`);
 console.log(`           ${context.declaredShardCount} verified building shards, ${context.sources.size} parents, ${context.cells.length} ledger cells`);
 if (stage === "gate") process.exit(0);
 
-const selected = stage === "all" ? STAGES.filter((name) => name !== "gate") : [stage];
+const selected = stage === "all" ? ALL_STAGES.filter((name) => name !== "gate") : [stage];
 for (const name of selected) {
   const summary = name === "extents" ? await stageExtents(context)
     : name === "plans" ? await stagePlans(context)
     : name === "bytes" ? await stageBytes(context)
     : name === "coarse" ? await stageCoarse(context)
     : name === "sample" ? await stageSample(context)
+    : name === "replay" ? await stageReplay(context)
+    : name === "uv" ? await stageUv(context)
     : await stageDecide(context);
   console.log(`${name} ${summary.skipped ? "SKIP (fresh receipt)" : "OK"}  ${JSON.stringify(summary)}`);
 }

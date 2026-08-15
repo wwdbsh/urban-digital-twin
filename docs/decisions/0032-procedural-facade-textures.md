@@ -584,3 +584,60 @@ flag a caller could forget to pass. The new `textureAdmission` is not a
 counter-example — it lives on the release rather than on the package, its default
 is closed, and it is checked in addition to every unconditional byte rule rather
 than in place of any of them.
+
+# Amendment — T001 (Issue #83), 2026-08-15
+
+**Append-only.** Nothing above this line is edited. This amendment corrects the
+scope of ONE number in the "Byte math (measured, all fourteen buildings)" table
+and changes no other claim in this ADR.
+
+## C1. The 76% `TEXCOORD_0` share is a Block 835 figure, not a citywide one
+
+The byte table above records 2,259,172 B of UV + JSON against 696,360 B of
+images across the fourteen Block 835 buildings, and concludes:
+
+> **The images are the minority of the cost. `TEXCOORD_0` is the majority — 76%
+> of the delta.** … This is the single most important number in this ADR for
+> planning purposes.
+
+**That holds for this package and does not hold island-wide.** T001 measured the
+same two terms across a 597-building stratified sample of the whole island, each
+building written twice through the real asset writer from the same plan. The
+island split is:
+
+| | UV + JSON share of the LOD 0 texture delta |
+| --- | --- |
+| Block 835, 14 buildings (this ADR) | **76%** |
+| Manhattan island, measured (ADR 0046) | **33.2% / 38.3% / 58.4%** (lower / central / upper) |
+
+It could not have held. The image term is a fixed two or three tiles per building
+regardless of the building's size; the UV term follows a vertex count whose
+island median is far below Block 835's. Block 835 is a block of unusually large,
+unusually vertex-dense buildings — the Empire State Building's LOD 0 alone
+carries 32,538 vertices against an island median well under a tenth of that.
+
+**What this changes and what it does not:**
+
+- **Precondition 3 (GPU scale) is strengthened, not weakened.** A shared
+  four-tile atlas removes the image term, and island-wide that term is the
+  *larger* of the two, not the smaller. The atlas is a better idea than this
+  ADR's table implied.
+- **The UV term still survives an atlas.** `TEXCOORD_0` is per-vertex geometry
+  data; an atlas changes which region of a texture a vertex addresses, not
+  whether it addresses one. The measured island UV term is 1.094 / 1.362 / 2.061
+  GB and no packaging change removes it.
+- **The per-building relationship is unchanged and was reproduced.** T001 ran its
+  instrument against this package's own committed `-v3t` census: embedded image
+  bytes and texture counts agree for all fourteen buildings, and
+  `uvAndJsonByteDelta` reproduces to within a fixed 248–268 B of package metadata
+  the instrument does not reconstruct — a 20 B spread across vertex counts from
+  1,318 to 206,124.
+
+**Do not quote the 76% as a citywide planning figure.** For citywide planning use
+ADR 0046 and the committed measurement it rests on.
+
+- Decision record: `docs/decisions/0046-full-city-retention-and-assembly.md`
+- Measurement: `data/citywide-overview-census-20260814/uv-delta.json`
+  (`byteDecomposition.atlasSplit`, `perVertexRegression`, `strata`,
+  `instrumentValidation`)
+- Reproduce: `pnpm citywide-overview:census uv --force`
