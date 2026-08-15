@@ -1,0 +1,6947 @@
+{
+  "schemaVersion": "1.0",
+  "releaseId": "manhattan-central-upper-manhattan-cells-20260812-t1",
+  "note": "Per-cell SOURCED height profile of EVERY wave-w04 ownership cell — the candidate set the promoted renderable subset was curated from, not only the cells that were chosen, and not a band drawn around them. Wave w03's curation ranked inside a stated high-rise envelope; this one deliberately does not, because a maximum over a band chosen after the answer was known is a weaker claim than a maximum over the whole wave, and the envelope recorded here is simply this wave's own bounding box. `skylineBuildingCount` counts owned buildings whose sourced heightMeters reaches the stated threshold; it is the primary key the curation's optimality claim is ranked on, and `central-upper-manhattan-curation-optimum.test.ts` re-runs that enumeration over these bytes on every run. `skylineBuildingCountByThresholdMeters` carries the same count at 60, 75, 90, 100 and 120 m, because ADR 0036 precondition (b) required this task to say whether 90 m is right for a wave north of Midtown rather than reuse the constant, and the strongest available answer is that the ranking does not depend on it — the same cell wins at all five, which that suite re-runs and asserts. Heights are the pinned manhattan-citywide-20260804 base's own sourced values and assert nothing about any named building: the NYC OTI footprint dataset carries no building names. `sourcedHeightCount` is reported beside `ownedBuildingCount` rather than reconciled with it, because a building whose source states no height is a building this census cannot rank and must not silently drop.",
+  "base": {
+    "releaseId": "manhattan-citywide-20260804",
+    "manifestChecksumSha256": "acb5a9b52014f86535c8478e7d4e516efc03f6dff95c17e9896dfea4413c203c"
+  },
+  "parentLedger": {
+    "releaseId": "manhattan-exterior-wave-ledger-20260804",
+    "checksumSha256": "62e093d2ca50b54b49fd8bbad9d0b11f6301b2b197623deb343f9ea915e59016"
+  },
+  "envelope": {
+    "west": -74.00390625,
+    "south": 40.770263671875,
+    "east": -73.916015625,
+    "north": 40.80322265625
+  },
+  "skylineThresholdMeters": 90,
+  "entryBudget": 42,
+  "curatedCellIds": [
+    "manhattan-exterior-cell-w04-000490-16-19300-17923",
+    "manhattan-exterior-cell-w04-000491-16-19301-17923"
+  ],
+  "candidates": [
+    {
+      "cellId": "manhattan-exterior-cell-w04-000452-17-38598-35840",
+      "parentOrder": 452,
+      "bounds": {
+        "west": -73.9874267578125,
+        "south": 40.779876708984375,
+        "east": -73.98468017578125,
+        "north": 40.78125
+      },
+      "ownedBuildingCount": 25,
+      "sourcedHeightCount": 25,
+      "skylineBuildingCount": 1,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 2,
+        "75": 1,
+        "90": 1,
+        "100": 1,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 106.3752,
+      "topSourcedHeightMeters": [
+        106.3752,
+        69.00672,
+        53.330856000000004,
+        51.063144,
+        49.86528
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000453-17-38599-35840",
+      "parentOrder": 453,
+      "bounds": {
+        "west": -73.98468017578125,
+        "south": 40.779876708984375,
+        "east": -73.98193359375,
+        "north": 40.78125
+      },
+      "ownedBuildingCount": 51,
+      "sourcedHeightCount": 51,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 4,
+        "75": 1,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 80.640936,
+      "topSourcedHeightMeters": [
+        80.640936,
+        72.5424,
+        69.1896,
+        61.212984000000006,
+        50.227992
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000454-16-19298-17920",
+      "parentOrder": 454,
+      "bounds": {
+        "west": -73.992919921875,
+        "south": 40.77850341796875,
+        "east": -73.9874267578125,
+        "north": 40.78125
+      },
+      "ownedBuildingCount": 2,
+      "sourcedHeightCount": 2,
+      "skylineBuildingCount": 1,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 1,
+        "75": 1,
+        "90": 1,
+        "100": 1,
+        "120": 1
+      },
+      "tallestSourcedHeightMeters": 148.1328,
+      "topSourcedHeightMeters": [
+        148.1328,
+        10.668000000000001
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000455-17-38598-35841",
+      "parentOrder": 455,
+      "bounds": {
+        "west": -73.9874267578125,
+        "south": 40.77850341796875,
+        "east": -73.98468017578125,
+        "north": 40.779876708984375
+      },
+      "ownedBuildingCount": 50,
+      "sourcedHeightCount": 50,
+      "skylineBuildingCount": 1,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 2,
+        "75": 2,
+        "90": 1,
+        "100": 1,
+        "120": 1
+      },
+      "tallestSourcedHeightMeters": 154.2288,
+      "topSourcedHeightMeters": [
+        154.2288,
+        77.724,
+        54.266592,
+        50.5968,
+        50.090832000000006
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000456-17-38599-35841",
+      "parentOrder": 456,
+      "bounds": {
+        "west": -73.98468017578125,
+        "south": 40.77850341796875,
+        "east": -73.98193359375,
+        "north": 40.779876708984375
+      },
+      "ownedBuildingCount": 67,
+      "sourcedHeightCount": 67,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 4,
+        "75": 1,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 82.6008,
+      "topSourcedHeightMeters": [
+        82.6008,
+        73.45537310928,
+        72.93864,
+        66.7512,
+        50.868072
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000457-16-19298-17921",
+      "parentOrder": 457,
+      "bounds": {
+        "west": -73.992919921875,
+        "south": 40.7757568359375,
+        "east": -73.9874267578125,
+        "north": 40.77850341796875
+      },
+      "ownedBuildingCount": 6,
+      "sourcedHeightCount": 6,
+      "skylineBuildingCount": 2,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 4,
+        "75": 3,
+        "90": 2,
+        "100": 2,
+        "120": 1
+      },
+      "tallestSourcedHeightMeters": 124.705872,
+      "topSourcedHeightMeters": [
+        124.705872,
+        108.456984,
+        85.95360000000001,
+        66.7512,
+        56.235600000000005
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000458-16-19299-17921",
+      "parentOrder": 458,
+      "bounds": {
+        "west": -73.9874267578125,
+        "south": 40.7757568359375,
+        "east": -73.98193359375,
+        "north": 40.77850341796875
+      },
+      "ownedBuildingCount": 60,
+      "sourcedHeightCount": 59,
+      "skylineBuildingCount": 3,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 13,
+        "75": 12,
+        "90": 3,
+        "100": 2,
+        "120": 1
+      },
+      "tallestSourcedHeightMeters": 203.6064,
+      "topSourcedHeightMeters": [
+        203.6064,
+        116.90604,
+        92.0496,
+        89.957669988288,
+        81.3816
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000459-15-9648-8961",
+      "parentOrder": 459,
+      "bounds": {
+        "west": -74.00390625,
+        "south": 40.770263671875,
+        "east": -73.992919921875,
+        "north": 40.7757568359375
+      },
+      "ownedBuildingCount": 6,
+      "sourcedHeightCount": 6,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 32.6136,
+      "topSourcedHeightMeters": [
+        32.6136,
+        23.634685635792,
+        15.24,
+        11.5824,
+        7.315200000000001
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000460-15-9649-8961",
+      "parentOrder": 460,
+      "bounds": {
+        "west": -73.992919921875,
+        "south": 40.770263671875,
+        "east": -73.98193359375,
+        "north": 40.7757568359375
+      },
+      "ownedBuildingCount": 107,
+      "sourcedHeightCount": 107,
+      "skylineBuildingCount": 28,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 42,
+        "75": 35,
+        "90": 28,
+        "100": 24,
+        "120": 12
+      },
+      "tallestSourcedHeightMeters": 181.96560000000002,
+      "topSourcedHeightMeters": [
+        181.96560000000002,
+        179.88192082980004,
+        162.4584,
+        160.9344,
+        149.024531027304
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000461-17-38600-35840",
+      "parentOrder": 461,
+      "bounds": {
+        "west": -73.98193359375,
+        "south": 40.779876708984375,
+        "east": -73.97918701171875,
+        "north": 40.78125
+      },
+      "ownedBuildingCount": 43,
+      "sourcedHeightCount": 43,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 2,
+        "75": 2,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 85.34400000000001,
+      "topSourcedHeightMeters": [
+        85.34400000000001,
+        75.5904,
+        57.607200000000006,
+        52.4256,
+        50.118264
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000462-17-38601-35840",
+      "parentOrder": 462,
+      "bounds": {
+        "west": -73.97918701171875,
+        "south": 40.779876708984375,
+        "east": -73.9764404296875,
+        "north": 40.78125
+      },
+      "ownedBuildingCount": 75,
+      "sourcedHeightCount": 75,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 31.668720000000004,
+      "topSourcedHeightMeters": [
+        31.668720000000004,
+        26.457119825304,
+        23.4696,
+        22.079615811216,
+        22.015704000000003
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000463-17-38600-35841",
+      "parentOrder": 463,
+      "bounds": {
+        "west": -73.98193359375,
+        "south": 40.77850341796875,
+        "east": -73.97918701171875,
+        "north": 40.779876708984375
+      },
+      "ownedBuildingCount": 52,
+      "sourcedHeightCount": 52,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 1,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 62.986920000000005,
+      "topSourcedHeightMeters": [
+        62.986920000000005,
+        55.251096000000004,
+        54.97068,
+        49.6824,
+        49.52695200000001
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000464-17-38601-35841",
+      "parentOrder": 464,
+      "bounds": {
+        "west": -73.97918701171875,
+        "south": 40.77850341796875,
+        "east": -73.9764404296875,
+        "north": 40.779876708984375
+      },
+      "ownedBuildingCount": 86,
+      "sourcedHeightCount": 86,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 48.85364153052,
+      "topSourcedHeightMeters": [
+        48.85364153052,
+        31.299912000000003,
+        31.281624,
+        29.204593953408,
+        28.941959263032004
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000465-16-19301-17920",
+      "parentOrder": 465,
+      "bounds": {
+        "west": -73.9764404296875,
+        "south": 40.77850341796875,
+        "east": -73.970947265625,
+        "north": 40.78125
+      },
+      "ownedBuildingCount": 85,
+      "sourcedHeightCount": 85,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 1,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 64.427912298096,
+      "topSourcedHeightMeters": [
+        64.427912298096,
+        55.83629103890401,
+        50.727864000000004,
+        50.700432000000006,
+        49.36787444160001
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000466-16-19302-17920",
+      "parentOrder": 466,
+      "bounds": {
+        "west": -73.970947265625,
+        "south": 40.77850341796875,
+        "east": -73.9654541015625,
+        "north": 40.78125
+      },
+      "ownedBuildingCount": 7,
+      "sourcedHeightCount": 7,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 8.2296,
+      "topSourcedHeightMeters": [
+        8.2296,
+        7.62,
+        6.4008,
+        6.4008,
+        5.1816
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000467-16-19303-17920",
+      "parentOrder": 467,
+      "bounds": {
+        "west": -73.9654541015625,
+        "south": 40.77850341796875,
+        "east": -73.9599609375,
+        "north": 40.78125
+      },
+      "ownedBuildingCount": 49,
+      "sourcedHeightCount": 49,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 3,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 74.0664,
+      "topSourcedHeightMeters": [
+        74.0664,
+        72.18578400000001,
+        70.448424,
+        51.425856,
+        50.737008
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000468-17-38600-35842",
+      "parentOrder": 468,
+      "bounds": {
+        "west": -73.98193359375,
+        "south": 40.777130126953125,
+        "east": -73.97918701171875,
+        "north": 40.77850341796875
+      },
+      "ownedBuildingCount": 79,
+      "sourcedHeightCount": 79,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 1,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 68.988432,
+      "topSourcedHeightMeters": [
+        68.988432,
+        58.716671999999996,
+        54.254400000000004,
+        51.816,
+        49.05756
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000469-17-38601-35842",
+      "parentOrder": 469,
+      "bounds": {
+        "west": -73.97918701171875,
+        "south": 40.777130126953125,
+        "east": -73.9764404296875,
+        "north": 40.77850341796875
+      },
+      "ownedBuildingCount": 59,
+      "sourcedHeightCount": 59,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 2,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 61.850016,
+      "topSourcedHeightMeters": [
+        61.850016,
+        61.2648,
+        50.9016,
+        50.008536,
+        49.71288
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000470-17-38606-35842",
+      "parentOrder": 470,
+      "bounds": {
+        "west": -73.9654541015625,
+        "south": 40.777130126953125,
+        "east": -73.96270751953125,
+        "north": 40.77850341796875
+      },
+      "ownedBuildingCount": 6,
+      "sourcedHeightCount": 6,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 1,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 70.85685600000001,
+      "topSourcedHeightMeters": [
+        70.85685600000001,
+        50.968656,
+        49.9872,
+        30.668976000000004,
+        26.666952
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000471-17-38607-35842",
+      "parentOrder": 471,
+      "bounds": {
+        "west": -73.96270751953125,
+        "south": 40.777130126953125,
+        "east": -73.9599609375,
+        "north": 40.77850341796875
+      },
+      "ownedBuildingCount": 65,
+      "sourcedHeightCount": 65,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 2,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 74.065260450336,
+      "topSourcedHeightMeters": [
+        74.065260450336,
+        62.7888,
+        53.023225858848,
+        49.99329600000001,
+        48.29556
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000472-17-38600-35843",
+      "parentOrder": 472,
+      "bounds": {
+        "west": -73.98193359375,
+        "south": 40.7757568359375,
+        "east": -73.97918701171875,
+        "north": 40.777130126953125
+      },
+      "ownedBuildingCount": 81,
+      "sourcedHeightCount": 81,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 1,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 71.628,
+      "topSourcedHeightMeters": [
+        71.628,
+        52.4256,
+        51.22164000000001,
+        50.93208,
+        46.32655200000001
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000473-17-38601-35843",
+      "parentOrder": 473,
+      "bounds": {
+        "west": -73.97918701171875,
+        "south": 40.7757568359375,
+        "east": -73.9764404296875,
+        "north": 40.777130126953125
+      },
+      "ownedBuildingCount": 67,
+      "sourcedHeightCount": 67,
+      "skylineBuildingCount": 3,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 3,
+        "75": 3,
+        "90": 3,
+        "100": 3,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 110.70031200000001,
+      "topSourcedHeightMeters": [
+        110.70031200000001,
+        109.39272,
+        102.431088,
+        57.241440000000004,
+        56.997600000000006
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000474-16-19301-17921",
+      "parentOrder": 474,
+      "bounds": {
+        "west": -73.9764404296875,
+        "south": 40.7757568359375,
+        "east": -73.970947265625,
+        "north": 40.77850341796875
+      },
+      "ownedBuildingCount": 42,
+      "sourcedHeightCount": 42,
+      "skylineBuildingCount": 1,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 1,
+        "75": 1,
+        "90": 1,
+        "100": 1,
+        "120": 1
+      },
+      "tallestSourcedHeightMeters": 120.53236870262401,
+      "topSourcedHeightMeters": [
+        120.53236870262401,
+        50.858928000000006,
+        49.822608,
+        40.02024000000001,
+        24.6888
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000475-16-19302-17921",
+      "parentOrder": 475,
+      "bounds": {
+        "west": -73.970947265625,
+        "south": 40.7757568359375,
+        "east": -73.9654541015625,
+        "north": 40.77850341796875
+      },
+      "ownedBuildingCount": 1,
+      "sourcedHeightCount": 1,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 4.2672,
+      "topSourcedHeightMeters": [
+        4.2672
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000476-17-38606-35843",
+      "parentOrder": 476,
+      "bounds": {
+        "west": -73.9654541015625,
+        "south": 40.7757568359375,
+        "east": -73.96270751953125,
+        "north": 40.777130126953125
+      },
+      "ownedBuildingCount": 30,
+      "sourcedHeightCount": 30,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 2,
+        "75": 1,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 79.869792,
+      "topSourcedHeightMeters": [
+        79.869792,
+        68.500752,
+        56.506872,
+        53.663088,
+        28.242768
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000477-17-38607-35843",
+      "parentOrder": 477,
+      "bounds": {
+        "west": -73.96270751953125,
+        "south": 40.7757568359375,
+        "east": -73.9599609375,
+        "north": 40.777130126953125
+      },
+      "ownedBuildingCount": 62,
+      "sourcedHeightCount": 62,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 5,
+        "75": 2,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 85.03920000000001,
+      "topSourcedHeightMeters": [
+        85.03920000000001,
+        82.296,
+        71.23176,
+        64.0626817296,
+        61.2648
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000478-17-38600-35844",
+      "parentOrder": 478,
+      "bounds": {
+        "west": -73.98193359375,
+        "south": 40.774383544921875,
+        "east": -73.97918701171875,
+        "north": 40.7757568359375
+      },
+      "ownedBuildingCount": 65,
+      "sourcedHeightCount": 65,
+      "skylineBuildingCount": 2,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 2,
+        "75": 2,
+        "90": 2,
+        "100": 1,
+        "120": 1
+      },
+      "tallestSourcedHeightMeters": 163.3728,
+      "topSourcedHeightMeters": [
+        163.3728,
+        92.0496,
+        33.11652,
+        31.459021586784004,
+        29.346144000000002
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000479-17-38601-35844",
+      "parentOrder": 479,
+      "bounds": {
+        "west": -73.97918701171875,
+        "south": 40.774383544921875,
+        "east": -73.9764404296875,
+        "north": 40.7757568359375
+      },
+      "ownedBuildingCount": 70,
+      "sourcedHeightCount": 70,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 1,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 64.48044,
+      "topSourcedHeightMeters": [
+        64.48044,
+        58.856880000000004,
+        47.368968,
+        42.214800000000004,
+        39.438072
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000480-17-38606-35844",
+      "parentOrder": 480,
+      "bounds": {
+        "west": -73.9654541015625,
+        "south": 40.774383544921875,
+        "east": -73.96270751953125,
+        "north": 40.7757568359375
+      },
+      "ownedBuildingCount": 54,
+      "sourcedHeightCount": 54,
+      "skylineBuildingCount": 1,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 4,
+        "75": 1,
+        "90": 1,
+        "100": 1,
+        "120": 1
+      },
+      "tallestSourcedHeightMeters": 130.43916000000002,
+      "topSourcedHeightMeters": [
+        130.43916000000002,
+        68.644008,
+        61.993272,
+        60.420504,
+        59.106816
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000481-17-38607-35844",
+      "parentOrder": 481,
+      "bounds": {
+        "west": -73.96270751953125,
+        "south": 40.774383544921875,
+        "east": -73.9599609375,
+        "north": 40.7757568359375
+      },
+      "ownedBuildingCount": 50,
+      "sourcedHeightCount": 50,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 2,
+        "75": 1,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 77.565504,
+      "topSourcedHeightMeters": [
+        77.565504,
+        66.147777354168,
+        58.81420800000001,
+        57.905904,
+        54.184296
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000482-17-38600-35845",
+      "parentOrder": 482,
+      "bounds": {
+        "west": -73.98193359375,
+        "south": 40.77301025390625,
+        "east": -73.97918701171875,
+        "north": 40.774383544921875
+      },
+      "ownedBuildingCount": 27,
+      "sourcedHeightCount": 27,
+      "skylineBuildingCount": 3,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 4,
+        "75": 3,
+        "90": 3,
+        "100": 1,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 102.111048,
+      "topSourcedHeightMeters": [
+        102.111048,
+        96.6216,
+        92.964,
+        60.816744,
+        44.043600000000005
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000483-17-38601-35845",
+      "parentOrder": 483,
+      "bounds": {
+        "west": -73.97918701171875,
+        "south": 40.77301025390625,
+        "east": -73.9764404296875,
+        "north": 40.774383544921875
+      },
+      "ownedBuildingCount": 26,
+      "sourcedHeightCount": 26,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 3,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 74.74305600000001,
+      "topSourcedHeightMeters": [
+        74.74305600000001,
+        61.26175200000001,
+        60.179712,
+        55.165170176424,
+        49.01184000000001
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000484-16-19301-17922",
+      "parentOrder": 484,
+      "bounds": {
+        "west": -73.9764404296875,
+        "south": 40.77301025390625,
+        "east": -73.970947265625,
+        "north": 40.7757568359375
+      },
+      "ownedBuildingCount": 3,
+      "sourcedHeightCount": 1,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 10.3632,
+      "topSourcedHeightMeters": [
+        10.3632
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000485-16-19302-17922",
+      "parentOrder": 485,
+      "bounds": {
+        "west": -73.970947265625,
+        "south": 40.77301025390625,
+        "east": -73.9654541015625,
+        "north": 40.7757568359375
+      },
+      "ownedBuildingCount": 14,
+      "sourcedHeightCount": 14,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 2,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 69.4944,
+      "topSourcedHeightMeters": [
+        69.4944,
+        64.157352,
+        57.427368,
+        28.767024,
+        26.179272
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000486-17-38606-35845",
+      "parentOrder": 486,
+      "bounds": {
+        "west": -73.9654541015625,
+        "south": 40.77301025390625,
+        "east": -73.96270751953125,
+        "north": 40.774383544921875
+      },
+      "ownedBuildingCount": 63,
+      "sourcedHeightCount": 63,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 58.8264,
+      "topSourcedHeightMeters": [
+        58.8264,
+        55.778400000000005,
+        55.19928,
+        53.353791285599996,
+        52.76088
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000487-17-38607-35845",
+      "parentOrder": 487,
+      "bounds": {
+        "west": -73.96270751953125,
+        "south": 40.77301025390625,
+        "east": -73.9599609375,
+        "north": 40.774383544921875
+      },
+      "ownedBuildingCount": 34,
+      "sourcedHeightCount": 34,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 1,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 60.749688000000006,
+      "topSourcedHeightMeters": [
+        60.749688000000006,
+        58.962479188344005,
+        58.12536,
+        54.412896,
+        51.5870232672
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000488-17-38606-35846",
+      "parentOrder": 488,
+      "bounds": {
+        "west": -73.9654541015625,
+        "south": 40.771636962890625,
+        "east": -73.96270751953125,
+        "north": 40.77301025390625
+      },
+      "ownedBuildingCount": 64,
+      "sourcedHeightCount": 64,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 4,
+        "75": 3,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 88.74861600000001,
+      "topSourcedHeightMeters": [
+        88.74861600000001,
+        87.669624,
+        76.980288,
+        69.22008,
+        57.878472
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000489-17-38607-35846",
+      "parentOrder": 489,
+      "bounds": {
+        "west": -73.96270751953125,
+        "south": 40.771636962890625,
+        "east": -73.9599609375,
+        "north": 40.77301025390625
+      },
+      "ownedBuildingCount": 61,
+      "sourcedHeightCount": 61,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 59.106816,
+      "topSourcedHeightMeters": [
+        59.106816,
+        57.570624,
+        55.272432,
+        50.068836412799996,
+        49.868328000000005
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000490-16-19300-17923",
+      "parentOrder": 490,
+      "bounds": {
+        "west": -73.98193359375,
+        "south": 40.770263671875,
+        "east": -73.9764404296875,
+        "north": 40.77301025390625
+      },
+      "ownedBuildingCount": 39,
+      "sourcedHeightCount": 39,
+      "skylineBuildingCount": 7,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 10,
+        "75": 8,
+        "90": 7,
+        "100": 5,
+        "120": 3
+      },
+      "tallestSourcedHeightMeters": 219.15120000000002,
+      "topSourcedHeightMeters": [
+        219.15120000000002,
+        136.5504,
+        132.588,
+        105.156,
+        103.522272
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000491-16-19301-17923",
+      "parentOrder": 491,
+      "bounds": {
+        "west": -73.9764404296875,
+        "south": 40.770263671875,
+        "east": -73.970947265625,
+        "north": 40.77301025390625
+      },
+      "ownedBuildingCount": 2,
+      "sourcedHeightCount": 2,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 12.8016,
+      "topSourcedHeightMeters": [
+        12.8016,
+        6.096
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000492-16-19302-17923",
+      "parentOrder": 492,
+      "bounds": {
+        "west": -73.970947265625,
+        "south": 40.770263671875,
+        "east": -73.9654541015625,
+        "north": 40.77301025390625
+      },
+      "ownedBuildingCount": 55,
+      "sourcedHeightCount": 55,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 5,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 70.390512,
+      "topSourcedHeightMeters": [
+        70.390512,
+        67.610736,
+        66.7512,
+        66.503189616672,
+        63.815976000000006
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000493-17-38606-35847",
+      "parentOrder": 493,
+      "bounds": {
+        "west": -73.9654541015625,
+        "south": 40.770263671875,
+        "east": -73.96270751953125,
+        "north": 40.771636962890625
+      },
+      "ownedBuildingCount": 39,
+      "sourcedHeightCount": 39,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 6,
+        "75": 2,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 81.30235200000001,
+      "topSourcedHeightMeters": [
+        81.30235200000001,
+        76.1283848016,
+        70.564248,
+        65.72707199999999,
+        61.67628
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000494-17-38607-35847",
+      "parentOrder": 494,
+      "bounds": {
+        "west": -73.96270751953125,
+        "south": 40.770263671875,
+        "east": -73.9599609375,
+        "north": 40.771636962890625
+      },
+      "ownedBuildingCount": 69,
+      "sourcedHeightCount": 69,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 2,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 65.93128800000001,
+      "topSourcedHeightMeters": [
+        65.93128800000001,
+        64.19088,
+        59.713368,
+        58.311640348800005,
+        50.848055156112
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000495-17-38610-35840",
+      "parentOrder": 495,
+      "bounds": {
+        "west": -73.9544677734375,
+        "south": 40.779876708984375,
+        "east": -73.95172119140625,
+        "north": 40.78125
+      },
+      "ownedBuildingCount": 66,
+      "sourcedHeightCount": 66,
+      "skylineBuildingCount": 2,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 3,
+        "75": 3,
+        "90": 2,
+        "100": 2,
+        "120": 2
+      },
+      "tallestSourcedHeightMeters": 143.256,
+      "topSourcedHeightMeters": [
+        143.256,
+        134.4168,
+        77.23632,
+        47.80788,
+        47.298864
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000496-17-38611-35840",
+      "parentOrder": 496,
+      "bounds": {
+        "west": -73.95172119140625,
+        "south": 40.779876708984375,
+        "east": -73.948974609375,
+        "north": 40.78125
+      },
+      "ownedBuildingCount": 69,
+      "sourcedHeightCount": 69,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 38.052156601656,
+      "topSourcedHeightMeters": [
+        38.052156601656,
+        27.432000000000002,
+        22.073616,
+        20.4216,
+        19.787616
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000497-17-38612-35840",
+      "parentOrder": 497,
+      "bounds": {
+        "west": -73.948974609375,
+        "south": 40.779876708984375,
+        "east": -73.94622802734375,
+        "north": 40.78125
+      },
+      "ownedBuildingCount": 61,
+      "sourcedHeightCount": 61,
+      "skylineBuildingCount": 2,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 4,
+        "75": 3,
+        "90": 2,
+        "100": 1,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 117.6528,
+      "topSourcedHeightMeters": [
+        117.6528,
+        92.964,
+        86.343744,
+        67.056,
+        30.1752
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000498-17-38613-35840",
+      "parentOrder": 498,
+      "bounds": {
+        "west": -73.94622802734375,
+        "south": 40.779876708984375,
+        "east": -73.9434814453125,
+        "north": 40.78125
+      },
+      "ownedBuildingCount": 11,
+      "sourcedHeightCount": 11,
+      "skylineBuildingCount": 1,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 4,
+        "75": 1,
+        "90": 1,
+        "100": 1,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 109.90169261476801,
+      "topSourcedHeightMeters": [
+        109.90169261476801,
+        68.81469600000001,
+        66.349563961008,
+        65.70102454790401,
+        50.5968
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000499-16-19304-17920",
+      "parentOrder": 499,
+      "bounds": {
+        "west": -73.9599609375,
+        "south": 40.77850341796875,
+        "east": -73.9544677734375,
+        "north": 40.78125
+      },
+      "ownedBuildingCount": 105,
+      "sourcedHeightCount": 105,
+      "skylineBuildingCount": 5,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 13,
+        "75": 6,
+        "90": 5,
+        "100": 2,
+        "120": 1
+      },
+      "tallestSourcedHeightMeters": 120.7008,
+      "topSourcedHeightMeters": [
+        120.7008,
+        104.2416,
+        96.9264,
+        94.08566400000001,
+        91.10582531148002
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000500-17-38610-35841",
+      "parentOrder": 500,
+      "bounds": {
+        "west": -73.9544677734375,
+        "south": 40.77850341796875,
+        "east": -73.95172119140625,
+        "north": 40.779876708984375
+      },
+      "ownedBuildingCount": 37,
+      "sourcedHeightCount": 37,
+      "skylineBuildingCount": 2,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 5,
+        "75": 4,
+        "90": 2,
+        "100": 1,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 111.294672,
+      "topSourcedHeightMeters": [
+        111.294672,
+        98.06635200000001,
+        84.42960000000001,
+        77.88554400000001,
+        65.845944
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000501-17-38611-35841",
+      "parentOrder": 501,
+      "bounds": {
+        "west": -73.95172119140625,
+        "south": 40.77850341796875,
+        "east": -73.948974609375,
+        "north": 40.779876708984375
+      },
+      "ownedBuildingCount": 66,
+      "sourcedHeightCount": 66,
+      "skylineBuildingCount": 1,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 2,
+        "75": 1,
+        "90": 1,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 92.6592,
+      "topSourcedHeightMeters": [
+        92.6592,
+        67.735704,
+        51.590448,
+        20.217384,
+        19.882104
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000502-17-38612-35841",
+      "parentOrder": 502,
+      "bounds": {
+        "west": -73.948974609375,
+        "south": 40.77850341796875,
+        "east": -73.94622802734375,
+        "north": 40.779876708984375
+      },
+      "ownedBuildingCount": 60,
+      "sourcedHeightCount": 60,
+      "skylineBuildingCount": 2,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 3,
+        "75": 3,
+        "90": 2,
+        "100": 1,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 114.90960000000001,
+      "topSourcedHeightMeters": [
+        114.90960000000001,
+        95.365824,
+        79.5528,
+        53.644800000000004,
+        35.6616
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000503-17-38613-35841",
+      "parentOrder": 503,
+      "bounds": {
+        "west": -73.94622802734375,
+        "south": 40.77850341796875,
+        "east": -73.9434814453125,
+        "north": 40.779876708984375
+      },
+      "ownedBuildingCount": 16,
+      "sourcedHeightCount": 16,
+      "skylineBuildingCount": 2,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 2,
+        "75": 2,
+        "90": 2,
+        "100": 2,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 105.599004119832,
+      "topSourcedHeightMeters": [
+        105.599004119832,
+        104.564207083512,
+        39.95928,
+        24.198405417672,
+        23.768346422064
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000504-16-19307-17920",
+      "parentOrder": 504,
+      "bounds": {
+        "west": -73.9434814453125,
+        "south": 40.77850341796875,
+        "east": -73.93798828125,
+        "north": 40.78125
+      },
+      "ownedBuildingCount": 1,
+      "sourcedHeightCount": 1,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 32.6136,
+      "topSourcedHeightMeters": [
+        32.6136
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000505-17-38608-35842",
+      "parentOrder": 505,
+      "bounds": {
+        "west": -73.9599609375,
+        "south": 40.777130126953125,
+        "east": -73.95721435546875,
+        "north": 40.77850341796875
+      },
+      "ownedBuildingCount": 55,
+      "sourcedHeightCount": 55,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 57.74740800000001,
+      "topSourcedHeightMeters": [
+        57.74740800000001,
+        55.723536,
+        55.450912248575996,
+        54.254400000000004,
+        51.2064
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000506-17-38609-35842",
+      "parentOrder": 506,
+      "bounds": {
+        "west": -73.95721435546875,
+        "south": 40.777130126953125,
+        "east": -73.9544677734375,
+        "north": 40.77850341796875
+      },
+      "ownedBuildingCount": 36,
+      "sourcedHeightCount": 36,
+      "skylineBuildingCount": 1,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 2,
+        "75": 1,
+        "90": 1,
+        "100": 1,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 112.16640000000001,
+      "topSourcedHeightMeters": [
+        112.16640000000001,
+        62.724792,
+        55.986292052592006,
+        54.586632,
+        50.435256
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000507-17-38610-35842",
+      "parentOrder": 507,
+      "bounds": {
+        "west": -73.9544677734375,
+        "south": 40.777130126953125,
+        "east": -73.95172119140625,
+        "north": 40.77850341796875
+      },
+      "ownedBuildingCount": 50,
+      "sourcedHeightCount": 50,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 4,
+        "75": 1,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 89.78188800000001,
+      "topSourcedHeightMeters": [
+        89.78188800000001,
+        74.923982594712,
+        70.472808,
+        62.04204000000001,
+        55.476648
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000508-17-38611-35842",
+      "parentOrder": 508,
+      "bounds": {
+        "west": -73.95172119140625,
+        "south": 40.777130126953125,
+        "east": -73.948974609375,
+        "north": 40.77850341796875
+      },
+      "ownedBuildingCount": 46,
+      "sourcedHeightCount": 46,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 2,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 64.00800000000001,
+      "topSourcedHeightMeters": [
+        64.00800000000001,
+        62.145672,
+        55.796688,
+        48.49368,
+        41.3276133822
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000509-17-38612-35842",
+      "parentOrder": 509,
+      "bounds": {
+        "west": -73.948974609375,
+        "south": 40.777130126953125,
+        "east": -73.94622802734375,
+        "north": 40.77850341796875
+      },
+      "ownedBuildingCount": 67,
+      "sourcedHeightCount": 67,
+      "skylineBuildingCount": 2,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 2,
+        "75": 2,
+        "90": 2,
+        "100": 1,
+        "120": 1
+      },
+      "tallestSourcedHeightMeters": 142.3416,
+      "topSourcedHeightMeters": [
+        142.3416,
+        90.766010926848,
+        43.51394457468,
+        32.187346203792,
+        28.485944011488
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000510-17-38613-35842",
+      "parentOrder": 510,
+      "bounds": {
+        "west": -73.94622802734375,
+        "south": 40.777130126953125,
+        "east": -73.9434814453125,
+        "north": 40.77850341796875
+      },
+      "ownedBuildingCount": 26,
+      "sourcedHeightCount": 26,
+      "skylineBuildingCount": 1,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 1,
+        "75": 1,
+        "90": 1,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 92.6592,
+      "topSourcedHeightMeters": [
+        92.6592,
+        46.45152,
+        28.114124169912003,
+        20.634960000000003,
+        20.570629820304003
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000511-17-38608-35843",
+      "parentOrder": 511,
+      "bounds": {
+        "west": -73.9599609375,
+        "south": 40.7757568359375,
+        "east": -73.95721435546875,
+        "north": 40.777130126953125
+      },
+      "ownedBuildingCount": 55,
+      "sourcedHeightCount": 55,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 58.528702983,
+      "topSourcedHeightMeters": [
+        58.528702983,
+        57.796963975056,
+        55.868264491848,
+        55.792380953496,
+        54.618577021200004
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000512-17-38609-35843",
+      "parentOrder": 512,
+      "bounds": {
+        "west": -73.95721435546875,
+        "south": 40.7757568359375,
+        "east": -73.9544677734375,
+        "north": 40.777130126953125
+      },
+      "ownedBuildingCount": 69,
+      "sourcedHeightCount": 69,
+      "skylineBuildingCount": 1,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 2,
+        "75": 2,
+        "90": 1,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 92.19975844898401,
+      "topSourcedHeightMeters": [
+        92.19975844898401,
+        81.97291200000001,
+        54.66562298349601,
+        34.1376,
+        31.887147080544
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000513-17-38610-35843",
+      "parentOrder": 513,
+      "bounds": {
+        "west": -73.9544677734375,
+        "south": 40.7757568359375,
+        "east": -73.95172119140625,
+        "north": 40.777130126953125
+      },
+      "ownedBuildingCount": 78,
+      "sourcedHeightCount": 78,
+      "skylineBuildingCount": 3,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 3,
+        "75": 3,
+        "90": 3,
+        "100": 2,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 117.47296800000001,
+      "topSourcedHeightMeters": [
+        117.47296800000001,
+        110.33760000000001,
+        92.38226121936,
+        58.494168,
+        24.097488000000002
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000514-17-38611-35843",
+      "parentOrder": 514,
+      "bounds": {
+        "west": -73.95172119140625,
+        "south": 40.7757568359375,
+        "east": -73.948974609375,
+        "north": 40.777130126953125
+      },
+      "ownedBuildingCount": 58,
+      "sourcedHeightCount": 58,
+      "skylineBuildingCount": 1,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 1,
+        "75": 1,
+        "90": 1,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 90.61399200000001,
+      "topSourcedHeightMeters": [
+        90.61399200000001,
+        47.804832000000005,
+        29.970984,
+        27.968448000000002,
+        24.207216000000003
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000515-17-38612-35843",
+      "parentOrder": 515,
+      "bounds": {
+        "west": -73.948974609375,
+        "south": 40.7757568359375,
+        "east": -73.94622802734375,
+        "north": 40.777130126953125
+      },
+      "ownedBuildingCount": 49,
+      "sourcedHeightCount": 49,
+      "skylineBuildingCount": 2,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 3,
+        "75": 2,
+        "90": 2,
+        "100": 1,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 117.04320000000001,
+      "topSourcedHeightMeters": [
+        117.04320000000001,
+        98.185224,
+        71.0184,
+        50.593752,
+        49.490376000000005
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000516-17-38613-35843",
+      "parentOrder": 516,
+      "bounds": {
+        "west": -73.94622802734375,
+        "south": 40.7757568359375,
+        "east": -73.9434814453125,
+        "north": 40.777130126953125
+      },
+      "ownedBuildingCount": 60,
+      "sourcedHeightCount": 60,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 2,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 64.61760000000001,
+      "topSourcedHeightMeters": [
+        64.61760000000001,
+        62.16396,
+        59.929776000000004,
+        21.921216,
+        19.921728
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000517-16-19307-17921",
+      "parentOrder": 517,
+      "bounds": {
+        "west": -73.9434814453125,
+        "south": 40.7757568359375,
+        "east": -73.93798828125,
+        "north": 40.77850341796875
+      },
+      "ownedBuildingCount": 4,
+      "sourcedHeightCount": 4,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 27.023568,
+      "topSourcedHeightMeters": [
+        27.023568,
+        12.551664,
+        3.3528000000000002,
+        3.048
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000518-17-38608-35844",
+      "parentOrder": 518,
+      "bounds": {
+        "west": -73.9599609375,
+        "south": 40.774383544921875,
+        "east": -73.95721435546875,
+        "north": 40.7757568359375
+      },
+      "ownedBuildingCount": 70,
+      "sourcedHeightCount": 70,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 5,
+        "75": 1,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 76.097283570432,
+      "topSourcedHeightMeters": [
+        76.097283570432,
+        67.056,
+        64.65225533328,
+        64.00800000000001,
+        63.7032
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000519-17-38609-35844",
+      "parentOrder": 519,
+      "bounds": {
+        "west": -73.95721435546875,
+        "south": 40.774383544921875,
+        "east": -73.9544677734375,
+        "north": 40.7757568359375
+      },
+      "ownedBuildingCount": 60,
+      "sourcedHeightCount": 60,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 3,
+        "75": 2,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 85.03920000000001,
+      "topSourcedHeightMeters": [
+        85.03920000000001,
+        80.1624,
+        62.243208,
+        37.1856,
+        34.326576
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000520-17-38610-35844",
+      "parentOrder": 520,
+      "bounds": {
+        "west": -73.9544677734375,
+        "south": 40.774383544921875,
+        "east": -73.95172119140625,
+        "north": 40.7757568359375
+      },
+      "ownedBuildingCount": 85,
+      "sourcedHeightCount": 85,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 3,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 71.628,
+      "topSourcedHeightMeters": [
+        71.628,
+        65.532,
+        63.7032,
+        59.262264,
+        30.358647744864
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000521-17-38611-35844",
+      "parentOrder": 521,
+      "bounds": {
+        "west": -73.95172119140625,
+        "south": 40.774383544921875,
+        "east": -73.948974609375,
+        "north": 40.7757568359375
+      },
+      "ownedBuildingCount": 81,
+      "sourcedHeightCount": 81,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 2,
+        "75": 1,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 84.12480000000001,
+      "topSourcedHeightMeters": [
+        84.12480000000001,
+        61.237368000000004,
+        55.068216,
+        33.278064,
+        29.340048000000003
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000522-17-38612-35844",
+      "parentOrder": 522,
+      "bounds": {
+        "west": -73.948974609375,
+        "south": 40.774383544921875,
+        "east": -73.94622802734375,
+        "north": 40.7757568359375
+      },
+      "ownedBuildingCount": 73,
+      "sourcedHeightCount": 73,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 1,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 62.65164000000001,
+      "topSourcedHeightMeters": [
+        62.65164000000001,
+        56.887872,
+        51.816,
+        50.316384000000006,
+        36.59124
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000523-17-38613-35844",
+      "parentOrder": 523,
+      "bounds": {
+        "west": -73.94622802734375,
+        "south": 40.774383544921875,
+        "east": -73.9434814453125,
+        "north": 40.7757568359375
+      },
+      "ownedBuildingCount": 35,
+      "sourcedHeightCount": 35,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 58.463688000000005,
+      "topSourcedHeightMeters": [
+        58.463688000000005,
+        58.344816,
+        57.71388,
+        50.715672,
+        50.227992
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000524-17-38608-35845",
+      "parentOrder": 524,
+      "bounds": {
+        "west": -73.9599609375,
+        "south": 40.77301025390625,
+        "east": -73.95721435546875,
+        "north": 40.774383544921875
+      },
+      "ownedBuildingCount": 49,
+      "sourcedHeightCount": 49,
+      "skylineBuildingCount": 1,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 5,
+        "75": 1,
+        "90": 1,
+        "100": 1,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 102.7176,
+      "topSourcedHeightMeters": [
+        102.7176,
+        69.7992,
+        63.7032,
+        63.020871251376,
+        61.289600347656005
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000525-17-38609-35845",
+      "parentOrder": 525,
+      "bounds": {
+        "west": -73.95721435546875,
+        "south": 40.77301025390625,
+        "east": -73.9544677734375,
+        "north": 40.774383544921875
+      },
+      "ownedBuildingCount": 45,
+      "sourcedHeightCount": 45,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 3,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 67.813377354432,
+      "topSourcedHeightMeters": [
+        67.813377354432,
+        65.794128,
+        60.1847189496,
+        57.930288000000004,
+        56.20512000000001
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000526-17-38610-35845",
+      "parentOrder": 526,
+      "bounds": {
+        "west": -73.9544677734375,
+        "south": 40.77301025390625,
+        "east": -73.95172119140625,
+        "north": 40.774383544921875
+      },
+      "ownedBuildingCount": 48,
+      "sourcedHeightCount": 48,
+      "skylineBuildingCount": 3,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 3,
+        "75": 3,
+        "90": 3,
+        "100": 2,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 118.2624,
+      "topSourcedHeightMeters": [
+        118.2624,
+        105.7656,
+        96.077166828264,
+        59.372421316896,
+        54.864000000000004
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000527-17-38611-35845",
+      "parentOrder": 527,
+      "bounds": {
+        "west": -73.95172119140625,
+        "south": 40.77301025390625,
+        "east": -73.948974609375,
+        "north": 40.774383544921875
+      },
+      "ownedBuildingCount": 58,
+      "sourcedHeightCount": 58,
+      "skylineBuildingCount": 3,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 3,
+        "75": 3,
+        "90": 3,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 99.29164800000001,
+      "topSourcedHeightMeters": [
+        99.29164800000001,
+        97.34397600000001,
+        94.1832,
+        56.64708,
+        27.569160000000004
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000528-17-38612-35845",
+      "parentOrder": 528,
+      "bounds": {
+        "west": -73.948974609375,
+        "south": 40.77301025390625,
+        "east": -73.94622802734375,
+        "north": 40.774383544921875
+      },
+      "ownedBuildingCount": 75,
+      "sourcedHeightCount": 75,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 58.18632,
+      "topSourcedHeightMeters": [
+        58.18632,
+        57.43956,
+        26.069544,
+        25.572720000000004,
+        21.241512
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000529-17-38613-35845",
+      "parentOrder": 529,
+      "bounds": {
+        "west": -73.94622802734375,
+        "south": 40.77301025390625,
+        "east": -73.9434814453125,
+        "north": 40.774383544921875
+      },
+      "ownedBuildingCount": 11,
+      "sourcedHeightCount": 11,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 2,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 66.7512,
+      "topSourcedHeightMeters": [
+        66.7512,
+        64.31280000000001,
+        50.67909600000001,
+        50.136552,
+        44.003976
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000530-17-38608-35846",
+      "parentOrder": 530,
+      "bounds": {
+        "west": -73.9599609375,
+        "south": 40.771636962890625,
+        "east": -73.95721435546875,
+        "north": 40.77301025390625
+      },
+      "ownedBuildingCount": 46,
+      "sourcedHeightCount": 45,
+      "skylineBuildingCount": 1,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 2,
+        "75": 1,
+        "90": 1,
+        "100": 1,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 103.9368,
+      "topSourcedHeightMeters": [
+        103.9368,
+        63.653968341288,
+        58.871798082432,
+        57.032337181224,
+        43.164865824528
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000531-17-38609-35846",
+      "parentOrder": 531,
+      "bounds": {
+        "west": -73.95721435546875,
+        "south": 40.771636962890625,
+        "east": -73.9544677734375,
+        "north": 40.77301025390625
+      },
+      "ownedBuildingCount": 67,
+      "sourcedHeightCount": 67,
+      "skylineBuildingCount": 2,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 4,
+        "75": 2,
+        "90": 2,
+        "100": 2,
+        "120": 1
+      },
+      "tallestSourcedHeightMeters": 146.9136,
+      "topSourcedHeightMeters": [
+        146.9136,
+        102.4128,
+        66.4464,
+        66.1416,
+        57.242695891824006
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000532-17-38610-35846",
+      "parentOrder": 532,
+      "bounds": {
+        "west": -73.9544677734375,
+        "south": 40.771636962890625,
+        "east": -73.95172119140625,
+        "north": 40.77301025390625
+      },
+      "ownedBuildingCount": 45,
+      "sourcedHeightCount": 45,
+      "skylineBuildingCount": 2,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 6,
+        "75": 2,
+        "90": 2,
+        "100": 1,
+        "120": 1
+      },
+      "tallestSourcedHeightMeters": 140.777976,
+      "topSourcedHeightMeters": [
+        140.777976,
+        96.012,
+        69.7992,
+        62.154443903208005,
+        61.823410270128
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000533-17-38611-35846",
+      "parentOrder": 533,
+      "bounds": {
+        "west": -73.95172119140625,
+        "south": 40.771636962890625,
+        "east": -73.948974609375,
+        "north": 40.77301025390625
+      },
+      "ownedBuildingCount": 29,
+      "sourcedHeightCount": 29,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 2,
+        "75": 1,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 89.20581600000001,
+      "topSourcedHeightMeters": [
+        89.20581600000001,
+        65.753195152224,
+        38.950392,
+        38.145720000000004,
+        36.185856
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000534-17-38608-35847",
+      "parentOrder": 534,
+      "bounds": {
+        "west": -73.9599609375,
+        "south": 40.770263671875,
+        "east": -73.95721435546875,
+        "north": 40.771636962890625
+      },
+      "ownedBuildingCount": 54,
+      "sourcedHeightCount": 54,
+      "skylineBuildingCount": 2,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 5,
+        "75": 2,
+        "90": 2,
+        "100": 1,
+        "120": 1
+      },
+      "tallestSourcedHeightMeters": 128.01600000000002,
+      "topSourcedHeightMeters": [
+        128.01600000000002,
+        99.3648,
+        68.0000396664,
+        65.532,
+        62.999619382272
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000535-17-38609-35847",
+      "parentOrder": 535,
+      "bounds": {
+        "west": -73.95721435546875,
+        "south": 40.770263671875,
+        "east": -73.9544677734375,
+        "north": 40.771636962890625
+      },
+      "ownedBuildingCount": 55,
+      "sourcedHeightCount": 55,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 1,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 61.968801314880004,
+      "topSourcedHeightMeters": [
+        61.968801314880004,
+        57.81867913711201,
+        54.254400000000004,
+        27.937968,
+        25.270968
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000536-17-38610-35847",
+      "parentOrder": 536,
+      "bounds": {
+        "west": -73.9544677734375,
+        "south": 40.770263671875,
+        "east": -73.95172119140625,
+        "north": 40.771636962890625
+      },
+      "ownedBuildingCount": 66,
+      "sourcedHeightCount": 66,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 1,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 64.00800000000001,
+      "topSourcedHeightMeters": [
+        64.00800000000001,
+        59.551824,
+        58.15315868964001,
+        37.914072000000004,
+        32.03448
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000537-17-38611-35847",
+      "parentOrder": 537,
+      "bounds": {
+        "west": -73.95172119140625,
+        "south": 40.770263671875,
+        "east": -73.948974609375,
+        "north": 40.771636962890625
+      },
+      "ownedBuildingCount": 33,
+      "sourcedHeightCount": 33,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 1,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 62.474856,
+      "topSourcedHeightMeters": [
+        62.474856,
+        55.168800000000005,
+        51.529488,
+        42.84878400000001,
+        41.757600000000004
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000538-16-19306-17923",
+      "parentOrder": 538,
+      "bounds": {
+        "west": -73.948974609375,
+        "south": 40.770263671875,
+        "east": -73.9434814453125,
+        "north": 40.77301025390625
+      },
+      "ownedBuildingCount": 66,
+      "sourcedHeightCount": 66,
+      "skylineBuildingCount": 2,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 6,
+        "75": 3,
+        "90": 2,
+        "100": 2,
+        "120": 1
+      },
+      "tallestSourcedHeightMeters": 121.715784,
+      "topSourcedHeightMeters": [
+        121.715784,
+        117.348,
+        86.09076,
+        67.144392,
+        64.00800000000001
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000539-16-19307-17923",
+      "parentOrder": 539,
+      "bounds": {
+        "west": -73.9434814453125,
+        "south": 40.770263671875,
+        "east": -73.93798828125,
+        "north": 40.77301025390625
+      },
+      "ownedBuildingCount": 5,
+      "sourcedHeightCount": 5,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 34.65576,
+      "topSourcedHeightMeters": [
+        34.65576,
+        17.3736,
+        4.2672,
+        3.6576000000000004,
+        3.048
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000540-15-9649-8958",
+      "parentOrder": 540,
+      "bounds": {
+        "west": -73.992919921875,
+        "south": 40.7867431640625,
+        "east": -73.98193359375,
+        "north": 40.792236328125
+      },
+      "ownedBuildingCount": 1,
+      "sourcedHeightCount": 1,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 3.3528000000000002,
+      "topSourcedHeightMeters": [
+        3.3528000000000002
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000541-16-19299-17918",
+      "parentOrder": 541,
+      "bounds": {
+        "west": -73.9874267578125,
+        "south": 40.78399658203125,
+        "east": -73.98193359375,
+        "north": 40.7867431640625
+      },
+      "ownedBuildingCount": 22,
+      "sourcedHeightCount": 20,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 57.927240000000005,
+      "topSourcedHeightMeters": [
+        57.927240000000005,
+        51.28869600000001,
+        50.273712,
+        45.424344000000005,
+        44.903136
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000542-17-38598-35838",
+      "parentOrder": 542,
+      "bounds": {
+        "west": -73.9874267578125,
+        "south": 40.782623291015625,
+        "east": -73.98468017578125,
+        "north": 40.78399658203125
+      },
+      "ownedBuildingCount": 3,
+      "sourcedHeightCount": 3,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 5.1816,
+      "topSourcedHeightMeters": [
+        5.1816,
+        4.2672,
+        4.224528
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000543-17-38599-35838",
+      "parentOrder": 543,
+      "bounds": {
+        "west": -73.98468017578125,
+        "south": 40.782623291015625,
+        "east": -73.98193359375,
+        "north": 40.78399658203125
+      },
+      "ownedBuildingCount": 84,
+      "sourcedHeightCount": 84,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 54.729888,
+      "topSourcedHeightMeters": [
+        54.729888,
+        51.322224,
+        50.06949600000001,
+        43.00118400000001,
+        38.032944
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000544-16-19298-17919",
+      "parentOrder": 544,
+      "bounds": {
+        "west": -73.992919921875,
+        "south": 40.78125,
+        "east": -73.9874267578125,
+        "north": 40.78399658203125
+      },
+      "ownedBuildingCount": 1,
+      "sourcedHeightCount": 1,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 3.048,
+      "topSourcedHeightMeters": [
+        3.048
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000545-17-38598-35839",
+      "parentOrder": 545,
+      "bounds": {
+        "west": -73.9874267578125,
+        "south": 40.78125,
+        "east": -73.98468017578125,
+        "north": 40.782623291015625
+      },
+      "ownedBuildingCount": 2,
+      "sourcedHeightCount": 2,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 1,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 63.876936,
+      "topSourcedHeightMeters": [
+        63.876936,
+        20.488656000000002
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000546-17-38599-35839",
+      "parentOrder": 546,
+      "bounds": {
+        "west": -73.98468017578125,
+        "south": 40.78125,
+        "east": -73.98193359375,
+        "north": 40.782623291015625
+      },
+      "ownedBuildingCount": 59,
+      "sourcedHeightCount": 59,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 1,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 70.38746400000001,
+      "topSourcedHeightMeters": [
+        70.38746400000001,
+        59.338464,
+        54.623208000000005,
+        51.249072,
+        51.224688
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000547-17-38600-35832",
+      "parentOrder": 547,
+      "bounds": {
+        "west": -73.98193359375,
+        "south": 40.790863037109375,
+        "east": -73.97918701171875,
+        "north": 40.792236328125
+      },
+      "ownedBuildingCount": 2,
+      "sourcedHeightCount": 2,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 47.68900800000001,
+      "topSourcedHeightMeters": [
+        47.68900800000001,
+        6.096
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000548-17-38601-35832",
+      "parentOrder": 548,
+      "bounds": {
+        "west": -73.97918701171875,
+        "south": 40.790863037109375,
+        "east": -73.9764404296875,
+        "north": 40.792236328125
+      },
+      "ownedBuildingCount": 63,
+      "sourcedHeightCount": 63,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 50.0634,
+      "topSourcedHeightMeters": [
+        50.0634,
+        49.923192,
+        49.654968000000004,
+        49.40808,
+        47.387256
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000549-17-38602-35832",
+      "parentOrder": 549,
+      "bounds": {
+        "west": -73.9764404296875,
+        "south": 40.790863037109375,
+        "east": -73.97369384765625,
+        "north": 40.792236328125
+      },
+      "ownedBuildingCount": 57,
+      "sourcedHeightCount": 57,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 1,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 62.7888,
+      "topSourcedHeightMeters": [
+        62.7888,
+        49.084992,
+        48.366409236,
+        45.424344000000005,
+        45.415200000000006
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000550-17-38603-35832",
+      "parentOrder": 550,
+      "bounds": {
+        "west": -73.97369384765625,
+        "south": 40.790863037109375,
+        "east": -73.970947265625,
+        "north": 40.792236328125
+      },
+      "ownedBuildingCount": 34,
+      "sourcedHeightCount": 34,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 51.359926598712,
+      "topSourcedHeightMeters": [
+        51.359926598712,
+        47.169923886024,
+        46.488096000000006,
+        46.171104,
+        28.456128
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000551-17-38604-35832",
+      "parentOrder": 551,
+      "bounds": {
+        "west": -73.970947265625,
+        "south": 40.790863037109375,
+        "east": -73.96820068359375,
+        "north": 40.792236328125
+      },
+      "ownedBuildingCount": 44,
+      "sourcedHeightCount": 44,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 1,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 71.71944,
+      "topSourcedHeightMeters": [
+        71.71944,
+        55.516272,
+        50.62728,
+        46.293024,
+        31.010352
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000552-17-38605-35832",
+      "parentOrder": 552,
+      "bounds": {
+        "west": -73.96820068359375,
+        "south": 40.790863037109375,
+        "east": -73.9654541015625,
+        "north": 40.792236328125
+      },
+      "ownedBuildingCount": 83,
+      "sourcedHeightCount": 83,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 1,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 69.53097600000001,
+      "topSourcedHeightMeters": [
+        69.53097600000001,
+        54.455568,
+        50.782728000000006,
+        50.352959999999996,
+        32.089344000000004
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000553-17-38600-35833",
+      "parentOrder": 553,
+      "bounds": {
+        "west": -73.98193359375,
+        "south": 40.78948974609375,
+        "east": -73.97918701171875,
+        "north": 40.790863037109375
+      },
+      "ownedBuildingCount": 8,
+      "sourcedHeightCount": 8,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 1,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 65.370456,
+      "topSourcedHeightMeters": [
+        65.370456,
+        59.826144000000006,
+        53.68137600000001,
+        50.32248,
+        49.84089600000001
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000554-17-38601-35833",
+      "parentOrder": 554,
+      "bounds": {
+        "west": -73.97918701171875,
+        "south": 40.78948974609375,
+        "east": -73.9764404296875,
+        "north": 40.790863037109375
+      },
+      "ownedBuildingCount": 75,
+      "sourcedHeightCount": 75,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 58.405776,
+      "topSourcedHeightMeters": [
+        58.405776,
+        57.049416,
+        50.919888,
+        49.6824,
+        49.46904000000001
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000555-17-38602-35833",
+      "parentOrder": 555,
+      "bounds": {
+        "west": -73.9764404296875,
+        "south": 40.78948974609375,
+        "east": -73.97369384765625,
+        "north": 40.790863037109375
+      },
+      "ownedBuildingCount": 23,
+      "sourcedHeightCount": 23,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 1,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 61.5696,
+      "topSourcedHeightMeters": [
+        61.5696,
+        52.1208,
+        49.60315200000001,
+        47.981615999999995,
+        46.6344
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000556-17-38603-35833",
+      "parentOrder": 556,
+      "bounds": {
+        "west": -73.97369384765625,
+        "south": 40.78948974609375,
+        "east": -73.970947265625,
+        "north": 40.790863037109375
+      },
+      "ownedBuildingCount": 28,
+      "sourcedHeightCount": 27,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 54.418992,
+      "topSourcedHeightMeters": [
+        54.418992,
+        52.68772800000001,
+        51.858672,
+        50.889408,
+        47.311056
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000557-17-38604-35833",
+      "parentOrder": 557,
+      "bounds": {
+        "west": -73.970947265625,
+        "south": 40.78948974609375,
+        "east": -73.96820068359375,
+        "north": 40.790863037109375
+      },
+      "ownedBuildingCount": 20,
+      "sourcedHeightCount": 20,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 4,
+        "75": 3,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 84.96325738836,
+      "topSourcedHeightMeters": [
+        84.96325738836,
+        81.56448000000002,
+        80.4672,
+        64.31280000000001,
+        58.512456
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000558-17-38605-35833",
+      "parentOrder": 558,
+      "bounds": {
+        "west": -73.96820068359375,
+        "south": 40.78948974609375,
+        "east": -73.9654541015625,
+        "north": 40.790863037109375
+      },
+      "ownedBuildingCount": 36,
+      "sourcedHeightCount": 36,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 55.824990204,
+      "topSourcedHeightMeters": [
+        55.824990204,
+        53.001672,
+        49.9872,
+        41.644824,
+        38.996151413688004
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000559-16-19303-17916",
+      "parentOrder": 559,
+      "bounds": {
+        "west": -73.9654541015625,
+        "south": 40.78948974609375,
+        "east": -73.9599609375,
+        "north": 40.792236328125
+      },
+      "ownedBuildingCount": 5,
+      "sourcedHeightCount": 5,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 1,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 64.61760000000001,
+      "topSourcedHeightMeters": [
+        64.61760000000001,
+        53.2254323856,
+        50.85283200000001,
+        16.681704,
+        16.67256
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000560-17-38600-35834",
+      "parentOrder": 560,
+      "bounds": {
+        "west": -73.98193359375,
+        "south": 40.788116455078125,
+        "east": -73.97918701171875,
+        "north": 40.78948974609375
+      },
+      "ownedBuildingCount": 51,
+      "sourcedHeightCount": 51,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 49.971959999999996,
+      "topSourcedHeightMeters": [
+        49.971959999999996,
+        49.341024000000004,
+        47.503080000000004,
+        46.954440000000005,
+        46.140624
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000561-17-38601-35834",
+      "parentOrder": 561,
+      "bounds": {
+        "west": -73.97918701171875,
+        "south": 40.788116455078125,
+        "east": -73.9764404296875,
+        "north": 40.78948974609375
+      },
+      "ownedBuildingCount": 33,
+      "sourcedHeightCount": 33,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 3,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 68.58,
+      "topSourcedHeightMeters": [
+        68.58,
+        63.3984,
+        63.3984,
+        56.388000000000005,
+        53.763672
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000562-17-38602-35834",
+      "parentOrder": 562,
+      "bounds": {
+        "west": -73.9764404296875,
+        "south": 40.788116455078125,
+        "east": -73.97369384765625,
+        "north": 40.78948974609375
+      },
+      "ownedBuildingCount": 19,
+      "sourcedHeightCount": 19,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 2,
+        "75": 2,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 85.91092800000001,
+      "topSourcedHeightMeters": [
+        85.91092800000001,
+        79.119984,
+        49.62916426598401,
+        46.39056,
+        28.544520000000002
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000563-17-38603-35834",
+      "parentOrder": 563,
+      "bounds": {
+        "west": -73.97369384765625,
+        "south": 40.788116455078125,
+        "east": -73.970947265625,
+        "north": 40.78948974609375
+      },
+      "ownedBuildingCount": 67,
+      "sourcedHeightCount": 67,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 1,
+        "75": 1,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 85.91092800000001,
+      "topSourcedHeightMeters": [
+        85.91092800000001,
+        48.911256,
+        28.379928,
+        26.822400000000002,
+        21.640800000000002
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000564-17-38604-35834",
+      "parentOrder": 564,
+      "bounds": {
+        "west": -73.970947265625,
+        "south": 40.788116455078125,
+        "east": -73.96820068359375,
+        "north": 40.78948974609375
+      },
+      "ownedBuildingCount": 68,
+      "sourcedHeightCount": 68,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 1,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 72.562144931808,
+      "topSourcedHeightMeters": [
+        72.562144931808,
+        58.945271999999996,
+        52.15727547696,
+        45.479865852888004,
+        42.32148
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000565-17-38605-35834",
+      "parentOrder": 565,
+      "bounds": {
+        "west": -73.96820068359375,
+        "south": 40.788116455078125,
+        "east": -73.9654541015625,
+        "north": 40.78948974609375
+      },
+      "ownedBuildingCount": 13,
+      "sourcedHeightCount": 13,
+      "skylineBuildingCount": 1,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 2,
+        "75": 1,
+        "90": 1,
+        "100": 1,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 103.55831225913602,
+      "topSourcedHeightMeters": [
+        103.55831225913602,
+        71.76127212664801,
+        50.47488,
+        45.369166882008,
+        19.978223688888
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000566-17-38600-35835",
+      "parentOrder": 566,
+      "bounds": {
+        "west": -73.98193359375,
+        "south": 40.7867431640625,
+        "east": -73.97918701171875,
+        "north": 40.788116455078125
+      },
+      "ownedBuildingCount": 51,
+      "sourcedHeightCount": 51,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 1,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 68.647056,
+      "topSourcedHeightMeters": [
+        68.647056,
+        50.810159999999996,
+        47.542704,
+        46.966632000000004,
+        45.75352800000001
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000567-17-38601-35835",
+      "parentOrder": 567,
+      "bounds": {
+        "west": -73.97918701171875,
+        "south": 40.7867431640625,
+        "east": -73.9764404296875,
+        "north": 40.788116455078125
+      },
+      "ownedBuildingCount": 24,
+      "sourcedHeightCount": 24,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 51.2064,
+      "topSourcedHeightMeters": [
+        51.2064,
+        50.4444,
+        50.432208,
+        49.746408,
+        49.16424000000001
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000568-17-38602-35835",
+      "parentOrder": 568,
+      "bounds": {
+        "west": -73.9764404296875,
+        "south": 40.7867431640625,
+        "east": -73.97369384765625,
+        "north": 40.788116455078125
+      },
+      "ownedBuildingCount": 44,
+      "sourcedHeightCount": 44,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 1,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 60.0456,
+      "topSourcedHeightMeters": [
+        60.0456,
+        59.603640000000006,
+        50.633376000000005,
+        50.541936,
+        49.295304
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000569-17-38603-35835",
+      "parentOrder": 569,
+      "bounds": {
+        "west": -73.97369384765625,
+        "south": 40.7867431640625,
+        "east": -73.970947265625,
+        "north": 40.788116455078125
+      },
+      "ownedBuildingCount": 88,
+      "sourcedHeightCount": 88,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 57.64072800000001,
+      "topSourcedHeightMeters": [
+        57.64072800000001,
+        50.157888,
+        49.761648,
+        48.713136,
+        41.279064000000005
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000570-17-38604-35835",
+      "parentOrder": 570,
+      "bounds": {
+        "west": -73.970947265625,
+        "south": 40.7867431640625,
+        "east": -73.96820068359375,
+        "north": 40.788116455078125
+      },
+      "ownedBuildingCount": 108,
+      "sourcedHeightCount": 108,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 1,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 74.676,
+      "topSourcedHeightMeters": [
+        74.676,
+        50.653596511248004,
+        31.735776,
+        22.53996,
+        22.427184
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000571-17-38605-35835",
+      "parentOrder": 571,
+      "bounds": {
+        "west": -73.96820068359375,
+        "south": 40.7867431640625,
+        "east": -73.9654541015625,
+        "north": 40.788116455078125
+      },
+      "ownedBuildingCount": 5,
+      "sourcedHeightCount": 5,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 56.964297497136,
+      "topSourcedHeightMeters": [
+        56.964297497136,
+        28.763659276224,
+        27.736800000000002,
+        25.48110132624,
+        22.713328953744004
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000572-16-19303-17917",
+      "parentOrder": 572,
+      "bounds": {
+        "west": -73.9654541015625,
+        "south": 40.7867431640625,
+        "east": -73.9599609375,
+        "north": 40.78948974609375
+      },
+      "ownedBuildingCount": 3,
+      "sourcedHeightCount": 3,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 8.5344,
+      "topSourcedHeightMeters": [
+        8.5344,
+        8.2296,
+        6.412992
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000573-17-38600-35836",
+      "parentOrder": 573,
+      "bounds": {
+        "west": -73.98193359375,
+        "south": 40.785369873046875,
+        "east": -73.97918701171875,
+        "north": 40.7867431640625
+      },
+      "ownedBuildingCount": 48,
+      "sourcedHeightCount": 48,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 1,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 68.049648,
+      "topSourcedHeightMeters": [
+        68.049648,
+        54.763416,
+        54.35498400000001,
+        54.083712000000006,
+        53.309520000000006
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000574-17-38601-35836",
+      "parentOrder": 574,
+      "bounds": {
+        "west": -73.97918701171875,
+        "south": 40.785369873046875,
+        "east": -73.9764404296875,
+        "north": 40.7867431640625
+      },
+      "ownedBuildingCount": 37,
+      "sourcedHeightCount": 37,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 2,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 69.4944,
+      "topSourcedHeightMeters": [
+        69.4944,
+        68.58,
+        51.105816,
+        47.46955200000001,
+        46.3296
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000575-17-38602-35836",
+      "parentOrder": 575,
+      "bounds": {
+        "west": -73.9764404296875,
+        "south": 40.785369873046875,
+        "east": -73.97369384765625,
+        "north": 40.7867431640625
+      },
+      "ownedBuildingCount": 41,
+      "sourcedHeightCount": 41,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 37.213032000000005,
+      "topSourcedHeightMeters": [
+        37.213032000000005,
+        27.24912,
+        21.933408,
+        21.083016,
+        20.936712
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000576-17-38603-35836",
+      "parentOrder": 576,
+      "bounds": {
+        "west": -73.97369384765625,
+        "south": 40.785369873046875,
+        "east": -73.970947265625,
+        "north": 40.7867431640625
+      },
+      "ownedBuildingCount": 66,
+      "sourcedHeightCount": 66,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 59.667648,
+      "topSourcedHeightMeters": [
+        59.667648,
+        50.292,
+        49.53609600000001,
+        47.271432000000004,
+        46.9392
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000577-17-38600-35837",
+      "parentOrder": 577,
+      "bounds": {
+        "west": -73.98193359375,
+        "south": 40.78399658203125,
+        "east": -73.97918701171875,
+        "north": 40.785369873046875
+      },
+      "ownedBuildingCount": 32,
+      "sourcedHeightCount": 32,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 5,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 73.152,
+      "topSourcedHeightMeters": [
+        73.152,
+        71.890128,
+        71.134224,
+        69.838824,
+        62.7888
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000578-17-38601-35837",
+      "parentOrder": 578,
+      "bounds": {
+        "west": -73.97918701171875,
+        "south": 40.78399658203125,
+        "east": -73.9764404296875,
+        "north": 40.785369873046875
+      },
+      "ownedBuildingCount": 61,
+      "sourcedHeightCount": 61,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 59.1312,
+      "topSourcedHeightMeters": [
+        59.1312,
+        45.790104,
+        40.681656000000004,
+        38.1,
+        27.736800000000002
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000579-17-38602-35837",
+      "parentOrder": 579,
+      "bounds": {
+        "west": -73.9764404296875,
+        "south": 40.78399658203125,
+        "east": -73.97369384765625,
+        "north": 40.785369873046875
+      },
+      "ownedBuildingCount": 68,
+      "sourcedHeightCount": 68,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 36.576,
+      "topSourcedHeightMeters": [
+        36.576,
+        31.144464000000003,
+        31.117032000000002,
+        30.7848,
+        26.822400000000002
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000580-17-38603-35837",
+      "parentOrder": 580,
+      "bounds": {
+        "west": -73.97369384765625,
+        "south": 40.78399658203125,
+        "east": -73.970947265625,
+        "north": 40.785369873046875
+      },
+      "ownedBuildingCount": 94,
+      "sourcedHeightCount": 94,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 33.414167188296,
+      "topSourcedHeightMeters": [
+        33.414167188296,
+        32.092392000000004,
+        31.619952,
+        31.3944,
+        29.568648000000003
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000581-17-38600-35838",
+      "parentOrder": 581,
+      "bounds": {
+        "west": -73.98193359375,
+        "south": 40.782623291015625,
+        "east": -73.97918701171875,
+        "north": 40.78399658203125
+      },
+      "ownedBuildingCount": 35,
+      "sourcedHeightCount": 35,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 2,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 67.3608,
+      "topSourcedHeightMeters": [
+        67.3608,
+        67.3608,
+        49.60315200000001,
+        45.122592,
+        43.872912
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000582-17-38601-35838",
+      "parentOrder": 582,
+      "bounds": {
+        "west": -73.97918701171875,
+        "south": 40.782623291015625,
+        "east": -73.9764404296875,
+        "north": 40.78399658203125
+      },
+      "ownedBuildingCount": 66,
+      "sourcedHeightCount": 66,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 57.607200000000006,
+      "topSourcedHeightMeters": [
+        57.607200000000006,
+        55.18054293816,
+        52.60848,
+        51.883056,
+        51.5112
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000583-17-38602-35838",
+      "parentOrder": 583,
+      "bounds": {
+        "west": -73.9764404296875,
+        "south": 40.782623291015625,
+        "east": -73.97369384765625,
+        "north": 40.78399658203125
+      },
+      "ownedBuildingCount": 76,
+      "sourcedHeightCount": 76,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 1,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 66.69328800000001,
+      "topSourcedHeightMeters": [
+        66.69328800000001,
+        46.445424,
+        45.954696000000006,
+        40.2654666876,
+        33.165288000000004
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000584-17-38603-35838",
+      "parentOrder": 584,
+      "bounds": {
+        "west": -73.97369384765625,
+        "south": 40.782623291015625,
+        "east": -73.970947265625,
+        "north": 40.78399658203125
+      },
+      "ownedBuildingCount": 70,
+      "sourcedHeightCount": 70,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 2,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 67.2859234416,
+      "topSourcedHeightMeters": [
+        67.2859234416,
+        62.1792,
+        58.533595501536006,
+        54.691136642400004,
+        49.6824
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000585-17-38600-35839",
+      "parentOrder": 585,
+      "bounds": {
+        "west": -73.98193359375,
+        "south": 40.78125,
+        "east": -73.97918701171875,
+        "north": 40.782623291015625
+      },
+      "ownedBuildingCount": 27,
+      "sourcedHeightCount": 27,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 3,
+        "75": 1,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 87.056976,
+      "topSourcedHeightMeters": [
+        87.056976,
+        73.842898944336,
+        61.5696,
+        58.573416,
+        50.828448
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000586-17-38601-35839",
+      "parentOrder": 586,
+      "bounds": {
+        "west": -73.97918701171875,
+        "south": 40.78125,
+        "east": -73.9764404296875,
+        "north": 40.782623291015625
+      },
+      "ownedBuildingCount": 72,
+      "sourcedHeightCount": 72,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 55.473600000000005,
+      "topSourcedHeightMeters": [
+        55.473600000000005,
+        50.968656,
+        49.69764000000001,
+        48.21936,
+        47.030640000000005
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000587-17-38602-35839",
+      "parentOrder": 587,
+      "bounds": {
+        "west": -73.9764404296875,
+        "south": 40.78125,
+        "east": -73.97369384765625,
+        "north": 40.782623291015625
+      },
+      "ownedBuildingCount": 17,
+      "sourcedHeightCount": 17,
+      "skylineBuildingCount": 1,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 1,
+        "75": 1,
+        "90": 1,
+        "100": 1,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 115.21440000000001,
+      "topSourcedHeightMeters": [
+        115.21440000000001,
+        55.271959166808,
+        50.9016,
+        46.6344,
+        44.805600000000005
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000588-17-38603-35839",
+      "parentOrder": 588,
+      "bounds": {
+        "west": -73.97369384765625,
+        "south": 40.78125,
+        "east": -73.970947265625,
+        "north": 40.782623291015625
+      },
+      "ownedBuildingCount": 1,
+      "sourcedHeightCount": 1,
+      "skylineBuildingCount": 1,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 1,
+        "75": 1,
+        "90": 1,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 90.08154163488001,
+      "topSourcedHeightMeters": [
+        90.08154163488001
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000589-15-9651-8959",
+      "parentOrder": 589,
+      "bounds": {
+        "west": -73.970947265625,
+        "south": 40.78125,
+        "east": -73.9599609375,
+        "north": 40.7867431640625
+      },
+      "ownedBuildingCount": 82,
+      "sourcedHeightCount": 82,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 3,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 70.1332568376,
+      "topSourcedHeightMeters": [
+        70.1332568376,
+        68.70496800000001,
+        62.81623200000001,
+        58.50026400000001,
+        50.575464000000004
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000590-17-38612-35832",
+      "parentOrder": 590,
+      "bounds": {
+        "west": -73.948974609375,
+        "south": 40.790863037109375,
+        "east": -73.94622802734375,
+        "north": 40.792236328125
+      },
+      "ownedBuildingCount": 38,
+      "sourcedHeightCount": 38,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 1,
+        "75": 1,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 77.1144,
+      "topSourcedHeightMeters": [
+        77.1144,
+        54.19344000000001,
+        30.757368,
+        29.782008,
+        27.432000000000002
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000591-17-38613-35832",
+      "parentOrder": 591,
+      "bounds": {
+        "west": -73.94622802734375,
+        "south": 40.790863037109375,
+        "east": -73.9434814453125,
+        "north": 40.792236328125
+      },
+      "ownedBuildingCount": 44,
+      "sourcedHeightCount": 44,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 1,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 60.155328000000004,
+      "topSourcedHeightMeters": [
+        60.155328000000004,
+        59.122056,
+        23.520072938424,
+        19.214592,
+        18.742152
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000592-16-19304-17916",
+      "parentOrder": 592,
+      "bounds": {
+        "west": -73.9599609375,
+        "south": 40.78948974609375,
+        "east": -73.9544677734375,
+        "north": 40.792236328125
+      },
+      "ownedBuildingCount": 2,
+      "sourcedHeightCount": 2,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 5.7912,
+      "topSourcedHeightMeters": [
+        5.7912,
+        3.6576000000000004
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000593-16-19305-17916",
+      "parentOrder": 593,
+      "bounds": {
+        "west": -73.9544677734375,
+        "south": 40.78948974609375,
+        "east": -73.948974609375,
+        "north": 40.792236328125
+      },
+      "ownedBuildingCount": 51,
+      "sourcedHeightCount": 51,
+      "skylineBuildingCount": 2,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 4,
+        "75": 2,
+        "90": 2,
+        "100": 2,
+        "120": 2
+      },
+      "tallestSourcedHeightMeters": 170.68800000000002,
+      "topSourcedHeightMeters": [
+        170.68800000000002,
+        133.788912,
+        69.963515125776,
+        60.764928000000005,
+        56.083200000000005
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000594-17-38612-35833",
+      "parentOrder": 594,
+      "bounds": {
+        "west": -73.948974609375,
+        "south": 40.78948974609375,
+        "east": -73.94622802734375,
+        "north": 40.790863037109375
+      },
+      "ownedBuildingCount": 70,
+      "sourcedHeightCount": 69,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 28.651200000000003,
+      "topSourcedHeightMeters": [
+        28.651200000000003,
+        24.797390382768,
+        24.384,
+        23.955218649792002,
+        23.864249346336
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000595-17-38613-35833",
+      "parentOrder": 595,
+      "bounds": {
+        "west": -73.94622802734375,
+        "south": 40.78948974609375,
+        "east": -73.9434814453125,
+        "north": 40.790863037109375
+      },
+      "ownedBuildingCount": 37,
+      "sourcedHeightCount": 37,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 54.34912364088,
+      "topSourcedHeightMeters": [
+        54.34912364088,
+        42.577794909264,
+        23.350790572392,
+        22.726997981015998,
+        22.555200000000003
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000596-16-19307-17916",
+      "parentOrder": 596,
+      "bounds": {
+        "west": -73.9434814453125,
+        "south": 40.78948974609375,
+        "east": -73.93798828125,
+        "north": 40.792236328125
+      },
+      "ownedBuildingCount": 108,
+      "sourcedHeightCount": 108,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 3,
+        "75": 1,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 84.197952,
+      "topSourcedHeightMeters": [
+        84.197952,
+        68.83908,
+        60.47232,
+        59.990736,
+        59.560968
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000597-16-19304-17917",
+      "parentOrder": 597,
+      "bounds": {
+        "west": -73.9599609375,
+        "south": 40.7867431640625,
+        "east": -73.9544677734375,
+        "north": 40.78948974609375
+      },
+      "ownedBuildingCount": 23,
+      "sourcedHeightCount": 23,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 56.60440800000001,
+      "topSourcedHeightMeters": [
+        56.60440800000001,
+        53.36438400000001,
+        53.184552000000004,
+        53.0352,
+        50.950368000000005
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000598-16-19305-17917",
+      "parentOrder": 598,
+      "bounds": {
+        "west": -73.9544677734375,
+        "south": 40.7867431640625,
+        "east": -73.948974609375,
+        "north": 40.78948974609375
+      },
+      "ownedBuildingCount": 112,
+      "sourcedHeightCount": 112,
+      "skylineBuildingCount": 2,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 5,
+        "75": 2,
+        "90": 2,
+        "100": 2,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 100.221288,
+      "topSourcedHeightMeters": [
+        100.221288,
+        100.221288,
+        63.087504,
+        60.682632000000005,
+        60.358443333672
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000599-16-19306-17917",
+      "parentOrder": 599,
+      "bounds": {
+        "west": -73.948974609375,
+        "south": 40.7867431640625,
+        "east": -73.9434814453125,
+        "north": 40.78948974609375
+      },
+      "ownedBuildingCount": 93,
+      "sourcedHeightCount": 93,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 52.054558507896004,
+      "topSourcedHeightMeters": [
+        52.054558507896004,
+        48.116155722792,
+        42.824870065608,
+        42.520070065608,
+        42.425642809200006
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000600-16-19307-17917",
+      "parentOrder": 600,
+      "bounds": {
+        "west": -73.9434814453125,
+        "south": 40.7867431640625,
+        "east": -73.93798828125,
+        "north": 40.78948974609375
+      },
+      "ownedBuildingCount": 81,
+      "sourcedHeightCount": 81,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 53.775864000000006,
+      "topSourcedHeightMeters": [
+        53.775864000000006,
+        53.349144,
+        53.05958400000001,
+        44.500800000000005,
+        35.145124922208005
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000601-17-38609-35836",
+      "parentOrder": 601,
+      "bounds": {
+        "west": -73.95721435546875,
+        "south": 40.785369873046875,
+        "east": -73.9544677734375,
+        "north": 40.7867431640625
+      },
+      "ownedBuildingCount": 71,
+      "sourcedHeightCount": 71,
+      "skylineBuildingCount": 1,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 1,
+        "75": 1,
+        "90": 1,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 95.7072,
+      "topSourcedHeightMeters": [
+        95.7072,
+        58.987944000000006,
+        58.399680000000004,
+        51.395376000000006,
+        49.798224
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000602-17-38610-35836",
+      "parentOrder": 602,
+      "bounds": {
+        "west": -73.9544677734375,
+        "south": 40.785369873046875,
+        "east": -73.95172119140625,
+        "north": 40.7867431640625
+      },
+      "ownedBuildingCount": 35,
+      "sourcedHeightCount": 35,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 3,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 71.798688,
+      "topSourcedHeightMeters": [
+        71.798688,
+        61.5696,
+        61.00015912212,
+        54.87198269676001,
+        51.66761582534401
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000603-17-38611-35836",
+      "parentOrder": 603,
+      "bounds": {
+        "west": -73.95172119140625,
+        "south": 40.785369873046875,
+        "east": -73.948974609375,
+        "north": 40.7867431640625
+      },
+      "ownedBuildingCount": 40,
+      "sourcedHeightCount": 40,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 2,
+        "75": 1,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 86.07162612513599,
+      "topSourcedHeightMeters": [
+        86.07162612513599,
+        65.37195993196801,
+        54.470176015488,
+        42.074942888808,
+        37.614426198480004
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000604-17-38608-35837",
+      "parentOrder": 604,
+      "bounds": {
+        "west": -73.9599609375,
+        "south": 40.78399658203125,
+        "east": -73.95721435546875,
+        "north": 40.785369873046875
+      },
+      "ownedBuildingCount": 5,
+      "sourcedHeightCount": 5,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 59.274456,
+      "topSourcedHeightMeters": [
+        59.274456,
+        44.39412,
+        33.631632,
+        26.057351999999998,
+        23.1648
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000605-17-38609-35837",
+      "parentOrder": 605,
+      "bounds": {
+        "west": -73.95721435546875,
+        "south": 40.78399658203125,
+        "east": -73.9544677734375,
+        "north": 40.785369873046875
+      },
+      "ownedBuildingCount": 87,
+      "sourcedHeightCount": 87,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 57.692544000000005,
+      "topSourcedHeightMeters": [
+        57.692544000000005,
+        57.59500800000001,
+        49.779936,
+        41.62044,
+        36.094416
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000606-17-38610-35837",
+      "parentOrder": 606,
+      "bounds": {
+        "west": -73.9544677734375,
+        "south": 40.78399658203125,
+        "east": -73.95172119140625,
+        "north": 40.785369873046875
+      },
+      "ownedBuildingCount": 43,
+      "sourcedHeightCount": 43,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 1,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 64.136016,
+      "topSourcedHeightMeters": [
+        64.136016,
+        56.998119031728,
+        50.99304000000001,
+        50.9778,
+        47.009304
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000607-17-38611-35837",
+      "parentOrder": 607,
+      "bounds": {
+        "west": -73.95172119140625,
+        "south": 40.78399658203125,
+        "east": -73.948974609375,
+        "north": 40.785369873046875
+      },
+      "ownedBuildingCount": 41,
+      "sourcedHeightCount": 41,
+      "skylineBuildingCount": 2,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 3,
+        "75": 3,
+        "90": 2,
+        "100": 2,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 111.86160000000001,
+      "topSourcedHeightMeters": [
+        111.86160000000001,
+        100.92571118856,
+        77.1144,
+        56.083200000000005,
+        37.919365028784
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000608-16-19306-17918",
+      "parentOrder": 608,
+      "bounds": {
+        "west": -73.948974609375,
+        "south": 40.78399658203125,
+        "east": -73.9434814453125,
+        "north": 40.7867431640625
+      },
+      "ownedBuildingCount": 45,
+      "sourcedHeightCount": 45,
+      "skylineBuildingCount": 4,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 6,
+        "75": 4,
+        "90": 4,
+        "100": 4,
+        "120": 2
+      },
+      "tallestSourcedHeightMeters": 129.84480000000002,
+      "topSourcedHeightMeters": [
+        129.84480000000002,
+        121.29481077235201,
+        115.68140261184,
+        110.879457721464,
+        67.121953989504
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000609-16-19307-17918",
+      "parentOrder": 609,
+      "bounds": {
+        "west": -73.9434814453125,
+        "south": 40.78399658203125,
+        "east": -73.93798828125,
+        "north": 40.7867431640625
+      },
+      "ownedBuildingCount": 12,
+      "sourcedHeightCount": 12,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 53.289897177168,
+      "topSourcedHeightMeters": [
+        53.289897177168,
+        48.768,
+        42.367200000000004,
+        41.434512,
+        41.187624
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000610-17-38610-35838",
+      "parentOrder": 610,
+      "bounds": {
+        "west": -73.9544677734375,
+        "south": 40.782623291015625,
+        "east": -73.95172119140625,
+        "north": 40.78399658203125
+      },
+      "ownedBuildingCount": 81,
+      "sourcedHeightCount": 81,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 54.88838400000001,
+      "topSourcedHeightMeters": [
+        54.88838400000001,
+        51.124104,
+        50.715672,
+        43.490297218368,
+        38.642544
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000611-17-38611-35838",
+      "parentOrder": 611,
+      "bounds": {
+        "west": -73.95172119140625,
+        "south": 40.782623291015625,
+        "east": -73.948974609375,
+        "north": 40.78399658203125
+      },
+      "ownedBuildingCount": 50,
+      "sourcedHeightCount": 49,
+      "skylineBuildingCount": 2,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 2,
+        "75": 2,
+        "90": 2,
+        "100": 1,
+        "120": 1
+      },
+      "tallestSourcedHeightMeters": 129.23520000000002,
+      "topSourcedHeightMeters": [
+        129.23520000000002,
+        92.15628000000001,
+        35.3568,
+        34.91484,
+        28.028520583944
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000612-17-38612-35838",
+      "parentOrder": 612,
+      "bounds": {
+        "west": -73.948974609375,
+        "south": 40.782623291015625,
+        "east": -73.94622802734375,
+        "north": 40.78399658203125
+      },
+      "ownedBuildingCount": 53,
+      "sourcedHeightCount": 53,
+      "skylineBuildingCount": 2,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 5,
+        "75": 2,
+        "90": 2,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 92.0496,
+      "topSourcedHeightMeters": [
+        92.0496,
+        92.0496,
+        71.40073714236,
+        67.826608630992,
+        64.00800000000001
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000613-17-38613-35838",
+      "parentOrder": 613,
+      "bounds": {
+        "west": -73.94622802734375,
+        "south": 40.782623291015625,
+        "east": -73.9434814453125,
+        "north": 40.78399658203125
+      },
+      "ownedBuildingCount": 16,
+      "sourcedHeightCount": 16,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 32.836104000000006,
+      "topSourcedHeightMeters": [
+        32.836104000000006,
+        22.240569764136,
+        22.061424,
+        21.407001700008,
+        20.747736
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000614-16-19304-17919",
+      "parentOrder": 614,
+      "bounds": {
+        "west": -73.9599609375,
+        "south": 40.78125,
+        "east": -73.9544677734375,
+        "north": 40.78399658203125
+      },
+      "ownedBuildingCount": 108,
+      "sourcedHeightCount": 108,
+      "skylineBuildingCount": 2,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 13,
+        "75": 3,
+        "90": 2,
+        "100": 1,
+        "120": 1
+      },
+      "tallestSourcedHeightMeters": 131.064,
+      "topSourcedHeightMeters": [
+        131.064,
+        98.654616,
+        76.8096,
+        73.22515200000001,
+        70.085712
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000615-17-38610-35839",
+      "parentOrder": 615,
+      "bounds": {
+        "west": -73.9544677734375,
+        "south": 40.78125,
+        "east": -73.95172119140625,
+        "north": 40.782623291015625
+      },
+      "ownedBuildingCount": 59,
+      "sourcedHeightCount": 59,
+      "skylineBuildingCount": 1,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 1,
+        "75": 1,
+        "90": 1,
+        "100": 1,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 105.7656,
+      "topSourcedHeightMeters": [
+        105.7656,
+        53.272944,
+        42.059352000000004,
+        41.541192,
+        38.133528
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000616-17-38611-35839",
+      "parentOrder": 616,
+      "bounds": {
+        "west": -73.95172119140625,
+        "south": 40.78125,
+        "east": -73.948974609375,
+        "north": 40.782623291015625
+      },
+      "ownedBuildingCount": 9,
+      "sourcedHeightCount": 9,
+      "skylineBuildingCount": 6,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 6,
+        "75": 6,
+        "90": 6,
+        "100": 5,
+        "120": 3
+      },
+      "tallestSourcedHeightMeters": 127.7112,
+      "topSourcedHeightMeters": [
+        127.7112,
+        127.7112,
+        127.7112,
+        110.210108822928,
+        103.632
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000617-17-38612-35839",
+      "parentOrder": 617,
+      "bounds": {
+        "west": -73.948974609375,
+        "south": 40.78125,
+        "east": -73.94622802734375,
+        "north": 40.782623291015625
+      },
+      "ownedBuildingCount": 68,
+      "sourcedHeightCount": 68,
+      "skylineBuildingCount": 2,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 4,
+        "75": 4,
+        "90": 2,
+        "100": 1,
+        "120": 1
+      },
+      "tallestSourcedHeightMeters": 136.2456,
+      "topSourcedHeightMeters": [
+        136.2456,
+        97.8408,
+        89.61120000000001,
+        88.236552,
+        30.48
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000618-17-38613-35839",
+      "parentOrder": 618,
+      "bounds": {
+        "west": -73.94622802734375,
+        "south": 40.78125,
+        "east": -73.9434814453125,
+        "north": 40.782623291015625
+      },
+      "ownedBuildingCount": 7,
+      "sourcedHeightCount": 7,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 2,
+        "75": 1,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 82.719672,
+      "topSourcedHeightMeters": [
+        82.719672,
+        64.410138120792,
+        18.8976,
+        9.930384,
+        6.821424
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000619-15-9654-8958",
+      "parentOrder": 619,
+      "bounds": {
+        "west": -73.93798828125,
+        "south": 40.7867431640625,
+        "east": -73.927001953125,
+        "north": 40.792236328125
+      },
+      "ownedBuildingCount": 31,
+      "sourcedHeightCount": 26,
+      "skylineBuildingCount": 2,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 6,
+        "75": 4,
+        "90": 2,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 90.522552,
+      "topSourcedHeightMeters": [
+        90.522552,
+        90.031824,
+        84.19185600000002,
+        80.88509116929602,
+        66.7512
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000620-15-9655-8958",
+      "parentOrder": 620,
+      "bounds": {
+        "west": -73.927001953125,
+        "south": 40.7867431640625,
+        "east": -73.916015625,
+        "north": 40.792236328125
+      },
+      "ownedBuildingCount": 67,
+      "sourcedHeightCount": 67,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 26.822400000000002,
+      "topSourcedHeightMeters": [
+        26.822400000000002,
+        23.1648,
+        20.4216,
+        17.3736,
+        16.788384
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000621-15-9654-8959",
+      "parentOrder": 621,
+      "bounds": {
+        "west": -73.93798828125,
+        "south": 40.78125,
+        "east": -73.927001953125,
+        "north": 40.7867431640625
+      },
+      "ownedBuildingCount": 13,
+      "sourcedHeightCount": 13,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 17.3736,
+      "topSourcedHeightMeters": [
+        17.3736,
+        14.9352,
+        12.8016,
+        12.192,
+        8.5344
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000622-15-9655-8959",
+      "parentOrder": 622,
+      "bounds": {
+        "west": -73.927001953125,
+        "south": 40.78125,
+        "east": -73.916015625,
+        "north": 40.7867431640625
+      },
+      "ownedBuildingCount": 19,
+      "sourcedHeightCount": 19,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 12.8016,
+      "topSourcedHeightMeters": [
+        12.8016,
+        9.7536,
+        9.144,
+        7.315200000000001,
+        6.7056000000000004
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000623-17-38604-35824",
+      "parentOrder": 623,
+      "bounds": {
+        "west": -73.970947265625,
+        "south": 40.801849365234375,
+        "east": -73.96820068359375,
+        "north": 40.80322265625
+      },
+      "ownedBuildingCount": 48,
+      "sourcedHeightCount": 48,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 49.38369600000001,
+      "topSourcedHeightMeters": [
+        49.38369600000001,
+        46.311312,
+        42.842688,
+        42.62018400000001,
+        23.929848000000003
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000624-17-38605-35824",
+      "parentOrder": 624,
+      "bounds": {
+        "west": -73.96820068359375,
+        "south": 40.801849365234375,
+        "east": -73.9654541015625,
+        "north": 40.80322265625
+      },
+      "ownedBuildingCount": 34,
+      "sourcedHeightCount": 34,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 49.426368000000004,
+      "topSourcedHeightMeters": [
+        49.426368000000004,
+        46.064424,
+        41.708832,
+        31.3944,
+        28.28544
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000625-17-38606-35824",
+      "parentOrder": 625,
+      "bounds": {
+        "west": -73.9654541015625,
+        "south": 40.801849365234375,
+        "east": -73.96270751953125,
+        "north": 40.80322265625
+      },
+      "ownedBuildingCount": 34,
+      "sourcedHeightCount": 34,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 41.148,
+      "topSourcedHeightMeters": [
+        41.148,
+        31.802832000000002,
+        23.1648,
+        22.05228,
+        21.966936
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000626-17-38607-35824",
+      "parentOrder": 626,
+      "bounds": {
+        "west": -73.96270751953125,
+        "south": 40.801849365234375,
+        "east": -73.9599609375,
+        "north": 40.80322265625
+      },
+      "ownedBuildingCount": 7,
+      "sourcedHeightCount": 7,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 58.32652800000001,
+      "topSourcedHeightMeters": [
+        58.32652800000001,
+        52.7304,
+        40.200072,
+        21.640800000000002,
+        20.7264
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000627-17-38604-35825",
+      "parentOrder": 627,
+      "bounds": {
+        "west": -73.970947265625,
+        "south": 40.80047607421875,
+        "east": -73.96820068359375,
+        "north": 40.801849365234375
+      },
+      "ownedBuildingCount": 54,
+      "sourcedHeightCount": 54,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 1,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 67.598544,
+      "topSourcedHeightMeters": [
+        67.598544,
+        49.523904,
+        49.435512,
+        46.762416,
+        46.335696000000006
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000628-17-38605-35825",
+      "parentOrder": 628,
+      "bounds": {
+        "west": -73.96820068359375,
+        "south": 40.80047607421875,
+        "east": -73.9654541015625,
+        "north": 40.801849365234375
+      },
+      "ownedBuildingCount": 33,
+      "sourcedHeightCount": 33,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 1,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 62.1792,
+      "topSourcedHeightMeters": [
+        62.1792,
+        58.216800000000006,
+        49.895759999999996,
+        49.874424,
+        31.19628
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000629-17-38606-35825",
+      "parentOrder": 629,
+      "bounds": {
+        "west": -73.9654541015625,
+        "south": 40.80047607421875,
+        "east": -73.96270751953125,
+        "north": 40.801849365234375
+      },
+      "ownedBuildingCount": 42,
+      "sourcedHeightCount": 42,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 49.782984000000006,
+      "topSourcedHeightMeters": [
+        49.782984000000006,
+        46.0248,
+        36.576,
+        20.37588,
+        20.2692
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000630-17-38607-35825",
+      "parentOrder": 630,
+      "bounds": {
+        "west": -73.96270751953125,
+        "south": 40.80047607421875,
+        "east": -73.9599609375,
+        "north": 40.801849365234375
+      },
+      "ownedBuildingCount": 38,
+      "sourcedHeightCount": 38,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 35.3568,
+      "topSourcedHeightMeters": [
+        35.3568,
+        26.822400000000002,
+        23.170896,
+        21.486389005800003,
+        21.403056
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000631-17-38604-35826",
+      "parentOrder": 631,
+      "bounds": {
+        "west": -73.970947265625,
+        "south": 40.799102783203125,
+        "east": -73.96820068359375,
+        "north": 40.80047607421875
+      },
+      "ownedBuildingCount": 47,
+      "sourcedHeightCount": 47,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 50.804064000000004,
+      "topSourcedHeightMeters": [
+        50.804064000000004,
+        49.923192,
+        49.557432000000006,
+        46.689264,
+        46.628304
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000632-17-38605-35826",
+      "parentOrder": 632,
+      "bounds": {
+        "west": -73.96820068359375,
+        "south": 40.799102783203125,
+        "east": -73.9654541015625,
+        "north": 40.80047607421875
+      },
+      "ownedBuildingCount": 50,
+      "sourcedHeightCount": 50,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 1,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 64.00800000000001,
+      "topSourcedHeightMeters": [
+        64.00800000000001,
+        49.6824,
+        46.378368,
+        41.800272,
+        21.793200000000002
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000633-17-38606-35826",
+      "parentOrder": 633,
+      "bounds": {
+        "west": -73.9654541015625,
+        "south": 40.799102783203125,
+        "east": -73.96270751953125,
+        "north": 40.80047607421875
+      },
+      "ownedBuildingCount": 40,
+      "sourcedHeightCount": 40,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 31.665672,
+      "topSourcedHeightMeters": [
+        31.665672,
+        31.309056,
+        31.080456,
+        26.496264000000004,
+        23.935944000000003
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000634-17-38607-35826",
+      "parentOrder": 634,
+      "bounds": {
+        "west": -73.96270751953125,
+        "south": 40.799102783203125,
+        "east": -73.9599609375,
+        "north": 40.80047607421875
+      },
+      "ownedBuildingCount": 55,
+      "sourcedHeightCount": 55,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 1,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 65.244742114776,
+      "topSourcedHeightMeters": [
+        65.244742114776,
+        32.308800000000005,
+        22.302216,
+        22.125432000000004,
+        22.029404257080003
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000635-15-9650-8956",
+      "parentOrder": 635,
+      "bounds": {
+        "west": -73.98193359375,
+        "south": 40.7977294921875,
+        "east": -73.970947265625,
+        "north": 40.80322265625
+      },
+      "ownedBuildingCount": 67,
+      "sourcedHeightCount": 67,
+      "skylineBuildingCount": 1,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 1,
+        "75": 1,
+        "90": 1,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 91.1352,
+      "topSourcedHeightMeters": [
+        91.1352,
+        50.292,
+        50.292,
+        49.54524000000001,
+        48.66132
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000636-17-38604-35827",
+      "parentOrder": 636,
+      "bounds": {
+        "west": -73.970947265625,
+        "south": 40.7977294921875,
+        "east": -73.96820068359375,
+        "north": 40.799102783203125
+      },
+      "ownedBuildingCount": 51,
+      "sourcedHeightCount": 50,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 58.216800000000006,
+      "topSourcedHeightMeters": [
+        58.216800000000006,
+        47.140368,
+        40.209216,
+        39.934896,
+        35.3568
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000637-17-38605-35827",
+      "parentOrder": 637,
+      "bounds": {
+        "west": -73.96820068359375,
+        "south": 40.7977294921875,
+        "east": -73.9654541015625,
+        "north": 40.799102783203125
+      },
+      "ownedBuildingCount": 16,
+      "sourcedHeightCount": 16,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 46.344840000000005,
+      "topSourcedHeightMeters": [
+        46.344840000000005,
+        46.040290722384,
+        43.52544,
+        34.677096,
+        22.671024
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000638-17-38606-35827",
+      "parentOrder": 638,
+      "bounds": {
+        "west": -73.9654541015625,
+        "south": 40.7977294921875,
+        "east": -73.96270751953125,
+        "north": 40.799102783203125
+      },
+      "ownedBuildingCount": 43,
+      "sourcedHeightCount": 43,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 54.864000000000004,
+      "topSourcedHeightMeters": [
+        54.864000000000004,
+        31.623,
+        28.956000000000003,
+        23.490935999999998,
+        21.412200000000002
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000639-17-38607-35827",
+      "parentOrder": 639,
+      "bounds": {
+        "west": -73.96270751953125,
+        "south": 40.7977294921875,
+        "east": -73.9599609375,
+        "north": 40.799102783203125
+      },
+      "ownedBuildingCount": 78,
+      "sourcedHeightCount": 78,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 50.292,
+      "topSourcedHeightMeters": [
+        50.292,
+        47.737776000000004,
+        39.873936,
+        30.269688000000002,
+        22.439376000000003
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000640-16-19300-17914",
+      "parentOrder": 640,
+      "bounds": {
+        "west": -73.98193359375,
+        "south": 40.79498291015625,
+        "east": -73.9764404296875,
+        "north": 40.7977294921875
+      },
+      "ownedBuildingCount": 1,
+      "sourcedHeightCount": 1,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 2.644431913056,
+      "topSourcedHeightMeters": [
+        2.644431913056
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000641-16-19301-17914",
+      "parentOrder": 641,
+      "bounds": {
+        "west": -73.9764404296875,
+        "south": 40.79498291015625,
+        "east": -73.970947265625,
+        "north": 40.7977294921875
+      },
+      "ownedBuildingCount": 78,
+      "sourcedHeightCount": 78,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 2,
+        "75": 2,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 87.78240000000001,
+      "topSourcedHeightMeters": [
+        87.78240000000001,
+        77.503143315984,
+        58.8264,
+        53.45386587336,
+        51.38623200000001
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000642-16-19302-17914",
+      "parentOrder": 642,
+      "bounds": {
+        "west": -73.970947265625,
+        "south": 40.79498291015625,
+        "east": -73.9654541015625,
+        "north": 40.7977294921875
+      },
+      "ownedBuildingCount": 72,
+      "sourcedHeightCount": 72,
+      "skylineBuildingCount": 2,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 3,
+        "75": 2,
+        "90": 2,
+        "100": 2,
+        "120": 1
+      },
+      "tallestSourcedHeightMeters": 126.069816823032,
+      "topSourcedHeightMeters": [
+        126.069816823032,
+        110.79924077445601,
+        63.066168000000005,
+        59.895303717408,
+        58.392846920448
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000643-16-19303-17914",
+      "parentOrder": 643,
+      "bounds": {
+        "west": -73.9654541015625,
+        "south": 40.79498291015625,
+        "east": -73.9599609375,
+        "north": 40.7977294921875
+      },
+      "ownedBuildingCount": 82,
+      "sourcedHeightCount": 82,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 1,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 65.69049600000001,
+      "topSourcedHeightMeters": [
+        65.69049600000001,
+        54.629304,
+        53.693568,
+        53.44668,
+        50.377344
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000644-17-38602-35830",
+      "parentOrder": 644,
+      "bounds": {
+        "west": -73.9764404296875,
+        "south": 40.793609619140625,
+        "east": -73.97369384765625,
+        "north": 40.79498291015625
+      },
+      "ownedBuildingCount": 28,
+      "sourcedHeightCount": 28,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 1,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 67.583304,
+      "topSourcedHeightMeters": [
+        67.583304,
+        59.472576000000004,
+        50.92598400000001,
+        47.600615999999995,
+        45.887640000000005
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000645-17-38603-35830",
+      "parentOrder": 645,
+      "bounds": {
+        "west": -73.97369384765625,
+        "south": 40.793609619140625,
+        "east": -73.970947265625,
+        "north": 40.79498291015625
+      },
+      "ownedBuildingCount": 54,
+      "sourcedHeightCount": 54,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 4,
+        "75": 1,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 81.9912,
+      "topSourcedHeightMeters": [
+        81.9912,
+        72.2376,
+        71.628,
+        64.294512,
+        50.896198648344004
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000646-16-19300-17915",
+      "parentOrder": 646,
+      "bounds": {
+        "west": -73.98193359375,
+        "south": 40.792236328125,
+        "east": -73.9764404296875,
+        "north": 40.79498291015625
+      },
+      "ownedBuildingCount": 5,
+      "sourcedHeightCount": 5,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 50.566320000000005,
+      "topSourcedHeightMeters": [
+        50.566320000000005,
+        43.281600000000005,
+        25.277064000000003,
+        22.795992000000002,
+        3.1638240000000004
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000647-17-38602-35831",
+      "parentOrder": 647,
+      "bounds": {
+        "west": -73.9764404296875,
+        "south": 40.792236328125,
+        "east": -73.97369384765625,
+        "north": 40.793609619140625
+      },
+      "ownedBuildingCount": 52,
+      "sourcedHeightCount": 52,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 2,
+        "75": 1,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 79.04619847320001,
+      "topSourcedHeightMeters": [
+        79.04619847320001,
+        64.31280000000001,
+        49.718976000000005,
+        49.570227964248005,
+        49.084992
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000648-17-38603-35831",
+      "parentOrder": 648,
+      "bounds": {
+        "west": -73.97369384765625,
+        "south": 40.792236328125,
+        "east": -73.970947265625,
+        "north": 40.793609619140625
+      },
+      "ownedBuildingCount": 25,
+      "sourcedHeightCount": 25,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 59.1312,
+      "topSourcedHeightMeters": [
+        59.1312,
+        58.360056,
+        50.292,
+        49.191672,
+        48.978312
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000649-16-19302-17915",
+      "parentOrder": 649,
+      "bounds": {
+        "west": -73.970947265625,
+        "south": 40.792236328125,
+        "east": -73.9654541015625,
+        "north": 40.79498291015625
+      },
+      "ownedBuildingCount": 104,
+      "sourcedHeightCount": 104,
+      "skylineBuildingCount": 2,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 6,
+        "75": 4,
+        "90": 2,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 97.8408,
+      "topSourcedHeightMeters": [
+        97.8408,
+        91.22304027847201,
+        89.00160000000001,
+        76.98333600000001,
+        71.27138400000001
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000650-16-19303-17915",
+      "parentOrder": 650,
+      "bounds": {
+        "west": -73.9654541015625,
+        "south": 40.792236328125,
+        "east": -73.9599609375,
+        "north": 40.79498291015625
+      },
+      "ownedBuildingCount": 21,
+      "sourcedHeightCount": 21,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 53.343048,
+      "topSourcedHeightMeters": [
+        53.343048,
+        52.200048,
+        51.816,
+        51.816,
+        51.816
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000651-17-38608-35824",
+      "parentOrder": 651,
+      "bounds": {
+        "west": -73.9599609375,
+        "south": 40.801849365234375,
+        "east": -73.95721435546875,
+        "north": 40.80322265625
+      },
+      "ownedBuildingCount": 44,
+      "sourcedHeightCount": 44,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 28.150884704976,
+      "topSourcedHeightMeters": [
+        28.150884704976,
+        25.691592000000004,
+        25.670242003584,
+        24.9936,
+        24.384
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000652-17-38609-35824",
+      "parentOrder": 652,
+      "bounds": {
+        "west": -73.95721435546875,
+        "south": 40.801849365234375,
+        "east": -73.9544677734375,
+        "north": 40.80322265625
+      },
+      "ownedBuildingCount": 82,
+      "sourcedHeightCount": 82,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 39.320253797232006,
+      "topSourcedHeightMeters": [
+        39.320253797232006,
+        39.3192,
+        34.4424,
+        34.1376,
+        26.5176
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000653-17-38610-35824",
+      "parentOrder": 653,
+      "bounds": {
+        "west": -73.9544677734375,
+        "south": 40.801849365234375,
+        "east": -73.95172119140625,
+        "north": 40.80322265625
+      },
+      "ownedBuildingCount": 26,
+      "sourcedHeightCount": 26,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 55.19928,
+      "topSourcedHeightMeters": [
+        55.19928,
+        25.395936,
+        24.384,
+        24.298656,
+        23.908512
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000654-17-38611-35824",
+      "parentOrder": 654,
+      "bounds": {
+        "west": -73.95172119140625,
+        "south": 40.801849365234375,
+        "east": -73.948974609375,
+        "north": 40.80322265625
+      },
+      "ownedBuildingCount": 52,
+      "sourcedHeightCount": 52,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 54.864000000000004,
+      "topSourcedHeightMeters": [
+        54.864000000000004,
+        30.701221230912,
+        20.531328000000002,
+        20.217384,
+        19.935485157144
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000655-17-38612-35824",
+      "parentOrder": 655,
+      "bounds": {
+        "west": -73.948974609375,
+        "south": 40.801849365234375,
+        "east": -73.94622802734375,
+        "north": 40.80322265625
+      },
+      "ownedBuildingCount": 35,
+      "sourcedHeightCount": 35,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 35.9664,
+      "topSourcedHeightMeters": [
+        35.9664,
+        30.1752,
+        18.809208,
+        18.806160000000002,
+        18.291048
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000656-17-38613-35824",
+      "parentOrder": 656,
+      "bounds": {
+        "west": -73.94622802734375,
+        "south": 40.801849365234375,
+        "east": -73.9434814453125,
+        "north": 40.80322265625
+      },
+      "ownedBuildingCount": 32,
+      "sourcedHeightCount": 32,
+      "skylineBuildingCount": 1,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 2,
+        "75": 1,
+        "90": 1,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 97.374871567368,
+      "topSourcedHeightMeters": [
+        97.374871567368,
+        60.83698526203201,
+        29.8704,
+        28.346400000000003,
+        26.5176
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000657-17-38608-35825",
+      "parentOrder": 657,
+      "bounds": {
+        "west": -73.9599609375,
+        "south": 40.80047607421875,
+        "east": -73.95721435546875,
+        "north": 40.801849365234375
+      },
+      "ownedBuildingCount": 21,
+      "sourcedHeightCount": 21,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 3,
+        "75": 1,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 83.51520000000001,
+      "topSourcedHeightMeters": [
+        83.51520000000001,
+        62.1792,
+        60.96,
+        36.576,
+        25.395319657824
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000658-17-38609-35825",
+      "parentOrder": 658,
+      "bounds": {
+        "west": -73.95721435546875,
+        "south": 40.80047607421875,
+        "east": -73.9544677734375,
+        "north": 40.801849365234375
+      },
+      "ownedBuildingCount": 54,
+      "sourcedHeightCount": 54,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 30.996954272160004,
+      "topSourcedHeightMeters": [
+        30.996954272160004,
+        29.696205681384,
+        26.732692852008,
+        26.173176,
+        24.618696
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000659-17-38610-35825",
+      "parentOrder": 659,
+      "bounds": {
+        "west": -73.9544677734375,
+        "south": 40.80047607421875,
+        "east": -73.95172119140625,
+        "north": 40.801849365234375
+      },
+      "ownedBuildingCount": 35,
+      "sourcedHeightCount": 35,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 29.3842324176,
+      "topSourcedHeightMeters": [
+        29.3842324176,
+        28.965284988288,
+        25.5637552224,
+        25.554432000000002,
+        24.270366497016003
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000660-17-38611-35825",
+      "parentOrder": 660,
+      "bounds": {
+        "west": -73.95172119140625,
+        "south": 40.80047607421875,
+        "east": -73.948974609375,
+        "north": 40.801849365234375
+      },
+      "ownedBuildingCount": 23,
+      "sourcedHeightCount": 23,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 40.698914327688,
+      "topSourcedHeightMeters": [
+        40.698914327688,
+        29.937456,
+        21.564600000000002,
+        20.241768,
+        20.034504000000002
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000661-17-38612-35825",
+      "parentOrder": 661,
+      "bounds": {
+        "west": -73.948974609375,
+        "south": 40.80047607421875,
+        "east": -73.94622802734375,
+        "north": 40.801849365234375
+      },
+      "ownedBuildingCount": 10,
+      "sourcedHeightCount": 10,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 43.586400000000005,
+      "topSourcedHeightMeters": [
+        43.586400000000005,
+        38.1,
+        38.1,
+        38.1,
+        29.260800000000003
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000662-17-38613-35825",
+      "parentOrder": 662,
+      "bounds": {
+        "west": -73.94622802734375,
+        "south": 40.80047607421875,
+        "east": -73.9434814453125,
+        "north": 40.801849365234375
+      },
+      "ownedBuildingCount": 56,
+      "sourcedHeightCount": 56,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 25.2984,
+      "topSourcedHeightMeters": [
+        25.2984,
+        24.371762164176,
+        22.89048,
+        21.499530073752002,
+        19.52244
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000663-16-19307-17912",
+      "parentOrder": 663,
+      "bounds": {
+        "west": -73.9434814453125,
+        "south": 40.80047607421875,
+        "east": -73.93798828125,
+        "north": 40.80322265625
+      },
+      "ownedBuildingCount": 119,
+      "sourcedHeightCount": 119,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 1,
+        "75": 1,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 85.18194640792801,
+      "topSourcedHeightMeters": [
+        85.18194640792801,
+        33.527031601632,
+        32.747338269480004,
+        30.893014872216003,
+        29.571956064504
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000664-17-38614-35826",
+      "parentOrder": 664,
+      "bounds": {
+        "west": -73.9434814453125,
+        "south": 40.799102783203125,
+        "east": -73.94073486328125,
+        "north": 40.80047607421875
+      },
+      "ownedBuildingCount": 40,
+      "sourcedHeightCount": 40,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 24.944608084776004,
+      "topSourcedHeightMeters": [
+        24.944608084776004,
+        23.130531159216,
+        21.526794034464,
+        20.989191711144,
+        20.98540011192
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000665-17-38615-35826",
+      "parentOrder": 665,
+      "bounds": {
+        "west": -73.94073486328125,
+        "south": 40.799102783203125,
+        "east": -73.93798828125,
+        "north": 40.80047607421875
+      },
+      "ownedBuildingCount": 52,
+      "sourcedHeightCount": 52,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 49.162406646288005,
+      "topSourcedHeightMeters": [
+        49.162406646288005,
+        41.7863225232,
+        36.576,
+        36.576,
+        25.6032
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000666-16-19304-17913",
+      "parentOrder": 666,
+      "bounds": {
+        "west": -73.9599609375,
+        "south": 40.7977294921875,
+        "east": -73.9544677734375,
+        "north": 40.80047607421875
+      },
+      "ownedBuildingCount": 36,
+      "sourcedHeightCount": 36,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 33.8328,
+      "topSourcedHeightMeters": [
+        33.8328,
+        26.549229656832,
+        25.87096280712,
+        25.283782575336,
+        24.048659228976
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000667-16-19305-17913",
+      "parentOrder": 667,
+      "bounds": {
+        "west": -73.9544677734375,
+        "south": 40.7977294921875,
+        "east": -73.948974609375,
+        "north": 40.80047607421875
+      },
+      "ownedBuildingCount": 101,
+      "sourcedHeightCount": 101,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 1,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 65.298642355464,
+      "topSourcedHeightMeters": [
+        65.298642355464,
+        43.360916924424004,
+        42.188973677256,
+        42.010227691848,
+        41.757600000000004
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000668-16-19306-17913",
+      "parentOrder": 668,
+      "bounds": {
+        "west": -73.948974609375,
+        "south": 40.7977294921875,
+        "east": -73.9434814453125,
+        "north": 40.80047607421875
+      },
+      "ownedBuildingCount": 68,
+      "sourcedHeightCount": 68,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 56.317896000000005,
+      "topSourcedHeightMeters": [
+        56.317896000000005,
+        56.119776,
+        56.025288,
+        55.90032000000001,
+        55.857648
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000669-17-38614-35827",
+      "parentOrder": 669,
+      "bounds": {
+        "west": -73.9434814453125,
+        "south": 40.7977294921875,
+        "east": -73.94073486328125,
+        "north": 40.799102783203125
+      },
+      "ownedBuildingCount": 62,
+      "sourcedHeightCount": 62,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 30.1752,
+      "topSourcedHeightMeters": [
+        30.1752,
+        25.908,
+        25.106349793296,
+        23.92527244908,
+        20.914560544176002
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000670-17-38615-35827",
+      "parentOrder": 670,
+      "bounds": {
+        "west": -73.94073486328125,
+        "south": 40.7977294921875,
+        "east": -73.93798828125,
+        "north": 40.799102783203125
+      },
+      "ownedBuildingCount": 81,
+      "sourcedHeightCount": 80,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 32.308800000000005,
+      "topSourcedHeightMeters": [
+        32.308800000000005,
+        31.736179887432,
+        26.5176,
+        22.456110864168,
+        22.250400000000003
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000671-17-38614-35828",
+      "parentOrder": 671,
+      "bounds": {
+        "west": -73.9434814453125,
+        "south": 40.796356201171875,
+        "east": -73.94073486328125,
+        "north": 40.7977294921875
+      },
+      "ownedBuildingCount": 10,
+      "sourcedHeightCount": 10,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 43.491269323104,
+      "topSourcedHeightMeters": [
+        43.491269323104,
+        43.126152000000005,
+        42.062400000000004,
+        41.757600000000004,
+        41.757600000000004
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000672-17-38615-35828",
+      "parentOrder": 672,
+      "bounds": {
+        "west": -73.94073486328125,
+        "south": 40.796356201171875,
+        "east": -73.93798828125,
+        "north": 40.7977294921875
+      },
+      "ownedBuildingCount": 73,
+      "sourcedHeightCount": 73,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 42.939802711536,
+      "topSourcedHeightMeters": [
+        42.939802711536,
+        25.908,
+        25.073795300112,
+        22.920704909832,
+        22.849263907679997
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000673-16-19306-17914",
+      "parentOrder": 673,
+      "bounds": {
+        "west": -73.948974609375,
+        "south": 40.79498291015625,
+        "east": -73.9434814453125,
+        "north": 40.7977294921875
+      },
+      "ownedBuildingCount": 81,
+      "sourcedHeightCount": 81,
+      "skylineBuildingCount": 3,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 4,
+        "75": 3,
+        "90": 3,
+        "100": 3,
+        "120": 1
+      },
+      "tallestSourcedHeightMeters": 124.60224000000001,
+      "topSourcedHeightMeters": [
+        124.60224000000001,
+        100.855272,
+        100.699824,
+        60.3504,
+        59.756040000000006
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000674-17-38614-35829",
+      "parentOrder": 674,
+      "bounds": {
+        "west": -73.9434814453125,
+        "south": 40.79498291015625,
+        "east": -73.94073486328125,
+        "north": 40.796356201171875
+      },
+      "ownedBuildingCount": 39,
+      "sourcedHeightCount": 39,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 25.16124,
+      "topSourcedHeightMeters": [
+        25.16124,
+        24.384,
+        23.7744,
+        23.439120000000003,
+        22.555200000000003
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000675-17-38615-35829",
+      "parentOrder": 675,
+      "bounds": {
+        "west": -73.94073486328125,
+        "south": 40.79498291015625,
+        "east": -73.93798828125,
+        "north": 40.796356201171875
+      },
+      "ownedBuildingCount": 9,
+      "sourcedHeightCount": 9,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 45.015912,
+      "topSourcedHeightMeters": [
+        45.015912,
+        43.272456000000005,
+        42.92498400000001,
+        42.62932800000001,
+        25.048464000000003
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000676-17-38612-35830",
+      "parentOrder": 676,
+      "bounds": {
+        "west": -73.948974609375,
+        "south": 40.793609619140625,
+        "east": -73.94622802734375,
+        "north": 40.79498291015625
+      },
+      "ownedBuildingCount": 5,
+      "sourcedHeightCount": 5,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 1,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 61.456824000000005,
+      "topSourcedHeightMeters": [
+        61.456824000000005,
+        59.426856,
+        51.2064,
+        16.04772,
+        3.913632
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000677-17-38613-35830",
+      "parentOrder": 677,
+      "bounds": {
+        "west": -73.94622802734375,
+        "south": 40.793609619140625,
+        "east": -73.9434814453125,
+        "north": 40.79498291015625
+      },
+      "ownedBuildingCount": 43,
+      "sourcedHeightCount": 43,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 54.836568,
+      "topSourcedHeightMeters": [
+        54.836568,
+        54.327552000000004,
+        54.12638400000001,
+        53.876448,
+        23.863747032888003
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000678-17-38614-35830",
+      "parentOrder": 678,
+      "bounds": {
+        "west": -73.9434814453125,
+        "south": 40.793609619140625,
+        "east": -73.94073486328125,
+        "north": 40.79498291015625
+      },
+      "ownedBuildingCount": 81,
+      "sourcedHeightCount": 81,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 1,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 64.61760000000001,
+      "topSourcedHeightMeters": [
+        64.61760000000001,
+        32.50532364048,
+        28.651200000000003,
+        26.74689107304,
+        24.384
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000679-17-38615-35830",
+      "parentOrder": 679,
+      "bounds": {
+        "west": -73.94073486328125,
+        "south": 40.793609619140625,
+        "east": -73.93798828125,
+        "north": 40.79498291015625
+      },
+      "ownedBuildingCount": 48,
+      "sourcedHeightCount": 48,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 43.284648,
+      "topSourcedHeightMeters": [
+        43.284648,
+        43.135296000000004,
+        42.921936,
+        34.140178763448006,
+        28.041600000000003
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000680-15-9652-8957",
+      "parentOrder": 680,
+      "bounds": {
+        "west": -73.9599609375,
+        "south": 40.792236328125,
+        "east": -73.948974609375,
+        "north": 40.7977294921875
+      },
+      "ownedBuildingCount": 46,
+      "sourcedHeightCount": 46,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 2,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 74.758296,
+      "topSourcedHeightMeters": [
+        74.758296,
+        64.92240000000001,
+        54.20868,
+        47.68596,
+        46.3296
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000681-17-38612-35831",
+      "parentOrder": 681,
+      "bounds": {
+        "west": -73.948974609375,
+        "south": 40.792236328125,
+        "east": -73.94622802734375,
+        "north": 40.793609619140625
+      },
+      "ownedBuildingCount": 27,
+      "sourcedHeightCount": 27,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 53.038248,
+      "topSourcedHeightMeters": [
+        53.038248,
+        46.421040000000005,
+        26.15184,
+        22.87524,
+        21.031200000000002
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000682-17-38613-35831",
+      "parentOrder": 682,
+      "bounds": {
+        "west": -73.94622802734375,
+        "south": 40.792236328125,
+        "east": -73.9434814453125,
+        "north": 40.793609619140625
+      },
+      "ownedBuildingCount": 76,
+      "sourcedHeightCount": 75,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 1,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 60.20409600000001,
+      "topSourcedHeightMeters": [
+        60.20409600000001,
+        28.346400000000003,
+        19.982688000000003,
+        18.982944,
+        18.035016000000002
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000683-17-38614-35831",
+      "parentOrder": 683,
+      "bounds": {
+        "west": -73.9434814453125,
+        "south": 40.792236328125,
+        "east": -73.94073486328125,
+        "north": 40.793609619140625
+      },
+      "ownedBuildingCount": 21,
+      "sourcedHeightCount": 21,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 22.064472000000002,
+      "topSourcedHeightMeters": [
+        22.064472000000002,
+        17.949672,
+        17.367504,
+        16.882872000000003,
+        13.981176
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000684-17-38615-35831",
+      "parentOrder": 684,
+      "bounds": {
+        "west": -73.94073486328125,
+        "south": 40.792236328125,
+        "east": -73.93798828125,
+        "north": 40.793609619140625
+      },
+      "ownedBuildingCount": 46,
+      "sourcedHeightCount": 46,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 32.170902045672,
+      "topSourcedHeightMeters": [
+        32.170902045672,
+        31.0896,
+        31.0896,
+        27.090624,
+        22.981920000000002
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000685-16-19308-17912",
+      "parentOrder": 685,
+      "bounds": {
+        "west": -73.93798828125,
+        "south": 40.80047607421875,
+        "east": -73.9324951171875,
+        "north": 40.80322265625
+      },
+      "ownedBuildingCount": 119,
+      "sourcedHeightCount": 119,
+      "skylineBuildingCount": 4,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 4,
+        "75": 4,
+        "90": 4,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 99.17560531819201,
+      "topSourcedHeightMeters": [
+        99.17560531819201,
+        98.79927617397601,
+        98.7552,
+        98.711799601152,
+        44.196000000000005
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000686-16-19309-17912",
+      "parentOrder": 686,
+      "bounds": {
+        "west": -73.9324951171875,
+        "south": 40.80047607421875,
+        "east": -73.927001953125,
+        "north": 40.80322265625
+      },
+      "ownedBuildingCount": 13,
+      "sourcedHeightCount": 13,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 42.894504,
+      "topSourcedHeightMeters": [
+        42.894504,
+        19.879995680112,
+        19.647408,
+        16.879824000000003,
+        16.858488
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000687-17-38616-35826",
+      "parentOrder": 687,
+      "bounds": {
+        "west": -73.93798828125,
+        "south": 40.799102783203125,
+        "east": -73.93524169921875,
+        "north": 40.80047607421875
+      },
+      "ownedBuildingCount": 47,
+      "sourcedHeightCount": 47,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 28.956000000000003,
+      "topSourcedHeightMeters": [
+        28.956000000000003,
+        23.435081945592003,
+        21.011405020032,
+        20.4216,
+        20.1168
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000688-17-38617-35826",
+      "parentOrder": 688,
+      "bounds": {
+        "west": -73.93524169921875,
+        "south": 40.799102783203125,
+        "east": -73.9324951171875,
+        "north": 40.80047607421875
+      },
+      "ownedBuildingCount": 7,
+      "sourcedHeightCount": 7,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 43.659552000000005,
+      "topSourcedHeightMeters": [
+        43.659552000000005,
+        43.37304,
+        43.224981909528005,
+        19.351752,
+        19.092672
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000689-17-38616-35827",
+      "parentOrder": 689,
+      "bounds": {
+        "west": -73.93798828125,
+        "south": 40.7977294921875,
+        "east": -73.93524169921875,
+        "north": 40.799102783203125
+      },
+      "ownedBuildingCount": 67,
+      "sourcedHeightCount": 67,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 35.6616,
+      "topSourcedHeightMeters": [
+        35.6616,
+        28.956000000000003,
+        26.554587476952,
+        23.514206894784,
+        21.031200000000002
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000690-17-38617-35827",
+      "parentOrder": 690,
+      "bounds": {
+        "west": -73.93524169921875,
+        "south": 40.7977294921875,
+        "east": -73.9324951171875,
+        "north": 40.799102783203125
+      },
+      "ownedBuildingCount": 64,
+      "sourcedHeightCount": 64,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 36.576,
+      "topSourcedHeightMeters": [
+        36.576,
+        21.700885787880004,
+        21.313106063568,
+        21.15312,
+        20.813664471648003
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000691-16-19309-17913",
+      "parentOrder": 691,
+      "bounds": {
+        "west": -73.9324951171875,
+        "south": 40.7977294921875,
+        "east": -73.927001953125,
+        "north": 40.80047607421875
+      },
+      "ownedBuildingCount": 18,
+      "sourcedHeightCount": 18,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 48.070008,
+      "topSourcedHeightMeters": [
+        48.070008,
+        43.595544000000004,
+        43.516296000000004,
+        43.004232,
+        42.540936
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000692-15-9655-8956",
+      "parentOrder": 692,
+      "bounds": {
+        "west": -73.927001953125,
+        "south": 40.7977294921875,
+        "east": -73.916015625,
+        "north": 40.80322265625
+      },
+      "ownedBuildingCount": 12,
+      "sourcedHeightCount": 12,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 11.277600000000001,
+      "topSourcedHeightMeters": [
+        11.277600000000001,
+        10.917936000000001,
+        9.7536,
+        9.144,
+        8.8392
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000693-17-38616-35828",
+      "parentOrder": 693,
+      "bounds": {
+        "west": -73.93798828125,
+        "south": 40.796356201171875,
+        "east": -73.93524169921875,
+        "north": 40.7977294921875
+      },
+      "ownedBuildingCount": 63,
+      "sourcedHeightCount": 63,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 24.075020835384002,
+      "topSourcedHeightMeters": [
+        24.075020835384002,
+        23.80543859172,
+        23.636708221536,
+        23.479547294304002,
+        19.571533422768
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000694-17-38617-35828",
+      "parentOrder": 694,
+      "bounds": {
+        "west": -73.93524169921875,
+        "south": 40.796356201171875,
+        "east": -73.9324951171875,
+        "north": 40.7977294921875
+      },
+      "ownedBuildingCount": 95,
+      "sourcedHeightCount": 95,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 34.110168,
+      "topSourcedHeightMeters": [
+        34.110168,
+        27.432000000000002,
+        24.384,
+        22.207967469168004,
+        21.458873194944005
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000695-17-38616-35829",
+      "parentOrder": 695,
+      "bounds": {
+        "west": -73.93798828125,
+        "south": 40.79498291015625,
+        "east": -73.93524169921875,
+        "north": 40.796356201171875
+      },
+      "ownedBuildingCount": 57,
+      "sourcedHeightCount": 56,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 46.585632000000004,
+      "topSourcedHeightMeters": [
+        46.585632000000004,
+        25.158192000000003,
+        24.944832,
+        24.603456,
+        23.536656
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000696-17-38617-35829",
+      "parentOrder": 696,
+      "bounds": {
+        "west": -73.93524169921875,
+        "south": 40.79498291015625,
+        "east": -73.9324951171875,
+        "north": 40.796356201171875
+      },
+      "ownedBuildingCount": 82,
+      "sourcedHeightCount": 82,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 29.799854692272,
+      "topSourcedHeightMeters": [
+        29.799854692272,
+        28.041600000000003,
+        23.961201081312,
+        23.887176000000004,
+        23.1648
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000697-16-19309-17914",
+      "parentOrder": 697,
+      "bounds": {
+        "west": -73.9324951171875,
+        "south": 40.79498291015625,
+        "east": -73.927001953125,
+        "north": 40.7977294921875
+      },
+      "ownedBuildingCount": 58,
+      "sourcedHeightCount": 58,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 31.898379368976,
+      "topSourcedHeightMeters": [
+        31.898379368976,
+        24.057864000000002,
+        23.847552,
+        21.640800000000002,
+        21.031200000000002
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000698-16-19308-17915",
+      "parentOrder": 698,
+      "bounds": {
+        "west": -73.93798828125,
+        "south": 40.792236328125,
+        "east": -73.9324951171875,
+        "north": 40.79498291015625
+      },
+      "ownedBuildingCount": 68,
+      "sourcedHeightCount": 68,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 55.473600000000005,
+      "topSourcedHeightMeters": [
+        55.473600000000005,
+        40.2336,
+        39.3192,
+        29.836872000000003,
+        26.160984
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000699-16-19309-17915",
+      "parentOrder": 699,
+      "bounds": {
+        "west": -73.9324951171875,
+        "south": 40.792236328125,
+        "east": -73.927001953125,
+        "north": 40.79498291015625
+      },
+      "ownedBuildingCount": 1,
+      "sourcedHeightCount": 1,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 27.064722284976003,
+      "topSourcedHeightMeters": [
+        27.064722284976003
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000700-15-9655-8957",
+      "parentOrder": 700,
+      "bounds": {
+        "west": -73.927001953125,
+        "south": 40.792236328125,
+        "east": -73.916015625,
+        "north": 40.7977294921875
+      },
+      "ownedBuildingCount": 22,
+      "sourcedHeightCount": 22,
+      "skylineBuildingCount": 0,
+      "skylineBuildingCountByThresholdMeters": {
+        "60": 0,
+        "75": 0,
+        "90": 0,
+        "100": 0,
+        "120": 0
+      },
+      "tallestSourcedHeightMeters": 20.1168,
+      "topSourcedHeightMeters": [
+        20.1168,
+        18.484047716616,
+        17.0688,
+        12.714361628376,
+        12.4968
+      ]
+    }
+  ]
+}
