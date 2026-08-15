@@ -20,6 +20,11 @@ import { enuFrame, readPilotBuildings, toEnuMeters, type PilotBuildingSource } f
 import { domainSeparatedSha256, stableSerialize } from "./deterministic-hash.ts";
 import {
   DETERMINISTIC_FACADE_V3_LIMITS,
+  DETERMINISTIC_FACADE_V3_UNCERTAINTY,
+  V3_EXTENDED_GRAMMAR_OPTIONS,
+  V3_EXTENDED_MAX_RING_VERTICES,
+  V3_LOW_RISE_HEIGHT_THRESHOLD_MM,
+  V3_NOMINAL_FLOOR_HEIGHT_MM,
   deriveV3Parameters,
   earClipRing,
   generateV3FacadePlan,
@@ -561,5 +566,165 @@ describe("(23) a cited style override displaces the designed draw, and nothing e
     refuse({ ...OVERRIDE, fact: "x".repeat(513) });
     refuse({ ...OVERRIDE, extra: "unexpected" });
     refuse("stone-neutral");
+  });
+});
+
+/**
+ * (T003) The two grammar extensions.
+ *
+ * Both are implemented here and NEITHER is a default, so the first thing these
+ * tests establish is that the shipped grammar is unchanged. The rest prove the
+ * two properties the extensions rest on: that the low-rise branch is disjoint
+ * from every input this grammar has ever accepted, and that neither extension
+ * substitutes massing for the buildings it recovers.
+ */
+describe("(T003) grammar extensions are inert by default", () => {
+  const RECT: Point2Mm[] = [[0, 0], [20_000, 0], [20_000, 15_000], [0, 15_000]];
+
+  function extensionInput(heightMm: number, outer: Point2Mm[] = RECT, options: Parameters<typeof deriveV3Parameters>[1] = {}): unknown {
+    return {
+      schemaVersion: "3.0",
+      buildingId: "doitt:extension",
+      generatedAt: "2026-08-15T00:00:00.000Z",
+      seed: "t003-grammar-extension",
+      tool: { id: "urban-digital-twin:t003", version: "1.0.0" },
+      geometry: { unit: "millimeter", footprint: { outer }, baseElevationMm: 0, heightMm },
+      sourceAnchors: [
+        { id: "anchor:footprint", kind: "footprint", sourceRefId: "source-ref:jh45-qr5r", fingerprintSha256: "a".repeat(64) },
+        { id: "anchor:height", kind: "height", sourceRefId: "source-ref:oti-height", fingerprintSha256: "b".repeat(64) },
+      ],
+      parameters: deriveV3Parameters({ footprintOuterMm: outer, heightMm }, options),
+    };
+  }
+
+  /** A regular polygon: simple, convex, well above the area floor and the neck minimum. */
+  function regularRing(vertexCount: number, radiusMm = 20_000): Point2Mm[] {
+    return Array.from({ length: vertexCount }, (_, index) => {
+      const angle = (2 * Math.PI * index) / vertexCount;
+      return [Math.round(radiusMm * Math.cos(angle)), Math.round(radiusMm * Math.sin(angle))] as Point2Mm;
+    });
+  }
+
+  it("keeps the ACTIVE admission envelope exactly where the shipped waves found it", () => {
+    // The number every committed V3 wave release was materialized under. Moving
+    // it changes what those releases emit when they are re-derived, which is why
+    // the extended cap is a separate constant and not an edit to this one.
+    expect(DETERMINISTIC_FACADE_V3_LIMITS.maxRingVertices).toBe(64);
+    expect(V3_EXTENDED_MAX_RING_VERTICES).toBe(384);
+    expect(V3_EXTENDED_GRAMMAR_OPTIONS).toEqual({ maxRingVertices: 384, lowRiseFloorHeight: true });
+    // The low-rise threshold IS the nominal floor height, restated.
+    expect(V3_LOW_RISE_HEIGHT_THRESHOLD_MM).toBe(V3_NOMINAL_FLOOR_HEIGHT_MM);
+  });
+
+  it("derives the nominal floor height for a low-rise unless the extension is asked for", () => {
+    expect(deriveV3Parameters({ footprintOuterMm: RECT, heightMm: 2_400 }).targetFloorHeightMm).toBe(3_600);
+    expect(deriveV3Parameters({ footprintOuterMm: RECT, heightMm: 2_400 }, {}).targetFloorHeightMm).toBe(3_600);
+    expect(deriveV3Parameters({ footprintOuterMm: RECT, heightMm: 2_400 }, { lowRiseFloorHeight: false }).targetFloorHeightMm).toBe(3_600);
+    // ...and the sub-threshold building is still refused, under the same code.
+    const refused = generateV3FacadePlan(extensionInput(2_400));
+    expect(refused.ok).toBe(false);
+    expect(refused.ok ? [] : refused.issues.map((issue) => issue.path)).toContain("geometry.heightMm");
+  });
+
+  /**
+   * THE DISJOINTNESS PROOF, as a test.
+   *
+   * `validateV3Input` refuses `heightMm < parameters.targetFloorHeightMm`, and
+   * the only floor height this policy has ever produced is 3,600 mm, so every
+   * input this grammar has ever accepted carries `heightMm >= 3_600`. The
+   * extension branch is taken strictly below that, so it cannot reach an
+   * accepted plan — which is what makes it safe to add without moving a single
+   * committed plan hash. Stated over the boundary, a dense sweep, and all
+   * fourteen real footprints at their real heights.
+   */
+  it("produces byte-identical parameters at and above the threshold, extension on or off", () => {
+    const heights = [3_600, 3_601, 4_000, 10_000, 59_999, 60_000, 381_000, 1_000_000_000];
+    for (const heightMm of heights) {
+      const off = deriveV3Parameters({ footprintOuterMm: RECT, heightMm });
+      const on = deriveV3Parameters({ footprintOuterMm: RECT, heightMm }, V3_EXTENDED_GRAMMAR_OPTIONS);
+      expect(stableSerialize(on), `heightMm ${heightMm}`).toBe(stableSerialize(off));
+    }
+    for (const building of buildings) {
+      const outer = footprintMm(building);
+      const heightMm = Math.round(building.heightMeters * 1_000);
+      expect(heightMm, building.canonicalBuildingId).toBeGreaterThanOrEqual(V3_LOW_RISE_HEIGHT_THRESHOLD_MM);
+      const off = deriveV3Parameters({ footprintOuterMm: outer, heightMm });
+      const on = deriveV3Parameters({ footprintOuterMm: outer, heightMm }, V3_EXTENDED_GRAMMAR_OPTIONS);
+      expect(stableSerialize(on), building.canonicalBuildingId).toBe(stableSerialize(off));
+    }
+    // And the branch does fire immediately below the boundary, so the pin above
+    // is a statement about disjointness rather than about a dead branch.
+    expect(deriveV3Parameters({ footprintOuterMm: RECT, heightMm: 3_599 }, V3_EXTENDED_GRAMMAR_OPTIONS).targetFloorHeightMm).toBe(3_599);
+  });
+
+  it("keeps every committed plan hash where it is: extension B moves no accepted plan", () => {
+    for (const id of [ESB_ID, REFLEX_ID, SHORT_EDGE_ID, CONVEX_ID]) {
+      const building = byId.get(id)!;
+      const outer = footprintMm(building);
+      const heightMm = Math.round(building.heightMeters * 1_000);
+      const extended = generateV3FacadePlan(inputFor(building, {
+        parameters: deriveV3Parameters({ footprintOuterMm: outer, heightMm }, V3_EXTENDED_GRAMMAR_OPTIONS),
+      }), V3_EXTENDED_GRAMMAR_OPTIONS);
+      expect(extended.ok, id).toBe(true);
+      expect(extended.ok ? extended.value.planHashSha256 : null, id).toBe(planFor(id).planHashSha256);
+    }
+  });
+
+  it("recovers a low-rise as ONE floor spanning the sourced height, over the sourced ring", () => {
+    const heightMm = 2_400;
+    const generated = generateV3FacadePlan(extensionInput(heightMm, RECT, V3_EXTENDED_GRAMMAR_OPTIONS), V3_EXTENDED_GRAMMAR_OPTIONS);
+    expect(generated.ok).toBe(true);
+    if (!generated.ok) return;
+    const plan = generated.value;
+    expect(plan.parameters.targetFloorHeightMm).toBe(heightMm);
+    expect(plan.massing.floorCount).toBe(1);
+    expect(plan.massing.effectiveTierCount).toBe(1);
+    // NO MASSING IS SUBSTITUTED. The ring is the sourced ring vertex for vertex
+    // and the single band spans the sourced height exactly, which is what keeps
+    // `DETERMINISTIC_FACADE_V3_UNCERTAINTY` literally true for these buildings
+    // and is why no third uncertainty statement exists.
+    expect(plan.tiers).toHaveLength(1);
+    expect(plan.tiers[0]!.ring).toEqual(RECT);
+    expect(plan.tiers[0]!.topZMm - plan.tiers[0]!.baseZMm).toBe(heightMm);
+    expect(plan.uncertainty).toBe(DETERMINISTIC_FACADE_V3_UNCERTAINTY);
+    expect(validateV3Plan(plan).ok).toBe(true);
+  });
+
+  it("admits a 65-vertex ring only under the extended cap, and carries all 65 vertices", () => {
+    const ring = regularRing(65);
+    const refused = generateV3FacadePlan(extensionInput(20_000, ring));
+    expect(refused.ok).toBe(false);
+    expect(refused.ok ? [] : refused.issues.map((issue) => issue.message).join(" ")).toContain("3 to 64 distinct vertices");
+
+    const admitted = generateV3FacadePlan(extensionInput(20_000, ring), V3_EXTENDED_GRAMMAR_OPTIONS);
+    expect(admitted.ok).toBe(true);
+    if (!admitted.ok) return;
+    // Verbatim, as the module charter requires: same count, same coordinates.
+    expect(admitted.value.tiers[0]!.ring).toEqual(ring);
+    expect(admitted.value.input.geometry.heightMm).toBe(20_000);
+    expect(validateV3Plan(admitted.value, V3_EXTENDED_GRAMMAR_OPTIONS).ok).toBe(true);
+    // MEASURED, and the reason `validateV3Plan` takes the envelope at all: the
+    // validator re-runs the input contract, so the SAME plan read against the
+    // active cap is refused. Left as a pin because the refusal is correct and
+    // its absence would have mislabelled every recovered building as
+    // `plan-validation-failed` in the census.
+    expect(validateV3Plan(admitted.value).ok).toBe(false);
+  });
+
+  it("stays a BOUNDED cap: 385 vertices is refused under the extended envelope too", () => {
+    const refused = generateV3FacadePlan(extensionInput(20_000, regularRing(385)), V3_EXTENDED_GRAMMAR_OPTIONS);
+    expect(refused.ok).toBe(false);
+    expect(refused.ok ? [] : refused.issues.map((issue) => issue.message).join(" ")).toContain("3 to 384 distinct vertices");
+  });
+
+  it("changes nothing for a ring the active cap already admitted", () => {
+    // Extension A widens an admission gate and is read nowhere else, so a ring
+    // inside the old cap produces a byte-identical plan under both envelopes.
+    const ring = regularRing(64);
+    const active = generateV3FacadePlan(extensionInput(20_000, ring));
+    const extended = generateV3FacadePlan(extensionInput(20_000, ring), V3_EXTENDED_GRAMMAR_OPTIONS);
+    expect(active.ok && extended.ok).toBe(true);
+    if (!active.ok || !extended.ok) return;
+    expect(stableSerialize(extended.value)).toBe(stableSerialize(active.value));
   });
 });

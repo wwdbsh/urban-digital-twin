@@ -38,6 +38,7 @@ import {
   tessellateV3Plan,
   validateV3Plan,
   type Point2Mm,
+  type V3GrammarOptions,
   type V3Plan,
 } from "../domain/deterministic-facade-generator-v3.ts";
 import { sha256HexBytes, sha256HexSync, stableSerialize } from "../domain/deterministic-hash.ts";
@@ -257,10 +258,13 @@ function collapseExactDuplicates(points: readonly Point2Mm[]): Point2Mm[] {
  * or `null` when the ring is admissible and the refusal came from later in
  * generation.
  */
-export function classifyMidtownCoreV3Ring(ringMm: readonly Point2Mm[]): MidtownCoreV3StopCode | null {
+export function classifyMidtownCoreV3Ring(
+  ringMm: readonly Point2Mm[],
+  options: Pick<V3GrammarOptions, "maxRingVertices"> = {},
+): MidtownCoreV3StopCode | null {
   const collapsed = collapseExactDuplicates(ringMm);
   if (collapsed.length < DETERMINISTIC_FACADE_V3_LIMITS.minRingVertices) return "degenerate-footprint";
-  if (collapsed.length > DETERMINISTIC_FACADE_V3_LIMITS.maxRingVertices) return "ring-vertex-count-unsupported";
+  if (collapsed.length > (options.maxRingVertices ?? DETERMINISTIC_FACADE_V3_LIMITS.maxRingVertices)) return "ring-vertex-count-unsupported";
   const oriented = ringSignedAreaMm2(collapsed) < 0 ? [...collapsed].reverse() : collapsed;
   if (!ringIsSimple(oriented)) return "ring-not-simple";
   if (Math.abs(ringSignedAreaMm2(oriented)) < DETERMINISTIC_FACADE_V3_LIMITS.minRingAreaMm2) return "ring-area-below-floor";
@@ -284,8 +288,9 @@ export function classifyMidtownCoreV3Ring(ringMm: readonly Point2Mm[]): MidtownC
 export function classifyMidtownCoreV3Generation(
   ringMm: readonly Point2Mm[],
   issues: readonly { path: string; message: string }[],
+  options: Pick<V3GrammarOptions, "maxRingVertices"> = {},
 ): MidtownCoreV3StopCode {
-  const ring = classifyMidtownCoreV3Ring(ringMm);
+  const ring = classifyMidtownCoreV3Ring(ringMm, options);
   if (ring !== null) return ring;
   const paths = new Set(issues.map((issue) => issue.path));
   if (paths.has("geometry.heightMm")) return "source-height-below-grammar-minimum";
@@ -321,6 +326,12 @@ export function buildMidtownCoreV3Plan(
   source: MidtownCoreBuildingSource,
   baseManifestChecksumSha256: string,
   profile: V3WaveProfile = MIDTOWN_CORE_V3_WAVE_PROFILE,
+  /**
+   * Grammar-extension state, for the T003 differential replay ALONE. Every field
+   * is optional and every default is the shipped grammar, so the wave CLIs and
+   * every existing caller travel the identical path they always did.
+   */
+  grammar: V3GrammarOptions = {},
 ): MidtownCoreV3PlanContext {
   const closed = source.outerRing.length > 1
     && source.outerRing[0]![0] === source.outerRing[source.outerRing.length - 1]![0]
@@ -361,15 +372,15 @@ export function buildMidtownCoreV3Plan(
         fingerprintSha256: sha256HexSync(stableSerialize({ heightMeters: source.heightMeters, heightUnknown: source.heightUnknown, heightSource, baseManifestChecksumSha256 })),
       },
     ],
-    parameters: deriveV3Parameters({ footprintOuterMm: outer, heightMm }),
-  });
+    parameters: deriveV3Parameters({ footprintOuterMm: outer, heightMm }, grammar),
+  }, grammar);
   if (!generated.ok) {
     const detail = generated.issues.map((issue) => `${issue.path}: ${issue.message}`).join("; ");
-    throw new MidtownCoreV3Stop(source.buildingId, classifyMidtownCoreV3Generation(raw, generated.issues), detail);
+    throw new MidtownCoreV3Stop(source.buildingId, classifyMidtownCoreV3Generation(raw, generated.issues, grammar), detail);
   }
   // Generation alone does not run the plan validator, which carries the
   // containment, local-thickness and corner-clearance guards.
-  const validated = validateV3Plan(generated.value);
+  const validated = validateV3Plan(generated.value, grammar);
   if (!validated.ok) {
     throw new MidtownCoreV3Stop(source.buildingId, "plan-validation-failed", validated.issues.map((issue) => `${issue.path}: ${issue.message}`).join("; "));
   }
