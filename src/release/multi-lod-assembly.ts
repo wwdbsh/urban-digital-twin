@@ -5,6 +5,7 @@ import {
   PROCEDURAL_TEXTURE_LIMITS,
   PROCEDURAL_TEXTURE_SAMPLER_FILTER,
   isProceduralTextureProvenance,
+  proceduralTextureCatalog,
   proceduralTextureReplayIndex,
   type ProceduralTextureProfile,
 } from "./procedural-texture.ts";
@@ -60,6 +61,17 @@ export const ASSEMBLY_ISSUE_TEXTURE_BUFFER_TAIL_FORBIDDEN = "procedural-texture-
  * other gate would pass.
  */
 export const ASSEMBLY_ISSUE_TEXTURE_SAMPLER_FILTER_REQUIRED = "procedural-texture-gate/sampler-filter-required: a publicly admitted textured GLB must name the exact magFilter/minFilter pair its release declares." as const;
+
+// ---------------------------------------------------------------------------
+// Shared external detail tiles: the URI-image sibling gate
+// ---------------------------------------------------------------------------
+
+export const ASSEMBLY_ISSUE_TEXTURE_URI_SHAPE_FORBIDDEN = "shared-texture-gate/uri-shape-forbidden: a shared-texture assembly requires every image to name a strict relative URI, one PNG per texture, each drawn by a used material." as const;
+export const ASSEMBLY_ISSUE_TEXTURE_URI_CONTAINMENT_FORBIDDEN = "shared-texture-gate/uri-containment-forbidden: an image URI must resolve inside its own audience root without escaping the package." as const;
+export const ASSEMBLY_ISSUE_TEXTURE_URI_UNDECLARED = "shared-texture-gate/uri-undeclared: an image URI must resolve to a texture artifact this package declares." as const;
+export const ASSEMBLY_ISSUE_TEXTURE_URI_DUPLICATE_CLASS = "shared-texture-gate/uri-duplicate-class: one GLB cannot reference the same shared texture artifact twice." as const;
+export const ASSEMBLY_ISSUE_TEXTURE_ARTIFACT_REPLAY_MISMATCH = "shared-texture-gate/artifact-replay-mismatch: a declared texture artifact is not byte-identical to the tile this repository's rasterizer produces from the declared parameters." as const;
+export const ASSEMBLY_ISSUE_TEXTURE_ARTIFACT_ORPHAN = "shared-texture-gate/artifact-orphan: a declared texture artifact that no GLB references cannot ride along in the package." as const;
 
 export interface MultiLodAssemblyPolicy {
   /**
@@ -124,7 +136,15 @@ export type ComponentTruthTier = "generated" | "evidence-backed" | "absent" | "n
 export interface ImmutablePin { id: string; checksumSha256: string }
 export interface AssemblyArtifact {
   logicalId: string;
-  role: "tileset-json" | "glb";
+  /**
+   * `texture` is a RELEASE-SCOPED shared detail tile: bytes that live once per
+   * package and are referenced by relative URI from every GLB that draws that
+   * class. It owns no cell (`ownerCellId` is null, like the tileset), it is not
+   * a LOD so no asset claims it, and it is admitted only under the
+   * shared-texture gate, which replays it byte-for-byte against
+   * `procedural-texture.ts`.
+   */
+  role: "tileset-json" | "glb" | "texture";
   relativeRef: string;
   byteSize: number;
   checksumSha256: string;
@@ -348,7 +368,7 @@ export function validateMultiLodAssembly(value: unknown, policy?: MultiLodAssemb
     const path = `$.artifacts[${index}]`; if (!rec(raw)) return issue(issues, path, "Artifact must be an object.");
     exact(raw, ["logicalId", "role", "relativeRef", "byteSize", "checksumSha256", "ownerCellId"], path, issues);
     if (!text(raw.logicalId) || artifactLogicalIds.has(String(raw.logicalId))) issue(issues, `${path}.logicalId`, "Logical IDs must be unique and non-empty."); else artifactLogicalIds.add(raw.logicalId);
-    if (raw.role !== "tileset-json" && raw.role !== "glb") issue(issues, `${path}.role`, "Artifact role must be tileset-json or glb.");
+    if (raw.role !== "tileset-json" && raw.role !== "glb" && raw.role !== "texture") issue(issues, `${path}.role`, "Artifact role must be tileset-json, glb or texture.");
     if (!audiencePath(raw.relativeRef, audience)) issue(issues, `${path}.relativeRef`, "Artifact path must be safe and audience-rooted.");
     else if (artifacts.has(raw.relativeRef)) issue(issues, `${path}.relativeRef`, "Artifact refs must be unique.");
     if (!integer(raw.byteSize, MULTI_LOD_ASSEMBLY_LIMITS.artifactBytes)) issue(issues, `${path}.byteSize`, "Artifact bytes exceed the safe bound.");
@@ -356,6 +376,10 @@ export function validateMultiLodAssembly(value: unknown, policy?: MultiLodAssemb
     if (!hash(raw.checksumSha256)) issue(issues, `${path}.checksumSha256`, "Artifact checksum is required.");
     if (raw.role === "glb" && (!text(raw.ownerCellId) || !cells.has(raw.ownerCellId))) issue(issues, `${path}.ownerCellId`, "GLB must name a declared owner cell.");
     if (raw.role === "tileset-json" && raw.ownerCellId !== null) issue(issues, `${path}.ownerCellId`, "Tileset ownerCellId must be null.");
+    // A shared tile belongs to the RELEASE, not to any one cell, so charging it
+    // to a cell's byte budget would double-count it against every other cell
+    // that draws the same class.
+    if (raw.role === "texture" && raw.ownerCellId !== null) issue(issues, `${path}.ownerCellId`, "Shared texture ownerCellId must be null.");
     if (typeof raw.relativeRef === "string") artifacts.set(raw.relativeRef, raw as unknown as AssemblyArtifact);
   });
   if (!integer(value.declaredTotalBytes, MULTI_LOD_ASSEMBLY_LIMITS.totalBytes) || value.declaredTotalBytes !== total) issue(issues, "$.declaredTotalBytes", "Declared total must exactly equal artifact bytes.");
@@ -507,7 +531,13 @@ function parseJsonBytes(bytes: Uint8Array): unknown {
   while (end > 0 && decoded.charCodeAt(end - 1) === 32) end -= 1;
   return JSON.parse(decoded.slice(0, end));
 }
-export function parseGlbV2(bytes: Uint8Array): ParsedGlb {
+/**
+ * `allowExternalImageUri` widens exactly one rule -- an image may name a strict
+ * relative `uri` instead of a `bufferView` -- and nothing else. It defaults to
+ * false, so every existing call site parses under the byte-identical rule it
+ * did before the option existed.
+ */
+export function parseGlbV2(bytes: Uint8Array, options?: { allowExternalImageUri?: boolean }): ParsedGlb {
   if (!(bytes instanceof Uint8Array) || bytes.byteLength < 20 || bytes.byteLength > MULTI_LOD_ASSEMBLY_LIMITS.artifactBytes) throw new Error("GLB byte length is outside the supported profile.");
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   if (u32(view, 0) !== 0x46546c67 || u32(view, 4) !== 2 || u32(view, 8) !== bytes.byteLength) throw new Error("GLB 2 header or declared length is invalid.");
@@ -524,7 +554,7 @@ export function parseGlbV2(bytes: Uint8Array): ParsedGlb {
   }
   if (!json || offset !== bytes.byteLength) throw new Error("GLB JSON or exact byte closure is missing.");
   const binary = bin ?? new Uint8Array();
-  validateGltfJson(json, binary);
+  validateGltfJson(json, binary, options?.allowExternalImageUri === true);
   return { json, jsonBytes, binBytes: binary.byteLength, bin: binary };
 }
 const COMPONENT_BYTES: Record<number, number> = { 5121: 1, 5123: 2, 5125: 4, 5126: 4 };
@@ -578,7 +608,38 @@ function validateAttributeAccessor(accessors: Record<string, unknown>[], semanti
   if (semantic.startsWith("TEXCOORD_") && (type !== "VEC2" || (componentType !== 5126 && !([5121, 5123].includes(Number(componentType)) && normalized)))) throw new Error("Texture coordinates use an unsupported accessor profile.");
   if (semantic === "COLOR_0" && (!["VEC3", "VEC4"].includes(String(type)) || (componentType !== 5126 && !([5121, 5123].includes(Number(componentType)) && normalized)))) throw new Error("Vertex colors use an unsupported accessor profile.");
 }
-function validateGltfJson(json: Record<string, unknown>, bin: Uint8Array): void {
+/**
+ * The relative-reference SHAPE `resolveTilesetUri` accepts, restated as a
+ * predicate so the image rule and the resolver below can both use it. Kept
+ * separate from `resolveTilesetUri` itself rather than refactored into it: that
+ * function is load-bearing for every frozen package's tileset closure and is
+ * deliberately left byte-untouched.
+ */
+function strictRelativeUri(value: unknown): value is string {
+  if (typeof value !== "string" || value.length === 0 || value.startsWith("/")) return false;
+  if (/^[A-Za-z][A-Za-z0-9+.-]*:/u.test(value) || /[%?#\\]/u.test(value)) return false;
+  if ([...value].some((part) => part.charCodeAt(0) <= 0x20 || part.charCodeAt(0) === 0x7f)) return false;
+  return value.split("/").every((segment) => segment === ".." || /^[A-Za-z0-9][A-Za-z0-9._-]*$/u.test(segment));
+}
+
+/**
+ * Resolves an image URI against the GLB that names it, with the same
+ * containment discipline `resolveTilesetUri` applies to tile content: canonical
+ * segments only, no escape past the package root, and the result must land
+ * inside the package's own audience root.
+ */
+function resolveImageUri(glbRef: string, uri: string, audience: AssemblyAudience): string {
+  const parts = glbRef.split("/").slice(0, -1);
+  for (const segment of uri.split("/")) {
+    if (segment === "..") { if (parts.length === 0) throw new Error(ASSEMBLY_ISSUE_TEXTURE_URI_CONTAINMENT_FORBIDDEN); parts.pop(); }
+    else parts.push(segment);
+  }
+  const resolved = parts.join("/");
+  if (!audiencePath(resolved, audience)) throw new Error(ASSEMBLY_ISSUE_TEXTURE_URI_CONTAINMENT_FORBIDDEN);
+  return resolved;
+}
+
+function validateGltfJson(json: Record<string, unknown>, bin: Uint8Array, allowExternalImageUri = false): void {
   const topLevel = new Set(["asset", "buffers", "bufferViews", "accessors", "meshes", "materials", "textures", "images", "samplers", "nodes", "scenes", "scene", "extras"]);
   if (Object.keys(json).some((key) => !topLevel.has(key))) throw new Error("Unsupported top-level glTF field or extension declaration.");
   if (!rec(json.asset)) throw new Error("glTF asset metadata is required.");
@@ -612,6 +673,17 @@ function validateGltfJson(json: Record<string, unknown>, bin: Uint8Array): void 
   }
   const images = gltfObjects(json.images, "glTF images", MULTI_LOD_ASSEMBLY_LIMITS.textures); const textures = gltfObjects(json.textures, "glTF textures", MULTI_LOD_ASSEMBLY_LIMITS.textures); const samplers = gltfObjects(json.samplers, "glTF samplers", MULTI_LOD_ASSEMBLY_LIMITS.textures);
   for (const image of images) {
+    // The external-image branch is reachable ONLY when a caller opts in, so
+    // every existing caller -- every frozen package, the operator replay path
+    // and the runtime as it stands -- keeps the byte-identical embedded-only
+    // rule it had before this branch existed. Opting in still buys nothing on
+    // its own: it admits a URI SHAPE here, and the shared-texture gate below is
+    // what decides whether that URI resolves to a declared, replayed artifact.
+    if (allowExternalImageUri && Object.hasOwn(image, "uri")) {
+      closedKeys(image, ["uri", "mimeType"], ["uri", "mimeType"], "glTF image");
+      if (!strictRelativeUri(image.uri) || typeof image.mimeType !== "string" || !["image/png", "image/jpeg", "image/webp"].includes(image.mimeType)) throw new Error("External image URI profile is invalid.");
+      continue;
+    }
     closedKeys(image, ["bufferView", "mimeType"], ["bufferView", "mimeType"], "glTF image");
     if (!integer(image.bufferView, Math.max(0, views.length - 1)) || typeof image.mimeType !== "string" || !["image/png", "image/jpeg", "image/webp"].includes(image.mimeType)) throw new Error("Embedded image profile is invalid.");
     const view = views[image.bufferView as number]!; if (view.byteStride !== undefined || view.target !== undefined) throw new Error("Image bufferView cannot declare geometry stride or target.");
@@ -849,6 +921,129 @@ function validateProceduralTextureGlb(json: Record<string, unknown>, bin: Uint8A
 }
 
 /**
+ * What a GLB needs in scope to have its image URIs judged: the artifact that
+ * names them, the audience root they must stay inside, and the exact set of
+ * texture artifacts the package declares.
+ */
+const EMPTY_TEXTURE_REFS: ReadonlySet<string> = new Set<string>();
+
+export interface SharedTextureContext {
+  /** The package-relative ref of the GLB being validated; URIs resolve against its directory. */
+  glbRef: string;
+  audience: AssemblyAudience;
+  /** Relative refs of every `role: "texture"` artifact this package declares. */
+  declaredTextureRefs: ReadonlySet<string>;
+}
+
+/**
+ * The SHARED-TEXTURE gate: a sibling of `validateProceduralTextureGlb`, never a
+ * replacement for it. That function and `validateTextureFreeGlb` are
+ * byte-untouched, and a package gated by either stays gated by it.
+ *
+ * The honesty claim is the same one and is carried the same way — the tile must
+ * be byte-identical to what this repository's rasterizer produces from named
+ * constants — but it is carried in two halves, because the bytes are no longer
+ * inside the GLB:
+ *
+ *   1. HERE: every image names a strict relative URI that resolves, inside the
+ *      package's own audience root, to an artifact the package DECLARES with
+ *      `role: "texture"`. A URI that resolves anywhere else is refused.
+ *   2. In `replayMultiLodAssembly`: every declared texture artifact is replayed
+ *      against `proceduralTextureCatalog()` byte for byte, and one class may be
+ *      declared only once.
+ *
+ * Neither half is optional and neither is sufficient alone: (1) without (2)
+ * would admit arbitrary bytes at a declared path, and (2) without (1) would let
+ * a GLB point at something the package never declared. Together they are
+ * exactly as strong as the embedded gate — a photograph, a re-encode, or a
+ * generated tile with one pixel altered fails the replay in (2), and a URI
+ * escaping the package fails the containment in (1).
+ *
+ * The BIN discipline is RESTATED rather than shared, following the same
+ * reasoning `validateProceduralTextureGlb` records: the texture-free function
+ * is load-bearing for every frozen public package and is left alone. Here the
+ * rule is strictly the tighter one — no image view exists at all, so every
+ * bufferView must be read by an accessor, exactly as in a texture-free GLB.
+ */
+function validateProceduralTextureUriGlb(json: Record<string, unknown>, provenance: unknown, requiredSamplerFilter: { magFilter: number; minFilter: number } | null, context: SharedTextureContext): ReadonlySet<string> {
+  if (!isProceduralTextureProvenance(provenance)) throw new Error(ASSEMBLY_ISSUE_TEXTURE_PROVENANCE_INVALID);
+  const images = (Array.isArray(json.images) ? json.images : []) as Array<Record<string, unknown>>;
+  const textures = (Array.isArray(json.textures) ? json.textures : []) as Array<Record<string, unknown>>;
+  const drawn = drawnTextureIds(json);
+  if (images.length === 0
+    || images.length > PROCEDURAL_TEXTURE_LIMITS.maxImagesPerGlb
+    || images.length !== textures.length
+    || drawn.size !== textures.length
+    || textures.some((texture, index) => !drawn.has(index) || texture.source !== index)
+    || images.some((image) => image.mimeType !== "image/png")
+    // Every image must be EXTERNAL. A package that mixes an embedded tile into
+    // the shared profile would reintroduce exactly the per-model duplication
+    // this mechanism exists to remove, and would do it invisibly.
+    || images.some((image) => Object.hasOwn(image, "bufferView") || !strictRelativeUri(image.uri))) throw new Error(ASSEMBLY_ISSUE_TEXTURE_URI_SHAPE_FORBIDDEN);
+
+  // Identical in force and in wording to the embedded gate's sampler rule: a
+  // publicly admitted textured GLB names the filtering its own evidence
+  // decided, on every drawn texture, with no renderer-chosen default.
+  if (requiredSamplerFilter !== null) {
+    const samplers = (Array.isArray(json.samplers) ? json.samplers : []) as Array<Record<string, unknown>>;
+    for (const index of drawn) {
+      const texture = textures[index];
+      const samplerIndex = texture?.sampler;
+      if (typeof samplerIndex !== "number") throw new Error(ASSEMBLY_ISSUE_TEXTURE_SAMPLER_FILTER_REQUIRED);
+      const sampler = samplers[samplerIndex];
+      if (!rec(sampler) || sampler.magFilter !== requiredSamplerFilter.magFilter || sampler.minFilter !== requiredSamplerFilter.minFilter) {
+        throw new Error(ASSEMBLY_ISSUE_TEXTURE_SAMPLER_FILTER_REQUIRED);
+      }
+    }
+  }
+
+  const referencedRefs = new Set<string>();
+  for (const image of images) {
+    const resolved = resolveImageUri(context.glbRef, image.uri as string, context.audience);
+    if (!context.declaredTextureRefs.has(resolved)) throw new Error(ASSEMBLY_ISSUE_TEXTURE_URI_UNDECLARED);
+    // Two images resolving to one artifact would mean the same tile referenced
+    // twice, which the writer never emits and which no legitimate asset needs.
+    if (referencedRefs.has(resolved)) throw new Error(ASSEMBLY_ISSUE_TEXTURE_URI_DUPLICATE_CLASS);
+    referencedRefs.add(resolved);
+  }
+
+  const views = json.bufferViews as Array<Record<string, unknown>>;
+  const accessors = json.accessors as Array<Record<string, unknown>>;
+  const referenced = new Set(accessors.map((accessor) => accessor.bufferView as number));
+  if (views.some((_, index) => !referenced.has(index))) throw new Error(ASSEMBLY_ISSUE_TEXTURE_UNREFERENCED_BUFFER_VIEW_FORBIDDEN);
+  const ordered = [...views].sort((left, right) => (((left.byteOffset as number | undefined) ?? 0) - ((right.byteOffset as number | undefined) ?? 0)));
+  let covered = 0;
+  for (const [index, view] of ordered.entries()) {
+    const offset = (view.byteOffset as number | undefined) ?? 0;
+    if (index === 0 && offset !== 0) throw new Error(ASSEMBLY_ISSUE_TEXTURE_BUFFER_GAP_FORBIDDEN);
+    if (offset - covered > 3) throw new Error(ASSEMBLY_ISSUE_TEXTURE_BUFFER_GAP_FORBIDDEN);
+    covered = Math.max(covered, offset + (view.byteLength as number));
+  }
+  const declared = (json.buffers as Array<Record<string, unknown>>)[0]!.byteLength as number;
+  if (declared !== Math.ceil(covered / 4) * 4) throw new Error(ASSEMBLY_ISSUE_TEXTURE_BUFFER_TAIL_FORBIDDEN);
+  return referencedRefs;
+}
+
+/**
+ * Replays one declared texture artifact against this repository's rasterizer.
+ *
+ * This is the second half of the shared-texture honesty claim and it is the
+ * same test the embedded gate applies, moved to where the bytes now live: the
+ * artifact must be byte-identical to a tile `proceduralTextureCatalog()`
+ * produces. A one-byte mutation anywhere in the PNG -- header, palette, IDAT --
+ * changes the digest and fails closed.
+ */
+export function replaySharedTextureArtifact(bytes: Uint8Array): string {
+  const textureClass = proceduralTextureReplayIndex().get(sha256HexBytes(bytes));
+  if (textureClass === undefined) throw new Error(ASSEMBLY_ISSUE_TEXTURE_ARTIFACT_REPLAY_MISMATCH);
+  // Byte length is implied by the digest, but the per-image cap is a declared
+  // property of the profile and is stated rather than inferred.
+  if (bytes.byteLength > PROCEDURAL_TEXTURE_LIMITS.maxImageBytes) throw new Error(ASSEMBLY_ISSUE_TEXTURE_BYTES_FORBIDDEN);
+  if (proceduralTextureCatalog().get(textureClass)?.pngBytes.byteLength !== bytes.byteLength) throw new Error(ASSEMBLY_ISSUE_TEXTURE_ARTIFACT_REPLAY_MISMATCH);
+  return textureClass;
+}
+
+/**
  * Export-only surface for the runtime loader: the browser must repeat the exact
  * per-artifact binding, texture-free and procedural-replay checks the offline
  * replay performs, so the runtime cannot admit a GLB the release pipeline would
@@ -868,11 +1063,19 @@ function validateProceduralTextureGlb(json: Record<string, unknown>, bin: Uint8A
  * Nothing frozen is affected: every committed package embeds zero images, and
  * the one textured package declares provenance on every GLB that carries them.
  */
-export function validateGlbBinding(parsed: ParsedGlb, asset: AssemblyAsset, lod: AssemblyLod, textureFree: boolean, requiredSamplerFilter: { magFilter: number; minFilter: number } | null = null): void {
+export function validateGlbBinding(parsed: ParsedGlb, asset: AssemblyAsset, lod: AssemblyLod, textureFree: boolean, requiredSamplerFilter: { magFilter: number; minFilter: number } | null = null, sharedTextures: SharedTextureContext | null = null): ReadonlySet<string> {
   const metadata = glbMetadata(parsed.json);
   if (textureFree) validateTextureFreeGlb(parsed.json);
   const hasImages = Array.isArray(parsed.json.images) && parsed.json.images.length > 0;
-  if (metadata.textureProvenance !== undefined) validateProceduralTextureGlb(parsed.json, parsed.bin, metadata.textureProvenance, requiredSamplerFilter);
+  let referencedTextureRefs: ReadonlySet<string> = EMPTY_TEXTURE_REFS;
+  // Which image gate applies is decided by the PACKAGE, not by the bytes: a
+  // caller that supplies no shared-texture context gets the embedded gate,
+  // which requires a bufferView on every image, so a URI-image GLB cannot slip
+  // through by omission. The two gates are mutually exclusive and total.
+  if (metadata.textureProvenance !== undefined) {
+    if (sharedTextures !== null) referencedTextureRefs = validateProceduralTextureUriGlb(parsed.json, metadata.textureProvenance, requiredSamplerFilter, sharedTextures);
+    else validateProceduralTextureGlb(parsed.json, parsed.bin, metadata.textureProvenance, requiredSamplerFilter);
+  }
   else if (hasImages) throw new Error(ASSEMBLY_ISSUE_TEXTURE_PROVENANCE_REQUIRED);
   if (metadata.textureProvenance !== undefined && !hasImages) throw new Error(ASSEMBLY_ISSUE_TEXTURE_SHAPE_FORBIDDEN);
   // `textureProvenance` is excluded from the equality below on purpose. The
@@ -889,6 +1092,9 @@ export function validateGlbBinding(parsed: ParsedGlb, asset: AssemblyAsset, lod:
   const expected = { canonicalFeatureId: asset.canonicalFeatureId, lodId: lod.lodId, ownerCellId: asset.ownerCellId, inventoryId: asset.inventoryId, inventoryHashSha256: asset.inventoryHashSha256, evidenceShardId: asset.evidenceShardId, truthTiers: [...asset.truthTiers].sort(compareText), sourceDates: asset.sourceDates, predecessor: asset.predecessor, uncertainty: asset.uncertainty, planHashSha256: asset.source.kind === "facade-plan" ? asset.source.planHashSha256 : asset.source.assetManifestChecksumSha256 };
   if (stableSerialize({ ...bound, truthTiers: [...bound.truthTiers].sort(compareText) }) !== stableSerialize(expected)) throw new Error("GLB canonical metadata differs from the immutable assembly manifest.");
   if (stableSerialize(counts(parsed.json)) !== stableSerialize({ triangleCount: lod.quality.triangleCount, materialCount: lod.quality.materialCount, textureCount: lod.quality.textureCount })) throw new Error("GLB topology/material/texture counts differ from declared quality.");
+  // Empty for every embedded, texture-free and untextured GLB, so a caller that
+  // ignores the value sees exactly the behaviour it saw when this returned void.
+  return referencedTextureRefs;
 }
 
 interface Tile { boundingVolume?: { box?: number[] }; geometricError?: number; refine?: string; transform?: number[]; content?: { uri?: string }; children?: Tile[] }
@@ -951,15 +1157,45 @@ export async function replayMultiLodAssembly(manifest: MultiLodAssemblyManifest,
     else lodBindings.set(lod.artifactRef, { asset, lod });
   }
   for (const key of contents.keys()) if (!declared.has(key)) issue(issues, `contents.${key}`, "Undeclared content is forbidden.");
+  // A package either declares shared texture artifacts or it does not, and that
+  // single fact selects the image gate for every GLB in it. Deriving it from the
+  // MANIFEST rather than from each GLB's bytes is deliberate: it means a GLB
+  // cannot elect its own gate, and a package that declares no texture artifact
+  // parses under the byte-identical embedded-only rule it always did.
+  const declaredTextureRefs = new Set(manifest.artifacts.filter((artifact) => artifact.role === "texture").map((artifact) => artifact.relativeRef));
+  const sharedTextures = declaredTextureRefs.size > 0;
+  const referencedTextureRefs = new Set<string>();
+  const replayedTextureClasses = new Map<string, string>();
   const verified: AssemblyReplay["verifiedArtifacts"] = []; const cellByteTotals = new Map<string, number>(); let total = 0; let tilesetBytes: Uint8Array | null = null;
   for (const artifact of [...manifest.artifacts].sort((a, b) => compareText(a.relativeRef, b.relativeRef))) {
     const bytes = contents.get(artifact.relativeRef); if (!(bytes instanceof Uint8Array)) { issue(issues, `contents.${artifact.relativeRef}`, "Declared raw Uint8Array content is missing."); continue; }
     if (bytes.byteLength !== artifact.byteSize || await sha256Bytes(bytes) !== artifact.checksumSha256) { issue(issues, `contents.${artifact.relativeRef}`, "Artifact byte/hash accounting failed."); continue; }
     const next = add(total, bytes.byteLength); if (next === null || next > MULTI_LOD_ASSEMBLY_LIMITS.totalBytes) { issue(issues, "contents", "Verified byte accounting overflowed."); continue; } total = next;
     if (artifact.ownerCellId) { const cellNext = add(cellByteTotals.get(artifact.ownerCellId) ?? 0, bytes.byteLength); if (cellNext === null) issue(issues, `contents.${artifact.relativeRef}`, "Cell bytes overflowed."); else cellByteTotals.set(artifact.ownerCellId, cellNext); }
-    try { if (artifact.role === "tileset-json") tilesetBytes = bytes; else { const binding = lodBindings.get(artifact.relativeRef); if (!binding) throw new Error("GLB has no asset/LOD binding."); validateGlbBinding(parseGlbV2(bytes), binding.asset, binding.lod, textureFree, requiredSamplerFilter); } } catch (error) { issue(issues, `contents.${artifact.relativeRef}`, error instanceof Error ? error.message : "Artifact validation failed."); }
+    try {
+      if (artifact.role === "tileset-json") tilesetBytes = bytes;
+      else if (artifact.role === "texture") {
+        const textureClass = replaySharedTextureArtifact(bytes);
+        // One class, one artifact. Declaring the same tile at two paths would
+        // hand Cesium two distinct URIs for identical content and quietly undo
+        // the deduplication this role exists to produce.
+        const previous = replayedTextureClasses.get(textureClass);
+        if (previous !== undefined) throw new Error(`${ASSEMBLY_ISSUE_TEXTURE_ARTIFACT_REPLAY_MISMATCH} Duplicate class ${textureClass} already declared at ${previous}.`);
+        replayedTextureClasses.set(textureClass, artifact.relativeRef);
+      }
+      else {
+        const binding = lodBindings.get(artifact.relativeRef); if (!binding) throw new Error("GLB has no asset/LOD binding.");
+        const context: SharedTextureContext | null = sharedTextures ? { glbRef: artifact.relativeRef, audience: manifest.audience, declaredTextureRefs } : null;
+        const parsed = parseGlbV2(bytes, { allowExternalImageUri: sharedTextures });
+        for (const ref of validateGlbBinding(parsed, binding.asset, binding.lod, textureFree, requiredSamplerFilter, context)) referencedTextureRefs.add(ref);
+      }
+    } catch (error) { issue(issues, `contents.${artifact.relativeRef}`, error instanceof Error ? error.message : "Artifact validation failed."); }
     verified.push({ relativeRef: artifact.relativeRef, byteSize: bytes.byteLength, checksumSha256: artifact.checksumSha256 });
   }
+  // The converse of the orphan-GLB rule: a declared texture artifact nothing
+  // draws is payload riding along inside a conforming package, which is exactly
+  // the route the embedded gate closes by dropping unreferenced images.
+  for (const ref of [...declaredTextureRefs].sort(compareText)) if (!referencedTextureRefs.has(ref)) issue(issues, `contents.${ref}`, ASSEMBLY_ISSUE_TEXTURE_ARTIFACT_ORPHAN);
   if (total !== manifest.declaredTotalBytes) issue(issues, "contents", "Verified total differs from the manifest.");
   if (tilesetBytes) try { validateTileset(tilesetBytes, manifest); } catch (error) { issue(issues, `contents.${manifest.tilesetRef}`, error instanceof Error ? error.message : "Tileset validation failed."); }
   if (issues.length) return { ok: false, issues };

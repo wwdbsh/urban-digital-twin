@@ -157,3 +157,61 @@ describe("the optional sampler filter", () => {
     expect(evidence.captures).toHaveLength(evidence.stations.length * 2);
   });
 });
+
+/**
+ * The external-URI variant is ADDITIVE, exactly as the triangle path was, and
+ * these tests exist to prove it: the embedded branch must keep producing the
+ * bytes it produced before `uriTextures` existed, or all 314 committed textured
+ * assets in the four `-p1` waves silently drift.
+ */
+describe("external-URI detail tiles", () => {
+  const IMAGE_BYTES = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3, 4]);
+  const texturedQuad: CanonicalGlbQuad = {
+    materialIndex: 0,
+    corners: [[0, 0, 0], [2, 0, 0], [2, 2, 0], [0, 2, 0]],
+    uv: [[0, 0], [1, 0], [1, 1], [0, 1]],
+  };
+  const textureSetWithout = { images: [{ mimeType: "image/png" as const, bytes: IMAGE_BYTES }], materialImage: [0, null, null] };
+  const uriSet = { images: [{ mimeType: "image/png" as const, uri: "../textures/brick-running-bond.png" }], materialImage: [0, null, null] };
+
+  /**
+   * Produced by the writer as of 427dad3, before `uriTextures` existed, by
+   * running that writer and this one over identical inputs and comparing
+   * digests. It is a frozen byte claim, not a convenience snapshot: if it
+   * moves, all 314 committed textured assets moved with it.
+   */
+  const EMBEDDED_PRE_URI_SHA256 = "5615d067fad490517ce05ff22c2a5cbc9a273fc83e51417d3f16385449bf139e";
+
+  it("leaves the embedded branch byte-frozen", () => {
+    const one = writeCanonicalGlb({ quads: [texturedQuad], materials: MATERIALS, metadata: { b: 2 }, textures: textureSetWithout });
+    expect(sha256(one.bytes)).toBe(EMBEDDED_PRE_URI_SHA256);
+  });
+
+  it("emits a uri image with no bufferView, no BIN image bytes, and the same sampler and textures", () => {
+    const embedded = writeCanonicalGlb({ quads: [texturedQuad], materials: MATERIALS, metadata: {}, textures: { ...textureSetWithout, filter: GLB_SAMPLER_FILTER_TRILINEAR } });
+    const external = writeCanonicalGlb({ quads: [texturedQuad], materials: MATERIALS, metadata: {}, uriTextures: { ...uriSet, filter: GLB_SAMPLER_FILTER_TRILINEAR } });
+    const embeddedJson = glbJson(embedded.bytes);
+    const externalJson = glbJson(external.bytes);
+    expect(externalJson.images).toStrictEqual([{ uri: "../textures/brick-running-bond.png", mimeType: "image/png" }]);
+    // The drawn-texture surface is identical; only where the bytes live differs.
+    expect(externalJson.textures).toStrictEqual(embeddedJson.textures);
+    expect(externalJson.samplers).toStrictEqual(embeddedJson.samplers);
+    expect(externalJson.materials).toStrictEqual(embeddedJson.materials);
+    expect(externalJson.accessors).toStrictEqual(embeddedJson.accessors);
+    expect(external.counts).toStrictEqual(embedded.counts);
+    // Every bufferView is geometry: the image view is gone, and with it the
+    // per-model copy of the tile.
+    expect((externalJson.bufferViews as unknown[]).length).toBe((embeddedJson.bufferViews as unknown[]).length - 1);
+    expect((externalJson.buffers as Array<{ byteLength: number }>)[0]!.byteLength).toBeLessThan((embeddedJson.buffers as Array<{ byteLength: number }>)[0]!.byteLength);
+  });
+
+  it("refuses both texture modes at once", () => {
+    expect(() => writeCanonicalGlb({ quads: [texturedQuad], materials: MATERIALS, metadata: {}, textures: textureSetWithout, uriTextures: uriSet })).toThrow(/never both/u);
+  });
+
+  it("refuses a URI that is not a strict local relative reference", () => {
+    for (const uri of ["/absolute/tile.png", "https://example.com/tile.png", "../../../etc/passwd.png".replace("../../../", "//"), "tile.png?v=2", "tile.png#frag", "a\\b.png", "", ".hidden/tile.png", "tile .png"]) {
+      expect(() => writeCanonicalGlb({ quads: [texturedQuad], materials: MATERIALS, metadata: {}, uriTextures: { ...uriSet, images: [{ mimeType: "image/png", uri }] } })).toThrow(/strict local relative reference/u);
+    }
+  });
+});

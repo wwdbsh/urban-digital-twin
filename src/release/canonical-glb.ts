@@ -110,6 +110,53 @@ export interface CanonicalGlbTextureSet {
   filter?: CanonicalGlbSamplerFilter;
 }
 
+/**
+ * One detail tile referenced by RELATIVE URI instead of embedded in the BIN.
+ *
+ * The bytes live once per release, as a declared package artifact, and every
+ * GLB that draws that class names the same URI. This is the whole mechanism
+ * behind the shared-class-texture work: Cesium's texture cache keys an embedded
+ * image by the OWNING MODEL's absolute URL, so 941 embedded copies of four
+ * tiles decode into 941 GPU textures with zero content dedupe, while an
+ * external image is keyed by its own resolved absolute URI and therefore
+ * collapses to one GPU texture per distinct URI.
+ *
+ * The URI is deliberately not a byte payload: this writer still never encodes
+ * an image, and the release validator still REPLAYS the referenced artifact
+ * against `procedural-texture.ts`. Moving the bytes out of the GLB moves where
+ * the replay happens, never whether it happens.
+ */
+export interface CanonicalGlbUriImage {
+  mimeType: "image/png";
+  /**
+   * Strict relative reference resolved against the GLB's own location. The
+   * authoritative containment rule -- canonical segments, no escape past the
+   * package root, audience-rooted resolution, and resolution to a DECLARED
+   * texture artifact -- lives in `validateProceduralTextureUriGlb`; the check
+   * here is a cheap shape guard so a malformed URI cannot reach shipped bytes.
+   */
+  uri: string;
+}
+
+/** The URI-image sibling of `CanonicalGlbTextureSet`; identical in every other respect. */
+export interface CanonicalGlbUriTextureSet {
+  images: readonly CanonicalGlbUriImage[];
+  materialImage: readonly (number | null)[];
+  filter?: CanonicalGlbSamplerFilter;
+}
+
+/**
+ * The same relative-reference shape `resolveTilesetUri` accepts in
+ * `multi-lod-assembly.ts`: no absolute path, no scheme, no percent/query/
+ * fragment/backslash, no control characters, and canonical segments only.
+ */
+function isStrictRelativeImageUri(value: unknown): value is string {
+  if (typeof value !== "string" || value.length === 0 || value.startsWith("/")) return false;
+  if (/^[A-Za-z][A-Za-z0-9+.-]*:/u.test(value) || /[%?#\\]/u.test(value)) return false;
+  if ([...value].some((part) => part.charCodeAt(0) <= 0x20 || part.charCodeAt(0) === 0x7f)) return false;
+  return value.split("/").every((segment) => segment === ".." || /^[A-Za-z0-9][A-Za-z0-9._-]*$/u.test(segment));
+}
+
 const GLB_MAGIC = 0x46546c67;
 const GLB_JSON_CHUNK = 0x4e4f534a;
 const GLB_BIN_CHUNK = 0x004e4942;
@@ -146,16 +193,33 @@ export function writeCanonicalGlb(options: {
    * `canonical-glb.test.ts` pins the frozen digest.
    */
   textures?: CanonicalGlbTextureSet;
+  /**
+   * Optional EXTERNAL detail tiles, mutually exclusive with `textures`.
+   *
+   * Supplying neither reproduces the untextured bytes; supplying `textures`
+   * reproduces the embedded bytes EXACTLY, because this branch adds no key and
+   * no bufferView to that path. Every geometry accessor, UV, material, sampler
+   * and texture record is produced by the same code in both texture modes --
+   * only where the image bytes live differs.
+   */
+  uriTextures?: CanonicalGlbUriTextureSet;
 }): CanonicalGlbResult {
   const { quads, materials, metadata } = options;
   const triangles = options.triangles ?? [];
   if (quads.length === 0 && triangles.length === 0) throw new Error("Canonical GLB requires at least one quad or triangle.");
-  const textureSet = options.textures;
+  const embeddedSet = options.textures;
+  const uriSet = options.uriTextures;
+  if (embeddedSet && uriSet) throw new Error("Canonical GLB accepts embedded or external-URI detail tiles, never both.");
+  const textureSet: { images: readonly { mimeType: string }[]; materialImage: readonly (number | null)[]; filter?: CanonicalGlbSamplerFilter } | undefined = embeddedSet ?? uriSet;
   if (textureSet) {
     if (textureSet.materialImage.length !== materials.length) throw new Error("Canonical GLB texture set must name one image slot per declared material.");
-    for (const image of textureSet.images) {
+    for (const image of embeddedSet?.images ?? []) {
       if (image.mimeType !== "image/png") throw new Error("Canonical GLB embeds PNG detail tiles only.");
       if (!(image.bytes instanceof Uint8Array) || image.bytes.byteLength === 0) throw new Error("Canonical GLB image bytes are empty.");
+    }
+    for (const image of uriSet?.images ?? []) {
+      if (image.mimeType !== "image/png") throw new Error("Canonical GLB references PNG detail tiles only.");
+      if (!isStrictRelativeImageUri(image.uri)) throw new Error("Canonical GLB image URI is not a strict local relative reference.");
     }
     for (const slot of textureSet.materialImage) {
       if (slot === null) continue;
@@ -177,18 +241,20 @@ export function writeCanonicalGlb(options: {
   for (const triangle of triangles) bucketFor(triangle.materialIndex).triangles.push(triangle);
   const usedMaterialIndexes = [...grouped.keys()].sort((left, right) => left - right);
 
-  // Only images a USED material samples are embedded, and they are renumbered
-  // into that order. An image nothing draws is dropped, which closes the one
-  // route by which an unreferenced payload could sit inside a conforming GLB.
-  const embeddedImageIndexes: number[] = [];
+  // Only images a USED material samples are kept, and they are renumbered into
+  // that order. An image nothing draws is dropped, which closes the one route
+  // by which an unreferenced payload could sit inside a conforming GLB. The
+  // rule is identical for embedded and external images; only the emission
+  // below differs.
+  const usedImageIndexes: number[] = [];
   if (textureSet) {
     for (const materialIndex of usedMaterialIndexes) {
       const slot = textureSet.materialImage[materialIndex] ?? null;
-      if (slot !== null && !embeddedImageIndexes.includes(slot)) embeddedImageIndexes.push(slot);
+      if (slot !== null && !usedImageIndexes.includes(slot)) usedImageIndexes.push(slot);
     }
-    embeddedImageIndexes.sort((left, right) => left - right);
+    usedImageIndexes.sort((left, right) => left - right);
   }
-  const textureOfImage = new Map(embeddedImageIndexes.map((imageIndex, position) => [imageIndex, position]));
+  const textureOfImage = new Map(usedImageIndexes.map((imageIndex, position) => [imageIndex, position]));
   const textureOfMaterial = (materialIndex: number): number | null => {
     if (!textureSet) return null;
     const slot = textureSet.materialImage[materialIndex] ?? null;
@@ -280,9 +346,9 @@ export function writeCanonicalGlb(options: {
   // alignment the profile's gap rule allows, so the BIN stays gap-free and the
   // untextured layout above is untouched.
   const imageViewIndexes: number[] = [];
-  if (textureSet) {
-    for (const imageIndex of embeddedImageIndexes) {
-      const image = textureSet.images[imageIndex]!;
+  if (embeddedSet) {
+    for (const imageIndex of usedImageIndexes) {
+      const image = embeddedSet.images[imageIndex]!;
       imageViewIndexes.push(bufferViews.length);
       bufferViews.push({ buffer: 0, byteOffset: offset, byteLength: image.bytes.byteLength });
       segments.push(image.bytes); offset += image.bytes.byteLength;
@@ -316,12 +382,18 @@ export function writeCanonicalGlb(options: {
     }),
     // Absent entirely when no texture set was supplied, so the untextured JSON
     // is byte-for-byte what it was before this branch existed.
-    ...(imageViewIndexes.length === 0 ? {} : {
-      images: imageViewIndexes.map((bufferView) => ({ bufferView, mimeType: "image/png" })),
+    // `usedImageIndexes.length` is identical to `imageViewIndexes.length` on the
+    // embedded path (the loop above pushes exactly one view per used image), so
+    // the frozen embedded bytes are unmoved; it is simply also correct when the
+    // images are external and no view exists.
+    ...(usedImageIndexes.length === 0 ? {} : {
+      images: embeddedSet
+        ? imageViewIndexes.map((bufferView) => ({ bufferView, mimeType: "image/png" }))
+        : usedImageIndexes.map((imageIndex) => ({ uri: uriSet!.images[imageIndex]!.uri, mimeType: "image/png" })),
       // Filter keys are emitted only when the caller decided them, so the
       // wrap-only sampler an existing textured package ships is unchanged.
       samplers: [{ ...(textureSet?.filter ? { magFilter: textureSet.filter.magFilter, minFilter: textureSet.filter.minFilter } : {}), wrapS: WRAP_REPEAT, wrapT: WRAP_REPEAT }],
-      textures: imageViewIndexes.map((_, source) => ({ sampler: 0, source })),
+      textures: usedImageIndexes.map((_, source) => ({ sampler: 0, source })),
     }),
     nodes: [{ mesh: 0 }],
     scenes: [{ nodes: [0] }],
@@ -342,5 +414,5 @@ export function writeCanonicalGlb(options: {
   const binHeader = 20 + jsonBytes.byteLength;
   view.setUint32(binHeader, bin.byteLength, true); view.setUint32(binHeader + 4, GLB_BIN_CHUNK, true);
   bytes.set(bin, binHeader + 8);
-  return { bytes, counts: { triangleCount, materialCount: usedMaterialIndexes.length, textureCount: imageViewIndexes.length } };
+  return { bytes, counts: { triangleCount, materialCount: usedMaterialIndexes.length, textureCount: usedImageIndexes.length } };
 }
