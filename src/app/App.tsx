@@ -60,6 +60,7 @@ import { AggregateRequestBudget, ComposedReleaseAdapter, type ComposedReleaseMet
 import { EXTERIOR_PILOT_RELEASE_ID, createExteriorPilotFaultFetcher, loadExteriorPilotRelease, parseExteriorPilotFault, type CommercialStorefrontPlacement, type LoadedExteriorPilotRelease } from "../runtime/exterior-pilot-release";
 import { BLOCK835_PUBLIC_REALM_RELEASE_ID, createBlock835PublicRealmFaultFetcher, loadBlock835PublicRealmRelease, parseBlock835PublicRealmFault, publicRealmFeatureToFeature, type Block835PublicRealmFeature, type LoadedBlock835PublicRealmRelease } from "../runtime/block835-public-realm-release";
 import { EXTERIOR_RUNTIME_BUDGETS, exteriorOutcomeCacheKeys, loadExteriorCellRuntime, type ExteriorCellOutcome, type ExteriorCellRuntime, type ExteriorHeadRequest } from "../runtime/exterior-cell-runtime";
+import { EXTERIOR_T1_RELEASE_IDS } from "../release/exterior-t1-variants";
 import { acceptExteriorCellOutcomes, createExteriorCellLoadState, exteriorCellLoadInputsUnchanged, failExteriorCellBatch, publishedExteriorCellOutcomes, reconcileExteriorCellLoads, type ExteriorCellLoadState } from "../runtime/exterior-cell-reconciliation";
 import { scheduleExteriorCellsGlobally } from "../runtime/exterior-cell-scheduling";
 import { commitExteriorCacheRelease, createExteriorCacheReleaseState, noteExteriorSceneRetired, planExteriorCacheRelease, queueExteriorCacheRelease } from "../runtime/exterior-cache-release";
@@ -726,8 +727,17 @@ export function appendBlock835PublicRealmUrl(baseUrl: string, requested: boolean
  * still refused, a promoted release is still gated, and the canaries are still
  * opt-in only. The paragraphs above are left as they were written because they
  * were true of the builds they described.
+ *
+ * The four `-t1` ids (T002, ADR 0047) are the SHARED-TEXTURE variants of the
+ * four promoted `-p1` waves: same cells, same buildings, same geometry, with the
+ * four detail tiles declared once per release and referenced by URI instead of
+ * embedded in every GLB. They are pinned here and nowhere else — reachable by
+ * `?exteriorCells=` opt-in ALONE, absent from the promotion record, and NOT a
+ * render toggle (ADR 0032 B3). Default serving is unchanged by their existence;
+ * whether any of them is ever promoted is a separate decision with its own
+ * measurement, and this pin does not anticipate it.
  */
-export const PINNED_EXTERIOR_CELL_RELEASE_IDS = ["udt-fixture-exterior-cells", "manhattan-exterior-cells-20260811", "manhattan-exterior-cells-20260811-v3", "manhattan-midtown-core-cells-20260811", "manhattan-midtown-core-cells-20260811-v3", "manhattan-lower-manhattan-cells-20260812", "manhattan-lower-manhattan-cells-20260812-p1", "manhattan-southern-remainder-cells-20260812", "manhattan-southern-remainder-cells-20260812-p1", "manhattan-central-upper-manhattan-cells-20260812", "manhattan-central-upper-manhattan-cells-20260812-p1", "manhattan-northern-manhattan-cells-20260812", "manhattan-northern-manhattan-cells-20260812-p1"] as const;
+export const PINNED_EXTERIOR_CELL_RELEASE_IDS = ["udt-fixture-exterior-cells", "manhattan-exterior-cells-20260811", "manhattan-exterior-cells-20260811-v3", "manhattan-midtown-core-cells-20260811", "manhattan-midtown-core-cells-20260811-v3", "manhattan-lower-manhattan-cells-20260812", "manhattan-lower-manhattan-cells-20260812-p1", "manhattan-southern-remainder-cells-20260812", "manhattan-southern-remainder-cells-20260812-p1", "manhattan-central-upper-manhattan-cells-20260812", "manhattan-central-upper-manhattan-cells-20260812-p1", "manhattan-northern-manhattan-cells-20260812", "manhattan-northern-manhattan-cells-20260812-p1", ...EXTERIOR_T1_RELEASE_IDS] as const;
 
 /**
  * The release used when neither a URL nor the promoted default names one: still

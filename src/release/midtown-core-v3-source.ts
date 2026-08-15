@@ -18,7 +18,7 @@ import {
 import { sha256HexSync, stableSerialize } from "../domain/deterministic-hash.ts";
 import type { ExteriorOwnershipCell } from "./exterior-release.ts";
 import type { ImmutablePin } from "./multi-lod-assembly.ts";
-import { proceduralTextureProvenance, type ProceduralTextureProvenance } from "./procedural-texture.ts";
+import { proceduralTextureProvenance, type ProceduralTextureClass, type ProceduralTextureProvenance } from "./procedural-texture.ts";
 import type { MidtownCoreBuildingSource } from "./midtown-core-materialization.ts";
 import { midtownCoreGlbBounds } from "./midtown-core-source.ts";
 import {
@@ -104,6 +104,13 @@ export interface MidtownCoreV3Materialization {
   registration: MidtownCoreV3Registration[];
   /** Buildings shipped with `setbacks` absent, with the disclosure each carries. */
   absentSetbacks: Map<string, string>;
+  /**
+   * Every RELEASE-scoped tile some shipped asset references by URI, sorted.
+   * Empty for an embedded or texture-free wave, which is every frozen release.
+   * The emitter declares exactly these as `texture` artifacts, so a tile no GLB
+   * draws is never declared and a tile some GLB draws is never missing.
+   */
+  sharedTextureClasses: ProceduralTextureClass[];
   census: MidtownCoreV3Census;
 }
 
@@ -155,6 +162,7 @@ export function materializeMidtownCoreV3Cells(input: MidtownCoreV3MaterializeInp
   const refusalCodes = new Map<string, string>();
   const registration: MidtownCoreV3Registration[] = [];
   const absentSetbacks = new Map<string, string>();
+  const sharedTextureClasses = new Set<ProceduralTextureClass>();
   const planHashes = new Set<string>();
   const refusalsByCode: Record<string, number> = {};
   const styleClassCounts: Record<string, number> = {};
@@ -240,6 +248,10 @@ export function materializeMidtownCoreV3Cells(input: MidtownCoreV3MaterializeInp
           totalShippedTriangleCount += asset.counts.triangleCount;
         }
         if (censusOnly) continue;
+        // Only tiles a RETAINED asset draws are collected: the census pass drops
+        // its bytes, and declaring an artifact for a tile no shipped GLB
+        // references would be exactly the orphan the release gate refuses.
+        for (const textureClass of asset.sharedTextureClasses) sharedTextureClasses.add(textureClass);
         assetBytes.set(asset.relativeRef, asset.bytes);
         shipped.push({
           lodId: asset.lodId,
@@ -247,7 +259,7 @@ export function materializeMidtownCoreV3Cells(input: MidtownCoreV3MaterializeInp
           byteSize: asset.bytes.byteLength,
           checksumSha256: asset.checksumSha256,
           counts: { ...asset.counts },
-          bounds: midtownCoreGlbBounds(asset.bytes),
+          bounds: midtownCoreGlbBounds(asset.bytes, { allowExternalImageUri: profile.textureDelivery === "shared-uri" }),
         });
       }
       planHashes.add(context.plan.planHashSha256);
@@ -274,6 +286,7 @@ export function materializeMidtownCoreV3Cells(input: MidtownCoreV3MaterializeInp
     refusalCodes,
     registration,
     absentSetbacks,
+    sharedTextureClasses: [...sharedTextureClasses].sort(),
     census: {
       requestedBuildingCount: requested,
       resolvedBuildingCount: resolved,

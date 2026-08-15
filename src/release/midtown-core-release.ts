@@ -72,6 +72,8 @@ import {
   type MultiLodAssemblyManifest,
 } from "./multi-lod-assembly.ts";
 import { BLOCK835_QUALITY_BUDGETS, enuFrame, toEnuMeters } from "./block835-reference-package.ts";
+import { proceduralTextureCatalog, type ProceduralTextureClass } from "./procedural-texture.ts";
+import { sharedTextureArtifactRef } from "./midtown-core-v3-materialization.ts";
 import { membershipChecksum } from "./exterior-wave-ledger.ts";
 import { MIDTOWN_CORE_RELEASE_ID, type MidtownCoreSubset } from "./midtown-core-package.ts";
 import {
@@ -308,6 +310,17 @@ export interface MidtownCoreReleaseInput {
   capture: { capturedAt: string; updatedAt: string };
   /** Omitted selects the V2 profile and reproduces its bytes exactly. */
   profile?: MidtownCoreReleaseProfile;
+  /**
+   * RELEASE-SCOPED shared detail tiles this package's GLBs reference by URI.
+   *
+   * Omitted or empty — every frozen release — emits nothing and declares
+   * nothing, so those packages stay byte-identical. Supplied, each class becomes
+   * exactly one `role: "texture"` artifact at `public/textures/<class>.png`,
+   * carrying bytes taken from `procedural-texture.ts` itself rather than from
+   * anything the caller produced: the artifact the release declares and the tile
+   * the validator replays are then the same object by construction.
+   */
+  sharedTextureClasses?: readonly ProceduralTextureClass[];
 }
 
 export interface MidtownCoreReleaseStats {
@@ -899,8 +912,27 @@ export function buildMidtownCoreRelease(input: MidtownCoreReleaseInput): Midtown
     },
   };
   const tilesetBytes = encode(JSON.stringify(tileset));
+  // Shared detail tiles: RELEASE-scoped, so `ownerCellId` is null exactly as the
+  // tileset's is. Charging a tile to the cell that happens to draw it first
+  // would double-count it against every other cell that draws the same class.
+  // The bytes come from `procedural-texture.ts`, so the artifact this release
+  // declares IS the tile the offline gate and the runtime replay against.
+  const sharedTextureClasses = [...new Set(input.sharedTextureClasses ?? [])].sort(compareText);
+  if (sharedTextureClasses.length > 0 && texturePolicy !== "procedural-replay") {
+    fail(`release ${profile.releaseId} declares shared detail tiles, which its texture admission (${texturePolicy}) does not admit.`);
+  }
+  const catalog = proceduralTextureCatalog();
+  const sharedTextureBytes = new Map<string, Uint8Array>();
+  const sharedTextureArtifacts: AssemblyArtifact[] = sharedTextureClasses.map((textureClass) => {
+    const tile = catalog.get(textureClass as ProceduralTextureClass);
+    if (!tile) fail(`shared detail tile ${textureClass} is not a class this repository's rasterizer produces.`);
+    const relativeRef = sharedTextureArtifactRef(textureClass as ProceduralTextureClass);
+    sharedTextureBytes.set(relativeRef, tile.pngBytes);
+    return { logicalId: `texture:${textureClass}`, role: "texture" as const, relativeRef, byteSize: tile.pngBytes.byteLength, checksumSha256: sha256HexBytes(tile.pngBytes), ownerCellId: null };
+  });
   const artifacts: AssemblyArtifact[] = [
     ...glbArtifacts,
+    ...sharedTextureArtifacts,
     { logicalId: `tileset:${ids.assemblyPackageId}`, role: "tileset-json" as const, relativeRef: MIDTOWN_CORE_TILESET_REF, byteSize: tilesetBytes.byteLength, checksumSha256: sha256HexBytes(tilesetBytes), ownerCellId: null },
   ].sort((left, right) => compareText(left.relativeRef, right.relativeRef));
 
@@ -980,6 +1012,7 @@ export function buildMidtownCoreRelease(input: MidtownCoreReleaseInput): Midtown
     ["release-graph.json", graphBytes],
     ["assemblies.json", assembliesBytes],
     [MIDTOWN_CORE_TILESET_REF, tilesetBytes],
+    ...sharedTextureBytes,
   ]);
   // Private-audience bytes are never written into a browser-reachable root.
   for (const blob of publicBlobs) {
