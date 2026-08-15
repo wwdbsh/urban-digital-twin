@@ -65,15 +65,27 @@ export function exteriorNotShippedSummary(
   // disappears and then reappears on the way back, so a permanent property of
   // the build would blink with the camera. A release fact is stated whenever it
   // is true.
+  //
+  // T007: WHAT THE SENTENCE SAYS ABOUT THE SCREEN. Before the citywide default
+  // flip these cells were the whole story — nothing at all was drawn for them
+  // and "no substitute was selected" was the truth. After the flip their
+  // buildings DO draw, as sourced base massing streamed from the citywide dense
+  // shards, so the old wording was false by omission: it read as "nothing is
+  // there" about buildings the reader can see. The reword states both halves —
+  // no GENERATED exterior ships, and what draws instead — and it is stated
+  // UNCONDITIONALLY. It is not gated on dense residency: the counts are release
+  // facts and the line must not blink with the camera, and `notShippedLines`
+  // feeds `dismissalKey`, so a camera-dependent line would re-arm a notice the
+  // reader already dismissed (the defect PR #64 fixed).
   if (declared && declared.cellCount > 0) {
     return declared.notShippedCellCount > 0
-      ? `${declared.notShippedCellCount} of ${declared.cellCount} exterior cells declared by this release ship no exterior geometry; no substitute was selected for them.`
+      ? `${declared.notShippedCellCount} of ${declared.cellCount} exterior cells declared by this release ship no generated exterior geometry; their buildings draw as sourced base massing (footprint extruded to sourced height), which is not a generated exterior.`
       : null;
   }
   const notShipped = cells.filter((cell) => cell.kind === "not-shipped");
   if (notShipped.length === 0) return null;
   if (notShipped.length === 1) return notShipped[0]!.notice;
-  return `${notShipped.length} of ${cells.length} exterior cells declared by this release ship no exterior geometry; no substitute was selected for them.`;
+  return `${notShipped.length} of ${cells.length} exterior cells declared by this release ship no generated exterior geometry; their buildings draw as sourced base massing (footprint extruded to sourced height), which is not a generated exterior.`;
 }
 
 /**
