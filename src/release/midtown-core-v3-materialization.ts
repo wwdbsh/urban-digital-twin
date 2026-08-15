@@ -38,6 +38,7 @@ import {
   tessellateV3Plan,
   validateV3Plan,
   type Point2Mm,
+  V3_SHIPPED_GRAMMAR_OPTIONS,
   type V3GrammarOptions,
   type V3Plan,
 } from "../domain/deterministic-facade-generator-v3.ts";
@@ -47,6 +48,7 @@ import { enuFrame, toEnuMeters, type EnuFrame, type Point2 } from "./block835-re
 import { V3_QUALITY_BUDGETS, v3GeometryForGlb, v3TruthTiers, type V3GlbGeometry } from "./block835-v3-package.ts";
 import { proceduralTextureProvenance, proceduralTextureReplayIndex, type ProceduralTextureClass, type ProceduralTextureProfile } from "./procedural-texture.ts";
 import type { ImmutablePin } from "./multi-lod-assembly.ts";
+import { midtownCoreV3SilhouetteMeasurement, type MidtownCoreV3SilhouetteMeasurement } from "./midtown-core-v3-silhouette.ts";
 import {
   MIDTOWN_CORE_FALLBACK_HEIGHT_METERS,
   type MidtownCoreBuildingSource,
@@ -148,6 +150,23 @@ export interface V3WaveProfile {
    * the first mode and once per release in the second.
    */
   textureDelivery?: "embedded" | "shared-uri";
+  /**
+   * The GRAMMAR STATE this wave is materialized under (T004 R1).
+   *
+   * Every frozen profile pins the shipped grammar explicitly, so the envelope a
+   * wave ran under is a property of the wave rather than of whichever call site
+   * happened to pass an options object. `buildMidtownCoreV3Plan` still takes a
+   * `grammar` argument for the T003 differential replay; when a profile names an
+   * envelope AND a caller passes one, the caller's wins and the disagreement is
+   * the caller's to justify — the profile is the DECLARED default, not a lock.
+   *
+   * It is entered into `midtownCoreV3StageFingerprint` only when it differs from
+   * the shipped grammar, so every frozen wave's fingerprints are the values they
+   * always were. That conditional is the whole point of the field: without it a
+   * resumable stage's receipt is BLIND to the grammar, and a receipt taken under
+   * the shipped envelope would satisfy a stage running the extended one.
+   */
+  admissionEnvelope?: V3GrammarOptions;
 }
 
 /**
@@ -168,6 +187,18 @@ export function sharedTextureUriFromAsset(textureClass: ProceduralTextureClass):
 }
 
 /**
+ * The grammar every FROZEN V3 wave was materialized under, named once.
+ *
+ * It is the shipped grammar, written down rather than left implicit, so a wave
+ * profile states the envelope its committed bytes came from instead of relying
+ * on nobody having passed an options object. Every frozen profile in this
+ * repository pins this value; a successor wave that means to run a different
+ * grammar overrides it, and that override is then visible in the profile diff
+ * and in every one of that wave's stage fingerprints.
+ */
+export const V3_FROZEN_WAVE_ADMISSION_ENVELOPE: V3GrammarOptions = { ...V3_SHIPPED_GRAMMAR_OPTIONS };
+
+/**
  * Wave `w01`'s profile: exactly the constants this module hard-coded before the
  * parameterization, including its texture-free emission and the zero-texture
  * `V3_QUALITY_BUDGETS` its committed manifest pins.
@@ -180,6 +211,7 @@ export const MIDTOWN_CORE_V3_WAVE_PROFILE: V3WaveProfile = {
   uncertainty: MIDTOWN_CORE_V3_UNCERTAINTY,
   budgets: { ...V3_QUALITY_BUDGETS },
   texture: null,
+  admissionEnvelope: V3_FROZEN_WAVE_ADMISSION_ENVELOPE,
 };
 
 // ---------------------------------------------------------------------------
@@ -327,11 +359,16 @@ export function buildMidtownCoreV3Plan(
   baseManifestChecksumSha256: string,
   profile: V3WaveProfile = MIDTOWN_CORE_V3_WAVE_PROFILE,
   /**
-   * Grammar-extension state, for the T003 differential replay ALONE. Every field
-   * is optional and every default is the shipped grammar, so the wave CLIs and
-   * every existing caller travel the identical path they always did.
+   * Grammar state for this call.
+   *
+   * It DEFAULTS TO THE PROFILE'S declared envelope, so a wave materializes under
+   * the grammar its own profile names rather than under whatever the last caller
+   * remembered to pass. Every frozen profile names the shipped grammar, so the
+   * wave CLIs and every existing caller travel the identical path they always
+   * did. An explicit argument still wins — that is how the T003 differential
+   * replay puts one profile through two envelopes in one process.
    */
-  grammar: V3GrammarOptions = {},
+  grammar: V3GrammarOptions = profile.admissionEnvelope ?? {},
 ): MidtownCoreV3PlanContext {
   const closed = source.outerRing.length > 1
     && source.outerRing[0]![0] === source.outerRing[source.outerRing.length - 1]![0]
@@ -613,6 +650,17 @@ function sharedUriTextureSet(
 export interface MidtownCoreV3AssetResult {
   assets: MidtownCoreV3AssetBytes[];
   registration: MidtownCoreV3Registration;
+  /**
+   * The LOD 0 / LOD 1 projected-silhouette measurement for this building.
+   *
+   * Reported, never enforced here. Every frozen wave ships a single LOD and
+   * claims nothing about a transition, so refusing on this number would turn a
+   * frozen release build into a failure over a property it never asserted. A
+   * wave that means to ship two LODs turns the number into the record the
+   * assembly schema demands through `midtownCoreV3SilhouetteRecord`, which is
+   * the fail-closed half.
+   */
+  silhouette: MidtownCoreV3SilhouetteMeasurement;
   truthTiers: readonly string[];
   /** True when the tier offset was refused and `setbacks` ships `absent`. */
   setbacksAbsent: boolean;
@@ -765,6 +813,7 @@ export function writeMidtownCoreV3Assets(
   return {
     assets,
     registration: registration!,
+    silhouette: midtownCoreV3SilhouetteMeasurement(plan),
     truthTiers,
     setbacksAbsent,
     setbackDisclosure: plan.massing.setbackDisclosure,

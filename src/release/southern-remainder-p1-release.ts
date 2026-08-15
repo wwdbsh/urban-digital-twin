@@ -47,7 +47,7 @@
 
 import type { MidtownCoreReleasePredecessor, MidtownCoreReleaseProfile } from "./midtown-core-release.ts";
 import { midtownCoreCellReleaseId, midtownCoreReleaseIds } from "./midtown-core-release.ts";
-import { midtownCoreV3EvidenceShardId, midtownCoreV3InventoryId, type V3WaveProfile } from "./midtown-core-v3-materialization.ts";
+import { V3_FROZEN_WAVE_ADMISSION_ENVELOPE, midtownCoreV3EvidenceShardId, midtownCoreV3InventoryId, type V3WaveProfile } from "./midtown-core-v3-materialization.ts";
 import { V3T_QUALITY_BUDGETS } from "./block835-v3-package.ts";
 import { DETERMINISTIC_FACADE_V3T_UNCERTAINTY } from "../domain/deterministic-facade-generator-v3.ts";
 import { PROCEDURAL_TEXTURE_PROFILE, PROCEDURAL_TEXTURE_SAMPLER_FILTER } from "./procedural-texture.ts";
@@ -97,6 +97,7 @@ export const SOUTHERN_REMAINDER_P1_WAVE_PROFILE: V3WaveProfile = {
   budgets: { ...V3T_QUALITY_BUDGETS },
   texture: PROCEDURAL_TEXTURE_PROFILE,
   textureFilter: { ...PROCEDURAL_TEXTURE_SAMPLER_FILTER },
+  admissionEnvelope: V3_FROZEN_WAVE_ADMISSION_ENVELOPE,
 };
 
 // ---------------------------------------------------------------------------

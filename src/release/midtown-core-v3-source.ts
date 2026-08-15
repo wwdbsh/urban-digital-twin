@@ -13,6 +13,8 @@
 import {
   DETERMINISTIC_FACADE_V3_GENERATOR_VERSION,
   DETERMINISTIC_FACADE_V3_SCHEMA_VERSION,
+  v3EffectiveGrammarOptions,
+  v3GrammarOptionsDifferFromShipped,
   type V3StyleClass,
 } from "../domain/deterministic-facade-generator-v3.ts";
 import { sha256HexSync, stableSerialize } from "../domain/deterministic-hash.ts";
@@ -368,6 +370,19 @@ export interface MidtownCoreV3StageFingerprintInput {
  * rasterizer change has to invalidate a receipt exactly as a grammar change
  * does. The key is emitted only when the wave is textured, so wave `w01`'s
  * fingerprints are the values they always were.
+ *
+ * TWO BLINDNESSES CLOSED (T004). This fingerprint covered the generator's
+ * VERSION but not the grammar STATE it was invoked under, and covered the tile
+ * catalogue but not WHERE its bytes are delivered. Both are the ADR 0046 D5b
+ * defect class: a receipt taken under one policy satisfying a stage running
+ * another, so a resumed stage emits the previous policy's bytes and reports
+ * `skipped: true`. Both keys are entered CONDITIONALLY — the grammar envelope
+ * only when it differs from the shipped grammar, the delivery only when it is
+ * not the default `embedded` — so every frozen wave profile's fingerprints are
+ * byte-identical to what they were before this key existed. The four `-t1`
+ * variants DO move, deliberately: `shared-uri` is the one substantive change
+ * that whole variant family exists for, and their receipts live in gitignored
+ * work roots rather than in any committed record.
  */
 export function midtownCoreV3StageFingerprint(input: MidtownCoreV3StageFingerprintInput): string {
   const profile = input.profile ?? MIDTOWN_CORE_V3_WAVE_PROFILE;
@@ -389,6 +404,15 @@ export function midtownCoreV3StageFingerprint(input: MidtownCoreV3StageFingerpri
       generatedAt: profile.generatedAt,
       budgets: { ...profile.budgets },
       volumeTolerance: MIDTOWN_CORE_V3_VOLUME_TOLERANCE,
+      // The EFFECTIVE envelope, so `{ maxRingVertices: 384 }` and the same
+      // value with every other field spelled out are one fingerprint rather
+      // than two.
+      ...(v3GrammarOptionsDifferFromShipped(profile.admissionEnvelope)
+        ? { admissionEnvelope: v3EffectiveGrammarOptions(profile.admissionEnvelope) }
+        : {}),
+      ...(profile.textureDelivery === undefined || profile.textureDelivery === "embedded"
+        ? {}
+        : { textureDelivery: profile.textureDelivery }),
       ...(profile.texture === null ? {} : {
         texture: {
           ...proceduralTextureProvenance(),
