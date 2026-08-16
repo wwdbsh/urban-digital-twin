@@ -276,6 +276,17 @@ export interface MidtownCoreShippedAsset {
    * building frame. Measured from the emitted bytes, never estimated.
    */
   bounds: { minimum: readonly [number, number, number]; maximum: readonly [number, number, number] };
+  /**
+   * RELEASE-scoped detail tiles this one asset's emitted bytes actually
+   * reference by URI, read back out of the GLB rather than restated.
+   *
+   * Absent for every embedded or texture-free wave, which is every frozen
+   * release, and unused by this module's own emitter — it exists so a
+   * per-cell packager can declare exactly the tiles the cell's own GLBs draw.
+   * Declaring a release-wide list per cell would make an orphan artifact of
+   * every class that cell happens not to use, which the assembly gate refuses.
+   */
+  sharedTextureClasses?: readonly string[];
 }
 
 export interface MidtownCoreMaterializedBuilding {

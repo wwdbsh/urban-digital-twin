@@ -1,0 +1,216 @@
+{
+  "schemaVersion": "1.0",
+  "releaseId": "manhattan-exterior-cells-20260811-v3-c1",
+  "waveId": "w00",
+  "payloadDirectory": "public/data/manhattan-exterior-cells-20260811-v3-c1",
+  "note": "The payload directory is intentionally untracked and LOCAL ONLY. This inventory is the committed record that keeps every emitted byte checkable after the local tree is removed. Nothing here is served, published or conveyed.",
+  "base": {
+    "releaseId": "manhattan-citywide-20260804",
+    "manifestChecksumSha256": "65e8fbeee3b10cc8ae1f4fef59373bad3fbc6e5d30cb68fe57a326532089f673"
+  },
+  "parentLedger": {
+    "releaseId": "manhattan-exterior-wave-ledger-20260804",
+    "checksumSha256": "62e093d2ca50b54b49fd8bbad9d0b11f6301b2b197623deb343f9ea915e59016"
+  },
+  "predecessorReleaseId": "manhattan-exterior-cells-20260811-v3",
+  "retentionRoot": {
+    "rootId": "root:manhattan-exterior-cells-20260811-v3-c1:retention",
+    "rootChecksumSha256": "c7deaeb120d762250965bb4197ffbde59746d78a68fdec2e2db91d2c7cbf0464"
+  },
+  "textureAdmission": {
+    "policy": "procedural-replay",
+    "generatedTextureFact": {
+      "basis": "generated-texture",
+      "profile": "procedural-texture-v1",
+      "gate": "rasterizer-replay",
+      "evidenceBasis": null,
+      "samplerFilter": {
+        "magFilter": 9729,
+        "minFilter": 9987
+      },
+      "statement": "Facade detail tiles in this retention package are four grayscale, pattern-only motifs generated from named constants in this repository and delivered by shared URI. They carry luminance modulation and no colour, cite no evidence record, and reproduce no photograph: the retention validator re-rasterizes the catalogue and requires byte equality with every declared tile, so a tile derived from an image cannot pass. No tile asserts the material, colour, age, or condition of any real building."
+    }
+  },
+  "cellManifestCount": 1,
+  "totals": {
+    "fileCount": 35,
+    "byteSize": 9620802
+  },
+  "files": [
+    {
+      "path": "public/assemblies/manhattan-exterior-cell-w00-000000-block-00835.json",
+      "byteSize": 57107,
+      "checksumSha256": "e8b7b3e0d132e21455bbd9ed984973c1e4523777f7d4b470348e003e6eb22170"
+    },
+    {
+      "path": "public/assets/doitt-102705__lod_0.glb",
+      "byteSize": 65400,
+      "checksumSha256": "1a0ba200db92705c56ffbada800a28aa68af5a158c1b5241a44db1d9534c5ee6"
+    },
+    {
+      "path": "public/assets/doitt-102705__lod_1.glb",
+      "byteSize": 23344,
+      "checksumSha256": "0845a5b2a4c6f262b420ff9ebefb75f06b7cfe419e2fdb296376942af61c84f9"
+    },
+    {
+      "path": "public/assets/doitt-131170__lod_0.glb",
+      "byteSize": 853320,
+      "checksumSha256": "c1be5a68bc0e9e630eaeac2722b443c8ac66d82b75a8bd8f6ab86336fead4980"
+    },
+    {
+      "path": "public/assets/doitt-131170__lod_1.glb",
+      "byteSize": 235484,
+      "checksumSha256": "4a0f11be316476b111bfd515ac836009a87c3b200e359bbf236ae3fc431ca9a9"
+    },
+    {
+      "path": "public/assets/doitt-147902__lod_0.glb",
+      "byteSize": 111304,
+      "checksumSha256": "d79467b2299bf407f9efeb505b28b2ab0b5a2c1c4892e3b651ef44d26e967739"
+    },
+    {
+      "path": "public/assets/doitt-147902__lod_1.glb",
+      "byteSize": 35376,
+      "checksumSha256": "9de0ff732f57d48228f05be9b1b293d7ab30ce2f62f442537a9188f8308d81c1"
+    },
+    {
+      "path": "public/assets/doitt-262867__lod_0.glb",
+      "byteSize": 40580,
+      "checksumSha256": "267f05f27810c6122ca5849ede70e608f51a38b54779acb4795ec191f1ce3549"
+    },
+    {
+      "path": "public/assets/doitt-262867__lod_1.glb",
+      "byteSize": 16140,
+      "checksumSha256": "c3ee3c3139bea138711919487b760bfab33fea212210e44788af6c1b6fb9bfdf"
+    },
+    {
+      "path": "public/assets/doitt-39969__lod_0.glb",
+      "byteSize": 112256,
+      "checksumSha256": "d5a31a0b98d340ae3c433258e81ba9d08605d0fdba05cd67e531c43023df8d97"
+    },
+    {
+      "path": "public/assets/doitt-39969__lod_1.glb",
+      "byteSize": 35328,
+      "checksumSha256": "796ae39a3c3aa2537817dab80def5fdc7ec811bf72bfef71b08edca7548ee59c"
+    },
+    {
+      "path": "public/assets/doitt-460555__lod_0.glb",
+      "byteSize": 90364,
+      "checksumSha256": "aa5c448e06f4d23ef682469caabff4df9b6845863170feb9099b843774f3c0d7"
+    },
+    {
+      "path": "public/assets/doitt-460555__lod_1.glb",
+      "byteSize": 31368,
+      "checksumSha256": "fbeb99b624af64875d1ecbd1552f821ac353b4ce298df7c12158bba69626f2fc"
+    },
+    {
+      "path": "public/assets/doitt-498980__lod_0.glb",
+      "byteSize": 69112,
+      "checksumSha256": "4235f285a504cdd2e990a15cc870122346ac6da2ae0cf3724168e3723f4f7032"
+    },
+    {
+      "path": "public/assets/doitt-498980__lod_1.glb",
+      "byteSize": 21744,
+      "checksumSha256": "9800ad657aa2df88ebf8b0a8e7230bdb1ee2f75d4ad4503d376c892d92e29846"
+    },
+    {
+      "path": "public/assets/doitt-502491__lod_0.glb",
+      "byteSize": 74556,
+      "checksumSha256": "51518ad60bbb20ad26a9f8282c6f56caacee422cd2f1432cce6a00ddca8a8a76"
+    },
+    {
+      "path": "public/assets/doitt-502491__lod_1.glb",
+      "byteSize": 24972,
+      "checksumSha256": "0b3e56d76120df98882fafc1ee44a5f88717b5f95eb4afcfe51da165b488d554"
+    },
+    {
+      "path": "public/assets/doitt-584049__lod_0.glb",
+      "byteSize": 104536,
+      "checksumSha256": "5f2d883a9d5b5743f921a8db6b0ad9bda7d93377e512cea80778f394b6e40f36"
+    },
+    {
+      "path": "public/assets/doitt-584049__lod_1.glb",
+      "byteSize": 33276,
+      "checksumSha256": "0a4bc07cb02fc476e7e15fe5bccf3853165b868427068547b459928c1dab30c1"
+    },
+    {
+      "path": "public/assets/doitt-778052__lod_0.glb",
+      "byteSize": 5364352,
+      "checksumSha256": "57cdb76b7fc16c0868040c1169ff7a3682314998e455ee47f5720c06f4aa98f6"
+    },
+    {
+      "path": "public/assets/doitt-778052__lod_1.glb",
+      "byteSize": 1305292,
+      "checksumSha256": "51f9897e82c3931bf18f06e9a8c3fad304b086a9342d0ad2e5e6b17193380f5f"
+    },
+    {
+      "path": "public/assets/doitt-812702__lod_0.glb",
+      "byteSize": 75236,
+      "checksumSha256": "c82065c9a02f59e0600885494464a8cbdf49c35a8b2299b624f08a78a051ec5b"
+    },
+    {
+      "path": "public/assets/doitt-812702__lod_1.glb",
+      "byteSize": 26596,
+      "checksumSha256": "d5bc5a25dade5ea5cd3cc96910ba1951dda38d3935debccc31b97545f3a299c9"
+    },
+    {
+      "path": "public/assets/doitt-835659__lod_0.glb",
+      "byteSize": 75612,
+      "checksumSha256": "8b1801f1bf0bf4367279c1a5c03811c815f5febc112ea78bfcf9c7a3452db559"
+    },
+    {
+      "path": "public/assets/doitt-835659__lod_1.glb",
+      "byteSize": 24000,
+      "checksumSha256": "45c6c30ca35cd60abdee62821588bd2f06d0ca56f8d504fe9948e9572593f01e"
+    },
+    {
+      "path": "public/assets/doitt-925937__lod_0.glb",
+      "byteSize": 72072,
+      "checksumSha256": "fc1c74a7098a4cd7b982b088a6b9dc7def2d1d6796ad22f33a05efb8b2997add"
+    },
+    {
+      "path": "public/assets/doitt-925937__lod_1.glb",
+      "byteSize": 24404,
+      "checksumSha256": "ec1beadf702690f8c9642f61f506d2b9e72aa21ff9ffe6023caafb14cc839289"
+    },
+    {
+      "path": "public/assets/doitt-982383__lod_0.glb",
+      "byteSize": 424400,
+      "checksumSha256": "1dba3d8498e5a76c36bcbf96b001d31655c5260320f120c4a3a73f87fb4883d4"
+    },
+    {
+      "path": "public/assets/doitt-982383__lod_1.glb",
+      "byteSize": 114788,
+      "checksumSha256": "409d06cb3f4027720815bc8cac5def2d84ef379bad55d3b89fbaaec1b246b45f"
+    },
+    {
+      "path": "public/textures/brick-running-bond.png",
+      "byteSize": 16580,
+      "checksumSha256": "fdd4c9c8238518b021a09211b380a8844bcee92cbc239f33463c7b79f4ecd519"
+    },
+    {
+      "path": "public/textures/curtain-mullion-grid.png",
+      "byteSize": 16580,
+      "checksumSha256": "9be8020e193fd4dafda5db973e51e11893a5e7cd55d9d63ac397caced4beeb50"
+    },
+    {
+      "path": "public/textures/limestone-ashlar.png",
+      "byteSize": 16580,
+      "checksumSha256": "a177e50fade043f0f868a7a262f6e04b959375fb6cbb47cbdfbb27aee22794f8"
+    },
+    {
+      "path": "public/textures/spandrel-panel.png",
+      "byteSize": 16580,
+      "checksumSha256": "abd89e470989ba02472c2df7b029f257747452b2df794742347ed802849f8936"
+    },
+    {
+      "path": "public/tiles/manhattan-exterior-cell-w00-000000-block-00835/tileset.json",
+      "byteSize": 9617,
+      "checksumSha256": "56d905815f68699b83c040a70f7cc31c12022bc1983778fbe2cf046086d1d511"
+    },
+    {
+      "path": "retention-root.json",
+      "byteSize": 2546,
+      "checksumSha256": "690c5fac2f478863eac9102e3d00e8344ade90833e2016e9bf56410fd32cf1f2"
+    }
+  ]
+}

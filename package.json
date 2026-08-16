@@ -38,6 +38,7 @@
     "tile:validate": "node --experimental-strip-types scripts/validate-tile-package.mjs",
     "asset:fixture": "node --experimental-strip-types scripts/run-asset-package-fixture.mjs",
     "multi-lod:validate": "node --experimental-strip-types scripts/validate-multi-lod-assembly.mjs",
+    "retention:validate": "node --experimental-strip-types scripts/validate-retention-release.mjs",
     "offline:ingest": "node --experimental-strip-types scripts/run-offline-ingest.mjs",
     "citywide:acquire:dohmh": "node --experimental-strip-types scripts/acquire-manhattan-citywide-dohmh-snapshot.mjs",
     "citywide:acquire:buildings": "node --experimental-strip-types scripts/acquire-manhattan-citywide-buildings.mjs",
@@ -123,7 +124,8 @@
     "exterior-scheduler:governance-evidence": "node --experimental-strip-types scripts/exterior-scheduler-trace-capture-cli.mjs governance-evidence",
     "exterior-scheduler:roam-evidence": "node --experimental-strip-types scripts/exterior-scheduler-trace-capture-cli.mjs roam-evidence",
     "exterior-scheduler:evidence": "node --experimental-strip-types scripts/exterior-scheduler-trace-capture-cli.mjs evidence",
-    "mass-generation:stage0": "node --max-old-space-size=8192 scripts/mass-generation-stage0-cli.mjs"
+    "mass-generation:stage0": "node --max-old-space-size=8192 scripts/mass-generation-stage0-cli.mjs",
+    "mass-generation:wave": "node --max-old-space-size=8192 scripts/mass-generation-wave-cli.mjs"
   },
   "dependencies": {
     "cesium": "1.143.0",

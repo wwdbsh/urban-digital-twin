@@ -19,7 +19,7 @@ import {
 } from "../domain/deterministic-facade-generator-v3.ts";
 import { sha256HexSync, stableSerialize } from "../domain/deterministic-hash.ts";
 import type { ExteriorOwnershipCell } from "./exterior-release.ts";
-import type { ImmutablePin } from "./multi-lod-assembly.ts";
+import type { AssemblyLod, ImmutablePin } from "./multi-lod-assembly.ts";
 import { proceduralTextureProvenance, type ProceduralTextureClass, type ProceduralTextureProvenance } from "./procedural-texture.ts";
 import type { MidtownCoreBuildingSource } from "./midtown-core-materialization.ts";
 import { midtownCoreGlbBounds } from "./midtown-core-source.ts";
@@ -34,6 +34,7 @@ import {
   MIDTOWN_CORE_V3_WAVE_PROFILE,
   MidtownCoreV3Stop,
   buildMidtownCoreV3Plan,
+  midtownCoreV3AssemblyLods,
   midtownCoreV3AssetRef,
   writeMidtownCoreV3Assets,
   type MidtownCoreV3Registration,
@@ -142,6 +143,23 @@ export interface MidtownCoreV3Materialization {
    * draws is never declared and a tile some GLB draws is never missing.
    */
   sharedTextureClasses: ProceduralTextureClass[];
+  /**
+   * TWO-LOD ASSEMBLY DESCRIPTORS per materialized building, keyed by canonical
+   * building id, and EMPTY unless the caller asked for them with
+   * `assemblyLods`.
+   *
+   * They are built here, inside the loop that still holds the plan and both
+   * emitted assets, because `midtownCoreV3AssemblyLods` is the enforced route to
+   * a coarse descriptor (ADR 0050) and it needs exactly those two things. A
+   * caller that reconstructed them downstream would have neither, and would have
+   * to restate the LOD-1 decision instead of carrying the one the writer
+   * measured — which is the second half the ADR requires a successor stage not
+   * to forget.
+   *
+   * Requesting them requires `retainAllLods`, since a coarse descriptor for an
+   * asset whose bytes were dropped would describe bytes nobody can check.
+   */
+  assemblyLods: Map<string, { lods: AssemblyLod[]; truthTiers: readonly string[] }>;
   census: MidtownCoreV3Census;
 }
 
@@ -173,6 +191,21 @@ export interface MidtownCoreV3MaterializeInput {
    * midtown pipeline calls this function exactly as it always did.
    */
   profile?: V3WaveProfile;
+  /**
+   * Ask for the two-LOD assembly descriptors of every materialized building.
+   *
+   * Absent — which is every frozen wave — computes nothing and returns an empty
+   * map, so no committed release's bytes, census or stage fingerprint can move
+   * because this option exists.
+   */
+  assemblyLods?: {
+    /**
+     * Distance beyond which the FINE level stops being selected, for a building
+     * whose coarse level is eligible. `null` serves the fine level at every
+     * range.
+     */
+    lod0MaxDistanceMeters: number | null;
+  };
 }
 
 /**
@@ -194,6 +227,7 @@ export function materializeMidtownCoreV3Cells(input: MidtownCoreV3MaterializeInp
   const registration: MidtownCoreV3Registration[] = [];
   const absentSetbacks = new Map<string, string>();
   const lod1Decisions = new Map<string, { variant: string; measuredDeviationRatio: number; emittedDeviationRatio: number; geometricErrorMeters: number }>();
+  const assemblyLods = new Map<string, { lods: AssemblyLod[]; truthTiers: readonly string[] }>();
   const sharedTextureClasses = new Set<ProceduralTextureClass>();
   const planHashes = new Set<string>();
   const refusalsByCode: Record<string, number> = {};
@@ -305,6 +339,29 @@ export function materializeMidtownCoreV3Cells(input: MidtownCoreV3MaterializeInp
           checksumSha256: asset.checksumSha256,
           counts: { ...asset.counts },
           bounds: midtownCoreGlbBounds(asset.bytes, { allowExternalImageUri: profile.textureDelivery === "shared-uri" }),
+          sharedTextureClasses: [...asset.sharedTextureClasses],
+        });
+      }
+      // The enforced route to a coarse descriptor (ADR 0050). Built here because
+      // this is the last point that still holds BOTH the plan and both emitted
+      // assets; a downstream builder has neither and would have to restate the
+      // LOD-1 decision the writer measured instead of carrying it.
+      if (input.assemblyLods) {
+        if (input.retainAllLods !== true) fail("assembly descriptors need both LODs retained; retainAllLods is not set.");
+        if (censusOnly) fail("assembly descriptors describe bytes, which a census-only pass does not retain.");
+        // `truthTiers` rides along because the writer EMBEDDED it in every GLB
+        // and the assembly replay compares the manifest asset to those embedded
+        // bytes field for field. Re-deriving it downstream would be a second
+        // opinion about the same fact, and the two could disagree.
+        assemblyLods.set(buildingId, {
+          lods: midtownCoreV3AssemblyLods({
+            plan: context.plan,
+            assets: written.assets,
+            lod1: written.lod1,
+            budgets: profile.budgets,
+            lod0MaxDistanceMeters: input.assemblyLods.lod0MaxDistanceMeters,
+          }),
+          truthTiers: written.truthTiers,
         });
       }
       planHashes.add(context.plan.planHashSha256);
@@ -332,6 +389,7 @@ export function materializeMidtownCoreV3Cells(input: MidtownCoreV3MaterializeInp
     registration,
     absentSetbacks,
     lod1Decisions,
+    assemblyLods,
     sharedTextureClasses: [...sharedTextureClasses].sort(),
     census: {
       requestedBuildingCount: requested,
