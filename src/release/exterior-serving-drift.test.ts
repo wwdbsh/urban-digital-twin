@@ -241,49 +241,59 @@ describe("the committed C5 session evidence", () => {
     expect(record.findings.requestBudgetRespected).toBe(true);
     expect(record.findings.everyPoseLanded).toBe(true);
 
-    // AND WHAT IT DID NOT. Three cells of wave w01 fall back to pinned base with
-    // three failed artifacts, on the promoted default, deterministically.
-    // Asserted as the exact numbers observed so that a change in either
-    // direction is a diff somebody has to explain.
-    expect(record.findings.fallbackCellCount).toBe(9);
-    expect(record.findings.failedArtifactCount).toBe(9);
-    expect(record.ok).toBe(false);
+    // NOTHING FELL BACK AND NOTHING FAILED. This is the re-capture after the
+    // cancellation defect the first capture found was fixed; the pre-fix numbers
+    // were 9 and 9. Pinned at zero so a regression is a diff somebody explains.
+    expect(record.findings.fallbackCellCount).toBe(0);
+    expect(record.findings.failedArtifactCount).toBe(0);
+    expect(record.ok).toBe(true);
   });
 
   /**
-   * The DIAGNOSIS travels with the failure, and is pinned so it cannot be
-   * quietly separated from it.
+   * THE DEFECT THIS CAPTURE FOUND TRAVELS WITH THE GREEN VERDICT.
    *
-   * The FAIL above is not an emission defect, and that is the load-bearing
-   * conclusion: it was the reason the promotion was held. What is pinned here is
-   * the evidence for it — that the three cells are the same three across
-   * independent captures, that nothing on the network refused them, and that the
-   * app stopped requesting each of them after six GLBs regardless of whether the
-   * cell declares 20 or 87.
+   * The first run of this capture failed: three named cells of wave w01 fell
+   * back to base massing while every one of their artifacts byte-verified on
+   * disk and re-fetched cleanly over HTTP. That was a real runtime defect —
+   * a cancelled shared load classified as a failed artifact — and it is fixed.
+   *
+   * The record keeps the whole story rather than the ending, and this pins it
+   * there. A green capture with the history deleted would read as a clean first
+   * try, and the next reader would not know that this arrangement has a defect
+   * class in it that only appears at promoted density.
    */
-  it("carries the diagnosis: three named cells, sound bytes, a cancelled load", () => {
+  it("carries the defect it found, and the fix that closed it", () => {
     const record = readEvidence("default-session-residency") as unknown as {
-      diagnosis: { verdict: string; failingCells: string[]; runtimeFailureCode: string; mechanism: string; proposedFix: string };
+      defectFoundAndFixed: {
+        preFixVerdict: { ok: boolean; fallbackCellCount: number; failedArtifactCount: number; failingCells: string[]; runtimeFailureCode: string };
+        whyItWasNotAnEmissionDefect: string[];
+        mechanism: string; fix: string; regressionTests: string; sideEffectOfTheFix: string;
+      };
       findings: { networkFailureCount: number; fallbackNotices: string[] };
     };
-    expect(record.diagnosis.failingCells).toEqual([
+    const defect = record.defectFoundAndFixed;
+    expect(defect.preFixVerdict.ok).toBe(false);
+    expect(defect.preFixVerdict.fallbackCellCount).toBe(9);
+    expect(defect.preFixVerdict.failedArtifactCount).toBe(9);
+    expect(defect.preFixVerdict.failingCells).toEqual([
       "manhattan-exterior-cell-w01-000038-16-19301-17928",
       "manhattan-exterior-cell-w01-000116-16-19301-17926",
       "manhattan-exterior-cell-w01-000117-17-38604-35853",
     ]);
-    // The app's own notices name exactly those three, so the diagnosis is not a
-    // claim laid over the capture — it is read out of it.
-    expect(record.findings.fallbackNotices).toHaveLength(3);
-    for (const cellId of record.diagnosis.failingCells) {
-      expect(record.findings.fallbackNotices.some((notice) => notice.includes(cellId)), cellId).toBe(true);
-    }
-    expect(record.diagnosis.runtimeFailureCode).toBe("request-failed");
-    expect(record.diagnosis.verdict).toContain("NOT an emission defect");
-    // No network refusal for these cells: the only failures in the session are a
-    // favicon and aborted GLBs belonging to other cells.
-    expect(record.findings.networkFailureCount).toBeLessThanOrEqual(5);
-    expect(record.diagnosis.mechanism).toContain("abortExcept");
-    expect(record.diagnosis.proposedFix).toContain("CANCELLATION");
+    expect(defect.preFixVerdict.runtimeFailureCode).toBe("request-failed");
+    // Four independent reasons the bytes were never in question.
+    expect(defect.whyItWasNotAnEmissionDefect).toHaveLength(4);
+    // The mechanism names the real trigger, and says the earlier guess was wrong.
+    expect(defect.mechanism).toContain("releaseWaiter");
+    expect(defect.mechanism).toContain("abortExcept as the trigger; that was wrong");
+    expect(defect.fix).toContain("RETRIES once");
+    expect(defect.fix).toContain("CitywideRequestPool is untouched");
+    expect(defect.regressionTests).toContain("exterior-cell-runtime.test.ts");
+    expect(defect.sideEffectOfTheFix).toContain("92.4%");
+    // And the re-capture is clean: no fallback notice, no network refusal beyond
+    // the favicon the page always asks for.
+    expect(record.findings.fallbackNotices).toEqual([]);
+    expect(record.findings.networkFailureCount).toBeLessThanOrEqual(1);
   });
 
   it("records the frame-time A/B, and records that it FAILED on the texture bound", () => {

@@ -624,7 +624,7 @@ They are close enough to be confused and have been:
 
 ---
 
-## 12. C5 was captured on the promoted build, and both bars FAILED
+## 12. C5 on the promoted build: two bars FAILED, and one capture found a defect
 
 Added 2026-08-16, after the captures. Recorded in the ADR rather than only in the
 implementation record because section 3's cap decision was made on synthetic
@@ -690,7 +690,7 @@ does not resolve to the same sourced information.
 stops, and all four default-session poses. The landing loop does not re-dispatch
 on the promoted build.
 
-### The six-wave DEFAULT session, observed once — and it FAILS too
+### The six-wave DEFAULT session — it found a defect, and it PASSES
 
 Both captures above name ONE wave with an explicit `?exteriorCells=`, so the
 composition this build actually promotes — six co-resident wave runtimes sharing
@@ -706,10 +706,15 @@ What it establishes:
 | declared cells across the six | **883** |
 | scheduled cells at any pose | **8**, the cap, split across waves |
 | cells FAILED | **0** |
-| shared cache entries / cap | 731 / 1,024 |
-| shared cache bytes / cap | 192.8 MB / 256 MB (75.3%) |
+| cells FELL BACK | **0** |
+| failed artifacts | **0** |
+| shared cache entries / cap | peak 876 / 1,024 |
+| shared cache bytes / cap | peak 236.6 MB / 256 MB (**92.4%**) |
 | peak concurrent requests / budget | 4 / 4 |
 | every pose landed, dispatches | yes, 1 each |
+
+All nine pre-registered gates pass. They did NOT pass on the first run, and what
+failed was worth the whole exercise — see below.
 
 The cross-wave behaviour cap 8 was chosen for is visible and correct: the
 overview pose put all eight slots in w02, the transition and midtown poses split
@@ -717,75 +722,67 @@ overview pose put all eight slots in w02, the transition and midtown poses split
 three waves. Residency crosses wave boundaries by distance, exactly as ADR 0052
 §1's D-4 fix intends, and the shared cache stayed inside both caps while doing it.
 
-**AND THREE CELLS OF WAVE w01 FELL BACK.** `fallbackCellCount` is 3 and
-`failedArtifactCount` is 3 on `manhattan-midtown-core-cells-20260811-v3-s1`,
-first observed at the transition pose and persisting through the two street poses
-(the counters are cumulative). Three cells of the promoted default rendered
-pinned base massing instead of their served geometry, and three artifact fetches
-failed. `failedCellCount` is 0, so nothing failed closed to nothing — the
-fallback is the runtime behaving as designed when an artifact does not arrive.
+### The three-cell fallback: a curated-era latent defect, made reachable and FIXED
 
-### The three-cell fallback, DIAGNOSED: not an emission defect
+The first run of this capture failed. Three cells of
+`manhattan-midtown-core-cells-20260811-v3-s1` —
+`w01-000038-16-19301-17928`, `w01-000116-16-19301-17926` and
+`w01-000117-17-38604-35853` — fell back to base massing at the transition pose,
+deterministically, the same three across two independent captures.
 
-The promotion was held on this until it was diagnosed, because "offline
-validation green, runtime fetch failure" is the signature of an emitter path or
-URL-class defect that `replayMultiLodAssembly` cannot see — it reads bytes off
-the filesystem and never issues a request. It is not that. The three cells are:
+It was **not** an emission defect, which is what held the promotion: all 170
+artifacts those cells declare byte-match their manifests on disk AND re-fetch
+over HTTP with a 2xx and the declared size in the same page and session; no
+loading failure or HTTP error touched any of them; and the app requested 6 of 48,
+6 of 87 and 6 of 20 GLBs before giving up — three cells of very different sizes
+each stopping at exactly six is a cancelled load, not a bad byte.
 
-- `manhattan-exterior-cell-w01-000038-16-19301-17928` (48 assets, 53 artifacts)
-- `manhattan-exterior-cell-w01-000116-16-19301-17926` (87 assets, 92 artifacts)
-- `manhattan-exterior-cell-w01-000117-17-38604-35853` (20 assets, 25 artifacts)
+**The mechanism.** `CitywideRequestPool` shares one in-flight request per
+artifact key. When the last waiter on a key aborts, `releaseWaiter` aborts the
+underlying request; a task that has already STARTED keeps its pending entry until
+that abort lands, and an aborted task settles the SHARED promise with `undefined`
+rather than rejecting it. A decision joining that window received `undefined` for
+an artifact nobody had faulted. `loadVerifiedArtifact` counted a failed artifact
+and threw a synthesised `request-failed`, which `renderCell` cannot distinguish
+from a verification failure — so a healthy cell fell back under a moving camera.
+It is the same defect class as the shared-texture memoization defect §2 already
+records: one batch's cancellation reaching another batch as if it were an error.
 
-all of `manhattan-midtown-core-cells-20260811-v3-s1`, all failing
-`request-failed`, all at the transition pose, **the same three across two
-independent captures in fresh browser sessions.** Deterministic.
+**Reachability is the promotion's doing, the defect is not.** It needs several
+co-resident cells still loading when the scheduler re-decides. The curated
+composition had content in 13 cells of 883 and rarely had more than one or two in
+flight; the promoted composition has content in all 883 and fills all eight
+residency slots at every pose. The defect was latent through the whole curated
+era and the promotion made it reachable — which is the honest form of "the
+promotion surfaced it", and the reason a density change deserves a session
+capture rather than a suite run.
 
-**The bytes are sound, four ways.**
+**The fix**, in `loadVerifiedArtifact` only. `artifactErrors` is an exact
+discriminator, not a heuristic: the loader records every non-abort error there
+and deliberately records no abort, so an `undefined` pool result with nothing
+recorded is reachable only through cancellation. Such a caller now RETRIES once —
+the shared entry is gone by then, so it issues its own request and renders
+normally — and only a second cancelled result raises an abort, which `loadCell`
+re-throws instead of falling back. `failedArtifactCount` is not incremented on
+the cancellation path. `CitywideRequestPool` is untouched: its `undefined`
+contract is depended on by the citywide runtime, and the classification belongs
+to the caller that knows what its own errors mean.
 
-1. *On disk*: all 170 declared artifacts exist and byte-match their manifests
-   against the committed payload inventory — zero missing, zero size or SHA-256
-   mismatch.
-2. *Over HTTP, in the same page and session*: all 170 re-fetch with a 2xx status
-   and the declared byte size. No path, encoding or server peculiarity declines
-   them.
-3. *Network log*: no HTTP error and no loading failure for any artifact of these
-   three cells. The only non-2xx in the session is `/favicon.ico`; the only
-   loading failures are `net::ERR_ABORTED` on four GLBs of OTHER cells — two in
-   w01 and two in w04, and **w04 recorded zero fallbacks**.
-4. *Request count*: the app requested **6 of 48, 6 of 87 and 6 of 20** GLBs
-   before giving up. A cell with bad data fails on a particular artifact; three
-   cells of very different sizes each stopping at exactly six is the signature of
-   a CANCELLED load.
+Raising the abort *without* the retry was implemented and rejected: it converts a
+spurious fallback into a spurious blank, because the innocent decision then
+carries an abort it never asked for.
 
-**The mechanism.** `CitywideRequestPool.abortExcept` aborts in-flight loads for
-cells that left the resident set and resolves queued-but-unstarted tasks with
-`undefined`; its `runTask` catch turns an `AbortError` into `undefined` too.
-`ExteriorCellRuntime.loadVerifiedArtifact` then sees `value === undefined`,
-increments `failedArtifactCount`, and throws `ExteriorRuntimeError("request-failed")`
-from its `??` branch — a branch reachable *only* on an abort, because aborts are
-deliberately excluded from `artifactErrors` one line above. `renderCell` catches
-it, cannot recognise it as an abort (`isAbort` is false for a synthesised
-`ExteriorRuntimeError`), and returns `base-massing`.
+**The re-capture passes all nine gates**: `fallbackCellCount` 0,
+`failedArtifactCount` 0, six waves, 18 boot documents, 8 scheduled cells per
+pose, both caps and the request budget respected, every pose landing in one
+dispatch.
 
-**So a cancelled load is classified as a failed artifact, and a healthy cell
-falls back to base massing.** The defect is in the exterior runtime's
-classification, not in the emitter, the payload, or the transport.
-
-**Why the curated build never showed it.** It needs several co-resident cells
-still loading when the scheduler re-decides. The curated composition had content
-in 13 cells of 883 and rarely had more than one or two in flight; the promoted
-composition has content in all 883 and fills all eight residency slots at every
-pose. The promotion did not create the defect — it made it reachable.
-
-**Not fixed here, and the FAIL stands.** The fix is one branch in
-`loadVerifiedArtifact`: an undefined pool result with no recorded artifact error
-is a cancellation, so throw an abort-shaped error and do not count a failed
-artifact. `CitywideRequestPool` is shared with the citywide runtime and is not
-the place to change it. That is a behaviour change on a core load path, and this
-capture was commissioned as a diagnosis; applying it under a diagnosis brief
-would be the same class of move as re-wiring a bar after seeing it fail. **The
-three cells do render base massing on the promoted default today, and the app
-says so in a notice rather than pretending otherwise.**
+One consequence is worth recording. The transition pose now LOADS the three cells
+it used to abandon, so residency there rises from 718 entries / 167.6 MB to **876
+entries / 236.6 MB — 92.4% of the unchanged 256 MiB byte cap**, within half a
+point of the **92.0%** §3's residency bound predicted for the worst reachable
+neighbourhood. The bound and the browser agree, and they agree at the tightest
+point in the composition.
 
 ### Cap-driven eviction WAS observed, in the six-wave session
 
@@ -850,11 +847,11 @@ The w01 fallback and the saturated frame instrument (above) also route to T006.
   (section 11).
 - D-8, D-11 and D-17 are carried forward unclosed and are restated by number
   (section 11).
-- ALL THREE C5 captures on the promoted build FAILED their pre-registered
-  conditions (section 12): the frame-time A/B on a decoded-texture bound that
-  looks mis-wired and was not re-wired, the single-wave eviction roam on an
-  eviction that was never exercised, and the six-wave default session on three
-  cells of wave w01 falling back to base massing.
+- Two of the three C5 captures FAIL their pre-registered conditions (section
+  12): the frame-time A/B on a decoded-texture bound that looks mis-wired and was
+  not re-wired, and the single-wave eviction roam on an eviction that was never
+  exercised. The six-wave default session FAILED, found a real runtime defect,
+  and PASSES all nine gates after it was fixed.
 - The frame-time PASS half is a SATURATED instrument — 8.3 ms p50 in both arms
   across a 6.9x residency difference is the 120 Hz presentation floor. The claim
   is narrowed to "no regression detectable above the ~8.3 ms floor at these
@@ -863,12 +860,15 @@ The w01 fallback and the saturated frame instrument (above) also route to T006.
   documents, 883 declared cells, 8 scheduled cells split across waves by
   distance, both caps and the request budget respected (section 12). ADR 0052
   §1's D-4 cross-wave ranking is confirmed in a browser.
-- Three cells of `manhattan-midtown-core-cells-20260811-v3-s1` fall back to
-  pinned base on the promoted default. DIAGNOSED (section 12) and **not an
-  emission defect**: all 170 declared artifacts byte-verify on disk and re-fetch
-  cleanly over HTTP in the same session. It is a runtime CLASSIFICATION defect —
-  a cancelled artifact load is counted as a failed one, and the cell falls back.
-  The one-branch fix is stated; applying it is T006's, and the FAIL stands.
+- A CANCELLED artifact load was classified as a FAILED one, so a healthy cell
+  fell back to base massing under a moving camera (section 12). Latent through
+  the whole curated era; the promoted composition's density made it reachable.
+  Fixed in `loadVerifiedArtifact` — cancellation is retried once, then raised as
+  an abort, and never counted — with `CitywideRequestPool` untouched. Three
+  regression tests, one reproducing and two holding the fail-closed path.
+- The residency bound and the browser AGREE at the tightest point: 92.4%
+  measured against 92.0% predicted for the worst reachable neighbourhood
+  (section 12).
 - Cap-driven eviction IS reached in a six-wave session (`cacheEvictions` 223),
   which explains the single-wave roam's zero rather than retiring its FAIL
   (section 12).

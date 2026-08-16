@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0",
   "artifact": "serving-default-session-residency",
-  "capturedAt": "2026-08-16T11:10:40.136Z",
+  "capturedAt": "2026-08-16T11:25:10.575Z",
   "browser": "Chrome/151.0.7922.138",
   "base": "http://localhost:4193/",
   "releaseSelector": "default",
@@ -102,8 +102,8 @@
         }
       ],
       "sharedCache": {
-        "cacheEntries": 541,
-        "cachedBytes": 117503825,
+        "cacheEntries": 544,
+        "cachedBytes": 118486823,
         "cacheEvictions": 0,
         "maxCacheEntries": 1024,
         "maxCachedBytes": 268435456,
@@ -168,9 +168,9 @@
           "scheduledCellCount": 7,
           "deferredCellCount": 142,
           "notShippedCellCount": 0,
-          "fallbackCellCount": 3,
+          "fallbackCellCount": 0,
           "failedCellCount": 0,
-          "failedArtifactCount": 3
+          "failedArtifactCount": 0
         },
         {
           "releaseId": "manhattan-lower-manhattan-cells-20260812-s1",
@@ -214,8 +214,8 @@
         }
       ],
       "sharedCache": {
-        "cacheEntries": 718,
-        "cachedBytes": 167550727,
+        "cacheEntries": 876,
+        "cachedBytes": 236617455,
         "cacheEvictions": 0,
         "maxCacheEntries": 1024,
         "maxCachedBytes": 268435456,
@@ -230,9 +230,6 @@
       "notices": {
         "present": true,
         "items": [
-          "Exterior release manhattan-midtown-core-cells-20260811-v3-s1: Exterior cell manhattan-exterior-cell-w01-000038-16-19301-17928 failed verification (request-failed). Its pinned fallback is the base identity set manhattan-midtown-core-cells-20260811-v3-s1:exterior-base-identity:47a0c1bb5c2fc60d, which carries no exterior geometry, so the existing verified base massing is shown for this cell.",
-          "Exterior release manhattan-midtown-core-cells-20260811-v3-s1: Exterior cell manhattan-exterior-cell-w01-000116-16-19301-17926 failed verification (request-failed). Its pinned fallback is the base identity set manhattan-midtown-core-cells-20260811-v3-s1:exterior-base-identity:47a0c1bb5c2fc60d, which carries no exterior geometry, so the existing verified base massing is shown for this cell.",
-          "Exterior release manhattan-midtown-core-cells-20260811-v3-s1: Exterior cell manhattan-exterior-cell-w01-000117-17-38604-35853 failed verification (request-failed). Its pinned fallback is the base identity set manhattan-midtown-core-cells-20260811-v3-s1:exterior-base-identity:47a0c1bb5c2fc60d, which carries no exterior geometry, so the existing verified base massing is shown for this cell.",
           "875 exterior cells are not loaded for this camera; they load when the camera reaches them.Details by releaseExterior release manhattan-midtown-core-cells-20260811-v3-s1: 142 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-lower-manhattan-cells-20260812-s1: 126 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-southern-remainder-cells-20260812-s1: 176 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-central-upper-manhattan-cells-20260812-s1: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-northern-manhattan-cells-20260812-s1: 182 exterior cells are not loaded for this camera; they load when the camera reaches them.",
           "Exterior release manhattan-midtown-core-cells-20260811-v3-s1: 142 exterior cells are not loaded for this camera; they load when the camera reaches them.",
           "Exterior release manhattan-lower-manhattan-cells-20260812-s1: 126 exterior cells are not loaded for this camera; they load when the camera reaches them.",
@@ -241,7 +238,7 @@
           "Exterior release manhattan-northern-manhattan-cells-20260812-s1: 182 exterior cells are not loaded for this camera; they load when the camera reaches them.",
           "Exterior geometry for 61 verified buildings is not drawn: the matching base building record is not loaded, so there is no verified WGS84 anchor for it. It will be drawn once that base record loads.Show the 61 building IDsdoitt:105139, doitt:1105834, doitt:117108, doitt:119253, doitt:12190, doitt:122830, doitt:142405, doitt:156782, doitt:165701, doitt:173269, doitt:174297, doitt:184418, doitt:190678, doitt:203431, doitt:225229, doitt:257850, doitt:271533, doitt:275485, doitt:285475, doitt:295448, doitt:30614, doitt:338791, doitt:344447, doitt:363122, doitt:367985, doitt:37175, doitt:410507, doitt:416984, doitt:43141, doitt:436086, doitt:452034, doitt:454973, doitt:487361, doitt:497248, doitt:50468, doitt:508945, doitt:527010, doitt:534631, doitt:557250, doitt:564225, doitt:587562, doitt:608052, doitt:61601, doitt:638573, doitt:65190, doitt:682283, doitt:689362, doitt:71885, doitt:721649, doitt:746993, doitt:756969, doitt:763502, doitt:775767, doitt:77845, doitt:789775, doitt:815255, doitt:838301, doitt:838923, doitt:843842, doitt:852933, doitt:945953"
         ],
-        "text": "Exterior streaming fallback DismissExterior release manhattan-midtown-core-cells-20260811-v3-s1: Exterior cell manhattan-exterior-cell-w01-000038-16-19301-17928 failed verification (request-failed). Its pinned fallback is the base identity set manhattan-midtown-core-cells-20260811-v3-s1:exterior-base-identity:47a0c1bb5c2fc60d, which carries no exterior geometry, so the existing verified base massing is shown for this cell.Exterior release manhattan-midtown-core-cells-20260811-v3-s1: Exterior cell manhattan-exterior-cell-w01-000116-16-19301-17926 failed verification (request-failed). Its pinned fallback is the base identity set manhattan-midtown-core-cells-20260811-v3-s1:exterior-base-identity:47a0c1bb5c2fc60d, which carries no exterior geometry, so the existing verified base massing is shown for this cell.Exterior release manhattan-midtown-core-cells-20260811-v3-s1: Exterior cell manhattan-exterior-cell-w01-000117-17-38604-35853 failed verification (request-failed). Its pinned fallback is the base identity set manhattan-midtown-core-cells-20260811-v3-s1:exterior-base-identity:47a0c1bb5c2fc60d, which carries no exterior geometry, so the existing verified base massing is shown for this cell.875 exterior cells are not loaded for this camera; they load when the camera reaches them.Details by releaseExterior release manhattan-midtown-core-cells-20260811-v3-s1: 142 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-lower-manhattan-cells-20260812-s1: 126 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-southern-remainder-cells-20260812-s1: 176 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-central-upper-manhattan-cells-20260812-s1: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-northern-manhattan-cells-20260812-s1: 182 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior geometry for 61 verified buildings is not drawn: the matching base building record is not loaded, so there is no verified WGS84 anchor for it. It will be drawn once that base record loads.Show the 61 building IDsdoitt:105139, doitt:1105834, doitt:117108, doitt:119253, doitt:12190, doitt:122830, doitt:142405, doitt:156782, doitt:165701, doitt:173269, doitt:174297, doitt:184418, doitt:190678, doitt:203431, doitt:225229, doitt:257850, doitt:271533, doitt:275485, doitt:285475, doitt:295448, doitt:30614, doitt:338791, doitt:344447, doitt:363122, doitt:367985, doitt:37175, doitt:410507, doitt:416984, doitt:43141, doitt:436086, doitt:452034, doitt:454973, doitt:487361, doitt:497248, doitt:50468, doitt:508945, doitt:527010, doitt:534631, doitt:557250, doitt:564225, doitt:587562, doitt:608052, doitt:61601, doitt:638573, doitt:65190, doitt:682283, doitt:689362, doitt:71885, doitt:721649, doitt:746993, doitt:756969, doitt:763502, doitt:775767, doitt:77845, doitt:789775, doitt:815255, doitt:838301, doitt:838923, doitt:843842, doitt:852933, doitt:945953"
+        "text": "Exterior streaming fallback Dismiss875 exterior cells are not loaded for this camera; they load when the camera reaches them.Details by releaseExterior release manhattan-midtown-core-cells-20260811-v3-s1: 142 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-lower-manhattan-cells-20260812-s1: 126 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-southern-remainder-cells-20260812-s1: 176 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-central-upper-manhattan-cells-20260812-s1: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-northern-manhattan-cells-20260812-s1: 182 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior geometry for 61 verified buildings is not drawn: the matching base building record is not loaded, so there is no verified WGS84 anchor for it. It will be drawn once that base record loads.Show the 61 building IDsdoitt:105139, doitt:1105834, doitt:117108, doitt:119253, doitt:12190, doitt:122830, doitt:142405, doitt:156782, doitt:165701, doitt:173269, doitt:174297, doitt:184418, doitt:190678, doitt:203431, doitt:225229, doitt:257850, doitt:271533, doitt:275485, doitt:285475, doitt:295448, doitt:30614, doitt:338791, doitt:344447, doitt:363122, doitt:367985, doitt:37175, doitt:410507, doitt:416984, doitt:43141, doitt:436086, doitt:452034, doitt:454973, doitt:487361, doitt:497248, doitt:50468, doitt:508945, doitt:527010, doitt:534631, doitt:557250, doitt:564225, doitt:587562, doitt:608052, doitt:61601, doitt:638573, doitt:65190, doitt:682283, doitt:689362, doitt:71885, doitt:721649, doitt:746993, doitt:756969, doitt:763502, doitt:775767, doitt:77845, doitt:789775, doitt:815255, doitt:838301, doitt:838923, doitt:843842, doitt:852933, doitt:945953"
       }
     },
     {
@@ -282,9 +279,9 @@
           "scheduledCellCount": 7,
           "deferredCellCount": 142,
           "notShippedCellCount": 0,
-          "fallbackCellCount": 3,
+          "fallbackCellCount": 0,
           "failedCellCount": 0,
-          "failedArtifactCount": 3
+          "failedArtifactCount": 0
         },
         {
           "releaseId": "manhattan-lower-manhattan-cells-20260812-s1",
@@ -330,7 +327,7 @@
       "sharedCache": {
         "cacheEntries": 597,
         "cachedBytes": 156936753,
-        "cacheEvictions": 223,
+        "cacheEvictions": 220,
         "maxCacheEntries": 1024,
         "maxCachedBytes": 268435456,
         "activeRequests": 0,
@@ -395,9 +392,9 @@
           "scheduledCellCount": 2,
           "deferredCellCount": 147,
           "notShippedCellCount": 0,
-          "fallbackCellCount": 3,
+          "fallbackCellCount": 0,
           "failedCellCount": 0,
-          "failedArtifactCount": 3
+          "failedArtifactCount": 0
         },
         {
           "releaseId": "manhattan-lower-manhattan-cells-20260812-s1",
@@ -443,7 +440,7 @@
       "sharedCache": {
         "cacheEntries": 731,
         "cachedBytes": 192784964,
-        "cacheEvictions": 223,
+        "cacheEvictions": 220,
         "maxCacheEntries": 1024,
         "maxCachedBytes": 268435456,
         "activeRequests": 0,
@@ -665,11 +662,11 @@
     ],
     "maxScheduledCellsAtAnyPose": 8,
     "failedCellCount": 0,
-    "fallbackCellCount": 9,
-    "failedArtifactCount": 9,
+    "fallbackCellCount": 0,
+    "failedArtifactCount": 0,
     "cacheEntries": 731,
     "cachedBytes": 192784964,
-    "cacheEvictions": 223,
+    "cacheEvictions": 220,
     "peakConcurrentRequests": 4,
     "maxConcurrentRequests": 4,
     "entriesWithinCap": true,
@@ -682,71 +679,46 @@
       1,
       1
     ],
-    "fallbackNotices": [
-      "Exterior release manhattan-midtown-core-cells-20260811-v3-s1: Exterior cell manhattan-exterior-cell-w01-000038-16-19301-17928 failed verification (request-failed). Its pinned fallback is the base identity set manhattan-midtown-core-cells-20260811-v3-s1:exterior-base-identity:47a0c1bb5c2fc60d, which carries no exterior geometry, so the existing verified base massing is shown for this cell.",
-      "Exterior release manhattan-midtown-core-cells-20260811-v3-s1: Exterior cell manhattan-exterior-cell-w01-000116-16-19301-17926 failed verification (request-failed). Its pinned fallback is the base identity set manhattan-midtown-core-cells-20260811-v3-s1:exterior-base-identity:47a0c1bb5c2fc60d, which carries no exterior geometry, so the existing verified base massing is shown for this cell.",
-      "Exterior release manhattan-midtown-core-cells-20260811-v3-s1: Exterior cell manhattan-exterior-cell-w01-000117-17-38604-35853 failed verification (request-failed). Its pinned fallback is the base identity set manhattan-midtown-core-cells-20260811-v3-s1:exterior-base-identity:47a0c1bb5c2fc60d, which carries no exterior geometry, so the existing verified base massing is shown for this cell."
-    ],
+    "fallbackNotices": [],
     "networkFailures": [
       {
         "kind": "http-error",
         "url": "http://localhost:4193/favicon.ico",
         "status": 404,
         "statusText": "Not Found"
-      },
-      {
-        "kind": "loading-failed",
-        "url": "http://localhost:4193/data/manhattan-midtown-core-cells-20260811-v3-s1/public/assets/doitt-165517__lod_0.glb",
-        "errorText": "net::ERR_ABORTED",
-        "canceled": true,
-        "blockedReason": null
-      },
-      {
-        "kind": "loading-failed",
-        "url": "http://localhost:4193/data/manhattan-midtown-core-cells-20260811-v3-s1/public/assets/doitt-190612__lod_0.glb",
-        "errorText": "net::ERR_ABORTED",
-        "canceled": true,
-        "blockedReason": null
-      },
-      {
-        "kind": "loading-failed",
-        "url": "http://localhost:4193/data/manhattan-central-upper-manhattan-cells-20260812-s1/public/assets/doitt-343405__lod_0.glb",
-        "errorText": "net::ERR_ABORTED",
-        "canceled": true,
-        "blockedReason": null
-      },
-      {
-        "kind": "loading-failed",
-        "url": "http://localhost:4193/data/manhattan-central-upper-manhattan-cells-20260812-s1/public/assets/doitt-183589__lod_0.glb",
-        "errorText": "net::ERR_ABORTED",
-        "canceled": true,
-        "blockedReason": null
       }
     ],
-    "networkFailureCount": 5
+    "networkFailureCount": 1
   },
   "uncapturedGap": "NO FRAME TIMING AND NO VISUAL CLAIM. This says the promoted arrangement resolves, boots, schedules and stays inside its budgets at four poses. It does not say how it looks or how fast it is, and it is one session rather than a distribution.",
   "claim": "A six-wave default session on the promoted build. It states that every promoted wave resolves and boots its three documents, that the scheduler admits cells across waves without any cell failing or falling back, and that the one shared cache stays inside both caps and inside the request budget.",
-  "ok": false,
-  "diagnosis": {
-    "verdict": "NOT an emission defect. The three cells' payload is sound and its delivery is sound. The failure is a RUNTIME CLASSIFICATION defect: a cancelled artifact load is counted as a failed artifact and drives the cell to base-massing fallback.",
-    "failingCells": [
-      "manhattan-exterior-cell-w01-000038-16-19301-17928",
-      "manhattan-exterior-cell-w01-000116-16-19301-17926",
-      "manhattan-exterior-cell-w01-000117-17-38604-35853"
+  "ok": true,
+  "defectFoundAndFixed": {
+    "summary": "This capture found a real runtime defect on the promoted default, and the defect is FIXED in the same task. The numbers above are the RE-CAPTURE, after the fix. The pre-fix capture is described here rather than deleted: the record is the story of a defect found and closed, not a clean first try.",
+    "preFixVerdict": {
+      "ok": false,
+      "fallbackCellCount": 9,
+      "failedArtifactCount": 9,
+      "failingCells": [
+        "manhattan-exterior-cell-w01-000038-16-19301-17928",
+        "manhattan-exterior-cell-w01-000116-16-19301-17926",
+        "manhattan-exterior-cell-w01-000117-17-38604-35853"
+      ],
+      "release": "manhattan-midtown-core-cells-20260811-v3-s1",
+      "runtimeFailureCode": "request-failed",
+      "deterministic": "The SAME three cells, at the SAME pose (transition-1200m-anchor), across two independent captures in fresh browser sessions."
+    },
+    "whyItWasNotAnEmissionDefect": [
+      "ON DISK: all 170 artifacts the three cells declare exist and byte-match their manifests against the committed payload inventory -- 53/53, 92/92, 25/25, zero missing, zero size or SHA-256 mismatch.",
+      "OVER HTTP, IN THE SAME PAGE AND SESSION: all 170 re-fetch with a 2xx status and the declared byte size. No path, encoding or server peculiarity declines them.",
+      "NETWORK LOG: no HTTP error and no loading failure touched any artifact of these three cells. The only non-2xx was /favicon.ico; the only loading failures were net::ERR_ABORTED on four GLBs of OTHER cells, two in w01 and two in w04, and w04 recorded zero fallbacks.",
+      "REQUEST COUNT: the app requested 6 of 48, 6 of 87 and 6 of 20 GLBs before giving up. A cell with bad data fails on a PARTICULAR artifact; three cells of very different sizes each stopping at exactly six is a cancelled load."
     ],
-    "release": "manhattan-midtown-core-cells-20260811-v3-s1",
-    "runtimeFailureCode": "request-failed",
-    "deterministic": "The SAME three cells, at the SAME pose (transition-1200m-anchor), across two independent captures in fresh browser sessions.",
-    "evidence": [
-      "ON DISK: every artifact each cell declares exists and byte-matches its manifest -- 53/53, 92/92 and 25/25 files, zero missing, zero size or SHA-256 mismatch, checked against the committed payload inventory.",
-      "OVER HTTP, IN THE SAME PAGE AND SESSION: all 170 declared artifacts of the three cells re-fetch with a 2xx status and the declared byte size. Nothing about the path, the encoding or the server declines them.",
-      "NETWORK LOG: no HTTP error and no loading failure for any artifact of these three cells. The only non-2xx in the session is /favicon.ico, and the only loading failures are net::ERR_ABORTED on four GLBs belonging to OTHER cells -- two in w01 and two in w04, and w04 recorded zero fallbacks.",
-      "REQUEST COUNT: the app requested 6 of 48, 6 of 87 and 6 of 20 GLBs for the three cells before giving up. A cell whose data were bad would fail on a particular artifact; three cells of very different sizes each stopping at exactly six is the signature of a cancelled load, not of a bad byte."
-    ],
-    "mechanism": "CitywideRequestPool.abortExcept aborts in-flight loads for cells that left the resident set, and resolves queued-but-unstarted tasks with undefined. Its runTask catch turns an AbortError into undefined as well. ExteriorCellRuntime.loadVerifiedArtifact then sees value === undefined, increments failedArtifactCount, and throws ExteriorRuntimeError('request-failed') from its ?? branch -- reached only when artifactErrors holds nothing, which is exactly the abort case, because aborts are deliberately excluded from artifactErrors. renderCell catches that, cannot recognise it as an abort (isAbort is false for a synthesised ExteriorRuntimeError), and returns base-massing.",
-    "proposedFix": "In loadVerifiedArtifact, an undefined pool result with no recorded artifact error is a CANCELLATION, not a failure: throw an abort-shaped error so renderCell rethrows instead of falling back, and do not increment failedArtifactCount. Confined to the exterior runtime; CitywideRequestPool is shared with the citywide runtime and is NOT the place to change this.",
-    "notFixedHere": "This is a runtime behaviour change on a core load path, and the capture was commissioned as a diagnosis. It is reported rather than applied. The FAIL stands and the fallback is real: three cells of the promoted default render base massing, and the app says so in a notice rather than pretending otherwise.",
-    "whyTheCuratedBuildDidNotShowIt": "The defect needs several co-resident cells still loading when the scheduler re-decides. The curated composition had content in 13 cells of 883 and rarely had more than one or two loading at once; the promoted composition has content in all 883 and fills all 8 residency slots at every pose."
+    "mechanism": "CitywideRequestPool shares one in-flight request per artifact key. When the LAST waiter on a key aborts, releaseWaiter aborts the underlying request; a task that has already STARTED keeps its pending entry until that abort lands, and an aborted task settles the SHARED promise with undefined rather than rejecting it. A decision that joined the entry inside that window was handed undefined for an artifact nobody had said anything bad about. ExteriorCellRuntime.loadVerifiedArtifact counted a failed artifact and threw a synthesised ExteriorRuntimeError('request-failed'), which renderCell cannot tell from a real verification failure -- so a healthy cell fell back to base massing under a moving camera. An earlier draft of this diagnosis named abortExcept as the trigger; that was wrong and is corrected here. The exterior runtime never calls abortExcept. It is the last-waiter abort inside releaseWaiter.",
+    "fix": "loadVerifiedArtifact now discriminates on artifactErrors, which is exact rather than heuristic: the loader records every non-abort error there and deliberately records no abort, so an undefined pool result with nothing recorded is reachable only through cancellation. Such a caller RETRIES once -- the shared entry is gone by then, so it issues its own request and renders normally. Only a second cancelled result raises an abort, which loadCell re-throws instead of falling back. failedArtifactCount is not incremented on the cancellation path. CitywideRequestPool is untouched: its undefined contract is depended on by the citywide runtime, and the classification belongs to the caller that knows what its own errors mean.",
+    "rejectedFirstAttempt": "Raising the abort WITHOUT the retry was implemented and rejected: it converts a spurious fallback into a spurious blank, because the innocent decision then carries an abort it never asked for.",
+    "regressionTests": "src/runtime/exterior-cell-runtime.test.ts, 'cancelled artifact loads are cancellations, not failed artifacts' -- one test reproduces the defect (pre-fix: representation 'predecessor', failedArtifactCount 1, fallbackCellCount 1) and two hold the fail-closed path in the other direction, on a transport failure and on a checksum mismatch.",
+    "whyTheCuratedBuildNeverShowedIt": "It needs several co-resident cells still loading when the scheduler re-decides. The curated composition had content in 13 cells of 883 and rarely had more than one or two in flight; the promoted composition has content in all 883 and fills all eight residency slots at every pose. The promotion did not create the defect -- it made a curated-era latent defect reachable.",
+    "sideEffectOfTheFix": "The transition pose now LOADS the three cells it used to abandon, so residency there rises from 718 entries / 167.6 MB to 876 entries / 236.6 MB -- 92.4% of the unchanged 256 MiB byte cap, within half a point of the 92.0% the T005 residency bound predicted for the worst reachable neighbourhood. The bound and the browser agree."
   }
 }

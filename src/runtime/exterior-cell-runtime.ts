@@ -1276,9 +1276,10 @@ export class ExteriorCellRuntime {
     const cacheKey = exteriorArtifactCacheKey(relativeRef, expectedChecksum);
     const cached = this.cache.get(cacheKey);
     if (cached) return cached;
-    this.requestedArtifactCount += 1;
-    this.artifactErrors.delete(cacheKey);
-    const value = await this.pool.load({
+    const attempt = (): Promise<Uint8Array | undefined> => {
+      this.requestedArtifactCount += 1;
+      this.artifactErrors.delete(cacheKey);
+      return this.pool.load({
       key: cacheKey,
       loader: async (poolSignal) => {
         try {
@@ -1292,10 +1293,66 @@ export class ExteriorCellRuntime {
           throw error;
         }
       },
-    }, signal);
+      }, signal);
+    };
+    let value = await attempt();
+    // A CANCELLATION THAT BELONGED TO SOMEBODY ELSE. Retry it once, for this
+    // caller, rather than inheriting an abandoned decision's abort. See the
+    // block below for why an undefined result with no recorded error can only be
+    // a cancellation. If THIS caller's signal is the one that aborted, the retry
+    // rejects immediately with its own AbortError -- `CitywideRequestPool.load`
+    // refuses an already-aborted signal -- so an abandoned decision still
+    // abandons and this cannot spin.
+    if (value === undefined && !this.artifactErrors.get(cacheKey)) value = await attempt();
     if (value === undefined) {
+      // A CANCELLATION, not a failure — and telling them apart is the whole of
+      // this branch.
+      //
+      // `CitywideRequestPool` shares one in-flight request per artifact key.
+      // When the last waiter on a key aborts, the pool aborts the underlying
+      // request, and a started task settles the SHARED promise with `undefined`
+      // instead of rejecting it. A decision that joined the entry in that window
+      // is therefore handed `undefined` for an artifact nobody said anything bad
+      // about.
+      //
+      // `artifactErrors` is the discriminator, and it is exact rather than
+      // heuristic: the loader's catch above records EVERY non-abort error there
+      // and deliberately records no abort. So an undefined result with nothing
+      // recorded is reachable only through cancellation, and an undefined result
+      // WITH a recorded error is a real failure that must keep failing closed.
+      //
+      // This used to synthesise `ExteriorRuntimeError("request-failed")` for
+      // both. `renderCell` cannot tell that from a verification failure, so a
+      // healthy cell fell back to base massing whenever the camera moved while
+      // it was loading. It was found in a browser on the promoted six-wave
+      // default — three cells fell back deterministically while all 170 of their
+      // artifacts byte-verified on disk and re-fetched cleanly over HTTP in the
+      // same session (`data/exterior-serving-20260817/default-session-residency.json`).
+      //
+      // The fix is two-step, and the order matters. A caller handed somebody
+      // else's cancellation RETRIES once (above): the shared entry is gone by
+      // then, so it issues its own request and renders normally, which is what a
+      // decision nobody cancelled should do. Only if that also comes back
+      // cancelled does this raise an abort — and `loadCell` re-throws aborts
+      // rather than falling back, so an abandoned decision abandons quietly
+      // instead of dragging a healthy cell down to base massing.
+      //
+      // Raising the abort WITHOUT the retry was tried and is wrong: it turns a
+      // spurious fallback into a spurious blank, because the innocent decision
+      // then carries an abort it never asked for.
+      //
+      // The counter is not incremented on this path either. A cancelled request
+      // is not a failed artifact, and counting it made the runtime's own metrics
+      // report a defect that was not there — which is exactly how this was
+      // mistaken for an emission defect in the first place.
+      //
+      // `CitywideRequestPool` is shared with the citywide runtime and is NOT
+      // changed: its `undefined` contract is depended on elsewhere, and the
+      // classification belongs to the caller that knows what its own errors mean.
+      const recorded = this.artifactErrors.get(cacheKey);
+      if (!recorded) throw new DOMException(`Exterior artifact ${relativeRef} load was cancelled.`, "AbortError");
       this.failedArtifactCount += 1;
-      throw this.artifactErrors.get(cacheKey) ?? new ExteriorRuntimeError("request-failed", `Exterior artifact ${relativeRef} could not be loaded.`, relativeRef);
+      throw recorded;
     }
     this.loadedArtifactCount += 1;
     return value;
