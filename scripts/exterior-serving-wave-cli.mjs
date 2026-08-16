@@ -77,6 +77,7 @@ import {
 import {
   EXTERIOR_SERVING_BASE_RELEASE_IDS,
   EXTERIOR_SERVING_CAPTURE,
+  EXTERIOR_SERVING_EVIDENCE_ID,
   EXTERIOR_SERVING_GENERATED_AT,
   EXTERIOR_SERVING_TEXTURE_ADMISSION,
   EXTERIOR_SERVING_WAVES,
@@ -681,7 +682,24 @@ async function runFingerprint(waveIds) {
   const targets = waveIds.length > 0 ? waveIds.map((waveId) => exteriorServingWave(waveId).retentionReleaseId) : EXTERIOR_SERVING_WAVES.map((entry) => entry.retentionReleaseId);
   const results = await fingerprintRetentionPayload(targets);
   const ok = results.every((entry) => entry.ok);
-  console.log(serialize({ ok, elapsedSeconds: Math.round((Date.now() - started) / 1000), results }));
+  const record = {
+    schemaVersion: "1.0",
+    artifact: "retention-payload-fingerprint",
+    note: "Every byte the six T004 retention inventories declare, re-hashed and compared. It is run after every serving wave because the whole island's evidence base is six local directories that nothing may edit and that the serving driver reads heavily. A byte-size-only check would miss exactly the in-place corruption a shared inode or an interrupted copy causes, so this re-hashes.",
+    scope: targets,
+    declaredFileCount: results.reduce((total, entry) => total + (entry.declaredFileCount ?? 0), 0),
+    verifiedFileCount: results.reduce((total, entry) => total + (entry.verifiedFileCount ?? 0), 0),
+    elapsedSeconds: Math.round((Date.now() - started) / 1000),
+    results,
+    ok,
+  };
+  if (waveIds.length === 0) {
+    const evidenceRoot = join(repositoryRoot, "data", EXTERIOR_SERVING_EVIDENCE_ID);
+    await mkdir(evidenceRoot, { recursive: true });
+    await writeFile(join(evidenceRoot, "retention-fingerprint.json"), serialize(record));
+    await writeFile(join(evidenceRoot, "retention-fingerprint.sha256"), `${sha256HexSync(serialize(record))}  retention-fingerprint.json\n`);
+  }
+  console.log(serialize(record));
   if (!ok) process.exit(1);
 }
 
