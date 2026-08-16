@@ -29,13 +29,32 @@
  * The unit of validation is ONE OWNERSHIP CELL, because the 256 MiB in-memory
  * replay bound makes a whole-wave manifest infeasible.
  *
- * usage: pnpm retention:validate -- --package public/data/<releaseId> [--census data/<id>/wave-census.json] [--max-cells N]
+ * ## Completeness is not optional
+ *
+ * The root's pin covers the owned-cell id SET, so a foreign cell cannot be
+ * appended. It does not cover the per-entry checksums, which are circular with
+ * the manifests that cite it. A DROPPED manifest is therefore only detectable
+ * against something outside the root, so this validator REFUSES to report `ok`
+ * unless it was given at least one completeness source:
+ *
+ *   --inventory  the committed payload inventory, whose `cellManifestCount` and
+ *                per-file entries the declared set must agree with, and whose
+ *                own bytes are checked against its committed `.sha256` sidecar;
+ *   --census     the committed wave census, whose generated/tombstoned/owned
+ *                accounting the packaged building set must close against.
+ *
+ * A run that walked a subset (`--max-cells`) cannot satisfy either and says so.
+ *
+ * usage: pnpm retention:validate -- --package public/data/<releaseId>
+ *          [--inventory data/<id>/payload-inventory.json]
+ *          [--census data/<id>/wave-census.json]
+ *          [--evidence-out FILE] [--max-cells N]
  */
 import { constants } from "node:fs";
-import { lstat, open, realpath } from "node:fs/promises";
+import { lstat, open, realpath, writeFile } from "node:fs/promises";
 import { isAbsolute, relative, resolve, sep } from "node:path";
 
-import { sha256HexBytes } from "../src/domain/deterministic-hash.ts";
+import { sha256HexBytes, sha256HexSync } from "../src/domain/deterministic-hash.ts";
 import {
   RETENTION_ROOT_REF,
   retentionTextureAdmissionPolicy,
@@ -49,7 +68,7 @@ const MAX_CELL_TOTAL_BYTES = 256 * 1024 * 1024;
 
 function fail(message) { throw new Error(message); }
 
-function args(argv) {
+export function args(argv) {
   const result = {};
   for (let index = 0; index < argv.length; index += 1) {
     const token = argv[index];
@@ -64,7 +83,7 @@ function args(argv) {
     index += 1;
   }
   // Refuse anything that even looks like an attempt to assert the policy.
-  for (const forbidden of ["texture-admission", "admission", "policy", "procedural-replay", "require-textured"]) {
+  for (const forbidden of ["texture-admission", "admission", "policy", "procedural-replay", "require-textured", "require-texture-free", "texture-free"]) {
     if (forbidden in result) fail(`--${forbidden} is refused: the texture admission policy is read from the package's pinned root and can never be supplied by an operator.`);
   }
   return result;
@@ -113,11 +132,34 @@ async function readJsonAt(root, relativeRef, label, maximumBytes, expectedChecks
 }
 
 /**
+ * Reads a COMMITTED record and checks it against its own `.sha256` sidecar.
+ *
+ * A completeness source that is not itself pinned would let an edited census
+ * excuse a dropped manifest, which is the failure this whole section exists to
+ * prevent.
+ */
+async function readCommittedRecord(path, label) {
+  const resolved = resolve(path);
+  const stat = await lstat(resolved);
+  if (!stat.isFile() || stat.isSymbolicLink() || stat.size > MAX_ROOT_BYTES) fail(`${label} must be a bounded regular non-symlink file.`);
+  const bytes = await boundedFile(await realpath(resolved), label, stat.size, MAX_ROOT_BYTES);
+  const text = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+  const sidecarPath = resolved.replace(/\.json$/u, ".sha256");
+  const sidecarStat = await lstat(sidecarPath).catch(() => null);
+  if (!sidecarStat?.isFile()) fail(`${label} carries no committed .sha256 sidecar; an unpinned completeness source cannot excuse a dropped manifest.`);
+  const sidecarBytes = await boundedFile(await realpath(sidecarPath), `${label} sidecar`, sidecarStat.size, MAX_ROOT_BYTES);
+  const declared = new TextDecoder("utf-8", { fatal: true }).decode(sidecarBytes).trim().split(/\s+/u)[0];
+  const measured = sha256HexBytes(bytes);
+  if (declared !== measured) fail(`${label} does not match its committed sidecar: declared ${declared}, measured ${measured}.`);
+  return JSON.parse(text);
+}
+
+/**
  * The RETENTION-SPECIFIC assertions, on top of the schema the assembly
  * validator already enforces. Each one is a property the wave contract claims
  * and the generic gate does not check.
  */
-function retentionAssertions(manifest) {
+export function retentionAssertions(manifest) {
   const issues = [];
   let fallbackCount = 0;
   let silhouetteCount = 0;
@@ -172,6 +214,8 @@ async function main() {
 
   // ---- 1. the pinned root, and the policy that comes only from it ----------
   const rootRead = await readJsonAt(root, RETENTION_ROOT_REF, "Retention root", MAX_ROOT_BYTES);
+  const rootFileChecksum = rootRead.checksum;
+  const rootFileBytes = rootRead.bytes.byteLength;
   const rootResult = validateRetentionReleaseRoot(rootRead.value);
   if (!rootResult.ok) fail(`Retention root is invalid:\n${rootResult.issues.join("\n")}`);
   const retentionRoot = rootResult.value;
@@ -246,26 +290,61 @@ async function main() {
     cellFingerprints.push({ cellId: declared.cellId, fingerprintSha256: replay.value.fingerprintSha256 });
   }
 
-  // ---- 3. tombstone accounting against the committed census ---------------
+  // ---- 3. COMPLETENESS, which is not optional --------------------------------
+  const walkedWholeSet = cells.length === retentionRoot.cellManifests.length;
+  let inventoryAccounting = null;
   let tombstones = null;
+
+  if (options.inventory) {
+    const inventory = await readCommittedRecord(options.inventory, "Payload inventory");
+    if (inventory.releaseId !== retentionRoot.releaseId) fail(`Payload inventory names release ${inventory.releaseId}, not ${retentionRoot.releaseId}.`);
+    if (inventory.retentionRoot?.rootChecksumSha256 !== retentionRoot.rootChecksumSha256) {
+      fail("Payload inventory pins a different retention root than the package carries.");
+    }
+    if (inventory.cellManifestCount !== retentionRoot.cellManifests.length) {
+      fail(`Payload inventory declares ${inventory.cellManifestCount} cell manifests against the root's ${retentionRoot.cellManifests.length}: a manifest has been dropped or appended.`);
+    }
+    // The root file itself is an inventory entry, so an edited root is caught by
+    // the committed record even though the root cannot pin its own bytes.
+    const rootEntry = (inventory.files ?? []).find((file) => file.path === RETENTION_ROOT_REF);
+    if (!rootEntry) fail(`Payload inventory declares no entry for ${RETENTION_ROOT_REF}.`);
+    if (rootEntry.checksumSha256 !== rootFileChecksum || rootEntry.byteSize !== rootFileBytes) {
+      fail(`${RETENTION_ROOT_REF} differs from the committed inventory: declared ${rootEntry.checksumSha256}/${rootEntry.byteSize}, measured ${rootFileChecksum}/${rootFileBytes}.`);
+    }
+    // Every declared manifest must also be an inventory entry at the same bytes.
+    const byPath = new Map((inventory.files ?? []).map((file) => [file.path, file]));
+    for (const declared of retentionRoot.cellManifests) {
+      const entry = byPath.get(declared.relativeRef);
+      if (!entry) fail(`Payload inventory declares no entry for ${declared.relativeRef}.`);
+      if (entry.checksumSha256 !== declared.checksumSha256 || entry.byteSize !== declared.byteSize) {
+        fail(`${declared.relativeRef} differs between the root and the committed inventory.`);
+      }
+    }
+    const inventoryManifestFiles = (inventory.files ?? []).filter((file) => /^public\/assemblies\/.+\.json$/u.test(file.path)).length;
+    if (inventoryManifestFiles !== retentionRoot.cellManifests.length) {
+      fail(`Payload inventory carries ${inventoryManifestFiles} assembly manifests against ${retentionRoot.cellManifests.length} declared.`);
+    }
+    inventoryAccounting = { cellManifestCount: inventory.cellManifestCount, fileCount: inventory.totals.fileCount, byteSize: inventory.totals.byteSize };
+  }
+
   if (options.census) {
-    const censusPath = resolve(options.census);
-    const stat = await lstat(censusPath);
-    if (!stat.isFile() || stat.isSymbolicLink() || stat.size > MAX_ROOT_BYTES) fail("Census must be a bounded regular non-symlink file.");
-    const bytes = await boundedFile(await realpath(censusPath), "Census", stat.size, MAX_ROOT_BYTES);
-    const census = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+    const census = await readCommittedRecord(options.census, "Census");
+    if (census.releaseId !== retentionRoot.releaseId) fail(`Census names release ${census.releaseId}, not ${retentionRoot.releaseId}.`);
     const owned = census.ownedBuildingCount;
     const generated = census.generatedBuildingCount;
     const tombstoned = Array.isArray(census.tombstones) ? census.tombstones.length : null;
     if (typeof owned !== "number" || typeof generated !== "number" || tombstoned === null) {
       fail("Census must declare ownedBuildingCount, generatedBuildingCount and a tombstones array for accounting.");
     }
+    if (census.tombstonedBuildingCount !== tombstoned) fail(`Census claims ${census.tombstonedBuildingCount} tombstoned against ${tombstoned} tombstone records.`);
     if (generated + tombstoned !== owned) {
       fail(`Census does not account for its own wave: ${generated} generated + ${tombstoned} tombstoned != ${owned} owned.`);
     }
-    // Only meaningful when the whole wave was validated in this run.
-    if (cells.length === retentionRoot.cellManifests.length && packagedBuildings.size !== generated) {
+    if (walkedWholeSet && packagedBuildings.size !== generated) {
       fail(`The package holds ${packagedBuildings.size} buildings against a census claiming ${generated} generated.`);
+    }
+    if (walkedWholeSet && census.lod1FallbackCount !== fallbackTotal) {
+      fail(`Census claims ${census.lod1FallbackCount} LOD-1 fallbacks against ${fallbackTotal} measured in the package.`);
     }
     for (const tombstone of census.tombstones) {
       if (packagedBuildings.has(tombstone.buildingId)) fail(`Building ${tombstone.buildingId} is both tombstoned and packaged.`);
@@ -274,7 +353,17 @@ async function main() {
     tombstones = { ownedBuildingCount: owned, generatedBuildingCount: generated, tombstonedBuildingCount: tombstoned };
   }
 
-  console.log(JSON.stringify({
+  // The refusal that makes the two above load-bearing rather than decorative.
+  if (!inventoryAccounting && !tombstones) {
+    fail("Refusing to report ok: no completeness source. A dropped cell manifest is invisible to the root's own pin, so --inventory and/or --census is REQUIRED.");
+  }
+  if (!walkedWholeSet) {
+    fail(`Refusing to report ok: --max-cells walked ${cells.length} of ${retentionRoot.cellManifests.length} declared manifests, which cannot establish completeness.`);
+  }
+
+  const evidence = {
+    schemaVersion: "1.0",
+    artifact: "retention-package-validation",
     ok: true,
     releaseId: retentionRoot.releaseId,
     waveId: retentionRoot.waveId,
@@ -290,8 +379,17 @@ async function main() {
     lod1FallbackCount: fallbackTotal,
     totalBytes,
     tombstones,
+    inventoryAccounting,
+    completenessSources: [inventoryAccounting ? "payload-inventory" : null, tombstones ? "wave-census" : null].filter(Boolean),
     cellFingerprints,
-  }, null, 2));
+  };
+  if (options["evidence-out"]) {
+    const outPath = resolve(options["evidence-out"]);
+    const serialized = `${JSON.stringify(evidence, null, 2)}\n`;
+    await writeFile(outPath, serialized);
+    await writeFile(outPath.replace(/\.json$/u, ".sha256"), `${sha256HexSync(serialized)}  ${outPath.split("/").pop()}\n`);
+  }
+  console.log(JSON.stringify({ ...evidence, cellFingerprints: `[${cellFingerprints.length} cells]` }, null, 2));
 }
 
 main().catch((error) => {

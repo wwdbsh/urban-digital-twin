@@ -25,15 +25,29 @@
       "lod1FallbackCount": 0,
       "cellManifestCount": 1,
       "payloadFileCount": 35,
-      "payloadByteSize": 9620802,
-      "retentionRootChecksumSha256": "c7deaeb120d762250965bb4197ffbde59746d78a68fdec2e2db91d2c7cbf0464",
-      "payloadInventorySha256": "18e6a0a4a32372d4cc1b079f791161bc7b604e9f170bd11b0be302ba80493fe1",
+      "payloadByteSize": 9620880,
+      "retentionRootChecksumSha256": "a4b6d0646e642e361d05f0d7f586f32d4851094d1fec6e88a5fafd1e985a7c26",
+      "payloadInventorySha256": "fd17c0b70cc02a104712724a9e0288938bba240a75e8baabfa16f80add7822fc",
       "waveCensusSha256": "d2923cc25e643b414086848831d1ab0f284d5b9d0bd78bd6d92c3bcb457d4928",
       "determinismReplay": {
         "compared": 28,
         "byteIdentical": 28,
         "cellsSampled": 1
       },
+      "determinismReplaySha256": "e8d520ab56d4b6d3f3dbe8ec375efa654d81e188bbebeb71771ccc90e8ba6403",
+      "validation": {
+        "declaredCellCount": 1,
+        "validatedCellCount": 1,
+        "silhouetteRecords": 14,
+        "lod1FallbackCount": 0,
+        "packagedBuildingCount": 14,
+        "completenessSources": [
+          "payload-inventory",
+          "wave-census"
+        ],
+        "textureAdmissionPolicy": "procedural-replay"
+      },
+      "retentionValidationSha256": "ea13926c24c7fe69d05a37d4e9f381595a43b79a9035d3459531e8ac85b9cba3",
       "blenderAgreement": "pending Blender connection"
     },
     {
@@ -47,15 +61,29 @@
       "lod1FallbackCount": 4,
       "cellManifestCount": 149,
       "payloadFileCount": 14661,
-      "payloadByteSize": 1674977793,
-      "retentionRootChecksumSha256": "50bd211c41f2984f98859d36a5d96e5f032adf1a6443ef8b262b766297294ee3",
-      "payloadInventorySha256": "4a463032dfac51775650547f7d4c64216293024db754a8c39ab43d3bf05afc0c",
+      "payloadByteSize": 1674986296,
+      "retentionRootChecksumSha256": "9310e4486a74aa4fd425ce2efec7286e48d124c4412ee4a89467a4d3fcd52d7f",
+      "payloadInventorySha256": "185ed3ab5f457245d7144e105302d75c4d680d49dd61a0f2fd30f4028ce87b17",
       "waveCensusSha256": "3983f8b1324aedd286b404dfcef5579c00407861770fa357c0553af2922f136c",
       "determinismReplay": {
         "compared": 40,
         "byteIdentical": 40,
         "cellsSampled": 40
       },
+      "determinismReplaySha256": "468c66328f9a2a0747696a51eeaee7e99ff2eadf1a26c9afc17b7647b13b66b1",
+      "validation": {
+        "declaredCellCount": 149,
+        "validatedCellCount": 149,
+        "silhouetteRecords": 7179,
+        "lod1FallbackCount": 4,
+        "packagedBuildingCount": 7179,
+        "completenessSources": [
+          "payload-inventory",
+          "wave-census"
+        ],
+        "textureAdmissionPolicy": "procedural-replay"
+      },
+      "retentionValidationSha256": "d645d4bc7ead989d853e06e084d7840976fbadcb3ca859b7da7e70710931349f",
       "blenderAgreement": "pending Blender connection"
     },
     {
@@ -69,15 +97,29 @@
       "lod1FallbackCount": 114,
       "cellManifestCount": 126,
       "payloadFileCount": 13021,
-      "payloadByteSize": 1006166980,
-      "retentionRootChecksumSha256": "95e8623cb702bf6c605b01c7634792ac5bdc8ab45e0e6f69c917c2e77f42426d",
-      "payloadInventorySha256": "5dff76314264fb583a353de681c8f3d8f39bcdfe3797e4febfd50dca0321d699",
+      "payloadByteSize": 1006174160,
+      "retentionRootChecksumSha256": "987c19e84b3b5e2c4e61aaa79d74bbace37da67e82691db877f4dbe94dd8f2be",
+      "payloadInventorySha256": "78720085d14dd6e6654823d94a722c2f1da212624740d11629e6c1d333c55594",
       "waveCensusSha256": "faca2938d637df2e5fa09b29dbf2b4d66269dcc5036bb6d96c40fa0fe161485e",
       "determinismReplay": {
         "compared": 40,
         "byteIdentical": 40,
         "cellsSampled": 40
       },
+      "determinismReplaySha256": "9a8227057fe167b2fd061f6ba48bb81f4028073795ea06cf2d9dbec0627c07bf",
+      "validation": {
+        "declaredCellCount": 126,
+        "validatedCellCount": 126,
+        "silhouetteRecords": 6382,
+        "lod1FallbackCount": 114,
+        "packagedBuildingCount": 6382,
+        "completenessSources": [
+          "payload-inventory",
+          "wave-census"
+        ],
+        "textureAdmissionPolicy": "procedural-replay"
+      },
+      "retentionValidationSha256": "5d5db3dc5a8de89222ef59099a73dda82c5b23f6a153df90ef7c9c73d3f9bb86",
       "blenderAgreement": "pending Blender connection"
     },
     {
@@ -91,15 +133,29 @@
       "lod1FallbackCount": 289,
       "cellManifestCount": 176,
       "payloadFileCount": 19477,
-      "payloadByteSize": 1202442064,
-      "retentionRootChecksumSha256": "b3a570605036a29ba573693e09725ad1014f8803a5aeb380ea302931d736a3c8",
-      "payloadInventorySha256": "605fc8bfda695de31e8aae1f0cdeef5265a62cda5fe626c885f70fcd0e6ddf77",
+      "payloadByteSize": 1202452116,
+      "retentionRootChecksumSha256": "230fdcb51c4e69b4948e052c7460aaffa22ff2dd19a8e2e02625353884354a3d",
+      "payloadInventorySha256": "4bdcc7a7e00d1140e9a46922b8f5e21e08a89ab89285654df435737280ede8db",
       "waveCensusSha256": "993de1870468c36b86134241ccefe000d2eb4acad7543ca9ea33f22efd5318ac",
       "determinismReplay": {
         "compared": 40,
         "byteIdentical": 40,
         "cellsSampled": 40
       },
+      "determinismReplaySha256": "b86748d1807104246457adeee5c72f4ee8a16e0885faff3b3b5a482e062a8ee2",
+      "validation": {
+        "declaredCellCount": 176,
+        "validatedCellCount": 176,
+        "silhouetteRecords": 9560,
+        "lod1FallbackCount": 289,
+        "packagedBuildingCount": 9560,
+        "completenessSources": [
+          "payload-inventory",
+          "wave-census"
+        ],
+        "textureAdmissionPolicy": "procedural-replay"
+      },
+      "retentionValidationSha256": "1363da53897e74bc8aa676a3246dee4808744ab8a9269e3fca9f7f99d45befc2",
       "blenderAgreement": "pending Blender connection"
     },
     {
@@ -113,15 +169,29 @@
       "lod1FallbackCount": 3,
       "cellManifestCount": 249,
       "payloadFileCount": 23867,
-      "payloadByteSize": 1469180692,
-      "retentionRootChecksumSha256": "eee350a7887ef6243f257410f41d98348ad4efd257eca88e7fb0865332d33ca4",
-      "payloadInventorySha256": "5a9e027b264a18c96ba35b92c8442d18025445411628791b4f101d46c60f684b",
+      "payloadByteSize": 1469194885,
+      "retentionRootChecksumSha256": "239295f3f3adbb1f9066677d70f6e199a6298732d45c74236ed58b9ca559bf65",
+      "payloadInventorySha256": "1a43bf0682247c9f6ced2a9c52ec41f283c0a4027e9accbdff2c42353bf904de",
       "waveCensusSha256": "e771eed7c806a78439d570c7896aab898af7592d627cf3d4cfa7a8b41e31947a",
       "determinismReplay": {
         "compared": 40,
         "byteIdentical": 40,
         "cellsSampled": 40
       },
+      "determinismReplaySha256": "32f405b7b615d60b68738dd82e9478e18f4f8984da6593512d667810e4db70b8",
+      "validation": {
+        "declaredCellCount": 249,
+        "validatedCellCount": 249,
+        "silhouetteRecords": 11682,
+        "lod1FallbackCount": 3,
+        "packagedBuildingCount": 11682,
+        "completenessSources": [
+          "payload-inventory",
+          "wave-census"
+        ],
+        "textureAdmissionPolicy": "procedural-replay"
+      },
+      "retentionValidationSha256": "d89b2f378fd26e4af88cfe38bd6a1e6e531c1c8ee37ef7beb732ee3036904974",
       "blenderAgreement": "pending Blender connection"
     },
     {
@@ -135,15 +205,29 @@
       "lod1FallbackCount": 14,
       "cellManifestCount": 182,
       "payloadFileCount": 20713,
-      "payloadByteSize": 1053432311,
-      "retentionRootChecksumSha256": "0abb9ec18d1bb713f4dd630a88da95790847e150f0f13b6cdd86103182b7fee4",
-      "payloadInventorySha256": "b7e2eab8cc6e32fe35d59c771634de43a6d7e67b0f924506e6a322c5a68cbb08",
+      "payloadByteSize": 1053442677,
+      "retentionRootChecksumSha256": "376c57cf29030d44b8e158fb88e18622954a2019e512f0d9b255e2d32a53caf0",
+      "payloadInventorySha256": "aabdc1e066cbfb38dab8bf84817f8ecf7b36abbac111c629ca5149d5a8726083",
       "waveCensusSha256": "3badc362fdddc9a00dcb833251c274db1d806cdba0affc321e36ea3156356293",
       "determinismReplay": {
         "compared": 40,
         "byteIdentical": 40,
         "cellsSampled": 40
       },
+      "determinismReplaySha256": "77b17967536e18968f1e0b1a6b817a810e070a5ac4cb17dbcc1c91c2d29a8bff",
+      "validation": {
+        "declaredCellCount": 182,
+        "validatedCellCount": 182,
+        "silhouetteRecords": 10172,
+        "lod1FallbackCount": 14,
+        "packagedBuildingCount": 10172,
+        "completenessSources": [
+          "payload-inventory",
+          "wave-census"
+        ],
+        "textureAdmissionPolicy": "procedural-replay"
+      },
+      "retentionValidationSha256": "2efd2045abd7f5212b86fe2d0550e151a1b48b5937c5fb954d9d64beff2f8382",
       "blenderAgreement": "pending Blender connection"
     }
   ],
@@ -153,7 +237,7 @@
     "recovered": 694,
     "tombstoned": 205,
     "lod1FallbackCount": 424,
-    "payloadByteSize": 6415820642,
+    "payloadByteSize": 6415871014,
     "shippedPlusTombstonedEqualsOwned": true
   },
   "tombstoneCategories": {
@@ -175,10 +259,16 @@
     "runtimeRollbackSurface": "zero",
     "conveyance": "none"
   },
+  "payloadRetentionHold": {
+    "status": "HOLD",
+    "directories": "public/data/*-c1 (six, gitignored)",
+    "approximateBytes": 6400000000,
+    "reason": "The per-wave 16-sample BLENDER AGREEMENT has not run — Blender MCP was disconnected for the whole of this task. Those samples must be taken from the SAME bytes these records pin. Deleting these payload directories therefore costs a full island regeneration before the agreement can be run at all, and the regenerated bytes would need re-validating before they could carry it.",
+    "releaseCondition": "Release the hold only after the per-wave Blender agreement has run, or after an explicit decision that it will not be run."
+  },
   "notClaimedHere": [
     "Any visual, geographic, architectural, accessibility or performance acceptance.",
     "The per-wave 16-sample Blender agreement, which is a separate evidence item and is PENDING CONNECTION for all six waves.",
     "Cache-ceiling and streaming benchmarks against a two-LOD population, which belong to T005/T006."
-  ],
-  "elapsedSeconds": 227
+  ]
 }

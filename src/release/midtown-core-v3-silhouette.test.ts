@@ -58,6 +58,33 @@ function planFor(building: PilotBuildingSource, grammar: V3GrammarOptions = {}):
 }
 
 /**
+ * A plan from an explicit rectangular footprint, for shapes Block 835 has none of.
+ *
+ * The fourteen real buildings are all large, so every raster comparison over
+ * them lands far INSIDE the 2% cap. The buildings the cap actually excludes are
+ * small and narrow, and a cross-check that never visits that regime has not
+ * checked the instrument where the decision is made.
+ */
+function narrowPlan(buildingId: string, widthMm: number, depthMm: number, heightMm: number, grammar: V3GrammarOptions = {}): V3Plan {
+  const outer: [number, number][] = [[0, 0], [widthMm, 0], [widthMm, depthMm], [0, depthMm]];
+  const result = generateV3FacadePlan({
+    schemaVersion: "3.0",
+    buildingId,
+    generatedAt: "2026-08-11T00:00:00.000Z",
+    seed: "block-835-reference-v3",
+    tool: { id: "urban-digital-twin:block835-v3", version: "3.0.0" },
+    geometry: { unit: "millimeter", footprint: { outer }, baseElevationMm: 0, heightMm },
+    sourceAnchors: [
+      { id: "anchor:footprint", kind: "footprint", sourceRefId: "source-ref:jh45-qr5r", fingerprintSha256: "a".repeat(64) },
+      { id: "anchor:height", kind: "height", sourceRefId: "source-ref:oti-height", fingerprintSha256: "b".repeat(64) },
+    ],
+    parameters: deriveV3Parameters({ footprintOuterMm: outer, heightMm }, grammar),
+  }, grammar);
+  if (!result.ok) throw new Error(`refused: ${stableSerialize(result.issues)}`);
+  return result.value;
+}
+
+/**
  * A plan-shaped value carrying only what the instrument reads.
  *
  * The same device `citywide-overview-tier-candidates.test.ts` uses, for the same
@@ -393,6 +420,44 @@ describe("(T004) the exact metric agrees with an independent rasterization of th
     // correct rasterization of a correct union looks like. Bounded at 1e-4,
     // which is still 200x inside the 0.02 cap the number is compared against.
     expect(worstAbsoluteDifference).toBeLessThan(1e-4);
+  });
+
+  /**
+   * THE REGIME THE CAP ACTUALLY DECIDES IN.
+   *
+   * A narrow, low building whose edge-on silhouette is small enough that the
+   * outward placements are a large share of it — the shape ADR 0050 says the
+   * fallback set is made of. The agreement above is measured where every
+   * deviation is ~1e-3; this measures it where the deviation is over the 2% cap,
+   * which is the only regime in which the number changes a decision.
+   */
+  it("agrees with the rasterized tessellation on a narrow plan that is OVER the cap", () => {
+    const plan = narrowPlan("doitt:synthetic-narrow", 5_000, 24_000, 9_000, V3_ROOFTOP_HONESTY_OPTIONS);
+    const exact = midtownCoreV3SilhouetteMeasurement(plan);
+    // Not a vacuous test: this plan must actually be over the cap, or it is
+    // measuring the same easy regime as the fourteen.
+    expect(exact.deviationRatio).toBeGreaterThan(MIDTOWN_CORE_V3_SILHOUETTE_MAXIMUM_RATIO);
+    expect(exact.withinBound).toBe(false);
+    let worst = 0;
+    let worstRelative = 0;
+    for (const view of exact.perView) {
+      const difference = Math.abs(rasterDeviationRatio(plan, view.viewId) - view.deviationRatio);
+      worst = Math.max(worst, difference);
+      if (view.deviationRatio > 0) worstRelative = Math.max(worstRelative, difference / view.deviationRatio);
+    }
+    // THE ABSOLUTE BOUND IS LOOSER HERE, AND THAT IS THE RASTER'S LIMIT RATHER
+    // THAN THE INSTRUMENT'S. This footprint is 5 m wide, so its edge-on
+    // silhouette covers a small part of the 1,024-pixel frame and each pixel is
+    // a correspondingly larger share of the fine area being divided by. The
+    // quantization floor therefore rises: measured 4.389e-4 absolute, against a
+    // deviation of 0.0853 — a RELATIVE agreement of 3.68%.
+    //
+    // Both are stated because only the relative one is meaningful in this
+    // regime, and a reader given the 1e-4 bound from the fourteen would
+    // reasonably expect it to hold here and be wrong.
+    expect(exact.deviationRatio).toBeGreaterThan(0.08);
+    expect(worst).toBeLessThan(1e-3);
+    expect(worstRelative).toBeLessThan(0.05);
   });
 
 });

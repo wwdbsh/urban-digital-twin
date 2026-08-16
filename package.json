@@ -125,7 +125,8 @@
     "exterior-scheduler:roam-evidence": "node --experimental-strip-types scripts/exterior-scheduler-trace-capture-cli.mjs roam-evidence",
     "exterior-scheduler:evidence": "node --experimental-strip-types scripts/exterior-scheduler-trace-capture-cli.mjs evidence",
     "mass-generation:stage0": "node --max-old-space-size=8192 scripts/mass-generation-stage0-cli.mjs",
-    "mass-generation:wave": "node --max-old-space-size=8192 scripts/mass-generation-wave-cli.mjs"
+    "mass-generation:wave": "node --experimental-strip-types --max-old-space-size=8192 scripts/mass-generation-wave-cli.mjs",
+    "mass-generation:coverage": "node --experimental-strip-types --max-old-space-size=8192 scripts/mass-generation-coverage-cli.mjs"
   },
   "dependencies": {
     "cesium": "1.143.0",

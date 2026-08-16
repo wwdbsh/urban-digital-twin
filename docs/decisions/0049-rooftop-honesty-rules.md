@@ -247,11 +247,17 @@ the clamp at any bound.
 The clamp bounds all six; it does not make a 305 mm building under 432 mm of
 designed rooftop a good claim, which is Decision 3's problem and not this ADR's.
 
-**Neither rule materially affects the LOD-transition silhouette, and the
-exception is named.** Rooftop prisms are emitted at both levels of detail, so
-they cancel. Across the 19 stride buildings over the multi-LOD 2% cap, the
-largest change either rule makes to a deviation ratio is 7.75e-5 and all
+**Neither rule materially affects the LOD-transition silhouette OF THE OVER-CAP
+SET, and the exception is named.** Rooftop prisms are emitted at both levels of
+detail, so they cancel. The 7.75e-5 bound below is measured over the 19 stride
+buildings that sit at or over the multi-LOD 2% cap, and it is a statement about
+THOSE buildings only — it is not a bound on the deviation change across the
+whole population, which this ADR did not measure and does not claim. All
 nineteen are already over the cap under the shipped grammar.
+
+Scoped the same way at island scale: among the **425** over-cap parents the
+exhaustive pass found, exactly **one** (`doitt:401323`) crosses the cap
+*because* of these rules.
 
 The EXHAUSTIVE island pass, which supersedes that stride as evidence, records
 425 over-cap parents of 45,032 measured (0.944%), and attributes every one:

@@ -205,6 +205,20 @@ export interface RetentionReleaseRoot {
   textureAdmission: ExteriorTextureAdmission;
   baseIdentitySet: { id: string; checksumSha256: string };
   ownershipLedger: { id: string; checksumSha256: string };
+  /**
+   * EVERY ownership cell the ledger gives this wave, sorted.
+   *
+   * A ledger property, known before a single manifest exists, so it is NOT
+   * circular with the manifests that cite this root's pin — and it is therefore
+   * INSIDE the pin. It is what makes a dropped or appended cell manifest a
+   * detectable edit rather than an invisible one: the validator requires the
+   * declared manifest set to be a subset of this list, with no duplicates.
+   *
+   * A SUBSET rather than an equality, because a cell whose every owned parent
+   * was refused packages no asset and carries no manifest. Equality would make
+   * an honest all-refused cell a validation failure.
+   */
+  ownedCellIds: string[];
   cellManifests: RetentionCellManifestRef[];
   /** What this package is and is not, carried in the bytes rather than in prose elsewhere. */
   retention: string;
@@ -212,28 +226,30 @@ export interface RetentionReleaseRoot {
 
 /**
  * The root's IDENTITY PIN, over everything except its own checksum field and
- * its cell-manifest list.
+ * the cell-manifest ENTRIES.
  *
- * The two exclusions are not conveniences, they are forced. Each cell manifest
- * cites `release.rootChecksumSha256`, so a manifest's bytes depend on this
- * value; if this value in turn covered those bytes the definition would be
- * circular and no package could satisfy it. The list is therefore excluded and
- * the pin covers exactly the surface a manifest cites plus THE ADMISSION
- * POLICY — which is the whole point, since the policy is what the validator
- * reads out of this root and must not be editable after the fact.
+ * Exactly ONE thing here is circular, and it is worth being precise about which:
+ * each cell manifest cites `release.rootChecksumSha256`, so each entry's
+ * `checksumSha256` and `byteSize` depend on this value. A pin covering those
+ * would be unsatisfiable.
  *
- * The cell-manifest list is not left unchecked. Every entry carries its
- * manifest's own SHA-256 and byte size, which the validator verifies on read,
- * and every manifest cross-cites this pin, so a manifest belonging to another
- * package — or a root re-pointed at manifests it did not produce — fails the
- * cross-check. What the exclusion costs is precisely one thing: the count of
- * manifests is not itself pinned, so the census accounting is what proves no
- * cell was dropped, and the validator refuses to compare it unless the whole
- * declared set was walked in that run.
+ * The manifest COUNT and the CELL-ID SET are NOT circular — they are properties
+ * of the ownership ledger, known before a manifest exists. So they are pinned,
+ * through `ownedCellIds` above: the validator requires the declared manifest set
+ * to be a duplicate-free subset of that list, and requires the count to agree
+ * with the committed payload inventory. Dropping or appending a manifest is
+ * therefore a detectable edit, not a gap.
+ *
+ * What remains outside the pin is only the per-entry checksum and byte size, and
+ * those are covered by the two cross-checks the validator performs anyway: each
+ * entry's SHA-256 is verified against the manifest's actual bytes on read, and
+ * each manifest cross-cites this root's id and pin, so a manifest from another
+ * package — or a root re-pointed at manifests it did not produce — fails.
  */
 export function retentionRootChecksum(root: Omit<RetentionReleaseRoot, "rootChecksumSha256"> & { rootChecksumSha256?: string }): string {
   const identity = { ...root };
   delete (identity as { cellManifests?: unknown }).cellManifests;
+  // `ownedCellIds` deliberately REMAINS in the digest; see the note above.
   return sha256HexSync(stableSerialize({ ...identity, rootChecksumSha256: "" }));
 }
 
@@ -264,8 +280,17 @@ export function validateRetentionReleaseRoot(value: unknown): { ok: true; value:
     if (typeof record.id !== "string" || record.id.length === 0) push(`${key}.id must be a non-empty string.`);
     if (typeof record.checksumSha256 !== "string" || !/^[0-9a-f]{64}$/u.test(record.checksumSha256)) push(`${key}.checksumSha256 must be lowercase hex sha256.`);
   }
+  const ownedCellIds = Array.isArray(root.ownedCellIds) ? root.ownedCellIds : null;
+  if (!ownedCellIds || ownedCellIds.length === 0 || ownedCellIds.some((id) => typeof id !== "string" || id.length === 0)) {
+    push("ownedCellIds must be a non-empty array of cell ids.");
+  } else if (ownedCellIds.some((id, index) => index > 0 && id <= ownedCellIds[index - 1]!)) {
+    push("ownedCellIds must be sorted and duplicate-free.");
+  }
+  const ownedCellSet = new Set(ownedCellIds ?? []);
   if (!Array.isArray(root.cellManifests) || root.cellManifests.length === 0) {
     push("cellManifests must be a non-empty array.");
+  } else if (root.cellManifests.length > ownedCellSet.size) {
+    push(`cellManifests declares ${root.cellManifests.length} entries against ${ownedCellSet.size} owned cells.`);
   } else {
     const seenCells = new Set<string>();
     const seenRefs = new Set<string>();
@@ -274,6 +299,7 @@ export function validateRetentionReleaseRoot(value: unknown): { ok: true; value:
       const record = entry as Record<string, unknown>;
       if (typeof record.cellId !== "string" || record.cellId.length === 0) push(`cellManifests[${index}].cellId must be a non-empty string.`);
       else if (seenCells.has(record.cellId)) push(`cellManifests[${index}].cellId is declared twice: ${record.cellId}`);
+      else if (ownedCellSet.size > 0 && !ownedCellSet.has(record.cellId)) push(`cellManifests[${index}].cellId is not a cell this wave owns: ${record.cellId}`);
       else seenCells.add(record.cellId);
       if (typeof record.relativeRef !== "string" || record.relativeRef.length === 0) push(`cellManifests[${index}].relativeRef must be a non-empty string.`);
       else if (seenRefs.has(record.relativeRef)) push(`cellManifests[${index}].relativeRef is declared twice: ${record.relativeRef}`);

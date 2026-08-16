@@ -1056,6 +1056,8 @@ export function midtownCoreV3AssemblyLods(options: {
    * serves its fine level at every range because it has nothing else.
    */
   lod0MaxDistanceMeters: number | null;
+  /** The writer's already-computed measurement of this plan; see the record builder. */
+  silhouetteMeasurement?: MidtownCoreV3SilhouetteMeasurement;
 }): AssemblyLod[] {
   const [fine, coarse] = options.assets;
   if (!fine || !coarse || options.assets.length !== 2) {
@@ -1065,6 +1067,7 @@ export function midtownCoreV3AssemblyLods(options: {
   const silhouette = midtownCoreV3SilhouetteRecord(options.plan, {
     expectedPlanHashSha256: options.plan.planHashSha256,
     lod1: options.lod1.variant,
+    ...(options.silhouetteMeasurement ? { measurement: options.silhouetteMeasurement } : {}),
   });
   return [
     {

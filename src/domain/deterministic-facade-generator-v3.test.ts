@@ -817,7 +817,7 @@ describe("(T003) no shipping module reaches for the extended envelope", () => {
     const decoder = new TextDecoder("utf-8");
     const importers: string[] = [];
     let scanned = 0;
-    for (const root of ["src/runtime", "src/app", "src/data", "src/ingestion", "src/domain"]) {
+    for (const root of ["src/runtime", "src/app", "src/data", "src/ingestion", "src/domain", "src/features"]) {
       for (const entry of readdirSync(root, { recursive: true, withFileTypes: true })) {
         if (!entry.isFile() || !/\.(?:ts|tsx)$/u.test(entry.name)) continue;
         const path = `${entry.parentPath}/${entry.name}`.replace(/\\/gu, "/");
@@ -827,6 +827,9 @@ describe("(T003) no shipping module reaches for the extended envelope", () => {
         if (decoder.decode(readFileSync(path)).includes("mass-generation-retention")) importers.push(path);
       }
     }
+    // The bundle entry point is a file rather than a tree, so it is named.
+    scanned += 1;
+    if (decoder.decode(readFileSync("src/main.tsx")).includes("mass-generation-retention")) importers.push("src/main.tsx");
     expect(scanned).toBeGreaterThan(20);
     expect(importers).toEqual([]);
   });

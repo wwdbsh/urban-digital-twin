@@ -105,6 +105,48 @@ describe("the T004 stage-4 coverage record", () => {
     }
   });
 
+  it("folds in the VALIDATOR's own output, completely and per wave (F4)", () => {
+    for (const row of coverage.waves) {
+      const v = row.validation;
+      // Walked everything it declared, and declared everything the inventory has.
+      expect(v.validatedCellCount).toBe(v.declaredCellCount);
+      expect(v.declaredCellCount).toBe(row.cellManifestCount);
+      // One silhouette record per generated building, fallbacks included.
+      expect(v.silhouetteRecords).toBe(row.materialized);
+      expect(v.packagedBuildingCount).toBe(row.materialized);
+      expect(v.lod1FallbackCount).toBe(row.lod1FallbackCount);
+      expect(v.textureAdmissionPolicy).toBe("procedural-replay");
+      // Completeness was actually established, not merely offered.
+      expect(v.completenessSources).toContain("payload-inventory");
+      expect(v.completenessSources).toContain("wave-census");
+    }
+  });
+
+  it("pins the committed validator and replay records by checksum (F12)", () => {
+    for (const row of coverage.waves) {
+      const recordRoot = join(repositoryRoot, "data", row.c1ReleaseId);
+      for (const [file, pinned] of [["retention-validation.json", row.retentionValidationSha256], ["determinism-replay.json", row.determinismReplaySha256]]) {
+        const text = readFileSync(join(recordRoot, file), "utf8");
+        expect(sha256HexSync(text)).toBe(pinned);
+        // And the record agrees with its own committed sidecar.
+        const sidecar = readFileSync(join(recordRoot, file.replace(/\.json$/u, ".sha256")), "utf8").trim().split(/\s+/u)[0];
+        expect(sidecar).toBe(pinned);
+      }
+    }
+  });
+
+  it("carries no host timing in its hashed bytes (F11)", () => {
+    // A wall-clock number inside the record would make a byte-identical re-run
+    // impossible on another machine, which is what the sidecar promises a reader.
+    expect(coverage.elapsedSeconds).toBeUndefined();
+    expect(JSON.stringify(coverage)).not.toMatch(/elapsedSeconds/u);
+  });
+
+  it("states the PAYLOAD RETENTION HOLD", () => {
+    expect(coverage.payloadRetentionHold.status).toBe("HOLD");
+    expect(coverage.payloadRetentionHold.reason).toMatch(/Blender/u);
+  });
+
   it("records a byte-identical determinism replay for every wave", () => {
     for (const row of coverage.waves) {
       expect(row.determinismReplay.compared).toBeGreaterThan(0);

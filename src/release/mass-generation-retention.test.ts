@@ -28,6 +28,7 @@ const ADMISSION = {
 };
 
 const CELL_ID = "manhattan-exterior-cell-w01-000001-14-19300-17921";
+const CELL_ID_2 = "manhattan-exterior-cell-w01-000002-14-19300-17922";
 
 function draft(overrides: Partial<RetentionReleaseRoot> = {}): RetentionReleaseRoot {
   const base = {
@@ -43,6 +44,7 @@ function draft(overrides: Partial<RetentionReleaseRoot> = {}): RetentionReleaseR
     textureAdmission: ADMISSION,
     baseIdentitySet: { id: "base:set", checksumSha256: "a".repeat(64) },
     ownershipLedger: { id: "ledger:test", checksumSha256: "b".repeat(64) },
+    ownedCellIds: [CELL_ID, CELL_ID_2],
     cellManifests: [{ cellId: CELL_ID, relativeRef: retentionCellManifestRef(CELL_ID), byteSize: 1024, checksumSha256: "c".repeat(64) }],
     retention: RETENTION_STATEMENT,
     ...overrides,
@@ -107,12 +109,33 @@ describe("the retention root pin", () => {
     expect(result.issues.join(" ")).toMatch(/self-pin disagrees/u);
   });
 
-  it("does NOT cover the cell-manifest list, because a manifest cites the pin", () => {
+  it("covers the owned-cell id SET, so a foreign cell cannot be appended", () => {
+    const root = draft();
+    const foreign = { ...root, cellManifests: [...root.cellManifests, { cellId: "manhattan-exterior-cell-w05-000900-14-19300-17999", relativeRef: retentionCellManifestRef("manhattan-exterior-cell-w05-000900-14-19300-17999"), byteSize: 2048, checksumSha256: "d".repeat(64) }] };
+    const result = validateRetentionReleaseRoot(foreign);
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.issues.join(" ")).toMatch(/not a cell this wave owns/u);
+  });
+
+  it("MOVES when the owned-cell set is edited, because that set is a ledger property", () => {
+    const root = draft();
+    const shrunk = { ...root, ownedCellIds: [CELL_ID] };
+    expect(retentionRootChecksum(shrunk)).not.toBe(root.rootChecksumSha256);
+  });
+
+  it("refuses more manifests than the wave owns cells", () => {
+    const root = draft({ ownedCellIds: [CELL_ID] } as never);
+    const extra = { ...root, cellManifests: [root.cellManifests[0]!, { cellId: CELL_ID_2, relativeRef: retentionCellManifestRef(CELL_ID_2), byteSize: 9, checksumSha256: "e".repeat(64) }] };
+    expect(validateRetentionReleaseRoot(extra).ok).toBe(false);
+  });
+
+  it("does NOT cover the per-entry checksums, because a manifest cites the pin", () => {
     const root = draft();
     // Appending a manifest entry cannot move the pin — that is the documented
     // cost of breaking the circularity, and the entry's own checksum plus the
     // manifest's cross-citation are what cover it instead.
-    const extended = { ...root, cellManifests: [...root.cellManifests, { cellId: "manhattan-exterior-cell-w01-000002-14-19300-17922", relativeRef: retentionCellManifestRef("manhattan-exterior-cell-w01-000002-14-19300-17922"), byteSize: 2048, checksumSha256: "d".repeat(64) }] };
+    const extended = { ...root, cellManifests: [...root.cellManifests, { cellId: CELL_ID_2, relativeRef: retentionCellManifestRef(CELL_ID_2), byteSize: 2048, checksumSha256: "d".repeat(64) }] };
     expect(retentionRootChecksum(extended)).toBe(root.rootChecksumSha256);
     expect(validateRetentionReleaseRoot(extended).ok).toBe(true);
   });

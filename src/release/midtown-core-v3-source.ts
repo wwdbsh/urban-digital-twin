@@ -360,6 +360,9 @@ export function materializeMidtownCoreV3Cells(input: MidtownCoreV3MaterializeInp
             lod1: written.lod1,
             budgets: profile.budgets,
             lod0MaxDistanceMeters: input.assemblyLods.lod0MaxDistanceMeters,
+            // Already measured to decide the variant; measuring again would put
+            // the island's rectangle-union pass through twice for one number.
+            silhouetteMeasurement: written.silhouette,
           }),
           truthTiers: written.truthTiers,
         });

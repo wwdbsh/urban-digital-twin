@@ -216,6 +216,9 @@ async function runWave(waveId, options) {
     generatedAt: profile.generatedAt,
     baseIdentitySet: { id: ledger.baseIdentitySet.id, checksumSha256: ledger.baseIdentitySet.checksumSha256 },
     ownershipLedger: { id: ledger.ledgerId, checksumSha256: ledgerChecksumSha256 },
+    // A LEDGER property, fixed before a manifest exists, so it is inside the pin
+    // and a dropped or appended cell becomes a detectable edit.
+    ownedCellIds: cells.map((cell) => cell.cellId).sort(),
   };
   // The manifests cite the root's checksum, and the root pins the manifests'.
   // That is circular unless one side is fixed first, so the root is pinned over

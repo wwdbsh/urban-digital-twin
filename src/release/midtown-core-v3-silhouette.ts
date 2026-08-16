@@ -320,14 +320,32 @@ export type MidtownCoreV3Lod1Variant = "shed-protrusions" | "full-geometry";
  */
 export function midtownCoreV3SilhouetteRecord(
   plan: V3Plan,
-  options: { expectedPlanHashSha256: string; lod1: MidtownCoreV3Lod1Variant },
+  options: {
+    expectedPlanHashSha256: string;
+    lod1: MidtownCoreV3Lod1Variant;
+    /**
+     * A measurement of THIS plan the caller already has.
+     *
+     * The rectangle-union pass is the expensive half of this function, and on a
+     * two-LOD wave the writer has already run it to DECIDE the LOD-1 variant.
+     * Recomputing it here would measure every building of the island twice to
+     * get the same number. Supplying it is an optimisation and never a claim:
+     * it is rejected below unless it binds this exact plan.
+     */
+    measurement?: MidtownCoreV3SilhouetteMeasurement;
+  },
 ): MidtownCoreV3SilhouetteRecord {
   if (plan.planHashSha256 !== options.expectedPlanHashSha256) {
     throw new Error(
       `Silhouette measurement for ${plan.buildingId} would bind plan hash ${plan.planHashSha256}, but the asset it is being attached to declares ${options.expectedPlanHashSha256}.`,
     );
   }
-  const measurement = midtownCoreV3SilhouetteMeasurement(plan);
+  if (options.measurement && (options.measurement.planHashSha256 !== plan.planHashSha256 || options.measurement.buildingId !== plan.buildingId)) {
+    throw new Error(
+      `Supplied silhouette measurement binds ${options.measurement.buildingId}/${options.measurement.planHashSha256}, not ${plan.buildingId}/${plan.planHashSha256}.`,
+    );
+  }
+  const measurement = options.measurement ?? midtownCoreV3SilhouetteMeasurement(plan);
   // The fallback level IS the fine level's geometry, so its silhouette is the
   // same set of rectangles and the symmetric difference is empty. Reported as
   // the literal 0 rather than as a measured near-zero: measuring a set against

@@ -61,11 +61,22 @@ Five things follow, and each is a rule rather than an intention:
    the two silhouettes are the same set of rectangles. `midtownCoreV3SilhouetteRecord`
    takes an explicit `lod1` variant argument and returns 0 for `full-geometry`;
    it keeps its fail-closed throw for a `shed-protrusions` level over the cap.
-3. **The declared geometric error is derived from the emitted geometry.** The
-   writer compares the two emitted tessellations element for element and corner
-   for corner, and declares 0 only when they are identical; a `full-geometry`
-   claim whose bytes differ from the fine level's is an error, not a fallback.
-   It is never read off the wave's LOD-1 constant.
+3. **The declared geometric error of a FALLBACK level is derived from the
+   emitted geometry.** The writer compares the two emitted tessellations element
+   for element and corner for corner, and declares 0 only when they are
+   identical; a `full-geometry` claim whose bytes differ from the fine level's is
+   an error, not a fallback.
+
+   **This scoping is the honest half.** A `shed-protrusions` level still declares
+   the wave's `MIDTOWN_CORE_V3_LOD1_GEOMETRIC_ERROR_METERS` constant of **0.2 m**,
+   which is NOT derived from its bytes and is NOT a measured bound on that
+   level's true deviation. It is a declared wave constant that nothing in this
+   task measured, and a shed level whose real worst-case displacement exceeds it
+   would not be caught by anything here. Deriving a true per-building bound for
+   shed levels is a separate measurement this ADR does not claim to have taken.
+   What IS measured for every level, shed or fallback, is the projected
+   SILHOUETTE ratio against the 2% cap — a different quantity from the geometric
+   error, and the only one the cap governs.
 4. **A fallback coarse level is `eligible: false`.** The schema has the field and
    `exterior-render-profiles.ts` honours it, so this is how a release says "never
    select this level". It is not decoration: the level is a byte-for-byte copy of

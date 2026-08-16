@@ -73,28 +73,62 @@ and the 1:1 image/texture/drawn-material shape is enforced. `procedural-replay`
 opens exactly one door — "this package MAY carry images" — and every other gate
 still has to be passed to walk through it.
 
-## The pin's one honest gap
+## What the pin covers, and precisely what it does not
 
-Each cell manifest cites `release.rootChecksumSha256`. A pin that covered the
-manifest list would therefore be **circular and unsatisfiable**: the manifests'
-bytes depend on the pin, and the pin would depend on their bytes.
+An earlier draft of this ADR said a pin over the cell-manifest list would be
+"circular and unsatisfiable". **That claim was wider than the truth**, and the
+correction matters because it hid a real option.
 
-The list is excluded, and the pin covers the identity a manifest cites **plus
-the admission policy** — the whole security surface. What that costs is stated
-rather than hidden:
+Only ONE thing is genuinely circular: each cell manifest cites
+`release.rootChecksumSha256`, so each entry's `checksumSha256` and `byteSize`
+depend on the pin's value. A pin over *those* is unsatisfiable.
 
-- The manifest **count** is not pinned. Census accounting is what proves no cell
-  was dropped, and the validator refuses that comparison unless it walked the
-  entire declared set in that run.
-- Every entry still carries its manifest's own SHA-256 and byte size, verified
-  on read.
-- Every manifest cross-cites the root's id and pin, so a manifest from another
-  package, or a root re-pointed at manifests it did not produce, fails.
+The manifest **count** and the **cell-id set** are not circular at all. They are
+properties of the ownership ledger, fixed before any manifest exists. Two
+non-circular options therefore existed:
 
-`src/release/mass-generation-retention.test.ts` pins the security property in
-both directions: editing the policy moves the pin and the root is refused;
-appending a manifest entry does not move it, and the test says so explicitly so
-the gap cannot be mistaken for an oversight.
+- **(a) Pin the ledger's owned-cell id set and require the declared manifest set
+  to be a subset of it.** Cheap: the list is at most 249 strings, known at wave
+  start.
+- **(b) Dual pins** — an identity pin the manifests cite, plus a second
+  whole-root pin written afterwards covering the entries.
+
+**Option (a) is implemented.** `RetentionReleaseRoot.ownedCellIds` carries the
+wave's full owned-cell list, sorted, and it is INSIDE the pin. The validator
+requires every declared manifest's `cellId` to be a duplicate-free member of it,
+and refuses a set larger than the wave owns. Appending a foreign cell now moves
+the pin or fails membership; the test asserts both.
+
+A **subset** rather than an equality, because a cell whose every owned parent was
+refused packages no asset and carries no manifest. Equality would turn an honest
+all-refused cell into a validation failure.
+
+**(b) was rejected on its merits.** A second pin written after the manifests
+would be a value nothing else cites, so nothing would ever verify it in the
+normal path; it would add a field that looks like a guarantee while being, in
+practice, a checksum of a file against itself. It also doubles the number of
+"the root pin" concepts a reader has to keep straight, for a property (a)
+already delivers.
+
+### The residue, stated exactly
+
+What remains outside the pin is only the **per-entry checksum and byte size**.
+Those are covered by checks the validator performs anyway:
+
+- each entry's SHA-256 is verified against the manifest's actual bytes on read;
+- each manifest cross-cites the root's id and pin, so a manifest from another
+  package — or a root re-pointed at manifests it did not produce — fails;
+- **completeness is not optional**: the validator refuses to report `ok` without
+  at least one committed completeness source (`--inventory` and/or `--census`),
+  each verified against its own `.sha256` sidecar, and it refuses outright when
+  `--max-cells` means it walked only part of the declared set. The inventory
+  cross-check also covers `retention-root.json`'s own bytes, which is how an
+  edited root is caught by a record the root cannot influence.
+
+`src/release/mass-generation-retention.test.ts` and
+`scripts/validate-retention-release.test.mjs` pin all of this, including that
+appending an entry does *not* move the pin — stated explicitly so the residue
+cannot be mistaken for an oversight.
 
 ## A retention root is not an `ExteriorRootManifest`
 

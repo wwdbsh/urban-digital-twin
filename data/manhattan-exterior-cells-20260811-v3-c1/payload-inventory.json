@@ -15,7 +15,7 @@
   "predecessorReleaseId": "manhattan-exterior-cells-20260811-v3",
   "retentionRoot": {
     "rootId": "root:manhattan-exterior-cells-20260811-v3-c1:retention",
-    "rootChecksumSha256": "c7deaeb120d762250965bb4197ffbde59746d78a68fdec2e2db91d2c7cbf0464"
+    "rootChecksumSha256": "a4b6d0646e642e361d05f0d7f586f32d4851094d1fec6e88a5fafd1e985a7c26"
   },
   "textureAdmission": {
     "policy": "procedural-replay",
@@ -34,13 +34,13 @@
   "cellManifestCount": 1,
   "totals": {
     "fileCount": 35,
-    "byteSize": 9620802
+    "byteSize": 9620880
   },
   "files": [
     {
       "path": "public/assemblies/manhattan-exterior-cell-w00-000000-block-00835.json",
       "byteSize": 57107,
-      "checksumSha256": "e8b7b3e0d132e21455bbd9ed984973c1e4523777f7d4b470348e003e6eb22170"
+      "checksumSha256": "a3378d495c500d8c767f26d833a6fab1e60897fa51a5ea69a08261365b00964b"
     },
     {
       "path": "public/assets/doitt-102705__lod_0.glb",
@@ -209,8 +209,8 @@
     },
     {
       "path": "retention-root.json",
-      "byteSize": 2546,
-      "checksumSha256": "690c5fac2f478863eac9102e3d00e8344ade90833e2016e9bf56410fd32cf1f2"
+      "byteSize": 2624,
+      "checksumSha256": "e5cb9357df22f1fa50d4a7b2eb0f1e7a54660231ceb063cd5155e9d5dc4a9f73"
     }
   ]
 }
