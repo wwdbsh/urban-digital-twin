@@ -22,6 +22,7 @@ import {
   validateExteriorReleaseGraph,
   type ExteriorCellRelease,
   type ExteriorEvidenceShard,
+  type ExteriorOwnershipCell,
   type ExteriorReleaseGraph,
   type ExteriorRolloutSnapshot,
   type ExteriorRootManifest,
@@ -153,6 +154,18 @@ export const EXTERIOR_RUNTIME_FAILURE_CODES = [
    * exactly the artifact that is fine.
    */
   "cell-detail-sidecar-invalid",
+  /**
+   * A release that shards its per-cell ASSEMBLY into a fetched document could
+   * not put a verified, cell-bound package in front of that cell's geometry.
+   *
+   * Distinct from `assembly-invalid`, which is the boot-time refusal of an
+   * inline package, and from `assembly-pin-mismatch`, which is a package that
+   * parsed but does not bind this cell. This code means the document carrying
+   * the package is absent, mis-checksummed or not a conforming assembly at all —
+   * so an operator is sent to the sharded artifact rather than to
+   * `assemblies.json`, which for a sharded release is nearly empty and fine.
+   */
+  "cell-assembly-package-invalid",
 ] as const;
 export type ExteriorRuntimeFailureCode = (typeof EXTERIOR_RUNTIME_FAILURE_CODES)[number];
 
@@ -862,36 +875,97 @@ export class ExteriorCellRuntime {
     }
   }
 
-  private assemblyForCell(cellRelease: ExteriorCellRelease, expectedCellReleaseChecksum: string): MultiLodAssemblyManifest {
+  /**
+   * The binding one assembly package must satisfy to be this cell's package.
+   *
+   * Extracted so the in-`assemblies.json` form and the fetched
+   * `cell-assembly-package` form reach the IDENTICAL rules through the same
+   * code. A rule tightened for one form and forgotten for the other would mean a
+   * serving release admitted on weaker terms than a curated one, which is the
+   * exact failure the sharded form must not introduce.
+   *
+   * Returns `null` when the candidate simply does not cover this cell — which is
+   * not a failure, it is another cell's package — and a message otherwise.
+   */
+  private assemblyBindingFailure(
+    candidate: MultiLodAssemblyManifest,
+    cellRelease: ExteriorCellRelease,
+    expectedCellReleaseChecksum: string,
+    ownerCell: ExteriorOwnershipCell,
+    ledgerArtifactChecksum: string,
+  ): { covers: false } | { covers: true; failure: string | null } {
+    const ledger = this.graph.ownershipLedger;
+    if (candidate.audience !== "public") return { covers: true, failure: `${candidate.packageId}: non-public assembly audience.` };
+    if (candidate.release.rootId !== this.publicRoot.rootId || candidate.release.rootChecksumSha256 !== this.publicRoot.rootChecksumSha256 || candidate.release.releaseId !== this.publicRoot.releaseId || candidate.release.cityId !== ledger.cityId || candidate.release.configId !== ledger.configId) return { covers: true, failure: `${candidate.packageId}: release root pin mismatch.` };
+    if (candidate.ownershipLedger.id !== ledger.ledgerId || candidate.ownershipLedger.checksumSha256 !== ledgerArtifactChecksum) return { covers: true, failure: `${candidate.packageId}: ownership ledger pin mismatch.` };
+    if (candidate.baseIdentitySet.id !== ledger.baseIdentitySet.id || candidate.baseIdentitySet.checksumSha256 !== ledger.baseIdentitySet.checksumSha256) return { covers: true, failure: `${candidate.packageId}: base identity pin mismatch.` };
+    const cell = candidate.cells.find((entry) => entry.cellId === cellRelease.cellId);
+    if (!cell) return { covers: false };
+    if (cell.cellRelease.id !== cellRelease.cellReleaseId || cell.cellRelease.checksumSha256 !== expectedCellReleaseChecksum) return { covers: true, failure: `${candidate.packageId}: cell-release pin mismatch.` };
+    // Coverage, not equality. The package may ship geometry for a strict
+    // SUBSET of the owned cell, and only if every building it leaves out is
+    // one this cell release explicitly declares unavailable with a reason.
+    // That is the anti-silent-omission property the old exact-equality rule
+    // was written for, stated as what it always meant; a cell containing a
+    // building the grammar refuses had no legal form under equality.
+    const coverage = assemblyCellCoverage({
+      packagedBuildingIds: cell.buildingIds,
+      ownedBuildingIds: ownerCell.buildingIds,
+      unavailableBuildingIds: cellRelease.buildingDetails.filter((detail) => detail.status === "unavailable").map((detail) => detail.buildingId),
+      declaredMembershipChecksumSha256: cell.membershipChecksumSha256,
+    });
+    if (!coverage.ok) return { covers: true, failure: `${candidate.packageId}: ${coverage.message}` };
+    return { covers: true, failure: null };
+  }
+
+  /**
+   * This cell's assembly package, from wherever the release puts it.
+   *
+   * The sharded branch mirrors `cellEvidenceShards` exactly, for the same reason
+   * and on the same path: one `loadVerifiedArtifact` fetch, then the SAME
+   * structural validation the constructor applies to an inline package and the
+   * SAME binding every inline package must satisfy. What moves is when it runs,
+   * not how strictly; see the `cell-assembly-package` docblock in
+   * `exterior-release.ts` and ADR 0052 §2.
+   *
+   * The head pin still governs. A sharded package whose `packageId` the active
+   * head does not list is refused here exactly as an inline one is dropped at
+   * construction, so the head remains the single statement of what this release
+   * serves.
+   */
+  private async assemblyForCell(cellRelease: ExteriorCellRelease, expectedCellReleaseChecksum: string, signal?: AbortSignal): Promise<MultiLodAssemblyManifest> {
     const ledger = this.graph.ownershipLedger;
     const ledgerArtifact = this.publicRoot.artifacts.find((artifact) => artifact.kind === "ownership-ledger" && artifact.logicalId === ledger.ledgerId);
     if (!ledgerArtifact) throw new ExteriorRuntimeError("graph-invalid", "The public root does not checksum-pin the ownership ledger.");
     const ownerCell = ledger.cells.find((entry) => entry.cellId === cellRelease.cellId);
     if (!ownerCell) throw new ExteriorRuntimeError("graph-invalid", `Cell ${cellRelease.cellId} is outside canonical ownership.`);
+
+    const sharded = this.publicRoot.artifacts.find((artifact) => artifact.kind === "cell-assembly-package" && artifact.logicalId === cellRelease.cellReleaseId);
+    if (sharded) {
+      const bytes = await this.loadVerifiedArtifact(sharded.relativeRef, sharded.byteSize, sharded.checksumSha256, signal);
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(new TextDecoder().decode(bytes));
+      } catch (error) {
+        throw new ExteriorRuntimeError("cell-assembly-package-invalid", `Exterior cell assembly package ${sharded.relativeRef} is not parseable JSON: ${error instanceof Error ? error.message : String(error)}`, sharded.relativeRef);
+      }
+      const structural = validateMultiLodAssembly(parsed, { textureAdmission: this.textureAdmission });
+      if (!structural.ok) throw new ExteriorRuntimeError("cell-assembly-package-invalid", `Exterior cell assembly package ${sharded.relativeRef} failed closed: ${issueText(structural.issues)}`, sharded.relativeRef);
+      const candidate = structural.value;
+      if (!this.head.pin.assemblyPackageIds.includes(candidate.packageId)) throw new ExteriorRuntimeError("assembly-pin-mismatch", `Assembly package ${candidate.packageId} is not listed by head ${this.head.pin.snapshotId}.`, sharded.relativeRef);
+      const bound = this.assemblyBindingFailure(candidate, cellRelease, expectedCellReleaseChecksum, ownerCell, ledgerArtifact.checksumSha256);
+      if (!bound.covers) throw new ExteriorRuntimeError("assembly-pin-mismatch", `Assembly package ${candidate.packageId} is declared for cell release ${cellRelease.cellReleaseId} but packages no such cell.`, sharded.relativeRef);
+      if (bound.failure) throw new ExteriorRuntimeError("assembly-pin-mismatch", `Assembly package ${candidate.packageId} does not bind cell release ${cellRelease.cellReleaseId}: ${bound.failure}`, sharded.relativeRef);
+      return candidate;
+    }
+
     const failures: string[] = [];
     const matches: MultiLodAssemblyManifest[] = [];
     // `this.assemblies` was structurally validated once at construction.
     for (const candidate of this.assemblies) {
-      if (candidate.audience !== "public") { failures.push(`${candidate.packageId}: non-public assembly audience.`); continue; }
-      if (candidate.release.rootId !== this.publicRoot.rootId || candidate.release.rootChecksumSha256 !== this.publicRoot.rootChecksumSha256 || candidate.release.releaseId !== this.publicRoot.releaseId || candidate.release.cityId !== ledger.cityId || candidate.release.configId !== ledger.configId) { failures.push(`${candidate.packageId}: release root pin mismatch.`); continue; }
-      if (candidate.ownershipLedger.id !== ledger.ledgerId || candidate.ownershipLedger.checksumSha256 !== ledgerArtifact.checksumSha256) { failures.push(`${candidate.packageId}: ownership ledger pin mismatch.`); continue; }
-      if (candidate.baseIdentitySet.id !== ledger.baseIdentitySet.id || candidate.baseIdentitySet.checksumSha256 !== ledger.baseIdentitySet.checksumSha256) { failures.push(`${candidate.packageId}: base identity pin mismatch.`); continue; }
-      const cell = candidate.cells.find((entry) => entry.cellId === cellRelease.cellId);
-      if (!cell) continue;
-      if (cell.cellRelease.id !== cellRelease.cellReleaseId || cell.cellRelease.checksumSha256 !== expectedCellReleaseChecksum) { failures.push(`${candidate.packageId}: cell-release pin mismatch.`); continue; }
-      // Coverage, not equality. The package may ship geometry for a strict
-      // SUBSET of the owned cell, and only if every building it leaves out is
-      // one this cell release explicitly declares unavailable with a reason.
-      // That is the anti-silent-omission property the old exact-equality rule
-      // was written for, stated as what it always meant; a cell containing a
-      // building the grammar refuses had no legal form under equality.
-      const coverage = assemblyCellCoverage({
-        packagedBuildingIds: cell.buildingIds,
-        ownedBuildingIds: ownerCell.buildingIds,
-        unavailableBuildingIds: cellRelease.buildingDetails.filter((detail) => detail.status === "unavailable").map((detail) => detail.buildingId),
-        declaredMembershipChecksumSha256: cell.membershipChecksumSha256,
-      });
-      if (!coverage.ok) { failures.push(`${candidate.packageId}: ${coverage.message}`); continue; }
+      const bound = this.assemblyBindingFailure(candidate, cellRelease, expectedCellReleaseChecksum, ownerCell, ledgerArtifact.checksumSha256);
+      if (!bound.covers) continue;
+      if (bound.failure) { failures.push(bound.failure); continue; }
       matches.push(candidate);
     }
     // Ambiguity is a pin failure, never a first-match-wins race against file order.
@@ -912,7 +986,7 @@ export class ExteriorCellRuntime {
     if (!declared || declared.checksumSha256 !== expectedCellReleaseChecksum) throw new ExteriorRuntimeError("checksum-mismatch", `Cell release ${cellRelease.cellReleaseId} checksum does not match the pinned public root declaration.`);
     assertPublicExteriorArtifactRef(cellRelease.artifactRef);
 
-    const assembly = this.assemblyForCell(cellRelease, expectedCellReleaseChecksum);
+    const assembly = await this.assemblyForCell(cellRelease, expectedCellReleaseChecksum, signal);
     const assemblyPolicy = { textureAdmission: this.textureAdmission, ...(this.declaredSamplerFilter ? { declaredSamplerFilter: this.declaredSamplerFilter } : {}) };
     const textureFree = requiresTextureFreeAssembly(assembly.audience, assemblyPolicy);
     // Under a public procedural-replay admission the shipped samplers must name

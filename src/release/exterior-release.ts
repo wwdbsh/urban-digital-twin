@@ -39,7 +39,52 @@ export type ExteriorReleaseAudience = "private" | "public";
  * did; the form is per cell and all-or-nothing, so a cell can never have half its
  * evidence in the graph and half in a fetched document.
  */
-export type ExteriorArtifactKind = "ownership-ledger" | "cell-release" | "inventory" | "evidence" | "rollout-snapshot" | "cell-detail-sidecar";
+/**
+ * `cell-assembly-package` is the SECOND kind T005 adds, and it exists for the
+ * reason the first one did, one artifact over.
+ *
+ * The sidecar seam moved the inventory and evidence shard BODIES out of
+ * `release-graph.json` because at 18,766 B per shipped asset they projected to
+ * ~841 MB island-wide. It left `assemblies.json` untouched, and `assemblies.json`
+ * has the same shape of problem: `loadExteriorCellRuntime` fetches it whole,
+ * `cache: "no-store"`, and the runtime constructor then runs
+ * `validateMultiLodAssembly` over every head-pinned package before the first
+ * frame. MEASURED from the committed `-c1` manifests transformed to the
+ * single-LOD form a serving release ships, that is 2,567 B per shipped asset:
+ * 15.86 MiB for wave w02 alone and **115,499,836 B across the island**, blocking,
+ * before any geometry can be verified.
+ *
+ * ADR 0046 D1 chose per-wave assemblies and explicitly rejected a per-cell
+ * partition, then measured the per-wave worst case and named it "a T004/T005
+ * obligation rather than declared acceptable here". ADR 0052 §2 discharges that
+ * obligation: the rejection was right about limit compliance and incomplete
+ * about boot weight, because `MULTI_LOD_ASSEMBLY_LIMITS` is not the binding
+ * constraint — the boot fetch is.
+ *
+ * So one ownership cell's assembly manifest becomes its own artifact, fetched at
+ * CELL-LOAD time through the same `loadVerifiedArtifact` path every GLB and
+ * every sidecar travels: public-root ref check, declared byte size, declared
+ * SHA-256, shared LRU, shared request budget. Boot weight becomes O(cells) pins
+ * instead of O(assets) manifests.
+ *
+ * TWO THINGS ARE DELIBERATELY UNCHANGED. The binding a package must satisfy is
+ * the identical one the in-`assemblies.json` form satisfies — same root pin,
+ * ledger pin, base identity pin, cell-release pin and coverage rule, reached
+ * through the same code — so a sharded package cannot be admitted on weaker
+ * terms than an inline one. And the head pin still has to list it: a package the
+ * active head does not name is refused whichever form carries it.
+ *
+ * WHAT DOES CHANGE IS TIMING, and ADR 0052 §2 says so in the open: structural
+ * validation of a per-cell package moves from construction to first use. A
+ * release whose 400th cell carries a malformed manifest now boots and renders
+ * 399 cells before failing that one, where previously it refused to construct at
+ * all. That is the price of not fetching ~110 MiB up front, and it is the same
+ * trade the sidecar seam already made for evidence.
+ *
+ * A release that declares no `cell-assembly-package` is byte-unchanged and
+ * behaves exactly as it did.
+ */
+export type ExteriorArtifactKind = "ownership-ledger" | "cell-release" | "inventory" | "evidence" | "rollout-snapshot" | "cell-detail-sidecar" | "cell-assembly-package";
 
 export interface ExteriorArtifactRef {
   logicalId: string;
@@ -390,7 +435,7 @@ function validateRoot(value: unknown, path: string, issues: ExteriorReleaseIssue
     if (!record(artifact)) return issue(issues, artifactPath, "Artifact declaration must be an object.");
     exactKeys(artifact, ["logicalId", "kind", "relativeRef", "byteSize", "checksumSha256"], artifactPath, issues);
     if (!nonEmpty(artifact.logicalId)) issue(issues, `${artifactPath}.logicalId`, "Artifact logical ID is required.");
-    if (!(["ownership-ledger", "cell-release", "inventory", "evidence", "rollout-snapshot", "cell-detail-sidecar"] as unknown[]).includes(artifact.kind)) issue(issues, `${artifactPath}.kind`, "Unknown exterior artifact kind.");
+    if (!(["ownership-ledger", "cell-release", "inventory", "evidence", "rollout-snapshot", "cell-detail-sidecar", "cell-assembly-package"] as unknown[]).includes(artifact.kind)) issue(issues, `${artifactPath}.kind`, "Unknown exterior artifact kind.");
     if (!isSafeReleaseArtifactReference(artifact.relativeRef)) issue(issues, `${artifactPath}.relativeRef`, "Artifact ref must be a canonical safe relative path.");
     if (!Number.isSafeInteger(artifact.byteSize) || (artifact.byteSize as number) < 0) issue(issues, `${artifactPath}.byteSize`, "Artifact byte size must be a non-negative integer.");
     if (!checksum(artifact.checksumSha256)) issue(issues, `${artifactPath}.checksumSha256`, "Artifact checksum must be lowercase SHA-256.");
@@ -850,6 +895,10 @@ export function validateExteriorReleaseGraph(value: unknown): ExteriorReleaseVal
     // one for a cell release that does not exist is still refused, because this
     // set is built from the cell releases the graph actually decodes.
     ...graph.cellReleases.map((entry) => `${entry.audience}:cell-detail-sidecar:${entry.cellReleaseId}`),
+    // Same rule for the assembly package: its decoded graph node is the cell
+    // release it packages, so declaring one for a cell release the graph does
+    // not carry is still refused.
+    ...graph.cellReleases.map((entry) => `${entry.audience}:cell-assembly-package:${entry.cellReleaseId}`),
     ...graph.inventoryShards.map((entry) => `${entry.audience}:inventory:${entry.inventoryId}`),
     ...graph.evidenceShards.map((entry) => `${entry.audience}:evidence:${entry.shardId}`),
     ...graph.snapshots.map((entry) => `${entry.audience}:rollout-snapshot:${entry.snapshotId}`),

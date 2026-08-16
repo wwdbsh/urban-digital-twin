@@ -498,6 +498,41 @@ export function corruptExteriorFixturePackage(fixture: ExteriorCellFixture, pack
  *
  * Returns the sidecar's artifact ref so a test can corrupt exactly those bytes.
  */
+/**
+ * Move one cell's ASSEMBLY MANIFEST out of `assemblies.json` and into its own
+ * checksum-pinned artifact (ADR 0052 §2), leaving everything else identical.
+ *
+ * The transform is deliberately the smallest one that produces the sharded form:
+ * the manifest's own bytes are unchanged, it simply arrives by a different
+ * route. That is what lets `exterior-cell-assembly-package.test.ts` compare the
+ * two forms as an EQUIVALENCE and catch a check that quietly stopped running,
+ * rather than asserting a list of properties that might all pass while the
+ * rendered result differs.
+ */
+export function shardExteriorFixtureCellAssembly(fixture: ExteriorCellFixture, cellReleaseId: string): { packageRef: string; packageId: string } {
+  const cell = fixture.graph.cellReleases.find((entry) => entry.cellReleaseId === cellReleaseId);
+  if (!cell) throw new Error(`Fixture cell release ${cellReleaseId} is absent.`);
+  const root = fixture.graph.roots.find((entry) => entry.audience === cell.audience);
+  if (!root) throw new Error(`Fixture ${cell.audience} root is absent.`);
+  const manifest = fixture.assemblies.find((entry) => entry.cells.some((candidate) => candidate.cellRelease.id === cellReleaseId));
+  if (!manifest) throw new Error(`No fixture assembly packages cell release ${cellReleaseId}.`);
+  if (manifest.cells.length !== 1) throw new Error(`Fixture assembly ${manifest.packageId} packages ${manifest.cells.length} cells; sharding it would strand the others.`);
+
+  const packageRef = `${cell.audience}/cell-assembly-package/${cellReleaseId.replaceAll(":", "-")}.json`;
+  const content = `${JSON.stringify(manifest, null, 2)}\n`;
+  const bytes = new TextEncoder().encode(content);
+  fixture.contents.set(packageRef, bytes);
+  // Out of the boot document entirely: a sharded cell must not ALSO be resolvable
+  // inline, or the test would pass on the inline copy and prove nothing.
+  fixture.assemblies = fixture.assemblies.filter((entry) => entry.packageId !== manifest.packageId);
+  root.artifacts = [
+    ...root.artifacts,
+    { logicalId: cellReleaseId, kind: "cell-assembly-package", relativeRef: packageRef, byteSize: bytes.byteLength, checksumSha256: sha256HexSync(content) },
+  ];
+  root.artifactAllowlist = root.artifacts.map((artifact) => artifact.relativeRef);
+  return { packageRef, packageId: manifest.packageId };
+}
+
 export function shardExteriorFixtureCellDetails(fixture: ExteriorCellFixture, cellReleaseId: string): { sidecarRef: string; sidecar: ExteriorCellDetailSidecar } {
   const cell = fixture.graph.cellReleases.find((entry) => entry.cellReleaseId === cellReleaseId);
   if (!cell) throw new Error(`Fixture cell release ${cellReleaseId} is absent.`);
