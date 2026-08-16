@@ -18,6 +18,7 @@ import {
 } from "../release/multi-lod-assembly.ts";
 import {
   exteriorTextureAdmissionPolicyOf,
+  validateExteriorCellDetailSidecar,
   validateExteriorReleaseGraph,
   type ExteriorCellRelease,
   type ExteriorEvidenceShard,
@@ -140,6 +141,18 @@ export const EXTERIOR_RUNTIME_FAILURE_CODES = [
    * Reporting that as a GLB fault would send an operator to the wrong artifact.
    */
   "shared-texture-invalid",
+  /**
+   * A release that shards its per-cell evidence into a fetched document could
+   * not put a verified, cell-bound sidecar in front of that cell's geometry.
+   *
+   * Its own code for the same reason `shared-texture-invalid` is: neither the
+   * cell release nor any GLB is what failed. The geometry may verify perfectly
+   * while the document carrying the cell's inventory and evidence is absent,
+   * mis-checksummed, or bound to a different cell — and reporting that as
+   * `graph-invalid` would send an operator to `release-graph.json`, which is
+   * exactly the artifact that is fine.
+   */
+  "cell-detail-sidecar-invalid",
 ] as const;
 export type ExteriorRuntimeFailureCode = (typeof EXTERIOR_RUNTIME_FAILURE_CODES)[number];
 
@@ -918,10 +931,16 @@ export class ExteriorCellRuntime {
     const declaredTextureRefs = sharedTextureArtifactRefs(assembly);
     const verifiedTextures = declaredTextureRefs.size > 0 ? await this.verifiedSharedTextures(assembly) : null;
 
+    // Where this cell's inventory and evidence shards live. A release that
+    // declares a sidecar for this cell resolves them from that fetched, verified
+    // document; every release frozen before the seam existed resolves them from
+    // the boot graph exactly as it always did.
+    const evidenceById = await this.cellEvidenceShards(cellRelease, signal);
+
     // Evidence-shard audience admission for every building this cell publishes.
     for (const detail of cellRelease.buildingDetails) {
       if (detail.status !== "available") continue;
-      const shard = this.evidenceById.get(detail.evidenceShardId);
+      const shard = evidenceById.get(detail.evidenceShardId);
       if (!shard) throw new ExteriorRuntimeError("evidence-audience-forbidden", `Evidence shard ${detail.evidenceShardId} is absent for building ${detail.buildingId}.`);
       if (shard.audience !== "public") throw new ExteriorRuntimeError("private-artifact-forbidden", `Evidence shard ${detail.evidenceShardId} is not public.`);
       const admission = validateProjectedGraphAudience(shard.graph, { audience: "public", runtimeTexture: detail.runtimeTexture });
@@ -970,6 +989,35 @@ export class ExteriorCellRuntime {
     }
     if (rendered.length === 0) throw new ExteriorRuntimeError("assembly-pin-mismatch", `Cell release ${cellRelease.cellReleaseId} published no verifiable exterior asset.`);
     return { assemblyPackageId: assembly.packageId, assets: rendered };
+  }
+
+  /**
+   * This cell's evidence shards, from wherever the release puts them.
+   *
+   * The sidecar branch is one fetch on the SAME verified path as every GLB —
+   * `loadVerifiedArtifact` enforces the public-root ref check, the declared byte
+   * size and the declared SHA-256 before a byte is parsed — followed by the same
+   * per-building binding `validateExteriorReleaseGraph` performs at boot for an
+   * in-graph release. Nothing is checked more weakly because it arrived later.
+   *
+   * The sidecar occupies a cache entry and its bytes count against the byte cap,
+   * which is a real cost and is measured rather than waved past: see
+   * `exterior-cache-ceiling.ts`, where the residency derivation counts one
+   * sidecar per resident cell alongside that cell's assets.
+   */
+  private async cellEvidenceShards(cellRelease: ExteriorCellRelease, signal?: AbortSignal): Promise<ReadonlyMap<string, ExteriorEvidenceShard>> {
+    const declared = this.publicRoot.artifacts.find((artifact) => artifact.kind === "cell-detail-sidecar" && artifact.logicalId === cellRelease.cellReleaseId);
+    if (!declared) return this.evidenceById;
+    const bytes = await this.loadVerifiedArtifact(declared.relativeRef, declared.byteSize, declared.checksumSha256, signal);
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(new TextDecoder().decode(bytes));
+    } catch (error) {
+      throw new ExteriorRuntimeError("cell-detail-sidecar-invalid", `Exterior cell detail sidecar ${declared.relativeRef} is not parseable JSON: ${error instanceof Error ? error.message : String(error)}`, declared.relativeRef);
+    }
+    const validation = validateExteriorCellDetailSidecar(parsed, { cell: cellRelease, artifactRef: declared.relativeRef });
+    if (!validation.ok) throw new ExteriorRuntimeError("cell-detail-sidecar-invalid", `Exterior cell detail sidecar ${declared.relativeRef} failed closed: ${issueText(validation.issues)}`, declared.relativeRef);
+    return new Map(validation.value.evidenceShards.map((shard) => [shard.shardId, shard]));
   }
 
   /**

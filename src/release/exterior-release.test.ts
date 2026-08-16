@@ -9,10 +9,12 @@ import { sha256HexSync, stableSerialize } from "./catalog-release";
 import {
   EXTERIOR_RELEASE_SCHEMA_VERSION,
   replayExteriorArtifactIntegrity,
+  validateExteriorCellDetailSidecar,
   validateExteriorReleaseGraph,
   validateExteriorReleaseStructure,
   type ExteriorArtifactKind,
   type ExteriorArtifactRef,
+  type ExteriorCellDetailSidecar,
   type ExteriorReleaseGraph,
 } from "./exterior-release";
 
@@ -412,5 +414,118 @@ describe("provider-neutral exterior release graph", () => {
     const unexpected = fixture();
     unexpected.bytes.set("public/extra.json", "extra");
     expect((await replayExteriorArtifactIntegrity(unexpected.graph, unexpected.bytes)).ok).toBe(false);
+  });
+});
+
+/**
+ * Move ONE cell's shards out of the graph and into a sidecar document.
+ *
+ * Deliberately one cell and not all of them: the form is per cell, so a graph
+ * where `c1` keeps its shards inline and `c2` sharded them out is a legal
+ * release, and it is the case that would break if the seam had been written as a
+ * whole-graph mode flag instead of a per-cell decision.
+ */
+function sidecarForm(): { graph: ExteriorReleaseGraph; bytes: Map<string, string>; sidecar: ExteriorCellDetailSidecar; sidecarRef: string } {
+  const { graph, bytes } = fixture();
+  const publicRoot = graph.roots.find((root) => root.audience === "public")!;
+  const sidecarRef = "public/cell-detail-sidecar/cell-c2-v1.json";
+  const inventoryShard = { ...graph.inventoryShards.find((shard) => shard.inventoryId === "inventory:b2")!, artifactRef: sidecarRef };
+  const evidenceShard = { ...graph.evidenceShards.find((shard) => shard.shardId === "evidence:b2")!, artifactRef: sidecarRef };
+  const sidecar: ExteriorCellDetailSidecar = {
+    schemaVersion: EXTERIOR_RELEASE_SCHEMA_VERSION,
+    sidecarId: "cell:c2:v1",
+    audience: "public",
+    artifactRef: sidecarRef,
+    cellReleaseId: "cell:c2:v1",
+    inventoryShards: [inventoryShard],
+    evidenceShards: [evidenceShard],
+  };
+  // The shards leave the graph entirely, and so do their root declarations.
+  graph.inventoryShards = graph.inventoryShards.filter((shard) => shard.inventoryId !== "inventory:b2");
+  graph.evidenceShards = graph.evidenceShards.filter((shard) => shard.shardId !== "evidence:b2");
+  for (const ref of ["public/inventory/inventory-b2.json", "public/evidence/evidence-b2.json"]) bytes.delete(ref);
+  const content = stableSerialize(sidecar);
+  bytes.set(sidecarRef, content);
+  publicRoot.artifacts = [
+    ...publicRoot.artifacts.filter((artifact) => !(artifact.kind === "inventory" && artifact.logicalId === "inventory:b2") && !(artifact.kind === "evidence" && artifact.logicalId === "evidence:b2")),
+    { logicalId: "cell:c2:v1", kind: "cell-detail-sidecar", relativeRef: sidecarRef, byteSize: new TextEncoder().encode(content).byteLength, checksumSha256: sha256HexSync(content) },
+  ];
+  publicRoot.artifactAllowlist = publicRoot.artifacts.map((artifact) => artifact.relativeRef);
+  return { graph, bytes, sidecar, sidecarRef };
+}
+
+describe("per-cell detail sidecars", () => {
+  it("accepts a graph that shards ONE cell's evidence out while another keeps it inline", async () => {
+    const { graph, bytes } = sidecarForm();
+    expect(validateExteriorReleaseGraph(graph)).toEqual({ ok: true, value: graph });
+    expect((await replayExteriorArtifactIntegrity(graph, bytes)).ok).toBe(true);
+    // The seam's whole point, stated as arithmetic the test can see: the shard
+    // bodies are no longer part of the document a runtime must fetch and parse
+    // before it can decide anything.
+    expect(graph.inventoryShards.map((shard) => shard.inventoryId)).toEqual(["inventory:b1"]);
+    expect(graph.evidenceShards.map((shard) => shard.shardId)).toEqual(["evidence:b1"]);
+  });
+
+  it("refuses a cell that carries its evidence in BOTH places", () => {
+    const { graph, sidecar } = sidecarForm();
+    graph.inventoryShards = [...graph.inventoryShards, { ...sidecar.inventoryShards[0]!, artifactRef: "public/inventory/inventory-b2.json" }];
+    const result = validateExteriorReleaseGraph(graph);
+    expect(result.ok).toBe(false);
+    expect(result.ok === false && result.issues.some((entry) => entry.message.includes("may not also carry its inventory shard"))).toBe(true);
+  });
+
+  it("refuses a sidecar declared for a cell release the graph does not decode", () => {
+    const { graph } = sidecarForm();
+    const publicRoot = graph.roots.find((root) => root.audience === "public")!;
+    publicRoot.artifacts = publicRoot.artifacts.map((artifact) => (artifact.kind === "cell-detail-sidecar" ? { ...artifact, logicalId: "cell:absent:v9" } : artifact));
+    expect(validateExteriorReleaseGraph(graph).ok).toBe(false);
+  });
+
+  it("binds a fetched sidecar to the exact cell release and artifact it was verified as", () => {
+    const { graph, sidecar, sidecarRef } = sidecarForm();
+    const cell = graph.cellReleases.find((entry) => entry.cellReleaseId === "cell:c2:v1")!;
+    expect(validateExteriorCellDetailSidecar(sidecar, { cell, artifactRef: sidecarRef })).toEqual({ ok: true, value: sidecar });
+
+    // A sidecar handed to the wrong cell is refused even though every shard in
+    // it is individually well-formed: the pairing is the claim being checked.
+    const otherCell = graph.cellReleases.find((entry) => entry.cellReleaseId === "cell:c1:v1")!;
+    expect(validateExteriorCellDetailSidecar(sidecar, { cell: otherCell, artifactRef: sidecarRef }).ok).toBe(false);
+
+    // A sidecar claiming an artifact other than the one whose checksum was just
+    // verified is refused, so the document cannot rename itself after the fact.
+    expect(validateExteriorCellDetailSidecar(sidecar, { cell, artifactRef: "public/cell-detail-sidecar/other.json" }).ok).toBe(false);
+  });
+
+  it("runs the SAME per-building evidence binding the in-graph form runs", () => {
+    const { graph, sidecar, sidecarRef } = sidecarForm();
+    const cell = graph.cellReleases.find((entry) => entry.cellReleaseId === "cell:c2:v1")!;
+    // `b2` is the runtimeTexture: true building, whose evidence graph must admit
+    // texture use. Flipping the evidence to the non-texture form must fail in the
+    // sidecar exactly as it fails in the graph — this is the check that would
+    // have silently disappeared if the resolution had been reimplemented here.
+    const weakened: ExteriorCellDetailSidecar = { ...sidecar, evidenceShards: [{ ...sidecar.evidenceShards[0]!, graph: evidence("b2", false) }] };
+    expect(validateExteriorCellDetailSidecar(weakened, { cell, artifactRef: sidecarRef }).ok).toBe(false);
+
+    // And an inventory for a different building is refused by identity, not by
+    // luck of the evidence check.
+    const misbound: ExteriorCellDetailSidecar = { ...sidecar, inventoryShards: [{ ...sidecar.inventoryShards[0]!, inventory: inventory("b1", true) }] };
+    expect(validateExteriorCellDetailSidecar(misbound, { cell, artifactRef: sidecarRef }).ok).toBe(false);
+  });
+
+  it("refuses a sidecar carrying a shard the cell release does not cite", () => {
+    const { graph, sidecar, sidecarRef } = sidecarForm();
+    const cell = graph.cellReleases.find((entry) => entry.cellReleaseId === "cell:c2:v1")!;
+    const padded: ExteriorCellDetailSidecar = {
+      ...sidecar,
+      inventoryShards: [...sidecar.inventoryShards, { schemaVersion: EXTERIOR_RELEASE_SCHEMA_VERSION, shardId: "inventory:b9", audience: "public", artifactRef: sidecarRef, inventoryId: "inventory:b9", inventory: inventory("b9") }],
+    };
+    expect(validateExteriorCellDetailSidecar(padded, { cell, artifactRef: sidecarRef }).ok).toBe(false);
+  });
+
+  it("refuses a contained shard that names an artifact other than the sidecar", () => {
+    const { graph, sidecar, sidecarRef } = sidecarForm();
+    const cell = graph.cellReleases.find((entry) => entry.cellReleaseId === "cell:c2:v1")!;
+    const strayRef: ExteriorCellDetailSidecar = { ...sidecar, inventoryShards: [{ ...sidecar.inventoryShards[0]!, artifactRef: "public/inventory/inventory-b2.json" }] };
+    expect(validateExteriorCellDetailSidecar(strayRef, { cell, artifactRef: sidecarRef }).ok).toBe(false);
   });
 });
