@@ -303,12 +303,12 @@ indistinguishable from a rigged one.
    projects the sourced polygon in float64 and never rounds it — which is why
    the two columns above differ by two orders of magnitude.
 
-Separately, and **not** caused by this work:
-`scripts/validate-retention-release.test.mjs` fails 6 of its 26 cases at
-`77b2469` on a clean tree, all in *the real w00 package, end to end*, all with
-`root self-pin disagrees with its own canonical bytes: declared a4b6d064…,
-recomputed e169c225…`. It was reproduced with every change in this task stashed.
-It is recorded here as a finding and is **not** addressed by this evidence task.
+A third finding was first recorded here as "pre-existing and not caused by this
+work": six failures in `scripts/validate-retention-release.test.mjs`, all with
+`root self-pin disagrees with its own canonical bytes`. **That
+characterisation was WRONG and is withdrawn.** It was not pre-existing, and it
+was not a defect in committed bytes. See *Incident: the test suite wrote to the
+retained payload* below.
 
 ### What this does and does not license
 
@@ -321,3 +321,103 @@ The agreement is a **geometry-agreement** statement over 94 of 44,989 generated
 buildings (0.21%), stratified and forced to include four per-wave extremes. It
 is not visual, geographic, architectural, accessibility or performance
 acceptance, and it says nothing about the 44,895 buildings it did not open.
+
+## Incident: the test suite wrote to the retained payload
+
+**`scripts/validate-retention-release.test.mjs` corrupted the real w00
+`retention-root.json`.** It has been fixed, the file has been restored
+byte-exactly, and a tripwire now fails loudly if it ever happens again. This is
+recorded in full because it is precisely the hazard the PAYLOAD RETENTION HOLD
+exists to guard against, and because the first diagnosis of it was wrong.
+
+### What happened
+
+`public/data/<releaseId>` is a **symlink** whenever the retained payload lives in
+another worktree — which is exactly the arrangement the hold creates. The
+suite's `scratch()` helper built its throwaway copy with:
+
+```js
+cpSync(SOURCE_PACKAGE, join(root, "package"), { recursive: true });
+```
+
+`cpSync` defaults to `dereference: false`. **Handed a symlinked source it copies
+the symlink, not the tree.** `<tmp>/package` therefore became a second name for
+the real payload directory, and the case *"refuses an edited self-pin before
+reading any policy"* — which writes a deliberately tampered `retention-root.json`
+into what it believes is scratch space — wrote
+
+```
+"textureAdmission": { "policy": "texture-free", ... }
+```
+
+straight into the retained package. The tamper is 5 bytes shorter than the
+truth (`texture-free` against `procedural-replay`), which is exactly the 2,624 →
+2,619 byte drop observed.
+
+`data/<releaseId>` is a real tracked directory, so `<tmp>/records` was a genuine
+copy. That is why the blast radius was one file in one package rather than the
+whole tree.
+
+The corrupted root then failed its own self-pin, which took the other five
+payload-gated cases down with it — six failures whose message pointed at the
+committed bytes rather than at the test that had just rewritten them.
+
+### Why the first diagnosis was wrong
+
+The failures were checked by stashing every change in this task and re-running,
+which reproduced them exactly — and that was read as proof they pre-dated the
+work. **It was not proof.** The damage had already been done by an *earlier*
+full-suite run in this same session, so the stashed baseline was measuring an
+already-corrupted tree. A stash reverts the working tree; it does not revert a
+gitignored payload directory that a test wrote to. The reproduction was real and
+the inference from it was invalid.
+
+### The fix
+
+The source is resolved through `realpathSync` and copied with
+`dereference: true`, so the destination is always an independent tree, and the
+result is **asserted** not to be a link. Restore-on-failure was considered and
+rejected: a crashed or killed run would leave the payload tampered. The real
+directory is simply never writable from the suite.
+
+Two new cases guard it:
+
+- *"copies the real package instead of aliasing it"* — the scratch root's
+  `package` and `records` must not resolve to the real directories.
+- A `beforeAll`/`afterAll` tripwire hashing the real w00 `retention-root.json`
+  around the whole block, which throws and names the file on any change. One
+  file, hashed twice.
+
+Both were verified against the old behaviour in isolation: `cpSync` on a
+symlinked source produces a link and a write through it reaches the original;
+with `realpathSync` + `dereference: true` it produces a real copy and the
+original is untouched.
+
+### The restoration
+
+Restored by setting the tampered field back and re-serialising with the writer's
+own format, then **verified against the committed payload inventory** rather
+than against intent:
+
+| | value |
+| --- | --- |
+| restored SHA-256 | `e5cb9357df22f1fa50d4a7b2eb0f1e7a54660231ceb063cd5155e9d5dc4a9f73` |
+| inventory pin | `e5cb9357df22f1fa50d4a7b2eb0f1e7a54660231ceb063cd5155e9d5dc4a9f73` |
+| restored byteSize | 2,624 |
+| inventory pin | 2,624 |
+
+`scripts/validate-retention-release.test.mjs` is **27/27** (26 original plus the
+new alias guard), the w00 retention validator runs green end to end against the
+real package, and the tripwire confirms the payload is byte-identical after the
+suite.
+
+### What it did NOT affect
+
+**The Blender agreement is unaffected**, and this is checked rather than
+asserted. The agreement never reads `retention-root.json`: its selection stage
+verifies every cell assembly manifest and every sampled GLB against the
+committed payload inventory and stops on any mismatch, and it was re-run after
+the restoration and still resolves all 94 samples with zero checksum
+disagreements. The measurements themselves were taken before the first suite run
+that caused the damage, and no GLB was ever written to. All other files across
+all six waves match their inventories.

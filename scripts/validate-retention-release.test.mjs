@@ -1,10 +1,10 @@
 /* global process */
 import { execFileSync } from "node:child_process";
-import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, lstatSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { afterAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { sha256HexSync } from "../src/domain/deterministic-hash.ts";
 import { args, retentionAssertions } from "./validate-retention-release.mjs";
@@ -18,12 +18,35 @@ const SOURCE_RECORDS = join(repositoryRoot, "data", RELEASE_ID);
 const temporaries = [];
 afterAll(() => { for (const path of temporaries) rmSync(path, { recursive: true, force: true }); });
 
-/** A throwaway copy of the real w00 package, so mutations test real bytes. */
+/**
+ * A throwaway copy of the real w00 package, so mutations test real bytes.
+ *
+ * THE COPY MUST BE A REAL TREE, NEVER AN ALIAS. `public/data/<releaseId>` is a
+ * SYMLINK whenever the retained payload lives in another worktree, and
+ * `cpSync(src, dest, { recursive: true })` defaults to `dereference: false`:
+ * handed a symlinked source it copies THE SYMLINK, so `<tmp>/package` becomes a
+ * second name for the real payload directory and every "scratch" mutation below
+ * writes straight through it into the retained bytes.
+ *
+ * That is not hypothetical. It happened: the self-pin case wrote
+ * `textureAdmission.policy = "texture-free"` into the REAL w00
+ * `retention-root.json`, which then failed its own committed pin and took five
+ * further cases down with it. See the incident note in
+ * `docs/implementation/20260816-mass-generation-retention-waves.md`.
+ *
+ * So the source is resolved through `realpathSync` AND copied with
+ * `dereference: true`, and the result is ASSERTED not to be a link. Restoring
+ * afterwards would not be good enough — a crashed run would leave the retained
+ * payload tampered — so the real directory is never writable from here at all.
+ */
 function scratch() {
   const root = mkdtempSync(join(tmpdir(), "retention-validate-"));
   temporaries.push(root);
-  cpSync(SOURCE_PACKAGE, join(root, "package"), { recursive: true });
-  cpSync(SOURCE_RECORDS, join(root, "records"), { recursive: true });
+  cpSync(realpathSync(SOURCE_PACKAGE), join(root, "package"), { recursive: true, dereference: true });
+  cpSync(realpathSync(SOURCE_RECORDS), join(root, "records"), { recursive: true, dereference: true });
+  for (const name of ["package", "records"]) {
+    expect(lstatSync(join(root, name)).isSymbolicLink()).toBe(false);
+  }
   return root;
 }
 
@@ -137,6 +160,32 @@ describe("the measured-fallback pair assertions, each failing independently", ()
  * record.
  */
 describe.skipIf(!existsSync(SOURCE_PACKAGE))("the real w00 package, end to end", () => {
+  // THE TRIPWIRE. Every case in this block mutates a copy; if any of them ever
+  // reaches the retained payload instead, this fails loudly and names the file,
+  // rather than the damage surfacing later as six unrelated-looking failures
+  // against a self-pin nobody edited. One file, hashed twice — it costs nothing.
+  const REAL_ROOT = join(SOURCE_PACKAGE, "retention-root.json");
+  let rootChecksumBefore = null;
+  beforeAll(() => { rootChecksumBefore = sha256HexSync(readFileSync(REAL_ROOT, "utf8")); });
+  afterAll(() => {
+    const after = sha256HexSync(readFileSync(REAL_ROOT, "utf8"));
+    if (after !== rootChecksumBefore) {
+      throw new Error(
+        `RETAINED PAYLOAD WRITTEN BY THIS SUITE: ${REAL_ROOT} changed from ${rootChecksumBefore} to ${after}. `
+        + "These cases must mutate copies only. Restore it from the committed payload inventory before trusting any result here.",
+      );
+    }
+  });
+
+  it("copies the real package instead of aliasing it", () => {
+    // The regression guard for the incident itself: a scratch root whose
+    // `package` is the real directory under another name would pass every other
+    // case in this block while quietly destroying the payload.
+    const root = scratch();
+    expect(realpathSync(join(root, "package"))).not.toBe(realpathSync(SOURCE_PACKAGE));
+    expect(realpathSync(join(root, "records"))).not.toBe(realpathSync(SOURCE_RECORDS));
+  });
+
   it("is green with both completeness sources", () => {
     const result = run(scratch());
     expect(result.ok).toBe(true);
