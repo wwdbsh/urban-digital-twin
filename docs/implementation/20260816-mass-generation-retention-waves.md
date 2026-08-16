@@ -146,6 +146,23 @@ cases when the w00 payload is absent. That skip is honest — there are no emitt
 bytes to assert about on a fresh clone — but it means deleting the payloads also
 silently reduces that suite to its unit cases.
 
+## Known-open: the App Escape-focus flake
+
+`src/app/App.test.tsx > "closes details with Escape and returns focus to the
+located-pick trigger"` **fails intermittently and is STILL OPEN.**
+
+It is **pre-existing** — reproduced at `b598b78`, before any of this task's
+changes — and it is **not** fixed by anything here. An earlier revision of this
+record's task claimed the F13 memoization had fixed it. That claim was wrong and
+is withdrawn: memoizing the V3 release build fixed a *different* failure (the
+`midtown-core-v3-release` timeout) and reduced overall suite load, which makes
+this flake rarer but does not remove it. A reviewer reproduced it once in two
+full runs after the memoization landed.
+
+It is unrelated to the retention waves — nothing in this task touches
+`src/app/` — and it is recorded here so a green full-suite run is not mistaken
+for evidence that it is gone.
+
 ## Rights and blast radius
 
 The six `-c1` packages **retain bytes locally only**, under gitignored payload

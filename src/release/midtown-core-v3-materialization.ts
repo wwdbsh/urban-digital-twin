@@ -858,19 +858,20 @@ export function writeMidtownCoreV3Assets(
   const assets: MidtownCoreV3AssetBytes[] = [];
   let registration: MidtownCoreV3Registration | null = null;
 
-  // (T004 F8) The measurement is taken ONCE, and only where it is needed.
+  // (T004 F8) The measurement is taken ONCE PER BUILDING, eagerly.
   //
-  // It used to run on every building of every wave, including the five frozen
-  // single-LOD ones, at a measured +0.23 ms each. A `measured-fallback` wave
-  // needs it before it can decide what LOD 1 IS, so there it is eager; a
-  // `shed-protrusions` wave needs it only if a caller asks, so there it is lazy
-  // and memoized behind the same `silhouette` property the result always had.
+  // An earlier revision hid it behind a memoized accessor and claimed a
+  // `shed-protrusions` wave that never read it would pay nothing. THAT CLAIM WAS
+  // FALSE: `lod1.measuredDeviationRatio` is a plain field on the returned
+  // result, and `materializeMidtownCoreV3Cells` reads it for every materialized
+  // building on every wave to build `lod1Decisions`. The lazy path was therefore
+  // unreachable, and the accessor was dead code wrapped in a false comment.
+  //
+  // What F8 actually eliminated survives and is elsewhere: the record builder
+  // takes this measurement as an argument, so a two-LOD retention wave measures
+  // each building once instead of twice.
   const lod1Policy = profile.lod1Policy ?? MIDTOWN_CORE_V3_DEFAULT_LOD1_POLICY;
-  let memoizedSilhouette: MidtownCoreV3SilhouetteMeasurement | null = null;
-  const silhouetteOf = (): MidtownCoreV3SilhouetteMeasurement => {
-    memoizedSilhouette ??= midtownCoreV3SilhouetteMeasurement(plan);
-    return memoizedSilhouette;
-  };
+  const silhouette = midtownCoreV3SilhouetteMeasurement(plan);
 
   // (T004 F5) THE PER-BUILDING LOD-1 DECISION, keyed on the MEASUREMENT.
   //
@@ -882,7 +883,7 @@ export function writeMidtownCoreV3Assets(
   // cap rather than `>=` for one reason: `withinBound` is `<=`, and the two
   // predicates have to be the same predicate or a building exactly at the cap
   // would shed AND be refused.
-  const lod1Variant: MidtownCoreV3Lod1Variant = lod1Policy === "measured-fallback" && !silhouetteOf().withinBound
+  const lod1Variant: MidtownCoreV3Lod1Variant = lod1Policy === "measured-fallback" && !silhouette.withinBound
     ? "full-geometry"
     : "shed-protrusions";
   let lod1GeometricErrorMeters: number = MIDTOWN_CORE_V3_LOD1_GEOMETRIC_ERROR_METERS;
@@ -991,19 +992,15 @@ export function writeMidtownCoreV3Assets(
       }
     }
   }
-  const measurement = silhouetteOf();
   return {
     assets,
     registration: registration!,
-    // Kept as a property with the same name and type it always had. It is
-    // memoized above, so a caller that reads it pays for one measurement and a
-    // caller that never reads it on a `shed-protrusions` wave pays for none.
-    get silhouette(): MidtownCoreV3SilhouetteMeasurement { return silhouetteOf(); },
+    silhouette,
     lod1: {
       policy: lod1Policy,
       variant: lod1Variant,
-      measuredDeviationRatio: measurement.deviationRatio,
-      emittedDeviationRatio: lod1Variant === "full-geometry" ? 0 : measurement.deviationRatio,
+      measuredDeviationRatio: silhouette.deviationRatio,
+      emittedDeviationRatio: lod1Variant === "full-geometry" ? 0 : silhouette.deviationRatio,
       geometricErrorMeters: lod1GeometricErrorMeters,
     },
     truthTiers,

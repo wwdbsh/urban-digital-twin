@@ -61,9 +61,13 @@ describe("the forbidden flags are refused BY NAME", () => {
     });
   }
 
+  it("refuses --max-cells AT PARSE TIME, before any cell is read", () => {
+    expect(() => args(["--package", "p", "--max-cells", "2"])).toThrow(/partial walk cannot establish completeness/u);
+  });
+
   it("still accepts the legitimate flags", () => {
-    const parsed = args(["--package", "p", "--inventory", "i", "--census", "c", "--evidence-out", "e", "--max-cells", "3"]);
-    expect(parsed).toEqual({ package: "p", inventory: "i", census: "c", "evidence-out": "e", "max-cells": "3" });
+    const parsed = args(["--package", "p", "--inventory", "i", "--census", "c", "--evidence-out", "e"]);
+    expect(parsed).toEqual({ package: "p", inventory: "i", census: "c", "evidence-out": "e" });
   });
 });
 
@@ -124,8 +128,13 @@ describe("the measured-fallback pair assertions, each failing independently", ()
  * The end-to-end cases run against the REAL w00 retention payload, which is
  * gitignored by design. They are skipped rather than failed when it is absent,
  * and the skip is the honest outcome: these cases assert properties of emitted
- * bytes, and there are no bytes to assert about on a fresh clone. See the
- * PAYLOAD RETENTION HOLD in the implementation record.
+ * bytes, and there are no bytes to assert about on a fresh clone.
+ *
+ * CONCRETELY, measured by hiding the payload directories and re-running:
+ * without them CI runs 18 of the 26 cases in this file — every unit case over
+ * the argument grammar and the measured-fallback assertions — and SKIPS THE 8
+ * that need emitted bytes. See the PAYLOAD RETENTION HOLD in the implementation
+ * record.
  */
 describe.skipIf(!existsSync(SOURCE_PACKAGE))("the real w00 package, end to end", () => {
   it("is green with both completeness sources", () => {
@@ -207,20 +216,15 @@ describe.skipIf(!existsSync(SOURCE_PACKAGE))("the real w00 package, end to end",
     expect(result.stderr).toMatch(/does not match its committed sidecar/u);
   });
 
-  it("treats a walk of every declared manifest as complete", () => {
-    // w00 declares exactly ONE manifest, so `--max-cells 1` IS the whole set and
-    // must NOT be refused. The refusal is asserted on a real multi-cell wave
-    // below, where a capped walk is genuinely partial.
-    expect(run(scratch(), ["--max-cells", "1"]).ok).toBe(true);
-  });
 });
 
 const MULTI_CELL_PACKAGE = join(repositoryRoot, "public", "data", "manhattan-midtown-core-cells-20260811-v3-c1");
 
-describe.skipIf(!existsSync(MULTI_CELL_PACKAGE))("a genuinely partial walk", () => {
-  it("is refused, because it cannot establish completeness", () => {
+describe.skipIf(!existsSync(MULTI_CELL_PACKAGE))("a capped walk of a real multi-cell wave", () => {
+  it("is refused before it reads a cell, not after", () => {
     let stderr = "";
     let exited = false;
+    const startedAt = Date.now();
     try {
       execFileSync(process.execPath, [
         "--experimental-strip-types", CLI,
@@ -233,6 +237,8 @@ describe.skipIf(!existsSync(MULTI_CELL_PACKAGE))("a genuinely partial walk", () 
       stderr = `${error.stderr ?? ""}`;
     }
     expect(exited).toBe(true);
-    expect(stderr).toMatch(/cannot establish completeness/u);
+    expect(stderr).toMatch(/partial walk cannot establish completeness/u);
+    // Parse-time means it cannot have replayed 149 cells of GLBs on the way.
+    expect(Date.now() - startedAt).toBeLessThan(20_000);
   });
 });

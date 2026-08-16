@@ -43,12 +43,15 @@
  *   --census     the committed wave census, whose generated/tombstoned/owned
  *                accounting the packaged building set must close against.
  *
- * A run that walked a subset (`--max-cells`) cannot satisfy either and says so.
+ * There is no way to validate part of a package: `--max-cells` is refused at
+ * argument-parse time, before a byte is read, because a partial walk cannot
+ * establish completeness and a refusal that arrived after the walk would read
+ * like a result.
  *
  * usage: pnpm retention:validate -- --package public/data/<releaseId>
  *          [--inventory data/<id>/payload-inventory.json]
  *          [--census data/<id>/wave-census.json]
- *          [--evidence-out FILE] [--max-cells N]
+ *          [--evidence-out FILE]
  */
 import { constants } from "node:fs";
 import { lstat, open, realpath, writeFile } from "node:fs/promises";
@@ -85,6 +88,13 @@ export function args(argv) {
   // Refuse anything that even looks like an attempt to assert the policy.
   for (const forbidden of ["texture-admission", "admission", "policy", "procedural-replay", "require-textured", "require-texture-free", "texture-free"]) {
     if (forbidden in result) fail(`--${forbidden} is refused: the texture admission policy is read from the package's pinned root and can never be supplied by an operator.`);
+  }
+  // Refused AT PARSE TIME, before a single cell is read, rather than after the
+  // walk. A partial walk can never establish completeness, so every byte it
+  // would replay is work spent on a run that is going to be refused anyway — and
+  // a refusal that arrives only at the end reads like a result.
+  if ("max-cells" in result) {
+    fail("--max-cells is refused: a partial walk cannot establish completeness, so this validator only ever reports on the whole declared manifest set.");
   }
   return result;
 }
@@ -227,9 +237,8 @@ async function main() {
   };
 
   // ---- 2. every declared cell manifest, one bounded package at a time ------
-  const limit = options["max-cells"] === undefined ? retentionRoot.cellManifests.length : Number(options["max-cells"]);
-  if (!Number.isSafeInteger(limit) || limit <= 0) fail("--max-cells must be a positive integer.");
-  const cells = [...retentionRoot.cellManifests].sort((left, right) => (left.cellId < right.cellId ? -1 : 1)).slice(0, limit);
+  // Always the WHOLE declared set; `--max-cells` is refused at parse time.
+  const cells = [...retentionRoot.cellManifests].sort((left, right) => (left.cellId < right.cellId ? -1 : 1));
 
   let checkedCells = 0;
   let checkedAssets = 0;
@@ -291,7 +300,10 @@ async function main() {
   }
 
   // ---- 3. COMPLETENESS, which is not optional --------------------------------
+  // Structurally true now that the set cannot be capped, and asserted rather
+  // than assumed so a future caller that reintroduces slicing trips here.
   const walkedWholeSet = cells.length === retentionRoot.cellManifests.length;
+  if (!walkedWholeSet) fail("Internal: the validator walked a subset of the declared manifests.");
   let inventoryAccounting = null;
   let tombstones = null;
 
@@ -357,10 +369,6 @@ async function main() {
   if (!inventoryAccounting && !tombstones) {
     fail("Refusing to report ok: no completeness source. A dropped cell manifest is invisible to the root's own pin, so --inventory and/or --census is REQUIRED.");
   }
-  if (!walkedWholeSet) {
-    fail(`Refusing to report ok: --max-cells walked ${cells.length} of ${retentionRoot.cellManifests.length} declared manifests, which cannot establish completeness.`);
-  }
-
   const evidence = {
     schemaVersion: "1.0",
     artifact: "retention-package-validation",
