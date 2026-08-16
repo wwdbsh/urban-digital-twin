@@ -142,9 +142,22 @@ describe("the T004 stage-4 coverage record", () => {
     expect(JSON.stringify(coverage)).not.toMatch(/elapsedSeconds/u);
   });
 
-  it("states the PAYLOAD RETENTION HOLD", () => {
-    expect(coverage.payloadRetentionHold.status).toBe("HOLD");
-    expect(coverage.payloadRetentionHold.reason).toMatch(/Blender/u);
+  it("ties the PAYLOAD RETENTION HOLD to the Blender agreement rather than to a declaration", () => {
+    // The hold existed for one reason and can be released for one reason. It is
+    // released here ONLY if the agreement record it names actually agreed, and
+    // the record is re-hashed from its own bytes so a released hold cannot rest
+    // on a stale or edited one.
+    if (coverage.payloadRetentionHold.status === "released") {
+      expect(coverage.blenderAgreementRecord.status).toBe("agreed");
+      expect(coverage.blenderAgreementRecord.failingSamples).toBe(0);
+      expect(coverage.payloadRetentionHold.releasedBy.checksumSha256).toBe(coverage.blenderAgreementRecord.checksumSha256);
+      const text = readFileSync(join(repositoryRoot, coverage.payloadRetentionHold.releasedBy.recordRef), "utf8");
+      expect(sha256HexSync(text)).toBe(coverage.payloadRetentionHold.releasedBy.checksumSha256);
+      expect(coverage.payloadRetentionHold.reason).toMatch(/Samples complete/u);
+    } else {
+      expect(coverage.payloadRetentionHold.status).toBe("HOLD");
+      expect(coverage.payloadRetentionHold.reason).toMatch(/Blender/u);
+    }
   });
 
   it("records a byte-identical determinism replay for every wave", () => {
@@ -154,9 +167,10 @@ describe("the T004 stage-4 coverage record", () => {
     }
   });
 
-  it("states that Blender agreement is pending rather than claiming it", () => {
+  it("carries the same Blender-agreement status its censuses do, never a better one", () => {
     for (const row of coverage.waves) {
-      expect(row.blenderAgreement).toBe("pending Blender connection");
+      const census = JSON.parse(readFileSync(join(repositoryRoot, "data", row.c1ReleaseId, "wave-census.json"), "utf8"));
+      expect(row.blenderAgreement).toBe(census.blenderAgreement.status);
     }
     expect(coverage.notClaimedHere.join(" ")).toMatch(/Blender agreement/u);
   });

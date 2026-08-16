@@ -186,3 +186,12 @@ artifacts/goal-bounded-gaps-20260812/
 # evidence stays checkable after this worktree-local tree is removed. The census
 # is census-only and retains no geometry, so there is nothing else here.
 artifacts/citywide-overview-census-20260814/
+
+# T004 Blender-agreement work root: the per-sample analytic inputs, the
+# selection table and the raw Blender inspection report. Every number the
+# agreement rests on — the sample list, the deterministic selection rule, each
+# building's measured deltas and each measured file's checksum — is committed in
+# data/mass-generation-20260816/blender-agreement.json with its own sidecar, so
+# the evidence stays checkable after this worktree-local tree is removed. No
+# geometry and no render is retained here.
+artifacts/mass-generation-20260816/
