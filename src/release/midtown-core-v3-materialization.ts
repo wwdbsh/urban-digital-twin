@@ -36,8 +36,10 @@ import {
   ringIsSimple,
   ringSignedAreaMm2,
   tessellateV3Plan,
+  v3EffectiveGrammarOptions,
   validateV3Plan,
   type Point2Mm,
+  V3_SHIPPED_GRAMMAR_OPTIONS,
   type V3GrammarOptions,
   type V3Plan,
 } from "../domain/deterministic-facade-generator-v3.ts";
@@ -46,7 +48,13 @@ import { writeCanonicalGlb, type CanonicalGlbQuad, type CanonicalGlbSamplerFilte
 import { enuFrame, toEnuMeters, type EnuFrame, type Point2 } from "./block835-reference-package.ts";
 import { V3_QUALITY_BUDGETS, v3GeometryForGlb, v3TruthTiers, type V3GlbGeometry } from "./block835-v3-package.ts";
 import { proceduralTextureProvenance, proceduralTextureReplayIndex, type ProceduralTextureClass, type ProceduralTextureProfile } from "./procedural-texture.ts";
-import type { ImmutablePin } from "./multi-lod-assembly.ts";
+import type { AssemblyLod, ImmutablePin } from "./multi-lod-assembly.ts";
+import {
+  midtownCoreV3SilhouetteMeasurement,
+  midtownCoreV3SilhouetteRecord,
+  type MidtownCoreV3Lod1Variant,
+  type MidtownCoreV3SilhouetteMeasurement,
+} from "./midtown-core-v3-silhouette.ts";
 import {
   MIDTOWN_CORE_FALLBACK_HEIGHT_METERS,
   type MidtownCoreBuildingSource,
@@ -148,7 +156,51 @@ export interface V3WaveProfile {
    * the first mode and once per release in the second.
    */
   textureDelivery?: "embedded" | "shared-uri";
+  /**
+   * The GRAMMAR STATE this wave is materialized under (T004 R1).
+   *
+   * Every frozen profile pins the shipped grammar explicitly, so the envelope a
+   * wave ran under is a property of the wave rather than of whichever call site
+   * happened to pass an options object. `buildMidtownCoreV3Plan` still takes a
+   * `grammar` argument for the T003 differential replay; when a profile names an
+   * envelope AND a caller passes one, the caller's wins and the disagreement is
+   * the caller's to justify — the profile is the DECLARED default, not a lock.
+   *
+   * It is entered into `midtownCoreV3StageFingerprint` only when it differs from
+   * the shipped grammar, so every frozen wave's fingerprints are the values they
+   * always were. That conditional is the whole point of the field: without it a
+   * resumable stage's receipt is BLIND to the grammar, and a receipt taken under
+   * the shipped envelope would satisfy a stage running the extended one.
+   */
+  admissionEnvelope?: V3GrammarOptions;
+  /**
+   * WHAT LOD 1 IS, for this wave (T004 F5a).
+   *
+   * `shed-protrusions` — the default, and the contract every frozen wave was
+   * built under — emits the massing and the rooftop cluster at LOD 1 and drops
+   * every outward placement. It is the cheaper coarse level and it is what the
+   * approved LOD contract describes.
+   *
+   * `measured-fallback` keeps that behaviour for every building whose MEASURED
+   * LOD 0 / LOD 1 silhouette deviation is within the assembly schema's 2% cap,
+   * and emits FULL GEOMETRY at LOD 1 for the rest. Stage 0 found the reason:
+   * 19 of 2,250 strided buildings sit at or over that cap, all of them small and
+   * narrow, all of them already over it under the SHIPPED grammar. For those the
+   * choice is between a coarse level the schema refuses and a coarse level that
+   * is identical to the fine one, and the second is the only one that ships an
+   * honest number — the deviation is zero because the geometry is the same
+   * geometry, not because a bound was relaxed.
+   *
+   * The decision is per building and keyed on the MEASUREMENT, never on a
+   * proxy for it. It enters `midtownCoreV3StageFingerprint` only when it differs
+   * from the shipped default, so every frozen wave's receipts are the values
+   * they always were.
+   */
+  lod1Policy?: "shed-protrusions" | "measured-fallback";
 }
+
+/** The wave default: LOD 1 sheds every outward placement, as it always has. */
+export const MIDTOWN_CORE_V3_DEFAULT_LOD1_POLICY = "shed-protrusions" as const;
 
 /**
  * Where a shared tile lives in the package, and how a GLB reaches it.
@@ -168,6 +220,18 @@ export function sharedTextureUriFromAsset(textureClass: ProceduralTextureClass):
 }
 
 /**
+ * The grammar every FROZEN V3 wave was materialized under, named once.
+ *
+ * It is the shipped grammar, written down rather than left implicit, so a wave
+ * profile states the envelope its committed bytes came from instead of relying
+ * on nobody having passed an options object. Every frozen profile in this
+ * repository pins this value; a successor wave that means to run a different
+ * grammar overrides it, and that override is then visible in the profile diff
+ * and in every one of that wave's stage fingerprints.
+ */
+export const V3_FROZEN_WAVE_ADMISSION_ENVELOPE: V3GrammarOptions = { ...V3_SHIPPED_GRAMMAR_OPTIONS };
+
+/**
  * Wave `w01`'s profile: exactly the constants this module hard-coded before the
  * parameterization, including its texture-free emission and the zero-texture
  * `V3_QUALITY_BUDGETS` its committed manifest pins.
@@ -180,6 +244,7 @@ export const MIDTOWN_CORE_V3_WAVE_PROFILE: V3WaveProfile = {
   uncertainty: MIDTOWN_CORE_V3_UNCERTAINTY,
   budgets: { ...V3_QUALITY_BUDGETS },
   texture: null,
+  admissionEnvelope: V3_FROZEN_WAVE_ADMISSION_ENVELOPE,
 };
 
 // ---------------------------------------------------------------------------
@@ -311,6 +376,25 @@ export interface MidtownCoreV3PlanContext {
   reversed: boolean;
   plan: V3Plan;
   heightSource: "source" | "fallback";
+  /**
+   * The EFFECTIVE grammar envelope this plan was actually materialized under
+   * (T004 F1).
+   *
+   * The plan context used to carry no grammar at all, which made the wave
+   * profile's `admissionEnvelope` a suggestion rather than a fact: an explicit
+   * `grammar` argument silently won over the profile, and
+   * `writeMidtownCoreV3Assets` then took a DIFFERENT profile with no way to
+   * notice the disagreement. The Stage-0 CLI itself ran exactly that path —
+   * planning under the extended envelope plus the rooftop rules and writing
+   * under wave `w01`'s profile, which declares the shipped grammar — so the
+   * emitted asset's provenance named an envelope its geometry did not come
+   * from.
+   *
+   * It is stored EFFECTIVE rather than as given, so `{ maxRingVertices: 384 }`
+   * and the same value with every other field spelled out are one envelope
+   * rather than two, exactly as `midtownCoreV3StageFingerprint` treats it.
+   */
+  grammar: Required<V3GrammarOptions>;
 }
 
 /**
@@ -327,11 +411,16 @@ export function buildMidtownCoreV3Plan(
   baseManifestChecksumSha256: string,
   profile: V3WaveProfile = MIDTOWN_CORE_V3_WAVE_PROFILE,
   /**
-   * Grammar-extension state, for the T003 differential replay ALONE. Every field
-   * is optional and every default is the shipped grammar, so the wave CLIs and
-   * every existing caller travel the identical path they always did.
+   * Grammar state for this call.
+   *
+   * It DEFAULTS TO THE PROFILE'S declared envelope, so a wave materializes under
+   * the grammar its own profile names rather than under whatever the last caller
+   * remembered to pass. Every frozen profile names the shipped grammar, so the
+   * wave CLIs and every existing caller travel the identical path they always
+   * did. An explicit argument still wins — that is how the T003 differential
+   * replay puts one profile through two envelopes in one process.
    */
-  grammar: V3GrammarOptions = {},
+  grammar: V3GrammarOptions = profile.admissionEnvelope ?? {},
 ): MidtownCoreV3PlanContext {
   const closed = source.outerRing.length > 1
     && source.outerRing[0]![0] === source.outerRing[source.outerRing.length - 1]![0]
@@ -384,7 +473,27 @@ export function buildMidtownCoreV3Plan(
   if (!validated.ok) {
     throw new MidtownCoreV3Stop(source.buildingId, "plan-validation-failed", validated.issues.map((issue) => `${issue.path}: ${issue.message}`).join("; "));
   }
-  return { source, frame, ringMm: outer, reversed, plan: validated.value, heightSource };
+  return { source, frame, ringMm: outer, reversed, plan: validated.value, heightSource, grammar: v3EffectiveGrammarOptions(grammar) };
+}
+
+/**
+ * Refuses a plan and a wave profile that disagree about the grammar (T004 F1).
+ *
+ * NOT a `MidtownCoreV3Stop`. The stop-code vocabulary is closed, pinned by a
+ * committed goal-completion record, and every code in it is a statement that
+ * this grammar cannot carry some property of a SOURCED POLYGON. This is not
+ * that: it says the plan in hand was materialized under one envelope and is
+ * being written into a wave that declares another, which is the repository
+ * contradicting itself and is true of every building rather than of this one.
+ * Refusing the building would hide a pipeline fault behind a plausible refusal
+ * count.
+ */
+export function assertMidtownCoreV3GrammarAgreement(context: MidtownCoreV3PlanContext, profile: V3WaveProfile): void {
+  const declared = v3EffectiveGrammarOptions(profile.admissionEnvelope);
+  if (stableSerialize(context.grammar) === stableSerialize(declared)) return;
+  throw new Error(
+    `Grammar disagreement for ${context.source.buildingId}: the plan was materialized under ${stableSerialize(context.grammar)}, but wave profile ${profile.releaseId} declares ${stableSerialize(declared)}. A wave's emitted bytes and its declared admission envelope must be the same statement.`,
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -613,10 +722,79 @@ function sharedUriTextureSet(
 export interface MidtownCoreV3AssetResult {
   assets: MidtownCoreV3AssetBytes[];
   registration: MidtownCoreV3Registration;
+  /**
+   * The LOD 0 / LOD 1 projected-silhouette measurement for this building.
+   *
+   * Reported, never enforced here. Every frozen wave ships a single LOD and
+   * claims nothing about a transition, so refusing on this number would turn a
+   * frozen release build into a failure over a property it never asserted. A
+   * wave that means to ship two LODs turns the number into the record the
+   * assembly schema demands through `midtownCoreV3SilhouetteRecord`, which is
+   * the fail-closed half.
+   */
+  silhouette: MidtownCoreV3SilhouetteMeasurement;
+  /**
+   * WHAT LOD 1 ACTUALLY IS for this building, and why (T004 F5).
+   *
+   * `policy` is the wave's, `variant` is this building's, and they differ only
+   * under `measured-fallback` and only for a building whose measured deviation
+   * exceeds the cap. `geometricErrorMeters` is DERIVED FROM THE EMITTED
+   * GEOMETRY rather than read from a wave constant: for a fallback level the two
+   * tessellations are the same object graph and the derivation returns a
+   * measured 0, which is the only honest error for a level that dropped nothing.
+   */
+  lod1: {
+    policy: NonNullable<V3WaveProfile["lod1Policy"]>;
+    variant: MidtownCoreV3Lod1Variant;
+    /** The measured worst-view deviation of the SHED-PROTRUSIONS level, always. */
+    measuredDeviationRatio: number;
+    /** The deviation the EMITTED level carries: 0 for a fallback, the measurement otherwise. */
+    emittedDeviationRatio: number;
+    geometricErrorMeters: number;
+  };
   truthTiers: readonly string[];
   /** True when the tier offset was refused and `setbacks` ships `absent`. */
   setbacksAbsent: boolean;
   setbackDisclosure: string;
+}
+
+/**
+ * Worst per-vertex displacement, in metres, between two emitted tessellations.
+ *
+ * The DERIVATION behind `lod1.geometricErrorMeters` (T004 F5c). A coarse level's
+ * declared geometric error is a statement about the bytes it ships, so it is
+ * taken from those bytes: identical geometry gives an exact 0, and anything else
+ * gives the wave's declared LOD-1 error because a shed-protrusion level's true
+ * bound is a separate measurement this task does not claim to have taken.
+ *
+ * Structural rather than nearest-neighbour on purpose. The fallback level is
+ * produced by the SAME `tessellateV3Plan` call arguments as the fine level, so
+ * "identical" here means element for element and corner for corner; a
+ * nearest-neighbour Hausdorff would report zero for two different surfaces that
+ * merely share vertices.
+ */
+export function midtownCoreV3EmittedGeometriesIdentical(
+  left: { quads: readonly CanonicalGlbQuad[]; triangles: readonly CanonicalGlbTri[] },
+  right: { quads: readonly CanonicalGlbQuad[]; triangles: readonly CanonicalGlbTri[] },
+): boolean {
+  if (left.quads.length !== right.quads.length || left.triangles.length !== right.triangles.length) return false;
+  for (let index = 0; index < left.quads.length; index += 1) {
+    const a = left.quads[index]!;
+    const b = right.quads[index]!;
+    if (a.materialIndex !== b.materialIndex) return false;
+    for (let corner = 0; corner < 4; corner += 1) {
+      for (let axis = 0; axis < 3; axis += 1) if (a.corners[corner]![axis] !== b.corners[corner]![axis]) return false;
+    }
+  }
+  for (let index = 0; index < left.triangles.length; index += 1) {
+    const a = left.triangles[index]!;
+    const b = right.triangles[index]!;
+    if (a.materialIndex !== b.materialIndex) return false;
+    for (const key of ["a", "b", "c"] as const) {
+      for (let axis = 0; axis < 3; axis += 1) if (a[key][axis] !== b[key][axis]) return false;
+    }
+  }
+  return true;
 }
 
 /** The URI a shared tile is named by, inverted back to its catalogue class. */
@@ -660,6 +838,10 @@ export function writeMidtownCoreV3Assets(
   },
 ): MidtownCoreV3AssetResult {
   const profile = options.profile ?? MIDTOWN_CORE_V3_WAVE_PROFILE;
+  // The plan's OWN envelope against the wave's DECLARED one, before a single
+  // byte is emitted. Without it the two are independent and nothing ever
+  // compares them (T004 F1).
+  assertMidtownCoreV3GrammarAgreement(context, profile);
   const plan = context.plan;
   const buildingId = context.source.buildingId;
   const inventoryId = midtownCoreV3InventoryId(buildingId, profile.releaseId);
@@ -675,11 +857,47 @@ export function writeMidtownCoreV3Assets(
 
   const assets: MidtownCoreV3AssetBytes[] = [];
   let registration: MidtownCoreV3Registration | null = null;
+
+  // (T004 F8) The measurement is taken ONCE PER BUILDING, eagerly.
+  //
+  // An earlier revision hid it behind a memoized accessor and claimed a
+  // `shed-protrusions` wave that never read it would pay nothing. THAT CLAIM WAS
+  // FALSE: `lod1.measuredDeviationRatio` is a plain field on the returned
+  // result, and `materializeMidtownCoreV3Cells` reads it for every materialized
+  // building on every wave to build `lod1Decisions`. The lazy path was therefore
+  // unreachable, and the accessor was dead code wrapped in a false comment.
+  //
+  // What F8 actually eliminated survives and is elsewhere: the record builder
+  // takes this measurement as an argument, so a two-LOD retention wave measures
+  // each building once instead of twice.
+  const lod1Policy = profile.lod1Policy ?? MIDTOWN_CORE_V3_DEFAULT_LOD1_POLICY;
+  const silhouette = midtownCoreV3SilhouetteMeasurement(plan);
+
+  // (T004 F5) THE PER-BUILDING LOD-1 DECISION, keyed on the MEASUREMENT.
+  //
+  // Under `shed-protrusions` LOD 1 always sheds, exactly as it always has, and
+  // the measurement is not consulted at all. Under `measured-fallback` a
+  // building whose measured deviation exceeds the schema's cap gets FULL
+  // GEOMETRY at LOD 1 — the same tessellation as LOD 0 — because the alternative
+  // is a coarse level the assembly validator refuses. The comparison is `>` the
+  // cap rather than `>=` for one reason: `withinBound` is `<=`, and the two
+  // predicates have to be the same predicate or a building exactly at the cap
+  // would shed AND be refused.
+  const lod1Variant: MidtownCoreV3Lod1Variant = lod1Policy === "measured-fallback" && !silhouette.withinBound
+    ? "full-geometry"
+    : "shed-protrusions";
+  let lod1GeometricErrorMeters: number = MIDTOWN_CORE_V3_LOD1_GEOMETRIC_ERROR_METERS;
+  let fineGeometry: V3GlbGeometry | null = null;
+
   for (const [lodIndex, lodId] of MIDTOWN_CORE_V3_LOD_IDS.entries()) {
-    const includeRecesses = lodIndex === 0;
+    // The fallback level carries EVERYTHING the fine level carries. That is not
+    // "LOD 1 with an exception"; it is the statement that this building has no
+    // honest coarse level under this grammar, written as geometry.
+    const includeRecesses = lodIndex === 0 || lod1Variant === "full-geometry";
     const tessellation = tessellateV3Plan(plan, { includeRecesses });
     const enu: V3GlbGeometry = v3GeometryForGlb(plan, tessellation, { yUp: false });
     if (lodIndex === 0) {
+      fineGeometry = enu;
       registration = midtownCoreV3Registration(context, enu);
       if (!registration.withinTolerance) {
         throw new MidtownCoreV3Stop(
@@ -761,12 +979,111 @@ export function writeMidtownCoreV3Assets(
       // from the writer's rule the way a restatement of that rule could.
       sharedTextureClasses: sharedUri ? emittedSharedTextureClasses(written.bytes, buildingId) : [],
     });
+    if (lodIndex === 1) {
+      // (T004 F5c) DERIVED FROM THE EMITTED GEOMETRY, never from a wave
+      // constant. A fallback level that turned out NOT to be identical to the
+      // fine one would be a level nobody measured shipping a zero error, so the
+      // derivation refuses rather than falling back to the constant.
+      if (lod1Variant === "full-geometry") {
+        if (!midtownCoreV3EmittedGeometriesIdentical(fineGeometry!, enu)) {
+          throw new Error(`Fallback LOD 1 for ${buildingId} declares full geometry but its emitted tessellation differs from LOD 0's, so its geometric error is not zero and cannot be declared as such.`);
+        }
+        lod1GeometricErrorMeters = 0;
+      }
+    }
   }
   return {
     assets,
     registration: registration!,
+    silhouette,
+    lod1: {
+      policy: lod1Policy,
+      variant: lod1Variant,
+      measuredDeviationRatio: silhouette.deviationRatio,
+      emittedDeviationRatio: lod1Variant === "full-geometry" ? 0 : silhouette.deviationRatio,
+      geometricErrorMeters: lod1GeometricErrorMeters,
+    },
     truthTiers,
     setbacksAbsent,
     setbackDisclosure: plan.massing.setbackDisclosure,
   };
+}
+
+// ---------------------------------------------------------------------------
+// The two-LOD assembly descriptors (T004 F4 / F5b / F5c)
+// ---------------------------------------------------------------------------
+
+/**
+ * The `AssemblyLod` pair for one materialized building.
+ *
+ * It exists so the three decisions the measured fallback forces are made ONCE,
+ * beside the measurement, instead of being restated by every emitter:
+ *
+ * F5b — THE RECORD-BUILDER IS THE ENFORCER. This function is the only way a
+ * successor stage gets a coarse LOD descriptor, and it always goes through
+ * `midtownCoreV3SilhouetteRecord`. So the fail-closed half cannot be forgotten:
+ * a `shed-protrusions` level over the cap throws here, at assembly-descriptor
+ * time, rather than being noticed by the assembly validator after the bytes are
+ * already on disk. The writer MEASURES, this builder ENFORCES, and a stage that
+ * wants two LODs has to call it.
+ *
+ * F5c — THE GEOMETRIC ERROR COMES FROM THE EMITTED GEOMETRY. `lod1` carries the
+ * number the writer derived by comparing the two emitted tessellations, and this
+ * builder copies it rather than reaching for the wave constant.
+ *
+ * F4 — A FALLBACK COARSE LEVEL IS `eligible: false`. The schema has the field
+ * and the runtime honours it (`exterior-render-profiles.ts` filters on it), so
+ * declaring it false is how a release says "never select this level". It is not
+ * decoration: a fallback lod_1 is a byte-for-byte copy of lod_0, and a runtime
+ * that selected it at range would pay for a second decode to draw the same
+ * triangles. The fine level therefore takes `maxDistanceMeters: null` for those
+ * buildings — with the coarse level ineligible, any bounded fine level would
+ * leave the asset with NO eligible representation beyond that distance, which is
+ * the `lod-unavailable` failure rather than a fallback.
+ */
+export function midtownCoreV3AssemblyLods(options: {
+  plan: V3Plan;
+  /** Both emitted assets, in `MIDTOWN_CORE_V3_LOD_IDS` order. */
+  assets: readonly MidtownCoreV3AssetBytes[];
+  lod1: MidtownCoreV3AssetResult["lod1"];
+  budgets: { maxTriangles: number; maxMaterials: number; maxTextures: number };
+  /**
+   * Distance beyond which the FINE level stops being selected, for a building
+   * whose coarse level is eligible. Ignored for a fallback building, which
+   * serves its fine level at every range because it has nothing else.
+   */
+  lod0MaxDistanceMeters: number | null;
+  /** The writer's already-computed measurement of this plan; see the record builder. */
+  silhouetteMeasurement?: MidtownCoreV3SilhouetteMeasurement;
+}): AssemblyLod[] {
+  const [fine, coarse] = options.assets;
+  if (!fine || !coarse || options.assets.length !== 2) {
+    throw new Error(`Two-LOD assembly descriptors need exactly the two emitted assets, got ${options.assets.length}.`);
+  }
+  const fallback = options.lod1.variant === "full-geometry";
+  const silhouette = midtownCoreV3SilhouetteRecord(options.plan, {
+    expectedPlanHashSha256: options.plan.planHashSha256,
+    lod1: options.lod1.variant,
+    ...(options.silhouetteMeasurement ? { measurement: options.silhouetteMeasurement } : {}),
+  });
+  return [
+    {
+      lodId: fine.lodId,
+      artifactRef: fine.relativeRef,
+      geometricErrorMeters: 0,
+      maxDistanceMeters: fallback ? null : options.lod0MaxDistanceMeters,
+      eligible: true,
+      quality: { ...fine.counts, budgets: { ...options.budgets } },
+      silhouette: null,
+    },
+    {
+      lodId: coarse.lodId,
+      artifactRef: coarse.relativeRef,
+      geometricErrorMeters: options.lod1.geometricErrorMeters,
+      maxDistanceMeters: null,
+      eligible: !fallback,
+      quality: { ...coarse.counts, budgets: { ...options.budgets } },
+      silhouette: { ...silhouette, viewIds: [...silhouette.viewIds] },
+    },
+  ];
 }

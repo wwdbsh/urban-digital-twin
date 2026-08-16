@@ -9,12 +9,17 @@
  */
 import { describe, expect, it } from "vitest";
 
-import { DETERMINISTIC_FACADE_V3_UNCERTAINTY } from "../domain/deterministic-facade-generator-v3.ts";
+import {
+  DETERMINISTIC_FACADE_V3_UNCERTAINTY,
+  V3_ROOFTOP_HONESTY_OPTIONS,
+  V3_SHIPPED_GRAMMAR_OPTIONS,
+} from "../domain/deterministic-facade-generator-v3.ts";
 import { V3_QUALITY_BUDGETS, v3GeometryForGlb } from "./block835-v3-package.ts";
 import { tessellateV3Plan } from "../domain/deterministic-facade-generator-v3.ts";
 import { MIDTOWN_CORE_RELEASE_ID } from "./midtown-core-package.ts";
 import type { MidtownCoreBuildingSource } from "./midtown-core-materialization.ts";
 import {
+  MIDTOWN_CORE_V3_LOD1_GEOMETRIC_ERROR_METERS,
   MIDTOWN_CORE_V3_LOD_IDS,
   MIDTOWN_CORE_V3_PREDECESSOR_RELEASE_ID,
   MIDTOWN_CORE_V3_RELEASE_ID,
@@ -22,20 +27,34 @@ import {
   MIDTOWN_CORE_V3_STOP_CODES,
   MIDTOWN_CORE_V3_UNCERTAINTY,
   MIDTOWN_CORE_V3_VOLUME_TOLERANCE,
+  MIDTOWN_CORE_V3_WAVE_PROFILE,
   MidtownCoreV3Stop,
   buildMidtownCoreV3Plan,
   classifyMidtownCoreV3Generation,
   classifyMidtownCoreV3Ring,
   midtownCoreV3AnalyticVolumeCubicMeters,
+  midtownCoreV3AssemblyLods,
   midtownCoreV3AssetRef,
   midtownCoreV3EvidenceShardId,
   midtownCoreV3InventoryId,
+  midtownCoreV3EmittedGeometriesIdentical,
   midtownCoreV3MeshVolumeCubicMeters,
   writeMidtownCoreV3Assets,
+  type V3WaveProfile,
 } from "./midtown-core-v3-materialization.ts";
 
 const BASE_MANIFEST = "b".repeat(64);
 const ANCHOR: [number, number] = [-73.9857, 40.7484];
+/**
+ * A SUCCESSOR envelope: one that differs from the shipped grammar.
+ *
+ * The two rooftop rules rather than the T003 admission envelope, deliberately.
+ * What the cross-check is about is a plan and a profile disagreeing about ANY
+ * envelope, the admission half is pinned inert by the domain suite's own
+ * reference guard, and naming it here would make this file an exception to that
+ * guard for no gain.
+ */
+const SUCCESSOR_GRAMMAR = { ...V3_ROOFTOP_HONESTY_OPTIONS };
 
 /** Metres east/north of the anchor, converted to WGS84 degrees. */
 function offsetDegrees(eastMeters: number, northMeters: number): [number, number] {
@@ -303,5 +322,202 @@ describe("(T003) the closed stop-code vocabulary", () => {
       "registration-out-of-tolerance",
     ]);
     expect(MIDTOWN_CORE_V3_STOP_CODES).toHaveLength(12);
+  });
+});
+
+/**
+ * (T004 F1) THE PLAN'S ENVELOPE AND THE WAVE'S DECLARED ENVELOPE ARE ONE FACT.
+ *
+ * Before this cross-check the two were independent and nothing ever compared
+ * them: `buildMidtownCoreV3Plan`'s explicit `grammar` argument silently won over
+ * `profile.admissionEnvelope`, the plan context carried no record of what it had
+ * actually run under, and `writeMidtownCoreV3Assets` accepted whatever profile
+ * it was handed. The Stage-0 CLI ran exactly that disagreeing path — planning
+ * under the extended envelope plus the two rooftop rules, writing under wave
+ * `w01`'s profile, which declares the shipped grammar — so an emitted asset's
+ * provenance named an envelope its geometry had not come from.
+ *
+ * The refusal is a plain `Error` rather than a `MidtownCoreV3Stop` on purpose:
+ * a stop code says this grammar cannot carry some property of ONE sourced
+ * polygon, and this says the repository is contradicting itself about every
+ * building at once.
+ */
+describe("(T004) grammar agreement between plan and wave profile", () => {
+  const options = { ownerCellId: "cell:test", capturedAt: null, updatedAt: null, predecessor: null } as const;
+
+  it("records the EFFECTIVE envelope the plan was materialized under", () => {
+    const shipped = buildMidtownCoreV3Plan(source({ ringMeters: L_SHAPE }), BASE_MANIFEST);
+    expect(shipped.grammar).toEqual(V3_SHIPPED_GRAMMAR_OPTIONS);
+    const extended = buildMidtownCoreV3Plan(source({ ringMeters: L_SHAPE }), BASE_MANIFEST, undefined, SUCCESSOR_GRAMMAR);
+    expect(extended.grammar).toEqual({ ...V3_SHIPPED_GRAMMAR_OPTIONS, ...SUCCESSOR_GRAMMAR });
+    // Stored EFFECTIVE, so a partially-spelled envelope and a fully-spelled one
+    // that mean the same thing are one value rather than two.
+    const partial = buildMidtownCoreV3Plan(source({ ringMeters: L_SHAPE }), BASE_MANIFEST, undefined, { lowRiseFloorHeight: false });
+    expect(partial.grammar).toEqual(V3_SHIPPED_GRAMMAR_OPTIONS);
+  });
+
+  it("REFUSES to write a plan whose envelope disagrees with the profile's", () => {
+    const extended = buildMidtownCoreV3Plan(source({ ringMeters: L_SHAPE }), BASE_MANIFEST, undefined, SUCCESSOR_GRAMMAR);
+    // The exact Stage-0 disagreement: extended plan, shipped-grammar profile.
+    expect(() => writeMidtownCoreV3Assets(extended, { ...options }))
+      .toThrowError(/Grammar disagreement for doitt:900001/u);
+    expect(() => writeMidtownCoreV3Assets(extended, { ...options }))
+      .not.toThrowError(MidtownCoreV3Stop);
+    // And the mirror: a shipped plan written into a wave declaring the extended
+    // envelope is refused just as hard, so the check is not one-directional.
+    const shipped = buildMidtownCoreV3Plan(source({ ringMeters: L_SHAPE }), BASE_MANIFEST);
+    expect(() => writeMidtownCoreV3Assets(shipped, {
+      ...options,
+      profile: { ...MIDTOWN_CORE_V3_WAVE_PROFILE, admissionEnvelope: SUCCESSOR_GRAMMAR },
+    })).toThrowError(/Grammar disagreement for doitt:900001/u);
+  });
+
+  it("accepts the agreeing pair, and an equivalent envelope spelled differently", () => {
+    const extended = buildMidtownCoreV3Plan(source({ ringMeters: L_SHAPE }), BASE_MANIFEST, undefined, SUCCESSOR_GRAMMAR);
+    const written = writeMidtownCoreV3Assets(extended, {
+      ...options,
+      profile: { ...MIDTOWN_CORE_V3_WAVE_PROFILE, admissionEnvelope: SUCCESSOR_GRAMMAR },
+    });
+    expect(written.assets).toHaveLength(2);
+    // The comparison is by EFFECTIVE value, not by reference or by key set.
+    expect(() => writeMidtownCoreV3Assets(extended, {
+      ...options,
+      profile: {
+        ...MIDTOWN_CORE_V3_WAVE_PROFILE,
+        admissionEnvelope: { ...V3_SHIPPED_GRAMMAR_OPTIONS, ...SUCCESSOR_GRAMMAR },
+      },
+    })).not.toThrow();
+    // A profile that names NO envelope means the shipped grammar, and therefore
+    // still disagrees with an extended plan rather than waiving the check.
+    const silent = { ...MIDTOWN_CORE_V3_WAVE_PROFILE };
+    delete silent.admissionEnvelope;
+    expect(() => writeMidtownCoreV3Assets(extended, { ...options, profile: silent }))
+      .toThrowError(/Grammar disagreement for doitt:900001/u);
+  });
+});
+
+/**
+ * (T004 F5) THE MEASURED LOD-1 FALLBACK.
+ *
+ * The V3 LOD-1 contract is "drop every outward placement". Stage 0 measured what
+ * that costs on a small, narrow building: on a 6 m x 13 m, 10 m footprint the
+ * fire escape and the blade sign are 6.2% of the edge-on silhouette, and the
+ * multi-LOD assembly schema refuses any coarse level above 2%. That is not a
+ * T004 defect — every one of the 19 strided buildings over the cap is already
+ * over it under the shipped grammar — but a two-LOD wave has to do something
+ * about it, and the choice is between a coarse level the schema refuses and one
+ * that is identical to the fine level.
+ *
+ * The rule: LOD 1 sheds protrusions only where the MEASURED deviation is inside
+ * the cap; otherwise LOD 1 IS the full geometry and its deviation is zero
+ * because the geometry is the same geometry.
+ */
+describe("(T004) the measured LOD-1 fallback", () => {
+  /** 6 m x 13 m, 10 m tall: measured at 0.06199, three times the cap. */
+  const NARROW: ReadonlyArray<readonly [number, number]> = [[0, 0], [6, 0], [6, 13], [0, 13]];
+  const options = { ownerCellId: "cell:test", capturedAt: null, updatedAt: null, predecessor: null } as const;
+  const fallbackProfile: V3WaveProfile = { ...MIDTOWN_CORE_V3_WAVE_PROFILE, lod1Policy: "measured-fallback" };
+
+  const narrowContext = () => buildMidtownCoreV3Plan(source({ buildingId: "doitt:900002", ringMeters: NARROW, heightMeters: 10 }), BASE_MANIFEST);
+  const wideContext = () => buildMidtownCoreV3Plan(source({ ringMeters: L_SHAPE }), BASE_MANIFEST);
+
+  it("leaves the default policy exactly as it was: LOD 1 always sheds", () => {
+    const written = writeMidtownCoreV3Assets(narrowContext(), { ...options });
+    expect(written.lod1.policy).toBe("shed-protrusions");
+    expect(written.lod1.variant).toBe("shed-protrusions");
+    // The building IS over the cap, and the default policy still sheds. The
+    // fallback is a decision a wave makes, not a behaviour that leaks into one.
+    expect(written.lod1.measuredDeviationRatio).toBeGreaterThan(0.02);
+    expect(written.lod1.emittedDeviationRatio).toBe(written.lod1.measuredDeviationRatio);
+    expect(written.lod1.geometricErrorMeters).toBe(MIDTOWN_CORE_V3_LOD1_GEOMETRIC_ERROR_METERS);
+    expect(written.assets[1]!.counts.triangleCount).toBeLessThan(written.assets[0]!.counts.triangleCount);
+  });
+
+  it("emits FULL GEOMETRY at LOD 1 for an over-cap building under the fallback policy", () => {
+    const written = writeMidtownCoreV3Assets(narrowContext(), { ...options, profile: fallbackProfile });
+    expect(written.lod1.variant).toBe("full-geometry");
+    expect(written.lod1.measuredDeviationRatio).toBeGreaterThan(0.02);
+    // The emitted level's deviation is ZERO because it dropped nothing, and the
+    // geometric error is DERIVED from that rather than read off a constant.
+    expect(written.lod1.emittedDeviationRatio).toBe(0);
+    expect(written.lod1.geometricErrorMeters).toBe(0);
+    // Same triangles, same materials — the coarse level is the fine level.
+    expect(written.assets[1]!.counts).toEqual(written.assets[0]!.counts);
+  });
+
+  it("still SHEDS for a building inside the cap, so the fallback is per building", () => {
+    const written = writeMidtownCoreV3Assets(wideContext(), { ...options, profile: fallbackProfile });
+    expect(written.lod1.measuredDeviationRatio).toBeLessThanOrEqual(0.02);
+    expect(written.lod1.variant).toBe("shed-protrusions");
+    expect(written.lod1.geometricErrorMeters).toBe(MIDTOWN_CORE_V3_LOD1_GEOMETRIC_ERROR_METERS);
+    expect(written.assets[1]!.counts.triangleCount).toBeLessThan(written.assets[0]!.counts.triangleCount);
+  });
+
+  /**
+   * (F4) A FALLBACK COARSE LEVEL IS DECLARED INELIGIBLE, and its fine level
+   * becomes unbounded, because a runtime that selected the fallback at range
+   * would pay a second decode to draw the identical triangles — and a bounded
+   * fine level under an ineligible coarse one leaves the asset with no eligible
+   * representation at all, which is `lod-unavailable` rather than a fallback.
+   */
+  it("declares the fallback coarse level ineligible and its fine level unbounded", () => {
+    const context = narrowContext();
+    const written = writeMidtownCoreV3Assets(context, { ...options, profile: fallbackProfile });
+    const lods = midtownCoreV3AssemblyLods({
+      plan: context.plan, assets: written.assets, lod1: written.lod1,
+      budgets: fallbackProfile.budgets, lod0MaxDistanceMeters: 250,
+    });
+    expect(lods.map((lod) => lod.eligible)).toEqual([true, false]);
+    expect(lods[0]!.maxDistanceMeters).toBeNull();
+    expect(lods[0]!.geometricErrorMeters).toBe(0);
+    expect(lods[1]!.geometricErrorMeters).toBe(0);
+    expect(lods[1]!.silhouette!.deviationRatio).toBe(0);
+    expect(lods[1]!.silhouette!.planHashSha256).toBe(context.plan.planHashSha256);
+  });
+
+  it("keeps a shedding building's coarse level eligible and its fine level bounded", () => {
+    const context = wideContext();
+    const written = writeMidtownCoreV3Assets(context, { ...options, profile: fallbackProfile });
+    const lods = midtownCoreV3AssemblyLods({
+      plan: context.plan, assets: written.assets, lod1: written.lod1,
+      budgets: fallbackProfile.budgets, lod0MaxDistanceMeters: 250,
+    });
+    expect(lods.map((lod) => lod.eligible)).toEqual([true, true]);
+    expect(lods[0]!.maxDistanceMeters).toBe(250);
+    expect(lods[1]!.geometricErrorMeters).toBe(MIDTOWN_CORE_V3_LOD1_GEOMETRIC_ERROR_METERS);
+    expect(lods[1]!.silhouette!.deviationRatio).toBe(written.lod1.measuredDeviationRatio);
+  });
+
+  /**
+   * (F5b) THE RECORD-BUILDER IS THE ENFORCER, and this is the proof that an
+   * implementer cannot route around it: the descriptor builder is the only way
+   * to a coarse LOD, and it refuses an over-cap SHEDDING level rather than
+   * writing the honest number into a release and letting the assembly validator
+   * find it later.
+   */
+  it("REFUSES assembly descriptors for an over-cap shedding level", () => {
+    const context = narrowContext();
+    const written = writeMidtownCoreV3Assets(context, { ...options });
+    expect(written.lod1.variant).toBe("shed-protrusions");
+    expect(() => midtownCoreV3AssemblyLods({
+      plan: context.plan, assets: written.assets, lod1: written.lod1,
+      budgets: MIDTOWN_CORE_V3_WAVE_PROFILE.budgets, lod0MaxDistanceMeters: 250,
+    })).toThrow(/outside the approved 0\.02 bound/u);
+  });
+
+  it("REFUSES a full-geometry claim whose emitted coarse level is not the fine level", () => {
+    // The derivation is fail-closed rather than trusting the variant label: a
+    // zero geometric error on geometry that dropped something would be a false
+    // claim written into an immutable release.
+    const context = wideContext();
+    const shed = writeMidtownCoreV3Assets(context, { ...options });
+    expect(midtownCoreV3EmittedGeometriesIdentical(
+      v3GeometryForGlb(context.plan, tessellateV3Plan(context.plan, { includeRecesses: true }), { yUp: false }),
+      v3GeometryForGlb(context.plan, tessellateV3Plan(context.plan, { includeRecesses: false }), { yUp: false }),
+    )).toBe(false);
+    expect(shed.lod1.geometricErrorMeters).toBe(MIDTOWN_CORE_V3_LOD1_GEOMETRIC_ERROR_METERS);
+    // And identical geometry compares identical, so the check is not vacuous.
+    const fine = v3GeometryForGlb(context.plan, tessellateV3Plan(context.plan, { includeRecesses: true }), { yUp: false });
+    expect(midtownCoreV3EmittedGeometriesIdentical(fine, fine)).toBe(true);
   });
 });

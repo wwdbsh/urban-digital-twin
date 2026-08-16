@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "1.0",
+  "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+  "waveId": "w01",
+  "artifact": "stratified-byte-replay",
+  "note": "Regenerated from the same pinned snapshot and ledger and byte-compared against the committed payload inventory. A byte-identical replay is a determinism statement about this repository's generator; it is not visual, geographic or performance acceptance.",
+  "declaredGlbCount": 14358,
+  "cellsSampled": 40,
+  "requestedSample": 40,
+  "comparedGlbCount": 40,
+  "byteIdenticalCount": 40,
+  "mismatches": [],
+  "ok": true
+}

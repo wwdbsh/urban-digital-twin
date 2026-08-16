@@ -1,0 +1,222 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "mass-generation-20260816",
+  "taskId": "T004",
+  "artifact": "stage0-frozen-stage-fingerprints",
+  "note": "The T004 grammar-envelope and texture-delivery keys enter midtownCoreV3StageFingerprint CONDITIONALLY. This is the measurement that every frozen wave profile's resumable-stage receipts are therefore unaffected. The pinned column was computed at commit 9e120e1, before either key existed.",
+  "frozenProfiles": [
+    {
+      "profile": "w01 midtown-core",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3",
+      "declaredAdmissionEnvelope": {
+        "maxRingVertices": 64,
+        "lowRiseFloorHeight": false,
+        "rooftopGroupContainment": false,
+        "rooftopClusterHeightClamp": false
+      },
+      "textureDelivery": "embedded",
+      "fingerprintAt9e120e1": "5bfdf427a770d3e17b987e489d983445cbab94851d8c7bc682ad198f4c0b3bfa",
+      "fingerprintNow": "5bfdf427a770d3e17b987e489d983445cbab94851d8c7bc682ad198f4c0b3bfa",
+      "unmoved": true
+    },
+    {
+      "profile": "lower-manhattan wave",
+      "releaseId": "manhattan-lower-manhattan-cells-20260812",
+      "declaredAdmissionEnvelope": {
+        "maxRingVertices": 64,
+        "lowRiseFloorHeight": false,
+        "rooftopGroupContainment": false,
+        "rooftopClusterHeightClamp": false
+      },
+      "textureDelivery": "embedded",
+      "fingerprintAt9e120e1": "b8172986a852cc65b2bc11e70440943ed5b3a8f2dbede7d86d659c911ca5ebe0",
+      "fingerprintNow": "b8172986a852cc65b2bc11e70440943ed5b3a8f2dbede7d86d659c911ca5ebe0",
+      "unmoved": true
+    },
+    {
+      "profile": "lower-manhattan census",
+      "releaseId": "manhattan-lower-manhattan-cells-20260812",
+      "declaredAdmissionEnvelope": {
+        "maxRingVertices": 64,
+        "lowRiseFloorHeight": false,
+        "rooftopGroupContainment": false,
+        "rooftopClusterHeightClamp": false
+      },
+      "textureDelivery": "embedded",
+      "fingerprintAt9e120e1": "cb08522d06477d7b0ede310d8272efec16f1f6a8d62ae22f6c1c55a11bc4d7f7",
+      "fingerprintNow": "cb08522d06477d7b0ede310d8272efec16f1f6a8d62ae22f6c1c55a11bc4d7f7",
+      "unmoved": true
+    },
+    {
+      "profile": "lower-manhattan p1",
+      "releaseId": "manhattan-lower-manhattan-cells-20260812-p1",
+      "declaredAdmissionEnvelope": {
+        "maxRingVertices": 64,
+        "lowRiseFloorHeight": false,
+        "rooftopGroupContainment": false,
+        "rooftopClusterHeightClamp": false
+      },
+      "textureDelivery": "embedded",
+      "fingerprintAt9e120e1": "2eacab3b98817a04c28216abbcc92aeff05e09b66f0f798930e2f1000acf5354",
+      "fingerprintNow": "2eacab3b98817a04c28216abbcc92aeff05e09b66f0f798930e2f1000acf5354",
+      "unmoved": true
+    },
+    {
+      "profile": "central-upper wave",
+      "releaseId": "manhattan-central-upper-manhattan-cells-20260812",
+      "declaredAdmissionEnvelope": {
+        "maxRingVertices": 64,
+        "lowRiseFloorHeight": false,
+        "rooftopGroupContainment": false,
+        "rooftopClusterHeightClamp": false
+      },
+      "textureDelivery": "embedded",
+      "fingerprintAt9e120e1": "67cbdbf3f1ead08acc6b6566d2d9a27a8d5262f7e91ada96d2c2d8ba6b7a459b",
+      "fingerprintNow": "67cbdbf3f1ead08acc6b6566d2d9a27a8d5262f7e91ada96d2c2d8ba6b7a459b",
+      "unmoved": true
+    },
+    {
+      "profile": "central-upper census",
+      "releaseId": "manhattan-central-upper-manhattan-cells-20260812",
+      "declaredAdmissionEnvelope": {
+        "maxRingVertices": 64,
+        "lowRiseFloorHeight": false,
+        "rooftopGroupContainment": false,
+        "rooftopClusterHeightClamp": false
+      },
+      "textureDelivery": "embedded",
+      "fingerprintAt9e120e1": "07759bea30b9f467d894651c1dd02193ad0b431ac74e3e611709f6e5ff5fac28",
+      "fingerprintNow": "07759bea30b9f467d894651c1dd02193ad0b431ac74e3e611709f6e5ff5fac28",
+      "unmoved": true
+    },
+    {
+      "profile": "central-upper p1",
+      "releaseId": "manhattan-central-upper-manhattan-cells-20260812-p1",
+      "declaredAdmissionEnvelope": {
+        "maxRingVertices": 64,
+        "lowRiseFloorHeight": false,
+        "rooftopGroupContainment": false,
+        "rooftopClusterHeightClamp": false
+      },
+      "textureDelivery": "embedded",
+      "fingerprintAt9e120e1": "54e62bbf5cd900a6323153e7c4f415976594a6f25668a4996d4762ecc9d28b40",
+      "fingerprintNow": "54e62bbf5cd900a6323153e7c4f415976594a6f25668a4996d4762ecc9d28b40",
+      "unmoved": true
+    },
+    {
+      "profile": "northern wave",
+      "releaseId": "manhattan-northern-manhattan-cells-20260812",
+      "declaredAdmissionEnvelope": {
+        "maxRingVertices": 64,
+        "lowRiseFloorHeight": false,
+        "rooftopGroupContainment": false,
+        "rooftopClusterHeightClamp": false
+      },
+      "textureDelivery": "embedded",
+      "fingerprintAt9e120e1": "66e2edc7f0e9acd72733babf462380e0361149a918d07881b8db52bed520666c",
+      "fingerprintNow": "66e2edc7f0e9acd72733babf462380e0361149a918d07881b8db52bed520666c",
+      "unmoved": true
+    },
+    {
+      "profile": "northern census",
+      "releaseId": "manhattan-northern-manhattan-cells-20260812",
+      "declaredAdmissionEnvelope": {
+        "maxRingVertices": 64,
+        "lowRiseFloorHeight": false,
+        "rooftopGroupContainment": false,
+        "rooftopClusterHeightClamp": false
+      },
+      "textureDelivery": "embedded",
+      "fingerprintAt9e120e1": "c2aa7dc5ff29790cbdc24d46e9a9d174e30e8b7e27a4e37388202fb752bb1803",
+      "fingerprintNow": "c2aa7dc5ff29790cbdc24d46e9a9d174e30e8b7e27a4e37388202fb752bb1803",
+      "unmoved": true
+    },
+    {
+      "profile": "northern p1",
+      "releaseId": "manhattan-northern-manhattan-cells-20260812-p1",
+      "declaredAdmissionEnvelope": {
+        "maxRingVertices": 64,
+        "lowRiseFloorHeight": false,
+        "rooftopGroupContainment": false,
+        "rooftopClusterHeightClamp": false
+      },
+      "textureDelivery": "embedded",
+      "fingerprintAt9e120e1": "157c2f80cb56406325a1bbec6c67770648ce25c1caf76a26192282a1c7b10a12",
+      "fingerprintNow": "157c2f80cb56406325a1bbec6c67770648ce25c1caf76a26192282a1c7b10a12",
+      "unmoved": true
+    },
+    {
+      "profile": "southern wave",
+      "releaseId": "manhattan-southern-remainder-cells-20260812",
+      "declaredAdmissionEnvelope": {
+        "maxRingVertices": 64,
+        "lowRiseFloorHeight": false,
+        "rooftopGroupContainment": false,
+        "rooftopClusterHeightClamp": false
+      },
+      "textureDelivery": "embedded",
+      "fingerprintAt9e120e1": "be86acf3c09063b43f5d10df7b3e1d1394da12bac42ea0f8ce30617c1f71239a",
+      "fingerprintNow": "be86acf3c09063b43f5d10df7b3e1d1394da12bac42ea0f8ce30617c1f71239a",
+      "unmoved": true
+    },
+    {
+      "profile": "southern census",
+      "releaseId": "manhattan-southern-remainder-cells-20260812",
+      "declaredAdmissionEnvelope": {
+        "maxRingVertices": 64,
+        "lowRiseFloorHeight": false,
+        "rooftopGroupContainment": false,
+        "rooftopClusterHeightClamp": false
+      },
+      "textureDelivery": "embedded",
+      "fingerprintAt9e120e1": "771fba82803df43820ebe7a5a6bd2ce203f9a787c11d9b060e39d29a7b88c1b3",
+      "fingerprintNow": "771fba82803df43820ebe7a5a6bd2ce203f9a787c11d9b060e39d29a7b88c1b3",
+      "unmoved": true
+    },
+    {
+      "profile": "southern p1",
+      "releaseId": "manhattan-southern-remainder-cells-20260812-p1",
+      "declaredAdmissionEnvelope": {
+        "maxRingVertices": 64,
+        "lowRiseFloorHeight": false,
+        "rooftopGroupContainment": false,
+        "rooftopClusterHeightClamp": false
+      },
+      "textureDelivery": "embedded",
+      "fingerprintAt9e120e1": "ec278816c6f2ebc8a32222d7f5e947860614013fd9bd57d2e94fa7fae6ad1477",
+      "fingerprintNow": "ec278816c6f2ebc8a32222d7f5e947860614013fd9bd57d2e94fa7fae6ad1477",
+      "unmoved": true
+    }
+  ],
+  "allUnmoved": true,
+  "sharedUriVariants": {
+    "note": "The four -t1 variants DO move, deliberately: shared-uri delivery is the one substantive change that family exists for, and a receipt blind to it was the defect. Their stage receipts live in gitignored work roots and no committed record pins one.",
+    "variants": [
+      {
+        "releaseId": "manhattan-southern-remainder-cells-20260812-t1",
+        "textureDelivery": "shared-uri",
+        "fingerprintNow": "b58253d4aa8d2f1aefd0ae97192a5c46be153fe88e4d41b10e3e09a5a0090b80",
+        "fingerprintUnderEmbedded": "fd3d5cc58f188230501922971f27ae190d90717fdcc4b358f1f2620f057ce431"
+      },
+      {
+        "releaseId": "manhattan-lower-manhattan-cells-20260812-t1",
+        "textureDelivery": "shared-uri",
+        "fingerprintNow": "a0ae4f9b6d2d9de95e96268707112290f2695b0aaa4c44f894b268bc92a1eadd",
+        "fingerprintUnderEmbedded": "3bad3c46d4e8a2aef5c22fc7ee68af66cdb474363fa8cfe61bd2cc65eb01ad9e"
+      },
+      {
+        "releaseId": "manhattan-central-upper-manhattan-cells-20260812-t1",
+        "textureDelivery": "shared-uri",
+        "fingerprintNow": "9f31b942bc260d28c662939b6595ce0b207be5fd6951883027c6038a55ebc2c7",
+        "fingerprintUnderEmbedded": "7be76acb85cd18301787e5c05c992d5cff976b00cc5182aaadd29caa744c7b62"
+      },
+      {
+        "releaseId": "manhattan-northern-manhattan-cells-20260812-t1",
+        "textureDelivery": "shared-uri",
+        "fingerprintNow": "36e250b5b9d4a085850f5b3b7a825234a0ec4ca40759a20e4625e14ca06b18a5",
+        "fingerprintUnderEmbedded": "6b1094792894ec0c46cb47dab8fc923d163c366348d3311d7c60b75df7182459"
+      }
+    ],
+    "allMoved": true
+  }
+}

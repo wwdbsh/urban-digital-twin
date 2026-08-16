@@ -30,6 +30,7 @@ import {
   type MidtownCoreReleaseProfile,
 } from "./midtown-core-release.ts";
 import {
+  V3_FROZEN_WAVE_ADMISSION_ENVELOPE,
   midtownCoreV3EvidenceShardId,
   midtownCoreV3InventoryId,
   type V3WaveProfile,
@@ -188,6 +189,7 @@ export const LOWER_MANHATTAN_WAVE_PROFILE: V3WaveProfile = {
   budgets: { ...V3T_QUALITY_BUDGETS },
   texture: PROCEDURAL_TEXTURE_PROFILE,
   textureFilter: { ...PROCEDURAL_TEXTURE_SAMPLER_FILTER },
+  admissionEnvelope: V3_FROZEN_WAVE_ADMISSION_ENVELOPE,
 };
 
 /**
@@ -206,6 +208,7 @@ export const LOWER_MANHATTAN_CENSUS_PROFILE: V3WaveProfile = {
   uncertainty: DETERMINISTIC_FACADE_V3_UNCERTAINTY,
   budgets: { ...V3_QUALITY_BUDGETS },
   texture: null,
+  admissionEnvelope: V3_FROZEN_WAVE_ADMISSION_ENVELOPE,
 };
 
 // ---------------------------------------------------------------------------

@@ -13,11 +13,13 @@
 import {
   DETERMINISTIC_FACADE_V3_GENERATOR_VERSION,
   DETERMINISTIC_FACADE_V3_SCHEMA_VERSION,
+  v3EffectiveGrammarOptions,
+  v3GrammarOptionsDifferFromShipped,
   type V3StyleClass,
 } from "../domain/deterministic-facade-generator-v3.ts";
 import { sha256HexSync, stableSerialize } from "../domain/deterministic-hash.ts";
 import type { ExteriorOwnershipCell } from "./exterior-release.ts";
-import type { ImmutablePin } from "./multi-lod-assembly.ts";
+import type { AssemblyLod, ImmutablePin } from "./multi-lod-assembly.ts";
 import { proceduralTextureProvenance, type ProceduralTextureClass, type ProceduralTextureProvenance } from "./procedural-texture.ts";
 import type { MidtownCoreBuildingSource } from "./midtown-core-materialization.ts";
 import { midtownCoreGlbBounds } from "./midtown-core-source.ts";
@@ -27,10 +29,12 @@ import {
   type MidtownCoreShippedAsset,
 } from "./midtown-core-release.ts";
 import {
+  MIDTOWN_CORE_V3_DEFAULT_LOD1_POLICY,
   MIDTOWN_CORE_V3_VOLUME_TOLERANCE,
   MIDTOWN_CORE_V3_WAVE_PROFILE,
   MidtownCoreV3Stop,
   buildMidtownCoreV3Plan,
+  midtownCoreV3AssemblyLods,
   midtownCoreV3AssetRef,
   writeMidtownCoreV3Assets,
   type MidtownCoreV3Registration,
@@ -91,6 +95,24 @@ export interface MidtownCoreV3Census {
   maximumRingVertexCount: number;
   refusalsByCode: Record<string, number>;
   styleClassCounts: Record<string, number>;
+  /**
+   * WHAT LOD 1 IS FOR THIS WAVE, and for how many of its buildings (T004 F12).
+   *
+   * `lod1Policy` is the wave's declared policy. `lod1FallbackCount` is the
+   * number of materialized buildings whose MEASURED silhouette deviation put
+   * them outside the assembly schema's 2% cap, so their coarse level carries
+   * full geometry instead of shedding protrusions. Under the default
+   * `shed-protrusions` policy it is always zero, and the field reads as the
+   * statement it is rather than as an absent one.
+   *
+   * `worstShedProtrusionsDeviationRatio` is the worst measured deviation over
+   * the buildings that DID shed, so a census can be read as "these are the
+   * numbers the cap was applied to" rather than only as a count.
+   */
+  lod1Policy: string;
+  lod1FallbackCount: number;
+  worstShedProtrusionsDeviationRatio: number;
+  worstMeasuredDeviationRatio: number;
 }
 
 export interface MidtownCoreV3Materialization {
@@ -105,12 +127,39 @@ export interface MidtownCoreV3Materialization {
   /** Buildings shipped with `setbacks` absent, with the disclosure each carries. */
   absentSetbacks: Map<string, string>;
   /**
+   * PER-BUILDING LOD-1 DECISION for every materialized building (T004 F12).
+   *
+   * Keyed by canonical building id; carries the variant its coarse level
+   * actually emitted, the measured deviation the decision was made on, and the
+   * deviation the emitted level declares. An emitter reads it to build the
+   * assembly descriptors, and a census reads it to name the fallback set rather
+   * than merely counting it.
+   */
+  lod1Decisions: Map<string, { variant: string; measuredDeviationRatio: number; emittedDeviationRatio: number; geometricErrorMeters: number }>;
+  /**
    * Every RELEASE-scoped tile some shipped asset references by URI, sorted.
    * Empty for an embedded or texture-free wave, which is every frozen release.
    * The emitter declares exactly these as `texture` artifacts, so a tile no GLB
    * draws is never declared and a tile some GLB draws is never missing.
    */
   sharedTextureClasses: ProceduralTextureClass[];
+  /**
+   * TWO-LOD ASSEMBLY DESCRIPTORS per materialized building, keyed by canonical
+   * building id, and EMPTY unless the caller asked for them with
+   * `assemblyLods`.
+   *
+   * They are built here, inside the loop that still holds the plan and both
+   * emitted assets, because `midtownCoreV3AssemblyLods` is the enforced route to
+   * a coarse descriptor (ADR 0050) and it needs exactly those two things. A
+   * caller that reconstructed them downstream would have neither, and would have
+   * to restate the LOD-1 decision instead of carrying the one the writer
+   * measured — which is the second half the ADR requires a successor stage not
+   * to forget.
+   *
+   * Requesting them requires `retainAllLods`, since a coarse descriptor for an
+   * asset whose bytes were dropped would describe bytes nobody can check.
+   */
+  assemblyLods: Map<string, { lods: AssemblyLod[]; truthTiers: readonly string[] }>;
   census: MidtownCoreV3Census;
 }
 
@@ -142,6 +191,21 @@ export interface MidtownCoreV3MaterializeInput {
    * midtown pipeline calls this function exactly as it always did.
    */
   profile?: V3WaveProfile;
+  /**
+   * Ask for the two-LOD assembly descriptors of every materialized building.
+   *
+   * Absent — which is every frozen wave — computes nothing and returns an empty
+   * map, so no committed release's bytes, census or stage fingerprint can move
+   * because this option exists.
+   */
+  assemblyLods?: {
+    /**
+     * Distance beyond which the FINE level stops being selected, for a building
+     * whose coarse level is eligible. `null` serves the fine level at every
+     * range.
+     */
+    lod0MaxDistanceMeters: number | null;
+  };
 }
 
 /**
@@ -162,6 +226,8 @@ export function materializeMidtownCoreV3Cells(input: MidtownCoreV3MaterializeInp
   const refusalCodes = new Map<string, string>();
   const registration: MidtownCoreV3Registration[] = [];
   const absentSetbacks = new Map<string, string>();
+  const lod1Decisions = new Map<string, { variant: string; measuredDeviationRatio: number; emittedDeviationRatio: number; geometricErrorMeters: number }>();
+  const assemblyLods = new Map<string, { lods: AssemblyLod[]; truthTiers: readonly string[] }>();
   const sharedTextureClasses = new Set<ProceduralTextureClass>();
   const planHashes = new Set<string>();
   const refusalsByCode: Record<string, number> = {};
@@ -183,6 +249,9 @@ export function materializeMidtownCoreV3Cells(input: MidtownCoreV3MaterializeInp
   let worstHorizontal = 0;
   let worstVertical = 0;
   let maximumRingVertexCount = 0;
+  let lod1FallbackCount = 0;
+  let worstShedDeviation = 0;
+  let worstMeasuredDeviation = 0;
 
   const censusOnly = input.retain === "census-only";
   const refuse = (buildingId: string, code: string, detail: string): void => {
@@ -232,6 +301,16 @@ export function materializeMidtownCoreV3Cells(input: MidtownCoreV3MaterializeInp
       worstHorizontal = Math.max(worstHorizontal, written.registration.horizontalDeviationMeters);
       worstVertical = Math.max(worstVertical, written.registration.verticalDeviationMeters);
       if (written.setbacksAbsent) absentSetbacks.set(buildingId, written.setbackDisclosure);
+      // (T004 F12) The decision, per building, from the writer that made it.
+      lod1Decisions.set(buildingId, {
+        variant: written.lod1.variant,
+        measuredDeviationRatio: written.lod1.measuredDeviationRatio,
+        emittedDeviationRatio: written.lod1.emittedDeviationRatio,
+        geometricErrorMeters: written.lod1.geometricErrorMeters,
+      });
+      if (written.lod1.variant === "full-geometry") lod1FallbackCount += 1;
+      else worstShedDeviation = Math.max(worstShedDeviation, written.lod1.measuredDeviationRatio);
+      worstMeasuredDeviation = Math.max(worstMeasuredDeviation, written.lod1.measuredDeviationRatio);
 
       generatedAssetCount += written.assets.length;
       const shipped: MidtownCoreShippedAsset[] = [];
@@ -260,6 +339,32 @@ export function materializeMidtownCoreV3Cells(input: MidtownCoreV3MaterializeInp
           checksumSha256: asset.checksumSha256,
           counts: { ...asset.counts },
           bounds: midtownCoreGlbBounds(asset.bytes, { allowExternalImageUri: profile.textureDelivery === "shared-uri" }),
+          sharedTextureClasses: [...asset.sharedTextureClasses],
+        });
+      }
+      // The enforced route to a coarse descriptor (ADR 0050). Built here because
+      // this is the last point that still holds BOTH the plan and both emitted
+      // assets; a downstream builder has neither and would have to restate the
+      // LOD-1 decision the writer measured instead of carrying it.
+      if (input.assemblyLods) {
+        if (input.retainAllLods !== true) fail("assembly descriptors need both LODs retained; retainAllLods is not set.");
+        if (censusOnly) fail("assembly descriptors describe bytes, which a census-only pass does not retain.");
+        // `truthTiers` rides along because the writer EMBEDDED it in every GLB
+        // and the assembly replay compares the manifest asset to those embedded
+        // bytes field for field. Re-deriving it downstream would be a second
+        // opinion about the same fact, and the two could disagree.
+        assemblyLods.set(buildingId, {
+          lods: midtownCoreV3AssemblyLods({
+            plan: context.plan,
+            assets: written.assets,
+            lod1: written.lod1,
+            budgets: profile.budgets,
+            lod0MaxDistanceMeters: input.assemblyLods.lod0MaxDistanceMeters,
+            // Already measured to decide the variant; measuring again would put
+            // the island's rectangle-union pass through twice for one number.
+            silhouetteMeasurement: written.silhouette,
+          }),
+          truthTiers: written.truthTiers,
         });
       }
       planHashes.add(context.plan.planHashSha256);
@@ -286,6 +391,8 @@ export function materializeMidtownCoreV3Cells(input: MidtownCoreV3MaterializeInp
     refusalCodes,
     registration,
     absentSetbacks,
+    lod1Decisions,
+    assemblyLods,
     sharedTextureClasses: [...sharedTextureClasses].sort(),
     census: {
       requestedBuildingCount: requested,
@@ -316,6 +423,10 @@ export function materializeMidtownCoreV3Cells(input: MidtownCoreV3MaterializeInp
       maximumRingVertexCount,
       refusalsByCode,
       styleClassCounts,
+      lod1Policy: profile.lod1Policy ?? MIDTOWN_CORE_V3_DEFAULT_LOD1_POLICY,
+      lod1FallbackCount,
+      worstShedProtrusionsDeviationRatio: worstShedDeviation,
+      worstMeasuredDeviationRatio: worstMeasuredDeviation,
     },
   };
 }
@@ -368,6 +479,19 @@ export interface MidtownCoreV3StageFingerprintInput {
  * rasterizer change has to invalidate a receipt exactly as a grammar change
  * does. The key is emitted only when the wave is textured, so wave `w01`'s
  * fingerprints are the values they always were.
+ *
+ * TWO BLINDNESSES CLOSED (T004). This fingerprint covered the generator's
+ * VERSION but not the grammar STATE it was invoked under, and covered the tile
+ * catalogue but not WHERE its bytes are delivered. Both are the ADR 0046 D5b
+ * defect class: a receipt taken under one policy satisfying a stage running
+ * another, so a resumed stage emits the previous policy's bytes and reports
+ * `skipped: true`. Both keys are entered CONDITIONALLY — the grammar envelope
+ * only when it differs from the shipped grammar, the delivery only when it is
+ * not the default `embedded` — so every frozen wave profile's fingerprints are
+ * byte-identical to what they were before this key existed. The four `-t1`
+ * variants DO move, deliberately: `shared-uri` is the one substantive change
+ * that whole variant family exists for, and their receipts live in gitignored
+ * work roots rather than in any committed record.
  */
 export function midtownCoreV3StageFingerprint(input: MidtownCoreV3StageFingerprintInput): string {
   const profile = input.profile ?? MIDTOWN_CORE_V3_WAVE_PROFILE;
@@ -389,6 +513,24 @@ export function midtownCoreV3StageFingerprint(input: MidtownCoreV3StageFingerpri
       generatedAt: profile.generatedAt,
       budgets: { ...profile.budgets },
       volumeTolerance: MIDTOWN_CORE_V3_VOLUME_TOLERANCE,
+      // The EFFECTIVE envelope, so `{ maxRingVertices: 384 }` and the same
+      // value with every other field spelled out are one fingerprint rather
+      // than two.
+      ...(v3GrammarOptionsDifferFromShipped(profile.admissionEnvelope)
+        ? { admissionEnvelope: v3EffectiveGrammarOptions(profile.admissionEnvelope) }
+        : {}),
+      ...(profile.textureDelivery === undefined || profile.textureDelivery === "embedded"
+        ? {}
+        : { textureDelivery: profile.textureDelivery }),
+      // The LOD-1 policy, on the same conditional-spread precedent and for the
+      // same reason (T004 F5a). `measured-fallback` changes WHAT BYTES LOD 1
+      // carries for some buildings, so a receipt taken under one policy must not
+      // satisfy a stage running the other; entering the key only when it differs
+      // from the shipped default keeps every frozen wave's fingerprint at the
+      // value it has always had.
+      ...(profile.lod1Policy === undefined || profile.lod1Policy === MIDTOWN_CORE_V3_DEFAULT_LOD1_POLICY
+        ? {}
+        : { lod1Policy: profile.lod1Policy }),
       ...(profile.texture === null ? {} : {
         texture: {
           ...proceduralTextureProvenance(),

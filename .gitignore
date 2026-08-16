@@ -12,6 +12,9 @@ coverage/
 *.blend1
 data/raw/
 data/generated/
+# The worktree-local `data/generated` is a SYMLINK into the main checkout, and a
+# trailing-slash pattern matches only directories, so it needs its own entry.
+/data/generated
 public/tiles/
 public/data/
 artifacts/offline-ingest/

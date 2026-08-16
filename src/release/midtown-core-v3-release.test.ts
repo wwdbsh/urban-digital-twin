@@ -205,7 +205,23 @@ const BASE_SKIP_NOTE =
   + "`data/midtown-core-20260811-v3/payload-inventory.json` carries the committed checksums, which the "
   + "unskipped gates above check.";
 
+/**
+ * MEMOIZED, because it is the expensive one.
+ *
+ * Every `it` in this file rebuilt the whole V3 release from the pinned snapshot
+ * — a full materialization of the wave — so the suite ran it twenty times. Under
+ * a loaded machine that intermittently pushed one case past its timeout and the
+ * file failed non-deterministically while passing in isolation. The build is a
+ * pure function of committed bytes, so one call per file is the same evidence at
+ * a twentieth of the cost.
+ */
+let memoizedBuild: ReturnType<typeof buildUncached> | null = null;
 function build() {
+  memoizedBuild ??= buildUncached();
+  return memoizedBuild;
+}
+
+function buildUncached() {
   const parentLedger = readJson(`${LEDGER_ROOT}/ledger.json`);
   const subset = buildMidtownCoreSubsetLedger({
     parentLedger,
