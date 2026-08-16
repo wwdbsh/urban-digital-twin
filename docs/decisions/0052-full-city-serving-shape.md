@@ -1,13 +1,18 @@
 # ADR 0052 — The full-city serving shape
 
-Status: accepted for the T005 `-s1` serving releases and the runtime seams they
-need. Sections 1 and 2 change runtime behaviour for the CURRENT promoted
-default; sections 4 to 7 are the emitted-and-measured record added 2026-08-16;
-section 3 is DECIDED BUT NOT YET LANDED, and section 8 says so plainly.
+Status: accepted, and LANDED. Sections 1 and 2 change runtime behaviour;
+sections 4 to 7 are the emitted-and-measured record added 2026-08-16; section 3
+was decided ahead of the promotion and **has now landed**, which section 8
+records together with the size of the rewrite it actually cost. Sections 9 to 11
+were added at the promotion commit: the record-id scoping defect and its
+decision, the camera-dependence the cap flip introduces, and the reconciliation
+seam plus the carries that stay open. **Section 12 records the C5 session
+captures, both of which FAILED their pre-registered bars.**
 Date: 2026-08-16
 Task: T005
 Supersedes: nothing. **Amends ADR 0046 D1** (per-wave assembly partitioning) and
-**corrects one cited figure in ADR 0042** (the cap 96/128 re-entry comparison).
+its manifest-weight measurement (section 7), and **corrects one cited figure in
+ADR 0042** (the cap 96/128 re-entry comparison).
 
 ## Context
 
@@ -373,19 +378,50 @@ carries the derivation.
 
 ---
 
-## 8. Status of section 3 — the budget flip has NOT landed
+## 8. Status of section 3 — the budget flip HAS landed
 
-Section 3 remains a decision and not yet an edit. `maxResidentUnits` is still
-128 and `maxCacheEntries` is still 512 in this build, because both are to land
-**in the first promotion commit** and no `-s1` release is promoted: all six are
-pinned as `?exteriorCells=` opt-ins and absent from the promotion record.
+**Amended 2026-08-16, at the promotion commit.** This section previously read
+"has NOT landed" and was correct on the day it was written. It is now history:
+`maxResidentUnits` is 8, `maxCacheEntries` is 1,024, and all six `-s1` releases
+are the promotion record. Section 3's sequencing decision was honoured exactly —
+the two constants moved in the same commit as the six activation records, and
+neither moved before the composition they were sized for existed.
 
-The flip was implemented and reverted before commit, and what that attempt found
-is recorded here because the next agent will meet it. Flipping the two constants
-turns over about twenty-five committed assertions across the residency,
-governance, promotion-record and journey suites — every figure that describes
-the CURRENT sparse composition against a 512-entry ceiling, plus the three
-frozen scheduler-trace baselines, which at cap 8 read:
+### The rewrite was about five and a half times larger than this section estimated
+
+The estimate below was **about twenty-five** committed assertions. The measured
+figure at the promotion commit is **138**, counted as removed `expect(` lines
+across the residency, governance, promotion-record and journey suites this
+section named:
+
+```
+git diff <pre-promotion> -- \
+  src/runtime/exterior-serving-residency.test.ts \
+  src/app/exterior-global-residency.test.ts \
+  src/runtime/exterior-cache-ceiling.test.ts \
+  src/runtime/exterior-cache-governance-gate.test.ts \
+  src/runtime/exterior-cache-eviction-correctness.test.ts \
+  src/runtime/exterior-cell-scheduling.test.ts \
+  src/runtime/exterior-default-activation.test.ts \
+  src/runtime/exterior-multiwave-activation.test.ts \
+  src/runtime/exterior-serving-activation.test.ts \
+  src/runtime/exterior-*-promotion-record.test.ts \
+  src/app/App.test.tsx | grep -c '^-.*expect('
+```
+
+The estimate was low for a reason worth naming rather than rounding away: it
+counted the assertions that state a NUMBER against the sparse composition, and
+missed the ones that state a RELATION which the promotion inverted — "no `-s1`
+release is in the promotion record", "the P1 successor IS the promoted default",
+"the predecessor is base massing". Those are not cap arithmetic and were not
+visible from a constant flip; they became false because six records were added
+above them.
+
+The pre-commit trial the paragraph below describes was therefore a partial
+rehearsal, and its "about twenty-five" should be read as the cap-arithmetic
+subset rather than as the cost of the promotion.
+
+The frozen scheduler-trace baselines, which at cap 8 read:
 
 | path | re-entry | wide re-entry | peak | evictions |
 | --- | --- | --- | --- | --- |
@@ -399,9 +435,219 @@ establish is that the cap BINDS on every path — peak is exactly 8 everywhere,
 where the street pan never reached 128 — and that eviction remains routine, at
 1.79 evictions per decision against 5.34 at the sparse cap.
 
-Rewriting those assertions is promotion's work, not the transform's, and doing
-it while nothing is promoted would leave the repository describing a composition
-it does not ship.
+Rewriting those assertions was promotion's work, not the transform's, and doing
+it while nothing was promoted would have left the repository describing a
+composition it did not ship. It is done here, in that commit.
+
+---
+
+## 9. D-C — a serving release republishes the RETENTION record ids
+
+Added 2026-08-16, at the promotion commit. The defect below was found by the two
+App tests that drive the real exterior runtime over the real committed bytes:
+both waited for a rendered entry count of 14 and both read **0**.
+
+### The defect
+
+Every `-s1` cell release published inventory and evidence-shard ids scoped to
+itself — `inventory:manhattan-lower-manhattan-cells-20260812-s1:doitt:…`. Every
+one of its assembly packages published the retained `-c1`-scoped ids, because
+`transformRetentionAssemblyToServing` carries the building-describing fields
+through untouched and those two are building-describing fields.
+
+Nothing structural caught it. `validateExteriorReleaseGraph`,
+`validateExteriorCellDetailSidecar` and `validateMultiLodAssembly` all check
+INTERNAL CONSISTENCY — that a cited id resolves, once, in the right audience —
+and none of them requires an id to be prefixed by the release carrying it. All
+six waves passed offline validation, including per-cell `replayMultiLodAssembly`
+over every GLB, and every cell failed in the browser with
+`assembly-pin-mismatch`. Rendered entry count: **zero**.
+
+The comparison that catches it is `ExteriorCellRuntime.renderCell`:
+
+```ts
+if (detail.inventoryId !== asset.inventoryId || detail.evidenceShardId !== asset.evidenceShardId)
+  throw new ExteriorRuntimeError("assembly-pin-mismatch", …);
+```
+
+### Why the other side cannot move
+
+The obvious repair — re-mint the assembly manifests with `-s1` ids — is not
+available, and this is the whole of the decision. `verifyGlb` requires the GLB's
+canonical `urbanDigitalTwin` metadata to be byte-equal to the manifest asset
+that declares it, and `inventoryId` and `evidenceShardId` are inside that
+metadata, inside 44,989 immutable T004 GLBs. Re-minting the manifest changes the
+field the bytes are pinned against, so every re-minted cell fails replay with
+"GLB canonical metadata differs from the immutable assembly manifest" — which
+was confirmed by doing it, not reasoned about.
+
+Regenerating the GLBs is not a repair either: it discards the retained evidence
+base, whose entire claim (section 4) is that the serving release carries the
+retained bytes and no others.
+
+### The decision
+
+**The record ids move.** `buildServingCellRelease` and
+`buildServingCellDetailSidecar` take a `recordReleaseId` — the RETENTION release
+— and publish `inventory:<-c1>:<building>` and `evidence-shard:<-c1>:<building>`.
+A TOMBSTONE keeps the `-s1` scope, because no retained record exists for a
+building the retention wave refused: the serving release is the author of that
+statement and names itself.
+
+This is not a workaround dressed as a principle. A serving release did not
+materialize these records — section 4's whole argument is that it transforms
+rather than rebuilds — so an `-s1`-scoped inventory id was a claim of authorship
+over evidence that came from somewhere else. The ids now say where the evidence
+is from, which is what a provenance-preserving platform should have said first.
+
+### It fails closed offline now
+
+The formula alone would be a second thing to keep in step, so it is BOUND to the
+bytes: `buildServingCellDetailSidecar` takes each building's declared
+`inventoryId`/`evidenceShardId` from the retained manifest asset and refuses to
+emit if the derived ids differ. The cell release is bound transitively —
+`validateExteriorCellDetailSidecar` requires the sidecar's shards to be exactly
+the ids the cell release cites — so a mis-scoped id is a build-time stop with a
+name on it rather than a blank viewport.
+
+### What it cost to find
+
+A structural validator suite of 2,238 tests, six offline validations over 5.7 GB
+of real bytes, and a committed promotion record, all green, on a release that
+rendered nothing. The gap was that no test loaded an emitted serving release
+THROUGH THE RUNTIME. One does now
+(`exterior-serving-release.test.ts`, "renders every shipped asset through the
+runtime, against the retained GLB metadata"), and it fails on the defect.
+
+---
+
+## 10. The cap flip changes WHERE a curated opt-in renders, not whether
+
+Added 2026-08-16, at the promotion commit. Section 3 measured this and decided
+to accept it; this section states it as a user-visible behaviour change, because
+that is what it is.
+
+`maxResidentUnits` 128 → 8 does not withdraw anything. Every curated and canary
+release stays pinned, and `?exteriorCells=manhattan-exterior-cells-20260811-v3`
+still resolves, still gates, still verifies. What changed is that the scheduler
+now admits the nearest **8** of 883 census cells instead of the nearest 128, so
+a SPARSE release is resident only when the camera is near the cells it has
+content for.
+
+Concretely: at the default overview pose the nearest eight cells are all wave
+w03's. Block 835 is not among them, so a session that opens the curated Block
+835 opt-in and does not travel there streams none of it — where before the flip
+the same link rendered from the opening pose.
+
+**The loss is real and it is named rather than absorbed.** The tests that are
+about activation and gating rather than about where the camera starts now carry
+`BLOCK_835_CAMERA_QUERY`, a six-parameter pose standing inside Block 835's own
+census cell. That constant IS the loss, written down: before this promotion no
+test needed one. It is deterministic because of the scheduler's first rule —
+every unit whose rectangle contains the camera ground point is resident, exempt
+from the cap — so the tests place the camera in the cell they are about instead
+of relying on a cap wide enough to hold everything.
+
+The alternative, keeping cap 128 for sparse releases and 8 for dense ones, was
+not taken: it makes residency depend on which release is loaded, which is a rule
+the scheduler would have to be told about and a user could not predict. One cap
+sized for the composition this build promotes, with the sparse consequence
+stated, is the choice.
+
+---
+
+## 11. The reconciliation seam, and the carries that stay open
+
+Added 2026-08-16, at the promotion commit.
+
+### `computePromotedCoverage` takes the activation set as a parameter
+
+`data/goal-integration-reconciliation.json` is a Goal completion artifact
+describing the CURATED composition, and it is not regenerated to follow a later
+promotion. Its coverage block used to be held byte-equal to a live recompute,
+which is the only fully arithmetic part of that Goal's completion argument; the
+serving promotion broke that equality by changing what "the promoted set" means.
+
+The seam is one parameter: `computePromotedCoverage(activations)` defaults to
+what the build ships, and the reconciliation suite passes the CURATED set, read
+off the live records' `predecessor` chain rather than hand-typed. The byte-equal
+drift check is therefore RESTORED — a curated record edited underneath the
+promotion still fails — rather than split into a frozen half and a live half.
+
+One field could not be restored and is named instead of hidden:
+`maxCacheEntries` is read from the live build, not from the activation set, and
+it moved 512 → 1,024. The suite subtracts that field and its derived
+`cacheEntryHeadroom` by name, asserts both the record's numbers and the build's,
+and holds everything else equal.
+
+### 484, 314 and D-8 are three different numbers
+
+They are close enough to be confused and have been:
+
+- **484** — the curated composition's promoted BUILDING count across the six
+  waves, against **498** shipped ASSETS. The 14-entry gap is Block 835 shipping
+  both canonical LODs for its fourteen buildings. This promotion replaces 484
+  with **44,989**.
+- **314** — ADR 0047's count of TEXTURED assets in the `-t1` shared-class
+  variant. Nothing to do with promotion: the `-t1` releases are pinned opt-ins
+  and are not in the promotion record before or after this commit.
+- **D-8** — ADR 0044's UNRESOLVED 484 / 474 discrepancy, carried by number since
+  ADR 0045. It is about how the curated promoted set was counted, and this
+  promotion neither closes it nor makes it worse; it makes it historical, since
+  the composition it disagrees about is no longer the default.
+
+### Carried forward, unclosed
+
+- **D-8** — the 484 / 474 discrepancy, carried unchanged, now historical (above).
+- **D-11** — the island-scale bounds-membership double-draw at 5,746 ms, named
+  by ADR 0045 §5.2 as a strictly cheaper, un-attempted fix. Untouched here. The
+  serving promotion does not make it worse: it changes what the exterior
+  scheduler admits, not how the citywide base computes bounds membership.
+- **D-17** — the commit gate's WIRING is unguarded, only its arithmetic is.
+  Routed to T007 by ADR 0045 and not closed here. Worth restating at this
+  commit because the promotion adds forty-eight pinned digits whose ARITHMETIC
+  is re-derived on every run by `exterior-serving-promotion-record.test.ts` —
+  and whose wiring is guarded by nothing more than that suite existing, which is
+  exactly D-17's shape one layer up.
+
+---
+
+## 12. C5 was captured on the promoted build, and both bars FAILED
+
+Added 2026-08-16, after the captures. Recorded in the ADR rather than only in the
+implementation record because section 3's cap decision was made on synthetic
+scheduler arithmetic, and this is the first time it met a browser.
+
+**Frame time (C5 a).** Every p50 and every p95 is inside the pre-registered
+tolerance on all four poses, including the pose where the serving arm holds 371
+resident assets against the curated arm's 54 — p50 8.3 ms in both arms
+everywhere, 720 frames per pose per arm against a 120-frame floor. The bar fails
+on `maximumDecodedTextures: 4` against a reading of 5, where exactly four are the
+shared class tiles the bound was written about and the fifth is a non-class PNG
+that ARM A ALSO LOADS with no serving release present.
+
+That reads like a harness-wiring defect — the bar's own docblock is about class
+tiles and the harness feeds it every PNG on the page — and it is deliberately NOT
+repaired here. Changing which field feeds a pre-registered threshold after seeing
+it fail is moving the goalposts whatever the argument, so the failure stands and
+the re-wiring is a decision for review.
+
+**Eviction at scale.** `cacheEvictions` is **0**, because the roam peaked at 544
+entries of 1,024 and 190.4 MB of 256 MB and never reached either cap. So the
+cap-driven eviction path is UNEXERCISED at the promoted caps, and section 3's
+"eviction remains routine, at 1.79 evictions per decision" — which is a
+scheduler-trace figure, not a browser figure — has no browser corroboration. The
+session does show residency-driven release (1,410 artifacts, 298.9 MB, 118 cells
+deferred against 8 scheduled), which is a different mechanism.
+
+The identity reading was not taken at all: the details panel the probe reads was
+absent at every stop. Nothing in this evidence says a re-admitted mesh does or
+does not resolve to the same sourced information.
+
+**D-18** passes: `dispatchCount === 1` at all four frame poses and all five roam
+stops. The landing loop does not re-dispatch on the promoted build.
+
+Neither capture was re-run under different conditions after failing.
 
 ---
 
@@ -418,7 +664,25 @@ it does not ship.
   so the island has one set of geometry bytes with one lineage (section 4).
 - Section 2's boot-cost figure was understated by roughly eight times; the
   measured island removal is 980.0 MB to 24.1 MB (section 7).
-- Section 3's budget flip is decided and NOT landed in this build (section 8).
+- Section 3's budget flip HAS landed, with the six activation records, in one
+  commit that is its own rollback contract (section 8).
+- A serving release's inventory and evidence-shard ids are the RETENTION
+  release's, because the retained GLB bytes name them and cannot be rewritten
+  (section 9). This is a provenance statement, not only a repair.
+- A sparse curated opt-in is now resident only when the camera is near its
+  cells. Nothing is withdrawn; where it renders changed (section 10).
+- `computePromotedCoverage` takes its activation set as a parameter, which keeps
+  the Goal reconciliation's byte-equal drift check alive across a promotion
+  (section 11).
+- D-8, D-11 and D-17 are carried forward unclosed and are restated by number
+  (section 11).
+- The C5 frame-time A/B and the eviction roam were captured on the promoted
+  build and BOTH FAILED their pre-registered bars (section 12). Frame times pass
+  on every pose; what fails is a decoded-texture bound that looks mis-wired and
+  was not re-wired, and an eviction claim that was never exercised because the
+  caps were never reached. Section 3's cap decision therefore stands on
+  scheduler arithmetic alone, with no browser corroboration of the eviction
+  behaviour it predicted.
 
 ## Related
 
