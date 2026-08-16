@@ -40,7 +40,7 @@ export interface SchedulableUnit {
   readonly bounds: ViewportBounds;
   /** The explicit priority order. Replaces the incidental lexicographic id order. */
   readonly order: number;
-  /** Final deterministic tiebreak when two units share a band and an order. */
+  /** Final deterministic tiebreak when two units share a distance and an order. */
   readonly tieBreakKey: string;
 }
 
@@ -78,9 +78,15 @@ export interface SchedulerPolicy {
   readonly maxResidentUnits: number;
   /**
    * Ascending distance-band edges in metres, measured from the footprint ground
-   * centre to the nearest point of a unit's rectangle. Units inside the same
-   * band are ranked by `order`, so distance decides coarsely and the explicit
-   * order decides finely.
+   * centre to the nearest point of a unit's rectangle.
+   *
+   * Bands remain the COARSE key and keep their ADR 0041 anchoring, but they no
+   * longer decide the order inside a band: see `compareRanked`, where the
+   * measured distance is the tiebreak immediately below the band and above
+   * `order`. Because `bandIndexOf` is monotone in distance, ranking by
+   * (band, distance) is the SAME total order as ranking by distance alone — the
+   * band is retained because it is the unit ADR 0041's evidence is stated in,
+   * not because it changes the result.
    */
   readonly distanceBandEdgesMeters: readonly number[];
   /**
@@ -272,11 +278,52 @@ interface RankedUnit {
   readonly unit: SchedulableUnit;
   readonly tier: number;
   readonly band: number;
+  /** Nearest-point distance in the census planar metric; the D-4 rank key. */
+  readonly distanceMeters: number;
 }
 
+/**
+ * Rank order: tier, band, DISTANCE, explicit order, tie-break key, id.
+ *
+ * ## The defect this closes (T005, D-4)
+ *
+ * `distanceMeters` used to be absent and `order` decided everything inside a
+ * band. `order` is the ledger's canonical cell order — a stable enumeration of
+ * the island, not a statement about where the camera is — so when the cap binds
+ * inside a single band the admitted set was "the lowest-numbered cells that
+ * happen to be within 1.2 km", not "the nearest cells". The band edges are
+ * 1,200 m and 2,400 m and an ownership cell is a few hundred metres across, so
+ * band 0 routinely holds dozens of cells: at a tight cap the truncation fell
+ * almost entirely inside one band, where the old key carried no distance
+ * information at all.
+ *
+ * Adding the measured distance below the band is provably the same total order
+ * as ranking by distance alone, because `bandIndexOf` is monotone in distance:
+ * if two units are in different bands the nearer one is already ranked first,
+ * and if they share a band the distance now decides. The band therefore keeps
+ * its ADR 0041 meaning and its evidence, and stops being load-bearing for the
+ * outcome.
+ *
+ * ## Why this is a no-op at the shipped cap and not at a serving cap
+ *
+ * MEASURED, over the 883-cell census at the 13 content-bearing cells of the
+ * promoted composition plus the two ADR 0041 cameras: at
+ * `maxResidentUnits: 128` every one of those fifteen cameras admits the
+ * IDENTICAL set under both rankings, because the cap binds at only one of them
+ * and binds there on a set the two orders agree about. At a serving cap of 8 the
+ * same cameras diverge sharply — the four-cell w03 cluster goes from 2 to 4
+ * content-bearing cells resident, and street cameras from 1 to 2 — which is why
+ * this lands as its own change, ahead of and separate from any cap movement.
+ *
+ * `order` remains below distance rather than being deleted: two rectangles can
+ * be exactly equidistant from a ground point, and a float comparison that fell
+ * straight through to `tieBreakKey` would make the decision depend on the census
+ * row order for those pairs. Determinism is unchanged.
+ */
 function compareRanked(left: RankedUnit, right: RankedUnit): number {
   if (left.tier !== right.tier) return left.tier - right.tier;
   if (left.band !== right.band) return left.band - right.band;
+  if (left.distanceMeters !== right.distanceMeters) return left.distanceMeters - right.distanceMeters;
   if (left.unit.order !== right.unit.order) return left.unit.order - right.unit.order;
   if (left.unit.tieBreakKey !== right.unit.tieBreakKey) return left.unit.tieBreakKey < right.unit.tieBreakKey ? -1 : 1;
   return left.unit.unitId < right.unit.unitId ? -1 : left.unit.unitId > right.unit.unitId ? 1 : 0;
@@ -313,9 +360,12 @@ function canonicalOrder(ids: Iterable<string>, byId: ReadonlyMap<string, Schedul
  *      street-level view rendered nothing. Overlapping units mean there can be
  *      several, and all of them are reserved.
  *   2. **Footprint intersection**, on each unit's `bounds`.
- *   3. **Distance band**, nearest-point distance from the footprint ground centre.
- *   4. **Explicit order**, then `tieBreakKey`, then id. Input array order is
- *      never consulted, so a shuffled input yields an identical decision.
+ *   3. **Distance band**, then the **measured nearest-point distance** itself,
+ *      both from the footprint ground centre. The distance term is the T005 D-4
+ *      fix; `compareRanked` carries the reasoning and the measurement.
+ *   4. **Explicit order**, then `tieBreakKey`, then id — reached only by units
+ *      that are exactly equidistant. Input array order is never consulted, so a
+ *      shuffled input yields an identical decision.
  *   5. **Hysteresis**, then the cap. A unit that has left the footprint stays
  *      resident for `hysteresisDecisions` further decisions, at lower priority
  *      than anything visible. There is NO behind-camera prefetch in this cycle;
@@ -360,19 +410,19 @@ export function selectResidentUnits(units: readonly SchedulableUnit[], view: Sch
     const distance = unitDistanceMeters(unit.bounds, view.footprint.groundCenter.longitude, view.footprint.groundCenter.latitude, policy);
     const band = bandIndexOf(distance, policy.distanceBandEdgesMeters);
     if (boundsContain(unit.bounds, view.camera.longitude, view.camera.latitude)) {
-      reserved.push({ unit, tier: 0, band });
+      reserved.push({ unit, tier: 0, band, distanceMeters: distance });
       remainingAfter.set(unit.unitId, policy.hysteresisDecisions);
       continue;
     }
     if (viewportBoundsIntersect(unit.bounds, view.footprint.bounds) && (maxUnitDistanceMeters === null || distance <= maxUnitDistanceMeters)) {
-      visible.push({ unit, tier: 1, band });
+      visible.push({ unit, tier: 1, band, distanceMeters: distance });
       remainingAfter.set(unit.unitId, policy.hysteresisDecisions);
       continue;
     }
     if (!previousSet.has(unit.unitId)) continue;
     const remaining = (previousRetained.get(unit.unitId) ?? policy.hysteresisDecisions) - 1;
     if (remaining <= 0) continue;
-    retained.push({ unit, tier: 2, band });
+    retained.push({ unit, tier: 2, band, distanceMeters: distance });
     remainingAfter.set(unit.unitId, remaining);
   }
 

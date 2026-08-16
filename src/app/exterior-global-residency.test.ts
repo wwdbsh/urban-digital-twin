@@ -362,7 +362,13 @@ describe("the App cell-loading effect under one global decision", () => {
     // The pre-fix placement, replayed by the same code. It reads a partially
     // applied decision hundreds of times per session.
     const midLoop = await replayEffect("mid-loop", { assertInvariants: false });
-    expect(midLoop.partiallyAppliedReleasePasses).toBe(238);
+    // 238 before the T005 D-4 ranking. The count is the number of times the
+    // pre-fix placement reads a partially applied decision, so it tracks how
+    // many decisions have a non-empty per-wave load at all; distance-first
+    // admission spreads the same session's loads over slightly more decisions.
+    // The structural assertions above are what this test is for, and they are
+    // unchanged at 0 and [].
+    expect(midLoop.partiallyAppliedReleasePasses).toBe(243);
 
     // HONEST LIMIT, stated rather than papered over: on THIS trace the mid-loop
     // placement produces no observed symptom, because the retirement pass at
@@ -383,12 +389,18 @@ describe("the App cell-loading effect under one global decision", () => {
    * CURRENT decision, which genuinely does not want the cell; the next decision
    * may re-admit it. No placement of the release pass can consult a decision
    * that has not been taken, so this is not fixable by ordering and is not
-   * fixed. Over 58 real camera samples it costs 2 refetches, which at ADR
-   * 0042's measured p50 is about 44 ms of localhost transport.
+   * fixed. Over 58 real camera samples it costs 1 refetch, which at ADR
+   * 0042's measured p50 is about 22 ms of localhost transport.
+   *
+   * It cost 2 before the T005 D-4 ranking. The residual race is a property of
+   * how often the admitted set changes its mind about a cell between two
+   * decisions, and distance-first admission changes its mind less often — the
+   * same mechanism behind the roam's 32 -> 15 re-entry fall in
+   * `exterior-cache-governance-gate.test.ts`.
    */
   it("pays a bounded refetch for loads that settle between two decisions", async () => {
     const shipped = await replayEffect("after-loop", { assertInvariants: false });
-    expect(shipped.releasedWhileSettlingThenRequested).toHaveLength(2);
+    expect(shipped.releasedWhileSettlingThenRequested).toHaveLength(1);
     // Small against the session's total release volume rather than merely small.
     expect(shipped.releasedWhileSettlingThenRequested.length / shipped.releasedKeys).toBeLessThan(0.01);
   });

@@ -185,11 +185,35 @@ describe("the roam trace this baseline is measured over", () => {
 /**
  * Budgets at the MEASURED value with no headroom, exactly as the T002 gate
  * states its own, so any policy change that makes any path worse fails here.
+ *
+ * ## Re-derived at the T005 D-4 ranking
+ *
+ * These figures moved when `compareRanked` began ranking by measured distance
+ * inside a distance band instead of by the census `order` (see
+ * `exterior-visibility-scheduler.ts`). They are re-derived here rather than
+ * relaxed, and the movement is stated rather than absorbed:
+ *
+ * | path | re-entry | wide re-entry | evictions |
+ * | --- | --- | --- | --- |
+ * | street-pan | 0 -> 0 | 0 -> 0 | 92 -> 92 |
+ * | zoom-out | 15 -> 13 | 25 -> 25 | 62 -> 58 |
+ * | roam | 32 -> **15** | 75 -> **38** | 362 -> **310** |
+ *
+ * Every path is unchanged or better, and the roaming session — the only one of
+ * the three that is a session rather than a gesture — improves by 53% at the
+ * hysteresis horizon and 49% over the wider window. That is the expected
+ * direction and the reason is mechanical: admitting the NEAREST cells means the
+ * admitted set changes less as the camera moves, because a small camera
+ * movement reorders a distance ranking slightly and can reorder a
+ * ledger-order ranking arbitrarily.
+ *
+ * `peakResidentCount` is unchanged on all three paths: D-4 changes WHICH cells
+ * are admitted when the cap binds, never HOW MANY.
  */
 const GLOBAL_BUDGET = {
   "midtown-street-pan-v1": { reEntryCount: 0, wideReEntryCount: 0, peakResidentCount: 91, totalEvictCount: 92 },
-  "midtown-zoom-out-v1": { reEntryCount: 15, wideReEntryCount: 25, peakResidentCount: 128, totalEvictCount: 62 },
-  "midtown-roam-v1": { reEntryCount: 32, wideReEntryCount: 75, peakResidentCount: 128, totalEvictCount: 362 },
+  "midtown-zoom-out-v1": { reEntryCount: 13, wideReEntryCount: 25, peakResidentCount: 128, totalEvictCount: 58 },
+  "midtown-roam-v1": { reEntryCount: 15, wideReEntryCount: 38, peakResidentCount: 128, totalEvictCount: 310 },
 } as const;
 
 describe("the single-pool residency baseline at the global cap", () => {
@@ -218,13 +242,32 @@ describe("the single-pool residency baseline at the global cap", () => {
 /**
  * The comparison, reported rather than spun.
  *
- * The same three traces replayed at the T002 cap and at the T003 cap. The zoom
- * path gets WORSE at the hysteresis horizon and BETTER over the wider window;
- * the roaming path — the only one of the three that is a session — gets clearly
- * better at the horizon. That is the whole result.
+ * The same three traces replayed at the T002 cap and at the T003 cap.
+ *
+ * ## ADR 0042's cited comparison no longer holds, and is corrected here
+ *
+ * ADR 0042 recorded this A/B at the pre-D-4 ranking and cited the roam's
+ * "29% fall in horizon re-entries" (45 at cap 96 against 32 at cap 128) as
+ * evidence FOR the raised cap. At the D-4 ranking that finding reverses: the
+ * roam scores 14 at cap 96 and 15 at cap 128, so the larger cap is marginally
+ * WORSE at the hysteresis horizon and worse over the wider window (31 against
+ * 38).
+ *
+ * The honest reading is that the raised cap's re-entry benefit was largely an
+ * artifact of the ordering defect. Ranking by `order` inside a band made the
+ * admitted set churn as the camera moved, and a bigger cap masked that churn by
+ * holding more cells; ranking by distance removes the churn at its source, and
+ * with it most of the benefit the larger cap was credited with.
+ *
+ * This does NOT retract the cap. Cap 128's justification was never only
+ * re-entries — its floor is the measured six-pool overview residency of 110
+ * cells (ADR 0041), which cap 96 cannot hold, and the zoom path is still better
+ * at 128 on both windows. What is retracted is the specific 29% claim, and
+ * ADR 0052 records the correction rather than leaving ADR 0042 citing a figure
+ * this repository no longer produces.
  */
 describe("cap 96 against cap 128, on all three paths", () => {
-  it("records the mixed zoom-out result and the roam improvement side by side", () => {
+  it("records the corrected post-D-4 comparison side by side", () => {
     const table = ["midtown-street-pan-v1", "midtown-zoom-out-v1", "midtown-roam-v1"].map((pathId) => {
       const at96 = replay(PATHS.get(pathId)!, EXTERIOR_CELL_SCHEDULER_POLICY);
       const at128 = replay(PATHS.get(pathId)!, EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY);
@@ -232,10 +275,10 @@ describe("cap 96 against cap 128, on all three paths", () => {
     });
     expect(table).toEqual([
       { pathId: "midtown-street-pan-v1", reEntry: [0, 0], wide: [0, 0], peak: [91, 91] },
-      // WORSE at the horizon, BETTER over the wider window. Not averaged.
-      { pathId: "midtown-zoom-out-v1", reEntry: [13, 15], wide: [30, 25], peak: [96, 128] },
-      // The roaming session: a 29% fall in horizon re-entries.
-      { pathId: "midtown-roam-v1", reEntry: [45, 32], wide: [76, 75], peak: [96, 128] },
+      // BETTER at the horizon, marginally worse over the wider window.
+      { pathId: "midtown-zoom-out-v1", reEntry: [14, 13], wide: [24, 25], peak: [96, 128] },
+      // The roaming session: the cap's re-entry advantage is gone post-D-4.
+      { pathId: "midtown-roam-v1", reEntry: [14, 15], wide: [31, 38], peak: [96, 128] },
     ]);
   });
 });
@@ -273,8 +316,11 @@ describe("steady-state residency against the cache ceilings", () => {
    */
   it("reports the largest single-decision eviction the roam produces", () => {
     const roamResult = replay(PATHS.get("midtown-roam-v1")!, EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY);
+    // Unchanged by D-4: the largest single-decision eviction is set by how far
+    // the camera jumps between two samples, not by how the admitted set is
+    // ordered. The TOTAL fell (362 -> 310) because the set churns less.
     expect(roamResult.peakEvictionsPerDecision).toBe(43);
-    expect(roamResult.totalEvictCount).toBe(362);
+    expect(roamResult.totalEvictCount).toBe(310);
     // Eviction is ROUTINE on a roaming path: it happens on most decisions, which
     // is the fact that turns a rare backstop into a hot loop.
     expect(roamResult.totalEvictCount / roamResult.decisionCount).toBeGreaterThan(5);

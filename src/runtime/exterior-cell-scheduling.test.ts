@@ -326,27 +326,26 @@ describe("scheduleExteriorCellsGlobally: one decision for the session", () => {
 });
 
 /**
- * ## FINDING (not fixed here): inside a distance band, wave order beats visibility
+ * ## T005 D-4, FIXED: no admitted cell is farther than a deferred one
  *
- * The frozen policy ranks by tier, then distance BAND, then the explicit census
- * `order`, then the tiebreak key. `order` is the ledger's wave-and-position
- * index: Block 835 is order 0, the midtown wave runs from 1, and the northern
- * wave runs to 882. So within one band — up to 1,200 m wide — a cell the camera
- * is nearly standing next to can be deferred in favour of a cell 1,100 m away
- * that happens to belong to an earlier wave.
+ * T003 recorded this as a FINDING and pinned the defect rather than repairing
+ * it: the policy ranked by tier, then distance BAND, then the census `order`,
+ * and `order` is the ledger's wave-and-position index — Block 835 at 0, midtown
+ * from 1, northern to 882. Inside one band, up to 1,200 m wide, a cell the
+ * camera nearly stands on could be deferred in favour of a cell 1,100 m away
+ * belonging to an earlier wave. T003 deferred the fix because changing the rank
+ * changes the frozen thrash baselines, and handed it to T005 as the first task
+ * with a rendered A/B in scope.
  *
- * That is a real ordering defect and it is NOT fixed here: changing the rank
- * order changes the frozen thrash baselines and the residency this task
- * measured, and T003's contract is cache governance, not ranking policy. The
- * candidate fix is to rank by `unitDistanceMeters` BEFORE `order` inside a band,
- * and it belongs to **T005**, which is the first task with a rendered A/B in
- * scope and can therefore see what the change does to what is drawn.
- *
- * The test below DOCUMENTS CURRENT BEHAVIOUR. It is written to fail if the
- * ordering is silently changed, so the fix has to be a decision.
+ * `compareRanked` now ranks by the measured distance below the band, and this
+ * test is inverted accordingly: what was an assertion that an inversion EXISTS
+ * is now an assertion that NONE does, over the whole 883-cell census at a camera
+ * where the cap binds hard. The scan is exhaustive over admitted/deferred pairs
+ * rather than sampled, so a future rank change that reintroduces the defect
+ * fails here rather than being noticed in a frame capture.
  */
-describe("FINDING for T005: band-internal ranking prefers wave order over distance", () => {
-  it("admits a farther low-order cell while deferring a nearer high-order cell in the same band", () => {
+describe("T005 D-4: band-internal ranking prefers distance over wave order", () => {
+  it("never admits a cell farther than one it defers in the same band", () => {
     const view = { enabled: true as const, footprint: footprintAround(-73.96, 40.79, 0.06), camera: pose(-73.96, 40.79, 6_000), heightBucket: 6_000, previous: null };
     const schedule = scheduleExteriorCellsGlobally(WAVES, view);
     const decision = schedule.decision!;
@@ -359,16 +358,19 @@ describe("FINDING for T005: band-internal ranking prefers wave order over distan
       const band = EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY.distanceBandEdgesMeters.filter((edge) => distance >= edge).length;
       return { unitId: unit.unitId, order: unit.order, distance, band, admitted: resident.has(unit.unitId) };
     });
+    // The camera must be somewhere the cap actually binds, or "no inversion"
+    // would be vacuously true because nothing was deferred at all.
+    expect(decision.deferredCount).toBeGreaterThan(0);
 
-    // A pair in the SAME band where the admitted cell is strictly farther than
-    // the deferred one, and the only thing separating them is `order`.
-    const inversion = scored.find((admitted) => admitted.admitted && scored.some((deferred) =>
-      !deferred.admitted && deferred.band === admitted.band && deferred.distance < admitted.distance && deferred.order > admitted.order));
-    expect(inversion, "the current policy is expected to produce at least one band-internal distance inversion").toBeDefined();
-    // And it is the wave index that does it: the admitted cell's order is lower.
-    const victim = scored.find((deferred) => !deferred.admitted && deferred.band === inversion!.band && deferred.distance < inversion!.distance && deferred.order > inversion!.order)!;
-    expect(victim.order).toBeGreaterThan(inversion!.order);
-    expect(victim.distance).toBeLessThan(inversion!.distance);
+    const admitted = scored.filter((entry) => entry.admitted);
+    const deferred = scored.filter((entry) => !entry.admitted);
+    const inversions = admitted.flatMap((entry) => deferred
+      .filter((victim) => victim.band === entry.band && victim.distance < entry.distance)
+      // A camera-reserved unit is exempt from the cap by design and can sit at
+      // any distance, so it is not an ordering inversion. See `selectResidentUnits`.
+      .filter(() => !decision.reserved.includes(entry.unitId))
+      .map((victim) => ({ admitted: entry.unitId, admittedDistance: entry.distance, deferred: victim.unitId, deferredDistance: victim.distance })));
+    expect(inversions).toEqual([]);
   });
 });
 
