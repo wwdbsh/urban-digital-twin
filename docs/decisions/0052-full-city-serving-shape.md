@@ -2,7 +2,8 @@
 
 Status: accepted for the T005 `-s1` serving releases and the runtime seams they
 need. Sections 1 and 2 change runtime behaviour for the CURRENT promoted
-default; section 3 changes nothing until a `-s1` release is promoted.
+default; sections 4 to 7 are the emitted-and-measured record added 2026-08-16;
+section 3 is DECIDED BUT NOT YET LANDED, and section 8 says so plainly.
 Date: 2026-08-16
 Task: T005
 Supersedes: nothing. **Amends ADR 0046 D1** (per-wave assembly partitioning) and
@@ -264,6 +265,146 @@ section 3 measures as the worst of both.
 
 ---
 
+## 4. The serving transform — `-s1` is derived from `-c1`, not rebuilt
+
+Added 2026-08-16, after the six waves were emitted.
+
+### The decision
+
+A serving release is a **pure transformation of the retention package**, not a
+re-cut of the wave. `buildMidtownCoreRelease` is not called. The per-cell
+assembly manifest T004 wrote is re-pinned to the new release, reduced to the
+shipped LOD, and its tileset chain unwrapped to the innermost tile; the GLB
+bytes are copied. Everything that describes the BUILDING — canonical identity,
+inventory hash, evidence shard, truth tiers, source dates, uncertainty, plan id
+and plan hash, and the shipped LOD's measured quality — is carried through
+untouched, and everything that describes the RELEASE is replaced. There is no
+third category, which is what makes the claim checkable.
+
+Two reasons, and the first is the one that matters. **Evidence**: the `-c1`
+bytes are what T004 validated, byte-replayed and committed an inventory for, and
+a re-materialization produces a second set of bytes believed equal and never
+checked to be. **Cost**: the island took nine hours to generate; regenerating it
+to serve it would take nine more for bytes already on disk. The six waves
+transformed in 12 minutes of generation.
+
+### What still has to be regenerated
+
+Inventories. A retention manifest pins each asset's `inventoryHashSha256` but
+carries no inventory, because nothing was served and there was no evidence
+surface. So `buildMidtownCoreV3Plan` re-runs under the same successor profile
+and `plan.inventory` is taken — and then **hashed and compared against what the
+retained manifest declared**, with a single mismatch stopping the wave. All
+44,989 matched, as did every plan id and plan hash. The regeneration is a
+derivation proven against the retained bytes, not a second opinion about them.
+
+### Copies, never links
+
+Payload GLBs are read and written as bytes. A hardlink would make the served and
+the retained file one inode, and the retention packages are the evidence base
+for the whole island. The writer refuses a symlink or a multiply-linked
+destination, and the full retention fingerprint — all 91,774 declared files,
+re-hashed — ran after every wave and passed six times.
+
+---
+
+## 5. D-B — the root self-pin excludes the assembly-package byte accounting
+
+A serving release has a circularity the curated releases do not: every assembly
+package pins `release.rootChecksumSha256`, and under the §2 seam every package
+is a root-declared artifact whose byte size and checksum the root declares.
+
+`exteriorServingRootChecksum` excludes **exactly** the `byteSize` and
+`checksumSha256` of `cell-assembly-package` entries and nothing else. The
+package-id SET stays inside the pin — the retention root's `ownedCellIds`
+precedent — so a dropped, added, renamed or moved package is still a detectable
+edit. For any root declaring no such package the function is **bit-identical**
+to the pre-seam `sha256HexSync(stableSerialize({ ...root, rootChecksumSha256:
+"" }))`, and the test pins that against the pre-seam expression itself rather
+than against a remembered digest.
+
+---
+
+## 6. D-A — a large acceptance is stated as a digest
+
+`buildingIdsDigestSha256` and `assemblyPackageIdsDigestSha256` join
+`cellsDigestSha256` on the same canonical join, with the same COUNT-FIRST-then-
+digest ordering, and the same refusal of a caller that computed no digest. Both
+are optional and absent means the literal form, so every record committed before
+this build is byte-unchanged.
+
+One consequence is not cosmetic and is recorded here rather than left to be
+discovered. `verifyPromotedExteriorMembership` gates rendered identities against
+the accepted set, and in the digest form there is no accepted list to read. It
+now takes the resolved membership as an argument and **refuses outright when a
+digest-form record is not handed one**. That argument is
+`runtime.promotedBuildingIds()` — the set `verifyPromotedExteriorPin` has
+already compared against the record's digest at load — so it is "the set that
+check verified", never "a set the caller believes in".
+
+---
+
+## 7. §2's boot-cost measurement was understated, by about eight times
+
+§2 measured the per-cell assembly manifests at ~110 MiB island-wide and treated
+them as the term worth moving. Measured over the six emitted `-s1` releases, the
+two sharded documents together cost **21,263 B per shipped asset**, and the
+EVIDENCE sidecars dominate the manifests' ~2,567 B by roughly eight to one.
+
+| wave | blocking boot, after the seam | before the seam | removed |
+| --- | --- | --- | --- |
+| w00 | 28,807 | 327,807 | 91.21% |
+| w01 | 3,835,123 | 154,279,360 | 97.51% |
+| w02 | 3,379,392 | 139,084,682 | 97.57% |
+| w03 | 5,013,967 | 208,615,537 | 97.60% |
+| w04 | 6,508,947 | 256,137,559 | 97.46% |
+| w05 | 5,302,721 | 221,555,915 | 97.61% |
+| **island** | **24,068,957** | **980,000,860** | **97.54%** |
+
+Assets structurally validated before the first frame: **44,989 before the seam,
+0 after it.**
+
+The BEFORE column is a counterfactual and an exact one: the byte sum of the same
+documents these releases emitted, carried the way the pre-seam form carried
+them, differing only by the array punctuation joining the elements. The
+correction is in the flattering direction, which is why it is stated as a
+correction rather than quietly enjoyed. `data/exterior-serving-20260817/boot-cost.json`
+carries the derivation.
+
+---
+
+## 8. Status of section 3 — the budget flip has NOT landed
+
+Section 3 remains a decision and not yet an edit. `maxResidentUnits` is still
+128 and `maxCacheEntries` is still 512 in this build, because both are to land
+**in the first promotion commit** and no `-s1` release is promoted: all six are
+pinned as `?exteriorCells=` opt-ins and absent from the promotion record.
+
+The flip was implemented and reverted before commit, and what that attempt found
+is recorded here because the next agent will meet it. Flipping the two constants
+turns over about twenty-five committed assertions across the residency,
+governance, promotion-record and journey suites — every figure that describes
+the CURRENT sparse composition against a 512-entry ceiling, plus the three
+frozen scheduler-trace baselines, which at cap 8 read:
+
+| path | re-entry | wide re-entry | peak | evictions |
+| --- | --- | --- | --- | --- |
+| midtown-street-pan-v1 | 1 | 1 | 8 | 35 |
+| midtown-zoom-out-v1 | 2 | 2 | 8 | 28 |
+| midtown-roam-v1 | 4 | 10 | 8 | 104 |
+
+Those falls are arithmetic and not an improvement: a session that may hold 8
+cells cannot evict 128 and cannot re-enter what it never held. What they do
+establish is that the cap BINDS on every path — peak is exactly 8 everywhere,
+where the street pan never reached 128 — and that eviction remains routine, at
+1.79 evictions per decision against 5.34 at the sparse cap.
+
+Rewriting those assertions is promotion's work, not the transform's, and doing
+it while nothing is promoted would leave the repository describing a composition
+it does not ship.
+
+---
+
 ## Consequences
 
 - ADR 0046 D1's per-wave assembly partition is amended to per-cell lazily
@@ -273,6 +414,11 @@ section 3 measures as the worst of both.
 - Boot weight for a promoted island becomes O(cells) rather than O(assets); the
   before/after is measured as T005 C5 evidence rather than asserted here.
 - Per-cell assembly validation is later and narrower. Stated in section 2.
+- A serving release is DERIVED from its retention package rather than rebuilt,
+  so the island has one set of geometry bytes with one lineage (section 4).
+- Section 2's boot-cost figure was understated by roughly eight times; the
+  measured island removal is 980.0 MB to 24.1 MB (section 7).
+- Section 3's budget flip is decided and NOT landed in this build (section 8).
 
 ## Related
 
@@ -280,3 +426,5 @@ ADR 0041 (visibility scheduler, band edges, overview residency), ADR 0042
 (cache governance, the corrected comparison), ADR 0046 (retention and assembly
 partitioning, amended), ADR 0050 (measured LOD-1 fallback), ADR 0051 (retention
 package validation).
+
+---
