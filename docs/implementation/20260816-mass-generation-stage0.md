@@ -145,7 +145,10 @@ assembly, checksums and disk I/O.
 ### 7. The sub-metre parents — GREEN (enumerated, not sampled)
 
 Six of the 45,194 carry a sourced height below one metre. All six are recovered
-only by the T003 low-rise extension; all six pass the 2% silhouette cap.
+only by the T003 low-rise extension; all six pass the 2% silhouette cap. **All
+six rows, not four** — the earlier version of this table printed the first four
+and the sentence beside it said the six "behave the same way", which the fifth
+and sixth rows disprove:
 
 | building | sourced height | pre-fix cluster ratio | post-fix ratio | above crown |
 | --- | --- | --- | --- | --- |
@@ -153,8 +156,21 @@ only by the T003 low-rise extension; all six pass the 2% silhouette cap.
 | `doitt:1303611` | 0.6085 m | 9.8670 | 6.9048 | 3,596 mm |
 | `doitt:1305414` | 0.6096 m | 9.8525 | 6.8951 | 3,596 mm |
 | `doitt:1302036` | 0.9144 m | 6.9081 | 4.9344 | 3,596 mm |
+| `doitt:1302037` | 0.9144 m | 6.9081 | 4.9344 | 3,596 mm |
+| `doitt:408121` | 0.9144 m | **3.1400** | **4.9344** | 3,596 mm |
 
-(The full six, with owner cells, source refs and silhouette ratios, are in
+**Five fall and one RISES.** `doitt:408121`'s pre-fix cluster was
+`roof-equipment` 978 mm plus **three water-tank legs holding nothing** — the
+tank crossed the parapet and was dropped, and the fourth leg with it — topping
+out 1,956 mm above the crown. Post-fix it carries a complete 1,998 mm tank on
+four 1,598 mm legs, because the clamp shrank the cluster's footprint as well as
+its height and brought the clipped tank back inside the crown. It is one of the
+70 stride buildings that recovered a tank, and its ratio went up while its
+honesty went up with it. What is true of all six is the thing the clamp claims:
+every one ends at the bound of 3,596 mm above the crown. ADR 0049 carries the
+corrected statement and the per-prism measurement.
+
+(Owner cells, source refs and per-building silhouette ratios are in
 `stage0-preflight-stride.json` → `subMetreParents`.)
 
 The reviewer's 18.7x is reproduced exactly, on a named building. Even clamped,
@@ -185,8 +201,15 @@ than that, so it is interior and cannot cast.
 
 That reasoning is validated twice rather than asserted:
 
-- against an independent 2,048-pixel rasterization of the **real emitted
-  tessellation** of both LODs, agreeing on all fourteen Block 835 buildings;
+- against an independent 1,024-pixel rasterization of the **real emitted
+  tessellation** of both LODs, agreeing on all fourteen Block 835 buildings at
+  all four views to a worst absolute difference of **5.681e-5**, against a
+  largest per-view deviation of 1.8895e-3. This was prose in an earlier draft of
+  this record and is now a committed test
+  (`midtown-core-v3-silhouette.test.ts`), so the claim is replayable rather than
+  reported. The rasterizer reads `tessellateV3Plan`'s triangles and restates the
+  view axes rather than importing them, so it shares no code with the instrument
+  it checks;
 - against the **committed Blender measurements** — a different tessellator, a
   different machine, a hand-run authoring pass — to a worst absolute difference
   of **2.027e-4**, about 1% of the cap. Pinned as a test, with the same plan
@@ -222,3 +245,38 @@ small enough that they were 5.6% of it. Options, none of which Stage 0 chooses:
 
 Option 2 is the smallest step that lets waves start, and it is a decision about
 an approved LOD contract, so it is not one this task may take on its own.
+
+## Review conditions closed against this record
+
+The Stage-0 review was CONDITIONALLY APPROVED. Three findings were conditions on
+the record itself rather than on the wave dispatch, and all three are closed
+here.
+
+**A plan and a wave profile could disagree about the grammar, silently.**
+`MidtownCoreV3PlanContext` carried no record of the envelope it had been
+materialized under; `buildMidtownCoreV3Plan`'s explicit `grammar` argument
+silently won over `profile.admissionEnvelope`; and `writeMidtownCoreV3Assets`
+accepted a different profile with nothing comparing the two. The Stage-0 CLI ran
+exactly that path — planning under the extended envelope plus both rooftop rules
+and writing under wave `w01`'s profile, which declares the shipped grammar — so
+the gate's own instrument disagreed with itself about what it had measured. The
+context now carries the EFFECTIVE envelope
+(`v3EffectiveGrammarOptions`), the writer REFUSES a disagreeing pair before
+emitting a byte, and the refusal is a plain `Error` rather than a
+`MidtownCoreV3Stop` because it is the repository contradicting itself about every
+building rather than a statement about one sourced polygon. Three callers had to
+be told which envelope they were writing under: this CLI's stride and sub-metre
+passes, and the T003 census's two-envelope differential. No emitted byte depends
+on the field, so every committed number is unchanged.
+
+**The raster validation existed only in prose.** It is now a test over the
+fourteen Block 835 buildings at all four views, rasterizing the REAL EMITTED
+TESSELLATION on a 1,024-pixel grid and restating the view axes rather than
+importing them: worst absolute difference **5.681e-5** against a largest
+per-view deviation of 1.8895e-3.
+
+**"All six sub-metre parents behave the same way" was false.** Five ratios fall
+and one — `doitt:408121`, 914 mm — RISES, 3.14 to 4.93, through the documented
+non-monotonicity. All six rows are printed above, ADR 0049 carries the corrected
+sentence and the per-prism measurement, and what is actually true of all six is
+stated: every one ends at the clamp's bound of 3,596 mm above the crown.

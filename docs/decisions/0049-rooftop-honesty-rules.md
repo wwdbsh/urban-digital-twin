@@ -185,11 +185,42 @@ artefact. The clamp's bound holds on every building. **70** buildings gained a
 complete water tank because the clamp brought a clipped one back inside the
 parapet — the non-monotonicity above, at city scale.
 
-The 305 mm parent is real and named: `doitt:1261650`, sourced height 0.3048 m,
-pre-fix cluster-top ratio **18.7049**, post-fix 12.7902. Six parents of 45,194
-carry a sub-metre sourced height and all six behave the same way. The clamp
-bounds them; it does not make a 305 mm building under 3,596 mm of designed
-rooftop a good claim, which is Decision 3's problem and not this ADR's.
+Six parents of 45,194 carry a sub-metre sourced height. All six are named rather
+than summarized, because the earlier draft of this sentence claimed "all six
+behave the same way" and that is **false**: five ratios fall and one RISES,
+through the same non-monotonicity documented above. What is true of all six is
+the thing that matters — every one of them ends at the clamp's bound of 3,596 mm
+of cluster above the crown.
+
+| parent | sourced height | pre-fix ratio | post-fix ratio | above crown |
+| --- | --- | --- | --- | --- |
+| `doitt:1261650` | 0.3048 m | 18.7049 | 12.7902 | 3,596 mm |
+| `doitt:1303611` | 0.6085 m | 9.8670 | 6.9048 | 3,596 mm |
+| `doitt:1305414` | 0.6096 m | 9.8525 | 6.8951 | 3,596 mm |
+| `doitt:1302036` | 0.9144 m | 6.9081 | 4.9344 | 3,596 mm |
+| `doitt:1302037` | 0.9144 m | 6.9081 | 4.9344 | 3,596 mm |
+| `doitt:408121` | 0.9144 m | **3.1400** | **4.9344** | 3,596 mm |
+
+`doitt:408121` is the exception, and it is the non-monotonicity rather than an
+error. Its prisms, measured:
+
+- **pre-fix**: `roof-equipment` 978 mm, and **three water-tank legs** 1,956 mm
+  tall holding **nothing** — the tank itself crossed the parapet and was
+  dropped, and the fourth leg was dropped with it. Cluster top 2,870 mm, i.e.
+  1,956 mm above the crown, and 3.14 crown-heights.
+- **post-fix**: `roof-equipment` 799 mm, a **complete water tank** 1,998 mm on
+  four 1,598 mm legs. Cluster top 4,510 mm, 3,596 mm above the crown.
+
+So the ratio rose because the clamp shrank the cluster's FOOTPRINT along with
+its height, which brought the clipped tank back inside the crown; the recovered
+tank stands taller than the orphan legs that were the tallest surviving prism
+before. The asset went from four metal posts holding nothing to a bounded,
+complete cluster, and its cluster-top ratio went UP. This row is exactly why the
+clamp is described as a bound on the cluster's height rather than as a reduction
+of it, and it is one of the 70 buildings the stride counts as recovering a tank.
+
+The clamp bounds all six; it does not make a 305 mm building under 3,596 mm of
+designed rooftop a good claim, which is Decision 3's problem and not this ADR's.
 
 **Neither rule affects the LOD-transition silhouette.** Rooftop prisms are
 emitted at both levels of detail, so they cancel: across the 19 stride buildings

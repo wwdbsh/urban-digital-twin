@@ -10,6 +10,7 @@ import {
   deriveV3Parameters,
   generateV3FacadePlan,
   ringSignedAreaMm2,
+  tessellateV3Plan,
   type Point2Mm,
   type V3GrammarOptions,
   type V3Plan,
@@ -238,4 +239,160 @@ describe("the record the assembly schema demands", () => {
     expect(() => midtownCoreV3SilhouetteRecord(successor, { expectedPlanHashSha256: shipped.planHashSha256 }))
       .toThrow(/would bind plan hash/u);
   });
+});
+
+/**
+ * (T004 F2) THE RASTER CROSS-CHECK, COMMITTED AS A TEST RATHER THAN AS PROSE.
+ *
+ * The Blender comparison above validates the metric against a DIFFERENT
+ * measurement of the same thing. This validates the ARGUMENT that makes the
+ * exact method legitimate at all: that the silhouette of a V3 plan is exactly
+ * the union of its solid parts' projected rectangles.
+ *
+ * It is an independent path in every respect that matters. The analytic
+ * instrument reads the plan's SOLID PARTS — tiers, prisms, placement boxes —
+ * and never touches a triangle. This rasterizes the REAL EMITTED TESSELLATION,
+ * the same `tessellateV3Plan` output the GLB writer consumes, through a plain
+ * point-in-triangle scan on a fixed grid. If the "every part projects to an
+ * axis-aligned rectangle" reasoning were wrong — if a recess did punch through
+ * a wall, if an attachment's projected footprint were not the interval of its
+ * eight corners, if a horizontal deck contributed area — the two would part
+ * company here.
+ *
+ * The bound is set by the RASTER's own quantization, not by the exact method's:
+ * a 1,024-pixel grid resolves an edge to about 1/1,024 of the frame, so a
+ * difference of that order is the instrument being read, not a disagreement.
+ * This claim was previously carried only in the Stage-0 implementation record,
+ * which is exactly the position the reviewer flagged: an argument nobody replays
+ * is an argument nobody checks.
+ */
+describe("(T004) the exact metric agrees with an independent rasterization of the emitted tessellation", () => {
+  /**
+   * The horizontal screen axis per view, restated rather than imported.
+   *
+   * A cross-check that imported the instrument's own constant would agree with
+   * it by construction on the one thing a wrong axis would break.
+   */
+  const RASTER_VIEW_AXIS: Record<string, readonly [number, number]> = {
+    "view:east": [0, 1],
+    "view:north": [-1, 0],
+    "view:south": [1, 0],
+    "view:west": [0, -1],
+  };
+  const RESOLUTION = 1_024;
+
+  /** Every emitted triangle of one tessellation, projected into (u, z). */
+  function projectedTriangles(plan: V3Plan, includeRecesses: boolean, axis: readonly [number, number]): Float64Array {
+    const tessellation = tessellateV3Plan(plan, { includeRecesses });
+    const out: number[] = [];
+    const push = (a: readonly number[], b: readonly number[], c: readonly number[]): void => {
+      out.push(
+        a[0]! * axis[0] + a[1]! * axis[1], a[2]!,
+        b[0]! * axis[0] + b[1]! * axis[1], b[2]!,
+        c[0]! * axis[0] + c[1]! * axis[1], c[2]!,
+      );
+    };
+    for (const quad of tessellation.quads) {
+      push(quad.corners[0], quad.corners[1], quad.corners[2]);
+      push(quad.corners[0], quad.corners[2], quad.corners[3]);
+    }
+    for (const triangle of tessellation.triangles) push(triangle.a, triangle.b, triangle.c);
+    return Float64Array.from(out);
+  }
+
+  function rasterize(triangles: Float64Array, box: { uMin: number; uMax: number; zMin: number; zMax: number }, mask: Uint8Array): void {
+    const du = (box.uMax - box.uMin) / RESOLUTION;
+    const dz = (box.zMax - box.zMin) / RESOLUTION;
+    for (let offset = 0; offset < triangles.length; offset += 6) {
+      const ux = triangles[offset]!; const zx = triangles[offset + 1]!;
+      const uy = triangles[offset + 2]!; const zy = triangles[offset + 3]!;
+      const uz = triangles[offset + 4]!; const zz = triangles[offset + 5]!;
+      const twiceArea = (uy - ux) * (zz - zx) - (uz - ux) * (zy - zx);
+      // A horizontal cap, deck or prism lid projects to a segment and casts no
+      // shadow. Skipping it is the RASTER's own statement of that, not the
+      // analytic instrument's assumption imported.
+      if (twiceArea === 0) continue;
+      const inverse = 1 / twiceArea;
+      const columnLow = Math.max(0, Math.floor((Math.min(ux, uy, uz) - box.uMin) / du));
+      const columnHigh = Math.min(RESOLUTION - 1, Math.ceil((Math.max(ux, uy, uz) - box.uMin) / du));
+      const rowLow = Math.max(0, Math.floor((Math.min(zx, zy, zz) - box.zMin) / dz));
+      const rowHigh = Math.min(RESOLUTION - 1, Math.ceil((Math.max(zx, zy, zz) - box.zMin) / dz));
+      for (let column = columnLow; column <= columnHigh; column += 1) {
+        const u = box.uMin + (column + 0.5) * du;
+        for (let row = rowLow; row <= rowHigh; row += 1) {
+          const index = row * RESOLUTION + column;
+          if (mask[index] === 1) continue;
+          const z = box.zMin + (row + 0.5) * dz;
+          const alpha = ((uy - u) * (zz - z) - (uz - u) * (zy - z)) * inverse;
+          if (alpha < 0 || alpha > 1) continue;
+          const beta = ((uz - u) * (zx - z) - (ux - u) * (zz - z)) * inverse;
+          if (beta < 0 || beta > 1) continue;
+          const gamma = 1 - alpha - beta;
+          if (gamma < 0 || gamma > 1) continue;
+          mask[index] = 1;
+        }
+      }
+    }
+  }
+
+  function rasterDeviationRatio(plan: V3Plan, viewId: string): number {
+    const axis = RASTER_VIEW_AXIS[viewId]!;
+    const fine = projectedTriangles(plan, true, axis);
+    const coarse = projectedTriangles(plan, false, axis);
+    let uMin = Number.POSITIVE_INFINITY; let uMax = Number.NEGATIVE_INFINITY;
+    let zMin = Number.POSITIVE_INFINITY; let zMax = Number.NEGATIVE_INFINITY;
+    for (const source of [fine, coarse]) {
+      for (let offset = 0; offset < source.length; offset += 2) {
+        const u = source[offset]!; const z = source[offset + 1]!;
+        if (u < uMin) uMin = u; if (u > uMax) uMax = u;
+        if (z < zMin) zMin = z; if (z > zMax) zMax = z;
+      }
+    }
+    // One pixel of slack on every side, so no edge lands exactly on the frame.
+    const box = {
+      uMin: uMin - (uMax - uMin) / RESOLUTION, uMax: uMax + (uMax - uMin) / RESOLUTION,
+      zMin: zMin - (zMax - zMin) / RESOLUTION, zMax: zMax + (zMax - zMin) / RESOLUTION,
+    };
+    const fineMask = new Uint8Array(RESOLUTION * RESOLUTION);
+    const coarseMask = new Uint8Array(RESOLUTION * RESOLUTION);
+    rasterize(fine, box, fineMask);
+    rasterize(coarse, box, coarseMask);
+    let fineCount = 0;
+    let symmetricDifference = 0;
+    for (let index = 0; index < fineMask.length; index += 1) {
+      if (fineMask[index] === 1) fineCount += 1;
+      if (fineMask[index] !== coarseMask[index]) symmetricDifference += 1;
+    }
+    return fineCount === 0 ? Number.POSITIVE_INFINITY : symmetricDifference / fineCount;
+  }
+
+  it("agrees with the rasterized emitted tessellation on all fourteen Block 835 buildings, at every view", () => {
+    let worstAbsoluteDifference = 0;
+    let maxExact = 0;
+    let comparisons = 0;
+    for (const building of buildings) {
+      const plan = planFor(building, V3_ROOFTOP_HONESTY_OPTIONS);
+      const exact = midtownCoreV3SilhouetteMeasurement(plan);
+      for (const view of exact.perView) {
+        maxExact = Math.max(maxExact, view.deviationRatio);
+        worstAbsoluteDifference = Math.max(worstAbsoluteDifference, Math.abs(rasterDeviationRatio(plan, view.viewId) - view.deviationRatio));
+        comparisons += 1;
+      }
+    }
+    // Not a vacuous pass: fourteen buildings at four views each.
+    expect(comparisons).toBe(buildings.length * 4);
+    expect(buildings).toHaveLength(14);
+    // AND NOT A VACUOUS AGREEMENT ON ZEROS. The largest per-view deviation over
+    // the fourteen is 1.8895e-3, so the two instruments are agreeing on a real
+    // quantity roughly thirty times the difference between them.
+    expect(maxExact).toBeGreaterThan(1e-3);
+    // MEASURED at 5.681e-5 on a 1,024-pixel grid — the RASTER's own edge
+    // quantization rather than a disagreement. A 1,024-pixel frame resolves an
+    // edge to about 1e-3 of its width and the two silhouettes being differenced
+    // agree everywhere but a thin band, so a difference of this order is what a
+    // correct rasterization of a correct union looks like. Bounded at 1e-4,
+    // which is still 200x inside the 0.02 cap the number is compared against.
+    expect(worstAbsoluteDifference).toBeLessThan(1e-4);
+  });
+
 });

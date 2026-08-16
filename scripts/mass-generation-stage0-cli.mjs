@@ -128,6 +128,19 @@ export const MASS_GENERATION_GRAMMAR = { ...V3_EXTENDED_GRAMMAR_OPTIONS, ...V3_R
 /** The same admission envelope WITHOUT the rooftop fixes: the pre-fix state. */
 export const PRE_FIX_GRAMMAR = { ...V3_EXTENDED_GRAMMAR_OPTIONS };
 
+/**
+ * Wave `w01`'s profile with its DECLARED envelope replaced by the one this gate
+ * actually plans under (T004 F1).
+ *
+ * Stage 0 used to plan under `MASS_GENERATION_GRAMMAR` and then write under the
+ * bare `w01` profile, which declares the SHIPPED grammar — the exact
+ * plan/profile disagreement `assertMidtownCoreV3GrammarAgreement` now refuses.
+ * The gate's own instrument was the first thing the cross-check caught.
+ * Only `admissionEnvelope` differs, and no emitted byte depends on it: the
+ * writer reads the profile for identity, budgets and texture policy alone.
+ */
+export const MASS_GENERATION_WRITE_PROFILE = { ...MIDTOWN_CORE_V3_WAVE_PROFILE, admissionEnvelope: MASS_GENERATION_GRAMMAR };
+
 function fail(message) {
   console.error(`STOP: ${message}`);
   process.exit(1);
@@ -349,6 +362,7 @@ export async function computeStrideRecord(options) {
         capturedAt: null,
         updatedAt: null,
         predecessor: null,
+        profile: MASS_GENERATION_WRITE_PROFILE,
       });
     } catch (error) {
       if (!(error instanceof MidtownCoreV3Stop)) throw error;
@@ -419,7 +433,7 @@ export async function computeStrideRecord(options) {
     if (!post.ok) continue;
     try {
       const written = writeMidtownCoreV3Assets(post.context, {
-        ownerCellId: entry.ownerCellId, capturedAt: null, updatedAt: null, predecessor: null,
+        ownerCellId: entry.ownerCellId, capturedAt: null, updatedAt: null, predecessor: null, profile: MASS_GENERATION_WRITE_PROFILE,
       });
       entry.postFixSilhouetteDeviationRatio = written.silhouette.deviationRatio;
     } catch (error) {

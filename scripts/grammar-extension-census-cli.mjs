@@ -80,6 +80,7 @@ import {
 } from "../src/release/exterior-wave-ledger.ts";
 import {
   MIDTOWN_CORE_V3_STOP_CODES,
+  MIDTOWN_CORE_V3_WAVE_PROFILE,
   MidtownCoreV3Stop,
   buildMidtownCoreV3Plan,
   writeMidtownCoreV3Assets,
@@ -278,6 +279,13 @@ function glbVertexCount(bytes) {
  */
 function runPass(label, sources, order, ownerCellOf, grammar, assetFor) {
   const startedAt = Date.now();
+  // Wave `w01`'s profile with its DECLARED envelope replaced by THIS pass's
+  // (T004 F1). This census is the one caller that deliberately puts one profile
+  // through two envelopes in a single process, so it is also the one caller
+  // that has to say which envelope each pass is writing under. Only
+  // `admissionEnvelope` differs from the bare profile and no emitted byte
+  // depends on it, so every number in the committed record is unchanged.
+  const writeProfile = { ...MIDTOWN_CORE_V3_WAVE_PROFILE, admissionEnvelope: grammar };
   const planned = new Map();
   const refused = new Map();
   const cost = new Map();
@@ -306,6 +314,7 @@ function runPass(label, sources, order, ownerCellOf, grammar, assetFor) {
         capturedAt: null,
         updatedAt: null,
         predecessor: null,
+        profile: writeProfile,
       });
       assetMs += Date.now() - assetStarted;
       cost.set(buildingId, {

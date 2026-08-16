@@ -36,6 +36,7 @@ import {
   ringIsSimple,
   ringSignedAreaMm2,
   tessellateV3Plan,
+  v3EffectiveGrammarOptions,
   validateV3Plan,
   type Point2Mm,
   V3_SHIPPED_GRAMMAR_OPTIONS,
@@ -343,6 +344,25 @@ export interface MidtownCoreV3PlanContext {
   reversed: boolean;
   plan: V3Plan;
   heightSource: "source" | "fallback";
+  /**
+   * The EFFECTIVE grammar envelope this plan was actually materialized under
+   * (T004 F1).
+   *
+   * The plan context used to carry no grammar at all, which made the wave
+   * profile's `admissionEnvelope` a suggestion rather than a fact: an explicit
+   * `grammar` argument silently won over the profile, and
+   * `writeMidtownCoreV3Assets` then took a DIFFERENT profile with no way to
+   * notice the disagreement. The Stage-0 CLI itself ran exactly that path —
+   * planning under the extended envelope plus the rooftop rules and writing
+   * under wave `w01`'s profile, which declares the shipped grammar — so the
+   * emitted asset's provenance named an envelope its geometry did not come
+   * from.
+   *
+   * It is stored EFFECTIVE rather than as given, so `{ maxRingVertices: 384 }`
+   * and the same value with every other field spelled out are one envelope
+   * rather than two, exactly as `midtownCoreV3StageFingerprint` treats it.
+   */
+  grammar: Required<V3GrammarOptions>;
 }
 
 /**
@@ -421,7 +441,27 @@ export function buildMidtownCoreV3Plan(
   if (!validated.ok) {
     throw new MidtownCoreV3Stop(source.buildingId, "plan-validation-failed", validated.issues.map((issue) => `${issue.path}: ${issue.message}`).join("; "));
   }
-  return { source, frame, ringMm: outer, reversed, plan: validated.value, heightSource };
+  return { source, frame, ringMm: outer, reversed, plan: validated.value, heightSource, grammar: v3EffectiveGrammarOptions(grammar) };
+}
+
+/**
+ * Refuses a plan and a wave profile that disagree about the grammar (T004 F1).
+ *
+ * NOT a `MidtownCoreV3Stop`. The stop-code vocabulary is closed, pinned by a
+ * committed goal-completion record, and every code in it is a statement that
+ * this grammar cannot carry some property of a SOURCED POLYGON. This is not
+ * that: it says the plan in hand was materialized under one envelope and is
+ * being written into a wave that declares another, which is the repository
+ * contradicting itself and is true of every building rather than of this one.
+ * Refusing the building would hide a pipeline fault behind a plausible refusal
+ * count.
+ */
+export function assertMidtownCoreV3GrammarAgreement(context: MidtownCoreV3PlanContext, profile: V3WaveProfile): void {
+  const declared = v3EffectiveGrammarOptions(profile.admissionEnvelope);
+  if (stableSerialize(context.grammar) === stableSerialize(declared)) return;
+  throw new Error(
+    `Grammar disagreement for ${context.source.buildingId}: the plan was materialized under ${stableSerialize(context.grammar)}, but wave profile ${profile.releaseId} declares ${stableSerialize(declared)}. A wave's emitted bytes and its declared admission envelope must be the same statement.`,
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -708,6 +748,10 @@ export function writeMidtownCoreV3Assets(
   },
 ): MidtownCoreV3AssetResult {
   const profile = options.profile ?? MIDTOWN_CORE_V3_WAVE_PROFILE;
+  // The plan's OWN envelope against the wave's DECLARED one, before a single
+  // byte is emitted. Without it the two are independent and nothing ever
+  // compares them (T004 F1).
+  assertMidtownCoreV3GrammarAgreement(context, profile);
   const plan = context.plan;
   const buildingId = context.source.buildingId;
   const inventoryId = midtownCoreV3InventoryId(buildingId, profile.releaseId);

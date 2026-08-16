@@ -9,7 +9,11 @@
  */
 import { describe, expect, it } from "vitest";
 
-import { DETERMINISTIC_FACADE_V3_UNCERTAINTY } from "../domain/deterministic-facade-generator-v3.ts";
+import {
+  DETERMINISTIC_FACADE_V3_UNCERTAINTY,
+  V3_ROOFTOP_HONESTY_OPTIONS,
+  V3_SHIPPED_GRAMMAR_OPTIONS,
+} from "../domain/deterministic-facade-generator-v3.ts";
 import { V3_QUALITY_BUDGETS, v3GeometryForGlb } from "./block835-v3-package.ts";
 import { tessellateV3Plan } from "../domain/deterministic-facade-generator-v3.ts";
 import { MIDTOWN_CORE_RELEASE_ID } from "./midtown-core-package.ts";
@@ -22,6 +26,7 @@ import {
   MIDTOWN_CORE_V3_STOP_CODES,
   MIDTOWN_CORE_V3_UNCERTAINTY,
   MIDTOWN_CORE_V3_VOLUME_TOLERANCE,
+  MIDTOWN_CORE_V3_WAVE_PROFILE,
   MidtownCoreV3Stop,
   buildMidtownCoreV3Plan,
   classifyMidtownCoreV3Generation,
@@ -36,6 +41,16 @@ import {
 
 const BASE_MANIFEST = "b".repeat(64);
 const ANCHOR: [number, number] = [-73.9857, 40.7484];
+/**
+ * A SUCCESSOR envelope: one that differs from the shipped grammar.
+ *
+ * The two rooftop rules rather than the T003 admission envelope, deliberately.
+ * What the cross-check is about is a plan and a profile disagreeing about ANY
+ * envelope, the admission half is pinned inert by the domain suite's own
+ * reference guard, and naming it here would make this file an exception to that
+ * guard for no gain.
+ */
+const SUCCESSOR_GRAMMAR = { ...V3_ROOFTOP_HONESTY_OPTIONS };
 
 /** Metres east/north of the anchor, converted to WGS84 degrees. */
 function offsetDegrees(eastMeters: number, northMeters: number): [number, number] {
@@ -303,5 +318,76 @@ describe("(T003) the closed stop-code vocabulary", () => {
       "registration-out-of-tolerance",
     ]);
     expect(MIDTOWN_CORE_V3_STOP_CODES).toHaveLength(12);
+  });
+});
+
+/**
+ * (T004 F1) THE PLAN'S ENVELOPE AND THE WAVE'S DECLARED ENVELOPE ARE ONE FACT.
+ *
+ * Before this cross-check the two were independent and nothing ever compared
+ * them: `buildMidtownCoreV3Plan`'s explicit `grammar` argument silently won over
+ * `profile.admissionEnvelope`, the plan context carried no record of what it had
+ * actually run under, and `writeMidtownCoreV3Assets` accepted whatever profile
+ * it was handed. The Stage-0 CLI ran exactly that disagreeing path — planning
+ * under the extended envelope plus the two rooftop rules, writing under wave
+ * `w01`'s profile, which declares the shipped grammar — so an emitted asset's
+ * provenance named an envelope its geometry had not come from.
+ *
+ * The refusal is a plain `Error` rather than a `MidtownCoreV3Stop` on purpose:
+ * a stop code says this grammar cannot carry some property of ONE sourced
+ * polygon, and this says the repository is contradicting itself about every
+ * building at once.
+ */
+describe("(T004) grammar agreement between plan and wave profile", () => {
+  const options = { ownerCellId: "cell:test", capturedAt: null, updatedAt: null, predecessor: null } as const;
+
+  it("records the EFFECTIVE envelope the plan was materialized under", () => {
+    const shipped = buildMidtownCoreV3Plan(source({ ringMeters: L_SHAPE }), BASE_MANIFEST);
+    expect(shipped.grammar).toEqual(V3_SHIPPED_GRAMMAR_OPTIONS);
+    const extended = buildMidtownCoreV3Plan(source({ ringMeters: L_SHAPE }), BASE_MANIFEST, undefined, SUCCESSOR_GRAMMAR);
+    expect(extended.grammar).toEqual({ ...V3_SHIPPED_GRAMMAR_OPTIONS, ...SUCCESSOR_GRAMMAR });
+    // Stored EFFECTIVE, so a partially-spelled envelope and a fully-spelled one
+    // that mean the same thing are one value rather than two.
+    const partial = buildMidtownCoreV3Plan(source({ ringMeters: L_SHAPE }), BASE_MANIFEST, undefined, { lowRiseFloorHeight: false });
+    expect(partial.grammar).toEqual(V3_SHIPPED_GRAMMAR_OPTIONS);
+  });
+
+  it("REFUSES to write a plan whose envelope disagrees with the profile's", () => {
+    const extended = buildMidtownCoreV3Plan(source({ ringMeters: L_SHAPE }), BASE_MANIFEST, undefined, SUCCESSOR_GRAMMAR);
+    // The exact Stage-0 disagreement: extended plan, shipped-grammar profile.
+    expect(() => writeMidtownCoreV3Assets(extended, { ...options }))
+      .toThrowError(/Grammar disagreement for doitt:900001/u);
+    expect(() => writeMidtownCoreV3Assets(extended, { ...options }))
+      .not.toThrowError(MidtownCoreV3Stop);
+    // And the mirror: a shipped plan written into a wave declaring the extended
+    // envelope is refused just as hard, so the check is not one-directional.
+    const shipped = buildMidtownCoreV3Plan(source({ ringMeters: L_SHAPE }), BASE_MANIFEST);
+    expect(() => writeMidtownCoreV3Assets(shipped, {
+      ...options,
+      profile: { ...MIDTOWN_CORE_V3_WAVE_PROFILE, admissionEnvelope: SUCCESSOR_GRAMMAR },
+    })).toThrowError(/Grammar disagreement for doitt:900001/u);
+  });
+
+  it("accepts the agreeing pair, and an equivalent envelope spelled differently", () => {
+    const extended = buildMidtownCoreV3Plan(source({ ringMeters: L_SHAPE }), BASE_MANIFEST, undefined, SUCCESSOR_GRAMMAR);
+    const written = writeMidtownCoreV3Assets(extended, {
+      ...options,
+      profile: { ...MIDTOWN_CORE_V3_WAVE_PROFILE, admissionEnvelope: SUCCESSOR_GRAMMAR },
+    });
+    expect(written.assets).toHaveLength(2);
+    // The comparison is by EFFECTIVE value, not by reference or by key set.
+    expect(() => writeMidtownCoreV3Assets(extended, {
+      ...options,
+      profile: {
+        ...MIDTOWN_CORE_V3_WAVE_PROFILE,
+        admissionEnvelope: { ...V3_SHIPPED_GRAMMAR_OPTIONS, ...SUCCESSOR_GRAMMAR },
+      },
+    })).not.toThrow();
+    // A profile that names NO envelope means the shipped grammar, and therefore
+    // still disagrees with an extended plan rather than waiving the check.
+    const silent = { ...MIDTOWN_CORE_V3_WAVE_PROFILE };
+    delete silent.admissionEnvelope;
+    expect(() => writeMidtownCoreV3Assets(extended, { ...options, profile: silent }))
+      .toThrowError(/Grammar disagreement for doitt:900001/u);
   });
 });
