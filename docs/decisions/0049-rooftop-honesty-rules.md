@@ -165,6 +165,39 @@ Those measurements are the Stage-0 gate record under
 `data/mass-generation-20260816/`, and the numbers are quoted in
 `docs/implementation/20260816-mass-generation-stage0.md`.
 
+## Measured outcome
+
+Run over a 1-in-20 stride of the ledger order, 2,250 buildings materialized at
+both levels of detail under the extended envelope plus both rules.
+
+| | pre-fix | post-fix |
+| --- | --- | --- |
+| buildings with orphan legs | **573 (25.47%)** | **0** |
+| orphan legs total | **1,653** | **0** |
+| cluster-top ratio median | 1.1075 | 1.0961 |
+| cluster-top ratio p95 | 1.4061 | 1.3260 |
+| cluster-top ratio max | 2.8342 | 2.2240 |
+| cluster above crown, max | 5,400 mm | **3,596 mm** |
+
+The 25.47% orphan prevalence is inside the ~26-30% band the reviewer measured
+over the shipped city, so the fourteen-footprint 28.6% was not a small-sample
+artefact. The clamp's bound holds on every building. **70** buildings gained a
+complete water tank because the clamp brought a clipped one back inside the
+parapet — the non-monotonicity above, at city scale.
+
+The 305 mm parent is real and named: `doitt:1261650`, sourced height 0.3048 m,
+pre-fix cluster-top ratio **18.7049**, post-fix 12.7902. Six parents of 45,194
+carry a sub-metre sourced height and all six behave the same way. The clamp
+bounds them; it does not make a 305 mm building under 3,596 mm of designed
+rooftop a good claim, which is Decision 3's problem and not this ADR's.
+
+**Neither rule affects the LOD-transition silhouette.** Rooftop prisms are
+emitted at both levels of detail, so they cancel: across the 19 stride buildings
+that exceed the multi-LOD 2% cap, the largest change either rule makes to a
+deviation ratio is 7.75e-5, and all nineteen are already over the cap under the
+shipped grammar. That gate failure is a pre-existing property of the LOD-1
+definition and is recorded against it, not against these rules.
+
 ## Rights and retention
 
 Nothing here acquires, publishes, conveys or redistributes anything. The rules

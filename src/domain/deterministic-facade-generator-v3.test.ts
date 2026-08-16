@@ -751,6 +751,14 @@ describe("(T003) no shipping module reaches for the extended envelope", () => {
     // The census that measures them, and the drift gate over its record.
     "scripts/grammar-extension-census-cli.mjs",
     "scripts/grammar-extension-census.test.mjs",
+    // The T004 Stage-0 gate, which is the same KIND of thing: a measurement CLI
+    // that plans buildings under the extended envelope in memory, counts and
+    // drops every byte, and retains only summary records. It is a deliberate
+    // operator command, it materializes no wave and touches no release, and the
+    // fact that activation for the waves rests on ITS numbers is exactly why it
+    // has to be able to name the envelope. Nothing that ships imports it.
+    "scripts/mass-generation-stage0-cli.mjs",
+    "scripts/mass-generation-stage0.test.mjs",
   ]);
   const SYMBOLS = ["V3_EXTENDED_GRAMMAR_OPTIONS", "V3_EXTENDED_MAX_RING_VERTICES"];
 

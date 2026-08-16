@@ -1,0 +1,1272 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "mass-generation-20260816",
+  "taskId": "T004",
+  "artifact": "stage0-textured-shared-uri-write-cost",
+  "note": "MEASURED on a real committed shared-URI wave profile through the real canonical writer, both levels of detail, bytes dropped. The projection is a RANGE derived from the measured median and p95 of this sample; it is a projection and is labelled as one, not a measurement of the six waves.",
+  "profile": {
+    "releaseId": "manhattan-southern-remainder-cells-20260812-t1",
+    "textureDelivery": "shared-uri"
+  },
+  "sample": {
+    "requested": 100,
+    "measured": 100,
+    "selection": "the first N plannable owned parents in ledger order"
+  },
+  "texturedBothLodMs": {
+    "min": 1.616,
+    "median": 4.395,
+    "p95": 27.888,
+    "p99": 167.378,
+    "max": 167.378
+  },
+  "texturedPerAssetMs": {
+    "min": 0.808,
+    "median": 2.198,
+    "p95": 13.944,
+    "p99": 83.689,
+    "max": 83.689
+  },
+  "untexturedBothLodMs": {
+    "min": 0.715,
+    "median": 2.72,
+    "p95": 20.101,
+    "p99": 156.04,
+    "max": 156.04
+  },
+  "byteSize": {
+    "texturedBothLod": {
+      "min": 22248,
+      "median": 124040,
+      "p95": 1088764,
+      "p99": 6669604,
+      "max": 6669604
+    },
+    "untexturedBothLod": {
+      "min": 17756,
+      "median": 95880,
+      "p95": 827088,
+      "p99": 5021004,
+      "max": 5021004
+    }
+  },
+  "sharedTextureClassCounts": {
+    "2": 3,
+    "3": 97
+  },
+  "sixWaveProjection": {
+    "ownedParents": {
+      "w00": 14,
+      "w01": 7201,
+      "w02": 6425,
+      "w03": 9603,
+      "w04": 11721,
+      "w05": 10230,
+      "total": 45194
+    },
+    "note": "Single-threaded writer time for BOTH levels of detail over every owned parent, from the measured per-building median and p95. It excludes plan derivation, snapshot verification, release assembly, checksums and disk I/O, so it is a floor on the writer stage alone, not an estimate of a wave's wall clock.",
+    "medianBasedSeconds": 198.6,
+    "p95BasedSeconds": 1260.4,
+    "rangeStatement": "3.3 to 21 minutes of single-threaded writer time for all six waves at both LODs"
+  },
+  "rows": [
+    {
+      "buildingId": "doitt:102705",
+      "texturedBothLodMs": 13.649082999996608,
+      "untexturedBothLodMs": 3.0189160000008997,
+      "texturedBothLodByteSize": 88688,
+      "untexturedBothLodByteSize": 69532,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:131170",
+      "texturedBothLodMs": 27.888165999997,
+      "untexturedBothLodMs": 20.10137499999837,
+      "texturedBothLodByteSize": 1088764,
+      "untexturedBothLodByteSize": 827088,
+      "sharedTextureClasses": [
+        "limestone-ashlar",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:147902",
+      "texturedBothLodMs": 4.827125000003434,
+      "untexturedBothLodMs": 2.9909589999952004,
+      "texturedBothLodByteSize": 146596,
+      "untexturedBothLodByteSize": 113032,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:262867",
+      "texturedBothLodMs": 2.5912499999976717,
+      "untexturedBothLodMs": 1.4043330000058631,
+      "texturedBothLodByteSize": 56652,
+      "untexturedBothLodByteSize": 44620,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:39969",
+      "texturedBothLodMs": 4.450624999997672,
+      "untexturedBothLodMs": 2.936707999993814,
+      "texturedBothLodByteSize": 147544,
+      "untexturedBothLodByteSize": 113524,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:460555",
+      "texturedBothLodMs": 4.134625000006054,
+      "untexturedBothLodMs": 2.58508399999846,
+      "texturedBothLodByteSize": 121668,
+      "untexturedBothLodByteSize": 94660,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:498980",
+      "texturedBothLodMs": 3.2819170000002487,
+      "untexturedBothLodMs": 1.8926250000004075,
+      "texturedBothLodByteSize": 90828,
+      "untexturedBothLodByteSize": 70152,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:502491",
+      "texturedBothLodMs": 3.733874999998079,
+      "untexturedBothLodMs": 2.1803749999962747,
+      "texturedBothLodByteSize": 99436,
+      "untexturedBothLodByteSize": 77212,
+      "sharedTextureClasses": [
+        "limestone-ashlar",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:584049",
+      "texturedBothLodMs": 4.395167000002402,
+      "untexturedBothLodMs": 2.7981670000008307,
+      "texturedBothLodByteSize": 137740,
+      "untexturedBothLodByteSize": 106252,
+      "sharedTextureClasses": [
+        "limestone-ashlar",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:778052",
+      "texturedBothLodMs": 167.37779199999932,
+      "untexturedBothLodMs": 156.04004200000054,
+      "texturedBothLodByteSize": 6669604,
+      "untexturedBothLodByteSize": 5021004,
+      "sharedTextureClasses": [
+        "limestone-ashlar",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:812702",
+      "texturedBothLodMs": 3.6307920000035665,
+      "untexturedBothLodMs": 3.7488329999978305,
+      "texturedBothLodByteSize": 101748,
+      "untexturedBothLodByteSize": 79204,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:835659",
+      "texturedBothLodMs": 3.549582999999984,
+      "untexturedBothLodMs": 2.130582999998296,
+      "texturedBothLodByteSize": 99552,
+      "untexturedBothLodByteSize": 77084,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:925937",
+      "texturedBothLodMs": 3.5080420000012964,
+      "untexturedBothLodMs": 2.1020409999982803,
+      "texturedBothLodByteSize": 96416,
+      "untexturedBothLodByteSize": 74800,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:982383",
+      "texturedBothLodMs": 12.960458000001381,
+      "untexturedBothLodMs": 8.715750000003027,
+      "texturedBothLodByteSize": 539108,
+      "untexturedBothLodByteSize": 409064,
+      "sharedTextureClasses": [
+        "limestone-ashlar",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:105916",
+      "texturedBothLodMs": 10.114375000004657,
+      "untexturedBothLodMs": 7.15625,
+      "texturedBothLodByteSize": 407396,
+      "untexturedBothLodByteSize": 311772,
+      "sharedTextureClasses": [
+        "limestone-ashlar",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:1104532",
+      "texturedBothLodMs": 8.214875000005122,
+      "untexturedBothLodMs": 5.897791000003053,
+      "texturedBothLodByteSize": 324956,
+      "untexturedBothLodByteSize": 248192,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:1111726",
+      "texturedBothLodMs": 4.679708000003302,
+      "untexturedBothLodMs": 2.9622089999975287,
+      "texturedBothLodByteSize": 147164,
+      "untexturedBothLodByteSize": 113232,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:1115013",
+      "texturedBothLodMs": 7.007499999999709,
+      "untexturedBothLodMs": 4.741667000002053,
+      "texturedBothLodByteSize": 249484,
+      "untexturedBothLodByteSize": 190408,
+      "sharedTextureClasses": [
+        "limestone-ashlar",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:1116162",
+      "texturedBothLodMs": 3.1095839999979944,
+      "untexturedBothLodMs": 1.8315000000002328,
+      "texturedBothLodByteSize": 81760,
+      "untexturedBothLodByteSize": 64580,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:1117425",
+      "texturedBothLodMs": 5.060874999995576,
+      "untexturedBothLodMs": 2.969250000001921,
+      "texturedBothLodByteSize": 155960,
+      "untexturedBothLodByteSize": 119528,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:1191064",
+      "texturedBothLodMs": 1.7385829999984708,
+      "untexturedBothLodMs": 0.7689160000008997,
+      "texturedBothLodByteSize": 23268,
+      "untexturedBothLodByteSize": 19016,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:1215127",
+      "texturedBothLodMs": 2.0918339999989257,
+      "untexturedBothLodMs": 1.0074580000000424,
+      "texturedBothLodByteSize": 37036,
+      "untexturedBothLodByteSize": 29652,
+      "sharedTextureClasses": [
+        "limestone-ashlar",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:1224763",
+      "texturedBothLodMs": 12.154834000000847,
+      "untexturedBothLodMs": 8.062958000002254,
+      "texturedBothLodByteSize": 419296,
+      "untexturedBothLodByteSize": 319388,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:1232671",
+      "texturedBothLodMs": 2.023958000005223,
+      "untexturedBothLodMs": 0.9538749999992433,
+      "texturedBothLodByteSize": 32880,
+      "untexturedBothLodByteSize": 26460,
+      "sharedTextureClasses": [
+        "limestone-ashlar",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:1256080",
+      "texturedBothLodMs": 3.5588750000024447,
+      "untexturedBothLodMs": 2.1705829999991693,
+      "texturedBothLodByteSize": 96888,
+      "untexturedBothLodByteSize": 75092,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:1260400",
+      "texturedBothLodMs": 2.256333999997878,
+      "untexturedBothLodMs": 1.1161670000001322,
+      "texturedBothLodByteSize": 41916,
+      "untexturedBothLodByteSize": 33332,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:1262786",
+      "texturedBothLodMs": 2.4382499999992433,
+      "untexturedBothLodMs": 1.0667079999984708,
+      "texturedBothLodByteSize": 38708,
+      "untexturedBothLodByteSize": 31288,
+      "sharedTextureClasses": [
+        "limestone-ashlar",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:1263464",
+      "texturedBothLodMs": 6.867041999998037,
+      "untexturedBothLodMs": 4.569125000001804,
+      "texturedBothLodByteSize": 245688,
+      "untexturedBothLodByteSize": 187004,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:1268457",
+      "texturedBothLodMs": 3.54912499999773,
+      "untexturedBothLodMs": 2.036082999999053,
+      "texturedBothLodByteSize": 96108,
+      "untexturedBothLodByteSize": 74856,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:1279525",
+      "texturedBothLodMs": 2.685166000002937,
+      "untexturedBothLodMs": 1.2320829999953276,
+      "texturedBothLodByteSize": 48476,
+      "untexturedBothLodByteSize": 37796,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:1279526",
+      "texturedBothLodMs": 6.254500000002736,
+      "untexturedBothLodMs": 4.2042920000021695,
+      "texturedBothLodByteSize": 217660,
+      "untexturedBothLodByteSize": 166636,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:1279527",
+      "texturedBothLodMs": 2.6569579999995767,
+      "untexturedBothLodMs": 1.4701249999998254,
+      "texturedBothLodByteSize": 61392,
+      "untexturedBothLodByteSize": 48184,
+      "sharedTextureClasses": [
+        "limestone-ashlar",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:1282695",
+      "texturedBothLodMs": 5.193707999998878,
+      "untexturedBothLodMs": 3.222750000000815,
+      "texturedBothLodByteSize": 164720,
+      "untexturedBothLodByteSize": 125296,
+      "sharedTextureClasses": [
+        "limestone-ashlar",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:1285662",
+      "texturedBothLodMs": 10.962208000004466,
+      "untexturedBothLodMs": 7.188625000002503,
+      "texturedBothLodByteSize": 399464,
+      "untexturedBothLodByteSize": 301772,
+      "sharedTextureClasses": [
+        "limestone-ashlar",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:1286246",
+      "texturedBothLodMs": 2.0900000000037835,
+      "untexturedBothLodMs": 1.0679170000003069,
+      "texturedBothLodByteSize": 42688,
+      "untexturedBothLodByteSize": 33660,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:1288650",
+      "texturedBothLodMs": 7.4064999999973224,
+      "untexturedBothLodMs": 4.938790999993216,
+      "texturedBothLodByteSize": 276252,
+      "untexturedBothLodByteSize": 209864,
+      "sharedTextureClasses": [
+        "limestone-ashlar",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:1289963",
+      "texturedBothLodMs": 1.706291999995301,
+      "untexturedBothLodMs": 0.7150839999958407,
+      "texturedBothLodByteSize": 22248,
+      "untexturedBothLodByteSize": 17756,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:1289964",
+      "texturedBothLodMs": 2.2221669999998994,
+      "untexturedBothLodMs": 0.9755000000004657,
+      "texturedBothLodByteSize": 34444,
+      "untexturedBothLodByteSize": 27628,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:1294316",
+      "texturedBothLodMs": 81.89058400000067,
+      "untexturedBothLodMs": 61.75770800000464,
+      "texturedBothLodByteSize": 3361876,
+      "untexturedBothLodByteSize": 2527104,
+      "sharedTextureClasses": [
+        "limestone-ashlar",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:1295112",
+      "texturedBothLodMs": 2.1535839999996824,
+      "untexturedBothLodMs": 1.0832920000029844,
+      "texturedBothLodByteSize": 40124,
+      "untexturedBothLodByteSize": 31968,
+      "sharedTextureClasses": [
+        "limestone-ashlar",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:1302197",
+      "texturedBothLodMs": 12.639957999999751,
+      "untexturedBothLodMs": 8.762541999996756,
+      "texturedBothLodByteSize": 505624,
+      "untexturedBothLodByteSize": 381956,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:1302589",
+      "texturedBothLodMs": 2.40916599999764,
+      "untexturedBothLodMs": 1.0056670000049053,
+      "texturedBothLodByteSize": 35212,
+      "untexturedBothLodByteSize": 28268,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:162071",
+      "texturedBothLodMs": 2.7052089999997406,
+      "untexturedBothLodMs": 1.458959000003233,
+      "texturedBothLodByteSize": 67716,
+      "untexturedBothLodByteSize": 52708,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:166790",
+      "texturedBothLodMs": 6.629167000006419,
+      "untexturedBothLodMs": 4.422166999996989,
+      "texturedBothLodByteSize": 229124,
+      "untexturedBothLodByteSize": 175748,
+      "sharedTextureClasses": [
+        "limestone-ashlar",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:181184",
+      "texturedBothLodMs": 10.990291999994952,
+      "untexturedBothLodMs": 7.640833999997994,
+      "texturedBothLodByteSize": 439112,
+      "untexturedBothLodByteSize": 333004,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:225670",
+      "texturedBothLodMs": 2.4996250000040163,
+      "untexturedBothLodMs": 1.359334000000672,
+      "texturedBothLodByteSize": 55328,
+      "untexturedBothLodByteSize": 43780,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:317859",
+      "texturedBothLodMs": 7.487042000000656,
+      "untexturedBothLodMs": 5.073624999997264,
+      "texturedBothLodByteSize": 278900,
+      "untexturedBothLodByteSize": 214068,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:328864",
+      "texturedBothLodMs": 7.312958999995317,
+      "untexturedBothLodMs": 5.505542000006244,
+      "texturedBothLodByteSize": 275512,
+      "untexturedBothLodByteSize": 210964,
+      "sharedTextureClasses": [
+        "limestone-ashlar",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:348074",
+      "texturedBothLodMs": 2.862250000005588,
+      "untexturedBothLodMs": 1.6066659999996773,
+      "texturedBothLodByteSize": 70136,
+      "untexturedBothLodByteSize": 55048,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:353265",
+      "texturedBothLodMs": 2.7267920000012964,
+      "untexturedBothLodMs": 1.5242920000018785,
+      "texturedBothLodByteSize": 64468,
+      "untexturedBothLodByteSize": 50484,
+      "sharedTextureClasses": [
+        "limestone-ashlar",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:36922",
+      "texturedBothLodMs": 2.2518329999948037,
+      "untexturedBothLodMs": 1.2164580000026035,
+      "texturedBothLodByteSize": 42684,
+      "untexturedBothLodByteSize": 34236,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:373902",
+      "texturedBothLodMs": 3.197041999999783,
+      "untexturedBothLodMs": 2.250500000001921,
+      "texturedBothLodByteSize": 95816,
+      "untexturedBothLodByteSize": 73452,
+      "sharedTextureClasses": [
+        "limestone-ashlar",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:375025",
+      "texturedBothLodMs": 2.7442080000037095,
+      "untexturedBothLodMs": 1.5039579999938724,
+      "texturedBothLodByteSize": 64544,
+      "untexturedBothLodByteSize": 50204,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:407018",
+      "texturedBothLodMs": 3.34150000000227,
+      "untexturedBothLodMs": 1.9717499999969732,
+      "texturedBothLodByteSize": 85344,
+      "untexturedBothLodByteSize": 66496,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:418207",
+      "texturedBothLodMs": 3.331500000000233,
+      "untexturedBothLodMs": 1.9710419999973965,
+      "texturedBothLodByteSize": 88932,
+      "untexturedBothLodByteSize": 69280,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:420075",
+      "texturedBothLodMs": 18.108749999999418,
+      "untexturedBothLodMs": 11.966957999997248,
+      "texturedBothLodByteSize": 696028,
+      "untexturedBothLodByteSize": 530172,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:440180",
+      "texturedBothLodMs": 4.988999999994121,
+      "untexturedBothLodMs": 3.164167000002635,
+      "texturedBothLodByteSize": 160100,
+      "untexturedBothLodByteSize": 123028,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:443409",
+      "texturedBothLodMs": 4.222000000001572,
+      "untexturedBothLodMs": 2.613999999994121,
+      "texturedBothLodByteSize": 129052,
+      "untexturedBothLodByteSize": 99860,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:450560",
+      "texturedBothLodMs": 3.1232919999965816,
+      "untexturedBothLodMs": 1.859375,
+      "texturedBothLodByteSize": 77520,
+      "untexturedBothLodByteSize": 60848,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:473907",
+      "texturedBothLodMs": 5.214124999998603,
+      "untexturedBothLodMs": 3.3204590000023018,
+      "texturedBothLodByteSize": 170188,
+      "untexturedBothLodByteSize": 130116,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:487836",
+      "texturedBothLodMs": 4.632417000000714,
+      "untexturedBothLodMs": 2.9621249999981956,
+      "texturedBothLodByteSize": 143452,
+      "untexturedBothLodByteSize": 111272,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:501878",
+      "texturedBothLodMs": 5.072707999999693,
+      "untexturedBothLodMs": 3.288542000002053,
+      "texturedBothLodByteSize": 162396,
+      "untexturedBothLodByteSize": 125804,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:513787",
+      "texturedBothLodMs": 4.8712500000037835,
+      "untexturedBothLodMs": 2.84150000000227,
+      "texturedBothLodByteSize": 140816,
+      "untexturedBothLodByteSize": 108508,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:547528",
+      "texturedBothLodMs": 2.977375000002212,
+      "untexturedBothLodMs": 1.6149999999979627,
+      "texturedBothLodByteSize": 69088,
+      "untexturedBothLodByteSize": 54516,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:555676",
+      "texturedBothLodMs": 1.61633399999846,
+      "untexturedBothLodMs": 0.7322500000009313,
+      "texturedBothLodByteSize": 23248,
+      "untexturedBothLodByteSize": 18996,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:559204",
+      "texturedBothLodMs": 5.050167000001238,
+      "untexturedBothLodMs": 3.2129999999961,
+      "texturedBothLodByteSize": 173084,
+      "untexturedBothLodByteSize": 132692,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:572887",
+      "texturedBothLodMs": 4.506124999999884,
+      "untexturedBothLodMs": 2.775999999998021,
+      "texturedBothLodByteSize": 151848,
+      "untexturedBothLodByteSize": 117164,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:594251",
+      "texturedBothLodMs": 56.95562500000233,
+      "untexturedBothLodMs": 38.31541699999798,
+      "texturedBothLodByteSize": 2273008,
+      "untexturedBothLodByteSize": 1710892,
+      "sharedTextureClasses": [
+        "limestone-ashlar",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:60572",
+      "texturedBothLodMs": 4.528833999997005,
+      "untexturedBothLodMs": 2.8977089999971213,
+      "texturedBothLodByteSize": 141840,
+      "untexturedBothLodByteSize": 110136,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:631125",
+      "texturedBothLodMs": 1.9619579999998678,
+      "untexturedBothLodMs": 0.9520829999964917,
+      "texturedBothLodByteSize": 33256,
+      "untexturedBothLodByteSize": 27036,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:678033",
+      "texturedBothLodMs": 4.484041999996407,
+      "untexturedBothLodMs": 2.8170420000024023,
+      "texturedBothLodByteSize": 139956,
+      "untexturedBothLodByteSize": 108432,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:684855",
+      "texturedBothLodMs": 1.9572499999994761,
+      "untexturedBothLodMs": 0.953458000003593,
+      "texturedBothLodByteSize": 32168,
+      "untexturedBothLodByteSize": 26192,
+      "sharedTextureClasses": [
+        "limestone-ashlar",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:688120",
+      "texturedBothLodMs": 4.852415999994264,
+      "untexturedBothLodMs": 3.076833000006445,
+      "texturedBothLodByteSize": 161376,
+      "untexturedBothLodByteSize": 123856,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:743834",
+      "texturedBothLodMs": 3.8160829999978887,
+      "untexturedBothLodMs": 2.0944579999995767,
+      "texturedBothLodByteSize": 90744,
+      "untexturedBothLodByteSize": 71880,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:749752",
+      "texturedBothLodMs": 7.6794169999993755,
+      "untexturedBothLodMs": 5.244709000005969,
+      "texturedBothLodByteSize": 276296,
+      "untexturedBothLodByteSize": 212120,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:755561",
+      "texturedBothLodMs": 4.579875000003085,
+      "untexturedBothLodMs": 2.579082999996899,
+      "texturedBothLodByteSize": 124040,
+      "untexturedBothLodByteSize": 95880,
+      "sharedTextureClasses": [
+        "limestone-ashlar",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:803147",
+      "texturedBothLodMs": 24.38429200000246,
+      "untexturedBothLodMs": 17.764917000000423,
+      "texturedBothLodByteSize": 913092,
+      "untexturedBothLodByteSize": 696552,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:817527",
+      "texturedBothLodMs": 2.5383749999964493,
+      "untexturedBothLodMs": 1.3495829999956186,
+      "texturedBothLodByteSize": 56776,
+      "untexturedBothLodByteSize": 44648,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:850090",
+      "texturedBothLodMs": 16.465083000002778,
+      "untexturedBothLodMs": 12.121624999999767,
+      "texturedBothLodByteSize": 658016,
+      "untexturedBothLodByteSize": 496780,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:852472",
+      "texturedBothLodMs": 2.8468749999956344,
+      "untexturedBothLodMs": 1.3816250000018044,
+      "texturedBothLodByteSize": 53432,
+      "untexturedBothLodByteSize": 42332,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:88101",
+      "texturedBothLodMs": 17.362333999997645,
+      "untexturedBothLodMs": 13.896333999997296,
+      "texturedBothLodByteSize": 592212,
+      "untexturedBothLodByteSize": 459360,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:91300",
+      "texturedBothLodMs": 13.897666000004392,
+      "untexturedBothLodMs": 9.674791999997979,
+      "texturedBothLodByteSize": 552696,
+      "untexturedBothLodByteSize": 417668,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:945838",
+      "texturedBothLodMs": 3.393458999998984,
+      "untexturedBothLodMs": 1.9711670000033337,
+      "texturedBothLodByteSize": 99776,
+      "untexturedBothLodByteSize": 77772,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:97522",
+      "texturedBothLodMs": 6.0575840000019525,
+      "untexturedBothLodMs": 3.936374999997497,
+      "texturedBothLodByteSize": 215272,
+      "untexturedBothLodByteSize": 165004,
+      "sharedTextureClasses": [
+        "limestone-ashlar",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:98082",
+      "texturedBothLodMs": 2.99237500000163,
+      "untexturedBothLodMs": 1.7930420000047889,
+      "texturedBothLodByteSize": 73744,
+      "untexturedBothLodByteSize": 57904,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:996627",
+      "texturedBothLodMs": 2.8661250000004657,
+      "untexturedBothLodMs": 1.6089579999970738,
+      "texturedBothLodByteSize": 75636,
+      "untexturedBothLodByteSize": 59244,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:996629",
+      "texturedBothLodMs": 7.08533300000272,
+      "untexturedBothLodMs": 4.723500000000058,
+      "texturedBothLodByteSize": 253108,
+      "untexturedBothLodByteSize": 192676,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:996630",
+      "texturedBothLodMs": 13.31962499999645,
+      "untexturedBothLodMs": 9.233000000000175,
+      "texturedBothLodByteSize": 526960,
+      "untexturedBothLodByteSize": 398172,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:996631",
+      "texturedBothLodMs": 2.9997500000026776,
+      "untexturedBothLodMs": 1.7392079999990528,
+      "texturedBothLodByteSize": 83940,
+      "untexturedBothLodByteSize": 65912,
+      "sharedTextureClasses": [
+        "limestone-ashlar",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:996632",
+      "texturedBothLodMs": 8.689790999997058,
+      "untexturedBothLodMs": 5.92108300000109,
+      "texturedBothLodByteSize": 333444,
+      "untexturedBothLodByteSize": 254760,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:996746",
+      "texturedBothLodMs": 2.5385839999944437,
+      "untexturedBothLodMs": 1.6635000000023865,
+      "texturedBothLodByteSize": 57388,
+      "untexturedBothLodByteSize": 45064,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:111690",
+      "texturedBothLodMs": 2.9509580000012647,
+      "untexturedBothLodMs": 1.6691250000003492,
+      "texturedBothLodByteSize": 75864,
+      "untexturedBothLodByteSize": 59116,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:1195535",
+      "texturedBothLodMs": 2.881208000006154,
+      "untexturedBothLodMs": 1.6231249999982538,
+      "texturedBothLodByteSize": 70640,
+      "untexturedBothLodByteSize": 55116,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:1264335",
+      "texturedBothLodMs": 22.56341600000451,
+      "untexturedBothLodMs": 15.153665999998339,
+      "texturedBothLodByteSize": 875976,
+      "untexturedBothLodByteSize": 665776,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:1297513",
+      "texturedBothLodMs": 28.10633300000336,
+      "untexturedBothLodMs": 21.257250000002387,
+      "texturedBothLodByteSize": 1179500,
+      "untexturedBothLodByteSize": 890664,
+      "sharedTextureClasses": [
+        "limestone-ashlar",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:1299442",
+      "texturedBothLodMs": 4.395375000000058,
+      "untexturedBothLodMs": 2.720458999996481,
+      "texturedBothLodByteSize": 136992,
+      "untexturedBothLodByteSize": 105368,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:1300185",
+      "texturedBothLodMs": 25.610207999998238,
+      "untexturedBothLodMs": 17.989332999997714,
+      "texturedBothLodByteSize": 1052468,
+      "untexturedBothLodByteSize": 798412,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:157592",
+      "texturedBothLodMs": 2.143707999995968,
+      "untexturedBothLodMs": 1.0794999999998254,
+      "texturedBothLodByteSize": 39868,
+      "untexturedBothLodByteSize": 31992,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:194068",
+      "texturedBothLodMs": 2.629791999999725,
+      "untexturedBothLodMs": 1.4006250000020373,
+      "texturedBothLodByteSize": 58328,
+      "untexturedBothLodByteSize": 45876,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    },
+    {
+      "buildingId": "doitt:261397",
+      "texturedBothLodMs": 2.731500000001688,
+      "untexturedBothLodMs": 1.5128330000006827,
+      "texturedBothLodByteSize": 64132,
+      "untexturedBothLodByteSize": 50400,
+      "sharedTextureClasses": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ]
+    }
+  ],
+  "retention": "gate-only: every GLB written by this stage was counted, timed and dropped"
+}
