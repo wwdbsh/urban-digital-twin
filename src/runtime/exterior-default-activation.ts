@@ -53,7 +53,38 @@ export interface ExteriorDefaultActivationMembership {
   /** SHA-256 over `exteriorAcceptedCellsJoin`, or `null` for the literal form. */
   readonly cellsDigestSha256: string | null;
   readonly cellCount: number;
+  /**
+   * The literal accepted building identities. Empty exactly when
+   * `buildingIdsDigestSha256` is set.
+   */
   readonly buildingIds: readonly string[];
+  /**
+   * SHA-256 over `exteriorAcceptedIdsJoin(buildingIds)`, for a wave whose
+   * membership is too large to list.
+   *
+   * The same argument the cell digest was introduced under, one field over and
+   * one order of magnitude later. A curated wave accepted 14 to 179 buildings
+   * and lists them, because a reviewer can read 179 names and check them. A
+   * SERVING wave accepts up to 11,682, and ninety kilobytes of identifiers
+   * pasted into a source file is not read by anybody — it is a diff nobody can
+   * review, and pasting it does not make the acceptance stronger, because the
+   * gate still only compares it against what the runtime resolved.
+   *
+   * So the same fact is stated as one digest over the canonical join, which
+   * `verifyPromotedExteriorPin` RECOMPUTES from the resolved release. It is
+   * exactly as strict — any identity added, removed or altered changes it — and
+   * it is reviewable, which the literal form stops being at this size.
+   *
+   * OPTIONAL, and absent means the literal form. Every record committed before
+   * this field existed is byte-unchanged and behaves exactly as it did.
+   */
+  readonly buildingIdsDigestSha256?: string | null;
+  /**
+   * Stated in BOTH forms, so a resolve that returned a truncated or padded
+   * building set fails closed before any digest is compared — and fails naming
+   * the count rather than printing two ninety-kilobyte joins.
+   */
+  readonly buildingCount?: number;
 }
 
 /**
@@ -63,6 +94,26 @@ export interface ExteriorDefaultActivationMembership {
  */
 export function exteriorAcceptedCellsJoin(cells: readonly ExteriorAcceptedCell[]): string {
   return cells.map((cell) => `${cell.cellId}|${cell.cellReleaseId}|${cell.checksumSha256}`).sort().join(", ");
+}
+
+/**
+ * The canonical, order-independent text form of a plain ID set — accepted
+ * building identities, and the assembly packages a head pins.
+ *
+ * Deliberately the SAME shape as `exteriorAcceptedCellsJoin`: sort, then join
+ * with the same separator. Two digest forms that agreed on the fact and
+ * disagreed on the encoding would be two things to get right, and the second
+ * one would be the one nobody checked.
+ */
+export function exteriorAcceptedIdsJoin(ids: readonly string[]): string {
+  return [...ids].sort().join(", ");
+}
+
+/** SHA-256 hex of the canonical ID join. Async because Web Crypto is. */
+export async function exteriorAcceptedIdsDigest(ids: readonly string[]): Promise<string> {
+  if (!globalThis.crypto?.subtle) throw new Error("Web Crypto SHA-256 is unavailable; the exterior identity digest could not be computed.");
+  const digest = await globalThis.crypto.subtle.digest("SHA-256", new TextEncoder().encode(exteriorAcceptedIdsJoin(ids)));
+  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
 /** SHA-256 hex of the canonical join. Async because Web Crypto is. */
@@ -91,7 +142,29 @@ export interface ExteriorDefaultActivationEnabled {
   readonly releaseId: string;
   readonly snapshotId: string;
   readonly snapshotChecksumSha256: string;
+  /**
+   * The packages the accepted head pins. Empty exactly when
+   * `assemblyPackageIdsDigestSha256` is set.
+   */
   readonly assemblyPackageIds: readonly string[];
+  /**
+   * SHA-256 over `exteriorAcceptedIdsJoin(assemblyPackageIds)`, for a head that
+   * pins one package per ownership cell.
+   *
+   * A curated wave's head pins ONE assembly package, so the literal form is one
+   * line. Under the ADR 0052 §2 assembly seam a serving wave's head pins one
+   * package PER CELL — 249 for `w04`, 883 island-wide — because the head is
+   * still the single statement of what the release serves and there is now one
+   * package per cell to state. That is the same reviewability problem the cell
+   * and building digests solve, and it is solved the same way and with the same
+   * failure ordering: count first, then digest.
+   *
+   * OPTIONAL, and absent means the literal form. Every committed record is
+   * byte-unchanged.
+   */
+  readonly assemblyPackageIdsDigestSha256?: string | null;
+  /** Stated in both forms, so a truncated or padded head is named as such. */
+  readonly assemblyPackageCount?: number;
   readonly membership: ExteriorDefaultActivationMembership;
   readonly approvalRef: string;
   /**
@@ -1114,6 +1187,12 @@ export interface ExteriorPinVerificationInput {
    * here fails closed rather than skipping the membership comparison.
    */
   cellsDigestSha256?: string | null;
+  /** The buildings the resolved release declares available, from the runtime. */
+  buildingIds?: readonly string[];
+  /** `exteriorAcceptedIdsDigest(buildingIds)`; see `cellsDigestSha256`. */
+  buildingIdsDigestSha256?: string | null;
+  /** `exteriorAcceptedIdsDigest(assemblyPackageIds)`; see `cellsDigestSha256`. */
+  assemblyPackageIdsDigestSha256?: string | null;
 }
 
 export type ExteriorPinVerification = { ok: true } | { ok: false; message: string };
@@ -1138,9 +1217,47 @@ export function verifyPromotedExteriorPin(
   if (resolved.releaseId !== record.releaseId) return mismatch("release", record.releaseId, resolved.releaseId);
   if (resolved.snapshotId !== record.snapshotId) return mismatch("snapshot", record.snapshotId, resolved.snapshotId);
   if (resolved.snapshotChecksumSha256 !== record.snapshotChecksumSha256) return mismatch("snapshot checksum", record.snapshotChecksumSha256, resolved.snapshotChecksumSha256);
-  const expectedPackages = [...record.assemblyPackageIds].sort().join(", ");
-  const actualPackages = [...resolved.assemblyPackageIds].sort().join(", ");
-  if (expectedPackages !== actualPackages) return mismatch("assembly packages", expectedPackages, actualPackages);
+  // Assembly packages, in whichever of the two forms the record states. The
+  // digest branch mirrors the cell branch below exactly — count first, then
+  // digest, and a caller that computed no digest has not verified the head.
+  if (typeof record.assemblyPackageIdsDigestSha256 === "string") {
+    if (resolved.assemblyPackageIds.length !== record.assemblyPackageCount) {
+      return mismatch("assembly package count", String(record.assemblyPackageCount), String(resolved.assemblyPackageIds.length));
+    }
+    if (typeof resolved.assemblyPackageIdsDigestSha256 !== "string" || resolved.assemblyPackageIdsDigestSha256.length === 0) {
+      return {
+        ok: false,
+        message: `Exterior streaming failed closed: release ${record.releaseId} states the packages its head pins as a digest, but no digest was computed for the resolved head, so the head was never verified (${record.approvalRef}). No exterior geometry was rendered and no substitute release was selected.`,
+      };
+    }
+    if (resolved.assemblyPackageIdsDigestSha256 !== record.assemblyPackageIdsDigestSha256) {
+      return mismatch("assembly package digest", record.assemblyPackageIdsDigestSha256, resolved.assemblyPackageIdsDigestSha256);
+    }
+  } else {
+    const expectedPackages = exteriorAcceptedIdsJoin(record.assemblyPackageIds);
+    const actualPackages = exteriorAcceptedIdsJoin(resolved.assemblyPackageIds);
+    if (expectedPackages !== actualPackages) return mismatch("assembly packages", expectedPackages, actualPackages);
+  }
+  // Accepted building identities, same two forms and same ordering. In the
+  // literal form the identity gate reads `membership.buildingIds` directly and
+  // this comparison would be redundant, so it runs only for the digest form —
+  // which is precisely the form where the identity gate CANNOT read a list and
+  // has to be handed the verified resolved set instead.
+  if (typeof record.membership.buildingIdsDigestSha256 === "string") {
+    const resolvedBuildingIds = resolved.buildingIds ?? [];
+    if (resolvedBuildingIds.length !== record.membership.buildingCount) {
+      return mismatch("building count", String(record.membership.buildingCount), String(resolvedBuildingIds.length));
+    }
+    if (typeof resolved.buildingIdsDigestSha256 !== "string" || resolved.buildingIdsDigestSha256.length === 0) {
+      return {
+        ok: false,
+        message: `Exterior streaming failed closed: release ${record.releaseId} states its accepted building membership as a digest, but no digest was computed for the resolved buildings, so membership was never verified (${record.approvalRef}). No exterior geometry was rendered and no substitute release was selected.`,
+      };
+    }
+    if (resolved.buildingIdsDigestSha256 !== record.membership.buildingIdsDigestSha256) {
+      return mismatch("building membership digest", record.membership.buildingIdsDigestSha256, resolved.buildingIdsDigestSha256);
+    }
+  }
   // Count first: a truncated or padded resolve is named as such instead of
   // producing an unreadable diff of two long joins.
   if (resolved.cells.length !== record.membership.cellCount) {
@@ -1177,11 +1294,27 @@ export function verifyPromotedExteriorPin(
 export function verifyPromotedExteriorMembership(
   renderedFeatureIds: readonly string[],
   record: ExteriorDefaultActivationRecord = EXTERIOR_DEFAULT_ACTIVATION,
+  /**
+   * The accepted set, for a record that states it as a digest.
+   *
+   * REQUIRED in that case and refused when absent. It is the set the runtime
+   * resolved, and it is the accepted set only because `verifyPromotedExteriorPin`
+   * already compared its digest against the record — so this parameter is
+   * "the set that check verified", never "a set the caller believes in".
+   * Ignored in the literal form, where the record's own list is authoritative.
+   */
+  verifiedAcceptedBuildingIds?: readonly string[],
 ): ExteriorPinVerification {
   if (!record.enabled) {
     return { ok: false, message: "Exterior streaming is not promoted in this build, so no promoted membership could be verified; no substitute release was selected." };
   }
-  const accepted = new Set(record.membership.buildingIds);
+  if (typeof record.membership.buildingIdsDigestSha256 === "string" && verifiedAcceptedBuildingIds === undefined) {
+    return {
+      ok: false,
+      message: `Exterior streaming failed closed: release ${record.releaseId} states its accepted building membership as a digest, so the identity gate must be handed the verified resolved membership; it was not, and no identity was checked (${record.approvalRef}). No exterior geometry was rendered and no substitute release was selected.`,
+    };
+  }
+  const accepted = new Set(typeof record.membership.buildingIdsDigestSha256 === "string" ? verifiedAcceptedBuildingIds! : record.membership.buildingIds);
   const unexpected = [...new Set(renderedFeatureIds)].filter((featureId) => !accepted.has(featureId)).sort();
   if (unexpected.length === 0) return { ok: true };
   return {

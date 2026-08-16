@@ -830,7 +830,13 @@ describe("exterior streaming profiles and canary state", () => {
   });
 
   it("round-trips the pinned Manhattan release and keeps the fixture as the no-real-base fallback", () => {
-    expect(PINNED_EXTERIOR_CELL_RELEASE_IDS).toEqual(["udt-fixture-exterior-cells", "manhattan-exterior-cells-20260811", "manhattan-exterior-cells-20260811-v3", "manhattan-midtown-core-cells-20260811", "manhattan-midtown-core-cells-20260811-v3", "manhattan-lower-manhattan-cells-20260812", "manhattan-lower-manhattan-cells-20260812-p1", "manhattan-southern-remainder-cells-20260812", "manhattan-southern-remainder-cells-20260812-p1", "manhattan-central-upper-manhattan-cells-20260812", "manhattan-central-upper-manhattan-cells-20260812-p1", "manhattan-northern-manhattan-cells-20260812", "manhattan-northern-manhattan-cells-20260812-p1", "manhattan-southern-remainder-cells-20260812-t1", "manhattan-lower-manhattan-cells-20260812-t1", "manhattan-central-upper-manhattan-cells-20260812-t1", "manhattan-northern-manhattan-cells-20260812-t1"]);
+    expect(PINNED_EXTERIOR_CELL_RELEASE_IDS).toEqual(["udt-fixture-exterior-cells", "manhattan-exterior-cells-20260811", "manhattan-exterior-cells-20260811-v3", "manhattan-midtown-core-cells-20260811", "manhattan-midtown-core-cells-20260811-v3", "manhattan-lower-manhattan-cells-20260812", "manhattan-lower-manhattan-cells-20260812-p1", "manhattan-southern-remainder-cells-20260812", "manhattan-southern-remainder-cells-20260812-p1", "manhattan-central-upper-manhattan-cells-20260812", "manhattan-central-upper-manhattan-cells-20260812-p1", "manhattan-northern-manhattan-cells-20260812", "manhattan-northern-manhattan-cells-20260812-p1", "manhattan-southern-remainder-cells-20260812-t1", "manhattan-lower-manhattan-cells-20260812-t1", "manhattan-central-upper-manhattan-cells-20260812-t1", "manhattan-northern-manhattan-cells-20260812-t1", "manhattan-exterior-cells-20260811-v3-s1", "manhattan-midtown-core-cells-20260811-v3-s1", "manhattan-lower-manhattan-cells-20260812-s1", "manhattan-southern-remainder-cells-20260812-s1", "manhattan-central-upper-manhattan-cells-20260812-s1", "manhattan-northern-manhattan-cells-20260812-s1"]);
+    // The six T005 SERVING releases are pinned on the canary terms and on no
+    // others: reachable by explicit opt-in so the frame-time and eviction
+    // evidence can be taken against the promoted default, absent from the
+    // promotion record, and therefore never loaded by an ordinary session.
+    expect(isPinnedExteriorCellRelease("manhattan-lower-manhattan-cells-20260812-s1")).toBe(true);
+    expect(EXTERIOR_DEFAULT_ACTIVATIONS.some((record) => record.releaseId?.endsWith("-s1") === true)).toBe(false);
     // The Lower-Manhattan CANARY stays reachable by explicit opt-in and by
     // nothing else, and this survives its wave's promotion: promoting the P1
     // successor did not promote the canary, and the canary's deep link keeps

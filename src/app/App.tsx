@@ -68,7 +68,8 @@ import { scheduleExteriorCellsGlobally } from "../runtime/exterior-cell-scheduli
 import { commitExteriorCacheRelease, createExteriorCacheReleaseState, noteExteriorSceneRetired, planExteriorCacheRelease, queueExteriorCacheRelease } from "../runtime/exterior-cache-release";
 import type { SchedulerCarry } from "../runtime/exterior-visibility-scheduler";
 import { createExteriorAssetFaultFetcher, createExteriorCellFaultFetcher, parseExteriorAssetFault, parseExteriorCellFault } from "../runtime/exterior-cell-fault";
-import { EXTERIOR_DEFAULT_ACTIVATION, exteriorAcceptedCellsDigest, exteriorDefaultActivations, exteriorRolledBackReleaseNotice, exteriorStreamingOverrideDisables, exteriorUnavailableStatements, resolveExteriorActivationSet, restoresPromotedDefault, verifyPromotedExteriorMembership, verifyPromotedExteriorPin, type ExteriorDefaultActivationRecord, type ExteriorDefaultActivationRecords, type ExteriorReleaseActivation, type ExteriorStreamingOverride } from "../runtime/exterior-default-activation";
+import { EXTERIOR_SERVING_WAVES } from "../release/exterior-serving-waves";
+import { EXTERIOR_DEFAULT_ACTIVATION, exteriorAcceptedCellsDigest, exteriorAcceptedIdsDigest, exteriorDefaultActivations, exteriorRolledBackReleaseNotice, exteriorStreamingOverrideDisables, exteriorUnavailableStatements, resolveExteriorActivationSet, restoresPromotedDefault, verifyPromotedExteriorMembership, verifyPromotedExteriorPin, type ExteriorDefaultActivationRecord, type ExteriorDefaultActivationRecords, type ExteriorReleaseActivation, type ExteriorStreamingOverride } from "../runtime/exterior-default-activation";
 import {
   BLOCK835_CANARY_REPEATS,
   BLOCK835_CANARY_SAMPLES_PER_POSE,
@@ -744,6 +745,15 @@ export function appendBlock835PublicRealmUrl(baseUrl: string, requested: boolean
  * opt-in only. The paragraphs above are left as they were written because they
  * were true of the builds they described.
  *
+ * The six `-s1` ids (T005, ADR 0052) are the SERVING releases: the same waves
+ * again, transformed without regeneration from the T004 retention packages, at
+ * FULL population rather than a curated subset — 44,989 buildings across 883
+ * cells against the 498 the promoted composition ships. They are pinned first
+ * as opt-ins ALONE, so the frame-time and eviction evidence can be captured on
+ * a real session against the promoted default before any default moves. Pinning
+ * a release makes it reachable; it does not promote it, does not enter it into
+ * the promotion record, and does not change what an ordinary session loads.
+ *
  * The four `-t1` ids (T002, ADR 0047) are the SHARED-TEXTURE variants of the
  * four promoted `-p1` waves: same cells, same buildings, same geometry, with the
  * four detail tiles declared once per release and referenced by URI instead of
@@ -753,7 +763,7 @@ export function appendBlock835PublicRealmUrl(baseUrl: string, requested: boolean
  * whether any of them is ever promoted is a separate decision with its own
  * measurement, and this pin does not anticipate it.
  */
-export const PINNED_EXTERIOR_CELL_RELEASE_IDS = ["udt-fixture-exterior-cells", "manhattan-exterior-cells-20260811", "manhattan-exterior-cells-20260811-v3", "manhattan-midtown-core-cells-20260811", "manhattan-midtown-core-cells-20260811-v3", "manhattan-lower-manhattan-cells-20260812", "manhattan-lower-manhattan-cells-20260812-p1", "manhattan-southern-remainder-cells-20260812", "manhattan-southern-remainder-cells-20260812-p1", "manhattan-central-upper-manhattan-cells-20260812", "manhattan-central-upper-manhattan-cells-20260812-p1", "manhattan-northern-manhattan-cells-20260812", "manhattan-northern-manhattan-cells-20260812-p1", ...EXTERIOR_T1_RELEASE_IDS] as const;
+export const PINNED_EXTERIOR_CELL_RELEASE_IDS = ["udt-fixture-exterior-cells", "manhattan-exterior-cells-20260811", "manhattan-exterior-cells-20260811-v3", "manhattan-midtown-core-cells-20260811", "manhattan-midtown-core-cells-20260811-v3", "manhattan-lower-manhattan-cells-20260812", "manhattan-lower-manhattan-cells-20260812-p1", "manhattan-southern-remainder-cells-20260812", "manhattan-southern-remainder-cells-20260812-p1", "manhattan-central-upper-manhattan-cells-20260812", "manhattan-central-upper-manhattan-cells-20260812-p1", "manhattan-northern-manhattan-cells-20260812", "manhattan-northern-manhattan-cells-20260812-p1", ...EXTERIOR_T1_RELEASE_IDS, ...EXTERIOR_SERVING_WAVES.map((entry) => entry.servingReleaseId)] as const;
 
 /**
  * The release used when neither a URL nor the promoted default names one: still
@@ -2074,6 +2084,17 @@ export function App() {
         const resolvedCellsDigest = target.record.enabled && target.record.membership.cellsDigestSha256 !== null
           ? await exteriorAcceptedCellsDigest(runtime.snapshot.cells)
           : null;
+        // The same recomputation for the two digest forms ADR 0052 D-A added,
+        // and for the same reason: a serving wave's accepted membership and its
+        // per-cell head are too large to list, so the record states a digest and
+        // the gate recomputes it from what the runtime actually resolved.
+        const resolvedBuildingIds = runtime.promotedBuildingIds();
+        const resolvedBuildingIdsDigest = target.record.enabled && typeof target.record.membership.buildingIdsDigestSha256 === "string"
+          ? await exteriorAcceptedIdsDigest(resolvedBuildingIds)
+          : null;
+        const resolvedAssemblyPackageIdsDigest = target.record.enabled && typeof target.record.assemblyPackageIdsDigestSha256 === "string"
+          ? await exteriorAcceptedIdsDigest(head.pin.assemblyPackageIds)
+          : null;
         if (controller.signal.aborted) return;
         // Acceptance gate for the promoted default: what the runtime resolved must
         // be the accepted hashes and the accepted cell membership. A same-named
@@ -2087,6 +2108,9 @@ export function App() {
             assemblyPackageIds: head.pin.assemblyPackageIds,
             cells: runtime.snapshot.cells,
             cellsDigestSha256: resolvedCellsDigest,
+            buildingIds: resolvedBuildingIds,
+            buildingIdsDigestSha256: resolvedBuildingIdsDigest,
+            assemblyPackageIdsDigestSha256: resolvedAssemblyPackageIdsDigest,
           }, target.record);
           if (!verification.ok) {
             setWave(failedExteriorWave(verification.message));
@@ -2299,7 +2323,10 @@ export function App() {
           // and is reported by the existing per-cell notices instead. The gate
           // runs against THIS wave's accepted membership.
           const renderedIds = outcomes.flatMap((outcome) => outcome.kind === "rendered" ? outcome.assets.map((asset) => asset.canonicalFeatureId) : []);
-          const membership = verifyPromotedExteriorMembership(renderedIds, target.record);
+          // The third argument is the set `verifyPromotedExteriorPin` already
+          // verified against the record's digest at load; in the literal form it
+          // is ignored and the record's own list stays authoritative.
+          const membership = verifyPromotedExteriorMembership(renderedIds, target.record, runtime.promotedBuildingIds());
           if (!membership.ok) {
             setExteriorWaveOutcomes((current) => { const next = new Map(current); next.delete(releaseId); return next; });
             setExteriorWaves((current) => (current.has(releaseId) ? new Map(current).set(releaseId, failedExteriorWave(membership.message)) : current));

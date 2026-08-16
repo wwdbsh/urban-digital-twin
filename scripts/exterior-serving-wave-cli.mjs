@@ -677,6 +677,145 @@ async function readServingFile(payloadRoot, relativeRef, declaredFiles, declared
 
 // ---------------------------------------------------------------------------
 
+/**
+ * The boot cost of a serving wave, before and after the assembly seam.
+ *
+ * DETERMINISTIC and browser-free, because the quantity is exactly determinable
+ * from the emitted bytes and a browser measurement of it would be a slower way
+ * to read the same file sizes. `loadExteriorCellRuntime` fetches exactly three
+ * documents, whole, in parallel, `cache: "no-store"`, before anything renders:
+ * `index.json`, `release-graph.json` and `assemblies.json`. That is the boot
+ * cost, and nothing else is in it.
+ *
+ * The BEFORE figure is a counterfactual, and it is an exact one rather than a
+ * projection: the same documents this release emits, carried the way the
+ * pre-seam form carried them. Every per-cell assembly manifest would be an
+ * element of `assemblies.json`, and every per-cell evidence sidecar would be
+ * inventory and evidence shards inside `release-graph.json`. So the before-cost
+ * is the sum of bytes that exist on disk, differing from a real pre-seam
+ * emission only by the array punctuation joining them, which is stated rather
+ * than absorbed.
+ *
+ * The second column is the one ADR 0052 §2 actually argued: the number of
+ * assets `validateMultiLodAssembly` walks synchronously in the runtime
+ * constructor, before the first frame.
+ */
+/**
+ * The promotion pins for a serving wave, derived from COMMITTED RECORDS ALONE.
+ *
+ * No payload directory is read. The accepted cell set comes from the serving
+ * inventory's own `cellReleases`, the accepted building set from the island
+ * ledger's membership minus the retention census's tombstones, and the head from
+ * the inventory's `assemblyPackageIds`. So the record a promotion commit pastes
+ * into `exterior-default-activation.ts` is reproducible on a clean checkout, and
+ * `exterior-serving-promotion.test.ts` recomputes every digest below on every
+ * run rather than trusting the paste.
+ */
+async function runActivation(waveIds) {
+  const targets = waveIds.length > 0 ? waveIds.map((waveId) => exteriorServingWave(waveId)) : EXTERIOR_SERVING_WAVES;
+  const islandLedger = await loadIslandLedger();
+  const records = [];
+  for (const waveEntry of targets) {
+    const recordRoot = join(repositoryRoot, "data", waveEntry.servingReleaseId);
+    if (!existsSync(join(recordRoot, "payload-inventory.json"))) continue;
+    const inventory = JSON.parse(await readFile(join(recordRoot, "payload-inventory.json"), "utf8"));
+    const { census } = await loadRetentionRecords(waveEntry.retentionReleaseId);
+    const tombstoned = new Set(census.tombstones.map((entry) => entry.buildingId));
+    const owned = islandLedger.cells
+      .filter((cell) => cell.cellId.startsWith(`manhattan-exterior-cell-${waveEntry.waveId}-`))
+      .flatMap((cell) => cell.buildingIds);
+    const buildingIds = owned.filter((buildingId) => !tombstoned.has(buildingId)).sort();
+    if (buildingIds.length !== waveEntry.generatedBuildingCount) {
+      fail(`wave ${waveEntry.waveId} derives ${buildingIds.length} accepted buildings, expected ${waveEntry.generatedBuildingCount}.`);
+    }
+    const cellsJoin = inventory.cellReleases.map((entry) => `${entry.cellId}|${entry.cellReleaseId}|${entry.checksumSha256}`).sort().join(", ");
+    records.push({
+      waveId: waveEntry.waveId,
+      releaseId: waveEntry.servingReleaseId,
+      snapshotId: inventory.head.snapshotId,
+      snapshotChecksumSha256: inventory.head.checksumSha256,
+      assemblyPackageCount: inventory.assemblyPackageIds.length,
+      assemblyPackageIdsDigestSha256: sha256HexSync([...inventory.assemblyPackageIds].sort().join(", ")),
+      cellCount: inventory.cellReleases.length,
+      cellsDigestSha256: sha256HexSync(cellsJoin),
+      buildingCount: buildingIds.length,
+      buildingIdsDigestSha256: sha256HexSync(buildingIds.join(", ")),
+      predecessorReleaseId: null,
+    });
+  }
+  const record = {
+    schemaVersion: "1.0",
+    artifact: "serving-activation-pins",
+    note: "Every pin below is derived from committed records only — the serving payload inventory, the retention wave census and the committed island ledger — so it is reproducible on a clean checkout with no payload directory present. The digests use the same canonical joins the runtime gate recomputes: cellId|cellReleaseId|checksum for cells, and a plain sorted join for building identities and assembly package ids, each sorted then joined with the same separator.",
+    waves: records,
+  };
+  const evidenceRoot = join(repositoryRoot, "data", EXTERIOR_SERVING_EVIDENCE_ID);
+  await mkdir(evidenceRoot, { recursive: true });
+  await writeFile(join(evidenceRoot, "activation-pins.json"), serialize(record));
+  await writeFile(join(evidenceRoot, "activation-pins.sha256"), `${sha256HexSync(serialize(record))}  activation-pins.json\n`);
+  console.log(serialize(record));
+}
+
+async function runBootCost(waveIds) {
+  const targets = waveIds.length > 0 ? waveIds.map((waveId) => exteriorServingWave(waveId)) : EXTERIOR_SERVING_WAVES;
+  const waves = [];
+  for (const waveEntry of targets) {
+    const recordRoot = join(repositoryRoot, "data", waveEntry.servingReleaseId);
+    if (!existsSync(join(recordRoot, "payload-inventory.json"))) continue;
+    const inventory = JSON.parse(await readFile(join(recordRoot, "payload-inventory.json"), "utf8"));
+    const byPath = new Map(inventory.files.map((file) => [file.path, file]));
+    const sum = (prefix) => inventory.files.filter((file) => file.path.startsWith(prefix)).reduce((total, file) => total + file.byteSize, 0);
+    const indexBytes = byPath.get("index.json").byteSize;
+    const graphBytes = byPath.get("release-graph.json").byteSize;
+    const assembliesBytes = byPath.get("assemblies.json").byteSize;
+    const shardedAssemblyBytes = sum("public/cell-assembly-package/");
+    const shardedSidecarBytes = sum("public/cell-detail-sidecar/");
+    const after = indexBytes + graphBytes + assembliesBytes;
+    const before = indexBytes + graphBytes + shardedAssemblyBytes + shardedSidecarBytes;
+    waves.push({
+      waveId: waveEntry.waveId,
+      releaseId: waveEntry.servingReleaseId,
+      shippedAssetCount: waveEntry.generatedBuildingCount,
+      cellCount: waveEntry.cellCount,
+      contentCellCount: inventory.composition.contentCellCount,
+      afterSeam: {
+        blockingBootBytes: after,
+        documents: { "index.json": indexBytes, "release-graph.json": graphBytes, "assemblies.json": assembliesBytes },
+        assetsValidatedBeforeFirstFrame: 0,
+        lazyDocumentsPerResidentCell: 2,
+      },
+      beforeSeam: {
+        blockingBootBytes: before,
+        documents: { "index.json": indexBytes, "release-graph.json": graphBytes, "assemblies.json (inlined manifests)": shardedAssemblyBytes, "release-graph.json (inlined evidence)": shardedSidecarBytes },
+        assetsValidatedBeforeFirstFrame: waveEntry.generatedBuildingCount,
+        lazyDocumentsPerResidentCell: 0,
+      },
+      removedBlockingBytes: before - after,
+      removedBlockingRatio: before === 0 ? null : Number(((before - after) / before).toFixed(6)),
+      bytesPerShippedAssetBeforeSeam: Number(((shardedAssemblyBytes + shardedSidecarBytes) / waveEntry.generatedBuildingCount).toFixed(2)),
+    });
+  }
+  const record = {
+    schemaVersion: "1.0",
+    artifact: "serving-boot-cost",
+    note: "loadExteriorCellRuntime fetches index.json, release-graph.json and assemblies.json whole, in parallel, cache: no-store, before anything renders, and the runtime constructor then runs validateMultiLodAssembly over every head-pinned package synchronously. That is the whole boot cost, so it is determined by three file sizes and one count rather than measured through a browser.",
+    counterfactualDisclosure: "The BEFORE column is not an estimate. It is the byte sum of the same documents this release emitted, carried the way the pre-seam form carried them: each per-cell assembly manifest as an element of assemblies.json, each per-cell sidecar's shards inside release-graph.json. It differs from a real pre-seam emission only by the array punctuation joining the elements — two bytes per element, under 1 KB per wave — which is named here rather than absorbed into the figure.",
+    waves,
+    islandTotals: {
+      blockingBootBytesAfterSeam: waves.reduce((total, wave) => total + wave.afterSeam.blockingBootBytes, 0),
+      blockingBootBytesBeforeSeam: waves.reduce((total, wave) => total + wave.beforeSeam.blockingBootBytes, 0),
+      assetsValidatedBeforeFirstFrameAfterSeam: 0,
+      assetsValidatedBeforeFirstFrameBeforeSeam: waves.reduce((total, wave) => total + wave.shippedAssetCount, 0),
+      wavesCovered: waves.length,
+    },
+  };
+  const evidenceRoot = join(repositoryRoot, "data", EXTERIOR_SERVING_EVIDENCE_ID);
+  await mkdir(evidenceRoot, { recursive: true });
+  await writeFile(join(evidenceRoot, "boot-cost.json"), serialize(record));
+  await writeFile(join(evidenceRoot, "boot-cost.sha256"), `${sha256HexSync(serialize(record))}  boot-cost.json\n`);
+  console.log(serialize(record));
+}
+
 async function runFingerprint(waveIds) {
   const started = Date.now();
   const targets = waveIds.length > 0 ? waveIds.map((waveId) => exteriorServingWave(waveId).retentionReleaseId) : EXTERIOR_SERVING_WAVES.map((entry) => entry.retentionReleaseId);
@@ -721,8 +860,12 @@ async function main() {
     await runValidate(rest[0], { limit });
   } else if (command === "fingerprint") {
     await runFingerprint(rest);
+  } else if (command === "boot-cost") {
+    await runBootCost(rest);
+  } else if (command === "activation") {
+    await runActivation(rest);
   } else {
-    console.error("usage: exterior-serving-wave-cli.mjs <emit|validate|fingerprint> [wave] [--force] [--limit=N]");
+    console.error("usage: exterior-serving-wave-cli.mjs <emit|validate|fingerprint|boot-cost|activation> [wave] [--force] [--limit=N]");
     console.error("The wave is REQUIRED for emit and validate. There is no default: a bare invocation would cut an island.");
     process.exit(1);
   }

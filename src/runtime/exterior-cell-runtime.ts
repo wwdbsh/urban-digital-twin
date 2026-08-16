@@ -648,6 +648,7 @@ export class ExteriorCellRuntime {
   private releasedArtifactCount = 0;
   private releasedArtifactBytes = 0;
   private declaredNotShippedCellCountCache: number | null = null;
+  private promotedBuildingIdsCache: readonly string[] | null = null;
 
   constructor(source: ExteriorCellRuntimeSource, head: ExteriorHeadResolution, options: ExteriorCellRuntimeOptions) {
     const publicRoot = source.graph.roots.find((root) => root.audience === "public");
@@ -761,6 +762,38 @@ export class ExteriorCellRuntime {
     }
     this.declaredNotShippedCellCountCache = count;
     return count;
+  }
+
+  /**
+   * Every building this release declares AVAILABLE, sorted, across the pinned
+   * snapshot's cells.
+   *
+   * It exists because a serving wave's accepted membership stopped being
+   * listable. A curated wave shipped 14 to 179 buildings and its promotion
+   * record names them literally, which is reviewable text; a serving wave ships
+   * up to 11,682, and ninety kilobytes of identifiers pasted into a source file
+   * is not read by anybody and does not make the acceptance stronger. So the
+   * record states one digest and the runtime resolves the set — exactly the
+   * split `cellsDigestSha256` already uses one field over.
+   *
+   * The set is therefore the ACCEPTED set only after
+   * `verifyPromotedExteriorPin` has compared its digest against the record. The
+   * identity gate is handed it afterwards, never instead of that check.
+   *
+   * Costs no request: `buildingDetails` are already resident in the verified
+   * release graph. Memoized because the identity gate runs on every publish.
+   */
+  promotedBuildingIds(): readonly string[] {
+    if (this.promotedBuildingIdsCache !== null) return this.promotedBuildingIdsCache;
+    const ids: string[] = [];
+    for (const mapping of this.snapshot.cells) {
+      const cellRelease = this.cellById.get(mapping.cellReleaseId);
+      if (!cellRelease) continue;
+      for (const detail of cellRelease.buildingDetails) if (detail.status === "available") ids.push(detail.buildingId);
+    }
+    ids.sort((left, right) => (left < right ? -1 : left > right ? 1 : 0));
+    this.promotedBuildingIdsCache = ids;
+    return ids;
   }
 
   getMetrics(): ExteriorRuntimeMetrics {
