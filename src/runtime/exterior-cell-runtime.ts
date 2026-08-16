@@ -18,9 +18,11 @@ import {
 } from "../release/multi-lod-assembly.ts";
 import {
   exteriorTextureAdmissionPolicyOf,
+  validateExteriorCellDetailSidecar,
   validateExteriorReleaseGraph,
   type ExteriorCellRelease,
   type ExteriorEvidenceShard,
+  type ExteriorOwnershipCell,
   type ExteriorReleaseGraph,
   type ExteriorRolloutSnapshot,
   type ExteriorRootManifest,
@@ -86,6 +88,42 @@ export const EXTERIOR_CELL_RUNTIME_SCHEMA_VERSION = "1.0" as const;
  * evidence records `runtimeBudgets` from this object rather than from a constant
  * typed into the measurement, so a reading taken at the old cap cannot be
  * presented as a reading at the new one.
+ *
+ * ## `maxCacheEntries` was RAISED again, 512 to 1,024, on 2026-08-17 (T005)
+ *
+ * This raise is NOT the previous one repeated. T018 doubled the cap because a
+ * fourth CURATED wave could not otherwise be promoted at all — the constraint
+ * was the release-time sum of a fixed promoted set. T005 promotes the six `-s1`
+ * serving releases, whose composition is 44,989 assets and 4.679 GB, and no
+ * entry cap holds that; none is meant to. What binds instead is RESIDENCY, and
+ * the number this cap has to admit is the worst neighbourhood a camera can
+ * stand in.
+ *
+ * `exterior-serving-residency.ts` measures that from the committed retention
+ * inventories and the committed extents census, and it is the reason for both
+ * halves of the T005 budget change:
+ *
+ * 1. **Entries: 1,024.** At the serving residency cap of 8 cells, the worst
+ *    reachable anchor holds **599 entries** — one per served GLB, plus each
+ *    resident cell's evidence sidecar, plus each resident cell's assembly
+ *    manifest under the ADR 0052 §2 seam. 599 does not fit 512, so the cap is
+ *    raised to the next doubling; 599 is 58.5% of 1,024, and the entry cap
+ *    stops being the binding constraint.
+ * 2. **Bytes: STILL 256 MiB, and now nearly binding.** The same anchor holds
+ *    **247,000,877 B — 92.0% of the byte cap**, leaving 21,434,579 B of
+ *    headroom. This is the honest reversal of what the frozen plan assumed: the
+ *    plan expected the binding constraint to invert from bytes to entries at
+ *    serving scale, and measured, it does the opposite. Bytes stay binding and
+ *    get TIGHTER. The byte cap is deliberately left where it is precisely
+ *    because it is now the live backstop — it is what makes a residency cap of
+ *    16 impossible (441,016,698 B, 164% of the cap) rather than merely tight.
+ *
+ * The paired change is `EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY.maxResidentUnits`,
+ * 128 -> 8, and the two land in ONE commit. Neither is correct without the
+ * other: 8 resident cells against a 512-entry cap would evict inside a single
+ * neighbourhood, and a 1,024-entry cap against 128 resident dense cells is a
+ * byte-cap violation by an order of magnitude. ADR 0052 §3 states the rollback
+ * contract that follows from that — the promotion commit is the atomic unit.
  */
 /**
  * How long the SHARED CLASS TILES of one release may take to verify.
@@ -107,7 +145,7 @@ export const EXTERIOR_CELL_RUNTIME_SCHEMA_VERSION = "1.0" as const;
 export const EXTERIOR_SHARED_TEXTURE_TIMEOUT_MS = 30_000;
 
 export const EXTERIOR_RUNTIME_BUDGETS = {
-  maxCacheEntries: 512,
+  maxCacheEntries: 1_024,
   maxCachedBytes: 256 * 1024 * 1024,
   maxConcurrentRequests: 4,
 } as const;
@@ -140,6 +178,30 @@ export const EXTERIOR_RUNTIME_FAILURE_CODES = [
    * Reporting that as a GLB fault would send an operator to the wrong artifact.
    */
   "shared-texture-invalid",
+  /**
+   * A release that shards its per-cell evidence into a fetched document could
+   * not put a verified, cell-bound sidecar in front of that cell's geometry.
+   *
+   * Its own code for the same reason `shared-texture-invalid` is: neither the
+   * cell release nor any GLB is what failed. The geometry may verify perfectly
+   * while the document carrying the cell's inventory and evidence is absent,
+   * mis-checksummed, or bound to a different cell — and reporting that as
+   * `graph-invalid` would send an operator to `release-graph.json`, which is
+   * exactly the artifact that is fine.
+   */
+  "cell-detail-sidecar-invalid",
+  /**
+   * A release that shards its per-cell ASSEMBLY into a fetched document could
+   * not put a verified, cell-bound package in front of that cell's geometry.
+   *
+   * Distinct from `assembly-invalid`, which is the boot-time refusal of an
+   * inline package, and from `assembly-pin-mismatch`, which is a package that
+   * parsed but does not bind this cell. This code means the document carrying
+   * the package is absent, mis-checksummed or not a conforming assembly at all —
+   * so an operator is sent to the sharded artifact rather than to
+   * `assemblies.json`, which for a sharded release is nearly empty and fine.
+   */
+  "cell-assembly-package-invalid",
 ] as const;
 export type ExteriorRuntimeFailureCode = (typeof EXTERIOR_RUNTIME_FAILURE_CODES)[number];
 
@@ -622,6 +684,7 @@ export class ExteriorCellRuntime {
   private releasedArtifactCount = 0;
   private releasedArtifactBytes = 0;
   private declaredNotShippedCellCountCache: number | null = null;
+  private promotedBuildingIdsCache: readonly string[] | null = null;
 
   constructor(source: ExteriorCellRuntimeSource, head: ExteriorHeadResolution, options: ExteriorCellRuntimeOptions) {
     const publicRoot = source.graph.roots.find((root) => root.audience === "public");
@@ -737,6 +800,38 @@ export class ExteriorCellRuntime {
     return count;
   }
 
+  /**
+   * Every building this release declares AVAILABLE, sorted, across the pinned
+   * snapshot's cells.
+   *
+   * It exists because a serving wave's accepted membership stopped being
+   * listable. A curated wave shipped 14 to 179 buildings and its promotion
+   * record names them literally, which is reviewable text; a serving wave ships
+   * up to 11,682, and ninety kilobytes of identifiers pasted into a source file
+   * is not read by anybody and does not make the acceptance stronger. So the
+   * record states one digest and the runtime resolves the set — exactly the
+   * split `cellsDigestSha256` already uses one field over.
+   *
+   * The set is therefore the ACCEPTED set only after
+   * `verifyPromotedExteriorPin` has compared its digest against the record. The
+   * identity gate is handed it afterwards, never instead of that check.
+   *
+   * Costs no request: `buildingDetails` are already resident in the verified
+   * release graph. Memoized because the identity gate runs on every publish.
+   */
+  promotedBuildingIds(): readonly string[] {
+    if (this.promotedBuildingIdsCache !== null) return this.promotedBuildingIdsCache;
+    const ids: string[] = [];
+    for (const mapping of this.snapshot.cells) {
+      const cellRelease = this.cellById.get(mapping.cellReleaseId);
+      if (!cellRelease) continue;
+      for (const detail of cellRelease.buildingDetails) if (detail.status === "available") ids.push(detail.buildingId);
+    }
+    ids.sort((left, right) => (left < right ? -1 : left > right ? 1 : 0));
+    this.promotedBuildingIdsCache = ids;
+    return ids;
+  }
+
   getMetrics(): ExteriorRuntimeMetrics {
     return {
       cacheEntries: this.cache.size(),
@@ -849,36 +944,97 @@ export class ExteriorCellRuntime {
     }
   }
 
-  private assemblyForCell(cellRelease: ExteriorCellRelease, expectedCellReleaseChecksum: string): MultiLodAssemblyManifest {
+  /**
+   * The binding one assembly package must satisfy to be this cell's package.
+   *
+   * Extracted so the in-`assemblies.json` form and the fetched
+   * `cell-assembly-package` form reach the IDENTICAL rules through the same
+   * code. A rule tightened for one form and forgotten for the other would mean a
+   * serving release admitted on weaker terms than a curated one, which is the
+   * exact failure the sharded form must not introduce.
+   *
+   * Returns `null` when the candidate simply does not cover this cell — which is
+   * not a failure, it is another cell's package — and a message otherwise.
+   */
+  private assemblyBindingFailure(
+    candidate: MultiLodAssemblyManifest,
+    cellRelease: ExteriorCellRelease,
+    expectedCellReleaseChecksum: string,
+    ownerCell: ExteriorOwnershipCell,
+    ledgerArtifactChecksum: string,
+  ): { covers: false } | { covers: true; failure: string | null } {
+    const ledger = this.graph.ownershipLedger;
+    if (candidate.audience !== "public") return { covers: true, failure: `${candidate.packageId}: non-public assembly audience.` };
+    if (candidate.release.rootId !== this.publicRoot.rootId || candidate.release.rootChecksumSha256 !== this.publicRoot.rootChecksumSha256 || candidate.release.releaseId !== this.publicRoot.releaseId || candidate.release.cityId !== ledger.cityId || candidate.release.configId !== ledger.configId) return { covers: true, failure: `${candidate.packageId}: release root pin mismatch.` };
+    if (candidate.ownershipLedger.id !== ledger.ledgerId || candidate.ownershipLedger.checksumSha256 !== ledgerArtifactChecksum) return { covers: true, failure: `${candidate.packageId}: ownership ledger pin mismatch.` };
+    if (candidate.baseIdentitySet.id !== ledger.baseIdentitySet.id || candidate.baseIdentitySet.checksumSha256 !== ledger.baseIdentitySet.checksumSha256) return { covers: true, failure: `${candidate.packageId}: base identity pin mismatch.` };
+    const cell = candidate.cells.find((entry) => entry.cellId === cellRelease.cellId);
+    if (!cell) return { covers: false };
+    if (cell.cellRelease.id !== cellRelease.cellReleaseId || cell.cellRelease.checksumSha256 !== expectedCellReleaseChecksum) return { covers: true, failure: `${candidate.packageId}: cell-release pin mismatch.` };
+    // Coverage, not equality. The package may ship geometry for a strict
+    // SUBSET of the owned cell, and only if every building it leaves out is
+    // one this cell release explicitly declares unavailable with a reason.
+    // That is the anti-silent-omission property the old exact-equality rule
+    // was written for, stated as what it always meant; a cell containing a
+    // building the grammar refuses had no legal form under equality.
+    const coverage = assemblyCellCoverage({
+      packagedBuildingIds: cell.buildingIds,
+      ownedBuildingIds: ownerCell.buildingIds,
+      unavailableBuildingIds: cellRelease.buildingDetails.filter((detail) => detail.status === "unavailable").map((detail) => detail.buildingId),
+      declaredMembershipChecksumSha256: cell.membershipChecksumSha256,
+    });
+    if (!coverage.ok) return { covers: true, failure: `${candidate.packageId}: ${coverage.message}` };
+    return { covers: true, failure: null };
+  }
+
+  /**
+   * This cell's assembly package, from wherever the release puts it.
+   *
+   * The sharded branch mirrors `cellEvidenceShards` exactly, for the same reason
+   * and on the same path: one `loadVerifiedArtifact` fetch, then the SAME
+   * structural validation the constructor applies to an inline package and the
+   * SAME binding every inline package must satisfy. What moves is when it runs,
+   * not how strictly; see the `cell-assembly-package` docblock in
+   * `exterior-release.ts` and ADR 0052 §2.
+   *
+   * The head pin still governs. A sharded package whose `packageId` the active
+   * head does not list is refused here exactly as an inline one is dropped at
+   * construction, so the head remains the single statement of what this release
+   * serves.
+   */
+  private async assemblyForCell(cellRelease: ExteriorCellRelease, expectedCellReleaseChecksum: string, signal?: AbortSignal): Promise<MultiLodAssemblyManifest> {
     const ledger = this.graph.ownershipLedger;
     const ledgerArtifact = this.publicRoot.artifacts.find((artifact) => artifact.kind === "ownership-ledger" && artifact.logicalId === ledger.ledgerId);
     if (!ledgerArtifact) throw new ExteriorRuntimeError("graph-invalid", "The public root does not checksum-pin the ownership ledger.");
     const ownerCell = ledger.cells.find((entry) => entry.cellId === cellRelease.cellId);
     if (!ownerCell) throw new ExteriorRuntimeError("graph-invalid", `Cell ${cellRelease.cellId} is outside canonical ownership.`);
+
+    const sharded = this.publicRoot.artifacts.find((artifact) => artifact.kind === "cell-assembly-package" && artifact.logicalId === cellRelease.cellReleaseId);
+    if (sharded) {
+      const bytes = await this.loadVerifiedArtifact(sharded.relativeRef, sharded.byteSize, sharded.checksumSha256, signal);
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(new TextDecoder().decode(bytes));
+      } catch (error) {
+        throw new ExteriorRuntimeError("cell-assembly-package-invalid", `Exterior cell assembly package ${sharded.relativeRef} is not parseable JSON: ${error instanceof Error ? error.message : String(error)}`, sharded.relativeRef);
+      }
+      const structural = validateMultiLodAssembly(parsed, { textureAdmission: this.textureAdmission });
+      if (!structural.ok) throw new ExteriorRuntimeError("cell-assembly-package-invalid", `Exterior cell assembly package ${sharded.relativeRef} failed closed: ${issueText(structural.issues)}`, sharded.relativeRef);
+      const candidate = structural.value;
+      if (!this.head.pin.assemblyPackageIds.includes(candidate.packageId)) throw new ExteriorRuntimeError("assembly-pin-mismatch", `Assembly package ${candidate.packageId} is not listed by head ${this.head.pin.snapshotId}.`, sharded.relativeRef);
+      const bound = this.assemblyBindingFailure(candidate, cellRelease, expectedCellReleaseChecksum, ownerCell, ledgerArtifact.checksumSha256);
+      if (!bound.covers) throw new ExteriorRuntimeError("assembly-pin-mismatch", `Assembly package ${candidate.packageId} is declared for cell release ${cellRelease.cellReleaseId} but packages no such cell.`, sharded.relativeRef);
+      if (bound.failure) throw new ExteriorRuntimeError("assembly-pin-mismatch", `Assembly package ${candidate.packageId} does not bind cell release ${cellRelease.cellReleaseId}: ${bound.failure}`, sharded.relativeRef);
+      return candidate;
+    }
+
     const failures: string[] = [];
     const matches: MultiLodAssemblyManifest[] = [];
     // `this.assemblies` was structurally validated once at construction.
     for (const candidate of this.assemblies) {
-      if (candidate.audience !== "public") { failures.push(`${candidate.packageId}: non-public assembly audience.`); continue; }
-      if (candidate.release.rootId !== this.publicRoot.rootId || candidate.release.rootChecksumSha256 !== this.publicRoot.rootChecksumSha256 || candidate.release.releaseId !== this.publicRoot.releaseId || candidate.release.cityId !== ledger.cityId || candidate.release.configId !== ledger.configId) { failures.push(`${candidate.packageId}: release root pin mismatch.`); continue; }
-      if (candidate.ownershipLedger.id !== ledger.ledgerId || candidate.ownershipLedger.checksumSha256 !== ledgerArtifact.checksumSha256) { failures.push(`${candidate.packageId}: ownership ledger pin mismatch.`); continue; }
-      if (candidate.baseIdentitySet.id !== ledger.baseIdentitySet.id || candidate.baseIdentitySet.checksumSha256 !== ledger.baseIdentitySet.checksumSha256) { failures.push(`${candidate.packageId}: base identity pin mismatch.`); continue; }
-      const cell = candidate.cells.find((entry) => entry.cellId === cellRelease.cellId);
-      if (!cell) continue;
-      if (cell.cellRelease.id !== cellRelease.cellReleaseId || cell.cellRelease.checksumSha256 !== expectedCellReleaseChecksum) { failures.push(`${candidate.packageId}: cell-release pin mismatch.`); continue; }
-      // Coverage, not equality. The package may ship geometry for a strict
-      // SUBSET of the owned cell, and only if every building it leaves out is
-      // one this cell release explicitly declares unavailable with a reason.
-      // That is the anti-silent-omission property the old exact-equality rule
-      // was written for, stated as what it always meant; a cell containing a
-      // building the grammar refuses had no legal form under equality.
-      const coverage = assemblyCellCoverage({
-        packagedBuildingIds: cell.buildingIds,
-        ownedBuildingIds: ownerCell.buildingIds,
-        unavailableBuildingIds: cellRelease.buildingDetails.filter((detail) => detail.status === "unavailable").map((detail) => detail.buildingId),
-        declaredMembershipChecksumSha256: cell.membershipChecksumSha256,
-      });
-      if (!coverage.ok) { failures.push(`${candidate.packageId}: ${coverage.message}`); continue; }
+      const bound = this.assemblyBindingFailure(candidate, cellRelease, expectedCellReleaseChecksum, ownerCell, ledgerArtifact.checksumSha256);
+      if (!bound.covers) continue;
+      if (bound.failure) { failures.push(bound.failure); continue; }
       matches.push(candidate);
     }
     // Ambiguity is a pin failure, never a first-match-wins race against file order.
@@ -899,7 +1055,7 @@ export class ExteriorCellRuntime {
     if (!declared || declared.checksumSha256 !== expectedCellReleaseChecksum) throw new ExteriorRuntimeError("checksum-mismatch", `Cell release ${cellRelease.cellReleaseId} checksum does not match the pinned public root declaration.`);
     assertPublicExteriorArtifactRef(cellRelease.artifactRef);
 
-    const assembly = this.assemblyForCell(cellRelease, expectedCellReleaseChecksum);
+    const assembly = await this.assemblyForCell(cellRelease, expectedCellReleaseChecksum, signal);
     const assemblyPolicy = { textureAdmission: this.textureAdmission, ...(this.declaredSamplerFilter ? { declaredSamplerFilter: this.declaredSamplerFilter } : {}) };
     const textureFree = requiresTextureFreeAssembly(assembly.audience, assemblyPolicy);
     // Under a public procedural-replay admission the shipped samplers must name
@@ -918,10 +1074,16 @@ export class ExteriorCellRuntime {
     const declaredTextureRefs = sharedTextureArtifactRefs(assembly);
     const verifiedTextures = declaredTextureRefs.size > 0 ? await this.verifiedSharedTextures(assembly) : null;
 
+    // Where this cell's inventory and evidence shards live. A release that
+    // declares a sidecar for this cell resolves them from that fetched, verified
+    // document; every release frozen before the seam existed resolves them from
+    // the boot graph exactly as it always did.
+    const evidenceById = await this.cellEvidenceShards(cellRelease, signal);
+
     // Evidence-shard audience admission for every building this cell publishes.
     for (const detail of cellRelease.buildingDetails) {
       if (detail.status !== "available") continue;
-      const shard = this.evidenceById.get(detail.evidenceShardId);
+      const shard = evidenceById.get(detail.evidenceShardId);
       if (!shard) throw new ExteriorRuntimeError("evidence-audience-forbidden", `Evidence shard ${detail.evidenceShardId} is absent for building ${detail.buildingId}.`);
       if (shard.audience !== "public") throw new ExteriorRuntimeError("private-artifact-forbidden", `Evidence shard ${detail.evidenceShardId} is not public.`);
       const admission = validateProjectedGraphAudience(shard.graph, { audience: "public", runtimeTexture: detail.runtimeTexture });
@@ -970,6 +1132,35 @@ export class ExteriorCellRuntime {
     }
     if (rendered.length === 0) throw new ExteriorRuntimeError("assembly-pin-mismatch", `Cell release ${cellRelease.cellReleaseId} published no verifiable exterior asset.`);
     return { assemblyPackageId: assembly.packageId, assets: rendered };
+  }
+
+  /**
+   * This cell's evidence shards, from wherever the release puts them.
+   *
+   * The sidecar branch is one fetch on the SAME verified path as every GLB —
+   * `loadVerifiedArtifact` enforces the public-root ref check, the declared byte
+   * size and the declared SHA-256 before a byte is parsed — followed by the same
+   * per-building binding `validateExteriorReleaseGraph` performs at boot for an
+   * in-graph release. Nothing is checked more weakly because it arrived later.
+   *
+   * The sidecar occupies a cache entry and its bytes count against the byte cap,
+   * which is a real cost and is measured rather than waved past: see
+   * `exterior-cache-ceiling.ts`, where the residency derivation counts one
+   * sidecar per resident cell alongside that cell's assets.
+   */
+  private async cellEvidenceShards(cellRelease: ExteriorCellRelease, signal?: AbortSignal): Promise<ReadonlyMap<string, ExteriorEvidenceShard>> {
+    const declared = this.publicRoot.artifacts.find((artifact) => artifact.kind === "cell-detail-sidecar" && artifact.logicalId === cellRelease.cellReleaseId);
+    if (!declared) return this.evidenceById;
+    const bytes = await this.loadVerifiedArtifact(declared.relativeRef, declared.byteSize, declared.checksumSha256, signal);
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(new TextDecoder().decode(bytes));
+    } catch (error) {
+      throw new ExteriorRuntimeError("cell-detail-sidecar-invalid", `Exterior cell detail sidecar ${declared.relativeRef} is not parseable JSON: ${error instanceof Error ? error.message : String(error)}`, declared.relativeRef);
+    }
+    const validation = validateExteriorCellDetailSidecar(parsed, { cell: cellRelease, artifactRef: declared.relativeRef });
+    if (!validation.ok) throw new ExteriorRuntimeError("cell-detail-sidecar-invalid", `Exterior cell detail sidecar ${declared.relativeRef} failed closed: ${issueText(validation.issues)}`, declared.relativeRef);
+    return new Map(validation.value.evidenceShards.map((shard) => [shard.shardId, shard]));
   }
 
   /**
@@ -1085,9 +1276,10 @@ export class ExteriorCellRuntime {
     const cacheKey = exteriorArtifactCacheKey(relativeRef, expectedChecksum);
     const cached = this.cache.get(cacheKey);
     if (cached) return cached;
-    this.requestedArtifactCount += 1;
-    this.artifactErrors.delete(cacheKey);
-    const value = await this.pool.load({
+    const attempt = (): Promise<Uint8Array | undefined> => {
+      this.requestedArtifactCount += 1;
+      this.artifactErrors.delete(cacheKey);
+      return this.pool.load({
       key: cacheKey,
       loader: async (poolSignal) => {
         try {
@@ -1101,10 +1293,66 @@ export class ExteriorCellRuntime {
           throw error;
         }
       },
-    }, signal);
+      }, signal);
+    };
+    let value = await attempt();
+    // A CANCELLATION THAT BELONGED TO SOMEBODY ELSE. Retry it once, for this
+    // caller, rather than inheriting an abandoned decision's abort. See the
+    // block below for why an undefined result with no recorded error can only be
+    // a cancellation. If THIS caller's signal is the one that aborted, the retry
+    // rejects immediately with its own AbortError -- `CitywideRequestPool.load`
+    // refuses an already-aborted signal -- so an abandoned decision still
+    // abandons and this cannot spin.
+    if (value === undefined && !this.artifactErrors.get(cacheKey)) value = await attempt();
     if (value === undefined) {
+      // A CANCELLATION, not a failure — and telling them apart is the whole of
+      // this branch.
+      //
+      // `CitywideRequestPool` shares one in-flight request per artifact key.
+      // When the last waiter on a key aborts, the pool aborts the underlying
+      // request, and a started task settles the SHARED promise with `undefined`
+      // instead of rejecting it. A decision that joined the entry in that window
+      // is therefore handed `undefined` for an artifact nobody said anything bad
+      // about.
+      //
+      // `artifactErrors` is the discriminator, and it is exact rather than
+      // heuristic: the loader's catch above records EVERY non-abort error there
+      // and deliberately records no abort. So an undefined result with nothing
+      // recorded is reachable only through cancellation, and an undefined result
+      // WITH a recorded error is a real failure that must keep failing closed.
+      //
+      // This used to synthesise `ExteriorRuntimeError("request-failed")` for
+      // both. `renderCell` cannot tell that from a verification failure, so a
+      // healthy cell fell back to base massing whenever the camera moved while
+      // it was loading. It was found in a browser on the promoted six-wave
+      // default — three cells fell back deterministically while all 170 of their
+      // artifacts byte-verified on disk and re-fetched cleanly over HTTP in the
+      // same session (`data/exterior-serving-20260817/default-session-residency.json`).
+      //
+      // The fix is two-step, and the order matters. A caller handed somebody
+      // else's cancellation RETRIES once (above): the shared entry is gone by
+      // then, so it issues its own request and renders normally, which is what a
+      // decision nobody cancelled should do. Only if that also comes back
+      // cancelled does this raise an abort — and `loadCell` re-throws aborts
+      // rather than falling back, so an abandoned decision abandons quietly
+      // instead of dragging a healthy cell down to base massing.
+      //
+      // Raising the abort WITHOUT the retry was tried and is wrong: it turns a
+      // spurious fallback into a spurious blank, because the innocent decision
+      // then carries an abort it never asked for.
+      //
+      // The counter is not incremented on this path either. A cancelled request
+      // is not a failed artifact, and counting it made the runtime's own metrics
+      // report a defect that was not there — which is exactly how this was
+      // mistaken for an emission defect in the first place.
+      //
+      // `CitywideRequestPool` is shared with the citywide runtime and is NOT
+      // changed: its `undefined` contract is depended on elsewhere, and the
+      // classification belongs to the caller that knows what its own errors mean.
+      const recorded = this.artifactErrors.get(cacheKey);
+      if (!recorded) throw new DOMException(`Exterior artifact ${relativeRef} load was cancelled.`, "AbortError");
       this.failedArtifactCount += 1;
-      throw this.artifactErrors.get(cacheKey) ?? new ExteriorRuntimeError("request-failed", `Exterior artifact ${relativeRef} could not be loaded.`, relativeRef);
+      throw recorded;
     }
     this.loadedArtifactCount += 1;
     return value;
@@ -1120,7 +1368,24 @@ export function createExteriorCellRuntime(
   if (!index.ok) throw new ExteriorRuntimeError("index-invalid", `Exterior runtime index failed closed: ${issueText(index.issues)}`);
   const graph = validateExteriorReleaseGraph(source.graph);
   if (!graph.ok) throw new ExteriorRuntimeError("graph-invalid", `Exterior release graph failed closed: ${issueText(graph.issues)}`);
-  if (!Array.isArray(source.assemblies) || source.assemblies.length === 0) throw new ExteriorRuntimeError("assembly-invalid", "At least one multi-LOD assembly package is required.");
+  // At least one assembly package must be REACHABLE, and since ADR 0052 §2 there
+  // are two ways to reach one. The check used to read `assemblies.length === 0`,
+  // which was the same question while `assemblies.json` was the only carrier;
+  // it stopped being the same question when a cell's manifest became its own
+  // root-declared artifact, and it made the fully-sharded form — the one the
+  // seam exists to produce — unrepresentable. A `-s1` release shards EVERY cell,
+  // so its `assemblies.json` is `[]` by construction, and the old guard refused
+  // it at boot with a message about a package it had deliberately moved.
+  //
+  // What the guard protects is unchanged and is still enforced: a release that
+  // packages no geometry AT ALL fails closed, before the first frame, with the
+  // same code and the same shape of message. Only the definition of "carries a
+  // package" widens, to the union of the two forms the runtime already reads.
+  // Declaring a sharded package is not a promise that it is valid — that is
+  // still proven per cell at load time, on the terms ADR 0052 §2 states.
+  if (!Array.isArray(source.assemblies)) throw new ExteriorRuntimeError("assembly-invalid", "The multi-LOD assembly list must be an array.");
+  const declaresShardedAssembly = graph.value.roots.some((root) => root.audience === "public" && root.artifacts.some((artifact) => artifact.kind === "cell-assembly-package"));
+  if (source.assemblies.length === 0 && !declaresShardedAssembly) throw new ExteriorRuntimeError("assembly-invalid", "At least one multi-LOD assembly package is required, inline or as a declared cell-assembly-package.");
   const head = resolveExteriorHead(index.value, request);
   // Structural validation of each package happens once inside the constructor,
   // which hard-fails only for packages the resolved head actually pins.

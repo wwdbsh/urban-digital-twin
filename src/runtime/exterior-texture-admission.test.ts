@@ -402,9 +402,21 @@ describe("rollback for a textured wave is a release reversion, never a build fla
     // change what the running application draws without changing which
     // checksum-pinned release it claims to be drawing, and the two would then
     // disagree with no record of why.
-    const promoted = EXTERIOR_DEFAULT_ACTIVATIONS.find((record) => record.enabled && record.releaseId === "manhattan-exterior-cells-20260811-v3");
-    expect(promoted?.enabled).toBe(true);
-    if (!promoted?.enabled) return;
+    //
+    // The T005 serving promotion made the chain one link longer rather than
+    // changing its shape: what the build promotes for this wave is the serving
+    // release, whose predecessor is the curated V3 record, whose own predecessor
+    // is the untextured V2 rollback target this case is about. The V3 record is
+    // reached THROUGH the shipped set rather than imported, so a build that
+    // stopped promoting this wave fails here instead of testing a constant
+    // nothing points at.
+    const serving = EXTERIOR_DEFAULT_ACTIVATIONS.find((record) => record.enabled && record.releaseId === "manhattan-exterior-cells-20260811-v3-s1");
+    expect(serving?.enabled).toBe(true);
+    if (!serving?.enabled) return;
+    const promoted = serving.predecessor;
+    expect(promoted.enabled).toBe(true);
+    if (!promoted.enabled) return;
+    expect(promoted.releaseId).toBe("manhattan-exterior-cells-20260811-v3");
     const predecessor = promoted.predecessor;
     expect(predecessor).toBe(BLOCK835_V2_EXTERIOR_ROLLBACK);
     expect(predecessor.enabled).toBe(true);

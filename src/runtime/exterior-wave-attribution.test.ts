@@ -30,6 +30,16 @@ const midtown = MIDTOWN_CORE_EXTERIOR_ACTIVATION as ExteriorDefaultActivationEna
 const BLOCK835_PICK = "doitt:778052";
 const MIDTOWN_PICK = "doitt:105916";
 const MIDTOWN_CELL_ID = "manhattan-exterior-cell-w01-000001-14-4823-4482";
+/**
+ * Wave w00's cell, named here rather than read off the record.
+ *
+ * Both promoted records now state their cell membership as a digest, so neither
+ * carries a cell id to build a fixture from. This is the id the serving wave's
+ * own committed `data/manhattan-exterior-cells-20260811-v3-s1/payload-inventory.json`
+ * declares, and the cell-release id below is built with the same template that
+ * inventory uses — which is also how the Midtown fixture has always been built.
+ */
+const BLOCK835_CELL_ID = "manhattan-exterior-cell-w00-000000-block-00835";
 
 function rendered(cellId: string, cellReleaseId: string, canonicalFeatureId: string): ExteriorCellOutcome {
   return {
@@ -57,7 +67,7 @@ function notShipped(cellId: string, cellReleaseId: string): ExteriorCellOutcome 
 /** The two promoted waves as the panel sees them: release id plus outcomes. */
 const block835Wave = {
   releaseId: block835.releaseId,
-  outcomes: [rendered(block835.membership.cells[0]!.cellId, block835.membership.cells[0]!.cellReleaseId, BLOCK835_PICK)],
+  outcomes: [rendered(BLOCK835_CELL_ID, `cell-release:${block835.releaseId}:${BLOCK835_CELL_ID}:v1`, BLOCK835_PICK)],
 };
 const midtownWave = {
   releaseId: midtown.releaseId,
@@ -94,9 +104,12 @@ describe("details-panel attribution follows the selected feature's wave", () => 
 
 describe("aggregated bounded-availability notice attribution", () => {
   it("attributes the tombstone line to the release that produced it, in its shipped form", () => {
-    // 146 of the Midtown wave's 149 cells deliberately ship nothing (ADR 0029),
-    // and the aggregate line must name the Midtown release rather than reading
-    // as if the leading wave had shipped nothing.
+    // The aggregate line must name the release that produced it rather than
+    // reading as if the leading wave had shipped nothing. The 146-of-147 shape
+    // is the CURATED Midtown composition's (ADR 0029); the promoted serving
+    // release ships geometry in all 149 of its cells, so these outcomes are
+    // constructed rather than read off a release, and what is under test is the
+    // attribution of the line, not who currently produces one.
     const cells = [
       midtownWave.outcomes[0]!,
       ...Array.from({ length: 146 }, (_, index) => notShipped(`midtown-cell-${index}`, `cell-release:${midtown.releaseId}:midtown-cell-${index}:v1`)),

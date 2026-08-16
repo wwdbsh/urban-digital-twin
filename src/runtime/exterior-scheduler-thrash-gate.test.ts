@@ -70,8 +70,24 @@ const WIDE_WINDOW_DECISIONS = 8;
  * replaces with byte-governed residency. It is recorded as a named follow-up in
  * ADR 0041 rather than tuned away here.
  */
-const RE_ENTRY_BUDGET = { "midtown-street-pan-v1": 0, "midtown-zoom-out-v1": 13 } as const;
-const WIDE_RE_ENTRY_BUDGET = { "midtown-street-pan-v1": 0, "midtown-zoom-out-v1": 30 } as const;
+/**
+ * ## Re-derived at the T005 D-4 ranking
+ *
+ * This gate replays at `EXTERIOR_CELL_SCHEDULER_POLICY` (cap 96), where the
+ * distance-first rank moves the zoom-out path in BOTH directions: 13 -> 14 at
+ * the hysteresis horizon and 30 -> 24 over the wider window. The horizon figure
+ * getting one worse is recorded rather than smoothed — it is a real regression
+ * on that window, it is a single re-entry, and it is bought with six fewer
+ * re-entries over the wide window on the same path.
+ *
+ * The mechanism is the one the paragraph above describes: the churn is cells
+ * crossing the 1,200 m band edge while the cap boundary sits mid-band. Distance
+ * ranking changes WHICH cells sit on that boundary, so a path whose churn is
+ * driven by the boundary itself is not guaranteed to improve on every window.
+ * The pan is monotone and stays at 0 on both.
+ */
+const RE_ENTRY_BUDGET = { "midtown-street-pan-v1": 0, "midtown-zoom-out-v1": 14 } as const;
+const WIDE_RE_ENTRY_BUDGET = { "midtown-street-pan-v1": 0, "midtown-zoom-out-v1": 24 } as const;
 /** Peak residency ceiling, so "never evict" cannot buy a zero. */
 const RESIDENCY_CEILING = EXTERIOR_CELL_SCHEDULER_POLICY.maxResidentUnits + 8;
 

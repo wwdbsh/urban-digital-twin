@@ -328,8 +328,17 @@ describe("southern-remainder committed payload inventory", () => {
     // the live cap to 512 (ADR 0034 admissible response 1), and comparing a frozen
     // record against a constant that has since moved would have forced exactly the
     // re-emission the freeze exists to prevent.
+    //
+    // THE LIVE CAP HAS MOVED AGAIN, 512 -> 1,024 at the T005 serving promotion,
+    // which is the second time this line has had to be corrected and is the
+    // argument for why it is written the way it is. The frozen figure stays a
+    // literal; the live constant is stated as what it currently is, so the gap
+    // between the two is visible rather than tracked away. What is asserted
+    // across the gap is only the property that must still hold: a record frozen
+    // at 256 still fits the cache the build ships.
     expect(inventory.occupancy.maxCacheEntries).toBe(256);
-    expect(EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries).toBe(512);
+    expect(inventory.occupancy.maxCacheEntries).toBeLessThanOrEqual(EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries);
+    expect(EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries).toBe(1_024);
   });
 
   /**

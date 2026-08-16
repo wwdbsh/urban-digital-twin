@@ -13,9 +13,44 @@ import {
   computePromotedCoverage,
   repositoryRoot,
 } from "./goal-integration-reconciliation-cli.mjs";
+import { EXTERIOR_DEFAULT_ACTIVATIONS } from "../src/runtime/exterior-default-activation.ts";
+import { EXTERIOR_RUNTIME_BUDGETS } from "../src/runtime/exterior-cell-runtime.ts";
 
 const record = JSON.parse(readFileSync(RECONCILIATION_RECORD_PATH, "utf8"));
 const VERDICT_VOCABULARY = ["MET", "MET-AS-ADJUDICATED", "NOT-MET"];
+
+/**
+ * The composition the committed record is ABOUT: the six curated releases, read
+ * off the live promotion records' predecessor chain rather than hand-typed.
+ *
+ * T005 promoted six `-s1` serving successors over them. The committed
+ * reconciliation was written before that and describes the curated composition,
+ * and it is not regenerated here — a Goal completion record is not re-derived to
+ * follow a later promotion.
+ */
+const CURATED_ACTIVATIONS = EXTERIOR_DEFAULT_ACTIVATIONS.flatMap((activation) =>
+  activation.enabled && activation.predecessor.enabled ? [activation.predecessor] : [],
+);
+const CURATED_PROMOTION_SET = CURATED_ACTIVATIONS.map((activation) => activation.releaseId);
+const SERVING_PROMOTION_SET = EXTERIOR_DEFAULT_ACTIVATIONS.flatMap((activation) => (activation.enabled ? [activation.releaseId] : []));
+
+/**
+ * The two runtime-budget fields the T005 promotion moved, held apart from the
+ * composition so that neither hides the other.
+ *
+ * `computePromotedCoverage` reads `EXTERIOR_RUNTIME_BUDGETS` from the LIVE build
+ * rather than from the activation set it is given, so even a curated recompute
+ * reports today's caps. `maxCacheEntries` rose 512 -> 1,024 with the serving
+ * promotion and `cacheEntryHeadroom` is derived from it. Everything else about
+ * the curated composition still recomputes byte-equal, so these two are named
+ * and subtracted rather than the whole promoted block being frozen.
+ */
+function withoutMovedBudget(promoted) {
+  const rest = { ...promoted };
+  delete rest.maxCacheEntries;
+  delete rest.cacheEntryHeadroom;
+  return rest;
+}
 
 /**
  * The record's `coverage` block is the ONLY part of this Goal's completion
@@ -24,8 +59,57 @@ const VERDICT_VOCABULARY = ["MET", "MET-AS-ADJUDICATED", "NOT-MET"];
  * censuses, or checks that the judgement half obeys its own stated rules.
  */
 describe("goal integration reconciliation — the coverage block cannot drift from the ledgers", () => {
-  it("recomputes byte-equal to the committed record", () => {
-    expect(computeCoverageReconciliation()).toEqual(record.coverage);
+  /**
+   * IT STILL RECOMPUTES, AGAINST THE COMPOSITION THE RECORD IS ABOUT.
+   *
+   * This was one `toEqual` over the whole `coverage` block, and T005 broke it by
+   * promoting six `-s1` serving releases over the six curated ones the committed
+   * record describes. The record is a Goal completion artifact and is not
+   * regenerated to follow a later promotion — so instead of freezing the
+   * comparison, `computePromotedCoverage` takes the activation set as a
+   * parameter and this passes the CURATED set, read off the live promotion
+   * records' predecessor chain. A curated record edited underneath the promotion
+   * therefore still fails here, which is the drift check the whole block exists
+   * to be.
+   *
+   * The two runtime-budget fields that legitimately moved with the promotion are
+   * subtracted by name and asserted immediately below, so the equality is over
+   * everything else rather than over a hand-picked subset.
+   */
+  it("recomputes byte-equal to the committed record, over the curated composition it describes", () => {
+    const computed = computeCoverageReconciliation(CURATED_ACTIVATIONS);
+    expect(withoutMovedBudget(computed.promoted)).toEqual(withoutMovedBudget(record.coverage.promoted));
+    expect({ ...computed, promoted: null }).toEqual({ ...record.coverage, promoted: null });
+    expect(computed.promoted.releases.map((release) => release.releaseId)).toEqual(CURATED_PROMOTION_SET);
+  });
+
+  /**
+   * The two fields the promotion moved, named as a change rather than absorbed.
+   * The record's numbers are the 512-entry contract of its day; the build's are
+   * the 1,024-entry contract ADR 0052 §3 measured the serving composition under.
+   */
+  it("names the entry cap as the one figure the promotion moved", () => {
+    const computed = computeCoverageReconciliation(CURATED_ACTIVATIONS);
+    expect(record.coverage.promoted.maxCacheEntries).toBe(512);
+    expect(record.coverage.promoted.cacheEntryHeadroom).toBe(14);
+    expect(computed.promoted.maxCacheEntries).toBe(EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries);
+    expect(computed.promoted.maxCacheEntries).toBe(1_024);
+    expect(computed.promoted.cacheEntryHeadroom).toBe(1_024 - computed.promoted.shippedAssetCount);
+    // The byte cap and the concurrency cap did not move with it.
+    expect(computed.promoted.maxCachedBytes).toBe(record.coverage.promoted.maxCachedBytes);
+    expect(computed.promoted.maxConcurrentRequests).toBe(record.coverage.promoted.maxConcurrentRequests);
+  });
+
+  /**
+   * The live default set is a DIFFERENT composition, and the two are joined by
+   * the records rather than by these comments.
+   */
+  it("describes the curated composition, which the build has since promoted past", () => {
+    const live = computeCoverageReconciliation();
+    expect(record.coverage.promoted.releases.map((release) => release.releaseId)).toEqual(CURATED_PROMOTION_SET);
+    expect(live.promoted.releases.map((release) => release.releaseId)).toEqual(SERVING_PROMOTION_SET);
+    expect(live.promoted).not.toEqual(record.coverage.promoted);
+    for (const releaseId of SERVING_PROMOTION_SET) expect(CURATED_PROMOTION_SET).not.toContain(releaseId);
   });
 
   it("reports the Goal's four zero-violation claims as actually zero, one count at a time", () => {
@@ -116,8 +200,22 @@ describe("census closure — every owned building is materialized or refused und
   });
 });
 
-describe("promoted default coverage — what a session with no URL parameter actually gets", () => {
-  const promoted = computePromotedCoverage();
+/**
+ * WHAT A SESSION WITH NO URL PARAMETER GOT WHEN THIS RECORD WAS WRITTEN.
+ *
+ * RECOMPUTED, not read off the record, from the curated activation set the
+ * record describes — which is still live, as every serving record's
+ * `predecessor`. So these figures keep detecting drift in the curated
+ * composition, exactly as they did before T005 promoted past it.
+ *
+ * The one figure that could not be recomputed against the record is the entry
+ * cap, because `computePromotedCoverage` reads the caps from the live build and
+ * `maxCacheEntries` moved 512 -> 1,024 with the serving promotion. It is
+ * asserted below in both forms — the record's number and the build's — rather
+ * than being dropped.
+ */
+describe("promoted default coverage — what a session with no URL parameter got when this record was written", () => {
+  const promoted = computePromotedCoverage(CURATED_ACTIVATIONS);
 
   it("promotes six waves, one per declared wave, each with a named approval", () => {
     expect(promoted.promotedWaveCount).toBe(6);
@@ -138,10 +236,14 @@ describe("promoted default coverage — what a session with no URL parameter act
     expect(promoted.shippedAssetCount - promoted.promotedBuildingCount).toBe(14);
   });
 
-  it("stays inside the unchanged 512-entry cache contract with 14 entries of headroom", () => {
-    expect(promoted.maxCacheEntries).toBe(512);
+  it("stayed inside the 512-entry cache contract of its day with 14 entries of headroom", () => {
+    // The record's own numbers, which are the contract the curated composition
+    // was accepted under.
+    expect(record.coverage.promoted.maxCacheEntries).toBe(512);
+    expect(record.coverage.promoted.cacheEntryHeadroom).toBe(14);
+    expect(promoted.shippedAssetCount).toBeLessThanOrEqual(record.coverage.promoted.maxCacheEntries);
+    // And under the cap this build ships, which only widened the headroom.
     expect(promoted.maxCachedBytes).toBe(256 * 1024 * 1024);
-    expect(promoted.cacheEntryHeadroom).toBe(14);
     expect(promoted.shippedAssetCount).toBeLessThanOrEqual(promoted.maxCacheEntries);
   });
 
@@ -154,6 +256,50 @@ describe("promoted default coverage — what a session with no URL parameter act
     expect(promoted.renderableCellCount).toBe(13);
     expect(promoted.tombstonedCellCount).toBe(870);
     expect(record.coverage.promotedSharePercent).toBeLessThan(2);
+  });
+});
+
+/**
+ * WHAT A SESSION WITH NO URL PARAMETER GETS NOW.
+ *
+ * The counterpart to the block above, and the reason it had to be frozen. These
+ * figures are read live off the promotion records, so they move when the build
+ * moves; nothing here is compared against the committed reconciliation, because
+ * the committed reconciliation is not about this composition.
+ */
+describe("promoted default coverage — the serving composition the build has since promoted", () => {
+  const live = computePromotedCoverage();
+
+  it("promotes the six serving successors of the curated releases the record describes", () => {
+    expect(live.releases.map((release) => release.releaseId)).toEqual(SERVING_PROMOTION_SET);
+    expect(live.promotedWaveCount).toBe(6);
+    for (const release of live.releases) expect(release.approvalRef).toBeTruthy();
+    // Each one names the curated release it succeeded, so the two blocks are
+    // joined by the records rather than by these comments.
+    expect(live.releases.map((release) => release.predecessorReleaseId)).toEqual(CURATED_PROMOTION_SET);
+  });
+
+  /**
+   * NO CACHE ENTRY CAP HOLDS THIS COMPOSITION, AND NONE IS MEANT TO. The curated
+   * composition fitted the cap with 14 entries to spare, which is what made
+   * `shippedAssetCount <= maxCacheEntries` a meaningful check above. At serving
+   * scale the promoted set is two orders of magnitude larger than any entry cap,
+   * and what bounds a session is RESIDENCY rather than the size of the release.
+   */
+  it("promotes a composition no entry cap holds, and says so instead of implying one does", () => {
+    const cells = EXTERIOR_DEFAULT_ACTIVATIONS.reduce((total, activation) => total + (activation.enabled ? activation.membership.cellCount : 0), 0);
+    const buildings = EXTERIOR_DEFAULT_ACTIVATIONS.reduce((total, activation) => total + (activation.enabled ? activation.membership.buildingCount : 0), 0);
+    // Every cell the ledger declares, and every canonical parent those cells own
+    // that materialized — the whole island rather than 13 curated cells.
+    expect(cells).toBe(883);
+    expect(cells).toBe(record.coverage.ledger.declaredCellCount);
+    expect(buildings).toBe(44_989);
+    // T005 raised the entry cap to 1,024, and 44,989 is not close to fitting it.
+    expect(EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries).toBe(1_024);
+    expect(buildings).toBeGreaterThan(EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries * 40);
+    // The byte cap did not move, and it is the constraint that still binds.
+    expect(EXTERIOR_RUNTIME_BUDGETS.maxCachedBytes).toBe(256 * 1024 * 1024);
+    expect(EXTERIOR_RUNTIME_BUDGETS.maxConcurrentRequests).toBe(4);
   });
 });
 

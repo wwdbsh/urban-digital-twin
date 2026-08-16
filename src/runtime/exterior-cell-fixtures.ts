@@ -10,6 +10,7 @@ import {
   EXTERIOR_RELEASE_SCHEMA_VERSION,
   type ExteriorArtifactKind,
   type ExteriorArtifactRef,
+  type ExteriorCellDetailSidecar,
   type ExteriorReleaseGraph,
 } from "../release/exterior-release.ts";
 import type { AssemblyAsset, MultiLodAssemblyManifest } from "../release/multi-lod-assembly.ts";
@@ -484,4 +485,89 @@ export function corruptExteriorFixturePackage(fixture: ExteriorCellFixture, pack
     corrupted[corrupted.length - 1] = (corrupted[corrupted.length - 1] ?? 0) ^ 0xff;
     fixture.contents.set(artifact.relativeRef, corrupted);
   }
+}
+
+/**
+ * Rewrite ONE cell of a fixture into the T005 sidecar form, in place.
+ *
+ * The point of doing it as a TRANSFORM of an already-valid fixture rather than
+ * as a second hand-built fixture is that the two forms then provably describe
+ * the same release: the same shard objects, the same cell releases, the same
+ * GLB bytes, differing only in which document carries the shards. A test can
+ * therefore compare the rendered outcome of both forms and mean it.
+ *
+ * Returns the sidecar's artifact ref so a test can corrupt exactly those bytes.
+ */
+/**
+ * Move one cell's ASSEMBLY MANIFEST out of `assemblies.json` and into its own
+ * checksum-pinned artifact (ADR 0052 §2), leaving everything else identical.
+ *
+ * The transform is deliberately the smallest one that produces the sharded form:
+ * the manifest's own bytes are unchanged, it simply arrives by a different
+ * route. That is what lets `exterior-cell-assembly-package.test.ts` compare the
+ * two forms as an EQUIVALENCE and catch a check that quietly stopped running,
+ * rather than asserting a list of properties that might all pass while the
+ * rendered result differs.
+ */
+export function shardExteriorFixtureCellAssembly(fixture: ExteriorCellFixture, cellReleaseId: string): { packageRef: string; packageId: string } {
+  const cell = fixture.graph.cellReleases.find((entry) => entry.cellReleaseId === cellReleaseId);
+  if (!cell) throw new Error(`Fixture cell release ${cellReleaseId} is absent.`);
+  const root = fixture.graph.roots.find((entry) => entry.audience === cell.audience);
+  if (!root) throw new Error(`Fixture ${cell.audience} root is absent.`);
+  const manifest = fixture.assemblies.find((entry) => entry.cells.some((candidate) => candidate.cellRelease.id === cellReleaseId));
+  if (!manifest) throw new Error(`No fixture assembly packages cell release ${cellReleaseId}.`);
+  if (manifest.cells.length !== 1) throw new Error(`Fixture assembly ${manifest.packageId} packages ${manifest.cells.length} cells; sharding it would strand the others.`);
+
+  const packageRef = `${cell.audience}/cell-assembly-package/${cellReleaseId.replaceAll(":", "-")}.json`;
+  const content = `${JSON.stringify(manifest, null, 2)}\n`;
+  const bytes = new TextEncoder().encode(content);
+  fixture.contents.set(packageRef, bytes);
+  // Out of the boot document entirely: a sharded cell must not ALSO be resolvable
+  // inline, or the test would pass on the inline copy and prove nothing.
+  fixture.assemblies = fixture.assemblies.filter((entry) => entry.packageId !== manifest.packageId);
+  root.artifacts = [
+    ...root.artifacts,
+    { logicalId: cellReleaseId, kind: "cell-assembly-package", relativeRef: packageRef, byteSize: bytes.byteLength, checksumSha256: sha256HexSync(content) },
+  ];
+  root.artifactAllowlist = root.artifacts.map((artifact) => artifact.relativeRef);
+  return { packageRef, packageId: manifest.packageId };
+}
+
+export function shardExteriorFixtureCellDetails(fixture: ExteriorCellFixture, cellReleaseId: string): { sidecarRef: string; sidecar: ExteriorCellDetailSidecar } {
+  const cell = fixture.graph.cellReleases.find((entry) => entry.cellReleaseId === cellReleaseId);
+  if (!cell) throw new Error(`Fixture cell release ${cellReleaseId} is absent.`);
+  const root = fixture.graph.roots.find((entry) => entry.audience === cell.audience);
+  if (!root) throw new Error(`Fixture ${cell.audience} root is absent.`);
+  const inventoryIds = new Set(cell.buildingDetails.flatMap((detail) => (detail.status === "available" ? [detail.inventoryId] : [])));
+  const evidenceIds = new Set(cell.buildingDetails.flatMap((detail) => (detail.status === "available" ? [detail.evidenceShardId] : [])));
+  if (inventoryIds.size === 0) throw new Error(`Fixture cell release ${cellReleaseId} publishes no available building, so it has no shards to shard out.`);
+  const sidecarRef = `${cell.audience}/cell-detail-sidecar/${cellReleaseId.replaceAll(":", "-")}.json`;
+  const sidecar: ExteriorCellDetailSidecar = {
+    schemaVersion: EXTERIOR_RELEASE_SCHEMA_VERSION,
+    sidecarId: cellReleaseId,
+    audience: cell.audience,
+    artifactRef: sidecarRef,
+    cellReleaseId,
+    inventoryShards: fixture.graph.inventoryShards.filter((shard) => inventoryIds.has(shard.inventoryId)).map((shard) => ({ ...shard, artifactRef: sidecarRef })),
+    evidenceShards: fixture.graph.evidenceShards.filter((shard) => evidenceIds.has(shard.shardId)).map((shard) => ({ ...shard, artifactRef: sidecarRef })),
+  };
+  const content = `${JSON.stringify(sidecar, null, 2)}\n`;
+  const bytes = new TextEncoder().encode(content);
+  fixture.contents.set(sidecarRef, bytes);
+  // A shard is only removed from the graph when NO other cell release still
+  // resolves it there. The fixture's versions share shards across a lineage, and
+  // deleting one another cell still cites would produce an invalid graph rather
+  // than a sidecar-form one.
+  const stillCitedInventory = new Set(fixture.graph.cellReleases.filter((entry) => entry.cellReleaseId !== cellReleaseId).flatMap((entry) => entry.buildingDetails.flatMap((detail) => (detail.status === "available" ? [detail.inventoryId] : []))));
+  const stillCitedEvidence = new Set(fixture.graph.cellReleases.filter((entry) => entry.cellReleaseId !== cellReleaseId).flatMap((entry) => entry.buildingDetails.flatMap((detail) => (detail.status === "available" ? [detail.evidenceShardId] : []))));
+  const droppedInventory = [...inventoryIds].filter((id) => !stillCitedInventory.has(id));
+  const droppedEvidence = [...evidenceIds].filter((id) => !stillCitedEvidence.has(id));
+  fixture.graph.inventoryShards = fixture.graph.inventoryShards.filter((shard) => !droppedInventory.includes(shard.inventoryId));
+  fixture.graph.evidenceShards = fixture.graph.evidenceShards.filter((shard) => !droppedEvidence.includes(shard.shardId));
+  root.artifacts = [
+    ...root.artifacts.filter((artifact) => !(artifact.kind === "inventory" && droppedInventory.includes(artifact.logicalId)) && !(artifact.kind === "evidence" && droppedEvidence.includes(artifact.logicalId))),
+    { logicalId: cellReleaseId, kind: "cell-detail-sidecar", relativeRef: sidecarRef, byteSize: bytes.byteLength, checksumSha256: sha256HexSync(content) },
+  ];
+  root.artifactAllowlist = root.artifacts.map((artifact) => artifact.relativeRef);
+  return { sidecarRef, sidecar };
 }

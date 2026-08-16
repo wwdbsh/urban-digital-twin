@@ -1,5 +1,10 @@
 /**
- * Drift gate for the ACTIVE Midtown-core V3 promotion record.
+ * Drift gate for the Midtown-core V3 promotion record.
+ *
+ * The V3 curated release is no longer the promoted default: T005 promoted this
+ * wave's `-s1` serving release, which carries the V3 record as its
+ * `predecessor`. This gate is retained over that curated record, unchanged in
+ * what it checks.
  *
  * This test is NEVER skipped. Every value it checks is recomputed from the
  * committed `data/midtown-core-20260811-v3/payload-inventory.json`, which is in
@@ -15,9 +20,9 @@
 import { existsSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
-  MIDTOWN_CORE_EXTERIOR_ACTIVATION,
   MIDTOWN_CORE_V2_EXTERIOR_ACTIVATION,
   MIDTOWN_CORE_V2_EXTERIOR_ROLLBACK,
+  MIDTOWN_CORE_V3_EXTERIOR_ACTIVATION,
   exteriorAcceptedCellsDigest,
   exteriorRolledBackReleaseNotice,
   verifyPromotedExteriorMembership,
@@ -41,7 +46,7 @@ const RELEASE_ID = "manhattan-midtown-core-cells-20260811-v3";
 const INVENTORY_PATH = "data/midtown-core-20260811-v3/payload-inventory.json";
 const V2_INVENTORY_PATH = "data/midtown-core-20260811/payload-inventory.json";
 const inventory = JSON.parse(new TextDecoder().decode(readFileSync(INVENTORY_PATH))) as PayloadInventory;
-const RECORD = MIDTOWN_CORE_EXTERIOR_ACTIVATION.enabled ? MIDTOWN_CORE_EXTERIOR_ACTIVATION : null;
+const RECORD = MIDTOWN_CORE_V3_EXTERIOR_ACTIVATION.enabled ? MIDTOWN_CORE_V3_EXTERIOR_ACTIVATION : null;
 
 const CELL_RELEASE_PREFIX = `public/cell-release/cell-release-${RELEASE_ID}-`;
 const ASSET_PATTERN = /^public\/assets\/(doitt-\d+)__lod_\d+\.glb$/;

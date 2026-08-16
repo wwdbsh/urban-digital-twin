@@ -371,11 +371,14 @@ describe("exterior request and cache budgets", () => {
     await runtime.loadCell("c1", "exploration", CLOSE_METERS);
     await runtime.loadCell("c2", "inspection", CLOSE_METERS);
     const metrics = runtime.getMetrics();
-    // 512 since T018: ADR 0034 admissible response 1, taken so a fourth wave
-    // could promote at all. The BYTE ceiling deliberately did not move with it —
-    // see `exterior-cache-ceiling.test.ts`, which re-derives it at the raised cap
-    // from the promoted waves' committed inventories.
-    expect(metrics.maxCacheEntries).toBe(512);
+    // 1,024 since T005, after 512 since T018. The first raise was ADR 0034
+    // admissible response 1, taken so a fourth CURATED wave could promote at
+    // all; the second is sized against the measured serving residency bound of
+    // 599 entries at the worst reachable anchor, which does not fit 512. The
+    // BYTE ceiling deliberately did not move with either — see
+    // `exterior-cache-ceiling.test.ts` and `exterior-serving-residency.test.ts`,
+    // which re-derive both from committed inventories.
+    expect(metrics.maxCacheEntries).toBe(1_024);
     expect(metrics.maxCachedBytes).toBe(256 * 1024 * 1024);
     expect(metrics.cacheEntries).toBe(3);
     expect(metrics.cachedBytes).toBeLessThanOrEqual(metrics.maxCachedBytes);
@@ -694,3 +697,146 @@ describe("exterior bounded availability", () => {
     expect(runtime.getMetrics().notShippedCellCount).toBe(0);
   });
 });
+
+/**
+ * CANCELLATION IS NOT FAILURE, and the runtime used to confuse the two.
+ *
+ * `CitywideRequestPool` shares one in-flight request per artifact key across
+ * every caller that wants it. When the LAST waiter on a key aborts, the pool
+ * aborts the underlying request — but a started task's pending entry survives
+ * until that abort actually lands, and a request aborted this way settles the
+ * SHARED promise with `undefined` rather than rejecting it. So a decision that
+ * joins the entry in that window is handed `undefined` for an artifact nobody
+ * said anything bad about.
+ *
+ * `loadVerifiedArtifact` then counted a failed artifact and threw a synthesised
+ * `request-failed`, which `renderCell` cannot tell from a real verification
+ * failure — so a healthy cell fell back to base massing under a moving camera.
+ *
+ * This was found in a browser, on the promoted six-wave default: three cells of
+ * `manhattan-midtown-core-cells-20260811-v3-s1` fell back deterministically at
+ * the transition pose while all 170 of their artifacts byte-verified on disk and
+ * re-fetched cleanly over HTTP in the same session. The evidence is
+ * `data/exterior-serving-20260817/default-session-residency.json`.
+ *
+ * It is the same defect class as the shared-texture memoization defect this file
+ * already documents one level up: a cancellation belonging to one batch reaching
+ * a different batch as if it were an error.
+ */
+describe("cancelled artifact loads are cancellations, not failed artifacts", () => {
+  /**
+   * A fetcher whose FIRST request hangs until released and honours its signal
+   * with a DEFERRED rejection, exactly as `fetch(url, { signal })` does. The
+   * fixture fetcher ignores the signal, and a rejection that lands synchronously
+   * closes the window this defect lives in — both are why the shape below is
+   * specific rather than incidental.
+   */
+  function cancellableFetcher(fixture: ExteriorCellFixture, release: Promise<void>) {
+    const inner = exteriorFixtureFetcher(fixture);
+    let firstRequest = true;
+    return async (relativeRef: string, signal?: AbortSignal): Promise<Uint8Array> => {
+      if (firstRequest) {
+        firstRequest = false;
+        await new Promise<void>((resolve, reject) => {
+          const fail = () => setTimeout(() => reject(new DOMException("Request was aborted.", "AbortError")), 30);
+          if (signal?.aborted) { fail(); return; }
+          signal?.addEventListener("abort", fail, { once: true });
+          release.then(resolve, reject);
+        });
+      }
+      return inner(relativeRef, signal);
+    };
+  }
+
+  it("renders a cell whose shared load was cancelled by an ABANDONED decision", async () => {
+    const fixture = await exteriorCellFixture();
+    let release: (() => void) | null = null;
+    const gate = new Promise<void>((resolve) => { release = resolve; });
+    const { runtime } = createExteriorCellRuntime(
+      { index: fixture.index, graph: fixture.graph, assemblies: fixture.assemblies },
+      { kind: "default" },
+      { fetchArtifact: cancellableFetcher(fixture, gate), baseIdentity: exteriorFixtureBaseIdentity(fixture) },
+    );
+
+    const abandoned = new AbortController();
+    const live = new AbortController();
+    const first = runtime.loadCell("c1", "inspection", CLOSE_METERS, abandoned.signal).catch((error: unknown) => ({ aborted: isAbortError(error) }));
+    await tick(20);
+    // The camera moved: this decision is abandoned, and it was the only waiter,
+    // so the pool aborts the shared request under it.
+    abandoned.abort();
+    await tick(5);
+    // The NEXT decision wants the same artifact and joins the dying entry.
+    const second = runtime.loadCell("c1", "inspection", CLOSE_METERS, live.signal);
+    await tick(5);
+    release!();
+
+    expect(await first).toEqual({ aborted: true });
+    const outcome = await second;
+    // Renders its OWN head, not a predecessor and not base massing. Before the
+    // fix this returned `representation: "predecessor"` with
+    // `failedArtifactCount: 1` and `fallbackCellCount: 1`.
+    expect(outcome.kind === "rendered" ? outcome.representation : outcome).toBe("head");
+    const metrics = runtime.getMetrics();
+    expect(metrics.failedArtifactCount).toBe(0);
+    expect(metrics.fallbackCellCount).toBe(0);
+    expect(metrics.failedCellCount).toBe(0);
+  });
+
+  /**
+   * THE OTHER DIRECTION, and the one that matters more: the fix must not turn a
+   * real failure into a silent retry. A transport failure is not a cancellation
+   * and must still count, still fall back, and still say so.
+   */
+  it("still counts and still falls back on a REAL artifact failure", async () => {
+    const fixture = await exteriorCellFixture();
+    const inner = exteriorFixtureFetcher(fixture);
+    const { runtime } = createExteriorCellRuntime(
+      { index: fixture.index, graph: fixture.graph, assemblies: fixture.assemblies },
+      { kind: "default" },
+      {
+        fetchArtifact: async (relativeRef: string, signal?: AbortSignal) => {
+          if (relativeRef.endsWith(".glb")) throw new ExteriorRuntimeError("request-failed", `Exterior artifact request failed (404) for ${relativeRef}.`, relativeRef);
+          return inner(relativeRef, signal);
+        },
+        baseIdentity: exteriorFixtureBaseIdentity(fixture),
+      },
+    );
+    const outcome = await runtime.loadCell("c1", "inspection", CLOSE_METERS);
+    // Not "rendered from head": the cell falls back, exactly as it always did.
+    expect(outcome.kind === "rendered" ? outcome.representation : outcome.kind).not.toBe("head");
+    const metrics = runtime.getMetrics();
+    expect(metrics.failedArtifactCount).toBeGreaterThan(0);
+    expect(metrics.fallbackCellCount + metrics.failedCellCount).toBeGreaterThan(0);
+  });
+
+  /** A checksum failure is likewise a failure, and the fail-closed path holds. */
+  it("still counts and still fails closed on a CHECKSUM mismatch", async () => {
+    const fixture = await exteriorCellFixture();
+    const inner = exteriorFixtureFetcher(fixture);
+    const { runtime } = createExteriorCellRuntime(
+      { index: fixture.index, graph: fixture.graph, assemblies: fixture.assemblies },
+      { kind: "default" },
+      {
+        fetchArtifact: async (relativeRef: string, signal?: AbortSignal) => {
+          const bytes = await inner(relativeRef, signal);
+          if (!relativeRef.endsWith(".glb")) return bytes;
+          const tampered = new Uint8Array(bytes);
+          tampered[tampered.length - 1] = tampered[tampered.length - 1]! ^ 0xff;
+          return tampered;
+        },
+        baseIdentity: exteriorFixtureBaseIdentity(fixture),
+      },
+    );
+    const outcome = await runtime.loadCell("c1", "inspection", CLOSE_METERS);
+    expect(outcome.kind === "rendered" ? outcome.representation : outcome.kind).not.toBe("head");
+    expect(runtime.getMetrics().failedArtifactCount).toBeGreaterThan(0);
+  });
+});
+
+function isAbortError(error: unknown): boolean {
+  return error instanceof DOMException && error.name === "AbortError";
+}
+function tick(ms: number): Promise<void> {
+  return new Promise((resolve) => { setTimeout(resolve, ms); });
+}

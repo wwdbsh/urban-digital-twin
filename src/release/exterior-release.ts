@@ -12,7 +12,79 @@ import { sha256HexSync, stableSerialize } from "./catalog-release.ts";
 
 export const EXTERIOR_RELEASE_SCHEMA_VERSION = "1.0" as const;
 export type ExteriorReleaseAudience = "private" | "public";
-export type ExteriorArtifactKind = "ownership-ledger" | "cell-release" | "inventory" | "evidence" | "rollout-snapshot";
+/**
+ * `cell-detail-sidecar` is the ONE kind T005 adds, and it exists because
+ * `release-graph.json` stopped being fetchable at island scale.
+ *
+ * Measured, not projected: across the three largest committed `-p1` waves the
+ * inventory and evidence shard PAIR costs 18,637 / 18,765 / 18,717 bytes per
+ * SHIPPED asset. The curated waves ship 40-179 assets each, so the pair is a
+ * rounding error there and `cellReleases` dominates — which is why ADR 0046
+ * concluded that "`release-graph.json` does not scale with asset count". That
+ * conclusion is correct for a curated release and FALSE for a serving one: at
+ * 44,989 shipped assets the same pair projects to ~841 MB island-wide, and the
+ * worst single wave (central-and-upper, 11,682 buildings) to ~224 MB — one
+ * blocking fetch, parsed in full, before the first byte of geometry is verified.
+ * The correction is recorded in ADR 0052 rather than applied silently.
+ *
+ * The seam moves ONLY the shard BODIES, one document per ownership cell, onto
+ * the artifact path every GLB already travels: declared byte size, declared
+ * SHA-256, public-root ref check, shared LRU, shared request budget. Nothing
+ * about verification is weakened — the same per-building checks run over the
+ * same shards, at cell-load time instead of at boot — and `release-graph.json`
+ * keeps roots, ownership, cell releases and snapshots, which are the parts a
+ * runtime genuinely needs before it can decide anything.
+ *
+ * A release that declares no sidecar is byte-unchanged and behaves exactly as it
+ * did; the form is per cell and all-or-nothing, so a cell can never have half its
+ * evidence in the graph and half in a fetched document.
+ */
+/**
+ * `cell-assembly-package` is the SECOND kind T005 adds, and it exists for the
+ * reason the first one did, one artifact over.
+ *
+ * The sidecar seam moved the inventory and evidence shard BODIES out of
+ * `release-graph.json` because at 18,766 B per shipped asset they projected to
+ * ~841 MB island-wide. It left `assemblies.json` untouched, and `assemblies.json`
+ * has the same shape of problem: `loadExteriorCellRuntime` fetches it whole,
+ * `cache: "no-store"`, and the runtime constructor then runs
+ * `validateMultiLodAssembly` over every head-pinned package before the first
+ * frame. MEASURED from the committed `-c1` manifests transformed to the
+ * single-LOD form a serving release ships, that is 2,567 B per shipped asset:
+ * 15.86 MiB for wave w02 alone and **115,499,836 B across the island**, blocking,
+ * before any geometry can be verified.
+ *
+ * ADR 0046 D1 chose per-wave assemblies and explicitly rejected a per-cell
+ * partition, then measured the per-wave worst case and named it "a T004/T005
+ * obligation rather than declared acceptable here". ADR 0052 §2 discharges that
+ * obligation: the rejection was right about limit compliance and incomplete
+ * about boot weight, because `MULTI_LOD_ASSEMBLY_LIMITS` is not the binding
+ * constraint — the boot fetch is.
+ *
+ * So one ownership cell's assembly manifest becomes its own artifact, fetched at
+ * CELL-LOAD time through the same `loadVerifiedArtifact` path every GLB and
+ * every sidecar travels: public-root ref check, declared byte size, declared
+ * SHA-256, shared LRU, shared request budget. Boot weight becomes O(cells) pins
+ * instead of O(assets) manifests.
+ *
+ * TWO THINGS ARE DELIBERATELY UNCHANGED. The binding a package must satisfy is
+ * the identical one the in-`assemblies.json` form satisfies — same root pin,
+ * ledger pin, base identity pin, cell-release pin and coverage rule, reached
+ * through the same code — so a sharded package cannot be admitted on weaker
+ * terms than an inline one. And the head pin still has to list it: a package the
+ * active head does not name is refused whichever form carries it.
+ *
+ * WHAT DOES CHANGE IS TIMING, and ADR 0052 §2 says so in the open: structural
+ * validation of a per-cell package moves from construction to first use. A
+ * release whose 400th cell carries a malformed manifest now boots and renders
+ * 399 cells before failing that one, where previously it refused to construct at
+ * all. That is the price of not fetching ~110 MiB up front, and it is the same
+ * trade the sidecar seam already made for evidence.
+ *
+ * A release that declares no `cell-assembly-package` is byte-unchanged and
+ * behaves exactly as it did.
+ */
+export type ExteriorArtifactKind = "ownership-ledger" | "cell-release" | "inventory" | "evidence" | "rollout-snapshot" | "cell-detail-sidecar" | "cell-assembly-package";
 
 export interface ExteriorArtifactRef {
   logicalId: string;
@@ -201,6 +273,32 @@ export interface ExteriorEvidenceShard {
   graph: ExteriorEvidenceGraph;
 }
 
+/**
+ * One ownership cell's inventory and evidence shards, as a separately fetched
+ * and separately checksum-pinned document.
+ *
+ * `sidecarId` equals the `cellReleaseId` it serves, and the root declares it
+ * under that same logical ID with kind `cell-detail-sidecar` — so resolving a
+ * cell's evidence is the same lookup shape as resolving the cell release itself,
+ * and there is no second naming scheme to keep in step.
+ *
+ * Every contained shard's `artifactRef` must equal this document's own
+ * `artifactRef`. That is not redundancy: a shard's `artifactRef` has always
+ * meant "the artifact whose bytes carry me", and for a sharded-out shard that
+ * artifact IS the sidecar. Stating it keeps `ExteriorInventoryShard` and
+ * `ExteriorEvidenceShard` byte-identical to their in-graph form, so a document
+ * moved between the two forms is the same object either way.
+ */
+export interface ExteriorCellDetailSidecar {
+  schemaVersion: typeof EXTERIOR_RELEASE_SCHEMA_VERSION;
+  sidecarId: string;
+  audience: ExteriorReleaseAudience;
+  artifactRef: string;
+  cellReleaseId: string;
+  inventoryShards: ExteriorInventoryShard[];
+  evidenceShards: ExteriorEvidenceShard[];
+}
+
 export interface ExteriorRolloutCell {
   cellId: string;
   cellReleaseId: string;
@@ -337,7 +435,7 @@ function validateRoot(value: unknown, path: string, issues: ExteriorReleaseIssue
     if (!record(artifact)) return issue(issues, artifactPath, "Artifact declaration must be an object.");
     exactKeys(artifact, ["logicalId", "kind", "relativeRef", "byteSize", "checksumSha256"], artifactPath, issues);
     if (!nonEmpty(artifact.logicalId)) issue(issues, `${artifactPath}.logicalId`, "Artifact logical ID is required.");
-    if (!(["ownership-ledger", "cell-release", "inventory", "evidence", "rollout-snapshot"] as unknown[]).includes(artifact.kind)) issue(issues, `${artifactPath}.kind`, "Unknown exterior artifact kind.");
+    if (!(["ownership-ledger", "cell-release", "inventory", "evidence", "rollout-snapshot", "cell-detail-sidecar", "cell-assembly-package"] as unknown[]).includes(artifact.kind)) issue(issues, `${artifactPath}.kind`, "Unknown exterior artifact kind.");
     if (!isSafeReleaseArtifactReference(artifact.relativeRef)) issue(issues, `${artifactPath}.relativeRef`, "Artifact ref must be a canonical safe relative path.");
     if (!Number.isSafeInteger(artifact.byteSize) || (artifact.byteSize as number) < 0) issue(issues, `${artifactPath}.byteSize`, "Artifact byte size must be a non-negative integer.");
     if (!checksum(artifact.checksumSha256)) issue(issues, `${artifactPath}.checksumSha256`, "Artifact checksum must be lowercase SHA-256.");
@@ -468,6 +566,104 @@ export function validateExteriorReleaseStructure(value: unknown): ExteriorReleas
   return issues.length === 0 ? { ok: true, value: value as unknown as ExteriorReleaseGraph } : { ok: false, issues };
 }
 
+/**
+ * The per-building evidence resolution, in the ONE place that may perform it.
+ *
+ * It was inline in `validateExteriorReleaseGraph` and had exactly one caller
+ * until the sidecar seam gave it a second — the browser, resolving a cell's
+ * shards out of a fetched document instead of out of the boot graph. Extracting
+ * it is what stops the two forms from drifting: a rule tightened for the in-graph
+ * form and forgotten for the sidecar form would be a serving release verified
+ * more weakly than a curated one, which is the exact failure this seam must not
+ * introduce. The checks below are byte-for-byte the ones the graph validator ran
+ * before extraction, and `exterior-release.test.ts` pins that both callers reach
+ * them.
+ */
+export function validateExteriorCellDetailResolution(
+  input: {
+    cell: ExteriorCellRelease;
+    inventoryById: ReadonlyMap<string, ExteriorInventoryShard>;
+    evidenceById: ReadonlyMap<string, ExteriorEvidenceShard>;
+    path: string;
+  },
+  issues: ExteriorReleaseIssue[],
+): { usedInventoryIds: Set<string>; usedEvidenceShardIds: Set<string> } {
+  const { cell, inventoryById, evidenceById, path } = input;
+  const usedInventoryIds = new Set<string>();
+  const usedEvidenceShardIds = new Set<string>();
+  for (const detail of cell.buildingDetails) if (detail.status === "available") {
+    usedInventoryIds.add(detail.inventoryId);
+    usedEvidenceShardIds.add(detail.evidenceShardId);
+    const inventoryShard = inventoryById.get(detail.inventoryId);
+    const evidenceShard = evidenceById.get(detail.evidenceShardId);
+    if (!inventoryShard || inventoryShard.audience !== cell.audience || inventoryShard.inventory.buildingId !== detail.buildingId) issue(issues, `${path}.buildingDetails.${detail.buildingId}`, "Available inventory must resolve within the same audience and building.");
+    if (!evidenceShard || evidenceShard.audience !== cell.audience || evidenceShard.inventoryId !== detail.inventoryId) issue(issues, `${path}.buildingDetails.${detail.buildingId}`, "Available evidence shard must resolve within the same audience and inventory.");
+    if (inventoryShard && evidenceShard) {
+      if (inventoryShard.inventory.components.some((component) => !isExteriorComponentReleaseEligible(component))) issue(issues, `${path}.buildingDetails.${detail.buildingId}`, "Required/applicable release inventory cannot promote absent representation.");
+      const evidenceResult = validateExteriorInventoryEvidence(inventoryShard.inventory, evidenceShard.graph, { audience: cell.audience, runtimeTexture: detail.runtimeTexture, evaluatedAt: cell.promotion.approvedAt });
+      if (!evidenceResult.ok) for (const evidenceIssue of evidenceResult.issues) issue(issues, `${path}.buildingDetails.${detail.buildingId}.${evidenceIssue.path}`, evidenceIssue.message);
+    }
+  }
+  return { usedInventoryIds, usedEvidenceShardIds };
+}
+
+/**
+ * A fetched sidecar, validated closed against the cell release it claims.
+ *
+ * Two halves, and both are required. The STRUCTURAL half checks the document is
+ * what it says it is and that every contained shard names this document as the
+ * artifact carrying it. The BINDING half runs
+ * `validateExteriorCellDetailResolution` — the identical per-building evidence
+ * resolution the boot graph runs for an in-graph release — so a sidecar cannot
+ * admit a shard the graph form would have refused.
+ *
+ * The caller supplies the `artifactRef` it actually fetched from rather than
+ * trusting the document's own field, so a sidecar cannot claim to be an artifact
+ * other than the one whose checksum was just verified.
+ */
+export function validateExteriorCellDetailSidecar(
+  value: unknown,
+  expected: { cell: ExteriorCellRelease; artifactRef: string },
+): ExteriorReleaseValidation<ExteriorCellDetailSidecar> {
+  const issues: ExteriorReleaseIssue[] = [];
+  const path = "$";
+  if (!record(value)) return { ok: false, issues: [{ path, message: "Exterior cell detail sidecar must be an object." }] };
+  exactKeys(value, ["schemaVersion", "sidecarId", "audience", "artifactRef", "cellReleaseId", "inventoryShards", "evidenceShards"], path, issues);
+  if (value.schemaVersion !== EXTERIOR_RELEASE_SCHEMA_VERSION) issue(issues, `${path}.schemaVersion`, "Unsupported exterior cell detail sidecar schema.");
+  if (value.audience !== expected.cell.audience) issue(issues, `${path}.audience`, "Sidecar audience must equal the audience of the cell release it serves.");
+  if (value.cellReleaseId !== expected.cell.cellReleaseId) issue(issues, `${path}.cellReleaseId`, "Sidecar must name the cell release it was fetched for.");
+  if (value.sidecarId !== expected.cell.cellReleaseId) issue(issues, `${path}.sidecarId`, "Sidecar logical ID must equal its cell release ID.");
+  if (value.artifactRef !== expected.artifactRef) issue(issues, `${path}.artifactRef`, "Sidecar must declare the artifact reference its bytes were verified under.");
+  for (const [field, kind] of [["inventoryShards", "inventory"], ["evidenceShards", "evidence"]] as const) {
+    if (!Array.isArray(value[field])) { issue(issues, `${path}.${field}`, `${field} must be an array.`); continue; }
+    value[field].forEach((entry, index) => {
+      const entryPath = `${path}.${field}[${index}]`;
+      validateShard(entry, entryPath, issues, kind);
+      // The shard's own ref must be this document. See the type docblock: a
+      // sharded-out shard's carrying artifact IS the sidecar, and saying so is
+      // what lets the shard type stay identical across both forms.
+      if (record(entry) && entry.artifactRef !== expected.artifactRef) issue(issues, `${entryPath}.artifactRef`, "A sharded-out shard must name the sidecar artifact that carries it.");
+      if (record(entry) && entry.audience !== expected.cell.audience) issue(issues, `${entryPath}.audience`, "Sharded-out shard audience must equal the cell release audience.");
+    });
+  }
+  if (issues.length > 0) return { ok: false, issues };
+  const sidecar = value as unknown as ExteriorCellDetailSidecar;
+  const inventoryIds = sidecar.inventoryShards.map((shard) => shard.inventoryId);
+  const evidenceIds = sidecar.evidenceShards.map((shard) => shard.shardId);
+  if (new Set(inventoryIds).size !== inventoryIds.length) issue(issues, `${path}.inventoryShards`, "Inventory IDs must be unique.");
+  if (new Set(evidenceIds).size !== evidenceIds.length) issue(issues, `${path}.evidenceShards`, "Evidence shard IDs must be unique.");
+  for (const shard of sidecar.inventoryShards) if (shard.shardId !== shard.inventoryId) issue(issues, `${path}.inventoryShards.${shard.inventoryId}.shardId`, "Inventory shard ID must equal its audited inventory logical ID.");
+  const inventoryById = new Map(sidecar.inventoryShards.map((shard) => [shard.inventoryId, shard]));
+  const evidenceById = new Map(sidecar.evidenceShards.map((shard) => [shard.shardId, shard]));
+  const used = validateExteriorCellDetailResolution({ cell: expected.cell, inventoryById, evidenceById, path }, issues);
+  // Closed in both directions: a sidecar carrying a shard no building of this
+  // cell cites is unreviewed weight nobody asked for, exactly as an unreferenced
+  // in-graph shard is.
+  for (const id of inventoryById.keys()) if (!used.usedInventoryIds.has(id)) issue(issues, `${path}.inventoryShards.${id}`, "Sidecar carries an inventory shard this cell release does not cite.");
+  for (const id of evidenceById.keys()) if (!used.usedEvidenceShardIds.has(id)) issue(issues, `${path}.evidenceShards.${id}`, "Sidecar carries an evidence shard this cell release does not cite.");
+  return issues.length === 0 ? { ok: true, value: sidecar } : { ok: false, issues };
+}
+
 function artifactByLogicalId(root: ExteriorRootManifest, id: string, kind: ExteriorArtifactKind): ExteriorArtifactRef | undefined {
   return root.artifacts.find((artifact) => artifact.logicalId === id && artifact.kind === kind);
 }
@@ -590,18 +786,23 @@ export function validateExteriorReleaseGraph(value: unknown): ExteriorReleaseVal
       if (cell.fallback.mode !== "predecessor" || cell.fallback.cellReleaseId !== cell.predecessor.cellReleaseId || cell.fallback.checksumSha256 !== cell.predecessor.checksumSha256) issue(issues, `${path}.fallback`, "Versioned cell fallback must be its exact predecessor.");
     } else if (cell.fallback.mode !== "pinned-base" || cell.fallback.baseIdentitySetId !== ledger.baseIdentitySet.id || cell.fallback.checksumSha256 !== ledger.baseIdentitySet.checksumSha256) issue(issues, `${path}.fallback`, "Initial cell fallback must be the pinned base, never a fixture by name.");
 
-    for (const detail of cell.buildingDetails) if (detail.status === "available") {
-      usedInventoryIds.add(detail.inventoryId);
-      usedEvidenceShardIds.add(detail.evidenceShardId);
-      const inventoryShard = inventoryById.get(detail.inventoryId);
-      const evidenceShard = evidenceById.get(detail.evidenceShardId);
-      if (!inventoryShard || inventoryShard.audience !== cell.audience || inventoryShard.inventory.buildingId !== detail.buildingId) issue(issues, `${path}.buildingDetails.${detail.buildingId}`, "Available inventory must resolve within the same audience and building.");
-      if (!evidenceShard || evidenceShard.audience !== cell.audience || evidenceShard.inventoryId !== detail.inventoryId) issue(issues, `${path}.buildingDetails.${detail.buildingId}`, "Available evidence shard must resolve within the same audience and inventory.");
-      if (inventoryShard && evidenceShard) {
-        if (inventoryShard.inventory.components.some((component) => !isExteriorComponentReleaseEligible(component))) issue(issues, `${path}.buildingDetails.${detail.buildingId}`, "Required/applicable release inventory cannot promote absent representation.");
-        const evidenceResult = validateExteriorInventoryEvidence(inventoryShard.inventory, evidenceShard.graph, { audience: cell.audience, runtimeTexture: detail.runtimeTexture, evaluatedAt: cell.promotion.approvedAt });
-        if (!evidenceResult.ok) for (const evidenceIssue of evidenceResult.issues) issue(issues, `${path}.buildingDetails.${detail.buildingId}.${evidenceIssue.path}`, evidenceIssue.message);
+    // Sidecar form, decided PER CELL and ALL-OR-NOTHING. A cell whose audience
+    // root declares a `cell-detail-sidecar` under this cell-release ID keeps its
+    // shards in that separately checksum-pinned document, and the graph must
+    // then carry none of them. The exclusion is what makes the form legible: a
+    // cell with half its evidence resolved at boot and half at load would be a
+    // release nobody could reason about, and a reviewer could not tell by looking
+    // at the graph which half they were reading.
+    const sidecarArtifact = root ? artifactByLogicalId(root, cell.cellReleaseId, "cell-detail-sidecar") : undefined;
+    if (sidecarArtifact) {
+      for (const detail of cell.buildingDetails) if (detail.status === "available") {
+        if (inventoryById.has(detail.inventoryId)) issue(issues, `${path}.buildingDetails.${detail.buildingId}`, "A sidecar-form cell may not also carry its inventory shard in the release graph.");
+        if (evidenceById.has(detail.evidenceShardId)) issue(issues, `${path}.buildingDetails.${detail.buildingId}`, "A sidecar-form cell may not also carry its evidence shard in the release graph.");
       }
+    } else {
+      const used = validateExteriorCellDetailResolution({ cell, inventoryById, evidenceById, path }, issues);
+      for (const id of used.usedInventoryIds) usedInventoryIds.add(id);
+      for (const id of used.usedEvidenceShardIds) usedEvidenceShardIds.add(id);
     }
   }
   validateAcyclic(graph.cellReleases, (entry) => entry.cellReleaseId, (entry) => entry.predecessor?.cellReleaseId ?? null, "cellReleases", issues);
@@ -690,6 +891,14 @@ export function validateExteriorReleaseGraph(value: unknown): ExteriorReleaseVal
 
   const expectedArtifacts = new Set<string>([
     ...graph.cellReleases.map((entry) => `${entry.audience}:cell-release:${entry.cellReleaseId}`),
+    // A sidecar's decoded graph node is the cell release it serves. Declaring
+    // one for a cell release that does not exist is still refused, because this
+    // set is built from the cell releases the graph actually decodes.
+    ...graph.cellReleases.map((entry) => `${entry.audience}:cell-detail-sidecar:${entry.cellReleaseId}`),
+    // Same rule for the assembly package: its decoded graph node is the cell
+    // release it packages, so declaring one for a cell release the graph does
+    // not carry is still refused.
+    ...graph.cellReleases.map((entry) => `${entry.audience}:cell-assembly-package:${entry.cellReleaseId}`),
     ...graph.inventoryShards.map((entry) => `${entry.audience}:inventory:${entry.inventoryId}`),
     ...graph.evidenceShards.map((entry) => `${entry.audience}:evidence:${entry.shardId}`),
     ...graph.snapshots.map((entry) => `${entry.audience}:rollout-snapshot:${entry.snapshotId}`),

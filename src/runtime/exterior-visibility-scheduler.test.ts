@@ -94,21 +94,72 @@ describe("selectResidentUnits: the frozen policy order", () => {
     // The cap bounds the TOTAL: one reserved unit plus one contested admission
     // against a cap of 2. The reservation is never the thing that gets cut.
     expect(decision.resident).toHaveLength(2);
-    expect(decision.order).toEqual(["home", "far-0"]);
+    // The single contested admission is the NEAREST far unit, not the
+    // lowest-`order` one. The ten rectangles march east from -74.050 in 0.001
+    // steps and the footprint centre is -74.045, so `far-5` sits on the centre
+    // at distance 0 while `far-0` is 0.005 deg west of it. Before the T005 D-4
+    // fix this asserted `far-0`: the units share a distance band, so `order`
+    // decided and the farthest-but-earliest unit won. See `compareRanked`.
+    expect(decision.order).toEqual(["home", "far-5"]);
   });
 
-  it("ranks by distance band first and by explicit order inside a band", () => {
-    // `near-late` sits in band 0 with a high order; `mid-early` sits in band 1
-    // with order 0. The band decides, so the high-order near unit outranks the
-    // low-order mid one — and inside band 0 the order decides.
-    const nearEarly = unit("near-early", rect(-73.9805, 40.7495, -73.9795, 40.7505), 5);
-    const nearLate = unit("near-late", rect(-73.9825, 40.7495, -73.9815, 40.7505), 900);
+  it("ranks by measured distance inside a band, not by the census order (T005 D-4)", () => {
+    // The nearest unit carries the HIGHEST order and the farthest in-band unit
+    // carries the lowest, so distance and `order` disagree on every pair. Before
+    // the D-4 fix `order` decided inside a band and this expectation read
+    // ["near-early", "near-late", "mid-early"] — the ledger's enumeration index
+    // outranking where the camera actually is.
+    const nearLate = unit("near-late", rect(-73.9805, 40.7495, -73.9795, 40.7505), 900);
+    const nearEarly = unit("near-early", rect(-73.9825, 40.7495, -73.9815, 40.7505), 5);
     // ~1.9 km east of centre at the census longitude scale (0.0225 deg x 84,412.702).
     const midEarly = unit("mid-early", rect(-73.9575, 40.7495, -73.9565, 40.7505), 0);
     const decision = selectResidentUnits([midEarly, nearLate, nearEarly], { footprint: centredFootprint(-73.98, 40.75, 0.05, 0.05), camera: pose(-73.98, 40.75), heightBucket: 500 }, policy());
-    expect(decision.order).toEqual(["near-early", "near-late", "mid-early"]);
+    expect(decision.order).toEqual(["near-late", "near-early", "mid-early"]);
+    // And the ordering really is the distance ordering.
+    expect(unitDistanceMeters(nearLate.bounds, -73.98, 40.75, METRIC)).toBeLessThan(unitDistanceMeters(nearEarly.bounds, -73.98, 40.75, METRIC));
+    // The band remains the monotone coarse key: a band-1 unit is ranked after
+    // every band-0 unit, which distance alone already implies.
     expect(unitDistanceMeters(midEarly.bounds, -73.98, 40.75, METRIC)).toBeGreaterThan(1_200);
-    expect(unitDistanceMeters(nearLate.bounds, -73.98, 40.75, METRIC)).toBeLessThan(1_200);
+    expect(unitDistanceMeters(nearEarly.bounds, -73.98, 40.75, METRIC)).toBeLessThan(1_200);
+  });
+
+  /**
+   * The D-4 invariant stated at its strongest, over the real 883-cell census and
+   * without needing any payload present.
+   *
+   * At a cap tight enough to bind hard, the contested admissions are EXACTLY the
+   * nearest units by measured distance. This is the property the serving
+   * residency bound in `exterior-serving-residency.ts` models when it takes "the
+   * `cap` cells nearest some camera" — before D-4 that model described no code,
+   * because inside a band the census `order` decided and the nearest cells could
+   * be deferred wholesale. The bound and the scheduler now agree by construction.
+   *
+   * A serving cap of 8 is used because that is where the divergence is largest
+   * and it is the cap the serving composition is sized for; the invariant holds
+   * at any cap.
+   */
+  it("admits exactly the nearest units when the cap binds (T005 D-4)", () => {
+    const camera = { longitude: -73.98, latitude: 40.755 };
+    const view = { footprint: centredFootprint(camera.longitude, camera.latitude, 0.05, 0.05), camera: pose(camera.longitude, camera.latitude, 2_000), heightBucket: 2_000 };
+    const decision = selectResidentUnits(CENSUS_UNITS, view, policy({ maxResidentUnits: 8 }));
+    expect(decision.deferredCount).toBeGreaterThan(0);
+
+    const centre = view.footprint.groundCenter;
+    const reserved = new Set(decision.reserved);
+    // Every contested (non-reserved) admission, and every deferred candidate.
+    const contested = CENSUS_UNITS
+      .filter((unit) => !reserved.has(unit.unitId) && viewportBoundsIntersect(unit.bounds, view.footprint.bounds))
+      .map((unit) => ({ unitId: unit.unitId, distance: unitDistanceMeters(unit.bounds, centre.longitude, centre.latitude, METRIC) }))
+      .sort((left, right) => left.distance - right.distance || (left.unitId < right.unitId ? -1 : 1));
+    const admittedCount = decision.resident.length - decision.reserved.length;
+    const expected = contested.slice(0, admittedCount).map((entry) => entry.unitId).sort();
+    const actual = decision.resident.filter((id) => !reserved.has(id)).sort();
+    expect(actual).toEqual(expected);
+    // And the cut really is a distance cut: the farthest admitted is no farther
+    // than the nearest deferred.
+    const farthestAdmitted = Math.max(...contested.slice(0, admittedCount).map((entry) => entry.distance));
+    const nearestDeferred = Math.min(...contested.slice(admittedCount).map((entry) => entry.distance));
+    expect(farthestAdmitted).toBeLessThanOrEqual(nearestDeferred);
   });
 
   it("bounds the output by construction at the cap", () => {

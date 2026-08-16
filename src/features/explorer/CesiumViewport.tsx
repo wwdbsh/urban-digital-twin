@@ -822,6 +822,51 @@ export function nativeCameraControlBindings(): CameraControlBindings {
   };
 }
 
+/** The only part of a Cesium scene this scheduling policy is allowed to see. */
+export interface PostRenderSource {
+  postRender: {
+    addEventListener(listener: () => void): unknown;
+    removeEventListener(listener: () => void): unknown;
+  };
+}
+
+/**
+ * Emit a settled camera AFTER the next rendered frame, exactly once (defect D-18).
+ *
+ * Extracted as a pure scheduling policy rather than left inline, because the
+ * defect it fixes is entirely about ORDER and order is the one thing an inline
+ * effect in this component cannot be tested for: `CesiumViewport` needs a live
+ * WebGL viewer, so every test in this file works against extracted functions.
+ *
+ * The rule it enforces, and each clause is a failure that was available:
+ *
+ *   - **After a frame, never before one.** The settled-camera emit builds a
+ *     ground footprint from nine globe pick-rays, and pick-rays read the last
+ *     RENDERED scene. Emitting synchronously after a pose change publishes a
+ *     footprint for the camera's previous position.
+ *   - **Exactly once.** A listener that stayed subscribed would emit a settled
+ *     camera on every subsequent frame, turning one pose request into a
+ *     continuous reconciliation storm.
+ *   - **Never after disposal.** The returned disposer detaches a listener that
+ *     has not fired yet, so a component unmounting between the request and the
+ *     frame emits nothing rather than touching a torn-down viewer.
+ */
+export function emitCameraSettledAfterNextFrame(scene: PostRenderSource, emit: () => void): () => void {
+  let settled = false;
+  const listener = (): void => {
+    if (settled) return;
+    settled = true;
+    scene.postRender.removeEventListener(listener);
+    emit();
+  };
+  scene.postRender.addEventListener(listener);
+  return () => {
+    if (settled) return;
+    settled = true;
+    scene.postRender.removeEventListener(listener);
+  };
+}
+
 export function shouldApplyCameraPoseRequest(lastRequestId: number, request: { requestId: number } | undefined): boolean {
   return Boolean(request && Number.isSafeInteger(request.requestId) && request.requestId > 0 && request.requestId !== lastRequestId);
 }
@@ -2709,10 +2754,40 @@ export function CesiumViewport({
     const viewer = viewerRef.current;
     if (!viewer || !cameraPoseRequest || !shouldApplyCameraPoseRequest(lastCameraPoseRequestIdRef.current, cameraPoseRequest)) return;
     lastCameraPoseRequestIdRef.current = cameraPoseRequest.requestId;
+    // Set BEFORE the pose is applied and left in force across the deferred emit
+    // below. `applyCameraPoseRequest` provokes a `moveEnd`, and the suppression
+    // window is what stops that synthetic move from being reported as a settled
+    // camera; the forced emit deliberately bypasses it, so the two must not be
+    // reordered. `CesiumViewport.landing.test.tsx` asserts the ordering.
     suppressCameraEventsUntilRef.current = Date.now() + 900;
     applyCameraPoseRequest(viewer, cameraPoseRequest);
     viewer.scene.requestRender();
-    cameraSettledEmitterRef.current?.();
+    /**
+     * Emit AFTER the first frame at the new camera, not before it (defect D-18).
+     *
+     * `emitSettledCamera` calls `cameraFootprintForViewer`, which samples the
+     * globe with nine pick-rays to build the ground footprint the residency
+     * scheduler culls on. Pick-rays read the scene as it was last RENDERED. Called
+     * synchronously here — one line after the camera moved and before any frame
+     * has been drawn at the new pose — they sampled the OLD view, so a deep link
+     * or a landing pose published a footprint belonging to wherever the camera
+     * used to be. The consequence is invisible at a cap that does not bind and
+     * severe at one that does: the scheduler admits the cells around the previous
+     * position and defers the ones the user is actually looking at, and only the
+     * next genuine camera move repairs it.
+     *
+     * A one-shot `postRender` listener is the narrowest fix that is actually
+     * correct. `requestRender` above guarantees the frame will come in the
+     * request-render mode this viewer runs in; the listener removes itself on the
+     * first invocation so a pose request cannot leave a permanent subscriber; and
+     * the effect's cleanup removes it too, so a component that unmounts between
+     * the request and the frame emits nothing at all rather than touching a torn
+     * -down viewer.
+     *
+     * The `flyTo` completion path above is NOT this defect and is untouched: a
+     * flight's `complete` callback already runs after frames have been drawn.
+     */
+    return emitCameraSettledAfterNextFrame(viewer.scene, () => cameraSettledEmitterRef.current?.());
   }, [cameraPoseRequest]);
 
   return <div className="viewport" ref={containerRef} aria-label="3D city viewport" tabIndex={0} onKeyDown={onViewportKeyDown} />;

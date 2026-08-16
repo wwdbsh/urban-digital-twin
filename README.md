@@ -320,8 +320,15 @@ private path and receives the SPA shell rather than the private bytes.
 ### Known gaps
 
 ```sh
-pnpm goal:reconcile -- --check   # recomputes the coverage reconciliation and refuses drift
+pnpm goal:reconcile -- --check          # recomputes the coverage reconciliation and refuses drift
+pnpm goal:reconcile -- --check --live   # the same check against what this build now promotes
 ```
+
+The committed record describes the six CURATED releases, and T005 promoted six
+`-s1` serving successors over them, so `--check` recomputes against the curated
+set — read off the live promotion records' `predecessor` chain, so a curated
+record edited underneath the promotion still fails. `--live` recomputes against
+the promoted set instead; that comparison drifts by design and exits non-zero.
 
 **The exteriors goal: 30 of its 31 criteria are closed; criterion 1 is open.**
 The record is

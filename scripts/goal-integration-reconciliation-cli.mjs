@@ -42,6 +42,21 @@
  * `data/goal-integration-acceptance-20260812/reconciliation.json`, so the record
  * cannot drift from the ledgers it summarizes.
  *
+ * WHICH COMPOSITION IT RECOMPUTES. The committed record describes the six
+ * CURATED releases, and T005 promoted six `-s1` serving successors over them.
+ * Both modes therefore default to the curated set, read off the live promotion
+ * records' `predecessor` chain — so the drift check still bites on a curated
+ * record edited underneath the promotion, and the WRITE path cannot silently
+ * replace a Goal completion artifact with a different composition. `--live`
+ * recomputes against what this build actually promotes; that comparison drifts
+ * on purpose and exits non-zero.
+ *
+ * `maxCacheEntries` and its derived `cacheEntryHeadroom` are read from the live
+ * `EXTERIOR_RUNTIME_BUDGETS` rather than from the activation set, so they moved
+ * with T005 even for a curated recompute. `--check` reports them as
+ * `runtimeBudgetDrift` and does not gate on them, because a runtime cap is not
+ * part of the composition this record describes.
+ *
  * RUNTIME. This script imports `.ts` modules directly and relies on Node's
  * native type stripping, so it requires **Node >= 24** and takes no
  * `--experimental-strip-types` flag. That is the convention of the newer
@@ -53,7 +68,8 @@
  * Usage:
  *   pnpm goal:reconcile
  *   pnpm goal:reconcile -- --check
- *   node scripts/goal-integration-reconciliation-cli.mjs [--check] [--out <path>]
+ *   pnpm goal:reconcile -- --check --live
+ *   node scripts/goal-integration-reconciliation-cli.mjs [--check] [--live] [--out <path>]
  */
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
@@ -243,9 +259,27 @@ export function computeCensusClosure() {
   };
 }
 
-/** (5): what the six default activation records actually put on screen. */
-export function computePromotedCoverage() {
-  const activations = exteriorDefaultActivations();
+/**
+ * (5): what the six default activation records actually put on screen.
+ *
+ * The activation set is a PARAMETER, defaulting to what this build ships.
+ *
+ * It became one when T005 promoted six `-s1` serving releases over the six
+ * curated ones this Goal's committed reconciliation describes. That record is a
+ * completion artifact and is not regenerated to follow a later promotion, so a
+ * bare recompute stopped equalling it — and the choice was either to freeze the
+ * comparison against the record's own numbers, losing the drift check entirely,
+ * or to let a caller name the composition it is asking about. This is the second.
+ *
+ * `goal-integration-reconciliation.test.mjs` passes the CURATED set, read off the
+ * live promotion records' predecessor chain rather than hand-typed, and gets the
+ * committed record back field for field. So a curated record edited underneath
+ * the promotion still fails the gate, which is the property the split form gave
+ * up. The runtime BUDGET fields below are read from the live build and are the
+ * one part that legitimately moved with the promotion; the test names those two
+ * rather than absorbing them.
+ */
+export function computePromotedCoverage(activations = exteriorDefaultActivations()) {
   const inventoryByWave = new Map(PROMOTED_PAYLOAD_INVENTORIES.map((entry) => [entry.waveId, readJson(entry.path)]));
 
   const releases = activations.map((activation) => {
@@ -296,10 +330,10 @@ export function computePromotedCoverage() {
  * The zero-violation claim of Goal criterion 12, stated as five separate counts
  * so that a single non-zero cannot hide behind an aggregate boolean.
  */
-export function computeCoverageReconciliation() {
+export function computeCoverageReconciliation(activations = exteriorDefaultActivations()) {
   const ledger = computeLedgerClosure();
   const census = computeCensusClosure();
-  const promoted = computePromotedCoverage();
+  const promoted = computePromotedCoverage(activations);
 
   const violations = {
     missingSpatialCells: ledger.missingCells,
@@ -327,16 +361,67 @@ function stableStringify(value) {
   return `${JSON.stringify(value, null, 2)}\n`;
 }
 
+/**
+ * The CURATED composition, which is the one the committed record is ABOUT.
+ *
+ * Read off the live promotion records' `predecessor` chain rather than
+ * hand-typed, so a curated record edited underneath the T005 serving promotion
+ * still fails the check. This is the same set `goal-integration-reconciliation.test.mjs`
+ * passes; the two agree by construction rather than by two copies of a list.
+ */
+function curatedActivations() {
+  return exteriorDefaultActivations().flatMap((activation) =>
+    activation.enabled && activation.predecessor.enabled ? [activation.predecessor] : [],
+  );
+}
+
+/**
+ * The two fields that read the LIVE build rather than the activation set.
+ *
+ * `computePromotedCoverage` takes its caps from `EXTERIOR_RUNTIME_BUDGETS`, not
+ * from the records it is given, and T005 moved `maxCacheEntries` 512 -> 1,024.
+ * So even a curated recompute differs from the frozen record in that field and
+ * in the `cacheEntryHeadroom` derived from it. They are held apart and REPORTED
+ * rather than folded into the drift verdict, because a runtime cap is not part
+ * of the composition this record describes — and reporting them is what stops
+ * that from being a way to hide a change.
+ */
+function splitBudget(promoted) {
+  const rest = { ...promoted };
+  delete rest.maxCacheEntries;
+  delete rest.cacheEntryHeadroom;
+  return { rest, budget: { maxCacheEntries: promoted.maxCacheEntries, cacheEntryHeadroom: promoted.cacheEntryHeadroom } };
+}
+
 export function runCli(argv) {
   const outIndex = argv.indexOf("--out");
   const outPath = outIndex >= 0 ? resolve(argv[outIndex + 1]) : RECONCILIATION_RECORD_PATH;
   const check = argv.includes("--check");
-  const computed = computeCoverageReconciliation();
+  // DEFAULTS TO THE CURATED COMPOSITION, in both modes. The committed record is
+  // a Goal completion artifact describing the six curated releases, and T005
+  // promoted six `-s1` successors over them; recomputing against the live set by
+  // default made `--check` exit 1 by design and would have made the WRITE path
+  // silently replace a frozen artifact with a different composition. `--live`
+  // asks for the drifting comparison explicitly.
+  const live = argv.includes("--live");
+  const computed = computeCoverageReconciliation(live ? undefined : curatedActivations());
 
   if (check) {
     const committed = readJson(outPath);
-    const drift = stableStringify(computed) !== stableStringify(committed.coverage);
-    const result = { ok: !drift && computed.allZero, checkedPath: outPath, drift, allZero: computed.allZero, violations: computed.violations };
+    const mine = splitBudget(computed.promoted);
+    const theirs = splitBudget(committed.coverage.promoted);
+    const compositionDrift = stableStringify({ ...computed, promoted: mine.rest }) !== stableStringify({ ...committed.coverage, promoted: theirs.rest });
+    const runtimeBudgetDrift = stableStringify(mine.budget) !== stableStringify(theirs.budget);
+    const result = {
+      ok: !compositionDrift && computed.allZero,
+      checkedPath: outPath,
+      composition: live ? "live-promotion-set" : "curated-predecessor-set",
+      compositionDrift,
+      runtimeBudgetDrift,
+      runtimeBudget: runtimeBudgetDrift ? { committed: theirs.budget, live: mine.budget, note: "Read from EXTERIOR_RUNTIME_BUDGETS, not from the activation set. Reported, not gated: a runtime cap is not part of the composition this record describes." } : null,
+      allZero: computed.allZero,
+      violations: computed.violations,
+    };
     console.log(stableStringify(result));
     return result.ok ? 0 : 1;
   }

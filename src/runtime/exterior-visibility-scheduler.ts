@@ -40,7 +40,7 @@ export interface SchedulableUnit {
   readonly bounds: ViewportBounds;
   /** The explicit priority order. Replaces the incidental lexicographic id order. */
   readonly order: number;
-  /** Final deterministic tiebreak when two units share a band and an order. */
+  /** Final deterministic tiebreak when two units share a distance and an order. */
   readonly tieBreakKey: string;
 }
 
@@ -78,9 +78,15 @@ export interface SchedulerPolicy {
   readonly maxResidentUnits: number;
   /**
    * Ascending distance-band edges in metres, measured from the footprint ground
-   * centre to the nearest point of a unit's rectangle. Units inside the same
-   * band are ranked by `order`, so distance decides coarsely and the explicit
-   * order decides finely.
+   * centre to the nearest point of a unit's rectangle.
+   *
+   * Bands remain the COARSE key and keep their ADR 0041 anchoring, but they no
+   * longer decide the order inside a band: see `compareRanked`, where the
+   * measured distance is the tiebreak immediately below the band and above
+   * `order`. Because `bandIndexOf` is monotone in distance, ranking by
+   * (band, distance) is the SAME total order as ranking by distance alone — the
+   * band is retained because it is the unit ADR 0041's evidence is stated in,
+   * not because it changes the result.
    */
   readonly distanceBandEdgesMeters: readonly number[];
   /**
@@ -221,10 +227,58 @@ export const EXTERIOR_CELL_SCHEDULER_POLICY = {
  * whole promoted composition resident at once measures 484 entries and
  * 122,601,292 B, inside both. ADR 0042 states that plainly rather than implying
  * the caps are doing work they are not.
+ *
+ * ---------------------------------------------------------------------------
+ *
+ * ## `maxResidentUnits` FELL from 128 to 8 on 2026-08-17 (T005)
+ *
+ * Everything above is the arithmetic of a SPARSE composition and it is retained
+ * verbatim, because it is what this cap was until this commit and because the
+ * reason it had to move is precisely that the composition changed underneath it.
+ *
+ * The six `-s1` serving releases have content in ALL 883 census cells. The
+ * curated composition they replace had content in 13. That single fact inverts
+ * every term:
+ *
+ * - **The floor argument is gone.** 128's floor was ADR 0041's measured six-pool
+ *   overview residency of 110 CELLS. Under a sparse composition, holding 110
+ *   cells cost 210 cache entries, because almost none of those cells had
+ *   anything in them. Under a `-s1` composition every resident cell carries its
+ *   buildings, its evidence sidecar and its assembly manifest, and 110 resident
+ *   cells would be roughly 8,200 entries and several gigabytes. The floor was
+ *   never a statement about cells; it was a statement about cells that were
+ *   mostly empty.
+ * - **The binding constraint is bytes, and it binds at 8.** Measured over the
+ *   committed retention inventories at the worst reachable anchor,
+ *   `exterior-serving-residency.ts` puts a cap of 8 at 247,000,877 B — 92.0% of
+ *   the unchanged 256 MiB byte cap — and a cap of 16 at 441,016,698 B, which is
+ *   164% of it. 8 is not a round number chosen for tidiness: it is the LARGEST
+ *   cap the unchanged byte ceiling admits.
+ * - **D-4 is what makes 8 usable at all.** At a cap this tight the truncation
+ *   falls deep inside one distance band, which is exactly where ranking by the
+ *   census `order` carried no information about where the camera was. Admitting
+ *   the NEAREST 8 is a different set from admitting the lowest-numbered 8, and
+ *   at 883 dense cells the difference is the whole scene.
+ *
+ * ## What this costs, stated rather than absorbed
+ *
+ * A session may now hold 8 cells where it could hold 128. The three frozen
+ * traces replay to smaller re-entry and eviction counts at this cap, and those
+ * falls are ARITHMETIC AND NOT AN IMPROVEMENT: a session that may hold 8 cells
+ * cannot evict 128 and cannot re-enter what it never held. What they do
+ * establish is that the cap BINDS on every path — peak resident is exactly 8
+ * everywhere, where the street pan never reached 128 — and that eviction remains
+ * routine rather than rare. `exterior-cache-governance-gate.test.ts` carries
+ * both readings side by side.
+ *
+ * This constant and `EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries` moved in ONE
+ * commit, together with the promotion records they were sized for. ADR 0052 §3
+ * gives the reason and the rollback contract: neither constant has a predecessor
+ * record, so reverting the promotion commit is the rollback.
  */
 export const EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY = {
   ...EXTERIOR_CELL_SCHEDULER_POLICY,
-  maxResidentUnits: 128,
+  maxResidentUnits: 8,
 } as const;
 
 export const EMPTY_SCHEDULER_CARRY: SchedulerCarry = {
@@ -272,11 +326,52 @@ interface RankedUnit {
   readonly unit: SchedulableUnit;
   readonly tier: number;
   readonly band: number;
+  /** Nearest-point distance in the census planar metric; the D-4 rank key. */
+  readonly distanceMeters: number;
 }
 
+/**
+ * Rank order: tier, band, DISTANCE, explicit order, tie-break key, id.
+ *
+ * ## The defect this closes (T005, D-4)
+ *
+ * `distanceMeters` used to be absent and `order` decided everything inside a
+ * band. `order` is the ledger's canonical cell order — a stable enumeration of
+ * the island, not a statement about where the camera is — so when the cap binds
+ * inside a single band the admitted set was "the lowest-numbered cells that
+ * happen to be within 1.2 km", not "the nearest cells". The band edges are
+ * 1,200 m and 2,400 m and an ownership cell is a few hundred metres across, so
+ * band 0 routinely holds dozens of cells: at a tight cap the truncation fell
+ * almost entirely inside one band, where the old key carried no distance
+ * information at all.
+ *
+ * Adding the measured distance below the band is provably the same total order
+ * as ranking by distance alone, because `bandIndexOf` is monotone in distance:
+ * if two units are in different bands the nearer one is already ranked first,
+ * and if they share a band the distance now decides. The band therefore keeps
+ * its ADR 0041 meaning and its evidence, and stops being load-bearing for the
+ * outcome.
+ *
+ * ## Why this is a no-op at the shipped cap and not at a serving cap
+ *
+ * MEASURED, over the 883-cell census at the 13 content-bearing cells of the
+ * promoted composition plus the two ADR 0041 cameras: at
+ * `maxResidentUnits: 128` every one of those fifteen cameras admits the
+ * IDENTICAL set under both rankings, because the cap binds at only one of them
+ * and binds there on a set the two orders agree about. At a serving cap of 8 the
+ * same cameras diverge sharply — the four-cell w03 cluster goes from 2 to 4
+ * content-bearing cells resident, and street cameras from 1 to 2 — which is why
+ * this lands as its own change, ahead of and separate from any cap movement.
+ *
+ * `order` remains below distance rather than being deleted: two rectangles can
+ * be exactly equidistant from a ground point, and a float comparison that fell
+ * straight through to `tieBreakKey` would make the decision depend on the census
+ * row order for those pairs. Determinism is unchanged.
+ */
 function compareRanked(left: RankedUnit, right: RankedUnit): number {
   if (left.tier !== right.tier) return left.tier - right.tier;
   if (left.band !== right.band) return left.band - right.band;
+  if (left.distanceMeters !== right.distanceMeters) return left.distanceMeters - right.distanceMeters;
   if (left.unit.order !== right.unit.order) return left.unit.order - right.unit.order;
   if (left.unit.tieBreakKey !== right.unit.tieBreakKey) return left.unit.tieBreakKey < right.unit.tieBreakKey ? -1 : 1;
   return left.unit.unitId < right.unit.unitId ? -1 : left.unit.unitId > right.unit.unitId ? 1 : 0;
@@ -308,14 +403,24 @@ function canonicalOrder(ids: Iterable<string>, byId: ReadonlyMap<string, Schedul
  *
  *   1. **Camera reservation.** Every unit whose rectangle contains the camera
  *      ground point is resident, unconditionally, ahead of everything else and
- *      exempt from the cap. This is the T009 F2 lesson restated for cells: the
+ *      exempt from TRUNCATION — not from the cap. Reserved units are counted
+ *      against `maxResidentUnits` (`budget = max(0, cap - reserved.length)`), so
+ *      they cannot be cut by the distance-ranked slice but they do consume
+ *      slots, and enough of them drive the contested budget to zero. The looser
+ *      phrasing this replaced ("exempt from the cap") read as though residency
+ *      could exceed the cap, which it cannot except through the
+ *      `max(cap, reserved.length)` floor the trace bound already states.
+ *      This is the T009 F2 lesson restated for cells: the
  *      shard the camera was standing on fell outside a distance-ranked cut and a
  *      street-level view rendered nothing. Overlapping units mean there can be
  *      several, and all of them are reserved.
  *   2. **Footprint intersection**, on each unit's `bounds`.
- *   3. **Distance band**, nearest-point distance from the footprint ground centre.
- *   4. **Explicit order**, then `tieBreakKey`, then id. Input array order is
- *      never consulted, so a shuffled input yields an identical decision.
+ *   3. **Distance band**, then the **measured nearest-point distance** itself,
+ *      both from the footprint ground centre. The distance term is the T005 D-4
+ *      fix; `compareRanked` carries the reasoning and the measurement.
+ *   4. **Explicit order**, then `tieBreakKey`, then id — reached only by units
+ *      that are exactly equidistant. Input array order is never consulted, so a
+ *      shuffled input yields an identical decision.
  *   5. **Hysteresis**, then the cap. A unit that has left the footprint stays
  *      resident for `hysteresisDecisions` further decisions, at lower priority
  *      than anything visible. There is NO behind-camera prefetch in this cycle;
@@ -360,19 +465,19 @@ export function selectResidentUnits(units: readonly SchedulableUnit[], view: Sch
     const distance = unitDistanceMeters(unit.bounds, view.footprint.groundCenter.longitude, view.footprint.groundCenter.latitude, policy);
     const band = bandIndexOf(distance, policy.distanceBandEdgesMeters);
     if (boundsContain(unit.bounds, view.camera.longitude, view.camera.latitude)) {
-      reserved.push({ unit, tier: 0, band });
+      reserved.push({ unit, tier: 0, band, distanceMeters: distance });
       remainingAfter.set(unit.unitId, policy.hysteresisDecisions);
       continue;
     }
     if (viewportBoundsIntersect(unit.bounds, view.footprint.bounds) && (maxUnitDistanceMeters === null || distance <= maxUnitDistanceMeters)) {
-      visible.push({ unit, tier: 1, band });
+      visible.push({ unit, tier: 1, band, distanceMeters: distance });
       remainingAfter.set(unit.unitId, policy.hysteresisDecisions);
       continue;
     }
     if (!previousSet.has(unit.unitId)) continue;
     const remaining = (previousRetained.get(unit.unitId) ?? policy.hysteresisDecisions) - 1;
     if (remaining <= 0) continue;
-    retained.push({ unit, tier: 2, band });
+    retained.push({ unit, tier: 2, band, distanceMeters: distance });
     remainingAfter.set(unit.unitId, remaining);
   }
 

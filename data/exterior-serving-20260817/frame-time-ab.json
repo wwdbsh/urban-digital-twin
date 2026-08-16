@@ -1,0 +1,619 @@
+{
+  "schemaVersion": "1.0",
+  "artifact": "serving-frame-time-ab",
+  "form": "cross-build",
+  "composedAt": "2026-08-16T10:25:55.986Z",
+  "arms": {
+    "promotedDefault": {
+      "buildLabel": "pre-promotion-062b6b7",
+      "capturedAt": "2026-08-16T09:00:41.756Z",
+      "browser": "Chrome/151.0.7922.138",
+      "base": "http://localhost:4191/",
+      "releaseSelector": "default",
+      "caps": {
+        "maxCacheEntries": 512,
+        "maxCachedBytes": 268435456,
+        "maxConcurrentRequests": 4
+      },
+      "residencyCap": 128,
+      "poses": [
+        {
+          "poseId": "overview-2400m-anchor",
+          "residentAssetCount": 54,
+          "decodedTextureCount": 1,
+          "textureRequestCount": 1,
+          "sharedClassTextureCount": 0,
+          "sharedClassTextureRequestCount": 0,
+          "decision": {
+            "hold": "none",
+            "visibleCount": 298,
+            "deferredCount": 170,
+            "retainedCount": 0,
+            "residentCount": 128,
+            "reserved": [
+              "manhattan-exterior-cell-w00-000000-block-00835",
+              "manhattan-exterior-cell-w01-000031-17-38598-35863"
+            ],
+            "decisionIndex": 8,
+            "footprintSignature": "-73.990342:40.745759:-73.931918:40.790196:-73.961130:40.767978",
+            "heightBucket": 2400
+          },
+          "metrics": {
+            "cacheEntries": 54,
+            "cachedBytes": 16280156,
+            "cacheEvictions": 0,
+            "maxCacheEntries": 512,
+            "maxCachedBytes": 268435456,
+            "activeRequests": 0,
+            "maxConcurrentRequests": 4,
+            "peakConcurrentRequests": 4,
+            "requestedArtifactCount": 14,
+            "loadedArtifactCount": 14,
+            "failedArtifactCount": 0,
+            "fallbackCellCount": 0,
+            "failedCellCount": 0,
+            "notShippedCellCount": 0,
+            "scheduledCellCount": 1,
+            "deferredCellCount": 0,
+            "releasedArtifactCount": 0,
+            "releasedArtifactBytes": 0
+          },
+          "frameSampleCount": 720,
+          "frameMsHead": [
+            8.3,
+            8.4,
+            8.3,
+            8.3,
+            8.3,
+            8.4,
+            8.4,
+            8.3
+          ]
+        },
+        {
+          "poseId": "transition-1200m-anchor",
+          "residentAssetCount": 54,
+          "decodedTextureCount": 1,
+          "textureRequestCount": 1,
+          "sharedClassTextureCount": 0,
+          "sharedClassTextureRequestCount": 0,
+          "decision": {
+            "hold": "none",
+            "visibleCount": 141,
+            "deferredCount": 53,
+            "retainedCount": 0,
+            "residentCount": 128,
+            "reserved": [
+              "manhattan-exterior-cell-w00-000000-block-00835",
+              "manhattan-exterior-cell-w01-000031-17-38598-35863"
+            ],
+            "decisionIndex": 10,
+            "footprintSignature": "-73.987534:40.747889:-73.953469:40.773801:-73.970501:40.760845",
+            "heightBucket": 1200
+          },
+          "metrics": {
+            "cacheEntries": 54,
+            "cachedBytes": 16280156,
+            "cacheEvictions": 0,
+            "maxCacheEntries": 512,
+            "maxCachedBytes": 268435456,
+            "activeRequests": 0,
+            "maxConcurrentRequests": 4,
+            "peakConcurrentRequests": 4,
+            "requestedArtifactCount": 14,
+            "loadedArtifactCount": 14,
+            "failedArtifactCount": 0,
+            "fallbackCellCount": 0,
+            "failedCellCount": 0,
+            "notShippedCellCount": 0,
+            "scheduledCellCount": 1,
+            "deferredCellCount": 0,
+            "releasedArtifactCount": 0,
+            "releasedArtifactBytes": 0
+          },
+          "frameSampleCount": 720,
+          "frameMsHead": [
+            8.4,
+            8.3,
+            8.3,
+            8.4,
+            8.3,
+            8.4,
+            8.3,
+            8.3
+          ]
+        },
+        {
+          "poseId": "street-260m-midtown",
+          "residentAssetCount": 54,
+          "decodedTextureCount": 1,
+          "textureRequestCount": 1,
+          "sharedClassTextureCount": 0,
+          "sharedClassTextureRequestCount": 0,
+          "decision": {
+            "hold": "none",
+            "visibleCount": 12,
+            "deferredCount": 1,
+            "retainedCount": 116,
+            "residentCount": 128,
+            "reserved": [
+              "manhattan-exterior-cell-w00-000000-block-00835",
+              "manhattan-exterior-cell-w01-000031-17-38598-35863"
+            ],
+            "decisionIndex": 12,
+            "footprintSignature": "-73.985808:40.749197:-73.980360:40.752675:-73.983084:40.750936",
+            "heightBucket": 300
+          },
+          "metrics": {
+            "cacheEntries": 54,
+            "cachedBytes": 16280156,
+            "cacheEvictions": 0,
+            "maxCacheEntries": 512,
+            "maxCachedBytes": 268435456,
+            "activeRequests": 0,
+            "maxConcurrentRequests": 4,
+            "peakConcurrentRequests": 4,
+            "requestedArtifactCount": 14,
+            "loadedArtifactCount": 14,
+            "failedArtifactCount": 0,
+            "fallbackCellCount": 0,
+            "failedCellCount": 0,
+            "notShippedCellCount": 0,
+            "scheduledCellCount": 1,
+            "deferredCellCount": 0,
+            "releasedArtifactCount": 0,
+            "releasedArtifactBytes": 0
+          },
+          "frameSampleCount": 720,
+          "frameMsHead": [
+            8.4,
+            8.4,
+            8.3,
+            8.3,
+            8.4,
+            8.3,
+            8.3,
+            8.3
+          ]
+        },
+        {
+          "poseId": "street-260m-w02-lower",
+          "residentAssetCount": 54,
+          "decodedTextureCount": 1,
+          "textureRequestCount": 1,
+          "sharedClassTextureCount": 0,
+          "sharedClassTextureRequestCount": 0,
+          "decision": {
+            "hold": "none",
+            "visibleCount": 5,
+            "deferredCount": 5,
+            "retainedCount": 123,
+            "residentCount": 128,
+            "reserved": [
+              "manhattan-exterior-cell-w02-000163-16-19295-17946",
+              "manhattan-exterior-cell-w02-000166-16-19295-17947"
+            ],
+            "decisionIndex": 13,
+            "footprintSignature": "-74.008449:40.707322:-74.003000:40.710800:-74.005724:40.709061",
+            "heightBucket": 300
+          },
+          "metrics": {
+            "cacheEntries": 54,
+            "cachedBytes": 16280156,
+            "cacheEvictions": 0,
+            "maxCacheEntries": 512,
+            "maxCachedBytes": 268435456,
+            "activeRequests": 0,
+            "maxConcurrentRequests": 4,
+            "peakConcurrentRequests": 4,
+            "requestedArtifactCount": 14,
+            "loadedArtifactCount": 14,
+            "failedArtifactCount": 0,
+            "fallbackCellCount": 0,
+            "failedCellCount": 0,
+            "notShippedCellCount": 0,
+            "scheduledCellCount": 1,
+            "deferredCellCount": 0,
+            "releasedArtifactCount": 0,
+            "releasedArtifactBytes": 0
+          },
+          "frameSampleCount": 721,
+          "frameMsHead": [
+            8.4,
+            8.3,
+            8.4,
+            8.3,
+            8.3,
+            8.4,
+            8.3,
+            8.3
+          ]
+        }
+      ],
+      "landings": [
+        {
+          "poseId": "overview-2400m-anchor",
+          "dispatchCount": 1,
+          "footprintSignature": "-73.990342:40.745759:-73.931918:40.790196:-73.961130:40.767978"
+        },
+        {
+          "poseId": "transition-1200m-anchor",
+          "dispatchCount": 1,
+          "footprintSignature": "-73.987534:40.747889:-73.953469:40.773801:-73.970501:40.760845"
+        },
+        {
+          "poseId": "street-260m-midtown",
+          "dispatchCount": 1,
+          "footprintSignature": "-73.985808:40.749197:-73.980360:40.752675:-73.983084:40.750936"
+        },
+        {
+          "poseId": "street-260m-w02-lower",
+          "dispatchCount": 1,
+          "footprintSignature": "-74.008449:40.707322:-74.003000:40.710800:-74.005724:40.709061"
+        }
+      ],
+      "externalHosts": []
+    },
+    "servingWave": {
+      "buildLabel": "promoted-d8a9a16",
+      "capturedAt": "2026-08-16T10:25:48.840Z",
+      "browser": "Chrome/151.0.7922.138",
+      "base": "http://localhost:4193/",
+      "releaseSelector": "?exteriorCells=manhattan-lower-manhattan-cells-20260812-s1",
+      "caps": {
+        "maxCacheEntries": 1024,
+        "maxCachedBytes": 268435456,
+        "maxConcurrentRequests": 4
+      },
+      "residencyCap": 8,
+      "poses": [
+        {
+          "poseId": "overview-2400m-anchor",
+          "residentAssetCount": 12,
+          "decodedTextureCount": 5,
+          "textureRequestCount": 5,
+          "sharedClassTextureCount": 4,
+          "sharedClassTextureRequestCount": 4,
+          "decision": {
+            "hold": "none",
+            "visibleCount": 298,
+            "deferredCount": 290,
+            "retainedCount": 0,
+            "residentCount": 8,
+            "reserved": [
+              "manhattan-exterior-cell-w00-000000-block-00835",
+              "manhattan-exterior-cell-w01-000031-17-38598-35863"
+            ],
+            "decisionIndex": 5,
+            "footprintSignature": "-73.990342:40.745759:-73.931918:40.790196:-73.961130:40.767978",
+            "heightBucket": 2400
+          },
+          "metrics": {
+            "cacheEntries": 12,
+            "cachedBytes": 3042752,
+            "cacheEvictions": 0,
+            "maxCacheEntries": 1024,
+            "maxCachedBytes": 268435456,
+            "activeRequests": 0,
+            "maxConcurrentRequests": 4,
+            "peakConcurrentRequests": 4,
+            "requestedArtifactCount": 0,
+            "loadedArtifactCount": 0,
+            "failedArtifactCount": 0,
+            "fallbackCellCount": 0,
+            "failedCellCount": 0,
+            "notShippedCellCount": 0,
+            "scheduledCellCount": 0,
+            "deferredCellCount": 126,
+            "releasedArtifactCount": 0,
+            "releasedArtifactBytes": 0
+          },
+          "frameSampleCount": 720,
+          "frameMsHead": [
+            8.1,
+            8.4,
+            8.3,
+            8.4,
+            8.3,
+            8.3,
+            8.4,
+            8.3
+          ]
+        },
+        {
+          "poseId": "transition-1200m-anchor",
+          "residentAssetCount": 12,
+          "decodedTextureCount": 5,
+          "textureRequestCount": 5,
+          "sharedClassTextureCount": 4,
+          "sharedClassTextureRequestCount": 4,
+          "decision": {
+            "hold": "none",
+            "visibleCount": 141,
+            "deferredCount": 133,
+            "retainedCount": 0,
+            "residentCount": 8,
+            "reserved": [
+              "manhattan-exterior-cell-w00-000000-block-00835",
+              "manhattan-exterior-cell-w01-000031-17-38598-35863"
+            ],
+            "decisionIndex": 7,
+            "footprintSignature": "-73.987534:40.747889:-73.953469:40.773801:-73.970501:40.760845",
+            "heightBucket": 1200
+          },
+          "metrics": {
+            "cacheEntries": 12,
+            "cachedBytes": 3042752,
+            "cacheEvictions": 0,
+            "maxCacheEntries": 1024,
+            "maxCachedBytes": 268435456,
+            "activeRequests": 0,
+            "maxConcurrentRequests": 4,
+            "peakConcurrentRequests": 4,
+            "requestedArtifactCount": 0,
+            "loadedArtifactCount": 0,
+            "failedArtifactCount": 0,
+            "fallbackCellCount": 0,
+            "failedCellCount": 0,
+            "notShippedCellCount": 0,
+            "scheduledCellCount": 0,
+            "deferredCellCount": 126,
+            "releasedArtifactCount": 0,
+            "releasedArtifactBytes": 0
+          },
+          "frameSampleCount": 720,
+          "frameMsHead": [
+            8.3,
+            8.4,
+            8.3,
+            8.3,
+            8.4,
+            8.3,
+            8.3,
+            8.3
+          ]
+        },
+        {
+          "poseId": "street-260m-midtown",
+          "residentAssetCount": 12,
+          "decodedTextureCount": 5,
+          "textureRequestCount": 5,
+          "sharedClassTextureCount": 4,
+          "sharedClassTextureRequestCount": 4,
+          "decision": {
+            "hold": "none",
+            "visibleCount": 12,
+            "deferredCount": 10,
+            "retainedCount": 0,
+            "residentCount": 8,
+            "reserved": [
+              "manhattan-exterior-cell-w00-000000-block-00835",
+              "manhattan-exterior-cell-w01-000031-17-38598-35863"
+            ],
+            "decisionIndex": 9,
+            "footprintSignature": "-73.985808:40.749197:-73.980360:40.752675:-73.983084:40.750936",
+            "heightBucket": 300
+          },
+          "metrics": {
+            "cacheEntries": 12,
+            "cachedBytes": 3042752,
+            "cacheEvictions": 0,
+            "maxCacheEntries": 1024,
+            "maxCachedBytes": 268435456,
+            "activeRequests": 0,
+            "maxConcurrentRequests": 4,
+            "peakConcurrentRequests": 4,
+            "requestedArtifactCount": 0,
+            "loadedArtifactCount": 0,
+            "failedArtifactCount": 0,
+            "fallbackCellCount": 0,
+            "failedCellCount": 0,
+            "notShippedCellCount": 0,
+            "scheduledCellCount": 0,
+            "deferredCellCount": 126,
+            "releasedArtifactCount": 0,
+            "releasedArtifactBytes": 0
+          },
+          "frameSampleCount": 720,
+          "frameMsHead": [
+            8.3,
+            8.4,
+            8.3,
+            8.3,
+            8.4,
+            7.1,
+            9.8,
+            8
+          ]
+        },
+        {
+          "poseId": "street-260m-w02-lower",
+          "residentAssetCount": 371,
+          "decodedTextureCount": 5,
+          "textureRequestCount": 5,
+          "sharedClassTextureCount": 4,
+          "sharedClassTextureRequestCount": 4,
+          "decision": {
+            "hold": "none",
+            "visibleCount": 5,
+            "deferredCount": 5,
+            "retainedCount": 3,
+            "residentCount": 8,
+            "reserved": [
+              "manhattan-exterior-cell-w02-000163-16-19295-17946",
+              "manhattan-exterior-cell-w02-000166-16-19295-17947"
+            ],
+            "decisionIndex": 10,
+            "footprintSignature": "-74.008449:40.707322:-74.003000:40.710800:-74.005724:40.709061",
+            "heightBucket": 300
+          },
+          "metrics": {
+            "cacheEntries": 371,
+            "cachedBytes": 99941339,
+            "cacheEvictions": 0,
+            "maxCacheEntries": 1024,
+            "maxCachedBytes": 268435456,
+            "activeRequests": 0,
+            "maxConcurrentRequests": 4,
+            "peakConcurrentRequests": 4,
+            "requestedArtifactCount": 359,
+            "loadedArtifactCount": 359,
+            "failedArtifactCount": 0,
+            "fallbackCellCount": 0,
+            "failedCellCount": 0,
+            "notShippedCellCount": 0,
+            "scheduledCellCount": 5,
+            "deferredCellCount": 121,
+            "releasedArtifactCount": 0,
+            "releasedArtifactBytes": 0
+          },
+          "frameSampleCount": 720,
+          "frameMsHead": [
+            8.3,
+            8.4,
+            8.4,
+            8.2,
+            6.9,
+            9.1,
+            7.9,
+            8.3
+          ]
+        }
+      ],
+      "landings": [
+        {
+          "poseId": "overview-2400m-anchor",
+          "dispatchCount": 1,
+          "footprintSignature": "-73.990342:40.745759:-73.931918:40.790196:-73.961130:40.767978"
+        },
+        {
+          "poseId": "transition-1200m-anchor",
+          "dispatchCount": 1,
+          "footprintSignature": "-73.987534:40.747889:-73.953469:40.773801:-73.970501:40.760845"
+        },
+        {
+          "poseId": "street-260m-midtown",
+          "dispatchCount": 1,
+          "footprintSignature": "-73.985808:40.749197:-73.980360:40.752675:-73.983084:40.750936"
+        },
+        {
+          "poseId": "street-260m-w02-lower",
+          "dispatchCount": 1,
+          "footprintSignature": "-74.008449:40.707322:-74.003000:40.710800:-74.005724:40.709061"
+        }
+      ],
+      "externalHosts": []
+    }
+  },
+  "viewport": {
+    "width": 1440,
+    "height": 900,
+    "deviceScaleFactor": 1
+  },
+  "verdict": {
+    "bar": {
+      "minimumFrameSamples": 120,
+      "p95RelativeTolerance": 0.2,
+      "p95AbsoluteToleranceMs": 4,
+      "p50RelativeTolerance": 0.2,
+      "p50AbsoluteToleranceMs": 2,
+      "maximumDecodedTextures": 4
+    },
+    "poses": [
+      {
+        "poseId": "overview-2400m-anchor",
+        "sampleCountA": 720,
+        "sampleCountB": 720,
+        "p50A": 8.299999999999272,
+        "p50B": 8.299999999999272,
+        "p95A": 8.400000000001455,
+        "p95B": 8.400000000001455,
+        "residentAssetCountA": 54,
+        "residentAssetCountB": 12,
+        "residentAssetsEqual": false,
+        "decodedTextureCountA": 1,
+        "decodedTextureCountB": 5,
+        "admittedP50Ms": 2,
+        "admittedP95Ms": 4,
+        "measurable": true,
+        "unmeasurableReason": null,
+        "p50Pass": true,
+        "p95Pass": true,
+        "decodedTexturePass": false,
+        "pass": false
+      },
+      {
+        "poseId": "transition-1200m-anchor",
+        "sampleCountA": 720,
+        "sampleCountB": 720,
+        "p50A": 8.30000000000291,
+        "p50B": 8.30000000000291,
+        "p95A": 8.400000000001455,
+        "p95B": 9.400000000001455,
+        "residentAssetCountA": 54,
+        "residentAssetCountB": 12,
+        "residentAssetsEqual": false,
+        "decodedTextureCountA": 1,
+        "decodedTextureCountB": 5,
+        "admittedP50Ms": 2,
+        "admittedP95Ms": 4,
+        "measurable": true,
+        "unmeasurableReason": null,
+        "p50Pass": true,
+        "p95Pass": true,
+        "decodedTexturePass": false,
+        "pass": false
+      },
+      {
+        "poseId": "street-260m-midtown",
+        "sampleCountA": 720,
+        "sampleCountB": 720,
+        "p50A": 8.30000000000291,
+        "p50B": 8.30000000000291,
+        "p95A": 8.400000000008731,
+        "p95B": 8.60000000000582,
+        "residentAssetCountA": 54,
+        "residentAssetCountB": 12,
+        "residentAssetsEqual": false,
+        "decodedTextureCountA": 1,
+        "decodedTextureCountB": 5,
+        "admittedP50Ms": 2,
+        "admittedP95Ms": 4,
+        "measurable": true,
+        "unmeasurableReason": null,
+        "p50Pass": true,
+        "p95Pass": true,
+        "decodedTexturePass": false,
+        "pass": false
+      },
+      {
+        "poseId": "street-260m-w02-lower",
+        "sampleCountA": 721,
+        "sampleCountB": 720,
+        "p50A": 8.30000000000291,
+        "p50B": 8.30000000000291,
+        "p95A": 9,
+        "p95B": 8.400000000008731,
+        "residentAssetCountA": 54,
+        "residentAssetCountB": 371,
+        "residentAssetsEqual": false,
+        "decodedTextureCountA": 1,
+        "decodedTextureCountB": 5,
+        "admittedP50Ms": 2,
+        "admittedP95Ms": 4,
+        "measurable": true,
+        "unmeasurableReason": null,
+        "p50Pass": true,
+        "p95Pass": true,
+        "decodedTexturePass": false,
+        "pass": false
+      }
+    ],
+    "measurablePoseCount": 4,
+    "likeForLikePoseCount": 0,
+    "pass": false,
+    "statement": "A NON-REGRESSION bar, not an equality. The serving arm renders far more geometry than the promoted default at the same camera, so equal frame times would be surprising rather than reassuring; what is under test is that the serving SHAPE — per-cell assembly fetch, per-cell evidence sidecar, larger cache, denser residency — costs no more than the stated tolerance. Resident asset counts are reported per arm and per pose; poses where they differ are still readings, but they are not like-for-like comparisons and the record says which is which. A pose where the serving arm renders nothing is refused as a measurement, because an empty scene is fast for the wrong reason."
+  },
+  "formDisclosure": "CROSS-BUILD, and stated as the first fact about this record rather than buried in it. The pre-registered bar names arm A at the caps the pre-promotion build shipped and arm B at the caps ADR 0052 §3 sizes for a dense composition; those are compiled constants, so the two arms cannot exist in one binary and were captured against two builds, one per arm, on the same machine at the same four poses in the same order. The two builds are named in `arms.*.buildLabel` and their compiled caps are carried beside their numbers. What this costs is that the arms did not share a browser process: each ran its own scratch Chrome, so a machine-state difference between the two runs is not controlled for and is a real limitation of this reading.",
+  "claim": "The pre-registered non-regression bar of ADR 0052, evaluated by exteriorServingFrameVerdict, which was committed before this instrument could produce a number. Passing it is a frame-time statement about the serving SHAPE at these four poses on this machine. It is not visual, architectural or geographic acceptance, and it is not a claim about any pose, machine or composition not listed here."
+}

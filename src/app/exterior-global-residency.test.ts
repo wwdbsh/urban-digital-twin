@@ -362,7 +362,15 @@ describe("the App cell-loading effect under one global decision", () => {
     // The pre-fix placement, replayed by the same code. It reads a partially
     // applied decision hundreds of times per session.
     const midLoop = await replayEffect("mid-loop", { assertInvariants: false });
-    expect(midLoop.partiallyAppliedReleasePasses).toBe(238);
+    // 238 before the T005 D-4 ranking, 243 after it, 248 at the T005 serving
+    // cap of 8. The count is the number of times the pre-fix placement reads a
+    // partially applied decision, so it tracks how many decisions have a
+    // non-empty per-wave load at all — and a tighter residency cap means the
+    // admitted set turns over on more decisions, so more of them load something.
+    // It is re-derived at each configuration rather than relaxed, and it is
+    // deliberately NOT the thing this test is about: the structural assertions
+    // above are, and they are unchanged at 0 and [].
+    expect(midLoop.partiallyAppliedReleasePasses).toBe(248);
 
     // HONEST LIMIT, stated rather than papered over: on THIS trace the mid-loop
     // placement produces no observed symptom, because the retirement pass at
@@ -383,14 +391,29 @@ describe("the App cell-loading effect under one global decision", () => {
    * CURRENT decision, which genuinely does not want the cell; the next decision
    * may re-admit it. No placement of the release pass can consult a decision
    * that has not been taken, so this is not fixable by ordering and is not
-   * fixed. Over 58 real camera samples it costs 2 refetches, which at ADR
-   * 0042's measured p50 is about 44 ms of localhost transport.
+   * fixed.
+   *
+   * It cost 2 before the T005 D-4 ranking, 1 after it, and 0 on this trace at
+   * the T005 serving cap of 8. ZERO IS NOT A FIX AND IS NOT CLAIMED AS ONE: the
+   * race is structural and still unfixable by ordering. What changed is the
+   * opportunity for it — a cell has to be admitted, settle late, be dropped, and
+   * be re-admitted, and a cap of 8 admits so much less of the island per
+   * decision that this trace never produces the sequence.
+   *
+   * So the assertion is written as a BOUND rather than as an equality: at most
+   * one on this trace, and a vanishing fraction of the session's releases. An
+   * equality on 0 would turn a trace-dependent absence into a claimed property
+   * and would fail the moment a different trace produced the race that is still
+   * there.
    */
   it("pays a bounded refetch for loads that settle between two decisions", async () => {
     const shipped = await replayEffect("after-loop", { assertInvariants: false });
-    expect(shipped.releasedWhileSettlingThenRequested).toHaveLength(2);
+    expect(shipped.releasedWhileSettlingThenRequested.length).toBeLessThanOrEqual(1);
     // Small against the session's total release volume rather than merely small.
     expect(shipped.releasedWhileSettlingThenRequested.length / shipped.releasedKeys).toBeLessThan(0.01);
+    // The replay really did release a substantial number of keys, so the ratio
+    // above is a measurement rather than a division by almost nothing.
+    expect(shipped.releasedKeys).toBeGreaterThan(100);
   });
 
   /**

@@ -1,5 +1,10 @@
 /**
- * Drift gate for the ACTIVE Central-and-upper-Manhattan promotion record.
+ * Drift gate for the Central-and-upper-Manhattan P1 curated promotion record.
+ *
+ * The P1 curated release is no longer the promoted default: T005 promoted this
+ * wave's `-s1` serving release, which carries the P1 record as its
+ * `predecessor`. This gate is retained over that curated record, unchanged in
+ * what it checks.
  *
  * This test is NEVER skipped. Every value it checks is recomputed from the
  * committed `data/central-upper-manhattan-20260812-p1/payload-inventory.json`,
@@ -19,10 +24,10 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   CENTRAL_UPPER_MANHATTAN_BASE_ONLY_PREDECESSOR,
-  CENTRAL_UPPER_MANHATTAN_EXTERIOR_ACTIVATION,
   CENTRAL_UPPER_MANHATTAN_MEMBERSHIP_BUILDING_IDS,
+  CENTRAL_UPPER_MANHATTAN_P1_EXTERIOR_ACTIVATION,
   EXTERIOR_DEFAULT_ACTIVATIONS,
-  SOUTHERN_REMAINDER_EXTERIOR_ACTIVATION,
+  SOUTHERN_REMAINDER_P1_EXTERIOR_ACTIVATION,
   exteriorAcceptedCellsDigest,
   exteriorRolledBackReleaseNotice,
   exteriorUnavailableDetail,
@@ -77,6 +82,9 @@ interface PayloadInventory {
 
 const RELEASE_ID = "manhattan-central-upper-manhattan-cells-20260812-p1";
 const CANARY_RELEASE_ID = "manhattan-central-upper-manhattan-cells-20260812";
+/** The T005 serving releases the fifth and fourth promotion slots now hold. */
+const SERVING_RELEASE_ID = "manhattan-central-upper-manhattan-cells-20260812-s1";
+const SOUTHERN_REMAINDER_SERVING_RELEASE_ID = "manhattan-southern-remainder-cells-20260812-s1";
 const INVENTORY_PATH = "data/central-upper-manhattan-20260812-p1/payload-inventory.json";
 const CANARY_INVENTORY_PATH = "data/central-upper-manhattan-20260812/payload-inventory.json";
 const LEDGER_PATH = "data/normalized/manhattan-exterior-wave-ledger-20260804/ledger.json";
@@ -86,7 +94,7 @@ const MIDTOWN_NEIGHBOUR_CELL_ID = "manhattan-exterior-cell-w01-000106-15-9650-89
 
 const inventoryText = new TextDecoder().decode(readFileSync(INVENTORY_PATH));
 const inventory = JSON.parse(inventoryText) as PayloadInventory;
-const RECORD = CENTRAL_UPPER_MANHATTAN_EXTERIOR_ACTIVATION.enabled ? CENTRAL_UPPER_MANHATTAN_EXTERIOR_ACTIVATION : null;
+const RECORD = CENTRAL_UPPER_MANHATTAN_P1_EXTERIOR_ACTIVATION.enabled ? CENTRAL_UPPER_MANHATTAN_P1_EXTERIOR_ACTIVATION : null;
 
 const CELL_RELEASE_PREFIX = `public/cell-release/cell-release-${RELEASE_ID}-`;
 const ASSET_PATTERN = /^public\/assets\/(doitt-\d+)__lod_\d+\.glb$/;
@@ -116,7 +124,7 @@ function buildingIdsFrom(files: InventoryFile[]): string[] {
 }
 
 describe("Central-and-upper-Manhattan promotion record versus the committed payload inventory", () => {
-  it("is enabled, is the fifth record, and names the successor rather than the canary", () => {
+  it("is enabled, is the fifth slot's predecessor, and names the successor rather than the canary", () => {
     expect(RECORD).not.toBeNull();
     expect(RECORD!.releaseId).toBe(inventory.releaseId);
     expect(RECORD!.releaseId).toBe(RELEASE_ID);
@@ -124,14 +132,24 @@ describe("Central-and-upper-Manhattan promotion record versus the committed payl
     expect(RECORD!.approvalRef).toBe("Issue #21 gate approval 2026-08-12 (T020 Central-and-upper-Manhattan curated promotion)");
     expect(RECORD!.rolledBackReleaseId ?? null).toBeNull();
     // Its POSITION is what this record owns, not the length of the set: T022
-    // promoted a sixth wave and appended it, so the assertion that stays true of
-    // this record is that it is still the fifth and still the same object. Same
-    // correction the southern-remainder gate took at T020, for the same reason.
+    // promoted a sixth wave and appended it, and T005 promoted this wave's
+    // serving release into the same fifth slot with this record as its
+    // predecessor. So the assertion that stays true of this record is that the
+    // fifth slot is still this wave's, one link further back. Same correction
+    // the southern-remainder gate took at T020, for the same reason.
     expect(EXTERIOR_DEFAULT_ACTIVATIONS.length).toBeGreaterThanOrEqual(5);
-    expect(EXTERIOR_DEFAULT_ACTIVATIONS[4]).toBe(CENTRAL_UPPER_MANHATTAN_EXTERIOR_ACTIVATION);
-    // The four earlier records are untouched by this promotion, and the one
+    const promoted = EXTERIOR_DEFAULT_ACTIVATIONS[4]!;
+    expect(promoted.enabled).toBe(true);
+    if (!promoted.enabled) throw new Error("expected the fifth promoted default to be enabled");
+    expect(promoted.releaseId).toBe(SERVING_RELEASE_ID);
+    expect(promoted.predecessor).toBe(CENTRAL_UPPER_MANHATTAN_P1_EXTERIOR_ACTIVATION);
+    // The four earlier slots are untouched by this promotion, and the wave
     // immediately before it is asserted by identity rather than by shape.
-    expect(EXTERIOR_DEFAULT_ACTIVATIONS[3]).toBe(SOUTHERN_REMAINDER_EXTERIOR_ACTIVATION);
+    const previous = EXTERIOR_DEFAULT_ACTIVATIONS[3]!;
+    expect(previous.enabled).toBe(true);
+    if (!previous.enabled) throw new Error("expected the fourth promoted default to be enabled");
+    expect(previous.releaseId).toBe(SOUTHERN_REMAINDER_SERVING_RELEASE_ID);
+    expect(previous.predecessor).toBe(SOUTHERN_REMAINDER_P1_EXTERIOR_ACTIVATION);
   });
 
   it("pins the rollout snapshot and assembly package the inventory recorded", () => {
@@ -197,7 +215,20 @@ describe("ADR 0036 preconditions on promotion, checked rather than asserted", ()
    */
   it("(a) records the split by number, takes response 2, and does NOT move the cache cap", () => {
     expect(inventory.occupancy.maxCacheEntries).toBe(512);
-    expect(inventory.occupancy.maxCacheEntries).toBe(EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries);
+    // The record states the cap that was IN FORCE WHEN IT WAS DERIVED, and this
+    // gate no longer ties that frozen 512 to the live constant. It used to, and
+    // the coupling was right while the cap stood still: it caught a build that
+    // moved the cap and left a promoted wave sized against the old one.
+    //
+    // The T005 serving promotion raised the live cap to 1,024, and re-pointing
+    // this equality at the new value would claim this release was derived
+    // against a cap that did not exist when it was cut. So the frozen figure
+    // stays a literal, and what is checked against the live constant is the
+    // property that still has to hold: the occupancy this record declares must
+    // still FIT the cache the build actually ships. A cap that fell below it
+    // would still fail here.
+    expect(inventory.occupancy.maxCacheEntries).toBeLessThanOrEqual(EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries);
+    expect(EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries).toBe(1_024);
     expect(inventory.occupancy.promotedAssetEntries).toBe(434);
     expect(inventory.occupancy.promotedWaveCount).toBe(4);
     expect(inventory.occupancy.promotedWaves.reduce((sum, wave) => sum + wave.assetEntries, 0)).toBe(434);

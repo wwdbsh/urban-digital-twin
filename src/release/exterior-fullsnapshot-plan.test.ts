@@ -226,18 +226,21 @@ describe("full-snapshot cache simulation", () => {
     expect(simulation.maximumSingleCellEntries).toBe(EXTERIOR_CELL_MAX_BUILDINGS);
     expect(simulation.singleCellFitsCache).toBe(true);
     // The predecessor-fallback path re-runs verifyCellRelease, so a full cell
-    // can cost 240 entries. Against the old 256-entry cap that was 94% — within
-    // budget, but saturating, and this assertion said so. T018 raised the cap to
-    // 512 (ADR 0034 admissible response 1), so the SAME 240 entries are now 47%.
-    // The claim is therefore restated rather than deleted: the cost of the
-    // fallback path did not change, the headroom it runs in did, and a suite that
-    // kept asserting ">0.9" would have been asserting the old cap under the name
-    // of the new one.
+    // can cost 240 entries. Against the original 256-entry cap that was 94% —
+    // within budget, but saturating, and this assertion said so. T018 raised the
+    // cap to 512 (ADR 0034 admissible response 1) and the same 240 entries became
+    // 47%; T005 raised it again to 1,024 (ADR 0052 §3, sized for serving-scale
+    // RESIDENCY rather than for this path) and the same 240 entries are now 23%.
+    // The claim is restated a second time rather than deleted: the cost of the
+    // fallback path has never changed, the headroom it runs in has changed twice,
+    // and a suite that kept asserting the previous ratio would have been asserting
+    // an old cap under the name of the current one.
     expect(simulation.maximumPredecessorFallbackEntries).toBe(EXTERIOR_CELL_MAX_BUILDINGS * 2);
     expect(simulation.predecessorFallbackFitsCache).toBe(true);
     expect(simulation.maximumPredecessorFallbackEntries).toBe(240);
     expect(simulation.maximumPredecessorFallbackEntries / 256).toBeGreaterThan(0.9);
-    expect(simulation.maximumPredecessorFallbackEntries / EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries).toBeCloseTo(0.469, 3);
+    expect(EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries).toBe(1_024);
+    expect(simulation.maximumPredecessorFallbackEntries / EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries).toBeCloseTo(0.234, 3);
     expect(simulation.cellsOverCachedBytes).toBe(0);
   });
 });
