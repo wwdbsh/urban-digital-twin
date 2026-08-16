@@ -1242,7 +1242,24 @@ export function createExteriorCellRuntime(
   if (!index.ok) throw new ExteriorRuntimeError("index-invalid", `Exterior runtime index failed closed: ${issueText(index.issues)}`);
   const graph = validateExteriorReleaseGraph(source.graph);
   if (!graph.ok) throw new ExteriorRuntimeError("graph-invalid", `Exterior release graph failed closed: ${issueText(graph.issues)}`);
-  if (!Array.isArray(source.assemblies) || source.assemblies.length === 0) throw new ExteriorRuntimeError("assembly-invalid", "At least one multi-LOD assembly package is required.");
+  // At least one assembly package must be REACHABLE, and since ADR 0052 §2 there
+  // are two ways to reach one. The check used to read `assemblies.length === 0`,
+  // which was the same question while `assemblies.json` was the only carrier;
+  // it stopped being the same question when a cell's manifest became its own
+  // root-declared artifact, and it made the fully-sharded form — the one the
+  // seam exists to produce — unrepresentable. A `-s1` release shards EVERY cell,
+  // so its `assemblies.json` is `[]` by construction, and the old guard refused
+  // it at boot with a message about a package it had deliberately moved.
+  //
+  // What the guard protects is unchanged and is still enforced: a release that
+  // packages no geometry AT ALL fails closed, before the first frame, with the
+  // same code and the same shape of message. Only the definition of "carries a
+  // package" widens, to the union of the two forms the runtime already reads.
+  // Declaring a sharded package is not a promise that it is valid — that is
+  // still proven per cell at load time, on the terms ADR 0052 §2 states.
+  if (!Array.isArray(source.assemblies)) throw new ExteriorRuntimeError("assembly-invalid", "The multi-LOD assembly list must be an array.");
+  const declaresShardedAssembly = graph.value.roots.some((root) => root.audience === "public" && root.artifacts.some((artifact) => artifact.kind === "cell-assembly-package"));
+  if (source.assemblies.length === 0 && !declaresShardedAssembly) throw new ExteriorRuntimeError("assembly-invalid", "At least one multi-LOD assembly package is required, inline or as a declared cell-assembly-package.");
   const head = resolveExteriorHead(index.value, request);
   // Structural validation of each package happens once inside the constructor,
   // which hard-fails only for packages the resolved head actually pins.

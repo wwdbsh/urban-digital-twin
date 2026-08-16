@@ -214,4 +214,70 @@ describe("per-cell assembly packages in the browser runtime", () => {
       expect(() => runtimeFor(inline)).toThrow(ExteriorRuntimeError);
     });
   });
+
+  /**
+   * The form a `-s1` serving release actually ships, which the seam could not
+   * express until now.
+   *
+   * The seam's whole purpose is that `assemblies.json` stops carrying manifests.
+   * Carried to its conclusion over a release that shards EVERY cell, the file
+   * becomes `[]` — and the boot guard read `assemblies.length === 0` and refused
+   * it, reporting a missing package the release had deliberately moved onto the
+   * verified artifact path. The guard was asking the right question in the only
+   * vocabulary that existed when it was written.
+   *
+   * It now asks the same question across both carriers. What it protects is
+   * unchanged: a release packaging no geometry at all still fails closed at
+   * boot, with the same code.
+   */
+  describe("the fully sharded form", () => {
+    /** Shards every cell release the fixture carries, emptying `assemblies.json`. */
+    function shardEveryCell(fixture: ExteriorCellFixture): void {
+      for (const cellReleaseId of Object.values(fixture.cellReleaseIds)) shardExteriorFixtureCellAssembly(fixture, cellReleaseId);
+    }
+
+    it("boots with an EMPTY assemblies.json and renders identically to the inline form", async () => {
+      const inline = await exteriorCellFixture();
+      const sharded = await exteriorCellFixture();
+      shardEveryCell(sharded);
+
+      // The precondition this case exists for: nothing is left inline.
+      expect(sharded.assemblies).toHaveLength(0);
+      const shardedGraph = validateExteriorReleaseGraph(sharded.graph);
+      expect(shardedGraph.ok, shardedGraph.ok ? "" : JSON.stringify(shardedGraph.issues, null, 2)).toBe(true);
+
+      // The same equivalence the per-cell case asserts, over every cell at once:
+      // a property list could pass while what reaches the scene differed.
+      for (const cellId of ["c1", "c2"]) {
+        const inlinePlan = rendered(await runtimeFor(inline).runtime.loadCell(cellId, "exploration", CLOSE_METERS));
+        const shardedPlan = rendered(await runtimeFor(sharded).runtime.loadCell(cellId, "exploration", CLOSE_METERS));
+        expect(shardedPlan).toEqual(inlinePlan);
+      }
+    });
+
+    it("still fails closed at boot when NO package is reachable by either carrier", async () => {
+      const empty = await exteriorCellFixture();
+      empty.assemblies.length = 0;
+      // No inline package and no declared `cell-assembly-package`: the release
+      // packages no geometry at all, which is exactly what the guard is for.
+      expect(() => runtimeFor(empty)).toThrow(ExteriorRuntimeError);
+      try {
+        runtimeFor(empty);
+      } catch (error) {
+        expect((error as ExteriorRuntimeError).code).toBe("assembly-invalid");
+      }
+    });
+
+    it("refuses a non-array assemblies document rather than coercing it", async () => {
+      const fixture = await exteriorCellFixture();
+      shardEveryCell(fixture);
+      // Sharding does not make the document optional or free-form; a release
+      // that ships something other than a list is still refused at boot.
+      expect(() => createExteriorCellRuntime(
+        { index: fixture.index, graph: fixture.graph, assemblies: { packages: [] } },
+        { kind: "default" },
+        { fetchArtifact: exteriorFixtureFetcher(fixture), baseIdentity: exteriorFixtureBaseIdentity(fixture) },
+      )).toThrow(ExteriorRuntimeError);
+    });
+  });
 });
