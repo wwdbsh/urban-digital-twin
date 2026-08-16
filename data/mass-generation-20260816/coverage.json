@@ -1,0 +1,184 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "mass-generation-20260816",
+  "taskId": "T004",
+  "artifact": "stage4-coverage",
+  "note": "The six retention waves in one table, checked against the IMMUTABLE ownership ledger rather than against the censuses that produced it. `recovered` is re-measured here by planning every owned parent again under the SHIPPED admission envelope; a building the retention wave generated and the shipped grammar refuses is a recovery. Passing this record is a statement about deterministic counts and bytes, and is NOT visual, geographic, architectural or performance acceptance.",
+  "ledger": {
+    "releaseId": "manhattan-exterior-wave-ledger-20260804",
+    "checksumSha256": "62e093d2ca50b54b49fd8bbad9d0b11f6301b2b197623deb343f9ea915e59016",
+    "ownedParents": 45194
+  },
+  "base": {
+    "releaseId": "manhattan-citywide-20260804",
+    "manifestChecksumSha256": "acb5a9b52014f86535c8478e7d4e516efc03f6dff95c17e9896dfea4413c203c"
+  },
+  "waves": [
+    {
+      "waveId": "w00",
+      "predecessorReleaseId": "manhattan-exterior-cells-20260811-v3",
+      "c1ReleaseId": "manhattan-exterior-cells-20260811-v3-c1",
+      "owned": 14,
+      "materialized": 14,
+      "recovered": 0,
+      "tombstoned": 0,
+      "lod1FallbackCount": 0,
+      "cellManifestCount": 1,
+      "payloadFileCount": 35,
+      "payloadByteSize": 9620802,
+      "retentionRootChecksumSha256": "c7deaeb120d762250965bb4197ffbde59746d78a68fdec2e2db91d2c7cbf0464",
+      "payloadInventorySha256": "18e6a0a4a32372d4cc1b079f791161bc7b604e9f170bd11b0be302ba80493fe1",
+      "waveCensusSha256": "d2923cc25e643b414086848831d1ab0f284d5b9d0bd78bd6d92c3bcb457d4928",
+      "determinismReplay": {
+        "compared": 28,
+        "byteIdentical": 28,
+        "cellsSampled": 1
+      },
+      "blenderAgreement": "pending Blender connection"
+    },
+    {
+      "waveId": "w01",
+      "predecessorReleaseId": "manhattan-midtown-core-cells-20260811-v3",
+      "c1ReleaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "owned": 7201,
+      "materialized": 7179,
+      "recovered": 88,
+      "tombstoned": 22,
+      "lod1FallbackCount": 4,
+      "cellManifestCount": 149,
+      "payloadFileCount": 14661,
+      "payloadByteSize": 1674977793,
+      "retentionRootChecksumSha256": "50bd211c41f2984f98859d36a5d96e5f032adf1a6443ef8b262b766297294ee3",
+      "payloadInventorySha256": "4a463032dfac51775650547f7d4c64216293024db754a8c39ab43d3bf05afc0c",
+      "waveCensusSha256": "3983f8b1324aedd286b404dfcef5579c00407861770fa357c0553af2922f136c",
+      "determinismReplay": {
+        "compared": 40,
+        "byteIdentical": 40,
+        "cellsSampled": 40
+      },
+      "blenderAgreement": "pending Blender connection"
+    },
+    {
+      "waveId": "w02",
+      "predecessorReleaseId": "manhattan-lower-manhattan-cells-20260812",
+      "c1ReleaseId": "manhattan-lower-manhattan-cells-20260812-c1",
+      "owned": 6425,
+      "materialized": 6382,
+      "recovered": 91,
+      "tombstoned": 43,
+      "lod1FallbackCount": 114,
+      "cellManifestCount": 126,
+      "payloadFileCount": 13021,
+      "payloadByteSize": 1006166980,
+      "retentionRootChecksumSha256": "95e8623cb702bf6c605b01c7634792ac5bdc8ab45e0e6f69c917c2e77f42426d",
+      "payloadInventorySha256": "5dff76314264fb583a353de681c8f3d8f39bcdfe3797e4febfd50dca0321d699",
+      "waveCensusSha256": "faca2938d637df2e5fa09b29dbf2b4d66269dcc5036bb6d96c40fa0fe161485e",
+      "determinismReplay": {
+        "compared": 40,
+        "byteIdentical": 40,
+        "cellsSampled": 40
+      },
+      "blenderAgreement": "pending Blender connection"
+    },
+    {
+      "waveId": "w03",
+      "predecessorReleaseId": "manhattan-southern-remainder-cells-20260812",
+      "c1ReleaseId": "manhattan-southern-remainder-cells-20260812-c1",
+      "owned": 9603,
+      "materialized": 9560,
+      "recovered": 53,
+      "tombstoned": 43,
+      "lod1FallbackCount": 289,
+      "cellManifestCount": 176,
+      "payloadFileCount": 19477,
+      "payloadByteSize": 1202442064,
+      "retentionRootChecksumSha256": "b3a570605036a29ba573693e09725ad1014f8803a5aeb380ea302931d736a3c8",
+      "payloadInventorySha256": "605fc8bfda695de31e8aae1f0cdeef5265a62cda5fe626c885f70fcd0e6ddf77",
+      "waveCensusSha256": "993de1870468c36b86134241ccefe000d2eb4acad7543ca9ea33f22efd5318ac",
+      "determinismReplay": {
+        "compared": 40,
+        "byteIdentical": 40,
+        "cellsSampled": 40
+      },
+      "blenderAgreement": "pending Blender connection"
+    },
+    {
+      "waveId": "w04",
+      "predecessorReleaseId": "manhattan-central-upper-manhattan-cells-20260812",
+      "c1ReleaseId": "manhattan-central-upper-manhattan-cells-20260812-c1",
+      "owned": 11721,
+      "materialized": 11682,
+      "recovered": 139,
+      "tombstoned": 39,
+      "lod1FallbackCount": 3,
+      "cellManifestCount": 249,
+      "payloadFileCount": 23867,
+      "payloadByteSize": 1469180692,
+      "retentionRootChecksumSha256": "eee350a7887ef6243f257410f41d98348ad4efd257eca88e7fb0865332d33ca4",
+      "payloadInventorySha256": "5a9e027b264a18c96ba35b92c8442d18025445411628791b4f101d46c60f684b",
+      "waveCensusSha256": "e771eed7c806a78439d570c7896aab898af7592d627cf3d4cfa7a8b41e31947a",
+      "determinismReplay": {
+        "compared": 40,
+        "byteIdentical": 40,
+        "cellsSampled": 40
+      },
+      "blenderAgreement": "pending Blender connection"
+    },
+    {
+      "waveId": "w05",
+      "predecessorReleaseId": "manhattan-northern-manhattan-cells-20260812",
+      "c1ReleaseId": "manhattan-northern-manhattan-cells-20260812-c1",
+      "owned": 10230,
+      "materialized": 10172,
+      "recovered": 323,
+      "tombstoned": 58,
+      "lod1FallbackCount": 14,
+      "cellManifestCount": 182,
+      "payloadFileCount": 20713,
+      "payloadByteSize": 1053432311,
+      "retentionRootChecksumSha256": "0abb9ec18d1bb713f4dd630a88da95790847e150f0f13b6cdd86103182b7fee4",
+      "payloadInventorySha256": "b7e2eab8cc6e32fe35d59c771634de43a6d7e67b0f924506e6a322c5a68cbb08",
+      "waveCensusSha256": "3badc362fdddc9a00dcb833251c274db1d806cdba0affc321e36ea3156356293",
+      "determinismReplay": {
+        "compared": 40,
+        "byteIdentical": 40,
+        "cellsSampled": 40
+      },
+      "blenderAgreement": "pending Blender connection"
+    }
+  ],
+  "island": {
+    "owned": 45194,
+    "materialized": 44989,
+    "recovered": 694,
+    "tombstoned": 205,
+    "lod1FallbackCount": 424,
+    "payloadByteSize": 6415820642,
+    "shippedPlusTombstonedEqualsOwned": true
+  },
+  "tombstoneCategories": {
+    "ring-area-below-floor": 114,
+    "volume-identity-failed": 43,
+    "ring-neck-below-grammar-minimum": 44,
+    "ring-not-simple": 4
+  },
+  "lod1": {
+    "policy": "measured-fallback",
+    "note": "ADR 0050. A building whose MEASURED silhouette deviation is outside the assembly schema's 2% cap emits FULL GEOMETRY at LOD 1, declares a derived geometric error of 0 because it dropped nothing, and marks that level INELIGIBLE so the runtime never selects a fake-coarse representation. The cap is not relaxed and no coarse level above it exists in any wave.",
+    "islandFallbackCount": 424
+  },
+  "rights": {
+    "statement": "The six -c1 packages RETAIN bytes LOCALLY ONLY, under gitignored payload directories. Nothing is conveyed, redistributed or published. No external data was acquired and no retained snapshot was replaced. No approval envelope is widened: every committed release keeps its approval scope, licensing and retention terms exactly as they were.",
+    "servingSurfaceChange": "none",
+    "pinnedReleaseIdChange": "none",
+    "promotedDefaultChange": "none",
+    "runtimeRollbackSurface": "zero",
+    "conveyance": "none"
+  },
+  "notClaimedHere": [
+    "Any visual, geographic, architectural, accessibility or performance acceptance.",
+    "The per-wave 16-sample Blender agreement, which is a separate evidence item and is PENDING CONNECTION for all six waves.",
+    "Cache-ceiling and streaming benchmarks against a two-LOD population, which belong to T005/T006."
+  ],
+  "elapsedSeconds": 227
+}

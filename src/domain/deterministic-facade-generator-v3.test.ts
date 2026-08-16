@@ -759,6 +759,28 @@ describe("(T003) no shipping module reaches for the extended envelope", () => {
     // has to be able to name the envelope. Nothing that ships imports it.
     "scripts/mass-generation-stage0-cli.mjs",
     "scripts/mass-generation-stage0.test.mjs",
+    // The T004 RETENTION WAVES, and this entry is the conversation this test
+    // exists to force rather than a quiet exception to it.
+    //
+    // ADR 0048 withheld ACTIVATION and named the resolution it was withholding
+    // for: "a successor release, not a constant edit" — R1, the admission
+    // envelope in the WAVE PROFILE, with the frozen waves pinned to the shipped
+    // grammar and a new approved wave selecting the extended one. This module is
+    // exactly that selection: `massGenerationSuccessorProfile` derives a `-c1`
+    // profile that names the wider envelope, and every frozen wave profile still
+    // carries `V3_FROZEN_WAVE_ADMISSION_ENVELOPE` untouched.
+    //
+    // The thing this test protects — that an ALREADY-APPROVED release must not
+    // quietly grow when it is re-derived — is intact and separately proven: the
+    // V3 release, stage-fingerprint, materialization and assembly suites re-derive
+    // the frozen waves byte for byte and are green and unmoved.
+    //
+    // It lives under `src/release/` rather than in a CLI because the wave profile
+    // IS the seam ADR 0048 chose, and scattering the envelope into three operator
+    // scripts would put the decision in three places instead of one. What keeps
+    // that safe is asserted below: nothing on a shipped surface can reach it.
+    "src/release/mass-generation-retention.ts",
+    "src/release/mass-generation-retention.test.ts",
   ]);
   const SYMBOLS = ["V3_EXTENDED_GRAMMAR_OPTIONS", "V3_EXTENDED_MAX_RING_VERTICES"];
 
@@ -781,6 +803,32 @@ describe("(T003) no shipping module reaches for the extended envelope", () => {
     // A walk that silently found nothing would pass this test vacuously.
     expect(scanned).toBeGreaterThan(100);
     expect(offenders).toEqual([]);
+  });
+
+  /**
+   * The other half of the T004 allowance above.
+   *
+   * Letting one `src/release` module name the extended envelope is only safe
+   * while nothing that SHIPS can reach it. That is asserted here rather than
+   * assumed, so the allowance cannot quietly widen later: a runtime, app or
+   * ingestion module that starts importing the retention package fails here.
+   */
+  it("keeps the T004 retention module off every shipped surface", () => {
+    const decoder = new TextDecoder("utf-8");
+    const importers: string[] = [];
+    let scanned = 0;
+    for (const root of ["src/runtime", "src/app", "src/data", "src/ingestion", "src/domain"]) {
+      for (const entry of readdirSync(root, { recursive: true, withFileTypes: true })) {
+        if (!entry.isFile() || !/\.(?:ts|tsx)$/u.test(entry.name)) continue;
+        const path = `${entry.parentPath}/${entry.name}`.replace(/\\/gu, "/");
+        // This file names the module in the assertion itself.
+        if (path.endsWith("deterministic-facade-generator-v3.test.ts")) continue;
+        scanned += 1;
+        if (decoder.decode(readFileSync(path)).includes("mass-generation-retention")) importers.push(path);
+      }
+    }
+    expect(scanned).toBeGreaterThan(20);
+    expect(importers).toEqual([]);
   });
 
   it("keeps the shipped grammar's own defaults at the pre-extension envelope", () => {

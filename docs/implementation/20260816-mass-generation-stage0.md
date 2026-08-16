@@ -1,21 +1,41 @@
 # T004 Stage 0 — the pre-generation gate
 
 Date: 2026-08-16
-Decision record: [ADR 0049](../decisions/0049-rooftop-honesty-rules.md)
+Decision records: [ADR 0049](../decisions/0049-rooftop-honesty-rules.md),
+[ADR 0050](../decisions/0050-measured-lod1-fallback.md)
 Evidence: `data/mass-generation-20260816/` (`stage0-gate.json`,
 `stage0-differential-digest.json`, `stage0-preflight-stride.json`,
-`stage0-frozen-fingerprints.json`, `stage0-textured-write-cost.json`, each with
-a `.sha256`), plus `data/citywide-overview-census-20260814/generation-replay.json`
+`stage0-island-silhouette.json`, `stage0-frozen-fingerprints.json`,
+`stage0-textured-write-cost.json`, each with a `.sha256`), plus
+`data/citywide-overview-census-20260814/generation-replay.json`
 
 ## The headline
 
-**Stage 0 does not pass. The waves must not start.**
+**Stage 0 passes under the adjudicated LOD-1 rule. The waves may start.**
 
-Nine of the ten gate items are green. The tenth is not: **19 of the 2,250
-strided buildings (0.844%) sit at or over the multi-LOD assembly schema's 2%
-silhouette cap**, with a worst deviation of **5.618%**. The schema refuses any
-coarse level above that ratio, so a two-LOD wave would refuse those assets at
-assembly time.
+> **Correction, recorded rather than rewritten.** This headline previously read
+> "Stage 0 does not pass. The waves must not start." That was true of the gate as
+> first measured, and it stopped being true when ADR 0050 decided the LOD-1
+> contract — but this section was not updated with the rest of the document, so
+> it contradicted `stage0-gate.json`'s own `lod1Contract` block for two commits.
+> The committed machine record was correct throughout; only this prose was stale.
+> The paragraphs below are the original finding and are left standing, because
+> the count that failed the gate has not gone away.
+
+Nine of the ten gate items were green on first measurement. The tenth was not:
+**19 of the 2,250 strided buildings (0.844%) sit at or over the multi-LOD
+assembly schema's 2% silhouette cap**, with a worst deviation of **5.618%**. The
+schema refuses any coarse level above that ratio, so a two-LOD wave under the
+shipped `shed-protrusions` contract would have refused those assets at assembly
+time.
+
+**What changed is the CONTRACT, not the cap.** Under ADR 0050's
+`measured-fallback`, LOD 1 sheds protrusions only where the MEASURED deviation
+is inside the cap and is full geometry otherwise, declaring a derived geometric
+error of 0 and an INELIGIBLE coarse level. The cap is not relaxed and no coarse
+level above it ships: the buildings it excludes stop having a coarse level.
+Measured over all six waves, that is **424 of 44,989** generated buildings —
+`data/mass-generation-20260816/coverage.json`.
 
 **The 19 are not T004's doing.** All nineteen are admitted by the shipped
 admission envelope and all nineteen are **already over the cap under the shipped
