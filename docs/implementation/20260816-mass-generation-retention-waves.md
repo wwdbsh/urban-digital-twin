@@ -5,9 +5,10 @@ Decision records: [ADR 0048](../decisions/0048-grammar-extensions.md),
 [ADR 0049](../decisions/0049-rooftop-honesty-rules.md),
 [ADR 0050](../decisions/0050-measured-lod1-fallback.md),
 [ADR 0051](../decisions/0051-retention-package-validation.md)
-Evidence: `data/mass-generation-20260816/coverage.json` (with `.sha256`), and per
-wave `data/<releaseId>-c1/` — `payload-inventory.json`, `wave-census.json`,
-`determinism-replay.json`, each with a `.sha256`
+Evidence: `data/mass-generation-20260816/coverage.json` and
+`data/mass-generation-20260816/blender-agreement.json` (each with a `.sha256`),
+and per wave `data/<releaseId>-c1/` — `payload-inventory.json`,
+`wave-census.json`, `determinism-replay.json`, each with a `.sha256`
 
 ## The headline
 
@@ -114,16 +115,23 @@ same pinned snapshot and ledger and byte-compared to the committed inventory.
 
 ## What is NOT claimed
 
-- **The per-wave 16-sample Blender agreement did not run.** Blender MCP was
-  disconnected for the entire task and was re-probed at every wave boundary. Each
-  census records `"pending Blender connection"` and **nothing was substituted** —
-  no render, no screenshot, no proxy measurement.
+- **The per-wave 16-sample Blender agreement did not run** *at the time this
+  record was first written.* Blender MCP was disconnected for the entire task and
+  was re-probed at every wave boundary. Each census recorded `"pending Blender
+  connection"` and **nothing was substituted** — no render, no screenshot, no
+  proxy measurement. **SUPERSEDED:** the agreement has since run; see
+  *The Blender agreement, run* below.
 - No visual, geographic, architectural, accessibility or performance acceptance.
   A coarse level can sit inside a 2% area ratio and still read wrongly on screen.
 - Cache-ceiling and streaming benchmarks against a two-LOD population belong to
   T005/T006.
 
-## PAYLOAD RETENTION HOLD
+## PAYLOAD RETENTION HOLD — released
+
+**SUPERSEDED by *The Blender agreement, run* below.** The samples have been
+taken from these exact bytes and `coverage.json.payloadRetentionHold.status` is
+now `released`. The section below is kept as written because it states why the
+hold existed and what releasing it costs to reverse.
 
 **The six `public/data/*-c1` payload directories (~6.4 GB, gitignored) must
 survive until the per-wave Blender samples have run.**
@@ -180,3 +188,136 @@ schema are green and unmoved.
 
 No serving surface, no pinned release id and no promoted default changed. The
 runtime rollback surface of this task is zero.
+
+## The Blender agreement, run
+
+Blender MCP became available after this record was first written, and the
+obligation the six censuses carried as `"pending Blender connection"` has been
+discharged. `data/mass-generation-20260816/blender-agreement.json`
+(`d3135d1f…`) is the evidence; each census's `blenderAgreement` block is amended
+from pending to the measured outcome and re-pinned, and `coverage.json` carries
+the new census hashes and the released hold.
+
+**94 buildings, 188 shipped GLBs, 855,112 re-imported triangles.** The
+obligation was sixteen per wave. Five waves give sixteen. **Wave `w00` owns 14
+generatable buildings in total and cannot give sixteen distinct ones**, so it is
+measured WHOLE — 14 of 14, 100% coverage — and that is stated as an exception in
+the record rather than padded to a nominal sixteen. The island total is
+therefore 94 rather than 96.
+
+**The selection rule is seedless and rank-based**, so a reader reproduces it
+with a sort. Per wave, candidates are the committed census's own materialized
+set (its `lod1Decisions`, tombstones excluded). Sourced height ranks into four
+quartiles; ring vertex count ranks into three terciles of which only the two
+EDGE terciles are eligible; the eight resulting cells give two picks each, taken
+at ranks `floor((m-1)/3)` and `floor(2(m-1)/3)` of the cell ordered by building
+id. Four mandatory inclusions — largest ring, shortest building, worst measured
+silhouette deviation, largest shipped asset — are then applied in that fixed
+order, each displacing the largest-id ordinary pick from its own cell.
+
+### What Blender measured, and what it did not
+
+Blender re-imported each sample at BOTH LODs and measured, from its own importer
+and its own topology: world bounds; ground-plane vertex bounds against the
+sourced footprint polygon; triangle, material and image counts; signed mesh
+volume by the divergence theorem; the two T004 rooftop rules; and the SHA-256 of
+every file it opened, computed inside Blender and matched against the committed
+payload inventory.
+
+The imported frame is checked rather than assumed: the importer maps a Y-up file
+`(x, y, z)` to `(x, -z, y)`, and these GLBs are written `(east, up, -north)`, so
+the imported world frame IS the building-anchored ENU metre frame with no
+compensation. A mis-stated mapping would show as a metres-scale disagreement.
+
+**It did NOT re-measure the projected-silhouette deviation ratio.** That metric
+is an exact union of axis-aligned rectangles over the plan's solid parts;
+Blender holds a triangle soup and an exact union over it is neither cheap nor
+exact. What Blender contributes to that number is a consistency statement, and
+the record says only that: a zero ratio must come with equal imported bounds, a
+positive ratio with strictly fewer LOD-1 triangles, and a `full-geometry`
+fallback with two indistinguishable levels.
+
+**It did not isolate the crown for itself either.** Every sampled building
+carries a rooftop cluster, so the highest vertex is never the crown; the
+analytic crown is handed in and Blender reports falsifiable properties of it.
+The direct crown-equals-sourced-height comparison therefore applied to *no*
+sample, and the record shows it as absent rather than as a passing zero.
+
+Nothing was rendered. No image, screenshot or eyeball stands behind any number.
+
+### Per-wave outcome
+
+Worst value in each wave, all six `agreed`, zero failing samples:
+
+| wave | samples | GLBs | ring vs SOURCED polygon | ring vs shipped ring | bounds vs analytic | crown vs sourced height (analytic) | rooftop rise above crown | rooftop containment slack | volume deviation | triangle delta |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| w00 | 14/14 | 28 | 0.4644 mm | 0.0035 mm | 0.0144 mm | 0.4560 mm | 3.5960 m | −6.697 m | 1.46e-7 | 0 |
+| w01 | 16 | 32 | 0.4924 mm | 0.0028 mm | 0.0028 mm | 0.4560 mm | 3.5960 m | −1.171 m | 3.27e-7 | 0 |
+| w02 | 16 | 32 | 0.4974 mm | 0.0020 mm | 0.0049 mm | 0.4857 mm | 3.5960 m | −1.782 m | 3.16e-7 | 0 |
+| w03 | 16 | 32 | 0.4975 mm | 0.0020 mm | 0.0056 mm | 0.4734 mm | 3.5960 m | −2.300 m | 3.06e-7 | 0 |
+| w04 | 16 | 32 | 0.4937 mm | 0.0037 mm | 0.0037 mm | 0.4240 mm | 3.5960 m | −1.843 m | 4.60e-7 | 0 |
+| w05 | 16 | 32 | 0.4801 mm | 0.0037 mm | 0.0037 mm | 0.4960 mm | 3.5960 m | −2.821 m | 5.07e-7 | 0 |
+
+The containment slack is **signed**: a negative number is the roof cluster
+sitting that far *inside* the massing footprint, which is the passing direction.
+
+### The tolerances are the quantization, not a knob
+
+Every number above lands where the arithmetic says it must, and the two scales
+are worth separating because they are different claims.
+
+Against the **shipped** ring and the analytic tessellation the worst
+disagreement is **3.7 µm**, and its whole content is glTF's float32 POSITION
+storage: these frames reach a few hundred metres from their own origin, where a
+float32 ulp is ~2.4e-5 m. Blender is reading back exactly what the writer wrote.
+
+Against the **sourced** polygon the worst is **0.4975 mm**, and its whole
+content is the plan rounding a float64 ENU ring to INTEGER MILLIMETRES before a
+byte exists — a bound of 0.5 mm per axis, which the measurement approaches and
+does not cross. That sits directly alongside the Block 835 precedent's 0.679 mm
+per-vertex shape deviation and 0.248 mm vertical, measured on the same rounding
+by a different pass.
+
+**No tolerance was widened to absorb a delta.** The volume identity is judged at
+`MIDTOWN_CORE_V3_VOLUME_TOLERANCE` (1e-6) — the writer's own constant, re-derived
+here through Blender's topology — and the worst sample sits at 5.07e-7, half of
+it. Triangle and material counts are judged at exact equality and every one of
+the 188 assets matched.
+
+### Two corrections made to the instrument, and one finding that is not one
+
+Two rules in the *agreement harness* were wrong on first run and were corrected;
+neither is a defect in the shipped bytes, the censuses or the analytic
+instrument, and both are worth recording because a silently-fixed instrument is
+indistinguishable from a rigged one.
+
+1. The consistency rule asserted that a zero deviation ratio predicts
+   geometrically identical LODs. It does not: `includeRecesses` gates the inward
+   openings as well as the outward attachments, so LOD 0 differs from a
+   shed-protrusions LOD 1 by recess geometry, which is interior and casts no
+   shadow. 64 of 94 samples failed against the wrong rule. The corrected rule
+   predicts equal *bounds*, which is what a zero ratio actually implies.
+2. The "against the sourced polygon" extent was computed from the
+   millimetre-rounded ring, which made it a duplicate of the "against the
+   shipped ring" number rather than a statement about the source. It now
+   projects the sourced polygon in float64 and never rounds it — which is why
+   the two columns above differ by two orders of magnitude.
+
+Separately, and **not** caused by this work:
+`scripts/validate-retention-release.test.mjs` fails 6 of its 26 cases at
+`77b2469` on a clean tree, all in *the real w00 package, end to end*, all with
+`root self-pin disagrees with its own canonical bytes: declared a4b6d064…,
+recomputed e169c225…`. It was reproduced with every change in this task stashed.
+It is recorded here as a finding and is **not** addressed by this evidence task.
+
+### What this does and does not license
+
+The hold is released because the samples it was protecting have been taken.
+Releasing it says these local bytes are no longer needed for THIS evidence item.
+It is not a deletion, not a conveyance, and not permission to replace or
+republish anything.
+
+The agreement is a **geometry-agreement** statement over 94 of 44,989 generated
+buildings (0.21%), stratified and forced to include four per-wave extremes. It
+is not visual, geographic, architectural, accessibility or performance
+acceptance, and it says nothing about the 44,895 buildings it did not open.

@@ -57608,8 +57608,27 @@
     }
   ],
   "blenderAgreement": {
-    "status": "pending Blender connection",
-    "note": "The per-wave 16-sample Blender agreement is a SEPARATE evidence item and has NOT been run for this wave. Blender MCP was disconnected for the whole of this run. Nothing has been substituted for it: no render, no screenshot and no proxy measurement stands in its place, and no visual or architectural acceptance is claimed by this record."
+    "status": "agreed",
+    "sampleCount": 16,
+    "candidateCount": 7179,
+    "exhaustive": false,
+    "glbCount": 32,
+    "worst": {
+      "groundRingExtentVsShippedRingMeters": 0.000002807617192956968,
+      "groundRingExtentVsSourcedPolygonMeters": 0.0004923988336251739,
+      "wholeBoundsVsAnalyticMeters": 0.000002807617192956968,
+      "silhouetteTopVsAnalyticMeters": 0.000001159667966987854,
+      "blenderCrownVsSourcedHeightMeters": null,
+      "analyticCrownVsSourcedHeightMeters": 0.0004559999999997899,
+      "rooftopRiseAboveCrownMeters": 3.596000854492189,
+      "rooftopContainmentSlackMeters": -1.1710000038146973,
+      "volumeDeviation": 3.2733945155215535e-7,
+      "triangleDelta": 0
+    },
+    "failingSamples": [],
+    "recordRef": "data/mass-generation-20260816/blender-agreement.json",
+    "recordSha256": "d3135d1f38c176b540c9c8fffc57404f8fe04881b1e29fa2ec08361fd7418c8f",
+    "note": "AMENDED. This block read 'pending Blender connection' when the wave was generated, because Blender MCP was disconnected for the whole of that run; it is replaced here by the measurement itself and by nothing else. 16 of this wave's 7179 generated buildings were re-imported into Blender at both LODs from the retained -c1 payload these records pin, and measured against this repository's analytic values by an implementation that is not this repository's. No other field of this census changed, and the geometry it describes is byte-identical. This is a geometry-agreement statement and is NOT visual, geographic, architectural or performance acceptance."
   },
   "rights": {
     "statement": "T004 mass-generation retention package. It retains generated exterior bytes LOCALLY ONLY, under a gitignored payload directory, so a committed inventory can keep them checkable. Nothing here is conveyed, redistributed, published or served: no runtime index names this package, no promoted default selects it, and no approval envelope is widened by its existence. It succeeds a frozen wave release by identity only — that release's bytes, approval scope, licensing and retention terms are exactly as they were.",

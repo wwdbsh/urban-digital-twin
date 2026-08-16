@@ -28,7 +28,7 @@
       "payloadByteSize": 9620880,
       "retentionRootChecksumSha256": "a4b6d0646e642e361d05f0d7f586f32d4851094d1fec6e88a5fafd1e985a7c26",
       "payloadInventorySha256": "fd17c0b70cc02a104712724a9e0288938bba240a75e8baabfa16f80add7822fc",
-      "waveCensusSha256": "d2923cc25e643b414086848831d1ab0f284d5b9d0bd78bd6d92c3bcb457d4928",
+      "waveCensusSha256": "f45806c0f066fd862153830c53155683b0832d4579c080b357f69de8501dfdca",
       "determinismReplay": {
         "compared": 28,
         "byteIdentical": 28,
@@ -48,7 +48,7 @@
         "textureAdmissionPolicy": "procedural-replay"
       },
       "retentionValidationSha256": "ea13926c24c7fe69d05a37d4e9f381595a43b79a9035d3459531e8ac85b9cba3",
-      "blenderAgreement": "pending Blender connection"
+      "blenderAgreement": "agreed"
     },
     {
       "waveId": "w01",
@@ -64,7 +64,7 @@
       "payloadByteSize": 1674986296,
       "retentionRootChecksumSha256": "9310e4486a74aa4fd425ce2efec7286e48d124c4412ee4a89467a4d3fcd52d7f",
       "payloadInventorySha256": "185ed3ab5f457245d7144e105302d75c4d680d49dd61a0f2fd30f4028ce87b17",
-      "waveCensusSha256": "3983f8b1324aedd286b404dfcef5579c00407861770fa357c0553af2922f136c",
+      "waveCensusSha256": "54e1fe365922852916e14d647efe8dfb81412441610fea53ffad1e2e5d838e73",
       "determinismReplay": {
         "compared": 40,
         "byteIdentical": 40,
@@ -84,7 +84,7 @@
         "textureAdmissionPolicy": "procedural-replay"
       },
       "retentionValidationSha256": "d645d4bc7ead989d853e06e084d7840976fbadcb3ca859b7da7e70710931349f",
-      "blenderAgreement": "pending Blender connection"
+      "blenderAgreement": "agreed"
     },
     {
       "waveId": "w02",
@@ -100,7 +100,7 @@
       "payloadByteSize": 1006174160,
       "retentionRootChecksumSha256": "987c19e84b3b5e2c4e61aaa79d74bbace37da67e82691db877f4dbe94dd8f2be",
       "payloadInventorySha256": "78720085d14dd6e6654823d94a722c2f1da212624740d11629e6c1d333c55594",
-      "waveCensusSha256": "faca2938d637df2e5fa09b29dbf2b4d66269dcc5036bb6d96c40fa0fe161485e",
+      "waveCensusSha256": "90a05b19d536daee70b9f03154f2d4657ec48890270885bfca1e1cd9358cda0d",
       "determinismReplay": {
         "compared": 40,
         "byteIdentical": 40,
@@ -120,7 +120,7 @@
         "textureAdmissionPolicy": "procedural-replay"
       },
       "retentionValidationSha256": "5d5db3dc5a8de89222ef59099a73dda82c5b23f6a153df90ef7c9c73d3f9bb86",
-      "blenderAgreement": "pending Blender connection"
+      "blenderAgreement": "agreed"
     },
     {
       "waveId": "w03",
@@ -136,7 +136,7 @@
       "payloadByteSize": 1202452116,
       "retentionRootChecksumSha256": "230fdcb51c4e69b4948e052c7460aaffa22ff2dd19a8e2e02625353884354a3d",
       "payloadInventorySha256": "4bdcc7a7e00d1140e9a46922b8f5e21e08a89ab89285654df435737280ede8db",
-      "waveCensusSha256": "993de1870468c36b86134241ccefe000d2eb4acad7543ca9ea33f22efd5318ac",
+      "waveCensusSha256": "d34e83d5a330bb98131ef19ee42af5cfd0e80f047b284f642e058b5619ae1fe1",
       "determinismReplay": {
         "compared": 40,
         "byteIdentical": 40,
@@ -156,7 +156,7 @@
         "textureAdmissionPolicy": "procedural-replay"
       },
       "retentionValidationSha256": "1363da53897e74bc8aa676a3246dee4808744ab8a9269e3fca9f7f99d45befc2",
-      "blenderAgreement": "pending Blender connection"
+      "blenderAgreement": "agreed"
     },
     {
       "waveId": "w04",
@@ -172,7 +172,7 @@
       "payloadByteSize": 1469194885,
       "retentionRootChecksumSha256": "239295f3f3adbb1f9066677d70f6e199a6298732d45c74236ed58b9ca559bf65",
       "payloadInventorySha256": "1a43bf0682247c9f6ced2a9c52ec41f283c0a4027e9accbdff2c42353bf904de",
-      "waveCensusSha256": "e771eed7c806a78439d570c7896aab898af7592d627cf3d4cfa7a8b41e31947a",
+      "waveCensusSha256": "612c72527425eedcf6580499d89b044ec2cd8a9f346f1c27812c4b815708c48d",
       "determinismReplay": {
         "compared": 40,
         "byteIdentical": 40,
@@ -192,7 +192,7 @@
         "textureAdmissionPolicy": "procedural-replay"
       },
       "retentionValidationSha256": "d89b2f378fd26e4af88cfe38bd6a1e6e531c1c8ee37ef7beb732ee3036904974",
-      "blenderAgreement": "pending Blender connection"
+      "blenderAgreement": "agreed"
     },
     {
       "waveId": "w05",
@@ -208,7 +208,7 @@
       "payloadByteSize": 1053442677,
       "retentionRootChecksumSha256": "376c57cf29030d44b8e158fb88e18622954a2019e512f0d9b255e2d32a53caf0",
       "payloadInventorySha256": "aabdc1e066cbfb38dab8bf84817f8ecf7b36abbac111c629ca5149d5a8726083",
-      "waveCensusSha256": "3badc362fdddc9a00dcb833251c274db1d806cdba0affc321e36ea3156356293",
+      "waveCensusSha256": "d7fa09d6f922db203d2425441c95a51ad74c7020822d8cc5970d1bb54b86bd32",
       "determinismReplay": {
         "compared": 40,
         "byteIdentical": 40,
@@ -228,7 +228,7 @@
         "textureAdmissionPolicy": "procedural-replay"
       },
       "retentionValidationSha256": "2efd2045abd7f5212b86fe2d0550e151a1b48b5937c5fb954d9d64beff2f8382",
-      "blenderAgreement": "pending Blender connection"
+      "blenderAgreement": "agreed"
     }
   ],
   "island": {
@@ -260,15 +260,26 @@
     "conveyance": "none"
   },
   "payloadRetentionHold": {
-    "status": "HOLD",
+    "status": "released",
     "directories": "public/data/*-c1 (six, gitignored)",
     "approximateBytes": 6400000000,
-    "reason": "The per-wave 16-sample BLENDER AGREEMENT has not run — Blender MCP was disconnected for the whole of this task. Those samples must be taken from the SAME bytes these records pin. Deleting these payload directories therefore costs a full island regeneration before the agreement can be run at all, and the regenerated bytes would need re-validating before they could carry it.",
-    "releaseCondition": "Release the hold only after the per-wave Blender agreement has run, or after an explicit decision that it will not be run."
+    "reason": "Samples complete. The per-wave Blender agreement ran over 94 sampled buildings and 188 shipped GLBs drawn from these exact payload directories, and every sample agreed. The hold existed only to keep those bytes available until it could run; it has run.",
+    "releasedBy": {
+      "recordRef": "data/mass-generation-20260816/blender-agreement.json",
+      "checksumSha256": "d3135d1f38c176b540c9c8fffc57404f8fe04881b1e29fa2ec08361fd7418c8f"
+    },
+    "note": "Releasing the hold is a statement that these local bytes are no longer needed for THIS evidence item. It is not a deletion, not a conveyance, and not permission to replace or republish anything: the committed inventories and censuses remain the record of what was generated."
+  },
+  "blenderAgreementRecord": {
+    "recordRef": "data/mass-generation-20260816/blender-agreement.json",
+    "checksumSha256": "d3135d1f38c176b540c9c8fffc57404f8fe04881b1e29fa2ec08361fd7418c8f",
+    "status": "agreed",
+    "passingSamples": 94,
+    "failingSamples": 0
   },
   "notClaimedHere": [
     "Any visual, geographic, architectural, accessibility or performance acceptance.",
-    "The per-wave 16-sample Blender agreement, which is a separate evidence item and is PENDING CONNECTION for all six waves.",
+    "The per-wave Blender agreement is a SEPARATE evidence item with its own record; what it does and does not claim is stated there, and it is a geometry-agreement statement rather than a visual or architectural one.",
     "Cache-ceiling and streaming benchmarks against a two-LOD population, which belong to T005/T006."
   ]
 }
