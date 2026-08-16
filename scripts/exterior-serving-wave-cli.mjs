@@ -26,6 +26,11 @@
  * wave. So the regeneration is a DERIVATION whose correctness is proven against
  * the retained bytes, not a second opinion about them.
  *
+ * The inventory and evidence-shard IDS it publishes are the RETENTION release's,
+ * not this release's, and every one is compared against the retained manifest
+ * asset that declares it. See `servingInventoryId` for why they have to be: the
+ * ids are inside the immutable GLB bytes, so it is the record ids that move.
+ *
  * ## Copies, never links
  *
  * Payload GLBs are read and written as bytes. A hardlink would make the served
@@ -304,6 +309,7 @@ async function runEmit(waveId, options) {
 
     const cellRelease = buildServingCellRelease({
       releaseId,
+      recordReleaseId: waveEntry.retentionReleaseId,
       ledger,
       cell,
       approval,
@@ -343,12 +349,15 @@ async function runEmit(waveId, options) {
         sourceRecordId: source.sourceRecordId,
         inventory: context.plan.inventory,
         declaredInventoryHashSha256: asset.inventoryHashSha256,
+        declaredInventoryId: asset.inventoryId,
+        declaredEvidenceShardId: asset.evidenceShardId,
       });
       inventoryRegenCount += 1;
     }
 
     const sidecar = buildServingCellDetailSidecar({
       releaseId,
+      recordReleaseId: waveEntry.retentionReleaseId,
       cellReleaseId: cellRelease.cellReleaseId,
       approval,
       rights,

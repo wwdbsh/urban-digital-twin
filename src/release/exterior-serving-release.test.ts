@@ -384,6 +384,7 @@ describe("the emitted serving release", () => {
     });
     const cellRelease = buildServingCellRelease({
       releaseId: SERVING_RELEASE_ID,
+      recordReleaseId: RETENTION_RELEASE_ID,
       ledger,
       cell: ledger.cells[0]!,
       approval,
@@ -394,6 +395,7 @@ describe("the emitted serving release", () => {
 
     const sidecar = buildServingCellDetailSidecar({
       releaseId: SERVING_RELEASE_ID,
+      recordReleaseId: RETENTION_RELEASE_ID,
       cellReleaseId: cellRelease.cellReleaseId,
       approval,
       rights: {
@@ -427,6 +429,8 @@ describe("the emitted serving release", () => {
         sourceRecordId: buildingId,
         inventory: fixtureInventory(buildingId),
         declaredInventoryHashSha256: sha256HexSync(stableSerialize(fixtureInventory(buildingId))),
+        declaredInventoryId: `inventory:${RETENTION_RELEASE_ID}:${buildingId}`,
+        declaredEvidenceShardId: `evidence-shard:${RETENTION_RELEASE_ID}:${buildingId}`,
       })),
     });
     const sidecarBlob = servingDocumentBlob("cell-detail-sidecar", cellRelease.cellReleaseId, sidecar);
@@ -507,6 +511,44 @@ describe("the emitted serving release", () => {
     )).not.toThrow();
   });
 
+  /**
+   * The end-to-end statement, and the one the structural validators cannot make.
+   *
+   * Every check above passes on a release whose cell details cite `-s1`-scoped
+   * inventory and evidence ids, because each of those checks is about internal
+   * consistency and an `-s1` id is internally consistent. What fails is the
+   * comparison the RUNTIME makes against the immutable GLB metadata, and it
+   * fails per cell, in a browser, as an empty viewport. So this loads the
+   * emitted release the way the browser does — fetching the sharded sidecar and
+   * assembly package, parsing every GLB — and requires it to render.
+   */
+  it("renders every shipped asset through the runtime, against the retained GLB metadata", async () => {
+    const release = buildRelease();
+    const { runtime } = createExteriorCellRuntime(
+      { index: release.index, graph: release.graph, assemblies: release.assemblies },
+      { kind: "default" },
+      {
+        fetchArtifact: async (relativeRef: string) => {
+          const bytes = release.contents.get(relativeRef);
+          if (!bytes) throw new Error(`fixture has no bytes for ${relativeRef}`);
+          return bytes;
+        },
+        baseIdentity: { releaseId: "manhattan-citywide-20260804", has: (id: string) => (BUILDING_IDS as readonly string[]).includes(id) },
+      },
+    );
+    const outcome = await runtime.loadCell(CELL_ID, "inspection", 50);
+    expect(outcome.kind === "rendered" ? null : outcome).toBeNull();
+    const rendered = outcome as Extract<typeof outcome, { kind: "rendered" }>;
+    expect(rendered.assets.map((asset) => asset.canonicalFeatureId)).toEqual([...BUILDING_IDS]);
+    // Named explicitly rather than left implicit in "it rendered": these are the
+    // strings the GLB bytes carry, so the assertion is what the serving release
+    // must republish, not what it happens to have minted.
+    for (const asset of rendered.assets) {
+      expect(asset.provenance.inventoryId).toBe(`inventory:${RETENTION_RELEASE_ID}:${asset.canonicalFeatureId}`);
+      expect(asset.provenance.evidenceShardId).toBe(`evidence-shard:${RETENTION_RELEASE_ID}:${asset.canonicalFeatureId}`);
+    }
+  });
+
   it("emits a sidecar that binds its own cell release", () => {
     const release = buildRelease();
     const graph = release.graph as { roots: ExteriorRootManifest[]; cellReleases: Array<{ cellReleaseId: string }> };
@@ -523,6 +565,7 @@ describe("the sidecar inventory cross-check", () => {
     const approval = exteriorServingApproval(exteriorServingWave("w02"));
     expect(() => buildServingCellDetailSidecar({
       releaseId: SERVING_RELEASE_ID,
+      recordReleaseId: RETENTION_RELEASE_ID,
       cellReleaseId: servingCellReleaseId(SERVING_RELEASE_ID, CELL_ID),
       approval,
       rights: {
@@ -543,8 +586,46 @@ describe("the sidecar inventory cross-check", () => {
         sourceRecordId: BUILDING_IDS[0],
         inventory: fixtureInventory(BUILDING_IDS[0]),
         declaredInventoryHashSha256: "f".repeat(64),
+        declaredInventoryId: `inventory:${RETENTION_RELEASE_ID}:${BUILDING_IDS[0]}`,
+        declaredEvidenceShardId: `evidence-shard:${RETENTION_RELEASE_ID}:${BUILDING_IDS[0]}`,
       }],
     })).toThrow(/would describe different geometry from the bytes it carries/u);
+  });
+
+  it("refuses a record id the retained manifest does not declare", () => {
+    const approval = exteriorServingApproval(exteriorServingWave("w02"));
+    expect(() => buildServingCellDetailSidecar({
+      releaseId: SERVING_RELEASE_ID,
+      // The defect this exists for: scoping the record ids to the SERVING
+      // release. It cannot be caught by any structural validator — an `-s1`
+      // scoped id is internally consistent everywhere — and it surfaces only as
+      // `assembly-pin-mismatch` in a browser, one cell at a time, against
+      // immutable GLB bytes that name the retained id.
+      recordReleaseId: SERVING_RELEASE_ID,
+      cellReleaseId: servingCellReleaseId(SERVING_RELEASE_ID, CELL_ID),
+      approval,
+      rights: {
+        license: {
+          id: "license:nyc.building-footprints",
+          termsUrl: "https://example.invalid/terms",
+          attribution: "Synthetic",
+          retention: { mode: "conditional", expiresAt: null, conditions: "fixture" },
+          allowedUse: { privateDerivative: true, publicDisplay: true, derivativeConveyance: true, redistribution: true, runtimeTexture: false, trainingInput: false, generationInput: true, validationOnly: false },
+          personalDataRestricted: false,
+        },
+        source: () => { throw new Error("unreachable: the id check runs before any source is read."); },
+      },
+      capture: { capturedAt: "2026-08-04T00:00:00.000Z", updatedAt: "2026-08-04T00:00:00.000Z" },
+      buildings: [{
+        buildingId: BUILDING_IDS[0],
+        sourceRefId: `source-ref:nyc.building-footprints:${BUILDING_IDS[0]}`,
+        sourceRecordId: BUILDING_IDS[0],
+        inventory: fixtureInventory(BUILDING_IDS[0]),
+        declaredInventoryHashSha256: sha256HexSync(stableSerialize(fixtureInventory(BUILDING_IDS[0]))),
+        declaredInventoryId: `inventory:${RETENTION_RELEASE_ID}:${BUILDING_IDS[0]}`,
+        declaredEvidenceShardId: `evidence-shard:${RETENTION_RELEASE_ID}:${BUILDING_IDS[0]}`,
+      }],
+    })).toThrow(/the immutable GLB bytes do not name/u);
   });
 });
 

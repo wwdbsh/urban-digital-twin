@@ -144,8 +144,38 @@ export function servingCellReleaseId(releaseId: string, cellId: string): string 
   return `cell-release:${releaseId}:${cellId}:${EXTERIOR_SERVING_CELL_RELEASE_VERSION}`;
 }
 export function servingAssemblyPackageId(releaseId: string, cellId: string): string { return `assembly:${releaseId}:${cellId}`; }
-export function servingInventoryId(releaseId: string, buildingId: string): string { return `inventory:${releaseId}:${buildingId}`; }
-export function servingEvidenceShardId(releaseId: string, buildingId: string): string { return `evidence-shard:${releaseId}:${buildingId}`; }
+/**
+ * Inventory and evidence-shard ids, scoped to the RETENTION release.
+ *
+ * These two take a `recordReleaseId`, not this release's id, and that is the
+ * whole of D-C. A serving release republishes the retained records rather than
+ * minting its own, because the retained ids are already inside bytes that cannot
+ * be rewritten: every `-c1` GLB carries `inventoryId` and `evidenceShardId` in
+ * its canonical `urbanDigitalTwin` metadata, and `verifyGlb` requires that
+ * metadata to be byte-equal to the assembly asset that declares it. The serving
+ * assembly manifest is a pure transform of the retained one and carries those
+ * asset ids through untouched (see `transformRetentionAssemblyToServing`), so a
+ * cell release that minted `-s1`-scoped ids would disagree with its own manifest
+ * and every cell would fail `assembly-pin-mismatch` at load.
+ *
+ * Re-minting the manifests instead is not available: doing so rewrites the very
+ * field the GLB bytes are pinned against, and those bytes are immutable T004
+ * evidence. So the ids move, and the record ids are the retained ones.
+ *
+ * Nothing outside this pairing constrains the strings. `validateExteriorReleaseGraph`
+ * and `validateExteriorCellDetailSidecar` check internal consistency only — that
+ * a cited id resolves, once, within the same audience — and never that an id is
+ * prefixed by the release carrying it. The scoping is therefore a statement about
+ * PROVENANCE: the inventory and the evidence come from the retention release
+ * named here, and the serving release says so in the id rather than claiming
+ * authorship of records it copied.
+ *
+ * A tombstone is different and stays `-s1`-scoped below: no retained record
+ * exists for a building the retention wave refused, so the serving release is
+ * the author of that statement and names itself.
+ */
+export function servingInventoryId(recordReleaseId: string, buildingId: string): string { return `inventory:${recordReleaseId}:${buildingId}`; }
+export function servingEvidenceShardId(recordReleaseId: string, buildingId: string): string { return `evidence-shard:${recordReleaseId}:${buildingId}`; }
 export function servingTombstoneId(releaseId: string, buildingId: string): string { return `tombstone:${releaseId}:${buildingId}`; }
 /** Per-cell tileset, at the same path the retention package uses. */
 export function servingTilesetRef(cellId: string): string { return `public/tiles/${cellId}/tileset.json`; }
@@ -406,6 +436,13 @@ export function buildServingOwnershipLedger(input: ServingLedgerInput): Exterior
 
 export interface ServingCellReleaseInput {
   releaseId: string;
+  /**
+   * The retention release whose inventory and evidence records this release
+   * republishes. See `servingInventoryId`: the available details below cite
+   * ids scoped to THIS id, not to `releaseId`, because the retained GLB bytes
+   * already name them and cannot be rewritten.
+   */
+  recordReleaseId: string;
   ledger: ExteriorOwnershipLedger;
   cell: ExteriorOwnershipCell;
   approval: ExteriorApprovalEvidence;
@@ -431,8 +468,8 @@ export function buildServingCellRelease(input: ServingCellReleaseInput): Exterio
       details.push({
         buildingId,
         status: "available",
-        inventoryId: servingInventoryId(input.releaseId, buildingId),
-        evidenceShardId: servingEvidenceShardId(input.releaseId, buildingId),
+        inventoryId: servingInventoryId(input.recordReleaseId, buildingId),
+        evidenceShardId: servingEvidenceShardId(input.recordReleaseId, buildingId),
         runtimeTexture: false,
       });
       continue;
@@ -541,10 +578,16 @@ export interface ServingSidecarBuildingInput {
   inventory: ExteriorComponentInventory;
   /** The retained manifest's declared inventory hash, cross-checked here. */
   declaredInventoryHashSha256: string;
+  /** The retained manifest asset's own `inventoryId`, cross-checked here. */
+  declaredInventoryId: string;
+  /** The retained manifest asset's own `evidenceShardId`, cross-checked here. */
+  declaredEvidenceShardId: string;
 }
 
 export interface ServingSidecarInput {
   releaseId: string;
+  /** The retention release whose records these shards are. See `servingInventoryId`. */
+  recordReleaseId: string;
   cellReleaseId: string;
   approval: ExteriorApprovalEvidence;
   rights: ServingSourceRights;
@@ -576,11 +619,23 @@ export function buildServingCellDetailSidecar(input: ServingSidecarInput): Exter
     }
     const ineligible = building.inventory.components.filter((component) => !isExteriorComponentReleaseEligible(component));
     if (ineligible.length > 0) servingFail(`asset ${building.buildingId} declares components no release may promote: ${ineligible.map((component) => `${component.kind} is ${component.state}`).join(", ")}.`);
+    const inventoryId = servingInventoryId(input.recordReleaseId, building.buildingId);
+    const evidenceShardId = servingEvidenceShardId(input.recordReleaseId, building.buildingId);
+    // The binding to the immutable bytes. `verifyGlb` compares the GLB's
+    // canonical `inventoryId`/`evidenceShardId` against the assembly asset's,
+    // and the runtime then compares the asset's against the cell release detail
+    // it renders under; the sidecar sits in the middle, because a shard the cell
+    // release does not cite fails `validateExteriorCellDetailSidecar` and a cell
+    // release that cites what the manifest does not fails `assembly-pin-mismatch`
+    // in the browser. Checking the two ids HERE, against what the retained
+    // manifest declared, makes that a build-time failure with a name on it
+    // rather than a blank viewport.
+    if (inventoryId !== building.declaredInventoryId || evidenceShardId !== building.declaredEvidenceShardId) {
+      servingFail(`record ids for ${building.buildingId} derive ${inventoryId}/${evidenceShardId}, but the retained manifest declared ${building.declaredInventoryId}/${building.declaredEvidenceShardId}; the serving release would cite evidence the immutable GLB bytes do not name.`);
+    }
     const source = input.rights.source(building, input.capture.capturedAt, input.capture.updatedAt);
     const constraintIds = [...new Set(building.inventory.components.flatMap((component) => component.state === "generated" ? component.generator.constraintSourceIds : []))];
     if (constraintIds.length !== 1 || constraintIds[0] !== source.id) servingFail(`inventory for ${building.buildingId} does not constrain exactly the ${source.id} source.`);
-    const inventoryId = servingInventoryId(input.releaseId, building.buildingId);
-    const evidenceShardId = servingEvidenceShardId(input.releaseId, building.buildingId);
     inventoryShards.push({
       schemaVersion: EXTERIOR_RELEASE_SCHEMA_VERSION,
       shardId: inventoryId,

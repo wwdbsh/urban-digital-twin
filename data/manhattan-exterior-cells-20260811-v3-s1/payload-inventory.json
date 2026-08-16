@@ -34,7 +34,7 @@
     },
     "public": {
       "rootId": "root:manhattan-exterior-cells-20260811-v3-s1:public",
-      "rootChecksumSha256": "9a4903687f523d65389a7a66737d4558039e14535b4c2bd6e88e8612a35ab7b7"
+      "rootChecksumSha256": "158121500daea50c33636f733098601fe263415ef1b52a6b0088415034381262"
     }
   },
   "ownershipLedger": {
@@ -46,7 +46,7 @@
   },
   "head": {
     "snapshotId": "snapshot:manhattan-exterior-cells-20260811-v3-s1:v1",
-    "checksumSha256": "5cfde13c7d75512197c41511e604992aedbfa68431301359fb8a105254c8a805",
+    "checksumSha256": "1483851473cc84e1b392dcf26b02a61805c166ed526eef1126e1570c5e5a33f3",
     "assemblyPackageCount": 1
   },
   "composition": {
@@ -65,7 +65,7 @@
     {
       "cellId": "manhattan-exterior-cell-w00-000000-block-00835",
       "cellReleaseId": "cell-release:manhattan-exterior-cells-20260811-v3-s1:manhattan-exterior-cell-w00-000000-block-00835:v1",
-      "checksumSha256": "4a37e75b6418d33121939e23641cc1f0799b1684941e293c5403b9bee9213b55"
+      "checksumSha256": "90fb2b4516556605b6211acd89594d8ef2cdf498e55fd4e511ada99945e490be"
     }
   ],
   "assemblyPackageIds": [
@@ -84,7 +84,7 @@
     {
       "path": "index.json",
       "byteSize": 724,
-      "checksumSha256": "feaa470e4bdcbc08087525b765b9017acfbe5a87b5dcff8e9eabf94495f1c82a"
+      "checksumSha256": "f45e1f92d38b3027559a15482b3006db1d61407a5462d693dee9838696f87d39"
     },
     {
       "path": "public/assets/doitt-102705__lod_0.glb",
@@ -159,17 +159,17 @@
     {
       "path": "public/cell-assembly-package/cell-release-manhattan-exterior-cells-20260811-v3-s1-manhattan-exterior-cell-w00-000000-block-00835-v1.json",
       "byteSize": 31451,
-      "checksumSha256": "12bc656c2268a635a958a3052d87f32b4cdfac305d9352fedc6ccf3c070bb278"
+      "checksumSha256": "fdfd31ab91b46f192c6aefb7751d9c5d4c61e57aaf8cfc57aa8f6ca727b688bc"
     },
     {
       "path": "public/cell-detail-sidecar/cell-release-manhattan-exterior-cells-20260811-v3-s1-manhattan-exterior-cell-w00-000000-block-00835-v1.json",
       "byteSize": 267552,
-      "checksumSha256": "290a851b24b52e9c807c3b891d06064f4421b53a148a45f7d26e64527735911a"
+      "checksumSha256": "f06ea2f35508ea2c709240ae7f6ce80b6bfc2f82e539d57af813462d8706f82c"
     },
     {
       "path": "public/cell-release/cell-release-manhattan-exterior-cells-20260811-v3-s1-manhattan-exterior-cell-w00-000000-block-00835-v1.json",
       "byteSize": 7866,
-      "checksumSha256": "4a37e75b6418d33121939e23641cc1f0799b1684941e293c5403b9bee9213b55"
+      "checksumSha256": "90fb2b4516556605b6211acd89594d8ef2cdf498e55fd4e511ada99945e490be"
     },
     {
       "path": "public/ownership-ledger/ownership-ledger-manhattan-exterior-cells-20260811-v3-s1-216cff785b5fcee1.json",
@@ -179,7 +179,7 @@
     {
       "path": "public/rollout-snapshot/snapshot-manhattan-exterior-cells-20260811-v3-s1-v1.json",
       "byteSize": 4052,
-      "checksumSha256": "5cfde13c7d75512197c41511e604992aedbfa68431301359fb8a105254c8a805"
+      "checksumSha256": "1483851473cc84e1b392dcf26b02a61805c166ed526eef1126e1570c5e5a33f3"
     },
     {
       "path": "public/textures/brick-running-bond.png",
@@ -209,7 +209,7 @@
     {
       "path": "release-graph.json",
       "byteSize": 28080,
-      "checksumSha256": "b107b2c83998e922896f2cf3d6a40d39cce6db30261b5dd06a865cc59859379c"
+      "checksumSha256": "cd42490ceff555ef61894a9eb2ba17ec654d09c49f39c0011661efe1027da3df"
     }
   ]
 }
