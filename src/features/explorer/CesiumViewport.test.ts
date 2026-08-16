@@ -7,7 +7,7 @@ import type { Feature } from "../../domain/schema";
 import type { CityAssetResolver } from "../../runtime/city-asset-manifest";
 import { LocalFixtureCityAdapter } from "../../runtime/fixture-adapter";
 import { DEFAULT_LAYER_VISIBILITY } from "../../runtime/layers";
-import { STAGE3_RENDER_PROOF_ATTRIBUTE, STAGE3_STOREFRONT_PROJECTIONS_ATTRIBUTE, buildCollisionCheckedFeatureMap, canonicalPickId, clearStorefrontProjectionRecords, collectStage3RenderProof, collectStorefrontProjectionRecords, commercialStorefrontProxyId, denseFeatureIntersectsBounds, densePoiMarkerStyle, applyDenseSuppressionDelta, denseAppliedSuppressionSet, denseRenderPlanDelta, denseRenderPlanDeltaSize, denseRenderPlanKey, emptyDenseInstanceIndex, drillPickedEntityId, featureForPickedId, fixtureOnlyForFeature, focusCameraCoordinatesForFeature, focusCoordinatesForFeature, focusHeightForFeature, focusPoseForFeature, focusPoseForFeatureWithOcclusion, medianFrameInterval, nativeCameraControlBindings, normalizeFocusCameraPose, poiRenderMode, publicRealmAssetEntityId, publicRealmProxyId, publicRealmRepresentative, publishStage3RenderProof, publishStorefrontProjectionRecords, selectDenseFeatureGroups, selectDenseFeatures, shouldApplyCameraPoseRequest, shouldFocusFeature, shouldReplaceDenseRenderPlan, shouldShowFeatureLabel, shouldStartFocusFlight, stage3StorefrontProofRequested, storefrontProjectionCameraSignature, supportedVisibleLayers, canonicalExteriorPickId, exteriorCellEntityId, exteriorCellSignature, exteriorOverlayRenderEntries, exteriorUnanchoredNotice, planExteriorOverlayUpdate, type ExteriorCellOverlay } from "./CesiumViewport";
+import { emitCameraSettledAfterNextFrame, STAGE3_RENDER_PROOF_ATTRIBUTE, STAGE3_STOREFRONT_PROJECTIONS_ATTRIBUTE, buildCollisionCheckedFeatureMap, canonicalPickId, clearStorefrontProjectionRecords, collectStage3RenderProof, collectStorefrontProjectionRecords, commercialStorefrontProxyId, denseFeatureIntersectsBounds, densePoiMarkerStyle, applyDenseSuppressionDelta, denseAppliedSuppressionSet, denseRenderPlanDelta, denseRenderPlanDeltaSize, denseRenderPlanKey, emptyDenseInstanceIndex, drillPickedEntityId, featureForPickedId, fixtureOnlyForFeature, focusCameraCoordinatesForFeature, focusCoordinatesForFeature, focusHeightForFeature, focusPoseForFeature, focusPoseForFeatureWithOcclusion, medianFrameInterval, nativeCameraControlBindings, normalizeFocusCameraPose, poiRenderMode, publicRealmAssetEntityId, publicRealmProxyId, publicRealmRepresentative, publishStage3RenderProof, publishStorefrontProjectionRecords, selectDenseFeatureGroups, selectDenseFeatures, shouldApplyCameraPoseRequest, shouldFocusFeature, shouldReplaceDenseRenderPlan, shouldShowFeatureLabel, shouldStartFocusFlight, stage3StorefrontProofRequested, storefrontProjectionCameraSignature, supportedVisibleLayers, canonicalExteriorPickId, exteriorCellEntityId, exteriorCellSignature, exteriorOverlayRenderEntries, exteriorUnanchoredNotice, planExteriorOverlayUpdate, type ExteriorCellOverlay } from "./CesiumViewport";
 import type { Block835PublicRealmFeature } from "../../runtime/block835-public-realm-release";
 
 describe("Cesium POI render seam", () => {
@@ -757,5 +757,87 @@ describe("exterior overlay owned-collection reducer", () => {
     expect(notice).toContain("1 verified building");
     expect(notice).toContain("no verified WGS84 anchor");
     expect(exteriorUnanchoredNotice(["a", "b"])).toContain("2 verified buildings");
+  });
+});
+
+/**
+ * Defect D-18: the settled-camera emit after a pose request ran BEFORE any frame
+ * had been drawn at the new camera.
+ *
+ * The emit builds the ground footprint the residency scheduler culls on, from
+ * nine globe pick-rays that read the last RENDERED scene. Synchronously after a
+ * pose change there is no such frame yet, so a deep link or a landing pose
+ * published the footprint of wherever the camera used to be — and the scheduler
+ * then admitted the cells around the OLD position while deferring the ones the
+ * user was looking at. Harmless while the residency cap does not bind, and
+ * severe at the 8-cell cap a full-city serving composition needs.
+ */
+describe("camera-settled emit after a pose request (D-18)", () => {
+  function fakeScene() {
+    const listeners = new Set<() => void>();
+    return {
+      scene: {
+        postRender: {
+          addEventListener: (listener: () => void) => { listeners.add(listener); },
+          removeEventListener: (listener: () => void) => { listeners.delete(listener); },
+        },
+      },
+      frame: () => { for (const listener of [...listeners]) listener(); },
+      listenerCount: () => listeners.size,
+    };
+  }
+
+  it("does not emit until a frame has been rendered, and then emits exactly once", () => {
+    const { scene, frame, listenerCount } = fakeScene();
+    let dispatchCount = 0;
+    emitCameraSettledAfterNextFrame(scene, () => { dispatchCount += 1; });
+
+    // The defect, stated as an assertion: nothing is dispatched synchronously.
+    expect(dispatchCount).toBe(0);
+
+    frame();
+    // The landing-loop regression instrument. One pose request must produce
+    // exactly one settled-camera dispatch: zero would strand the scheduler on a
+    // stale footprint, and more than one would re-enter reconciliation on every
+    // subsequent frame.
+    expect(dispatchCount).toBe(1);
+
+    // Repeated frames must not re-emit, and the listener must be gone.
+    frame();
+    frame();
+    expect(dispatchCount).toBe(1);
+    expect(listenerCount()).toBe(0);
+  });
+
+  it("emits nothing when disposed before the first frame", () => {
+    const { scene, frame, listenerCount } = fakeScene();
+    let dispatchCount = 0;
+    const dispose = emitCameraSettledAfterNextFrame(scene, () => { dispatchCount += 1; });
+    dispose();
+    expect(listenerCount()).toBe(0);
+    frame();
+    expect(dispatchCount).toBe(0);
+  });
+
+  it("is inert when disposed after it has already emitted", () => {
+    const { scene, frame } = fakeScene();
+    let dispatchCount = 0;
+    const dispose = emitCameraSettledAfterNextFrame(scene, () => { dispatchCount += 1; });
+    frame();
+    dispose();
+    frame();
+    expect(dispatchCount).toBe(1);
+  });
+
+  it("keeps each pose request's dispatch independent", () => {
+    // Two requests in one session are two schedulers, and the second must not be
+    // satisfied by the first one's frame.
+    const { scene, frame } = fakeScene();
+    const dispatched: string[] = [];
+    emitCameraSettledAfterNextFrame(scene, () => dispatched.push("first"));
+    frame();
+    emitCameraSettledAfterNextFrame(scene, () => dispatched.push("second"));
+    frame();
+    expect(dispatched).toEqual(["first", "second"]);
   });
 });
