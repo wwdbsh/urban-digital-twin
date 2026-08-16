@@ -1,0 +1,242 @@
+{
+  "schemaVersion": "1.0",
+  "artifact": "serving-eviction-at-scale",
+  "capturedAt": "2026-08-16T10:29:08.301Z",
+  "browser": "Chrome/151.0.7922.138",
+  "base": "http://localhost:4193/",
+  "releaseId": "manhattan-lower-manhattan-cells-20260812-s1",
+  "armDisclosure": "This roam ran against the PROMOTED build, with the serving caps compiled into it, and named its wave with an explicit ?exteriorCells= so the reading is about ONE wave's cells rather than about six waves' interleaved residency. Because that wave is now a promoted default, the opt-in resolves the promoted record and the pin and identity gates run against it — which is a stronger arrangement than the pre-promotion opt-in this harness was written for, not a weaker one. What is NOT measured here is a six-wave session: a roam through the default set would exercise cross-wave residency, and that is a separate reading nobody has taken.",
+  "caps": {
+    "maxCacheEntries": 1024,
+    "maxCachedBytes": 268435456,
+    "maxConcurrentRequests": 4
+  },
+  "stops": [
+    {
+      "poseId": "roam-1-battery",
+      "landing": {
+        "dispatchCount": 1,
+        "footprintSignature": "-74.019743:40.705420:-74.008000:40.707400:-74.013872:40.706410"
+      },
+      "decision": {
+        "hold": "none",
+        "visibleCount": 6,
+        "deferredCount": 0,
+        "retainedCount": 0,
+        "residentCount": 6,
+        "reserved": [
+          "manhattan-exterior-cell-w02-000156-14-4823-4487"
+        ],
+        "decisionIndex": 5,
+        "footprintSignature": "-74.019743:40.705420:-74.008000:40.707400:-74.013872:40.706410",
+        "heightBucket": 300
+      },
+      "metrics": {
+        "cacheEntries": 408,
+        "cachedBytes": 160601904,
+        "cacheEvictions": 0,
+        "maxCacheEntries": 1024,
+        "maxCachedBytes": 268435456,
+        "activeRequests": 0,
+        "maxConcurrentRequests": 4,
+        "peakConcurrentRequests": 4,
+        "requestedArtifactCount": 400,
+        "loadedArtifactCount": 400,
+        "failedArtifactCount": 0,
+        "fallbackCellCount": 0,
+        "failedCellCount": 0,
+        "notShippedCellCount": 0,
+        "scheduledCellCount": 6,
+        "deferredCellCount": 120,
+        "releasedArtifactCount": 0,
+        "releasedArtifactBytes": 0
+      },
+      "selection": null
+    },
+    {
+      "poseId": "roam-2-wall-st",
+      "landing": {
+        "dispatchCount": 1,
+        "footprintSignature": "-74.004796:40.702900:-74.002500:40.710700:-74.003648:40.706800"
+      },
+      "decision": {
+        "hold": "none",
+        "visibleCount": 7,
+        "deferredCount": 2,
+        "retainedCount": 1,
+        "residentCount": 8,
+        "reserved": [
+          "manhattan-exterior-cell-w02-000166-16-19295-17947"
+        ],
+        "decisionIndex": 6,
+        "footprintSignature": "-74.004796:40.702900:-74.002500:40.710700:-74.003648:40.706800",
+        "heightBucket": 300
+      },
+      "metrics": {
+        "cacheEntries": 541,
+        "cachedBytes": 160134733,
+        "cacheEvictions": 0,
+        "maxCacheEntries": 1024,
+        "maxCachedBytes": 268435456,
+        "activeRequests": 0,
+        "maxConcurrentRequests": 4,
+        "peakConcurrentRequests": 4,
+        "requestedArtifactCount": 626,
+        "loadedArtifactCount": 626,
+        "failedArtifactCount": 0,
+        "fallbackCellCount": 0,
+        "failedCellCount": 0,
+        "notShippedCellCount": 0,
+        "scheduledCellCount": 8,
+        "deferredCellCount": 118,
+        "releasedArtifactCount": 93,
+        "releasedArtifactBytes": 42611424
+      },
+      "selection": null
+    },
+    {
+      "poseId": "roam-3-tribeca",
+      "landing": {
+        "dispatchCount": 1,
+        "footprintSignature": "-74.013715:40.713600:-74.002000:40.715581:-74.007857:40.714590"
+      },
+      "decision": {
+        "hold": "none",
+        "visibleCount": 8,
+        "deferredCount": 0,
+        "retainedCount": 0,
+        "residentCount": 8,
+        "reserved": [
+          "manhattan-exterior-cell-w02-000198-17-38590-35886"
+        ],
+        "decisionIndex": 8,
+        "footprintSignature": "-74.013714:40.713600:-74.002000:40.715581:-74.007857:40.714590",
+        "heightBucket": 300
+      },
+      "metrics": {
+        "cacheEntries": 468,
+        "cachedBytes": 111190954,
+        "cacheEvictions": 0,
+        "maxCacheEntries": 1024,
+        "maxCachedBytes": 268435456,
+        "activeRequests": 0,
+        "maxConcurrentRequests": 4,
+        "peakConcurrentRequests": 4,
+        "requestedArtifactCount": 1062,
+        "loadedArtifactCount": 1062,
+        "failedArtifactCount": 0,
+        "fallbackCellCount": 0,
+        "failedCellCount": 0,
+        "notShippedCellCount": 0,
+        "scheduledCellCount": 8,
+        "deferredCellCount": 118,
+        "releasedArtifactCount": 602,
+        "releasedArtifactBytes": 186925804
+      },
+      "selection": null
+    },
+    {
+      "poseId": "roam-4-les",
+      "landing": {
+        "dispatchCount": 1,
+        "footprintSignature": "-73.994000:40.713100:-73.990522:40.720900:-73.992261:40.717000"
+      },
+      "decision": {
+        "hold": "none",
+        "visibleCount": 15,
+        "deferredCount": 15,
+        "retainedCount": 0,
+        "residentCount": 8,
+        "reserved": [
+          "manhattan-exterior-cell-w02-000257-17-38597-35886"
+        ],
+        "decisionIndex": 9,
+        "footprintSignature": "-73.994000:40.713100:-73.990522:40.720900:-73.992261:40.717000",
+        "heightBucket": 300
+      },
+      "metrics": {
+        "cacheEntries": 544,
+        "cachedBytes": 66540810,
+        "cacheEvictions": 0,
+        "maxCacheEntries": 1024,
+        "maxCachedBytes": 268435456,
+        "activeRequests": 0,
+        "maxConcurrentRequests": 4,
+        "peakConcurrentRequests": 4,
+        "requestedArtifactCount": 1558,
+        "loadedArtifactCount": 1558,
+        "failedArtifactCount": 0,
+        "fallbackCellCount": 0,
+        "failedCellCount": 0,
+        "notShippedCellCount": 0,
+        "scheduledCellCount": 8,
+        "deferredCellCount": 118,
+        "releasedArtifactCount": 1022,
+        "releasedArtifactBytes": 273375472
+      },
+      "selection": null
+    },
+    {
+      "poseId": "roam-5-battery-return",
+      "landing": {
+        "dispatchCount": 1,
+        "footprintSignature": "-74.019743:40.705420:-74.008000:40.707400:-74.013872:40.706410"
+      },
+      "decision": {
+        "hold": "none",
+        "visibleCount": 6,
+        "deferredCount": 6,
+        "retainedCount": 2,
+        "residentCount": 8,
+        "reserved": [
+          "manhattan-exterior-cell-w02-000156-14-4823-4487"
+        ],
+        "decisionIndex": 10,
+        "footprintSignature": "-74.019743:40.705420:-74.008000:40.707400:-74.013872:40.706410",
+        "heightBucket": 300
+      },
+      "metrics": {
+        "cacheEntries": 540,
+        "cachedBytes": 190436098,
+        "cacheEvictions": 0,
+        "maxCacheEntries": 1024,
+        "maxCachedBytes": 268435456,
+        "activeRequests": 0,
+        "maxConcurrentRequests": 4,
+        "peakConcurrentRequests": 4,
+        "requestedArtifactCount": 1942,
+        "loadedArtifactCount": 1942,
+        "failedArtifactCount": 0,
+        "fallbackCellCount": 0,
+        "failedCellCount": 0,
+        "notShippedCellCount": 0,
+        "scheduledCellCount": 8,
+        "deferredCellCount": 118,
+        "releasedArtifactCount": 1410,
+        "releasedArtifactBytes": 298894908
+      },
+      "selection": null
+    }
+  ],
+  "findings": {
+    "evictionsObserved": false,
+    "cacheEvictions": 0,
+    "peakConcurrentRequests": 4,
+    "maxConcurrentRequests": 4,
+    "requestBudgetRespected": true,
+    "entriesWithinCap": true,
+    "bytesWithinCap": true,
+    "failedArtifactCount": 0,
+    "failedCellCount": 0,
+    "reEntryPoseId": "roam-5-battery-return",
+    "firstVisitEntries": 408,
+    "reEntryEntries": 540,
+    "selectionFeatureId": "doitt:1000469",
+    "selectionDigestFirstVisit": null,
+    "selectionDigestAfterReEntry": null,
+    "selectionStableAcrossEviction": false
+  },
+  "uncapturedGap": "A CANVAS PICK on the re-admitted mesh was not captured. The selection above is reached through a ?feature= deep link against the canonical base identity set, so it shows the same building resolving to the same sourced information across an eviction cycle; it does not show that a mouse click on the re-admitted geometry returns that identity. That is a real gap and is named rather than approximated.",
+  "claim": "A roam across wave w02's full-population cells at the serving caps. It states that eviction actually happens at this scale, that the shared request budget is never exceeded, that neither cache cap is breached, and that a cell re-entered after eviction verifies and renders again with zero failed artifacts — every re-admitted byte is re-verified against the same declared size and SHA-256, so a successful re-entry IS a byte-identical re-entry. It is not a frame-time reading and makes no visual claim.",
+  "ok": false
+}

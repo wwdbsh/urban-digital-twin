@@ -9,6 +9,22 @@
  *    `exteriorServingFrameVerdict` which was committed BEFORE this file could
  *    produce a number. This CLI reports whatever that function returns; it does
  *    not re-implement the arithmetic and cannot choose the constants.
+ *
+ *    THE A/B IS CROSS-BUILD, and that was not visible until the capture was
+ *    attempted. The pre-registered bar names arm A as "the promoted default …
+ *    at the caps this build ships today" (128 resident units, 512 entries) and
+ *    arm B as one serving wave "at the caps ADR 0052 §3 sizes for a dense
+ *    composition" (8 and 1,024). Those caps are COMPILED CONSTANTS, so no single
+ *    build can present both arms: running both post-promotion would measure arm
+ *    A at cap 8, and running both pre-promotion would measure arm B at cap 128.
+ *    Either substitution silently answers a different question than the one that
+ *    was registered.
+ *
+ *    So `frames-arm` captures ONE arm against ONE build and writes a partial
+ *    document that records the caps IT ran under, and `frames-compose` joins two
+ *    partials and hands them to the unchanged verdict function. `frames` is kept
+ *    for the same-build control — both arms, one browser, one set of caps —
+ *    because it answers a real question too, just not the pre-registered one.
  *  - **roam** — eviction at scale. A camera path across `w02`'s full-population
  *    cells at the serving caps, checking that eviction actually happens, that a
  *    cell re-entered after eviction is byte-identical, that picking still
@@ -28,7 +44,7 @@ import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 
 import { sha256HexSync } from "../src/domain/deterministic-hash.ts";
-import { exteriorServingFrameVerdict } from "../src/runtime/exterior-serving-frame-bar.ts";
+import { exteriorServingFrameVerdict, framePercentile } from "../src/runtime/exterior-serving-frame-bar.ts";
 import { EXTERIOR_SERVING_EVIDENCE_ID, exteriorServingWave } from "../src/release/exterior-serving-waves.ts";
 import { EXTERIOR_RUNTIME_BUDGETS } from "../src/runtime/exterior-cell-runtime.ts";
 
@@ -38,7 +54,21 @@ const evidenceRoot = join(repositoryRoot, "data", EXTERIOR_SERVING_EVIDENCE_ID);
 
 const PORT = 9224;
 const USER_DATA_DIR = "/tmp/t005-serving-chrome";
-const CHROME_LAUNCH_COMMAND = `open -na "Google Chrome" --args --remote-debugging-port=${PORT} --user-data-dir=${USER_DATA_DIR} --no-first-run --disable-background-timer-throttling`;
+/**
+ * The scratch instance's launch line.
+ *
+ * `--disable-backgrounding-occluded-windows` and `--disable-renderer-backgrounding`
+ * are HARNESS FIXES, found by running this file: `requestAnimationFrame` is
+ * suspended in an occluded window, so the frame sampler simply never received a
+ * callback and timed out after two minutes whenever another window happened to
+ * cover the scratch Chrome. They do not change what is rendered or how fast it
+ * renders; they stop the browser from deciding not to render at all, which is
+ * the difference between a measurement and a missing one. They are disclosed in
+ * every record this file writes because a frame-time reading taken with
+ * backgrounding disabled is not identical to one taken without it, and a reader
+ * is entitled to know which they are looking at.
+ */
+const CHROME_LAUNCH_COMMAND = `open -na "Google Chrome" --args --remote-debugging-port=${PORT} --user-data-dir=${USER_DATA_DIR} --no-first-run --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-renderer-backgrounding`;
 const VIEWPORT = { width: 1440, height: 900, deviceScaleFactor: 1 };
 const READY_TIMEOUT_MS = 300_000;
 const EVALUATE_TIMEOUT_MS = 120_000;
@@ -148,10 +178,27 @@ async function launchChrome() {
 
 /**
  * Kills ONLY the scratch instance, matched on its own user-data directory.
- * The operator's Chrome does not carry that flag and is never a match.
+ * The operator's Chrome does not carry that path and is never a match.
+ *
+ * HARNESS FIX, found by running this file: the pattern used to be
+ * `--user-data-dir=/tmp/t005-serving-chrome`, and `pkill` parses a pattern
+ * beginning with `--` as an option rather than as the pattern. The call failed
+ * every time, the failure was swallowed by the `.catch`, and the scratch Chrome
+ * was left running after every command — including the error path, which is
+ * exactly when it matters. The pattern is now the scratch profile's directory
+ * NAME, which still cannot match any browser but this one, and the result is
+ * VERIFIED rather than assumed: this function returns how many processes remain,
+ * so "cleaned up" is a reading and not a hope.
  */
 async function killChrome() {
-  await run("/usr/bin/pkill", ["-f", `--user-data-dir=${USER_DATA_DIR}`]).catch(() => null);
+  await run("/usr/bin/pkill", ["-f", USER_DATA_DIR.replace("/tmp/", "")]).catch(() => null);
+  await wait(1_500);
+  const remaining = await run("/usr/bin/pgrep", ["-f", USER_DATA_DIR.replace("/tmp/", "")]).then(
+    ({ stdout }) => stdout.split("\n").filter((line) => line.trim().length > 0).length,
+    () => 0,
+  );
+  if (remaining > 0) console.error(`exterior-serving-evidence: WARNING — ${remaining} scratch Chrome processes survived cleanup.`);
+  return remaining;
 }
 
 // ---------------------------------------------------------------------------
@@ -197,9 +244,29 @@ function sampleFramesExpression(durationMs) {
   })()`;
 }
 
+/**
+ * PNG image requests this document made, counted two ways.
+ *
+ * HARNESS FIX, disclosed: this filtered on `/public/textures/`, which is the
+ * shared-class tile directory a `-s1` SERVING release ships and which NO
+ * curated `-p1` release has — so arm A could only ever score zero, and a zero
+ * produced by a path filter is not a measurement. It now counts every `.png`
+ * the document fetched and reports the shared-class subset separately, so arm
+ * A's zero is a measured zero over all image requests rather than an artifact
+ * of which release layout the pattern happened to match.
+ *
+ * What it does NOT measure is GPU decode: this is the request count, which is
+ * the observable that answers "does texture delivery scale with population".
+ */
 const COUNT_DECODED_TEXTURES = `(() => {
-  const entries = performance.getEntriesByType("resource").filter((entry) => entry.name.includes("/public/textures/") && entry.name.endsWith(".png"));
-  return { requestCount: entries.length, distinctUrlCount: new Set(entries.map((entry) => entry.name)).size };
+  const png = performance.getEntriesByType("resource").filter((entry) => entry.name.split("?")[0].endsWith(".png"));
+  const shared = png.filter((entry) => entry.name.includes("/public/textures/"));
+  return {
+    requestCount: png.length,
+    distinctUrlCount: new Set(png.map((entry) => entry.name)).size,
+    sharedClassRequestCount: shared.length,
+    sharedClassDistinctUrlCount: new Set(shared.map((entry) => entry.name)).size,
+  };
 })()`;
 
 function poseUrl(base, pose, releaseId) {
@@ -268,8 +335,33 @@ function waveMetrics(probe, releaseId) {
   return wave?.metrics ?? null;
 }
 
+/**
+ * Assets RESIDENT in the shared exterior LRU, which is what the frame bar means
+ * by `residentAssetCount`.
+ *
+ * TWO DEFECTS FIXED HERE, both found by running this file for the first time
+ * and both disclosed rather than quietly corrected:
+ *
+ *  1. It read `loadedArtifactCount`, which `ExteriorCellRuntime` only ever
+ *     INCREMENTS (`this.loadedArtifactCount += 1`). That is a cumulative count
+ *     of everything a document has ever fetched, so it can only rise and it
+ *     reported the same number at a 2,400 m overview and a 260 m street pose.
+ *     Residency is `cacheEntries`.
+ *  2. It SUMMED across waves. `cacheEntries` and `cachedBytes` are SESSION-WIDE
+ *     — they read the one shared cache instance every promoted wave writes into
+ *     — and `exterior-cell-runtime.ts` says in as many words that a reader must
+ *     take them from one wave and never sum them, on pain of multiplying one
+ *     pool by the number of promotions. At six promoted waves that error is 6x.
+ *
+ * Both mattered: the bar treats resident-asset equality as the thing that makes
+ * a pose like-for-like, and a cumulative counter would have made every pose look
+ * equal for the wrong reason.
+ */
 function residentAssetCount(probe) {
-  return (probe?.waves ?? []).reduce((total, wave) => total + (wave.metrics?.loadedArtifactCount ?? 0), 0);
+  for (const wave of probe?.waves ?? []) {
+    if (wave.metrics) return wave.metrics.cacheEntries;
+  }
+  return 0;
 }
 
 // ---------------------------------------------------------------------------
@@ -296,6 +388,8 @@ async function captureArm(base, releaseId, label) {
         residentAssetCount: residentAssetCount(probe),
         decodedTextureCount: textures.distinctUrlCount,
         textureRequestCount: textures.requestCount,
+        sharedClassTextureCount: textures.sharedClassDistinctUrlCount,
+        sharedClassTextureRequestCount: textures.sharedClassRequestCount,
         decision: probe?.decision ?? null,
         metrics: waveMetrics(probe, releaseId),
       });
@@ -343,6 +437,114 @@ async function runFrames(base) {
 function stripFrames(sample) {
   const { frameMs, ...rest } = sample;
   return { ...rest, frameSampleCount: frameMs.length, frameMsHead: frameMs.slice(0, 8).map((value) => Number(value.toFixed(3))) };
+}
+
+// ---------------------------------------------------------------------------
+// frames-arm / frames-compose — the CROSS-BUILD form of the same A/B
+// ---------------------------------------------------------------------------
+
+/**
+ * The residency cap COMPILED INTO THE BUILD UNDER TEST, read out of the source
+ * the build was made from.
+ *
+ * It is read as text rather than imported because
+ * `exterior-visibility-scheduler.ts` reaches its dependencies without file
+ * extensions, which Node's type stripping cannot resolve; the module graph
+ * simply is not loadable from a plain `node` process, and the runtime budgets
+ * above are (they are). The read is a pinned pattern over the same file the
+ * bundler compiled and it FAILS CLOSED — an arm document without this number
+ * cannot be composed against one that has a different one, which is the entire
+ * reason the arms are separate.
+ */
+async function compiledResidencyCap() {
+  const text = await readFile(join(repositoryRoot, "src/runtime/exterior-visibility-scheduler.ts"), "utf8");
+  const match = /EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY\s*=\s*\{[\s\S]*?maxResidentUnits:\s*(\d[\d_]*)/u.exec(text);
+  if (!match) fail("could not read maxResidentUnits out of EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY; an arm document that cannot state its own residency cap is not evidence about a cap.");
+  return Number(match[1].replaceAll("_", ""));
+}
+
+const FRAME_ARMS = {
+  a: { label: "promoted-default", releaseSelector: null, verdictKey: "promotedDefault" },
+  b: { label: "serving-w02", releaseSelector: SERVING_WAVE.servingReleaseId, verdictKey: "servingWave" },
+};
+
+/**
+ * One arm, one build. The FULL frame series is retained here rather than
+ * stripped, because the verdict is computed later in a different process and a
+ * percentile cannot be recovered from a summary.
+ */
+async function runFrameArm(base, armId, buildLabel) {
+  const arm = FRAME_ARMS[armId];
+  if (!arm) fail(`unknown arm ${armId}; expected a or b.`);
+  if (!buildLabel) fail("--build= is required: an arm document that does not say which build produced it cannot be composed honestly.");
+  const residencyCap = await compiledResidencyCap();
+  const browser = await launchChrome();
+  try {
+    const captured = await captureArm(base, arm.releaseSelector, arm.label);
+    const record = {
+      schemaVersion: "1.0",
+      artifact: "serving-frame-time-arm",
+      arm: armId,
+      armLabel: arm.label,
+      buildLabel,
+      capturedAt: new Date().toISOString(),
+      browser,
+      viewport: VIEWPORT,
+      base,
+      releaseSelector: arm.releaseSelector === null ? "default" : `?exteriorCells=${arm.releaseSelector}`,
+      caps: { ...EXTERIOR_RUNTIME_BUDGETS },
+      residencyCap,
+      samples: captured.samples,
+      landings: captured.landings,
+      externalHosts: captured.externalHosts,
+      harnessDisclosure: `ONE arm of the pre-registered A/B, captured against build "${buildLabel}" in its own scratch Chrome (${CHROME_LAUNCH_COMMAND}), at the four registered poses in the registered order, with ${SETTLE_MS} ms of settle before each ${FRAME_SAMPLE_MS} ms frame sample. The bundle carries VITE_EXTERIOR_SCHEDULER_PROBE=1 because the residency and cache columns are read out of that probe's DOM payload; the probe reads state the app already holds and decides nothing. Frame durations are requestAnimationFrame deltas — the browser's own presentation cadence — and the first delta of each sample is dropped because it spans the gap since the previous paint rather than a rendered frame. The caps above are the ones COMPILED INTO THIS BUILD, which is the whole reason the arms are captured separately.`,
+    };
+    await writeEvidence(`frame-arm-${armId}`, record);
+    console.log(serialize({
+      arm: armId,
+      buildLabel,
+      caps: record.caps,
+      residencyCap: record.residencyCap,
+      poses: captured.samples.map((sample) => ({ poseId: sample.poseId, frames: sample.frameMs.length, p50: Number(framePercentile(sample.frameMs, 50).toFixed(3)), p95: Number(framePercentile(sample.frameMs, 95).toFixed(3)), resident: sample.residentAssetCount, textures: sample.decodedTextureCount, dispatches: captured.landings.find((landing) => landing.poseId === sample.poseId)?.dispatchCount ?? null })),
+    }));
+  } finally {
+    await killChrome();
+  }
+}
+
+/**
+ * Join two arm documents and hand them, unaltered, to the pre-registered
+ * verdict. This function chooses nothing: it reads two files, passes the frame
+ * series through, and prints what `exteriorServingFrameVerdict` returns.
+ */
+async function composeFrames() {
+  const read = async (armId) => JSON.parse(await readFile(join(evidenceRoot, `frame-arm-${armId}.json`), "utf8"));
+  const armA = await read("a");
+  const armB = await read("b");
+  if (armA.arm !== "a" || armB.arm !== "b") fail("the two arm documents are not one A and one B.");
+  const posesEqual = JSON.stringify(armA.samples.map((sample) => sample.poseId)) === JSON.stringify(armB.samples.map((sample) => sample.poseId));
+  if (!posesEqual) fail("the two arms did not visit the same poses in the same order, so they are not a comparison.");
+  const verdict = exteriorServingFrameVerdict({
+    promotedDefault: armA.samples.map((sample) => ({ poseId: sample.poseId, frameMs: sample.frameMs, residentAssetCount: sample.residentAssetCount, decodedTextureCount: sample.decodedTextureCount })),
+    servingWave: armB.samples.map((sample) => ({ poseId: sample.poseId, frameMs: sample.frameMs, residentAssetCount: sample.residentAssetCount, decodedTextureCount: sample.decodedTextureCount })),
+  });
+  const record = {
+    schemaVersion: "1.0",
+    artifact: "serving-frame-time-ab",
+    form: "cross-build",
+    composedAt: new Date().toISOString(),
+    arms: {
+      promotedDefault: { buildLabel: armA.buildLabel, capturedAt: armA.capturedAt, browser: armA.browser, base: armA.base, releaseSelector: armA.releaseSelector, caps: armA.caps, residencyCap: armA.residencyCap, poses: armA.samples.map(stripFrames), landings: armA.landings, externalHosts: armA.externalHosts },
+      servingWave: { buildLabel: armB.buildLabel, capturedAt: armB.capturedAt, browser: armB.browser, base: armB.base, releaseSelector: armB.releaseSelector, caps: armB.caps, residencyCap: armB.residencyCap, poses: armB.samples.map(stripFrames), landings: armB.landings, externalHosts: armB.externalHosts },
+    },
+    viewport: armA.viewport,
+    verdict,
+    formDisclosure: "CROSS-BUILD, and stated as the first fact about this record rather than buried in it. The pre-registered bar names arm A at the caps the pre-promotion build shipped and arm B at the caps ADR 0052 §3 sizes for a dense composition; those are compiled constants, so the two arms cannot exist in one binary and were captured against two builds, one per arm, on the same machine at the same four poses in the same order. The two builds are named in `arms.*.buildLabel` and their compiled caps are carried beside their numbers. What this costs is that the arms did not share a browser process: each ran its own scratch Chrome, so a machine-state difference between the two runs is not controlled for and is a real limitation of this reading.",
+    claim: "The pre-registered non-regression bar of ADR 0052, evaluated by exteriorServingFrameVerdict, which was committed before this instrument could produce a number. Passing it is a frame-time statement about the serving SHAPE at these four poses on this machine. It is not visual, architectural or geographic acceptance, and it is not a claim about any pose, machine or composition not listed here.",
+  };
+  await writeEvidence("frame-time-ab", record);
+  console.log(serialize({ ok: verdict.pass, measurablePoseCount: verdict.measurablePoseCount, likeForLikePoseCount: verdict.likeForLikePoseCount, poses: verdict.poses.map((pose) => ({ poseId: pose.poseId, p50A: Number(pose.p50A.toFixed(3)), p50B: Number(pose.p50B.toFixed(3)), p95A: Number(pose.p95A.toFixed(3)), p95B: Number(pose.p95B.toFixed(3)), admittedP50Ms: Number(pose.admittedP50Ms.toFixed(3)), admittedP95Ms: Number(pose.admittedP95Ms.toFixed(3)), residentA: pose.residentAssetCountA, residentB: pose.residentAssetCountB, texturesA: pose.decodedTextureCountA, texturesB: pose.decodedTextureCountB, pass: pose.pass, unmeasurableReason: pose.unmeasurableReason })) }));
+  if (!verdict.pass) process.exitCode = 1;
 }
 
 // ---------------------------------------------------------------------------
@@ -428,7 +630,7 @@ async function runRoam(base) {
       browser,
       base,
       releaseId,
-      armDisclosure: "This roam ran as an OPT-IN arm, before any promotion, with the serving caps compiled into the build under test. That is deliberate and is stated rather than implied: the caps are a property of the serving composition, and measuring them against the 13-cell promoted composition would measure the case ADR 0052 §3 already rejected.",
+      armDisclosure: "This roam ran against the PROMOTED build, with the serving caps compiled into it, and named its wave with an explicit ?exteriorCells= so the reading is about ONE wave's cells rather than about six waves' interleaved residency. Because that wave is now a promoted default, the opt-in resolves the promoted record and the pin and identity gates run against it — which is a stronger arrangement than the pre-promotion opt-in this harness was written for, not a weaker one. What is NOT measured here is a six-wave session: a roam through the default set would exercise cross-wave residency, and that is a separate reading nobody has taken.",
       caps: { ...EXTERIOR_RUNTIME_BUDGETS },
       stops,
       findings: {
@@ -475,9 +677,11 @@ async function main() {
   const base = argValue(argv, "--base", "http://127.0.0.1:4173/");
   const command = argv.find((token) => !token.startsWith("--"));
   if (command === "frames") await runFrames(base);
+  else if (command === "frames-arm") await runFrameArm(base, argValue(argv, "--arm", ""), argValue(argv, "--build", ""));
+  else if (command === "frames-compose") await composeFrames();
   else if (command === "roam") await runRoam(base);
   else {
-    console.error("usage: exterior-serving-evidence-cli.mjs <frames|roam> [--base=http://127.0.0.1:4173/]");
+    console.error("usage: exterior-serving-evidence-cli.mjs <frames|frames-arm|frames-compose|roam> [--base=http://127.0.0.1:4173/] [--arm=a|b] [--build=<label>]");
     console.error(`The scratch Chrome is launched and killed by this file: ${CHROME_LAUNCH_COMMAND}`);
     process.exit(1);
   }
