@@ -191,3 +191,103 @@ describe.each(COMMITTED.map((entry) => [entry.waveId, entry] as const))("%s serv
     expect(new Set([...servingFiles.values()].map((file) => file.checksumSha256)).size).toBeGreaterThan(0);
   });
 });
+
+/**
+ * The C5 SESSION EVIDENCE, held to its own sidecar and to its own verdict.
+ *
+ * These records are browser readings, so they cannot be recomputed here — but
+ * they can be kept from drifting, and more importantly they can be kept from
+ * being quietly replaced. Every one of the three C5 captures on the promoted
+ * build FAILED its pre-registered conditions, and a failing record is exactly
+ * the kind that gets swapped for a greener one during a later edit.
+ *
+ * So the verdicts are asserted AS THEY STAND. A future task that legitimately
+ * turns one of them green has to change this file to say so, in a diff a
+ * reviewer sees, rather than by dropping a new JSON into `data/`.
+ */
+describe("the committed C5 session evidence", () => {
+  const EVIDENCE_ROOT = "data/exterior-serving-20260817";
+
+  function readEvidence(name: string): Record<string, unknown> {
+    const decoder = new TextDecoder();
+    const text = decoder.decode(readFileSync(`${EVIDENCE_ROOT}/${name}.json`));
+    const recorded = decoder.decode(readFileSync(`${EVIDENCE_ROOT}/${name}.sha256`)).trim().split(/\s+/u)[0];
+    expect(sha256HexSync(text), `${name}.json does not match its recorded checksum`).toBe(recorded);
+    return JSON.parse(text) as Record<string, unknown>;
+  }
+
+  it("records the six-wave DEFAULT session, and records that it FAILED", () => {
+    const record = readEvidence("default-session-residency") as unknown as {
+      artifact: string; releaseSelector: string; ok: boolean;
+      caps: { maxCacheEntries: number; maxCachedBytes: number };
+      findings: Record<string, number | boolean | null>;
+    };
+    expect(record.artifact).toBe("serving-default-session-residency");
+    // No ?exteriorCells=: this is the promoted composition, which is the whole
+    // reason the capture exists.
+    expect(record.releaseSelector).toBe("default");
+    expect(record.caps.maxCacheEntries).toBe(1_024);
+
+    // What it established.
+    expect(record.findings.promotedWaveCount).toBe(6);
+    expect(record.findings.allSixWavesResolved).toBe(true);
+    expect(record.findings.bootDocumentTotal).toBe(18);
+    expect(record.findings.bootDocumentsComplete).toBe(true);
+    expect(record.findings.declaredCellTotal).toBe(883);
+    expect(record.findings.maxScheduledCellsAtAnyPose).toBe(8);
+    expect(record.findings.failedCellCount).toBe(0);
+    expect(record.findings.entriesWithinCap).toBe(true);
+    expect(record.findings.bytesWithinCap).toBe(true);
+    expect(record.findings.requestBudgetRespected).toBe(true);
+    expect(record.findings.everyPoseLanded).toBe(true);
+
+    // AND WHAT IT DID NOT. Three cells of wave w01 fell back to pinned base with
+    // three failed artifacts, on the promoted default, at three of four poses.
+    // Asserted as the exact numbers observed so that a change in either
+    // direction is a diff somebody has to explain.
+    expect(record.findings.fallbackCellCount).toBe(9);
+    expect(record.findings.failedArtifactCount).toBe(9);
+    expect(record.ok).toBe(false);
+  });
+
+  it("records the frame-time A/B, and records that it FAILED on the texture bound", () => {
+    const record = readEvidence("frame-time-ab") as unknown as {
+      verdict: { pass: boolean; bar: { maximumDecodedTextures: number }; poses: Array<{ poseId: string; pass: boolean; p50Pass: boolean; p95Pass: boolean; decodedTexturePass: boolean; decodedTextureCountA: number; decodedTextureCountB: number }> };
+    };
+    expect(record.verdict.bar.maximumDecodedTextures).toBe(4);
+    expect(record.verdict.pass).toBe(false);
+    for (const pose of record.verdict.poses) {
+      expect(pose.pass, pose.poseId).toBe(false);
+      // The FRAME halves pass on every pose; the texture bound is the only
+      // reason any of them fails, and that separation is the finding.
+      expect(pose.p50Pass, pose.poseId).toBe(true);
+      expect(pose.p95Pass, pose.poseId).toBe(true);
+      expect(pose.decodedTexturePass, pose.poseId).toBe(false);
+      expect(pose.decodedTextureCountB, pose.poseId).toBe(5);
+      expect(pose.decodedTextureCountA, pose.poseId).toBe(1);
+    }
+    // The column the follow-up will be evaluated over, already committed: the
+    // shared-class subset is four in every arm-B pose, which is the property the
+    // bound was written about. The THRESHOLD is untouched and the FAIL stands.
+    const armB = readEvidence("frame-arm-b") as unknown as { samples: Array<{ sharedClassTextureCount: number; sharedClassTextureRequestCount: number; residentAssetCount: number }> };
+    for (const sample of armB.samples) {
+      expect(sample.sharedClassTextureCount).toBe(4);
+      expect(sample.sharedClassTextureRequestCount).toBe(4);
+    }
+    // …and it does not scale with residency: 12 resident assets and 371 resident
+    // assets both cost four class-tile requests. That is the statement the
+    // re-wire follow-up has to make, and the data for it is already here.
+    const residency = armB.samples.map((sample) => sample.residentAssetCount);
+    expect(Math.max(...residency)).toBeGreaterThan(Math.min(...residency) * 10);
+  });
+
+  it("records the eviction roam, and records that it FAILED on eviction and identity", () => {
+    const record = readEvidence("eviction-at-scale") as unknown as { ok: boolean; findings: Record<string, number | boolean | null> };
+    expect(record.findings.evictionsObserved).toBe(false);
+    expect(record.findings.cacheEvictions).toBe(0);
+    expect(record.findings.selectionStableAcrossEviction).toBe(false);
+    expect(record.findings.requestBudgetRespected).toBe(true);
+    expect(record.findings.failedArtifactCount).toBe(0);
+    expect(record.ok).toBe(false);
+  });
+});

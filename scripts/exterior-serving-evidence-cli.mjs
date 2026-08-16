@@ -597,15 +597,70 @@ function selectionUrl(base, pose, releaseId, featureId) {
   return url.toString();
 }
 
-async function runRoam(base) {
+/**
+ * Pre-registered pass conditions for the DEFAULT-SESSION arm, written before the
+ * capture was taken.
+ *
+ * Every one is a structural or byte statement about a six-wave session, not a
+ * performance bar. That is deliberate: F1 exists because nobody had ever
+ * OBSERVED the promoted composition — both prior captures named one wave with an
+ * explicit `?exteriorCells=`, so six co-resident runtimes sharing one cache
+ * under one global residency cap was the exact arrangement with no evidence.
+ * What this asks is whether that arrangement holds together, not how fast it is.
+ */
+const DEFAULT_SESSION_GATES = {
+  promotedWaveCount: 6,
+  bootDocumentsPerWave: 3,
+  maximumFailedCells: 0,
+  maximumFallbackCells: 0,
+  maximumFailedArtifacts: 0,
+};
+
+/**
+ * The boot documents a session fetched, per release.
+ *
+ * `loadExteriorCellRuntime` fetches exactly three whole documents per release
+ * before anything renders — `index.json`, `release-graph.json`, `assemblies.json`
+ * — so a six-wave session boots on eighteen. Counting them from the CDP network
+ * log rather than from the app's own accounting means a wave that silently
+ * failed to boot shows up as a missing document rather than as a wave the app
+ * declined to mention.
+ */
+function bootDocumentCounts(session) {
+  const byRelease = new Map();
+  for (const response of session.responses()) {
+    const match = /\/data\/([^/]+)\/(index\.json|release-graph\.json|assemblies\.json)(?:\?|$)/u.exec(response.url);
+    if (!match) continue;
+    const entry = byRelease.get(match[1]) ?? new Set();
+    entry.add(match[2]);
+    byRelease.set(match[1], entry);
+  }
+  return [...byRelease.entries()]
+    .map(([releaseId, documents]) => ({ releaseId, documentCount: documents.size, documents: [...documents].sort() }))
+    .sort((left, right) => (left.releaseId < right.releaseId ? -1 : left.releaseId > right.releaseId ? 1 : 0));
+}
+
+async function runRoam(base, releaseSelector) {
+  // The DEFAULT arm resolves whatever the promotion record says, which is the
+  // whole point of it; the w02 arm names its wave. `captureArm` has taken a null
+  // release selector since the frame A/B was written, and this is the same
+  // switch one command over.
+  const defaultSession = releaseSelector === "default";
   const browser = await launchChrome();
-  const releaseId = SERVING_WAVE.servingReleaseId;
+  const releaseId = defaultSession ? null : SERVING_WAVE.servingReleaseId;
+  // The ROAM path is documented as being across `w02` cells only, so a default
+  // session walks the four registered frame poses instead: an overview at the
+  // outer band edge, the inner band edge, and two street poses in different
+  // waves. A default session's question is co-residency across waves, and those
+  // are the poses that cross a wave boundary.
+  const poses = defaultSession ? POSES : ROAM;
   const featureId = await servedSelectionFeatureId();
-  const { session, targetId } = await attach(selectionUrl(base, ROAM[0], releaseId, featureId));
+  const { session, targetId } = await attach(selectionUrl(base, poses[0], releaseId, featureId));
   try {
     await waitFor(session, READ_SCHEDULER_PROBE, (probe) => probe.exteriorStreamingActive, "serving exterior activation");
+    if (defaultSession) return await captureDefaultSession(session, base, poses, featureId, browser);
     const stops = [];
-    for (const pose of ROAM) {
+    for (const pose of poses) {
       const landing = await landPose(session, selectionUrl(base, pose, releaseId, featureId), `roam:${pose.poseId}`);
       await wait(SETTLE_MS);
       const probe = await session.evaluate(READ_SCHEDULER_PROBE, `roam:${pose.poseId} probe`);
@@ -666,6 +721,127 @@ async function runRoam(base) {
   }
 }
 
+/**
+ * The SIX-WAVE DEFAULT SESSION, observed once on the promoted build.
+ *
+ * ## Why the session-wide numbers are read from one wave and never summed
+ *
+ * `cacheEntries`, `cachedBytes`, `cacheEvictions` and the request counters read
+ * the ONE shared exterior cache that every promoted wave writes into.
+ * `exterior-cell-runtime.ts` says so in as many words. Summing them across six
+ * waves would multiply one pool by six, which is exactly the error that would
+ * make a 92%-full byte cap look like a 550%-full one. They are taken from the
+ * first wave that reports metrics; the per-wave columns beside them are the ones
+ * that really are per wave.
+ *
+ * ## What it does NOT do
+ *
+ * It takes no frame timings and makes no visual claim. It is the missing
+ * OBSERVATION that the promoted arrangement resolves, boots, schedules and stays
+ * inside its budgets — the thing both single-wave captures could not say.
+ */
+async function captureDefaultSession(session, base, poses, featureId, browser) {
+  const stops = [];
+  for (const pose of poses) {
+    const landing = await landPose(session, selectionUrl(base, pose, null, featureId), `default:${pose.poseId}`);
+    await wait(SETTLE_MS);
+    const probe = await session.evaluate(READ_SCHEDULER_PROBE, `default:${pose.poseId} probe`);
+    const waves = (probe?.waves ?? []).map((wave) => ({
+      releaseId: wave.releaseId,
+      declaredCellCount: wave.declaredCellCount,
+      scheduledCellCount: wave.metrics?.scheduledCellCount ?? null,
+      deferredCellCount: wave.metrics?.deferredCellCount ?? null,
+      notShippedCellCount: wave.metrics?.notShippedCellCount ?? null,
+      fallbackCellCount: wave.metrics?.fallbackCellCount ?? null,
+      failedCellCount: wave.metrics?.failedCellCount ?? null,
+      failedArtifactCount: wave.metrics?.failedArtifactCount ?? null,
+    }));
+    // SESSION-WIDE, taken once. See the docblock.
+    const shared = (probe?.waves ?? []).find((wave) => wave.metrics)?.metrics ?? null;
+    stops.push({
+      poseId: pose.poseId,
+      role: pose.role ?? null,
+      landing,
+      decision: probe?.decision ?? null,
+      waves,
+      sharedCache: shared === null ? null : {
+        cacheEntries: shared.cacheEntries,
+        cachedBytes: shared.cachedBytes,
+        cacheEvictions: shared.cacheEvictions,
+        maxCacheEntries: shared.maxCacheEntries,
+        maxCachedBytes: shared.maxCachedBytes,
+        activeRequests: shared.activeRequests,
+        peakConcurrentRequests: shared.peakConcurrentRequests,
+        maxConcurrentRequests: shared.maxConcurrentRequests,
+        requestedArtifactCount: shared.requestedArtifactCount,
+        loadedArtifactCount: shared.loadedArtifactCount,
+        releasedArtifactCount: shared.releasedArtifactCount,
+        releasedArtifactBytes: shared.releasedArtifactBytes,
+      },
+    });
+    console.log(`  default ${pose.poseId} waves=${waves.length} scheduled=[${waves.map((wave) => wave.scheduledCellCount).join(",")}] entries=${shared?.cacheEntries} bytes=${shared?.cachedBytes} evictions=${shared?.cacheEvictions} peak=${shared?.peakConcurrentRequests} dispatches=${landing.dispatchCount}`);
+  }
+
+  const boot = bootDocumentCounts(session);
+  const last = stops[stops.length - 1] ?? null;
+  const shared = last?.sharedCache ?? null;
+  const everyWave = stops.flatMap((stop) => stop.waves);
+  const promotedBoot = boot.filter((entry) => entry.releaseId.endsWith("-s1"));
+  const findings = {
+    promotedWaveCount: last?.waves.length ?? 0,
+    promotedWaveIds: (last?.waves ?? []).map((wave) => wave.releaseId).sort(),
+    allSixWavesResolved: (last?.waves.length ?? 0) === DEFAULT_SESSION_GATES.promotedWaveCount,
+    bootReleases: promotedBoot,
+    bootDocumentTotal: promotedBoot.reduce((total, entry) => total + entry.documentCount, 0),
+    bootDocumentsComplete: promotedBoot.length === DEFAULT_SESSION_GATES.promotedWaveCount
+      && promotedBoot.every((entry) => entry.documentCount === DEFAULT_SESSION_GATES.bootDocumentsPerWave),
+    declaredCellTotal: (last?.waves ?? []).reduce((total, wave) => total + (wave.declaredCellCount ?? 0), 0),
+    scheduledCellsByPose: stops.map((stop) => ({ poseId: stop.poseId, byWave: stop.waves.map((wave) => ({ releaseId: wave.releaseId, scheduledCellCount: wave.scheduledCellCount })), total: stop.waves.reduce((total, wave) => total + (wave.scheduledCellCount ?? 0), 0) })),
+    maxScheduledCellsAtAnyPose: Math.max(...stops.map((stop) => stop.waves.reduce((total, wave) => total + (wave.scheduledCellCount ?? 0), 0))),
+    failedCellCount: everyWave.reduce((total, wave) => total + (wave.failedCellCount ?? 0), 0),
+    fallbackCellCount: everyWave.reduce((total, wave) => total + (wave.fallbackCellCount ?? 0), 0),
+    failedArtifactCount: everyWave.reduce((total, wave) => total + (wave.failedArtifactCount ?? 0), 0),
+    cacheEntries: shared?.cacheEntries ?? null,
+    cachedBytes: shared?.cachedBytes ?? null,
+    cacheEvictions: shared?.cacheEvictions ?? null,
+    peakConcurrentRequests: shared?.peakConcurrentRequests ?? null,
+    maxConcurrentRequests: shared?.maxConcurrentRequests ?? null,
+    entriesWithinCap: (shared?.cacheEntries ?? Number.POSITIVE_INFINITY) <= (shared?.maxCacheEntries ?? 0),
+    bytesWithinCap: (shared?.cachedBytes ?? Number.POSITIVE_INFINITY) <= (shared?.maxCachedBytes ?? 0),
+    requestBudgetRespected: (shared?.peakConcurrentRequests ?? Number.POSITIVE_INFINITY) <= (shared?.maxConcurrentRequests ?? 0),
+    everyPoseLanded: stops.every((stop) => stop.landing.footprintSignature !== null),
+    dispatchCounts: stops.map((stop) => stop.landing.dispatchCount),
+  };
+  const record = {
+    schemaVersion: "1.0",
+    artifact: "serving-default-session-residency",
+    capturedAt: new Date().toISOString(),
+    browser,
+    base,
+    releaseSelector: "default",
+    gates: DEFAULT_SESSION_GATES,
+    caps: { ...EXTERIOR_RUNTIME_BUDGETS },
+    armDisclosure: "The PROMOTED DEFAULT COMPOSITION, observed once, with no ?exteriorCells= parameter: six co-resident wave runtimes sharing one exterior cache under one global residency cap. It exists because the frame A/B and the eviction roam both named a single wave explicitly, so the arrangement this build actually ships had no browser evidence at all. Session-wide cache figures are read from ONE wave and never summed, because they read one shared pool; the per-wave columns are the ones that really are per wave.",
+    stops,
+    findings,
+    uncapturedGap: "NO FRAME TIMING AND NO VISUAL CLAIM. This says the promoted arrangement resolves, boots, schedules and stays inside its budgets at four poses. It does not say how it looks or how fast it is, and it is one session rather than a distribution.",
+    claim: "A six-wave default session on the promoted build. It states that every promoted wave resolves and boots its three documents, that the scheduler admits cells across waves without any cell failing or falling back, and that the one shared cache stays inside both caps and inside the request budget.",
+  };
+  record.ok = findings.allSixWavesResolved
+    && findings.bootDocumentsComplete
+    && findings.failedCellCount <= DEFAULT_SESSION_GATES.maximumFailedCells
+    && findings.fallbackCellCount <= DEFAULT_SESSION_GATES.maximumFallbackCells
+    && findings.failedArtifactCount <= DEFAULT_SESSION_GATES.maximumFailedArtifacts
+    && findings.entriesWithinCap
+    && findings.bytesWithinCap
+    && findings.requestBudgetRespected
+    && findings.everyPoseLanded;
+  await writeEvidence("default-session-residency", record);
+  console.log(serialize({ ok: record.ok, ...findings }));
+  if (!record.ok) process.exitCode = 1;
+  return record;
+}
+
 async function writeEvidence(name, record) {
   await mkdir(evidenceRoot, { recursive: true });
   await writeFile(join(evidenceRoot, `${name}.json`), serialize(record));
@@ -679,9 +855,10 @@ async function main() {
   if (command === "frames") await runFrames(base);
   else if (command === "frames-arm") await runFrameArm(base, argValue(argv, "--arm", ""), argValue(argv, "--build", ""));
   else if (command === "frames-compose") await composeFrames();
-  else if (command === "roam") await runRoam(base);
+  else if (command === "roam") await runRoam(base, argValue(argv, "--release", ""));
   else {
-    console.error("usage: exterior-serving-evidence-cli.mjs <frames|frames-arm|frames-compose|roam> [--base=http://127.0.0.1:4173/] [--arm=a|b] [--build=<label>]");
+    console.error("usage: exterior-serving-evidence-cli.mjs <frames|frames-arm|frames-compose|roam> [--base=http://127.0.0.1:4173/] [--arm=a|b] [--build=<label>] [--release=default]");
+    console.error("roam --release=default captures the SIX-WAVE PROMOTED DEFAULT session over the registered frame poses; without it, the w02 opt-in roam.");
     console.error(`The scratch Chrome is launched and killed by this file: ${CHROME_LAUNCH_COMMAND}`);
     process.exit(1);
   }
