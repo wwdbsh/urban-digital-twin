@@ -1,0 +1,201 @@
+{
+  "schemaVersion": "1.0",
+  "artifact": "serving-boot-cost",
+  "note": "loadExteriorCellRuntime fetches index.json, release-graph.json and assemblies.json whole, in parallel, cache: no-store, before anything renders, and the runtime constructor then runs validateMultiLodAssembly over every head-pinned package synchronously. That is the whole boot cost, so it is determined by three file sizes and one count rather than measured through a browser.",
+  "counterfactualDisclosure": "The BEFORE column is not an estimate. It is the byte sum of the same documents this release emitted, carried the way the pre-seam form carried them: each per-cell assembly manifest as an element of assemblies.json, each per-cell sidecar's shards inside release-graph.json. It differs from a real pre-seam emission only by the array punctuation joining the elements — two bytes per element, under 1 KB per wave — which is named here rather than absorbed into the figure.",
+  "waves": [
+    {
+      "waveId": "w00",
+      "releaseId": "manhattan-exterior-cells-20260811-v3-s1",
+      "shippedAssetCount": 14,
+      "cellCount": 1,
+      "contentCellCount": 1,
+      "afterSeam": {
+        "blockingBootBytes": 28807,
+        "documents": {
+          "index.json": 724,
+          "release-graph.json": 28080,
+          "assemblies.json": 3
+        },
+        "assetsValidatedBeforeFirstFrame": 0,
+        "lazyDocumentsPerResidentCell": 2
+      },
+      "beforeSeam": {
+        "blockingBootBytes": 327807,
+        "documents": {
+          "index.json": 724,
+          "release-graph.json": 28080,
+          "assemblies.json (inlined manifests)": 31451,
+          "release-graph.json (inlined evidence)": 267552
+        },
+        "assetsValidatedBeforeFirstFrame": 14,
+        "lazyDocumentsPerResidentCell": 0
+      },
+      "removedBlockingBytes": 299000,
+      "removedBlockingRatio": 0.912122,
+      "bytesPerShippedAssetBeforeSeam": 21357.36
+    },
+    {
+      "waveId": "w01",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-s1",
+      "shippedAssetCount": 7179,
+      "cellCount": 149,
+      "contentCellCount": 149,
+      "afterSeam": {
+        "blockingBootBytes": 3835123,
+        "documents": {
+          "index.json": 17301,
+          "release-graph.json": 3817819,
+          "assemblies.json": 3
+        },
+        "assetsValidatedBeforeFirstFrame": 0,
+        "lazyDocumentsPerResidentCell": 2
+      },
+      "beforeSeam": {
+        "blockingBootBytes": 154279360,
+        "documents": {
+          "index.json": 17301,
+          "release-graph.json": 3817819,
+          "assemblies.json (inlined manifests)": 13089583,
+          "release-graph.json (inlined evidence)": 137354657
+        },
+        "assetsValidatedBeforeFirstFrame": 7179,
+        "lazyDocumentsPerResidentCell": 0
+      },
+      "removedBlockingBytes": 150444237,
+      "removedBlockingRatio": 0.975142,
+      "bytesPerShippedAssetBeforeSeam": 20956.16
+    },
+    {
+      "waveId": "w02",
+      "releaseId": "manhattan-lower-manhattan-cells-20260812-s1",
+      "shippedAssetCount": 6382,
+      "cellCount": 126,
+      "contentCellCount": 126,
+      "afterSeam": {
+        "blockingBootBytes": 3379392,
+        "documents": {
+          "index.json": 14713,
+          "release-graph.json": 3364676,
+          "assemblies.json": 3
+        },
+        "assetsValidatedBeforeFirstFrame": 0,
+        "lazyDocumentsPerResidentCell": 2
+      },
+      "beforeSeam": {
+        "blockingBootBytes": 139084682,
+        "documents": {
+          "index.json": 14713,
+          "release-graph.json": 3364676,
+          "assemblies.json (inlined manifests)": 13494953,
+          "release-graph.json (inlined evidence)": 122210340
+        },
+        "assetsValidatedBeforeFirstFrame": 6382,
+        "lazyDocumentsPerResidentCell": 0
+      },
+      "removedBlockingBytes": 135705290,
+      "removedBlockingRatio": 0.975703,
+      "bytesPerShippedAssetBeforeSeam": 21263.76
+    },
+    {
+      "waveId": "w03",
+      "releaseId": "manhattan-southern-remainder-cells-20260812-s1",
+      "shippedAssetCount": 9560,
+      "cellCount": 176,
+      "contentCellCount": 176,
+      "afterSeam": {
+        "blockingBootBytes": 5013967,
+        "documents": {
+          "index.json": 20869,
+          "release-graph.json": 4993095,
+          "assemblies.json": 3
+        },
+        "assetsValidatedBeforeFirstFrame": 0,
+        "lazyDocumentsPerResidentCell": 2
+      },
+      "beforeSeam": {
+        "blockingBootBytes": 208615537,
+        "documents": {
+          "index.json": 20869,
+          "release-graph.json": 4993095,
+          "assemblies.json (inlined manifests)": 20239039,
+          "release-graph.json (inlined evidence)": 183362534
+        },
+        "assetsValidatedBeforeFirstFrame": 9560,
+        "lazyDocumentsPerResidentCell": 0
+      },
+      "removedBlockingBytes": 203601570,
+      "removedBlockingRatio": 0.975966,
+      "bytesPerShippedAssetBeforeSeam": 21297.24
+    },
+    {
+      "waveId": "w04",
+      "releaseId": "manhattan-central-upper-manhattan-cells-20260812-s1",
+      "shippedAssetCount": 11682,
+      "cellCount": 249,
+      "contentCellCount": 249,
+      "afterSeam": {
+        "blockingBootBytes": 6508947,
+        "documents": {
+          "index.json": 30499,
+          "release-graph.json": 6478445,
+          "assemblies.json": 3
+        },
+        "assetsValidatedBeforeFirstFrame": 0,
+        "lazyDocumentsPerResidentCell": 2
+      },
+      "beforeSeam": {
+        "blockingBootBytes": 256137559,
+        "documents": {
+          "index.json": 30499,
+          "release-graph.json": 6478445,
+          "assemblies.json (inlined manifests)": 24954923,
+          "release-graph.json (inlined evidence)": 224673692
+        },
+        "assetsValidatedBeforeFirstFrame": 11682,
+        "lazyDocumentsPerResidentCell": 0
+      },
+      "removedBlockingBytes": 249628612,
+      "removedBlockingRatio": 0.974588,
+      "bytesPerShippedAssetBeforeSeam": 21368.65
+    },
+    {
+      "waveId": "w05",
+      "releaseId": "manhattan-northern-manhattan-cells-20260812-s1",
+      "shippedAssetCount": 10172,
+      "cellCount": 182,
+      "contentCellCount": 182,
+      "afterSeam": {
+        "blockingBootBytes": 5302721,
+        "documents": {
+          "index.json": 21531,
+          "release-graph.json": 5281187,
+          "assemblies.json": 3
+        },
+        "assetsValidatedBeforeFirstFrame": 0,
+        "lazyDocumentsPerResidentCell": 2
+      },
+      "beforeSeam": {
+        "blockingBootBytes": 221555915,
+        "documents": {
+          "index.json": 21531,
+          "release-graph.json": 5281187,
+          "assemblies.json (inlined manifests)": 21532440,
+          "release-graph.json (inlined evidence)": 194720757
+        },
+        "assetsValidatedBeforeFirstFrame": 10172,
+        "lazyDocumentsPerResidentCell": 0
+      },
+      "removedBlockingBytes": 216253194,
+      "removedBlockingRatio": 0.976066,
+      "bytesPerShippedAssetBeforeSeam": 21259.65
+    }
+  ],
+  "islandTotals": {
+    "blockingBootBytesAfterSeam": 24068957,
+    "blockingBootBytesBeforeSeam": 980000860,
+    "assetsValidatedBeforeFirstFrameAfterSeam": 0,
+    "assetsValidatedBeforeFirstFrameBeforeSeam": 44989,
+    "wavesCovered": 6
+  }
+}

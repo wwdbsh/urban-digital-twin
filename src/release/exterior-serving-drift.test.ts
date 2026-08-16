@@ -53,8 +53,21 @@ function readRecord(releaseId: string, name: string): Record<string, unknown> {
 const COMMITTED: ExteriorServingWave[] = EXTERIOR_SERVING_WAVES.filter((entry) => existsSync(`data/${entry.servingReleaseId}/payload-inventory.json`));
 
 describe("the committed serving records", () => {
-  it("cover at least one wave, so this gate is never vacuous", () => {
-    expect(COMMITTED.length).toBeGreaterThan(0);
+  it("cover every wave the island ledger declares", () => {
+    // Not "at least one". Six waves were transformed and six records were
+    // committed, so a missing one is a wave whose evidence was dropped rather
+    // than a gate that has not been reached yet.
+    expect(COMMITTED.map((entry) => entry.waveId)).toEqual(EXTERIOR_SERVING_WAVES.map((entry) => entry.waveId));
+  });
+
+  it("account for the whole island, exactly once each", () => {
+    const totals = COMMITTED.reduce((sum, entry) => ({
+      cells: sum.cells + entry.cellCount,
+      owned: sum.owned + entry.ownedBuildingCount,
+      generated: sum.generated + entry.generatedBuildingCount,
+      tombstoned: sum.tombstoned + entry.tombstonedBuildingCount,
+    }), { cells: 0, owned: 0, generated: 0, tombstoned: 0 });
+    expect(totals).toEqual({ cells: 883, owned: 45_194, generated: 44_989, tombstoned: 205 });
   });
 });
 

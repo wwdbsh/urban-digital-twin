@@ -1,0 +1,85 @@
+{
+  "schemaVersion": "1.0",
+  "artifact": "serving-activation-pins",
+  "note": "Every pin below is derived from committed records only — the serving payload inventory, the retention wave census and the committed island ledger — so it is reproducible on a clean checkout with no payload directory present. The digests use the same canonical joins the runtime gate recomputes: cellId|cellReleaseId|checksum for cells, and a plain sorted join for building identities and assembly package ids, each sorted then joined with the same separator.",
+  "waves": [
+    {
+      "waveId": "w00",
+      "releaseId": "manhattan-exterior-cells-20260811-v3-s1",
+      "snapshotId": "snapshot:manhattan-exterior-cells-20260811-v3-s1:v1",
+      "snapshotChecksumSha256": "5cfde13c7d75512197c41511e604992aedbfa68431301359fb8a105254c8a805",
+      "assemblyPackageCount": 1,
+      "assemblyPackageIdsDigestSha256": "2df3bb8fa34c86f481ddb2fef92ace1195003c08645b93581fd0e86b5b351fbf",
+      "cellCount": 1,
+      "cellsDigestSha256": "354e15ad1df236c1b31b3e33d4063591eb4955f7f9614c28ccc1411e86a3810f",
+      "buildingCount": 14,
+      "buildingIdsDigestSha256": "e7ef032bdf12222084fcf923ce1d61570d0989bc7f0f17d1dcc4db5659942c2f",
+      "predecessorReleaseId": null
+    },
+    {
+      "waveId": "w01",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-s1",
+      "snapshotId": "snapshot:manhattan-midtown-core-cells-20260811-v3-s1:v1",
+      "snapshotChecksumSha256": "80e2cc4395c8643708022e6c76783553922ce6fb21e72a04daaac71f87fd69bd",
+      "assemblyPackageCount": 149,
+      "assemblyPackageIdsDigestSha256": "b738b4cb42e244f9157a6d889f5474e3aff404a42cf7535aefbba58115daabb3",
+      "cellCount": 149,
+      "cellsDigestSha256": "5dd66bc4446a1ea93d020e57c79b8e5c5bb67465c8b2260e66f08eaa59502dd7",
+      "buildingCount": 7179,
+      "buildingIdsDigestSha256": "0ef78d63bc0d5c8a0c29f0b86991360df04deb7fee34c498bc8357c484e0cf96",
+      "predecessorReleaseId": null
+    },
+    {
+      "waveId": "w02",
+      "releaseId": "manhattan-lower-manhattan-cells-20260812-s1",
+      "snapshotId": "snapshot:manhattan-lower-manhattan-cells-20260812-s1:v1",
+      "snapshotChecksumSha256": "669556a4fdd8c43671a017fb49b7866aa741b48de81db7c6aa701f6bd43bf96b",
+      "assemblyPackageCount": 126,
+      "assemblyPackageIdsDigestSha256": "9a761d52dfe70de2d98e1e56f0ab043eeaa6e75c0d79ea36eba02e12e1de63d5",
+      "cellCount": 126,
+      "cellsDigestSha256": "0f07fd9d37913fc64452c69a975b5924e257ee1152d549b16ee5a245f709ec7c",
+      "buildingCount": 6382,
+      "buildingIdsDigestSha256": "c280e22fff0b5e50be6833052e4f3d3d669cb00afb3fc0bab11f6ac5df22a0c0",
+      "predecessorReleaseId": null
+    },
+    {
+      "waveId": "w03",
+      "releaseId": "manhattan-southern-remainder-cells-20260812-s1",
+      "snapshotId": "snapshot:manhattan-southern-remainder-cells-20260812-s1:v1",
+      "snapshotChecksumSha256": "ebbc8c2377c49cf44dceaf95aaa5de98d42f6e263be11dc822c664508181ec82",
+      "assemblyPackageCount": 176,
+      "assemblyPackageIdsDigestSha256": "86380721b5d78be23887e7567e0ba4159fb4eb962f65a5e0c3f0843abfab441a",
+      "cellCount": 176,
+      "cellsDigestSha256": "8871240bdee2e06f23b4aae65271a3d5634f359c74267996c997b899c978a9f0",
+      "buildingCount": 9560,
+      "buildingIdsDigestSha256": "fd0f4a413854b4d081402f4a5d31d60b478f5cebbdc4e4ab6a71dc9cbfa34973",
+      "predecessorReleaseId": null
+    },
+    {
+      "waveId": "w04",
+      "releaseId": "manhattan-central-upper-manhattan-cells-20260812-s1",
+      "snapshotId": "snapshot:manhattan-central-upper-manhattan-cells-20260812-s1:v1",
+      "snapshotChecksumSha256": "3deb12f02fc992367249c4ce4a4b756b29643a07881543dbfcc8c1e8665d5bed",
+      "assemblyPackageCount": 249,
+      "assemblyPackageIdsDigestSha256": "ba1faebd25a37c2579620b6a1c244d7cd39698fa16555495fedb36fc135cfc2e",
+      "cellCount": 249,
+      "cellsDigestSha256": "468c04c24bb614fdc03d1a4a42e31d71752ce475e673e28ecb0161948f4d2bdb",
+      "buildingCount": 11682,
+      "buildingIdsDigestSha256": "bf9ee190a27696698142b3e05570244feeea877355675ca23525b7b4fc57dd66",
+      "predecessorReleaseId": null
+    },
+    {
+      "waveId": "w05",
+      "releaseId": "manhattan-northern-manhattan-cells-20260812-s1",
+      "snapshotId": "snapshot:manhattan-northern-manhattan-cells-20260812-s1:v1",
+      "snapshotChecksumSha256": "b76bdb6e40f7c16fecf0903bf3c77912747db2f517ff9dd6120ca708d5ef812c",
+      "assemblyPackageCount": 182,
+      "assemblyPackageIdsDigestSha256": "67036dca7cea21791d0c3a26c4009bf31ae3f6dd6d60604843b0b57265414352",
+      "cellCount": 182,
+      "cellsDigestSha256": "8621e7e33e57feab2918b9b959527f1abcf6a23d39c2c5a3a624db213c247c59",
+      "buildingCount": 10172,
+      "buildingIdsDigestSha256": "54f902edd27ce0cda22fcca9164238b6aeced4eb51a3d326f5015d58fa7654b5",
+      "predecessorReleaseId": null
+    }
+  ]
+}

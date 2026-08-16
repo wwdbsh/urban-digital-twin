@@ -1,0 +1,73 @@
+{
+  "schemaVersion": "1.0",
+  "artifact": "retention-payload-fingerprint",
+  "note": "Every byte the six T004 retention inventories declare, re-hashed and compared. It is run after every serving wave because the whole island's evidence base is six local directories that nothing may edit and that the serving driver reads heavily. A byte-size-only check would miss exactly the in-place corruption a shared inode or an interrupted copy causes, so this re-hashes.",
+  "scope": [
+    "manhattan-exterior-cells-20260811-v3-c1",
+    "manhattan-midtown-core-cells-20260811-v3-c1",
+    "manhattan-lower-manhattan-cells-20260812-c1",
+    "manhattan-southern-remainder-cells-20260812-c1",
+    "manhattan-central-upper-manhattan-cells-20260812-c1",
+    "manhattan-northern-manhattan-cells-20260812-c1"
+  ],
+  "declaredFileCount": 91774,
+  "verifiedFileCount": 91774,
+  "elapsedSeconds": 139,
+  "results": [
+    {
+      "retentionReleaseId": "manhattan-exterior-cells-20260811-v3-c1",
+      "present": true,
+      "declaredFileCount": 35,
+      "verifiedFileCount": 35,
+      "mismatches": [],
+      "mismatchCount": 0,
+      "ok": true
+    },
+    {
+      "retentionReleaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "present": true,
+      "declaredFileCount": 14661,
+      "verifiedFileCount": 14661,
+      "mismatches": [],
+      "mismatchCount": 0,
+      "ok": true
+    },
+    {
+      "retentionReleaseId": "manhattan-lower-manhattan-cells-20260812-c1",
+      "present": true,
+      "declaredFileCount": 13021,
+      "verifiedFileCount": 13021,
+      "mismatches": [],
+      "mismatchCount": 0,
+      "ok": true
+    },
+    {
+      "retentionReleaseId": "manhattan-southern-remainder-cells-20260812-c1",
+      "present": true,
+      "declaredFileCount": 19477,
+      "verifiedFileCount": 19477,
+      "mismatches": [],
+      "mismatchCount": 0,
+      "ok": true
+    },
+    {
+      "retentionReleaseId": "manhattan-central-upper-manhattan-cells-20260812-c1",
+      "present": true,
+      "declaredFileCount": 23867,
+      "verifiedFileCount": 23867,
+      "mismatches": [],
+      "mismatchCount": 0,
+      "ok": true
+    },
+    {
+      "retentionReleaseId": "manhattan-northern-manhattan-cells-20260812-c1",
+      "present": true,
+      "declaredFileCount": 20713,
+      "verifiedFileCount": 20713,
+      "mismatches": [],
+      "mismatchCount": 0,
+      "ok": true
+    }
+  ],
+  "ok": true
+}
