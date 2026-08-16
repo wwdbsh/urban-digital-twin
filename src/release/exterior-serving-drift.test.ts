@@ -241,13 +241,49 @@ describe("the committed C5 session evidence", () => {
     expect(record.findings.requestBudgetRespected).toBe(true);
     expect(record.findings.everyPoseLanded).toBe(true);
 
-    // AND WHAT IT DID NOT. Three cells of wave w01 fell back to pinned base with
-    // three failed artifacts, on the promoted default, at three of four poses.
+    // AND WHAT IT DID NOT. Three cells of wave w01 fall back to pinned base with
+    // three failed artifacts, on the promoted default, deterministically.
     // Asserted as the exact numbers observed so that a change in either
     // direction is a diff somebody has to explain.
     expect(record.findings.fallbackCellCount).toBe(9);
     expect(record.findings.failedArtifactCount).toBe(9);
     expect(record.ok).toBe(false);
+  });
+
+  /**
+   * The DIAGNOSIS travels with the failure, and is pinned so it cannot be
+   * quietly separated from it.
+   *
+   * The FAIL above is not an emission defect, and that is the load-bearing
+   * conclusion: it was the reason the promotion was held. What is pinned here is
+   * the evidence for it — that the three cells are the same three across
+   * independent captures, that nothing on the network refused them, and that the
+   * app stopped requesting each of them after six GLBs regardless of whether the
+   * cell declares 20 or 87.
+   */
+  it("carries the diagnosis: three named cells, sound bytes, a cancelled load", () => {
+    const record = readEvidence("default-session-residency") as unknown as {
+      diagnosis: { verdict: string; failingCells: string[]; runtimeFailureCode: string; mechanism: string; proposedFix: string };
+      findings: { networkFailureCount: number; fallbackNotices: string[] };
+    };
+    expect(record.diagnosis.failingCells).toEqual([
+      "manhattan-exterior-cell-w01-000038-16-19301-17928",
+      "manhattan-exterior-cell-w01-000116-16-19301-17926",
+      "manhattan-exterior-cell-w01-000117-17-38604-35853",
+    ]);
+    // The app's own notices name exactly those three, so the diagnosis is not a
+    // claim laid over the capture — it is read out of it.
+    expect(record.findings.fallbackNotices).toHaveLength(3);
+    for (const cellId of record.diagnosis.failingCells) {
+      expect(record.findings.fallbackNotices.some((notice) => notice.includes(cellId)), cellId).toBe(true);
+    }
+    expect(record.diagnosis.runtimeFailureCode).toBe("request-failed");
+    expect(record.diagnosis.verdict).toContain("NOT an emission defect");
+    // No network refusal for these cells: the only failures in the session are a
+    // favicon and aborted GLBs belonging to other cells.
+    expect(record.findings.networkFailureCount).toBeLessThanOrEqual(5);
+    expect(record.diagnosis.mechanism).toContain("abortExcept");
+    expect(record.diagnosis.proposedFix).toContain("CANCELLATION");
   });
 
   it("records the frame-time A/B, and records that it FAILED on the texture bound", () => {

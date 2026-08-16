@@ -118,13 +118,32 @@ of 256 MB, peak 4 of a 4-request budget, every pose landing in one dispatch. The
 cross-wave residency ranking cap 8 was chosen for is confirmed in a browser.
 
 **And three cells of `manhattan-midtown-core-cells-20260811-v3-s1` fell back to
-pinned base massing, with three failed artifact fetches**, first at the
-transition pose and persisting. The pre-registered condition was zero. Nothing
-failed closed to nothing — the fallback is the runtime behaving as designed when
-an artifact does not arrive — but three cells of the promoted default did not
-render their served geometry. **It is not diagnosed:** the capture does not name
-the failing artifacts, and one session cannot say whether it is deterministic.
-Per the stop rule it was not re-run to look for a greener sample. Routed to T006.
+pinned base massing, with three failed artifact fetches**, at the transition pose
+and persisting. The pre-registered condition was zero.
+
+**DIAGNOSED, and it is NOT an emission defect.** The three cells are
+`w01-000038-16-19301-17928`, `w01-000116-16-19301-17926` and
+`w01-000117-17-38604-35853` — the same three across two independent captures.
+All 170 artifacts they declare exist on disk and byte-match their manifests, and
+all 170 re-fetch over HTTP with a 2xx status and the declared size in the same
+page and session. No HTTP error and no loading failure touched any of them. The
+app requested **6 of 48, 6 of 87 and 6 of 20** GLBs before giving up — three
+cells of very different sizes each stopping at exactly six is a cancelled load,
+not a bad byte.
+
+The mechanism is a runtime **classification** defect: the request pool resolves
+aborted and never-started tasks with `undefined`, `loadVerifiedArtifact` counts
+that as a failed artifact and throws a synthesised `request-failed`, and
+`renderCell` cannot tell that from a real verification failure, so it falls back.
+The curated composition never reached it because it rarely had more than one or
+two cells in flight; the promoted composition fills all eight residency slots at
+every pose. **The promotion did not create the defect — it made it reachable.**
+
+The fix is one branch (`undefined` with no recorded artifact error is a
+cancellation, not a failure) and is **not applied here**: it is a behaviour
+change on a core load path, and this capture was commissioned as a diagnosis.
+The FAIL stands, and three cells of the promoted default do render base massing
+today — with a notice saying so. ADR 0052 §12 carries the full evidence.
 
 **The frame-time A/B (C5 a) FAILS its pre-registered bar.** Frame times pass on
 every pose — p50 8.3 ms in both arms everywhere, p95 within tolerance at all
@@ -194,14 +213,15 @@ stand.
 - **No visual, geographic, architectural or accessibility acceptance.** Passing
   every gate here is a statement that the bytes are the retained bytes, that
   they validate, and that the release shape is what it claims.
-- **Why three cells of w01 fall back on the promoted default.** Observed once,
-  undiagnosed, routed to T006.
+- **The fix for the three-cell fallback.** Diagnosed and located; the one-branch
+  change to `loadVerifiedArtifact` is T006's to apply and verify.
 - **Frame cost below the ~8.3 ms presentation floor.** Unmeasurable with this
   instrument; a headroom-sensitive one routes to T006.
 - **Cap-driven eviction under a pre-registered roam.** The single-wave roam
-  never reached either cap. The default session did reach eviction
-  (`cacheEvictions` 226), but that is an observation, not the roam whose
-  conditions failed.
+  never reached either cap. The six-wave default session DID reach eviction
+  (`cacheEvictions` 223), which explains the roam's zero — it was not dense
+  enough to exercise the path — without retiring its FAIL. A systematic study of
+  eviction and re-admission at the promoted caps is T006's.
 - **Identity across an eviction cycle**, and the older gap beside it: no canvas
   pick on a re-admitted mesh has ever been captured.
 - **A distribution.** The default session is ONE run at four poses.

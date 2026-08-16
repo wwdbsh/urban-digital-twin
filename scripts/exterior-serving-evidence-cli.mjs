@@ -144,6 +144,33 @@ class CdpSession {
     return result.result.value;
   }
   responses() { return this.events.filter((event) => event.method === "Network.responseReceived").map((event) => event.params.response); }
+  /**
+   * Requests the NETWORK refused or dropped, and responses the server answered
+   * with a non-2xx status.
+   *
+   * Added to diagnose a three-artifact fallback on the promoted default that the
+   * offline validator could not see: `replayMultiLodAssembly` reads the emitted
+   * bytes off the filesystem, so a defect in how a path is REQUESTED — an
+   * encoded character, a wrong prefix, a URL a static server declines — passes
+   * every offline gate and fails in a browser. Naming the request is the only
+   * way to tell that apart from a transport hiccup.
+   */
+  failedRequests() {
+    const byId = new Map();
+    for (const event of this.events) {
+      if (event.method === "Network.requestWillBeSent") byId.set(event.params.requestId, event.params.request.url);
+    }
+    const failures = [];
+    for (const event of this.events) {
+      if (event.method === "Network.loadingFailed") {
+        failures.push({ kind: "loading-failed", url: byId.get(event.params.requestId) ?? null, errorText: event.params.errorText, canceled: event.params.canceled === true, blockedReason: event.params.blockedReason ?? null });
+      }
+      if (event.method === "Network.responseReceived" && event.params.response.status >= 400) {
+        failures.push({ kind: "http-error", url: event.params.response.url, status: event.params.response.status, statusText: event.params.response.statusText });
+      }
+    }
+    return failures;
+  }
   close() { try { this.socket.close(); } catch { /* already gone */ } }
 }
 
@@ -569,6 +596,21 @@ async function composeFrames() {
  * re-admitted mesh returns that identity. A canvas-pick reading is named as an
  * uncaptured gap rather than approximated here.
  */
+/**
+ * Every exterior notice the app is showing, verbatim.
+ *
+ * A `base-massing` outcome carries the failing cell, the runtime failure CODE
+ * and the message naming the artifact, and the app puts all of it in the notice
+ * region. Reading it is how a fallback stops being a counter and becomes three
+ * named cells with a stated reason.
+ */
+const READ_EXTERIOR_NOTICES = `(() => {
+  const root = document.querySelector("[data-exterior-notices]");
+  if (!root) return { present: false, items: [] };
+  const items = [...root.querySelectorAll("li")].map((node) => (node.textContent || "").replace(/\\s+/gu, " ").trim()).filter((text) => text.length > 0);
+  return { present: true, items, text: (root.textContent || "").replace(/\\s+/gu, " ").trim().slice(0, 4000) };
+})()`;
+
 const READ_SELECTION = `(() => {
   const panel = document.querySelector('[role="complementary"]');
   if (!panel) return null;
@@ -779,9 +821,14 @@ async function captureDefaultSession(session, base, poses, featureId, browser) {
         releasedArtifactBytes: shared.releasedArtifactBytes,
       },
     });
-    console.log(`  default ${pose.poseId} waves=${waves.length} scheduled=[${waves.map((wave) => wave.scheduledCellCount).join(",")}] entries=${shared?.cacheEntries} bytes=${shared?.cachedBytes} evictions=${shared?.cacheEvictions} peak=${shared?.peakConcurrentRequests} dispatches=${landing.dispatchCount}`);
+    const notices = await session.evaluate(READ_EXTERIOR_NOTICES, `default:${pose.poseId} notices`);
+    stops[stops.length - 1].notices = notices;
+    console.log(`  default ${pose.poseId} waves=${waves.length} scheduled=[${waves.map((wave) => wave.scheduledCellCount).join(",")}] entries=${shared?.cacheEntries} bytes=${shared?.cachedBytes} evictions=${shared?.cacheEvictions} peak=${shared?.peakConcurrentRequests} dispatches=${landing.dispatchCount} fallback=${waves.reduce((total, wave) => total + (wave.fallbackCellCount ?? 0), 0)}`);
+    for (const item of notices.items ?? []) if (/failed verification/u.test(item)) console.log(`    NOTICE ${item.slice(0, 300)}`);
   }
 
+  const networkFailures = session.failedRequests();
+  for (const failure of networkFailures) console.log(`    NETWORK ${failure.kind} ${failure.status ?? failure.errorText} ${failure.url}`);
   const boot = bootDocumentCounts(session);
   const last = stops[stops.length - 1] ?? null;
   const shared = last?.sharedCache ?? null;
@@ -811,6 +858,10 @@ async function captureDefaultSession(session, base, poses, featureId, browser) {
     requestBudgetRespected: (shared?.peakConcurrentRequests ?? Number.POSITIVE_INFINITY) <= (shared?.maxConcurrentRequests ?? 0),
     everyPoseLanded: stops.every((stop) => stop.landing.footprintSignature !== null),
     dispatchCounts: stops.map((stop) => stop.landing.dispatchCount),
+    // The diagnosis columns: what the app SAID failed, and what the network did.
+    fallbackNotices: [...new Set(stops.flatMap((stop) => (stop.notices?.items ?? []).filter((item) => /failed verification/u.test(item))))],
+    networkFailures,
+    networkFailureCount: networkFailures.length,
   };
   const record = {
     schemaVersion: "1.0",

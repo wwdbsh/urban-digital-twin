@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0",
   "artifact": "serving-default-session-residency",
-  "capturedAt": "2026-08-16T10:58:39.782Z",
+  "capturedAt": "2026-08-16T11:10:40.136Z",
   "browser": "Chrome/151.0.7922.138",
   "base": "http://localhost:4193/",
   "releaseSelector": "default",
@@ -35,7 +35,7 @@
         "reserved": [
           "manhattan-exterior-cell-w02-000165-16-19294-17947"
         ],
-        "decisionIndex": 9,
+        "decisionIndex": 8,
         "footprintSignature": "-74.015124:40.706820:-73.993116:40.723660:-74.004120:40.715240",
         "heightBucket": 500
       },
@@ -102,8 +102,8 @@
         }
       ],
       "sharedCache": {
-        "cacheEntries": 545,
-        "cachedBytes": 118063593,
+        "cacheEntries": 541,
+        "cachedBytes": 117503825,
         "cacheEvictions": 0,
         "maxCacheEntries": 1024,
         "maxCachedBytes": 268435456,
@@ -114,6 +114,20 @@
         "loadedArtifactCount": 20,
         "releasedArtifactCount": 0,
         "releasedArtifactBytes": 0
+      },
+      "notices": {
+        "present": true,
+        "items": [
+          "875 exterior cells are not loaded for this camera; they load when the camera reaches them.Details by releaseExterior release manhattan-exterior-cells-20260811-v3-s1: 1 exterior cell is not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-midtown-core-cells-20260811-v3-s1: 149 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-lower-manhattan-cells-20260812-s1: 118 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-southern-remainder-cells-20260812-s1: 176 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-central-upper-manhattan-cells-20260812-s1: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-northern-manhattan-cells-20260812-s1: 182 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-exterior-cells-20260811-v3-s1: 1 exterior cell is not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-midtown-core-cells-20260811-v3-s1: 149 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-lower-manhattan-cells-20260812-s1: 118 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-southern-remainder-cells-20260812-s1: 176 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-central-upper-manhattan-cells-20260812-s1: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-northern-manhattan-cells-20260812-s1: 182 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior geometry for 391 verified buildings is not drawn: the matching base building record is not loaded, so there is no verified WGS84 anchor for it. It will be drawn once that base record loads.Show the 391 building IDsdoitt:1029286, doitt:1038687, doitt:105139, doitt:1089316, doitt:110498, doitt:110572, doitt:1105834, doitt:1106253, doitt:1108301, doitt:1109612, doitt:1112925, doitt:1114316, doitt:11190, doitt:112592, doitt:115086, doitt:117108, doitt:119253, doitt:119822, doitt:121440, doitt:12190, doitt:122830, doitt:124714, doitt:1250415, doitt:1250503, doitt:1261612, doitt:1261613, doitt:1264272, doitt:1264273, doitt:1264274, doitt:1264275, doitt:1264518, doitt:1268131, doitt:127489, doitt:127769, doitt:1283674, doitt:1283912, doitt:1288533, doitt:1290494, doitt:1296015, doitt:131178, doitt:135651, doitt:136897, doitt:139318, doitt:139717, doitt:142405, doitt:142777, doitt:145352, doitt:149961, doitt:151657, doitt:153703, doitt:154438, doitt:154449, doitt:154822, doitt:156782, doitt:157531, doitt:15842, doitt:163234, doitt:165701, doitt:166341, doitt:170337, doitt:172047, doitt:173269, doitt:174297, doitt:17661, doitt:176621, doitt:179881, doitt:18229, doitt:182505, doitt:183603, doitt:184418, doitt:188381, doitt:190151, doitt:190678, doitt:190736, doitt:196207, doitt:197676, doitt:198469, doitt:202833, doitt:203379, doitt:203431, doitt:207449, doitt:207716, doitt:216422, doitt:220090, doitt:223592, doitt:224426, doitt:225229, doitt:226854, doitt:230400, doitt:233132, doitt:235616, doitt:237297, doitt:239416, doitt:242183, doitt:244606, doitt:245121, doitt:25009, doitt:252439, doitt:254031, doitt:255084, doitt:257850, doitt:264659, doitt:269165, doitt:271533, doitt:275062, doitt:275485, doitt:278285, doitt:280177, doitt:281200, doitt:282176, doitt:283834, doitt:284875, doitt:285475, doitt:285864, doitt:286984, doitt:287431, doitt:288354, doitt:290462, doitt:292249, doitt:295448, doitt:296699, doitt:301936, doitt:305804, doitt:30614, doitt:309406, doitt:310860, doitt:317031, doitt:31891, doitt:324915, doitt:327860, doitt:328022, doitt:329071, doitt:329126, doitt:330338, doitt:331573, doitt:331995, doitt:333080, doitt:333286, doitt:33544, doitt:335442, doitt:336043, doitt:336572, doitt:338106, doitt:338791, doitt:340827, doitt:342999, doitt:344447, doitt:352413, doitt:356617, doitt:363122, doitt:367985, doitt:37175, doitt:37237, doitt:372751, doitt:373634, doitt:374072, doitt:374690, doitt:378538, doitt:379751, doitt:38038, doitt:38904, doitt:390009, doitt:390889, doitt:3986, doitt:405188, doitt:407490, doitt:407841, doitt:408926, doitt:410507, doitt:412350, doitt:41530, doitt:416984, doitt:417429, doitt:418373, doitt:43141, doitt:434288, doitt:436086, doitt:437445, doitt:438883, doitt:440043, doitt:440503, doitt:441834, doitt:442001, doitt:442471, doitt:442669, doitt:444076, doitt:445704, doitt:446282, doitt:447788, doitt:449864, doitt:452034, doitt:454125, doitt:454149, doitt:454973, doitt:45771, doitt:462035, doitt:467146, doitt:470304, doitt:470366, doitt:481694, doitt:487361, doitt:49387, doitt:497248, doitt:499099, doitt:50468, doitt:504708, doitt:505338, doitt:508945, doitt:511823, doitt:513097, doitt:514090, doitt:515520, doitt:517928, doitt:520893, doitt:521160, doitt:521228, doitt:523198, doitt:52411, doitt:526356, doitt:527010, doitt:530463, doitt:530519, doitt:532460, doitt:532725, doitt:534631, doitt:535866, doitt:535989, doitt:539568, doitt:540564, doitt:541780, doitt:545077, doitt:548735, doitt:553032, doitt:554254, doitt:556035, doitt:557250, doitt:564225, doitt:566885, doitt:567276, doitt:568260, doitt:571603, doitt:574061, doitt:580403, doitt:582465, doitt:585195, doitt:587562, doitt:588354, doitt:590754, doitt:593439, doitt:593582, doitt:608052, doitt:609129, doitt:610755, doitt:61601, doitt:617529, doitt:617913, doitt:620417, doitt:622569, doitt:622723, doitt:628039, doitt:628243, doitt:631791, doitt:631961, doitt:633754, doitt:635053, doitt:638573, doitt:641919, doitt:647119, doitt:649858, doitt:65190, doitt:65209, doitt:652692, doitt:656475, doitt:664371, doitt:665726, doitt:666094, doitt:667325, doitt:669759, doitt:669906, doitt:671332, doitt:675566, doitt:677173, doitt:678985, doitt:681410, doitt:682283, doitt:687587, doitt:689362, doitt:689684, doitt:689910, doitt:694686, doitt:698812, doitt:699827, doitt:702124, doitt:707655, doitt:710645, doitt:711468, doitt:711671, doitt:71560, doitt:718032, doitt:71885, doitt:719090, doitt:719312, doitt:721649, doitt:721735, doitt:724291, doitt:72822, doitt:732745, doitt:733752, doitt:73668, doitt:742070, doitt:742969, doitt:746993, doitt:75251, doitt:754376, doitt:755186, doitt:756019, doitt:756969, doitt:758523, doitt:7602, doitt:760722, doitt:763502, doitt:763933, doitt:773069, doitt:77318, doitt:774340, doitt:775731, doitt:775767, doitt:776852, doitt:77845, doitt:778906, doitt:779007, doitt:780178, doitt:78020, doitt:780377, doitt:786459, doitt:788072, doitt:788987, doitt:789775, doitt:790537, doitt:79236, doitt:792409, doitt:79251, doitt:795807, doitt:80038, doitt:806286, doitt:806520, doitt:807528, doitt:811055, doitt:811939, doitt:814827, doitt:815255, doitt:820818, doitt:821215, doitt:824941, doitt:825063, doitt:82886, doitt:832334, doitt:83518, doitt:835443, doitt:838301, doitt:838923, doitt:839596, doitt:840549, doitt:843404, doitt:843700, doitt:843842, doitt:849048, doitt:849573, doitt:850603, doitt:851033, doitt:851083, doitt:852164, doitt:852933, doitt:88425, doitt:917558, doitt:917740, doitt:923418, doitt:931658, doitt:945953, doitt:950133, doitt:958278, doitt:962107, doitt:962168, doitt:96663, doitt:970257, doitt:970283, doitt:978357, doitt:98341, doitt:98786, doitt:99299, doitt:996286"
+        ],
+        "text": "Exterior streaming fallback Dismiss875 exterior cells are not loaded for this camera; they load when the camera reaches them.Details by releaseExterior release manhattan-exterior-cells-20260811-v3-s1: 1 exterior cell is not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-midtown-core-cells-20260811-v3-s1: 149 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-lower-manhattan-cells-20260812-s1: 118 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-southern-remainder-cells-20260812-s1: 176 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-central-upper-manhattan-cells-20260812-s1: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-northern-manhattan-cells-20260812-s1: 182 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior geometry for 391 verified buildings is not drawn: the matching base building record is not loaded, so there is no verified WGS84 anchor for it. It will be drawn once that base record loads.Show the 391 building IDsdoitt:1029286, doitt:1038687, doitt:105139, doitt:1089316, doitt:110498, doitt:110572, doitt:1105834, doitt:1106253, doitt:1108301, doitt:1109612, doitt:1112925, doitt:1114316, doitt:11190, doitt:112592, doitt:115086, doitt:117108, doitt:119253, doitt:119822, doitt:121440, doitt:12190, doitt:122830, doitt:124714, doitt:1250415, doitt:1250503, doitt:1261612, doitt:1261613, doitt:1264272, doitt:1264273, doitt:1264274, doitt:1264275, doitt:1264518, doitt:1268131, doitt:127489, doitt:127769, doitt:1283674, doitt:1283912, doitt:1288533, doitt:1290494, doitt:1296015, doitt:131178, doitt:135651, doitt:136897, doitt:139318, doitt:139717, doitt:142405, doitt:142777, doitt:145352, doitt:149961, doitt:151657, doitt:153703, doitt:154438, doitt:154449, doitt:154822, doitt:156782, doitt:157531, doitt:15842, doitt:163234, doitt:165701, doitt:166341, doitt:170337, doitt:172047, doitt:173269, doitt:174297, doitt:17661, doitt:176621, doitt:179881, doitt:18229, doitt:182505, doitt:183603, doitt:184418, doitt:188381, doitt:190151, doitt:190678, doitt:190736, doitt:196207, doitt:197676, doitt:198469, doitt:202833, doitt:203379, doitt:203431, doitt:207449, doitt:207716, doitt:216422, doitt:220090, doitt:223592, doitt:224426, doitt:225229, doitt:226854, doitt:230400, doitt:233132, doitt:235616, doitt:237297, doitt:239416, doitt:242183, doitt:244606, doitt:245121, doitt:25009, doitt:252439, doitt:254031, doitt:255084, doitt:257850, doitt:264659, doitt:269165, doitt:271533, doitt:275062, doitt:275485, doitt:278285, doitt:280177, doitt:281200, doitt:282176, doitt:283834, doitt:284875, doitt:285475, doitt:285864, doitt:286984, doitt:287431, doitt:288354, doitt:290462, doitt:292249, doitt:295448, doitt:296699, doitt:301936, doitt:305804, doitt:30614, doitt:309406, doitt:310860, doitt:317031, doitt:31891, doitt:324915, doitt:327860, doitt:328022, doitt:329071, doitt:329126, doitt:330338, doitt:331573, doitt:331995, doitt:333080, doitt:333286, doitt:33544, doitt:335442, doitt:336043, doitt:336572, doitt:338106, doitt:338791, doitt:340827, doitt:342999, doitt:344447, doitt:352413, doitt:356617, doitt:363122, doitt:367985, doitt:37175, doitt:37237, doitt:372751, doitt:373634, doitt:374072, doitt:374690, doitt:378538, doitt:379751, doitt:38038, doitt:38904, doitt:390009, doitt:390889, doitt:3986, doitt:405188, doitt:407490, doitt:407841, doitt:408926, doitt:410507, doitt:412350, doitt:41530, doitt:416984, doitt:417429, doitt:418373, doitt:43141, doitt:434288, doitt:436086, doitt:437445, doitt:438883, doitt:440043, doitt:440503, doitt:441834, doitt:442001, doitt:442471, doitt:442669, doitt:444076, doitt:445704, doitt:446282, doitt:447788, doitt:449864, doitt:452034, doitt:454125, doitt:454149, doitt:4"
       }
     },
     {
@@ -133,7 +147,7 @@
           "manhattan-exterior-cell-w00-000000-block-00835",
           "manhattan-exterior-cell-w01-000031-17-38598-35863"
         ],
-        "decisionIndex": 12,
+        "decisionIndex": 11,
         "footprintSignature": "-73.987534:40.747889:-73.953469:40.773800:-73.970502:40.760844",
         "heightBucket": 1200
       },
@@ -200,8 +214,8 @@
         }
       ],
       "sharedCache": {
-        "cacheEntries": 721,
-        "cachedBytes": 167905119,
+        "cacheEntries": 718,
+        "cachedBytes": 167550727,
         "cacheEvictions": 0,
         "maxCacheEntries": 1024,
         "maxCachedBytes": 268435456,
@@ -212,6 +226,22 @@
         "loadedArtifactCount": 20,
         "releasedArtifactCount": 0,
         "releasedArtifactBytes": 0
+      },
+      "notices": {
+        "present": true,
+        "items": [
+          "Exterior release manhattan-midtown-core-cells-20260811-v3-s1: Exterior cell manhattan-exterior-cell-w01-000038-16-19301-17928 failed verification (request-failed). Its pinned fallback is the base identity set manhattan-midtown-core-cells-20260811-v3-s1:exterior-base-identity:47a0c1bb5c2fc60d, which carries no exterior geometry, so the existing verified base massing is shown for this cell.",
+          "Exterior release manhattan-midtown-core-cells-20260811-v3-s1: Exterior cell manhattan-exterior-cell-w01-000116-16-19301-17926 failed verification (request-failed). Its pinned fallback is the base identity set manhattan-midtown-core-cells-20260811-v3-s1:exterior-base-identity:47a0c1bb5c2fc60d, which carries no exterior geometry, so the existing verified base massing is shown for this cell.",
+          "Exterior release manhattan-midtown-core-cells-20260811-v3-s1: Exterior cell manhattan-exterior-cell-w01-000117-17-38604-35853 failed verification (request-failed). Its pinned fallback is the base identity set manhattan-midtown-core-cells-20260811-v3-s1:exterior-base-identity:47a0c1bb5c2fc60d, which carries no exterior geometry, so the existing verified base massing is shown for this cell.",
+          "875 exterior cells are not loaded for this camera; they load when the camera reaches them.Details by releaseExterior release manhattan-midtown-core-cells-20260811-v3-s1: 142 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-lower-manhattan-cells-20260812-s1: 126 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-southern-remainder-cells-20260812-s1: 176 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-central-upper-manhattan-cells-20260812-s1: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-northern-manhattan-cells-20260812-s1: 182 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-midtown-core-cells-20260811-v3-s1: 142 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-lower-manhattan-cells-20260812-s1: 126 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-southern-remainder-cells-20260812-s1: 176 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-central-upper-manhattan-cells-20260812-s1: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-northern-manhattan-cells-20260812-s1: 182 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior geometry for 61 verified buildings is not drawn: the matching base building record is not loaded, so there is no verified WGS84 anchor for it. It will be drawn once that base record loads.Show the 61 building IDsdoitt:105139, doitt:1105834, doitt:117108, doitt:119253, doitt:12190, doitt:122830, doitt:142405, doitt:156782, doitt:165701, doitt:173269, doitt:174297, doitt:184418, doitt:190678, doitt:203431, doitt:225229, doitt:257850, doitt:271533, doitt:275485, doitt:285475, doitt:295448, doitt:30614, doitt:338791, doitt:344447, doitt:363122, doitt:367985, doitt:37175, doitt:410507, doitt:416984, doitt:43141, doitt:436086, doitt:452034, doitt:454973, doitt:487361, doitt:497248, doitt:50468, doitt:508945, doitt:527010, doitt:534631, doitt:557250, doitt:564225, doitt:587562, doitt:608052, doitt:61601, doitt:638573, doitt:65190, doitt:682283, doitt:689362, doitt:71885, doitt:721649, doitt:746993, doitt:756969, doitt:763502, doitt:775767, doitt:77845, doitt:789775, doitt:815255, doitt:838301, doitt:838923, doitt:843842, doitt:852933, doitt:945953"
+        ],
+        "text": "Exterior streaming fallback DismissExterior release manhattan-midtown-core-cells-20260811-v3-s1: Exterior cell manhattan-exterior-cell-w01-000038-16-19301-17928 failed verification (request-failed). Its pinned fallback is the base identity set manhattan-midtown-core-cells-20260811-v3-s1:exterior-base-identity:47a0c1bb5c2fc60d, which carries no exterior geometry, so the existing verified base massing is shown for this cell.Exterior release manhattan-midtown-core-cells-20260811-v3-s1: Exterior cell manhattan-exterior-cell-w01-000116-16-19301-17926 failed verification (request-failed). Its pinned fallback is the base identity set manhattan-midtown-core-cells-20260811-v3-s1:exterior-base-identity:47a0c1bb5c2fc60d, which carries no exterior geometry, so the existing verified base massing is shown for this cell.Exterior release manhattan-midtown-core-cells-20260811-v3-s1: Exterior cell manhattan-exterior-cell-w01-000117-17-38604-35853 failed verification (request-failed). Its pinned fallback is the base identity set manhattan-midtown-core-cells-20260811-v3-s1:exterior-base-identity:47a0c1bb5c2fc60d, which carries no exterior geometry, so the existing verified base massing is shown for this cell.875 exterior cells are not loaded for this camera; they load when the camera reaches them.Details by releaseExterior release manhattan-midtown-core-cells-20260811-v3-s1: 142 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-lower-manhattan-cells-20260812-s1: 126 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-southern-remainder-cells-20260812-s1: 176 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-central-upper-manhattan-cells-20260812-s1: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-northern-manhattan-cells-20260812-s1: 182 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior geometry for 61 verified buildings is not drawn: the matching base building record is not loaded, so there is no verified WGS84 anchor for it. It will be drawn once that base record loads.Show the 61 building IDsdoitt:105139, doitt:1105834, doitt:117108, doitt:119253, doitt:12190, doitt:122830, doitt:142405, doitt:156782, doitt:165701, doitt:173269, doitt:174297, doitt:184418, doitt:190678, doitt:203431, doitt:225229, doitt:257850, doitt:271533, doitt:275485, doitt:285475, doitt:295448, doitt:30614, doitt:338791, doitt:344447, doitt:363122, doitt:367985, doitt:37175, doitt:410507, doitt:416984, doitt:43141, doitt:436086, doitt:452034, doitt:454973, doitt:487361, doitt:497248, doitt:50468, doitt:508945, doitt:527010, doitt:534631, doitt:557250, doitt:564225, doitt:587562, doitt:608052, doitt:61601, doitt:638573, doitt:65190, doitt:682283, doitt:689362, doitt:71885, doitt:721649, doitt:746993, doitt:756969, doitt:763502, doitt:775767, doitt:77845, doitt:789775, doitt:815255, doitt:838301, doitt:838923, doitt:843842, doitt:852933, doitt:945953"
       }
     },
     {
@@ -231,7 +261,7 @@
           "manhattan-exterior-cell-w00-000000-block-00835",
           "manhattan-exterior-cell-w01-000031-17-38598-35863"
         ],
-        "decisionIndex": 14,
+        "decisionIndex": 13,
         "footprintSignature": "-73.985808:40.749197:-73.980360:40.752675:-73.983084:40.750936",
         "heightBucket": 300
       },
@@ -300,7 +330,7 @@
       "sharedCache": {
         "cacheEntries": 597,
         "cachedBytes": 156936753,
-        "cacheEvictions": 226,
+        "cacheEvictions": 223,
         "maxCacheEntries": 1024,
         "maxCachedBytes": 268435456,
         "activeRequests": 0,
@@ -310,6 +340,21 @@
         "loadedArtifactCount": 20,
         "releasedArtifactCount": 320,
         "releasedArtifactBytes": 111427352
+      },
+      "notices": {
+        "present": true,
+        "items": [
+          "875 exterior cells are not loaded for this camera; they load when the camera reaches them.Details by releaseExterior release manhattan-midtown-core-cells-20260811-v3-s1: 142 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-lower-manhattan-cells-20260812-s1: 126 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-southern-remainder-cells-20260812-s1: 176 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-central-upper-manhattan-cells-20260812-s1: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-northern-manhattan-cells-20260812-s1: 182 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-midtown-core-cells-20260811-v3-s1: 142 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-lower-manhattan-cells-20260812-s1: 126 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-southern-remainder-cells-20260812-s1: 176 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-central-upper-manhattan-cells-20260812-s1: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-northern-manhattan-cells-20260812-s1: 182 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "320 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.Details by releaseExterior release manhattan-exterior-cells-20260811-v3-s1: 320 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.",
+          "Exterior release manhattan-exterior-cells-20260811-v3-s1: 320 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.",
+          "Exterior geometry for 61 verified buildings is not drawn: the matching base building record is not loaded, so there is no verified WGS84 anchor for it. It will be drawn once that base record loads.Show the 61 building IDsdoitt:105139, doitt:1105834, doitt:117108, doitt:119253, doitt:12190, doitt:122830, doitt:142405, doitt:156782, doitt:165701, doitt:173269, doitt:174297, doitt:184418, doitt:190678, doitt:203431, doitt:225229, doitt:257850, doitt:271533, doitt:275485, doitt:285475, doitt:295448, doitt:30614, doitt:338791, doitt:344447, doitt:363122, doitt:367985, doitt:37175, doitt:410507, doitt:416984, doitt:43141, doitt:436086, doitt:452034, doitt:454973, doitt:487361, doitt:497248, doitt:50468, doitt:508945, doitt:527010, doitt:534631, doitt:557250, doitt:564225, doitt:587562, doitt:608052, doitt:61601, doitt:638573, doitt:65190, doitt:682283, doitt:689362, doitt:71885, doitt:721649, doitt:746993, doitt:756969, doitt:763502, doitt:775767, doitt:77845, doitt:789775, doitt:815255, doitt:838301, doitt:838923, doitt:843842, doitt:852933, doitt:945953"
+        ],
+        "text": "Exterior streaming fallback Dismiss875 exterior cells are not loaded for this camera; they load when the camera reaches them.Details by releaseExterior release manhattan-midtown-core-cells-20260811-v3-s1: 142 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-lower-manhattan-cells-20260812-s1: 126 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-southern-remainder-cells-20260812-s1: 176 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-central-upper-manhattan-cells-20260812-s1: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-northern-manhattan-cells-20260812-s1: 182 exterior cells are not loaded for this camera; they load when the camera reaches them.320 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.Details by releaseExterior release manhattan-exterior-cells-20260811-v3-s1: 320 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.Exterior geometry for 61 verified buildings is not drawn: the matching base building record is not loaded, so there is no verified WGS84 anchor for it. It will be drawn once that base record loads.Show the 61 building IDsdoitt:105139, doitt:1105834, doitt:117108, doitt:119253, doitt:12190, doitt:122830, doitt:142405, doitt:156782, doitt:165701, doitt:173269, doitt:174297, doitt:184418, doitt:190678, doitt:203431, doitt:225229, doitt:257850, doitt:271533, doitt:275485, doitt:285475, doitt:295448, doitt:30614, doitt:338791, doitt:344447, doitt:363122, doitt:367985, doitt:37175, doitt:410507, doitt:416984, doitt:43141, doitt:436086, doitt:452034, doitt:454973, doitt:487361, doitt:497248, doitt:50468, doitt:508945, doitt:527010, doitt:534631, doitt:557250, doitt:564225, doitt:587562, doitt:608052, doitt:61601, doitt:638573, doitt:65190, doitt:682283, doitt:689362, doitt:71885, doitt:721649, doitt:746993, doitt:756969, doitt:763502, doitt:775767, doitt:77845, doitt:789775, doitt:815255, doitt:838301, doitt:838923, doitt:843842, doitt:852933, doitt:945953"
       }
     },
     {
@@ -329,7 +374,7 @@
           "manhattan-exterior-cell-w02-000163-16-19295-17946",
           "manhattan-exterior-cell-w02-000166-16-19295-17947"
         ],
-        "decisionIndex": 15,
+        "decisionIndex": 14,
         "footprintSignature": "-74.008449:40.707322:-74.003000:40.710800:-74.005724:40.709061",
         "heightBucket": 300
       },
@@ -398,7 +443,7 @@
       "sharedCache": {
         "cacheEntries": 731,
         "cachedBytes": 192784964,
-        "cacheEvictions": 226,
+        "cacheEvictions": 223,
         "maxCacheEntries": 1024,
         "maxCachedBytes": 268435456,
         "activeRequests": 0,
@@ -408,6 +453,21 @@
         "loadedArtifactCount": 20,
         "releasedArtifactCount": 545,
         "releasedArtifactBytes": 172477728
+      },
+      "notices": {
+        "present": true,
+        "items": [
+          "875 exterior cells are not loaded for this camera; they load when the camera reaches them.Details by releaseExterior release manhattan-midtown-core-cells-20260811-v3-s1: 147 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-lower-manhattan-cells-20260812-s1: 121 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-southern-remainder-cells-20260812-s1: 176 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-central-upper-manhattan-cells-20260812-s1: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-northern-manhattan-cells-20260812-s1: 182 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-midtown-core-cells-20260811-v3-s1: 147 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-lower-manhattan-cells-20260812-s1: 121 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-southern-remainder-cells-20260812-s1: 176 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-central-upper-manhattan-cells-20260812-s1: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-northern-manhattan-cells-20260812-s1: 182 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "545 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.Details by releaseExterior release manhattan-exterior-cells-20260811-v3-s1: 545 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.",
+          "Exterior release manhattan-exterior-cells-20260811-v3-s1: 545 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.",
+          "Exterior geometry for 349 verified buildings is not drawn: the matching base building record is not loaded, so there is no verified WGS84 anchor for it. It will be drawn once that base record loads.Show the 349 building IDsdoitt:10479, doitt:105101, doitt:1064441, doitt:107009, doitt:108179, doitt:109173, doitt:110009, doitt:1105835, doitt:1107962, doitt:1107967, doitt:1107968, doitt:1109927, doitt:1110161, doitt:1110400, doitt:1114709, doitt:1114748, doitt:1117123, doitt:1117168, doitt:1117747, doitt:1117830, doitt:1118676, doitt:114988, doitt:115663, doitt:115982, doitt:119028, doitt:1194347, doitt:120084, doitt:1214511, doitt:1215258, doitt:122706, doitt:1254684, doitt:1255837, doitt:1257097, doitt:1257098, doitt:1262668, doitt:1264524, doitt:1264525, doitt:1264530, doitt:1264531, doitt:1272401, doitt:1281127, doitt:1282656, doitt:1284002, doitt:1286114, doitt:1286710, doitt:1288033, doitt:1288530, doitt:1288531, doitt:1290742, doitt:1290752, doitt:1290756, doitt:1292491, doitt:1296931, doitt:1298488, doitt:1298813, doitt:1300995, doitt:1303988, doitt:1305599, doitt:130591, doitt:133460, doitt:141864, doitt:14301, doitt:145131, doitt:152132, doitt:153292, doitt:15422, doitt:156189, doitt:156567, doitt:157281, doitt:157976, doitt:163071, doitt:164935, doitt:168244, doitt:168795, doitt:171017, doitt:17286, doitt:178642, doitt:178750, doitt:179453, doitt:183810, doitt:191059, doitt:195813, doitt:199175, doitt:204474, doitt:204625, doitt:214630, doitt:215627, doitt:21855, doitt:225204, doitt:225765, doitt:233897, doitt:233956, doitt:236220, doitt:236658, doitt:247224, doitt:2480, doitt:252033, doitt:254194, doitt:255716, doitt:259711, doitt:2653, doitt:26807, doitt:268632, doitt:271276, doitt:271975, doitt:273523, doitt:27805, doitt:282685, doitt:291494, doitt:295522, doitt:296904, doitt:298626, doitt:306377, doitt:312379, doitt:313683, doitt:314602, doitt:327339, doitt:33067, doitt:331171, doitt:331481, doitt:332628, doitt:336352, doitt:33693, doitt:338830, doitt:339803, doitt:345550, doitt:34748, doitt:35774, doitt:361912, doitt:363379, doitt:366263, doitt:368472, doitt:368514, doitt:36890, doitt:375186, doitt:376436, doitt:376977, doitt:379944, doitt:38047, doitt:38618, doitt:393209, doitt:393702, doitt:395427, doitt:395976, doitt:396119, doitt:400003, doitt:400517, doitt:401853, doitt:40319, doitt:407309, doitt:413451, doitt:415535, doitt:416112, doitt:416183, doitt:417076, doitt:417769, doitt:418772, doitt:423164, doitt:42608, doitt:430396, doitt:43091, doitt:433411, doitt:441, doitt:442093, doitt:442630, doitt:446198, doitt:447482, doitt:449100, doitt:452569, doitt:458380, doitt:463091, doitt:463235, doitt:463752, doitt:46608, doitt:466788, doitt:469459, doitt:470295, doitt:473151, doitt:477555, doitt:484155, doitt:485075, doitt:488229, doitt:489953, doitt:490559, doitt:4912, doitt:491490, doitt:491585, doitt:49846, doitt:51009, doitt:512073, doitt:512384, doitt:512620, doitt:512632, doitt:512769, doitt:514330, doitt:515003, doitt:515967, doitt:517287, doitt:517421, doitt:525904, doitt:529760, doitt:537118, doitt:543202, doitt:544160, doitt:544216, doitt:544839, doitt:547650, doitt:54857, doitt:551986, doitt:553840, doitt:554844, doitt:559242, doitt:563686, doitt:564795, doitt:567916, doitt:570728, doitt:571001, doitt:575097, doitt:575623, doitt:585754, doitt:589899, doitt:593867, doitt:59657, doitt:596877, doitt:599596, doitt:606314, doitt:607105, doitt:622128, doitt:623732, doitt:624309, doitt:627314, doitt:632045, doitt:634410, doitt:635851, doitt:637829, doitt:640074, doitt:641650, doitt:644042, doitt:644681, doitt:647316, doitt:64983, doitt:650727, doitt:653459, doitt:658508, doitt:6598, doitt:662269, doitt:662850, doitt:664329, doitt:670392, doitt:671705, doitt:673746, doitt:676703, doitt:677517, doitt:680944, doitt:682317, doitt:685023, doitt:695189, doitt:696501, doitt:698508, doitt:699693, doitt:700577, doitt:702020, doitt:702588, doitt:703179, doitt:704166, doitt:709059, doitt:709987, doitt:711894, doitt:714151, doitt:716631, doitt:717046, doitt:718439, doitt:723319, doitt:72454, doitt:725586, doitt:730863, doitt:733450, doitt:73362, doitt:734118, doitt:734733, doitt:735939, doitt:735994, doitt:739005, doitt:740191, doitt:740308, doitt:746219, doitt:746543, doitt:746846, doitt:747228, doitt:747510, doitt:749040, doitt:749385, doitt:752907, doitt:768551, doitt:770512, doitt:774828, doitt:775375, doitt:777918, doitt:778441, doitt:778618, doitt:778806, doitt:781036, doitt:786392, doitt:787051, doitt:790556, doitt:795161, doitt:798490, doitt:798714, doitt:806724, doitt:80674, doitt:815321, doitt:820081, doitt:824425, doitt:824942, doitt:829570, doitt:836516, doitt:837913, doitt:843855, doitt:844610, doitt:848088, doitt:848508, doitt:852309, doitt:87465, doitt:87656, doitt:90967, doitt:913202, doitt:915138, doitt:917727, doitt:93350, doitt:935626, doitt:941765, doitt:942459, doitt:94672, doitt:950051, doitt:954130, doitt:954134, doitt:958078, doitt:962190, doitt:970357, doitt:974421, doitt:978314, doitt:978498, doitt:987831, doitt:99304, doitt:996063, doitt:996167, doitt:996242, doitt:996276, doitt:996406"
+        ],
+        "text": "Exterior streaming fallback Dismiss875 exterior cells are not loaded for this camera; they load when the camera reaches them.Details by releaseExterior release manhattan-midtown-core-cells-20260811-v3-s1: 147 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-lower-manhattan-cells-20260812-s1: 121 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-southern-remainder-cells-20260812-s1: 176 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-central-upper-manhattan-cells-20260812-s1: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-northern-manhattan-cells-20260812-s1: 182 exterior cells are not loaded for this camera; they load when the camera reaches them.545 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.Details by releaseExterior release manhattan-exterior-cells-20260811-v3-s1: 545 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.Exterior geometry for 349 verified buildings is not drawn: the matching base building record is not loaded, so there is no verified WGS84 anchor for it. It will be drawn once that base record loads.Show the 349 building IDsdoitt:10479, doitt:105101, doitt:1064441, doitt:107009, doitt:108179, doitt:109173, doitt:110009, doitt:1105835, doitt:1107962, doitt:1107967, doitt:1107968, doitt:1109927, doitt:1110161, doitt:1110400, doitt:1114709, doitt:1114748, doitt:1117123, doitt:1117168, doitt:1117747, doitt:1117830, doitt:1118676, doitt:114988, doitt:115663, doitt:115982, doitt:119028, doitt:1194347, doitt:120084, doitt:1214511, doitt:1215258, doitt:122706, doitt:1254684, doitt:1255837, doitt:1257097, doitt:1257098, doitt:1262668, doitt:1264524, doitt:1264525, doitt:1264530, doitt:1264531, doitt:1272401, doitt:1281127, doitt:1282656, doitt:1284002, doitt:1286114, doitt:1286710, doitt:1288033, doitt:1288530, doitt:1288531, doitt:1290742, doitt:1290752, doitt:1290756, doitt:1292491, doitt:1296931, doitt:1298488, doitt:1298813, doitt:1300995, doitt:1303988, doitt:1305599, doitt:130591, doitt:133460, doitt:141864, doitt:14301, doitt:145131, doitt:152132, doitt:153292, doitt:15422, doitt:156189, doitt:156567, doitt:157281, doitt:157976, doitt:163071, doitt:164935, doitt:168244, doitt:168795, doitt:171017, doitt:17286, doitt:178642, doitt:178750, doitt:179453, doitt:183810, doitt:191059, doitt:195813, doitt:199175, doitt:204474, doitt:204625, doitt:214630, doitt:215627, doitt:21855, doitt:225204, doitt:225765, doitt:233897, doitt:233956, doitt:236220, doitt:236658, doitt:247224, doitt:2480, doitt:252033, doitt:254194, doitt:255716, doitt:259711, doitt:2653, doitt:26807, doitt:268632, doitt:271276, doitt:271975, doitt:273523, doitt:27805, doitt:282685, doitt:291494, doitt:295522, doitt:296904, doitt:298626, doitt:306377, doitt:312379, doitt:313683, doitt:314602, doitt:327339, doitt:33067, doitt:331171, doitt:331481, doitt:332628, doitt:336352, doitt:33693, doitt:338830, doitt:339803, doitt:345550, doitt:34748, doitt:35774, doitt:361912, doitt:363379, doitt:366263, doitt:368472, doitt:368514, doitt:36890, doitt:375186, doitt:376436, doitt:376977, doitt:379944, doitt:38047, doitt:38618, doitt:393209, doitt:393702, doitt:395427, doitt:395976, doitt:396119, doitt:400003, doitt:400517, doitt:401853, doitt:40319, doitt:407309, doitt:413451, doitt:415535, doitt:416112, doitt:416183, doitt:417076, doitt:417769, doitt:418772, doitt:423164, doitt:42608, doitt:430396, doitt:43091, doitt:433411, doitt:441, doitt:442093, doitt:442630, doitt:446198, doitt:447482, doitt:449100, doitt:452569, doitt:458380, doitt:463091, doitt:463235, doitt:463752, doitt:46608, doitt:466788, doitt:469459, doitt:470295, doitt:473151, doitt:477555, doitt:484155, doitt:485075, doitt:488229, doitt:48995"
       }
     }
   ],
@@ -609,7 +669,7 @@
     "failedArtifactCount": 9,
     "cacheEntries": 731,
     "cachedBytes": 192784964,
-    "cacheEvictions": 226,
+    "cacheEvictions": 223,
     "peakConcurrentRequests": 4,
     "maxConcurrentRequests": 4,
     "entriesWithinCap": true,
@@ -621,9 +681,72 @@
       1,
       1,
       1
-    ]
+    ],
+    "fallbackNotices": [
+      "Exterior release manhattan-midtown-core-cells-20260811-v3-s1: Exterior cell manhattan-exterior-cell-w01-000038-16-19301-17928 failed verification (request-failed). Its pinned fallback is the base identity set manhattan-midtown-core-cells-20260811-v3-s1:exterior-base-identity:47a0c1bb5c2fc60d, which carries no exterior geometry, so the existing verified base massing is shown for this cell.",
+      "Exterior release manhattan-midtown-core-cells-20260811-v3-s1: Exterior cell manhattan-exterior-cell-w01-000116-16-19301-17926 failed verification (request-failed). Its pinned fallback is the base identity set manhattan-midtown-core-cells-20260811-v3-s1:exterior-base-identity:47a0c1bb5c2fc60d, which carries no exterior geometry, so the existing verified base massing is shown for this cell.",
+      "Exterior release manhattan-midtown-core-cells-20260811-v3-s1: Exterior cell manhattan-exterior-cell-w01-000117-17-38604-35853 failed verification (request-failed). Its pinned fallback is the base identity set manhattan-midtown-core-cells-20260811-v3-s1:exterior-base-identity:47a0c1bb5c2fc60d, which carries no exterior geometry, so the existing verified base massing is shown for this cell."
+    ],
+    "networkFailures": [
+      {
+        "kind": "http-error",
+        "url": "http://localhost:4193/favicon.ico",
+        "status": 404,
+        "statusText": "Not Found"
+      },
+      {
+        "kind": "loading-failed",
+        "url": "http://localhost:4193/data/manhattan-midtown-core-cells-20260811-v3-s1/public/assets/doitt-165517__lod_0.glb",
+        "errorText": "net::ERR_ABORTED",
+        "canceled": true,
+        "blockedReason": null
+      },
+      {
+        "kind": "loading-failed",
+        "url": "http://localhost:4193/data/manhattan-midtown-core-cells-20260811-v3-s1/public/assets/doitt-190612__lod_0.glb",
+        "errorText": "net::ERR_ABORTED",
+        "canceled": true,
+        "blockedReason": null
+      },
+      {
+        "kind": "loading-failed",
+        "url": "http://localhost:4193/data/manhattan-central-upper-manhattan-cells-20260812-s1/public/assets/doitt-343405__lod_0.glb",
+        "errorText": "net::ERR_ABORTED",
+        "canceled": true,
+        "blockedReason": null
+      },
+      {
+        "kind": "loading-failed",
+        "url": "http://localhost:4193/data/manhattan-central-upper-manhattan-cells-20260812-s1/public/assets/doitt-183589__lod_0.glb",
+        "errorText": "net::ERR_ABORTED",
+        "canceled": true,
+        "blockedReason": null
+      }
+    ],
+    "networkFailureCount": 5
   },
   "uncapturedGap": "NO FRAME TIMING AND NO VISUAL CLAIM. This says the promoted arrangement resolves, boots, schedules and stays inside its budgets at four poses. It does not say how it looks or how fast it is, and it is one session rather than a distribution.",
   "claim": "A six-wave default session on the promoted build. It states that every promoted wave resolves and boots its three documents, that the scheduler admits cells across waves without any cell failing or falling back, and that the one shared cache stays inside both caps and inside the request budget.",
-  "ok": false
+  "ok": false,
+  "diagnosis": {
+    "verdict": "NOT an emission defect. The three cells' payload is sound and its delivery is sound. The failure is a RUNTIME CLASSIFICATION defect: a cancelled artifact load is counted as a failed artifact and drives the cell to base-massing fallback.",
+    "failingCells": [
+      "manhattan-exterior-cell-w01-000038-16-19301-17928",
+      "manhattan-exterior-cell-w01-000116-16-19301-17926",
+      "manhattan-exterior-cell-w01-000117-17-38604-35853"
+    ],
+    "release": "manhattan-midtown-core-cells-20260811-v3-s1",
+    "runtimeFailureCode": "request-failed",
+    "deterministic": "The SAME three cells, at the SAME pose (transition-1200m-anchor), across two independent captures in fresh browser sessions.",
+    "evidence": [
+      "ON DISK: every artifact each cell declares exists and byte-matches its manifest -- 53/53, 92/92 and 25/25 files, zero missing, zero size or SHA-256 mismatch, checked against the committed payload inventory.",
+      "OVER HTTP, IN THE SAME PAGE AND SESSION: all 170 declared artifacts of the three cells re-fetch with a 2xx status and the declared byte size. Nothing about the path, the encoding or the server declines them.",
+      "NETWORK LOG: no HTTP error and no loading failure for any artifact of these three cells. The only non-2xx in the session is /favicon.ico, and the only loading failures are net::ERR_ABORTED on four GLBs belonging to OTHER cells -- two in w01 and two in w04, and w04 recorded zero fallbacks.",
+      "REQUEST COUNT: the app requested 6 of 48, 6 of 87 and 6 of 20 GLBs for the three cells before giving up. A cell whose data were bad would fail on a particular artifact; three cells of very different sizes each stopping at exactly six is the signature of a cancelled load, not of a bad byte."
+    ],
+    "mechanism": "CitywideRequestPool.abortExcept aborts in-flight loads for cells that left the resident set, and resolves queued-but-unstarted tasks with undefined. Its runTask catch turns an AbortError into undefined as well. ExteriorCellRuntime.loadVerifiedArtifact then sees value === undefined, increments failedArtifactCount, and throws ExteriorRuntimeError('request-failed') from its ?? branch -- reached only when artifactErrors holds nothing, which is exactly the abort case, because aborts are deliberately excluded from artifactErrors. renderCell catches that, cannot recognise it as an abort (isAbort is false for a synthesised ExteriorRuntimeError), and returns base-massing.",
+    "proposedFix": "In loadVerifiedArtifact, an undefined pool result with no recorded artifact error is a CANCELLATION, not a failure: throw an abort-shaped error so renderCell rethrows instead of falling back, and do not increment failedArtifactCount. Confined to the exterior runtime; CitywideRequestPool is shared with the citywide runtime and is NOT the place to change this.",
+    "notFixedHere": "This is a runtime behaviour change on a core load path, and the capture was commissioned as a diagnosis. It is reported rather than applied. The FAIL stands and the fallback is real: three cells of the promoted default render base massing, and the app says so in a notice rather than pretending otherwise.",
+    "whyTheCuratedBuildDidNotShowIt": "The defect needs several co-resident cells still loading when the scheduler re-decides. The curated composition had content in 13 cells of 883 and rarely had more than one or two loading at once; the promoted composition has content in all 883 and fills all 8 residency slots at every pose."
+  }
 }
