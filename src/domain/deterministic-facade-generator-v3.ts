@@ -1630,11 +1630,26 @@ function buildPrisms(input: V3Input, tiers: V3Tier[], options: V3GrammarOptions 
   // T004 rule 2, expressed as a SECOND BOUND ON THE ONE EXISTING SCALE rather
   // than as a new vertical rule. The cluster already has exactly one scale, so
   // bounding that scale bounds the cluster's height, keeps its proportions, and
-  // adds no geometry vocabulary — the bound itself is `V3_NOMINAL_FLOOR_HEIGHT_MM`,
-  // the grammar's own designed storey, so no magic number enters either.
+  // adds no geometry vocabulary.
+  //
+  // THE BOUND IS THE BUILDING'S OWN DESIGNED STOREY, not the grammar's nominal
+  // one. `parameters.targetFloorHeightMm` IS `V3_NOMINAL_FLOOR_HEIGHT_MM` for
+  // every building at or above 3.6 m — `validateV3Input` refuses anything below
+  // its own floor height, so that is every building the shipped grammar has ever
+  // accepted — which makes this a byte-identical no-op there. It differs only
+  // for a T003-recovered low-rise, where the storey IS the sourced height, and
+  // it is the honest bound for exactly those: a 305 mm building has no 3.6 m
+  // storey to hide a water tank inside.
+  //
+  // THE FLOOR IS 80 PERMILLE, the same lower bound `planScalePermille` already
+  // carries one line above. Below it the cluster stops being a cluster and
+  // becomes a scattering of 1 mm prisms, and a rule that produced sub-millimetre
+  // geometry to satisfy a height bound would be trading one false claim for
+  // another. It costs the low-rise case its exactness and says so: on the 305 mm
+  // parent the cluster lands 432 mm above the crown rather than 305 mm.
   const heightBoundPermille = Math.max(
-    1,
-    Math.floor((V3_NOMINAL_FLOOR_HEIGHT_MM * 1_000) / Math.max(1, rooftopClusterRawHeightMm(parameters))),
+    80,
+    Math.floor((parameters.targetFloorHeightMm * 1_000) / Math.max(1, rooftopClusterRawHeightMm(parameters))),
   );
   const scalePermille = options.rooftopClusterHeightClamp === true
     ? Math.min(planScalePermille, heightBoundPermille)

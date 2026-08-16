@@ -150,16 +150,16 @@ six rows, not four** — the earlier version of this table printed the first fou
 and the sentence beside it said the six "behave the same way", which the fifth
 and sixth rows disprove:
 
-| building | sourced height | pre-fix cluster ratio | post-fix ratio | above crown |
-| --- | --- | --- | --- | --- |
-| `doitt:1261650` | 0.3048 m | **18.7049** | 12.7902 | 3,596 mm |
-| `doitt:1303611` | 0.6085 m | 9.8670 | 6.9048 | 3,596 mm |
-| `doitt:1305414` | 0.6096 m | 9.8525 | 6.8951 | 3,596 mm |
-| `doitt:1302036` | 0.9144 m | 6.9081 | 4.9344 | 3,596 mm |
-| `doitt:1302037` | 0.9144 m | 6.9081 | 4.9344 | 3,596 mm |
-| `doitt:408121` | 0.9144 m | **3.1400** | **4.9344** | 3,596 mm |
+| building | sourced height | pre-fix ratio | nominal-storey bound | storey-aware bound | above crown |
+| --- | --- | --- | --- | --- | --- |
+| `doitt:1261650` | 0.3048 m | **18.7049** | 12.7902 | **2.4164** | 432 mm |
+| `doitt:1303611` | 0.6085 m | 9.8670 | 6.9048 | **1.9934** | 605 mm |
+| `doitt:1305414` | 0.6096 m | 9.8525 | 6.8951 | **1.9918** | 605 mm |
+| `doitt:1302036` | 0.9144 m | 6.9081 | 4.9344 | **1.9989** | 913 mm |
+| `doitt:1302037` | 0.9144 m | 6.9081 | 4.9344 | **1.9989** | 913 mm |
+| `doitt:408121` | 0.9144 m | **3.1400** | **4.9344** | **1.9989** | 913 mm |
 
-**Five fall and one RISES.** `doitt:408121`'s pre-fix cluster was
+**Under the NOMINAL-STOREY bound, five fell and one ROSE.** `doitt:408121`'s pre-fix cluster was
 `roof-equipment` 978 mm plus **three water-tank legs holding nothing** — the
 tank crossed the parapet and was dropped, and the fourth leg with it — topping
 out 1,956 mm above the crown. Post-fix it carries a complete 1,998 mm tank on
@@ -170,13 +170,20 @@ honesty went up with it. What is true of all six is the thing the clamp claims:
 every one ends at the bound of 3,596 mm above the crown. ADR 0049 carries the
 corrected statement and the per-prism measurement.
 
+The clamp's bound is now the BUILDING's own designed storey rather than the
+grammar's nominal one, so all six fall — but the non-monotonicity that made the
+original sentence false is a property of the rule, not of one number, and it is
+pinned by two of the fourteen real Block 835 footprints that recover a tank under
+the clamp at any bound.
+
 (Owner cells, source refs and per-building silhouette ratios are in
 `stage0-preflight-stride.json` → `subMetreParents`.)
 
 The reviewer's 18.7x is reproduced exactly, on a named building. Even clamped,
-`doitt:1261650` is a 305 mm building under 3,596 mm of designed rooftop — 92% of
-the asset's height is grammar, not source. The clamp bounds it; it does not make
-it a good claim, and that is a Decision 3 input, not a Stage-0 pass.
+`doitt:1261650` is a 305 mm building under 432 mm of designed rooftop — 59% of
+the asset's height is grammar, not source, down from 92% under the nominal-storey
+bound. The clamp bounds it; it does not make it a good claim, and that is a
+Decision 3 input, not a Stage-0 pass.
 
 ### 8. Rights and retention
 
@@ -280,3 +287,87 @@ and one — `doitt:408121`, 914 mm — RISES, 3.14 to 4.93, through the document
 non-monotonicity. All six rows are printed above, ADR 0049 carries the corrected
 sentence and the per-prism measurement, and what is actually true of all six is
 stated: every one ends at the clamp's bound of 3,596 mm above the crown.
+
+## Stage 0 now passes: the LOD-1 contract, decided
+
+The single failure was item 4 — 19 of 2,250 strided buildings at or over the
+multi-LOD schema's 2% silhouette cap. ADR 0050 decides what LOD 1 IS for those
+buildings, and the gate is restated against that decision rather than relaxed.
+
+### The exhaustive island silhouette pass
+
+A stride can say "about 0.8% are over the cap". It cannot say WHICH, and the
+fallback rule decides per building, so the ~380 projection was replaced by a
+measurement of every owned parent the envelope admits. The deviation is a
+function of the plan's solid parts, so this pass writes no GLB and retains
+nothing: 45,032 parents in 244 seconds.
+
+| | measured |
+| --- | --- |
+| owned parents enumerated | 45,194 |
+| measured (plan-stage admissible) | **45,032** |
+| refused before measurement | 162 (114 area, 44 neck, 4 not-simple) |
+| deviation median | 3.64e-16 |
+| deviation p95 | 0.003318 |
+| deviation p99 | 0.019379 |
+| deviation max | **0.091603** (`doitt:99783`) |
+| exactly zero | 6,707 (14.89%) |
+| mean | 0.001157 |
+| **at or over the 0.02 cap** | **425 (0.944%)** |
+
+The over-cap set is attributed in three disjoint buckets rather than one count,
+because a single "already over the cap" number would have hidden the residual:
+
+| bucket | count |
+| --- | --- |
+| already over the cap under the SHIPPED grammar | 415 |
+| refused outright by the shipped grammar (T003 low-rise recoveries) | 9 |
+| crossed the cap because of the T004 rooftop rules | **1** (`doitt:401323`, 0.019780 → 0.020410) |
+
+Largest deviation change either rooftop rule makes anywhere on the island:
+1.394e-3. The full distribution, the histogram and all 425 buildings with their
+own deviations are in `stage0-island-silhouette.json`.
+
+### The adjudicated rule, measured on the stride
+
+Both LOD-1 policies were written for every strided building in the same process:
+
+| | shed-protrusions | measured-fallback |
+| --- | --- | --- |
+| buildings over the cap | 19 | 19 (unchanged — the cap is not relaxed) |
+| over-cap buildings UNRESOLVED | 19 | **0** |
+| worst EMITTED coarse-level deviation | 0.05618 | **0.019846** |
+| fallback coarse levels with a derived zero error | — | 19/19 |
+| fallback coarse levels carrying LOD 0's triangle count | — | 19/19 |
+| total LOD-1 triangles | 1,761,930 | 1,767,066 (**+0.29%**) |
+
+### The honest runtime statement
+
+All five frozen waves serve `lod_0` only, so a fallback building at range renders
+exactly as every building of every shipped wave renders today: its
+triangles-at-range are unchanged against the status quo. The LOD system improves
+the other ~99% of the population. Cache-ceiling and streaming-benchmark re-runs
+against a two-LOD population belong to **T005/T006** and are not claimed here.
+
+### The rooftop clamp, re-measured under the storey-aware bound
+
+| | pre-fix | storey-aware clamp |
+| --- | --- | --- |
+| buildings with orphan legs | 573 (25.47%) | **0** |
+| orphan legs total | 1,653 | **0** |
+| cluster-top ratio median | 1.1075 | 1.0961 |
+| cluster-top ratio p95 | 1.4061 | 1.3260 |
+| cluster-top ratio max | 2.8342 | **2.0000** |
+| cluster above crown, max | 5,400 mm | **3,596 mm** |
+| buildings that recovered a complete tank | — | 70 |
+
+The maximum cluster-top ratio falls from 2.2240 under the nominal-storey bound to
+2.0000 under the storey-aware one, and the cluster-above-crown maximum is
+unchanged at 3,596 mm because that maximum belongs to buildings at or above one
+nominal storey, where the change is a byte-identical no-op.
+
+### Gate state
+
+`stage0Invariants` returns an EMPTY issue list. The raw over-cap count of 19 is
+still recorded and still asserted by the drift test, so the fallback reads as a
+decision rather than as a disappearance.

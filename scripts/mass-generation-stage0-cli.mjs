@@ -107,6 +107,7 @@ export const STRIDE_PATH = join(RECORD_DIR, "stage0-preflight-stride.json");
 export const FINGERPRINT_PATH = join(RECORD_DIR, "stage0-frozen-fingerprints.json");
 export const TEXTURE_COST_PATH = join(RECORD_DIR, "stage0-textured-write-cost.json");
 export const GATE_PATH = join(RECORD_DIR, "stage0-gate.json");
+export const ISLAND_PATH = join(RECORD_DIR, "stage0-island-silhouette.json");
 
 const snapshotRoot = join(repositoryRoot, "public", "data", EXTERIOR_FULLSNAPSHOT_BASE_RELEASE_ID);
 const ledgerRoot = join(repositoryRoot, "data", "normalized", EXTERIOR_WAVE_LEDGER_RELEASE_ID);
@@ -140,6 +141,18 @@ export const PRE_FIX_GRAMMAR = { ...V3_EXTENDED_GRAMMAR_OPTIONS };
  * writer reads the profile for identity, budgets and texture policy alone.
  */
 export const MASS_GENERATION_WRITE_PROFILE = { ...MIDTOWN_CORE_V3_WAVE_PROFILE, admissionEnvelope: MASS_GENERATION_GRAMMAR };
+
+/**
+ * The same profile under the ADJUDICATED LOD-1 RULE (T004 F5).
+ *
+ * `measured-fallback`: LOD 1 sheds protrusions only where the MEASURED
+ * silhouette deviation is inside the assembly schema's 2% cap, and is FULL
+ * GEOMETRY otherwise. The stride writes both profiles for every building, so the
+ * gate can state the over-cap count under the shipped rule AND show that every
+ * one of those buildings resolves under the adjudicated one — two numbers from
+ * the same buildings in the same process, rather than a before and an after.
+ */
+export const MASS_GENERATION_FALLBACK_PROFILE = { ...MASS_GENERATION_WRITE_PROFILE, lod1Policy: "measured-fallback" };
 
 function fail(message) {
   console.error(`STOP: ${message}`);
@@ -371,6 +384,26 @@ export async function computeStrideRecord(options) {
     }
     const assetMs = performance.now() - assetStartedAt;
 
+    // (T004 F5) The SAME building through the adjudicated rule, in the same
+    // process. Under `measured-fallback` an over-cap building's coarse level is
+    // the fine level's geometry, so its emitted deviation is zero and its
+    // declared geometric error is derived from the bytes rather than from a
+    // wave constant.
+    let fallback;
+    try {
+      fallback = writeMidtownCoreV3Assets(post.context, {
+        ownerCellId: ownerCellOf.get(buildingId),
+        capturedAt: null,
+        updatedAt: null,
+        predecessor: null,
+        profile: MASS_GENERATION_FALLBACK_PROFILE,
+      });
+    } catch (error) {
+      if (!(error instanceof MidtownCoreV3Stop)) throw error;
+      postFixRefusals[error.code] = (postFixRefusals[error.code] ?? 0) + 1;
+      continue;
+    }
+
     const postPlan = post.context.plan;
     rows.push({
       buildingId,
@@ -401,6 +434,12 @@ export async function computeStrideRecord(options) {
       lod1TriangleCount: written.assets[1].counts.triangleCount,
       bothLodByteSize: written.assets[0].bytes.byteLength + written.assets[1].bytes.byteLength,
       bothLodWriteMs: assetMs,
+      lod1Fallback: {
+        variant: fallback.lod1.variant,
+        emittedDeviationRatio: fallback.lod1.emittedDeviationRatio,
+        geometricErrorMeters: fallback.lod1.geometricErrorMeters,
+        lod1TriangleCount: fallback.assets[1].counts.triangleCount,
+      },
     });
   }
 
@@ -540,7 +579,24 @@ export async function computeStrideRecord(options) {
           ringVertexCount: row.ringVertexCount,
         })),
       worstViewDistribution: tally(rows, (row) => row.silhouette.worstViewId),
-      verdict: overCap.length === 0 ? "WITHIN THE 2% CAP" : "OVER THE 2% CAP",
+      verdict: overCap.length === 0 ? "WITHIN THE 2% CAP" : "OVER THE 2% CAP UNDER shed-protrusions",
+      measuredFallback: {
+        note: "THE ADJUDICATED LOD-1 RULE (T004 F5), measured on the SAME buildings in the SAME process. Under `measured-fallback` a building whose measured deviation exceeds the cap emits FULL GEOMETRY at LOD 1 — the same tessellation as LOD 0 — so its emitted deviation is zero because it dropped nothing, its declared geometric error is derived from the emitted bytes rather than from a wave constant, and its coarse level is declared INELIGIBLE so the runtime never selects a fake-coarse level. It is not a relaxation of the cap: the cap still decides, and the buildings it excludes stop having a coarse level at all.",
+        policy: "measured-fallback",
+        fallbackBuildings: rows.filter((row) => row.lod1Fallback.variant === "full-geometry").length,
+        shedBuildings: rows.filter((row) => row.lod1Fallback.variant === "shed-protrusions").length,
+        // The gate number: over-cap buildings the fallback rule does NOT resolve.
+        unresolvedOverCap: overCap.filter((row) => row.lod1Fallback.variant !== "full-geometry").length,
+        worstEmittedDeviationRatio: rows.reduce((worst, row) => Math.max(worst, row.lod1Fallback.emittedDeviationRatio), 0),
+        fallbackGeometricErrorsAllZero: rows.filter((row) => row.lod1Fallback.variant === "full-geometry").every((row) => row.lod1Fallback.geometricErrorMeters === 0),
+        // A fallback level IS the fine level, so its triangle count matches.
+        fallbackTrianglesMatchLod0: rows.filter((row) => row.lod1Fallback.variant === "full-geometry").every((row) => row.lod1Fallback.lod1TriangleCount === row.lod0TriangleCount),
+        triangleCost: {
+          note: "What the fallback costs, over the strided population: LOD-1 triangles under the shipped rule against LOD-1 triangles under the adjudicated one. Only the fallback buildings differ, and each of them pays exactly its own LOD-0 count.",
+          shedRuleLod1Triangles: rows.reduce((total, row) => total + row.lod1TriangleCount, 0),
+          fallbackRuleLod1Triangles: rows.reduce((total, row) => total + row.lod1Fallback.lod1TriangleCount, 0),
+        },
+      },
       overCapAttribution: {
         note: "WHOSE DEFECT IT IS. Each over-cap building is measured under the SHIPPED grammar as well, and its deviation is attributed to the placement kinds that produce it by removing one kind at a time from the fine level and re-measuring the worst view. `deviationShareByPlacementKind` values do not sum to the total: removing one kind can uncover another that was overlapping it, which is a property of a UNION area and not an error.",
         buildings: overCapAttribution,
@@ -581,6 +637,159 @@ export async function computeStrideRecord(options) {
     },
     rows,
     retention: "gate-only: every GLB written by this stage was counted, timed and dropped",
+    timings: {
+      wallSeconds: Number(((Date.now() - startedAt) / 1_000).toFixed(1)),
+      note: "Host wall clock, kept out of every other field so a re-run rewrites byte-identical content.",
+    },
+  };
+}
+
+// ---------------------------------------------------------------------------
+// (6) THE EXHAUSTIVE ISLAND SILHOUETTE PASS (T004 F6)
+//
+// The stride measured 2,250 buildings and 19 of them were at or over the cap.
+// Projecting that share onto the island gives "about 380", and a per-building
+// LOD decision keyed on a projection is a decision keyed on nothing: the
+// projection cannot name WHICH buildings, and the wave has to decide for each.
+//
+// So every owned parent the mass-generation envelope admits is measured. The
+// deviation is a function of the PLAN alone — the instrument reads the plan's
+// solid parts, not its triangles — so this costs a plan and a rectangle sweep
+// per building and no GLB is written at all.
+//
+// WHAT IS COMMITTED. The full distribution, and the EXACT over-cap set with each
+// building's own deviation. Not the 44,989 individual rows: a per-building
+// record of the whole island is roughly a hundred megabytes of JSON that says
+// almost nothing per line, and the two things a reader needs — the shape of the
+// distribution and the identity of every exception — are both here.
+// ---------------------------------------------------------------------------
+
+export async function computeIslandSilhouetteRecord() {
+  const { gate, sources } = await loadSources();
+  const { ledger, ledgerChecksumSha256 } = await loadLedger();
+  const cells = [...ledger.cells].sort((left, right) => left.order - right.order);
+  const ownerCellOf = new Map();
+  const order = [];
+  for (const cell of cells) for (const buildingId of cell.buildingIds) { ownerCellOf.set(buildingId, cell.cellId); order.push(buildingId); }
+
+  const startedAt = Date.now();
+  const deviations = [];
+  const overCap = [];
+  const refusalsByCode = {};
+  // 41 buckets: 40 of width 0.0005 up to 0.02, and everything at or above the
+  // cap in the last one. Fine enough that the mass just under the cap is
+  // visible, which is the part of the distribution the decision turns on.
+  const BUCKET_WIDTH = 0.0005;
+  const BUCKET_COUNT = 40;
+  const histogram = new Array(BUCKET_COUNT + 1).fill(0);
+  let measured = 0;
+  let exactlyZero = 0;
+
+  for (const buildingId of order) {
+    const source = sources.get(buildingId);
+    if (!source) { refusalsByCode["absent-from-base-shards"] = (refusalsByCode["absent-from-base-shards"] ?? 0) + 1; continue; }
+    const planned = planUnder(source, MASS_GENERATION_GRAMMAR);
+    if (!planned.ok) { refusalsByCode[planned.code] = (refusalsByCode[planned.code] ?? 0) + 1; continue; }
+    const plan = planned.context.plan;
+    const measurement = midtownCoreV3SilhouetteMeasurement(plan);
+    const ratio = measurement.deviationRatio;
+    measured += 1;
+    deviations.push(ratio);
+    if (ratio === 0) exactlyZero += 1;
+    histogram[ratio >= MIDTOWN_CORE_V3_SILHOUETTE_MAXIMUM_RATIO ? BUCKET_COUNT : Math.min(BUCKET_COUNT - 1, Math.floor(ratio / BUCKET_WIDTH))] += 1;
+    if (ratio >= MIDTOWN_CORE_V3_SILHOUETTE_MAXIMUM_RATIO) {
+      const ring = plan.tiers[0].ring;
+      const xs = ring.map((point) => point[0]);
+      const ys = ring.map((point) => point[1]);
+      // Every over-cap building is ALSO measured under the shipped grammar, so
+      // the record states whose defect each one is rather than leaving a reader
+      // to assume T004 caused it.
+      const shipped = planUnder(source, V3_SHIPPED_GRAMMAR_OPTIONS);
+      const shippedMeasurement = shipped.ok ? midtownCoreV3SilhouetteMeasurement(shipped.context.plan) : null;
+      overCap.push({
+        buildingId,
+        ownerCellId: ownerCellOf.get(buildingId) ?? null,
+        deviationRatio: ratio,
+        worstViewId: measurement.worstViewId,
+        heightMm: plan.input.geometry.heightMm,
+        heightIsFallback: planned.context.heightSource === "fallback",
+        ringVertexCount: planned.context.ringMm.length,
+        footprintExtentMm: [Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys)],
+        floorCount: plan.massing.floorCount,
+        effectiveTierCount: plan.massing.effectiveTierCount,
+        shippedGrammarOutcome: shipped.ok ? "generated" : shipped.code,
+        deviationUnderShippedGrammar: shippedMeasurement === null ? null : shippedMeasurement.deviationRatio,
+        t004Delta: shippedMeasurement === null ? null : ratio - shippedMeasurement.deviationRatio,
+        // The adjudicated rule's answer for THIS building, stated per building
+        // rather than inferred from the count.
+        lod1Decision: "full-geometry",
+      });
+    }
+  }
+
+  overCap.sort((left, right) => right.deviationRatio - left.deviationRatio || (left.buildingId < right.buildingId ? -1 : 1));
+  // WHOSE OVER-CAP BUILDING IS IT, in three disjoint buckets rather than one
+  // "already over the cap" count. The distinction matters: a building the
+  // SHIPPED grammar refuses outright has no shipped deviation to be over or
+  // under, so counting it as "not already over" would read as a regression
+  // caused by T004 when it is a building T003 recovered from a refusal.
+  const alreadyOver = overCap.filter((row) => row.deviationUnderShippedGrammar !== null && row.deviationUnderShippedGrammar >= MIDTOWN_CORE_V3_SILHOUETTE_MAXIMUM_RATIO).length;
+  const absentUnderShipped = overCap.filter((row) => row.deviationUnderShippedGrammar === null).length;
+  const crossedUnderT004 = overCap.filter((row) => row.deviationUnderShippedGrammar !== null && row.deviationUnderShippedGrammar < MIDTOWN_CORE_V3_SILHOUETTE_MAXIMUM_RATIO);
+
+  return {
+    schemaVersion: "1.0",
+    recordId: RECORD_ID,
+    taskId: "T004",
+    artifact: "stage0-exhaustive-island-silhouette",
+    note: "EVERY owned parent the mass-generation envelope admits, measured — not a stride and not a projection. The LOD 0 / LOD 1 projected-silhouette deviation is a function of the PLAN's solid parts, so no GLB was written by this pass and nothing was retained. The per-building rows of the whole island are deliberately NOT committed: the distribution and the exact over-cap set are what a reader needs, and 44,989 near-identical rows are not. Schema compliance is not visual acceptance.",
+    base: { releaseId: EXTERIOR_FULLSNAPSHOT_BASE_RELEASE_ID, manifestChecksumSha256: gate.observedManifestChecksumSha256 },
+    ledger: { releaseId: EXTERIOR_WAVE_LEDGER_RELEASE_ID, ledgerId: ledger.ledgerId, checksumSha256: ledgerChecksumSha256 },
+    grammar: { ...MASS_GENERATION_GRAMMAR },
+    population: {
+      enumeratedOwnedParents: order.length,
+      measured,
+      refusedBeforeMeasurement: order.length - measured,
+      refusalsByCode,
+      note: "Refusals here are PLAN-STAGE only. The writer's own gates (volume identity, registration, budgets) refuse a further handful that this pass never reaches, because the silhouette is a property of the plan and does not need the bytes.",
+    },
+    maximumRatio: MIDTOWN_CORE_V3_SILHOUETTE_MAXIMUM_RATIO,
+    distribution: {
+      quantiles: quantiles(deviations),
+      exactlyZero,
+      exactlyZeroShare: measured === 0 ? null : exactlyZero / measured,
+      mean: measured === 0 ? null : deviations.reduce((total, value) => total + value, 0) / measured,
+      histogram: {
+        note: "Counts by deviation bucket. Buckets 0..39 are width 0.0005 from 0 to 0.02; the last bucket is everything AT OR OVER the 0.02 cap.",
+        bucketWidth: BUCKET_WIDTH,
+        buckets: histogram.map((count, index) => ({
+          from: index === BUCKET_COUNT ? MIDTOWN_CORE_V3_SILHOUETTE_MAXIMUM_RATIO : round(index * BUCKET_WIDTH, 6),
+          to: index === BUCKET_COUNT ? null : round((index + 1) * BUCKET_WIDTH, 6),
+          count,
+        })),
+      },
+    },
+    overCap: {
+      note: "THE EXACT SET, with each building's own measured deviation. This is what the per-building LOD-1 decision keys on: under the adjudicated rule every building in this list emits FULL GEOMETRY at LOD 1 and every building not in it sheds protrusions.",
+      count: overCap.length,
+      share: measured === 0 ? null : overCap.length / measured,
+      attribution: {
+        note: "Three disjoint buckets over the over-cap set. `alreadyOverCapUnderShippedGrammar` were over it before T004 existed. `absentUnderShippedGrammar` are buildings the SHIPPED grammar REFUSES outright — every one of them is a T003 low-rise recovery, so it has no shipped-grammar deviation to be over or under and its presence here is a building that did not exist rather than a building that got worse. `crossedUnderT004` is the honest residual: buildings that were inside the cap under the shipped grammar and are outside it under this envelope, named individually with the delta that moved them.",
+        alreadyOverCapUnderShippedGrammar: alreadyOver,
+        absentUnderShippedGrammar: absentUnderShipped,
+        crossedUnderT004Count: crossedUnderT004.length,
+        crossedUnderT004: crossedUnderT004.map((row) => ({
+          buildingId: row.buildingId,
+          deviationUnderShippedGrammar: row.deviationUnderShippedGrammar,
+          deviationRatio: row.deviationRatio,
+          t004Delta: row.t004Delta,
+        })),
+      },
+      alreadyOverCapUnderShippedGrammar: alreadyOver,
+      worstT004Delta: overCap.reduce((worst, row) => Math.max(worst, Math.abs(row.t004Delta ?? 0)), 0),
+      buildings: overCap,
+    },
+    retention: "measurement-only: no GLB was written, no byte was retained, no release was touched",
     timings: {
       wallSeconds: Number(((Date.now() - startedAt) / 1_000).toFixed(1)),
       note: "Host wall clock, kept out of every other field so a re-run rewrites byte-identical content.",
@@ -691,6 +900,7 @@ export async function composeGateRecord() {
   const replay = JSON.parse(await readFile(T001_REPLAY_PATH, "utf8"));
   const fingerprints = JSON.parse(await readFile(FINGERPRINT_PATH, "utf8"));
   const stride = JSON.parse(await readFile(STRIDE_PATH, "utf8"));
+  const island = JSON.parse(await readFile(ISLAND_PATH, "utf8"));
   const texture = JSON.parse(await readFile(TEXTURE_COST_PATH, "utf8"));
 
   return {
@@ -732,6 +942,30 @@ export async function composeGateRecord() {
       ...stride.silhouette,
       recordPath: `data/${RECORD_ID}/stage0-preflight-stride.json`,
     },
+    islandSilhouette: {
+      note: "THE EXHAUSTIVE PASS. The stride's 19-in-2,250 is a sample; this is every owned parent the envelope admits, so the per-building LOD-1 decision keys on a measurement rather than on a projection.",
+      recordPath: `data/${RECORD_ID}/stage0-island-silhouette.json`,
+      measured: island.population.measured,
+      enumeratedOwnedParents: island.population.enumeratedOwnedParents,
+      quantiles: island.distribution.quantiles,
+      exactlyZero: island.distribution.exactlyZero,
+      overCapCount: island.overCap.count,
+      overCapShare: island.overCap.share,
+      alreadyOverCapUnderShippedGrammar: island.overCap.alreadyOverCapUnderShippedGrammar,
+      attribution: island.overCap.attribution,
+      worstT004Delta: island.overCap.worstT004Delta,
+    },
+    lod1Contract: {
+      note: "THE ADJUDICATED RULE. LOD 1 sheds protrusions only where the MEASURED deviation is within the assembly schema's 2% cap; otherwise LOD 1 is FULL GEOMETRY and its deviation is zero because it dropped nothing. The cap is not relaxed and no coarse level above it ships. A fallback level declares `eligible: false`, so the runtime never selects a fake-coarse level.",
+      policy: "measured-fallback",
+      strideFallbackBuildings: stride.silhouette.measuredFallback.fallbackBuildings,
+      strideUnresolvedOverCap: stride.silhouette.measuredFallback.unresolvedOverCap,
+      strideWorstEmittedDeviationRatio: stride.silhouette.measuredFallback.worstEmittedDeviationRatio,
+      fallbackGeometricErrorsAllZero: stride.silhouette.measuredFallback.fallbackGeometricErrorsAllZero,
+      fallbackTrianglesMatchLod0: stride.silhouette.measuredFallback.fallbackTrianglesMatchLod0,
+      islandFallbackBuildings: island.overCap.count,
+      runtimeStatement: "All five frozen waves serve lod_0 ONLY, so a fallback building at range renders exactly as every building of every shipped wave renders today. The LOD system improves the other ~99% of the population; triangles-at-range for a fallback building are unchanged against the status quo rather than worsened by this rule. Cache-ceiling and streaming-benchmark re-runs against the two-LOD population belong to T005/T006 and are not claimed here.",
+    },
     rooftop: { ...stride.rooftop, recordPath: `data/${RECORD_ID}/stage0-preflight-stride.json` },
     subMetreParents: stride.subMetreParents,
     texturedWriteCost: {
@@ -768,7 +1002,21 @@ export function stage0Invariants(gate) {
   if (gate.shippedByteReplay.totalAssetsCompared === 0) issues.push("the shipped GLB byte replay compared nothing, which would be a vacuous pass");
   if (gate.rooftop.postFix.orphanLegBuildings !== 0) issues.push("orphan water-tank legs survive the fix");
   if (!gate.rooftop.postFix.boundHolds) issues.push("a post-clamp rooftop cluster exceeds one nominal storey above its crown");
-  if (gate.silhouette.countAtOrOverCap !== 0) issues.push(`${gate.silhouette.countAtOrOverCap} strided building(s) are at or over the 2% LOD-transition cap`);
+  // (T004 F5) The gate is now stated against the ADJUDICATED rule. The raw
+  // over-cap count is still recorded — it is a real property of the LOD-1
+  // definition and it did not go away — but what stops a wave is an over-cap
+  // building the rule does not RESOLVE, and a coarse level that ships above the
+  // cap. Under `measured-fallback` there is no such level: the building stops
+  // having a coarse level instead.
+  if (!gate.lod1Contract) issues.push("the gate record predates the adjudicated LOD-1 rule and cannot state whether the cap is honoured");
+  else {
+    if (gate.lod1Contract.strideUnresolvedOverCap !== 0) issues.push(`${gate.lod1Contract.strideUnresolvedOverCap} strided building(s) are at or over the 2% cap and are NOT resolved by the measured-fallback rule`);
+    if (gate.lod1Contract.strideWorstEmittedDeviationRatio > 0.02) issues.push("an emitted coarse level declares a silhouette deviation above the 2% cap");
+    if (gate.lod1Contract.fallbackGeometricErrorsAllZero !== true) issues.push("a fallback coarse level declares a non-zero geometric error, which its own emitted geometry contradicts");
+    if (gate.lod1Contract.fallbackTrianglesMatchLod0 !== true) issues.push("a fallback coarse level does not carry the fine level's triangle count, so it is not full geometry");
+  }
+  if (!gate.islandSilhouette) issues.push("the gate record carries no exhaustive island silhouette pass, so the per-building LOD-1 decision would rest on a projection");
+  else if (gate.islandSilhouette.measured < 40_000) issues.push(`the island silhouette pass measured only ${gate.islandSilhouette.measured} parents, which is not the island`);
   return issues;
 }
 
@@ -793,6 +1041,12 @@ async function runCli(argv) {
     console.log(serialize({ ok: issues.length === 0, checkedPath: GATE_PATH, issues }));
     return issues.length === 0 ? 0 : 1;
   }
+  if (mode === "island") {
+    const record = await computeIslandSilhouetteRecord();
+    await writeRecord(ISLAND_PATH, record);
+    console.log(serialize({ ok: true, wrote: ISLAND_PATH, measured: record.population.measured, overCapCount: record.overCap.count, attribution: record.overCap.attribution.crossedUnderT004Count }));
+    return 0;
+  }
   if (mode === "gate") {
     const gate = await composeGateRecord();
     const issues = stage0Invariants(gate);
@@ -804,13 +1058,15 @@ async function runCli(argv) {
       differentialUnmoved: gate.differential.unmoved,
       shippedByteReplay: `${gate.shippedByteReplay.totalAssetsMatched}/${gate.shippedByteReplay.totalAssetsCompared}`,
       silhouetteCountAtOrOverCap: gate.silhouette.countAtOrOverCap,
+      unresolvedOverCapUnderFallback: gate.lod1Contract?.strideUnresolvedOverCap ?? null,
+      islandOverCapCount: gate.islandSilhouette?.overCapCount ?? null,
       postFixOrphanLegBuildings: gate.rooftop.postFix.orphanLegBuildings,
       verdict: issues.length === 0 ? "STAGE 0 PASSES" : "STAGE 0 FAILS",
     }));
     return issues.length === 0 ? 0 : 1;
   }
   if (mode !== "run") {
-    console.error("Usage: node scripts/mass-generation-stage0-cli.mjs <run|gate|check> [--stride <n>] [--texture-sample <n>]");
+    console.error("Usage: node scripts/mass-generation-stage0-cli.mjs <run|island|gate|check> [--stride <n>] [--texture-sample <n>]");
     return 2;
   }
   const strideIndex = argv.indexOf("--stride");
@@ -828,13 +1084,18 @@ async function runCli(argv) {
   await writeRecord(STRIDE_PATH, strideRecord);
   console.error(`[stride] materialized=${strideRecord.stride.materialized} overCap=${strideRecord.silhouette.countAtOrOverCap} orphansPost=${strideRecord.rooftop.postFix.orphanLegBuildings}`);
 
+  const islandRecord = await computeIslandSilhouetteRecord();
+  await writeRecord(ISLAND_PATH, islandRecord);
+  console.error(`[island] measured=${islandRecord.population.measured} overCap=${islandRecord.overCap.count}`);
+
   const textureRecord = await computeTextureCostRecord({ sample });
   await writeRecord(TEXTURE_COST_PATH, textureRecord);
   console.error(`[texture] ${textureRecord.sixWaveProjection.rangeStatement}`);
 
   console.log(serialize({
     ok: true,
-    wrote: [FINGERPRINT_PATH, STRIDE_PATH, TEXTURE_COST_PATH],
+    wrote: [FINGERPRINT_PATH, STRIDE_PATH, ISLAND_PATH, TEXTURE_COST_PATH],
+    island: { measured: islandRecord.population.measured, overCapCount: islandRecord.overCap.count },
     silhouette: { countAtOrOverCap: strideRecord.silhouette.countAtOrOverCap, deviationRatio: strideRecord.silhouette.deviationRatio },
     rooftop: { preFixOrphanBuildings: strideRecord.rooftop.preFix.orphanLegBuildings, postFixOrphanBuildings: strideRecord.rooftop.postFix.orphanLegBuildings },
   }));

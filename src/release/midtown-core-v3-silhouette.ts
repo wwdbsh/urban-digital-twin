@@ -278,23 +278,49 @@ export interface MidtownCoreV3SilhouetteRecord {
 }
 
 /**
+ * WHAT GEOMETRY A COARSE LEVEL ACTUALLY CARRIES (T004 F5b).
+ *
+ * `shed-protrusions` is the V3 LOD-1 contract: the coarse level emits the
+ * massing and the rooftop cluster and drops every outward placement. Its
+ * silhouette deviation is whatever the measurement says, and the 2% cap decides
+ * whether it may ship.
+ *
+ * `full-geometry` is the measured fallback: the coarse level emits the SAME
+ * tessellation as the fine one, so the two silhouettes are the same set and the
+ * deviation is exactly zero. That is not an assumption to be waived through — it
+ * is the definition of the variant, and a caller that declares it and then emits
+ * something else has emitted geometry nobody measured.
+ */
+export type MidtownCoreV3Lod1Variant = "shed-protrusions" | "full-geometry";
+
+/**
  * Builds that record, FAIL CLOSED.
  *
- * Two refusals, and neither is a `MidtownCoreV3Stop`. The stop-code vocabulary
- * is closed and pinned by a committed goal-completion record, and neither of
- * these is a statement that this grammar cannot carry some property of a sourced
- * polygon:
+ * The `lod1` argument is REQUIRED and explicit rather than inferred, because the
+ * two variants make different claims and the record cannot say which one it is:
+ * the assembly schema's key set is closed, so a `variant` field would be
+ * refused. An implicit default would mean a caller that emitted full geometry
+ * and forgot to say so would get a `shed-protrusions` measurement attached to
+ * bytes it was not taken from.
+ *
+ * Two refusals on the `shed-protrusions` path, and neither is a
+ * `MidtownCoreV3Stop`. The stop-code vocabulary is closed and pinned by a
+ * committed goal-completion record, and neither of these is a statement that
+ * this grammar cannot carry some property of a sourced polygon:
  *
  *   - a binding mismatch is the caller attaching a measurement to a plan it was
  *     not taken from, which is the repository contradicting itself;
- *   - a ratio over the cap is a building that CANNOT be shipped as a two-LOD
- *     asset under the approved LOD contract, and emitting the record anyway
- *     would push the refusal down to the assembly validator with the honest
- *     number already written into a release.
+ *   - a ratio over the cap is a building that CANNOT be shipped as a
+ *     protrusion-shedding two-LOD asset under the approved LOD contract, and
+ *     emitting the record anyway would push the refusal down to the assembly
+ *     validator with the honest number already written into a release.
+ *
+ * The binding check applies to BOTH variants: a zero deviation still has to be
+ * bound to the plan the asset actually came from.
  */
 export function midtownCoreV3SilhouetteRecord(
   plan: V3Plan,
-  options: { expectedPlanHashSha256: string },
+  options: { expectedPlanHashSha256: string; lod1: MidtownCoreV3Lod1Variant },
 ): MidtownCoreV3SilhouetteRecord {
   if (plan.planHashSha256 !== options.expectedPlanHashSha256) {
     throw new Error(
@@ -302,6 +328,22 @@ export function midtownCoreV3SilhouetteRecord(
     );
   }
   const measurement = midtownCoreV3SilhouetteMeasurement(plan);
+  // The fallback level IS the fine level's geometry, so its silhouette is the
+  // same set of rectangles and the symmetric difference is empty. Reported as
+  // the literal 0 rather than as a measured near-zero: measuring a set against
+  // itself and reporting a float would invite the reader to wonder what the
+  // residual meant.
+  if (options.lod1 === "full-geometry") {
+    return {
+      status: "authoring-declared",
+      method: MIDTOWN_CORE_V3_SILHOUETTE_METHOD,
+      metricVersion: MIDTOWN_CORE_V3_SILHOUETTE_METRIC_VERSION,
+      planHashSha256: plan.planHashSha256,
+      viewIds: [...measurement.viewIds],
+      deviationRatio: 0,
+      maximumRatio: MIDTOWN_CORE_V3_SILHOUETTE_MAXIMUM_RATIO,
+    };
+  }
   if (!measurement.withinBound) {
     throw new Error(
       `LOD 1 silhouette for ${plan.buildingId} deviates ${measurement.deviationRatio} from LOD 0 at ${measurement.worstViewId}, outside the approved ${MIDTOWN_CORE_V3_SILHOUETTE_MAXIMUM_RATIO} bound.`,

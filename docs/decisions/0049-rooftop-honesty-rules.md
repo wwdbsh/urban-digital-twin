@@ -185,49 +185,89 @@ artefact. The clamp's bound holds on every building. **70** buildings gained a
 complete water tank because the clamp brought a clipped one back inside the
 parapet — the non-monotonicity above, at city scale.
 
+### The bound is the building's own storey
+
+Rule 2 first bounded the cluster at `V3_NOMINAL_FLOOR_HEIGHT_MM` for every
+building. On a building that HAS a 3.6 m storey that is the grammar's own
+designed number and the right one. On a 305 mm parent it is not — the grammar
+asserts a storey the building does not have, and the clamped asset was still 92%
+designed rooftop by height. The bound is therefore `parameters.targetFloorHeightMm`:
+the nominal storey at and above 3.6 m, the sourced height below it. The floor is
+80 permille, the same lower bound the cluster's plan scale already carries,
+because below it the cluster degenerates into millimetre prisms and a rule that
+produced sub-millimetre geometry to satisfy a height bound would trade one false
+claim for another.
+
+At and above 3.6 m it is a **byte-identical no-op**, algebraically —
+`targetFloorHeightMm` IS 3,600 there and `floor(3,600,000 / 5,400) = 666`, well
+above the 80-permille floor — and empirically: all fourteen real Block 835
+clamped plan hashes are pinned unchanged.
+
 Six parents of 45,194 carry a sub-metre sourced height. All six are named rather
-than summarized, because the earlier draft of this sentence claimed "all six
-behave the same way" and that is **false**: five ratios fall and one RISES,
-through the same non-monotonicity documented above. What is true of all six is
-the thing that matters — every one of them ends at the clamp's bound of 3,596 mm
-of cluster above the crown.
+than summarized, because an earlier draft of this section claimed "all six
+behave the same way" and that was false of the nominal-storey bound: five ratios
+fell and `doitt:408121` ROSE, 3.14 to 4.93. Under the storey-aware bound all six
+fall, and the reason the sentence was wrong is still live and is pinned as a
+test rather than deleted with the number that exposed it.
 
-| parent | sourced height | pre-fix ratio | post-fix ratio | above crown |
-| --- | --- | --- | --- | --- |
-| `doitt:1261650` | 0.3048 m | 18.7049 | 12.7902 | 3,596 mm |
-| `doitt:1303611` | 0.6085 m | 9.8670 | 6.9048 | 3,596 mm |
-| `doitt:1305414` | 0.6096 m | 9.8525 | 6.8951 | 3,596 mm |
-| `doitt:1302036` | 0.9144 m | 6.9081 | 4.9344 | 3,596 mm |
-| `doitt:1302037` | 0.9144 m | 6.9081 | 4.9344 | 3,596 mm |
-| `doitt:408121` | 0.9144 m | **3.1400** | **4.9344** | 3,596 mm |
+| parent | sourced height | pre-fix ratio | nominal-storey bound | storey-aware bound | above crown |
+| --- | --- | --- | --- | --- | --- |
+| `doitt:1261650` | 0.3048 m | 18.7049 | 12.7902 | **2.4164** | 432 mm |
+| `doitt:1303611` | 0.6085 m | 9.8670 | 6.9048 | **1.9934** | 605 mm |
+| `doitt:1305414` | 0.6096 m | 9.8525 | 6.8951 | **1.9918** | 605 mm |
+| `doitt:1302036` | 0.9144 m | 6.9081 | 4.9344 | **1.9989** | 913 mm |
+| `doitt:1302037` | 0.9144 m | 6.9081 | 4.9344 | **1.9989** | 913 mm |
+| `doitt:408121` | 0.9144 m | 3.1400 | **4.9344** | **1.9989** | 913 mm |
 
-`doitt:408121` is the exception, and it is the non-monotonicity rather than an
-error. Its prisms, measured:
+The 305 mm parent lands at 432 mm rather than at 305 mm because its own storey
+asks for 56 permille and the scale floor is 80. That is a stated cost, not a
+rounding: 1.4x its sourced height of designed rooftop rather than 11.8x.
 
-- **pre-fix**: `roof-equipment` 978 mm, and **three water-tank legs** 1,956 mm
-  tall holding **nothing** — the tank itself crossed the parapet and was
-  dropped, and the fourth leg was dropped with it. Cluster top 2,870 mm, i.e.
-  1,956 mm above the crown, and 3.14 crown-heights.
-- **post-fix**: `roof-equipment` 799 mm, a **complete water tank** 1,998 mm on
-  four 1,598 mm legs. Cluster top 4,510 mm, 3,596 mm above the crown.
+### The clamp is a bound, not a reduction
 
-So the ratio rose because the clamp shrank the cluster's FOOTPRINT along with
-its height, which brought the clipped tank back inside the crown; the recovered
-tank stands taller than the orphan legs that were the tallest surviving prism
-before. The asset went from four metal posts holding nothing to a bounded,
-complete cluster, and its cluster-top ratio went UP. This row is exactly why the
-clamp is described as a bound on the cluster's height rather than as a reduction
-of it, and it is one of the 70 buildings the stride counts as recovering a tank.
+`doitt:408121` under the NOMINAL-STOREY bound is the property at its most
+visible, and it is measured rather than argued:
 
-The clamp bounds all six; it does not make a 305 mm building under 3,596 mm of
+- **pre-fix**: `roof-equipment` 978 mm and **three water-tank legs** 1,956 mm
+  tall holding **nothing** — the tank crossed the parapet and was dropped, and
+  the fourth leg with it. 1,956 mm above the crown, 3.14 crown-heights.
+- **under the nominal-storey bound**: a **complete water tank** 1,998 mm on four
+  1,598 mm legs, 3,596 mm above the crown, 4.93 crown-heights.
+
+The ratio rose because the clamp shrank the cluster's FOOTPRINT along with its
+height, which brought the clipped tank back inside the crown; the recovered tank
+stands taller than the orphan legs that were the tallest surviving prism. The
+asset went from four metal posts holding nothing to a bounded, complete cluster,
+and its cluster-top ratio went UP. The storey-aware bound shrinks it further, so
+this row now falls like the others — but the non-monotonicity is a property of
+the rule and not of one number, and it is pinned by two of the fourteen real
+Block 835 footprints (`doitt:102705`, `doitt:982383`), which recover a tank under
+the clamp at any bound.
+
+The clamp bounds all six; it does not make a 305 mm building under 432 mm of
 designed rooftop a good claim, which is Decision 3's problem and not this ADR's.
 
-**Neither rule affects the LOD-transition silhouette.** Rooftop prisms are
-emitted at both levels of detail, so they cancel: across the 19 stride buildings
-that exceed the multi-LOD 2% cap, the largest change either rule makes to a
-deviation ratio is 7.75e-5, and all nineteen are already over the cap under the
-shipped grammar. That gate failure is a pre-existing property of the LOD-1
-definition and is recorded against it, not against these rules.
+**Neither rule materially affects the LOD-transition silhouette, and the
+exception is named.** Rooftop prisms are emitted at both levels of detail, so
+they cancel. Across the 19 stride buildings over the multi-LOD 2% cap, the
+largest change either rule makes to a deviation ratio is 7.75e-5 and all
+nineteen are already over the cap under the shipped grammar.
+
+The EXHAUSTIVE island pass, which supersedes that stride as evidence, records
+425 over-cap parents of 45,032 measured (0.944%), and attributes every one:
+
+- **415** were already over the cap under the shipped grammar;
+- **9** are buildings the shipped grammar REFUSES outright
+  (`source-height-below-grammar-minimum`) — T003 low-rise recoveries, which have
+  no shipped-grammar deviation to be over or under, so their presence is a
+  building that did not exist rather than a building that got worse;
+- **1**, `doitt:401323`, genuinely crosses because of these rules: 0.019780 to
+  0.020410, a delta of 6.3e-4.
+
+One building of 45,032 is the honest residual, and it is named rather than
+absorbed into an "already over the cap" count. The largest deviation change
+either rule makes anywhere on the island is 1.394e-3. The over-cap set is not a
+gate failure any more: ADR 0050 decides what LOD 1 IS for those buildings.
 
 ## Rights and retention
 

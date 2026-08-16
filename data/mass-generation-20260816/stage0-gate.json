@@ -129,12 +129,27 @@
       }
     ],
     "worstViewDistribution": {
-      "view:east": 827,
-      "view:west": 357,
-      "view:north": 632,
+      "view:east": 828,
+      "view:west": 358,
+      "view:north": 630,
       "view:south": 434
     },
-    "verdict": "OVER THE 2% CAP",
+    "verdict": "OVER THE 2% CAP UNDER shed-protrusions",
+    "measuredFallback": {
+      "note": "THE ADJUDICATED LOD-1 RULE (T004 F5), measured on the SAME buildings in the SAME process. Under `measured-fallback` a building whose measured deviation exceeds the cap emits FULL GEOMETRY at LOD 1 — the same tessellation as LOD 0 — so its emitted deviation is zero because it dropped nothing, its declared geometric error is derived from the emitted bytes rather than from a wave constant, and its coarse level is declared INELIGIBLE so the runtime never selects a fake-coarse level. It is not a relaxation of the cap: the cap still decides, and the buildings it excludes stop having a coarse level at all.",
+      "policy": "measured-fallback",
+      "fallbackBuildings": 19,
+      "shedBuildings": 2231,
+      "unresolvedOverCap": 0,
+      "worstEmittedDeviationRatio": 0.019845977053363103,
+      "fallbackGeometricErrorsAllZero": true,
+      "fallbackTrianglesMatchLod0": true,
+      "triangleCost": {
+        "note": "What the fallback costs, over the strided population: LOD-1 triangles under the shipped rule against LOD-1 triangles under the adjudicated one. Only the fallback buildings differ, and each of them pays exactly its own LOD-0 count.",
+        "shedRuleLod1Triangles": 1761930,
+        "fallbackRuleLod1Triangles": 1767066
+      }
+    },
     "overCapAttribution": {
       "note": "WHOSE DEFECT IT IS. Each over-cap building is measured under the SHIPPED grammar as well, and its deviation is attributed to the placement kinds that produce it by removing one kind at a time from the fine level and re-measuring the worst view. `deviationShareByPlacementKind` values do not sum to the total: removing one kind can uncover another that was overlapping it, which is a property of a UNION area and not an error.",
       "buildings": [
@@ -564,6 +579,49 @@
     },
     "recordPath": "data/mass-generation-20260816/stage0-preflight-stride.json"
   },
+  "islandSilhouette": {
+    "note": "THE EXHAUSTIVE PASS. The stride's 19-in-2,250 is a sample; this is every owned parent the envelope admits, so the per-building LOD-1 decision keys on a measurement rather than on a projection.",
+    "recordPath": "data/mass-generation-20260816/stage0-island-silhouette.json",
+    "measured": 45032,
+    "enumeratedOwnedParents": 45194,
+    "quantiles": {
+      "min": 0,
+      "median": 3.6409475271258036e-16,
+      "p95": 0.0033182119675593583,
+      "p99": 0.019379318480787496,
+      "max": 0.0916030381636583
+    },
+    "exactlyZero": 6707,
+    "overCapCount": 425,
+    "overCapShare": 0.009437733167525315,
+    "alreadyOverCapUnderShippedGrammar": 415,
+    "attribution": {
+      "note": "Three disjoint buckets over the over-cap set. `alreadyOverCapUnderShippedGrammar` were over it before T004 existed. `absentUnderShippedGrammar` are buildings the SHIPPED grammar REFUSES outright — every one of them is a T003 low-rise recovery, so it has no shipped-grammar deviation to be over or under and its presence here is a building that did not exist rather than a building that got worse. `crossedUnderT004` is the honest residual: buildings that were inside the cap under the shipped grammar and are outside it under this envelope, named individually with the delta that moved them.",
+      "alreadyOverCapUnderShippedGrammar": 415,
+      "absentUnderShippedGrammar": 9,
+      "crossedUnderT004Count": 1,
+      "crossedUnderT004": [
+        {
+          "buildingId": "doitt:401323",
+          "deviationUnderShippedGrammar": 0.019777348490474505,
+          "deviationRatio": 0.020412689626907454,
+          "t004Delta": 0.0006353411364329493
+        }
+      ]
+    },
+    "worstT004Delta": 0.0013942786086264397
+  },
+  "lod1Contract": {
+    "note": "THE ADJUDICATED RULE. LOD 1 sheds protrusions only where the MEASURED deviation is within the assembly schema's 2% cap; otherwise LOD 1 is FULL GEOMETRY and its deviation is zero because it dropped nothing. The cap is not relaxed and no coarse level above it ships. A fallback level declares `eligible: false`, so the runtime never selects a fake-coarse level.",
+    "policy": "measured-fallback",
+    "strideFallbackBuildings": 19,
+    "strideUnresolvedOverCap": 0,
+    "strideWorstEmittedDeviationRatio": 0.019845977053363103,
+    "fallbackGeometricErrorsAllZero": true,
+    "fallbackTrianglesMatchLod0": true,
+    "islandFallbackBuildings": 425,
+    "runtimeStatement": "All five frozen waves serve lod_0 ONLY, so a fallback building at range renders exactly as every building of every shipped wave renders today. The LOD system improves the other ~99% of the population; triangles-at-range for a fallback building are unchanged against the status quo rather than worsened by this rule. Cache-ceiling and streaming-benchmark re-runs against the two-LOD population belong to T005/T006 and are not claimed here."
+  },
   "rooftop": {
     "note": "The ADR 0049 re-measurement. `orphanLegCount` counts water-tank legs shipped with no tank; the post-fix number is a gate and must be zero. `clusterTopRatio` is the cluster's top over the crown's own height, the same statement the reviewer's shipped 1.11 / 1.36 / 2.46 makes.",
     "preFixMeasured": 2250,
@@ -594,7 +652,7 @@
         "median": 1.0961137542096542,
         "p95": 1.3259608411892676,
         "p99": 1.7400699732455238,
-        "max": 2.2239618788291353
+        "max": 2
       },
       "clusterAboveCrownMm": {
         "min": 96,
@@ -622,8 +680,8 @@
         "preFixOutcome": "generated",
         "preFixClusterTopRatio": 18.7049,
         "postFixOutcome": "generated",
-        "postFixClusterTopRatio": 12.7902,
-        "postFixClusterAboveCrownMm": 3596,
+        "postFixClusterTopRatio": 2.4164,
+        "postFixClusterAboveCrownMm": 432,
         "postFixSilhouetteDeviationRatio": 0
       },
       {
@@ -635,9 +693,9 @@
         "preFixOutcome": "generated",
         "preFixClusterTopRatio": 9.867,
         "postFixOutcome": "generated",
-        "postFixClusterTopRatio": 6.9048,
-        "postFixClusterAboveCrownMm": 3596,
-        "postFixSilhouetteDeviationRatio": 1.7514395939411745e-16
+        "postFixClusterTopRatio": 1.9934,
+        "postFixClusterAboveCrownMm": 605,
+        "postFixSilhouetteDeviationRatio": 1.9427754065687358e-16
       },
       {
         "buildingId": "doitt:1305414",
@@ -648,9 +706,9 @@
         "preFixOutcome": "generated",
         "preFixClusterTopRatio": 9.8525,
         "postFixOutcome": "generated",
-        "postFixClusterTopRatio": 6.8951,
-        "postFixClusterAboveCrownMm": 3596,
-        "postFixSilhouetteDeviationRatio": 1.2894862887793298e-16
+        "postFixClusterTopRatio": 1.9918,
+        "postFixClusterAboveCrownMm": 605,
+        "postFixSilhouetteDeviationRatio": 1.5082048038640043e-16
       },
       {
         "buildingId": "doitt:1302036",
@@ -661,9 +719,9 @@
         "preFixOutcome": "generated",
         "preFixClusterTopRatio": 6.9081,
         "postFixOutcome": "generated",
-        "postFixClusterTopRatio": 4.9344,
-        "postFixClusterAboveCrownMm": 3596,
-        "postFixSilhouetteDeviationRatio": 1.3099400255838298e-16
+        "postFixClusterTopRatio": 1.9989,
+        "postFixClusterAboveCrownMm": 913,
+        "postFixSilhouetteDeviationRatio": 0
       },
       {
         "buildingId": "doitt:1302037",
@@ -674,9 +732,9 @@
         "preFixOutcome": "generated",
         "preFixClusterTopRatio": 6.9081,
         "postFixOutcome": "generated",
-        "postFixClusterTopRatio": 4.9344,
-        "postFixClusterAboveCrownMm": 3596,
-        "postFixSilhouetteDeviationRatio": 0.0013980185756531044
+        "postFixClusterTopRatio": 1.9989,
+        "postFixClusterAboveCrownMm": 913,
+        "postFixSilhouetteDeviationRatio": 0.0015692806203372453
       },
       {
         "buildingId": "doitt:408121",
@@ -687,20 +745,20 @@
         "preFixOutcome": "generated",
         "preFixClusterTopRatio": 3.14,
         "postFixOutcome": "generated",
-        "postFixClusterTopRatio": 4.9344,
-        "postFixClusterAboveCrownMm": 3596,
-        "postFixSilhouetteDeviationRatio": 0.0033082000709819155
+        "postFixClusterTopRatio": 1.9989,
+        "postFixClusterAboveCrownMm": 913,
+        "postFixSilhouetteDeviationRatio": 0.005035649715825245
       }
     ]
   },
   "texturedWriteCost": {
     "recordPath": "data/mass-generation-20260816/stage0-textured-write-cost.json",
     "texturedPerAssetMs": {
-      "min": 0.808,
-      "median": 2.198,
-      "p95": 13.944,
-      "p99": 83.689,
-      "max": 83.689
+      "min": 0.864,
+      "median": 2.152,
+      "p95": 13.942,
+      "p99": 95.884,
+      "max": 95.884
     },
     "sixWaveProjection": {
       "ownedParents": {
@@ -713,9 +771,9 @@
         "total": 45194
       },
       "note": "Single-threaded writer time for BOTH levels of detail over every owned parent, from the measured per-building median and p95. It excludes plan derivation, snapshot verification, release assembly, checksums and disk I/O, so it is a floor on the writer stage alone, not an estimate of a wave's wall clock.",
-      "medianBasedSeconds": 198.6,
-      "p95BasedSeconds": 1260.4,
-      "rangeStatement": "3.3 to 21 minutes of single-threaded writer time for all six waves at both LODs"
+      "medianBasedSeconds": 194.5,
+      "p95BasedSeconds": 1260.1,
+      "rangeStatement": "3.2 to 21 minutes of single-threaded writer time for all six waves at both LODs"
     }
   },
   "rights": {

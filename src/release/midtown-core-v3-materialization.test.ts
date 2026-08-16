@@ -19,6 +19,7 @@ import { tessellateV3Plan } from "../domain/deterministic-facade-generator-v3.ts
 import { MIDTOWN_CORE_RELEASE_ID } from "./midtown-core-package.ts";
 import type { MidtownCoreBuildingSource } from "./midtown-core-materialization.ts";
 import {
+  MIDTOWN_CORE_V3_LOD1_GEOMETRIC_ERROR_METERS,
   MIDTOWN_CORE_V3_LOD_IDS,
   MIDTOWN_CORE_V3_PREDECESSOR_RELEASE_ID,
   MIDTOWN_CORE_V3_RELEASE_ID,
@@ -32,11 +33,14 @@ import {
   classifyMidtownCoreV3Generation,
   classifyMidtownCoreV3Ring,
   midtownCoreV3AnalyticVolumeCubicMeters,
+  midtownCoreV3AssemblyLods,
   midtownCoreV3AssetRef,
   midtownCoreV3EvidenceShardId,
   midtownCoreV3InventoryId,
+  midtownCoreV3EmittedGeometriesIdentical,
   midtownCoreV3MeshVolumeCubicMeters,
   writeMidtownCoreV3Assets,
+  type V3WaveProfile,
 } from "./midtown-core-v3-materialization.ts";
 
 const BASE_MANIFEST = "b".repeat(64);
@@ -389,5 +393,131 @@ describe("(T004) grammar agreement between plan and wave profile", () => {
     delete silent.admissionEnvelope;
     expect(() => writeMidtownCoreV3Assets(extended, { ...options, profile: silent }))
       .toThrowError(/Grammar disagreement for doitt:900001/u);
+  });
+});
+
+/**
+ * (T004 F5) THE MEASURED LOD-1 FALLBACK.
+ *
+ * The V3 LOD-1 contract is "drop every outward placement". Stage 0 measured what
+ * that costs on a small, narrow building: on a 6 m x 13 m, 10 m footprint the
+ * fire escape and the blade sign are 6.2% of the edge-on silhouette, and the
+ * multi-LOD assembly schema refuses any coarse level above 2%. That is not a
+ * T004 defect — every one of the 19 strided buildings over the cap is already
+ * over it under the shipped grammar — but a two-LOD wave has to do something
+ * about it, and the choice is between a coarse level the schema refuses and one
+ * that is identical to the fine level.
+ *
+ * The rule: LOD 1 sheds protrusions only where the MEASURED deviation is inside
+ * the cap; otherwise LOD 1 IS the full geometry and its deviation is zero
+ * because the geometry is the same geometry.
+ */
+describe("(T004) the measured LOD-1 fallback", () => {
+  /** 6 m x 13 m, 10 m tall: measured at 0.06199, three times the cap. */
+  const NARROW: ReadonlyArray<readonly [number, number]> = [[0, 0], [6, 0], [6, 13], [0, 13]];
+  const options = { ownerCellId: "cell:test", capturedAt: null, updatedAt: null, predecessor: null } as const;
+  const fallbackProfile: V3WaveProfile = { ...MIDTOWN_CORE_V3_WAVE_PROFILE, lod1Policy: "measured-fallback" };
+
+  const narrowContext = () => buildMidtownCoreV3Plan(source({ buildingId: "doitt:900002", ringMeters: NARROW, heightMeters: 10 }), BASE_MANIFEST);
+  const wideContext = () => buildMidtownCoreV3Plan(source({ ringMeters: L_SHAPE }), BASE_MANIFEST);
+
+  it("leaves the default policy exactly as it was: LOD 1 always sheds", () => {
+    const written = writeMidtownCoreV3Assets(narrowContext(), { ...options });
+    expect(written.lod1.policy).toBe("shed-protrusions");
+    expect(written.lod1.variant).toBe("shed-protrusions");
+    // The building IS over the cap, and the default policy still sheds. The
+    // fallback is a decision a wave makes, not a behaviour that leaks into one.
+    expect(written.lod1.measuredDeviationRatio).toBeGreaterThan(0.02);
+    expect(written.lod1.emittedDeviationRatio).toBe(written.lod1.measuredDeviationRatio);
+    expect(written.lod1.geometricErrorMeters).toBe(MIDTOWN_CORE_V3_LOD1_GEOMETRIC_ERROR_METERS);
+    expect(written.assets[1]!.counts.triangleCount).toBeLessThan(written.assets[0]!.counts.triangleCount);
+  });
+
+  it("emits FULL GEOMETRY at LOD 1 for an over-cap building under the fallback policy", () => {
+    const written = writeMidtownCoreV3Assets(narrowContext(), { ...options, profile: fallbackProfile });
+    expect(written.lod1.variant).toBe("full-geometry");
+    expect(written.lod1.measuredDeviationRatio).toBeGreaterThan(0.02);
+    // The emitted level's deviation is ZERO because it dropped nothing, and the
+    // geometric error is DERIVED from that rather than read off a constant.
+    expect(written.lod1.emittedDeviationRatio).toBe(0);
+    expect(written.lod1.geometricErrorMeters).toBe(0);
+    // Same triangles, same materials — the coarse level is the fine level.
+    expect(written.assets[1]!.counts).toEqual(written.assets[0]!.counts);
+  });
+
+  it("still SHEDS for a building inside the cap, so the fallback is per building", () => {
+    const written = writeMidtownCoreV3Assets(wideContext(), { ...options, profile: fallbackProfile });
+    expect(written.lod1.measuredDeviationRatio).toBeLessThanOrEqual(0.02);
+    expect(written.lod1.variant).toBe("shed-protrusions");
+    expect(written.lod1.geometricErrorMeters).toBe(MIDTOWN_CORE_V3_LOD1_GEOMETRIC_ERROR_METERS);
+    expect(written.assets[1]!.counts.triangleCount).toBeLessThan(written.assets[0]!.counts.triangleCount);
+  });
+
+  /**
+   * (F4) A FALLBACK COARSE LEVEL IS DECLARED INELIGIBLE, and its fine level
+   * becomes unbounded, because a runtime that selected the fallback at range
+   * would pay a second decode to draw the identical triangles — and a bounded
+   * fine level under an ineligible coarse one leaves the asset with no eligible
+   * representation at all, which is `lod-unavailable` rather than a fallback.
+   */
+  it("declares the fallback coarse level ineligible and its fine level unbounded", () => {
+    const context = narrowContext();
+    const written = writeMidtownCoreV3Assets(context, { ...options, profile: fallbackProfile });
+    const lods = midtownCoreV3AssemblyLods({
+      plan: context.plan, assets: written.assets, lod1: written.lod1,
+      budgets: fallbackProfile.budgets, lod0MaxDistanceMeters: 250,
+    });
+    expect(lods.map((lod) => lod.eligible)).toEqual([true, false]);
+    expect(lods[0]!.maxDistanceMeters).toBeNull();
+    expect(lods[0]!.geometricErrorMeters).toBe(0);
+    expect(lods[1]!.geometricErrorMeters).toBe(0);
+    expect(lods[1]!.silhouette!.deviationRatio).toBe(0);
+    expect(lods[1]!.silhouette!.planHashSha256).toBe(context.plan.planHashSha256);
+  });
+
+  it("keeps a shedding building's coarse level eligible and its fine level bounded", () => {
+    const context = wideContext();
+    const written = writeMidtownCoreV3Assets(context, { ...options, profile: fallbackProfile });
+    const lods = midtownCoreV3AssemblyLods({
+      plan: context.plan, assets: written.assets, lod1: written.lod1,
+      budgets: fallbackProfile.budgets, lod0MaxDistanceMeters: 250,
+    });
+    expect(lods.map((lod) => lod.eligible)).toEqual([true, true]);
+    expect(lods[0]!.maxDistanceMeters).toBe(250);
+    expect(lods[1]!.geometricErrorMeters).toBe(MIDTOWN_CORE_V3_LOD1_GEOMETRIC_ERROR_METERS);
+    expect(lods[1]!.silhouette!.deviationRatio).toBe(written.lod1.measuredDeviationRatio);
+  });
+
+  /**
+   * (F5b) THE RECORD-BUILDER IS THE ENFORCER, and this is the proof that an
+   * implementer cannot route around it: the descriptor builder is the only way
+   * to a coarse LOD, and it refuses an over-cap SHEDDING level rather than
+   * writing the honest number into a release and letting the assembly validator
+   * find it later.
+   */
+  it("REFUSES assembly descriptors for an over-cap shedding level", () => {
+    const context = narrowContext();
+    const written = writeMidtownCoreV3Assets(context, { ...options });
+    expect(written.lod1.variant).toBe("shed-protrusions");
+    expect(() => midtownCoreV3AssemblyLods({
+      plan: context.plan, assets: written.assets, lod1: written.lod1,
+      budgets: MIDTOWN_CORE_V3_WAVE_PROFILE.budgets, lod0MaxDistanceMeters: 250,
+    })).toThrow(/outside the approved 0\.02 bound/u);
+  });
+
+  it("REFUSES a full-geometry claim whose emitted coarse level is not the fine level", () => {
+    // The derivation is fail-closed rather than trusting the variant label: a
+    // zero geometric error on geometry that dropped something would be a false
+    // claim written into an immutable release.
+    const context = wideContext();
+    const shed = writeMidtownCoreV3Assets(context, { ...options });
+    expect(midtownCoreV3EmittedGeometriesIdentical(
+      v3GeometryForGlb(context.plan, tessellateV3Plan(context.plan, { includeRecesses: true }), { yUp: false }),
+      v3GeometryForGlb(context.plan, tessellateV3Plan(context.plan, { includeRecesses: false }), { yUp: false }),
+    )).toBe(false);
+    expect(shed.lod1.geometricErrorMeters).toBe(MIDTOWN_CORE_V3_LOD1_GEOMETRIC_ERROR_METERS);
+    // And identical geometry compares identical, so the check is not vacuous.
+    const fine = v3GeometryForGlb(context.plan, tessellateV3Plan(context.plan, { includeRecesses: true }), { yUp: false });
+    expect(midtownCoreV3EmittedGeometriesIdentical(fine, fine)).toBe(true);
   });
 });

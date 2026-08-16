@@ -29,6 +29,7 @@ import {
   type MidtownCoreShippedAsset,
 } from "./midtown-core-release.ts";
 import {
+  MIDTOWN_CORE_V3_DEFAULT_LOD1_POLICY,
   MIDTOWN_CORE_V3_VOLUME_TOLERANCE,
   MIDTOWN_CORE_V3_WAVE_PROFILE,
   MidtownCoreV3Stop,
@@ -93,6 +94,24 @@ export interface MidtownCoreV3Census {
   maximumRingVertexCount: number;
   refusalsByCode: Record<string, number>;
   styleClassCounts: Record<string, number>;
+  /**
+   * WHAT LOD 1 IS FOR THIS WAVE, and for how many of its buildings (T004 F12).
+   *
+   * `lod1Policy` is the wave's declared policy. `lod1FallbackCount` is the
+   * number of materialized buildings whose MEASURED silhouette deviation put
+   * them outside the assembly schema's 2% cap, so their coarse level carries
+   * full geometry instead of shedding protrusions. Under the default
+   * `shed-protrusions` policy it is always zero, and the field reads as the
+   * statement it is rather than as an absent one.
+   *
+   * `worstShedProtrusionsDeviationRatio` is the worst measured deviation over
+   * the buildings that DID shed, so a census can be read as "these are the
+   * numbers the cap was applied to" rather than only as a count.
+   */
+  lod1Policy: string;
+  lod1FallbackCount: number;
+  worstShedProtrusionsDeviationRatio: number;
+  worstMeasuredDeviationRatio: number;
 }
 
 export interface MidtownCoreV3Materialization {
@@ -106,6 +125,16 @@ export interface MidtownCoreV3Materialization {
   registration: MidtownCoreV3Registration[];
   /** Buildings shipped with `setbacks` absent, with the disclosure each carries. */
   absentSetbacks: Map<string, string>;
+  /**
+   * PER-BUILDING LOD-1 DECISION for every materialized building (T004 F12).
+   *
+   * Keyed by canonical building id; carries the variant its coarse level
+   * actually emitted, the measured deviation the decision was made on, and the
+   * deviation the emitted level declares. An emitter reads it to build the
+   * assembly descriptors, and a census reads it to name the fallback set rather
+   * than merely counting it.
+   */
+  lod1Decisions: Map<string, { variant: string; measuredDeviationRatio: number; emittedDeviationRatio: number; geometricErrorMeters: number }>;
   /**
    * Every RELEASE-scoped tile some shipped asset references by URI, sorted.
    * Empty for an embedded or texture-free wave, which is every frozen release.
@@ -164,6 +193,7 @@ export function materializeMidtownCoreV3Cells(input: MidtownCoreV3MaterializeInp
   const refusalCodes = new Map<string, string>();
   const registration: MidtownCoreV3Registration[] = [];
   const absentSetbacks = new Map<string, string>();
+  const lod1Decisions = new Map<string, { variant: string; measuredDeviationRatio: number; emittedDeviationRatio: number; geometricErrorMeters: number }>();
   const sharedTextureClasses = new Set<ProceduralTextureClass>();
   const planHashes = new Set<string>();
   const refusalsByCode: Record<string, number> = {};
@@ -185,6 +215,9 @@ export function materializeMidtownCoreV3Cells(input: MidtownCoreV3MaterializeInp
   let worstHorizontal = 0;
   let worstVertical = 0;
   let maximumRingVertexCount = 0;
+  let lod1FallbackCount = 0;
+  let worstShedDeviation = 0;
+  let worstMeasuredDeviation = 0;
 
   const censusOnly = input.retain === "census-only";
   const refuse = (buildingId: string, code: string, detail: string): void => {
@@ -234,6 +267,16 @@ export function materializeMidtownCoreV3Cells(input: MidtownCoreV3MaterializeInp
       worstHorizontal = Math.max(worstHorizontal, written.registration.horizontalDeviationMeters);
       worstVertical = Math.max(worstVertical, written.registration.verticalDeviationMeters);
       if (written.setbacksAbsent) absentSetbacks.set(buildingId, written.setbackDisclosure);
+      // (T004 F12) The decision, per building, from the writer that made it.
+      lod1Decisions.set(buildingId, {
+        variant: written.lod1.variant,
+        measuredDeviationRatio: written.lod1.measuredDeviationRatio,
+        emittedDeviationRatio: written.lod1.emittedDeviationRatio,
+        geometricErrorMeters: written.lod1.geometricErrorMeters,
+      });
+      if (written.lod1.variant === "full-geometry") lod1FallbackCount += 1;
+      else worstShedDeviation = Math.max(worstShedDeviation, written.lod1.measuredDeviationRatio);
+      worstMeasuredDeviation = Math.max(worstMeasuredDeviation, written.lod1.measuredDeviationRatio);
 
       generatedAssetCount += written.assets.length;
       const shipped: MidtownCoreShippedAsset[] = [];
@@ -288,6 +331,7 @@ export function materializeMidtownCoreV3Cells(input: MidtownCoreV3MaterializeInp
     refusalCodes,
     registration,
     absentSetbacks,
+    lod1Decisions,
     sharedTextureClasses: [...sharedTextureClasses].sort(),
     census: {
       requestedBuildingCount: requested,
@@ -318,6 +362,10 @@ export function materializeMidtownCoreV3Cells(input: MidtownCoreV3MaterializeInp
       maximumRingVertexCount,
       refusalsByCode,
       styleClassCounts,
+      lod1Policy: profile.lod1Policy ?? MIDTOWN_CORE_V3_DEFAULT_LOD1_POLICY,
+      lod1FallbackCount,
+      worstShedProtrusionsDeviationRatio: worstShedDeviation,
+      worstMeasuredDeviationRatio: worstMeasuredDeviation,
     },
   };
 }
@@ -413,6 +461,15 @@ export function midtownCoreV3StageFingerprint(input: MidtownCoreV3StageFingerpri
       ...(profile.textureDelivery === undefined || profile.textureDelivery === "embedded"
         ? {}
         : { textureDelivery: profile.textureDelivery }),
+      // The LOD-1 policy, on the same conditional-spread precedent and for the
+      // same reason (T004 F5a). `measured-fallback` changes WHAT BYTES LOD 1
+      // carries for some buildings, so a receipt taken under one policy must not
+      // satisfy a stage running the other; entering the key only when it differs
+      // from the shipped default keeps every frozen wave's fingerprint at the
+      // value it has always had.
+      ...(profile.lod1Policy === undefined || profile.lod1Policy === MIDTOWN_CORE_V3_DEFAULT_LOD1_POLICY
+        ? {}
+        : { lod1Policy: profile.lod1Policy }),
       ...(profile.texture === null ? {} : {
         texture: {
           ...proceduralTextureProvenance(),

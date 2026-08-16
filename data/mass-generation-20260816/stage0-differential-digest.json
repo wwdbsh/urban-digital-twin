@@ -208,8 +208,8 @@
     "planWallClockMs": {
       "min": 2,
       "median": 5,
-      "p95": 106,
-      "max": 595
+      "p95": 98,
+      "max": 564
     },
     "lod0VertexCount": {
       "min": 208,
@@ -249,12 +249,12 @@
   ],
   "stopCodesAdded": [],
   "timings": {
-    "shippedPassSeconds": 401.8,
-    "extendedPassSeconds": 275.1,
-    "shippedPlanSeconds": 259.5,
-    "shippedAssetSeconds": 140.3,
-    "extendedPlanSeconds": 270.8,
-    "extendedAssetSeconds": 4.1,
+    "shippedPassSeconds": 354.3,
+    "extendedPassSeconds": 245.5,
+    "shippedPlanSeconds": 229.5,
+    "shippedAssetSeconds": 123.9,
+    "extendedPlanSeconds": 241.9,
+    "extendedAssetSeconds": 3.6,
     "note": "Host wall clock, recorded here rather than in the deterministic body's counts. Every other field is a function of the pinned snapshot, the committed ledger and this repository's code."
   },
   "refusals": [
@@ -392,7 +392,7 @@
         "lod1TriangleCount": 134,
         "lod0ByteSize": 13112,
         "lod1ByteSize": 9624,
-        "planWallClockMs": 3
+        "planWallClockMs": 2
       }
     },
     {
@@ -429,7 +429,7 @@
         "lod1TriangleCount": 2884,
         "lod0ByteSize": 184168,
         "lod1ByteSize": 116568,
-        "planWallClockMs": 223
+        "planWallClockMs": 208
       }
     },
     {
@@ -466,7 +466,7 @@
         "lod1TriangleCount": 1088,
         "lod0ByteSize": 70636,
         "lod1ByteSize": 50148,
-        "planWallClockMs": 43
+        "planWallClockMs": 39
       }
     },
     {
@@ -503,7 +503,7 @@
         "lod1TriangleCount": 162,
         "lod0ByteSize": 15168,
         "lod1ByteSize": 10656,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -540,7 +540,7 @@
         "lod1TriangleCount": 134,
         "lod0ByteSize": 13108,
         "lod1ByteSize": 9624,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -577,7 +577,7 @@
         "lod1TriangleCount": 164,
         "lod0ByteSize": 13748,
         "lod1ByteSize": 10824,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -614,7 +614,7 @@
         "lod1TriangleCount": 868,
         "lod0ByteSize": 63804,
         "lod1ByteSize": 39420,
-        "planWallClockMs": 13
+        "planWallClockMs": 12
       }
     },
     {
@@ -651,7 +651,7 @@
         "lod1TriangleCount": 3640,
         "lod0ByteSize": 291440,
         "lod1ByteSize": 142204,
-        "planWallClockMs": 77
+        "planWallClockMs": 73
       }
     },
     {
@@ -688,7 +688,7 @@
         "lod1TriangleCount": 190,
         "lod0ByteSize": 15452,
         "lod1ByteSize": 11956,
-        "planWallClockMs": 5
+        "planWallClockMs": 4
       }
     },
     {
@@ -762,7 +762,7 @@
         "lod1TriangleCount": 136,
         "lod0ByteSize": 13416,
         "lod1ByteSize": 9620,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -899,7 +899,7 @@
         "lod1TriangleCount": 108,
         "lod0ByteSize": 13408,
         "lod1ByteSize": 8916,
-        "planWallClockMs": 4
+        "planWallClockMs": 2
       }
     },
     {
@@ -1010,7 +1010,7 @@
         "lod1TriangleCount": 136,
         "lod0ByteSize": 12984,
         "lod1ByteSize": 9640,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -1084,7 +1084,7 @@
         "lod1TriangleCount": 4792,
         "lod0ByteSize": 420484,
         "lod1ByteSize": 180948,
-        "planWallClockMs": 55
+        "planWallClockMs": 46
       }
     },
     {
@@ -1121,7 +1121,7 @@
         "lod1TriangleCount": 164,
         "lod0ByteSize": 13760,
         "lod1ByteSize": 10848,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -1221,7 +1221,7 @@
         "lod1TriangleCount": 96,
         "lod0ByteSize": 12880,
         "lod1ByteSize": 8512,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -1258,7 +1258,7 @@
         "lod1TriangleCount": 246,
         "lod0ByteSize": 19216,
         "lod1ByteSize": 14284,
-        "planWallClockMs": 9
+        "planWallClockMs": 7
       }
     },
     {
@@ -1295,7 +1295,7 @@
         "lod1TriangleCount": 156,
         "lod0ByteSize": 14284,
         "lod1ByteSize": 10368,
-        "planWallClockMs": 3
+        "planWallClockMs": 4
       }
     },
     {
@@ -1332,7 +1332,7 @@
         "lod1TriangleCount": 4456,
         "lod0ByteSize": 337416,
         "lod1ByteSize": 170880,
-        "planWallClockMs": 101
+        "planWallClockMs": 93
       }
     },
     {
@@ -1406,7 +1406,7 @@
         "lod1TriangleCount": 128,
         "lod0ByteSize": 11648,
         "lod1ByteSize": 8884,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -1480,7 +1480,7 @@
         "lod1TriangleCount": 116,
         "lod0ByteSize": 10672,
         "lod1ByteSize": 8348,
-        "planWallClockMs": 3
+        "planWallClockMs": 2
       }
     },
     {
@@ -1517,7 +1517,7 @@
         "lod1TriangleCount": 144,
         "lod0ByteSize": 14872,
         "lod1ByteSize": 10512,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -1554,7 +1554,7 @@
         "lod1TriangleCount": 640,
         "lod0ByteSize": 59732,
         "lod1ByteSize": 29316,
-        "planWallClockMs": 11
+        "planWallClockMs": 10
       }
     },
     {
@@ -1591,7 +1591,7 @@
         "lod1TriangleCount": 1664,
         "lod0ByteSize": 117952,
         "lod1ByteSize": 69216,
-        "planWallClockMs": 48
+        "planWallClockMs": 44
       }
     },
     {
@@ -1691,7 +1691,7 @@
         "lod1TriangleCount": 198,
         "lod0ByteSize": 19452,
         "lod1ByteSize": 12640,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -1754,7 +1754,7 @@
         "lod1TriangleCount": 2052,
         "lod0ByteSize": 184680,
         "lod1ByteSize": 81940,
-        "planWallClockMs": 24
+        "planWallClockMs": 21
       }
     },
     {
@@ -1817,7 +1817,7 @@
         "lod1TriangleCount": 2158,
         "lod0ByteSize": 195352,
         "lod1ByteSize": 85992,
-        "planWallClockMs": 32
+        "planWallClockMs": 28
       }
     },
     {
@@ -1984,7 +1984,7 @@
         "lod1TriangleCount": 174,
         "lod0ByteSize": 17028,
         "lod1ByteSize": 11660,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -2058,7 +2058,7 @@
         "lod1TriangleCount": 7740,
         "lod0ByteSize": 658992,
         "lod1ByteSize": 286848,
-        "planWallClockMs": 64
+        "planWallClockMs": 57
       }
     },
     {
@@ -2184,7 +2184,7 @@
         "lod1TriangleCount": 944,
         "lod0ByteSize": 84216,
         "lod1ByteSize": 42120,
-        "planWallClockMs": 15
+        "planWallClockMs": 14
       }
     },
     {
@@ -2221,7 +2221,7 @@
         "lod1TriangleCount": 1884,
         "lod0ByteSize": 150456,
         "lod1ByteSize": 76096,
-        "planWallClockMs": 27
+        "planWallClockMs": 26
       }
     },
     {
@@ -2814,7 +2814,7 @@
         "lod1TriangleCount": 132,
         "lod0ByteSize": 12208,
         "lod1ByteSize": 9020,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -2851,7 +2851,7 @@
         "lod1TriangleCount": 184,
         "lod0ByteSize": 18272,
         "lod1ByteSize": 12196,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -2914,7 +2914,7 @@
         "lod1TriangleCount": 940,
         "lod0ByteSize": 42564,
         "lod1ByteSize": 42564,
-        "planWallClockMs": 43
+        "planWallClockMs": 40
       }
     },
     {
@@ -3062,7 +3062,7 @@
         "lod1TriangleCount": 164,
         "lod0ByteSize": 15896,
         "lod1ByteSize": 11260,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -3251,7 +3251,7 @@
         "lod1TriangleCount": 120,
         "lod0ByteSize": 10840,
         "lod1ByteSize": 8512,
-        "planWallClockMs": 3
+        "planWallClockMs": 2
       }
     },
     {
@@ -3288,7 +3288,7 @@
         "lod1TriangleCount": 120,
         "lod0ByteSize": 11208,
         "lod1ByteSize": 8460,
-        "planWallClockMs": 4
+        "planWallClockMs": 2
       }
     },
     {
@@ -3351,7 +3351,7 @@
         "lod1TriangleCount": 144,
         "lod0ByteSize": 14004,
         "lod1ByteSize": 10516,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -3488,7 +3488,7 @@
         "lod1TriangleCount": 116,
         "lod0ByteSize": 10676,
         "lod1ByteSize": 8348,
-        "planWallClockMs": 3
+        "planWallClockMs": 2
       }
     },
     {
@@ -3525,7 +3525,7 @@
         "lod1TriangleCount": 116,
         "lod0ByteSize": 10672,
         "lod1ByteSize": 8340,
-        "planWallClockMs": 3
+        "planWallClockMs": 2
       }
     },
     {
@@ -3677,7 +3677,7 @@
         "lod1TriangleCount": 206,
         "lod0ByteSize": 20512,
         "lod1ByteSize": 12824,
-        "planWallClockMs": 3
+        "planWallClockMs": 4
       }
     },
     {
@@ -3714,7 +3714,7 @@
         "lod1TriangleCount": 116,
         "lod0ByteSize": 10676,
         "lod1ByteSize": 8344,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -3814,7 +3814,7 @@
         "lod1TriangleCount": 120,
         "lod0ByteSize": 10836,
         "lod1ByteSize": 8508,
-        "planWallClockMs": 3
+        "planWallClockMs": 2
       }
     },
     {
@@ -3903,7 +3903,7 @@
         "lod1TriangleCount": 1742,
         "lod0ByteSize": 160284,
         "lod1ByteSize": 73244,
-        "planWallClockMs": 32
+        "planWallClockMs": 27
       }
     },
     {
@@ -4003,7 +4003,7 @@
         "lod1TriangleCount": 128,
         "lod0ByteSize": 11608,
         "lod1ByteSize": 8848,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -4040,7 +4040,7 @@
         "lod1TriangleCount": 8132,
         "lod0ByteSize": 741156,
         "lod1ByteSize": 302472,
-        "planWallClockMs": 89
+        "planWallClockMs": 84
       }
     },
     {
@@ -4166,7 +4166,7 @@
         "lod1TriangleCount": 140,
         "lod0ByteSize": 13588,
         "lod1ByteSize": 9812,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -4314,7 +4314,7 @@
         "lod1TriangleCount": 132,
         "lod0ByteSize": 12216,
         "lod1ByteSize": 9024,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -4351,7 +4351,7 @@
         "lod1TriangleCount": 5660,
         "lod0ByteSize": 503656,
         "lod1ByteSize": 214016,
-        "planWallClockMs": 74
+        "planWallClockMs": 68
       }
     },
     {
@@ -4540,7 +4540,7 @@
         "lod1TriangleCount": 78,
         "lod0ByteSize": 10364,
         "lod1ByteSize": 7308,
-        "planWallClockMs": 3
+        "planWallClockMs": 2
       }
     },
     {
@@ -4614,7 +4614,7 @@
         "lod1TriangleCount": 142,
         "lod0ByteSize": 13016,
         "lod1ByteSize": 9956,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -4725,7 +4725,7 @@
         "lod1TriangleCount": 120,
         "lod0ByteSize": 10836,
         "lod1ByteSize": 8512,
-        "planWallClockMs": 3
+        "planWallClockMs": 2
       }
     },
     {
@@ -4788,7 +4788,7 @@
         "lod1TriangleCount": 180,
         "lod0ByteSize": 17880,
         "lod1ByteSize": 11804,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -4851,7 +4851,7 @@
         "lod1TriangleCount": 1558,
         "lod0ByteSize": 128316,
         "lod1ByteSize": 64176,
-        "planWallClockMs": 19
+        "planWallClockMs": 17
       }
     },
     {
@@ -4940,7 +4940,7 @@
         "lod1TriangleCount": 128,
         "lod0ByteSize": 11608,
         "lod1ByteSize": 8852,
-        "planWallClockMs": 4
+        "planWallClockMs": 2
       }
     },
     {
@@ -5014,7 +5014,7 @@
         "lod1TriangleCount": 68,
         "lod0ByteSize": 10624,
         "lod1ByteSize": 6852,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -5292,7 +5292,7 @@
         "lod1TriangleCount": 136,
         "lod0ByteSize": 13416,
         "lod1ByteSize": 9624,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -5492,7 +5492,7 @@
         "lod1TriangleCount": 200,
         "lod0ByteSize": 15676,
         "lod1ByteSize": 12316,
-        "planWallClockMs": 5
+        "planWallClockMs": 4
       }
     },
     {
@@ -5555,7 +5555,7 @@
         "lod1TriangleCount": 3412,
         "lod0ByteSize": 281172,
         "lod1ByteSize": 131924,
-        "planWallClockMs": 41
+        "planWallClockMs": 37
       }
     },
     {
@@ -5592,7 +5592,7 @@
         "lod1TriangleCount": 176,
         "lod0ByteSize": 12776,
         "lod1ByteSize": 10880,
-        "planWallClockMs": 5
+        "planWallClockMs": 4
       }
     },
     {
@@ -5629,7 +5629,7 @@
         "lod1TriangleCount": 972,
         "lod0ByteSize": 88816,
         "lod1ByteSize": 42692,
-        "planWallClockMs": 29
+        "planWallClockMs": 26
       }
     },
     {
@@ -5755,7 +5755,7 @@
         "lod1TriangleCount": 4480,
         "lod0ByteSize": 361884,
         "lod1ByteSize": 173336,
-        "planWallClockMs": 106
+        "planWallClockMs": 98
       }
     },
     {
@@ -5792,7 +5792,7 @@
         "lod1TriangleCount": 116,
         "lod0ByteSize": 10676,
         "lod1ByteSize": 8348,
-        "planWallClockMs": 3
+        "planWallClockMs": 2
       }
     },
     {
@@ -5881,7 +5881,7 @@
         "lod1TriangleCount": 116,
         "lod0ByteSize": 10680,
         "lod1ByteSize": 8344,
-        "planWallClockMs": 3
+        "planWallClockMs": 2
       }
     },
     {
@@ -6007,7 +6007,7 @@
         "lod1TriangleCount": 134,
         "lod0ByteSize": 13532,
         "lod1ByteSize": 9596,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -6118,7 +6118,7 @@
         "lod1TriangleCount": 3094,
         "lod0ByteSize": 242316,
         "lod1ByteSize": 121588,
-        "planWallClockMs": 54
+        "planWallClockMs": 49
       }
     },
     {
@@ -6155,7 +6155,7 @@
         "lod1TriangleCount": 3250,
         "lod0ByteSize": 272764,
         "lod1ByteSize": 127412,
-        "planWallClockMs": 61
+        "planWallClockMs": 56
       }
     },
     {
@@ -6192,7 +6192,7 @@
         "lod1TriangleCount": 2182,
         "lod0ByteSize": 180716,
         "lod1ByteSize": 88484,
-        "planWallClockMs": 45
+        "planWallClockMs": 40
       }
     },
     {
@@ -6229,7 +6229,7 @@
         "lod1TriangleCount": 5380,
         "lod0ByteSize": 434672,
         "lod1ByteSize": 203780,
-        "planWallClockMs": 66
+        "planWallClockMs": 60
       }
     },
     {
@@ -6266,7 +6266,7 @@
         "lod1TriangleCount": 300,
         "lod0ByteSize": 29912,
         "lod1ByteSize": 16608,
-        "planWallClockMs": 6
+        "planWallClockMs": 5
       }
     },
     {
@@ -6303,7 +6303,7 @@
         "lod1TriangleCount": 3436,
         "lod0ByteSize": 281848,
         "lod1ByteSize": 133040,
-        "planWallClockMs": 44
+        "planWallClockMs": 40
       }
     },
     {
@@ -6429,7 +6429,7 @@
         "lod1TriangleCount": 96,
         "lod0ByteSize": 9012,
         "lod1ByteSize": 7552,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -6492,7 +6492,7 @@
         "lod1TriangleCount": 124,
         "lod0ByteSize": 8688,
         "lod1ByteSize": 8688,
-        "planWallClockMs": 3
+        "planWallClockMs": 2
       }
     },
     {
@@ -6640,7 +6640,7 @@
         "lod1TriangleCount": 934,
         "lod0ByteSize": 73912,
         "lod1ByteSize": 41604,
-        "planWallClockMs": 13
+        "planWallClockMs": 12
       }
     },
     {
@@ -6703,7 +6703,7 @@
         "lod1TriangleCount": 2556,
         "lod0ByteSize": 224388,
         "lod1ByteSize": 100184,
-        "planWallClockMs": 42
+        "planWallClockMs": 39
       }
     },
     {
@@ -6740,7 +6740,7 @@
         "lod1TriangleCount": 92,
         "lod0ByteSize": 12460,
         "lod1ByteSize": 8404,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -6803,7 +6803,7 @@
         "lod1TriangleCount": 136,
         "lod0ByteSize": 13412,
         "lod1ByteSize": 9620,
-        "planWallClockMs": 4
+        "planWallClockMs": 2
       }
     },
     {
@@ -6840,7 +6840,7 @@
         "lod1TriangleCount": 52,
         "lod0ByteSize": 8488,
         "lod1ByteSize": 5724,
-        "planWallClockMs": 3
+        "planWallClockMs": 2
       }
     },
     {
@@ -6951,7 +6951,7 @@
         "lod1TriangleCount": 12948,
         "lod0ByteSize": 1136544,
         "lod1ByteSize": 475948,
-        "planWallClockMs": 129
+        "planWallClockMs": 119
       }
     },
     {
@@ -6988,7 +6988,7 @@
         "lod1TriangleCount": 156,
         "lod0ByteSize": 14708,
         "lod1ByteSize": 10340,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -7099,7 +7099,7 @@
         "lod1TriangleCount": 134,
         "lod0ByteSize": 13104,
         "lod1ByteSize": 9620,
-        "planWallClockMs": 4
+        "planWallClockMs": 2
       }
     },
     {
@@ -7199,7 +7199,7 @@
         "lod1TriangleCount": 156,
         "lod0ByteSize": 14712,
         "lod1ByteSize": 10344,
-        "planWallClockMs": 4
+        "planWallClockMs": 2
       }
     },
     {
@@ -7273,7 +7273,7 @@
         "lod1TriangleCount": 142,
         "lod0ByteSize": 13432,
         "lod1ByteSize": 9928,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -7336,7 +7336,7 @@
         "lod1TriangleCount": 116,
         "lod0ByteSize": 10668,
         "lod1ByteSize": 8340,
-        "planWallClockMs": 3
+        "planWallClockMs": 2
       }
     },
     {
@@ -7373,7 +7373,7 @@
         "lod1TriangleCount": 152,
         "lod0ByteSize": 15732,
         "lod1ByteSize": 10804,
-        "planWallClockMs": 3
+        "planWallClockMs": 4
       }
     },
     {
@@ -7484,7 +7484,7 @@
         "lod1TriangleCount": 88,
         "lod0ByteSize": 11436,
         "lod1ByteSize": 7672,
-        "planWallClockMs": 3
+        "planWallClockMs": 2
       }
     },
     {
@@ -7547,7 +7547,7 @@
         "lod1TriangleCount": 76,
         "lod0ByteSize": 9036,
         "lod1ByteSize": 6712,
-        "planWallClockMs": 2
+        "planWallClockMs": 3
       }
     },
     {
@@ -7584,7 +7584,7 @@
         "lod1TriangleCount": 104,
         "lod0ByteSize": 14260,
         "lod1ByteSize": 8744,
-        "planWallClockMs": 3
+        "planWallClockMs": 2
       }
     },
     {
@@ -7621,7 +7621,7 @@
         "lod1TriangleCount": 144,
         "lod0ByteSize": 14852,
         "lod1ByteSize": 10476,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -7658,7 +7658,7 @@
         "lod1TriangleCount": 156,
         "lod0ByteSize": 14716,
         "lod1ByteSize": 10368,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -7732,7 +7732,7 @@
         "lod1TriangleCount": 216,
         "lod0ByteSize": 19308,
         "lod1ByteSize": 13508,
-        "planWallClockMs": 5
+        "planWallClockMs": 4
       }
     },
     {
@@ -7769,7 +7769,7 @@
         "lod1TriangleCount": 1388,
         "lod0ByteSize": 100628,
         "lod1ByteSize": 58948,
-        "planWallClockMs": 27
+        "planWallClockMs": 25
       }
     },
     {
@@ -7806,7 +7806,7 @@
         "lod1TriangleCount": 144,
         "lod0ByteSize": 14584,
         "lod1ByteSize": 10504,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -7880,7 +7880,7 @@
         "lod1TriangleCount": 120,
         "lod0ByteSize": 10836,
         "lod1ByteSize": 8512,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -7917,7 +7917,7 @@
         "lod1TriangleCount": 116,
         "lod0ByteSize": 10676,
         "lod1ByteSize": 8348,
-        "planWallClockMs": 3
+        "planWallClockMs": 2
       }
     },
     {
@@ -7954,7 +7954,7 @@
         "lod1TriangleCount": 6112,
         "lod0ByteSize": 550464,
         "lod1ByteSize": 232884,
-        "planWallClockMs": 79
+        "planWallClockMs": 70
       }
     },
     {
@@ -8069,7 +8069,7 @@
         "lod1TriangleCount": 180,
         "lod0ByteSize": 17812,
         "lod1ByteSize": 11880,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -8132,7 +8132,7 @@
         "lod1TriangleCount": 2416,
         "lod0ByteSize": 186692,
         "lod1ByteSize": 96192,
-        "planWallClockMs": 40
+        "planWallClockMs": 37
       }
     },
     {
@@ -8388,7 +8388,7 @@
         "lod1TriangleCount": 652,
         "lod0ByteSize": 49980,
         "lod1ByteSize": 30376,
-        "planWallClockMs": 18
+        "planWallClockMs": 17
       }
     },
     {
@@ -8540,7 +8540,7 @@
         "lod1TriangleCount": 3624,
         "lod0ByteSize": 301664,
         "lod1ByteSize": 140048,
-        "planWallClockMs": 46
+        "planWallClockMs": 40
       }
     },
     {
@@ -8614,7 +8614,7 @@
         "lod1TriangleCount": 156,
         "lod0ByteSize": 14696,
         "lod1ByteSize": 10336,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -8725,7 +8725,7 @@
         "lod1TriangleCount": 142,
         "lod0ByteSize": 14316,
         "lod1ByteSize": 9956,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -8988,7 +8988,7 @@
         "lod1TriangleCount": 1958,
         "lod0ByteSize": 134704,
         "lod1ByteSize": 82224,
-        "planWallClockMs": 37
+        "planWallClockMs": 35
       }
     },
     {
@@ -9077,7 +9077,7 @@
         "lod1TriangleCount": 136,
         "lod0ByteSize": 12976,
         "lod1ByteSize": 9632,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -9177,7 +9177,7 @@
         "lod1TriangleCount": 124,
         "lod0ByteSize": 11436,
         "lod1ByteSize": 8672,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -9214,7 +9214,7 @@
         "lod1TriangleCount": 560,
         "lod0ByteSize": 36312,
         "lod1ByteSize": 27756,
-        "planWallClockMs": 25
+        "planWallClockMs": 22
       }
     },
     {
@@ -9251,7 +9251,7 @@
         "lod1TriangleCount": 354,
         "lod0ByteSize": 34332,
         "lod1ByteSize": 18304,
-        "planWallClockMs": 6
+        "planWallClockMs": 5
       }
     },
     {
@@ -9288,7 +9288,7 @@
         "lod1TriangleCount": 124,
         "lod0ByteSize": 11444,
         "lod1ByteSize": 8684,
-        "planWallClockMs": 3
+        "planWallClockMs": 2
       }
     },
     {
@@ -9325,7 +9325,7 @@
         "lod1TriangleCount": 128,
         "lod0ByteSize": 16828,
         "lod1ByteSize": 9580,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -9362,7 +9362,7 @@
         "lod1TriangleCount": 196,
         "lod0ByteSize": 19608,
         "lod1ByteSize": 12360,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -10007,7 +10007,7 @@
         "lod1TriangleCount": 116,
         "lod0ByteSize": 10680,
         "lod1ByteSize": 8352,
-        "planWallClockMs": 4
+        "planWallClockMs": 2
       }
     },
     {
@@ -10155,7 +10155,7 @@
         "lod1TriangleCount": 136,
         "lod0ByteSize": 13408,
         "lod1ByteSize": 9616,
-        "planWallClockMs": 3
+        "planWallClockMs": 2
       }
     },
     {
@@ -10333,7 +10333,7 @@
         "lod1TriangleCount": 116,
         "lod0ByteSize": 10672,
         "lod1ByteSize": 8340,
-        "planWallClockMs": 2
+        "planWallClockMs": 3
       }
     },
     {
@@ -10537,7 +10537,7 @@
         "lod1TriangleCount": 100,
         "lod0ByteSize": 13272,
         "lod1ByteSize": 8204,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -10574,7 +10574,7 @@
         "lod1TriangleCount": 898,
         "lod0ByteSize": 68328,
         "lod1ByteSize": 40340,
-        "planWallClockMs": 14
+        "planWallClockMs": 13
       }
     },
     {
@@ -10726,7 +10726,7 @@
         "lod1TriangleCount": 388,
         "lod0ByteSize": 19792,
         "lod1ByteSize": 19792,
-        "planWallClockMs": 21
+        "planWallClockMs": 19
       }
     },
     {
@@ -10763,7 +10763,7 @@
         "lod1TriangleCount": 388,
         "lod0ByteSize": 19792,
         "lod1ByteSize": 19792,
-        "planWallClockMs": 22
+        "planWallClockMs": 21
       }
     },
     {
@@ -10930,7 +10930,7 @@
         "lod1TriangleCount": 452,
         "lod0ByteSize": 46848,
         "lod1ByteSize": 21620,
-        "planWallClockMs": 7
+        "planWallClockMs": 5
       }
     },
     {
@@ -11004,7 +11004,7 @@
         "lod1TriangleCount": 652,
         "lod0ByteSize": 65444,
         "lod1ByteSize": 29264,
-        "planWallClockMs": 9
+        "planWallClockMs": 8
       }
     },
     {
@@ -11182,7 +11182,7 @@
         "lod1TriangleCount": 440,
         "lod0ByteSize": 43848,
         "lod1ByteSize": 21348,
-        "planWallClockMs": 7
+        "planWallClockMs": 5
       }
     },
     {
@@ -11219,7 +11219,7 @@
         "lod1TriangleCount": 76,
         "lod0ByteSize": 11656,
         "lod1ByteSize": 7740,
-        "planWallClockMs": 3
+        "planWallClockMs": 2
       }
     },
     {
@@ -11345,7 +11345,7 @@
         "lod1TriangleCount": 164,
         "lod0ByteSize": 16164,
         "lod1ByteSize": 11240,
-        "planWallClockMs": 3
+        "planWallClockMs": 4
       }
     },
     {
@@ -11382,7 +11382,7 @@
         "lod1TriangleCount": 156,
         "lod0ByteSize": 14712,
         "lod1ByteSize": 10360,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -11419,7 +11419,7 @@
         "lod1TriangleCount": 340,
         "lod0ByteSize": 34336,
         "lod1ByteSize": 17588,
-        "planWallClockMs": 5
+        "planWallClockMs": 4
       }
     },
     {
@@ -11534,7 +11534,7 @@
         "lod1TriangleCount": 308,
         "lod0ByteSize": 16408,
         "lod1ByteSize": 16408,
-        "planWallClockMs": 13
+        "planWallClockMs": 12
       }
     },
     {
@@ -11623,7 +11623,7 @@
         "lod1TriangleCount": 164,
         "lod0ByteSize": 16300,
         "lod1ByteSize": 11376,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -11697,7 +11697,7 @@
         "lod1TriangleCount": 2170,
         "lod0ByteSize": 186272,
         "lod1ByteSize": 86704,
-        "planWallClockMs": 28
+        "planWallClockMs": 25
       }
     },
     {
@@ -11760,7 +11760,7 @@
         "lod1TriangleCount": 1136,
         "lod0ByteSize": 78564,
         "lod1ByteSize": 49572,
-        "planWallClockMs": 26
+        "planWallClockMs": 23
       }
     },
     {
@@ -11823,7 +11823,7 @@
         "lod1TriangleCount": 9172,
         "lod0ByteSize": 890048,
         "lod1ByteSize": 340052,
-        "planWallClockMs": 92
+        "planWallClockMs": 82
       }
     },
     {
@@ -11860,7 +11860,7 @@
         "lod1TriangleCount": 1232,
         "lod0ByteSize": 108088,
         "lod1ByteSize": 52596,
-        "planWallClockMs": 20
+        "planWallClockMs": 19
       }
     },
     {
@@ -11971,7 +11971,7 @@
         "lod1TriangleCount": 3560,
         "lod0ByteSize": 270648,
         "lod1ByteSize": 140840,
-        "planWallClockMs": 132
+        "planWallClockMs": 120
       }
     },
     {
@@ -12008,7 +12008,7 @@
         "lod1TriangleCount": 184,
         "lod0ByteSize": 18028,
         "lod1ByteSize": 12096,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -12045,7 +12045,7 @@
         "lod1TriangleCount": 160,
         "lod0ByteSize": 16120,
         "lod1ByteSize": 11196,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -12082,7 +12082,7 @@
         "lod1TriangleCount": 876,
         "lod0ByteSize": 67608,
         "lod1ByteSize": 39764,
-        "planWallClockMs": 19
+        "planWallClockMs": 18
       }
     },
     {
@@ -12119,7 +12119,7 @@
         "lod1TriangleCount": 1414,
         "lod0ByteSize": 120360,
         "lod1ByteSize": 58804,
-        "planWallClockMs": 19
+        "planWallClockMs": 18
       }
     },
     {
@@ -12156,7 +12156,7 @@
         "lod1TriangleCount": 1528,
         "lod0ByteSize": 125528,
         "lod1ByteSize": 63112,
-        "planWallClockMs": 21
+        "planWallClockMs": 20
       }
     },
     {
@@ -12193,7 +12193,7 @@
         "lod1TriangleCount": 772,
         "lod0ByteSize": 63744,
         "lod1ByteSize": 35324,
-        "planWallClockMs": 19
+        "planWallClockMs": 17
       }
     },
     {
@@ -12230,7 +12230,7 @@
         "lod1TriangleCount": 162,
         "lod0ByteSize": 16012,
         "lod1ByteSize": 11228,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -12267,7 +12267,7 @@
         "lod1TriangleCount": 1312,
         "lod0ByteSize": 105732,
         "lod1ByteSize": 55416,
-        "planWallClockMs": 18
+        "planWallClockMs": 15
       }
     },
     {
@@ -12304,7 +12304,7 @@
         "lod1TriangleCount": 1190,
         "lod0ByteSize": 93824,
         "lod1ByteSize": 51012,
-        "planWallClockMs": 17
+        "planWallClockMs": 15
       }
     },
     {
@@ -12341,7 +12341,7 @@
         "lod1TriangleCount": 3386,
         "lod0ByteSize": 183312,
         "lod1ByteSize": 144520,
-        "planWallClockMs": 595
+        "planWallClockMs": 564
       }
     },
     {
@@ -12378,7 +12378,7 @@
         "lod1TriangleCount": 1270,
         "lod0ByteSize": 101040,
         "lod1ByteSize": 54340,
-        "planWallClockMs": 22
+        "planWallClockMs": 18
       }
     },
     {
@@ -12415,7 +12415,7 @@
         "lod1TriangleCount": 2370,
         "lod0ByteSize": 180536,
         "lod1ByteSize": 95384,
-        "planWallClockMs": 46
+        "planWallClockMs": 42
       }
     },
     {
@@ -12489,7 +12489,7 @@
         "lod1TriangleCount": 1222,
         "lod0ByteSize": 98452,
         "lod1ByteSize": 52032,
-        "planWallClockMs": 17
+        "planWallClockMs": 14
       }
     },
     {
@@ -12526,7 +12526,7 @@
         "lod1TriangleCount": 1504,
         "lod0ByteSize": 117208,
         "lod1ByteSize": 62572,
-        "planWallClockMs": 20
+        "planWallClockMs": 18
       }
     },
     {
@@ -12626,7 +12626,7 @@
         "lod1TriangleCount": 1858,
         "lod0ByteSize": 150236,
         "lod1ByteSize": 75296,
-        "planWallClockMs": 24
+        "planWallClockMs": 22
       }
     },
     {
@@ -12663,7 +12663,7 @@
         "lod1TriangleCount": 640,
         "lod0ByteSize": 41636,
         "lod1ByteSize": 31076,
-        "planWallClockMs": 24
+        "planWallClockMs": 23
       }
     },
     {
@@ -12700,7 +12700,7 @@
         "lod1TriangleCount": 8724,
         "lod0ByteSize": 827204,
         "lod1ByteSize": 323144,
-        "planWallClockMs": 90
+        "planWallClockMs": 82
       }
     },
     {
@@ -12737,7 +12737,7 @@
         "lod1TriangleCount": 2216,
         "lod0ByteSize": 183520,
         "lod1ByteSize": 88848,
-        "planWallClockMs": 77
+        "planWallClockMs": 72
       }
     },
     {
@@ -12811,7 +12811,7 @@
         "lod1TriangleCount": 11918,
         "lod0ByteSize": 1039944,
         "lod1ByteSize": 443008,
-        "planWallClockMs": 111
+        "planWallClockMs": 100
       }
     },
     {
@@ -12885,7 +12885,7 @@
         "lod1TriangleCount": 1228,
         "lod0ByteSize": 94392,
         "lod1ByteSize": 53148,
-        "planWallClockMs": 24
+        "planWallClockMs": 22
       }
     },
     {
@@ -12922,7 +12922,7 @@
         "lod1TriangleCount": 6532,
         "lod0ByteSize": 593920,
         "lod1ByteSize": 243220,
-        "planWallClockMs": 60
+        "planWallClockMs": 52
       }
     },
     {
@@ -12959,7 +12959,7 @@
         "lod1TriangleCount": 6676,
         "lod0ByteSize": 619228,
         "lod1ByteSize": 250532,
-        "planWallClockMs": 113
+        "planWallClockMs": 104
       }
     },
     {
@@ -12996,7 +12996,7 @@
         "lod1TriangleCount": 742,
         "lod0ByteSize": 55312,
         "lod1ByteSize": 34808,
-        "planWallClockMs": 15
+        "planWallClockMs": 12
       }
     },
     {
@@ -13033,7 +13033,7 @@
         "lod1TriangleCount": 4072,
         "lod0ByteSize": 343792,
         "lod1ByteSize": 154380,
-        "planWallClockMs": 36
+        "planWallClockMs": 32
       }
     },
     {
@@ -13122,7 +13122,7 @@
         "lod1TriangleCount": 1072,
         "lod0ByteSize": 88288,
         "lod1ByteSize": 46608,
-        "planWallClockMs": 17
+        "planWallClockMs": 15
       }
     },
     {
@@ -13259,7 +13259,7 @@
         "lod1TriangleCount": 912,
         "lod0ByteSize": 68312,
         "lod1ByteSize": 41192,
-        "planWallClockMs": 20
+        "planWallClockMs": 17
       }
     },
     {
@@ -13333,7 +13333,7 @@
         "lod1TriangleCount": 2482,
         "lod0ByteSize": 205160,
         "lod1ByteSize": 97384,
-        "planWallClockMs": 24
+        "planWallClockMs": 22
       }
     },
     {
@@ -13370,7 +13370,7 @@
         "lod1TriangleCount": 996,
         "lod0ByteSize": 77688,
         "lod1ByteSize": 43936,
-        "planWallClockMs": 15
+        "planWallClockMs": 13
       }
     },
     {
@@ -13444,7 +13444,7 @@
         "lod1TriangleCount": 2618,
         "lod0ByteSize": 253564,
         "lod1ByteSize": 102736,
-        "planWallClockMs": 38
+        "planWallClockMs": 36
       }
     },
     {
@@ -13481,7 +13481,7 @@
         "lod1TriangleCount": 68,
         "lod0ByteSize": 8268,
         "lod1ByteSize": 6372,
-        "planWallClockMs": 3
+        "planWallClockMs": 2
       }
     },
     {
@@ -13518,7 +13518,7 @@
         "lod1TriangleCount": 92,
         "lod0ByteSize": 13320,
         "lod1ByteSize": 8396,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -13555,7 +13555,7 @@
         "lod1TriangleCount": 1052,
         "lod0ByteSize": 82080,
         "lod1ByteSize": 46032,
-        "planWallClockMs": 15
+        "planWallClockMs": 14
       }
     },
     {
@@ -13618,7 +13618,7 @@
         "lod1TriangleCount": 4264,
         "lod0ByteSize": 397488,
         "lod1ByteSize": 161836,
-        "planWallClockMs": 52
+        "planWallClockMs": 48
       }
     },
     {
@@ -13655,7 +13655,7 @@
         "lod1TriangleCount": 700,
         "lod0ByteSize": 54024,
         "lod1ByteSize": 33236,
-        "planWallClockMs": 14
+        "planWallClockMs": 13
       }
     },
     {
@@ -13692,7 +13692,7 @@
         "lod1TriangleCount": 590,
         "lod0ByteSize": 37592,
         "lod1ByteSize": 29480,
-        "planWallClockMs": 13
+        "planWallClockMs": 12
       }
     },
     {
@@ -13729,7 +13729,7 @@
         "lod1TriangleCount": 1412,
         "lod0ByteSize": 107004,
         "lod1ByteSize": 59144,
-        "planWallClockMs": 20
+        "planWallClockMs": 17
       }
     },
     {
@@ -13918,7 +13918,7 @@
         "lod1TriangleCount": 684,
         "lod0ByteSize": 51740,
         "lod1ByteSize": 32680,
-        "planWallClockMs": 18
+        "planWallClockMs": 17
       }
     },
     {
@@ -13955,7 +13955,7 @@
         "lod1TriangleCount": 2102,
         "lod0ByteSize": 129116,
         "lod1ByteSize": 87448,
-        "planWallClockMs": 140
+        "planWallClockMs": 131
       }
     },
     {
@@ -13992,7 +13992,7 @@
         "lod1TriangleCount": 1364,
         "lod0ByteSize": 105840,
         "lod1ByteSize": 57976,
-        "planWallClockMs": 22
+        "planWallClockMs": 21
       }
     },
     {
@@ -14066,7 +14066,7 @@
         "lod1TriangleCount": 4860,
         "lod0ByteSize": 395516,
         "lod1ByteSize": 184796,
-        "planWallClockMs": 61
+        "planWallClockMs": 55
       }
     },
     {
@@ -14103,7 +14103,7 @@
         "lod1TriangleCount": 3290,
         "lod0ByteSize": 257832,
         "lod1ByteSize": 132196,
-        "planWallClockMs": 41
+        "planWallClockMs": 36
       }
     },
     {
@@ -14140,7 +14140,7 @@
         "lod1TriangleCount": 5288,
         "lod0ByteSize": 427040,
         "lod1ByteSize": 198456,
-        "planWallClockMs": 42
+        "planWallClockMs": 39
       }
     },
     {
@@ -14214,7 +14214,7 @@
         "lod1TriangleCount": 116,
         "lod0ByteSize": 10664,
         "lod1ByteSize": 8340,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -14251,7 +14251,7 @@
         "lod1TriangleCount": 132,
         "lod0ByteSize": 11780,
         "lod1ByteSize": 9020,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -14288,7 +14288,7 @@
         "lod1TriangleCount": 666,
         "lod0ByteSize": 41420,
         "lod1ByteSize": 32292,
-        "planWallClockMs": 24
+        "planWallClockMs": 22
       }
     },
     {
@@ -14325,7 +14325,7 @@
         "lod1TriangleCount": 368,
         "lod0ByteSize": 36212,
         "lod1ByteSize": 19024,
-        "planWallClockMs": 7
+        "planWallClockMs": 6
       }
     },
     {
@@ -14362,7 +14362,7 @@
         "lod1TriangleCount": 1104,
         "lod0ByteSize": 69468,
         "lod1ByteSize": 49256,
-        "planWallClockMs": 28
+        "planWallClockMs": 26
       }
     },
     {
@@ -14436,7 +14436,7 @@
         "lod1TriangleCount": 628,
         "lod0ByteSize": 48544,
         "lod1ByteSize": 30640,
-        "planWallClockMs": 17
+        "planWallClockMs": 15
       }
     },
     {
@@ -14473,7 +14473,7 @@
         "lod1TriangleCount": 8288,
         "lod0ByteSize": 721224,
         "lod1ByteSize": 306884,
-        "planWallClockMs": 74
+        "planWallClockMs": 66
       }
     },
     {
@@ -14510,7 +14510,7 @@
         "lod1TriangleCount": 2356,
         "lod0ByteSize": 175164,
         "lod1ByteSize": 95040,
-        "planWallClockMs": 88
+        "planWallClockMs": 83
       }
     },
     {
@@ -14573,7 +14573,7 @@
         "lod1TriangleCount": 5188,
         "lod0ByteSize": 427120,
         "lod1ByteSize": 194932,
-        "planWallClockMs": 43
+        "planWallClockMs": 39
       }
     },
     {
@@ -14647,7 +14647,7 @@
         "lod1TriangleCount": 106,
         "lod0ByteSize": 13676,
         "lod1ByteSize": 9032,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -14684,7 +14684,7 @@
         "lod1TriangleCount": 3294,
         "lod0ByteSize": 295320,
         "lod1ByteSize": 126920,
-        "planWallClockMs": 38
+        "planWallClockMs": 36
       }
     },
     {
@@ -14747,7 +14747,7 @@
         "lod1TriangleCount": 1038,
         "lod0ByteSize": 76176,
         "lod1ByteSize": 45880,
-        "planWallClockMs": 19
+        "planWallClockMs": 17
       }
     },
     {
@@ -14784,7 +14784,7 @@
         "lod1TriangleCount": 970,
         "lod0ByteSize": 81260,
         "lod1ByteSize": 43052,
-        "planWallClockMs": 15
+        "planWallClockMs": 14
       }
     },
     {
@@ -14821,7 +14821,7 @@
         "lod1TriangleCount": 4368,
         "lod0ByteSize": 414780,
         "lod1ByteSize": 165456,
-        "planWallClockMs": 53
+        "planWallClockMs": 47
       }
     },
     {
@@ -14932,7 +14932,7 @@
         "lod1TriangleCount": 592,
         "lod0ByteSize": 54020,
         "lod1ByteSize": 27628,
-        "planWallClockMs": 11
+        "planWallClockMs": 10
       }
     },
     {
@@ -14969,7 +14969,7 @@
         "lod1TriangleCount": 5200,
         "lod0ByteSize": 452008,
         "lod1ByteSize": 195192,
-        "planWallClockMs": 46
+        "planWallClockMs": 41
       }
     },
     {
@@ -15006,7 +15006,7 @@
         "lod1TriangleCount": 3460,
         "lod0ByteSize": 292688,
         "lod1ByteSize": 133080,
-        "planWallClockMs": 38
+        "planWallClockMs": 34
       }
     },
     {
@@ -15043,7 +15043,7 @@
         "lod1TriangleCount": 2200,
         "lod0ByteSize": 190280,
         "lod1ByteSize": 87256,
-        "planWallClockMs": 26
+        "planWallClockMs": 23
       }
     },
     {
@@ -15117,7 +15117,7 @@
         "lod1TriangleCount": 1468,
         "lod0ByteSize": 122232,
         "lod1ByteSize": 61408,
-        "planWallClockMs": 28
+        "planWallClockMs": 24
       }
     },
     {
@@ -15154,7 +15154,7 @@
         "lod1TriangleCount": 678,
         "lod0ByteSize": 50052,
         "lod1ByteSize": 32424,
-        "planWallClockMs": 17
+        "planWallClockMs": 16
       }
     },
     {
@@ -15191,7 +15191,7 @@
         "lod1TriangleCount": 1108,
         "lod0ByteSize": 88868,
         "lod1ByteSize": 48040,
-        "planWallClockMs": 17
+        "planWallClockMs": 16
       }
     },
     {
@@ -15228,7 +15228,7 @@
         "lod1TriangleCount": 708,
         "lod0ByteSize": 55112,
         "lod1ByteSize": 33460,
-        "planWallClockMs": 15
+        "planWallClockMs": 13
       }
     },
     {
@@ -15291,7 +15291,7 @@
         "lod1TriangleCount": 92,
         "lod0ByteSize": 12040,
         "lod1ByteSize": 7820,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -15417,7 +15417,7 @@
         "lod1TriangleCount": 172,
         "lod0ByteSize": 17200,
         "lod1ByteSize": 11548,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -15454,7 +15454,7 @@
         "lod1TriangleCount": 1308,
         "lod0ByteSize": 106360,
         "lod1ByteSize": 55352,
-        "planWallClockMs": 18
+        "planWallClockMs": 15
       }
     },
     {
@@ -15602,7 +15602,7 @@
         "lod1TriangleCount": 864,
         "lod0ByteSize": 52972,
         "lod1ByteSize": 40384,
-        "planWallClockMs": 28
+        "planWallClockMs": 25
       }
     },
     {
@@ -15676,7 +15676,7 @@
         "lod1TriangleCount": 1682,
         "lod0ByteSize": 122284,
         "lod1ByteSize": 70108,
-        "planWallClockMs": 36
+        "planWallClockMs": 33
       }
     },
     {
@@ -15713,7 +15713,7 @@
         "lod1TriangleCount": 6526,
         "lod0ByteSize": 632852,
         "lod1ByteSize": 242992,
-        "planWallClockMs": 66
+        "planWallClockMs": 58
       }
     },
     {
@@ -15750,7 +15750,7 @@
         "lod1TriangleCount": 446,
         "lod0ByteSize": 40496,
         "lod1ByteSize": 22172,
-        "planWallClockMs": 14
+        "planWallClockMs": 11
       }
     },
     {
@@ -15787,7 +15787,7 @@
         "lod1TriangleCount": 9784,
         "lod0ByteSize": 959600,
         "lod1ByteSize": 361504,
-        "planWallClockMs": 108
+        "planWallClockMs": 102
       }
     },
     {
@@ -15824,7 +15824,7 @@
         "lod1TriangleCount": 910,
         "lod0ByteSize": 71796,
         "lod1ByteSize": 41644,
-        "planWallClockMs": 23
+        "planWallClockMs": 22
       }
     },
     {
@@ -15861,7 +15861,7 @@
         "lod1TriangleCount": 1728,
         "lod0ByteSize": 158508,
         "lod1ByteSize": 70744,
-        "planWallClockMs": 29
+        "planWallClockMs": 27
       }
     },
     {
@@ -15935,7 +15935,7 @@
         "lod1TriangleCount": 1632,
         "lod0ByteSize": 112424,
         "lod1ByteSize": 68732,
-        "planWallClockMs": 42
+        "planWallClockMs": 38
       }
     },
     {
@@ -15972,7 +15972,7 @@
         "lod1TriangleCount": 734,
         "lod0ByteSize": 50432,
         "lod1ByteSize": 35120,
-        "planWallClockMs": 18
+        "planWallClockMs": 17
       }
     },
     {
@@ -16009,7 +16009,7 @@
         "lod1TriangleCount": 866,
         "lod0ByteSize": 70140,
         "lod1ByteSize": 39704,
-        "planWallClockMs": 17
+        "planWallClockMs": 16
       }
     },
     {
@@ -16072,7 +16072,7 @@
         "lod1TriangleCount": 3230,
         "lod0ByteSize": 212884,
         "lod1ByteSize": 130024,
-        "planWallClockMs": 449
+        "planWallClockMs": 416
       }
     },
     {
@@ -16109,7 +16109,7 @@
         "lod1TriangleCount": 730,
         "lod0ByteSize": 50900,
         "lod1ByteSize": 34292,
-        "planWallClockMs": 15
+        "planWallClockMs": 14
       }
     },
     {
@@ -16146,7 +16146,7 @@
         "lod1TriangleCount": 4198,
         "lod0ByteSize": 383992,
         "lod1ByteSize": 160452,
-        "planWallClockMs": 53
+        "planWallClockMs": 48
       }
     },
     {
@@ -16283,7 +16283,7 @@
         "lod1TriangleCount": 124,
         "lod0ByteSize": 11012,
         "lod1ByteSize": 8684,
-        "planWallClockMs": 3
+        "planWallClockMs": 2
       }
     },
     {
@@ -16320,7 +16320,7 @@
         "lod1TriangleCount": 204,
         "lod0ByteSize": 19940,
         "lod1ByteSize": 12688,
-        "planWallClockMs": 5
+        "planWallClockMs": 3
       }
     },
     {
@@ -16357,7 +16357,7 @@
         "lod1TriangleCount": 1390,
         "lod0ByteSize": 111392,
         "lod1ByteSize": 58484,
-        "planWallClockMs": 20
+        "planWallClockMs": 18
       }
     },
     {
@@ -16394,7 +16394,7 @@
         "lod1TriangleCount": 1284,
         "lod0ByteSize": 87100,
         "lod1ByteSize": 56380,
-        "planWallClockMs": 27
+        "planWallClockMs": 24
       }
     },
     {
@@ -16468,7 +16468,7 @@
         "lod1TriangleCount": 1396,
         "lod0ByteSize": 114204,
         "lod1ByteSize": 59144,
-        "planWallClockMs": 24
+        "planWallClockMs": 22
       }
     },
     {
@@ -16568,7 +16568,7 @@
         "lod1TriangleCount": 2800,
         "lod0ByteSize": 249584,
         "lod1ByteSize": 109980,
-        "planWallClockMs": 41
+        "planWallClockMs": 37
       }
     },
     {
@@ -16605,7 +16605,7 @@
         "lod1TriangleCount": 8664,
         "lod0ByteSize": 744488,
         "lod1ByteSize": 320208,
-        "planWallClockMs": 72
+        "planWallClockMs": 65
       }
     },
     {
@@ -16642,7 +16642,7 @@
         "lod1TriangleCount": 1330,
         "lod0ByteSize": 87868,
         "lod1ByteSize": 57428,
-        "planWallClockMs": 37
+        "planWallClockMs": 34
       }
     },
     {
@@ -16679,7 +16679,7 @@
         "lod1TriangleCount": 768,
         "lod0ByteSize": 52072,
         "lod1ByteSize": 35764,
-        "planWallClockMs": 15
+        "planWallClockMs": 14
       }
     },
     {
@@ -16716,7 +16716,7 @@
         "lod1TriangleCount": 140,
         "lod0ByteSize": 13152,
         "lod1ByteSize": 9812,
-        "planWallClockMs": 3
+        "planWallClockMs": 4
       }
     },
     {
@@ -16753,7 +16753,7 @@
         "lod1TriangleCount": 8158,
         "lod0ByteSize": 736580,
         "lod1ByteSize": 303948,
-        "planWallClockMs": 115
+        "planWallClockMs": 98
       }
     },
     {
@@ -16790,7 +16790,7 @@
         "lod1TriangleCount": 1178,
         "lod0ByteSize": 90700,
         "lod1ByteSize": 50896,
-        "planWallClockMs": 24
+        "planWallClockMs": 23
       }
     },
     {
@@ -16827,7 +16827,7 @@
         "lod1TriangleCount": 3230,
         "lod0ByteSize": 267560,
         "lod1ByteSize": 125524,
-        "planWallClockMs": 40
+        "planWallClockMs": 37
       }
     },
     {
@@ -16927,7 +16927,7 @@
         "lod1TriangleCount": 132,
         "lod0ByteSize": 11348,
         "lod1ByteSize": 9020,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -16964,7 +16964,7 @@
         "lod1TriangleCount": 1810,
         "lod0ByteSize": 154480,
         "lod1ByteSize": 73480,
-        "planWallClockMs": 30
+        "planWallClockMs": 26
       }
     },
     {
@@ -17001,7 +17001,7 @@
         "lod1TriangleCount": 1178,
         "lod0ByteSize": 98924,
         "lod1ByteSize": 50484,
-        "planWallClockMs": 16
+        "planWallClockMs": 14
       }
     },
     {
@@ -17038,7 +17038,7 @@
         "lod1TriangleCount": 1732,
         "lod0ByteSize": 154304,
         "lod1ByteSize": 71148,
-        "planWallClockMs": 54
+        "planWallClockMs": 51
       }
     },
     {
@@ -17075,7 +17075,7 @@
         "lod1TriangleCount": 2338,
         "lod0ByteSize": 155876,
         "lod1ByteSize": 96060,
-        "planWallClockMs": 92
+        "planWallClockMs": 86
       }
     },
     {
@@ -17112,7 +17112,7 @@
         "lod1TriangleCount": 4580,
         "lod0ByteSize": 377480,
         "lod1ByteSize": 173956,
-        "planWallClockMs": 50
+        "planWallClockMs": 45
       }
     },
     {
@@ -17149,7 +17149,7 @@
         "lod1TriangleCount": 78,
         "lod0ByteSize": 10788,
         "lod1ByteSize": 7280,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -17186,7 +17186,7 @@
         "lod1TriangleCount": 2554,
         "lod0ByteSize": 211340,
         "lod1ByteSize": 100540,
-        "planWallClockMs": 35
+        "planWallClockMs": 32
       }
     },
     {
@@ -17260,7 +17260,7 @@
         "lod1TriangleCount": 846,
         "lod0ByteSize": 61716,
         "lod1ByteSize": 38616,
-        "planWallClockMs": 17
+        "planWallClockMs": 16
       }
     },
     {
@@ -17297,7 +17297,7 @@
         "lod1TriangleCount": 688,
         "lod0ByteSize": 52048,
         "lod1ByteSize": 32848,
-        "planWallClockMs": 13
+        "planWallClockMs": 11
       }
     },
     {
@@ -17408,7 +17408,7 @@
         "lod1TriangleCount": 730,
         "lod0ByteSize": 42548,
         "lod1ByteSize": 35020,
-        "planWallClockMs": 25
+        "planWallClockMs": 23
       }
     },
     {
@@ -17445,7 +17445,7 @@
         "lod1TriangleCount": 3904,
         "lod0ByteSize": 328240,
         "lod1ByteSize": 148748,
-        "planWallClockMs": 36
+        "planWallClockMs": 31
       }
     },
     {
@@ -17519,7 +17519,7 @@
         "lod1TriangleCount": 1022,
         "lod0ByteSize": 83708,
         "lod1ByteSize": 44612,
-        "planWallClockMs": 17
+        "planWallClockMs": 15
       }
     },
     {
@@ -17556,7 +17556,7 @@
         "lod1TriangleCount": 1936,
         "lod0ByteSize": 160264,
         "lod1ByteSize": 77972,
-        "planWallClockMs": 24
+        "planWallClockMs": 21
       }
     },
     {
@@ -17593,7 +17593,7 @@
         "lod1TriangleCount": 204,
         "lod0ByteSize": 20488,
         "lod1ByteSize": 12660,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -17630,7 +17630,7 @@
         "lod1TriangleCount": 366,
         "lod0ByteSize": 27892,
         "lod1ByteSize": 19796,
-        "planWallClockMs": 13
+        "planWallClockMs": 11
       }
     },
     {
@@ -17667,7 +17667,7 @@
         "lod1TriangleCount": 1140,
         "lod0ByteSize": 81072,
         "lod1ByteSize": 49916,
-        "planWallClockMs": 28
+        "planWallClockMs": 26
       }
     },
     {
@@ -17704,7 +17704,7 @@
         "lod1TriangleCount": 136,
         "lod0ByteSize": 13420,
         "lod1ByteSize": 9644,
-        "planWallClockMs": 3
+        "planWallClockMs": 2
       }
     },
     {
@@ -17741,7 +17741,7 @@
         "lod1TriangleCount": 10512,
         "lod0ByteSize": 958844,
         "lod1ByteSize": 387256,
-        "planWallClockMs": 131
+        "planWallClockMs": 115
       }
     },
     {
@@ -17778,7 +17778,7 @@
         "lod1TriangleCount": 254,
         "lod0ByteSize": 24652,
         "lod1ByteSize": 14680,
-        "planWallClockMs": 5
+        "planWallClockMs": 4
       }
     },
     {
@@ -17815,7 +17815,7 @@
         "lod1TriangleCount": 1630,
         "lod0ByteSize": 136040,
         "lod1ByteSize": 66708,
-        "planWallClockMs": 23
+        "planWallClockMs": 21
       }
     },
     {
@@ -17852,7 +17852,7 @@
         "lod1TriangleCount": 152,
         "lod0ByteSize": 15384,
         "lod1ByteSize": 10312,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -17889,7 +17889,7 @@
         "lod1TriangleCount": 2218,
         "lod0ByteSize": 193856,
         "lod1ByteSize": 89100,
-        "planWallClockMs": 47
+        "planWallClockMs": 42
       }
     },
     {
@@ -17963,7 +17963,7 @@
         "lod1TriangleCount": 612,
         "lod0ByteSize": 49080,
         "lod1ByteSize": 29156,
-        "planWallClockMs": 16
+        "planWallClockMs": 13
       }
     },
     {
@@ -18000,7 +18000,7 @@
         "lod1TriangleCount": 2488,
         "lod0ByteSize": 225736,
         "lod1ByteSize": 97648,
-        "planWallClockMs": 37
+        "planWallClockMs": 34
       }
     },
     {
@@ -18100,7 +18100,7 @@
         "lod1TriangleCount": 112,
         "lod0ByteSize": 13844,
         "lod1ByteSize": 9068,
-        "planWallClockMs": 4
+        "planWallClockMs": 2
       }
     },
     {
@@ -18237,7 +18237,7 @@
         "lod1TriangleCount": 1386,
         "lod0ByteSize": 97396,
         "lod1ByteSize": 58892,
-        "planWallClockMs": 28
+        "planWallClockMs": 25
       }
     },
     {
@@ -18274,7 +18274,7 @@
         "lod1TriangleCount": 2158,
         "lod0ByteSize": 173652,
         "lod1ByteSize": 86192,
-        "planWallClockMs": 24
+        "planWallClockMs": 21
       }
     },
     {
@@ -18311,7 +18311,7 @@
         "lod1TriangleCount": 116,
         "lod0ByteSize": 12648,
         "lod1ByteSize": 8860,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -18348,7 +18348,7 @@
         "lod1TriangleCount": 1072,
         "lod0ByteSize": 86272,
         "lod1ByteSize": 46752,
-        "planWallClockMs": 17
+        "planWallClockMs": 15
       }
     },
     {
@@ -18385,7 +18385,7 @@
         "lod1TriangleCount": 9240,
         "lod0ByteSize": 875496,
         "lod1ByteSize": 341052,
-        "planWallClockMs": 92
+        "planWallClockMs": 83
       }
     },
     {
@@ -18422,7 +18422,7 @@
         "lod1TriangleCount": 1314,
         "lod0ByteSize": 109660,
         "lod1ByteSize": 55752,
-        "planWallClockMs": 49
+        "planWallClockMs": 44
       }
     },
     {
@@ -18496,7 +18496,7 @@
         "lod1TriangleCount": 68,
         "lod0ByteSize": 8696,
         "lod1ByteSize": 6372,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -18533,7 +18533,7 @@
         "lod1TriangleCount": 136,
         "lod0ByteSize": 13404,
         "lod1ByteSize": 9632,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -18570,7 +18570,7 @@
         "lod1TriangleCount": 1036,
         "lod0ByteSize": 76360,
         "lod1ByteSize": 45488,
-        "planWallClockMs": 24
+        "planWallClockMs": 21
       }
     },
     {
@@ -18607,7 +18607,7 @@
         "lod1TriangleCount": 818,
         "lod0ByteSize": 65192,
         "lod1ByteSize": 37780,
-        "planWallClockMs": 16
+        "planWallClockMs": 14
       }
     },
     {
@@ -18644,7 +18644,7 @@
         "lod1TriangleCount": 1260,
         "lod0ByteSize": 98436,
         "lod1ByteSize": 54032,
-        "planWallClockMs": 43
+        "planWallClockMs": 39
       }
     },
     {
@@ -18681,7 +18681,7 @@
         "lod1TriangleCount": 2894,
         "lod0ByteSize": 236048,
         "lod1ByteSize": 112576,
-        "planWallClockMs": 31
+        "planWallClockMs": 28
       }
     },
     {
@@ -18718,7 +18718,7 @@
         "lod1TriangleCount": 5044,
         "lod0ByteSize": 433624,
         "lod1ByteSize": 189780,
-        "planWallClockMs": 48
+        "planWallClockMs": 44
       }
     },
     {
@@ -18755,7 +18755,7 @@
         "lod1TriangleCount": 2542,
         "lod0ByteSize": 208808,
         "lod1ByteSize": 100172,
-        "planWallClockMs": 34
+        "planWallClockMs": 30
       }
     },
     {
@@ -18792,7 +18792,7 @@
         "lod1TriangleCount": 1924,
         "lod0ByteSize": 154536,
         "lod1ByteSize": 77432,
-        "planWallClockMs": 23
+        "planWallClockMs": 22
       }
     },
     {
@@ -18903,7 +18903,7 @@
         "lod1TriangleCount": 124,
         "lod0ByteSize": 11880,
         "lod1ByteSize": 8688,
-        "planWallClockMs": 3
+        "planWallClockMs": 2
       }
     },
     {
@@ -18940,7 +18940,7 @@
         "lod1TriangleCount": 192,
         "lod0ByteSize": 19412,
         "lod1ByteSize": 12308,
-        "planWallClockMs": 5
+        "planWallClockMs": 4
       }
     },
     {
@@ -18977,7 +18977,7 @@
         "lod1TriangleCount": 3218,
         "lod0ByteSize": 281024,
         "lod1ByteSize": 124000,
-        "planWallClockMs": 34
+        "planWallClockMs": 30
       }
     },
     {
@@ -19014,7 +19014,7 @@
         "lod1TriangleCount": 7220,
         "lod0ByteSize": 630748,
         "lod1ByteSize": 270552,
-        "planWallClockMs": 124
+        "planWallClockMs": 111
       }
     },
     {
@@ -19077,7 +19077,7 @@
         "lod1TriangleCount": 1078,
         "lod0ByteSize": 76920,
         "lod1ByteSize": 47352,
-        "planWallClockMs": 19
+        "planWallClockMs": 17
       }
     },
     {
@@ -19188,7 +19188,7 @@
         "lod1TriangleCount": 1218,
         "lod0ByteSize": 74188,
         "lod1ByteSize": 53408,
-        "planWallClockMs": 31
+        "planWallClockMs": 30
       }
     },
     {
@@ -19225,7 +19225,7 @@
         "lod1TriangleCount": 6040,
         "lod0ByteSize": 478960,
         "lod1ByteSize": 225612,
-        "planWallClockMs": 49
+        "planWallClockMs": 46
       }
     },
     {
@@ -19262,7 +19262,7 @@
         "lod1TriangleCount": 190,
         "lod0ByteSize": 18756,
         "lod1ByteSize": 12388,
-        "planWallClockMs": 5
+        "planWallClockMs": 4
       }
     },
     {
@@ -19299,7 +19299,7 @@
         "lod1TriangleCount": 1152,
         "lod0ByteSize": 87732,
         "lod1ByteSize": 52248,
-        "planWallClockMs": 24
+        "planWallClockMs": 20
       }
     },
     {
@@ -19336,7 +19336,7 @@
         "lod1TriangleCount": 854,
         "lod0ByteSize": 64908,
         "lod1ByteSize": 38948,
-        "planWallClockMs": 14
+        "planWallClockMs": 12
       }
     },
     {
@@ -19373,7 +19373,7 @@
         "lod1TriangleCount": 1184,
         "lod0ByteSize": 70788,
         "lod1ByteSize": 52316,
-        "planWallClockMs": 33
+        "planWallClockMs": 32
       }
     },
     {
@@ -19410,7 +19410,7 @@
         "lod1TriangleCount": 1600,
         "lod0ByteSize": 131208,
         "lod1ByteSize": 67932,
-        "planWallClockMs": 43
+        "planWallClockMs": 40
       }
     },
     {
@@ -19447,7 +19447,7 @@
         "lod1TriangleCount": 202,
         "lod0ByteSize": 20096,
         "lod1ByteSize": 12716,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -19484,7 +19484,7 @@
         "lod1TriangleCount": 1540,
         "lod0ByteSize": 131068,
         "lod1ByteSize": 63476,
-        "planWallClockMs": 19
+        "planWallClockMs": 17
       }
     },
     {
@@ -19573,7 +19573,7 @@
         "lod1TriangleCount": 2176,
         "lod0ByteSize": 183576,
         "lod1ByteSize": 86608,
-        "planWallClockMs": 24
+        "planWallClockMs": 21
       }
     },
     {
@@ -19647,7 +19647,7 @@
         "lod1TriangleCount": 446,
         "lod0ByteSize": 26224,
         "lod1ByteSize": 22716,
-        "planWallClockMs": 39
+        "planWallClockMs": 36
       }
     },
     {
@@ -19710,7 +19710,7 @@
         "lod1TriangleCount": 1368,
         "lod0ByteSize": 94476,
         "lod1ByteSize": 58708,
-        "planWallClockMs": 49
+        "planWallClockMs": 43
       }
     },
     {
@@ -19858,7 +19858,7 @@
         "lod1TriangleCount": 780,
         "lod0ByteSize": 60784,
         "lod1ByteSize": 36104,
-        "planWallClockMs": 14
+        "planWallClockMs": 13
       }
     },
     {
@@ -19895,7 +19895,7 @@
         "lod1TriangleCount": 5422,
         "lod0ByteSize": 421736,
         "lod1ByteSize": 204240,
-        "planWallClockMs": 47
+        "planWallClockMs": 45
       }
     },
     {
@@ -19932,7 +19932,7 @@
         "lod1TriangleCount": 98,
         "lod0ByteSize": 12512,
         "lod1ByteSize": 8020,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -19969,7 +19969,7 @@
         "lod1TriangleCount": 886,
         "lod0ByteSize": 79512,
         "lod1ByteSize": 39708,
-        "planWallClockMs": 15
+        "planWallClockMs": 14
       }
     },
     {
@@ -20032,7 +20032,7 @@
         "lod1TriangleCount": 25316,
         "lod0ByteSize": 2317664,
         "lod1ByteSize": 919500,
-        "planWallClockMs": 211
+        "planWallClockMs": 191
       }
     },
     {
@@ -20069,7 +20069,7 @@
         "lod1TriangleCount": 124,
         "lod0ByteSize": 15776,
         "lod1ByteSize": 9564,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -20195,7 +20195,7 @@
         "lod1TriangleCount": 2248,
         "lod0ByteSize": 185268,
         "lod1ByteSize": 89004,
-        "planWallClockMs": 25
+        "planWallClockMs": 23
       }
     },
     {
@@ -20232,7 +20232,7 @@
         "lod1TriangleCount": 164,
         "lod0ByteSize": 16744,
         "lod1ByteSize": 10812,
-        "planWallClockMs": 5
+        "planWallClockMs": 4
       }
     },
     {
@@ -20295,7 +20295,7 @@
         "lod1TriangleCount": 188,
         "lod0ByteSize": 19360,
         "lod1ByteSize": 12124,
-        "planWallClockMs": 5
+        "planWallClockMs": 4
       }
     },
     {
@@ -20332,7 +20332,7 @@
         "lod1TriangleCount": 4924,
         "lod0ByteSize": 409404,
         "lod1ByteSize": 185572,
-        "planWallClockMs": 43
+        "planWallClockMs": 39
       }
     },
     {
@@ -20369,7 +20369,7 @@
         "lod1TriangleCount": 6364,
         "lod0ByteSize": 616644,
         "lod1ByteSize": 237716,
-        "planWallClockMs": 68
+        "planWallClockMs": 63
       }
     },
     {
@@ -20432,7 +20432,7 @@
         "lod1TriangleCount": 1452,
         "lod0ByteSize": 118252,
         "lod1ByteSize": 60304,
-        "planWallClockMs": 17
+        "planWallClockMs": 16
       }
     },
     {
@@ -20495,7 +20495,7 @@
         "lod1TriangleCount": 1074,
         "lod0ByteSize": 66332,
         "lod1ByteSize": 48872,
-        "planWallClockMs": 119
+        "planWallClockMs": 110
       }
     },
     {
@@ -20621,7 +20621,7 @@
         "lod1TriangleCount": 4750,
         "lod0ByteSize": 396452,
         "lod1ByteSize": 180688,
-        "planWallClockMs": 59
+        "planWallClockMs": 52
       }
     },
     {
@@ -20658,7 +20658,7 @@
         "lod1TriangleCount": 1948,
         "lod0ByteSize": 157404,
         "lod1ByteSize": 79004,
-        "planWallClockMs": 28
+        "planWallClockMs": 25
       }
     },
     {
@@ -20695,7 +20695,7 @@
         "lod1TriangleCount": 550,
         "lod0ByteSize": 38168,
         "lod1ByteSize": 27748,
-        "planWallClockMs": 15
+        "planWallClockMs": 13
       }
     },
     {
@@ -20732,7 +20732,7 @@
         "lod1TriangleCount": 1092,
         "lod0ByteSize": 79320,
         "lod1ByteSize": 49176,
-        "planWallClockMs": 22
+        "planWallClockMs": 19
       }
     },
     {
@@ -20769,7 +20769,7 @@
         "lod1TriangleCount": 970,
         "lod0ByteSize": 76536,
         "lod1ByteSize": 43072,
-        "planWallClockMs": 16
+        "planWallClockMs": 14
       }
     },
     {
@@ -20806,7 +20806,7 @@
         "lod1TriangleCount": 780,
         "lod0ByteSize": 36024,
         "lod1ByteSize": 36024,
-        "planWallClockMs": 29
+        "planWallClockMs": 26
       }
     },
     {
@@ -20843,7 +20843,7 @@
         "lod1TriangleCount": 838,
         "lod0ByteSize": 58484,
         "lod1ByteSize": 38848,
-        "planWallClockMs": 23
+        "planWallClockMs": 20
       }
     },
     {
@@ -20880,7 +20880,7 @@
         "lod1TriangleCount": 11344,
         "lod0ByteSize": 1018284,
         "lod1ByteSize": 416736,
-        "planWallClockMs": 100
+        "planWallClockMs": 89
       }
     },
     {
@@ -20917,7 +20917,7 @@
         "lod1TriangleCount": 1866,
         "lod0ByteSize": 150060,
         "lod1ByteSize": 76844,
-        "planWallClockMs": 28
+        "planWallClockMs": 25
       }
     },
     {
@@ -21017,7 +21017,7 @@
         "lod1TriangleCount": 868,
         "lod0ByteSize": 71000,
         "lod1ByteSize": 39272,
-        "planWallClockMs": 15
+        "planWallClockMs": 12
       }
     },
     {
@@ -21054,7 +21054,7 @@
         "lod1TriangleCount": 196,
         "lod0ByteSize": 14468,
         "lod1ByteSize": 11704,
-        "planWallClockMs": 5
+        "planWallClockMs": 4
       }
     },
     {
@@ -21128,7 +21128,7 @@
         "lod1TriangleCount": 718,
         "lod0ByteSize": 56812,
         "lod1ByteSize": 34148,
-        "planWallClockMs": 14
+        "planWallClockMs": 13
       }
     },
     {
@@ -21165,7 +21165,7 @@
         "lod1TriangleCount": 1472,
         "lod0ByteSize": 124152,
         "lod1ByteSize": 61452,
-        "planWallClockMs": 27
+        "planWallClockMs": 22
       }
     },
     {
@@ -21202,7 +21202,7 @@
         "lod1TriangleCount": 1026,
         "lod0ByteSize": 77060,
         "lod1ByteSize": 45332,
-        "planWallClockMs": 45
+        "planWallClockMs": 41
       }
     },
     {
@@ -21265,7 +21265,7 @@
         "lod1TriangleCount": 3526,
         "lod0ByteSize": 279104,
         "lod1ByteSize": 136760,
-        "planWallClockMs": 58
+        "planWallClockMs": 53
       }
     },
     {
@@ -21302,7 +21302,7 @@
         "lod1TriangleCount": 124,
         "lod0ByteSize": 11432,
         "lod1ByteSize": 8672,
-        "planWallClockMs": 4
+        "planWallClockMs": 2
       }
     },
     {
@@ -21339,7 +21339,7 @@
         "lod1TriangleCount": 736,
         "lod0ByteSize": 57312,
         "lod1ByteSize": 34660,
-        "planWallClockMs": 14
+        "planWallClockMs": 13
       }
     },
     {
@@ -21376,7 +21376,7 @@
         "lod1TriangleCount": 146,
         "lod0ByteSize": 14020,
         "lod1ByteSize": 10104,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -21413,7 +21413,7 @@
         "lod1TriangleCount": 964,
         "lod0ByteSize": 75588,
         "lod1ByteSize": 42832,
-        "planWallClockMs": 20
+        "planWallClockMs": 17
       }
     },
     {
@@ -21487,7 +21487,7 @@
         "lod1TriangleCount": 116,
         "lod0ByteSize": 10664,
         "lod1ByteSize": 8332,
-        "planWallClockMs": 3
+        "planWallClockMs": 2
       }
     },
     {
@@ -21587,7 +21587,7 @@
         "lod1TriangleCount": 1442,
         "lod0ByteSize": 112768,
         "lod1ByteSize": 60288,
-        "planWallClockMs": 24
+        "planWallClockMs": 22
       }
     },
     {
@@ -21661,7 +21661,7 @@
         "lod1TriangleCount": 5864,
         "lod0ByteSize": 534500,
         "lod1ByteSize": 219224,
-        "planWallClockMs": 59
+        "planWallClockMs": 52
       }
     },
     {
@@ -21698,7 +21698,7 @@
         "lod1TriangleCount": 10738,
         "lod0ByteSize": 1006104,
         "lod1ByteSize": 395368,
-        "planWallClockMs": 135
+        "planWallClockMs": 118
       }
     },
     {
@@ -21735,7 +21735,7 @@
         "lod1TriangleCount": 1174,
         "lod0ByteSize": 73388,
         "lod1ByteSize": 52036,
-        "planWallClockMs": 26
+        "planWallClockMs": 24
       }
     },
     {
@@ -21772,7 +21772,7 @@
         "lod1TriangleCount": 1448,
         "lod0ByteSize": 124304,
         "lod1ByteSize": 60156,
-        "planWallClockMs": 20
+        "planWallClockMs": 18
       }
     },
     {
@@ -21809,7 +21809,7 @@
         "lod1TriangleCount": 2884,
         "lod0ByteSize": 252036,
         "lod1ByteSize": 113004,
-        "planWallClockMs": 62
+        "planWallClockMs": 54
       }
     },
     {
@@ -21846,7 +21846,7 @@
         "lod1TriangleCount": 1398,
         "lod0ByteSize": 97916,
         "lod1ByteSize": 60276,
-        "planWallClockMs": 39
+        "planWallClockMs": 37
       }
     },
     {
@@ -21920,7 +21920,7 @@
         "lod1TriangleCount": 7530,
         "lod0ByteSize": 574004,
         "lod1ByteSize": 284648,
-        "planWallClockMs": 326
+        "planWallClockMs": 311
       }
     },
     {
@@ -22031,7 +22031,7 @@
         "lod1TriangleCount": 122,
         "lod0ByteSize": 15756,
         "lod1ByteSize": 9520,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -22142,7 +22142,7 @@
         "lod1TriangleCount": 922,
         "lod0ByteSize": 74032,
         "lod1ByteSize": 41432,
-        "planWallClockMs": 18
+        "planWallClockMs": 15
       }
     },
     {
@@ -22179,7 +22179,7 @@
         "lod1TriangleCount": 2784,
         "lod0ByteSize": 246668,
         "lod1ByteSize": 110384,
-        "planWallClockMs": 37
+        "planWallClockMs": 34
       }
     },
     {
@@ -22242,7 +22242,7 @@
         "lod1TriangleCount": 3004,
         "lod0ByteSize": 278408,
         "lod1ByteSize": 117484,
-        "planWallClockMs": 59
+        "planWallClockMs": 55
       }
     },
     {
@@ -22316,7 +22316,7 @@
         "lod1TriangleCount": 596,
         "lod0ByteSize": 42492,
         "lod1ByteSize": 29624,
-        "planWallClockMs": 13
+        "planWallClockMs": 11
       }
     },
     {
@@ -22353,7 +22353,7 @@
         "lod1TriangleCount": 2222,
         "lod0ByteSize": 183612,
         "lod1ByteSize": 88360,
-        "planWallClockMs": 35
+        "planWallClockMs": 32
       }
     },
     {
@@ -22390,7 +22390,7 @@
         "lod1TriangleCount": 282,
         "lod0ByteSize": 31872,
         "lod1ByteSize": 15832,
-        "planWallClockMs": 8
+        "planWallClockMs": 7
       }
     },
     {
@@ -22453,7 +22453,7 @@
         "lod1TriangleCount": 1450,
         "lod0ByteSize": 97408,
         "lod1ByteSize": 62232,
-        "planWallClockMs": 41
+        "planWallClockMs": 37
       }
     },
     {
@@ -22490,7 +22490,7 @@
         "lod1TriangleCount": 1192,
         "lod0ByteSize": 94948,
         "lod1ByteSize": 51116,
-        "planWallClockMs": 17
+        "planWallClockMs": 14
       }
     },
     {
@@ -22564,7 +22564,7 @@
         "lod1TriangleCount": 1064,
         "lod0ByteSize": 70464,
         "lod1ByteSize": 47520,
-        "planWallClockMs": 27
+        "planWallClockMs": 24
       }
     },
     {
@@ -22675,7 +22675,7 @@
         "lod1TriangleCount": 1072,
         "lod0ByteSize": 81248,
         "lod1ByteSize": 47360,
-        "planWallClockMs": 22
+        "planWallClockMs": 21
       }
     },
     {
@@ -22712,7 +22712,7 @@
         "lod1TriangleCount": 132,
         "lod0ByteSize": 11784,
         "lod1ByteSize": 9028,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -22801,7 +22801,7 @@
         "lod1TriangleCount": 736,
         "lod0ByteSize": 54688,
         "lod1ByteSize": 34624,
-        "planWallClockMs": 12
+        "planWallClockMs": 11
       }
     },
     {
@@ -22864,7 +22864,7 @@
         "lod1TriangleCount": 1630,
         "lod0ByteSize": 133304,
         "lod1ByteSize": 67000,
-        "planWallClockMs": 22
+        "planWallClockMs": 19
       }
     },
     {
@@ -22901,7 +22901,7 @@
         "lod1TriangleCount": 1462,
         "lod0ByteSize": 119312,
         "lod1ByteSize": 60932,
-        "planWallClockMs": 21
+        "planWallClockMs": 20
       }
     },
     {
@@ -23012,7 +23012,7 @@
         "lod1TriangleCount": 1444,
         "lod0ByteSize": 112192,
         "lod1ByteSize": 60592,
-        "planWallClockMs": 29
+        "planWallClockMs": 26
       }
     },
     {
@@ -23049,7 +23049,7 @@
         "lod1TriangleCount": 1018,
         "lod0ByteSize": 72028,
         "lod1ByteSize": 45056,
-        "planWallClockMs": 22
+        "planWallClockMs": 19
       }
     },
     {
@@ -23086,7 +23086,7 @@
         "lod1TriangleCount": 942,
         "lod0ByteSize": 74928,
         "lod1ByteSize": 42032,
-        "planWallClockMs": 16
+        "planWallClockMs": 14
       }
     },
     {
@@ -23186,7 +23186,7 @@
         "lod1TriangleCount": 5466,
         "lod0ByteSize": 465716,
         "lod1ByteSize": 208044,
-        "planWallClockMs": 60
+        "planWallClockMs": 54
       }
     },
     {
@@ -23223,7 +23223,7 @@
         "lod1TriangleCount": 212,
         "lod0ByteSize": 21280,
         "lod1ByteSize": 12872,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -23260,7 +23260,7 @@
         "lod1TriangleCount": 1696,
         "lod0ByteSize": 135872,
         "lod1ByteSize": 69424,
-        "planWallClockMs": 23
+        "planWallClockMs": 20
       }
     },
     {
@@ -23323,7 +23323,7 @@
         "lod1TriangleCount": 13276,
         "lod0ByteSize": 1134308,
         "lod1ByteSize": 487396,
-        "planWallClockMs": 122
+        "planWallClockMs": 112
       }
     },
     {
@@ -23360,7 +23360,7 @@
         "lod1TriangleCount": 1600,
         "lod0ByteSize": 100620,
         "lod1ByteSize": 68604,
-        "planWallClockMs": 69
+        "planWallClockMs": 64
       }
     },
     {
@@ -23397,7 +23397,7 @@
         "lod1TriangleCount": 1114,
         "lod0ByteSize": 88956,
         "lod1ByteSize": 48148,
-        "planWallClockMs": 15
+        "planWallClockMs": 13
       }
     },
     {
@@ -23434,7 +23434,7 @@
         "lod1TriangleCount": 1354,
         "lod0ByteSize": 105068,
         "lod1ByteSize": 56920,
-        "planWallClockMs": 17
+        "planWallClockMs": 16
       }
     },
     {
@@ -23508,7 +23508,7 @@
         "lod1TriangleCount": 244,
         "lod0ByteSize": 24392,
         "lod1ByteSize": 14400,
-        "planWallClockMs": 5
+        "planWallClockMs": 4
       }
     },
     {
@@ -23545,7 +23545,7 @@
         "lod1TriangleCount": 15232,
         "lod0ByteSize": 1366368,
         "lod1ByteSize": 557600,
-        "planWallClockMs": 141
+        "planWallClockMs": 130
       }
     },
     {
@@ -23671,7 +23671,7 @@
         "lod1TriangleCount": 100,
         "lod0ByteSize": 11960,
         "lod1ByteSize": 8052,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -23745,7 +23745,7 @@
         "lod1TriangleCount": 1094,
         "lod0ByteSize": 79932,
         "lod1ByteSize": 47476,
-        "planWallClockMs": 20
+        "planWallClockMs": 17
       }
     },
     {
@@ -23782,7 +23782,7 @@
         "lod1TriangleCount": 1462,
         "lod0ByteSize": 110296,
         "lod1ByteSize": 61284,
-        "planWallClockMs": 30
+        "planWallClockMs": 27
       }
     },
     {
@@ -23819,7 +23819,7 @@
         "lod1TriangleCount": 794,
         "lod0ByteSize": 53520,
         "lod1ByteSize": 37340,
-        "planWallClockMs": 22
+        "planWallClockMs": 20
       }
     },
     {
@@ -23856,7 +23856,7 @@
         "lod1TriangleCount": 1196,
         "lod0ByteSize": 65016,
         "lod1ByteSize": 55480,
-        "planWallClockMs": 117
+        "planWallClockMs": 107
       }
     },
     {
@@ -23919,7 +23919,7 @@
         "lod1TriangleCount": 120,
         "lod0ByteSize": 10856,
         "lod1ByteSize": 8532,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -23956,7 +23956,7 @@
         "lod1TriangleCount": 142,
         "lod0ByteSize": 15260,
         "lod1ByteSize": 9760,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -23993,7 +23993,7 @@
         "lod1TriangleCount": 888,
         "lod0ByteSize": 62976,
         "lod1ByteSize": 40608,
-        "planWallClockMs": 20
+        "planWallClockMs": 21
       }
     },
     {
@@ -24093,7 +24093,7 @@
         "lod1TriangleCount": 818,
         "lod0ByteSize": 62268,
         "lod1ByteSize": 37448,
-        "planWallClockMs": 17
+        "planWallClockMs": 13
       }
     },
     {
@@ -24130,7 +24130,7 @@
         "lod1TriangleCount": 1756,
         "lod0ByteSize": 147252,
         "lod1ByteSize": 71436,
-        "planWallClockMs": 21
+        "planWallClockMs": 19
       }
     },
     {
@@ -24167,7 +24167,7 @@
         "lod1TriangleCount": 110,
         "lod0ByteSize": 14308,
         "lod1ByteSize": 9096,
-        "planWallClockMs": 3
+        "planWallClockMs": 4
       }
     },
     {
@@ -24204,7 +24204,7 @@
         "lod1TriangleCount": 662,
         "lod0ByteSize": 57844,
         "lod1ByteSize": 31728,
-        "planWallClockMs": 13
+        "planWallClockMs": 12
       }
     },
     {
@@ -24278,7 +24278,7 @@
         "lod1TriangleCount": 1550,
         "lod0ByteSize": 129140,
         "lod1ByteSize": 65580,
-        "planWallClockMs": 23
+        "planWallClockMs": 20
       }
     },
     {
@@ -24315,7 +24315,7 @@
         "lod1TriangleCount": 2988,
         "lod0ByteSize": 254988,
         "lod1ByteSize": 116252,
-        "planWallClockMs": 41
+        "planWallClockMs": 38
       }
     },
     {
@@ -24352,7 +24352,7 @@
         "lod1TriangleCount": 1050,
         "lod0ByteSize": 79516,
         "lod1ByteSize": 46344,
-        "planWallClockMs": 19
+        "planWallClockMs": 18
       }
     },
     {
@@ -24389,7 +24389,7 @@
         "lod1TriangleCount": 4502,
         "lod0ByteSize": 378920,
         "lod1ByteSize": 170060,
-        "planWallClockMs": 41
+        "planWallClockMs": 39
       }
     },
     {
@@ -24426,7 +24426,7 @@
         "lod1TriangleCount": 1840,
         "lod0ByteSize": 148088,
         "lod1ByteSize": 76180,
-        "planWallClockMs": 59
+        "planWallClockMs": 53
       }
     },
     {
@@ -24537,7 +24537,7 @@
         "lod1TriangleCount": 184,
         "lod0ByteSize": 18576,
         "lod1ByteSize": 12064,
-        "planWallClockMs": 3
+        "planWallClockMs": 4
       }
     },
     {
@@ -24574,7 +24574,7 @@
         "lod1TriangleCount": 1248,
         "lod0ByteSize": 102408,
         "lod1ByteSize": 52952,
-        "planWallClockMs": 16
+        "planWallClockMs": 14
       }
     },
     {
@@ -24611,7 +24611,7 @@
         "lod1TriangleCount": 2172,
         "lod0ByteSize": 176264,
         "lod1ByteSize": 86200,
-        "planWallClockMs": 24
+        "planWallClockMs": 21
       }
     },
     {
@@ -24748,7 +24748,7 @@
         "lod1TriangleCount": 1332,
         "lod0ByteSize": 109264,
         "lod1ByteSize": 56356,
-        "planWallClockMs": 24
+        "planWallClockMs": 22
       }
     },
     {
@@ -24785,7 +24785,7 @@
         "lod1TriangleCount": 584,
         "lod0ByteSize": 48876,
         "lod1ByteSize": 28948,
-        "planWallClockMs": 64
+        "planWallClockMs": 60
       }
     },
     {
@@ -24822,7 +24822,7 @@
         "lod1TriangleCount": 1344,
         "lod0ByteSize": 81436,
         "lod1ByteSize": 60928,
-        "planWallClockMs": 106
+        "planWallClockMs": 98
       }
     },
     {
@@ -24859,7 +24859,7 @@
         "lod1TriangleCount": 144,
         "lod0ByteSize": 13744,
         "lod1ByteSize": 9956,
-        "planWallClockMs": 3
+        "planWallClockMs": 2
       }
     },
     {
@@ -24896,7 +24896,7 @@
         "lod1TriangleCount": 306,
         "lod0ByteSize": 28456,
         "lod1ByteSize": 16884,
-        "planWallClockMs": 7
+        "planWallClockMs": 5
       }
     },
     {
@@ -24933,7 +24933,7 @@
         "lod1TriangleCount": 796,
         "lod0ByteSize": 63224,
         "lod1ByteSize": 36676,
-        "planWallClockMs": 12
+        "planWallClockMs": 11
       }
     },
     {
@@ -24970,7 +24970,7 @@
         "lod1TriangleCount": 1554,
         "lod0ByteSize": 121836,
         "lod1ByteSize": 64768,
-        "planWallClockMs": 30
+        "planWallClockMs": 26
       }
     },
     {
@@ -25007,7 +25007,7 @@
         "lod1TriangleCount": 124,
         "lod0ByteSize": 11004,
         "lod1ByteSize": 8680,
-        "planWallClockMs": 3
+        "planWallClockMs": 2
       }
     },
     {
@@ -25044,7 +25044,7 @@
         "lod1TriangleCount": 168,
         "lod0ByteSize": 17448,
         "lod1ByteSize": 11348,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -25081,7 +25081,7 @@
         "lod1TriangleCount": 1198,
         "lod0ByteSize": 94416,
         "lod1ByteSize": 51444,
-        "planWallClockMs": 18
+        "planWallClockMs": 16
       }
     },
     {
@@ -25118,7 +25118,7 @@
         "lod1TriangleCount": 15334,
         "lod0ByteSize": 1358336,
         "lod1ByteSize": 560092,
-        "planWallClockMs": 126
+        "planWallClockMs": 113
       }
     },
     {
@@ -25192,7 +25192,7 @@
         "lod1TriangleCount": 922,
         "lod0ByteSize": 75016,
         "lod1ByteSize": 41556,
-        "planWallClockMs": 16
+        "planWallClockMs": 15
       }
     },
     {
@@ -25229,7 +25229,7 @@
         "lod1TriangleCount": 132,
         "lod0ByteSize": 11332,
         "lod1ByteSize": 9004,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -25266,7 +25266,7 @@
         "lod1TriangleCount": 1172,
         "lod0ByteSize": 91708,
         "lod1ByteSize": 50620,
-        "planWallClockMs": 19
+        "planWallClockMs": 18
       }
     },
     {
@@ -25340,7 +25340,7 @@
         "lod1TriangleCount": 5082,
         "lod0ByteSize": 436144,
         "lod1ByteSize": 191428,
-        "planWallClockMs": 51
+        "planWallClockMs": 47
       }
     },
     {
@@ -25451,7 +25451,7 @@
         "lod1TriangleCount": 1602,
         "lod0ByteSize": 119468,
         "lod1ByteSize": 67132,
-        "planWallClockMs": 30
+        "planWallClockMs": 28
       }
     },
     {
@@ -25488,7 +25488,7 @@
         "lod1TriangleCount": 10022,
         "lod0ByteSize": 880608,
         "lod1ByteSize": 372228,
-        "planWallClockMs": 139
+        "planWallClockMs": 126
       }
     },
     {
@@ -25525,7 +25525,7 @@
         "lod1TriangleCount": 3722,
         "lod0ByteSize": 324892,
         "lod1ByteSize": 142668,
-        "planWallClockMs": 46
+        "planWallClockMs": 39
       }
     },
     {
@@ -25588,7 +25588,7 @@
         "lod1TriangleCount": 1420,
         "lod0ByteSize": 104652,
         "lod1ByteSize": 59952,
-        "planWallClockMs": 26
+        "planWallClockMs": 23
       }
     },
     {
@@ -25625,7 +25625,7 @@
         "lod1TriangleCount": 716,
         "lod0ByteSize": 53704,
         "lod1ByteSize": 34360,
-        "planWallClockMs": 16
+        "planWallClockMs": 15
       }
     },
     {
@@ -25725,7 +25725,7 @@
         "lod1TriangleCount": 16332,
         "lod0ByteSize": 1597480,
         "lod1ByteSize": 596316,
-        "planWallClockMs": 157
+        "planWallClockMs": 140
       }
     },
     {
@@ -25788,7 +25788,7 @@
         "lod1TriangleCount": 1282,
         "lod0ByteSize": 82124,
         "lod1ByteSize": 56004,
-        "planWallClockMs": 42
+        "planWallClockMs": 37
       }
     },
     {
@@ -25825,7 +25825,7 @@
         "lod1TriangleCount": 5572,
         "lod0ByteSize": 471584,
         "lod1ByteSize": 208732,
-        "planWallClockMs": 48
+        "planWallClockMs": 43
       }
     },
     {
@@ -25899,7 +25899,7 @@
         "lod1TriangleCount": 138,
         "lod0ByteSize": 13696,
         "lod1ByteSize": 9760,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -25936,7 +25936,7 @@
         "lod1TriangleCount": 1014,
         "lod0ByteSize": 74284,
         "lod1ByteSize": 45720,
-        "planWallClockMs": 31
+        "planWallClockMs": 27
       }
     },
     {
@@ -25973,7 +25973,7 @@
         "lod1TriangleCount": 2832,
         "lod0ByteSize": 223924,
         "lod1ByteSize": 111828,
-        "planWallClockMs": 36
+        "planWallClockMs": 32
       }
     },
     {
@@ -26010,7 +26010,7 @@
         "lod1TriangleCount": 2038,
         "lod0ByteSize": 178412,
         "lod1ByteSize": 81440,
-        "planWallClockMs": 33
+        "planWallClockMs": 27
       }
     },
     {
@@ -26047,7 +26047,7 @@
         "lod1TriangleCount": 730,
         "lod0ByteSize": 54824,
         "lod1ByteSize": 34752,
-        "planWallClockMs": 23
+        "planWallClockMs": 20
       }
     },
     {
@@ -26121,7 +26121,7 @@
         "lod1TriangleCount": 1566,
         "lod0ByteSize": 129336,
         "lod1ByteSize": 64476,
-        "planWallClockMs": 20
+        "planWallClockMs": 18
       }
     },
     {
@@ -26158,7 +26158,7 @@
         "lod1TriangleCount": 15352,
         "lod0ByteSize": 1521052,
         "lod1ByteSize": 561792,
-        "planWallClockMs": 183
+        "planWallClockMs": 168
       }
     },
     {
@@ -26195,7 +26195,7 @@
         "lod1TriangleCount": 152,
         "lod0ByteSize": 14952,
         "lod1ByteSize": 10296,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -26232,7 +26232,7 @@
         "lod1TriangleCount": 2272,
         "lod0ByteSize": 199424,
         "lod1ByteSize": 91208,
-        "planWallClockMs": 42
+        "planWallClockMs": 36
       }
     },
     {
@@ -26295,7 +26295,7 @@
         "lod1TriangleCount": 386,
         "lod0ByteSize": 36600,
         "lod1ByteSize": 19696,
-        "planWallClockMs": 7
+        "planWallClockMs": 6
       }
     },
     {
@@ -26421,7 +26421,7 @@
         "lod1TriangleCount": 258,
         "lod0ByteSize": 24164,
         "lod1ByteSize": 15036,
-        "planWallClockMs": 5
+        "planWallClockMs": 4
       }
     },
     {
@@ -26458,7 +26458,7 @@
         "lod1TriangleCount": 2840,
         "lod0ByteSize": 159448,
         "lod1ByteSize": 117344,
-        "planWallClockMs": 487
+        "planWallClockMs": 458
       }
     },
     {
@@ -26495,7 +26495,7 @@
         "lod1TriangleCount": 1036,
         "lod0ByteSize": 74764,
         "lod1ByteSize": 45620,
-        "planWallClockMs": 18
+        "planWallClockMs": 15
       }
     },
     {
@@ -26558,7 +26558,7 @@
         "lod1TriangleCount": 1702,
         "lod0ByteSize": 129868,
         "lod1ByteSize": 70484,
-        "planWallClockMs": 30
+        "planWallClockMs": 27
       }
     },
     {
@@ -26595,7 +26595,7 @@
         "lod1TriangleCount": 5968,
         "lod0ByteSize": 503596,
         "lod1ByteSize": 226056,
-        "planWallClockMs": 132
+        "planWallClockMs": 121
       }
     },
     {
@@ -26632,7 +26632,7 @@
         "lod1TriangleCount": 1312,
         "lod0ByteSize": 106580,
         "lod1ByteSize": 56264,
-        "planWallClockMs": 52
+        "planWallClockMs": 49
       }
     },
     {
@@ -26669,7 +26669,7 @@
         "lod1TriangleCount": 2314,
         "lod0ByteSize": 189024,
         "lod1ByteSize": 92904,
-        "planWallClockMs": 58
+        "planWallClockMs": 52
       }
     },
     {
@@ -26743,7 +26743,7 @@
         "lod1TriangleCount": 142,
         "lod0ByteSize": 13440,
         "lod1ByteSize": 9936,
-        "planWallClockMs": 3
+        "planWallClockMs": 4
       }
     },
     {
@@ -26817,7 +26817,7 @@
         "lod1TriangleCount": 1392,
         "lod0ByteSize": 114596,
         "lod1ByteSize": 58816,
-        "planWallClockMs": 34
+        "planWallClockMs": 31
       }
     },
     {
@@ -26854,7 +26854,7 @@
         "lod1TriangleCount": 480,
         "lod0ByteSize": 26412,
         "lod1ByteSize": 23656,
-        "planWallClockMs": 18
+        "planWallClockMs": 16
       }
     },
     {
@@ -26891,7 +26891,7 @@
         "lod1TriangleCount": 5940,
         "lod0ByteSize": 549584,
         "lod1ByteSize": 222796,
-        "planWallClockMs": 74
+        "planWallClockMs": 72
       }
     },
     {
@@ -27017,7 +27017,7 @@
         "lod1TriangleCount": 1522,
         "lod0ByteSize": 133748,
         "lod1ByteSize": 63124,
-        "planWallClockMs": 33
+        "planWallClockMs": 30
       }
     },
     {
@@ -27054,7 +27054,7 @@
         "lod1TriangleCount": 1072,
         "lod0ByteSize": 73228,
         "lod1ByteSize": 48556,
-        "planWallClockMs": 62
+        "planWallClockMs": 56
       }
     },
     {
@@ -27117,7 +27117,7 @@
         "lod1TriangleCount": 180,
         "lod0ByteSize": 17468,
         "lod1ByteSize": 11232,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -27154,7 +27154,7 @@
         "lod1TriangleCount": 5298,
         "lod0ByteSize": 418932,
         "lod1ByteSize": 205748,
-        "planWallClockMs": 102
+        "planWallClockMs": 93
       }
     },
     {
@@ -27191,7 +27191,7 @@
         "lod1TriangleCount": 158,
         "lod0ByteSize": 18464,
         "lod1ByteSize": 10780,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -27254,7 +27254,7 @@
         "lod1TriangleCount": 1882,
         "lod0ByteSize": 118612,
         "lod1ByteSize": 79240,
-        "planWallClockMs": 125
+        "planWallClockMs": 116
       }
     },
     {
@@ -27291,7 +27291,7 @@
         "lod1TriangleCount": 2248,
         "lod0ByteSize": 209768,
         "lod1ByteSize": 89888,
-        "planWallClockMs": 43
+        "planWallClockMs": 38
       }
     },
     {
@@ -27354,7 +27354,7 @@
         "lod1TriangleCount": 2086,
         "lod0ByteSize": 171144,
         "lod1ByteSize": 83232,
-        "planWallClockMs": 28
+        "planWallClockMs": 25
       }
     },
     {
@@ -27391,7 +27391,7 @@
         "lod1TriangleCount": 9484,
         "lod0ByteSize": 817728,
         "lod1ByteSize": 349680,
-        "planWallClockMs": 80
+        "planWallClockMs": 71
       }
     },
     {
@@ -27428,7 +27428,7 @@
         "lod1TriangleCount": 1372,
         "lod0ByteSize": 95288,
         "lod1ByteSize": 58812,
-        "planWallClockMs": 68
+        "planWallClockMs": 66
       }
     },
     {
@@ -27465,7 +27465,7 @@
         "lod1TriangleCount": 144,
         "lod0ByteSize": 14872,
         "lod1ByteSize": 10512,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -27502,7 +27502,7 @@
         "lod1TriangleCount": 1732,
         "lod0ByteSize": 140300,
         "lod1ByteSize": 70976,
-        "planWallClockMs": 25
+        "planWallClockMs": 23
       }
     },
     {
@@ -27539,7 +27539,7 @@
         "lod1TriangleCount": 1492,
         "lod0ByteSize": 119040,
         "lod1ByteSize": 61816,
-        "planWallClockMs": 18
+        "planWallClockMs": 17
       }
     },
     {
@@ -27576,7 +27576,7 @@
         "lod1TriangleCount": 2538,
         "lod0ByteSize": 221140,
         "lod1ByteSize": 99540,
-        "planWallClockMs": 28
+        "planWallClockMs": 26
       }
     },
     {
@@ -27639,7 +27639,7 @@
         "lod1TriangleCount": 14542,
         "lod0ByteSize": 1315324,
         "lod1ByteSize": 532908,
-        "planWallClockMs": 137
+        "planWallClockMs": 123
       }
     },
     {
@@ -27713,7 +27713,7 @@
         "lod1TriangleCount": 136,
         "lod0ByteSize": 13408,
         "lod1ByteSize": 9620,
-        "planWallClockMs": 3
+        "planWallClockMs": 2
       }
     },
     {
@@ -27787,7 +27787,7 @@
         "lod1TriangleCount": 964,
         "lod0ByteSize": 75452,
         "lod1ByteSize": 43300,
-        "planWallClockMs": 22
+        "planWallClockMs": 19
       }
     },
     {
@@ -27861,7 +27861,7 @@
         "lod1TriangleCount": 2290,
         "lod0ByteSize": 157392,
         "lod1ByteSize": 93676,
-        "planWallClockMs": 99
+        "planWallClockMs": 92
       }
     },
     {
@@ -27898,7 +27898,7 @@
         "lod1TriangleCount": 172,
         "lod0ByteSize": 16760,
         "lod1ByteSize": 11544,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -27987,7 +27987,7 @@
         "lod1TriangleCount": 386,
         "lod0ByteSize": 24248,
         "lod1ByteSize": 20764,
-        "planWallClockMs": 26
+        "planWallClockMs": 24
       }
     },
     {
@@ -28024,7 +28024,7 @@
         "lod1TriangleCount": 2990,
         "lod0ByteSize": 242564,
         "lod1ByteSize": 118092,
-        "planWallClockMs": 62
+        "planWallClockMs": 60
       }
     },
     {
@@ -28087,7 +28087,7 @@
         "lod1TriangleCount": 2290,
         "lod0ByteSize": 193540,
         "lod1ByteSize": 90516,
-        "planWallClockMs": 29
+        "planWallClockMs": 27
       }
     },
     {
@@ -28124,7 +28124,7 @@
         "lod1TriangleCount": 1934,
         "lod0ByteSize": 153244,
         "lod1ByteSize": 79024,
-        "planWallClockMs": 34
+        "planWallClockMs": 30
       }
     },
     {
@@ -28161,7 +28161,7 @@
         "lod1TriangleCount": 1258,
         "lod0ByteSize": 101000,
         "lod1ByteSize": 53852,
-        "planWallClockMs": 25
+        "planWallClockMs": 22
       }
     },
     {
@@ -28198,7 +28198,7 @@
         "lod1TriangleCount": 228,
         "lod0ByteSize": 23004,
         "lod1ByteSize": 13600,
-        "planWallClockMs": 5
+        "planWallClockMs": 4
       }
     },
     {
@@ -28235,7 +28235,7 @@
         "lod1TriangleCount": 148,
         "lod0ByteSize": 15180,
         "lod1ByteSize": 10664,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -28298,7 +28298,7 @@
         "lod1TriangleCount": 172,
         "lod0ByteSize": 17096,
         "lod1ByteSize": 11572,
-        "planWallClockMs": 3
+        "planWallClockMs": 4
       }
     },
     {
@@ -28335,7 +28335,7 @@
         "lod1TriangleCount": 180,
         "lod0ByteSize": 18644,
         "lod1ByteSize": 11828,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -28372,7 +28372,7 @@
         "lod1TriangleCount": 4252,
         "lod0ByteSize": 326852,
         "lod1ByteSize": 163792,
-        "planWallClockMs": 153
+        "planWallClockMs": 140
       }
     },
     {
@@ -28435,7 +28435,7 @@
         "lod1TriangleCount": 1092,
         "lod0ByteSize": 79468,
         "lod1ByteSize": 47740,
-        "planWallClockMs": 20
+        "planWallClockMs": 18
       }
     },
     {
@@ -28472,7 +28472,7 @@
         "lod1TriangleCount": 314,
         "lod0ByteSize": 28172,
         "lod1ByteSize": 17320,
-        "planWallClockMs": 8
+        "planWallClockMs": 6
       }
     },
     {
@@ -28509,7 +28509,7 @@
         "lod1TriangleCount": 3304,
         "lod0ByteSize": 265892,
         "lod1ByteSize": 127444,
-        "planWallClockMs": 41
+        "planWallClockMs": 37
       }
     },
     {
@@ -28546,7 +28546,7 @@
         "lod1TriangleCount": 1196,
         "lod0ByteSize": 90708,
         "lod1ByteSize": 51632,
-        "planWallClockMs": 33
+        "planWallClockMs": 26
       }
     },
     {
@@ -28583,7 +28583,7 @@
         "lod1TriangleCount": 1294,
         "lod0ByteSize": 106004,
         "lod1ByteSize": 54824,
-        "planWallClockMs": 17
+        "planWallClockMs": 16
       }
     },
     {
@@ -28620,7 +28620,7 @@
         "lod1TriangleCount": 2468,
         "lod0ByteSize": 200488,
         "lod1ByteSize": 98036,
-        "planWallClockMs": 35
+        "planWallClockMs": 32
       }
     },
     {
@@ -28683,7 +28683,7 @@
         "lod1TriangleCount": 228,
         "lod0ByteSize": 22992,
         "lod1ByteSize": 14028,
-        "planWallClockMs": 6
+        "planWallClockMs": 4
       }
     },
     {
@@ -28757,7 +28757,7 @@
         "lod1TriangleCount": 1060,
         "lod0ByteSize": 78144,
         "lod1ByteSize": 48132,
-        "planWallClockMs": 24
+        "planWallClockMs": 21
       }
     },
     {
@@ -28857,7 +28857,7 @@
         "lod1TriangleCount": 1156,
         "lod0ByteSize": 101112,
         "lod1ByteSize": 49932,
-        "planWallClockMs": 19
+        "planWallClockMs": 17
       }
     },
     {
@@ -28931,7 +28931,7 @@
         "lod1TriangleCount": 3940,
         "lod0ByteSize": 336584,
         "lod1ByteSize": 151488,
-        "planWallClockMs": 50
+        "planWallClockMs": 44
       }
     },
     {
@@ -29042,7 +29042,7 @@
         "lod1TriangleCount": 3694,
         "lod0ByteSize": 315968,
         "lod1ByteSize": 143396,
-        "planWallClockMs": 176
+        "planWallClockMs": 159
       }
     },
     {
@@ -29116,7 +29116,7 @@
         "lod1TriangleCount": 120,
         "lod0ByteSize": 10840,
         "lod1ByteSize": 8512,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -29153,7 +29153,7 @@
         "lod1TriangleCount": 6700,
         "lod0ByteSize": 577480,
         "lod1ByteSize": 249820,
-        "planWallClockMs": 62
+        "planWallClockMs": 57
       }
     },
     {
@@ -29190,7 +29190,7 @@
         "lod1TriangleCount": 4138,
         "lod0ByteSize": 321184,
         "lod1ByteSize": 159416,
-        "planWallClockMs": 119
+        "planWallClockMs": 110
       }
     },
     {
@@ -29301,7 +29301,7 @@
         "lod1TriangleCount": 168,
         "lod0ByteSize": 14736,
         "lod1ByteSize": 11540,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -29438,7 +29438,7 @@
         "lod1TriangleCount": 60,
         "lod0ByteSize": 8360,
         "lod1ByteSize": 6032,
-        "planWallClockMs": 3
+        "planWallClockMs": 2
       }
     },
     {
@@ -29475,7 +29475,7 @@
         "lod1TriangleCount": 260,
         "lod0ByteSize": 26352,
         "lod1ByteSize": 14772,
-        "planWallClockMs": 5
+        "planWallClockMs": 4
       }
     },
     {
@@ -29601,7 +29601,7 @@
         "lod1TriangleCount": 92,
         "lod0ByteSize": 12440,
         "lod1ByteSize": 8360,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -29675,7 +29675,7 @@
         "lod1TriangleCount": 152,
         "lod0ByteSize": 15572,
         "lod1ByteSize": 10772,
-        "planWallClockMs": 3
+        "planWallClockMs": 4
       }
     },
     {
@@ -29712,7 +29712,7 @@
         "lod1TriangleCount": 144,
         "lod0ByteSize": 14620,
         "lod1ByteSize": 9980,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -29775,7 +29775,7 @@
         "lod1TriangleCount": 1696,
         "lod0ByteSize": 142620,
         "lod1ByteSize": 69116,
-        "planWallClockMs": 19
+        "planWallClockMs": 18
       }
     },
     {
@@ -29849,7 +29849,7 @@
         "lod1TriangleCount": 116,
         "lod0ByteSize": 10668,
         "lod1ByteSize": 8340,
-        "planWallClockMs": 2
+        "planWallClockMs": 3
       }
     },
     {
@@ -29912,7 +29912,7 @@
         "lod1TriangleCount": 136,
         "lod0ByteSize": 12980,
         "lod1ByteSize": 9636,
-        "planWallClockMs": 3
+        "planWallClockMs": 2
       }
     },
     {
@@ -29986,7 +29986,7 @@
         "lod1TriangleCount": 844,
         "lod0ByteSize": 73224,
         "lod1ByteSize": 38468,
-        "planWallClockMs": 21
+        "planWallClockMs": 20
       }
     },
     {
@@ -30134,7 +30134,7 @@
         "lod1TriangleCount": 116,
         "lod0ByteSize": 10676,
         "lod1ByteSize": 8348,
-        "planWallClockMs": 3
+        "planWallClockMs": 2
       }
     },
     {
@@ -30171,7 +30171,7 @@
         "lod1TriangleCount": 1078,
         "lod0ByteSize": 86556,
         "lod1ByteSize": 47044,
-        "planWallClockMs": 16
+        "planWallClockMs": 15
       }
     },
     {
@@ -30271,7 +30271,7 @@
         "lod1TriangleCount": 60,
         "lod0ByteSize": 8364,
         "lod1ByteSize": 6032,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -30345,7 +30345,7 @@
         "lod1TriangleCount": 116,
         "lod0ByteSize": 10676,
         "lod1ByteSize": 8344,
-        "planWallClockMs": 3
+        "planWallClockMs": 2
       }
     },
     {
@@ -30382,7 +30382,7 @@
         "lod1TriangleCount": 120,
         "lod0ByteSize": 10832,
         "lod1ByteSize": 8508,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -30419,7 +30419,7 @@
         "lod1TriangleCount": 116,
         "lod0ByteSize": 10676,
         "lod1ByteSize": 8344,
-        "planWallClockMs": 3
+        "planWallClockMs": 2
       }
     },
     {
@@ -30493,7 +30493,7 @@
         "lod1TriangleCount": 144,
         "lod0ByteSize": 13768,
         "lod1ByteSize": 9996,
-        "planWallClockMs": 3
+        "planWallClockMs": 4
       }
     },
     {
@@ -30567,7 +30567,7 @@
         "lod1TriangleCount": 164,
         "lod0ByteSize": 16324,
         "lod1ByteSize": 11256,
-        "planWallClockMs": 4
+        "planWallClockMs": 3
       }
     },
     {
@@ -30604,7 +30604,7 @@
         "lod1TriangleCount": 60,
         "lod0ByteSize": 8364,
         "lod1ByteSize": 6036,
-        "planWallClockMs": 3
+        "planWallClockMs": 2
       }
     },
     {
@@ -30730,7 +30730,7 @@
         "lod1TriangleCount": 1526,
         "lod0ByteSize": 126788,
         "lod1ByteSize": 63084,
-        "planWallClockMs": 24
+        "planWallClockMs": 21
       }
     },
     {
@@ -30841,7 +30841,7 @@
         "lod1TriangleCount": 19104,
         "lod0ByteSize": 1736956,
         "lod1ByteSize": 698932,
-        "planWallClockMs": 213
+        "planWallClockMs": 198
       }
     },
     {
@@ -30878,7 +30878,7 @@
         "lod1TriangleCount": 598,
         "lod0ByteSize": 37892,
         "lod1ByteSize": 28212,
-        "planWallClockMs": 25
+        "planWallClockMs": 24
       }
     },
     {
@@ -30915,7 +30915,7 @@
         "lod1TriangleCount": 4156,
         "lod0ByteSize": 335208,
         "lod1ByteSize": 161488,
-        "planWallClockMs": 94
+        "planWallClockMs": 87
       }
     },
     {
@@ -30952,7 +30952,7 @@
         "lod1TriangleCount": 4086,
         "lod0ByteSize": 349944,
         "lod1ByteSize": 155616,
-        "planWallClockMs": 44
+        "planWallClockMs": 37
       }
     },
     {
@@ -30989,7 +30989,7 @@
         "lod1TriangleCount": 1174,
         "lod0ByteSize": 91580,
         "lod1ByteSize": 50336,
-        "planWallClockMs": 20
+        "planWallClockMs": 18
       }
     },
     {
@@ -31052,7 +31052,7 @@
         "lod1TriangleCount": 2882,
         "lod0ByteSize": 246644,
         "lod1ByteSize": 113240,
-        "planWallClockMs": 47
+        "planWallClockMs": 44
       }
     },
     {
@@ -31089,7 +31089,7 @@
         "lod1TriangleCount": 11062,
         "lod0ByteSize": 938088,
         "lod1ByteSize": 412148,
-        "planWallClockMs": 326
+        "planWallClockMs": 306
       }
     },
     {
@@ -31126,7 +31126,7 @@
         "lod1TriangleCount": 1840,
         "lod0ByteSize": 161480,
         "lod1ByteSize": 74004,
-        "planWallClockMs": 24
+        "planWallClockMs": 21
       }
     },
     {
@@ -31163,7 +31163,7 @@
         "lod1TriangleCount": 6368,
         "lod0ByteSize": 569384,
         "lod1ByteSize": 239276,
-        "planWallClockMs": 194
+        "planWallClockMs": 179
       }
     },
     {
@@ -31200,7 +31200,7 @@
         "lod1TriangleCount": 25016,
         "lod0ByteSize": 2358904,
         "lod1ByteSize": 909476,
-        "planWallClockMs": 225
+        "planWallClockMs": 213
       }
     },
     {
@@ -31237,7 +31237,7 @@
         "lod1TriangleCount": 2904,
         "lod0ByteSize": 242840,
         "lod1ByteSize": 114328,
-        "planWallClockMs": 33
+        "planWallClockMs": 30
       }
     },
     {

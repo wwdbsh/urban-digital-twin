@@ -226,3 +226,91 @@ describe("rule 2: the rooftop cluster tops out one nominal storey above the crow
     expect(raised.sort()).toEqual(["doitt:102705", "doitt:982383"]);
   });
 });
+
+/**
+ * (T004 F7) THE BOUND IS THE BUILDING'S OWN DESIGNED STOREY.
+ *
+ * Rule 2 first bounded the cluster at `V3_NOMINAL_FLOOR_HEIGHT_MM` for every
+ * building. On a building that HAS a 3.6 m storey that is the grammar's own
+ * designed number and the right one. On a T003-recovered 305 mm parent it is
+ * not: the grammar is asserting a storey the building does not have, and the
+ * clamped asset was still 92% designed rooftop by height. The bound is now
+ * `parameters.targetFloorHeightMm`, which IS the nominal storey for every
+ * building at or above 3.6 m and IS the sourced height below it.
+ *
+ * The floor of 80 permille is the same lower bound `planScalePermille` already
+ * carries, and it is a real cost rather than a detail: below it the cluster
+ * degenerates into millimetre prisms, so the low-rise bound is not exact.
+ */
+describe("(T004 F7) rule 2 bounds by the building's own storey, not the grammar's", () => {
+  /** `max(roofEquipmentHeightMm, waterTankLegHeightMm + waterTankHeightMm)`, a constant. */
+  const RAW_CLUSTER_HEIGHT_MM = 5_400;
+  const SCALE_FLOOR_PERMILLE = 80;
+
+  it("is ALGEBRAICALLY a no-op at and above one nominal storey, which is every building the shipped grammar admits", () => {
+    // `validateV3Input` refuses `heightMm < parameters.targetFloorHeightMm`, so
+    // every input this grammar has ever accepted without the low-rise extension
+    // is at or above 3,600 mm and takes the nominal storey.
+    for (const heightMm of [3_600, 3_601, 4_000, 12_000, 60_000, 400_000]) {
+      const parameters = deriveV3Parameters({ footprintOuterMm: SQUARE, heightMm }, { lowRiseFloorHeight: true });
+      expect(parameters.targetFloorHeightMm).toBe(V3_NOMINAL_FLOOR_HEIGHT_MM);
+      const now = Math.max(SCALE_FLOOR_PERMILLE, Math.floor((parameters.targetFloorHeightMm * 1_000) / RAW_CLUSTER_HEIGHT_MM));
+      const before = Math.max(1, Math.floor((V3_NOMINAL_FLOOR_HEIGHT_MM * 1_000) / RAW_CLUSTER_HEIGHT_MM));
+      expect(now).toBe(before);
+      expect(now).toBe(666);
+    }
+  });
+
+  /**
+   * And EMPIRICALLY, on the only real footprints this repository has: the
+   * fourteen Block 835 rings, clamped, pinned to the plan hashes they produced
+   * before this change. Byte identity rather than an argument about it.
+   */
+  it("leaves all fourteen real clamped plan hashes byte-identical", () => {
+    const pinned: Record<string, string> = {
+      "doitt:102705": "6ae1692ecd9db5126455e188f4c5c47168b1a789d5e9f757d8b4258dcca43314",
+      "doitt:131170": "1935e152da769142f4c972e81e4b2d6ae60da336a7eaa006a9b929f22ace4060",
+      "doitt:147902": "75280d882160d4163c0be09e92e1c0c4b9f65752bead425a2095e6fc6d7e7566",
+      "doitt:262867": "5f220cf49faa4dbfacd791301b0b5e9683254e46eb73abd19494c55d0d2e0a92",
+      "doitt:39969": "8921e67fe94a40a4fc3b8455850c494d047779cdaf165dabd25ddee155fc0ab2",
+      "doitt:460555": "de82c18e84bea9ef0eddaff30ca31a71e0d6e5bbd9ef2c5f4b0b1f03e7a6a9fd",
+      "doitt:498980": "7de8fcba43a0612e16ff09d915d7a34b81a8d02992a071ed3033c79c0db677c2",
+      "doitt:502491": "cfbc147c094b2afd1ed6e8b4b547441dee741e3ab6098fdb1a7a2921815dd288",
+      "doitt:584049": "1991aa09a849595d6e6e962e0d5e26e41cfb2a560cf1a98b6cbce6e1883cfbb1",
+      "doitt:778052": "60c370c86796dc3a300f5b1c23456aaeb68b412ef64683e4541fb6104e4d7ed0",
+      "doitt:812702": "970a10870de514670bfdc2ed6bb17a23c8275cbf25efa4088159d1cbc56edb54",
+      "doitt:835659": "1ed99ee8944073e600ad5d42d31dddd17e7843edd51faf896c2f670f3fce7c50",
+      "doitt:925937": "f771ac61c69c5de520fa0f426d6172d4a83a154f78df696e7c2a43a3a4fbf61f",
+      "doitt:982383": "8f7c35c25122c17fa72215e00a730bf55056e0a7062d8de0b007bccde79ea569",
+    };
+    expect(Object.keys(pinned)).toHaveLength(14);
+    for (const building of buildings) {
+      const plan = planFor(building, V3_ROOFTOP_HONESTY_OPTIONS);
+      expect(plan.planHashSha256, building.canonicalBuildingId).toBe(pinned[building.canonicalBuildingId]);
+    }
+  });
+
+  it("bounds a low-rise by ITS storey, down to the scale floor, and says what that costs", () => {
+    // 3,599 mm: one millimetre below the nominal storey, and the bound tracks
+    // the building rather than the grammar.
+    const nearly = lowRisePlan(3_599, { rooftopClusterHeightClamp: true });
+    expect(clusterTopMm(nearly) - crownTopMm(nearly)).toBeLessThanOrEqual(3_599);
+    // 305 mm: the bound the building's own storey asks for is 56 permille, below
+    // the 80-permille scale floor, so the cluster lands at 432 mm rather than at
+    // 305 mm. Pinned as the number it is, not described as "small".
+    const submetre = lowRisePlan(305, { rooftopClusterHeightClamp: true });
+    expect(Math.floor((305 * 1_000) / RAW_CLUSTER_HEIGHT_MM)).toBe(56);
+    expect(clusterTopMm(submetre) - crownTopMm(submetre)).toBe(432);
+    // The previous bound put 3,596 mm of designed rooftop on this building —
+    // 11.8x its sourced height. This is 1.4x, and it is still designed.
+    expect((clusterTopMm(submetre) - crownTopMm(submetre)) / 305).toBeLessThan(1.5);
+    for (const heightMm of [1, 305, 999, 2_400, 3_599]) {
+      const clamped = lowRisePlan(heightMm, { rooftopClusterHeightClamp: true });
+      const above = clusterTopMm(clamped) - crownTopMm(clamped);
+      // Never above the building's own storey OR the scale floor's cluster —
+      // whichever the clamp actually had to settle for, stated honestly.
+      expect(above).toBeLessThanOrEqual(Math.max(heightMm, Math.round((RAW_CLUSTER_HEIGHT_MM * SCALE_FLOOR_PERMILLE) / 1_000)));
+      expect(above).toBeLessThanOrEqual(V3_NOMINAL_FLOOR_HEIGHT_MM);
+    }
+  });
+});

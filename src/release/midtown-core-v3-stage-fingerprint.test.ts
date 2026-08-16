@@ -149,4 +149,39 @@ describe("the fingerprint now SEES what it was blind to", () => {
         }));
     }
   });
+
+  /**
+   * (T004 F5a) THE LOD-1 POLICY, on the same conditional-spread precedent.
+   *
+   * `measured-fallback` changes WHAT BYTES LOD 1 carries for the buildings whose
+   * measured deviation exceeds the cap, so a receipt taken under one policy must
+   * not satisfy a stage running the other. And naming the shipped default
+   * explicitly must move nothing, or every frozen wave's fingerprint would
+   * depend on whether somebody had written the field down — the same defect the
+   * effective-envelope normalization exists to prevent.
+   */
+  it("moves for measured-fallback and stays put when the default is named explicitly", () => {
+    const base = midtownCoreV3StageFingerprint({ ...SHARED, profile: MIDTOWN_CORE_V3_WAVE_PROFILE });
+    expect(midtownCoreV3StageFingerprint({
+      ...SHARED,
+      profile: { ...MIDTOWN_CORE_V3_WAVE_PROFILE, lod1Policy: "shed-protrusions" },
+    })).toBe(base);
+    expect(midtownCoreV3StageFingerprint({
+      ...SHARED,
+      profile: { ...MIDTOWN_CORE_V3_WAVE_PROFILE, lod1Policy: "measured-fallback" },
+    })).not.toBe(base);
+  });
+
+  /**
+   * And the pin that matters: the fallback fingerprint is a LITERAL, so the day
+   * a successor wave's receipts are written under it, "the policy is visible"
+   * is a checkable statement about a specific value rather than an inequality
+   * that would pass just as happily if both sides had moved.
+   */
+  it("pins the measured-fallback fingerprint to a literal", () => {
+    expect(midtownCoreV3StageFingerprint({
+      ...SHARED,
+      profile: { ...MIDTOWN_CORE_V3_WAVE_PROFILE, lod1Policy: "measured-fallback" },
+    })).toBe("8e118580af7b0d09656c01364bdac4e6363cf3cb2695af5e8ee6c4873ff5b685");
+  });
 });

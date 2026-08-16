@@ -168,7 +168,7 @@ describe("the LOD 0 / LOD 1 projected-silhouette measurement", () => {
     expect(measurement.perView.find((view) => view.viewId === "view:north")!.deviationRatio).toBe(0);
     expect(measurement.deviationRatio).toBeGreaterThan(MIDTOWN_CORE_V3_SILHOUETTE_MAXIMUM_RATIO);
     expect(measurement.withinBound).toBe(false);
-    expect(() => midtownCoreV3SilhouetteRecord(degraded, { expectedPlanHashSha256: degraded.planHashSha256 }))
+    expect(() => midtownCoreV3SilhouetteRecord(degraded, { expectedPlanHashSha256: degraded.planHashSha256, lod1: "shed-protrusions" }))
       .toThrow(/outside the approved 0\.02 bound/u);
   });
 });
@@ -216,7 +216,7 @@ describe("the computed metric agrees with the committed Blender measurements", (
 describe("the record the assembly schema demands", () => {
   it("carries exactly the schema's key set, bound to the plan hash", () => {
     const plan = planFor(buildings[0]!);
-    const record = midtownCoreV3SilhouetteRecord(plan, { expectedPlanHashSha256: plan.planHashSha256 });
+    const record = midtownCoreV3SilhouetteRecord(plan, { expectedPlanHashSha256: plan.planHashSha256, lod1: "shed-protrusions" });
     expect(Object.keys(record).sort()).toEqual([
       "deviationRatio", "maximumRatio", "method", "metricVersion", "planHashSha256", "status", "viewIds",
     ]);
@@ -227,7 +227,7 @@ describe("the record the assembly schema demands", () => {
 
   it("REFUSES a measurement bound to a different plan hash", () => {
     const plan = planFor(buildings[0]!);
-    expect(() => midtownCoreV3SilhouetteRecord(plan, { expectedPlanHashSha256: "f".repeat(64) }))
+    expect(() => midtownCoreV3SilhouetteRecord(plan, { expectedPlanHashSha256: "f".repeat(64), lod1: "shed-protrusions" }))
       .toThrow(/would bind plan hash/u);
   });
 
@@ -236,7 +236,7 @@ describe("the record the assembly schema demands", () => {
     const shipped = planFor(building);
     const successor = planFor(building, V3_ROOFTOP_HONESTY_OPTIONS);
     expect(successor.planHashSha256).not.toBe(shipped.planHashSha256);
-    expect(() => midtownCoreV3SilhouetteRecord(successor, { expectedPlanHashSha256: shipped.planHashSha256 }))
+    expect(() => midtownCoreV3SilhouetteRecord(successor, { expectedPlanHashSha256: shipped.planHashSha256, lod1: "shed-protrusions" }))
       .toThrow(/would bind plan hash/u);
   });
 });
@@ -395,4 +395,105 @@ describe("(T004) the exact metric agrees with an independent rasterization of th
     expect(worstAbsoluteDifference).toBeLessThan(1e-4);
   });
 
+});
+
+/**
+ * (T004 F9) THE SWEEP'S ARITHMETIC, BOUNDED BY MAGNITUDE.
+ *
+ * `rectangleUnionAreaMm2` is called "an exact integer sweep", and on a real plan
+ * it is not literally integer arithmetic: the u coordinates are dot products of
+ * millimetre integers with unit axis vectors, so a diagonal facade produces
+ * irrational projections and the areas are doubles. What IS exact is the
+ * ALGORITHM — no quantization, no resolution — and what bounds the arithmetic is
+ * magnitude.
+ *
+ * The numbers involved: a Manhattan parent's silhouette is at most a few hundred
+ * metres across and a few hundred metres tall, so an area in square millimetres
+ * reaches about 1e11 for the largest building on the island. A double carries 53
+ * bits, or about 9.0e15 of integer resolution, so the products and sums here sit
+ * roughly five orders of magnitude inside exact-integer range. That is the claim
+ * this test pins — with a deliberately absurd building, so the bound is stated
+ * against the worst case rather than against a typical one.
+ */
+describe("(T004) the union sweep stays inside exact-integer magnitude", () => {
+  it("is exact for axis-aligned rectangles at the largest magnitude any Manhattan parent can reach", () => {
+    // 500 m x 500 m in millimetres: larger than any parent on the island.
+    const huge = { uMinMm: -250_000, uMaxMm: 250_000, zMinMm: 0, zMaxMm: 500_000 };
+    const area = rectangleUnionAreaMm2([huge]);
+    expect(area).toBe(500_000 * 500_000);
+    expect(Number.isSafeInteger(area)).toBe(true);
+    // Five orders of magnitude of headroom, stated rather than implied.
+    expect(area).toBeLessThan(Number.MAX_SAFE_INTEGER / 1e4);
+    // And a union of many such rectangles still is: 128 overlapping copies.
+    const many = Array.from({ length: 128 }, (_unused, index) => ({ ...huge, uMinMm: huge.uMinMm + index, uMaxMm: huge.uMaxMm - index }));
+    expect(rectangleUnionAreaMm2(many)).toBe(area);
+    expect(Number.isSafeInteger(rectangleUnionAreaMm2(many))).toBe(true);
+  });
+
+  it("keeps every real Block 835 silhouette area inside safe-integer range with four orders of headroom", () => {
+    let worstArea = 0;
+    for (const building of buildings) {
+      const measurement = midtownCoreV3SilhouetteMeasurement(planFor(building, V3_ROOFTOP_HONESTY_OPTIONS));
+      for (const view of measurement.perView) {
+        worstArea = Math.max(worstArea, view.lod0AreaMm2, view.lod1AreaMm2);
+        // A ratio is only meaningful if both areas are finite and positive.
+        expect(view.lod0AreaMm2).toBeGreaterThan(0);
+        expect(Number.isFinite(view.deviationRatio)).toBe(true);
+      }
+    }
+    expect(worstArea).toBeGreaterThan(0);
+    expect(worstArea).toBeLessThan(Number.MAX_SAFE_INTEGER / 1e4);
+  });
+
+  /**
+   * The clamp on the symmetric difference is not cosmetic, and this is why: the
+   * three areas come from the same float sweep, so two exactly-equal silhouettes
+   * can land a few parts in 1e16 apart and produce a NEGATIVE deviation, which
+   * is a nonsense number to write into a gate record.
+   */
+  it("never reports a negative deviation for a coarse level that dropped nothing", () => {
+    for (const building of buildings) {
+      const measurement = midtownCoreV3SilhouetteMeasurement(planFor(building, V3_ROOFTOP_HONESTY_OPTIONS));
+      for (const view of measurement.perView) expect(view.deviationRatio).toBeGreaterThanOrEqual(0);
+    }
+  });
+});
+
+/**
+ * (T004 F5b) THE LOD-1 VARIANT ARGUMENT.
+ *
+ * The record's key set is closed — the assembly validator checks it exactly — so
+ * the record cannot say which variant produced it. The argument is therefore
+ * required and explicit at the call site, because a default would mean a caller
+ * that emitted full geometry and forgot to say so would silently attach a
+ * shed-protrusions measurement to bytes it was not taken from.
+ */
+describe("(T004) the record builder's LOD-1 variant", () => {
+  it("returns a zero deviation for a full-geometry coarse level, even when the shedding one is over the cap", () => {
+    const degraded = syntheticPlan({ heightMm: 40_000, halfMm: 3_000, attachmentDepthMm: 3_000, attachmentHeightMm: 3_000 });
+    expect(midtownCoreV3SilhouetteMeasurement(degraded).deviationRatio).toBeGreaterThan(0.02);
+    const record = midtownCoreV3SilhouetteRecord(degraded, { expectedPlanHashSha256: degraded.planHashSha256, lod1: "full-geometry" });
+    expect(record.deviationRatio).toBe(0);
+    expect(record.maximumRatio).toBe(0.02);
+    // The key set is still exactly the schema's; the variant is nowhere in it.
+    expect(Object.keys(record).sort()).toEqual([
+      "deviationRatio", "maximumRatio", "method", "metricVersion", "planHashSha256", "status", "viewIds",
+    ]);
+  });
+
+  it("keeps the fail-closed throw for a SHEDDING level over the cap", () => {
+    const degraded = syntheticPlan({ heightMm: 40_000, halfMm: 3_000, attachmentDepthMm: 3_000, attachmentHeightMm: 3_000 });
+    expect(() => midtownCoreV3SilhouetteRecord(degraded, { expectedPlanHashSha256: degraded.planHashSha256, lod1: "shed-protrusions" }))
+      .toThrow(/outside the approved 0\.02 bound/u);
+  });
+
+  it("binds the plan hash on BOTH variants, so a zero deviation is still bound to its own plan", () => {
+    const plan = planFor(buildings[0]!);
+    for (const lod1 of ["shed-protrusions", "full-geometry"] as const) {
+      expect(() => midtownCoreV3SilhouetteRecord(plan, { expectedPlanHashSha256: "f".repeat(64), lod1 }))
+        .toThrow(/would bind plan hash/u);
+      expect(midtownCoreV3SilhouetteRecord(plan, { expectedPlanHashSha256: plan.planHashSha256, lod1 }).planHashSha256)
+        .toBe(plan.planHashSha256);
+    }
+  });
 });
