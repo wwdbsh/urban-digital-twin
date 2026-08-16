@@ -31,6 +31,14 @@
  *  - RESIDENCY IS DERIVED FROM DISTINCT ARTIFACTS, not from responses. At six
  *    waves those stop being the same number, and a record that conflated them
  *    would overstate occupancy against a 512-entry cap it is close to.
+ *
+ * WHAT MOVED UNDER IT SINCE. This record measured the six CURATED releases at a
+ * 512-entry cache cap. T005 promoted six `-s1` serving successors over them and
+ * raised the live cap to 1,024 in the same commit. Neither fact changes what was
+ * measured, and neither is allowed to quietly re-point an assertion here: the
+ * composition is compared against the live records' PREDECESSOR chain, which is
+ * what this record is about, and the cap is held to the literal it ran at while
+ * the raise is asserted separately against the live constant.
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -104,6 +112,26 @@ const journeys = readJson<Journeys>(`${RECORD_ROOT}/journey-evidence.json`);
 const blender = readJson<BlenderRecord>(`${RECORD_ROOT}/blender-sample.json`);
 const census = readJson<{ releaseId: string; volumeIdentity: Record<string, number | string> }>(`${RECORD_ROOT}/wave-census.json`);
 
+/**
+ * The cache entry cap in force WHEN THIS MEASUREMENT RAN, as a literal. T005
+ * raised the live cap after capture; see the module docblock.
+ */
+const CACHE_ENTRY_CAP_AT_MEASUREMENT = 512;
+
+/**
+ * The composition this record measured: the six CURATED releases, derived from
+ * the live promotion set rather than hand-typed.
+ *
+ * Every live record is a T005 serving promotion whose `predecessor` is the
+ * curated record it replaced, so the predecessor chain IS the measured set. A
+ * seventh wave, or a curated record swapped underneath a serving one, still
+ * moves this list and still fails here — which is the property the original
+ * comparison against the promotion set was protecting.
+ */
+const CURATED_PROMOTION_SET = EXTERIOR_DEFAULT_ACTIVATIONS.flatMap((record) =>
+  record.enabled && record.predecessor.enabled ? [record.predecessor.releaseId] : [],
+);
+
 describe("every committed evidence record is about THIS release", () => {
   it("names the same release id in all four records", () => {
     expect(inventory.releaseId).toBe(NORTHERN_MANHATTAN_P1_RELEASE_ID);
@@ -129,15 +157,30 @@ describe("the acceptance measurement describes the shipped bytes", () => {
   it("measured a SIX-wave composition, and names every promoted release", () => {
     expect(acceptance.promotedReleaseIds).toHaveLength(6);
     expect(acceptance.promotedReleaseIds.at(-1)).toBe(NORTHERN_MANHATTAN_P1_RELEASE_ID);
-    // The list is the build's own promotion set, not a hand-typed one.
-    expect(acceptance.promotedReleaseIds)
-      .toEqual(EXTERIOR_DEFAULT_ACTIVATIONS.filter((record) => record.enabled).map((record) => (record.enabled ? record.releaseId : "")));
+    // The list is still derived from the build's own records rather than
+    // hand-typed — but from the PREDECESSOR chain, because the promotion set
+    // itself now names the six `-s1` serving successors, which this record did
+    // not measure and must not be said to have measured.
+    expect(acceptance.promotedReleaseIds).toEqual(CURATED_PROMOTION_SET);
+    expect(CURATED_PROMOTION_SET).toHaveLength(6);
+    // And the successors are genuinely different releases, so the substitution
+    // above is a real distinction rather than two names for one thing.
+    const servingSet = EXTERIOR_DEFAULT_ACTIVATIONS.flatMap((record) => (record.enabled ? [record.releaseId] : []));
+    expect(servingSet).toHaveLength(6);
+    expect(servingSet.every((releaseId) => !acceptance.promotedReleaseIds.includes(releaseId))).toBe(true);
   });
 
-  it("was taken at the cap this build actually carries, and the cap did not move", () => {
-    expect(acceptance.capAtMeasurement.maxCacheEntries).toBe(EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries);
+  it("was taken at the cap in force that day, and the raise since is stated", () => {
+    expect(acceptance.capAtMeasurement.maxCacheEntries).toBe(CACHE_ENTRY_CAP_AT_MEASUREMENT);
+    expect(acceptance.runtimeBudgets.maxCacheEntries).toBe(CACHE_ENTRY_CAP_AT_MEASUREMENT);
+    expect(CACHE_ENTRY_CAP_AT_MEASUREMENT).toBe(512);
+    // T005 doubled the live entry cap AFTER this reading. Asserting the record
+    // against the live constant would date the reading to a cap that did not
+    // exist when it ran, so the move is stated instead.
+    expect(EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries).toBe(1_024);
+    expect(EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries).toBe(CACHE_ENTRY_CAP_AT_MEASUREMENT * 2);
+    // The byte cap did not move, so it is still compared live.
     expect(acceptance.capAtMeasurement.maxCachedBytes).toBe(EXTERIOR_RUNTIME_BUDGETS.maxCachedBytes);
-    expect(acceptance.runtimeBudgets.maxCacheEntries).toBe(512);
     expect(acceptance.runtimeBudgets.maxCachedBytes).toBe(256 * 1024 * 1024);
   });
 
@@ -178,7 +221,9 @@ describe("the acceptance measurement describes the shipped bytes", () => {
   it("derives residency from distinct artifacts and stays inside both cache budgets", () => {
     expect(acceptance.cacheResidency.withinEntryBudget).toBe(true);
     expect(acceptance.cacheResidency.withinByteBudget).toBe(true);
-    expect(acceptance.cacheResidency.worstObserved.entries).toBeLessThanOrEqual(EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries);
+    // Entries are judged against the cap of the day; bytes against the live cap,
+    // which is the same number it was.
+    expect(acceptance.cacheResidency.worstObserved.entries).toBeLessThanOrEqual(CACHE_ENTRY_CAP_AT_MEASUREMENT);
     expect(acceptance.cacheResidency.worstObserved.bytes).toBeLessThanOrEqual(EXTERIOR_RUNTIME_BUDGETS.maxCachedBytes);
     for (const run of acceptance.cacheResidency.perRun) {
       // Entries can never exceed responses: one artifact is fetched at least once.

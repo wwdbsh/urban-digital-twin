@@ -12,8 +12,15 @@
  * So both become digests over the same canonical join `cellsDigestSha256`
  * already uses, with the same failure ordering: COUNT FIRST, then digest. This
  * suite pins that ordering, pins that a caller which computed no digest is
- * refused rather than passed by omission, and pins that the literal form is
- * untouched — every record this build ships still uses it.
+ * refused rather than passed by omission, and pins which form each shipped
+ * record uses.
+ *
+ * That last part is what the T005 promotion changed. When this suite was
+ * written every promoted record still stated its acceptance literally and the
+ * digest form was reachable only through fixtures. All six promoted records now
+ * state all three sets as digests, and the literal form survives — unchanged and
+ * still exercised below — in the curated predecessors those records roll back
+ * to.
  */
 import { describe, expect, it } from "vitest";
 
@@ -157,19 +164,51 @@ describe("the digest-form identity gate", () => {
   });
 });
 
-describe("the literal form", () => {
-  it("is what every record this build ships still uses, and is untouched", () => {
+describe("the digest form, in the records this build ships", () => {
+  it("is what every promoted record uses, for all three acceptance sets", () => {
     for (const record of EXTERIOR_DEFAULT_ACTIVATIONS) {
       if (!record.enabled) continue;
-      expect(record.assemblyPackageIdsDigestSha256 ?? null).toBeNull();
-      expect(record.membership.buildingIdsDigestSha256 ?? null).toBeNull();
-      expect(record.assemblyPackageIds.length).toBeGreaterThan(0);
-      expect(record.membership.buildingIds.length).toBeGreaterThan(0);
+      // The unused form is empty in all three places, so nothing in a promoted
+      // record can be read as an accepted list the gate does not compare.
+      expect(record.assemblyPackageIds, record.releaseId).toEqual([]);
+      expect(record.assemblyPackageIdsDigestSha256 ?? "", record.releaseId).toMatch(/^[0-9a-f]{64}$/u);
+      expect(record.assemblyPackageCount ?? 0, record.releaseId).toBeGreaterThan(0);
+      expect(record.membership.cells, record.releaseId).toEqual([]);
+      expect(record.membership.cellsDigestSha256 ?? "", record.releaseId).toMatch(/^[0-9a-f]{64}$/u);
+      expect(record.membership.cellCount, record.releaseId).toBeGreaterThan(0);
+      expect(record.membership.buildingIds, record.releaseId).toEqual([]);
+      expect(record.membership.buildingIdsDigestSha256 ?? "", record.releaseId).toMatch(/^[0-9a-f]{64}$/u);
+      expect(record.membership.buildingCount ?? 0, record.releaseId).toBeGreaterThan(0);
+    }
+  });
+});
+
+/**
+ * The literal form, which no promoted record uses any more.
+ *
+ * It is not dead: every promoted record's predecessor is a curated record that
+ * states its head and its building membership literally, so the literal path is
+ * what a rolled-back build runs. These cases follow the form to where it
+ * actually ships instead of asserting it of records that moved.
+ */
+describe("the literal form", () => {
+  it("is what every curated predecessor still uses, and is untouched", () => {
+    for (const record of EXTERIOR_DEFAULT_ACTIVATIONS) {
+      if (!record.enabled) continue;
+      const predecessor = record.predecessor;
+      expect(predecessor.enabled, record.releaseId).toBe(true);
+      if (!predecessor.enabled) continue;
+      expect(predecessor.assemblyPackageIdsDigestSha256 ?? null, predecessor.releaseId).toBeNull();
+      expect(predecessor.membership.buildingIdsDigestSha256 ?? null, predecessor.releaseId).toBeNull();
+      expect(predecessor.assemblyPackageIds.length, predecessor.releaseId).toBeGreaterThan(0);
+      expect(predecessor.membership.buildingIds.length, predecessor.releaseId).toBeGreaterThan(0);
     }
   });
 
   it("ignores a supplied resolved set, so the record's own list stays authoritative", () => {
-    const record = EXTERIOR_DEFAULT_ACTIVATIONS.find((entry) => entry.enabled)! as ExteriorDefaultActivationEnabled;
+    const promoted = EXTERIOR_DEFAULT_ACTIVATIONS.find((entry) => entry.enabled)! as ExteriorDefaultActivationEnabled;
+    const record = promoted.predecessor as ExteriorDefaultActivationEnabled;
+    expect(record.enabled).toBe(true);
     const outsider = "doitt:000000";
     expect(record.membership.buildingIds).not.toContain(outsider);
     const verification = verifyPromotedExteriorMembership([outsider], record, [outsider]);

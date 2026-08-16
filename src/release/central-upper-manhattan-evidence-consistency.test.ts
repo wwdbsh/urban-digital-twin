@@ -76,6 +76,19 @@ const blender = readJson<BlenderRecord>(`${RECORD_ROOT}/blender-sample.json`);
 
 const SHIPPED_ASSET_COUNT = inventory.stats.shippedAssetCount!;
 
+/**
+ * The cache entry cap that was in force WHEN THIS MEASUREMENT RAN, as a literal.
+ *
+ * It used to be read from `EXTERIOR_RUNTIME_BUDGETS`, which was true while the
+ * two agreed. T005 raised the live cap to 1,024 after this record was captured,
+ * and re-pointing the assertions below at the live constant would claim a past
+ * reading was taken at a cap that did not exist when it ran. So the historical
+ * cap is named here and the record is held to it, while the RAISE is asserted
+ * separately against the live constant — the record says "taken at 512, and the
+ * build now ships 1,024" rather than silently tracking a moving number.
+ */
+const CACHE_ENTRY_CAP_AT_MEASUREMENT = 512;
+
 describe("every committed T020 evidence record is about THIS release", () => {
   it("names the promoted release, never the canary", () => {
     for (const record of [inventory, acceptance, journeys, blender]) {
@@ -98,10 +111,17 @@ describe("every committed T020 evidence record is about THIS release", () => {
 });
 
 describe("the acceptance measurement agrees with the release it measured", () => {
-  it("states the cap that was in force, read from the live budgets", () => {
-    expect(acceptance.capAtMeasurement.maxCacheEntries).toBe(EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries);
+  it("states the cap that was in force when it ran, and names the raise that came after", () => {
+    // Both halves of the record agree with each other and with the cap of the day.
+    expect(acceptance.capAtMeasurement.maxCacheEntries).toBe(CACHE_ENTRY_CAP_AT_MEASUREMENT);
+    expect(acceptance.runtimeBudgets.maxCacheEntries).toBe(CACHE_ENTRY_CAP_AT_MEASUREMENT);
+    // The live build has moved, by exactly one doubling, and that is stated here
+    // rather than absorbed: this evidence was taken at 512 and the build ships 1,024.
+    expect(EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries).toBe(1_024);
+    expect(EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries).toBe(CACHE_ENTRY_CAP_AT_MEASUREMENT * 2);
+    // The BYTE cap did not move at all, so that half still reads live.
     expect(acceptance.capAtMeasurement.maxCachedBytes).toBe(EXTERIOR_RUNTIME_BUDGETS.maxCachedBytes);
-    expect(acceptance.runtimeBudgets.maxCacheEntries).toBe(EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries);
+    expect(acceptance.capAtMeasurement.maxCachedBytes).toBe(256 * 1024 * 1024);
   });
 
   it("attributes FIVE promoted releases and ends with this one", () => {
@@ -125,11 +145,14 @@ describe("the acceptance measurement agrees with the release it measured", () =>
     expect(acceptance.cacheResidency.releaseTimeDerivation.thisWaveAssetEntries).toBe(SHIPPED_ASSET_COUNT);
     expect(acceptance.cacheResidency.withinEntryBudget).toBe(true);
     expect(acceptance.cacheResidency.withinByteBudget).toBe(true);
-    expect(acceptance.cacheResidency.worstObserved.entries).toBeLessThanOrEqual(EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries);
+    // Held to the cap the derivation was computed under, not to the raised one.
+    // Judging a 512-cap derivation against 1,024 would be a looser test wearing
+    // the name of the original.
+    expect(acceptance.cacheResidency.worstObserved.entries).toBeLessThanOrEqual(CACHE_ENTRY_CAP_AT_MEASUREMENT);
     // The reserve survives the promotion in cache arithmetic, not only in prose.
     const reserved = acceptance.cacheResidency.releaseTimeDerivation.reservedForNorthernManhattanEntries;
     expect(reserved).toBe(36);
-    expect(EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries - acceptance.cacheResidency.releaseTimeDerivation.residentAssetEntries)
+    expect(CACHE_ENTRY_CAP_AT_MEASUREMENT - acceptance.cacheResidency.releaseTimeDerivation.residentAssetEntries)
       .toBeGreaterThanOrEqual(reserved);
   });
 

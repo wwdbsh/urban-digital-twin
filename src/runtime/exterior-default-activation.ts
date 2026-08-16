@@ -274,7 +274,7 @@ export const BLOCK835_V2_EXTERIOR_ROLLBACK: ExteriorDefaultActivationEnabled = {
  * pin below from the committed `public/data/manhattan-exterior-cells-20260811-v3/`
  * bytes on every run.
  */
-export const EXTERIOR_DEFAULT_ACTIVATION: ExteriorDefaultActivationRecord = {
+export const BLOCK835_V3_EXTERIOR_ACTIVATION: ExteriorDefaultActivationRecord = {
   enabled: true,
   releaseId: "manhattan-exterior-cells-20260811-v3",
   snapshotId: "snapshot:manhattan-exterior-cells-20260811-v3:v1",
@@ -391,7 +391,7 @@ export const MIDTOWN_CORE_V2_EXTERIOR_ROLLBACK: ExteriorDefaultActivationEnabled
  * the committed `data/midtown-core-20260811-v3/payload-inventory.json` on every
  * run — no payload directory required, so the drift gate is never skipped.
  */
-export const MIDTOWN_CORE_EXTERIOR_ACTIVATION: ExteriorDefaultActivationRecord = {
+export const MIDTOWN_CORE_V3_EXTERIOR_ACTIVATION: ExteriorDefaultActivationRecord = {
   enabled: true,
   releaseId: "manhattan-midtown-core-cells-20260811-v3",
   snapshotId: "snapshot:manhattan-midtown-core-cells-20260811-v3:v1",
@@ -532,7 +532,7 @@ export const LOWER_MANHATTAN_MEMBERSHIP_BUILDING_IDS: readonly string[] = [
  * on every run — no payload directory required, so the drift gate is never
  * skipped.
  */
-export const LOWER_MANHATTAN_EXTERIOR_ACTIVATION: ExteriorDefaultActivationRecord = {
+export const LOWER_MANHATTAN_P1_EXTERIOR_ACTIVATION: ExteriorDefaultActivationRecord = {
   enabled: true,
   releaseId: "manhattan-lower-manhattan-cells-20260812-p1",
   snapshotId: "snapshot:manhattan-lower-manhattan-cells-20260812-p1:v1",
@@ -664,7 +664,7 @@ export const SOUTHERN_REMAINDER_MEMBERSHIP_BUILDING_IDS: readonly string[] = [
  * on every run — no payload directory required, so the drift gate is never
  * skipped.
  */
-export const SOUTHERN_REMAINDER_EXTERIOR_ACTIVATION: ExteriorDefaultActivationRecord = {
+export const SOUTHERN_REMAINDER_P1_EXTERIOR_ACTIVATION: ExteriorDefaultActivationRecord = {
   enabled: true,
   releaseId: "manhattan-southern-remainder-cells-20260812-p1",
   snapshotId: "snapshot:manhattan-southern-remainder-cells-20260812-p1:v1",
@@ -778,7 +778,7 @@ export const CENTRAL_UPPER_MANHATTAN_MEMBERSHIP_BUILDING_IDS: readonly string[] 
  * `data/central-upper-manhattan-20260812-p1/payload-inventory.json` on every run
  * — no payload directory required, so the drift gate is never skipped.
  */
-export const CENTRAL_UPPER_MANHATTAN_EXTERIOR_ACTIVATION: ExteriorDefaultActivationRecord = {
+export const CENTRAL_UPPER_MANHATTAN_P1_EXTERIOR_ACTIVATION: ExteriorDefaultActivationRecord = {
   enabled: true,
   releaseId: "manhattan-central-upper-manhattan-cells-20260812-p1",
   snapshotId: "snapshot:manhattan-central-upper-manhattan-cells-20260812-p1:v1",
@@ -904,7 +904,7 @@ export const NORTHERN_MANHATTAN_MEMBERSHIP_BUILDING_IDS: readonly string[] = [
  * on every run — no payload directory required, so the drift gate is never
  * skipped.
  */
-export const NORTHERN_MANHATTAN_EXTERIOR_ACTIVATION: ExteriorDefaultActivationRecord = {
+export const NORTHERN_MANHATTAN_P1_EXTERIOR_ACTIVATION: ExteriorDefaultActivationRecord = {
   enabled: true,
   releaseId: "manhattan-northern-manhattan-cells-20260812-p1",
   snapshotId: "snapshot:manhattan-northern-manhattan-cells-20260812-p1:v1",
@@ -920,6 +920,273 @@ export const NORTHERN_MANHATTAN_EXTERIOR_ACTIVATION: ExteriorDefaultActivationRe
   rolledBackReleaseId: null,
   predecessor: NORTHERN_MANHATTAN_BASE_ONLY_PREDECESSOR,
 } as const;
+
+// ---------------------------------------------------------------------------
+// The T005 SERVING promotion — the six `-s1` releases become the default
+// ---------------------------------------------------------------------------
+
+/**
+ * The six serving promotion records, and the one thing they all say.
+ *
+ * Every record below is a FORWARD promotion whose `predecessor` is the curated
+ * record that was the active default until this commit — `BLOCK835_V3_…`,
+ * `MIDTOWN_CORE_V3_…`, and the four `…_P1_…` records above, each retained
+ * verbatim and none re-derived. `rolledBackReleaseId` is `null` on all six,
+ * because this promotion withdraws nothing: the `-p1` and `-t1` releases stay
+ * pinned in `PINNED_EXTERIOR_CELL_RELEASE_IDS` and stay reachable by
+ * `?exteriorCells=`, exactly as they were.
+ *
+ * ## What changes, stated as breadth and not as fidelity
+ *
+ * The curated composition shipped 498 assets across 13 content-bearing cells of
+ * 883. This composition ships 44,989 assets across all 883. That is MORE BYTES
+ * UNDER THE SAME PERMISSION — `exterior-serving-waves.ts` carries the approval
+ * instrument and the exclusions verbatim — and it is not a claim that the city
+ * became more accurate. No truth tier rises, no new source is read, no
+ * photograph is ingested, and every refused building still ships as an explicit
+ * unavailable detail with its stated deterministic reason.
+ *
+ * ## Why all three sets are DIGESTS (ADR 0052 D-A)
+ *
+ * A curated record listed its acceptance because a reviewer could read it: one
+ * assembly package, 149 cells, 14 to 179 building identities. A serving record
+ * states the same three facts about up to 249 cells, up to 249 per-cell assembly
+ * packages, and up to 11,682 buildings. Ninety kilobytes of identifiers pasted
+ * into a source file is a diff nobody reads, and pasting it would not make the
+ * acceptance stronger — the gate still only compares it against what the runtime
+ * resolved. So each set is stated as one digest over the same canonical join the
+ * literal form compares, with the count beside it, and the gate RECOMPUTES the
+ * digest from the resolved release on every load.
+ *
+ * The digest form is used uniformly across the six, including `w00`'s single
+ * cell and fourteen buildings, because one form for one promotion is checkable
+ * and a per-wave mixture is a rule someone has to remember. Nothing is lost:
+ * `exterior-serving-promotion-record.test.ts` recomputes every pin below from
+ * committed records alone — the serving payload inventories, the retention
+ * censuses and the island ledger — with no payload directory present, so a clean
+ * checkout re-derives all forty-eight of them.
+ *
+ * ## The budget constants land WITH this set, and the rollback is the commit
+ *
+ * `EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY.maxResidentUnits` falls 128 -> 8 and
+ * `EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries` rises 512 -> 1,024 in the same
+ * commit as these records, for the reason ADR 0052 §3 measures: cap 8 is correct
+ * for a DENSE composition and destructive for a SPARSE one, and at the overview
+ * camera the CURATED composition under cap 8 would render nothing at all. Those
+ * two constants are code and have no predecessor record, so the rollback
+ * contract is the commit itself — reverting it restores both constants together
+ * with the records they were sized for.
+ */
+
+/** Wave `w00` — Block 835, served in full. One cell, fourteen buildings. */
+export const EXTERIOR_DEFAULT_ACTIVATION: ExteriorDefaultActivationRecord = {
+  enabled: true,
+  releaseId: "manhattan-exterior-cells-20260811-v3-s1",
+  snapshotId: "snapshot:manhattan-exterior-cells-20260811-v3-s1:v1",
+  snapshotChecksumSha256: "1483851473cc84e1b392dcf26b02a61805c166ed526eef1126e1570c5e5a33f3",
+  assemblyPackageIds: [],
+  assemblyPackageIdsDigestSha256: "2df3bb8fa34c86f481ddb2fef92ace1195003c08645b93581fd0e86b5b351fbf",
+  assemblyPackageCount: 1,
+  membership: {
+    cells: [],
+    cellsDigestSha256: "2aea3bee70a1195f26bd6eb2efdadd0625c978b626f66d3c25a39f57e479f049",
+    cellCount: 1,
+    buildingIds: [],
+    buildingIdsDigestSha256: "e7ef032bdf12222084fcf923ce1d61570d0989bc7f0f17d1dcc4db5659942c2f",
+    buildingCount: 14,
+  },
+  approvalRef: "Issue #87 gate approval 2026-08-17 (T005 full-city serving promotion, ADR 0052; release approval approval:manhattan-exterior-cells-20260811-v3-s1:full-city-serving)",
+  rolledBackReleaseId: null,
+  predecessor: BLOCK835_V3_EXTERIOR_ACTIVATION,
+} as const;
+
+/** Wave `w01` — Midtown core, served in full. 149 cells, 7,179 buildings. */
+export const MIDTOWN_CORE_EXTERIOR_ACTIVATION: ExteriorDefaultActivationRecord = {
+  enabled: true,
+  releaseId: "manhattan-midtown-core-cells-20260811-v3-s1",
+  snapshotId: "snapshot:manhattan-midtown-core-cells-20260811-v3-s1:v1",
+  snapshotChecksumSha256: "a67806575cb5338e8b6bf145bfe141ace0d57dba7980808fa1fcec1dec1e6b87",
+  assemblyPackageIds: [],
+  assemblyPackageIdsDigestSha256: "b738b4cb42e244f9157a6d889f5474e3aff404a42cf7535aefbba58115daabb3",
+  assemblyPackageCount: 149,
+  membership: {
+    cells: [],
+    cellsDigestSha256: "14d6138da1e209f5712670f0c97c62564f1649dba7c5f4a0a20c9143c9c2c9cf",
+    cellCount: 149,
+    buildingIds: [],
+    buildingIdsDigestSha256: "0ef78d63bc0d5c8a0c29f0b86991360df04deb7fee34c498bc8357c484e0cf96",
+    buildingCount: 7_179,
+  },
+  approvalRef: "Issue #87 gate approval 2026-08-17 (T005 full-city serving promotion, ADR 0052; release approval approval:manhattan-midtown-core-cells-20260811-v3-s1:full-city-serving)",
+  rolledBackReleaseId: null,
+  predecessor: MIDTOWN_CORE_V3_EXTERIOR_ACTIVATION,
+} as const;
+
+/** Wave `w02` — Lower Manhattan, served in full. 126 cells, 6,382 buildings. */
+export const LOWER_MANHATTAN_EXTERIOR_ACTIVATION: ExteriorDefaultActivationRecord = {
+  enabled: true,
+  releaseId: "manhattan-lower-manhattan-cells-20260812-s1",
+  snapshotId: "snapshot:manhattan-lower-manhattan-cells-20260812-s1:v1",
+  snapshotChecksumSha256: "ef0a7d28de38eee3eecbf8a93c5e777a547eea774a7588e346103ea51d014099",
+  assemblyPackageIds: [],
+  assemblyPackageIdsDigestSha256: "9a761d52dfe70de2d98e1e56f0ab043eeaa6e75c0d79ea36eba02e12e1de63d5",
+  assemblyPackageCount: 126,
+  membership: {
+    cells: [],
+    cellsDigestSha256: "1407af2f5ab9b260250fa8c6ed6ebce2c526d2e9efc249bb91d24222c275b41f",
+    cellCount: 126,
+    buildingIds: [],
+    buildingIdsDigestSha256: "c280e22fff0b5e50be6833052e4f3d3d669cb00afb3fc0bab11f6ac5df22a0c0",
+    buildingCount: 6_382,
+  },
+  approvalRef: "Issue #87 gate approval 2026-08-17 (T005 full-city serving promotion, ADR 0052; release approval approval:manhattan-lower-manhattan-cells-20260812-s1:full-city-serving)",
+  rolledBackReleaseId: null,
+  predecessor: LOWER_MANHATTAN_P1_EXTERIOR_ACTIVATION,
+} as const;
+
+/** Wave `w03` — Southern remainder, served in full. 176 cells, 9,560 buildings. */
+export const SOUTHERN_REMAINDER_EXTERIOR_ACTIVATION: ExteriorDefaultActivationRecord = {
+  enabled: true,
+  releaseId: "manhattan-southern-remainder-cells-20260812-s1",
+  snapshotId: "snapshot:manhattan-southern-remainder-cells-20260812-s1:v1",
+  snapshotChecksumSha256: "11012c6e7efb46c0ecc2234fe35d6e8f6414a2b99bf408392aa1769f8767314c",
+  assemblyPackageIds: [],
+  assemblyPackageIdsDigestSha256: "86380721b5d78be23887e7567e0ba4159fb4eb962f65a5e0c3f0843abfab441a",
+  assemblyPackageCount: 176,
+  membership: {
+    cells: [],
+    cellsDigestSha256: "cf6b0b961b7e2b183c8baee5470eead66b98f1d06bb4e6e300c1e8d5e2887549",
+    cellCount: 176,
+    buildingIds: [],
+    buildingIdsDigestSha256: "fd0f4a413854b4d081402f4a5d31d60b478f5cebbdc4e4ab6a71dc9cbfa34973",
+    buildingCount: 9_560,
+  },
+  approvalRef: "Issue #87 gate approval 2026-08-17 (T005 full-city serving promotion, ADR 0052; release approval approval:manhattan-southern-remainder-cells-20260812-s1:full-city-serving)",
+  rolledBackReleaseId: null,
+  predecessor: SOUTHERN_REMAINDER_P1_EXTERIOR_ACTIVATION,
+} as const;
+
+/** Wave `w04` — Central and upper Manhattan, served in full. 249 cells, 11,682 buildings. */
+export const CENTRAL_UPPER_MANHATTAN_EXTERIOR_ACTIVATION: ExteriorDefaultActivationRecord = {
+  enabled: true,
+  releaseId: "manhattan-central-upper-manhattan-cells-20260812-s1",
+  snapshotId: "snapshot:manhattan-central-upper-manhattan-cells-20260812-s1:v1",
+  snapshotChecksumSha256: "7294f5128d16cbf5064c118feaacf069acf814c8425d45b4c4199d60c4b4d425",
+  assemblyPackageIds: [],
+  assemblyPackageIdsDigestSha256: "ba1faebd25a37c2579620b6a1c244d7cd39698fa16555495fedb36fc135cfc2e",
+  assemblyPackageCount: 249,
+  membership: {
+    cells: [],
+    cellsDigestSha256: "ddff5cf43ad4414eedeb17244aeac96dfd3b3e3b52e4410ee424fe66cd61ef97",
+    cellCount: 249,
+    buildingIds: [],
+    buildingIdsDigestSha256: "bf9ee190a27696698142b3e05570244feeea877355675ca23525b7b4fc57dd66",
+    buildingCount: 11_682,
+  },
+  approvalRef: "Issue #87 gate approval 2026-08-17 (T005 full-city serving promotion, ADR 0052; release approval approval:manhattan-central-upper-manhattan-cells-20260812-s1:full-city-serving)",
+  rolledBackReleaseId: null,
+  predecessor: CENTRAL_UPPER_MANHATTAN_P1_EXTERIOR_ACTIVATION,
+} as const;
+
+/** Wave `w05` — Northern Manhattan, served in full. 182 cells, 10,172 buildings. */
+export const NORTHERN_MANHATTAN_EXTERIOR_ACTIVATION: ExteriorDefaultActivationRecord = {
+  enabled: true,
+  releaseId: "manhattan-northern-manhattan-cells-20260812-s1",
+  snapshotId: "snapshot:manhattan-northern-manhattan-cells-20260812-s1:v1",
+  snapshotChecksumSha256: "07f9e007a0fc7d33b3588dec6cb618c9d6bc4e36ad9bb5e2450fd00789c26270",
+  assemblyPackageIds: [],
+  assemblyPackageIdsDigestSha256: "67036dca7cea21791d0c3a26c4009bf31ae3f6dd6d60604843b0b57265414352",
+  assemblyPackageCount: 182,
+  membership: {
+    cells: [],
+    cellsDigestSha256: "1861da406dba48398f6245b3961e5afd56c9be0e2bd1466db401d758698bdf76",
+    cellCount: 182,
+    buildingIds: [],
+    buildingIdsDigestSha256: "54f902edd27ce0cda22fcca9164238b6aeced4eb51a3d326f5015d58fa7654b5",
+    buildingCount: 10_172,
+  },
+  approvalRef: "Issue #87 gate approval 2026-08-17 (T005 full-city serving promotion, ADR 0052; release approval approval:manhattan-northern-manhattan-cells-20260812-s1:full-city-serving)",
+  rolledBackReleaseId: null,
+  predecessor: NORTHERN_MANHATTAN_P1_EXTERIOR_ACTIVATION,
+} as const;
+
+// ---------------------------------------------------------------------------
+// The six serving rollback targets, shipped rather than described
+// ---------------------------------------------------------------------------
+
+/**
+ * What a serving rollback swaps in, one constant per wave.
+ *
+ * A rollback record has TWO jobs, and shipping only the first is the failure
+ * mode these constants exist to close. It must restore the previous verified
+ * representation — the curated record above, verbatim — and it must REFUSE the
+ * promotion-era `?exteriorCells=<-s1>` bookmarks that were handed out while the
+ * serving release was the default. Without the second half the rollback removes
+ * the default and leaves every serving bookmark rendering the withdrawn wave,
+ * and rendering it UNGATED: the pin and identity gates would be verifying
+ * against a record that no longer accepts those bytes.
+ *
+ * Each is built by spreading its curated predecessor rather than retyping it, on
+ * the `BLOCK835_V2_EXTERIOR_ROLLBACK` precedent, so the restored representation
+ * and the promoted record's `predecessor` can never disagree about which bytes
+ * the curated release was.
+ *
+ * ## The single-string limitation, stated rather than worked around
+ *
+ * `rolledBackReleaseId` is ONE string and names ONE withdrawn release. So a
+ * rollback that must reach past the curated release — back to base massing, or
+ * back to a canary — is TWO swaps and cannot be collapsed into one record: this
+ * constant refuses the `-s1` link and restores the curated release, and the
+ * curated record's own predecessor (already shipped above) refuses the curated
+ * link in a second edit. That is a real limitation of the record shape, not an
+ * omission here, and `exterior-multiwave-activation.test.ts` rehearses both
+ * steps for Lower-Manhattan rather than asserting the first and implying the
+ * second.
+ *
+ * Nothing in this build imports these. They are the reviewed, tested text of the
+ * edit an operator makes — `exteriorDefaultActivations()` takes the records as
+ * parameters, so a rollback is a one-line substitution whose target already
+ * exists and has already been rehearsed.
+ */
+export const BLOCK835_V3_SERVING_ROLLBACK: ExteriorDefaultActivationEnabled = {
+  ...BLOCK835_V3_EXTERIOR_ACTIVATION,
+  rolledBackReleaseId: "manhattan-exterior-cells-20260811-v3-s1",
+} as const;
+
+export const MIDTOWN_CORE_V3_SERVING_ROLLBACK: ExteriorDefaultActivationEnabled = {
+  ...MIDTOWN_CORE_V3_EXTERIOR_ACTIVATION,
+  rolledBackReleaseId: "manhattan-midtown-core-cells-20260811-v3-s1",
+} as const;
+
+export const LOWER_MANHATTAN_P1_SERVING_ROLLBACK: ExteriorDefaultActivationEnabled = {
+  ...LOWER_MANHATTAN_P1_EXTERIOR_ACTIVATION,
+  rolledBackReleaseId: "manhattan-lower-manhattan-cells-20260812-s1",
+} as const;
+
+export const SOUTHERN_REMAINDER_P1_SERVING_ROLLBACK: ExteriorDefaultActivationEnabled = {
+  ...SOUTHERN_REMAINDER_P1_EXTERIOR_ACTIVATION,
+  rolledBackReleaseId: "manhattan-southern-remainder-cells-20260812-s1",
+} as const;
+
+export const CENTRAL_UPPER_MANHATTAN_P1_SERVING_ROLLBACK: ExteriorDefaultActivationEnabled = {
+  ...CENTRAL_UPPER_MANHATTAN_P1_EXTERIOR_ACTIVATION,
+  rolledBackReleaseId: "manhattan-central-upper-manhattan-cells-20260812-s1",
+} as const;
+
+export const NORTHERN_MANHATTAN_P1_SERVING_ROLLBACK: ExteriorDefaultActivationEnabled = {
+  ...NORTHERN_MANHATTAN_P1_EXTERIOR_ACTIVATION,
+  rolledBackReleaseId: "manhattan-northern-manhattan-cells-20260812-s1",
+} as const;
+
+/** The six, in wave order, so a rehearsal can walk them beside the promoted set. */
+export const EXTERIOR_SERVING_ROLLBACKS: readonly ExteriorDefaultActivationEnabled[] = [
+  BLOCK835_V3_SERVING_ROLLBACK,
+  MIDTOWN_CORE_V3_SERVING_ROLLBACK,
+  LOWER_MANHATTAN_P1_SERVING_ROLLBACK,
+  SOUTHERN_REMAINDER_P1_SERVING_ROLLBACK,
+  CENTRAL_UPPER_MANHATTAN_P1_SERVING_ROLLBACK,
+  NORTHERN_MANHATTAN_P1_SERVING_ROLLBACK,
+];
 
 /**
  * The ordered promotion set this build activates, oldest wave first.

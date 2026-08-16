@@ -141,16 +141,55 @@ function pickIdentity(outcomes: readonly ExteriorCellOutcome[]): string[] {
 }
 
 describe("the shipped exterior caps, stated plainly", () => {
-  it("cannot bind for the promoted composition, which is why these tests lower them", () => {
-    // ADR 0041's committed opt-in evidence, default variant, at both cameras.
-    const WHOLE_COMPOSITION_ENTRIES = 484;
-    const WHOLE_COMPOSITION_BYTES = 122_601_292;
-    expect(WHOLE_COMPOSITION_ENTRIES).toBeLessThan(EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries);
-    expect(WHOLE_COMPOSITION_BYTES).toBeLessThan(EXTERIOR_RUNTIME_BUDGETS.maxCachedBytes);
-    expect(EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries - WHOLE_COMPOSITION_ENTRIES).toBe(28);
-    expect(EXTERIOR_RUNTIME_BUDGETS.maxCachedBytes - WHOLE_COMPOSITION_BYTES).toBe(145_834_164);
-    // Unchanged by T003. The mechanics below are proved at an injected cap.
-    expect(EXTERIOR_RUNTIME_BUDGETS).toEqual({ maxCacheEntries: 512, maxCachedBytes: 256 * 1024 * 1024, maxConcurrentRequests: 4 });
+  /**
+   * THIS CLAIM INVERTED AT THE T005 SERVING PROMOTION, and the inversion is the
+   * whole reason the mechanics below stopped being hypothetical.
+   *
+   * Until the promotion this case was titled "cannot bind for the promoted
+   * composition, which is why these tests lower them". It was true: the CURATED
+   * composition measured 484 cache entries and 122,601,292 B with every wave
+   * resident at once — ADR 0041's committed opt-in evidence, default variant, at
+   * both cameras — which fitted inside a 512-entry, 256 MiB cache with 28 entries
+   * to spare. Eviction was a backstop nothing reached, so the correctness tests
+   * below had to INJECT a lowered cap to exercise it at all.
+   *
+   * The serving composition is 44,989 entries and 4.679 GB. Nothing about the
+   * caps changed except one doubling; what changed is that the promoted
+   * composition became 93 times the entry cap. Eviction is now the normal
+   * operating mode — measured at 1.79 evictions per decision on the committed
+   * roam trace — and the mechanics these tests prove are on the hot path of every
+   * session rather than on a path nobody reached.
+   *
+   * The injected caps below are RETAINED, and the reason changes with the claim:
+   * they are no longer the only way to reach eviction, they are the way to reach
+   * it deterministically in a unit test with three fixture cells. That is a
+   * statement about test construction, not about whether the shipped cap binds.
+   */
+  it("BIND for the promoted composition, where the curated composition never reached them", () => {
+    // The curated composition, retained as the historical figure it is.
+    const CURATED_COMPOSITION_ENTRIES = 484;
+    const CURATED_COMPOSITION_BYTES = 122_601_292;
+    const CURATED_ENTRY_CAP = 512;
+    expect(CURATED_COMPOSITION_ENTRIES).toBeLessThan(CURATED_ENTRY_CAP);
+    expect(CURATED_COMPOSITION_BYTES).toBeLessThan(EXTERIOR_RUNTIME_BUDGETS.maxCachedBytes);
+    expect(CURATED_ENTRY_CAP - CURATED_COMPOSITION_ENTRIES).toBe(28);
+    expect(EXTERIOR_RUNTIME_BUDGETS.maxCachedBytes - CURATED_COMPOSITION_BYTES).toBe(145_834_164);
+
+    // The serving composition, which does not fit and is not meant to. The
+    // reachable bound — what a camera can actually make resident at cap 8 — is
+    // 599 entries and 247,000,877 B, and `exterior-serving-residency.test.ts`
+    // derives both from the committed inventories.
+    const SERVING_COMPOSITION_ENTRIES = 44_989;
+    const SERVING_COMPOSITION_BYTES = 4_679_223_068;
+    expect(SERVING_COMPOSITION_ENTRIES).toBeGreaterThan(EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries);
+    expect(SERVING_COMPOSITION_BYTES).toBeGreaterThan(EXTERIOR_RUNTIME_BUDGETS.maxCachedBytes);
+    expect(Math.round(SERVING_COMPOSITION_ENTRIES / EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries)).toBe(44);
+    expect(Math.round(SERVING_COMPOSITION_ENTRIES / CURATED_COMPOSITION_ENTRIES)).toBe(93);
+
+    // The entry cap doubled with the promotion; the byte cap and the request
+    // budget did not move.
+    expect(EXTERIOR_RUNTIME_BUDGETS).toEqual({ maxCacheEntries: 1_024, maxCachedBytes: 256 * 1024 * 1024, maxConcurrentRequests: 4 });
+    expect(EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries).toBe(CURATED_ENTRY_CAP * 2);
   });
 });
 

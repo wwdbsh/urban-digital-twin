@@ -227,10 +227,58 @@ export const EXTERIOR_CELL_SCHEDULER_POLICY = {
  * whole promoted composition resident at once measures 484 entries and
  * 122,601,292 B, inside both. ADR 0042 states that plainly rather than implying
  * the caps are doing work they are not.
+ *
+ * ---------------------------------------------------------------------------
+ *
+ * ## `maxResidentUnits` FELL from 128 to 8 on 2026-08-17 (T005)
+ *
+ * Everything above is the arithmetic of a SPARSE composition and it is retained
+ * verbatim, because it is what this cap was until this commit and because the
+ * reason it had to move is precisely that the composition changed underneath it.
+ *
+ * The six `-s1` serving releases have content in ALL 883 census cells. The
+ * curated composition they replace had content in 13. That single fact inverts
+ * every term:
+ *
+ * - **The floor argument is gone.** 128's floor was ADR 0041's measured six-pool
+ *   overview residency of 110 CELLS. Under a sparse composition, holding 110
+ *   cells cost 210 cache entries, because almost none of those cells had
+ *   anything in them. Under a `-s1` composition every resident cell carries its
+ *   buildings, its evidence sidecar and its assembly manifest, and 110 resident
+ *   cells would be roughly 8,200 entries and several gigabytes. The floor was
+ *   never a statement about cells; it was a statement about cells that were
+ *   mostly empty.
+ * - **The binding constraint is bytes, and it binds at 8.** Measured over the
+ *   committed retention inventories at the worst reachable anchor,
+ *   `exterior-serving-residency.ts` puts a cap of 8 at 247,000,877 B — 92.0% of
+ *   the unchanged 256 MiB byte cap — and a cap of 16 at 441,016,698 B, which is
+ *   164% of it. 8 is not a round number chosen for tidiness: it is the LARGEST
+ *   cap the unchanged byte ceiling admits.
+ * - **D-4 is what makes 8 usable at all.** At a cap this tight the truncation
+ *   falls deep inside one distance band, which is exactly where ranking by the
+ *   census `order` carried no information about where the camera was. Admitting
+ *   the NEAREST 8 is a different set from admitting the lowest-numbered 8, and
+ *   at 883 dense cells the difference is the whole scene.
+ *
+ * ## What this costs, stated rather than absorbed
+ *
+ * A session may now hold 8 cells where it could hold 128. The three frozen
+ * traces replay to smaller re-entry and eviction counts at this cap, and those
+ * falls are ARITHMETIC AND NOT AN IMPROVEMENT: a session that may hold 8 cells
+ * cannot evict 128 and cannot re-enter what it never held. What they do
+ * establish is that the cap BINDS on every path — peak resident is exactly 8
+ * everywhere, where the street pan never reached 128 — and that eviction remains
+ * routine rather than rare. `exterior-cache-governance-gate.test.ts` carries
+ * both readings side by side.
+ *
+ * This constant and `EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries` moved in ONE
+ * commit, together with the promotion records they were sized for. ADR 0052 §3
+ * gives the reason and the rollback contract: neither constant has a predecessor
+ * record, so reverting the promotion commit is the rollback.
  */
 export const EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY = {
   ...EXTERIOR_CELL_SCHEDULER_POLICY,
-  maxResidentUnits: 128,
+  maxResidentUnits: 8,
 } as const;
 
 export const EMPTY_SCHEDULER_CARRY: SchedulerCarry = {

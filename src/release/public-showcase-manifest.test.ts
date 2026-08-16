@@ -42,10 +42,31 @@ import {
 } from "./public-showcase-manifest.ts";
 
 describe("the public showcase candidate is a closed set", () => {
-  it("enumerates exactly the six promoted waves, in activation order", () => {
-    const activated = EXTERIOR_DEFAULT_ACTIVATIONS.filter((record) => record.enabled).map((record) => record.releaseId);
-    expect(PUBLIC_SHOWCASE_WAVES.map((wave) => wave.publicReleaseId)).toEqual(activated);
+  /**
+   * The manifest enumerates the six CURATED releases — the ones whose approvals
+   * are imported above — so it is compared against the curated set rather than
+   * against whatever the build happens to promote today.
+   *
+   * Until T005 those were the same list and this read the promotion set directly.
+   * T005 promoted six `-s1` serving successors, and the curated releases the
+   * manifest is about became their PREDECESSORS. The comparison follows them
+   * there instead of being re-pointed at the successors, which the manifest does
+   * not cover: no showcase root, package or exclusion was re-derived for them,
+   * and claiming this closed set enumerates them would be false. It is still
+   * derived from the build's own records, so a curated record swapped underneath
+   * a promotion still fails here.
+   */
+  it("enumerates exactly the six curated waves the promotion set descends from, in activation order", () => {
+    const curated = EXTERIOR_DEFAULT_ACTIVATIONS.flatMap((record) =>
+      record.enabled && record.predecessor.enabled ? [record.predecessor.releaseId] : [],
+    );
+    expect(PUBLIC_SHOWCASE_WAVES.map((wave) => wave.publicReleaseId)).toEqual(curated);
     expect(PUBLIC_SHOWCASE_WAVES).toHaveLength(6);
+    // The promoted successors are outside this manifest, and that is asserted
+    // rather than left to be inferred from the list above.
+    const promoted = EXTERIOR_DEFAULT_ACTIVATIONS.flatMap((record) => (record.enabled ? [record.releaseId] : []));
+    expect(promoted).toHaveLength(6);
+    for (const releaseId of promoted) expect(curated).not.toContain(releaseId);
   });
 
   it("resolves each enumerated public root and returns its wave", () => {

@@ -155,24 +155,60 @@ const locatedFeature = runtimeFixtureFeatures.find((feature) => feature.kind ===
 /** The V2 canary release. Still pinned and still reachable by explicit opt-in. */
 const CANARY_EXTERIOR_RELEASE_ID = "manhattan-exterior-cells-20260811";
 const CANARY_EXTERIOR_ROOT = `/data/${CANARY_EXTERIOR_RELEASE_ID}/`;
-/** The V3 successor, which is what this build promotes as the Block 835 default. */
-const PROMOTED_EXTERIOR_RELEASE_ID = "manhattan-exterior-cells-20260811-v3";
+/**
+ * The V3 CURATED successor of the V2 canary. It was the promoted Block 835
+ * default until T005 promoted the serving release below over it; it is now that
+ * record's `predecessor` — still pinned, still reachable by `?exteriorCells=`,
+ * and no longer what a parameterless session loads.
+ */
+const CURATED_BLOCK835_RELEASE_ID = "manhattan-exterior-cells-20260811-v3";
+/** The T005 SERVING release, which is what this build promotes as the w00 default. */
+const PROMOTED_EXTERIOR_RELEASE_ID = "manhattan-exterior-cells-20260811-v3-s1";
 const PROMOTED_EXTERIOR_ROOT = `/data/${PROMOTED_EXTERIOR_RELEASE_ID}/`;
-const MIDTOWN_CORE_EXTERIOR_RELEASE_ID = "manhattan-midtown-core-cells-20260811-v3";
+const MIDTOWN_CORE_EXTERIOR_RELEASE_ID = "manhattan-midtown-core-cells-20260811-v3-s1";
 const MIDTOWN_CORE_EXTERIOR_ROOT = `/data/${MIDTOWN_CORE_EXTERIOR_RELEASE_ID}/`;
 const BLOCK_835_FEATURE_IDS = [...BLOCK_835_DOITT_IDS].map((id) => `doitt:${id}`);
 
 /**
- * Serves the COMMITTED canary release bytes from `public/` so the App drives the
- * real exterior runtime. Everything else fails closed exactly as it does when a
- * local release is absent.
+ * A camera standing INSIDE Block 835's census cell, as the six pose parameters
+ * a shared link carries.
+ *
+ * Before T005 no test needed one: `EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY`
+ * admitted 128 resident cells out of the 883-cell census, and the default
+ * overview pose held Block 835's cell comfortably inside that. T005 cut the cap
+ * to 8 — sized for a DENSE serving composition against an unchanged byte
+ * ceiling — and at the default overview pose the nearest eight cells are all
+ * wave w03's. Block 835 is no longer among them, so a session that does not go
+ * there streams none of it.
+ *
+ * THAT IS A REAL LOSS AND IT IS NAMED HERE RATHER THAN WORKED AROUND SILENTLY: a
+ * curated single-cell wave is only resident now when the camera is close to it.
+ * These tests are about activation, gating and streaming rather than about where
+ * the camera starts, so they place the camera in the cell they are about. The
+ * scheduler's first rule — every unit whose rectangle contains the camera ground
+ * point is resident, exempt from the cap — is what makes that deterministic.
+ */
+const BLOCK_835_CAMERA_QUERY = "lon=-73.986360&lat=40.748775&height=900.000000&heading=0.000000&pitch=-45.000000&roll=0.000000";
+
+/**
+ * Serves the COMMITTED release bytes from `public/` so the App drives the real
+ * exterior runtime. Everything else fails closed exactly as it does when a local
+ * release is absent.
+ *
+ * The served set widened at T005. It used to be the two Block 835 releases; the
+ * promoted default is now six SERVING releases, and a session that resolves them
+ * requests all six roots, so a mock that answered only Block 835's would turn a
+ * promotion into a transport failure and test the wrong thing.
  */
 function serveCommittedCanaryRelease() {
   return vi.spyOn(globalThis, "fetch").mockImplementation(async (input: RequestInfo | URL) => {
     const path = String(input);
-    // Both Block 835 releases are served: the promoted V3 successor and the V2
-    // release its explicit opt-in links still name.
-    if (!path.startsWith(CANARY_EXTERIOR_ROOT) && !path.startsWith(PROMOTED_EXTERIOR_ROOT)) return new Response(null, { status: 404 });
+    // Every Manhattan exterior release this build pins is served: the six T005
+    // serving releases the promotion record names, the V3 curated predecessor,
+    // and the V2 canary that explicit opt-in links still name.
+    if (!/^\/data\/manhattan-(?:exterior|midtown-core|lower-manhattan|southern-remainder|central-upper-manhattan|northern-manhattan)-cells-/u.test(path)) {
+      return new Response(null, { status: 404 });
+    }
     try {
       return new Response(new Uint8Array(readFileSync(`public${path}`)), { status: 200 });
     } catch {
@@ -831,27 +867,36 @@ describe("exterior streaming profiles and canary state", () => {
 
   it("round-trips the pinned Manhattan release and keeps the fixture as the no-real-base fallback", () => {
     expect(PINNED_EXTERIOR_CELL_RELEASE_IDS).toEqual(["udt-fixture-exterior-cells", "manhattan-exterior-cells-20260811", "manhattan-exterior-cells-20260811-v3", "manhattan-midtown-core-cells-20260811", "manhattan-midtown-core-cells-20260811-v3", "manhattan-lower-manhattan-cells-20260812", "manhattan-lower-manhattan-cells-20260812-p1", "manhattan-southern-remainder-cells-20260812", "manhattan-southern-remainder-cells-20260812-p1", "manhattan-central-upper-manhattan-cells-20260812", "manhattan-central-upper-manhattan-cells-20260812-p1", "manhattan-northern-manhattan-cells-20260812", "manhattan-northern-manhattan-cells-20260812-p1", "manhattan-southern-remainder-cells-20260812-t1", "manhattan-lower-manhattan-cells-20260812-t1", "manhattan-central-upper-manhattan-cells-20260812-t1", "manhattan-northern-manhattan-cells-20260812-t1", "manhattan-exterior-cells-20260811-v3-s1", "manhattan-midtown-core-cells-20260811-v3-s1", "manhattan-lower-manhattan-cells-20260812-s1", "manhattan-southern-remainder-cells-20260812-s1", "manhattan-central-upper-manhattan-cells-20260812-s1", "manhattan-northern-manhattan-cells-20260812-s1"]);
-    // The six T005 SERVING releases are pinned on the canary terms and on no
-    // others: reachable by explicit opt-in so the frame-time and eviction
-    // evidence can be taken against the promoted default, absent from the
-    // promotion record, and therefore never loaded by an ordinary session.
+    // The six T005 SERVING releases ARE the promotion record now. This assertion
+    // is the inverse of what it said before that promotion — the `-s1` ids were
+    // pinned on the canary terms and deliberately absent from the record, so the
+    // frame-time and eviction evidence could be taken against them without an
+    // ordinary session loading them. T005 promoted them, and the pins did not
+    // have to move for it: they were already there.
     expect(isPinnedExteriorCellRelease("manhattan-lower-manhattan-cells-20260812-s1")).toBe(true);
-    expect(EXTERIOR_DEFAULT_ACTIVATIONS.some((record) => record.releaseId?.endsWith("-s1") === true)).toBe(false);
+    expect(EXTERIOR_DEFAULT_ACTIVATIONS.filter((record) => record.releaseId?.endsWith("-s1") === true)).toHaveLength(6);
+    expect(EXTERIOR_DEFAULT_ACTIVATIONS.every((record) => record.enabled && record.releaseId.endsWith("-s1"))).toBe(true);
     // The Lower-Manhattan CANARY stays reachable by explicit opt-in and by
-    // nothing else, and this survives its wave's promotion: promoting the P1
-    // successor did not promote the canary, and the canary's deep link keeps
-    // meaning exactly what it meant the day it was taken.
+    // nothing else, and this survives its wave's promotion twice over: neither
+    // the P1 successor's promotion nor the S1 serving promotion over that
+    // touched it, and the canary's deep link keeps meaning exactly what it meant
+    // the day it was taken.
     expect(isPinnedExteriorCellRelease("manhattan-lower-manhattan-cells-20260812")).toBe(true);
     expect(EXTERIOR_DEFAULT_ACTIVATION.releaseId).not.toBe("manhattan-lower-manhattan-cells-20260812");
     expect(EXTERIOR_DEFAULT_ACTIVATIONS.some((record) => record.enabled && record.releaseId === "manhattan-lower-manhattan-cells-20260812")).toBe(false);
-    // The P1 successor IS promoted, and is pinned so its own link resolves too.
+    // The P1 successor is pinned so its own link resolves. It WAS the promoted
+    // default and is now the serving record's PREDECESSOR, which is a different
+    // claim: a parameterless session no longer loads it, and the rollback that
+    // would restore it is the one record swap it always was.
     expect(isPinnedExteriorCellRelease("manhattan-lower-manhattan-cells-20260812-p1")).toBe(true);
     // The T1 SHARED-TEXTURE variant (ADR 0047) is pinned on the canary terms and
     // on no others: reachable by explicit opt-in, absent from the promotion
     // record, and therefore never loaded by an ordinary session.
     expect(isPinnedExteriorCellRelease("manhattan-lower-manhattan-cells-20260812-t1")).toBe(true);
     expect(EXTERIOR_DEFAULT_ACTIVATIONS.some((record) => record.releaseId?.endsWith("-t1") === true)).toBe(false);
-    expect(EXTERIOR_DEFAULT_ACTIVATIONS.some((record) => record.enabled && record.releaseId === "manhattan-lower-manhattan-cells-20260812-p1")).toBe(true);
+    expect(EXTERIOR_DEFAULT_ACTIVATIONS.some((record) => record.enabled && record.releaseId === "manhattan-lower-manhattan-cells-20260812-s1")).toBe(true);
+    expect(EXTERIOR_DEFAULT_ACTIVATIONS.some((record) => record.enabled && record.releaseId === "manhattan-lower-manhattan-cells-20260812-p1")).toBe(false);
+    expect(EXTERIOR_DEFAULT_ACTIVATIONS.some((record) => record.enabled && record.predecessor.releaseId === "manhattan-lower-manhattan-cells-20260812-p1")).toBe(true);
     // The Southern-remainder CANARY is pinned on the canary terms exactly: it
     // resolves by explicit opt-in and has no entry in the promotion record, so
     // adding it changed nothing about what an ordinary session loads.
@@ -867,11 +912,16 @@ describe("exterior streaming profiles and canary state", () => {
     expect(isPinnedExteriorCellRelease("manhattan-central-upper-manhattan-cells-20260812")).toBe(true);
     expect(EXTERIOR_DEFAULT_ACTIVATION.releaseId).not.toBe("manhattan-central-upper-manhattan-cells-20260812");
     expect(EXTERIOR_DEFAULT_ACTIVATIONS.some((record) => record.releaseId === "manhattan-central-upper-manhattan-cells-20260812")).toBe(false);
-    // The T020 P1 successor IS promoted, and the canary above is untouched by
-    // that: the split the comment above declined to make was made at T020, 42
-    // entries to this wave and 36 reserved for wave w05, with no cap change.
+    // The T020 P1 successor was promoted at T020, and the canary above was
+    // untouched by that: the split the comment above declined to make was made
+    // at T020, 42 entries to this wave and 36 reserved for wave w05, with no cap
+    // change. T005 has since promoted the S1 serving release over it, so the P1
+    // release is now the predecessor rather than the default — still pinned, and
+    // no longer loaded by a session that names nothing.
     expect(isPinnedExteriorCellRelease("manhattan-central-upper-manhattan-cells-20260812-p1")).toBe(true);
-    expect(EXTERIOR_DEFAULT_ACTIVATIONS.some((record) => record.enabled && record.releaseId === "manhattan-central-upper-manhattan-cells-20260812-p1")).toBe(true);
+    expect(EXTERIOR_DEFAULT_ACTIVATIONS.some((record) => record.enabled && record.releaseId === "manhattan-central-upper-manhattan-cells-20260812-s1")).toBe(true);
+    expect(EXTERIOR_DEFAULT_ACTIVATIONS.some((record) => record.enabled && record.releaseId === "manhattan-central-upper-manhattan-cells-20260812-p1")).toBe(false);
+    expect(EXTERIOR_DEFAULT_ACTIVATIONS.some((record) => record.enabled && record.predecessor.releaseId === "manhattan-central-upper-manhattan-cells-20260812-p1")).toBe(true);
     // The Northern-Manhattan CANARY, materializing the LAST wave the committed
     // ledger declares, on the same canary terms as every canary before it: pinned
     // so an explicit opt-in resolves, absent from the promotion record so an
@@ -883,16 +933,25 @@ describe("exterior streaming profiles and canary state", () => {
     expect(isPinnedExteriorCellRelease("manhattan-northern-manhattan-cells-20260812")).toBe(true);
     expect(EXTERIOR_DEFAULT_ACTIVATION.releaseId).not.toBe("manhattan-northern-manhattan-cells-20260812");
     expect(EXTERIOR_DEFAULT_ACTIVATIONS.some((record) => record.releaseId === "manhattan-northern-manhattan-cells-20260812")).toBe(false);
-    // The T022 P1 successor IS promoted, and the canary above is untouched by
-    // that: the reservation the T021 canary recorded as somebody else's number
-    // was SPENT here — 24 of the 36 reserved entries, with no cap change — and
-    // with this record every wave the ledger declares has a promoted default.
+    // The T022 P1 successor was promoted at T022, and the canary above was
+    // untouched by that: the reservation the T021 canary recorded as somebody
+    // else's number was SPENT there — 24 of the 36 reserved entries, with no cap
+    // change — and with that record every wave the ledger declares had a
+    // promoted default. T005 promoted the S1 serving release over it, so this
+    // one too is now a predecessor rather than a default.
     expect(isPinnedExteriorCellRelease("manhattan-northern-manhattan-cells-20260812-p1")).toBe(true);
-    expect(EXTERIOR_DEFAULT_ACTIVATIONS.some((record) => record.enabled && record.releaseId === "manhattan-northern-manhattan-cells-20260812-p1")).toBe(true);
+    expect(EXTERIOR_DEFAULT_ACTIVATIONS.some((record) => record.enabled && record.releaseId === "manhattan-northern-manhattan-cells-20260812-s1")).toBe(true);
+    expect(EXTERIOR_DEFAULT_ACTIVATIONS.some((record) => record.enabled && record.releaseId === "manhattan-northern-manhattan-cells-20260812-p1")).toBe(false);
+    expect(EXTERIOR_DEFAULT_ACTIVATIONS.some((record) => record.enabled && record.predecessor.releaseId === "manhattan-northern-manhattan-cells-20260812-p1")).toBe(true);
     // Unchanged: this is the fallback for a session with no real base, not the
     // promoted default. The promoted default lives in EXTERIOR_DEFAULT_ACTIVATION.
     expect(EXTERIOR_CELL_STREAMING_RELEASE_ID).toBe("udt-fixture-exterior-cells");
-    expect(EXTERIOR_DEFAULT_ACTIVATION.releaseId).toBe("manhattan-exterior-cells-20260811-v3");
+    // T005 moved this one record from the V3 curated release to its serving
+    // successor. The curated release stays pinned as the record's predecessor.
+    expect(EXTERIOR_DEFAULT_ACTIVATION.releaseId).toBe(PROMOTED_EXTERIOR_RELEASE_ID);
+    expect(EXTERIOR_DEFAULT_ACTIVATION.releaseId).toBe("manhattan-exterior-cells-20260811-v3-s1");
+    expect(isPinnedExteriorCellRelease(CURATED_BLOCK835_RELEASE_ID)).toBe(true);
+    expect(EXTERIOR_DEFAULT_ACTIVATION.enabled && EXTERIOR_DEFAULT_ACTIVATION.predecessor.releaseId).toBe(CURATED_BLOCK835_RELEASE_ID);
     expect(isPinnedExteriorCellRelease(EXTERIOR_DEFAULT_ACTIVATION.releaseId)).toBe(true);
     expect(isPinnedExteriorCellRelease("manhattan-exterior-cells-20260811")).toBe(true);
     expect(isPinnedExteriorCellRelease("manhattan-exterior-production")).toBe(false);
@@ -1009,6 +1068,12 @@ describe("exterior streaming profiles and canary state", () => {
    * nothing re-ran when the real adapter landed — only a manual disable/enable
    * toggle recovered. This drives the committed canary bytes through the real
    * exterior runtime inside `<App />` and allows no toggle.
+   *
+   * The link carries a Block 835 camera because T005 cut the global residency cap
+   * to 8 cells out of 883; see `BLOCK_835_CAMERA_QUERY`. Nothing about the
+   * ordering under test depends on where the camera is — what the pose buys is
+   * that the cell is resident at all, so that "rendered nothing" means the
+   * activation ordering broke rather than that the scheduler deferred the wave.
    */
   it("renders the pinned canary on a clean load when the citywide base adapter arrives after the first activation attempt", async () => {
     const fetchSpy = serveCommittedCanaryRelease();
@@ -1016,7 +1081,7 @@ describe("exterior streaming profiles and canary state", () => {
     const citywideGate = deferred<CitywideReleaseAdapter>();
     citywideRuntimeMocks.loadCitywideRelease.mockReturnValue(citywideGate.promise);
     try {
-      window.history.replaceState({}, "", `/?data=${CITYWIDE_RELEASE_ID}&release=${CITYWIDE_RELEASE_ID}&exteriorCells=${CANARY_EXTERIOR_RELEASE_ID}`);
+      window.history.replaceState({}, "", `/?data=${CITYWIDE_RELEASE_ID}&release=${CITYWIDE_RELEASE_ID}&exteriorCells=${CANARY_EXTERIOR_RELEASE_ID}&${BLOCK_835_CAMERA_QUERY}`);
       render(<App />);
       const requestedPaths = () => fetchSpy.mock.calls.map(([input]) => String(input));
 
@@ -1076,7 +1141,11 @@ describe("exterior streaming profiles and canary state", () => {
     const citywide = lateCitywideBaseAdapter(BLOCK_835_FEATURE_IDS);
     citywideRuntimeMocks.loadCitywideRelease.mockResolvedValue(citywide.adapter as unknown as CitywideReleaseAdapter);
     try {
-      window.history.replaceState({}, "", `/?data=${CITYWIDE_RELEASE_ID}&release=${CITYWIDE_RELEASE_ID}`);
+      // Carries a POSE and no exterior parameter. The claim under test is that a
+      // session naming no exterior release streams the promoted set; where the
+      // camera stands is not part of that claim, and since the T005 cap flip it
+      // decides which of 883 cells are resident. See `BLOCK_835_CAMERA_QUERY`.
+      window.history.replaceState({}, "", `/?data=${CITYWIDE_RELEASE_ID}&release=${CITYWIDE_RELEASE_ID}&${BLOCK_835_CAMERA_QUERY}`);
       render(<App />);
       const requestedPaths = () => fetchSpy.mock.calls.map(([input]) => String(input));
 
@@ -1414,7 +1483,9 @@ describe("exterior fallback notice presentation", () => {
  * base, with no `exteriorCells` opt-in, and its rollback is one record swap.
  */
 describe("promoted Block 835 exterior default activation", () => {
-  const REAL_BASE_URL = `/?data=real-pilot&release=${CITYWIDE_RELEASE_ID}`;
+  // The pose is Block 835's own cell; see `BLOCK_835_CAMERA_QUERY` for why a
+  // promoted-default session has to carry one since T005.
+  const REAL_BASE_URL = `/?data=real-pilot&release=${CITYWIDE_RELEASE_ID}&${BLOCK_835_CAMERA_QUERY}`;
   // The real predecessor: it names the release the build withdrew, which is what
   // makes promotion-era `?exteriorCells=` bookmarks fail closed.
   const ROLLED_BACK_RECORD = { enabled: false, releaseId: null, rolledBackReleaseId: CANARY_EXTERIOR_RELEASE_ID };
@@ -1471,7 +1542,17 @@ describe("promoted Block 835 exterior default activation", () => {
       const status = [...document.querySelectorAll<HTMLElement>(".runtime-note-overlay")].find((candidate) => candidate.textContent?.startsWith("Exterior streaming ·"));
       expect(status?.textContent).toContain(`Default pinned snapshot ${promoted!.snapshotId}`);
       expect(status?.getAttribute("data-exterior-snapshot-origin")).toBe("default");
-      expect(document.querySelector("[data-exterior-notices]")).toBeNull();
+      // NOT silent, and this reverses the pre-promotion expectation. A session
+      // used to resolve one wave of 13 content cells and have nothing to defer.
+      // It now resolves six waves covering all 883, and from a pose inside
+      // Block 835 the other five waves' cells are simply not near the camera —
+      // so the app SAYS SO, per wave, rather than rendering fourteen buildings
+      // and leaving a reader to assume the island failed to load.
+      const notices = document.querySelector("[data-exterior-notices]");
+      expect(notices).not.toBeNull();
+      expect(notices?.textContent).toContain("they load when the camera reaches them");
+      // The wave that IS at the camera is not among the deferred ones.
+      expect(notices?.textContent).not.toContain(`Exterior release ${PROMOTED_EXTERIOR_RELEASE_ID}:`);
       expect(within(document.body).getByRole("button", { name: "Disable exterior streaming" })).toBeInTheDocument();
 
       // A default-on session carries no exterior parameters at all.

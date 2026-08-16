@@ -1,6 +1,14 @@
 /**
- * Drift gate for the ACTIVE Northern-Manhattan promotion record — the SIXTH and
- * last.
+ * Drift gate for the Northern-Manhattan P1 curated promotion record — the SIXTH
+ * and last curated wave.
+ *
+ * The P1 curated release is no longer the promoted default: T005 promoted this
+ * wave's `-s1` serving release, which carries the P1 record as its
+ * `predecessor`, and did the same for the five waves before it. This gate is
+ * retained over the curated records, unchanged in what it checks; where it
+ * reads the promotion set it now reads each promoted record's predecessor,
+ * because a serving record states its membership as a digest and names no
+ * building identity.
  *
  * This test is NEVER skipped. Every value it checks is recomputed from the
  * committed `data/northern-manhattan-20260812-p1/payload-inventory.json`, which is
@@ -25,17 +33,18 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
-  CENTRAL_UPPER_MANHATTAN_EXTERIOR_ACTIVATION,
+  CENTRAL_UPPER_MANHATTAN_P1_EXTERIOR_ACTIVATION,
   EXTERIOR_DEFAULT_ACTIVATIONS,
   NORTHERN_MANHATTAN_BASE_ONLY_PREDECESSOR,
-  NORTHERN_MANHATTAN_EXTERIOR_ACTIVATION,
   NORTHERN_MANHATTAN_MEMBERSHIP_BUILDING_IDS,
+  NORTHERN_MANHATTAN_P1_EXTERIOR_ACTIVATION,
   exteriorAcceptedCellsDigest,
   exteriorRolledBackReleaseNotice,
   exteriorUnavailableDetail,
   verifyPromotedExteriorMembership,
   verifyPromotedExteriorPin,
   type ExteriorAcceptedCell,
+  type ExteriorDefaultActivationRecord,
 } from "./exterior-default-activation";
 import { EXTERIOR_RUNTIME_BUDGETS } from "./exterior-cell-runtime";
 import { sha256HexSync } from "../domain/deterministic-hash";
@@ -90,13 +99,16 @@ interface PayloadInventory {
 
 const RELEASE_ID = "manhattan-northern-manhattan-cells-20260812-p1";
 const CANARY_RELEASE_ID = "manhattan-northern-manhattan-cells-20260812";
+/** The T005 serving releases the sixth and fifth promotion slots now hold. */
+const SERVING_RELEASE_ID = "manhattan-northern-manhattan-cells-20260812-s1";
+const CENTRAL_UPPER_MANHATTAN_SERVING_RELEASE_ID = "manhattan-central-upper-manhattan-cells-20260812-s1";
 const INVENTORY_PATH = "data/northern-manhattan-20260812-p1/payload-inventory.json";
 const CANARY_INVENTORY_PATH = "data/northern-manhattan-20260812/payload-inventory.json";
 const LEDGER_PATH = "data/normalized/manhattan-exterior-wave-ledger-20260804/ledger.json";
 
 const inventoryText = new TextDecoder().decode(readFileSync(INVENTORY_PATH));
 const inventory = JSON.parse(inventoryText) as PayloadInventory;
-const RECORD = NORTHERN_MANHATTAN_EXTERIOR_ACTIVATION.enabled ? NORTHERN_MANHATTAN_EXTERIOR_ACTIVATION : null;
+const RECORD = NORTHERN_MANHATTAN_P1_EXTERIOR_ACTIVATION.enabled ? NORTHERN_MANHATTAN_P1_EXTERIOR_ACTIVATION : null;
 
 const CELL_RELEASE_PREFIX = `public/cell-release/cell-release-${RELEASE_ID}-`;
 const ASSET_PATTERN = /^public\/assets\/(doitt-\d+)__lod_\d+\.glb$/;
@@ -128,8 +140,23 @@ function buildingIdsFrom(files: InventoryFile[]): string[] {
   return [...ids].sort();
 }
 
+/**
+ * The curated record behind each promotion slot.
+ *
+ * T005 promoted a `-s1` serving release into every slot, each carrying the
+ * curated record it superseded as its `predecessor`. A serving record states
+ * its accepted membership as a digest and names no building identity, so the
+ * ledger-coverage claims below — which are about building identities — read the
+ * predecessors. The set is still walked rather than counted: a slot that lost
+ * its curated predecessor, or a slot that went disabled, drops out here and the
+ * coverage assertions fail.
+ */
+function curatedPredecessors(): readonly ExteriorDefaultActivationRecord[] {
+  return EXTERIOR_DEFAULT_ACTIVATIONS.map((record) => (record.enabled ? record.predecessor : record));
+}
+
 describe("Northern-Manhattan promotion record versus the committed payload inventory", () => {
-  it("is enabled, is the sixth record, and names the successor rather than the canary", () => {
+  it("is enabled, is the sixth slot's predecessor, and names the successor rather than the canary", () => {
     expect(RECORD).not.toBeNull();
     expect(RECORD!.releaseId).toBe(inventory.releaseId);
     expect(RECORD!.releaseId).toBe(RELEASE_ID);
@@ -137,10 +164,21 @@ describe("Northern-Manhattan promotion record versus the committed payload inven
     expect(RECORD!.approvalRef).toBe("Issue #23 gate approval 2026-08-12 (T022 Northern-Manhattan curated promotion)");
     expect(RECORD!.rolledBackReleaseId ?? null).toBeNull();
     expect(EXTERIOR_DEFAULT_ACTIVATIONS).toHaveLength(6);
-    expect(EXTERIOR_DEFAULT_ACTIVATIONS[5]).toBe(NORTHERN_MANHATTAN_EXTERIOR_ACTIVATION);
-    // The five earlier records are untouched by this promotion, and the one
+    // T005 promoted this wave's serving release into the same sixth slot with
+    // this record as its predecessor, so the slot is still this wave's, one
+    // link further back.
+    const promoted = EXTERIOR_DEFAULT_ACTIVATIONS[5]!;
+    expect(promoted.enabled).toBe(true);
+    if (!promoted.enabled) throw new Error("expected the sixth promoted default to be enabled");
+    expect(promoted.releaseId).toBe(SERVING_RELEASE_ID);
+    expect(promoted.predecessor).toBe(NORTHERN_MANHATTAN_P1_EXTERIOR_ACTIVATION);
+    // The five earlier slots are untouched by this promotion, and the wave
     // immediately before it is asserted by identity rather than by shape.
-    expect(EXTERIOR_DEFAULT_ACTIVATIONS[4]).toBe(CENTRAL_UPPER_MANHATTAN_EXTERIOR_ACTIVATION);
+    const previous = EXTERIOR_DEFAULT_ACTIVATIONS[4]!;
+    expect(previous.enabled).toBe(true);
+    if (!previous.enabled) throw new Error("expected the fifth promoted default to be enabled");
+    expect(previous.releaseId).toBe(CENTRAL_UPPER_MANHATTAN_SERVING_RELEASE_ID);
+    expect(previous.predecessor).toBe(CENTRAL_UPPER_MANHATTAN_P1_EXTERIOR_ACTIVATION);
   });
 
   it("pins the rollout snapshot and assembly package the inventory recorded", () => {
@@ -215,7 +253,20 @@ describe("ADR 0037 preconditions on promotion, checked rather than asserted", ()
    */
   it("(a) consumes the reservation by number, and does NOT move the cache cap", () => {
     expect(inventory.occupancy.maxCacheEntries).toBe(512);
-    expect(inventory.occupancy.maxCacheEntries).toBe(EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries);
+    // The record states the cap that was IN FORCE WHEN IT WAS DERIVED, and this
+    // gate no longer ties that frozen 512 to the live constant. It used to, and
+    // the coupling was right while the cap stood still: it caught a build that
+    // moved the cap and left a promoted wave sized against the old one.
+    //
+    // The T005 serving promotion raised the live cap to 1,024, and re-pointing
+    // this equality at the new value would claim this release was derived
+    // against a cap that did not exist when it was cut. So the frozen figure
+    // stays a literal, and what is checked against the live constant is the
+    // property that still has to hold: the occupancy this record declares must
+    // still FIT the cache the build actually ships. A cap that fell below it
+    // would still fail here.
+    expect(inventory.occupancy.maxCacheEntries).toBeLessThanOrEqual(EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries);
+    expect(EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries).toBe(1_024);
     expect(inventory.occupancy.promotedAssetEntries).toBe(474);
     expect(inventory.occupancy.promotedWaveCount).toBe(5);
     expect(inventory.occupancy.promotedWaves.reduce((sum, wave) => sum + wave.assetEntries, 0)).toBe(474);
@@ -434,14 +485,18 @@ describe("Northern-Manhattan lineage and rollback semantics", () => {
  *
  * Every earlier promotion could say "one more wave is promoted". This one says
  * "every wave the ledger declares is promoted", and that is checked against the
- * ledger's own cells: each enabled record's wave index is taken from the cell ids
+ * ledger's own cells: each curated record's wave index is taken from the cell ids
  * its committed inventory ships, and the set of those indexes must be exactly the
  * declared plan. Six is never typed as a target — it falls out of the plan.
+ *
+ * The records walked here are the curated predecessors of the promoted serving
+ * releases, because building identities are what these claims are made of and a
+ * serving record carries only their digest.
  */
 describe("the promotion set is COMPLETE with respect to the committed wave ledger", () => {
   it("covers every declared wave exactly once, with disjoint partitions", () => {
     const declared = EXTERIOR_WAVE_PLAN.map((wave) => wave.waveIndex).sort((left, right) => left - right);
-    const enabled = EXTERIOR_DEFAULT_ACTIVATIONS.filter((record) => record.enabled);
+    const enabled = curatedPredecessors().filter((record) => record.enabled);
     expect(enabled).toHaveLength(declared.length);
 
     // Block 835 is the one promoted release whose membership is not a wave-ledger
@@ -484,7 +539,7 @@ describe("the promotion set is COMPLETE with respect to the committed wave ledge
    * prose about scope is exactly what drifts.
    */
   it("is completeness of COVERAGE, not of the city, and the arithmetic says so", () => {
-    const enabled = EXTERIOR_DEFAULT_ACTIVATIONS.filter((record) => record.enabled);
+    const enabled = curatedPredecessors().filter((record) => record.enabled);
     const promotedBuildings = enabled.reduce((sum, record) => sum + (record.enabled ? record.membership.buildingIds.length : 0), 0);
     const baseBuildings = new Set(ledger.cells.flatMap((cell) => cell.buildingIds)).size;
     expect(baseBuildings).toBe(45194);

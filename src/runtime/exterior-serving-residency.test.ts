@@ -201,14 +201,51 @@ describe("full-city serving residency bound", () => {
     expect(bound.composition.bytes / bound.reachable.bytes).toBeGreaterThan(22);
   });
 
-  it("records the caps this build still ships, so a flip is a deliberate edit", () => {
-    // T005 does NOT change these here. The bound above says what they must
-    // become when the serving releases are promoted, and flipping them before
-    // the serving payload exists would cap the CURATED composition at 8 cells
-    // for no benefit. The pairing is asserted so the two halves cannot drift
-    // apart silently — ADR 0045 4.1's both-halves lesson.
-    expect(EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY.maxResidentUnits).toBe(128);
-    expect(EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries).toBe(512);
+  /**
+   * THE FLIP LANDED, and this test is the reason it could only land here.
+   *
+   * Until the promotion commit this case asserted the OPPOSITE — cap 128, 512
+   * entries — and said so deliberately: flipping the caps before the serving
+   * releases were promoted would have capped the CURATED composition at 8 cells,
+   * which ADR 0052 §3 measured as rendering NOTHING at the overview camera,
+   * because the nearest 8 of 883 dense census cells almost never coincide with
+   * 13 sparse content cells.
+   *
+   * It now asserts the flip, in the same shape and for the same reason: the two
+   * halves are pinned TOGETHER so they cannot drift apart silently, which is
+   * ADR 0045 4.1's both-halves lesson. Each half is also tied to the measurement
+   * that justifies it, so neither can be moved without moving a bound.
+   */
+  it("records the caps this build ships, both halves of the flip in one place", () => {
+    const bound = exteriorServingResidencyBound({ cells: servedCells(), cap: 8, maxCacheEntries: 1_024, maxCachedBytes: 256 * MIB });
+
+    // Half one: the residency cap IS the cap the bound was measured at.
+    expect(EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY.maxResidentUnits).toBe(8);
+
+    // Half two: the entry cap had to rise because 599 does not fit 512, and it
+    // rose to exactly one doubling rather than to a number nobody sized.
+    expect(EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries).toBe(1_024);
+    expect(bound.reachable.entries).toBeGreaterThan(512);
+    expect(bound.reachable.entries).toBeLessThanOrEqual(EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries);
+
+    // And the byte cap did NOT move, which is the third fact and the one most
+    // easily lost: it is now the live backstop at 92.0% of the worst anchor,
+    // and it is what makes a cap of 16 impossible rather than merely tight.
     expect(EXTERIOR_RUNTIME_BUDGETS.maxCachedBytes).toBe(256 * MIB);
+    expect(bound.bindingConstraint).toBe("bytes");
+
+    // The bound is recomputed here against the LIVE constants, not against the
+    // literals above, so a later edit to either constant is measured rather
+    // than merely noticed.
+    const live = exteriorServingResidencyBound({
+      cells: servedCells(),
+      cap: EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY.maxResidentUnits,
+      maxCacheEntries: EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries,
+      maxCachedBytes: EXTERIOR_RUNTIME_BUDGETS.maxCachedBytes,
+    });
+    expect(live.fitsEntryCap).toBe(true);
+    expect(live.fitsByteCap).toBe(true);
+    expect(live.reachable.entries).toBe(599);
+    expect(live.reachable.bytes).toBe(247_000_877);
   });
 });

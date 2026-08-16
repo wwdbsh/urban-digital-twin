@@ -88,6 +88,42 @@ export const EXTERIOR_CELL_RUNTIME_SCHEMA_VERSION = "1.0" as const;
  * evidence records `runtimeBudgets` from this object rather than from a constant
  * typed into the measurement, so a reading taken at the old cap cannot be
  * presented as a reading at the new one.
+ *
+ * ## `maxCacheEntries` was RAISED again, 512 to 1,024, on 2026-08-17 (T005)
+ *
+ * This raise is NOT the previous one repeated. T018 doubled the cap because a
+ * fourth CURATED wave could not otherwise be promoted at all — the constraint
+ * was the release-time sum of a fixed promoted set. T005 promotes the six `-s1`
+ * serving releases, whose composition is 44,989 assets and 4.679 GB, and no
+ * entry cap holds that; none is meant to. What binds instead is RESIDENCY, and
+ * the number this cap has to admit is the worst neighbourhood a camera can
+ * stand in.
+ *
+ * `exterior-serving-residency.ts` measures that from the committed retention
+ * inventories and the committed extents census, and it is the reason for both
+ * halves of the T005 budget change:
+ *
+ * 1. **Entries: 1,024.** At the serving residency cap of 8 cells, the worst
+ *    reachable anchor holds **599 entries** — one per served GLB, plus each
+ *    resident cell's evidence sidecar, plus each resident cell's assembly
+ *    manifest under the ADR 0052 §2 seam. 599 does not fit 512, so the cap is
+ *    raised to the next doubling; 599 is 58.5% of 1,024, and the entry cap
+ *    stops being the binding constraint.
+ * 2. **Bytes: STILL 256 MiB, and now nearly binding.** The same anchor holds
+ *    **247,000,877 B — 92.0% of the byte cap**, leaving 21,434,579 B of
+ *    headroom. This is the honest reversal of what the frozen plan assumed: the
+ *    plan expected the binding constraint to invert from bytes to entries at
+ *    serving scale, and measured, it does the opposite. Bytes stay binding and
+ *    get TIGHTER. The byte cap is deliberately left where it is precisely
+ *    because it is now the live backstop — it is what makes a residency cap of
+ *    16 impossible (441,016,698 B, 164% of the cap) rather than merely tight.
+ *
+ * The paired change is `EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY.maxResidentUnits`,
+ * 128 -> 8, and the two land in ONE commit. Neither is correct without the
+ * other: 8 resident cells against a 512-entry cap would evict inside a single
+ * neighbourhood, and a 1,024-entry cap against 128 resident dense cells is a
+ * byte-cap violation by an order of magnitude. ADR 0052 §3 states the rollback
+ * contract that follows from that — the promotion commit is the atomic unit.
  */
 /**
  * How long the SHARED CLASS TILES of one release may take to verify.
@@ -109,7 +145,7 @@ export const EXTERIOR_CELL_RUNTIME_SCHEMA_VERSION = "1.0" as const;
 export const EXTERIOR_SHARED_TEXTURE_TIMEOUT_MS = 30_000;
 
 export const EXTERIOR_RUNTIME_BUDGETS = {
-  maxCacheEntries: 512,
+  maxCacheEntries: 1_024,
   maxCachedBytes: 256 * 1024 * 1024,
   maxConcurrentRequests: 4,
 } as const;

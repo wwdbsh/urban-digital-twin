@@ -517,16 +517,30 @@ describe("northern-manhattan committed payload inventory", () => {
    * The live comparison is kept, in the only form that stays a real check on frozen
    * bytes: those five are still enabled, still occupy what this record recorded, and
    * are still the PREFIX of the live six-record set rather than the whole of it.
+   *
+   * T005 THEN MOVED WHAT "THE LIVE SET" NAMES. Every live record is now a serving
+   * `-s1` promotion whose PREDECESSOR is the curated release this frozen inventory
+   * counted, so the curated composition is read off the predecessor chain. The
+   * comparison follows the records rather than the name; re-pointing it at the
+   * serving ids would assert that this inventory counted releases that did not
+   * exist when it was written.
    */
   it("pins each promoted wave's occupancy to that wave's own committed record", () => {
     const glbCount = (path: string): number =>
       readJson<{ files: { path: string }[] }>(path).files.filter((file) => /^public\/assets\/.*\.glb$/u.test(file.path)).length;
     expect(BLOCK835_MEMBERSHIP_BUILDING_IDS).toHaveLength(14);
-    const liveEnabled = EXTERIOR_DEFAULT_ACTIVATIONS.filter((record) => record.enabled).map((record) => record.releaseId);
+    const liveCurated = EXTERIOR_DEFAULT_ACTIVATIONS.flatMap((record) =>
+      record.enabled && record.predecessor.enabled ? [record.predecessor.releaseId] : [],
+    );
     expect(inventory.occupancy.promotedWaves.map((wave) => wave.releaseId))
-      .toEqual(liveEnabled.slice(0, inventory.occupancy.promotedWaveCount));
-    expect(liveEnabled).toHaveLength(6);
-    expect(liveEnabled[5]).toBe("manhattan-northern-manhattan-cells-20260812-p1");
+      .toEqual(liveCurated.slice(0, inventory.occupancy.promotedWaveCount));
+    expect(liveCurated).toHaveLength(6);
+    expect(liveCurated[5]).toBe("manhattan-northern-manhattan-cells-20260812-p1");
+    // And the curated set is no longer the promoted one, stated rather than left
+    // to be inferred from the derivation above.
+    const livePromoted = EXTERIOR_DEFAULT_ACTIVATIONS.flatMap((record) => (record.enabled ? [record.releaseId] : []));
+    expect(livePromoted).toHaveLength(6);
+    for (const releaseId of livePromoted) expect(liveCurated).not.toContain(releaseId);
     expect(inventory.occupancy.promotedWaveCount).toBe(5);
     expect(inventory.occupancy.promotedWaves).toEqual([
       { releaseId: "manhattan-exterior-cells-20260811-v3", assetEntries: BLOCK835_MEMBERSHIP_BUILDING_IDS.length * BLOCK835_SHIPPED_LOD_COUNT },
@@ -536,9 +550,13 @@ describe("northern-manhattan committed payload inventory", () => {
       { releaseId: "manhattan-central-upper-manhattan-cells-20260812-p1", assetEntries: glbCount("data/central-upper-manhattan-20260812-p1/payload-inventory.json") },
     ]);
     expect(inventory.occupancy.promotedAssetEntries).toBe(474);
-    // Emitted at the LIVE cap, unchanged by this release.
+    // Emitted at the cap of its own day — 512, unchanged by this release. T005
+    // has since raised the live cap to 1,024, so the record's figure is pinned as
+    // the literal it froze and the live constant is read only for the relation
+    // that survives a raise: the record's cap cannot exceed the build's.
     expect(inventory.occupancy.maxCacheEntries).toBe(512);
-    expect(inventory.occupancy.maxCacheEntries).toBe(EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries);
+    expect(EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries).toBe(1_024);
+    expect(inventory.occupancy.maxCacheEntries).toBeLessThanOrEqual(EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries);
   });
 
   /**

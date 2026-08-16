@@ -243,9 +243,27 @@ export function computeCensusClosure() {
   };
 }
 
-/** (5): what the six default activation records actually put on screen. */
-export function computePromotedCoverage() {
-  const activations = exteriorDefaultActivations();
+/**
+ * (5): what the six default activation records actually put on screen.
+ *
+ * The activation set is a PARAMETER, defaulting to what this build ships.
+ *
+ * It became one when T005 promoted six `-s1` serving releases over the six
+ * curated ones this Goal's committed reconciliation describes. That record is a
+ * completion artifact and is not regenerated to follow a later promotion, so a
+ * bare recompute stopped equalling it — and the choice was either to freeze the
+ * comparison against the record's own numbers, losing the drift check entirely,
+ * or to let a caller name the composition it is asking about. This is the second.
+ *
+ * `goal-integration-reconciliation.test.mjs` passes the CURATED set, read off the
+ * live promotion records' predecessor chain rather than hand-typed, and gets the
+ * committed record back field for field. So a curated record edited underneath
+ * the promotion still fails the gate, which is the property the split form gave
+ * up. The runtime BUDGET fields below are read from the live build and are the
+ * one part that legitimately moved with the promotion; the test names those two
+ * rather than absorbing them.
+ */
+export function computePromotedCoverage(activations = exteriorDefaultActivations()) {
   const inventoryByWave = new Map(PROMOTED_PAYLOAD_INVENTORIES.map((entry) => [entry.waveId, readJson(entry.path)]));
 
   const releases = activations.map((activation) => {
@@ -296,10 +314,10 @@ export function computePromotedCoverage() {
  * The zero-violation claim of Goal criterion 12, stated as five separate counts
  * so that a single non-zero cannot hide behind an aggregate boolean.
  */
-export function computeCoverageReconciliation() {
+export function computeCoverageReconciliation(activations = exteriorDefaultActivations()) {
   const ledger = computeLedgerClosure();
   const census = computeCensusClosure();
-  const promoted = computePromotedCoverage();
+  const promoted = computePromotedCoverage(activations);
 
   const violations = {
     missingSpatialCells: ledger.missingCells,

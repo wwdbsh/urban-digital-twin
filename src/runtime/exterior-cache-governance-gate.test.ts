@@ -7,6 +7,7 @@ import type { CameraPose } from "../domain/visitor-navigation";
 import { CITYWIDE_OVERVIEW_CELL_EXTENTS_SOURCE } from "./citywide-overview-cell-extents";
 import { EXTERIOR_CELL_STATIC_UNITS } from "./exterior-cell-scheduling";
 import { EXTERIOR_RUNTIME_BUDGETS } from "./exterior-cell-runtime";
+import { exteriorServingCellOccupancy, exteriorServingResidencyBound } from "./exterior-serving-residency";
 import { EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY, EXTERIOR_CELL_SCHEDULER_POLICY, selectResidentUnits, type SchedulerCarry } from "./exterior-visibility-scheduler";
 import type { ViewportFootprint } from "./viewport-footprint";
 
@@ -62,6 +63,49 @@ const WIDE_WINDOW_DECISIONS = 8;
 const MEASURED_OVERVIEW_RESIDENT_CELLS = 110;
 const MEASURED_OVERVIEW_CACHE_ENTRIES = 210;
 const MEASURED_OVERVIEW_CACHE_BYTES = 37_164_596;
+
+/**
+ * The instrument that REPLACES the ratio above for the serving composition.
+ *
+ * It is built here, from the committed retention inventories and the committed
+ * extents census, so the statements below about what binds are recomputed on
+ * every run rather than quoted from `exterior-serving-residency.test.ts`. Both
+ * suites read the same module; neither remembers the other's numbers.
+ */
+const SERVING_INVENTORY_RECORDS = [
+  "manhattan-exterior-cells-20260811-v3-c1",
+  "manhattan-midtown-core-cells-20260811-v3-c1",
+  "manhattan-lower-manhattan-cells-20260812-c1",
+  "manhattan-southern-remainder-cells-20260812-c1",
+  "manhattan-central-upper-manhattan-cells-20260812-c1",
+  "manhattan-northern-manhattan-cells-20260812-c1",
+] as const;
+
+function servingCellOccupancy(): ReturnType<typeof exteriorServingCellOccupancy> {
+  const decode = (path: string) => JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(new Uint8Array(readFileSync(path))));
+  const ledger = decode("data/normalized/manhattan-exterior-wave-ledger-20260804/ledger.json") as { cells: { cellId: string; buildingIds: string[] }[] };
+  const ownerByBuildingId = new Map<string, string>();
+  for (const cell of ledger.cells) for (const buildingId of cell.buildingIds) ownerByBuildingId.set(buildingId, cell.cellId);
+  const files: { path: string; byteSize: number }[] = [];
+  for (const releaseId of SERVING_INVENTORY_RECORDS) {
+    files.push(...(decode(`data/${releaseId}/payload-inventory.json`) as { files: { path: string; byteSize: number }[] }).files);
+  }
+  return exteriorServingCellOccupancy({ files, ownerByBuildingId });
+}
+
+const SERVING_CELLS = servingCellOccupancy();
+const SERVING_BOUND = exteriorServingResidencyBound({
+  cells: SERVING_CELLS,
+  cap: EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY.maxResidentUnits,
+  maxCacheEntries: EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries,
+  maxCachedBytes: EXTERIOR_RUNTIME_BUDGETS.maxCachedBytes,
+});
+const SERVING_BOUND_AT_16 = exteriorServingResidencyBound({
+  cells: SERVING_CELLS,
+  cap: 16,
+  maxCacheEntries: EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries,
+  maxCachedBytes: EXTERIOR_RUNTIME_BUDGETS.maxCachedBytes,
+});
 
 interface TraceSample { index: number; camera: CameraPose; heightBucket: number; footprint: ViewportFootprint }
 interface TracePath { pathId: string; sampleCount: number; samples: TraceSample[] }
@@ -183,15 +227,31 @@ describe("the roam trace this baseline is measured over", () => {
 });
 
 /**
+ * The cap the SPARSE composition shipped under, kept as a literal so the
+ * historical comparisons below stay computable after the policy constant moved.
+ *
+ * `EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY.maxResidentUnits` was 128 until the
+ * T005 serving promotion and is 8 now. Every statement this file makes about
+ * "the cap this build ships" reads the constant; every statement it makes about
+ * what 128 DID — including the ADR 0042 correction — replays at this literal,
+ * because a historical figure that silently followed a moving constant would
+ * stop being a historical figure.
+ */
+const SPARSE_GLOBAL_CAP = 128;
+const AT_SPARSE_CAP = { ...EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY, maxResidentUnits: SPARSE_GLOBAL_CAP };
+
+/**
  * Budgets at the MEASURED value with no headroom, exactly as the T002 gate
  * states its own, so any policy change that makes any path worse fails here.
  *
- * ## Re-derived at the T005 D-4 ranking
+ * ## Re-derived at the T005 SERVING cap of 8
  *
- * These figures moved when `compareRanked` began ranking by measured distance
- * inside a distance band instead of by the census `order` (see
- * `exterior-visibility-scheduler.ts`). They are re-derived here rather than
- * relaxed, and the movement is stated rather than absorbed:
+ * These figures moved twice, and both movements are recorded rather than
+ * collapsed into one re-baseline.
+ *
+ * **First, at the D-4 ranking** (`compareRanked` began ranking by measured
+ * distance inside a distance band instead of by the census `order`), replayed at
+ * the then-shipped cap of 128:
  *
  * | path | re-entry | wide re-entry | evictions |
  * | --- | --- | --- | --- |
@@ -199,18 +259,47 @@ describe("the roam trace this baseline is measured over", () => {
  * | zoom-out | 15 -> 13 | 25 -> 25 | 62 -> 58 |
  * | roam | 32 -> **15** | 75 -> **38** | 362 -> **310** |
  *
- * Every path is unchanged or better, and the roaming session — the only one of
- * the three that is a session rather than a gesture — improves by 53% at the
- * hysteresis horizon and 49% over the wider window. That is the expected
- * direction and the reason is mechanical: admitting the NEAREST cells means the
- * admitted set changes less as the camera moves, because a small camera
- * movement reorders a distance ranking slightly and can reorder a
- * ledger-order ranking arbitrarily.
+ * Every path unchanged or better, and the roaming session — the only one of the
+ * three that is a session rather than a gesture — improved 53% at the hysteresis
+ * horizon and 49% over the wider window. That comparison is preserved below at
+ * `SPARSE_GLOBAL_CAP` rather than deleted.
  *
- * `peakResidentCount` is unchanged on all three paths: D-4 changes WHICH cells
- * are admitted when the cap binds, never HOW MANY.
+ * **Second, at the serving cap of 8**, which is what this build ships:
+ *
+ * | path | re-entry | wide re-entry | peak | evictions |
+ * | --- | --- | --- | --- | --- |
+ * | street-pan | 0 -> 1 | 0 -> 1 | 91 -> **8** | 92 -> 35 |
+ * | zoom-out | 13 -> 2 | 25 -> 2 | 128 -> **8** | 58 -> 28 |
+ * | roam | 15 -> 4 | 38 -> 10 | 128 -> **8** | 310 -> 104 |
+ *
+ * ## THE FALLS ARE ARITHMETIC AND NOT AN IMPROVEMENT
+ *
+ * This is the sentence that has to survive review, so it is stated before the
+ * numbers are used for anything: a session that may hold 8 cells CANNOT EVICT
+ * 128 and cannot re-enter what it never held. Reading "evictions fell from 310
+ * to 104" as a win would be reading a smaller cap as a better policy, which is
+ * exactly backwards — the same camera path now holds a sixteenth of the scene.
+ * The street pan even gets WORSE on both re-entry windows (0 -> 1), because a
+ * cap of 8 binds on a gesture that never came close to 128.
+ *
+ * What the table DOES establish is the two facts a serving cap needs:
+ *
+ * 1. **The cap binds on every path.** `peakResidentCount` is exactly 8
+ *    everywhere, including the street pan, which peaked at 91 of 128 and so was
+ *    never bounded by the sparse cap at all.
+ * 2. **Eviction stays routine rather than becoming rare.** 1.79 evictions per
+ *    decision on the roam, against 5.34 at the sparse cap — lower, because
+ *    there is less to evict, but still most decisions. The release seam that
+ *    ADR 0042 introduced is still a hot loop and not a backstop.
  */
 const GLOBAL_BUDGET = {
+  "midtown-street-pan-v1": { reEntryCount: 1, wideReEntryCount: 1, peakResidentCount: 8, totalEvictCount: 35 },
+  "midtown-zoom-out-v1": { reEntryCount: 2, wideReEntryCount: 2, peakResidentCount: 8, totalEvictCount: 28 },
+  "midtown-roam-v1": { reEntryCount: 4, wideReEntryCount: 10, peakResidentCount: 8, totalEvictCount: 104 },
+} as const;
+
+/** The same three paths at the cap the sparse composition shipped under. */
+const SPARSE_GLOBAL_BUDGET = {
   "midtown-street-pan-v1": { reEntryCount: 0, wideReEntryCount: 0, peakResidentCount: 91, totalEvictCount: 92 },
   "midtown-zoom-out-v1": { reEntryCount: 13, wideReEntryCount: 25, peakResidentCount: 128, totalEvictCount: 58 },
   "midtown-roam-v1": { reEntryCount: 15, wideReEntryCount: 38, peakResidentCount: 128, totalEvictCount: 310 },
@@ -236,6 +325,41 @@ describe("the single-pool residency baseline at the global cap", () => {
 
   it("is deterministic", () => {
     for (const path of PATHS.values()) expect(replay(path, EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY)).toEqual(replay(path, EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY));
+  });
+
+  /**
+   * The sparse cap's own baseline, retained and still replayed.
+   *
+   * It is kept because deleting it would leave this repository unable to say
+   * what the cap it shipped for five days actually did, and because the T005
+   * fall is only readable against it. It replays at a literal rather than at the
+   * policy constant, so it stays a statement about 128 after the constant moved.
+   */
+  for (const pathId of ["midtown-street-pan-v1", "midtown-zoom-out-v1", "midtown-roam-v1"] as const) {
+    it(`still holds ${pathId} at the sparse cap's measured figures`, () => {
+      const result = replay(PATHS.get(pathId)!, AT_SPARSE_CAP);
+      expect({
+        reEntryCount: result.reEntryCount,
+        wideReEntryCount: result.wideReEntryCount,
+        peakResidentCount: result.peakResidentCount,
+        totalEvictCount: result.totalEvictCount,
+      }).toEqual(SPARSE_GLOBAL_BUDGET[pathId]);
+    });
+  }
+
+  /**
+   * The cap BINDS everywhere, which is the property that makes a residency cap
+   * load-bearing. Asserted separately from the table because it is the one
+   * conclusion the table supports on its own — the eviction and re-entry falls
+   * support nothing without it.
+   */
+  it("binds on every path, including the gesture the sparse cap never bounded", () => {
+    for (const pathId of ["midtown-street-pan-v1", "midtown-zoom-out-v1", "midtown-roam-v1"] as const) {
+      expect(replay(PATHS.get(pathId)!, EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY).peakResidentCount, pathId).toBe(EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY.maxResidentUnits);
+    }
+    // The street pan is the proof that this is a real change of regime: it
+    // peaked at 91 of 128 and so was never truncated by the sparse cap at all.
+    expect(replay(PATHS.get("midtown-street-pan-v1")!, AT_SPARSE_CAP).peakResidentCount).toBeLessThan(SPARSE_GLOBAL_CAP);
   });
 });
 
@@ -270,7 +394,7 @@ describe("cap 96 against cap 128, on all three paths", () => {
   it("records the corrected post-D-4 comparison side by side", () => {
     const table = ["midtown-street-pan-v1", "midtown-zoom-out-v1", "midtown-roam-v1"].map((pathId) => {
       const at96 = replay(PATHS.get(pathId)!, EXTERIOR_CELL_SCHEDULER_POLICY);
-      const at128 = replay(PATHS.get(pathId)!, EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY);
+      const at128 = replay(PATHS.get(pathId)!, AT_SPARSE_CAP);
       return { pathId, reEntry: [at96.reEntryCount, at128.reEntryCount], wide: [at96.wideReEntryCount, at128.wideReEntryCount], peak: [at96.peakResidentCount, at128.peakResidentCount] };
     });
     expect(table).toEqual([
@@ -281,33 +405,81 @@ describe("cap 96 against cap 128, on all three paths", () => {
       { pathId: "midtown-roam-v1", reEntry: [14, 15], wide: [31, 38], peak: [96, 128] },
     ]);
   });
+
+  /**
+   * And the same three paths at the cap this build actually ships.
+   *
+   * Reported beside the historical comparison rather than replacing it, because
+   * the two answer different questions and only one of them is about today. The
+   * numbers fall everywhere and THAT IS NOT A RESULT — see the header on
+   * `GLOBAL_BUDGET`. The column that carries information is `peak`: 8 on every
+   * path, against 91/96/128 before, which is the cap binding rather than the
+   * policy improving.
+   */
+  it("records the serving cap beside them, with the falls named as arithmetic", () => {
+    const table = ["midtown-street-pan-v1", "midtown-zoom-out-v1", "midtown-roam-v1"].map((pathId) => {
+      const at96 = replay(PATHS.get(pathId)!, EXTERIOR_CELL_SCHEDULER_POLICY);
+      const at8 = replay(PATHS.get(pathId)!, EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY);
+      return { pathId, reEntry: [at96.reEntryCount, at8.reEntryCount], wide: [at96.wideReEntryCount, at8.wideReEntryCount], peak: [at96.peakResidentCount, at8.peakResidentCount] };
+    });
+    expect(table).toEqual([
+      // WORSE at both windows, and stated first for that reason: a cap of 8
+      // binds on a gesture that never came within 5 cells of 96.
+      { pathId: "midtown-street-pan-v1", reEntry: [0, 1], wide: [0, 1], peak: [91, 8] },
+      { pathId: "midtown-zoom-out-v1", reEntry: [14, 2], wide: [24, 2], peak: [96, 8] },
+      { pathId: "midtown-roam-v1", reEntry: [14, 4], wide: [31, 10], peak: [96, 8] },
+    ]);
+  });
 });
 
 describe("steady-state residency against the cache ceilings", () => {
   /**
-   * The peak the roam certifies, priced against both ceilings.
+   * The peak the roam certifies, and the RETIREMENT of the way it used to be
+   * priced.
    *
-   * The pricing is DERIVED from a measured ratio, and the derivation is written
-   * out rather than asserted so a reader can see it is arithmetic and not a
-   * measurement of a session nobody ran.
+   * Until the T005 promotion this test priced the peak with ADR 0041's measured
+   * per-cell ratio — 110 resident cells cost 210 entries and 37,164,596 B — and
+   * concluded that neither ceiling bound. That pricing is now WRONG BY
+   * CONSTRUCTION and is retired rather than re-applied to a smaller number,
+   * which is the tempting move and would have produced a confident, meaningless
+   * figure of 15 entries and 2.7 MB.
+   *
+   * The reason is the composition, not the cap. Those ratios were measured over
+   * a SPARSE composition where all but 13 of 883 cells carried nothing, so
+   * "1.909 entries per resident cell" was really "0.24 entries per cell in the
+   * 13 that had content, averaged over 110 that mostly did not". Under the
+   * serving composition every resident cell carries its buildings, its evidence
+   * sidecar and its assembly manifest, and the honest per-cell figure is roughly
+   * 75 entries and 30 MB — nearly forty times the retired ratio.
+   *
+   * The correct instrument is `exterior-serving-residency.ts`, which derives the
+   * bound from the committed retention inventories over the worst reachable
+   * camera anchor rather than from a ratio taken at one camera. What is asserted
+   * here is only what this trace can support: the peak, and the fact that the
+   * cap is what sets it.
    */
-  it("certifies a session peak of 128 cells and shows neither ceiling binds at it", () => {
+  it("certifies a session peak of 8 cells, set by the cap and not by the trace", () => {
     const peak = replay(PATHS.get("midtown-roam-v1")!, EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY).peakResidentCount;
-    expect(peak).toBe(128);
+    expect(peak).toBe(8);
+    expect(peak).toBe(EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY.maxResidentUnits);
 
+    // The retired pricing, kept as an explicit statement of what it WOULD say,
+    // so the reason it is not used is checkable rather than asserted in prose.
     const entriesPerCell = MEASURED_OVERVIEW_CACHE_ENTRIES / MEASURED_OVERVIEW_RESIDENT_CELLS;
     const bytesPerCell = MEASURED_OVERVIEW_CACHE_BYTES / MEASURED_OVERVIEW_RESIDENT_CELLS;
-    const derivedEntries = Math.round(peak * entriesPerCell);
-    const derivedBytes = Math.round(peak * bytesPerCell);
-    expect(derivedEntries).toBe(244);
-    expect(derivedBytes).toBe(43_246_075);
-
-    expect(derivedEntries).toBeLessThan(EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries);
-    expect(derivedBytes).toBeLessThan(EXTERIOR_RUNTIME_BUDGETS.maxCachedBytes);
-    // Where each ceiling WOULD bind, in cells. Both are far above the cap, which
-    // is the arithmetic behind "neither ceiling binds today".
-    expect(Math.floor(EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries / entriesPerCell)).toBe(268);
-    expect(Math.floor(EXTERIOR_RUNTIME_BUDGETS.maxCachedBytes / bytesPerCell)).toBe(794);
+    expect(Math.round(peak * entriesPerCell)).toBe(15);
+    expect(Math.round(peak * bytesPerCell)).toBe(2_702_880);
+    // ...and the measured serving bound at the same cap, which is the number
+    // that governs. 599 entries and 247,000,877 B: forty times the entries the
+    // sparse ratio predicts, and ninety-one times the bytes. A cap sized on the
+    // retired ratio would have been sized on a composition that no longer ships.
+    expect(SERVING_BOUND.reachable.entries).toBe(599);
+    expect(SERVING_BOUND.reachable.bytes).toBe(247_000_877);
+    expect(SERVING_BOUND.reachable.entries).toBeLessThanOrEqual(EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries);
+    expect(SERVING_BOUND.reachable.bytes).toBeLessThanOrEqual(EXTERIOR_RUNTIME_BUDGETS.maxCachedBytes);
+    // Bytes bind, entries do not. This is the inversion of what the frozen plan
+    // assumed, and it is the reason the byte cap was left at 256 MiB.
+    expect(SERVING_BOUND.bindingConstraint).toBe("bytes");
   });
 
   /**
@@ -316,34 +488,60 @@ describe("steady-state residency against the cache ceilings", () => {
    */
   it("reports the largest single-decision eviction the roam produces", () => {
     const roamResult = replay(PATHS.get("midtown-roam-v1")!, EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY);
-    // Unchanged by D-4: the largest single-decision eviction is set by how far
-    // the camera jumps between two samples, not by how the admitted set is
-    // ordered. The TOTAL fell (362 -> 310) because the set churns less.
-    expect(roamResult.peakEvictionsPerDecision).toBe(43);
-    expect(roamResult.totalEvictCount).toBe(310);
-    // Eviction is ROUTINE on a roaming path: it happens on most decisions, which
-    // is the fact that turns a rare backstop into a hot loop.
-    expect(roamResult.totalEvictCount / roamResult.decisionCount).toBeGreaterThan(5);
+    const atSparseCap = replay(PATHS.get("midtown-roam-v1")!, AT_SPARSE_CAP);
+    // The peak single-decision eviction is bounded by the cap itself now: a
+    // decision cannot drop more cells than a session may hold. At the sparse cap
+    // it was 43, set by how far the camera jumped between two samples.
+    expect(atSparseCap.peakEvictionsPerDecision).toBe(43);
+    expect(roamResult.peakEvictionsPerDecision).toBe(8);
+    expect(roamResult.peakEvictionsPerDecision).toBeLessThanOrEqual(EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY.maxResidentUnits);
+    expect(roamResult.totalEvictCount).toBe(104);
+    // Eviction is STILL ROUTINE, which is the property that matters and the only
+    // thing this figure is offered as evidence for: 1.79 evictions per decision,
+    // against 5.34 at the sparse cap. Lower because there is less to evict, and
+    // still most decisions, so the seam remains a hot loop rather than a rare
+    // backstop. The fall is NOT an improvement — see the GLOBAL_BUDGET header.
+    expect(Number((roamResult.totalEvictCount / roamResult.decisionCount).toFixed(2))).toBe(1.79);
+    expect(Number((atSparseCap.totalEvictCount / atSparseCap.decisionCount).toFixed(2))).toBe(5.34);
+    expect(roamResult.totalEvictCount / roamResult.decisionCount).toBeGreaterThan(1);
   });
 });
 
-describe("the T003 cap, pinned with its arithmetic", () => {
-  it("is 128, above the measured six-pool overview residency and far below the shape it replaces", () => {
-    expect(EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY.maxResidentUnits).toBe(128);
-    // Floor: the six-pool configuration's measured residency at 2,400 m.
-    expect(EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY.maxResidentUnits).toBeGreaterThan(MEASURED_OVERVIEW_RESIDENT_CELLS);
-    // Still a bound: 4.5x tighter than 6 x 96, and 6.9x below the 883 declared.
-    expect(6 * EXTERIOR_CELL_SCHEDULER_POLICY.maxResidentUnits).toBe(576);
-    expect(EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY.maxResidentUnits).toBeLessThan(576);
+describe("the T005 serving cap, pinned with its arithmetic", () => {
+  it("is 8, the largest cap the unchanged byte ceiling admits", () => {
+    expect(EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY.maxResidentUnits).toBe(8);
+    // The floor argument that justified 128 is GONE, and its disappearance is
+    // asserted rather than left implicit: ADR 0041's six-pool overview residency
+    // of 110 cells was measured over a composition where 870 of 883 cells were
+    // empty, so it was never a statement about how many LOADED cells fit.
+    expect(EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY.maxResidentUnits).toBeLessThan(MEASURED_OVERVIEW_RESIDENT_CELLS);
+    // What replaces it is a measurement over the committed serving inventories:
+    // 8 fits the byte cap, 16 does not, and 16 does not fit the raised entry cap
+    // either. That is the whole justification for this number.
+    expect(SERVING_BOUND.fitsByteCap).toBe(true);
+    expect(SERVING_BOUND_AT_16.fitsByteCap).toBe(false);
+    expect(SERVING_BOUND_AT_16.reachable.entries).toBeGreaterThan(EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries);
+    // Still a bound on the same 883-row table, and now a far tighter one.
     expect(EXTERIOR_CELL_STATIC_UNITS.length).toBe(883);
-    // Everything else about the policy is unchanged from T002.
+    expect(EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY.maxResidentUnits).toBeLessThan(EXTERIOR_CELL_SCHEDULER_POLICY.maxResidentUnits);
+    // Everything else about the policy is unchanged from T002, including the two
+    // band edges ADR 0041's evidence is stated in.
     expect(EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY.distanceBandEdgesMeters).toEqual(EXTERIOR_CELL_SCHEDULER_POLICY.distanceBandEdgesMeters);
     expect(EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY.hysteresisDecisions).toBe(EXTERIOR_CELL_SCHEDULER_POLICY.hysteresisDecisions);
   });
 
-  it("leaves EXTERIOR_RUNTIME_BUDGETS untouched", () => {
-    // T003 changed no cache constant. The injected-cap tests in
-    // `exterior-cache-eviction-correctness.test.ts` prove the mechanics instead.
-    expect(EXTERIOR_RUNTIME_BUDGETS).toEqual({ maxCacheEntries: 512, maxCachedBytes: 256 * 1024 * 1024, maxConcurrentRequests: 4 });
+  /**
+   * THE PIN TRIPLE. Both halves of the T005 budget change in one assertion, so
+   * they cannot drift apart silently — ADR 0045 4.1's both-halves lesson, and
+   * the reason ADR 0052 §3 makes the promotion commit the atomic rollback unit.
+   */
+  it("raises maxCacheEntries to 1,024 and leaves the byte and concurrency caps alone", () => {
+    expect(EXTERIOR_RUNTIME_BUDGETS).toEqual({ maxCacheEntries: 1_024, maxCachedBytes: 256 * 1024 * 1024, maxConcurrentRequests: 4 });
+    // The pairing, asserted as a pairing: the entry cap had to rise because 599
+    // does not fit 512, and the byte cap deliberately did NOT rise because it is
+    // now the live backstop at 92.0% of the worst reachable neighbourhood.
+    expect(SERVING_BOUND.reachable.entries).toBeGreaterThan(512);
+    expect(Number((SERVING_BOUND.byteRatio * 100).toFixed(1))).toBe(92.0);
+    expect(Number((SERVING_BOUND.entryRatio * 100).toFixed(1))).toBe(58.5);
   });
 });

@@ -1,5 +1,10 @@
 /**
- * Drift gate for the ACTIVE Southern-remainder promotion record.
+ * Drift gate for the Southern-remainder P1 curated promotion record.
+ *
+ * The P1 curated release is no longer the promoted default: T005 promoted this
+ * wave's `-s1` serving release, which carries the P1 record as its
+ * `predecessor`. This gate is retained over that curated record, unchanged in
+ * what it checks.
  *
  * This test is NEVER skipped. Every value it checks is recomputed from the
  * committed `data/southern-remainder-20260812-p1/payload-inventory.json`, which
@@ -18,8 +23,8 @@ import { describe, expect, it } from "vitest";
 import {
   EXTERIOR_DEFAULT_ACTIVATIONS,
   SOUTHERN_REMAINDER_BASE_ONLY_PREDECESSOR,
-  SOUTHERN_REMAINDER_EXTERIOR_ACTIVATION,
   SOUTHERN_REMAINDER_MEMBERSHIP_BUILDING_IDS,
+  SOUTHERN_REMAINDER_P1_EXTERIOR_ACTIVATION,
   exteriorAcceptedCellsDigest,
   exteriorRolledBackReleaseNotice,
   exteriorUnavailableDetail,
@@ -59,12 +64,14 @@ interface PayloadInventory {
 
 const RELEASE_ID = "manhattan-southern-remainder-cells-20260812-p1";
 const CANARY_RELEASE_ID = "manhattan-southern-remainder-cells-20260812";
+/** The T005 serving release this wave's promotion slot now holds. */
+const SERVING_RELEASE_ID = "manhattan-southern-remainder-cells-20260812-s1";
 const INVENTORY_PATH = "data/southern-remainder-20260812-p1/payload-inventory.json";
 const CANARY_INVENTORY_PATH = "data/southern-remainder-20260812/payload-inventory.json";
 
 const inventoryText = new TextDecoder().decode(readFileSync(INVENTORY_PATH));
 const inventory = JSON.parse(inventoryText) as PayloadInventory;
-const RECORD = SOUTHERN_REMAINDER_EXTERIOR_ACTIVATION.enabled ? SOUTHERN_REMAINDER_EXTERIOR_ACTIVATION : null;
+const RECORD = SOUTHERN_REMAINDER_P1_EXTERIOR_ACTIVATION.enabled ? SOUTHERN_REMAINDER_P1_EXTERIOR_ACTIVATION : null;
 
 const CELL_RELEASE_PREFIX = `public/cell-release/cell-release-${RELEASE_ID}-`;
 const ASSET_PATTERN = /^public\/assets\/(doitt-\d+)__lod_\d+\.glb$/;
@@ -94,7 +101,7 @@ function buildingIdsFrom(files: InventoryFile[]): string[] {
 }
 
 describe("Southern-remainder promotion record versus the committed payload inventory", () => {
-  it("is enabled, is the fourth record, and names the successor rather than the canary", () => {
+  it("is enabled, is the fourth slot's predecessor, and names the successor rather than the canary", () => {
     expect(RECORD).not.toBeNull();
     expect(RECORD!.releaseId).toBe(inventory.releaseId);
     expect(RECORD!.releaseId).toBe(RELEASE_ID);
@@ -102,10 +109,16 @@ describe("Southern-remainder promotion record versus the committed payload inven
     expect(RECORD!.approvalRef).toBe("Issue #19 gate approval 2026-08-12 (T018 Southern-remainder curated promotion)");
     expect(RECORD!.rolledBackReleaseId ?? null).toBeNull();
     // Its POSITION is what this record owns, not the length of the set: T020
-    // promoted a fifth wave and appended it, so the assertion that stays true of
-    // this record is that it is still the fourth and still the same object.
+    // promoted a fifth wave and appended it, and T005 promoted this wave's
+    // serving release into the same fourth slot with this record as its
+    // predecessor. So the assertion that stays true of this record is that the
+    // fourth slot is still this wave's, one link further back.
     expect(EXTERIOR_DEFAULT_ACTIVATIONS.length).toBeGreaterThanOrEqual(4);
-    expect(EXTERIOR_DEFAULT_ACTIVATIONS[3]).toBe(SOUTHERN_REMAINDER_EXTERIOR_ACTIVATION);
+    const promoted = EXTERIOR_DEFAULT_ACTIVATIONS[3]!;
+    expect(promoted.enabled).toBe(true);
+    if (!promoted.enabled) throw new Error("expected the fourth promoted default to be enabled");
+    expect(promoted.releaseId).toBe(SERVING_RELEASE_ID);
+    expect(promoted.predecessor).toBe(SOUTHERN_REMAINDER_P1_EXTERIOR_ACTIVATION);
   });
 
   it("pins the rollout snapshot and assembly package the inventory recorded", () => {
@@ -170,7 +183,20 @@ describe("ADR 0035 preconditions on promotion, checked rather than asserted", ()
    */
   it("(a) derives its occupancy against the RAISED cache cap, and fits it", () => {
     expect(inventory.occupancy.maxCacheEntries).toBe(512);
-    expect(inventory.occupancy.maxCacheEntries).toBe(EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries);
+    // The record states the cap that was IN FORCE WHEN IT WAS DERIVED, and this
+    // gate no longer ties that frozen 512 to the live constant. It used to, and
+    // the coupling was right while the cap stood still: it caught a build that
+    // moved the cap and left a promoted wave sized against the old one.
+    //
+    // The T005 serving promotion raised the live cap to 1,024, and re-pointing
+    // this equality at the new value would claim this release was derived
+    // against a cap that did not exist when it was cut. So the frozen figure
+    // stays a literal, and what is checked against the live constant is the
+    // property that still has to hold: the occupancy this record declares must
+    // still FIT the cache the build actually ships. A cap that fell below it
+    // would still fail here.
+    expect(inventory.occupancy.maxCacheEntries).toBeLessThanOrEqual(EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries);
+    expect(EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries).toBe(1_024);
     expect(inventory.occupancy.promotedAssetEntries).toBe(255);
     expect(inventory.occupancy.alongsidePromotedHeadroom).toBe(257);
     expect(inventory.occupancy.curatedSubsetCeiling).toBe(200);

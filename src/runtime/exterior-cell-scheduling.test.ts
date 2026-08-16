@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { CameraPose } from "../domain/visitor-navigation";
 import { CITYWIDE_OVERVIEW_CELL_EXTENTS } from "./citywide-overview-cell-extents";
-import { EXTERIOR_DEFAULT_ACTIVATION, verifyPromotedExteriorPin } from "./exterior-default-activation";
+import { BLOCK835_V3_EXTERIOR_ACTIVATION, EXTERIOR_DEFAULT_ACTIVATION, verifyPromotedExteriorPin } from "./exterior-default-activation";
 import { EXTERIOR_CELL_STATIC_UNITS, EXTERIOR_CELL_UNIT_CLASS, exteriorCellUnits, scheduleExteriorCells, scheduleExteriorCellsGlobally } from "./exterior-cell-scheduling";
 import { EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY, EXTERIOR_CELL_SCHEDULER_POLICY, unitDistanceMeters } from "./exterior-visibility-scheduler";
 import { fallbackViewportFootprint, viewportFootprintFromGroundPoints, type ViewportFootprint } from "./viewport-footprint";
@@ -153,9 +153,14 @@ describe("scheduleExteriorCells: the opt-in path", () => {
    * passes `runtime.snapshot.cells` to the gate and the scheduled list only to
    * `loadCell`.
    */
-  it("must never be fed to the promoted-pin gate: a scheduled subset fails the cell-count check", () => {
-    const record = EXTERIOR_DEFAULT_ACTIVATION;
-    if (!record.enabled) throw new Error("the Block 835 record is expected to be enabled in this build");
+  it("must never be fed to the promoted-pin gate: a scheduled subset fails the cell-count check", async () => {
+    // The Block 835 CURATED record, deliberately: it states its acceptance
+    // literally, so the resolved input here is the record's own cell list and
+    // the pass case needs no digest machinery to be a pass case. The separation
+    // under test is about scheduled-vs-resolved sets and is identical for both
+    // record forms; the serving form is exercised below.
+    const record = BLOCK835_V3_EXTERIOR_ACTIVATION;
+    if (!record.enabled) throw new Error("the Block 835 curated record is expected to be enabled in this build");
     const resolved = {
       releaseId: record.releaseId,
       snapshotId: record.snapshotId,
@@ -166,6 +171,38 @@ describe("scheduleExteriorCells: the opt-in path", () => {
     const scheduledToNothing = verifyPromotedExteriorPin({ ...resolved, cells: [] }, record);
     if (scheduledToNothing.ok) throw new Error("a scheduled-to-nothing subset must not pass the promoted pin gate");
     expect(scheduledToNothing.message).toContain("cell count");
+
+    /**
+     * AND THE SAME FAILURE ON THE SERVING RECORD, which is the one this build
+     * actually promotes and the one where the mistake would be catastrophic
+     * rather than merely wrong.
+     *
+     * A curated wave declared 1 to 249 cells and the scheduler rarely deferred
+     * any of them. A serving wave declares up to 249 content-bearing cells and
+     * the residency cap is 8, so the scheduled subset is ALWAYS a strict subset
+     * — every session, at every camera. If the gate were ever fed the scheduled
+     * list the whole island would fail closed on the first frame rather than
+     * intermittently. The count check is what catches it, and it is checked
+     * before any digest is compared so the message names the count.
+     */
+    const serving = EXTERIOR_DEFAULT_ACTIVATION;
+    if (!serving.enabled) throw new Error("the promoted serving record is expected to be enabled in this build");
+    const scheduledSubset = verifyPromotedExteriorPin({
+      releaseId: serving.releaseId,
+      snapshotId: serving.snapshotId,
+      snapshotChecksumSha256: serving.snapshotChecksumSha256,
+      assemblyPackageIds: [],
+      assemblyPackageIdsDigestSha256: serving.assemblyPackageIdsDigestSha256,
+      cells: [],
+      cellsDigestSha256: serving.membership.cellsDigestSha256,
+      buildingIds: [],
+      buildingIdsDigestSha256: serving.membership.buildingIdsDigestSha256,
+    }, serving);
+    if (scheduledSubset.ok) throw new Error("a scheduled subset must not pass the promoted pin gate for a serving release");
+    // Counts first, before any digest: the building count is checked ahead of
+    // the cell count, and neither message mentions a digest.
+    expect(scheduledSubset.message).toContain("count");
+    expect(scheduledSubset.message).not.toContain("digest");
   });
 
   /**
@@ -236,7 +273,17 @@ describe("scheduleExteriorCellsGlobally: one decision for the session", () => {
     expect(alone.cellIds).toEqual(together.cellIds);
     // And the wave that loaded alone did NOT inherit the whole cap: it took the
     // share the global ranking gave it, leaving the rest for waves not yet here.
-    expect(alone.cellIds.length).toBeLessThan(EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY.maxResidentUnits);
+    //
+    // At the serving cap this is asserted as "no more than the cap" rather than
+    // "strictly fewer". The claim was always that a lone wave takes its ranked
+    // share and not the whole budget, and at cap 8 the midtown wave's share at
+    // this camera IS the whole budget — every one of the nearest 8 cells is a
+    // w01 cell, because the camera is over midtown. That is the ranking working,
+    // not a lone wave inheriting the cap, and the equality with `together`
+    // above is what proves the difference: the same 8 cells are admitted whether
+    // or not the other five waves are present.
+    expect(alone.cellIds.length).toBeLessThanOrEqual(EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY.maxResidentUnits);
+    expect(alone.cellIds.length).toBeLessThan(midtown.declaredCellIds.length);
   });
 
   it("bounds the SESSION by one cap instead of the cap times the wave count", () => {
@@ -251,23 +298,46 @@ describe("scheduleExteriorCellsGlobally: one decision for the session", () => {
     // the single one at this camera rather than being a theoretical difference.
     expect(perWaveTotal).toBeGreaterThan(globalTotal);
     expect(6 * EXTERIOR_CELL_SCHEDULER_POLICY.maxResidentUnits).toBe(576);
-    expect(EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY.maxResidentUnits).toBe(128);
+    expect(EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY.maxResidentUnits).toBe(8);
   });
 
   /**
-   * No residency regression against the six-pool configuration. ADR 0041's
-   * committed evidence holds 110 cells at the 2,400 m overview camera; whenever
-   * the single decision binds it admits 128, which is strictly more, and the
-   * 18-cell difference is budget the per-wave shape could not spend because it
-   * was locked inside four waves the camera was not looking at.
+   * The residency the single decision admits, and the DIRECTION IT MOVED.
+   *
+   * This case used to say "admits the full cap where the six-pool configuration
+   * truncated at 110", and that was true and was an improvement: at cap 128 a
+   * single decision admitted more cells at the overview camera than six per-wave
+   * pools of 96 could, because the per-wave shape locked budget inside waves the
+   * camera was not looking at.
+   *
+   * At the serving cap it is FALSE and the reversal is stated rather than
+   * removed. A single decision now admits 8 cells where the six-pool
+   * configuration admitted 110. Residency fell by a factor of fourteen.
+   *
+   * That is not a regression in what a user sees, because the two numbers count
+   * different things: those 110 cells were almost entirely EMPTY — the curated
+   * composition had content in 13 of 883 — while all 8 of these carry their full
+   * building population, their evidence sidecar and their assembly manifest.
+   * `exterior-serving-residency.ts` prices the difference: 8 serving cells are
+   * 599 cache entries and 235.56 MiB, where 110 curated cells were 210 entries
+   * and 35.4 MiB. The cap fell because what a cell COSTS rose by roughly forty
+   * times, and 8 is the largest cap the unchanged byte cap admits.
+   *
+   * What is genuinely lost is angular reach: fewer distinct cells are resident,
+   * so the far field falls back to base massing sooner. That is a real cost of
+   * serving the island and it is named here rather than absorbed.
    */
-  it("admits the full cap where the six-pool configuration truncated at 110", () => {
+  it("admits 8 cells where the six-pool configuration truncated at 110, and that is a fall", () => {
     const MEASURED_SIX_POOL_OVERVIEW_RESIDENCY = 110;
     const view = { enabled: true as const, footprint: footprintAround(-73.98, 40.758, 0.05), camera: pose(-73.98, 40.758, 5_000), heightBucket: 5_000, previous: null };
     const global = scheduleExteriorCellsGlobally(WAVES, view);
     expect(global.decision!.visibleCount).toBeGreaterThan(EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY.maxResidentUnits);
     expect(global.residentCellIds.length).toBe(EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY.maxResidentUnits);
-    expect(global.residentCellIds.length).toBeGreaterThan(MEASURED_SIX_POOL_OVERVIEW_RESIDENCY);
+    // The fall, asserted in the direction it actually goes.
+    expect(global.residentCellIds.length).toBeLessThan(MEASURED_SIX_POOL_OVERVIEW_RESIDENCY);
+    // The cap still BINDS at this camera, which is what makes the number a cap
+    // rather than a coincidence: far more cells are visible than are admitted.
+    expect(global.decision!.visibleCount).toBeGreaterThan(MEASURED_SIX_POOL_OVERVIEW_RESIDENCY);
   });
 
   it("keeps each wave's load list in that wave's own declared order", () => {
@@ -387,12 +457,33 @@ describe("scheduleExteriorCellsGlobally: the detail radius (T005)", () => {
     expect(schedule.decision).toBeNull();
   });
 
+  /**
+   * The radius still reaches the decision, and the SUBSET property still holds.
+   *
+   * What no longer separates the two radii is the RESIDENT count. At the serving
+   * cap of 8 the cap binds at both radii — a 1,000 m circle over midtown still
+   * contains far more than 8 ownership cells — so residency is 8 either way and
+   * a strict inequality there would be asserting something the cap makes
+   * impossible rather than something the radius does.
+   *
+   * The reading that carries the radius signal is `visibleCount`, which is the
+   * set the radius filters BEFORE the cap truncates it, and it is strictly
+   * smaller. Both facts are asserted, and the reason residency cannot separate
+   * them is asserted too, so a future cap change that made residency separate
+   * again would be visible rather than silently re-enabling a weaker test.
+   */
   it("passes the radius through: a tighter radius is a strict subset of a wider one", () => {
     const wide = scheduleExteriorCellsGlobally(WAVES, view);
     const tight = scheduleExteriorCellsGlobally(WAVES, { ...view, maxUnitDistanceMeters: 1_000 });
-    expect(tight.residentCellIds.length).toBeLessThan(wide.residentCellIds.length);
+    expect(tight.residentCellIds.length).toBeLessThanOrEqual(wide.residentCellIds.length);
     for (const cellId of tight.residentCellIds) expect(wide.residentCellIds).toContain(cellId);
+    // The radius genuinely narrowed the candidate set...
     expect(tight.decision!.visibleCount).toBeLessThan(wide.decision!.visibleCount);
+    // ...and the cap is what makes residency equal at both, which is why the
+    // comparison above is not strict.
+    expect(wide.residentCellIds.length).toBe(EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY.maxResidentUnits);
+    expect(tight.residentCellIds.length).toBe(EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY.maxResidentUnits);
+    expect(tight.decision!.visibleCount).toBeGreaterThan(EXTERIOR_CELL_GLOBAL_SCHEDULER_POLICY.maxResidentUnits);
   });
 
   it("treats an absent radius and an explicit null as the same decision", () => {

@@ -371,11 +371,14 @@ describe("exterior request and cache budgets", () => {
     await runtime.loadCell("c1", "exploration", CLOSE_METERS);
     await runtime.loadCell("c2", "inspection", CLOSE_METERS);
     const metrics = runtime.getMetrics();
-    // 512 since T018: ADR 0034 admissible response 1, taken so a fourth wave
-    // could promote at all. The BYTE ceiling deliberately did not move with it —
-    // see `exterior-cache-ceiling.test.ts`, which re-derives it at the raised cap
-    // from the promoted waves' committed inventories.
-    expect(metrics.maxCacheEntries).toBe(512);
+    // 1,024 since T005, after 512 since T018. The first raise was ADR 0034
+    // admissible response 1, taken so a fourth CURATED wave could promote at
+    // all; the second is sized against the measured serving residency bound of
+    // 599 entries at the worst reachable anchor, which does not fit 512. The
+    // BYTE ceiling deliberately did not move with either — see
+    // `exterior-cache-ceiling.test.ts` and `exterior-serving-residency.test.ts`,
+    // which re-derive both from committed inventories.
+    expect(metrics.maxCacheEntries).toBe(1_024);
     expect(metrics.maxCachedBytes).toBe(256 * 1024 * 1024);
     expect(metrics.cacheEntries).toBe(3);
     expect(metrics.cachedBytes).toBeLessThanOrEqual(metrics.maxCachedBytes);

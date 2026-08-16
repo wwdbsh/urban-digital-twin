@@ -1,5 +1,10 @@
 /**
- * Drift gate for the ACTIVE Lower-Manhattan promotion record.
+ * Drift gate for the Lower-Manhattan P1 curated promotion record.
+ *
+ * The P1 curated release is no longer the promoted default: T005 promoted this
+ * wave's `-s1` serving release, which carries the P1 record as its
+ * `predecessor`. This gate is retained over that curated record, unchanged in
+ * what it checks.
  *
  * This test is NEVER skipped. Every value it checks is recomputed from the
  * committed `data/lower-manhattan-20260812-p1/payload-inventory.json`, which is
@@ -16,8 +21,8 @@ import { existsSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   LOWER_MANHATTAN_BASE_ONLY_PREDECESSOR,
-  LOWER_MANHATTAN_EXTERIOR_ACTIVATION,
   LOWER_MANHATTAN_MEMBERSHIP_BUILDING_IDS,
+  LOWER_MANHATTAN_P1_EXTERIOR_ACTIVATION,
   exteriorAcceptedCellsDigest,
   exteriorRolledBackReleaseNotice,
   exteriorUnavailableDetail,
@@ -61,7 +66,7 @@ const INVENTORY_PATH = "data/lower-manhattan-20260812-p1/payload-inventory.json"
 const CANARY_INVENTORY_PATH = "data/lower-manhattan-20260812/payload-inventory.json";
 const inventoryText = new TextDecoder().decode(readFileSync(INVENTORY_PATH));
 const inventory = JSON.parse(inventoryText) as PayloadInventory;
-const RECORD = LOWER_MANHATTAN_EXTERIOR_ACTIVATION.enabled ? LOWER_MANHATTAN_EXTERIOR_ACTIVATION : null;
+const RECORD = LOWER_MANHATTAN_P1_EXTERIOR_ACTIVATION.enabled ? LOWER_MANHATTAN_P1_EXTERIOR_ACTIVATION : null;
 
 const CELL_RELEASE_PREFIX = `public/cell-release/cell-release-${RELEASE_ID}-`;
 const ASSET_PATTERN = /^public\/assets\/(doitt-\d+)__lod_\d+\.glb$/;
