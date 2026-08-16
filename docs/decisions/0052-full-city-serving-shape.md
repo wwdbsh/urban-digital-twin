@@ -543,10 +543,22 @@ the same link rendered from the opening pose.
 about activation and gating rather than about where the camera starts now carry
 `BLOCK_835_CAMERA_QUERY`, a six-parameter pose standing inside Block 835's own
 census cell. That constant IS the loss, written down: before this promotion no
-test needed one. It is deterministic because of the scheduler's first rule —
-every unit whose rectangle contains the camera ground point is resident, exempt
-from the cap — so the tests place the camera in the cell they are about instead
-of relying on a cap wide enough to hold everything.
+test needed one. It is deterministic because of the scheduler's first rule:
+every unit whose rectangle contains the camera ground point is reserved and
+resident ahead of everything else.
+
+**That reservation is exempt from TRUNCATION, not from the cap**, and the
+difference matters at cap 8. `selectResidentUnits` computes
+`budget = max(0, maxResidentUnits - reserved.length)` and admits only that many
+contested units, so reserved cells CONSUME the cap rather than sitting outside
+it: standing where several overlapping cells contain the camera ground point
+leaves proportionally fewer slots for everything visible around it, and enough
+reservations drive the contested budget to zero. What the reservation guarantees
+is that the cell the camera is standing in can never be truncated away by a
+distance-ranked cut — the T009 F2 lesson — not that residency can exceed the cap.
+
+So the tests place the camera in the cell they are about instead of relying on a
+cap wide enough to hold everything.
 
 The alternative, keeping cap 128 for sparse releases and 8 for dense ones, was
 not taken: it makes residency depend on which release is loaded, which is a rule
@@ -632,6 +644,36 @@ repaired here. Changing which field feeds a pre-registered threshold after seein
 it fail is moving the goalposts whatever the argument, so the failure stands and
 the re-wiring is a decision for review.
 
+### THE FRAME-TIME PASS IS A SATURATED INSTRUMENT, and must not be read as a cost measurement
+
+The p50 is **8.3 ms in both arms at every pose**, and 8.3 ms is the presentation
+interval of a 120 Hz display. That is the instrument's floor, not a property of
+the scene. `requestAnimationFrame` deltas cannot report anything faster than the
+compositor's cadence, so an arm doing more work reads identically to an arm doing
+less until the work exceeds the frame budget.
+
+The signature is visible in the data: the serving arm holds **371 resident assets
+against the curated arm's 54 — 6.9x — and returns the same p50 to the digit.**
+Identical percentiles across a 6.9x change in scene population is the shape of an
+instrument with no headroom, not of a cost that happens to be zero.
+
+So the claim this evidence supports is narrowed, deliberately, to:
+
+> **No regression is detectable above the ~8.3 ms presentation floor at these
+> four poses.**
+
+It does NOT support "the serving shape costs no more than the tolerance", which
+is what the bar was written to test and what the numbers would otherwise be read
+as saying. The tolerance was never approached, because the instrument could not
+have shown it being approached.
+
+**Routed to T006: a headroom-sensitive instrument.** A CPU/GPU frame-span
+reading (`Performance.getMetrics` over CDP, or Cesium's own frame-rate monitor)
+or an uncapped render loop would put the measurement below the presentation
+ceiling, where a difference between 54 and 371 resident assets could actually
+show. No re-capture is taken here: re-running the same instrument would produce
+the same saturated numbers.
+
 **Eviction at scale.** `cacheEvictions` is **0**, because the roam peaked at 544
 entries of 1,024 and 190.4 MB of 256 MB and never reached either cap. So the
 cap-driven eviction path is UNEXERCISED at the promoted caps, and section 3's
@@ -644,10 +686,76 @@ The identity reading was not taken at all: the details panel the probe reads was
 absent at every stop. Nothing in this evidence says a re-admitted mesh does or
 does not resolve to the same sourced information.
 
-**D-18** passes: `dispatchCount === 1` at all four frame poses and all five roam
-stops. The landing loop does not re-dispatch on the promoted build.
+**D-18** passes: `dispatchCount === 1` at all four frame poses, all five roam
+stops, and all four default-session poses. The landing loop does not re-dispatch
+on the promoted build.
 
-Neither capture was re-run under different conditions after failing.
+### The six-wave DEFAULT session, observed once — and it FAILS too
+
+Both captures above name ONE wave with an explicit `?exteriorCells=`, so the
+composition this build actually promotes — six co-resident wave runtimes sharing
+one exterior cache under one global residency cap — had no browser evidence at
+all. It does now, over the same four poses with no exterior parameter.
+
+What it establishes:
+
+| | |
+| --- | --- |
+| promoted waves resolved | **6 of 6** |
+| boot documents | **18** — three per release, exactly |
+| declared cells across the six | **883** |
+| scheduled cells at any pose | **8**, the cap, split across waves |
+| cells FAILED | **0** |
+| shared cache entries / cap | 731 / 1,024 |
+| shared cache bytes / cap | 192.8 MB / 256 MB (75.3%) |
+| peak concurrent requests / budget | 4 / 4 |
+| every pose landed, dispatches | yes, 1 each |
+
+The cross-wave behaviour cap 8 was chosen for is visible and correct: the
+overview pose put all eight slots in w02, the transition and midtown poses split
+1/7 between w00 and w01, and the Lower-Manhattan street pose split 1/2/5 across
+three waves. Residency crosses wave boundaries by distance, exactly as ADR 0052
+§1's D-4 fix intends, and the shared cache stayed inside both caps while doing it.
+
+**AND THREE CELLS OF WAVE w01 FELL BACK.** `fallbackCellCount` is 3 and
+`failedArtifactCount` is 3 on `manhattan-midtown-core-cells-20260811-v3-s1`,
+first observed at the transition pose and persisting through the two street poses
+(the counters are cumulative). Three cells of the promoted default rendered
+pinned base massing instead of their served geometry, and three artifact fetches
+failed. `failedCellCount` is 0, so nothing failed closed to nothing — the
+fallback is the runtime behaving as designed when an artifact does not arrive.
+
+**That is a real defect on the promoted default and it is not diagnosed here.**
+The capture does not name which artifacts failed, and the pre-registered
+condition was `fallbackCellCount === 0`. It is one session, so whether it is
+deterministic is also unknown. Per the stop rule the capture was not re-run to
+look for a greener sample.
+
+Also unmeasured: cap-driven eviction was reached in this session
+(`cacheEvictions` 226, against 0 in the single-wave roam) — but that is an
+observation, not the pre-registered roam whose FAIL stands above.
+
+Neither of the two single-wave captures was re-run under different conditions
+after failing, and the default-session capture was run once.
+
+### Ratified follow-ups, recorded rather than acted on
+
+Both were adjudicated as legitimate FOLLOW-UPS. Neither changes anything in T005,
+and both FAILs stand.
+
+1. **The decoded-texture re-wire.** Legitimate because it can be evaluated over
+   the ALREADY COMMITTED arm documents — `sharedClassTextureCount` is 4 in every
+   arm-B pose and was recorded before the threshold was known to fail. The
+   threshold itself is untouched. A follow-up that re-wires the bar must also
+   assert that `sharedClassTextureRequestCount` does not scale with residency
+   (it is 4 at both 12 and 371 resident assets, which
+   `exterior-serving-drift.test.ts` now pins) and must keep `distinctUrlCount` as
+   a reported, NON-GATING column so the page's other PNGs stay visible.
+2. **The deeper cap-eviction roam**, routed to **T006**. Legitimate because its
+   pass conditions are byte-identical to the ones that failed and its poses are
+   pre-committed; it is a longer path, not a different bar. The T005 FAIL stands.
+
+The w01 fallback and the saturated frame instrument (above) also route to T006.
 
 ---
 
@@ -676,13 +784,23 @@ Neither capture was re-run under different conditions after failing.
   (section 11).
 - D-8, D-11 and D-17 are carried forward unclosed and are restated by number
   (section 11).
-- The C5 frame-time A/B and the eviction roam were captured on the promoted
-  build and BOTH FAILED their pre-registered bars (section 12). Frame times pass
-  on every pose; what fails is a decoded-texture bound that looks mis-wired and
-  was not re-wired, and an eviction claim that was never exercised because the
-  caps were never reached. Section 3's cap decision therefore stands on
-  scheduler arithmetic alone, with no browser corroboration of the eviction
-  behaviour it predicted.
+- ALL THREE C5 captures on the promoted build FAILED their pre-registered
+  conditions (section 12): the frame-time A/B on a decoded-texture bound that
+  looks mis-wired and was not re-wired, the single-wave eviction roam on an
+  eviction that was never exercised, and the six-wave default session on three
+  cells of wave w01 falling back to base massing.
+- The frame-time PASS half is a SATURATED instrument — 8.3 ms p50 in both arms
+  across a 6.9x residency difference is the 120 Hz presentation floor. The claim
+  is narrowed to "no regression detectable above the ~8.3 ms floor at these
+  poses", and a headroom-sensitive instrument routes to T006 (section 12).
+- The promoted six-wave composition IS observed: six waves resolve, 18 boot
+  documents, 883 declared cells, 8 scheduled cells split across waves by
+  distance, both caps and the request budget respected (section 12). ADR 0052
+  §1's D-4 cross-wave ranking is confirmed in a browser.
+- Three cells of `manhattan-midtown-core-cells-20260811-v3-s1` fall back to
+  pinned base on the promoted default, with three failed artifact fetches,
+  undiagnosed. Routed to T006 (section 12).
+- ADR 0042 and ADR 0046 carry reciprocal amendment markers for §1 and §2.
 
 ## Related
 

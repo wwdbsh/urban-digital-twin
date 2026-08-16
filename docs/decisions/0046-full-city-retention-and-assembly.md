@@ -2,6 +2,12 @@
 
 Date: 2026-08-15
 
+Amended by ADR 0052 §2 (D1's partition superseded for serving releases). D1's
+per-wave assembly partition still describes the RETENTION packages; an `-s1`
+serving release publishes one lazily fetched package per cell. ADR 0052 §7 also
+corrects D1's manifest-weight measurement, which understated the sharded boot
+cost by roughly eight times.
+
 Status: **accepted for the measurements and the assembly-partitioning decision
 (D1, D3, D5)**. D2 (retain) records a decision that is already in force for the
 shipped subset and extends it to a full-city payload. D4 (retire superseded

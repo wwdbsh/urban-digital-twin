@@ -2,6 +2,9 @@
 
 Date: 2026-08-14
 
+Amended by ADR 0052 §1 (the 29% re-entry figure is retracted). The cap decision
+below stands on its residency floor; the cited comparison does not.
+
 Status: **accepted, behind the same opt-in flag as ADR 0041**. The release seam
 and the single-decision pool ship in this build and are off. A session without
 `?exteriorScheduler=on` loads exactly what it loaded before, evicts nothing, and

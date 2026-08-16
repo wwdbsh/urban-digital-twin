@@ -295,8 +295,20 @@ export function transformRetentionAssemblyToServing(
 ): MultiLodAssemblyManifest {
   if (retention.cells.length !== 1) servingFail(`retention manifest ${retention.packageId} packages ${retention.cells.length} cells; the serving form is exactly one.`);
   const cell = retention.cells[0]!;
-  if (cell.cellId !== pins.cellRelease.id.split(":")[2] && !pins.cellRelease.id.includes(cell.cellId)) {
-    servingFail(`retention manifest ${retention.packageId} packages cell ${cell.cellId}, which the supplied cell-release pin does not name.`);
+  // ANCHORED, not a substring search. A cell-release id is
+  // `cell-release:<releaseId>:<cellId>:<version>`, so the cell it names is the
+  // segment before the version — and the check is that the pin ENDS WITH
+  // `:<cellId>:<version>`. The previous form fell back to
+  // `pins.cellRelease.id.includes(cell.cellId)`, which would accept a pin naming
+  // any cell whose id merely CONTAINS this one's. Nothing collides in the
+  // committed ledger today (verified across all 883 ids: no cell id is a
+  // substring of another), so this changes no emitted byte; what it removes is a
+  // fallback that would silently pass on the day a cell-id scheme made one a
+  // prefix of another, which is exactly the day a package would be pinned to the
+  // wrong cell release.
+  const expectedSuffix = `:${cell.cellId}:${EXTERIOR_SERVING_CELL_RELEASE_VERSION}`;
+  if (pins.cellRelease.id.split(":")[2] !== cell.cellId && !pins.cellRelease.id.endsWith(expectedSuffix)) {
+    servingFail(`retention manifest ${retention.packageId} packages cell ${cell.cellId}, which the supplied cell-release pin ${pins.cellRelease.id} does not name.`);
   }
 
   const shippedRefs = new Set<string>();

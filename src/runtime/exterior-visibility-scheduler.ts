@@ -403,7 +403,14 @@ function canonicalOrder(ids: Iterable<string>, byId: ReadonlyMap<string, Schedul
  *
  *   1. **Camera reservation.** Every unit whose rectangle contains the camera
  *      ground point is resident, unconditionally, ahead of everything else and
- *      exempt from the cap. This is the T009 F2 lesson restated for cells: the
+ *      exempt from TRUNCATION — not from the cap. Reserved units are counted
+ *      against `maxResidentUnits` (`budget = max(0, cap - reserved.length)`), so
+ *      they cannot be cut by the distance-ranked slice but they do consume
+ *      slots, and enough of them drive the contested budget to zero. The looser
+ *      phrasing this replaced ("exempt from the cap") read as though residency
+ *      could exceed the cap, which it cannot except through the
+ *      `max(cap, reserved.length)` floor the trace bound already states.
+ *      This is the T009 F2 lesson restated for cells: the
  *      shard the camera was standing on fell outside a distance-ranked cut and a
  *      street-level view rendered nothing. Overlapping units mean there can be
  *      several, and all of them are reserved.

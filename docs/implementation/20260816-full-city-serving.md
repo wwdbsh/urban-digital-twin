@@ -105,6 +105,27 @@ on the promoted build. The landing loop does not re-dispatch.
 
 ## What FAILED, and what a reader must not conclude from it
 
+**All three captures failed.** They are listed worst-news-first.
+
+**The six-wave DEFAULT session FAILS.** This is the capture that did not exist
+until review demanded it: both others named one wave with an explicit
+`?exteriorCells=`, so the composition this build promotes had no browser evidence.
+It establishes a great deal — six waves resolve, 18 boot documents (three per
+release, exactly), 883 declared cells, 8 scheduled cells at every pose split
+across waves by distance (overview 0/0/8/0/0/0, transition 1/7/0/0/0/0, Lower
+Manhattan 1/2/5/0/0/0), zero failed cells, 731 of 1,024 cache entries, 192.8 MB
+of 256 MB, peak 4 of a 4-request budget, every pose landing in one dispatch. The
+cross-wave residency ranking cap 8 was chosen for is confirmed in a browser.
+
+**And three cells of `manhattan-midtown-core-cells-20260811-v3-s1` fell back to
+pinned base massing, with three failed artifact fetches**, first at the
+transition pose and persisting. The pre-registered condition was zero. Nothing
+failed closed to nothing — the fallback is the runtime behaving as designed when
+an artifact does not arrive — but three cells of the promoted default did not
+render their served geometry. **It is not diagnosed:** the capture does not name
+the failing artifacts, and one session cannot say whether it is deterministic.
+Per the stop rule it was not re-run to look for a greener sample. Routed to T006.
+
 **The frame-time A/B (C5 a) FAILS its pre-registered bar.** Frame times pass on
 every pose — p50 8.3 ms in both arms everywhere, p95 within tolerance at all
 four, including the pose where the serving arm holds 371 resident assets against
@@ -115,6 +136,20 @@ bound protects — and the fifth is a non-class PNG that **arm A also loads, in 
 build with no serving release at all.** That is a harness-wiring question, and it
 is deliberately NOT resolved here: changing which field feeds a pre-registered
 threshold after seeing it fail is moving the goalposts. The failure stands.
+
+**The frame-time PASS half is a saturated instrument, and must not be read as a
+cost measurement.** 8.3 ms is the presentation interval of a 120 Hz display, and
+both arms sit on it at every pose. `requestAnimationFrame` deltas cannot report
+anything faster than the compositor's cadence, so identical percentiles across a
+**6.9x difference in resident assets** is the signature of an instrument with no
+headroom rather than of a cost that happens to be zero. The claim this evidence
+supports is therefore narrowed to: **no regression is detectable above the
+~8.3 ms presentation floor at these four poses.** It does not support "the
+serving shape costs no more than the tolerance" — the tolerance was never
+approached, because the instrument could not have shown it being approached. A
+headroom-sensitive instrument (CPU/GPU frame span, or an uncapped loop) routes to
+T006; no re-capture is taken, because the same instrument would return the same
+saturated numbers.
 
 **The eviction-at-scale roam FAILS its bar**, on two of seven checks:
 
@@ -141,16 +176,35 @@ information.** That is an instrument gap, named rather than approximated. The
 pre-existing gap it sits beside is unchanged: no CANVAS PICK on a re-admitted
 mesh has ever been captured.
 
-**Neither capture was re-run under different conditions after failing**, and no
-bar was moved.
+**No capture was re-run under different conditions after failing**, and no bar
+was moved. The three verdicts are pinned as they stand by
+`exterior-serving-drift.test.ts`, so a later task that turns one green has to say
+so in a diff rather than by dropping a new JSON into `data/`.
+
+**Two follow-ups are ratified and recorded, not acted on.** The decoded-texture
+re-wire is evaluable over the already-committed arm documents (the shared-class
+subset is 4 in every arm-B pose, and does not scale with residency — 4 requests
+at both 12 and 371 resident assets); a re-wire must also keep `distinctUrlCount`
+as a reported, non-gating column. The deeper cap-eviction roam routes to T006
+with byte-identical pass conditions and pre-committed poses. Both T005 FAILs
+stand.
 
 ## Still not established
 
 - **No visual, geographic, architectural or accessibility acceptance.** Passing
   every gate here is a statement that the bytes are the retained bytes, that
   they validate, and that the release shape is what it claims.
-- **No six-wave session reading.** Both captures name one wave explicitly, so
-  cross-wave residency at the promoted caps is unmeasured.
+- **Why three cells of w01 fall back on the promoted default.** Observed once,
+  undiagnosed, routed to T006.
+- **Frame cost below the ~8.3 ms presentation floor.** Unmeasurable with this
+  instrument; a headroom-sensitive one routes to T006.
+- **Cap-driven eviction under a pre-registered roam.** The single-wave roam
+  never reached either cap. The default session did reach eviction
+  (`cacheEvictions` 226), but that is an observation, not the roam whose
+  conditions failed.
+- **Identity across an eviction cycle**, and the older gap beside it: no canvas
+  pick on a re-admitted mesh has ever been captured.
+- **A distribution.** The default session is ONE run at four poses.
 - **D-8, D-11 and D-17** are carried forward unclosed; ADR 0052 §11 restates
   each by number and says what this promotion did and did not do to it.
 

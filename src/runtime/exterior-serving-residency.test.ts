@@ -114,7 +114,15 @@ describe("full-city serving residency bound", () => {
       }
       if (assets > 0) measured.push(Math.round(bytes / assets));
     }
-    if (measured.length === 0) return;
+    // FAILS CLOSED, exactly as the sidecar constant's re-derivation above does.
+    // This used to `return` when no retention payload was present, which made
+    // the strongest gate on the constant the one that quietly stopped running
+    // whenever the untracked tree was absent — and 2,757 is load-bearing: it is
+    // a term in the worst-8-cell byte figure that puts the shared cache at 92.0%
+    // of its unchanged 256 MiB cap, which is the measurement ADR 0052 §3's cap
+    // decision rests on. A constant that important may not be guarded by a
+    // condition that turns its own test off.
+    expect(measured.length).toBeGreaterThan(0);
     // At least the worst measured wave, never below it.
     expect(EXTERIOR_SERVING_ASSEMBLY_BYTES_PER_ASSET).toBeGreaterThanOrEqual(Math.max(...measured));
     // The constant is w00's ratio, which is high because Block 835 is ONE cell
