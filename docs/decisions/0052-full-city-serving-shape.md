@@ -137,12 +137,18 @@ transformed to the single-LOD serving form this release ships:
 | term | per shipped asset | w02 (6,382) | island (44,989) |
 | --- | --- | --- | --- |
 | assembly manifests, two-LOD (retained) | 3,932 B | 23.93 MiB | — |
-| assembly manifests, **single-LOD (served)** | **2,607 B** | **15.86 MiB** | **111.8 MiB** |
+| assembly manifests, **single-LOD (served)** | **2,567 B** | **15.86 MiB** | **110.1 MiB** |
 | `cellRelease.buildingDetails` rows | 251 B | 1.5 MiB | 10.8 MiB |
 | ownership ledger cells | — | 0.13 MiB | 0.89 MiB |
 
-With all six waves promoted that is ~112 MiB of assembly manifests plus ~14 MiB
-of release graphs — **~126 MiB of blocking JSON before first paint**, plus full
+The island figure is measured across all six waves' committed `-c1` manifests
+rather than scaled from w02: 115,499,836 B over 44,989 buildings and 883 cells.
+Per wave the single-LOD ratio runs 2,316–2,629 B/building (w00, one cell of 14
+buildings, sits at 2,756 because its fixed header amortises over almost
+nothing).
+
+With all six waves promoted that is ~110 MiB of assembly manifests plus ~14 MiB
+of release graphs — **~124 MiB of blocking JSON before first paint**, plus full
 structural validation of 44,989 assets and ~90,000 artifact records across six
 constructors.
 
@@ -183,10 +189,27 @@ Two consequences, neither hidden:
 
 ### What this costs the residency bound
 
-Every resident cell gains one cache entry and its manifest's bytes. Measured at
-16,635,537 B over 126 w02 cells, that is ~129 KiB per cell. The serving
-residency bound is re-derived against this in the commit that changes it; it is
-NOT absorbed into the existing figure.
+Every resident cell gains one cache entry and its manifest's bytes. The serving
+residency bound is RE-DERIVED against this rather than assumed to absorb it,
+because at 92% of the byte cap there is no room for a term nobody counted.
+
+At the serving cap of 8, over the worst reachable anchor
+(`manhattan-exterior-cell-w01-000037-16-19300-17928`):
+
+| | before the seam | after the seam |
+| --- | --- | --- |
+| entries | 591 | **599** (58.5% of 1,024) |
+| bytes | 245,393,546 (234.02 MiB) | **247,000,877 (235.56 MiB)** |
+| byte headroom | 8.6% | **8.0%** (21,434,579 B) |
+| binding constraint | bytes | bytes |
+
+Cap 8 still fits both caps, so the contingency of dropping to 7 is not taken.
+Cap 16 remains impossible by a wider margin than before: 441,016,698 B, 164.3%
+of the byte cap, and 1,186 entries against the raised 1,024.
+
+The charge is deliberately conservative: the bound charges 2,757 B per shipped
+asset (w00's ratio) against a measured island mean of 2,567, so it over-states
+the island by 8,534,837 B rather than under-stating any wave.
 
 ---
 

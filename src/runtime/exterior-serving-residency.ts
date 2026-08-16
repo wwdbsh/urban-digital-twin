@@ -33,13 +33,15 @@
  *   reported so the ratio between what ships and what is ever resident is
  *   visible rather than implied.
  *
- * ## The sidecar is charged, not waved past
+ * ## Both per-cell documents are charged, not waved past
  *
- * A serving release fetches one `cell-detail-sidecar` per resident cell through
- * the same verified path as its GLBs, so it occupies one cache entry and its
- * bytes count against the same byte cap. Charging it is the difference between a
- * bound and a bound-shaped guess: at the worst anchor it is worth about twelve
- * mebibytes, which is most of the remaining headroom.
+ * A serving release fetches TWO per-cell documents through the same verified
+ * path as its GLBs — the `cell-detail-sidecar` carrying the cell's inventory and
+ * evidence shards, and, since ADR 0052 §2, the cell's own assembly manifest.
+ * Each occupies one cache entry and each counts against the same byte cap.
+ * Charging them is the difference between a bound and a bound-shaped guess: at
+ * the worst anchor the sidecar is worth about twelve mebibytes and the manifest
+ * about one and a half, which together are most of the remaining headroom.
  *
  * ## What this deliberately does NOT claim
  *
@@ -74,17 +76,55 @@ const SERVED_ASSET_PATH = /^public\/assets\/(.+)__lod_0\.glb$/u;
  */
 export const EXTERIOR_SERVING_SIDECAR_BYTES_PER_ASSET = 18_766;
 
+/**
+ * Per-shipped-asset weight of the per-cell ASSEMBLY MANIFEST (ADR 0052 §2).
+ *
+ * MEASURED, by transforming every committed `-c1` per-cell manifest to the
+ * single-LOD form a serving release ships — drop `lod_1` from `lods`, drop its
+ * GLB artifact, recompute `declaredTotalBytes` — and dividing by the buildings
+ * each wave packages:
+ *
+ * | wave | cells | buildings | single-LOD bytes | B/building |
+ * | --- | --- | --- | --- | --- |
+ * | w00 | 1 | 14 | 38,590 | **2,756.4** |
+ * | w01 | 149 | 7,179 | 16,629,620 | 2,316.4 |
+ * | w02 | 126 | 6,382 | 16,635,537 | 2,606.6 |
+ * | w03 | 176 | 9,560 | 24,938,475 | 2,608.6 |
+ * | w04 | 249 | 11,682 | 30,709,246 | 2,628.8 |
+ * | w05 | 182 | 10,172 | 26,548,368 | 2,609.9 |
+ * | ALL | 883 | 44,989 | **115,499,836** | 2,567.3 |
+ *
+ * The LARGEST is used, for the same reason the sidecar constant above uses the
+ * largest: a bound built from the island mean would understate the worst cell by
+ * construction. w00's ratio is high because it is Block 835 — ONE cell of 14
+ * buildings, so the manifest's fixed header amortises over almost nothing. That
+ * makes 2,756 an over-statement for every real serving cell rather than a
+ * typical value, which is the conservative direction for a bound and is why it
+ * is preferred to w04's 2,628.8 despite being the small-sample figure.
+ *
+ * The 115,499,836 B island total is the term ADR 0052 §2 removes from boot: it
+ * is what a promoted island would fetch and structurally validate before its
+ * first frame if per-cell manifests stayed inside `assemblies.json`.
+ */
+export const EXTERIOR_SERVING_ASSEMBLY_BYTES_PER_ASSET = 2_757;
+
 function fail(message: string): never {
   throw new Error(`Exterior serving residency: ${message}`);
 }
 
 export interface ExteriorServingCellOccupancy {
   readonly cellId: string;
-  /** Cache entries this cell occupies: one per served GLB, PLUS its sidecar. */
+  /**
+   * Cache entries this cell occupies: one per served GLB, PLUS its evidence
+   * sidecar, PLUS its assembly manifest. Both extras are fetched through
+   * `loadVerifiedArtifact` and so occupy an entry exactly as a GLB does.
+   */
   readonly entries: number;
   readonly buildingCount: number;
   readonly assetBytes: number;
   readonly sidecarBytes: number;
+  /** The per-cell assembly manifest's bytes (ADR 0052 §2). */
+  readonly assemblyBytes: number;
   readonly totalBytes: number;
 }
 
@@ -121,14 +161,18 @@ export function exteriorServingCellOccupancy(input: {
   return [...byCell.entries()]
     .map(([cellId, bucket]) => {
       const sidecarBytes = bucket.entries * EXTERIOR_SERVING_SIDECAR_BYTES_PER_ASSET;
+      const assemblyBytes = bucket.entries * EXTERIOR_SERVING_ASSEMBLY_BYTES_PER_ASSET;
       return {
         cellId,
-        // One sidecar per cell, on top of one entry per served GLB.
-        entries: bucket.entries + 1,
+        // One sidecar AND one assembly manifest per cell, on top of one entry
+        // per served GLB. Both are separately fetched, separately pinned
+        // documents on the verified artifact path; see ADR 0052 §2.
+        entries: bucket.entries + 2,
         buildingCount: bucket.entries,
         assetBytes: bucket.assetBytes,
         sidecarBytes,
-        totalBytes: bucket.assetBytes + sidecarBytes,
+        assemblyBytes,
+        totalBytes: bucket.assetBytes + sidecarBytes + assemblyBytes,
       };
     })
     .sort((left, right) => (left.cellId < right.cellId ? -1 : left.cellId > right.cellId ? 1 : 0));
