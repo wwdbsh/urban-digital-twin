@@ -7,6 +7,34 @@ import type { AssemblyLod } from "../release/multi-lod-assembly.ts";
  */
 export const EXTERIOR_RENDER_PROFILES = ["exploration", "inspection"] as const;
 export type ExteriorRenderProfile = (typeof EXTERIOR_RENDER_PROFILES)[number];
+/**
+ * The DEFAULT selection semantics.
+ *
+ * T001 HOLDS A FLIP OF THIS CONSTANT to `inspection` (finest-that-covers), and
+ * it is developed but deliberately NOT applied here: ADR 0057 Part 0 requires it
+ * to ship in the SAME commit as the `-s2` activation records and the rollback
+ * entries, so that one revert restores the composition and the semantics
+ * together. Until that commit it would be a third, unmeasured configuration.
+ *
+ * The reason it has to move is worth stating rather than absorbing. `maxDistanceMeters` is an UPPER bound only, and `AssemblyLod` has
+ * no near bound, so under a coarsest-preferring profile a two-LOD asset has
+ * exactly two reachable behaviours: thresholds distinguished, so the coarse
+ * level covers everywhere and wins everywhere; or thresholds tied, so the tie
+ * rule sends every distance to the fine level. NEITHER IS A RING. Shipping the
+ * `-s2` thresholds under the old default would have put the protrusion-shed
+ * level in front of the camera at street level.
+ *
+ * `exploration` is unchanged and stays reachable through `?exteriorProfile=`,
+ * where it is the documented coarsest / degraded-performance arm.
+ *
+ * The flip is a NO-OP for every release the promoted city serves today, and
+ * that is proven rather than asserted: `exterior-two-lod-selection.test.ts`
+ * pins all three frozen shapes — single-LOD `-s1`, null-at-both `-c1`/`-c2`, and
+ * the 424 ADR 0050 fallback parents — at thirteen distances under BOTH profiles,
+ * and pins the ANTECEDENT that makes them agree, so a future shape that
+ * distinguished its levels fails there instead of silently changing what a
+ * promoted session renders.
+ */
 export const DEFAULT_EXTERIOR_RENDER_PROFILE: ExteriorRenderProfile = "exploration";
 
 export function parseExteriorRenderProfile(value: unknown): ExteriorRenderProfile | null {

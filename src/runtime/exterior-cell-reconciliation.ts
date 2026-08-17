@@ -66,7 +66,25 @@ export function createExteriorCellLoadState<TOutcome>(): ExteriorCellLoadState<T
 export function reconcileExteriorCellLoads<TOutcome>(
   state: ExteriorCellLoadState<TOutcome>,
   scheduledCellIds: readonly string[],
+  /**
+   * Cells that are still scheduled but whose LOADED FORM is stale (T001).
+   *
+   * A cell that crossed the near-ring bound is still resident and still wanted,
+   * but the level it holds is no longer the level its distance selects. Dropping
+   * it from `requested` here is what puts it back into `fresh`, so the crossing
+   * becomes a reload rather than being absorbed.
+   *
+   * A cell already IN FLIGHT is deliberately left alone: its load has not
+   * settled, re-requesting it would put two loads on the wire for one cell, and
+   * the next reconciliation catches it once it has settled.
+   */
+  invalidatedCellIds: readonly string[] = [],
 ): ExteriorCellReconciliation {
+  for (const cellId of invalidatedCellIds) {
+    if (state.inFlight.has(cellId)) continue;
+    state.requested.delete(cellId);
+    state.outcomes.delete(cellId);
+  }
   const scheduled = new Set(scheduledCellIds);
   const dropped = [...state.requested].filter((cellId) => !scheduled.has(cellId));
   for (const cellId of dropped) {

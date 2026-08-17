@@ -86,6 +86,7 @@ import {
 } from "../runtime/block835-canary-probe";
 import { MIDTOWN_CORE_CANARY_FACADE_PATH } from "../runtime/midtown-core-canary-facade-path";
 import { DEFAULT_EXTERIOR_RENDER_PROFILE, EXTERIOR_RENDER_PROFILES, exteriorRenderProfileLabel, parseExteriorRenderProfile, type ExteriorRenderProfile } from "../runtime/exterior-render-profiles";
+import { EXTERIOR_TWO_LOD_SERVING_NEAR_RING_METERS } from "../release/exterior-serving-release";
 import { exteriorDeferredCellNotice, exteriorNotShippedSummary, exteriorQualifiedNotice, exteriorReleasedArtifactNotice, exteriorWaveForSelection } from "../runtime/exterior-wave-attribution";
 import { fallbackViewportFootprint, type ViewportFootprint } from "../runtime/viewport-footprint";
 
@@ -582,6 +583,11 @@ export const MOBILE_VIEWPORT_MEDIA_QUERY = "(max-width: 680px)";
  * declares. That is deliberately LESS detail than the inspection profile a
  * desktop session can ask for, and this policy exists so the product states it
  * rather than quietly serving less.
+ *
+ * T001 NOTE: this clamp reads `DEFAULT_EXTERIOR_RENDER_PROFILE`, so it follows
+ * that constant wherever it goes. Under single-LOD serving the clamp is VACUOUS
+ * — every profile resolves the same level — which is why ADR 0057 §2.2 hands
+ * the mobile frame-time measurement to T007 rather than claiming it here.
  *
  * Three things it deliberately does NOT do:
  *
@@ -1449,6 +1455,12 @@ export function App() {
   // release follows whatever this build promotes.
   const [exteriorExplicitReleaseId, setExteriorExplicitReleaseId] = useState<string | null>(initialExteriorStreaming.explicitReleaseId);
   const [exteriorProfile, setExteriorProfile] = useState<ExteriorRenderProfile>(initialExteriorStreaming.profile);
+  /**
+   * Which side of the near ring each cell was LOADED at (T001, ADR 0057 §1).
+   * A ref rather than state: it records what already happened and must never
+   * itself trigger a render.
+   */
+  const exteriorRingSideRef = useRef(new Map<string, "near" | "mid">());
   const [exteriorCanarySnapshotId, setExteriorCanarySnapshotId] = useState<string | null>(initialExteriorStreaming.canarySnapshotId);
   // T002 opt-in. Read once at boot and never written by the UI: this build has
   // no scheduler control, only the URL flag, so the value cannot change within a
@@ -2378,6 +2390,38 @@ export function App() {
       { ...schedulerView, enabled: schedulerEnabled, previous: exteriorSchedulerCarryRef.current, maxUnitDistanceMeters: exteriorDetailRadiusMetersRef.current },
     );
     if (globalSchedule.carry) exteriorSchedulerCarryRef.current = globalSchedule.carry;
+    /**
+     * THE DISTANCE THE LOD THRESHOLDS ARE ACTUALLY EVALUATED AGAINST (T001).
+     *
+     * The scheduler measured a camera-to-cell distance for every resident cell
+     * in order to rank it; this reads that number rather than recomputing it, so
+     * the LOD tier and the residency order cannot disagree about how far away a
+     * cell is.
+     *
+     * The bucketed camera HEIGHT remains the documented fallback, and it is a
+     * real fallback rather than a dead branch: a held-previous decision ranks
+     * nothing and publishes no distances, and a session with the scheduler off
+     * has no decision at all. In both cases the release thresholds are compared
+     * against the same proxy they were compared against before this change,
+     * which is also the rollback arm named in ADR 0057 §1.1.
+     */
+    const measuredDistances = globalSchedule.decision?.distanceMetersByUnitId ?? null;
+    const lodDistanceFor = (cellId: string): number => measuredDistances?.get(cellId) ?? exteriorCameraHeightBucketMeters;
+    /**
+     * WHICH SIDE OF THE NEAR RING a cell is on, which is what its served level
+     * depends on.
+     *
+     * A cell already resident at `lod_0` would otherwise keep serving `lod_0`
+     * after the camera pulled back past the bound: nothing in the wave-level
+     * inputs changes on a crossing, so no reload would be requested and the mid
+     * ring would only ever appear for cells that arrived already beyond it.
+     *
+     * The SIDE is tracked rather than the distance, deliberately. Keying on the
+     * raw metre value would re-request a cell on every camera nudge, which is
+     * the thrash the height bucketing existed to prevent; the side changes
+     * exactly when the served level does.
+     */
+    const ringSideOf = (cellId: string): "near" | "mid" => (lodDistanceFor(cellId) > EXTERIOR_TWO_LOD_SERVING_NEAR_RING_METERS ? "mid" : "near");
     // Probe-only. The decision object is otherwise dropped here, so
     // `visibleCount`/`deferredCount`/`reserved`/`hold` — the four numbers that
     // say whether the CAP or the FOOTPRINT bound a pose — were unreadable from a
@@ -2410,7 +2454,14 @@ export function App() {
       // On a default session this admits the whole declared list on the first
       // run and nothing after, so the requests, their order and their count are
       // what they have always been.
-      const { fresh, dropped, idle } = reconcileExteriorCellLoads(entry.load, schedule.cellIds);
+      // Cells whose ring side moved since they were loaded: their level is now
+      // wrong, so they are re-requested rather than left as they are.
+      const crossed = schedule.cellIds.filter((cellId) => {
+        const loadedSide = exteriorRingSideRef.current.get(cellId);
+        return loadedSide !== undefined && loadedSide !== ringSideOf(cellId);
+      });
+      for (const cellId of schedule.cellIds) exteriorRingSideRef.current.set(cellId, ringSideOf(cellId));
+      const { fresh, dropped, idle } = reconcileExteriorCellLoads(entry.load, schedule.cellIds, crossed);
       // Gate (a) of the release seam: ONLY a scheduler eviction enqueues, and
       // only under the flag. Removing the flag removes the seam.
       if (schedulerEnabled && outcomesBeforeDrop) {
@@ -2464,7 +2515,7 @@ export function App() {
       // immediately re-fetched. The pass is hoisted below the loop so it never
       // observes a decision that is only partially applied.
       if (fresh.length === 0) { if (dropped.length > 0) publish(); continue; }
-      void Promise.all(fresh.map((cellId) => runtime.loadCell(cellId, exteriorEffectiveProfile, exteriorCameraHeightBucketMeters, controller.signal)))
+      void Promise.all(fresh.map((cellId) => runtime.loadCell(cellId, exteriorEffectiveProfile, lodDistanceFor(cellId), controller.signal)))
         .then((loaded) => {
           if (!isCurrent()) return;
           // Guarded, not unconditional: a cell the scheduler evicted while its

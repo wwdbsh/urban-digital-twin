@@ -158,6 +158,25 @@ export interface SchedulerDecision {
   readonly deferredCount: number;
   /** Units resident only because hysteresis has not expired for them. */
   readonly retainedCount: number;
+  /**
+   * The MEASURED camera-to-unit distance of every resident unit, in the census
+   * planar metric (T001).
+   *
+   * This is the number the scheduler already computes to rank by — the D-4 rank
+   * key — surfaced rather than recomputed, so the LOD tier and the residency
+   * order can never disagree about how far away a cell is.
+   *
+   * It exists because the exterior LOD thresholds used to be evaluated against a
+   * bucketed camera ELLIPSOID HEIGHT, which answers "how high is the camera",
+   * not "how far is this cell". A per-release distance threshold compared
+   * against a height is not a ring, and ADR 0057 §1.1 records why that had to
+   * move before any threshold could mean anything.
+   *
+   * Empty on a held-previous decision: that path re-publishes the previous
+   * resident set without ranking anything, so it has no distances of its own and
+   * inventing them would be worse than saying so.
+   */
+  readonly distanceMetersByUnitId: ReadonlyMap<string, number>;
 }
 
 /**
@@ -448,6 +467,10 @@ export function selectResidentUnits(units: readonly SchedulableUnit[], view: Sch
       visibleCount: 0,
       deferredCount: 0,
       retainedCount: 0,
+      // Nothing was ranked on this path, so there is no measured distance to
+      // publish. An empty map makes the caller fall back explicitly rather than
+      // read a stale number as if it were this decision's.
+      distanceMetersByUnitId: new Map<string, number>(),
     };
   }
 
@@ -512,5 +535,6 @@ export function selectResidentUnits(units: readonly SchedulableUnit[], view: Sch
     visibleCount: reserved.length + visible.length,
     deferredCount: contested.length - admitted.length,
     retainedCount: admitted.filter((entry) => entry.tier === 2).length,
+    distanceMetersByUnitId: new Map(priority.map((entry) => [entry.unit.unitId, entry.distanceMeters] as const)),
   };
 }
