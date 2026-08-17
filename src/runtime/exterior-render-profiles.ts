@@ -15,7 +15,8 @@ export type ExteriorRenderProfile = (typeof EXTERIOR_RENDER_PROFILES)[number];
  * restores the composition and the semantics together. Shipping either half
  * alone would have been a third, unmeasured configuration.
  *
- * The reason it had to move is worth stating rather than absorbing. `maxDistanceMeters` is an UPPER bound only, and `AssemblyLod` has
+ * The reason it had to move is worth stating rather than absorbing.
+ * `maxDistanceMeters` is an UPPER bound only, and `AssemblyLod` has
  * no near bound, so under a coarsest-preferring profile a two-LOD asset has
  * exactly two reachable behaviours: thresholds distinguished, so the coarse
  * level covers everywhere and wins everywhere; or thresholds tied, so the tie

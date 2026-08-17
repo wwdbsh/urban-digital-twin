@@ -585,9 +585,13 @@ export const MOBILE_VIEWPORT_MEDIA_QUERY = "(max-width: 680px)";
  * rather than quietly serving less.
  *
  * T001 NOTE: this clamp reads `DEFAULT_EXTERIOR_RENDER_PROFILE`, so it follows
- * that constant wherever it goes. Under single-LOD serving the clamp is VACUOUS
- * — every profile resolves the same level — which is why ADR 0057 §2.2 hands
- * the mobile frame-time measurement to T007 rather than claiming it here.
+ * that constant wherever it goes. Under the single-LOD serving era the clamp
+ * WAS vacuous — every profile resolved the same level. Post-promotion it is
+ * inert for a different reason: mobile follows the finest-that-covers default
+ * rather than clamping below it, so mobile and desktop request the same
+ * profile. The frame-time consequence of that is unmeasured, which is why
+ * ADR 0057 §2.2 hands the mobile measurement to T007 rather than claiming it
+ * here.
  *
  * Three things it deliberately does NOT do:
  *

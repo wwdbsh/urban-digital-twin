@@ -71,24 +71,30 @@ function withdrawingRollback(record: ExteriorDefaultActivationRecord): ExteriorD
 const BLOCK835_SERVING_RELEASE_ID = "manhattan-exterior-cells-20260811-v3-s1";
 const BLOCK835_TWO_LOD_RELEASE_ID = "manhattan-exterior-cells-20260811-v3-s2";
 const BLOCK835_V3_RELEASE_ID = "manhattan-exterior-cells-20260811-v3";
-/** The Block 835 rollback this build ships: back to the curated V3 release. */
+/** The Block 835 rollback this build ships: back to the -s1 serving release — the SAME fourteen buildings, one level instead of two. */
 const ROLLED_BACK_TO_PREDECESSOR: ExteriorDefaultActivationRecord = withdrawingRollback(EXTERIOR_TWO_LOD_DEFAULT_ACTIVATION);
 const MIDTOWN = MIDTOWN_CORE_TWO_LOD_ACTIVATION.enabled ? MIDTOWN_CORE_TWO_LOD_ACTIVATION : null;
 /**
- * The Midtown rollback this build ships: back to the curated V3 release.
+ * The Midtown rollback this build ships: back to the -s1 serving release.
  *
- * Enabled, as it has been since the P3 V3 repromotion, but one release later:
- * the previous verified representation of the serving wave is the curated V3
- * wave, which nobody withdrew. Restoring it is a large FALL in what renders —
- * 7,179 served buildings back to the curated 156, with the rest of the area
- * returning to base massing — and it is still verified geometry rather than
- * nothing, which is why it is the rollback target.
+ * The previous verified representation of the two-LOD wave is the -s1 serving
+ * wave, which nobody withdrew. Restoring it is NOT a fall in rendered coverage
+ * — the same 7,179 buildings render, at a single level instead of two. The
+ * fall to the curated 156 now belongs to the SECOND swap (the -s1 rollback,
+ * rehearsed below), not to this one.
  */
 const MIDTOWN_ROLLED_BACK: ExteriorDefaultActivationRecord = withdrawingRollback(MIDTOWN_CORE_TWO_LOD_ACTIVATION);
 const MIDTOWN_SERVING_RELEASE_ID = "manhattan-midtown-core-cells-20260811-v3-s1";
 const MIDTOWN_TWO_LOD_RELEASE_ID = "manhattan-midtown-core-cells-20260811-v3-s2";
 const MIDTOWN_V3_RELEASE_ID = "manhattan-midtown-core-cells-20260811-v3";
-/** A Midtown withdrawal all the way to base, kept representable and tested. */
+/**
+ * A Midtown withdrawal all the way to base, kept representable and tested.
+ * HAND-BUILT, not shipped text: this build ships no one-step -s2-to-base
+ * withdrawal (the ladder is -s2 -> -s1 -> curated -> base, one swap per rung —
+ * see the three-swap Lower-Manhattan rehearsal). It exists to prove the
+ * record SHAPE stays representable and the per-wave notice text still names
+ * the darkened wave, not to rehearse an edit an operator would export.
+ */
 const ROLLED_BACK_MIDTOWN_TO_BASE: ExteriorDefaultActivationRecord = { enabled: false, releaseId: null, rolledBackReleaseId: MIDTOWN ? MIDTOWN.releaseId : null };
 const LOWER_MANHATTAN = LOWER_MANHATTAN_TWO_LOD_ACTIVATION.enabled ? LOWER_MANHATTAN_TWO_LOD_ACTIVATION : null;
 const LOWER_MANHATTAN_SERVING_RELEASE_ID = "manhattan-lower-manhattan-cells-20260812-s1";
@@ -724,10 +730,9 @@ describe("the promoted set as this build actually ships it", () => {
     const midtownRolledBack = exteriorDefaultActivations(EXTERIOR_TWO_LOD_DEFAULT_ACTIVATION, MIDTOWN_ROLLED_BACK);
     const set = resolveExteriorActivationSet({ ...base, override: null, explicitReleaseId: null, activeRealBaseReleaseId: CITYWIDE_BASE, records: midtownRolledBack });
     // The rollback restores the previous VERIFIED release rather than going
-    // dark. It is still a large FALL in what renders — the curated V3 wave
-    // generates geometry for 156 of the wave's buildings where the serving
-    // release generated it for 7,179, and the rest of the area draws as base
-    // massing — but it is verified geometry, and Block 835 is untouched.
+    // dark — and it is NOT a fall in rendered coverage: the -s1 serving wave
+    // renders the same 7,179 buildings at a single level. The fall to the
+    // curated 156 belongs to the second swap, and Block 835 is untouched.
     expect(set.targets.map((target) => target.releaseId)).toEqual([
       BLOCK835_TWO_LOD_RELEASE_ID,
       MIDTOWN_SERVING_RELEASE_ID,

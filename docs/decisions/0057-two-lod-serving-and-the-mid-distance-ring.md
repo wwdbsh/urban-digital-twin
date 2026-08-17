@@ -179,6 +179,12 @@ The frame-time consequence is NOT claimed here. T007's campaign owns the mobile
 measurement, and `exploration` remains the documented fallback arm if T007
 measures a miss.
 
+Known residual: the DOM/CSS/test hook `data-mobile-lower-lod` is now a
+misnomer — the disclosure it marks explicitly states mobile resolves the SAME
+level as desktop. The selector name is kept (it is not user-visible text), and
+this line exists so a future reader querying it does not conclude mobile ships
+reduced detail.
+
 ---
 
 ## Part 3 — the budgets, re-derived
