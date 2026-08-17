@@ -747,15 +747,21 @@ async function readServingFile(payloadRoot, relativeRef, declaredFiles, declared
  * `exterior-serving-promotion.test.ts` recomputes every digest below on every
  * run rather than trusting the paste.
  */
-async function runActivation(waveIds) {
+async function runActivation(waveIds, options = {}) {
   const targets = waveIds.length > 0 ? waveIds.map((waveId) => exteriorServingWave(waveId)) : EXTERIOR_SERVING_WAVES;
   const islandLedger = await loadIslandLedger();
+  const twoLod = options.lods === "two";
+  // Same cut selector as emit/validate/fingerprint. The -s2 pins are derived
+  // from the -s2 inventories and the -c2 censuses; deriving them from -s1
+  // records would pin a composition the promotion is not activating.
+  const cutRetentionId = (waveEntry) => (twoLod ? exteriorTwoLodRetentionReleaseId(waveEntry.retentionReleaseId) : waveEntry.retentionReleaseId);
+  const cutServingId = (waveEntry) => (twoLod ? exteriorTwoLodServingReleaseId(exteriorTwoLodRetentionReleaseId(waveEntry.retentionReleaseId)) : waveEntry.servingReleaseId);
   const records = [];
   for (const waveEntry of targets) {
-    const recordRoot = join(repositoryRoot, "data", waveEntry.servingReleaseId);
+    const recordRoot = join(repositoryRoot, "data", cutServingId(waveEntry));
     if (!existsSync(join(recordRoot, "payload-inventory.json"))) continue;
     const inventory = JSON.parse(await readFile(join(recordRoot, "payload-inventory.json"), "utf8"));
-    const { census } = await loadRetentionRecords(waveEntry.retentionReleaseId);
+    const { census } = await loadRetentionRecords(cutRetentionId(waveEntry));
     const tombstoned = new Set(census.tombstones.map((entry) => entry.buildingId));
     const owned = islandLedger.cells
       .filter((cell) => cell.cellId.startsWith(`manhattan-exterior-cell-${waveEntry.waveId}-`))
@@ -767,7 +773,7 @@ async function runActivation(waveIds) {
     const cellsJoin = inventory.cellReleases.map((entry) => `${entry.cellId}|${entry.cellReleaseId}|${entry.checksumSha256}`).sort().join(", ");
     records.push({
       waveId: waveEntry.waveId,
-      releaseId: waveEntry.servingReleaseId,
+      releaseId: cutServingId(waveEntry),
       snapshotId: inventory.head.snapshotId,
       snapshotChecksumSha256: inventory.head.checksumSha256,
       assemblyPackageCount: inventory.assemblyPackageIds.length,
@@ -787,8 +793,11 @@ async function runActivation(waveIds) {
   };
   const evidenceRoot = join(repositoryRoot, "data", EXTERIOR_SERVING_EVIDENCE_ID);
   await mkdir(evidenceRoot, { recursive: true });
-  await writeFile(join(evidenceRoot, "activation-pins.json"), serialize(record));
-  await writeFile(join(evidenceRoot, "activation-pins.sha256"), `${sha256HexSync(serialize(record))}  activation-pins.json\n`);
+  // The -s1 pins are FROZEN evidence of the T005 promotion; a two-LOD run
+  // writes its own file rather than overwriting them.
+  const pinsName = twoLod ? "activation-pins-s2" : "activation-pins";
+  await writeFile(join(evidenceRoot, `${pinsName}.json`), serialize(record));
+  await writeFile(join(evidenceRoot, `${pinsName}.sha256`), `${sha256HexSync(serialize(record))}  ${pinsName}.json\n`);
   console.log(serialize(record));
 }
 
@@ -911,7 +920,7 @@ async function main() {
   } else if (command === "boot-cost") {
     await runBootCost(rest);
   } else if (command === "activation") {
-    await runActivation(rest);
+    await runActivation(rest, { lods });
   } else {
     console.error("usage: exterior-serving-wave-cli.mjs <emit|validate|fingerprint|boot-cost|activation> [wave] [--force] [--limit=N]");
     console.error("The wave is REQUIRED for emit and validate. There is no default: a bare invocation would cut an island.");

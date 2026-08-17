@@ -1188,6 +1188,210 @@ export const EXTERIOR_SERVING_ROLLBACKS: readonly ExteriorDefaultActivationEnabl
   NORTHERN_MANHATTAN_P1_SERVING_ROLLBACK,
 ];
 
+// ---------------------------------------------------------------------------
+// The T001 TWO-LOD promotion — the six `-s2` releases become the default
+// ---------------------------------------------------------------------------
+
+/**
+ * The six two-LOD promotion records.
+ *
+ * Every record below is a FORWARD promotion whose `predecessor` is the `-s1`
+ * serving record that was the active default until this commit, retained
+ * verbatim and none re-derived. `rolledBackReleaseId` is `null` on all six,
+ * because this promotion WITHDRAWS NOTHING: the six `-s1` releases stay pinned
+ * in `PINNED_EXTERIOR_CELL_RELEASE_IDS` and stay reachable by
+ * `?exteriorCells=`, so every `-s1` bookmark that worked yesterday still works.
+ *
+ * Digest form, exactly as the `-s1` records use it: 44,989 building identities
+ * and 883 cell pins are not pasted into a source file. Every digest below is
+ * derived from committed records only — the `-s2` payload inventories, the
+ * `-c2` wave censuses and the committed island ledger — by
+ * `exterior-serving-wave-cli.mjs activation --lods=two`, and is reproducible on
+ * a clean checkout with no payload directory present.
+ */
+
+/** Wave `w00` — Block 835, served at BOTH levels. 1 cells, 14 buildings. */
+export const EXTERIOR_TWO_LOD_DEFAULT_ACTIVATION: ExteriorDefaultActivationRecord = {
+  enabled: true,
+  releaseId: "manhattan-exterior-cells-20260811-v3-s2",
+  snapshotId: "snapshot:manhattan-exterior-cells-20260811-v3-s2:v1",
+  snapshotChecksumSha256: "28a50318b1a6967e985b2fd68bfd6f17bc5bc79c9672b9fc0fed700e6e34a6e7",
+  assemblyPackageIds: [],
+  assemblyPackageIdsDigestSha256: "9d5c34c3c4139c16dfbc68e625eee177367b62cf0d5e1f0369fd381cfcfe017d",
+  assemblyPackageCount: 1,
+  membership: {
+    cells: [],
+    cellsDigestSha256: "10a761a694a06c8e4014085b70024bf0019359436803b37b264fc9742fe1e1f3",
+    cellCount: 1,
+    buildingIds: [],
+    buildingIdsDigestSha256: "e7ef032bdf12222084fcf923ce1d61570d0989bc7f0f17d1dcc4db5659942c2f",
+    buildingCount: 14,
+  },
+  approvalRef: "Issue #101 gate approval 2026-08-17 (T001 two-LOD serving promotion, ADR 0057; release approval approval:manhattan-exterior-cells-20260811-v3-s2:full-city-serving)",
+  rolledBackReleaseId: null,
+  predecessor: EXTERIOR_DEFAULT_ACTIVATION,
+} as const;
+
+/** Wave `w01` — Midtown core, served at BOTH levels. 149 cells, 7,179 buildings. */
+export const MIDTOWN_CORE_TWO_LOD_ACTIVATION: ExteriorDefaultActivationRecord = {
+  enabled: true,
+  releaseId: "manhattan-midtown-core-cells-20260811-v3-s2",
+  snapshotId: "snapshot:manhattan-midtown-core-cells-20260811-v3-s2:v1",
+  snapshotChecksumSha256: "43777356c50fb240bce10dfe63191a9fbab8b9c577b1ba991ae128ca2b9914f0",
+  assemblyPackageIds: [],
+  assemblyPackageIdsDigestSha256: "d8c4b8bb704511cb5bfd74f89c72b357f81ed50b5ea5fbf1f0e29f79044493d0",
+  assemblyPackageCount: 149,
+  membership: {
+    cells: [],
+    cellsDigestSha256: "5f5a63b62450ae0e96a452b221ee85793d15573287b21f796b7f459ded72b51f",
+    cellCount: 149,
+    buildingIds: [],
+    buildingIdsDigestSha256: "0ef78d63bc0d5c8a0c29f0b86991360df04deb7fee34c498bc8357c484e0cf96",
+    buildingCount: 7179,
+  },
+  approvalRef: "Issue #101 gate approval 2026-08-17 (T001 two-LOD serving promotion, ADR 0057; release approval approval:manhattan-midtown-core-cells-20260811-v3-s2:full-city-serving)",
+  rolledBackReleaseId: null,
+  predecessor: MIDTOWN_CORE_EXTERIOR_ACTIVATION,
+} as const;
+
+/** Wave `w02` — Lower Manhattan, served at BOTH levels. 126 cells, 6,382 buildings. */
+export const LOWER_MANHATTAN_TWO_LOD_ACTIVATION: ExteriorDefaultActivationRecord = {
+  enabled: true,
+  releaseId: "manhattan-lower-manhattan-cells-20260812-s2",
+  snapshotId: "snapshot:manhattan-lower-manhattan-cells-20260812-s2:v1",
+  snapshotChecksumSha256: "9a1bb2935bd08943d7f67c002aef70e9db5546311f8deff6b67a221da5e957e3",
+  assemblyPackageIds: [],
+  assemblyPackageIdsDigestSha256: "5aa87af6acb9581d0bcf38ac68c41e3f2d3b619b1c6c9c46aa0498eb57ed65b2",
+  assemblyPackageCount: 126,
+  membership: {
+    cells: [],
+    cellsDigestSha256: "528f89e7aab85bc5114aecb474f624de4aee3f8c409464e9d7c4fa21fedc0d1f",
+    cellCount: 126,
+    buildingIds: [],
+    buildingIdsDigestSha256: "c280e22fff0b5e50be6833052e4f3d3d669cb00afb3fc0bab11f6ac5df22a0c0",
+    buildingCount: 6382,
+  },
+  approvalRef: "Issue #101 gate approval 2026-08-17 (T001 two-LOD serving promotion, ADR 0057; release approval approval:manhattan-lower-manhattan-cells-20260812-s2:full-city-serving)",
+  rolledBackReleaseId: null,
+  predecessor: LOWER_MANHATTAN_EXTERIOR_ACTIVATION,
+} as const;
+
+/** Wave `w03` — Southern remainder, served at BOTH levels. 176 cells, 9,560 buildings. */
+export const SOUTHERN_REMAINDER_TWO_LOD_ACTIVATION: ExteriorDefaultActivationRecord = {
+  enabled: true,
+  releaseId: "manhattan-southern-remainder-cells-20260812-s2",
+  snapshotId: "snapshot:manhattan-southern-remainder-cells-20260812-s2:v1",
+  snapshotChecksumSha256: "ad9e1cf4ecc3eb07637cb5d8ffcfa8567b3f49981b0d0df74bb9e6ac4af7c306",
+  assemblyPackageIds: [],
+  assemblyPackageIdsDigestSha256: "d2cd36266ead0c0b5e2dd8606e03d5cec311b475d29d71ee0d6905ac65f4fb77",
+  assemblyPackageCount: 176,
+  membership: {
+    cells: [],
+    cellsDigestSha256: "5ad54ca1a32c5277d9a233f6989a5111150deb0c390718b08e4706c25b3f5f16",
+    cellCount: 176,
+    buildingIds: [],
+    buildingIdsDigestSha256: "fd0f4a413854b4d081402f4a5d31d60b478f5cebbdc4e4ab6a71dc9cbfa34973",
+    buildingCount: 9560,
+  },
+  approvalRef: "Issue #101 gate approval 2026-08-17 (T001 two-LOD serving promotion, ADR 0057; release approval approval:manhattan-southern-remainder-cells-20260812-s2:full-city-serving)",
+  rolledBackReleaseId: null,
+  predecessor: SOUTHERN_REMAINDER_EXTERIOR_ACTIVATION,
+} as const;
+
+/** Wave `w04` — Central and upper Manhattan, served at BOTH levels. 249 cells, 11,682 buildings. */
+export const CENTRAL_UPPER_MANHATTAN_TWO_LOD_ACTIVATION: ExteriorDefaultActivationRecord = {
+  enabled: true,
+  releaseId: "manhattan-central-upper-manhattan-cells-20260812-s2",
+  snapshotId: "snapshot:manhattan-central-upper-manhattan-cells-20260812-s2:v1",
+  snapshotChecksumSha256: "99bbf78cfd6d8d7ca3a581163e5d92fc6caf56bbc478b0f5ffebc7f1ee7f1df2",
+  assemblyPackageIds: [],
+  assemblyPackageIdsDigestSha256: "5f9192752c57c3b78528495bb84991a4e067b21e1742b1ba1e800e4d1fc3e626",
+  assemblyPackageCount: 249,
+  membership: {
+    cells: [],
+    cellsDigestSha256: "aa266c48e2e503cf7899852ec8d9f0dc2312557eb2ee8f234d4d355241a3975c",
+    cellCount: 249,
+    buildingIds: [],
+    buildingIdsDigestSha256: "bf9ee190a27696698142b3e05570244feeea877355675ca23525b7b4fc57dd66",
+    buildingCount: 11682,
+  },
+  approvalRef: "Issue #101 gate approval 2026-08-17 (T001 two-LOD serving promotion, ADR 0057; release approval approval:manhattan-central-upper-manhattan-cells-20260812-s2:full-city-serving)",
+  rolledBackReleaseId: null,
+  predecessor: CENTRAL_UPPER_MANHATTAN_EXTERIOR_ACTIVATION,
+} as const;
+
+/** Wave `w05` — Northern Manhattan, served at BOTH levels. 182 cells, 10,172 buildings. */
+export const NORTHERN_MANHATTAN_TWO_LOD_ACTIVATION: ExteriorDefaultActivationRecord = {
+  enabled: true,
+  releaseId: "manhattan-northern-manhattan-cells-20260812-s2",
+  snapshotId: "snapshot:manhattan-northern-manhattan-cells-20260812-s2:v1",
+  snapshotChecksumSha256: "e3f7e9a03c8260e375f86c506c1b17bce1fcc2aff05267d972518dd3a63616aa",
+  assemblyPackageIds: [],
+  assemblyPackageIdsDigestSha256: "71a1ee244fdb1d090b046c765d32f3a30ae2d3430c1424744819fd6657754bd2",
+  assemblyPackageCount: 182,
+  membership: {
+    cells: [],
+    cellsDigestSha256: "49acec871139df568bfde4a09d22e42d69c510f8bd475aee3ce4fb8707380311",
+    cellCount: 182,
+    buildingIds: [],
+    buildingIdsDigestSha256: "54f902edd27ce0cda22fcca9164238b6aeced4eb51a3d326f5015d58fa7654b5",
+    buildingCount: 10172,
+  },
+  approvalRef: "Issue #101 gate approval 2026-08-17 (T001 two-LOD serving promotion, ADR 0057; release approval approval:manhattan-northern-manhattan-cells-20260812-s2:full-city-serving)",
+  rolledBackReleaseId: null,
+  predecessor: NORTHERN_MANHATTAN_EXTERIOR_ACTIVATION,
+} as const;
+
+
+/**
+ * The six two-LOD rollbacks: each record with its `-s2` release withdrawn.
+ *
+ * Reverting the promotion commit restores the `-s1` composition AND the old
+ * selection semantics together, which is the single-revert rule ADR 0057 Part 0
+ * registered. These entries exist so a rehearsal can walk the withdrawn set
+ * beside the promoted one without editing either.
+ */
+
+export const EXTERIOR_TWO_LOD_DEFAULT_ROLLBACK: ExteriorDefaultActivationEnabled = {
+  ...EXTERIOR_TWO_LOD_DEFAULT_ACTIVATION,
+  rolledBackReleaseId: "manhattan-exterior-cells-20260811-v3-s2",
+} as const;
+
+export const MIDTOWN_CORE_TWO_LOD_ROLLBACK: ExteriorDefaultActivationEnabled = {
+  ...MIDTOWN_CORE_TWO_LOD_ACTIVATION,
+  rolledBackReleaseId: "manhattan-midtown-core-cells-20260811-v3-s2",
+} as const;
+
+export const LOWER_MANHATTAN_TWO_LOD_ROLLBACK: ExteriorDefaultActivationEnabled = {
+  ...LOWER_MANHATTAN_TWO_LOD_ACTIVATION,
+  rolledBackReleaseId: "manhattan-lower-manhattan-cells-20260812-s2",
+} as const;
+
+export const SOUTHERN_REMAINDER_TWO_LOD_ROLLBACK: ExteriorDefaultActivationEnabled = {
+  ...SOUTHERN_REMAINDER_TWO_LOD_ACTIVATION,
+  rolledBackReleaseId: "manhattan-southern-remainder-cells-20260812-s2",
+} as const;
+
+export const CENTRAL_UPPER_MANHATTAN_TWO_LOD_ROLLBACK: ExteriorDefaultActivationEnabled = {
+  ...CENTRAL_UPPER_MANHATTAN_TWO_LOD_ACTIVATION,
+  rolledBackReleaseId: "manhattan-central-upper-manhattan-cells-20260812-s2",
+} as const;
+
+export const NORTHERN_MANHATTAN_TWO_LOD_ROLLBACK: ExteriorDefaultActivationEnabled = {
+  ...NORTHERN_MANHATTAN_TWO_LOD_ACTIVATION,
+  rolledBackReleaseId: "manhattan-northern-manhattan-cells-20260812-s2",
+} as const;
+
+/** The six, in wave order, so a rehearsal can walk them beside the promoted set. */
+export const EXTERIOR_TWO_LOD_SERVING_ROLLBACKS: readonly ExteriorDefaultActivationEnabled[] = [
+  EXTERIOR_TWO_LOD_DEFAULT_ROLLBACK,
+  MIDTOWN_CORE_TWO_LOD_ROLLBACK,
+  LOWER_MANHATTAN_TWO_LOD_ROLLBACK,
+  SOUTHERN_REMAINDER_TWO_LOD_ROLLBACK,
+  CENTRAL_UPPER_MANHATTAN_TWO_LOD_ROLLBACK,
+  NORTHERN_MANHATTAN_TWO_LOD_ROLLBACK,
+];
+
 /**
  * The ordered promotion set this build activates, oldest wave first.
  *
