@@ -1,0 +1,2201 @@
+{
+ "schemaVersion": "1.0",
+ "recordId": "lod1-texturing-20260817:sampling-results",
+ "task": "T009",
+ "artifact": "blender-appearance-sampling-results",
+ "preRegistration": {
+  "record": "sampling-pre-registration.json",
+  "sha256": "9da83b0e7576b41a7fd9cd3bbed22cc9990a9322c903ad270d05de3d72bdb7b0",
+  "note": "The bars below were fixed and committed BEFORE any still was captured. They are reported against verbatim, including where they are missed."
+ },
+ "capture": {
+  "pairsCaptured": 39,
+  "stills": 78,
+  "strataAvailable": 39,
+  "strataContracted": 48,
+  "errors": 0,
+  "renderer": "BLENDER_EEVEE, 512x512, film_transparent, Standard view transform, one fixed sun",
+  "cameraDiscipline": "One camera transform per pair, computed from lod_0's bounds and REUSED VERBATIM for lod_1, so any difference is the asset and never the framing.",
+  "sceneClearing": "Object deletion plus orphan purge only. read_factory_settings was never called; the BlenderMCP channel survived all 39 pairs."
+ },
+ "headline": "THE FALLBACK SET SETTLES THE PALETTE QUESTION AND IT PASSES OUTRIGHT. THE SHED SET MISSES ITS PRE-REGISTERED BAR ON 12 OF 24 PAIRS, and that miss is reported rather than explained away.",
+ "result_fallbackPairs": {
+  "bar": "|meanLuminanceRatio - 1| <= 0.005",
+  "passed": 15,
+  "of": 15,
+  "verdict": "PASS",
+  "meanLuminanceRatio": {
+   "min": 1.0,
+   "max": 1.0,
+   "mean": 1.0,
+   "n": 15
+  },
+  "channelSpread": {
+   "min": 0.0,
+   "max": 0.0,
+   "mean": 0.0,
+   "n": 15
+  },
+  "why_this_is_the_decisive_cell": "A fallback parent's two levels are the SAME geometry, so geometry is held constant and the ONLY thing that can differ is the material binding. Every one of the 15 renders at a luminance ratio of exactly 1.000000 with a per-channel spread of exactly 0.0 \u2014 the two levels are pixel-identical. Before the campaign these same buildings differed by 11-16% in brightness with a 12.3% channel spread. The palette carry-over is confirmed at the one place it can be isolated."
+ },
+ "result_shedPairs": {
+  "bar": "|meanLuminanceRatio - 1| <= 0.02",
+  "passed": 12,
+  "of": 24,
+  "verdict": "MISS",
+  "meanLuminanceRatio": {
+   "min": 0.9182281142810081,
+   "max": 1.0346124146616018,
+   "mean": 0.9764887570404696,
+   "n": 24
+  },
+  "direction": "lod_1 measures DARKER than lod_0 (mean ratio 0.976), the OPPOSITE sign to the pre-campaign defect, which had lod_1 11-16% BRIGHTER.",
+  "missingPairs": [
+   {
+    "waveId": "w01",
+    "buildingId": "doitt:10049",
+    "styleClass": "curtain-cool",
+    "unionRatio": 0.9182281142810081,
+    "intersectionRatio": 0.9339283993233641,
+    "intersectionOverUnion": 0.9631574231699669
+   },
+   {
+    "waveId": "w04",
+    "buildingId": "doitt:1006135",
+    "styleClass": "masonry-warm",
+    "unionRatio": 0.9204157351222518,
+    "intersectionRatio": 1.005376597143185,
+    "intersectionOverUnion": 0.9232200761313971
+   },
+   {
+    "waveId": "w04",
+    "buildingId": "doitt:100749",
+    "styleClass": "curtain-cool",
+    "unionRatio": 0.9248916640991423,
+    "intersectionRatio": 0.9295065611785669,
+    "intersectionOverUnion": 0.9744264422297114
+   },
+   {
+    "waveId": "w00",
+    "buildingId": "doitt:147902",
+    "styleClass": "masonry-warm",
+    "unionRatio": 0.9395093411658016,
+    "intersectionRatio": 0.9735301218593384,
+    "intersectionOverUnion": 0.9600076266742933
+   },
+   {
+    "waveId": "w05",
+    "buildingId": "doitt:100082",
+    "styleClass": "masonry-warm",
+    "unionRatio": 0.9581381339252104,
+    "intersectionRatio": 0.9918535892827411,
+    "intersectionOverUnion": 0.9589354726450171
+   },
+   {
+    "waveId": "w01",
+    "buildingId": "doitt:100220",
+    "styleClass": "masonry-warm",
+    "unionRatio": 0.9589326603800397,
+    "intersectionRatio": 0.9968531042898919,
+    "intersectionOverUnion": 0.9482994707819844
+   },
+   {
+    "waveId": "w03",
+    "buildingId": "doitt:100144",
+    "styleClass": "masonry-warm",
+    "unionRatio": 0.9603521451572167,
+    "intersectionRatio": 1.003309062493891,
+    "intersectionOverUnion": 0.9396865061335756
+   },
+   {
+    "waveId": "w01",
+    "buildingId": "doitt:100022",
+    "styleClass": "masonry-light",
+    "unionRatio": 0.9661457546814823,
+    "intersectionRatio": 1.0186650810969646,
+    "intersectionOverUnion": 0.9204148863302782
+   },
+   {
+    "waveId": "w02",
+    "buildingId": "doitt:100368",
+    "styleClass": "curtain-cool",
+    "unionRatio": 0.9726027626189266,
+    "intersectionRatio": 0.9779636771516541,
+    "intersectionOverUnion": 0.9755913690276754
+   },
+   {
+    "waveId": "w03",
+    "buildingId": "doitt:100154",
+    "styleClass": "curtain-cool",
+    "unionRatio": 0.9750580865123744,
+    "intersectionRatio": 0.9817239176753177,
+    "intersectionOverUnion": 0.9740051850434117
+   },
+   {
+    "waveId": "w05",
+    "buildingId": "doitt:1000984",
+    "styleClass": "curtain-cool",
+    "unionRatio": 0.9763357510200695,
+    "intersectionRatio": 0.9908644555572556,
+    "intersectionOverUnion": 0.9568479097204411
+   },
+   {
+    "waveId": "w04",
+    "buildingId": "doitt:100176",
+    "styleClass": "masonry-light",
+    "unionRatio": 1.0346124146616018,
+    "intersectionRatio": 1.0402119853426697,
+    "intersectionOverUnion": 0.9739638041775007
+   }
+  ]
+ },
+ "postHocDiagnostic": {
+  "status": "POST HOC \u2014 designed and computed AFTER the pre-registered numbers were seen. It is a DIAGNOSIS, not a replacement bar, and it does not convert the miss above into a pass.",
+  "measure": "Mean over the INTERSECTION silhouette (pixels where BOTH levels have geometry) instead of the union.",
+  "whyItWasAdded": "The pre-registered measure averages over the UNION silhouette. A shed level removes protrusions, so the union contains pixels lod_0 fills and lod_1 leaves TRANSPARENT, and those contribute 0 to lod_1's mean. That is a SILHOUETTE-AREA difference being counted as a TONE difference \u2014 a flaw in the pre-registered measure, which this record owns rather than hides.",
+  "evidence": {
+   "shedIntersectionOverUnion": {
+    "min": 0.9204148863302782,
+    "max": 0.9783607599968202,
+    "mean": 0.9610399539120053,
+    "n": 24
+   },
+   "reading": "2-8% of each shed pair's union area is protrusion pixels present at lod_0 only, which is the right order of magnitude to produce the observed dip."
+  },
+  "shedIntersectionLuminanceRatio": {
+   "min": 0.9295065611785669,
+   "max": 1.0402119853426697,
+   "mean": 0.994673194382651,
+   "n": 24
+  },
+  "shedPassingUnderDiagnostic": 19,
+  "of": 24,
+  "residual": "EVEN UNDER THE DIAGNOSTIC, 5 of 24 shed pairs remain outside 2%. The diagnostic explains most of the dip; it does not explain all of it, and the remaining 5 are named below rather than absorbed.",
+  "residualPairs": [
+   {
+    "waveId": "w04",
+    "buildingId": "doitt:100749",
+    "styleClass": "curtain-cool",
+    "intersectionRatio": 0.9295065611785669
+   },
+   {
+    "waveId": "w01",
+    "buildingId": "doitt:10049",
+    "styleClass": "curtain-cool",
+    "intersectionRatio": 0.9339283993233641
+   },
+   {
+    "waveId": "w00",
+    "buildingId": "doitt:147902",
+    "styleClass": "masonry-warm",
+    "intersectionRatio": 0.9735301218593384
+   },
+   {
+    "waveId": "w02",
+    "buildingId": "doitt:100368",
+    "styleClass": "curtain-cool",
+    "intersectionRatio": 0.9779636771516541
+   },
+   {
+    "waveId": "w04",
+    "buildingId": "doitt:100176",
+    "styleClass": "masonry-light",
+    "intersectionRatio": 1.0402119853426697
+   }
+  ],
+  "residualOwner": {
+   "owner": "T006 \u2014 the rendered LOD-transition gate (Issue #106).",
+   "question": "Whether the 5 shed pairs below differ in TONE beyond the silhouette-area artifact, measured by an instrument that separates geometry from tone by construction and is agreed in advance.",
+   "buildingIds": [
+    "doitt:100749",
+    "doitt:10049",
+    "doitt:147902",
+    "doitt:100368",
+    "doitt:100176"
+   ],
+   "note": "Named verbatim so the successor gate can target them rather than re-sample the island."
+  }
+ },
+ "result_hueDiagnostic": {
+  "bar": "max per-channel ratio spread <= 0.01",
+  "passed": 25,
+  "of": 39,
+  "verdict": "PASS on fallbacks, MIXED overall",
+  "fallbackSpread": {
+   "min": 0.0,
+   "max": 0.0,
+   "mean": 0.0,
+   "n": 15
+  },
+  "shedSpread": {
+   "min": 0.0007363976242846793,
+   "max": 0.10285840393246315,
+   "mean": 0.0236666279469311,
+   "n": 24
+  },
+  "reading": "Every fallback pair has a channel spread of EXACTLY 0.0, which is the clean statement: identical geometry plus identical factors plus a grayscale tile cannot produce a hue difference, and does not. The shed spreads are inflated by the same silhouette-area artifact as the luminance figures, because the removed protrusions are not colour-neutral. This diagnostic is therefore only trustworthy on the fallback cell, where it is unambiguous."
+ },
+ "conclusion": "The palette carry-over does what the ruling required, and the fallback cell proves it without confound: 15/15 pairs pixel-identical where previously they differed by 11-16%. The shed cell MISSES its pre-registered bar on 12 of 24 pairs. The post-hoc intersection measure attributes most of that miss to the pre-registered measure conflating silhouette area with tone, and recovers 19/24 \u2014 but 5 pairs remain unexplained and the pre-registered result stands as a MISS. What the sampling does NOT establish is that every shed lod_1 matches its lod_0 in tone at mid distance; a measure that separates geometry from tone by construction, agreed in advance, is what that would need.",
+ "notClaimedHere": [
+  "EEVEE is not the shipped renderer. CesiumJS draws the app. What transfers is the geometry of the comparison and the pixel arithmetic, not an absolute appearance claim. (Carried forward verbatim from render-comparison.json limitations[4].)",
+  "This is a comparison between two levels of the SAME release under one renderer, one camera and one light. It is not geographic, architectural, accessibility or performance acceptance.",
+  "It does not claim the tile is resolvable at mid ring. Stage 0 measured that it is not, and that finding is unchanged.",
+  "The 9 unavailable strata were not sampled and no substitute was rendered for them."
+ ],
+ "pairs": [
+  {
+   "waveId": "w00",
+   "buildingId": "doitt:982383",
+   "styleClass": "curtain-cool",
+   "variant": "shed",
+   "cameraTransform": [
+    [
+     118.69084167480469,
+     168.98834228515625,
+     128.92694091796875
+    ],
+    [
+     1.2566369771957397,
+     -6.101004146330524e-08,
+     2.5307276248931885
+    ]
+   ],
+   "lod0Still": "/tmp/t009_sampling/w00_doitt-982383_shed_lod0.exr",
+   "lod1Still": "/tmp/t009_sampling/w00_doitt-982383_shed_lod1.exr",
+   "silhouettePixels": 29935,
+   "meanLod0": [
+    0.16545105957319886,
+    0.23288510900637294,
+    0.2621478738302139
+   ],
+   "meanLod1": [
+    0.16598033726623546,
+    0.2337634567089823,
+    0.26294354368215894
+   ],
+   "luminanceLod0": 0.22066140171716142,
+   "luminanceLod1": 0.22145956779491768,
+   "meanLuminanceRatio": 1.0036171531203237,
+   "perChannelRatio": [
+    1.0031989985099035,
+    1.003771592380281,
+    1.0030351947559963
+   ],
+   "channelSpread": 0.0007363976242846793,
+   "intersectionPixels": 28487,
+   "unionPixels": 29935,
+   "intersectionOverUnion": 0.9516285284783698,
+   "intersectionLuminanceRatio": 1.0130222123144945,
+   "intersectionPerChannelRatio": [
+    1.0148033663343479,
+    1.012737519025918,
+    1.0122307432558222
+   ],
+   "intersectionChannelSpread": 0.002572623078525682
+  },
+  {
+   "waveId": "w00",
+   "buildingId": "doitt:102705",
+   "styleClass": "masonry-light",
+   "variant": "shed",
+   "cameraTransform": [
+    [
+     40.441551208496094,
+     56.01771545410156,
+     32.985748291015625
+    ],
+    [
+     1.2566369771957397,
+     1.646813529987412e-08,
+     2.5307273864746094
+    ]
+   ],
+   "lod0Still": "/tmp/t009_sampling/w00_doitt-102705_shed_lod0.exr",
+   "lod1Still": "/tmp/t009_sampling/w00_doitt-102705_shed_lod1.exr",
+   "silhouettePixels": 30907,
+   "meanLod0": [
+    0.29550795657403234,
+    0.31322506590932775,
+    0.3280032230687858
+   ],
+   "meanLod1": [
+    0.2863649917492783,
+    0.31028265555905377,
+    0.330657291659975
+   ],
+   "luminanceLod0": 0.31052539141155683,
+   "luminanceLod1": 0.30666880895958204,
+   "meanLuminanceRatio": 0.9875804602179425,
+   "perChannelRatio": [
+    0.9690601737741587,
+    0.9906060827484165,
+    1.008091593022647
+   ],
+   "channelSpread": 0.03903141924848841,
+   "intersectionPixels": 29548,
+   "unionPixels": 30907,
+   "intersectionOverUnion": 0.9560293784579545,
+   "intersectionLuminanceRatio": 1.0050256738271401,
+   "intersectionPerChannelRatio": [
+    0.9921087407233039,
+    1.0071341190998366,
+    1.019024917393684
+   ],
+   "intersectionChannelSpread": 0.026916176670380154
+  },
+  {
+   "waveId": "w00",
+   "buildingId": "doitt:147902",
+   "styleClass": "masonry-warm",
+   "variant": "shed",
+   "cameraTransform": [
+    [
+     50.08079147338867,
+     71.01669311523438,
+     42.93894577026367
+    ],
+    [
+     1.2566369771957397,
+     1.646813529987412e-08,
+     2.5307273864746094
+    ]
+   ],
+   "lod0Still": "/tmp/t009_sampling/w00_doitt-147902_shed_lod0.exr",
+   "lod1Still": "/tmp/t009_sampling/w00_doitt-147902_shed_lod1.exr",
+   "silhouettePixels": 41958,
+   "meanLod0": [
+    0.2298096591037883,
+    0.15911040037772387,
+    0.13980837942584634
+   ],
+   "meanLod1": [
+    0.2190844583706824,
+    0.14834664901876093,
+    0.13328213523997895
+   ],
+   "luminanceLod0": 0.1727474568701596,
+   "luminanceLod1": 0.1622978493921514,
+   "meanLuminanceRatio": 0.9395093411658016,
+   "perChannelRatio": [
+    0.9533300698720322,
+    0.9323504225153725,
+    0.9533200784340049
+   ],
+   "channelSpread": 0.020979647356659692,
+   "intersectionPixels": 40280,
+   "unionPixels": 41958,
+   "intersectionOverUnion": 0.9600076266742933,
+   "intersectionLuminanceRatio": 0.9735301218593384,
+   "intersectionPerChannelRatio": [
+    0.9834127891751062,
+    0.9684940771434741,
+    0.9820430734120184
+   ],
+   "intersectionChannelSpread": 0.014918712031632086
+  },
+  {
+   "waveId": "w00",
+   "buildingId": "doitt:131170",
+   "styleClass": "stone-neutral",
+   "variant": "shed",
+   "cameraTransform": [
+    [
+     149.95635986328125,
+     197.91554260253906,
+     131.1027069091797
+    ],
+    [
+     1.2566369771957397,
+     -4.602156433719529e-09,
+     2.5307276248931885
+    ]
+   ],
+   "lod0Still": "/tmp/t009_sampling/w00_doitt-131170_shed_lod0.exr",
+   "lod1Still": "/tmp/t009_sampling/w00_doitt-131170_shed_lod1.exr",
+   "silhouettePixels": 58177,
+   "meanLod0": [
+    0.3681653907788075,
+    0.402990183530358,
+    0.4190052401165649
+   ],
+   "meanLod1": [
+    0.3647960902473431,
+    0.40006349179974093,
+    0.4163126455468523
+   ],
+   "luminanceLod0": 0.39674271967690244,
+   "luminanceLod1": 0.3937388311302426,
+   "meanLuminanceRatio": 0.9924286233932506,
+   "perChannelRatio": [
+    0.9908484050487824,
+    0.9927375607391276,
+    0.9935738403439452
+   ],
+   "channelSpread": 0.0027254352951628924,
+   "intersectionPixels": 56512,
+   "unionPixels": 58177,
+   "intersectionOverUnion": 0.9713804424428898,
+   "intersectionLuminanceRatio": 0.9965754301867725,
+   "intersectionPerChannelRatio": [
+    0.9948915433024574,
+    0.996866822415717,
+    0.9981561639941139
+   ],
+   "intersectionChannelSpread": 0.00326462069165645
+  },
+  {
+   "waveId": "w01",
+   "buildingId": "doitt:10049",
+   "styleClass": "curtain-cool",
+   "variant": "shed",
+   "cameraTransform": [
+    [
+     64.51207733154297,
+     91.94818115234375,
+     57.974609375
+    ],
+    [
+     1.2566369771957397,
+     -6.293443277627375e-08,
+     2.5307273864746094
+    ]
+   ],
+   "lod0Still": "/tmp/t009_sampling/w01_doitt-10049_shed_lod0.exr",
+   "lod1Still": "/tmp/t009_sampling/w01_doitt-10049_shed_lod1.exr",
+   "silhouettePixels": 55805,
+   "meanLod0": [
+    0.2211436371298719,
+    0.27876480882841354,
+    0.315417775211876
+   ],
+   "meanLod1": [
+    0.19868244621213454,
+    0.257207581883914,
+    0.29025412157609165
+   ],
+   "luminanceLod0": 0.2691608918981896,
+   "luminanceLod1": 0.24715109820586892,
+   "meanLuminanceRatio": 0.9182281142810081,
+   "perChannelRatio": [
+    0.8984316654584709,
+    0.9226687649883077,
+    0.9202211935618368
+   ],
+   "channelSpread": 0.02423709952983688,
+   "intersectionPixels": 53749,
+   "unionPixels": 55805,
+   "intersectionOverUnion": 0.9631574231699669,
+   "intersectionLuminanceRatio": 0.9339283993233641,
+   "intersectionPerChannelRatio": [
+    0.9153738260983215,
+    0.9380930969327104,
+    0.93566950518394
+   ],
+   "intersectionChannelSpread": 0.02271927083438885
+  },
+  {
+   "waveId": "w01",
+   "buildingId": "doitt:100022",
+   "styleClass": "masonry-light",
+   "variant": "shed",
+   "cameraTransform": [
+    [
+     22.864343643188477,
+     32.60546875,
+     19.84222412109375
+    ],
+    [
+     1.2566369771957397,
+     -6.293443277627375e-08,
+     2.5307273864746094
+    ]
+   ],
+   "lod0Still": "/tmp/t009_sampling/w01_doitt-100022_shed_lod0.exr",
+   "lod1Still": "/tmp/t009_sampling/w01_doitt-100022_shed_lod1.exr",
+   "silhouettePixels": 30659,
+   "meanLod0": [
+    0.32638723567614697,
+    0.3433403663429333,
+    0.357051366629629
+   ],
+   "meanLod1": [
+    0.309337686376837,
+    0.3328569798212298,
+    0.35133707897004995
+   ],
+   "luminanceLod0": 0.3407260649838739,
+   "luminanceLod1": 0.3291910411934967,
+   "meanLuminanceRatio": 0.9661457546814823,
+   "perChannelRatio": [
+    0.9477628184080485,
+    0.9694664899633952,
+    0.983995894726524
+   ],
+   "channelSpread": 0.0362330763184755,
+   "intersectionPixels": 28219,
+   "unionPixels": 30659,
+   "intersectionOverUnion": 0.9204148863302782,
+   "intersectionLuminanceRatio": 1.0186650810969646,
+   "intersectionPerChannelRatio": [
+    1.004510239875978,
+    1.021267185284955,
+    1.0316779209215317
+   ],
+   "intersectionChannelSpread": 0.02716768104555367
+  },
+  {
+   "waveId": "w01",
+   "buildingId": "doitt:100220",
+   "styleClass": "masonry-warm",
+   "variant": "shed",
+   "cameraTransform": [
+    [
+     38.94084930419922,
+     55.1173210144043,
+     31.257614135742188
+    ],
+    [
+     1.2566369771957397,
+     -6.293443277627375e-08,
+     2.5307273864746094
+    ]
+   ],
+   "lod0Still": "/tmp/t009_sampling/w01_doitt-100220_shed_lod0.exr",
+   "lod1Still": "/tmp/t009_sampling/w01_doitt-100220_shed_lod1.exr",
+   "silhouettePixels": 27021,
+   "meanLod0": [
+    0.25179720419922585,
+    0.16916302994325422,
+    0.14654547106456026
+   ],
+   "meanLod1": [
+    0.24639697232785865,
+    0.16035378505818246,
+    0.14442602550951222
+   ],
+   "luminanceLod0": 0.1850980676390321,
+   "luminanceLod1": 0.1774965824323016,
+   "meanLuminanceRatio": 0.9589326603800397,
+   "perChannelRatio": [
+    0.9785532492763722,
+    0.9479245264876917,
+    0.9855372838228872
+   ],
+   "channelSpread": 0.037612757335195535,
+   "intersectionPixels": 25624,
+   "unionPixels": 27021,
+   "intersectionOverUnion": 0.9482994707819844,
+   "intersectionLuminanceRatio": 0.9968531042898919,
+   "intersectionPerChannelRatio": [
+    1.0113306282296322,
+    0.9884579316416332,
+    1.018747896904328
+   ],
+   "intersectionChannelSpread": 0.030289965262694785
+  },
+  {
+   "waveId": "w01",
+   "buildingId": "doitt:1294337",
+   "styleClass": "masonry-warm",
+   "variant": "fallback",
+   "cameraTransform": [
+    [
+     49.09349060058594,
+     64.88720703125,
+     52.35850524902344
+    ],
+    [
+     1.2566372156143188,
+     1.1421968793001724e-07,
+     2.5307273864746094
+    ]
+   ],
+   "lod0Still": "/tmp/t009_sampling/w01_doitt-1294337_fallback_lod0.exr",
+   "lod1Still": "/tmp/t009_sampling/w01_doitt-1294337_fallback_lod1.exr",
+   "silhouettePixels": 35986,
+   "meanLod0": [
+    0.3913601829650131,
+    0.24060540861347496,
+    0.2035049832676169
+   ],
+   "meanLod1": [
+    0.3913601829650131,
+    0.24060540861347496,
+    0.2035049832676169
+   ],
+   "luminanceLod0": 0.26997722293064097,
+   "luminanceLod1": 0.26997722293064097,
+   "meanLuminanceRatio": 1.0,
+   "perChannelRatio": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "channelSpread": 0.0,
+   "intersectionPixels": 34774,
+   "unionPixels": 35986,
+   "intersectionOverUnion": 0.9663202356471962,
+   "intersectionLuminanceRatio": 1.0,
+   "intersectionPerChannelRatio": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "intersectionChannelSpread": 0.0
+  },
+  {
+   "waveId": "w01",
+   "buildingId": "doitt:100691",
+   "styleClass": "stone-neutral",
+   "variant": "shed",
+   "cameraTransform": [
+    [
+     179.77626037597656,
+     249.06936645507812,
+     175.7081298828125
+    ],
+    [
+     1.2566369771957397,
+     1.646813529987412e-08,
+     2.5307273864746094
+    ]
+   ],
+   "lod0Still": "/tmp/t009_sampling/w01_doitt-100691_shed_lod0.exr",
+   "lod1Still": "/tmp/t009_sampling/w01_doitt-100691_shed_lod1.exr",
+   "silhouettePixels": 51700,
+   "meanLod0": [
+    0.36675636563125846,
+    0.4029513263149003,
+    0.4205843178677144
+   ],
+   "meanLod1": [
+    0.366404550075531,
+    0.40286966161986154,
+    0.42019436428463897
+   ],
+   "luminanceLod0": 0.3965293796636712,
+   "luminanceLod1": 0.39636802243793373,
+   "meanLuminanceRatio": 0.9995930762409728,
+   "perChannelRatio": [
+    0.9990407376975668,
+    0.9997973335991083,
+    0.9990728289988262
+   ],
+   "channelSpread": 0.0007565959015414236,
+   "intersectionPixels": 50407,
+   "unionPixels": 51700,
+   "intersectionOverUnion": 0.974990328820116,
+   "intersectionLuminanceRatio": 0.9999807874743962,
+   "intersectionPerChannelRatio": [
+    0.9994858452800774,
+    1.0001772556684847,
+    0.9993868500366698
+   ],
+   "intersectionChannelSpread": 0.0007904056318148722
+  },
+  {
+   "waveId": "w01",
+   "buildingId": "doitt:1268121",
+   "styleClass": "stone-neutral",
+   "variant": "fallback",
+   "cameraTransform": [
+    [
+     14.98495864868164,
+     19.5777645111084,
+     11.322317123413086
+    ],
+    [
+     1.2566370964050293,
+     3.8920013878396276e-09,
+     2.5307273864746094
+    ]
+   ],
+   "lod0Still": "/tmp/t009_sampling/w01_doitt-1268121_fallback_lod0.exr",
+   "lod1Still": "/tmp/t009_sampling/w01_doitt-1268121_fallback_lod1.exr",
+   "silhouettePixels": 51360,
+   "meanLod0": [
+    0.41434743424813697,
+    0.4311273430691701,
+    0.4302856960354193
+   ],
+   "meanLod1": [
+    0.41434743424813697,
+    0.4311273430691701,
+    0.4302856960354193
+   ],
+   "luminanceLod0": 0.4274991675379816,
+   "luminanceLod1": 0.4274991675379816,
+   "meanLuminanceRatio": 1.0,
+   "perChannelRatio": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "channelSpread": 0.0,
+   "intersectionPixels": 50126,
+   "unionPixels": 51360,
+   "intersectionOverUnion": 0.9759735202492212,
+   "intersectionLuminanceRatio": 1.0,
+   "intersectionPerChannelRatio": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "intersectionChannelSpread": 0.0
+  },
+  {
+   "waveId": "w02",
+   "buildingId": "doitt:100368",
+   "styleClass": "curtain-cool",
+   "variant": "shed",
+   "cameraTransform": [
+    [
+     26.571311950683594,
+     39.55036926269531,
+     22.84197235107422
+    ],
+    [
+     1.2566370964050293,
+     1.0131310013150596e-08,
+     2.5307273864746094
+    ]
+   ],
+   "lod0Still": "/tmp/t009_sampling/w02_doitt-100368_shed_lod0.exr",
+   "lod1Still": "/tmp/t009_sampling/w02_doitt-100368_shed_lod1.exr",
+   "silhouettePixels": 59692,
+   "meanLod0": [
+    0.382698221250361,
+    0.43152225534589844,
+    0.4623066601377466
+   ],
+   "meanLod1": [
+    0.37054567734194066,
+    0.42023990512421455,
+    0.44920055289326966
+   ],
+   "luminanceLod0": 0.4233648997231586,
+   "luminanceLod1": 0.41176587106662893,
+   "meanLuminanceRatio": 0.9726027626189266,
+   "perChannelRatio": [
+    0.9682450995755474,
+    0.9738545345415841,
+    0.9716506198708625
+   ],
+   "channelSpread": 0.005609434966036719,
+   "intersectionPixels": 58235,
+   "unionPixels": 59692,
+   "intersectionOverUnion": 0.9755913690276754,
+   "intersectionLuminanceRatio": 0.9779636771516541,
+   "intersectionPerChannelRatio": [
+    0.9738095821459115,
+    0.979171571067259,
+    0.9769170144221396
+   ],
+   "intersectionChannelSpread": 0.005361988921347538
+  },
+  {
+   "waveId": "w02",
+   "buildingId": "doitt:111357",
+   "styleClass": "curtain-cool",
+   "variant": "fallback",
+   "cameraTransform": [
+    [
+     31.395082473754883,
+     44.637020111083984,
+     26.662036895751953
+    ],
+    [
+     1.2566369771957397,
+     -1.694508000582573e-08,
+     2.5307273864746094
+    ]
+   ],
+   "lod0Still": "/tmp/t009_sampling/w02_doitt-111357_fallback_lod0.exr",
+   "lod1Still": "/tmp/t009_sampling/w02_doitt-111357_fallback_lod1.exr",
+   "silhouettePixels": 59633,
+   "meanLod0": [
+    0.33050096890796543,
+    0.38922424892572155,
+    0.4201961997737446
+   ],
+   "meanLod1": [
+    0.33050096890796543,
+    0.38922424892572155,
+    0.4201961997737446
+   ],
+   "luminanceLod0": 0.3789758544451739,
+   "luminanceLod1": 0.3789758544451739,
+   "meanLuminanceRatio": 1.0,
+   "perChannelRatio": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "channelSpread": 0.0,
+   "intersectionPixels": 58343,
+   "unionPixels": 59633,
+   "intersectionOverUnion": 0.9783676823235457,
+   "intersectionLuminanceRatio": 1.0,
+   "intersectionPerChannelRatio": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "intersectionChannelSpread": 0.0
+  },
+  {
+   "waveId": "w02",
+   "buildingId": "doitt:100321",
+   "styleClass": "masonry-light",
+   "variant": "shed",
+   "cameraTransform": [
+    [
+     26.57653045654297,
+     36.04610061645508,
+     23.34479522705078
+    ],
+    [
+     1.2566372156143188,
+     2.2241017916257988e-08,
+     2.5307273864746094
+    ]
+   ],
+   "lod0Still": "/tmp/t009_sampling/w02_doitt-100321_shed_lod0.exr",
+   "lod1Still": "/tmp/t009_sampling/w02_doitt-100321_shed_lod1.exr",
+   "silhouettePixels": 33040,
+   "meanLod0": [
+    0.3218917311157932,
+    0.34068102861143484,
+    0.3553941719901475
+   ],
+   "meanLod1": [
+    0.31298767357306967,
+    0.33880468324259755,
+    0.3599523222294904
+   ],
+   "luminanceLod0": 0.33774871291580444,
+   "luminanceLod1": 0.3348428465217096,
+   "meanLuminanceRatio": 0.9913963657507135,
+   "perChannelRatio": [
+    0.9723383464624615,
+    0.9944923690747178,
+    1.0128256189847404
+   ],
+   "channelSpread": 0.040487272522278905,
+   "intersectionPixels": 31504,
+   "unionPixels": 33040,
+   "intersectionOverUnion": 0.9535108958837772,
+   "intersectionLuminanceRatio": 1.0097101171620784,
+   "intersectionPerChannelRatio": [
+    0.9964188530172688,
+    1.0118354273701824,
+    1.024630371975094
+   ],
+   "intersectionChannelSpread": 0.028211518957825144
+  },
+  {
+   "waveId": "w02",
+   "buildingId": "doitt:1108103",
+   "styleClass": "masonry-light",
+   "variant": "fallback",
+   "cameraTransform": [
+    [
+     11.305685997009277,
+     16.552473068237305,
+     9.897478103637695
+    ],
+    [
+     1.2566369771957397,
+     -4.602156433719529e-09,
+     2.5307276248931885
+    ]
+   ],
+   "lod0Still": "/tmp/t009_sampling/w02_doitt-1108103_fallback_lod0.exr",
+   "lod1Still": "/tmp/t009_sampling/w02_doitt-1108103_fallback_lod1.exr",
+   "silhouettePixels": 62889,
+   "meanLod0": [
+    0.3713535803201311,
+    0.3764152868035644,
+    0.370559644269944
+   ],
+   "meanLod1": [
+    0.3713535803201311,
+    0.3764152868035644,
+    0.370559644269944
+   ],
+   "luminanceLod0": 0.3749163906142591,
+   "luminanceLod1": 0.3749163906142591,
+   "meanLuminanceRatio": 1.0,
+   "perChannelRatio": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "channelSpread": 0.0,
+   "intersectionPixels": 61570,
+   "unionPixels": 62889,
+   "intersectionOverUnion": 0.9790265388223696,
+   "intersectionLuminanceRatio": 1.0,
+   "intersectionPerChannelRatio": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "intersectionChannelSpread": 0.0
+  },
+  {
+   "waveId": "w02",
+   "buildingId": "doitt:10021",
+   "styleClass": "masonry-warm",
+   "variant": "shed",
+   "cameraTransform": [
+    [
+     26.581302642822266,
+     41.420654296875,
+     20.51741600036621
+    ],
+    [
+     1.2566369771957397,
+     1.646813529987412e-08,
+     2.5307273864746094
+    ]
+   ],
+   "lod0Still": "/tmp/t009_sampling/w02_doitt-10021_shed_lod0.exr",
+   "lod1Still": "/tmp/t009_sampling/w02_doitt-10021_shed_lod1.exr",
+   "silhouettePixels": 52203,
+   "meanLod0": [
+    0.29960402363988947,
+    0.19766981231022906,
+    0.16661541896919302
+   ],
+   "meanLod1": [
+    0.30279800690716396,
+    0.19204861678796362,
+    0.16565161609120782
+   ],
+   "luminanceLod0": 0.21709889843969205,
+   "luminanceLod1": 0.21368807367699985,
+   "meanLuminanceRatio": 0.984289073840512,
+   "perChannelRatio": [
+    1.010660682151297,
+    0.9715627011703569,
+    0.9942154040487489
+   ],
+   "channelSpread": 0.03909798098093997,
+   "intersectionPixels": 50819,
+   "unionPixels": 52203,
+   "intersectionOverUnion": 0.97348811370994,
+   "intersectionLuminanceRatio": 0.9905233979120032,
+   "intersectionPerChannelRatio": [
+    1.0162171147953358,
+    0.9781337452289359,
+    0.9998627930073696
+   ],
+   "intersectionChannelSpread": 0.038083369566399905
+  },
+  {
+   "waveId": "w02",
+   "buildingId": "doitt:1214511",
+   "styleClass": "masonry-warm",
+   "variant": "fallback",
+   "cameraTransform": [
+    [
+     14.699653625488281,
+     18.13871955871582,
+     10.939209938049316
+    ],
+    [
+     1.2566369771957397,
+     1.646813529987412e-08,
+     2.5307273864746094
+    ]
+   ],
+   "lod0Still": "/tmp/t009_sampling/w02_doitt-1214511_fallback_lod0.exr",
+   "lod1Still": "/tmp/t009_sampling/w02_doitt-1214511_fallback_lod1.exr",
+   "silhouettePixels": 56224,
+   "meanLod0": [
+    0.2357195856375116,
+    0.17740366078688466,
+    0.15852382070531748
+   ],
+   "meanLod1": [
+    0.2357195856375116,
+    0.17740366078688466,
+    0.15852382070531748
+   ],
+   "luminanceLod0": 0.1884385019562388,
+   "luminanceLod1": 0.1884385019562388,
+   "meanLuminanceRatio": 1.0,
+   "perChannelRatio": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "channelSpread": 0.0,
+   "intersectionPixels": 54843,
+   "unionPixels": 56224,
+   "intersectionOverUnion": 0.9754375355719977,
+   "intersectionLuminanceRatio": 1.0,
+   "intersectionPerChannelRatio": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "intersectionChannelSpread": 0.0
+  },
+  {
+   "waveId": "w02",
+   "buildingId": "doitt:1000469",
+   "styleClass": "stone-neutral",
+   "variant": "shed",
+   "cameraTransform": [
+    [
+     179.32635498046875,
+     262.84130859375,
+     194.08053588867188
+    ],
+    [
+     1.2566370964050293,
+     -8.400471784852925e-08,
+     2.5307276248931885
+    ]
+   ],
+   "lod0Still": "/tmp/t009_sampling/w02_doitt-1000469_shed_lod0.exr",
+   "lod1Still": "/tmp/t009_sampling/w02_doitt-1000469_shed_lod1.exr",
+   "silhouettePixels": 32044,
+   "meanLod0": [
+    0.3516157920136462,
+    0.38808193682671904,
+    0.4063422317035248
+   ],
+   "meanLod1": [
+    0.350039709201765,
+    0.38657493792793274,
+    0.404358193921903
+   ],
+   "luminanceLod0": 0.38164762772956506,
+   "luminanceLod1": 0.3800914993835141,
+   "meanLuminanceRatio": 0.9959226044314531,
+   "perChannelRatio": [
+    0.9955175994716984,
+    0.9961168022631798,
+    0.9951173232147098
+   ],
+   "channelSpread": 0.0009994790484699756,
+   "intersectionPixels": 30663,
+   "unionPixels": 32044,
+   "intersectionOverUnion": 0.9569030083635002,
+   "intersectionLuminanceRatio": 1.0011520339795716,
+   "intersectionPerChannelRatio": [
+    1.0008722071696359,
+    1.0013132503003963,
+    1.0003396297185287
+   ],
+   "intersectionChannelSpread": 0.0009736205818675625
+  },
+  {
+   "waveId": "w02",
+   "buildingId": "doitt:109379",
+   "styleClass": "stone-neutral",
+   "variant": "fallback",
+   "cameraTransform": [
+    [
+     29.002960205078125,
+     40.34967041015625,
+     25.839683532714844
+    ],
+    [
+     1.2566372156143188,
+     -5.692832871773135e-08,
+     2.5307273864746094
+    ]
+   ],
+   "lod0Still": "/tmp/t009_sampling/w02_doitt-109379_fallback_lod0.exr",
+   "lod1Still": "/tmp/t009_sampling/w02_doitt-109379_fallback_lod1.exr",
+   "silhouettePixels": 60207,
+   "meanLod0": [
+    0.47873602403777005,
+    0.5055827264351594,
+    0.5055831359961995
+   ],
+   "meanLod1": [
+    0.47873602403777005,
+    0.5055827264351594,
+    0.5055831359961995
+   ],
+   "luminanceLod0": 0.49987514707578157,
+   "luminanceLod1": 0.49987514707578157,
+   "meanLuminanceRatio": 1.0,
+   "perChannelRatio": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "channelSpread": 0.0,
+   "intersectionPixels": 58946,
+   "unionPixels": 60207,
+   "intersectionOverUnion": 0.9790555915425116,
+   "intersectionLuminanceRatio": 1.0,
+   "intersectionPerChannelRatio": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "intersectionChannelSpread": 0.0
+  },
+  {
+   "waveId": "w03",
+   "buildingId": "doitt:100154",
+   "styleClass": "curtain-cool",
+   "variant": "shed",
+   "cameraTransform": [
+    [
+     19.55223846435547,
+     28.7165470123291,
+     18.947980880737305
+    ],
+    [
+     1.2566370964050293,
+     1.2679583960562013e-07,
+     2.5307276248931885
+    ]
+   ],
+   "lod0Still": "/tmp/t009_sampling/w03_doitt-100154_shed_lod0.exr",
+   "lod1Still": "/tmp/t009_sampling/w03_doitt-100154_shed_lod1.exr",
+   "silhouettePixels": 57473,
+   "meanLod0": [
+    0.2827100715619286,
+    0.33156120461232663,
+    0.36210440094702084
+   ],
+   "meanLod1": [
+    0.27605643521902895,
+    0.3233739962052721,
+    0.3510839270153221
+   ],
+   "luminanceLod0": 0.3233806725011769,
+   "luminanceLod1": 0.31531493974408237,
+   "meanLuminanceRatio": 0.9750580865123744,
+   "perChannelRatio": [
+    0.9764648061311032,
+    0.9753070977751231,
+    0.9695654791743027
+   ],
+   "channelSpread": 0.006899326956800511,
+   "intersectionPixels": 55979,
+   "unionPixels": 57473,
+   "intersectionOverUnion": 0.9740051850434117,
+   "intersectionLuminanceRatio": 0.9817239176753177,
+   "intersectionPerChannelRatio": [
+    0.9836663943615341,
+    0.9818697304843106,
+    0.9759404972606643
+   ],
+   "intersectionChannelSpread": 0.007725897100869794
+  },
+  {
+   "waveId": "w03",
+   "buildingId": "doitt:117468",
+   "styleClass": "curtain-cool",
+   "variant": "fallback",
+   "cameraTransform": [
+    [
+     15.379801750183105,
+     23.834457397460938,
+     14.160454750061035
+    ],
+    [
+     1.2566370964050293,
+     -8.400471784852925e-08,
+     2.5307276248931885
+    ]
+   ],
+   "lod0Still": "/tmp/t009_sampling/w03_doitt-117468_fallback_lod0.exr",
+   "lod1Still": "/tmp/t009_sampling/w03_doitt-117468_fallback_lod1.exr",
+   "silhouettePixels": 61396,
+   "meanLod0": [
+    0.3740385770914228,
+    0.40774665325268433,
+    0.4397292344785605
+   ],
+   "meanLod1": [
+    0.3740385770914228,
+    0.40774665325268433,
+    0.4397292344785605
+   ],
+   "luminanceLod0": 0.40288945862530834,
+   "luminanceLod1": 0.40288945862530834,
+   "meanLuminanceRatio": 1.0,
+   "perChannelRatio": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "channelSpread": 0.0,
+   "intersectionPixels": 60047,
+   "unionPixels": 61396,
+   "intersectionOverUnion": 0.9780278845527396,
+   "intersectionLuminanceRatio": 1.0,
+   "intersectionPerChannelRatio": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "intersectionChannelSpread": 0.0
+  },
+  {
+   "waveId": "w03",
+   "buildingId": "doitt:1001202",
+   "styleClass": "masonry-light",
+   "variant": "shed",
+   "cameraTransform": [
+    [
+     20.03460693359375,
+     30.421297073364258,
+     18.562889099121094
+    ],
+    [
+     1.2566369771957397,
+     1.646813529987412e-08,
+     2.5307273864746094
+    ]
+   ],
+   "lod0Still": "/tmp/t009_sampling/w03_doitt-1001202_shed_lod0.exr",
+   "lod1Still": "/tmp/t009_sampling/w03_doitt-1001202_shed_lod1.exr",
+   "silhouettePixels": 57341,
+   "meanLod0": [
+    0.30178740178991337,
+    0.322583031270583,
+    0.3396135725704523
+   ],
+   "meanLod1": [
+    0.2990564694398947,
+    0.32716657446234104,
+    0.3524194045212859
+   ],
+   "luminanceLod0": 0.3193914855248432,
+   "luminanceLod1": 0.32301362046482474,
+   "meanLuminanceRatio": 1.0113407373212515,
+   "perChannelRatio": [
+    0.9909508073106387,
+    1.014208878792243,
+    1.037707067635458
+   ],
+   "channelSpread": 0.04675626032481939,
+   "intersectionPixels": 55828,
+   "unionPixels": 57341,
+   "intersectionOverUnion": 0.9736139934776163,
+   "intersectionLuminanceRatio": 1.017774060534495,
+   "intersectionPerChannelRatio": [
+    0.9993853933493624,
+    1.020291978552735,
+    1.0420333580907428
+   ],
+   "intersectionChannelSpread": 0.04264796474138044
+  },
+  {
+   "waveId": "w03",
+   "buildingId": "doitt:107742",
+   "styleClass": "masonry-light",
+   "variant": "fallback",
+   "cameraTransform": [
+    [
+     13.307028770446777,
+     18.665870666503906,
+     12.186887741088867
+    ],
+    [
+     1.2566369771957397,
+     -1.694508000582573e-08,
+     2.5307273864746094
+    ]
+   ],
+   "lod0Still": "/tmp/t009_sampling/w03_doitt-107742_fallback_lod0.exr",
+   "lod1Still": "/tmp/t009_sampling/w03_doitt-107742_fallback_lod1.exr",
+   "silhouettePixels": 71439,
+   "meanLod0": [
+    0.38961141810548466,
+    0.4080947258282246,
+    0.4196493795663329
+   ],
+   "meanLod1": [
+    0.38961141810548466,
+    0.4080947258282246,
+    0.4196493795663329
+   ],
+   "luminanceLod0": 0.4049994206062615,
+   "luminanceLod1": 0.4049994206062615,
+   "meanLuminanceRatio": 1.0,
+   "perChannelRatio": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "channelSpread": 0.0,
+   "intersectionPixels": 70131,
+   "unionPixels": 71439,
+   "intersectionOverUnion": 0.9816906731617184,
+   "intersectionLuminanceRatio": 1.0,
+   "intersectionPerChannelRatio": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "intersectionChannelSpread": 0.0
+  },
+  {
+   "waveId": "w03",
+   "buildingId": "doitt:100144",
+   "styleClass": "masonry-warm",
+   "variant": "shed",
+   "cameraTransform": [
+    [
+     31.737510681152344,
+     45.17315673828125,
+     28.66059112548828
+    ],
+    [
+     1.2566369771957397,
+     -1.694508000582573e-08,
+     2.5307273864746094
+    ]
+   ],
+   "lod0Still": "/tmp/t009_sampling/w03_doitt-100144_shed_lod0.exr",
+   "lod1Still": "/tmp/t009_sampling/w03_doitt-100144_shed_lod1.exr",
+   "silhouettePixels": 26412,
+   "meanLod0": [
+    0.2535053120992878,
+    0.16852493980662778,
+    0.15481144513900436
+   ],
+   "meanLod1": [
+    0.24815805452927556,
+    0.16054597616141517,
+    0.14767397112166106
+   ],
+   "luminanceLod0": 0.18560165264104486,
+   "luminanceLod1": 0.17824294525855203,
+   "meanLuminanceRatio": 0.9603521451572167,
+   "perChannelRatio": [
+    0.9789067237852676,
+    0.9526541077281024,
+    0.953895695431726
+   ],
+   "channelSpread": 0.026252616057165112,
+   "intersectionPixels": 24819,
+   "unionPixels": 26412,
+   "intersectionOverUnion": 0.9396865061335756,
+   "intersectionLuminanceRatio": 1.003309062493891,
+   "intersectionPerChannelRatio": [
+    1.0097687427639015,
+    1.0001042914678298,
+    1.0061760257286403
+   ],
+   "intersectionChannelSpread": 0.009664451296071741
+  },
+  {
+   "waveId": "w03",
+   "buildingId": "doitt:100689",
+   "styleClass": "masonry-warm",
+   "variant": "fallback",
+   "cameraTransform": [
+    [
+     21.864978790283203,
+     30.717683792114258,
+     19.630783081054688
+    ],
+    [
+     1.2566369771957397,
+     1.646813529987412e-08,
+     2.5307273864746094
+    ]
+   ],
+   "lod0Still": "/tmp/t009_sampling/w03_doitt-100689_fallback_lod0.exr",
+   "lod1Still": "/tmp/t009_sampling/w03_doitt-100689_fallback_lod1.exr",
+   "silhouettePixels": 60366,
+   "meanLod0": [
+    0.3250130151172276,
+    0.21183847637539557,
+    0.18413318566314207
+   ],
+   "meanLod1": [
+    0.3250130151172276,
+    0.21183847637539557,
+    0.18413318566314207
+   ],
+   "luminanceLod0": 0.23389906132248434,
+   "luminanceLod1": 0.23389906132248434,
+   "meanLuminanceRatio": 1.0,
+   "perChannelRatio": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "channelSpread": 0.0,
+   "intersectionPixels": 59105,
+   "unionPixels": 60366,
+   "intersectionOverUnion": 0.9791107577112944,
+   "intersectionLuminanceRatio": 1.0,
+   "intersectionPerChannelRatio": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "intersectionChannelSpread": 0.0
+  },
+  {
+   "waveId": "w03",
+   "buildingId": "doitt:100137",
+   "styleClass": "stone-neutral",
+   "variant": "shed",
+   "cameraTransform": [
+    [
+     103.29134368896484,
+     142.3606414794922,
+     98.49285888671875
+    ],
+    [
+     1.2566369771957397,
+     -3.801536863079491e-08,
+     2.5307276248931885
+    ]
+   ],
+   "lod0Still": "/tmp/t009_sampling/w03_doitt-100137_shed_lod0.exr",
+   "lod1Still": "/tmp/t009_sampling/w03_doitt-100137_shed_lod1.exr",
+   "silhouettePixels": 62895,
+   "meanLod0": [
+    0.35304537653799833,
+    0.3916106917234737,
+    0.40904194181508824
+   ],
+   "meanLod1": [
+    0.3501930928143099,
+    0.38947360718683366,
+    0.4076043848288591
+   ],
+   "luminanceLod0": 0.3846702419716561,
+   "luminanceLod1": 0.3824316119769893,
+   "meanLuminanceRatio": 0.9941803920594624,
+   "perChannelRatio": [
+    0.9919209146663858,
+    0.994542834039503,
+    0.9964855511396946
+   ],
+   "channelSpread": 0.004564636473308847,
+   "intersectionPixels": 61534,
+   "unionPixels": 62895,
+   "intersectionOverUnion": 0.9783607599968202,
+   "intersectionLuminanceRatio": 0.9949133178292148,
+   "intersectionPerChannelRatio": [
+    0.9927351604615222,
+    0.9952630500050254,
+    0.9971308584362757
+   ],
+   "intersectionChannelSpread": 0.004395697974753476
+  },
+  {
+   "waveId": "w03",
+   "buildingId": "doitt:102229",
+   "styleClass": "stone-neutral",
+   "variant": "fallback",
+   "cameraTransform": [
+    [
+     23.85100555419922,
+     31.458965301513672,
+     19.436412811279297
+    ],
+    [
+     1.2566369771957397,
+     -6.293443277627375e-08,
+     2.5307273864746094
+    ]
+   ],
+   "lod0Still": "/tmp/t009_sampling/w03_doitt-102229_fallback_lod0.exr",
+   "lod1Still": "/tmp/t009_sampling/w03_doitt-102229_fallback_lod1.exr",
+   "silhouettePixels": 66171,
+   "meanLod0": [
+    0.3791797845829241,
+    0.40464947161366294,
+    0.4096113673088202
+   ],
+   "meanLod1": [
+    0.3791797845829241,
+    0.40464947161366294,
+    0.4096113673088202
+   ],
+   "luminanceLod0": 0.3995928650201182,
+   "luminanceLod1": 0.3995928650201182,
+   "meanLuminanceRatio": 1.0,
+   "perChannelRatio": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "channelSpread": 0.0,
+   "intersectionPixels": 64794,
+   "unionPixels": 66171,
+   "intersectionOverUnion": 0.979190279729791,
+   "intersectionLuminanceRatio": 1.0,
+   "intersectionPerChannelRatio": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "intersectionChannelSpread": 0.0
+  },
+  {
+   "waveId": "w04",
+   "buildingId": "doitt:100749",
+   "styleClass": "curtain-cool",
+   "variant": "shed",
+   "cameraTransform": [
+    [
+     42.572540283203125,
+     57.640377044677734,
+     32.90502166748047
+    ],
+    [
+     1.2566369771957397,
+     -4.602156433719529e-09,
+     2.5307276248931885
+    ]
+   ],
+   "lod0Still": "/tmp/t009_sampling/w04_doitt-100749_shed_lod0.exr",
+   "lod1Still": "/tmp/t009_sampling/w04_doitt-100749_shed_lod1.exr",
+   "silhouettePixels": 55487,
+   "meanLod0": [
+    0.24886975748023737,
+    0.30053336851457657,
+    0.336006965953798
+   ],
+   "meanLod1": [
+    0.22682193865277542,
+    0.2790011520113924,
+    0.31034554683792825
+   ],
+   "luminanceLod0": 0.2921108785437878,
+   "luminanceLod1": 0.2701709165578263,
+   "meanLuminanceRatio": 0.9248916640991423,
+   "perChannelRatio": [
+    0.9114082038304202,
+    0.9283533252576583,
+    0.9236283121600573
+   ],
+   "channelSpread": 0.01694512142723814,
+   "intersectionPixels": 54068,
+   "unionPixels": 55487,
+   "intersectionOverUnion": 0.9744264422297114,
+   "intersectionLuminanceRatio": 0.9295065611785669,
+   "intersectionPerChannelRatio": [
+    0.9163480151315574,
+    0.9329152343270474,
+    0.9279748934241812
+   ],
+   "intersectionChannelSpread": 0.01656721919548998
+  },
+  {
+   "waveId": "w04",
+   "buildingId": "doitt:100176",
+   "styleClass": "masonry-light",
+   "variant": "shed",
+   "cameraTransform": [
+    [
+     37.754425048828125,
+     52.32379913330078,
+     29.550350189208984
+    ],
+    [
+     1.2566369771957397,
+     -4.602156433719529e-09,
+     2.5307276248931885
+    ]
+   ],
+   "lod0Still": "/tmp/t009_sampling/w04_doitt-100176_shed_lod0.exr",
+   "lod1Still": "/tmp/t009_sampling/w04_doitt-100176_shed_lod1.exr",
+   "silhouettePixels": 58073,
+   "meanLod0": [
+    0.3000961621848022,
+    0.3146476374499251,
+    0.3286068114902979
+   ],
+   "meanLod1": [
+    0.29652966073740383,
+    0.3278164934098352,
+    0.3585014465646611
+   ],
+   "luminanceLod0": 0.31256184617427485,
+   "luminanceLod1": 0.3233803664014547,
+   "meanLuminanceRatio": 1.0346124146616018,
+   "perChannelRatio": [
+    0.9881154713161509,
+    1.0418527088480234,
+    1.090973875248614
+   ],
+   "channelSpread": 0.10285840393246315,
+   "intersectionPixels": 56561,
+   "unionPixels": 58073,
+   "intersectionOverUnion": 0.9739638041775007,
+   "intersectionLuminanceRatio": 1.0402119853426697,
+   "intersectionPerChannelRatio": [
+    0.9950279073758818,
+    1.0472110031564077,
+    1.0950201849142704
+   ],
+   "intersectionChannelSpread": 0.09999227753838869
+  },
+  {
+   "waveId": "w04",
+   "buildingId": "doitt:1006135",
+   "styleClass": "masonry-warm",
+   "variant": "shed",
+   "cameraTransform": [
+    [
+     22.42740249633789,
+     32.02964782714844,
+     20.305179595947266
+    ],
+    [
+     1.2566369771957397,
+     -1.694508000582573e-08,
+     2.5307273864746094
+    ]
+   ],
+   "lod0Still": "/tmp/t009_sampling/w04_doitt-1006135_shed_lod0.exr",
+   "lod1Still": "/tmp/t009_sampling/w04_doitt-1006135_shed_lod1.exr",
+   "silhouettePixels": 35465,
+   "meanLod0": [
+    0.24863787858052228,
+    0.16433647406314672,
+    0.15150698179857833
+   ],
+   "meanLod1": [
+    0.23749806296921205,
+    0.14901653428046102,
+    0.1361873006729923
+   ],
+   "luminanceLod0": 0.1813326633220389,
+   "luminanceLod1": 0.16690143661323023,
+   "meanLuminanceRatio": 0.9204157351222518,
+   "perChannelRatio": [
+    0.9551966270187486,
+    0.9067769959771744,
+    0.8988846524185081
+   ],
+   "channelSpread": 0.05631197460024051,
+   "intersectionPixels": 32742,
+   "unionPixels": 35465,
+   "intersectionOverUnion": 0.9232200761313971,
+   "intersectionLuminanceRatio": 1.005376597143185,
+   "intersectionPerChannelRatio": [
+    1.0151540070328464,
+    1.0007128869455002,
+    1.0064171825811452
+   ],
+   "intersectionChannelSpread": 0.014441120087346215
+  },
+  {
+   "waveId": "w04",
+   "buildingId": "doitt:1304503",
+   "styleClass": "masonry-warm",
+   "variant": "fallback",
+   "cameraTransform": [
+    [
+     21.478168487548828,
+     30.848962783813477,
+     17.16545867919922
+    ],
+    [
+     1.2566370964050293,
+     3.8920013878396276e-09,
+     2.5307273864746094
+    ]
+   ],
+   "lod0Still": "/tmp/t009_sampling/w04_doitt-1304503_fallback_lod0.exr",
+   "lod1Still": "/tmp/t009_sampling/w04_doitt-1304503_fallback_lod1.exr",
+   "silhouettePixels": 53732,
+   "meanLod0": [
+    0.23034820746418833,
+    0.18264552651349392,
+    0.16580487160971805
+   ],
+   "meanLod1": [
+    0.23034820746418833,
+    0.18264552651349392,
+    0.16580487160971805
+   ],
+   "luminanceLod0": 0.19157122119955894,
+   "luminanceLod1": 0.19157122119955894,
+   "meanLuminanceRatio": 1.0,
+   "perChannelRatio": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "channelSpread": 0.0,
+   "intersectionPixels": 52350,
+   "unionPixels": 53732,
+   "intersectionOverUnion": 0.9742797588029479,
+   "intersectionLuminanceRatio": 1.0,
+   "intersectionPerChannelRatio": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "intersectionChannelSpread": 0.0
+  },
+  {
+   "waveId": "w04",
+   "buildingId": "doitt:100465",
+   "styleClass": "stone-neutral",
+   "variant": "shed",
+   "cameraTransform": [
+    [
+     23.269784927368164,
+     37.44001770019531,
+     22.836036682128906
+    ],
+    [
+     1.2566369771957397,
+     -1.694508000582573e-08,
+     2.5307273864746094
+    ]
+   ],
+   "lod0Still": "/tmp/t009_sampling/w04_doitt-100465_shed_lod0.exr",
+   "lod1Still": "/tmp/t009_sampling/w04_doitt-100465_shed_lod1.exr",
+   "silhouettePixels": 57086,
+   "meanLod0": [
+    0.3450599240925937,
+    0.3787171266777507,
+    0.3925655971281589
+   ],
+   "meanLod1": [
+    0.34214679509201895,
+    0.37621125404825473,
+    0.38954107863832127
+   ],
+   "luminanceLod0": 0.3725614649746658,
+   "luminanceLod1": 0.3699315634095618,
+   "meanLuminanceRatio": 0.9929410263477387,
+   "perChannelRatio": [
+    0.9915576142079223,
+    0.993383260346638,
+    0.9922955080323805
+   ],
+   "channelSpread": 0.0018256461387157197,
+   "intersectionPixels": 55500,
+   "unionPixels": 57086,
+   "intersectionOverUnion": 0.9722173562694881,
+   "intersectionLuminanceRatio": 0.9999223086625214,
+   "intersectionPerChannelRatio": [
+    0.9991122274600975,
+    1.0002907701468966,
+    0.99849724332937
+   ],
+   "intersectionChannelSpread": 0.0017935268175266472
+  },
+  {
+   "waveId": "w04",
+   "buildingId": "doitt:635886",
+   "styleClass": "stone-neutral",
+   "variant": "fallback",
+   "cameraTransform": [
+    [
+     14.522047996520996,
+     20.209009170532227,
+     12.17647933959961
+    ],
+    [
+     1.2566369771957397,
+     -4.602156433719529e-09,
+     2.5307276248931885
+    ]
+   ],
+   "lod0Still": "/tmp/t009_sampling/w04_doitt-635886_fallback_lod0.exr",
+   "lod1Still": "/tmp/t009_sampling/w04_doitt-635886_fallback_lod1.exr",
+   "silhouettePixels": 60741,
+   "meanLod0": [
+    0.4276066861207837,
+    0.4467627225140655,
+    0.44729936248695895
+   ],
+   "meanLod1": [
+    0.4276066861207837,
+    0.4467627225140655,
+    0.44729936248695895
+   ],
+   "luminanceLod0": 0.44272889458289666,
+   "luminanceLod1": 0.44272889458289666,
+   "meanLuminanceRatio": 1.0,
+   "perChannelRatio": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "channelSpread": 0.0,
+   "intersectionPixels": 59479,
+   "unionPixels": 60741,
+   "intersectionOverUnion": 0.9792232594129171,
+   "intersectionLuminanceRatio": 1.0,
+   "intersectionPerChannelRatio": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "intersectionChannelSpread": 0.0
+  },
+  {
+   "waveId": "w05",
+   "buildingId": "doitt:1000984",
+   "styleClass": "curtain-cool",
+   "variant": "shed",
+   "cameraTransform": [
+    [
+     25.521764755249023,
+     34.4833869934082,
+     16.922266006469727
+    ],
+    [
+     1.2566369771957397,
+     -1.694508000582573e-08,
+     2.5307273864746094
+    ]
+   ],
+   "lod0Still": "/tmp/t009_sampling/w05_doitt-1000984_shed_lod0.exr",
+   "lod1Still": "/tmp/t009_sampling/w05_doitt-1000984_shed_lod1.exr",
+   "silhouettePixels": 31192,
+   "meanLod0": [
+    0.5633912443212743,
+    0.6056514017304936,
+    0.6524119847751514
+   ],
+   "meanLod1": [
+    0.5511784930241722,
+    0.5912376747020669,
+    0.6344834722446674
+   ],
+   "luminanceLod0": 0.6000430063611177,
+   "luminanceLod1": 0.5858434392599222,
+   "meanLuminanceRatio": 0.9763357510200695,
+   "perChannelRatio": [
+    0.9783227882573593,
+    0.9762012818145172,
+    0.9725196456397671
+   ],
+   "channelSpread": 0.005803142617592183,
+   "intersectionPixels": 29846,
+   "unionPixels": 31192,
+   "intersectionOverUnion": 0.9568479097204411,
+   "intersectionLuminanceRatio": 0.9908644555572556,
+   "intersectionPerChannelRatio": [
+    0.99291062365142,
+    0.9907273695066666,
+    0.9869224917496595
+   ],
+   "intersectionChannelSpread": 0.005988131901760507
+  },
+  {
+   "waveId": "w05",
+   "buildingId": "doitt:100274",
+   "styleClass": "masonry-light",
+   "variant": "shed",
+   "cameraTransform": [
+    [
+     56.22858810424805,
+     81.33812713623047,
+     43.65605163574219
+    ],
+    [
+     1.2566369771957397,
+     -1.694508000582573e-08,
+     2.5307273864746094
+    ]
+   ],
+   "lod0Still": "/tmp/t009_sampling/w05_doitt-100274_shed_lod0.exr",
+   "lod1Still": "/tmp/t009_sampling/w05_doitt-100274_shed_lod1.exr",
+   "silhouettePixels": 43765,
+   "meanLod0": [
+    0.29698096710273936,
+    0.31910960391550275,
+    0.3387980663666082
+   ],
+   "meanLod1": [
+    0.2885821730712203,
+    0.31458013242385763,
+    0.3376394979983456
+   ],
+   "luminanceLod0": 0.315826562718079,
+   "luminanceLod1": 0.31071785245996497,
+   "meanLuminanceRatio": 0.9838243173273734,
+   "perChannelRatio": [
+    0.9717194198892432,
+    0.9858059066976734,
+    0.9965803572001236
+   ],
+   "channelSpread": 0.02486093731088046,
+   "intersectionPixels": 42280,
+   "unionPixels": 43765,
+   "intersectionOverUnion": 0.9660687764195133,
+   "intersectionLuminanceRatio": 0.9994254176823786,
+   "intersectionPerChannelRatio": [
+    0.9928010453470848,
+    1.0004876266077456,
+    1.006463636665793
+   ],
+   "intersectionChannelSpread": 0.013662591318708284
+  },
+  {
+   "waveId": "w05",
+   "buildingId": "doitt:1017295",
+   "styleClass": "masonry-light",
+   "variant": "fallback",
+   "cameraTransform": [
+    [
+     20.59557342529297,
+     29.164722442626953,
+     15.135261535644531
+    ],
+    [
+     1.2566369771957397,
+     -1.694508000582573e-08,
+     2.5307273864746094
+    ]
+   ],
+   "lod0Still": "/tmp/t009_sampling/w05_doitt-1017295_fallback_lod0.exr",
+   "lod1Still": "/tmp/t009_sampling/w05_doitt-1017295_fallback_lod1.exr",
+   "silhouettePixels": 42399,
+   "meanLod0": [
+    0.31942223688322335,
+    0.32085802214936116,
+    0.31864426301283055
+   ],
+   "meanLod1": [
+    0.31942223688322335,
+    0.32085802214936116,
+    0.31864426301283055
+   ],
+   "luminanceLod0": 0.32039294079212277,
+   "luminanceLod1": 0.32039294079212277,
+   "meanLuminanceRatio": 1.0,
+   "perChannelRatio": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "channelSpread": 0.0,
+   "intersectionPixels": 41271,
+   "unionPixels": 42399,
+   "intersectionOverUnion": 0.9733955989528055,
+   "intersectionLuminanceRatio": 1.0,
+   "intersectionPerChannelRatio": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "intersectionChannelSpread": 0.0
+  },
+  {
+   "waveId": "w05",
+   "buildingId": "doitt:100082",
+   "styleClass": "masonry-warm",
+   "variant": "shed",
+   "cameraTransform": [
+    [
+     25.96841812133789,
+     36.706703186035156,
+     22.016525268554688
+    ],
+    [
+     1.2566369771957397,
+     1.646813529987412e-08,
+     2.5307273864746094
+    ]
+   ],
+   "lod0Still": "/tmp/t009_sampling/w05_doitt-100082_shed_lod0.exr",
+   "lod1Still": "/tmp/t009_sampling/w05_doitt-100082_shed_lod1.exr",
+   "silhouettePixels": 54597,
+   "meanLod0": [
+    0.22645199199075422,
+    0.14523786434658342,
+    0.1348478555142195
+   ],
+   "meanLod1": [
+    0.2206991212222638,
+    0.1381710942312023,
+    0.1280043260809733
+   ],
+   "luminanceLod0": 0.16175382924603746,
+   "luminanceLod1": 0.15498251210905545,
+   "meanLuminanceRatio": 0.9581381339252104,
+   "perChannelRatio": [
+    0.9745956274532338,
+    0.9513434726737817,
+    0.949249994320269
+   ],
+   "channelSpread": 0.025345633132964784,
+   "intersectionPixels": 52355,
+   "unionPixels": 54597,
+   "intersectionOverUnion": 0.9589354726450171,
+   "intersectionLuminanceRatio": 0.9918535892827411,
+   "intersectionPerChannelRatio": [
+    0.9974363572203602,
+    0.9890816839775594,
+    0.9933769071969683
+   ],
+   "intersectionChannelSpread": 0.008354673242800814
+  },
+  {
+   "waveId": "w05",
+   "buildingId": "doitt:1009511",
+   "styleClass": "masonry-warm",
+   "variant": "fallback",
+   "cameraTransform": [
+    [
+     35.239044189453125,
+     50.07757568359375,
+     22.317956924438477
+    ],
+    [
+     1.2566369771957397,
+     1.646813529987412e-08,
+     2.5307273864746094
+    ]
+   ],
+   "lod0Still": "/tmp/t009_sampling/w05_doitt-1009511_fallback_lod0.exr",
+   "lod1Still": "/tmp/t009_sampling/w05_doitt-1009511_fallback_lod1.exr",
+   "silhouettePixels": 25954,
+   "meanLod0": [
+    0.2442547831116816,
+    0.19393636896107408,
+    0.16876086277587668
+   ],
+   "meanLod1": [
+    0.2442547831116816,
+    0.19393636896107408,
+    0.16876086277587668
+   ],
+   "luminanceLod0": 0.20281639226292197,
+   "luminanceLod1": 0.20281639226292197,
+   "meanLuminanceRatio": 1.0,
+   "perChannelRatio": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "channelSpread": 0.0,
+   "intersectionPixels": 24963,
+   "unionPixels": 25954,
+   "intersectionOverUnion": 0.9618170609539956,
+   "intersectionLuminanceRatio": 1.0,
+   "intersectionPerChannelRatio": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "intersectionChannelSpread": 0.0
+  },
+  {
+   "waveId": "w05",
+   "buildingId": "doitt:100192",
+   "styleClass": "stone-neutral",
+   "variant": "shed",
+   "cameraTransform": [
+    [
+     25.26640510559082,
+     38.40494155883789,
+     22.102279663085938
+    ],
+    [
+     1.2566369771957397,
+     1.646813529987412e-08,
+     2.5307273864746094
+    ]
+   ],
+   "lod0Still": "/tmp/t009_sampling/w05_doitt-100192_shed_lod0.exr",
+   "lod1Still": "/tmp/t009_sampling/w05_doitt-100192_shed_lod1.exr",
+   "silhouettePixels": 55963,
+   "meanLod0": [
+    0.3747150440211634,
+    0.3971505251498768,
+    0.4045471937178441
+   ],
+   "meanLod1": [
+    0.37236524735590604,
+    0.3945194605989614,
+    0.40157795275535535
+   ],
+   "luminanceLod0": 0.39291478133251956,
+   "luminanceLod1": 0.39031909799717945,
+   "meanLuminanceRatio": 0.9933937752951488,
+   "perChannelRatio": [
+    0.9937291104193707,
+    0.99337514523008,
+    0.9926603347925838
+   ],
+   "channelSpread": 0.0010687756267869775,
+   "intersectionPixels": 54184,
+   "unionPixels": 55963,
+   "intersectionOverUnion": 0.9682111395028858,
+   "intersectionLuminanceRatio": 1.0003453552237165,
+   "intersectionPerChannelRatio": [
+    1.0004202173106742,
+    1.0003372336435803,
+    1.0002200492863496
+   ],
+   "intersectionChannelSpread": 0.00020016802432465397
+  },
+  {
+   "waveId": "w05",
+   "buildingId": "doitt:1042664",
+   "styleClass": "stone-neutral",
+   "variant": "fallback",
+   "cameraTransform": [
+    [
+     19.780410766601562,
+     28.00034523010254,
+     13.400440216064453
+    ],
+    [
+     1.2566369771957397,
+     1.646813529987412e-08,
+     2.5307273864746094
+    ]
+   ],
+   "lod0Still": "/tmp/t009_sampling/w05_doitt-1042664_fallback_lod0.exr",
+   "lod1Still": "/tmp/t009_sampling/w05_doitt-1042664_fallback_lod1.exr",
+   "silhouettePixels": 42268,
+   "meanLod0": [
+    0.47354325045471646,
+    0.4979319632070297,
+    0.4922800596394128
+   ],
+   "meanLod1": [
+    0.47354325045471646,
+    0.4979319632070297,
+    0.4922800596394128
+   ],
+   "luminanceLod0": 0.49233885543830597,
+   "luminanceLod1": 0.49233885543830597,
+   "meanLuminanceRatio": 1.0,
+   "perChannelRatio": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "channelSpread": 0.0,
+   "intersectionPixels": 41176,
+   "unionPixels": 42268,
+   "intersectionOverUnion": 0.9741648528437589,
+   "intersectionLuminanceRatio": 1.0,
+   "intersectionPerChannelRatio": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "intersectionChannelSpread": 0.0
+  }
+ ],
+ "rendererDependence": {
+  "shedResult": "RENDERER-DEPENDENT. The shed cell's numbers come out of a rasterizer, a light rig and a colour transform, so the MISS is a statement about this comparison and not an absolute appearance claim under CesiumJS.",
+  "fallbackResult": "RENDERER-INDEPENDENT BY CONSTRUCTION, and this is the distinction worth drawing. A fallback pair's two levels are the SAME geometry with the SAME UVs referencing the SAME tile, and the palette check proved their baseColorFactors are equal at exact equality. Two draws of identical geometry with identical materials produce identical pixels under ANY renderer that is a function of its inputs. The 15/15 pixel-identical result confirms the emitted bytes; it does not depend on EEVEE being the shipped renderer."
+ }
+}

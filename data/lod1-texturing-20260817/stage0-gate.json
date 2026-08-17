@@ -1,0 +1,207 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "lod1-texturing-20260817:stage0-gate",
+  "task": "T009",
+  "stage": "0",
+  "artifact": "stage0-pre-flight-gate",
+  "adjudicatedAt": "2026-08-17T10:58:31.007Z",
+  "verdict": "NO-GO FOR THE CAMPAIGN AS CONTRACTED; RESCOPE-RECOMMENDED",
+  "verdictStatement": "This stage does NOT authorize the 44,989-building re-emission. Two separate reasons, and they are different in kind. FIRST, the decisive appearance evidence is INCOMPLETE: the rendered comparison that item 1 exists to produce was not captured, so the gate cannot return GO on its own terms. SECOND, and independently, the analytic evidence that WAS captured contradicts the contract's premise strongly enough to recommend a rescope: the visible mid-ring defect is very unlikely to be missing tile detail, and the measured palette mismatch is a per-material tone error fixable from a 20-entry lookup table rather than by re-emitting the island.",
+  "authority": "This is a pre-flight gate with standing authority to refuse. It refuses.",
+  "premiseAsContracted": "T009 contracts to re-emit all 44,989 retained lod_1 with shared-class texture bindings, on the premise that lod_1 is untextured and therefore visibly deficient at mid ring.",
+  "premiseAsMeasured": {
+    "lod1IsUntextured": "CONFIRMED, island-wide and exhaustively: 0 of 44,989 lod_1 assets carry any image, and 0 carry a TEXCOORD_0 attribute.",
+    "lod1IsNotUncoloured": "CONFIRMED: all 341,634 lod_1 materials declare a baseColorFactor, and every single one is exactly k/255 - authored as a byte palette.",
+    "theQuietSubstitution": "The contract reads \"untextured\" as \"visibly deficient\". Those are different claims. lod_1 is fully colour-shaded per material; what it lacks is the tile pattern, and whether that pattern is resolvable at the distance the mid ring selects lod_1 is exactly what was never measured."
+  },
+  "decisiveFinding": {
+    "title": "THE TWO LEVELS ARE FED BY TWO DIFFERENT AUTHORING PATHS, AND THEIR PALETTES ARE NOT RECONCILED.",
+    "evidence": [
+      "lod_0 materials: 306,918 continuous-valued (the tile TINT) and 89,978 byte-quantized (exactly two per building, the untextured caps).",
+      "lod_1 materials: 341,634 byte-quantized, 0 continuous. Entirely the flat palette.",
+      "The palettes are small CLOSED SETS: 20 distinct baseColorFactors across every lod_0 on the island, 15 across every lod_1.",
+      "The four shared class tiles are GRAYSCALE with mean texel 0.8387 (brick-running-bond), 0.8837 (limestone-ashlar), 0.8894 (curtain-mullion-grid), 0.8879 (spandrel-panel)."
+    ],
+    "theArithmetic": "glTF renders a base-colour-textured surface at baseColorFactor x texel. Because the tiles are GRAYSCALE, a faithfully reconciled lod_1 would satisfy factor_lod1 = factor_lod0 x tileMean with the SAME scalar on all three channels. A per-channel ratio that varies across R, G and B cannot be produced by a grayscale tile and is therefore a HUE error, not a brightness error.",
+    "measuredRatios": "The ratios cited in the challenge (0.893 / 0.925 / 1.003) vary by 12.3% across channels against a tile mean of 0.84-0.89. lod_1 is relatively cooler than a correctly darkened lod_0.",
+    "consequence": "The defect is a TONE/HUE discontinuity between rings, not an absence of tile detail. Binding the tile to lod_1 WITHOUT re-tinting would additionally darken lod_1 by the tile mean and could make the discontinuity worse rather than better.",
+    "cost": "Reconciliation is a 20-entry to 15-entry palette mapping applied at emission, not a 44,989-building re-emission."
+  },
+  "blockingCondition": {
+    "item": "1 (rendered appearance evidence)",
+    "status": "NOT CAPTURED",
+    "instrument": "Blender MCP",
+    "whatHappened": "Blender MCP was probed FIRST and answered - it was connected, and an lod_0 import succeeded. The render script then called bpy.ops.wm.read_factory_settings(use_empty=True) to clear the scene between variants. That call resets the Blender session and UNREGISTERS THE BLENDERMCP ADDON, which terminated the very channel driving it. Two subsequent probes returned \"Not connected to Blender\".",
+    "responsibility": "THIS WAS SELF-INFLICTED BY THIS STAGE'S OWN SCRIPT, not a pre-existing outage, and it is recorded as such rather than reported as an environment failure.",
+    "policy": "AGENTS.md requires that a 3D task stop when Blender MCP is unavailable and NOT substitute unrelated tooling. No substitute renderer was used and no appearance claim is made from any other source.",
+    "fixForTheNextAttempt": "Clear the scene by deleting objects and purging orphans, never by read_factory_settings. The addon must survive the clear.",
+    "whatWouldSettleIt": "lod_0 as shipped, lod_0 with detail removed but tone preserved (baseColorFactor x tileMean), and lod_1 as shipped, rendered from one camera at ~350 m and ~120 m over a stratified sample. The first pair isolates whether TILE DETAIL survives to mid ring; the second isolates the TONE gap. That decomposition needs no slot mapping between the levels and was the design that was executing when the channel dropped.",
+    "couldItOverturnTheRescope": "YES, and that is stated rather than hedged. If the render shows tile detail clearly resolvable at 350 m, the missing-detail reading returns and the campaign premise is restored. The analytic result makes that unlikely; it does not make it impossible."
+  },
+  "items": {
+    "1": {
+      "title": "Appearance evidence that can say NO",
+      "status": "COMPLETE - analytic and rendered halves agree",
+      "records": [
+        "class-tile-luminance.json",
+        "lod-material-delta.json",
+        "render-comparison.json",
+        "stills/ (30 committed 1:1 crops)"
+      ],
+      "answer": "On the analytic evidence the mid-ring defect is (b) TONE DISCONTINUITY, specifically a hue error. (a) missing tile detail is not supported and (c) is contradicted by the palette mismatch. NOT CONFIRMED BY RENDER.",
+      "seamRationale": "CONFIRMED by measurement, where the pre-render record could only say it was neither rebutted nor confirmed. At 350 m one screen pixel spans 12.8-44.9 texels.",
+      "renderedAnswer": "TONE. Confirmed by a stratified five-building, two-distance, three-variant comparison. See render-comparison.json."
+    },
+    "2": {
+      "title": "Prototype textured-lod_1 emission + storage projection",
+      "status": "NOT DONE in this pass",
+      "reason": "Not reached before the stage was closed out. No scratch profile was flipped and no prototype asset was emitted, so no measured per-asset delta exists from this stage.",
+      "whatExistsInstead": "A committed prior measurement, data/mass-generation-20260816/stage0-textured-write-cost.json, over 100 buildings through the real canonical writer.",
+      "note": "The prototype textured-lod_1 emission was not built. The storage projection therefore remains the first-order projection this record already carries, and is NOT a measurement. Under the RESCOPE verdict the prototype's question changes: a tone reconciliation adds no TEXCOORD_0 and no image, so its byte delta is approximately zero and the +0.41 GB projection applies only to the campaign that is now not recommended."
+    },
+    "3": {
+      "title": "lod_0 byte-identity under the changed emission path",
+      "status": "NOT DONE in this pass",
+      "reason": "Depends on item 2's prototype emission, which was not reached.",
+      "whyItStaysLoadBearing": "writeCanonicalGlb assigns accessor and image indices in write order. Adding a textured lod_1 to the same write could renumber lod_0's accessors and change its bytes even though its geometry is untouched. Until that is proven byte-identical on a stride sample, a -c2 emission cannot claim to preserve lod_0.",
+      "note": "lod_0 byte-identity under a changed write path was not exercised. It remains load-bearing for ANY -c2, including a tone rescope: the rescope rewrites lod_1 only, but it re-runs the same writer over lod_0, and writeCanonicalGlb accessor/image write-order renumbering is the named risk. This must pass before a -c2 can claim to preserve the near ring."
+    },
+    "4": {
+      "title": "Asset-budget dry run under textured lod_1 emission",
+      "status": "COMPLETE - ZERO VIOLATIONS, over the whole population",
+      "method": "The budget gate is midtown-core-v3-materialization.ts:955-964, applied PER LOD to written.counts against profile.budgets. The successor profile uses V3T_QUALITY_BUDGETS (block835-v3-package.ts:85) = maxTriangles 200,000 / maxMaterials 12 / maxTextures 4. Texturing changes neither triangles nor materials; it can only raise textureCount, which canonical-glb.ts:417 defines as usedImageIndexes.length. All 44,989 assets in the six committed -c1 packages were walked, both LODs, reading each GLB's JSON chunk.",
+      "measured": {
+        "assetsWalked": 44989,
+        "distinctClassTilesPerAsset": {
+          "2": 881,
+          "3": 44108
+        },
+        "maxDistinctClassTilesPerAsset": 3,
+        "maxTexturesBudget": 4,
+        "lod1MaterialsPerAsset": {
+          "3": 55,
+          "4": 363,
+          "5": 845,
+          "6": 1979,
+          "7": 10414,
+          "8": 30977,
+          "9": 356
+        },
+        "maxLod1MaterialsPerAsset": 9,
+        "maxMaterialsBudget": 12
+      },
+      "finding": "No asset can violate the texture budget: the catalogue has only FOUR class tiles and the worst asset references THREE. No asset violates the material budget either, with a worst case of 9 against 12. Zero violations, and the margin is structural rather than lucky.",
+      "violations": []
+    },
+    "5": {
+      "title": "Validator physical-presence rule for a -c2 release",
+      "status": "COMPLETE - RESOLVED: MUST COPY",
+      "codeEvidence": [
+        "scripts/validate-retention-release.mjs:274 - `if (!candidate.isFile() || candidate.isSymbolicLink() || candidate.size !== artifact.byteSize) fail(`Artifact size/type differs before read: ${artifact.relativeRef}`);` - every declared artifact is lstat'd and a symlink FAILS.",
+        "scripts/validate-retention-release.mjs:110, 133, 154 - the same refusal on the root, the sidecar and every bounded file it reads.",
+        "scripts/exterior-serving-wave-cli.mjs:213 - the serving fingerprint refuses symlinks too, so the rule holds on both sides of the seam."
+      ],
+      "resolution": "MUST COPY. A -c2 cannot reference or symlink -c1's lod_0 bytes; the retention validator refuses a symlinked artifact before it reads it, so a referencing -c2 would fail its own validation.",
+      "c2ShapeRecommendation": "If T009 proceeds as a TONE RESCOPE, the question mostly dissolves: the reconciliation rewrites baseColorFactor values, so lod_1 GLBs change and lod_0 GLBs do not -- but a -c2 must still physically carry both, i.e. 4.68 GB of copied lod_0 on top of the re-emitted lod_1. Per-wave lod_0 runs 7.5 MB (w00) to 1.269 GB (w01). The cheapest honest shape is a per-wave -c2 emitted wave by wave so peak extra disk is one wave's payload rather than the island's, with the -c1 packages left untouched and still authoritative."
+    },
+    "6": {
+      "title": "Fallback identity under textured emission",
+      "status": "NOT COMPLETE - one fallback rendered, the identity predicate NOT re-run",
+      "whatWasDone": "doitt:1302589, one of the 424, was rendered as part of item 1. Because its lod_1 is full geometry, its lod_0/lod_1 comparison holds geometry constant and isolates the palette gap: toneMeanAbs 0.0199 at 350 m and 0.0406 at 120 m, channel spread 0.0082 and 0.0169.",
+      "whatWasNot": "midtownCoreV3EmittedGeometriesIdentical was NOT re-run under a textured or re-tinted emission on 3 or more of the 424. That needs the prototype emission of item 2, which was not built."
+    },
+    "7": {
+      "title": "Fallback identity under textured emission, and the 425/424 discrepancy",
+      "status": "SPLIT - discrepancy RESOLVED, identity check NOT COMPLETED",
+      "record": "fallback-count-reconciliation.json",
+      "resolved": "425 is a PLAN-STAGE count of buildings over the 2% silhouette cap (45,032 planned parents); 424 is EMITTED reality (variant \"full-geometry\" in the wave censuses). 424 is a strict subset of 425 and the single difference is doitt:263078, tombstoned at emission with stopCode volume-identity-failed. T009 should use 424.",
+      "notCompleted": "midtownCoreV3EmittedGeometriesIdentical was not re-proven for the 424 under textured emission, because that depends on item 2.",
+      "noteworthy": "Under textured emission the 424 become the sharpest test available: their lod_1 IS their lod_0 geometry, so if both levels are textured identically their GLBs should differ only in the lodId metadata. That is a strong and cheap check and it is recommended for the next attempt."
+    },
+    "8": {
+      "title": "Re-assert the payload retention hold",
+      "status": "COMPLETE",
+      "record": "payload-retention-hold.json",
+      "result": "All six -c1 payload directories physically exist, resolve through their symlinks, and match their committed inventories at three spot-checked GLBs each (first, middle, last) on both byteSize and sha256. 91,774 declared files, 89,978 declared GLBs. data/mass-generation-20260816/coverage.json was NOT edited."
+    }
+  },
+  "measuredBaseline": {
+    "note": "On-disk totals over the six retained payload directories, measured for this stage.",
+    "lod0": {
+      "assetCount": 44989,
+      "bytes": 4679223068,
+      "gigabytes": 4.679
+    },
+    "lod1": {
+      "assetCount": 44989,
+      "bytes": 1530680344,
+      "gigabytes": 1.531
+    },
+    "total": {
+      "bytes": 6209903412,
+      "gigabytes": 6.21
+    },
+    "lod1ShareOfLod0": 0.327
+  },
+  "storageProjection": {
+    "status": "FIRST-ORDER PROJECTION ONLY, NOT THE MEASURED FIGURE ITEM 2 ASKED FOR",
+    "basis": "data/mass-generation-20260816/stage0-textured-write-cost.json, a committed 100-building sample through the real canonical writer: median both-LOD byte size 124,040 textured against 95,880 texture-free, i.e. a median +28,160 B per building to texture ONE level (lod_0).",
+    "reasoning": "Under shared-uri delivery the tile PNGs do not ride in the GLB, so the added bytes are the TEXCOORD_0 accessor (8 B per vertex) plus a little JSON. Scaling the measured lod_0 texturing delta by lod_1's 0.327 byte share gives roughly +9,200 B per building, i.e. about +0.41 GB across 44,989.",
+    "range": "0.4 to 1.3 GB, the lower end from the vertex-share scaling and the upper end from assuming lod_1 costs what lod_0 cost to texture.",
+    "comparisonToTheArchitect": "CONSISTENT with the architect's +0.5-1.1 GB and NOT with +3-4 GB. But it is a projection over a prior sample, not a measurement of a prototype emission, and it must not be quoted as one.",
+    "medianTextureClassesPerBuilding": {
+      "2": 3,
+      "3": 97
+    }
+  },
+  "eAdjudicationVerbatim": "-c2 keeps maxDistanceMeters:null both levels and eligible:false for the 424; T001 owns distinct thresholds in -s2 (or the ADR 0052 tie rule collapses the mid ring to lod_0).",
+  "constraintsHonoured": {
+    "c1PayloadsReadOnly": "No byte under any -c1 payload directory was written. Every reading was a read.",
+    "frozenRecordsUntouched": "data/mass-generation-20260816/, exterior-acceptance-20260817/, exterior-completion-acceptance-20260817/ and goal-integration-acceptance-20260812/ were read and not modified.",
+    "noSeamFlipShipped": "src/release/midtown-core-v3-materialization.ts:923 is UNCHANGED. No default-path change and no scratch profile were committed, because the prototype was not reached.",
+    "noMassCampaignStarted": "None."
+  },
+  "recommendation": {
+    "primary": "RESCOPE T009 to a per-material-class baseColorFactor reconciliation between the two palettes, emitted as -c2. The render confirms this is the defect users see.",
+    "nowConfirmedByRender": "The item-1 render that could have overturned this instead confirms it. The gate's own falsification condition was stated in advance and was not met.",
+    "remainingBeforeAnyEmission": "Items 2, 3 and 6 are unmet. Item 3 - lod_0 byte-identity under the changed write path - is the one that must pass before a -c2 can claim to preserve the near ring, and it applies to the rescope exactly as it applied to the campaign."
+  },
+  "notClaimedHere": [
+    "That the rescope's reconciled factors have been derived, emitted or validated. They have not.",
+    "Any measured storage delta from a prototype emission.",
+    "That lod_0 re-emits byte-identically under a changed write path.",
+    "That the fallback identity predicate holds under a changed emission.",
+    "Any acceptance of a -c2 release. None exists.",
+    "An absolute appearance claim in the shipped renderer: the comparison was rendered in Blender EEVEE, not CesiumJS.",
+    "That the campaign is justified by the evidence. It is not; it is justified by an explicit user decision recorded above."
+  ],
+  "supersededBy": {
+    "note": "THIS RECORD IS AMENDED, NOT REWRITTEN. Every analytic finding below stood up and is preserved verbatim. What changed is that the blocking condition was cleared: item 1's render was captured on 2026-08-17 and it CONFIRMS the analytic reading. The fields `verdict`, `verdictStatement` and `blockingCondition` are superseded by `amendment2026_08_17` and are kept so the sequence of belief stays readable.",
+    "amendedAt": "2026-08-17T11:17:42.817Z"
+  },
+  "amendment2026_08_17": {
+    "verdict": "RESCOPE",
+    "verdictStatement": "The rendered comparison the gate was blocked on has been captured, and it CONFIRMS the rescope rather than overturning it. At mid distance the visible difference between the two levels is a TONE AND HUE discontinuity, not missing tile detail. T009 should reconcile the two palettes, not re-emit 44,989 buildings with texture bindings.",
+    "theEvidence": "render-comparison.json plus 30 committed 1:1 stills. The decisive frame is lod0flat: lod_0 with the tile REMOVED but its mean tone preserved renders very close to shipped lod_0 at 350 m, while shipped lod_1 is visibly bleached and cooler. Removing the tile costs almost nothing if the tone is kept. Keeping only the flat palette costs a lot.",
+    "couldItHaveOverturnedTheRescope": "YES, and the gate said so in advance. If the tile had been resolvable at 350 m the missing-detail reading would have returned. It is not: one screen pixel spans 12.8 to 44.9 texels at 350 m and still 4.4 to 15.4 at 120 m. The seam's own rationale is confirmed with a wide margin.",
+    "whatTheSeamGotRightAndWrong": "RIGHT: a 128-pixel joint is below a screen pixel beyond 250 m, so lod_1 does not need the tile for DETAIL. WRONG BY OMISSION: dropping the tile also drops its mean DARKENING, and nothing re-tinted lod_1 to compensate. The tile means are 0.8387 to 0.8894, so an untinted lod_1 renders 11 to 16 percent brighter than the same surface at lod_0 -- which is the discontinuity users see.",
+    "hueErrorIsClassDependent": "REPHRASED after the fallback pair rebutted the first wording. The spread is 0.0158-0.0265 on limestone-bearing buildings, 0.0003-0.0016 on the two DECIMATED brick buildings, and 0.0082-0.0169 on the FALLBACK brick building whose two levels share geometry. Decimation is a confound this five-building sample cannot separate from texture class, so the reconciliation should be derived PER MATERIAL rather than assumed uniform -- but 'limestone only' is not supported.",
+    "costOfTheRescope": "A per-material factor multiply at emission. No TEXCOORD_0 accessor, no image, no new bytes in the GLB beyond the changed factor values, and no change to triangle, material or texture counts."
+  },
+  "finalDisposition2026_08_17": {
+    "disposition": "GO-BY-USER-DECISION",
+    "supersedes": "The `verdict` field and `amendment2026_08_17.verdict`. Both are preserved byte-intact below and neither is retracted: they remain the correct reading of the evidence this stage gathered.",
+    "whatStage0Recommended": "RESCOPE. On the rendered evidence the visible mid-ring defect is a TONE and HUE discontinuity, not missing tile detail, and a per-material palette reconciliation would close it at approximately zero byte cost.",
+    "whatTheUserDecided": "The full textured-lod_1 campaign, as originally contracted.",
+    "userDecisionVerbatim": "\uadf8\ub798\ub3c4 \ud14d\uc2a4\ucc98\ub9c1",
+    "userDecisionDate": "2026-08-17",
+    "howTheDecisionWasTaken": "The user was shown the rendered evidence -- the lod0flat frame that makes the tone case, the sub-pixel texel arithmetic, and the RESCOPE recommendation -- and chose the campaign anyway, on a maximum-completeness posture rather than on a dispute with the measurement.",
+    "thisIsNotAReversalOfTheEvidence": "Nothing measured here is withdrawn. The tile remains sub-pixel at both distances tested; the tone gap remains the visible defect; the rescope remains the cheaper remedy for that defect. The decision is a choice to spend bytes for completeness, and it is recorded as a decision rather than re-argued as a finding.",
+    "whatTheCampaignMustNowDoDifferently": "Textured lod_1 must carry lod_0's CONTINUOUS tile-tint palette, not lod_1's quantized one. factor x grayscale tile then reproduces lod_0's exact rendered appearance, which closes the 11-16 percent tone gap BY CONSTRUCTION rather than leaving it. Binding the tile to the existing quantized palette would darken lod_1 by the tile mean on top of an already-cooler palette and would make the discontinuity worse -- the outcome this stage warned about.",
+    "gatesThatCanStillStopIt": [
+      "2a prototype textured emission and UV set-containment",
+      "2b lod_0 BYTE-IDENTITY under the both-LODs-textured write path",
+      "2c fallback identity under textured emission"
+    ]
+  }
+}

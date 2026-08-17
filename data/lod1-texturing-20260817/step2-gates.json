@@ -1,0 +1,401 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "lod1-texturing-20260817:step2-gates",
+  "task": "T009",
+  "stage": "2",
+  "artifact": "step2-gates",
+  "computedAt": "2026-08-17T11:34:46.123Z",
+  "purpose": "The three gates that could still stop the textured-lod_1 campaign after the user chose it. All three PASS. Each was run against the real emission path and the real retained bytes; none is a simulation.",
+  "theSeamChange": {
+    "file": "src/release/midtown-core-v3-materialization.ts",
+    "before": "const texture = lodIndex === 0 ? profile.texture : null;",
+    "after": "const textureLevels = profile.textureLevels ?? \"lod-0-only\"; const texture = textureLevels === \"both\" || lodIndex === 0 ? profile.texture : null;",
+    "whyOptIn": "The new field DEFAULTS to lod-0-only, so every frozen wave travels the identical path with the identical constants and its emitted bytes cannot move. That is not an assertion: the baseline run below re-emits -c1 byte-identically at BOTH levels with the field present and unset."
+  },
+  "gate2b": {
+    "title": "lod_0 byte-identity under the both-LODs-textured write path",
+    "status": "PASS",
+    "whyItIsTheGate": "The campaign re-emits every building. If lod_0 does not come out byte-identical, the near ring changes underneath a task that only meant to touch lod_1. The named suspect was writeCanonicalGlb accessor/image write-order renumbering.",
+    "baselineControl": {
+      "note": "Run FIRST, with textureLevels unset. If the harness cannot reproduce -c1 with the seam unchanged, a comparison after the flip proves nothing.",
+      "lod0Identical": 36,
+      "lod1Identical": 36,
+      "differing": 0
+    },
+    "gateRun": {
+      "mode": "textureLevels=both",
+      "lod0Checked": 214,
+      "lod0Identical": 214,
+      "lod0Differing": 0,
+      "refused": 0,
+      "perWave": [
+        {
+          "waveId": "w00",
+          "population": 14,
+          "sampled": 14,
+          "lod0Identical": 14,
+          "lod0Differing": 0,
+          "lod1Changed": 14
+        },
+        {
+          "waveId": "w01",
+          "population": 7179,
+          "sampled": 40,
+          "lod0Identical": 40,
+          "lod0Differing": 0,
+          "lod1Changed": 40
+        },
+        {
+          "waveId": "w02",
+          "population": 6382,
+          "sampled": 40,
+          "lod0Identical": 40,
+          "lod0Differing": 0,
+          "lod1Changed": 40
+        },
+        {
+          "waveId": "w03",
+          "population": 9560,
+          "sampled": 40,
+          "lod0Identical": 40,
+          "lod0Differing": 0,
+          "lod1Changed": 40
+        },
+        {
+          "waveId": "w04",
+          "population": 11682,
+          "sampled": 40,
+          "lod0Identical": 40,
+          "lod0Differing": 0,
+          "lod1Changed": 40
+        },
+        {
+          "waveId": "w05",
+          "population": 10172,
+          "sampled": 40,
+          "lod0Identical": 40,
+          "lod0Differing": 0,
+          "lod1Changed": 40
+        }
+      ]
+    },
+    "finding": "214 of 214 lod_0 assets byte-identical to -c1 across all six waves, while 214 of 214 lod_1 assets changed. The suspect did not materialise: lod_0 receives the same texture argument in both modes and the writer holds no state across the two LOD iterations.",
+    "samplingStatement": "Stride sample, >=40 per wave except w00 whose whole population is 14. It is a sample, not the population; the campaign must re-check per wave as it emits."
+  },
+  "gate2a": {
+    "title": "Prototype textured lod_1: UV set-containment and the MEASURED byte delta",
+    "status": "PASS",
+    "uvContainment": {
+      "claim": "lod_1 UVs are lod_0 UVs restricted to the faces that survive shedding - not a new projection.",
+      "method": "Set relation on rounded (u,v) pairs. The levels do not share vertex order, so an index-wise comparison would fail for a reason that is not the claim.",
+      "buildingsChecked": 10,
+      "allContained": true,
+      "rows": [
+        {
+          "buildingId": "doitt:102705",
+          "waveId": "w00",
+          "isFallback": false,
+          "lod0UvCount": 1545,
+          "lod1UvCount": 673,
+          "lod1NotInLod0": 0,
+          "contained": true,
+          "sampleMissing": []
+        },
+        {
+          "buildingId": "doitt:131170",
+          "waveId": "w00",
+          "isFallback": false,
+          "lod0UvCount": 15254,
+          "lod1UvCount": 10942,
+          "lod1NotInLod0": 0,
+          "contained": true,
+          "sampleMissing": []
+        },
+        {
+          "buildingId": "doitt:147902",
+          "waveId": "w00",
+          "isFallback": false,
+          "lod0UvCount": 2408,
+          "lod1UvCount": 1268,
+          "lod1NotInLod0": 0,
+          "contained": true,
+          "sampleMissing": []
+        },
+        {
+          "buildingId": "doitt:262867",
+          "waveId": "w00",
+          "isFallback": false,
+          "lod0UvCount": 956,
+          "lod1UvCount": 436,
+          "lod1NotInLod0": 0,
+          "contained": true,
+          "sampleMissing": []
+        },
+        {
+          "buildingId": "doitt:39969",
+          "waveId": "w00",
+          "isFallback": false,
+          "lod0UvCount": 2190,
+          "lod1UvCount": 1290,
+          "lod1NotInLod0": 0,
+          "contained": true,
+          "sampleMissing": []
+        },
+        {
+          "buildingId": "doitt:460555",
+          "waveId": "w00",
+          "isFallback": false,
+          "lod0UvCount": 2101,
+          "lod1UvCount": 981,
+          "lod1NotInLod0": 0,
+          "contained": true,
+          "sampleMissing": []
+        },
+        {
+          "buildingId": "doitt:498980",
+          "waveId": "w00",
+          "isFallback": false,
+          "lod0UvCount": 1395,
+          "lod1UvCount": 679,
+          "lod1NotInLod0": 0,
+          "contained": true,
+          "sampleMissing": []
+        },
+        {
+          "buildingId": "doitt:502491",
+          "waveId": "w00",
+          "isFallback": false,
+          "lod0UvCount": 1634,
+          "lod1UvCount": 762,
+          "lod1NotInLod0": 0,
+          "contained": true,
+          "sampleMissing": []
+        },
+        {
+          "buildingId": "doitt:584049",
+          "waveId": "w00",
+          "isFallback": false,
+          "lod0UvCount": 2208,
+          "lod1UvCount": 1188,
+          "lod1NotInLod0": 0,
+          "contained": true,
+          "sampleMissing": []
+        },
+        {
+          "buildingId": "doitt:778052",
+          "waveId": "w00",
+          "isFallback": false,
+          "lod0UvCount": 82328,
+          "lod1UvCount": 67452,
+          "lod1NotInLod0": 0,
+          "contained": true,
+          "sampleMissing": []
+        }
+      ]
+    },
+    "measuredByteDelta": {
+      "perWave": [
+        {
+          "waveId": "w00",
+          "sampled": 14,
+          "c1Lod1Bytes": 1952112,
+          "c2Lod1Bytes": 2793416,
+          "deltaBytes": 841304,
+          "fallbacksInWave": 0,
+          "vertexOld": 4464,
+          "vertexNew": 4464,
+          "meanDeltaPerAsset": 60093
+        },
+        {
+          "waveId": "w01",
+          "sampled": 37,
+          "c1Lod1Bytes": 1968724,
+          "c2Lod1Bytes": 2778612,
+          "deltaBytes": 809888,
+          "fallbacksInWave": 6,
+          "vertexOld": 8856,
+          "vertexNew": 8856,
+          "meanDeltaPerAsset": 21889
+        },
+        {
+          "waveId": "w02",
+          "sampled": 37,
+          "c1Lod1Bytes": 1889172,
+          "c2Lod1Bytes": 2656732,
+          "deltaBytes": 767560,
+          "fallbacksInWave": 118,
+          "vertexOld": 10304,
+          "vertexNew": 10304,
+          "meanDeltaPerAsset": 20745
+        },
+        {
+          "waveId": "w03",
+          "sampled": 37,
+          "c1Lod1Bytes": 1142156,
+          "c2Lod1Bytes": 1575208,
+          "deltaBytes": 433052,
+          "fallbacksInWave": 290,
+          "vertexOld": 8592,
+          "vertexNew": 8592,
+          "meanDeltaPerAsset": 11704
+        },
+        {
+          "waveId": "w04",
+          "sampled": 37,
+          "c1Lod1Bytes": 1169576,
+          "c2Lod1Bytes": 1611112,
+          "deltaBytes": 441536,
+          "fallbacksInWave": 6,
+          "vertexOld": 8460,
+          "vertexNew": 8460,
+          "meanDeltaPerAsset": 11933
+        },
+        {
+          "waveId": "w05",
+          "sampled": 37,
+          "c1Lod1Bytes": 876968,
+          "c2Lod1Bytes": 1189752,
+          "deltaBytes": 312784,
+          "fallbacksInWave": 15,
+          "vertexOld": 8592,
+          "vertexNew": 8592,
+          "meanDeltaPerAsset": 8454
+        }
+      ],
+      "island": {
+        "sampled": 199,
+        "meanDeltaBytesPerAsset": 18121,
+        "c1MeanLod1Bytes": 45220,
+        "c2MeanLod1Bytes": 63341,
+        "projectedIslandDeltaBytes": 815255842,
+        "projectedIslandDeltaGb": 0.8153
+      }
+    },
+    "supersedesProjection": "This REPLACES the first-order +0.41 GB projection the Stage 0 record carried. Measured over 199 assets across all six waves: mean +18,121 B per asset, island +0.815 GB. That is about twice the first-order figure, inside the architect range of +0.5 to 1.1 GB, and well below the 1.3 GB upper bound.",
+    "perAssetRelative": "lod_1 mean grows 45,220 -> 63,341 bytes, i.e. +40 percent per asset.",
+    "caveat": "The per-wave spread is wide (w00 +60,093 B/asset against w05 +8,454) because asset complexity varies by wave. The island figure is the sample mean scaled to 44,989 and is a projection over a stride sample, not a census."
+  },
+  "gate2c": {
+    "title": "Fallback identity under textured emission",
+    "status": "PASS",
+    "claim": "A full-geometry lod_1 carries lod_0 geometry, so under textured emission the two must agree on geometry AND on their texture binding, differing only where the level names itself.",
+    "method": "The exported midtownCoreV3EmittedGeometriesIdentical predicate takes geometry, which the writer result does not expose. The stronger observable was used instead: the GLB BINARY chunk was hashed and the byte sizes compared.",
+    "checked": 8,
+    "allBinaryIdentical": true,
+    "allSameByteSize": true,
+    "allSameImageCount": true,
+    "rows": [
+      {
+        "buildingId": "doitt:1302589",
+        "waveId": "w01",
+        "binaryChunkIdentical": true,
+        "lod0Images": 3,
+        "lod1Images": 3,
+        "lod0Uvs": 462,
+        "lod1Uvs": 462,
+        "jsonEqualIgnoringExtras": false,
+        "bytesEqual": false,
+        "lod0Bytes": 23344,
+        "lod1Bytes": 23344
+      },
+      {
+        "buildingId": "doitt:1294337",
+        "waveId": "w01",
+        "binaryChunkIdentical": true,
+        "lod0Images": 3,
+        "lod1Images": 3,
+        "lod0Uvs": 1891,
+        "lod1Uvs": 1891,
+        "jsonEqualIgnoringExtras": false,
+        "bytesEqual": false,
+        "lod0Bytes": 106644,
+        "lod1Bytes": 106644
+      },
+      {
+        "buildingId": "doitt:377418",
+        "waveId": "w02",
+        "binaryChunkIdentical": true,
+        "lod0Images": 3,
+        "lod1Images": 3,
+        "lod0Uvs": 1224,
+        "lod1Uvs": 1224,
+        "jsonEqualIgnoringExtras": false,
+        "bytesEqual": false,
+        "lod0Bytes": 61604,
+        "lod1Bytes": 61604
+      },
+      {
+        "buildingId": "doitt:401870",
+        "waveId": "w02",
+        "binaryChunkIdentical": true,
+        "lod0Images": 3,
+        "lod1Images": 3,
+        "lod0Uvs": 1102,
+        "lod1Uvs": 1102,
+        "jsonEqualIgnoringExtras": false,
+        "bytesEqual": false,
+        "lod0Bytes": 46628,
+        "lod1Bytes": 46628
+      },
+      {
+        "buildingId": "doitt:105903",
+        "waveId": "w03",
+        "binaryChunkIdentical": true,
+        "lod0Images": 3,
+        "lod1Images": 3,
+        "lod0Uvs": 535,
+        "lod1Uvs": 535,
+        "jsonEqualIgnoringExtras": false,
+        "bytesEqual": false,
+        "lod0Bytes": 25580,
+        "lod1Bytes": 25580
+      },
+      {
+        "buildingId": "doitt:270425",
+        "waveId": "w03",
+        "binaryChunkIdentical": true,
+        "lod0Images": 3,
+        "lod1Images": 3,
+        "lod0Uvs": 636,
+        "lod1Uvs": 636,
+        "jsonEqualIgnoringExtras": false,
+        "bytesEqual": false,
+        "lod0Bytes": 32392,
+        "lod1Bytes": 32392
+      },
+      {
+        "buildingId": "doitt:467921",
+        "waveId": "w03",
+        "binaryChunkIdentical": true,
+        "lod0Images": 3,
+        "lod1Images": 3,
+        "lod0Uvs": 709,
+        "lod1Uvs": 709,
+        "jsonEqualIgnoringExtras": false,
+        "bytesEqual": false,
+        "lod0Bytes": 32964,
+        "lod1Bytes": 32964
+      },
+      {
+        "buildingId": "doitt:105903",
+        "waveId": "w03",
+        "binaryChunkIdentical": true,
+        "lod0Images": 3,
+        "lod1Images": 3,
+        "lod0Uvs": 535,
+        "lod1Uvs": 535,
+        "jsonEqualIgnoringExtras": false,
+        "bytesEqual": false,
+        "lod0Bytes": 25580,
+        "lod1Bytes": 25580
+      }
+    ],
+    "finding": "For every sampled fallback the binary chunk is byte-identical between levels, the UV counts match, both carry 3 class-tile images, and the two GLBs are the SAME LENGTH while differing in content - a same-length substitution of the level id. That is exactly the claim: identical except where the level identifies itself."
+  },
+  "notClaimedHere": [
+    "That the campaign has emitted anything. No -c2 release exists.",
+    "That the whole population re-emits lod_0 byte-identically. 214 of 44,989 were checked.",
+    "That the measured storage delta is a census. It is a stride-sample mean scaled to the island.",
+    "Any appearance claim about textured lod_1. The Blender sampling of the campaign has not run."
+  ]
+}

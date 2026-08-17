@@ -1,0 +1,197 @@
+{
+ "note": "A bounded evidence subset: 6 fallback pairs (the decisive cell) and the 6 worst pre-registered shed misses. Full measurements for all 39 pairs are in sampling-results.json.",
+ "stills": [
+  {
+   "file": "w01_doitt-1294337_fallback_lod0.exr",
+   "buildingId": "doitt:1294337",
+   "waveId": "w01",
+   "variant": "fallback",
+   "level": "lod_0",
+   "sha256": "a43d5b87cbcfc61a252b3d9b5865c7c9f412bdbec9638987ad9ca7910d782944"
+  },
+  {
+   "file": "w01_doitt-1294337_fallback_lod1.exr",
+   "buildingId": "doitt:1294337",
+   "waveId": "w01",
+   "variant": "fallback",
+   "level": "lod_1",
+   "sha256": "ecbc9b5111e138fda19dcad7f46c25f83a1c163d8802a16f364797e5df5ddd30"
+  },
+  {
+   "file": "w01_doitt-1268121_fallback_lod0.exr",
+   "buildingId": "doitt:1268121",
+   "waveId": "w01",
+   "variant": "fallback",
+   "level": "lod_0",
+   "sha256": "a5973e0c5411806c672716032c19631734540a5ca83747e14bfb8e22e38e8d8c"
+  },
+  {
+   "file": "w01_doitt-1268121_fallback_lod1.exr",
+   "buildingId": "doitt:1268121",
+   "waveId": "w01",
+   "variant": "fallback",
+   "level": "lod_1",
+   "sha256": "3fe3b98dafc04e5f075e8e2d0efe74d18052e56ed9aa4849de2bb904e5a6599c"
+  },
+  {
+   "file": "w02_doitt-111357_fallback_lod0.exr",
+   "buildingId": "doitt:111357",
+   "waveId": "w02",
+   "variant": "fallback",
+   "level": "lod_0",
+   "sha256": "c0b636a402ac2982ad1bf0605e9cbe618513c290b2b73555f3b800d332628a8c"
+  },
+  {
+   "file": "w02_doitt-111357_fallback_lod1.exr",
+   "buildingId": "doitt:111357",
+   "waveId": "w02",
+   "variant": "fallback",
+   "level": "lod_1",
+   "sha256": "c0b636a402ac2982ad1bf0605e9cbe618513c290b2b73555f3b800d332628a8c"
+  },
+  {
+   "file": "w02_doitt-1108103_fallback_lod0.exr",
+   "buildingId": "doitt:1108103",
+   "waveId": "w02",
+   "variant": "fallback",
+   "level": "lod_0",
+   "sha256": "5ae23a2e7cdfb48a1e2c1433f2701940023f2ac195723c2a744459511e01c013"
+  },
+  {
+   "file": "w02_doitt-1108103_fallback_lod1.exr",
+   "buildingId": "doitt:1108103",
+   "waveId": "w02",
+   "variant": "fallback",
+   "level": "lod_1",
+   "sha256": "ad52d0cbb72edc8a9ca91f89d8ee30ae5c28931ea080a4309d9e5db866dbec2c"
+  },
+  {
+   "file": "w02_doitt-1214511_fallback_lod0.exr",
+   "buildingId": "doitt:1214511",
+   "waveId": "w02",
+   "variant": "fallback",
+   "level": "lod_0",
+   "sha256": "c982974bd0cd61bf5d4e04bb7ae92446f1dbc237e8816fbb3e2209489290fa8a"
+  },
+  {
+   "file": "w02_doitt-1214511_fallback_lod1.exr",
+   "buildingId": "doitt:1214511",
+   "waveId": "w02",
+   "variant": "fallback",
+   "level": "lod_1",
+   "sha256": "c982974bd0cd61bf5d4e04bb7ae92446f1dbc237e8816fbb3e2209489290fa8a"
+  },
+  {
+   "file": "w02_doitt-109379_fallback_lod0.exr",
+   "buildingId": "doitt:109379",
+   "waveId": "w02",
+   "variant": "fallback",
+   "level": "lod_0",
+   "sha256": "493f2098243a1d96630ba2b7c6267e9a95a84228cbfaf8e283599d12488ef92d"
+  },
+  {
+   "file": "w02_doitt-109379_fallback_lod1.exr",
+   "buildingId": "doitt:109379",
+   "waveId": "w02",
+   "variant": "fallback",
+   "level": "lod_1",
+   "sha256": "c5c472a74bfba2b30bcd8bfc60419d41d5dfa87f2b13618c2148589af1d323f5"
+  },
+  {
+   "file": "w00_doitt-147902_shed_lod0.exr",
+   "buildingId": "doitt:147902",
+   "waveId": "w00",
+   "variant": "shed",
+   "level": "lod_0",
+   "sha256": "f137fd740dd6893aa614b7907b372d27d2e8955b0665ddb6d77ef0ed15a2dfde"
+  },
+  {
+   "file": "w00_doitt-147902_shed_lod1.exr",
+   "buildingId": "doitt:147902",
+   "waveId": "w00",
+   "variant": "shed",
+   "level": "lod_1",
+   "sha256": "a90615d9e5b54bb4dcf8236939b51b4476120feea3f4242c4e2aaa659755d38f"
+  },
+  {
+   "file": "w01_doitt-10049_shed_lod0.exr",
+   "buildingId": "doitt:10049",
+   "waveId": "w01",
+   "variant": "shed",
+   "level": "lod_0",
+   "sha256": "92cc5b7b19438f59145d778e7ddf7caa0aed56e0f79042cd7fb79613a09e5bfa"
+  },
+  {
+   "file": "w01_doitt-10049_shed_lod1.exr",
+   "buildingId": "doitt:10049",
+   "waveId": "w01",
+   "variant": "shed",
+   "level": "lod_1",
+   "sha256": "c366ab1d274c6b93047e048372023ebc21843311f8fa4438e19809ee1685f1c3"
+  },
+  {
+   "file": "w01_doitt-100022_shed_lod0.exr",
+   "buildingId": "doitt:100022",
+   "waveId": "w01",
+   "variant": "shed",
+   "level": "lod_0",
+   "sha256": "076262d55a16f29b98e612ae49450e1ed546007bff437020f6cfe79ecf553b38"
+  },
+  {
+   "file": "w01_doitt-100022_shed_lod1.exr",
+   "buildingId": "doitt:100022",
+   "waveId": "w01",
+   "variant": "shed",
+   "level": "lod_1",
+   "sha256": "9275319563a89b0c6c2a5d11f3ed219e7385541ca849e89aa58f003a9a3f665c"
+  },
+  {
+   "file": "w01_doitt-100220_shed_lod0.exr",
+   "buildingId": "doitt:100220",
+   "waveId": "w01",
+   "variant": "shed",
+   "level": "lod_0",
+   "sha256": "6b40640006845ba55abf9766526367904c8e11eda6111647f58de6b87a1b8f14"
+  },
+  {
+   "file": "w01_doitt-100220_shed_lod1.exr",
+   "buildingId": "doitt:100220",
+   "waveId": "w01",
+   "variant": "shed",
+   "level": "lod_1",
+   "sha256": "ecf4150964d253fea93997b7866f6a3cd5b8a98c7d209b58ad4bf8d657ae87a9"
+  },
+  {
+   "file": "w02_doitt-100368_shed_lod0.exr",
+   "buildingId": "doitt:100368",
+   "waveId": "w02",
+   "variant": "shed",
+   "level": "lod_0",
+   "sha256": "006f6c2e68c2226d86514abf14624bb16989d80db8342c11025cd794106ed78d"
+  },
+  {
+   "file": "w02_doitt-100368_shed_lod1.exr",
+   "buildingId": "doitt:100368",
+   "waveId": "w02",
+   "variant": "shed",
+   "level": "lod_1",
+   "sha256": "78a2085db625e6ea76ab0a99e5f4ed3ca3f2a200a5faba53a3aede6f7e35d1d4"
+  },
+  {
+   "file": "w03_doitt-100154_shed_lod0.exr",
+   "buildingId": "doitt:100154",
+   "waveId": "w03",
+   "variant": "shed",
+   "level": "lod_0",
+   "sha256": "55a20a9a02753cc04bd3171061b04ebdb6a6e42fe55f27366ccd2b969eed9a23"
+  },
+  {
+   "file": "w03_doitt-100154_shed_lod1.exr",
+   "buildingId": "doitt:100154",
+   "waveId": "w03",
+   "variant": "shed",
+   "level": "lod_1",
+   "sha256": "d5cfc72115bf1babb02bd477ab79d7a91e15419ea5a7279e6e58d54af01be6f9"
+  }
+ ]
+}

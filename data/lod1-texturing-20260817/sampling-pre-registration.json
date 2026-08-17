@@ -1,0 +1,734 @@
+{
+ "schemaVersion": "1.0",
+ "recordId": "lod1-texturing-20260817:sampling-pre-registration",
+ "task": "T009",
+ "artifact": "blender-sampling-pre-registration",
+ "status": "PRE-REGISTERED — written and committed BEFORE any still was captured",
+ "purpose": "Compare the TEXTURED lod_1 against the TEXTURED lod_0 at mid distance, to test whether the palette carry-over closes the 11-16% tone gap Stage 0 measured between the levels.",
+ "design": {
+  "contractedStrata": "4 style classes x 6 waves x {shed, fallback} = 48 pairs = 96 stills.",
+  "selection": "Within each (wave, style class, variant) cell, the LOWEST canonical building id that matches. Deterministic and fixed here, before any render.",
+  "unavailableCells": "A cell with no matching building is recorded as UNAVAILABLE and is NOT substituted from a neighbouring cell. w00 has 14 buildings and no fallback parent at all, so several of its cells cannot be filled; reporting a substitute would be reporting a stratum that was not sampled.",
+  "camera": "One camera per pair, identical for both levels: azimuth 55 degrees, elevation 18 degrees, framed so the building's bounding sphere subtends the same angle at a nominal 350 m mid-ring distance. The two levels are rendered from the SAME camera transform, so any difference is the asset and not the framing.",
+  "lighting": "One sun at fixed elevation and strength, no environment texture, no colour management beyond the scene default. Identical across every pair.",
+  "sceneClearing": "Objects are deleted and orphans purged. `bpy.ops.wm.read_factory_settings` is NEVER called: it unregisters the BlenderMCP addon and killed the channel during Stage 0."
+ },
+ "measurement": {
+  "primary": "MEAN LUMINANCE RATIO over the building's silhouette pixels, lod_1 / lod_0. Silhouette pixels are those where either render is non-background. Luminance is Rec. 709 on the linear framebuffer.",
+  "secondary": "PER-CHANNEL mean ratios, reported to expose any residual HUE error. Stage 0's finding was that the old gap varied 12.3% ACROSS channels, which a grayscale tile cannot produce, so the channel spread is the hue diagnostic.",
+  "why": "Pixel-identity is the wrong measure for a SHED pair: the two levels genuinely differ in geometry, by design. Tone is the thing the campaign set out to fix and tone is what is measured."
+ },
+ "agreementBar": {
+  "statedInAdvance": true,
+  "fallbackPairs": {
+   "bar": "|meanLuminanceRatio - 1| <= 0.005",
+   "rationale": "A fallback's two levels are the SAME geometry, so any difference at all is the material binding. This is effectively an equality check and it is the strictest cell in the design."
+  },
+  "shedPairs": {
+   "bar": "|meanLuminanceRatio - 1| <= 0.02",
+   "rationale": "Shed geometry removes protrusions, which changes shading and self-occlusion slightly even when the palette is identical. 2% is the tolerance for that, and it is far inside the 11-16% gap this campaign exists to close."
+  },
+  "hueDiagnostic": {
+   "bar": "max per-channel ratio spread <= 0.01",
+   "rationale": "The pre-campaign defect was a HUE error of 12.3% channel spread. A grayscale tile applied to an identical factor cannot produce a channel spread, so anything above 1% would mean the palette carry-over did not take."
+  },
+  "reportingRule": "REPORT WITH THRESHOLD. Every pair's measured values are reported against these bars whether they pass or fail. A miss is reported as a miss and is NOT re-explained by a bar chosen afterwards. A failed bar does not retract the byte-level gates, which are separate evidence."
+ },
+ "strataSelected": [
+  {
+   "buildingId": "doitt:982383",
+   "variant": "shed",
+   "lod0Ref": "public/assets/doitt-982383__lod_0.glb",
+   "lod1Ref": "public/assets/doitt-982383__lod_1.glb",
+   "styleClass": "curtain-cool",
+   "waveId": "w00",
+   "releaseId": "manhattan-exterior-cells-20260811-v3-c2"
+  },
+  {
+   "buildingId": "doitt:102705",
+   "variant": "shed",
+   "lod0Ref": "public/assets/doitt-102705__lod_0.glb",
+   "lod1Ref": "public/assets/doitt-102705__lod_1.glb",
+   "styleClass": "masonry-light",
+   "waveId": "w00",
+   "releaseId": "manhattan-exterior-cells-20260811-v3-c2"
+  },
+  {
+   "buildingId": "doitt:147902",
+   "variant": "shed",
+   "lod0Ref": "public/assets/doitt-147902__lod_0.glb",
+   "lod1Ref": "public/assets/doitt-147902__lod_1.glb",
+   "styleClass": "masonry-warm",
+   "waveId": "w00",
+   "releaseId": "manhattan-exterior-cells-20260811-v3-c2"
+  },
+  {
+   "buildingId": "doitt:131170",
+   "variant": "shed",
+   "lod0Ref": "public/assets/doitt-131170__lod_0.glb",
+   "lod1Ref": "public/assets/doitt-131170__lod_1.glb",
+   "styleClass": "stone-neutral",
+   "waveId": "w00",
+   "releaseId": "manhattan-exterior-cells-20260811-v3-c2"
+  },
+  {
+   "buildingId": "doitt:10049",
+   "variant": "shed",
+   "lod0Ref": "public/assets/doitt-10049__lod_0.glb",
+   "lod1Ref": "public/assets/doitt-10049__lod_1.glb",
+   "styleClass": "curtain-cool",
+   "waveId": "w01",
+   "releaseId": "manhattan-midtown-core-cells-20260811-v3-c2"
+  },
+  {
+   "buildingId": "doitt:100022",
+   "variant": "shed",
+   "lod0Ref": "public/assets/doitt-100022__lod_0.glb",
+   "lod1Ref": "public/assets/doitt-100022__lod_1.glb",
+   "styleClass": "masonry-light",
+   "waveId": "w01",
+   "releaseId": "manhattan-midtown-core-cells-20260811-v3-c2"
+  },
+  {
+   "buildingId": "doitt:100220",
+   "variant": "shed",
+   "lod0Ref": "public/assets/doitt-100220__lod_0.glb",
+   "lod1Ref": "public/assets/doitt-100220__lod_1.glb",
+   "styleClass": "masonry-warm",
+   "waveId": "w01",
+   "releaseId": "manhattan-midtown-core-cells-20260811-v3-c2"
+  },
+  {
+   "buildingId": "doitt:1294337",
+   "variant": "fallback",
+   "lod0Ref": "public/assets/doitt-1294337__lod_0.glb",
+   "lod1Ref": "public/assets/doitt-1294337__lod_1.glb",
+   "styleClass": "masonry-warm",
+   "waveId": "w01",
+   "releaseId": "manhattan-midtown-core-cells-20260811-v3-c2"
+  },
+  {
+   "buildingId": "doitt:100691",
+   "variant": "shed",
+   "lod0Ref": "public/assets/doitt-100691__lod_0.glb",
+   "lod1Ref": "public/assets/doitt-100691__lod_1.glb",
+   "styleClass": "stone-neutral",
+   "waveId": "w01",
+   "releaseId": "manhattan-midtown-core-cells-20260811-v3-c2"
+  },
+  {
+   "buildingId": "doitt:1268121",
+   "variant": "fallback",
+   "lod0Ref": "public/assets/doitt-1268121__lod_0.glb",
+   "lod1Ref": "public/assets/doitt-1268121__lod_1.glb",
+   "styleClass": "stone-neutral",
+   "waveId": "w01",
+   "releaseId": "manhattan-midtown-core-cells-20260811-v3-c2"
+  },
+  {
+   "buildingId": "doitt:100368",
+   "variant": "shed",
+   "lod0Ref": "public/assets/doitt-100368__lod_0.glb",
+   "lod1Ref": "public/assets/doitt-100368__lod_1.glb",
+   "styleClass": "curtain-cool",
+   "waveId": "w02",
+   "releaseId": "manhattan-lower-manhattan-cells-20260812-c2"
+  },
+  {
+   "buildingId": "doitt:111357",
+   "variant": "fallback",
+   "lod0Ref": "public/assets/doitt-111357__lod_0.glb",
+   "lod1Ref": "public/assets/doitt-111357__lod_1.glb",
+   "styleClass": "curtain-cool",
+   "waveId": "w02",
+   "releaseId": "manhattan-lower-manhattan-cells-20260812-c2"
+  },
+  {
+   "buildingId": "doitt:100321",
+   "variant": "shed",
+   "lod0Ref": "public/assets/doitt-100321__lod_0.glb",
+   "lod1Ref": "public/assets/doitt-100321__lod_1.glb",
+   "styleClass": "masonry-light",
+   "waveId": "w02",
+   "releaseId": "manhattan-lower-manhattan-cells-20260812-c2"
+  },
+  {
+   "buildingId": "doitt:1108103",
+   "variant": "fallback",
+   "lod0Ref": "public/assets/doitt-1108103__lod_0.glb",
+   "lod1Ref": "public/assets/doitt-1108103__lod_1.glb",
+   "styleClass": "masonry-light",
+   "waveId": "w02",
+   "releaseId": "manhattan-lower-manhattan-cells-20260812-c2"
+  },
+  {
+   "buildingId": "doitt:10021",
+   "variant": "shed",
+   "lod0Ref": "public/assets/doitt-10021__lod_0.glb",
+   "lod1Ref": "public/assets/doitt-10021__lod_1.glb",
+   "styleClass": "masonry-warm",
+   "waveId": "w02",
+   "releaseId": "manhattan-lower-manhattan-cells-20260812-c2"
+  },
+  {
+   "buildingId": "doitt:1214511",
+   "variant": "fallback",
+   "lod0Ref": "public/assets/doitt-1214511__lod_0.glb",
+   "lod1Ref": "public/assets/doitt-1214511__lod_1.glb",
+   "styleClass": "masonry-warm",
+   "waveId": "w02",
+   "releaseId": "manhattan-lower-manhattan-cells-20260812-c2"
+  },
+  {
+   "buildingId": "doitt:1000469",
+   "variant": "shed",
+   "lod0Ref": "public/assets/doitt-1000469__lod_0.glb",
+   "lod1Ref": "public/assets/doitt-1000469__lod_1.glb",
+   "styleClass": "stone-neutral",
+   "waveId": "w02",
+   "releaseId": "manhattan-lower-manhattan-cells-20260812-c2"
+  },
+  {
+   "buildingId": "doitt:109379",
+   "variant": "fallback",
+   "lod0Ref": "public/assets/doitt-109379__lod_0.glb",
+   "lod1Ref": "public/assets/doitt-109379__lod_1.glb",
+   "styleClass": "stone-neutral",
+   "waveId": "w02",
+   "releaseId": "manhattan-lower-manhattan-cells-20260812-c2"
+  },
+  {
+   "buildingId": "doitt:100154",
+   "variant": "shed",
+   "lod0Ref": "public/assets/doitt-100154__lod_0.glb",
+   "lod1Ref": "public/assets/doitt-100154__lod_1.glb",
+   "styleClass": "curtain-cool",
+   "waveId": "w03",
+   "releaseId": "manhattan-southern-remainder-cells-20260812-c2"
+  },
+  {
+   "buildingId": "doitt:117468",
+   "variant": "fallback",
+   "lod0Ref": "public/assets/doitt-117468__lod_0.glb",
+   "lod1Ref": "public/assets/doitt-117468__lod_1.glb",
+   "styleClass": "curtain-cool",
+   "waveId": "w03",
+   "releaseId": "manhattan-southern-remainder-cells-20260812-c2"
+  },
+  {
+   "buildingId": "doitt:1001202",
+   "variant": "shed",
+   "lod0Ref": "public/assets/doitt-1001202__lod_0.glb",
+   "lod1Ref": "public/assets/doitt-1001202__lod_1.glb",
+   "styleClass": "masonry-light",
+   "waveId": "w03",
+   "releaseId": "manhattan-southern-remainder-cells-20260812-c2"
+  },
+  {
+   "buildingId": "doitt:107742",
+   "variant": "fallback",
+   "lod0Ref": "public/assets/doitt-107742__lod_0.glb",
+   "lod1Ref": "public/assets/doitt-107742__lod_1.glb",
+   "styleClass": "masonry-light",
+   "waveId": "w03",
+   "releaseId": "manhattan-southern-remainder-cells-20260812-c2"
+  },
+  {
+   "buildingId": "doitt:100144",
+   "variant": "shed",
+   "lod0Ref": "public/assets/doitt-100144__lod_0.glb",
+   "lod1Ref": "public/assets/doitt-100144__lod_1.glb",
+   "styleClass": "masonry-warm",
+   "waveId": "w03",
+   "releaseId": "manhattan-southern-remainder-cells-20260812-c2"
+  },
+  {
+   "buildingId": "doitt:100689",
+   "variant": "fallback",
+   "lod0Ref": "public/assets/doitt-100689__lod_0.glb",
+   "lod1Ref": "public/assets/doitt-100689__lod_1.glb",
+   "styleClass": "masonry-warm",
+   "waveId": "w03",
+   "releaseId": "manhattan-southern-remainder-cells-20260812-c2"
+  },
+  {
+   "buildingId": "doitt:100137",
+   "variant": "shed",
+   "lod0Ref": "public/assets/doitt-100137__lod_0.glb",
+   "lod1Ref": "public/assets/doitt-100137__lod_1.glb",
+   "styleClass": "stone-neutral",
+   "waveId": "w03",
+   "releaseId": "manhattan-southern-remainder-cells-20260812-c2"
+  },
+  {
+   "buildingId": "doitt:102229",
+   "variant": "fallback",
+   "lod0Ref": "public/assets/doitt-102229__lod_0.glb",
+   "lod1Ref": "public/assets/doitt-102229__lod_1.glb",
+   "styleClass": "stone-neutral",
+   "waveId": "w03",
+   "releaseId": "manhattan-southern-remainder-cells-20260812-c2"
+  },
+  {
+   "buildingId": "doitt:100749",
+   "variant": "shed",
+   "lod0Ref": "public/assets/doitt-100749__lod_0.glb",
+   "lod1Ref": "public/assets/doitt-100749__lod_1.glb",
+   "styleClass": "curtain-cool",
+   "waveId": "w04",
+   "releaseId": "manhattan-central-upper-manhattan-cells-20260812-c2"
+  },
+  {
+   "buildingId": "doitt:100176",
+   "variant": "shed",
+   "lod0Ref": "public/assets/doitt-100176__lod_0.glb",
+   "lod1Ref": "public/assets/doitt-100176__lod_1.glb",
+   "styleClass": "masonry-light",
+   "waveId": "w04",
+   "releaseId": "manhattan-central-upper-manhattan-cells-20260812-c2"
+  },
+  {
+   "buildingId": "doitt:1006135",
+   "variant": "shed",
+   "lod0Ref": "public/assets/doitt-1006135__lod_0.glb",
+   "lod1Ref": "public/assets/doitt-1006135__lod_1.glb",
+   "styleClass": "masonry-warm",
+   "waveId": "w04",
+   "releaseId": "manhattan-central-upper-manhattan-cells-20260812-c2"
+  },
+  {
+   "buildingId": "doitt:1304503",
+   "variant": "fallback",
+   "lod0Ref": "public/assets/doitt-1304503__lod_0.glb",
+   "lod1Ref": "public/assets/doitt-1304503__lod_1.glb",
+   "styleClass": "masonry-warm",
+   "waveId": "w04",
+   "releaseId": "manhattan-central-upper-manhattan-cells-20260812-c2"
+  },
+  {
+   "buildingId": "doitt:100465",
+   "variant": "shed",
+   "lod0Ref": "public/assets/doitt-100465__lod_0.glb",
+   "lod1Ref": "public/assets/doitt-100465__lod_1.glb",
+   "styleClass": "stone-neutral",
+   "waveId": "w04",
+   "releaseId": "manhattan-central-upper-manhattan-cells-20260812-c2"
+  },
+  {
+   "buildingId": "doitt:635886",
+   "variant": "fallback",
+   "lod0Ref": "public/assets/doitt-635886__lod_0.glb",
+   "lod1Ref": "public/assets/doitt-635886__lod_1.glb",
+   "styleClass": "stone-neutral",
+   "waveId": "w04",
+   "releaseId": "manhattan-central-upper-manhattan-cells-20260812-c2"
+  },
+  {
+   "buildingId": "doitt:1000984",
+   "variant": "shed",
+   "lod0Ref": "public/assets/doitt-1000984__lod_0.glb",
+   "lod1Ref": "public/assets/doitt-1000984__lod_1.glb",
+   "styleClass": "curtain-cool",
+   "waveId": "w05",
+   "releaseId": "manhattan-northern-manhattan-cells-20260812-c2"
+  },
+  {
+   "buildingId": "doitt:100274",
+   "variant": "shed",
+   "lod0Ref": "public/assets/doitt-100274__lod_0.glb",
+   "lod1Ref": "public/assets/doitt-100274__lod_1.glb",
+   "styleClass": "masonry-light",
+   "waveId": "w05",
+   "releaseId": "manhattan-northern-manhattan-cells-20260812-c2"
+  },
+  {
+   "buildingId": "doitt:1017295",
+   "variant": "fallback",
+   "lod0Ref": "public/assets/doitt-1017295__lod_0.glb",
+   "lod1Ref": "public/assets/doitt-1017295__lod_1.glb",
+   "styleClass": "masonry-light",
+   "waveId": "w05",
+   "releaseId": "manhattan-northern-manhattan-cells-20260812-c2"
+  },
+  {
+   "buildingId": "doitt:100082",
+   "variant": "shed",
+   "lod0Ref": "public/assets/doitt-100082__lod_0.glb",
+   "lod1Ref": "public/assets/doitt-100082__lod_1.glb",
+   "styleClass": "masonry-warm",
+   "waveId": "w05",
+   "releaseId": "manhattan-northern-manhattan-cells-20260812-c2"
+  },
+  {
+   "buildingId": "doitt:1009511",
+   "variant": "fallback",
+   "lod0Ref": "public/assets/doitt-1009511__lod_0.glb",
+   "lod1Ref": "public/assets/doitt-1009511__lod_1.glb",
+   "styleClass": "masonry-warm",
+   "waveId": "w05",
+   "releaseId": "manhattan-northern-manhattan-cells-20260812-c2"
+  },
+  {
+   "buildingId": "doitt:100192",
+   "variant": "shed",
+   "lod0Ref": "public/assets/doitt-100192__lod_0.glb",
+   "lod1Ref": "public/assets/doitt-100192__lod_1.glb",
+   "styleClass": "stone-neutral",
+   "waveId": "w05",
+   "releaseId": "manhattan-northern-manhattan-cells-20260812-c2"
+  },
+  {
+   "buildingId": "doitt:1042664",
+   "variant": "fallback",
+   "lod0Ref": "public/assets/doitt-1042664__lod_0.glb",
+   "lod1Ref": "public/assets/doitt-1042664__lod_1.glb",
+   "styleClass": "stone-neutral",
+   "waveId": "w05",
+   "releaseId": "manhattan-northern-manhattan-cells-20260812-c2"
+  }
+ ],
+ "availability": [
+  {
+   "waveId": "w00",
+   "styleClass": "curtain-cool",
+   "variant": "shed",
+   "populationSeen": 1,
+   "available": true
+  },
+  {
+   "waveId": "w00",
+   "styleClass": "curtain-cool",
+   "variant": "fallback",
+   "populationSeen": 0,
+   "available": false
+  },
+  {
+   "waveId": "w00",
+   "styleClass": "masonry-light",
+   "variant": "shed",
+   "populationSeen": 3,
+   "available": true
+  },
+  {
+   "waveId": "w00",
+   "styleClass": "masonry-light",
+   "variant": "fallback",
+   "populationSeen": 0,
+   "available": false
+  },
+  {
+   "waveId": "w00",
+   "styleClass": "masonry-warm",
+   "variant": "shed",
+   "populationSeen": 7,
+   "available": true
+  },
+  {
+   "waveId": "w00",
+   "styleClass": "masonry-warm",
+   "variant": "fallback",
+   "populationSeen": 0,
+   "available": false
+  },
+  {
+   "waveId": "w00",
+   "styleClass": "stone-neutral",
+   "variant": "shed",
+   "populationSeen": 3,
+   "available": true
+  },
+  {
+   "waveId": "w00",
+   "styleClass": "stone-neutral",
+   "variant": "fallback",
+   "populationSeen": 0,
+   "available": false
+  },
+  {
+   "waveId": "w01",
+   "styleClass": "curtain-cool",
+   "variant": "shed",
+   "populationSeen": 990,
+   "available": true
+  },
+  {
+   "waveId": "w01",
+   "styleClass": "curtain-cool",
+   "variant": "fallback",
+   "populationSeen": 0,
+   "available": false
+  },
+  {
+   "waveId": "w01",
+   "styleClass": "masonry-light",
+   "variant": "shed",
+   "populationSeen": 2161,
+   "available": true
+  },
+  {
+   "waveId": "w01",
+   "styleClass": "masonry-light",
+   "variant": "fallback",
+   "populationSeen": 0,
+   "available": false
+  },
+  {
+   "waveId": "w01",
+   "styleClass": "masonry-warm",
+   "variant": "shed",
+   "populationSeen": 2580,
+   "available": true
+  },
+  {
+   "waveId": "w01",
+   "styleClass": "masonry-warm",
+   "variant": "fallback",
+   "populationSeen": 3,
+   "available": true
+  },
+  {
+   "waveId": "w01",
+   "styleClass": "stone-neutral",
+   "variant": "shed",
+   "populationSeen": 1444,
+   "available": true
+  },
+  {
+   "waveId": "w01",
+   "styleClass": "stone-neutral",
+   "variant": "fallback",
+   "populationSeen": 1,
+   "available": true
+  },
+  {
+   "waveId": "w02",
+   "styleClass": "curtain-cool",
+   "variant": "shed",
+   "populationSeen": 45,
+   "available": true
+  },
+  {
+   "waveId": "w02",
+   "styleClass": "curtain-cool",
+   "variant": "fallback",
+   "populationSeen": 1,
+   "available": true
+  },
+  {
+   "waveId": "w02",
+   "styleClass": "masonry-light",
+   "variant": "shed",
+   "populationSeen": 115,
+   "available": true
+  },
+  {
+   "waveId": "w02",
+   "styleClass": "masonry-light",
+   "variant": "fallback",
+   "populationSeen": 1,
+   "available": true
+  },
+  {
+   "waveId": "w02",
+   "styleClass": "masonry-warm",
+   "variant": "shed",
+   "populationSeen": 114,
+   "available": true
+  },
+  {
+   "waveId": "w02",
+   "styleClass": "masonry-warm",
+   "variant": "fallback",
+   "populationSeen": 1,
+   "available": true
+  },
+  {
+   "waveId": "w02",
+   "styleClass": "stone-neutral",
+   "variant": "shed",
+   "populationSeen": 68,
+   "available": true
+  },
+  {
+   "waveId": "w02",
+   "styleClass": "stone-neutral",
+   "variant": "fallback",
+   "populationSeen": 1,
+   "available": true
+  },
+  {
+   "waveId": "w03",
+   "styleClass": "curtain-cool",
+   "variant": "shed",
+   "populationSeen": 61,
+   "available": true
+  },
+  {
+   "waveId": "w03",
+   "styleClass": "curtain-cool",
+   "variant": "fallback",
+   "populationSeen": 1,
+   "available": true
+  },
+  {
+   "waveId": "w03",
+   "styleClass": "masonry-light",
+   "variant": "shed",
+   "populationSeen": 136,
+   "available": true
+  },
+  {
+   "waveId": "w03",
+   "styleClass": "masonry-light",
+   "variant": "fallback",
+   "populationSeen": 4,
+   "available": true
+  },
+  {
+   "waveId": "w03",
+   "styleClass": "masonry-warm",
+   "variant": "shed",
+   "populationSeen": 143,
+   "available": true
+  },
+  {
+   "waveId": "w03",
+   "styleClass": "masonry-warm",
+   "variant": "fallback",
+   "populationSeen": 4,
+   "available": true
+  },
+  {
+   "waveId": "w03",
+   "styleClass": "stone-neutral",
+   "variant": "shed",
+   "populationSeen": 67,
+   "available": true
+  },
+  {
+   "waveId": "w03",
+   "styleClass": "stone-neutral",
+   "variant": "fallback",
+   "populationSeen": 2,
+   "available": true
+  },
+  {
+   "waveId": "w04",
+   "styleClass": "curtain-cool",
+   "variant": "shed",
+   "populationSeen": 1213,
+   "available": true
+  },
+  {
+   "waveId": "w04",
+   "styleClass": "curtain-cool",
+   "variant": "fallback",
+   "populationSeen": 0,
+   "available": false
+  },
+  {
+   "waveId": "w04",
+   "styleClass": "masonry-light",
+   "variant": "shed",
+   "populationSeen": 3728,
+   "available": true
+  },
+  {
+   "waveId": "w04",
+   "styleClass": "masonry-light",
+   "variant": "fallback",
+   "populationSeen": 0,
+   "available": false
+  },
+  {
+   "waveId": "w04",
+   "styleClass": "masonry-warm",
+   "variant": "shed",
+   "populationSeen": 4668,
+   "available": true
+  },
+  {
+   "waveId": "w04",
+   "styleClass": "masonry-warm",
+   "variant": "fallback",
+   "populationSeen": 2,
+   "available": true
+  },
+  {
+   "waveId": "w04",
+   "styleClass": "stone-neutral",
+   "variant": "shed",
+   "populationSeen": 2070,
+   "available": true
+  },
+  {
+   "waveId": "w04",
+   "styleClass": "stone-neutral",
+   "variant": "fallback",
+   "populationSeen": 1,
+   "available": true
+  },
+  {
+   "waveId": "w05",
+   "styleClass": "curtain-cool",
+   "variant": "shed",
+   "populationSeen": 882,
+   "available": true
+  },
+  {
+   "waveId": "w05",
+   "styleClass": "curtain-cool",
+   "variant": "fallback",
+   "populationSeen": 0,
+   "available": false
+  },
+  {
+   "waveId": "w05",
+   "styleClass": "masonry-light",
+   "variant": "shed",
+   "populationSeen": 3270,
+   "available": true
+  },
+  {
+   "waveId": "w05",
+   "styleClass": "masonry-light",
+   "variant": "fallback",
+   "populationSeen": 5,
+   "available": true
+  },
+  {
+   "waveId": "w05",
+   "styleClass": "masonry-warm",
+   "variant": "shed",
+   "populationSeen": 4261,
+   "available": true
+  },
+  {
+   "waveId": "w05",
+   "styleClass": "masonry-warm",
+   "variant": "fallback",
+   "populationSeen": 5,
+   "available": true
+  },
+  {
+   "waveId": "w05",
+   "styleClass": "stone-neutral",
+   "variant": "shed",
+   "populationSeen": 1745,
+   "available": true
+  },
+  {
+   "waveId": "w05",
+   "styleClass": "stone-neutral",
+   "variant": "fallback",
+   "populationSeen": 4,
+   "available": true
+  }
+ ],
+ "availableStrata": 39,
+ "contractedStrata": 48,
+ "notClaimedHere": [
+  "No still has been captured at the time this record is committed.",
+  "This is an APPEARANCE comparison between two levels of the same release. It is not geographic, architectural or performance acceptance, and it does not claim the tile is resolvable at mid ring — Stage 0 measured that it is not."
+ ]
+}

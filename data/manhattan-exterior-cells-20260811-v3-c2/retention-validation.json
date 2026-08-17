@@ -1,0 +1,40 @@
+{
+  "schemaVersion": "1.0",
+  "artifact": "retention-package-validation",
+  "ok": true,
+  "releaseId": "manhattan-exterior-cells-20260811-v3-c2",
+  "waveId": "w00",
+  "rootChecksumSha256": "5bcec4b7e531e4d7ca72c85968c9f5da71e8b3923fb7e4306d18845328ac968c",
+  "textureAdmission": {
+    "policy": "procedural-replay",
+    "source": "retention-root.json (checksum-pinned; not operator-supplied)"
+  },
+  "declaredCellCount": 1,
+  "validatedCellCount": 1,
+  "assets": 14,
+  "artifacts": 33,
+  "packagedBuildingCount": 14,
+  "silhouetteRecords": 14,
+  "lod1FallbackCount": 0,
+  "totalBytes": 10402453,
+  "tombstones": {
+    "ownedBuildingCount": 14,
+    "generatedBuildingCount": 14,
+    "tombstonedBuildingCount": 0
+  },
+  "inventoryAccounting": {
+    "cellManifestCount": 1,
+    "fileCount": 35,
+    "byteSize": 10462188
+  },
+  "completenessSources": [
+    "payload-inventory",
+    "wave-census"
+  ],
+  "cellFingerprints": [
+    {
+      "cellId": "manhattan-exterior-cell-w00-000000-block-00835",
+      "fingerprintSha256": "888fd88d7bc417780b20e5194d29e3281fbea4809348f464dfda78d5281ebe7b"
+    }
+  ]
+}

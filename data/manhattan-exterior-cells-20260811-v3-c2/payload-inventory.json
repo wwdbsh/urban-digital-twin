@@ -1,0 +1,224 @@
+{
+  "schemaVersion": "1.0",
+  "releaseId": "manhattan-exterior-cells-20260811-v3-c2",
+  "waveId": "w00",
+  "payloadDirectory": "public/data/manhattan-exterior-cells-20260811-v3-c2",
+  "note": "Textured-lod_1 successor of the -c1 retention wave. lod_0 is COPIED from -c1 and verified byte for byte; lod_1 is re-emitted with the shared-class tile bound and lod_0's continuous tint palette. Payload is gitignored and LOCAL ONLY; nothing is served, published or conveyed.",
+  "base": {
+    "releaseId": "manhattan-citywide-20260804",
+    "manifestChecksumSha256": "65e8fbeee3b10cc8ae1f4fef59373bad3fbc6e5d30cb68fe57a326532089f673"
+  },
+  "parentLedger": {
+    "releaseId": "manhattan-exterior-wave-ledger-20260804",
+    "checksumSha256": "62e093d2ca50b54b49fd8bbad9d0b11f6301b2b197623deb343f9ea915e59016"
+  },
+  "predecessorReleaseId": "manhattan-exterior-cells-20260811-v3-c1",
+  "predecessorRetentionRoot": {
+    "rootId": "root:manhattan-exterior-cells-20260811-v3-c1:retention",
+    "rootChecksumSha256": "a4b6d0646e642e361d05f0d7f586f32d4851094d1fec6e88a5fafd1e985a7c26"
+  },
+  "glbReleaseIdentity": {
+    "releaseId": "manhattan-exterior-cells-20260811-v3-c1",
+    "why": "Every GLB embeds inventoryId and evidenceShardId derived from the EMISSION profile's releaseId. lod_0 is copied from -c1, so both levels must carry the -c1 identity or the assembly replay's field-for-field comparison would fail. -c2 is the identity of this release WRAPPER only."
+  },
+  "retentionRoot": {
+    "rootId": "root:manhattan-exterior-cells-20260811-v3-c2:retention",
+    "rootChecksumSha256": "5bcec4b7e531e4d7ca72c85968c9f5da71e8b3923fb7e4306d18845328ac968c"
+  },
+  "textureAdmission": {
+    "policy": "procedural-replay",
+    "generatedTextureFact": {
+      "basis": "generated-texture",
+      "profile": "procedural-texture-v1",
+      "gate": "rasterizer-replay",
+      "evidenceBasis": null,
+      "samplerFilter": {
+        "magFilter": 9729,
+        "minFilter": 9987
+      },
+      "statement": "Facade detail tiles in this retention package are four grayscale, pattern-only motifs generated from named constants in this repository and delivered by shared URI. They carry luminance modulation and no colour, cite no evidence record, and reproduce no photograph: the retention validator re-rasterizes the catalogue and requires byte equality with every declared tile, so a tile derived from an image cannot pass. No tile asserts the material, colour, age, or condition of any real building."
+    }
+  },
+  "cellManifestCount": 1,
+  "totals": {
+    "fileCount": 35,
+    "byteSize": 10462188
+  },
+  "files": [
+    {
+      "path": "public/assemblies/manhattan-exterior-cell-w00-000000-block-00835.json",
+      "byteSize": 57108,
+      "checksumSha256": "a1fee6820a0a0d7b573b30b187015a016f8b1f010f8d57d91d00f7b6de59cf86"
+    },
+    {
+      "path": "public/assets/doitt-102705__lod_0.glb",
+      "byteSize": 65400,
+      "checksumSha256": "1a0ba200db92705c56ffbada800a28aa68af5a158c1b5241a44db1d9534c5ee6"
+    },
+    {
+      "path": "public/assets/doitt-102705__lod_1.glb",
+      "byteSize": 31528,
+      "checksumSha256": "c4e26cc2021eaba920607d7ab31f33be4c4488ce2116289f2797f0470cb84607"
+    },
+    {
+      "path": "public/assets/doitt-131170__lod_0.glb",
+      "byteSize": 853320,
+      "checksumSha256": "c1be5a68bc0e9e630eaeac2722b443c8ac66d82b75a8bd8f6ab86336fead4980"
+    },
+    {
+      "path": "public/assets/doitt-131170__lod_1.glb",
+      "byteSize": 338108,
+      "checksumSha256": "e3c5e9914167c3bb13da964d0ccfe5b1584b62a177f10e45db42407e921114ff"
+    },
+    {
+      "path": "public/assets/doitt-147902__lod_0.glb",
+      "byteSize": 111304,
+      "checksumSha256": "d79467b2299bf407f9efeb505b28b2ab0b5a2c1c4892e3b651ef44d26e967739"
+    },
+    {
+      "path": "public/assets/doitt-147902__lod_1.glb",
+      "byteSize": 49344,
+      "checksumSha256": "da92b1fff0248bac08fce9eff6172fcb190f7d995311698dcd9cc44998883af1"
+    },
+    {
+      "path": "public/assets/doitt-262867__lod_0.glb",
+      "byteSize": 40580,
+      "checksumSha256": "267f05f27810c6122ca5849ede70e608f51a38b54779acb4795ec191f1ce3549"
+    },
+    {
+      "path": "public/assets/doitt-262867__lod_1.glb",
+      "byteSize": 21876,
+      "checksumSha256": "7fece498caf952ecdbeb75c3a55ed63b66ba16fb880430db5c4e0812faa51b08"
+    },
+    {
+      "path": "public/assets/doitt-39969__lod_0.glb",
+      "byteSize": 112256,
+      "checksumSha256": "d5a31a0b98d340ae3c433258e81ba9d08605d0fdba05cd67e531c43023df8d97"
+    },
+    {
+      "path": "public/assets/doitt-39969__lod_1.glb",
+      "byteSize": 49464,
+      "checksumSha256": "f53979ab21913582a22b00f881b11c4bd75a54bf426426da4e78ac1dae440e3b"
+    },
+    {
+      "path": "public/assets/doitt-460555__lod_0.glb",
+      "byteSize": 90364,
+      "checksumSha256": "aa5c448e06f4d23ef682469caabff4df9b6845863170feb9099b843774f3c0d7"
+    },
+    {
+      "path": "public/assets/doitt-460555__lod_1.glb",
+      "byteSize": 43380,
+      "checksumSha256": "66a2ee2e39511af9ae6319d771a092ea1634cd2bb1a2cbdd610a42091d2f0d6a"
+    },
+    {
+      "path": "public/assets/doitt-498980__lod_0.glb",
+      "byteSize": 69112,
+      "checksumSha256": "4235f285a504cdd2e990a15cc870122346ac6da2ae0cf3724168e3723f4f7032"
+    },
+    {
+      "path": "public/assets/doitt-498980__lod_1.glb",
+      "byteSize": 29880,
+      "checksumSha256": "16521325eadc2048fa7988d85cef3058c5938250ee997ed37aa2151ece148b20"
+    },
+    {
+      "path": "public/assets/doitt-502491__lod_0.glb",
+      "byteSize": 74556,
+      "checksumSha256": "51518ad60bbb20ad26a9f8282c6f56caacee422cd2f1432cce6a00ddca8a8a76"
+    },
+    {
+      "path": "public/assets/doitt-502491__lod_1.glb",
+      "byteSize": 34232,
+      "checksumSha256": "9b0951c7c9fb5c70a14988a72471be69d3f403ad8b3f28e0479ce2b0b3a358b3"
+    },
+    {
+      "path": "public/assets/doitt-584049__lod_0.glb",
+      "byteSize": 104536,
+      "checksumSha256": "5f2d883a9d5b5743f921a8db6b0ad9bda7d93377e512cea80778f394b6e40f36"
+    },
+    {
+      "path": "public/assets/doitt-584049__lod_1.glb",
+      "byteSize": 46312,
+      "checksumSha256": "516185600aa973414b7c370e556a5c615cdbe012d369095c2e7143670e252b02"
+    },
+    {
+      "path": "public/assets/doitt-778052__lod_0.glb",
+      "byteSize": 5364352,
+      "checksumSha256": "57cdb76b7fc16c0868040c1169ff7a3682314998e455ee47f5720c06f4aa98f6"
+    },
+    {
+      "path": "public/assets/doitt-778052__lod_1.glb",
+      "byteSize": 1881816,
+      "checksumSha256": "d4ce282c0b0e224cc4a64ed4b05ba2f9f04bafb1bf750b21d68db34137e5fdb2"
+    },
+    {
+      "path": "public/assets/doitt-812702__lod_0.glb",
+      "byteSize": 75236,
+      "checksumSha256": "c82065c9a02f59e0600885494464a8cbdf49c35a8b2299b624f08a78a051ec5b"
+    },
+    {
+      "path": "public/assets/doitt-812702__lod_1.glb",
+      "byteSize": 36788,
+      "checksumSha256": "82a2632203726d10f7808faa3fa12bea11bbba1d291a949b962b17f4a840e9c7"
+    },
+    {
+      "path": "public/assets/doitt-835659__lod_0.glb",
+      "byteSize": 75612,
+      "checksumSha256": "8b1801f1bf0bf4367279c1a5c03811c815f5febc112ea78bfcf9c7a3452db559"
+    },
+    {
+      "path": "public/assets/doitt-835659__lod_1.glb",
+      "byteSize": 32832,
+      "checksumSha256": "1e1b7bad761ba6602f763090a3678a785d866188d8b0165564e9043f29547543"
+    },
+    {
+      "path": "public/assets/doitt-925937__lod_0.glb",
+      "byteSize": 72072,
+      "checksumSha256": "fc1c74a7098a4cd7b982b088a6b9dc7def2d1d6796ad22f33a05efb8b2997add"
+    },
+    {
+      "path": "public/assets/doitt-925937__lod_1.glb",
+      "byteSize": 33648,
+      "checksumSha256": "aa5ea88c7a1cf220c48219e1b9d272ded938a3b9623cb2c4967fdbbd4b3d050c"
+    },
+    {
+      "path": "public/assets/doitt-982383__lod_0.glb",
+      "byteSize": 424400,
+      "checksumSha256": "1dba3d8498e5a76c36bcbf96b001d31655c5260320f120c4a3a73f87fb4883d4"
+    },
+    {
+      "path": "public/assets/doitt-982383__lod_1.glb",
+      "byteSize": 164208,
+      "checksumSha256": "63f22476186ef3d6dab8840ddb69d7b8853d62c2709eb70116e0add32893b3bb"
+    },
+    {
+      "path": "public/textures/brick-running-bond.png",
+      "byteSize": 16580,
+      "checksumSha256": "fdd4c9c8238518b021a09211b380a8844bcee92cbc239f33463c7b79f4ecd519"
+    },
+    {
+      "path": "public/textures/curtain-mullion-grid.png",
+      "byteSize": 16580,
+      "checksumSha256": "9be8020e193fd4dafda5db973e51e11893a5e7cd55d9d63ac397caced4beeb50"
+    },
+    {
+      "path": "public/textures/limestone-ashlar.png",
+      "byteSize": 16580,
+      "checksumSha256": "a177e50fade043f0f868a7a262f6e04b959375fb6cbb47cbdfbb27aee22794f8"
+    },
+    {
+      "path": "public/textures/spandrel-panel.png",
+      "byteSize": 16580,
+      "checksumSha256": "abd89e470989ba02472c2df7b029f257747452b2df794742347ed802849f8936"
+    },
+    {
+      "path": "public/tiles/manhattan-exterior-cell-w00-000000-block-00835/tileset.json",
+      "byteSize": 9617,
+      "checksumSha256": "56d905815f68699b83c040a70f7cc31c12022bc1983778fbe2cf046086d1d511"
+    },
+    {
+      "path": "retention-root.json",
+      "byteSize": 2627,
+      "checksumSha256": "a5a2dd864e12554f2d9783cee048158d7bae2cc42fa931362f4a6c7462b58cc5"
+    }
+  ]
+}

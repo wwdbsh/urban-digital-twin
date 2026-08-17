@@ -141,6 +141,16 @@ export interface V3WaveProfile {
    * That is the committed Block 835 `-v3t` decision, carried here unchanged.
    */
   texture: ProceduralTextureProfile | null;
+  /**
+   * WHICH LEVELS the detail tile binds to.
+   *
+   * OPTIONAL, and absent means `lod-0-only` — which is what every frozen wave
+   * was emitted under, so an existing profile is byte-unchanged by this field
+   * existing. `both` also textures LOD 1; see the seam in
+   * `writeMidtownCoreV3Assets` for why that is a TONE decision rather than a
+   * detail one.
+   */
+  textureLevels?: "lod-0-only" | "both";
   /** Decided sampler filtering for this wave's detail tiles, when textured. */
   textureFilter?: CanonicalGlbSamplerFilter;
   /**
@@ -917,10 +927,32 @@ export function writeMidtownCoreV3Assets(
         `${lodId} signed mesh volume ${meshVolume} m³ against analytic ${analyticVolume} m³ (deviation ${volumeDeviation}).`,
       );
     }
-    // Detail tiles ride on LOD 0 alone: LOD 1 is selected beyond 250 m, where a
-    // 128-pixel joint is far below a screen pixel. A texture-free profile passes
-    // null at both levels and emits exactly the bytes it always did.
-    const texture = lodIndex === 0 ? profile.texture : null;
+    // WHICH LEVELS CARRY THE DETAIL TILE.
+    //
+    // `lod-0-only` is what every frozen wave was emitted under and is the
+    // default, so a profile that does not ask changes nothing: a texture-free
+    // profile still passes null at both levels and emits exactly the bytes it
+    // always did, and a textured one still binds at LOD 0 alone.
+    //
+    // The original rationale is retained because it is CORRECT and was measured:
+    // LOD 1 is selected beyond 250 m, where a 128-pixel joint is far below a
+    // screen pixel — at 350 m one screen pixel spans 12.8 to 44.9 texels
+    // (T009 `render-comparison.json`). Texturing LOD 1 buys no DETAIL at range.
+    //
+    // What that rationale did not account for is TONE. Dropping the tile also
+    // drops its mean darkening (the four tile means are 0.8387 to 0.8894), and
+    // nothing re-tinted LOD 1 to compensate, so an untextured LOD 1 renders 11
+    // to 16 percent brighter than the same surface at LOD 0. That discontinuity
+    // is the visible defect, and `both` exists to close it by construction: the
+    // same tile on the same UVs against the same continuous tint reproduces LOD
+    // 0's rendered appearance at LOD 1.
+    //
+    // T009 is emitting `both` on an explicit user decision recorded in
+    // `data/lod1-texturing-20260817/stage0-gate.json`, over this stage's own
+    // recommendation to reconcile the tone alone. Both readings are on the
+    // record; neither is retracted.
+    const textureLevels = profile.textureLevels ?? "lod-0-only";
+    const texture = textureLevels === "both" || lodIndex === 0 ? profile.texture : null;
     const file = v3GeometryForGlb(plan, tessellation, {
       yUp: true,
       texture,

@@ -1,0 +1,51 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "lod1-texturing-20260817:fallback-count-reconciliation",
+  "task": "T009",
+  "stage": "0",
+  "artifact": "fallback-count-reconciliation",
+  "computedAt": "2026-08-17T10:56:56.233Z",
+  "question": "Three committed figures disagree about how many island buildings emit FULL GEOMETRY at lod_1: stage0-gate.lod1Contract.islandFallbackBuildings = 425, coverage.lod1.islandFallbackCount = 424, and the per-wave census sum = 424. T009 must not inherit an unexplained number.",
+  "finding": "THEY ARE TWO DIFFERENT QUANTITIES, and the difference is exactly one named building.",
+  "the425": {
+    "value": 425,
+    "jsonPath": "data/mass-generation-20260816/stage0-gate.json -> lod1Contract.islandFallbackBuildings",
+    "source": "data/mass-generation-20260816/stage0-island-silhouette.json -> overCap.count (the exhaustive pass, 425 buildings enumerated individually)",
+    "computedBy": "scripts/mass-generation-stage0-cli.mjs:966 -> island.overCap.count",
+    "predicate": "midtownCoreV3SilhouetteMeasurement(plan).deviationRatio >= MIDTOWN_CORE_V3_SILHOUETTE_MAXIMUM_RATIO (0.02), evaluated at scripts/mass-generation-stage0-cli.mjs:699 over every owned parent the envelope PLANS successfully.",
+    "stage": "PLAN STAGE. It counts buildings whose planned silhouette deviation is over the cap, BEFORE any emission was attempted.",
+    "population": "measured = 45,032 successfully planned owned parents (stage0-island-silhouette.json -> population), of an enumerated 45,194."
+  },
+  "the424": {
+    "value": 424,
+    "jsonPath": "data/mass-generation-20260816/coverage.json -> lod1.islandFallbackCount",
+    "computedBy": "scripts/mass-generation-coverage-cli.mjs:232 summing wave-census.lod1FallbackCount over the six waves",
+    "underlyingPredicate": "src/release/midtown-core-v3-source.ts:311 -> if (written.lod1.variant === \"full-geometry\") lod1FallbackCount += 1",
+    "stage": "EMITTED REALITY. It counts buildings whose lod_1 was actually WRITTEN as full geometry.",
+    "population": "44,989 emitted buildings.",
+    "independentlyRecomputed": "This stage re-derived it from the six committed wave-census.json lod1Decisions arrays: variant \"full-geometry\" = 424, variant \"shed-protrusions\" = 44,565, total 44,989."
+  },
+  "symmetricDifference": {
+    "in425NotIn424": [
+      "doitt:263078"
+    ],
+    "in424NotIn425": [],
+    "direction": "The 424 set is a strict SUBSET of the 425 set. Nothing is emitted as a fallback that was not planned as one.",
+    "namedBuilding": {
+      "buildingId": "doitt:263078",
+      "wave": "w03 / manhattan-southern-remainder-cells-20260812-c1",
+      "ownerCellId": "manhattan-exterior-cell-w03-000339-17-38597-35877",
+      "plannedDeviationRatio": 0.026699150508540343,
+      "overTheCap": true,
+      "whyItIsNotInThe424": "IT WAS NEVER EMITTED. It is tombstoned in its wave census with stopCode \"volume-identity-failed\": lod_0 signed mesh volume 842.7984934669256 m3 against analytic 842.7974240279999 m3, deviation 0.000001268915750342109. A building refused at emission contributes to no emitted count.",
+      "evidence": "data/manhattan-southern-remainder-cells-20260812-c1/wave-census.json -> tombstones[], entry buildingId doitt:263078"
+    }
+  },
+  "arithmeticCheck": "45,032 planned - 44,989 emitted = 43 buildings planned but not emitted (205 tombstones exist across the six waves; the remainder were never planned or are owned by no wave). Exactly ONE of those 43 was over the cap, which is the whole of the 425 - 424 = 1 gap.",
+  "whichNumberT009ShouldUse": {
+    "value": 424,
+    "reason": "T009 re-emits the RETAINED SET. The population it acts on is the 44,989 buildings that exist as bytes, and 424 of them carry a full-geometry lod_1. 425 is a plan-stage count over a population that includes a building T009 will never touch, because no bytes for it exist."
+  },
+  "notInheritedNote": "Neither committed figure is wrong. The defect was that the two were quoted side by side as if they were the same quantity. They are labelled here instead of one being corrected.",
+  "claim": "A reconciliation of the 425/424 fallback-count discrepancy, resolved to one named tombstoned building with the predicate and stage of each figure identified."
+}

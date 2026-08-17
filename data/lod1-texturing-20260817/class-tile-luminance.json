@@ -1,0 +1,53 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "lod1-texturing-20260817:class-tile-luminance",
+  "task": "T009",
+  "stage": "0",
+  "artifact": "class-tile-luminance",
+  "computedAt": "2026-08-17T10:51:52.478Z",
+  "method": "The shipped rasterizer `rasterizeProceduralTexture` is CALLED, not re-implemented, so this reading cannot drift from the tiles the emission path actually binds. The tiles are grayscale; the mean below is the mean texel over the whole tile.",
+  "rows": [
+    {
+      "textureClass": "brick-running-bond",
+      "tilePixels": 128,
+      "texelCount": 16384,
+      "meanTexel": 213.857788,
+      "meanNormalized": 0.838657992,
+      "minTexel": 179,
+      "maxTexel": 250,
+      "darkeningStatement": "A surface bound to this tile renders, on average, at 0.838658 x its baseColorFactor. An untextured surface renders at 1.0 x it."
+    },
+    {
+      "textureClass": "limestone-ashlar",
+      "tilePixels": 128,
+      "texelCount": 16384,
+      "meanTexel": 225.34906,
+      "meanNormalized": 0.883721804,
+      "minTexel": 154,
+      "maxTexel": 244,
+      "darkeningStatement": "A surface bound to this tile renders, on average, at 0.883722 x its baseColorFactor. An untextured surface renders at 1.0 x it."
+    },
+    {
+      "textureClass": "curtain-mullion-grid",
+      "tilePixels": 128,
+      "texelCount": 16384,
+      "meanTexel": 226.788879,
+      "meanNormalized": 0.889368154,
+      "minTexel": 125,
+      "maxTexel": 248,
+      "darkeningStatement": "A surface bound to this tile renders, on average, at 0.889368 x its baseColorFactor. An untextured surface renders at 1.0 x it."
+    },
+    {
+      "textureClass": "spandrel-panel",
+      "tilePixels": 128,
+      "texelCount": 16384,
+      "meanTexel": 226.412231,
+      "meanNormalized": 0.887891104,
+      "minTexel": 144,
+      "maxTexel": 244,
+      "darkeningStatement": "A surface bound to this tile renders, on average, at 0.887891 x its baseColorFactor. An untextured surface renders at 1.0 x it."
+    }
+  ],
+  "claim": "The mean texel of each shared class tile, which is the factor by which binding that tile darkens a surface relative to the same baseColorFactor untextured. It is arithmetic over the shipped rasterizer's own output and it is not a rendering.",
+  "whyItMatters": "glTF renders a base-colour-textured surface at baseColorFactor x texel. So `lod_0` textured tone ~= factor_lod0 x tileMean, and `lod_1` untextured tone = factor_lod1. Whether the two palettes already agree is decidable from these numbers plus the measured factors, without rendering anything."
+}
