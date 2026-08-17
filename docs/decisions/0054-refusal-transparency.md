@@ -103,6 +103,13 @@ Nothing is hidden and nothing arm-dependent is asserted. J7 captures the same
 building in both arms and checks the asserted sentence is byte-identical between
 them while the quotation still carries the clause.
 
+The doubled period some reasons contain (`…area floor.. No geometry…`) is
+upstream, produced by the generator joining a detail that already ends in a full
+stop to the following sentence; it is deliberately **not** cleaned up here,
+because the panel's contract is that the quotation is byte-identical to what the
+release recorded, and silently tidying punctuation is the first step toward
+tidying wording.
+
 ### D-4 — The notice half of criterion #9 needs no change, and here is why
 
 Measured, not assumed: **zero of the 883 cells across all six serving waves is

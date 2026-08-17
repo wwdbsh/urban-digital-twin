@@ -59,7 +59,7 @@ import { TRAVEL_CONTEXT_BUDGETS, TRAVEL_CONTEXT_RELEASE_ID, TRAVEL_CONTEXT_TILE_
 import { AggregateRequestBudget, ComposedReleaseAdapter, type ComposedReleaseMetrics } from "../runtime/composed-release-runtime";
 import { EXTERIOR_PILOT_RELEASE_ID, createExteriorPilotFaultFetcher, loadExteriorPilotRelease, parseExteriorPilotFault, type CommercialStorefrontPlacement, type LoadedExteriorPilotRelease } from "../runtime/exterior-pilot-release";
 import { BLOCK835_PUBLIC_REALM_RELEASE_ID, createBlock835PublicRealmFaultFetcher, loadBlock835PublicRealmRelease, parseBlock835PublicRealmFault, publicRealmFeatureToFeature, type Block835PublicRealmFeature, type LoadedBlock835PublicRealmRelease } from "../runtime/block835-public-realm-release";
-import { EXTERIOR_RUNTIME_BUDGETS, exteriorOutcomeCacheKeys, exteriorRefusalStatement, exteriorRefusalStopCode, loadExteriorCellRuntime, type ExteriorCellOutcome, type ExteriorCellRuntime, type ExteriorHeadRequest, type ExteriorRefusedBuilding } from "../runtime/exterior-cell-runtime";
+import { EXTERIOR_RUNTIME_BUDGETS, exteriorOutcomeCacheKeys, exteriorRefusalRawStopCode, exteriorRefusalStatement, exteriorRefusalStopCode, loadExteriorCellRuntime, type ExteriorCellOutcome, type ExteriorCellRuntime, type ExteriorHeadRequest, type ExteriorRefusedBuilding } from "../runtime/exterior-cell-runtime";
 import { EXTERIOR_T1_RELEASE_IDS } from "../release/exterior-t1-variants";
 import { PROBE_MIP_CHAIN_MULTIPLIER, PROBE_TILE_WIRE_BYTES, baseLevelByteLength, predictedTextureByteLength } from "../features/explorer/gpu-texture-probe";
 import { cesiumGpuTextureReading, cesiumVersion } from "../features/explorer/cesium-resource-cache";
@@ -1229,13 +1229,36 @@ export interface ExteriorSelectionSource {
  * precisely the selections this row exists to explain.
  */
 export function ExteriorSelectedFeatureDetail({ selectedId, runtimes }: { selectedId: string | null; runtimes: readonly ExteriorSelectionSource[] }) {
-  const refusal = selectedId
+  /*
+    AVAILABILITY IS CHECKED FIRST, and the order is the decision.
+
+    A building is refused PER WAVE. Nothing in the release shape forbids one
+    wave tombstoning a building that another wave ships — the waves partition
+    the island by cell, but a building sitting on a wave boundary could in
+    principle be claimed by both. If that ever happens, the two answers
+    disagree, and this component has to pick one.
+
+    It picks the RECOVERABLE one. Telling a user "move closer" about a building
+    that some wave will actually draw is a recoverable error: they move closer
+    and see it. Telling them "refused, approaching will never help" about a
+    building that is on screen in another wave is not recoverable — it is the
+    app asserting a permanent absence that is false, which is the exact failure
+    this feature exists to remove.
+
+    The payload-gated test asserts the overlap is EMPTY across all six shipped
+    waves today, so this ordering currently changes no rendered answer. It is
+    here so that if a future re-cut introduces an overlap, the panel degrades
+    toward the truthful direction rather than the confident one.
+  */
+  const declaredSomewhere = selectedId !== null && runtimes.some((runtime) => exteriorSortedIdsInclude(runtime.promotedBuildingIds(), selectedId));
+
+  const refusal = selectedId && !declaredSomewhere
     ? runtimes.reduce<ExteriorRefusedBuilding | null>((found, runtime) => found ?? runtime.refusedBuilding(selectedId), null)
     : null;
 
   if (refusal) {
     const stopCode = exteriorRefusalStopCode(refusal.reason);
-    const rawCode = /\[([a-z0-9-]+)\]/u.exec(refusal.reason)?.[1] ?? null;
+    const rawCode = exteriorRefusalRawStopCode(refusal.reason);
     return <div data-exterior-refusal data-exterior-stop-code={stopCode ?? "unrecognized"}>
       <dt>Selected feature</dt>
       <dd>
@@ -1259,7 +1282,6 @@ export function ExteriorSelectedFeatureDetail({ selectedId, runtimes }: { select
     </div>;
   }
 
-  const declaredSomewhere = selectedId !== null && runtimes.some((runtime) => exteriorSortedIdsInclude(runtime.promotedBuildingIds(), selectedId));
   if (declaredSomewhere) {
     return <div data-exterior-not-resident>
       <dt>Selected feature</dt>

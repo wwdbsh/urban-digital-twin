@@ -705,6 +705,32 @@ describe("exterior bounded availability", () => {
     expect(runtime.refusedBuildings()).toBe(refused);
   });
 
+  /**
+   * THE BINARY SEARCH'S PRECONDITION, pinned at the source.
+   *
+   * `App.tsx` decides refused-versus-not-resident with a BINARY SEARCH over
+   * `promotedBuildingIds()`, which is only correct if the array is sorted. The
+   * accessor sorts today, and its docblock explains why — but the sort exists
+   * for the identity digest, not for this search, so nothing else would notice
+   * if it went away. The symptom would be a shipped building rendered as
+   * REFUSED, for some ids only. This is the assertion that fails first instead.
+   */
+  it("returns promoted building ids in sorted order, which the panel's binary search requires", async () => {
+    // The INTACT fixture: tombstoning c2 leaves a single available building,
+    // and one element is sorted no matter what the accessor does, so it could
+    // not detect the regression this test exists for.
+    const { runtime } = await runtimeFor(await exteriorCellFixture());
+
+    const ids = runtime.promotedBuildingIds();
+    expect(ids.length).toBeGreaterThan(1);
+    expect([...ids]).toEqual([...ids].sort());
+    // The order is not merely non-decreasing by luck of insertion: it must
+    // survive being compared against a deliberately shuffled copy.
+    const shuffled = [...ids].reverse();
+    expect(ids).not.toEqual(shuffled);
+    expect([...shuffled].sort()).toEqual([...ids]);
+  });
+
   it("indexes ONLY refusals, and reports null for an available building", async () => {
     const fixture = await exteriorCellFixture();
     tombstoneC2(fixture);

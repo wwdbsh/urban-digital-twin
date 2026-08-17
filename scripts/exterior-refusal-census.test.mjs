@@ -123,6 +123,59 @@ function filesystemFetcher(releaseId) {
  * screenshot would look fine, which is exactly the sort of evidence that is
  * worse than none. Every field is therefore re-read from the shipped graph.
  */
+/**
+ * The identity half of the subject check, WITHOUT the payloads.
+ *
+ * The `-c1` wave censuses are committed, so a checkout with no `public/data`
+ * symlinks can still prove that every pre-registered subject is a real refused
+ * building with the stop code J7 claims for it. Only the cell/bounds half needs
+ * the serving graphs, and that stays gated below. Splitting the check this way
+ * means the invented-identifier failure mode is caught everywhere, not just on
+ * a machine that happens to have the payload trees.
+ */
+describe("J7 pre-registered subjects are real refusals in the committed censuses", () => {
+  const tombstoneByBuildingId = new Map();
+  for (const { record } of censuses) {
+    for (const row of record.tombstones) tombstoneByBuildingId.set(row.buildingId, { row, releaseId: record.releaseId });
+  }
+
+  /**
+   * The JSDOM fixture's identifiers, checked against the pre-registered subject.
+   *
+   * Checked HERE, on the component test's source text, rather than by importing
+   * the subjects into the `.tsx`: that file is type-checked and the constants
+   * module is untyped `.mjs`, so the import fails `tsc` with TS7016. Reading the
+   * source is the same guard without dragging a `declare module` shim or an
+   * `allowJs` flag into the build for one assertion.
+   *
+   * It exists because the fixture's cell id WAS invented once, and a component
+   * test with a plausible-but-fictional cell id still passes.
+   */
+  it("keeps the JSDOM fixture's identifiers equal to the pre-registered subject", () => {
+    const source = readFileSync("src/app/ExteriorSelectedFeatureDetail.test.tsx", "utf8");
+    const subject = REFUSAL_SUBJECTS[0];
+    expect(source).toContain(`buildingId: "${subject.buildingId}"`);
+    expect(source).toContain(`cellId: "${subject.cellId}"`);
+    expect(source).toContain(`tombstoneId: "${subject.tombstoneId}"`);
+    expect(source).toContain(`releaseId: "${subject.releaseId}"`);
+  });
+
+  it("names one real tombstoned building per stop code", () => {
+    const codes = new Set();
+    for (const subject of REFUSAL_SUBJECTS) {
+      const found = tombstoneByBuildingId.get(subject.buildingId);
+      expect(found, `${subject.buildingId} is not tombstoned in any committed census`).toBeDefined();
+      expect(found.row.stopCode, subject.buildingId).toBe(subject.stopCode);
+      expect(exteriorRefusalStopCode(found.row.reason), subject.buildingId).toBe(subject.stopCode);
+      expect(found.row.reason.trim().length, subject.buildingId).toBeGreaterThan(0);
+      codes.add(subject.stopCode);
+    }
+    // Every branch of the closed vocabulary exercised, none twice.
+    expect(codes.size).toBe(REFUSAL_SUBJECTS.length);
+    expect([...codes].sort()).toEqual([...EXTERIOR_REFUSAL_STOP_CODES].sort());
+  });
+});
+
 describe.skipIf(!payloadsPresent)("J7 pre-registered subjects exist in the serving graphs as declared", () => {
   it("names one real refused building per stop code, with the right cell, release and tombstone", () => {
     const codes = new Set();
@@ -157,6 +210,9 @@ describe.skipIf(!payloadsPresent)("the refusal accessor over the real serving gr
   it("indexes all 205 refusals across the six promoted waves, with non-empty reasons", async () => {
     let total = 0;
     const codes = new Set();
+    /** buildingId -> releases that refuse it / declare it available. */
+    const refusedIn = new Map();
+    const availableIn = new Map();
     for (const releaseId of SERVING_RELEASES) {
       const { runtime } = await loadExteriorCellRuntime(`/data/${releaseId}/`, {
         fetcher: filesystemFetcher(releaseId),
@@ -176,9 +232,35 @@ describe.skipIf(!payloadsPresent)("the refusal accessor over the real serving gr
         expect(exteriorRefusalStatement(entry.reason)).not.toContain("base massing");
       }
       // Refusals and shipped buildings stay disjoint in the real graphs too.
-      for (const buildingId of refused.keys()) expect(runtime.promotedBuildingIds()).not.toContain(buildingId);
+      const promoted = runtime.promotedBuildingIds();
+      for (const buildingId of refused.keys()) expect(promoted).not.toContain(buildingId);
+
+      // ADR 0054 D-4's premise: NO cell in any serving wave is fully
+      // tombstoned, which is why the not-shipped coverage sentence is never
+      // produced on the shipped default and why no coverage string is currently
+      // false. If a future wave ships an empty cell, that argument stops
+      // holding and this fails rather than the ADR quietly going stale.
+      expect(runtime.declaredNotShippedCellCount(), releaseId).toBe(0);
+
+      for (const buildingId of refused.keys()) {
+        refusedIn.set(buildingId, [...(refusedIn.get(buildingId) ?? []), releaseId]);
+      }
+      for (const buildingId of promoted) {
+        availableIn.set(buildingId, [...(availableIn.get(buildingId) ?? []), releaseId]);
+      }
     }
     expect(total).toBe(ISLAND_WIDE_TOMBSTONE_COUNT);
     expect([...codes].sort()).toEqual([...EXTERIOR_REFUSAL_STOP_CODES].sort());
+
+    // CROSS-WAVE DISJOINTNESS. The panel prefers the recoverable answer when a
+    // building is refused by one wave and shipped by another; this asserts that
+    // situation does not exist today, so the ordering currently changes no
+    // rendered answer and is purely a safety margin.
+    const overlaps = [...refusedIn.keys()].filter((buildingId) => availableIn.has(buildingId));
+    expect(overlaps).toEqual([]);
+    // ...and no building is refused by two waves either, which would make
+    // "the" stop code for a building ambiguous.
+    const doublyRefused = [...refusedIn.entries()].filter(([, releases]) => releases.length > 1);
+    expect(doublyRefused).toEqual([]);
   });
 });

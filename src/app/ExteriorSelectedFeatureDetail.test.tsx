@@ -3,7 +3,7 @@
 import { cleanup, render } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 
-import { ExteriorSelectedFeatureDetail, type ExteriorSelectionSource } from "./App";
+import { ExteriorSelectedFeatureDetail, exteriorSortedIdsInclude, type ExteriorSelectionSource } from "./App";
 import type { ExteriorRefusedBuilding } from "../runtime/exterior-cell-runtime";
 
 afterEach(cleanup);
@@ -15,8 +15,8 @@ const REFUSAL: ExteriorRefusedBuilding = {
   buildingId: "doitt:1290701",
   reason: REAL_REASON,
   tombstoneId: "tombstone:manhattan-midtown-core-cells-20260811-v3-s1:doitt:1290701",
-  cellId: "manhattan-exterior-cell-w01-000125-16-19300-17927",
-  cellReleaseId: "cell-release:manhattan-midtown-core-cells-20260811-v3-s1:manhattan-exterior-cell-w01-000125-16-19300-17927:v1",
+  cellId: "manhattan-exterior-cell-w01-000006-17-38594-35858",
+  cellReleaseId: "cell-release:manhattan-midtown-core-cells-20260811-v3-s1:manhattan-exterior-cell-w01-000006-17-38594-35858:v1",
   releaseId: "manhattan-midtown-core-cells-20260811-v3-s1",
 };
 
@@ -99,6 +99,18 @@ describe("ExteriorSelectedFeatureDetail", () => {
     expect(container.querySelector("[data-exterior-refusal]")).not.toBeNull();
   });
 
+  it("PREFERS THE RECOVERABLE ANSWER when one wave refuses a building another wave ships", () => {
+    // Refused by wave A, available in wave B. Saying "refused, approaching will
+    // never help" about a building that is on screen in another wave is an
+    // unrecoverable falsehood; "move closer" is at worst a recoverable one.
+    const { container } = renderRow("doitt:1290701", [
+      source({ refused: REFUSAL }),
+      source({ promoted: ["doitt:1290701", "doitt:aaa"] }),
+    ]);
+    expect(container.querySelector("[data-exterior-not-resident]")).not.toBeNull();
+    expect(container.querySelector("[data-exterior-refusal]")).toBeNull();
+  });
+
   it("falls back to not-owned when nothing is selected", () => {
     const { container } = renderRow(null, [source({ refused: REFUSAL })]);
     expect(container.querySelector("[data-exterior-not-owned]")).not.toBeNull();
@@ -111,6 +123,45 @@ describe("ExteriorSelectedFeatureDetail", () => {
     const row = container.querySelector("[data-exterior-refusal]")!;
     expect(row.getAttribute("data-exterior-stop-code")).toBe("unrecognized");
     expect(row.textContent).toContain("not a refusal category this build recognizes");
+  });
+});
+
+/**
+ * THE BINARY SEARCH'S PRECONDITION.
+ *
+ * `exteriorSortedIdsInclude` is only correct on a SORTED array, and it is fed
+ * `promotedBuildingIds()`. If that accessor ever stopped sorting, the search
+ * would return false for buildings that are present — and the visible symptom
+ * would be a shipped building described as REFUSED, silently and only for some
+ * ids. The sortedness half is pinned in `exterior-cell-runtime.test.ts`; this
+ * half pins the search itself against the obvious reference implementation.
+ */
+describe("exteriorSortedIdsInclude", () => {
+  const sorted = ["doitt:1", "doitt:1290701", "doitt:2", "doitt:558741", "doitt:99", "doitt:zzz"].sort();
+
+  it("agrees with Array.includes at every position, present and absent", () => {
+    const probes = [
+      sorted[0]!,                       // first
+      sorted[sorted.length - 1]!,       // last
+      sorted[Math.floor(sorted.length / 2)]!, // middle
+      "doitt:0",                        // absent, sorts BEFORE every element
+      "doitt:~absent",                  // absent, sorts AFTER every element
+      "doitt:3",                        // absent, sorts INSIDE the range
+    ];
+    for (const probe of probes) {
+      expect(exteriorSortedIdsInclude(sorted, probe), probe).toBe(sorted.includes(probe));
+    }
+  });
+
+  it("agrees with Array.includes exhaustively over the fixture", () => {
+    const universe = [...sorted, "doitt:0", "doitt:3", "doitt:~absent", "", "doitt:12"];
+    for (const probe of universe) {
+      expect(exteriorSortedIdsInclude(sorted, probe), probe).toBe(sorted.includes(probe));
+    }
+  });
+
+  it("returns false on an empty list rather than throwing", () => {
+    expect(exteriorSortedIdsInclude([], "doitt:1")).toBe(false);
   });
 });
 

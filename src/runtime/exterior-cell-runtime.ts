@@ -450,11 +450,22 @@ export type ExteriorRefusalStopCode = (typeof EXTERIOR_REFUSAL_STOP_CODES)[numbe
 
 const STOP_CODE_PATTERN = /\[([a-z0-9-]+)\]/u;
 
+/**
+ * The bracketed token as WRITTEN, whether or not this build knows it.
+ *
+ * Exported so the panel can name an unrecognized category instead of keeping a
+ * second copy of the pattern next to the one that recognizes it — two regexes
+ * for one grammar drift apart, and the drift would show up as a panel that
+ * cannot echo a code it just failed to match.
+ */
+export function exteriorRefusalRawStopCode(reason: string): string | null {
+  return STOP_CODE_PATTERN.exec(reason)?.[1] ?? null;
+}
+
 /** The bracketed stop code, or null when the release's sentence carries none. */
 export function exteriorRefusalStopCode(reason: string): ExteriorRefusalStopCode | null {
-  const matched = STOP_CODE_PATTERN.exec(reason);
-  if (!matched) return null;
-  const code = matched[1]!;
+  const code = exteriorRefusalRawStopCode(reason);
+  if (code === null) return null;
   return (EXTERIOR_REFUSAL_STOP_CODES as readonly string[]).includes(code) ? (code as ExteriorRefusalStopCode) : null;
 }
 
