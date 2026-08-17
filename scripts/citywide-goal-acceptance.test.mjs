@@ -184,20 +184,42 @@ describe("criterion 12's documentation closure is checked, not taken on trust", 
     const amendment = prior.closures.amendments?.find((entry) => entry.task === "T007 (Issue #72)");
     expect(amendment, "no T007 amendment in the prior-goal record").toBeTruthy();
     expect(amendment.closedCriteria).toEqual([22]);
-    // And the thing that makes the closure honest rather than tidy: criterion 1
-    // did NOT come along with it.
-    expect(prior.closures.remainingNotMet).toEqual([1]);
+    // And the thing that made THAT closure honest rather than tidy: criterion 1
+    // did NOT come along with it. T007 closed 22 alone, on a user decision, and
+    // deliberately left 1 open.
+    //
+    // Criterion 1 was closed later, by the exterior-completion goal, on its own
+    // evidence — so `remainingNotMet` is now empty. This assertion still pins
+    // the shape of T007's amendment (closedCriteria === [22]) above, which is
+    // what this test is actually about; it does not reach backwards and rewrite
+    // that goal's history, and the prior record still carries criterion 1's
+    // original NOT-MET verdict and stop report under `priorVerdict` and
+    // `priorStopReport`.
+    expect(prior.closures.remainingNotMet).toEqual([]);
+    const criterion1 = prior.verdicts.find((entry) => entry.index === 1);
+    expect(criterion1.priorVerdict).toBe("NOT-MET");
   });
 
   it("finds the two-tier framing in both documents it says it rewrote", () => {
-    // The specific overstatement this goal is most exposed to is quoting 484 of
-    // 45,194 as "what renders". Both documents must carry the drawn count and
-    // must name the 484 figure as the textured tier.
+    // The overstatement this goal is most exposed to is quoting the TEXTURED
+    // TIER as "what renders". When this test was written the textured tier was
+    // 484 of 45,194; T008 raised it to 44,989 of 45,194 (205 tombstoned) and the
+    // 484 figure is gone from both documents. The hazard is unchanged and so is
+    // this assertion: both documents must still carry the DRAWN count and must
+    // still name the coverage figure as the textured tier, whatever it is,
+    // because the two numbers answer different questions.
     for (const path of ["README.md", "docs/PROJECT_BRIEF.md"]) {
       const text = readFileSync(path, "utf8");
       expect(text, `${path} does not state the drawn count`).toContain("41,841");
-      expect(text.toLowerCase(), `${path} does not frame 484 as the textured tier`).toContain("textured");
+      expect(text.toLowerCase(), `${path} does not frame the coverage figure as the textured tier`).toContain("textured");
       expect(text, `${path} does not state the measured dense residency`).toContain("58,243,420");
+      // The COVERAGE figure itself, pinned beside the word it is framed by.
+      // Without this the pair could drift apart silently: "textured" would
+      // still appear, the drawn count would still be right, and the coverage
+      // number next to them could be any stale value at all — which is exactly
+      // how 484 (and a 870-of-883 cell claim) survived past the completion.
+      expect(text, `${path} does not state the shipped coverage figure`).toContain("44,989");
+      expect(text, `${path} does not state the tombstoned remainder`).toContain("205");
     }
   });
 });

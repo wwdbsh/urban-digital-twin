@@ -1,0 +1,159 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "exterior-completion-acceptance-20260817:refusal-code-mapping",
+  "task": "T008",
+  "artifact": "refusal-code-before-after-mapping",
+  "note": "DERIVED, NOT RE-MEASURED. Every row is a re-aggregation of the per-building vectors already committed in data/grammar-extension-20260815/extension-census.json (its `refusals` array, 899 rows, each carrying shippedStopCode, extendedOutcome, extendedStopCode and reclassified). No plan was replayed and no geometry was generated to produce this file.",
+  "source": {
+    "path": "data/grammar-extension-20260815/extension-census.json",
+    "sha256": "932f51cbc373b9b03ad6d99cfec83e613355055154424c922b391e33bcd9d8e3",
+    "field": "refusals",
+    "rowCount": 899
+  },
+  "totals": {
+    "before": 899,
+    "recovered": 694,
+    "refusedAfter": 205,
+    "reclassifiedButStillRefused": 14,
+    "reclassifiedAndRecovered": 0
+  },
+  "partition": {
+    "statement": "The 899 partition exactly: 694 recovered + 205 still refused = 899. The 14 reclassified-but-refused are a SUBSET of the 205, not a third bucket; they are counted separately because a building refused under a different code than before is not the same fact as one refused under the same code.",
+    "recovered": 694,
+    "stillRefused": 205,
+    "sum": 899
+  },
+  "beforeByStopCode": {
+    "ring-area-below-floor": 113,
+    "ring-neck-below-grammar-minimum": 39,
+    "ring-not-simple": 4,
+    "ring-vertex-count-unsupported": 324,
+    "source-height-below-grammar-minimum": 384,
+    "volume-identity-failed": 35
+  },
+  "afterByStopCode": {
+    "ring-area-below-floor": 114,
+    "ring-neck-below-grammar-minimum": 44,
+    "ring-not-simple": 4,
+    "volume-identity-failed": 43
+  },
+  "recoveredByBeforeStopCode": {
+    "ring-vertex-count-unsupported": 319,
+    "source-height-below-grammar-minimum": 375
+  },
+  "transitions": [
+    {
+      "beforeStopCode": "ring-area-below-floor",
+      "afterStopCode": "ring-area-below-floor",
+      "count": 113,
+      "migrated": false
+    },
+    {
+      "beforeStopCode": "ring-neck-below-grammar-minimum",
+      "afterStopCode": "ring-neck-below-grammar-minimum",
+      "count": 39,
+      "migrated": false
+    },
+    {
+      "beforeStopCode": "volume-identity-failed",
+      "afterStopCode": "volume-identity-failed",
+      "count": 35,
+      "migrated": false
+    },
+    {
+      "beforeStopCode": "source-height-below-grammar-minimum",
+      "afterStopCode": "volume-identity-failed",
+      "count": 8,
+      "migrated": true
+    },
+    {
+      "beforeStopCode": "ring-not-simple",
+      "afterStopCode": "ring-not-simple",
+      "count": 4,
+      "migrated": false
+    },
+    {
+      "beforeStopCode": "ring-vertex-count-unsupported",
+      "afterStopCode": "ring-neck-below-grammar-minimum",
+      "count": 4,
+      "migrated": true
+    },
+    {
+      "beforeStopCode": "ring-vertex-count-unsupported",
+      "afterStopCode": "ring-area-below-floor",
+      "count": 1,
+      "migrated": true
+    },
+    {
+      "beforeStopCode": "source-height-below-grammar-minimum",
+      "afterStopCode": "ring-neck-below-grammar-minimum",
+      "count": 1,
+      "migrated": true
+    }
+  ],
+  "ringAreaBelowFloorInversion": {
+    "before": 113,
+    "after": 114,
+    "question": "The extended grammar recovers buildings and never refuses one the shipped grammar accepted, so every after-count should be less than or equal to its before-count. ring-area-below-floor rises by one. That looks like the extension making things worse, and it is not.",
+    "explanation": "The classifier is PRIORITY-ORDERED: a building is reported under the FIRST gate it trips, so raising an earlier gate can expose a later one that was always going to fire. Exactly one building carried shippedStopCode ring-vertex-count-unsupported because its ring exceeded the shipped 64-vertex admission cap. Extension A raised that cap to 384, the building passed the vertex gate, and the NEXT gate it met — the footprint-area floor — refused it. It moved between codes; it did not become newly refusable.",
+    "arithmetic": "114 = 113 unchanged + 1 migrated from ring-vertex-count-unsupported.",
+    "corroboration": "extensionC in the source census records belowAreaFloorCount 114 with shippedStopCodeOfThoseRows {ring-area-below-floor: 113, ring-vertex-count-unsupported: 1}, which is the same fact counted from the other direction.",
+    "buildingId": "doitt:527428"
+  },
+  "migrations": [
+    {
+      "from": "source-height-below-grammar-minimum",
+      "to": "volume-identity-failed",
+      "count": 8,
+      "reading": "Extension B derives a sub-3600 mm floor height so floorCount is 1; these eight then reached the generator's own volume self-check and failed it."
+    },
+    {
+      "from": "ring-vertex-count-unsupported",
+      "to": "ring-neck-below-grammar-minimum",
+      "count": 4,
+      "reading": "The raised vertex cap admitted the ring; the neck gate then fired."
+    },
+    {
+      "from": "ring-vertex-count-unsupported",
+      "to": "ring-area-below-floor",
+      "count": 1,
+      "reading": "The single building behind the 113 -> 114 inversion, named so the claim is checkable rather than merely asserted: doitt:527428. Its ring carries 82 vertices, above the shipped 64-vertex cap and below the extended 384 cap, so the shipped grammar stopped at the vertex gate and never reached the area gate. Its footprint is 19.0295 m2, below the 20 m2 area floor, so once extension A admitted the ring the area gate refused it. It was always going to be refused; the extension only changed WHICH gate reported it.",
+      "buildingId": "doitt:527428",
+      "gates": {
+        "vertexCount": 82,
+        "areaSquareMeters": 19.0295,
+        "areaBelowFloor": true,
+        "vertexCountAboveShippedCap": true,
+        "vertexCountAboveExtendedCap": false
+      }
+    },
+    {
+      "from": "source-height-below-grammar-minimum",
+      "to": "ring-neck-below-grammar-minimum",
+      "count": 1,
+      "reading": "Admitted by the low-rise floor-height rule, then refused by the neck gate."
+    }
+  ],
+  "extensionEligibleCategoriesCleared": {
+    "statement": "All three extension-eligible refusal categories the goal contract names are gone from the after-set.",
+    "categories": {
+      "source-height-below-grammar-minimum": {
+        "before": 384,
+        "after": 0
+      },
+      "ring-vertex-count-unsupported": {
+        "before": 324,
+        "after": 0
+      },
+      "ring-area-below-floor-originalCohort": {
+        "before": 113,
+        "after": 113,
+        "note": "NOT cleared, and not extension-eligible in the same sense: extension C measured the sub-20 m2 footprints and deliberately left them refused. This is the cohort the AC1 adjudication turns on."
+      }
+    }
+  },
+  "notClaimedHere": [
+    "Any statement that the 205 are all degenerate DATA. 43 are volume-identity-failed, which is the generator's own self-check, not a property of the source footprint. That delta is what makes criterion 1 MET-AS-ADJUDICATED rather than MET.",
+    "Any re-measurement. This file re-aggregates committed vectors and measures nothing."
+  ]
+}

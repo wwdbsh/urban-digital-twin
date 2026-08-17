@@ -177,20 +177,31 @@ records **45,154 of 45,194** at the same camera
 cold-arrival floor rather than a ceiling — the drawn count follows what the
 session has loaded and how far the dense plan has rebuilt, not the camera alone.
 
-**What carries a generated, textured exterior: 484 of 45,194 parents (1.07%),
-shipped as 498 GLB artifacts.** This is the **textured V3 tier**, promoted on
-top of the massing within the near-camera radius — 14 buildings at a 260 m
-street camera, 66 at 1.2 km, 40 at the overview — and it is **not** the answer
-to "what renders". Conflating the two numbers is the single easiest way to
-overstate this project, and the brief keeps them apart deliberately.
+**What carries a generated, textured exterior: 44,989 of 45,194 parents
+(99.55%); the remaining 205 are tombstoned under a named stop code.** This is
+the **textured V3 tier**, promoted on top of the massing within the near-camera
+radius, and it is **not** the answer to "what renders" — how many are on screen
+at once still depends on the camera and on what the session has streamed.
+Conflating the two numbers is the single easiest way to overstate this project,
+and the brief keeps them apart deliberately: coverage is what the release
+ships, the drawn count is what a session has loaded.
 
-870 of 883 cells ship no *generated* exterior geometry. **Where the citywide
-base tier is active** their buildings draw as sourced base massing rather than
-being absent, and since T007 the runtime's notice says exactly that, with the
-condition attached: the rollback arm (`?exteriorScheduler=off`) withdraws the
-base tier, so an unconditional promise would be false there. The pre-flip
-wording, which said no substitute was selected, was true when nothing was drawn
-for those cells and became false by omission once they drew. **The binding constraint is no longer the 512-entry
+**0 of 883 cells ship no *generated* exterior geometry** — every cell in all six
+promoted serving waves ships. This paragraph used to say *870 of 883*, which
+described the pre-completion release; the full-city generation closed it, and
+the 205 surviving refusals sit **within** cells that ship rather than emptying
+any cell. The not-shipped notice consequently **no longer fires on the shipped
+default**: it counts entirely-unavailable cells and that count is structurally
+zero ([Decision 0054](decisions/0054-refusal-transparency.md) D-4). The path is
+retained, not deleted, in case a future wave ships an empty cell.
+
+When it did fire, the condition mattered. **Where the citywide base tier is
+active** those buildings drew as sourced base massing rather than being absent,
+and since T007 the notice said exactly that with the condition attached: the
+rollback arm (`?exteriorScheduler=off`) withdraws the base tier, so an
+unconditional promise would be false there. The pre-flip wording, which said no
+substitute was selected, was true when nothing was drawn for those cells and
+became false by omission once they drew. **The binding constraint is no longer the 512-entry
 all-resident exterior cache contract**: the visibility scheduler of Decision
 0041 holds at most 128 resident cells against 883 visible, certified in Decision
 0042, and it is that **cell cap** that binds. Two separate caches with two
@@ -209,8 +220,10 @@ waves add procedural facade textures rasterized from named constants and
 re-verified byte-for-byte. No shipped component asserts a real building's
 facade, material, entrance, signage or occupancy. Every component carries a
 machine-readable truth tier and an uncertainty statement; generated components
-carry no real-world accuracy score. The grammar refuses 899 parents outright
-under named stop codes rather than inventing geometry for them.
+carry no real-world accuracy score. The grammar **refuses 205 parents outright**
+under named stop codes rather than inventing geometry for them. (Under the
+shipped grammar, before the extension, that figure was 899; 694 of those were
+recovered by the extended grammars and the rest remain refused.)
 
 **Evidence posture.** No rights-cleared building imagery was ever admitted as
 geometry, texture, training or validation input. Zero components are
@@ -246,11 +259,14 @@ global form is the single constant `EXTERIOR_SCHEDULER_DEFAULT_ON`.
 **Two goals, two records, one open criterion.** The exteriors goal's
 reconciliation is in
 [Decision 0039](decisions/0039-goal-integration-acceptance.md) and
-`data/goal-integration-acceptance-20260812/reconciliation.json`: 30 of 31
-criteria are closed, and criterion 1 remains NOT-MET because 41,357 of the
-41,841 buildings drawn are sourced base massing rather than generated exteriors,
-with the 899 grammar refusals still awaiting their adjudication. The citywide
-default streaming goal's reconciliation is
+`data/goal-integration-acceptance-20260812/reconciliation.json`: all 31 criteria
+are now closed. Criterion 1 stood NOT-MET because 41,357 of the 41,841 buildings
+drawn were sourced base massing rather than generated exteriors, with the 899
+grammar refusals still awaiting their adjudication; the exterior-completion
+goal's T008 closed it as MET-AS-ADJUDICATED, and the record preserves the prior
+verdict, the original stop report and an adjudication delta naming what makes it
+adjudicated rather than clean. The citywide default streaming goal's
+reconciliation is
 `data/citywide-goal-acceptance-20260815/reconciliation.json`, summarized in
 [Decision 0045](decisions/0045-citywide-default-streaming-flip.md): all 12
 criteria are MET or adjudicated. Its last open one — criterion 7, a
