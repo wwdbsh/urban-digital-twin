@@ -253,6 +253,7 @@ async function main() {
    */
   const withinCeiling = g3Readings.every((reading) => reading.impliedTileCount <= (reading.residentWaveCount ?? 0) * 4 && Number.isInteger(reading.impliedTileCount));
   const strictlyFourPerWave = g3Readings.every((reading) => reading.impliedTileCount === (reading.residentWaveCount ?? 0) * 4);
+  const belowCeilingReadings = g3Readings.filter((reading) => reading.impliedTileCount < (reading.residentWaveCount ?? 0) * 4);
   // Asset independence, read off the pair the gate asks for: the high-asset
   // reading must not carry more tiles than the low-asset one unless it also
   // holds more waves.
@@ -272,8 +273,21 @@ async function main() {
     allReadings: g3Readings,
   }, "frames-and-gpu.json", {
     whyItIsTheRealClaim: GPU_GATES.G3.whyItIsTheRealClaim,
-    twoClauseNote: "The verdict is taken on the operative clause — texture bytes explained by the resident WAVE count and never by the asset count — with the four-per-wave ceiling checked beside it. A reading strictly below four tiles per resident wave means that wave's resident cells used fewer than four style classes; it is not a violation, and it is reported rather than rounded up.",
-    ...(strictlyFourPerWave ? {} : { exactlyFourNotObserved: "At least one reading carried FEWER than four tiles per resident wave. That is the expected consequence of a resident set that does not use every style class, and it is recorded rather than presented as agreement with the arithmetic." }),
+    /**
+     * THE SUPPORTED CLAIM, stated exactly as far as the readings reach and no
+     * further. Everything past this sentence is inference, and is labelled.
+     */
+    supportedClaim: "Resident GPU texture cost is BOUNDED BY four tiles per resident wave and is NOT DRIVEN BY the resident asset count. Both limbs are read off the table: no reading exceeds four tiles per resident wave, and 14 resident assets and 431 resident assets both cost exactly four tiles.",
+    twoClauseNote: "The verdict is taken on the operative clause — texture bytes explained by the resident WAVE count and never by the asset count — with the four-per-wave ceiling checked beside it. The registered phrasing says '=== 4 per resident wave'; the readings support '<= 4 per resident wave', and the difference is reported rather than smoothed.",
+    ...(strictlyFourPerWave ? {} : {
+      belowCeilingReadings,
+      belowCeilingAccount: {
+        observation: `${belowCeilingReadings.length} reading(s) carried FEWER than four tiles per resident wave (e.g. 7 tiles across 2 resident waves rather than 8).`,
+        inference: "UNVERIFIED INFERENCE, labelled as such: the likeliest account is that one resident wave's cells drew on only three of the four shipped style classes, so only three of its four class tiles were ever requested and uploaded. This campaign did NOT confirm it.",
+        confirmingReading: "The reading that would confirm it is a per-release breakdown of the DISTINCT class-tile URLs the document fetched — `/data/<releaseId>/public/textures/<class>.png` — grouped by release and compared against the resident wave set at that station. The CDP network log already contains every one of those URLs; this roll-up records only the total count, so the breakdown was available and was not taken.",
+        whyItMatters: "Only the ceiling and the asset-independence limbs are load-bearing for the architecture claim. The account of the shortfall is not, which is why it is allowed to remain an inference rather than being asserted.",
+      },
+    }),
     ...(high.length === 0 || low.length === 0
       ? { notCapturedBecause: `The pre-registered pair needs one reading at >= ${GPU_GATES.G3.residentAssetHigh} resident assets and one at <= ${GPU_GATES.G3.residentAssetLow}. This campaign captured ${high.length} and ${low.length} of them respectively, so the comparison the gate asks for was not available and no verdict is asserted from a single side of it.` }
       : {}),
@@ -459,6 +473,45 @@ async function main() {
       capturedAtStatement: preRegistration.capturedAtStatement,
     },
     acceptanceCriterionMapping: AC_MAPPING,
+    /**
+     * THE SUPERSESSION INDEX.
+     *
+     * A capture record is never edited after it is written — that is the whole
+     * point of the sidecars. The cost of that rule is that a field a capture got
+     * WRONG stays in the tree, readable, quotable, and with nothing next to it
+     * saying so. This index is the fix: one row per retracted field, naming the
+     * capture file, the exact field path, and where in this roll-up the
+     * replacement lives. A reader who finds the retracted field can get here in
+     * one hop; a reader who starts here can get to the original.
+     *
+     * It is a LIST, deliberately, not a boolean or a sentence. If a future
+     * campaign retracts a second field the index grows a row rather than a
+     * paragraph, and an empty index means nothing was retracted.
+     */
+    supersededFindings: [
+      ...(eviction?.forcingArgument?.falsified === undefined ? [] : [{
+        captureFile: `data/${evidenceId}/eviction-loop.json`,
+        retractedFieldPath: "forcingArgument.falsified",
+        retractedValue: eviction.forcingArgument.falsified,
+        alsoRetracted: ["forcingArgument.falsifyingStops", "forcingArgument.statement"],
+        supersededBy: "campaign-record.json -> forcingArgument",
+        replacementVerdict: "UNDECIDED-BY-THIS-INSTRUMENT",
+        reason: "The detector compared consecutive readings of `cacheEvictions`, which is CUMULATIVE and SESSION-WIDE. Once any eviction has occurred — including in transit, which is exactly where the argument predicts it — every later settled stop reads non-zero while holding the scheduler's cap of 8, so the boolean fires on a session behaving precisely as the argument says it will. It is not a falsification and must not be quoted as one.",
+        captureNotMutated: "The capture record is left byte-for-byte as it was measured, and its sidecar still matches. The instrument was fixed AFTER this capture; the sequence is recorded rather than a tidied result.",
+      }]),
+    ],
+    /**
+     * Fields whose meaning is inherited from an earlier task's numbering and
+     * would be misread at face value here. Annotated rather than mutated, for
+     * the same reason as the index above: the capture is sidecar-pinned.
+     */
+    inheritedFieldAnnotations: heap ? [{
+      captureFile: `data/${evidenceId}/heap-repeat-evidence.json`,
+      fieldPath: "criterion",
+      capturedValue: heap.criterion ?? null,
+      annotation: "INHERITED T008 NUMBERING, not this campaign's. `criterion: 7` is the criterion index of the goal T008 ran against (Issue #80), carried unchanged because this is the T008 instrument re-run rather than a new one. In THIS campaign's acceptance mapping the same measurement discharges the retained-heap half of criterion #6; gates M1-M4 are indexed to #6 throughout this roll-up. The captured record is not mutated because it is sidecar-pinned.",
+      thisCampaignCriterion: "#6",
+    }] : [],
     textureArchitectureCorrection: {
       atlas: false,
       delivery: "shared per-class URI delivery",

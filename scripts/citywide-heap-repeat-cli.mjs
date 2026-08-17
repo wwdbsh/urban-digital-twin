@@ -70,11 +70,15 @@
  *                  survives a cycle, and calling that a heap FAILURE would be
  *                  reporting the wrong quantity.
  *
- *   LAP CAP.       The wall-clock cap on the sampling phase comes from the T006
- *                  pre-registration (`HEAP_GATES.lapPhaseCapMs`, 75 minutes,
- *                  raised from 50 with its reason recorded BEFORE any lap ran).
- *                  It is imported rather than retyped so the number cannot drift
- *                  from the pre-registration that justifies it.
+ *   LAP CAP.       SCOPED BY EVIDENCE ROOT. A run writing to the historical T008
+ *                  root keeps T008's own 50-minute cap, unchanged. A run writing
+ *                  anywhere else (i.e. `--out`) takes the T006
+ *                  pre-registration's 75 minutes (`HEAP_GATES.lapPhaseCapMs`,
+ *                  raised from 50 with its reason recorded BEFORE any lap ran),
+ *                  imported rather than retyped so the number cannot drift from
+ *                  the pre-registration that justifies it. Raising a cap for one
+ *                  campaign is not a reason to raise it for the instrument's own
+ *                  default run.
  */
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { registerHooks } from "node:module";
@@ -133,13 +137,20 @@ const POSE_LANDING_DISCLOSURE = "A pose is dispatched, then RE-DISPATCHED at 5 s
  * separately and is not charged against it: a slow cold load is not a runaway
  * instrument, and charging it here would make the cap fire on the wrong thing.
  *
- * RAISED from 50 to 75 minutes, and imported from the T006 pre-registration
- * rather than retyped, so the number and the reason that justifies it cannot
- * drift apart. The reason, recorded before any lap ran: the arithmetic floor at
- * six promoted waves is ~37.5 minutes BEFORE any re-dispatch, and a cap that
- * fires on a healthy slow run is an instrument failure masquerading as a result.
+ * TWO VALUES, SCOPED BY EVIDENCE ROOT, because raising a cap for one campaign is
+ * not a reason to raise it for the instrument's own default run. A run writing
+ * to the historical T008 root keeps T008's 50 minutes unchanged; a run writing
+ * to any other root (i.e. `--out`) takes the T006 pre-registration's 75, which
+ * is IMPORTED rather than retyped so the number and the reason that justifies it
+ * cannot drift apart. That reason, recorded before any lap ran: the arithmetic
+ * floor at six promoted waves is ~37.5 minutes BEFORE any re-dispatch, and a cap
+ * that fires on a healthy slow run is an instrument failure masquerading as a
+ * result.
  */
-const LAP_PHASE_CAP_MS = HEAP_GATES.lapPhaseCapMs;
+const T008_LAP_PHASE_CAP_MS = 50 * 60 * 1_000;
+function lapPhaseCapMs() {
+  return evidenceId === DEFAULT_EVIDENCE_ID ? T008_LAP_PHASE_CAP_MS : HEAP_GATES.lapPhaseCapMs;
+}
 
 const WARMUP_LAPS = 1;
 const SAMPLED_LAPS = 8;
@@ -659,7 +670,7 @@ async function run(argv) {
     for (let lapIndex = 0; lapIndex < TOTAL_LAPS; lapIndex += 1) {
       const lapPoses = [];
       for (let poseIndex = 0; poseIndex < POSES.length; poseIndex += 1) {
-        if (Date.now() - lapPhaseStartedAt > LAP_PHASE_CAP_MS) fail(`hard wall-clock cap: the sampling phase exceeded ${LAP_PHASE_CAP_MS} ms at lap ${lapIndex} pose ${poseIndex}`);
+        if (Date.now() - lapPhaseStartedAt > lapPhaseCapMs()) fail(`hard wall-clock cap: the sampling phase exceeded ${lapPhaseCapMs()} ms at lap ${lapIndex} pose ${poseIndex}`);
         const pose = POSES[poseIndex];
         let dispatchCount = 0;
         let landingMs = 0;
@@ -804,7 +815,7 @@ async function run(argv) {
         gates: { M1: HEAP_GATES.M1.rule, M2: HEAP_GATES.M2.rule, M3: HEAP_GATES.M3.rule, M4: HEAP_GATES.M4.rule },
         m2OnViolation: HEAP_GATES.M2.onViolation,
         m2WhyItIsNew: HEAP_GATES.M2.whyItIsNew,
-        lapPhaseCapMs: LAP_PHASE_CAP_MS,
+        lapPhaseCapMs: lapPhaseCapMs(),
         lapPhaseCapReason: HEAP_GATES.lapPhaseCapReason,
         frozenPathProhibition: HEAP_GATES.frozenPathProhibition,
         writtenTo: `data/${evidenceId}/`,

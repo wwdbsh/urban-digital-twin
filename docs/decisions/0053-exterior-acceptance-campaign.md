@@ -154,12 +154,25 @@ argued: texture cost tracks the resident WAVE count and is flat in building
 count. Only per-building duplication would make the number move with population,
 and it does not move.
 
-Two readings carried **7** tiles for 2 resident waves rather than the arithmetic
-8. That is recorded rather than rounded up: a wave whose resident cells use only
-three of the four style classes uploads three tiles. The registered sentence has
-two clauses — a four-per-wave ceiling and "explained by the resident WAVE count,
-never by the asset count" — and the verdict is taken on the second, with the
-first checked beside it and its shortfall named.
+**There are only four distinct tile IMAGES in the whole city** — the four shipped
+style classes — but each of the six releases ships and serves its own copy at its
+own URL, so a resident wave uploads its own four and the resident GPU cost is
+`4 × resident-wave-count` rather than a flat 4.
+
+The claim the readings support, stated exactly that far: **resident texture cost
+is bounded by four tiles per resident wave and is not driven by the resident
+asset count.** Two readings carried **7** tiles for 2 resident waves rather than
+the arithmetic 8, so the registered "=== 4 per resident wave" phrasing is
+supported as "≤ 4". The likeliest account — that one wave's resident cells drew
+on only three of the four style classes — is an **unverified inference and is
+labelled as one in the record**. The reading that would confirm it is a
+per-release breakdown of the distinct class-tile URLs the document fetched,
+grouped by release and compared against the resident wave set; the CDP log
+already contains every one of those URLs and the breakdown was simply not taken.
+The registered sentence has two clauses — the ceiling and "explained by the
+resident WAVE count, never by the asset count" — and the verdict is taken on the
+second, with the first checked beside it and its shortfall named rather than
+rounded up.
 
 **G2 passed, and passed weakly, and that is stated rather than banked.** The bar
 is 2,097,144 + one tile = 2,184,525 bytes, and it assumes all 24 unique tiles
@@ -196,6 +209,10 @@ the full strict pair to the during-storm window itself, decided in advance:
 - **S-1a PASS** — during-storm p50 **8.4 ms**, p95 **17.4 ms** over 1,102 frames
   spanning 12 flip-identical drags, 4 zoom excursions and 6 cross-wave
   translations (25.4 s of storm). Post-storm settled: p50 8.3 / p95 10.2.
+  **The tail is quoted beside the pass, because the pass is a p95 statement and
+  the tail is not inside it: p99 33 ms and max 125 ms.** A 125 ms frame is a
+  visible hitch. The gate is met and the storm still drops frames a user would
+  see; both are true and the second does not disappear into the first.
 - **S-1b PASS** — peak concurrency 4; **cacheEntries reached exactly 1,024**, the
   cap itself; `cachedBytes` peaked at 183,056,897 (68% of the byte ceiling).
 - **S-1c PASS** — `fallbackCellCount`, `failedCellCount` and
@@ -442,21 +459,33 @@ campaign measures and reports.
 2. Criterion #5 is discharged at these five stations and through the storm, off
    the vsync floor, with the nadir overview passing by 0.1 ms and D-11 carried at
    a larger measured value than D-11 itself records.
-3. Criterion #7 is discharged: eviction is reachable and correct, re-entry is
+3. **Criterion #6 is discharged in its retained-heap half, as a BOUND rather than
+   an exclusion.** M1 passes at growthRatio 0.0365 against the 0.10 band with
+   `monotonicGrowthDetected` false, and M2's 18 samples were all taken at
+   `activeRequests === 0`. What that buys is stated precisely: the detectable
+   retention floor is **15,061,372 B per lap**, so the pass BOUNDS retention at
+   that floor and does not exclude retention below it. The instrument's own
+   monotonicity columns, which the pass formula does not compute, are disclosed
+   and point the other way: **OLS slope 4,703,921 B per lap at r² 0.685**, with 6
+   positive deltas of 7. That is a consistent upward drift roughly a third of the
+   detection floor — invisible to this gate by construction, and reported rather
+   than left for a reader to notice. The GPU half of #6 is G2, which passed
+   without ever being pressed at its own assumption (§4).
+4. Criterion #7 is discharged: eviction is reachable and correct, re-entry is
    clean, selection identity survives an eviction cycle, and the request ceiling
    is a provable 4 everywhere.
-4. Criterion #8 is discharged for four of five journeys, with J4's failure and
+5. Criterion #8 is discharged for four of five journeys, with J4's failure and
    its diagnosis on the record.
 
 **Not discharged, and named.**
 
-5. **Criterion #4 does not close.** L2 is a pre-registered HONEST-STOP with two
+6. **Criterion #4 does not close.** L2 is a pre-registered HONEST-STOP with two
    stated reachability routes. L1 demonstrates the mechanism on 14 buildings and
    claims nothing more.
-6. **J4 fails** and its amendment belongs to a new cycle.
-7. **The E-1 forcing argument is undecided** by this instrument, and the reading
+7. **J4 fails** and its amendment belongs to a new cycle.
+8. **The E-1 forcing argument is undecided** by this instrument, and the reading
    that would decide it is named.
-8. **E-1f stays open**: no canvas pick on re-admitted geometry has ever been
+9. **E-1f stays open**: no canvas pick on re-admitted geometry has ever been
    captured.
 
 **Carried, unchanged.** D-11 (double-draw), and the limit of the Blender
