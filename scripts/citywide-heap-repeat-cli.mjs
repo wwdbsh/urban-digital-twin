@@ -51,6 +51,30 @@
  *   pnpm heap:repeat -- --dev http://localhost:4213 --port 9223 --attempt 1
  *   node --experimental-strip-types scripts/citywide-heap-repeat-cli.mjs \
  *     --dev http://localhost:4213 --port 9223 --attempt 1
+ *
+ * T006 ADDITIONS, and why each one is here rather than in a fork of this file:
+ *
+ *   --out <evidence-id>  The historical output root
+ *                  `data/citywide-heap-repeat-20260815/` is FROZEN evidence of
+ *                  the T008 run, and re-running this instrument would silently
+ *                  overwrite it. The flag moves the write target; the DEFAULT is
+ *                  unchanged, so nothing that ran before this flag existed
+ *                  behaves differently.
+ *
+ *   M2 VALIDITY.   Every heap sample is now taken with `activeRequests === 0`,
+ *                  READ rather than implied. T008 relied on a 45 s settle to
+ *                  imply quiescence; at six promoted waves that implication is
+ *                  no longer self-evident. A violation is an INSTRUMENT-FAILURE
+ *                  ABORT — no record is written — because a sample taken while
+ *                  artifacts are in flight measures a transient, not what
+ *                  survives a cycle, and calling that a heap FAILURE would be
+ *                  reporting the wrong quantity.
+ *
+ *   LAP CAP.       The wall-clock cap on the sampling phase comes from the T006
+ *                  pre-registration (`HEAP_GATES.lapPhaseCapMs`, 75 minutes,
+ *                  raised from 50 with its reason recorded BEFORE any lap ran).
+ *                  It is imported rather than retyped so the number cannot drift
+ *                  from the pre-registration that justifies it.
  */
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { registerHooks } from "node:module";
@@ -58,6 +82,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { sha256HexBytes, sha256HexSync } from "../src/domain/deterministic-hash.ts";
+import { HEAP_GATES } from "./exterior-acceptance-campaign-constants.mjs";
 
 /**
  * Node's type stripping does not rewrite import specifiers, so the JSON
@@ -77,7 +102,10 @@ registerHooks({
 const { block835CanaryHeapVerdict, BLOCK835_CANARY_HEAP_NOISE_BAND } = await import("../src/runtime/block835-canary-probe.ts");
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const evidenceRoot = join(repositoryRoot, "data", "citywide-heap-repeat-20260815");
+/** The T008 output root. FROZEN evidence; `--out` moves the write target. */
+const DEFAULT_EVIDENCE_ID = "citywide-heap-repeat-20260815";
+let evidenceId = DEFAULT_EVIDENCE_ID;
+let evidenceRoot = join(repositoryRoot, "data", DEFAULT_EVIDENCE_ID);
 
 const VIEWPORT = { width: 1440, height: 900, deviceScaleFactor: 1 };
 const READY_TIMEOUT_MS = 300_000;
@@ -104,8 +132,14 @@ const POSE_LANDING_DISCLOSURE = "A pose is dispatched, then RE-DISPATCHED at 5 s
  * Hard wall-clock cap on the SAMPLING PHASE (lap 0 onwards). Boot is reported
  * separately and is not charged against it: a slow cold load is not a runaway
  * instrument, and charging it here would make the cap fire on the wrong thing.
+ *
+ * RAISED from 50 to 75 minutes, and imported from the T006 pre-registration
+ * rather than retyped, so the number and the reason that justifies it cannot
+ * drift apart. The reason, recorded before any lap ran: the arithmetic floor at
+ * six promoted waves is ~37.5 minutes BEFORE any re-dispatch, and a cap that
+ * fires on a healthy slow run is an instrument failure masquerading as a result.
  */
-const LAP_PHASE_CAP_MS = 50 * 60 * 1_000;
+const LAP_PHASE_CAP_MS = HEAP_GATES.lapPhaseCapMs;
 
 const WARMUP_LAPS = 1;
 const SAMPLED_LAPS = 8;
@@ -325,6 +359,23 @@ const READ_FOOTPRINT = `(() => {
 
 const READ_FOCUS = '({ hasFocus: document.hasFocus(), visibilityState: document.visibilityState })';
 
+/**
+ * M2's reading: how many exterior artifact requests are IN FLIGHT right now.
+ *
+ * `activeRequests` is a SESSION-WIDE field written onto every live wave's
+ * metrics, so it is taken from one wave and never summed. Returning `null` when
+ * no wave has published metrics is deliberate: an absent reading is not a zero,
+ * and M2 treats it as a violation rather than as quiescence.
+ */
+const READ_ACTIVE_REQUESTS = `(() => {
+  const node = document.querySelector("[data-exterior-scheduler-probe]");
+  if (!node) return null;
+  const waves = JSON.parse(node.textContent).waves || [];
+  const wave = waves.find((entry) => entry.metrics);
+  if (!wave) return null;
+  return { activeRequests: wave.metrics.activeRequests, peakConcurrentRequests: wave.metrics.peakConcurrentRequests, readFrom: wave.releaseId };
+})()`;
+
 const FORCE_GC = `(() => {
   if (typeof window.gc !== "function") throw new Error("window.gc is not a function; Chrome was not launched with --js-flags=--expose-gc");
   window.gc();
@@ -526,6 +577,8 @@ async function run(argv) {
   const port = Number(argValue(argv, "--port", "9223"));
   const attemptCount = Number(argValue(argv, "--attempt", "1"));
   if (!Number.isInteger(attemptCount) || attemptCount < 1) fail("--attempt must be a positive integer; the record states how many attempts this capture took");
+  evidenceId = argValue(argv, "--out", DEFAULT_EVIDENCE_ID);
+  evidenceRoot = join(repositoryRoot, "data", evidenceId);
 
   const servedBundle = await servedBundleGate(dev);
   const browserVersion = await (await fetch(`http://127.0.0.1:${port}/json/version`)).json();
@@ -651,6 +704,16 @@ async function run(argv) {
         }
 
         if (poseIndex === VERDICT_POSE_INDEX || poseIndex === SECONDARY_POSE_INDEX) {
+          // M2, the T006 validity condition: quiescence is READ, not implied by
+          // the settle. A violation aborts the run and writes NO record, because
+          // a sample taken mid-flight is a transient rather than a reading of
+          // what survives a cycle, and recording it as a heap FAILURE would be
+          // reporting the wrong quantity.
+          const inFlight = await session.evaluate(READ_ACTIVE_REQUESTS, `${pose.poseId} activeRequests`);
+          if (inFlight === null) fail(`M2 INSTRUMENT-FAILURE ABORT at lap ${lapIndex} ${pose.poseId}: no wave published metrics, so activeRequests could not be read. An absent reading is not a zero.`);
+          if (inFlight.activeRequests !== 0) fail(`M2 INSTRUMENT-FAILURE ABORT at lap ${lapIndex} ${pose.poseId}: activeRequests was ${inFlight.activeRequests} at sample time, not 0. Re-run with --attempt incremented; this is NOT a heap failure.`);
+          observation.activeRequestsAtSample = inFlight.activeRequests;
+          observation.activeRequestsReadFrom = inFlight.readFrom;
           await session.evaluate(FORCE_GC, `${pose.poseId} forced collection`);
           await wait(GC_SETTLE_MS);
           const bytes = await session.evaluate(READ_HEAP, `${pose.poseId} heap read`);
@@ -731,9 +794,21 @@ async function run(argv) {
 
     const record = {
       schemaVersion: "1.0",
-      recordId: "citywide-heap-repeat-20260815:repeated-camera-path",
-      task: "T008 (Issue #80)",
+      recordId: `${evidenceId}:repeated-camera-path`,
+      task: evidenceId === DEFAULT_EVIDENCE_ID ? "T008 (Issue #80)" : "T006 (re-run of the T008 instrument at six-wave scale)",
       criterion: 7,
+      /**
+       * The T006 additions, stated in the record rather than only in the file.
+       */
+      t006: evidenceId === DEFAULT_EVIDENCE_ID ? null : {
+        gates: { M1: HEAP_GATES.M1.rule, M2: HEAP_GATES.M2.rule, M3: HEAP_GATES.M3.rule, M4: HEAP_GATES.M4.rule },
+        m2OnViolation: HEAP_GATES.M2.onViolation,
+        m2WhyItIsNew: HEAP_GATES.M2.whyItIsNew,
+        lapPhaseCapMs: LAP_PHASE_CAP_MS,
+        lapPhaseCapReason: HEAP_GATES.lapPhaseCapReason,
+        frozenPathProhibition: HEAP_GATES.frozenPathProhibition,
+        writtenTo: `data/${evidenceId}/`,
+      },
       capturedAt: new Date().toISOString(),
       claim: "The retained-heap half of goal criterion 7, captured where T007 recorded it had never been captured: ONE deterministic island-scale camera path, repeated in a SINGLE document, over the default six-wave citywide composition, with an explicit in-page window.gc() before every heap sample. The verdict arithmetic is block835CanaryHeapVerdict, imported from src/runtime/block835-canary-probe.ts, not re-implemented here.",
       preRegistered: PRE_REGISTERED,
