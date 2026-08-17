@@ -184,9 +184,20 @@ describe("criterion 12's documentation closure is checked, not taken on trust", 
     const amendment = prior.closures.amendments?.find((entry) => entry.task === "T007 (Issue #72)");
     expect(amendment, "no T007 amendment in the prior-goal record").toBeTruthy();
     expect(amendment.closedCriteria).toEqual([22]);
-    // And the thing that makes the closure honest rather than tidy: criterion 1
-    // did NOT come along with it.
-    expect(prior.closures.remainingNotMet).toEqual([1]);
+    // And the thing that made THAT closure honest rather than tidy: criterion 1
+    // did NOT come along with it. T007 closed 22 alone, on a user decision, and
+    // deliberately left 1 open.
+    //
+    // Criterion 1 was closed later, by the exterior-completion goal, on its own
+    // evidence — so `remainingNotMet` is now empty. This assertion still pins
+    // the shape of T007's amendment (closedCriteria === [22]) above, which is
+    // what this test is actually about; it does not reach backwards and rewrite
+    // that goal's history, and the prior record still carries criterion 1's
+    // original NOT-MET verdict and stop report under `priorVerdict` and
+    // `priorStopReport`.
+    expect(prior.closures.remainingNotMet).toEqual([]);
+    const criterion1 = prior.verdicts.find((entry) => entry.index === 1);
+    expect(criterion1.priorVerdict).toBe("NOT-MET");
   });
 
   it("finds the two-tier framing in both documents it says it rewrote", () => {

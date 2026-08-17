@@ -20,16 +20,18 @@
     "NOT-MET"
   ],
   "verdictCounts": {
-    "NOT-MET": 1,
-    "MET-AS-ADJUDICATED": 13,
-    "MET": 17
+    "MET": 17,
+    "MET-AS-ADJUDICATED": 14,
+    "NOT-MET": 0
   },
-  "stopReportCount": 1,
+  "stopReportCount": 0,
   "verdicts": [
     {
       "index": 1,
       "criterion": "Every accepted building parent in the approved Manhattan snapshot has a detailed, visually complete generated exterior at the target baseline LODs; missing exterior representations are zero",
-      "verdict": "NOT-MET",
+      "verdict": "MET-AS-ADJUDICATED",
+      "priorVerdict": "NOT-MET",
+      "closedBy": "T008 (Issue #90)",
       "evidence": [
         "data/goal-integration-acceptance-20260812/reconciliation.json coverage.promoted: 484 canonical parents carry a shipped exterior by default, shipped as 498 GLB cache entries, against a pinned base of 45,194.",
         "data/public-showcase-20260812/differential-audit.json totals.unavailableBuildingDetails = 44710, unexplainedFallbacks = 0 - every parent without an exterior carries an explicit tombstoned unavailable state rather than a substitute.",
@@ -37,7 +39,8 @@
         "coverage.census: the grammar REFUSES 899 of 45,194 owned parents outright, each under a named stop code from the closed MIDTOWN_CORE_V3_STOP_CODES vocabulary, so the number is not zero even at census scale.",
         "Positive half: the T012 full-snapshot dry run planned all 45,194 parents with 0 stops (data/normalized/manhattan-exterior-fullsnapshot-dryrun-20260810/evidence.json, runDigest 05a47492ed50c3b9a8c540683d97630c37628608e1750363dea357c09f81bf32), and the six wave censuses MATERIALIZED 44,295 of 45,194 - but with retention 'census-only', so those bytes were measured and discarded rather than released."
       ],
-      "stopReport": "AMENDED BY T007 (Issue #72). ONE OF THE TWO GAPS IS STRUCTURALLY CLOSED; THE OTHER IS WHAT REMAINS, AND IT IS THE SUBSTANTIVE ONE. (a) RETENTION - CLOSED AS A STRUCTURE. This stop report originally said the gap was bounded by the 512-entry all-resident exterior cache contract (EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries), and that ADR 0024 cell scheduling was the named structural prerequisite, so that until it existed 'promote more of a wave' and 'raise the cache cap' were the same decision. That prerequisite now exists and is on by default: visibility-driven cell scheduling ships (ADR 0041), its residency is certified at a 128-cell pool (ADR 0042), and the 512-entry cap is no longer the binder - the measured default session holds 128 resident cells against 883 visible, and the EXTERIOR cell cache it governs sits at 40 entries and 14,369,372 B, 7.8% of its 512-entry ceiling and 5.3% of its 256 MiB ceiling. Stated precisely, because two caches are easy to conflate: the 58,243,420 B over 99 entries measured at that station belongs to the SEPARATE citywide dense shard cache, whose own resolved budget is 112 shards / 83,886,080 B - that is 69.4% of its bytes and 88.4% of its entries, which is pressure rather than headroom. What closed for this criterion is the exterior cache's entry cap, not a claim of headroom everywhere. Breadth is now a function of what the camera can see, exactly as the prerequisite promised. (b) GENERATED EXTERIORS - OPEN, AND UNCHANGED IN KIND. A default session draws 41,841 buildings at the island overview, but 484 of them carry a GENERATED exterior; the other 41,357 draw as sourced base massing - a real footprint extruded to a sourced height, which is real geometry and is not a generated exterior. This criterion asks for a detailed, visually complete generated exterior at the target baseline LODs for every accepted parent, and that is still 484. Closing it requires materializing and retaining generated exteriors for the remaining parents, which is a data-production task and not a runtime one; the scheduler that used to block it no longer does. (c) REFUSALS - OPEN, AND STILL A USER DECISION. The grammar refuses 899 of 45,194 owned parents outright under named stop codes (864 at the plan stage, 35 at the asset stage; dominated by source-height-below-grammar-minimum 384 and ring-vertex-count-unsupported 324). Either extend the grammar to close them, or record a user adjudication that a tombstoned refusal under a named stop code satisfies this criterion. No such adjudication record exists in this repository, and T007 did not create one: the user's 2026-08-15 decision closed criterion 22 only and left criterion 1 open."
+      "adjudicationDelta": "CLOSED AS ADJUDICATED, NOT AS CLEAN, AND THE INSTRUMENT IS THE GOAL CONTRACT'S OWN WORDING. The exterior-completion goal's criterion 1 requires that every canonical parent resolve to a shipped textured exterior or a named-stop-code tombstone, and that ONLY DEGENERATE-DATA REFUSALS MAY REMAIN TOMBSTONED. That clause is the adjudication instrument: it is what this criterion is now measured against, and it is not fully satisfied. Both halves this criterion's stop report named are done. The 899 grammar refusals were adjudicated: 694 were recovered by the extended low-rise, complex-ring and small-structure grammars and 205 remain, each under a named stop code from a closed four-code vocabulary, with the before/after mapping for all 899 committed. Generated exteriors were produced for the remaining parents: 44,989 of 45,194 parents now ship a textured V3 exterior, against the 484 that stood when this criterion was graded NOT-MET. THE DELTA: 43 of the surviving 205 refusals are `volume-identity-failed` — the generator's own signed-mesh-volume self-check, NOT a property of the source footprint, and therefore NOT a degenerate-data refusal in the sense the contract's clause requires. The remaining 162 are footprint-geometry refusals, and the largest cohort, `ring-area-below-floor` at 114, is THE FLOOR AT THIS GRAMMAR'S CONSTANTS rather than a property of the data: extension C measured the sub-20 m² footprints and deliberately left them refused, so a different area floor would yield a different count. The criterion is graded MET-AS-ADJUDICATED on the ground that every parent resolves to either a shipped exterior or an honest, named, user-visible refusal and that no geometry was invented for any of them — not on the ground that the contract's degenerate-data clause was satisfied. It was not.",
+      "priorStopReport": "AMENDED BY T007 (Issue #72). ONE OF THE TWO GAPS IS STRUCTURALLY CLOSED; THE OTHER IS WHAT REMAINS, AND IT IS THE SUBSTANTIVE ONE. (a) RETENTION - CLOSED AS A STRUCTURE. This stop report originally said the gap was bounded by the 512-entry all-resident exterior cache contract (EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries), and that ADR 0024 cell scheduling was the named structural prerequisite, so that until it existed 'promote more of a wave' and 'raise the cache cap' were the same decision. That prerequisite now exists and is on by default: visibility-driven cell scheduling ships (ADR 0041), its residency is certified at a 128-cell pool (ADR 0042), and the 512-entry cap is no longer the binder - the measured default session holds 128 resident cells against 883 visible, and the EXTERIOR cell cache it governs sits at 40 entries and 14,369,372 B, 7.8% of its 512-entry ceiling and 5.3% of its 256 MiB ceiling. Stated precisely, because two caches are easy to conflate: the 58,243,420 B over 99 entries measured at that station belongs to the SEPARATE citywide dense shard cache, whose own resolved budget is 112 shards / 83,886,080 B - that is 69.4% of its bytes and 88.4% of its entries, which is pressure rather than headroom. What closed for this criterion is the exterior cache's entry cap, not a claim of headroom everywhere. Breadth is now a function of what the camera can see, exactly as the prerequisite promised. (b) GENERATED EXTERIORS - OPEN, AND UNCHANGED IN KIND. A default session draws 41,841 buildings at the island overview, but 484 of them carry a GENERATED exterior; the other 41,357 draw as sourced base massing - a real footprint extruded to a sourced height, which is real geometry and is not a generated exterior. This criterion asks for a detailed, visually complete generated exterior at the target baseline LODs for every accepted parent, and that is still 484. Closing it requires materializing and retaining generated exteriors for the remaining parents, which is a data-production task and not a runtime one; the scheduler that used to block it no longer does. (c) REFUSALS - OPEN, AND STILL A USER DECISION. The grammar refuses 899 of 45,194 owned parents outright under named stop codes (864 at the plan stage, 35 at the asset stage; dominated by source-height-below-grammar-minimum 384 and ring-vertex-count-unsupported 324). Either extend the grammar to close them, or record a user adjudication that a tombstoned refusal under a named stop code satisfies this criterion. No such adjudication record exists in this repository, and T007 did not create one: the user's 2026-08-15 decision closed criterion 22 only and left criterion 1 open."
     },
     {
       "index": 2,
@@ -827,15 +830,14 @@
   "closures": {
     "task": "T029 (Issue #62)",
     "closedCriteria": [
+      1,
       7,
       8,
       22,
       24,
       30
     ],
-    "remainingNotMet": [
-      1
-    ],
+    "remainingNotMet": [],
     "statement": "Every closure is graded MET-AS-ADJUDICATED rather than MET, and each states its own delta. That is not modesty: a 1440p capture inherits the deep-link height clamp, a mobile journey is emulated, a keyboard traversal runs on emulated focus, and a heap verdict over a one-block camera path does not speak for peak residency. Grading any of them MET would have claimed more than was measured.",
     "evidenceRecords": [
       {
@@ -862,6 +864,11 @@
         "criterion": 22,
         "path": "data/citywide-goal-acceptance-20260815/reconciliation.json",
         "sha256": "2d4bd14306ecc4f43e15abd1bdcb8bfa28673745e884425dde0233c271bcf924"
+      },
+      {
+        "criterion": 1,
+        "path": "data/exterior-completion-acceptance-20260817/reconciliation.json",
+        "sha256": "2326119851c51c41629f6bf2a27f48e0fe98ccd26f6bc9319db6e5931910033d"
       }
     ],
     "layoutDefectResolution": "RESOLVED during this task. The mobile lower-LOD disclosure was structurally unreadable at 390 CSS px - a stylesheet clamp, not a wiring gap - and the first mobile re-capture under the new legibility instrument failed legs 1 and 4 and said why. It is fixed in src/styles.css and re-captured: 7 wrapped lines at 11px, inside the viewport, unoccluded at all nine hit-tested points. The remaining on-screen occlusion is the truthful 'Exterior streaming fallback' notice, which is named per leg in the journey record rather than cropped out of the stills.",
@@ -873,6 +880,14 @@
         ],
         "decision": "USER DECISION, recorded 2026-08-15: close criterion 22 only. Criterion 1 remains NOT-MET.",
         "statement": "One criterion closed, one deliberately left open, by a decision that was the user's to make rather than an implementer's. Criterion 22 asks whether the approved coverage envelope reaches its user-approved exterior tier without regressions, and the tier is now defined by a user-approved Goal contract that the shipped default session satisfies and that this record cites by digest. Criterion 1 asks for a generated exterior for every accepted parent, and 41,357 of the 41,841 buildings a default session draws are sourced base massing rather than generated exteriors - so closing 22 does not close 1, and grading them together would have turned a structural change into a claim about data that was never produced. The T029 discipline is kept: criterion 22 carries priorVerdict, priorStopReport and closedBy, so the original refusal and the stop report that named it stay readable beside the closure. Criterion 1's stop report was UPDATED IN PLACE rather than duplicated, because the record's own shape rule forbids a priorStopReport on a criterion that is still NOT-MET; the amended text therefore states what the original said and which half of it closed."
+      },
+      {
+        "task": "T008 (Issue #90)",
+        "closedCriteria": [
+          1
+        ],
+        "decision": "Closed by the exterior-completion goal's closure task, on the evidence of that goal's own acceptance record.",
+        "statement": "Criterion 1 was the last open criterion in this record and it is closed MET-AS-ADJUDICATED, never MET. The two halves its stop report named — producing generated exteriors for the remaining parents, and adjudicating the 899 grammar refusals — are both done: 44,989 of 45,194 parents ship a textured exterior and the 899 refusals resolve to 694 recovered plus 205 named-stop-code tombstones. What is NOT satisfied is the contract clause that only degenerate-data refusals may remain, because 43 of the 205 are the generator's own volume self-check. That delta is recorded in this criterion's adjudicationDelta, its prior verdict and its original stop report are preserved rather than deleted, and the closing goal's record grades its own equivalent criterion the same way."
       }
     ]
   }

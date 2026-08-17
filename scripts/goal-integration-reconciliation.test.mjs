@@ -335,8 +335,15 @@ describe("the verdict table obeys its own rules", () => {
   });
 
   it("keeps the stop report and the verdict counts in agreement", () => {
-    const counts = {};
-    for (const entry of record.verdicts) counts[entry.verdict] = (counts[entry.verdict] ?? 0) + 1;
+    // SEEDED from the vocabulary rather than accumulated from the table. Once
+    // T008 closed the last NOT-MET, pure accumulation stopped producing a
+    // "NOT-MET" key at all, so this compared { MET, MET-AS-ADJUDICATED } against
+    // a record that correctly still declares "NOT-MET": 0 — a false failure
+    // about object shape rather than about counts. Seeding also keeps the
+    // stopReportCount assertion below meaningful instead of comparing against
+    // undefined.
+    const counts = Object.fromEntries(record.verdictVocabulary.map((verdict) => [verdict, 0]));
+    for (const entry of record.verdicts) counts[entry.verdict] += 1;
     expect(counts).toEqual(record.verdictCounts);
     expect(record.stopReportCount).toBe(counts["NOT-MET"]);
   });
@@ -347,7 +354,7 @@ describe("the verdict table obeys its own rules", () => {
     // record. Written as literals rather than derived, because the whole point
     // of the number is that it is the one a reader will quote — and moving it
     // has to be a deliberate, reviewed edit to this line.
-    expect(record.verdictCounts).toEqual({ MET: 17, "MET-AS-ADJUDICATED": 13, "NOT-MET": 1 });
+    expect(record.verdictCounts).toEqual({ MET: 17, "MET-AS-ADJUDICATED": 14, "NOT-MET": 0 });
     expect(record.verdicts).toHaveLength(31);
   });
 
@@ -358,14 +365,19 @@ describe("the verdict table obeys its own rules", () => {
     // The envelope reaching its approved two-tier composition (22) is a
     // different claim from a generated exterior existing for every accepted
     // parent (1), and the user's 2026-08-15 decision closed only the first.
-    expect(unmet).toEqual([1]);
-    expect(record.closures.remainingNotMet).toEqual([1]);
-    // Criterion 1's stop report must keep saying which half closed and which
-    // half did not. A stop report that quietly dropped the open half would let
-    // the record read as finished.
+    expect(unmet).toEqual([]);
+    expect(record.closures.remainingNotMet).toEqual([]);
+    // Criterion 1 is now CLOSED, by T008. Its stop report is preserved as
+    // `priorStopReport` rather than deleted, and it must keep saying which half
+    // had closed and which had not — the record's value is that a reader can
+    // still see what the criterion looked like when it was open, so a closure
+    // that erased its own precondition would read as though it had always been
+    // finished.
     const criterion1 = record.verdicts.find((entry) => entry.index === 1);
-    expect(criterion1.stopReport).toContain("41,357");
-    expect(criterion1.stopReport).toContain("899");
+    expect(criterion1.verdict).toBe("MET-AS-ADJUDICATED");
+    expect(criterion1.priorVerdict).toBe("NOT-MET");
+    expect(criterion1.priorStopReport).toContain("41,357");
+    expect(criterion1.priorStopReport).toContain("899");
   });
 
   /**
@@ -376,7 +388,7 @@ describe("the verdict table obeys its own rules", () => {
    * write.
    */
   it("keeps every closed criterion's prior refusal and its stop report legible", () => {
-    expect(record.closures.closedCriteria).toEqual([7, 8, 22, 24, 30]);
+    expect(record.closures.closedCriteria).toEqual([1, 7, 8, 22, 24, 30]);
     // Closure attribution is PER CRITERION, because two different tasks closed
     // different criteria and a single task literal would have let the later
     // closure inherit the earlier one's name. The map is built from the
@@ -391,6 +403,7 @@ describe("the verdict table obeys its own rules", () => {
       for (const index of amendment.closedCriteria) closedBy.set(index, amendment.task);
     }
     expect([...closedBy.keys()].sort((left, right) => left - right)).toEqual(record.closures.closedCriteria);
+    expect(closedBy.get(1)).toBe("T008 (Issue #90)");
     expect(closedBy.get(22)).toBe("T007 (Issue #72)");
     expect(closedBy.get(30)).toBe("T029 (Issue #62)");
     for (const index of record.closures.closedCriteria) {
@@ -416,11 +429,14 @@ describe("the verdict table obeys its own rules", () => {
     const cited = record.closures.evidenceRecords.map((entry) => entry.criterion).sort((left, right) => left - right);
     expect(cited).toEqual([...record.closures.closedCriteria].sort((left, right) => left - right));
     for (const entry of record.closures.evidenceRecords) {
-      // Two directories, enumerated rather than widened to `data/`: T029's
-      // bounded-gaps captures, and the closing goal's own acceptance record,
-      // which is what closed criterion 22. A third directory has to be added
-      // here deliberately.
-      expect(entry.path, `criterion ${entry.criterion}`).toMatch(/^data\/(?:goal-bounded-gaps-20260812|citywide-goal-acceptance-20260815)\//u);
+      // Three directories, enumerated rather than widened to `data/`: T029's
+      // bounded-gaps captures, the citywide goal's acceptance record which
+      // closed criterion 22, and the exterior-completion goal's acceptance
+      // record which closed criterion 1. The comment above this line has always
+      // said a third directory has to be added deliberately; T008 is that
+      // deliberate addition, and the list stays enumerated so a fourth one is
+      // a decision rather than a side effect.
+      expect(entry.path, `criterion ${entry.criterion}`).toMatch(/^data\/(?:goal-bounded-gaps-20260812|citywide-goal-acceptance-20260815|exterior-completion-acceptance-20260817)\//u);
       expect(entry.sha256, `criterion ${entry.criterion}`).toMatch(/^[0-9a-f]{64}$/u);
       // The record must be on disk and must still hash to what is cited here.
       const bytes = readFileSync(entry.path);
