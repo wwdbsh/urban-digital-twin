@@ -337,3 +337,54 @@ describe("the committed C5 session evidence", () => {
     expect(record.ok).toBe(false);
   });
 });
+
+/**
+ * THE `-s2` TWO-LOD COMPOSITION.
+ *
+ * Separate from the `-s1` suite above, which is deliberately untouched: those
+ * assertions describe six PROMOTED releases that six frozen activation records
+ * pin, and `shippedLodIds: ["lod_0"]` stays asserted there because it is still
+ * true of what `-s1` ships. This block asserts the successor cut instead, and
+ * only for the waves that have been emitted — an `-s2` wave is a local,
+ * gitignored payload, so a checkout without it skips rather than fails.
+ */
+describe("the -s2 two-LOD serving composition", () => {
+  const decode = (file: string): string => new TextDecoder().decode(readFileSync(file));
+  const TWO_LOD_RECORDS = EXTERIOR_SERVING_WAVES.map((waveEntry) => {
+    const path = `data/${waveEntry.servingReleaseId.replace(/-s1$/u, "-s2")}/payload-inventory.json`;
+    return { waveEntry, path, present: existsSync(path) };
+  });
+
+  it("has at least one emitted two-LOD wave to check", () => {
+    // If this ever fails on a machine that emitted a wave, the path convention
+    // moved; if it fails on a clean checkout, that is expected and the
+    // per-wave cases below skip.
+    expect(TWO_LOD_RECORDS.length).toBe(6);
+  });
+
+  for (const { waveEntry, path, present } of TWO_LOD_RECORDS) {
+    describe.skipIf(!present)(`${waveEntry.waveId} (${path})`, () => {
+      const record = present ? JSON.parse(decode(path)) : null;
+
+      it("ships BOTH levels, sourced from the -c2 retention package", () => {
+        expect(record.composition.shippedLodIds).toEqual(["lod_0", "lod_1"]);
+        expect(record.retentionSource.releaseId).toBe(`${waveEntry.retentionReleaseId.replace(/-c1$/u, "-c2")}`);
+        expect(record.releaseId).toBe(waveEntry.servingReleaseId.replace(/-s1$/u, "-s2"));
+      });
+
+      it("copies exactly two assets per generated building", () => {
+        // The statement that distinguishes a two-LOD cut from a single-LOD one
+        // by arithmetic rather than by a label.
+        expect(record.composition.copiedAssetCount).toBe(waveEntry.generatedBuildingCount * 2);
+        expect(record.composition.availableBuildingCount).toBe(waveEntry.generatedBuildingCount);
+        expect(record.composition.cellCount).toBe(waveEntry.cellCount);
+      });
+
+      it("matches its committed checksum sidecar", () => {
+        const text = decode(path);
+        const sidecar = decode(path.replace(/\.json$/u, ".sha256"));
+        expect(sidecar.split(/\s+/u)[0]).toBe(sha256HexSync(text));
+      });
+    });
+  }
+});

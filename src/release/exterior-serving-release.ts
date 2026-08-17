@@ -111,6 +111,8 @@ import { midtownCoreConveyanceRights } from "./midtown-core-release.ts";
 
 export const EXTERIOR_SERVING_SUFFIX = "-s1" as const;
 export const EXTERIOR_RETENTION_SUFFIX = "-c1" as const;
+/** The TWO-LOD retention package T009 cut: `-c1` geometry plus a textured `lod_1`. */
+export const EXTERIOR_TWO_LOD_RETENTION_SUFFIX = "-c2" as const;
 /** The one LOD a serving release ships. See the module docblock. */
 export const EXTERIOR_SERVING_SHIPPED_LOD_ID = "lod_0" as const;
 export const EXTERIOR_SERVING_CELL_RELEASE_VERSION = "v1" as const;
@@ -128,6 +130,30 @@ export function exteriorServingReleaseId(retentionReleaseId: string): string {
     servingFail(`${retentionReleaseId} is not a retention release id (expected a ${EXTERIOR_RETENTION_SUFFIX} suffix).`);
   }
   return `${retentionReleaseId.slice(0, -EXTERIOR_RETENTION_SUFFIX.length)}${EXTERIOR_SERVING_SUFFIX}`;
+}
+
+/**
+ * `…-c1` becomes `…-c2`: the TWO-LOD retention package the `-s2` cut reads.
+ *
+ * The wave table names `-c1` because that is what it was cut against, and it is
+ * left alone — rewriting the table would move the `-s1` ids that six frozen
+ * activation records pin. The two-LOD driver derives its own source id instead,
+ * so the single wave table serves both cuts and neither has to know about the
+ * other's suffix.
+ */
+export function exteriorTwoLodRetentionReleaseId(retentionReleaseId: string): string {
+  if (!retentionReleaseId.endsWith(EXTERIOR_RETENTION_SUFFIX)) {
+    servingFail(`${retentionReleaseId} is not a retention release id (expected a ${EXTERIOR_RETENTION_SUFFIX} suffix).`);
+  }
+  return `${retentionReleaseId.slice(0, -EXTERIOR_RETENTION_SUFFIX.length)}${EXTERIOR_TWO_LOD_RETENTION_SUFFIX}`;
+}
+
+/** `…-c2` becomes `…-s2`; anything else is refused rather than suffixed blindly. */
+export function exteriorTwoLodServingReleaseId(retentionReleaseId: string): string {
+  if (!retentionReleaseId.endsWith(EXTERIOR_TWO_LOD_RETENTION_SUFFIX)) {
+    servingFail(`${retentionReleaseId} is not a two-LOD retention release id (expected a ${EXTERIOR_TWO_LOD_RETENTION_SUFFIX} suffix).`);
+  }
+  return `${retentionReleaseId.slice(0, -EXTERIOR_TWO_LOD_RETENTION_SUFFIX.length)}${EXTERIOR_TWO_LOD_SERVING_SUFFIX}`;
 }
 
 export function servingArtifactRef(audience: ExteriorReleaseAudience, kind: ExteriorArtifactKind, logicalId: string): string {
@@ -261,6 +287,63 @@ export function transformRetentionTilesetToServing(value: unknown, shippedLodSuf
     return rest;
   });
   return { ...document, root: { ...(root as Record<string, unknown>), children: leaves } };
+}
+
+/**
+ * The TWO-LOD tileset: the retained refinement chain, KEPT rather than flattened.
+ *
+ * `transformRetentionTilesetToServing` reduces each chain to its leaf, because
+ * an `-s1` release ships one level and a tileset advertising a coarse tile it
+ * does not ship would be a lie the validator correctly refuses. An `-s2`
+ * release ships both, so the chain it advertises must be the chain it carries:
+ * the coarse wrapper refining to the fine leaf, exactly as retained.
+ *
+ * This is therefore close to identity, and that is the point — the retained
+ * chain is ALREADY the shape a two-LOD serving tileset needs, so the honest
+ * transform is to validate that shape and pass it through rather than rebuild
+ * it. Rebuilding would reorder keys and would have to guess which optional
+ * fields were present.
+ *
+ * FOUND BY RUNNING IT: the w00 rehearsal emitted a two-LOD assembly beside a
+ * flattened single-LOD tileset, and `validateMultiLodAssembly` refused the
+ * package with "Tile content URI does not match the canonical asset LOD
+ * refinement chain." The assembly transform had been written and proven; the
+ * tileset half had not, and only cutting a real wave surfaced it.
+ */
+export function transformRetentionTilesetToTwoLodServing(
+  value: unknown,
+  options: { fineLodSuffix?: string; coarseLodSuffix?: string } = {},
+): Record<string, unknown> {
+  const fineSuffix = options.fineLodSuffix ?? `__${EXTERIOR_SERVING_SHIPPED_LOD_ID}.glb`;
+  const coarseSuffix = options.coarseLodSuffix ?? `__${EXTERIOR_TWO_LOD_SERVING_COARSE_LOD_ID}.glb`;
+  if (typeof value !== "object" || value === null || Array.isArray(value)) servingFail("retention tileset must be an object.");
+  const document = value as Record<string, unknown>;
+  const root = document.root;
+  if (typeof root !== "object" || root === null || Array.isArray(root)) servingFail("retention tileset root must be an object.");
+  const rootTile = root as unknown as RetentionTile;
+  const children = rootTile.children;
+  if (!Array.isArray(children) || children.length === 0) servingFail("retention tileset root must carry one LOD chain per asset.");
+
+  const chains = children.map((chain, index) => {
+    if (!Array.isArray(chain.children) || chain.children.length !== 1) {
+      servingFail(`retention tileset chain [${index}] does not refine to exactly one finer LOD.`);
+    }
+    const leaf = chain.children[0]!;
+    if (leaf.children !== undefined && (leaf.children as RetentionTile[]).length !== 0) {
+      servingFail(`retention tileset chain [${index}] is deeper than the two LODs this transform carries.`);
+    }
+    const coarseUri = chain.content?.uri;
+    if (typeof coarseUri !== "string" || !coarseUri.endsWith(coarseSuffix)) {
+      servingFail(`retention tileset chain [${index}] outer content ${String(coarseUri)} is not the coarse LOD.`);
+    }
+    const fineUri = leaf.content?.uri;
+    if (typeof fineUri !== "string" || !fineUri.endsWith(fineSuffix)) {
+      servingFail(`retention tileset chain [${index}] innermost content ${String(fineUri)} is not the shipped fine LOD.`);
+    }
+    if (leaf.geometricError !== 0) servingFail(`retention tileset chain [${index}] innermost tile does not declare zero geometric error.`);
+    return chain;
+  });
+  return { ...document, root: { ...(root as Record<string, unknown>), children: chains } };
 }
 
 // ---------------------------------------------------------------------------
