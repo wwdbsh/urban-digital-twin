@@ -1,0 +1,764 @@
+{
+  "schemaVersion": "1.0",
+  "artifact": "retention-package-validation",
+  "ok": true,
+  "releaseId": "manhattan-northern-manhattan-cells-20260812-c2",
+  "waveId": "w05",
+  "rootChecksumSha256": "d43bef97e114145ae9f038bacda6cdc29c9a6195712534886e36903d1138102e",
+  "textureAdmission": {
+    "policy": "procedural-replay",
+    "source": "retention-root.json (checksum-pinned; not operator-supplied)"
+  },
+  "declaredCellCount": 182,
+  "validatedCellCount": 182,
+  "assets": 10172,
+  "artifacts": 21249,
+  "packagedBuildingCount": 10172,
+  "silhouetteRecords": 10172,
+  "lod1FallbackCount": 14,
+  "totalBytes": 1123060533,
+  "tombstones": {
+    "ownedBuildingCount": 10230,
+    "generatedBuildingCount": 10172,
+    "tombstonedBuildingCount": 58
+  },
+  "inventoryAccounting": {
+    "cellManifestCount": 182,
+    "fileCount": 20713,
+    "byteSize": 1151223441
+  },
+  "completenessSources": [
+    "payload-inventory",
+    "wave-census"
+  ],
+  "cellFingerprints": [
+    {
+      "cellId": "manhattan-exterior-cell-w05-000701-15-9651-8954",
+      "fingerprintSha256": "9d89508426d74945c83dd67c7123bdc0ba40a68971735dd1fa2f537de4242cc8"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000702-16-19302-17910",
+      "fingerprintSha256": "4907d3c9569beaf6e88c0d4480333dc471e3b6563861e35c1b8ba7c951c045df"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000703-16-19303-17910",
+      "fingerprintSha256": "b6a5a6afa98ea5fd699bbe50e92e72c36271b9406f8c9c468c48cafb9c24ca7c"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000704-16-19302-17911",
+      "fingerprintSha256": "16b25cfda958605e5d85282708c701e357146d8a065bae341b9ba2f14f97375e"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000705-16-19303-17911",
+      "fingerprintSha256": "b7efd3c7b7b0bdc68744b43ebf21ffc851814d2df474d3df11ed895b87d23222"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000706-17-38610-35816",
+      "fingerprintSha256": "1bc2e3ab894c418bcdc0c3c01f956058ef9512dea01a062912c37365296a7483"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000707-17-38611-35816",
+      "fingerprintSha256": "eea7192a20f14d8c47961f4d804a2a1434377c30584695b43679f54c0a25b2b2"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000708-17-38612-35816",
+      "fingerprintSha256": "9101ba2fc5385517cee4f8c8386f6e1f8c6470313582edd0fd12a14cace98965"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000709-17-38613-35816",
+      "fingerprintSha256": "ceea889e43be8012945ac185fd0811c245b526a8d99c4309b3123e330a9276dc"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000710-17-38614-35816",
+      "fingerprintSha256": "f8ea9aa6450dd5a0910162ef798baffd4adecc4092c70565c1d7627715196473"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000711-17-38615-35816",
+      "fingerprintSha256": "9328d870e755db73e45f3c4950deb8b485cfd118f63045934f81fb736fa81f37"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000712-16-19304-17908",
+      "fingerprintSha256": "972bef8145aaee81b29e6abbdf8f04352cb34f371b1409d5f669f37e604d45e9"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000713-17-38610-35817",
+      "fingerprintSha256": "d7c3610c26e8e9b836a20b061c653d0d9caf059903c7f7cc7d73551fbdfc1c64"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000714-17-38611-35817",
+      "fingerprintSha256": "ddad3038c378f892f858202528d84102771637b2fa644297ba34c9b66275b23b"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000715-17-38612-35817",
+      "fingerprintSha256": "6275147f3a01ccf3eccb4fcd90a94d79742e423ae2dcf87260cb594222967a9e"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000716-17-38613-35817",
+      "fingerprintSha256": "4a669ae41196daa49acb903e4079eb5769851c59660c06028805271e35926312"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000717-17-38614-35817",
+      "fingerprintSha256": "0390345f79ab12d1ce5f0550e3daa91a1be024d32894ec9a38e42ca932962711"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000718-17-38615-35817",
+      "fingerprintSha256": "86524086422ff1e189dd4a33364ff5a76a375fa542e25deb87afc5c1d1300872"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000719-17-38610-35818",
+      "fingerprintSha256": "893523be022f6d24e871512ab18da1d7a8aad8a596e1587a613df16a32ac2cf3"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000720-17-38611-35818",
+      "fingerprintSha256": "ddc5efae9061c1f4389993eca5fe71d554a3d0f72a20e6d2003a0d7a48b8c1bc"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000721-17-38612-35818",
+      "fingerprintSha256": "a6c7793d664290cc2e17684aa83fa6329799342a256b3cecb2ade25c8f03289e"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000722-17-38613-35818",
+      "fingerprintSha256": "0c984f79bcd179838ed4ef8ec5fc44be931d0c3fd5e27fbe1fdea3b9d759ccfb"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000723-17-38614-35818",
+      "fingerprintSha256": "82414a44d2f478d7d4cf1f31a5b0fae642aacd469b794812ca38430612ca898e"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000724-17-38615-35818",
+      "fingerprintSha256": "8cfe74905ead99468cd5aedf7e13f655c59a198cfbc64a9ac8539eb7c12fa267"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000725-16-19304-17909",
+      "fingerprintSha256": "2859c4d903420ad923ceec2a4b9b8934c8949ab6e38614127a1faa082c39647c"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000726-17-38610-35819",
+      "fingerprintSha256": "1f7f5360e9af317737686ae773f54f5975a23f2998a25bfc5c2230ca7132290b"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000727-17-38611-35819",
+      "fingerprintSha256": "b708be0baf25b6235e3d9e60f54af984eec22e4e4654ed688a0a039940b4e021"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000728-17-38612-35819",
+      "fingerprintSha256": "4f08b41b77dfbd8c04b4e5cffd32152fa144dadfd83c3ba043fa073e7dcd6a88"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000729-17-38613-35819",
+      "fingerprintSha256": "0836665b6e2597aa6d8e6cefad914ba3dc9f5dbd82343996f3b15e8e01a37b98"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000730-17-38614-35819",
+      "fingerprintSha256": "b7814059e191d406a88509d1338ced78007e6991edefcbdc772be1664de9259e"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000731-17-38615-35819",
+      "fingerprintSha256": "757fa3770200ede40191f38a69f05c37094e60b7986b06b7dea929e55d9b4335"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000732-17-38610-35820",
+      "fingerprintSha256": "e295bed1c39ec1ccc3e496361cd581ff3b31a638ab8a2520ac59c832c5a8e572"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000733-17-38611-35820",
+      "fingerprintSha256": "c0b0694129168e0b221d69f7d9939a076b38e7b6c9df0f5d534bb55ab4cdab03"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000734-17-38612-35820",
+      "fingerprintSha256": "33eaabf6605e73b1a5d68cb526da15828874e7ab57a11f618682bda3188788b4"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000735-17-38613-35820",
+      "fingerprintSha256": "eabd64e45174b331c3bca17fa9761f9307ef511df2189b18607fac3cce6bd499"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000736-17-38614-35820",
+      "fingerprintSha256": "5ad9873bd34cda8d5931b7994ec8ed649332b5206b09f23429b69ddd2a0e5130"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000737-17-38615-35820",
+      "fingerprintSha256": "e68e5af7d163cf197a8c6919a32361745f1ea979b960a81c7ca553b4383e9706"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000738-16-19304-17910",
+      "fingerprintSha256": "5c5c3d218cf2dc56a8c4dfac23521b58697028bd00a01c49b4dda5db2e355054"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000739-17-38610-35821",
+      "fingerprintSha256": "861af4b4e2a08fd75005e9cfbd5e5af9877949ea6b896e9cb4a9000a8cb322aa"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000740-17-38611-35821",
+      "fingerprintSha256": "0f42e84447d65c86bd581411ff979f90830f5a384bf0b6b8e20e658304167b1c"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000741-17-38612-35821",
+      "fingerprintSha256": "4a589dc413f08799f69277c7b7cb98d818468b9e64d2512f5a256de3cd2090b0"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000742-17-38613-35821",
+      "fingerprintSha256": "8edcda4f946c21a0934553e9e71c02643a0f2761c84d2fed4ad28d92a0888ef6"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000743-17-38614-35821",
+      "fingerprintSha256": "76399c599862d3d5d3515a12d9c1a860e59b5b70d54b55b2b1e650825ac3431c"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000744-17-38615-35821",
+      "fingerprintSha256": "564cae57034a595728f3c53cb8b1073f516c8e9c031b43eb9233071a669771f7"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000745-17-38608-35822",
+      "fingerprintSha256": "cfaf52885eddcce51376bc65303b898d2b0810d03ddc8d3f88a9f0f30dc2175a"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000746-17-38609-35822",
+      "fingerprintSha256": "b29aa9e9fb36f6d6a83bae215ec742e29f60898065e13c32bfb0824f228d6322"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000747-17-38610-35822",
+      "fingerprintSha256": "bb57a03bed0dbcc2276332ad9923b617c8d318168c956f2e706982b0b1204217"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000748-17-38611-35822",
+      "fingerprintSha256": "89f79a902d4dc9c5b368a0e50740e8fb16044f13ed9db43b308d5aa5e6649549"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000749-17-38612-35822",
+      "fingerprintSha256": "daa71afff765dc5e52aacc9e6f4a96855913d2e1fd54499b22b18fcf487b6b9b"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000750-17-38613-35822",
+      "fingerprintSha256": "64dcba5e60d556e106fc7901ee474783111afb7365d3947bfb712e2575173b57"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000751-17-38608-35823",
+      "fingerprintSha256": "785e26341afc5e6917644e91db6943f017d22a71d94b47c01d831898d8976ee0"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000752-17-38609-35823",
+      "fingerprintSha256": "6d32d74dc10647fa264e5bf73e6d962ac22c8ec22c63c7a414b31200e7e0ecf9"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000753-17-38610-35823",
+      "fingerprintSha256": "d0686f39f1094dddad546c6acf16d829681c1d505435562b8e0d0fdd045db111"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000754-17-38611-35823",
+      "fingerprintSha256": "647a5b2b024027f449575281c6ad28a1a986e647c7ce872a90a289238bee24cd"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000755-17-38612-35823",
+      "fingerprintSha256": "0570cc6c939b1dbf38cc833c256fbb81c37d43bd225b850fa234706460be0b37"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000756-17-38613-35823",
+      "fingerprintSha256": "2a29251c00be3953fc7276154f6801410253f8cef30afef53e722d7740953f51"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000757-16-19307-17911",
+      "fingerprintSha256": "af5e13f86ca333803277cad15e029c521e010bd8503f288b0310dfdb865b5865"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000758-15-9654-8954",
+      "fingerprintSha256": "05ae2df87d4cb663b50f5bfcb62f3f02364b8899bf63f42446ae7d71e70fc13e"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000759-15-9654-8955",
+      "fingerprintSha256": "acd25e8a29dc5d606ef150c3c149f87daae1ce63227cb3b9a96bd4914dca7c03"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000760-14-4825-4476",
+      "fingerprintSha256": "059c689fe3bbd8a0dfd5b04c333ab704f4bbac795930d88174b80997ea80df03"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000761-17-38610-35808",
+      "fingerprintSha256": "a81b2a19f457036a753f1862eb05c871ecf8e10a46328c5d2354738aa646c2f3"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000762-17-38611-35808",
+      "fingerprintSha256": "cce24f58421ff5ffde8fbe4b4ed630455dd7559dfb5bade3e0250105d7da8502"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000763-17-38612-35808",
+      "fingerprintSha256": "230681774bf0a870bed7e91242e8bf13c02425de2606aa909f5c63cacdcbaf5f"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000764-17-38613-35808",
+      "fingerprintSha256": "35665f33f3c7026bbfdc7417e88318bb6205c2cbffe776f1fe9aa81476354c7b"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000765-17-38614-35808",
+      "fingerprintSha256": "d413df761b9926f6555420a666c93e5827b129810ed9c79b26b1c8b9cfa1f5e3"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000766-17-38615-35808",
+      "fingerprintSha256": "5cfb4490d387e739d2056c14fe91b7d82ef0a229ead0fd2eea9ce3627901155f"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000767-16-19304-17904",
+      "fingerprintSha256": "ea88bfaaed5273d676b9d39d25313fa497ed157c105bb85a52bc7d6ad27c1077"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000768-17-38610-35809",
+      "fingerprintSha256": "14426923dd64700d7358425c73708ca58aaac2f1138f8ebe1fcdd3f32c0dd191"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000769-17-38611-35809",
+      "fingerprintSha256": "f1f610490f36abe5e3f2aa67e8b97a0a0ac01738f06e6eaa88cccbb0a5358b4b"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000770-17-38612-35809",
+      "fingerprintSha256": "5044dcf2ba5b6e2777dedea5d4926b8114712f35b4442665e4072ff4af2f74a8"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000771-17-38613-35809",
+      "fingerprintSha256": "7d3c00e6cab09243aa22577878fee4b94df8cb8b2ce643cdb73fe72c448aed6f"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000772-17-38614-35809",
+      "fingerprintSha256": "e0a275e746d03778ec92fd472a474dbe6ac6026671357dbc70adc51610c3cf5c"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000773-17-38615-35809",
+      "fingerprintSha256": "30370bf998da5f4bcd56570a09eb49bc092233b23762470fce7390ab511f0ab1"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000774-17-38612-35810",
+      "fingerprintSha256": "1756a665b2c6e8a1993f878a79bb6791e6e5dbb7e880d873fbbc98040f63e03d"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000775-17-38613-35810",
+      "fingerprintSha256": "d568ba72829ff805f3065c207b8d20d5e642a8fb6547946c1a572f7ec85acaba"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000776-17-38614-35810",
+      "fingerprintSha256": "5c9f5192df968864c9246f45a5cd132f0b76a6d4032327de47fc1d408651d038"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000777-17-38615-35810",
+      "fingerprintSha256": "5663d5a4e98dab15d04d6e3e7156120327166ce1d3c4fc54790619440c25d699"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000778-16-19304-17905",
+      "fingerprintSha256": "9cce727a6e3a43cdb2c868ae1a226ca9bdb6b0c341cbe2de29c744c4cb60b0a2"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000779-16-19305-17905",
+      "fingerprintSha256": "56ac8513593aa5bcc5d71f64d48aeb18d1b15df59514947ec9bc35f58fa821c2"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000780-17-38612-35811",
+      "fingerprintSha256": "58f3a993c955531f6ed9ec65ce963754efbc8f7c908b27480845869e56af4405"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000781-17-38613-35811",
+      "fingerprintSha256": "07e16b74d4469eae66654c4ddeaab34c332713893808e6c135ce80152ac83a52"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000782-17-38614-35811",
+      "fingerprintSha256": "195ba31ae277551e930c3888b158ef73405e6c085818cb5ef5ba6b8952f62ff5"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000783-17-38615-35811",
+      "fingerprintSha256": "ed1b325ce5c05256be2115247219a88153c7e78b671297475def3dabebfc9b25"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000784-18-77226-71624",
+      "fingerprintSha256": "0a9f442d011e124a28f4c70cf0be2c4d1379cc3d4f228e3d81caad0da273b4df"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000785-18-77227-71624",
+      "fingerprintSha256": "9793e083fab125014c99c3becb8f3bf5189be0c09022716c089c085605e96249"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000786-17-38612-35812",
+      "fingerprintSha256": "798c1b6caaf7b96151d4fe00f2232be377e9b8ce3652b34927457d428f8a392f"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000787-18-77226-71625",
+      "fingerprintSha256": "8194a7d1359ff9ddf467c9d5f493f463adeb342d511d01396f66c9298e29b48e"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000788-18-77227-71625",
+      "fingerprintSha256": "1d15de304e81a5524a2b36a36d1016524658d7882ea90c6640782e43596ebd64"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000789-17-38614-35812",
+      "fingerprintSha256": "fbd2069efd66498fe9de7f7a43b3bf27af71dd7d391d74c557fb9e66d3d628d2"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000790-17-38615-35812",
+      "fingerprintSha256": "5af22d5c035e5c37467a949b64cd82900fe0006d116c60e2b32415b62eefc5fc"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000791-18-77226-71626",
+      "fingerprintSha256": "67baec14a08aed028487a468eed41d07fc0e5146236086185a458fb1768492d5"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000792-18-77227-71626",
+      "fingerprintSha256": "645648f5613ea710f0c82b6ab46b3d6c73b668cff3f3cc4feba84f3fad900351"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000793-16-19304-17906",
+      "fingerprintSha256": "5937ffa96bb91e69c60a32aff3a90d8242c4de7ea5a282d815823c1545959314"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000794-16-19305-17906",
+      "fingerprintSha256": "55b70630245b3179281e7bf28a696cad48b64ffcb1e89a6b1e23252e7fb4c00e"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000795-17-38612-35813",
+      "fingerprintSha256": "c73199db3a744399208b61d5d8236c3ebf9c371516e4cfae32beebc2991c6a6e"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000796-18-77226-71627",
+      "fingerprintSha256": "25cb069e5595789e5074e3cc5e22549fb742ba3fd3f1e40bdaabc67b69a9617d"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000797-18-77227-71627",
+      "fingerprintSha256": "5643b5aa3b825648661a16c4f7fa42f2e51a14d8eba33506f82d86316cb37fc4"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000798-17-38614-35813",
+      "fingerprintSha256": "89b709e3010aa5fce3b27ebdf364fca8cee053085ebf37a390cfbad80e94b2ef"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000799-17-38615-35813",
+      "fingerprintSha256": "dae154a96db960303cbcd3a393144199b58e2e48ff5f71c7af960c69faf79326"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000800-17-38612-35814",
+      "fingerprintSha256": "f5f9df2d76ec5f5428eab580ac62896e94e6e4424f91c78ebea85e9b0c80130e"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000801-17-38613-35814",
+      "fingerprintSha256": "eeba2e533a71d5005d7c07e998fbf48a709846f0676e6b8e0a2e44649c16315d"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000802-17-38614-35814",
+      "fingerprintSha256": "1ea21de79b1802d8635abf268aafc1c252e339d0064532ecba23271ed3bcb6b7"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000803-17-38615-35814",
+      "fingerprintSha256": "a218d10c8cbb6438ec077c1e44f3e25e5195377f29d92291e3d537f83d7089d6"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000804-16-19304-17907",
+      "fingerprintSha256": "8e9a989fece46e5f09cb04272ab81956d08fec06247183eb155bb18a2f7517b6"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000805-16-19305-17907",
+      "fingerprintSha256": "77fcc8ea87fc9a03ef7c2b9ef02e091398443277b8837edc085a53966540b1bd"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000806-17-38612-35815",
+      "fingerprintSha256": "00f36a8286f51aca11d0672dcbdcd2a6ab202fe8b431faaf0510ba53161c1542"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000807-17-38613-35815",
+      "fingerprintSha256": "6fb6604465b19c37bb23b6e7ac3203958769cf690a6bc6fc7968ff12c4e2d694"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000808-17-38614-35815",
+      "fingerprintSha256": "7bf34ef51c01cb262f3f56998dee33b60597f379fc1d48414ad9e0af41c971ac"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000809-17-38615-35815",
+      "fingerprintSha256": "e6fa649d4d1b88810c91d1e780491c29e46fbcabf4a9959d5911782284838559"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000810-14-4827-4476",
+      "fingerprintSha256": "dced43d15a3a2dec9a550ef81319c84c67d145de47e03be060a0fe629c14dad8"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000811-17-38614-35800",
+      "fingerprintSha256": "aa37c3184e3837811cb2c41808118d615990daf346599313e27901b489030db1"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000812-17-38615-35800",
+      "fingerprintSha256": "bf318fd6e60ada79075125daff00294bfb1d9a6b654041aa74ffcb9f3ddc2179"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000813-16-19306-17900",
+      "fingerprintSha256": "6054cd876892adf1719d2803ba88448884994a8a7a7d6206ceaff3f4328be75f"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000814-17-38614-35801",
+      "fingerprintSha256": "90c1eb32673949b536d194b6fcddb209f67bf2568fff3d214c5cc0e4b19f4e8a"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000815-17-38615-35801",
+      "fingerprintSha256": "5412729a66ec692ab52dbb00fd111061f8669ca176e8dd7ada52664171998d70"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000816-15-9652-8950",
+      "fingerprintSha256": "a26812d52df3692707a083d98519e52200e1d6c92553163e28e21f8fbb005c15"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000817-16-19306-17901",
+      "fingerprintSha256": "3c3fa0b2ccae738a0ca97b1230076983a88867ba65ea24bb246254aaad79dcf9"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000818-16-19307-17901",
+      "fingerprintSha256": "94bcb18b10d562fc285cfeb9c44943f5fa8c1eae09dc5b5283e7ef98d1d4e3e6"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000819-17-38612-35804",
+      "fingerprintSha256": "9ec372491a4e89824a7da2ad0c960af536dc6f39031c4f381ac7f2dd5bffa5e0"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000820-17-38613-35804",
+      "fingerprintSha256": "3ec9249299bb714756cb48a50b1ec2292547ee865ae0532b462433f3ec156280"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000821-17-38614-35804",
+      "fingerprintSha256": "0eaaa2cfd020fc591dc24776c480a72085e3aca38bd41661fae32fd7fbbdf0f5"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000822-17-38615-35804",
+      "fingerprintSha256": "fafd36d3a4c13e59611ce184caaa3cbb087523434dbcf03913b1e75e416cd34e"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000823-16-19305-17902",
+      "fingerprintSha256": "2a4b10a168e9b0cd118bd9f8169862e74729f8793969203d6dcb428abba392d7"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000824-17-38612-35805",
+      "fingerprintSha256": "37bdc68a340f6582cf2dd59b989f55e39b3f56f56d5b27eaa4b716832a912af5"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000825-17-38613-35805",
+      "fingerprintSha256": "dfa18be3f8363c220e35a046bd925b5637b8ae10521282df6841b7376b6851d5"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000826-17-38614-35805",
+      "fingerprintSha256": "2b4920f4b858af01bffbbe42d550e1d2d280ea438aa63e55c143dc83058fdda1"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000827-17-38615-35805",
+      "fingerprintSha256": "126c5b5c0fe3de54cb230888b710ac87a887b5344be72db9bc3f5d9cd515e4f4"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000828-17-38612-35806",
+      "fingerprintSha256": "315af6ef02d1de69575ffa87121fa2967ce8e02884b223ed4c2cb60f6477bce0"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000829-17-38613-35806",
+      "fingerprintSha256": "90b43b1911c872c8504df259228b2445ce373e1b8f09b3493742602d7ef30f94"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000830-16-19304-17903",
+      "fingerprintSha256": "104977e88df27ffae9f615123ed83da2484649204457a356e431e65d42616708"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000831-16-19305-17903",
+      "fingerprintSha256": "7fd23882465bf11755b37e9dc185366b98567bf96acd055088b65591c4145b7b"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000832-17-38612-35807",
+      "fingerprintSha256": "f746d5ac34bd8194f12cc5a1751e1561a125c23668f3a8b83dba808b1030206f"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000833-17-38613-35807",
+      "fingerprintSha256": "262ffaf75c2beafb8fe3338b55031ed706f9b54fdb6121dd4791b93bab443c21"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000834-16-19307-17903",
+      "fingerprintSha256": "87913a1bd2a8a0a2f216b7578eac14e444b8a4bbf80f55dca1341b7549c8d3b3"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000835-14-4827-4475",
+      "fingerprintSha256": "d0cf90b33e2035f887c31596782b68c7d7bb31fbcd28a81d925b8cd83f86115e"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000836-16-19306-17896",
+      "fingerprintSha256": "2365096cd88ab0f93ae231fb9783a7af45b635a88459bd7149a378d158131cf3"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000837-16-19307-17896",
+      "fingerprintSha256": "6032e1f495979e258a9383a543daf598064f81e82472fb5ab7828e6e98a9d256"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000838-16-19306-17897",
+      "fingerprintSha256": "9e4b81d1abdde7f9f43ff4433944b5b6a82f87249e1111c483191f3bc124cc13"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000839-16-19307-17897",
+      "fingerprintSha256": "fb0d36122253954a0ec8ed4c6892d05f2fee40c7dd4c5cc7b40a2d8e8149946c"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000840-16-19306-17898",
+      "fingerprintSha256": "81402619035c44ef81ee50a92fb3e883a7d76a872a3de061d9d92862bbaea644"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000841-16-19307-17898",
+      "fingerprintSha256": "a21bb3ddd5bdd501e6056cc971aed87c366a4f54de89f08cc7c5913d45b7a56f"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000842-17-38614-35798",
+      "fingerprintSha256": "284911ddab5d2837ca72ad42225e59afed70c245e32228ab634f09e394383e1d"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000843-17-38615-35798",
+      "fingerprintSha256": "2287fe04f23cb7a65552fb4fc24dfb986d7b031e33a130ce8d9e1eabf8f37670"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000844-16-19306-17899",
+      "fingerprintSha256": "37aca860a1a387682411380fb365274b0743ec335cd248b34c68dcaaef12cbc3"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000845-17-38614-35799",
+      "fingerprintSha256": "925e6d9aef5098b4c7360fd62ceda814aadeedfed18f582b912f4468dfd55304"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000846-17-38615-35799",
+      "fingerprintSha256": "22bec68a15c1bd187961c0220852e1fc61e472ec7c1559be8923bf723e29919f"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000847-16-19308-17896",
+      "fingerprintSha256": "e966e4a05f3c1e2970f2cb083f6be4ccbe5071ef75469f154117440e2786d857"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000848-16-19309-17896",
+      "fingerprintSha256": "3c85a6d9a316e2a0a03b608b8b6585d4ba465b7ebedd9d2b7a93e0c2e5c140c6"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000849-16-19308-17897",
+      "fingerprintSha256": "cd53fc1e9476503f373f6dbe1e141e5a8d8c0ea26d77775e406426eb4b3bdc3f"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000850-16-19309-17897",
+      "fingerprintSha256": "1a605b45ac6d05319b4cba85ad256d1bee1db3fbf2c635a97674ef1d60c943e4"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000851-15-9654-8949",
+      "fingerprintSha256": "5c403ca77211c0ca8d4cdb9f72453b5be451818a4baddf7bf08e78d425d4b570"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000852-15-9653-8946",
+      "fingerprintSha256": "68cbb27935c6254ef51f212f0daff6a4a7f2ad623e2516dc8238d77e7605beb8"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000853-15-9653-8947",
+      "fingerprintSha256": "2546f2be5c3bf59f08fad31782c9a159487e207c1ab9b3d9e1fd1a7e5868a30e"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000854-16-19308-17892",
+      "fingerprintSha256": "9b47cbb88567b03259b03185818b68f84a675d00e433e389fee891e534497d4c"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000855-16-19309-17892",
+      "fingerprintSha256": "6d8a131b6a911e0b56162fa80c6c18f9bb39f8edeb491258a3ddc700ae45596e"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000856-16-19308-17893",
+      "fingerprintSha256": "f90680fac70dca1d2f4b36fab2158bf5605e1f7d75b3b04d1714d8381018ee75"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000857-16-19309-17893",
+      "fingerprintSha256": "4f50bcf6a6d314d4ae32f90ca19c3edc3259e96538cc84e9bcef9fad285a4553"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000858-15-9655-8946",
+      "fingerprintSha256": "e8863b5c719b1ebed85c60ac099547306eb7f7fadfde8b0f65af3eefc0d84ebd"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000859-17-38618-35788",
+      "fingerprintSha256": "3b33916b47379c1215466dc938b2cb9b504b98ba43ba363316b5c1112763adcf"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000860-17-38619-35788",
+      "fingerprintSha256": "123718fdfa40c0029a04c32a475abe2fc025e7a3ab89fe859e1ab4f59823cf0c"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000861-16-19308-17894",
+      "fingerprintSha256": "19a7c82b4fac50cf7330ec8cc992a9ae693124430a1e9d68631719a566991a56"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000862-17-38618-35789",
+      "fingerprintSha256": "6a613c6c6a632bf7dac79dd7b3feaf650a26a36c10c991e7e693fae12cc1af7f"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000863-17-38619-35789",
+      "fingerprintSha256": "7094174a3c0de295aac4df2ba26a445aad70a63dd26dd4e141b2e03c249c24f8"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000864-16-19308-17895",
+      "fingerprintSha256": "ab05209c789051f832f4bb342634a25d47919b4f1d1ad504bc194e010d8bd15f"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000865-16-19309-17895",
+      "fingerprintSha256": "f39aae3e1f738205f98f46cd2c4dcf269c9d5e46f36c6f51f529ac1b52a901c1"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000866-16-19310-17888",
+      "fingerprintSha256": "469a2d9c3756fd622c0879a8caa3ff0bbf82984d40319c1828f7d99c3e211653"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000867-16-19311-17888",
+      "fingerprintSha256": "22a70f0d21fa560f4bda272352bbc4979d366c850876fcdb23da0b6869443ddb"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000868-15-9654-8944",
+      "fingerprintSha256": "ab9d76bda9326a7f502fdc155f26785dfb78544d81971e612eec3f90c8b3cce2"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000869-16-19310-17889",
+      "fingerprintSha256": "a6cc47d318874aa2324a0d957bfa441abd6fa37b2908ad4f2ae223736f067bd2"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000870-16-19311-17889",
+      "fingerprintSha256": "76e1ae1dc83900f94f2bbc16b09740d068d3d039fb6590e4122f11afd9ab49b1"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000871-16-19310-17890",
+      "fingerprintSha256": "5e356e188c2b7c6dc28b03bc81f26d32cff26eb4a2e8e757d9da26e87cd1665f"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000872-16-19311-17890",
+      "fingerprintSha256": "b51e898777c229c3d11b96107f6f78fd0e3c37337785a5616e0c86b93247e984"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000873-15-9654-8945",
+      "fingerprintSha256": "31b533fc4e3cdb4113797688dca0cc3be9ee2361c423eb526afa654517a447f7"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000874-16-19310-17891",
+      "fingerprintSha256": "ce282ff8f35d8e6f5ad483593738bc68e1f590eaaa7a17e87f020622d47d6f63"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000875-16-19311-17891",
+      "fingerprintSha256": "77a26e7b62d11e1475b2e9a1d8f505be023dbd9c63d5bf13806bc970bb81533a"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000876-14-4828-4472",
+      "fingerprintSha256": "35bf4cea9a7ea46f9d0deca605be0607f5d88d21110baf6de16adc22690137bb"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000877-14-4827-4471",
+      "fingerprintSha256": "6e06f0f0252ad3bd71f775cc019eb4e76c31bb1a631b06ce832093a7c4570d71"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000878-16-19312-17884",
+      "fingerprintSha256": "4f699ae2e4518b5fb97b4ce60ad29a4be48afc76a77e88b1722bb8e1912ca9a2"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000879-16-19313-17884",
+      "fingerprintSha256": "e5f6754a5b909fea6bc9e7244b1aa3d8495683a1ab055047b4a0b6bc842d9d4d"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000880-16-19312-17885",
+      "fingerprintSha256": "45662d1c0c5aad6164b2f2d2a9eae4f3f37019f2cd6631155f3b6a0248f81c07"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000881-16-19313-17885",
+      "fingerprintSha256": "ad93adffce9cb4e7d6f7bb7a0c548345a6348b9ea002c274a48e9bdad47cbc8d"
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000882-15-9656-8943",
+      "fingerprintSha256": "c069ea7470d2384a2caf0e52019e901738a28c6dce42b6865d899bfbcac4256d"
+    }
+  ]
+}
