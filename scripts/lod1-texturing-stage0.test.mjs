@@ -216,6 +216,27 @@ describe("the rendered comparison, and the verdict it settles", () => {
     expect(render.instrument.blenderIncidentAvoided).toContain("read_factory_settings");
   });
 
+  /**
+   * THE USER OVERRODE THE RECOMMENDATION, AND BOTH THINGS STAY TRUE AT ONCE.
+   *
+   * Stage 0 recommended RESCOPE on the rendered evidence; the user was shown
+   * that evidence and chose the campaign. Neither is retracted. A record that
+   * kept only the decision would read as though the measurement had agreed with
+   * it, and a record that kept only the measurement would misstate what ships.
+   */
+  it("records the user decision WITHOUT retracting the recommendation it overrode", () => {
+    const gate = readJson(join(root, "stage0-gate.json"));
+    const final = gate.finalDisposition2026_08_17;
+    expect(final.disposition).toBe("GO-BY-USER-DECISION");
+    expect(final.userDecisionVerbatim).toBe("그래도 텍스처링");
+    // The recommendation it supersedes is still there, unedited.
+    expect(gate.amendment2026_08_17.verdict).toBe("RESCOPE");
+    expect(final.thisIsNotAReversalOfTheEvidence).toContain("Nothing measured here is withdrawn");
+    // And the campaign inherits a design constraint FROM the evidence.
+    expect(final.whatTheCampaignMustNowDoDifferently).toContain("CONTINUOUS tile-tint palette");
+    expect(gate.notClaimedHere.some((entry) => entry.includes("justified by an explicit user decision"))).toBe(true);
+  });
+
   it("states the amended verdict as RESCOPE and keeps its limitations", () => {
     const gate = readJson(join(root, "stage0-gate.json"));
     expect(gate.amendment2026_08_17.verdict).toBe("RESCOPE");

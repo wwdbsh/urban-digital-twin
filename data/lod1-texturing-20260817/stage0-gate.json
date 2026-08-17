@@ -172,7 +172,8 @@
     "That lod_0 re-emits byte-identically under a changed write path.",
     "That the fallback identity predicate holds under a changed emission.",
     "Any acceptance of a -c2 release. None exists.",
-    "An absolute appearance claim in the shipped renderer: the comparison was rendered in Blender EEVEE, not CesiumJS."
+    "An absolute appearance claim in the shipped renderer: the comparison was rendered in Blender EEVEE, not CesiumJS.",
+    "That the campaign is justified by the evidence. It is not; it is justified by an explicit user decision recorded above."
   ],
   "supersededBy": {
     "note": "THIS RECORD IS AMENDED, NOT REWRITTEN. Every analytic finding below stood up and is preserved verbatim. What changed is that the blocking condition was cleared: item 1's render was captured on 2026-08-17 and it CONFIRMS the analytic reading. The fields `verdict`, `verdictStatement` and `blockingCondition` are superseded by `amendment2026_08_17` and are kept so the sequence of belief stays readable.",
@@ -186,5 +187,21 @@
     "whatTheSeamGotRightAndWrong": "RIGHT: a 128-pixel joint is below a screen pixel beyond 250 m, so lod_1 does not need the tile for DETAIL. WRONG BY OMISSION: dropping the tile also drops its mean DARKENING, and nothing re-tinted lod_1 to compensate. The tile means are 0.8387 to 0.8894, so an untinted lod_1 renders 11 to 16 percent brighter than the same surface at lod_0 -- which is the discontinuity users see.",
     "hueErrorIsClassDependent": "REPHRASED after the fallback pair rebutted the first wording. The spread is 0.0158-0.0265 on limestone-bearing buildings, 0.0003-0.0016 on the two DECIMATED brick buildings, and 0.0082-0.0169 on the FALLBACK brick building whose two levels share geometry. Decimation is a confound this five-building sample cannot separate from texture class, so the reconciliation should be derived PER MATERIAL rather than assumed uniform -- but 'limestone only' is not supported.",
     "costOfTheRescope": "A per-material factor multiply at emission. No TEXCOORD_0 accessor, no image, no new bytes in the GLB beyond the changed factor values, and no change to triangle, material or texture counts."
+  },
+  "finalDisposition2026_08_17": {
+    "disposition": "GO-BY-USER-DECISION",
+    "supersedes": "The `verdict` field and `amendment2026_08_17.verdict`. Both are preserved byte-intact below and neither is retracted: they remain the correct reading of the evidence this stage gathered.",
+    "whatStage0Recommended": "RESCOPE. On the rendered evidence the visible mid-ring defect is a TONE and HUE discontinuity, not missing tile detail, and a per-material palette reconciliation would close it at approximately zero byte cost.",
+    "whatTheUserDecided": "The full textured-lod_1 campaign, as originally contracted.",
+    "userDecisionVerbatim": "\uadf8\ub798\ub3c4 \ud14d\uc2a4\ucc98\ub9c1",
+    "userDecisionDate": "2026-08-17",
+    "howTheDecisionWasTaken": "The user was shown the rendered evidence -- the lod0flat frame that makes the tone case, the sub-pixel texel arithmetic, and the RESCOPE recommendation -- and chose the campaign anyway, on a maximum-completeness posture rather than on a dispute with the measurement.",
+    "thisIsNotAReversalOfTheEvidence": "Nothing measured here is withdrawn. The tile remains sub-pixel at both distances tested; the tone gap remains the visible defect; the rescope remains the cheaper remedy for that defect. The decision is a choice to spend bytes for completeness, and it is recorded as a decision rather than re-argued as a finding.",
+    "whatTheCampaignMustNowDoDifferently": "Textured lod_1 must carry lod_0's CONTINUOUS tile-tint palette, not lod_1's quantized one. factor x grayscale tile then reproduces lod_0's exact rendered appearance, which closes the 11-16 percent tone gap BY CONSTRUCTION rather than leaving it. Binding the tile to the existing quantized palette would darken lod_1 by the tile mean on top of an already-cooler palette and would make the discontinuity worse -- the outcome this stage warned about.",
+    "gatesThatCanStillStopIt": [
+      "2a prototype textured emission and UV set-containment",
+      "2b lod_0 BYTE-IDENTITY under the both-LODs-textured write path",
+      "2c fallback identity under textured emission"
+    ]
   }
 }
