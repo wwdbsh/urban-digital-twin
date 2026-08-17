@@ -1876,10 +1876,32 @@ async function runCampaignEviction(base, attemptCount) {
       const e1c = stops.every((stop) => stop.ceilings.peakWithinFour);
       const e1d = stops.every((stop) => stop.ceilings.entriesWithinCap && stop.ceilings.bytesWithinCap);
       const e1e = first.selection?.digest != null && last.selection?.digest != null && first.selection.digest === last.selection.digest;
-      // The pre-registered FALSIFIER of the forcing argument, checked rather
-      // than assumed: a STATIONARY stop that evicted while holding no more than
-      // the scheduler's hard cap would mean the argument is wrong.
-      const falsifying = stops.filter((stop, index) => index > 0 && (stop.sharedCache?.cacheEvictions ?? 0) > (stops[index - 1].sharedCache?.cacheEvictions ?? 0) && stop.scheduledCellTotal <= 8);
+      /**
+       * THE PRE-REGISTERED FALSIFIER, AND WHY THIS INSTRUMENT CANNOT DECIDE IT.
+       *
+       * The registered condition is "a STATIONARY STOP with cacheEvictions > 0
+       * and a scheduledCellCount at or below 8". Taken literally against the
+       * shipped counter it is trivially satisfiable and therefore decides
+       * nothing: `cacheEvictions` is CUMULATIVE and SESSION-WIDE, so once any
+       * eviction has happened anywhere in the session — including in transit,
+       * which is exactly where the argument predicts it — every later settled
+       * stop reads a non-zero value while holding the scheduler's cap of 8.
+       *
+       * A reading that CAN separate the two would take two probe reads at ONE
+       * stationary pose and ask whether the counter moved between them. This
+       * instrument takes one read per stop, so it reports the literal condition,
+       * reports the increments and where they fall, and returns an explicitly
+       * UNDECIDED verdict rather than asserting a falsification the data cannot
+       * support — or a survival it cannot support either.
+       */
+      const literallySatisfying = stops.filter((stop) => (stop.sharedCache?.cacheEvictions ?? 0) > 0 && stop.scheduledCellTotal <= 8);
+      const increments = stops.map((stop, index) => ({
+        poseId: stop.poseId,
+        cacheEvictions: stop.sharedCache?.cacheEvictions ?? null,
+        incrementSincePreviousStop: index === 0 ? null : (stop.sharedCache?.cacheEvictions ?? 0) - (stops[index - 1].sharedCache?.cacheEvictions ?? 0),
+        scheduledCellTotal: stop.scheduledCellTotal,
+        note: index === 0 ? "first stop" : "the increment spans the TRANSIT from the previous pose AND this pose's settle; one read per stop cannot say which of the two produced it",
+      }));
       const record = {
         ...campaignEnvelope("eviction-loop", { attemptCount, base, servedBundle, browser }),
         releaseSelector: "default",
@@ -1912,18 +1934,19 @@ async function runCampaignEviction(base, attemptCount) {
         forcingArgument: {
           claimUnderTest: "A stationary anchor cannot force an eviction; eviction is reachable only in transit.",
           falsifyingCondition: "A stationary stop with cacheEvictions > 0 and a scheduledCellCount at or below 8.",
-          falsifyingStops: falsifying.map((stop) => ({ poseId: stop.poseId, scheduledCellTotal: stop.scheduledCellTotal, cacheEvictions: stop.sharedCache?.cacheEvictions ?? null })),
-          falsified: falsifying.length > 0,
-          statement: falsifying.length > 0
-            ? "FALSIFIED BY THIS CAPTURE. One or more stops evicted while holding no more than the scheduler's hard cap of 8 resident units. The pre-registered forcing argument is WRONG and this record says so rather than reinterpreting the stop as transit."
-            : "NOT FALSIFIED by this capture. Every eviction increment observed here is bracketed by a camera move, which is what the pre-registered argument predicts. That is a consistency reading, not a proof of the argument.",
+          verdict: "UNDECIDED-BY-THIS-INSTRUMENT",
+          literallySatisfyingStops: literallySatisfying.map((stop) => ({ poseId: stop.poseId, scheduledCellTotal: stop.scheduledCellTotal, cacheEvictions: stop.sharedCache?.cacheEvictions ?? null })),
+          evictionIncrements: increments,
+          whyUndecided: "THE PRE-REGISTERED CONDITION IS UNDER-SPECIFIED AGAINST THE SHIPPED COUNTER, and that is recorded rather than resolved in whichever direction is convenient. `cacheEvictions` is CUMULATIVE and SESSION-WIDE: once any eviction has occurred — including in transit, which is exactly where the argument predicts it — every later settled stop reads a non-zero value while holding the scheduler's cap of 8, so the literal condition is satisfied by a session that behaves exactly as the argument says it will. Reading that as a falsification would be wrong; reading its literal satisfaction away would also be wrong.",
+          whatWouldDecideIt: "TWO probe reads at ONE stationary pose, separated by a dwell, asking whether cacheEvictions moved BETWEEN them. This instrument takes one read per stop and therefore cannot answer it. That is a named instrument limitation, not a finding.",
+          whatThisCaptureDoesSupport: "Every settled stop sat inside both caps with room to spare, which is consistent with the argument's central claim that a stationary anchor does not reach the byte ceiling. Consistency is not proof.",
         },
         externalHosts: externalHostsOf(session, base),
         claim: "A closed eight-pose loop through the midtown neighbourhood on the six-wave default session, with a deep-linked selection applied before the roam. It states whether eviction is reachable in transit, whether re-entry is clean, and whether the same building resolves to the same sourced information across the cycle.",
         uncapturedGap: EVICTION_GATES["E-1f"].rule,
       };
       await writeEvidence("eviction-loop", record);
-      console.log(serialize({ "E-1a": e1a, "E-1b": e1b, "E-1c": e1c, "E-1d": e1d, "E-1e": e1e, maxEvictions, digests: [first.selection?.digest ?? null, last.selection?.digest ?? null], falsified: record.forcingArgument.falsified }));
+      console.log(serialize({ "E-1a": e1a, "E-1b": e1b, "E-1c": e1c, "E-1d": e1d, "E-1e": e1e, maxEvictions, digests: [first.selection?.digest ?? null, last.selection?.digest ?? null], forcingArgumentVerdict: record.forcingArgument.verdict }));
     } finally {
       session.close();
       await fetch(`http://127.0.0.1:${PORT}/json/close/${targetId}`).catch(() => null);

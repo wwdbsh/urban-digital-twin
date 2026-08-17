@@ -138,6 +138,20 @@ describe("T006 pre-registration record", () => {
  */
 const FROZEN = {
   "data/citywide-heap-repeat-20260815/heap-repeat-evidence.json": "6c3ef7c38118dcc1630a1da73ae2224592b5c4fbd94c60c4488a07ddc925eb9a",
+  // ADDED AT THE CAPTURE COMMIT, for a reason the S1 list did not yet have:
+  // these T005 records are the BASELINES the T006 gates are defined against.
+  // E-1a's comparison condition is byte-identical to `eviction-at-scale.json`'s
+  // `findings.evictionsObserved === false`, the E-1 forcing argument quotes
+  // `default-session-residency.json`'s stationary stops, and G4 restates
+  // `gpu-campaign.json`'s two arms. The T006 instrument writes to a different
+  // root and refuses to run without `--out`; this is the check that the refusal
+  // held.
+  "data/exterior-serving-20260817/eviction-at-scale.json": "84809b28ad88460a5bd3ee678bfed5a210b0ec3d859773824f8fe57bc18575cb",
+  "data/exterior-serving-20260817/default-session-residency.json": "dc86b08882cdab0c2e311be3ee43428b84d28860a4aa55d7233549da8308891e",
+  "data/exterior-serving-20260817/frame-time-ab.json": "8bf220330cf70232aca2acf1a25bebdd2c29f0ecffc46433902c69e095b72482",
+  "data/exterior-serving-20260817/frame-arm-a.json": "8efe6f0f384a4b11755fd9b53da385b2aea7b9b89c7a659fe9cb437ddb517a9e",
+  "data/exterior-serving-20260817/frame-arm-b.json": "daa543f88ed3ccc487479e8f6a2dec8ca5f66550f84a97aa799ebe6d0c133bcc",
+  "data/shared-class-textures-20260815/gpu-campaign.json": "0a9501b717c088644d793ffe9d7961893534bc975b4d9054e7681273ab13dd9f",
   "data/central-upper-manhattan-20260812/journey-evidence.json": "d7af843a7b07f3eea1602528010e48b553296d843d0025eb1347e976e61909cf",
   "data/central-upper-manhattan-20260812-p1/journey-evidence.json": "6ce55d588828eed17c0f05060f32645e2e697322f4283e799907b21087294a5f",
   "data/lower-manhattan-20260812-p1/journey-evidence.json": "348b174021f9f896d930232153bf827fa6cd7c88ebf44d7a2ff1625d5cdff0cb",
