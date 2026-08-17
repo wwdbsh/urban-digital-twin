@@ -28,11 +28,18 @@ const VERDICT_VOCABULARY = ["MET", "MET-AS-ADJUDICATED", "NOT-MET"];
  * and it is not regenerated here — a Goal completion record is not re-derived to
  * follow a later promotion.
  */
-const CURATED_ACTIVATIONS = EXTERIOR_DEFAULT_ACTIVATIONS.flatMap((activation) =>
+// T001 promoted the six two-LOD (`-s2`) releases over the `-s1` serving set,
+// so the chain is now `-s2` -> `-s1` -> curated: the curated composition this
+// record describes is TWO links down, and the `-s1` rung sits between.
+const SERVING_ACTIVATIONS = EXTERIOR_DEFAULT_ACTIVATIONS.flatMap((activation) =>
+  activation.enabled && activation.predecessor.enabled ? [activation.predecessor] : [],
+);
+const CURATED_ACTIVATIONS = SERVING_ACTIVATIONS.flatMap((activation) =>
   activation.enabled && activation.predecessor.enabled ? [activation.predecessor] : [],
 );
 const CURATED_PROMOTION_SET = CURATED_ACTIVATIONS.map((activation) => activation.releaseId);
-const SERVING_PROMOTION_SET = EXTERIOR_DEFAULT_ACTIVATIONS.flatMap((activation) => (activation.enabled ? [activation.releaseId] : []));
+const SERVING_PROMOTION_SET = SERVING_ACTIVATIONS.map((activation) => activation.releaseId);
+const TWO_LOD_PROMOTION_SET = EXTERIOR_DEFAULT_ACTIVATIONS.flatMap((activation) => (activation.enabled ? [activation.releaseId] : []));
 
 /**
  * The two runtime-budget fields the T005 promotion moved, held apart from the
@@ -107,9 +114,9 @@ describe("goal integration reconciliation — the coverage block cannot drift fr
   it("describes the curated composition, which the build has since promoted past", () => {
     const live = computeCoverageReconciliation();
     expect(record.coverage.promoted.releases.map((release) => release.releaseId)).toEqual(CURATED_PROMOTION_SET);
-    expect(live.promoted.releases.map((release) => release.releaseId)).toEqual(SERVING_PROMOTION_SET);
+    expect(live.promoted.releases.map((release) => release.releaseId)).toEqual(TWO_LOD_PROMOTION_SET);
     expect(live.promoted).not.toEqual(record.coverage.promoted);
-    for (const releaseId of SERVING_PROMOTION_SET) expect(CURATED_PROMOTION_SET).not.toContain(releaseId);
+    for (const releaseId of [...SERVING_PROMOTION_SET, ...TWO_LOD_PROMOTION_SET]) expect(CURATED_PROMOTION_SET).not.toContain(releaseId);
   });
 
   it("reports the Goal's four zero-violation claims as actually zero, one count at a time", () => {
@@ -270,13 +277,14 @@ describe("promoted default coverage — what a session with no URL parameter got
 describe("promoted default coverage — the serving composition the build has since promoted", () => {
   const live = computePromotedCoverage();
 
-  it("promotes the six serving successors of the curated releases the record describes", () => {
-    expect(live.releases.map((release) => release.releaseId)).toEqual(SERVING_PROMOTION_SET);
+  it("promotes the six two-LOD successors of the serving releases, which succeeded the curated ones the record describes", () => {
+    expect(live.releases.map((release) => release.releaseId)).toEqual(TWO_LOD_PROMOTION_SET);
     expect(live.promotedWaveCount).toBe(6);
     for (const release of live.releases) expect(release.approvalRef).toBeTruthy();
-    // Each one names the curated release it succeeded, so the two blocks are
-    // joined by the records rather than by these comments.
-    expect(live.releases.map((release) => release.predecessorReleaseId)).toEqual(CURATED_PROMOTION_SET);
+    // Each one names the -s1 release it succeeded, which in turn names the
+    // curated release IT succeeded — the blocks stay joined by the records.
+    expect(live.releases.map((release) => release.predecessorReleaseId)).toEqual(SERVING_PROMOTION_SET);
+    expect(SERVING_ACTIVATIONS.map((release) => (release.enabled && release.predecessor.enabled ? release.predecessor.releaseId : null))).toEqual(CURATED_PROMOTION_SET);
   });
 
   /**

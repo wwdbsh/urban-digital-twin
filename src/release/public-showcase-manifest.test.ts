@@ -57,9 +57,12 @@ describe("the public showcase candidate is a closed set", () => {
    * a promotion still fails here.
    */
   it("enumerates exactly the six curated waves the promotion set descends from, in activation order", () => {
-    const curated = EXTERIOR_DEFAULT_ACTIVATIONS.flatMap((record) =>
-      record.enabled && record.predecessor.enabled ? [record.predecessor.releaseId] : [],
-    );
+    // T001 added the two-LOD rung: curated is now two links down the chain.
+    const curated = EXTERIOR_DEFAULT_ACTIVATIONS.flatMap((record) => {
+      if (!record.enabled || !record.predecessor.enabled) return [];
+      const serving = record.predecessor;
+      return serving.predecessor.enabled ? [serving.predecessor.releaseId] : [serving.releaseId];
+    });
     expect(PUBLIC_SHOWCASE_WAVES.map((wave) => wave.publicReleaseId)).toEqual(curated);
     expect(PUBLIC_SHOWCASE_WAVES).toHaveLength(6);
     // The promoted successors are outside this manifest, and that is asserted

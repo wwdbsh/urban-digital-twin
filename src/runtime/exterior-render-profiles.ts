@@ -8,15 +8,14 @@ import type { AssemblyLod } from "../release/multi-lod-assembly.ts";
 export const EXTERIOR_RENDER_PROFILES = ["exploration", "inspection"] as const;
 export type ExteriorRenderProfile = (typeof EXTERIOR_RENDER_PROFILES)[number];
 /**
- * The DEFAULT selection semantics.
+ * The DEFAULT selection semantics: `inspection`, finest-that-covers.
  *
- * T001 HOLDS A FLIP OF THIS CONSTANT to `inspection` (finest-that-covers), and
- * it is developed but deliberately NOT applied here: ADR 0057 Part 0 requires it
- * to ship in the SAME commit as the `-s2` activation records and the rollback
- * entries, so that one revert restores the composition and the semantics
- * together. Until that commit it would be a third, unmeasured configuration.
+ * FLIPPED BY T001 IN THE SAME COMMIT as the `-s2` activation records and the
+ * rollback entries, exactly as ADR 0057 Part 0 requires, so that ONE revert
+ * restores the composition and the semantics together. Shipping either half
+ * alone would have been a third, unmeasured configuration.
  *
- * The reason it has to move is worth stating rather than absorbing. `maxDistanceMeters` is an UPPER bound only, and `AssemblyLod` has
+ * The reason it had to move is worth stating rather than absorbing. `maxDistanceMeters` is an UPPER bound only, and `AssemblyLod` has
  * no near bound, so under a coarsest-preferring profile a two-LOD asset has
  * exactly two reachable behaviours: thresholds distinguished, so the coarse
  * level covers everywhere and wins everywhere; or thresholds tied, so the tie
@@ -27,15 +26,19 @@ export type ExteriorRenderProfile = (typeof EXTERIOR_RENDER_PROFILES)[number];
  * `exploration` is unchanged and stays reachable through `?exteriorProfile=`,
  * where it is the documented coarsest / degraded-performance arm.
  *
- * The flip is a NO-OP for every release the promoted city serves today, and
- * that is proven rather than asserted: `exterior-two-lod-selection.test.ts`
+ * The flip is a NO-OP for every release the city served BEFORE this promotion,
+ * and it is decidedly NOT a no-op for the `-s2` releases this commit promotes:
+ * they declare `lod_0` bounded at 400 m and `lod_1` unbounded, so under the old
+ * `exploration` default the shed level would have covered street level. That is
+ * the whole reason the two halves ship together. The no-op claim for the older
+ * shapes is proven rather than asserted: `exterior-two-lod-selection.test.ts`
  * pins all three frozen shapes — single-LOD `-s1`, null-at-both `-c1`/`-c2`, and
  * the 424 ADR 0050 fallback parents — at thirteen distances under BOTH profiles,
  * and pins the ANTECEDENT that makes them agree, so a future shape that
  * distinguished its levels fails there instead of silently changing what a
  * promoted session renders.
  */
-export const DEFAULT_EXTERIOR_RENDER_PROFILE: ExteriorRenderProfile = "exploration";
+export const DEFAULT_EXTERIOR_RENDER_PROFILE: ExteriorRenderProfile = "inspection";
 
 export function parseExteriorRenderProfile(value: unknown): ExteriorRenderProfile | null {
   return typeof value === "string" && (EXTERIOR_RENDER_PROFILES as readonly string[]).includes(value)

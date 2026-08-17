@@ -328,3 +328,21 @@ RECORDED and NOT judged, and it does not gate any pose here.
 - No frame-time claim, on desktop or mobile.
 - Nothing about the far-tier bake (T002+) or the rendered 2% gate (T006).
 - No claim about decoded GPU memory, which is not observable from the loader.
+
+## Frozen records and the promotion that moved past them
+
+The promoted default moved past the committed goal-integration reconciliation
+(`data/goal-integration-acceptance-20260812/`) and the Northern-Manhattan P1
+acceptance evidence in T001; their tests assert the historical composition per
+the curated-comparison precedent (`computePromotedCoverage` over the
+composition each record describes, read off the predecessor chain — now two
+links down: `-s2` -> `-s1` -> curated). No frozen record was edited.
+
+Two module-shape corrections landed with the promotion commit rather than
+after it: the six `*_TWO_LOD_ROLLBACK` constants originally spread the `-s2`
+activation itself (a record that would restore the very release it refuses —
+not a rollback); they now spread the `-s1` predecessor record with the `-s2`
+release withdrawn, the same shape every `-s1` rollback uses. The `-s2` pin
+derivation in `App.tsx` consequently moved from the rollback list to the
+promoted set itself. Parameterless defaults of the single-record activation
+helpers moved from the `-s1` record to the promoted two-LOD record.

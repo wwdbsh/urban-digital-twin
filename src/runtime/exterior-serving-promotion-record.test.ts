@@ -34,6 +34,7 @@ import { describe, expect, it } from "vitest";
 
 import { sha256HexSync } from "../domain/deterministic-hash";
 import { EXTERIOR_SERVING_WAVES, type ExteriorServingWave } from "../release/exterior-serving-waves";
+import { exteriorTwoLodRetentionReleaseId, exteriorTwoLodServingReleaseId } from "../release/exterior-serving-release";
 import {
   EXTERIOR_DEFAULT_ACTIVATIONS,
   exteriorAcceptedCellsJoin,
@@ -43,8 +44,8 @@ import {
 } from "./exterior-default-activation";
 
 const LEDGER_ROOT = "data/normalized/manhattan-exterior-wave-ledger-20260804";
-const PINS_PATH = "data/exterior-serving-20260817/activation-pins.json";
-const PINS_SIDECAR = "data/exterior-serving-20260817/activation-pins.sha256";
+const PINS_PATH = "data/exterior-serving-20260817/activation-pins-s2.json";
+const PINS_SIDECAR = "data/exterior-serving-20260817/activation-pins-s2.sha256";
 
 function readText(path: string): string {
   return new TextDecoder("utf-8", { fatal: true }).decode(readFileSync(path));
@@ -69,9 +70,18 @@ interface IslandLedger { cells: { cellId: string; buildingIds: string[] }[] }
 
 const ledger = JSON.parse(readText(`${LEDGER_ROOT}/ledger.json`)) as IslandLedger;
 
+/**
+ * The TWO-LOD serving id of a wave, derived by the same function the emitter
+ * uses rather than spelled here. T001 promoted `-s2` over `-s1`, so this suite
+ * re-derives against the release the build now serves; pointing it at `-s1`
+ * would have left it green while describing a build nobody runs.
+ */
+const twoLodServingReleaseId = (waveEntry: ExteriorServingWave): string =>
+  exteriorTwoLodServingReleaseId(exteriorTwoLodRetentionReleaseId(waveEntry.retentionReleaseId));
+
 /** Everything the record for one wave SHOULD say, derived rather than read. */
 function derivePins(waveEntry: ExteriorServingWave) {
-  const inventory = readChecked(`data/${waveEntry.servingReleaseId}/payload-inventory.json`) as ServingInventory;
+  const inventory = readChecked(`data/${twoLodServingReleaseId(waveEntry)}/payload-inventory.json`) as ServingInventory;
   const census = readChecked(`data/${waveEntry.retentionReleaseId}/wave-census.json`) as WaveCensus;
   const tombstoned = new Set(census.tombstones.map((entry) => entry.buildingId));
   const owned = ledger.cells
@@ -79,7 +89,7 @@ function derivePins(waveEntry: ExteriorServingWave) {
     .flatMap((cell) => cell.buildingIds);
   const buildingIds = owned.filter((buildingId) => !tombstoned.has(buildingId));
   return {
-    releaseId: waveEntry.servingReleaseId,
+    releaseId: twoLodServingReleaseId(waveEntry),
     snapshotId: inventory.head.snapshotId,
     snapshotChecksumSha256: inventory.head.checksumSha256,
     assemblyPackageCount: inventory.assemblyPackageIds.length,
@@ -96,12 +106,15 @@ const PROMOTED = EXTERIOR_DEFAULT_ACTIVATIONS.filter((record): record is Exterio
 describe("the serving promotion records are re-derived, never trusted", () => {
   it("promotes exactly the six serving releases the wave table declares, in wave order", () => {
     expect(PROMOTED).toHaveLength(6);
-    expect(PROMOTED.map((record) => record.releaseId)).toEqual(EXTERIOR_SERVING_WAVES.map((waveEntry) => waveEntry.servingReleaseId));
+    expect(PROMOTED.map((record) => record.releaseId)).toEqual(EXTERIOR_SERVING_WAVES.map(twoLodServingReleaseId));
+    // The -s1 releases are no longer promoted; they are each -s2 record's own
+    // predecessor, which is the rung the promotion moved off rather than deleted.
+    expect(PROMOTED.map((record) => record.predecessor.releaseId)).toEqual(EXTERIOR_SERVING_WAVES.map((waveEntry) => waveEntry.servingReleaseId));
   });
 
   for (const waveEntry of EXTERIOR_SERVING_WAVES) {
-    it(`re-derives every pin of ${waveEntry.waveId} (${waveEntry.servingReleaseId}) from committed records`, () => {
-      const record = PROMOTED.find((entry) => entry.releaseId === waveEntry.servingReleaseId)!;
+    it(`re-derives every pin of ${waveEntry.waveId} (${twoLodServingReleaseId(waveEntry)}) from committed records`, () => {
+      const record = PROMOTED.find((entry) => entry.releaseId === twoLodServingReleaseId(waveEntry))!;
       const derived = derivePins(waveEntry);
       expect({
         releaseId: record.releaseId,
@@ -164,28 +177,30 @@ describe("what the serving promotion is, as a record", () => {
   });
 
   /**
-   * The predecessor of each serving record is the CURATED record that was the
-   * active default until this commit — not base massing, and not a re-derivation
-   * of it. Asserted by identity against the retained constants, because "the
-   * predecessor is the previous verified representation" is the whole rollback
-   * contract and a re-typed copy could drift from what actually shipped.
+   * The predecessor of each `-s2` record is the `-s1` SERVING record it was
+   * promoted over — not the curated `-p1`/`-v3` record, which is now the
+   * predecessor's own predecessor one rung further down.
+   *
+   * T001 MOVED THIS ONE RUNG and the identity assertion is what makes that
+   * visible: "the predecessor is the previous verified representation" is the
+   * whole rollback contract, and a re-typed copy could drift from what shipped.
    */
-  it("carries the curated record it replaced as its predecessor, verbatim", async () => {
+  it("carries the -s1 serving record it replaced as its predecessor, verbatim", async () => {
     const module = await import("./exterior-default-activation");
     const expected = [
-      module.BLOCK835_V3_EXTERIOR_ACTIVATION,
-      module.MIDTOWN_CORE_V3_EXTERIOR_ACTIVATION,
-      module.LOWER_MANHATTAN_P1_EXTERIOR_ACTIVATION,
-      module.SOUTHERN_REMAINDER_P1_EXTERIOR_ACTIVATION,
-      module.CENTRAL_UPPER_MANHATTAN_P1_EXTERIOR_ACTIVATION,
-      module.NORTHERN_MANHATTAN_P1_EXTERIOR_ACTIVATION,
+      module.EXTERIOR_DEFAULT_ACTIVATION,
+      module.MIDTOWN_CORE_EXTERIOR_ACTIVATION,
+      module.LOWER_MANHATTAN_EXTERIOR_ACTIVATION,
+      module.SOUTHERN_REMAINDER_EXTERIOR_ACTIVATION,
+      module.CENTRAL_UPPER_MANHATTAN_EXTERIOR_ACTIVATION,
+      module.NORTHERN_MANHATTAN_EXTERIOR_ACTIVATION,
     ];
     PROMOTED.forEach((record, index) => {
       expect(record.predecessor, record.releaseId).toBe(expected[index]);
     });
-    // And every predecessor is itself an ENABLED curated release: this promotion
-    // rolls back to verified geometry on all six waves, where the four curated
-    // `-p1` promotions rolled back to base massing on four of them.
+    // And every predecessor is itself an ENABLED serving release: this
+    // promotion rolls back to the single-LOD city that was serving until this
+    // commit, on all six waves.
     for (const predecessor of expected) {
       expect(predecessor.enabled).toBe(true);
     }

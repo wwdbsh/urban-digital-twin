@@ -101,6 +101,11 @@ vi.mock("../runtime/exterior-default-activation", async (importOriginal) => {
     // A getter, so a rehearsal can swap the record between renders. It returns
     // the real committed record unless a test opts into the predecessor.
     get EXTERIOR_DEFAULT_ACTIVATION() { return promotionMocks.record ?? actual.EXTERIOR_DEFAULT_ACTIVATION; },
+    // The substitution seam followed the promotion. `App.tsx` composes w00 from
+    // the -s2 record now, so overriding only the -s1 one would leave the
+    // drifted-record and rolled-back gates asserting against a record the app
+    // no longer reads — the tests would pass while testing nothing.
+    get EXTERIOR_TWO_LOD_DEFAULT_ACTIVATION() { return promotionMocks.record ?? actual.EXTERIOR_TWO_LOD_DEFAULT_ACTIVATION; },
   };
 });
 
@@ -109,7 +114,11 @@ import { ExteriorFallbackNotice, digestExteriorNotices, exteriorNoticeEntryKey, 
 import { exteriorDeferredCellNotice, exteriorQualifiedNotice, exteriorReleasedArtifactNotice } from "../runtime/exterior-wave-attribution";
 import { exteriorUnanchoredNotice } from "../features/explorer/CesiumViewport";
 import type { ExteriorCellOutcome } from "../runtime/exterior-cell-runtime";
-import { EXTERIOR_DEFAULT_ACTIVATION, EXTERIOR_DEFAULT_ACTIVATIONS } from "../runtime/exterior-default-activation";
+import { EXTERIOR_DEFAULT_ACTIVATION, EXTERIOR_DEFAULT_ACTIVATIONS, EXTERIOR_TWO_LOD_DEFAULT_ACTIVATION } from "../runtime/exterior-default-activation";
+// The DEFAULT profile is read rather than spelled, so a future flip of the
+// promotion semantics moves these expectations with it instead of silently
+// asserting a profile the build no longer defaults to.
+import { DEFAULT_EXTERIOR_RENDER_PROFILE } from "../runtime/exterior-render-profiles";
 import { navigationUrl, parseNavigationUrl } from "../domain/visitor-navigation";
 import { BLOCK_835_DOITT_IDS } from "../domain/commercial-frontage";
 import { CITYWIDE_BUDGETS, CITYWIDE_NO_CACHE_FLOORS, CITYWIDE_OVERVIEW_BUDGETS, CITYWIDE_OVERVIEW_CACHE_FLOORS, CITYWIDE_RELEASE_ID } from "../release/citywide-release";
@@ -162,10 +171,25 @@ const CANARY_EXTERIOR_ROOT = `/data/${CANARY_EXTERIOR_RELEASE_ID}/`;
  * and no longer what a parameterless session loads.
  */
 const CURATED_BLOCK835_RELEASE_ID = "manhattan-exterior-cells-20260811-v3";
-/** The T005 SERVING release, which is what this build promotes as the w00 default. */
-const PROMOTED_EXTERIOR_RELEASE_ID = "manhattan-exterior-cells-20260811-v3-s1";
+/**
+ * The release this build promotes as the w00 default.
+ *
+ * T001 MOVED THIS FROM `-s1` TO `-s2`, and the move was the point rather than a
+ * rename. `App.tsx` used to pass `EXTERIOR_DEFAULT_ACTIVATION` explicitly into
+ * `exteriorDefaultActivations()`, pinning Block 835 to the single-LOD serving
+ * release while waves 1-5 followed the function's defaults. Flipping those
+ * defaults alone would therefore have promoted five waves and left the sixth
+ * behind — and every assertion below would have kept passing against `-s1`,
+ * for the wrong reason. The call is now parameterless and all six promote.
+ *
+ * The `-s1` record is NOT retired: it stays exported, pinned, and is the `-s2`
+ * record's own `predecessor`, which the assertions below still check.
+ */
+const PROMOTED_EXTERIOR_RELEASE_ID = "manhattan-exterior-cells-20260811-v3-s2";
+/** The single-LOD serving release, now the promoted record's predecessor. */
+const PROMOTED_EXTERIOR_PREDECESSOR_RELEASE_ID = "manhattan-exterior-cells-20260811-v3-s1";
 const PROMOTED_EXTERIOR_ROOT = `/data/${PROMOTED_EXTERIOR_RELEASE_ID}/`;
-const MIDTOWN_CORE_EXTERIOR_RELEASE_ID = "manhattan-midtown-core-cells-20260811-v3-s1";
+const MIDTOWN_CORE_EXTERIOR_RELEASE_ID = "manhattan-midtown-core-cells-20260811-v3-s2";
 const MIDTOWN_CORE_EXTERIOR_ROOT = `/data/${MIDTOWN_CORE_EXTERIOR_RELEASE_ID}/`;
 const BLOCK_835_FEATURE_IDS = [...BLOCK_835_DOITT_IDS].map((id) => `doitt:${id}`);
 
@@ -677,7 +701,7 @@ describe("exterior streaming profiles and canary state", () => {
     // The distinct disable sentinel: "which release" and "no release at all" are
     // different questions, so an explicit off is not an absent parameter.
     expect(disabled.searchParams.get("exteriorStreaming")).toBe("off");
-    expect(parseExteriorStreamingUrl(disabled.toString())).toEqual({ override: "off", explicitReleaseId: null, profile: "exploration", canarySnapshotId: null, scheduler: false, detailRadiusMeters: null });
+    expect(parseExteriorStreamingUrl(disabled.toString())).toEqual({ override: "off", explicitReleaseId: null, profile: DEFAULT_EXTERIOR_RENDER_PROFILE, canarySnapshotId: null, scheduler: false, detailRadiusMeters: null });
     expect(disabled.searchParams.get("publicRealm")).toBe("manhattan-esb-block-public-realm-20260806");
     expect(disabled.searchParams.get("feature")).toBe("doitt:778052");
   });
@@ -685,16 +709,20 @@ describe("exterior streaming profiles and canary state", () => {
   it("serializes no exterior parameter for an untouched default-on session, and still shares a chosen profile", () => {
     // The promoted default is not URL state, so a default-on session must not
     // acquire exterior parameters just by streaming.
-    const untouched = new URL(canonicalUrl({ requested: true, override: null, releaseId: CANARY_EXTERIOR_RELEASE_ID, profile: "exploration", canarySnapshotId: null }));
+    const untouched = new URL(canonicalUrl({ requested: true, override: null, releaseId: CANARY_EXTERIOR_RELEASE_ID, profile: DEFAULT_EXTERIOR_RENDER_PROFILE, canarySnapshotId: null }));
     expect(untouched.searchParams.has("exteriorCells")).toBe(false);
     expect(untouched.searchParams.has("exteriorStreaming")).toBe(false);
     expect(untouched.searchParams.has("exteriorProfile")).toBe(false);
 
-    // A profile the user actually chose is still explicit intent, so it round-trips.
-    const chosen = new URL(canonicalUrl({ requested: true, override: null, releaseId: CANARY_EXTERIOR_RELEASE_ID, profile: "inspection", canarySnapshotId: null }));
-    expect(chosen.searchParams.get("exteriorProfile")).toBe("inspection");
+    // A profile the user actually chose is still explicit intent, so it
+    // round-trips. It has to be the NON-default one to test anything, and T001
+    // moved which that is: `exploration` is now the profile a session must ask
+    // for, and `inspection` is the silent default the first half asserts.
+    const nonDefault = DEFAULT_EXTERIOR_RENDER_PROFILE === "inspection" ? "exploration" : "inspection";
+    const chosen = new URL(canonicalUrl({ requested: true, override: null, releaseId: CANARY_EXTERIOR_RELEASE_ID, profile: nonDefault, canarySnapshotId: null }));
+    expect(chosen.searchParams.get("exteriorProfile")).toBe(nonDefault);
     expect(chosen.searchParams.has("exteriorCells")).toBe(false);
-    expect(parseExteriorStreamingUrl(chosen.toString())).toEqual({ override: null, explicitReleaseId: null, profile: "inspection", canarySnapshotId: null, scheduler: false, detailRadiusMeters: null });
+    expect(parseExteriorStreamingUrl(chosen.toString())).toEqual({ override: null, explicitReleaseId: null, profile: nonDefault, canarySnapshotId: null, scheduler: false, detailRadiusMeters: null });
   });
 
   /**
@@ -709,14 +737,14 @@ describe("exterior streaming profiles and canary state", () => {
    * that must survive the rewrite, and it is the same defect in the mirror.
    */
   it("round-trips the scheduler OPT-OUT through the appender chain a camera move rewrites", () => {
-    const off = canonicalUrl({ requested: true, override: null, releaseId: CANARY_EXTERIOR_RELEASE_ID, profile: "exploration", canarySnapshotId: null, scheduler: false });
+    const off = canonicalUrl({ requested: true, override: null, releaseId: CANARY_EXTERIOR_RELEASE_ID, profile: DEFAULT_EXTERIOR_RENDER_PROFILE, canarySnapshotId: null, scheduler: false });
     expect(new URL(off).searchParams.get("exteriorScheduler")).toBe("off");
     expect(parseExteriorStreamingUrl(off).scheduler).toBe(false);
     // The second pass is the camera move: parse what the URL says, write it
     // back through the same chain, and the opt-out must still be there. A
     // session that stops being opted out halfway through is worse than one that
     // never was, because the reader is no longer looking at what they asked for.
-    const rewritten = canonicalUrl({ requested: true, override: null, releaseId: CANARY_EXTERIOR_RELEASE_ID, profile: "exploration", canarySnapshotId: null, scheduler: parseExteriorStreamingUrl(off).scheduler });
+    const rewritten = canonicalUrl({ requested: true, override: null, releaseId: CANARY_EXTERIOR_RELEASE_ID, profile: DEFAULT_EXTERIOR_RENDER_PROFILE, canarySnapshotId: null, scheduler: parseExteriorStreamingUrl(off).scheduler });
     expect(rewritten).toBe(off);
     expect(parseExteriorStreamingUrl(rewritten).scheduler).toBe(false);
   });
@@ -728,8 +756,8 @@ describe("exterior streaming profiles and canary state", () => {
    * into every URL anyone copies.
    */
   it("writes a character-identical default-session URL when the session takes the default", () => {
-    const defaultSession = canonicalUrl({ requested: true, override: null, releaseId: CANARY_EXTERIOR_RELEASE_ID, profile: "exploration", canarySnapshotId: null, scheduler: EXTERIOR_SCHEDULER_DEFAULT_ON });
-    const silent = canonicalUrl({ requested: true, override: null, releaseId: CANARY_EXTERIOR_RELEASE_ID, profile: "exploration", canarySnapshotId: null });
+    const defaultSession = canonicalUrl({ requested: true, override: null, releaseId: CANARY_EXTERIOR_RELEASE_ID, profile: DEFAULT_EXTERIOR_RENDER_PROFILE, canarySnapshotId: null, scheduler: EXTERIOR_SCHEDULER_DEFAULT_ON });
+    const silent = canonicalUrl({ requested: true, override: null, releaseId: CANARY_EXTERIOR_RELEASE_ID, profile: DEFAULT_EXTERIOR_RENDER_PROFILE, canarySnapshotId: null });
     expect(defaultSession).not.toContain("exteriorScheduler");
     expect(parseExteriorStreamingUrl(defaultSession).scheduler).toBe(EXTERIOR_SCHEDULER_DEFAULT_ON);
     // A writer that says nothing about the scheduler writes the OPT-OUT, because
@@ -804,7 +832,7 @@ describe("exterior streaming profiles and canary state", () => {
     expect(pinned.scheduler).toBe(EXTERIOR_SCHEDULER_DEFAULT_ON);
     // The opt-out survives being written beside a disabled wave, which is the
     // durability half of the same rule.
-    const written = new URL(appendExteriorProfileUrl("/", { override: "off", streaming: false, releaseId: "udt-fixture-exterior-cells", profile: "exploration", canarySnapshotId: null, scheduler: false }));
+    const written = new URL(appendExteriorProfileUrl("/", { override: "off", streaming: false, releaseId: "udt-fixture-exterior-cells", profile: DEFAULT_EXTERIOR_RENDER_PROFILE, canarySnapshotId: null, scheduler: false }));
     expect(written.searchParams.get("exteriorScheduler")).toBe("off");
     expect(written.searchParams.get("exteriorStreaming")).toBe("off");
     expect(parseExteriorStreamingUrl(written.toString()).scheduler).toBe(false);
@@ -832,25 +860,25 @@ describe("exterior streaming profiles and canary state", () => {
   });
 
   it("writes the radius back on every camera move, so a radiused session stays radiused", () => {
-    const written = new URL(appendExteriorProfileUrl("/", { override: null, streaming: true, releaseId: CANARY_EXTERIOR_RELEASE_ID, profile: "exploration", canarySnapshotId: null, scheduler: true, detailRadiusMeters: 1_200 }));
+    const written = new URL(appendExteriorProfileUrl("/", { override: null, streaming: true, releaseId: CANARY_EXTERIOR_RELEASE_ID, profile: DEFAULT_EXTERIOR_RENDER_PROFILE, canarySnapshotId: null, scheduler: true, detailRadiusMeters: 1_200 }));
     expect(written.searchParams.has("exteriorScheduler")).toBe(false);
     expect(written.searchParams.get("exteriorDetailRadius")).toBe("1200");
     expect(parseExteriorStreamingUrl(written.toString()).detailRadiusMeters).toBe(1_200);
     // No scheduling, no radius: the parameter never outlives the flag it qualifies.
-    const unflagged = new URL(appendExteriorProfileUrl("/?exteriorDetailRadius=1200", { override: null, streaming: true, releaseId: CANARY_EXTERIOR_RELEASE_ID, profile: "exploration", canarySnapshotId: null, scheduler: false, detailRadiusMeters: 1_200 }));
+    const unflagged = new URL(appendExteriorProfileUrl("/?exteriorDetailRadius=1200", { override: null, streaming: true, releaseId: CANARY_EXTERIOR_RELEASE_ID, profile: DEFAULT_EXTERIOR_RENDER_PROFILE, canarySnapshotId: null, scheduler: false, detailRadiusMeters: 1_200 }));
     expect(unflagged.searchParams.has("exteriorDetailRadius")).toBe(false);
     expect(unflagged.searchParams.get("exteriorScheduler")).toBe("off");
     // And a writer that says nothing about the radius writes none.
-    const silent = new URL(appendExteriorProfileUrl("/", { override: null, streaming: true, releaseId: CANARY_EXTERIOR_RELEASE_ID, profile: "exploration", canarySnapshotId: null, scheduler: true }));
+    const silent = new URL(appendExteriorProfileUrl("/", { override: null, streaming: true, releaseId: CANARY_EXTERIOR_RELEASE_ID, profile: DEFAULT_EXTERIOR_RENDER_PROFILE, canarySnapshotId: null, scheduler: true }));
     expect(silent.searchParams.has("exteriorDetailRadius")).toBe(false);
   });
 
   it("ignores an unknown exterior release ID and an unsupported profile instead of guessing", () => {
     // An unpinned release fails closed to an explicit off, so a link naming a
     // release this build does not have is never answered with the promoted one.
-    expect(parseExteriorStreamingUrl("/?exteriorCells=manhattan-exterior-production&exteriorProfile=inspection")).toEqual({ override: "off-unpinned", explicitReleaseId: null, profile: "exploration", canarySnapshotId: null, scheduler: EXTERIOR_SCHEDULER_DEFAULT_ON, detailRadiusMeters: null });
-    expect(parseExteriorStreamingUrl("/?exteriorCells=udt-fixture-exterior-cells&exteriorProfile=cinematic")).toEqual({ override: "on", explicitReleaseId: "udt-fixture-exterior-cells", profile: "exploration", canarySnapshotId: null, scheduler: EXTERIOR_SCHEDULER_DEFAULT_ON, detailRadiusMeters: null });
-    expect(parseExteriorStreamingUrl("/?exteriorCanary=snapshot:v3")).toEqual({ override: null, explicitReleaseId: null, profile: "exploration", canarySnapshotId: null, scheduler: EXTERIOR_SCHEDULER_DEFAULT_ON, detailRadiusMeters: null });
+    expect(parseExteriorStreamingUrl("/?exteriorCells=manhattan-exterior-production&exteriorProfile=inspection")).toEqual({ override: "off-unpinned", explicitReleaseId: null, profile: DEFAULT_EXTERIOR_RENDER_PROFILE, canarySnapshotId: null, scheduler: EXTERIOR_SCHEDULER_DEFAULT_ON, detailRadiusMeters: null });
+    expect(parseExteriorStreamingUrl("/?exteriorCells=udt-fixture-exterior-cells&exteriorProfile=cinematic")).toEqual({ override: "on", explicitReleaseId: "udt-fixture-exterior-cells", profile: DEFAULT_EXTERIOR_RENDER_PROFILE, canarySnapshotId: null, scheduler: EXTERIOR_SCHEDULER_DEFAULT_ON, detailRadiusMeters: null });
+    expect(parseExteriorStreamingUrl("/?exteriorCanary=snapshot:v3")).toEqual({ override: null, explicitReleaseId: null, profile: DEFAULT_EXTERIOR_RENDER_PROFILE, canarySnapshotId: null, scheduler: EXTERIOR_SCHEDULER_DEFAULT_ON, detailRadiusMeters: null });
   });
 
   it("keeps an explicit disable dominant over every other exterior parameter", () => {
@@ -858,7 +886,7 @@ describe("exterior streaming profiles and canary state", () => {
     // the scheduler any more: that is the B2 split, and the citywide overview
     // is not an exterior wave.
     expect(parseExteriorStreamingUrl("/?exteriorStreaming=off&exteriorCells=manhattan-exterior-cells-20260811&exteriorProfile=inspection&exteriorCanary=snapshot:v3"))
-      .toEqual({ override: "off", explicitReleaseId: null, profile: "exploration", canarySnapshotId: null, scheduler: EXTERIOR_SCHEDULER_DEFAULT_ON, detailRadiusMeters: null });
+      .toEqual({ override: "off", explicitReleaseId: null, profile: DEFAULT_EXTERIOR_RENDER_PROFILE, canarySnapshotId: null, scheduler: EXTERIOR_SCHEDULER_DEFAULT_ON, detailRadiusMeters: null });
     const message = exteriorDeepLinkMessage("/?exteriorStreaming=on");
     expect(message).toContain("exteriorStreaming=on is not supported");
     expect(message).toContain("only exteriorStreaming=off disables the exterior wave");
@@ -866,7 +894,12 @@ describe("exterior streaming profiles and canary state", () => {
   });
 
   it("round-trips the pinned Manhattan release and keeps the fixture as the no-real-base fallback", () => {
-    expect(PINNED_EXTERIOR_CELL_RELEASE_IDS).toEqual(["udt-fixture-exterior-cells", "manhattan-exterior-cells-20260811", "manhattan-exterior-cells-20260811-v3", "manhattan-midtown-core-cells-20260811", "manhattan-midtown-core-cells-20260811-v3", "manhattan-lower-manhattan-cells-20260812", "manhattan-lower-manhattan-cells-20260812-p1", "manhattan-southern-remainder-cells-20260812", "manhattan-southern-remainder-cells-20260812-p1", "manhattan-central-upper-manhattan-cells-20260812", "manhattan-central-upper-manhattan-cells-20260812-p1", "manhattan-northern-manhattan-cells-20260812", "manhattan-northern-manhattan-cells-20260812-p1", "manhattan-southern-remainder-cells-20260812-t1", "manhattan-lower-manhattan-cells-20260812-t1", "manhattan-central-upper-manhattan-cells-20260812-t1", "manhattan-northern-manhattan-cells-20260812-t1", "manhattan-exterior-cells-20260811-v3-s1", "manhattan-midtown-core-cells-20260811-v3-s1", "manhattan-lower-manhattan-cells-20260812-s1", "manhattan-southern-remainder-cells-20260812-s1", "manhattan-central-upper-manhattan-cells-20260812-s1", "manhattan-northern-manhattan-cells-20260812-s1"]);
+    expect(PINNED_EXTERIOR_CELL_RELEASE_IDS).toEqual(["udt-fixture-exterior-cells", "manhattan-exterior-cells-20260811", "manhattan-exterior-cells-20260811-v3", "manhattan-midtown-core-cells-20260811", "manhattan-midtown-core-cells-20260811-v3", "manhattan-lower-manhattan-cells-20260812", "manhattan-lower-manhattan-cells-20260812-p1", "manhattan-southern-remainder-cells-20260812", "manhattan-southern-remainder-cells-20260812-p1", "manhattan-central-upper-manhattan-cells-20260812", "manhattan-central-upper-manhattan-cells-20260812-p1", "manhattan-northern-manhattan-cells-20260812", "manhattan-northern-manhattan-cells-20260812-p1", "manhattan-southern-remainder-cells-20260812-t1", "manhattan-lower-manhattan-cells-20260812-t1", "manhattan-central-upper-manhattan-cells-20260812-t1", "manhattan-northern-manhattan-cells-20260812-t1", "manhattan-exterior-cells-20260811-v3-s1", "manhattan-midtown-core-cells-20260811-v3-s1", "manhattan-lower-manhattan-cells-20260812-s1", "manhattan-southern-remainder-cells-20260812-s1", "manhattan-central-upper-manhattan-cells-20260812-s1", "manhattan-northern-manhattan-cells-20260812-s1", "manhattan-exterior-cells-20260811-v3-s2", "manhattan-midtown-core-cells-20260811-v3-s2", "manhattan-lower-manhattan-cells-20260812-s2", "manhattan-southern-remainder-cells-20260812-s2", "manhattan-central-upper-manhattan-cells-20260812-s2", "manhattan-northern-manhattan-cells-20260812-s2"]);
+    // The six -s2 ids arrive DERIVED from `EXTERIOR_TWO_LOD_SERVING_ROLLBACKS`
+    // rather than hand-listed, so a seventh wave cannot be pinned in one place
+    // and forgotten in the other. They are spelled out HERE, once, because a
+    // pin list that asserted itself by the same expression that built it would
+    // check nothing.
     // The six T005 SERVING releases ARE the promotion record now. This assertion
     // is the inverse of what it said before that promotion — the `-s1` ids were
     // pinned on the canary terms and deliberately absent from the record, so the
@@ -874,8 +907,13 @@ describe("exterior streaming profiles and canary state", () => {
     // ordinary session loading them. T005 promoted them, and the pins did not
     // have to move for it: they were already there.
     expect(isPinnedExteriorCellRelease("manhattan-lower-manhattan-cells-20260812-s1")).toBe(true);
-    expect(EXTERIOR_DEFAULT_ACTIVATIONS.filter((record) => record.releaseId?.endsWith("-s1") === true)).toHaveLength(6);
-    expect(EXTERIOR_DEFAULT_ACTIVATIONS.every((record) => record.enabled && record.releaseId.endsWith("-s1"))).toBe(true);
+    // T001 MOVED THE PROMOTED SET FROM `-s1` TO `-s2`. The `-s1` releases stay
+    // pinned and reachable, and are now each `-s2` record's own predecessor —
+    // which is what "promoted over" has meant at every step of this ladder.
+    expect(EXTERIOR_DEFAULT_ACTIVATIONS.filter((record) => record.releaseId?.endsWith("-s2") === true)).toHaveLength(6);
+    expect(EXTERIOR_DEFAULT_ACTIVATIONS.every((record) => record.enabled && record.releaseId.endsWith("-s2"))).toBe(true);
+    expect(EXTERIOR_DEFAULT_ACTIVATIONS.every((record) => record.enabled && record.predecessor?.releaseId?.endsWith("-s1") === true)).toBe(true);
+    expect(EXTERIOR_DEFAULT_ACTIVATIONS.some((record) => record.enabled && record.releaseId.endsWith("-s1"))).toBe(false);
     // The Lower-Manhattan CANARY stays reachable by explicit opt-in and by
     // nothing else, and this survives its wave's promotion twice over: neither
     // the P1 successor's promotion nor the S1 serving promotion over that
@@ -894,9 +932,9 @@ describe("exterior streaming profiles and canary state", () => {
     // record, and therefore never loaded by an ordinary session.
     expect(isPinnedExteriorCellRelease("manhattan-lower-manhattan-cells-20260812-t1")).toBe(true);
     expect(EXTERIOR_DEFAULT_ACTIVATIONS.some((record) => record.releaseId?.endsWith("-t1") === true)).toBe(false);
-    expect(EXTERIOR_DEFAULT_ACTIVATIONS.some((record) => record.enabled && record.releaseId === "manhattan-lower-manhattan-cells-20260812-s1")).toBe(true);
+    expect(EXTERIOR_DEFAULT_ACTIVATIONS.some((record) => record.enabled && record.releaseId === "manhattan-lower-manhattan-cells-20260812-s2")).toBe(true);
     expect(EXTERIOR_DEFAULT_ACTIVATIONS.some((record) => record.enabled && record.releaseId === "manhattan-lower-manhattan-cells-20260812-p1")).toBe(false);
-    expect(EXTERIOR_DEFAULT_ACTIVATIONS.some((record) => record.enabled && record.predecessor.releaseId === "manhattan-lower-manhattan-cells-20260812-p1")).toBe(true);
+    expect(EXTERIOR_DEFAULT_ACTIVATIONS.some((record) => record.enabled && record.predecessor.releaseId === "manhattan-lower-manhattan-cells-20260812-s1")).toBe(true);
     // The Southern-remainder CANARY is pinned on the canary terms exactly: it
     // resolves by explicit opt-in and has no entry in the promotion record, so
     // adding it changed nothing about what an ordinary session loads.
@@ -919,9 +957,9 @@ describe("exterior streaming profiles and canary state", () => {
     // release is now the predecessor rather than the default — still pinned, and
     // no longer loaded by a session that names nothing.
     expect(isPinnedExteriorCellRelease("manhattan-central-upper-manhattan-cells-20260812-p1")).toBe(true);
-    expect(EXTERIOR_DEFAULT_ACTIVATIONS.some((record) => record.enabled && record.releaseId === "manhattan-central-upper-manhattan-cells-20260812-s1")).toBe(true);
+    expect(EXTERIOR_DEFAULT_ACTIVATIONS.some((record) => record.enabled && record.releaseId === "manhattan-central-upper-manhattan-cells-20260812-s2")).toBe(true);
     expect(EXTERIOR_DEFAULT_ACTIVATIONS.some((record) => record.enabled && record.releaseId === "manhattan-central-upper-manhattan-cells-20260812-p1")).toBe(false);
-    expect(EXTERIOR_DEFAULT_ACTIVATIONS.some((record) => record.enabled && record.predecessor.releaseId === "manhattan-central-upper-manhattan-cells-20260812-p1")).toBe(true);
+    expect(EXTERIOR_DEFAULT_ACTIVATIONS.some((record) => record.enabled && record.predecessor.releaseId === "manhattan-central-upper-manhattan-cells-20260812-s1")).toBe(true);
     // The Northern-Manhattan CANARY, materializing the LAST wave the committed
     // ledger declares, on the same canary terms as every canary before it: pinned
     // so an explicit opt-in resolves, absent from the promotion record so an
@@ -940,16 +978,22 @@ describe("exterior streaming profiles and canary state", () => {
     // promoted default. T005 promoted the S1 serving release over it, so this
     // one too is now a predecessor rather than a default.
     expect(isPinnedExteriorCellRelease("manhattan-northern-manhattan-cells-20260812-p1")).toBe(true);
-    expect(EXTERIOR_DEFAULT_ACTIVATIONS.some((record) => record.enabled && record.releaseId === "manhattan-northern-manhattan-cells-20260812-s1")).toBe(true);
+    expect(EXTERIOR_DEFAULT_ACTIVATIONS.some((record) => record.enabled && record.releaseId === "manhattan-northern-manhattan-cells-20260812-s2")).toBe(true);
     expect(EXTERIOR_DEFAULT_ACTIVATIONS.some((record) => record.enabled && record.releaseId === "manhattan-northern-manhattan-cells-20260812-p1")).toBe(false);
-    expect(EXTERIOR_DEFAULT_ACTIVATIONS.some((record) => record.enabled && record.predecessor.releaseId === "manhattan-northern-manhattan-cells-20260812-p1")).toBe(true);
+    expect(EXTERIOR_DEFAULT_ACTIVATIONS.some((record) => record.enabled && record.predecessor.releaseId === "manhattan-northern-manhattan-cells-20260812-s1")).toBe(true);
     // Unchanged: this is the fallback for a session with no real base, not the
     // promoted default. The promoted default lives in EXTERIOR_DEFAULT_ACTIVATION.
     expect(EXTERIOR_CELL_STREAMING_RELEASE_ID).toBe("udt-fixture-exterior-cells");
     // T005 moved this one record from the V3 curated release to its serving
     // successor. The curated release stays pinned as the record's predecessor.
-    expect(EXTERIOR_DEFAULT_ACTIVATION.releaseId).toBe(PROMOTED_EXTERIOR_RELEASE_ID);
+    // `EXTERIOR_DEFAULT_ACTIVATION` is the -s1 RECORD and keeps its own identity;
+    // what T001 moved is which record the promotion COMPOSES, not this one.
+    expect(EXTERIOR_DEFAULT_ACTIVATION.releaseId).toBe(PROMOTED_EXTERIOR_PREDECESSOR_RELEASE_ID);
     expect(EXTERIOR_DEFAULT_ACTIVATION.releaseId).toBe("manhattan-exterior-cells-20260811-v3-s1");
+    // The promoted w00 default is the -s2 record, and it cites the -s1 one.
+    expect(EXTERIOR_TWO_LOD_DEFAULT_ACTIVATION.releaseId).toBe(PROMOTED_EXTERIOR_RELEASE_ID);
+    expect(EXTERIOR_DEFAULT_ACTIVATIONS.some((record) => record.enabled && record.releaseId === PROMOTED_EXTERIOR_RELEASE_ID)).toBe(true);
+    expect(EXTERIOR_TWO_LOD_DEFAULT_ACTIVATION.enabled && EXTERIOR_TWO_LOD_DEFAULT_ACTIVATION.predecessor.releaseId).toBe(PROMOTED_EXTERIOR_PREDECESSOR_RELEASE_ID);
     expect(isPinnedExteriorCellRelease(CURATED_BLOCK835_RELEASE_ID)).toBe(true);
     expect(EXTERIOR_DEFAULT_ACTIVATION.enabled && EXTERIOR_DEFAULT_ACTIVATION.predecessor.releaseId).toBe(CURATED_BLOCK835_RELEASE_ID);
     expect(isPinnedExteriorCellRelease(EXTERIOR_DEFAULT_ACTIVATION.releaseId)).toBe(true);
@@ -1025,7 +1069,13 @@ describe("exterior streaming profiles and canary state", () => {
     expect(within(controls).getByRole("button", { name: "Enable exterior streaming" })).toBeEnabled();
     expect(within(controls).getByRole("button", { name: "Inspection profile" })).toBeDisabled();
     expect(within(controls).getByRole("button", { name: "Exploration profile" })).toBeDisabled();
-    expect(within(controls).getByRole("button", { name: "Exploration profile" })).toHaveAttribute("aria-pressed", "true");
+    // The PRESSED control is whichever profile the build defaults to, so this
+    // reads the constant instead of naming a profile that a flip would silently
+    // falsify. T001 moved it from Exploration to Inspection.
+    const defaultLabel = DEFAULT_EXTERIOR_RENDER_PROFILE === "inspection" ? "Inspection profile" : "Exploration profile";
+    const otherLabel = defaultLabel === "Inspection profile" ? "Exploration profile" : "Inspection profile";
+    expect(within(controls).getByRole("button", { name: defaultLabel })).toHaveAttribute("aria-pressed", "true");
+    expect(within(controls).getByRole("button", { name: otherLabel })).toHaveAttribute("aria-pressed", "false");
   });
 
   it("keeps the exterior deep link and shows an explicit notice when the local release is absent", async () => {
@@ -1187,7 +1237,7 @@ describe("exterior streaming deep-link and anchor honesty", () => {
   it("names an unsupported render profile instead of quietly using the default", () => {
     const message = exteriorDeepLinkMessage("/?exteriorCells=udt-fixture-exterior-cells&exteriorProfile=cinematic");
     expect(message).toContain("cinematic");
-    expect(message).toContain("exploration");
+    expect(message).toContain(DEFAULT_EXTERIOR_RENDER_PROFILE);
   });
 
   it("shows the unrecognized-release notice in the live app without changing the rest of the view", async () => {
@@ -1521,7 +1571,11 @@ describe("promoted Block 835 exterior default activation", () => {
     spy.mock.calls.map((call) => String(call[0])).filter((path) => path.includes("exterior-cells"));
 
   /** The record is a union; these assertions are about the promoted variant. */
-  const promoted = EXTERIOR_DEFAULT_ACTIVATION.enabled ? EXTERIOR_DEFAULT_ACTIVATION : null;
+  // The record the build actually PROMOTES for w00, which T001 moved from the
+  // -s1 record to the -s2 one. Reading `EXTERIOR_DEFAULT_ACTIVATION` here would
+  // have kept these cases asserting against a release the session no longer
+  // loads — passing while describing the wrong build.
+  const promoted = EXTERIOR_TWO_LOD_DEFAULT_ACTIVATION.enabled ? EXTERIOR_TWO_LOD_DEFAULT_ACTIVATION : null;
 
   it("streams the promoted release with no exterior parameters once a real base is active", async () => {
     const fetchSpy = serveCommittedCanaryRelease();
@@ -1889,30 +1943,44 @@ describe("the mobile path: viewport signal, lower-LOD clamp, and its disclosure"
     expect(mobileExteriorLodPolicy(false, "exploration").effectiveProfile).toBe("exploration");
   });
 
-  it("clamps a mobile viewport to the coarsest-LOD profile and says so without claiming parity", () => {
-    const clamped = mobileExteriorLodPolicy(true, "inspection");
-    expect(clamped.active).toBe(true);
-    expect(clamped.effectiveProfile).toBe("exploration");
-    expect(clamped.requestedProfile).toBe("inspection");
-    expect(clamped.clamped).toBe(true);
-    // The wording is the claim. It must say LOWER, must name the override, and
-    // must refuse parity in the product's own words rather than by omission.
-    expect(clamped.disclosure).toContain("LOWER level of detail");
-    expect(clamped.disclosure).toContain("no desktop visual parity is claimed");
-    expect(clamped.disclosure).toContain("Exploration (coarsest verified LOD)");
-    expect(clamped.disclosure).toContain("Inspection (finest verified LOD)");
-    // And it must NOT promise the things a lower LOD does not cost.
-    expect(clamped.disclosure).toContain("Feature identity, selection, details, provenance and deep links are unchanged");
+  it("pins a mobile viewport to the DEFAULT profile and no longer claims a reduction it is not making", () => {
+    // T001 INVERTED THIS CASE, and the inversion is the point rather than a
+    // wording change. The clamp reads `DEFAULT_EXTERIOR_RENDER_PROFILE`, which
+    // this promotion moved from `exploration` to `inspection`. A mobile session
+    // that asks for inspection now GETS inspection, so there is nothing to
+    // override and nothing lower to disclose — and the old assertion that the
+    // disclosure must say "LOWER level of detail" would have made the product
+    // state a reduction it is not applying.
+    const matched = mobileExteriorLodPolicy(true, "inspection");
+    expect(matched.active).toBe(true);
+    expect(matched.effectiveProfile).toBe(DEFAULT_EXTERIOR_RENDER_PROFILE);
+    expect(matched.effectiveProfile).toBe("inspection");
+    expect(matched.requestedProfile).toBe("inspection");
+    expect(matched.clamped).toBe(false);
+    expect(matched.disclosure).toContain("SAME level of detail");
+    expect(matched.disclosure).not.toContain("LOWER level of detail");
+    expect(matched.disclosure).not.toContain("overriding the requested");
+    // Still refuses to promise a frame-time budget it has not measured.
+    expect(matched.disclosure).toContain("no mobile frame-time budget is claimed here");
+    expect(matched.disclosure).toContain("Feature identity, selection, details, provenance and deep links are unchanged");
   });
 
-  it("still discloses on mobile when the session never asked for inspection", () => {
-    // A session that defaulted to exploration is not "unclamped": it is still
-    // getting the coarsest LOD, and a user is owed that statement either way.
-    const unclamped = mobileExteriorLodPolicy(true, "exploration");
-    expect(unclamped.active).toBe(true);
-    expect(unclamped.clamped).toBe(false);
-    expect(unclamped.disclosure).toContain("LOWER level of detail");
-    expect(unclamped.disclosure).not.toContain("overriding the requested");
+  it("now overrides a mobile EXPLORATION request UPWARD, which is the direction that reversed", () => {
+    // The safeguard used to run the other way: mobile was pinned to the
+    // coarsest profile so a phone rendered less. Under the two-LOD promotion the
+    // coarsest profile would put the protrusion-shed level in front of the
+    // camera at street level, so the pin follows the default UP instead. The
+    // cost is that a phone now renders the finest level within 400 m, and the
+    // mobile frame-time consequence is ADR 0057 §2.2's, owned by T007. This
+    // test exists so that trade is stated in the suite rather than discovered.
+    const raised = mobileExteriorLodPolicy(true, "exploration");
+    expect(raised.active).toBe(true);
+    expect(raised.effectiveProfile).toBe("inspection");
+    expect(raised.clamped).toBe(true);
+    expect(raised.disclosure).toContain("overriding the requested");
+    expect(raised.disclosure).toContain("Exploration (coarsest verified LOD)");
+    expect(raised.disclosure).toContain("Inspection (finest verified LOD)");
+    expect(raised.disclosure).not.toContain("LOWER level of detail");
   });
 
   it("covers the overlay placement combination that had no test", () => {
@@ -1942,10 +2010,13 @@ describe("the mobile path: viewport signal, lower-LOD clamp, and its disclosure"
     }
   });
 
-  it("wires overlayLayoutPolicy to the real viewport signal and shows the lower-LOD disclosure", () => {
+  it("wires overlayLayoutPolicy to the real viewport signal and shows the profile-pin disclosure", () => {
     const media = stubMatchMedia(true);
     try {
-      window.history.replaceState({}, "", `${REAL_BASE_URL}&exteriorProfile=inspection`);
+      // Requests EXPLORATION, because that is the profile the mobile pin now
+      // overrides. Under the two-LOD default an inspection request is simply
+      // honoured, so asking for it would no longer exercise the override at all.
+      window.history.replaceState({}, "", `${REAL_BASE_URL}&exteriorProfile=exploration`);
       render(<App />);
       const region = document.querySelector<HTMLElement>(".map-region");
       expect(region).not.toBeNull();
@@ -1957,11 +2028,14 @@ describe("the mobile path: viewport signal, lower-LOD clamp, and its disclosure"
 
       const disclosure = document.querySelector<HTMLElement>("[data-mobile-lower-lod]");
       expect(disclosure).not.toBeNull();
-      expect(disclosure!.getAttribute("data-mobile-effective-profile")).toBe("exploration");
-      expect(disclosure!.getAttribute("data-mobile-requested-profile")).toBe("inspection");
+      expect(disclosure!.getAttribute("data-mobile-effective-profile")).toBe("inspection");
+      expect(disclosure!.getAttribute("data-mobile-requested-profile")).toBe("exploration");
       expect(disclosure!.getAttribute("data-mobile-profile-clamped")).toBe("true");
       expect(disclosure!.getAttribute("role")).toBe("status");
-      expect(disclosure!.textContent).toContain("no desktop visual parity is claimed");
+      // The disclosure states the pin and refuses a frame-time promise; it no
+      // longer claims a reduction, because it is no longer making one.
+      expect(disclosure!.textContent).toContain("no mobile frame-time budget is claimed here");
+      expect(disclosure!.textContent).not.toContain("LOWER level of detail");
     } finally {
       media.restore();
     }
@@ -1970,7 +2044,8 @@ describe("the mobile path: viewport signal, lower-LOD clamp, and its disclosure"
   it("presses the profile control that is IN FORCE, not the one that was requested", () => {
     const media = stubMatchMedia(true);
     try {
-      window.history.replaceState({}, "", `${REAL_BASE_URL}&exteriorProfile=inspection`);
+      // Same inversion as above: EXPLORATION is now the overridden request.
+      window.history.replaceState({}, "", `${REAL_BASE_URL}&exteriorProfile=exploration`);
       render(<App />);
       const buttons = [...document.querySelectorAll<HTMLButtonElement>(".exterior-streaming-controls button")]
         .filter((node) => /profile$/u.test(node.textContent ?? ""));
@@ -1978,14 +2053,15 @@ describe("the mobile path: viewport signal, lower-LOD clamp, and its disclosure"
       const inspection = buttons.find((node) => node.textContent === "Inspection profile")!;
       const exploration = buttons.find((node) => node.textContent === "Exploration profile")!;
       // A toggle's pressed state is a statement about what is in force. Under
-      // the mobile clamp the requested profile is NOT in force, and reporting
-      // it pressed told a screen-reader user the finest LOD was rendering.
-      expect(inspection.getAttribute("aria-pressed")).toBe("false");
-      expect(exploration.getAttribute("aria-pressed")).toBe("true");
+      // the mobile pin the requested profile is NOT in force, and reporting it
+      // pressed would tell a screen-reader user the coarsest LOD was rendering
+      // when the finest one is. The direction reversed; the property did not.
+      expect(exploration.getAttribute("aria-pressed")).toBe("false");
+      expect(inspection.getAttribute("aria-pressed")).toBe("true");
       // The requested state is disclosed rather than discarded.
-      expect(inspection.getAttribute("data-profile-requested")).toBe("true");
-      expect(inspection.getAttribute("data-profile-effective")).toBe("false");
-      expect(inspection.getAttribute("title")).toContain("requested by this session but NOT in force");
+      expect(exploration.getAttribute("data-profile-requested")).toBe("true");
+      expect(exploration.getAttribute("data-profile-effective")).toBe("false");
+      expect(exploration.getAttribute("title")).toContain("requested by this session but NOT in force");
     } finally {
       media.restore();
     }

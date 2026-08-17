@@ -69,7 +69,7 @@ import { commitExteriorCacheRelease, createExteriorCacheReleaseState, noteExteri
 import type { SchedulerCarry } from "../runtime/exterior-visibility-scheduler";
 import { createExteriorAssetFaultFetcher, createExteriorCellFaultFetcher, parseExteriorAssetFault, parseExteriorCellFault } from "../runtime/exterior-cell-fault";
 import { EXTERIOR_SERVING_WAVES } from "../release/exterior-serving-waves";
-import { EXTERIOR_DEFAULT_ACTIVATION, exteriorAcceptedCellsDigest, exteriorAcceptedIdsDigest, exteriorDefaultActivations, exteriorRolledBackReleaseNotice, exteriorStreamingOverrideDisables, exteriorUnavailableStatements, resolveExteriorActivationSet, restoresPromotedDefault, verifyPromotedExteriorMembership, verifyPromotedExteriorPin, type ExteriorDefaultActivationRecord, type ExteriorDefaultActivationRecords, type ExteriorReleaseActivation, type ExteriorStreamingOverride } from "../runtime/exterior-default-activation";
+import { EXTERIOR_DEFAULT_ACTIVATION, EXTERIOR_TWO_LOD_DEFAULT_ACTIVATION, exteriorAcceptedCellsDigest, exteriorAcceptedIdsDigest, exteriorDefaultActivations, exteriorRolledBackReleaseNotice, exteriorStreamingOverrideDisables, exteriorUnavailableStatements, resolveExteriorActivationSet, restoresPromotedDefault, verifyPromotedExteriorMembership, verifyPromotedExteriorPin, type ExteriorDefaultActivationRecord, type ExteriorDefaultActivationRecords, type ExteriorReleaseActivation, type ExteriorStreamingOverride } from "../runtime/exterior-default-activation";
 import {
   BLOCK835_CANARY_REPEATS,
   BLOCK835_CANARY_SAMPLES_PER_POSE,
@@ -621,7 +621,7 @@ export function mobileExteriorLodPolicy(mobile: boolean, requestedProfile: Exter
     requestedProfile,
     effectiveProfile,
     clamped,
-    disclosure: `Mobile viewport · exterior geometry is pinned to the ${exteriorRenderProfileLabel(effectiveProfile)}${clamped ? `, overriding the requested ${exteriorRenderProfileLabel(requestedProfile)}` : ""}. This is a LOWER level of detail than a desktop inspection session and no desktop visual parity is claimed. Feature identity, selection, details, provenance and deep links are unchanged.`,
+    disclosure: `Mobile viewport · exterior geometry is pinned to the ${exteriorRenderProfileLabel(effectiveProfile)}${clamped ? `, overriding the requested ${exteriorRenderProfileLabel(requestedProfile)}` : ""}. ${effectiveProfile === "inspection" ? "This is the SAME level of detail a desktop inspection session resolves; no reduction is applied and no mobile frame-time budget is claimed here." : "This is a LOWER level of detail than a desktop inspection session and no desktop visual parity is claimed."} Feature identity, selection, details, provenance and deep links are unchanged.`,
   };
 }
 
@@ -769,7 +769,7 @@ export function appendBlock835PublicRealmUrl(baseUrl: string, requested: boolean
  * whether any of them is ever promoted is a separate decision with its own
  * measurement, and this pin does not anticipate it.
  */
-export const PINNED_EXTERIOR_CELL_RELEASE_IDS = ["udt-fixture-exterior-cells", "manhattan-exterior-cells-20260811", "manhattan-exterior-cells-20260811-v3", "manhattan-midtown-core-cells-20260811", "manhattan-midtown-core-cells-20260811-v3", "manhattan-lower-manhattan-cells-20260812", "manhattan-lower-manhattan-cells-20260812-p1", "manhattan-southern-remainder-cells-20260812", "manhattan-southern-remainder-cells-20260812-p1", "manhattan-central-upper-manhattan-cells-20260812", "manhattan-central-upper-manhattan-cells-20260812-p1", "manhattan-northern-manhattan-cells-20260812", "manhattan-northern-manhattan-cells-20260812-p1", ...EXTERIOR_T1_RELEASE_IDS, ...EXTERIOR_SERVING_WAVES.map((entry) => entry.servingReleaseId)] as const;
+export const PINNED_EXTERIOR_CELL_RELEASE_IDS = ["udt-fixture-exterior-cells", "manhattan-exterior-cells-20260811", "manhattan-exterior-cells-20260811-v3", "manhattan-midtown-core-cells-20260811", "manhattan-midtown-core-cells-20260811-v3", "manhattan-lower-manhattan-cells-20260812", "manhattan-lower-manhattan-cells-20260812-p1", "manhattan-southern-remainder-cells-20260812", "manhattan-southern-remainder-cells-20260812-p1", "manhattan-central-upper-manhattan-cells-20260812", "manhattan-central-upper-manhattan-cells-20260812-p1", "manhattan-northern-manhattan-cells-20260812", "manhattan-northern-manhattan-cells-20260812-p1", ...EXTERIOR_T1_RELEASE_IDS, ...EXTERIOR_SERVING_WAVES.map((entry) => entry.servingReleaseId), ...exteriorDefaultActivations().flatMap((entry) => (entry.enabled && entry.releaseId ? [entry.releaseId] : []))] as const;
 
 /**
  * The release used when neither a URL nor the promoted default names one: still
@@ -1485,7 +1485,7 @@ export function App() {
   const [exteriorUnanchoredIds, setExteriorUnanchoredIds] = useState<string[]>([]);
   // Kept separate from `deepLinkMessage`, which the first selection clears.
   const [exteriorDeepLinkNotice, setExteriorDeepLinkNotice] = useState<string | null>(
-    typeof window === "undefined" ? null : exteriorDeepLinkMessage(window.location.href, exteriorDefaultActivations(EXTERIOR_DEFAULT_ACTIVATION)),
+    typeof window === "undefined" ? null : exteriorDeepLinkMessage(window.location.href, exteriorDefaultActivations(EXTERIOR_TWO_LOD_DEFAULT_ACTIVATION)),
   );
   const [stage3RenderProof, setStage3RenderProof] = useState<Stage3RenderProof | null>(null);
   const [block835PerformanceProbe, setBlock835PerformanceProbe] = useState<Block835PerformanceProbeResult | null>(null);
@@ -1673,7 +1673,21 @@ export function App() {
   // base is itself the request, and a fixture-mode session resolves to quiet.
   // The records are read per render, not captured once, so a build that swaps a
   // record resolves the record it actually exports.
-  const exteriorActivationRecords = exteriorDefaultActivations(EXTERIOR_DEFAULT_ACTIVATION);
+  // w00's record is passed EXPLICITLY, and T001 changed WHICH record rather than
+  // whether one is passed. Two reasons it stays explicit:
+  //
+  //  1. Passing `EXTERIOR_DEFAULT_ACTIVATION` held Block 835 on the single-LOD
+  //     `-s1` release while waves 1-5 followed the function's defaults, so
+  //     flipping those defaults alone would have promoted five waves and quietly
+  //     left the sixth behind, with the w00 status assertion still passing for
+  //     the wrong reason.
+  //  2. The parameter IS the substitution seam. `exteriorDefaultActivations`
+  //     takes records as arguments precisely so a caller holding one — a build
+  //     that rolled a wave back, or a rollback rehearsal — orders the record it
+  //     actually holds. A parameterless call reads the module's own binding,
+  //     which no caller and no test can substitute, and it silently disarmed the
+  //     drifted-record and rolled-back gates.
+  const exteriorActivationRecords = exteriorDefaultActivations(EXTERIOR_TWO_LOD_DEFAULT_ACTIVATION);
   const exteriorActivationSet = resolveExteriorActivationSet({
     override: exteriorStreamingOverride,
     explicitReleaseId: exteriorExplicitReleaseId,

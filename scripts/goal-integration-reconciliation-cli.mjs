@@ -365,14 +365,18 @@ function stableStringify(value) {
  * The CURATED composition, which is the one the committed record is ABOUT.
  *
  * Read off the live promotion records' `predecessor` chain rather than
- * hand-typed, so a curated record edited underneath the T005 serving promotion
- * still fails the check. This is the same set `goal-integration-reconciliation.test.mjs`
- * passes; the two agree by construction rather than by two copies of a list.
+ * hand-typed, so a curated record edited underneath a later promotion still
+ * fails the check. The T001 two-LOD promotion added a rung, so curated is now
+ * TWO links down: `-s2` -> `-s1` -> curated. This is the same set
+ * `goal-integration-reconciliation.test.mjs` passes; the two agree by
+ * construction rather than by two copies of a list.
  */
 function curatedActivations() {
-  return exteriorDefaultActivations().flatMap((activation) =>
-    activation.enabled && activation.predecessor.enabled ? [activation.predecessor] : [],
-  );
+  return exteriorDefaultActivations().flatMap((activation) => {
+    if (!activation.enabled || !activation.predecessor.enabled) return [];
+    const serving = activation.predecessor;
+    return serving.predecessor.enabled ? [serving.predecessor] : [serving];
+  });
 }
 
 /**

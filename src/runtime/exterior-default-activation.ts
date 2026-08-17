@@ -1344,7 +1344,11 @@ export const NORTHERN_MANHATTAN_TWO_LOD_ACTIVATION: ExteriorDefaultActivationRec
 
 
 /**
- * The six two-LOD rollbacks: each record with its `-s2` release withdrawn.
+ * The six two-LOD rollbacks: for each wave, the `-s1` PREDECESSOR record with
+ * the `-s2` release withdrawn — the same shape every `-s1` rollback above uses
+ * (spread the record being restored, refuse the release being withdrawn). A
+ * record that spread the `-s2` activation itself would restore the very release
+ * it refuses, which is not a rollback.
  *
  * Reverting the promotion commit restores the `-s1` composition AND the old
  * selection semantics together, which is the single-revert rule ADR 0057 Part 0
@@ -1353,32 +1357,32 @@ export const NORTHERN_MANHATTAN_TWO_LOD_ACTIVATION: ExteriorDefaultActivationRec
  */
 
 export const EXTERIOR_TWO_LOD_DEFAULT_ROLLBACK: ExteriorDefaultActivationEnabled = {
-  ...EXTERIOR_TWO_LOD_DEFAULT_ACTIVATION,
+  ...EXTERIOR_DEFAULT_ACTIVATION,
   rolledBackReleaseId: "manhattan-exterior-cells-20260811-v3-s2",
 } as const;
 
 export const MIDTOWN_CORE_TWO_LOD_ROLLBACK: ExteriorDefaultActivationEnabled = {
-  ...MIDTOWN_CORE_TWO_LOD_ACTIVATION,
+  ...MIDTOWN_CORE_EXTERIOR_ACTIVATION,
   rolledBackReleaseId: "manhattan-midtown-core-cells-20260811-v3-s2",
 } as const;
 
 export const LOWER_MANHATTAN_TWO_LOD_ROLLBACK: ExteriorDefaultActivationEnabled = {
-  ...LOWER_MANHATTAN_TWO_LOD_ACTIVATION,
+  ...LOWER_MANHATTAN_EXTERIOR_ACTIVATION,
   rolledBackReleaseId: "manhattan-lower-manhattan-cells-20260812-s2",
 } as const;
 
 export const SOUTHERN_REMAINDER_TWO_LOD_ROLLBACK: ExteriorDefaultActivationEnabled = {
-  ...SOUTHERN_REMAINDER_TWO_LOD_ACTIVATION,
+  ...SOUTHERN_REMAINDER_EXTERIOR_ACTIVATION,
   rolledBackReleaseId: "manhattan-southern-remainder-cells-20260812-s2",
 } as const;
 
 export const CENTRAL_UPPER_MANHATTAN_TWO_LOD_ROLLBACK: ExteriorDefaultActivationEnabled = {
-  ...CENTRAL_UPPER_MANHATTAN_TWO_LOD_ACTIVATION,
+  ...CENTRAL_UPPER_MANHATTAN_EXTERIOR_ACTIVATION,
   rolledBackReleaseId: "manhattan-central-upper-manhattan-cells-20260812-s2",
 } as const;
 
 export const NORTHERN_MANHATTAN_TWO_LOD_ROLLBACK: ExteriorDefaultActivationEnabled = {
-  ...NORTHERN_MANHATTAN_TWO_LOD_ACTIVATION,
+  ...NORTHERN_MANHATTAN_EXTERIOR_ACTIVATION,
   rolledBackReleaseId: "manhattan-northern-manhattan-cells-20260812-s2",
 } as const;
 
@@ -1410,12 +1414,12 @@ export const EXTERIOR_TWO_LOD_SERVING_ROLLBACKS: readonly ExteriorDefaultActivat
  * checked against the ledger rather than in a comment that would silently rot.
  */
 export function exteriorDefaultActivations(
-  blockEight35: ExteriorDefaultActivationRecord = EXTERIOR_DEFAULT_ACTIVATION,
-  midtownCore: ExteriorDefaultActivationRecord = MIDTOWN_CORE_EXTERIOR_ACTIVATION,
-  lowerManhattan: ExteriorDefaultActivationRecord = LOWER_MANHATTAN_EXTERIOR_ACTIVATION,
-  southernRemainder: ExteriorDefaultActivationRecord = SOUTHERN_REMAINDER_EXTERIOR_ACTIVATION,
-  centralUpperManhattan: ExteriorDefaultActivationRecord = CENTRAL_UPPER_MANHATTAN_EXTERIOR_ACTIVATION,
-  northernManhattan: ExteriorDefaultActivationRecord = NORTHERN_MANHATTAN_EXTERIOR_ACTIVATION,
+  blockEight35: ExteriorDefaultActivationRecord = EXTERIOR_TWO_LOD_DEFAULT_ACTIVATION,
+  midtownCore: ExteriorDefaultActivationRecord = MIDTOWN_CORE_TWO_LOD_ACTIVATION,
+  lowerManhattan: ExteriorDefaultActivationRecord = LOWER_MANHATTAN_TWO_LOD_ACTIVATION,
+  southernRemainder: ExteriorDefaultActivationRecord = SOUTHERN_REMAINDER_TWO_LOD_ACTIVATION,
+  centralUpperManhattan: ExteriorDefaultActivationRecord = CENTRAL_UPPER_MANHATTAN_TWO_LOD_ACTIVATION,
+  northernManhattan: ExteriorDefaultActivationRecord = NORTHERN_MANHATTAN_TWO_LOD_ACTIVATION,
 ): readonly ExteriorDefaultActivationRecord[] {
   return [blockEight35, midtownCore, lowerManhattan, southernRemainder, centralUpperManhattan, northernManhattan];
 }
@@ -1462,7 +1466,7 @@ export function exteriorStreamingOverrideDisables(override: ExteriorStreamingOve
  */
 export function exteriorRolledBackReleaseNotice(
   explicitReleaseId: string | null,
-  records: ExteriorDefaultActivationRecords = EXTERIOR_DEFAULT_ACTIVATION,
+  records: ExteriorDefaultActivationRecords = EXTERIOR_TWO_LOD_DEFAULT_ACTIVATION,
 ): string | null {
   if (explicitReleaseId === null) return null;
   for (const record of activationRecordList(records)) {
@@ -1490,7 +1494,7 @@ export function restoresPromotedDefault(input: {
   record?: ExteriorDefaultActivationRecords;
 }): boolean {
   if (input.activeRealBaseReleaseId === null) return false;
-  return activationRecordList(input.record ?? EXTERIOR_DEFAULT_ACTIVATION)
+  return activationRecordList(input.record ?? EXTERIOR_TWO_LOD_DEFAULT_ACTIVATION)
     .some((record) => record.enabled && input.targetReleaseId === record.releaseId);
 }
 
@@ -1541,7 +1545,7 @@ export interface ExteriorActivationResolution {
  * directions, which keeps every pre-promotion deep link behaving as it did.
  */
 export function resolveExteriorActivation(input: ExteriorActivationInput): ExteriorActivationResolution {
-  const record = input.record ?? EXTERIOR_DEFAULT_ACTIVATION;
+  const record = input.record ?? EXTERIOR_TWO_LOD_DEFAULT_ACTIVATION;
   const promotable = record.enabled && input.activeRealBaseReleaseId !== null;
   const releaseId = input.explicitReleaseId ?? (promotable && record.enabled ? record.releaseId : input.fallbackReleaseId);
   // Streaming the promoted release is streaming the promoted release, whoever
@@ -1676,7 +1680,7 @@ export type ExteriorPinVerification = { ok: true } | { ok: false; message: strin
  */
 export function verifyPromotedExteriorPin(
   resolved: ExteriorPinVerificationInput,
-  record: ExteriorDefaultActivationRecord = EXTERIOR_DEFAULT_ACTIVATION,
+  record: ExteriorDefaultActivationRecord = EXTERIOR_TWO_LOD_DEFAULT_ACTIVATION,
 ): ExteriorPinVerification {
   if (!record.enabled) {
     return { ok: false, message: "Exterior streaming is not promoted in this build, so no promoted pin could be verified; no substitute release was selected." };
@@ -1764,7 +1768,7 @@ export function verifyPromotedExteriorPin(
  */
 export function verifyPromotedExteriorMembership(
   renderedFeatureIds: readonly string[],
-  record: ExteriorDefaultActivationRecord = EXTERIOR_DEFAULT_ACTIVATION,
+  record: ExteriorDefaultActivationRecord = EXTERIOR_TWO_LOD_DEFAULT_ACTIVATION,
   /**
    * The accepted set, for a record that states it as a digest.
    *
@@ -1811,7 +1815,7 @@ export interface ExteriorUnavailableInput {
  * claimed an exterior wave, so there is nothing to report as missing.
  */
 export function exteriorUnavailableDetail(input: ExteriorUnavailableInput): string | null {
-  const record = input.record ?? EXTERIOR_DEFAULT_ACTIVATION;
+  const record = input.record ?? EXTERIOR_TWO_LOD_DEFAULT_ACTIVATION;
   if (input.streaming || input.activeRealBaseReleaseId === null) return null;
   const rolledBack = exteriorRolledBackReleaseNotice(input.explicitReleaseId ?? null, record);
   if (rolledBack) return `${rolledBack} Base massing from release ${input.activeRealBaseReleaseId} is shown.`;

@@ -152,7 +152,14 @@ function buildingIdsFrom(files: InventoryFile[]): string[] {
  * coverage assertions fail.
  */
 function curatedPredecessors(): readonly ExteriorDefaultActivationRecord[] {
-  return EXTERIOR_DEFAULT_ACTIVATIONS.map((record) => (record.enabled ? record.predecessor : record));
+  // Two links down since the two-LOD promotion: -s2 -> -s1 -> curated. Both
+  // serving rungs state membership as digests; the curated rung still names
+  // building identities, which is what the ledger-coverage claims read.
+  return EXTERIOR_DEFAULT_ACTIVATIONS.map((record) => {
+    if (!record.enabled) return record;
+    const serving = record.predecessor;
+    return serving.enabled ? serving.predecessor : serving;
+  });
 }
 
 describe("Northern-Manhattan promotion record versus the committed payload inventory", () => {
@@ -165,20 +172,20 @@ describe("Northern-Manhattan promotion record versus the committed payload inven
     expect(RECORD!.rolledBackReleaseId ?? null).toBeNull();
     expect(EXTERIOR_DEFAULT_ACTIVATIONS).toHaveLength(6);
     // T005 promoted this wave's serving release into the same sixth slot with
-    // this record as its predecessor, so the slot is still this wave's, one
-    // link further back.
+    // this record as its predecessor, and T001 promoted the two-LOD release
+    // over that — so the slot is still this wave's, two links further back.
     const promoted = EXTERIOR_DEFAULT_ACTIVATIONS[5]!;
     expect(promoted.enabled).toBe(true);
     if (!promoted.enabled) throw new Error("expected the sixth promoted default to be enabled");
-    expect(promoted.releaseId).toBe(SERVING_RELEASE_ID);
-    expect(promoted.predecessor).toBe(NORTHERN_MANHATTAN_P1_EXTERIOR_ACTIVATION);
+    expect(promoted.predecessor.enabled && promoted.predecessor.releaseId).toBe(SERVING_RELEASE_ID);
+    expect(promoted.predecessor.enabled && promoted.predecessor.predecessor).toBe(NORTHERN_MANHATTAN_P1_EXTERIOR_ACTIVATION);
     // The five earlier slots are untouched by this promotion, and the wave
     // immediately before it is asserted by identity rather than by shape.
     const previous = EXTERIOR_DEFAULT_ACTIVATIONS[4]!;
     expect(previous.enabled).toBe(true);
     if (!previous.enabled) throw new Error("expected the fifth promoted default to be enabled");
-    expect(previous.releaseId).toBe(CENTRAL_UPPER_MANHATTAN_SERVING_RELEASE_ID);
-    expect(previous.predecessor).toBe(CENTRAL_UPPER_MANHATTAN_P1_EXTERIOR_ACTIVATION);
+    expect(previous.predecessor.enabled && previous.predecessor.releaseId).toBe(CENTRAL_UPPER_MANHATTAN_SERVING_RELEASE_ID);
+    expect(previous.predecessor.enabled && previous.predecessor.predecessor).toBe(CENTRAL_UPPER_MANHATTAN_P1_EXTERIOR_ACTIVATION);
   });
 
   it("pins the rollout snapshot and assembly package the inventory recorded", () => {
