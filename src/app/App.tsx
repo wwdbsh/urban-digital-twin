@@ -2450,6 +2450,23 @@ export function App() {
       decisionIndex: globalSchedule.decision.carry.decisionIndex,
       footprintSignature: globalSchedule.decision.carry.footprintSignature,
       heightBucket: globalSchedule.decision.carry.heightBucket,
+      // INSTRUMENT DEFECT, FIXED. These two were never put in the probe payload
+      // at all, so the T001 pose captures recorded `residentUnitCount: 0` and
+      // `distances.count: 0` at ALL SIX poses. That is not a finding about the
+      // scheduler -- the scheduler was resolving cells the whole time, as the
+      // request-level LOD readings in the same captures show. It is the probe
+      // failing to carry what the capture CLI was reading.
+      //
+      // `distanceMetersByUnitId` is a Map, and a Map inside `JSON.stringify`
+      // renders as `{}`, so it is emitted as ENTRIES. The capture CLI already
+      // accepts either shape.
+      //
+      // PROBE PAYLOAD ONLY: this whole assignment is behind
+      // EXTERIOR_SCHEDULER_PROBE_ENABLED, which compiles out unless
+      // VITE_EXTERIOR_SCHEDULER_PROBE is set, and the decision object itself is
+      // not touched. No runtime behaviour depends on any of it.
+      residentUnitIds: [...globalSchedule.decision.resident],
+      distanceMetersByUnitId: [...globalSchedule.decision.distanceMetersByUnitId.entries()],
     };
     for (const [releaseId, { target, runtime }] of wanted) {
       const live = running.get(releaseId);

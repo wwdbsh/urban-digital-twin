@@ -192,6 +192,12 @@ const READ_LOD_REQUESTS = `(() => {
     lod1DistinctCount: new Set(lod1.map(name)).size,
     lod0Sample: [...new Set(lod0.map(name))].sort().slice(0, 5),
     lod1Sample: [...new Set(lod1.map(name))].sort().slice(0, 5),
+    // The BUILDING identity behind each request, so the two levels can be
+    // intersected. A building appearing in both lists had both of its levels
+    // pulled over the wire in one session, which is what the D-11 doubling
+    // allowance bounds.
+    lod0BuildingIds: [...new Set(lod0.map((entry) => name(entry).replace("__lod_0.glb", "")))].sort(),
+    lod1BuildingIds: [...new Set(lod1.map((entry) => name(entry).replace("__lod_1.glb", "")))].sort(),
   };
 })()`;
 
@@ -271,7 +277,31 @@ async function capturePose(base, pose) {
       url,
       pose: { lon: pose.lon, lat: pose.lat, height: pose.height, heading: pose.heading, pitch: pose.pitch, roll: pose.roll },
       residentUnitCount: probe.residentUnitIds.length,
-      distances: { count: distances.length, nearRingCount: near.length, farRingCount: far.length, minMeters: distances.length ? Math.min(...distances.map((d) => d.meters)) : null, maxMeters: distances.length ? Math.max(...distances.map((d) => d.meters)) : null },
+      distances: {
+        count: distances.length,
+        nearRingCount: near.length,
+        farRingCount: far.length,
+        minMeters: distances.length ? Math.min(...distances.map((d) => d.meters)) : null,
+        maxMeters: distances.length ? Math.max(...distances.map((d) => d.meters)) : null,
+        ringMeters: EXTERIOR_TWO_LOD_SERVING_NEAR_RING_METERS,
+        // NAMED cells per side. A straddle pose has to say WHICH cells sat which
+        // side of the ring, or "both sides were populated" is a count nobody can
+        // check. Sorted by distance and capped so the record stays readable.
+        nearRingCells: [...near].sort((a, b) => a.meters - b.meters).slice(0, 12).map((d) => ({ unitId: d.unitId, meters: Number(d.meters.toFixed(2)) })),
+        farRingCells: [...far].sort((a, b) => a.meters - b.meters).slice(0, 12).map((d) => ({ unitId: d.unitId, meters: Number(d.meters.toFixed(2)) })),
+        // The cells nearest the ring on each side: the ones a small camera move
+        // would push across, which is what makes the straddle a straddle.
+        closestBelowRing: near.length ? (() => { const d = near.reduce((a, b) => (a.meters > b.meters ? a : b)); return { unitId: d.unitId, meters: Number(d.meters.toFixed(2)) }; })() : null,
+        closestAboveRing: far.length ? (() => { const d = far.reduce((a, b) => (a.meters < b.meters ? a : b)); return { unitId: d.unitId, meters: Number(d.meters.toFixed(2)) }; })() : null,
+      },
+      // D-11: cells whose BOTH levels are simultaneously resident in the shared
+      // cache, against the registered 4-of-8 doubling allowance. Read from the
+      // request log rather than from the scheduler, because what the allowance
+      // bounds is bytes held, and a request is what puts bytes there.
+      simultaneousBothLevels: (() => {
+        const both = (lods.lod0BuildingIds ?? []).filter((id) => (lods.lod1BuildingIds ?? []).includes(id));
+        return { count: both.length, buildingIds: both.slice(0, 24) };
+      })(),
       lodRequests: lods,
       sharedCache: metrics,
       universalGates: { ...universal, pass: universalPass },
@@ -291,7 +321,11 @@ async function main() {
   let surviving;
   const stops = [];
   try {
-    for (const pose of POSES) {
+    // The INSTRUMENT-DEFECT RE-RUN convention needs a way to re-take named poses
+    // without disturbing the ones whose readings were never in doubt.
+    const only = argValue(argv, "--poses", "");
+    const wanted = only ? new Set(only.split(",").map((token) => token.trim().toUpperCase())) : null;
+    for (const pose of POSES.filter((entry) => !wanted || wanted.has(entry.poseId))) {
       const stop = await capturePose(base, pose);
       stops.push(stop);
       console.log(`  ${stop.poseId} resident=${stop.residentUnitCount} near=${stop.distances.nearRingCount} far=${stop.distances.farRingCount} lod0=${stop.lodRequests.lod0DistinctCount} lod1=${stop.lodRequests.lod1DistinctCount} universal=${stop.universalGates.pass ? "PASS" : "FAIL"}`);

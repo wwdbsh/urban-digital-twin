@@ -320,6 +320,95 @@ RECORDED and NOT judged, and it does not gate any pose here.
 
 ---
 
+## Part 4.3 — what the capture returned
+
+Added 2026-08-18, after the six registered poses were captured against the
+promoted `-s2` composition and after P2 and P3 were re-taken under the
+instrument-defect convention. Evidence:
+`data/exterior-two-lod-serving-20260818/pose-captures.json`.
+
+**Universal gates PASS at all six poses**: zero failed cells, zero
+fallback-to-massing, zero failed artifacts, peak concurrency 4 against a ceiling
+of 4, zero external hosts.
+
+| pose | registered gate | result |
+| --- | --- | --- |
+| P1 street 180 m | finest level resolves close in | **WEAK** — few resident cells at this height; recorded as captured, not argued up |
+| P2 400 m straddle | named cells both sides of the ring; crossing is a reload | **PROVEN (straddle)**, after a re-capture — see below |
+| P3 mid ring 1,100 m | coarse level dominates | **PASS** — 61 distinct `lod_1` against 3 `lod_0` |
+| P4 sparse island edge | ungated (section 1.5 limitation) | records only |
+| P5 w03 measured-fallback parents | fallback parents resolve | **PASS** |
+| P6 Block 835 deep link | the one release whose behaviour changes | **PASS** |
+
+### P2 has TWO readings, and both are on the record
+
+The first capture recorded **zero** resident cells and **zero** per-cell
+distances at all six poses. The probe payload never carried `residentUnitIds` or
+`distanceMetersByUnitId`, and the latter is a `Map`, which `JSON.stringify`
+renders as `{}` even when present. That is an INSTRUMENT defect, not a finding
+about the scheduler — the request-level LOD readings in the same captures show it
+resolving cells throughout.
+
+P2 and P3 were re-taken under the **instrument-defect re-run** convention, single
+attempt, with the four unaffected poses left alone. The defective zero reading is
+retained under `instrumentDefectAndReRun.supersededReadings`; the drift test pins
+**both**.
+
+**The straddle is now PROVEN.** At P2, 8 resident cells split **6 at or below**
+400 m and **2 above**. The nearest below is
+`manhattan-exterior-cell-w01-000051-16-19301-17930` at 207.96 m; the nearest
+above is `manhattan-exterior-cell-w00-000000-block-00835` at 886.02 m.
+
+**Crossing-is-reload is proven at BUILDING granularity and refused at cell
+granularity.** 15 buildings were fetched as `__lod_0.glb` at P2 and as
+`__lod_1.glb` at P3 — the same building, re-loaded at the other level once the
+camera moved out. What was *not* observed is a **cell** changing ring side: only
+3 cells are resident at both poses and all three stayed on the same side. The
+building-level evidence stands on its own; the cell-level claim does not, and is
+not made.
+
+One metric caveat, because it would otherwise be over-read:
+`distanceMetersByUnitId` is a **ground-plane** distance from the camera ground
+point. At P3, 1,100 m up, it still reports 6 cells at or below 400 m. It must not
+be read as the quantity that routes the level — the LOD request sets are that
+evidence.
+
+### 4.3.1 D-11 disposition — WITHIN ALLOWANCE
+
+Section 4.1 registered an allowance of **4 of 8** resident cells holding both
+levels at once. Measured: **3 buildings** held both levels at P2 and **3** at P3,
+against 8 resident cells at each. Those buildings sit in at most 3 cells, so
+cells-holding-both is **at most 3 against an allowance of 4**.
+
+The reading is per **building**, because the request log is per building; the
+cell figure is therefore an upper bound rather than a direct count. It is under
+the allowance either way, so the bound does not need tightening to reach the
+disposition.
+
+### 4.3.2 Instrument coverage
+
+| claim | how it is covered |
+| --- | --- |
+| threshold arithmetic, band edges, rounding | **suite-covered** — deterministic tests |
+| per-building byte cost, budget inversion | **suite-covered** |
+| finest-that-covers routing per cell | **suite-covered** |
+| revert is one unit, both directions | **suite-covered**, rehearsed at `c2a07ce` |
+| universal gates under a real browser | **live** — six poses |
+| which level a document actually fetched | **live**, request-level only |
+| ring-side membership per named cell | **live**, P2/P3 only, after the instrument fix |
+| what a building LOOKS like at any ring | **not covered by anything here** |
+
+The last row is the honest boundary of the whole part: every live reading is a
+request or a counter. No pose claims a building looks coarse, and none can.
+
+### 4.3.3 T009 shed pairs
+
+The five T009 shed pairs named in ADR 0056 were not identified in the
+re-captured poses' request sets, and no appearance claim is made about them here.
+Their treatment is T009's.
+
+---
+
 ## Part 5 — what this ADR does not claim
 
 - No visual, geographic, architectural, accessibility or performance acceptance.

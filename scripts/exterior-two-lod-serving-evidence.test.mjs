@@ -103,22 +103,90 @@ describe("the request-level LOD readings the ADR reports", () => {
 });
 
 /**
- * THE INSTRUMENT LIMITATION, pinned so it cannot be quietly dropped.
+ * THE INSTRUMENT DEFECT AND ITS RE-RUN, with BOTH readings pinned.
  *
- * `distanceMetersByUnitId` is a `Map` on `SchedulerDecision`, and the DOM probe
- * serializes the decision with `JSON.stringify` — which renders a Map as `{}`.
- * Every pose therefore captured ZERO per-cell distances, and no capture here
- * can say which side of the 400 m ring a NAMED cell sat on.
+ * The probe payload never carried `residentUnitIds` or `distanceMetersByUnitId`
+ * at all — and `distanceMetersByUnitId` is a `Map`, which `JSON.stringify`
+ * renders as `{}` even when present. The first capture therefore recorded zero
+ * resident cells and zero distances at ALL SIX poses, and P2's straddle gate
+ * could not be proven.
  *
- * That is why P2's registered gate is reported as NOT FULLY PROVEN rather than
- * passed: the aggregate request counts show both levels present in the same
- * session, which is consistent with a straddle but does not establish the
- * per-cell side assignment the gate asks for.
+ * It was NOT a finding about the scheduler: the request-level LOD readings in
+ * the same captures show it resolving cells throughout. P2 and P3 were re-taken
+ * under the INSTRUMENT-DEFECT RE-RUN convention, single attempt.
+ *
+ * Both readings are pinned. The defective zero stays on the record under
+ * `instrumentDefectAndReRun.supersededReadings`, and the fixed non-empty reading
+ * is in `poses[]`. A later edit that dropped either one has to argue with this.
  */
-describe("the per-cell distance instrument did not report", () => {
-  it("captured zero distances at every pose, and the record says so", () => {
-    for (const entry of record.poses) {
-      expect(entry.distances.count, `${entry.poseId} unexpectedly reported distances`).toBe(0);
+describe("the per-cell distance instrument: the defect, and the reading that replaced it", () => {
+  it("keeps the DEFECTIVE zero reading, superseded with its reason", () => {
+    const defect = record.instrumentDefectAndReRun;
+    expect(defect.supersededReadings.length).toBe(2);
+    for (const superseded of defect.supersededReadings) {
+      expect(["P2", "P3"]).toContain(superseded.poseId);
+      expect(superseded.residentUnitCount, `${superseded.poseId} superseded reading`).toBe(0);
+      expect(superseded.distances.count, `${superseded.poseId} superseded reading`).toBe(0);
+      expect(superseded.reason).toContain("Instrument defect");
     }
+    expect(defect.whatItWasNot).toContain("NOT a finding about the scheduler");
+    expect(defect.convention).toContain("INSTRUMENT-DEFECT RE-RUN");
+    // The second defect the re-run itself introduced, kept rather than tidied.
+    expect(defect.aSecondDefectFoundDuringTheReRun).toContain("CLOBBERED");
+  });
+
+  it("carries the FIXED non-empty reading at the two re-captured poses", () => {
+    for (const poseId of ["P2", "P3"]) {
+      const entry = record.poses.find((pose) => pose.poseId === poseId);
+      expect(entry.recaptured, poseId).toBe(true);
+      expect(entry.residentUnitCount, poseId).toBeGreaterThan(0);
+      expect(entry.distances.count, poseId).toBe(entry.residentUnitCount);
+      expect(entry.distances.nearRingCells.length + entry.distances.farRingCells.length, poseId).toBeGreaterThan(0);
+    }
+  });
+
+  it("leaves the four poses that were NOT re-taken exactly as they were", () => {
+    for (const poseId of ["P1", "P4", "P5", "P6"]) {
+      const entry = record.poses.find((pose) => pose.poseId === poseId);
+      expect(entry.recaptured, poseId).toBeUndefined();
+      // Their distance reading is still the defective zero, and saying so is the
+      // point: only the two poses that needed the instrument were re-taken.
+      expect(entry.distances.count, poseId).toBe(0);
+    }
+  });
+
+  it("proves the P2 straddle with NAMED cells on both sides of the ring", () => {
+    const straddle = record.p2Straddle;
+    expect(straddle.verdict).toBe("PROVEN");
+    expect(straddle.ringMeters).toBe(400);
+    expect(straddle.nearRingCount).toBeGreaterThan(0);
+    expect(straddle.farRingCount).toBeGreaterThan(0);
+    expect(straddle.closestBelowRing.meters).toBeLessThanOrEqual(400);
+    expect(straddle.closestAboveRing.meters).toBeGreaterThan(400);
+    for (const cell of straddle.nearRingCells) expect(cell.meters, cell.unitId).toBeLessThanOrEqual(400);
+    for (const cell of straddle.farRingCells) expect(cell.meters, cell.unitId).toBeGreaterThan(400);
+  });
+
+  it("claims the crossing=reload proof at BUILDING granularity and refuses it at cell", () => {
+    const crossing = record.crossingIsReload;
+    expect(crossing.verdict).toContain("PROVEN AT BUILDING GRANULARITY");
+    expect(crossing.verdict).toContain("NOT PROVEN AT CELL GRANULARITY");
+    expect(crossing.buildingsRefetchedAtTheOtherLevel).toBeGreaterThan(0);
+    // The honest half: no cell changed ring side between the two poses.
+    expect(crossing.whatIsNotProven).toContain("No CELL changed ring side");
+    // And the metric caveat that stops the distance map being read as the router.
+    expect(crossing.metricCaveat).toContain("ground-plane distance");
+  });
+
+  it("reads D-11 against its registered allowance", () => {
+    const d11 = record.d11Reading;
+    expect(d11.allowance).toContain("4 of 8");
+    expect(d11.verdict).toBe("WITHIN ALLOWANCE");
+    for (const measured of [d11.measuredAtP2, d11.measuredAtP3]) {
+      expect(measured.count).toBeLessThanOrEqual(4);
+    }
+    // The reading is per BUILDING; the cell figure is an upper bound and the
+    // record must keep saying so.
+    expect(d11.statement).toContain("upper bound");
   });
 });
