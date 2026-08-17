@@ -53,6 +53,14 @@ import {
   STATIONS,
   VISUAL_GATES,
 } from "./exterior-acceptance-campaign-constants.mjs";
+import {
+  ISLAND_WIDE_TOMBSTONE_COUNT,
+  J7_GATES,
+  REFUSAL_ARMS,
+  REFUSAL_EVIDENCE_ID,
+  REFUSAL_POSE,
+  REFUSAL_SUBJECTS,
+} from "./exterior-refusal-journey-constants.mjs";
 
 const run = promisify(execFile);
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -253,6 +261,7 @@ function poseUrl(base, pose, options = {}) {
   if (options.featureId) url.searchParams.set("feature", options.featureId);
   if (options.profile) url.searchParams.set("exteriorProfile", options.profile);
   if (options.streaming === false) url.searchParams.set("exteriorStreaming", "off");
+  if (options.schedulerOff) url.searchParams.set("exteriorScheduler", "off");
   for (const [key, value] of [["lon", pose.lon], ["lat", pose.lat], ["height", pose.height], ["heading", pose.heading], ["pitch", pose.pitch], ["roll", pose.roll]]) {
     url.searchParams.set(key, Number(value).toFixed(6));
   }
@@ -553,8 +562,136 @@ async function servedBundlePreflight(base) {
   return record;
 }
 
+/**
+ * Reads the REFUSAL case out of the details panel, by its data-* markers.
+ *
+ * Markers rather than prose: the wording is allowed to be edited, and a journey
+ * that asserted on sentences would fail for a copy change while passing for a
+ * building silently described by the wrong case. The three markers are mutually
+ * exclusive by construction, so reading all three is how a mis-classification
+ * shows up as evidence rather than as a missing string.
+ */
+const READ_REFUSAL_PANEL = `(() => {
+  const panel = document.querySelector('aside.inspector[aria-label="Selected feature details"]');
+  if (!panel) return { present: false };
+  const refusal = panel.querySelector("[data-exterior-refusal]");
+  const text = (node) => (node ? (node.textContent || "").replace(/\\s+/gu, " ").trim() : null);
+  return {
+    present: true,
+    refusalPresent: refusal !== null,
+    notResidentPresent: panel.querySelector("[data-exterior-not-resident]") !== null,
+    notOwnedPresent: panel.querySelector("[data-exterior-not-owned]") !== null,
+    stopCode: refusal ? refusal.getAttribute("data-exterior-stop-code") : null,
+    tombstoneId: text(panel.querySelector("[data-exterior-tombstone-id]")),
+    assertedStatement: text(panel.querySelector("[data-exterior-refusal-statement]")),
+    releaseQuotation: text(panel.querySelector("[data-exterior-refusal-quotation]")),
+    href: window.location.href,
+  };
+})()`;
+
+/**
+ * J7 — refused-parent honesty, in BOTH streaming arms.
+ *
+ * Four pre-registered buildings, one per stop code, each selected through a
+ * `?feature=` deep link at its own cell, captured once in the default arm and
+ * once under `?exteriorScheduler=off`. The arm split is the point: it is the
+ * only way to show that what the app ASSERTS about a refusal does not move when
+ * the release's trailing clause stops being true.
+ */
+async function journeyRefusedParentHonesty(base) {
+  const stops = [];
+  for (const subject of REFUSAL_SUBJECTS) {
+    const byArm = {};
+    for (const arm of REFUSAL_ARMS) {
+      const pose = { ...REFUSAL_POSE, lon: subject.lon, lat: subject.lat };
+      const url = poseUrl(base, pose, { featureId: subject.buildingId, schedulerOff: arm.schedulerOff });
+      byArm[arm.armId] = await inTab(base, url, async (session) => {
+        await waitFor(session, READ_REFUSAL_PANEL, (panel) => panel.present, `J7 ${subject.buildingId} ${arm.armId} panel`);
+        await wait(SETTLE_MS);
+        const panel = await session.evaluate(READ_REFUSAL_PANEL, `J7 ${subject.buildingId} ${arm.armId}`);
+        const still = await writeCapture(`journey-j7-${subject.stopCode}-${arm.armId}`, await session.screenshot(`J7 ${subject.buildingId} ${arm.armId} still`));
+        return { armId: arm.armId, url, panel, still, externalHosts: externalHosts(session, base) };
+      });
+    }
+    const [primary, secondary] = REFUSAL_ARMS.map((arm) => byArm[arm.armId]);
+    const armsAgreeOnAssertion = primary.panel.assertedStatement !== null && primary.panel.assertedStatement === secondary.panel.assertedStatement;
+    const gates = {
+      "J7-a": REFUSAL_ARMS.every((arm) => byArm[arm.armId].panel.refusalPresent && !byArm[arm.armId].panel.notResidentPresent && !byArm[arm.armId].panel.notOwnedPresent),
+      "J7-b": REFUSAL_ARMS.every((arm) => byArm[arm.armId].panel.stopCode === subject.stopCode),
+      "J7-c": REFUSAL_ARMS.every((arm) => byArm[arm.armId].panel.tombstoneId === subject.tombstoneId),
+      "J7-d": armsAgreeOnAssertion && REFUSAL_ARMS.every((arm) => {
+        const asserted = byArm[arm.armId].panel.assertedStatement ?? "";
+        return !asserted.includes("base massing") && !asserted.includes("what remains on screen");
+      }),
+      "J7-e": REFUSAL_ARMS.every((arm) => (byArm[arm.armId].panel.releaseQuotation ?? "").includes("base massing from the pinned citywide release is what remains on screen")),
+      "J7-f": REFUSAL_ARMS.every((arm) => byArm[arm.armId].externalHosts.length === 0),
+    };
+    stops.push({ subject, arms: byArm, armsAgreeOnAssertion, gates, pass: Object.values(gates).every(Boolean) });
+    console.log(`  J7 ${subject.stopCode} ${subject.buildingId} gates=${Object.entries(gates).map(([id, ok]) => `${id}:${ok ? "PASS" : "FAIL"}`).join(" ")}`);
+  }
+  return {
+    journeyId: J7_GATES.journeyId,
+    claim: J7_GATES.claim,
+    gateRules: J7_GATES,
+    stops,
+    pass: stops.every((stop) => stop.pass),
+  };
+}
+
+async function runRefusalJourney() {
+  const argv = process.argv.slice(2);
+  const base = argValue(argv, "--base", "http://127.0.0.1:4173/");
+  evidenceRoot = join(repositoryRoot, "data", argValue(argv, "--out", REFUSAL_EVIDENCE_ID));
+  const attemptCount = Number(argValue(argv, "--attempt", "1"));
+  if (!Number.isInteger(attemptCount) || attemptCount < 1) fail("--attempt must be a positive integer.");
+
+  const servedBundle = await servedBundlePreflight(base);
+  const browser = await launchChrome();
+  let surviving;
+  let j7;
+  try {
+    j7 = await journeyRefusedParentHonesty(base);
+  } finally {
+    surviving = await killChrome();
+    console.log(`  cleanup: survivingChromeProcessCount=${surviving}`);
+  }
+
+  const record = {
+    schemaVersion: "1.0",
+    recordId: `${REFUSAL_EVIDENCE_ID}:refusal-journey`,
+    task: "T007",
+    artifact: "refused-parent-honesty",
+    capturedAt: new Date().toISOString(),
+    attemptCount,
+    browser,
+    viewport: VIEWPORT,
+    base,
+    pose: REFUSAL_POSE,
+    arms: REFUSAL_ARMS,
+    islandWideTombstoneCount: ISLAND_WIDE_TOMBSTONE_COUNT,
+    servedBundle,
+    chromeLaunchCommand: CHROME_LAUNCH_COMMAND,
+    chromeDiscipline: CAMPAIGN_DISCIPLINE.chromeDiscipline,
+    survivingChromeProcessCount: surviving,
+    journey: j7,
+    ok: j7.pass,
+    claim: "Four refused parents, one per stop code, selected in the shipped UI and captured in BOTH streaming arms. The record states what the panel classified them as, which stop code it named, what the app asserted, and what it quoted from the release.",
+    notClaimedHere: [
+      "Any visual or geographic acceptance. A still is evidence that pixels were produced, not evidence of likeness.",
+      "Anything about the 201 refused parents these four did not select.",
+      "A CANVAS PICK: every selection here is a ?feature= deep link, not a mouse click on geometry.",
+    ],
+  };
+  await mkdir(evidenceRoot, { recursive: true });
+  await writeFile(join(evidenceRoot, "refusal-journey.json"), serialize(record));
+  await writeFile(join(evidenceRoot, "refusal-journey.sha256"), `${sha256HexSync(serialize(record))}  refusal-journey.json\n`);
+  console.log(serialize({ ok: record.ok, survivingChromeProcessCount: surviving }));
+  if (!record.ok) process.exitCode = 1;
+}
+
 async function main() {
   const argv = process.argv.slice(2);
+  if (argv.includes("--journey=j7")) return runRefusalJourney();
   const base = argValue(argv, "--base", "http://127.0.0.1:4173/");
   const out = argValue(argv, "--out", CAMPAIGN_EVIDENCE_ID);
   evidenceRoot = join(repositoryRoot, "data", out);
