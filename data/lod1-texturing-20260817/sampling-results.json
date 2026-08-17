@@ -202,7 +202,19 @@
     "styleClass": "masonry-light",
     "intersectionRatio": 1.0402119853426697
    }
-  ]
+  ],
+  "residualOwner": {
+   "owner": "T006 \u2014 the rendered LOD-transition gate (Issue #106).",
+   "question": "Whether the 5 shed pairs below differ in TONE beyond the silhouette-area artifact, measured by an instrument that separates geometry from tone by construction and is agreed in advance.",
+   "buildingIds": [
+    "doitt:100749",
+    "doitt:10049",
+    "doitt:147902",
+    "doitt:100368",
+    "doitt:100176"
+   ],
+   "note": "Named verbatim so the successor gate can target them rather than re-sample the island."
+  }
  },
  "result_hueDiagnostic": {
   "bar": "max per-channel ratio spread <= 0.01",
@@ -225,6 +237,7 @@
  },
  "conclusion": "The palette carry-over does what the ruling required, and the fallback cell proves it without confound: 15/15 pairs pixel-identical where previously they differed by 11-16%. The shed cell MISSES its pre-registered bar on 12 of 24 pairs. The post-hoc intersection measure attributes most of that miss to the pre-registered measure conflating silhouette area with tone, and recovers 19/24 \u2014 but 5 pairs remain unexplained and the pre-registered result stands as a MISS. What the sampling does NOT establish is that every shed lod_1 matches its lod_0 in tone at mid distance; a measure that separates geometry from tone by construction, agreed in advance, is what that would need.",
  "notClaimedHere": [
+  "EEVEE is not the shipped renderer. CesiumJS draws the app. What transfers is the geometry of the comparison and the pixel arithmetic, not an absolute appearance claim. (Carried forward verbatim from render-comparison.json limitations[4].)",
   "This is a comparison between two levels of the SAME release under one renderer, one camera and one light. It is not geographic, architectural, accessibility or performance acceptance.",
   "It does not claim the tile is resolvable at mid ring. Stage 0 measured that it is not, and that finding is unchanged.",
   "The 9 unavailable strata were not sampled and no substitute was rendered for them."
@@ -2180,5 +2193,9 @@
    ],
    "intersectionChannelSpread": 0.0
   }
- ]
+ ],
+ "rendererDependence": {
+  "shedResult": "RENDERER-DEPENDENT. The shed cell's numbers come out of a rasterizer, a light rig and a colour transform, so the MISS is a statement about this comparison and not an absolute appearance claim under CesiumJS.",
+  "fallbackResult": "RENDERER-INDEPENDENT BY CONSTRUCTION, and this is the distinction worth drawing. A fallback pair's two levels are the SAME geometry with the SAME UVs referencing the SAME tile, and the palette check proved their baseColorFactors are equal at exact equality. Two draws of identical geometry with identical materials produce identical pixels under ANY renderer that is a function of its inputs. The 15/15 pixel-identical result confirms the emitted bytes; it does not depend on EEVEE being the shipped renderer."
+ }
 }

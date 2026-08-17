@@ -4,8 +4,17 @@ Status: accepted for the T009 `-c2` retention campaign. It changes no approved
 release, no serving surface and no runtime default.
 Date: 2026-08-17
 Task: T009
-Supersedes: nothing. Amends nothing. Records the decision history that ADR 0048
-through 0055 left open for the coarse level's appearance.
+Supersedes: the DISPOSITION of `data/lod1-texturing-20260817/stage0-gate.json`,
+whose `verdict` reads "NO-GO FOR THE CAMPAIGN AS CONTRACTED; RESCOPE-RECOMMENDED"
+and whose `amendment2026_08_17.verdict` reads "RESCOPE". Neither is retracted —
+both remain the correct reading of the evidence that stage gathered, and the
+sequence is readable in that record's own `supersededBy` and
+`finalDisposition2026_08_17` fields, which carry the user's decision. This ADR
+records what was DONE and why; Stage 0 records what the evidence RECOMMENDED, and
+they disagree on the disposition rather than on any measurement.
+
+Amends nothing. Records the decision history that ADR 0048 through 0055 left open
+for the coarse level's appearance.
 
 ## The decision history, preserved rather than smoothed
 
@@ -105,8 +114,26 @@ recovers 19/24, but 5 pairs remain unexplained and the pre-registered result
 stands as a MISS. The campaign therefore does NOT establish that every shed lod_1
 matches its lod_0 in tone at mid distance.
 
+**The shed result is RENDERER-DEPENDENT and the fallback result is not.** EEVEE is
+not the shipped renderer — CesiumJS draws the app — and what transfers from a
+Blender comparison is the geometry of the comparison and the pixel arithmetic,
+not an absolute appearance claim. That caveat binds the shed MISS. It does NOT
+bind the fallback PASS, which holds by construction: a fallback pair is the SAME
+geometry with the SAME UVs referencing the SAME tile, and the palette check
+proved the two levels' `baseColorFactor`s equal at exact equality, so any
+renderer that is a function of its inputs must draw them identically. The 15/15
+confirms the emitted bytes rather than the rasterizer.
+
 ## What is NOT decided here
 
+- **The shed-tone residue, which now has an OWNER: T006, the rendered
+  LOD-transition gate (Issue #106).** Five shed pairs remain outside 2% even
+  under the post-hoc intersection measure, and settling them needs an instrument
+  that separates geometry from tone BY CONSTRUCTION, agreed in advance, under
+  the shipped renderer rather than EEVEE. The five are named here so the
+  successor gate can target them instead of re-sampling the island:
+  `doitt:100749`, `doitt:10049`, `doitt:147902`, `doitt:100368`,
+  `doitt:100176`.
 - Whether any `-c2` package is ever served. It is not, and nothing in
   `src/runtime/` can reach one.
 - Distinct LOD distance thresholds, which belong to T001's `-s2`.

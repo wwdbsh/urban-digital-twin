@@ -47,7 +47,11 @@ Total `-c2` payload is **7.01 GB**, of which 4.68 GB is copied lod_0.
 - **Validator**: ADR 0051 retention validator green over all **883** declared cell
   manifests, with both completeness sources on every wave.
 - **Determinism**: 40 GLBs per wave (28 for w00, its whole population),
-  byte-identical, with fallback parents sorted FIRST into the sample.
+  byte-identical, under a sampler that reserves a FALLBACK QUOTA (4) and caps
+  per-cell contribution so the sample spreads across 10 ownership cells and
+  covers 36 shed assets as well. The earlier reading, where fallbacks consumed
+  the whole cap on w03 and left shed coverage at zero, is preserved in each
+  wave's `verification.json` under `supersededReadings`.
 - **`-c1` immutability**: spot-checked on every wave, 335 artifacts re-hashed
   from disk, 0 differing, 0 symlinks.
 
@@ -74,6 +78,38 @@ in tone at mid distance.
   unchanged. This campaign was a completeness decision, not a refutation.
 - `-c2` keeps `maxDistanceMeters: null` at both levels and `eligible: false` for
   the 424. Distinct thresholds belong to T001's `-s2`.
+
+## Known-open: the App Escape failure is LOAD-DEPENDENT, and the two measurements disagree
+
+`src/app/App.test.tsx > "closes details with Escape and returns focus to the
+located-pick trigger"`. Both readings are recorded because they do not agree, and
+picking the more convenient one would be the error:
+
+| observer | method | result |
+| --- | --- | --- |
+| reviewer | full-suite runs | **2 of 2 FAILED**, same assertion |
+| this task | full-suite runs, idle machine | **1 of 3 FAILED** (pass, pass, fail) |
+| this task | isolated file runs | **0 of 3 failed** |
+
+**"Deterministic under load" is therefore too strong, and "intermittent flake" is
+too dismissive.** The defensible statement is that it is **load-dependent and
+non-deterministic**: it never fails in isolation, it fails often under full-suite
+load, and it does not fail on every such run. The reviewer's 2/2 and this task's
+1/3 are consistent with a high but sub-unity failure rate rather than with
+determinism.
+
+That distinction matters for the remedy. A genuinely deterministic failure can be
+debugged from one run; this one needs a harness that reproduces it reliably
+before a fix can be trusted, and any "fixed" claim needs repeated full-suite runs
+rather than a single green.
+
+It is **pre-existing** — it reproduces at `b598b78`, before any T004 or T009
+change — and unrelated to this campaign, which touches nothing under `src/app/`.
+It is **not** claimed as cleared by anything here.
+
+**It needs an owning task that may touch `src/`.** T009 cannot be that task: this
+campaign's constraint is that no serving-surface code changes, so a React
+focus-restoration fix is outside its envelope by construction.
 
 ## Retention hold
 

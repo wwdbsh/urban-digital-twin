@@ -9,16 +9,21 @@
   "parentLedgerChecksumSha256": "62e093d2ca50b54b49fd8bbad9d0b11f6301b2b197623deb343f9ea915e59016",
   "determinismReplay": {
     "requestedSample": 40,
-    "cellsSampled": 22,
+    "fallbackQuota": 4,
+    "perCellCap": 4,
+    "spreadTarget": 10,
+    "cellsSampled": 10,
+    "cellsPicked": 22,
     "comparedGlbCount": 40,
     "byteIdenticalCount": 40,
     "lod0Compared": 20,
     "lod1Compared": 20,
-    "fallbackGlbCompared": 2,
+    "fallbackGlbCompared": 4,
+    "shedGlbCompared": 36,
     "mismatches": [],
     "note": "Re-emitted from the same pinned snapshot and ledger and byte-compared to the committed -c2 inventory. lod_0 entries in this sample are the COPIED bytes, so their agreement is a second, independent confirmation of the copy.",
     "includedFallbackParent": true,
-    "fallbackAvailability": "5 cells own at least one fallback parent; the sample includes one."
+    "fallbackAvailability": "5 cells own at least one fallback parent; this run compared 4 fallback GLB(s) against a quota of 4, and 36 shed GLB(s)."
   },
   "c1Immutability": {
     "sampled": 60,
@@ -28,5 +33,25 @@
     "note": "A stride sample of the -c1 payload re-hashed from disk against the -c1 committed inventory. -c1 is READ-ONLY for this task and this is the check that says so from bytes.",
     "symlinkCount": 0
   },
+  "supersededReadings": [
+    {
+      "supersededAt": "2026-08-17T12:31:24.358Z",
+      "supersededCommit": "the reading committed at T009 wave/closure time",
+      "reason": "The replay sampler reserved no fallback QUOTA, so on a wave with many fallback parents they consumed the whole cap and 0 shed lod_1 assets were covered. `cellsSampled` counted cells PICKED rather than cells that contributed, which hid a third defect of the same family: with no per-cell cap the entire sample came from the FIRST cell, against this CLI's own promise of a sample spread across ownership cells. `fallbackAvailability` additionally asserted the sample included a fallback without checking. This entry preserves the reading those defects produced; it is NOT retracted, it is superseded.",
+      "determinismReplay": {
+        "requestedSample": 40,
+        "cellsSampled": 22,
+        "comparedGlbCount": 40,
+        "byteIdenticalCount": 40,
+        "lod0Compared": 20,
+        "lod1Compared": 20,
+        "fallbackGlbCompared": 2,
+        "mismatches": [],
+        "note": "Re-emitted from the same pinned snapshot and ledger and byte-compared to the committed -c2 inventory. lod_0 entries in this sample are the COPIED bytes, so their agreement is a second, independent confirmation of the copy.",
+        "includedFallbackParent": true,
+        "fallbackAvailability": "5 cells own at least one fallback parent; the sample includes one."
+      }
+    }
+  ],
   "ok": true
 }

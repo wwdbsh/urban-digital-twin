@@ -88,6 +88,45 @@ describe("the T009 textured-lod_1 coverage record", () => {
     expect(coverage.appearanceSampling.statement).toMatch(/stands as a MISS/u);
   });
 
+  it("covers BOTH fallback and shed assets in every replay, and spreads across cells", () => {
+    // The defect this locks: fallbacks once consumed the entire 40-GLB cap on
+    // w03, leaving zero shed coverage on a population that is 97% shed; and the
+    // whole sample once came from a single cell.
+    for (const row of coverage.waves) {
+      const v = JSON.parse(readFileSync(join(root, "data", row.c2ReleaseId, "verification.json"), "utf8"));
+      const r = v.determinismReplay;
+      expect(r.byteIdenticalCount).toBe(r.comparedGlbCount);
+      expect(r.fallbackGlbCompared + r.shedGlbCompared).toBe(r.comparedGlbCount);
+      expect(r.fallbackGlbCompared).toBeLessThanOrEqual(r.fallbackQuota);
+      // Shed assets are the bulk of every wave and must never be crowded out.
+      expect(r.shedGlbCompared).toBeGreaterThan(0);
+      // A wave with fallback parents must actually sample one.
+      if (row.texturedFallbacks > 0) expect(r.fallbackGlbCompared).toBeGreaterThan(0);
+      // cellsSampled counts CONTRIBUTING cells, so it can never exceed picked.
+      expect(r.cellsSampled).toBeLessThanOrEqual(r.cellsPicked);
+      expect(r.cellsSampled).toBeGreaterThan(0);
+      // Multi-cell waves must spread rather than draw it all from cell one.
+      if (row.cellManifests > 10) expect(r.cellsSampled).toBeGreaterThan(1);
+      // The prior reading is preserved, not erased.
+      expect(Array.isArray(v.supersededReadings)).toBe(true);
+      expect(v.supersededReadings.length).toBeGreaterThan(0);
+      expect(v.supersededReadings[0].determinismReplay).toBeDefined();
+    }
+  });
+
+  it("carries the renderer caveat and names an owner for the shed residue", () => {
+    const sampling = JSON.parse(readFileSync(join(dir, "sampling-results.json"), "utf8"));
+    expect(sampling.notClaimedHere.join(" ")).toMatch(/EEVEE is not the shipped renderer/u);
+    // The fallback PASS must stay explicitly renderer-INDEPENDENT, or the
+    // caveat would read as undermining the one result that settles the palette.
+    expect(sampling.rendererDependence.fallbackResult).toMatch(/RENDERER-INDEPENDENT BY CONSTRUCTION/u);
+    expect(sampling.rendererDependence.shedResult).toMatch(/RENDERER-DEPENDENT/u);
+    const owner = sampling.postHocDiagnostic.residualOwner;
+    expect(owner.owner).toMatch(/T006/u);
+    expect(owner.buildingIds).toHaveLength(sampling.postHocDiagnostic.residualPairs.length);
+    for (const id of owner.buildingIds) expect(id).toMatch(/^doitt:/u);
+  });
+
   it("states that nothing served, pinned, promoted or predecessor changed", () => {
     expect(coverage.rights.servingSurfaceChange).toBe("none");
     expect(coverage.rights.pinnedReleaseIdChange).toBe("none");

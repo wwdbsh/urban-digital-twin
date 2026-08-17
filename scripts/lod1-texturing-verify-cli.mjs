@@ -15,7 +15,7 @@
  *
  * usage: node --experimental-strip-types scripts/lod1-texturing-verify-cli.mjs <wNN> [--sample=40]
  */
-import { readFileSync, writeFileSync, lstatSync } from "node:fs";
+import { readFileSync, writeFileSync, lstatSync, existsSync } from "node:fs";
 import { join, resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -92,20 +92,37 @@ function main() {
     const m = JSON.parse(readFileSync(join(c2Root, cm.relativeRef), "utf8"));
     if (m.assets.some((a) => a.lods.some((l) => l.lodId === "lod_1" && l.eligible === false))) fallbackCells.add(cm.cellId);
   }
-  // FALLBACK CELLS FIRST. Appending them last let the 40-GLB cap exhaust before
-  // the sample ever reached one, which reported "0 fallback GLBs" while quietly
-  // satisfying nothing. A fallback parent's two levels share geometry, so it is
-  // the case a palette or texture-binding fault would show in first.
+  // A FALLBACK QUOTA, not a fallback priority.
+  //
+  // Sorting fallbacks first fixed "0 fallback GLBs" and then overshot: on w03,
+  // which owns 289 fallback parents, they consumed the ENTIRE 40-GLB cap and the
+  // replay covered 0 shed lod_1 assets -- the opposite blind spot, and on the
+  // population that is 97% shed. The cap is now SPLIT: at most
+  // `min(4, ceil(cap/4))` GLBs may be fallbacks, and shed buildings fill the
+  // rest. Both classes are covered on every wave that has both.
+  const fallbackQuota = Math.min(4, Math.max(1, Math.ceil(sampleSize / 4)));
+  // PER-CELL CAP, the third instance of the same defect. This CLI's own header
+  // promises a sample "stratified by ownership cell ... so the sample cannot all
+  // come from one neighbourhood", and honest `cellsSampled` reporting exposed
+  // that all 40 GLBs were coming from the FIRST cell. A cell may contribute at
+  // most this many, so the cap spreads across roughly ten cells as intended.
+  // Scaled by how many cells the wave HAS, not by a fixed ten. w00 owns a
+  // single cell, and a fixed cap silently cut its replay from its whole
+  // 28-GLB population to 4 -- trading one blind spot for another.
+  const spreadTarget = Math.min(10, Math.max(1, cells.length));
+  const perCellCap = Math.max(2, Math.ceil(sampleSize / spreadTarget));
   const fallbackFirst = cells.filter((c) => fallbackCells.has(c.cellId));
   const rest = cells.filter((c) => !fallbackCells.has(c.cellId));
-  const picked = [...fallbackFirst.slice(0, 2), ...stride(rest, Math.max(1, Math.ceil(sampleSize / 2)))];
+  const picked = [...fallbackFirst.slice(0, 2), ...stride(rest.length > 0 ? rest : cells, Math.max(1, Math.ceil(sampleSize / 2)))];
 
   const wanted = new Set(picked.flatMap((c) => c.buildingIds));
   const sources = collectMidtownCoreSources(shards, wanted);
-  const replay = { requestedSample: sampleSize, cellsSampled: picked.length, comparedGlbCount: 0, byteIdenticalCount: 0, lod0Compared: 0, lod1Compared: 0, fallbackGlbCompared: 0, mismatches: [] };
+  const replay = { requestedSample: sampleSize, fallbackQuota, perCellCap, spreadTarget, cellsSampled: 0, cellsPicked: picked.length, comparedGlbCount: 0, byteIdenticalCount: 0, lod0Compared: 0, lod1Compared: 0, fallbackGlbCompared: 0, shedGlbCompared: 0, mismatches: [] };
 
   for (const cell of picked) {
     if (replay.comparedGlbCount >= sampleSize) break;
+    const comparedBefore = replay.comparedGlbCount;
+    let fromThisCell = 0;
     const m = materializeMidtownCoreV3Cells({
       cells: [cell], sources, baseManifestChecksumSha256: manifestChecksumSha256,
       capture: CAPTURE, retainAllLods: true, retain: "shipped-bytes",
@@ -123,19 +140,40 @@ function main() {
       return fl !== fr ? fl - fr : (l < r ? -1 : l > r ? 1 : 0);
     });
     for (const ref of ordered) {
-      if (replay.comparedGlbCount >= sampleSize) break;
+      if (replay.comparedGlbCount >= sampleSize || fromThisCell >= perCellCap) break;
+      const isFallback = fallbackRef(ref);
+      // The quota: once it is filled, fallback refs are SKIPPED so the rest of
+      // the cap can reach shed assets.
+      if (isFallback && replay.fallbackGlbCompared >= fallbackQuota) continue;
       const expected = declared.get(ref);
       if (!expected) { replay.mismatches.push({ ref, reason: "not declared by the -c2 inventory" }); replay.comparedGlbCount += 1; continue; }
       const bytes = m.assetBytes.get(ref);
       const measured = sha256HexBytes(bytes);
       replay.comparedGlbCount += 1;
+      fromThisCell += 1;
       if (ref.endsWith("__lod_0.glb")) replay.lod0Compared += 1; else replay.lod1Compared += 1;
-      if (fallbackRef(ref)) replay.fallbackGlbCompared += 1;
+      if (isFallback) replay.fallbackGlbCompared += 1; else replay.shedGlbCompared += 1;
       if (measured === expected.checksumSha256 && bytes.byteLength === expected.byteSize) replay.byteIdenticalCount += 1;
       else replay.mismatches.push({ ref, declared: expected.checksumSha256, replayed: measured });
     }
+    // Only a cell that actually contributed a comparison counts as sampled.
+    if (replay.comparedGlbCount > comparedBefore) replay.cellsSampled += 1;
   }
   if (replay.mismatches.length > 0) fail(`replay found ${replay.mismatches.length} mismatch(es): ${JSON.stringify(replay.mismatches.slice(0, 3))}`);
+
+  // SUPERSESSION, not silent rewrite. A prior verification record's reading is
+  // carried forward verbatim under `supersededReadings` so the sequence of
+  // belief stays readable, exactly as the -c1 stage records do it.
+  const priorPath = join(recordRoot, "verification.json");
+  let superseded = [];
+  if (existsSync(priorPath)) {
+    const prior = JSON.parse(readFileSync(priorPath, "utf8"));
+    superseded = [...(prior.supersededReadings ?? []), {
+      supersededAt: new Date().toISOString(),
+      reason: "The replay sampler reserved no fallback QUOTA: fallback refs were sorted first and, on a wave with many fallback parents, consumed the whole cap so that 0 shed lod_1 assets were covered. `cellsSampled` also counted cells that were PICKED rather than cells that contributed a comparison, and `fallbackAvailability` asserted that the sample included a fallback without checking. This entry preserves the reading those defects produced.",
+      determinismReplay: prior.determinismReplay,
+    }];
+  }
 
   const record = {
     schemaVersion: "1.0",
@@ -150,15 +188,19 @@ function main() {
       ...replay,
       note: "Re-emitted from the same pinned snapshot and ledger and byte-compared to the committed -c2 inventory. lod_0 entries in this sample are the COPIED bytes, so their agreement is a second, independent confirmation of the copy.",
       includedFallbackParent: replay.fallbackGlbCompared > 0,
+      // DERIVED from what the run actually compared. The previous wording said
+      // "the sample includes one" unconditionally, which was an assertion the
+      // run had not checked and which was false on w01's first pass.
       fallbackAvailability: fallbackCells.size === 0
         ? "THIS WAVE HAS NO LOD-1 FALLBACK PARENT, so none could be sampled. Stated rather than silently satisfied."
-        : `${fallbackCells.size} cells own at least one fallback parent; the sample includes one.`,
+        : `${fallbackCells.size} cells own at least one fallback parent; this run compared ${replay.fallbackGlbCompared} fallback GLB(s) against a quota of ${fallbackQuota}, and ${replay.shedGlbCompared} shed GLB(s).`,
     },
     c1Immutability: {
       ...immutability,
       note: "A stride sample of the -c1 payload re-hashed from disk against the -c1 committed inventory. -c1 is READ-ONLY for this task and this is the check that says so from bytes.",
       symlinkCount: immutability.symlinks,
     },
+    ...(superseded.length > 0 ? { supersededReadings: superseded } : {}),
     ok: true,
   };
   const serialized = serialize(record);

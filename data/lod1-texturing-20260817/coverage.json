@@ -52,7 +52,7 @@
    "waveCensusSha256": "958ceb177cb9d37676dc36eb9b9ae42b61278508bec5680f035ae11f9decad53",
    "payloadInventorySha256": "3c32785a65bfc837e66e97ff6a4fd64f95cb9db635e8f9c03e1bd9b869809122",
    "retentionValidationSha256": "be3c369352b6d38fd5d3cc64fdae99e46d83847205e19a870c49797fe7ebd1ba",
-   "verificationSha256": "3df6738d6d27645f5e238d75e11f8816c9334858f25efcb39905f495734f48a5"
+   "verificationSha256": "1041f4ec3d50e03eddc281683cc1795f1cbd1b8bc28c4f020d6300a30a045b49"
   },
   {
    "waveId": "w01",
@@ -87,7 +87,7 @@
    "determinismReplay": {
     "compared": 40,
     "byteIdentical": 40,
-    "fallbackGlbCompared": 2
+    "fallbackGlbCompared": 4
    },
    "c1Immutability": {
     "sampled": 60,
@@ -96,7 +96,7 @@
    "waveCensusSha256": "a067ad84822077294652bff158eadb23e89fa912ad87f0d7fe8daab5ba5e3027",
    "payloadInventorySha256": "e7238f93b59b84e626a6dcf8402bdd5d3c84b4c299f22a6eee0b0a5f1d4c9b00",
    "retentionValidationSha256": "09fc18259899e9bd1bb5dc8b459af367c36aa454ca85777b32bd3cc11ae0548e",
-   "verificationSha256": "e6a9dbf054c3b3a1d49e269151be45c3da989710411f68ffcc5b4bb8c49f0f01"
+   "verificationSha256": "bf0f141f50c6ac92d8c3ab333ea2beb4de705151ee6caab040ef261859ac9df4"
   },
   {
    "waveId": "w02",
@@ -131,7 +131,7 @@
    "determinismReplay": {
     "compared": 40,
     "byteIdentical": 40,
-    "fallbackGlbCompared": 6
+    "fallbackGlbCompared": 4
    },
    "c1Immutability": {
     "sampled": 60,
@@ -140,7 +140,7 @@
    "waveCensusSha256": "5e086f36a1969d5df9bcbf86ef64f9c90c5cb9194aacd34dc61d5008fb5286e0",
    "payloadInventorySha256": "4b9d7ed05bc53382b18e844e0517a818c2bbb7bcc90f9c45864ca82aaf53a8b5",
    "retentionValidationSha256": "d0d7a22a770d8f3a6fafea34a62ef65e94955dbdbead51436f171cbd475a6039",
-   "verificationSha256": "1180fadbd791e591345e310822ddb1241186463e465a37c2cc878d63ab30f0f6"
+   "verificationSha256": "3e0787373ce39c1e6ff6a34d72c50b290a0d68a56f0a93432bd620a4fb6c4fe0"
   },
   {
    "waveId": "w03",
@@ -175,7 +175,7 @@
    "determinismReplay": {
     "compared": 40,
     "byteIdentical": 40,
-    "fallbackGlbCompared": 40
+    "fallbackGlbCompared": 4
    },
    "c1Immutability": {
     "sampled": 60,
@@ -184,7 +184,7 @@
    "waveCensusSha256": "8c6541b78b0b2548beafe01c43a427e7b62e2d7e95e7d0bfbeec19e4fb275a65",
    "payloadInventorySha256": "46fb1b0f851c5969bf4bc39bbca7bc284bc63f76fe44512612396a94f42b9da9",
    "retentionValidationSha256": "8451ce4dfbf1c2f80bbd78477a116f814dd05259a787c01721ec2988252001d8",
-   "verificationSha256": "147f7517c044570bf1d3a5152c7b77776de6b8b787e46ba7929df472e2cc68ff"
+   "verificationSha256": "ad09d4cacb043ede007da4a139a948f03689b93c53d7fa77afbce487df84d5cd"
   },
   {
    "waveId": "w04",
@@ -228,7 +228,7 @@
    "waveCensusSha256": "428b6c815ba578fdb1487372455c6b88203957317ff9b9484e8c9a995c8a12f5",
    "payloadInventorySha256": "0b99e282aff583876d57f05a4b3335425fd3c2872e4c59595793a9155477d26f",
    "retentionValidationSha256": "53de4926eb2100906dd47bfe4f652ff266a91cac76059b1cc8bae6d08d564075",
-   "verificationSha256": "ceaea16db4af8b2229a7536a95a8c0b03d089422481692527d027883c3014abd"
+   "verificationSha256": "13cf79a5fc79952fc1a4452a8db34bfdfd54728de211aa932dd142ca8e5c6545"
   },
   {
    "waveId": "w05",
@@ -263,7 +263,7 @@
    "determinismReplay": {
     "compared": 40,
     "byteIdentical": 40,
-    "fallbackGlbCompared": 2
+    "fallbackGlbCompared": 4
    },
    "c1Immutability": {
     "sampled": 60,
@@ -272,7 +272,7 @@
    "waveCensusSha256": "e6b203f3954b67db4f38de32f974b832b057c81c9999cec8bc2e80d3abf21aed",
    "payloadInventorySha256": "290b06d3d3db06286d778fefbc8c860b272510f8fab258ea53a4f55725fe2509",
    "retentionValidationSha256": "43c79d794a52f244bb73f16386b47ded6e4ba0c29ad247895e6aa8346cb426b3",
-   "verificationSha256": "a0a0f071145115b7d8827a75ef5400c598b0ed3bad384bcb4ba2f5f25ecd521a"
+   "verificationSha256": "24c5923835c9de3cdae3888addcbf09bd96b291423ce41f62dfbfd047391f1fd"
   }
  ],
  "island": {
