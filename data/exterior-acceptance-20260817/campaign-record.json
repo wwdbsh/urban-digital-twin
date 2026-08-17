@@ -1,0 +1,1400 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "exterior-acceptance-20260817:campaign-record",
+  "task": "T006",
+  "artifact": "exterior-acceptance-campaign-record",
+  "composedAt": "2026-08-17T02:49:38.035Z",
+  "preRegistration": {
+    "path": "data/exterior-acceptance-20260817/pre-registration.json",
+    "checksumSha256": "132adaf5ffdb8558400e06d3650cb7b03db90976f12eeacdb183876d6404d2bf",
+    "capturedAtStatement": "NULL BY CONSTRUCTION. This record is committed before any capture exists; a timestamp here would be the time the bars were written, and recording it as a capture time would be a small lie in the one file whose whole value is that it predates the measurements."
+  },
+  "acceptanceCriterionMapping": {
+    "#3": "Texture architecture: shared per-class URI delivery (NO ATLAS) under ADR 0047's measured-equivalent clause; GPU texture memory measured, not arithmetic-only. Gates G1-G4.",
+    "#4": "LOD chain: per-wave stratified 2% key-silhouette gate on RENDERED evidence. Gates L1 (mechanism only, does NOT discharge) and L2 (HONEST-STOP).",
+    "#5": "Frame budgets at full-textured-city scale off the vsync floor with a capped control. Gates F1, F2, F4, S-1a.",
+    "#6": "Repeated-camera-path heap non-monotonic under forced collection, plus GPU texture memory. Gates M1-M4 and G2.",
+    "#7": "CACHE AND STREAMING GOVERNANCE, including the request ceiling: eviction correctness, pick identity across evict/reload, byte-identical re-entry, active requests bounded. Gates E-1a..E-1f, S-1b, S-1c, S-1d, and REQUEST_CEILINGS.",
+    "#8": "VISUAL VERIFICATION: rendered stills at approved viewpoints as what-is-drawn evidence, plus picking/details/provenance/deep-links/attribution on the committed journey suites. Gates J1-J6, VISUAL_GATES, and the Blender inheritance argument.",
+    "correctionNote": "#7 is cache/streaming governance and owns the request ceiling; #8 is visual verification and owns the stills and the journey suites. An earlier reading had these two transposed."
+  },
+  "supersededFindings": [
+    {
+      "captureFile": "data/exterior-acceptance-20260817/eviction-loop.json",
+      "retractedFieldPath": "forcingArgument.falsified",
+      "retractedValue": true,
+      "alsoRetracted": [
+        "forcingArgument.falsifyingStops",
+        "forcingArgument.statement"
+      ],
+      "supersededBy": "campaign-record.json -> forcingArgument",
+      "replacementVerdict": "UNDECIDED-BY-THIS-INSTRUMENT",
+      "reason": "The detector compared consecutive readings of `cacheEvictions`, which is CUMULATIVE and SESSION-WIDE. Once any eviction has occurred — including in transit, which is exactly where the argument predicts it — every later settled stop reads non-zero while holding the scheduler's cap of 8, so the boolean fires on a session behaving precisely as the argument says it will. It is not a falsification and must not be quoted as one.",
+      "captureNotMutated": "The capture record is left byte-for-byte as it was measured, and its sidecar still matches. The instrument was fixed AFTER this capture; the sequence is recorded rather than a tidied result."
+    }
+  ],
+  "inheritedFieldAnnotations": [
+    {
+      "captureFile": "data/exterior-acceptance-20260817/heap-repeat-evidence.json",
+      "fieldPath": "criterion",
+      "capturedValue": 7,
+      "annotation": "INHERITED T008 NUMBERING, not this campaign's. `criterion: 7` is the criterion index of the goal T008 ran against (Issue #80), carried unchanged because this is the T008 instrument re-run rather than a new one. In THIS campaign's acceptance mapping the same measurement discharges the retained-heap half of criterion #6; gates M1-M4 are indexed to #6 throughout this roll-up. The captured record is not mutated because it is sidecar-pinned.",
+      "thisCampaignCriterion": "#6"
+    }
+  ],
+  "textureArchitectureCorrection": {
+    "atlas": false,
+    "delivery": "shared per-class URI delivery",
+    "statement": "AC #3 asks for an atlas. THIS BUILD SHIPS NO ATLAS, and that is a decided design rather than an omission: ADR 0047 declines one because the maximum observed |UV| is 1210.1 and an atlas cannot repeat-wrap a tile across that range. The criterion is discharged through its own '(or measured equivalent)' clause, and the equivalent is shared per-class URI delivery — MEASURED by G1-G3 rather than argued.",
+    "uniqueTileDerivation": "4 shared class tiles per release x 6 promoted waves = 24 unique tiles, 2097144 bytes as Cesium accounts for them WITH the mip chain.",
+    "mipChainNote": "The per-tile figure of 87,381 bytes INCLUDES the mip chain and was established by measurement, not assumption; the base level alone is 65,536. Any sentence that mixes wire bytes, base-level bytes and Cesium's accounting is wrong."
+  },
+  "gates": [
+    {
+      "gateId": "F1",
+      "criterion": "#5",
+      "verdict": "PASS",
+      "rule": "PASS if and only if, at EVERY station, p50 <= 16.7 ms AND p95 <= 25 ms over at least 600 sampled rAF deltas taken after 45,000 ms of settle.",
+      "keyNumbers": {
+        "bar": {
+          "p50Ms": 16.7,
+          "p95Ms": 25,
+          "minimumFrames": 600,
+          "settleMs": 45000,
+          "windowMs": 12000
+        },
+        "perStation": [
+          {
+            "stationId": "overview-52km-island",
+            "p50Ms": 16.7,
+            "p95Ms": 24.9,
+            "sampleCount": 704,
+            "pass": true,
+            "instrumentLimited": false
+          },
+          {
+            "stationId": "overview-2400m-anchor",
+            "p50Ms": 8.4,
+            "p95Ms": 16.9,
+            "sampleCount": 1183,
+            "pass": true,
+            "instrumentLimited": false
+          },
+          {
+            "stationId": "transition-1200m-anchor",
+            "p50Ms": 16.5,
+            "p95Ms": 18.2,
+            "sampleCount": 846,
+            "pass": true,
+            "instrumentLimited": false
+          },
+          {
+            "stationId": "street-260m-midtown",
+            "p50Ms": 8.4,
+            "p95Ms": 16.8,
+            "sampleCount": 1169,
+            "pass": true,
+            "instrumentLimited": false
+          },
+          {
+            "stationId": "street-260m-w02-lower",
+            "p50Ms": 8.3,
+            "p95Ms": 10.2,
+            "sampleCount": 1440,
+            "pass": true,
+            "instrumentLimited": false
+          }
+        ]
+      },
+      "source": "frames-and-gpu.json"
+    },
+    {
+      "gateId": "F2",
+      "criterion": "#5",
+      "verdict": "REPORTED",
+      "rule": "The control is captured in the SAME browser session as the stations, in BOTH vsync modes, on about:blank. A station p95 verdict is only MEANINGFUL above the control's own p95 in the matching mode. A station p95 at or below the control's p95 is reported as instrument-limited, never as a scene result.",
+      "keyNumbers": {
+        "controlByMode": [
+          {
+            "vsyncMode": "vsync-on",
+            "p50Ms": 8.3,
+            "p95Ms": 9.9,
+            "sampleCount": 1441
+          },
+          {
+            "vsyncMode": "vsync-off",
+            "p50Ms": 18.3,
+            "p95Ms": 18.8,
+            "sampleCount": 668
+          }
+        ],
+        "inSessionControl": {
+          "vsyncMode": "vsync-on",
+          "p50Ms": 8.3,
+          "p95Ms": 9.9,
+          "sampleCount": 1441
+        },
+        "stationsAtOrBelowControlP95": []
+      },
+      "source": "frame-control.json + frames-and-gpu.json",
+      "whyNotABar": "This gate cannot FAIL in the ordinary sense: it constrains interpretation. It is registered so that a p95 that merely reproduces the display cadence cannot later be quoted as evidence the scene is fast."
+    },
+    {
+      "gateId": "F4",
+      "criterion": "#5",
+      "verdict": "REPORTED",
+      "rule": "doubleDrawMs and totalBuildMs are REPORTED at every station and across the storm. Exceeding the 4,000 ms leg-Y bar is recorded as a named carry of D-11 with the measured value, NOT as a campaign failure. A value BELOW 4,000 ms is reported as such and does not close D-11 either, because one session is not the island-scale bounds rebuild D-11 names.",
+      "keyNumbers": {
+        "legYDoubleDrawMs": 4000,
+        "legXRebuildMs": 8000,
+        "stationsMaxDoubleDrawMs": 7122.200000047684,
+        "stationsMaxTotalBuildMs": 7122.200000047684,
+        "stormMaxDoubleDrawMs": 599.0999999046326,
+        "stormMaxTotalBuildMs": 599.0999999046326,
+        "stationsOutcome": "NAMED CARRY of ADR 0045 deferral D-11 with the measured value 7122.200000047684 ms against the 4,000 ms leg-Y bar. NOT a campaign failure: D-11 already records 5,746 ms measured and is carried forward unchanged by ADR 0052."
+      },
+      "source": "frames-and-gpu.json + storm.json",
+      "inheritedFrom": "ADR 0045 section 3.3 REVIVAL_BARS; the exceedance is ADR 0045 section 5.2 deferral D-11 (5,746 ms measured), carried forward unchanged by ADR 0052."
+    },
+    {
+      "gateId": "H1",
+      "criterion": "#5",
+      "verdict": "REPORTED",
+      "rule": "REPORTED, never gating. Uncapped rAF p50 is captured at every station.",
+      "keyNumbers": {
+        "launchFlags": [
+          "--disable-gpu-vsync",
+          "--disable-frame-rate-limit"
+        ],
+        "comparedStations": [
+          "street-260m-w02-lower",
+          "overview-2400m-anchor"
+        ],
+        "p50Ms": {
+          "street-260m-w02-lower": 2.8,
+          "overview-2400m-anchor": 11.2
+        },
+        "separationMs": 8.4,
+        "vsyncOffControlP95Ms": 18.8,
+        "detectable": false
+      },
+      "source": "headroom.json",
+      "detectabilityCondition": "The comparison is DETECTABLE only if |p50(street-260m-w02-lower) - p50(overview-2400m-anchor)| exceeds the vsync-off control's own p95. If it does not, the registered finding is INSTRUMENT-STILL-SATURATED: the loop is bounded by something other than the scene, and no scene conclusion may be drawn from it.",
+      "finding": "INSTRUMENT-STILL-SATURATED, the pre-registered outcome when the separation does not clear the control: the two stations' uncapped p50 differ by 8.4 ms against a vsync-off control p95 of 18.8 ms. The loop is bounded by something other than the scene and NO scene conclusion may be drawn from it."
+    },
+    {
+      "gateId": "H2",
+      "criterion": "#5",
+      "verdict": "REPORTED",
+      "rule": "REPORTED, never gating. Deltas (not absolutes) are recorded so a reader sees the work attributable to the window rather than to the session's whole history.",
+      "keyNumbers": {
+        "source": "CDP Performance.getMetrics deltas across each station's frame window",
+        "stationsWithDeltas": [
+          "overview-52km-island",
+          "overview-2400m-anchor",
+          "transition-1200m-anchor",
+          "street-260m-midtown",
+          "street-260m-w02-lower"
+        ],
+        "headroomStationsWithDeltas": [
+          "overview-52km-island",
+          "overview-2400m-anchor",
+          "transition-1200m-anchor",
+          "street-260m-midtown",
+          "street-260m-w02-lower"
+        ]
+      },
+      "source": "frames-and-gpu.json + headroom.json",
+      "caveat": "Performance.getMetrics counters are renderer-process accounting, not a GPU query. They are recorded as a second, independent view of the same window and are never reconciled into the rAF series."
+    },
+    {
+      "gateId": "S-1a",
+      "criterion": "#5",
+      "verdict": "PASS",
+      "rule": "During-storm p50 <= 16.7 ms AND p95 <= 25 ms, over the frame window that spans the drags, the zoom excursions and the translations.",
+      "keyNumbers": {
+        "bar": {
+          "p50Ms": 16.7,
+          "p95Ms": 25
+        },
+        "duringStormFrame": {
+          "sampleCount": 1102,
+          "p50Ms": 8.4,
+          "p95Ms": 17.4,
+          "p99Ms": 33,
+          "maxMs": 125
+        },
+        "postStormFrame": {
+          "sampleCount": 1440,
+          "p50Ms": 8.3,
+          "p95Ms": 10.2,
+          "p99Ms": 10.3,
+          "maxMs": 10.4,
+          "note": "A SETTLED window after the storm, reported beside the during-storm one so a reader can see recovery. S-1a is judged on the during-storm window."
+        },
+        "stormMs": 25360
+      },
+      "source": "storm.json",
+      "stricterThanT005": "ADR 0045's flip campaign explicitly EXCLUDED its during-storm window from the frame budgets and judged only the post-storm steady state. This gate applies the strict pair to the during-storm window itself. The exclusion is resolved in the stricter direction, deliberately and in advance."
+    },
+    {
+      "gateId": "S-1b",
+      "criterion": "#7",
+      "verdict": "PASS",
+      "rule": "peakConcurrentRequests <= 4 on every probe read during the storm, AND cacheEntries <= 1024 AND cachedBytes <= 268435456 throughout.",
+      "keyNumbers": {
+        "ceilings": {
+          "maxConcurrent": 4,
+          "maxCacheEntries": 1024,
+          "maxCachedBytes": 268435456
+        },
+        "maxPeakConcurrentRequests": 4,
+        "maxCacheEntriesObserved": 1024,
+        "maxCachedBytesObserved": 183056897
+      },
+      "source": "storm.json"
+    },
+    {
+      "gateId": "S-1c",
+      "criterion": "#7",
+      "verdict": "PASS",
+      "rule": "fallbackCellCount === 0 AND failedCellCount === 0 AND failedArtifactCount === 0, at EVERY probe read during and after the storm.",
+      "keyNumbers": {
+        "worst": {
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        }
+      },
+      "source": "storm.json",
+      "whyItExists": "THE T005 CANCELLATION-DEFECT REGRESSION GATE. A storm cancels in-flight requests continuously by moving the camera out from under them. A cancellation that is mis-accounted as a FAILURE shows up here and nowhere else, because a settled station never cancels anything. Zero is the only passing value; a non-zero count is a real regression, not storm noise."
+    },
+    {
+      "gateId": "S-1d",
+      "criterion": "#7",
+      "verdict": "REPORTED",
+      "rule": "cacheEvictions, releasedArtifactCount, releasedArtifactBytes and every exterior notice are REPORTED. No bar. They are the storm's residency story and are recorded so the next task has them.",
+      "keyNumbers": {
+        "cacheEvictionsStart": 0,
+        "cacheEvictionsEnd": 1253,
+        "releasedArtifactCountEnd": 2608,
+        "releasedArtifactBytesEnd": 376540840,
+        "noticeCount": 10
+      },
+      "source": "storm.json"
+    },
+    {
+      "gateId": "S-1e",
+      "criterion": "#7",
+      "verdict": "PASS",
+      "rule": "Zero external hosts contacted, over the whole storm session.",
+      "keyNumbers": {
+        "externalHosts": []
+      },
+      "source": "storm.json"
+    },
+    {
+      "gateId": "G1",
+      "criterion": "#3",
+      "verdict": "PASS",
+      "rule": "Instrument validation FIRST, on a scene with a known unique tile count: validateGpuTextureProbe(...).deltaByteLength MUST be exactly 0. Not a tolerance. A probe that disagrees with arithmetic on a small known scene has not earned the right to be quoted on a large one, and if G1 fails, G2-G4 are NOT reported as measurements.",
+      "keyNumbers": {
+        "barBytes": 0,
+        "releaseId": "manhattan-exterior-cells-20260811-v3-s1",
+        "declaredClassTileCount": 4,
+        "observedClassTileCount": 4,
+        "measuredTextureByteLength": 349524,
+        "predictedTextureByteLength": 349524,
+        "deltaByteLength": 0
+      },
+      "source": "frames-and-gpu.json"
+    },
+    {
+      "gateId": "G2",
+      "criterion": "#3",
+      "verdict": "PASS",
+      "rule": "texturesByteLength <= 2097144 + n * 87381 with n <= 1, at the maximum-residency station.",
+      "keyNumbers": {
+        "expectedUniqueTileCount": 24,
+        "expectedByteLength": 2097144,
+        "barByteLength": 2184525,
+        "preRegisteredMaximumResidencyStation": "overview-52km-island",
+        "preRegisteredStationByteLength": 349524,
+        "worstObservedStation": "street-260m-midtown",
+        "worstObservedByteLength": 699048,
+        "worstObservedTileCount": 8,
+        "allStationReadings": [
+          {
+            "stationId": "overview-52km-island",
+            "texturesByteLength": 349524,
+            "residentAssetCount": 431,
+            "residentWaveCount": 1
+          },
+          {
+            "stationId": "overview-2400m-anchor",
+            "texturesByteLength": 611667,
+            "residentAssetCount": 269,
+            "residentWaveCount": 2
+          },
+          {
+            "stationId": "transition-1200m-anchor",
+            "texturesByteLength": 611667,
+            "residentAssetCount": 348,
+            "residentWaveCount": 2
+          },
+          {
+            "stationId": "street-260m-midtown",
+            "texturesByteLength": 699048,
+            "residentAssetCount": 277,
+            "residentWaveCount": 2
+          },
+          {
+            "stationId": "street-260m-w02-lower",
+            "texturesByteLength": 699048,
+            "residentAssetCount": 401,
+            "residentWaveCount": 3
+          }
+        ]
+      },
+      "source": "frames-and-gpu.json",
+      "strictnessNote": "The registered wording judges G2 at the maximum-RESIDENCY station. This row judges it at the maximum-TEXTURE-BYTES station, which is the harder reading and is not always the same pose: resident asset count and resident wave count are different quantities, and only the second one moves texture bytes.",
+      "weakerThanItLooks": "THE BAR WAS NEVER PRESSED, and that is stated rather than banked. The 2,097,144-byte bar assumes all 24 unique tiles co-resident, i.e. all six waves holding cells at once. The highest reading anywhere in this session was 699048 bytes (8 tiles) at street-260m-midtown with 2 resident wave(s), because the scheduler's 8-resident-unit cap keeps the co-resident wave count low at every pose the campaign visited. G2 passing therefore says the budget was not exceeded; it does NOT say the budget was tested at its own assumption."
+    },
+    {
+      "gateId": "G3",
+      "criterion": "#3",
+      "verdict": "PASS",
+      "rule": "Unique class tiles resident === 4 per RESIDENT WAVE, independent of resident building count. Captured at a station with >= 300 resident assets and again at a station with <= 20 resident assets; texturesByteLength must be explained by the resident WAVE count at both, never by the asset count.",
+      "keyNumbers": {
+        "sharedClassTileNames": [
+          "brick-running-bond",
+          "curtain-mullion-grid",
+          "limestone-ashlar",
+          "spandrel-panel"
+        ],
+        "residentAssetHigh": 300,
+        "residentAssetLow": 20,
+        "highResidencyReadings": [
+          {
+            "scope": "six-wave default station",
+            "stationId": "overview-52km-island",
+            "residentAssetCount": 431,
+            "residentWaveCount": 1,
+            "texturesByteLength": 349524,
+            "impliedTileCount": 4,
+            "tilesPerResidentWave": 4,
+            "tilesPerHundredResidentAssets": 0.9281
+          },
+          {
+            "scope": "six-wave default station",
+            "stationId": "transition-1200m-anchor",
+            "residentAssetCount": 348,
+            "residentWaveCount": 2,
+            "texturesByteLength": 611667,
+            "impliedTileCount": 7,
+            "tilesPerResidentWave": 3.5,
+            "tilesPerHundredResidentAssets": 2.0115
+          },
+          {
+            "scope": "six-wave default station",
+            "stationId": "street-260m-w02-lower",
+            "residentAssetCount": 401,
+            "residentWaveCount": 3,
+            "texturesByteLength": 699048,
+            "impliedTileCount": 8,
+            "tilesPerResidentWave": 2.6667,
+            "tilesPerHundredResidentAssets": 1.995
+          }
+        ],
+        "lowResidencyReadings": [
+          {
+            "scope": "single-wave G1 arm",
+            "stationId": "gpu-validation-block835",
+            "residentAssetCount": 14,
+            "residentWaveCount": 1,
+            "texturesByteLength": 349524,
+            "impliedTileCount": 4,
+            "tilesPerResidentWave": 4,
+            "tilesPerHundredResidentAssets": 28.5714
+          }
+        ],
+        "everyReadingWithinFourPerResidentWave": true,
+        "everyReadingExactlyFourPerResidentWave": false,
+        "assetCountIndependent": true,
+        "allReadings": [
+          {
+            "scope": "six-wave default station",
+            "stationId": "overview-52km-island",
+            "residentAssetCount": 431,
+            "residentWaveCount": 1,
+            "texturesByteLength": 349524,
+            "impliedTileCount": 4,
+            "tilesPerResidentWave": 4,
+            "tilesPerHundredResidentAssets": 0.9281
+          },
+          {
+            "scope": "six-wave default station",
+            "stationId": "overview-2400m-anchor",
+            "residentAssetCount": 269,
+            "residentWaveCount": 2,
+            "texturesByteLength": 611667,
+            "impliedTileCount": 7,
+            "tilesPerResidentWave": 3.5,
+            "tilesPerHundredResidentAssets": 2.6022
+          },
+          {
+            "scope": "six-wave default station",
+            "stationId": "transition-1200m-anchor",
+            "residentAssetCount": 348,
+            "residentWaveCount": 2,
+            "texturesByteLength": 611667,
+            "impliedTileCount": 7,
+            "tilesPerResidentWave": 3.5,
+            "tilesPerHundredResidentAssets": 2.0115
+          },
+          {
+            "scope": "six-wave default station",
+            "stationId": "street-260m-midtown",
+            "residentAssetCount": 277,
+            "residentWaveCount": 2,
+            "texturesByteLength": 699048,
+            "impliedTileCount": 8,
+            "tilesPerResidentWave": 4,
+            "tilesPerHundredResidentAssets": 2.8881
+          },
+          {
+            "scope": "six-wave default station",
+            "stationId": "street-260m-w02-lower",
+            "residentAssetCount": 401,
+            "residentWaveCount": 3,
+            "texturesByteLength": 699048,
+            "impliedTileCount": 8,
+            "tilesPerResidentWave": 2.6667,
+            "tilesPerHundredResidentAssets": 1.995
+          },
+          {
+            "scope": "single-wave G1 arm",
+            "stationId": "gpu-validation-block835",
+            "residentAssetCount": 14,
+            "residentWaveCount": 1,
+            "texturesByteLength": 349524,
+            "impliedTileCount": 4,
+            "tilesPerResidentWave": 4,
+            "tilesPerHundredResidentAssets": 28.5714
+          }
+        ]
+      },
+      "source": "frames-and-gpu.json",
+      "whyItIsTheRealClaim": "G2 is a budget. G3 is the ARCHITECTURE claim: it is the reading that distinguishes shared per-class delivery from per-building duplication, because only duplication makes the number move with population.",
+      "supportedClaim": "Resident GPU texture cost is BOUNDED BY four tiles per resident wave and is NOT DRIVEN BY the resident asset count. Both limbs are read off the table: no reading exceeds four tiles per resident wave, and 14 resident assets and 431 resident assets both cost exactly four tiles.",
+      "twoClauseNote": "The verdict is taken on the operative clause — texture bytes explained by the resident WAVE count and never by the asset count — with the four-per-wave ceiling checked beside it. The registered phrasing says '=== 4 per resident wave'; the readings support '<= 4 per resident wave', and the difference is reported rather than smoothed.",
+      "belowCeilingReadings": [
+        {
+          "scope": "six-wave default station",
+          "stationId": "overview-2400m-anchor",
+          "residentAssetCount": 269,
+          "residentWaveCount": 2,
+          "texturesByteLength": 611667,
+          "impliedTileCount": 7,
+          "tilesPerResidentWave": 3.5,
+          "tilesPerHundredResidentAssets": 2.6022
+        },
+        {
+          "scope": "six-wave default station",
+          "stationId": "transition-1200m-anchor",
+          "residentAssetCount": 348,
+          "residentWaveCount": 2,
+          "texturesByteLength": 611667,
+          "impliedTileCount": 7,
+          "tilesPerResidentWave": 3.5,
+          "tilesPerHundredResidentAssets": 2.0115
+        },
+        {
+          "scope": "six-wave default station",
+          "stationId": "street-260m-w02-lower",
+          "residentAssetCount": 401,
+          "residentWaveCount": 3,
+          "texturesByteLength": 699048,
+          "impliedTileCount": 8,
+          "tilesPerResidentWave": 2.6667,
+          "tilesPerHundredResidentAssets": 1.995
+        }
+      ],
+      "belowCeilingAccount": {
+        "observation": "3 reading(s) carried FEWER than four tiles per resident wave (e.g. 7 tiles across 2 resident waves rather than 8).",
+        "inference": "UNVERIFIED INFERENCE, labelled as such: the likeliest account is that one resident wave's cells drew on only three of the four shipped style classes, so only three of its four class tiles were ever requested and uploaded. This campaign did NOT confirm it.",
+        "confirmingReading": "The reading that would confirm it is a per-release breakdown of the DISTINCT class-tile URLs the document fetched — `/data/<releaseId>/public/textures/<class>.png` — grouped by release and compared against the resident wave set at that station. The CDP network log already contains every one of those URLs; this roll-up records only the total count, so the breakdown was available and was not taken.",
+        "whyItMatters": "Only the ceiling and the asset-independence limbs are load-bearing for the architecture claim. The account of the shortfall is not, which is why it is allowed to remain an inference rather than being asserted."
+      }
+    },
+    {
+      "gateId": "G4",
+      "criterion": "#3",
+      "verdict": "REPORTED",
+      "rule": "The embedded-texture counterfactual is REPORTED from the committed data/shared-class-textures-20260815/gpu-campaign.json arms (p1-embedded 15,204,294 B over 174 distinct textures vs t1-shared 349,524 B over 4). It is a CITATION of an earlier measurement restated beside this one, not a new capture, and it is labelled as such.",
+      "keyNumbers": {
+        "citation": "data/shared-class-textures-20260815/gpu-campaign.json",
+        "p1EmbeddedByteLength": 15204294,
+        "p1EmbeddedDistinctTextures": 174,
+        "t1SharedByteLength": 349524,
+        "t1SharedDistinctTextures": 4
+      },
+      "source": "citation only; no capture",
+      "restatedNotRecaptured": true
+    },
+    {
+      "gateId": "E-1a",
+      "criterion": "#7",
+      "verdict": "PASS",
+      "rule": "cacheEvictions > 0 must be observed somewhere in the loop. The comparison condition is BYTE-IDENTICAL to the T005 condition that failed to observe eviction (data/exterior-serving-20260817/eviction-at-scale.json, findings.evictionsObserved === false, cacheEvictions === 0): same counter, same probe, same reading, different route.",
+      "keyNumbers": {
+        "maxCacheEvictions": 46,
+        "evictionsByStop": [
+          {
+            "poseId": "e1-anchor",
+            "cacheEvictions": 0
+          },
+          {
+            "poseId": "e2-north",
+            "cacheEvictions": 0
+          },
+          {
+            "poseId": "e3-northeast",
+            "cacheEvictions": 46
+          },
+          {
+            "poseId": "e4-east",
+            "cacheEvictions": 46
+          },
+          {
+            "poseId": "e5-southeast",
+            "cacheEvictions": 46
+          },
+          {
+            "poseId": "e6-south",
+            "cacheEvictions": 46
+          },
+          {
+            "poseId": "e7-southwest",
+            "cacheEvictions": 46
+          },
+          {
+            "poseId": "e8-anchor-return",
+            "cacheEvictions": 46
+          }
+        ]
+      },
+      "source": "eviction-loop.json"
+    },
+    {
+      "gateId": "E-1b",
+      "criterion": "#7",
+      "verdict": "PASS",
+      "rule": "At the RETURN stop (e8-anchor-return): failedCellCount === 0 AND fallbackCellCount === 0 AND failedArtifactCount === 0. Every re-admitted byte is re-verified against the same declared size and SHA-256 by the runtime, so a clean re-entry IS a byte-identical re-entry; the gate names that inference rather than implying a separate byte comparison was made.",
+      "keyNumbers": {
+        "returnStop": "e8-anchor-return",
+        "fallbackCellCount": 0,
+        "failedCellCount": 0,
+        "failedArtifactCount": 0
+      },
+      "source": "eviction-loop.json"
+    },
+    {
+      "gateId": "E-1c",
+      "criterion": "#7",
+      "verdict": "PASS",
+      "rule": "peakConcurrentRequests <= 4 at every stop.",
+      "keyNumbers": {
+        "maxPeakConcurrentRequests": 4,
+        "ceiling": 4
+      },
+      "source": "eviction-loop.json"
+    },
+    {
+      "gateId": "E-1d",
+      "criterion": "#7",
+      "verdict": "PASS",
+      "rule": "cacheEntries <= 1024 AND cachedBytes <= 268435456 at every stop.",
+      "keyNumbers": {
+        "maxCacheEntries": 515,
+        "maxCachedBytes": 181452451,
+        "caps": {
+          "maxCacheEntries": 1024,
+          "maxCachedBytes": 268435456
+        }
+      },
+      "source": "eviction-loop.json"
+    },
+    {
+      "gateId": "E-1e",
+      "criterion": "#7",
+      "verdict": "PASS",
+      "rule": "Selection identity across the eviction cycle: the details-panel digest at e1-anchor and at e8-anchor-return must be EQUAL and BOTH NON-NULL.",
+      "keyNumbers": {
+        "selector": "aside.inspector[aria-label=\"Selected feature details\"]",
+        "selectionDigestFirstVisit": "a39e251b",
+        "selectionDigestAfterReEntry": "a39e251b",
+        "bothNonNull": true,
+        "equal": true
+      },
+      "source": "eviction-loop.json"
+    },
+    {
+      "gateId": "E-1f",
+      "criterion": "#7",
+      "verdict": "CARRIED-VERBATIM",
+      "rule": "CARRIED VERBATIM, not closed: 'A CANVAS PICK on the re-admitted mesh was not captured. The selection above is reached through a ?feature= deep link against the canonical base identity set, so it shows the same building resolving to the same sourced information across an eviction cycle; it does not show that a mouse click on the re-admitted geometry returns that identity. That is a real gap and is named rather than approximated.'",
+      "keyNumbers": {
+        "source": "data/exterior-serving-20260817/eviction-at-scale.json, field uncapturedGap"
+      },
+      "source": "eviction-loop.json",
+      "statement": "NOT CLOSED by this campaign. A canvas pick on the re-admitted mesh was not captured here either."
+    },
+    {
+      "gateId": "M1",
+      "criterion": "#6",
+      "verdict": "PASS",
+      "rule": "The T008 pass rule, inherited unchanged: first-half-versus-second-half median growthRatio <= 0.10 AND heapVerdict.monotonicGrowthDetected === false, over >= 6 sampled repeats, each reading taken from performance.memory AFTER an explicit in-page window.gc().",
+      "keyNumbers": {
+        "growthRatio": 0.03653390601378496,
+        "noiseBandRatio": 0.1,
+        "monotonicGrowthDetected": false,
+        "sampleCount": 8,
+        "verdictSeries": {
+          "sampleCount": 8,
+          "firstBytes": 599400173,
+          "lastBytes": 631767715,
+          "minBytes": 599400173,
+          "maxBytes": 632695907,
+          "maxOverFirstRatio": 1.055548,
+          "lastOverFirstRatio": 1.054
+        }
+      },
+      "source": "heap-repeat-evidence.json"
+    },
+    {
+      "gateId": "M2",
+      "criterion": "#6",
+      "verdict": "PASS",
+      "rule": "NEW VALIDITY CONDITION: every heap sample must be taken with activeRequests === 0. A sample taken while artifacts are still in flight measures a transient, not what survives a cycle.",
+      "keyNumbers": {
+        "samplesTaken": 18,
+        "activeRequestsAtEverySample": true,
+        "distinctActiveRequestValues": [
+          0
+        ]
+      },
+      "source": "heap-repeat-evidence.json",
+      "howItPasses": "M2 is FAIL-CLOSED IN THE INSTRUMENT, not judged here: a non-zero activeRequests at sample time aborts the run and writes NO record. The existence of a record is therefore the evidence that every sample was taken quiescent, and the per-sample readings above are published so a reader can check that rather than take it on trust.",
+      "onViolation": "INSTRUMENT-FAILURE ABORT. The run writes no record and is repeated with attemptCount incremented. It is NOT recorded as a heap failure, because a sample taken mid-flight is not a reading of the quantity the gate is about."
+    },
+    {
+      "gateId": "M3",
+      "criterion": "#6",
+      "verdict": "REPORTED",
+      "rule": "The disclosed secondary series at overview-52km-island is captured and published, never the verdict.",
+      "keyNumbers": {
+        "poseId": "overview-52km-island",
+        "jsHeapBytes": [
+          521884586,
+          527982304,
+          525990332,
+          530099236,
+          526294664,
+          530302292,
+          530471892,
+          534704944
+        ],
+        "shape": {
+          "sampleCount": 8,
+          "firstBytes": 521884586,
+          "lastBytes": 534704944,
+          "minBytes": 521884586,
+          "maxBytes": 534704944,
+          "maxOverFirstRatio": 1.024566,
+          "lastOverFirstRatio": 1.024566
+        }
+      },
+      "source": "heap-repeat-evidence.json"
+    },
+    {
+      "gateId": "M4",
+      "criterion": "#6",
+      "verdict": "REPORTED",
+      "rule": "attemptCount is recorded. A run is repeated ONLY for a named instrument failure (a pre-flight abort, an M2 violation, a landing failure), never because a series looked wrong.",
+      "keyNumbers": {
+        "attemptCount": 2,
+        "lapPhaseCapMs": 4500000,
+        "lapPhaseMs": 2256592
+      },
+      "source": "heap-repeat-evidence.json",
+      "lapPhaseCapReason": "RAISED from 50 to 75 minutes for this campaign. The T008 cap was sized for a session whose exterior residency was one wave; the arithmetic floor at six promoted waves is 9 laps x 5 poses x (45 s settle + >= 5 s landing dwell) ~= 37.5 min BEFORE any re-dispatch, and six-wave boots and landings are materially slower than the one-wave session the 50-minute cap was fitted to. Raising it prevents the cap from firing on a healthy slow run, which would be an instrument failure masquerading as a result. It is raised in the pre-registration commit, before any lap ran."
+    },
+    {
+      "gateId": "J1",
+      "criterion": "#8",
+      "verdict": "PASS",
+      "rule": "Six promoted serving waves active, each having fetched its three boot documents, with no exterior parameter in the URL and no external host contacted.",
+      "keyNumbers": {
+        "journeyId": "cold-default-six-wave",
+        "claim": "A cold default session activates all six promoted serving waves with no opt-in parameter.",
+        "still": {
+          "file": "captures/journey-j1-cold-default.png",
+          "byteSize": 944205,
+          "sha256": "66ae73de5ead039eacf3c56a3baaf9534b4ed4280200c6cc8d229c33e07d4d9f"
+        },
+        "activeWaveCount": 6,
+        "bootDocumentTotal": 18
+      },
+      "source": "journeys.json"
+    },
+    {
+      "gateId": "J2",
+      "criterion": "#8",
+      "verdict": "PASS",
+      "rule": "The typed query returns at least one result, activating it opens the details panel, and the panel carries the cell/release, active asset, truth tiers and uncertainty rows with non-empty values.",
+      "keyNumbers": {
+        "journeyId": "search-select-details",
+        "claim": "Search resolves a served building, selection opens the details panel, and the panel carries cell/release, active asset, truth tiers and uncertainty rows.",
+        "still": {
+          "file": "captures/journey-j2-search-select.png",
+          "byteSize": 616089,
+          "sha256": "63187cbab6252a2deb262c2d752ec35e70fa601354bf78346d7fcb2b328d4851"
+        },
+        "searchResultCount": 1,
+        "presentRows": [
+          "Cell / release",
+          "Active asset",
+          "Truth tiers",
+          "Uncertainty"
+        ],
+        "missingRows": []
+      },
+      "source": "journeys.json"
+    },
+    {
+      "gateId": "J3",
+      "criterion": "#8",
+      "verdict": "PASS",
+      "rule": "The opt-in release is the active exterior wave and the scheduler holds at least one resident cell for it.",
+      "keyNumbers": {
+        "journeyId": "block835-opt-in",
+        "claim": "The Block 835 -v3 opt-in still resolves through ?exteriorCells= and renders beside the promoted default.",
+        "still": {
+          "file": "captures/journey-j3-block835-opt-in.png",
+          "byteSize": 306387,
+          "sha256": "9ed0b28e2bfea73d54cd13d3bf99b5adce86f609276729980dc16a04243a460b"
+        },
+        "activeWaveIds": [
+          "manhattan-exterior-cells-20260811-v3"
+        ],
+        "residentCount": 8
+      },
+      "source": "journeys.json",
+      "claimCorrection": "THE CLAIM'S PHRASING IS CORRECTED BY THE CODE, and the correction is recorded rather than argued away. `resolveExteriorActivationSet` (src/runtime/exterior-default-activation.ts) takes the `?exteriorCells=` branch and returns EXACTLY ONE target, so an explicit opt-in REPLACES the promoted six-wave set; it does not render beside it. What this journey establishes is that the opt-in still resolves, activates and renders over the citywide base — not that two exterior sets are co-resident. That would be a different arrangement and no capture here produces it."
+    },
+    {
+      "gateId": "J4",
+      "criterion": "#8",
+      "verdict": "FAIL",
+      "rule": "The deep-linked panel is present, the URL still carries the feature parameter after the app has rewritten it, and the panel digest EQUALS the digest of the same building selected interactively in J2 — both non-null.",
+      "keyNumbers": {
+        "journeyId": "deep-link-identity",
+        "claim": "A ?feature= deep link resolves the same building to the same sourced information as an interactive selection, and the URL round-trips.",
+        "still": {
+          "file": "captures/journey-j4-deep-link.png",
+          "byteSize": 770245,
+          "sha256": "42c6d8eaa49f922b9a7c8a1ef346054d5ce3056896a6149bbefff0b5dddf936d"
+        },
+        "urlRoundTripped": true,
+        "digestsMatch": false,
+        "bothNonNull": true,
+        "diagnosis": {
+          "sharedRowCount": 13,
+          "agreeingRowCount": 13,
+          "disagreeingRows": [],
+          "rowsOnlyInInteractiveArm": [
+            "Release origin",
+            "Cell / release",
+            "Active asset",
+            "Truth tiers",
+            "Source dates"
+          ],
+          "rowsOnlyInDeepLinkArm": [
+            "Selected feature"
+          ],
+          "identityRows": [
+            {
+              "label": "Feature ID",
+              "interactive": "doitt:100022",
+              "deepLink": "doitt:100022",
+              "agree": true
+            },
+            {
+              "label": "Coordinates",
+              "interactive": "40.7541, -73.9701 (13.4 m)",
+              "deepLink": "40.7541, -73.9701 (13.4 m)",
+              "agree": true
+            },
+            {
+              "label": "Confidence",
+              "interactive": "high (0.96)",
+              "deepLink": "high (0.96)",
+              "agree": true
+            },
+            {
+              "label": "Geometry",
+              "interactive": "Polygon · normalized EPSG:4326",
+              "deepLink": "Polygon · normalized EPSG:4326",
+              "agree": true
+            }
+          ]
+        }
+      },
+      "source": "journeys.json"
+    },
+    {
+      "gateId": "J5",
+      "criterion": "#8",
+      "verdict": "PASS",
+      "rule": "Exterior streaming is off, the details panel STATES what is unavailable in words rather than silently drawing less, and the still differs by checksum from the default arm's still at the same pose.",
+      "keyNumbers": {
+        "journeyId": "streaming-off-honesty",
+        "claim": "With exterior streaming off, the app states what is unavailable rather than silently drawing less, and the still differs from the default arm.",
+        "still": {
+          "file": "captures/journey-j5-streaming-off.png",
+          "byteSize": 372914,
+          "sha256": "ebbf59b575d956906d542347943ac8e8825eb409d7fed70e4d147738670e3d0f"
+        },
+        "unavailableStatements": [
+          "Exterior streaming is switched off for this session, so base massing from release manhattan-citywide-20260804 is shown; no substitute exterior was selected."
+        ],
+        "stillDiffersFromDefaultArm": true
+      },
+      "source": "journeys.json"
+    },
+    {
+      "gateId": "J6",
+      "criterion": "#8",
+      "verdict": "CROSS-REFERENCE",
+      "rule": "CROSS-REFERENCES E-1e rather than duplicating it. The eviction loop is the E-1 capture; this journey records the E-1e digest pair and its verdict by reference, so one measurement is reported once. It does not re-run the loop.",
+      "keyNumbers": {
+        "referent": "E-1e",
+        "selectionDigestFirstVisit": "a39e251b",
+        "selectionDigestAfterReEntry": "a39e251b",
+        "pass": true
+      },
+      "source": "journeys.json -> eviction-loop.json"
+    },
+    {
+      "gateId": "L1",
+      "criterion": "#4",
+      "verdict": "PASS",
+      "rule": "With a feature selected on the Block 835 -v3 opt-in under the inspection profile, capture rendered stills at bucketed heights 200 m and 300 m at the BLOCK_835_CAMERA pose family and read the selected lodId at each. PASS if the lodId is lod_0 at 200 m, lod_1 at 300 m, and both stills render and differ by checksum.",
+      "keyNumbers": {
+        "releaseId": "manhattan-exterior-cells-20260811-v3",
+        "buildingCount": 14,
+        "profile": "inspection",
+        "lodSeamMeters": 250,
+        "lodIdAt200m": "lod_0",
+        "lodIdAt300m": "lod_1",
+        "stillSha256At200m": "6c37b9c393440ee9b20c524c4e8850eddeec5b064fa5b113c3fd2bda481f4e93",
+        "stillSha256At300m": "8ee7fc2e3516d984ed2443d814ec05ca7838267f90fc8c2a5a02614d9428e344",
+        "stillsDifferByChecksum": true
+      },
+      "source": "lod-l1.json",
+      "heightBucketingDisclosure": "selectExteriorLod receives Math.max(50, Math.round(height / 100) * 100), not a true camera-to-asset distance. The still heights are chosen so the BUCKETED values (200 and 300) straddle the 250 m seam.",
+      "lodIdReadMethod": "Scrape the <dd> following <dt>Active asset</dt> inside aside.inspector[aria-label=\"Selected feature details\"] and split on \" · \". No probe exposes lodId; this is the only surface, and the campaign records that rather than adding one.",
+      "explicitlyNotDischarging": "AC #4. Criterion #4 requires the 2% key-silhouette gate on stratified samples PER WAVE, measured on rendered evidence. Fourteen buildings in one opt-in release is not a per-wave stratified sample of six waves, and this gate does not claim to be one."
+    },
+    {
+      "gateId": "L2",
+      "criterion": "#4",
+      "verdict": "HONEST-STOP",
+      "rule": "PRE-REGISTERED AS STRUCTURALLY UNREACHABLE. The per-wave rendered 2% key-silhouette gate cannot be measured under the shipped serving arrangement, because the six promoted -s1 serving waves deliver a SINGLE LOD per building. There is no rendered lod_0-to-lod_1 transition to sample per wave, so no capture this campaign could run would produce the evidence AC #4 asks for. This is registered BEFORE the capture as a stop, not discovered after a failed attempt.",
+      "keyNumbers": {
+        "promotedWaveCount": 6,
+        "everyWaveShipsASingleLod": true,
+        "shippedLodIdsPerWave": [
+          {
+            "releaseId": "manhattan-exterior-cells-20260811-v3-s1",
+            "shippedLodIds": [
+              "lod_0"
+            ]
+          },
+          {
+            "releaseId": "manhattan-midtown-core-cells-20260811-v3-s1",
+            "shippedLodIds": [
+              "lod_0"
+            ]
+          },
+          {
+            "releaseId": "manhattan-lower-manhattan-cells-20260812-s1",
+            "shippedLodIds": [
+              "lod_0"
+            ]
+          },
+          {
+            "releaseId": "manhattan-southern-remainder-cells-20260812-s1",
+            "shippedLodIds": [
+              "lod_0"
+            ]
+          },
+          {
+            "releaseId": "manhattan-central-upper-manhattan-cells-20260812-s1",
+            "shippedLodIds": [
+              "lod_0"
+            ]
+          },
+          {
+            "releaseId": "manhattan-northern-manhattan-cells-20260812-s1",
+            "shippedLodIds": [
+              "lod_0"
+            ]
+          }
+        ]
+      },
+      "source": "pre-registration.json (registered BEFORE any capture)",
+      "reachabilityRoutes": [
+        "ROUTE 1 - serve both LODs: re-cut the six serving waves to ship lod_0 and lod_1 per building and let the runtime select between them, then sample stratified per wave on rendered stills. This is a release-shape change (ADR 0052 territory), not a measurement change.",
+        "ROUTE 2 - measure on the retained set: the -c1 retention packages DO carry both LODs for all 44,989 buildings. A per-wave stratified 2% gate could be measured by rendering from the retained packages directly, outside the serving path. That measures the ARTIFACTS rather than what the app draws, and the difference must be stated in any record that takes this route."
+      ],
+      "analyticRecordStatus": "The analytic island-scale LOD record is cited as PLAN-STAGE evidence only. It is arithmetic over generated plans, not rendered evidence, and AC #4 asks for rendered evidence; it is named here so a reader knows what does exist and what it is worth.",
+      "whyItIsNotAFailure": "A FAIL means a bar was missed. This bar cannot be reached by any capture against the shipped serving arrangement, because the six promoted waves deliver one LOD per building and there is no rendered transition to sample. Recording it as a failed measurement would imply a measurement was attempted and fell short; it was not, and the reason was registered before the campaign began."
+    },
+    {
+      "gateId": "REQUEST_CEILINGS",
+      "criterion": "#7",
+      "verdict": "PASS",
+      "rule": "peak <= 4 on every probe read, per pool, at every station and throughout the storm and the eviction loop.",
+      "keyNumbers": {
+        "appWideSharedSemaphoreMaxConcurrent": 4,
+        "observations": [
+          {
+            "session": "frames-and-gpu",
+            "scope": "overview-52km-island",
+            "peak": 4,
+            "within": true
+          },
+          {
+            "session": "frames-and-gpu",
+            "scope": "overview-2400m-anchor",
+            "peak": 4,
+            "within": true
+          },
+          {
+            "session": "frames-and-gpu",
+            "scope": "transition-1200m-anchor",
+            "peak": 4,
+            "within": true
+          },
+          {
+            "session": "frames-and-gpu",
+            "scope": "street-260m-midtown",
+            "peak": 4,
+            "within": true
+          },
+          {
+            "session": "frames-and-gpu",
+            "scope": "street-260m-w02-lower",
+            "peak": 4,
+            "within": true
+          },
+          {
+            "session": "storm",
+            "scope": "whole storm",
+            "peak": 4,
+            "within": true
+          },
+          {
+            "session": "eviction-loop",
+            "scope": "every stop",
+            "peak": 4,
+            "within": true
+          }
+        ],
+        "maxPeakObserved": 4
+      },
+      "source": "frames-and-gpu.json + storm.json + eviction-loop.json",
+      "neverSum": "The exterior and composed probes report the SAME AggregateRequestBudget peak when a shared budget is installed. Their peaks are never summed and no combined '8' bar is registered or reported.",
+      "supersededPhrasing": "The contract's '<= 8 active requests' is superseded by the stricter provable 4 and is recorded here only so the correction is visible."
+    },
+    {
+      "gateId": "VISUAL",
+      "criterion": "#8",
+      "verdict": "REPORTED",
+      "rule": "Rendered stills are captured at every station in STATIONS and at every journey, checksummed, and committed as what-is-drawn evidence.",
+      "keyNumbers": {
+        "stillCount": 27,
+        "stills": [
+          {
+            "scope": "station:overview-52km-island",
+            "file": "captures/overview-52km-island.png",
+            "byteSize": 289303,
+            "sha256": "c80d7f5b815206b8da0cddc146e4b63c97cc615f1cfa2c489c158126a10717fc"
+          },
+          {
+            "scope": "station:overview-2400m-anchor",
+            "file": "captures/overview-2400m-anchor.png",
+            "byteSize": 733888,
+            "sha256": "6b629a2d291427daf3cae76e4266ce1cd013e649c1f2f73df3be9d87df29e9fb"
+          },
+          {
+            "scope": "station:transition-1200m-anchor",
+            "file": "captures/transition-1200m-anchor.png",
+            "byteSize": 486639,
+            "sha256": "01f9d6dc6765bc7f0255556ee2de646026178da78c5a8eaec4463550b57ef626"
+          },
+          {
+            "scope": "station:street-260m-midtown",
+            "file": "captures/street-260m-midtown.png",
+            "byteSize": 922764,
+            "sha256": "ef759894ff7d139f35211f5eeef45a5e15b5be35f8428ebd9f9e5fb09822ad34"
+          },
+          {
+            "scope": "station:street-260m-w02-lower",
+            "file": "captures/street-260m-w02-lower.png",
+            "byteSize": 776584,
+            "sha256": "507751ebe55f543656ca5c5cfc4d21cb39d80b49feb6067246dc52dcfa751eca"
+          },
+          {
+            "scope": "gpu-validation",
+            "file": "captures/gpu-validation-block835.png",
+            "byteSize": 306387,
+            "sha256": "9ed0b28e2bfea73d54cd13d3bf99b5adce86f609276729980dc16a04243a460b"
+          },
+          {
+            "scope": "headroom:overview-52km-island",
+            "file": "captures/headroom-overview-52km-island.png",
+            "byteSize": 286313,
+            "sha256": "f0d0a0d0dc04db0bd6f58e76bb027a49d9faafcaf924086de63816a065907c61"
+          },
+          {
+            "scope": "headroom:overview-2400m-anchor",
+            "file": "captures/headroom-overview-2400m-anchor.png",
+            "byteSize": 734488,
+            "sha256": "1abbfbc1876595bf54d12b80cdc8ced2903c653d036cb5e5b5179a5f9929fb65"
+          },
+          {
+            "scope": "headroom:transition-1200m-anchor",
+            "file": "captures/headroom-transition-1200m-anchor.png",
+            "byteSize": 487202,
+            "sha256": "3b822f772c868b72f85e9cb598a1e34d7aa864fe1b711cf4aaf6c1a5858a3a64"
+          },
+          {
+            "scope": "headroom:street-260m-midtown",
+            "file": "captures/headroom-street-260m-midtown.png",
+            "byteSize": 922976,
+            "sha256": "180ef1b8a9180082675c97c121ee0ad77374346290354cee2da8d28a5c2ded85"
+          },
+          {
+            "scope": "headroom:street-260m-w02-lower",
+            "file": "captures/headroom-street-260m-w02-lower.png",
+            "byteSize": 776549,
+            "sha256": "4127bc3630c7425037af73ffb4e16fb602eeeab0a318c7ebd2d22ca2703d20b6"
+          },
+          {
+            "scope": "storm-end",
+            "file": "captures/storm-end.png",
+            "byteSize": 757431,
+            "sha256": "c055e49e31220353990367242c826aec19cddfb56afdc4fa36b79976e4a4f614"
+          },
+          {
+            "scope": "eviction:e1-anchor",
+            "file": "captures/eviction-e1-anchor.png",
+            "byteSize": 770245,
+            "sha256": "42c6d8eaa49f922b9a7c8a1ef346054d5ce3056896a6149bbefff0b5dddf936d"
+          },
+          {
+            "scope": "eviction:e2-north",
+            "file": "captures/eviction-e2-north.png",
+            "byteSize": 868444,
+            "sha256": "0adc52329a527e3ba6492ae0a66a6408ebda3d68e5612aaf9ccef79e4f307576"
+          },
+          {
+            "scope": "eviction:e3-northeast",
+            "file": "captures/eviction-e3-northeast.png",
+            "byteSize": 523740,
+            "sha256": "a46694008196ee63439748f36a078127215e7a2d00ee71fbb05a244b83c99fc7"
+          },
+          {
+            "scope": "eviction:e4-east",
+            "file": "captures/eviction-e4-east.png",
+            "byteSize": 722651,
+            "sha256": "0411c25f901b26889e891ccb4c91a1360d8f1a4a6e9390a3dadb7baa22f76d50"
+          },
+          {
+            "scope": "eviction:e5-southeast",
+            "file": "captures/eviction-e5-southeast.png",
+            "byteSize": 473754,
+            "sha256": "7db352bf2d333129705980820bce5e05c08a32045a139eb293bc512cdaab863a"
+          },
+          {
+            "scope": "eviction:e6-south",
+            "file": "captures/eviction-e6-south.png",
+            "byteSize": 646406,
+            "sha256": "5740c262f74e88f1f7abd75b7416e10cf946f8793e37c80452fca01b00b3dab1"
+          },
+          {
+            "scope": "eviction:e7-southwest",
+            "file": "captures/eviction-e7-southwest.png",
+            "byteSize": 626316,
+            "sha256": "717d19ef486984c5bb52171fd4010e0682b0c75cb78006610880dc0f9244f966"
+          },
+          {
+            "scope": "eviction:e8-anchor-return",
+            "file": "captures/eviction-e8-anchor-return.png",
+            "byteSize": 748264,
+            "sha256": "cd67b526054b0db1b63eb8da0943c5f4440736027ea93f026bfd8c7625faae07"
+          },
+          {
+            "scope": "lod:300m",
+            "file": "captures/lod-300m.png",
+            "byteSize": 253330,
+            "sha256": "8ee7fc2e3516d984ed2443d814ec05ca7838267f90fc8c2a5a02614d9428e344"
+          },
+          {
+            "scope": "lod:200m",
+            "file": "captures/lod-200m.png",
+            "byteSize": 242962,
+            "sha256": "6c37b9c393440ee9b20c524c4e8850eddeec5b064fa5b113c3fd2bda481f4e93"
+          },
+          {
+            "scope": "journey:cold-default-six-wave",
+            "file": "captures/journey-j1-cold-default.png",
+            "byteSize": 944205,
+            "sha256": "66ae73de5ead039eacf3c56a3baaf9534b4ed4280200c6cc8d229c33e07d4d9f"
+          },
+          {
+            "scope": "journey:search-select-details",
+            "file": "captures/journey-j2-search-select.png",
+            "byteSize": 616089,
+            "sha256": "63187cbab6252a2deb262c2d752ec35e70fa601354bf78346d7fcb2b328d4851"
+          },
+          {
+            "scope": "journey:block835-opt-in",
+            "file": "captures/journey-j3-block835-opt-in.png",
+            "byteSize": 306387,
+            "sha256": "9ed0b28e2bfea73d54cd13d3bf99b5adce86f609276729980dc16a04243a460b"
+          },
+          {
+            "scope": "journey:deep-link-identity",
+            "file": "captures/journey-j4-deep-link.png",
+            "byteSize": 770245,
+            "sha256": "42c6d8eaa49f922b9a7c8a1ef346054d5ce3056896a6149bbefff0b5dddf936d"
+          },
+          {
+            "scope": "journey:streaming-off-honesty",
+            "file": "captures/journey-j5-streaming-off.png",
+            "byteSize": 372914,
+            "sha256": "ebbf59b575d956906d542347943ac8e8825eb409d7fed70e4d147738670e3d0f"
+          }
+        ]
+      },
+      "source": "every capture record",
+      "whatAStillProves": "A still is evidence that PIXELS WERE PRODUCED at a stated pose from a stated release. It is not evidence of likeness, geographic accuracy or architectural fidelity, and no gate here upgrades it into one.",
+      "blenderInheritance": {
+        "claim": "The T004 Blender re-import agreement (94 of 94 sampled buildings) INHERITS to the shipped -s1 serving releases and is NOT re-run.",
+        "argument": "The agreement was measured on the -c1 retention payloads. The -s1 serving releases are BYTE COPIES of the -c1 GLBs - the serving cut changes which artifacts a release declares and where the class tiles live, not the geometry bytes - and every served byte is re-verified at load against the same declared size and SHA-256. A re-import of a byte-identical GLB is arithmetically guaranteed to reproduce the same measurement, so re-running it would generate evidence that could not differ.",
+        "honesty": "This is an INHERITANCE ARGUMENT resting on the byte-copy proof, stated as such. If the byte-copy proof does not hold for a wave, the inheritance does not hold for that wave either, and the campaign records that rather than asserting agreement it did not measure.",
+        "source": "data/mass-generation-20260816/blender-agreement.json"
+      }
+    }
+  ],
+  "summary": {
+    "total": 34,
+    "pass": [
+      "F1",
+      "S-1a",
+      "S-1b",
+      "S-1c",
+      "S-1e",
+      "G1",
+      "G2",
+      "G3",
+      "E-1a",
+      "E-1b",
+      "E-1c",
+      "E-1d",
+      "E-1e",
+      "M1",
+      "M2",
+      "J1",
+      "J2",
+      "J3",
+      "J5",
+      "L1",
+      "REQUEST_CEILINGS"
+    ],
+    "fail": [
+      "J4"
+    ],
+    "reported": [
+      "F2",
+      "F4",
+      "H1",
+      "H2",
+      "S-1d",
+      "G4",
+      "M3",
+      "M4",
+      "VISUAL"
+    ],
+    "honestStop": [
+      "L2"
+    ],
+    "notMeasured": [],
+    "notCaptured": [],
+    "crossReference": [
+      "E-1f",
+      "J6"
+    ],
+    "gatingPassRate": "21/22"
+  },
+  "forcingArgument": {
+    "claimUnderTest": "A stationary anchor cannot force an eviction; eviction is reachable only in transit.",
+    "falsifyingCondition": "A stationary stop with cacheEvictions > 0 and a scheduledCellCount at or below 8.",
+    "verdict": "UNDECIDED-BY-THIS-INSTRUMENT",
+    "capturedFlag": true,
+    "capturedFlagStatus": "SUPERSEDED. The capture's boolean `falsified` was produced by a detector that compared consecutive cumulative readings and could not tell a transit eviction from a stationary one. It is not a falsification of the forcing argument and must not be quoted as one.",
+    "evictionByStop": [
+      {
+        "poseId": "e1-anchor",
+        "cacheEvictions": 0,
+        "scheduledCellTotal": 8,
+        "cacheEntries": 297,
+        "cachedBytes": 82082109,
+        "percentOfByteCap": 30.6
+      },
+      {
+        "poseId": "e2-north",
+        "cacheEvictions": 0,
+        "scheduledCellTotal": 8,
+        "cacheEntries": 494,
+        "cachedBytes": 181452451,
+        "percentOfByteCap": 67.6
+      },
+      {
+        "poseId": "e3-northeast",
+        "cacheEvictions": 46,
+        "scheduledCellTotal": 8,
+        "cacheEntries": 391,
+        "cachedBytes": 137801030,
+        "percentOfByteCap": 51.3
+      },
+      {
+        "poseId": "e4-east",
+        "cacheEvictions": 46,
+        "scheduledCellTotal": 8,
+        "cacheEntries": 480,
+        "cachedBytes": 102453787,
+        "percentOfByteCap": 38.2
+      },
+      {
+        "poseId": "e5-southeast",
+        "cacheEvictions": 46,
+        "scheduledCellTotal": 8,
+        "cacheEntries": 515,
+        "cachedBytes": 96989492,
+        "percentOfByteCap": 36.1
+      },
+      {
+        "poseId": "e6-south",
+        "cacheEvictions": 46,
+        "scheduledCellTotal": 8,
+        "cacheEntries": 379,
+        "cachedBytes": 80106830,
+        "percentOfByteCap": 29.8
+      },
+      {
+        "poseId": "e7-southwest",
+        "cacheEvictions": 46,
+        "scheduledCellTotal": 8,
+        "cacheEntries": 474,
+        "cachedBytes": 104930504,
+        "percentOfByteCap": 39.1
+      },
+      {
+        "poseId": "e8-anchor-return",
+        "cacheEvictions": 46,
+        "scheduledCellTotal": 8,
+        "cacheEntries": 377,
+        "cachedBytes": 127031433,
+        "percentOfByteCap": 47.3
+      }
+    ],
+    "whyUndecided": "`cacheEvictions` is CUMULATIVE and SESSION-WIDE. Once any eviction has occurred, every later settled stop reads a non-zero value while holding the scheduler's cap of 8 resident units — so the pre-registered falsifying condition, read literally, is satisfied by a session that behaves exactly as the argument predicts. Neither direction can be asserted from these readings.",
+    "whatWouldDecideIt": "TWO probe reads at ONE stationary pose, separated by a dwell, asking whether the counter moved BETWEEN them. The instrument now says so; it does not yet do it, and that is carried as an open gap rather than closed.",
+    "whatIsSupported": "Every settled stop stayed inside both caps with margin (the heaviest was well under the 268,435,456-byte ceiling), which is CONSISTENT with the argument's central claim that a stationary anchor does not reach the byte ceiling. Consistency is not proof."
+  },
+  "missingCaptureRecords": [],
+  "chromeCleanup": {
+    "sessions": [
+      {
+        "session": "campaign-control:vsync-on",
+        "at": "2026-08-17T01:14:23.271Z",
+        "vsyncMode": "vsync-on",
+        "survivingChromeProcessCount": 0
+      },
+      {
+        "session": "campaign-control:vsync-off",
+        "at": "2026-08-17T01:14:37.588Z",
+        "vsyncMode": "vsync-off",
+        "survivingChromeProcessCount": 0
+      },
+      {
+        "session": "campaign-frames",
+        "at": "2026-08-17T01:20:44.076Z",
+        "vsyncMode": "vsync-on",
+        "survivingChromeProcessCount": 0
+      },
+      {
+        "session": "campaign-headroom",
+        "at": "2026-08-17T01:27:07.674Z",
+        "vsyncMode": "vsync-off",
+        "survivingChromeProcessCount": 0
+      },
+      {
+        "session": "campaign-storm",
+        "at": "2026-08-17T01:30:34.582Z",
+        "vsyncMode": "vsync-on",
+        "survivingChromeProcessCount": 0
+      },
+      {
+        "session": "campaign-eviction",
+        "at": "2026-08-17T01:33:37.142Z",
+        "vsyncMode": "vsync-on",
+        "survivingChromeProcessCount": 0
+      },
+      {
+        "session": "campaign-lod",
+        "at": "2026-08-17T01:36:04.854Z",
+        "vsyncMode": "vsync-on",
+        "survivingChromeProcessCount": 0
+      }
+    ],
+    "everySessionClean": true
+  },
+  "attemptCounts": {
+    "frame-control": 1,
+    "frames-and-gpu": 1,
+    "headroom": 1,
+    "storm": 1,
+    "eviction-loop": 1,
+    "lod-l1": 1,
+    "journeys": 1,
+    "heap": 2
+  },
+  "discipline": {
+    "attemptPolicy": "SINGLE attempt per capture. attemptCount is recorded on every record. A capture is repeated ONLY for a NAMED instrument failure (a pre-flight abort, an M2 activeRequests violation, a pose-landing failure, a probe that never mounted), never because a reading looked wrong. The name of the failure is recorded with the attempt.",
+    "failurePolicy": "If ANY gate fails its pre-registered bar, the FAILURE IS RECORDED and the campaign CONTINUES. All verdicts are reported together at the end. The goal's own honest-stop form is a named failure with its number, not an abandoned run.",
+    "chromeDiscipline": "T008 discipline: a scratch user-data-dir per capture session, killed after, with the surviving-process count READ rather than assumed and recorded as a number.",
+    "preRegistrationCommit": "This module and its pinning test are committed BEFORE any capture. No capture exists at that commit."
+  },
+  "claim": "Every pre-registered gate of the T006 acceptance campaign, beside the reading that decided it. Verdicts are READ from the capture records and not recomputed here.",
+  "notClaimedHere": [
+    "That passing these gates constitutes visual, geographic, factual, accessibility or performance acceptance.",
+    "That any reading generalises beyond the poses, the machine, the browser and the session it was taken in.",
+    "That a FAIL was fixed. The contract puts fixes in a new cycle by amendment; this campaign measures and reports."
+  ]
+}

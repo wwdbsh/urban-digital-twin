@@ -1,0 +1,1511 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "exterior-acceptance-20260817:eviction-loop",
+  "task": "T006",
+  "artifact": "eviction-loop",
+  "capturedAt": "2026-08-17T01:33:35.566Z",
+  "attemptCount": 1,
+  "attemptPolicy": "SINGLE attempt per capture. attemptCount is recorded on every record. A capture is repeated ONLY for a NAMED instrument failure (a pre-flight abort, an M2 activeRequests violation, a pose-landing failure, a probe that never mounted), never because a reading looked wrong. The name of the failure is recorded with the attempt.",
+  "vsyncMode": "vsync-on",
+  "chromeLaunchCommand": "open -na \"Google Chrome\" --args --remote-debugging-port=9224 --user-data-dir=/tmp/t005-serving-chrome --no-first-run --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-renderer-backgrounding",
+  "chromeDiscipline": "T008 discipline: a scratch user-data-dir per capture session, killed after, with the surviving-process count READ rather than assumed and recorded as a number.",
+  "browser": "Chrome/151.0.7922.138",
+  "viewport": {
+    "width": 1440,
+    "height": 900,
+    "deviceScaleFactor": 1
+  },
+  "base": "http://127.0.0.1:4191/",
+  "servedBundle": {
+    "previewBase": "http://127.0.0.1:4191/",
+    "indexHtmlChecksumSha256": "53741f4faef414a7fc8c50c14f6b224312f2df0b06c8544b5dda95bc6bbaa561",
+    "localDistIndexHtmlChecksumSha256": "53741f4faef414a7fc8c50c14f6b224312f2df0b06c8544b5dda95bc6bbaa561",
+    "matchesLocalDist": true,
+    "entryScriptCount": 1,
+    "assets": [
+      {
+        "ref": "/assets/index-k7tDJ7RO.js",
+        "byteSize": 5827657,
+        "sha256": "6115f67cfb5b5061e5636f396d093d4647d7e2f8f0afd526be2a949502eccc16"
+      }
+    ],
+    "probeMarkers": {
+      "scheduler": "data-exterior-scheduler-probe",
+      "citywideOverview": "data-citywide-overview-probe",
+      "texture": "data-exterior-texture-probe"
+    },
+    "probeMarkersPresent": {
+      "scheduler": true,
+      "citywideOverview": true,
+      "texture": true
+    },
+    "probeBuildCommand": "VITE_EXTERIOR_SCHEDULER_PROBE=1 VITE_CITYWIDE_OVERVIEW_PROBE=1 VITE_EXTERIOR_TEXTURE_PROBE=1 pnpm build",
+    "statement": "Checked BEFORE Chrome is launched, and fail-closed on both limbs: the served index.html is byte-identical to this worktree's dist/index.html, and the served entry scripts literally contain all three probe attribute markers. The second limb exists because a probe-less bundle does not fail loudly; it reads null and produces a record full of absences."
+  },
+  "preRegistration": "data/exterior-acceptance-20260817/pre-registration.json",
+  "harnessDisclosure": "The bundle carries VITE_EXTERIOR_SCHEDULER_PROBE=1 VITE_CITYWIDE_OVERVIEW_PROBE=1 VITE_EXTERIOR_TEXTURE_PROBE=1, verified by reading the three attribute markers out of the SERVED bytes before Chrome was launched. The probes read state the app already holds and decide nothing. Chrome runs with --disable-backgrounding-occluded-windows and --disable-renderer-backgrounding because requestAnimationFrame is suspended in an occluded window; they stop the browser deciding not to render at all. Frame durations are requestAnimationFrame deltas and the first delta of each window is dropped because it spans the gap since the previous paint rather than a rendered frame.",
+  "releaseSelector": "default",
+  "selectionFeatureId": "doitt:100022",
+  "selectionReleaseId": "manhattan-midtown-core-cells-20260811-v3-s1",
+  "selectionOpenedVia": "?feature=<id> deep link applied BEFORE the roam begins, so the selection survives the loop rather than being re-made at the end.",
+  "selectionSelector": "aside.inspector[aria-label=\"Selected feature details\"]",
+  "settleMsPerPose": 20000,
+  "settleDisclosure": "The per-pose settle is 20000 ms. It is NOT pre-registered — the pre-registration fixes the poses and the gates, not the dwell — and it is stated here because eviction is forced in TRANSIT, so a longer dwell would not make the gate easier and a shorter one would not make it harder.",
+  "stops": [
+    {
+      "poseId": "e1-anchor",
+      "pose": {
+        "poseId": "e1-anchor",
+        "lon": -73.98636,
+        "lat": 40.748775,
+        "height": 260,
+        "heading": 45,
+        "pitch": -25,
+        "roll": 0
+      },
+      "url": "http://127.0.0.1:4191/?data=real-pilot&release=manhattan-citywide-20260804&view=free&lon=-73.986360&lat=40.748775&height=260.000000&heading=45.000000&pitch=-25.000000&roll=0.000000&feature=doitt%3A100022",
+      "landing": {
+        "dispatchCount": 1,
+        "footprintSignature": "-73.985808:40.749197:-73.980360:40.752675:-73.983084:40.750936"
+      },
+      "settleMs": 20000,
+      "decision": {
+        "hold": "none",
+        "visibleCount": 12,
+        "deferredCount": 4,
+        "retainedCount": 0,
+        "residentCount": 8,
+        "reserved": [
+          "manhattan-exterior-cell-w00-000000-block-00835",
+          "manhattan-exterior-cell-w01-000031-17-38598-35863"
+        ],
+        "decisionIndex": 7,
+        "footprintSignature": "-73.985808:40.749197:-73.980360:40.752675:-73.983084:40.750936",
+        "heightBucket": 300
+      },
+      "waves": [
+        {
+          "releaseId": "manhattan-exterior-cells-20260811-v3-s1",
+          "declaredCellCount": 1,
+          "scheduledCellCount": 1,
+          "deferredCellCount": 0,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-midtown-core-cells-20260811-v3-s1",
+          "declaredCellCount": 149,
+          "scheduledCellCount": 7,
+          "deferredCellCount": 142,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-lower-manhattan-cells-20260812-s1",
+          "declaredCellCount": 126,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 126,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-southern-remainder-cells-20260812-s1",
+          "declaredCellCount": 176,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 176,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-central-upper-manhattan-cells-20260812-s1",
+          "declaredCellCount": 249,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 249,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-northern-manhattan-cells-20260812-s1",
+          "declaredCellCount": 182,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 182,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        }
+      ],
+      "residentWaveCount": 2,
+      "scheduledCellTotal": 8,
+      "sharedCache": {
+        "cacheEntries": 297,
+        "cachedBytes": 82082109,
+        "cacheEvictions": 0,
+        "maxCacheEntries": 1024,
+        "maxCachedBytes": 268435456,
+        "activeRequests": 0,
+        "peakConcurrentRequests": 4,
+        "maxConcurrentRequests": 4,
+        "requestedArtifactCount": 20,
+        "loadedArtifactCount": 20,
+        "releasedArtifactCount": 0,
+        "releasedArtifactBytes": 0,
+        "readFrom": "manhattan-exterior-cells-20260811-v3-s1",
+        "note": "SESSION-WIDE fields read from ONE wave and never summed across waves; see exterior-cell-runtime.ts."
+      },
+      "ceilings": {
+        "peakConcurrentRequests": 4,
+        "peakWithinFour": true,
+        "cacheEntries": 297,
+        "entriesWithinCap": true,
+        "cachedBytes": 82082109,
+        "bytesWithinCap": true,
+        "neverSum": "The exterior and composed probes report the SAME AggregateRequestBudget peak when a shared budget is installed. Their peaks are never summed and no combined '8' bar is registered or reported."
+      },
+      "cells": {
+        "fallbackCellCount": 0,
+        "failedCellCount": 0,
+        "failedArtifactCount": 0,
+        "clean": true
+      },
+      "selection": {
+        "length": 1774,
+        "digest": "a39e251b",
+        "head": "Building 100022OverviewLocationManhattan, New YorkCoordinates40.7541, -73.9701 (13.4 m)GeometryPolygon · normalized EPSG:4326Feature IDdoitt:100022Confidencehig"
+      },
+      "texture": {
+        "cesiumVersion": "1.143.0",
+        "exteriorReleaseIds": [
+          "manhattan-exterior-cells-20260811-v3-s1",
+          "manhattan-midtown-core-cells-20260811-v3-s1",
+          "manhattan-lower-manhattan-cells-20260812-s1",
+          "manhattan-southern-remainder-cells-20260812-s1",
+          "manhattan-central-upper-manhattan-cells-20260812-s1",
+          "manhattan-northern-manhattan-cells-20260812-s1"
+        ],
+        "exteriorStreamingActive": true,
+        "residentAssetCount": 277,
+        "reading": {
+          "texturesByteLength": 699048,
+          "geometryByteLength": 73851688,
+          "resourceCacheEntryCount": 7445
+        }
+      },
+      "notices": {
+        "present": true,
+        "items": [
+          "875 exterior cells are not loaded for this camera; they load when the camera reaches them.Details by releaseExterior release manhattan-midtown-core-cells-20260811-v3-s1: 142 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-lower-manhattan-cells-20260812-s1: 126 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-southern-remainder-cells-20260812-s1: 176 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-central-upper-manhattan-cells-20260812-s1: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-northern-manhattan-cells-20260812-s1: 182 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-midtown-core-cells-20260811-v3-s1: 142 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-lower-manhattan-cells-20260812-s1: 126 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-southern-remainder-cells-20260812-s1: 176 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-central-upper-manhattan-cells-20260812-s1: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-northern-manhattan-cells-20260812-s1: 182 exterior cells are not loaded for this camera; they load when the camera reaches them."
+        ],
+        "text": "Exterior streaming fallback Dismiss875 exterior cells are not loaded for this camera; they load when the camera reaches them.Details by releaseExterior release manhattan-midtown-core-cells-20260811-v3-s1: 142 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-lower-manhattan-cells-20260812-s1: 126 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-southern-remainder-cells-20260812-s1: 176 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-central-upper-manhattan-cells-20260812-s1: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-northern-manhattan-cells-20260812-s1: 182 exterior cells are not loaded for this camera; they load when the camera reaches them."
+      },
+      "still": {
+        "file": "captures/eviction-e1-anchor.png",
+        "byteSize": 770245,
+        "sha256": "42c6d8eaa49f922b9a7c8a1ef346054d5ce3056896a6149bbefff0b5dddf936d"
+      }
+    },
+    {
+      "poseId": "e2-north",
+      "pose": {
+        "poseId": "e2-north",
+        "lon": -73.9815,
+        "lat": 40.7545,
+        "height": 260,
+        "heading": 45,
+        "pitch": -25,
+        "roll": 0
+      },
+      "url": "http://127.0.0.1:4191/?data=real-pilot&release=manhattan-citywide-20260804&view=free&lon=-73.981500&lat=40.754500&height=260.000000&heading=45.000000&pitch=-25.000000&roll=0.000000&feature=doitt%3A100022",
+      "landing": {
+        "dispatchCount": 1,
+        "footprintSignature": "-73.980948:40.754922:-73.975500:40.758400:-73.978224:40.756661"
+      },
+      "settleMs": 20000,
+      "decision": {
+        "hold": "none",
+        "visibleCount": 4,
+        "deferredCount": 4,
+        "retainedCount": 4,
+        "residentCount": 8,
+        "reserved": [
+          "manhattan-exterior-cell-w01-000045-16-19300-17929"
+        ],
+        "decisionIndex": 8,
+        "footprintSignature": "-73.980948:40.754922:-73.975500:40.758400:-73.978224:40.756661",
+        "heightBucket": 300
+      },
+      "waves": [
+        {
+          "releaseId": "manhattan-exterior-cells-20260811-v3-s1",
+          "declaredCellCount": 1,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 1,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-midtown-core-cells-20260811-v3-s1",
+          "declaredCellCount": 149,
+          "scheduledCellCount": 8,
+          "deferredCellCount": 141,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-lower-manhattan-cells-20260812-s1",
+          "declaredCellCount": 126,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 126,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-southern-remainder-cells-20260812-s1",
+          "declaredCellCount": 176,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 176,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-central-upper-manhattan-cells-20260812-s1",
+          "declaredCellCount": 249,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 249,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-northern-manhattan-cells-20260812-s1",
+          "declaredCellCount": 182,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 182,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        }
+      ],
+      "residentWaveCount": 1,
+      "scheduledCellTotal": 8,
+      "sharedCache": {
+        "cacheEntries": 494,
+        "cachedBytes": 181452451,
+        "cacheEvictions": 0,
+        "maxCacheEntries": 1024,
+        "maxCachedBytes": 268435456,
+        "activeRequests": 0,
+        "peakConcurrentRequests": 4,
+        "maxConcurrentRequests": 4,
+        "requestedArtifactCount": 20,
+        "loadedArtifactCount": 20,
+        "releasedArtifactCount": 108,
+        "releasedArtifactBytes": 22852172,
+        "readFrom": "manhattan-exterior-cells-20260811-v3-s1",
+        "note": "SESSION-WIDE fields read from ONE wave and never summed across waves; see exterior-cell-runtime.ts."
+      },
+      "ceilings": {
+        "peakConcurrentRequests": 4,
+        "peakWithinFour": true,
+        "cacheEntries": 494,
+        "entriesWithinCap": true,
+        "cachedBytes": 181452451,
+        "bytesWithinCap": true,
+        "neverSum": "The exterior and composed probes report the SAME AggregateRequestBudget peak when a shared budget is installed. Their peaks are never summed and no combined '8' bar is registered or reported."
+      },
+      "cells": {
+        "fallbackCellCount": 0,
+        "failedCellCount": 0,
+        "failedArtifactCount": 0,
+        "clean": true
+      },
+      "selection": {
+        "length": 1774,
+        "digest": "a39e251b",
+        "head": "Building 100022OverviewLocationManhattan, New YorkCoordinates40.7541, -73.9701 (13.4 m)GeometryPolygon · normalized EPSG:4326Feature IDdoitt:100022Confidencehig"
+      },
+      "texture": {
+        "cesiumVersion": "1.143.0",
+        "exteriorReleaseIds": [
+          "manhattan-exterior-cells-20260811-v3-s1",
+          "manhattan-midtown-core-cells-20260811-v3-s1",
+          "manhattan-lower-manhattan-cells-20260812-s1",
+          "manhattan-southern-remainder-cells-20260812-s1",
+          "manhattan-central-upper-manhattan-cells-20260812-s1",
+          "manhattan-northern-manhattan-cells-20260812-s1"
+        ],
+        "exteriorStreamingActive": true,
+        "residentAssetCount": 466,
+        "reading": {
+          "texturesByteLength": 349524,
+          "geometryByteLength": 51912272,
+          "resourceCacheEntryCount": 5149
+        }
+      },
+      "notices": {
+        "present": true,
+        "items": [
+          "875 exterior cells are not loaded for this camera; they load when the camera reaches them.Details by releaseExterior release manhattan-exterior-cells-20260811-v3-s1: 1 exterior cell is not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-midtown-core-cells-20260811-v3-s1: 141 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-lower-manhattan-cells-20260812-s1: 126 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-southern-remainder-cells-20260812-s1: 176 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-central-upper-manhattan-cells-20260812-s1: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-northern-manhattan-cells-20260812-s1: 182 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-exterior-cells-20260811-v3-s1: 1 exterior cell is not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-midtown-core-cells-20260811-v3-s1: 141 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-lower-manhattan-cells-20260812-s1: 126 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-southern-remainder-cells-20260812-s1: 176 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-central-upper-manhattan-cells-20260812-s1: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-northern-manhattan-cells-20260812-s1: 182 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "108 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.Details by releaseExterior release manhattan-exterior-cells-20260811-v3-s1: 108 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.",
+          "Exterior release manhattan-exterior-cells-20260811-v3-s1: 108 exterior artifacts were released to stay within the session cache budget; they reload on re-entry."
+        ],
+        "text": "Exterior streaming fallback Dismiss875 exterior cells are not loaded for this camera; they load when the camera reaches them.Details by releaseExterior release manhattan-exterior-cells-20260811-v3-s1: 1 exterior cell is not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-midtown-core-cells-20260811-v3-s1: 141 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-lower-manhattan-cells-20260812-s1: 126 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-southern-remainder-cells-20260812-s1: 176 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-central-upper-manhattan-cells-20260812-s1: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-northern-manhattan-cells-20260812-s1: 182 exterior cells are not loaded for this camera; they load when the camera reaches them.108 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.Details by releaseExterior release manhattan-exterior-cells-20260811-v3-s1: 108 exterior artifacts were released to stay within the session cache budget; they reload on re-entry."
+      },
+      "still": {
+        "file": "captures/eviction-e2-north.png",
+        "byteSize": 868444,
+        "sha256": "0adc52329a527e3ba6492ae0a66a6408ebda3d68e5612aaf9ccef79e4f307576"
+      }
+    },
+    {
+      "poseId": "e3-northeast",
+      "pose": {
+        "poseId": "e3-northeast",
+        "lon": -73.9755,
+        "lat": 40.7595,
+        "height": 260,
+        "heading": 90,
+        "pitch": -25,
+        "roll": 0
+      },
+      "url": "http://127.0.0.1:4191/?data=real-pilot&release=manhattan-citywide-20260804&view=free&lon=-73.975500&lat=40.759500&height=260.000000&heading=90.000000&pitch=-25.000000&roll=0.000000&feature=doitt%3A100022",
+      "landing": {
+        "dispatchCount": 1,
+        "footprintSignature": "-73.972287:40.755600:-73.969500:40.763400:-73.970894:40.759500"
+      },
+      "settleMs": 20000,
+      "decision": {
+        "hold": "none",
+        "visibleCount": 11,
+        "deferredCount": 9,
+        "retainedCount": 0,
+        "residentCount": 8,
+        "reserved": [
+          "manhattan-exterior-cell-w01-000038-16-19301-17928",
+          "manhattan-exterior-cell-w01-000126-16-19301-17927"
+        ],
+        "decisionIndex": 9,
+        "footprintSignature": "-73.972287:40.755600:-73.969500:40.763400:-73.970894:40.759500",
+        "heightBucket": 300
+      },
+      "waves": [
+        {
+          "releaseId": "manhattan-exterior-cells-20260811-v3-s1",
+          "declaredCellCount": 1,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 1,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-midtown-core-cells-20260811-v3-s1",
+          "declaredCellCount": 149,
+          "scheduledCellCount": 8,
+          "deferredCellCount": 141,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-lower-manhattan-cells-20260812-s1",
+          "declaredCellCount": 126,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 126,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-southern-remainder-cells-20260812-s1",
+          "declaredCellCount": 176,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 176,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-central-upper-manhattan-cells-20260812-s1",
+          "declaredCellCount": 249,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 249,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-northern-manhattan-cells-20260812-s1",
+          "declaredCellCount": 182,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 182,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        }
+      ],
+      "residentWaveCount": 1,
+      "scheduledCellTotal": 8,
+      "sharedCache": {
+        "cacheEntries": 391,
+        "cachedBytes": 137801030,
+        "cacheEvictions": 46,
+        "maxCacheEntries": 1024,
+        "maxCachedBytes": 268435456,
+        "activeRequests": 0,
+        "peakConcurrentRequests": 4,
+        "maxConcurrentRequests": 4,
+        "requestedArtifactCount": 20,
+        "loadedArtifactCount": 20,
+        "releasedArtifactCount": 526,
+        "releasedArtifactBytes": 163700316,
+        "readFrom": "manhattan-exterior-cells-20260811-v3-s1",
+        "note": "SESSION-WIDE fields read from ONE wave and never summed across waves; see exterior-cell-runtime.ts."
+      },
+      "ceilings": {
+        "peakConcurrentRequests": 4,
+        "peakWithinFour": true,
+        "cacheEntries": 391,
+        "entriesWithinCap": true,
+        "cachedBytes": 137801030,
+        "bytesWithinCap": true,
+        "neverSum": "The exterior and composed probes report the SAME AggregateRequestBudget peak when a shared budget is installed. Their peaks are never summed and no combined '8' bar is registered or reported."
+      },
+      "cells": {
+        "fallbackCellCount": 0,
+        "failedCellCount": 0,
+        "failedArtifactCount": 0,
+        "clean": true
+      },
+      "selection": {
+        "length": 1774,
+        "digest": "a39e251b",
+        "head": "Building 100022OverviewLocationManhattan, New YorkCoordinates40.7541, -73.9701 (13.4 m)GeometryPolygon · normalized EPSG:4326Feature IDdoitt:100022Confidencehig"
+      },
+      "texture": {
+        "cesiumVersion": "1.143.0",
+        "exteriorReleaseIds": [
+          "manhattan-exterior-cells-20260811-v3-s1",
+          "manhattan-midtown-core-cells-20260811-v3-s1",
+          "manhattan-lower-manhattan-cells-20260812-s1",
+          "manhattan-southern-remainder-cells-20260812-s1",
+          "manhattan-central-upper-manhattan-cells-20260812-s1",
+          "manhattan-northern-manhattan-cells-20260812-s1"
+        ],
+        "exteriorStreamingActive": true,
+        "residentAssetCount": 365,
+        "reading": {
+          "texturesByteLength": 349524,
+          "geometryByteLength": 28092672,
+          "resourceCacheEntryCount": 1390
+        }
+      },
+      "notices": {
+        "present": true,
+        "items": [
+          "875 exterior cells are not loaded for this camera; they load when the camera reaches them.Details by releaseExterior release manhattan-exterior-cells-20260811-v3-s1: 1 exterior cell is not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-midtown-core-cells-20260811-v3-s1: 141 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-lower-manhattan-cells-20260812-s1: 126 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-southern-remainder-cells-20260812-s1: 176 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-central-upper-manhattan-cells-20260812-s1: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-northern-manhattan-cells-20260812-s1: 182 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-exterior-cells-20260811-v3-s1: 1 exterior cell is not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-midtown-core-cells-20260811-v3-s1: 141 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-lower-manhattan-cells-20260812-s1: 126 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-southern-remainder-cells-20260812-s1: 176 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-central-upper-manhattan-cells-20260812-s1: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-northern-manhattan-cells-20260812-s1: 182 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "526 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.Details by releaseExterior release manhattan-exterior-cells-20260811-v3-s1: 526 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.",
+          "Exterior release manhattan-exterior-cells-20260811-v3-s1: 526 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.",
+          "Exterior geometry for 272 verified buildings is not drawn: the matching base building record is not loaded, so there is no verified WGS84 anchor for it. It will be drawn once that base record loads.Show the 272 building IDsdoitt:101741, doitt:104352, doitt:106344, doitt:106943, doitt:1108587, doitt:1111415, doitt:111739, doitt:1119374, doitt:116586, doitt:120099, doitt:120117, doitt:122299, doitt:122819, doitt:122987, doitt:124564, doitt:127698, doitt:1281325, doitt:1283376, doitt:129091, doitt:129121, doitt:1298567, doitt:1298885, doitt:130140, doitt:1302220, doitt:130251, doitt:1303970, doitt:1304061, doitt:135151, doitt:135167, doitt:140197, doitt:147305, doitt:153401, doitt:156315, doitt:158182, doitt:168405, doitt:16901, doitt:174199, doitt:182367, doitt:19507, doitt:197727, doitt:208060, doitt:211798, doitt:212008, doitt:214406, doitt:218477, doitt:220239, doitt:224168, doitt:228324, doitt:229515, doitt:229542, doitt:230465, doitt:232756, doitt:238946, doitt:239952, doitt:239997, doitt:242590, doitt:245594, doitt:246602, doitt:246748, doitt:246917, doitt:247199, doitt:248529, doitt:251182, doitt:256321, doitt:256687, doitt:257517, doitt:25767, doitt:261519, doitt:266826, doitt:267021, doitt:271796, doitt:272530, doitt:273841, doitt:274430, doitt:274567, doitt:284380, doitt:285483, doitt:286963, doitt:292289, doitt:293620, doitt:297671, doitt:298345, doitt:303149, doitt:313122, doitt:313854, doitt:314382, doitt:319032, doitt:319518, doitt:322311, doitt:329153, doitt:330060, doitt:330782, doitt:331554, doitt:332626, doitt:33362, doitt:335263, doitt:338490, doitt:340119, doitt:340279, doitt:341005, doitt:343268, doitt:34399, doitt:346465, doitt:347684, doitt:35339, doitt:355756, doitt:357501, doitt:364384, doitt:372340, doitt:377986, doitt:380110, doitt:385142, doitt:388945, doitt:389776, doitt:397522, doitt:399764, doitt:401746, doitt:407232, doitt:415874, doitt:420635, doitt:422130, doitt:422638, doitt:423752, doitt:424360, doitt:425815, doitt:425893, doitt:428818, doitt:429533, doitt:43619, doitt:438312, doitt:439465, doitt:445004, doitt:449388, doitt:453335, doitt:458744, doitt:460874, doitt:461178, doitt:462859, doitt:472084, doitt:473990, doitt:474199, doitt:475211, doitt:47893, doitt:481014, doitt:483944, doitt:485706, doitt:489466, doitt:492951, doitt:497542, doitt:49785, doitt:503412, doitt:506431, doitt:507190, doitt:507534, doitt:508545, doitt:510153, doitt:51146, doitt:512131, doitt:512934, doitt:513509, doitt:517054, doitt:519307, doitt:519428, doitt:524583, doitt:528900, doitt:530834, doitt:538366, doitt:540972, doitt:5454, doitt:545603, doitt:547804, doitt:551974, doitt:552872, doitt:555290, doitt:55698, doitt:558236, doitt:562871, doitt:56737, doitt:569483, doitt:57581, doitt:576409, doitt:579262, doitt:582076, doitt:582340, doitt:583808, doitt:584103, doitt:588719, doitt:592232, doitt:595745, doitt:605810, doitt:606184, doitt:607937, doitt:619460, doitt:628359, doitt:634515, doitt:640111, doitt:643574, doitt:647842, doitt:651403, doitt:652048, doitt:653966, doitt:656219, doitt:656676, doitt:659666, doitt:664094, doitt:668536, doitt:673083, doitt:680707, doitt:681229, doitt:685956, doitt:687163, doitt:688690, doitt:689346, doitt:694392, doitt:697261, doitt:702519, doitt:708074, doitt:711098, doitt:713006, doitt:715945, doitt:716503, doitt:717067, doitt:72730, doitt:732462, doitt:737096, doitt:740429, doitt:744270, doitt:748968, doitt:749412, doitt:753129, doitt:755374, doitt:756877, doitt:760753, doitt:762454, doitt:770751, doitt:774513, doitt:774854, doitt:777925, doitt:780643, doitt:782539, doitt:78452, doitt:788078, doitt:792074, doitt:793233, doitt:796550, doitt:797442, doitt:798141, doitt:801921, doitt:807435, doitt:810032, doitt:81429, doitt:821024, doitt:82182, doitt:825980, doitt:826881, doitt:828768, doitt:829915, doitt:832425, doitt:835306, doitt:84117, doitt:845155, doitt:848000, doitt:850180, doitt:853260, doitt:871085, doitt:90325, doitt:91551, doitt:945740, doitt:946038, doitt:958178, doitt:96575, doitt:966404"
+        ],
+        "text": "Exterior streaming fallback Dismiss875 exterior cells are not loaded for this camera; they load when the camera reaches them.Details by releaseExterior release manhattan-exterior-cells-20260811-v3-s1: 1 exterior cell is not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-midtown-core-cells-20260811-v3-s1: 141 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-lower-manhattan-cells-20260812-s1: 126 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-southern-remainder-cells-20260812-s1: 176 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-central-upper-manhattan-cells-20260812-s1: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-northern-manhattan-cells-20260812-s1: 182 exterior cells are not loaded for this camera; they load when the camera reaches them.526 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.Details by releaseExterior release manhattan-exterior-cells-20260811-v3-s1: 526 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.Exterior geometry for 272 verified buildings is not drawn: the matching base building record is not loaded, so there is no verified WGS84 anchor for it. It will be drawn once that base record loads.Show the 272 building IDsdoitt:101741, doitt:104352, doitt:106344, doitt:106943, doitt:1108587, doitt:1111415, doitt:111739, doitt:1119374, doitt:116586, doitt:120099, doitt:120117, doitt:122299, doitt:122819, doitt:122987, doitt:124564, doitt:127698, doitt:1281325, doitt:1283376, doitt:129091, doitt:129121, doitt:1298567, doitt:1298885, doitt:130140, doitt:1302220, doitt:130251, doitt:1303970, doitt:1304061, doitt:135151, doitt:135167, doitt:140197, doitt:147305, doitt:153401, doitt:156315, doitt:158182, doitt:168405, doitt:16901, doitt:174199, doitt:182367, doitt:19507, doitt:197727, doitt:208060, doitt:211798, doitt:212008, doitt:214406, doitt:218477, doitt:220239, doitt:224168, doitt:228324, doitt:229515, doitt:229542, doitt:230465, doitt:232756, doitt:238946, doitt:239952, doitt:239997, doitt:242590, doitt:245594, doitt:246602, doitt:246748, doitt:246917, doitt:247199, doitt:248529, doitt:251182, doitt:256321, doitt:256687, doitt:257517, doitt:25767, doitt:261519, doitt:266826, doitt:267021, doitt:271796, doitt:272530, doitt:273841, doitt:274430, doitt:274567, doitt:284380, doitt:285483, doitt:286963, doitt:292289, doitt:293620, doitt:297671, doitt:298345, doitt:303149, doitt:313122, doitt:313854, doitt:314382, doitt:319032, doitt:319518, doitt:322311, doitt:329153, doitt:330060, doitt:330782, doitt:331554, doitt:332626, doitt:33362, doitt:335263, doitt:338490, doitt:340119, doitt:340279, doitt:341005, doitt:343268, doitt:34399, doitt:346465, doitt:347684, doitt:35339, doitt:355756, doitt:357501, doitt:364384, doitt:372340, doitt:377986, doitt:380110, doitt:385142, doitt:388945, doitt:389776, doitt:397522, doitt:399764, doitt:401746, doitt:407232, doitt:415874, doitt:420635, doitt:422130, doitt:422638, doitt:423752, doitt:424360, doitt:425815, doitt:425893, doitt:428818, doitt:429533, doitt:43619, doitt:438312, doitt:439465, doitt:445004, doitt:449388, doitt:453335, doitt:458744, doitt:460874, doitt:461178, doitt:462859, doitt:472084, doitt:473990, doitt:474199, doitt:475211, doitt:47893, doitt:481014, doitt:483944, doitt:485706, doitt:489466, doitt:492951, doitt:497542, doitt:49785, doitt:503412, doitt:506431, doitt:507190, doitt:507534, doitt:508545, doitt:510153, doitt:51146, doitt:512131, doitt:512934, doitt:513509, doitt:517054, doitt:519307, doitt:519428, doitt:524583, doitt:528900, doitt:530834, doitt:538366, doitt:540972, doitt:5454, doitt:545603, doitt:547804, doitt:551974, doitt:552872, doitt:555290, do"
+      },
+      "still": {
+        "file": "captures/eviction-e3-northeast.png",
+        "byteSize": 523740,
+        "sha256": "a46694008196ee63439748f36a078127215e7a2d00ee71fbb05a244b83c99fc7"
+      }
+    },
+    {
+      "poseId": "e4-east",
+      "pose": {
+        "poseId": "e4-east",
+        "lon": -73.9705,
+        "lat": 40.755,
+        "height": 260,
+        "heading": 135,
+        "pitch": -25,
+        "roll": 0
+      },
+      "url": "http://127.0.0.1:4191/?data=real-pilot&release=manhattan-citywide-20260804&view=free&lon=-73.970500&lat=40.755000&height=260.000000&heading=135.000000&pitch=-25.000000&roll=0.000000&feature=doitt%3A100022",
+      "landing": {
+        "dispatchCount": 1,
+        "footprintSignature": "-73.969946:40.751100:-73.964500:40.754580:-73.967223:40.752840"
+      },
+      "settleMs": 20000,
+      "decision": {
+        "hold": "none",
+        "visibleCount": 6,
+        "deferredCount": 6,
+        "retainedCount": 2,
+        "residentCount": 8,
+        "reserved": [
+          "manhattan-exterior-cell-w01-000047-17-38604-35859"
+        ],
+        "decisionIndex": 10,
+        "footprintSignature": "-73.969946:40.751100:-73.964500:40.754580:-73.967223:40.752840",
+        "heightBucket": 300
+      },
+      "waves": [
+        {
+          "releaseId": "manhattan-exterior-cells-20260811-v3-s1",
+          "declaredCellCount": 1,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 1,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-midtown-core-cells-20260811-v3-s1",
+          "declaredCellCount": 149,
+          "scheduledCellCount": 8,
+          "deferredCellCount": 141,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-lower-manhattan-cells-20260812-s1",
+          "declaredCellCount": 126,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 126,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-southern-remainder-cells-20260812-s1",
+          "declaredCellCount": 176,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 176,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-central-upper-manhattan-cells-20260812-s1",
+          "declaredCellCount": 249,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 249,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-northern-manhattan-cells-20260812-s1",
+          "declaredCellCount": 182,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 182,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        }
+      ],
+      "residentWaveCount": 1,
+      "scheduledCellTotal": 8,
+      "sharedCache": {
+        "cacheEntries": 480,
+        "cachedBytes": 102453787,
+        "cacheEvictions": 46,
+        "maxCacheEntries": 1024,
+        "maxCachedBytes": 268435456,
+        "activeRequests": 0,
+        "peakConcurrentRequests": 4,
+        "maxConcurrentRequests": 4,
+        "requestedArtifactCount": 20,
+        "loadedArtifactCount": 20,
+        "releasedArtifactCount": 813,
+        "releasedArtifactBytes": 253054404,
+        "readFrom": "manhattan-exterior-cells-20260811-v3-s1",
+        "note": "SESSION-WIDE fields read from ONE wave and never summed across waves; see exterior-cell-runtime.ts."
+      },
+      "ceilings": {
+        "peakConcurrentRequests": 4,
+        "peakWithinFour": true,
+        "cacheEntries": 480,
+        "entriesWithinCap": true,
+        "cachedBytes": 102453787,
+        "bytesWithinCap": true,
+        "neverSum": "The exterior and composed probes report the SAME AggregateRequestBudget peak when a shared budget is installed. Their peaks are never summed and no combined '8' bar is registered or reported."
+      },
+      "cells": {
+        "fallbackCellCount": 0,
+        "failedCellCount": 0,
+        "failedArtifactCount": 0,
+        "clean": true
+      },
+      "selection": {
+        "length": 2666,
+        "digest": "1a735c8c",
+        "head": "Building 100022OverviewLocationManhattan, New YorkCoordinates40.7541, -73.9701 (13.4 m)GeometryPolygon · normalized EPSG:4326Feature IDdoitt:100022Confidencehig"
+      },
+      "texture": {
+        "cesiumVersion": "1.143.0",
+        "exteriorReleaseIds": [
+          "manhattan-exterior-cells-20260811-v3-s1",
+          "manhattan-midtown-core-cells-20260811-v3-s1",
+          "manhattan-lower-manhattan-cells-20260812-s1",
+          "manhattan-southern-remainder-cells-20260812-s1",
+          "manhattan-central-upper-manhattan-cells-20260812-s1",
+          "manhattan-northern-manhattan-cells-20260812-s1"
+        ],
+        "exteriorStreamingActive": true,
+        "residentAssetCount": 442,
+        "reading": {
+          "texturesByteLength": 349524,
+          "geometryByteLength": 34857944,
+          "resourceCacheEntryCount": 2823
+        }
+      },
+      "notices": {
+        "present": true,
+        "items": [
+          "875 exterior cells are not loaded for this camera; they load when the camera reaches them.Details by releaseExterior release manhattan-exterior-cells-20260811-v3-s1: 1 exterior cell is not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-midtown-core-cells-20260811-v3-s1: 141 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-lower-manhattan-cells-20260812-s1: 126 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-southern-remainder-cells-20260812-s1: 176 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-central-upper-manhattan-cells-20260812-s1: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-northern-manhattan-cells-20260812-s1: 182 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-exterior-cells-20260811-v3-s1: 1 exterior cell is not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-midtown-core-cells-20260811-v3-s1: 141 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-lower-manhattan-cells-20260812-s1: 126 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-southern-remainder-cells-20260812-s1: 176 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-central-upper-manhattan-cells-20260812-s1: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-northern-manhattan-cells-20260812-s1: 182 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "813 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.Details by releaseExterior release manhattan-exterior-cells-20260811-v3-s1: 813 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.",
+          "Exterior release manhattan-exterior-cells-20260811-v3-s1: 813 exterior artifacts were released to stay within the session cache budget; they reload on re-entry."
+        ],
+        "text": "Exterior streaming fallback Dismiss875 exterior cells are not loaded for this camera; they load when the camera reaches them.Details by releaseExterior release manhattan-exterior-cells-20260811-v3-s1: 1 exterior cell is not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-midtown-core-cells-20260811-v3-s1: 141 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-lower-manhattan-cells-20260812-s1: 126 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-southern-remainder-cells-20260812-s1: 176 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-central-upper-manhattan-cells-20260812-s1: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-northern-manhattan-cells-20260812-s1: 182 exterior cells are not loaded for this camera; they load when the camera reaches them.813 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.Details by releaseExterior release manhattan-exterior-cells-20260811-v3-s1: 813 exterior artifacts were released to stay within the session cache budget; they reload on re-entry."
+      },
+      "still": {
+        "file": "captures/eviction-e4-east.png",
+        "byteSize": 722651,
+        "sha256": "0411c25f901b26889e891ccb4c91a1360d8f1a4a6e9390a3dadb7baa22f76d50"
+      }
+    },
+    {
+      "poseId": "e5-southeast",
+      "pose": {
+        "poseId": "e5-southeast",
+        "lon": -73.975,
+        "lat": 40.748,
+        "height": 260,
+        "heading": 180,
+        "pitch": -25,
+        "roll": 0
+      },
+      "url": "http://127.0.0.1:4191/?data=real-pilot&release=manhattan-citywide-20260804&view=free&lon=-73.975000&lat=40.748000&height=260.000000&heading=180.000000&pitch=-25.000000&roll=0.000000&feature=doitt%3A100022",
+      "landing": {
+        "dispatchCount": 1,
+        "footprintSignature": "-73.981000:40.744100:-73.969000:40.745557:-73.975000:40.744828"
+      },
+      "settleMs": 20000,
+      "decision": {
+        "hold": "none",
+        "visibleCount": 10,
+        "deferredCount": 10,
+        "retainedCount": 0,
+        "residentCount": 8,
+        "reserved": [
+          "manhattan-exterior-cell-w03-000438-16-19301-17932",
+          "manhattan-exterior-cell-w01-000058-16-19301-17931"
+        ],
+        "decisionIndex": 11,
+        "footprintSignature": "-73.981000:40.744100:-73.969000:40.745557:-73.975000:40.744828",
+        "heightBucket": 300
+      },
+      "waves": [
+        {
+          "releaseId": "manhattan-exterior-cells-20260811-v3-s1",
+          "declaredCellCount": 1,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 1,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-midtown-core-cells-20260811-v3-s1",
+          "declaredCellCount": 149,
+          "scheduledCellCount": 1,
+          "deferredCellCount": 148,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-lower-manhattan-cells-20260812-s1",
+          "declaredCellCount": 126,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 126,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-southern-remainder-cells-20260812-s1",
+          "declaredCellCount": 176,
+          "scheduledCellCount": 7,
+          "deferredCellCount": 169,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-central-upper-manhattan-cells-20260812-s1",
+          "declaredCellCount": 249,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 249,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-northern-manhattan-cells-20260812-s1",
+          "declaredCellCount": 182,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 182,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        }
+      ],
+      "residentWaveCount": 2,
+      "scheduledCellTotal": 8,
+      "sharedCache": {
+        "cacheEntries": 515,
+        "cachedBytes": 96989492,
+        "cacheEvictions": 46,
+        "maxCacheEntries": 1024,
+        "maxCachedBytes": 268435456,
+        "activeRequests": 0,
+        "peakConcurrentRequests": 4,
+        "maxConcurrentRequests": 4,
+        "requestedArtifactCount": 20,
+        "loadedArtifactCount": 20,
+        "releasedArtifactCount": 1255,
+        "releasedArtifactBytes": 334960720,
+        "readFrom": "manhattan-exterior-cells-20260811-v3-s1",
+        "note": "SESSION-WIDE fields read from ONE wave and never summed across waves; see exterior-cell-runtime.ts."
+      },
+      "ceilings": {
+        "peakConcurrentRequests": 4,
+        "peakWithinFour": true,
+        "cacheEntries": 515,
+        "entriesWithinCap": true,
+        "cachedBytes": 96989492,
+        "bytesWithinCap": true,
+        "neverSum": "The exterior and composed probes report the SAME AggregateRequestBudget peak when a shared budget is installed. Their peaks are never summed and no combined '8' bar is registered or reported."
+      },
+      "cells": {
+        "fallbackCellCount": 0,
+        "failedCellCount": 0,
+        "failedArtifactCount": 0,
+        "clean": true
+      },
+      "selection": {
+        "length": 1774,
+        "digest": "a39e251b",
+        "head": "Building 100022OverviewLocationManhattan, New YorkCoordinates40.7541, -73.9701 (13.4 m)GeometryPolygon · normalized EPSG:4326Feature IDdoitt:100022Confidencehig"
+      },
+      "texture": {
+        "cesiumVersion": "1.143.0",
+        "exteriorReleaseIds": [
+          "manhattan-exterior-cells-20260811-v3-s1",
+          "manhattan-midtown-core-cells-20260811-v3-s1",
+          "manhattan-lower-manhattan-cells-20260812-s1",
+          "manhattan-southern-remainder-cells-20260812-s1",
+          "manhattan-central-upper-manhattan-cells-20260812-s1",
+          "manhattan-northern-manhattan-cells-20260812-s1"
+        ],
+        "exteriorStreamingActive": true,
+        "residentAssetCount": 461,
+        "reading": {
+          "texturesByteLength": 349524,
+          "geometryByteLength": 23265408,
+          "resourceCacheEntryCount": 1912
+        }
+      },
+      "notices": {
+        "present": true,
+        "items": [
+          "875 exterior cells are not loaded for this camera; they load when the camera reaches them.Details by releaseExterior release manhattan-exterior-cells-20260811-v3-s1: 1 exterior cell is not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-midtown-core-cells-20260811-v3-s1: 148 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-lower-manhattan-cells-20260812-s1: 126 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-southern-remainder-cells-20260812-s1: 169 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-central-upper-manhattan-cells-20260812-s1: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-northern-manhattan-cells-20260812-s1: 182 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-exterior-cells-20260811-v3-s1: 1 exterior cell is not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-midtown-core-cells-20260811-v3-s1: 148 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-lower-manhattan-cells-20260812-s1: 126 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-southern-remainder-cells-20260812-s1: 169 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-central-upper-manhattan-cells-20260812-s1: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-northern-manhattan-cells-20260812-s1: 182 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "1255 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.Details by releaseExterior release manhattan-exterior-cells-20260811-v3-s1: 1255 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.",
+          "Exterior release manhattan-exterior-cells-20260811-v3-s1: 1255 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.",
+          "Exterior geometry for 389 verified buildings is not drawn: the matching base building record is not loaded, so there is no verified WGS84 anchor for it. It will be drawn once that base record loads.Show the 389 building IDsdoitt:1007398, doitt:102102, doitt:1022592, doitt:10245, doitt:1024738, doitt:103248, doitt:103427, doitt:1043606, doitt:106920, doitt:1069778, doitt:108067, doitt:108460, doitt:1087514, doitt:110043, doitt:1110850, doitt:1112075, doitt:112789, doitt:113029, doitt:1154004, doitt:115754, doitt:1159117, doitt:116809, doitt:119311, doitt:120898, doitt:1211426, doitt:1213536, doitt:121671, doitt:122069, doitt:124626, doitt:1256242, doitt:1261650, doitt:1268449, doitt:127033, doitt:1284261, doitt:128552, doitt:128738, doitt:1287481, doitt:1287482, doitt:1287483, doitt:129226, doitt:1293206, doitt:1300755, doitt:1305620, doitt:1306311, doitt:133131, doitt:133817, doitt:136382, doitt:13783, doitt:137970, doitt:138549, doitt:14304, doitt:145100, doitt:145367, doitt:147888, doitt:150632, doitt:151572, doitt:154030, doitt:154384, doitt:154398, doitt:158870, doitt:162323, doitt:163311, doitt:165761, doitt:167063, doitt:168225, doitt:171960, doitt:179239, doitt:179339, doitt:180190, doitt:180763, doitt:18250, doitt:185037, doitt:185749, doitt:187623, doitt:198324, doitt:198566, doitt:200775, doitt:202828, doitt:203463, doitt:206872, doitt:209582, doitt:209797, doitt:2102, doitt:210973, doitt:21344, doitt:2154, doitt:219942, doitt:221335, doitt:223803, doitt:226302, doitt:231325, doitt:232732, doitt:239946, doitt:242993, doitt:24722, doitt:248475, doitt:248942, doitt:249380, doitt:249642, doitt:252339, doitt:256418, doitt:259324, doitt:265194, doitt:265477, doitt:265571, doitt:268417, doitt:268520, doitt:268700, doitt:271558, doitt:273938, doitt:274657, doitt:277584, doitt:279685, doitt:284248, doitt:284397, doitt:288074, doitt:29423, doitt:295510, doitt:297, doitt:298519, doitt:302422, doitt:307124, doitt:307252, doitt:307701, doitt:308471, doitt:309256, doitt:31386, doitt:314109, doitt:317719, doitt:319191, doitt:32289, doitt:32408, doitt:324128, doitt:326349, doitt:328779, doitt:329963, doitt:330001, doitt:333955, doitt:335049, doitt:335586, doitt:336903, doitt:337333, doitt:339149, doitt:347429, doitt:351273, doitt:353666, doitt:353834, doitt:361466, doitt:361886, doitt:361919, doitt:364760, doitt:365512, doitt:366136, doitt:371144, doitt:376321, doitt:376795, doitt:377885, doitt:386622, doitt:387324, doitt:387532, doitt:391552, doitt:394269, doitt:398648, doitt:399877, doitt:402307, doitt:403564, doitt:403746, doitt:404121, doitt:406107, doitt:406252, doitt:410103, doitt:411164, doitt:412518, doitt:413383, doitt:413472, doitt:414358, doitt:414976, doitt:416411, doitt:419696, doitt:422244, doitt:422741, doitt:424354, doitt:426359, doitt:426452, doitt:428654, doitt:428712, doitt:433350, doitt:435186, doitt:44153, doitt:44743, doitt:452377, doitt:452630, doitt:453028, doitt:453087, doitt:453954, doitt:460389, doitt:469782, doitt:472812, doitt:47445, doitt:476241, doitt:476307, doitt:478650, doitt:47947, doitt:481082, doitt:481841, doitt:482085, doitt:482172, doitt:484807, doitt:485044, doitt:486305, doitt:488306, doitt:49052, doitt:490664, doitt:49288, doitt:495165, doitt:498886, doitt:499992, doitt:501250, doitt:505565, doitt:505844, doitt:506913, doitt:512219, doitt:514097, doitt:516139, doitt:516720, doitt:526617, doitt:526788, doitt:53576, doitt:542374, doitt:546331, doitt:549417, doitt:549527, doitt:55058, doitt:559912, doitt:567707, doitt:569673, doitt:573098, doitt:577390, doitt:578370, doitt:580693, doitt:582861, doitt:583968, doitt:585737, doitt:587660, doitt:594680, doitt:595812, doitt:597245, doitt:598189, doitt:600855, doitt:604525, doitt:604757, doitt:607345, doitt:609739, doitt:613466, doitt:613631, doitt:614786, doitt:615651, doitt:616963, doitt:622450, doitt:623929, doitt:624579, doitt:627448, doitt:628469, doitt:629822, doitt:636207, doitt:637058, doitt:637517, doitt:639096, doitt:640419, doitt:640778, doitt:641804, doitt:642404, doitt:642413, doitt:644029, doitt:646160, doitt:650691, doitt:654367, doitt:655271, doitt:660811, doitt:661409, doitt:661700, doitt:662763, doitt:662774, doitt:66571, doitt:666487, doitt:667367, doitt:667440, doitt:672081, doitt:674586, doitt:679504, doitt:680091, doitt:680502, doitt:68128, doitt:681318, doitt:682585, doitt:683026, doitt:687596, doitt:6907, doitt:691471, doitt:692478, doitt:693023, doitt:694443, doitt:69479, doitt:694809, doitt:698235, doitt:699467, doitt:701555, doitt:701638, doitt:706906, doitt:708120, doitt:708144, doitt:709825, doitt:716362, doitt:71659, doitt:71824, doitt:721700, doitt:721824, doitt:722298, doitt:72252, doitt:728040, doitt:73268, doitt:732918, doitt:737850, doitt:73967, doitt:745912, doitt:750169, doitt:752206, doitt:757, doitt:758574, doitt:762336, doitt:764403, doitt:764992, doitt:770944, doitt:772172, doitt:775103, doitt:77604, doitt:778058, doitt:778119, doitt:782605, doitt:784703, doitt:785992, doitt:786424, doitt:788368, doitt:788846, doitt:789704, doitt:790409, doitt:793012, doitt:794078, doitt:796606, doitt:799433, doitt:800048, doitt:80365, doitt:803801, doitt:81054, doitt:812024, doitt:815500, doitt:815525, doitt:818772, doitt:821621, doitt:82243, doitt:822660, doitt:829434, doitt:830428, doitt:832663, doitt:832749, doitt:833005, doitt:838232, doitt:83832, doitt:839049, doitt:839803, doitt:842530, doitt:843130, doitt:844939, doitt:871358, doitt:872, doitt:8989, doitt:92021, doitt:93196, doitt:933313, doitt:933347, doitt:933351, doitt:937454, doitt:945619, doitt:946458, doitt:946524, doitt:950157, doitt:958152, doitt:978631, doitt:996675"
+        ],
+        "text": "Exterior streaming fallback Dismiss875 exterior cells are not loaded for this camera; they load when the camera reaches them.Details by releaseExterior release manhattan-exterior-cells-20260811-v3-s1: 1 exterior cell is not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-midtown-core-cells-20260811-v3-s1: 148 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-lower-manhattan-cells-20260812-s1: 126 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-southern-remainder-cells-20260812-s1: 169 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-central-upper-manhattan-cells-20260812-s1: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-northern-manhattan-cells-20260812-s1: 182 exterior cells are not loaded for this camera; they load when the camera reaches them.1255 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.Details by releaseExterior release manhattan-exterior-cells-20260811-v3-s1: 1255 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.Exterior geometry for 389 verified buildings is not drawn: the matching base building record is not loaded, so there is no verified WGS84 anchor for it. It will be drawn once that base record loads.Show the 389 building IDsdoitt:1007398, doitt:102102, doitt:1022592, doitt:10245, doitt:1024738, doitt:103248, doitt:103427, doitt:1043606, doitt:106920, doitt:1069778, doitt:108067, doitt:108460, doitt:1087514, doitt:110043, doitt:1110850, doitt:1112075, doitt:112789, doitt:113029, doitt:1154004, doitt:115754, doitt:1159117, doitt:116809, doitt:119311, doitt:120898, doitt:1211426, doitt:1213536, doitt:121671, doitt:122069, doitt:124626, doitt:1256242, doitt:1261650, doitt:1268449, doitt:127033, doitt:1284261, doitt:128552, doitt:128738, doitt:1287481, doitt:1287482, doitt:1287483, doitt:129226, doitt:1293206, doitt:1300755, doitt:1305620, doitt:1306311, doitt:133131, doitt:133817, doitt:136382, doitt:13783, doitt:137970, doitt:138549, doitt:14304, doitt:145100, doitt:145367, doitt:147888, doitt:150632, doitt:151572, doitt:154030, doitt:154384, doitt:154398, doitt:158870, doitt:162323, doitt:163311, doitt:165761, doitt:167063, doitt:168225, doitt:171960, doitt:179239, doitt:179339, doitt:180190, doitt:180763, doitt:18250, doitt:185037, doitt:185749, doitt:187623, doitt:198324, doitt:198566, doitt:200775, doitt:202828, doitt:203463, doitt:206872, doitt:209582, doitt:209797, doitt:2102, doitt:210973, doitt:21344, doitt:2154, doitt:219942, doitt:221335, doitt:223803, doitt:226302, doitt:231325, doitt:232732, doitt:239946, doitt:242993, doitt:24722, doitt:248475, doitt:248942, doitt:249380, doitt:249642, doitt:252339, doitt:256418, doitt:259324, doitt:265194, doitt:265477, doitt:265571, doitt:268417, doitt:268520, doitt:268700, doitt:271558, doitt:273938, doitt:274657, doitt:277584, doitt:279685, doitt:284248, doitt:284397, doitt:288074, doitt:29423, doitt:295510, doitt:297, doitt:298519, doitt:302422, doitt:307124, doitt:307252, doitt:307701, doitt:308471, doitt:309256, doitt:31386, doitt:314109, doitt:317719, doitt:319191, doitt:32289, doitt:32408, doitt:324128, doitt:326349, doitt:328779, doitt:329963, doitt:330001, doitt:333955, doitt:335049, doitt:335586, doitt:336903, doitt:337333, doitt:339149, doitt:347429, doitt:351273, doitt:353666, doitt:353834, doitt:361466, doitt:361886, doitt:361919, doitt:364760, doitt:365512, doitt:366136, doitt:371144, doitt:376321, doitt:376795, doitt:377885, doitt:386622, doitt:387324, doitt:387532, doitt:391552, doitt:394269, doitt:398648, doitt:399877, doitt:402307, doitt:403564, doitt:403746, doitt:404121, doitt:406107, doitt:406252, doitt:410103, doitt:411164, doitt:412518, doitt:"
+      },
+      "still": {
+        "file": "captures/eviction-e5-southeast.png",
+        "byteSize": 473754,
+        "sha256": "7db352bf2d333129705980820bce5e05c08a32045a139eb293bc512cdaab863a"
+      }
+    },
+    {
+      "poseId": "e6-south",
+      "pose": {
+        "poseId": "e6-south",
+        "lon": -73.982,
+        "lat": 40.7425,
+        "height": 260,
+        "heading": 225,
+        "pitch": -25,
+        "roll": 0
+      },
+      "url": "http://127.0.0.1:4191/?data=real-pilot&release=manhattan-citywide-20260804&view=free&lon=-73.982000&lat=40.742500&height=260.000000&heading=225.000000&pitch=-25.000000&roll=0.000000&feature=doitt%3A100022",
+      "landing": {
+        "dispatchCount": 1,
+        "footprintSignature": "-73.988000:40.738600:-73.982552:40.742078:-73.985276:40.740339"
+      },
+      "settleMs": 20000,
+      "decision": {
+        "hold": "none",
+        "visibleCount": 12,
+        "deferredCount": 12,
+        "retainedCount": 0,
+        "residentCount": 8,
+        "reserved": [
+          "manhattan-exterior-cell-w03-000410-17-38599-35868",
+          "manhattan-exterior-cell-w03-000445-17-38600-35868"
+        ],
+        "decisionIndex": 12,
+        "footprintSignature": "-73.988000:40.738600:-73.982552:40.742078:-73.985276:40.740339",
+        "heightBucket": 300
+      },
+      "waves": [
+        {
+          "releaseId": "manhattan-exterior-cells-20260811-v3-s1",
+          "declaredCellCount": 1,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 1,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-midtown-core-cells-20260811-v3-s1",
+          "declaredCellCount": 149,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 149,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-lower-manhattan-cells-20260812-s1",
+          "declaredCellCount": 126,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 126,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-southern-remainder-cells-20260812-s1",
+          "declaredCellCount": 176,
+          "scheduledCellCount": 8,
+          "deferredCellCount": 168,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-central-upper-manhattan-cells-20260812-s1",
+          "declaredCellCount": 249,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 249,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-northern-manhattan-cells-20260812-s1",
+          "declaredCellCount": 182,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 182,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        }
+      ],
+      "residentWaveCount": 1,
+      "scheduledCellTotal": 8,
+      "sharedCache": {
+        "cacheEntries": 379,
+        "cachedBytes": 80106830,
+        "cacheEvictions": 46,
+        "maxCacheEntries": 1024,
+        "maxCachedBytes": 268435456,
+        "activeRequests": 0,
+        "peakConcurrentRequests": 4,
+        "maxConcurrentRequests": 4,
+        "requestedArtifactCount": 20,
+        "loadedArtifactCount": 20,
+        "releasedArtifactCount": 1716,
+        "releasedArtifactBytes": 401622232,
+        "readFrom": "manhattan-exterior-cells-20260811-v3-s1",
+        "note": "SESSION-WIDE fields read from ONE wave and never summed across waves; see exterior-cell-runtime.ts."
+      },
+      "ceilings": {
+        "peakConcurrentRequests": 4,
+        "peakWithinFour": true,
+        "cacheEntries": 379,
+        "entriesWithinCap": true,
+        "cachedBytes": 80106830,
+        "bytesWithinCap": true,
+        "neverSum": "The exterior and composed probes report the SAME AggregateRequestBudget peak when a shared budget is installed. Their peaks are never summed and no combined '8' bar is registered or reported."
+      },
+      "cells": {
+        "fallbackCellCount": 0,
+        "failedCellCount": 0,
+        "failedArtifactCount": 0,
+        "clean": true
+      },
+      "selection": {
+        "length": 1774,
+        "digest": "a39e251b",
+        "head": "Building 100022OverviewLocationManhattan, New YorkCoordinates40.7541, -73.9701 (13.4 m)GeometryPolygon · normalized EPSG:4326Feature IDdoitt:100022Confidencehig"
+      },
+      "texture": {
+        "cesiumVersion": "1.143.0",
+        "exteriorReleaseIds": [
+          "manhattan-exterior-cells-20260811-v3-s1",
+          "manhattan-midtown-core-cells-20260811-v3-s1",
+          "manhattan-lower-manhattan-cells-20260812-s1",
+          "manhattan-southern-remainder-cells-20260812-s1",
+          "manhattan-central-upper-manhattan-cells-20260812-s1",
+          "manhattan-northern-manhattan-cells-20260812-s1"
+        ],
+        "exteriorStreamingActive": true,
+        "residentAssetCount": 309,
+        "reading": {
+          "texturesByteLength": 0,
+          "geometryByteLength": 0,
+          "resourceCacheEntryCount": 0
+        }
+      },
+      "notices": {
+        "present": true,
+        "items": [
+          "875 exterior cells are not loaded for this camera; they load when the camera reaches them.Details by releaseExterior release manhattan-exterior-cells-20260811-v3-s1: 1 exterior cell is not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-midtown-core-cells-20260811-v3-s1: 149 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-lower-manhattan-cells-20260812-s1: 126 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-southern-remainder-cells-20260812-s1: 168 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-central-upper-manhattan-cells-20260812-s1: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-northern-manhattan-cells-20260812-s1: 182 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-exterior-cells-20260811-v3-s1: 1 exterior cell is not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-midtown-core-cells-20260811-v3-s1: 149 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-lower-manhattan-cells-20260812-s1: 126 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-southern-remainder-cells-20260812-s1: 168 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-central-upper-manhattan-cells-20260812-s1: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-northern-manhattan-cells-20260812-s1: 182 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "1716 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.Details by releaseExterior release manhattan-exterior-cells-20260811-v3-s1: 1716 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.",
+          "Exterior release manhattan-exterior-cells-20260811-v3-s1: 1716 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.",
+          "Exterior geometry for 309 verified buildings is not drawn: the matching base building record is not loaded, so there is no verified WGS84 anchor for it. It will be drawn once that base record loads.Show the 309 building IDsdoitt:101621, doitt:105267, doitt:10767, doitt:1083, doitt:1087216, doitt:10946, doitt:109991, doitt:1106100, doitt:1114315, doitt:1115385, doitt:111766, doitt:1117932, doitt:1118341, doitt:1119014, doitt:113453, doitt:1155722, doitt:116656, doitt:117980, doitt:118484, doitt:123400, doitt:1260323, doitt:1260815, doitt:126105, doitt:126638, doitt:1268668, doitt:1273168, doitt:127680, doitt:1279443, doitt:1283669, doitt:128455, doitt:1284682, doitt:12861, doitt:1288133, doitt:1288290, doitt:1290458, doitt:1290461, doitt:1294809, doitt:1305455, doitt:136160, doitt:13655, doitt:138326, doitt:139249, doitt:146146, doitt:148752, doitt:156063, doitt:159905, doitt:160150, doitt:160355, doitt:160781, doitt:163126, doitt:165165, doitt:168194, doitt:169987, doitt:170904, doitt:174734, doitt:179723, doitt:181019, doitt:183622, doitt:185660, doitt:194347, doitt:194642, doitt:194802, doitt:195139, doitt:198369, doitt:202972, doitt:204150, doitt:208824, doitt:210018, doitt:212444, doitt:2127, doitt:215975, doitt:2170, doitt:21833, doitt:221578, doitt:223210, doitt:233453, doitt:238192, doitt:246088, doitt:248251, doitt:258951, doitt:259125, doitt:259239, doitt:26031, doitt:262027, doitt:264150, doitt:265757, doitt:270721, doitt:27121, doitt:276319, doitt:281797, doitt:282146, doitt:28567, doitt:285974, doitt:292214, doitt:29253, doitt:295930, doitt:299613, doitt:301584, doitt:313275, doitt:313563, doitt:313781, doitt:314653, doitt:315042, doitt:323299, doitt:331310, doitt:343837, doitt:345037, doitt:345056, doitt:34674, doitt:348072, doitt:348114, doitt:362270, doitt:362787, doitt:364069, doitt:364750, doitt:366434, doitt:368018, doitt:36907, doitt:369345, doitt:372837, doitt:374603, doitt:374818, doitt:376084, doitt:376691, doitt:380702, doitt:385658, doitt:385665, doitt:386052, doitt:394884, doitt:395681, doitt:398031, doitt:398035, doitt:398647, doitt:403689, doitt:406011, doitt:41012, doitt:410567, doitt:414706, doitt:417402, doitt:419098, doitt:421186, doitt:424370, doitt:426121, doitt:428096, doitt:428503, doitt:429358, doitt:430036, doitt:432671, doitt:436256, doitt:442232, doitt:44407, doitt:44549, doitt:448742, doitt:451362, doitt:452968, doitt:453311, doitt:454788, doitt:459546, doitt:461897, doitt:466938, doitt:467682, doitt:46822, doitt:468884, doitt:469025, doitt:480792, doitt:481817, doitt:481993, doitt:485002, doitt:487694, doitt:490968, doitt:493645, doitt:496673, doitt:497017, doitt:502262, doitt:504120, doitt:504412, doitt:510493, doitt:511219, doitt:514423, doitt:516298, doitt:516575, doitt:520404, doitt:527117, doitt:542959, doitt:549382, doitt:549737, doitt:551094, doitt:554300, doitt:55674, doitt:55859, doitt:559773, doitt:565246, doitt:566608, doitt:567502, doitt:569330, doitt:576573, doitt:579297, doitt:579750, doitt:582083, doitt:585106, doitt:588579, doitt:589077, doitt:591780, doitt:593657, doitt:595487, doitt:597798, doitt:598943, doitt:603055, doitt:605630, doitt:606465, doitt:607544, doitt:607636, doitt:610295, doitt:615549, doitt:619969, doitt:62303, doitt:624798, doitt:630331, doitt:632613, doitt:632676, doitt:634840, doitt:635977, doitt:636753, doitt:639224, doitt:640475, doitt:641790, doitt:642717, doitt:643527, doitt:643627, doitt:650184, doitt:651925, doitt:654280, doitt:660915, doitt:661355, doitt:662367, doitt:662785, doitt:663501, doitt:664064, doitt:666471, doitt:671764, doitt:67196, doitt:679869, doitt:682475, doitt:687316, doitt:688626, doitt:688808, doitt:690384, doitt:691168, doitt:692892, doitt:696385, doitt:699436, doitt:701872, doitt:702743, doitt:707848, doitt:709998, doitt:71159, doitt:722175, doitt:725510, doitt:729378, doitt:729580, doitt:730580, doitt:734457, doitt:738005, doitt:741211, doitt:747632, doitt:753954, doitt:754641, doitt:75674, doitt:762061, doitt:763316, doitt:764351, doitt:76593, doitt:767004, doitt:772614, doitt:77671, doitt:778298, doitt:778315, doitt:778517, doitt:781216, doitt:783896, doitt:788350, doitt:789067, doitt:790714, doitt:794688, doitt:796112, doitt:805017, doitt:805490, doitt:80791, doitt:815945, doitt:822736, doitt:822900, doitt:823325, doitt:825991, doitt:828695, doitt:836910, doitt:841679, doitt:84780, doitt:848159, doitt:849316, doitt:853274, doitt:867730, doitt:879352, doitt:89840, doitt:939822, doitt:950164, doitt:954036, doitt:958708, doitt:989435, doitt:996671"
+        ],
+        "text": "Exterior streaming fallback Dismiss875 exterior cells are not loaded for this camera; they load when the camera reaches them.Details by releaseExterior release manhattan-exterior-cells-20260811-v3-s1: 1 exterior cell is not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-midtown-core-cells-20260811-v3-s1: 149 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-lower-manhattan-cells-20260812-s1: 126 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-southern-remainder-cells-20260812-s1: 168 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-central-upper-manhattan-cells-20260812-s1: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-northern-manhattan-cells-20260812-s1: 182 exterior cells are not loaded for this camera; they load when the camera reaches them.1716 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.Details by releaseExterior release manhattan-exterior-cells-20260811-v3-s1: 1716 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.Exterior geometry for 309 verified buildings is not drawn: the matching base building record is not loaded, so there is no verified WGS84 anchor for it. It will be drawn once that base record loads.Show the 309 building IDsdoitt:101621, doitt:105267, doitt:10767, doitt:1083, doitt:1087216, doitt:10946, doitt:109991, doitt:1106100, doitt:1114315, doitt:1115385, doitt:111766, doitt:1117932, doitt:1118341, doitt:1119014, doitt:113453, doitt:1155722, doitt:116656, doitt:117980, doitt:118484, doitt:123400, doitt:1260323, doitt:1260815, doitt:126105, doitt:126638, doitt:1268668, doitt:1273168, doitt:127680, doitt:1279443, doitt:1283669, doitt:128455, doitt:1284682, doitt:12861, doitt:1288133, doitt:1288290, doitt:1290458, doitt:1290461, doitt:1294809, doitt:1305455, doitt:136160, doitt:13655, doitt:138326, doitt:139249, doitt:146146, doitt:148752, doitt:156063, doitt:159905, doitt:160150, doitt:160355, doitt:160781, doitt:163126, doitt:165165, doitt:168194, doitt:169987, doitt:170904, doitt:174734, doitt:179723, doitt:181019, doitt:183622, doitt:185660, doitt:194347, doitt:194642, doitt:194802, doitt:195139, doitt:198369, doitt:202972, doitt:204150, doitt:208824, doitt:210018, doitt:212444, doitt:2127, doitt:215975, doitt:2170, doitt:21833, doitt:221578, doitt:223210, doitt:233453, doitt:238192, doitt:246088, doitt:248251, doitt:258951, doitt:259125, doitt:259239, doitt:26031, doitt:262027, doitt:264150, doitt:265757, doitt:270721, doitt:27121, doitt:276319, doitt:281797, doitt:282146, doitt:28567, doitt:285974, doitt:292214, doitt:29253, doitt:295930, doitt:299613, doitt:301584, doitt:313275, doitt:313563, doitt:313781, doitt:314653, doitt:315042, doitt:323299, doitt:331310, doitt:343837, doitt:345037, doitt:345056, doitt:34674, doitt:348072, doitt:348114, doitt:362270, doitt:362787, doitt:364069, doitt:364750, doitt:366434, doitt:368018, doitt:36907, doitt:369345, doitt:372837, doitt:374603, doitt:374818, doitt:376084, doitt:376691, doitt:380702, doitt:385658, doitt:385665, doitt:386052, doitt:394884, doitt:395681, doitt:398031, doitt:398035, doitt:398647, doitt:403689, doitt:406011, doitt:41012, doitt:410567, doitt:414706, doitt:417402, doitt:419098, doitt:421186, doitt:424370, doitt:426121, doitt:428096, doitt:428503, doitt:429358, doitt:430036, doitt:432671, doitt:436256, doitt:442232, doitt:44407, doitt:44549, doitt:448742, doitt:451362, doitt:452968, doitt:453311, doitt:454788, doitt:459546, doitt:461897, doitt:466938, doitt:467682, doitt:46822, doitt:468884, doitt:469025, doitt:480792, doitt:481817, doitt:481993, doitt:485002, doitt:487694, doitt:490968, doitt:493645, doitt:496673, doitt:497017, doitt:502262"
+      },
+      "still": {
+        "file": "captures/eviction-e6-south.png",
+        "byteSize": 646406,
+        "sha256": "5740c262f74e88f1f7abd75b7416e10cf946f8793e37c80452fca01b00b3dab1"
+      }
+    },
+    {
+      "poseId": "e7-southwest",
+      "pose": {
+        "poseId": "e7-southwest",
+        "lon": -73.991,
+        "lat": 40.744,
+        "height": 260,
+        "heading": 315,
+        "pitch": -25,
+        "roll": 0
+      },
+      "url": "http://127.0.0.1:4191/?data=real-pilot&release=manhattan-citywide-20260804&view=free&lon=-73.991000&lat=40.744000&height=260.000000&heading=315.000000&pitch=-25.000000&roll=0.000000&feature=doitt%3A100022",
+      "landing": {
+        "dispatchCount": 1,
+        "footprintSignature": "-73.997000:40.744420:-73.991554:40.747900:-73.994277:40.746160"
+      },
+      "settleMs": 20000,
+      "decision": {
+        "hold": "none",
+        "visibleCount": 7,
+        "deferredCount": 7,
+        "retainedCount": 1,
+        "residentCount": 8,
+        "reserved": [
+          "manhattan-exterior-cell-w03-000401-17-38596-35867"
+        ],
+        "decisionIndex": 13,
+        "footprintSignature": "-73.997000:40.744420:-73.991554:40.747900:-73.994277:40.746160",
+        "heightBucket": 300
+      },
+      "waves": [
+        {
+          "releaseId": "manhattan-exterior-cells-20260811-v3-s1",
+          "declaredCellCount": 1,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 1,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-midtown-core-cells-20260811-v3-s1",
+          "declaredCellCount": 149,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 149,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-lower-manhattan-cells-20260812-s1",
+          "declaredCellCount": 126,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 126,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-southern-remainder-cells-20260812-s1",
+          "declaredCellCount": 176,
+          "scheduledCellCount": 8,
+          "deferredCellCount": 168,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-central-upper-manhattan-cells-20260812-s1",
+          "declaredCellCount": 249,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 249,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-northern-manhattan-cells-20260812-s1",
+          "declaredCellCount": 182,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 182,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        }
+      ],
+      "residentWaveCount": 1,
+      "scheduledCellTotal": 8,
+      "sharedCache": {
+        "cacheEntries": 474,
+        "cachedBytes": 104930504,
+        "cacheEvictions": 46,
+        "maxCacheEntries": 1024,
+        "maxCachedBytes": 268435456,
+        "activeRequests": 0,
+        "peakConcurrentRequests": 4,
+        "maxConcurrentRequests": 4,
+        "requestedArtifactCount": 20,
+        "loadedArtifactCount": 20,
+        "releasedArtifactCount": 2015,
+        "releasedArtifactBytes": 438032996,
+        "readFrom": "manhattan-exterior-cells-20260811-v3-s1",
+        "note": "SESSION-WIDE fields read from ONE wave and never summed across waves; see exterior-cell-runtime.ts."
+      },
+      "ceilings": {
+        "peakConcurrentRequests": 4,
+        "peakWithinFour": true,
+        "cacheEntries": 474,
+        "entriesWithinCap": true,
+        "cachedBytes": 104930504,
+        "bytesWithinCap": true,
+        "neverSum": "The exterior and composed probes report the SAME AggregateRequestBudget peak when a shared budget is installed. Their peaks are never summed and no combined '8' bar is registered or reported."
+      },
+      "cells": {
+        "fallbackCellCount": 0,
+        "failedCellCount": 0,
+        "failedArtifactCount": 0,
+        "clean": true
+      },
+      "selection": {
+        "length": 1774,
+        "digest": "a39e251b",
+        "head": "Building 100022OverviewLocationManhattan, New YorkCoordinates40.7541, -73.9701 (13.4 m)GeometryPolygon · normalized EPSG:4326Feature IDdoitt:100022Confidencehig"
+      },
+      "texture": {
+        "cesiumVersion": "1.143.0",
+        "exteriorReleaseIds": [
+          "manhattan-exterior-cells-20260811-v3-s1",
+          "manhattan-midtown-core-cells-20260811-v3-s1",
+          "manhattan-lower-manhattan-cells-20260812-s1",
+          "manhattan-southern-remainder-cells-20260812-s1",
+          "manhattan-central-upper-manhattan-cells-20260812-s1",
+          "manhattan-northern-manhattan-cells-20260812-s1"
+        ],
+        "exteriorStreamingActive": true,
+        "residentAssetCount": 390,
+        "reading": {
+          "texturesByteLength": 0,
+          "geometryByteLength": 0,
+          "resourceCacheEntryCount": 0
+        }
+      },
+      "notices": {
+        "present": true,
+        "items": [
+          "875 exterior cells are not loaded for this camera; they load when the camera reaches them.Details by releaseExterior release manhattan-exterior-cells-20260811-v3-s1: 1 exterior cell is not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-midtown-core-cells-20260811-v3-s1: 149 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-lower-manhattan-cells-20260812-s1: 126 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-southern-remainder-cells-20260812-s1: 168 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-central-upper-manhattan-cells-20260812-s1: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-northern-manhattan-cells-20260812-s1: 182 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-exterior-cells-20260811-v3-s1: 1 exterior cell is not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-midtown-core-cells-20260811-v3-s1: 149 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-lower-manhattan-cells-20260812-s1: 126 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-southern-remainder-cells-20260812-s1: 168 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-central-upper-manhattan-cells-20260812-s1: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-northern-manhattan-cells-20260812-s1: 182 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "2015 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.Details by releaseExterior release manhattan-exterior-cells-20260811-v3-s1: 2015 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.",
+          "Exterior release manhattan-exterior-cells-20260811-v3-s1: 2015 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.",
+          "Exterior geometry for 390 verified buildings is not drawn: the matching base building record is not loaded, so there is no verified WGS84 anchor for it. It will be drawn once that base record loads.Show the 390 building IDsdoitt:1001203, doitt:1014385, doitt:1015183, doitt:1025657, doitt:1026073, doitt:104711, doitt:105277, doitt:1054549, doitt:1070031, doitt:1075771, doitt:1076223, doitt:10767, doitt:1081732, doitt:1090768, doitt:1106424, doitt:1106425, doitt:1108004, doitt:1108006, doitt:1114308, doitt:1114402, doitt:1114663, doitt:1117469, doitt:1117751, doitt:1118890, doitt:1119071, doitt:1157406, doitt:116061, doitt:1206431, doitt:120856, doitt:1224762, doitt:1255845, doitt:1260814, doitt:126349, doitt:1272516, doitt:1273168, doitt:1273275, doitt:12806, doitt:1282288, doitt:1284463, doitt:1284464, doitt:1288603, doitt:1290984, doitt:1293802, doitt:1295538, doitt:1296557, doitt:1297495, doitt:1298166, doitt:1298168, doitt:1300375, doitt:1303290, doitt:1303329, doitt:1305061, doitt:14030, doitt:141713, doitt:14240, doitt:148924, doitt:149787, doitt:151674, doitt:154457, doitt:155649, doitt:156392, doitt:158303, doitt:160057, doitt:161884, doitt:163766, doitt:164922, doitt:1677, doitt:168270, doitt:168880, doitt:172681, doitt:175606, doitt:183462, doitt:186613, doitt:188152, doitt:189331, doitt:18970, doitt:19168, doitt:193746, doitt:196437, doitt:196640, doitt:199188, doitt:202819, doitt:202839, doitt:206957, doitt:21270, doitt:223149, doitt:225526, doitt:226398, doitt:226975, doitt:232703, doitt:232855, doitt:237118, doitt:240605, doitt:241402, doitt:243315, doitt:243586, doitt:243590, doitt:246791, doitt:249256, doitt:249720, doitt:256199, doitt:260005, doitt:2631, doitt:264150, doitt:267262, doitt:26825, doitt:269287, doitt:273517, doitt:273953, doitt:277879, doitt:280211, doitt:281972, doitt:284817, doitt:28763, doitt:288230, doitt:28919, doitt:292676, doitt:298999, doitt:301584, doitt:307647, doitt:307730, doitt:313078, doitt:315531, doitt:316978, doitt:317370, doitt:320354, doitt:321474, doitt:322251, doitt:323299, doitt:328374, doitt:333724, doitt:343622, doitt:344554, doitt:348365, doitt:353218, doitt:353727, doitt:355887, doitt:356919, doitt:359052, doitt:361098, doitt:363897, doitt:364350, doitt:365923, doitt:366945, doitt:370120, doitt:372421, doitt:375385, doitt:377729, doitt:38050, doitt:38133, doitt:387729, doitt:394065, doitt:394235, doitt:397112, doitt:39805, doitt:39955, doitt:403173, doitt:405568, doitt:405796, doitt:409232, doitt:410946, doitt:411435, doitt:416662, doitt:42155, doitt:422010, doitt:423270, doitt:423869, doitt:426258, doitt:428632, doitt:430860, doitt:431553, doitt:432965, doitt:436225, doitt:437622, doitt:438648, doitt:438916, doitt:439560, doitt:443368, doitt:443636, doitt:443957, doitt:44716, doitt:453485, doitt:456186, doitt:457939, doitt:460633, doitt:463810, doitt:471485, doitt:472605, doitt:474442, doitt:47512, doitt:477328, doitt:478492, doitt:478716, doitt:482657, doitt:483027, doitt:483052, doitt:484776, doitt:485174, doitt:485351, doitt:486376, doitt:488499, doitt:493389, doitt:494708, doitt:495835, doitt:500248, doitt:504933, doitt:506194, doitt:50656, doitt:507381, doitt:512743, doitt:513546, doitt:516828, doitt:518823, doitt:518958, doitt:524523, doitt:524859, doitt:526644, doitt:526761, doitt:527117, doitt:529750, doitt:532602, doitt:532805, doitt:534695, doitt:538091, doitt:538655, doitt:540182, doitt:542690, doitt:543227, doitt:546863, doitt:548591, doitt:560679, doitt:563541, doitt:565997, doitt:567495, doitt:568839, doitt:570353, doitt:570654, doitt:570829, doitt:571788, doitt:572024, doitt:572476, doitt:572544, doitt:574526, doitt:577308, doitt:580644, doitt:588781, doitt:596647, doitt:59953, doitt:601762, doitt:604745, doitt:608477, doitt:611499, doitt:612798, doitt:619083, doitt:619454, doitt:620727, doitt:623890, doitt:623906, doitt:628060, doitt:628190, doitt:632385, doitt:633670, doitt:634706, doitt:635977, doitt:637993, doitt:641061, doitt:645540, doitt:645889, doitt:647122, doitt:651342, doitt:653033, doitt:653292, doitt:655487, doitt:657345, doitt:66233, doitt:662367, doitt:662787, doitt:665657, doitt:66781, doitt:668399, doitt:669279, doitt:673024, doitt:673292, doitt:676232, doitt:676475, doitt:676825, doitt:681776, doitt:690384, doitt:690926, doitt:691168, doitt:692541, doitt:692788, doitt:693884, doitt:694381, doitt:696293, doitt:699459, doitt:700074, doitt:7015, doitt:703629, doitt:706737, doitt:710785, doitt:716784, doitt:718565, doitt:718811, doitt:71883, doitt:720067, doitt:720892, doitt:725202, doitt:725333, doitt:731625, doitt:733612, doitt:736108, doitt:742396, doitt:748743, doitt:749164, doitt:754222, doitt:760020, doitt:761776, doitt:763165, doitt:764765, doitt:765251, doitt:766308, doitt:767113, doitt:770894, doitt:771923, doitt:772270, doitt:774544, doitt:775508, doitt:775902, doitt:777783, doitt:77791, doitt:778603, doitt:794287, doitt:794868, doitt:798590, doitt:799805, doitt:800773, doitt:804999, doitt:805362, doitt:805577, doitt:807736, doitt:808245, doitt:809141, doitt:810100, doitt:811496, doitt:813596, doitt:814320, doitt:814505, doitt:817209, doitt:817901, doitt:823554, doitt:824701, doitt:826955, doitt:828585, doitt:83269, doitt:835144, doitt:836027, doitt:836112, doitt:843203, doitt:84332, doitt:845222, doitt:845245, doitt:84585, doitt:852506, doitt:852580, doitt:86474, doitt:87207, doitt:92398, doitt:93381, doitt:945929, doitt:94593, doitt:945969, doitt:94965, doitt:950033, doitt:952115, doitt:952117, doitt:95456, doitt:96281, doitt:966399, doitt:974227, doitt:978327, doitt:978387, doitt:978442, doitt:990153, doitt:996646, doitt:996652, doitt:996655, doitt:996656, doitt:996659, doitt:996664"
+        ],
+        "text": "Exterior streaming fallback Dismiss875 exterior cells are not loaded for this camera; they load when the camera reaches them.Details by releaseExterior release manhattan-exterior-cells-20260811-v3-s1: 1 exterior cell is not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-midtown-core-cells-20260811-v3-s1: 149 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-lower-manhattan-cells-20260812-s1: 126 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-southern-remainder-cells-20260812-s1: 168 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-central-upper-manhattan-cells-20260812-s1: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-northern-manhattan-cells-20260812-s1: 182 exterior cells are not loaded for this camera; they load when the camera reaches them.2015 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.Details by releaseExterior release manhattan-exterior-cells-20260811-v3-s1: 2015 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.Exterior geometry for 390 verified buildings is not drawn: the matching base building record is not loaded, so there is no verified WGS84 anchor for it. It will be drawn once that base record loads.Show the 390 building IDsdoitt:1001203, doitt:1014385, doitt:1015183, doitt:1025657, doitt:1026073, doitt:104711, doitt:105277, doitt:1054549, doitt:1070031, doitt:1075771, doitt:1076223, doitt:10767, doitt:1081732, doitt:1090768, doitt:1106424, doitt:1106425, doitt:1108004, doitt:1108006, doitt:1114308, doitt:1114402, doitt:1114663, doitt:1117469, doitt:1117751, doitt:1118890, doitt:1119071, doitt:1157406, doitt:116061, doitt:1206431, doitt:120856, doitt:1224762, doitt:1255845, doitt:1260814, doitt:126349, doitt:1272516, doitt:1273168, doitt:1273275, doitt:12806, doitt:1282288, doitt:1284463, doitt:1284464, doitt:1288603, doitt:1290984, doitt:1293802, doitt:1295538, doitt:1296557, doitt:1297495, doitt:1298166, doitt:1298168, doitt:1300375, doitt:1303290, doitt:1303329, doitt:1305061, doitt:14030, doitt:141713, doitt:14240, doitt:148924, doitt:149787, doitt:151674, doitt:154457, doitt:155649, doitt:156392, doitt:158303, doitt:160057, doitt:161884, doitt:163766, doitt:164922, doitt:1677, doitt:168270, doitt:168880, doitt:172681, doitt:175606, doitt:183462, doitt:186613, doitt:188152, doitt:189331, doitt:18970, doitt:19168, doitt:193746, doitt:196437, doitt:196640, doitt:199188, doitt:202819, doitt:202839, doitt:206957, doitt:21270, doitt:223149, doitt:225526, doitt:226398, doitt:226975, doitt:232703, doitt:232855, doitt:237118, doitt:240605, doitt:241402, doitt:243315, doitt:243586, doitt:243590, doitt:246791, doitt:249256, doitt:249720, doitt:256199, doitt:260005, doitt:2631, doitt:264150, doitt:267262, doitt:26825, doitt:269287, doitt:273517, doitt:273953, doitt:277879, doitt:280211, doitt:281972, doitt:284817, doitt:28763, doitt:288230, doitt:28919, doitt:292676, doitt:298999, doitt:301584, doitt:307647, doitt:307730, doitt:313078, doitt:315531, doitt:316978, doitt:317370, doitt:320354, doitt:321474, doitt:322251, doitt:323299, doitt:328374, doitt:333724, doitt:343622, doitt:344554, doitt:348365, doitt:353218, doitt:353727, doitt:355887, doitt:356919, doitt:359052, doitt:361098, doitt:363897, doitt:364350, doitt:365923, doitt:366945, doitt:370120, doitt:372421, doitt:375385, doitt:377729, doitt:38050, doitt:38133, doitt:387729, doitt:394065, doitt:394235, doitt:397112, doitt:39805, doitt:39955, doitt:403173, doitt:405568, doitt:405796, doitt:409232, doitt:410946, doitt:411435, doitt:416662, doitt:42155, doitt:422010, doitt:423270, doitt:423869, doitt:426258, doitt:428632, doitt:430860, doitt:431553, doitt:432965, "
+      },
+      "still": {
+        "file": "captures/eviction-e7-southwest.png",
+        "byteSize": 626316,
+        "sha256": "717d19ef486984c5bb52171fd4010e0682b0c75cb78006610880dc0f9244f966"
+      }
+    },
+    {
+      "poseId": "e8-anchor-return",
+      "pose": {
+        "poseId": "e8-anchor-return",
+        "lon": -73.98636,
+        "lat": 40.748775,
+        "height": 260,
+        "heading": 45,
+        "pitch": -25,
+        "roll": 0
+      },
+      "url": "http://127.0.0.1:4191/?data=real-pilot&release=manhattan-citywide-20260804&view=free&lon=-73.986360&lat=40.748775&height=260.000000&heading=45.000000&pitch=-25.000000&roll=0.000000&feature=doitt%3A100022",
+      "landing": {
+        "dispatchCount": 1,
+        "footprintSignature": "-73.985808:40.749197:-73.980360:40.752675:-73.983084:40.750936"
+      },
+      "settleMs": 20000,
+      "decision": {
+        "hold": "none",
+        "visibleCount": 12,
+        "deferredCount": 12,
+        "retainedCount": 0,
+        "residentCount": 8,
+        "reserved": [
+          "manhattan-exterior-cell-w00-000000-block-00835",
+          "manhattan-exterior-cell-w01-000031-17-38598-35863"
+        ],
+        "decisionIndex": 14,
+        "footprintSignature": "-73.985808:40.749197:-73.980360:40.752675:-73.983084:40.750936",
+        "heightBucket": 300
+      },
+      "waves": [
+        {
+          "releaseId": "manhattan-exterior-cells-20260811-v3-s1",
+          "declaredCellCount": 1,
+          "scheduledCellCount": 1,
+          "deferredCellCount": 0,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-midtown-core-cells-20260811-v3-s1",
+          "declaredCellCount": 149,
+          "scheduledCellCount": 7,
+          "deferredCellCount": 142,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-lower-manhattan-cells-20260812-s1",
+          "declaredCellCount": 126,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 126,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-southern-remainder-cells-20260812-s1",
+          "declaredCellCount": 176,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 176,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-central-upper-manhattan-cells-20260812-s1",
+          "declaredCellCount": 249,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 249,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-northern-manhattan-cells-20260812-s1",
+          "declaredCellCount": 182,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 182,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        }
+      ],
+      "residentWaveCount": 2,
+      "scheduledCellTotal": 8,
+      "sharedCache": {
+        "cacheEntries": 377,
+        "cachedBytes": 127031433,
+        "cacheEvictions": 46,
+        "maxCacheEntries": 1024,
+        "maxCachedBytes": 268435456,
+        "activeRequests": 0,
+        "peakConcurrentRequests": 4,
+        "maxConcurrentRequests": 4,
+        "requestedArtifactCount": 36,
+        "loadedArtifactCount": 36,
+        "releasedArtifactCount": 2405,
+        "releasedArtifactBytes": 497947856,
+        "readFrom": "manhattan-exterior-cells-20260811-v3-s1",
+        "note": "SESSION-WIDE fields read from ONE wave and never summed across waves; see exterior-cell-runtime.ts."
+      },
+      "ceilings": {
+        "peakConcurrentRequests": 4,
+        "peakWithinFour": true,
+        "cacheEntries": 377,
+        "entriesWithinCap": true,
+        "cachedBytes": 127031433,
+        "bytesWithinCap": true,
+        "neverSum": "The exterior and composed probes report the SAME AggregateRequestBudget peak when a shared budget is installed. Their peaks are never summed and no combined '8' bar is registered or reported."
+      },
+      "cells": {
+        "fallbackCellCount": 0,
+        "failedCellCount": 0,
+        "failedArtifactCount": 0,
+        "clean": true
+      },
+      "selection": {
+        "length": 1774,
+        "digest": "a39e251b",
+        "head": "Building 100022OverviewLocationManhattan, New YorkCoordinates40.7541, -73.9701 (13.4 m)GeometryPolygon · normalized EPSG:4326Feature IDdoitt:100022Confidencehig"
+      },
+      "texture": {
+        "cesiumVersion": "1.143.0",
+        "exteriorReleaseIds": [
+          "manhattan-exterior-cells-20260811-v3-s1",
+          "manhattan-midtown-core-cells-20260811-v3-s1",
+          "manhattan-lower-manhattan-cells-20260812-s1",
+          "manhattan-southern-remainder-cells-20260812-s1",
+          "manhattan-central-upper-manhattan-cells-20260812-s1",
+          "manhattan-northern-manhattan-cells-20260812-s1"
+        ],
+        "exteriorStreamingActive": true,
+        "residentAssetCount": 277,
+        "reading": {
+          "texturesByteLength": 699048,
+          "geometryByteLength": 73851688,
+          "resourceCacheEntryCount": 7445
+        }
+      },
+      "notices": {
+        "present": true,
+        "items": [
+          "875 exterior cells are not loaded for this camera; they load when the camera reaches them.Details by releaseExterior release manhattan-midtown-core-cells-20260811-v3-s1: 142 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-lower-manhattan-cells-20260812-s1: 126 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-southern-remainder-cells-20260812-s1: 176 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-central-upper-manhattan-cells-20260812-s1: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-northern-manhattan-cells-20260812-s1: 182 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-midtown-core-cells-20260811-v3-s1: 142 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-lower-manhattan-cells-20260812-s1: 126 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-southern-remainder-cells-20260812-s1: 176 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-central-upper-manhattan-cells-20260812-s1: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-northern-manhattan-cells-20260812-s1: 182 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "2405 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.Details by releaseExterior release manhattan-exterior-cells-20260811-v3-s1: 2405 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.",
+          "Exterior release manhattan-exterior-cells-20260811-v3-s1: 2405 exterior artifacts were released to stay within the session cache budget; they reload on re-entry."
+        ],
+        "text": "Exterior streaming fallback Dismiss875 exterior cells are not loaded for this camera; they load when the camera reaches them.Details by releaseExterior release manhattan-midtown-core-cells-20260811-v3-s1: 142 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-lower-manhattan-cells-20260812-s1: 126 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-southern-remainder-cells-20260812-s1: 176 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-central-upper-manhattan-cells-20260812-s1: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-northern-manhattan-cells-20260812-s1: 182 exterior cells are not loaded for this camera; they load when the camera reaches them.2405 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.Details by releaseExterior release manhattan-exterior-cells-20260811-v3-s1: 2405 exterior artifacts were released to stay within the session cache budget; they reload on re-entry."
+      },
+      "still": {
+        "file": "captures/eviction-e8-anchor-return.png",
+        "byteSize": 748264,
+        "sha256": "cd67b526054b0db1b63eb8da0943c5f4440736027ea93f026bfd8c7625faae07"
+      }
+    }
+  ],
+  "gates": {
+    "E-1a": {
+      "rule": "cacheEvictions > 0 must be observed somewhere in the loop. The comparison condition is BYTE-IDENTICAL to the T005 condition that failed to observe eviction (data/exterior-serving-20260817/eviction-at-scale.json, findings.evictionsObserved === false, cacheEvictions === 0): same counter, same probe, same reading, different route.",
+      "maxCacheEvictions": 46,
+      "evictionsByStop": [
+        {
+          "poseId": "e1-anchor",
+          "cacheEvictions": 0
+        },
+        {
+          "poseId": "e2-north",
+          "cacheEvictions": 0
+        },
+        {
+          "poseId": "e3-northeast",
+          "cacheEvictions": 46
+        },
+        {
+          "poseId": "e4-east",
+          "cacheEvictions": 46
+        },
+        {
+          "poseId": "e5-southeast",
+          "cacheEvictions": 46
+        },
+        {
+          "poseId": "e6-south",
+          "cacheEvictions": 46
+        },
+        {
+          "poseId": "e7-southwest",
+          "cacheEvictions": 46
+        },
+        {
+          "poseId": "e8-anchor-return",
+          "cacheEvictions": 46
+        }
+      ],
+      "pass": true
+    },
+    "E-1b": {
+      "rule": "At the RETURN stop (e8-anchor-return): failedCellCount === 0 AND fallbackCellCount === 0 AND failedArtifactCount === 0. Every re-admitted byte is re-verified against the same declared size and SHA-256 by the runtime, so a clean re-entry IS a byte-identical re-entry; the gate names that inference rather than implying a separate byte comparison was made.",
+      "returnStop": "e8-anchor-return",
+      "fallbackCellCount": 0,
+      "failedCellCount": 0,
+      "failedArtifactCount": 0,
+      "clean": true,
+      "pass": true
+    },
+    "E-1c": {
+      "rule": "peakConcurrentRequests <= 4 at every stop.",
+      "maxPeakConcurrentRequests": 4,
+      "pass": true
+    },
+    "E-1d": {
+      "rule": "cacheEntries <= 1024 AND cachedBytes <= 268435456 at every stop.",
+      "maxCacheEntries": 515,
+      "maxCachedBytes": 181452451,
+      "caps": {
+        "maxCacheEntries": 1024,
+        "maxCachedBytes": 268435456
+      },
+      "pass": true
+    },
+    "E-1e": {
+      "rule": "Selection identity across the eviction cycle: the details-panel digest at e1-anchor and at e8-anchor-return must be EQUAL and BOTH NON-NULL.",
+      "selector": "aside.inspector[aria-label=\"Selected feature details\"]",
+      "whyNonNullIsRegistered": "T005 recorded selectionDigestFirstVisit: null and selectionDigestAfterReEntry: null and reported selectionStableAcrossEviction: false. Two nulls are EQUAL, so an equality-only rule would have been silently satisfied by an instrument that read nothing. The non-null conjunct is what makes this gate capable of failing. The null itself was an instrument defect: the old selector was [role=\"complementary\"], and the panel carries an IMPLICIT complementary role via <aside>, which a CSS attribute selector cannot match.",
+      "selectionDigestFirstVisit": "a39e251b",
+      "selectionDigestAfterReEntry": "a39e251b",
+      "selectionLengthFirstVisit": 1774,
+      "selectionLengthAfterReEntry": 1774,
+      "bothNonNull": true,
+      "equal": true,
+      "pass": true
+    },
+    "E-1f": {
+      "rule": "CARRIED VERBATIM, not closed: 'A CANVAS PICK on the re-admitted mesh was not captured. The selection above is reached through a ?feature= deep link against the canonical base identity set, so it shows the same building resolving to the same sourced information across an eviction cycle; it does not show that a mouse click on the re-admitted geometry returns that identity. That is a real gap and is named rather than approximated.'",
+      "source": "data/exterior-serving-20260817/eviction-at-scale.json, field uncapturedGap",
+      "carriedVerbatim": true
+    }
+  },
+  "forcingArgument": {
+    "claimUnderTest": "A stationary anchor cannot force an eviction; eviction is reachable only in transit.",
+    "falsifyingCondition": "A stationary stop with cacheEvictions > 0 and a scheduledCellCount at or below 8.",
+    "falsifyingStops": [
+      {
+        "poseId": "e3-northeast",
+        "scheduledCellTotal": 8,
+        "cacheEvictions": 46
+      }
+    ],
+    "falsified": true,
+    "statement": "FALSIFIED BY THIS CAPTURE. One or more stops evicted while holding no more than the scheduler's hard cap of 8 resident units. The pre-registered forcing argument is WRONG and this record says so rather than reinterpreting the stop as transit."
+  },
+  "externalHosts": [],
+  "claim": "A closed eight-pose loop through the midtown neighbourhood on the six-wave default session, with a deep-linked selection applied before the roam. It states whether eviction is reachable in transit, whether re-entry is clean, and whether the same building resolves to the same sourced information across the cycle.",
+  "uncapturedGap": "CARRIED VERBATIM, not closed: 'A CANVAS PICK on the re-admitted mesh was not captured. The selection above is reached through a ?feature= deep link against the canonical base identity set, so it shows the same building resolving to the same sourced information across an eviction cycle; it does not show that a mouse click on the re-admitted geometry returns that identity. That is a real gap and is named rather than approximated.'"
+}

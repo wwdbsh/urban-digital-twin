@@ -1,0 +1,53 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "exterior-acceptance-20260817:chrome-cleanup",
+  "task": "T006",
+  "artifact": "chrome-cleanup",
+  "userDataDir": "/tmp/t005-serving-chrome",
+  "rule": "T008 discipline: a scratch user-data-dir per capture session, killed after, with the surviving-process count READ rather than assumed and recorded as a number.",
+  "statement": "One row per capture session, appended by the instrument at the moment it killed its own scratch Chrome. pgrep is run AFTER the kill and its line count is the number recorded; zero is the only clean value and a non-zero value is recorded rather than retried away.",
+  "sessions": [
+    {
+      "session": "campaign-control:vsync-on",
+      "at": "2026-08-17T01:14:23.271Z",
+      "vsyncMode": "vsync-on",
+      "survivingChromeProcessCount": 0
+    },
+    {
+      "session": "campaign-control:vsync-off",
+      "at": "2026-08-17T01:14:37.588Z",
+      "vsyncMode": "vsync-off",
+      "survivingChromeProcessCount": 0
+    },
+    {
+      "session": "campaign-frames",
+      "at": "2026-08-17T01:20:44.076Z",
+      "vsyncMode": "vsync-on",
+      "survivingChromeProcessCount": 0
+    },
+    {
+      "session": "campaign-headroom",
+      "at": "2026-08-17T01:27:07.674Z",
+      "vsyncMode": "vsync-off",
+      "survivingChromeProcessCount": 0
+    },
+    {
+      "session": "campaign-storm",
+      "at": "2026-08-17T01:30:34.582Z",
+      "vsyncMode": "vsync-on",
+      "survivingChromeProcessCount": 0
+    },
+    {
+      "session": "campaign-eviction",
+      "at": "2026-08-17T01:33:37.142Z",
+      "vsyncMode": "vsync-on",
+      "survivingChromeProcessCount": 0
+    },
+    {
+      "session": "campaign-lod",
+      "at": "2026-08-17T01:36:04.854Z",
+      "vsyncMode": "vsync-on",
+      "survivingChromeProcessCount": 0
+    }
+  ]
+}

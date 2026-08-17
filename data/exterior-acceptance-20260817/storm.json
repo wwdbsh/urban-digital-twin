@@ -1,0 +1,1030 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "exterior-acceptance-20260817:storm",
+  "task": "T006",
+  "artifact": "storm",
+  "capturedAt": "2026-08-17T01:30:33.014Z",
+  "attemptCount": 1,
+  "attemptPolicy": "SINGLE attempt per capture. attemptCount is recorded on every record. A capture is repeated ONLY for a NAMED instrument failure (a pre-flight abort, an M2 activeRequests violation, a pose-landing failure, a probe that never mounted), never because a reading looked wrong. The name of the failure is recorded with the attempt.",
+  "vsyncMode": "vsync-on",
+  "chromeLaunchCommand": "open -na \"Google Chrome\" --args --remote-debugging-port=9224 --user-data-dir=/tmp/t005-serving-chrome --no-first-run --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-renderer-backgrounding",
+  "chromeDiscipline": "T008 discipline: a scratch user-data-dir per capture session, killed after, with the surviving-process count READ rather than assumed and recorded as a number.",
+  "browser": "Chrome/151.0.7922.138",
+  "viewport": {
+    "width": 1440,
+    "height": 900,
+    "deviceScaleFactor": 1
+  },
+  "base": "http://127.0.0.1:4191/",
+  "servedBundle": {
+    "previewBase": "http://127.0.0.1:4191/",
+    "indexHtmlChecksumSha256": "53741f4faef414a7fc8c50c14f6b224312f2df0b06c8544b5dda95bc6bbaa561",
+    "localDistIndexHtmlChecksumSha256": "53741f4faef414a7fc8c50c14f6b224312f2df0b06c8544b5dda95bc6bbaa561",
+    "matchesLocalDist": true,
+    "entryScriptCount": 1,
+    "assets": [
+      {
+        "ref": "/assets/index-k7tDJ7RO.js",
+        "byteSize": 5827657,
+        "sha256": "6115f67cfb5b5061e5636f396d093d4647d7e2f8f0afd526be2a949502eccc16"
+      }
+    ],
+    "probeMarkers": {
+      "scheduler": "data-exterior-scheduler-probe",
+      "citywideOverview": "data-citywide-overview-probe",
+      "texture": "data-exterior-texture-probe"
+    },
+    "probeMarkersPresent": {
+      "scheduler": true,
+      "citywideOverview": true,
+      "texture": true
+    },
+    "probeBuildCommand": "VITE_EXTERIOR_SCHEDULER_PROBE=1 VITE_CITYWIDE_OVERVIEW_PROBE=1 VITE_EXTERIOR_TEXTURE_PROBE=1 pnpm build",
+    "statement": "Checked BEFORE Chrome is launched, and fail-closed on both limbs: the served index.html is byte-identical to this worktree's dist/index.html, and the served entry scripts literally contain all three probe attribute markers. The second limb exists because a probe-less bundle does not fail loudly; it reads null and produces a record full of absences."
+  },
+  "preRegistration": "data/exterior-acceptance-20260817/pre-registration.json",
+  "harnessDisclosure": "The bundle carries VITE_EXTERIOR_SCHEDULER_PROBE=1 VITE_CITYWIDE_OVERVIEW_PROBE=1 VITE_EXTERIOR_TEXTURE_PROBE=1, verified by reading the three attribute markers out of the SERVED bytes before Chrome was launched. The probes read state the app already holds and decide nothing. Chrome runs with --disable-backgrounding-occluded-windows and --disable-renderer-backgrounding because requestAnimationFrame is suspended in an occluded window; they stop the browser deciding not to render at all. Frame durations are requestAnimationFrame deltas and the first delta of each window is dropped because it spans the gap since the previous paint rather than a rendered frame.",
+  "method": {
+    "startPose": {
+      "stationId": "street-260m-midtown",
+      "lon": -73.98636,
+      "lat": 40.748775,
+      "height": 260,
+      "heading": 45,
+      "pitch": -25,
+      "roll": 0,
+      "role": "street level over the promoted midtown wave"
+    },
+    "dragCount": 12,
+    "dragDisclosure": "Flip-identical: dx = step % 2 === 0 ? -220 : 220, dy = step % 3 === 0 ? 120 : -120, from viewport centre, 10 interpolated steps 30 ms apart. Byte-identical to scripts/citywide-default-flip-campaign-cli.mjs so the two storms are comparable.",
+    "zoomExcursions": [
+      {
+        "stepId": "z1",
+        "height": 1200
+      },
+      {
+        "stepId": "z2",
+        "height": 260
+      },
+      {
+        "stepId": "z3",
+        "height": 1200
+      },
+      {
+        "stepId": "z4",
+        "height": 260
+      }
+    ],
+    "translations": [
+      {
+        "stepId": "t1",
+        "lon": -73.99016,
+        "lat": 40.744275
+      },
+      {
+        "stepId": "t2",
+        "lon": -73.99396,
+        "lat": 40.739775
+      },
+      {
+        "stepId": "t3",
+        "lon": -73.99776,
+        "lat": 40.735275
+      },
+      {
+        "stepId": "t4",
+        "lon": -74.00156,
+        "lat": 40.730775
+      },
+      {
+        "stepId": "t5",
+        "lon": -74.00536,
+        "lat": 40.726275
+      },
+      {
+        "stepId": "t6",
+        "lon": -74.00916,
+        "lat": 40.721775
+      }
+    ],
+    "stormMs": 25360,
+    "frameWindowMs": 12000,
+    "windowDisclosure": "ONE continuous 12 s rAF window opens at the first drag. If the storm outlasts it, the window covers the storm's opening phase and says so through its own sample count rather than being silently extended.",
+    "probeReadCadence": "A probe read after every third drag, after every zoom excursion and after every translation, plus a settled read before and after."
+  },
+  "gates": {
+    "S-1a": {
+      "rule": "During-storm p50 <= 16.7 ms AND p95 <= 25 ms, over the frame window that spans the drags, the zoom excursions and the translations.",
+      "stricterThanT005": "ADR 0045's flip campaign explicitly EXCLUDED its during-storm window from the frame budgets and judged only the post-storm steady state. This gate applies the strict pair to the during-storm window itself. The exclusion is resolved in the stricter direction, deliberately and in advance.",
+      "bar": {
+        "p50Ms": 16.7,
+        "p95Ms": 25
+      },
+      "duringStormFrame": {
+        "sampleCount": 1102,
+        "p50Ms": 8.4,
+        "p95Ms": 17.4,
+        "p99Ms": 33,
+        "maxMs": 125
+      },
+      "pass": true
+    },
+    "S-1b": {
+      "rule": "peakConcurrentRequests <= 4 on every probe read during the storm, AND cacheEntries <= 1024 AND cachedBytes <= 268435456 throughout.",
+      "ceilingSource": "EXTERIOR_RUNTIME_BUDGETS",
+      "ceilings": {
+        "maxConcurrent": 4,
+        "maxCacheEntries": 1024,
+        "maxCachedBytes": 268435456
+      },
+      "maxPeakConcurrentRequests": 4,
+      "maxCacheEntriesObserved": 1024,
+      "maxCachedBytesObserved": 183056897,
+      "pass": true
+    },
+    "S-1c": {
+      "rule": "fallbackCellCount === 0 AND failedCellCount === 0 AND failedArtifactCount === 0, at EVERY probe read during and after the storm.",
+      "whyItExists": "THE T005 CANCELLATION-DEFECT REGRESSION GATE. A storm cancels in-flight requests continuously by moving the camera out from under them. A cancellation that is mis-accounted as a FAILURE shows up here and nowhere else, because a settled station never cancels anything. Zero is the only passing value; a non-zero count is a real regression, not storm noise.",
+      "worst": {
+        "fallbackCellCount": 0,
+        "failedCellCount": 0,
+        "failedArtifactCount": 0
+      },
+      "pass": true
+    },
+    "S-1d": {
+      "rule": "cacheEvictions, releasedArtifactCount, releasedArtifactBytes and every exterior notice are REPORTED. No bar. They are the storm's residency story and are recorded so the next task has them.",
+      "cacheEvictionsStart": 0,
+      "cacheEvictionsEnd": 1253,
+      "releasedArtifactCountEnd": 2608,
+      "releasedArtifactBytesEnd": 376540840,
+      "notices": {
+        "present": true,
+        "items": [
+          "875 exterior cells are not loaded for this camera; they load when the camera reaches them.Details by releaseExterior release manhattan-exterior-cells-20260811-v3-s1: 1 exterior cell is not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-midtown-core-cells-20260811-v3-s1: 149 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-lower-manhattan-cells-20260812-s1: 120 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-southern-remainder-cells-20260812-s1: 174 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-central-upper-manhattan-cells-20260812-s1: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-northern-manhattan-cells-20260812-s1: 182 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-exterior-cells-20260811-v3-s1: 1 exterior cell is not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-midtown-core-cells-20260811-v3-s1: 149 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-lower-manhattan-cells-20260812-s1: 120 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-southern-remainder-cells-20260812-s1: 174 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-central-upper-manhattan-cells-20260812-s1: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-northern-manhattan-cells-20260812-s1: 182 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "2608 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.Details by releaseExterior release manhattan-exterior-cells-20260811-v3-s1: 2608 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.",
+          "Exterior release manhattan-exterior-cells-20260811-v3-s1: 2608 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.",
+          "Exterior geometry for 638 verified buildings is not drawn: the matching base building record is not loaded, so there is no verified WGS84 anchor for it. It will be drawn once that base record loads.Show the 638 building IDsdoitt:100625, doitt:101106, doitt:101240, doitt:101263, doitt:102722, doitt:1035524, doitt:107809, doitt:1078848, doitt:1081289, doitt:1084224, doitt:1105549, doitt:1106422, doitt:1106858, doitt:1108002, doitt:1108304, doitt:1108571, doitt:1108616, doitt:1110498, doitt:1111450, doitt:1111605, doitt:1111625, doitt:1113891, doitt:1115629, doitt:1115826, doitt:1116328, doitt:1155720, doitt:1158174, doitt:11583, doitt:115988, doitt:1160807, doitt:117062, doitt:117264, doitt:1203941, doitt:120502, doitt:121144, doitt:1213415, doitt:123140, doitt:1243667, doitt:1251896, doitt:1258672, doitt:1262796, doitt:1262797, doitt:1262798, doitt:1263466, doitt:126657, doitt:1268142, doitt:1268576, doitt:1268794, doitt:1272393, doitt:1273007, doitt:1273011, doitt:127874, doitt:1282498, doitt:1282736, doitt:1282737, doitt:1282738, doitt:1282739, doitt:1282740, doitt:1283687, doitt:1283688, doitt:1284465, doitt:1284466, doitt:1284469, doitt:1284471, doitt:1284473, doitt:1284515, doitt:1285174, doitt:1286145, doitt:1290514, doitt:1290773, doitt:1291909, doitt:1292498, doitt:1295693, doitt:1296043, doitt:1298883, doitt:1299061, doitt:1301202, doitt:1303736, doitt:1305944, doitt:131946, doitt:132234, doitt:13245, doitt:132617, doitt:133319, doitt:133362, doitt:13839, doitt:141176, doitt:144066, doitt:144123, doitt:144877, doitt:147111, doitt:149242, doitt:15290, doitt:160248, doitt:16090, doitt:166980, doitt:168403, doitt:168468, doitt:169092, doitt:169547, doitt:170800, doitt:173469, doitt:174927, doitt:175684, doitt:178053, doitt:178398, doitt:178912, doitt:180001, doitt:18111, doitt:18149, doitt:182307, doitt:186561, doitt:187548, doitt:187725, doitt:188114, doitt:188398, doitt:188618, doitt:188892, doitt:189563, doitt:189778, doitt:192230, doitt:193122, doitt:193443, doitt:193565, doitt:1941, doitt:195591, doitt:197020, doitt:197472, doitt:197544, doitt:198215, doitt:2001, doitt:201066, doitt:201091, doitt:203141, doitt:203218, doitt:204793, doitt:207184, doitt:207906, doitt:208808, doitt:211152, doitt:211834, doitt:212842, doitt:214387, doitt:218314, doitt:219770, doitt:220160, doitt:220696, doitt:220731, doitt:221191, doitt:221749, doitt:223065, doitt:223425, doitt:224988, doitt:226938, doitt:230991, doitt:232337, doitt:233030, doitt:233090, doitt:238163, doitt:240693, doitt:242630, doitt:243161, doitt:245060, doitt:246616, doitt:247831, doitt:248829, doitt:251758, doitt:253747, doitt:254078, doitt:254739, doitt:25497, doitt:255326, doitt:256073, doitt:256573, doitt:259583, doitt:260116, doitt:260349, doitt:261184, doitt:261191, doitt:261287, doitt:263088, doitt:264249, doitt:266172, doitt:266922, doitt:267169, doitt:269213, doitt:270646, doitt:270858, doitt:272061, doitt:272107, doitt:272346, doitt:279664, doitt:280069, doitt:283967, doitt:286786, doitt:291169, doitt:291733, doitt:293711, doitt:29802, doitt:298875, doitt:298944, doitt:299373, doitt:301756, doitt:305581, doitt:306613, doitt:30782, doitt:30830, doitt:309859, doitt:310769, doitt:311504, doitt:311703, doitt:311833, doitt:312388, doitt:31460, doitt:317352, doitt:318514, doitt:320133, doitt:320343, doitt:320414, doitt:321530, doitt:323464, doitt:329066, doitt:33275, doitt:333688, doitt:335272, doitt:336087, doitt:337319, doitt:342870, doitt:344049, doitt:344097, doitt:345235, doitt:345724, doitt:345805, doitt:347723, doitt:348520, doitt:349087, doitt:352270, doitt:353744, doitt:35617, doitt:359776, doitt:35986, doitt:360625, doitt:361699, doitt:361719, doitt:371032, doitt:372217, doitt:374973, doitt:375610, doitt:377811, doitt:37782, doitt:380367, doitt:380550, doitt:383219, doitt:387333, doitt:388039, doitt:388065, doitt:388364, doitt:389542, doitt:389731, doitt:391786, doitt:392199, doitt:392907, doitt:396620, doitt:398387, doitt:400453, doitt:40168, doitt:402999, doitt:404467, doitt:409125, doitt:412066, doitt:413579, doitt:413963, doitt:414077, doitt:414443, doitt:416713, doitt:416967, doitt:41965, doitt:420036, doitt:420141, doitt:420153, doitt:42050, doitt:423003, doitt:42348, doitt:425405, doitt:42797, doitt:428656, doitt:42928, doitt:432966, doitt:434068, doitt:436198, doitt:436298, doitt:43862, doitt:443523, doitt:449591, doitt:449790, doitt:453406, doitt:45473, doitt:454796, doitt:457128, doitt:457772, doitt:458029, doitt:458589, doitt:461757, doitt:462986, doitt:466172, doitt:466722, doitt:466931, doitt:467503, doitt:471867, doitt:471873, doitt:472897, doitt:473397, doitt:473930, doitt:475180, doitt:477290, doitt:478827, doitt:479469, doitt:480579, doitt:481739, doitt:488378, doitt:490000, doitt:49023, doitt:492919, doitt:493149, doitt:493785, doitt:495390, doitt:497114, doitt:497198, doitt:499294, doitt:501684, doitt:501819, doitt:502495, doitt:502669, doitt:503841, doitt:504808, doitt:506259, doitt:506862, doitt:507087, doitt:507940, doitt:508797, doitt:510636, doitt:510742, doitt:512385, doitt:512713, doitt:513203, doitt:516326, doitt:516433, doitt:517881, doitt:517897, doitt:518511, doitt:519184, doitt:520619, doitt:521615, doitt:521668, doitt:523024, doitt:523261, doitt:523515, doitt:525913, doitt:527445, doitt:527598, doitt:528002, doitt:529196, doitt:531494, doitt:533870, doitt:534563, doitt:535400, doitt:543366, doitt:545244, doitt:546167, doitt:546798, doitt:546964, doitt:549765, doitt:55419, doitt:55455, doitt:556871, doitt:561849, doitt:562541, doitt:56444, doitt:565041, doitt:565366, doitt:567260, doitt:568645, doitt:57102, doitt:571947, doitt:572139, doitt:576510, doitt:576933, doitt:579487, doitt:579729, doitt:581, doitt:581212, doitt:58132, doitt:58177, doitt:586939, doitt:587436, doitt:588062, doitt:588309, doitt:589948, doitt:591775, doitt:591936, doitt:593494, doitt:594514, doitt:595332, doitt:595392, doitt:597253, doitt:600524, doitt:600682, doitt:601275, doitt:606179, doitt:608505, doitt:60870, doitt:609301, doitt:609761, doitt:614581, doitt:615010, doitt:616680, doitt:617945, doitt:618948, doitt:61945, doitt:619540, doitt:61966, doitt:62162, doitt:625070, doitt:625292, doitt:626432, doitt:627210, doitt:627544, doitt:62837, doitt:631586, doitt:632843, doitt:633331, doitt:634076, doitt:634337, doitt:636436, doitt:636535, doitt:636735, doitt:637204, doitt:638604, doitt:640129, doitt:640506, doitt:641063, doitt:642211, doitt:643225, doitt:643989, doitt:645023, doitt:645356, doitt:645667, doitt:645916, doitt:647109, doitt:647937, doitt:650052, doitt:653154, doitt:653358, doitt:656353, doitt:658139, doitt:659332, doitt:661839, doitt:662433, doitt:664172, doitt:665456, doitt:66568, doitt:665806, doitt:667789, doitt:66917, doitt:669403, doitt:673313, doitt:674913, doitt:676962, doitt:678919, doitt:679158, doitt:679805, doitt:680191, doitt:680294, doitt:681201, doitt:681264, doitt:681631, doitt:681754, doitt:68229, doitt:682956, doitt:689760, doitt:689848, doitt:691922, doitt:692724, doitt:693523, doitt:694541, doitt:695217, doitt:695457, doitt:697556, doitt:700547, doitt:704362, doitt:705690, doitt:708983, doitt:709057, doitt:709258, doitt:709284, doitt:70941, doitt:712637, doitt:714371, doitt:717506, doitt:719368, doitt:719592, doitt:722404, doitt:724180, doitt:726852, doitt:727332, doitt:727773, doitt:730010, doitt:730414, doitt:731085, doitt:732743, doitt:7357, doitt:736905, doitt:736941, doitt:738618, doitt:739572, doitt:740788, doitt:741046, doitt:743640, doitt:744090, doitt:74691, doitt:747229, doitt:747392, doitt:747835, doitt:747897, doitt:748416, doitt:751402, doitt:751687, doitt:753117, doitt:753563, doitt:7555, doitt:759057, doitt:76007, doitt:761748, doitt:761890, doitt:764399, doitt:765707, doitt:76607, doitt:76738, doitt:769944, doitt:770105, doitt:770546, doitt:770681, doitt:773200, doitt:774232, doitt:774552, doitt:774564, doitt:77553, doitt:77657, doitt:777693, doitt:777971, doitt:778786, doitt:780896, doitt:784043, doitt:78502, doitt:785330, doitt:785677, doitt:786608, doitt:786731, doitt:788413, doitt:790222, doitt:790506, doitt:791234, doitt:791404, doitt:792090, doitt:796553, doitt:796664, doitt:797765, doitt:799191, doitt:800543, doitt:803844, doitt:804420, doitt:806887, doitt:807269, doitt:807796, doitt:808557, doitt:808666, doitt:808730, doitt:809857, doitt:811856, doitt:815299, doitt:815734, doitt:817028, doitt:819595, doitt:821348, doitt:821789, doitt:822530, doitt:825799, doitt:827586, doitt:827598, doitt:827803, doitt:828838, doitt:832945, doitt:834134, doitt:834600, doitt:836801, doitt:837046, doitt:838161, doitt:841088, doitt:84671, doitt:84760, doitt:848275, doitt:84851, doitt:849751, doitt:852500, doitt:85759, doitt:861373, doitt:86826, doitt:87449, doitt:90213, doitt:90858, doitt:913180, doitt:917590, doitt:934741, doitt:938277, doitt:939703, doitt:942361, doitt:945866, doitt:946572, doitt:94799, doitt:950052, doitt:950519, doitt:95276, doitt:953971, doitt:954182, doitt:95651, doitt:974226, doitt:978336, doitt:984693, doitt:987934, doitt:995640, doitt:995641, doitt:996155, doitt:996205, doitt:996210, doitt:996294, doitt:996383, doitt:996394, doitt:99748"
+        ],
+        "text": "Exterior streaming fallback Dismiss875 exterior cells are not loaded for this camera; they load when the camera reaches them.Details by releaseExterior release manhattan-exterior-cells-20260811-v3-s1: 1 exterior cell is not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-midtown-core-cells-20260811-v3-s1: 149 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-lower-manhattan-cells-20260812-s1: 120 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-southern-remainder-cells-20260812-s1: 174 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-central-upper-manhattan-cells-20260812-s1: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-northern-manhattan-cells-20260812-s1: 182 exterior cells are not loaded for this camera; they load when the camera reaches them.2608 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.Details by releaseExterior release manhattan-exterior-cells-20260811-v3-s1: 2608 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.Exterior geometry for 638 verified buildings is not drawn: the matching base building record is not loaded, so there is no verified WGS84 anchor for it. It will be drawn once that base record loads.Show the 638 building IDsdoitt:100625, doitt:101106, doitt:101240, doitt:101263, doitt:102722, doitt:1035524, doitt:107809, doitt:1078848, doitt:1081289, doitt:1084224, doitt:1105549, doitt:1106422, doitt:1106858, doitt:1108002, doitt:1108304, doitt:1108571, doitt:1108616, doitt:1110498, doitt:1111450, doitt:1111605, doitt:1111625, doitt:1113891, doitt:1115629, doitt:1115826, doitt:1116328, doitt:1155720, doitt:1158174, doitt:11583, doitt:115988, doitt:1160807, doitt:117062, doitt:117264, doitt:1203941, doitt:120502, doitt:121144, doitt:1213415, doitt:123140, doitt:1243667, doitt:1251896, doitt:1258672, doitt:1262796, doitt:1262797, doitt:1262798, doitt:1263466, doitt:126657, doitt:1268142, doitt:1268576, doitt:1268794, doitt:1272393, doitt:1273007, doitt:1273011, doitt:127874, doitt:1282498, doitt:1282736, doitt:1282737, doitt:1282738, doitt:1282739, doitt:1282740, doitt:1283687, doitt:1283688, doitt:1284465, doitt:1284466, doitt:1284469, doitt:1284471, doitt:1284473, doitt:1284515, doitt:1285174, doitt:1286145, doitt:1290514, doitt:1290773, doitt:1291909, doitt:1292498, doitt:1295693, doitt:1296043, doitt:1298883, doitt:1299061, doitt:1301202, doitt:1303736, doitt:1305944, doitt:131946, doitt:132234, doitt:13245, doitt:132617, doitt:133319, doitt:133362, doitt:13839, doitt:141176, doitt:144066, doitt:144123, doitt:144877, doitt:147111, doitt:149242, doitt:15290, doitt:160248, doitt:16090, doitt:166980, doitt:168403, doitt:168468, doitt:169092, doitt:169547, doitt:170800, doitt:173469, doitt:174927, doitt:175684, doitt:178053, doitt:178398, doitt:178912, doitt:180001, doitt:18111, doitt:18149, doitt:182307, doitt:186561, doitt:187548, doitt:187725, doitt:188114, doitt:188398, doitt:188618, doitt:188892, doitt:189563, doitt:189778, doitt:192230, doitt:193122, doitt:193443, doitt:193565, doitt:1941, doitt:195591, doitt:197020, doitt:197472, doitt:197544, doitt:198215, doitt:2001, doitt:201066, doitt:201091, doitt:203141, doitt:203218, doitt:204793, doitt:207184, doitt:207906, doitt:208808, doitt:211152, doitt:211834, doitt:212842, doitt:214387, doitt:218314, doitt:219770, doitt:220160, doitt:220696, doitt:220731, doitt:221191, doitt:221749, doitt:223065, doitt:223425, doitt:224988, doitt:226938, doitt:230991, doitt:232337, doitt:233030, doitt:233090, doitt:238163, doitt:240693, doitt:242630, doitt:243161, doitt:245060, doitt:246616, doitt:247831, doitt:248829, doitt:251758, doitt:253747, doitt:254078, doitt:254739, d"
+      }
+    },
+    "S-1e": {
+      "rule": "Zero external hosts contacted, over the whole storm session.",
+      "externalHosts": [],
+      "pass": true
+    },
+    "F4": {
+      "rule": "doubleDrawMs and totalBuildMs are REPORTED at every station and across the storm. Exceeding the 4,000 ms leg-Y bar is recorded as a named carry of D-11 with the measured value, NOT as a campaign failure. A value BELOW 4,000 ms is reported as such and does not close D-11 either, because one session is not the island-scale bounds rebuild D-11 names.",
+      "legYDoubleDrawMs": 4000,
+      "measuredDoubleDrawMs": [
+        599.0999999046326,
+        599.0999999046326,
+        97.60000002384186,
+        119,
+        119,
+        157.20000004768372,
+        157.20000004768372,
+        112.10000002384186,
+        112.10000002384186,
+        124.39999997615814,
+        124.39999997615814,
+        124.39999997615814,
+        80.19999992847443
+      ],
+      "maxDoubleDrawMs": 599.0999999046326,
+      "maxTotalBuildMs": 599.0999999046326,
+      "exceedsLegYBar": false,
+      "inheritedFrom": "ADR 0045 section 3.3 REVIVAL_BARS; the exceedance is ADR 0045 section 5.2 deferral D-11 (5,746 ms measured), carried forward unchanged by ADR 0052."
+    }
+  },
+  "postStormFrame": {
+    "sampleCount": 1440,
+    "p50Ms": 8.3,
+    "p95Ms": 10.2,
+    "p99Ms": 10.3,
+    "maxMs": 10.4,
+    "note": "A SETTLED window after the storm, reported beside the during-storm one so a reader can see recovery. S-1a is judged on the during-storm window."
+  },
+  "performanceMetricsDelta": {
+    "AdSubframes": 0,
+    "ArrayBufferContents": 4388,
+    "AudioHandlers": 0,
+    "AudioWorkletProcessors": 0,
+    "ContextLifecycleStateObservers": 2,
+    "DetachedScriptStates": 0,
+    "DevToolsCommandDuration": 0.269864,
+    "Documents": 0,
+    "DomContentLoaded": 0,
+    "FirstMeaningfulPaint": 0,
+    "Frames": 0,
+    "JSEventListeners": 2644,
+    "JSHeapTotalSize": 33128448,
+    "JSHeapUsedSize": -13055532,
+    "LayoutCount": 9,
+    "LayoutDuration": 0.001654,
+    "LayoutObjects": 11,
+    "MediaKeySessions": 0,
+    "MediaKeys": 0,
+    "NavigationStart": 0,
+    "Nodes": 29,
+    "ProcessTime": 19.403038,
+    "RTCPeerConnections": 0,
+    "RecalcStyleCount": 8,
+    "RecalcStyleDuration": 0.000945,
+    "ResourceFetchers": 0,
+    "Resources": 606,
+    "ScriptDuration": 12.452834,
+    "TaskDuration": 15.541586,
+    "TaskOtherDuration": 2.816289,
+    "ThreadTime": 15.5057,
+    "Timestamp": 25.361627,
+    "UACSSResources": 0,
+    "V8CompileDuration": 0,
+    "V8PerContextDatas": 0,
+    "WorkerGlobalScopes": 0
+  },
+  "probeReads": [
+    {
+      "phase": "before",
+      "stepId": "settled-start",
+      "at": "2026-08-17T01:29:10.448Z",
+      "decision": {
+        "residentCount": 8,
+        "visibleCount": 12,
+        "deferredCount": 4,
+        "retainedCount": 0,
+        "heightBucket": 300,
+        "footprintSignature": "-73.985808:40.749197:-73.980360:40.752675:-73.983084:40.750936"
+      },
+      "residentWaveCount": 2,
+      "sharedCache": {
+        "cacheEntries": 297,
+        "cachedBytes": 82082109,
+        "cacheEvictions": 0,
+        "maxCacheEntries": 1024,
+        "maxCachedBytes": 268435456,
+        "activeRequests": 0,
+        "peakConcurrentRequests": 4,
+        "maxConcurrentRequests": 4,
+        "requestedArtifactCount": 19,
+        "loadedArtifactCount": 19,
+        "releasedArtifactCount": 0,
+        "releasedArtifactBytes": 0,
+        "readFrom": "manhattan-exterior-cells-20260811-v3-s1",
+        "note": "SESSION-WIDE fields read from ONE wave and never summed across waves; see exterior-cell-runtime.ts."
+      },
+      "cells": {
+        "fallbackCellCount": 0,
+        "failedCellCount": 0,
+        "failedArtifactCount": 0,
+        "clean": true
+      },
+      "ceilings": {
+        "peakConcurrentRequests": 4,
+        "peakWithinFour": true,
+        "cacheEntries": 297,
+        "entriesWithinCap": true,
+        "cachedBytes": 82082109,
+        "bytesWithinCap": true,
+        "neverSum": "The exterior and composed probes report the SAME AggregateRequestBudget peak when a shared budget is installed. Their peaks are never summed and no combined '8' bar is registered or reported."
+      }
+    },
+    {
+      "phase": "drag",
+      "stepId": "d3",
+      "at": "2026-08-17T01:29:11.712Z",
+      "decision": {
+        "residentCount": 8,
+        "visibleCount": 12,
+        "deferredCount": 4,
+        "retainedCount": 0,
+        "heightBucket": 300,
+        "footprintSignature": "-73.985808:40.749197:-73.980360:40.752675:-73.983084:40.750936"
+      },
+      "residentWaveCount": 2,
+      "sharedCache": {
+        "cacheEntries": 297,
+        "cachedBytes": 82082109,
+        "cacheEvictions": 0,
+        "maxCacheEntries": 1024,
+        "maxCachedBytes": 268435456,
+        "activeRequests": 0,
+        "peakConcurrentRequests": 4,
+        "maxConcurrentRequests": 4,
+        "requestedArtifactCount": 19,
+        "loadedArtifactCount": 19,
+        "releasedArtifactCount": 0,
+        "releasedArtifactBytes": 0,
+        "readFrom": "manhattan-exterior-cells-20260811-v3-s1",
+        "note": "SESSION-WIDE fields read from ONE wave and never summed across waves; see exterior-cell-runtime.ts."
+      },
+      "cells": {
+        "fallbackCellCount": 0,
+        "failedCellCount": 0,
+        "failedArtifactCount": 0,
+        "clean": true
+      },
+      "ceilings": {
+        "peakConcurrentRequests": 4,
+        "peakWithinFour": true,
+        "cacheEntries": 297,
+        "entriesWithinCap": true,
+        "cachedBytes": 82082109,
+        "bytesWithinCap": true,
+        "neverSum": "The exterior and composed probes report the SAME AggregateRequestBudget peak when a shared budget is installed. Their peaks are never summed and no combined '8' bar is registered or reported."
+      }
+    },
+    {
+      "phase": "drag",
+      "stepId": "d6",
+      "at": "2026-08-17T01:29:13.010Z",
+      "decision": {
+        "residentCount": 8,
+        "visibleCount": 12,
+        "deferredCount": 4,
+        "retainedCount": 0,
+        "heightBucket": 300,
+        "footprintSignature": "-73.985808:40.749197:-73.980360:40.752675:-73.983084:40.750936"
+      },
+      "residentWaveCount": 2,
+      "sharedCache": {
+        "cacheEntries": 297,
+        "cachedBytes": 82082109,
+        "cacheEvictions": 0,
+        "maxCacheEntries": 1024,
+        "maxCachedBytes": 268435456,
+        "activeRequests": 0,
+        "peakConcurrentRequests": 4,
+        "maxConcurrentRequests": 4,
+        "requestedArtifactCount": 19,
+        "loadedArtifactCount": 19,
+        "releasedArtifactCount": 0,
+        "releasedArtifactBytes": 0,
+        "readFrom": "manhattan-exterior-cells-20260811-v3-s1",
+        "note": "SESSION-WIDE fields read from ONE wave and never summed across waves; see exterior-cell-runtime.ts."
+      },
+      "cells": {
+        "fallbackCellCount": 0,
+        "failedCellCount": 0,
+        "failedArtifactCount": 0,
+        "clean": true
+      },
+      "ceilings": {
+        "peakConcurrentRequests": 4,
+        "peakWithinFour": true,
+        "cacheEntries": 297,
+        "entriesWithinCap": true,
+        "cachedBytes": 82082109,
+        "bytesWithinCap": true,
+        "neverSum": "The exterior and composed probes report the SAME AggregateRequestBudget peak when a shared budget is installed. Their peaks are never summed and no combined '8' bar is registered or reported."
+      }
+    },
+    {
+      "phase": "drag",
+      "stepId": "d9",
+      "at": "2026-08-17T01:29:14.232Z",
+      "decision": {
+        "residentCount": 8,
+        "visibleCount": 12,
+        "deferredCount": 4,
+        "retainedCount": 0,
+        "heightBucket": 300,
+        "footprintSignature": "-73.985808:40.749197:-73.980360:40.752675:-73.983084:40.750936"
+      },
+      "residentWaveCount": 2,
+      "sharedCache": {
+        "cacheEntries": 297,
+        "cachedBytes": 82082109,
+        "cacheEvictions": 0,
+        "maxCacheEntries": 1024,
+        "maxCachedBytes": 268435456,
+        "activeRequests": 0,
+        "peakConcurrentRequests": 4,
+        "maxConcurrentRequests": 4,
+        "requestedArtifactCount": 19,
+        "loadedArtifactCount": 19,
+        "releasedArtifactCount": 0,
+        "releasedArtifactBytes": 0,
+        "readFrom": "manhattan-exterior-cells-20260811-v3-s1",
+        "note": "SESSION-WIDE fields read from ONE wave and never summed across waves; see exterior-cell-runtime.ts."
+      },
+      "cells": {
+        "fallbackCellCount": 0,
+        "failedCellCount": 0,
+        "failedArtifactCount": 0,
+        "clean": true
+      },
+      "ceilings": {
+        "peakConcurrentRequests": 4,
+        "peakWithinFour": true,
+        "cacheEntries": 297,
+        "entriesWithinCap": true,
+        "cachedBytes": 82082109,
+        "bytesWithinCap": true,
+        "neverSum": "The exterior and composed probes report the SAME AggregateRequestBudget peak when a shared budget is installed. Their peaks are never summed and no combined '8' bar is registered or reported."
+      }
+    },
+    {
+      "phase": "drag",
+      "stepId": "d12",
+      "at": "2026-08-17T01:29:15.434Z",
+      "decision": {
+        "residentCount": 8,
+        "visibleCount": 12,
+        "deferredCount": 4,
+        "retainedCount": 0,
+        "heightBucket": 300,
+        "footprintSignature": "-73.985808:40.749197:-73.980360:40.752675:-73.983084:40.750936"
+      },
+      "residentWaveCount": 2,
+      "sharedCache": {
+        "cacheEntries": 297,
+        "cachedBytes": 82082109,
+        "cacheEvictions": 0,
+        "maxCacheEntries": 1024,
+        "maxCachedBytes": 268435456,
+        "activeRequests": 0,
+        "peakConcurrentRequests": 4,
+        "maxConcurrentRequests": 4,
+        "requestedArtifactCount": 19,
+        "loadedArtifactCount": 19,
+        "releasedArtifactCount": 0,
+        "releasedArtifactBytes": 0,
+        "readFrom": "manhattan-exterior-cells-20260811-v3-s1",
+        "note": "SESSION-WIDE fields read from ONE wave and never summed across waves; see exterior-cell-runtime.ts."
+      },
+      "cells": {
+        "fallbackCellCount": 0,
+        "failedCellCount": 0,
+        "failedArtifactCount": 0,
+        "clean": true
+      },
+      "ceilings": {
+        "peakConcurrentRequests": 4,
+        "peakWithinFour": true,
+        "cacheEntries": 297,
+        "entriesWithinCap": true,
+        "cachedBytes": 82082109,
+        "bytesWithinCap": true,
+        "neverSum": "The exterior and composed probes report the SAME AggregateRequestBudget peak when a shared budget is installed. Their peaks are never summed and no combined '8' bar is registered or reported."
+      }
+    },
+    {
+      "phase": "zoom",
+      "stepId": "z1",
+      "at": "2026-08-17T01:29:17.569Z",
+      "decision": {
+        "residentCount": 8,
+        "visibleCount": 8,
+        "deferredCount": 8,
+        "retainedCount": 0,
+        "heightBucket": 1200,
+        "footprintSignature": "-74.001569:40.748597:-73.994392:40.752974:-73.997980:40.750786"
+      },
+      "residentWaveCount": 2,
+      "sharedCache": {
+        "cacheEntries": 405,
+        "cachedBytes": 114763279,
+        "cacheEvictions": 0,
+        "maxCacheEntries": 1024,
+        "maxCachedBytes": 268435456,
+        "activeRequests": 4,
+        "peakConcurrentRequests": 4,
+        "maxConcurrentRequests": 4,
+        "requestedArtifactCount": 19,
+        "loadedArtifactCount": 19,
+        "releasedArtifactCount": 14,
+        "releasedArtifactBytes": 7533100,
+        "readFrom": "manhattan-exterior-cells-20260811-v3-s1",
+        "note": "SESSION-WIDE fields read from ONE wave and never summed across waves; see exterior-cell-runtime.ts."
+      },
+      "cells": {
+        "fallbackCellCount": 0,
+        "failedCellCount": 0,
+        "failedArtifactCount": 0,
+        "clean": true
+      },
+      "ceilings": {
+        "peakConcurrentRequests": 4,
+        "peakWithinFour": true,
+        "cacheEntries": 405,
+        "entriesWithinCap": true,
+        "cachedBytes": 114763279,
+        "bytesWithinCap": true,
+        "neverSum": "The exterior and composed probes report the SAME AggregateRequestBudget peak when a shared budget is installed. Their peaks are never summed and no combined '8' bar is registered or reported."
+      }
+    },
+    {
+      "phase": "zoom",
+      "stepId": "z2",
+      "at": "2026-08-17T01:29:19.618Z",
+      "decision": {
+        "residentCount": 8,
+        "visibleCount": 12,
+        "deferredCount": 10,
+        "retainedCount": 0,
+        "heightBucket": 300,
+        "footprintSignature": "-73.985808:40.749197:-73.980360:40.752675:-73.983084:40.750936"
+      },
+      "residentWaveCount": 2,
+      "sharedCache": {
+        "cacheEntries": 483,
+        "cachedBytes": 147667389,
+        "cacheEvictions": 0,
+        "maxCacheEntries": 1024,
+        "maxCachedBytes": 268435456,
+        "activeRequests": 4,
+        "peakConcurrentRequests": 4,
+        "maxConcurrentRequests": 4,
+        "requestedArtifactCount": 33,
+        "loadedArtifactCount": 33,
+        "releasedArtifactCount": 14,
+        "releasedArtifactBytes": 7533100,
+        "readFrom": "manhattan-exterior-cells-20260811-v3-s1",
+        "note": "SESSION-WIDE fields read from ONE wave and never summed across waves; see exterior-cell-runtime.ts."
+      },
+      "cells": {
+        "fallbackCellCount": 0,
+        "failedCellCount": 0,
+        "failedArtifactCount": 0,
+        "clean": true
+      },
+      "ceilings": {
+        "peakConcurrentRequests": 4,
+        "peakWithinFour": true,
+        "cacheEntries": 483,
+        "entriesWithinCap": true,
+        "cachedBytes": 147667389,
+        "bytesWithinCap": true,
+        "neverSum": "The exterior and composed probes report the SAME AggregateRequestBudget peak when a shared budget is installed. Their peaks are never summed and no combined '8' bar is registered or reported."
+      }
+    },
+    {
+      "phase": "zoom",
+      "stepId": "z3",
+      "at": "2026-08-17T01:29:21.690Z",
+      "decision": {
+        "residentCount": 8,
+        "visibleCount": 13,
+        "deferredCount": 7,
+        "retainedCount": 0,
+        "heightBucket": 1200,
+        "footprintSignature": "-73.983812:40.750720:-73.976630:40.755099:-73.980221:40.752909"
+      },
+      "residentWaveCount": 2,
+      "sharedCache": {
+        "cacheEntries": 582,
+        "cachedBytes": 183056897,
+        "cacheEvictions": 0,
+        "maxCacheEntries": 1024,
+        "maxCachedBytes": 268435456,
+        "activeRequests": 0,
+        "peakConcurrentRequests": 4,
+        "maxConcurrentRequests": 4,
+        "requestedArtifactCount": 33,
+        "loadedArtifactCount": 33,
+        "releasedArtifactCount": 125,
+        "releasedArtifactBytes": 28162556,
+        "readFrom": "manhattan-exterior-cells-20260811-v3-s1",
+        "note": "SESSION-WIDE fields read from ONE wave and never summed across waves; see exterior-cell-runtime.ts."
+      },
+      "cells": {
+        "fallbackCellCount": 0,
+        "failedCellCount": 0,
+        "failedArtifactCount": 0,
+        "clean": true
+      },
+      "ceilings": {
+        "peakConcurrentRequests": 4,
+        "peakWithinFour": true,
+        "cacheEntries": 582,
+        "entriesWithinCap": true,
+        "cachedBytes": 183056897,
+        "bytesWithinCap": true,
+        "neverSum": "The exterior and composed probes report the SAME AggregateRequestBudget peak when a shared budget is installed. Their peaks are never summed and no combined '8' bar is registered or reported."
+      }
+    },
+    {
+      "phase": "zoom",
+      "stepId": "z4",
+      "at": "2026-08-17T01:29:23.769Z",
+      "decision": {
+        "residentCount": 8,
+        "visibleCount": 12,
+        "deferredCount": 6,
+        "retainedCount": 0,
+        "heightBucket": 300,
+        "footprintSignature": "-73.985808:40.749197:-73.980360:40.752675:-73.983084:40.750936"
+      },
+      "residentWaveCount": 2,
+      "sharedCache": {
+        "cacheEntries": 517,
+        "cachedBytes": 142141537,
+        "cacheEvictions": 0,
+        "maxCacheEntries": 1024,
+        "maxCachedBytes": 268435456,
+        "activeRequests": 0,
+        "peakConcurrentRequests": 4,
+        "maxConcurrentRequests": 4,
+        "requestedArtifactCount": 33,
+        "loadedArtifactCount": 33,
+        "releasedArtifactCount": 301,
+        "releasedArtifactBytes": 89707372,
+        "readFrom": "manhattan-exterior-cells-20260811-v3-s1",
+        "note": "SESSION-WIDE fields read from ONE wave and never summed across waves; see exterior-cell-runtime.ts."
+      },
+      "cells": {
+        "fallbackCellCount": 0,
+        "failedCellCount": 0,
+        "failedArtifactCount": 0,
+        "clean": true
+      },
+      "ceilings": {
+        "peakConcurrentRequests": 4,
+        "peakWithinFour": true,
+        "cacheEntries": 517,
+        "entriesWithinCap": true,
+        "cachedBytes": 142141537,
+        "bytesWithinCap": true,
+        "neverSum": "The exterior and composed probes report the SAME AggregateRequestBudget peak when a shared budget is installed. Their peaks are never summed and no combined '8' bar is registered or reported."
+      }
+    },
+    {
+      "phase": "translate",
+      "stepId": "t1",
+      "at": "2026-08-17T01:29:25.783Z",
+      "decision": {
+        "residentCount": 8,
+        "visibleCount": 16,
+        "deferredCount": 13,
+        "retainedCount": 0,
+        "heightBucket": 300,
+        "footprintSignature": "-73.989608:40.744697:-73.984160:40.748175:-73.986884:40.746436"
+      },
+      "residentWaveCount": 1,
+      "sharedCache": {
+        "cacheEntries": 248,
+        "cachedBytes": 66613847,
+        "cacheEvictions": 0,
+        "maxCacheEntries": 1024,
+        "maxCachedBytes": 268435456,
+        "activeRequests": 4,
+        "peakConcurrentRequests": 4,
+        "maxConcurrentRequests": 4,
+        "requestedArtifactCount": 33,
+        "loadedArtifactCount": 33,
+        "releasedArtifactCount": 578,
+        "releasedArtifactBytes": 165904352,
+        "readFrom": "manhattan-exterior-cells-20260811-v3-s1",
+        "note": "SESSION-WIDE fields read from ONE wave and never summed across waves; see exterior-cell-runtime.ts."
+      },
+      "cells": {
+        "fallbackCellCount": 0,
+        "failedCellCount": 0,
+        "failedArtifactCount": 0,
+        "clean": true
+      },
+      "ceilings": {
+        "peakConcurrentRequests": 4,
+        "peakWithinFour": true,
+        "cacheEntries": 248,
+        "entriesWithinCap": true,
+        "cachedBytes": 66613847,
+        "bytesWithinCap": true,
+        "neverSum": "The exterior and composed probes report the SAME AggregateRequestBudget peak when a shared budget is installed. Their peaks are never summed and no combined '8' bar is registered or reported."
+      }
+    },
+    {
+      "phase": "translate",
+      "stepId": "t2",
+      "at": "2026-08-17T01:29:27.789Z",
+      "decision": {
+        "residentCount": 8,
+        "visibleCount": 9,
+        "deferredCount": 7,
+        "retainedCount": 0,
+        "heightBucket": 300,
+        "footprintSignature": "-73.993408:40.740197:-73.987960:40.743675:-73.990684:40.741936"
+      },
+      "residentWaveCount": 1,
+      "sharedCache": {
+        "cacheEntries": 467,
+        "cachedBytes": 110443912,
+        "cacheEvictions": 0,
+        "maxCacheEntries": 1024,
+        "maxCachedBytes": 268435456,
+        "activeRequests": 4,
+        "peakConcurrentRequests": 4,
+        "maxConcurrentRequests": 4,
+        "requestedArtifactCount": 33,
+        "loadedArtifactCount": 33,
+        "releasedArtifactCount": 833,
+        "releasedArtifactBytes": 211103956,
+        "readFrom": "manhattan-exterior-cells-20260811-v3-s1",
+        "note": "SESSION-WIDE fields read from ONE wave and never summed across waves; see exterior-cell-runtime.ts."
+      },
+      "cells": {
+        "fallbackCellCount": 0,
+        "failedCellCount": 0,
+        "failedArtifactCount": 0,
+        "clean": true
+      },
+      "ceilings": {
+        "peakConcurrentRequests": 4,
+        "peakWithinFour": true,
+        "cacheEntries": 467,
+        "entriesWithinCap": true,
+        "cachedBytes": 110443912,
+        "bytesWithinCap": true,
+        "neverSum": "The exterior and composed probes report the SAME AggregateRequestBudget peak when a shared budget is installed. Their peaks are never summed and no combined '8' bar is registered or reported."
+      }
+    },
+    {
+      "phase": "translate",
+      "stepId": "t3",
+      "at": "2026-08-17T01:29:29.794Z",
+      "decision": {
+        "residentCount": 8,
+        "visibleCount": 11,
+        "deferredCount": 9,
+        "retainedCount": 0,
+        "heightBucket": 300,
+        "footprintSignature": "-73.997208:40.735697:-73.991760:40.739175:-73.994484:40.737436"
+      },
+      "residentWaveCount": 1,
+      "sharedCache": {
+        "cacheEntries": 579,
+        "cachedBytes": 126491528,
+        "cacheEvictions": 0,
+        "maxCacheEntries": 1024,
+        "maxCachedBytes": 268435456,
+        "activeRequests": 4,
+        "peakConcurrentRequests": 4,
+        "maxConcurrentRequests": 4,
+        "requestedArtifactCount": 33,
+        "loadedArtifactCount": 33,
+        "releasedArtifactCount": 833,
+        "releasedArtifactBytes": 211103956,
+        "readFrom": "manhattan-exterior-cells-20260811-v3-s1",
+        "note": "SESSION-WIDE fields read from ONE wave and never summed across waves; see exterior-cell-runtime.ts."
+      },
+      "cells": {
+        "fallbackCellCount": 0,
+        "failedCellCount": 0,
+        "failedArtifactCount": 0,
+        "clean": true
+      },
+      "ceilings": {
+        "peakConcurrentRequests": 4,
+        "peakWithinFour": true,
+        "cacheEntries": 579,
+        "entriesWithinCap": true,
+        "cachedBytes": 126491528,
+        "bytesWithinCap": true,
+        "neverSum": "The exterior and composed probes report the SAME AggregateRequestBudget peak when a shared budget is installed. Their peaks are never summed and no combined '8' bar is registered or reported."
+      }
+    },
+    {
+      "phase": "translate",
+      "stepId": "t4",
+      "at": "2026-08-17T01:29:31.798Z",
+      "decision": {
+        "residentCount": 8,
+        "visibleCount": 12,
+        "deferredCount": 11,
+        "retainedCount": 0,
+        "heightBucket": 300,
+        "footprintSignature": "-74.001008:40.731197:-73.995560:40.734675:-73.998284:40.732936"
+      },
+      "residentWaveCount": 1,
+      "sharedCache": {
+        "cacheEntries": 655,
+        "cachedBytes": 119170595,
+        "cacheEvictions": 91,
+        "maxCacheEntries": 1024,
+        "maxCachedBytes": 268435456,
+        "activeRequests": 4,
+        "peakConcurrentRequests": 4,
+        "maxConcurrentRequests": 4,
+        "requestedArtifactCount": 33,
+        "loadedArtifactCount": 33,
+        "releasedArtifactCount": 1202,
+        "releasedArtifactBytes": 266636032,
+        "readFrom": "manhattan-exterior-cells-20260811-v3-s1",
+        "note": "SESSION-WIDE fields read from ONE wave and never summed across waves; see exterior-cell-runtime.ts."
+      },
+      "cells": {
+        "fallbackCellCount": 0,
+        "failedCellCount": 0,
+        "failedArtifactCount": 0,
+        "clean": true
+      },
+      "ceilings": {
+        "peakConcurrentRequests": 4,
+        "peakWithinFour": true,
+        "cacheEntries": 655,
+        "entriesWithinCap": true,
+        "cachedBytes": 119170595,
+        "bytesWithinCap": true,
+        "neverSum": "The exterior and composed probes report the SAME AggregateRequestBudget peak when a shared budget is installed. Their peaks are never summed and no combined '8' bar is registered or reported."
+      }
+    },
+    {
+      "phase": "translate",
+      "stepId": "t5",
+      "at": "2026-08-17T01:29:33.806Z",
+      "decision": {
+        "residentCount": 8,
+        "visibleCount": 10,
+        "deferredCount": 9,
+        "retainedCount": 0,
+        "heightBucket": 300,
+        "footprintSignature": "-74.004808:40.726697:-73.999360:40.730175:-74.002084:40.728436"
+      },
+      "residentWaveCount": 2,
+      "sharedCache": {
+        "cacheEntries": 743,
+        "cachedBytes": 125965411,
+        "cacheEvictions": 91,
+        "maxCacheEntries": 1024,
+        "maxCachedBytes": 268435456,
+        "activeRequests": 4,
+        "peakConcurrentRequests": 4,
+        "maxConcurrentRequests": 4,
+        "requestedArtifactCount": 33,
+        "loadedArtifactCount": 33,
+        "releasedArtifactCount": 1202,
+        "releasedArtifactBytes": 266636032,
+        "readFrom": "manhattan-exterior-cells-20260811-v3-s1",
+        "note": "SESSION-WIDE fields read from ONE wave and never summed across waves; see exterior-cell-runtime.ts."
+      },
+      "cells": {
+        "fallbackCellCount": 0,
+        "failedCellCount": 0,
+        "failedArtifactCount": 0,
+        "clean": true
+      },
+      "ceilings": {
+        "peakConcurrentRequests": 4,
+        "peakWithinFour": true,
+        "cacheEntries": 743,
+        "entriesWithinCap": true,
+        "cachedBytes": 125965411,
+        "bytesWithinCap": true,
+        "neverSum": "The exterior and composed probes report the SAME AggregateRequestBudget peak when a shared budget is installed. Their peaks are never summed and no combined '8' bar is registered or reported."
+      }
+    },
+    {
+      "phase": "translate",
+      "stepId": "t6",
+      "at": "2026-08-17T01:29:35.812Z",
+      "decision": {
+        "residentCount": 8,
+        "visibleCount": 6,
+        "deferredCount": 5,
+        "retainedCount": 2,
+        "heightBucket": 300,
+        "footprintSignature": "-74.008608:40.722197:-74.003160:40.725675:-74.005884:40.723936"
+      },
+      "residentWaveCount": 2,
+      "sharedCache": {
+        "cacheEntries": 1024,
+        "cachedBytes": 149705977,
+        "cacheEvictions": 134,
+        "maxCacheEntries": 1024,
+        "maxCachedBytes": 268435456,
+        "activeRequests": 4,
+        "peakConcurrentRequests": 4,
+        "maxConcurrentRequests": 4,
+        "requestedArtifactCount": 33,
+        "loadedArtifactCount": 33,
+        "releasedArtifactCount": 1202,
+        "releasedArtifactBytes": 266636032,
+        "readFrom": "manhattan-exterior-cells-20260811-v3-s1",
+        "note": "SESSION-WIDE fields read from ONE wave and never summed across waves; see exterior-cell-runtime.ts."
+      },
+      "cells": {
+        "fallbackCellCount": 0,
+        "failedCellCount": 0,
+        "failedArtifactCount": 0,
+        "clean": true
+      },
+      "ceilings": {
+        "peakConcurrentRequests": 4,
+        "peakWithinFour": true,
+        "cacheEntries": 1024,
+        "entriesWithinCap": true,
+        "cachedBytes": 149705977,
+        "bytesWithinCap": true,
+        "neverSum": "The exterior and composed probes report the SAME AggregateRequestBudget peak when a shared budget is installed. Their peaks are never summed and no combined '8' bar is registered or reported."
+      }
+    },
+    {
+      "phase": "after",
+      "stepId": "settled-end",
+      "at": "2026-08-17T01:30:32.820Z",
+      "decision": {
+        "residentCount": 8,
+        "visibleCount": 6,
+        "deferredCount": 5,
+        "retainedCount": 2,
+        "heightBucket": 300,
+        "footprintSignature": "-74.008608:40.722197:-74.003160:40.725675:-74.005884:40.723936"
+      },
+      "residentWaveCount": 2,
+      "sharedCache": {
+        "cacheEntries": 492,
+        "cachedBytes": 45035212,
+        "cacheEvictions": 1253,
+        "maxCacheEntries": 1024,
+        "maxCachedBytes": 268435456,
+        "activeRequests": 0,
+        "peakConcurrentRequests": 4,
+        "maxConcurrentRequests": 4,
+        "requestedArtifactCount": 33,
+        "loadedArtifactCount": 33,
+        "releasedArtifactCount": 2608,
+        "releasedArtifactBytes": 376540840,
+        "readFrom": "manhattan-exterior-cells-20260811-v3-s1",
+        "note": "SESSION-WIDE fields read from ONE wave and never summed across waves; see exterior-cell-runtime.ts."
+      },
+      "cells": {
+        "fallbackCellCount": 0,
+        "failedCellCount": 0,
+        "failedArtifactCount": 0,
+        "clean": true
+      },
+      "ceilings": {
+        "peakConcurrentRequests": 4,
+        "peakWithinFour": true,
+        "cacheEntries": 492,
+        "entriesWithinCap": true,
+        "cachedBytes": 45035212,
+        "bytesWithinCap": true,
+        "neverSum": "The exterior and composed probes report the SAME AggregateRequestBudget peak when a shared budget is installed. Their peaks are never summed and no combined '8' bar is registered or reported."
+      }
+    }
+  ],
+  "texture": {
+    "cesiumVersion": "1.143.0",
+    "exteriorReleaseIds": [
+      "manhattan-exterior-cells-20260811-v3-s1",
+      "manhattan-midtown-core-cells-20260811-v3-s1",
+      "manhattan-lower-manhattan-cells-20260812-s1",
+      "manhattan-southern-remainder-cells-20260812-s1",
+      "manhattan-central-upper-manhattan-cells-20260812-s1",
+      "manhattan-northern-manhattan-cells-20260812-s1"
+    ],
+    "exteriorStreamingActive": true,
+    "residentAssetCount": 638,
+    "reading": {
+      "texturesByteLength": 0,
+      "geometryByteLength": 0,
+      "resourceCacheEntryCount": 0
+    }
+  },
+  "denseSampleCount": 15,
+  "still": {
+    "file": "captures/storm-end.png",
+    "byteSize": 757431,
+    "sha256": "c055e49e31220353990367242c826aec19cddfb56afdc4fa36b79976e4a4f614"
+  },
+  "networkFailures": [
+    {
+      "kind": "http-error",
+      "url": "http://127.0.0.1:4191/favicon.ico",
+      "status": 404,
+      "statusText": "Not Found"
+    },
+    {
+      "kind": "loading-failed",
+      "url": "http://127.0.0.1:4191/data/manhattan-midtown-core-cells-20260811-v3-s1/public/assets/doitt-10125__lod_0.glb",
+      "errorText": "net::ERR_ABORTED",
+      "canceled": true,
+      "blockedReason": null
+    },
+    {
+      "kind": "loading-failed",
+      "url": "http://127.0.0.1:4191/data/manhattan-midtown-core-cells-20260811-v3-s1/public/assets/doitt-101157__lod_0.glb",
+      "errorText": "net::ERR_ABORTED",
+      "canceled": true,
+      "blockedReason": null
+    },
+    {
+      "kind": "loading-failed",
+      "url": "http://127.0.0.1:4191/data/manhattan-midtown-core-cells-20260811-v3-s1/public/assets/doitt-628606__lod_0.glb",
+      "errorText": "net::ERR_ABORTED",
+      "canceled": true,
+      "blockedReason": null
+    }
+  ],
+  "networkFailureCount": 4,
+  "claim": "A pan/zoom/translate storm on the six-wave default session, with the FULL strict frame pair applied to the during-storm window itself. It is one storm on one machine and it makes no visual claim beyond the still it carries."
+}

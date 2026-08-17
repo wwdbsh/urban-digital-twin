@@ -1,0 +1,203 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "exterior-acceptance-20260817:lod-l1",
+  "task": "T006",
+  "artifact": "lod-l1",
+  "capturedAt": "2026-08-17T01:36:03.278Z",
+  "attemptCount": 1,
+  "attemptPolicy": "SINGLE attempt per capture. attemptCount is recorded on every record. A capture is repeated ONLY for a NAMED instrument failure (a pre-flight abort, an M2 activeRequests violation, a pose-landing failure, a probe that never mounted), never because a reading looked wrong. The name of the failure is recorded with the attempt.",
+  "vsyncMode": "vsync-on",
+  "chromeLaunchCommand": "open -na \"Google Chrome\" --args --remote-debugging-port=9224 --user-data-dir=/tmp/t005-serving-chrome --no-first-run --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-renderer-backgrounding",
+  "chromeDiscipline": "T008 discipline: a scratch user-data-dir per capture session, killed after, with the surviving-process count READ rather than assumed and recorded as a number.",
+  "browser": "Chrome/151.0.7922.138",
+  "viewport": {
+    "width": 1440,
+    "height": 900,
+    "deviceScaleFactor": 1
+  },
+  "base": "http://127.0.0.1:4191/",
+  "servedBundle": {
+    "previewBase": "http://127.0.0.1:4191/",
+    "indexHtmlChecksumSha256": "53741f4faef414a7fc8c50c14f6b224312f2df0b06c8544b5dda95bc6bbaa561",
+    "localDistIndexHtmlChecksumSha256": "53741f4faef414a7fc8c50c14f6b224312f2df0b06c8544b5dda95bc6bbaa561",
+    "matchesLocalDist": true,
+    "entryScriptCount": 1,
+    "assets": [
+      {
+        "ref": "/assets/index-k7tDJ7RO.js",
+        "byteSize": 5827657,
+        "sha256": "6115f67cfb5b5061e5636f396d093d4647d7e2f8f0afd526be2a949502eccc16"
+      }
+    ],
+    "probeMarkers": {
+      "scheduler": "data-exterior-scheduler-probe",
+      "citywideOverview": "data-citywide-overview-probe",
+      "texture": "data-exterior-texture-probe"
+    },
+    "probeMarkersPresent": {
+      "scheduler": true,
+      "citywideOverview": true,
+      "texture": true
+    },
+    "probeBuildCommand": "VITE_EXTERIOR_SCHEDULER_PROBE=1 VITE_CITYWIDE_OVERVIEW_PROBE=1 VITE_EXTERIOR_TEXTURE_PROBE=1 pnpm build",
+    "statement": "Checked BEFORE Chrome is launched, and fail-closed on both limbs: the served index.html is byte-identical to this worktree's dist/index.html, and the served entry scripts literally contain all three probe attribute markers. The second limb exists because a probe-less bundle does not fail loudly; it reads null and produces a record full of absences."
+  },
+  "preRegistration": "data/exterior-acceptance-20260817/pre-registration.json",
+  "harnessDisclosure": "The bundle carries VITE_EXTERIOR_SCHEDULER_PROBE=1 VITE_CITYWIDE_OVERVIEW_PROBE=1 VITE_EXTERIOR_TEXTURE_PROBE=1, verified by reading the three attribute markers out of the SERVED bytes before Chrome was launched. The probes read state the app already holds and decide nothing. Chrome runs with --disable-backgrounding-occluded-windows and --disable-renderer-backgrounding because requestAnimationFrame is suspended in an occluded window; they stop the browser deciding not to render at all. Frame durations are requestAnimationFrame deltas and the first delta of each window is dropped because it spans the gap since the previous paint rather than a rendered frame.",
+  "gate": {
+    "gateId": "L1",
+    "releaseId": "manhattan-exterior-cells-20260811-v3",
+    "buildingCount": 14,
+    "stillHeightsM": [
+      300,
+      200
+    ],
+    "profile": "inspection",
+    "lodSeamMeters": 250,
+    "heightBucketingDisclosure": "selectExteriorLod receives Math.max(50, Math.round(height / 100) * 100), not a true camera-to-asset distance. The still heights are chosen so the BUCKETED values (200 and 300) straddle the 250 m seam.",
+    "lodIdReadMethod": "Scrape the <dd> following <dt>Active asset</dt> inside aside.inspector[aria-label=\"Selected feature details\"] and split on \" · \". No probe exposes lodId; this is the only surface, and the campaign records that rather than adding one.",
+    "rule": "With a feature selected on the Block 835 -v3 opt-in under the inspection profile, capture rendered stills at bucketed heights 200 m and 300 m at the BLOCK_835_CAMERA pose family and read the selected lodId at each. PASS if the lodId is lod_0 at 200 m, lod_1 at 300 m, and both stills render and differ by checksum.",
+    "claim": "The lod_0-to-lod_1 transition MECHANISM renders, demonstrated on the only distinguished LOD pair addressable by the running app: 14 buildings in one opt-in release.",
+    "explicitlyNotDischarging": "AC #4. Criterion #4 requires the 2% key-silhouette gate on stratified samples PER WAVE, measured on rendered evidence. Fourteen buildings in one opt-in release is not a per-wave stratified sample of six waves, and this gate does not claim to be one.",
+    "selection": {
+      "featureId": "doitt:778052",
+      "relativeRef": "public/assets/doitt-778052__lod_0.glb",
+      "byteSize": 3716836,
+      "lodPairCount": 14
+    },
+    "readings": [
+      {
+        "heightMeters": 300,
+        "bucketedHeightMeters": 300,
+        "expectedLodId": "lod_1",
+        "url": "http://127.0.0.1:4191/?data=real-pilot&release=manhattan-citywide-20260804&view=free&exteriorCells=manhattan-exterior-cells-20260811-v3&lon=-73.986360&lat=40.748775&height=300.000000&heading=0.000000&pitch=-45.000000&roll=0.000000&feature=doitt%3A778052&exteriorProfile=inspection",
+        "landing": {
+          "dispatchCount": 12,
+          "footprintSignature": null,
+          "landed": false
+        },
+        "activeAsset": {
+          "panelPresent": true,
+          "lodId": "lod_1",
+          "checksumSha256": "8397c16d946de1912a0ec17fb7d750833bd9888be99b8e298832f6960f139bc3",
+          "raw": "lod_1 · 8397c16d946de1912a0ec17fb7d750833bd9888be99b8e298832f6960f139bc3"
+        },
+        "decision": {
+          "hold": "none",
+          "visibleCount": 16,
+          "deferredCount": 8,
+          "retainedCount": 0,
+          "residentCount": 8,
+          "reserved": [
+            "manhattan-exterior-cell-w00-000000-block-00835",
+            "manhattan-exterior-cell-w01-000031-17-38598-35863"
+          ],
+          "decisionIndex": 4,
+          "footprintSignature": "-73.990762:40.750105:-73.981965:40.754272:-73.986363:40.752189",
+          "heightBucket": 300
+        },
+        "waves": [
+          {
+            "releaseId": "manhattan-exterior-cells-20260811-v3",
+            "declaredCellCount": 1,
+            "scheduledCellCount": 1,
+            "deferredCellCount": 0,
+            "notShippedCellCount": 0,
+            "fallbackCellCount": 0,
+            "failedCellCount": 0,
+            "failedArtifactCount": 0
+          }
+        ],
+        "texture": {
+          "cesiumVersion": "1.143.0",
+          "exteriorReleaseIds": [
+            "manhattan-exterior-cells-20260811-v3"
+          ],
+          "exteriorStreamingActive": true,
+          "residentAssetCount": 14,
+          "reading": {
+            "texturesByteLength": 0,
+            "geometryByteLength": 1824984,
+            "resourceCacheEntryCount": 248
+          }
+        },
+        "still": {
+          "file": "captures/lod-300m.png",
+          "byteSize": 253330,
+          "sha256": "8ee7fc2e3516d984ed2443d814ec05ca7838267f90fc8c2a5a02614d9428e344"
+        }
+      },
+      {
+        "heightMeters": 200,
+        "bucketedHeightMeters": 200,
+        "expectedLodId": "lod_0",
+        "url": "http://127.0.0.1:4191/?data=real-pilot&release=manhattan-citywide-20260804&view=free&exteriorCells=manhattan-exterior-cells-20260811-v3&lon=-73.986360&lat=40.748775&height=200.000000&heading=0.000000&pitch=-45.000000&roll=0.000000&feature=doitt%3A778052&exteriorProfile=inspection",
+        "landing": {
+          "dispatchCount": 1,
+          "footprintSignature": "-73.989294:40.749662:-73.983430:40.752440:-73.986362:40.751051"
+        },
+        "activeAsset": {
+          "panelPresent": true,
+          "lodId": "lod_0",
+          "checksumSha256": "df4ca50a533bc4db16a28da6607eed1559ec7b31ac5f6d40da7aa8ee5886d39f",
+          "raw": "lod_0 · df4ca50a533bc4db16a28da6607eed1559ec7b31ac5f6d40da7aa8ee5886d39f"
+        },
+        "decision": {
+          "hold": "none",
+          "visibleCount": 11,
+          "deferredCount": 3,
+          "retainedCount": 0,
+          "residentCount": 8,
+          "reserved": [
+            "manhattan-exterior-cell-w00-000000-block-00835",
+            "manhattan-exterior-cell-w01-000031-17-38598-35863"
+          ],
+          "decisionIndex": 6,
+          "footprintSignature": "-73.989294:40.749662:-73.983430:40.752440:-73.986362:40.751051",
+          "heightBucket": 200
+        },
+        "waves": [
+          {
+            "releaseId": "manhattan-exterior-cells-20260811-v3",
+            "declaredCellCount": 1,
+            "scheduledCellCount": 1,
+            "deferredCellCount": 0,
+            "notShippedCellCount": 0,
+            "fallbackCellCount": 0,
+            "failedCellCount": 0,
+            "failedArtifactCount": 0
+          }
+        ],
+        "texture": {
+          "cesiumVersion": "1.143.0",
+          "exteriorReleaseIds": [
+            "manhattan-exterior-cells-20260811-v3"
+          ],
+          "exteriorStreamingActive": true,
+          "residentAssetCount": 14,
+          "reading": {
+            "texturesByteLength": 0,
+            "geometryByteLength": 0,
+            "resourceCacheEntryCount": 14
+          }
+        },
+        "still": {
+          "file": "captures/lod-200m.png",
+          "byteSize": 242962,
+          "sha256": "6c37b9c393440ee9b20c524c4e8850eddeec5b064fa5b113c3fd2bda481f4e93"
+        }
+      }
+    ],
+    "lodIdAt200m": "lod_0",
+    "lodIdAt300m": "lod_1",
+    "stillSha256At200m": "6c37b9c393440ee9b20c524c4e8850eddeec5b064fa5b113c3fd2bda481f4e93",
+    "stillSha256At300m": "8ee7fc2e3516d984ed2443d814ec05ca7838267f90fc8c2a5a02614d9428e344",
+    "stillsRendered": true,
+    "stillsDifferByChecksum": true,
+    "lodSelectionCorrect": true,
+    "pass": true
+  },
+  "claim": "The lod_0-to-lod_1 transition MECHANISM renders, demonstrated on the only distinguished LOD pair addressable by the running app: 14 buildings in one opt-in release.",
+  "explicitlyNotDischarging": "AC #4. Criterion #4 requires the 2% key-silhouette gate on stratified samples PER WAVE, measured on rendered evidence. Fourteen buildings in one opt-in release is not a per-wave stratified sample of six waves, and this gate does not claim to be one.",
+  "externalHosts": []
+}

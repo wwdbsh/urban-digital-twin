@@ -1,4 +1,4 @@
-/* global console, process, fetch, WebSocket, URL, setTimeout, clearTimeout */
+/* global console, process, fetch, WebSocket, URL, setTimeout, clearTimeout, Buffer */
 /**
  * The T005 C5 SESSION evidence: what a browser does with a wave served in full.
  *
@@ -43,14 +43,50 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 
-import { sha256HexSync } from "../src/domain/deterministic-hash.ts";
+import { sha256HexBytes, sha256HexSync } from "../src/domain/deterministic-hash.ts";
 import { exteriorServingFrameVerdict, framePercentile } from "../src/runtime/exterior-serving-frame-bar.ts";
 import { EXTERIOR_SERVING_EVIDENCE_ID, exteriorServingWave } from "../src/release/exterior-serving-waves.ts";
 import { EXTERIOR_RUNTIME_BUDGETS } from "../src/runtime/exterior-cell-runtime.ts";
+import { predictedTextureByteLength, validateGpuTextureProbe } from "../src/features/explorer/gpu-texture-probe.ts";
+import {
+  BLOCK_835_CAMERA,
+  BLOCK_835_V3_RELEASE_ID,
+  CACHE_CEILINGS,
+  CAMPAIGN_DISCIPLINE,
+  CAMPAIGN_EVIDENCE_ID,
+  EVICTION_GATES,
+  EVICTION_LOOP,
+  EXPECTED_TEXTURE_BYTE_LENGTH,
+  EXPECTED_UNIQUE_TILE_COUNT,
+  FRAME_F1,
+  FRAME_F2,
+  FRAME_F4,
+  GPU_GATES,
+  HEADROOM_H1,
+  HEADROOM_H2,
+  LOD_L1,
+  REQUEST_CEILINGS,
+  STATIONS,
+  STORM_S1,
+  STORM_TRANSLATIONS,
+  STORM_ZOOM_EXCURSIONS,
+  TEXTURE_TOLERANCE_TILES,
+} from "./exterior-acceptance-campaign-constants.mjs";
 
 const run = promisify(execFile);
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const evidenceRoot = join(repositoryRoot, "data", EXTERIOR_SERVING_EVIDENCE_ID);
+/**
+ * The dated evidence root every command writes under.
+ *
+ * MUTABLE, and it has to be. This instrument's historical root
+ * (`data/exterior-serving-20260817/`) holds the T005 records the T006 campaign
+ * COMPARES ITSELF AGAINST — `eviction-at-scale.json` is the byte-identical
+ * baseline gate E-1a is defined against, and overwriting it would delete the
+ * thing the new reading is a reading against. `--out=` moves the write target
+ * to the campaign's own dated root; the default is unchanged, so every command
+ * that existed before this flag behaves exactly as it did.
+ */
+let evidenceRoot = join(repositoryRoot, "data", EXTERIOR_SERVING_EVIDENCE_ID);
 
 const PORT = 9224;
 const USER_DATA_DIR = "/tmp/t005-serving-chrome";
@@ -68,7 +104,33 @@ const USER_DATA_DIR = "/tmp/t005-serving-chrome";
  * backgrounding disabled is not identical to one taken without it, and a reader
  * is entitled to know which they are looking at.
  */
-const CHROME_LAUNCH_COMMAND = `open -na "Google Chrome" --args --remote-debugging-port=${PORT} --user-data-dir=${USER_DATA_DIR} --no-first-run --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-renderer-backgrounding`;
+const BASE_CHROME_FLAGS = [
+  `--remote-debugging-port=${PORT}`,
+  `--user-data-dir=${USER_DATA_DIR}`,
+  "--no-first-run",
+  "--disable-background-timer-throttling",
+  "--disable-backgrounding-occluded-windows",
+  "--disable-renderer-backgrounding",
+];
+/**
+ * H1's UNCAPPING FLAGS, and the reason they are a separate arm rather than a
+ * default.
+ *
+ * `--disable-gpu-vsync --disable-frame-rate-limit` let the renderer present as
+ * fast as it can, which is the only way to ask what the scene costs when the
+ * display is not the answer. It is NOT what a user sees, so the arm they select
+ * is registered non-gating (HEADROOM_H1) and no frame criterion may be
+ * discharged from it. The flags are named in every record captured under them.
+ */
+const VSYNC_OFF_FLAGS = HEADROOM_H1.launchFlags;
+/** `vsync-on` (the shipped default) or `vsync-off` (the H1 arm). */
+let vsyncMode = "vsync-on";
+function chromeFlags() {
+  return vsyncMode === "vsync-off" ? [...BASE_CHROME_FLAGS, ...VSYNC_OFF_FLAGS] : [...BASE_CHROME_FLAGS];
+}
+function chromeLaunchCommand() {
+  return `open -na "Google Chrome" --args ${chromeFlags().join(" ")}`;
+}
 const VIEWPORT = { width: 1440, height: 900, deviceScaleFactor: 1 };
 const READY_TIMEOUT_MS = 300_000;
 const EVALUATE_TIMEOUT_MS = 120_000;
@@ -171,12 +233,38 @@ class CdpSession {
     }
     return failures;
   }
+  /** A rendered still, as PNG bytes. What-is-drawn evidence for AC #8. */
+  async screenshot(what = "still") {
+    const shot = await withTimeout(this.send("Page.captureScreenshot", { format: "png" }), EVALUATE_TIMEOUT_MS, what);
+    return Buffer.from(shot.data, "base64");
+  }
+
+  /**
+   * H2: `Performance.getMetrics`, as a flat name -> value map.
+   *
+   * These are RENDERER-PROCESS COUNTERS, not a GPU query, and the campaign
+   * records DELTAS across a frame window rather than absolutes so a reader sees
+   * the work attributable to the window instead of the session's whole history.
+   * They are never reconciled into the rAF series; they are a second,
+   * independent view of the same window.
+   */
+  async metrics() {
+    const result = await withTimeout(this.send("Performance.getMetrics"), EVALUATE_TIMEOUT_MS, "Performance.getMetrics");
+    return Object.fromEntries((result.metrics ?? []).map((metric) => [metric.name, metric.value]));
+  }
+
   close() { try { this.socket.close(); } catch { /* already gone */ } }
+}
+
+/** `after - before`, over the union of both keys. Absolutes are never quoted. */
+function metricsDelta(before, after) {
+  const names = [...new Set([...Object.keys(before ?? {}), ...Object.keys(after ?? {})])].sort();
+  return Object.fromEntries(names.map((name) => [name, Number((((after?.[name] ?? 0) - (before?.[name] ?? 0))).toFixed(6))]));
 }
 
 async function attach(initialUrl) {
   const listResponse = await fetch(`http://127.0.0.1:${PORT}/json/new?${encodeURIComponent(initialUrl)}`, { method: "PUT" }).catch(() => null);
-  if (!listResponse?.ok) fail(`could not open a tab on debugging port ${PORT}; the scratch Chrome did not come up. Launch line: ${CHROME_LAUNCH_COMMAND}`);
+  if (!listResponse?.ok) fail(`could not open a tab on debugging port ${PORT}; the scratch Chrome did not come up. Launch line: ${chromeLaunchCommand()}`);
   const target = await listResponse.json();
   const socket = new WebSocket(target.webSocketDebuggerUrl);
   await new Promise((resolvePromise, rejectPromise) => {
@@ -187,13 +275,17 @@ async function attach(initialUrl) {
   await session.send("Page.enable");
   await session.send("Runtime.enable");
   await session.send("Network.enable");
+  // H2. Enabled unconditionally: the domain only starts an accounting feed, it
+  // changes nothing about what is rendered, and a command that does not read it
+  // simply never calls `metrics()`.
+  await session.send("Performance.enable").catch(() => null);
   await session.send("Emulation.setDeviceMetricsOverride", { ...VIEWPORT, mobile: false });
   await session.send("Page.bringToFront").catch(() => null);
   return { session, targetId: target.id };
 }
 
 async function launchChrome() {
-  await run("/bin/sh", ["-c", CHROME_LAUNCH_COMMAND]);
+  await run("/bin/sh", ["-c", chromeLaunchCommand()]);
   const deadline = Date.now() + 60_000;
   for (;;) {
     const probe = await fetch(`http://127.0.0.1:${PORT}/json/version`).catch(() => null);
@@ -240,8 +332,47 @@ const READ_SCHEDULER_PROBE = `(() => {
     exteriorStreamingActive: probe.exteriorStreamingActive,
     decision: probe.decision,
     traceLength: probe.traceLength,
+    // F4's two numbers ride on the dense telemetry the app already publishes
+    // here. Added as a passthrough field: nothing that read this probe before
+    // reads it by shape, and no existing column moves.
+    denseMetrics: probe.denseMetrics || null,
     waves: (probe.waves || []).map((wave) => ({ releaseId: wave.releaseId, declaredCellCount: wave.declaredCellCount, metrics: wave.metrics })),
   };
+})()`;
+
+/**
+ * The T002 GPU texture probe, read as an ATTRIBUTE payload rather than scraped.
+ *
+ * `reading.texturesByteLength` is Cesium's own CPU-side accounting WITH the mip
+ * chain, not a driver query — 87,381 bytes per 128x128 RGBA tile, which ADR 0047
+ * established by measurement. G1 validates that arithmetic against a scene whose
+ * unique tile count is known BEFORE G2-G4 quote it on the six-wave composition.
+ */
+const READ_TEXTURE_PROBE = `(() => {
+  const node = document.querySelector("[data-exterior-texture-probe]");
+  if (!node) return null;
+  const probe = JSON.parse(node.textContent);
+  return {
+    cesiumVersion: probe.cesiumVersion,
+    exteriorReleaseIds: probe.exteriorReleaseIds,
+    exteriorStreamingActive: probe.exteriorStreamingActive,
+    residentAssetCount: probe.residentAssetCount,
+    reading: probe.reading,
+  };
+})()`;
+
+/** Every dense build the citywide probe retained: F4's doubleDraw timeline. */
+const READ_DENSE_SAMPLES = `(() => {
+  const node = document.querySelector("[data-citywide-overview-probe]");
+  if (!node) return [];
+  return (JSON.parse(node.textContent).denseSamples || []).map((sample) => ({
+    planFingerprint: sample.planFingerprint || null,
+    totalBuildMs: sample.totalBuildMs === undefined ? null : sample.totalBuildMs,
+    doubleDrawMs: sample.doubleDrawMs === undefined ? null : sample.doubleDrawMs,
+    allocationMs: sample.allocationMs === undefined ? null : sample.allocationMs,
+    planBuildCount: sample.planBuildCount === undefined ? null : sample.planBuildCount,
+    buildingFeatureCount: sample.buildingFeatureCount === undefined ? null : sample.buildingFeatureCount,
+  }));
 })()`;
 
 /**
@@ -450,7 +581,7 @@ async function runFrames(base) {
       },
       verdict,
       caps: { ...EXTERIOR_RUNTIME_BUDGETS },
-      harnessDisclosure: `Both arms ran in ONE scratch Chrome (${CHROME_LAUNCH_COMMAND}), one document per arm, at the identical four poses in the identical order, with ${SETTLE_MS} ms of settle before each ${FRAME_SAMPLE_MS} ms frame sample. The bundle carries VITE_EXTERIOR_SCHEDULER_PROBE=1 because the residency and cache columns are read out of that probe's DOM payload; the probe reads state the app already holds and decides nothing. Frame durations are requestAnimationFrame deltas — the browser's own presentation cadence, the same instrument in both arms — and the first delta of each sample is dropped because it spans the gap since the previous paint rather than a rendered frame.`,
+      harnessDisclosure: `Both arms ran in ONE scratch Chrome (${chromeLaunchCommand()}), one document per arm, at the identical four poses in the identical order, with ${SETTLE_MS} ms of settle before each ${FRAME_SAMPLE_MS} ms frame sample. The bundle carries VITE_EXTERIOR_SCHEDULER_PROBE=1 because the residency and cache columns are read out of that probe's DOM payload; the probe reads state the app already holds and decides nothing. Frame durations are requestAnimationFrame deltas — the browser's own presentation cadence, the same instrument in both arms — and the first delta of each sample is dropped because it spans the gap since the previous paint rather than a rendered frame.`,
       claim: "The pre-registered non-regression bar of ADR 0052, evaluated by exteriorServingFrameVerdict, which was committed before this instrument could produce a number. Passing it is a frame-time statement about the serving SHAPE at these four poses on this machine. It is not visual, architectural or geographic acceptance, and it is not a claim about any pose, machine or composition not listed here.",
     };
     await writeEvidence("frame-time-ab", record);
@@ -524,7 +655,7 @@ async function runFrameArm(base, armId, buildLabel) {
       samples: captured.samples,
       landings: captured.landings,
       externalHosts: captured.externalHosts,
-      harnessDisclosure: `ONE arm of the pre-registered A/B, captured against build "${buildLabel}" in its own scratch Chrome (${CHROME_LAUNCH_COMMAND}), at the four registered poses in the registered order, with ${SETTLE_MS} ms of settle before each ${FRAME_SAMPLE_MS} ms frame sample. The bundle carries VITE_EXTERIOR_SCHEDULER_PROBE=1 because the residency and cache columns are read out of that probe's DOM payload; the probe reads state the app already holds and decides nothing. Frame durations are requestAnimationFrame deltas — the browser's own presentation cadence — and the first delta of each sample is dropped because it spans the gap since the previous paint rather than a rendered frame. The caps above are the ones COMPILED INTO THIS BUILD, which is the whole reason the arms are captured separately.`,
+      harnessDisclosure: `ONE arm of the pre-registered A/B, captured against build "${buildLabel}" in its own scratch Chrome (${chromeLaunchCommand()}), at the four registered poses in the registered order, with ${SETTLE_MS} ms of settle before each ${FRAME_SAMPLE_MS} ms frame sample. The bundle carries VITE_EXTERIOR_SCHEDULER_PROBE=1 because the residency and cache columns are read out of that probe's DOM payload; the probe reads state the app already holds and decides nothing. Frame durations are requestAnimationFrame deltas — the browser's own presentation cadence — and the first delta of each sample is dropped because it spans the gap since the previous paint rather than a rendered frame. The caps above are the ones COMPILED INTO THIS BUILD, which is the whole reason the arms are captured separately.`,
     };
     await writeEvidence(`frame-arm-${armId}`, record);
     console.log(serialize({
@@ -611,8 +742,25 @@ const READ_EXTERIOR_NOTICES = `(() => {
   return { present: true, items, text: (root.textContent || "").replace(/\\s+/gu, " ").trim().slice(0, 4000) };
 })()`;
 
+/**
+ * INSTRUMENT DEFECT, FIXED AND DISCLOSED rather than quietly corrected.
+ *
+ * The selector used to be `[role="complementary"]`, and it matched NOTHING. The
+ * details panel is `<aside class="inspector" aria-label="Selected feature
+ * details">`, and an `<aside>` carries the complementary role IMPLICITLY — it
+ * has no `role` ATTRIBUTE, so a CSS attribute selector cannot see it. The
+ * consequence is on the record: T005's eviction capture wrote
+ * `selectionDigestFirstVisit: null`, `selectionDigestAfterReEntry: null` and
+ * `selectionStableAcrossEviction: false`. That was the instrument reading
+ * nothing, not the app losing a selection.
+ *
+ * It also shows why E-1e's bar is EQUAL **and BOTH NON-NULL**: two nulls are
+ * equal, so an equality-only rule would have been silently satisfied by exactly
+ * this defect. The pre-registration fixed the selector in words before this line
+ * was changed; this is that change.
+ */
 const READ_SELECTION = `(() => {
-  const panel = document.querySelector('[role="complementary"]');
+  const panel = document.querySelector('aside.inspector[aria-label="Selected feature details"]');
   if (!panel) return null;
   const text = (panel.textContent || "").replace(/\\s+/gu, " ").trim();
   let hash = 0;
@@ -899,18 +1047,1051 @@ async function writeEvidence(name, record) {
   await writeFile(join(evidenceRoot, `${name}.sha256`), `${sha256HexSync(serialize(record))}  ${name}.json\n`);
 }
 
+// ===========================================================================
+// THE T006 ACCEPTANCE CAMPAIGN
+//
+// Every bar, station, storm step and pose below is IMPORTED from
+// `exterior-acceptance-campaign-constants.mjs`, which was committed in a
+// pre-registration commit containing no capture at all. Nothing in this section
+// chooses a constant; it takes readings and compares them to constants it
+// cannot edit without breaking a committed pinning test.
+// ===========================================================================
+
+/** Percentiles through the SHIPPED formula, never a second implementation. */
+function frameStats(frameMs) {
+  if (!Array.isArray(frameMs) || frameMs.length === 0) return { sampleCount: 0, p50Ms: null, p95Ms: null, p99Ms: null, maxMs: null };
+  return {
+    sampleCount: frameMs.length,
+    p50Ms: Number(framePercentile(frameMs, 50).toFixed(3)),
+    p95Ms: Number(framePercentile(frameMs, 95).toFixed(3)),
+    p99Ms: Number(framePercentile(frameMs, 99).toFixed(3)),
+    maxMs: Number(Math.max(...frameMs).toFixed(3)),
+  };
+}
+
+/**
+ * THE SERVED-BUNDLE PRE-FLIGHT, and why it checks two different things.
+ *
+ * 1. The served `index.html` must be byte-identical to this worktree's
+ *    `dist/index.html`, so every reading below is from THIS build rather than
+ *    from whatever was last left in a preview server.
+ * 2. The served entry scripts must CONTAIN all three probe markers. This is the
+ *    limb that matters for T006 specifically: the campaign reads residency out
+ *    of the scheduler probe, dense telemetry out of the citywide probe and GPU
+ *    texture bytes out of the texture probe, and all three are tree-shaken out
+ *    of an ordinary build. A capture run against a probe-less bundle does not
+ *    fail loudly — it silently reads `null` everywhere and produces a record
+ *    full of absences. Reading the marker out of the SERVED BYTES is the only
+ *    check that cannot be satisfied by an environment variable that was set in
+ *    the wrong shell.
+ *
+ * Both limbs FAIL CLOSED: a mismatch aborts before Chrome is launched.
+ */
+const PROBE_MARKERS = {
+  scheduler: "data-exterior-scheduler-probe",
+  citywideOverview: "data-citywide-overview-probe",
+  texture: "data-exterior-texture-probe",
+};
+
+async function servedBundlePreflight(base) {
+  const index = await (await fetch(base)).text();
+  const localIndex = await readFile(join(repositoryRoot, "dist", "index.html"), "utf8");
+  const scripts = [...index.matchAll(/src="([^"]+\.js)"/gu)].map((match) => match[1]);
+  const assets = [];
+  const markersSeen = { scheduler: false, citywideOverview: false, texture: false };
+  for (const relative of scripts) {
+    const bytes = new Uint8Array(await (await fetch(new URL(relative, base))).arrayBuffer());
+    const text = Buffer.from(bytes).toString("utf8");
+    for (const [key, marker] of Object.entries(PROBE_MARKERS)) if (text.includes(marker)) markersSeen[key] = true;
+    assets.push({ ref: relative, byteSize: bytes.byteLength, sha256: sha256HexBytes(bytes) });
+  }
+  const record = {
+    previewBase: base,
+    indexHtmlChecksumSha256: sha256HexSync(index),
+    localDistIndexHtmlChecksumSha256: sha256HexSync(localIndex),
+    matchesLocalDist: sha256HexSync(index) === sha256HexSync(localIndex),
+    entryScriptCount: assets.length,
+    assets,
+    probeMarkers: PROBE_MARKERS,
+    probeMarkersPresent: markersSeen,
+    probeBuildCommand: "VITE_EXTERIOR_SCHEDULER_PROBE=1 VITE_CITYWIDE_OVERVIEW_PROBE=1 VITE_EXTERIOR_TEXTURE_PROBE=1 pnpm build",
+    statement: "Checked BEFORE Chrome is launched, and fail-closed on both limbs: the served index.html is byte-identical to this worktree's dist/index.html, and the served entry scripts literally contain all three probe attribute markers. The second limb exists because a probe-less bundle does not fail loudly; it reads null and produces a record full of absences.",
+  };
+  if (!record.matchesLocalDist) fail("pre-flight: the served index.html does not match this worktree's dist/index.html; the capture would not be about this build.");
+  const missing = Object.entries(markersSeen).filter(([, present]) => !present).map(([key]) => PROBE_MARKERS[key]);
+  if (missing.length > 0) fail(`pre-flight: the served bundle carries no ${missing.join(", ")} marker; rebuild with ${record.probeBuildCommand}`);
+  return record;
+}
+
+/** The campaign's URL builder: pose, plus the opt-ins a gate needs. */
+function campaignUrl(base, pose, options = {}) {
+  const url = new URL(poseUrl(base, pose, options.releaseId ?? null));
+  if (options.featureId) url.searchParams.set("feature", options.featureId);
+  if (options.profile) url.searchParams.set("exteriorProfile", options.profile);
+  if (options.streaming === false) url.searchParams.set("exteriorStreaming", "off");
+  return url.toString();
+}
+
+/**
+ * SESSION-WIDE cache and request figures, read from ONE wave and NEVER summed.
+ *
+ * `exterior-cell-runtime.ts` writes the same shared-pool totals onto every live
+ * runtime's metrics. At six promoted waves, summing them would multiply one pool
+ * by six and turn a 92%-full byte cap into a 550%-full one.
+ */
+function sharedCacheOf(probe) {
+  const wave = (probe?.waves ?? []).find((entry) => entry.metrics);
+  const metrics = wave?.metrics ?? null;
+  if (!metrics) return null;
+  return {
+    cacheEntries: metrics.cacheEntries,
+    cachedBytes: metrics.cachedBytes,
+    cacheEvictions: metrics.cacheEvictions,
+    maxCacheEntries: metrics.maxCacheEntries,
+    maxCachedBytes: metrics.maxCachedBytes,
+    activeRequests: metrics.activeRequests,
+    peakConcurrentRequests: metrics.peakConcurrentRequests,
+    maxConcurrentRequests: metrics.maxConcurrentRequests,
+    requestedArtifactCount: metrics.requestedArtifactCount,
+    loadedArtifactCount: metrics.loadedArtifactCount,
+    releasedArtifactCount: metrics.releasedArtifactCount,
+    releasedArtifactBytes: metrics.releasedArtifactBytes,
+    readFrom: wave.releaseId,
+    note: "SESSION-WIDE fields read from ONE wave and never summed across waves; see exterior-cell-runtime.ts.",
+  };
+}
+
+/** Per-wave columns that really are per wave. */
+function waveColumns(probe) {
+  return (probe?.waves ?? []).map((wave) => ({
+    releaseId: wave.releaseId,
+    declaredCellCount: wave.declaredCellCount,
+    scheduledCellCount: wave.metrics?.scheduledCellCount ?? null,
+    deferredCellCount: wave.metrics?.deferredCellCount ?? null,
+    notShippedCellCount: wave.metrics?.notShippedCellCount ?? null,
+    fallbackCellCount: wave.metrics?.fallbackCellCount ?? null,
+    failedCellCount: wave.metrics?.failedCellCount ?? null,
+    failedArtifactCount: wave.metrics?.failedArtifactCount ?? null,
+  }));
+}
+
+function residentWaveCount(probe) {
+  return waveColumns(probe).filter((wave) => (wave.scheduledCellCount ?? 0) > 0).length;
+}
+
+/**
+ * Distinct shared-class tile URLs the DOCUMENT actually fetched, taken from the
+ * CDP network log rather than from `performance.getEntriesByType("resource")`.
+ *
+ * The page-side resource buffer is capped at 250 entries by default and a
+ * six-wave session blows straight past it, so a page-side count would silently
+ * truncate. The CDP log is complete.
+ */
+function classTileUrls(session) {
+  return [...new Set(session.responses()
+    .map((response) => response.url)
+    .filter((url) => url.split("?")[0].endsWith(".png") && url.includes("/public/textures/")))].sort();
+}
+
+function externalHostsOf(session, base) {
+  const origin = new URL(base).host;
+  return [...new Set(session.responses().map((response) => {
+    try { return new URL(response.url).host; } catch { return ""; }
+  }).filter((host) => host && host !== origin))].sort();
+}
+
+/**
+ * T008 CHROME DISCIPLINE, as a READING rather than a claim.
+ *
+ * `killChrome` already returns how many scratch processes survived the kill.
+ * This appends that number, per session, to one committed file, so "cleaned up"
+ * is something a reader can check instead of something the campaign asserts. A
+ * non-zero count is recorded, not hidden.
+ */
+async function recordCleanup(sessionName, survivingChromeProcessCount) {
+  await mkdir(evidenceRoot, { recursive: true });
+  const path = join(evidenceRoot, "chrome-cleanup.json");
+  const existing = await readFile(path, "utf8").then((text) => JSON.parse(text)).catch(() => ({
+    schemaVersion: "1.0",
+    recordId: `${CAMPAIGN_EVIDENCE_ID}:chrome-cleanup`,
+    task: "T006",
+    artifact: "chrome-cleanup",
+    userDataDir: USER_DATA_DIR,
+    rule: CAMPAIGN_DISCIPLINE.chromeDiscipline,
+    statement: "One row per capture session, appended by the instrument at the moment it killed its own scratch Chrome. pgrep is run AFTER the kill and its line count is the number recorded; zero is the only clean value and a non-zero value is recorded rather than retried away.",
+    sessions: [],
+  }));
+  existing.sessions.push({ session: sessionName, at: new Date().toISOString(), vsyncMode, survivingChromeProcessCount });
+  await writeFile(path, serialize(existing));
+  await writeFile(join(evidenceRoot, "chrome-cleanup.sha256"), `${sha256HexSync(serialize(existing))}  chrome-cleanup.json\n`);
+  return survivingChromeProcessCount;
+}
+
+async function writeCapture(name, bytes) {
+  await mkdir(join(evidenceRoot, "captures"), { recursive: true });
+  await writeFile(join(evidenceRoot, "captures", `${name}.png`), bytes);
+  return { file: `captures/${name}.png`, byteSize: bytes.byteLength, sha256: sha256HexBytes(new Uint8Array(bytes)) };
+}
+
+/**
+ * The F2 CONTROL: `about:blank`, in the SAME browser as the stations.
+ *
+ * A p95 frame time is not a property of the scene unless the instrument's own
+ * floor is known, and on a vsync-capped display the floor IS the display. An
+ * empty document renders nothing, so whatever cadence it reports is the
+ * instrument. A station p95 at or below this number is instrument-limited and is
+ * reported as such, never as a scene result.
+ */
+async function captureControl(session, label) {
+  await session.evaluate("void 0", `${label} control reachable`);
+  const frameMs = await session.evaluate(sampleFramesExpression(FRAME_F1.windowMs), `${label} control frames`);
+  return { url: FRAME_F2.controlUrl, vsyncMode, ...frameStats(frameMs) };
+}
+
+async function withControlTab(base, label) {
+  const { session, targetId } = await attach(FRAME_F2.controlUrl);
+  try {
+    return await captureControl(session, label);
+  } finally {
+    session.close();
+    await fetch(`http://127.0.0.1:${PORT}/json/close/${targetId}`).catch(() => null);
+    void base;
+  }
+}
+
+/**
+ * ONE STATION: land, settle, then read everything the campaign needs from the
+ * one window, so the frame series, the residency, the GPU bytes and the CDP
+ * counters all describe the SAME 12 seconds rather than four adjacent moments.
+ */
+async function captureStation(session, base, station, options = {}) {
+  const url = campaignUrl(base, station, options);
+  const landing = await landPose(session, url, `station:${station.stationId}`);
+  await wait(FRAME_F1.settleMs);
+  const probeBefore = await session.evaluate(READ_SCHEDULER_PROBE, `${station.stationId} probe`);
+  const metricsBefore = await session.metrics();
+  const frameMs = await session.evaluate(sampleFramesExpression(FRAME_F1.windowMs), `${station.stationId} frames`);
+  const metricsAfter = await session.metrics();
+  const probeAfter = await session.evaluate(READ_SCHEDULER_PROBE, `${station.stationId} probe after window`);
+  const texture = await session.evaluate(READ_TEXTURE_PROBE, `${station.stationId} texture probe`);
+  const notices = await session.evaluate(READ_EXTERIOR_NOTICES, `${station.stationId} notices`);
+  const denseSamples = await session.evaluate(READ_DENSE_SAMPLES, `${station.stationId} dense samples`);
+  const still = await session.screenshot(`${station.stationId} still`);
+  const capture = await writeCapture(`${options.captureName ?? station.stationId}`, still);
+  return {
+    stationId: station.stationId,
+    role: station.role ?? null,
+    pose: { lon: station.lon, lat: station.lat, height: station.height, heading: station.heading, pitch: station.pitch, roll: station.roll },
+    url,
+    landing,
+    settleMs: FRAME_F1.settleMs,
+    windowMs: FRAME_F1.windowMs,
+    frame: frameStats(frameMs),
+    frameMsHead: frameMs.slice(0, 8).map((value) => Number(value.toFixed(3))),
+    decision: probeAfter?.decision ?? null,
+    waves: waveColumns(probeAfter),
+    residentWaveCount: residentWaveCount(probeAfter),
+    sharedCache: sharedCacheOf(probeAfter),
+    sharedCacheBeforeWindow: sharedCacheOf(probeBefore),
+    texture,
+    classTileUrlCount: classTileUrls(session).length,
+    denseMetrics: probeAfter?.denseMetrics ?? null,
+    denseSampleCount: denseSamples.length,
+    denseSamplesWithDoubleDraw: denseSamples.filter((sample) => typeof sample.doubleDrawMs === "number"),
+    performanceMetricsDelta: metricsDelta(metricsBefore, metricsAfter),
+    notices,
+    still: capture,
+  };
+}
+
+/** The F1 verdict for one station, against constants this file cannot edit. */
+function frameVerdictFor(station, control) {
+  const p50 = station.frame.p50Ms;
+  const p95 = station.frame.p95Ms;
+  const enoughFrames = station.frame.sampleCount >= FRAME_F1.minimumFrames;
+  return {
+    stationId: station.stationId,
+    p50Ms: p50,
+    p95Ms: p95,
+    sampleCount: station.frame.sampleCount,
+    minimumFrames: FRAME_F1.minimumFrames,
+    frameFloorMet: enoughFrames,
+    p50WithinBar: p50 !== null && p50 <= FRAME_F1.p50Ms,
+    p95WithinBar: p95 !== null && p95 <= FRAME_F1.p95Ms,
+    pass: enoughFrames && p50 !== null && p95 !== null && p50 <= FRAME_F1.p50Ms && p95 <= FRAME_F1.p95Ms,
+    controlP95Ms: control?.p95Ms ?? null,
+    // F2 is a rule about what may be CONCLUDED, not a bar something passes.
+    instrumentLimited: control?.p95Ms !== null && control?.p95Ms !== undefined && p95 !== null && p95 <= control.p95Ms,
+    interpretation: FRAME_F2.rule,
+  };
+}
+
+function ceilingVerdictFor(sharedCache) {
+  return {
+    peakConcurrentRequests: sharedCache?.peakConcurrentRequests ?? null,
+    peakWithinFour: (sharedCache?.peakConcurrentRequests ?? Number.POSITIVE_INFINITY) <= REQUEST_CEILINGS.appWideSharedSemaphoreMaxConcurrent,
+    cacheEntries: sharedCache?.cacheEntries ?? null,
+    entriesWithinCap: (sharedCache?.cacheEntries ?? Number.POSITIVE_INFINITY) <= CACHE_CEILINGS.maxCacheEntries,
+    cachedBytes: sharedCache?.cachedBytes ?? null,
+    bytesWithinCap: (sharedCache?.cachedBytes ?? Number.POSITIVE_INFINITY) <= CACHE_CEILINGS.maxCachedBytes,
+    neverSum: REQUEST_CEILINGS.neverSum,
+  };
+}
+
+function cleanCellVerdictFor(waves) {
+  const total = (key) => waves.reduce((sum, wave) => sum + (wave[key] ?? 0), 0);
+  return {
+    fallbackCellCount: total("fallbackCellCount"),
+    failedCellCount: total("failedCellCount"),
+    failedArtifactCount: total("failedArtifactCount"),
+    clean: total("fallbackCellCount") === 0 && total("failedCellCount") === 0 && total("failedArtifactCount") === 0,
+  };
+}
+
+/** Common record furniture, so every campaign record carries the same spine. */
+function campaignEnvelope(name, options) {
+  return {
+    schemaVersion: "1.0",
+    recordId: `${CAMPAIGN_EVIDENCE_ID}:${name}`,
+    task: "T006",
+    artifact: name,
+    capturedAt: new Date().toISOString(),
+    attemptCount: options.attemptCount,
+    attemptPolicy: CAMPAIGN_DISCIPLINE.attemptPolicy,
+    vsyncMode: options.vsyncMode ?? vsyncMode,
+    chromeLaunchCommand: options.chromeLaunchCommand ?? chromeLaunchCommand(),
+    chromeDiscipline: CAMPAIGN_DISCIPLINE.chromeDiscipline,
+    browser: options.browser,
+    viewport: VIEWPORT,
+    base: options.base,
+    servedBundle: options.servedBundle,
+    preRegistration: `data/${CAMPAIGN_EVIDENCE_ID}/pre-registration.json`,
+    harnessDisclosure: `The bundle carries VITE_EXTERIOR_SCHEDULER_PROBE=1 VITE_CITYWIDE_OVERVIEW_PROBE=1 VITE_EXTERIOR_TEXTURE_PROBE=1, verified by reading the three attribute markers out of the SERVED bytes before Chrome was launched. The probes read state the app already holds and decide nothing. Chrome runs with --disable-backgrounding-occluded-windows and --disable-renderer-backgrounding because requestAnimationFrame is suspended in an occluded window; they stop the browser deciding not to render at all. Frame durations are requestAnimationFrame deltas and the first delta of each window is dropped because it spans the gap since the previous paint rather than a rendered frame.`,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// campaign-control — F2, both vsync modes
+// ---------------------------------------------------------------------------
+
+async function runCampaignControl(base, attemptCount) {
+  const servedBundle = await servedBundlePreflight(base);
+  const modes = [];
+  for (const mode of FRAME_F2.modes) {
+    vsyncMode = mode;
+    const browser = await launchChrome();
+    let control;
+    let surviving;
+    try {
+      control = await withControlTab(base, `control:${mode}`);
+      control.browser = browser;
+      control.launchCommand = chromeLaunchCommand();
+    } finally {
+      surviving = await recordCleanup(`campaign-control:${mode}`, await killChrome());
+    }
+    modes.push({ ...control, survivingChromeProcessCount: surviving });
+    console.log(`  control ${mode}: p50=${control.p50Ms} p95=${control.p95Ms} frames=${control.sampleCount}`);
+  }
+  vsyncMode = "vsync-on";
+  const record = {
+    ...campaignEnvelope("frame-control", { attemptCount, base, servedBundle, browser: modes[0]?.browser ?? null, vsyncMode: "both", chromeLaunchCommand: "one launch per mode; each mode's line is on its own row" }),
+    gate: FRAME_F2,
+    modes,
+    claim: "The instrument's own noise floor, on an empty document, in both vsync modes, on this machine. It is not a scene reading and it cannot pass or fail; it is the number below which a station p95 says nothing about the scene.",
+  };
+  await writeEvidence("frame-control", record);
+  console.log(serialize({ modes: modes.map((mode) => ({ vsyncMode: mode.vsyncMode, p50Ms: mode.p50Ms, p95Ms: mode.p95Ms, sampleCount: mode.sampleCount, survivingChromeProcessCount: mode.survivingChromeProcessCount })) }));
+}
+
+// ---------------------------------------------------------------------------
+// campaign-frames — F1, F2, F4 and G1-G3, one session
+// ---------------------------------------------------------------------------
+
+/**
+ * G1's KNOWN-COUNT SCENE.
+ *
+ * The smallest promoted serving release: 14 buildings, four shared class tiles
+ * declared by its committed payload inventory. The unique tile count is read
+ * TWO independent ways — the inventory on disk and the distinct texture URLs the
+ * document actually fetched — and the validation runs against the observed one,
+ * with the declared one recorded beside it so a disagreement is visible rather
+ * than absorbed.
+ */
+const GPU_VALIDATION_RELEASE_ID = "manhattan-exterior-cells-20260811-v3-s1";
+
+async function declaredClassTileCount(releaseId) {
+  const inventory = JSON.parse(await readFile(join(repositoryRoot, "data", releaseId, "payload-inventory.json"), "utf8"));
+  return inventory.files.filter((file) => file.path.startsWith("public/textures/") && file.path.endsWith(".png")).length;
+}
+
+async function captureGpuValidationArm(base, attemptCount) {
+  const declaredTileCount = await declaredClassTileCount(GPU_VALIDATION_RELEASE_ID);
+  const pose = { stationId: "gpu-validation-block835", ...BLOCK_835_CAMERA, role: "G1 instrument validation: a small scene whose unique class-tile count is known" };
+  const { session, targetId } = await attach(campaignUrl(base, pose, { releaseId: GPU_VALIDATION_RELEASE_ID, profile: LOD_L1.profile }));
+  try {
+    await waitFor(session, READ_SCHEDULER_PROBE, (probe) => probe.exteriorStreamingActive, "G1 exterior activation");
+    await wait(FRAME_F1.settleMs);
+    const probe = await session.evaluate(READ_SCHEDULER_PROBE, "G1 probe");
+    const texture = await session.evaluate(READ_TEXTURE_PROBE, "G1 texture probe");
+    const tileUrls = classTileUrls(session);
+    const still = await session.screenshot("G1 still");
+    const capture = await writeCapture("gpu-validation-block835", still);
+    if (!texture?.reading) fail("G1: the texture probe published no reading; the bundle is not the probe build or Cesium never mounted.");
+    const verdict = validateGpuTextureProbe(texture.reading, tileUrls.length);
+    return {
+      gateId: "G1",
+      attemptCount,
+      releaseId: GPU_VALIDATION_RELEASE_ID,
+      pose,
+      declaredClassTileCount: declaredTileCount,
+      observedClassTileUrls: tileUrls,
+      observedClassTileCount: tileUrls.length,
+      declaredAndObservedAgree: declaredTileCount === tileUrls.length,
+      residentAssetCount: texture.residentAssetCount,
+      reading: texture.reading,
+      verdict,
+      barBytes: GPU_GATES.G1.barBytes,
+      pass: verdict.deltaByteLength === GPU_GATES.G1.barBytes,
+      waves: waveColumns(probe),
+      still: capture,
+      rule: GPU_GATES.G1.rule,
+    };
+  } finally {
+    session.close();
+    await fetch(`http://127.0.0.1:${PORT}/json/close/${targetId}`).catch(() => null);
+  }
+}
+
+async function runCampaignFrames(base, attemptCount) {
+  vsyncMode = "vsync-on";
+  const servedBundle = await servedBundlePreflight(base);
+  const browser = await launchChrome();
+  /** The T008 cleanup reading: how many scratch processes SURVIVED the kill. */
+  let surviving;
+  try {
+    // G1 FIRST. A probe that disagrees with arithmetic on a four-tile scene has
+    // not earned the right to be quoted on a twenty-four-tile one, and the
+    // pre-registration says G2-G4 are not reported as measurements if it fails.
+    const g1 = await captureGpuValidationArm(base, attemptCount);
+    console.log(`  G1 delta=${g1.verdict.deltaByteLength} tiles=${g1.observedClassTileCount} measured=${g1.verdict.measuredTextureByteLength}`);
+
+    const control = await withControlTab(base, "frames");
+    console.log(`  control vsync-on: p50=${control.p50Ms} p95=${control.p95Ms} frames=${control.sampleCount}`);
+
+    const { session, targetId } = await attach(campaignUrl(base, STATIONS[0]));
+    const stations = [];
+    try {
+      await waitFor(session, READ_SCHEDULER_PROBE, (probe) => probe.traceLength >= 0, "scheduler probe");
+      await waitFor(session, READ_SCHEDULER_PROBE, (probe) => probe.exteriorStreamingActive, "default exterior activation");
+      for (const station of STATIONS) {
+        const capture = await captureStation(session, base, station);
+        stations.push(capture);
+        console.log(`  station ${station.stationId}: p50=${capture.frame.p50Ms} p95=${capture.frame.p95Ms} frames=${capture.frame.sampleCount} resident=${capture.texture?.residentAssetCount} waves=${capture.residentWaveCount} textures=${capture.texture?.reading?.texturesByteLength} entries=${capture.sharedCache?.cacheEntries} peak=${capture.sharedCache?.peakConcurrentRequests}`);
+      }
+      const externalHosts = externalHostsOf(session, base);
+      const networkFailures = session.failedRequests();
+
+      const f1 = stations.map((station) => frameVerdictFor(station, control));
+      const doubleDraw = stations.flatMap((station) => station.denseSamplesWithDoubleDraw.map((sample) => sample.doubleDrawMs));
+      const totalBuild = stations.map((station) => station.denseMetrics?.totalBuildMs ?? null).filter((value) => typeof value === "number");
+      const maxResident = stations.reduce((best, station) => ((station.texture?.residentAssetCount ?? -1) > (best?.texture?.residentAssetCount ?? -1) ? station : best), null);
+      const g2Station = stations.find((station) => station.stationId === "overview-52km-island") ?? maxResident;
+      const g2Measured = g2Station?.texture?.reading?.texturesByteLength ?? null;
+      const g2Bar = EXPECTED_TEXTURE_BYTE_LENGTH + TEXTURE_TOLERANCE_TILES * predictedTextureByteLength(1);
+
+      const record = {
+        ...campaignEnvelope("frames-and-gpu", { attemptCount, base, servedBundle, browser }),
+        stations: stations.map((station) => ({ ...station, denseSamplesWithDoubleDraw: station.denseSamplesWithDoubleDraw.slice(0, 20) })),
+        control,
+        gates: {
+          F1: { rule: FRAME_F1.rule, bar: { p50Ms: FRAME_F1.p50Ms, p95Ms: FRAME_F1.p95Ms, minimumFrames: FRAME_F1.minimumFrames, settleMs: FRAME_F1.settleMs, windowMs: FRAME_F1.windowMs }, perStation: f1, pass: f1.every((entry) => entry.pass) },
+          F2: { rule: FRAME_F2.rule, control, whyNotABar: FRAME_F2.whyNotABar, stationsAtOrBelowControlP95: f1.filter((entry) => entry.instrumentLimited).map((entry) => entry.stationId) },
+          F4: {
+            rule: FRAME_F4.rule,
+            legYDoubleDrawMs: FRAME_F4.legYDoubleDrawMs,
+            legXRebuildMs: FRAME_F4.legXRebuildMs,
+            measuredDoubleDrawMs: doubleDraw,
+            maxDoubleDrawMs: doubleDraw.length ? Math.max(...doubleDraw) : null,
+            measuredTotalBuildMs: totalBuild,
+            maxTotalBuildMs: totalBuild.length ? Math.max(...totalBuild) : null,
+            exceedsLegYBar: doubleDraw.length > 0 && Math.max(...doubleDraw) > FRAME_F4.legYDoubleDrawMs,
+            outcome: doubleDraw.length === 0
+              ? "NO DOUBLE-DRAW WINDOW WAS OBSERVED at any station. The stations are settled poses and the dense plan is not rebuilt at a camera that is not moving, so this is an absence of the event rather than a measurement of it. The storm capture is where a rebuild is forced."
+              : Math.max(...doubleDraw) > FRAME_F4.legYDoubleDrawMs
+                ? `NAMED CARRY of ADR 0045 deferral D-11 with the measured value ${Math.max(...doubleDraw)} ms against the 4,000 ms leg-Y bar. NOT a campaign failure: D-11 already records 5,746 ms measured and is carried forward unchanged by ADR 0052.`
+                : `BELOW the 4,000 ms leg-Y bar at ${Math.max(...doubleDraw)} ms. This does NOT close D-11: one session is not the island-scale bounds rebuild D-11 names.`,
+            inheritedFrom: FRAME_F4.inheritedFrom,
+          },
+          G1: g1,
+          G2: {
+            rule: GPU_GATES.G2.rule,
+            stationId: g2Station?.stationId ?? null,
+            expectedByteLength: EXPECTED_TEXTURE_BYTE_LENGTH,
+            expectedUniqueTileCount: EXPECTED_UNIQUE_TILE_COUNT,
+            perTileByteLength: predictedTextureByteLength(1),
+            toleranceTiles: TEXTURE_TOLERANCE_TILES,
+            barByteLength: g2Bar,
+            measuredByteLength: g2Measured,
+            measuredTileCount: g2Measured === null ? null : g2Measured / predictedTextureByteLength(1),
+            residentAssetCount: g2Station?.texture?.residentAssetCount ?? null,
+            residentWaveCount: g2Station?.residentWaveCount ?? null,
+            pass: g2Measured !== null && g2Measured <= g2Bar,
+            gatedOnG1: g1.pass,
+          },
+          G3: {
+            rule: GPU_GATES.G3.rule,
+            residentAssetHigh: GPU_GATES.G3.residentAssetHigh,
+            residentAssetLow: GPU_GATES.G3.residentAssetLow,
+            readings: [
+              ...stations.map((station) => ({ scope: "six-wave default station", stationId: station.stationId, residentAssetCount: station.texture?.residentAssetCount ?? null, residentWaveCount: station.residentWaveCount, texturesByteLength: station.texture?.reading?.texturesByteLength ?? null, impliedTileCount: (station.texture?.reading?.texturesByteLength ?? 0) / predictedTextureByteLength(1) })),
+              { scope: "single-wave G1 arm", stationId: g1.pose.stationId, residentAssetCount: g1.residentAssetCount, residentWaveCount: 1, texturesByteLength: g1.reading.texturesByteLength, impliedTileCount: g1.reading.texturesByteLength / predictedTextureByteLength(1) },
+            ],
+            whyItIsTheRealClaim: GPU_GATES.G3.whyItIsTheRealClaim,
+          },
+          G4: { ...GPU_GATES.G4, citation: "data/shared-class-textures-20260815/gpu-campaign.json", restatedNotRecaptured: true },
+          requestCeilings: stations.map((station) => ({ stationId: station.stationId, ...ceilingVerdictFor(station.sharedCache) })),
+          cleanCells: stations.map((station) => ({ stationId: station.stationId, ...cleanCellVerdictFor(station.waves) })),
+        },
+        headroomH2: { rule: HEADROOM_H2.rule, caveat: HEADROOM_H2.caveat, source: HEADROOM_H2.source, perStation: stations.map((station) => ({ stationId: station.stationId, delta: station.performanceMetricsDelta })) },
+        externalHosts,
+        networkFailures,
+        networkFailureCount: networkFailures.length,
+        claim: "Frame percentiles, GPU texture bytes and residency at the five frozen stations of a SIX-WAVE DEFAULT session, with the instrument's own control captured in the same browser. It is not visual, geographic or factual acceptance and it is one session on one machine rather than a distribution.",
+        uncapturedGap: "No canvas pick, no journey and no LOD reading is taken here; those are separate captures. The stills are what-is-drawn evidence at these five poses only.",
+      };
+      await writeEvidence("frames-and-gpu", record);
+      console.log(serialize({
+        F1: record.gates.F1.pass,
+        G1: g1.pass,
+        G2: record.gates.G2.pass,
+        stations: f1.map((entry) => ({ stationId: entry.stationId, p50Ms: entry.p50Ms, p95Ms: entry.p95Ms, frames: entry.sampleCount, pass: entry.pass, instrumentLimited: entry.instrumentLimited })),
+        externalHosts,
+      }));
+    } finally {
+      session.close();
+      await fetch(`http://127.0.0.1:${PORT}/json/close/${targetId}`).catch(() => null);
+    }
+  } finally {
+    surviving = await recordCleanup("campaign-frames", await killChrome());
+    console.log(`  cleanup: survivingChromeProcessCount=${surviving}`);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// campaign-headroom — H1 and H2, vsync OFF, reported and never gating
+// ---------------------------------------------------------------------------
+
+async function runCampaignHeadroom(base, attemptCount) {
+  vsyncMode = "vsync-off";
+  const servedBundle = await servedBundlePreflight(base);
+  const browser = await launchChrome();
+  /** The T008 cleanup reading: how many scratch processes SURVIVED the kill. */
+  let surviving;
+  try {
+    const control = await withControlTab(base, "headroom");
+    console.log(`  control vsync-off: p50=${control.p50Ms} p95=${control.p95Ms} frames=${control.sampleCount}`);
+    const { session, targetId } = await attach(campaignUrl(base, STATIONS[0]));
+    const stations = [];
+    try {
+      await waitFor(session, READ_SCHEDULER_PROBE, (probe) => probe.exteriorStreamingActive, "default exterior activation");
+      for (const station of STATIONS) {
+        const capture = await captureStation(session, base, station, { captureName: `headroom-${station.stationId}` });
+        stations.push(capture);
+        console.log(`  headroom ${station.stationId}: p50=${capture.frame.p50Ms} p95=${capture.frame.p95Ms} frames=${capture.frame.sampleCount}`);
+      }
+      const byId = (stationId) => stations.find((station) => station.stationId === stationId) ?? null;
+      const [heavyId, lightId] = HEADROOM_H1.comparedStations;
+      const heavy = byId(heavyId);
+      const light = byId(lightId);
+      const separation = heavy?.frame.p50Ms !== null && light?.frame.p50Ms !== null ? Number(Math.abs(heavy.frame.p50Ms - light.frame.p50Ms).toFixed(3)) : null;
+      const detectable = separation !== null && control.p95Ms !== null && separation > control.p95Ms;
+      const record = {
+        ...campaignEnvelope("headroom", { attemptCount, base, servedBundle, browser }),
+        gating: false,
+        gates: {
+          H1: {
+            ...HEADROOM_H1,
+            control,
+            comparedStations: HEADROOM_H1.comparedStations,
+            p50Ms: { [heavyId]: heavy?.frame.p50Ms ?? null, [lightId]: light?.frame.p50Ms ?? null },
+            separationMs: separation,
+            controlP95Ms: control.p95Ms,
+            detectable,
+            finding: detectable
+              ? `DETECTABLE: the two stations' uncapped p50 differ by ${separation} ms, which exceeds the vsync-off control's own p95 of ${control.p95Ms} ms. The difference is reported as a headroom observation and still discharges no frame criterion.`
+              : `INSTRUMENT-STILL-SATURATED, the pre-registered outcome when the separation does not clear the control: the two stations' uncapped p50 differ by ${separation} ms against a vsync-off control p95 of ${control.p95Ms} ms. The loop is bounded by something other than the scene and NO scene conclusion may be drawn from it.`,
+          },
+          H2: { rule: HEADROOM_H2.rule, caveat: HEADROOM_H2.caveat, source: HEADROOM_H2.source, perStation: stations.map((station) => ({ stationId: station.stationId, windowMs: station.windowMs, delta: station.performanceMetricsDelta })) },
+        },
+        stations: stations.map((station) => ({ ...station, denseSamplesWithDoubleDraw: station.denseSamplesWithDoubleDraw.slice(0, 20) })),
+        externalHosts: externalHostsOf(session, base),
+        claim: "An UNCAPPED reading, taken with the display's frame limiter removed. It is registered NON-GATING because an uncapped loop is not what a user sees; it can inform and it can never discharge a frame criterion.",
+      };
+      await writeEvidence("headroom", record);
+      console.log(serialize({ detectable, separationMs: separation, controlP95Ms: control.p95Ms, stations: stations.map((station) => ({ stationId: station.stationId, p50Ms: station.frame.p50Ms, p95Ms: station.frame.p95Ms, frames: station.frame.sampleCount })) }));
+    } finally {
+      session.close();
+      await fetch(`http://127.0.0.1:${PORT}/json/close/${targetId}`).catch(() => null);
+    }
+  } finally {
+    surviving = await recordCleanup("campaign-headroom", await killChrome());
+    vsyncMode = "vsync-on";
+    console.log(`  cleanup: survivingChromeProcessCount=${surviving}`);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// campaign-storm — S-1
+// ---------------------------------------------------------------------------
+
+const CENTRE = { x: Math.round(VIEWPORT.width / 2), y: Math.round(VIEWPORT.height / 2) };
+
+/**
+ * The drag, BYTE-IDENTICAL to `citywide-default-flip-campaign-cli.mjs`.
+ *
+ * Same centre, same ten interpolated steps, same 30 ms spacing, same
+ * `Input.dispatchMouseEvent` transport. Two storms are only comparable if the
+ * gesture is the same gesture, so it is ported rather than re-invented.
+ */
+async function stormDrag(session, dx, dy) {
+  await session.send("Input.dispatchMouseEvent", { type: "mouseMoved", x: CENTRE.x, y: CENTRE.y, buttons: 0 });
+  await session.send("Input.dispatchMouseEvent", { type: "mousePressed", x: CENTRE.x, y: CENTRE.y, button: "left", clickCount: 1, buttons: 1 });
+  for (let step = 1; step <= 10; step += 1) {
+    await session.send("Input.dispatchMouseEvent", { type: "mouseMoved", x: Math.round(CENTRE.x + dx * step / 10), y: Math.round(CENTRE.y + dy * step / 10), button: "left", buttons: 1 });
+    await wait(30);
+  }
+  await session.send("Input.dispatchMouseEvent", { type: "mouseReleased", x: CENTRE.x + dx, y: CENTRE.y + dy, button: "left", clickCount: 1, buttons: 0 });
+}
+
+/** One probe read, taken repeatedly through the storm. S-1b, S-1c and S-1d. */
+async function stormProbe(session, session_label, phase, stepId) {
+  const probe = await session.evaluate(READ_SCHEDULER_PROBE, `${session_label} ${phase} ${stepId} probe`);
+  const waves = waveColumns(probe);
+  return {
+    phase,
+    stepId,
+    at: new Date().toISOString(),
+    decision: probe?.decision ? { residentCount: probe.decision.residentCount, visibleCount: probe.decision.visibleCount, deferredCount: probe.decision.deferredCount, retainedCount: probe.decision.retainedCount, heightBucket: probe.decision.heightBucket, footprintSignature: probe.decision.footprintSignature } : null,
+    residentWaveCount: residentWaveCount(probe),
+    sharedCache: sharedCacheOf(probe),
+    cells: cleanCellVerdictFor(waves),
+    ceilings: ceilingVerdictFor(sharedCacheOf(probe)),
+  };
+}
+
+/** The storm's start pose: the midtown street station the excursions return to. */
+const STORM_START = STATIONS.find((station) => station.stationId === "street-260m-midtown");
+
+async function runCampaignStorm(base, attemptCount) {
+  vsyncMode = "vsync-on";
+  const servedBundle = await servedBundlePreflight(base);
+  const browser = await launchChrome();
+  /** The T008 cleanup reading: how many scratch processes SURVIVED the kill. */
+  let surviving;
+  try {
+    const { session, targetId } = await attach(campaignUrl(base, STORM_START));
+    try {
+      await waitFor(session, READ_SCHEDULER_PROBE, (probe) => probe.exteriorStreamingActive, "default exterior activation");
+      await landPose(session, campaignUrl(base, STORM_START), "storm:start");
+      await wait(FRAME_F1.settleMs);
+      const beforeProbe = await stormProbe(session, "storm", "before", "settled-start");
+      const metricsBefore = await session.metrics();
+
+      // ONE continuous frame window spans the whole storm: the drags, the four
+      // zoom excursions and the six cross-wave translations. S-1a applies the
+      // FULL strict pair to it, which is stricter than ADR 0045's flip campaign,
+      // which excluded its own during-storm window from the budgets.
+      const reads = [beforeProbe];
+      const startedAt = Date.now();
+      const framePromise = session.evaluate(sampleFramesExpression(FRAME_F1.windowMs), "storm frames");
+
+      for (let step = 0; step < STORM_S1.dragCount; step += 1) {
+        await stormDrag(session, step % 2 === 0 ? -220 : 220, step % 3 === 0 ? 120 : -120);
+        if (step % 3 === 2) reads.push(await stormProbe(session, "storm", "drag", `d${step + 1}`));
+      }
+      for (const excursion of STORM_ZOOM_EXCURSIONS) {
+        await session.evaluate(applyPoseExpression(campaignUrl(base, { ...STORM_START, height: excursion.height })), `storm zoom ${excursion.stepId}`);
+        await wait(2_000);
+        reads.push(await stormProbe(session, "storm", "zoom", excursion.stepId));
+      }
+      for (const translation of STORM_TRANSLATIONS) {
+        await session.evaluate(applyPoseExpression(campaignUrl(base, { ...STORM_START, lon: translation.lon, lat: translation.lat })), `storm translate ${translation.stepId}`);
+        await wait(2_000);
+        reads.push(await stormProbe(session, "storm", "translate", translation.stepId));
+      }
+      const stormMs = Date.now() - startedAt;
+      const duringStormFrameMs = await framePromise;
+      const metricsAfter = await session.metrics();
+
+      await wait(FRAME_F1.settleMs);
+      const settledFrameMs = await session.evaluate(sampleFramesExpression(FRAME_F1.windowMs), "post-storm frames");
+      const afterProbe = await stormProbe(session, "storm", "after", "settled-end");
+      reads.push(afterProbe);
+      const texture = await session.evaluate(READ_TEXTURE_PROBE, "storm texture probe");
+      const notices = await session.evaluate(READ_EXTERIOR_NOTICES, "storm notices");
+      const denseSamples = await session.evaluate(READ_DENSE_SAMPLES, "storm dense samples");
+      const still = await writeCapture("storm-end", await session.screenshot("storm still"));
+      const externalHosts = externalHostsOf(session, base);
+      const networkFailures = session.failedRequests();
+
+      const duringStorm = frameStats(duringStormFrameMs);
+      const doubleDraw = denseSamples.map((sample) => sample.doubleDrawMs).filter((value) => typeof value === "number");
+      const totalBuild = denseSamples.map((sample) => sample.totalBuildMs).filter((value) => typeof value === "number");
+      const s1a = duringStorm.p50Ms !== null && duringStorm.p95Ms !== null && duringStorm.p50Ms <= FRAME_F1.p50Ms && duringStorm.p95Ms <= FRAME_F1.p95Ms;
+      const s1b = reads.every((read) => read.ceilings.peakWithinFour && read.ceilings.entriesWithinCap && read.ceilings.bytesWithinCap);
+      const s1c = reads.every((read) => read.cells.clean);
+      const s1e = externalHosts.length === 0;
+
+      const record = {
+        ...campaignEnvelope("storm", { attemptCount, base, servedBundle, browser }),
+        method: {
+          startPose: STORM_START,
+          dragCount: STORM_S1.dragCount,
+          dragDisclosure: STORM_S1.dragDisclosure,
+          zoomExcursions: STORM_ZOOM_EXCURSIONS,
+          translations: STORM_TRANSLATIONS,
+          stormMs,
+          frameWindowMs: FRAME_F1.windowMs,
+          windowDisclosure: "ONE continuous 12 s rAF window opens at the first drag. If the storm outlasts it, the window covers the storm's opening phase and says so through its own sample count rather than being silently extended.",
+          probeReadCadence: "A probe read after every third drag, after every zoom excursion and after every translation, plus a settled read before and after.",
+        },
+        gates: {
+          "S-1a": { rule: STORM_S1.gates["S-1a"].rule, stricterThanT005: STORM_S1.gates["S-1a"].stricterThanT005, bar: { p50Ms: FRAME_F1.p50Ms, p95Ms: FRAME_F1.p95Ms }, duringStormFrame: duringStorm, pass: s1a },
+          "S-1b": { rule: STORM_S1.gates["S-1b"].rule, ceilingSource: STORM_S1.gates["S-1b"].ceilingSource, ceilings: { maxConcurrent: REQUEST_CEILINGS.appWideSharedSemaphoreMaxConcurrent, ...CACHE_CEILINGS }, maxPeakConcurrentRequests: Math.max(...reads.map((read) => read.ceilings.peakConcurrentRequests ?? 0)), maxCacheEntriesObserved: Math.max(...reads.map((read) => read.ceilings.cacheEntries ?? 0)), maxCachedBytesObserved: Math.max(...reads.map((read) => read.ceilings.cachedBytes ?? 0)), pass: s1b },
+          "S-1c": { rule: STORM_S1.gates["S-1c"].rule, whyItExists: STORM_S1.gates["S-1c"].whyItExists, worst: reads.map((read) => read.cells).reduce((worst, cells) => ({ fallbackCellCount: Math.max(worst.fallbackCellCount, cells.fallbackCellCount), failedCellCount: Math.max(worst.failedCellCount, cells.failedCellCount), failedArtifactCount: Math.max(worst.failedArtifactCount, cells.failedArtifactCount) }), { fallbackCellCount: 0, failedCellCount: 0, failedArtifactCount: 0 }), pass: s1c },
+          "S-1d": {
+            rule: STORM_S1.gates["S-1d"].rule,
+            cacheEvictionsStart: beforeProbe.sharedCache?.cacheEvictions ?? null,
+            cacheEvictionsEnd: afterProbe.sharedCache?.cacheEvictions ?? null,
+            releasedArtifactCountEnd: afterProbe.sharedCache?.releasedArtifactCount ?? null,
+            releasedArtifactBytesEnd: afterProbe.sharedCache?.releasedArtifactBytes ?? null,
+            notices,
+          },
+          "S-1e": { rule: STORM_S1.gates["S-1e"].rule, externalHosts, pass: s1e },
+          F4: {
+            rule: FRAME_F4.rule,
+            legYDoubleDrawMs: FRAME_F4.legYDoubleDrawMs,
+            measuredDoubleDrawMs: doubleDraw,
+            maxDoubleDrawMs: doubleDraw.length ? Math.max(...doubleDraw) : null,
+            maxTotalBuildMs: totalBuild.length ? Math.max(...totalBuild) : null,
+            exceedsLegYBar: doubleDraw.length > 0 && Math.max(...doubleDraw) > FRAME_F4.legYDoubleDrawMs,
+            inheritedFrom: FRAME_F4.inheritedFrom,
+          },
+        },
+        postStormFrame: { ...frameStats(settledFrameMs), note: "A SETTLED window after the storm, reported beside the during-storm one so a reader can see recovery. S-1a is judged on the during-storm window." },
+        performanceMetricsDelta: metricsDelta(metricsBefore, metricsAfter),
+        probeReads: reads,
+        texture,
+        denseSampleCount: denseSamples.length,
+        still,
+        networkFailures,
+        networkFailureCount: networkFailures.length,
+        claim: "A pan/zoom/translate storm on the six-wave default session, with the FULL strict frame pair applied to the during-storm window itself. It is one storm on one machine and it makes no visual claim beyond the still it carries.",
+      };
+      await writeEvidence("storm", record);
+      console.log(serialize({ "S-1a": s1a, "S-1b": s1b, "S-1c": s1c, "S-1e": s1e, duringStorm, stormMs, evictions: record.gates["S-1d"].cacheEvictionsEnd }));
+    } finally {
+      session.close();
+      await fetch(`http://127.0.0.1:${PORT}/json/close/${targetId}`).catch(() => null);
+    }
+  } finally {
+    surviving = await recordCleanup("campaign-storm", await killChrome());
+    console.log(`  cleanup: survivingChromeProcessCount=${surviving}`);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// campaign-eviction — E-1
+// ---------------------------------------------------------------------------
+
+/**
+ * A served building of the MIDTOWN wave, taken from its committed inventory.
+ *
+ * The E-1 loop roams midtown, so the deep-linked selection has to be a midtown
+ * building: a selection whose bytes are never resident says nothing about
+ * identity surviving an eviction cycle. It is read from the inventory rather
+ * than typed so a re-cut wave cannot leave this instrument selecting a building
+ * that is no longer served.
+ */
+const EVICTION_SELECTION_RELEASE_ID = "manhattan-midtown-core-cells-20260811-v3-s1";
+
+async function servedFeatureIdFrom(releaseId) {
+  const inventory = JSON.parse(await readFile(join(repositoryRoot, "data", releaseId, "payload-inventory.json"), "utf8"));
+  const glb = inventory.files.find((file) => file.path.startsWith("public/assets/") && file.path.endsWith("__lod_0.glb"));
+  if (!glb) fail(`the committed inventory for ${releaseId} declares no shipped lod_0 asset.`);
+  return glb.path.slice("public/assets/".length, -"__lod_0.glb".length).replace("-", ":");
+}
+
+async function runCampaignEviction(base, attemptCount) {
+  vsyncMode = "vsync-on";
+  const servedBundle = await servedBundlePreflight(base);
+  const featureId = await servedFeatureIdFrom(EVICTION_SELECTION_RELEASE_ID);
+  const browser = await launchChrome();
+  /** The T008 cleanup reading: how many scratch processes SURVIVED the kill. */
+  let surviving;
+  try {
+    // The deep link is applied AT BOOT, before the roam begins, so the selection
+    // SURVIVES the loop rather than being re-made at the end. E-1e is a question
+    // about persistence and a selection made after the cycle would not ask it.
+    const { session, targetId } = await attach(campaignUrl(base, EVICTION_LOOP[0], { featureId }));
+    try {
+      await waitFor(session, READ_SCHEDULER_PROBE, (probe) => probe.exteriorStreamingActive, "default exterior activation");
+      const stops = [];
+      for (const pose of EVICTION_LOOP) {
+        const url = campaignUrl(base, pose, { featureId });
+        const landing = await landPose(session, url, `eviction:${pose.poseId}`);
+        await wait(SETTLE_MS);
+        const probe = await session.evaluate(READ_SCHEDULER_PROBE, `eviction:${pose.poseId} probe`);
+        const selection = await session.evaluate(READ_SELECTION, `eviction:${pose.poseId} selection`);
+        const texture = await session.evaluate(READ_TEXTURE_PROBE, `eviction:${pose.poseId} texture probe`);
+        const notices = await session.evaluate(READ_EXTERIOR_NOTICES, `eviction:${pose.poseId} notices`);
+        const waves = waveColumns(probe);
+        const shared = sharedCacheOf(probe);
+        const still = await writeCapture(`eviction-${pose.poseId}`, await session.screenshot(`${pose.poseId} still`));
+        stops.push({
+          poseId: pose.poseId,
+          pose,
+          url,
+          landing,
+          settleMs: SETTLE_MS,
+          decision: probe?.decision ?? null,
+          waves,
+          residentWaveCount: residentWaveCount(probe),
+          scheduledCellTotal: waves.reduce((total, wave) => total + (wave.scheduledCellCount ?? 0), 0),
+          sharedCache: shared,
+          ceilings: ceilingVerdictFor(shared),
+          cells: cleanCellVerdictFor(waves),
+          selection,
+          texture,
+          notices,
+          still,
+        });
+        console.log(`  eviction ${pose.poseId}: entries=${shared?.cacheEntries} bytes=${shared?.cachedBytes} evictions=${shared?.cacheEvictions} peak=${shared?.peakConcurrentRequests} scheduled=${stops.at(-1).scheduledCellTotal} digest=${selection?.digest ?? "null"}`);
+      }
+      const first = stops[0];
+      const last = stops.at(-1);
+      const maxEvictions = Math.max(...stops.map((stop) => stop.sharedCache?.cacheEvictions ?? 0));
+      const e1a = maxEvictions > 0;
+      const e1b = last.cells.clean;
+      const e1c = stops.every((stop) => stop.ceilings.peakWithinFour);
+      const e1d = stops.every((stop) => stop.ceilings.entriesWithinCap && stop.ceilings.bytesWithinCap);
+      const e1e = first.selection?.digest != null && last.selection?.digest != null && first.selection.digest === last.selection.digest;
+      /**
+       * THE PRE-REGISTERED FALSIFIER, AND WHY THIS INSTRUMENT CANNOT DECIDE IT.
+       *
+       * The registered condition is "a STATIONARY STOP with cacheEvictions > 0
+       * and a scheduledCellCount at or below 8". Taken literally against the
+       * shipped counter it is trivially satisfiable and therefore decides
+       * nothing: `cacheEvictions` is CUMULATIVE and SESSION-WIDE, so once any
+       * eviction has happened anywhere in the session — including in transit,
+       * which is exactly where the argument predicts it — every later settled
+       * stop reads a non-zero value while holding the scheduler's cap of 8.
+       *
+       * A reading that CAN separate the two would take two probe reads at ONE
+       * stationary pose and ask whether the counter moved between them. This
+       * instrument takes one read per stop, so it reports the literal condition,
+       * reports the increments and where they fall, and returns an explicitly
+       * UNDECIDED verdict rather than asserting a falsification the data cannot
+       * support — or a survival it cannot support either.
+       */
+      const literallySatisfying = stops.filter((stop) => (stop.sharedCache?.cacheEvictions ?? 0) > 0 && stop.scheduledCellTotal <= 8);
+      const increments = stops.map((stop, index) => ({
+        poseId: stop.poseId,
+        cacheEvictions: stop.sharedCache?.cacheEvictions ?? null,
+        incrementSincePreviousStop: index === 0 ? null : (stop.sharedCache?.cacheEvictions ?? 0) - (stops[index - 1].sharedCache?.cacheEvictions ?? 0),
+        scheduledCellTotal: stop.scheduledCellTotal,
+        note: index === 0 ? "first stop" : "the increment spans the TRANSIT from the previous pose AND this pose's settle; one read per stop cannot say which of the two produced it",
+      }));
+      const record = {
+        ...campaignEnvelope("eviction-loop", { attemptCount, base, servedBundle, browser }),
+        releaseSelector: "default",
+        selectionFeatureId: featureId,
+        selectionReleaseId: EVICTION_SELECTION_RELEASE_ID,
+        selectionOpenedVia: EVICTION_GATES["E-1e"].openedVia,
+        selectionSelector: EVICTION_GATES["E-1e"].selector,
+        settleMsPerPose: SETTLE_MS,
+        settleDisclosure: `The per-pose settle is ${SETTLE_MS} ms. It is NOT pre-registered — the pre-registration fixes the poses and the gates, not the dwell — and it is stated here because eviction is forced in TRANSIT, so a longer dwell would not make the gate easier and a shorter one would not make it harder.`,
+        stops,
+        gates: {
+          "E-1a": { rule: EVICTION_GATES["E-1a"].rule, maxCacheEvictions: maxEvictions, evictionsByStop: stops.map((stop) => ({ poseId: stop.poseId, cacheEvictions: stop.sharedCache?.cacheEvictions ?? null })), pass: e1a },
+          "E-1b": { rule: EVICTION_GATES["E-1b"].rule, returnStop: last.poseId, ...last.cells, pass: e1b },
+          "E-1c": { rule: EVICTION_GATES["E-1c"].rule, maxPeakConcurrentRequests: Math.max(...stops.map((stop) => stop.ceilings.peakConcurrentRequests ?? 0)), pass: e1c },
+          "E-1d": { rule: EVICTION_GATES["E-1d"].rule, maxCacheEntries: Math.max(...stops.map((stop) => stop.ceilings.cacheEntries ?? 0)), maxCachedBytes: Math.max(...stops.map((stop) => stop.ceilings.cachedBytes ?? 0)), caps: CACHE_CEILINGS, pass: e1d },
+          "E-1e": {
+            rule: EVICTION_GATES["E-1e"].rule,
+            selector: EVICTION_GATES["E-1e"].selector,
+            whyNonNullIsRegistered: EVICTION_GATES["E-1e"].whyNonNullIsRegistered,
+            selectionDigestFirstVisit: first.selection?.digest ?? null,
+            selectionDigestAfterReEntry: last.selection?.digest ?? null,
+            selectionLengthFirstVisit: first.selection?.length ?? null,
+            selectionLengthAfterReEntry: last.selection?.length ?? null,
+            bothNonNull: first.selection?.digest != null && last.selection?.digest != null,
+            equal: (first.selection?.digest ?? null) === (last.selection?.digest ?? null),
+            pass: e1e,
+          },
+          "E-1f": { ...EVICTION_GATES["E-1f"], carriedVerbatim: true },
+        },
+        forcingArgument: {
+          claimUnderTest: "A stationary anchor cannot force an eviction; eviction is reachable only in transit.",
+          falsifyingCondition: "A stationary stop with cacheEvictions > 0 and a scheduledCellCount at or below 8.",
+          verdict: "UNDECIDED-BY-THIS-INSTRUMENT",
+          literallySatisfyingStops: literallySatisfying.map((stop) => ({ poseId: stop.poseId, scheduledCellTotal: stop.scheduledCellTotal, cacheEvictions: stop.sharedCache?.cacheEvictions ?? null })),
+          evictionIncrements: increments,
+          whyUndecided: "THE PRE-REGISTERED CONDITION IS UNDER-SPECIFIED AGAINST THE SHIPPED COUNTER, and that is recorded rather than resolved in whichever direction is convenient. `cacheEvictions` is CUMULATIVE and SESSION-WIDE: once any eviction has occurred — including in transit, which is exactly where the argument predicts it — every later settled stop reads a non-zero value while holding the scheduler's cap of 8, so the literal condition is satisfied by a session that behaves exactly as the argument says it will. Reading that as a falsification would be wrong; reading its literal satisfaction away would also be wrong.",
+          whatWouldDecideIt: "TWO probe reads at ONE stationary pose, separated by a dwell, asking whether cacheEvictions moved BETWEEN them. This instrument takes one read per stop and therefore cannot answer it. That is a named instrument limitation, not a finding.",
+          whatThisCaptureDoesSupport: "Every settled stop sat inside both caps with room to spare, which is consistent with the argument's central claim that a stationary anchor does not reach the byte ceiling. Consistency is not proof.",
+        },
+        externalHosts: externalHostsOf(session, base),
+        claim: "A closed eight-pose loop through the midtown neighbourhood on the six-wave default session, with a deep-linked selection applied before the roam. It states whether eviction is reachable in transit, whether re-entry is clean, and whether the same building resolves to the same sourced information across the cycle.",
+        uncapturedGap: EVICTION_GATES["E-1f"].rule,
+      };
+      await writeEvidence("eviction-loop", record);
+      console.log(serialize({ "E-1a": e1a, "E-1b": e1b, "E-1c": e1c, "E-1d": e1d, "E-1e": e1e, maxEvictions, digests: [first.selection?.digest ?? null, last.selection?.digest ?? null], forcingArgumentVerdict: record.forcingArgument.verdict }));
+    } finally {
+      session.close();
+      await fetch(`http://127.0.0.1:${PORT}/json/close/${targetId}`).catch(() => null);
+    }
+  } finally {
+    surviving = await recordCleanup("campaign-eviction", await killChrome());
+    console.log(`  cleanup: survivingChromeProcessCount=${surviving}`);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// campaign-lod — L1
+// ---------------------------------------------------------------------------
+
+/**
+ * The lodId is DOM-SCRAPED, and that is a recorded negative result.
+ *
+ * No probe payload and no `data-*` attribute exposes the selected LOD. The
+ * scheduler, citywide and texture probes carry none. The ONLY surface is the
+ * details panel's "Active asset" row, rendered as
+ * `${asset.lodId} · ${asset.checksumSha256}`, and it requires a selected
+ * feature. The campaign records that rather than adding a probe to be measured.
+ */
+const READ_ACTIVE_ASSET = `(() => {
+  const panel = document.querySelector('aside.inspector[aria-label="Selected feature details"]');
+  if (!panel) return { panelPresent: false, lodId: null, checksumSha256: null, raw: null };
+  const terms = [...panel.querySelectorAll("dt")];
+  const term = terms.find((node) => (node.textContent || "").trim() === "Active asset");
+  if (!term) return { panelPresent: true, lodId: null, checksumSha256: null, raw: null };
+  const raw = (term.nextElementSibling ? term.nextElementSibling.textContent || "" : "").replace(/\\s+/gu, " ").trim();
+  const parts = raw.split(" · ");
+  return { panelPresent: true, lodId: parts[0] || null, checksumSha256: parts[1] || null, raw };
+})()`;
+
+/** The largest lod_0 GLB of the 14-building opt-in: deterministic, not typed. */
+async function block835SelectionFeatureId() {
+  const assemblies = JSON.parse(await readFile(join(repositoryRoot, "public", "data", BLOCK_835_V3_RELEASE_ID, "assemblies.json"), "utf8"));
+  const artifacts = Object.values(assemblies).flatMap((entry) => entry.artifacts ?? []);
+  const lod0 = artifacts.filter((artifact) => artifact.relativeRef.endsWith("__lod_0.glb")).sort((left, right) => right.byteSize - left.byteSize || (left.relativeRef < right.relativeRef ? -1 : 1));
+  if (lod0.length === 0) fail(`${BLOCK_835_V3_RELEASE_ID} declares no lod_0 asset.`);
+  const slug = lod0[0].relativeRef.slice("public/assets/".length, -"__lod_0.glb".length);
+  return { featureId: slug.replace("-", ":"), relativeRef: lod0[0].relativeRef, byteSize: lod0[0].byteSize, lodPairCount: artifacts.filter((artifact) => artifact.relativeRef.endsWith("__lod_1.glb")).length };
+}
+
+async function runCampaignLod(base, attemptCount) {
+  vsyncMode = "vsync-on";
+  const servedBundle = await servedBundlePreflight(base);
+  const selection = await block835SelectionFeatureId();
+  const browser = await launchChrome();
+  /** The T008 cleanup reading: how many scratch processes SURVIVED the kill. */
+  let surviving;
+  try {
+    const firstHeight = LOD_L1.stillHeightsM[0];
+    const startPose = { stationId: `lod-${firstHeight}m`, ...BLOCK_835_CAMERA, height: firstHeight };
+    const { session, targetId } = await attach(campaignUrl(base, startPose, { releaseId: LOD_L1.releaseId, profile: LOD_L1.profile, featureId: selection.featureId }));
+    try {
+      await waitFor(session, READ_SCHEDULER_PROBE, (probe) => probe.exteriorStreamingActive, "block835 opt-in activation");
+      const readings = [];
+      for (const height of LOD_L1.stillHeightsM) {
+        const pose = { stationId: `lod-${height}m`, ...BLOCK_835_CAMERA, height };
+        const url = campaignUrl(base, pose, { releaseId: LOD_L1.releaseId, profile: LOD_L1.profile, featureId: selection.featureId });
+        const landing = await landPose(session, url, `lod:${height}m`);
+        await wait(SETTLE_MS);
+        const activeAsset = await session.evaluate(READ_ACTIVE_ASSET, `lod ${height} m active asset`);
+        const probe = await session.evaluate(READ_SCHEDULER_PROBE, `lod ${height} m probe`);
+        const texture = await session.evaluate(READ_TEXTURE_PROBE, `lod ${height} m texture probe`);
+        const still = await writeCapture(`lod-${height}m`, await session.screenshot(`lod ${height} m still`));
+        readings.push({
+          heightMeters: height,
+          bucketedHeightMeters: Math.max(50, Math.round(height / 100) * 100),
+          expectedLodId: Math.max(50, Math.round(height / 100) * 100) <= LOD_L1.lodSeamMeters ? "lod_0" : "lod_1",
+          url,
+          landing,
+          activeAsset,
+          decision: probe?.decision ?? null,
+          waves: waveColumns(probe),
+          texture,
+          still,
+        });
+        console.log(`  lod ${height} m: bucket=${readings.at(-1).bucketedHeightMeters} lodId=${activeAsset.lodId} still=${still.sha256.slice(0, 12)}`);
+      }
+      const at200 = readings.find((reading) => reading.heightMeters === 200);
+      const at300 = readings.find((reading) => reading.heightMeters === 300);
+      const stillsDiffer = at200?.still.sha256 !== at300?.still.sha256;
+      const lodCorrect = at200?.activeAsset.lodId === "lod_0" && at300?.activeAsset.lodId === "lod_1";
+      const record = {
+        ...campaignEnvelope("lod-l1", { attemptCount, base, servedBundle, browser }),
+        gate: {
+          ...LOD_L1,
+          selection,
+          readings,
+          lodIdAt200m: at200?.activeAsset.lodId ?? null,
+          lodIdAt300m: at300?.activeAsset.lodId ?? null,
+          stillSha256At200m: at200?.still.sha256 ?? null,
+          stillSha256At300m: at300?.still.sha256 ?? null,
+          stillsRendered: Boolean(at200?.still && at300?.still),
+          stillsDifferByChecksum: stillsDiffer,
+          lodSelectionCorrect: lodCorrect,
+          pass: lodCorrect && stillsDiffer,
+        },
+        claim: LOD_L1.claim,
+        explicitlyNotDischarging: LOD_L1.explicitlyNotDischarging,
+        externalHosts: externalHostsOf(session, base),
+      };
+      await writeEvidence("lod-l1", record);
+      console.log(serialize({ pass: record.gate.pass, lodIdAt200m: record.gate.lodIdAt200m, lodIdAt300m: record.gate.lodIdAt300m, stillsDifferByChecksum: stillsDiffer }));
+    } finally {
+      session.close();
+      await fetch(`http://127.0.0.1:${PORT}/json/close/${targetId}`).catch(() => null);
+    }
+  } finally {
+    surviving = await recordCleanup("campaign-lod", await killChrome());
+    console.log(`  cleanup: survivingChromeProcessCount=${surviving}`);
+  }
+}
+
 async function main() {
   const argv = process.argv.slice(2);
   const base = argValue(argv, "--base", "http://127.0.0.1:4173/");
   const command = argv.find((token) => !token.startsWith("--"));
+  const out = argValue(argv, "--out", "");
+  if (out) evidenceRoot = join(repositoryRoot, "data", out);
+  const attemptCount = Number(argValue(argv, "--attempt", "1"));
+  if (!Number.isInteger(attemptCount) || attemptCount < 1) fail("--attempt must be a positive integer; every campaign record states how many attempts its capture took.");
+  // A campaign command must never write into this instrument's historical root:
+  // that directory holds the T005 readings the T006 gates are DEFINED AGAINST.
+  if (command?.startsWith("campaign-") && evidenceRoot.endsWith(EXTERIOR_SERVING_EVIDENCE_ID)) {
+    fail(`a campaign capture must name its own evidence root; pass --out=${CAMPAIGN_EVIDENCE_ID}. Writing into data/${EXTERIOR_SERVING_EVIDENCE_ID}/ would overwrite the T005 records the T006 gates compare against.`);
+  }
   if (command === "frames") await runFrames(base);
   else if (command === "frames-arm") await runFrameArm(base, argValue(argv, "--arm", ""), argValue(argv, "--build", ""));
   else if (command === "frames-compose") await composeFrames();
   else if (command === "roam") await runRoam(base, argValue(argv, "--release", ""));
+  else if (command === "campaign-control") await runCampaignControl(base, attemptCount);
+  else if (command === "campaign-frames") await runCampaignFrames(base, attemptCount);
+  else if (command === "campaign-headroom") await runCampaignHeadroom(base, attemptCount);
+  else if (command === "campaign-storm") await runCampaignStorm(base, attemptCount);
+  else if (command === "campaign-eviction") await runCampaignEviction(base, attemptCount);
+  else if (command === "campaign-lod") await runCampaignLod(base, attemptCount);
   else {
     console.error("usage: exterior-serving-evidence-cli.mjs <frames|frames-arm|frames-compose|roam> [--base=http://127.0.0.1:4173/] [--arm=a|b] [--build=<label>] [--release=default]");
+    console.error("       exterior-serving-evidence-cli.mjs <campaign-control|campaign-frames|campaign-headroom|campaign-storm|campaign-eviction|campaign-lod> --out=<evidence-id> [--attempt=N]");
     console.error("roam --release=default captures the SIX-WAVE PROMOTED DEFAULT session over the registered frame poses; without it, the w02 opt-in roam.");
-    console.error(`The scratch Chrome is launched and killed by this file: ${CHROME_LAUNCH_COMMAND}`);
+    console.error("campaign-* captures the T006 acceptance campaign against the frozen bars in scripts/exterior-acceptance-campaign-constants.mjs. They REQUIRE --out.");
+    console.error(`The scratch Chrome is launched and killed by this file: ${chromeLaunchCommand()}`);
     process.exit(1);
   }
 }

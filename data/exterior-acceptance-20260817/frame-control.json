@@ -1,0 +1,85 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "exterior-acceptance-20260817:frame-control",
+  "task": "T006",
+  "artifact": "frame-control",
+  "capturedAt": "2026-08-17T01:14:37.589Z",
+  "attemptCount": 1,
+  "attemptPolicy": "SINGLE attempt per capture. attemptCount is recorded on every record. A capture is repeated ONLY for a NAMED instrument failure (a pre-flight abort, an M2 activeRequests violation, a pose-landing failure, a probe that never mounted), never because a reading looked wrong. The name of the failure is recorded with the attempt.",
+  "vsyncMode": "both",
+  "chromeLaunchCommand": "one launch per mode; each mode's line is on its own row",
+  "chromeDiscipline": "T008 discipline: a scratch user-data-dir per capture session, killed after, with the surviving-process count READ rather than assumed and recorded as a number.",
+  "browser": "Chrome/151.0.7922.138",
+  "viewport": {
+    "width": 1440,
+    "height": 900,
+    "deviceScaleFactor": 1
+  },
+  "base": "http://127.0.0.1:4191/",
+  "servedBundle": {
+    "previewBase": "http://127.0.0.1:4191/",
+    "indexHtmlChecksumSha256": "53741f4faef414a7fc8c50c14f6b224312f2df0b06c8544b5dda95bc6bbaa561",
+    "localDistIndexHtmlChecksumSha256": "53741f4faef414a7fc8c50c14f6b224312f2df0b06c8544b5dda95bc6bbaa561",
+    "matchesLocalDist": true,
+    "entryScriptCount": 1,
+    "assets": [
+      {
+        "ref": "/assets/index-k7tDJ7RO.js",
+        "byteSize": 5827657,
+        "sha256": "6115f67cfb5b5061e5636f396d093d4647d7e2f8f0afd526be2a949502eccc16"
+      }
+    ],
+    "probeMarkers": {
+      "scheduler": "data-exterior-scheduler-probe",
+      "citywideOverview": "data-citywide-overview-probe",
+      "texture": "data-exterior-texture-probe"
+    },
+    "probeMarkersPresent": {
+      "scheduler": true,
+      "citywideOverview": true,
+      "texture": true
+    },
+    "probeBuildCommand": "VITE_EXTERIOR_SCHEDULER_PROBE=1 VITE_CITYWIDE_OVERVIEW_PROBE=1 VITE_EXTERIOR_TEXTURE_PROBE=1 pnpm build",
+    "statement": "Checked BEFORE Chrome is launched, and fail-closed on both limbs: the served index.html is byte-identical to this worktree's dist/index.html, and the served entry scripts literally contain all three probe attribute markers. The second limb exists because a probe-less bundle does not fail loudly; it reads null and produces a record full of absences."
+  },
+  "preRegistration": "data/exterior-acceptance-20260817/pre-registration.json",
+  "harnessDisclosure": "The bundle carries VITE_EXTERIOR_SCHEDULER_PROBE=1 VITE_CITYWIDE_OVERVIEW_PROBE=1 VITE_EXTERIOR_TEXTURE_PROBE=1, verified by reading the three attribute markers out of the SERVED bytes before Chrome was launched. The probes read state the app already holds and decide nothing. Chrome runs with --disable-backgrounding-occluded-windows and --disable-renderer-backgrounding because requestAnimationFrame is suspended in an occluded window; they stop the browser deciding not to render at all. Frame durations are requestAnimationFrame deltas and the first delta of each window is dropped because it spans the gap since the previous paint rather than a rendered frame.",
+  "gate": {
+    "gateId": "F2",
+    "controlUrl": "about:blank",
+    "modes": [
+      "vsync-on",
+      "vsync-off"
+    ],
+    "sameBrowserRequired": true,
+    "rule": "The control is captured in the SAME browser session as the stations, in BOTH vsync modes, on about:blank. A station p95 verdict is only MEANINGFUL above the control's own p95 in the matching mode. A station p95 at or below the control's p95 is reported as instrument-limited, never as a scene result.",
+    "whyNotABar": "This gate cannot FAIL in the ordinary sense: it constrains interpretation. It is registered so that a p95 that merely reproduces the display cadence cannot later be quoted as evidence the scene is fast."
+  },
+  "modes": [
+    {
+      "url": "about:blank",
+      "vsyncMode": "vsync-on",
+      "sampleCount": 1441,
+      "p50Ms": 8.3,
+      "p95Ms": 9.9,
+      "p99Ms": 10.3,
+      "maxMs": 10.4,
+      "browser": "Chrome/151.0.7922.138",
+      "launchCommand": "open -na \"Google Chrome\" --args --remote-debugging-port=9224 --user-data-dir=/tmp/t005-serving-chrome --no-first-run --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-renderer-backgrounding",
+      "survivingChromeProcessCount": 0
+    },
+    {
+      "url": "about:blank",
+      "vsyncMode": "vsync-off",
+      "sampleCount": 668,
+      "p50Ms": 18.3,
+      "p95Ms": 18.8,
+      "p99Ms": 18.8,
+      "maxMs": 18.9,
+      "browser": "Chrome/151.0.7922.138",
+      "launchCommand": "open -na \"Google Chrome\" --args --remote-debugging-port=9224 --user-data-dir=/tmp/t005-serving-chrome --no-first-run --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-renderer-backgrounding --disable-gpu-vsync --disable-frame-rate-limit",
+      "survivingChromeProcessCount": 0
+    }
+  ],
+  "claim": "The instrument's own noise floor, on an empty document, in both vsync modes, on this machine. It is not a scene reading and it cannot pass or fail; it is the number below which a station p95 says nothing about the scene."
+}
