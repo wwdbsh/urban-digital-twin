@@ -124,9 +124,19 @@ describe("the numbers the refusal rests on are re-derivable", () => {
 });
 
 describe("Stage 0 changed nothing it promised not to change", () => {
-  it("the emission seam still binds a texture at lod_0 only", () => {
+  it("the emission seam still defaults to lod_0 only, so every frozen wave is byte-unchanged", () => {
     const source = readFileSync(join("src", "release", "midtown-core-v3-materialization.ts"), "utf8");
-    expect(source).toContain("const texture = lodIndex === 0 ? profile.texture : null;");
+    // The seam became opt-in for T009. What must not change is the DEFAULT: a
+    // profile that does not ask still binds the tile at LOD 0 alone.
+    expect(source).toContain('const textureLevels = profile.textureLevels ?? "lod-0-only";');
+    expect(source).toContain('const texture = textureLevels === "both" || lodIndex === 0 ? profile.texture : null;');
+    // And the default is not merely written -- it is PROVEN by the baseline
+    // control in step2-gates.json, which re-emits -c1 byte-identically at both
+    // levels with the field present and unset.
+    const gates = readJson(join(root, "step2-gates.json"));
+    expect(gates.gate2b.baselineControl.lod0Identical).toBe(36);
+    expect(gates.gate2b.baselineControl.lod1Identical).toBe(36);
+    expect(gates.gate2b.baselineControl.differing).toBe(0);
   });
 
   it("the frozen mass-generation coverage record is untouched", () => {
@@ -294,5 +304,73 @@ describe("the retention validator's physical-presence rule", () => {
     expect(source).toContain("Artifact size/type differs before read");
     const gate = readJson(join(root, "stage0-gate.json"));
     expect(gate.items["5"].resolution).toContain("MUST COPY");
+  });
+});
+
+
+/**
+ * STEP 2 — the three gates that could still have stopped the campaign.
+ *
+ * All three passed, so the campaign is authorised to proceed. These pin the
+ * PASSES so that a later regression has to argue with a committed number, and
+ * they pin the sampling statements so a pass over 214 assets is never read as a
+ * pass over 44,989.
+ */
+describe("the STEP 2 campaign gates", () => {
+  const gates = () => readJson(join(root, "step2-gates.json"));
+
+  it("2b: lod_0 is byte-identical under the both-LODs-textured write path", () => {
+    const g = gates().gate2b;
+    expect(g.status).toBe("PASS");
+    expect(g.gateRun.mode).toBe("textureLevels=both");
+    expect(g.gateRun.lod0Differing).toBe(0);
+    expect(g.gateRun.lod0Identical).toBe(g.gateRun.lod0Checked);
+    expect(g.gateRun.lod0Checked).toBeGreaterThanOrEqual(200);
+    // Every wave represented, and every wave's lod_1 actually changed -- a run
+    // where lod_1 did not change would mean the flip never took effect and the
+    // lod_0 pass would be vacuous.
+    expect(g.gateRun.perWave.length).toBe(6);
+    for (const wave of g.gateRun.perWave) expect(wave.lod1Changed, wave.waveId).toBeGreaterThan(0);
+  });
+
+  it("2a: every lod_1 UV is one of lod_0's, and the storage figure is MEASURED", () => {
+    const g = gates().gate2a;
+    expect(g.status).toBe("PASS");
+    expect(g.uvContainment.allContained).toBe(true);
+    for (const row of g.uvContainment.rows) {
+      expect(row.lod1NotInLod0, row.buildingId).toBe(0);
+      expect(row.lod1UvCount, row.buildingId).toBeGreaterThan(0);
+      expect(row.lod1UvCount, row.buildingId).toBeLessThanOrEqual(row.lod0UvCount);
+    }
+    // The measured figure replaces the first-order projection, and the record
+    // must keep saying which is which.
+    expect(g.supersedesProjection).toContain("REPLACES the first-order +0.41 GB projection");
+    expect(g.measuredByteDelta.island.sampled).toBeGreaterThanOrEqual(150);
+    expect(g.measuredByteDelta.island.projectedIslandDeltaGb).toBeGreaterThan(0.5);
+    expect(g.measuredByteDelta.island.projectedIslandDeltaGb).toBeLessThan(1.1);
+  });
+
+  it("2c: a fallback's two levels differ only where the level names itself", () => {
+    const g = gates().gate2c;
+    expect(g.status).toBe("PASS");
+    expect(g.checked).toBeGreaterThanOrEqual(3);
+    expect(g.allBinaryIdentical).toBe(true);
+    expect(g.allSameByteSize).toBe(true);
+    expect(g.allSameImageCount).toBe(true);
+    for (const row of g.rows) {
+      expect(row.binaryChunkIdentical, row.buildingId).toBe(true);
+      expect(row.lod0Bytes, row.buildingId).toBe(row.lod1Bytes);
+      expect(row.lod0Uvs, row.buildingId).toBe(row.lod1Uvs);
+      // Same length, different content: the level id is a same-length
+      // substitution, which is why bytesEqual is false and must stay false.
+      expect(row.bytesEqual, row.buildingId).toBe(false);
+    }
+  });
+
+  it("keeps its sampling honest: a pass over 214 is not a pass over 44,989", () => {
+    const g = gates();
+    expect(g.gate2b.samplingStatement).toContain("not the population");
+    expect(g.notClaimedHere.some((entry) => entry.includes("214 of 44,989"))).toBe(true);
+    expect(g.notClaimedHere.some((entry) => entry.includes("No -c2 release exists"))).toBe(true);
   });
 });
