@@ -92,11 +92,13 @@ function main() {
     const m = JSON.parse(readFileSync(join(c2Root, cm.relativeRef), "utf8"));
     if (m.assets.some((a) => a.lods.some((l) => l.lodId === "lod_1" && l.eligible === false))) fallbackCells.add(cm.cellId);
   }
-  const picked = [...stride(cells, Math.max(1, Math.ceil(sampleSize / 2)))];
-  for (const cell of cells) {
-    if (picked.length >= cells.length) break;
-    if (fallbackCells.has(cell.cellId) && !picked.includes(cell)) { picked.push(cell); break; }
-  }
+  // FALLBACK CELLS FIRST. Appending them last let the 40-GLB cap exhaust before
+  // the sample ever reached one, which reported "0 fallback GLBs" while quietly
+  // satisfying nothing. A fallback parent's two levels share geometry, so it is
+  // the case a palette or texture-binding fault would show in first.
+  const fallbackFirst = cells.filter((c) => fallbackCells.has(c.cellId));
+  const rest = cells.filter((c) => !fallbackCells.has(c.cellId));
+  const picked = [...fallbackFirst.slice(0, 2), ...stride(rest, Math.max(1, Math.ceil(sampleSize / 2)))];
 
   const wanted = new Set(picked.flatMap((c) => c.buildingIds));
   const sources = collectMidtownCoreSources(shards, wanted);
@@ -110,7 +112,17 @@ function main() {
       profile: emissionProfile, assemblyLods: { lod0MaxDistanceMeters: null },
     });
     const fallbackIds = new Set([...m.lod1Decisions].filter(([, d]) => d.variant === "full-geometry").map(([id]) => id));
-    for (const ref of [...m.assetBytes.keys()].sort()) {
+    // FALLBACK REFS FIRST within the cell, for the same reason the fallback
+    // CELLS come first: a cell holds ~50 buildings and only one of them is a
+    // fallback, so taking the first 40 refs in name order sampled 40 GLBs that
+    // reliably excluded the very building the sample exists to cover.
+    const fallbackRef = (ref) => [...fallbackIds].some((id) => ref.includes(id.replaceAll(":", "-")));
+    const ordered = [...m.assetBytes.keys()].sort((l, r) => {
+      const fl = fallbackRef(l) ? 0 : 1;
+      const fr = fallbackRef(r) ? 0 : 1;
+      return fl !== fr ? fl - fr : (l < r ? -1 : l > r ? 1 : 0);
+    });
+    for (const ref of ordered) {
       if (replay.comparedGlbCount >= sampleSize) break;
       const expected = declared.get(ref);
       if (!expected) { replay.mismatches.push({ ref, reason: "not declared by the -c2 inventory" }); replay.comparedGlbCount += 1; continue; }
@@ -118,7 +130,7 @@ function main() {
       const measured = sha256HexBytes(bytes);
       replay.comparedGlbCount += 1;
       if (ref.endsWith("__lod_0.glb")) replay.lod0Compared += 1; else replay.lod1Compared += 1;
-      if ([...fallbackIds].some((id) => ref.includes(id.replaceAll(":", "-")))) replay.fallbackGlbCompared += 1;
+      if (fallbackRef(ref)) replay.fallbackGlbCompared += 1;
       if (measured === expected.checksumSha256 && bytes.byteLength === expected.byteSize) replay.byteIdenticalCount += 1;
       else replay.mismatches.push({ ref, declared: expected.checksumSha256, replayed: measured });
     }
