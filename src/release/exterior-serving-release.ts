@@ -111,6 +111,8 @@ import { midtownCoreConveyanceRights } from "./midtown-core-release.ts";
 
 export const EXTERIOR_SERVING_SUFFIX = "-s1" as const;
 export const EXTERIOR_RETENTION_SUFFIX = "-c1" as const;
+/** The TWO-LOD retention package T009 cut: `-c1` geometry plus a textured `lod_1`. */
+export const EXTERIOR_TWO_LOD_RETENTION_SUFFIX = "-c2" as const;
 /** The one LOD a serving release ships. See the module docblock. */
 export const EXTERIOR_SERVING_SHIPPED_LOD_ID = "lod_0" as const;
 export const EXTERIOR_SERVING_CELL_RELEASE_VERSION = "v1" as const;
@@ -128,6 +130,30 @@ export function exteriorServingReleaseId(retentionReleaseId: string): string {
     servingFail(`${retentionReleaseId} is not a retention release id (expected a ${EXTERIOR_RETENTION_SUFFIX} suffix).`);
   }
   return `${retentionReleaseId.slice(0, -EXTERIOR_RETENTION_SUFFIX.length)}${EXTERIOR_SERVING_SUFFIX}`;
+}
+
+/**
+ * `…-c1` becomes `…-c2`: the TWO-LOD retention package the `-s2` cut reads.
+ *
+ * The wave table names `-c1` because that is what it was cut against, and it is
+ * left alone — rewriting the table would move the `-s1` ids that six frozen
+ * activation records pin. The two-LOD driver derives its own source id instead,
+ * so the single wave table serves both cuts and neither has to know about the
+ * other's suffix.
+ */
+export function exteriorTwoLodRetentionReleaseId(retentionReleaseId: string): string {
+  if (!retentionReleaseId.endsWith(EXTERIOR_RETENTION_SUFFIX)) {
+    servingFail(`${retentionReleaseId} is not a retention release id (expected a ${EXTERIOR_RETENTION_SUFFIX} suffix).`);
+  }
+  return `${retentionReleaseId.slice(0, -EXTERIOR_RETENTION_SUFFIX.length)}${EXTERIOR_TWO_LOD_RETENTION_SUFFIX}`;
+}
+
+/** `…-c2` becomes `…-s2`; anything else is refused rather than suffixed blindly. */
+export function exteriorTwoLodServingReleaseId(retentionReleaseId: string): string {
+  if (!retentionReleaseId.endsWith(EXTERIOR_TWO_LOD_RETENTION_SUFFIX)) {
+    servingFail(`${retentionReleaseId} is not a two-LOD retention release id (expected a ${EXTERIOR_TWO_LOD_RETENTION_SUFFIX} suffix).`);
+  }
+  return `${retentionReleaseId.slice(0, -EXTERIOR_TWO_LOD_RETENTION_SUFFIX.length)}${EXTERIOR_TWO_LOD_SERVING_SUFFIX}`;
 }
 
 export function servingArtifactRef(audience: ExteriorReleaseAudience, kind: ExteriorArtifactKind, logicalId: string): string {
@@ -263,6 +289,63 @@ export function transformRetentionTilesetToServing(value: unknown, shippedLodSuf
   return { ...document, root: { ...(root as Record<string, unknown>), children: leaves } };
 }
 
+/**
+ * The TWO-LOD tileset: the retained refinement chain, KEPT rather than flattened.
+ *
+ * `transformRetentionTilesetToServing` reduces each chain to its leaf, because
+ * an `-s1` release ships one level and a tileset advertising a coarse tile it
+ * does not ship would be a lie the validator correctly refuses. An `-s2`
+ * release ships both, so the chain it advertises must be the chain it carries:
+ * the coarse wrapper refining to the fine leaf, exactly as retained.
+ *
+ * This is therefore close to identity, and that is the point — the retained
+ * chain is ALREADY the shape a two-LOD serving tileset needs, so the honest
+ * transform is to validate that shape and pass it through rather than rebuild
+ * it. Rebuilding would reorder keys and would have to guess which optional
+ * fields were present.
+ *
+ * FOUND BY RUNNING IT: the w00 rehearsal emitted a two-LOD assembly beside a
+ * flattened single-LOD tileset, and `validateMultiLodAssembly` refused the
+ * package with "Tile content URI does not match the canonical asset LOD
+ * refinement chain." The assembly transform had been written and proven; the
+ * tileset half had not, and only cutting a real wave surfaced it.
+ */
+export function transformRetentionTilesetToTwoLodServing(
+  value: unknown,
+  options: { fineLodSuffix?: string; coarseLodSuffix?: string } = {},
+): Record<string, unknown> {
+  const fineSuffix = options.fineLodSuffix ?? `__${EXTERIOR_SERVING_SHIPPED_LOD_ID}.glb`;
+  const coarseSuffix = options.coarseLodSuffix ?? `__${EXTERIOR_TWO_LOD_SERVING_COARSE_LOD_ID}.glb`;
+  if (typeof value !== "object" || value === null || Array.isArray(value)) servingFail("retention tileset must be an object.");
+  const document = value as Record<string, unknown>;
+  const root = document.root;
+  if (typeof root !== "object" || root === null || Array.isArray(root)) servingFail("retention tileset root must be an object.");
+  const rootTile = root as unknown as RetentionTile;
+  const children = rootTile.children;
+  if (!Array.isArray(children) || children.length === 0) servingFail("retention tileset root must carry one LOD chain per asset.");
+
+  const chains = children.map((chain, index) => {
+    if (!Array.isArray(chain.children) || chain.children.length !== 1) {
+      servingFail(`retention tileset chain [${index}] does not refine to exactly one finer LOD.`);
+    }
+    const leaf = chain.children[0]!;
+    if (leaf.children !== undefined && (leaf.children as RetentionTile[]).length !== 0) {
+      servingFail(`retention tileset chain [${index}] is deeper than the two LODs this transform carries.`);
+    }
+    const coarseUri = chain.content?.uri;
+    if (typeof coarseUri !== "string" || !coarseUri.endsWith(coarseSuffix)) {
+      servingFail(`retention tileset chain [${index}] outer content ${String(coarseUri)} is not the coarse LOD.`);
+    }
+    const fineUri = leaf.content?.uri;
+    if (typeof fineUri !== "string" || !fineUri.endsWith(fineSuffix)) {
+      servingFail(`retention tileset chain [${index}] innermost content ${String(fineUri)} is not the shipped fine LOD.`);
+    }
+    if (leaf.geometricError !== 0) servingFail(`retention tileset chain [${index}] innermost tile does not declare zero geometric error.`);
+    return chain;
+  });
+  return { ...document, root: { ...(root as Record<string, unknown>), children: chains } };
+}
+
 // ---------------------------------------------------------------------------
 // The assembly transform
 // ---------------------------------------------------------------------------
@@ -332,6 +415,134 @@ export function transformRetentionAssemblyToServing(
   }
   if (artifacts.filter((artifact) => artifact.role === "glb").length !== assets.length) {
     servingFail(`retention manifest ${retention.packageId} does not declare exactly one ${EXTERIOR_SERVING_SHIPPED_LOD_ID} artifact per asset.`);
+  }
+
+  return {
+    schemaVersion: retention.schemaVersion,
+    packageId: pins.packageId,
+    audience: "public",
+    generatedAt: pins.generatedAt,
+    immutable: true,
+    release: { ...pins.release },
+    baseIdentitySet: { ...pins.baseIdentitySet },
+    ownershipLedger: { ...pins.ownershipLedger },
+    cells: [{ ...cell, cellRelease: { ...pins.cellRelease }, predecessor: null }],
+    assets,
+    artifacts,
+    tilesetRef: servingTilesetRef(cell.cellId),
+    declaredTotalBytes: artifacts.reduce((total, artifact) => total + artifact.byteSize, 0),
+  };
+}
+
+/** The `-s2` serving generation: two LODs, a near ring and a mid ring (ADR 0057). */
+export const EXTERIOR_TWO_LOD_SERVING_SUFFIX = "-s2" as const;
+export const EXTERIOR_TWO_LOD_SERVING_COARSE_LOD_ID = "lod_1" as const;
+
+/**
+ * The near-ring bound written onto every served `lod_0`, in metres.
+ *
+ * DERIVED in ADR 0057 §1.4 from the committed extents census — the median cell
+ * diagonal of 316.5 m, rounded up to the next 100 m under a named convention —
+ * and re-derived by `exterior-two-lod-residency.test.ts`. It is deliberately NOT
+ * a scheduler distance-band edge: ADR 0044 §1.1 recorded that those are sort
+ * keys rather than admission tests, and at 1,200 m the mid ring holds no
+ * resident cell at all.
+ */
+export const EXTERIOR_TWO_LOD_SERVING_NEAR_RING_METERS = 400;
+
+/**
+ * One retained `-c2` cell manifest, re-pinned to an `-s2` serving release and
+ * kept at BOTH levels.
+ *
+ * ## Why this is a separate function from the `-s1` transform
+ *
+ * `transformRetentionAssemblyToServing` reduces a manifest to one level and
+ * writes `maxDistanceMeters: null` onto it. That is the correct shape for what
+ * `-s1` ships and it is left exactly as it is: it describes a promoted release,
+ * and a transform that changed under a successor would change what the frozen
+ * drift test is checking.
+ *
+ * ## The thresholds are the tier
+ *
+ * `lod_0` is bounded at the near ring and `lod_1` is unbounded beyond it. Under
+ * finest-that-covers — the default selection semantics from ADR 0057 Part 0 —
+ * that resolves `lod_0` within the ring and `lod_1` outside it, which IS the
+ * mid-distance ring the contract asks for. Nothing in the scheduler decides it;
+ * the scheduler decides residency only.
+ *
+ * ## The ADR 0050 exception, carried rather than re-derived
+ *
+ * A measured-fallback parent's `lod_1` is INELIGIBLE, because its coarse level
+ * was never honest coarse geometry — it is full geometry wearing a coarse label.
+ * Bounding such an asset's `lod_0` would leave it resolving NOTHING beyond the
+ * ring: `lod-unavailable`, a blank building. So a fallback parent keeps
+ * `lod_0` UNBOUNDED and its ineligible `lod_1` is carried through untouched.
+ * The condition is read off the retained manifest rather than recomputed, so
+ * this cannot disagree with the census that declared it.
+ *
+ * ## The silhouette record is PRESERVED, not nulled
+ *
+ * `-s1` nulls it because a single-LOD package declares no transition. A two-LOD
+ * package must carry the coarse level's measurement or `validateMultiLodAssembly`
+ * refuses it — correctly, since an unmeasured coarse level is exactly what the
+ * 2% cap exists to prevent.
+ */
+export function transformRetentionAssemblyToTwoLodServing(
+  retention: MultiLodAssemblyManifest,
+  pins: ServingAssemblyPins,
+  options: { nearRingMeters: number },
+): MultiLodAssemblyManifest {
+  if (retention.cells.length !== 1) servingFail(`retention manifest ${retention.packageId} packages ${retention.cells.length} cells; the serving form is exactly one.`);
+  if (!(options.nearRingMeters > 0)) servingFail("the near-ring bound must be a positive distance.");
+  const cell = retention.cells[0]!;
+  const expectedSuffix = `:${cell.cellId}:${EXTERIOR_SERVING_CELL_RELEASE_VERSION}`;
+  if (pins.cellRelease.id.split(":")[2] !== cell.cellId && !pins.cellRelease.id.endsWith(expectedSuffix)) {
+    servingFail(`retention manifest ${retention.packageId} packages cell ${cell.cellId}, which the supplied cell-release pin ${pins.cellRelease.id} does not name.`);
+  }
+
+  const shippedRefs = new Set<string>();
+  const assets: AssemblyAsset[] = retention.assets.map((asset) => {
+    const fine = asset.lods.filter((lod) => lod.lodId === EXTERIOR_SERVING_SHIPPED_LOD_ID);
+    const coarse = asset.lods.filter((lod) => lod.lodId === EXTERIOR_TWO_LOD_SERVING_COARSE_LOD_ID);
+    if (fine.length !== 1) servingFail(`asset ${asset.canonicalFeatureId} declares ${fine.length} ${EXTERIOR_SERVING_SHIPPED_LOD_ID} entries; exactly one is required.`);
+    if (coarse.length !== 1) servingFail(`asset ${asset.canonicalFeatureId} declares ${coarse.length} ${EXTERIOR_TWO_LOD_SERVING_COARSE_LOD_ID} entries; a two-LOD serving release requires exactly one.`);
+    const retainedFine = fine[0]!;
+    const retainedCoarse = coarse[0]!;
+    if (retainedFine.geometricErrorMeters !== 0) servingFail(`asset ${asset.canonicalFeatureId} ships a nonzero geometric error at ${EXTERIOR_SERVING_SHIPPED_LOD_ID}.`);
+    if (!retainedFine.eligible) servingFail(`asset ${asset.canonicalFeatureId} declares its ${EXTERIOR_SERVING_SHIPPED_LOD_ID} ineligible; there would be nothing to serve in the near ring.`);
+
+    // ADR 0050. Read off the retained manifest, never recomputed here.
+    const measuredFallback = !retainedCoarse.eligible;
+    if (!measuredFallback && retainedCoarse.silhouette === null) {
+      servingFail(`asset ${asset.canonicalFeatureId} ships an eligible ${EXTERIOR_TWO_LOD_SERVING_COARSE_LOD_ID} with no silhouette measurement; a coarse level nobody measured cannot be served.`);
+    }
+    const lods: AssemblyLod[] = [
+      {
+        ...retainedFine,
+        silhouette: null,
+        // A fallback parent keeps an UNBOUNDED fine level, because its coarse
+        // level cannot cover anything and a bounded fine level would leave it
+        // resolving nothing at range.
+        maxDistanceMeters: measuredFallback ? null : options.nearRingMeters,
+      },
+      { ...retainedCoarse, maxDistanceMeters: null },
+    ];
+    shippedRefs.add(retainedFine.artifactRef);
+    shippedRefs.add(retainedCoarse.artifactRef);
+    return { ...asset, lods };
+  });
+
+  const artifacts: AssemblyArtifact[] = [];
+  for (const artifact of retention.artifacts) {
+    if (artifact.role === "glb") { if (shippedRefs.has(artifact.relativeRef)) artifacts.push({ ...artifact }); continue; }
+    if (artifact.role === "tileset-json") {
+      artifacts.push({ ...artifact, relativeRef: servingTilesetRef(cell.cellId), byteSize: pins.tileset.byteSize, checksumSha256: pins.tileset.checksumSha256 });
+      continue;
+    }
+    artifacts.push({ ...artifact });
+  }
+  if (artifacts.filter((artifact) => artifact.role === "glb").length !== assets.length * 2) {
+    servingFail(`retention manifest ${retention.packageId} does not declare exactly two GLB artifacts per asset.`);
   }
 
   return {

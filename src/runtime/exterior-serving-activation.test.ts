@@ -186,28 +186,47 @@ describe("the digest form, in the records this build ships", () => {
 /**
  * The literal form, which no promoted record uses any more.
  *
- * It is not dead: every promoted record's predecessor is a curated record that
- * states its head and its building membership literally, so the literal path is
- * what a rolled-back build runs. These cases follow the form to where it
- * actually ships instead of asserting it of records that moved.
+ * It is not dead: it is what the CURATED records state, and a rolled-back build
+ * runs it. T001 MOVED IT ONE RUNG FURTHER DOWN — a promoted `-s2` record's
+ * predecessor is now the `-s1` serving record, which uses the DIGEST form like
+ * its successor, and the curated record that states its head and membership
+ * literally is that record's own predecessor. These cases follow the form to
+ * where it actually ships rather than asserting it of records that moved.
  */
 describe("the literal form", () => {
+  /** The curated rung: down through the serving records to the literal one. */
+  const curatedRung = (record: ExteriorDefaultActivationEnabled): ExteriorDefaultActivationEnabled => {
+    let current = record;
+    while (current.predecessor.enabled && (current.predecessor.assemblyPackageIdsDigestSha256 ?? null) !== null) {
+      current = current.predecessor as ExteriorDefaultActivationEnabled;
+    }
+    return current.predecessor as ExteriorDefaultActivationEnabled;
+  };
+
   it("is what every curated predecessor still uses, and is untouched", () => {
+    let checked = 0;
     for (const record of EXTERIOR_DEFAULT_ACTIVATIONS) {
       if (!record.enabled) continue;
-      const predecessor = record.predecessor;
+      // The rung immediately below is the -s1 serving record, which is DIGEST
+      // form. Asserting the literal form of it would have failed for the right
+      // reason and been "fixed" by deleting the check.
+      expect(record.predecessor.enabled, record.releaseId).toBe(true);
+      const predecessor = curatedRung(record);
       expect(predecessor.enabled, record.releaseId).toBe(true);
       if (!predecessor.enabled) continue;
       expect(predecessor.assemblyPackageIdsDigestSha256 ?? null, predecessor.releaseId).toBeNull();
       expect(predecessor.membership.buildingIdsDigestSha256 ?? null, predecessor.releaseId).toBeNull();
       expect(predecessor.assemblyPackageIds.length, predecessor.releaseId).toBeGreaterThan(0);
       expect(predecessor.membership.buildingIds.length, predecessor.releaseId).toBeGreaterThan(0);
+      checked += 1;
     }
+    // Not vacuous: all six waves reach a literal-form curated record.
+    expect(checked).toBe(6);
   });
 
   it("ignores a supplied resolved set, so the record's own list stays authoritative", () => {
     const promoted = EXTERIOR_DEFAULT_ACTIVATIONS.find((entry) => entry.enabled)! as ExteriorDefaultActivationEnabled;
-    const record = promoted.predecessor as ExteriorDefaultActivationEnabled;
+    const record = curatedRung(promoted);
     expect(record.enabled).toBe(true);
     const outsider = "doitt:000000";
     expect(record.membership.buildingIds).not.toContain(outsider);

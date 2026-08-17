@@ -141,15 +141,15 @@ describe("Central-and-upper-Manhattan promotion record versus the committed payl
     const promoted = EXTERIOR_DEFAULT_ACTIVATIONS[4]!;
     expect(promoted.enabled).toBe(true);
     if (!promoted.enabled) throw new Error("expected the fifth promoted default to be enabled");
-    expect(promoted.releaseId).toBe(SERVING_RELEASE_ID);
-    expect(promoted.predecessor).toBe(CENTRAL_UPPER_MANHATTAN_P1_EXTERIOR_ACTIVATION);
+    expect(promoted.predecessor.enabled && promoted.predecessor.releaseId).toBe(SERVING_RELEASE_ID);
+    expect(promoted.predecessor.enabled && promoted.predecessor.predecessor).toBe(CENTRAL_UPPER_MANHATTAN_P1_EXTERIOR_ACTIVATION);
     // The four earlier slots are untouched by this promotion, and the wave
     // immediately before it is asserted by identity rather than by shape.
     const previous = EXTERIOR_DEFAULT_ACTIVATIONS[3]!;
     expect(previous.enabled).toBe(true);
     if (!previous.enabled) throw new Error("expected the fourth promoted default to be enabled");
-    expect(previous.releaseId).toBe(SOUTHERN_REMAINDER_SERVING_RELEASE_ID);
-    expect(previous.predecessor).toBe(SOUTHERN_REMAINDER_P1_EXTERIOR_ACTIVATION);
+    expect(previous.predecessor.enabled && previous.predecessor.releaseId).toBe(SOUTHERN_REMAINDER_SERVING_RELEASE_ID);
+    expect(previous.predecessor.enabled && previous.predecessor.predecessor).toBe(SOUTHERN_REMAINDER_P1_EXTERIOR_ACTIVATION);
   });
 
   it("pins the rollout snapshot and assembly package the inventory recorded", () => {

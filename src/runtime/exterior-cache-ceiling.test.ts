@@ -104,6 +104,19 @@ const SERVING_RELEASE_IDS = [
 const servingProfiles = SERVING_RELEASE_IDS.map((releaseId) => inventoryProfile(releaseId, `data/${releaseId}/payload-inventory.json`));
 
 /**
+ * The TWO-LOD serving releases, DERIVED from the `-s1` ids rather than typed.
+ *
+ * T001 promoted these over the `-s1` set, and the ceiling refused the promotion
+ * until their bytes were registered — the guard's fourth firing, and exactly
+ * what it exists for. Their profiles come from their own committed payload
+ * inventories by the same `inventoryProfile` path the `-s1` rows use, so this is
+ * deterministic arithmetic over committed data and not a second, hand-maintained
+ * account of the same bytes.
+ */
+const TWO_LOD_SERVING_RELEASE_IDS = SERVING_RELEASE_IDS.map((releaseId) => `${releaseId.slice(0, -"-s1".length)}-s2`);
+const twoLodServingProfiles = TWO_LOD_SERVING_RELEASE_IDS.map((releaseId) => inventoryProfile(releaseId, `data/${releaseId}/payload-inventory.json`));
+
+/**
  * Where each release's measured bytes come from, keyed by release id.
  *
  * This is a REGISTRY, not the composition. The composition is derived from
@@ -127,6 +140,7 @@ const BYTE_PROFILES = new Map<string, ExteriorCacheWaveByteProfile>([
   [centralUpperManhattan.releaseId, centralUpperManhattan],
   [northernManhattan.releaseId, northernManhattan],
   ...servingProfiles.map((profile) => [profile.releaseId, profile] as const),
+  ...twoLodServingProfiles.map((profile) => [profile.releaseId, profile] as const),
 ]);
 
 /** The composition this build actually promotes, in promotion-record order. */
@@ -141,7 +155,25 @@ const PROMOTED_PROFILES = exteriorPromotedCacheProfiles({ records: EXTERIOR_DEFA
  * records and not a literal array someone has to keep in step. That is the same
  * derivation discipline the T018 review imposed, applied one level down.
  */
-const CURATED_RECORDS = EXTERIOR_DEFAULT_ACTIVATIONS.map((record) => (record.enabled ? record.predecessor : record));
+/**
+ * The SINGLE-LOD serving composition: one rung below the promotion.
+ *
+ * T001 promoted `-s2` over `-s1`, so the immediate predecessor chain is now the
+ * `-s1` releases rather than the curated ones. This binding names that rung so
+ * the historical describes below can keep meaning what they meant.
+ */
+const SINGLE_LOD_RECORDS = EXTERIOR_DEFAULT_ACTIVATIONS.map((record) => (record.enabled ? record.predecessor : record));
+
+/**
+ * The CURATED composition, now TWO rungs below the promotion.
+ *
+ * Still derived from the predecessor chain rather than listed by hand — the
+ * chain simply got one link longer when `-s2` was promoted over `-s1`. Every
+ * historical describe below states what a build shipped at a past moment, so it
+ * must follow the composition it describes down the chain rather than track the
+ * live default, which has moved past it.
+ */
+const CURATED_RECORDS = SINGLE_LOD_RECORDS.map((record) => (record.enabled ? record.predecessor : record));
 const CURATED_PROFILES = exteriorPromotedCacheProfiles({ records: CURATED_RECORDS, profiles: BYTE_PROFILES });
 
 describe("the exterior entry cap", () => {
@@ -422,8 +454,13 @@ describe("the byte ceiling with the SIXTH and LAST curated wave promoted", () =>
 });
 
 describe("the SERVING composition, where the composition ceiling stops being a bound", () => {
+  // HISTORICAL: the single-LOD serving city, which is what this describe
+  // measured when it was written. T001 promoted `-s2` past it, and the live
+  // two-LOD composition is asserted separately below rather than by silently
+  // re-pointing these numbers at bytes they were never taken over.
+  const SINGLE_LOD_PROFILES = exteriorPromotedCacheProfiles({ records: SINGLE_LOD_RECORDS, profiles: BYTE_PROFILES });
   const ceiling = exteriorCacheByteCeiling({
-    waves: PROMOTED_PROFILES,
+    waves: SINGLE_LOD_PROFILES,
     maxCacheEntries: EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries,
     maxCachedBytes: EXTERIOR_RUNTIME_BUDGETS.maxCachedBytes,
   });
@@ -493,7 +530,19 @@ describe("the SERVING composition, where the composition ceiling stops being a b
    */
   it("sums to the island the ledger declares: 44,989 served assets", () => {
     expect(servingProfiles.reduce((sum, profile) => sum + profile.assetEntries, 0)).toBe(44_989);
-    expect(PROMOTED_PROFILES.reduce((sum, profile) => sum + profile.assetEntries, 0)).toBe(44_989);
+    expect(SINGLE_LOD_PROFILES.reduce((sum, profile) => sum + profile.assetEntries, 0)).toBe(44_989);
+  });
+
+  /**
+   * The LIVE composition, stated separately because its asset count is a
+   * different number for a real reason rather than a drifted one: a `-s2` wave
+   * serves BOTH levels of every building, so the island's 44,989 buildings are
+   * 89,978 cache entries. Folding this into the assertion above would have made
+   * one number stand for two different quantities.
+   */
+  it("serves TWO entries per building once the two-LOD composition is promoted", () => {
+    expect(PROMOTED_PROFILES.reduce((sum, profile) => sum + profile.assetEntries, 0)).toBe(2 * 44_989);
+    expect(PROMOTED_PROFILES.reduce((sum, profile) => sum + profile.assetEntries, 0)).toBe(89_978);
   });
 });
 
@@ -502,10 +551,13 @@ describe("the composition is derived from the promotion records", () => {
     const enabled = EXTERIOR_DEFAULT_ACTIVATIONS.filter((record) => record.enabled).map((record) => record.releaseId);
     expect(PROMOTED_PROFILES.map((profile) => profile.releaseId)).toEqual(enabled);
     expect(PROMOTED_PROFILES).toHaveLength(6);
-    expect(enabled).toEqual([...SERVING_RELEASE_IDS]);
+    expect(enabled).toEqual([...TWO_LOD_SERVING_RELEASE_IDS]);
   });
 
   it("resolves the curated predecessors just as strictly, in the same order", () => {
+    // TWO rungs down from the promotion: -s2 over -s1 over the curated record.
+    // The rung between them is asserted separately so a collapsed chain fails.
+    expect(exteriorPromotedCacheProfiles({ records: SINGLE_LOD_RECORDS, profiles: BYTE_PROFILES }).map((profile) => profile.releaseId)).toEqual([...SERVING_RELEASE_IDS]);
     expect(CURATED_PROFILES.map((profile) => profile.releaseId)).toEqual([
       block835.releaseId, midtown.releaseId, lowerManhattan.releaseId,
       southernRemainder.releaseId, centralUpperManhattan.releaseId, northernManhattan.releaseId,
@@ -543,18 +595,19 @@ describe("the composition is derived from the promotion records", () => {
 
   it("skips a wave rolled back to base, because it is genuinely not resident", () => {
     const rolledBack = EXTERIOR_DEFAULT_ACTIVATIONS.map((record) => (
-      record.enabled && record.releaseId === "manhattan-southern-remainder-cells-20260812-s1"
+      record.enabled && record.releaseId === "manhattan-southern-remainder-cells-20260812-s2"
         ? { enabled: false as const, releaseId: null }
         : record
     ));
     const profiles = exteriorPromotedCacheProfiles({ records: rolledBack, profiles: BYTE_PROFILES });
-    expect(profiles.map((profile) => profile.releaseId)).not.toContain("manhattan-southern-remainder-cells-20260812-s1");
+    expect(profiles.map((profile) => profile.releaseId)).not.toContain("manhattan-southern-remainder-cells-20260812-s2");
     expect(profiles).toHaveLength(5);
     const ceiling = exteriorCacheByteCeiling({ waves: profiles, maxCacheEntries: EXTERIOR_RUNTIME_BUDGETS.maxCacheEntries, maxCachedBytes: 256 * MIB });
-    // 44,989 resident minus the 9,560 the withdrawn wave occupied. The rollback
-    // is per record, so the other five waves stay resident.
-    expect(ceiling.residentAssetEntries).toBe(44_989 - 9_560);
-    expect(ceiling.residentAssetEntries).toBe(35_429);
+    // Two entries per building under the two-LOD composition: 89,978 resident
+    // minus the 2 x 9,560 the withdrawn wave occupied. The rollback is per
+    // record, so the other five waves stay resident.
+    expect(ceiling.residentAssetEntries).toBe(89_978 - (2 * 9_560));
+    expect(ceiling.residentAssetEntries).toBe(70_858);
   });
 
   it("refuses a mislabelled profile and an empty composition", () => {

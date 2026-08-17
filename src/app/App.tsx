@@ -69,7 +69,7 @@ import { commitExteriorCacheRelease, createExteriorCacheReleaseState, noteExteri
 import type { SchedulerCarry } from "../runtime/exterior-visibility-scheduler";
 import { createExteriorAssetFaultFetcher, createExteriorCellFaultFetcher, parseExteriorAssetFault, parseExteriorCellFault } from "../runtime/exterior-cell-fault";
 import { EXTERIOR_SERVING_WAVES } from "../release/exterior-serving-waves";
-import { EXTERIOR_DEFAULT_ACTIVATION, exteriorAcceptedCellsDigest, exteriorAcceptedIdsDigest, exteriorDefaultActivations, exteriorRolledBackReleaseNotice, exteriorStreamingOverrideDisables, exteriorUnavailableStatements, resolveExteriorActivationSet, restoresPromotedDefault, verifyPromotedExteriorMembership, verifyPromotedExteriorPin, type ExteriorDefaultActivationRecord, type ExteriorDefaultActivationRecords, type ExteriorReleaseActivation, type ExteriorStreamingOverride } from "../runtime/exterior-default-activation";
+import { EXTERIOR_DEFAULT_ACTIVATION, EXTERIOR_TWO_LOD_DEFAULT_ACTIVATION, exteriorAcceptedCellsDigest, exteriorAcceptedIdsDigest, exteriorDefaultActivations, exteriorRolledBackReleaseNotice, exteriorStreamingOverrideDisables, exteriorUnavailableStatements, resolveExteriorActivationSet, restoresPromotedDefault, verifyPromotedExteriorMembership, verifyPromotedExteriorPin, type ExteriorDefaultActivationRecord, type ExteriorDefaultActivationRecords, type ExteriorReleaseActivation, type ExteriorStreamingOverride } from "../runtime/exterior-default-activation";
 import {
   BLOCK835_CANARY_REPEATS,
   BLOCK835_CANARY_SAMPLES_PER_POSE,
@@ -86,6 +86,7 @@ import {
 } from "../runtime/block835-canary-probe";
 import { MIDTOWN_CORE_CANARY_FACADE_PATH } from "../runtime/midtown-core-canary-facade-path";
 import { DEFAULT_EXTERIOR_RENDER_PROFILE, EXTERIOR_RENDER_PROFILES, exteriorRenderProfileLabel, parseExteriorRenderProfile, type ExteriorRenderProfile } from "../runtime/exterior-render-profiles";
+import { EXTERIOR_TWO_LOD_SERVING_NEAR_RING_METERS } from "../release/exterior-serving-release";
 import { exteriorDeferredCellNotice, exteriorNotShippedSummary, exteriorQualifiedNotice, exteriorReleasedArtifactNotice, exteriorWaveForSelection } from "../runtime/exterior-wave-attribution";
 import { fallbackViewportFootprint, type ViewportFootprint } from "../runtime/viewport-footprint";
 
@@ -583,6 +584,15 @@ export const MOBILE_VIEWPORT_MEDIA_QUERY = "(max-width: 680px)";
  * desktop session can ask for, and this policy exists so the product states it
  * rather than quietly serving less.
  *
+ * T001 NOTE: this clamp reads `DEFAULT_EXTERIOR_RENDER_PROFILE`, so it follows
+ * that constant wherever it goes. Under the single-LOD serving era the clamp
+ * WAS vacuous — every profile resolved the same level. Post-promotion it is
+ * inert for a different reason: mobile follows the finest-that-covers default
+ * rather than clamping below it, so mobile and desktop request the same
+ * profile. The frame-time consequence of that is unmeasured, which is why
+ * ADR 0057 §2.2 hands the mobile measurement to T007 rather than claiming it
+ * here.
+ *
  * Three things it deliberately does NOT do:
  *
  *  1. It does not claim desktop visual parity. It claims the opposite, in the
@@ -615,7 +625,7 @@ export function mobileExteriorLodPolicy(mobile: boolean, requestedProfile: Exter
     requestedProfile,
     effectiveProfile,
     clamped,
-    disclosure: `Mobile viewport · exterior geometry is pinned to the ${exteriorRenderProfileLabel(effectiveProfile)}${clamped ? `, overriding the requested ${exteriorRenderProfileLabel(requestedProfile)}` : ""}. This is a LOWER level of detail than a desktop inspection session and no desktop visual parity is claimed. Feature identity, selection, details, provenance and deep links are unchanged.`,
+    disclosure: `Mobile viewport · exterior geometry is pinned to the ${exteriorRenderProfileLabel(effectiveProfile)}${clamped ? `, overriding the requested ${exteriorRenderProfileLabel(requestedProfile)}` : ""}. ${effectiveProfile === "inspection" ? "This is the SAME level of detail a desktop inspection session resolves; no reduction is applied and no mobile frame-time budget is claimed here." : "This is a LOWER level of detail than a desktop inspection session and no desktop visual parity is claimed."} Feature identity, selection, details, provenance and deep links are unchanged.`,
   };
 }
 
@@ -763,7 +773,7 @@ export function appendBlock835PublicRealmUrl(baseUrl: string, requested: boolean
  * whether any of them is ever promoted is a separate decision with its own
  * measurement, and this pin does not anticipate it.
  */
-export const PINNED_EXTERIOR_CELL_RELEASE_IDS = ["udt-fixture-exterior-cells", "manhattan-exterior-cells-20260811", "manhattan-exterior-cells-20260811-v3", "manhattan-midtown-core-cells-20260811", "manhattan-midtown-core-cells-20260811-v3", "manhattan-lower-manhattan-cells-20260812", "manhattan-lower-manhattan-cells-20260812-p1", "manhattan-southern-remainder-cells-20260812", "manhattan-southern-remainder-cells-20260812-p1", "manhattan-central-upper-manhattan-cells-20260812", "manhattan-central-upper-manhattan-cells-20260812-p1", "manhattan-northern-manhattan-cells-20260812", "manhattan-northern-manhattan-cells-20260812-p1", ...EXTERIOR_T1_RELEASE_IDS, ...EXTERIOR_SERVING_WAVES.map((entry) => entry.servingReleaseId)] as const;
+export const PINNED_EXTERIOR_CELL_RELEASE_IDS = ["udt-fixture-exterior-cells", "manhattan-exterior-cells-20260811", "manhattan-exterior-cells-20260811-v3", "manhattan-midtown-core-cells-20260811", "manhattan-midtown-core-cells-20260811-v3", "manhattan-lower-manhattan-cells-20260812", "manhattan-lower-manhattan-cells-20260812-p1", "manhattan-southern-remainder-cells-20260812", "manhattan-southern-remainder-cells-20260812-p1", "manhattan-central-upper-manhattan-cells-20260812", "manhattan-central-upper-manhattan-cells-20260812-p1", "manhattan-northern-manhattan-cells-20260812", "manhattan-northern-manhattan-cells-20260812-p1", ...EXTERIOR_T1_RELEASE_IDS, ...EXTERIOR_SERVING_WAVES.map((entry) => entry.servingReleaseId), ...exteriorDefaultActivations().flatMap((entry) => (entry.enabled && entry.releaseId ? [entry.releaseId] : []))] as const;
 
 /**
  * The release used when neither a URL nor the promoted default names one: still
@@ -1449,6 +1459,12 @@ export function App() {
   // release follows whatever this build promotes.
   const [exteriorExplicitReleaseId, setExteriorExplicitReleaseId] = useState<string | null>(initialExteriorStreaming.explicitReleaseId);
   const [exteriorProfile, setExteriorProfile] = useState<ExteriorRenderProfile>(initialExteriorStreaming.profile);
+  /**
+   * Which side of the near ring each cell was LOADED at (T001, ADR 0057 §1).
+   * A ref rather than state: it records what already happened and must never
+   * itself trigger a render.
+   */
+  const exteriorRingSideRef = useRef(new Map<string, "near" | "mid">());
   const [exteriorCanarySnapshotId, setExteriorCanarySnapshotId] = useState<string | null>(initialExteriorStreaming.canarySnapshotId);
   // T002 opt-in. Read once at boot and never written by the UI: this build has
   // no scheduler control, only the URL flag, so the value cannot change within a
@@ -1473,7 +1489,7 @@ export function App() {
   const [exteriorUnanchoredIds, setExteriorUnanchoredIds] = useState<string[]>([]);
   // Kept separate from `deepLinkMessage`, which the first selection clears.
   const [exteriorDeepLinkNotice, setExteriorDeepLinkNotice] = useState<string | null>(
-    typeof window === "undefined" ? null : exteriorDeepLinkMessage(window.location.href, exteriorDefaultActivations(EXTERIOR_DEFAULT_ACTIVATION)),
+    typeof window === "undefined" ? null : exteriorDeepLinkMessage(window.location.href, exteriorDefaultActivations(EXTERIOR_TWO_LOD_DEFAULT_ACTIVATION)),
   );
   const [stage3RenderProof, setStage3RenderProof] = useState<Stage3RenderProof | null>(null);
   const [block835PerformanceProbe, setBlock835PerformanceProbe] = useState<Block835PerformanceProbeResult | null>(null);
@@ -1661,7 +1677,21 @@ export function App() {
   // base is itself the request, and a fixture-mode session resolves to quiet.
   // The records are read per render, not captured once, so a build that swaps a
   // record resolves the record it actually exports.
-  const exteriorActivationRecords = exteriorDefaultActivations(EXTERIOR_DEFAULT_ACTIVATION);
+  // w00's record is passed EXPLICITLY, and T001 changed WHICH record rather than
+  // whether one is passed. Two reasons it stays explicit:
+  //
+  //  1. Passing `EXTERIOR_DEFAULT_ACTIVATION` held Block 835 on the single-LOD
+  //     `-s1` release while waves 1-5 followed the function's defaults, so
+  //     flipping those defaults alone would have promoted five waves and quietly
+  //     left the sixth behind, with the w00 status assertion still passing for
+  //     the wrong reason.
+  //  2. The parameter IS the substitution seam. `exteriorDefaultActivations`
+  //     takes records as arguments precisely so a caller holding one — a build
+  //     that rolled a wave back, or a rollback rehearsal — orders the record it
+  //     actually holds. A parameterless call reads the module's own binding,
+  //     which no caller and no test can substitute, and it silently disarmed the
+  //     drifted-record and rolled-back gates.
+  const exteriorActivationRecords = exteriorDefaultActivations(EXTERIOR_TWO_LOD_DEFAULT_ACTIVATION);
   const exteriorActivationSet = resolveExteriorActivationSet({
     override: exteriorStreamingOverride,
     explicitReleaseId: exteriorExplicitReleaseId,
@@ -2378,6 +2408,38 @@ export function App() {
       { ...schedulerView, enabled: schedulerEnabled, previous: exteriorSchedulerCarryRef.current, maxUnitDistanceMeters: exteriorDetailRadiusMetersRef.current },
     );
     if (globalSchedule.carry) exteriorSchedulerCarryRef.current = globalSchedule.carry;
+    /**
+     * THE DISTANCE THE LOD THRESHOLDS ARE ACTUALLY EVALUATED AGAINST (T001).
+     *
+     * The scheduler measured a camera-to-cell distance for every resident cell
+     * in order to rank it; this reads that number rather than recomputing it, so
+     * the LOD tier and the residency order cannot disagree about how far away a
+     * cell is.
+     *
+     * The bucketed camera HEIGHT remains the documented fallback, and it is a
+     * real fallback rather than a dead branch: a held-previous decision ranks
+     * nothing and publishes no distances, and a session with the scheduler off
+     * has no decision at all. In both cases the release thresholds are compared
+     * against the same proxy they were compared against before this change,
+     * which is also the rollback arm named in ADR 0057 §1.1.
+     */
+    const measuredDistances = globalSchedule.decision?.distanceMetersByUnitId ?? null;
+    const lodDistanceFor = (cellId: string): number => measuredDistances?.get(cellId) ?? exteriorCameraHeightBucketMeters;
+    /**
+     * WHICH SIDE OF THE NEAR RING a cell is on, which is what its served level
+     * depends on.
+     *
+     * A cell already resident at `lod_0` would otherwise keep serving `lod_0`
+     * after the camera pulled back past the bound: nothing in the wave-level
+     * inputs changes on a crossing, so no reload would be requested and the mid
+     * ring would only ever appear for cells that arrived already beyond it.
+     *
+     * The SIDE is tracked rather than the distance, deliberately. Keying on the
+     * raw metre value would re-request a cell on every camera nudge, which is
+     * the thrash the height bucketing existed to prevent; the side changes
+     * exactly when the served level does.
+     */
+    const ringSideOf = (cellId: string): "near" | "mid" => (lodDistanceFor(cellId) > EXTERIOR_TWO_LOD_SERVING_NEAR_RING_METERS ? "mid" : "near");
     // Probe-only. The decision object is otherwise dropped here, so
     // `visibleCount`/`deferredCount`/`reserved`/`hold` — the four numbers that
     // say whether the CAP or the FOOTPRINT bound a pose — were unreadable from a
@@ -2392,6 +2454,23 @@ export function App() {
       decisionIndex: globalSchedule.decision.carry.decisionIndex,
       footprintSignature: globalSchedule.decision.carry.footprintSignature,
       heightBucket: globalSchedule.decision.carry.heightBucket,
+      // INSTRUMENT DEFECT, FIXED. These two were never put in the probe payload
+      // at all, so the T001 pose captures recorded `residentUnitCount: 0` and
+      // `distances.count: 0` at ALL SIX poses. That is not a finding about the
+      // scheduler -- the scheduler was resolving cells the whole time, as the
+      // request-level LOD readings in the same captures show. It is the probe
+      // failing to carry what the capture CLI was reading.
+      //
+      // `distanceMetersByUnitId` is a Map, and a Map inside `JSON.stringify`
+      // renders as `{}`, so it is emitted as ENTRIES. The capture CLI already
+      // accepts either shape.
+      //
+      // PROBE PAYLOAD ONLY: this whole assignment is behind
+      // EXTERIOR_SCHEDULER_PROBE_ENABLED, which compiles out unless
+      // VITE_EXTERIOR_SCHEDULER_PROBE is set, and the decision object itself is
+      // not touched. No runtime behaviour depends on any of it.
+      residentUnitIds: [...globalSchedule.decision.resident],
+      distanceMetersByUnitId: [...globalSchedule.decision.distanceMetersByUnitId.entries()],
     };
     for (const [releaseId, { target, runtime }] of wanted) {
       const live = running.get(releaseId);
@@ -2410,7 +2489,14 @@ export function App() {
       // On a default session this admits the whole declared list on the first
       // run and nothing after, so the requests, their order and their count are
       // what they have always been.
-      const { fresh, dropped, idle } = reconcileExteriorCellLoads(entry.load, schedule.cellIds);
+      // Cells whose ring side moved since they were loaded: their level is now
+      // wrong, so they are re-requested rather than left as they are.
+      const crossed = schedule.cellIds.filter((cellId) => {
+        const loadedSide = exteriorRingSideRef.current.get(cellId);
+        return loadedSide !== undefined && loadedSide !== ringSideOf(cellId);
+      });
+      for (const cellId of schedule.cellIds) exteriorRingSideRef.current.set(cellId, ringSideOf(cellId));
+      const { fresh, dropped, idle } = reconcileExteriorCellLoads(entry.load, schedule.cellIds, crossed);
       // Gate (a) of the release seam: ONLY a scheduler eviction enqueues, and
       // only under the flag. Removing the flag removes the seam.
       if (schedulerEnabled && outcomesBeforeDrop) {
@@ -2464,7 +2550,7 @@ export function App() {
       // immediately re-fetched. The pass is hoisted below the loop so it never
       // observes a decision that is only partially applied.
       if (fresh.length === 0) { if (dropped.length > 0) publish(); continue; }
-      void Promise.all(fresh.map((cellId) => runtime.loadCell(cellId, exteriorEffectiveProfile, exteriorCameraHeightBucketMeters, controller.signal)))
+      void Promise.all(fresh.map((cellId) => runtime.loadCell(cellId, exteriorEffectiveProfile, lodDistanceFor(cellId), controller.signal)))
         .then((loaded) => {
           if (!isCurrent()) return;
           // Guarded, not unconditional: a cell the scheduler evicted while its

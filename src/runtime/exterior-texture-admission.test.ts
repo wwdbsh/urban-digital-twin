@@ -403,16 +403,20 @@ describe("rollback for a textured wave is a release reversion, never a build fla
     // checksum-pinned release it claims to be drawing, and the two would then
     // disagree with no record of why.
     //
-    // The T005 serving promotion made the chain one link longer rather than
-    // changing its shape: what the build promotes for this wave is the serving
-    // release, whose predecessor is the curated V3 record, whose own predecessor
-    // is the untextured V2 rollback target this case is about. The V3 record is
-    // reached THROUGH the shipped set rather than imported, so a build that
-    // stopped promoting this wave fails here instead of testing a constant
-    // nothing points at.
-    const serving = EXTERIOR_DEFAULT_ACTIVATIONS.find((record) => record.enabled && record.releaseId === "manhattan-exterior-cells-20260811-v3-s1");
-    expect(serving?.enabled).toBe(true);
-    if (!serving?.enabled) return;
+    // The T005 serving promotion made the chain one link longer, and the T001
+    // two-LOD promotion added another: the build promotes the -s2 release,
+    // whose predecessor is the -s1 serving record, whose predecessor is the
+    // curated V3 record, whose own predecessor is the untextured V2 rollback
+    // target this case is about. The chain is reached THROUGH the shipped set
+    // rather than imported, so a build that stopped promoting this wave fails
+    // here instead of testing a constant nothing points at.
+    const twoLod = EXTERIOR_DEFAULT_ACTIVATIONS.find((record) => record.enabled && record.releaseId === "manhattan-exterior-cells-20260811-v3-s2");
+    expect(twoLod?.enabled).toBe(true);
+    if (!twoLod?.enabled) return;
+    const serving = twoLod.predecessor;
+    expect(serving.enabled).toBe(true);
+    if (!serving.enabled) return;
+    expect(serving.releaseId).toBe("manhattan-exterior-cells-20260811-v3-s1");
     const promoted = serving.predecessor;
     expect(promoted.enabled).toBe(true);
     if (!promoted.enabled) return;

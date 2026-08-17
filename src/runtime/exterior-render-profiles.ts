@@ -7,7 +7,39 @@ import type { AssemblyLod } from "../release/multi-lod-assembly.ts";
  */
 export const EXTERIOR_RENDER_PROFILES = ["exploration", "inspection"] as const;
 export type ExteriorRenderProfile = (typeof EXTERIOR_RENDER_PROFILES)[number];
-export const DEFAULT_EXTERIOR_RENDER_PROFILE: ExteriorRenderProfile = "exploration";
+/**
+ * The DEFAULT selection semantics: `inspection`, finest-that-covers.
+ *
+ * FLIPPED BY T001 IN THE SAME COMMIT as the `-s2` activation records and the
+ * rollback entries, exactly as ADR 0057 Part 0 requires, so that ONE revert
+ * restores the composition and the semantics together. Shipping either half
+ * alone would have been a third, unmeasured configuration.
+ *
+ * The reason it had to move is worth stating rather than absorbing.
+ * `maxDistanceMeters` is an UPPER bound only, and `AssemblyLod` has
+ * no near bound, so under a coarsest-preferring profile a two-LOD asset has
+ * exactly two reachable behaviours: thresholds distinguished, so the coarse
+ * level covers everywhere and wins everywhere; or thresholds tied, so the tie
+ * rule sends every distance to the fine level. NEITHER IS A RING. Shipping the
+ * `-s2` thresholds under the old default would have put the protrusion-shed
+ * level in front of the camera at street level.
+ *
+ * `exploration` is unchanged and stays reachable through `?exteriorProfile=`,
+ * where it is the documented coarsest / degraded-performance arm.
+ *
+ * The flip is a NO-OP for every release the city served BEFORE this promotion,
+ * and it is decidedly NOT a no-op for the `-s2` releases this commit promotes:
+ * they declare `lod_0` bounded at 400 m and `lod_1` unbounded, so under the old
+ * `exploration` default the shed level would have covered street level. That is
+ * the whole reason the two halves ship together. The no-op claim for the older
+ * shapes is proven rather than asserted: `exterior-two-lod-selection.test.ts`
+ * pins all three frozen shapes — single-LOD `-s1`, null-at-both `-c1`/`-c2`, and
+ * the 424 ADR 0050 fallback parents — at thirteen distances under BOTH profiles,
+ * and pins the ANTECEDENT that makes them agree, so a future shape that
+ * distinguished its levels fails there instead of silently changing what a
+ * promoted session renders.
+ */
+export const DEFAULT_EXTERIOR_RENDER_PROFILE: ExteriorRenderProfile = "inspection";
 
 export function parseExteriorRenderProfile(value: unknown): ExteriorRenderProfile | null {
   return typeof value === "string" && (EXTERIOR_RENDER_PROFILES as readonly string[]).includes(value)
@@ -79,12 +111,33 @@ function threshold(lod: AssemblyLod): number {
  * distinguished is a choice the release did not authorise, so the tie resolves
  * to the finest member instead.
  *
- * This is provably a no-op for every currently frozen release: five of the six
- * promoted waves are single-LOD (no tie possible), and the sixth declares
- * distinct thresholds. `exterior-render-profiles.test.ts` pins that, and the
- * serving releases this goal emits are single-LOD by construction, so the rule
- * is a guard on the retained two-LOD population rather than a change to what
- * anything ships today.
+ * WHAT THE TIE RULE NOW GUARDS, restated because T001 made the old wording
+ * false. This block used to say the serving releases were "single-LOD by
+ * construction", so the rule only guarded the retained population and changed
+ * nothing anyone shipped. The six promoted `-s2` releases ship BOTH levels, so
+ * that sentence describes a composition the default no longer serves and it is
+ * replaced rather than patched.
+ *
+ * The rule is still a no-op WHERE IT APPLIES, and the distinction is exact:
+ *
+ *   - The `-s2` releases DECLARE DISTINCT THRESHOLDS — `lod_0` bounded at the
+ *     400 m near ring, `lod_1` unbounded — so no tie exists to resolve and the
+ *     tie rule never fires on them. What decides their level is coverage, not
+ *     this rule.
+ *   - The shapes that DO tie are the ones that always tied: the retained
+ *     `-c1`/`-c2` packages, whose two levels both declare
+ *     `maxDistanceMeters: null`, and the 424 ADR 0050 measured-fallback parents
+ *     carried into `-s2` with an unbounded fine level. On those the rule sends
+ *     every distance to the finest member, which is what stops a coarse level a
+ *     release never distinguished from winning by "last one wins".
+ *
+ * Both halves are PINNED rather than asserted:
+ * `exterior-two-lod-selection.test.ts` walks all three frozen shapes —
+ * single-LOD `-s1`, null-at-both `-c1`/`-c2`, and the fallback parents — at
+ * thirteen distances under BOTH profiles and pins the antecedent that makes
+ * them agree, so a future shape that distinguished its levels fails there
+ * instead of silently changing what a promoted session renders.
+ * `exterior-render-profiles.test.ts` pins the rule itself.
  *
  * Returns `null` when no eligible LOD covers the distance; callers must fail
  * closed rather than substitute a different asset.

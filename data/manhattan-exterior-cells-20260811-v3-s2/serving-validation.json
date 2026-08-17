@@ -1,0 +1,13 @@
+{
+  "schemaVersion": "1.0",
+  "releaseId": "manhattan-exterior-cells-20260811-v3-s2",
+  "waveId": "w00",
+  "artifact": "serving-offline-validation",
+  "note": "Per-cell replayMultiLodAssembly over the emitted bytes: every GLB parsed under the shared-texture gate, every declared detail tile re-rasterized and byte-compared, the tileset walked against the manifest LOD chain, plus the release graph, each evidence sidecar and the head pin. Passing this is a structural and byte statement; it is not visual, geographic or performance acceptance.",
+  "replayedPackageCount": 1,
+  "declaredPackageCount": 1,
+  "replayedAssetCount": 14,
+  "replayedBytes": 10402454,
+  "issues": [],
+  "ok": true
+}

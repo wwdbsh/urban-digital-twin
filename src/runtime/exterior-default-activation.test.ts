@@ -6,6 +6,8 @@ import {
   BLOCK835_V2_EXTERIOR_ROLLBACK,
   BLOCK835_V3_EXTERIOR_ACTIVATION,
   EXTERIOR_DEFAULT_ACTIVATION,
+  EXTERIOR_TWO_LOD_DEFAULT_ACTIVATION,
+  EXTERIOR_TWO_LOD_DEFAULT_ROLLBACK,
   exteriorAcceptedCellsDigest,
   exteriorAcceptedIdsDigest,
   exteriorRolledBackReleaseNotice,
@@ -21,7 +23,7 @@ import {
 const FIXTURE_RELEASE_ID = "udt-fixture-exterior-cells";
 const CITYWIDE_BASE = "manhattan-citywide-20260804";
 /** What this build promotes for wave w00: the SERVING release, since T005. */
-const PROMOTED = EXTERIOR_DEFAULT_ACTIVATION.enabled ? EXTERIOR_DEFAULT_ACTIVATION : null;
+const PROMOTED = EXTERIOR_TWO_LOD_DEFAULT_ACTIVATION.enabled ? EXTERIOR_TWO_LOD_DEFAULT_ACTIVATION : null;
 /**
  * The curated V3 record: what this wave promoted until T005, and what the
  * promoted serving record now names as its predecessor. It is still one
@@ -46,8 +48,7 @@ const CURATED_ROLLED_BACK: ExteriorDefaultActivationRecord = CURATED ? CURATED.p
  * the refusal cases run against this record, which is what the swap would have
  * to be.
  */
-const WITHDRAWING_ROLLBACK: ExteriorDefaultActivationRecord =
-  CURATED && PROMOTED ? { ...CURATED, rolledBackReleaseId: PROMOTED.releaseId } : BLOCK835_V2_EXTERIOR_ROLLBACK;
+const WITHDRAWING_ROLLBACK: ExteriorDefaultActivationRecord = EXTERIOR_TWO_LOD_DEFAULT_ROLLBACK;
 /** A build that never promoted anything has no withdrawn release to refuse. */
 const NEVER_PROMOTED: ExteriorDefaultActivationRecord = { enabled: false, releaseId: null, rolledBackReleaseId: null };
 
@@ -144,14 +145,17 @@ describe("Block 835 curated V3 promotion record, which the promoted serving reco
     }
   });
 
-  it("is the record the promoted serving release names as its predecessor, by identity", () => {
-    // The chain is one link longer than it was, and this is the link: the build
-    // promotes the serving release, whose previous verified representation is
-    // this curated record — retained verbatim, not re-derived — whose own is V2.
+  it("is the record the promoted chain reaches two links down, by identity", () => {
+    // The chain grew again with the two-LOD promotion: the build promotes the
+    // -s2 release, whose previous verified representation is the -s1 serving
+    // record, whose own is this curated record — retained verbatim — whose own
+    // is V2.
     expect(EXTERIOR_DEFAULT_ACTIVATION.enabled).toBe(true);
     expect(PROMOTED).not.toBeNull();
-    expect(PROMOTED!.releaseId).toBe("manhattan-exterior-cells-20260811-v3-s1");
-    expect(ROLLED_BACK).toBe(BLOCK835_V3_EXTERIOR_ACTIVATION);
+    expect(PROMOTED!.releaseId).toBe("manhattan-exterior-cells-20260811-v3-s2");
+    expect(ROLLED_BACK).toBe(EXTERIOR_DEFAULT_ACTIVATION);
+    expect(EXTERIOR_DEFAULT_ACTIVATION.enabled && EXTERIOR_DEFAULT_ACTIVATION.releaseId).toBe("manhattan-exterior-cells-20260811-v3-s1");
+    expect(EXTERIOR_DEFAULT_ACTIVATION.enabled && EXTERIOR_DEFAULT_ACTIVATION.predecessor).toBe(BLOCK835_V3_EXTERIOR_ACTIVATION);
     expect(PROMOTED!.rolledBackReleaseId ?? null).toBeNull();
   });
 
@@ -281,11 +285,11 @@ describe("promoted exterior activation resolution", () => {
 
   it("restores the previous VERIFIED release atomically when the record is rolled back, and rolls forward again", () => {
     // Rehearsal, in the direction the swap actually goes. Exporting the
-    // predecessor must put the curated V3 release back on as the default over a
-    // real base — not turn the wave off, which would discard verified geometry
-    // nobody withdrew.
+    // predecessor must put the -s1 serving release back on as the default over
+    // a real base — not turn the wave off, which would discard verified
+    // geometry nobody withdrew.
     expect(resolveExteriorActivation({ ...base, override: null, activeRealBaseReleaseId: CITYWIDE_BASE, record: ROLLED_BACK }))
-      .toEqual({ streaming: true, releaseId: CURATED!.releaseId, promotedDefault: true, reason: "promoted-default" });
+      .toEqual({ streaming: true, releaseId: ROLLED_BACK.enabled ? ROLLED_BACK.releaseId : "", promotedDefault: true, reason: "promoted-default" });
     // The promotion gate is unchanged by the rollback: no real base, no wave.
     expect(resolveExteriorActivation({ ...base, override: null, activeRealBaseReleaseId: null, record: ROLLED_BACK }))
       .toEqual({ streaming: false, releaseId: FIXTURE_RELEASE_ID, promotedDefault: false, reason: "no-real-base" });
@@ -398,12 +402,22 @@ describe("promoted exterior pin verification", () => {
     // exactly the bytes it accepted rather than failing closed on everything.
     // That record states its acceptance literally, so no digest is supplied and
     // none is needed: the literal branch compares the lists themselves.
+    // The restored -s1 record states its acceptance as digests, so its pins are
+    // rebuilt from that release's own committed inventory, the way the runtime
+    // would — and they verify against the rolled-back record.
+    const s1Inventory = JSON.parse(
+      new TextDecoder().decode(readFileSync(`data/${ROLLED_BACK.enabled ? ROLLED_BACK.releaseId : ""}/payload-inventory.json`)),
+    ) as { assemblyPackageIds: string[]; cellReleases: ExteriorAcceptedCell[] };
     expect(verifyPromotedExteriorPin({
       releaseId: ROLLED_BACK.enabled ? ROLLED_BACK.releaseId : "",
       snapshotId: ROLLED_BACK.enabled ? ROLLED_BACK.snapshotId : "",
       snapshotChecksumSha256: ROLLED_BACK.enabled ? ROLLED_BACK.snapshotChecksumSha256 : "",
-      assemblyPackageIds: ROLLED_BACK.enabled ? [...ROLLED_BACK.assemblyPackageIds] : [],
-      cells: ROLLED_BACK.enabled ? ROLLED_BACK.membership.cells.map((cell) => ({ ...cell })) : [],
+      assemblyPackageIds: [...s1Inventory.assemblyPackageIds],
+      assemblyPackageIdsDigestSha256: await exteriorAcceptedIdsDigest(s1Inventory.assemblyPackageIds),
+      cells: s1Inventory.cellReleases.map((cell) => ({ ...cell })),
+      cellsDigestSha256: await exteriorAcceptedCellsDigest(s1Inventory.cellReleases),
+      buildingIds: [...BLOCK835_MEMBERSHIP_BUILDING_IDS],
+      buildingIdsDigestSha256: await exteriorAcceptedIdsDigest(BLOCK835_MEMBERSHIP_BUILDING_IDS),
     }, ROLLED_BACK)).toEqual({ ok: true });
     // A build that promoted nothing still verifies nothing at all.
     const never = verifyPromotedExteriorPin(await resolved(), NEVER_PROMOTED);

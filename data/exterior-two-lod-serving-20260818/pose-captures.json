@@ -1,0 +1,817 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "exterior-two-lod-serving-20260818:poses",
+  "task": "T001 (Issue #101)",
+  "artifact": "two-lod-serving-pose-captures",
+  "capturedAt": "2026-08-17T15:10:45.754Z",
+  "attemptCount": 1,
+  "attemptPolicy": "SINGLE attempt per pose. A FAIL is RECORDED and NOT re-run: the poses and their gates were registered in ADR 0057 section 4.2 before any capture existed.",
+  "browser": "Chrome/151.0.7922.138",
+  "viewport": {
+    "width": 1440,
+    "height": 900,
+    "deviceScaleFactor": 1
+  },
+  "base": "http://127.0.0.1:4194/",
+  "nearRingMeters": 400,
+  "requestCeiling": 4,
+  "chromeLaunchCommand": "open -na \"Google Chrome\" --args --remote-debugging-port=9227 --user-data-dir=/tmp/t001-two-lod-chrome --no-first-run --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-renderer-backgrounding",
+  "survivingChromeProcessCount": 0,
+  "lodReadingMethod": "REQUEST-LEVEL. A two-LOD release ships __lod_0.glb and __lod_1.glb as separate artifacts, so the set of GLB URLs a document fetched says which level the runtime resolved. It is not a pixel reading and no pose here claims a building LOOKS coarse.",
+  "poses": [
+    {
+      "poseId": "P1",
+      "label": "street level, dense midtown, camera inside a cell",
+      "gated": true,
+      "url": "http://127.0.0.1:4194/?data=real-pilot&release=manhattan-citywide-20260804&view=free&lon=-73.986360&lat=40.748775&height=180.000000&heading=45.000000&pitch=-20.000000&roll=0.000000",
+      "pose": {
+        "lon": -73.98636,
+        "lat": 40.748775,
+        "height": 180,
+        "heading": 45,
+        "pitch": -20,
+        "roll": 0
+      },
+      "residentUnitCount": 0,
+      "distances": {
+        "count": 0,
+        "nearRingCount": 0,
+        "farRingCount": 0,
+        "minMeters": null,
+        "maxMeters": null
+      },
+      "lodRequests": {
+        "glbRequestCount": 6,
+        "lod0RequestCount": 3,
+        "lod1RequestCount": 3,
+        "lod0DistinctCount": 3,
+        "lod1DistinctCount": 3,
+        "lod0Sample": [
+          "empire-state-building__lod_0.glb",
+          "flatiron-building__lod_0.glb",
+          "theodore-roosevelt-birthplace__lod_0.glb"
+        ],
+        "lod1Sample": [
+          "empire-state-building__lod_1.glb",
+          "flatiron-building__lod_1.glb",
+          "theodore-roosevelt-birthplace__lod_1.glb"
+        ]
+      },
+      "sharedCache": {
+        "cacheEntries": 297,
+        "cachedBytes": 82319228,
+        "cacheEvictions": 0,
+        "maxCacheEntries": 1024,
+        "maxCachedBytes": 268435456,
+        "activeRequests": 0,
+        "maxConcurrentRequests": 4,
+        "peakConcurrentRequests": 4,
+        "requestedArtifactCount": 20,
+        "loadedArtifactCount": 20,
+        "failedArtifactCount": 0,
+        "fallbackCellCount": 0,
+        "failedCellCount": 0,
+        "notShippedCellCount": 0,
+        "scheduledCellCount": 1,
+        "deferredCellCount": 0,
+        "releasedArtifactCount": 0,
+        "releasedArtifactBytes": 0
+      },
+      "universalGates": {
+        "failedCellCount": 0,
+        "fallbackCellCount": 0,
+        "failedArtifactCount": 0,
+        "peakConcurrentRequests": 4,
+        "maxConcurrentRequests": 4,
+        "externalHosts": [],
+        "pass": true
+      },
+      "still": {
+        "file": "captures/pose-p1.png",
+        "byteSize": 894207,
+        "sha256": "3c402a4fe6b05b50fec90f98894588a2b82c19d9dab46282239ae4fede05ce18"
+      }
+    },
+    {
+      "poseId": "P2",
+      "label": "400 m boundary straddle, dense midtown",
+      "gated": true,
+      "url": "http://localhost:4194/?data=real-pilot&release=manhattan-citywide-20260804&view=free&lon=-73.986360&lat=40.748775&height=400.000000&heading=45.000000&pitch=-35.000000&roll=0.000000",
+      "pose": {
+        "lon": -73.98636,
+        "lat": 40.748775,
+        "height": 400,
+        "heading": 45,
+        "pitch": -35,
+        "roll": 0
+      },
+      "residentUnitCount": 8,
+      "distances": {
+        "count": 8,
+        "nearRingCount": 6,
+        "farRingCount": 2,
+        "minMeters": 0,
+        "maxMeters": 890.8224560361299,
+        "ringMeters": 400,
+        "nearRingCells": [
+          {
+            "unitId": "manhattan-exterior-cell-w01-000045-16-19300-17929",
+            "meters": 0
+          },
+          {
+            "unitId": "manhattan-exterior-cell-w01-000046-16-19301-17929",
+            "meters": 33.04
+          },
+          {
+            "unitId": "manhattan-exterior-cell-w01-000037-16-19300-17928",
+            "meters": 64.81
+          },
+          {
+            "unitId": "manhattan-exterior-cell-w01-000038-16-19301-17928",
+            "meters": 73.93
+          },
+          {
+            "unitId": "manhattan-exterior-cell-w01-000050-16-19300-17930",
+            "meters": 175.72
+          },
+          {
+            "unitId": "manhattan-exterior-cell-w01-000051-16-19301-17930",
+            "meters": 207.96
+          }
+        ],
+        "farRingCells": [
+          {
+            "unitId": "manhattan-exterior-cell-w00-000000-block-00835",
+            "meters": 886.02
+          },
+          {
+            "unitId": "manhattan-exterior-cell-w01-000031-17-38598-35863",
+            "meters": 890.82
+          }
+        ],
+        "closestBelowRing": {
+          "unitId": "manhattan-exterior-cell-w01-000051-16-19301-17930",
+          "meters": 207.96
+        },
+        "closestAboveRing": {
+          "unitId": "manhattan-exterior-cell-w00-000000-block-00835",
+          "meters": 886.02
+        }
+      },
+      "simultaneousBothLevels": {
+        "count": 3,
+        "buildingIds": [
+          "empire-state-building",
+          "flatiron-building",
+          "theodore-roosevelt-birthplace"
+        ]
+      },
+      "lodRequests": {
+        "glbRequestCount": 32,
+        "lod0RequestCount": 29,
+        "lod1RequestCount": 3,
+        "lod0DistinctCount": 29,
+        "lod1DistinctCount": 3,
+        "lod0Sample": [
+          "doitt-100691__lod_0.glb",
+          "doitt-1010565__lod_0.glb",
+          "doitt-1010930__lod_0.glb",
+          "doitt-101362__lod_0.glb",
+          "doitt-1017836__lod_0.glb"
+        ],
+        "lod1Sample": [
+          "empire-state-building__lod_1.glb",
+          "flatiron-building__lod_1.glb",
+          "theodore-roosevelt-birthplace__lod_1.glb"
+        ],
+        "lod0BuildingIds": [
+          "doitt-100691",
+          "doitt-1010565",
+          "doitt-1010930",
+          "doitt-101362",
+          "doitt-1017836",
+          "doitt-102705",
+          "doitt-1032824",
+          "doitt-104207",
+          "doitt-105848",
+          "doitt-106525",
+          "doitt-106844",
+          "doitt-1069433",
+          "doitt-109129",
+          "doitt-109636",
+          "doitt-1107768",
+          "doitt-1110059",
+          "doitt-1110098",
+          "doitt-114229",
+          "doitt-121756",
+          "doitt-125896",
+          "doitt-131170",
+          "doitt-147902",
+          "doitt-262867",
+          "doitt-39969",
+          "doitt-460555",
+          "doitt-498980",
+          "empire-state-building",
+          "flatiron-building",
+          "theodore-roosevelt-birthplace"
+        ],
+        "lod1BuildingIds": [
+          "empire-state-building",
+          "flatiron-building",
+          "theodore-roosevelt-birthplace"
+        ]
+      },
+      "sharedCache": {
+        "cacheEntries": 501,
+        "cachedBytes": 192798954,
+        "cacheEvictions": 0,
+        "maxCacheEntries": 1024,
+        "maxCachedBytes": 268435456,
+        "activeRequests": 0,
+        "maxConcurrentRequests": 4,
+        "peakConcurrentRequests": 4,
+        "requestedArtifactCount": 20,
+        "loadedArtifactCount": 20,
+        "failedArtifactCount": 0,
+        "fallbackCellCount": 0,
+        "failedCellCount": 0,
+        "notShippedCellCount": 0,
+        "scheduledCellCount": 1,
+        "deferredCellCount": 0,
+        "releasedArtifactCount": 0,
+        "releasedArtifactBytes": 0
+      },
+      "universalGates": {
+        "failedCellCount": 0,
+        "fallbackCellCount": 0,
+        "failedArtifactCount": 0,
+        "peakConcurrentRequests": 4,
+        "maxConcurrentRequests": 4,
+        "externalHosts": [],
+        "pass": true
+      },
+      "still": {
+        "file": "captures/pose-p2.png",
+        "byteSize": 534360,
+        "sha256": "870ac23a05740564d79e11dee11326c54fd3ed3f7db29538fa2a9226c4087e6c"
+      },
+      "recaptured": true
+    },
+    {
+      "poseId": "P3",
+      "label": "mid ring, dense midtown, above 400 m from every resident cell",
+      "gated": true,
+      "url": "http://localhost:4194/?data=real-pilot&release=manhattan-citywide-20260804&view=free&lon=-73.986360&lat=40.748775&height=1100.000000&heading=45.000000&pitch=-45.000000&roll=0.000000",
+      "pose": {
+        "lon": -73.98636,
+        "lat": 40.748775,
+        "height": 1100,
+        "heading": 45,
+        "pitch": -45,
+        "roll": 0
+      },
+      "residentUnitCount": 8,
+      "distances": {
+        "count": 8,
+        "nearRingCount": 6,
+        "farRingCount": 2,
+        "minMeters": 0,
+        "maxMeters": 1534.0467866317958,
+        "ringMeters": 400,
+        "nearRingCells": [
+          {
+            "unitId": "manhattan-exterior-cell-w01-000126-16-19301-17927",
+            "meters": 0
+          },
+          {
+            "unitId": "manhattan-exterior-cell-w01-000038-16-19301-17928",
+            "meters": 34.7
+          },
+          {
+            "unitId": "manhattan-exterior-cell-w01-000127-17-38604-35855",
+            "meters": 63.59
+          },
+          {
+            "unitId": "manhattan-exterior-cell-w01-000033-17-38604-35856",
+            "meters": 82.49
+          },
+          {
+            "unitId": "manhattan-exterior-cell-w01-000121-17-38604-35854",
+            "meters": 93.81
+          },
+          {
+            "unitId": "manhattan-exterior-cell-w01-000039-17-38604-35857",
+            "meters": 195.94
+          }
+        ],
+        "farRingCells": [
+          {
+            "unitId": "manhattan-exterior-cell-w00-000000-block-00835",
+            "meters": 1529.25
+          },
+          {
+            "unitId": "manhattan-exterior-cell-w01-000031-17-38598-35863",
+            "meters": 1534.05
+          }
+        ],
+        "closestBelowRing": {
+          "unitId": "manhattan-exterior-cell-w01-000039-17-38604-35857",
+          "meters": 195.94
+        },
+        "closestAboveRing": {
+          "unitId": "manhattan-exterior-cell-w00-000000-block-00835",
+          "meters": 1529.25
+        }
+      },
+      "simultaneousBothLevels": {
+        "count": 3,
+        "buildingIds": [
+          "empire-state-building",
+          "flatiron-building",
+          "theodore-roosevelt-birthplace"
+        ]
+      },
+      "lodRequests": {
+        "glbRequestCount": 64,
+        "lod0RequestCount": 3,
+        "lod1RequestCount": 61,
+        "lod0DistinctCount": 3,
+        "lod1DistinctCount": 61,
+        "lod0Sample": [
+          "empire-state-building__lod_0.glb",
+          "flatiron-building__lod_0.glb",
+          "theodore-roosevelt-birthplace__lod_0.glb"
+        ],
+        "lod1Sample": [
+          "doitt-1010565__lod_1.glb",
+          "doitt-102705__lod_1.glb",
+          "doitt-104352__lod_1.glb",
+          "doitt-106943__lod_1.glb",
+          "doitt-1110059__lod_1.glb"
+        ],
+        "lod0BuildingIds": [
+          "empire-state-building",
+          "flatiron-building",
+          "theodore-roosevelt-birthplace"
+        ],
+        "lod1BuildingIds": [
+          "doitt-1010565",
+          "doitt-102705",
+          "doitt-104352",
+          "doitt-106943",
+          "doitt-1110059",
+          "doitt-1110098",
+          "doitt-1111085",
+          "doitt-1111415",
+          "doitt-111739",
+          "doitt-1119374",
+          "doitt-1156849",
+          "doitt-120099",
+          "doitt-120117",
+          "doitt-121756",
+          "doitt-124564",
+          "doitt-125896",
+          "doitt-126228",
+          "doitt-127085",
+          "doitt-1277106",
+          "doitt-1284550",
+          "doitt-1285056",
+          "doitt-1286544",
+          "doitt-129121",
+          "doitt-1298567",
+          "doitt-1298885",
+          "doitt-1302220",
+          "doitt-1303970",
+          "doitt-131170",
+          "doitt-132801",
+          "doitt-135151",
+          "doitt-137813",
+          "doitt-147902",
+          "doitt-158606",
+          "doitt-164783",
+          "doitt-170030",
+          "doitt-174199",
+          "doitt-182367",
+          "doitt-211798",
+          "doitt-232756",
+          "doitt-262867",
+          "doitt-273841",
+          "doitt-275071",
+          "doitt-320050",
+          "doitt-320083",
+          "doitt-326069",
+          "doitt-36062",
+          "doitt-365486",
+          "doitt-39969",
+          "doitt-421116",
+          "doitt-460555",
+          "doitt-475707",
+          "doitt-498980",
+          "doitt-502491",
+          "doitt-584049",
+          "doitt-778052",
+          "doitt-812702",
+          "doitt-835659",
+          "doitt-925937",
+          "empire-state-building",
+          "flatiron-building",
+          "theodore-roosevelt-birthplace"
+        ]
+      },
+      "sharedCache": {
+        "cacheEntries": 306,
+        "cachedBytes": 44630631,
+        "cacheEvictions": 0,
+        "maxCacheEntries": 1024,
+        "maxCachedBytes": 268435456,
+        "activeRequests": 0,
+        "maxConcurrentRequests": 4,
+        "peakConcurrentRequests": 4,
+        "requestedArtifactCount": 20,
+        "loadedArtifactCount": 20,
+        "failedArtifactCount": 0,
+        "fallbackCellCount": 0,
+        "failedCellCount": 0,
+        "notShippedCellCount": 0,
+        "scheduledCellCount": 1,
+        "deferredCellCount": 0,
+        "releasedArtifactCount": 0,
+        "releasedArtifactBytes": 0
+      },
+      "universalGates": {
+        "failedCellCount": 0,
+        "fallbackCellCount": 0,
+        "failedArtifactCount": 0,
+        "peakConcurrentRequests": 4,
+        "maxConcurrentRequests": 4,
+        "externalHosts": [],
+        "pass": true
+      },
+      "still": {
+        "file": "captures/pose-p3.png",
+        "byteSize": 444746,
+        "sha256": "5156ee1f9ca31b6215f516b9d0d98daaa2b6cc118e19c9ca76fc10358012e9b8"
+      },
+      "recaptured": true
+    },
+    {
+      "poseId": "P4",
+      "label": "sparse island edge (ADR 0057 section 1.5 limitation)",
+      "gated": false,
+      "url": "http://127.0.0.1:4194/?data=real-pilot&release=manhattan-citywide-20260804&view=free&lon=-73.929000&lat=40.870000&height=300.000000&heading=0.000000&pitch=-30.000000&roll=0.000000",
+      "pose": {
+        "lon": -73.929,
+        "lat": 40.87,
+        "height": 300,
+        "heading": 0,
+        "pitch": -30,
+        "roll": 0
+      },
+      "residentUnitCount": 0,
+      "distances": {
+        "count": 0,
+        "nearRingCount": 0,
+        "farRingCount": 0,
+        "minMeters": null,
+        "maxMeters": null
+      },
+      "lodRequests": {
+        "glbRequestCount": 4,
+        "lod0RequestCount": 2,
+        "lod1RequestCount": 2,
+        "lod0DistinctCount": 2,
+        "lod1DistinctCount": 2,
+        "lod0Sample": [
+          "empire-state-building__lod_0.glb",
+          "flatiron-building__lod_0.glb"
+        ],
+        "lod1Sample": [
+          "empire-state-building__lod_1.glb",
+          "flatiron-building__lod_1.glb"
+        ]
+      },
+      "sharedCache": {
+        "cacheEntries": 97,
+        "cachedBytes": 7953187,
+        "cacheEvictions": 0,
+        "maxCacheEntries": 1024,
+        "maxCachedBytes": 268435456,
+        "activeRequests": 0,
+        "maxConcurrentRequests": 4,
+        "peakConcurrentRequests": 3,
+        "requestedArtifactCount": 0,
+        "loadedArtifactCount": 0,
+        "failedArtifactCount": 0,
+        "fallbackCellCount": 0,
+        "failedCellCount": 0,
+        "notShippedCellCount": 0,
+        "scheduledCellCount": 0,
+        "deferredCellCount": 1,
+        "releasedArtifactCount": 0,
+        "releasedArtifactBytes": 0
+      },
+      "universalGates": {
+        "failedCellCount": 0,
+        "fallbackCellCount": 0,
+        "failedArtifactCount": 0,
+        "peakConcurrentRequests": 3,
+        "maxConcurrentRequests": 4,
+        "externalHosts": [],
+        "pass": true
+      },
+      "still": {
+        "file": "captures/pose-p4.png",
+        "byteSize": 527172,
+        "sha256": "4c747eb8920e9199a6a954d8146676c35a7a55bb9cc42ab3b2da81a542e162d3"
+      }
+    },
+    {
+      "poseId": "P5",
+      "label": "w03 cell carrying measured-fallback parents",
+      "gated": true,
+      "url": "http://127.0.0.1:4194/?data=real-pilot&release=manhattan-citywide-20260804&view=free&lon=-73.997760&lat=40.735275&height=700.000000&heading=45.000000&pitch=-40.000000&roll=0.000000",
+      "pose": {
+        "lon": -73.99776,
+        "lat": 40.735275,
+        "height": 700,
+        "heading": 45,
+        "pitch": -40,
+        "roll": 0
+      },
+      "residentUnitCount": 0,
+      "distances": {
+        "count": 0,
+        "nearRingCount": 0,
+        "farRingCount": 0,
+        "minMeters": null,
+        "maxMeters": null
+      },
+      "lodRequests": {
+        "glbRequestCount": 41,
+        "lod0RequestCount": 3,
+        "lod1RequestCount": 38,
+        "lod0DistinctCount": 3,
+        "lod1DistinctCount": 38,
+        "lod0Sample": [
+          "empire-state-building__lod_0.glb",
+          "flatiron-building__lod_0.glb",
+          "theodore-roosevelt-birthplace__lod_0.glb"
+        ],
+        "lod1Sample": [
+          "doitt-100137__lod_1.glb",
+          "doitt-101__lod_1.glb",
+          "doitt-103242__lod_1.glb",
+          "doitt-1070507__lod_1.glb",
+          "doitt-10767__lod_1.glb"
+        ]
+      },
+      "sharedCache": {
+        "cacheEntries": 345,
+        "cachedBytes": 28661689,
+        "cacheEvictions": 0,
+        "maxCacheEntries": 1024,
+        "maxCachedBytes": 268435456,
+        "activeRequests": 0,
+        "maxConcurrentRequests": 4,
+        "peakConcurrentRequests": 4,
+        "requestedArtifactCount": 0,
+        "loadedArtifactCount": 0,
+        "failedArtifactCount": 0,
+        "fallbackCellCount": 0,
+        "failedCellCount": 0,
+        "notShippedCellCount": 0,
+        "scheduledCellCount": 0,
+        "deferredCellCount": 1,
+        "releasedArtifactCount": 0,
+        "releasedArtifactBytes": 0
+      },
+      "universalGates": {
+        "failedCellCount": 0,
+        "fallbackCellCount": 0,
+        "failedArtifactCount": 0,
+        "peakConcurrentRequests": 4,
+        "maxConcurrentRequests": 4,
+        "externalHosts": [],
+        "pass": true
+      },
+      "still": {
+        "file": "captures/pose-p5.png",
+        "byteSize": 423975,
+        "sha256": "2778dbbbd9f09eb432dd6498cabb0365b26cfb7161044c23c96de4ef325bef20"
+      }
+    },
+    {
+      "poseId": "P6",
+      "label": "Block 835 by explicit deep link",
+      "gated": true,
+      "url": "http://127.0.0.1:4194/?data=real-pilot&release=manhattan-citywide-20260804&view=free&exteriorCells=manhattan-exterior-cells-20260811-v3-s2&lon=-73.986360&lat=40.748775&height=200.000000&heading=0.000000&pitch=-30.000000&roll=0.000000",
+      "pose": {
+        "lon": -73.98636,
+        "lat": 40.748775,
+        "height": 200,
+        "heading": 0,
+        "pitch": -30,
+        "roll": 0
+      },
+      "residentUnitCount": 0,
+      "distances": {
+        "count": 0,
+        "nearRingCount": 0,
+        "farRingCount": 0,
+        "minMeters": null,
+        "maxMeters": null
+      },
+      "lodRequests": {
+        "glbRequestCount": 20,
+        "lod0RequestCount": 17,
+        "lod1RequestCount": 3,
+        "lod0DistinctCount": 17,
+        "lod1DistinctCount": 3,
+        "lod0Sample": [
+          "doitt-102705__lod_0.glb",
+          "doitt-131170__lod_0.glb",
+          "doitt-147902__lod_0.glb",
+          "doitt-262867__lod_0.glb",
+          "doitt-39969__lod_0.glb"
+        ],
+        "lod1Sample": [
+          "empire-state-building__lod_1.glb",
+          "flatiron-building__lod_1.glb",
+          "theodore-roosevelt-birthplace__lod_1.glb"
+        ]
+      },
+      "sharedCache": {
+        "cacheEntries": 20,
+        "cachedBytes": 7910347,
+        "cacheEvictions": 0,
+        "maxCacheEntries": 1024,
+        "maxCachedBytes": 268435456,
+        "activeRequests": 0,
+        "maxConcurrentRequests": 4,
+        "peakConcurrentRequests": 4,
+        "requestedArtifactCount": 20,
+        "loadedArtifactCount": 20,
+        "failedArtifactCount": 0,
+        "fallbackCellCount": 0,
+        "failedCellCount": 0,
+        "notShippedCellCount": 0,
+        "scheduledCellCount": 1,
+        "deferredCellCount": 0,
+        "releasedArtifactCount": 0,
+        "releasedArtifactBytes": 0
+      },
+      "universalGates": {
+        "failedCellCount": 0,
+        "fallbackCellCount": 0,
+        "failedArtifactCount": 0,
+        "peakConcurrentRequests": 4,
+        "maxConcurrentRequests": 4,
+        "externalHosts": [],
+        "pass": true
+      },
+      "still": {
+        "file": "captures/pose-p6.png",
+        "byteSize": 175218,
+        "sha256": "bfee83ee26bb2ef101ef924741aab510e8dc68e5caee9b906b682cce5fa2fb26"
+      }
+    }
+  ],
+  "notClaimedHere": [
+    "Any visual, geographic, architectural or performance acceptance. A still is evidence that pixels were produced, not evidence of likeness.",
+    "Any frame-time claim, on desktop or mobile.",
+    "Any claim about decoded GPU memory, which is not observable from the loader.",
+    "T009's 5 shed-tone residual pairs are RECORDED and NOT judged wherever they appear; they gate nothing here."
+  ],
+  "instrumentDefectAndReRun": {
+    "defect": "The scheduler probe payload never carried residentUnitIds or distanceMetersByUnitId. distanceMetersByUnitId is a Map on SchedulerDecision and a Map inside JSON.stringify renders as {}, but the field was not in the payload at all -- so the first capture recorded residentUnitCount 0 and distances.count 0 at ALL SIX poses.",
+    "whatItWasNot": "NOT a finding about the scheduler. The scheduler was resolving cells throughout, as the request-level LOD readings in the same captures show. The probe was failing to carry what the capture CLI was reading.",
+    "fix": "src/app/App.tsx, inside the EXTERIOR_SCHEDULER_PROBE_ENABLED block only: residentUnitIds and distanceMetersByUnitId (as entries) are added to the probe payload. The decision object is untouched, the block compiles out unless VITE_EXTERIOR_SCHEDULER_PROBE is set, and no runtime behaviour depends on it.",
+    "convention": "INSTRUMENT-DEFECT RE-RUN, the one permitted re-run class (T006-era precedent). Single attempt. P2 and P3 only -- the four poses whose readings were never in doubt were not re-taken.",
+    "supersededReadings": [
+      {
+        "poseId": "P2",
+        "residentUnitCount": 0,
+        "distances": {
+          "count": 0,
+          "nearRingCount": 0,
+          "farRingCount": 0,
+          "minMeters": null,
+          "maxMeters": null
+        },
+        "reason": "Instrument defect: probe payload omitted the fields. Superseded by the re-capture in poses[], kept so the defective reading stays on the record."
+      },
+      {
+        "poseId": "P3",
+        "residentUnitCount": 0,
+        "distances": {
+          "count": 0,
+          "nearRingCount": 0,
+          "farRingCount": 0,
+          "minMeters": null,
+          "maxMeters": null
+        },
+        "reason": "Instrument defect: probe payload omitted the fields. Superseded by the re-capture in poses[], kept so the defective reading stays on the record."
+      }
+    ],
+    "aSecondDefectFoundDuringTheReRun": "The capture CLI wrote its record from the poses it captured, so a filtered re-run CLOBBERED the four poses it did not take. Caught by reading the file back rather than by trusting the run; the four were restored from the committed version and the two re-captures merged in."
+  },
+  "p2Straddle": {
+    "verdict": "PROVEN",
+    "ringMeters": 400,
+    "residentCells": 8,
+    "nearRingCount": 6,
+    "farRingCount": 2,
+    "closestBelowRing": {
+      "unitId": "manhattan-exterior-cell-w01-000051-16-19301-17930",
+      "meters": 207.96
+    },
+    "closestAboveRing": {
+      "unitId": "manhattan-exterior-cell-w00-000000-block-00835",
+      "meters": 886.02
+    },
+    "nearRingCells": [
+      {
+        "unitId": "manhattan-exterior-cell-w01-000045-16-19300-17929",
+        "meters": 0
+      },
+      {
+        "unitId": "manhattan-exterior-cell-w01-000046-16-19301-17929",
+        "meters": 33.04
+      },
+      {
+        "unitId": "manhattan-exterior-cell-w01-000037-16-19300-17928",
+        "meters": 64.81
+      },
+      {
+        "unitId": "manhattan-exterior-cell-w01-000038-16-19301-17928",
+        "meters": 73.93
+      },
+      {
+        "unitId": "manhattan-exterior-cell-w01-000050-16-19300-17930",
+        "meters": 175.72
+      },
+      {
+        "unitId": "manhattan-exterior-cell-w01-000051-16-19301-17930",
+        "meters": 207.96
+      }
+    ],
+    "farRingCells": [
+      {
+        "unitId": "manhattan-exterior-cell-w00-000000-block-00835",
+        "meters": 886.02
+      },
+      {
+        "unitId": "manhattan-exterior-cell-w01-000031-17-38598-35863",
+        "meters": 890.82
+      }
+    ],
+    "statement": "At P2 the resident set straddles the 400 m ring with named cells on both sides: 6 at or below and 2 above, the nearest above being manhattan-exterior-cell-w00-000000-block-00835 at 886.02 m."
+  },
+  "crossingIsReload": {
+    "verdict": "PROVEN AT BUILDING GRANULARITY; NOT PROVEN AT CELL GRANULARITY",
+    "buildingsRefetchedAtTheOtherLevel": 15,
+    "buildingIds": [
+      "doitt-1010565",
+      "doitt-102705",
+      "doitt-1110059",
+      "doitt-1110098",
+      "doitt-121756",
+      "doitt-125896",
+      "doitt-131170",
+      "doitt-147902",
+      "doitt-262867",
+      "doitt-39969",
+      "doitt-460555",
+      "doitt-498980",
+      "empire-state-building",
+      "flatiron-building",
+      "theodore-roosevelt-birthplace"
+    ],
+    "statement": "15 buildings were fetched as __lod_0.glb at P2 and as __lod_1.glb at P3. The same building, re-loaded at the other level when the camera moved out: crossing IS a reload, and it is a request-level reading rather than a pixel one.",
+    "whatIsNotProven": "No CELL changed ring side between the two poses. Only 3 cells are resident at both, and all three stayed on the same side of 400 m, so the cell-level straddle crossing was not observed within this pair. The building-level evidence stands on its own; the cell-level claim does not.",
+    "metricCaveat": "distanceMetersByUnitId is a ground-plane distance from the camera ground point. At P3 (1,100 m altitude) it still reports 6 cells at or below 400 m, which is why it must not be read as the quantity that routes the level -- the LOD request sets are that evidence."
+  },
+  "d11Reading": {
+    "allowance": "4 of 8 resident cells may hold both levels simultaneously",
+    "measuredAtP2": {
+      "count": 3,
+      "buildingIds": [
+        "empire-state-building",
+        "flatiron-building",
+        "theodore-roosevelt-birthplace"
+      ]
+    },
+    "measuredAtP3": {
+      "count": 3,
+      "buildingIds": [
+        "empire-state-building",
+        "flatiron-building",
+        "theodore-roosevelt-birthplace"
+      ]
+    },
+    "residentCellsAtP2": 8,
+    "residentCellsAtP3": 8,
+    "verdict": "WITHIN ALLOWANCE",
+    "statement": "3 buildings held both levels at P2 and 3 at P3, against 8 resident cells. Those buildings sit in at most 3 cells, so cells-holding-both is at most 3 against an allowance of 4. The reading is per BUILDING because the request log is per building; the cell figure is therefore an upper bound rather than a direct count, and it is under the allowance either way."
+  }
+}

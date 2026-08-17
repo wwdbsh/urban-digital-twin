@@ -529,9 +529,13 @@ describe("northern-manhattan committed payload inventory", () => {
     const glbCount = (path: string): number =>
       readJson<{ files: { path: string }[] }>(path).files.filter((file) => /^public\/assets\/.*\.glb$/u.test(file.path)).length;
     expect(BLOCK835_MEMBERSHIP_BUILDING_IDS).toHaveLength(14);
-    const liveCurated = EXTERIOR_DEFAULT_ACTIVATIONS.flatMap((record) =>
-      record.enabled && record.predecessor.enabled ? [record.predecessor.releaseId] : [],
-    );
+    // T001 added the two-LOD rung, so the curated composition is now two links
+    // down: -s2 -> -s1 -> curated. The comparison still follows the records.
+    const liveCurated = EXTERIOR_DEFAULT_ACTIVATIONS.flatMap((record) => {
+      if (!record.enabled || !record.predecessor.enabled) return [];
+      const serving = record.predecessor;
+      return serving.predecessor.enabled ? [serving.predecessor.releaseId] : [serving.releaseId];
+    });
     expect(inventory.occupancy.promotedWaves.map((wave) => wave.releaseId))
       .toEqual(liveCurated.slice(0, inventory.occupancy.promotedWaveCount));
     expect(liveCurated).toHaveLength(6);

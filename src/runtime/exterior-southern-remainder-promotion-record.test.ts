@@ -117,8 +117,8 @@ describe("Southern-remainder promotion record versus the committed payload inven
     const promoted = EXTERIOR_DEFAULT_ACTIVATIONS[3]!;
     expect(promoted.enabled).toBe(true);
     if (!promoted.enabled) throw new Error("expected the fourth promoted default to be enabled");
-    expect(promoted.releaseId).toBe(SERVING_RELEASE_ID);
-    expect(promoted.predecessor).toBe(SOUTHERN_REMAINDER_P1_EXTERIOR_ACTIVATION);
+    expect(promoted.predecessor.enabled && promoted.predecessor.releaseId).toBe(SERVING_RELEASE_ID);
+    expect(promoted.predecessor.enabled && promoted.predecessor.predecessor).toBe(SOUTHERN_REMAINDER_P1_EXTERIOR_ACTIVATION);
   });
 
   it("pins the rollout snapshot and assembly package the inventory recorded", () => {

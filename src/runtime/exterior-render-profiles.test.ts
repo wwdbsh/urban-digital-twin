@@ -25,7 +25,9 @@ function lod(lodId: string, geometricErrorMeters: number, maxDistanceMeters: num
 describe("exterior render profiles", () => {
   it("parses only the two supported profiles", () => {
     expect(EXTERIOR_RENDER_PROFILES).toEqual(["exploration", "inspection"]);
-    expect(DEFAULT_EXTERIOR_RENDER_PROFILE).toBe("exploration");
+    // T001 flipped the default to finest-that-covers in the same commit as the
+    // -s2 activation records, per ADR 0057 Part 0's single-revert rule.
+    expect(DEFAULT_EXTERIOR_RENDER_PROFILE).toBe("inspection");
     expect(parseExteriorRenderProfile("exploration")).toBe("exploration");
     expect(parseExteriorRenderProfile("inspection")).toBe("inspection");
     expect(parseExteriorRenderProfile("Inspection")).toBeNull();

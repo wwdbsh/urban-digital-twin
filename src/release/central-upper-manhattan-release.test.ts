@@ -433,9 +433,13 @@ describe("central-upper-manhattan committed payload inventory", () => {
     // alternative — comparing this record's four curated ids against six serving
     // ids — would have failed for a true reason and been silenced by deleting the
     // check, which is the outcome the paragraph above exists to prevent.
-    const liveCurated = EXTERIOR_DEFAULT_ACTIVATIONS.flatMap((record) =>
-      record.enabled && record.predecessor.enabled ? [record.predecessor.releaseId] : [],
-    );
+    // T001 added the two-LOD rung, so the curated composition is now two links
+    // down: -s2 -> -s1 -> curated. The comparison still follows the records.
+    const liveCurated = EXTERIOR_DEFAULT_ACTIVATIONS.flatMap((record) => {
+      if (!record.enabled || !record.predecessor.enabled) return [];
+      const serving = record.predecessor;
+      return serving.predecessor.enabled ? [serving.predecessor.releaseId] : [serving.releaseId];
+    });
     expect(inventory.occupancy.promotedWaves.map((wave) => wave.releaseId))
       .toEqual(liveCurated.slice(0, inventory.occupancy.promotedWaveCount));
     expect(liveCurated).toHaveLength(6);

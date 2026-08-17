@@ -128,9 +128,13 @@ const CACHE_ENTRY_CAP_AT_MEASUREMENT = 512;
  * moves this list and still fails here — which is the property the original
  * comparison against the promotion set was protecting.
  */
-const CURATED_PROMOTION_SET = EXTERIOR_DEFAULT_ACTIVATIONS.flatMap((record) =>
-  record.enabled && record.predecessor.enabled ? [record.predecessor.releaseId] : [],
-);
+// T001 promoted the two-LOD releases over the -s1 serving set, so the curated
+// rung this record measured is now TWO links down the predecessor chain.
+const CURATED_PROMOTION_SET = EXTERIOR_DEFAULT_ACTIVATIONS.flatMap((record) => {
+  if (!record.enabled || !record.predecessor.enabled) return [];
+  const serving = record.predecessor;
+  return serving.predecessor.enabled ? [serving.predecessor.releaseId] : [serving.releaseId];
+});
 
 describe("every committed evidence record is about THIS release", () => {
   it("names the same release id in all four records", () => {
