@@ -1,0 +1,506 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "lod1-texturing-20260817:render-comparison",
+  "task": "T009",
+  "stage": "0",
+  "artifact": "render-comparison",
+  "computedAt": "2026-08-17T11:16:44.625Z",
+  "supersedes": "The stage0-gate blockingCondition, which recorded item 1 as NOT CAPTURED. It is captured here.",
+  "instrument": {
+    "renderer": "Blender EEVEE via Blender MCP, headful, addon blender_mcp_pinned on port 9876",
+    "viewport": [
+      1440,
+      900
+    ],
+    "horizontalFovDeg": 60,
+    "fovRationale": "Matched to Cesium's default PerspectiveFrustum fov so the screen-pixel arithmetic below is the arithmetic of the shipped viewport rather than of a render setting.",
+    "viewTransform": "Standard (no filmic curve): tone must read as authored.",
+    "light": "One sun, 3.0 W/m2, 52 deg elevation, 35 deg azimuth. Identical for every variant.",
+    "camera": "Fixed ground azimuth 35 deg, elevation 12 deg, aimed at the asset's bounding-box centre, at the stated distance. Identical for every variant of a building.",
+    "cropMethod": "Blender render border with crop-to-border: a TRUE 1:1 crop of the same camera, not a zoom. A pixel in a crop is a screen pixel.",
+    "cropAlignment": "The crop box is computed ONCE from lod_0 and reused for all three variants, so the three crops are pixel-aligned.",
+    "instrumentDefectFound": "The first implementation derived the crop box per variant and produced 201x162 against 200x161 for the same building, silently comparing misaligned rows. Fixed before any number below was taken.",
+    "blenderIncidentAvoided": "The scene was cleared by deleting objects and purging orphans. read_factory_settings(use_empty=True) was never called; it unregisters the MCP addon and was what terminated the previous attempt."
+  },
+  "variants": {
+    "lod0": "The shipped lod_0 GLB, textured, exactly as retained.",
+    "lod1": "The shipped lod_1 GLB, untextured, exactly as retained.",
+    "lod0flat": "THE RECONCILIATION PREVIEW. lod_0 geometry with the image unbound and each material's baseColorFactor multiplied by its own tile's mean texel. It is what a tone-reconciled level looks like: no image, no TEXCOORD, tone preserved. Built by material edit in Blender; nothing was re-emitted."
+  },
+  "metricDefinition": {
+    "toneMeanAbs": "Mean of the per-channel MEAN difference over the building's pixels. A whole-surface, low-spatial-frequency shift.",
+    "toneChannelSpread": "max minus min of the three per-channel means. NON-ZERO MEANS A HUE ERROR: a grayscale tile can only move all three channels together.",
+    "patternRms": "RMS of the difference AFTER the per-channel mean is removed. High-spatial-frequency structure only.",
+    "whyDecomposed": "A flat-tone variant slightly off in overall brightness would otherwise inflate the tile-detail figure with what is really a tone residual. Removing the mean makes the pattern number a statement about spatial structure, which is what 'is the tile visible' asks."
+  },
+  "screenPixelArithmetic": {
+    "worldMetresPerScreenPixel": {
+      "350m": 0.280656,
+      "120m": 0.096225
+    },
+    "formula": "2 * distance * tan(hfov/2) / 1440",
+    "texelSizeMm": {
+      "brick-running-bond": 6.25,
+      "limestone-ashlar": 17.58,
+      "curtain-mullion-grid": 21.88,
+      "spandrel-panel": 18.75
+    },
+    "texelsPerScreenPixel": {
+      "350m": {
+        "min": 12.8,
+        "max": 44.9
+      },
+      "120m": {
+        "min": 4.4,
+        "max": 15.4
+      }
+    },
+    "seamRationaleVerdict": "CONFIRMED, with a wide margin. The emission seam (midtown-core-v3-materialization.ts:920-923) argues a 128-pixel joint is below a screen pixel beyond 250 m. At 350 m one screen pixel spans 12.8 to 44.9 texels; even at 120 m it spans 4.4 to 15.4. The joint is sub-pixel at BOTH distances tested."
+  },
+  "rows": [
+    {
+      "buildingId": "doitt:102705",
+      "classes": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ],
+      "fallback": false,
+      "d": 350,
+      "cropPx": [
+        197,
+        130
+      ],
+      "tileDetail": {
+        "toneMeanAbs": 0.014278,
+        "toneChannelSpread": 0.001187,
+        "patternRms": 0.028534
+      },
+      "toneAndGeom": {
+        "toneMeanAbs": 0.008101,
+        "toneChannelSpread": 0.001293,
+        "patternRms": 0.043909
+      },
+      "shipped": {
+        "toneMeanAbs": 0.02238,
+        "toneChannelSpread": 0.000269,
+        "patternRms": 0.052073
+      }
+    },
+    {
+      "buildingId": "doitt:102705",
+      "classes": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ],
+      "fallback": false,
+      "d": 120,
+      "cropPx": [
+        469,
+        316
+      ],
+      "tileDetail": {
+        "toneMeanAbs": 0.020734,
+        "toneChannelSpread": 0.00191,
+        "patternRms": 0.033799
+      },
+      "toneAndGeom": {
+        "toneMeanAbs": 0.013723,
+        "toneChannelSpread": 0.002638,
+        "patternRms": 0.058438
+      },
+      "shipped": {
+        "toneMeanAbs": 0.034457,
+        "toneChannelSpread": 0.000728,
+        "patternRms": 0.065864
+      }
+    },
+    {
+      "buildingId": "doitt:39969",
+      "classes": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ],
+      "fallback": false,
+      "d": 350,
+      "cropPx": [
+        201,
+        161
+      ],
+      "tileDetail": {
+        "toneMeanAbs": 0.01898,
+        "toneChannelSpread": 0.001654,
+        "patternRms": 0.032701
+      },
+      "toneAndGeom": {
+        "toneMeanAbs": 0.008593,
+        "toneChannelSpread": 0.002582,
+        "patternRms": 0.050794
+      },
+      "shipped": {
+        "toneMeanAbs": 0.027573,
+        "toneChannelSpread": 0.000928,
+        "patternRms": 0.058897
+      }
+    },
+    {
+      "buildingId": "doitt:39969",
+      "classes": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ],
+      "fallback": false,
+      "d": 120,
+      "cropPx": [
+        485,
+        410
+      ],
+      "tileDetail": {
+        "toneMeanAbs": 0.026499,
+        "toneChannelSpread": 0.002689,
+        "patternRms": 0.037842
+      },
+      "toneAndGeom": {
+        "toneMeanAbs": 0.01226,
+        "toneChannelSpread": 0.004241,
+        "patternRms": 0.06547
+      },
+      "shipped": {
+        "toneMeanAbs": 0.038759,
+        "toneChannelSpread": 0.001552,
+        "patternRms": 0.074101
+      }
+    },
+    {
+      "buildingId": "doitt:131170",
+      "classes": [
+        "curtain-mullion-grid",
+        "limestone-ashlar",
+        "spandrel-panel"
+      ],
+      "fallback": false,
+      "d": 350,
+      "cropPx": [
+        439,
+        480
+      ],
+      "tileDetail": {
+        "toneMeanAbs": 0.023515,
+        "toneChannelSpread": 0.003591,
+        "patternRms": 0.031138
+      },
+      "toneAndGeom": {
+        "toneMeanAbs": 0.004854,
+        "toneChannelSpread": 0.012638,
+        "patternRms": 0.042285
+      },
+      "shipped": {
+        "toneMeanAbs": 0.027325,
+        "toneChannelSpread": 0.015762,
+        "patternRms": 0.056007
+      }
+    },
+    {
+      "buildingId": "doitt:131170",
+      "classes": [
+        "curtain-mullion-grid",
+        "limestone-ashlar",
+        "spandrel-panel"
+      ],
+      "fallback": false,
+      "d": 120,
+      "cropPx": [
+        1258,
+        900
+      ],
+      "tileDetail": {
+        "toneMeanAbs": 0.032274,
+        "toneChannelSpread": 0.005995,
+        "patternRms": 0.038668
+      },
+      "toneAndGeom": {
+        "toneMeanAbs": 0.009169,
+        "toneChannelSpread": 0.012748,
+        "patternRms": 0.053227
+      },
+      "shipped": {
+        "toneMeanAbs": 0.041444,
+        "toneChannelSpread": 0.018056,
+        "patternRms": 0.06863
+      }
+    },
+    {
+      "buildingId": "doitt:778052",
+      "classes": [
+        "curtain-mullion-grid",
+        "limestone-ashlar",
+        "spandrel-panel"
+      ],
+      "fallback": false,
+      "d": 350,
+      "cropPx": [
+        837,
+        900
+      ],
+      "tileDetail": {
+        "toneMeanAbs": 0.023008,
+        "toneChannelSpread": 0.002422,
+        "patternRms": 0.029931
+      },
+      "toneAndGeom": {
+        "toneMeanAbs": 0.005592,
+        "toneChannelSpread": 0.014359,
+        "patternRms": 0.041878
+      },
+      "shipped": {
+        "toneMeanAbs": 0.022652,
+        "toneChannelSpread": 0.01626,
+        "patternRms": 0.047135
+      }
+    },
+    {
+      "buildingId": "doitt:778052",
+      "classes": [
+        "curtain-mullion-grid",
+        "limestone-ashlar",
+        "spandrel-panel"
+      ],
+      "fallback": false,
+      "d": 120,
+      "cropPx": [
+        1440,
+        900
+      ],
+      "tileDetail": {
+        "toneMeanAbs": 0.036824,
+        "toneChannelSpread": 0.002914,
+        "patternRms": 0.038881
+      },
+      "toneAndGeom": {
+        "toneMeanAbs": 0.009569,
+        "toneChannelSpread": 0.023934,
+        "patternRms": 0.071497
+      },
+      "shipped": {
+        "toneMeanAbs": 0.035477,
+        "toneChannelSpread": 0.026452,
+        "patternRms": 0.074817
+      }
+    },
+    {
+      "buildingId": "doitt:1302589",
+      "classes": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ],
+      "fallback": true,
+      "d": 350,
+      "cropPx": null,
+      "tileDetail": null,
+      "toneAndGeom": {
+        "toneMeanAbs": 0.019854,
+        "toneChannelSpread": 0.008199,
+        "patternRms": 0.056145
+      },
+      "shipped": {
+        "toneMeanAbs": 0.019854,
+        "toneChannelSpread": 0.008199,
+        "patternRms": 0.056145
+      }
+    },
+    {
+      "buildingId": "doitt:1302589",
+      "classes": [
+        "brick-running-bond",
+        "curtain-mullion-grid",
+        "spandrel-panel"
+      ],
+      "fallback": true,
+      "d": 120,
+      "cropPx": null,
+      "tileDetail": null,
+      "toneAndGeom": {
+        "toneMeanAbs": 0.040627,
+        "toneChannelSpread": 0.016867,
+        "patternRms": 0.077129
+      },
+      "shipped": {
+        "toneMeanAbs": 0.040627,
+        "toneChannelSpread": 0.016867,
+        "patternRms": 0.077129
+      }
+    }
+  ],
+  "findings": {
+    "theAnswer": "TONE. At mid distance the visible difference between the two levels is a tone and hue discontinuity, not missing tile detail.",
+    "theDecisiveFrame": "lod0flat -- lod_0 with the tile REMOVED but its mean tone preserved -- is very close to shipped lod_0 at 350 m, while shipped lod_1 is visibly bleached and cooler. Removing the tile entirely costs almost nothing if the tone is kept; keeping only the flat palette costs a lot.",
+    "whyTheNumbersAloneMislead": "patternRms (0.030-0.039) and toneMeanAbs (0.020-0.041) are the same ORDER, which on the numbers alone reads as a tie. It is not a tie perceptually: the tone term is a whole-surface shift the eye reads instantly, while the pattern term is high-frequency structure already at or below the pixel grid. The stills are the evidence for that, and they are committed.",
+    "hueErrorConfirmedInARender": "CONFIRMED, and its distribution is more careful than a first pass suggested. toneChannelSpread on the two limestone-bearing buildings is 0.0158/0.0181 (doitt:131170) and 0.0163/0.0265 (doitt:778052), blue consistently the largest gap: lod_1 is brighter AND cooler. On the two DECIMATED brick-bearing buildings it is 0.0003-0.0016, i.e. no measurable hue error. But the FALLBACK building doitt:1302589 is brick-bearing and shows 0.0082/0.0169 -- and it is the one comparison holding geometry CONSTANT. So the honest reading is NOT 'limestone only': decimation averages the two levels' facades differently and masks the hue gap, and the cleanest isolation available shows it on a brick building too. The Stage 0 analytic finding of a 12.3% per-channel ratio spread is confirmed; its per-class distribution is not settled by five buildings.",
+    "fallbackPair": "doitt:1302589 has lod_1 emitted as FULL GEOMETRY, so its lod_0/lod_1 comparison holds geometry constant and is the cleanest isolation of the palette gap available: toneMeanAbs 0.0199 at 350 m and 0.0406 at 120 m, channel spread 0.0082 and 0.0169, lod_1 again brighter and cooler."
+  },
+  "limitations": [
+    "FIVE buildings, not a population. Class coverage is met (brick 3, curtain 5, spandrel 5, limestone 2) but this is a stratified sample and nothing here is a distribution.",
+    "The lod0flat variant for the fallback building doitt:1302589 was a NO-OP: the flatten found no image-bound material to convert, so its tileDetail row is null rather than zero-by-measurement. That building contributes a tone reading only.",
+    "lod0flat is rendered on lod_0 GEOMETRY. A truly rescoped lod_1 would carry lod_1 geometry with reconciled tone; the render shows the tone remedy, not the final artifact.",
+    "The tile mean used for lod0flat is the raw texel mean the committed class-tile-luminance record states. A residual whole-surface brightness offset of 1.4-3.7% remains between lod0 and lod0flat, which is why the pattern term is reported mean-removed.",
+    "EEVEE is not the shipped renderer. CesiumJS draws the app. What transfers is the geometry of the comparison and the pixel arithmetic, not an absolute appearance claim.",
+    "The hue error's dependence on texture class is NOT settled here. Two decimated brick buildings show none and the one geometry-constant brick building shows some, which means decimation is a confound this sample cannot separate from class."
+  ],
+  "stills": [
+    {
+      "name": "doitt-102705__lod0__120m__crop.png",
+      "byteSize": 183695,
+      "checksumSha256": "e57c8fe53cb8cb855e5a65e48ee72c0af9a1c841d93d4ee019ae4b4c4fe40ecd"
+    },
+    {
+      "name": "doitt-102705__lod0__350m__crop.png",
+      "byteSize": 31544,
+      "checksumSha256": "cfc86308283e66b9eeb7390194d58e00f3eb5c65da2b5b96aed13999526f6feb"
+    },
+    {
+      "name": "doitt-102705__lod0flat__120m__crop.png",
+      "byteSize": 151376,
+      "checksumSha256": "7214a00df9309c7bef7b1062139e6a6f4e4e6db20a21576f2bd848fa1d8ddfab"
+    },
+    {
+      "name": "doitt-102705__lod0flat__350m__crop.png",
+      "byteSize": 29821,
+      "checksumSha256": "92991b75e0bce472146e3bd8e1ba7ee3f379331dfdf7fb98b75558f68aabe2ad"
+    },
+    {
+      "name": "doitt-102705__lod1__120m__crop.png",
+      "byteSize": 154784,
+      "checksumSha256": "a691a01fb5913625507c04c3058b4d23b3992e1421287c7d2f436724e0f354d4"
+    },
+    {
+      "name": "doitt-102705__lod1__350m__crop.png",
+      "byteSize": 29403,
+      "checksumSha256": "45f0d4c1e858a24ea06639b5458a64e1bdb33fbb221683788b75023267990fc1"
+    },
+    {
+      "name": "doitt-1302589__lod0__120m__crop.png",
+      "byteSize": 50034,
+      "checksumSha256": "8243668d7fe8431de9de6f54c52bf64d7ed70ddfd126cf555e973ec1d1694042"
+    },
+    {
+      "name": "doitt-1302589__lod0__350m__crop.png",
+      "byteSize": 11900,
+      "checksumSha256": "24deb5d6daa4c1f5736f70530a8c675b7b5f69d5762a2f8f4864bd074c5142d9"
+    },
+    {
+      "name": "doitt-1302589__lod0flat__120m__crop.png",
+      "byteSize": 50034,
+      "checksumSha256": "8ee73aa4ecdb145dbd707f6ff6849355a649c7d51d59011afa1f6edb8e9f40a5"
+    },
+    {
+      "name": "doitt-1302589__lod0flat__350m__crop.png",
+      "byteSize": 11900,
+      "checksumSha256": "1a0ea1890253f2b39b349580aab776bc88d8f0fc08db5829c7e03e3850210a50"
+    },
+    {
+      "name": "doitt-1302589__lod1__120m__crop.png",
+      "byteSize": 45885,
+      "checksumSha256": "68a6837924e4570eeff6eaea8659dfc59420eb74d029c718b3d81269b9febe2e"
+    },
+    {
+      "name": "doitt-1302589__lod1__350m__crop.png",
+      "byteSize": 11297,
+      "checksumSha256": "bf39c4f607d8ef0de77fb9308b04bf6feb26aa6a2df0b19304f59e3216945f40"
+    },
+    {
+      "name": "doitt-131170__lod0__120m__crop.png",
+      "byteSize": 1554956,
+      "checksumSha256": "e6f1f1a1c840c6a240bdeb8a1a221e928b4a12f334bd75a4eb00b6401a1afc0f"
+    },
+    {
+      "name": "doitt-131170__lod0__350m__crop.png",
+      "byteSize": 290418,
+      "checksumSha256": "ebc7ba48818a1cc94ec5f706dc449f5d2f18b7c4bbb6ec0e8513c0954d4148e4"
+    },
+    {
+      "name": "doitt-131170__lod0flat__120m__crop.png",
+      "byteSize": 824378,
+      "checksumSha256": "3d721159859925d24f414b52a788b5ae716474d3b5bfde9dc299a4af15cfc9c2"
+    },
+    {
+      "name": "doitt-131170__lod0flat__350m__crop.png",
+      "byteSize": 216500,
+      "checksumSha256": "f92e28c48e0a3b884d7e0ea4fe1fc8259929f12ffe748ba8743bb7eddfcf8c61"
+    },
+    {
+      "name": "doitt-131170__lod1__120m__crop.png",
+      "byteSize": 1013812,
+      "checksumSha256": "ccf619d1d4272fdb5d2d9646aa8fcd4b46bb51bb56b4138863dcb746e65f99e1"
+    },
+    {
+      "name": "doitt-131170__lod1__350m__crop.png",
+      "byteSize": 227187,
+      "checksumSha256": "9c8046146fbb8e0b070ec5923007849bab0b2d24bc3d2b50bad3259eee883614"
+    },
+    {
+      "name": "doitt-39969__lod0__120m__crop.png",
+      "byteSize": 251569,
+      "checksumSha256": "25aa30bbd5cd0f371032cb5baeb84077ef90ccb7622536f10a1bf9db615ca44a"
+    },
+    {
+      "name": "doitt-39969__lod0__350m__crop.png",
+      "byteSize": 40480,
+      "checksumSha256": "4ffc32a3e6dfdf4dbf5ac7ea4d4270f3ea5c5f6ce5277f415a655a72c17dc7ec"
+    },
+    {
+      "name": "doitt-39969__lod0flat__120m__crop.png",
+      "byteSize": 187772,
+      "checksumSha256": "fd11a8620d4a0abc5b5ac601286ed99b0815d9e10f98bcc3a18a54b0c7753a96"
+    },
+    {
+      "name": "doitt-39969__lod0flat__350m__crop.png",
+      "byteSize": 36277,
+      "checksumSha256": "4583bdce7067a10b0d5964588357201b1c9f027aa9bebbe6fd5775e1fd64d36c"
+    },
+    {
+      "name": "doitt-39969__lod1__120m__crop.png",
+      "byteSize": 204363,
+      "checksumSha256": "3aa9530fbaf4d61fe04c091a624683a37ce9694d332f63a2763886c34e392131"
+    },
+    {
+      "name": "doitt-39969__lod1__350m__crop.png",
+      "byteSize": 36840,
+      "checksumSha256": "855ea583263fea805056b5aad199399fc30d922ceae2949f31bdba2970dd7579"
+    },
+    {
+      "name": "doitt-778052__lod0__120m__crop.png",
+      "byteSize": 1821793,
+      "checksumSha256": "242e939a88da70d8b9fff90ac8a7c618c60697947ba17f0f60853ac15da02f4d"
+    },
+    {
+      "name": "doitt-778052__lod0__350m__crop.png",
+      "byteSize": 1034945,
+      "checksumSha256": "7030f5577c6c3baab869f791020654a94b221639124d0380b7b68195185e9fb3"
+    },
+    {
+      "name": "doitt-778052__lod0flat__120m__crop.png",
+      "byteSize": 1210386,
+      "checksumSha256": "79cbfa5a33e34dd3d2a1e5ba7f2576e2f09c75298dae5e856d2dec1d21fbbe4c"
+    },
+    {
+      "name": "doitt-778052__lod0flat__350m__crop.png",
+      "byteSize": 828981,
+      "checksumSha256": "2458589fe8a6d2cebcc04ed234333270b9de2009f85d23b42fc932cee80897c3"
+    },
+    {
+      "name": "doitt-778052__lod1__120m__crop.png",
+      "byteSize": 1301876,
+      "checksumSha256": "e4ddf3acc27792e9ff16e67734e937e5fe0e42847449dd4d8723b9940558b87d"
+    },
+    {
+      "name": "doitt-778052__lod1__350m__crop.png",
+      "byteSize": 843490,
+      "checksumSha256": "56c6cc38a937dd783ddf076ce3b5001f07c8ad02bc13c479cd0b34f4cc71c4e0"
+    }
+  ],
+  "claim": "A stratified five-building, two-distance, three-variant rendered comparison, taken through Blender MCP against the retained -c1 bytes. It answers the question the Stage 0 gate was blocked on. It is not a population measurement and it is not an acceptance of any release."
+}
