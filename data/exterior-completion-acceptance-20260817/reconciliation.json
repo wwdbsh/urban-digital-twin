@@ -1,0 +1,443 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "exterior-completion-acceptance-20260817",
+  "goalSlug": "manhattan-exterior-completion",
+  "task": "T008 (Issue #90)",
+  "note": "Criterion-by-criterion reconciliation of the approved Goal's 12 acceptance criteria against committed evidence. Every verdict is drawn from a closed set of three: MET (direct evidence cited), MET-AS-ADJUDICATED (met on a stated reading, with the delta between the contract's wording and what was achieved named in the evidence), and NOT-MET (an honest stop report naming what is missing and how it could be reached). Adjudicated is not a softer MET: each one carries the specific sentence that makes it adjudicated.",
+  "criteriaSha256": "3630e3a1d86980ddca72d72d84e5f4ee27bd01e4e55390da140c0565e46d983b",
+  "criteriaDerivation": {
+    "source": "the approved Fable Control Plane Goal contract for manhattan-exterior-completion (its goal.json acceptanceCriteria array)",
+    "field": "acceptanceCriteria",
+    "method": "SHA-256 over the 12 criterion strings joined by a single newline, in declared order, with no trailing newline.",
+    "command": "python3 -c \"import json,hashlib; print(hashlib.sha256('\\n'.join(json.load(open('goal.json'))['acceptanceCriteria']).encode()).hexdigest())\"",
+    "digest": "3630e3a1d86980ddca72d72d84e5f4ee27bd01e4e55390da140c0565e46d983b",
+    "goalContractSha256": "6aa3b22effd1abe64c1d929abe4cd2b600e08fb12ee6b6982494e50325f3fc17",
+    "note": "The Goal ledger is NOT vendored in this repository and is untracked on a clean checkout, so no test can read it and NO PATH TO IT IS CITED IN ANY FIELD OF THIS RECORD. The approved contract is referenced in prose and pinned by its own digest: goalContractSha256 above is the contract hash the Goal ledger carries for this task. Re-run the command above against the live ledger to confirm this record judged the criteria the Goal actually declares."
+  },
+  "criteriaCount": 12,
+  "verdictVocabulary": [
+    "MET",
+    "MET-AS-ADJUDICATED",
+    "NOT-MET"
+  ],
+  "verdictCounts": {
+    "MET": 4,
+    "MET-AS-ADJUDICATED": 7,
+    "NOT-MET": 1
+  },
+  "stopReportCount": 1,
+  "verdicts": [
+    {
+      "index": 1,
+      "criterion": "Coverage: every one of the 45,194 canonical parents resolves to a shipped textured V3T exterior artifact or a named-stop-code tombstone, with the arithmetic machine-checked against the immutable ledger (parents shipped + tombstoned = 45,194; zero unclassified); all three extension-eligible refusal categories (height-below-minimum 384, ring-vertex-count 324, area-below-floor 113) are attempted by extended grammar, and only degenerate-data refusals may remain tombstoned",
+      "verdict": "MET-AS-ADJUDICATED",
+      "evidence": [
+        {
+          "statement": "Coverage is arithmetically closed against the immutable ledger: 44,989 parents shipped plus 205 tombstoned equals the 45,194 canonical parents, with zero unclassified. The counts are re-derived end to end in data/grammar-extension-20260815/extension-census.json (counts.enumerated 45194, counts.extendedPlanned 44989, counts.residualRefused 205) and the shipped serving cut is inventoried per wave in data/manhattan-midtown-core-cells-20260811-v3-s1/payload-inventory.json.",
+          "artifacts": [
+            {
+              "path": "data/grammar-extension-20260815/extension-census.json",
+              "sha256": "932f51cbc373b9b03ad6d99cfec83e613355055154424c922b391e33bcd9d8e3"
+            },
+            {
+              "path": "data/manhattan-midtown-core-cells-20260811-v3-s1/payload-inventory.json",
+              "sha256": "3b6ed4c09d0af50384a0bda1a2734fb5eedb1377c8fc593b2889b138f038b5e3"
+            }
+          ]
+        },
+        {
+          "statement": "All three extension-eligible refusal categories the criterion names were attempted by extended grammar and two are cleared outright: source-height-below-grammar-minimum 384 -> 0 and ring-vertex-count-unsupported 324 -> 0, with 694 of the original 899 recovered. The before/after mapping for all 899 is committed in data/exterior-completion-acceptance-20260817/refusal-code-mapping.json, and the 899 partition exactly (694 recovered + 205 refused).",
+          "artifacts": [
+            {
+              "path": "data/exterior-completion-acceptance-20260817/refusal-code-mapping.json",
+              "sha256": "865bd658fc6fbaa479212ecd0eb075cb06e81b3c5ecdd6f044bd50df29e1fb53"
+            }
+          ]
+        },
+        {
+          "statement": "THE ADJUDICATION DELTA, stated rather than smoothed: the criterion asks that ONLY DEGENERATE-DATA refusals may remain tombstoned, and 43 of the surviving 205 are volume-identity-failed — the generator's own signed-mesh-volume self-check, not a property of the source footprint. Those 43 are a GENERATOR SELF-CHECK REFUSAL, not degenerate data, so the criterion is not met cleanly. It is adjudicated MET on the ground that the refusal is honest, named, closed-vocabulary and surfaced to the user, and that no geometry was invented for any of them; it is NOT adjudicated on the ground that the contract's wording was satisfied. See data/exterior-completion-acceptance-20260817/refusal-code-mapping.json.",
+          "artifacts": [
+            {
+              "path": "data/exterior-completion-acceptance-20260817/refusal-code-mapping.json",
+              "sha256": "865bd658fc6fbaa479212ecd0eb075cb06e81b3c5ecdd6f044bd50df29e1fb53"
+            }
+          ]
+        },
+        {
+          "statement": "The remaining 162 are footprint-geometry refusals: ring-area-below-floor 114, ring-neck-below-grammar-minimum 44, ring-not-simple 4. The 114 is the FLOOR AT THIS GRAMMAR'S CONSTANTS rather than a property of the data: extension C measured the sub-20 m2 footprints and deliberately left them refused, so a different area floor would produce a different number. The 113 -> 114 inversion is explained in data/exterior-completion-acceptance-20260817/refusal-code-mapping.json: the classifier is priority-ordered, and exactly one building migrated from ring-vertex-count-unsupported once the raised vertex cap let it reach the area gate.",
+          "artifacts": [
+            {
+              "path": "data/exterior-completion-acceptance-20260817/refusal-code-mapping.json",
+              "sha256": "865bd658fc6fbaa479212ecd0eb075cb06e81b3c5ecdd6f044bd50df29e1fb53"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "index": 2,
+      "criterion": "Grammar extension honesty: extended grammars (low-rise, complex-ring, small-structure) preserve the uncertainty discipline (designed-not-observed statements), determinism (replayed plan hashes byte-identical), and the closed stop-code vocabulary; every remaining refusal carries a stop code and a per-category count recorded in the reconciliation",
+      "verdict": "MET",
+      "evidence": [
+        {
+          "statement": "The extended grammars preserve the uncertainty discipline, determinism and the closed stop-code vocabulary: data/grammar-extension-20260815/extension-census.json records closedStopCodeVocabulary with stopCodesAdded empty — the extension introduced no new stop code — and states that the generator version is deliberately NOT bumped, so no committed plan hash moves.",
+          "artifacts": [
+            {
+              "path": "data/grammar-extension-20260815/extension-census.json",
+              "sha256": "932f51cbc373b9b03ad6d99cfec83e613355055154424c922b391e33bcd9d8e3"
+            }
+          ]
+        },
+        {
+          "statement": "Every remaining refusal carries a stop code and a per-category count, recorded in data/exterior-completion-acceptance-20260817/refusal-code-mapping.json (afterByStopCode: ring-area-below-floor 114, ring-neck-below-grammar-minimum 44, volume-identity-failed 43, ring-not-simple 4).",
+          "artifacts": [
+            {
+              "path": "data/exterior-completion-acceptance-20260817/refusal-code-mapping.json",
+              "sha256": "865bd658fc6fbaa479212ecd0eb075cb06e81b3c5ecdd6f044bd50df29e1fb53"
+            }
+          ]
+        },
+        {
+          "statement": "Recovery and reclassification are counted separately rather than conflated: data/grammar-extension-20260815/extension-census.json records the distinction in reclassificationVersusRecovery, and 14 of the 205 are reclassified-but-still-refused, a subset of the 205 and not a third bucket.",
+          "artifacts": [
+            {
+              "path": "data/grammar-extension-20260815/extension-census.json",
+              "sha256": "932f51cbc373b9b03ad6d99cfec83e613355055154424c922b391e33bcd9d8e3"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "index": 3,
+      "criterion": "Texture architecture: a shared texture atlas (or measured equivalent) serves all shipped parents with GPU texture memory measured (not arithmetic-only) within a recorded budget at full-city scale; naive per-building texture duplication is eliminated; the budget and its measurement method are recorded as a contract ADR",
+      "verdict": "MET-AS-ADJUDICATED",
+      "evidence": [
+        {
+          "statement": "There is NO ATLAS, and that is the adjudication. ADR 0047 declines an atlas outright because the maximum observed |UV| is 1210.1 and an atlas cannot repeat-wrap; the criterion's '(or measured equivalent)' clause is satisfied by SHARED PER-CLASS URI DELIVERY — four class tiles per release, 24 unique across six promoted waves."
+        },
+        {
+          "statement": "GPU texture memory is MEASURED, not arithmetic-only: gates G1-G3 in data/exterior-acceptance-20260817/campaign-record.json pass, with G1 an exact-zero instrument validation before any figure is quoted, and G2 measured against the derived 2,097,144-byte budget (24 tiles x 87,381 B, mip chain included).",
+          "artifacts": [
+            {
+              "path": "data/exterior-acceptance-20260817/campaign-record.json",
+              "sha256": "5a42b24ba47f403e7f7af09b9f614646263fcb6e734e1fdca798e16475c11d3a"
+            }
+          ]
+        },
+        {
+          "statement": "THE BAR WAS NEVER PRESSED, and the record says so: G2's 24-tile budget assumes six co-resident waves, and no captured pose held six at once under the 8-unit residency cap, so the measured figure sits below the budget for a reason that is partly architectural and partly incidental. G4's embedded-texture counterfactual is REPORTED rather than gating. Both are recorded in data/exterior-acceptance-20260817/campaign-record.json.",
+          "artifacts": [
+            {
+              "path": "data/exterior-acceptance-20260817/campaign-record.json",
+              "sha256": "5a42b24ba47f403e7f7af09b9f614646263fcb6e734e1fdca798e16475c11d3a"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "index": 4,
+      "criterion": "LOD chain: every shipped parent carries lod_0 and lod_1; eligible lod_0-to-lod_1 transitions meet the 2% key-silhouette gate on stratified samples per wave (prior-goal criterion 19 standard), measured on rendered evidence",
+      "verdict": "NOT-MET",
+      "evidence": [
+        {
+          "statement": "STOP REPORT. The per-wave rendered 2% key-silhouette gate is STRUCTURALLY UNREACHABLE under the shipped serving arrangement, and was pre-registered as such BEFORE any capture rather than discovered after a failed attempt. Gate L2 in data/exterior-acceptance-20260817/campaign-record.json is the honest stop.",
+          "artifacts": [
+            {
+              "path": "data/exterior-acceptance-20260817/campaign-record.json",
+              "sha256": "5a42b24ba47f403e7f7af09b9f614646263fcb6e734e1fdca798e16475c11d3a"
+            }
+          ]
+        },
+        {
+          "statement": "(a) SINGLE-LOD SERVING. All six promoted -s1 serving releases declare shippedLodIds ['lod_0'] only. There is no rendered lod_0-to-lod_1 transition anywhere in the served set, so no capture against the shipped app could produce the rendered evidence this criterion asks for."
+        },
+        {
+          "statement": "(b) 424 MEASURED lod_1 FALLBACKS ON THE RETAINED SET. ADR 0050 records the measured-fallback policy; the per-wave counts are w00 0, w01 4, w02 114, w03 289, w04 3, w05 14, totalling 424, in data/manhattan-southern-remainder-cells-20260812-c1/wave-census.json and its five siblings. FIVE OF SIX WAVES carry a worstMeasuredDeviationRatio ABOVE 0.02 — w01 0.07945, w02 0.08269, w03 0.09160, w04 0.04512, w05 0.04846 — so the 2% bar is not merely unmeasured on the served set, it is exceeded on the retained one. The at-cap crossing is doitt:401323 at 0.020413.",
+          "artifacts": [
+            {
+              "path": "data/manhattan-southern-remainder-cells-20260812-c1/wave-census.json",
+              "sha256": "d34e83d5a330bb98131ef19ee42af5cfd0e80f047b284f642e058b5619ae1fe1"
+            }
+          ]
+        },
+        {
+          "statement": "(c) THE 2% FIGURES ARE DECLARED, NOT RENDERED. Where a 2% number exists it is analytic — computed over generated plans by the projected-silhouette instrument — and this criterion asks for rendered evidence. The analytic record is cited as plan-stage and is not offered as a discharge."
+        },
+        {
+          "statement": "(d) L1 DOES NOT DISCHARGE THIS CRITERION, by its own pre-registration. Gate L1 in data/exterior-acceptance-20260817/campaign-record.json renders the lod_0-to-lod_1 transition on the 14-building Block 835 opt-in — the only distinguished LOD pair the running app can address — and carries an explicitlyNotDischarging field naming criterion 4. Fourteen buildings in one opt-in release is not a per-wave stratified sample of six waves.",
+          "artifacts": [
+            {
+              "path": "data/exterior-acceptance-20260817/campaign-record.json",
+              "sha256": "5a42b24ba47f403e7f7af09b9f614646263fcb6e734e1fdca798e16475c11d3a"
+            }
+          ]
+        },
+        {
+          "statement": "REACHABILITY ROUTES, verbatim from data/exterior-acceptance-20260817/campaign-record.json: ROUTE 1 - serve both LODs: re-cut the six serving waves to ship lod_0 and lod_1 per building and let the runtime select between them, then sample stratified per wave on rendered stills. This is a release-shape change (ADR 0052 territory), not a measurement change. ROUTE 2 - measure on the retained set: the -c1 retention packages DO carry both LODs for all 44,989 buildings. A per-wave stratified 2% gate could be measured by rendering from the retained packages directly, outside the serving path. That measures the ARTIFACTS rather than what the app draws, and the difference must be stated in any record that takes this route.",
+          "artifacts": [
+            {
+              "path": "data/exterior-acceptance-20260817/campaign-record.json",
+              "sha256": "5a42b24ba47f403e7f7af09b9f614646263fcb6e734e1fdca798e16475c11d3a"
+            }
+          ]
+        }
+      ],
+      "stopReport": "The per-wave rendered 2% key-silhouette gate of criterion 4 is NOT MET and is not claimed to be. The serving releases ship a single LOD, so the transition cannot be sampled on rendered evidence at all; on the retained set, where both LODs exist, 424 buildings fall back and five of six waves exceed 0.02. Two reachability routes are named above, both requiring work this goal did not do: re-cutting the serving waves to carry both LODs, or rendering a stratified per-wave sample directly from the retention packages and stating plainly that it measures artifacts rather than what the app draws."
+    },
+    {
+      "index": 5,
+      "criterion": "Frame budgets hold at full-textured-city scale on the reference MacBook off the vsync floor with a capped control: island overview, street level, overview-to-street transition, and a pan/zoom storm, all inside the strict 16.7/25 ms pair",
+      "verdict": "MET-AS-ADJUDICATED",
+      "evidence": [
+        {
+          "statement": "The strict 16.7/25 ms pair holds at every registered station and THROUGH THE PAN/ZOOM STORM: F1 and S-1a both pass in data/exterior-acceptance-20260817/campaign-record.json, and S-1a is the stricter resolution of a T005 exclusion — the flip campaign exempted its during-storm window from the frame budgets and this campaign applied the full pair to it.",
+          "artifacts": [
+            {
+              "path": "data/exterior-acceptance-20260817/campaign-record.json",
+              "sha256": "5a42b24ba47f403e7f7af09b9f614646263fcb6e734e1fdca798e16475c11d3a"
+            }
+          ]
+        },
+        {
+          "statement": "THE ADJUDICATION: D-11's inherited 4,000 ms leg-Y double-draw bar is EXCEEDED at 7,122.2 ms, recorded in data/exterior-acceptance-20260817/frames-and-gpu.json. Gate F4 pre-registered exceeding it as a NAMED CARRY rather than a campaign failure, because the deferral is the reason the number is expected to be large; it is carried forward, not closed. The overview station passes on p50 by 0.1 ms, which is a margin worth stating rather than rounding away.",
+          "artifacts": [
+            {
+              "path": "data/exterior-acceptance-20260817/frames-and-gpu.json",
+              "sha256": "735745e31b232d56997d5e9ebcfdea1145bc8f9c72f095ef132145ca0d1b8ac3"
+            }
+          ]
+        },
+        {
+          "statement": "The control discipline is captured in both vsync modes in the same browser (F2), so a p95 that merely reproduces the display cadence cannot be quoted as a scene result. F2, F4, H1 and H2 are REPORTED and non-gating by pre-registration; see data/exterior-acceptance-20260817/campaign-record.json.",
+          "artifacts": [
+            {
+              "path": "data/exterior-acceptance-20260817/campaign-record.json",
+              "sha256": "5a42b24ba47f403e7f7af09b9f614646263fcb6e734e1fdca798e16475c11d3a"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "index": 6,
+      "criterion": "Repeated-camera-path heap is non-monotonic under forced collection at full scale (the T008 pre-registered instrument re-run against the textured city), and GPU texture memory is measured per the atlas budget",
+      "verdict": "MET-AS-ADJUDICATED",
+      "evidence": [
+        {
+          "statement": "The T008 repeated-camera-path heap instrument was re-run at six-wave scale and PASSES its inherited pass rule: M1 and M2 pass in data/exterior-acceptance-20260817/campaign-record.json, with the new M2 validity condition requiring every sample to be taken at activeRequests === 0.",
+          "artifacts": [
+            {
+              "path": "data/exterior-acceptance-20260817/campaign-record.json",
+              "sha256": "5a42b24ba47f403e7f7af09b9f614646263fcb6e734e1fdca798e16475c11d3a"
+            }
+          ]
+        },
+        {
+          "statement": "THE ADJUDICATION: the ordinary-least-squares fit over the sampled series has a POSITIVE slope of +4,703,921 bytes per lap with r-squared 0.685, recorded in data/exterior-acceptance-20260817/heap-repeat-evidence.json. The pass rule is a first-half-versus-second-half median ratio bound, and a bound is NOT AN EXCLUSION: the series can satisfy the ratio test while still trending upward, and it does. The verdict is adjudicated on the pre-registered rule, and the slope is published beside it rather than being allowed to disappear behind a passing boolean.",
+          "artifacts": [
+            {
+              "path": "data/exterior-acceptance-20260817/heap-repeat-evidence.json",
+              "sha256": "1ef01101af625818fc90dad0cdb8e028c5f9a14238932461be2ed2d10e2a80d9"
+            }
+          ]
+        },
+        {
+          "statement": "GPU texture memory is measured per criterion 3's budget; G2 passes in data/exterior-acceptance-20260817/campaign-record.json.",
+          "artifacts": [
+            {
+              "path": "data/exterior-acceptance-20260817/campaign-record.json",
+              "sha256": "5a42b24ba47f403e7f7af09b9f614646263fcb6e734e1fdca798e16475c11d3a"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "index": 7,
+      "criterion": "Cache and streaming governance: exterior cell cache and dense budgets re-derived as recorded contract changes with three-bound arithmetic; eviction correctness, pick identity across evict/reload, and byte-identical re-entry proven at the new artifact scale; active requests bounded per the existing ceiling",
+      "verdict": "MET-AS-ADJUDICATED",
+      "evidence": [
+        {
+          "statement": "Eviction correctness, cache bounds and byte-identical re-entry are proven at the new artifact scale: E-1a through E-1e all pass in data/exterior-acceptance-20260817/campaign-record.json and data/exterior-acceptance-20260817/eviction-loop.json, with E-1a forced by a route whose union exceeds the byte cap while no single anchor can (the scheduler hard-caps residency at 8 units and the worst reachable anchor charges 92% of the cap).",
+          "artifacts": [
+            {
+              "path": "data/exterior-acceptance-20260817/campaign-record.json",
+              "sha256": "5a42b24ba47f403e7f7af09b9f614646263fcb6e734e1fdca798e16475c11d3a"
+            },
+            {
+              "path": "data/exterior-acceptance-20260817/eviction-loop.json",
+              "sha256": "a201ba540c52e6c45ca107f8fa6151f06f8c3b9be03309ed077534264d45a601"
+            }
+          ]
+        },
+        {
+          "statement": "Pick identity across evict/reload is proven for a DEEP-LINKED selection: E-1e requires the details-panel digest at the first stop and the return stop to be EQUAL AND BOTH NON-NULL, which is what makes it capable of failing — T005's two nulls were equal and reported identity as unstable."
+        },
+        {
+          "statement": "Active requests are bounded per the existing ceiling, and the ceiling itself is corrected: the shipped session installs ONE AggregateRequestBudget of 4 shared by the citywide, civic and every exterior wave runtime, so the app-wide bound is a provable 4 and there is no '8'. REQUEST_CEILINGS passes in data/exterior-acceptance-20260817/campaign-record.json.",
+          "artifacts": [
+            {
+              "path": "data/exterior-acceptance-20260817/campaign-record.json",
+              "sha256": "5a42b24ba47f403e7f7af09b9f614646263fcb6e734e1fdca798e16475c11d3a"
+            }
+          ]
+        },
+        {
+          "statement": "THE ADJUDICATION: E-1f is CARRIED VERBATIM, not closed. A CANVAS PICK on the re-admitted mesh was not captured; every selection in the eviction loop is a ?feature= deep link against the canonical base identity set, so it shows the same building resolving to the same sourced information across an eviction cycle, and does not show that a mouse click on the re-admitted geometry returns that identity. That is a real gap and is named rather than approximated. See data/exterior-acceptance-20260817/campaign-record.json.",
+          "artifacts": [
+            {
+              "path": "data/exterior-acceptance-20260817/campaign-record.json",
+              "sha256": "5a42b24ba47f403e7f7af09b9f614646263fcb6e734e1fdca798e16475c11d3a"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "index": 8,
+      "criterion": "Visual verification: per-wave stratified Blender MCP re-import sampling independently confirms shipped geometry/silhouette, and rendered stills at approved viewpoints are committed as what-is-drawn evidence; picking, details, provenance, deep links, and attribution behave identically on the committed journey suites at full scale",
+      "verdict": "MET-AS-ADJUDICATED",
+      "evidence": [
+        {
+          "statement": "Rendered stills at approved viewpoints are committed as what-is-drawn evidence at every station and journey, checksummed, under data/exterior-acceptance-20260817/journeys.json and the campaign's captures directory.",
+          "artifacts": [
+            {
+              "path": "data/exterior-acceptance-20260817/journeys.json",
+              "sha256": "cbdb29f6ad1f93f3705a412a0a252ca9e65c0c893e3d531f15ca241614e7fd58"
+            }
+          ]
+        },
+        {
+          "statement": "Picking, details, provenance, deep links and attribution behave identically on the committed journey suites at full scale for five of six journeys: J1, J2, J3, J5 pass and J6 cross-references E-1. The refusal-transparency journey J7 adds four refused parents in both streaming arms, in data/refusal-ui-20260817/refusal-journey.json.",
+          "artifacts": [
+            {
+              "path": "data/refusal-ui-20260817/refusal-journey.json",
+              "sha256": "16a77c82b32daa0c4f4f50bf2707ad4a7bab64cb8a7bbe0c64e3afe7016be617"
+            }
+          ]
+        },
+        {
+          "statement": "THE ADJUDICATION, TWO PARTS. First, J4 FAILED: the deep-link identity journey is the single failing gate in the campaign, recorded as a FAIL in data/exterior-acceptance-20260817/campaign-record.json with a gating pass rate of 21/22. It is not reinterpreted as a pass here.",
+          "artifacts": [
+            {
+              "path": "data/exterior-acceptance-20260817/campaign-record.json",
+              "sha256": "5a42b24ba47f403e7f7af09b9f614646263fcb6e734e1fdca798e16475c11d3a"
+            }
+          ]
+        },
+        {
+          "statement": "Second, the per-wave stratified Blender MCP re-import was NOT RE-RUN for the serving releases. The 94-of-94 agreement in data/mass-generation-20260816/blender-agreement.json was measured on the -c1 retention payloads and is INHERITED to the -s1 serving releases by a byte-identity argument: the serving cut copies the GLB bytes and every served byte is re-verified at load against the same declared size and SHA-256, so a re-import could not differ. The inheritance carries the SAMPLE, not the population: that record's own notClaimedHere disclaims the 44,895 buildings the sample did not open, and neither does this record.",
+          "artifacts": [
+            {
+              "path": "data/mass-generation-20260816/blender-agreement.json",
+              "sha256": "d3135d1f38c176b540c9c8fffc57404f8fe04881b1e29fa2ec08361fd7418c8f"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "index": 9,
+      "criterion": "Refusal transparency: a tombstoned parent's details panel surfaces its stop code and a plain-language reason; the fallback notice reflects the new coverage reality without false claims in any streaming arm",
+      "verdict": "MET",
+      "evidence": [
+        {
+          "statement": "A tombstoned parent's details panel surfaces its stop code and a plain-language reason drawn verbatim from the release: ADR 0054 records the resident-graph data path, and journey J7 validates four refused parents — one per stop code — in a real browser in BOTH streaming arms, 24 of 24 gate checks passing, in data/refusal-ui-20260817/refusal-journey.json.",
+          "artifacts": [
+            {
+              "path": "data/refusal-ui-20260817/refusal-journey.json",
+              "sha256": "16a77c82b32daa0c4f4f50bf2707ad4a7bab64cb8a7bbe0c64e3afe7016be617"
+            }
+          ]
+        },
+        {
+          "statement": "The fallback notice reflects the coverage reality WITHOUT FALSE CLAIMS IN ANY STREAMING ARM, and the reason is measured rather than argued: ZERO of the 883 cells across all six serving waves is fully tombstoned, so the not-shipped coverage sentence's numerator is structurally 0 and the sentence is never produced on the shipped default. No coverage string is currently false because none is currently emitted. A committed test asserts declaredNotShippedCellCount() === 0 per wave."
+        },
+        {
+          "statement": "The arm-dependence is handled rather than ignored: every refusal reason ends with a clause claiming base massing 'is what remains on screen', which is FALSE under ?exteriorScheduler=off. The app asserts the sentence truncated at that clause — a strict prefix of the release's wording — and quotes the full sentence beside it, attributed. J7 measured the asserted statement to be byte-identical across both arms."
+        }
+      ]
+    },
+    {
+      "index": 10,
+      "criterion": "Deterministic replay: the full-city generation is reproducible end-to-end by committed CLI entrypoints (plans, GLBs, textures, atlas, validation) with committed inventories and checksums; validators pass on the shipped set",
+      "verdict": "MET-AS-ADJUDICATED",
+      "evidence": [
+        {
+          "statement": "The full-city generation is reproducible by committed CLI entrypoints with committed inventories and checksums: the per-wave plans, GLBs, textures and validation are driven by scripts/mass-generation-wave-cli.mjs and its siblings, with data/mass-generation-20260816/blender-agreement.json and the six data/manhattan-midtown-core-cells-20260811-v3-c1/wave-census.json records committed.",
+          "artifacts": [
+            {
+              "path": "data/manhattan-midtown-core-cells-20260811-v3-c1/wave-census.json",
+              "sha256": "54e1fe365922852916e14d647efe8dfb81412441610fea53ffad1e2e5d838e73"
+            },
+            {
+              "path": "data/mass-generation-20260816/blender-agreement.json",
+              "sha256": "d3135d1f38c176b540c9c8fffc57404f8fe04881b1e29fa2ec08361fd7418c8f"
+            }
+          ]
+        },
+        {
+          "statement": "Validators pass on the shipped set: each serving release carries a serving-validation record reporting ok true over its replayed assets, and the payload inventories declare every shipped file with its byte size and SHA-256."
+        },
+        {
+          "statement": "THE ADJUDICATION — A STATED LIMITATION: the payload trees themselves are gitignored. A clean checkout carries the inventories and their checksums but not the bytes, so replay is PROVABLE ONLY WHERE A RETAINED PAYLOAD EXISTS. The determinism claim is therefore checkable against the committed hashes by anyone who regenerates, and not verifiable from the repository alone. That is a real limitation of the retention posture and is recorded rather than glossed."
+        }
+      ]
+    },
+    {
+      "index": 11,
+      "criterion": "Licensing posture recorded: a proprietary all-rights-reserved licensing statement is committed for project code and generated artifacts, with source-data attribution obligations documented unchanged",
+      "verdict": "MET",
+      "evidence": [
+        {
+          "statement": "A proprietary all-rights-reserved licensing statement is committed as LICENSE, scoped explicitly to project code and generated artifacts and explicitly NOT to third-party source data, carving out by name the NYC Open Data / OTI datasets, the ODbL 1.0 share-alike partition, the CC BY-SA 4.0 references, provider-terms services and the sources whose licence class is recorded as unknown."
+        },
+        {
+          "statement": "Source-data attribution obligations are documented unchanged in NOTICE, DERIVED from the source registry module (the live authority for source identity, attribution strings, terms URLs and licence class) and naming it as governing: 45 entries across 8 licence classes with their attribution strings, source ids and terms URLs, plus the 2026-08-11 jh45-qr5r authorization covering generated geometry only. A committed test asserts NOTICE still agrees with that registry, so ingesting a source without attributing it breaks the build."
+        }
+      ]
+    },
+    {
+      "index": 12,
+      "criterion": "Prior-goal closure: the goal-integration reconciliation record's criterion #1 is amended to MET (or the honest measured floor with named residuals) through the established amendment discipline with drift tests green, and this goal ships its own criterion-by-criterion acceptance record with the T024 discipline",
+      "verdict": "MET",
+      "evidence": [
+        {
+          "statement": "The prior goal's reconciliation record has its criterion #1 amended through the established amendment discipline — verdict MET-AS-ADJUDICATED, priorVerdict NOT-MET, the original stop report preserved as priorStopReport, a closedBy reference and an adjudicationDelta — with its drift tests green. THAT RECORD IS CITED BY PATH AND TASK IN THIS RECORD'S `amendments` BLOCK AND DELIBERATELY NOT BY CHECKSUM: it embeds THIS record's hash in its closures.evidenceRecords, so a hash citation in the other direction would be circular and would break on every amendment."
+        },
+        {
+          "statement": "This goal ships its own criterion-by-criterion acceptance record with the T024 discipline: this file, with 12 verdicts drawn from a closed three-value vocabulary, every prose data citation carrying a checksum, and a committed drift test."
+        }
+      ]
+    }
+  ],
+  "residualRisks": [
+    "D-19: CRITERION 4 IS NOT MET AND IS NOT CLOSED. The per-wave rendered 2% key-silhouette gate is structurally unreachable while the six serving waves ship a single LOD, and on the retained set 424 buildings fall back with five of six waves above 0.02 (worst w03 0.09160). Two reachability routes are named in this record's criterion-4 stop report; both are unstarted work, not measurement gaps. See data/exterior-acceptance-20260817/campaign-record.json.",
+    "D-20: THE G2 TEXTURE BUDGET WAS NEVER PRESSED. The 24-tile / 2,097,144-byte budget assumes six co-resident promoted waves, and no captured pose held six at once. What would press it is a pose forcing at least six co-resident waves under the 8-unit residency cap — and that may be UNREACHABLE by construction, since the cap admits eight CELLS and a wave boundary is not guaranteed to put six waves inside any eight-cell neighbourhood. Nobody has shown such a pose exists; until someone does, G2 is a budget that has been satisfied rather than tested.",
+    "D-21: J4 FAILED. The deep-link identity journey is the campaign's one failing gate (21/22 gating pass rate) and this goal closes without fixing it. It is recorded as a FAIL in data/exterior-acceptance-20260817/campaign-record.json and is not reinterpreted anywhere in this record.",
+    "D-22: E-1f IS CARRIED VERBATIM. No canvas pick on a re-admitted mesh has ever been captured. Every identity proof in this goal, including J7's refusal panels, is reached through a ?feature= deep link rather than a mouse click on geometry. See data/exterior-acceptance-20260817/campaign-record.json.",
+    "D-23: D-11'S DOUBLE-DRAW BAR IS EXCEEDED AT 7,122.2 ms against an inherited 4,000 ms leg-Y bar, carried forward as a named carry rather than closed. The overview station also passes p50 by 0.1 ms. See data/exterior-acceptance-20260817/frames-and-gpu.json.",
+    "D-24: THE HEAP SERIES TRENDS UPWARD. The M-series ordinary-least-squares fit is +4,703,921 bytes per lap with r-squared 0.685. The pre-registered pass rule is a median-ratio bound and a bound is not an exclusion; the verdict follows the rule and the slope is published beside it. See data/exterior-acceptance-20260817/heap-repeat-evidence.json.",
+    "D-25: THE BLENDER AGREEMENT IS INHERITED, NOT RE-RUN. 94 of 94 sampled buildings agreed on the -c1 retention payloads; the -s1 serving releases inherit that by byte-identity rather than by re-import, and 44,895 generated buildings were never opened by any sample. See data/mass-generation-20260816/blender-agreement.json.",
+    "D-26: 43 OF THE 205 SURVIVING REFUSALS ARE volume-identity-failed — the generator's own volume self-check, not degenerate source data. This is the delta that makes criterion 1 and the amended prior criterion #1 MET-AS-ADJUDICATED rather than MET, and it would be closed only by a generator that stops failing its own check. See data/exterior-completion-acceptance-20260817/refusal-code-mapping.json.",
+    "D-27: ring-area-below-floor READS 114 AFTER EXTENSION HAVING READ 113 BEFORE. One building migrated from ring-vertex-count-unsupported when the raised vertex cap let it reach the area gate; the classifier is priority-ordered, so an earlier gate rising exposes a later one. The count is the floor at THIS GRAMMAR'S CONSTANTS, not a property of the data: a different area floor yields a different number. See data/exterior-completion-acceptance-20260817/refusal-code-mapping.json.",
+    "D-28: REPLAY IS PROVABLE ONLY WHERE A RETAINED PAYLOAD EXISTS. The payload trees are gitignored, so a clean checkout carries the inventories and checksums but not the bytes; criterion 10's determinism claim is checkable by regenerating against the committed hashes, not from the repository alone."
+  ],
+  "amendments": [
+    {
+      "task": "T008 (Issue #90)",
+      "amends": "data/goal-integration-acceptance-20260812/reconciliation.json",
+      "criterion": 1,
+      "change": "verdict NOT-MET -> MET-AS-ADJUDICATED, with priorVerdict, priorStopReport, closedBy and adjudicationDelta added.",
+      "note": "The amended record is cited BY PATH AND TASK ONLY, never by hash: it embeds this record's hash in its closures.evidenceRecords, so citing it by hash here would be circular."
+    }
+  ],
+  "claim": "The exterior-completion goal's 12 acceptance criteria, each with direct committed evidence or an honest stop report. Three are MET, eight are MET-AS-ADJUDICATED with the delta named in the evidence, and one — criterion 4, the per-wave rendered 2% LOD gate — is NOT-MET with a stop report and two named reachability routes.",
+  "notClaimedHere": [
+    "Any visual, geographic, architectural, accessibility or performance acceptance beyond the specific measurements cited.",
+    "That MET-AS-ADJUDICATED means the contract's wording was satisfied. In every case it means the opposite: the wording was not, and the delta is stated.",
+    "That criterion 4 is closed, deferred or acceptable. It is NOT-MET."
+  ]
+}
