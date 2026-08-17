@@ -1,0 +1,348 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "refusal-ui-20260817:refusal-journey",
+  "task": "T007",
+  "artifact": "refused-parent-honesty",
+  "capturedAt": "2026-08-17T08:41:35.166Z",
+  "attemptCount": 1,
+  "browser": "Chrome/151.0.7922.138",
+  "viewport": {
+    "width": 1440,
+    "height": 900,
+    "deviceScaleFactor": 1
+  },
+  "base": "http://127.0.0.1:4192/",
+  "pose": {
+    "height": 300,
+    "heading": 45,
+    "pitch": -30,
+    "roll": 0
+  },
+  "arms": [
+    {
+      "armId": "default",
+      "schedulerOff": false,
+      "note": "The shipped default: six promoted serving waves, overview tier active."
+    },
+    {
+      "armId": "scheduler-off",
+      "schedulerOff": true,
+      "note": "?exteriorScheduler=off — no visibility scheduling and no overview tier. The arm in which the release's trailing clause is FALSE."
+    }
+  ],
+  "islandWideTombstoneCount": 205,
+  "servedBundle": {
+    "previewBase": "http://127.0.0.1:4192/",
+    "indexHtmlChecksumSha256": "f9866211840fd7556d455041051767906d762479c0130a926fbfb214fc3c1bf5",
+    "localDistIndexHtmlChecksumSha256": "f9866211840fd7556d455041051767906d762479c0130a926fbfb214fc3c1bf5",
+    "matchesLocalDist": true,
+    "assets": [
+      {
+        "ref": "/assets/index-Dsc6lWVF.js",
+        "byteSize": 5135423,
+        "sha256": "87fb52c1b7063007c5a8eb2b93329d155924c00475aba3e3785eabb31fc2b0e8"
+      }
+    ],
+    "schedulerProbePresent": true,
+    "statement": "Checked BEFORE Chrome is launched and fail-closed: the served index.html is byte-identical to this worktree's dist/index.html, and the served bytes carry the scheduler probe marker the journeys read wave activation from."
+  },
+  "chromeLaunchCommand": "open -na \"Google Chrome\" --args --remote-debugging-port=9225 --user-data-dir=/tmp/t006-journeys-chrome --no-first-run --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-renderer-backgrounding",
+  "chromeDiscipline": "T008 discipline: a scratch user-data-dir per capture session, killed after, with the surviving-process count READ rather than assumed and recorded as a number.",
+  "survivingChromeProcessCount": 0,
+  "journey": {
+    "journeyId": "refused-parent-honesty",
+    "claim": "A refused parent's details panel names its stop code and gives a plain-language reason drawn from the release, in both streaming arms, without the app asserting the release's arm-dependent trailing clause.",
+    "gateRules": {
+      "journeyId": "refused-parent-honesty",
+      "claim": "A refused parent's details panel names its stop code and gives a plain-language reason drawn from the release, in both streaming arms, without the app asserting the release's arm-dependent trailing clause.",
+      "J7-a": {
+        "rule": "For every pre-registered subject, in BOTH arms, the panel renders the refusal case: [data-exterior-refusal] present, [data-exterior-not-resident] and [data-exterior-not-owned] absent."
+      },
+      "J7-b": {
+        "rule": "data-exterior-stop-code equals the subject's pre-registered stop code in both arms. 'unrecognized' is a FAIL: it would mean the shipped release carries a category this build does not know."
+      },
+      "J7-c": {
+        "rule": "The rendered tombstone id equals the pre-registered tombstoneId, so the panel is explaining THIS building's refusal and not a neighbour's."
+      },
+      "J7-d": {
+        "rule": "H1: the asserted statement carries neither 'base massing' nor 'what remains on screen' in EITHER arm, and is byte-identical between the two arms — what the app asserts must not depend on the arm."
+      },
+      "J7-e": {
+        "rule": "The attributed release quotation DOES carry the full sentence including the trailing clause, in both arms. Truncating without disclosing would hide what the release says."
+      },
+      "J7-f": {
+        "rule": "Zero external hosts contacted in either arm."
+      }
+    },
+    "stops": [
+      {
+        "subject": {
+          "stopCode": "ring-area-below-floor",
+          "buildingId": "doitt:1290701",
+          "releaseId": "manhattan-midtown-core-cells-20260811-v3-s1",
+          "cellId": "manhattan-exterior-cell-w01-000006-17-38594-35858",
+          "tombstoneId": "tombstone:manhattan-midtown-core-cells-20260811-v3-s1:doitt:1290701",
+          "lon": -73.99704,
+          "lat": 40.755844
+        },
+        "arms": {
+          "default": {
+            "armId": "default",
+            "url": "http://127.0.0.1:4192/?data=real-pilot&release=manhattan-citywide-20260804&view=free&feature=doitt%3A1290701&lon=-73.997040&lat=40.755844&height=300.000000&heading=45.000000&pitch=-30.000000&roll=0.000000",
+            "panel": {
+              "present": true,
+              "refusalPresent": true,
+              "notResidentPresent": false,
+              "notOwnedPresent": false,
+              "stopCode": "ring-area-below-floor",
+              "tombstoneId": "tombstone:manhattan-midtown-core-cells-20260811-v3-s1:doitt:1290701",
+              "assertedStatement": "Refused by the footprint-faithful V3 exterior grammar [ring-area-below-floor]: geometry.footprint.outer: V3 ring area is below the footprint area floor.. No geometry was invented for this building, and no substitute representation was selected.",
+              "releaseQuotation": "Recorded by the release, verbatim: “Refused by the footprint-faithful V3 exterior grammar [ring-area-below-floor]: geometry.footprint.outer: V3 ring area is below the footprint area floor.. No geometry was invented for this building, and no substitute representation was selected; base massing from the pinned citywide release is what remains on screen.”",
+              "href": "http://127.0.0.1:4192/?data=real-pilot&release=manhattan-citywide-20260804&view=free&feature=doitt%3A1290701&lon=-73.997040&lat=40.755844&height=300.000000&heading=45.000000&pitch=-30.000000&roll=0.000000"
+            },
+            "still": {
+              "file": "captures/journey-j7-ring-area-below-floor-default.png",
+              "byteSize": 709923,
+              "sha256": "46e6a066a27e1c0e19424a9858a75cab741eb6312e3157d29865a3f7760e7f3e"
+            },
+            "externalHosts": []
+          },
+          "scheduler-off": {
+            "armId": "scheduler-off",
+            "url": "http://127.0.0.1:4192/?data=real-pilot&release=manhattan-citywide-20260804&view=free&feature=doitt%3A1290701&exteriorScheduler=off&lon=-73.997040&lat=40.755844&height=300.000000&heading=45.000000&pitch=-30.000000&roll=0.000000",
+            "panel": {
+              "present": true,
+              "refusalPresent": true,
+              "notResidentPresent": false,
+              "notOwnedPresent": false,
+              "stopCode": "ring-area-below-floor",
+              "tombstoneId": "tombstone:manhattan-midtown-core-cells-20260811-v3-s1:doitt:1290701",
+              "assertedStatement": "Refused by the footprint-faithful V3 exterior grammar [ring-area-below-floor]: geometry.footprint.outer: V3 ring area is below the footprint area floor.. No geometry was invented for this building, and no substitute representation was selected.",
+              "releaseQuotation": "Recorded by the release, verbatim: “Refused by the footprint-faithful V3 exterior grammar [ring-area-below-floor]: geometry.footprint.outer: V3 ring area is below the footprint area floor.. No geometry was invented for this building, and no substitute representation was selected; base massing from the pinned citywide release is what remains on screen.”",
+              "href": "http://127.0.0.1:4192/?data=real-pilot&release=manhattan-citywide-20260804&view=free&feature=doitt%3A1290701&exteriorScheduler=off&lon=-73.997040&lat=40.755844&height=300.000000&heading=45.000000&pitch=-30.000000&roll=0.000000"
+            },
+            "still": {
+              "file": "captures/journey-j7-ring-area-below-floor-scheduler-off.png",
+              "byteSize": 378365,
+              "sha256": "6266abe125051a63dd6756d0c329093ceaa7386318d400d49ba17445c72ff781"
+            },
+            "externalHosts": []
+          }
+        },
+        "armsAgreeOnAssertion": true,
+        "gates": {
+          "J7-a": true,
+          "J7-b": true,
+          "J7-c": true,
+          "J7-d": true,
+          "J7-e": true,
+          "J7-f": true
+        },
+        "pass": true
+      },
+      {
+        "subject": {
+          "stopCode": "ring-neck-below-grammar-minimum",
+          "buildingId": "doitt:510821",
+          "releaseId": "manhattan-central-upper-manhattan-cells-20260812-s1",
+          "cellId": "manhattan-exterior-cell-w04-000520-17-38610-35844",
+          "tombstoneId": "tombstone:manhattan-central-upper-manhattan-cells-20260812-s1:doitt:510821",
+          "lon": -73.953094,
+          "lat": 40.77507
+        },
+        "arms": {
+          "default": {
+            "armId": "default",
+            "url": "http://127.0.0.1:4192/?data=real-pilot&release=manhattan-citywide-20260804&view=free&feature=doitt%3A510821&lon=-73.953094&lat=40.775070&height=300.000000&heading=45.000000&pitch=-30.000000&roll=0.000000",
+            "panel": {
+              "present": true,
+              "refusalPresent": true,
+              "notResidentPresent": false,
+              "notOwnedPresent": false,
+              "stopCode": "ring-neck-below-grammar-minimum",
+              "tombstoneId": "tombstone:manhattan-central-upper-manhattan-cells-20260812-s1:doitt:510821",
+              "assertedStatement": "Refused by the footprint-faithful V3 exterior grammar [ring-neck-below-grammar-minimum]: geometry.footprint.outer: V3 ring has a neck 101 mm across, thinner than the 600 mm two opposed recesses and a wall need; the openings would punch through the massing.. No geometry was invented for this building, and no substitute representation was selected.",
+              "releaseQuotation": "Recorded by the release, verbatim: “Refused by the footprint-faithful V3 exterior grammar [ring-neck-below-grammar-minimum]: geometry.footprint.outer: V3 ring has a neck 101 mm across, thinner than the 600 mm two opposed recesses and a wall need; the openings would punch through the massing.. No geometry was invented for this building, and no substitute representation was selected; base massing from the pinned citywide release is what remains on screen.”",
+              "href": "http://127.0.0.1:4192/?data=real-pilot&release=manhattan-citywide-20260804&view=free&feature=doitt%3A510821&lon=-73.953094&lat=40.775070&height=300.000000&heading=45.000000&pitch=-30.000000&roll=0.000000"
+            },
+            "still": {
+              "file": "captures/journey-j7-ring-neck-below-grammar-minimum-default.png",
+              "byteSize": 435103,
+              "sha256": "4b0f1d979a06c817743dfc65e1ef483075abf4afde7a1ffdef629d7cdd3f0a21"
+            },
+            "externalHosts": []
+          },
+          "scheduler-off": {
+            "armId": "scheduler-off",
+            "url": "http://127.0.0.1:4192/?data=real-pilot&release=manhattan-citywide-20260804&view=free&feature=doitt%3A510821&exteriorScheduler=off&lon=-73.953094&lat=40.775070&height=300.000000&heading=45.000000&pitch=-30.000000&roll=0.000000",
+            "panel": {
+              "present": true,
+              "refusalPresent": true,
+              "notResidentPresent": false,
+              "notOwnedPresent": false,
+              "stopCode": "ring-neck-below-grammar-minimum",
+              "tombstoneId": "tombstone:manhattan-central-upper-manhattan-cells-20260812-s1:doitt:510821",
+              "assertedStatement": "Refused by the footprint-faithful V3 exterior grammar [ring-neck-below-grammar-minimum]: geometry.footprint.outer: V3 ring has a neck 101 mm across, thinner than the 600 mm two opposed recesses and a wall need; the openings would punch through the massing.. No geometry was invented for this building, and no substitute representation was selected.",
+              "releaseQuotation": "Recorded by the release, verbatim: “Refused by the footprint-faithful V3 exterior grammar [ring-neck-below-grammar-minimum]: geometry.footprint.outer: V3 ring has a neck 101 mm across, thinner than the 600 mm two opposed recesses and a wall need; the openings would punch through the massing.. No geometry was invented for this building, and no substitute representation was selected; base massing from the pinned citywide release is what remains on screen.”",
+              "href": "http://127.0.0.1:4192/?data=real-pilot&release=manhattan-citywide-20260804&view=free&feature=doitt%3A510821&exteriorScheduler=off&lon=-73.953094&lat=40.775070&height=300.000000&heading=45.000000&pitch=-30.000000&roll=0.000000"
+            },
+            "still": {
+              "file": "captures/journey-j7-ring-neck-below-grammar-minimum-scheduler-off.png",
+              "byteSize": 397038,
+              "sha256": "11146ed0f9f1c22f6c588755eb20589f93ed8aaa468cdf294b3297a6e9d73825"
+            },
+            "externalHosts": []
+          }
+        },
+        "armsAgreeOnAssertion": true,
+        "gates": {
+          "J7-a": true,
+          "J7-b": true,
+          "J7-c": true,
+          "J7-d": true,
+          "J7-e": true,
+          "J7-f": true
+        },
+        "pass": true
+      },
+      {
+        "subject": {
+          "stopCode": "ring-not-simple",
+          "buildingId": "doitt:819435",
+          "releaseId": "manhattan-central-upper-manhattan-cells-20260812-s1",
+          "cellId": "manhattan-exterior-cell-w04-000489-17-38607-35846",
+          "tombstoneId": "tombstone:manhattan-central-upper-manhattan-cells-20260812-s1:doitt:819435",
+          "lon": -73.961334,
+          "lat": 40.772324
+        },
+        "arms": {
+          "default": {
+            "armId": "default",
+            "url": "http://127.0.0.1:4192/?data=real-pilot&release=manhattan-citywide-20260804&view=free&feature=doitt%3A819435&lon=-73.961334&lat=40.772324&height=300.000000&heading=45.000000&pitch=-30.000000&roll=0.000000",
+            "panel": {
+              "present": true,
+              "refusalPresent": true,
+              "notResidentPresent": false,
+              "notOwnedPresent": false,
+              "stopCode": "ring-not-simple",
+              "tombstoneId": "tombstone:manhattan-central-upper-manhattan-cells-20260812-s1:doitt:819435",
+              "assertedStatement": "Refused by the footprint-faithful V3 exterior grammar [ring-not-simple]: geometry.footprint.outer: V3 ring must be simple: it self-intersects or folds back on itself.. No geometry was invented for this building, and no substitute representation was selected.",
+              "releaseQuotation": "Recorded by the release, verbatim: “Refused by the footprint-faithful V3 exterior grammar [ring-not-simple]: geometry.footprint.outer: V3 ring must be simple: it self-intersects or folds back on itself.. No geometry was invented for this building, and no substitute representation was selected; base massing from the pinned citywide release is what remains on screen.”",
+              "href": "http://127.0.0.1:4192/?data=real-pilot&release=manhattan-citywide-20260804&view=free&feature=doitt%3A819435&lon=-73.961334&lat=40.772324&height=300.000000&heading=45.000000&pitch=-30.000000&roll=0.000000"
+            },
+            "still": {
+              "file": "captures/journey-j7-ring-not-simple-default.png",
+              "byteSize": 378448,
+              "sha256": "48acf8d8ba620e86dbb461cb5f0a9c1a1f93f786be21d4cea68d349326baa0b4"
+            },
+            "externalHosts": []
+          },
+          "scheduler-off": {
+            "armId": "scheduler-off",
+            "url": "http://127.0.0.1:4192/?data=real-pilot&release=manhattan-citywide-20260804&view=free&feature=doitt%3A819435&exteriorScheduler=off&lon=-73.961334&lat=40.772324&height=300.000000&heading=45.000000&pitch=-30.000000&roll=0.000000",
+            "panel": {
+              "present": true,
+              "refusalPresent": true,
+              "notResidentPresent": false,
+              "notOwnedPresent": false,
+              "stopCode": "ring-not-simple",
+              "tombstoneId": "tombstone:manhattan-central-upper-manhattan-cells-20260812-s1:doitt:819435",
+              "assertedStatement": "Refused by the footprint-faithful V3 exterior grammar [ring-not-simple]: geometry.footprint.outer: V3 ring must be simple: it self-intersects or folds back on itself.. No geometry was invented for this building, and no substitute representation was selected.",
+              "releaseQuotation": "Recorded by the release, verbatim: “Refused by the footprint-faithful V3 exterior grammar [ring-not-simple]: geometry.footprint.outer: V3 ring must be simple: it self-intersects or folds back on itself.. No geometry was invented for this building, and no substitute representation was selected; base massing from the pinned citywide release is what remains on screen.”",
+              "href": "http://127.0.0.1:4192/?data=real-pilot&release=manhattan-citywide-20260804&view=free&feature=doitt%3A819435&exteriorScheduler=off&lon=-73.961334&lat=40.772324&height=300.000000&heading=45.000000&pitch=-30.000000&roll=0.000000"
+            },
+            "still": {
+              "file": "captures/journey-j7-ring-not-simple-scheduler-off.png",
+              "byteSize": 363044,
+              "sha256": "fedd659c535be80b63a110b432c6221ecd6ac4f405f61e3094b04bf78f802def"
+            },
+            "externalHosts": []
+          }
+        },
+        "armsAgreeOnAssertion": true,
+        "gates": {
+          "J7-a": true,
+          "J7-b": true,
+          "J7-c": true,
+          "J7-d": true,
+          "J7-e": true,
+          "J7-f": true
+        },
+        "pass": true
+      },
+      {
+        "subject": {
+          "stopCode": "volume-identity-failed",
+          "buildingId": "doitt:1269491",
+          "releaseId": "manhattan-central-upper-manhattan-cells-20260812-s1",
+          "cellId": "manhattan-exterior-cell-w04-000596-16-19307-17916",
+          "tombstoneId": "tombstone:manhattan-central-upper-manhattan-cells-20260812-s1:doitt:1269491",
+          "lon": -73.940735,
+          "lat": 40.790863
+        },
+        "arms": {
+          "default": {
+            "armId": "default",
+            "url": "http://127.0.0.1:4192/?data=real-pilot&release=manhattan-citywide-20260804&view=free&feature=doitt%3A1269491&lon=-73.940735&lat=40.790863&height=300.000000&heading=45.000000&pitch=-30.000000&roll=0.000000",
+            "panel": {
+              "present": true,
+              "refusalPresent": true,
+              "notResidentPresent": false,
+              "notOwnedPresent": false,
+              "stopCode": "volume-identity-failed",
+              "tombstoneId": "tombstone:manhattan-central-upper-manhattan-cells-20260812-s1:doitt:1269491",
+              "assertedStatement": "Refused by the footprint-faithful V3 exterior grammar [volume-identity-failed]: lod_0 signed mesh volume 145.7161392935687 m³ against analytic 145.716309871 m³ (deviation 0.0000011706131692205764).. No geometry was invented for this building, and no substitute representation was selected.",
+              "releaseQuotation": "Recorded by the release, verbatim: “Refused by the footprint-faithful V3 exterior grammar [volume-identity-failed]: lod_0 signed mesh volume 145.7161392935687 m³ against analytic 145.716309871 m³ (deviation 0.0000011706131692205764).. No geometry was invented for this building, and no substitute representation was selected; base massing from the pinned citywide release is what remains on screen.”",
+              "href": "http://127.0.0.1:4192/?data=real-pilot&release=manhattan-citywide-20260804&view=free&feature=doitt%3A1269491&lon=-73.940735&lat=40.790863&height=300.000000&heading=45.000000&pitch=-30.000000&roll=0.000000"
+            },
+            "still": {
+              "file": "captures/journey-j7-volume-identity-failed-default.png",
+              "byteSize": 595468,
+              "sha256": "5674f39ffcf5fa89456384f0ecbe33919d64ac90b5081b270ba605e61a6eca8a"
+            },
+            "externalHosts": []
+          },
+          "scheduler-off": {
+            "armId": "scheduler-off",
+            "url": "http://127.0.0.1:4192/?data=real-pilot&release=manhattan-citywide-20260804&view=free&feature=doitt%3A1269491&exteriorScheduler=off&lon=-73.940735&lat=40.790863&height=300.000000&heading=45.000000&pitch=-30.000000&roll=0.000000",
+            "panel": {
+              "present": true,
+              "refusalPresent": true,
+              "notResidentPresent": false,
+              "notOwnedPresent": false,
+              "stopCode": "volume-identity-failed",
+              "tombstoneId": "tombstone:manhattan-central-upper-manhattan-cells-20260812-s1:doitt:1269491",
+              "assertedStatement": "Refused by the footprint-faithful V3 exterior grammar [volume-identity-failed]: lod_0 signed mesh volume 145.7161392935687 m³ against analytic 145.716309871 m³ (deviation 0.0000011706131692205764).. No geometry was invented for this building, and no substitute representation was selected.",
+              "releaseQuotation": "Recorded by the release, verbatim: “Refused by the footprint-faithful V3 exterior grammar [volume-identity-failed]: lod_0 signed mesh volume 145.7161392935687 m³ against analytic 145.716309871 m³ (deviation 0.0000011706131692205764).. No geometry was invented for this building, and no substitute representation was selected; base massing from the pinned citywide release is what remains on screen.”",
+              "href": "http://127.0.0.1:4192/?data=real-pilot&release=manhattan-citywide-20260804&view=free&feature=doitt%3A1269491&exteriorScheduler=off&lon=-73.940735&lat=40.790863&height=300.000000&heading=45.000000&pitch=-30.000000&roll=0.000000"
+            },
+            "still": {
+              "file": "captures/journey-j7-volume-identity-failed-scheduler-off.png",
+              "byteSize": 571822,
+              "sha256": "567af9741505787040788cecbb473cc4b34ad3f8e8686c2fef56bccebe73f981"
+            },
+            "externalHosts": []
+          }
+        },
+        "armsAgreeOnAssertion": true,
+        "gates": {
+          "J7-a": true,
+          "J7-b": true,
+          "J7-c": true,
+          "J7-d": true,
+          "J7-e": true,
+          "J7-f": true
+        },
+        "pass": true
+      }
+    ],
+    "pass": true
+  },
+  "ok": true,
+  "claim": "Four refused parents, one per stop code, selected in the shipped UI and captured in BOTH streaming arms. The record states what the panel classified them as, which stop code it named, what the app asserted, and what it quoted from the release.",
+  "notClaimedHere": [
+    "Any visual or geographic acceptance. A still is evidence that pixels were produced, not evidence of likeness.",
+    "Anything about the 201 refused parents these four did not select.",
+    "A CANVAS PICK: every selection here is a ?feature= deep link, not a mouse click on geometry."
+  ]
+}

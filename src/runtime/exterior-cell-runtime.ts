@@ -418,6 +418,79 @@ export interface ExteriorCellNotShippedState {
 
 export type ExteriorCellOutcome = ExteriorCellRenderPlan | ExteriorCellFailureState | ExteriorCellNotShippedState;
 
+/**
+ * A building the exterior grammar REFUSED to generate, as the release records it.
+ *
+ * `reason` is carried VERBATIM from the release graph. It is the generator's own
+ * sentence, including the bracketed stop code and any measured gate values, and
+ * nothing in the runtime rewrites it — a refusal explained in the app's words
+ * rather than the release's would be a paraphrase presented as provenance.
+ */
+export interface ExteriorRefusedBuilding {
+  readonly buildingId: string;
+  readonly reason: string;
+  readonly tombstoneId: string;
+  readonly cellId: string;
+  readonly cellReleaseId: string;
+  readonly releaseId: string;
+}
+
+/**
+ * The CLOSED stop-code vocabulary, as shipped across all six waves.
+ *
+ * Enumerated from the committed wave censuses (205 tombstones island-wide) and
+ * pinned by test. It is closed on purpose: an unrecognized code means the
+ * release is carrying a refusal category this build has never seen, and the
+ * panel says so rather than rendering an unknown token as though it were
+ * understood.
+ */
+export const EXTERIOR_REFUSAL_STOP_CODES = ["ring-area-below-floor", "ring-neck-below-grammar-minimum", "ring-not-simple", "volume-identity-failed"] as const;
+
+export type ExteriorRefusalStopCode = (typeof EXTERIOR_REFUSAL_STOP_CODES)[number];
+
+const STOP_CODE_PATTERN = /\[([a-z0-9-]+)\]/u;
+
+/**
+ * The bracketed token as WRITTEN, whether or not this build knows it.
+ *
+ * Exported so the panel can name an unrecognized category instead of keeping a
+ * second copy of the pattern next to the one that recognizes it — two regexes
+ * for one grammar drift apart, and the drift would show up as a panel that
+ * cannot echo a code it just failed to match.
+ */
+export function exteriorRefusalRawStopCode(reason: string): string | null {
+  return STOP_CODE_PATTERN.exec(reason)?.[1] ?? null;
+}
+
+/** The bracketed stop code, or null when the release's sentence carries none. */
+export function exteriorRefusalStopCode(reason: string): ExteriorRefusalStopCode | null {
+  const code = exteriorRefusalRawStopCode(reason);
+  if (code === null) return null;
+  return (EXTERIOR_REFUSAL_STOP_CODES as readonly string[]).includes(code) ? (code as ExteriorRefusalStopCode) : null;
+}
+
+/**
+ * THE ARM-DEPENDENT CLAUSE, removed from what the app ASSERTS.
+ *
+ * Every refusal reason ends with a clause of the form "...; base massing from
+ * the pinned citywide release is what remains on screen." That sentence is true
+ * in the default arm and FALSE under `?exteriorScheduler=off`, where the
+ * citywide base tier is not drawing and nothing remains on screen for that
+ * building at all. The release is not wrong to say it — it describes the
+ * arrangement the release was cut for — but the app cannot repeat it as a live
+ * claim about the current session, because the app does not know from the
+ * reason string which arm it is in.
+ *
+ * So the app asserts the refusal up to that clause, and shows the untouched
+ * sentence separately as an attributed release quotation. Nothing is hidden and
+ * nothing arm-dependent is asserted. The split is on the semicolon that
+ * introduces the clause; a reason without it is returned unchanged.
+ */
+export function exteriorRefusalStatement(reason: string): string {
+  const marker = reason.indexOf("; base massing");
+  return marker < 0 ? reason.trim() : `${reason.slice(0, marker).trim()}.`;
+}
+
 export interface ExteriorRuntimeMetrics {
   cacheEntries: number;
   cachedBytes: number;
@@ -685,6 +758,7 @@ export class ExteriorCellRuntime {
   private releasedArtifactBytes = 0;
   private declaredNotShippedCellCountCache: number | null = null;
   private promotedBuildingIdsCache: readonly string[] | null = null;
+  private refusedBuildingsCache: ReadonlyMap<string, ExteriorRefusedBuilding> | null = null;
 
   constructor(source: ExteriorCellRuntimeSource, head: ExteriorHeadResolution, options: ExteriorCellRuntimeOptions) {
     const publicRoot = source.graph.roots.find((root) => root.audience === "public");
@@ -830,6 +904,55 @@ export class ExteriorCellRuntime {
     ids.sort((left, right) => (left < right ? -1 : left > right ? 1 : 0));
     this.promotedBuildingIdsCache = ids;
     return ids;
+  }
+
+  /**
+   * Every building this release REFUSED, by canonical building id.
+   *
+   * A tombstoned parent is a building the grammar declined to generate. The
+   * release records why, in a sentence written by the generator and carried
+   * verbatim into the release graph, and until now nothing could reach it: the
+   * app knew only that a selection had no verified exterior representation,
+   * which is equally true of a building in a cell nobody has streamed yet. Those
+   * are different facts and a user is entitled to be told which one applies.
+   *
+   * Costs no request, and no new artifact exists to carry it. `release-graph.json`
+   * is fetched whole at boot for every wave and the `buildingDetails` rows are
+   * already resident in the VERIFIED graph — the same rows
+   * `declaredNotShippedCellCount()` and `promotedBuildingIds()` read one method
+   * over. This is those rows indexed the other way round.
+   *
+   * Only `status: "unavailable"` rows are indexed, which is roughly 205 across
+   * the whole island against 44,989 available ones, so the map is small even
+   * though the graph it is built from is not. Memoized because a details panel
+   * re-renders on every selection and the map does not change for the life of a
+   * pinned snapshot.
+   */
+  refusedBuildings(): ReadonlyMap<string, ExteriorRefusedBuilding> {
+    if (this.refusedBuildingsCache !== null) return this.refusedBuildingsCache;
+    const refused = new Map<string, ExteriorRefusedBuilding>();
+    for (const mapping of this.snapshot.cells) {
+      const cellRelease = this.cellById.get(mapping.cellReleaseId);
+      if (!cellRelease) continue;
+      for (const detail of cellRelease.buildingDetails) {
+        if (detail.status !== "unavailable") continue;
+        refused.set(detail.buildingId, {
+          buildingId: detail.buildingId,
+          reason: detail.reason,
+          tombstoneId: detail.tombstoneId,
+          cellId: cellRelease.cellId,
+          cellReleaseId: cellRelease.cellReleaseId,
+          releaseId: this.releaseId,
+        });
+      }
+    }
+    this.refusedBuildingsCache = refused;
+    return refused;
+  }
+
+  /** One refusal, or null. The lookup a details panel actually makes. */
+  refusedBuilding(buildingId: string): ExteriorRefusedBuilding | null {
+    return this.refusedBuildings().get(buildingId) ?? null;
   }
 
   getMetrics(): ExteriorRuntimeMetrics {

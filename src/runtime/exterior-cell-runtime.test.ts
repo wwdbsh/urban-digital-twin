@@ -670,6 +670,88 @@ describe("exterior bounded availability", () => {
     expect(intactRuntime.declaredNotShippedCellCount()).toBe(0);
   });
 
+  /**
+   * T007: the refusal accessor.
+   *
+   * The reason a refused building needs its own accessor at all is that every
+   * OTHER path collapses it into "no verified exterior representation", which is
+   * equally true of a building nobody has streamed yet. These tests hold the
+   * distinction: the map indexes refusals and only refusals, it costs no
+   * request, and it survives being asked twice.
+   */
+  it("indexes refused buildings out of the already-resident graph, costing no request", async () => {
+    const fixture = await exteriorCellFixture();
+    tombstoneC2(fixture);
+    const seen: string[] = [];
+    const { runtime } = await runtimeFor(fixture, { onRequest: (ref) => { seen.push(ref); } });
+
+    const refused = runtime.refusedBuildings();
+    expect(refused.size).toBeGreaterThan(0);
+    // The rows are already resident in the verified graph; reading them the
+    // other way round must not reach the network.
+    expect(seen).toEqual([]);
+
+    const [buildingId] = [...refused.keys()];
+    const entry = runtime.refusedBuilding(buildingId!);
+    expect(entry).not.toBeNull();
+    expect(entry!.buildingId).toBe(buildingId);
+    expect(entry!.cellId).toBe("c2");
+    expect(entry!.releaseId).toBe(runtime.releaseId);
+    expect(entry!.tombstoneId).toContain("tombstone:");
+    // Carried VERBATIM: the app must not be able to show a paraphrase.
+    expect(entry!.reason).toBe("Not scheduled for exterior materialization in this release.");
+
+    // Memoized: the same map object comes back rather than a rebuilt one.
+    expect(runtime.refusedBuildings()).toBe(refused);
+  });
+
+  /**
+   * THE BINARY SEARCH'S PRECONDITION, pinned at the source.
+   *
+   * `App.tsx` decides refused-versus-not-resident with a BINARY SEARCH over
+   * `promotedBuildingIds()`, which is only correct if the array is sorted. The
+   * accessor sorts today, and its docblock explains why — but the sort exists
+   * for the identity digest, not for this search, so nothing else would notice
+   * if it went away. The symptom would be a shipped building rendered as
+   * REFUSED, for some ids only. This is the assertion that fails first instead.
+   */
+  it("returns promoted building ids in sorted order, which the panel's binary search requires", async () => {
+    // The INTACT fixture: tombstoning c2 leaves a single available building,
+    // and one element is sorted no matter what the accessor does, so it could
+    // not detect the regression this test exists for.
+    const { runtime } = await runtimeFor(await exteriorCellFixture());
+
+    const ids = runtime.promotedBuildingIds();
+    expect(ids.length).toBeGreaterThan(1);
+    expect([...ids]).toEqual([...ids].sort());
+    // The order is not merely non-decreasing by luck of insertion: it must
+    // survive being compared against a deliberately shuffled copy.
+    const shuffled = [...ids].reverse();
+    expect(ids).not.toEqual(shuffled);
+    expect([...shuffled].sort()).toEqual([...ids]);
+  });
+
+  it("indexes ONLY refusals, and reports null for an available building", async () => {
+    const fixture = await exteriorCellFixture();
+    tombstoneC2(fixture);
+    const { runtime } = await runtimeFor(fixture);
+
+    const available = runtime.promotedBuildingIds();
+    expect(available.length).toBeGreaterThan(0);
+    // The two sets are disjoint. If an available building ever appeared in the
+    // refusal map the panel would call a shipped building refused, which is the
+    // worst failure this feature can have.
+    for (const buildingId of available) expect(runtime.refusedBuilding(buildingId)).toBeNull();
+    for (const buildingId of runtime.refusedBuildings().keys()) expect(available).not.toContain(buildingId);
+
+    // A release that refuses nothing has an empty map, so the accessor is not
+    // structurally stuck at a non-empty answer.
+    const intact = await exteriorCellFixture();
+    const { runtime: intactRuntime } = await runtimeFor(intact);
+    expect(intactRuntime.refusedBuildings().size).toBe(0);
+    expect(intactRuntime.refusedBuilding(available[0]!)).toBeNull();
+  });
+
   it("keeps a genuinely failing cell on the alarming pinned-base path", async () => {
     const fixture = await exteriorCellFixture();
     tombstoneC2(fixture);

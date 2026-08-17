@@ -59,7 +59,7 @@ import { TRAVEL_CONTEXT_BUDGETS, TRAVEL_CONTEXT_RELEASE_ID, TRAVEL_CONTEXT_TILE_
 import { AggregateRequestBudget, ComposedReleaseAdapter, type ComposedReleaseMetrics } from "../runtime/composed-release-runtime";
 import { EXTERIOR_PILOT_RELEASE_ID, createExteriorPilotFaultFetcher, loadExteriorPilotRelease, parseExteriorPilotFault, type CommercialStorefrontPlacement, type LoadedExteriorPilotRelease } from "../runtime/exterior-pilot-release";
 import { BLOCK835_PUBLIC_REALM_RELEASE_ID, createBlock835PublicRealmFaultFetcher, loadBlock835PublicRealmRelease, parseBlock835PublicRealmFault, publicRealmFeatureToFeature, type Block835PublicRealmFeature, type LoadedBlock835PublicRealmRelease } from "../runtime/block835-public-realm-release";
-import { EXTERIOR_RUNTIME_BUDGETS, exteriorOutcomeCacheKeys, loadExteriorCellRuntime, type ExteriorCellOutcome, type ExteriorCellRuntime, type ExteriorHeadRequest } from "../runtime/exterior-cell-runtime";
+import { EXTERIOR_RUNTIME_BUDGETS, exteriorOutcomeCacheKeys, exteriorRefusalRawStopCode, exteriorRefusalStatement, exteriorRefusalStopCode, loadExteriorCellRuntime, type ExteriorCellOutcome, type ExteriorCellRuntime, type ExteriorHeadRequest, type ExteriorRefusedBuilding } from "../runtime/exterior-cell-runtime";
 import { EXTERIOR_T1_RELEASE_IDS } from "../release/exterior-t1-variants";
 import { PROBE_MIP_CHAIN_MULTIPLIER, PROBE_TILE_WIRE_BYTES, baseLevelByteLength, predictedTextureByteLength } from "../features/explorer/gpu-texture-probe";
 import { cesiumGpuTextureReading, cesiumVersion } from "../features/explorer/cesium-resource-cache";
@@ -1174,6 +1174,125 @@ export function exteriorBaseIdentityHas(adapter: ExteriorBaseIdentityAdapter, fe
   if (typeof adapter.hasIdentityMember === "function") return adapter.hasIdentityMember(featureId);
   const resident = adapter.getFeature(featureId);
   return resident !== undefined && resident !== null;
+}
+
+/**
+ * Membership in an ALREADY-SORTED id list, by binary search.
+ *
+ * `promotedBuildingIds()` returns a sorted, memoized array of every building a
+ * wave declares available — up to 11,682 for one wave and 44,989 across the six.
+ * The details panel needs one membership question per selection, and a linear
+ * `includes` over that array on every re-render is the kind of thing that is
+ * invisible in a fixture and miserable at full scale. The array is already
+ * sorted for the identity digest, so the search is free: no extra accessor, no
+ * second copy of forty-five thousand strings, O(log n) per selection.
+ */
+export function exteriorSortedIdsInclude(sortedIds: readonly string[], buildingId: string): boolean {
+  let low = 0;
+  let high = sortedIds.length - 1;
+  while (low <= high) {
+    const middle = (low + high) >>> 1;
+    const candidate = sortedIds[middle]!;
+    if (candidate === buildingId) return true;
+    if (candidate < buildingId) low = middle + 1;
+    else high = middle - 1;
+  }
+  return false;
+}
+
+/**
+ * The minimum a wave runtime has to answer for this row. Structural so tests can
+ * drive the three cases without booting a release.
+ */
+export interface ExteriorSelectionSource {
+  refusedBuilding(buildingId: string): ExteriorRefusedBuilding | null;
+  promotedBuildingIds(): readonly string[];
+}
+
+/**
+ * THE SELECTED-FEATURE ROW, split three ways.
+ *
+ * This row used to answer every selection without a rendered exterior asset with
+ * one sentence: "No verified exterior representation is active for this record."
+ * That sentence is true of three different situations and useful in none of
+ * them, because it does not separate the permanent from the recoverable:
+ *
+ *   REFUSED       the grammar declined to generate this building. Permanent.
+ *                 Approaching it will never help, and the release says why.
+ *   NOT RESIDENT  an asset ships, but this camera has not streamed its cell.
+ *                 Recoverable by approaching, which the old sentence denied.
+ *   NOT OWNED     no exterior release claims this building at all.
+ *
+ * The lookup runs DIRECTLY over the active wave runtimes rather than through
+ * `exteriorWaveForSelection`, which attributes by RENDERED outcome: a refused
+ * building appears in no wave's rendered set, so attribution returns null for
+ * precisely the selections this row exists to explain.
+ */
+export function ExteriorSelectedFeatureDetail({ selectedId, runtimes }: { selectedId: string | null; runtimes: readonly ExteriorSelectionSource[] }) {
+  /*
+    AVAILABILITY IS CHECKED FIRST, and the order is the decision.
+
+    A building is refused PER WAVE. Nothing in the release shape forbids one
+    wave tombstoning a building that another wave ships — the waves partition
+    the island by cell, but a building sitting on a wave boundary could in
+    principle be claimed by both. If that ever happens, the two answers
+    disagree, and this component has to pick one.
+
+    It picks the RECOVERABLE one. Telling a user "move closer" about a building
+    that some wave will actually draw is a recoverable error: they move closer
+    and see it. Telling them "refused, approaching will never help" about a
+    building that is on screen in another wave is not recoverable — it is the
+    app asserting a permanent absence that is false, which is the exact failure
+    this feature exists to remove.
+
+    The payload-gated test asserts the overlap is EMPTY across all six shipped
+    waves today, so this ordering currently changes no rendered answer. It is
+    here so that if a future re-cut introduces an overlap, the panel degrades
+    toward the truthful direction rather than the confident one.
+  */
+  const declaredSomewhere = selectedId !== null && runtimes.some((runtime) => exteriorSortedIdsInclude(runtime.promotedBuildingIds(), selectedId));
+
+  const refusal = selectedId && !declaredSomewhere
+    ? runtimes.reduce<ExteriorRefusedBuilding | null>((found, runtime) => found ?? runtime.refusedBuilding(selectedId), null)
+    : null;
+
+  if (refusal) {
+    const stopCode = exteriorRefusalStopCode(refusal.reason);
+    const rawCode = exteriorRefusalRawStopCode(refusal.reason);
+    return <div data-exterior-refusal data-exterior-stop-code={stopCode ?? "unrecognized"}>
+      <dt>Selected feature</dt>
+      <dd>
+        <p className="section-label">This building was <strong>refused</strong> by the exterior grammar of release {refusal.releaseId}. It is not missing and it is not still loading: no exterior geometry was generated for it, and approaching it will not produce any.</p>
+        <dl>
+          <div><dt>Refusal record</dt><dd data-exterior-tombstone-id={refusal.tombstoneId}>{refusal.tombstoneId}</dd></div>
+          <div><dt>Stop code</dt><dd>{stopCode ?? `${rawCode ?? "none"} — not a refusal category this build recognizes`}</dd></div>
+          <div><dt>Cell / release</dt><dd>{refusal.cellId} · {refusal.cellReleaseId}</dd></div>
+          {/*
+            The app's OWN assertion, with the release's arm-dependent trailing
+            clause removed. See `exteriorRefusalStatement`: the clause claims
+            base massing "is what remains on screen", which is false under
+            ?exteriorScheduler=off, and this row cannot tell which arm it is in.
+          */}
+          <div><dt>Reason</dt><dd data-exterior-refusal-statement>{exteriorRefusalStatement(refusal.reason)}</dd></div>
+        </dl>
+        {/* ...and the untouched sentence, explicitly attributed, so the clause
+            is available to read without the app asserting it. */}
+        <p className="section-label" data-exterior-refusal-quotation>Recorded by the release, verbatim: “{refusal.reason}”</p>
+      </dd>
+    </div>;
+  }
+
+  if (declaredSomewhere) {
+    return <div data-exterior-not-resident>
+      <dt>Selected feature</dt>
+      <dd>A verified exterior asset ships for this building, but its cell is not streamed at this camera yet. Move closer to load it.</dd>
+    </div>;
+  }
+
+  return <div data-exterior-not-owned>
+    <dt>Selected feature</dt>
+    <dd>No verified exterior representation is active for this record.</dd>
+  </div>;
 }
 
 export function exteriorSnapshotOriginLabel(origin: "default" | "canary", snapshotId: string): string {
@@ -4358,7 +4477,15 @@ export function App() {
                 {(() => {
                   const selectedId = activeSelectionId;
                   const owner = selectedId ? owning?.wave.outcomes.find((cell) => cell.kind === "rendered" && cell.assets.some((asset) => asset.canonicalFeatureId === selectedId)) : undefined;
-                  if (!owner || owner.kind !== "rendered") return <div><dt>Selected feature</dt><dd>No verified exterior representation is active for this record.</dd></div>;
+                  if (!owner || owner.kind !== "rendered") {
+                    // Three cases, decided over the ACTIVE WAVE RUNTIMES rather
+                    // than over the attributed wave: see the component's header
+                    // for why attribution cannot answer for a refused building.
+                    return <ExteriorSelectedFeatureDetail
+                      selectedId={selectedId}
+                      runtimes={exteriorActiveWaves.flatMap((entry) => (entry.wave.runtime ? [entry.wave.runtime] : []))}
+                    />;
+                  }
                   const asset = owner.assets.find((entry) => entry.canonicalFeatureId === selectedId)!;
                   return <>
                     <div><dt>Cell / release</dt><dd>{owner.cellId} · {owner.cellReleaseId} ({owner.cellReleaseVersion}){owner.representation === "predecessor" ? " · pinned predecessor fallback" : ""}</dd></div>
