@@ -1,0 +1,69 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "lod1-texturing-20260817:island-uv-magnitude",
+  "task": "T009",
+  "stage": "0",
+  "artifact": "island-uv-magnitude",
+  "computedAt": "2026-08-17T10:55:50.075Z",
+  "stride": 10,
+  "strideStatement": "Every 10th lod_0 was scanned. SAMPLE.",
+  "assetsScanned": 4502,
+  "uvComponentsScanned": 31920696,
+  "maxAbsU": 324.885651,
+  "maxAbsV": 976.028442,
+  "maxAbsUv": 976.028442,
+  "worst": {
+    "buildingId": "doitt:510535",
+    "releaseId": "manhattan-northern-manhattan-cells-20260812-c1",
+    "u": 80.1738052368164,
+    "v": 976.0284423828125
+  },
+  "waves": [
+    {
+      "waveId": "w00",
+      "releaseId": "manhattan-exterior-cells-20260811-v3-c1",
+      "assetsScanned": 2,
+      "maxAbsUv": 69.803917
+    },
+    {
+      "waveId": "w01",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "assetsScanned": 718,
+      "maxAbsUv": 871.182861
+    },
+    {
+      "waveId": "w02",
+      "releaseId": "manhattan-lower-manhattan-cells-20260812-c1",
+      "assetsScanned": 639,
+      "maxAbsUv": 806.731323
+    },
+    {
+      "waveId": "w03",
+      "releaseId": "manhattan-southern-remainder-cells-20260812-c1",
+      "assetsScanned": 956,
+      "maxAbsUv": 653.862793
+    },
+    {
+      "waveId": "w04",
+      "releaseId": "manhattan-central-upper-manhattan-cells-20260812-c1",
+      "assetsScanned": 1169,
+      "maxAbsUv": 487.906708
+    },
+    {
+      "waveId": "w05",
+      "releaseId": "manhattan-northern-manhattan-cells-20260812-c1",
+      "assetsScanned": 1018,
+      "maxAbsUv": 976.028442
+    }
+  ],
+  "method": "Decoded from the TEXCOORD_0 accessors' actual float32 bytes. The shipped accessors declare no min/max, so nothing here is taken from accessor metadata.",
+  "float32Resolution": {
+    "significandBits": 24,
+    "ulpAtObservedMaximum": 0.00006103515625,
+    "texelsPerUnitAtTileSize": 128,
+    "subTexelResolutionAtMaximum": 128,
+    "statement": "At the observed maximum |UV| of 976.0284, consecutive representable float32 values are 0.00006103515625 apart. Against a 128-pixel tile that is 7.813e-3 of a texel, i.e. roughly 128 representable steps per texel, so float32 UVs remain far finer than the tile they address and wrapping does not lose texels at this magnitude."
+  },
+  "atlasConsequence": "These magnitudes are why ADR 0047 declined an atlas: an atlas cannot repeat-wrap, and a UV range of this size is a repeat-wrapped planar projection by construction. Nothing in T009 changes that, because T009 binds the SAME tiles through the SAME sampler.",
+  "claim": "The largest UV magnitude present in the retained lod_0 set, decoded from the shipped bytes, with the float32 resolution at that magnitude stated rather than assumed."
+}

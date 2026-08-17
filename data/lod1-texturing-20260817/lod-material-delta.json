@@ -1,0 +1,6511 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "lod1-texturing-20260817:lod-material-delta",
+  "task": "T009",
+  "stage": "0",
+  "artifact": "lod-material-delta",
+  "computedAt": "2026-08-17T10:52:34.536Z",
+  "stride": 1,
+  "strideStatement": "EVERY retained pair was read. This is a census, not a sample.",
+  "population": {
+    "pairsRead": 44989,
+    "waves": [
+      {
+        "waveId": "w00",
+        "releaseId": "manhattan-exterior-cells-20260811-v3-c1",
+        "pairsRead": 14,
+        "lod0MaterialTotal": 124,
+        "lod1MaterialTotal": 108,
+        "lod0TextureTotal": 42
+      },
+      {
+        "waveId": "w01",
+        "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+        "pairsRead": 7179,
+        "lod0MaterialTotal": 63552,
+        "lod1MaterialTotal": 54803,
+        "lod0TextureTotal": 21446
+      },
+      {
+        "waveId": "w02",
+        "releaseId": "manhattan-lower-manhattan-cells-20260812-c1",
+        "pairsRead": 6382,
+        "lod0MaterialTotal": 56170,
+        "lod1MaterialTotal": 48657,
+        "lod0TextureTotal": 19034
+      },
+      {
+        "waveId": "w03",
+        "releaseId": "manhattan-southern-remainder-cells-20260812-c1",
+        "pairsRead": 9560,
+        "lod0MaterialTotal": 84693,
+        "lod1MaterialTotal": 73065,
+        "lod0TextureTotal": 28563
+      },
+      {
+        "waveId": "w04",
+        "releaseId": "manhattan-central-upper-manhattan-cells-20260812-c1",
+        "pairsRead": 11682,
+        "lod0MaterialTotal": 103609,
+        "lod1MaterialTotal": 88555,
+        "lod0TextureTotal": 34881
+      },
+      {
+        "waveId": "w05",
+        "releaseId": "manhattan-northern-manhattan-cells-20260812-c1",
+        "pairsRead": 10172,
+        "lod0MaterialTotal": 88748,
+        "lod1MaterialTotal": 76446,
+        "lod0TextureTotal": 30120
+      }
+    ]
+  },
+  "premiseFindings": {
+    "lod1PairsCarryingImages": 0,
+    "lod1PairsCarryingTexcoords": 0,
+    "lod0PairsCarryingNoImages": 0,
+    "statement": "The contract's premise, checked over the population rather than over one building: `lod_1` carries no images and no TEXCOORD_0 anywhere in the retained set, and `lod_0` carries images everywhere it was measured. `lod_1` is UNTEXTURED. It is NOT uncoloured — every one of its materials declares a baseColorFactor — and that distinction is what this stage exists to price."
+  },
+  "paletteAuthoring": {
+    "lod0MaterialsByteQuantized": 89978,
+    "lod0MaterialsContinuous": 306918,
+    "lod1MaterialsByteQuantized": 341634,
+    "lod1MaterialsContinuous": 0,
+    "distinctLod0Factors": 20,
+    "distinctLod1Factors": 15,
+    "tell": "A factor that is exactly k/255 was authored as a byte triple; one that is not came from the continuous tile tint. The split below is the evidence that the two levels are fed by two different authoring paths rather than by one palette applied twice."
+  },
+  "perChannelRatio": {
+    "note": "lod_1 factor divided by lod_0 factor, per channel, over material slots ONLY where the two levels declare the same number of slots. A constant ratio across channels would mean the two palettes differ by a single brightness scale; a non-constant one means they differ in HUE, which no single scalar can reconcile.",
+    "r": {
+      "count": 3702,
+      "min": 0.421621622,
+      "max": 2.785714286,
+      "mean": 1.074165712,
+      "median": 0.924674197,
+      "p05": 0.559757435,
+      "p95": 2.785714286
+    },
+    "g": {
+      "count": 3702,
+      "min": 0.427807487,
+      "max": 2.962962963,
+      "mean": 1.183020774,
+      "median": 1,
+      "p05": 0.57283297,
+      "p95": 2.962962963
+    },
+    "b": {
+      "count": 3702,
+      "min": 0.436170213,
+      "max": 3.28,
+      "mean": 1.388519996,
+      "median": 1.117024292,
+      "p05": 0.608012386,
+      "p95": 3.28
+    }
+  },
+  "perBuildingSample": [
+    {
+      "buildingId": "doitt:102705",
+      "releaseId": "manhattan-exterior-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:131170",
+      "releaseId": "manhattan-exterior-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:147902",
+      "releaseId": "manhattan-exterior-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:262867",
+      "releaseId": "manhattan-exterior-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 7,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 6,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:39969",
+      "releaseId": "manhattan-exterior-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:460555",
+      "releaseId": "manhattan-exterior-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:498980",
+      "releaseId": "manhattan-exterior-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:502491",
+      "releaseId": "manhattan-exterior-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:584049",
+      "releaseId": "manhattan-exterior-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:778052",
+      "releaseId": "manhattan-exterior-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:812702",
+      "releaseId": "manhattan-exterior-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:835659",
+      "releaseId": "manhattan-exterior-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:925937",
+      "releaseId": "manhattan-exterior-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:982383",
+      "releaseId": "manhattan-exterior-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:100022",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1001111",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 7,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 5,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1002071",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 7,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 6,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:100220",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:100230",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:100234",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:100331",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1003732",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:10049",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:100581",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:100691",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:100696",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1008201",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1008507",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1008698",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1008746",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:100896",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1010565",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 7,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 5,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1010930",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:101157",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1012066",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1012366",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:10125",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:101330",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:101362",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1014301",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1014814",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:101490",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:101518",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:101592",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:101655",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:101692",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:101741",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1017836",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1019773",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 7,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 6,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:102",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1021015",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 7,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 6,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1021221",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:102172",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1022",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:102201",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1022883",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:102335",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:102392",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1023965",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:102469",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1024830",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:102519",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:103094",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1032824",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1032877",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:103318",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:103349",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1034029",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:103403",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:103514",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:10369",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1036927",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 7,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 6,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1037464",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1037713",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:103812",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:103833",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:103860",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:104128",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:104151",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:104207",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1042904",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:104291",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:104352",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1046017",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 7,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 6,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1049082",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:105032",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1050759",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1051557",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 7,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 6,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:105251",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:10537",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:105848",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1058794",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:105916",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1059289",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1059538",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 7,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 6,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:106030",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1060553",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:106088",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:106125",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:106135",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1061411",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 7,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 6,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:10632",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:106328",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:106344",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:106397",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:106525",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1067058",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 7,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 5,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:106741",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:106742",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:10676",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:106844",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:106882",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:106916",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:106934",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:106943",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1069433",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1069889",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:107134",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:10726",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:10730",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1075181",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1075239",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 6,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 5,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1075788",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1075854",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:107670",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:107762",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1079428",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:107956",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:108011",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1082782",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:10830",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:108379",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:108401",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1084457",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1084668",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:108470",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1085372",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:108592",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:108593",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:108617",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1086242",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1086941",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1087821",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:10882",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:10892",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 6,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 5,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1089536",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:108956",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1089870",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1090522",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:109061",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:109127",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:109129",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:109138",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:109330",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1094320",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1094828",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:109545",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:109602",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:109636",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1097628",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1097636",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1097676",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1097801",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:109899",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:109916",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 7,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 6,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:11001",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:110065",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:110209",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:110295",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:110359",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:110442",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1104532",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1104787",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:110489",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1105205",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1105405",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:110560",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1105689",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1105839",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1105842",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 5,
+        "imageCount": 2,
+        "textureCount": 2
+      },
+      "lod1": {
+        "materialCount": 4,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1105843",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 5,
+        "imageCount": 2,
+        "textureCount": 2
+      },
+      "lod1": {
+        "materialCount": 4,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1105845",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1105846",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1105847",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1106099",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1106105",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1106421",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1106429",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1106533",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1106535",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:110682",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1106852",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 7,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 5,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:110693",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1107083",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1107338",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1107622",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1107685",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1107686",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1107687",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1107692",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1107695",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1107696",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1107697",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1107768",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 7,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 6,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1108003",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1108007",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1108009",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1108305",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1108306",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1108587",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1108714",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1109534",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1109632",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1109659",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1109665",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:110999",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1110009",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1110059",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1110098",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1110103",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1110247",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1110254",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1110597",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1110773",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:11108",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1111085",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1111315",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1111415",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1111432",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1111726",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1111850",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:111191",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1111936",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1112124",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:111218",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1112770",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:111303",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1113238",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1114221",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 7,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 6,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1114380",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1114391",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 7,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 6,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1114625",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1114726",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1115013",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1115019",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1115058",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1116162",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1116320",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 7,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 6,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1116587",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1116804",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:111690",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1116993",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1117349",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 7,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 6,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:111739",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1117425",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1117429",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1117591",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 7,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 6,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1117633",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 7,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 6,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1117889",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1118236",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1118327",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1119034",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1119374",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:111946",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:112207",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:112221",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:112290",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:112437",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 7,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 6,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:112845",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:112870",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:113080",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:113316",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:113380",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 7,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 6,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:113405",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:113527",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:113616",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:114025",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:114184",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:114229",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:114274",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1143",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:11435",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:114431",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:114677",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:114835",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:115107",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:115197",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:115311",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1153991",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1153995",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 6,
+        "imageCount": 2,
+        "textureCount": 2
+      },
+      "lod1": {
+        "materialCount": 5,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1153998",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 5,
+        "imageCount": 2,
+        "textureCount": 2
+      },
+      "lod1": {
+        "materialCount": 4,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1154002",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:11550",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:115676",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1156849",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1156850",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1156851",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1156852",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:115694",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1157407",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1157639",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:115792",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1158175",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1158176",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1158177",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1158178",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:115843",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1159110",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:116065",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1160809",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1160810",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:116276",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:116428",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 7,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 6,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:116509",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:116513",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:116586",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:116606",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:116676",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:117036",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:117038",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:11721",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:117257",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:117349",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:117413",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:117503",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:117564",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:117624",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:117637",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 6,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 5,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:117756",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 7,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 5,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:11777",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:118011",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:118112",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:118186",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:118277",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:118480",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:118502",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:11851",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:118565",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1189563",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 7,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 6,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1189860",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1189861",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 7,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 6,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1190395",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1190396",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 7,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 6,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:11907",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1191064",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 5,
+        "imageCount": 2,
+        "textureCount": 2
+      },
+      "lod1": {
+        "materialCount": 4,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1191375",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 7,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 6,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1191376",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 7,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 6,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1191377",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1192",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:119553",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 7,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 6,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1195535",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 7,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 6,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1195698",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1197280",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 5,
+        "imageCount": 2,
+        "textureCount": 2
+      },
+      "lod1": {
+        "materialCount": 4,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:119850",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:119964",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:119970",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:120032",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1200457",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:120099",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:120117",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:120278",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1203588",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1203600",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 6,
+        "imageCount": 2,
+        "textureCount": 2
+      },
+      "lod1": {
+        "materialCount": 5,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1203802",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:120479",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 7,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 6,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1206446",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:120790",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1208448",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:120881",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:120927",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1211427",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:121153",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:121161",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:121167",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1212073",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1213537",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:121408",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1214621",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1215113",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 7,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 5,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1215127",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 7,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 6,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:121587",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 7,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 6,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1216034",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:121756",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1218860",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 7,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 6,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1219175",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:122062",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1221124",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 7,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 6,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1221131",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 7,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 6,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1221191",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1221493",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:122200",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:122231",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:122299",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1224631",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1224744",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1224763",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1224826",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:1225892",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 7,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:122685",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    },
+    {
+      "buildingId": "doitt:122787",
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+      "lod0": {
+        "materialCount": 9,
+        "imageCount": 3,
+        "textureCount": 3
+      },
+      "lod1": {
+        "materialCount": 8,
+        "imageCount": 0,
+        "textureCount": 0,
+        "hasUv": false
+      },
+      "materialSlotCountsAlign": false
+    }
+  ],
+  "claim": "Material-level readings taken from the GLB JSON chunks of the retained set. It states what each level declares; it renders nothing and makes no appearance claim on its own."
+}
