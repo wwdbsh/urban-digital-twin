@@ -1,4 +1,4 @@
-/* global console, process */
+/* global console */
 /**
  * PRE-REGISTRATION of the textured-lod_1 appearance sampling.
  *
@@ -18,7 +18,7 @@ import { collectMidtownCoreSources } from "../src/release/midtown-core-source.ts
 import { buildMidtownCoreV3Plan, MidtownCoreV3Stop } from "../src/release/midtown-core-v3-materialization.ts";
 import { massGenerationSuccessorProfile } from "../src/release/mass-generation-retention.ts";
 import { WAVE_BASE_PROFILES } from "./mass-generation-wave-cli.mjs";
-import { C1_RELEASE_IDS, c2ReleaseId } from "./lod1-texturing-wave-cli.mjs";
+import { c2ReleaseId } from "./lod1-texturing-wave-cli.mjs";
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const snapshotRoot = join(repositoryRoot, "public", "data", EXTERIOR_FULLSNAPSHOT_BASE_RELEASE_ID);

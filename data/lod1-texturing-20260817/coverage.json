@@ -1,0 +1,322 @@
+{
+ "schemaVersion": "1.0",
+ "recordId": "lod1-texturing-20260817:coverage",
+ "task": "T009",
+ "artifact": "textured-lod1-coverage",
+ "note": "The six -c2 textured-lod_1 waves in one table, checked against the IMMUTABLE ownership ledger and against the -c1 predecessor the campaign must not have moved. Deterministic counts and bytes only; NOT visual, geographic, architectural or performance acceptance.",
+ "ledger": {
+  "releaseId": "manhattan-exterior-wave-ledger-20260804",
+  "checksumSha256": "62e093d2ca50b54b49fd8bbad9d0b11f6301b2b197623deb343f9ea915e59016",
+  "ownedParents": 45194
+ },
+ "waves": [
+  {
+   "waveId": "w00",
+   "c1ReleaseId": "manhattan-exterior-cells-20260811-v3-c1",
+   "c2ReleaseId": "manhattan-exterior-cells-20260811-v3-c2",
+   "owned": 14,
+   "texturedLod1": 14,
+   "tombstoned": 0,
+   "texturedFallbacks": 0,
+   "cellManifests": 1,
+   "lod0Bytes": 7533100,
+   "lod1Bytes": 2793416,
+   "totalBytes": 10462188,
+   "predecessorLod1Bytes": 1952112,
+   "lod1TexturingDeltaBytes": 841304,
+   "lod0Copy": {
+    "copied": 14,
+    "matchedC1Inventory": 14,
+    "matchedReemission": 14
+   },
+   "validation": {
+    "validatedCellCount": 1,
+    "declaredCellCount": 1,
+    "assets": 14,
+    "silhouetteRecords": 14,
+    "lod1FallbackCount": 0,
+    "completenessSources": [
+     "payload-inventory",
+     "wave-census"
+    ]
+   },
+   "determinismReplay": {
+    "compared": 28,
+    "byteIdentical": 28,
+    "fallbackGlbCompared": 0
+   },
+   "c1Immutability": {
+    "sampled": 35,
+    "identical": 35
+   },
+   "waveCensusSha256": "958ceb177cb9d37676dc36eb9b9ae42b61278508bec5680f035ae11f9decad53",
+   "payloadInventorySha256": "3c32785a65bfc837e66e97ff6a4fd64f95cb9db635e8f9c03e1bd9b869809122",
+   "retentionValidationSha256": "be3c369352b6d38fd5d3cc64fdae99e46d83847205e19a870c49797fe7ebd1ba",
+   "verificationSha256": "3df6738d6d27645f5e238d75e11f8816c9334858f25efcb39905f495734f48a5"
+  },
+  {
+   "waveId": "w01",
+   "c1ReleaseId": "manhattan-midtown-core-cells-20260811-v3-c1",
+   "c2ReleaseId": "manhattan-midtown-core-cells-20260811-v3-c2",
+   "owned": 7201,
+   "texturedLod1": 7179,
+   "tombstoned": 22,
+   "texturedFallbacks": 4,
+   "cellManifests": 149,
+   "lod0Bytes": 1269329072,
+   "lod1Bytes": 527590692,
+   "totalBytes": 1828003527,
+   "predecessorLod1Bytes": 374574008,
+   "lod1TexturingDeltaBytes": 153016684,
+   "lod0Copy": {
+    "copied": 7179,
+    "matchedC1Inventory": 7179,
+    "matchedReemission": 7179
+   },
+   "validation": {
+    "validatedCellCount": 149,
+    "declaredCellCount": 149,
+    "assets": 7179,
+    "silhouetteRecords": 7179,
+    "lod1FallbackCount": 4,
+    "completenessSources": [
+     "payload-inventory",
+     "wave-census"
+    ]
+   },
+   "determinismReplay": {
+    "compared": 40,
+    "byteIdentical": 40,
+    "fallbackGlbCompared": 2
+   },
+   "c1Immutability": {
+    "sampled": 60,
+    "identical": 60
+   },
+   "waveCensusSha256": "a067ad84822077294652bff158eadb23e89fa912ad87f0d7fe8daab5ba5e3027",
+   "payloadInventorySha256": "e7238f93b59b84e626a6dcf8402bdd5d3c84b4c299f22a6eee0b0a5f1d4c9b00",
+   "retentionValidationSha256": "09fc18259899e9bd1bb5dc8b459af367c36aa454ca85777b32bd3cc11ae0548e",
+   "verificationSha256": "e6a9dbf054c3b3a1d49e269151be45c3da989710411f68ffcc5b4bb8c49f0f01"
+  },
+  {
+   "waveId": "w02",
+   "c1ReleaseId": "manhattan-lower-manhattan-cells-20260812-c1",
+   "c2ReleaseId": "manhattan-lower-manhattan-cells-20260812-c2",
+   "owned": 6425,
+   "texturedLod1": 6382,
+   "tombstoned": 43,
+   "texturedFallbacks": 114,
+   "cellManifests": 126,
+   "lod0Bytes": 739668716,
+   "lod1Bytes": 329754556,
+   "totalBytes": 1098912457,
+   "predecessorLod1Bytes": 237016572,
+   "lod1TexturingDeltaBytes": 92737984,
+   "lod0Copy": {
+    "copied": 6382,
+    "matchedC1Inventory": 6382,
+    "matchedReemission": 6382
+   },
+   "validation": {
+    "validatedCellCount": 126,
+    "declaredCellCount": 126,
+    "assets": 6382,
+    "silhouetteRecords": 6382,
+    "lod1FallbackCount": 114,
+    "completenessSources": [
+     "payload-inventory",
+     "wave-census"
+    ]
+   },
+   "determinismReplay": {
+    "compared": 40,
+    "byteIdentical": 40,
+    "fallbackGlbCompared": 6
+   },
+   "c1Immutability": {
+    "sampled": 60,
+    "identical": 60
+   },
+   "waveCensusSha256": "5e086f36a1969d5df9bcbf86ef64f9c90c5cb9194aacd34dc61d5008fb5286e0",
+   "payloadInventorySha256": "4b9d7ed05bc53382b18e844e0517a818c2bbb7bcc90f9c45864ca82aaf53a8b5",
+   "retentionValidationSha256": "d0d7a22a770d8f3a6fafea34a62ef65e94955dbdbead51436f171cbd475a6039",
+   "verificationSha256": "1180fadbd791e591345e310822ddb1241186463e465a37c2cc878d63ab30f0f6"
+  },
+  {
+   "waveId": "w03",
+   "c1ReleaseId": "manhattan-southern-remainder-cells-20260812-c1",
+   "c2ReleaseId": "manhattan-southern-remainder-cells-20260812-c2",
+   "owned": 9603,
+   "texturedLod1": 9560,
+   "tombstoned": 43,
+   "texturedFallbacks": 289,
+   "cellManifests": 176,
+   "lod0Bytes": 868474880,
+   "lod1Bytes": 400340056,
+   "totalBytes": 1312937833,
+   "predecessorLod1Bytes": 289854784,
+   "lod1TexturingDeltaBytes": 110485272,
+   "lod0Copy": {
+    "copied": 9560,
+    "matchedC1Inventory": 9560,
+    "matchedReemission": 9560
+   },
+   "validation": {
+    "validatedCellCount": 176,
+    "declaredCellCount": 176,
+    "assets": 9560,
+    "silhouetteRecords": 9560,
+    "lod1FallbackCount": 289,
+    "completenessSources": [
+     "payload-inventory",
+     "wave-census"
+    ]
+   },
+   "determinismReplay": {
+    "compared": 40,
+    "byteIdentical": 40,
+    "fallbackGlbCompared": 40
+   },
+   "c1Immutability": {
+    "sampled": 60,
+    "identical": 60
+   },
+   "waveCensusSha256": "8c6541b78b0b2548beafe01c43a427e7b62e2d7e95e7d0bfbeec19e4fb275a65",
+   "payloadInventorySha256": "46fb1b0f851c5969bf4bc39bbca7bc284bc63f76fe44512612396a94f42b9da9",
+   "retentionValidationSha256": "8451ce4dfbf1c2f80bbd78477a116f814dd05259a787c01721ec2988252001d8",
+   "verificationSha256": "147f7517c044570bf1d3a5152c7b77776de6b8b787e46ba7929df472e2cc68ff"
+  },
+  {
+   "waveId": "w04",
+   "c1ReleaseId": "manhattan-central-upper-manhattan-cells-20260812-c1",
+   "c2ReleaseId": "manhattan-central-upper-manhattan-cells-20260812-c2",
+   "owned": 11721,
+   "texturedLod1": 11682,
+   "tombstoned": 39,
+   "texturedFallbacks": 3,
+   "cellManifests": 249,
+   "lod0Bytes": 1057450304,
+   "lod1Bytes": 492186756,
+   "totalBytes": 1603820623,
+   "predecessorLod1Bytes": 357561588,
+   "lod1TexturingDeltaBytes": 134625168,
+   "lod0Copy": {
+    "copied": 11682,
+    "matchedC1Inventory": 11682,
+    "matchedReemission": 11682
+   },
+   "validation": {
+    "validatedCellCount": 249,
+    "declaredCellCount": 249,
+    "assets": 11682,
+    "silhouetteRecords": 11682,
+    "lod1FallbackCount": 3,
+    "completenessSources": [
+     "payload-inventory",
+     "wave-census"
+    ]
+   },
+   "determinismReplay": {
+    "compared": 40,
+    "byteIdentical": 40,
+    "fallbackGlbCompared": 4
+   },
+   "c1Immutability": {
+    "sampled": 60,
+    "identical": 60
+   },
+   "waveCensusSha256": "428b6c815ba578fdb1487372455c6b88203957317ff9b9484e8c9a995c8a12f5",
+   "payloadInventorySha256": "0b99e282aff583876d57f05a4b3335425fd3c2872e4c59595793a9155477d26f",
+   "retentionValidationSha256": "53de4926eb2100906dd47bfe4f652ff266a91cac76059b1cc8bae6d08d564075",
+   "verificationSha256": "ceaea16db4af8b2229a7536a95a8c0b03d089422481692527d027883c3014abd"
+  },
+  {
+   "waveId": "w05",
+   "c1ReleaseId": "manhattan-northern-manhattan-cells-20260812-c1",
+   "c2ReleaseId": "manhattan-northern-manhattan-cells-20260812-c2",
+   "owned": 10230,
+   "texturedLod1": 10172,
+   "tombstoned": 58,
+   "texturedFallbacks": 14,
+   "cellManifests": 182,
+   "lod0Bytes": 736766996,
+   "lod1Bytes": 367501668,
+   "totalBytes": 1151223441,
+   "predecessorLod1Bytes": 269721280,
+   "lod1TexturingDeltaBytes": 97780388,
+   "lod0Copy": {
+    "copied": 10172,
+    "matchedC1Inventory": 10172,
+    "matchedReemission": 10172
+   },
+   "validation": {
+    "validatedCellCount": 182,
+    "declaredCellCount": 182,
+    "assets": 10172,
+    "silhouetteRecords": 10172,
+    "lod1FallbackCount": 14,
+    "completenessSources": [
+     "payload-inventory",
+     "wave-census"
+    ]
+   },
+   "determinismReplay": {
+    "compared": 40,
+    "byteIdentical": 40,
+    "fallbackGlbCompared": 2
+   },
+   "c1Immutability": {
+    "sampled": 60,
+    "identical": 60
+   },
+   "waveCensusSha256": "e6b203f3954b67db4f38de32f974b832b057c81c9999cec8bc2e80d3abf21aed",
+   "payloadInventorySha256": "290b06d3d3db06286d778fefbc8c860b272510f8fab258ea53a4f55725fe2509",
+   "retentionValidationSha256": "43c79d794a52f244bb73f16386b47ded6e4ba0c29ad247895e6aa8346cb426b3",
+   "verificationSha256": "a0a0f071145115b7d8827a75ef5400c598b0ed3bad384bcb4ba2f5f25ecd521a"
+  }
+ ],
+ "island": {
+  "owned": 45194,
+  "texturedLod1": 44989,
+  "texturedFallbacks": 424,
+  "tombstoned": 205,
+  "cellManifests": 883,
+  "texturedPlusTombstonedEqualsOwned": true
+ },
+ "tombstoneCategories": {
+  "ring-area-below-floor": 114,
+  "volume-identity-failed": 43,
+  "ring-neck-below-grammar-minimum": 44,
+  "ring-not-simple": 4
+ },
+ "measuredStorage": {
+  "status": "MEASURED, replacing Stage 0's first-order projection.",
+  "lod0BytesCopied": 4679223068,
+  "lod1BytesTextured": 2120167144,
+  "totalBytes": 7005360069,
+  "predecessorLod1Bytes": 1530680344,
+  "lod1TexturingDeltaBytes": 589486800,
+  "againstProjection": "Stage 0 projected the lod_1 texturing delta at 0.4-1.3 GB, consistent with the architect's +0.5-1.1 GB and NOT with +3-4 GB. The measured delta is stated above; it is the figure that now stands."
+ },
+ "appearanceSampling": {
+  "record": "sampling-results.json",
+  "fallbackCell": "PASS",
+  "fallbackPassed": "15/15",
+  "shedCell": "MISS",
+  "shedPassed": "12/24",
+  "statement": "The fallback cell PASSES its strictest pre-registered bar pixel-identically and settles the palette question. The shed cell MISSES on 12 of 24 pairs; a post-hoc intersection diagnostic attributes most of it to the pre-registered measure conflating silhouette area with tone and recovers 19/24, but 5 remain unexplained and the pre-registered result stands as a MISS."
+ },
+ "rights": {
+  "statement": "The six -c2 packages RETAIN bytes LOCALLY ONLY under gitignored payload directories. Nothing is conveyed, redistributed, published or served. No approval envelope is widened.",
+  "servingSurfaceChange": "none",
+  "pinnedReleaseIdChange": "none",
+  "promotedDefaultChange": "none",
+  "predecessorMutation": "none — -c1 immutability spot-checked on every wave and unchanged"
+ },
+ "notClaimedHere": [
+  "Any visual, geographic, architectural, accessibility or performance acceptance.",
+  "That every shed lod_1 matches its lod_0 in tone at mid distance; the sampling did not establish that.",
+  "That the tile is resolvable at mid ring. Stage 0 measured that it is not and that finding is unchanged.",
+  "Distinct LOD thresholds: -c2 keeps maxDistanceMeters null at both levels and eligible:false for the 424; T001 owns -s2."
+ ]
+}
