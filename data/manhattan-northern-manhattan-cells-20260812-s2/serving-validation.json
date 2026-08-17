@@ -1,0 +1,13 @@
+{
+  "schemaVersion": "1.0",
+  "releaseId": "manhattan-northern-manhattan-cells-20260812-s2",
+  "waveId": "w05",
+  "artifact": "serving-offline-validation",
+  "note": "Per-cell replayMultiLodAssembly over the emitted bytes: every GLB parsed under the shared-texture gate, every declared detail tile re-rasterized and byte-compared, the tileset walked against the manifest LOD chain, plus the release graph, each evidence sidecar and the head pin. Passing this is a structural and byte statement; it is not visual, geographic or performance acceptance.",
+  "replayedPackageCount": 182,
+  "declaredPackageCount": 182,
+  "replayedAssetCount": 10172,
+  "replayedBytes": 1123060715,
+  "issues": [],
+  "ok": true
+}
