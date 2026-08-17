@@ -177,12 +177,14 @@ records **45,154 of 45,194** at the same camera
 cold-arrival floor rather than a ceiling — the drawn count follows what the
 session has loaded and how far the dense plan has rebuilt, not the camera alone.
 
-**What carries a generated, textured exterior: 484 of 45,194 parents (1.07%),
-shipped as 498 GLB artifacts.** This is the **textured V3 tier**, promoted on
-top of the massing within the near-camera radius — 14 buildings at a 260 m
-street camera, 66 at 1.2 km, 40 at the overview — and it is **not** the answer
-to "what renders". Conflating the two numbers is the single easiest way to
-overstate this project, and the brief keeps them apart deliberately.
+**What carries a generated, textured exterior: 44,989 of 45,194 parents
+(99.55%); the remaining 205 are tombstoned under a named stop code.** This is
+the **textured V3 tier**, promoted on top of the massing within the near-camera
+radius, and it is **not** the answer to "what renders" — how many are on screen
+at once still depends on the camera and on what the session has streamed.
+Conflating the two numbers is the single easiest way to overstate this project,
+and the brief keeps them apart deliberately: coverage is what the release
+ships, the drawn count is what a session has loaded.
 
 870 of 883 cells ship no *generated* exterior geometry. **Where the citywide
 base tier is active** their buildings draw as sourced base massing rather than
@@ -246,11 +248,14 @@ global form is the single constant `EXTERIOR_SCHEDULER_DEFAULT_ON`.
 **Two goals, two records, one open criterion.** The exteriors goal's
 reconciliation is in
 [Decision 0039](decisions/0039-goal-integration-acceptance.md) and
-`data/goal-integration-acceptance-20260812/reconciliation.json`: 30 of 31
-criteria are closed, and criterion 1 remains NOT-MET because 41,357 of the
-41,841 buildings drawn are sourced base massing rather than generated exteriors,
-with the 899 grammar refusals still awaiting their adjudication. The citywide
-default streaming goal's reconciliation is
+`data/goal-integration-acceptance-20260812/reconciliation.json`: all 31 criteria
+are now closed. Criterion 1 stood NOT-MET because 41,357 of the 41,841 buildings
+drawn were sourced base massing rather than generated exteriors, with the 899
+grammar refusals still awaiting their adjudication; the exterior-completion
+goal's T008 closed it as MET-AS-ADJUDICATED, and the record preserves the prior
+verdict, the original stop report and an adjudication delta naming what makes it
+adjudicated rather than clean. The citywide default streaming goal's
+reconciliation is
 `data/citywide-goal-acceptance-20260815/reconciliation.json`, summarized in
 [Decision 0045](decisions/0045-citywide-default-streaming-flip.md): all 12
 criteria are MET or adjudicated. Its last open one — criterion 7, a

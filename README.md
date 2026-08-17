@@ -170,11 +170,15 @@ is only the second of them.
   (`data/citywide-heap-repeat-20260815/heap-repeat-evidence.json`), because the
   drawn count depends on what the session has loaded and how far the dense plan
   has rebuilt. 41,841 is the cold-arrival floor, not a ceiling.
-- **484 of 45,194 canonical building parents — 1.07%, about one in ninety-three
-  — carry a generated, textured V3 exterior**, shipped as 498 GLB artifacts.
-  **This is the TEXTURED TIER, not "what renders."** It is what the near-camera
-  radius promotes on top of the massing: 14 V3 buildings at a 260 m street
-  camera, 66 at 1.2 km, 40 at the overview.
+- **44,989 of 45,194 canonical building parents — 99.55% — carry a generated,
+  textured V3 exterior**, and the remaining **205 are tombstoned** under a named
+  stop code. **This is the TEXTURED TIER, not "what renders."** It is what the
+  near-camera radius promotes on top of the massing; how many are on screen at
+  once still depends on the camera and on what the session has streamed, which
+  is why the drawn count above and this coverage figure are different numbers
+  and are stated separately. The full-city generation is recorded in
+  `data/mass-generation-20260816/` and the shipped serving cut in the six
+  `data/manhattan-*-s1/payload-inventory.json` records.
 - **870 of the 883 spatial cells ship no *generated* exterior geometry.** In a
   default session their buildings are not missing from the screen — the citywide
   base tier draws them as sourced base massing. **In the rollback arm
@@ -231,11 +235,21 @@ generated — the packages are glyph-free by construction. Zero pixels, geometry
 textures, training inputs or acceptance evidence come from Google Maps, Street
 View, unlicensed web photographs, or platform-restricted imagery.
 
-The grammar **refuses** 899 of the 45,194 owned parents outright rather than
+The grammar **refuses** 205 of the 45,194 owned parents outright rather than
 inventing geometry for them, each under a named stop code
-(`source-height-below-grammar-minimum` 384, `ring-vertex-count-unsupported`
-324, `ring-area-below-floor` 113, `ring-neck-below-grammar-minimum` 39,
-`volume-identity-failed` 35, `ring-not-simple` 4).
+(`ring-area-below-floor` 114, `ring-neck-below-grammar-minimum` 44,
+`volume-identity-failed` 43, `ring-not-simple` 4).
+
+That is down from **899** before the grammar extension: 694 of the original
+refusals were recovered by the extended low-rise, complex-ring and
+small-structure grammars, and the three extension-eligible categories
+(`source-height-below-grammar-minimum` 384, `ring-vertex-count-unsupported` 324,
+and the original `ring-area-below-floor` 113) are gone. The before/after mapping
+for all 899 — including why `ring-area-below-floor` reads 114 *after* extension
+having read 113 before — is committed in
+`data/exterior-completion-acceptance-20260817/refusal-code-mapping.json`.
+A refused building explains itself in the details panel: see
+[Decision 0054](docs/decisions/0054-refusal-transparency.md).
 
 ### Opt-in canaries
 
@@ -336,13 +350,22 @@ The record is
 summarized in [`Decision 0039`](docs/decisions/0039-goal-integration-acceptance.md).
 T029 closed four (1440p capture, mobile path, accessibility, retained memory)
 and T007 closed criterion 22 — the coverage envelope reaching its user-approved
-exterior tier — on a user decision recorded 2026-08-15. **Criterion 1 stays
-NOT-MET on purpose**: of the 41,841 buildings a default session draws, 484 carry
-a generated exterior and the other 41,357 draw as sourced base massing, which is
-real geometry but is not what that criterion asks for. Its stop report records
-that the retention half is now structurally closed and names the two halves that
-are not: producing generated exteriors for the remaining parents, and
-adjudicating the 899 grammar refusals.
+exterior tier — on a user decision recorded 2026-08-15. **Criterion 1 is now
+closed as MET-AS-ADJUDICATED**, by the exterior-completion goal's T008. It had
+stood NOT-MET on purpose: of the 41,841 buildings a default session draws, only
+484 carried a generated exterior and the other 41,357 drew as sourced base
+massing — real geometry, but not what that criterion asks for. Its stop report
+named the two halves that were open: producing generated exteriors for the
+remaining parents, and adjudicating the 899 grammar refusals. Both were done.
+
+It is closed as **adjudicated rather than clean**, and the distinction is
+recorded rather than smoothed: the goal contract asks that only degenerate-data
+refusals remain tombstoned, and 43 of the surviving 205 are
+`volume-identity-failed` — the generator's own volume self-check, not a property
+of the source data. The prior verdict, the stop report and the adjudication
+delta are all preserved in the amended record. See
+`data/exterior-completion-acceptance-20260817/reconciliation.json` and
+[Decision 0055](docs/decisions/0055-exterior-completion-goal-closure.md).
 
 **The citywide default streaming goal: all 12 of its criteria are MET or
 adjudicated.** The record is

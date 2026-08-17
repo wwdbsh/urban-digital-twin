@@ -190,13 +190,17 @@ describe("criterion 12's documentation closure is checked, not taken on trust", 
   });
 
   it("finds the two-tier framing in both documents it says it rewrote", () => {
-    // The specific overstatement this goal is most exposed to is quoting 484 of
-    // 45,194 as "what renders". Both documents must carry the drawn count and
-    // must name the 484 figure as the textured tier.
+    // The overstatement this goal is most exposed to is quoting the TEXTURED
+    // TIER as "what renders". When this test was written the textured tier was
+    // 484 of 45,194; T008 raised it to 44,989 of 45,194 (205 tombstoned) and the
+    // 484 figure is gone from both documents. The hazard is unchanged and so is
+    // this assertion: both documents must still carry the DRAWN count and must
+    // still name the coverage figure as the textured tier, whatever it is,
+    // because the two numbers answer different questions.
     for (const path of ["README.md", "docs/PROJECT_BRIEF.md"]) {
       const text = readFileSync(path, "utf8");
       expect(text, `${path} does not state the drawn count`).toContain("41,841");
-      expect(text.toLowerCase(), `${path} does not frame 484 as the textured tier`).toContain("textured");
+      expect(text.toLowerCase(), `${path} does not frame the coverage figure as the textured tier`).toContain("textured");
       expect(text, `${path} does not state the measured dense residency`).toContain("58,243,420");
     }
   });

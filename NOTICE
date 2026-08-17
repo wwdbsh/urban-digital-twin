@@ -1,0 +1,158 @@
+# NOTICE — source-data attribution
+
+Urban Digital Twin is proprietary; see `LICENSE`. **This file is about the data
+the project does NOT own.**
+
+Every entry below is DERIVED FROM `src/data/source-registry.ts`, which is the
+live authority for source identity, attribution strings, terms URLs and licence
+class. This file quotes that registry; it does not restate it from memory. A
+committed test (`scripts/source-attribution-notice.test.mjs`) asserts that every
+attribution string in the registry appears here verbatim, so the two cannot
+drift apart silently.
+
+If this file and the registry ever disagree, **the registry governs.**
+
+Obligations that travel with the data — attribution, the City of New York
+modified-data disclaimer, source IDs, capture and update dates, checksums, CRS
+and height uncertainty — are preserved through ingestion and presentation, and
+are surfaced in the application's details panel rather than only recorded here.
+
+## Share-alike obligations, stated plainly
+
+Two licence classes below are SHARE-ALIKE and are **not** displaced by the
+proprietary grant in `LICENSE`:
+
+- **ODbL 1.0** — the OpenStreetMap-derived block-835 commercial frontage
+  partition is retained as a declared derivative database, with attribution and
+  database-offer metadata.
+- **CC BY-SA 4.0** — the Wikimedia Commons photographic references used as
+  cited style inputs.
+
+## The 2026-08-11 authorization (NYC OTI Building Footprints, jh45-qr5r)
+
+Recorded against `nyc.building-footprints` in the registry: exterior geometry
+GENERATED from these footprints may be publicly displayed, conveyed as a
+derivative and redistributed, provided NYC OTI attribution, the City
+modified-data disclaimer, source IDs, capture timestamp, checksum, CRS and
+height uncertainty travel with it. That permission covers the generated geometry
+ONLY — never the raw jh45-qr5r source dataset — and public deployment remains
+excluded.
+
+## Attribution by licence class
+
+### NYC Open Data / NYC Office of Technology and Innovation (OTI) datasets
+
+Registry `licenseClass: "nyc-open-data-terms"` — 20 entries.
+
+Terms:
+  - <https://opendata.cityofnewyork.us/overview/>
+  - <https://www.nyc.gov/html/datamine/html/data/terms.html?dataSetJs=raw>
+
+- `nyc.oti-planimetrics-sidewalk-block835` — Source: NYC Office of Technology and Innovation (OTI), NYC Planimetric Database: Sidewalk; accessed through NYC Open Data (vfx9-tbb6).
+- `nyc.oti-planimetrics-roadbed-block835` — Source: NYC Office of Technology and Innovation (OTI), NYC Planimetric Database: Roadbed; accessed through NYC Open Data (xgwd-7vhd).
+- `nyc.oti-planimetrics-pavement-edge-block835` — Source: NYC Office of Technology and Innovation (OTI), NYC Planimetric Database: Pavement Edge; accessed through NYC Open Data (x9uq-u3qs).
+- `nyc.building-footprints` — Source: NYC Office of Technology and Innovation GIS, Building Footprints; accessed through NYC Open Data.
+- `nyc.mappluto` — Source: City of New York Open Data, MapPLUTO/PLUTO.
+- `nyc.dcp-centerline` — Source: City of New York DCP Centerline metadata.
+- `nyc.lidar-2017` — Source: New York City 2017 LiDAR metadata record.
+- `nyc.nta-2020` — Source: City of New York DCP 2020 Neighborhood Tabulation Areas.
+- `nyc.community-districts` — Source: NYC Department of City Planning, New York City Community Districts (nycd).
+- `nyc.cdta-2020` — Source: NYC Department of City Planning, 2020 Community District Tabulation Areas (CDTAs), release 26B.
+- `nyc.borough-boundaries` — Source: NYC Department of City Planning, New York City Borough Boundary (nybb), release 26B.
+- `nyc.census-tracts-2020` — Source: NYC Department of City Planning, 2020 Census Tracts.
+- `nyc.lpc-sites` — Source: NYC Landmarks Preservation Commission.
+- `nyc.parks-properties` — Source: NYC Parks Properties.
+- `nyc.facilities` — Source: City of New York Facilities Database.
+- `nyc.dca-businesses` — Source: NYC Legally Operating Businesses by Industry.
+- `nyc.dohmh-restaurant-inspections` — Source: NYC DOHMH Restaurant Inspection Results.
+- `nyc.dot-traffic` — Source: NYC Department of Transportation traffic data feeds.
+- `nyc.addresspoint` — Source: NYC Department of City Planning, Address Point, dataset uf93-f8nk; accessed through NYC Open Data.
+- `nyc.dcwp-legally-operating-businesses` — Source: NYC Department of Consumer and Worker Protection, Issued Licenses / Legally Operating Businesses base dataset w7w3-xahh; accessed through NYC Open Data.
+
+### OpenStreetMap and Overture data — Open Database License (ODbL) 1.0, SHARE-ALIKE
+
+Registry `licenseClass: "odbl-1.0"` — 4 entries.
+
+Terms:
+  - <https://overturemaps.org/about/faq/>
+  - <https://www.openstreetmap.org/copyright>
+  - <https://www.openstreetmap.org/copyright/sp>
+
+- `overture.transportation` — Source: Overture Maps transportation; inspect release-level attribution.
+- `osm.nyc-extract` — © OpenStreetMap contributors.
+- `osm.nyc-routing` — © OpenStreetMap contributors, ODbL 1.0; see https://www.openstreetmap.org/copyright.
+- `osm.block-835-overpass` — Map data © OpenStreetMap contributors; ODbL 1.0. OSM-derived content is limited to the declared block-835 derivative-database partition.
+
+### Wikimedia Commons photographic references — CC BY-SA 4.0, SHARE-ALIKE
+
+Registry `licenseClass: "cc-by-sa-4.0"` — 3 entries.
+
+Terms: <https://creativecommons.org/licenses/by-sa/4.0/>
+
+- `commons.empire-state-photo-cc-by-sa-4` — Photo reference: NegweS, Wikimedia Commons, File:Empire State Building.png; CC BY-SA 4.0.
+- `commons.theodore-roosevelt-birthplace-photo-cc-by-sa-4` — Photo reference: Beyond My Ken, Wikimedia Commons, File:Theodore Roosevelt Birthplace.jpg; CC BY-SA 4.0.
+- `commons.herald-towers-photo-cc-by-sa-4` — Photo reference: Deansfa, Wikimedia Commons, Herald Towers, 50 West 34th Street, Manhattan, New York; CC BY-SA 4.0; file revision/checksum retained in the Stage 3 evidence record; no source pixels shipped.
+
+### City of New York publication facts
+
+Registry `licenseClass: "nyc-publication-facts"` — 2 entries.
+
+Terms: <https://www.nyc.gov/home/terms-of-use.page>
+
+- `nyc.lpc-flatiron-designation` — Source: NYC Landmarks Preservation Commission, Flatiron Building designation report (LP-0219).
+- `nyc.dcp-empire-state-design` — Source: NYC Department of City Planning, 15 Penn Plaza FEIS (Empire State Building visual/architectural description).
+
+### Public-domain sources
+
+Registry `licenseClass: "public-domain"` — 2 entries.
+
+Terms:
+  - <https://creativecommons.org/publicdomain/zero/1.0/>
+  - <https://www.nps.gov/aboutus/disclaimer.htm>
+
+- `nps.theodore-roosevelt-birthplace-hsr` — Source: U.S. National Park Service, Theodore Roosevelt Birthplace National Historic Site Historic Structure Report; U.S. federal work attribution retained.
+- `commons.flatiron-photo-pd` — Photo reference: Gryffindor, Wikimedia Commons, File:Flatiron building.jpg; public-domain dedication.
+
+### Third-party services under their own provider terms
+
+Registry `licenseClass: "provider-terms"` — 3 entries.
+
+Terms:
+  - <https://cesium.com/platform/>
+  - <https://developers.google.com/maps/documentation/places/web-service/policies?hl=en>
+  - <https://www.511ny.org/developers/daa>
+
+- `511ny.traffic` — Source: 511NY developer traffic service.
+- `google.places` — Google Maps Platform attribution is required where applicable.
+- `cesium.ion-hosting` — Cesium ion attribution and source-specific asset attribution as required.
+
+### Sources whose licence class is recorded as UNKNOWN
+
+Registry `licenseClass: "unknown"` — 8 entries.
+
+Terms:
+  - <https://docs.overturemaps.org/attribution/>
+  - <https://www.mta.info/open-data>
+
+- `mta.gtfs-static` — Source: Metropolitan Transportation Authority General Transit Feed Specification (GTFS) Static Data.
+- `mta.gtfs-realtime` — Source: Metropolitan Transportation Authority NYC Subway GTFS-Realtime documentation.
+- `mta.subway-station-complexes` — Source: Metropolitan Transportation Authority, MTA Subway Stations and Complexes.
+- `mta.subway-entrances-2024` — Source: Metropolitan Transportation Authority, MTA Subway Entrances and Exits 2024.
+- `mta.station-amenities-2026` — Source: Metropolitan Transportation Authority, MTA Subway Station Amenities Beginning May 2026.
+- `overture.addresses` — Source: Overture Maps Foundation Addresses theme; retain record-level source attribution and license metadata.
+- `overture.places` — Source: Overture Maps Foundation Places; retain each record's source license and attribution fields.
+- `overture.transportation-routing` — Source: Overture Maps Foundation Transportation theme; retain upstream source attribution.
+
+### Local synthetic fixtures (no external source)
+
+Registry `licenseClass: "fixture-only"` — 3 entries.
+
+Terms:
+  - <https://example.invalid/udt/local-fixture-terms>
+  - <https://example.invalid/udt/local-route-graph-terms>
+  - <https://example.invalid/udt/local-transit-terms>
+
+- `fixture.local.manhattan-slice` — Synthetic local fixture; not real Manhattan coverage.
+- `fixture.local.transit` — Synthetic local transit fixture; not real Manhattan coverage.
+- `fixture.local.route-graph` — Synthetic local route graph; not real navigation coverage.
+

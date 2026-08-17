@@ -1,0 +1,96 @@
+Copyright © 2026 Sangheon Lee. All rights reserved.
+
+PROPRIETARY LICENCE — Urban Digital Twin
+
+================================================================================
+1. WHAT THIS LICENCE COVERS
+================================================================================
+
+This licence covers, and covers only:
+
+  (a) the PROJECT CODE in this repository — the source, configuration, scripts,
+      tests and documentation authored for this project; and
+
+  (b) the GENERATED ARTIFACTS produced by that code — the procedurally generated
+      exterior geometry (glTF/GLB), the derived textures, the assembled release
+      packages, tiles, indexes and the evidence records committed under `data/`.
+
+All rights in (a) and (b) are reserved. No permission is granted to use, copy,
+modify, merge, publish, distribute, sublicense or sell them, in whole or in
+part, without the prior written permission of the copyright holder.
+
+================================================================================
+2. WHAT THIS LICENCE DOES *NOT* COVER — THIRD-PARTY SOURCE DATA
+================================================================================
+
+THIS LICENCE MAKES NO CLAIM OVER THIRD-PARTY SOURCE DATA.
+
+The project ingests public and third-party datasets. Those datasets remain the
+property of, and remain governed by the terms of, their respective sources. The
+proprietary grant in section 1 does not extend to them, and nothing in this file
+should be read as asserting ownership of, or as re-licensing, any of them.
+
+This matters in both directions: some of the source data carries SHARE-ALIKE
+obligations that a proprietary claim would contradict outright.
+
+Carved out by name:
+
+  (a) NYC OPEN DATA / NYC OFFICE OF TECHNOLOGY AND INNOVATION (OTI) DATASETS.
+      Used under the NYC Open Data terms of use, and subject to the City's
+      modified-data disclaimer. Includes the OTI Building Footprints dataset
+      (jh45-qr5r) from which the exterior geometry is derived.
+      Terms: <https://opendata.cityofnewyork.us/overview/> and
+             <https://www.nyc.gov/html/datamine/html/data/terms.html?dataSetJs=raw>
+
+  (b) THE ODbL 1.0 SHARE-ALIKE PARTITION — OpenStreetMap-derived data,
+      including the block-835 commercial frontage metadata retained as a
+      declared derivative-database partition, and Overture transportation data.
+      Licensed under the Open Database License (ODbL) 1.0. Map data
+      © OpenStreetMap contributors. ODbL 1.0 is a SHARE-ALIKE licence: the
+      obligations attaching to that partition are not displaced by this file.
+      Terms: <https://www.openstreetmap.org/copyright>
+
+  (c) CC BY-SA 4.0 PHOTOGRAPHIC REFERENCES from Wikimedia Commons, used as
+      cited style references. CC BY-SA 4.0 is also a SHARE-ALIKE licence.
+      Terms: <https://creativecommons.org/licenses/by-sa/4.0/>
+
+  (d) THIRD-PARTY SERVICES under their own provider terms (511NY, Google Places,
+      Cesium Ion) and MTA open-data feeds.
+
+  (e) SOURCES WHOSE LICENCE CLASS IS RECORDED AS `unknown` in the registry.
+      They are used under the retention and local-only constraints recorded
+      against them and carry no claim here.
+
+The authoritative, per-dataset list — every attribution string, terms URL and
+licence class — is `src/data/source-registry.ts`, reproduced in `NOTICE`.
+Where this file and that registry disagree, THE REGISTRY GOVERNS, and a
+committed test asserts that `NOTICE` still agrees with it.
+
+================================================================================
+3. SCOPE OF USE ALREADY RECORDED
+================================================================================
+
+Redistribution and public-deployment posture is NOT granted by this file; it is
+recorded per dataset in the source registry and in the approval evidence
+committed alongside it. In particular, the 2026-08-11 authorization recorded
+against `nyc.building-footprints` permits the GENERATED exterior geometry to be
+publicly displayed, conveyed as a derivative and redistributed — with NYC OTI
+attribution, the City modified-data disclaimer, source IDs, capture timestamp,
+checksum, CRS and height uncertainty travelling with it — while the RAW
+jh45-qr5r source dataset remains non-redistributable and public deployment
+remains excluded. See `NOTICE` and `src/data/source-registry.ts`.
+
+================================================================================
+4. NO WARRANTY
+================================================================================
+
+THE SOFTWARE AND GENERATED ARTIFACTS ARE PROVIDED "AS IS", WITHOUT WARRANTY OF
+ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
+EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
+
+The generated exterior geometry is DESIGNED, not observed. It is not a survey,
+not a measurement of any real building's appearance, and must not be relied on
+as one.
