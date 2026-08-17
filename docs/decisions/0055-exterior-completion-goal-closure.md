@@ -67,11 +67,26 @@ contract's wording was met. The prior verdict, the original stop report
 (`priorStopReport`) and an `adjudicationDelta` are all preserved rather than
 deleted.
 
+Cell-level coverage is likewise complete: **0 of 883 cells** ship no generated
+geometry, so the not-shipped coverage notice no longer fires on the shipped
+default (D-4 of ADR 0054). The 205 refusals sit within cells that ship, which is
+why they needed a per-building surface rather than a per-cell notice.
+
 The largest surviving cohort, `ring-area-below-floor` at 114, is described as
 **the floor at this grammar's constants** rather than "the honest floor": the
 sub-20 m² area floor is a grammar constant that extension C measured and
 deliberately left in place, so a different constant yields a different count.
 Calling it a property of the data would be wrong.
+
+### D-2b — Two of three extension-eligible categories cleared, not three
+
+Stated precisely because the first draft of the README overstated it: of the
+three extension-eligible refusal categories, **two cleared outright** —
+`source-height-below-grammar-minimum` 384 → 0 and `ring-vertex-count-unsupported`
+324 → 0, which together are the whole of the 694 recoveries (375 + 319).
+`ring-area-below-floor` cleared **none** of its 113: the small-structure
+extension measured the sub-20 m² footprints and deliberately left them refused.
+It reads 114 today only because one building migrated into it.
 
 ### D-3 — The 899 → 205 mapping is derived, never re-measured
 

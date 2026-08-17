@@ -868,7 +868,7 @@
       {
         "criterion": 1,
         "path": "data/exterior-completion-acceptance-20260817/reconciliation.json",
-        "sha256": "2326119851c51c41629f6bf2a27f48e0fe98ccd26f6bc9319db6e5931910033d"
+        "sha256": "345b032ef84a1b32bf90847b2fc8e01cabc0aad1dc9e11f5adcf0c4c1416d19c"
       }
     ],
     "layoutDefectResolution": "RESOLVED during this task. The mobile lower-LOD disclosure was structurally unreadable at 390 CSS px - a stylesheet clamp, not a wiring gap - and the first mobile re-capture under the new legibility instrument failed legs 1 and 4 and said why. It is fixed in src/styles.css and re-captured: 7 wrapped lines at 11px, inside the viewport, unoccluded at all nine hit-tested points. The remaining on-screen occlusion is the truthful 'Exterior streaming fallback' notice, which is named per leg in the journey record rather than cropped out of the stills.",

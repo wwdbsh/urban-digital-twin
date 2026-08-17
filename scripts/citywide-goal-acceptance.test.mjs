@@ -213,6 +213,13 @@ describe("criterion 12's documentation closure is checked, not taken on trust", 
       expect(text, `${path} does not state the drawn count`).toContain("41,841");
       expect(text.toLowerCase(), `${path} does not frame the coverage figure as the textured tier`).toContain("textured");
       expect(text, `${path} does not state the measured dense residency`).toContain("58,243,420");
+      // The COVERAGE figure itself, pinned beside the word it is framed by.
+      // Without this the pair could drift apart silently: "textured" would
+      // still appear, the drawn count would still be right, and the coverage
+      // number next to them could be any stale value at all — which is exactly
+      // how 484 (and a 870-of-883 cell claim) survived past the completion.
+      expect(text, `${path} does not state the shipped coverage figure`).toContain("44,989");
+      expect(text, `${path} does not state the tombstoned remainder`).toContain("205");
     }
   });
 });

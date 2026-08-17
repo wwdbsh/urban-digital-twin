@@ -97,7 +97,8 @@
     "question": "The extended grammar recovers buildings and never refuses one the shipped grammar accepted, so every after-count should be less than or equal to its before-count. ring-area-below-floor rises by one. That looks like the extension making things worse, and it is not.",
     "explanation": "The classifier is PRIORITY-ORDERED: a building is reported under the FIRST gate it trips, so raising an earlier gate can expose a later one that was always going to fire. Exactly one building carried shippedStopCode ring-vertex-count-unsupported because its ring exceeded the shipped 64-vertex admission cap. Extension A raised that cap to 384, the building passed the vertex gate, and the NEXT gate it met — the footprint-area floor — refused it. It moved between codes; it did not become newly refusable.",
     "arithmetic": "114 = 113 unchanged + 1 migrated from ring-vertex-count-unsupported.",
-    "corroboration": "extensionC in the source census records belowAreaFloorCount 114 with shippedStopCodeOfThoseRows {ring-area-below-floor: 113, ring-vertex-count-unsupported: 1}, which is the same fact counted from the other direction."
+    "corroboration": "extensionC in the source census records belowAreaFloorCount 114 with shippedStopCodeOfThoseRows {ring-area-below-floor: 113, ring-vertex-count-unsupported: 1}, which is the same fact counted from the other direction.",
+    "buildingId": "doitt:527428"
   },
   "migrations": [
     {
@@ -116,7 +117,15 @@
       "from": "ring-vertex-count-unsupported",
       "to": "ring-area-below-floor",
       "count": 1,
-      "reading": "The single building behind the 113 -> 114 inversion."
+      "reading": "The single building behind the 113 -> 114 inversion, named so the claim is checkable rather than merely asserted: doitt:527428. Its ring carries 82 vertices, above the shipped 64-vertex cap and below the extended 384 cap, so the shipped grammar stopped at the vertex gate and never reached the area gate. Its footprint is 19.0295 m2, below the 20 m2 area floor, so once extension A admitted the ring the area gate refused it. It was always going to be refused; the extension only changed WHICH gate reported it.",
+      "buildingId": "doitt:527428",
+      "gates": {
+        "vertexCount": 82,
+        "areaSquareMeters": 19.0295,
+        "areaBelowFloor": true,
+        "vertexCountAboveShippedCap": true,
+        "vertexCountAboveExtendedCap": false
+      }
     },
     {
       "from": "source-height-below-grammar-minimum",

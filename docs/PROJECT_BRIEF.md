@@ -186,13 +186,22 @@ Conflating the two numbers is the single easiest way to overstate this project,
 and the brief keeps them apart deliberately: coverage is what the release
 ships, the drawn count is what a session has loaded.
 
-870 of 883 cells ship no *generated* exterior geometry. **Where the citywide
-base tier is active** their buildings draw as sourced base massing rather than
-being absent, and since T007 the runtime's notice says exactly that, with the
-condition attached: the rollback arm (`?exteriorScheduler=off`) withdraws the
-base tier, so an unconditional promise would be false there. The pre-flip
-wording, which said no substitute was selected, was true when nothing was drawn
-for those cells and became false by omission once they drew. **The binding constraint is no longer the 512-entry
+**0 of 883 cells ship no *generated* exterior geometry** — every cell in all six
+promoted serving waves ships. This paragraph used to say *870 of 883*, which
+described the pre-completion release; the full-city generation closed it, and
+the 205 surviving refusals sit **within** cells that ship rather than emptying
+any cell. The not-shipped notice consequently **no longer fires on the shipped
+default**: it counts entirely-unavailable cells and that count is structurally
+zero ([Decision 0054](decisions/0054-refusal-transparency.md) D-4). The path is
+retained, not deleted, in case a future wave ships an empty cell.
+
+When it did fire, the condition mattered. **Where the citywide base tier is
+active** those buildings drew as sourced base massing rather than being absent,
+and since T007 the notice said exactly that with the condition attached: the
+rollback arm (`?exteriorScheduler=off`) withdraws the base tier, so an
+unconditional promise would be false there. The pre-flip wording, which said no
+substitute was selected, was true when nothing was drawn for those cells and
+became false by omission once they drew. **The binding constraint is no longer the 512-entry
 all-resident exterior cache contract**: the visibility scheduler of Decision
 0041 holds at most 128 resident cells against 883 visible, certified in Decision
 0042, and it is that **cell cap** that binds. Two separate caches with two
@@ -211,8 +220,10 @@ waves add procedural facade textures rasterized from named constants and
 re-verified byte-for-byte. No shipped component asserts a real building's
 facade, material, entrance, signage or occupancy. Every component carries a
 machine-readable truth tier and an uncertainty statement; generated components
-carry no real-world accuracy score. The grammar refuses 899 parents outright
-under named stop codes rather than inventing geometry for them.
+carry no real-world accuracy score. The grammar **refuses 205 parents outright**
+under named stop codes rather than inventing geometry for them. (Under the
+shipped grammar, before the extension, that figure was 899; 694 of those were
+recovered by the extended grammars and the rest remain refused.)
 
 **Evidence posture.** No rights-cleared building imagery was ever admitted as
 geometry, texture, training or validation input. Zero components are

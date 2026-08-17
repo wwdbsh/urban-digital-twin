@@ -50,7 +50,7 @@
           "artifacts": [
             {
               "path": "data/exterior-completion-acceptance-20260817/refusal-code-mapping.json",
-              "sha256": "865bd658fc6fbaa479212ecd0eb075cb06e81b3c5ecdd6f044bd50df29e1fb53"
+              "sha256": "498d076eb537e39d1945cd4a2104aa53fbf5747f53d421abba4eb760d729c444"
             }
           ]
         },
@@ -59,7 +59,7 @@
           "artifacts": [
             {
               "path": "data/exterior-completion-acceptance-20260817/refusal-code-mapping.json",
-              "sha256": "865bd658fc6fbaa479212ecd0eb075cb06e81b3c5ecdd6f044bd50df29e1fb53"
+              "sha256": "498d076eb537e39d1945cd4a2104aa53fbf5747f53d421abba4eb760d729c444"
             }
           ]
         },
@@ -68,7 +68,7 @@
           "artifacts": [
             {
               "path": "data/exterior-completion-acceptance-20260817/refusal-code-mapping.json",
-              "sha256": "865bd658fc6fbaa479212ecd0eb075cb06e81b3c5ecdd6f044bd50df29e1fb53"
+              "sha256": "498d076eb537e39d1945cd4a2104aa53fbf5747f53d421abba4eb760d729c444"
             }
           ]
         }
@@ -93,7 +93,7 @@
           "artifacts": [
             {
               "path": "data/exterior-completion-acceptance-20260817/refusal-code-mapping.json",
-              "sha256": "865bd658fc6fbaa479212ecd0eb075cb06e81b3c5ecdd6f044bd50df29e1fb53"
+              "sha256": "498d076eb537e39d1945cd4a2104aa53fbf5747f53d421abba4eb760d729c444"
             }
           ]
         },
@@ -114,7 +114,7 @@
       "verdict": "MET-AS-ADJUDICATED",
       "evidence": [
         {
-          "statement": "There is NO ATLAS, and that is the adjudication. ADR 0047 declines an atlas outright because the maximum observed |UV| is 1210.1 and an atlas cannot repeat-wrap; the criterion's '(or measured equivalent)' clause is satisfied by SHARED PER-CLASS URI DELIVERY — four class tiles per release, 24 unique across six promoted waves."
+          "statement": "There is NO ATLAS, and that is the adjudication. ADR 0047 (docs/decisions/0047-shared-class-texture-images.md, a decision record rather than a checksummed data artifact) declines an atlas outright because the maximum observed |UV| it records is 1210.1 and an atlas cannot repeat-wrap; the criterion's '(or measured equivalent)' clause is satisfied by SHARED PER-CLASS URI DELIVERY — four class tiles per release, 24 unique across six promoted waves."
         },
         {
           "statement": "GPU texture memory is MEASURED, not arithmetic-only: gates G1-G3 in data/exterior-acceptance-20260817/campaign-record.json pass, with G1 an exact-zero instrument validation before any figure is quoted, and G2 measured against the derived 2,097,144-byte budget (24 tiles x 87,381 B, mip chain included).",
@@ -353,7 +353,7 @@
           ]
         },
         {
-          "statement": "The fallback notice reflects the coverage reality WITHOUT FALSE CLAIMS IN ANY STREAMING ARM, and the reason is measured rather than argued: ZERO of the 883 cells across all six serving waves is fully tombstoned, so the not-shipped coverage sentence's numerator is structurally 0 and the sentence is never produced on the shipped default. No coverage string is currently false because none is currently emitted. A committed test asserts declaredNotShippedCellCount() === 0 per wave."
+          "statement": "The fallback notice reflects the coverage reality WITHOUT FALSE CLAIMS IN ANY STREAMING ARM, and the reason is measured rather than argued: ZERO of the 883 cells across all six serving waves is fully tombstoned, so the not-shipped coverage sentence's numerator is structurally 0 and the sentence is never produced on the shipped default. No coverage string is currently false because none is currently emitted. ENFORCEMENT, stated because this figure has no committed artifact to checksum: the release graphs it is counted from live in the gitignored payload trees, so the number is pinned by a committed PAYLOAD-GATED TEST (scripts/exterior-refusal-census.test.mjs) asserting declaredNotShippedCellCount() === 0 for every wave wherever the payloads are materialized, rather than by an artifact citation this record could hash."
         },
         {
           "statement": "The arm-dependence is handled rather than ignored: every refusal reason ends with a clause claiming base massing 'is what remains on screen', which is FALSE under ?exteriorScheduler=off. The app asserts the sentence truncated at that clause — a strict prefix of the release's wording — and quotes the full sentence beside it, attributed. J7 measured the asserted statement to be byte-identical across both arms."
@@ -408,7 +408,7 @@
           "statement": "The prior goal's reconciliation record has its criterion #1 amended through the established amendment discipline — verdict MET-AS-ADJUDICATED, priorVerdict NOT-MET, the original stop report preserved as priorStopReport, a closedBy reference and an adjudicationDelta — with its drift tests green. THAT RECORD IS CITED BY PATH AND TASK IN THIS RECORD'S `amendments` BLOCK AND DELIBERATELY NOT BY CHECKSUM: it embeds THIS record's hash in its closures.evidenceRecords, so a hash citation in the other direction would be circular and would break on every amendment."
         },
         {
-          "statement": "This goal ships its own criterion-by-criterion acceptance record with the T024 discipline: this file, with 12 verdicts drawn from a closed three-value vocabulary, every prose data citation carrying a checksum, and a committed drift test."
+          "statement": "This goal ships its own criterion-by-criterion acceptance record with the T024 discipline: this file, with 12 verdicts drawn from a closed three-value vocabulary, EVERY `data/` PATH NAMED IN A VERDICT'S PROSE CARRYING A DECLARED CHECKSUM, and a committed drift test that fails if one does not. That rule is stated precisely because it is bounded: it binds committed `data/` artifacts, and it does NOT bind figures whose source is a docs/ decision record or a gitignored payload tree. Where such a figure appears, the evidence names how it is enforced instead."
         }
       ]
     }
@@ -434,7 +434,7 @@
       "note": "The amended record is cited BY PATH AND TASK ONLY, never by hash: it embeds this record's hash in its closures.evidenceRecords, so citing it by hash here would be circular."
     }
   ],
-  "claim": "The exterior-completion goal's 12 acceptance criteria, each with direct committed evidence or an honest stop report. Three are MET, eight are MET-AS-ADJUDICATED with the delta named in the evidence, and one — criterion 4, the per-wave rendered 2% LOD gate — is NOT-MET with a stop report and two named reachability routes.",
+  "claim": "The exterior-completion goal's 12 acceptance criteria, each with direct committed evidence or an honest stop report. 4 are MET, 7 are MET-AS-ADJUDICATED with the delta named in the evidence, and 1 — criterion 4, the per-wave rendered 2% LOD gate — is NOT-MET with a stop report and two named reachability routes.",
   "notClaimedHere": [
     "Any visual, geographic, architectural, accessibility or performance acceptance beyond the specific measurements cited.",
     "That MET-AS-ADJUDICATED means the contract's wording was satisfied. In every case it means the opposite: the wording was not, and the delta is stated.",

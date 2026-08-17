@@ -69,6 +69,23 @@ describe("the verdict table obeys its own rules", () => {
     expect(counted.MET + counted["MET-AS-ADJUDICATED"] + counted["NOT-MET"]).toBe(12);
   });
 
+  it("keeps the summary CLAIM's numbers in agreement with the verdict table", () => {
+    // THE EXACT DRIFT THIS CATCHES, and it is not hypothetical: the first
+    // committed draft of this record carried a claim sentence reading "Three are
+    // MET, eight are MET-AS-ADJUDICATED" — residue of a plan whose summary line
+    // disagreed with its own itemized grade table. The verdicts were right, the
+    // counts were right, and the one sentence a reader actually quotes was
+    // wrong. Nothing in the record checked it.
+    //
+    // The numbers are now spelled out of verdictCounts by the generator; this
+    // asserts the sentence still agrees with the table it summarizes.
+    const spoken = record.claim.match(/(\d+) are MET, (\d+) are MET-AS-ADJUDICATED\b[^.]*?, and (\d+)\b/u);
+    expect(spoken, "the claim sentence no longer states its counts in a checkable form").not.toBeNull();
+    expect(Number(spoken[1])).toBe(record.verdictCounts.MET);
+    expect(Number(spoken[2])).toBe(record.verdictCounts["MET-AS-ADJUDICATED"]);
+    expect(Number(spoken[3])).toBe(record.verdictCounts["NOT-MET"]);
+  });
+
   it("gives every NOT-MET an honest stop report and no one else one", () => {
     for (const entry of record.verdicts) {
       if (entry.verdict === "NOT-MET") {

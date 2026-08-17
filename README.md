@@ -179,23 +179,37 @@ is only the second of them.
   and are stated separately. The full-city generation is recorded in
   `data/mass-generation-20260816/` and the shipped serving cut in the six
   `data/manhattan-*-s1/payload-inventory.json` records.
-- **870 of the 883 spatial cells ship no *generated* exterior geometry.** In a
-  default session their buildings are not missing from the screen — the citywide
-  base tier draws them as sourced base massing. **In the rollback arm
-  (`?exteriorScheduler=off`) it does not**, and the notice says so conditionally
-  rather than promising a screen that arm does not show. **The wording changed
-  on 2026-08-15**; it now reads, verbatim:
+- **0 of the 883 spatial cells ship no *generated* exterior geometry.** Every
+  cell in every one of the six promoted serving waves now ships geometry. This
+  bullet used to read *870 of 883* and that number is dead: it described the
+  pre-completion release, and the full-city generation closed it. The 205
+  refusals that remain are scattered **within** cells that ship, which is why
+  they needed a per-building surface (see
+  [Decision 0054](docs/decisions/0054-refusal-transparency.md)) rather than a
+  per-cell notice.
+
+  **The not-shipped notice below therefore no longer fires on the shipped
+  default.** It counts cells whose buildings are *entirely* unavailable, and
+  that count is now structurally zero, so the sentence is never emitted — see
+  [Decision 0054](docs/decisions/0054-refusal-transparency.md) D-4. The code
+  path is retained, not deleted, because a future wave could ship an empty cell.
+  Verbatim, for the record:
 
   > *N of M exterior cells declared by this release ship no generated exterior
   > geometry; where the citywide base tier is active, their buildings draw as
   > sourced base massing (footprint extruded to sourced height), which is not a
   > generated exterior.*
 
-  The earlier wording ("…ship no exterior geometry; no substitute was selected
-  for them") was true before the flip, when nothing was drawn for those cells;
-  it became false by omission once they drew. **Committed evidence captures and
-  descriptive prose that quote the old sentence are left byte-identical** —
-  rewriting a capture to match today's wording would falsify it. **Executable
+  When that sentence did fire, its condition mattered: in a default session the
+  citywide base tier drew those buildings as sourced base massing, and **in the
+  rollback arm (`?exteriorScheduler=off`) it did not**, so the notice was
+  conditional rather than promising a screen that arm does not show. **The
+  wording changed on 2026-08-15**; the earlier version ("…ship no exterior
+  geometry; no substitute was selected for them") was true before the flip, when
+  nothing was drawn for those cells, and became false by omission once they
+  drew. **Committed evidence captures and descriptive prose that quote the old
+  sentence are left byte-identical** — rewriting a capture to match today's
+  wording would falsify it. **Executable
   assertions were not**: seven journey CLIs gated a live run on the removed
   substring, and all seven predicates were updated to the sentence's
   arm-independent first clause (`no generated exterior geometry`).
@@ -241,12 +255,18 @@ inventing geometry for them, each under a named stop code
 `volume-identity-failed` 43, `ring-not-simple` 4).
 
 That is down from **899** before the grammar extension: 694 of the original
-refusals were recovered by the extended low-rise, complex-ring and
-small-structure grammars, and the three extension-eligible categories
-(`source-height-below-grammar-minimum` 384, `ring-vertex-count-unsupported` 324,
-and the original `ring-area-below-floor` 113) are gone. The before/after mapping
-for all 899 — including why `ring-area-below-floor` reads 114 *after* extension
-having read 113 before — is committed in
+refusals were recovered by the extended low-rise and complex-ring grammars —
+375 from `source-height-below-grammar-minimum` and 319 from
+`ring-vertex-count-unsupported`, which is the whole of the 694.
+
+**Two of the three extension-eligible categories are cleared outright**
+(`source-height-below-grammar-minimum` 384 → 0, `ring-vertex-count-unsupported`
+324 → 0). **The third is not**: `ring-area-below-floor` had 113, and **none of
+them were recovered** — the small-structure extension measured the sub-20 m²
+footprints and deliberately left them refused. It reads **114** today, one more
+than before, because a single building (`doitt:527428`) migrated into it when
+the raised vertex cap let it past the gate that had been reporting it. The
+before/after mapping for all 899 is committed in
 `data/exterior-completion-acceptance-20260817/refusal-code-mapping.json`.
 A refused building explains itself in the details panel: see
 [Decision 0054](docs/decisions/0054-refusal-transparency.md).

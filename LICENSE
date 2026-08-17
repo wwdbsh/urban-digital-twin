@@ -54,12 +54,26 @@ Carved out by name:
       cited style references. CC BY-SA 4.0 is also a SHARE-ALIKE licence.
       Terms: <https://creativecommons.org/licenses/by-sa/4.0/>
 
-  (d) THIRD-PARTY SERVICES under their own provider terms (511NY, Google Places,
+  (d) CITY OF NEW YORK PUBLICATION FACTS — registry licence class
+      `nyc-publication-facts`: the LPC Flatiron designation report and the DCP
+      Empire State design record. These are agency PUBLICATIONS rather than
+      Open Data portal datasets, so they fall outside the literal wording of
+      the NYC Open Data terms in (a) and are named separately.
+      Terms: <https://www.nyc.gov/home/terms-of-use.page>
+
+  (e) THIRD-PARTY SERVICES under their own provider terms (511NY, Google Places,
       Cesium Ion) and MTA open-data feeds.
 
-  (e) SOURCES WHOSE LICENCE CLASS IS RECORDED AS `unknown` in the registry.
+  (f) SOURCES WHOSE LICENCE CLASS IS RECORDED AS `unknown` in the registry.
       They are used under the retention and local-only constraints recorded
       against them and carry no claim here.
+
+The registry uses eight licence classes and the carve-outs above account for
+six of them. The remaining two need no carve-out and are listed so the mapping
+is exhaustive on its face: `public-domain` sources impose no obligation and are
+not claimed here either, and `fixture-only` entries are locally synthesized
+test data with no external source at all. A committed test fails if the
+registry ever grows a licence class this file has not classified.
 
 The authoritative, per-dataset list — every attribution string, terms URL and
 licence class — is `src/data/source-registry.ts`, reproduced in `NOTICE`.
