@@ -499,6 +499,36 @@ export function encodeGrayscalePng(width: number, height: number, luminance: Uin
   return concat([PNG_SIGNATURE, pngChunk("IHDR", header), pngChunk("IDAT", storedDeflate(raw)), pngChunk("IEND", new Uint8Array())]);
 }
 
+/**
+ * Truecolour (8-bit RGB, colour type 2) sibling of `encodeGrayscalePng`.
+ *
+ * WHY A SECOND ENCODER EXISTS, given narrowing 1 above says tiles are grayscale
+ * and colour lives in `baseColorFactor`: this encoder does NOT write a tile. It
+ * writes the far-tier BAKE product, where `factor x tile` has already been
+ * composed into one image because the far tier collapses many materials into a
+ * single atlas and therefore has no per-face factor left to carry the hue. The
+ * grayscale catalogue is untouched and its closed four-class gate still holds;
+ * a baked atlas is a DERIVATIVE artifact under its own admission rule, never a
+ * catalogue member. See ADR 0058.
+ *
+ * Identical discipline to the grayscale encoder — filter 0 on every row, stored
+ * DEFLATE, no ancillary chunks — so the bytes stay a total function of the
+ * pixels and survive the same cross-process byte-equality gate.
+ */
+export function encodeRgbPng(width: number, height: number, rgb: Uint8Array): Uint8Array {
+  if (!Number.isSafeInteger(width) || !Number.isSafeInteger(height) || width <= 0 || height <= 0) throw new Error("Procedural texture PNG requires positive integer dimensions.");
+  if (rgb.byteLength !== width * height * 3) throw new Error("Procedural texture RGB PNG pixel count does not match its dimensions.");
+  const stride = width * 3;
+  const raw = new Uint8Array(height * (stride + 1));
+  for (let row = 0; row < height; row += 1) {
+    raw[row * (stride + 1)] = 0; // filter type 0: none.
+    raw.set(rgb.subarray(row * stride, (row + 1) * stride), row * (stride + 1) + 1);
+  }
+  // IHDR tail: bit depth 8, colour type 2 (truecolour), deflate, filter 0, no interlace.
+  const header = concat([beU32(width), beU32(height), Uint8Array.from([8, 2, 0, 0, 0])]);
+  return concat([PNG_SIGNATURE, pngChunk("IHDR", header), pngChunk("IDAT", storedDeflate(raw)), pngChunk("IEND", new Uint8Array())]);
+}
+
 // ---------------------------------------------------------------------------
 // Catalogue
 // ---------------------------------------------------------------------------
