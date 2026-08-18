@@ -1,0 +1,105 @@
+{
+ "schemaVersion": "1.0",
+ "recordId": "far-tier-hlod-instrument-20260818:divergence-attribution",
+ "task": "T012",
+ "artifact": "far-tier-instrument-divergence-attribution",
+ "capturedAt": null,
+ "capturedAtStatement": "NULL BY CONSTRUCTION.",
+ "headline": "THE DIVERGENCE IS FULLY ATTRIBUTED AND EXACTLY REPRODUCED. T002 rendered its two subjects with BOTH resident in the scene, hiding one per render with hide_render. A hidden object still participates in EEVEE lighting. Reproducing that arrangement returns T002 committed reading to six decimals; isolating the subject returns this session reading.",
+ "theDecisiveExperiment": {
+  "pose": "1200 m / azimuth 235",
+  "subject": "the byte-identical v1 tile",
+  "arrangements": [
+   {
+    "id": "A",
+    "setup": "Both subjects resident, the other hidden by hide_render — T002 arrangement.",
+    "bakedMean": 0.04230319,
+    "ratio": 1.072801,
+    "note": "T002 committed 0.042303 and ratio 1.072801. Reproduced to six decimals."
+   },
+   {
+    "id": "B",
+    "setup": "As A, and the hidden subject additionally excluded from shadow casting.",
+    "bakedMean": 0.04292261,
+    "ratio": 1.088509,
+    "note": "Brighter still, so the hidden objects were casting shadows onto the measured subject."
+   },
+   {
+    "id": "C",
+    "setup": "The other subject collection excluded from the view layer.",
+    "bakedMean": 0.03951735,
+    "ratio": 1.002152
+   },
+   {
+    "id": "D",
+    "setup": "The other subject deleted — the pinned arrangement.",
+    "bakedMean": 0.03951735,
+    "ratio": 1.002152
+   }
+  ],
+  "finding": "Presence of a hidden subject brightens the measured subject by 7.0%. hide_render suppresses camera visibility only; it removes neither shadow casting nor whatever else EEVEE derives from scene contents. C and D agree exactly, so exclusion and deletion are equivalent and either is sufficient.",
+  "consequence": "T002 tone MISS at 1,200 m / azimuth 235 was an ARTIFACT OF ITS SCENE ARRANGEMENT, not a property of the tile. The pinned spec forbids hide_render and requires subject isolation."
+ },
+ "hypothesesTested": [
+  {
+   "id": "H1",
+   "hypothesis": "Anisotropic filtering (a user preference, unpinned, acts on minified textures).",
+   "method": "Baked tile at 1200/235 under FILTER_0, FILTER_2, FILTER_8, FILTER_16.",
+   "result": "NO EFFECT. Identical to eight decimal places at every setting.",
+   "verdict": "REJECTED as a cause. Still pinned, because a setting proven inert today is not guaranteed inert after an engine update."
+  },
+  {
+   "id": "H2",
+   "hypothesis": "gl_texture_limit downsamples the atlas.",
+   "method": "CLAMP_OFF, CLAMP_512, CLAMP_128.",
+   "result": "NO EFFECT beyond the eighth decimal.",
+   "verdict": "REJECTED as a cause. Still pinned, same reasoning."
+  },
+  {
+   "id": "H3",
+   "hypothesis": "The atlas was loaded in the wrong colour space.",
+   "method": "sRGB against Non-Color.",
+   "result": "ENORMOUS effect — ratio 1.002152 against 2.322015 — but in the wrong direction and two orders of magnitude too large for a 6% gap.",
+   "verdict": "REJECTED as a cause. Retained as a reminder that this is the single most destructive misconfiguration available."
+  },
+  {
+   "id": "H4",
+   "hypothesis": "Sample count.",
+   "method": "taa_render_samples 16, 64, 256.",
+   "result": "About 0.1%.",
+   "verdict": "REJECTED as a cause. Pinned at 64."
+  },
+  {
+   "id": "H5",
+   "hypothesis": "Scene residency and datablock accumulation.",
+   "method": "The four arrangements above.",
+   "result": "+7.0%, exactly reproducing T002.",
+   "verdict": "CONFIRMED. This is the cause."
+  }
+ ],
+ "attributionOfTheSURVIVINGFindings": {
+  "fourThousandTwoThirtyFiveTooDark": {
+   "observation": "At 4,000 m / azimuth 235 the tile reads 0.942736 against the source, a 5.7% deficit, and it persists under the pinned instrument and reproduces exactly.",
+   "isItAnArtifact": "NO. It survives subject isolation and full instrument pinning.",
+   "mechanismEvidence": "It is the SOURCE that moves, not the tile. Between 1,200 m and 4,000 m at azimuth 235 the source mean rises 0.03943247 -> 0.04218957 (+7.0%) while the baked mean is almost flat, 0.03951735 -> 0.03977362 (+0.6%). The source brightens under minification and the prism does not.",
+   "attribution": "A REAL SUBJECT DIFFERENCE, attributed to geometry the prism does not carry. The source rooftop clusters are sub-pixel at 4 km and average into brighter values; the prism has no rooftop mass to average. This is consistent with T011 ablation finding that rooftop mass is a large effect at shadow poses.",
+   "confidence": "Mechanism is INFERRED from the distance trend, not demonstrated by a controlled ablation at 4 km. Stated as an inference."
+  },
+  "hueSpreads": {
+   "observation": "Per-channel spread runs 0.016 to 0.034 and exceeds the 0.02 bar at five of six poses.",
+   "isItAnArtifact": "PARTLY MASKED BEFORE, NOT CREATED NOW. T002 recorded 0.006 to 0.016 and passed 6 of 6, under the residency arrangement that brightened the tile and pulled its channel ratios toward unity. Under isolation the spread is larger and mostly out of bar.",
+   "distanceDependence": "GROWS WITH DISTANCE at both azimuths: 0.016 -> 0.021 -> 0.023 at azimuth 55, and 0.026 -> 0.025 -> 0.034 at azimuth 235.",
+   "channelPattern": "RED IS CONSISTENTLY THE DEFICIT CHANNEL. At 4,000/235 the per-channel ratios are 0.907, 0.931, 0.941; at 1,200/235 they are 0.964, 0.985, 0.990. The tile is red-deficient relative to the source and increasingly so with distance.",
+   "attribution": "TILE PROPERTY, not instrument. It reproduces exactly under the pinned spec, it has a coherent channel signature, and it grows with minification. The most likely mechanism is the far tier flat-face averaging and its single-atlas composition losing red relative to the source per-material factors, but NO controlled test isolates that here.",
+   "confidence": "Attribution to the tile is well supported. The MECHANISM is UNATTRIBUTED and is left so rather than guessed."
+  }
+ },
+ "unexplainedResidue": {
+  "statement": "None material. The 6% divergence that motivated this task is fully explained and reproduced on demand. What remains unattributed is the MECHANISM behind the tile red deficit, not any variance in the instrument.",
+  "instrumentVarianceUnderPinning": "0.0 at every pose across two cycles separated by a deliberate full perturbation."
+ },
+ "notClaimedHere": [
+  "No fix is proposed or applied to the tile; this task is attribution only.",
+  "The mechanism by which a hidden object brightens a render was not traced into EEVEE internals; the effect was measured, bounded and eliminated by the spec."
+ ]
+}

@@ -220,3 +220,10 @@ artifacts/far-tier-hlod-v2-20260818/
 # instrumentation on the T010 black-conductor precedent. Every number the
 # Stage 0a halt rests on is committed under data/far-tier-hlod-v3-20260818/.
 artifacts/far-tier-hlod-v3-20260818/
+
+# T012 instrument-pin work root: the generated assertion harness, the hypothesis
+# sweep renders and the pinned baseline stills. The harness is regenerated from
+# src/release/far-tier-instrument.ts on demand and its sha256 is committed in
+# data/far-tier-hlod-instrument-20260818/pinned-instrument-spec.json, so nothing
+# here is evidence that is not also committed.
+artifacts/far-tier-instrument-20260818/

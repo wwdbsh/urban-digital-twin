@@ -1,0 +1,150 @@
+{
+ "schemaVersion": "1.0",
+ "recordId": "far-tier-hlod-instrument-20260818:pinned-instrument-spec",
+ "task": "T012",
+ "artifact": "far-tier-pinned-appearance-instrument",
+ "capturedAt": null,
+ "capturedAtStatement": "NULL BY CONSTRUCTION. This is a specification, not a measurement.",
+ "claim": "Every render-relevant setting the far-tier appearance instrument depends on, enumerated, pinned, and enforced by a harness generated from this same specification.",
+ "whyItExists": "Three sessions measured the same byte-identical tile and disagreed by up to 6%. The instrument was specified in prose listing seven settings; Blender exposes far more that move a pixel, and the ones nobody listed are the ones that drifted.",
+ "spec": {
+  "specId": "far-tier-appearance-instrument-v1",
+  "application": {
+   "versionString": "5.2.0 LTS"
+  },
+  "preferences": {
+   "system.anisotropic_filter": "FILTER_0",
+   "system.gl_texture_limit": "CLAMP_OFF",
+   "system.use_gpu_subdivision": false
+  },
+  "render": {
+   "engine": "BLENDER_EEVEE",
+   "resolution_x": 1440,
+   "resolution_y": 900,
+   "resolution_percentage": 100,
+   "pixel_aspect_x": 1,
+   "pixel_aspect_y": 1,
+   "filter_size": 1.5,
+   "film_transparent": true,
+   "use_motion_blur": false,
+   "use_border": false,
+   "dither_intensity": 0,
+   "use_persistent_data": false
+  },
+  "imageSettings": {
+   "file_format": "OPEN_EXR",
+   "color_mode": "RGBA",
+   "color_depth": "32",
+   "exr_codec": "ZIP"
+  },
+  "colourManagement": {
+   "view_settings.view_transform": "Standard",
+   "view_settings.look": "None",
+   "view_settings.exposure": 0,
+   "view_settings.gamma": 1,
+   "view_settings.use_curve_mapping": false,
+   "display_settings.display_device": "sRGB",
+   "sequencer_colorspace_settings.name": "sRGB"
+  },
+  "eevee": {
+   "taa_render_samples": 64,
+   "use_raytracing": false,
+   "use_fast_gi": false,
+   "use_shadows": true,
+   "shadow_ray_count": 1,
+   "shadow_step_count": 6,
+   "shadow_resolution_scale": 1,
+   "use_volumetric_shadows": false,
+   "use_overscan": false,
+   "light_threshold": 0.01,
+   "clamp_surface_direct": 0
+  },
+  "camera": {
+   "sensor_fit": "VERTICAL",
+   "angle_y_degrees": 60,
+   "clip_start": 1,
+   "clip_end": 60000,
+   "shift_x": 0,
+   "shift_y": 0
+  },
+  "sun": {
+   "type": "SUN",
+   "energy": 3,
+   "angle": 0,
+   "rotation_euler_degrees": [
+    50,
+    0,
+    35
+   ],
+   "color": [
+    1,
+    1,
+    1
+   ]
+  },
+  "world": {
+   "background_strength": 0,
+   "background_color": [
+    0,
+    0,
+    0
+   ]
+  },
+  "maskSemantics": {
+   "rule": "A pixel is covered when its alpha exceeds 0.5.",
+   "union": "Union of the SOURCE and BAKED silhouettes, computed per pose within the same session.",
+   "luminance": "Rec. 709 on the linear framebuffer: 0.2126 R + 0.7152 G + 0.0722 B.",
+   "unPremultiply": "Per-channel ratios divide by that subject's own alpha before averaging; the union luminance ratio does not."
+  },
+  "poses": {
+   "distancesMeters": [
+    400,
+    1200,
+    4000
+   ],
+   "azimuthsDegrees": [
+    55,
+    235
+   ],
+   "elevationDegrees": 18,
+   "cameraDiscipline": "One transform per pose, computed from the SOURCE subject's bounds and reused verbatim for every other subject."
+  },
+  "sceneHygiene": {
+   "clearing": "Objects deleted and datablocks purged. bpy.ops.wm.read_factory_settings is NEVER called: it unregisters the BlenderMCP addon.",
+   "betweenSubjects": "Meshes, materials and images purged between subjects, so datablock accumulation cannot bind a subject to a stale material.",
+   "subjectIsolation": "A subject is rendered ALONE. Other subjects are deleted, or their collection is excluded from the view layer. `hide_render` is FORBIDDEN: a hidden object still casts shadows and still brightens the measured subject, by 7.0% on the prototype cell at 1,200 m / azimuth 235."
+  }
+ },
+ "specSha256": "3015b23059590cfc17535483baa284dd3a70bfbd47c7af4a434aade64ef558df",
+ "harness": {
+  "generatedFrom": "src/release/far-tier-instrument.ts farTierInstrumentAssertionPython()",
+  "sha256": "a0bd54f36702866a165bc54ef108286376e5ea0f0e846f856b89b85c3d41055d",
+  "behaviour": "Reads every pinned value back out of Blender immediately before capture and raises on any mismatch. It is GENERATED from the spec, so spec and harness cannot drift.",
+  "negativeControls": {
+   "method": "Each pinned setting perturbed in turn; the harness must refuse.",
+   "perturbed": [
+    "view_settings.exposure",
+    "preferences.system.anisotropic_filter",
+    "eevee.use_raytracing",
+    "render.filter_size",
+    "colour.display_settings.display_device",
+    "eevee.taa_render_samples",
+    "sun.energy"
+   ],
+   "allFailedClosed": true,
+   "note": "Seven of seven refused with the correct setting named. The harness also caught two genuine errors while being built: a FILTER_1 value that does not exist in the enum, and a degrees/radians round trip exceeding a 1e-6 tolerance."
+  }
+ },
+ "selfReproduction": {
+  "toleranceStatedInAdvance": "|delta ratio| <= 0.001 and |delta hue spread| <= 0.001 at every pose.",
+  "method": "Two full capture cycles, each preceded by a complete purge and rebuild, with the ENTIRE instrument deliberately perturbed between them (exposure 0.7, raytracing on, 8 samples, filter size 3.0, anisotropic FILTER_16).",
+  "worstDeltaRatio": 0,
+  "worstDeltaSpread": 0,
+  "verdict": "PASS — exact reproduction at all six poses.",
+  "limitation": "A true operating-system process restart was NOT performed: restarting Blender drops the MCP channel this session runs over. The test is purge-and-rebuild within one process, which does exercise every pinned setting but cannot exclude a defect that only a fresh process would reset."
+ },
+ "notClaimedHere": [
+  "Pinning the instrument does not validate any tile.",
+  "These are EEVEE-under-one-sun conditions and say nothing about the shipped Cesium renderer."
+ ]
+}

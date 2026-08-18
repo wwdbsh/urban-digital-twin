@@ -253,3 +253,76 @@ Fork options for the user are enumerated in `sampling-results.json`.
 Runtime integration (T003), the mass bake (T004) and serving promotion (T005). It also
 makes no visual-acceptance claim: **agreement is not likeness**, and a luminance ratio
 near 1.0 says the tile puts roughly the same light on screen, not that it looks right.
+
+---
+
+## Amendment — T012: the appearance instrument is pinned, and the supersession chain
+
+Date: 2026-08-18 · Task: T012 (Issue #116) · Branch: `fcp/116-instrument-pin`
+Evidence: `data/far-tier-hlod-instrument-20260818/`
+
+Everything above about GEOMETRY, PACKING, GAMMA and BUDGET stands unchanged. What
+changes is the standing of every **appearance** number this ADR and its successors
+quoted.
+
+### The supersession chain, in order
+
+1. **T002** captured the prototype tile and recorded a tone MISS at 1,200 m /
+   azimuth 235 (ratio 1.072801) and a hue PASS at 6 of 6 poses.
+2. **T010** measured the same tile at 0.03957 where T002 had 0.042303, and
+   attributed the ~6.5% gap to a difference of masks.
+3. **T011** used T002's own union mask, reproduced its pixel count exactly, and
+   still measured 0.0395 — excluding the mask explanation — then halted.
+4. **T012 attributed it.** T002 rendered its two subjects with **both resident in
+   the scene**, hiding one per render with `hide_render`. A hidden object still
+   participates in EEVEE's lighting: it casts shadows, and its presence brightens
+   the measured subject by **7.0%**. Reproducing that arrangement returns
+   **1.072801** — T002's committed value to six decimals. Isolating the subject
+   returns **1.002152**.
+
+**T002's baked-tile readings and both its verdicts are therefore SUPERSEDED BY
+STATEMENT.** Its record is not edited. T010's admissible band and predicted MISS,
+and T011's 5.32 attribution gate, all descend from the superseded figure and are
+not current.
+
+### What is now pinned
+
+`src/release/far-tier-instrument.ts` carries the exhaustive spec — Blender version,
+engine, ray tracing, fast GI, sample count, filter size, the full colour-management
+chain, output format and depth, camera, sun, world, **user preferences**, mask
+semantics and **subject isolation**. The capture harness is **generated from that
+spec** and reads every value back out of Blender immediately before capture,
+failing closed on any mismatch. Seven of seven deliberate perturbations were
+refused. Two full capture cycles separated by a deliberate whole-instrument
+perturbation reproduced **exactly** — worst delta 0.0 at all six poses.
+
+`hide_render` is forbidden. Subjects are rendered alone.
+
+### The operative baseline, and two open items
+
+| pose | ratio | hue spread |
+| --- | --- | --- |
+| 400/55 | 1.040478 | 0.015976 |
+| 400/235 | 1.019942 | 0.025771 |
+| 1200/55 | 1.023193 | 0.020598 |
+| 1200/235 | 1.002152 | 0.025470 |
+| 4000/55 | 1.020074 | 0.022754 |
+| 4000/235 | **0.942736** | **0.033819** |
+
+Two findings survive pinning and are **tile properties, not artifacts**:
+
+- **4,000 m / azimuth 235 reads 5.7% dark.** The evidence says it is the *source*
+  that moves: between 1.2 km and 4 km the source brightens 7.0% while the tile is
+  almost flat. Attributed to sub-pixel rooftop geometry the prism does not carry —
+  consistent with T011's ablation. Mechanism inferred from the distance trend, not
+  demonstrated.
+- **Hue spread exceeds 0.02 at five of six poses**, grows with distance, and red is
+  consistently the deficit channel. A tile property; the **mechanism is left
+  unattributed** rather than guessed. Previously masked by the residency artifact.
+
+### Consequence for §1's coarse-tier identity
+
+Unchanged by this amendment — the far tier is still the census's coarse prism. But
+note that the silhouette figures §1 quotes (median 0.045221, max 0.628806) are
+geometric measurements from the citywide census and were never appearance readings,
+so nothing in this supersession touches them.
