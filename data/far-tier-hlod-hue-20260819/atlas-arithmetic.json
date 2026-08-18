@@ -1,0 +1,1386 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "far-tier-hlod-hue-20260819:atlas-arithmetic",
+  "task": "T013",
+  "artifact": "far-tier-hue-attribution-arithmetic",
+  "capturedAt": null,
+  "capturedAtStatement": "NULL BY CONSTRUCTION. Every number here is a total function of the committed recipe, the pinned base snapshot and the byte-identical v1 atlas.",
+  "subject": {
+    "cellId": "manhattan-exterior-cell-w05-000747-17-38610-35822",
+    "atlasSha256": "c159e0508aeb7522620b799b83041461aecf34727f69209bd7efbf992f5c067a",
+    "atlasSha256ExpectedFromProvenance": "c159e0508aeb7522620b799b83041461aecf34727f69209bd7efbf992f5c067a",
+    "atlasReproducesProvenance": true,
+    "atlasPixels": 256,
+    "recipeId": "far-tier-hlod-bake-v1"
+  },
+  "replicationGate": {
+    "why": "Quantization bias is a statement about the values that were ROUNDED, which the shipped rasterizer discards. The rasterizer is replicated here to keep them, and the replication is verified rather than trusted.",
+    "byteMismatchesAgainstShippedRasterizer": 0,
+    "verdict": "PASS"
+  },
+  "atlasCensus": {
+    "totalTexels": 65536,
+    "contentTexels": 16349,
+    "gutterTexels": 39576,
+    "unusedTexels": 9611,
+    "unusedShare": 0.146652,
+    "unusedShareMatchesOccupancyRecord": 0.146652,
+    "unusedTexelsThatAreNotPureBlack": 0,
+    "channelMeansLinear": {
+      "wholeAtlasIncludingUnused": [
+        0.444952164,
+        0.347252332,
+        0.302135482
+      ],
+      "usedAreaOnly": [
+        0.521419491,
+        0.406929438,
+        0.354059025
+      ],
+      "contentOnly": [
+        0.526718364,
+        0.410090418,
+        0.356712316
+      ]
+    },
+    "hueOfWholeAtlasAgainstUsedArea": {
+      "perChannelRatio": [
+        0.853347778,
+        0.853347778,
+        0.853347778
+      ],
+      "spread": 0,
+      "statement": "Mixing any colour with BLACK in LINEAR light is a per-channel-EQUAL scaling. The three ratios above are identical to floating-point precision and the spread is at the rounding floor. Black area changes LUMINANCE and cannot change HUE, so long as the mixing happens in linear light."
+    }
+  },
+  "hypotheses": {
+    "H1_blackAtlasDilution": {
+      "hypothesis": "The atlas's unused black area averages in under minification and moves the per-channel ratios.",
+      "testedBy": "Exact arithmetic over the real atlas: the whole-atlas channel means against the used-area channel means, and a full 2x2 box mip pyramid built in LINEAR light.",
+      "evidence": {
+        "unusedShare": 0.146652,
+        "blackMixHueSpread": 0,
+        "linearPyramidWorstSpread": 0,
+        "linearPyramidWorstLuminanceRatio": 1
+      },
+      "verdict": "REJECTED as the hue mechanism — arithmetically, not empirically. A linear-light box filter preserves the per-channel mean of the whole atlas EXACTLY at every mip level, black area included, so it can move neither hue nor the whole-atlas luminance. Black dilution remains available as a LOCAL luminance mechanism where a footprint straddles the used/unused boundary; it is not available as a hue mechanism at all."
+    },
+    "H2_srgbQuantization": {
+      "hypothesis": "8-bit sRGB quantization floors the channels unequally, red hardest.",
+      "testedBy": "Comparing the pre-quantization linear field the rasterizer rounded against the decoded shipped bytes, over content texels, unweighted and face-world-area weighted.",
+      "evidence": {
+        "analyticContentMeansLinear": [
+          0.526751647,
+          0.410162511,
+          0.35649453
+        ],
+        "quantizedContentMeansLinear": [
+          0.526718364,
+          0.410090418,
+          0.356712316
+        ],
+        "perChannelRelativeBias": [
+          -0.00006319,
+          -0.00017577,
+          0.00061091
+        ],
+        "perChannelRelativeBiasSpread": 0.00078668,
+        "areaWeightedPerChannelRelativeBias": [
+          -0.0001288,
+          0.00015343,
+          0.00054354
+        ],
+        "areaWeightedSpread": 0.00067234
+      },
+      "verdict": "REJECTED as the cause; RETAINED as a small contributor with the RIGHT SIGN. Quantization does bias red lowest and blue highest, which is the observed pattern — but by a channel spread of about 0.0008 against measured pose spreads of 0.0160 to 0.0338. That is between 20 and 43 times too small. It is also frozen into the bytes and therefore identical at every distance, while the measured spread grows with distance."
+    },
+    "H3_zoneFactorColourPath": {
+      "hypothesis": "v3tCalibratedFactor or the palette lowers red systematically.",
+      "testedBy": "Per-channel arithmetic over every calibrated palette entry reachable in this cell.",
+      "evidence": {
+        "entriesChecked": 32,
+        "worstPerChannelScaleSpread": 0,
+        "worstFactorChannelValue": 1,
+        "clampedTexelChannelCount": 0,
+        "maxLinearPerChannelBeforeClamp": [
+          0.747502529,
+          0.733333333,
+          0.737254902
+        ],
+        "rows": [
+          {
+            "styleClass": "curtain-cool",
+            "materialId": "material:facade:base",
+            "hex": "#8F8A7C",
+            "textureClass": "limestone-ashlar",
+            "meanModulation": 0.883721804,
+            "factor": [
+              0.634571096,
+              0.612383295,
+              0.550257454
+            ],
+            "perChannelScale": [
+              1.131577828342,
+              1.131577828342,
+              1.131577828342
+            ],
+            "scaleSpread": 0,
+            "maxChannel": 0.634571096
+          },
+          {
+            "styleClass": "curtain-cool",
+            "materialId": "material:facade:shaft",
+            "hex": "#3E5A57",
+            "textureClass": "curtain-mullion-grid",
+            "meanModulation": 0.889368154,
+            "factor": [
+              0.273382011,
+              0.396844855,
+              0.383616693
+            ],
+            "perChannelScale": [
+              1.124393756346,
+              1.124393756346,
+              1.124393756346
+            ],
+            "scaleSpread": 0,
+            "maxChannel": 0.396844855
+          },
+          {
+            "styleClass": "curtain-cool",
+            "materialId": "material:glazing:base",
+            "hex": "#6B6F72",
+            "textureClass": "curtain-mullion-grid",
+            "meanModulation": 0.889368154,
+            "factor": [
+              0.471804439,
+              0.489441988,
+              0.50267015
+            ],
+            "perChannelScale": [
+              1.124393756346,
+              1.124393756346,
+              1.124393756346
+            ],
+            "scaleSpread": 0,
+            "maxChannel": 0.50267015
+          },
+          {
+            "styleClass": "curtain-cool",
+            "materialId": "material:glazing:shaft",
+            "hex": "#6B6F72",
+            "textureClass": "curtain-mullion-grid",
+            "meanModulation": 0.889368154,
+            "factor": [
+              0.471804439,
+              0.489441988,
+              0.50267015
+            ],
+            "perChannelScale": [
+              1.124393756346,
+              1.124393756346,
+              1.124393756346
+            ],
+            "scaleSpread": 0,
+            "maxChannel": 0.50267015
+          },
+          {
+            "styleClass": "curtain-cool",
+            "materialId": "material:metal",
+            "hex": "#8E9092",
+            "textureClass": "spandrel-panel",
+            "meanModulation": 0.887891104,
+            "factor": [
+              0.627174597,
+              0.636008042,
+              0.644841487
+            ],
+            "perChannelScale": [
+              1.126264240992,
+              1.126264240992,
+              1.126264240992
+            ],
+            "scaleSpread": 0,
+            "maxChannel": 0.644841487
+          },
+          {
+            "styleClass": "curtain-cool",
+            "materialId": "material:roof",
+            "hex": "#B9BBBC",
+            "textureClass": null,
+            "meanModulation": 1,
+            "factor": [
+              0.725490196,
+              0.733333333,
+              0.737254902
+            ],
+            "perChannelScale": [
+              1,
+              1,
+              1
+            ],
+            "scaleSpread": 0,
+            "maxChannel": 0.737254902
+          },
+          {
+            "styleClass": "curtain-cool",
+            "materialId": "material:trim:base",
+            "hex": "#B8BAB8",
+            "textureClass": "spandrel-panel",
+            "meanModulation": 0.887891104,
+            "factor": [
+              0.812676943,
+              0.821510388,
+              0.812676943
+            ],
+            "perChannelScale": [
+              1.126264240992,
+              1.126264240992,
+              1.126264240992
+            ],
+            "scaleSpread": 0,
+            "maxChannel": 0.821510388
+          },
+          {
+            "styleClass": "curtain-cool",
+            "materialId": "material:trim:shaft",
+            "hex": "#B8BAB8",
+            "textureClass": "spandrel-panel",
+            "meanModulation": 0.887891104,
+            "factor": [
+              0.812676943,
+              0.821510388,
+              0.812676943
+            ],
+            "perChannelScale": [
+              1.126264240992,
+              1.126264240992,
+              1.126264240992
+            ],
+            "scaleSpread": 0,
+            "maxChannel": 0.821510388
+          },
+          {
+            "styleClass": "masonry-light",
+            "materialId": "material:facade:base",
+            "hex": "#B7B0A0",
+            "textureClass": "brick-running-bond",
+            "meanModulation": 0.838657992,
+            "factor": [
+              0.855708841,
+              0.822976809,
+              0.748160735
+            ],
+            "perChannelScale": [
+              1.192381172004,
+              1.192381172004,
+              1.192381172004
+            ],
+            "scaleSpread": 0,
+            "maxChannel": 0.855708841
+          },
+          {
+            "styleClass": "masonry-light",
+            "materialId": "material:facade:shaft",
+            "hex": "#D8D3C4",
+            "textureClass": "brick-running-bond",
+            "meanModulation": 0.838657992,
+            "factor": [
+              1,
+              0.976851852,
+              0.907407407
+            ],
+            "perChannelScale": [
+              1.180555555556,
+              1.180555555556,
+              1.180555555556
+            ],
+            "scaleSpread": 0,
+            "maxChannel": 1
+          },
+          {
+            "styleClass": "masonry-light",
+            "materialId": "material:glazing:base",
+            "hex": "#6B6F72",
+            "textureClass": "curtain-mullion-grid",
+            "meanModulation": 0.889368154,
+            "factor": [
+              0.471804439,
+              0.489441988,
+              0.50267015
+            ],
+            "perChannelScale": [
+              1.124393756346,
+              1.124393756346,
+              1.124393756346
+            ],
+            "scaleSpread": 0,
+            "maxChannel": 0.50267015
+          },
+          {
+            "styleClass": "masonry-light",
+            "materialId": "material:glazing:shaft",
+            "hex": "#6B6F72",
+            "textureClass": "curtain-mullion-grid",
+            "meanModulation": 0.889368154,
+            "factor": [
+              0.471804439,
+              0.489441988,
+              0.50267015
+            ],
+            "perChannelScale": [
+              1.124393756346,
+              1.124393756346,
+              1.124393756346
+            ],
+            "scaleSpread": 0,
+            "maxChannel": 0.50267015
+          },
+          {
+            "styleClass": "masonry-light",
+            "materialId": "material:metal",
+            "hex": "#B8BAB8",
+            "textureClass": "spandrel-panel",
+            "meanModulation": 0.887891104,
+            "factor": [
+              0.812676943,
+              0.821510388,
+              0.812676943
+            ],
+            "perChannelScale": [
+              1.126264240992,
+              1.126264240992,
+              1.126264240992
+            ],
+            "scaleSpread": 0,
+            "maxChannel": 0.821510388
+          },
+          {
+            "styleClass": "masonry-light",
+            "materialId": "material:roof",
+            "hex": "#1C1B19",
+            "textureClass": null,
+            "meanModulation": 1,
+            "factor": [
+              0.109803922,
+              0.105882353,
+              0.098039216
+            ],
+            "perChannelScale": [
+              1,
+              1,
+              1
+            ],
+            "scaleSpread": 0,
+            "maxChannel": 0.109803922
+          },
+          {
+            "styleClass": "masonry-light",
+            "materialId": "material:trim:base",
+            "hex": "#8A6B3E",
+            "textureClass": "spandrel-panel",
+            "meanModulation": 0.887891104,
+            "factor": [
+              0.609507707,
+              0.472589309,
+              0.273836796
+            ],
+            "perChannelScale": [
+              1.126264240992,
+              1.126264240992,
+              1.126264240992
+            ],
+            "scaleSpread": 0,
+            "maxChannel": 0.609507707
+          },
+          {
+            "styleClass": "masonry-light",
+            "materialId": "material:trim:shaft",
+            "hex": "#C4834F",
+            "textureClass": "spandrel-panel",
+            "meanModulation": 0.887891104,
+            "factor": [
+              0.865677613,
+              0.578590649,
+              0.348921079
+            ],
+            "perChannelScale": [
+              1.126264240992,
+              1.126264240992,
+              1.126264240992
+            ],
+            "scaleSpread": 0,
+            "maxChannel": 0.865677613
+          },
+          {
+            "styleClass": "masonry-warm",
+            "materialId": "material:facade:base",
+            "hex": "#7A3A2C",
+            "textureClass": "brick-running-bond",
+            "meanModulation": 0.838657992,
+            "factor": [
+              0.570472561,
+              0.271208267,
+              0.205744202
+            ],
+            "perChannelScale": [
+              1.192381172004,
+              1.192381172004,
+              1.192381172004
+            ],
+            "scaleSpread": 0,
+            "maxChannel": 0.570472561
+          },
+          {
+            "styleClass": "masonry-warm",
+            "materialId": "material:facade:shaft",
+            "hex": "#9C4A34",
+            "textureClass": "brick-running-bond",
+            "meanModulation": 0.838657992,
+            "factor": [
+              0.729456717,
+              0.34602434,
+              0.243152239
+            ],
+            "perChannelScale": [
+              1.192381172004,
+              1.192381172004,
+              1.192381172004
+            ],
+            "scaleSpread": 0,
+            "maxChannel": 0.729456717
+          },
+          {
+            "styleClass": "masonry-warm",
+            "materialId": "material:glazing:base",
+            "hex": "#5C4A32",
+            "textureClass": "curtain-mullion-grid",
+            "meanModulation": 0.889368154,
+            "factor": [
+              0.40566363,
+              0.326294659,
+              0.220469364
+            ],
+            "perChannelScale": [
+              1.124393756346,
+              1.124393756346,
+              1.124393756346
+            ],
+            "scaleSpread": 0,
+            "maxChannel": 0.40566363
+          },
+          {
+            "styleClass": "masonry-warm",
+            "materialId": "material:glazing:shaft",
+            "hex": "#5C4A32",
+            "textureClass": "curtain-mullion-grid",
+            "meanModulation": 0.889368154,
+            "factor": [
+              0.40566363,
+              0.326294659,
+              0.220469364
+            ],
+            "perChannelScale": [
+              1.124393756346,
+              1.124393756346,
+              1.124393756346
+            ],
+            "scaleSpread": 0,
+            "maxChannel": 0.40566363
+          },
+          {
+            "styleClass": "masonry-warm",
+            "materialId": "material:metal",
+            "hex": "#8E9092",
+            "textureClass": "spandrel-panel",
+            "meanModulation": 0.887891104,
+            "factor": [
+              0.627174597,
+              0.636008042,
+              0.644841487
+            ],
+            "perChannelScale": [
+              1.126264240992,
+              1.126264240992,
+              1.126264240992
+            ],
+            "scaleSpread": 0,
+            "maxChannel": 0.644841487
+          },
+          {
+            "styleClass": "masonry-warm",
+            "materialId": "material:roof",
+            "hex": "#1C1B19",
+            "textureClass": null,
+            "meanModulation": 1,
+            "factor": [
+              0.109803922,
+              0.105882353,
+              0.098039216
+            ],
+            "perChannelScale": [
+              1,
+              1,
+              1
+            ],
+            "scaleSpread": 0,
+            "maxChannel": 0.109803922
+          },
+          {
+            "styleClass": "masonry-warm",
+            "materialId": "material:trim:base",
+            "hex": "#5A4326",
+            "textureClass": "spandrel-panel",
+            "meanModulation": 0.887891104,
+            "factor": [
+              0.397505026,
+              0.295920408,
+              0.167835456
+            ],
+            "perChannelScale": [
+              1.126264240992,
+              1.126264240992,
+              1.126264240992
+            ],
+            "scaleSpread": 0,
+            "maxChannel": 0.397505026
+          },
+          {
+            "styleClass": "masonry-warm",
+            "materialId": "material:trim:shaft",
+            "hex": "#8A6B3E",
+            "textureClass": "spandrel-panel",
+            "meanModulation": 0.887891104,
+            "factor": [
+              0.609507707,
+              0.472589309,
+              0.273836796
+            ],
+            "perChannelScale": [
+              1.126264240992,
+              1.126264240992,
+              1.126264240992
+            ],
+            "scaleSpread": 0,
+            "maxChannel": 0.609507707
+          },
+          {
+            "styleClass": "stone-neutral",
+            "materialId": "material:facade:base",
+            "hex": "#B8AC94",
+            "textureClass": "limestone-ashlar",
+            "meanModulation": 0.883721804,
+            "factor": [
+              0.81651106,
+              0.763260339,
+              0.656758896
+            ],
+            "perChannelScale": [
+              1.131577828342,
+              1.131577828342,
+              1.131577828342
+            ],
+            "scaleSpread": 0,
+            "maxChannel": 0.81651106
+          },
+          {
+            "styleClass": "stone-neutral",
+            "materialId": "material:facade:shaft",
+            "hex": "#D9CFB8",
+            "textureClass": "limestone-ashlar",
+            "meanModulation": 0.883721804,
+            "factor": [
+              0.962950544,
+              0.918574943,
+              0.81651106
+            ],
+            "perChannelScale": [
+              1.131577828342,
+              1.131577828342,
+              1.131577828342
+            ],
+            "scaleSpread": 0,
+            "maxChannel": 0.962950544
+          },
+          {
+            "styleClass": "stone-neutral",
+            "materialId": "material:glazing:base",
+            "hex": "#3E5A57",
+            "textureClass": "curtain-mullion-grid",
+            "meanModulation": 0.889368154,
+            "factor": [
+              0.273382011,
+              0.396844855,
+              0.383616693
+            ],
+            "perChannelScale": [
+              1.124393756346,
+              1.124393756346,
+              1.124393756346
+            ],
+            "scaleSpread": 0,
+            "maxChannel": 0.396844855
+          },
+          {
+            "styleClass": "stone-neutral",
+            "materialId": "material:glazing:shaft",
+            "hex": "#3E5A57",
+            "textureClass": "curtain-mullion-grid",
+            "meanModulation": 0.889368154,
+            "factor": [
+              0.273382011,
+              0.396844855,
+              0.383616693
+            ],
+            "perChannelScale": [
+              1.124393756346,
+              1.124393756346,
+              1.124393756346
+            ],
+            "scaleSpread": 0,
+            "maxChannel": 0.396844855
+          },
+          {
+            "styleClass": "stone-neutral",
+            "materialId": "material:metal",
+            "hex": "#8E9092",
+            "textureClass": "spandrel-panel",
+            "meanModulation": 0.887891104,
+            "factor": [
+              0.627174597,
+              0.636008042,
+              0.644841487
+            ],
+            "perChannelScale": [
+              1.126264240992,
+              1.126264240992,
+              1.126264240992
+            ],
+            "scaleSpread": 0,
+            "maxChannel": 0.644841487
+          },
+          {
+            "styleClass": "stone-neutral",
+            "materialId": "material:roof",
+            "hex": "#8A8478",
+            "textureClass": null,
+            "meanModulation": 1,
+            "factor": [
+              0.541176471,
+              0.517647059,
+              0.470588235
+            ],
+            "perChannelScale": [
+              1,
+              1,
+              1
+            ],
+            "scaleSpread": 0,
+            "maxChannel": 0.541176471
+          },
+          {
+            "styleClass": "stone-neutral",
+            "materialId": "material:trim:base",
+            "hex": "#C9BC9E",
+            "textureClass": "spandrel-panel",
+            "meanModulation": 0.887891104,
+            "factor": [
+              0.887761225,
+              0.830343833,
+              0.697842157
+            ],
+            "perChannelScale": [
+              1.126264240992,
+              1.126264240992,
+              1.126264240992
+            ],
+            "scaleSpread": 0,
+            "maxChannel": 0.887761225
+          },
+          {
+            "styleClass": "stone-neutral",
+            "materialId": "material:trim:shaft",
+            "hex": "#C9BC9E",
+            "textureClass": "spandrel-panel",
+            "meanModulation": 0.887891104,
+            "factor": [
+              0.887761225,
+              0.830343833,
+              0.697842157
+            ],
+            "perChannelScale": [
+              1.126264240992,
+              1.126264240992,
+              1.126264240992
+            ],
+            "scaleSpread": 0,
+            "maxChannel": 0.887761225
+          }
+        ]
+      },
+      "verdict": "REJECTED. The calibration scale is UNIFORM across the three channels by construction and measures uniform to floating-point precision, so it preserves the target's channel ratios exactly. It is also distance-invariant, which the distance-growing spread already argued against. No texel reaches the clamp, so the encoder's clamp cannot be clipping a channel either."
+    },
+    "H6_filteringColourSpace": {
+      "hypothesis": "Minification of the baked TRUECOLOUR atlas is not channel-neutral when the filter ignores the sRGB transfer function; the source's GRAYSCALE texture is immune by construction.",
+      "testedBy": "The same 2x2 box mip pyramid built twice — once in linear light, once on the 8-bit sRGB codes — over the real atlas, with and without the unused black area filled.",
+      "evidence": {
+        "pyramidLinear": [
+          {
+            "level": 0,
+            "sizeTexels": 256,
+            "channelMeansLinear": [
+              0.444952164,
+              0.347252332,
+              0.302135482
+            ],
+            "ratioToLevel0": [
+              1,
+              1,
+              1
+            ],
+            "channelRatioSpread": 0,
+            "luminanceRatioToLevel0": 1
+          },
+          {
+            "level": 1,
+            "sizeTexels": 128,
+            "channelMeansLinear": [
+              0.444952164,
+              0.347252332,
+              0.302135482
+            ],
+            "ratioToLevel0": [
+              1,
+              1,
+              1
+            ],
+            "channelRatioSpread": 0,
+            "luminanceRatioToLevel0": 1
+          },
+          {
+            "level": 2,
+            "sizeTexels": 64,
+            "channelMeansLinear": [
+              0.444952164,
+              0.347252332,
+              0.302135482
+            ],
+            "ratioToLevel0": [
+              1,
+              1,
+              1
+            ],
+            "channelRatioSpread": 0,
+            "luminanceRatioToLevel0": 1
+          },
+          {
+            "level": 3,
+            "sizeTexels": 32,
+            "channelMeansLinear": [
+              0.444952164,
+              0.347252332,
+              0.302135482
+            ],
+            "ratioToLevel0": [
+              1,
+              1,
+              1
+            ],
+            "channelRatioSpread": 0,
+            "luminanceRatioToLevel0": 1
+          },
+          {
+            "level": 4,
+            "sizeTexels": 16,
+            "channelMeansLinear": [
+              0.444952164,
+              0.347252332,
+              0.302135482
+            ],
+            "ratioToLevel0": [
+              1,
+              1,
+              1
+            ],
+            "channelRatioSpread": 0,
+            "luminanceRatioToLevel0": 1
+          },
+          {
+            "level": 5,
+            "sizeTexels": 8,
+            "channelMeansLinear": [
+              0.444952164,
+              0.347252332,
+              0.302135482
+            ],
+            "ratioToLevel0": [
+              1,
+              1,
+              1
+            ],
+            "channelRatioSpread": 0,
+            "luminanceRatioToLevel0": 1
+          },
+          {
+            "level": 6,
+            "sizeTexels": 4,
+            "channelMeansLinear": [
+              0.444952164,
+              0.347252332,
+              0.302135482
+            ],
+            "ratioToLevel0": [
+              1,
+              1,
+              1
+            ],
+            "channelRatioSpread": 0,
+            "luminanceRatioToLevel0": 1
+          },
+          {
+            "level": 7,
+            "sizeTexels": 2,
+            "channelMeansLinear": [
+              0.444952164,
+              0.347252332,
+              0.302135482
+            ],
+            "ratioToLevel0": [
+              1,
+              1,
+              1
+            ],
+            "channelRatioSpread": 0,
+            "luminanceRatioToLevel0": 1
+          },
+          {
+            "level": 8,
+            "sizeTexels": 1,
+            "channelMeansLinear": [
+              0.444952164,
+              0.347252332,
+              0.302135482
+            ],
+            "ratioToLevel0": [
+              1,
+              1,
+              1
+            ],
+            "channelRatioSpread": 0,
+            "luminanceRatioToLevel0": 1
+          }
+        ],
+        "pyramidEncoded": [
+          {
+            "level": 0,
+            "sizeTexels": 256,
+            "channelMeansLinear": [
+              0.444952164,
+              0.347252332,
+              0.302135482
+            ],
+            "ratioToLevel0": [
+              1,
+              1,
+              1
+            ],
+            "channelRatioSpread": 0,
+            "luminanceRatioToLevel0": 1
+          },
+          {
+            "level": 1,
+            "sizeTexels": 128,
+            "channelMeansLinear": [
+              0.433851741,
+              0.336762205,
+              0.292222594
+            ],
+            "ratioToLevel0": [
+              0.975053,
+              0.969791,
+              0.967191
+            ],
+            "channelRatioSpread": 0.007862,
+            "luminanceRatioToLevel0": 0.971
+          },
+          {
+            "level": 2,
+            "sizeTexels": 64,
+            "channelMeansLinear": [
+              0.425764902,
+              0.329508463,
+              0.285490674
+            ],
+            "ratioToLevel0": [
+              0.956878,
+              0.948902,
+              0.944909
+            ],
+            "channelRatioSpread": 0.011968,
+            "luminanceRatioToLevel0": 0.950732
+          },
+          {
+            "level": 3,
+            "sizeTexels": 32,
+            "channelMeansLinear": [
+              0.410716184,
+              0.312915463,
+              0.269037595
+            ],
+            "ratioToLevel0": [
+              0.923057,
+              0.901118,
+              0.890453
+            ],
+            "channelRatioSpread": 0.032603,
+            "luminanceRatioToLevel0": 0.90617
+          },
+          {
+            "level": 4,
+            "sizeTexels": 16,
+            "channelMeansLinear": [
+              0.398685805,
+              0.298668446,
+              0.254345035
+            ],
+            "ratioToLevel0": [
+              0.896019,
+              0.860091,
+              0.841824
+            ],
+            "channelRatioSpread": 0.054195,
+            "luminanceRatioToLevel0": 0.868316
+          },
+          {
+            "level": 5,
+            "sizeTexels": 8,
+            "channelMeansLinear": [
+              0.382973948,
+              0.284365502,
+              0.240930886
+            ],
+            "ratioToLevel0": [
+              0.860708,
+              0.818902,
+              0.797427
+            ],
+            "channelRatioSpread": 0.063281,
+            "luminanceRatioToLevel0": 0.828459
+          },
+          {
+            "level": 6,
+            "sizeTexels": 4,
+            "channelMeansLinear": [
+              0.365284539,
+              0.270926338,
+              0.229296449
+            ],
+            "ratioToLevel0": [
+              0.820952,
+              0.7802,
+              0.758919
+            ],
+            "channelRatioSpread": 0.062033,
+            "luminanceRatioToLevel0": 0.789496
+          },
+          {
+            "level": 7,
+            "sizeTexels": 2,
+            "channelMeansLinear": [
+              0.356212035,
+              0.263633277,
+              0.222983713
+            ],
+            "ratioToLevel0": [
+              0.800563,
+              0.759198,
+              0.738026
+            ],
+            "channelRatioSpread": 0.062537,
+            "luminanceRatioToLevel0": 0.768659
+          },
+          {
+            "level": 8,
+            "sizeTexels": 1,
+            "channelMeansLinear": [
+              0.355897073,
+              0.263520455,
+              0.222905753
+            ],
+            "ratioToLevel0": [
+              0.799855,
+              0.758873,
+              0.737768
+            ],
+            "channelRatioSpread": 0.062087,
+            "luminanceRatioToLevel0": 0.768239
+          }
+        ],
+        "pyramidLinearUnusedFilledWithUsedAreaMean": [
+          {
+            "level": 0,
+            "sizeTexels": 256,
+            "channelMeansLinear": [
+              0.521419491,
+              0.406929438,
+              0.354059025
+            ],
+            "ratioToLevel0": [
+              1,
+              1,
+              1
+            ],
+            "channelRatioSpread": 0,
+            "luminanceRatioToLevel0": 1
+          },
+          {
+            "level": 1,
+            "sizeTexels": 128,
+            "channelMeansLinear": [
+              0.521419491,
+              0.406929438,
+              0.354059025
+            ],
+            "ratioToLevel0": [
+              1,
+              1,
+              1
+            ],
+            "channelRatioSpread": 0,
+            "luminanceRatioToLevel0": 1
+          },
+          {
+            "level": 2,
+            "sizeTexels": 64,
+            "channelMeansLinear": [
+              0.521419491,
+              0.406929438,
+              0.354059025
+            ],
+            "ratioToLevel0": [
+              1,
+              1,
+              1
+            ],
+            "channelRatioSpread": 0,
+            "luminanceRatioToLevel0": 1
+          },
+          {
+            "level": 3,
+            "sizeTexels": 32,
+            "channelMeansLinear": [
+              0.521419491,
+              0.406929438,
+              0.354059025
+            ],
+            "ratioToLevel0": [
+              1,
+              1,
+              1
+            ],
+            "channelRatioSpread": 0,
+            "luminanceRatioToLevel0": 1
+          },
+          {
+            "level": 4,
+            "sizeTexels": 16,
+            "channelMeansLinear": [
+              0.521419491,
+              0.406929438,
+              0.354059025
+            ],
+            "ratioToLevel0": [
+              1,
+              1,
+              1
+            ],
+            "channelRatioSpread": 0,
+            "luminanceRatioToLevel0": 1
+          },
+          {
+            "level": 5,
+            "sizeTexels": 8,
+            "channelMeansLinear": [
+              0.521419491,
+              0.406929438,
+              0.354059025
+            ],
+            "ratioToLevel0": [
+              1,
+              1,
+              1
+            ],
+            "channelRatioSpread": 0,
+            "luminanceRatioToLevel0": 1
+          },
+          {
+            "level": 6,
+            "sizeTexels": 4,
+            "channelMeansLinear": [
+              0.521419491,
+              0.406929438,
+              0.354059025
+            ],
+            "ratioToLevel0": [
+              1,
+              1,
+              1
+            ],
+            "channelRatioSpread": 0,
+            "luminanceRatioToLevel0": 1
+          },
+          {
+            "level": 7,
+            "sizeTexels": 2,
+            "channelMeansLinear": [
+              0.521419491,
+              0.406929438,
+              0.354059025
+            ],
+            "ratioToLevel0": [
+              1,
+              1,
+              1
+            ],
+            "channelRatioSpread": 0,
+            "luminanceRatioToLevel0": 1
+          },
+          {
+            "level": 8,
+            "sizeTexels": 1,
+            "channelMeansLinear": [
+              0.521419491,
+              0.406929438,
+              0.354059025
+            ],
+            "ratioToLevel0": [
+              1,
+              1,
+              1
+            ],
+            "channelRatioSpread": 0,
+            "luminanceRatioToLevel0": 1
+          }
+        ],
+        "pyramidEncodedUnusedFilledWithUsedAreaMean": [
+          {
+            "level": 0,
+            "sizeTexels": 256,
+            "channelMeansLinear": [
+              0.521419491,
+              0.406929438,
+              0.354059025
+            ],
+            "ratioToLevel0": [
+              1,
+              1,
+              1
+            ],
+            "channelRatioSpread": 0,
+            "luminanceRatioToLevel0": 1
+          },
+          {
+            "level": 1,
+            "sizeTexels": 128,
+            "channelMeansLinear": [
+              0.519779595,
+              0.403530655,
+              0.350141476
+            ],
+            "ratioToLevel0": [
+              0.996855,
+              0.991648,
+              0.988935
+            ],
+            "channelRatioSpread": 0.00792,
+            "luminanceRatioToLevel0": 0.992836
+          },
+          {
+            "level": 2,
+            "sizeTexels": 64,
+            "channelMeansLinear": [
+              0.518742763,
+              0.401422292,
+              0.347728651
+            ],
+            "ratioToLevel0": [
+              0.994866,
+              0.986467,
+              0.982121
+            ],
+            "channelRatioSpread": 0.012746,
+            "luminanceRatioToLevel0": 0.988385
+          },
+          {
+            "level": 3,
+            "sizeTexels": 32,
+            "channelMeansLinear": [
+              0.515667493,
+              0.394202277,
+              0.339324427
+            ],
+            "ratioToLevel0": [
+              0.988969,
+              0.968724,
+              0.958384
+            ],
+            "channelRatioSpread": 0.030585,
+            "luminanceRatioToLevel0": 0.973356
+          },
+          {
+            "level": 4,
+            "sizeTexels": 16,
+            "channelMeansLinear": [
+              0.511829385,
+              0.385637856,
+              0.329267782
+            ],
+            "ratioToLevel0": [
+              0.981608,
+              0.947677,
+              0.92998
+            ],
+            "channelRatioSpread": 0.051628,
+            "luminanceRatioToLevel0": 0.955418
+          },
+          {
+            "level": 5,
+            "sizeTexels": 8,
+            "channelMeansLinear": [
+              0.509517573,
+              0.380462553,
+              0.323314956
+            ],
+            "ratioToLevel0": [
+              0.977174,
+              0.93496,
+              0.913167
+            ],
+            "channelRatioSpread": 0.064007,
+            "luminanceRatioToLevel0": 0.944604
+          },
+          {
+            "level": 6,
+            "sizeTexels": 4,
+            "channelMeansLinear": [
+              0.508797816,
+              0.378598538,
+              0.321085744
+            ],
+            "ratioToLevel0": [
+              0.975794,
+              0.930379,
+              0.906871
+            ],
+            "channelRatioSpread": 0.068923,
+            "luminanceRatioToLevel0": 0.940751
+          },
+          {
+            "level": 7,
+            "sizeTexels": 2,
+            "channelMeansLinear": [
+              0.508625383,
+              0.378242355,
+              0.32066842
+            ],
+            "ratioToLevel0": [
+              0.975463,
+              0.929504,
+              0.905692
+            ],
+            "channelRatioSpread": 0.069771,
+            "luminanceRatioToLevel0": 0.939998
+          },
+          {
+            "level": 8,
+            "sizeTexels": 1,
+            "channelMeansLinear": [
+              0.508386884,
+              0.378177716,
+              0.320628637
+            ],
+            "ratioToLevel0": [
+              0.975006,
+              0.929345,
+              0.90558
+            ],
+            "channelRatioSpread": 0.069426,
+            "luminanceRatioToLevel0": 0.939765
+          }
+        ],
+        "poseToMipLevel": [
+          {
+            "distanceMeters": 400,
+            "azimuthDegrees": 55,
+            "unionPixels": 63724,
+            "texelPerPixel": 0.9368,
+            "impliedMipLevel": 0,
+            "predictedSpreadLinearFilter": 0,
+            "predictedSpreadEncodedFilter": 0
+          },
+          {
+            "distanceMeters": 400,
+            "azimuthDegrees": 235,
+            "unionPixels": 60356,
+            "texelPerPixel": 0.9626,
+            "impliedMipLevel": 0,
+            "predictedSpreadLinearFilter": 0,
+            "predictedSpreadEncodedFilter": 0
+          },
+          {
+            "distanceMeters": 1200,
+            "azimuthDegrees": 55,
+            "unionPixels": 5964,
+            "texelPerPixel": 3.0622,
+            "impliedMipLevel": 1.6146,
+            "predictedSpreadLinearFilter": 0,
+            "predictedSpreadEncodedFilter": 0.010385
+          },
+          {
+            "distanceMeters": 1200,
+            "azimuthDegrees": 235,
+            "unionPixels": 5918,
+            "texelPerPixel": 3.0741,
+            "impliedMipLevel": 1.6202,
+            "predictedSpreadLinearFilter": 0,
+            "predictedSpreadEncodedFilter": 0.010408
+          },
+          {
+            "distanceMeters": 4000,
+            "azimuthDegrees": 55,
+            "unionPixels": 524,
+            "texelPerPixel": 10.3309,
+            "impliedMipLevel": 3.3689,
+            "predictedSpreadLinearFilter": 0,
+            "predictedSpreadEncodedFilter": 0.040568
+          },
+          {
+            "distanceMeters": 4000,
+            "azimuthDegrees": 235,
+            "unionPixels": 517,
+            "texelPerPixel": 10.4006,
+            "impliedMipLevel": 3.3786,
+            "predictedSpreadLinearFilter": 0,
+            "predictedSpreadEncodedFilter": 0.040778
+          }
+        ]
+      },
+      "verdict": "REJECTED BY SIGN, and by the 400 m pose. A linear-light pyramid moves the channel ratios by exactly 0 at every level. An encoded-space pyramid moves them a great deal — but it attenuates the channel with the largest RELATIVE encoded variance hardest, and in this atlas that is BLUE. Its ratios run R > G > B at every level, the OPPOSITE order to the measured deficit, and by the level the 4,000 m pose implies it would open a spread of about 0.04 the wrong way. Neither filtering space can make red the deficit channel here."
+    }
+  },
+  "structuralAsymmetry": {
+    "statement": "The shipped lod_0 source carries colour in the LINEAR glTF baseColorFactor and modulation in a GRAYSCALE sRGB texture. All three channels therefore sample the SAME texel, and any texture filter — in any colour space, at any mip level — multiplies all three by the SAME scalar. The source's hue is filter-invariant BY CONSTRUCTION.",
+    "bakeChange": "The far-tier bake moves colour INTO an sRGB-encoded truecolour atlas and sets baseColorFactor to [1,1,1,1]. Per-channel values now pass through an 8-bit sRGB encode and through the renderer's minification filter.",
+    "consequence": "Any per-channel non-neutrality in the encode or the filter is a defect the BAKED tile has and the SOURCE cannot have. That asymmetry is a property of the bake's representation choice, not of any one renderer.",
+    "codeEvidence": {
+      "sourceTextureIsGrayscale": "src/release/procedural-texture.ts rasterizes one luminance channel and writes it through encodeGrayscalePng.",
+      "sourceColourIsLinearFactor": "src/release/block835-v3-package.ts sets material baseColorFactor to v3tCalibratedFactor(hex, mean).",
+      "bakeColourIsInTheTexture": "src/release/far-tier-bake.ts encodes factor x modulation into the atlas and the bake CLI writes baseColorFactor [1,1,1,1]."
+    }
+  },
+  "notClaimedHere": [
+    "This file measures the ATLAS. It does not measure a render, and no verdict about the pinned instrument's own filtering behaviour is drawn from it.",
+    "A 2x2 box pyramid is a MODEL of minification, not the renderer's filter. It bounds and signs the effect; it does not reproduce EEVEE.",
+    "No fix is proposed or applied."
+  ]
+}

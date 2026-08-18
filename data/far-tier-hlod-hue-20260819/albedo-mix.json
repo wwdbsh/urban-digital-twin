@@ -1,0 +1,260 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "far-tier-hlod-hue-20260819:albedo-mix",
+  "task": "T013",
+  "artifact": "far-tier-hue-attribution-albedo-mix",
+  "capturedAt": null,
+  "capturedAtStatement": "NULL BY CONSTRUCTION. Surface areas and albedos, not a capture.",
+  "subject": {
+    "cellId": "manhattan-exterior-cell-w05-000747-17-38610-35822",
+    "recipeId": "far-tier-hlod-bake-v1",
+    "sourceSurfaceAreaSquareMeters": 139174.021,
+    "bakedSurfaceAreaSquareMeters": 105198.826,
+    "bakedOverSourceArea": 0.75588
+  },
+  "method": {
+    "sourceAlbedo": "For each tessellated lod_0 surface: baseColorFactor x the class tile's LINEAR mean, which is the area average a textured surface renders over many tile periods.",
+    "bakedAlbedo": "For each packed far-tier face: the decoded mean of its own atlas content rect. The shipped bytes, not a model of them.",
+    "weightings": [
+      "totalSurfaceArea — every surface, unweighted by view.",
+      "projected — area x max(0, n . v) at the pinned pose azimuth, elevation 18 degrees.",
+      "lit — projected x max(0, n . sun) under the pinned sun."
+    ],
+    "limitations": "NO shadowing, NO inter-building occlusion, NO self-occlusion, NO minification. This model cannot predict a rendered mean and no verdict here rests on its absolute values — only on the SIGN and rough MAGNITUDE of the baked-minus-source hue shift."
+  },
+  "totalSurfaceArea": {
+    "sourceAlbedoLinear": [
+      0.478091263,
+      0.397244014,
+      0.34805612
+    ],
+    "bakedAlbedoLinear": [
+      0.481870221,
+      0.380115559,
+      0.3322929
+    ],
+    "perChannelRatio": [
+      1.007904,
+      0.956882,
+      0.954711
+    ],
+    "channelSpread": 0.053194,
+    "sourceRedOverBlue": 1.373604,
+    "bakedRedOverBlue": 1.450137,
+    "bakedRedOverBlueRelativeToSource": 1.055717
+  },
+  "byAzimuth": [
+    {
+      "azimuthDegrees": 55,
+      "projected": {
+        "sourceAlbedoLinear": [
+          0.463199245,
+          0.376486957,
+          0.324549973
+        ],
+        "bakedAlbedoLinear": [
+          0.47794093,
+          0.382953978,
+          0.336594687
+        ],
+        "perChannelRatio": [
+          1.031826,
+          1.017177,
+          1.037112
+        ],
+        "channelSpread": 0.019935,
+        "sourceRedOverBlue": 1.427205,
+        "bakedRedOverBlue": 1.41993,
+        "bakedRedOverBlueRelativeToSource": 0.994903
+      },
+      "lit": {
+        "sourceAlbedoLinear": [
+          0.465048642,
+          0.381963123,
+          0.330440438
+        ],
+        "bakedAlbedoLinear": [
+          0.479972506,
+          0.389774863,
+          0.343855887
+        ],
+        "perChannelRatio": [
+          1.032091,
+          1.020452,
+          1.040599
+        ],
+        "channelSpread": 0.020147,
+        "sourceRedOverBlue": 1.40736,
+        "bakedRedOverBlue": 1.395854,
+        "bakedRedOverBlueRelativeToSource": 0.991824
+      }
+    },
+    {
+      "azimuthDegrees": 235,
+      "projected": {
+        "sourceAlbedoLinear": [
+          0.462461827,
+          0.376296772,
+          0.324489921
+        ],
+        "bakedAlbedoLinear": [
+          0.478051238,
+          0.383190456,
+          0.336566249
+        ],
+        "perChannelRatio": [
+          1.03371,
+          1.01832,
+          1.037216
+        ],
+        "channelSpread": 0.018897,
+        "sourceRedOverBlue": 1.425196,
+        "bakedRedOverBlue": 1.420378,
+        "bakedRedOverBlueRelativeToSource": 0.996619
+      },
+      "lit": {
+        "sourceAlbedoLinear": [
+          0.233417758,
+          0.211412813,
+          0.187524141
+        ],
+        "bakedAlbedoLinear": [
+          0.168102195,
+          0.164866378,
+          0.154086961
+        ],
+        "perChannelRatio": [
+          0.720177,
+          0.779832,
+          0.821691
+        ],
+        "channelSpread": 0.101514,
+        "sourceRedOverBlue": 1.244734,
+        "bakedRedOverBlue": 1.090957,
+        "bakedRedOverBlueRelativeToSource": 0.876457
+      }
+    }
+  ],
+  "sourceCompositionByRole": [
+    {
+      "role": "facade",
+      "areaSquareMeters": 76462.229,
+      "areaShare": 0.5494,
+      "albedoLinear": [
+        0.547470054,
+        0.425315412,
+        0.36943301
+      ],
+      "redOverBlue": 1.48192
+    },
+    {
+      "role": "roof",
+      "areaSquareMeters": 18743.426,
+      "areaShare": 0.134676,
+      "albedoLinear": [
+        0.168539124,
+        0.16407801,
+        0.154525309
+      ],
+      "redOverBlue": 1.090689
+    },
+    {
+      "role": "ground",
+      "areaSquareMeters": 18234.551,
+      "areaShare": 0.13102,
+      "albedoLinear": [
+        0.541176471,
+        0.533333333,
+        0.517647059
+      ],
+      "redOverBlue": 1.045455
+    },
+    {
+      "role": "trim",
+      "areaSquareMeters": 12138.514,
+      "areaShare": 0.087218,
+      "albedoLinear": [
+        0.533098376,
+        0.407862147,
+        0.265468056
+      ],
+      "redOverBlue": 2.008145
+    },
+    {
+      "role": "glazing",
+      "areaSquareMeters": 10499.863,
+      "areaShare": 0.075444,
+      "albedoLinear": [
+        0.333045065,
+        0.315342432,
+        0.278904899
+      ],
+      "redOverBlue": 1.194117
+    },
+    {
+      "role": "metal",
+      "areaSquareMeters": 3095.438,
+      "areaShare": 0.022241,
+      "albedoLinear": [
+        0.5433941,
+        0.55020054,
+        0.551279662
+      ],
+      "redOverBlue": 0.985696
+    }
+  ],
+  "bakedCompositionByKind": [
+    {
+      "kind": "wall",
+      "areaSquareMeters": 86964.275,
+      "areaShare": 0.826666,
+      "albedoLinear": [
+        0.547667014,
+        0.4252536,
+        0.369663138
+      ],
+      "redOverBlue": 1.48153
+    },
+    {
+      "kind": "roof",
+      "areaSquareMeters": 18234.551,
+      "areaShare": 0.173334,
+      "albedoLinear": [
+        0.168071962,
+        0.164843082,
+        0.154066652
+      ],
+      "redOverBlue": 1.090904
+    }
+  ],
+  "poses": [
+    {
+      "distanceMeters": 400,
+      "azimuthDegrees": 55
+    },
+    {
+      "distanceMeters": 400,
+      "azimuthDegrees": 235
+    },
+    {
+      "distanceMeters": 1200,
+      "azimuthDegrees": 55
+    },
+    {
+      "distanceMeters": 1200,
+      "azimuthDegrees": 235
+    },
+    {
+      "distanceMeters": 4000,
+      "azimuthDegrees": 55
+    },
+    {
+      "distanceMeters": 4000,
+      "azimuthDegrees": 235
+    }
+  ],
+  "notClaimedHere": [
+    "No rendered mean is predicted here.",
+    "No fix is proposed or applied."
+  ]
+}
