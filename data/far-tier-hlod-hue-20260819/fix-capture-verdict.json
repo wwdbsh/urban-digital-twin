@@ -1,0 +1,390 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "far-tier-hlod-hue-20260819:fix-capture-verdict",
+  "task": "T013",
+  "artifact": "far-tier-hue-fix-capture-verdict",
+  "capturedAt": null,
+  "capturedAtStatement": "NULL BY CONSTRUCTION.",
+  "headline": "TWO PRE-REGISTERED BARS ARE MISSED AND THE TASK STOPS HERE. The correction works exactly where the wall is visible and does not reach the pose that decides the bar, because at azimuth 235 beyond 400 m the far tier's visible signal is its ROOF CAP and the correction only touches walls.",
+  "boundTo": {
+    "preRegistration": "fix-pre-registration.json",
+    "preRegistrationSha256": "e01db79ddde70eee239d331ee1e1d02e8ded97d080fb8594724a559ff20e89b7",
+    "committedBeforeCapture": "Yes. The pre-registration was committed in its own commit, with no v3 render in existence.",
+    "recipeSha256": "e73206429c496c28c707120769eee5f4a6155f44442eccb9b19fe2fdcfbc24c8",
+    "recipeSha256MatchesPreRegistration": true
+  },
+  "instrument": {
+    "specId": "far-tier-appearance-instrument-v2",
+    "specSha256": "9a77561b9d8307aff77692412961102b3a3aa66e1a6dbe04db181a886ad53b89",
+    "harnessSha256": "d394bcf76efdedfdf58b1bef86838137adc71f5a0c544e051f509de0edffc1d2",
+    "enforcement": "The generated harness ran immediately before each of the six captures with a renderable-mesh count of 1 and returned the spec hash. The subject was isolated by deletion.",
+    "domain": "The SOURCE-and-V3 intersection, un-premultiplied.",
+    "domainControl": "The v3 tile's silhouette is pixel-identical to v1's at all six poses, so the intersection is the SAME pixel set the predictions were built on. Verified: 0 pixels of difference at every pose."
+  },
+  "poses": [
+    {
+      "pose": "400/55",
+      "distanceMeters": 400,
+      "azimuthDegrees": 55,
+      "silhouetteControlAgainstV1": 0,
+      "intersectionPixels": 61862,
+      "sourceChannelMeans": [
+        0.245700867,
+        0.218731945,
+        0.196856174
+      ],
+      "v3ChannelMeans": [
+        0.241521313,
+        0.21624741,
+        0.194956981
+      ],
+      "perChannelRatios": [
+        0.982989,
+        0.988641,
+        0.990352
+      ],
+      "channelSpread": 0.007363,
+      "predictedPerChannelRatios": [
+        0.964025,
+        0.970083,
+        0.973605
+      ],
+      "predictedChannelSpread": 0.00958,
+      "worstChannelPredictionDelta": 0.018964,
+      "spreadPredictionDelta": 0.002217,
+      "P1": "MISS",
+      "A3primeVerdict": "PASS",
+      "legacyHueBar002Verdict": "PASS",
+      "v1ChannelSpread": 0.015976,
+      "spreadChangeAgainstV1": -0.008613,
+      "unionMeanLuminanceRatio": 1.004122,
+      "absoluteLuminanceDifference": 0.00088945,
+      "A1Verdict": "PASS",
+      "A2Verdict": "PASS",
+      "relativeEnergyChangeAgainstV1": 0.04806873,
+      "pixelsMovedAbove1e6": 41764,
+      "coveredPixels": 63513
+    },
+    {
+      "pose": "400/235",
+      "distanceMeters": 400,
+      "azimuthDegrees": 235,
+      "silhouetteControlAgainstV1": 0,
+      "intersectionPixels": 58950,
+      "sourceChannelMeans": [
+        0.039694421,
+        0.038141124,
+        0.035691889
+      ],
+      "v3ChannelMeans": [
+        0.038676518,
+        0.037958069,
+        0.03568342
+      ],
+      "perChannelRatios": [
+        0.974357,
+        0.995201,
+        0.999763
+      ],
+      "channelSpread": 0.025406,
+      "predictedPerChannelRatios": [
+        0.989163,
+        1.018252,
+        1.009689
+      ],
+      "predictedChannelSpread": 0.029089,
+      "worstChannelPredictionDelta": 0.023051,
+      "spreadPredictionDelta": 0.003683,
+      "P1": "MISS",
+      "A3primeVerdict": "PASS",
+      "legacyHueBar002Verdict": "MISS",
+      "v1ChannelSpread": 0.025772,
+      "spreadChangeAgainstV1": -0.000366,
+      "unionMeanLuminanceRatio": 1.01786,
+      "absoluteLuminanceDifference": 0.0006727,
+      "A1Verdict": "not applicable",
+      "A2Verdict": "PASS",
+      "relativeEnergyChangeAgainstV1": 0.00197256,
+      "pixelsMovedAbove1e6": 492,
+      "coveredPixels": 60153
+    },
+    {
+      "pose": "1200/55",
+      "distanceMeters": 1200,
+      "azimuthDegrees": 55,
+      "silhouetteControlAgainstV1": 0,
+      "intersectionPixels": 5801,
+      "sourceChannelMeans": [
+        0.24420355,
+        0.213603112,
+        0.191170422
+      ],
+      "v3ChannelMeans": [
+        0.236504824,
+        0.208808047,
+        0.187386492
+      ],
+      "perChannelRatios": [
+        0.968474,
+        0.977552,
+        0.980207
+      ],
+      "channelSpread": 0.011732,
+      "predictedPerChannelRatios": [
+        0.947151,
+        0.957979,
+        0.962564
+      ],
+      "predictedChannelSpread": 0.015413,
+      "worstChannelPredictionDelta": 0.021323,
+      "spreadPredictionDelta": 0.003681,
+      "P1": "MISS",
+      "A3primeVerdict": "PASS",
+      "legacyHueBar002Verdict": "PASS",
+      "v1ChannelSpread": 0.020627,
+      "spreadChangeAgainstV1": -0.008895,
+      "unionMeanLuminanceRatio": 0.987486,
+      "absoluteLuminanceDifference": -0.00262795,
+      "A1Verdict": "PASS",
+      "A2Verdict": "PASS",
+      "relativeEnergyChangeAgainstV1": 0.04734096,
+      "pixelsMovedAbove1e6": 4617,
+      "coveredPixels": 5945
+    },
+    {
+      "pose": "1200/235",
+      "distanceMeters": 1200,
+      "azimuthDegrees": 235,
+      "silhouetteControlAgainstV1": 0,
+      "intersectionPixels": 5787,
+      "sourceChannelMeans": [
+        0.042090397,
+        0.040544976,
+        0.03810586
+      ],
+      "v3ChannelMeans": [
+        0.040595346,
+        0.039928502,
+        0.037721584
+      ],
+      "perChannelRatios": [
+        0.96448,
+        0.984795,
+        0.989916
+      ],
+      "channelSpread": 0.025436,
+      "predictedPerChannelRatios": [
+        0.967837,
+        0.993871,
+        0.986401
+      ],
+      "predictedChannelSpread": 0.026034,
+      "worstChannelPredictionDelta": 0.009076,
+      "spreadPredictionDelta": 0.000598,
+      "P1": "PASS",
+      "A3primeVerdict": "PASS",
+      "legacyHueBar002Verdict": "MISS",
+      "v1ChannelSpread": 0.025436,
+      "spreadChangeAgainstV1": 0,
+      "unionMeanLuminanceRatio": 1.002229,
+      "absoluteLuminanceDifference": 0.00008788,
+      "A1Verdict": "not applicable",
+      "A2Verdict": "PASS",
+      "relativeEnergyChangeAgainstV1": 1e-8,
+      "pixelsMovedAbove1e6": 1,
+      "coveredPixels": 5889
+    },
+    {
+      "pose": "4000/55",
+      "distanceMeters": 4000,
+      "azimuthDegrees": 55,
+      "silhouetteControlAgainstV1": 0,
+      "intersectionPixels": 511,
+      "sourceChannelMeans": [
+        0.245675043,
+        0.213221661,
+        0.190491397
+      ],
+      "v3ChannelMeans": [
+        0.236987125,
+        0.207999893,
+        0.186367357
+      ],
+      "perChannelRatios": [
+        0.964637,
+        0.97551,
+        0.978351
+      ],
+      "channelSpread": 0.013714,
+      "predictedPerChannelRatios": [
+        0.942865,
+        0.955938,
+        0.961265
+      ],
+      "predictedChannelSpread": 0.0184,
+      "worstChannelPredictionDelta": 0.021772,
+      "spreadPredictionDelta": 0.004686,
+      "P1": "MISS",
+      "A3primeVerdict": "PASS",
+      "legacyHueBar002Verdict": "PASS",
+      "v1ChannelSpread": 0.022772,
+      "spreadChangeAgainstV1": -0.009058,
+      "unionMeanLuminanceRatio": 0.984226,
+      "absoluteLuminanceDifference": -0.00317314,
+      "A1Verdict": "PASS",
+      "A2Verdict": "PASS",
+      "relativeEnergyChangeAgainstV1": 0.04623123,
+      "pixelsMovedAbove1e6": 489,
+      "coveredPixels": 524
+    },
+    {
+      "pose": "4000/235",
+      "distanceMeters": 4000,
+      "azimuthDegrees": 235,
+      "silhouetteControlAgainstV1": 0,
+      "intersectionPixels": 507,
+      "sourceChannelMeans": [
+        0.047593581,
+        0.045642662,
+        0.042723686
+      ],
+      "v3ChannelMeans": [
+        0.043170904,
+        0.04248856,
+        0.040198632
+      ],
+      "perChannelRatios": [
+        0.907074,
+        0.930896,
+        0.940898
+      ],
+      "channelSpread": 0.033824,
+      "predictedPerChannelRatios": [
+        0.911622,
+        0.942485,
+        0.938231
+      ],
+      "predictedChannelSpread": 0.030863,
+      "worstChannelPredictionDelta": 0.011589,
+      "spreadPredictionDelta": 0.002961,
+      "P1": "MISS",
+      "A3primeVerdict": "MISS",
+      "legacyHueBar002Verdict": "MISS",
+      "v1ChannelSpread": 0.033824,
+      "spreadChangeAgainstV1": 0,
+      "unionMeanLuminanceRatio": 0.942687,
+      "absoluteLuminanceDifference": -0.00241735,
+      "A1Verdict": "not applicable",
+      "A2Verdict": "PASS",
+      "relativeEnergyChangeAgainstV1": 8e-8,
+      "pixelsMovedAbove1e6": 1,
+      "coveredPixels": 516
+    }
+  ],
+  "barVerdicts": {
+    "R1_byteReplay": {
+      "verdict": "PASS",
+      "detail": "The v3 tile reproduces its digests across an in-process repeat and a fresh child process, and the facade-only path through the same code still reproduces the committed v1 atlas byte for byte.",
+      "glbSha256": "e154561cfe63313720b5b735cc5344c9d23b2ec1c406999f3e993511b88dc0a3",
+      "atlasSha256": "368c863cffea9002811700a3f86addd2fe1c32afce867b9209398fa45cb3b278"
+    },
+    "A1_relativeLuminance": {
+      "verdict": "PASS",
+      "missedPoses": [],
+      "detail": "All three applicable poses inside the 0.05 bar, at 1.004122, 0.987486 and 0.984226. The pre-registration predicted 0.985, 0.967 and 0.964 and declared the deviation would GROW at two poses; in the event it SHRANK at all three, from 0.040, 0.023 and 0.020 to 0.004, 0.013 and 0.016. The declared regression did not materialise, and it was declared anyway."
+    },
+    "A2_absoluteLuminance": {
+      "verdict": "PASS",
+      "missedPoses": [],
+      "detail": "All six poses inside 0.010, worst 0.00317 at 4,000 m / azimuth 55. The 4,000 m / azimuth 235 pose is unchanged at -0.00242 rather than improved to the predicted -0.00203, for the same reason the hue bar is missed there."
+    },
+    "P1_predictionAgreement": {
+      "verdict": "MISS",
+      "allowance": 0.01,
+      "missedPoses": [
+        "400/55",
+        "400/235",
+        "1200/55",
+        "4000/55",
+        "4000/235"
+      ],
+      "worstChannelDelta": 0.023051,
+      "worstSpreadDelta": 0.004686,
+      "detail": "MISSED at five of six poses on the per-channel LEVELS, worst 0.023051, while the SPREADS agreed everywhere to 0.0047. The model over-predicted the darkening: it assumed the whole tile carried the substitution, when only the wall zones do and the roof cap does not. The quantity the fix was designed to move — the spread — was predicted well; the quantity it was not designed to move — the overall level — was not."
+    },
+    "A3prime_hue": {
+      "verdict": "MISS",
+      "bar": 0.032,
+      "missedPoses": [
+        "4000/235"
+      ],
+      "worstSpread": 0.033824,
+      "detail": "MISSED at 4,000 m / azimuth 235 with a spread of 0.033824 against a bar of 0.032. That spread is UNCHANGED from v1 to eight decimal places, because the correction does not reach that pose at all."
+    }
+  },
+  "whyTheWorstPoseDidNotMove": {
+    "claim": "The correction is invisible at azimuth 235 beyond 400 m, and this is measured rather than inferred.",
+    "measurement": "Relative energy change between the v1 and v3 renders over the tile's own silhouette: 4.81 per cent at 400 m / azimuth 55, 4.73 per cent at 1,200 m / azimuth 55, 4.62 per cent at 4,000 m / azimuth 55 — and 0.197 per cent at 400 m / azimuth 235, 1e-8 at 1,200 m / azimuth 235 and 8e-8 at 4,000 m / azimuth 235. At the two far azimuth-235 poses exactly ONE pixel moves by more than 1e-6.",
+    "mechanism": "The pinned poses sit on the sun's terminator: the pinned sun is at compass azimuth 145 and the two pose azimuths are its plus and minus 90 degrees. At azimuth 235 the walls the camera sees are the unlit ones, so the tile's visible signal is almost entirely its LIT ROOF CAP — which is why the source reads 0.038 there against 0.216 at azimuth 55. Recipe v3 changes wall zone colours and leaves the roof cap exactly as v1 had it. A wall correction cannot move a roof-dominated image.",
+    "consequence": "The hue spread at azimuth 235 is therefore NOT a wall-colour finding at all. Whatever produces it lives in the roof cap's relationship to the source's roof-and-rooftop-group mix, which recipe v3 does not touch and this stage did not test.",
+    "whatThisRevisesInTheAttribution": "The attribution stage measured the palette-equalised comparison and predicted 0.029089 / 0.026034 / 0.030863 at the three azimuth-235 poses. Those numbers came from a variant that substituted materials across the WHOLE source, including its rooftop groups; recipe v3 substitutes only on the prism's walls. The two are not the same substitution at a roof-dominated pose, and this capture is what shows the difference. The attribution's own caution — that the geometric term's internal mechanism was NOT established — is what this result lands on."
+  },
+  "whatDidWork": {
+    "statement": "Where the wall is visible, the correction does what it was designed to do and slightly better than predicted.",
+    "azimuth55": "Hue spread falls at all three distances: 0.015976 to 0.007363, 0.020627 to 0.011732, 0.022772 to 0.013714. All three cross the legacy 0.02 bar, which two of them missed under v1.",
+    "azimuth235At400m": "0.025772 to 0.025406, a small improvement rather than the predicted worsening to 0.029089, because only 0.2 per cent of that image's energy moved.",
+    "poseCount": "3 of 6 poses now pass the legacy 0.02 hue bar, against 1 of 6 under v1.",
+    "luminance": "A1 and A2 both pass at every applicable pose, and A1's agreement improved at all three rather than degrading as the pre-registration warned it might."
+  },
+  "theStop": {
+    "rule": "The pre-registration's stop rule: a MISS on ANY bar stops the task and is reported; no bar may be retuned after a capture, no pose may be dropped, and no second recipe may be tried inside this stage.",
+    "applied": "TWO bars are missed. The task stops here. A3' is NOT widened to admit 0.033824, P1 is NOT relaxed to admit 0.023051, and the azimuth-235 poses are NOT set aside as roof-dominated after the fact — that they are roof-dominated is a finding of this capture, not a licence to exclude them from it.",
+    "whatIsNotClaimed": "The recipe is not withdrawn and is not promoted. It exists, it replays, it is additive, and it demonstrably improves three of six poses; whether that is worth adopting on its own is a decision this stage does not make."
+  },
+  "renders": {
+    "retention": "LOCAL WORK PRODUCT. The v3 EXR bytes live under artifacts/ and are gitignored; these checksums are the committed artifact.",
+    "files": [
+      {
+        "name": "v3-1200m-az235.exr",
+        "byteSize": 67146,
+        "sha256": "8ef01ad1e09dbeaf0fef6e9d6110379c0abfec72f4b378b58ab09af2edd8ee6f"
+      },
+      {
+        "name": "v3-1200m-az55.exr",
+        "byteSize": 90763,
+        "sha256": "506d72726c4c911417be10a01cadcb73affc01d50dd5668b7d7890b86bd47b02"
+      },
+      {
+        "name": "v3-4000m-az235.exr",
+        "byteSize": 33414,
+        "sha256": "f340503a18f5a6d314a0a6eb3a9057ac84cf9a22cbd13e0e902f5b61dbff5900"
+      },
+      {
+        "name": "v3-4000m-az55.exr",
+        "byteSize": 36214,
+        "sha256": "3a84903fe35f67eee8af530c71743fd82d8daddf2b6d7b804845425a57d18f79"
+      },
+      {
+        "name": "v3-400m-az235.exr",
+        "byteSize": 199645,
+        "sha256": "d898f81aab62244e488c80ebcb06043b859f368682b486d696fbb38d5c8024f6"
+      },
+      {
+        "name": "v3-400m-az55.exr",
+        "byteSize": 349044,
+        "sha256": "add37cfe388591623f09838d16eb10c62b1b1b5931782adbe9ab49fbaae03f27"
+      }
+    ],
+    "tile": {
+      "glbSha256": "e154561cfe63313720b5b735cc5344c9d23b2ec1c406999f3e993511b88dc0a3",
+      "atlasSha256": "368c863cffea9002811700a3f86addd2fe1c32afce867b9209398fa45cb3b278",
+      "atlasByteSize": 196947,
+      "glbByteSize": 123200
+    }
+  },
+  "notClaimedHere": [
+    "No bar was moved after the capture.",
+    "The roof-cap term is NAMED by this capture and NOT measured by it.",
+    "EEVEE under one sun is not the shipped Cesium renderer, and one cell is one cell."
+  ]
+}

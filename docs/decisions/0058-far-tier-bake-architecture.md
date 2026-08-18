@@ -352,3 +352,97 @@ Unchanged by this amendment — the far tier is still the census's coarse prism.
 note that the silhouette figures §1 quotes (median 0.045221, max 0.628806) are
 geometric measurements from the citywide census and were never appearance readings,
 so nothing in this supersession touches them.
+
+---
+
+## Amendment — T013 (Issue #118, branch `fcp/118-hue-integrity`, 2026-08-19)
+
+**Status of this amendment: the hue mechanism is ATTRIBUTED, a colour-only recipe
+`v3` exists and replays, and its confirming capture MISSES two pre-registered bars.
+`v3` is NOT promoted. The mass bake stays blocked.**
+
+Evidence: `data/far-tier-hlod-hue-20260819/` — `atlas-arithmetic.json`,
+`albedo-mix.json`, `pinned-capture.json`, `hue-attribution.json`,
+`instrument-mask-semantics-note.json`, `fix-pre-registration.json`,
+`fix-capture-verdict.json`, each with a `.sha256`.
+
+### The hue mechanism, attributed
+
+The amendment above left it unattributed. It is now attributed, and **not to the
+colour path**, every part of which is excluded by exact arithmetic on the shipped
+bytes: black atlas dilution moves the channel ratios by 1.1e-16 (mixing with black
+in linear light is a per-channel-equal scale); sRGB quantization spreads the
+channels by 0.00079 against measured 0.0160–0.0338; the calibrated factor is a
+per-channel-uniform scale to fifteen decimals and no texel reaches the encoder
+clamp; and gamma-space filtering is rejected **by sign** — it attenuates the
+widest-encoded-contrast channel hardest, which in this atlas is *blue*.
+
+The decisive observation is that at 400 m the atlas is drawn at **0.9368 texels per
+pixel** — magnified, not minified — and the spread is already 0.0160 and 0.0258.
+Between 47% and 76% of the worst spread exists before any minification, which
+retires the black-area candidate for the *hue* finding specifically.
+
+What remains is **surface composition**: which surfaces exist and how much of each
+is seen. Measured in two terms on log(R/B), with a controlled instrumentation
+variant whose geometry is byte-identical to the source: material absorption
+14.1–36.4%, geometric simplification 63.6–85.9%.
+
+### The representation choice this amendment records
+
+Recipe **v3** (`far-tier-hlod-bake-v3`) makes a wall zone's colour the
+**area-weighted linear-light aggregate** of the vertical facade, glazing and trim
+surfaces that wall stands in for, carried as the zone's factor divided through its
+own class-tile linear mean. It derives from **v1**, not v2 — exactly one field
+differs and nine are added — and the same code path with `facade-only` reproduces
+the committed v1 atlas byte for byte, enforced rather than asserted.
+
+`material:metal` is **excluded**. Rooftop tanks, their legs and fire escapes are
+geometric omissions of the prism, not materials a wall absorbs; the scope is what
+the *wall* replaces on the wall's own footprint. 2.22% of source area.
+
+ADR 0047 / T006-G2 handling is **unchanged** by this amendment.
+
+### The confirming capture, and why it stops
+
+Pre-registered before any v3 render existed: per-pose point predictions, an
+agreement bar of 0.01, and **A3' = 0.032**, derived from the measured irreducible
+geometric term (0.030863) plus the instrument's own cross-session tolerance (0.001).
+
+| pose | v1 spread | v3 spread | 0.02 bar | A3' |
+| --- | --- | --- | --- | --- |
+| 400/55 | 0.015976 | **0.007363** | PASS | PASS |
+| 400/235 | 0.025772 | 0.025406 | MISS | PASS |
+| 1200/55 | 0.020627 | **0.011732** | PASS | PASS |
+| 1200/235 | 0.025436 | 0.025436 | MISS | PASS |
+| 4000/55 | 0.022772 | **0.013714** | PASS | PASS |
+| 4000/235 | 0.033824 | 0.033824 | MISS | **MISS** |
+
+A1 and A2 **pass at every applicable pose**, and A1's agreement *improved* at all
+three rather than degrading as the pre-registration warned it might. Byte replay
+passes in-process and in a fresh child.
+
+**Two bars are missed.** A3' misses at 4,000 m / azimuth 235 at 0.033824, and the
+prediction bar misses at five of six poses on the per-channel *levels* (worst
+0.023051) while the *spreads* agreed everywhere to 0.0047.
+
+### Why the worst pose did not move at all — measured, not inferred
+
+Relative energy change between the v1 and v3 renders over the tile's own
+silhouette: **4.81% / 4.73% / 4.62%** at the three azimuth-55 poses, and **0.197% /
+1e-8 / 8e-8** at the three azimuth-235 poses. At the two far azimuth-235 poses
+exactly **one pixel** moves by more than 1e-6.
+
+The pinned poses sit on the sun's terminator — the sun is at compass azimuth 145
+and the pose azimuths are its ±90°. At azimuth 235 the visible walls are the unlit
+ones, so the tile's visible signal is almost entirely its **lit roof cap**, which
+v3 does not touch. A wall correction cannot move a roof-dominated image.
+
+**The azimuth-235 hue spread is therefore not a wall-colour finding at all.** The
+attribution's own caution — that the geometric term's internal mechanism was *not*
+established — is exactly what this capture lands on. The roof cap is now the named
+next candidate, and it is named rather than measured.
+
+### What was not done
+
+No bar was widened after the capture, no pose was set aside as roof-dominated after
+the fact, and no second recipe was tried. v3 is neither withdrawn nor promoted.

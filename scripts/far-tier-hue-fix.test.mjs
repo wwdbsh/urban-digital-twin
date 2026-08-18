@@ -9,6 +9,7 @@
  * of the colour.
  */
 import { readFileSync } from "node:fs";
+import { sha256HexSync } from "../src/domain/deterministic-hash.ts";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -167,5 +168,80 @@ describe("the pre-registration is a pre-registration", () => {
     expect(preRegistration.predictionModel.sourceRecord).toContain("pinned-capture.json");
     expect(preRegistration.predictionModel.sourceRecord).toMatch(/[0-9a-f]{64}/u);
     expect(preRegistration.predictionModel.knownImperfections.length).toBeGreaterThanOrEqual(3);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// The verdict, tested against the bars as they were pre-registered.
+//
+// The failure mode this guards is the one that matters after a MISS: a bar
+// quietly widened, a pose quietly dropped, or a verdict recomputed against
+// something other than the number committed before the capture.
+// ---------------------------------------------------------------------------
+
+const verdict = JSON.parse(readFileSync(join(repositoryRoot, "data/far-tier-hlod-hue-20260819/fix-capture-verdict.json"), "utf8"));
+
+describe("the verdict is judged against the pre-registered bars", () => {
+  it("binds to the pre-registration by checksum and to the same recipe", () => {
+    const preText = readFileSync(join(repositoryRoot, "data/far-tier-hlod-hue-20260819/fix-pre-registration.json"), "utf8");
+    expect(verdict.boundTo.preRegistrationSha256).toBe(sha256HexSync(preText));
+    expect(verdict.boundTo.recipeSha256MatchesPreRegistration).toBe(true);
+    expect(verdict.boundTo.recipeSha256).toBe(farTierRecipeHashV3());
+  });
+
+  it("uses the bar values the pre-registration fixed, not new ones", () => {
+    expect(verdict.barVerdicts.A3prime_hue.bar).toBe(preRegistration.bars.A3prime.bar);
+    expect(verdict.barVerdicts.P1_predictionAgreement.allowance).toBe(preRegistration.bars.predictionAgreement.allowance);
+  });
+
+  it("keeps all six poses", () => {
+    expect(verdict.poses).toHaveLength(6);
+    expect(verdict.poses.map((pose) => pose.pose).sort()).toEqual(preRegistration.poses.map((pose) => pose.pose).sort());
+  });
+
+  it("recomputes every per-pose verdict from the channel means beside it", () => {
+    for (const pose of verdict.poses) {
+      const ratios = pose.v3ChannelMeans.map((value, index) => value / pose.sourceChannelMeans[index]);
+      expect(pose.channelSpread).toBeCloseTo(Math.max(...ratios) - Math.min(...ratios), 6);
+      expect(pose.A3primeVerdict).toBe(pose.channelSpread <= preRegistration.bars.A3prime.bar ? "PASS" : "MISS");
+      expect(pose.A2Verdict).toBe(Math.abs(pose.absoluteLuminanceDifference) <= 0.01 ? "PASS" : "MISS");
+    }
+  });
+
+  it("reports the two misses rather than a summary that hides them", () => {
+    expect(verdict.barVerdicts.A3prime_hue.verdict).toBe("MISS");
+    expect(verdict.barVerdicts.P1_predictionAgreement.verdict).toBe("MISS");
+    expect(verdict.barVerdicts.A3prime_hue.missedPoses).toEqual(["4000/235"]);
+    expect(verdict.barVerdicts.A1_relativeLuminance.verdict).toBe("PASS");
+    expect(verdict.barVerdicts.A2_absoluteLuminance.verdict).toBe("PASS");
+    expect(verdict.barVerdicts.R1_byteReplay.verdict).toBe("PASS");
+    expect(verdict.headline).toContain("STOPS HERE");
+    expect(verdict.theStop.applied).toContain("NOT widened");
+  });
+
+  it("holds the measurement that explains the miss", () => {
+    // The correction is a WALL correction. Where the image is roof, it cannot act.
+    const far235 = verdict.poses.filter((pose) => pose.azimuthDegrees === 235 && pose.distanceMeters >= 1200);
+    for (const pose of far235) {
+      expect(pose.relativeEnergyChangeAgainstV1).toBeLessThan(1e-6);
+      expect(pose.pixelsMovedAbove1e6).toBeLessThanOrEqual(1);
+      // Unchanged from v1 means exactly unchanged, not merely close.
+      expect(Math.abs(pose.spreadChangeAgainstV1)).toBeLessThan(1e-5);
+    }
+    for (const pose of verdict.poses.filter((entry) => entry.azimuthDegrees === 55)) {
+      expect(pose.relativeEnergyChangeAgainstV1).toBeGreaterThan(0.04);
+      expect(pose.spreadChangeAgainstV1).toBeLessThan(0);
+    }
+  });
+
+  it("keeps the domain control that makes the comparison legitimate", () => {
+    for (const pose of verdict.poses) expect(pose.silhouetteControlAgainstV1).toBe(0);
+  });
+
+  it("records what did work without letting it stand in for the verdict", () => {
+    const passes = verdict.poses.filter((pose) => pose.legacyHueBar002Verdict === "PASS").length;
+    expect(passes).toBe(3);
+    expect(verdict.whatDidWork.poseCount).toContain(`${passes} of 6`);
+    expect(verdict.theStop.rule).toContain("no second recipe may be tried");
   });
 });
