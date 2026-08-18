@@ -4,7 +4,7 @@
  * tests attack both, and the second matters more — a task that quietly moves a
  * committed checksum has broken the ledger even if its own numbers are right.
  */
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -22,12 +22,38 @@ const readJson = (name) => JSON.parse(readRecord(name));
 
 const RECORDS = ["stage0-hierarchy", "bake-pre-registration", "prototype-provenance", "sampling-results"];
 
+/**
+ * Every committed far-tier record, v1 and v2, discovered from the TREE rather
+ * than from a hand-kept list.
+ *
+ * The list above is v1-only and stayed v1-only when T010 added a second
+ * directory, so the sidecar and artefact-string scans silently stopped covering
+ * the new records while still being described as covering them. Enumerating the
+ * directories removes the chance to forget again.
+ */
+const EVIDENCE_DIRECTORIES = ["far-tier-hlod-20260818", "far-tier-hlod-v2-20260818"];
+const ALL_RECORDS = EVIDENCE_DIRECTORIES.flatMap((directory) => {
+  const root = join(repositoryRoot, "data", directory);
+  return readdirSync(root)
+    .filter((entry) => entry.endsWith(".json"))
+    .sort()
+    .map((entry) => ({ directory, root, name: entry.replace(/\.json$/u, "") }));
+});
+
 describe("every far-tier record matches its own sidecar", () => {
-  for (const name of RECORDS) {
-    it(`${name} reproduces its committed checksum`, () => {
-      const declared = readFileSync(join(evidenceRoot, `${name}.sha256`), "utf8").trim().split(/\s+/u);
-      expect(declared[1]).toBe(`${name}.json`);
-      expect(sha256HexSync(readRecord(name))).toBe(declared[0]);
+  it("discovers records from both evidence directories, v1 and v2", () => {
+    expect(ALL_RECORDS.length).toBeGreaterThan(RECORDS.length);
+    for (const directory of EVIDENCE_DIRECTORIES) {
+      expect(ALL_RECORDS.some((record) => record.directory === directory), `no record found under ${directory}`).toBe(true);
+    }
+  });
+
+  for (const record of ALL_RECORDS) {
+    it(`${record.directory}/${record.name} reproduces its committed checksum`, () => {
+      const text = readFileSync(join(record.root, `${record.name}.json`), "utf8");
+      const declared = readFileSync(join(record.root, `${record.name}.sha256`), "utf8").trim().split(/\s+/u);
+      expect(declared[1]).toBe(`${record.name}.json`);
+      expect(sha256HexSync(text)).toBe(declared[0]);
     });
   }
 });
@@ -39,15 +65,16 @@ describe("the committed records are free of emission defects", () => {
   // undefined faces ... undefined of 883 cells". Every test at the time passed,
   // because each only asserted fields it had itself added. This one reads the
   // bytes.
-  for (const name of RECORDS) {
-    it(`${name} contains no "undefined" anywhere in its bytes`, () => {
-      expect(readRecord(name)).not.toContain("undefined");
+  for (const record of ALL_RECORDS) {
+    const label = `${record.directory}/${record.name}`;
+    it(`${label} contains no "undefined" anywhere in its bytes`, () => {
+      expect(readFileSync(join(record.root, `${record.name}.json`), "utf8")).not.toContain("undefined");
     });
 
-    it(`${name} contains no other stringified-JS artefact`, () => {
-      const text = readRecord(name);
+    it(`${label} contains no other stringified-JS artefact`, () => {
+      const text = readFileSync(join(record.root, `${record.name}.json`), "utf8");
       for (const artefact of ["[object Object]", "NaN", '"null"', "Infinity"]) {
-        expect(text, `${name} contains ${artefact}`).not.toContain(artefact);
+        expect(text, `${label} contains ${artefact}`).not.toContain(artefact);
       }
     });
   }
@@ -482,5 +509,33 @@ describe("the sampling record's own arithmetic holds", () => {
     const residual = readJson("sampling-results").diagnosis.unexplainedResidual;
     expect(residual.status).toContain("UNEXPLAINED");
     expect(residual.whatWouldSettleIt.length).toBeGreaterThan(0);
+  });
+});
+
+describe("the v2 shading derivation cannot see a measurement", () => {
+  // The anti-fitting protocol in prose is worth little. This reads the file.
+  const source = readFileSync(join(repositoryRoot, "src", "release", "far-tier-shading.ts"), "utf8");
+
+  it("imports only committed plan geometry", () => {
+    const imports = [...source.matchAll(/^import .*?from "(.*?)";$/gmu)].map((match) => match[1]);
+    expect(imports).toEqual(["../domain/deterministic-facade-generator-v3.ts"]);
+  });
+
+  it("uses no transcendental in the derivation path", () => {
+    // Comments stripped first, so the check is about CODE and not about prose
+    // that happens to name the thing it forbids.
+    const code = source.replace(/\/\*[\s\S]*?\*\//gu, "").replace(/^\s*\/\/.*$/gmu, "");
+    for (const banned of ["Math.pow", "Math.exp", "Math.log", "Math.cos", "Math.sin", "**"]) {
+      expect(code, `derivation uses ${banned}`).not.toContain(banned);
+    }
+  });
+
+  it("never mentions a ratio, a pose, a camera or a luminance in the scalar's own path", () => {
+    const scalar = source.slice(source.indexOf("export function farTierShadingTerm"));
+    const band = scalar.indexOf("export function farTierRoofScalarBand");
+    const scalarOnly = band < 0 ? scalar : scalar.slice(0, band);
+    for (const banned of ["luminance", "Luminance", "ratio", "Ratio", "camera", "pose"]) {
+      expect(scalarOnly, `scalar path mentions ${banned}`).not.toContain(banned);
+    }
   });
 });

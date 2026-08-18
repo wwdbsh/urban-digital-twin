@@ -1,0 +1,572 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "far-tier-hlod-v2-20260818:stage-a-packing-census",
+  "task": "T010",
+  "artifact": "far-tier-v2-packing-feasibility-census",
+  "capturedAt": null,
+  "capturedAtStatement": "NULL BY CONSTRUCTION. Every number here is arithmetic over committed inputs; a timestamp would be the only field a replay could not reproduce.",
+  "claim": "Packing feasibility and delivered resolution for every node of the far-tier hierarchy, under recipe v1 and under recipe v2 at both candidate flat-face gutter widths.",
+  "lineage": {
+    "supersedesRecord": "data/far-tier-hlod-20260818/stage0-hierarchy.json",
+    "supersededRecordSha256": "c6a2a9f9ca6f36eb17d1d6a3f20890c25576cd1a136c362ab49fd2a3688cd38c",
+    "supersededRecordIsImmutable": "The T002 records and their sidecars are NOT edited by this task. Its own amendments block forbids it, and this record lives in a separate directory precisely so that stays true.",
+    "whatT002Measured": {
+      "leavesOnly": true,
+      "leafUnpackableCount": 172,
+      "leafUnderResolvedCount": 650,
+      "internalNodesNeverPacked": "T002 packed the 883 ledger cells and no internal node at all, so it could not see whether the hierarchy above the leaf level is bakeable."
+    }
+  },
+  "inputs": {
+    "baseRelease": {
+      "releaseId": "manhattan-citywide-20260804",
+      "manifestFileChecksumSha256": "acb5a9b52014f86535c8478e7d4e516efc03f6dff95c17e9896dfea4413c203c"
+    },
+    "ledger": {
+      "ledgerId": "manhattan-exterior-wave-ledger-20260804-a3382ef4cac213a2",
+      "checksumSha256": "62e093d2ca50b54b49fd8bbad9d0b11f6301b2b197623deb343f9ea915e59016",
+      "cellCount": 883
+    },
+    "targetTexelWorldSizeMeters": 1.396263,
+    "atlasPixelBounds": {
+      "minimum": 64,
+      "maximum": 256
+    },
+    "atlasCeilingUnchanged": "B1-B5 are NOT touched by this task. The atlas ceiling stays at 256 and no memory bar moves; the only change is how many texels a resolved-away face costs."
+  },
+  "hierarchy": {
+    "totalNodes": 1221,
+    "leafNodes": 883,
+    "internalNodes": 338,
+    "facesPerLeaf": {
+      "min": 4,
+      "median": 650,
+      "p99": 2642,
+      "max": 3836
+    },
+    "facesPerInternalNode": {
+      "min": 16,
+      "median": 3232,
+      "p99": 305270,
+      "max": 343288
+    }
+  },
+  "results": {
+    "v1": {
+      "parameters": {
+        "gutterTexels": 2,
+        "flatFaceGutterTexels": 2,
+        "faceTexelFloor": 4,
+        "flatFaceTexels": 4,
+        "shadingScalar": 1
+      },
+      "minimumTexelsPerFlatFace": 64,
+      "leaves": {
+        "nodes": 883,
+        "packedCount": 711,
+        "unpackableCount": 172,
+        "unpackableShare": 0.19479,
+        "underResolvedCount": 650,
+        "underResolvedShareOfPacked": 0.914205,
+        "appliedScaleHistogram": {
+          "1": 61,
+          "0.08838834764831845": 5,
+          "0.125": 12,
+          "0.7071067811865476": 109,
+          "0.1767766952966369": 26,
+          "0.5": 264,
+          "0.25": 40,
+          "0.3535533905932738": 192,
+          "0.04419417382415922": 1,
+          "0.0625": 1
+        },
+        "deliveredRatio": {
+          "min": 0.044194,
+          "median": 0.5,
+          "max": 1
+        },
+        "meanFlatFaceShare": 0.798169,
+        "occupancy": {
+          "min": 0.078125,
+          "median": 0.714325,
+          "max": 0.998047,
+          "mean": 0.705002
+        }
+      },
+      "internalNodes": {
+        "nodes": 338,
+        "packedCount": 13,
+        "unpackableCount": 325,
+        "unpackableShare": 0.961538,
+        "underResolvedCount": 10,
+        "underResolvedShareOfPacked": 0.769231,
+        "appliedScaleHistogram": {
+          "1": 3,
+          "0.3535533905932738": 1,
+          "0.5": 9
+        },
+        "deliveredRatio": {
+          "min": 0.353553,
+          "median": 0.5,
+          "max": 1
+        },
+        "meanFlatFaceShare": 0.595349,
+        "occupancy": {
+          "min": 0.367188,
+          "median": 0.615845,
+          "max": 0.735107,
+          "mean": 0.618124
+        }
+      },
+      "allNodes": {
+        "nodes": 1221,
+        "packedCount": 724,
+        "unpackableCount": 497,
+        "unpackableShare": 0.407043,
+        "underResolvedCount": 660,
+        "underResolvedShareOfPacked": 0.911602,
+        "appliedScaleHistogram": {
+          "1": 64,
+          "0.08838834764831845": 5,
+          "0.125": 12,
+          "0.7071067811865476": 109,
+          "0.1767766952966369": 26,
+          "0.5": 273,
+          "0.25": 40,
+          "0.3535533905932738": 193,
+          "0.04419417382415922": 1,
+          "0.0625": 1
+        },
+        "deliveredRatio": {
+          "min": 0.044194,
+          "median": 0.5,
+          "max": 1
+        },
+        "meanFlatFaceShare": 0.794527,
+        "occupancy": {
+          "min": 0.078125,
+          "median": 0.71077,
+          "max": 0.998047,
+          "mean": 0.703442
+        }
+      },
+      "byZoomLevel": [
+        {
+          "zoom": 18,
+          "nodes": 16,
+          "packedCount": 6,
+          "unpackableCount": 10
+        },
+        {
+          "zoom": 17,
+          "nodes": 628,
+          "packedCount": 571,
+          "unpackableCount": 57
+        },
+        {
+          "zoom": 16,
+          "nodes": 351,
+          "packedCount": 104,
+          "unpackableCount": 247
+        },
+        {
+          "zoom": 15,
+          "nodes": 128,
+          "packedCount": 24,
+          "unpackableCount": 104
+        },
+        {
+          "zoom": 14,
+          "nodes": 51,
+          "packedCount": 9,
+          "unpackableCount": 42
+        },
+        {
+          "zoom": 13,
+          "nodes": 21,
+          "packedCount": 4,
+          "unpackableCount": 17
+        },
+        {
+          "zoom": 12,
+          "nodes": 11,
+          "packedCount": 2,
+          "unpackableCount": 9
+        },
+        {
+          "zoom": 11,
+          "nodes": 6,
+          "packedCount": 1,
+          "unpackableCount": 5
+        },
+        {
+          "zoom": 10,
+          "nodes": 3,
+          "packedCount": 1,
+          "unpackableCount": 2
+        },
+        {
+          "zoom": 9,
+          "nodes": 3,
+          "packedCount": 1,
+          "unpackableCount": 2
+        },
+        {
+          "zoom": 8,
+          "nodes": 3,
+          "packedCount": 1,
+          "unpackableCount": 2
+        }
+      ]
+    },
+    "v2-flatgutter2": {
+      "parameters": {
+        "gutterTexels": 2,
+        "flatFaceGutterTexels": 2,
+        "faceTexelFloor": 4,
+        "flatFaceTexels": 1,
+        "shadingScalar": 1
+      },
+      "minimumTexelsPerFlatFace": 25,
+      "leaves": {
+        "nodes": 883,
+        "packedCount": 873,
+        "unpackableCount": 10,
+        "unpackableShare": 0.011325,
+        "underResolvedCount": 789,
+        "underResolvedShareOfPacked": 0.90378,
+        "appliedScaleHistogram": {
+          "1": 84,
+          "0.25": 45,
+          "0.7071067811865476": 239,
+          "0.3535533905932738": 88,
+          "0.5": 391,
+          "0.1767766952966369": 23,
+          "0.125": 2,
+          "0.0625": 1
+        },
+        "deliveredRatio": {
+          "min": 0.0625,
+          "median": 0.5,
+          "max": 1
+        },
+        "meanFlatFaceShare": 0.770558,
+        "occupancy": {
+          "min": 0.030518,
+          "median": 0.546051,
+          "max": 0.973129,
+          "mean": 0.550292
+        }
+      },
+      "internalNodes": {
+        "nodes": 338,
+        "packedCount": 112,
+        "unpackableCount": 226,
+        "unpackableShare": 0.668639,
+        "underResolvedCount": 109,
+        "underResolvedShareOfPacked": 0.973214,
+        "appliedScaleHistogram": {
+          "1": 3,
+          "0.1767766952966369": 40,
+          "0.25": 38,
+          "0.5": 13,
+          "0.3535533905932738": 7,
+          "0.125": 5,
+          "0.0625": 2,
+          "0.08838834764831845": 4
+        },
+        "deliveredRatio": {
+          "min": 0.0625,
+          "median": 0.25,
+          "max": 1
+        },
+        "meanFlatFaceShare": 0.924387,
+        "occupancy": {
+          "min": 0.291016,
+          "median": 0.816223,
+          "max": 0.989151,
+          "mean": 0.786406
+        }
+      },
+      "allNodes": {
+        "nodes": 1221,
+        "packedCount": 985,
+        "unpackableCount": 236,
+        "unpackableShare": 0.193284,
+        "underResolvedCount": 898,
+        "underResolvedShareOfPacked": 0.911675,
+        "appliedScaleHistogram": {
+          "1": 87,
+          "0.25": 83,
+          "0.7071067811865476": 239,
+          "0.3535533905932738": 95,
+          "0.5": 404,
+          "0.1767766952966369": 63,
+          "0.125": 7,
+          "0.0625": 3,
+          "0.08838834764831845": 4
+        },
+        "deliveredRatio": {
+          "min": 0.0625,
+          "median": 0.5,
+          "max": 1
+        },
+        "meanFlatFaceShare": 0.788049,
+        "occupancy": {
+          "min": 0.030518,
+          "median": 0.562607,
+          "max": 0.989151,
+          "mean": 0.57714
+        }
+      },
+      "byZoomLevel": [
+        {
+          "zoom": 18,
+          "nodes": 16,
+          "packedCount": 16,
+          "unpackableCount": 0
+        },
+        {
+          "zoom": 17,
+          "nodes": 628,
+          "packedCount": 628,
+          "unpackableCount": 0
+        },
+        {
+          "zoom": 16,
+          "nodes": 351,
+          "packedCount": 270,
+          "unpackableCount": 81
+        },
+        {
+          "zoom": 15,
+          "nodes": 128,
+          "packedCount": 40,
+          "unpackableCount": 88
+        },
+        {
+          "zoom": 14,
+          "nodes": 51,
+          "packedCount": 16,
+          "unpackableCount": 35
+        },
+        {
+          "zoom": 13,
+          "nodes": 21,
+          "packedCount": 6,
+          "unpackableCount": 15
+        },
+        {
+          "zoom": 12,
+          "nodes": 11,
+          "packedCount": 4,
+          "unpackableCount": 7
+        },
+        {
+          "zoom": 11,
+          "nodes": 6,
+          "packedCount": 2,
+          "unpackableCount": 4
+        },
+        {
+          "zoom": 10,
+          "nodes": 3,
+          "packedCount": 1,
+          "unpackableCount": 2
+        },
+        {
+          "zoom": 9,
+          "nodes": 3,
+          "packedCount": 1,
+          "unpackableCount": 2
+        },
+        {
+          "zoom": 8,
+          "nodes": 3,
+          "packedCount": 1,
+          "unpackableCount": 2
+        }
+      ]
+    },
+    "v2-flatgutter1": {
+      "parameters": {
+        "gutterTexels": 2,
+        "flatFaceGutterTexels": 1,
+        "faceTexelFloor": 4,
+        "flatFaceTexels": 1,
+        "shadingScalar": 1
+      },
+      "minimumTexelsPerFlatFace": 9,
+      "leaves": {
+        "nodes": 883,
+        "packedCount": 883,
+        "unpackableCount": 0,
+        "unpackableShare": 0,
+        "underResolvedCount": 785,
+        "underResolvedShareOfPacked": 0.889015,
+        "appliedScaleHistogram": {
+          "1": 98,
+          "0.25": 37,
+          "0.3535533905932738": 69,
+          "0.7071067811865476": 358,
+          "0.5": 318,
+          "0.1767766952966369": 3
+        },
+        "deliveredRatio": {
+          "min": 0.176777,
+          "median": 0.707107,
+          "max": 1
+        },
+        "meanFlatFaceShare": 0.744095,
+        "occupancy": {
+          "min": 0.010986,
+          "median": 0.473541,
+          "max": 0.79837,
+          "mean": 0.481238
+        }
+      },
+      "internalNodes": {
+        "nodes": 338,
+        "packedCount": 244,
+        "unpackableCount": 94,
+        "unpackableShare": 0.278107,
+        "underResolvedCount": 241,
+        "underResolvedShareOfPacked": 0.987705,
+        "appliedScaleHistogram": {
+          "1": 3,
+          "0.25": 82,
+          "0.3535533905932738": 101,
+          "0.1767766952966369": 19,
+          "0.125": 15,
+          "0.5": 16,
+          "0.08838834764831845": 4,
+          "0.0625": 2,
+          "0.7071067811865476": 2
+        },
+        "deliveredRatio": {
+          "min": 0.0625,
+          "median": 0.353553,
+          "max": 1
+        },
+        "meanFlatFaceShare": 0.923046,
+        "occupancy": {
+          "min": 0.259766,
+          "median": 0.586258,
+          "max": 0.987396,
+          "mean": 0.613057
+        }
+      },
+      "allNodes": {
+        "nodes": 1221,
+        "packedCount": 1127,
+        "unpackableCount": 94,
+        "unpackableShare": 0.076986,
+        "underResolvedCount": 1026,
+        "underResolvedShareOfPacked": 0.910382,
+        "appliedScaleHistogram": {
+          "1": 101,
+          "0.25": 119,
+          "0.3535533905932738": 170,
+          "0.7071067811865476": 360,
+          "0.5": 334,
+          "0.1767766952966369": 22,
+          "0.125": 15,
+          "0.08838834764831845": 4,
+          "0.0625": 2
+        },
+        "deliveredRatio": {
+          "min": 0.0625,
+          "median": 0.5,
+          "max": 1
+        },
+        "meanFlatFaceShare": 0.782839,
+        "occupancy": {
+          "min": 0.010986,
+          "median": 0.502304,
+          "max": 0.987396,
+          "mean": 0.509777
+        }
+      },
+      "byZoomLevel": [
+        {
+          "zoom": 18,
+          "nodes": 16,
+          "packedCount": 16,
+          "unpackableCount": 0
+        },
+        {
+          "zoom": 17,
+          "nodes": 628,
+          "packedCount": 628,
+          "unpackableCount": 0
+        },
+        {
+          "zoom": 16,
+          "nodes": 351,
+          "packedCount": 351,
+          "unpackableCount": 0
+        },
+        {
+          "zoom": 15,
+          "nodes": 128,
+          "packedCount": 91,
+          "unpackableCount": 37
+        },
+        {
+          "zoom": 14,
+          "nodes": 51,
+          "packedCount": 22,
+          "unpackableCount": 29
+        },
+        {
+          "zoom": 13,
+          "nodes": 21,
+          "packedCount": 8,
+          "unpackableCount": 13
+        },
+        {
+          "zoom": 12,
+          "nodes": 11,
+          "packedCount": 6,
+          "unpackableCount": 5
+        },
+        {
+          "zoom": 11,
+          "nodes": 6,
+          "packedCount": 2,
+          "unpackableCount": 4
+        },
+        {
+          "zoom": 10,
+          "nodes": 3,
+          "packedCount": 1,
+          "unpackableCount": 2
+        },
+        {
+          "zoom": 9,
+          "nodes": 3,
+          "packedCount": 1,
+          "unpackableCount": 2
+        },
+        {
+          "zoom": 8,
+          "nodes": 3,
+          "packedCount": 1,
+          "unpackableCount": 2
+        }
+      ]
+    }
+  },
+  "censusModelComparability": {
+    "whatTheFaceSetIs": "Faces are built from the base snapshot's SOURCE rings and `heightMeters`, with the plan builder's own 10 m fallback for the 76 buildings recorded with no height. They are NOT the V3 tessellation's faces.",
+    "refusalInclusive": "Buildings the V3 grammar refuses are INCLUDED here, because a source ring exists for them. A real bake ships none of them, so every face count in this record is an UPPER BOUND on what a bake would place.",
+    "whyThatIsAcceptable": "An upper bound is the conservative direction for a feasibility census: it can only report a cell as harder to pack than it is, never easier.",
+    "crossCheckAgainstT002": "The v1 column reproduces T002's published leaf figures exactly — 172 unpackable and 650 under-resolved — which is what licenses reading the v2 column as a like-for-like comparison rather than a differently-modelled one."
+  },
+  "notClaimedHere": [
+    "This is packing arithmetic. It says nothing about how the tier LOOKS.",
+    "No tile was baked and no still was captured for this record.",
+    "Delivered resolution is measured with synthetic ordering keys, so a cell's appliedScale here is representative of a real bake rather than byte-identical to it: face world area is the primary sort in both and only ties break differently.",
+    "Face counts are upper bounds: refused buildings are counted here and shipped by no bake. See `censusModelComparability`."
+  ]
+}

@@ -149,6 +149,118 @@ export const FAR_TIER_BAKE_RECIPE = {
   capsEmitted: "roof",
 } as const;
 
+/**
+ * RECIPE v2 — the packing half.
+ *
+ * v2 exists because v1 left the far tier with two defects the T002 records
+ * measured and could not fix inside their own frozen bars: 172 of 883 ledger
+ * cells could not be packed at any scale, and the cells that could were packed
+ * at a median global resolution scale of 0.5.
+ *
+ * BOTH TRACE TO ONE DECISION: v1 gave a flat, constant-colour face a 4x4
+ * content rect. A constant colour needs exactly ONE texel. The 4x4 was never a
+ * quality choice — it fell out of reusing `faceTexelFloor` as both "below this,
+ * stop resolving detail" and "this is how big a resolved-away face is". v2
+ * separates them.
+ *
+ * v1 IS NOT TOUCHED. `FAR_TIER_BAKE_RECIPE` and `farTierRecipeHash()` are
+ * byte-frozen, every v1 artifact still replays, and the T002 records remain
+ * exactly as committed. v2 is selected explicitly by a caller and by nothing
+ * else.
+ *
+ * `shading` STAYS NULL. Stage B derived a roof-only shading term, predicted the
+ * verdict it implies, and HALTED at a pre-registered NO-GO without baking a v2
+ * tile — so nothing was added to this object and its hash did not move for that
+ * reason. See `data/far-tier-hlod-v2-20260818/stage-b-decomposition-and-prediction.json`.
+ *
+ * NOT FROZEN AGAINST ANY ARTIFACT. No v2 tile exists, so `farTierRecipeHashV2()`
+ * pins nothing yet. It is a version identity, not a provenance commitment, and
+ * it may still move before a v2 artifact is ever written.
+ */
+export const FAR_TIER_BAKE_RECIPE_V2 = {
+  ...FAR_TIER_BAKE_RECIPE,
+  recipeId: "far-tier-hlod-bake-v2",
+  supersedes: FAR_TIER_BAKE_RECIPE.recipeId,
+
+  /**
+   * A resolved-away face carries ONE texel, not `faceTexelFloor` of them.
+   *
+   * `farTierGeometry` already samples texel CENTRES — `u0 = (x + 0.5) / size`
+   * and `u1 = (x + width - 0.5) / size` — so at width 1 the two collapse to the
+   * same coordinate and all four corners address the single texel. That is the
+   * trick the roof fan has always used. The rendered result is identical to a
+   * 4x4 block of the same colour; only the atlas cost differs.
+   */
+  flatFaceTexels: 1,
+
+  /**
+   * ONE gutter texel around a flat face, against two around a resolved one.
+   *
+   * Reasoned, not assumed. A flat face's four corners carry the SAME uv, so its
+   * uv derivative across the face is identically zero, so the hardware selects
+   * mip level 0 for it and never samples a level where a wider gutter would
+   * matter. One texel of edge-clamped gutter is there to protect the bilinear
+   * tap at level 0, where a magnifying sample at the exact texel centre can
+   * drift into its neighbours by a floating-point epsilon.
+   *
+   * THE RESIDUAL, STATED HONESTLY AND NOT MINIMISED. Derivatives are computed
+   * per 2x2 pixel quad, so a quad straddling a seam between two faces sees a
+   * large false derivative and can select a high mip level for one pixel. The
+   * gutter width does NOT decide whether that bleeds; it only decides WHICH mip
+   * level it starts bleeding at. Two texels buys one more level than one texel,
+   * and nothing more.
+   *
+   * AND THE EFFECT IS UNMEASURED AT THIS TIER'S OWN SERVING DISTANCES, where it
+   * is least comfortable: the whole cell covers 5,889 pixels at 1,200 m and 516
+   * at 4,000 m against a median 650 faces per leaf, so most covered pixels are
+   * at or near a face boundary and the cross-primitive case is the common case
+   * rather than the edge case. What bounds the damage is the CONTENT, not the
+   * gutter — every flat face carries its own area average, so a bleed mixes two
+   * similar constants. That is an argument about magnitude, not about absence,
+   * and no still has been captured to check it.
+   *
+   * The alternative was measured rather than guessed: see the Stage A census
+   * for the unpackable remainder at both gutter widths.
+   */
+  flatFaceGutterTexels: 1,
+
+  /** Stage B replaces this with the derived shading descriptor. */
+  shading: null,
+} as const;
+
+/**
+ * Parameters the bake path actually reads, resolved from any recipe.
+ *
+ * Every v2-only field falls back to the value that reproduces v1 EXACTLY, so a
+ * v1 caller cannot take a v2 code path by omission. This is what lets v2 be
+ * additive without forking the packer.
+ */
+export interface FarTierEffectiveParameters {
+  gutterTexels: number;
+  flatFaceGutterTexels: number;
+  faceTexelFloor: number;
+  flatFaceTexels: number;
+  /** Linear-light multiplier applied to every zone factor; 1 means none. */
+  shadingScalar: number;
+}
+
+export function farTierEffectiveParameters(recipe: Record<string, unknown> = FAR_TIER_BAKE_RECIPE): FarTierEffectiveParameters {
+  const gutterTexels = recipe.gutterTexels as number;
+  const faceTexelFloor = recipe.faceTexelFloor as number;
+  const shading = recipe.shading as { scalar?: number } | null | undefined;
+  return {
+    gutterTexels,
+    flatFaceGutterTexels: (recipe.flatFaceGutterTexels as number | undefined) ?? gutterTexels,
+    faceTexelFloor,
+    flatFaceTexels: (recipe.flatFaceTexels as number | undefined) ?? faceTexelFloor,
+    shadingScalar: shading?.scalar ?? 1,
+  };
+}
+
+export function farTierRecipeHashV2(): string {
+  return sha256HexSync(stableSerialize(FAR_TIER_BAKE_RECIPE_V2));
+}
+
 export function farTierRecipeHash(): string {
   return sha256HexSync(stableSerialize(FAR_TIER_BAKE_RECIPE));
 }
@@ -342,7 +454,7 @@ export interface FarTierFace {
    * re-deriving the predicate from `width === floor && height === floor`
    * conflated the two and under-reported `flatFaceCount`.
    */
-  rect?: { x: number; y: number; width: number; height: number; flat: boolean };
+  rect?: { x: number; y: number; width: number; height: number; flat: boolean; gutter: number };
 }
 
 function paletteFactor(plan: V3Plan, materialId: string): { textureClass: ProceduralTextureClass | null; factor: [number, number, number] } {
@@ -455,11 +567,16 @@ export function farTierPackingOrder(faces: readonly FarTierFace[]): FarTierFace[
   });
 }
 
-function contentExtent(face: FarTierFace, texelWorldSizeMeters: number): { width: number; height: number; flat: boolean } {
-  const floor = FAR_TIER_BAKE_RECIPE.faceTexelFloor;
+function contentExtent(
+  face: FarTierFace,
+  texelWorldSizeMeters: number,
+  parameters: FarTierEffectiveParameters,
+): { width: number; height: number; flat: boolean } {
+  const floor = parameters.faceTexelFloor;
+  const flatExtent = parameters.flatFaceTexels;
   if (face.kind === "roof") {
     // A roof is a flat colour at every resolution; it never earns interior texels.
-    return { width: floor, height: floor, flat: true };
+    return { width: flatExtent, height: flatExtent, flat: true };
   }
   const [a, b] = [face.cornersMm[0]!, face.cornersMm[1]!];
   // `Math.sqrt` is correctly rounded by IEEE 754; `Math.hypot` is not specified
@@ -470,11 +587,17 @@ function contentExtent(face: FarTierFace, texelWorldSizeMeters: number): { width
   const heightMeters = (face.cornersMm[2]![2] - a[2]) / 1_000;
   const width = Math.round(widthMeters / texelWorldSizeMeters);
   const height = Math.round(heightMeters / texelWorldSizeMeters);
-  if (width < floor || height < floor) return { width: floor, height: floor, flat: true };
+  // The floor decides WHETHER a face resolves; `flatFaceTexels` decides how big
+  // it is once it does not. v1 conflated the two at 4, which is why a constant
+  // colour cost sixteen texels.
+  if (width < floor || height < floor) return { width: flatExtent, height: flatExtent, flat: true };
   return { width, height, flat: false };
 }
 
 export interface FarTierPacking {
+  /** Resolved parameters this packing was produced under; the rasterizer reads them back. */
+  parameters: FarTierEffectiveParameters;
+  recipeId: string;
   atlasPixels: number;
   /** Global resolution scale actually applied; 1 when the target was affordable. */
   appliedScale: number;
@@ -499,8 +622,8 @@ export class FarTierPackingUnfeasibleError extends Error {
   readonly faceCount: number;
   readonly atlasPixels: number;
   readonly minimumTexelsPerFace: number;
-  constructor(faceCount: number, atlasPixels: number) {
-    const minimumTexelsPerFace = (FAR_TIER_BAKE_RECIPE.faceTexelFloor + 2 * FAR_TIER_BAKE_RECIPE.gutterTexels) ** 2;
+  constructor(faceCount: number, atlasPixels: number, parameters: FarTierEffectiveParameters = farTierEffectiveParameters()) {
+    const minimumTexelsPerFace = (parameters.flatFaceTexels + 2 * parameters.flatFaceGutterTexels) ** 2;
     super(`Far-tier bake could not pack ${faceCount} faces into a ${atlasPixels}px atlas at any declared scale; each face costs at least ${minimumTexelsPerFace} texels, so this atlas holds at most ${Math.floor((atlasPixels * atlasPixels) / minimumTexelsPerFace)}.`);
     this.name = "FarTierPackingUnfeasibleError";
     this.faceCount = faceCount;
@@ -520,9 +643,10 @@ export function packFarTierAtlas(
   faces: readonly FarTierFace[],
   atlasPixels: number,
   targetTexelWorldSizeMeters: number,
+  recipe: Record<string, unknown> = FAR_TIER_BAKE_RECIPE,
 ): FarTierPacking {
   const ordered = farTierPackingOrder(faces);
-  const gutter = FAR_TIER_BAKE_RECIPE.gutterTexels;
+  const parameters = farTierEffectiveParameters(recipe);
 
   for (let step = 0; step < 24; step += 1) {
     const appliedScale = 2 ** (-step / 2);
@@ -536,24 +660,27 @@ export function packFarTierAtlas(
     const placed: FarTierFace[] = [];
 
     for (const face of ordered) {
-      const extent = contentExtent(face, texelWorldSizeMeters);
+      const extent = contentExtent(face, texelWorldSizeMeters, parameters);
       if (extent.flat) flatFaceCount += 1;
+      // A flat face may carry a narrower gutter than a resolved one; see the v2
+      // recipe for why that is safe and what it costs.
+      const gutter = extent.flat ? parameters.flatFaceGutterTexels : parameters.gutterTexels;
       const boxWidth = extent.width + gutter * 2;
       const boxHeight = extent.height + gutter * 2;
       if (boxWidth > atlasPixels) { failed = true; break; }
       if (cursorX + boxWidth > atlasPixels) { shelfY += shelfHeight; shelfHeight = 0; cursorX = 0; }
       if (shelfY + boxHeight > atlasPixels) { failed = true; break; }
-      placed.push({ ...face, rect: { x: cursorX + gutter, y: shelfY + gutter, width: extent.width, height: extent.height, flat: extent.flat } });
+      placed.push({ ...face, rect: { x: cursorX + gutter, y: shelfY + gutter, width: extent.width, height: extent.height, flat: extent.flat, gutter } });
       cursorX += boxWidth;
       if (boxHeight > shelfHeight) shelfHeight = boxHeight;
       occupied += boxWidth * boxHeight;
     }
 
     if (!failed) {
-      return { atlasPixels, appliedScale, texelWorldSizeMeters, faces: placed, flatFaceCount, occupancy: occupied / (atlasPixels * atlasPixels) };
+      return { parameters, recipeId: recipe.recipeId as string, atlasPixels, appliedScale, texelWorldSizeMeters, faces: placed, flatFaceCount, occupancy: occupied / (atlasPixels * atlasPixels) };
     }
   }
-  throw new FarTierPackingUnfeasibleError(faces.length, atlasPixels);
+  throw new FarTierPackingUnfeasibleError(faces.length, atlasPixels, parameters);
 }
 
 // ---------------------------------------------------------------------------
@@ -573,9 +700,20 @@ function zoneAt(face: FarTierFace, t: number): FaceZone {
  * ready for `encodeRgbPng`.
  */
 export function bakeFarTierAtlas(packing: FarTierPacking): Uint8Array {
+  // FAIL CLOSED ON AN UNAPPLIED SHADING TERM.
+  //
+  // `farTierEffectiveParameters` resolves `shadingScalar` and the packing
+  // carries it, so a recipe declaring one would travel into provenance and into
+  // any hash computed over the recipe. This rasterizer does NOT apply it — the
+  // Stage B halt left the term derived but unwired — so a recipe with a scalar
+  // other than 1 would produce bytes that are lighter than the provenance
+  // describing them. That is a silent lie about an artifact, which is worse
+  // than a missing feature, so it is refused rather than ignored.
+  if (packing.parameters.shadingScalar !== 1) {
+    throw new Error(`Far-tier bake was given a shading scalar of ${packing.parameters.shadingScalar}, but this rasterizer does not apply one; baking would produce bytes that contradict the recipe recorded beside them.`);
+  }
   const size = packing.atlasPixels;
   const rgb = new Uint8Array(size * size * 3);
-  const gutter = FAR_TIER_BAKE_RECIPE.gutterTexels;
 
   const put = (x: number, y: number, colour: readonly [number, number, number]): void => {
     if (x < 0 || y < 0 || x >= size || y >= size) return;
@@ -660,6 +798,7 @@ export function bakeFarTierAtlas(packing: FarTierPacking): Uint8Array {
     }
 
     // Gutter: edge-clamp replication, so mip level 1 cannot pull a neighbour in.
+    const gutter = rect.gutter;
     for (let ring = 1; ring <= gutter; ring += 1) {
       for (let column = -gutter; column < rect.width + gutter; column += 1) {
         const source = Math.min(rect.width - 1, Math.max(0, column));
