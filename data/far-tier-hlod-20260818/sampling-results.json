@@ -7,7 +7,7 @@
  "capturedAtStatement": "NULL BY CONSTRUCTION, matching the T009 precedent. The readings below are the capture; a wall-clock stamp would be the only field in this record that a re-run could not reproduce.",
  "preRegistration": {
   "record": "bake-pre-registration.json",
-  "sha256": "52d32ac601b58f4a98ac6b468bec429f0858109c4ed66185d2aa3b7326a8e78e",
+  "sha256": "6ff6aea7afb131c3c646a4e5ba65d873f453f1447bef7900531aae01d1500214",
   "note": "The APPEARANCE bars were fixed and committed BEFORE any still was captured and have never been touched: the pre-registration's `blenderAgreementInstrument` section is byte-identical across every commit of that record. The BUDGET bars in the same record were amended after the bake, which is disclosed in its own `amendments` block and does not touch anything this record is judged against."
  },
  "subjectDigestSupersession": {

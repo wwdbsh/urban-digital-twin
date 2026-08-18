@@ -23,7 +23,7 @@
   "claim": "The complete set of recipe constants, budget bars and appearance-agreement bars the far-tier bake is judged against. Nothing here is a measurement.",
   "derivedFrom": {
     "record": "stage0-hierarchy.json",
-    "sha256": "4b7ad699ef5338299956371bdd001689e0a6d52a0d335177f2d18f245f3f59a1"
+    "sha256": "c6a2a9f9ca6f36eb17d1d6a3f20890c25576cd1a136c362ab49fd2a3688cd38c"
   },
   "recipe": {
     "recipeId": "far-tier-hlod-bake-v1",
@@ -80,7 +80,7 @@
     "B1": {
       "rule": "Baked atlas edge length is a power of two in [64, 256] texels.",
       "rationale": "Derived, not chosen. The cut-independent atlas bound is 72.2 MiB at a 128 ceiling, 278.5 MiB at 256, 640.0 MiB at 512 and 861.7 MiB at 1024.",
-      "alsoDecidesFeasibility": "An atlas holds at most undefined faces at this ceiling, because every face costs at least 64 texels however far resolution is reduced. undefined of 883 cells exceed what the real packer can place and CANNOT be baked at this ceiling at any scale."
+      "alsoDecidesFeasibility": "An atlas that is actually AT this ceiling holds at most 1024 faces, because every face costs at least 64 texels however far resolution is reduced. That capacity is NOT a feasibility count: atlas edge is chosen from a cell's surface area, so most cells sit well below the ceiling. Measured with the real packer, 172 of 883 cells CANNOT be baked at this ceiling at any scale."
     },
     "B2": {
       "rule": "One far-tier tile occupies at most 349525 decoded GPU bytes of texture, mip chain included.",

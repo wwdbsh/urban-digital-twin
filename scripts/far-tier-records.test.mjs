@@ -32,6 +32,73 @@ describe("every far-tier record matches its own sidecar", () => {
   }
 });
 
+describe("the committed records are free of emission defects", () => {
+  // The failure this exists to catch actually happened: two record fields were
+  // renamed, a template string in a DIFFERENT command kept reading the old
+  // names, and `bake-pre-registration.json` shipped the sentence "at most
+  // undefined faces ... undefined of 883 cells". Every test at the time passed,
+  // because each only asserted fields it had itself added. This one reads the
+  // bytes.
+  for (const name of RECORDS) {
+    it(`${name} contains no "undefined" anywhere in its bytes`, () => {
+      expect(readRecord(name)).not.toContain("undefined");
+    });
+
+    it(`${name} contains no other stringified-JS artefact`, () => {
+      const text = readRecord(name);
+      for (const artefact of ["[object Object]", "NaN", '"null"', "Infinity"]) {
+        expect(text, `${name} contains ${artefact}`).not.toContain(artefact);
+      }
+    });
+  }
+
+  it("interpolates B1's feasibility sentence from the REAL field values", () => {
+    const b1 = readJson("bake-pre-registration").budgetBars.B1;
+    const ceiling = readJson("stage0-hierarchy").leafResolutionLadder.faceCountCeiling;
+    // Both numbers must appear literally, so a renamed source field cannot
+    // silently blank them again.
+    expect(b1.alsoDecidesFeasibility).toContain(String(ceiling.arithmeticCapacityOfACeilingSizedAtlas));
+    expect(b1.alsoDecidesFeasibility).toContain(String(ceiling.packerMeasuredUnpackableCellCount));
+    expect(b1.alsoDecidesFeasibility).toContain(String(ceiling.minimumTexelsPerFace));
+    expect(ceiling.arithmeticCapacityOfACeilingSizedAtlas).toBe(1_024);
+    expect(ceiling.packerMeasuredUnpackableCellCount).toBe(172);
+    // And it must not sell the capacity figure as a feasibility count.
+    expect(b1.alsoDecidesFeasibility).toContain("NOT a feasibility count");
+  });
+
+  it("does not claim a higher ceiling buys packability, which its own table denies", () => {
+    const bound = readJson("stage0-hierarchy").cutIndependentBound;
+    const at512 = bound.atlasCeilingComparison.find((row) => row.atlasCeilingPixels === 512);
+    const at1024 = bound.atlasCeilingComparison.find((row) => row.atlasCeilingPixels === 1_024);
+    // The table's own facts, restated as the invariant the note must respect.
+    expect(at1024.packerMeasuredUnpackableCellCount).toBe(at512.packerMeasuredUnpackableCellCount);
+    expect(at1024.cutIndependentAtlasGpuBytes).toBeGreaterThan(at512.cutIndependentAtlasGpuBytes);
+    expect(bound.atlasCeilingComparisonNote).not.toContain("buys packability as much as sharpness");
+    expect(bound.atlasCeilingComparisonNote).toContain("NO packability");
+  });
+});
+
+describe("the cut-independent bound really dominates the sweep", () => {
+  it("holds on the committed record", () => {
+    // The substantive invariant: a bound below an observed pose is not a bound.
+    const hierarchy = readJson("stage0-hierarchy");
+    expect(hierarchy.cutIndependentBound.totalGpuBytes)
+      .toBeGreaterThanOrEqual(hierarchy.worstCaseResidency.totalGpuBytes);
+    expect(hierarchy.cutIndependentBound.atlasGpuBytes)
+      .toBeGreaterThanOrEqual(hierarchy.worstCaseResidency.atlasGpuBytes);
+  });
+
+  it("is still ENFORCED by the derivation, not merely true today", () => {
+    // The guard was an explicit B1 closure condition and was silently deleted
+    // once already, during an unrelated refactor. A record that happens to
+    // satisfy the invariant proves nothing about the next run, so the guard's
+    // presence is pinned too.
+    const source = readFileSync(join(repositoryRoot, "scripts", "far-tier-stage0-cli.mjs"), "utf8");
+    expect(source).toContain("cutBound.totalGpuBytes < worst.totalGpuBytes");
+    expect(source).toMatch(/if \(cutBound\.totalGpuBytes < worst\.totalGpuBytes\) \{\s*\n\s*fail\(/u);
+  });
+});
+
 describe("the pre-registration really does predate the measurements", () => {
   it("carries no capture timestamp in any record", () => {
     // A timestamp is the one field a replay cannot reproduce, and in a

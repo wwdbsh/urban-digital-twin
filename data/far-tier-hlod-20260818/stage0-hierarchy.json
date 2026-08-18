@@ -344,7 +344,7 @@
         "unpackableWhoseAtlasIsBelowTheCeilingNote": "These cells CANNOT be helped by raising the ceiling at all: atlas edge is chosen from a cell's SURFACE AREA, not from the ceiling, so a low-area, high-face-count cell keeps a small atlas however high the ceiling goes."
       }
     ],
-    "atlasCeilingComparisonNote": "The 256 ceiling is chosen against these, all computed the same exact way. Note that the feasibility column moves faster than the memory column: raising the ceiling buys packability as much as sharpness."
+    "atlasCeilingComparisonNote": "The 256 ceiling is chosen against these, all computed the same exact way. READ THE FEASIBILITY COLUMN AGAINST THE MEMORY COLUMN: from 512 to 1024 the unpackable count does not move at all (57 to 57) while the atlas bound rises from 640.02 to 861.65 MiB. Beyond 512 the ceiling buys memory cost and NO packability. An earlier version of this note asserted the opposite, and its own table contradicted it."
   },
   "gpuAccounting": {
     "bytesPerTexel": 4,

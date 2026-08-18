@@ -426,6 +426,13 @@ async function commandHierarchy() {
     boundGeometry += rootBound.geometry;
   }
   const cutBound = { atlasGpuBytes: boundAtlas, geometryGpuBytes: boundGeometry, totalGpuBytes: boundAtlas + boundGeometry };
+  // FAIL CLOSED. The whole point of the DP is that it DOMINATES every pose, so
+  // a bound that sits below a pose the sweep actually observed is not a bound
+  // and the derivation is wrong. This guard was an explicit B1 closure
+  // condition and was lost once in a refactor; it is asserted by test.
+  if (cutBound.totalGpuBytes < worst.totalGpuBytes) {
+    fail(`the cut-independent bound ${cutBound.totalGpuBytes} is below the observed sweep maximum ${worst.totalGpuBytes}; it is therefore not a bound and the derivation is wrong.`);
+  }
 
   // The same exact bound at other atlas ceilings, so the choice of 256 rests on
   // comparable arithmetic rather than on figures from a sweep that did not
@@ -692,7 +699,7 @@ async function commandHierarchy() {
       },
       headroomOverObservedSweepMaximum: cutBound.totalGpuBytes - worst.totalGpuBytes,
       atlasCeilingComparison: ceilingComparison,
-      atlasCeilingComparisonNote: "The 256 ceiling is chosen against these, all computed the same exact way. Note that the feasibility column moves faster than the memory column: raising the ceiling buys packability as much as sharpness.",
+      atlasCeilingComparisonNote: "The 256 ceiling is chosen against these, all computed the same exact way. READ THE FEASIBILITY COLUMN AGAINST THE MEMORY COLUMN: from 512 to 1024 the unpackable count does not move at all (57 to 57) while the atlas bound rises from 640.02 to 861.65 MiB. Beyond 512 the ceiling buys memory cost and NO packability. An earlier version of this note asserted the opposite, and its own table contradicted it.",
     },
     gpuAccounting: {
       bytesPerTexel: FAR_TIER_GPU_TEXEL_BYTES,
@@ -791,7 +798,7 @@ async function commandPreregister() {
       B1: {
         rule: `Baked atlas edge length is a power of two in [${FAR_TIER_ATLAS_PIXELS.minimum}, ${FAR_TIER_ATLAS_PIXELS.maximum}] texels.`,
         rationale: "Derived, not chosen. The cut-independent atlas bound is 72.2 MiB at a 128 ceiling, 278.5 MiB at 256, 640.0 MiB at 512 and 861.7 MiB at 1024.",
-        alsoDecidesFeasibility: `An atlas holds at most ${hierarchy.leafResolutionLadder.faceCountCeiling.maximumFacesPer256Atlas} faces at this ceiling, because every face costs at least ${hierarchy.leafResolutionLadder.faceCountCeiling.minimumTexelsPerFace} texels however far resolution is reduced. ${hierarchy.leafResolutionLadder.faceCountCeiling.unpackableCellCount} of ${hierarchy.inputs.ledger.cellCount} cells exceed what the real packer can place and CANNOT be baked at this ceiling at any scale.`,
+        alsoDecidesFeasibility: `An atlas that is actually AT this ceiling holds at most ${hierarchy.leafResolutionLadder.faceCountCeiling.arithmeticCapacityOfACeilingSizedAtlas} faces, because every face costs at least ${hierarchy.leafResolutionLadder.faceCountCeiling.minimumTexelsPerFace} texels however far resolution is reduced. That capacity is NOT a feasibility count: atlas edge is chosen from a cell's surface area, so most cells sit well below the ceiling. Measured with the real packer, ${hierarchy.leafResolutionLadder.faceCountCeiling.packerMeasuredUnpackableCellCount} of ${hierarchy.inputs.ledger.cellCount} cells CANNOT be baked at this ceiling at any scale.`,
       },
       B2: {
         rule: `One far-tier tile occupies at most ${FAR_TIER_BUDGET_CONTRACT.maxTileAtlasGpuBytes} decoded GPU bytes of texture, mip chain included.`,
