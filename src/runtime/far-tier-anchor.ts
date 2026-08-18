@@ -59,8 +59,26 @@ export interface FarTierAnchor {
   readonly bounds: { west: number; south: number; east: number; north: number };
 }
 
+/**
+ * WHERE THE FROZEN PLANAR SCALE IS ALLOWED TO BE USED AT ALL.
+ *
+ * `FAR_TIER_METERS_PER_DEGREE_*` are two Manhattan constants, not a projection.
+ * They are wrong by a growing margin away from this latitude, and the selection
+ * arithmetic that consumes them clamps longitudes without any ±180 wrap, so a
+ * cell on the other side of the antimeridian would score a distance that is not
+ * merely imprecise but meaningless. This band is the envelope the constants were
+ * frozen for — the whole of New York City with room to spare — and a cell
+ * outside it is REFUSED rather than placed with a scale nobody derived for it.
+ *
+ * It is a guard, not a feature: the ledger holds no such cell today, so nothing
+ * in this repository can reach it. It exists so that the first cell of a second
+ * city fails closed here, with a message naming the reason, instead of landing
+ * silently in the wrong place.
+ */
+export const FAR_TIER_PLANAR_VALIDITY_BAND = { west: -74.3, east: -73.6, south: 40.4, north: 41.1 } as const;
+
 export class FarTierAnchorError extends Error {
-  constructor(readonly code: "block-835-alias" | "not-a-tile-cell", message: string) {
+  constructor(readonly code: "block-835-alias" | "not-a-tile-cell" | "outside-planar-validity-band", message: string) {
     super(message);
     this.name = "FarTierAnchorError";
   }
@@ -86,6 +104,13 @@ export function farTierTileAnchor(cellId: string): FarTierAnchor {
     );
   }
   const bounds = tileBounds(tile);
+  const band = FAR_TIER_PLANAR_VALIDITY_BAND;
+  if (bounds.west < band.west || bounds.east > band.east || bounds.south < band.south || bounds.north > band.north) {
+    throw new FarTierAnchorError(
+      "outside-planar-validity-band",
+      `Cell ${cellId} spans [${bounds.west}, ${bounds.south}] to [${bounds.east}, ${bounds.north}], outside the frozen planar scale's validity band [${band.west}, ${band.south}] to [${band.east}, ${band.north}]. The far tier's metres-per-degree constants were frozen for Manhattan and its selection arithmetic does not wrap at ±180, so this cell must fall back to massing rather than be placed with a scale nobody derived for it.`,
+    );
+  }
   return { cellId: resolved, originLongitude: bounds.west, originLatitude: bounds.south, bounds };
 }
 

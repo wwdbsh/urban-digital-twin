@@ -4197,13 +4197,27 @@ export function App() {
               viewport container as `data-far-tier-failures`, inspectable without
               being shouted. The counts are deliberately separate columns —
               checksum-mismatch is an integrity failure, not another spelling of
-              absent — and the line is present only when the session opted in. */}
+              absent, and build-failure is neither — and the line is present only
+              when the session opted in.
+
+              IT IS NOT A LIVE REGION, and that is a correction. The counts move
+              with the CAMERA: every pan changes how many cells are drawn versus
+              near, so `role="status"` re-announced the whole line to a screen
+              reader on every camera move — a tier-status announcement fired as
+              navigation feedback, which is noise that would drive a user to turn
+              announcements off. The same numbers are exposed as `data-far-tier-*`
+              attributes for tests and inspection, and the line stays visible;
+              what it no longer does is interrupt. */}
           {farTierRequested && farTierState && <span
             className="runtime-note-overlay"
-            role="status"
+            data-far-tier-declared={farTierState.declared}
             data-far-tier-drawn={farTierState.drawn}
+            data-far-tier-near={farTierState.near}
+            data-far-tier-not-declared={farTierState.notDeclared}
             data-far-tier-absent={farTierState.absent}
             data-far-tier-checksum-mismatch={farTierState.checksumMismatch}
+            data-far-tier-build-failure={farTierState.buildFailure}
+            data-far-tier-over-budget={farTierState.overBudget}
           >{farTierStatusLine(farTierState)} · visual-only; picking, identity and provenance are unchanged.</span>}
           {publicRealmActive && <span className="runtime-note-overlay" role="status">NYC OTI Planimetrics local snapshot · curb profile and crosswalk striping are estimated, source-constrained, and not survey/current-paint truth.</span>}
           {publicRealmRequested && !publicRealmActive && <span className="runtime-note-overlay" role="status">{publicRealmLoadState === "loading" ? "Block 835 public realm · loading local release…" : publicRealmStatusMessage || "Block 835 public realm unavailable; the existing base/exterior state was left unchanged."}</span>}

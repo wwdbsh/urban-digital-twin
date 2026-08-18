@@ -16,7 +16,7 @@ function readText(path: string): string {
   return new TextDecoder("utf-8", { fatal: true }).decode(readFileSync(path));
 }
 import { sha256HexSync } from "../domain/deterministic-hash";
-import { FAR_TIER_RUNTIME_BUDGETS } from "./far-tier-serving";
+import { FAR_TIER_CELL_STATES, FAR_TIER_PAYLOAD_INVENTORY_SHA256, FAR_TIER_RUNTIME_BUDGETS } from "./far-tier-serving";
 import { EXTERIOR_RUNTIME_BUDGETS } from "./exterior-cell-runtime";
 
 const ROOT = "data/far-tier-hlod-runtime-20260818";
@@ -56,6 +56,87 @@ describe("far-tier runtime records", () => {
     expect(EXTERIOR_RUNTIME_BUDGETS.maxCachedBytes).toBe(256 * 1024 * 1024);
   });
 
+  it("describes the cache as what the code does, and names what it does NOT do", () => {
+    // The finding this pins: the record claimed "its own cache with its own
+    // ceiling and its own accounting" while the constant had zero non-test
+    // consumers. A record must never claim what the code does not do — and the
+    // eviction policy that is still missing has to be named, not implied away.
+    const record = readChecked("runtime-record") as { servingPath: { cache: Record<string, string> } };
+    const cache = record.servingPath.cache;
+    expect(cache.whatIsImplemented).toContain("bounded by the SAME distance predicate");
+    expect(cache.whatIsImplemented).toContain("BEFORE the fetch");
+    expect(cache.whatIsNOTImplemented).toContain("NO EVICTION POLICY");
+    expect(cache.whatIsNOTImplemented).toContain("DEFERRED TO MASS-BAKE SCALE");
+    expect(cache.correctionRecorded).toContain("ZERO NON-TEST CONSUMERS");
+  });
+
+  it("pins the committed inventory's digest in shipped code", () => {
+    // The staged copy is gitignored operator work product. Without this pin a
+    // swapped staged file declares its own checksums and every per-tile check
+    // faithfully confirms them.
+    const committed = readText(`${ROOT}/payload-inventory.json`);
+    expect(sha256HexSync(committed)).toBe(FAR_TIER_PAYLOAD_INVENTORY_SHA256);
+    const record = readChecked("runtime-record") as { servingPath: { inventoryPin: { digest: string; failDirection: string } } };
+    expect(record.servingPath.inventoryPin.digest).toBe(FAR_TIER_PAYLOAD_INVENTORY_SHA256);
+    expect(record.servingPath.inventoryPin.failDirection).toContain("WHOLE TIER");
+  });
+
+  it("records that BOTH payloads are verified, and what an atlas mismatch does", () => {
+    const record = readChecked("runtime-record") as { servingPath: { verification: Record<string, string> } };
+    expect(record.servingPath.verification.statement).toContain("BOTH PAYLOADS ARE VERIFIED");
+    expect(record.servingPath.verification.onAtlasMismatch).toContain("fails closed as checksum-mismatch");
+    expect(record.servingPath.verification.onAtlasAbsence).toContain("not a mismatch");
+  });
+
+  it("records the pick Cesium performs that this repository cannot scan for", () => {
+    const record = readChecked("runtime-record") as { pickingMechanism: { cesiumOwnPick: { finding: string; fix: string } } };
+    expect(record.pickingMechanism.cesiumOwnPick.finding).toContain("pickAndTrackObject");
+    expect(record.pickingMechanism.cesiumOwnPick.fix).toContain("removes that input action");
+  });
+
+  it("keeps the state vocabulary in the record identical to the code's", () => {
+    const record = readChecked("runtime-record") as { explicitState: { states: string[]; buildFailureIsNotMismatch: string; declaredMeansTheInventory: string } };
+    expect(record.explicitState.states).toEqual([...FAR_TIER_CELL_STATES]);
+    // checksum-mismatch must mean exactly "the bytes differ from what was declared".
+    expect(record.explicitState.buildFailureIsNotMismatch).toContain("its own state");
+    expect(record.explicitState.declaredMeansTheInventory).toContain("INVENTORY'S OWN COUNT");
+  });
+
+  it("records the rebuild contract the far-tier alpha lost once", () => {
+    const record = readChecked("runtime-record") as { suppression: { mechanism: { rebuildContract: { defect: string; fix: string } } } };
+    expect(record.suppression.mechanism.rebuildContract.defect).toContain("NEVER HEALS");
+    expect(record.suppression.mechanism.rebuildContract.fix).toContain("all three sites");
+  });
+
+  it("records the readiness gate and does not claim it was measured", () => {
+    const record = readChecked("runtime-record") as { doubleResidency: { ordering: string; readinessGateCorrection: string } };
+    expect(record.doubleResidency.ordering).toContain("reports `ready`");
+    expect(record.doubleResidency.readinessGateCorrection).toContain("found by reading");
+  });
+
+  it("records that the distance rule bounds LOADING, not only drawing", () => {
+    const record = readChecked("runtime-record") as { distanceSelection: { itBoundsLOADINGToo: string; retryPolicy: string } };
+    expect(record.distanceSelection.itBoundsLOADINGToo).toContain("EVERY declared cell");
+    expect(record.distanceSelection.retryPolicy).toContain("ONCE per in-range episode");
+  });
+
+  it("records the re-run arms, including what they did NOT cover", () => {
+    // The two states no session has ever reached must not be allowed to read as
+    // validated by a run that never produced them.
+    const record = readChecked("runtime-record") as { endToEndValidation: { reviewFixArms: Record<string, string> } };
+    const arms = record.endToEndValidation.reviewFixArms;
+    expect(arms.distanceBoundedLoading).toContain("no .far_0.glb");
+    expect(arms.defaultSessionUnchanged).toContain("ZERO far-tier network requests");
+    expect(arms.notCovered).toContain("BUILD-FAILURE AND OVER-BUDGET STATES WERE NOT REACHED");
+    expect(arms.notCovered).toContain("fixture only");
+  });
+
+  it("records that the status line stopped being a live region", () => {
+    const record = readChecked("runtime-record") as { explicitState: { notALiveRegion: { correction: string; replacement: string } } };
+    expect(record.explicitState.notALiveRegion.correction).toContain("role=status AND IT IS NOT ANY MORE");
+    expect(record.explicitState.notALiveRegion.replacement).toContain("data-far-tier-");
+  });
+
   it("records Route D, the rejected allowPicking finding, and the discarded Route E", () => {
     // The next Cesium upgrade needs to know why the bracket exists.
     const record = readChecked("runtime-record") as { pickingMechanism: Record<string, { sourceCitation?: string; whyRejected?: string; warning?: string }> & { headline: string } };
@@ -85,6 +166,10 @@ describe("far-tier runtime records", () => {
     expect(notDone).toContain("ONE CELL, NOT A RING");
     expect(notDone).toContain("FIXTURE-ONLY");
     expect(notDone).toContain("NO GPU MEASUREMENT");
+    // The gaps the review fixes did NOT close are named alongside the old ones.
+    expect(notDone).toContain("NO EVICTION POLICY");
+    expect(notDone).toContain("THE READINESS GATE IS UNOBSERVED");
+    expect(disclosures).toContain("NEVER BEEN REACHED OUTSIDE A FIXTURE");
   });
 
   it("records the end-to-end run against the real prototype tile", () => {
@@ -93,7 +178,13 @@ describe("far-tier runtime records", () => {
     expect(record.endToEndValidation.pickingUnchanged.farTierOn).toBe("doitt:119910");
     expect(record.endToEndValidation.pickingUnchanged.farTierOff).toBe("doitt:119910");
     expect(record.endToEndValidation.pickingUnchanged.verdict).toContain("IDENTICAL");
-    expect(record.endToEndValidation.fallbackArms.checksumMismatch).toContain("never as absence");
+    expect(record.endToEndValidation.fallbackArms.checksumMismatch).toContain("checksum-mismatch (fail-closed, drawing massing)");
+    // Absence and mismatch stay two different sentences about two different arms.
+    expect(record.endToEndValidation.fallbackArms.absent).toContain("1 absent");
+    expect(record.endToEndValidation.fallbackArms.absent).not.toContain("checksum-mismatch");
+    // The arm that proves the atlas is verified, run against the real tile.
+    expect(record.endToEndValidation.fallbackArms.atlasMismatch).toContain(".atlas.png");
+    expect(record.endToEndValidation.fallbackArms.forgedInventory).toContain("0 declared");
   });
 
   it("records that far-tier massing is hidden by alpha, not by show", () => {

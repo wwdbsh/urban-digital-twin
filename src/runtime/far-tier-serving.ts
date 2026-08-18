@@ -20,7 +20,7 @@
  * ADDING the two rather than merging them.
  */
 
-import { sha256HexBytes } from "../domain/deterministic-hash";
+import { sha256HexBytes, sha256HexSync } from "../domain/deterministic-hash";
 
 /**
  * The far tier's own residency ceiling, additive to B3-B5 and to criterion #30.
@@ -32,15 +32,51 @@ import { sha256HexBytes } from "../domain/deterministic-hash";
  * 196,947 atlas, about 320 KiB per cell — 64 MiB retains roughly 200 cells,
  * which comfortably spans the far ring without approaching either neighbour's
  * ceiling.
+ *
+ * THIS IS A CEILING ON RESIDENCY, AND IT IS ENFORCED, NOT DECLARED. Every
+ * admission goes through `farTierAdmission` below, and a cell that would take
+ * the resident total past either number is REFUSED — reported as `over-budget`
+ * and left drawing its massing. An earlier revision of this module exported
+ * these numbers with no consumer at all while the record claimed "its own cache
+ * with its own accounting"; that gap is what this contract closes.
+ *
+ * WHAT IS STILL NOT IMPLEMENTED, stated here rather than left to be discovered:
+ * there is NO EVICTION POLICY. Bytes are released when the camera leaves a
+ * cell's exit band and at no other time, so a pose that selects more than the
+ * ceiling refuses the excess rather than evicting an older tile for it. With one
+ * baked cell the ceiling cannot be reached; a policy is owed at mass-bake scale
+ * (T004) and is named in the runtime record as a gap rather than described as a
+ * cache that already has one.
  */
 export const FAR_TIER_RUNTIME_BUDGETS = {
   maxCacheEntries: 256,
   maxCachedBytes: 64 * 1024 * 1024,
   additiveTo: "far-tier-hlod-gpu-budget-v1 B3-B5, and the closed criterion #30. Never merged with either.",
+  evictionPolicy: "NONE. Bytes are released on distance deselection only; an admission over either ceiling is refused rather than evicted for. Deferred to mass-bake scale (T004).",
 } as const;
+
+/**
+ * The digest of the COMMITTED payload inventory, pinned in shipped code.
+ *
+ * The staged copy under the serving root is gitignored operator work product,
+ * and it is a byte copy of `data/far-tier-hlod-runtime-20260818/
+ * payload-inventory.json`. Fetching it and trusting it would make a swapped or
+ * hand-edited staged file authoritative over the committed record — an attacker
+ * or an accident could then declare any digest it liked for the tiles, and every
+ * per-tile check below would faithfully verify bytes against a declaration
+ * nobody committed. Pinning the digest here makes the staged copy a CACHE of the
+ * committed text rather than a second authority, and a mismatch fails closed
+ * with no tier at all.
+ *
+ * A test re-derives this from the committed file, so it cannot drift silently.
+ */
+export const FAR_TIER_PAYLOAD_INVENTORY_SHA256 = "9c46f62a1ac9a662f768facd716f8d04ecf960afaf3ae0f536eb216bb3e6bd24" as const;
 
 /** Where staged far-tier bytes are served from. Its own root, not a release audience. */
 export const FAR_TIER_SERVING_ROOT = "far-tier" as const;
+
+/** Where the staged copy of the committed inventory is served from. */
+export const FAR_TIER_PAYLOAD_INVENTORY_REF = `${FAR_TIER_SERVING_ROOT}/payload-inventory.json` as const;
 
 /** The bake emitter's flat layout: `<cellId>.far_0.glb` and `<cellId>.atlas.png`. */
 export function farTierTileRef(cellId: string): string { return `${FAR_TIER_SERVING_ROOT}/${cellId}.far_0.glb`; }
@@ -67,7 +103,7 @@ export interface FarTierInventory {
 }
 
 /**
- * The five states a cell can be in, and they are FIVE, not four.
+ * The states a cell can be in, and each failure class keeps its own name.
  *
  * `checksum-mismatch` is never folded into `absent`. Absence is a staging gap —
  * the operator has not put the bytes there yet — and it is ordinary. A checksum
@@ -75,12 +111,25 @@ export interface FarTierInventory {
  * bytes that were declared. Reporting the second as the first would turn the
  * loudest signal this path can produce into routine background noise.
  *
- * `near` is neither. It is a verified tile that the camera is simply too close
- * to draw coarsely, so the massing is showing instead — the tier working as
- * designed. It is counted separately from both failure states precisely so a
- * session spent inside the near edge does not read as a broken far tier.
+ * `build-failure` is a THIRD thing and was split out of `checksum-mismatch`
+ * after independent review. Bytes that verified and then would not build a model
+ * are not bytes that differ from their declaration: reporting them as a mismatch
+ * accuses the staging of an integrity failure it did not commit, and — worse —
+ * makes the mismatch column stop meaning "the bytes are not the declared bytes",
+ * which is the one thing it exists to say.
+ *
+ * `over-budget` is a REFUSAL, not a failure of the payload: the cell's bytes
+ * would take far-tier residency past `FAR_TIER_RUNTIME_BUDGETS`, so it was never
+ * fetched. Named rather than silently skipped, because a tier that quietly draws
+ * fewer cells than it selected is indistinguishable from one that is broken.
+ *
+ * `near` is none of these. It is a cell the camera is inside the near edge of,
+ * so the massing is showing instead — the tier working as designed. Since T003's
+ * review it also covers a cell that was never fetched BECAUSE it is near: the
+ * tier bounds loading by the same distance rule it bounds drawing by, so `near`
+ * means "not drawn, by distance", and it does not claim the bytes were verified.
  */
-export const FAR_TIER_CELL_STATES = ["declared", "drawn", "near", "not-declared", "absent", "checksum-mismatch"] as const;
+export const FAR_TIER_CELL_STATES = ["declared", "drawn", "near", "not-declared", "absent", "checksum-mismatch", "build-failure", "over-budget"] as const;
 export type FarTierCellState = (typeof FAR_TIER_CELL_STATES)[number];
 
 export interface FarTierLoadOutcome {
@@ -93,10 +142,72 @@ export interface FarTierLoadOutcome {
 export type FarTierFetcher = (relativeRef: string, signal?: AbortSignal) => Promise<Uint8Array>;
 
 /**
- * Fetch and verify one tile's bytes, failing CLOSED and distinguishing why.
+ * Just enough of a `fetch` response for this module, so the shell refusal below
+ * can be exercised without a network or a DOM.
+ */
+export interface FarTierHttpResponse {
+  readonly ok: boolean;
+  readonly status: number;
+  readonly statusText: string;
+  readonly headers: { get(name: string): string | null };
+  arrayBuffer(): Promise<ArrayBuffer>;
+}
+
+export type FarTierHttpFetch = (url: string, init?: { signal?: AbortSignal }) => Promise<FarTierHttpResponse>;
+
+/**
+ * The HTTP fetcher, with the single-page-app fallback refused BY NAME.
  *
- * Byte size is checked before the digest so a truncated or padded response is
- * named for what it is rather than reported as a hash failure.
+ * A SPA fallback answers 200 with the application shell for a path that does
+ * not exist. Those bytes are not a corrupted tile — they are the ABSENCE of a
+ * tile wearing a 200 — and letting them reach the digest check reports a staging
+ * gap as an INTEGRITY FAILURE, which is precisely the confusion the state
+ * vocabulary exists to prevent. Measured, not hypothesised: the dev server did
+ * exactly this, and removing a staged tile produced "1 checksum-mismatch" before
+ * this refusal and "1 absent" after it.
+ *
+ * It lives here, and not inline in the viewport effect it used to live in, so it
+ * is a pinned contract with a test rather than a closure nothing can reach.
+ */
+export function createFarTierFetcher(httpFetch: FarTierHttpFetch): FarTierFetcher {
+  return async (relativeRef: string, signal?: AbortSignal): Promise<Uint8Array> => {
+    const response = await httpFetch(`/${relativeRef}`, { signal });
+    if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+    const contentType = response.headers.get("content-type") ?? "";
+    if (contentType.includes("text/html")) {
+      throw new Error(`served the application shell rather than an artifact (content-type ${contentType}); the tile is not staged`);
+    }
+    return new Uint8Array(await response.arrayBuffer());
+  };
+}
+
+/**
+ * The committed inventory, verified against the digest pinned in this module.
+ *
+ * FAILS CLOSED FOR THE WHOLE TIER, not per cell: an inventory that is not the
+ * committed one cannot be trusted to declare anything, so there is nothing to
+ * fall back to except the massing that is already drawing.
+ */
+export function parseVerifiedFarTierInventory(text: string): FarTierInventory {
+  const actual = sha256HexSync(text);
+  if (actual !== FAR_TIER_PAYLOAD_INVENTORY_SHA256) {
+    throw new Error(`${FAR_TIER_PAYLOAD_INVENTORY_REF}: digest ${actual} is not the committed ${FAR_TIER_PAYLOAD_INVENTORY_SHA256}; the staged inventory is not the inventory this build declares.`);
+  }
+  return JSON.parse(text) as FarTierInventory;
+}
+
+/**
+ * Size-then-digest, so a truncated or padded response is named for what it is
+ * rather than reported as a hash failure. Returns null when the bytes are good.
+ */
+function verificationFailure(ref: string, bytes: Uint8Array, declaredSize: number, declaredSha256: string): string | null {
+  if (bytes.byteLength !== declaredSize) return `${ref}: returned ${bytes.byteLength} bytes; ${declaredSize} were declared.`;
+  if (sha256HexBytes(bytes) !== declaredSha256) return `${ref}: failed its declared SHA-256.`;
+  return null;
+}
+
+/**
+ * Fetch and verify one tile's bytes, failing CLOSED and distinguishing why.
  */
 export async function loadVerifiedFarTierTile(
   entry: FarTierInventoryEntry,
@@ -110,13 +221,72 @@ export async function loadVerifiedFarTierTile(
   } catch (error) {
     return { outcome: { cellId: entry.cellId, state: "absent", detail: `${ref}: ${(error as Error).message}` } };
   }
-  if (bytes.byteLength !== entry.glbByteSize) {
-    return { outcome: { cellId: entry.cellId, state: "checksum-mismatch", detail: `${ref}: returned ${bytes.byteLength} bytes; ${entry.glbByteSize} were declared.` } };
-  }
-  if (sha256HexBytes(bytes) !== entry.glbSha256) {
-    return { outcome: { cellId: entry.cellId, state: "checksum-mismatch", detail: `${ref}: failed its declared SHA-256.` } };
-  }
+  const failure = verificationFailure(ref, bytes, entry.glbByteSize, entry.glbSha256);
+  if (failure !== null) return { outcome: { cellId: entry.cellId, state: "checksum-mismatch", detail: failure } };
   return { outcome: { cellId: entry.cellId, state: "declared" }, bytes };
+}
+
+/**
+ * Fetch and verify one tile's ATLAS, which the inventory declares just as
+ * precisely as it declares the GLB.
+ *
+ * NEVER TEXTURE FROM UNVERIFIED BYTES. An earlier revision fetched the atlas and
+ * handed it straight to the model factory unchecked, while declaring
+ * `atlasSha256` and `atlasByteSize` two fields away — so the one payload a user
+ * actually LOOKS at was the one payload nothing verified. Bytes that are present
+ * and wrong now fail the tile closed as `checksum-mismatch`, exactly as wrong
+ * geometry bytes do.
+ *
+ * ABSENCE IS STILL NOT MISMATCH here either. An atlas that cannot be fetched at
+ * all is a staging gap: it returns `bytes: undefined` with no outcome, and the
+ * caller draws the tile untextured rather than refusing it. Nothing unverified
+ * is ever uploaded either way.
+ */
+export async function loadVerifiedFarTierAtlas(
+  entry: FarTierInventoryEntry,
+  fetcher: FarTierFetcher,
+  signal?: AbortSignal,
+): Promise<{ outcome?: FarTierLoadOutcome; bytes?: Uint8Array }> {
+  const ref = farTierAtlasRef(entry.cellId);
+  let bytes: Uint8Array;
+  try {
+    bytes = await fetcher(ref, signal);
+  } catch {
+    return {};
+  }
+  const failure = verificationFailure(ref, bytes, entry.atlasByteSize, entry.atlasSha256);
+  if (failure !== null) return { outcome: { cellId: entry.cellId, state: "checksum-mismatch", detail: failure } };
+  return { bytes };
+}
+
+/** What one cell costs the far tier's own residency ledger, in declared bytes. */
+export function farTierEntryByteCost(entry: FarTierInventoryEntry): number {
+  return entry.glbByteSize + entry.atlasByteSize;
+}
+
+export interface FarTierResidencyLedger {
+  readonly entries: number;
+  readonly bytes: number;
+}
+
+/**
+ * Would admitting this cell keep the far tier inside its OWN ceiling?
+ *
+ * Returns the refusal message when it would not, so the refusal can be reported
+ * with its arithmetic instead of as a silent skip.
+ */
+export function farTierAdmission(
+  resident: FarTierResidencyLedger,
+  cost: number,
+  budgets: { readonly maxCacheEntries: number; readonly maxCachedBytes: number } = FAR_TIER_RUNTIME_BUDGETS,
+): string | null {
+  if (resident.entries + 1 > budgets.maxCacheEntries) {
+    return `refused: ${resident.entries} tiles are resident and the far-tier ceiling is ${budgets.maxCacheEntries}.`;
+  }
+  if (resident.bytes + cost > budgets.maxCachedBytes) {
+    return `refused: ${cost} bytes on top of ${resident.bytes} resident would exceed the far-tier ceiling of ${budgets.maxCachedBytes} bytes.`;
+  }
+  return null;
 }
 
 /**
@@ -133,25 +303,42 @@ export function farTierSuppressibleBuildingIds(entry: FarTierInventoryEntry): re
 }
 
 export interface FarTierStateSummary {
+  /**
+   * EVERY CELL THE COMMITTED INVENTORY DECLARES, whatever became of it.
+   *
+   * It used to be `drawn + near`, which read as "declared" and meant "verified",
+   * and which under distance-bounded loading would have meant neither. A cell
+   * the inventory declares is declared whether its bytes are staged, corrupt or
+   * simply too near to fetch, so the column is now the inventory's own count and
+   * every other column is a partition of it. (`not-declared` is not the
+   * contradiction it looks like: it names a cell with no ANCHOR — an id that
+   * encodes no tile rectangle — not a cell missing from the inventory.)
+   */
   readonly declared: number;
   readonly drawn: number;
-  /** Verified tiles held back because the camera is inside the near edge. */
+  /** Cells not drawn because of distance — including cells never fetched for it. */
   readonly near: number;
   readonly notDeclared: number;
   readonly absent: number;
   readonly checksumMismatch: number;
+  /** Verified bytes that would not build a model. Never a mismatch. */
+  readonly buildFailure: number;
+  /** Cells refused admission by the far tier's own residency ceiling. */
+  readonly overBudget: number;
 }
 
-/** Count outcomes into the aggregate. Mismatch keeps its own column. */
+/** Count outcomes into the aggregate. Every failure class keeps its own column. */
 export function summarizeFarTierState(outcomes: readonly FarTierLoadOutcome[]): FarTierStateSummary {
   const count = (state: FarTierCellState): number => outcomes.filter((outcome) => outcome.state === state).length;
   return {
-    declared: count("declared") + count("drawn") + count("near"),
+    declared: outcomes.length,
     drawn: count("drawn"),
     near: count("near"),
     notDeclared: count("not-declared"),
     absent: count("absent"),
     checksumMismatch: count("checksum-mismatch"),
+    buildFailure: count("build-failure"),
+    overBudget: count("over-budget"),
   };
 }
 
@@ -170,10 +357,18 @@ export function farTierStatusLine(summary: FarTierStateSummary): string {
   if (summary.near > 0) parts.push(`${summary.near} near (massing drawing)`);
   if (summary.notDeclared > 0) parts.push(`${summary.notDeclared} not declared`);
   if (summary.absent > 0) parts.push(`${summary.absent} absent`);
-  // Named separately and last, so it reads as the distinct integrity class it is.
+  if (summary.overBudget > 0) parts.push(`${summary.overBudget} over-budget (refused, drawing massing)`);
+  // Named separately and last, so each reads as the distinct class it is: bytes
+  // that differ from their declaration, and bytes that matched it and then would
+  // not build. Collapsing the second into the first would stop the first meaning
+  // anything precise.
   if (summary.checksumMismatch > 0) parts.push(`${summary.checksumMismatch} checksum-mismatch (fail-closed, drawing massing)`);
+  if (summary.buildFailure > 0) parts.push(`${summary.buildFailure} build-failure (fail-closed, drawing massing)`);
   return `Far tier · ${parts.join(" · ")}`;
 }
+
+/** The states that owe the user a per-cell explanation on the container. */
+const FAR_TIER_DETAILED_STATES: readonly FarTierCellState[] = ["absent", "checksum-mismatch", "build-failure", "over-budget"];
 
 /**
  * Per-cell detail for the container dataset attribute, mirroring the
@@ -181,7 +376,7 @@ export function farTierStatusLine(summary: FarTierStateSummary): string {
  * by " | ", and ABSENT rather than empty when nothing failed.
  */
 export function farTierFailureDetail(outcomes: readonly FarTierLoadOutcome[]): string | null {
-  const failures = outcomes.filter((outcome) => outcome.detail && (outcome.state === "absent" || outcome.state === "checksum-mismatch"));
+  const failures = outcomes.filter((outcome) => outcome.detail && FAR_TIER_DETAILED_STATES.includes(outcome.state));
   if (failures.length === 0) return null;
   return failures.map((outcome) => `${outcome.cellId}: ${outcome.state}: ${outcome.detail}`).join(" | ");
 }

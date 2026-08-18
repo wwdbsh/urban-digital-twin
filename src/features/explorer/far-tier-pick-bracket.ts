@@ -1,5 +1,16 @@
 /**
- * The ONE place this application is allowed to pick.
+ * The one place this application's own code is allowed to pick.
+ *
+ * AND THAT IS NOT THE SAME AS "the one place a pick can happen", which is what
+ * an earlier version of this header claimed. `Viewer` installs its own
+ * `LEFT_DOUBLE_CLICK` handler — `pickAndTrackObject` — which calls `scene.pick`
+ * directly, inside CesiumJS, where no source scan in this repository can see it
+ * and no bracket can wrap it. A double click over a far-tier tile would
+ * therefore pick against a scene with the tile still in the pick pass: exactly
+ * the invisible-id occluder described below. `CesiumViewport` removes that
+ * input action at viewer construction, and a test pins the removal. Anything
+ * that re-introduces an entity-tracking double click must register it through
+ * this bracket.
  *
  * WHY THIS MODULE EXISTS. The far tier draws a merged per-cell tile over the
  * massing it replaces. Two measured facts about CesiumJS make that dangerous,

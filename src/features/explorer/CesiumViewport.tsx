@@ -45,9 +45,9 @@ import type { ExteriorCellOutcome, ExteriorCellRenderPlan } from "../../runtime/
 import type { ExteriorRenderProfile } from "../../runtime/exterior-render-profiles";
 import { verifiedExteriorModelResource, type VerifiedExteriorResource } from "./exterior-verified-resource";
 import { createFarTierPickBracket, FAR_TIER_MASSING_PICK_ALPHA, type FarTierHideable } from "./far-tier-pick-bracket";
-import { loadFarTierLayer } from "./far-tier-layer";
-import { farTierFailureDetail, summarizeFarTierState, type FarTierCellState, type FarTierInventory, type FarTierLoadOutcome, type FarTierStateSummary } from "../../runtime/far-tier-serving";
-import { farTierCellDistanceMeters, farTierCellInRange, type FarTierRectangle } from "../../runtime/far-tier-selection";
+import { createFarTierResidency, farTierTileReady, type FarTierDrawnTile } from "./far-tier-layer";
+import { createFarTierFetcher, farTierFailureDetail, parseVerifiedFarTierInventory, summarizeFarTierState, FAR_TIER_PAYLOAD_INVENTORY_REF, type FarTierCellState, type FarTierLoadOutcome, type FarTierStateSummary } from "../../runtime/far-tier-serving";
+import { farTierCellDistanceMeters, farTierCellInRange } from "../../runtime/far-tier-selection";
 import {
   boundFootprintToCamera,
   viewportFootprintFromGroundPoints,
@@ -1446,6 +1446,35 @@ export function applyDenseFarTierAlphaDelta(index: DenseInstanceIndex, delta: De
 }
 
 /**
+ * The far tier's alpha reconciliation as ONE function, applied set in and out.
+ *
+ * IT IS A FUNCTION AND NOT A CLOSURE BECAUSE OF THE BUG IT NOW PINS. The applied
+ * set is only meaningful against the instance index it was written into. When a
+ * dense render plan is rebuilt, every instance is new and at full opacity, so an
+ * applied set carried across the rebuild describes writes that no longer exist:
+ * the next delta is empty, this function early-returns, and the tan massing
+ * under every drawn far-tier tile comes back at full opacity and NEVER HEALS,
+ * because nothing will ever produce a delta again until the covered set itself
+ * changes. The fix is that every site which replaces or discards
+ * `denseActiveIndexRef` also resets the applied set, and the commit path
+ * re-applies the desired covered set against the layer it just installed —
+ * exactly what the `show`-based ownership path already did.
+ */
+export function reconcileDenseFarTierAlpha(
+  index: DenseInstanceIndex,
+  previousCovered: ReadonlySet<string>,
+  nextCovered: ReadonlySet<string>,
+): { applied: ReadonlySet<string>; writes: number } {
+  const delta = denseRenderPlanDelta(previousCovered, nextCovered);
+  if (denseRenderPlanDeltaSize(delta) === 0) return { applied: previousCovered, writes: 0 };
+  const result = applyDenseFarTierAlphaDelta(index, delta);
+  // Only what actually wrote advances the record, so a skipped id is retried
+  // next pass instead of being un-flipped by a reverse delta that never had a
+  // matching forward write.
+  return { applied: denseAppliedSuppressionSet(previousCovered, nextCovered, result.skipped), writes: result.writes };
+}
+
+/**
  * Flip `show` for the ids in a delta. Returns the number of instances actually
  * written, which is the honest flip count, plus the ids that did not write so
  * the caller can leave them out of its applied set.
@@ -1990,23 +2019,30 @@ export function CesiumViewport({
    * drawn only while the camera is beyond the tier's near edge, so the distance
    * has to be recomputed against the cell's own bounds as the camera moves.
    */
-  const farTierTilesRef = useRef<Array<{ cellId: string; primitive: FarTierHideable; suppressibleBuildingIds: readonly string[]; bounds: FarTierRectangle }>>([]);
+  const farTierTilesRef = useRef<readonly FarTierDrawnTile[]>([]);
   /** Cell ids currently drawn. This is the hysteresis state the band acts on. */
   const farTierDrawnCellsRef = useRef<Set<string>>(new Set());
-  /** Outcomes for cells that never produced a tile, so the summary can be rebuilt. */
+  /** Outcomes for every cell that is NOT resident, so the summary can be rebuilt. */
   const farTierBaseOutcomesRef = useRef<readonly FarTierLoadOutcome[]>([]);
 
-  /**
-   * Member building ids whose far-tier tile has actually DRAWN.
-   *
-   * Populated strictly AFTER a tile's bytes verify and its model builds, which
-   * is the ordering that makes the takeover flicker-free: the massing is still
-   * drawing right up to the frame the tile becomes available, and there is no
-   * window in which neither is on screen.
-   */
-  const farTierSuppressedIdsRef = useRef<Set<string>>(new Set());
   /** Ids whose massing is currently held at the far-tier pick alpha. */
   const denseFarTierAlphaAppliedRef = useRef<ReadonlySet<string>>(new Set());
+  /**
+   * The covered set the scene WANTS, reconciled at commit if a build is in
+   * flight — the alpha twin of `denseDesiredSuppressedIdsRef`, and missing from
+   * the first revision, which is half of why a rebuild lost the far tier.
+   */
+  const denseDesiredFarTierCoveredRef = useRef<ReadonlySet<string>>(new Set());
+  /**
+   * Bumped whenever far-tier residency changes, purely to wake the dense pass.
+   *
+   * Without it the tier activates only when some unrelated dense dependency
+   * happens to change: a camera that is already stationary when the tiles finish
+   * loading gets a scene with the primitives added, hidden, and nothing to show
+   * them, until the user moves. Selection lives inside the dense effect, so the
+   * dense effect is what has to be woken.
+   */
+  const [farTierResidencyGeneration, setFarTierResidencyGeneration] = useState(0);
   const onFarTierStateRef = useRef(onFarTierState);
   onFarTierStateRef.current = onFarTierState;
 
@@ -2109,6 +2145,15 @@ export function CesiumViewport({
     // invisible-id occluder that would otherwise swallow every click on the
     // massing behind it. See `far-tier-pick-bracket.ts` for the measurement.
     const pickBracket = createFarTierPickBracket(viewer.scene, () => farTierPrimitivesRef.current);
+    // AND CESIUM'S OWN PICK IS REMOVED, because the bracket cannot wrap what it
+    // does not own. `Viewer` installs a LEFT_DOUBLE_CLICK handler
+    // (`pickAndTrackObject`) that calls `scene.pick` directly, outside this
+    // bracket, so a double click over a far-tier tile would pick against a scene
+    // with the tile still in the pick pass — the exact invisible-id occluder
+    // Stage 0 measured. This application does not use entity tracking, so the
+    // handler is removed rather than re-registered through the bracket: nothing
+    // in this product tracks an entity, so there is no behaviour to preserve.
+    viewer.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
     viewer.screenSpaceEventHandler.setInputAction((movement: { position: Cartesian2 }) => {
       const picks = pickBracket.drillPick(movement.position, 12) as Array<{ id?: unknown }>;
       const storefront = picks.map((picked) => {
@@ -2178,6 +2223,11 @@ export function CesiumViewport({
       denseBuildGenerationRef.current += 1;
       denseActiveIndexRef.current = emptyDenseInstanceIndex();
       denseAppliedSuppressedIdsRef.current = new Set<string>();
+      // The far tier's applied set is reset EVERYWHERE the index it describes is
+      // replaced or discarded. An applied set that outlives its instances makes
+      // the next delta empty and leaves the massing under every tile at full
+      // opacity with nothing left to repair it.
+      denseFarTierAlphaAppliedRef.current = new Set<string>();
       denseDoubleDrawOpenedAtRef.current = null;
       ownedEntityIdsRef.current.clear();
       storefrontPickMapRef.current.clear();
@@ -2267,7 +2317,13 @@ export function CesiumViewport({
       const nowDrawn = new Set<string>();
       for (const tile of farTierTilesRef.current) {
         const distance = farTierCellDistanceMeters(farTierPose, tile.bounds);
-        const inRange = farTierCellInRange(distance, previouslyDrawn.has(tile.cellId));
+        // READINESS IS PART OF THE SELECTION, not an afterthought. A tile whose
+        // model has not finished uploading draws nothing, so showing it and
+        // dimming its massing in the same pass opens a window in which NEITHER
+        // is on screen. The massing-side writer applies the same `ready` gate to
+        // its own primitives. Until the tile is ready the cell simply reads as
+        // `near`: not drawn, massing showing, which is exactly what is true.
+        const inRange = farTierCellInRange(distance, previouslyDrawn.has(tile.cellId)) && farTierTileReady(tile.primitive);
         tile.primitive.show = inRange;
         if (!inRange) continue;
         nowDrawn.add(tile.cellId);
@@ -2277,7 +2333,6 @@ export function CesiumViewport({
         farTierDrawnCellsRef.current = nowDrawn;
         publishFarTierState();
       }
-      farTierSuppressedIdsRef.current = farTierSuppressed;
 
       const farTierCovered = new Set<string>();
       for (const feature of denseRenderBasis) {
@@ -2337,15 +2392,13 @@ export function CesiumViewport({
        * `skipped` obligation as ownership, different attribute.
        */
       const applyFarTierAlpha = (nextCovered: ReadonlySet<string>): void => {
-        const previousCovered = denseFarTierAlphaAppliedRef.current;
-        const alphaDelta = denseRenderPlanDelta(previousCovered, nextCovered);
-        if (denseRenderPlanDeltaSize(alphaDelta) === 0) return;
-        const applied = applyDenseFarTierAlphaDelta(denseActiveIndexRef.current, alphaDelta);
-        // Only what actually wrote advances the record, so a skipped id is
-        // retried next pass instead of being un-flipped by a reverse delta
-        // that never had a matching forward write.
-        denseFarTierAlphaAppliedRef.current = denseAppliedSuppressionSet(previousCovered, nextCovered, applied.skipped);
+        denseFarTierAlphaAppliedRef.current = reconcileDenseFarTierAlpha(denseActiveIndexRef.current, denseFarTierAlphaAppliedRef.current, nextCovered).applied;
       };
+      // Recorded BEFORE the write, and for the same reason the ownership set is:
+      // if this pass schedules a rebuild, the write below lands on a layer that
+      // is about to be discarded, and the commit path needs the desired set in
+      // order to write it again against the layer it installs.
+      denseDesiredFarTierCoveredRef.current = farTierCovered;
       applyFarTierAlpha(farTierCovered);
       denseDesiredSuppressedIdsRef.current = denseSuppressedIds;
       if (denseRendering && rootDenseCollection && shouldReplaceDenseRenderPlan(denseRenderPlanFeaturesRef.current, denseRenderBasis)) {
@@ -2416,6 +2469,14 @@ export function CesiumViewport({
             // Ownership that moved while the build ran is reconciled as flips,
             // never as another build: the instances are already correct.
             applyDenseOwnership(denseDesiredSuppressedIdsRef.current);
+            // AND SO IS THE FAR TIER'S ALPHA. These instances are brand new and
+            // fully opaque, and the applied set describes writes into the layer
+            // that was just replaced — so it is cleared first and the desired
+            // covered set is written afresh. Without this the massing under
+            // every drawn tile returns at full opacity on the first rebuild and
+            // never heals, because the next delta is empty forever.
+            denseFarTierAlphaAppliedRef.current = new Set<string>();
+            applyFarTierAlpha(denseDesiredFarTierCoveredRef.current);
             denseMetricsRef.current = liveDenseMetrics();
             publishDenseMetrics(denseMetricsRef.current);
           }
@@ -2444,6 +2505,9 @@ export function CesiumViewport({
         denseBuildGenerationRef.current += 1;
         denseActiveIndexRef.current = emptyDenseInstanceIndex();
         denseAppliedSuppressedIdsRef.current = new Set<string>();
+        // Same obligation as the ownership set above: the index these described
+        // is gone, so the record of what was written into it must go too.
+        denseFarTierAlphaAppliedRef.current = new Set<string>();
         denseBuiltCountsRef.current = { buildings: 0, points: 0, primitives: 0 };
         denseHiddenCountsRef.current = { buildings: 0, points: 0 };
         denseDoubleDrawOpenedAtRef.current = null;
@@ -2644,7 +2708,12 @@ export function CesiumViewport({
     // `exteriorOverlay` is a real dependency: coverage decides which base
     // geometry this pass may draw, so the base pass has to re-run when the wave
     // changes or the two passes disagree for one render.
-  }, [adapter, assetResolver, commercialOverlay, denseFeatureGroups, denseFeatureGroupLimits, denseFeatureLimit, denseFeatures, denseRendering, exteriorOverlay, featureFilter, itinerary, publicRealmOverlay, selectedFeatureId, viewportFootprint, visibleLayers.buildings, visibleLayers.pois, visibleLayers.areas, visibleLayers.stations, visibleLayers.entrances, visibleLayers.routes, visibleLayers["statistical-areas"], visibleLayers.parks, visibleLayers.landmarks]);
+    // `farTierResidencyGeneration` is a WAKE-UP, not an input: far-tier
+    // selection and the alpha writes live in this pass, so a tile that finishes
+    // loading or becomes ready while the camera is stationary has no other way
+    // to reach the scene. It changes only when residency actually changed, and
+    // never at all in a session that did not opt into the tier.
+  }, [adapter, assetResolver, commercialOverlay, denseFeatureGroups, denseFeatureGroupLimits, denseFeatureLimit, denseFeatures, denseRendering, exteriorOverlay, farTierResidencyGeneration, featureFilter, itinerary, publicRealmOverlay, selectedFeatureId, viewportFootprint, visibleLayers.buildings, visibleLayers.pois, visibleLayers.areas, visibleLayers.stations, visibleLayers.entrances, visibleLayers.routes, visibleLayers["statistical-areas"], visibleLayers.parks, visibleLayers.landmarks]);
 
   // Exterior cells own a per-cell collection with diff-and-replace discipline so
   // one cell failing closed removes exactly that cell. Bytes come from the
@@ -2988,59 +3057,135 @@ export function CesiumViewport({
     if (!farTier || !viewer) return;
     const controller = new AbortController();
     let disposed = false;
-    const added: FarTierHideable[] = [];
+    let residency: ReturnType<typeof createFarTierResidency> | null = null;
+    let readinessWatchActive = false;
+    let readinessFramesLeft = 0;
 
-    const fetchBytes = async (relativeRef: string, signal?: AbortSignal): Promise<Uint8Array> => {
-      const response = await fetch(`/${relativeRef}`, { signal });
-      if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
-      // A single-page-app fallback answers 200 with the application shell for a
-      // path that does not exist. Those bytes are not a corrupted tile — they
-      // are the absence of a tile wearing a 200 — and letting them reach the
-      // digest check would report a staging gap as an INTEGRITY FAILURE, which
-      // is precisely the confusion the five-state vocabulary exists to prevent.
-      // Measured, not hypothesised: the dev server did exactly this.
-      const contentType = response.headers.get("content-type") ?? "";
-      if (contentType.includes("text/html")) throw new Error(`served the application shell rather than an artifact (content-type ${contentType}); the tile is not staged`);
-      return new Uint8Array(await response.arrayBuffer());
+    const cameraPose = () => {
+      const carto = viewer.camera.positionCartographic;
+      return { longitude: CesiumMath.toDegrees(carto.longitude), latitude: CesiumMath.toDegrees(carto.latitude), heightMeters: carto.height };
+    };
+
+    /**
+     * A far-tier primitive is only worth showing once Cesium reports it ready,
+     * and readiness lands during a frame rather than at a promise. This watcher
+     * wakes the dense pass on the frame it happens, so a stationary camera gets
+     * its tiles instead of waiting for the user to move. It is bounded: after
+     * `readinessFramesLeft` frames it gives up and leaves the next genuine
+     * camera move to notice, rather than driving frames forever for a tile that
+     * is never going to upload.
+     */
+    const watchReadiness = () => {
+      if (disposed || !residency) return;
+      const tiles = residency.tiles();
+      if (tiles.length === 0) return;
+      if (tiles.every((tile) => farTierTileReady(tile.primitive))) {
+        viewer.scene.postRender.removeEventListener(watchReadiness);
+        readinessWatchActive = false;
+        setFarTierResidencyGeneration((generation) => generation + 1);
+        return;
+      }
+      readinessFramesLeft -= 1;
+      if (readinessFramesLeft <= 0) {
+        viewer.scene.postRender.removeEventListener(watchReadiness);
+        readinessWatchActive = false;
+        return;
+      }
+      viewer.scene.requestRender();
+    };
+
+    const publishAfterReconcile = (changed: boolean) => {
+      if (disposed) return;
+      // PUBLISHED EVEN WHEN NOTHING CHANGED. A camera that opens inside the near
+      // edge selects no cell, loads nothing and changes nothing — and the tier
+      // still owes the user its line, which is exactly "0 drawn, 1 declared, 1
+      // near (massing drawing)". Running the app is what caught this: gating the
+      // publish on `changed` left the line absent entirely at a near pose.
+      farTierBaseOutcomesRef.current = residency?.outcomes() ?? [];
+      farTierTilesRef.current = residency?.tiles() ?? [];
+      publishFarTierState();
+      if (!changed) return;
+      // Selection and the alpha writes live in the dense pass, so residency
+      // changes have to WAKE it. Without this the tier activated only when some
+      // unrelated dense dependency happened to change.
+      setFarTierResidencyGeneration((generation) => generation + 1);
+      if (!readinessWatchActive && (residency?.tiles().length ?? 0) > 0) {
+        readinessWatchActive = true;
+        readinessFramesLeft = 900;
+        viewer.scene.postRender.addEventListener(watchReadiness);
+      }
+      viewer.scene.requestRender();
+    };
+
+    const onCameraSettled = () => {
+      if (disposed || !residency) return;
+      void residency.reconcile(cameraPose()).then(publishAfterReconcile);
     };
 
     void (async () => {
-      let inventory: FarTierInventory;
+      let inventory;
       try {
-        const response = await fetch("/far-tier/payload-inventory.json", { signal: controller.signal });
+        const response = await fetch(`/${FAR_TIER_PAYLOAD_INVENTORY_REF}`, { signal: controller.signal });
         if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
-        inventory = await response.json() as FarTierInventory;
+        // THE STAGED INVENTORY IS A CACHE OF THE COMMITTED ONE, NOT A SECOND
+        // AUTHORITY. Its digest is pinned in shipped code, so a swapped staged
+        // file cannot declare its own checksums for the tiles and have every
+        // per-tile check below faithfully verify against them.
+        inventory = parseVerifiedFarTierInventory(await response.text());
       } catch {
-        // Nothing is staged. That is a declared-but-absent tier, not an error
-        // state, and the massing keeps drawing exactly as it does today.
-        if (!disposed) onFarTierStateRef.current?.({ declared: 0, drawn: 0, near: 0, notDeclared: 0, absent: 0, checksumMismatch: 0 });
+        // Nothing staged, or something staged that is not what this build
+        // declares. Either way the massing keeps drawing exactly as it does
+        // today, and the tier reports nothing rather than something wrong.
+        if (!disposed) onFarTierStateRef.current?.({ declared: 0, drawn: 0, near: 0, notDeclared: 0, absent: 0, checksumMismatch: 0, buildFailure: 0, overBudget: 0 });
         return;
       }
-      const result = await loadFarTierLayer(viewer.scene, inventory.entries, fetchBytes, undefined, controller.signal);
       if (disposed) return;
-
-      for (const tile of result.drawn) added.push(tile.primitive);
-      farTierPrimitivesRef.current = added;
-      farTierTilesRef.current = result.drawn.map((tile) => ({ cellId: tile.cellId, primitive: tile.primitive, suppressibleBuildingIds: tile.suppressibleBuildingIds, bounds: tile.bounds }));
-      // Outcomes for cells that produced NO tile. The tiles' own states are
-      // recomputed from selection on every pass instead of frozen here.
-      farTierBaseOutcomesRef.current = result.outcomes.filter((outcome) => outcome.state !== "near" && outcome.state !== "drawn");
-      // The suppression set is consumed by the dense render plan, which is what
-      // owns the `show` writes; nudging the scene is enough to make it run.
-      viewer.scene.requestRender();
-
-      publishFarTierState();
+      residency = createFarTierResidency({
+        // The scene wrapper is where the teardown guard lives: React runs this
+        // effect's cleanup AFTER the viewer effect's, so by the time a release
+        // reaches the scene the viewer may already be destroyed, and Cesium
+        // throws on a destroyed viewer rather than ignoring the call.
+        scene: {
+          primitives: {
+            add: (primitive) => viewer.scene.primitives.add(primitive),
+            remove: (primitive) => (viewer.isDestroyed() ? false : viewer.scene.primitives.remove(primitive)),
+          },
+        },
+        entries: inventory.entries,
+        fetcher: createFarTierFetcher((url, init) => fetch(url, init)),
+        signal: controller.signal,
+        // AT ADD TIME. The pick bracket reads this list on every pick, so a tile
+        // that arrives mid-load must be coverable immediately rather than when
+        // the whole ring resolves.
+        onPrimitiveAdded: (primitive) => { farTierPrimitivesRef.current = [...farTierPrimitivesRef.current, primitive]; },
+        onPrimitiveRemoved: (primitive) => { farTierPrimitivesRef.current = farTierPrimitivesRef.current.filter((entry) => entry !== primitive); },
+      });
+      viewer.camera.moveEnd.addEventListener(onCameraSettled);
+      publishAfterReconcile(await residency.reconcile(cameraPose()));
     })();
 
     return () => {
       disposed = true;
       controller.abort();
-      for (const primitive of added) viewer.scene.primitives.remove(primitive);
+      // THE VIEWER IS USUALLY ALREADY GONE BY HERE. React runs this effect's
+      // cleanup AFTER the viewer effect's, which destroys the viewer, and a
+      // destroyed Cesium `Viewer` throws from `camera` and `scene` rather than
+      // ignoring the call — so an unmount with the far tier on took the whole
+      // component down with it. Running the app is what caught this: React's
+      // development double-invoke made it fire on every mount.
+      if (!viewer.isDestroyed()) {
+        viewer.camera.moveEnd.removeEventListener(onCameraSettled);
+        if (readinessWatchActive) viewer.scene.postRender.removeEventListener(watchReadiness);
+      }
+      // Every primitive this tier ever added is tracked by the residency from
+      // the instant it entered the scene, so an aborted mid-load leaves nothing
+      // behind. The removal itself is guarded against a destroyed viewer by the
+      // scene wrapper above.
+      residency?.releaseAll();
       farTierPrimitivesRef.current = [];
       farTierTilesRef.current = [];
       farTierDrawnCellsRef.current = new Set();
       farTierBaseOutcomesRef.current = [];
-      farTierSuppressedIdsRef.current = new Set();
       const container = containerRef.current;
       if (container) delete container.dataset.farTierFailures;
     };

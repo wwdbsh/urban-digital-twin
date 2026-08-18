@@ -15,7 +15,24 @@ function readText(path: string): string {
 }
 
 import { createFarTierPickBracket, FAR_TIER_MASSING_PICK_ALPHA, type FarTierHideable } from "./far-tier-pick-bracket";
-import { applyDenseFarTierAlphaDelta, DENSE_MASSING_BASE_ALPHA } from "./CesiumViewport";
+import { applyDenseFarTierAlphaDelta, reconcileDenseFarTierAlpha, DENSE_MASSING_BASE_ALPHA, type DenseInstanceIndex } from "./CesiumViewport";
+
+/** A dense index of freshly built, fully opaque massing instances. */
+function denseIndexOf(buildingIds: readonly string[]): { index: DenseInstanceIndex; alphaOf: (id: string) => number } {
+  const attributes = new Map<string, { color: Uint8Array; show: Uint8Array }>();
+  const buildings = new Map<string, unknown>();
+  for (const id of buildingIds) {
+    attributes.set(id, { color: new Uint8Array([215, 168, 93, Math.round(DENSE_MASSING_BASE_ALPHA * 255)]), show: new Uint8Array([1]) });
+    buildings.set(id, { ready: true, getGeometryInstanceAttributes: (key: string) => attributes.get(key) });
+  }
+  return {
+    index: { buildings, points: new Map() } as unknown as DenseInstanceIndex,
+    alphaOf: (id: string) => attributes.get(id)!.color[3]!,
+  };
+}
+
+const COVERED_ALPHA = Math.round(FAR_TIER_MASSING_PICK_ALPHA * 255);
+const OPAQUE_ALPHA = Math.round(DENSE_MASSING_BASE_ALPHA * 255);
 
 function fakeScene(observe: (visible: boolean[]) => void, hideables: FarTierHideable[]) {
   return {
@@ -116,6 +133,71 @@ describe("no bypass", () => {
       if (/\bscene\.(drillPick|pick)\s*\(/u.test(readText(path))) offenders.push(path);
     }
     expect(offenders, "these files pick without the far-tier bracket and will swallow far-range clicks").toEqual([]);
+  });
+
+  it("removes the one pick this repository CANNOT see: Cesium's own double-click handler", () => {
+    // The source scan above is blind to picks inside CesiumJS. `Viewer` installs
+    // `pickAndTrackObject` on LEFT_DOUBLE_CLICK, which calls `scene.pick`
+    // unbracketed, so a double click over a far-tier tile picks against a scene
+    // with the tile still in the pick pass.
+    const viewport = readText("src/features/explorer/CesiumViewport.tsx");
+    expect(viewport).toContain("removeInputAction(ScreenSpaceEventType.LEFT_DOUBLE_CLICK)");
+    // And the module header must not claim a completeness it does not have.
+    const bracket = readText("src/features/explorer/far-tier-pick-bracket.ts");
+    expect(bracket).toContain("pickAndTrackObject");
+    expect(bracket).not.toContain("The ONE place this application is allowed to pick");
+  });
+});
+
+describe("the far-tier alpha survives a dense render-plan rebuild", () => {
+  const covered = new Set(["doitt:1"]);
+
+  it("re-applies the covered set against the layer the commit installs", () => {
+    // THE DEFECT THIS PINS. The applied set is only meaningful against the
+    // instance index it was written into. A rebuild replaces every instance
+    // with a fresh, fully opaque one, so an applied set carried across the
+    // rebuild makes the next delta EMPTY: the tan massing under every drawn
+    // far-tier tile comes back at full opacity and never heals, because nothing
+    // will produce a delta again until the covered set itself changes.
+    const first = denseIndexOf(["doitt:1"]);
+    const applied = reconcileDenseFarTierAlpha(first.index, new Set(), covered);
+    expect(applied.writes).toBe(1);
+    expect(first.alphaOf("doitt:1")).toBe(COVERED_ALPHA);
+
+    // The rebuild: a new index, brand new instances, all fully opaque.
+    const rebuilt = denseIndexOf(["doitt:1"]);
+    expect(rebuilt.alphaOf("doitt:1")).toBe(OPAQUE_ALPHA);
+
+    // Carrying the applied set across it writes NOTHING — the bug, reproduced.
+    const stale = reconcileDenseFarTierAlpha(rebuilt.index, applied.applied, covered);
+    expect(stale.writes).toBe(0);
+    expect(rebuilt.alphaOf("doitt:1"), "the massing is back at full opacity under a drawn tile").toBe(OPAQUE_ALPHA);
+
+    // The fix: the commit path clears the applied set first, exactly as the
+    // `show`-based ownership path already did, and writes the desired set again.
+    const healed = reconcileDenseFarTierAlpha(rebuilt.index, new Set(), covered);
+    expect(healed.writes).toBe(1);
+    expect(rebuilt.alphaOf("doitt:1")).toBe(COVERED_ALPHA);
+  });
+
+  it("still advances the applied set only over writes that landed", () => {
+    // The skipped contract is unchanged by the reset: an id that did not write
+    // is retried next pass rather than recorded as flipped.
+    const index = denseIndexOf([]);
+    const result = reconcileDenseFarTierAlpha(index.index, new Set(), covered);
+    expect(result.writes).toBe(0);
+    expect([...result.applied]).toEqual([]);
+  });
+
+  it("resets the applied set everywhere the index it describes is discarded", () => {
+    // A structural pin, deliberately: the three reset sites and the commit
+    // re-apply are glue inside an effect that no unit test can reach, and their
+    // absence is precisely the defect above. The `show` path has exactly the
+    // same three sites, which is what makes this checkable at all.
+    const viewport = readText("src/features/explorer/CesiumViewport.tsx");
+    const resets = viewport.match(/denseFarTierAlphaAppliedRef\.current = new Set<string>\(\)/gu) ?? [];
+    expect(resets.length, "viewer teardown, rebuild commit and dense teardown must each reset it").toBeGreaterThanOrEqual(3);
+    expect(viewport).toContain("applyFarTierAlpha(denseDesiredFarTierCoveredRef.current)");
   });
 });
 
