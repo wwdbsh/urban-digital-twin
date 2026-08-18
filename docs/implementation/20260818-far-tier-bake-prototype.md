@@ -89,7 +89,8 @@ agreement number.
 
 ## Results
 
-**Byte replay: PASS.** `a0688874…` (GLB) and `098a5def…` (atlas) on both runs.
+**Byte replay: PASS, across processes.** `2f859925…` (GLB) and `c159e050…` (atlas) from
+the parent run and from a fresh child process.
 
 **Hue: PASS at all six poses**, spread 0.0060-0.0160 against 0.02. This is the reading
 that settles the gamma decision: a linear-light composition error would show as a
@@ -119,12 +120,49 @@ cheaper than having it discovered on screen after a mass bake.
 Two things drive it: the 2-texel gutter, which costs ~3x on small faces and forced a
 global resolution scale of 0.5 on this cell; and the 256 ceiling.
 
+## What independent review caught, after the first commit
+
+Three quantitative claims did not hold, **all erring in the flattering direction**. They
+are worth recording because each is a different way to be wrong with correct arithmetic.
+
+1. **A sampled maximum was presented as a bound.** B3/B5 came from a 13×13 camera sweep
+   and the record said the figures are never exceeded at any pose, and that every
+   conservatism enlarged them. Both false: a grid can only *miss* a peak. Refining to
+   24, 48, 96 and 192 steps kept finding worse poses and never converged, so the sweep
+   cannot supply a bar at all. Replaced by an exact max-over-antichains DP —
+   291,984,434 / 390,295,058 B, roughly **1.7× the figure first committed**. The
+   tempting simpler bound, "all leaves resident", is *not* a bound: 3 internal nodes
+   cost more than their children.
+2. **The resolution ladder assumed a 100%-full atlas.** No packer achieves that, and the
+   one baked cell had already shown a 0.5 scale. Running the real packer over all 883
+   leaves moved B6's shortfall from 360 cells to 650 of 711 packable ones — and
+   surfaced something the ideal ladder could not: **172 cells cannot be packed at any
+   scale**, because the texel floor plus gutter caps an atlas at 1,024 faces. That is a
+   feasibility blocker for T004, not a quality note, and it was invisible until the
+   real packer ran.
+3. **The prototype record reported pre-packing quality.** It stated ratio 1.102 and
+   `underResolved: false` beside `appliedScale: 0.5`. The delivered ratio is 0.500 and
+   the true critical distance 2,400 m — so the tile violated the very bar (B6) whose
+   whole purpose is to force under-resolved leaves to be reported.
+
+Also fixed: `Math.hypot` removed from byte paths (the repository's own policy, stated in
+`block835-v3-package.ts`, and previously not followed here); the flat-face predicate is
+carried from the packer rather than re-derived, which had mislabelled legitimately 4×4
+faces; and the replay's second run now spawns a **child process**, which is what the
+code comment had claimed all along while both runs shared one process and its caches.
+
+The `Math.hypot` fix moved the tile's bytes. The appearance readings therefore describe
+a **superseded digest**, and that is disclosed rather than resolved: re-running the
+instrument after seeing a MISS is what pre-registration exists to prevent.
+
 ## Residuals and NOT-METs
 
 1. **NOT MET — tone bar** at 1,200 m / azimuth 235. Mass bake blocked pending a user
    fork; four options are enumerated in `sampling-results.json`.
-2. **NOT MET, and pre-registered as such — B6.** 360 of 883 leaves (40.8%) cannot reach
-   texel ratio 1.0 at the boundary inside 256px; worst 0.284, critical only by 4,221 m.
+2. **NOT MET, and pre-registered as such — B6.** Against delivered resolution: 650 of
+   711 packable leaves under-resolved, worst ratio 0.044; a further **172 cells cannot
+   be baked at this ceiling at all**. The ideal-ladder figure of 360 is retained only so
+   the packing penalty is visible as the difference.
 3. **The hierarchy does not reduce geometry residency.** Parent nodes concatenate
    rather than simplify. 93.8 MiB, bounded and affordable; a prerequisite for any
    larger city.

@@ -160,11 +160,47 @@
       "18": 16
     },
     "note": "Leaf zoom levels are the ledger's own tile ids; the far tier does not invent a hierarchy, it adopts the cut the ledger already committed.",
-    "underResolvedCellCount": 360,
-    "underResolvedShare": 0.407701,
-    "worstAchievedRatio": 0.284291,
-    "worstCriticalDistanceMeters": 4221,
-    "honesty": "THIS IS THE TIER'S LARGEST QUALITY SHORTFALL AND IT IS STATED RATHER THAN FUNDED. A leaf whose surface area exceeds what a 256px atlas can carry at ratio 1.0 does not get a bigger atlas and does not get a waiver: it renders blurrier than target between the 1,200 m boundary and its own critical distance. Raising the ceiling to 512 or 1024 would fix it at a worst-case resident cost of 209.8 MiB or 346.0 MiB respectively, against 126.4 MiB at 256. Splitting the leaf below the ledger cell would also fix it and is a T004 question, not one this prototype may answer."
+    "idealLadder": {
+      "basis": "farTierResolution alone, which assumes an atlas can be filled to 100%.",
+      "underResolvedCellCount": 360,
+      "underResolvedShare": 0.407701,
+      "cellsMeasured": 883,
+      "worstAchievedRatio": 0.284291,
+      "caveat": "THIS LADDER IS NOT ACHIEVABLE. No packer fills an atlas completely, so these figures are an upper bound on quality, not a prediction of it."
+    },
+    "faceCountCeiling": {
+      "note": "THE HARDEST LIMIT IN THIS TIER, AND IT IS NOT A QUALITY LIMIT — IT IS FEASIBILITY. Every face occupies at least (faceTexelFloor + 2 * gutterTexels)^2 texels however far the global resolution is reduced, so one atlas holds a FIXED MAXIMUM NUMBER OF FACES. A cell above it cannot be baked at this ceiling at any scale.",
+      "minimumTexelsPerFace": 64,
+      "maximumFacesPer256Atlas": 1024,
+      "unpackableCellCount": 172,
+      "unpackableShare": 0.19479,
+      "worstFaceCount": 3836,
+      "consequence": "T004 CANNOT MASS-BAKE AT THIS CEILING WITHOUT ONE OF: a larger atlas, a smaller gutter, a lower texel floor, or splitting leaves below the ledger cell. This prototype does not choose between them."
+    },
+    "deliveredLadder": {
+      "basis": "The real packer run over every PACKABLE leaf, using each cell's own face extents from the base snapshot. This is the resolution a bake actually delivers.",
+      "cellsMeasured": 711,
+      "cellsUnpackable": 172,
+      "underResolvedCellCount": 650,
+      "underResolvedShare": 0.736127,
+      "worstAchievedRatio": 0.044194,
+      "worstCriticalDistanceMeters": 27153,
+      "appliedScaleHistogram": {
+        "1": 61,
+        "0.5": 264,
+        "0.08838834764831845": 5,
+        "0.3535533905932738": 192,
+        "0.1767766952966369": 26,
+        "0.7071067811865476": 109,
+        "0.125": 12,
+        "0.0625": 1,
+        "0.25": 40,
+        "0.04419417382415922": 1
+      },
+      "meanFlatFaceShare": 0.798169,
+      "representativeness": "Ordering keys are synthetic, so `appliedScale` is representative rather than byte-identical to a real bake: face world area is the primary sort in both and only ties break differently."
+    },
+    "honesty": "THE DELIVERED LADDER IS THE ONE THAT MATTERS, AND IT IS MUCH WORSE THAN THE IDEAL ONE. THIS IS THE TIER'S LARGEST QUALITY SHORTFALL AND IT IS STATED RATHER THAN FUNDED. The ideal ladder puts it at 360 of 883 leaves; the DELIVERED ladder, which is the one that matters, puts it at 650. The gap between them is packing overhead — gutters and shelf waste — and it is the dominant term, not a correction. A leaf that cannot reach ratio 1.0 does not get a bigger atlas and does not get a waiver: it renders blurrier than target between the 1,200 m boundary and its own critical distance. Raising the ceiling to 512 or 1024 would help at a worst-case resident cost this project has no evidence it can pay; splitting leaves below the ledger cell would also help and is a T004 question this prototype may not answer. Reducing the gutter from 2 texels would help most of all and would cost mip-level-1 bleed."
   },
   "hierarchy": {
     "nodeCount": 1221,
@@ -174,7 +210,9 @@
     "geometryLimitation": "THE HIERARCHY REDUCES TEXTURE RESIDENCY WITH DISTANCE AND DOES NOT REDUCE GEOMETRY RESIDENCY AT ALL. A parent node here is the concatenation of its children's prisms, not a simplified massing of them, so coarsening the cut moves texture bytes and leaves geometry bytes almost unchanged — which is why the swept geometry worst case equals the whole island's prism geometry rather than some fraction of it. At 93.8 MiB that is affordable and bounded, so it does not block this prototype. It is named here rather than discovered during a mass bake: parent-node geometry simplification is a real prerequisite for any tier that must grow past this island's size, and it is out of T002's scope."
   },
   "worstCaseResidency": {
-    "method": "Maximum over a 13x13 camera grid across the island bounding box at seven altitudes, with NO frustum culling and NO occlusion. Every conservatism here makes the bound larger, never smaller.",
+    "quantifier": "MAXIMUM OVER THE DECLARED POSE SAMPLE, at the stated grid resolution. NOT a proven bound over all camera poses.",
+    "quantifierNote": "An earlier draft of this record claimed these figures are never exceeded at any camera pose, and claimed every conservatism enlarged them. Both were wrong in the same direction. A sampled grid can only MISS a peak, never invent one, so grid coarseness makes the figure SMALLER. A 12-step grid reported 133,190,868 atlas bytes; refining found more. The ladder below is the evidence for where refinement stopped moving the answer, and the quantifier above is what the number actually supports.",
+    "method": "Camera grid across the island bounding box at seven altitudes, with NO frustum culling and NO occlusion. Those two conservatisms do enlarge the bound; the grid sampling does not.",
     "altitudesMeters": [
       400,
       800,
@@ -184,14 +222,107 @@
       8000,
       16000
     ],
+    "refinementLadder": [
+      {
+        "gridSteps": 12,
+        "posesSampled": 1183,
+        "atlasGpuBytes": 133190868,
+        "geometryGpuBytes": 98310624,
+        "totalGpuBytes": 231501492,
+        "altitudeMeters": 1200
+      },
+      {
+        "gridSteps": 24,
+        "posesSampled": 4375,
+        "atlasGpuBytes": 135288018,
+        "geometryGpuBytes": 98310624,
+        "totalGpuBytes": 233598642,
+        "altitudeMeters": 1200
+      },
+      {
+        "gridSteps": 48,
+        "posesSampled": 16807,
+        "atlasGpuBytes": 135288018,
+        "geometryGpuBytes": 98310624,
+        "totalGpuBytes": 233598642,
+        "altitudeMeters": 1200
+      },
+      {
+        "gridSteps": 96,
+        "posesSampled": 65863,
+        "atlasGpuBytes": 135637543,
+        "geometryGpuBytes": 98310624,
+        "totalGpuBytes": 233948167,
+        "altitudeMeters": 1200
+      },
+      {
+        "gridSteps": 192,
+        "posesSampled": 260743,
+        "atlasGpuBytes": 136686118,
+        "geometryGpuBytes": 98310624,
+        "totalGpuBytes": 234996742,
+        "altitudeMeters": 1200
+      }
+    ],
+    "stabilityRule": "The last three rungs must agree exactly.",
+    "stable": false,
+    "stabilityStatement": "NOT STABLE. The last three rungs disagree, so the maximum below is the largest SEEN and refinement had not converged when it stopped. It must be read as a lower bound on the true sampled maximum.",
     "altitudeMeters": 1200,
-    "nodeCount": 388,
-    "atlasGpuBytes": 133190868,
+    "nodeCount": 398,
+    "atlasGpuBytes": 136686118,
     "geometryGpuBytes": 98310624,
-    "totalGpuBytes": 231501492,
-    "atlasGpuMebibytes": 127.02,
+    "totalGpuBytes": 234996742,
+    "atlasGpuMebibytes": 130.35,
     "geometryGpuMebibytes": 93.76,
-    "totalGpuMebibytes": 220.78
+    "totalGpuMebibytes": 224.11
+  },
+  "cutIndependentBound": {
+    "note": "THIS IS WHAT THE COMMITTED BARS REST ON, not the sweep. Every camera pose selects some antichain of the tree, minus whatever the 1,200 m boundary excludes, and excluding only subtracts. So the maximum over all antichains dominates every pose.",
+    "method": "One bottom-up pass: maxCut(node) = max(cost(node), sum of maxCut(children)). A theorem about the tree, not a sample.",
+    "atlasGpuBytes": 291984434,
+    "geometryGpuBytes": 98310624,
+    "totalGpuBytes": 390295058,
+    "atlasGpuMebibytes": 278.46,
+    "geometryGpuMebibytes": 93.76,
+    "totalGpuMebibytes": 372.21,
+    "allLeavesRejectedAsBound": {
+      "why": "'Every leaf resident at once' was considered as the simpler bound and REJECTED: it is not one. Power-of-two rounding and the 64-texel floor make some internal nodes cost MORE than their children.",
+      "internalNodesCostlierThanTheirChildren": 3,
+      "allLeavesAtlasGpuBytes": 291984431,
+      "allLeavesGeometryGpuBytes": 98310624
+    },
+    "headroomOverObservedSweepMaximum": 155298316,
+    "atlasCeilingComparison": [
+      {
+        "atlasCeilingPixels": 128,
+        "cutIndependentAtlasGpuBytes": 75715631,
+        "cutIndependentAtlasMebibytes": 72.21,
+        "maximumFacesPerAtlas": 256,
+        "unpackableCellCount": 772
+      },
+      {
+        "atlasCeilingPixels": 256,
+        "cutIndependentAtlasGpuBytes": 291984434,
+        "cutIndependentAtlasMebibytes": 278.46,
+        "maximumFacesPerAtlas": 1024,
+        "unpackableCellCount": 156
+      },
+      {
+        "atlasCeilingPixels": 512,
+        "cutIndependentAtlasGpuBytes": 671110264,
+        "cutIndependentAtlasMebibytes": 640.02,
+        "maximumFacesPerAtlas": 4096,
+        "unpackableCellCount": 0
+      },
+      {
+        "atlasCeilingPixels": 1024,
+        "cutIndependentAtlasGpuBytes": 903501015,
+        "cutIndependentAtlasMebibytes": 861.65,
+        "maximumFacesPerAtlas": 16384,
+        "unpackableCellCount": 0
+      }
+    ],
+    "atlasCeilingComparisonNote": "The 256 ceiling is chosen against these, all computed the same exact way. Note that the feasibility column moves faster than the memory column: raising the ceiling buys packability as much as sharpness."
   },
   "allLeavesResidentUpperBound": {
     "note": "The degenerate case where the hierarchy is ignored entirely and every leaf is resident at once. It is NOT the budget; it is what the budget buys protection from.",

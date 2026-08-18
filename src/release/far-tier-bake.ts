@@ -275,6 +275,7 @@ function cross(left: Vec3Mm, right: Vec3Mm): Vec3Mm {
   return [left[1] * right[2] - left[2] * right[1], left[2] * right[0] - left[0] * right[2], left[0] * right[1] - left[1] * right[0]];
 }
 function dot(left: Vec3Mm, right: Vec3Mm): number { return left[0] * right[0] + left[1] * right[1] + left[2] * right[2]; }
+/** `Math.sqrt` is correctly rounded by IEEE 754; `Math.hypot` is not, and these bytes ship. */
 function normalize(vector: Vec3Mm): Vec3Mm {
   const length = Math.sqrt(dot(vector, vector));
   return length === 0 ? [0, 0, 1] : [vector[0] / length, vector[1] / length, vector[2] / length];
@@ -333,7 +334,15 @@ export interface FarTierFace {
   offsetMeters: readonly [number, number];
   zones: readonly FaceZone[];
   /** Set by packing. */
-  rect?: { x: number; y: number; width: number; height: number };
+  /**
+   * Set by packing. `flat` is decided ONCE, by the packer, and carried here.
+   *
+   * It is deliberately not re-derived from the rect dimensions: a face that
+   * legitimately sizes to exactly the texel floor on both axes is NOT flat, and
+   * re-deriving the predicate from `width === floor && height === floor`
+   * conflated the two and under-reported `flatFaceCount`.
+   */
+  rect?: { x: number; y: number; width: number; height: number; flat: boolean };
 }
 
 function paletteFactor(plan: V3Plan, materialId: string): { textureClass: ProceduralTextureClass | null; factor: [number, number, number] } {
@@ -380,7 +389,11 @@ export function farTierFacesForBuilding(
   for (let index = 0; index < ring.length; index += 1) {
     const [ax, ay] = ring[index]!;
     const [bx, by] = ring[(index + 1) % ring.length]!;
-    const widthMm = Math.hypot(bx - ax, by - ay);
+    // `Math.sqrt` is correctly rounded by IEEE 754; `Math.hypot` is not, and this
+    // area is the primary packing sort key, so it decides shipped bytes.
+    const edgeDx = bx - ax;
+    const edgeDy = by - ay;
+    const widthMm = Math.sqrt(edgeDx * edgeDx + edgeDy * edgeDy);
     if (widthMm <= 0 || heightMm <= 0) continue;
 
     const facade = baseVMaxByEdge.get(index);
@@ -449,7 +462,11 @@ function contentExtent(face: FarTierFace, texelWorldSizeMeters: number): { width
     return { width: floor, height: floor, flat: true };
   }
   const [a, b] = [face.cornersMm[0]!, face.cornersMm[1]!];
-  const widthMeters = Math.hypot(b[0] - a[0], b[1] - a[1]) / 1_000;
+  // `Math.sqrt` is correctly rounded by IEEE 754; `Math.hypot` is not specified
+  // to be, and this length decides a texel count that decides shipped bytes.
+  const dx = b[0] - a[0];
+  const dy = b[1] - a[1];
+  const widthMeters = Math.sqrt(dx * dx + dy * dy) / 1_000;
   const heightMeters = (face.cornersMm[2]![2] - a[2]) / 1_000;
   const width = Math.round(widthMeters / texelWorldSizeMeters);
   const height = Math.round(heightMeters / texelWorldSizeMeters);
@@ -502,7 +519,7 @@ export function packFarTierAtlas(
       if (boxWidth > atlasPixels) { failed = true; break; }
       if (cursorX + boxWidth > atlasPixels) { shelfY += shelfHeight; shelfHeight = 0; cursorX = 0; }
       if (shelfY + boxHeight > atlasPixels) { failed = true; break; }
-      placed.push({ ...face, rect: { x: cursorX + gutter, y: shelfY + gutter, width: extent.width, height: extent.height } });
+      placed.push({ ...face, rect: { x: cursorX + gutter, y: shelfY + gutter, width: extent.width, height: extent.height, flat: extent.flat } });
       cursorX += boxWidth;
       if (boxHeight > shelfHeight) shelfHeight = boxHeight;
       occupied += boxWidth * boxHeight;
@@ -563,7 +580,7 @@ export function bakeFarTierAtlas(packing: FarTierPacking): Uint8Array {
     const vAtBottom = dot(a, vAxis);
     const vAtTop = dot(top, vAxis);
 
-    const isFlat = rect.width === FAR_TIER_BAKE_RECIPE.faceTexelFloor && rect.height === FAR_TIER_BAKE_RECIPE.faceTexelFloor;
+    const isFlat = rect.flat;
 
     // A flat face is one area-weighted average over all its zones.
     let flatColour: [number, number, number] | null = null;

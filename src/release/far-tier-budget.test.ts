@@ -4,6 +4,7 @@
  * whose drift would silently re-open a frozen bar.
  */
 import { describe, expect, it } from "vitest";
+import { sha256HexSync, stableSerialize } from "../domain/deterministic-hash.ts";
 import {
   FAR_TIER_ATLAS_PIXELS,
   FAR_TIER_BUDGET_CONTRACT,
@@ -124,9 +125,35 @@ describe("the frozen contract", () => {
     );
   });
 
-  it("pins a contract hash, so a silent constant edit fails here", () => {
-    expect(farTierBudgetContractHash()).toBe(farTierBudgetContractHash());
-    expect(farTierBudgetContractHash()).toMatch(/^[0-9a-f]{64}$/u);
+  it("moves its hash when ANY covered constant changes", () => {
+    // The previous version asserted `hash() === hash()`, which is true of every
+    // pure function and says nothing about what the hash covers. This one
+    // mutates each covered input in turn and requires the hash to move.
+    const baseline = farTierBudgetContractHash();
+    expect(baseline).toMatch(/^[0-9a-f]{64}$/u);
+    const covered = {
+      contract: FAR_TIER_BUDGET_CONTRACT,
+      view: FAR_TIER_VIEW_REFERENCE,
+      nearEdgeMeters: FAR_TIER_NEAR_EDGE_METERS,
+      ratio: FAR_TIER_TEXEL_RATIO,
+      atlasPixels: FAR_TIER_ATLAS_PIXELS,
+      gpuTexelBytes: FAR_TIER_GPU_TEXEL_BYTES,
+      mipMultiplier: FAR_TIER_MIP_CHAIN_MULTIPLIER,
+    };
+    expect(sha256HexSync(stableSerialize(covered))).toBe(baseline);
+    for (const key of Object.keys(covered)) {
+      const mutated: Record<string, unknown> = { ...covered };
+      mutated[key] = typeof mutated[key] === "number" ? (mutated[key] as number) + 1 : { mutated: true };
+      expect(sha256HexSync(stableSerialize(mutated)), `contract hash ignores ${key}`).not.toBe(baseline);
+    }
+  });
+
+  it("pins the bound as a BOUND, not as a sampled maximum", () => {
+    // The correction this records: B3/B5 were once the maximum of a 13x13
+    // camera sweep, presented as a figure never exceeded at any pose. A sampled
+    // grid can only miss a peak, so that claim was false in the flattering
+    // direction. These constants now come from a max-over-cuts DP.
+    expect(FAR_TIER_BUDGET_CONTRACT.maxResidentAtlasGpuBytes).toBeGreaterThan(136_686_118);
   });
 
   it("begins where the shipped mid tier stops", () => {

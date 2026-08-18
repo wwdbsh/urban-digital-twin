@@ -69,12 +69,18 @@ export const FAR_TIER_TEXEL_RATIO = { floor: 1.0, target: 1.0, ceiling: 2.0 } as
  * Atlas edge length is a power of two in [64, 256].
  *
  * The 256 ceiling is the decisive constant and it was chosen from measured
- * island arithmetic, not preference. Against the committed per-cell facade
- * areas, the worst-case resident far-tier texture memory over a swept camera
- * grid is 126.4 MiB at a 256 ceiling, 209.8 MiB at 512 and 346.0 MiB at 1024.
- * 512 and 1024 both buy sharper near-boundary cells at a memory cost this
+ * island arithmetic, not preference. The cut-independent atlas bound is 72.2
+ * MiB at a 128 ceiling, 278.5 MiB at 256, 640.0 MiB at 512 and 861.7 MiB at
+ * 1024. 512 and 1024 buy sharper near-boundary cells at a memory cost this
  * project has no evidence it can pay, so the ceiling is 256 and the cells that
  * cannot reach ratio 1.0 inside it are REPORTED rather than funded.
+ *
+ * THE CEILING ALSO DECIDES FEASIBILITY, NOT ONLY SHARPNESS. Every face costs at
+ * least `(faceTexelFloor + 2 * gutterTexels)^2` texels however far the global
+ * resolution is reduced, so an atlas holds a FIXED MAXIMUM NUMBER OF FACES:
+ * 1,024 at a 256 ceiling. 172 of 883 ledger cells have more faces than the real
+ * packer can place there, and cannot be baked at this ceiling at any scale. A
+ * 512 ceiling removes that limit entirely. See `stage0-hierarchy.json`.
  */
 export const FAR_TIER_ATLAS_PIXELS = { minimum: 64, maximum: 256 } as const;
 
@@ -168,6 +174,42 @@ export function farTierResolution(
   };
 }
 
+export interface FarTierDeliveredQuality {
+  /** Texels per screen pixel actually achieved at `nearEdgeMeters`. */
+  achievedRatio: number;
+  underResolved: boolean;
+  /** Distance at which this delivered texel size first reaches the ratio floor. */
+  criticalDistanceMeters: number;
+}
+
+/**
+ * Quality from the texel size the PACKER ACTUALLY DELIVERED, not from the one
+ * the ladder asked for.
+ *
+ * These are different numbers and the gap is not small. `farTierResolution`
+ * assumes an atlas can be filled to 100%, which no packer achieves: gutters and
+ * shelf waste force `packFarTierAtlas` to shrink the global texel size until
+ * the faces fit, and it reports that as `appliedScale`. Reporting the ideal
+ * ratio while the packer delivered half of it would state a quality the tile
+ * does not have — which is exactly what B6 exists to prevent — so anything that
+ * reports a real tile's quality must call THIS, with `packing.texelWorldSizeMeters`.
+ */
+export function farTierDeliveredQuality(
+  deliveredTexelWorldSizeMeters: number,
+  nearEdgeMeters: number = FAR_TIER_NEAR_EDGE_METERS,
+): FarTierDeliveredQuality {
+  if (!Number.isFinite(deliveredTexelWorldSizeMeters) || deliveredTexelWorldSizeMeters <= 0) {
+    throw new Error("Far-tier delivered quality requires a positive texel world size.");
+  }
+  const achievedRatio = farTierMetersPerPixel(nearEdgeMeters) / deliveredTexelWorldSizeMeters;
+  return {
+    achievedRatio,
+    underResolved: achievedRatio < FAR_TIER_TEXEL_RATIO.floor,
+    criticalDistanceMeters: (deliveredTexelWorldSizeMeters * FAR_TIER_VIEW_REFERENCE.viewportHeightPixels * FAR_TIER_TEXEL_RATIO.floor)
+      / ((FAR_TIER_VIEW_REFERENCE.verticalFieldOfViewDegrees * Math.PI) / 180),
+  };
+}
+
 /** Decoded GPU bytes one baked atlas of `atlasPixels` edge occupies, mip chain included. */
 export function farTierAtlasGpuBytes(atlasPixels: number): number {
   if (!Number.isSafeInteger(atlasPixels) || atlasPixels <= 0) throw new Error("Far-tier atlas edge must be a positive integer.");
@@ -203,14 +245,29 @@ export const FAR_TIER_BUDGET_CONTRACT = {
   /** One tile's atlas at the ceiling edge, mip chain included. */
   maxTileAtlasGpuBytes: 349_525,
   /**
-   * Worst-case resident far-tier TEXTURE bytes over the swept camera grid, at
-   * the 256 ceiling and ratio 1.0. Derived in `far-tier-stage0-cli.mjs` from
-   * the committed wave ledger and the base snapshot's own rings and heights,
-   * with no frustum culling and no occlusion.
+   * Maximum resident far-tier TEXTURE bytes over ALL camera poses, at the 256
+   * ceiling.
+   *
+   * THIS IS A BOUND, NOT A SAMPLED MAXIMUM, and the distinction cost a
+   * correction. An earlier draft took the maximum of a 13x13 camera sweep and
+   * called it a figure that is never exceeded at any pose. It is not: a sampled
+   * grid can only MISS a peak, never invent one, so refining the grid kept
+   * finding worse poses (133,190,868 at 12 steps, creeping to 136,686,118 at
+   * 192) and never converged.
+   *
+   * The committed value instead comes from a theorem about the tree. Every
+   * camera pose selects some ANTICHAIN of nodes, minus whatever the 1,200 m
+   * boundary excludes, and excluding only subtracts — so the maximum over all
+   * antichains dominates every pose. That maximum is one bottom-up pass:
+   * `maxCut(node) = max(cost(node), sum of maxCut(children))`.
+   *
+   * "Every leaf resident at once" was considered as a simpler bound and
+   * REJECTED, because it is not one: power-of-two rounding and the 64-texel
+   * floor make 3 internal nodes of this tree cost more than their children.
    */
-  maxResidentAtlasGpuBytes: 133_190_868,
+  maxResidentAtlasGpuBytes: 291_984_434,
   /**
-   * The same sweep's worst-case resident merged prism geometry.
+   * The same bound's resident merged prism geometry.
    *
    * READ THIS NUMBER CAREFULLY. It is 98,310,624 bytes, which is the ENTIRE
    * island's prism geometry, and that is not a rounding artefact — it is the
@@ -226,7 +283,7 @@ export const FAR_TIER_BUDGET_CONTRACT = {
    * tier that wants to grow past this island's size.
    */
   maxResidentGeometryGpuBytes: 98_310_624,
-  maxResidentTotalGpuBytes: 231_501_492,
+  maxResidentTotalGpuBytes: 390_295_058,
 } as const;
 
 export function farTierBudgetContractHash(): string {

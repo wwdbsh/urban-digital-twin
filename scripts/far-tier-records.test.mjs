@@ -10,7 +10,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 import { sha256HexSync } from "../src/domain/deterministic-hash.ts";
-import { FAR_TIER_BUDGET_CONTRACT, farTierBudgetContractHash } from "../src/release/far-tier-budget.ts";
+import { FAR_TIER_BUDGET_CONTRACT, farTierBudgetContractHash, farTierDeliveredQuality } from "../src/release/far-tier-budget.ts";
 import { farTierRecipeHash } from "../src/release/far-tier-bake.ts";
 import { AUDITED_WORKING_RECORD_DIRECTORIES } from "./public-showcase-audit-cli.mjs";
 import { EXPECTED_TEXTURE_BYTE_LENGTH } from "./exterior-acceptance-campaign-constants.mjs";
@@ -80,10 +80,17 @@ describe("the bars are reported against verbatim, including where they are misse
     expect(tone.verdict).toBe("MISS");
   });
 
-  it("pre-registered B6 as already missed rather than discovering it later", () => {
+  it("pre-registered B6 as already missed, and against the DELIVERED resolution", () => {
     const b6 = readJson("bake-pre-registration").budgetBars.B6;
     expect(b6.knownToBeMissed).toBe(true);
-    expect(b6.measuredShortfall.underResolvedCellCount).toBeGreaterThan(0);
+    // The bar must be judged on what the packer delivers, not on a 100%-full
+    // atlas that no packer achieves. Deriving it from the ideal ladder alone
+    // understated the shortfall by more than half, which is the defect this
+    // assertion exists to stop recurring.
+    expect(b6.rule).toContain("THE RESOLUTION THE PACKER ACTUALLY DELIVERS");
+    expect(b6.measuredShortfallDelivered.underResolvedCellCount)
+      .toBeGreaterThan(b6.measuredShortfallIdeal.underResolvedCellCount);
+    expect(b6.measuredShortfallDelivered.cellsUnpackable).toBeGreaterThan(0);
   });
 });
 
@@ -94,6 +101,43 @@ describe("the byte-replay proof", () => {
     expect(replay.verdict).toBe("PASS");
     expect(replay.run1.glbSha256).toBe(replay.run2.glbSha256);
     expect(replay.run1.atlasSha256).toBe(replay.run2.atlasSha256);
+  });
+
+  it("ran the second bake in a FRESH PROCESS, not the same one", () => {
+    // This module memoizes the tile integrator and the texture catalogue, so a
+    // same-process repeat exercises the caches rather than the computation and
+    // cannot catch one that leaks state.
+    const replay = readJson("prototype-provenance").byteReplay;
+    expect(replay.run1.process).toBe("parent");
+    expect(replay.run2.process).toBe("child");
+    expect(replay.method).toContain("FRESH CHILD PROCESS");
+  });
+
+  it("reports the DELIVERED resolution, consistent with the applied packing scale", () => {
+    // The defect this catches: reporting the ideal ratio beside an applied
+    // scale of 0.5 stated a sharpness the tile does not have, and B6 requires
+    // an under-resolved leaf to be reported as under-resolved.
+    const outcome = readJson("prototype-provenance").bakeOutcome;
+    // Both operands are recorded to six decimals, so the identity is checked to
+    // five; a real inconsistency is orders of magnitude larger than this.
+    expect(outcome.appliedTexelWorldSizeMeters)
+      .toBeCloseTo(outcome.targetTexelWorldSizeMeters / outcome.appliedResolutionScale, 5);
+    const delivered = farTierDeliveredQuality(outcome.appliedTexelWorldSizeMeters);
+    expect(outcome.achievedTexelRatio).toBeCloseTo(delivered.achievedRatio, 6);
+    expect(outcome.underResolved).toBe(delivered.underResolved);
+    expect(outcome.criticalDistanceMeters).toBe(Math.round(delivered.criticalDistanceMeters));
+    // A scale below 1 is a real quality loss and must never read as fully resolved.
+    if (outcome.appliedResolutionScale < 1) {
+      expect(outcome.achievedTexelRatio).toBeLessThan(outcome.idealTexelRatio);
+    }
+  });
+
+  it("discloses that the sampled tile is not the committed tile", () => {
+    const supersession = readJson("sampling-results").subjectDigestSupersession;
+    const replay = readJson("prototype-provenance").byteReplay;
+    expect(supersession.committedTileGlbSha256).toBe(replay.run1.glbSha256);
+    expect(supersession.measuredTileGlbSha256).not.toBe(supersession.committedTileGlbSha256);
+    expect(supersession.status).toContain("HAVE NOT BEEN RE-TAKEN");
   });
 
   it("names every source it derives from by checksum", () => {
@@ -167,11 +211,31 @@ describe("nothing already frozen was disturbed", () => {
 });
 
 describe("the derived budget bars and the code agree", () => {
-  it("carries the same worst-case residency the contract pins", () => {
+  it("pins the CUT-INDEPENDENT bound, not the sampled sweep maximum", () => {
+    const hierarchy = readJson("stage0-hierarchy");
+    const bound = hierarchy.cutIndependentBound;
+    expect(bound.atlasGpuBytes).toBe(FAR_TIER_BUDGET_CONTRACT.maxResidentAtlasGpuBytes);
+    expect(bound.geometryGpuBytes).toBe(FAR_TIER_BUDGET_CONTRACT.maxResidentGeometryGpuBytes);
+    expect(bound.totalGpuBytes).toBe(FAR_TIER_BUDGET_CONTRACT.maxResidentTotalGpuBytes);
+    // And it must actually dominate the thing it replaced, or it is not a bound.
+    expect(bound.totalGpuBytes).toBeGreaterThan(hierarchy.worstCaseResidency.totalGpuBytes);
+  });
+
+  it("does not claim the sweep is a bound, and shows why", () => {
     const worst = readJson("stage0-hierarchy").worstCaseResidency;
-    expect(worst.atlasGpuBytes).toBe(FAR_TIER_BUDGET_CONTRACT.maxResidentAtlasGpuBytes);
-    expect(worst.geometryGpuBytes).toBe(FAR_TIER_BUDGET_CONTRACT.maxResidentGeometryGpuBytes);
-    expect(worst.totalGpuBytes).toBe(FAR_TIER_BUDGET_CONTRACT.maxResidentTotalGpuBytes);
+    expect(worst.quantifier).toContain("NOT a proven bound");
+    // The ladder is the evidence. It must be a real ladder, and it must record
+    // that refinement kept moving the answer rather than settling.
+    expect(worst.refinementLadder.length).toBeGreaterThanOrEqual(4);
+    const totals = worst.refinementLadder.map((entry) => entry.totalGpuBytes);
+    expect(Math.max(...totals)).toBeGreaterThan(Math.min(...totals));
+    expect(worst.stable).toBe(false);
+    expect(worst.stabilityStatement).toContain("NOT STABLE");
+  });
+
+  it("rejects 'all leaves resident' as a bound, with its counterexample count", () => {
+    const rejected = readJson("stage0-hierarchy").cutIndependentBound.allLeavesRejectedAsBound;
+    expect(rejected.internalNodesCostlierThanTheirChildren).toBeGreaterThan(0);
   });
 
   it("states the geometry limitation rather than leaving it to be inferred", () => {
@@ -180,5 +244,59 @@ describe("the derived budget bars and the code agree", () => {
     // The swept geometry worst case IS the whole island's, and that identity is
     // the evidence for the claim, so it must hold.
     expect(hierarchy.worstCaseResidency.geometryGpuBytes).toBe(hierarchy.allLeavesResidentUpperBound.geometryGpuBytes);
+  });
+});
+
+describe("the sampling record's own arithmetic holds", () => {
+  // A reading typed by hand, or a pose silently edited to look better, should
+  // fail here rather than sit in a committed record looking plausible.
+  const results = readJson("sampling-results").results;
+
+  it("has every pose the instrument pre-registered, and no others", () => {
+    const poses = readJson("bake-pre-registration").blenderAgreementInstrument.poses;
+    const expected = poses.distancesMeters.flatMap((d) => poses.azimuthsDegrees.map((a) => `${d}/${a}`));
+    expect(results.map((entry) => `${entry.distanceMeters}/${entry.azimuthDegrees}`).sort()).toEqual(expected.sort());
+  });
+
+  it("partitions the union silhouette exactly", () => {
+    for (const entry of results) {
+      expect(entry.unionPixels).toBe(entry.intersectionPixels + entry.sourceOnlyPixels + entry.bakedOnlyPixels);
+      expect(entry.intersectionOverUnion).toBeCloseTo(entry.intersectionPixels / entry.unionPixels, 6);
+    }
+  });
+
+  it("reproduces each channel spread from its own per-channel ratios", () => {
+    for (const entry of results) {
+      // Recorded to six decimals; a difference of two such values carries at
+      // most that precision, so the identity is checked to five.
+      expect(entry.channelSpread).toBeCloseTo(Math.max(...entry.perChannelRatios) - Math.min(...entry.perChannelRatios), 5);
+    }
+  });
+
+  it("reproduces the union ratio from the absolute luminances it also records", () => {
+    for (const entry of results) {
+      expect(entry.unionMeanLuminanceRatio).toBeCloseTo(entry.bakedMeanLuminance / entry.sourceMeanLuminance, 4);
+      expect(entry.absoluteLuminanceDelta).toBeCloseTo(entry.bakedMeanLuminance - entry.sourceMeanLuminance, 6);
+    }
+  });
+
+  it("agrees with its own verdict about which barred poses missed", () => {
+    const tone = readJson("sampling-results").result_tone;
+    const bar = 0.05;
+    const missed = results.filter((entry) => entry.barred && Math.abs(entry.unionMeanLuminanceRatio - 1) > bar);
+    expect(missed).toHaveLength(tone.missingPoses.length);
+    expect(tone.passed).toBe(results.filter((entry) => entry.barred).length - missed.length);
+    expect(tone.verdict).toBe(missed.length > 0 ? "MISS" : "PASS");
+    for (const entry of missed) {
+      const declared = tone.missingPoses.find((pose) => pose.distanceMeters === entry.distanceMeters && pose.azimuthDegrees === entry.azimuthDegrees);
+      expect(declared).toBeDefined();
+      expect(declared.excess).toBeCloseTo(Math.abs(entry.unionMeanLuminanceRatio - 1) - bar, 6);
+    }
+  });
+
+  it("names the unexplained residual rather than leaving it undiscussed", () => {
+    const residual = readJson("sampling-results").diagnosis.unexplainedResidual;
+    expect(residual.status).toContain("UNEXPLAINED");
+    expect(residual.whatWouldSettleIt.length).toBeGreaterThan(0);
   });
 });

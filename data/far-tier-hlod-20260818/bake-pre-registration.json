@@ -9,7 +9,7 @@
   "claim": "The complete set of recipe constants, budget bars and appearance-agreement bars the far-tier bake is judged against. Nothing here is a measurement.",
   "derivedFrom": {
     "record": "stage0-hierarchy.json",
-    "sha256": "d44b547ffb94712edbe18006c85fcad272b07e79e2d21605a495dde7657b91e1"
+    "sha256": "ca37173c0a3509c4eaae099a5a7881b6525e23ae5ddcd95fef22e717f9ddd8c2"
   },
   "recipe": {
     "recipeId": "far-tier-hlod-bake-v1",
@@ -50,12 +50,13 @@
   },
   "budgetBars": {
     "contractId": "far-tier-hlod-gpu-budget-v1",
-    "contractSha256": "1bfeeedf7ffafd4450b8ea9dbd57aa88f3f745437d91ffde859f8f0a44059f67",
+    "contractSha256": "30403b6d161cdee965dcec7a57dbf9b0b97f031c13940a95d793d8f4a8b6d62e",
     "scopeStatement": "The baked far-tier HLOD atlases and their merged prism geometry, and nothing else.",
     "separateFromCriterion30": "THE FAR TIER GETS ITS OWN BUDGET AND IS NOT FOLDED INTO THE CLOSED 256 MiB CRITERION #30. That criterion was frozen against a measurement this tier did not exist for. Adding a new tier's memory to a closed criterion would silently reopen it. The two budgets are ADDED when a total is needed, never merged.",
     "B1": {
       "rule": "Baked atlas edge length is a power of two in [64, 256] texels.",
-      "rationale": "Derived, not chosen: worst-case resident texture memory over the swept camera grid is 126.4 MiB at a 256 ceiling, 209.8 MiB at 512 and 346.0 MiB at 1024."
+      "rationale": "Derived, not chosen. The cut-independent atlas bound is 72.2 MiB at a 128 ceiling, 278.5 MiB at 256, 640.0 MiB at 512 and 861.7 MiB at 1024.",
+      "alsoDecidesFeasibility": "An atlas holds at most 1024 faces at this ceiling, because every face costs at least 64 texels however far resolution is reduced. 172 of 883 cells exceed what the real packer can place and CANNOT be baked at this ceiling at any scale."
     },
     "B2": {
       "rule": "One far-tier tile occupies at most 349525 decoded GPU bytes of texture, mip chain included.",
@@ -63,28 +64,42 @@
       "rationale": "256 * 256 * 4 bytes * 4/3 for the mip chain."
     },
     "B3": {
-      "rule": "Resident far-tier TEXTURE memory never exceeds 133190868 decoded GPU bytes at any camera pose.",
-      "derivedValue": 133190868,
-      "rationale": "Maximum over a 13x13 camera grid at seven altitudes, with no frustum culling and no occlusion. Every conservatism enlarges the bound."
+      "rule": "Resident far-tier TEXTURE memory never exceeds 291984434 decoded GPU bytes at any camera pose.",
+      "derivedValue": 291984434,
+      "basis": "cut-independent-bound",
+      "rationale": "A BOUND, not a sampled maximum. Every camera pose selects some antichain of the tree, minus whatever the 1,200 m boundary excludes, and excluding only subtracts; so the maximum over all antichains dominates every pose, and that maximum is one bottom-up pass over the tree.",
+      "supersededSamplingClaim": "An earlier draft of this record derived B3 from the maximum of a 13x13 camera sweep and asserted it was never exceeded at any pose. That was wrong: a sampled grid can only MISS a peak, so refinement kept finding worse poses (133,190,868 at 12 steps creeping to 136,686,118 at 192) and never converged. The sweep is retained as an observation only."
     },
     "B4": {
       "rule": "Resident far-tier GEOMETRY memory never exceeds 98310624 decoded GPU bytes at any camera pose.",
-      "derivedValue": 98310624
+      "derivedValue": 98310624,
+      "basis": "cut-independent-bound"
     },
     "B5": {
-      "rule": "Resident far-tier TOTAL never exceeds 231501492 decoded GPU bytes at any camera pose.",
-      "derivedValue": 231501492
+      "rule": "Resident far-tier TOTAL never exceeds 390295058 decoded GPU bytes at any camera pose.",
+      "derivedValue": 390295058,
+      "basis": "cut-independent-bound"
     },
     "B6": {
-      "rule": "Every leaf reaches texel ratio 1 at the 1200 m boundary, or is REPORTED as under-resolved with its critical distance.",
+      "rule": "Every leaf reaches texel ratio 1 at the 1200 m boundary AT THE RESOLUTION THE PACKER ACTUALLY DELIVERS, or is REPORTED as under-resolved with its critical distance.",
       "knownToBeMissed": true,
-      "measuredShortfall": {
+      "measuredShortfallIdeal": {
+        "note": "Assuming a 100%-full atlas, which no packer achieves. Kept only so the packing penalty is visible as the difference.",
         "underResolvedCellCount": 360,
         "underResolvedShare": 0.407701,
-        "worstAchievedRatio": 0.284291,
-        "worstCriticalDistanceMeters": 4221
+        "worstAchievedRatio": 0.284291
       },
-      "rationale": "PRE-REGISTERED AS ALREADY MISSED. The arithmetic that fixes the ceiling at 256 also proves this bar cannot be met inside it, and saying so here is the whole point of pre-registering. It is reported at mass bake as a per-cell flag, never averaged away."
+      "measuredShortfallDelivered": {
+        "note": "THE ONE THAT COUNTS. The real packer run over every packable leaf.",
+        "cellsMeasured": 711,
+        "cellsUnpackable": 172,
+        "underResolvedCellCount": 650,
+        "underResolvedShare": 0.736127,
+        "worstAchievedRatio": 0.044194,
+        "worstCriticalDistanceMeters": 27153,
+        "meanFlatFaceShare": 0.798169
+      },
+      "rationale": "PRE-REGISTERED AS ALREADY MISSED, AND BY MORE THAN THE IDEAL LADDER SUGGESTS. An earlier draft derived this bar from the ideal ladder alone and reported 360 of 883; measuring the packer that actually runs moves it to 650 of the 711 packable cells, with a further 172 unpackable at this ceiling. Packing overhead is the dominant term, not a correction to it. Reported at mass bake as a per-cell flag, never averaged away."
     }
   },
   "supersedes": {

@@ -9,10 +9,10 @@
   "tile": {
     "cellId": "manhattan-exterior-cell-w05-000747-17-38610-35822",
     "lodId": "far_0",
-    "glbSha256": "a06888740d9485feb82b2d154f92cc87813beb08943c164ee2c76fb047392787",
+    "glbSha256": "2f8599256ac45ee509dc7d7ce0da6a56964bac8e3ca66b77e795c1435ff7930b",
     "glbByteSize": 122976,
     "atlasRelativeRef": "manhattan-exterior-cell-w05-000747-17-38610-35822.atlas.png",
-    "atlasSha256": "098a5defaf429943c49404adce05819be1ec68758e03add6bfd9eea37d726d1f",
+    "atlasSha256": "c159e0508aeb7522620b799b83041461aecf34727f69209bd7efbf992f5c067a",
     "atlasByteSize": 196947,
     "atlasPixels": 256,
     "triangleCount": 2052,
@@ -22,14 +22,16 @@
   },
   "byteReplay": {
     "runs": 2,
-    "method": "Two independent full bakes from the committed inputs in this process, each re-reading the base snapshot and the ledger, compared by sha256.",
+    "method": "Two independent full bakes from the committed inputs, each re-reading the base snapshot and the ledger, compared by sha256. The SECOND runs in a FRESH CHILD PROCESS, so the module-level tile-integrator and texture-catalogue caches are cold for it and cannot mask a leak.",
     "run1": {
-      "glbSha256": "a06888740d9485feb82b2d154f92cc87813beb08943c164ee2c76fb047392787",
-      "atlasSha256": "098a5defaf429943c49404adce05819be1ec68758e03add6bfd9eea37d726d1f"
+      "glbSha256": "2f8599256ac45ee509dc7d7ce0da6a56964bac8e3ca66b77e795c1435ff7930b",
+      "atlasSha256": "c159e0508aeb7522620b799b83041461aecf34727f69209bd7efbf992f5c067a",
+      "process": "parent"
     },
     "run2": {
-      "glbSha256": "a06888740d9485feb82b2d154f92cc87813beb08943c164ee2c76fb047392787",
-      "atlasSha256": "098a5defaf429943c49404adce05819be1ec68758e03add6bfd9eea37d726d1f"
+      "glbSha256": "2f8599256ac45ee509dc7d7ce0da6a56964bac8e3ca66b77e795c1435ff7930b",
+      "atlasSha256": "c159e0508aeb7522620b799b83041461aecf34727f69209bd7efbf992f5c067a",
+      "process": "child"
     },
     "byteIdentical": true,
     "verdict": "PASS"
@@ -569,7 +571,7 @@
       }
     ],
     "recipeSha256": "88baa55611bfdf52a745f01eacc2c9bb44305897109fbd5491f7e8f5caaa6dea",
-    "budgetContractSha256": "1bfeeedf7ffafd4450b8ea9dbd57aa88f3f745437d91ffde859f8f0a44059f67",
+    "budgetContractSha256": "30403b6d161cdee965dcec7a57dbf9b0b97f031c13940a95d793d8f4a8b6d62e",
     "emissionProfileReleaseId": "manhattan-northern-manhattan-cells-20260812-c1",
     "emissionProfileNote": "The -c1 suffix is correct and deliberate: the GLBs inside -c2 embed the -c1 identity in inventoryId and evidenceShardId, because -c2 copies lod_0 byte for byte."
   },
@@ -582,9 +584,11 @@
     "appliedResolutionScale": 0.5,
     "appliedTexelWorldSizeMeters": 2.792527,
     "targetTexelWorldSizeMeters": 1.396263,
-    "achievedTexelRatio": 1.102051,
-    "underResolved": false,
-    "criticalDistanceMeters": 1089,
+    "idealTexelRatio": 1.102051,
+    "idealTexelRatioNote": "What a 100%-full atlas would have achieved. Not delivered; kept only so the packing penalty is visible as the difference.",
+    "achievedTexelRatio": 0.5,
+    "underResolved": true,
+    "criticalDistanceMeters": 2400,
     "atlasGpuBytes": 349525,
     "geometryGpuBytes": 119104,
     "members": [

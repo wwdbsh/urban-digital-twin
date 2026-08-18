@@ -94,13 +94,34 @@ total is needed, never merged.
 | --- | --- |
 | B1 atlas edge | power of two in [64, 256] |
 | B2 per tile | 349,525 GPU bytes (256² x 4 x 4/3) |
-| B3 resident texture | 133,190,868 B (127.0 MiB) |
+| B3 resident texture | 291,984,434 B (278.5 MiB) |
 | B4 resident geometry | 98,310,624 B (93.8 MiB) |
-| B5 resident total | 231,501,492 B (220.8 MiB) |
+| B5 resident total | 390,295,058 B (372.2 MiB) |
 
-Derived from a 13x13 camera sweep at seven altitudes with **no frustum culling and no
-occlusion**; every conservatism enlarges the bound. The 256 ceiling was chosen against
-209.8 MiB at 512 and 346.0 MiB at 1024.
+**B3–B5 are bounds, not sampled maxima, and the distinction cost a correction.** An
+earlier version of this ADR took the maximum of a 13×13 camera sweep and called it a
+figure never exceeded at any pose. It is not: a sampled grid can only *miss* a peak,
+never invent one, so refining it kept finding worse poses — 133,190,868 atlas bytes at
+12 steps creeping to 136,686,118 at 192 — and never converged. The claim that "every
+conservatism enlarges the bound" was also wrong: grid coarseness shrinks it.
+
+The committed values come instead from a theorem about the tree. Every camera pose
+selects some **antichain** of nodes, minus whatever the 1,200 m boundary excludes, and
+excluding only subtracts — so the maximum over all antichains dominates every pose, and
+that maximum is one bottom-up pass: `maxCut(node) = max(cost(node), Σ maxCut(children))`.
+"All leaves resident" was considered as a simpler bound and **rejected**: 3 internal
+nodes of this tree cost more than their children, because of power-of-two rounding and
+the 64-texel floor.
+
+The 256 ceiling is chosen against the same bound computed at other ceilings: **72.2 MiB
+at 128, 278.5 MiB at 256, 640.0 MiB at 512, 861.7 MiB at 1024.**
+
+**The ceiling also decides feasibility, not only sharpness.** Every face costs at least
+`(faceTexelFloor + 2·gutterTexels)² = 64` texels however far resolution is reduced, so
+an atlas holds at most **1,024 faces** at a 256 ceiling. **172 of 883 cells have more
+faces than the real packer can place and cannot be baked at this ceiling at any scale.**
+A 512 ceiling removes that limit entirely. T004 cannot mass-bake without choosing among
+a larger atlas, a smaller gutter, a lower texel floor, or splitting leaves.
 
 ### 5. ADR 0047's no-atlas finding is reversed FOR THE FAR TIER ONLY
 
@@ -125,9 +146,12 @@ conveyance. Baking does not widen an approval envelope.
 
 ## What was measured
 
-**Byte replay: PASS.** Two independent runs produced
-`a06888740d9485feb82b2d154f92cc87813beb08943c164ee2c76fb047392787` (GLB) and
-`098a5defaf429943c49404adce05819be1ec68758e03add6bfd9eea37d726d1f` (atlas).
+**Byte replay: PASS, across processes.** The parent run and a fresh **child process**
+both produced `2f8599256ac45ee509dc7d7ce0da6a56964bac8e3ca66b77e795c1435ff7930b` (GLB)
+and `c159e0508aeb7522620b799b83041461aecf34727f69209bd7efbf992f5c067a` (atlas). The
+child process matters: this module memoizes the tile integrator and the texture
+catalogue, so a same-process repeat would exercise the caches rather than the
+computation.
 
 **Source provenance: PASS, and proved rather than asserted.** The `-c2` payload bytes
 are gitignored and absent from this machine. All 96 of the prototype cell's assets
@@ -165,9 +189,13 @@ Fork options for the user are enumerated in `sampling-results.json`.
 
 ## Known shortfalls, stated rather than buried
 
-1. **B6 was pre-registered as already missed.** 360 of 883 leaves (40.8%) cannot reach
-   texel ratio 1.0 at the 1,200 m boundary inside a 256px atlas; the worst reaches
-   0.284 and is only critical by 4,221 m.
+1. **B6 was pre-registered as already missed, and by more than first stated.** Measured
+   against the *ideal* ladder — a 100%-full atlas, which no packer achieves — it is 360
+   of 883 leaves (40.8%). Measured against **the resolution the packer actually
+   delivers**, it is **650 of the 711 packable leaves (73.6% of all cells)**, worst
+   delivered ratio **0.044**, plus **172 cells that cannot be packed at all**. Packing
+   overhead — gutters and shelf waste — is the dominant term, not a correction to it.
+   The prototype cell itself packs at scale 0.5, i.e. half the intended sharpness.
 2. **The hierarchy does not reduce geometry residency at all.** A parent is the
    concatenation of its children's prisms, not a simplified massing, so coarsening the
    cut moves texture bytes and leaves geometry bytes alone. Affordable at 93.8 MiB;
@@ -180,7 +208,14 @@ Fork options for the user are enumerated in `sampling-results.json`.
    resolution scale of 0.5 on the prototype cell.
 5. **`Math.pow` is the one primitive whose cross-engine bit-exactness is not
    contractually guaranteed.** Replay is proven cross-process on the pinned toolchain;
-   cross-engine is not claimed.
+   cross-engine is not claimed. `Math.hypot` has been removed from every byte-producing
+   path in favour of `Math.sqrt`, per `block835-v3-package.ts`'s own policy.
+6. **The appearance readings describe a superseded tile.** They were captured against
+   GLB `a0688874…`; the correctness fixes above moved the committed bytes to
+   `2f859925…`. The readings have **not** been re-taken, because re-running an
+   instrument after seeing a MISS is what pre-registration exists to prevent. The
+   supersession is disclosed in `sampling-results.json`, with the byte delta attributed
+   to the `Math.hypot` → `Math.sqrt` change alone.
 
 ## What this ADR does not decide
 

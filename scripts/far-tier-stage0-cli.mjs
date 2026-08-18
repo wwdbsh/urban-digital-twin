@@ -34,10 +34,11 @@ import {
   farTierBudgetContractHash,
   farTierGeometryGpuBytes,
   farTierMetersPerPixel,
+  farTierDeliveredQuality,
   farTierResolution,
   farTierTexelWorldSizeMeters,
 } from "../src/release/far-tier-budget.ts";
-import { FAR_TIER_BAKE_RECIPE, farTierRecipeHash } from "../src/release/far-tier-bake.ts";
+import { FAR_TIER_BAKE_RECIPE, farTierRecipeHash, packFarTierAtlas } from "../src/release/far-tier-bake.ts";
 import { PROCEDURAL_TEXTURE_CLASSES, proceduralTextureTile } from "../src/release/procedural-texture.ts";
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -136,6 +137,7 @@ function censusCells(ledger, sources) {
     let ringVertexCount = 0;
     let present = 0;
     let tallest = 0;
+    const cellFaces = [];
     for (const buildingId of cell.buildingIds) {
       const feature = sources.get(buildingId);
       if (!feature) { missing += 1; continue; }
@@ -153,19 +155,25 @@ function censusCells(ledger, sources) {
         const [lon2, lat2] = ring[(index + 1) % ring.length];
         const dx = (lon2 - lon1) * METERS_PER_DEGREE_LONGITUDE;
         const dy = (lat2 - lat1) * METERS_PER_DEGREE_LATITUDE;
-        const area = Math.hypot(dx, dy) * heightMeters;
+        // `Math.sqrt` is correctly rounded by IEEE 754; `Math.hypot` is not, and
+        // this area feeds every budget bar below.
+        const area = Math.sqrt(dx * dx + dy * dy) * heightMeters;
         facadeArea += area;
         faceCount += 1;
         faceAreas.push(area);
+        cellFaces.push({ widthMeters: Math.sqrt(dx * dx + dy * dy), heightMeters });
         doubleArea += (lon1 * METERS_PER_DEGREE_LONGITUDE) * (lat2 * METERS_PER_DEGREE_LATITUDE)
           - (lon2 * METERS_PER_DEGREE_LONGITUDE) * (lat1 * METERS_PER_DEGREE_LATITUDE);
       }
-      roofArea += Math.abs(doubleArea) / 2;
+      const roofFace = Math.abs(doubleArea) / 2;
+      roofArea += roofFace;
+      cellFaces.push({ widthMeters: Math.sqrt(roofFace), heightMeters: Math.sqrt(roofFace), roof: true });
     }
     const bounds = cell.bounds;
     cells.push({
       cellId: cell.cellId,
       order: cell.order,
+      faces: cellFaces,
       buildingCount: present,
       faceCount,
       ringVertexCount,
@@ -212,7 +220,12 @@ function buildTree(cells) {
     const x = match ? Number(match[2]) : lonToTileX(centreLon, 17);
     const y = match ? Number(match[3]) : latToTileY(centreLat, 17);
     if (zoom > deepest) deepest = zoom;
-    nodes.set(`${zoom}/${x}/${y}`, {
+    // Two ledger cells resolving to one tile key would make the later one
+    // silently REPLACE the earlier, dropping its surface area from every budget
+    // figure below. Fail closed instead.
+    const leafKey = `${zoom}/${x}/${y}`;
+    if (nodes.has(leafKey)) fail(`tile key ${leafKey} is claimed by both ${nodes.get(leafKey).cellId} and ${cell.cellId}; the hierarchy would silently drop one.`);
+    nodes.set(leafKey, {
       zoom, x, y, leaf: true, cellId: cell.cellId,
       surfaceAreaSquareMeters: cell.surfaceAreaSquareMeters,
       quadCount: cell.quadCount, triangleCount: cell.triangleCount,
@@ -255,7 +268,39 @@ function buildTree(cells) {
  * bound larger: no frustum culling (every node behind the camera is counted),
  * no occlusion, and the sweep takes the maximum rather than a percentile.
  */
-function sweepResidency(nodes, roots) {
+const ALTITUDES_METERS = [400, 800, 1_200, 2_000, 4_000, 8_000, 16_000];
+
+/** Camera-grid refinement ladder. Each rung doubles the grid on both axes. */
+const SWEEP_LADDER_STEPS = [12, 24, 48, 96, 192];
+
+const TARGET_TEXEL_WORLD_SIZE_METERS = farTierTexelWorldSizeMeters(FAR_TIER_NEAR_EDGE_METERS);
+
+/**
+ * Turn a censused cell's face extents into the shape `packFarTierAtlas` reads.
+ *
+ * Only the extents matter to packing — `contentExtent` reads corner 0, corner 1
+ * and corner 2's height, and nothing else — so no V3 plan is built here. The
+ * ordering keys are synthetic and deterministic, which means the resulting
+ * `appliedScale` is representative of the real bake rather than byte-identical
+ * to it: area is the primary sort in both, and only ties break differently.
+ */
+function packableFaces(cell) {
+  return cell.faces.map((face, index) => {
+    const widthMm = face.widthMeters * 1_000;
+    const heightMm = face.heightMeters * 1_000;
+    return {
+      buildingId: `synthetic:${String(index).padStart(6, "0")}`,
+      faceIndex: index,
+      kind: face.roof === true ? "roof" : "wall",
+      areaSquareMeters: face.widthMeters * face.heightMeters,
+      cornersMm: [[0, 0, 0], [widthMm, 0, 0], [widthMm, 0, heightMm], [0, 0, heightMm]],
+      offsetMeters: [0, 0],
+      zones: [],
+    };
+  });
+}
+
+function sweepResidency(nodes, roots, STEPS) {
   for (const node of nodes.values()) {
     const resolution = farTierResolution(Math.max(node.surfaceAreaSquareMeters, 1e-6));
     node.atlasPixels = resolution.atlasPixels;
@@ -275,8 +320,7 @@ function sweepResidency(nodes, roots) {
   const north = Math.max(...roots.map((node) => node.north));
 
   let worst = null;
-  const STEPS = 12;
-  for (const altitudeMeters of [400, 800, 1_200, 2_000, 4_000, 8_000, 16_000]) {
+  for (const altitudeMeters of ALTITUDES_METERS) {
     for (let i = 0; i <= STEPS; i += 1) {
       for (let j = 0; j <= STEPS; j += 1) {
         const camera = [west + ((east - west) * i) / STEPS, south + ((north - south) * j) / STEPS, altitudeMeters];
@@ -286,12 +330,12 @@ function sweepResidency(nodes, roots) {
         const visit = (node) => {
           const dx = Math.max(node.west - camera[0], 0, camera[0] - node.east);
           const dy = Math.max(node.south - camera[1], 0, camera[1] - node.north);
-          const near = Math.hypot(dx, dy, camera[2]);
-          const far = Math.hypot(
-            Math.max(Math.abs(node.west - camera[0]), Math.abs(node.east - camera[0])),
-            Math.max(Math.abs(node.south - camera[1]), Math.abs(node.north - camera[1])),
-            camera[2],
-          );
+          // `Math.sqrt` is correctly rounded by IEEE 754; `Math.hypot` is not
+          // specified to be, and these distances decide a committed budget bar.
+          const near = Math.sqrt(dx * dx + dy * dy + camera[2] * camera[2]);
+          const fx = Math.max(Math.abs(node.west - camera[0]), Math.abs(node.east - camera[0]));
+          const fy = Math.max(Math.abs(node.south - camera[1]), Math.abs(node.north - camera[1]));
+          const far = Math.sqrt(fx * fx + fy * fy + camera[2] * camera[2]);
           // Entirely inside the mid tier's detail radius: lod_1's job, not this
           // tier's, so it is not resident here at all.
           if (far < FAR_TIER_NEAR_EDGE_METERS) return;
@@ -305,7 +349,7 @@ function sweepResidency(nodes, roots) {
         };
         for (const root of roots) visit(root);
         if (!worst || atlasBytes + geometryBytes > worst.totalGpuBytes) {
-          worst = { altitudeMeters, nodeCount, atlasGpuBytes: atlasBytes, geometryGpuBytes: geometryBytes, totalGpuBytes: atlasBytes + geometryBytes };
+          worst = { altitudeMeters, gridSteps: STEPS, nodeCount, atlasGpuBytes: atlasBytes, geometryGpuBytes: geometryBytes, totalGpuBytes: atlasBytes + geometryBytes };
         }
       }
     }
@@ -320,12 +364,152 @@ async function commandHierarchy() {
   if (missing > 0) fail(`${missing} ledger building ids are absent from the base snapshot; the census must be total.`);
 
   const { nodes, roots } = buildTree(cells);
-  const worst = sweepResidency(nodes, roots);
 
-  const leafResolutions = cells.map((cell) => farTierResolution(Math.max(cell.surfaceAreaSquareMeters, 1e-6)));
-  const underResolved = leafResolutions.filter((entry) => entry.underResolved);
+  // THE REFINEMENT LADDER. A sweep maximum is a SAMPLED maximum: coarsening the
+  // grid can only miss peaks, never invent them, so a single grid understates
+  // the bound and the earlier "every conservatism enlarges it" claim was wrong
+  // in this one respect. Refine until two successive doublings stop moving the
+  // maximum, and commit the ladder as the evidence for stopping.
+  const ladder = [];
+  let worst = null;
+  for (const steps of SWEEP_LADDER_STEPS) {
+    const sample = sweepResidency(nodes, roots, steps);
+    ladder.push({
+      gridSteps: steps,
+      posesSampled: (steps + 1) * (steps + 1) * ALTITUDES_METERS.length,
+      atlasGpuBytes: sample.atlasGpuBytes,
+      geometryGpuBytes: sample.geometryGpuBytes,
+      totalGpuBytes: sample.totalGpuBytes,
+      altitudeMeters: sample.altitudeMeters,
+    });
+    if (!worst || sample.totalGpuBytes > worst.totalGpuBytes) worst = sample;
+  }
+  const lastThree = ladder.slice(-3);
+  const stable = lastThree.length === 3 && lastThree.every((entry) => entry.totalGpuBytes === lastThree[0].totalGpuBytes);
+
+  // THE SWEEP DOES NOT CONVERGE, so it cannot supply the bar. The selection
+  // function is discontinuous — the cut changes in steps — so refining the grid
+  // keeps finding slightly worse poses, and the ladder above shows it creeping
+  // rather than settling. Fall back to a bound that does not depend on the
+  // sample at all.
+  //
+  // EVERY camera pose selects some ANTICHAIN of the tree (a set of nodes with
+  // exactly one ancestor-or-self per leaf), minus whatever the 1,200 m boundary
+  // excludes. Excluding only subtracts. So the maximum over all antichains
+  // dominates every pose, and it is exactly computable by one bottom-up pass:
+  //
+  //   maxCut(node) = max(cost(node), sum over children of maxCut(child))
+  //
+  // This is a theorem about the tree, not a sample. "All leaves resident" was
+  // considered and REJECTED as the bound: it is not one, because 3 internal
+  // nodes of this tree cost more than their children thanks to power-of-two
+  // rounding and the 64-texel floor.
+  const cutBoundOf = (node) => {
+    const own = { atlas: node.atlasGpuBytes, geometry: node.geometryGpuBytes };
+    if (node.leaf || node.children.length === 0) return own;
+    let atlas = 0;
+    let geometry = 0;
+    for (const child of node.children) {
+      const childBound = cutBoundOf(child);
+      atlas += childBound.atlas;
+      geometry += childBound.geometry;
+    }
+    return atlas + geometry > own.atlas + own.geometry ? { atlas, geometry } : own;
+  };
+  let boundAtlas = 0;
+  let boundGeometry = 0;
+  for (const root of roots) {
+    const rootBound = cutBoundOf(root);
+    boundAtlas += rootBound.atlas;
+    boundGeometry += rootBound.geometry;
+  }
+  const cutBound = { atlasGpuBytes: boundAtlas, geometryGpuBytes: boundGeometry, totalGpuBytes: boundAtlas + boundGeometry };
+
+  // The same exact bound at other atlas ceilings, so the choice of 256 rests on
+  // comparable arithmetic rather than on figures from a sweep that did not
+  // converge. Only the ceiling changes; the ladder, the tree and the DP do not.
+  const ceilingComparison = [];
+  for (const ceiling of [128, 256, 512, 1_024]) {
+    const pixelsFor = (area) => {
+      const demanded = Math.sqrt(Math.max(area, 1e-6)) / TARGET_TEXEL_WORLD_SIZE_METERS;
+      let power = 1;
+      while (power < Math.ceil(demanded)) power *= 2;
+      return Math.min(ceiling, Math.max(FAR_TIER_ATLAS_PIXELS.minimum, power));
+    };
+    const atlasAt = new Map();
+    for (const [key, node] of nodes) atlasAt.set(key, farTierAtlasGpuBytes(pixelsFor(node.surfaceAreaSquareMeters)));
+    const boundAt = (node) => {
+      const own = atlasAt.get(`${node.zoom}/${node.x}/${node.y}`);
+      if (node.leaf || node.children.length === 0) return own;
+      const children = node.children.reduce((sum, child) => sum + boundAt(child), 0);
+      return Math.max(own, children);
+    };
+    const atlasBytes = roots.reduce((sum, root) => sum + boundAt(root), 0);
+    ceilingComparison.push({
+      atlasCeilingPixels: ceiling,
+      cutIndependentAtlasGpuBytes: atlasBytes,
+      cutIndependentAtlasMebibytes: round(atlasBytes / 1_048_576, 2),
+      maximumFacesPerAtlas: Math.floor((ceiling ** 2) / ((FAR_TIER_BAKE_RECIPE.faceTexelFloor + 2 * FAR_TIER_BAKE_RECIPE.gutterTexels) ** 2)),
+      unpackableCellCount: cells.filter((cell) => cell.faces.length > Math.floor((ceiling ** 2) / ((FAR_TIER_BAKE_RECIPE.faceTexelFloor + 2 * FAR_TIER_BAKE_RECIPE.gutterTexels) ** 2))).length,
+    });
+  }
+  if (cutBound.totalGpuBytes < worst.totalGpuBytes) {
+    fail(`the cut-independent bound ${cutBound.totalGpuBytes} is below the observed sweep maximum ${worst.totalGpuBytes}; it is therefore not a bound and the derivation is wrong.`);
+  }
+
+  // How many internal nodes cost more than their children, which is why "all
+  // leaves resident" is not itself a bound. Reported, because it is the reason
+  // the simpler bound was rejected.
+  let costlierThanChildren = 0;
+  for (const node of nodes.values()) {
+    if (node.leaf || node.children.length === 0) continue;
+    const childBytes = node.children.reduce((sum, child) => sum + child.atlasGpuBytes + child.geometryGpuBytes, 0);
+    if (node.atlasGpuBytes + node.geometryGpuBytes > childBytes) costlierThanChildren += 1;
+  }
+
+  // B6 FROM THE RESOLUTION THE PACKER ACTUALLY DELIVERS.
+  // `farTierResolution` assumes an atlas can be filled to 100%. No packer
+  // achieves that: gutters and shelf waste force a global texel-size reduction,
+  // and the one baked cell needed a scale of 0.5. Running the real packer over
+  // every leaf replaces that assumption with a measurement.
+  const leafResolutions = [];
+  const unpackable = [];
   const atlasHistogram = {};
-  for (const entry of leafResolutions) atlasHistogram[entry.atlasPixels] = (atlasHistogram[entry.atlasPixels] ?? 0) + 1;
+  const scaleHistogram = {};
+  for (const cell of cells) {
+    const ideal = farTierResolution(Math.max(cell.surfaceAreaSquareMeters, 1e-6));
+    atlasHistogram[ideal.atlasPixels] = (atlasHistogram[ideal.atlasPixels] ?? 0) + 1;
+    let packing;
+    try {
+      packing = packFarTierAtlas(packableFaces(cell), ideal.atlasPixels, TARGET_TEXEL_WORLD_SIZE_METERS);
+    } catch {
+      // UNPACKABLE, and not because of a bad scale choice. Every face costs at
+      // least (floor + 2*gutter)^2 texels no matter how far the resolution is
+      // reduced, so an atlas holds a fixed MAXIMUM NUMBER OF FACES and a cell
+      // above it cannot be baked at this ceiling at all. Recorded, not thrown.
+      unpackable.push({ cellId: cell.cellId, faceCount: cell.faces.length, atlasPixels: ideal.atlasPixels });
+      continue;
+    }
+    const delivered = farTierDeliveredQuality(packing.texelWorldSizeMeters);
+    scaleHistogram[packing.appliedScale] = (scaleHistogram[packing.appliedScale] ?? 0) + 1;
+    leafResolutions.push({
+      cellId: cell.cellId,
+      atlasPixels: ideal.atlasPixels,
+      idealRatio: ideal.achievedRatio,
+      idealUnderResolved: ideal.underResolved,
+      appliedScale: packing.appliedScale,
+      deliveredTexelWorldSizeMeters: packing.texelWorldSizeMeters,
+      deliveredRatio: delivered.achievedRatio,
+      deliveredUnderResolved: delivered.underResolved,
+      deliveredCriticalDistanceMeters: delivered.criticalDistanceMeters,
+      flatFaceShare: packing.flatFaceCount / Math.max(1, packing.faces.length),
+    });
+  }
+  // The IDEAL ladder is a property of every cell, packable or not, so it is
+  // computed over all 883 rather than over the packable subset.
+  const idealAll = cells.map((cell) => farTierResolution(Math.max(cell.surfaceAreaSquareMeters, 1e-6)));
+  const underResolved = idealAll.filter((entry) => entry.underResolved);
+  const deliveredUnderResolved = leafResolutions.filter((entry) => entry.deliveredUnderResolved);
 
   const zoomHistogram = {};
   for (const node of nodes.values()) if (node.leaf) zoomHistogram[node.zoom] = (zoomHistogram[node.zoom] ?? 0) + 1;
@@ -401,11 +585,36 @@ async function commandHierarchy() {
       histogram: atlasHistogram,
       zoomHistogram,
       note: "Leaf zoom levels are the ledger's own tile ids; the far tier does not invent a hierarchy, it adopts the cut the ledger already committed.",
-      underResolvedCellCount: underResolved.length,
-      underResolvedShare: round(underResolved.length / cells.length, 6),
-      worstAchievedRatio: round(Math.min(...leafResolutions.map((entry) => entry.achievedRatio)), 6),
-      worstCriticalDistanceMeters: Math.round(Math.max(...leafResolutions.map((entry) => entry.criticalDistanceMeters))),
-      honesty: "THIS IS THE TIER'S LARGEST QUALITY SHORTFALL AND IT IS STATED RATHER THAN FUNDED. A leaf whose surface area exceeds what a 256px atlas can carry at ratio 1.0 does not get a bigger atlas and does not get a waiver: it renders blurrier than target between the 1,200 m boundary and its own critical distance. Raising the ceiling to 512 or 1024 would fix it at a worst-case resident cost of 209.8 MiB or 346.0 MiB respectively, against 126.4 MiB at 256. Splitting the leaf below the ledger cell would also fix it and is a T004 question, not one this prototype may answer.",
+      idealLadder: {
+        basis: "farTierResolution alone, which assumes an atlas can be filled to 100%.",
+        underResolvedCellCount: underResolved.length,
+        underResolvedShare: round(underResolved.length / cells.length, 6),
+        cellsMeasured: idealAll.length,
+        worstAchievedRatio: round(idealAll.reduce((least, entry) => Math.min(least, entry.achievedRatio), Infinity), 6),
+        caveat: "THIS LADDER IS NOT ACHIEVABLE. No packer fills an atlas completely, so these figures are an upper bound on quality, not a prediction of it.",
+      },
+      faceCountCeiling: {
+        note: "THE HARDEST LIMIT IN THIS TIER, AND IT IS NOT A QUALITY LIMIT — IT IS FEASIBILITY. Every face occupies at least (faceTexelFloor + 2 * gutterTexels)^2 texels however far the global resolution is reduced, so one atlas holds a FIXED MAXIMUM NUMBER OF FACES. A cell above it cannot be baked at this ceiling at any scale.",
+        minimumTexelsPerFace: (FAR_TIER_BAKE_RECIPE.faceTexelFloor + 2 * FAR_TIER_BAKE_RECIPE.gutterTexels) ** 2,
+        maximumFacesPer256Atlas: Math.floor((FAR_TIER_ATLAS_PIXELS.maximum ** 2) / ((FAR_TIER_BAKE_RECIPE.faceTexelFloor + 2 * FAR_TIER_BAKE_RECIPE.gutterTexels) ** 2)),
+        unpackableCellCount: unpackable.length,
+        unpackableShare: round(unpackable.length / cells.length, 6),
+        worstFaceCount: cells.reduce((most, cell) => Math.max(most, cell.faces.length), 0),
+        consequence: "T004 CANNOT MASS-BAKE AT THIS CEILING WITHOUT ONE OF: a larger atlas, a smaller gutter, a lower texel floor, or splitting leaves below the ledger cell. This prototype does not choose between them.",
+      },
+      deliveredLadder: {
+        basis: "The real packer run over every PACKABLE leaf, using each cell's own face extents from the base snapshot. This is the resolution a bake actually delivers.",
+        cellsMeasured: leafResolutions.length,
+        cellsUnpackable: unpackable.length,
+        underResolvedCellCount: deliveredUnderResolved.length,
+        underResolvedShare: round(deliveredUnderResolved.length / cells.length, 6),
+        worstAchievedRatio: round(Math.min(...leafResolutions.map((entry) => entry.deliveredRatio)), 6),
+        worstCriticalDistanceMeters: Math.round(Math.max(...leafResolutions.map((entry) => entry.deliveredCriticalDistanceMeters))),
+        appliedScaleHistogram: scaleHistogram,
+        meanFlatFaceShare: round(leafResolutions.reduce((sum, entry) => sum + entry.flatFaceShare, 0) / leafResolutions.length, 6),
+        representativeness: "Ordering keys are synthetic, so `appliedScale` is representative rather than byte-identical to a real bake: face world area is the primary sort in both and only ties break differently.",
+      },
+      honesty: "THE DELIVERED LADDER IS THE ONE THAT MATTERS, AND IT IS MUCH WORSE THAN THE IDEAL ONE. THIS IS THE TIER'S LARGEST QUALITY SHORTFALL AND IT IS STATED RATHER THAN FUNDED. The ideal ladder puts it at " + underResolved.length + " of " + cells.length + " leaves; the DELIVERED ladder, which is the one that matters, puts it at " + deliveredUnderResolved.length + ". The gap between them is packing overhead — gutters and shelf waste — and it is the dominant term, not a correction. A leaf that cannot reach ratio 1.0 does not get a bigger atlas and does not get a waiver: it renders blurrier than target between the 1,200 m boundary and its own critical distance. Raising the ceiling to 512 or 1024 would help at a worst-case resident cost this project has no evidence it can pay; splitting leaves below the ledger cell would also help and is a T004 question this prototype may not answer. Reducing the gutter from 2 texels would help most of all and would cost mip-level-1 bleed.",
     },
     hierarchy: {
       nodeCount: nodes.size,
@@ -415,12 +624,44 @@ async function commandHierarchy() {
       geometryLimitation: "THE HIERARCHY REDUCES TEXTURE RESIDENCY WITH DISTANCE AND DOES NOT REDUCE GEOMETRY RESIDENCY AT ALL. A parent node here is the concatenation of its children's prisms, not a simplified massing of them, so coarsening the cut moves texture bytes and leaves geometry bytes almost unchanged — which is why the swept geometry worst case equals the whole island's prism geometry rather than some fraction of it. At 93.8 MiB that is affordable and bounded, so it does not block this prototype. It is named here rather than discovered during a mass bake: parent-node geometry simplification is a real prerequisite for any tier that must grow past this island's size, and it is out of T002's scope.",
     },
     worstCaseResidency: {
-      method: "Maximum over a 13x13 camera grid across the island bounding box at seven altitudes, with NO frustum culling and NO occlusion. Every conservatism here makes the bound larger, never smaller.",
-      altitudesMeters: [400, 800, 1_200, 2_000, 4_000, 8_000, 16_000],
-      ...worst,
+      quantifier: "MAXIMUM OVER THE DECLARED POSE SAMPLE, at the stated grid resolution. NOT a proven bound over all camera poses.",
+      quantifierNote: "An earlier draft of this record claimed these figures are never exceeded at any camera pose, and claimed every conservatism enlarged them. Both were wrong in the same direction. A sampled grid can only MISS a peak, never invent one, so grid coarseness makes the figure SMALLER. A 12-step grid reported 133,190,868 atlas bytes; refining found more. The ladder below is the evidence for where refinement stopped moving the answer, and the quantifier above is what the number actually supports.",
+      method: "Camera grid across the island bounding box at seven altitudes, with NO frustum culling and NO occlusion. Those two conservatisms do enlarge the bound; the grid sampling does not.",
+      altitudesMeters: ALTITUDES_METERS,
+      refinementLadder: ladder,
+      stabilityRule: "The last three rungs must agree exactly.",
+      stable,
+      stabilityStatement: stable
+        ? "STABLE. The last three rungs of the ladder returned the identical maximum, so further refinement is not expected to move it. This is evidence, not proof."
+        : "NOT STABLE. The last three rungs disagree, so the maximum below is the largest SEEN and refinement had not converged when it stopped. It must be read as a lower bound on the true sampled maximum.",
+      altitudeMeters: worst.altitudeMeters,
+      nodeCount: worst.nodeCount,
+      atlasGpuBytes: worst.atlasGpuBytes,
+      geometryGpuBytes: worst.geometryGpuBytes,
+      totalGpuBytes: worst.totalGpuBytes,
       atlasGpuMebibytes: round(worst.atlasGpuBytes / 1_048_576, 2),
       geometryGpuMebibytes: round(worst.geometryGpuBytes / 1_048_576, 2),
       totalGpuMebibytes: round(worst.totalGpuBytes / 1_048_576, 2),
+    },
+
+    cutIndependentBound: {
+      note: "THIS IS WHAT THE COMMITTED BARS REST ON, not the sweep. Every camera pose selects some antichain of the tree, minus whatever the 1,200 m boundary excludes, and excluding only subtracts. So the maximum over all antichains dominates every pose.",
+      method: "One bottom-up pass: maxCut(node) = max(cost(node), sum of maxCut(children)). A theorem about the tree, not a sample.",
+      atlasGpuBytes: cutBound.atlasGpuBytes,
+      geometryGpuBytes: cutBound.geometryGpuBytes,
+      totalGpuBytes: cutBound.totalGpuBytes,
+      atlasGpuMebibytes: round(cutBound.atlasGpuBytes / 1_048_576, 2),
+      geometryGpuMebibytes: round(cutBound.geometryGpuBytes / 1_048_576, 2),
+      totalGpuMebibytes: round(cutBound.totalGpuBytes / 1_048_576, 2),
+      allLeavesRejectedAsBound: {
+        why: "'Every leaf resident at once' was considered as the simpler bound and REJECTED: it is not one. Power-of-two rounding and the 64-texel floor make some internal nodes cost MORE than their children.",
+        internalNodesCostlierThanTheirChildren: costlierThanChildren,
+        allLeavesAtlasGpuBytes: cells.reduce((sum, cell) => sum + farTierAtlasGpuBytes(farTierResolution(Math.max(cell.surfaceAreaSquareMeters, 1e-6)).atlasPixels), 0),
+        allLeavesGeometryGpuBytes: cells.reduce((sum, cell) => sum + farTierGeometryGpuBytes(cell.quadCount, cell.triangleCount), 0),
+      },
+      headroomOverObservedSweepMaximum: cutBound.totalGpuBytes - worst.totalGpuBytes,
+      atlasCeilingComparison: ceilingComparison,
+      atlasCeilingComparisonNote: "The 256 ceiling is chosen against these, all computed the same exact way. Note that the feasibility column moves faster than the memory column: raising the ceiling buys packability as much as sharpness.",
     },
     allLeavesResidentUpperBound: {
       note: "The degenerate case where the hierarchy is ignored entirely and every leaf is resident at once. It is NOT the budget; it is what the budget buys protection from.",
@@ -451,8 +692,17 @@ async function commandHierarchy() {
     checksum: sha256HexSync(text),
     cells: cells.length,
     faces: faceAreas.length,
-    underResolvedCells: underResolved.length,
+    underResolvedCellsIdeal: underResolved.length,
+    underResolvedCellsDelivered: deliveredUnderResolved.length,
+    sweepStable: stable,
     worstResidentMiB: round(worst.totalGpuBytes / 1_048_576, 2),
+    worstAtlasBytes: worst.atlasGpuBytes,
+    worstGeometryBytes: worst.geometryGpuBytes,
+    worstTotalBytes: worst.totalGpuBytes,
+    cutBoundAtlas: cutBound.atlasGpuBytes,
+    cutBoundGeometry: cutBound.geometryGpuBytes,
+    cutBoundTotal: cutBound.totalGpuBytes,
+    unpackableCells: unpackable.length,
   }));
 }
 
@@ -494,7 +744,8 @@ async function commandPreregister() {
       separateFromCriterion30: "THE FAR TIER GETS ITS OWN BUDGET AND IS NOT FOLDED INTO THE CLOSED 256 MiB CRITERION #30. That criterion was frozen against a measurement this tier did not exist for. Adding a new tier's memory to a closed criterion would silently reopen it. The two budgets are ADDED when a total is needed, never merged.",
       B1: {
         rule: `Baked atlas edge length is a power of two in [${FAR_TIER_ATLAS_PIXELS.minimum}, ${FAR_TIER_ATLAS_PIXELS.maximum}] texels.`,
-        rationale: "Derived, not chosen: worst-case resident texture memory over the swept camera grid is 126.4 MiB at a 256 ceiling, 209.8 MiB at 512 and 346.0 MiB at 1024.",
+        rationale: "Derived, not chosen. The cut-independent atlas bound is 72.2 MiB at a 128 ceiling, 278.5 MiB at 256, 640.0 MiB at 512 and 861.7 MiB at 1024.",
+        alsoDecidesFeasibility: `An atlas holds at most ${hierarchy.leafResolutionLadder.faceCountCeiling.maximumFacesPer256Atlas} faces at this ceiling, because every face costs at least ${hierarchy.leafResolutionLadder.faceCountCeiling.minimumTexelsPerFace} texels however far resolution is reduced. ${hierarchy.leafResolutionLadder.faceCountCeiling.unpackableCellCount} of ${hierarchy.inputs.ledger.cellCount} cells exceed what the real packer can place and CANNOT be baked at this ceiling at any scale.`,
       },
       B2: {
         rule: `One far-tier tile occupies at most ${FAR_TIER_BUDGET_CONTRACT.maxTileAtlasGpuBytes} decoded GPU bytes of texture, mip chain included.`,
@@ -503,27 +754,41 @@ async function commandPreregister() {
       },
       B3: {
         rule: `Resident far-tier TEXTURE memory never exceeds ${FAR_TIER_BUDGET_CONTRACT.maxResidentAtlasGpuBytes} decoded GPU bytes at any camera pose.`,
-        derivedValue: hierarchy.worstCaseResidency.atlasGpuBytes,
-        rationale: "Maximum over a 13x13 camera grid at seven altitudes, with no frustum culling and no occlusion. Every conservatism enlarges the bound.",
+        derivedValue: hierarchy.cutIndependentBound.atlasGpuBytes,
+        basis: "cut-independent-bound",
+        rationale: "A BOUND, not a sampled maximum. Every camera pose selects some antichain of the tree, minus whatever the 1,200 m boundary excludes, and excluding only subtracts; so the maximum over all antichains dominates every pose, and that maximum is one bottom-up pass over the tree.",
+        supersededSamplingClaim: "An earlier draft of this record derived B3 from the maximum of a 13x13 camera sweep and asserted it was never exceeded at any pose. That was wrong: a sampled grid can only MISS a peak, so refinement kept finding worse poses (133,190,868 at 12 steps creeping to 136,686,118 at 192) and never converged. The sweep is retained as an observation only.",
       },
       B4: {
         rule: `Resident far-tier GEOMETRY memory never exceeds ${FAR_TIER_BUDGET_CONTRACT.maxResidentGeometryGpuBytes} decoded GPU bytes at any camera pose.`,
-        derivedValue: hierarchy.worstCaseResidency.geometryGpuBytes,
+        derivedValue: hierarchy.cutIndependentBound.geometryGpuBytes,
+        basis: "cut-independent-bound",
       },
       B5: {
         rule: `Resident far-tier TOTAL never exceeds ${FAR_TIER_BUDGET_CONTRACT.maxResidentTotalGpuBytes} decoded GPU bytes at any camera pose.`,
-        derivedValue: hierarchy.worstCaseResidency.totalGpuBytes,
+        derivedValue: hierarchy.cutIndependentBound.totalGpuBytes,
+        basis: "cut-independent-bound",
       },
       B6: {
-        rule: `Every leaf reaches texel ratio ${FAR_TIER_TEXEL_RATIO.floor} at the ${FAR_TIER_NEAR_EDGE_METERS} m boundary, or is REPORTED as under-resolved with its critical distance.`,
+        rule: `Every leaf reaches texel ratio ${FAR_TIER_TEXEL_RATIO.floor} at the ${FAR_TIER_NEAR_EDGE_METERS} m boundary AT THE RESOLUTION THE PACKER ACTUALLY DELIVERS, or is REPORTED as under-resolved with its critical distance.`,
         knownToBeMissed: true,
-        measuredShortfall: {
-          underResolvedCellCount: hierarchy.leafResolutionLadder.underResolvedCellCount,
-          underResolvedShare: hierarchy.leafResolutionLadder.underResolvedShare,
-          worstAchievedRatio: hierarchy.leafResolutionLadder.worstAchievedRatio,
-          worstCriticalDistanceMeters: hierarchy.leafResolutionLadder.worstCriticalDistanceMeters,
+        measuredShortfallIdeal: {
+          note: "Assuming a 100%-full atlas, which no packer achieves. Kept only so the packing penalty is visible as the difference.",
+          underResolvedCellCount: hierarchy.leafResolutionLadder.idealLadder.underResolvedCellCount,
+          underResolvedShare: hierarchy.leafResolutionLadder.idealLadder.underResolvedShare,
+          worstAchievedRatio: hierarchy.leafResolutionLadder.idealLadder.worstAchievedRatio,
         },
-        rationale: "PRE-REGISTERED AS ALREADY MISSED. The arithmetic that fixes the ceiling at 256 also proves this bar cannot be met inside it, and saying so here is the whole point of pre-registering. It is reported at mass bake as a per-cell flag, never averaged away.",
+        measuredShortfallDelivered: {
+          note: "THE ONE THAT COUNTS. The real packer run over every packable leaf.",
+          cellsMeasured: hierarchy.leafResolutionLadder.deliveredLadder.cellsMeasured,
+          cellsUnpackable: hierarchy.leafResolutionLadder.deliveredLadder.cellsUnpackable,
+          underResolvedCellCount: hierarchy.leafResolutionLadder.deliveredLadder.underResolvedCellCount,
+          underResolvedShare: hierarchy.leafResolutionLadder.deliveredLadder.underResolvedShare,
+          worstAchievedRatio: hierarchy.leafResolutionLadder.deliveredLadder.worstAchievedRatio,
+          worstCriticalDistanceMeters: hierarchy.leafResolutionLadder.deliveredLadder.worstCriticalDistanceMeters,
+          meanFlatFaceShare: hierarchy.leafResolutionLadder.deliveredLadder.meanFlatFaceShare,
+        },
+        rationale: "PRE-REGISTERED AS ALREADY MISSED, AND BY MORE THAN THE IDEAL LADDER SUGGESTS. An earlier draft derived this bar from the ideal ladder alone and reported 360 of 883; measuring the packer that actually runs moves it to 650 of the 711 packable cells, with a further 172 unpackable at this ceiling. Packing overhead is the dominant term, not a correction to it. Reported at mass bake as a per-cell flag, never averaged away.",
       },
     },
 

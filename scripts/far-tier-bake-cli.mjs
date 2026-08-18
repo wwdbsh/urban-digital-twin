@@ -20,8 +20,10 @@
  *   node --experimental-strip-types scripts/far-tier-bake-cli.mjs sources [--cell <cellId>]
  */
 
+import { spawnSync } from "node:child_process";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
+import { execPath } from "node:process";
 import { fileURLToPath } from "node:url";
 
 import { sha256HexBytes, sha256HexSync, stableSerialize } from "../src/domain/deterministic-hash.ts";
@@ -46,6 +48,7 @@ import {
   FAR_TIER_NEAR_EDGE_METERS,
   farTierAtlasGpuBytes,
   farTierBudgetContractHash,
+  farTierDeliveredQuality,
   farTierGeometryGpuBytes,
   farTierResolution,
   farTierTexelWorldSizeMeters,
@@ -247,8 +250,9 @@ function bakeCell(context) {
   const rgb = bakeFarTierAtlas(packing);
   const atlasPng = encodeRgbPng(packing.atlasPixels, packing.atlasPixels, rgb);
   const geometry = farTierGeometry(packing);
+  const delivered = farTierDeliveredQuality(packing.texelWorldSizeMeters);
 
-  return { faces, members, surfaceArea, resolution, packing, atlasPng, geometry };
+  return { faces, members, surfaceArea, resolution, delivered, packing, atlasPng, geometry };
 }
 
 function writeTile(context, baked, atlasRelativeRef) {
@@ -319,10 +323,17 @@ async function commandBake(cellId, { quiet = false } = {}) {
 }
 
 async function commandReplay(cellId) {
-  // Two independent full runs, each from the committed inputs, compared by
-  // digest. An in-process repeat would not catch a module-level cache.
+  // Two independent full runs compared by digest. The SECOND runs in a FRESH
+  // CHILD PROCESS, which is the whole point: this module memoizes the tile
+  // integrator and the texture catalogue, so a same-process repeat would
+  // exercise those caches rather than the computation and could not catch a
+  // cache that leaked state between runs.
   const first = await commandBake(cellId, { quiet: true });
-  const second = await commandBake(cellId, { quiet: true });
+  const child = spawnSync(execPath, ["--experimental-strip-types", fileURLToPath(import.meta.url), "bake", "--cell", cellId], {
+    cwd: repositoryRoot, encoding: "utf8", maxBuffer: 32 * 1024 * 1024,
+  });
+  if (child.status !== 0) fail(`the child-process replay run failed: ${child.stderr?.slice(0, 2_000) ?? "no stderr"}`);
+  const second = JSON.parse(child.stdout);
   const identical = first.glbSha256 === second.glbSha256 && first.atlasSha256 === second.atlasSha256;
 
   const { context, baked, tile } = first;
@@ -352,9 +363,9 @@ async function commandReplay(cellId) {
 
     byteReplay: {
       runs: 2,
-      method: "Two independent full bakes from the committed inputs in this process, each re-reading the base snapshot and the ledger, compared by sha256.",
-      run1: { glbSha256: first.glbSha256, atlasSha256: first.atlasSha256 },
-      run2: { glbSha256: second.glbSha256, atlasSha256: second.atlasSha256 },
+      method: "Two independent full bakes from the committed inputs, each re-reading the base snapshot and the ledger, compared by sha256. The SECOND runs in a FRESH CHILD PROCESS, so the module-level tile-integrator and texture-catalogue caches are cold for it and cannot mask a leak.",
+      run1: { glbSha256: first.glbSha256, atlasSha256: first.atlasSha256, process: "parent" },
+      run2: { glbSha256: second.glbSha256, atlasSha256: second.atlasSha256, process: "child" },
       byteIdentical: identical,
       verdict: identical ? "PASS" : "FAIL",
     },
@@ -403,9 +414,16 @@ async function commandReplay(cellId) {
       appliedResolutionScale: baked.packing.appliedScale,
       appliedTexelWorldSizeMeters: Number.parseFloat(baked.packing.texelWorldSizeMeters.toFixed(6)),
       targetTexelWorldSizeMeters: Number.parseFloat(farTierTexelWorldSizeMeters(FAR_TIER_NEAR_EDGE_METERS).toFixed(6)),
-      achievedTexelRatio: Number.parseFloat(baked.resolution.achievedRatio.toFixed(6)),
-      underResolved: baked.resolution.underResolved,
-      criticalDistanceMeters: Math.round(baked.resolution.criticalDistanceMeters),
+      // DELIVERED, not ideal. `farTierResolution` assumes a 100%-full atlas;
+      // the packer had to shrink the global texel size to fit, and reporting
+      // the ideal ratio beside an appliedScale of 0.5 stated a sharpness this
+      // tile does not have. B6 requires under-resolved leaves to be REPORTED,
+      // so these come from `packing.texelWorldSizeMeters`.
+      idealTexelRatio: Number.parseFloat(baked.resolution.achievedRatio.toFixed(6)),
+      idealTexelRatioNote: "What a 100%-full atlas would have achieved. Not delivered; kept only so the packing penalty is visible as the difference.",
+      achievedTexelRatio: Number.parseFloat(baked.delivered.achievedRatio.toFixed(6)),
+      underResolved: baked.delivered.underResolved,
+      criticalDistanceMeters: Math.round(baked.delivered.criticalDistanceMeters),
       atlasGpuBytes: farTierAtlasGpuBytes(baked.packing.atlasPixels),
       geometryGpuBytes: farTierGeometryGpuBytes(baked.geometry.quads.length, baked.geometry.triangles.length),
       members: baked.members,

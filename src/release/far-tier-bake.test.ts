@@ -7,7 +7,7 @@
 import { execFileSync } from "node:child_process";
 import { cwd, execPath } from "node:process";
 import { describe, expect, it } from "vitest";
-import { sha256HexBytes } from "../domain/deterministic-hash.ts";
+import { sha256HexBytes, sha256HexSync, stableSerialize } from "../domain/deterministic-hash.ts";
 import {
   FAR_TIER_BAKE_RECIPE,
   bakeFarTierAtlas,
@@ -278,10 +278,77 @@ describe("the bake is a total function of its inputs", () => {
   });
 });
 
+describe("the texel floor and the flat-face predicate", () => {
+  const wide = (widthMm: number, heightMm: number): FarTierFace => ({
+    buildingId: "doitt:1", faceIndex: 0, kind: "wall",
+    areaSquareMeters: (widthMm / 1_000) * (heightMm / 1_000),
+    cornersMm: [[0, 0, 0], [widthMm, 0, 0], [widthMm, 0, heightMm], [0, 0, heightMm]],
+    offsetMeters: [0, 0],
+    zones: [{ materialId: "material:facade:shaft", textureClass: "brick-running-bond", factor: [0.5, 0.4, 0.3], fromFraction: 0, toFraction: 1 }],
+  });
+
+  it("drops a face below the floor on EITHER axis to a flat block", () => {
+    // 40 m wide but only 2 m tall at a 1 m texel: wide enough, far too short.
+    const packing = packFarTierAtlas([wide(40_000, 2_000)], 256, 1);
+    expect(packing.flatFaceCount).toBe(1);
+    expect(packing.faces[0]!.rect!.flat).toBe(true);
+    expect(packing.faces[0]!.rect!.width).toBe(FAR_TIER_BAKE_RECIPE.faceTexelFloor);
+  });
+
+  it("does NOT call a face flat merely because it sizes to exactly the floor", () => {
+    // The defect this pins: `flat` used to be re-derived as
+    // `width === floor && height === floor`, which mislabelled a legitimately
+    // 4x4 face as flat and under-reported `flatFaceCount`.
+    const floor = FAR_TIER_BAKE_RECIPE.faceTexelFloor;
+    const packing = packFarTierAtlas([wide(floor * 1_000, floor * 1_000)], 256, 1);
+    const rect = packing.faces[0]!.rect!;
+    expect(rect.width).toBe(floor);
+    expect(rect.height).toBe(floor);
+    expect(rect.flat).toBe(false);
+    expect(packing.flatFaceCount).toBe(0);
+  });
+
+  it("renders a flat face as one solid colour and a floor-sized face as not solid", () => {
+    const solid = bakeFarTierAtlas(packFarTierAtlas([wide(40_000, 2_000)], 64, 1));
+    const rectSolid = packFarTierAtlas([wide(40_000, 2_000)], 64, 1).faces[0]!.rect!;
+    const texel = (rgb: Uint8Array, size: number, x: number, y: number): string => {
+      const at = (y * size + x) * 3;
+      return `${rgb[at]},${rgb[at + 1]},${rgb[at + 2]}`;
+    };
+    const seenSolid = new Set<string>();
+    for (let row = 0; row < rectSolid.height; row += 1) {
+      for (let column = 0; column < rectSolid.width; column += 1) seenSolid.add(texel(solid, 64, rectSolid.x + column, rectSolid.y + row));
+    }
+    expect(seenSolid.size).toBe(1);
+  });
+
+  it("counts every roof as flat, because a roof has no pattern at any resolution", () => {
+    const roof: FarTierFace = {
+      buildingId: "doitt:1", faceIndex: 9, kind: "roof", areaSquareMeters: 900,
+      cornersMm: [[0, 0, 10_000], [30_000, 0, 10_000], [30_000, 30_000, 10_000], [0, 30_000, 10_000]],
+      offsetMeters: [0, 0],
+      zones: [{ materialId: "material:roof", textureClass: null, factor: [0.1, 0.1, 0.1], fromFraction: 0, toFraction: 1 }],
+    };
+    const packing = packFarTierAtlas([roof], 256, 1);
+    expect(packing.faces[0]!.rect!.flat).toBe(true);
+    expect(packing.flatFaceCount).toBe(1);
+  });
+});
+
 describe("the recipe hash", () => {
-  it("is stable and covers every constant that can move a byte", () => {
-    expect(farTierRecipeHash()).toBe(farTierRecipeHash());
-    expect(farTierRecipeHash()).toMatch(/^[0-9a-f]{64}$/u);
+  it("changes when any constant that can move a byte changes", () => {
+    // The previous version of this test asserted `hash() === hash()`, which is
+    // true of any pure function and proves nothing about coverage. This one
+    // recomputes the hash over a MUTATED copy of the recipe and requires it to
+    // move, for every field in turn.
+    const baseline = farTierRecipeHash();
+    expect(baseline).toMatch(/^[0-9a-f]{64}$/u);
+    expect(sha256HexSync(stableSerialize(FAR_TIER_BAKE_RECIPE))).toBe(baseline);
+    for (const key of Object.keys(FAR_TIER_BAKE_RECIPE)) {
+      const mutated: Record<string, unknown> = { ...FAR_TIER_BAKE_RECIPE };
+      mutated[key] = typeof mutated[key] === "number" ? (mutated[key] as number) + 1 : "MUTATED";
+      expect(sha256HexSync(stableSerialize(mutated)), `recipe hash ignores ${key}`).not.toBe(baseline);
+    }
   });
 
   it("names the gamma decision and the packing order explicitly", () => {
