@@ -1,0 +1,292 @@
+{
+ "schemaVersion": "1.0",
+ "recordId": "far-tier-hlod-runtime-20260818:runtime",
+ "task": "T003",
+ "capturedAt": null,
+ "capturedAtStatement": "NULL BY CONSTRUCTION, matching every capture record in this goal.",
+ "scope": "Runtime serving, verification, placement, suppression contract, explicit state, and the rollback switch for baked far-tier tiles. NOT the mass bake (T004), promotion (T005), or campaign (T007).",
+ "pickingMechanism": {
+  "headline": "ROUTE D. Every pick this application's own code performs flows through one bracket that hides the far-tier primitives for the duration of the pick call and restores them in a finally.",
+  "cesiumOwnPick": {
+   "finding": "THE FIRST STATEMENT OF THIS RECORD WAS TOO STRONG, and independent review was right to say so. `Viewer` installs its own LEFT_DOUBLE_CLICK handler — `pickAndTrackObject` — which calls scene.pick INSIDE CesiumJS, where the repository's source-scan pin cannot see it and the bracket cannot wrap it. A double click over a drawn far-tier tile would have picked against a scene with the tile still in the pick pass: the same invisible-id occluder Stage 0 measured.",
+   "fix": "CesiumViewport removes that input action at viewer construction. Nothing in this product tracks an entity, so there is no behaviour to preserve; anything that re-introduces an entity-tracking double click must register it through the bracket.",
+   "pin": "A test asserts the removeInputAction call is present and that the bracket's header no longer claims to be the only place a pick can happen."
+  },
+  "whyItIsNeeded": "A far-tier tile is one merged mesh drawn over the massing it replaces. Two measured CesiumJS facts make that destroy per-building picking unless compensated.",
+  "rejected_allowPicking": {
+   "claim": "allowPicking:false does NOT remove a Primitive from the pick pass.",
+   "mechanism": "It only clears the pick id. The draw command is pushed whenever passes.render OR passes.pick, and allowPicking merely chooses between colorCommand.pickId = \"v_pickColor\" or else leaves it unset.",
+   "sourceCitation": "cesium@1.143.0 Build/CesiumUnminified/index.js:48744-48765",
+   "measurement": "With the opaque tile present, picking failed at EVERY massing alpha including 0.5 — a plainly visible massing — with the show attribute reading back as [1]. Removing the tile restored picking immediately.",
+   "consequence": "The tile is an invisible-id OCCLUDER that writes depth and swallows clicks. The frozen plan treated allowPicking:false as sufficient; it is not, and no alpha tuning compensates."
+  },
+  "rejected_routeE": {
+   "approach": "Draw the tile in the TRANSLUCENT pass, which writes no depth and therefore cannot occlude the pick pass.",
+   "measurement": "WORKS — 3 of 3 far subjects picked correctly.",
+   "whyRejected": "A translucent merged tile cannot self-occlude. Buildings behind buildings INSIDE one tile would show through each other. Recorded because it works, rejected because of what it costs."
+  },
+  "alphaCutoff": {
+   "constant": "FAR_TIER_MASSING_PICK_ALPHA = 0.004",
+   "claim": "A per-instance colour alpha below 0.004 removes the instance from the pick pass entirely, exactly like show=false.",
+   "mechanism": "Cesium discards translucent fragments below the cutoff, and the discard happens inside czm_non_pick_main(), which the pick fragment shader calls BEFORE writing the pick id — so the fragment never reaches the pick output.",
+   "sweep": [
+    {
+     "alpha": 0,
+     "picks": false
+    },
+    {
+     "alpha": 0.002,
+     "picks": false
+    },
+    {
+     "alpha": 0.004,
+     "picks": true
+    },
+    {
+     "alpha": 0.01,
+     "picks": true
+    },
+    {
+     "alpha": 0.02,
+     "picks": true
+    },
+    {
+     "alpha": 0.05,
+     "picks": true
+    },
+    {
+     "alpha": 0.1,
+     "picks": true
+    }
+   ],
+   "zeroTintMeasurement": "Reading back rendered pixels over each far subject, tile-only and tile-plus-massing-at-0.004 were IDENTICAL at [138,107,79] on all three subjects. Maximum channel delta: 0 8-bit levels. The visual cost of holding 0.004 instead of 0 is nil, measured rather than assumed.",
+   "warning": "CLEANING THIS UP TO 0 DESTROYS FAR-RANGE PICKING. Pinned by test."
+  },
+  "bypassPin": "A source-scan test asserts scene.pick and scene.drillPick appear ONLY in far-tier-pick-bracket.ts (and the dev-only Stage 0 spike harness), so a future direct call fails CI instead of silently swallowing far-range clicks.",
+  "forTheNextCesiumUpgrade": "If a future CesiumJS stops pushing non-pickable commands into the pick pass, the bracket becomes unnecessary. far-tier-pick-bracket.test.ts pins the behaviour being compensated for, so that upgrade surfaces as a test result rather than as silence.",
+  "spikeRecord": "data/far-tier-hlod-runtime-20260818/stage-0-picking-spike.json (sha256 a95723fd0973760ff7d539fcc3ccc851bbd0dc053bcb1cf872aebd217f73aa5b)"
+ },
+ "placement": {
+  "anchorSource": "THE CELL ID. The SW corner is tileBounds(cellTileKey(cellId)).west/.south — the ledger invariant that a cell's bounds ARE the WGS84 tile rectangle it is named for (exterior-wave-ledger.ts:785).",
+  "renderBoundsRefused": "CITYWIDE_OVERVIEW_CELL_EXTENTS.renderBounds is WRONG BY CONSTRUCTION for this purpose and is never read. It is the union of the assignment rectangle with every member building's outer ring — 870 of 883 cells extend beyond their assignment rectangle, median 1.257x area, max 2.064x — so anchoring on it would displace each tile by its own overhang. Pinned by a source-scan test.",
+  "block835": "REFUSED, both the ledger spelling and the CITYWIDE_OVERVIEW_CELL_ID_ALIASES spelling. That cell shipped before the wave ledger and its id encodes no tile, so cellTileKey returns null and there is no rectangle to anchor on. Refusing is fail-closed; guessing an origin would place a tile where nobody baked it.",
+  "bakeFrame": {
+   "units": "metres",
+   "origin": "south-west corner of the cell's own WGS84 tile rectangle",
+   "upAxis": "y",
+   "axes": [
+    "east",
+    "up",
+    "-north"
+   ],
+   "metricId": "rect-euclidean-frozen-scale-v1",
+   "frozenPlanarScale": {
+    "metersPerDegreeLongitude": 84412.702,
+    "metersPerDegreeLatitude": 111049.654
+   }
+  },
+  "residualMeasurement": {
+   "statement": "MEASURED ONCE, not assumed negligible. Frozen-planar versus true geodetic placement, at the far corner of the prototype cell's tile rectangle.",
+   "cellId": "manhattan-exterior-cell-w05-000747-17-38610-35822",
+   "tileSizeMeters": {
+    "east": 231.84641052246096,
+    "north": 152.50349212646483
+   },
+   "eastResidualMeters": 0.0811097076484657,
+   "northResidualMeters": -0.0006574940493635495,
+   "residualMeters": 0.08111237250410398,
+   "reading": "8.1 cm across a 232 m cell, or 0.035 percent of the cell width, essentially all of it in the east component. Sub-metre and bounded; pinned by test."
+  }
+ },
+ "distanceBoundary": {
+  "nearEdgeMeters": 1200,
+  "source": "FAR_TIER_NEAR_EDGE_METERS, the tier's own pre-registered value, which also feeds farTierBudgetContractHash() and is therefore embedded in every baked tile's budgetContractSha256.",
+  "notTheMidRing": "NOT the 400 m EXTERIOR_TWO_LOD_NEAR_RING_METERS, and not an admission test derived from EXTERIOR_CELL_SCHEDULER_POLICY.distanceBandEdgesMeters — ADR 0044 §1.1 records those as SORT KEYS rather than admission tests.",
+  "leavesOnly": "Leaves-only selection is DOMINATED BY THE CUT-INDEPENDENT BOUND. B3-B5 bound the maximum over all antichains via maxCut(node) = max(cost(node), sum of maxCut(children)), and excluding nodes beyond the 1,200 m boundary only SUBTRACTS. So a leaves-only runtime cannot exceed a bound that already dominates every cut, and choosing leaves-only is a residency decision rather than a budget risk."
+ },
+ "servingPath": {
+  "separation": "A SEPARATE PATH. The far tier does not extend ExteriorArtifactKind, does not fabricate a canonicalFeatureId for a cell tile, and does not charge a single byte to EXTERIOR_RUNTIME_BUDGETS.",
+  "whyNotExtendTheKind": "That vocabulary is closed (ADR 0051) and its member string is a filesystem path segment inside a hashed artifact envelope — ${audience}/${kind}/${slug(id)}.json — so adding a member would rewrite on-disk layout and every declared checksum of releases that are already immutable.",
+  "whyNoFeatureId": "A far-tier tile is one merged mesh for a whole cell. Fabricating a feature id would put a thing with no feature identity into the map that exists to answer 'which building is this'.",
+  "layout": {
+   "root": "public/far-tier/ (gitignored)",
+   "tile": "far-tier/<cellId>.far_0.glb",
+   "atlas": "far-tier/<cellId>.atlas.png"
+  },
+  "inventory": "data/far-tier-hlod-runtime-20260818/payload-inventory.json with a .sha256 sidecar, DERIVED FROM COMMITTED TEXT (prototype-provenance.json, itself sidecar-verified) rather than from a payload directory, so the gate runs on a fresh clone without staging a byte.",
+  "inventoryPin": {
+   "statement": "THE STAGED INVENTORY IS A CACHE OF THE COMMITTED ONE, NOT A SECOND AUTHORITY. FAR_TIER_PAYLOAD_INVENTORY_SHA256 in src/runtime/far-tier-serving.ts pins the committed file's digest, and the runtime verifies the fetched text against it before parsing.",
+   "whyItMatters": "Without the pin, a swapped or hand-edited staged inventory declares its own checksums for the tiles, and every per-tile verification below faithfully confirms them. The staged copy is gitignored operator work product; the committed record is the authority.",
+   "digest": "9c46f62a1ac9a662f768facd716f8d04ecf960afaf3ae0f536eb216bb3e6bd24",
+   "failDirection": "A mismatch fails the WHOLE TIER closed — no cells, no line beyond zeros — because an inventory that is not the committed one cannot be trusted to declare anything.",
+   "pin": "A test re-derives the constant from the committed file, so it cannot drift silently."
+  },
+  "verification": {
+   "statement": "BOTH PAYLOADS ARE VERIFIED, SIZE THEN DIGEST, BEFORE EITHER IS USED. The first revision verified only the GLB and handed the atlas bytes straight to the model factory with atlasSha256 and atlasByteSize declared two fields away — so the one payload a user actually looks at was the one payload nothing checked. Independent review found it; it is fixed.",
+   "onAtlasMismatch": "The TILE fails closed as checksum-mismatch and is not drawn. Nothing is ever textured from unverified bytes.",
+   "onAtlasAbsence": "Still not a mismatch. An atlas that cannot be fetched leaves an untextured tile drawn from verified geometry; absence is a staging gap and stays one.",
+   "sizeBeforeDigest": "A truncated or padded response is named for its size rather than reported as a hash failure, for both payloads."
+  },
+  "cache": {
+   "maxCacheEntries": 256,
+   "maxCachedBytes": 67108864,
+   "rationale": "Its own residency ceiling with its own accounting, and — since independent review — its own ENFORCEMENT. Sized against the measured prototype tile — 122,976 GLB plus 196,947 atlas, about 320 KiB per cell — so 64 MiB retains roughly 200 cells, spanning the far ring without approaching either neighbour's ceiling.",
+   "whatIsImplemented": "Loading is bounded by the SAME distance predicate that bounds drawing, hysteresis included, so only selected cells are ever fetched. Declared GLB + atlas bytes are charged to a ledger on admission and released when the camera comes inside a cell's exit edge. Admission is checked BEFORE the fetch against both numbers; a cell that would exceed either is refused, reported as `over-budget` with its arithmetic, and keeps drawing its massing. Candidates are admitted nearest-first, so a pose that cannot afford every selected cell spends the ceiling where the viewer is looking rather than in inventory order.",
+   "whatIsNOTImplemented": "THERE IS NO EVICTION POLICY. Bytes are released on distance deselection and at no other time, so an over-ceiling pose refuses the excess rather than evicting an older tile for it. DEFERRED TO MASS-BAKE SCALE (T004) and named here as a gap. With one baked cell the ceiling cannot be reached, so no refusal has ever been observed outside a fixture.",
+   "correctionRecorded": "AN EARLIER VERSION OF THIS RECORD CLAIMED 'its own cache with its own ceiling and its own accounting' WHILE FAR_TIER_RUNTIME_BUDGETS HAD ZERO NON-TEST CONSUMERS, and two tests green-lit the constant without exercising anything. The claim is now true of the code, and the part that is still not true of it is stated above rather than implied away.",
+   "additive": "ADDITIVE to the far-tier B3-B5 bars and to the closed criterion #30, never merged. FAR_TIER_BOUND_EXCLUSIONS already records that a retained eviction cache is a cost the frozen bars do not cover."
+  },
+  "criterion30Isolation": "Asserted by test: EXTERIOR_RUNTIME_BUDGETS stays at 256 MiB / 1024 entries / 4 concurrent requests, and the far-tier cap is a different object with different numbers."
+ },
+ "explicitState": {
+  "shape": "ONE aggregate line, never one notice per cell. A per-cell notice would put up to 883 lines in front of a user to say something true of the tier as a whole, and would make a single staging gap look like a catastrophe.",
+  "line": "Far tier · <n> drawn · <n> declared [· <n> near (massing drawing)] [· <n> not declared] [· <n> absent] [· <n> over-budget (refused, drawing massing)] [· <n> checksum-mismatch (fail-closed, drawing massing)] [· <n> build-failure (fail-closed, drawing massing)]",
+  "notALiveRegion": {
+   "correction": "IT WAS role=status AND IT IS NOT ANY MORE. The counts move with the CAMERA — every pan changes how many cells are drawn versus near — so a live region re-announced the whole tier status to a screen reader on every camera move: tier telemetry delivered as navigation feedback, which is the kind of noise that makes a user switch announcements off.",
+   "replacement": "The line stays visible and the same numbers are exposed as data-far-tier-declared / -drawn / -near / -not-declared / -absent / -checksum-mismatch / -build-failure / -over-budget on the element, so tests and inspection read them without anyone being interrupted."
+  },
+  "states": [
+   "declared",
+   "drawn",
+   "near",
+   "not-declared",
+   "absent",
+   "checksum-mismatch",
+   "build-failure",
+   "over-budget"
+  ],
+  "declaredMeansTheInventory": "DECLARED IS THE INVENTORY'S OWN COUNT, and that is a correction. It used to be drawn + near, which read as 'declared' and meant 'verified'; under distance-bounded loading it would have meant neither, because a near cell is now a cell that was never fetched. Every other column is a partition of this one. `not-declared` is not the contradiction it looks like: it names a cell with no ANCHOR — an id that encodes no tile rectangle, or one outside the frozen planar scale's validity band — not a cell missing from the inventory.",
+  "mismatchIsNotAbsence": "CHECKSUM-MISMATCH IS NEVER COLLAPSED INTO ABSENCE. Absence is a staging gap and is ordinary. A mismatch is an integrity failure: bytes exist at the path and are not the bytes that were declared. Reporting the second as the first would turn the loudest signal this path can produce into routine background noise. Counted and reported in its own column; pinned by test.",
+  "buildFailureIsNotMismatch": "AND NEITHER IS A MODEL THAT WILL NOT BUILD. The first revision reported verified bytes that failed to build as checksum-mismatch, which accuses the staging of an integrity failure it did not commit and — worse — costs the mismatch column the one precise meaning it has. `build-failure` is its own state, its own column and its own words; `checksum-mismatch` now means exactly 'the bytes differ from what was declared'.",
+  "overBudgetIsARefusal": "`over-budget` is not a payload failure at all: the cell's bytes would take far-tier residency past its own ceiling, so they were never fetched. Named rather than silently skipped, because a tier that quietly draws fewer cells than it selected is indistinguishable from one that is broken.",
+  "perCellDetail": "Container dataset attribute only, mirroring the data-exterior-verified-resource-failures idiom: '<cellId>: <state>: <message>' joined by ' | ', and DELETED rather than emptied when nothing failed, so an ordinary session's DOM is unchanged.",
+  "absenceVsShell": {
+   "finding": "A single-page-app fallback answers 200 with the application shell for a path that does not exist, and those 691 bytes reached the digest check and were reported as CHECKSUM-MISMATCH — a staging gap wearing the costume of an integrity failure.",
+   "measurement": "Observed directly: removing the staged tile produced '1 checksum-mismatch' before the fix and '1 absent' after it.",
+   "fix": "The fetcher refuses a `text/html` content-type for an artifact path and reports it as absence, so the five-state vocabulary keeps meaning what it says."
+  }
+ },
+ "suppression": {
+  "rule": "BY MEMBER BUILDING ID, NEVER BY CELL. Driven from the tile's members[].included == true set.",
+  "whyNotPerCell": "The V3 bake refused some buildings. Each refusal still owes its massing and its entry in the refusal panel. Hiding a whole cell because a tile arrived would silently erase those refusals and make the panel describe buildings the user can no longer see.",
+  "writeContract": "Every visibility write routes through applyDenseSuppressionDelta and HONORS its skipped list. Applied state is never advanced over a skipped write — doing so makes the record a lie three ways: the id is never retried, the reverse delta later un-flips an instance that was never flipped, and the hidden-instance count drifts by one per skipped write for the life of the layer.",
+  "prototypeCaveat": "THE PROTOTYPE CELL HAS 48 MEMBERS AND ALL 48 ARE included:true. The refused-member path is therefore exercised ONLY by synthetic fixtures in this task, not by real data. A cell with refusals has not been observed end to end.",
+  "mechanism": {
+   "attribute": "PER-INSTANCE COLOUR ALPHA, never the `show` attribute.",
+   "alphaFloor": "FAR_TIER_MASSING_PICK_ALPHA = 0.004",
+   "why": "`show` is compiled into the single shader program used by BOTH the colour and the pick pass, so a `show=false` instance is also unpickable. Exterior-wave takeover WANTS that, because an exterior model replaces the massing as the pick target. The far tier does NOT: its tile is one merged mesh with no per-building ids, so if the massing stopped picking there would be nothing left to answer a click and per-building identity at far range would simply vanish.",
+   "defectFound": "THIS SHIPPED WRONG FOR ONE REVISION AND RUNNING THE APP IS WHAT CAUGHT IT. Far-tier ids were first routed into the existing show-based ownership set, which would have destroyed exactly the property Stage 0 was run to protect. It is now a separate alpha-driven set with its own applied-state ref, and `applyDenseFarTierAlphaDelta` mirrors the suppression writer's `skipped` contract rather than reusing it.",
+   "writeContract": "Same obligation as the show-based writer: `skipped` ids did not write, and the applied set is never advanced over them.",
+   "rebuildContract": {
+    "defect": "A SECOND DEFECT IN THE SAME MECHANISM, found by independent review rather than by running the app. The applied set is only meaningful against the instance index it was written into, and the far-tier set was never reset when a dense render plan was rebuilt — while the show-based set was reset at all three of its sites. After any rebuild every instance is new and fully opaque, the next delta is EMPTY, and the tan massing under every drawn tile returns at full opacity AND NEVER HEALS, because nothing produces a delta again until the covered set itself changes.",
+    "fix": "The far-tier applied set is now reset at all three sites the show-based set is — viewer teardown, rebuild commit, dense teardown — and the commit path re-applies the DESIRED covered set against the layer it has just installed, exactly as it already reconciled ownership. A desired-covered ref was added alongside the desired-suppressed ref for that purpose.",
+    "pin": "A test writes the alpha into one index, rebuilds the index, reproduces the empty-delta failure with the stale applied set, and then proves the reset writes it again. A source-scan test pins that the three reset sites and the commit re-apply are present, because that glue lives inside an effect no unit test can reach."
+   }
+  }
+ },
+ "doubleResidency": {
+  "ordering": "The massing is hidden STRICTLY AFTER the tile bytes are verified, the model builds, AND the primitive reports `ready`. There is no window in which neither is drawn, so no flicker.",
+  "readinessGateCorrection": "THE FIRST REVISION DID NOT ACTUALLY CHECK READY, and this sentence claimed it did. `Model.fromGltfAsync` resolves when the model has been created, not when it has been uploaded and drawn, so showing the tile and dimming the massing in the same pass left frames in which the tile was not yet drawn and the massing was at 0.4% alpha — a hole in the city rather than a handoff. Selection now ANDs `farTierTileReady(primitive)` into the in-range test, mirroring the massing-side writer's own `primitive.ready` guard, and a tile that is loaded but not yet ready simply reads as `near`: not drawn, massing showing, which is exactly what is true of it. The window was never observed on screen; it was found by reading, and it is closed by construction rather than by measurement.",
+  "overlapBound": "During the overlap the scene holds both the massing instances and the tile for one cell. For the prototype cell that is 48 prisms plus one 122,976-byte merged mesh and its 196,947-byte atlas.",
+  "labelling": "THIS IS ARITHMETIC, NOT A GPU READING. No double-residency measurement was taken. The figure above is an analytic bound from declared byte sizes and member counts, and it is stated as such rather than presented as an observation."
+ },
+ "rollbackSwitch": {
+  "param": "?farTier=on",
+  "defaultConstant": "FAR_TIER_DEFAULT_ON = false",
+  "default": "OFF. No session gets the far tier without asking.",
+  "serialization": "Written ONLY when it differs from the default, with a mandatory else-delete half so the flag cannot leak across a camera-driven replaceState — the exact defect the scheduler flag had to be fixed for.",
+  "defaultSessionUnchanged": "PROVEN BY TEST: a write that names no flag and a write that names the flag at its default produce byte-identical URLs, and neither contains the parameter.",
+  "failDirection": "Exactly two spellings are accepted. Anything else — including a link this build cannot honour — resolves to the build's own default, never to a third state nobody measured."
+ },
+ "disclosures": [
+  "VALIDATED END TO END MEANS THE PLUMBING, NOT THE PICTURE. Nothing here is visual acceptance of the far tier.",
+  "OPEN APPEARANCE DEFECTS, owned by T013 and NOT fixed by this task: the 4000/235 tone ratio sits at 0.939, and 5 of 6 sampled hues are over the 0.02 bar. A tile that draws correctly still looks wrong in these specific, measured ways.",
+  "capsEmitted is 'roof': the bake emits a roof cap and NO FLOOR. A viewpoint below a building base sees through it. Bounded in practice by the 1,200 m near edge, which puts the camera above the base for the envelope this tier serves, but it is a real hole and not a cosmetic one.",
+  "The frozen-planar placement residual is 8.1 cm per cell and is NOT corrected, only measured.",
+  "The far-tier cache ceiling is additive to two other ceilings. A total memory figure must ADD 256 MiB, the B3-B5 bars, and this 64 MiB; merging any pair understates the total.",
+  "THE RESIDENCY CEILING HAS NEVER BEEN REACHED OUTSIDE A FIXTURE. One baked cell costs about 320 KiB against a 64 MiB ceiling, so every refusal, every nearest-first admission and every release path in this record is proven by test rather than by a session.",
+  "THIS REVISION FIXES REVIEW FINDINGS, IT DOES NOT ADD CAPABILITY. Four of them were defects that shipped in the first T003 revision — a lost alpha suppression after any dense rebuild, unverified atlas bytes, a build failure misreported as an integrity failure, and a declared cache with nothing enforcing it — and the corresponding claims in the first version of this record were wrong. Each is now stated with what was wrong, not silently replaced."
+ ],
+ "whatIsNotDone": [
+  "ONE CELL, NOT A RING. Every end-to-end result is a single-cell observation. Nothing here measures many resident tiles, eviction, or the cache ceiling under load, and the selection loop has never been run against more than one rectangle.",
+  "THE REFUSED-MEMBER PATH IS FIXTURE-ONLY. The prototype cell's 48 members are all included:true, so a cell where the bake refused a building — the case the member-id rule exists for — has never been observed end to end.",
+  "NO GPU MEASUREMENT. The double-residency figure remains arithmetic, and no frame-time or memory reading was taken in the application.",
+  "THE EXIT BAND IS UNMEASURED. 120 m stops the boundary flickering by construction, but no flicker rate was recorded before or after, so it is a safe choice rather than a tuned one.",
+  "NO EVICTION POLICY. Residency is released by distance and by nothing else, so a pose that selects more than the 64 MiB ceiling refuses the excess instead of evicting for it. Owed at mass-bake scale (T004).",
+  "THE READINESS GATE IS UNOBSERVED. The window it closes was found by reading Cesium's contract, not by seeing a hole on screen, and no frame in which neither tile nor massing was drawn was ever captured. The gate is correct by construction; it is not a measurement.",
+  "NO MEASURED COST FOR WAKING THE DENSE PASS. Residency changes now bump a dense-effect dependency; the extra pass is cheap by inspection (the plan basis is unchanged, so no rebuild is scheduled) but no frame-time reading was taken before or after."
+ ],
+ "endToEndValidation": {
+  "statement": "RUN AGAINST THE REAL T002 PROTOTYPE TILE IN THE REAL APPLICATION, on the real citywide base (manhattan-citywide-20260804), not a fixture.",
+  "stagedTile": "manhattan-exterior-cell-w05-000747-17-38610-35822.far_0.glb (2f859925…) plus its atlas (c159e050…), verified against the committed inventory by scripts/far-tier-stage-cli.mjs before staging.",
+  "drawn": "Far tier · 1 drawn · 1 declared. The textured tile is visible in place of the tan massing for that cell.",
+  "pickingUnchanged": {
+   "method": "Camera straight down at 1,400 m over member building doitt:119910 (40.8059, -73.9519, inside the cell's tile rectangle), one synthetic click at canvas centre, far tier ON and then OFF.",
+   "farTierOn": "doitt:119910",
+   "farTierOff": "doitt:119910",
+   "verdict": "IDENTICAL. Picking, feature identity and the details panel are unchanged by the far tier, which is the contract's central requirement, and it is measured rather than argued."
+  },
+  "fallbackArms": {
+   "statement": "RE-RUN IN FULL AFTER THE REVIEW FIXES, against the same real prototype tile. The `declared` column now counts the inventory rather than drawn + near, which is why the absent and mismatch arms read '1 declared' where the first run read '0 declared'; the cell is declared whatever became of its bytes.",
+   "absent": "Tile removed → 'Far tier · 0 drawn · 1 declared · 1 absent', per-cell detail naming the served application shell, massing still drawing.",
+   "checksumMismatch": "One GLB byte flipped → 'Far tier · 0 drawn · 1 declared · 1 checksum-mismatch (fail-closed, drawing massing)', detail naming the .far_0.glb and its declared SHA-256.",
+   "atlasMismatch": "NEW ARM, AND THE ONE THAT PROVES B2. One ATLAS byte flipped with the GLB left intact → 'Far tier · 0 drawn · 1 declared · 1 checksum-mismatch (fail-closed, drawing massing)', detail naming the .atlas.png. Before this fix the same bytes were handed to the model factory and textured a drawn tile.",
+   "forgedInventory": "NEW ARM. The staged payload-inventory.json edited to declare a different glbSha256 → 'Far tier · 0 drawn · 0 declared', no cells at all. The forged declaration never became the authority; the whole tier fails closed on the pinned digest.",
+   "restored": "Every payload restored to its committed digest → 'Far tier · 1 drawn · 1 declared', failures attribute DELETED rather than emptied (verified with an `in` check on the dataset, not a truthiness test)."
+  },
+  "reviewFixArms": {
+   "distanceBoundedLoading": "MEASURED IN THE PAGE, not argued. At the 600 m near pose the only far-tier resource the runtime fetched was payload-inventory.json — performance.getEntriesByType('resource') shows no .far_0.glb and no .atlas.png. At the 1,400 m far pose the same query shows both payloads. That is B4's distance bound, observed.",
+   "unchangedPosePublishes": "A DEFECT THIS RE-RUN CAUGHT, in the fix rather than in the original: publishing the aggregate only when residency CHANGED left the status line absent entirely at a near pose, because a near pose loads nothing and releases nothing. The publish now precedes the change check, and the 600 m pose reports 'Far tier · 0 drawn · 1 declared · 1 near (massing drawing)'. Pinned by test.",
+   "teardown": "A SECOND DEFECT THE APP CAUGHT. React runs the far-tier cleanup AFTER the viewer effect destroys the viewer, and a destroyed Cesium Viewer THROWS from `camera` and `scene`. With the far tier on, unmount took the whole component down — visible immediately because React's development double-invoke fires it on every mount. The cleanup is now guarded by viewer.isDestroyed(), and the scene wrapper guards removals too.",
+   "doubleClick": "Double click at canvas centre over the drawn tile at 1,400 m → doitt:119910 selected, details panel correct, no error. Cesium's own LEFT_DOUBLE_CLICK pick is removed at viewer construction; this arm shows the removal costs nothing the product used.",
+   "notALiveRegion": "The status element reports role=null and carries data-far-tier-declared/-drawn/-near/-not-declared/-absent/-checksum-mismatch/-build-failure/-over-budget.",
+   "defaultSessionUnchanged": "Same URL WITHOUT farTier=on: no status line in the DOM, no far-tier dataset attribute, ZERO far-tier network requests, no farTier parameter written back to the URL, and the same canvas-centre click still returns doitt:119910.",
+   "notCovered": "THE BUILD-FAILURE AND OVER-BUDGET STATES WERE NOT REACHED IN THE APPLICATION. Both are proven by fixture only: the prototype tile builds, and one cell at about 320 KiB cannot approach a 64 MiB ceiling. They are states this run did not exercise, not states it verified.",
+   "screenshot": "artifacts/far-tier-runtime-20260818/review-fixes-far-1400m.png"
+  },
+  "rollbackRehearsal": "farTier=off renders no far-tier line at all and the same click returns the same building. The flag also SURVIVES the settled-camera rewrite, which it did not in the first revision — the production writer did not pass the then-optional field, so ?farTier=on was dropped on the opening camera move. The field is now REQUIRED so a call site that forgets it fails typecheck.",
+  "distanceGating": {
+   "method": "Camera straight down over member building doitt:119910 at two heights, sampling the status line BEFORE the click (selecting a building flies the camera, which itself drops the tile to `near` — live proof the selection is camera-driven).",
+   "farPose": {
+    "heightMeters": 1400,
+    "line": "Far tier · 1 drawn · 1 declared",
+    "clicked": "doitt:119910",
+    "screenshot": "artifacts/far-tier-runtime-20260818/selection-1400m.png"
+   },
+   "nearPose": {
+    "heightMeters": 600,
+    "line": "Far tier · 0 drawn · 1 declared · 1 near (massing drawing)",
+    "reRunAfterFixes": "Reproduced exactly after the review fixes, and now with NOTHING FETCHED for the cell: the near pose's only far-tier request is the inventory.",
+    "clicked": "doitt:119910",
+    "screenshot": "artifacts/far-tier-runtime-20260818/selection-600m.png",
+    "visual": "Uniform tan massing across the whole view; no textured tile anywhere."
+   },
+   "verdict": "The tile is drawn beyond the edge and withheld inside it, the massing is restored inside it, and BOTH poses return the same correct building id."
+  }
+ },
+ "distanceSelection": {
+  "statement": "PER-CELL, PER-FRAME. A baked tile is drawn only while the camera is beyond the tier's pre-registered near edge; inside it the tile is hidden and the massing draws normally.",
+  "itBoundsLOADINGToo": "AND IT BOUNDS LOADING, NOT ONLY DRAWING — which it did not in the first revision. That revision fetched, verified and uploaded EVERY declared cell the moment the tier was switched on, with no distance bound at all, and then hid all but the far ones. With one baked cell nothing visible was wrong; at mass-bake scale it would have pulled the whole island through the network to draw a ring. Loading now uses the same predicate, hysteresis included, and bytes are released when a cell comes inside its exit edge. A cell inside the edge is never fetched, and reports `near`.",
+  "retryPolicy": "A cell is attempted ONCE per in-range episode, so a permanently absent tile is not refetched on every camera move. Leaving the band clears the attempt, so approaching the cell again retries it — which is how a tile the operator restores heals without a page reload.",
+  "whyItIsNotOptional": "Without it the far tier is not a distance tier. Drawing every declared cell puts merged, roof-capped, atlas-textured geometry directly under the viewer's nose, which is exactly what the 1,200 m edge exists to prevent.",
+  "metric": {
+   "id": "nearest-point-of-tile-rectangle-plus-camera-height",
+   "definition": "Horizontal distance from the camera's ground track to the NEAREST POINT of the cell's tile rectangle — each axis clamped into the rectangle, so a camera over the cell scores zero horizontally — combined with camera height by hypot.",
+   "scale": "The frozen planar metric rect-euclidean-frozen-scale-v1 (84412.702 / 111049.654 m per degree), not geodesics.",
+   "whyNearestPoint": "The question is whether the WHOLE cell is far enough away to be drawn coarsely, so it must be answered with the distance to the closest part of it. Centre-minus-half-diagonal was considered and REJECTED: it approximates the same bound but is loose on non-square rectangles, and the clamped form is barely more arithmetic.",
+   "limitation": "BUILDING HEIGHT IS NOT MODELLED. The rectangle is a ground footprint, so a tall building is nearer to a high camera than this distance reports. The exit band absorbs it; it is named here rather than left to be discovered."
+  },
+  "thresholds": {
+   "enterMeters": 1200,
+   "enterSource": "FAR_TIER_NEAR_EDGE_METERS, the tier's own pre-registered edge, restated rather than reinvented.",
+   "exitMeters": 1080,
+   "exitBandMeters": 120,
+   "hysteresis": "A cell is drawn at or beyond 1,200 m and is not dropped until it comes nearer than 1,080 m, so a camera hovering on the line cannot flip it every frame.",
+   "bandProvenance": "120 m is 10 percent of the near edge. IT IS AN ARITHMETIC CHOICE, NOT A MEASURED ONE. No flicker rate was recorded and no alternative band was compared. A later reader must not inherit it as evidence."
+  },
+  "massingFollowsTheSameDecision": "The alpha restore is driven by the SAME per-cell selection, so a cell the camera has come close to shows ordinary tan massing at full opacity and picks exactly as it did before the far tier existed. A tile is also created HIDDEN and shown only by the first selection pass, so it can never appear for a frame at a distance the tier does not serve.",
+  "blockEight35Interplay": "Selection measures against a tile rectangle, and Block 835 has none, so the anchor refuses that cell before selection is ever consulted. There is no 'distance to a cell with no rectangle' case, which is why none is answered.",
+  "nearIsNotAFailure": "A tile held back by distance reports the state `near`, counted inside `declared` and never with `absent`, `checksum-mismatch` or `build-failure`. Folding it into any of them would make an ordinary close-up session read as a broken far tier. Since loading is distance-bounded, `near` no longer asserts that the bytes were verified — only that the cell is not drawn because of distance.",
+  "wakingTheDensePass": "Far-tier selection and the massing alpha writes live inside the dense render pass, so residency changes have to WAKE it. They now bump a generation the dense effect depends on. Before that fix the tier activated only when some unrelated dense dependency happened to change: a camera already stationary when the tiles finished loading got the primitives added, hidden, and nothing to show them until the user moved. A bounded post-render watcher does the same for the frame a model becomes `ready`, and gives up after 900 frames rather than driving frames forever for a tile that will never upload."
+ }
+}

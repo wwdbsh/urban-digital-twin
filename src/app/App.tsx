@@ -59,6 +59,7 @@ import { TRAVEL_CONTEXT_BUDGETS, TRAVEL_CONTEXT_RELEASE_ID, TRAVEL_CONTEXT_TILE_
 import { AggregateRequestBudget, ComposedReleaseAdapter, type ComposedReleaseMetrics } from "../runtime/composed-release-runtime";
 import { EXTERIOR_PILOT_RELEASE_ID, createExteriorPilotFaultFetcher, loadExteriorPilotRelease, parseExteriorPilotFault, type CommercialStorefrontPlacement, type LoadedExteriorPilotRelease } from "../runtime/exterior-pilot-release";
 import { BLOCK835_PUBLIC_REALM_RELEASE_ID, createBlock835PublicRealmFaultFetcher, loadBlock835PublicRealmRelease, parseBlock835PublicRealmFault, publicRealmFeatureToFeature, type Block835PublicRealmFeature, type LoadedBlock835PublicRealmRelease } from "../runtime/block835-public-realm-release";
+import { farTierStatusLine, type FarTierStateSummary } from "../runtime/far-tier-serving";
 import { EXTERIOR_RUNTIME_BUDGETS, exteriorOutcomeCacheKeys, exteriorRefusalRawStopCode, exteriorRefusalStatement, exteriorRefusalStopCode, loadExteriorCellRuntime, type ExteriorCellOutcome, type ExteriorCellRuntime, type ExteriorHeadRequest, type ExteriorRefusedBuilding } from "../runtime/exterior-cell-runtime";
 import { EXTERIOR_T1_RELEASE_IDS } from "../release/exterior-t1-variants";
 import { PROBE_MIP_CHAIN_MULTIPLIER, PROBE_TILE_WIRE_BYTES, baseLevelByteLength, predictedTextureByteLength } from "../features/explorer/gpu-texture-probe";
@@ -834,6 +835,41 @@ export const EXTERIOR_SCHEDULER_OFF_VALUE = "off" as const;
 export const EXTERIOR_SCHEDULER_DEFAULT_ON = true;
 
 /**
+ * T003 opt-in: the baked far-tier tiles. `?farTier=on`.
+ *
+ * DEFAULT OFF, which is the whole point of shipping it this way. The far tier
+ * replaces the tan massing draw with baked geometry whose appearance defects
+ * are open and owned by T013, so no session gets it without asking. It is a
+ * member of the exterior URL state rather than a boot-time read for the reason
+ * the scheduler flag documents above: every settled camera move rewrites the
+ * whole URL, and a parameter the writer does not know about dies on the first
+ * pan.
+ *
+ * Because the default is OFF, the URL states the opt-IN and stays silent
+ * otherwise — so a default session's URL is character-identical to what it is
+ * today. `App.test.tsx` pins that.
+ */
+export const FAR_TIER_PARAM = "farTier" as const;
+export const FAR_TIER_ON_VALUE = "on" as const;
+export const FAR_TIER_OFF_VALUE = "off" as const;
+
+/**
+ * THE ROLLBACK SWITCH (T003).
+ *
+ * One constant, read in exactly two places — the URL parse default and the
+ * far-tier resolve — so reverting the far tier is a one-token edit rather than
+ * an archaeology exercise. Flipping it to `true` makes the far tier the default
+ * and inverts which sessions are silent, without touching the parser or the
+ * writer.
+ */
+export const FAR_TIER_DEFAULT_ON = false;
+
+/** The URL states whatever the default is NOT, so the default stays silent. */
+export function farTierOptOutValue(): string {
+  return FAR_TIER_DEFAULT_ON ? FAR_TIER_OFF_VALUE : FAR_TIER_ON_VALUE;
+}
+
+/**
  * Which spelling a URL carries is decided by the default, not hardcoded: the
  * URL states the OPT-OUT and stays silent about the default. A default-on
  * session therefore serializes no scheduler parameter at all, and flipping
@@ -891,10 +927,23 @@ export interface ExteriorStreamingUrlState {
   scheduler: boolean;
   /** The T005 detail radius in metres, or `null` when the URL names none. */
   detailRadiusMeters: number | null;
+  /** Whether this session opted in to the T003 baked far tier. */
+  farTier: boolean;
 }
 
 /** What a URL write needs: the intent plus the activation it resolved to. */
 export interface ExteriorStreamingUrlWrite {
+  /**
+   * Whether this session opted in to the T003 baked far tier.
+   *
+   * REQUIRED, and deliberately so. It was optional for one revision and the
+   * production writer — which names every other field explicitly — simply did
+   * not pass it, so the flag defaulted and `?farTier=on` was dropped by the
+   * first settled-camera `replaceState`. That is the exact defect the scheduler
+   * flag above had to be fixed for, reintroduced by an optional field. Required
+   * means a call site that forgets it fails typecheck instead of failing a user.
+   */
+  farTier: boolean;
   override: ExteriorStreamingOverride;
   /** The release actually streaming, so an explicit link is never ambiguous. */
   releaseId: string;
@@ -948,6 +997,12 @@ export function appendExteriorProfileUrl(baseUrl: string, state: ExteriorStreami
   else url.searchParams.delete("exteriorProfile");
   if (state.override === "on" && state.canarySnapshotId) url.searchParams.set("exteriorCanary", state.canarySnapshotId);
   else url.searchParams.delete("exteriorCanary");
+  // The far tier is written ONLY when it differs from the default, and the
+  // `delete` half is mandatory: an `if (x) set(...)` with no `else delete(...)`
+  // leaks a stale parameter across the next camera-driven `replaceState`, which
+  // is the exact defect the scheduler flag had to be fixed for.
+  if (state.farTier !== FAR_TIER_DEFAULT_ON) url.searchParams.set(FAR_TIER_PARAM, farTierOptOutValue());
+  else url.searchParams.delete(FAR_TIER_PARAM);
   return url.toString();
 }
 
@@ -962,6 +1017,13 @@ export function parseExteriorStreamingUrl(href: string): ExteriorStreamingUrlSta
   const schedulerOn = schedulerParam === EXTERIOR_SCHEDULER_ON_VALUE ? true
     : schedulerParam === EXTERIOR_SCHEDULER_OFF_VALUE ? false
     : EXTERIOR_SCHEDULER_DEFAULT_ON;
+  // Same fail-direction as the scheduler: exactly two spellings are accepted,
+  // and anything else — including a link this build cannot honour — resolves to
+  // the build's own default rather than to a third state nobody measured.
+  const farTierParam = url.searchParams.get(FAR_TIER_PARAM);
+  const farTierOn = farTierParam === FAR_TIER_ON_VALUE ? true
+    : farTierParam === FAR_TIER_OFF_VALUE ? false
+    : FAR_TIER_DEFAULT_ON;
   // An explicit disable outranks every other exterior parameter: a link that
   // says "off" must never resolve to a wave because it also carries a release.
   const requestedRelease = url.searchParams.get("exteriorCells");
@@ -979,6 +1041,7 @@ export function parseExteriorStreamingUrl(href: string): ExteriorStreamingUrlSta
   return {
     override,
     explicitReleaseId,
+    farTier: farTierOn,
     profile: (disabled ? null : parseExteriorRenderProfile(url.searchParams.get("exteriorProfile"))) ?? DEFAULT_EXTERIOR_RENDER_PROFILE,
     canarySnapshotId: canary && canary.trim().length > 0 ? canary : null,
     // THE SPLIT (T006 B2). `exteriorStreaming=off` used to disable the exterior
@@ -1396,7 +1459,7 @@ export function App() {
   const initialPublicRealmRequested = typeof window !== "undefined" && new URL(window.location.href).searchParams.get("publicRealm") === BLOCK835_PUBLIC_REALM_RELEASE_ID;
   const initialPublicRealmFeatureId = typeof window !== "undefined" ? new URL(window.location.href).searchParams.get("publicRealmFeature") : null;
   const initialExteriorStreaming: ExteriorStreamingUrlState = typeof window === "undefined"
-    ? { override: null, explicitReleaseId: null, profile: DEFAULT_EXTERIOR_RENDER_PROFILE, canarySnapshotId: null, scheduler: false, detailRadiusMeters: null }
+    ? { override: null, explicitReleaseId: null, profile: DEFAULT_EXTERIOR_RENDER_PROFILE, canarySnapshotId: null, scheduler: false, detailRadiusMeters: null, farTier: FAR_TIER_DEFAULT_ON }
     : parseExteriorStreamingUrl(window.location.href);
   const stage3RenderProofRequested = import.meta.env.DEV && typeof window !== "undefined" && new URL(window.location.href).searchParams.get("stage3Proof") === "storefront-picks";
   const block835PerformanceMode = import.meta.env.DEV && typeof window !== "undefined" ? block835PerformanceProbeMode(window.location.search) : null;
@@ -1470,6 +1533,16 @@ export function App() {
   // no scheduler control, only the URL flag, so the value cannot change within a
   // session and no setter exists to change it by accident.
   const exteriorSchedulerRequested = initialExteriorStreaming.scheduler;
+  const farTierRequested = initialExteriorStreaming.farTier;
+  /**
+   * Read by `navigationUrlForApp`, which is a stable callback that must not
+   * close over a render-scoped value. Without this the flag is dropped by the
+   * first settled-camera `replaceState` — measured, not theorised: the first
+   * run of this feature lost `farTier=on` on the opening camera move.
+   */
+  const farTierRequestedRef = useRef(farTierRequested);
+  farTierRequestedRef.current = farTierRequested;
+  const [farTierState, setFarTierState] = useState<FarTierStateSummary | null>(null);
   // T005 detail radius, read once at boot beside the flag it qualifies and for
   // the same reason: this build has no radius control, only the URL parameter.
   const exteriorDetailRadiusMeters = initialExteriorStreaming.detailRadiusMeters;
@@ -1645,7 +1718,7 @@ export function App() {
   const getOverlayUrlFields = useCallback(() => navigationOverlayFields(exteriorRequestedRef.current, selectedStorefrontIdRef.current), []);
   const navigationUrlForApp = useCallback((value: Parameters<typeof navigationUrl>[0], base: string) => appendExteriorProfileUrl(
     appendBlock835PublicRealmUrl(navigationUrl(value, base), publicRealmRequestedRef.current, selectedPublicRealmIdRef.current),
-    { override: exteriorStreamingOverrideRef.current, releaseId: exteriorCellReleaseIdRef.current, streaming: exteriorStreamingRequestedRef.current, profile: exteriorProfileRef.current, canarySnapshotId: exteriorCanarySnapshotIdRef.current, scheduler: exteriorSchedulerRequestedRef.current, detailRadiusMeters: exteriorDetailRadiusMetersRef.current },
+    { override: exteriorStreamingOverrideRef.current, releaseId: exteriorCellReleaseIdRef.current, streaming: exteriorStreamingRequestedRef.current, profile: exteriorProfileRef.current, canarySnapshotId: exteriorCanarySnapshotIdRef.current, scheduler: exteriorSchedulerRequestedRef.current, detailRadiusMeters: exteriorDetailRadiusMetersRef.current, farTier: farTierRequestedRef.current },
   ), []);
   const updateSelectedStorefront = useCallback((storefrontId: string | null) => {
     selectedStorefrontIdRef.current = storefrontId;
@@ -4053,6 +4126,8 @@ export function App() {
       >
         <CesiumViewport
           adapter={activeAdapter}
+          farTier={farTierRequested}
+          onFarTierState={setFarTierState}
           assetResolver={exteriorActive && exteriorOverlay ? exteriorOverlay.resolver : activeAdapter.assetResolver}
           focusRequest={focusRequest}
           focusFeatureId={focusFeatureId}
@@ -4115,6 +4190,35 @@ export function App() {
           {publicRealmActive ? <strong title={publicRealmStatusMessage}>Block 835 · public realm · 4 semantic classes · 4 intersections</strong> : exteriorActive ? <strong title={exteriorMessage}>Block 835 · 14 buildings · {exteriorOverlay?.diagnostics.acceptedStorefronts ?? 0} signs</strong> : <strong>Local runtime layer</strong>}
           {!exteriorRequested && <span>{civicMode ? `Real NYC civic-context release · ${TRAVEL_CONTEXT_RELEASE_ID} over base ${CITYWIDE_RELEASE_ID} · local snapshot-relative coverage` : citywideMode ? `Real NYC citywide release · ${CITYWIDE_RELEASE_ID} · local snapshot-relative coverage` : dataMode === "real-pilot" ? "Real NYC pilot · bounded Flatiron/NoMad/Union Square coverage" : "Synthetic fixture only · no real Manhattan coverage"}</span>}
           {exteriorRequested && !exteriorActive && <span className="runtime-note-overlay" role="status">{exteriorLoadState === "loading" ? "Block 835 overlay · loading local release…" : exteriorMessage || "Block 835 overlay unavailable; base release remains active."}</span>}
+          {/* THE FAR TIER'S ONE LINE. An aggregate over the whole tier, never a
+              notice per cell: 883 cells' worth of per-cell notices would say
+              something true of the tier as a whole 883 times, and would make one
+              staging gap look like a catastrophe. Per-cell detail is on the
+              viewport container as `data-far-tier-failures`, inspectable without
+              being shouted. The counts are deliberately separate columns —
+              checksum-mismatch is an integrity failure, not another spelling of
+              absent, and build-failure is neither — and the line is present only
+              when the session opted in.
+
+              IT IS NOT A LIVE REGION, and that is a correction. The counts move
+              with the CAMERA: every pan changes how many cells are drawn versus
+              near, so `role="status"` re-announced the whole line to a screen
+              reader on every camera move — a tier-status announcement fired as
+              navigation feedback, which is noise that would drive a user to turn
+              announcements off. The same numbers are exposed as `data-far-tier-*`
+              attributes for tests and inspection, and the line stays visible;
+              what it no longer does is interrupt. */}
+          {farTierRequested && farTierState && <span
+            className="runtime-note-overlay"
+            data-far-tier-declared={farTierState.declared}
+            data-far-tier-drawn={farTierState.drawn}
+            data-far-tier-near={farTierState.near}
+            data-far-tier-not-declared={farTierState.notDeclared}
+            data-far-tier-absent={farTierState.absent}
+            data-far-tier-checksum-mismatch={farTierState.checksumMismatch}
+            data-far-tier-build-failure={farTierState.buildFailure}
+            data-far-tier-over-budget={farTierState.overBudget}
+          >{farTierStatusLine(farTierState)} · visual-only; picking, identity and provenance are unchanged.</span>}
           {publicRealmActive && <span className="runtime-note-overlay" role="status">NYC OTI Planimetrics local snapshot · curb profile and crosswalk striping are estimated, source-constrained, and not survey/current-paint truth.</span>}
           {publicRealmRequested && !publicRealmActive && <span className="runtime-note-overlay" role="status">{publicRealmLoadState === "loading" ? "Block 835 public realm · loading local release…" : publicRealmStatusMessage || "Block 835 public realm unavailable; the existing base/exterior state was left unchanged."}</span>}
           {publicRealmRequested && <button type="button" onClick={disablePublicRealm}>Disable public realm</button>}

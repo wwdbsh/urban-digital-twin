@@ -1,0 +1,68 @@
+{
+ "schemaVersion": "1.0",
+ "recordId": "far-tier-hlod-runtime-20260818:stage-0-picking-spike",
+ "task": "T003",
+ "artifact": "far-tier-runtime-picking-spike",
+ "capturedAt": null,
+ "capturedAtStatement": "NULL BY CONSTRUCTION, matching every capture record in this goal.",
+ "status": "STAGE 0 GATE PASSED — option (c) is WORKABLE, but NOT by the mechanism the frozen plan specified. Both halves of that mechanism were measured and both are wrong.",
+ "headline": "Keeping the massing in the scene for picking while the far tile draws over it DOES work. It does not work via alpha->0 with allowPicking:false: alpha 0 removes the instance from the pick pass entirely, and allowPicking:false does not remove the tile from the pick pass at all.",
+ "harness": {
+  "file": "t003-picking-spike.html + src/picking-spike-main.tsx",
+  "discipline": "The massing instance is constructed byte-for-byte as CesiumViewport.denseBuildingInstance builds it — same PolygonGeometry, same POSITION_ONLY vertex format, same PerInstanceColorAppearance(flat, translucent), same per-instance colour and show attributes — so the spike tests the shipped construction and not a lookalike.",
+  "layout": "Six 40 m boxes in one row 120 m apart, camera straight down from 1,500 m (inside the far tier own envelope), alternating far/near roles so hidden subjects and visible controls appear in the SAME frame.",
+  "firstAttemptWasInvalid": "The first layout used two rows at an oblique pitch and ITS OWN BASELINE FAILED — far:4 picked near:4 before anything was hidden, because the near row occluded the far row. A spike whose control arm is wrong cannot answer anything. The rewrite added an explicit baselineTrustworthy gate, which now reads true (6 of 6 correct)."
+ },
+ "findings": [
+  {
+   "id": "F1",
+   "claim": "Per-instance colour alpha 0 REMOVES the instance from the pick pass, exactly like show=false.",
+   "evidence": "With no tile present at all, alpha 0 returns pickedId null for every far subject; the visible controls in the same frame all pick correctly.",
+   "mechanism": "Cesium discards translucent fragments below an alpha cutoff, and the discard happens inside czm_non_pick_main() — which the pick fragment shader calls BEFORE writing the pick id — so the fragment never reaches the pick output."
+  },
+  {
+   "id": "F2",
+   "claim": "The alpha cutoff is 0.004, and it is sharp.",
+   "evidence": "Sweep with no tile: alpha 0 FAIL, 0.002 FAIL, 0.004 PASS, 0.01 PASS, 0.02 PASS, 0.05 PASS, 0.1 PASS.",
+   "consequence": "A massing kept for picking must carry alpha >= 0.004, not 0. At 0.4% opacity the measured tint on the tile is ZERO 8-bit levels on every channel."
+  },
+  {
+   "id": "F3",
+   "claim": "allowPicking:false does NOT remove a Primitive from the pick pass. It only clears the pick id, leaving an invisible-id occluder that still writes depth.",
+   "evidence": "With the opaque tile present, picking fails at EVERY alpha including 0.5 — a plainly visible massing. Removing the tile restores picking at 0.004. The show attribute was read back as [1] in each failing case, so the instance really was shown.",
+   "sourceConfirmation": "cesium 1.143.0 Build/CesiumUnminified/index.js:48744-48765 — the draw command is pushed into the command list whenever passes.render OR passes.pick, and allowPicking only chooses between colorCommand.pickId = v_pickColor or else leaves it unset.",
+   "whyItMatters": "The frozen plan treated allowPicking:false as sufficient to keep the tile out of the way of a click. It is not, and no amount of tuning the massing alpha compensates."
+  }
+ ],
+ "escapeRoutes": [
+  {
+   "id": "D",
+   "approach": "Hide the far-tier primitives for the DURATION of the scene.pick / drillPick call, then restore.",
+   "result": "WORKS — 3 of 3 far subjects pick correctly, tile visible again immediately after.",
+   "whyItIsSafe": "The pick renders into an offscreen framebuffer; no presented frame is affected, so the toggle cannot be seen. The tile stays OPAQUE, so it self-occludes correctly.",
+   "recommendation": "RECOMMENDED."
+  },
+  {
+   "id": "E",
+   "approach": "Draw the tile in the TRANSLUCENT pass, which does not write depth.",
+   "result": "WORKS — 3 of 3 pick correctly.",
+   "caveat": "A translucent merged tile cannot self-occlude: buildings behind buildings INSIDE the same tile would show through each other. Measured and recorded, NOT recommended."
+  }
+ ],
+ "contractQuestionsAnswered": {
+  "q1_invisibleMassingStillReturnsTheRightId": "YES, under route D at alpha >= 0.004. 3 of 3 far subjects returned their own id.",
+  "q2_noVisualBleedOrZFight": "NO BLEED MEASURED. Reading back rendered pixels over each far subject, tile-only and tile-plus-massing are IDENTICAL at [138,107,79] on all three subjects — max channel delta 0. No z-fighting was observed either: the massing is translucent and Cesium translucent state does not write depth, so it cannot fight the opaque tile.",
+  "q3_drillPickOrderUnaffected": "The tile NEVER appears in a drill result (tileInDrill false everywhere), and every near-tier control subject picks correctly in every arm, so other tiers keep their slots.",
+  "q4_frameCost": "Not materially worse. Every arm measured FASTER than the all-visible baseline (deltas -0.02 to -0.06 ms/frame at 60 frames), which is expected since a near-zero-alpha instance shades fewer visible pixels. The measurement is a 6-box synthetic scene and is NOT a claim about the citywide primitive."
+ },
+ "whatThisDoesNotShow": [
+  "This is a synthetic 6-box scene, not the citywide dense primitive. It answers a mechanism question, not a performance question at island scale.",
+  "No far-tier tile bytes were loaded; the tile stand-in is an opaque Primitive of the same extrusions.",
+  "Nothing here is visual acceptance of the far tier."
+ ],
+ "consequenceForImplementation": [
+  "The massing hide must write alpha >= 0.004 rather than 0, and must NOT use the show attribute, which is what the shipped comment in CesiumViewport.tsx warns kills picking.",
+  "Every scene.pick and scene.drillPick call in the app must bracket the far-tier primitives with show=false/true, or the far tier will silently swallow clicks at far range.",
+  "That bracketing is a cross-cutting change to the pick path and is the main design consequence of Stage 0."
+ ]
+}

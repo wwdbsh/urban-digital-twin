@@ -17,6 +17,10 @@ data/generated/
 /data/generated
 public/tiles/
 public/data/
+# T003 far-tier serving root: staged baked tiles. The bytes are local work
+# product; data/far-tier-hlod-runtime-20260818/payload-inventory.json is the
+# committed artifact that pins them.
+public/far-tier/
 artifacts/offline-ingest/
 __pycache__/
 *.pyc
@@ -227,3 +231,9 @@ artifacts/far-tier-hlod-v3-20260818/
 # data/far-tier-hlod-instrument-20260818/pinned-instrument-spec.json, so nothing
 # here is evidence that is not also committed.
 artifacts/far-tier-instrument-20260818/
+
+# T003 far-tier runtime work root: Stage 0 spike screenshots and scratch. The
+# spike's numbers are committed in data/far-tier-hlod-runtime-20260818/ with a
+# checksum sidecar; the harness itself is committed and re-runnable.
+artifacts/far-tier-runtime-20260818/
+artifacts/far-tier-hlod-20260818/
