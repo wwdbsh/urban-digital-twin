@@ -30,7 +30,7 @@
    "id": "F3",
    "claim": "allowPicking:false does NOT remove a Primitive from the pick pass. It only clears the pick id, leaving an invisible-id occluder that still writes depth.",
    "evidence": "With the opaque tile present, picking fails at EVERY alpha including 0.5 — a plainly visible massing. Removing the tile restores picking at 0.004. The show attribute was read back as [1] in each failing case, so the instance really was shown.",
-   "sourceConfirmation": "cesium 1.143.0 Build/CesiumUnminified/index.js:48744-48765 — the draw command is pushed into the command list whenever passes.render OR passes.pick, and allowPicking only chooses between colorCommand.pickId = v_pickColor and undefined.",
+   "sourceConfirmation": "cesium 1.143.0 Build/CesiumUnminified/index.js:48744-48765 — the draw command is pushed into the command list whenever passes.render OR passes.pick, and allowPicking only chooses between colorCommand.pickId = v_pickColor or else leaves it unset.",
    "whyItMatters": "The frozen plan treated allowPicking:false as sufficient to keep the tile out of the way of a click. It is not, and no amount of tuning the massing alpha compensates."
   }
  ],

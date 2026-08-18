@@ -109,7 +109,8 @@ vi.mock("../runtime/exterior-default-activation", async (importOriginal) => {
   };
 });
 
-import { App, EXTERIOR_CELL_STREAMING_RELEASE_ID, EXTERIOR_SCHEDULER_DEFAULT_ON, PINNED_EXTERIOR_CELL_RELEASE_IDS, appendBlock835PublicRealmUrl, appendExteriorProfileUrl, exteriorCellBasePath, exteriorCanarySnapshotMessage, exteriorDeepLinkMessage, exteriorSnapshotOriginLabel, isPinnedExteriorCellRelease, exteriorStreamingActivation, exteriorStreamingFailureMessage, exteriorStreamingNotices, parseExteriorDetailRadiusMeters, parseExteriorStreamingUrl, applyStorefrontResolution, block835PerformanceGate, block835PerformanceProbeMode, block835PublicRealmActivation, block835PublicRealmFailureMessage, isCurrentStorefrontResolution, MOBILE_VIEWPORT_MEDIA_QUERY, mobileExteriorLodPolicy, overlayLayoutPolicy, preserveFeatureSequence, resolveCitywideOverviewResidency, resolveStorefrontBuilding, selectionFocusTransaction, summarizeBlock835Frames, type StorefrontResolutionState } from "./App";
+import { App, EXTERIOR_CELL_STREAMING_RELEASE_ID, EXTERIOR_SCHEDULER_DEFAULT_ON,
+  FAR_TIER_DEFAULT_ON, PINNED_EXTERIOR_CELL_RELEASE_IDS, appendBlock835PublicRealmUrl, appendExteriorProfileUrl, exteriorCellBasePath, exteriorCanarySnapshotMessage, exteriorDeepLinkMessage, exteriorSnapshotOriginLabel, isPinnedExteriorCellRelease, exteriorStreamingActivation, exteriorStreamingFailureMessage, exteriorStreamingNotices, parseExteriorDetailRadiusMeters, parseExteriorStreamingUrl, applyStorefrontResolution, block835PerformanceGate, block835PerformanceProbeMode, block835PublicRealmActivation, block835PublicRealmFailureMessage, isCurrentStorefrontResolution, MOBILE_VIEWPORT_MEDIA_QUERY, mobileExteriorLodPolicy, overlayLayoutPolicy, preserveFeatureSequence, resolveCitywideOverviewResidency, resolveStorefrontBuilding, selectionFocusTransaction, summarizeBlock835Frames, type StorefrontResolutionState } from "./App";
 import { ExteriorFallbackNotice, digestExteriorNotices, exteriorNoticeEntryKey, type ExteriorNoticeEntry } from "./ExteriorFallbackNotice";
 import { exteriorDeferredCellNotice, exteriorQualifiedNotice, exteriorReleasedArtifactNotice } from "../runtime/exterior-wave-attribution";
 import { exteriorUnanchoredNotice } from "../features/explorer/CesiumViewport";
@@ -693,7 +694,7 @@ describe("exterior streaming profiles and canary state", () => {
 
   it("round-trips profile and canary state and clears all three when streaming is explicitly disabled", () => {
     const enabled = canonicalUrl({ requested: true, profile: "inspection", canarySnapshotId: "snapshot:v3" });
-    expect(parseExteriorStreamingUrl(enabled)).toEqual({ override: "on", explicitReleaseId: "udt-fixture-exterior-cells", profile: "inspection", canarySnapshotId: "snapshot:v3", scheduler: false, detailRadiusMeters: null });
+    expect(parseExteriorStreamingUrl(enabled)).toEqual({ override: "on", explicitReleaseId: "udt-fixture-exterior-cells", profile: "inspection", canarySnapshotId: "snapshot:v3", scheduler: false, detailRadiusMeters: null, farTier: FAR_TIER_DEFAULT_ON });
     const disabled = new URL(appendExteriorProfileUrl(enabled, { override: "off", streaming: false, releaseId: "udt-fixture-exterior-cells", profile: "inspection", canarySnapshotId: "snapshot:v3", scheduler: false }));
     expect(disabled.searchParams.has("exteriorCells")).toBe(false);
     expect(disabled.searchParams.has("exteriorProfile")).toBe(false);
@@ -701,7 +702,7 @@ describe("exterior streaming profiles and canary state", () => {
     // The distinct disable sentinel: "which release" and "no release at all" are
     // different questions, so an explicit off is not an absent parameter.
     expect(disabled.searchParams.get("exteriorStreaming")).toBe("off");
-    expect(parseExteriorStreamingUrl(disabled.toString())).toEqual({ override: "off", explicitReleaseId: null, profile: DEFAULT_EXTERIOR_RENDER_PROFILE, canarySnapshotId: null, scheduler: false, detailRadiusMeters: null });
+    expect(parseExteriorStreamingUrl(disabled.toString())).toEqual({ override: "off", explicitReleaseId: null, profile: DEFAULT_EXTERIOR_RENDER_PROFILE, canarySnapshotId: null, scheduler: false, detailRadiusMeters: null, farTier: FAR_TIER_DEFAULT_ON });
     expect(disabled.searchParams.get("publicRealm")).toBe("manhattan-esb-block-public-realm-20260806");
     expect(disabled.searchParams.get("feature")).toBe("doitt:778052");
   });
@@ -722,7 +723,7 @@ describe("exterior streaming profiles and canary state", () => {
     const chosen = new URL(canonicalUrl({ requested: true, override: null, releaseId: CANARY_EXTERIOR_RELEASE_ID, profile: nonDefault, canarySnapshotId: null }));
     expect(chosen.searchParams.get("exteriorProfile")).toBe(nonDefault);
     expect(chosen.searchParams.has("exteriorCells")).toBe(false);
-    expect(parseExteriorStreamingUrl(chosen.toString())).toEqual({ override: null, explicitReleaseId: null, profile: nonDefault, canarySnapshotId: null, scheduler: false, detailRadiusMeters: null });
+    expect(parseExteriorStreamingUrl(chosen.toString())).toEqual({ override: null, explicitReleaseId: null, profile: nonDefault, canarySnapshotId: null, scheduler: false, detailRadiusMeters: null, farTier: FAR_TIER_DEFAULT_ON });
   });
 
   /**
@@ -876,9 +877,9 @@ describe("exterior streaming profiles and canary state", () => {
   it("ignores an unknown exterior release ID and an unsupported profile instead of guessing", () => {
     // An unpinned release fails closed to an explicit off, so a link naming a
     // release this build does not have is never answered with the promoted one.
-    expect(parseExteriorStreamingUrl("/?exteriorCells=manhattan-exterior-production&exteriorProfile=inspection")).toEqual({ override: "off-unpinned", explicitReleaseId: null, profile: DEFAULT_EXTERIOR_RENDER_PROFILE, canarySnapshotId: null, scheduler: EXTERIOR_SCHEDULER_DEFAULT_ON, detailRadiusMeters: null });
-    expect(parseExteriorStreamingUrl("/?exteriorCells=udt-fixture-exterior-cells&exteriorProfile=cinematic")).toEqual({ override: "on", explicitReleaseId: "udt-fixture-exterior-cells", profile: DEFAULT_EXTERIOR_RENDER_PROFILE, canarySnapshotId: null, scheduler: EXTERIOR_SCHEDULER_DEFAULT_ON, detailRadiusMeters: null });
-    expect(parseExteriorStreamingUrl("/?exteriorCanary=snapshot:v3")).toEqual({ override: null, explicitReleaseId: null, profile: DEFAULT_EXTERIOR_RENDER_PROFILE, canarySnapshotId: null, scheduler: EXTERIOR_SCHEDULER_DEFAULT_ON, detailRadiusMeters: null });
+    expect(parseExteriorStreamingUrl("/?exteriorCells=manhattan-exterior-production&exteriorProfile=inspection")).toEqual({ override: "off-unpinned", explicitReleaseId: null, profile: DEFAULT_EXTERIOR_RENDER_PROFILE, canarySnapshotId: null, scheduler: EXTERIOR_SCHEDULER_DEFAULT_ON, detailRadiusMeters: null, farTier: FAR_TIER_DEFAULT_ON });
+    expect(parseExteriorStreamingUrl("/?exteriorCells=udt-fixture-exterior-cells&exteriorProfile=cinematic")).toEqual({ override: "on", explicitReleaseId: "udt-fixture-exterior-cells", profile: DEFAULT_EXTERIOR_RENDER_PROFILE, canarySnapshotId: null, scheduler: EXTERIOR_SCHEDULER_DEFAULT_ON, detailRadiusMeters: null, farTier: FAR_TIER_DEFAULT_ON });
+    expect(parseExteriorStreamingUrl("/?exteriorCanary=snapshot:v3")).toEqual({ override: null, explicitReleaseId: null, profile: DEFAULT_EXTERIOR_RENDER_PROFILE, canarySnapshotId: null, scheduler: EXTERIOR_SCHEDULER_DEFAULT_ON, detailRadiusMeters: null, farTier: FAR_TIER_DEFAULT_ON });
   });
 
   it("keeps an explicit disable dominant over every other exterior parameter", () => {
@@ -886,7 +887,7 @@ describe("exterior streaming profiles and canary state", () => {
     // the scheduler any more: that is the B2 split, and the citywide overview
     // is not an exterior wave.
     expect(parseExteriorStreamingUrl("/?exteriorStreaming=off&exteriorCells=manhattan-exterior-cells-20260811&exteriorProfile=inspection&exteriorCanary=snapshot:v3"))
-      .toEqual({ override: "off", explicitReleaseId: null, profile: DEFAULT_EXTERIOR_RENDER_PROFILE, canarySnapshotId: null, scheduler: EXTERIOR_SCHEDULER_DEFAULT_ON, detailRadiusMeters: null });
+      .toEqual({ override: "off", explicitReleaseId: null, profile: DEFAULT_EXTERIOR_RENDER_PROFILE, canarySnapshotId: null, scheduler: EXTERIOR_SCHEDULER_DEFAULT_ON, detailRadiusMeters: null, farTier: FAR_TIER_DEFAULT_ON });
     const message = exteriorDeepLinkMessage("/?exteriorStreaming=on");
     expect(message).toContain("exteriorStreaming=on is not supported");
     expect(message).toContain("only exteriorStreaming=off disables the exterior wave");
@@ -1003,7 +1004,7 @@ describe("exterior streaming profiles and canary state", () => {
 
     const canary = new URL(canonicalUrl({ requested: true, releaseId: "manhattan-exterior-cells-20260811", profile: "inspection", canarySnapshotId: "snapshot:v3" }));
     expect(canary.searchParams.get("exteriorCells")).toBe("manhattan-exterior-cells-20260811");
-    expect(parseExteriorStreamingUrl(canary.toString())).toEqual({ override: "on", explicitReleaseId: "manhattan-exterior-cells-20260811", profile: "inspection", canarySnapshotId: "snapshot:v3", scheduler: false, detailRadiusMeters: null });
+    expect(parseExteriorStreamingUrl(canary.toString())).toEqual({ override: "on", explicitReleaseId: "manhattan-exterior-cells-20260811", profile: "inspection", canarySnapshotId: "snapshot:v3", scheduler: false, detailRadiusMeters: null, farTier: FAR_TIER_DEFAULT_ON });
     expect(canary.searchParams.get("feature")).toBe("doitt:778052");
     expect(canary.searchParams.get("publicRealm")).toBe("manhattan-esb-block-public-realm-20260806");
     expect(exteriorDeepLinkMessage(canary.toString())).toBeNull();

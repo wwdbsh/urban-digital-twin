@@ -834,6 +834,41 @@ export const EXTERIOR_SCHEDULER_OFF_VALUE = "off" as const;
 export const EXTERIOR_SCHEDULER_DEFAULT_ON = true;
 
 /**
+ * T003 opt-in: the baked far-tier tiles. `?farTier=on`.
+ *
+ * DEFAULT OFF, which is the whole point of shipping it this way. The far tier
+ * replaces the tan massing draw with baked geometry whose appearance defects
+ * are open and owned by T013, so no session gets it without asking. It is a
+ * member of the exterior URL state rather than a boot-time read for the reason
+ * the scheduler flag documents above: every settled camera move rewrites the
+ * whole URL, and a parameter the writer does not know about dies on the first
+ * pan.
+ *
+ * Because the default is OFF, the URL states the opt-IN and stays silent
+ * otherwise — so a default session's URL is character-identical to what it is
+ * today. `App.test.tsx` pins that.
+ */
+export const FAR_TIER_PARAM = "farTier" as const;
+export const FAR_TIER_ON_VALUE = "on" as const;
+export const FAR_TIER_OFF_VALUE = "off" as const;
+
+/**
+ * THE ROLLBACK SWITCH (T003).
+ *
+ * One constant, read in exactly two places — the URL parse default and the
+ * far-tier resolve — so reverting the far tier is a one-token edit rather than
+ * an archaeology exercise. Flipping it to `true` makes the far tier the default
+ * and inverts which sessions are silent, without touching the parser or the
+ * writer.
+ */
+export const FAR_TIER_DEFAULT_ON = false;
+
+/** The URL states whatever the default is NOT, so the default stays silent. */
+export function farTierOptOutValue(): string {
+  return FAR_TIER_DEFAULT_ON ? FAR_TIER_OFF_VALUE : FAR_TIER_ON_VALUE;
+}
+
+/**
  * Which spelling a URL carries is decided by the default, not hardcoded: the
  * URL states the OPT-OUT and stays silent about the default. A default-on
  * session therefore serializes no scheduler parameter at all, and flipping
@@ -891,10 +926,21 @@ export interface ExteriorStreamingUrlState {
   scheduler: boolean;
   /** The T005 detail radius in metres, or `null` when the URL names none. */
   detailRadiusMeters: number | null;
+  /** Whether this session opted in to the T003 baked far tier. */
+  farTier: boolean;
 }
 
 /** What a URL write needs: the intent plus the activation it resolved to. */
 export interface ExteriorStreamingUrlWrite {
+  /**
+   * Whether this session opted in to the T003 baked far tier.
+   *
+   * OPTIONAL, and absent means the default. Every caller that predates the far
+   * tier therefore keeps writing exactly the URL it wrote before, which is the
+   * property `App.test.tsx` pins: a default session's serialized URL must be
+   * character-identical to today's.
+   */
+  farTier?: boolean;
   override: ExteriorStreamingOverride;
   /** The release actually streaming, so an explicit link is never ambiguous. */
   releaseId: string;
@@ -948,6 +994,12 @@ export function appendExteriorProfileUrl(baseUrl: string, state: ExteriorStreami
   else url.searchParams.delete("exteriorProfile");
   if (state.override === "on" && state.canarySnapshotId) url.searchParams.set("exteriorCanary", state.canarySnapshotId);
   else url.searchParams.delete("exteriorCanary");
+  // The far tier is written ONLY when it differs from the default, and the
+  // `delete` half is mandatory: an `if (x) set(...)` with no `else delete(...)`
+  // leaks a stale parameter across the next camera-driven `replaceState`, which
+  // is the exact defect the scheduler flag had to be fixed for.
+  if ((state.farTier ?? FAR_TIER_DEFAULT_ON) !== FAR_TIER_DEFAULT_ON) url.searchParams.set(FAR_TIER_PARAM, farTierOptOutValue());
+  else url.searchParams.delete(FAR_TIER_PARAM);
   return url.toString();
 }
 
@@ -962,6 +1014,13 @@ export function parseExteriorStreamingUrl(href: string): ExteriorStreamingUrlSta
   const schedulerOn = schedulerParam === EXTERIOR_SCHEDULER_ON_VALUE ? true
     : schedulerParam === EXTERIOR_SCHEDULER_OFF_VALUE ? false
     : EXTERIOR_SCHEDULER_DEFAULT_ON;
+  // Same fail-direction as the scheduler: exactly two spellings are accepted,
+  // and anything else — including a link this build cannot honour — resolves to
+  // the build's own default rather than to a third state nobody measured.
+  const farTierParam = url.searchParams.get(FAR_TIER_PARAM);
+  const farTierOn = farTierParam === FAR_TIER_ON_VALUE ? true
+    : farTierParam === FAR_TIER_OFF_VALUE ? false
+    : FAR_TIER_DEFAULT_ON;
   // An explicit disable outranks every other exterior parameter: a link that
   // says "off" must never resolve to a wave because it also carries a release.
   const requestedRelease = url.searchParams.get("exteriorCells");
@@ -979,6 +1038,7 @@ export function parseExteriorStreamingUrl(href: string): ExteriorStreamingUrlSta
   return {
     override,
     explicitReleaseId,
+    farTier: farTierOn,
     profile: (disabled ? null : parseExteriorRenderProfile(url.searchParams.get("exteriorProfile"))) ?? DEFAULT_EXTERIOR_RENDER_PROFILE,
     canarySnapshotId: canary && canary.trim().length > 0 ? canary : null,
     // THE SPLIT (T006 B2). `exteriorStreaming=off` used to disable the exterior
@@ -1396,7 +1456,7 @@ export function App() {
   const initialPublicRealmRequested = typeof window !== "undefined" && new URL(window.location.href).searchParams.get("publicRealm") === BLOCK835_PUBLIC_REALM_RELEASE_ID;
   const initialPublicRealmFeatureId = typeof window !== "undefined" ? new URL(window.location.href).searchParams.get("publicRealmFeature") : null;
   const initialExteriorStreaming: ExteriorStreamingUrlState = typeof window === "undefined"
-    ? { override: null, explicitReleaseId: null, profile: DEFAULT_EXTERIOR_RENDER_PROFILE, canarySnapshotId: null, scheduler: false, detailRadiusMeters: null }
+    ? { override: null, explicitReleaseId: null, profile: DEFAULT_EXTERIOR_RENDER_PROFILE, canarySnapshotId: null, scheduler: false, detailRadiusMeters: null, farTier: FAR_TIER_DEFAULT_ON }
     : parseExteriorStreamingUrl(window.location.href);
   const stage3RenderProofRequested = import.meta.env.DEV && typeof window !== "undefined" && new URL(window.location.href).searchParams.get("stage3Proof") === "storefront-picks";
   const block835PerformanceMode = import.meta.env.DEV && typeof window !== "undefined" ? block835PerformanceProbeMode(window.location.search) : null;

@@ -1,0 +1,212 @@
+{
+ "schemaVersion": "1.0",
+ "inventoryId": "far-tier-hlod-runtime-20260818",
+ "derivedFrom": {
+  "record": "data/far-tier-hlod-20260818/prototype-provenance.json",
+  "recordSha256": "7b5b2f4452a64600785704f14a1eb18b273ea74c1226935a19caa906677a08a4",
+  "statement": "DERIVED FROM COMMITTED TEXT, NOT FROM A PAYLOAD DIRECTORY. The baked bytes are gitignored local work product; this inventory is re-derivable on a fresh clone and is what the staging script verifies against."
+ },
+ "entries": [
+  {
+   "cellId": "manhattan-exterior-cell-w05-000747-17-38610-35822",
+   "glbSha256": "2f8599256ac45ee509dc7d7ce0da6a56964bac8e3ca66b77e795c1435ff7930b",
+   "glbByteSize": 122976,
+   "atlasSha256": "c159e0508aeb7522620b799b83041461aecf34727f69209bd7efbf992f5c067a",
+   "atlasByteSize": 196947,
+   "members": [
+    {
+     "buildingId": "doitt:119910",
+     "included": true
+    },
+    {
+     "buildingId": "doitt:1283944",
+     "included": true
+    },
+    {
+     "buildingId": "doitt:1292742",
+     "included": true
+    },
+    {
+     "buildingId": "doitt:141215",
+     "included": true
+    },
+    {
+     "buildingId": "doitt:144129",
+     "included": true
+    },
+    {
+     "buildingId": "doitt:147906",
+     "included": true
+    },
+    {
+     "buildingId": "doitt:157460",
+     "included": true
+    },
+    {
+     "buildingId": "doitt:175013",
+     "included": true
+    },
+    {
+     "buildingId": "doitt:21295",
+     "included": true
+    },
+    {
+     "buildingId": "doitt:230832",
+     "included": true
+    },
+    {
+     "buildingId": "doitt:231587",
+     "included": true
+    },
+    {
+     "buildingId": "doitt:25699",
+     "included": true
+    },
+    {
+     "buildingId": "doitt:287400",
+     "included": true
+    },
+    {
+     "buildingId": "doitt:298617",
+     "included": true
+    },
+    {
+     "buildingId": "doitt:303919",
+     "included": true
+    },
+    {
+     "buildingId": "doitt:336066",
+     "included": true
+    },
+    {
+     "buildingId": "doitt:338151",
+     "included": true
+    },
+    {
+     "buildingId": "doitt:36350",
+     "included": true
+    },
+    {
+     "buildingId": "doitt:365723",
+     "included": true
+    },
+    {
+     "buildingId": "doitt:388977",
+     "included": true
+    },
+    {
+     "buildingId": "doitt:423153",
+     "included": true
+    },
+    {
+     "buildingId": "doitt:43432",
+     "included": true
+    },
+    {
+     "buildingId": "doitt:458597",
+     "included": true
+    },
+    {
+     "buildingId": "doitt:460272",
+     "included": true
+    },
+    {
+     "buildingId": "doitt:476191",
+     "included": true
+    },
+    {
+     "buildingId": "doitt:485638",
+     "included": true
+    },
+    {
+     "buildingId": "doitt:507840",
+     "included": true
+    },
+    {
+     "buildingId": "doitt:525242",
+     "included": true
+    },
+    {
+     "buildingId": "doitt:535912",
+     "included": true
+    },
+    {
+     "buildingId": "doitt:549070",
+     "included": true
+    },
+    {
+     "buildingId": "doitt:558878",
+     "included": true
+    },
+    {
+     "buildingId": "doitt:569179",
+     "included": true
+    },
+    {
+     "buildingId": "doitt:57314",
+     "included": true
+    },
+    {
+     "buildingId": "doitt:645563",
+     "included": true
+    },
+    {
+     "buildingId": "doitt:673176",
+     "included": true
+    },
+    {
+     "buildingId": "doitt:694844",
+     "included": true
+    },
+    {
+     "buildingId": "doitt:716925",
+     "included": true
+    },
+    {
+     "buildingId": "doitt:724161",
+     "included": true
+    },
+    {
+     "buildingId": "doitt:804958",
+     "included": true
+    },
+    {
+     "buildingId": "doitt:805073",
+     "included": true
+    },
+    {
+     "buildingId": "doitt:833821",
+     "included": true
+    },
+    {
+     "buildingId": "doitt:846858",
+     "included": true
+    },
+    {
+     "buildingId": "doitt:84871",
+     "included": true
+    },
+    {
+     "buildingId": "doitt:865180",
+     "included": true
+    },
+    {
+     "buildingId": "doitt:917660",
+     "included": true
+    },
+    {
+     "buildingId": "doitt:92955",
+     "included": true
+    },
+    {
+     "buildingId": "doitt:966236",
+     "included": true
+    },
+    {
+     "buildingId": "doitt:990436",
+     "included": true
+    }
+   ]
+  }
+ ]
+}

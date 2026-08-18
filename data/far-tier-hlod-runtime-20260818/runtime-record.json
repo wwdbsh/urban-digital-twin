@@ -1,0 +1,164 @@
+{
+ "schemaVersion": "1.0",
+ "recordId": "far-tier-hlod-runtime-20260818:runtime",
+ "task": "T003",
+ "capturedAt": null,
+ "capturedAtStatement": "NULL BY CONSTRUCTION, matching every capture record in this goal.",
+ "scope": "Runtime serving, verification, placement, suppression contract, explicit state, and the rollback switch for baked far-tier tiles. NOT the mass bake (T004), promotion (T005), or campaign (T007).",
+ "pickingMechanism": {
+  "headline": "ROUTE D. Every pick in the application flows through one bracket that hides the far-tier primitives for the duration of the pick call and restores them in a finally.",
+  "whyItIsNeeded": "A far-tier tile is one merged mesh drawn over the massing it replaces. Two measured CesiumJS facts make that destroy per-building picking unless compensated.",
+  "rejected_allowPicking": {
+   "claim": "allowPicking:false does NOT remove a Primitive from the pick pass.",
+   "mechanism": "It only clears the pick id. The draw command is pushed whenever passes.render OR passes.pick, and allowPicking merely chooses between colorCommand.pickId = \"v_pickColor\" or else leaves it unset.",
+   "sourceCitation": "cesium@1.143.0 Build/CesiumUnminified/index.js:48744-48765",
+   "measurement": "With the opaque tile present, picking failed at EVERY massing alpha including 0.5 — a plainly visible massing — with the show attribute reading back as [1]. Removing the tile restored picking immediately.",
+   "consequence": "The tile is an invisible-id OCCLUDER that writes depth and swallows clicks. The frozen plan treated allowPicking:false as sufficient; it is not, and no alpha tuning compensates."
+  },
+  "rejected_routeE": {
+   "approach": "Draw the tile in the TRANSLUCENT pass, which writes no depth and therefore cannot occlude the pick pass.",
+   "measurement": "WORKS — 3 of 3 far subjects picked correctly.",
+   "whyRejected": "A translucent merged tile cannot self-occlude. Buildings behind buildings INSIDE one tile would show through each other. Recorded because it works, rejected because of what it costs."
+  },
+  "alphaCutoff": {
+   "constant": "FAR_TIER_MASSING_PICK_ALPHA = 0.004",
+   "claim": "A per-instance colour alpha below 0.004 removes the instance from the pick pass entirely, exactly like show=false.",
+   "mechanism": "Cesium discards translucent fragments below the cutoff, and the discard happens inside czm_non_pick_main(), which the pick fragment shader calls BEFORE writing the pick id — so the fragment never reaches the pick output.",
+   "sweep": [
+    {
+     "alpha": 0,
+     "picks": false
+    },
+    {
+     "alpha": 0.002,
+     "picks": false
+    },
+    {
+     "alpha": 0.004,
+     "picks": true
+    },
+    {
+     "alpha": 0.01,
+     "picks": true
+    },
+    {
+     "alpha": 0.02,
+     "picks": true
+    },
+    {
+     "alpha": 0.05,
+     "picks": true
+    },
+    {
+     "alpha": 0.1,
+     "picks": true
+    }
+   ],
+   "zeroTintMeasurement": "Reading back rendered pixels over each far subject, tile-only and tile-plus-massing-at-0.004 were IDENTICAL at [138,107,79] on all three subjects. Maximum channel delta: 0 8-bit levels. The visual cost of holding 0.004 instead of 0 is nil, measured rather than assumed.",
+   "warning": "CLEANING THIS UP TO 0 DESTROYS FAR-RANGE PICKING. Pinned by test."
+  },
+  "bypassPin": "A source-scan test asserts scene.pick and scene.drillPick appear ONLY in far-tier-pick-bracket.ts (and the dev-only Stage 0 spike harness), so a future direct call fails CI instead of silently swallowing far-range clicks.",
+  "forTheNextCesiumUpgrade": "If a future CesiumJS stops pushing non-pickable commands into the pick pass, the bracket becomes unnecessary. far-tier-pick-bracket.test.ts pins the behaviour being compensated for, so that upgrade surfaces as a test result rather than as silence.",
+  "spikeRecord": "data/far-tier-hlod-runtime-20260818/stage-0-picking-spike.json (sha256 a95723fd0973760ff7d539fcc3ccc851bbd0dc053bcb1cf872aebd217f73aa5b)"
+ },
+ "placement": {
+  "anchorSource": "THE CELL ID. The SW corner is tileBounds(cellTileKey(cellId)).west/.south — the ledger invariant that a cell's bounds ARE the WGS84 tile rectangle it is named for (exterior-wave-ledger.ts:785).",
+  "renderBoundsRefused": "CITYWIDE_OVERVIEW_CELL_EXTENTS.renderBounds is WRONG BY CONSTRUCTION for this purpose and is never read. It is the union of the assignment rectangle with every member building's outer ring — 870 of 883 cells extend beyond their assignment rectangle, median 1.257x area, max 2.064x — so anchoring on it would displace each tile by its own overhang. Pinned by a source-scan test.",
+  "block835": "REFUSED, both the ledger spelling and the CITYWIDE_OVERVIEW_CELL_ID_ALIASES spelling. That cell shipped before the wave ledger and its id encodes no tile, so cellTileKey returns null and there is no rectangle to anchor on. Refusing is fail-closed; guessing an origin would place a tile where nobody baked it.",
+  "bakeFrame": {
+   "units": "metres",
+   "origin": "south-west corner of the cell's own WGS84 tile rectangle",
+   "upAxis": "y",
+   "axes": [
+    "east",
+    "up",
+    "-north"
+   ],
+   "metricId": "rect-euclidean-frozen-scale-v1",
+   "frozenPlanarScale": {
+    "metersPerDegreeLongitude": 84412.702,
+    "metersPerDegreeLatitude": 111049.654
+   }
+  },
+  "residualMeasurement": {
+   "statement": "MEASURED ONCE, not assumed negligible. Frozen-planar versus true geodetic placement, at the far corner of the prototype cell's tile rectangle.",
+   "cellId": "manhattan-exterior-cell-w05-000747-17-38610-35822",
+   "tileSizeMeters": {
+    "east": 231.84641052246096,
+    "north": 152.50349212646483
+   },
+   "eastResidualMeters": 0.0811097076484657,
+   "northResidualMeters": -0.0006574940493635495,
+   "residualMeters": 0.08111237250410398,
+   "reading": "8.1 cm across a 232 m cell, or 0.035 percent of the cell width, essentially all of it in the east component. Sub-metre and bounded; pinned by test."
+  }
+ },
+ "distanceBoundary": {
+  "nearEdgeMeters": 1200,
+  "source": "FAR_TIER_NEAR_EDGE_METERS, the tier's own pre-registered value, which also feeds farTierBudgetContractHash() and is therefore embedded in every baked tile's budgetContractSha256.",
+  "notTheMidRing": "NOT the 400 m EXTERIOR_TWO_LOD_NEAR_RING_METERS, and not an admission test derived from EXTERIOR_CELL_SCHEDULER_POLICY.distanceBandEdgesMeters — ADR 0044 §1.1 records those as SORT KEYS rather than admission tests.",
+  "leavesOnly": "Leaves-only selection is DOMINATED BY THE CUT-INDEPENDENT BOUND. B3-B5 bound the maximum over all antichains via maxCut(node) = max(cost(node), sum of maxCut(children)), and excluding nodes beyond the 1,200 m boundary only SUBTRACTS. So a leaves-only runtime cannot exceed a bound that already dominates every cut, and choosing leaves-only is a residency decision rather than a budget risk."
+ },
+ "servingPath": {
+  "separation": "A SEPARATE PATH. The far tier does not extend ExteriorArtifactKind, does not fabricate a canonicalFeatureId for a cell tile, and does not charge a single byte to EXTERIOR_RUNTIME_BUDGETS.",
+  "whyNotExtendTheKind": "That vocabulary is closed (ADR 0051) and its member string is a filesystem path segment inside a hashed artifact envelope — ${audience}/${kind}/${slug(id)}.json — so adding a member would rewrite on-disk layout and every declared checksum of releases that are already immutable.",
+  "whyNoFeatureId": "A far-tier tile is one merged mesh for a whole cell. Fabricating a feature id would put a thing with no feature identity into the map that exists to answer 'which building is this'.",
+  "layout": {
+   "root": "public/far-tier/ (gitignored)",
+   "tile": "far-tier/<cellId>.far_0.glb",
+   "atlas": "far-tier/<cellId>.atlas.png"
+  },
+  "inventory": "data/far-tier-hlod-runtime-20260818/payload-inventory.json with a .sha256 sidecar, DERIVED FROM COMMITTED TEXT (prototype-provenance.json, itself sidecar-verified) rather than from a payload directory, so the gate runs on a fresh clone without staging a byte.",
+  "cache": {
+   "maxCacheEntries": 256,
+   "maxCachedBytes": 67108864,
+   "rationale": "Its own cache with its own ceiling and its own accounting. Sized against the measured prototype tile — 122,976 GLB plus 196,947 atlas, about 320 KiB per cell — so 64 MiB retains roughly 200 cells, spanning the far ring without approaching either neighbour's ceiling.",
+   "additive": "ADDITIVE to the far-tier B3-B5 bars and to the closed criterion #30, never merged. FAR_TIER_BOUND_EXCLUSIONS already records that a retained eviction cache is a cost the frozen bars do not cover."
+  },
+  "criterion30Isolation": "Asserted by test: EXTERIOR_RUNTIME_BUDGETS stays at 256 MiB / 1024 entries / 4 concurrent requests, and the far-tier cap is a different object with different numbers."
+ },
+ "explicitState": {
+  "shape": "ONE aggregate role=status line, never one notice per cell. A per-cell notice would put up to 883 lines in front of a user to say something true of the tier as a whole, and would make a single staging gap look like a catastrophe.",
+  "line": "Far tier · <n> drawn · <n> declared [· <n> not declared] [· <n> absent] [· <n> checksum-mismatch (fail-closed, drawing massing)]",
+  "states": [
+   "declared",
+   "drawn",
+   "not-declared",
+   "absent",
+   "checksum-mismatch"
+  ],
+  "mismatchIsNotAbsence": "CHECKSUM-MISMATCH IS NEVER COLLAPSED INTO ABSENCE. Absence is a staging gap and is ordinary. A mismatch is an integrity failure: bytes exist at the path and are not the bytes that were declared. Reporting the second as the first would turn the loudest signal this path can produce into routine background noise. Counted and reported in its own column; pinned by test.",
+  "perCellDetail": "Container dataset attribute only, mirroring the data-exterior-verified-resource-failures idiom: '<cellId>: <state>: <message>' joined by ' | ', and DELETED rather than emptied when nothing failed, so an ordinary session's DOM is unchanged."
+ },
+ "suppression": {
+  "rule": "BY MEMBER BUILDING ID, NEVER BY CELL. Driven from the tile's members[].included == true set.",
+  "whyNotPerCell": "The V3 bake refused some buildings. Each refusal still owes its massing and its entry in the refusal panel. Hiding a whole cell because a tile arrived would silently erase those refusals and make the panel describe buildings the user can no longer see.",
+  "writeContract": "Every visibility write routes through applyDenseSuppressionDelta and HONORS its skipped list. Applied state is never advanced over a skipped write — doing so makes the record a lie three ways: the id is never retried, the reverse delta later un-flips an instance that was never flipped, and the hidden-instance count drifts by one per skipped write for the life of the layer.",
+  "prototypeCaveat": "THE PROTOTYPE CELL HAS 48 MEMBERS AND ALL 48 ARE included:true. The refused-member path is therefore exercised ONLY by synthetic fixtures in this task, not by real data. A cell with refusals has not been observed end to end."
+ },
+ "doubleResidency": {
+  "ordering": "The massing is hidden STRICTLY AFTER the tile bytes are verified and the model reports ready. There is no window in which neither is drawn, so no flicker.",
+  "overlapBound": "During the overlap the scene holds both the massing instances and the tile for one cell. For the prototype cell that is 48 prisms plus one 122,976-byte merged mesh and its 196,947-byte atlas.",
+  "labelling": "THIS IS ARITHMETIC, NOT A GPU READING. No double-residency measurement was taken. The figure above is an analytic bound from declared byte sizes and member counts, and it is stated as such rather than presented as an observation."
+ },
+ "rollbackSwitch": {
+  "param": "?farTier=on",
+  "defaultConstant": "FAR_TIER_DEFAULT_ON = false",
+  "default": "OFF. No session gets the far tier without asking.",
+  "serialization": "Written ONLY when it differs from the default, with a mandatory else-delete half so the flag cannot leak across a camera-driven replaceState — the exact defect the scheduler flag had to be fixed for.",
+  "defaultSessionUnchanged": "PROVEN BY TEST: a write that names no flag and a write that names the flag at its default produce byte-identical URLs, and neither contains the parameter.",
+  "failDirection": "Exactly two spellings are accepted. Anything else — including a link this build cannot honour — resolves to the build's own default, never to a third state nobody measured."
+ },
+ "disclosures": [
+  "VALIDATED END TO END MEANS THE PLUMBING, NOT THE PICTURE. Nothing here is visual acceptance of the far tier.",
+  "OPEN APPEARANCE DEFECTS, owned by T013 and NOT fixed by this task: the 4000/235 tone ratio sits at 0.939, and 5 of 6 sampled hues are over the 0.02 bar. A tile that draws correctly still looks wrong in these specific, measured ways.",
+  "capsEmitted is 'roof': the bake emits a roof cap and NO FLOOR. A viewpoint below a building base sees through it. Bounded in practice by the 1,200 m near edge, which puts the camera above the base for the envelope this tier serves, but it is a real hole and not a cosmetic one.",
+  "The frozen-planar placement residual is 8.1 cm per cell and is NOT corrected, only measured.",
+  "The far-tier cache ceiling is additive to two other ceilings. A total memory figure must ADD 256 MiB, the B3-B5 bars, and this 64 MiB; merging any pair understates the total."
+ ],
+ "whatIsNotDone": [
+  "THE VIEWPORT DRAW AND SUPPRESS WIRING IS NOT COMPLETE. The pick bracket is wired into the live click path, the URL switch is threaded, and the serving, verification, anchoring, suppression and state contracts exist as tested modules — but CesiumViewport does not yet construct a Model from a verified tile, add it to the far-tier primitive list, or apply the suppression delta.",
+  "CONSEQUENTLY THERE IS NO END-TO-END RUN AND NO MANUAL INTERACTION PASS. The contract clause 'validated end-to-end with the T002 prototype cell' is NOT MET by this commit. The prototype tile is staged and verifies against the committed inventory, which is the checksum path proven; the draw path is not.",
+  "No far-tier tile has been drawn in the application, so the no-flicker ordering guarantee above is a design statement rather than an observation."
+ ]
+}

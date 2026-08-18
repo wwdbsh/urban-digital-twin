@@ -44,6 +44,7 @@ import { publicRealmFeatureToFeature, type Block835PublicRealmFeature, type Load
 import type { ExteriorCellOutcome, ExteriorCellRenderPlan } from "../../runtime/exterior-cell-runtime";
 import type { ExteriorRenderProfile } from "../../runtime/exterior-render-profiles";
 import { verifiedExteriorModelResource, type VerifiedExteriorResource } from "./exterior-verified-resource";
+import { createFarTierPickBracket, type FarTierHideable } from "./far-tier-pick-bracket";
 import {
   boundFootprintToCamera,
   viewportFootprintFromGroundPoints,
@@ -1914,6 +1915,15 @@ export function CesiumViewport({
    * clears its entry instead of accumulating one forever.
    */
   const exteriorVerifiedResourceFailuresRef = useRef<Map<string, string>>(new Map());
+
+  /**
+   * The far-tier tile primitives currently in the scene.
+   *
+   * Read at pick time by the Route D bracket rather than captured once, because
+   * tiles arrive and leave as cells stream; a snapshot taken when the handler
+   * was installed would stop covering everything added afterwards.
+   */
+  const farTierPrimitivesRef = useRef<FarTierHideable[]>([]);
   const onExteriorUnanchoredRef = useRef(onExteriorUnanchored);
   onExteriorUnanchoredRef.current = onExteriorUnanchored;
   const onExteriorCellsRetiredRef = useRef(onExteriorCellsRetired);
@@ -1985,8 +1995,15 @@ export function CesiumViewport({
         if (publicRealmFeature) onPublicRealmSelectedRef.current?.(publicRealmFeature);
       }
     });
+    // ROUTE D (T003). Every pick in this application goes through this bracket,
+    // which hides the far-tier tiles for the duration of the pick call. Cesium
+    // pushes a non-pickable primitive's draw command into the pick pass anyway
+    // — `allowPicking: false` only clears the pick id — so a far-tier tile is an
+    // invisible-id occluder that would otherwise swallow every click on the
+    // massing behind it. See `far-tier-pick-bracket.ts` for the measurement.
+    const pickBracket = createFarTierPickBracket(viewer.scene, () => farTierPrimitivesRef.current);
     viewer.screenSpaceEventHandler.setInputAction((movement: { position: Cartesian2 }) => {
-      const picks = viewer.scene.drillPick(movement.position, 12) as Array<{ id?: unknown }>;
+      const picks = pickBracket.drillPick(movement.position, 12) as Array<{ id?: unknown }>;
       const storefront = picks.map((picked) => {
         const pickedId = drillPickedEntityId(picked);
         return pickedId ? storefrontPickMapRef.current.get(pickedId) : undefined;
@@ -2014,7 +2031,7 @@ export function CesiumViewport({
         onPublicRealmSelectedRef.current?.(publicRealmFeatures[0]!);
         return;
       }
-      const picked = viewer.scene.pick(movement.position) as { id?: unknown } | undefined;
+      const picked = pickBracket.pick(movement.position) as { id?: unknown } | undefined;
       const pickedId = drillPickedEntityId(picked);
       const feature = featureForPickedId(pickedId === null ? null : canonicalExteriorPickId(pickedId, exteriorPickMapRef.current), denseFeatureMapRef.current, adapterRef.current) ?? pickedFeatures[0];
       if (feature) onFeatureSelectedRef.current(feature);
