@@ -168,8 +168,14 @@ export const FAR_TIER_BAKE_RECIPE = {
  * exactly as committed. v2 is selected explicitly by a caller and by nothing
  * else.
  *
- * NOT YET FROZEN. Stage B adds the shading term to this object, which moves its
- * hash. No v2 artifact is frozen against this hash until that lands.
+ * `shading` STAYS NULL. Stage B derived a roof-only shading term, predicted the
+ * verdict it implies, and HALTED at a pre-registered NO-GO without baking a v2
+ * tile — so nothing was added to this object and its hash did not move for that
+ * reason. See `data/far-tier-hlod-v2-20260818/stage-b-decomposition-and-prediction.json`.
+ *
+ * NOT FROZEN AGAINST ANY ARTIFACT. No v2 tile exists, so `farTierRecipeHashV2()`
+ * pins nothing yet. It is a version identity, not a provenance commitment, and
+ * it may still move before a v2 artifact is ever written.
  */
 export const FAR_TIER_BAKE_RECIPE_V2 = {
   ...FAR_TIER_BAKE_RECIPE,
@@ -197,14 +203,24 @@ export const FAR_TIER_BAKE_RECIPE_V2 = {
    * tap at level 0, where a magnifying sample at the exact texel centre can
    * drift into its neighbours by a floating-point epsilon.
    *
-   * THE RESIDUAL, STATED: derivatives are computed per 2x2 pixel quad, so a
-   * quad straddling a seam between two faces sees a large false derivative and
-   * can select a high mip level for one pixel. There, a one-texel gutter can
-   * bleed a neighbour. The bleed is bounded — both faces carry their own area
-   * average, so it mixes two similar constants — and it is confined to seam
-   * pixels. This is the honest cost of the decision, and the alternative was
-   * measured rather than guessed: see the Stage A census for the unpackable
-   * remainder at both gutter widths.
+   * THE RESIDUAL, STATED HONESTLY AND NOT MINIMISED. Derivatives are computed
+   * per 2x2 pixel quad, so a quad straddling a seam between two faces sees a
+   * large false derivative and can select a high mip level for one pixel. The
+   * gutter width does NOT decide whether that bleeds; it only decides WHICH mip
+   * level it starts bleeding at. Two texels buys one more level than one texel,
+   * and nothing more.
+   *
+   * AND THE EFFECT IS UNMEASURED AT THIS TIER'S OWN SERVING DISTANCES, where it
+   * is least comfortable: the whole cell covers 5,889 pixels at 1,200 m and 516
+   * at 4,000 m against a median 650 faces per leaf, so most covered pixels are
+   * at or near a face boundary and the cross-primitive case is the common case
+   * rather than the edge case. What bounds the damage is the CONTENT, not the
+   * gutter — every flat face carries its own area average, so a bleed mixes two
+   * similar constants. That is an argument about magnitude, not about absence,
+   * and no still has been captured to check it.
+   *
+   * The alternative was measured rather than guessed: see the Stage A census
+   * for the unpackable remainder at both gutter widths.
    */
   flatFaceGutterTexels: 1,
 
@@ -684,6 +700,18 @@ function zoneAt(face: FarTierFace, t: number): FaceZone {
  * ready for `encodeRgbPng`.
  */
 export function bakeFarTierAtlas(packing: FarTierPacking): Uint8Array {
+  // FAIL CLOSED ON AN UNAPPLIED SHADING TERM.
+  //
+  // `farTierEffectiveParameters` resolves `shadingScalar` and the packing
+  // carries it, so a recipe declaring one would travel into provenance and into
+  // any hash computed over the recipe. This rasterizer does NOT apply it — the
+  // Stage B halt left the term derived but unwired — so a recipe with a scalar
+  // other than 1 would produce bytes that are lighter than the provenance
+  // describing them. That is a silent lie about an artifact, which is worse
+  // than a missing feature, so it is refused rather than ignored.
+  if (packing.parameters.shadingScalar !== 1) {
+    throw new Error(`Far-tier bake was given a shading scalar of ${packing.parameters.shadingScalar}, but this rasterizer does not apply one; baking would produce bytes that contradict the recipe recorded beside them.`);
+  }
   const size = packing.atlasPixels;
   const rgb = new Uint8Array(size * size * 3);
 

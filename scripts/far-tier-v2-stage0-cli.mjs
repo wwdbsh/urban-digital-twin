@@ -161,6 +161,13 @@ function buildTree(cells) {
       if (node.zoom !== zoom) continue;
       const key = `${zoom - 1}/${node.x >> 1}/${node.y >> 1}`;
       let parent = nodes.get(key);
+      if (parent && parent.leaf) {
+        // A LEAF already owns this key. Attaching children to it would make one
+        // node both a ledger cell and an aggregate of other cells, double-count
+        // its surface area, and corrupt every figure downstream — silently.
+        // Same failure class as the duplicate-leaf check above, so same answer.
+        fail(`tile key ${key} is claimed by leaf cell ${parent.cellId} and also required as a parent of ${node.cellId ?? `${node.zoom}/${node.x}/${node.y}`}; the hierarchy would be self-referential.`);
+      }
       if (!parent) {
         parent = { zoom: zoom - 1, x: node.x >> 1, y: node.y >> 1, leaf: false, cellId: null, cell: null, children: [], surfaceAreaSquareMeters: 0 };
         nodes.set(key, parent);
@@ -216,6 +223,7 @@ function summarize(rows) {
   const scales = {};
   for (const row of packed) scales[row.appliedScale] = (scales[row.appliedScale] ?? 0) + 1;
   const ratios = packed.map((row) => row.deliveredRatio).sort((left, right) => left - right);
+  const occupancies = packed.map((row) => row.occupancy).sort((left, right) => left - right);
   return {
     nodes: rows.length,
     packedCount: packed.length,
@@ -230,6 +238,15 @@ function summarize(rows) {
       max: round(ratios[ratios.length - 1], 6),
     },
     meanFlatFaceShare: packed.length === 0 ? null : round(packed.reduce((sum, row) => sum + row.flatFaceShare, 0) / packed.length, 6),
+    // Atlas occupancy was measured per node and then dropped by an earlier
+    // version of this summary, which hid exactly the quantity the flat-face fix
+    // was meant to move.
+    occupancy: occupancies.length === 0 ? null : {
+      min: round(occupancies[0], 6),
+      median: round(occupancies[Math.floor(occupancies.length / 2)], 6),
+      max: round(occupancies[occupancies.length - 1], 6),
+      mean: round(occupancies.reduce((sum, value) => sum + value, 0) / occupancies.length, 6),
+    },
   };
 }
 
@@ -343,10 +360,17 @@ async function commandCensus() {
     },
 
     results,
+    censusModelComparability: {
+      whatTheFaceSetIs: "Faces are built from the base snapshot's SOURCE rings and `heightMeters`, with the plan builder's own 10 m fallback for the 76 buildings recorded with no height. They are NOT the V3 tessellation's faces.",
+      refusalInclusive: "Buildings the V3 grammar refuses are INCLUDED here, because a source ring exists for them. A real bake ships none of them, so every face count in this record is an UPPER BOUND on what a bake would place.",
+      whyThatIsAcceptable: "An upper bound is the conservative direction for a feasibility census: it can only report a cell as harder to pack than it is, never easier.",
+      crossCheckAgainstT002: "The v1 column reproduces T002's published leaf figures exactly — 172 unpackable and 650 under-resolved — which is what licenses reading the v2 column as a like-for-like comparison rather than a differently-modelled one.",
+    },
     notClaimedHere: [
       "This is packing arithmetic. It says nothing about how the tier LOOKS.",
       "No tile was baked and no still was captured for this record.",
       "Delivered resolution is measured with synthetic ordering keys, so a cell's appliedScale here is representative of a real bake rather than byte-identical to it: face world area is the primary sort in both and only ties break differently.",
+      "Face counts are upper bounds: refused buildings are counted here and shipped by no bake. See `censusModelComparability`.",
     ],
   };
 

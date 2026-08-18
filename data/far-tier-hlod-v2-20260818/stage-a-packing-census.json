@@ -85,7 +85,13 @@
           "median": 0.5,
           "max": 1
         },
-        "meanFlatFaceShare": 0.798169
+        "meanFlatFaceShare": 0.798169,
+        "occupancy": {
+          "min": 0.078125,
+          "median": 0.714325,
+          "max": 0.998047,
+          "mean": 0.705002
+        }
       },
       "internalNodes": {
         "nodes": 338,
@@ -104,7 +110,13 @@
           "median": 0.5,
           "max": 1
         },
-        "meanFlatFaceShare": 0.595349
+        "meanFlatFaceShare": 0.595349,
+        "occupancy": {
+          "min": 0.367188,
+          "median": 0.615845,
+          "max": 0.735107,
+          "mean": 0.618124
+        }
       },
       "allNodes": {
         "nodes": 1221,
@@ -130,7 +142,13 @@
           "median": 0.5,
           "max": 1
         },
-        "meanFlatFaceShare": 0.794527
+        "meanFlatFaceShare": 0.794527,
+        "occupancy": {
+          "min": 0.078125,
+          "median": 0.71077,
+          "max": 0.998047,
+          "mean": 0.703442
+        }
       },
       "byZoomLevel": [
         {
@@ -232,7 +250,13 @@
           "median": 0.5,
           "max": 1
         },
-        "meanFlatFaceShare": 0.770558
+        "meanFlatFaceShare": 0.770558,
+        "occupancy": {
+          "min": 0.030518,
+          "median": 0.546051,
+          "max": 0.973129,
+          "mean": 0.550292
+        }
       },
       "internalNodes": {
         "nodes": 338,
@@ -256,7 +280,13 @@
           "median": 0.25,
           "max": 1
         },
-        "meanFlatFaceShare": 0.924387
+        "meanFlatFaceShare": 0.924387,
+        "occupancy": {
+          "min": 0.291016,
+          "median": 0.816223,
+          "max": 0.989151,
+          "mean": 0.786406
+        }
       },
       "allNodes": {
         "nodes": 1221,
@@ -281,7 +311,13 @@
           "median": 0.5,
           "max": 1
         },
-        "meanFlatFaceShare": 0.788049
+        "meanFlatFaceShare": 0.788049,
+        "occupancy": {
+          "min": 0.030518,
+          "median": 0.562607,
+          "max": 0.989151,
+          "mean": 0.57714
+        }
       },
       "byZoomLevel": [
         {
@@ -381,7 +417,13 @@
           "median": 0.707107,
           "max": 1
         },
-        "meanFlatFaceShare": 0.744095
+        "meanFlatFaceShare": 0.744095,
+        "occupancy": {
+          "min": 0.010986,
+          "median": 0.473541,
+          "max": 0.79837,
+          "mean": 0.481238
+        }
       },
       "internalNodes": {
         "nodes": 338,
@@ -406,7 +448,13 @@
           "median": 0.353553,
           "max": 1
         },
-        "meanFlatFaceShare": 0.923046
+        "meanFlatFaceShare": 0.923046,
+        "occupancy": {
+          "min": 0.259766,
+          "median": 0.586258,
+          "max": 0.987396,
+          "mean": 0.613057
+        }
       },
       "allNodes": {
         "nodes": 1221,
@@ -431,7 +479,13 @@
           "median": 0.5,
           "max": 1
         },
-        "meanFlatFaceShare": 0.782839
+        "meanFlatFaceShare": 0.782839,
+        "occupancy": {
+          "min": 0.010986,
+          "median": 0.502304,
+          "max": 0.987396,
+          "mean": 0.509777
+        }
       },
       "byZoomLevel": [
         {
@@ -503,9 +557,16 @@
       ]
     }
   },
+  "censusModelComparability": {
+    "whatTheFaceSetIs": "Faces are built from the base snapshot's SOURCE rings and `heightMeters`, with the plan builder's own 10 m fallback for the 76 buildings recorded with no height. They are NOT the V3 tessellation's faces.",
+    "refusalInclusive": "Buildings the V3 grammar refuses are INCLUDED here, because a source ring exists for them. A real bake ships none of them, so every face count in this record is an UPPER BOUND on what a bake would place.",
+    "whyThatIsAcceptable": "An upper bound is the conservative direction for a feasibility census: it can only report a cell as harder to pack than it is, never easier.",
+    "crossCheckAgainstT002": "The v1 column reproduces T002's published leaf figures exactly — 172 unpackable and 650 under-resolved — which is what licenses reading the v2 column as a like-for-like comparison rather than a differently-modelled one."
+  },
   "notClaimedHere": [
     "This is packing arithmetic. It says nothing about how the tier LOOKS.",
     "No tile was baked and no still was captured for this record.",
-    "Delivered resolution is measured with synthetic ordering keys, so a cell's appliedScale here is representative of a real bake rather than byte-identical to it: face world area is the primary sort in both and only ties break differently."
+    "Delivered resolution is measured with synthetic ordering keys, so a cell's appliedScale here is representative of a real bake rather than byte-identical to it: face world area is the primary sort in both and only ties break differently.",
+    "Face counts are upper bounds: refused buildings are counted here and shipped by no bake. See `censusModelComparability`."
   ]
 }

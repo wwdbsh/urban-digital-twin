@@ -472,3 +472,35 @@ describe("the v2 flat-face rect", () => {
     expect(v2.occupancy).toBeLessThan(v1.occupancy / 5);
   });
 });
+
+
+describe("an unapplied shading term is refused, not ignored", () => {
+  const face = (): FarTierFace => ({
+    buildingId: "doitt:1", faceIndex: 0, kind: "wall", areaSquareMeters: 1_200,
+    cornersMm: [[0, 0, 0], [40_000, 0, 0], [40_000, 0, 30_000], [0, 0, 30_000]],
+    offsetMeters: [0, 0],
+    zones: [{ materialId: "material:facade:shaft", textureClass: "brick-running-bond", factor: [0.5, 0.4, 0.3], fromFraction: 0, toFraction: 1 }],
+  });
+
+  it("throws when the packing carries a scalar the rasterizer does not apply", () => {
+    // The defect this closes: `shadingScalar` is resolved into the packing and
+    // would travel into provenance and into any recipe hash, while the
+    // rasterizer ignores it — producing bytes lighter than the record beside
+    // them. A silent lie about an artifact is worse than a missing feature.
+    const packing = packFarTierAtlas([face()], 256, 1.4, { ...FAR_TIER_BAKE_RECIPE_V2, shading: { scalar: 0.98 } });
+    expect(packing.parameters.shadingScalar).toBe(0.98);
+    expect(() => bakeFarTierAtlas(packing)).toThrow(/does not apply one/u);
+  });
+
+  it("bakes normally when there is no shading term", () => {
+    for (const recipe of [FAR_TIER_BAKE_RECIPE, FAR_TIER_BAKE_RECIPE_V2]) {
+      const packing = packFarTierAtlas([face()], 256, 1.4, recipe);
+      expect(packing.parameters.shadingScalar).toBe(1);
+      expect(() => bakeFarTierAtlas(packing)).not.toThrow();
+    }
+  });
+
+  it("keeps v2's shading null, because Stage B halted before wiring one", () => {
+    expect(FAR_TIER_BAKE_RECIPE_V2.shading).toBeNull();
+  });
+});

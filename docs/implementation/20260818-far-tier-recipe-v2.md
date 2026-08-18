@@ -25,12 +25,22 @@ corners address the single texel — the trick the roof fan has used since T002.
 pins that the 1×1 renders the identical colour the 4×4 block carried.
 
 **The gutter decision.** A flat face's four corners carry the *same* uv, so its uv
-derivative is identically zero and the hardware selects mip 0 for it — it never reaches
-a level where a wider gutter matters. One texel protects the bilinear tap. The residual
-is real and stated: derivatives are computed per 2×2 pixel quad, so a quad straddling a
-face seam sees a false derivative and can select a high mip for one pixel, where one
-texel of gutter can bleed a neighbour. Bounded, because both faces carry their own area
-average. Both widths were measured rather than argued.
+derivative is identically zero and the hardware selects mip 0 for it. One texel protects
+the bilinear tap.
+
+The residual is larger than that argument makes it sound, and it is worth stating
+plainly. Derivatives are computed per 2×2 pixel quad, so a quad straddling a face seam
+sees a false derivative and can select a high mip. **Gutter width does not decide whether
+that bleeds — only which mip level it starts bleeding at**; two texels buys one more
+level than one, and nothing more. **And the effect is unmeasured at this tier's own
+serving distances**, where it is least comfortable: the whole cell covers 5,889 pixels at
+1,200 m and 516 at 4,000 m against a median 650 faces per leaf, so most covered pixels
+are at or near a face boundary and the cross-primitive case is the common case rather
+than the edge case. What bounds the damage is the *content* — every flat face carries its
+own area average, so a bleed mixes two similar constants. That is an argument about
+magnitude, not absence, and no still has been captured to check it.
+
+Both widths were measured rather than argued.
 
 **The census now packs all 1,221 nodes, not 883.** T002 packed leaves only and therefore
 could not see that the hierarchy above the leaf level barely existed.
@@ -107,7 +117,15 @@ piece of hardware — in the direction that would have made passing *easier*.
 - **Derived value is outside the band.** It delivers 0.000547 of the 0.000899 absolute
   shadow-pose reduction required — **61% of what is needed**.
 
-Six point predictions were published before any capture:
+The band and the delivered figure come from **different masks** — T002's means are over
+the union of source and baked silhouettes, the decomposition's over the full variant's
+own alpha — a ~6.9% scale gap. Restated in one set of units the shortfall is **65%** and
+the band maximum **0.978746**. The derived 0.986167 sits above both, so **the verdict is
+unaffected**; the mismatch is disclosed because it is real, not because it matters here.
+
+Six point predictions were published before any capture. The four **barred** poses are
+tabulated; the two unbarred 400 m poses are omitted here and are in the record
+(predicted 1.024394 at az 55 and 1.081246 at az 235):
 
 | pose | g_eff | r_v1 | **predicted r_v2** | verdict |
 | --- | --- | --- | --- | --- |

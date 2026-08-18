@@ -103,6 +103,9 @@ async function commandPredict(cellId) {
   const predictedMisses = predictions.filter((entry) => entry.predictedVerdict === "MISS");
 
   const t002SamplingText = await readFile(join(t002Root, "sampling-results.json"), "utf8");
+  const stageAPath = join(evidenceRoot, "stage-a-packing-census.json");
+  const stageAText = await readFile(stageAPath, "utf8").catch(() => null);
+  if (stageAText === null) fail("stage-a-packing-census.json is absent; Stage B's lineage must bind to the Stage A census it follows.");
 
   const record = {
     schemaVersion: "1.0",
@@ -115,6 +118,9 @@ async function commandPredict(cellId) {
     claim: "The roof/wall luminance decomposition of the far-tier tile, the shading term derived from committed plan geometry, and the six point predictions that term implies — all fixed before any measurement could confirm or refute them.",
 
     lineage: {
+      stageARecord: "data/far-tier-hlod-v2-20260818/stage-a-packing-census.json",
+      stageARecordSha256: sha256HexSync(stageAText),
+      stageARelationship: "Stage A changed the PACKING and Stage B derives a SHADING term. They are independent: the term below is a property of plan geometry and would be the same number under either packing. The binding exists so the two halves of one task cannot drift apart unnoticed.",
       v1SamplingRecord: "data/far-tier-hlod-20260818/sampling-results.json",
       v1SamplingRecordSha256: sha256HexSync(t002SamplingText),
       v1RecordsAreImmutable: "The T002 records are not edited by this task. This record supersedes none of them; it adds to them.",
@@ -143,7 +149,12 @@ async function commandPredict(cellId) {
       form: "ROOF-ONLY linear-light scalar. Every roof zone's factor is multiplied by `roofScalar`; wall zones are untouched.",
       mechanismApproximated: "The prism replaces a building's roof with one flat plane and omits the rooftop groups standing on it — the T002 frame check measured 3.59 m of rooftop mass present in the source and absent from the prism. A flat lit plane returns more light than the roof it stands in for.",
       syntheticDeviationDeclaration: "THIS IS AN INVENTED APPEARANCE, NOT A MEASUREMENT. No occlusion is computed, no shadow is traced, and nothing in the derivation observes a real building. It approximates a named mechanism with a geometric proxy and must be declared as a synthetic deviation wherever a baked artifact carries it.",
-      closedForm: "roofScalar = 1 - (sum of roof-occupying prism footprint areas) / (sum of tier-0 ring areas), area-weighted across the cell's plans, with water-tank legs excluded because they sit beneath the tank they support and would double-count its footprint.",
+      closedForm: "roofScalar = 1 - (sum of roof-occupying prism footprint areas) / (sum of tier-0 ring areas), area-weighted across the cell's plans, with water-tank legs excluded.",
+      legExclusionAssumption: {
+        assumption: "Water-tank legs are assumed to lie INSIDE the footprint of the tank they support, so counting them would charge the roof twice for one piece of hardware.",
+        status: "ASSUMED FROM THE GRAMMAR'S INTENT, NOT ASSERTED BY THIS CODE. Containment is not checked per building; the derivation simply omits the `water-tank-leg` kind.",
+        directionIfWrong: "If some legs in fact protrude beyond their tank, the true occupied fraction is LARGER than derived, so the term is understated and the predicted miss would be by a smaller margin than reported. The assumption therefore cannot manufacture a pass.",
+      },
       inputsAreCommittedGeometryOnly: "Plan rings and prism rings from the committed V3 plans. Nothing reads a rendered image, a luminance ratio, a camera or a light.",
       arithmeticRestriction: "Only + - * / are used, so no engine-dependent transcendental enters a byte-producing path. Aggregation is over an explicitly sorted building order.",
       occupyingPrismKinds: ["roof-equipment", "water-tank"],
@@ -159,16 +170,34 @@ async function commandPredict(cellId) {
       roofScalarMaximum: round(band.maximum),
       derivedRoofScalar: round(term.roofScalar),
       derivedValueInsideBand: term.roofScalar >= band.minimum && term.roofScalar <= band.maximum,
+      crossInstrumentScaleDisclosure: {
+        problem: "The two quantities in this band come from DIFFERENT MASKS. `requiredShadowReduction` and `permittedLitReduction` are derived from T002's sampling record, whose means are taken over the union of the SOURCE and BAKED silhouettes. The decomposition's `L_full` and `R_roof` are taken over the FULL VARIANT's own alpha mask. The two differ, so the numbers are not on the same scale.",
+        measuredGap: {
+          t002BakedMeanLuminanceShadowPose: 0.042303,
+          decompositionFullLuminanceShadowPose: shadow.L_full,
+          ratio: round(0.042303 / shadow.L_full, 6),
+        },
+        restatedInDecompositionUnits: {
+          requiredShadowReduction: round(requiredShadowReduction * (shadow.L_full / 0.042303)),
+          deliveredShadowReduction: round(shadow.R_roof * (1 - term.roofScalar)),
+          deliveredShareOfRequired: round((shadow.R_roof * (1 - term.roofScalar)) / (requiredShadowReduction * (shadow.L_full / 0.042303)), 6),
+          roofScalarMaximum: round(1 - (requiredShadowReduction * (shadow.L_full / 0.042303)) / shadow.R_roof),
+        },
+        effectOnTheVerdict: "NONE. Rescaling moves the shortfall from about 61% to about 65% of what is required and the band maximum from 0.977280 to about 0.978747. The derived scalar of 0.986167 sits above both, so it is outside the band either way and the predicted MISS stands. The mismatch is disclosed because it is real, not because it changes the answer.",
+      },
       shortfall: {
         deliveredShadowReduction: round(shadow.R_roof * (1 - term.roofScalar)),
         requiredShadowReduction,
         deliveredShareOfRequired: round((shadow.R_roof * (1 - term.roofScalar)) / requiredShadowReduction, 6),
+        unitsCaveat: "Both figures are in the mixed units described in `crossInstrumentScaleDisclosure`. The rescaled versions are there.",
       },
     },
 
     pointPredictions: {
       publishedBeforeCapture: true,
-      predictionAgreementBar: "|measured - predicted| <= 0.01, to be judged only if a v2 capture is ever taken under this recipe id.",
+      predictionAgreementBar: "|measured - predicted| <= 0.01.",
+      barScope: "THE BAR IS ONLY MEANINGFUL FOR A TILE THAT DIFFERS FROM v1 BY THE SHADING TERM ALONE. The formula holds r_v1 fixed and multiplies it by a per-pose gain, so it assumes the packing is unchanged. It is NOT a prediction about a tile that also carries the Stage A flat-face change: that repacks the atlas, moves texel counts on individual faces, and would break the assumption without announcing it.",
+      packingInvarianceAssumption: "If a v2 capture is ever taken on a tile carrying BOTH the packing fix and a shading term, this bar must be re-derived rather than reused, or a packing-induced difference will be scored as a shading-model error.",
       formula: "r_v2(pose) = r_v1(pose) * (L_full(pose) - R_roof(pose) * (1 - roofScalar)) / L_full(pose)",
       predictions,
     },

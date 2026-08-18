@@ -21,10 +21,11 @@
  */
 
 import { spawnSync } from "node:child_process";
+import { realpathSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { execPath } from "node:process";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
 
 import { sha256HexBytes, sha256HexSync, stableSerialize } from "../src/domain/deterministic-hash.ts";
 import { collectMidtownCoreSources } from "../src/release/midtown-core-source.ts";
@@ -497,7 +498,27 @@ async function commandSources(cellId) {
 // Dispatch only when this file is the entry point. Another module importing
 // `materializeCell` or `bakeCell` must not trigger a command as a side effect
 // of the import — which it did, until a decomposition tool tried it.
-if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
+//
+// The comparison resolves BOTH sides through `realpathSync`. Comparing URLs
+// directly is fail-open: this worktree reaches its inputs through symlinks, and
+// any symlink or normalization difference between `import.meta.url` and argv[1]
+// makes the guard false, at which point `replay` exits 0 having verified
+// nothing. A byte-replay that silently does not run is worse than one that
+// crashes.
+function isDirectEntryPoint() {
+  const entry = process.argv[1];
+  if (entry === undefined) return false;
+  try {
+    return realpathSync(fileURLToPath(import.meta.url)) === realpathSync(entry);
+  } catch {
+    return false;
+  }
+}
+
+/** This CLI's own verbs. Another tool's verb is not this CLI's business. */
+const COMMANDS = new Set(["bake", "replay", "sources"]);
+
+if (isDirectEntryPoint()) {
   const command = process.argv[2];
   const cellIndex = process.argv.indexOf("--cell");
   const cellId = cellIndex > 0 ? process.argv[cellIndex + 1] : DEFAULT_CELL_ID;
@@ -506,4 +527,11 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
   else if (command === "replay") await commandReplay(cellId);
   else if (command === "sources") await commandSources(cellId);
   else fail("usage: far-tier-bake-cli.mjs <bake|replay|sources> [--cell <cellId>]");
+} else if (COMMANDS.has(process.argv[2] ?? "")) {
+  // ONE OF THIS CLI'S OWN VERBS was supplied, yet the guard says this file is
+  // not the entry point. That is the fail-open case the realpath comparison
+  // exists to catch, and exiting quietly here would reproduce it — a `replay`
+  // that verifies nothing and reports success. Another tool's verb (`emit`,
+  // `predict`, `census`) is not this CLI's business and passes through.
+  fail(`the command "${process.argv[2]}" is one of this CLI's own verbs, but this module was not resolved as the entry point (argv[1]=${process.argv[1]}); refusing to exit silently without running it.`);
 }
