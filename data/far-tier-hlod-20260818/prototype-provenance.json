@@ -1,0 +1,945 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "far-tier-hlod-20260818:prototype-provenance",
+  "task": "T002",
+  "artifact": "far-tier-hlod-prototype-tile-provenance",
+  "capturedAt": null,
+  "capturedAtStatement": "NULL BY CONSTRUCTION. The bake is a total function of committed inputs; a timestamp would be the only non-reproducible field in a record whose entire claim is reproducibility.",
+  "claim": "One ownership cell baked into one merged far-tier HLOD tile, with every source it derives from named by checksum and its byte-replay proved by two independent runs.",
+  "tile": {
+    "cellId": "manhattan-exterior-cell-w05-000747-17-38610-35822",
+    "lodId": "far_0",
+    "glbSha256": "2f8599256ac45ee509dc7d7ce0da6a56964bac8e3ca66b77e795c1435ff7930b",
+    "glbByteSize": 122976,
+    "atlasRelativeRef": "manhattan-exterior-cell-w05-000747-17-38610-35822.atlas.png",
+    "atlasSha256": "c159e0508aeb7522620b799b83041461aecf34727f69209bd7efbf992f5c067a",
+    "atlasByteSize": 196947,
+    "atlasPixels": 256,
+    "triangleCount": 2052,
+    "materialCount": 1,
+    "textureCount": 1,
+    "retention": "LOCAL WORK PRODUCT. The bytes live under artifacts/ and are gitignored; this record and its checksums are the committed artifact."
+  },
+  "byteReplay": {
+    "runs": 2,
+    "method": "Two independent full bakes from the committed inputs, each re-reading the base snapshot and the ledger, compared by sha256. The SECOND runs in a FRESH CHILD PROCESS, so the module-level tile-integrator and texture-catalogue caches are cold for it and cannot mask a leak.",
+    "run1": {
+      "glbSha256": "2f8599256ac45ee509dc7d7ce0da6a56964bac8e3ca66b77e795c1435ff7930b",
+      "atlasSha256": "c159e0508aeb7522620b799b83041461aecf34727f69209bd7efbf992f5c067a",
+      "process": "parent"
+    },
+    "run2": {
+      "glbSha256": "2f8599256ac45ee509dc7d7ce0da6a56964bac8e3ca66b77e795c1435ff7930b",
+      "atlasSha256": "c159e0508aeb7522620b799b83041461aecf34727f69209bd7efbf992f5c067a",
+      "process": "child"
+    },
+    "byteIdentical": true,
+    "verdict": "PASS"
+  },
+  "provenance": {
+    "sourceRelease": {
+      "releaseId": "manhattan-northern-manhattan-cells-20260812-c2",
+      "payloadInventoryChecksumSha256": "290b06d3d3db06286d778fefbc8c860b272510f8fab258ea53a4f55725fe2509",
+      "note": "The -c2 payload bytes are gitignored and absent from this machine. Every source asset below was REGENERATED through the shipped emitter and verified against this inventory before the bake ran; a mismatch stops the run."
+    },
+    "baseRelease": {
+      "releaseId": "manhattan-citywide-20260804",
+      "manifestFileChecksumSha256": "acb5a9b52014f86535c8478e7d4e516efc03f6dff95c17e9896dfea4413c203c",
+      "planChecksumSha256": "65e8fbeee3b10cc8ae1f4fef59373bad3fbc6e5d30cb68fe57a326532089f673",
+      "planChecksumNote": "The retention pipeline hashes a compact re-serialization of the manifest, not the file bytes, and that value enters every plan hash. Both are recorded so neither can be mistaken for the other."
+    },
+    "parentLedger": {
+      "ledgerId": "manhattan-exterior-wave-ledger-20260804-a3382ef4cac213a2",
+      "checksumSha256": "62e093d2ca50b54b49fd8bbad9d0b11f6301b2b197623deb343f9ea915e59016"
+    },
+    "cell": {
+      "cellId": "manhattan-exterior-cell-w05-000747-17-38610-35822",
+      "order": 747,
+      "membershipChecksumSha256": "3682e362361dc23bd0fb5545c5a2e71191366b1bc110117752c3e4b53eb7d86f",
+      "declaredBuildingCount": 48,
+      "bakedBuildingCount": 48
+    },
+    "sourceAssets": [
+      {
+        "relativeRef": "public/assets/doitt-119910__lod_0.glb",
+        "byteSize": 239544,
+        "checksumSha256": "03bf6eb7d1052d63c1b47753a1a8659f0b4b4a8f47090c59b0977b7f640953dd"
+      },
+      {
+        "relativeRef": "public/assets/doitt-119910__lod_1.glb",
+        "byteSize": 107036,
+        "checksumSha256": "552c35333e0fa3affb7323206e36a2d3995f284c6c07c1442cc37300ff614484"
+      },
+      {
+        "relativeRef": "public/assets/doitt-1283944__lod_0.glb",
+        "byteSize": 52860,
+        "checksumSha256": "2a36f70c4cc7b9db702bee9176df27c0987ba28a492d0992576b881e380e64e6"
+      },
+      {
+        "relativeRef": "public/assets/doitt-1283944__lod_1.glb",
+        "byteSize": 23196,
+        "checksumSha256": "6d7c4785d7194dacdf04e3513113c9241ca9de44ab9af9693c7ccaf1b7f41061"
+      },
+      {
+        "relativeRef": "public/assets/doitt-1292742__lod_0.glb",
+        "byteSize": 190492,
+        "checksumSha256": "58afae65b0e06c0a459e363c2a53caf601f995fcba3c26508e6c4b820e2e5b7c"
+      },
+      {
+        "relativeRef": "public/assets/doitt-1292742__lod_1.glb",
+        "byteSize": 76716,
+        "checksumSha256": "c1be76ae3dc144888e8db3f0ec45483c34e3f99b3fb87fae8e8d5ec96a08c3ab"
+      },
+      {
+        "relativeRef": "public/assets/doitt-141215__lod_0.glb",
+        "byteSize": 47960,
+        "checksumSha256": "1176928ea7a10456400e3b7760a8e148ad555e1b09e6514707d60c4e07c0bf8d"
+      },
+      {
+        "relativeRef": "public/assets/doitt-141215__lod_1.glb",
+        "byteSize": 29072,
+        "checksumSha256": "d88f338f0c01acc67503cba7ddc43549ff7b8959b23082ca004fc17bda263a11"
+      },
+      {
+        "relativeRef": "public/assets/doitt-144129__lod_0.glb",
+        "byteSize": 59300,
+        "checksumSha256": "1f4b72592fc02a4520da83f677e581d6ce513326f7111a8e88958807b4b59a61"
+      },
+      {
+        "relativeRef": "public/assets/doitt-144129__lod_1.glb",
+        "byteSize": 31876,
+        "checksumSha256": "84ee72de2a880c260015cbd2f570112b7c4a459a00697fa3d67732cf52fd006e"
+      },
+      {
+        "relativeRef": "public/assets/doitt-147906__lod_0.glb",
+        "byteSize": 42424,
+        "checksumSha256": "b6314a0c71259bbaf8ce79d620157cbcdb589debd0a7e2e1ae57003cd934ac8e"
+      },
+      {
+        "relativeRef": "public/assets/doitt-147906__lod_1.glb",
+        "byteSize": 22528,
+        "checksumSha256": "3ce1704f885f8e662d5bfc730094c8501456130da57199ce23381d60d8944d7d"
+      },
+      {
+        "relativeRef": "public/assets/doitt-157460__lod_0.glb",
+        "byteSize": 45800,
+        "checksumSha256": "8fa71ff723731262e06a27f53c56ac78e6d6d7763f467631325277f648f0d1f0"
+      },
+      {
+        "relativeRef": "public/assets/doitt-157460__lod_1.glb",
+        "byteSize": 27512,
+        "checksumSha256": "d9330a450ff02ed5bfdfb60ff2a47529973526eae1571400f0f2e8ff1323b1df"
+      },
+      {
+        "relativeRef": "public/assets/doitt-175013__lod_0.glb",
+        "byteSize": 96612,
+        "checksumSha256": "adf6e72c50df6e90dc24eb0262611e644a4b15b21f49bf8006f3bc666554d500"
+      },
+      {
+        "relativeRef": "public/assets/doitt-175013__lod_1.glb",
+        "byteSize": 46092,
+        "checksumSha256": "b96c50b9ffa9a977b2d0032144c0fe9bbe31584009c74614173a03a79096e5cb"
+      },
+      {
+        "relativeRef": "public/assets/doitt-21295__lod_0.glb",
+        "byteSize": 59552,
+        "checksumSha256": "bcd01e3120688a8db3b730ae4c07271ef719bc3b8615a223552a7cf77d7f890c"
+      },
+      {
+        "relativeRef": "public/assets/doitt-21295__lod_1.glb",
+        "byteSize": 30668,
+        "checksumSha256": "bb0855e8a2da75f7228db9a5beaf0bcf72e66226b0e3e666db99c959e64609c3"
+      },
+      {
+        "relativeRef": "public/assets/doitt-230832__lod_0.glb",
+        "byteSize": 118908,
+        "checksumSha256": "aba23a85da4a53a0fc631d0570e4a85746fe08f54d5ab7c27e39028ce532633d"
+      },
+      {
+        "relativeRef": "public/assets/doitt-230832__lod_1.glb",
+        "byteSize": 52572,
+        "checksumSha256": "35822a6269c369c4d28529eea825bc62a817fcaafe4d2610e0265e2dd072011e"
+      },
+      {
+        "relativeRef": "public/assets/doitt-231587__lod_0.glb",
+        "byteSize": 64912,
+        "checksumSha256": "639cb4c8f6b1f7efe45dbf419c0c1c0345d0ea38d222352cd577d472c1b7556f"
+      },
+      {
+        "relativeRef": "public/assets/doitt-231587__lod_1.glb",
+        "byteSize": 33324,
+        "checksumSha256": "7c056c2f1cd1e769aec1872e26e0a569ee6481efe675fcb85d8ca009fa7416b3"
+      },
+      {
+        "relativeRef": "public/assets/doitt-25699__lod_0.glb",
+        "byteSize": 48108,
+        "checksumSha256": "aefc55b51fe0eb7c0b322dcbdbd924d5d0db02340d09b2e5e21b881d92df29b5"
+      },
+      {
+        "relativeRef": "public/assets/doitt-25699__lod_1.glb",
+        "byteSize": 28588,
+        "checksumSha256": "1a3762ed205bafecaf3fb83674f338e4e58be2ee37c02eddf201e02c74d26d3f"
+      },
+      {
+        "relativeRef": "public/assets/doitt-287400__lod_0.glb",
+        "byteSize": 59652,
+        "checksumSha256": "67f5aaf7906686d6f09fe3176be3f8b8c61644791be969075aa51ec75ffb8141"
+      },
+      {
+        "relativeRef": "public/assets/doitt-287400__lod_1.glb",
+        "byteSize": 30352,
+        "checksumSha256": "aea4770a2f8594c6ebe7a46508962183faa285e4fa79e1833f2703addf8e5938"
+      },
+      {
+        "relativeRef": "public/assets/doitt-298617__lod_0.glb",
+        "byteSize": 49508,
+        "checksumSha256": "52edebfc5407d3802d50e2e04915dc96fe746f02eecd148cba1888d1e0e7d16f"
+      },
+      {
+        "relativeRef": "public/assets/doitt-298617__lod_1.glb",
+        "byteSize": 22548,
+        "checksumSha256": "92c12e85cbad45ecb983ffd26581d76e51b90eb4204d21311842c93b6d51f21d"
+      },
+      {
+        "relativeRef": "public/assets/doitt-303919__lod_0.glb",
+        "byteSize": 46256,
+        "checksumSha256": "9b4328e5872540d5928ce729078d9d9a5123be4e2ef127294412b2391402931f"
+      },
+      {
+        "relativeRef": "public/assets/doitt-303919__lod_1.glb",
+        "byteSize": 24916,
+        "checksumSha256": "f472e375837fb093dce0690fb4de2096b4c4da4a31fd1a743d88f27dee5aee00"
+      },
+      {
+        "relativeRef": "public/assets/doitt-336066__lod_0.glb",
+        "byteSize": 70012,
+        "checksumSha256": "b245cce671a3686e60d5750d5ae777eaceaf3d01f4b9c2ea3d0287ad1b387b52"
+      },
+      {
+        "relativeRef": "public/assets/doitt-336066__lod_1.glb",
+        "byteSize": 36136,
+        "checksumSha256": "65c8a2e6ece4ee10e0c889a0a00160ea22815bec93c158acc16d71ca2406c3dc"
+      },
+      {
+        "relativeRef": "public/assets/doitt-338151__lod_0.glb",
+        "byteSize": 134768,
+        "checksumSha256": "a15c78b110a0cb20c825a7f0060739948489e7e9d2716d5c92e077da085a125d"
+      },
+      {
+        "relativeRef": "public/assets/doitt-338151__lod_1.glb",
+        "byteSize": 57396,
+        "checksumSha256": "3b35c4a5e4c83d826ce0eb13fe0969d290cd5138dd3e1321f93eae02a4c08e9c"
+      },
+      {
+        "relativeRef": "public/assets/doitt-36350__lod_0.glb",
+        "byteSize": 85308,
+        "checksumSha256": "7f83b2e6ff211325ddbd66562596278ec3d3180bc9f18087f98c02cdaa086dba"
+      },
+      {
+        "relativeRef": "public/assets/doitt-36350__lod_1.glb",
+        "byteSize": 44564,
+        "checksumSha256": "bafc9d099369702fa6004b1bb5ed8ec0c1fd9f79f1e077dfacac1b099aca2458"
+      },
+      {
+        "relativeRef": "public/assets/doitt-365723__lod_0.glb",
+        "byteSize": 42420,
+        "checksumSha256": "9ff96024fbb0cfe41fdd567bd5b5fbf4478fbac583ac5b731601094ba3c5c656"
+      },
+      {
+        "relativeRef": "public/assets/doitt-365723__lod_1.glb",
+        "byteSize": 22536,
+        "checksumSha256": "16503bf2063404d85025348af6eed22975a268cbab0d6891af837e200a76b853"
+      },
+      {
+        "relativeRef": "public/assets/doitt-388977__lod_0.glb",
+        "byteSize": 63960,
+        "checksumSha256": "6fd2d0726da6a70042643ccb861ecb38eb576afdcec19d6ddfb865971d450958"
+      },
+      {
+        "relativeRef": "public/assets/doitt-388977__lod_1.glb",
+        "byteSize": 33828,
+        "checksumSha256": "d34ece9eceb915c6df47b7a90b3dbcf6445b25f4b334c722e9d937f03fe91e6d"
+      },
+      {
+        "relativeRef": "public/assets/doitt-423153__lod_0.glb",
+        "byteSize": 46732,
+        "checksumSha256": "c4f7ed783443790304e99710e83cc8745f9b31dc49c06d1b38ee0a7c8fa9ade1"
+      },
+      {
+        "relativeRef": "public/assets/doitt-423153__lod_1.glb",
+        "byteSize": 22896,
+        "checksumSha256": "95785c7252ce88d2044ecf56ef0db68d296e4b1fe32b7a88bd506cef186ef7f5"
+      },
+      {
+        "relativeRef": "public/assets/doitt-43432__lod_0.glb",
+        "byteSize": 66060,
+        "checksumSha256": "53f50b4c6ac0c1edf77bc7de05ffe2abf784540300eef6d8bc5ab61c99a5e217"
+      },
+      {
+        "relativeRef": "public/assets/doitt-43432__lod_1.glb",
+        "byteSize": 28908,
+        "checksumSha256": "e5f326d21353efc256d157fc87b3e683948b610000e8de8b3da5832bf18e6d65"
+      },
+      {
+        "relativeRef": "public/assets/doitt-458597__lod_0.glb",
+        "byteSize": 57232,
+        "checksumSha256": "722322b8a2ce7bda352712b59a01e63779a73dae018d9ac11560b64ba88c118e"
+      },
+      {
+        "relativeRef": "public/assets/doitt-458597__lod_1.glb",
+        "byteSize": 29804,
+        "checksumSha256": "9f58e7a6160c330e95b6b53d50697cd9beadf72e8629a3c825a5b1c6ae481f80"
+      },
+      {
+        "relativeRef": "public/assets/doitt-460272__lod_0.glb",
+        "byteSize": 51068,
+        "checksumSha256": "561873b6f36bccd013b5ff512ccba019b3ecd6cf822c224dd7d219de13e14da4"
+      },
+      {
+        "relativeRef": "public/assets/doitt-460272__lod_1.glb",
+        "byteSize": 23700,
+        "checksumSha256": "b445866652cc9b35c239ead2d2f14b1ce84cfa06764af6b10da8aafb4aef6770"
+      },
+      {
+        "relativeRef": "public/assets/doitt-476191__lod_0.glb",
+        "byteSize": 110632,
+        "checksumSha256": "ef64d70f0fb8759f503537eb286092a3a798c77a26e1326763c2d9fb4fe07e9a"
+      },
+      {
+        "relativeRef": "public/assets/doitt-476191__lod_1.glb",
+        "byteSize": 49728,
+        "checksumSha256": "b828a0da58841223f7fdee22143354d091ea974c402d1b4b2ca6fa65c9d222f6"
+      },
+      {
+        "relativeRef": "public/assets/doitt-485638__lod_0.glb",
+        "byteSize": 71424,
+        "checksumSha256": "2d8bd5dee7bd03a78d87c6ec2da915f6bcc6da5bc4f14026936f9043ed267936"
+      },
+      {
+        "relativeRef": "public/assets/doitt-485638__lod_1.glb",
+        "byteSize": 35680,
+        "checksumSha256": "1e25855943ae0c5ad8abfe1babbaf6d9ecbb735fe17313f0f2ec8c5628b98c87"
+      },
+      {
+        "relativeRef": "public/assets/doitt-507840__lod_0.glb",
+        "byteSize": 41536,
+        "checksumSha256": "c0d0e7ed2cf2fb336687e1d143809d1dfa643fe0281a9b9e6e8a3001b757c08c"
+      },
+      {
+        "relativeRef": "public/assets/doitt-507840__lod_1.glb",
+        "byteSize": 21224,
+        "checksumSha256": "e177b52165720d8552a6354cf542ccfc389da544847676c1c8af0e9817ff3e20"
+      },
+      {
+        "relativeRef": "public/assets/doitt-525242__lod_0.glb",
+        "byteSize": 61432,
+        "checksumSha256": "50a7b8b263553e1e0573f76b97f7f6b81146b03dc6052cc933671e7c7fe16b73"
+      },
+      {
+        "relativeRef": "public/assets/doitt-525242__lod_1.glb",
+        "byteSize": 27820,
+        "checksumSha256": "067f8bedf4423a02ab55be76283ecb994f4fab642f91a9f020711dcc7941f371"
+      },
+      {
+        "relativeRef": "public/assets/doitt-535912__lod_0.glb",
+        "byteSize": 69068,
+        "checksumSha256": "291ad7f92a4d46c8ab99d7168456a8134178c976a9c36089b74c331c3c4b1c02"
+      },
+      {
+        "relativeRef": "public/assets/doitt-535912__lod_1.glb",
+        "byteSize": 34568,
+        "checksumSha256": "ecab36eae03815ff95f8f784d869fbc786434b5dbeaa021dd9dd21d884fe9170"
+      },
+      {
+        "relativeRef": "public/assets/doitt-549070__lod_0.glb",
+        "byteSize": 35696,
+        "checksumSha256": "a71f033f31edafd43e4c0088b948f3a3e5bfda8866ffb2fa0dc94d383ca68d40"
+      },
+      {
+        "relativeRef": "public/assets/doitt-549070__lod_1.glb",
+        "byteSize": 22200,
+        "checksumSha256": "cba42f97d34d9bd02f2262f5b530ed37beb27e94ee317f546385088ff52c1cb6"
+      },
+      {
+        "relativeRef": "public/assets/doitt-558878__lod_0.glb",
+        "byteSize": 47904,
+        "checksumSha256": "1a47bfa63692be54d4ada8a3ffd3c7d137dd0b6028e18d6f2c0a4fa344a5770b"
+      },
+      {
+        "relativeRef": "public/assets/doitt-558878__lod_1.glb",
+        "byteSize": 29012,
+        "checksumSha256": "02af04ae0dc09ff326712407ac54e42ad3f8da37653386833e057b5f67b53e5b"
+      },
+      {
+        "relativeRef": "public/assets/doitt-569179__lod_0.glb",
+        "byteSize": 54544,
+        "checksumSha256": "1faffb54bdfeb4cfbd673285d12a3aff17237830b294a72272d61286da277b9f"
+      },
+      {
+        "relativeRef": "public/assets/doitt-569179__lod_1.glb",
+        "byteSize": 29824,
+        "checksumSha256": "646454ca3b0407dae3bd999135177e3cdcde3c8c821c357b19b916ae00b28783"
+      },
+      {
+        "relativeRef": "public/assets/doitt-57314__lod_0.glb",
+        "byteSize": 47968,
+        "checksumSha256": "5f78d10d1225a6a2621ca6b8e20240b1d6265b6332f3b33e16ca72e33262de76"
+      },
+      {
+        "relativeRef": "public/assets/doitt-57314__lod_1.glb",
+        "byteSize": 29076,
+        "checksumSha256": "26dde62e4933df6b35284a61022c664a9db0271a4d9c7d75bc9767ef8864b2e6"
+      },
+      {
+        "relativeRef": "public/assets/doitt-645563__lod_0.glb",
+        "byteSize": 51452,
+        "checksumSha256": "2391c6c8bf1e637c36113018f310597902376c7d17fbe3816d95bc89c65a653f"
+      },
+      {
+        "relativeRef": "public/assets/doitt-645563__lod_1.glb",
+        "byteSize": 30892,
+        "checksumSha256": "37be74d616ea716703491c9ff25a837e780dd9f14845dfdfda7a91aeb524eec2"
+      },
+      {
+        "relativeRef": "public/assets/doitt-673176__lod_0.glb",
+        "byteSize": 42120,
+        "checksumSha256": "72e58f3733adbe95b59e834fd73bd598da66188533c8a3659a8921bdecc7748d"
+      },
+      {
+        "relativeRef": "public/assets/doitt-673176__lod_1.glb",
+        "byteSize": 22232,
+        "checksumSha256": "488066739835d78be2eeb447d6053be41aab100250c809e517bceb5eb29a4098"
+      },
+      {
+        "relativeRef": "public/assets/doitt-694844__lod_0.glb",
+        "byteSize": 68736,
+        "checksumSha256": "9b7486136793c7eedbffbdb8d702f20958c0ca26444e7dbbb749dc88c9b4e9c3"
+      },
+      {
+        "relativeRef": "public/assets/doitt-694844__lod_1.glb",
+        "byteSize": 37352,
+        "checksumSha256": "671ff976d1510c9faf34a5066ef141ee2d41d6c01d8e488f160953db8b59b69f"
+      },
+      {
+        "relativeRef": "public/assets/doitt-716925__lod_0.glb",
+        "byteSize": 44248,
+        "checksumSha256": "ce737fa28f25b5fef4959221b3312a79e7da0615817ac940bcfcc4920948308e"
+      },
+      {
+        "relativeRef": "public/assets/doitt-716925__lod_1.glb",
+        "byteSize": 23320,
+        "checksumSha256": "54ae0dad78b3e0ad77d34ef9e42d895a0d8e28f55543a970860f8e483668ba57"
+      },
+      {
+        "relativeRef": "public/assets/doitt-724161__lod_0.glb",
+        "byteSize": 115612,
+        "checksumSha256": "af43b08f235cfab5e72fa672aa899e5480e9312347edec2ba3c4699bb98badbb"
+      },
+      {
+        "relativeRef": "public/assets/doitt-724161__lod_1.glb",
+        "byteSize": 55312,
+        "checksumSha256": "3b15f0eb2cd1ee770bd24546eb38ce3319371d00681e17234ce40ec09f64f0e2"
+      },
+      {
+        "relativeRef": "public/assets/doitt-804958__lod_0.glb",
+        "byteSize": 50108,
+        "checksumSha256": "0320b25fdc3fa6934c3540d359434c6393b8c107ff3ccba2b6386312e8c961dd"
+      },
+      {
+        "relativeRef": "public/assets/doitt-804958__lod_1.glb",
+        "byteSize": 22528,
+        "checksumSha256": "608a0890e1cd82cc9d118e98564c378d02c0a0b64a57146b8fbf3393b459ce89"
+      },
+      {
+        "relativeRef": "public/assets/doitt-805073__lod_0.glb",
+        "byteSize": 52616,
+        "checksumSha256": "4fbb8ce10abf8b882b4b6ae42338d9ebb0aecb0dab06f5ea296153129f12b16f"
+      },
+      {
+        "relativeRef": "public/assets/doitt-805073__lod_1.glb",
+        "byteSize": 28732,
+        "checksumSha256": "e24114dccb345afb6b2d02c7337fd3a9a70a46c90b2d9892a30c2754a1a7589c"
+      },
+      {
+        "relativeRef": "public/assets/doitt-833821__lod_0.glb",
+        "byteSize": 94472,
+        "checksumSha256": "7f394ba003ed4a0e1f9e46b26651fb45c9e825c92d1ddc3b931d2dd4d8d86ba2"
+      },
+      {
+        "relativeRef": "public/assets/doitt-833821__lod_1.glb",
+        "byteSize": 49776,
+        "checksumSha256": "fca3d58e144cd7b35cdb0a9478844246e7502d9587f95a0706a06363c2babb2a"
+      },
+      {
+        "relativeRef": "public/assets/doitt-846858__lod_0.glb",
+        "byteSize": 70528,
+        "checksumSha256": "33dfaab3bce85592fa1d3e34ec2d74e771de7cd10ebf2852ac2a2aa52c1010b7"
+      },
+      {
+        "relativeRef": "public/assets/doitt-846858__lod_1.glb",
+        "byteSize": 35404,
+        "checksumSha256": "dda88b6f17e4bb8c93d2a8f0868d6d89a0d30d1502d81ce0cb1379a36e3e4180"
+      },
+      {
+        "relativeRef": "public/assets/doitt-84871__lod_0.glb",
+        "byteSize": 57268,
+        "checksumSha256": "6aa71ca57f191cda09416f51f92f0450209f80b956e6837ef2c35651084d8637"
+      },
+      {
+        "relativeRef": "public/assets/doitt-84871__lod_1.glb",
+        "byteSize": 30460,
+        "checksumSha256": "fb72a2fd1ea2a78d88324c826efa2cbbbda36f7093bcfde05e3ab59abeb5187d"
+      },
+      {
+        "relativeRef": "public/assets/doitt-865180__lod_0.glb",
+        "byteSize": 264232,
+        "checksumSha256": "84ba2ce5d6bf0d6c7b6c882f0fb828ea43f418fccbd57ebc619534afe630651e"
+      },
+      {
+        "relativeRef": "public/assets/doitt-865180__lod_1.glb",
+        "byteSize": 110528,
+        "checksumSha256": "bfdff01af9096aba9b62ca282719c8ae4bc5a439a52b556a1269f0f7d246439c"
+      },
+      {
+        "relativeRef": "public/assets/doitt-917660__lod_0.glb",
+        "byteSize": 123888,
+        "checksumSha256": "20df3c9f352a910c45c6d26b42e87aa1db03632555ada939c142148f7ca29c51"
+      },
+      {
+        "relativeRef": "public/assets/doitt-917660__lod_1.glb",
+        "byteSize": 61504,
+        "checksumSha256": "97ed05484b7831cebb4f23547a7bd6cb72e6e838d5efa10354ff5ff6dcb4d268"
+      },
+      {
+        "relativeRef": "public/assets/doitt-92955__lod_0.glb",
+        "byteSize": 56040,
+        "checksumSha256": "97a711d46ab789edc86440f96b4d637a4399e0439dd7a80297b0a605347b58a5"
+      },
+      {
+        "relativeRef": "public/assets/doitt-92955__lod_1.glb",
+        "byteSize": 30696,
+        "checksumSha256": "a16d1349b33c70235bd8f7a92fc64ba1c1f920c8f7c633d8e61dd0bceb17c4fc"
+      },
+      {
+        "relativeRef": "public/assets/doitt-966236__lod_0.glb",
+        "byteSize": 195240,
+        "checksumSha256": "972755bd6301e91d56a6301a4d072eb4a7dbcbe0bd8fdd5022a9b6b998503a1f"
+      },
+      {
+        "relativeRef": "public/assets/doitt-966236__lod_1.glb",
+        "byteSize": 81052,
+        "checksumSha256": "e5ceaa5871f8553902e8dc000f13177cba47a013fda73b0f21b60aa2359e03d9"
+      },
+      {
+        "relativeRef": "public/assets/doitt-990436__lod_0.glb",
+        "byteSize": 88024,
+        "checksumSha256": "ad13f0c6a7153c4083e62753bc0d5e5aceb3ca30d52cedbafc076295a9d3f5ea"
+      },
+      {
+        "relativeRef": "public/assets/doitt-990436__lod_1.glb",
+        "byteSize": 41248,
+        "checksumSha256": "468fda4ddcd71e9f499be8b20fa7378487b9edb4132d6d2074df54f12f716ce8"
+      }
+    ],
+    "sourceAssetVerification": {
+      "method": "Regenerate through writeMidtownCoreV3Assets under the shipped wave profile, then compare sha256 and byte length against the committed -c2 payload-inventory.json.",
+      "compared": 96,
+      "byteIdentical": 96,
+      "verdict": "PASS",
+      "why": "This is what lets the record name source checksums it never read from disk. The bake derives from the same plans that produce exactly these bytes, and proves it rather than asserting it."
+    },
+    "classTiles": [
+      {
+        "path": "public/textures/brick-running-bond.png",
+        "byteSize": 16580,
+        "checksumSha256": "fdd4c9c8238518b021a09211b380a8844bcee92cbc239f33463c7b79f4ecd519"
+      },
+      {
+        "path": "public/textures/curtain-mullion-grid.png",
+        "byteSize": 16580,
+        "checksumSha256": "9be8020e193fd4dafda5db973e51e11893a5e7cd55d9d63ac397caced4beeb50"
+      },
+      {
+        "path": "public/textures/limestone-ashlar.png",
+        "byteSize": 16580,
+        "checksumSha256": "a177e50fade043f0f868a7a262f6e04b959375fb6cbb47cbdfbb27aee22794f8"
+      },
+      {
+        "path": "public/textures/spandrel-panel.png",
+        "byteSize": 16580,
+        "checksumSha256": "abd89e470989ba02472c2df7b029f257747452b2df794742347ed802849f8936"
+      }
+    ],
+    "recipeSha256": "88baa55611bfdf52a745f01eacc2c9bb44305897109fbd5491f7e8f5caaa6dea",
+    "budgetContractSha256": "30403b6d161cdee965dcec7a57dbf9b0b97f031c13940a95d793d8f4a8b6d62e",
+    "emissionProfileReleaseId": "manhattan-northern-manhattan-cells-20260812-c1",
+    "emissionProfileNote": "The -c1 suffix is correct and deliberate: the GLBs inside -c2 embed the -c1 identity in inventoryId and evidenceShardId, because -c2 copies lod_0 byte for byte."
+  },
+  "bakeOutcome": {
+    "surfaceAreaSquareMeters": 105198.8,
+    "faceCount": 764,
+    "flatFaceCount": 648,
+    "flatFaceShare": 0.848168,
+    "atlasOccupancy": 0.853348,
+    "appliedResolutionScale": 0.5,
+    "appliedTexelWorldSizeMeters": 2.792527,
+    "targetTexelWorldSizeMeters": 1.396263,
+    "idealTexelRatio": 1.102051,
+    "idealTexelRatioNote": "What a 100%-full atlas would have achieved. Not delivered; kept only so the packing penalty is visible as the difference.",
+    "achievedTexelRatio": 0.5,
+    "underResolved": true,
+    "criticalDistanceMeters": 2400,
+    "atlasGpuBytes": 349525,
+    "geometryGpuBytes": 119104,
+    "members": [
+      {
+        "buildingId": "doitt:119910",
+        "included": true,
+        "styleClass": "masonry-light",
+        "faceCount": 42,
+        "planHashSha256": "3621a44b89495e6eec65e3a5812aa24ea779a0f05e14e50a33dbbb104bb945c0"
+      },
+      {
+        "buildingId": "doitt:1283944",
+        "included": true,
+        "styleClass": "stone-neutral",
+        "faceCount": 5,
+        "planHashSha256": "5829b80911568a6a780ead132bce1a45b1065c4db648df02a2a3ad4b616e6d19"
+      },
+      {
+        "buildingId": "doitt:1292742",
+        "included": true,
+        "styleClass": "masonry-light",
+        "faceCount": 11,
+        "planHashSha256": "50e73cdcfd0598d86b7940f5ba34ab95bcb989c2d415f83d00beec13e7ce2d5b"
+      },
+      {
+        "buildingId": "doitt:141215",
+        "included": true,
+        "styleClass": "masonry-light",
+        "faceCount": 19,
+        "planHashSha256": "9e084a7aa5baf22e309a0d67735bfbd7c0b621b7a91d5db3e8bc9b3f7f549ab3"
+      },
+      {
+        "buildingId": "doitt:144129",
+        "included": true,
+        "styleClass": "masonry-warm",
+        "faceCount": 11,
+        "planHashSha256": "2197e5451f780a3f8d9907c35c2d4913fd275c0409fe5979cfb3eb83c32253b5"
+      },
+      {
+        "buildingId": "doitt:147906",
+        "included": true,
+        "styleClass": "masonry-warm",
+        "faceCount": 19,
+        "planHashSha256": "dd603b1a7ef30f5cde0f5e55dd5586158f9c6218953c6121303026c310cd7ac3"
+      },
+      {
+        "buildingId": "doitt:157460",
+        "included": true,
+        "styleClass": "masonry-warm",
+        "faceCount": 19,
+        "planHashSha256": "1e10e2c808fb400abb0102610ed1de5986a60991f63a3c99bd307f68120d9233"
+      },
+      {
+        "buildingId": "doitt:175013",
+        "included": true,
+        "styleClass": "curtain-cool",
+        "faceCount": 18,
+        "planHashSha256": "399850fb4a10cdbd6983addf76ef71f2d3d73ca11eabae7575da608604c3c3fc"
+      },
+      {
+        "buildingId": "doitt:21295",
+        "included": true,
+        "styleClass": "masonry-warm",
+        "faceCount": 13,
+        "planHashSha256": "a4a1519bea84794e53f31147fda2136451b719d86e9cab387e946bfbf3060d03"
+      },
+      {
+        "buildingId": "doitt:230832",
+        "included": true,
+        "styleClass": "masonry-light",
+        "faceCount": 14,
+        "planHashSha256": "99eca5faa43ff270e14f6922124a7f39e01d0e0d2545452865d0c492594c90d8"
+      },
+      {
+        "buildingId": "doitt:231587",
+        "included": true,
+        "styleClass": "masonry-light",
+        "faceCount": 9,
+        "planHashSha256": "0399bcc41b826e0423cd12aea597a647fb7d1654a1fba7975a18ced6d899b282"
+      },
+      {
+        "buildingId": "doitt:25699",
+        "included": true,
+        "styleClass": "masonry-warm",
+        "faceCount": 18,
+        "planHashSha256": "959a511e78fca5d6c3798fc68cb1e93a1418fb2da6fae8117feccd217412d3bc"
+      },
+      {
+        "buildingId": "doitt:287400",
+        "included": true,
+        "styleClass": "stone-neutral",
+        "faceCount": 10,
+        "planHashSha256": "41dd70ea451daebfd68330d8cb6990334cf61ab07d45a5147ae9b675a66cfba1"
+      },
+      {
+        "buildingId": "doitt:298617",
+        "included": true,
+        "styleClass": "masonry-warm",
+        "faceCount": 7,
+        "planHashSha256": "2fa9fe2e134d162aaa8324b1db3e7fba48d86446f7bf922d597c7f53f600b604"
+      },
+      {
+        "buildingId": "doitt:303919",
+        "included": true,
+        "styleClass": "curtain-cool",
+        "faceCount": 19,
+        "planHashSha256": "948d3771579b5949ca65df5a53e9c6abb29fdaa898bbf4052603056bf0b07e8d"
+      },
+      {
+        "buildingId": "doitt:336066",
+        "included": true,
+        "styleClass": "stone-neutral",
+        "faceCount": 12,
+        "planHashSha256": "6bc89e249fbf2c106aaef2964e48869448844a61cc2e21632d01c8749e5c8dc7"
+      },
+      {
+        "buildingId": "doitt:338151",
+        "included": true,
+        "styleClass": "masonry-warm",
+        "faceCount": 10,
+        "planHashSha256": "18e8d6bfbe6266ad1a18d1c3a54ec556548b6ab5cf9e9a919613dccb88c90cd2"
+      },
+      {
+        "buildingId": "doitt:36350",
+        "included": true,
+        "styleClass": "masonry-light",
+        "faceCount": 25,
+        "planHashSha256": "cdd3fd85c1fcc0c774ece3c53ec8c98676334d57563318b2293bb340ac9f6478"
+      },
+      {
+        "buildingId": "doitt:365723",
+        "included": true,
+        "styleClass": "masonry-warm",
+        "faceCount": 19,
+        "planHashSha256": "a89250e2db4a66a90571fcc618b019ad311f647f645ee0067f6f30380ad3f1e7"
+      },
+      {
+        "buildingId": "doitt:388977",
+        "included": true,
+        "styleClass": "masonry-light",
+        "faceCount": 14,
+        "planHashSha256": "299a13a5529a5b570fe3dc5706354445e35cb0f8433454d6d4b13812423e9cf5"
+      },
+      {
+        "buildingId": "doitt:423153",
+        "included": true,
+        "styleClass": "masonry-light",
+        "faceCount": 14,
+        "planHashSha256": "7908a9e053eab67576941e235e73e4851493d9ba61afe82c42cfa018155ac83c"
+      },
+      {
+        "buildingId": "doitt:43432",
+        "included": true,
+        "styleClass": "masonry-light",
+        "faceCount": 6,
+        "planHashSha256": "4b9e6ec180a98b3a6cc1fa930e00394f184f9a5f15a73295fcde868669a76a69"
+      },
+      {
+        "buildingId": "doitt:458597",
+        "included": true,
+        "styleClass": "stone-neutral",
+        "faceCount": 12,
+        "planHashSha256": "cc592988099414617aa66d58d1f1a8e4c52b68bd4d3dc7f28d091d67b3070b85"
+      },
+      {
+        "buildingId": "doitt:460272",
+        "included": true,
+        "styleClass": "masonry-warm",
+        "faceCount": 7,
+        "planHashSha256": "b468acfee3c5c819ebf45e51cb971c0b152a2c35d08f5b78d934a49bc8c1e529"
+      },
+      {
+        "buildingId": "doitt:476191",
+        "included": true,
+        "styleClass": "masonry-light",
+        "faceCount": 9,
+        "planHashSha256": "17e298198d0073a86ebb67ff81b6b393611fd5d871720804b641d10fa89fefb5"
+      },
+      {
+        "buildingId": "doitt:485638",
+        "included": true,
+        "styleClass": "masonry-warm",
+        "faceCount": 17,
+        "planHashSha256": "6f06e911c4204e738c6b3883da7099feef63c137cd3842874fdcbfdb1310f77b"
+      },
+      {
+        "buildingId": "doitt:507840",
+        "included": true,
+        "styleClass": "masonry-warm",
+        "faceCount": 19,
+        "planHashSha256": "decf4dc44d6e294d113972b02412fe10582006b0aa370199fd2c7d0632ba8f7e"
+      },
+      {
+        "buildingId": "doitt:525242",
+        "included": true,
+        "styleClass": "masonry-light",
+        "faceCount": 9,
+        "planHashSha256": "55faa63743f289bc5c2a0f9bff0e0966f01b837961b798d6afc8551bbb8e4e84"
+      },
+      {
+        "buildingId": "doitt:535912",
+        "included": true,
+        "styleClass": "masonry-light",
+        "faceCount": 12,
+        "planHashSha256": "6cb1e3e94402a4302c87cbfe358f3c8cb8c39e2ab91a88660a8c5eeedbf6c338"
+      },
+      {
+        "buildingId": "doitt:549070",
+        "included": true,
+        "styleClass": "masonry-light",
+        "faceCount": 21,
+        "planHashSha256": "7a8b0d71f0dc23feae8cb79c80dc865777c6b1f784245d87eec5307375b0cb73"
+      },
+      {
+        "buildingId": "doitt:558878",
+        "included": true,
+        "styleClass": "masonry-light",
+        "faceCount": 22,
+        "planHashSha256": "622f85e8c990a93546be4727f1f66a8d9fd5c8a5686ddc9aa8a24ab571da4891"
+      },
+      {
+        "buildingId": "doitt:569179",
+        "included": true,
+        "styleClass": "masonry-warm",
+        "faceCount": 11,
+        "planHashSha256": "3a708abbb82cfcb8ae819ffcaeed091036a586943f407252cd758c3bb93d5462"
+      },
+      {
+        "buildingId": "doitt:57314",
+        "included": true,
+        "styleClass": "stone-neutral",
+        "faceCount": 19,
+        "planHashSha256": "fb43db4f95252d53a6e98b4b3292f08912a6a4cd59b9e7b69860acd128ca00be"
+      },
+      {
+        "buildingId": "doitt:645563",
+        "included": true,
+        "styleClass": "masonry-light",
+        "faceCount": 18,
+        "planHashSha256": "ef1c5b1fdfdbc9470e7325aa15e6fd657a3b3707694a4e4dc73fef9eacd85259"
+      },
+      {
+        "buildingId": "doitt:673176",
+        "included": true,
+        "styleClass": "masonry-warm",
+        "faceCount": 18,
+        "planHashSha256": "4a26403164749c29303966ce8059fe8846959fa634cccbbdc1312398649d2a3d"
+      },
+      {
+        "buildingId": "doitt:694844",
+        "included": true,
+        "styleClass": "masonry-light",
+        "faceCount": 15,
+        "planHashSha256": "9b92e6d5702c14f9d2515ec101b71d5be362d14ed62251274b2f9e696e45b2e3"
+      },
+      {
+        "buildingId": "doitt:716925",
+        "included": true,
+        "styleClass": "masonry-light",
+        "faceCount": 17,
+        "planHashSha256": "94d7e224fcf8c8cce12e008a731ee76b20527307faacae955ec2d5d65e683802"
+      },
+      {
+        "buildingId": "doitt:724161",
+        "included": true,
+        "styleClass": "masonry-warm",
+        "faceCount": 24,
+        "planHashSha256": "ea67146bf49dc539a4144cf7f5833fc5c73f25eae3d68ee8f25c1303a33623f4"
+      },
+      {
+        "buildingId": "doitt:804958",
+        "included": true,
+        "styleClass": "masonry-light",
+        "faceCount": 7,
+        "planHashSha256": "75056946317d86b66d179fa31aa1dbb8d7b271320786427049c41518c07541c1"
+      },
+      {
+        "buildingId": "doitt:805073",
+        "included": true,
+        "styleClass": "masonry-warm",
+        "faceCount": 14,
+        "planHashSha256": "5d580a33cab91f04b696428239f0ec49094c18f3c4604eaa80197840a5a0cbc4"
+      },
+      {
+        "buildingId": "doitt:833821",
+        "included": true,
+        "styleClass": "masonry-warm",
+        "faceCount": 32,
+        "planHashSha256": "b9c6120565c3570508e5b81b2fac9e04aa6abf11223d7c029786d37fb8ee4564"
+      },
+      {
+        "buildingId": "doitt:846858",
+        "included": true,
+        "styleClass": "masonry-warm",
+        "faceCount": 7,
+        "planHashSha256": "b781c3690a17f08fa306cc5d42c01337876716257790e47d5ce25c066a9e4917"
+      },
+      {
+        "buildingId": "doitt:84871",
+        "included": true,
+        "styleClass": "masonry-light",
+        "faceCount": 11,
+        "planHashSha256": "0738f2512a68614ba827e47946cc2737b98c260b9173b7919a9408b803ffab8b"
+      },
+      {
+        "buildingId": "doitt:865180",
+        "included": true,
+        "styleClass": "masonry-warm",
+        "faceCount": 26,
+        "planHashSha256": "f698aac2d0057fee1315a7ccdf50fc518f4a344db32fd83b9fcf45bcdc7bce97"
+      },
+      {
+        "buildingId": "doitt:917660",
+        "included": true,
+        "styleClass": "masonry-warm",
+        "faceCount": 45,
+        "planHashSha256": "3c4dc2f428a1e8e9009fa35e15b653241f5de89ad14b0a10c503431d7d16ba0f"
+      },
+      {
+        "buildingId": "doitt:92955",
+        "included": true,
+        "styleClass": "stone-neutral",
+        "faceCount": 14,
+        "planHashSha256": "e09ccf8b6a43f9fe7902576342796f603219aeba3fe2c96d4384ee9229b3b220"
+      },
+      {
+        "buildingId": "doitt:966236",
+        "included": true,
+        "styleClass": "masonry-warm",
+        "faceCount": 18,
+        "planHashSha256": "eb3cfcca0ae39cdafa2b02744f0082e62181f50f68aaa02b62203bc4df428ad9"
+      },
+      {
+        "buildingId": "doitt:990436",
+        "included": true,
+        "styleClass": "masonry-warm",
+        "faceCount": 6,
+        "planHashSha256": "b396a3013eebff34a2a4da3f6b8b67650810c192de511de5b2117c61de99741b"
+      }
+    ]
+  },
+  "rights": {
+    "derivation": "Derivative of the generated procedural facade tiles and the sourced OTI building footprints and heights.",
+    "envelope": "The NARROWER of the inherited envelopes travels with this artifact. Retention and local display only. No publication, no redistribution, no public conveyance.",
+    "attribution": "Source: NYC Office of Technology and Innovation GIS, Building Footprints; accessed through NYC Open Data.",
+    "note": "Baking does not widen an approval envelope. A derivative of a retention-only artifact is retention-only."
+  },
+  "uncertainty": "Far-tier HLOD massing. The sourced footprint extruded to the sourced height, carrying a facade appearance baked from the generated procedural tiles. Setback steps, tier insets, rooftop groups, window openings, glazing and trim are ABSENT BY CONSTRUCTION and are filled in solid or absorbed into the facade material. No lighting, ambient occlusion or shadowing is baked in. This asserts nothing about the material, colour, age, condition or cladding of any real building, and its silhouette is a coarser claim than ADR 0050's 2% standard covers.",
+  "notClaimedHere": [
+    "Byte replay is not appearance agreement. It says the bake is a function; it says nothing about whether the tile looks right.",
+    "This is one cell. Nothing here generalizes to the island without the mass bake measuring it.",
+    "The prism's silhouette error is not measured by this record and is not covered by ADR 0050's 2% cap."
+  ]
+}

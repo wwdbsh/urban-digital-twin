@@ -1,0 +1,335 @@
+/**
+ * Far-tier HLOD resolution and GPU-memory arithmetic.
+ *
+ * This module is the ONLY place the far tier's resolution ladder and its GPU
+ * budget are computed. It is pure: every function here is a total function of
+ * its arguments and the named constants below, so the pre-registration record
+ * and any later audit can recompute the same numbers from the same inputs.
+ *
+ * WHAT THIS TIER IS. The far tier draws each ownership cell as ONE merged
+ * artifact: the sourced footprint extruded to the sourced height (the same
+ * coarse prism `data/citywide-overview-census-20260814/coarse-tier.json`
+ * measured), carrying a baked facade atlas instead of a flat designed colour.
+ * It is NOT merged `lod_1`: merging `lod_1` was costed and refused, because the
+ * island's shipped triangle count is 80,253,286 against this tier's 1,696,292.
+ *
+ * WHAT THE PRISM COSTS IN HONESTY. A prism has no setbacks. Every step, tier
+ * inset and rooftop group in the V3 massing is filled in solid. That is a
+ * geometric error class of its OWN, and it is NOT covered by ADR 0050's 2%
+ * silhouette standard: the census measured this prism against the massing it
+ * replaces at a median deviation of 0.045221 and a maximum of 0.628806, with
+ * only 48.19% of buildings inside the 2% cap. The far tier does not claim that
+ * cap and must never declare one.
+ */
+
+import { sha256HexSync, stableSerialize } from "../domain/deterministic-hash.ts";
+
+/**
+ * The reference viewport every screen-space number in this module is stated
+ * against. A texel budget without a viewport is not a budget, so this travels
+ * with every derived figure.
+ *
+ * `metersPerPixel` uses the ARC form `d * fov / height`, not the tangent form
+ * `2 * d * tan(fov/2) / height`. The two differ by 10.2% at a 60 degree field
+ * (0.4654 against 0.5132 metres per pixel at 400 m), and the arc form is the
+ * SMALLER of the two — it asks for finer texels than the tangent form does, so
+ * choosing it is conservative in the quality direction and costs memory rather
+ * than saving it. It is also the form the frozen execution plan stated.
+ */
+export const FAR_TIER_VIEW_REFERENCE = {
+  viewportWidthPixels: 1440,
+  viewportHeightPixels: 900,
+  verticalFieldOfViewDegrees: 60,
+  metricId: "arc-approximation-v1",
+} as const;
+
+/**
+ * Where the far tier begins.
+ *
+ * Not invented here: `EXTERIOR_DETAIL_RADIUS` shipped at 1,200 m in the
+ * citywide default flip, and `EXTERIOR_CELL_SCHEDULER_POLICY.distanceBandEdgesMeters`
+ * is `[1200, 2400]`. The far tier takes over exactly where the mid tier's
+ * detail radius stops, so this constant is a restatement of a shipped number
+ * rather than a new one.
+ */
+export const FAR_TIER_NEAR_EDGE_METERS = 1_200 as const;
+
+/**
+ * Texels per screen pixel at a node's own near edge.
+ *
+ * `target` is what resolution selection solves for. `floor` is the bar: a node
+ * that cannot reach 1.0 at its near edge is UNDER-RESOLVED and must be reported
+ * as such, never silently accepted. `ceiling` bounds the other side, because
+ * every doubling above 1.0 costs 4x the memory for detail the screen cannot
+ * show.
+ */
+export const FAR_TIER_TEXEL_RATIO = { floor: 1.0, target: 1.0, ceiling: 2.0 } as const;
+
+/**
+ * Atlas edge length is a power of two in [64, 256].
+ *
+ * The 256 ceiling is the decisive constant and it was chosen from measured
+ * island arithmetic, not preference. The cut-independent atlas bound is 72.2
+ * MiB at a 128 ceiling, 278.5 MiB at 256, 640.0 MiB at 512 and 861.7 MiB at
+ * 1024. 512 and 1024 buy sharper near-boundary cells at a memory cost this
+ * project has no evidence it can pay, so the ceiling is 256 and the cells that
+ * cannot reach ratio 1.0 inside it are REPORTED rather than funded.
+ *
+ * THE CEILING ALSO DECIDES FEASIBILITY, NOT ONLY SHARPNESS. Every face costs at
+ * least `(faceTexelFloor + 2 * gutterTexels)^2` texels however far the global
+ * resolution is reduced, so an atlas holds a fixed maximum face count. Measured
+ * with the REAL packer over all 883 cells, the cells that cannot be baked at
+ * any scale are: 774 at a 128 ceiling, 172 at 256, 57 at 512 and 57 at 1024.
+ *
+ * RAISING THE CEILING DOES NOT FIX THIS, and an earlier version of this comment
+ * wrongly said a 512 ceiling removed the limit entirely. That claim came from
+ * estimating infeasibility as `faceCount > ceiling^2 / 64`, which is the same
+ * 100%-utilisation idealisation the delivered-resolution ladder had already been
+ * corrected for. The real packer says otherwise, and the mechanism is
+ * structural: atlas edge is chosen from a cell's SURFACE AREA, not from the
+ * ceiling, so a low-area, high-face-count cell keeps a small atlas however high
+ * the ceiling goes. At 512 and 1024 ALL 57 survivors are cells whose atlas is
+ * already below the ceiling — raising it further cannot reach them.
+ *
+ * The remedies that do bite are therefore: a smaller gutter, a lower texel
+ * floor, splitting leaves below the ledger cell, or decoupling the per-cell
+ * atlas floor from surface area so a face-dense cell can be given a larger
+ * atlas than its area alone would earn. This prototype chooses none of them.
+ * See `stage0-hierarchy.json`.
+ */
+export const FAR_TIER_ATLAS_PIXELS = { minimum: 64, maximum: 256 } as const;
+
+/**
+ * Bytes per texel on the GPU, and the mip multiplier.
+ *
+ * RGBA8 at 4 bytes: a truecolour PNG decodes to RGB8, but no mainstream GPU
+ * stores a 3-byte texel — it pads to 4. Counting 3 here would understate every
+ * figure in this module by a quarter.
+ *
+ * The 4/3 multiplier is the full mip chain. The far tier bakes NO mips: PNG has
+ * no mip chain to carry one in, so the levels below the base are generated by
+ * the runtime. They are generated whether or not this budget counts them, so it
+ * counts them.
+ */
+export const FAR_TIER_GPU_TEXEL_BYTES = 4 as const;
+export const FAR_TIER_MIP_CHAIN_MULTIPLIER = 4 / 3;
+
+/** Metres one screen pixel subtends at `distanceMeters`, in the reference viewport. */
+export function farTierMetersPerPixel(distanceMeters: number): number {
+  if (!Number.isFinite(distanceMeters) || distanceMeters <= 0) throw new Error("Far-tier screen arithmetic requires a positive distance.");
+  const fovRadians = (FAR_TIER_VIEW_REFERENCE.verticalFieldOfViewDegrees * Math.PI) / 180;
+  return (distanceMeters * fovRadians) / FAR_TIER_VIEW_REFERENCE.viewportHeightPixels;
+}
+
+/** The texel world size that hits `ratio` texels per screen pixel at `distanceMeters`. */
+export function farTierTexelWorldSizeMeters(distanceMeters: number, ratio: number = FAR_TIER_TEXEL_RATIO.target): number {
+  if (!Number.isFinite(ratio) || ratio <= 0) throw new Error("Far-tier texel ratio must be positive.");
+  return farTierMetersPerPixel(distanceMeters) / ratio;
+}
+
+function nextPowerOfTwo(value: number): number {
+  let power = 1;
+  while (power < value) power *= 2;
+  return power;
+}
+
+export interface FarTierResolution {
+  /** Atlas edge length in texels; always a power of two inside the declared bounds. */
+  atlasPixels: number;
+  /** Texels the node's surface area demands at the target ratio, before clamping. */
+  demandedTexels: number;
+  /** Edge length that demand implies, before clamping. */
+  demandedPixels: number;
+  /** World size of one atlas texel once the clamp has been applied, in metres. */
+  texelWorldSizeMeters: number;
+  /** Texels per screen pixel actually achieved at `nearEdgeMeters`. */
+  achievedRatio: number;
+  /**
+   * True when `achievedRatio` is below `FAR_TIER_TEXEL_RATIO.floor`, i.e. the
+   * atlas ceiling bound before the quality target did. Such a node renders
+   * blurrier than the target between its near edge and `criticalDistanceMeters`.
+   */
+  underResolved: boolean;
+  /** Distance at which this node first reaches the ratio floor. */
+  criticalDistanceMeters: number;
+}
+
+/**
+ * Resolution for ONE node, from the surface area it must carry and the nearest
+ * distance it is allowed to be drawn at.
+ *
+ * `surfaceAreaSquareMeters` is the node's whole baked surface — every wall face
+ * plus every roof cap. Occluded faces are counted: the bake has no visibility
+ * information and inventing some would be a claim this task cannot support.
+ */
+export function farTierResolution(
+  surfaceAreaSquareMeters: number,
+  nearEdgeMeters: number = FAR_TIER_NEAR_EDGE_METERS,
+  ratio: number = FAR_TIER_TEXEL_RATIO.target,
+): FarTierResolution {
+  if (!Number.isFinite(surfaceAreaSquareMeters) || surfaceAreaSquareMeters <= 0) throw new Error("Far-tier resolution requires a positive surface area.");
+  const texelSize = farTierTexelWorldSizeMeters(nearEdgeMeters, ratio);
+  const demandedTexels = surfaceAreaSquareMeters / (texelSize * texelSize);
+  const demandedPixels = Math.sqrt(demandedTexels);
+  const atlasPixels = Math.min(
+    FAR_TIER_ATLAS_PIXELS.maximum,
+    Math.max(FAR_TIER_ATLAS_PIXELS.minimum, nextPowerOfTwo(Math.ceil(demandedPixels))),
+  );
+  const achievedTexelSize = Math.sqrt(surfaceAreaSquareMeters) / atlasPixels;
+  const achievedRatio = farTierMetersPerPixel(nearEdgeMeters) / achievedTexelSize;
+  return {
+    atlasPixels,
+    demandedTexels,
+    demandedPixels,
+    texelWorldSizeMeters: achievedTexelSize,
+    achievedRatio,
+    underResolved: achievedRatio < FAR_TIER_TEXEL_RATIO.floor,
+    criticalDistanceMeters: (achievedTexelSize * FAR_TIER_VIEW_REFERENCE.viewportHeightPixels * FAR_TIER_TEXEL_RATIO.floor)
+      / ((FAR_TIER_VIEW_REFERENCE.verticalFieldOfViewDegrees * Math.PI) / 180),
+  };
+}
+
+export interface FarTierDeliveredQuality {
+  /** Texels per screen pixel actually achieved at `nearEdgeMeters`. */
+  achievedRatio: number;
+  underResolved: boolean;
+  /** Distance at which this delivered texel size first reaches the ratio floor. */
+  criticalDistanceMeters: number;
+}
+
+/**
+ * Quality from the texel size the PACKER ACTUALLY DELIVERED, not from the one
+ * the ladder asked for.
+ *
+ * These are different numbers and the gap is not small. `farTierResolution`
+ * assumes an atlas can be filled to 100%, which no packer achieves: gutters and
+ * shelf waste force `packFarTierAtlas` to shrink the global texel size until
+ * the faces fit, and it reports that as `appliedScale`. Reporting the ideal
+ * ratio while the packer delivered half of it would state a quality the tile
+ * does not have — which is exactly what B6 exists to prevent — so anything that
+ * reports a real tile's quality must call THIS, with `packing.texelWorldSizeMeters`.
+ */
+export function farTierDeliveredQuality(
+  deliveredTexelWorldSizeMeters: number,
+  nearEdgeMeters: number = FAR_TIER_NEAR_EDGE_METERS,
+): FarTierDeliveredQuality {
+  if (!Number.isFinite(deliveredTexelWorldSizeMeters) || deliveredTexelWorldSizeMeters <= 0) {
+    throw new Error("Far-tier delivered quality requires a positive texel world size.");
+  }
+  const achievedRatio = farTierMetersPerPixel(nearEdgeMeters) / deliveredTexelWorldSizeMeters;
+  return {
+    achievedRatio,
+    underResolved: achievedRatio < FAR_TIER_TEXEL_RATIO.floor,
+    criticalDistanceMeters: (deliveredTexelWorldSizeMeters * FAR_TIER_VIEW_REFERENCE.viewportHeightPixels * FAR_TIER_TEXEL_RATIO.floor)
+      / ((FAR_TIER_VIEW_REFERENCE.verticalFieldOfViewDegrees * Math.PI) / 180),
+  };
+}
+
+/** Decoded GPU bytes one baked atlas of `atlasPixels` edge occupies, mip chain included. */
+export function farTierAtlasGpuBytes(atlasPixels: number): number {
+  if (!Number.isSafeInteger(atlasPixels) || atlasPixels <= 0) throw new Error("Far-tier atlas edge must be a positive integer.");
+  return Math.round(atlasPixels * atlasPixels * FAR_TIER_GPU_TEXEL_BYTES * FAR_TIER_MIP_CHAIN_MULTIPLIER);
+}
+
+/**
+ * Decoded GPU bytes the merged prism geometry of one tile occupies.
+ *
+ * Counted as `writeCanonicalGlb` actually emits, which is POSITION and
+ * TEXCOORD_0 as float32 on UNSHARED vertices plus uint32 indices. It does not
+ * emit NORMAL, so this does not count one. Vertices are never welded: a quad
+ * costs four vertices and a triangle three, always.
+ */
+export function farTierGeometryGpuBytes(quadCount: number, triangleCount: number): number {
+  const vertexCount = quadCount * 4 + triangleCount * 3;
+  const indexCount = quadCount * 6 + triangleCount * 3;
+  return vertexCount * (12 + 8) + indexCount * 4;
+}
+
+/** The frozen budget contract for the far tier, stated in one object. */
+export const FAR_TIER_BUDGET_CONTRACT = {
+  contractId: "far-tier-hlod-gpu-budget-v1",
+  /**
+   * Deliberately its own contract. The exterior-completion goal's criterion #30
+   * is CLOSED at 256 MiB and covers the near and mid tiers' textured assets; it
+   * was frozen against a measurement this tier did not exist for. Folding a new
+   * 372 MiB tier into a closed criterion would silently re-open it, so the far
+   * tier carries a separate ceiling and the two are added, never merged.
+   */
+  scope: "The baked far-tier HLOD atlases and their merged prism geometry, and nothing else.",
+  maxAtlasEdgePixels: FAR_TIER_ATLAS_PIXELS.maximum,
+  /** One tile's atlas at the ceiling edge, mip chain included. */
+  maxTileAtlasGpuBytes: 349_525,
+  /**
+   * Maximum resident far-tier TEXTURE bytes over ALL camera poses, at the 256
+   * ceiling.
+   *
+   * THIS IS A BOUND, NOT A SAMPLED MAXIMUM, and the distinction cost a
+   * correction. An earlier draft took the maximum of a 13x13 camera sweep and
+   * called it a figure that is never exceeded at any pose. It is not: a sampled
+   * grid can only MISS a peak, never invent one, so refining the grid kept
+   * finding worse poses (133,190,868 at 12 steps, creeping to 136,686,118 at
+   * 192) and never converged.
+   *
+   * The committed value instead comes from a theorem about the tree. Every
+   * camera pose selects some ANTICHAIN of nodes, minus whatever the 1,200 m
+   * boundary excludes, and excluding only subtracts — so the maximum over all
+   * antichains dominates every pose. That maximum is one bottom-up pass:
+   * `maxCut(node) = max(cost(node), sum of maxCut(children))`.
+   *
+   * "Every leaf resident at once" was considered as a simpler bound and
+   * REJECTED, because it is not one: power-of-two rounding and the 64-texel
+   * floor make 3 internal nodes of this tree cost more than their children.
+   */
+  maxResidentAtlasGpuBytes: 291_984_434,
+  /**
+   * The same bound's resident merged prism geometry.
+   *
+   * READ THIS NUMBER CAREFULLY. It is 98,310,624 bytes, which is the ENTIRE
+   * island's prism geometry, and that is not a rounding artefact — it is the
+   * measured consequence of a real limitation. A parent node in this hierarchy
+   * is the concatenation of its children's prisms, not a simplified massing of
+   * them, so refining or coarsening the cut moves texture memory and leaves
+   * geometry memory almost unchanged. THE HIERARCHY REDUCES TEXTURE RESIDENCY
+   * WITH DISTANCE AND DOES NOT REDUCE GEOMETRY RESIDENCY AT ALL.
+   *
+   * That is affordable at 93.8 MiB and it is bounded, so it does not block the
+   * prototype. It is named here, rather than discovered during a mass bake,
+   * because parent-node geometry simplification is a real prerequisite for any
+   * tier that wants to grow past this island's size.
+   */
+  maxResidentGeometryGpuBytes: 98_310_624,
+  maxResidentTotalGpuBytes: 390_295_058,
+} as const;
+
+/**
+ * WHAT B3-B5 BOUND, AND WHAT THEY DO NOT.
+ *
+ * They bound the cost of ONE SELECTED CUT: the instantaneous, steady-state
+ * residency of whatever antichain a camera pose selects. They are not a bound
+ * on a streaming runtime's peak.
+ *
+ * DELIBERATELY OUTSIDE `FAR_TIER_BUDGET_CONTRACT`. Every baked tile embeds
+ * `budgetContractSha256` in its metadata, so adding a field to that object
+ * rewrites every tile's bytes. This qualification describes how the bars should
+ * be READ; it does not change what they are, and it must not be able to
+ * invalidate an artifact that is already correct.
+ */
+export const FAR_TIER_BOUND_KIND = "instantaneous-steady-state-over-one-selected-cut" as const;
+
+export const FAR_TIER_BOUND_EXCLUSIONS = [
+  "TRANSITIONAL DOUBLE RESIDENCY. A runtime that keeps an outgoing node resident while its replacement uploads holds both, and momentarily exceeds these figures by the size of the overlap.",
+  "RETAINED EVICTION CACHES. A cache that keeps an evicted atlas against a likely return holds nodes no cut selects; its ceiling is ADDITIVE to these bars.",
+  "UPLOAD STAGING. Bytes in flight, or in a decode buffer, are not counted here.",
+] as const;
+
+export function farTierBudgetContractHash(): string {
+  return sha256HexSync(stableSerialize({
+    contract: FAR_TIER_BUDGET_CONTRACT,
+    view: FAR_TIER_VIEW_REFERENCE,
+    nearEdgeMeters: FAR_TIER_NEAR_EDGE_METERS,
+    ratio: FAR_TIER_TEXEL_RATIO,
+    atlasPixels: FAR_TIER_ATLAS_PIXELS,
+    gpuTexelBytes: FAR_TIER_GPU_TEXEL_BYTES,
+    mipMultiplier: FAR_TIER_MIP_CHAIN_MULTIPLIER,
+  }));
+}
