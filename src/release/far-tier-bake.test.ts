@@ -10,6 +10,10 @@ import { describe, expect, it } from "vitest";
 import { sha256HexBytes, sha256HexSync, stableSerialize } from "../domain/deterministic-hash.ts";
 import {
   FAR_TIER_BAKE_RECIPE,
+  FAR_TIER_BAKE_RECIPE_V2,
+  farTierEffectiveParameters,
+  farTierGeometry,
+  farTierRecipeHashV2,
   bakeFarTierAtlas,
   farTierPackingOrder,
   farTierProjectionBasis,
@@ -357,5 +361,114 @@ describe("the recipe hash", () => {
     expect(FAR_TIER_BAKE_RECIPE.packingOrder).toContain("descending-face-world-area");
     expect(FAR_TIER_BAKE_RECIPE.packingOrder).not.toContain("map");
     expect(FAR_TIER_BAKE_RECIPE.bakedMipLevels).toBe(0);
+  });
+});
+
+
+describe("recipe v2 is additive: v1 cannot change by omission", () => {
+  it("resolves v1 parameters identically whether or not a recipe is passed", () => {
+    expect(farTierEffectiveParameters()).toEqual(farTierEffectiveParameters(FAR_TIER_BAKE_RECIPE));
+  });
+
+  it("makes every v2-only field fall back to the value that reproduces v1", () => {
+    const v1 = farTierEffectiveParameters(FAR_TIER_BAKE_RECIPE);
+    // The two fields v1 never declared must resolve to v1's conflated meaning.
+    expect(v1.flatFaceTexels).toBe(FAR_TIER_BAKE_RECIPE.faceTexelFloor);
+    expect(v1.flatFaceGutterTexels).toBe(FAR_TIER_BAKE_RECIPE.gutterTexels);
+    expect(v1.shadingScalar).toBe(1);
+  });
+
+  it("keeps the v1 recipe hash frozen while v2 has its own", () => {
+    expect(farTierRecipeHash()).toBe("88baa55611bfdf52a745f01eacc2c9bb44305897109fbd5491f7e8f5caaa6dea");
+    expect(farTierRecipeHashV2()).not.toBe(farTierRecipeHash());
+    expect(FAR_TIER_BAKE_RECIPE_V2.supersedes).toBe(FAR_TIER_BAKE_RECIPE.recipeId);
+  });
+
+  it("does not let a v2 field leak into the v1 object", () => {
+    expect(FAR_TIER_BAKE_RECIPE).not.toHaveProperty("flatFaceTexels");
+    expect(FAR_TIER_BAKE_RECIPE).not.toHaveProperty("flatFaceGutterTexels");
+    expect(FAR_TIER_BAKE_RECIPE).not.toHaveProperty("shading");
+  });
+});
+
+describe("the v2 flat-face rect", () => {
+  const flatFace = (): FarTierFace => ({
+    buildingId: "doitt:1", faceIndex: 0, kind: "wall",
+    // 40 m wide, 2 m tall at a 1 m texel: below the floor on one axis, so flat.
+    areaSquareMeters: 80,
+    cornersMm: [[0, 0, 0], [40_000, 0, 0], [40_000, 0, 2_000], [0, 0, 2_000]],
+    offsetMeters: [0, 0],
+    zones: [{ materialId: "material:facade:shaft", textureClass: "brick-running-bond", factor: [0.5, 0.4, 0.3], fromFraction: 0, toFraction: 1 }],
+  });
+
+  it("is 1x1 under v2 and 4x4 under v1", () => {
+    const v1 = packFarTierAtlas([flatFace()], 256, 1, FAR_TIER_BAKE_RECIPE);
+    const v2 = packFarTierAtlas([flatFace()], 256, 1, FAR_TIER_BAKE_RECIPE_V2);
+    expect(v1.faces[0]!.rect!.width).toBe(4);
+    expect(v1.faces[0]!.rect!.height).toBe(4);
+    expect(v2.faces[0]!.rect!.width).toBe(1);
+    expect(v2.faces[0]!.rect!.height).toBe(1);
+    // Both are still marked flat; only the cost differs.
+    expect(v1.faces[0]!.rect!.flat).toBe(true);
+    expect(v2.faces[0]!.rect!.flat).toBe(true);
+  });
+
+  it("carries the narrower gutter ONLY on flat faces", () => {
+    const v2 = packFarTierAtlas([flatFace()], 256, 1, FAR_TIER_BAKE_RECIPE_V2);
+    expect(v2.faces[0]!.rect!.gutter).toBe(1);
+    // A resolved face keeps two, because its uv derivative is non-zero and it
+    // really can select a mip level where a one-texel gutter would bleed.
+    const resolved: FarTierFace = { ...flatFace(), cornersMm: [[0, 0, 0], [40_000, 0, 0], [40_000, 0, 40_000], [0, 0, 40_000]] };
+    const packed = packFarTierAtlas([resolved], 256, 1, FAR_TIER_BAKE_RECIPE_V2);
+    expect(packed.faces[0]!.rect!.flat).toBe(false);
+    expect(packed.faces[0]!.rect!.gutter).toBe(2);
+  });
+
+  it("RENDERS THE SAME COLOUR as the 4x4 it replaces", () => {
+    // The identity the whole Stage A fix rests on: shrinking a constant-colour
+    // face to one texel must not change what is sampled.
+    const v1 = packFarTierAtlas([flatFace()], 256, 1, FAR_TIER_BAKE_RECIPE);
+    const v2 = packFarTierAtlas([flatFace()], 256, 1, FAR_TIER_BAKE_RECIPE_V2);
+    const rgbV1 = bakeFarTierAtlas(v1);
+    const rgbV2 = bakeFarTierAtlas(v2);
+    const at = (rgb: Uint8Array, x: number, y: number): number[] => {
+      const offset = (y * 256 + x) * 3;
+      return [rgb[offset]!, rgb[offset + 1]!, rgb[offset + 2]!];
+    };
+    const r1 = v1.faces[0]!.rect!;
+    const r2 = v2.faces[0]!.rect!;
+    const colourV1 = at(rgbV1, r1.x, r1.y);
+    expect(at(rgbV2, r2.x, r2.y)).toEqual(colourV1);
+    // And the v1 block really was uniform, so "the same colour" is well defined.
+    for (let row = 0; row < r1.height; row += 1) {
+      for (let column = 0; column < r1.width; column += 1) expect(at(rgbV1, r1.x + column, r1.y + row)).toEqual(colourV1);
+    }
+  });
+
+  it("SAMPLES THE SAME TEXEL, because both uv pairs collapse to its centre", () => {
+    // farTierGeometry samples texel centres: u0 = (x + 0.5)/size and
+    // u1 = (x + width - 0.5)/size. At width 1 these are equal, so all four
+    // corners address the one texel — the trick the roof fan already used.
+    const v2 = packFarTierAtlas([flatFace()], 256, 1, FAR_TIER_BAKE_RECIPE_V2);
+    const geometry = farTierGeometry(v2);
+    const uv = geometry.quads[0]!.uv!;
+    const rect = v2.faces[0]!.rect!;
+    const centre = [(rect.x + 0.5) / 256, (rect.y + 0.5) / 256];
+    for (const corner of uv) {
+      expect(corner[0]).toBeCloseTo(centre[0]!, 12);
+      expect(corner[1]).toBeCloseTo(centre[1]!, 12);
+    }
+    // Degenerate uv is the reason a flat face can never select a mip level
+    // above 0, which is what makes the one-texel gutter safe.
+    expect(uv[0]![0]).toBe(uv[1]![0]);
+    expect(uv[0]![1]).toBe(uv[3]![1]);
+  });
+
+  it("frees real atlas capacity, which is the point", () => {
+    const many = Array.from({ length: 400 }, (unused, index) => ({ ...flatFace(), buildingId: `doitt:${index}`, faceIndex: index }));
+    const v1 = packFarTierAtlas(many, 256, 1, FAR_TIER_BAKE_RECIPE);
+    const v2 = packFarTierAtlas(many, 256, 1, FAR_TIER_BAKE_RECIPE_V2);
+    // 8x8 box per face under v1 against 3x3 under v2.
+    expect(v2.occupancy).toBeLessThan(v1.occupancy / 5);
   });
 });
