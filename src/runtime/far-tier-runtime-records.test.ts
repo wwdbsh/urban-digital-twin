@@ -82,7 +82,7 @@ describe("far-tier runtime records", () => {
     // And the gaps that REMAIN are recorded rather than implied. End-to-end is
     // now met, so this pins the honest remainder instead of the old caveat.
     const notDone = record.whatIsNotDone.join(" ");
-    expect(notDone).toContain("NO DISTANCE GATING");
+    expect(notDone).toContain("ONE CELL, NOT A RING");
     expect(notDone).toContain("FIXTURE-ONLY");
     expect(notDone).toContain("NO GPU MEASUREMENT");
   });
@@ -100,6 +100,24 @@ describe("far-tier runtime records", () => {
     const record = readChecked("runtime-record") as { suppression: { mechanism: { attribute: string; defectFound: string } } };
     expect(record.suppression.mechanism.attribute).toContain("never the `show` attribute");
     expect(record.suppression.mechanism.defectFound).toContain("SHIPPED WRONG FOR ONE REVISION");
+  });
+
+  it("records the distance selection, its metric and its unmeasured band", () => {
+    const record = readChecked("runtime-record") as {
+      distanceSelection: { metric: { id: string; limitation: string }; thresholds: { enterMeters: number; exitMeters: number; bandProvenance: string }; nearIsNotAFailure: string };
+      endToEndValidation: { distanceGating: { farPose: { line: string }; nearPose: { line: string; clicked: string } } };
+    };
+    expect(record.distanceSelection.metric.id).toBe("nearest-point-of-tile-rectangle-plus-camera-height");
+    expect(record.distanceSelection.thresholds.enterMeters).toBe(1_200);
+    expect(record.distanceSelection.thresholds.exitMeters).toBe(1_080);
+    // The band must never be mistaken for evidence.
+    expect(record.distanceSelection.thresholds.bandProvenance).toContain("NOT A MEASURED ONE");
+    expect(record.distanceSelection.metric.limitation).toContain("BUILDING HEIGHT IS NOT MODELLED");
+    expect(record.distanceSelection.nearIsNotAFailure).toContain("never with");
+    // And the near pose is recorded as massing restored with picking intact.
+    expect(record.endToEndValidation.distanceGating.farPose.line).toContain("1 drawn");
+    expect(record.endToEndValidation.distanceGating.nearPose.line).toContain("1 near (massing drawing)");
+    expect(record.endToEndValidation.distanceGating.nearPose.clicked).toBe("doitt:119910");
   });
 
   it("labels the double-residency figure as arithmetic, not a GPU reading", () => {

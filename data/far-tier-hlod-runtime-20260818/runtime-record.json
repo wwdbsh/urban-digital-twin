@@ -119,10 +119,11 @@
  },
  "explicitState": {
   "shape": "ONE aggregate role=status line, never one notice per cell. A per-cell notice would put up to 883 lines in front of a user to say something true of the tier as a whole, and would make a single staging gap look like a catastrophe.",
-  "line": "Far tier · <n> drawn · <n> declared [· <n> not declared] [· <n> absent] [· <n> checksum-mismatch (fail-closed, drawing massing)]",
+  "line": "Far tier · <n> drawn · <n> declared [· <n> near (massing drawing)] [· <n> not declared] [· <n> absent] [· <n> checksum-mismatch (fail-closed, drawing massing)]",
   "states": [
    "declared",
    "drawn",
+   "near",
    "not-declared",
    "absent",
    "checksum-mismatch"
@@ -169,10 +170,10 @@
   "The far-tier cache ceiling is additive to two other ceilings. A total memory figure must ADD 256 MiB, the B3-B5 bars, and this 64 MiB; merging any pair understates the total."
  ],
  "whatIsNotDone": [
-  "NO DISTANCE GATING. The runtime loads and draws every cell the inventory declares; it does not yet select by the 1,200 m near edge. With one prototype cell staged this is not observable, but a mass bake (T004) would draw tiles at every range until selection is added. The 1,200 m boundary is recorded and reasoned about here; it is not yet enforced in code.",
-  "ONE CELL, NOT A RING. Every end-to-end result above is a single-cell observation. Nothing here measures many resident tiles, eviction, or the cache ceiling under load.",
+  "ONE CELL, NOT A RING. Every end-to-end result is a single-cell observation. Nothing here measures many resident tiles, eviction, or the cache ceiling under load, and the selection loop has never been run against more than one rectangle.",
   "THE REFUSED-MEMBER PATH IS FIXTURE-ONLY. The prototype cell's 48 members are all included:true, so a cell where the bake refused a building — the case the member-id rule exists for — has never been observed end to end.",
-  "NO GPU MEASUREMENT. The double-residency figure remains arithmetic, and no frame-time or memory reading was taken in the application."
+  "NO GPU MEASUREMENT. The double-residency figure remains arithmetic, and no frame-time or memory reading was taken in the application.",
+  "THE EXIT BAND IS UNMEASURED. 120 m stops the boundary flickering by construction, but no flicker rate was recorded before or after, so it is a safe choice rather than a tuned one."
  ],
  "endToEndValidation": {
   "statement": "RUN AGAINST THE REAL T002 PROTOTYPE TILE IN THE REAL APPLICATION, on the real citywide base (manhattan-citywide-20260804), not a fixture.",
@@ -189,6 +190,45 @@
    "checksumMismatch": "One byte flipped → 'Far tier · 0 drawn · 0 declared · 1 checksum-mismatch (fail-closed, drawing massing)', reported in its own column and never as absence.",
    "restored": "Tile restored → 'Far tier · 1 drawn · 1 declared', failures attribute deleted rather than emptied."
   },
-  "rollbackRehearsal": "farTier=off renders no far-tier line at all and the same click returns the same building. The flag also SURVIVES the settled-camera rewrite, which it did not in the first revision — the production writer did not pass the then-optional field, so ?farTier=on was dropped on the opening camera move. The field is now REQUIRED so a call site that forgets it fails typecheck."
+  "rollbackRehearsal": "farTier=off renders no far-tier line at all and the same click returns the same building. The flag also SURVIVES the settled-camera rewrite, which it did not in the first revision — the production writer did not pass the then-optional field, so ?farTier=on was dropped on the opening camera move. The field is now REQUIRED so a call site that forgets it fails typecheck.",
+  "distanceGating": {
+   "method": "Camera straight down over member building doitt:119910 at two heights, sampling the status line BEFORE the click (selecting a building flies the camera, which itself drops the tile to `near` — live proof the selection is camera-driven).",
+   "farPose": {
+    "heightMeters": 1400,
+    "line": "Far tier · 1 drawn · 1 declared",
+    "clicked": "doitt:119910",
+    "screenshot": "artifacts/far-tier-runtime-20260818/selection-1400m.png"
+   },
+   "nearPose": {
+    "heightMeters": 600,
+    "line": "Far tier · 0 drawn · 1 declared · 1 near (massing drawing)",
+    "clicked": "doitt:119910",
+    "screenshot": "artifacts/far-tier-runtime-20260818/selection-600m.png",
+    "visual": "Uniform tan massing across the whole view; no textured tile anywhere."
+   },
+   "verdict": "The tile is drawn beyond the edge and withheld inside it, the massing is restored inside it, and BOTH poses return the same correct building id."
+  }
+ },
+ "distanceSelection": {
+  "statement": "PER-CELL, PER-FRAME. A baked tile is drawn only while the camera is beyond the tier's pre-registered near edge; inside it the tile is hidden and the massing draws normally.",
+  "whyItIsNotOptional": "Without it the far tier is not a distance tier. Drawing every declared cell puts merged, roof-capped, atlas-textured geometry directly under the viewer's nose, which is exactly what the 1,200 m edge exists to prevent.",
+  "metric": {
+   "id": "nearest-point-of-tile-rectangle-plus-camera-height",
+   "definition": "Horizontal distance from the camera's ground track to the NEAREST POINT of the cell's tile rectangle — each axis clamped into the rectangle, so a camera over the cell scores zero horizontally — combined with camera height by hypot.",
+   "scale": "The frozen planar metric rect-euclidean-frozen-scale-v1 (84412.702 / 111049.654 m per degree), not geodesics.",
+   "whyNearestPoint": "The question is whether the WHOLE cell is far enough away to be drawn coarsely, so it must be answered with the distance to the closest part of it. Centre-minus-half-diagonal was considered and REJECTED: it approximates the same bound but is loose on non-square rectangles, and the clamped form is barely more arithmetic.",
+   "limitation": "BUILDING HEIGHT IS NOT MODELLED. The rectangle is a ground footprint, so a tall building is nearer to a high camera than this distance reports. The exit band absorbs it; it is named here rather than left to be discovered."
+  },
+  "thresholds": {
+   "enterMeters": 1200,
+   "enterSource": "FAR_TIER_NEAR_EDGE_METERS, the tier's own pre-registered edge, restated rather than reinvented.",
+   "exitMeters": 1080,
+   "exitBandMeters": 120,
+   "hysteresis": "A cell is drawn at or beyond 1,200 m and is not dropped until it comes nearer than 1,080 m, so a camera hovering on the line cannot flip it every frame.",
+   "bandProvenance": "120 m is 10 percent of the near edge. IT IS AN ARITHMETIC CHOICE, NOT A MEASURED ONE. No flicker rate was recorded and no alternative band was compared. A later reader must not inherit it as evidence."
+  },
+  "massingFollowsTheSameDecision": "The alpha restore is driven by the SAME per-cell selection, so a cell the camera has come close to shows ordinary tan massing at full opacity and picks exactly as it did before the far tier existed. A tile is also created HIDDEN and shown only by the first selection pass, so it can never appear for a frame at a distance the tier does not serve.",
+  "blockEight35Interplay": "Selection measures against a tile rectangle, and Block 835 has none, so the anchor refuses that cell before selection is ever consulted. There is no 'distance to a cell with no rectangle' case, which is why none is answered.",
+  "nearIsNotAFailure": "A verified tile held back by distance reports the state `near`, counted with `declared` and never with `absent` or `checksum-mismatch`. Folding it into either would make an ordinary close-up session read as a broken far tier."
  }
 }

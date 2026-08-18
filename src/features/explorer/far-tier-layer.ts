@@ -31,6 +31,8 @@ export interface FarTierDrawnTile {
   readonly primitive: { show: boolean };
   /** The member buildings whose massing this tile is entitled to hide. */
   readonly suppressibleBuildingIds: readonly string[];
+  /** The rectangle it was anchored on, which is what distance selection measures against. */
+  readonly bounds: { west: number; south: number; east: number; north: number };
 }
 
 export interface FarTierLoadResult {
@@ -90,8 +92,10 @@ export async function loadFarTierLayer(
     // rectangle can never be placed, so fetching for it would be work whose
     // result has nowhere to go.
     let modelMatrix: Matrix4;
+    let bounds: { west: number; south: number; east: number; north: number };
     try {
       const anchor = farTierTileAnchor(entry.cellId);
+      bounds = anchor.bounds;
       modelMatrix = Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(anchor.originLongitude, anchor.originLatitude, 0));
     } catch (error) {
       if (!(error instanceof FarTierAnchorError)) throw error;
@@ -116,12 +120,16 @@ export async function loadFarTierLayer(
         atlasBytes,
         modelMatrix,
       });
+      // Starts HIDDEN. Selection decides whether it is shown, so a tile can
+      // never appear for a frame at a distance the tier does not serve.
+      primitive.show = false;
       scene.primitives.add(primitive);
-      outcomes.push({ cellId: entry.cellId, state: "drawn" });
+      outcomes.push({ cellId: entry.cellId, state: "near" });
       drawn.push({
         cellId: entry.cellId,
         primitive,
         suppressibleBuildingIds: entry.members.filter((member) => member.included).map((member) => member.buildingId),
+        bounds,
       });
     } catch (error) {
       // A model that will not build leaves the massing alone. It is reported as

@@ -115,8 +115,35 @@ describe("suppression is by member building id", () => {
 });
 
 describe("aggregate state", () => {
-  it("has five states, and mismatch is its own", () => {
-    expect([...FAR_TIER_CELL_STATES]).toEqual(["declared", "drawn", "not-declared", "absent", "checksum-mismatch"]);
+  it("has six states; mismatch is its own, and so is near", () => {
+    expect([...FAR_TIER_CELL_STATES]).toEqual(["declared", "drawn", "near", "not-declared", "absent", "checksum-mismatch"]);
+  });
+
+  it("counts a near cell as declared, and never as a failure", () => {
+    // A verified tile the camera is too close to draw is the tier working, not
+    // a fault. Folding it into absent or mismatch would make an ordinary
+    // close-up session look like a broken far tier.
+    const summary = summarizeFarTierState([
+      { cellId: "a", state: "drawn" },
+      { cellId: "b", state: "near" },
+      { cellId: "c", state: "near" },
+    ]);
+    expect(summary.drawn).toBe(1);
+    expect(summary.near).toBe(2);
+    expect(summary.declared).toBe(3);
+    expect(summary.absent).toBe(0);
+    expect(summary.checksumMismatch).toBe(0);
+  });
+
+  it("names the near count for what the user is looking at", () => {
+    const line = farTierStatusLine(summarizeFarTierState([{ cellId: "a", state: "near" }]));
+    expect(line).toContain("1 near (massing drawing)");
+    expect(line).not.toContain("absent");
+    expect(line).not.toContain("checksum-mismatch");
+  });
+
+  it("keeps a near cell out of the per-cell failure detail", () => {
+    expect(farTierFailureDetail([{ cellId: "a", state: "near" }])).toBeNull();
   });
 
   it("counts checksum mismatches in their own column", () => {

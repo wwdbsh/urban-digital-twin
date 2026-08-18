@@ -74,8 +74,13 @@ export interface FarTierInventory {
  * mismatch is an INTEGRITY FAILURE: bytes exist at the path and are not the
  * bytes that were declared. Reporting the second as the first would turn the
  * loudest signal this path can produce into routine background noise.
+ *
+ * `near` is neither. It is a verified tile that the camera is simply too close
+ * to draw coarsely, so the massing is showing instead — the tier working as
+ * designed. It is counted separately from both failure states precisely so a
+ * session spent inside the near edge does not read as a broken far tier.
  */
-export const FAR_TIER_CELL_STATES = ["declared", "drawn", "not-declared", "absent", "checksum-mismatch"] as const;
+export const FAR_TIER_CELL_STATES = ["declared", "drawn", "near", "not-declared", "absent", "checksum-mismatch"] as const;
 export type FarTierCellState = (typeof FAR_TIER_CELL_STATES)[number];
 
 export interface FarTierLoadOutcome {
@@ -130,6 +135,8 @@ export function farTierSuppressibleBuildingIds(entry: FarTierInventoryEntry): re
 export interface FarTierStateSummary {
   readonly declared: number;
   readonly drawn: number;
+  /** Verified tiles held back because the camera is inside the near edge. */
+  readonly near: number;
   readonly notDeclared: number;
   readonly absent: number;
   readonly checksumMismatch: number;
@@ -139,8 +146,9 @@ export interface FarTierStateSummary {
 export function summarizeFarTierState(outcomes: readonly FarTierLoadOutcome[]): FarTierStateSummary {
   const count = (state: FarTierCellState): number => outcomes.filter((outcome) => outcome.state === state).length;
   return {
-    declared: count("declared") + count("drawn"),
+    declared: count("declared") + count("drawn") + count("near"),
     drawn: count("drawn"),
+    near: count("near"),
     notDeclared: count("not-declared"),
     absent: count("absent"),
     checksumMismatch: count("checksum-mismatch"),
@@ -157,6 +165,9 @@ export function summarizeFarTierState(outcomes: readonly FarTierLoadOutcome[]): 
  */
 export function farTierStatusLine(summary: FarTierStateSummary): string {
   const parts = [`${summary.drawn} drawn`, `${summary.declared} declared`];
+  // Named for what the user is actually looking at: the massing, because the
+  // camera is inside the near edge. Not a failure, and never counted as one.
+  if (summary.near > 0) parts.push(`${summary.near} near (massing drawing)`);
   if (summary.notDeclared > 0) parts.push(`${summary.notDeclared} not declared`);
   if (summary.absent > 0) parts.push(`${summary.absent} absent`);
   // Named separately and last, so it reads as the distinct integrity class it is.

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { KeyboardEventHandler } from "react";
 import {
   Cartesian3,
@@ -46,7 +46,8 @@ import type { ExteriorRenderProfile } from "../../runtime/exterior-render-profil
 import { verifiedExteriorModelResource, type VerifiedExteriorResource } from "./exterior-verified-resource";
 import { createFarTierPickBracket, FAR_TIER_MASSING_PICK_ALPHA, type FarTierHideable } from "./far-tier-pick-bracket";
 import { loadFarTierLayer } from "./far-tier-layer";
-import { farTierFailureDetail, summarizeFarTierState, type FarTierInventory, type FarTierStateSummary } from "../../runtime/far-tier-serving";
+import { farTierFailureDetail, summarizeFarTierState, type FarTierCellState, type FarTierInventory, type FarTierLoadOutcome, type FarTierStateSummary } from "../../runtime/far-tier-serving";
+import { farTierCellDistanceMeters, farTierCellInRange, type FarTierRectangle } from "../../runtime/far-tier-selection";
 import {
   boundFootprintToCamera,
   viewportFootprintFromGroundPoints,
@@ -1983,6 +1984,19 @@ export function CesiumViewport({
   const farTierPrimitivesRef = useRef<FarTierHideable[]>([]);
 
   /**
+   * Verified far-tier tiles, with the rectangle each was anchored on.
+   *
+   * The rectangle is kept because SELECTION IS PER CELL AND PER FRAME: a tile is
+   * drawn only while the camera is beyond the tier's near edge, so the distance
+   * has to be recomputed against the cell's own bounds as the camera moves.
+   */
+  const farTierTilesRef = useRef<Array<{ cellId: string; primitive: FarTierHideable; suppressibleBuildingIds: readonly string[]; bounds: FarTierRectangle }>>([]);
+  /** Cell ids currently drawn. This is the hysteresis state the band acts on. */
+  const farTierDrawnCellsRef = useRef<Set<string>>(new Set());
+  /** Outcomes for cells that never produced a tile, so the summary can be rebuilt. */
+  const farTierBaseOutcomesRef = useRef<readonly FarTierLoadOutcome[]>([]);
+
+  /**
    * Member building ids whose far-tier tile has actually DRAWN.
    *
    * Populated strictly AFTER a tile's bytes verify and its model builds, which
@@ -1995,6 +2009,28 @@ export function CesiumViewport({
   const denseFarTierAlphaAppliedRef = useRef<ReadonlySet<string>>(new Set());
   const onFarTierStateRef = useRef(onFarTierState);
   onFarTierStateRef.current = onFarTierState;
+
+  /**
+   * Recompute the aggregate from the load outcomes plus the CURRENT selection.
+   *
+   * A verified tile the camera is too close for reports `near`, not `drawn` and
+   * certainly not a failure, so the one status line stays true as the camera
+   * moves rather than describing the moment the tiles were loaded.
+   */
+  const publishFarTierState = useCallback(() => {
+    const drawnCells = farTierDrawnCellsRef.current;
+    const outcomes: FarTierLoadOutcome[] = [
+      ...farTierBaseOutcomesRef.current,
+      ...farTierTilesRef.current.map((tile) => ({ cellId: tile.cellId, state: (drawnCells.has(tile.cellId) ? "drawn" : "near") as FarTierCellState })),
+    ];
+    const container = containerRef.current;
+    if (container) {
+      const detail = farTierFailureDetail(outcomes);
+      if (detail === null) delete container.dataset.farTierFailures;
+      else container.dataset.farTierFailures = detail;
+    }
+    onFarTierStateRef.current?.(summarizeFarTierState(outcomes));
+  }, []);
   const onExteriorUnanchoredRef = useRef(onExteriorUnanchored);
   onExteriorUnanchoredRef.current = onExteriorUnanchored;
   const onExteriorCellsRetiredRef = useRef(onExteriorCellsRetired);
@@ -2213,7 +2249,36 @@ export function CesiumViewport({
       // write does not land is retried instead of being recorded as flipped.
       // Membership is by MEMBER BUILDING ID, so a building the bake refused is
       // simply absent from this set and keeps its massing and its refusal entry.
-      const farTierSuppressed = farTierSuppressedIdsRef.current;
+      /**
+       * FAR-TIER SELECTION, re-evaluated every dense pass because that is what
+       * the camera drives. A tile is shown only while the camera is beyond the
+       * tier's near edge, with an exit band so the boundary cannot flicker; the
+       * massing alpha follows the SAME decision, so a cell the camera has come
+       * close to shows ordinary tan massing and picks exactly as it always did.
+       */
+      const farTierCamera = viewer.camera.positionCartographic;
+      const farTierPose = {
+        longitude: CesiumMath.toDegrees(farTierCamera.longitude),
+        latitude: CesiumMath.toDegrees(farTierCamera.latitude),
+        heightMeters: farTierCamera.height,
+      };
+      const farTierSuppressed = new Set<string>();
+      const previouslyDrawn = farTierDrawnCellsRef.current;
+      const nowDrawn = new Set<string>();
+      for (const tile of farTierTilesRef.current) {
+        const distance = farTierCellDistanceMeters(farTierPose, tile.bounds);
+        const inRange = farTierCellInRange(distance, previouslyDrawn.has(tile.cellId));
+        tile.primitive.show = inRange;
+        if (!inRange) continue;
+        nowDrawn.add(tile.cellId);
+        for (const buildingId of tile.suppressibleBuildingIds) farTierSuppressed.add(buildingId);
+      }
+      if (nowDrawn.size !== previouslyDrawn.size || [...nowDrawn].some((cellId) => !previouslyDrawn.has(cellId))) {
+        farTierDrawnCellsRef.current = nowDrawn;
+        publishFarTierState();
+      }
+      farTierSuppressedIdsRef.current = farTierSuppressed;
+
       const farTierCovered = new Set<string>();
       for (const feature of denseRenderBasis) {
         if (renderOwner(feature) !== "procedural-extrusion") denseSuppressedIds.add(feature.id);
@@ -2948,28 +3013,23 @@ export function CesiumViewport({
       } catch {
         // Nothing is staged. That is a declared-but-absent tier, not an error
         // state, and the massing keeps drawing exactly as it does today.
-        if (!disposed) onFarTierStateRef.current?.({ declared: 0, drawn: 0, notDeclared: 0, absent: 0, checksumMismatch: 0 });
+        if (!disposed) onFarTierStateRef.current?.({ declared: 0, drawn: 0, near: 0, notDeclared: 0, absent: 0, checksumMismatch: 0 });
         return;
       }
       const result = await loadFarTierLayer(viewer.scene, inventory.entries, fetchBytes, undefined, controller.signal);
       if (disposed) return;
 
-      for (const tile of result.drawn) {
-        added.push(tile.primitive);
-        for (const buildingId of tile.suppressibleBuildingIds) farTierSuppressedIdsRef.current.add(buildingId);
-      }
+      for (const tile of result.drawn) added.push(tile.primitive);
       farTierPrimitivesRef.current = added;
+      farTierTilesRef.current = result.drawn.map((tile) => ({ cellId: tile.cellId, primitive: tile.primitive, suppressibleBuildingIds: tile.suppressibleBuildingIds, bounds: tile.bounds }));
+      // Outcomes for cells that produced NO tile. The tiles' own states are
+      // recomputed from selection on every pass instead of frozen here.
+      farTierBaseOutcomesRef.current = result.outcomes.filter((outcome) => outcome.state !== "near" && outcome.state !== "drawn");
       // The suppression set is consumed by the dense render plan, which is what
       // owns the `show` writes; nudging the scene is enough to make it run.
       viewer.scene.requestRender();
 
-      const container = containerRef.current;
-      const detail = farTierFailureDetail(result.outcomes);
-      if (container) {
-        if (detail === null) delete container.dataset.farTierFailures;
-        else container.dataset.farTierFailures = detail;
-      }
-      onFarTierStateRef.current?.(summarizeFarTierState(result.outcomes));
+      publishFarTierState();
     })();
 
     return () => {
@@ -2977,11 +3037,14 @@ export function CesiumViewport({
       controller.abort();
       for (const primitive of added) viewer.scene.primitives.remove(primitive);
       farTierPrimitivesRef.current = [];
+      farTierTilesRef.current = [];
+      farTierDrawnCellsRef.current = new Set();
+      farTierBaseOutcomesRef.current = [];
       farTierSuppressedIdsRef.current = new Set();
       const container = containerRef.current;
       if (container) delete container.dataset.farTierFailures;
     };
-  }, [farTier]);
+  }, [farTier, publishFarTierState]);
 
   return <div className="viewport" ref={containerRef} aria-label="3D city viewport" tabIndex={0} onKeyDown={onViewportKeyDown} />;
 }
