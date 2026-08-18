@@ -125,7 +125,7 @@
   "optionsForTheUser": [
    "Adopt A1 + A2 + A3 as proposed; 4,000/235 becomes a tone PASS and the open tone question closes.",
    "Adopt A2 + A3 only, dropping the relative bar entirely as ill-conditioned.",
-   "MIDDLE OPTION: keep a RELATIVE bar at every pose but with an explicitly larger tolerance at dark poses — for example 0.05 where source mean >= 0.10 and a stated wider tolerance below it. This keeps the relative form, admits the conditioning problem openly, and forces the dark-pose tolerance to be argued as a number rather than inherited by accident. Under a 0.08 dark tolerance the tile would still MISS 4,000/235 at 0.0573; under 0.10 it would pass.",
+   "MIDDLE OPTION: keep a RELATIVE bar at every pose but with an explicitly larger tolerance at dark poses — for example 0.05 where source mean >= 0.10 and a stated wider tolerance below it. This keeps the relative form, admits the conditioning problem openly, and forces the dark-pose tolerance to be argued as a number rather than inherited by accident. NOTE THE ARITHMETIC (see darkPoseToleranceArithmetic): the 4,000/235 failure survives only below about 0.057264, so the inherited 0.05 preserves it while about 0.06 and above — including 0.08 and 0.10 — converts it to a pass. This option is therefore only materially different from adopting A2 if the chosen dark tolerance is under 0.057264.",
    "Keep the inherited relative bar at all poses and carry 4,000/235 as an open tone failure.",
    "Adopt A1 + A2 + A3 but additionally REPORT the relative value at dark poses unbarred, so the deficit stays visible without gating on it."
   ]
@@ -134,5 +134,36 @@
  "notClaimedHere": [
   "No capture was taken for this record.",
   "Gates are not acceptance."
- ]
+ ],
+ "darkPoseToleranceArithmetic": {
+  "derivedFrom": "pinned-baseline.json results; not hand-typed prose. An earlier version of this record stated this arithmetic incorrectly.",
+  "worstDarkPose": "4000/235",
+  "worstDarkPoseRatio": 0.942736,
+  "worstDarkPoseDeficit": 0.057264,
+  "rule": "A dark-pose relative tolerance T preserves the failure if and only if T < 0.057264.",
+  "inheritedToleranceKeepsTheFailure": {
+   "tolerance": 0.05,
+   "preservesFailure": true
+  },
+  "probe": [
+   {
+    "tolerance": 0.05,
+    "verdict": "MISS"
+   },
+   {
+    "tolerance": 0.06,
+    "verdict": "PASS"
+   },
+   {
+    "tolerance": 0.08,
+    "verdict": "PASS"
+   },
+   {
+    "tolerance": 0.1,
+    "verdict": "PASS"
+   }
+  ],
+  "correctedStatement": "The failure survives ONLY for a dark-pose tolerance below about 0.057264. The inherited 0.05 preserves it; about 0.06 and above converts it to a pass — including 0.08 and 0.10.",
+  "whatWasWrongBefore": "The prior text said the tile would still MISS at 0.08 and pass only at 0.10. It is 0.057264 from unity, so it PASSES at 0.08."
+ }
 }

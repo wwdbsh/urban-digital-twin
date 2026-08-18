@@ -7,10 +7,11 @@
  "capturedAtStatement": "NULL BY CONSTRUCTION.",
  "headline": "THE OPERATIVE BASELINE. Captured under the pinned instrument with the generated harness enforcing it, reproduced exactly across two cycles and again under spec v2.",
  "instrument": {
-  "specId": "far-tier-appearance-instrument-v1",
-  "specSha256": "135385ff19b692a4b24949263647db784aff558c02b1c69466a61be7438c7d03",
-  "capturedUnder": "spec v1; RE-CAPTURED under spec v2 with identical results at all six poses, which is how the added pins were shown to have been at their pinned values during the original capture.",
-  "enforcement": "The generated harness ran immediately before each capture, including a caller-supplied renderable-mesh count, and returned the spec hash."
+  "specId": "far-tier-appearance-instrument-v2",
+  "specSha256": "9a77561b9d8307aff77692412961102b3a3aa66e1a6dbe04db181a886ad53b89",
+  "capturedUnder": "spec v1 (3015b230...); RE-CAPTURED under the added-pins spec (135385ff...) with identical results at all six poses, which is how the added pins were shown to have been at their pinned values during the original capture. The later specId bump to v2 changed no pinned value.",
+  "enforcement": "The generated harness ran immediately before each capture, including a caller-supplied renderable-mesh count, and returned the spec hash.",
+  "capturedUnderSpecSha256": "3015b23059590cfc17535483baa284dd3a70bfbd47c7af4a434aade64ef558df"
  },
  "subject": {
   "bakedTile": "GLB 2f8599256ac45ee509dc7d7ce0da6a56964bac8e3ca66b77e795c1435ff7930b, atlas c159e0508aeb7522620b799b83041461aecf34727f69209bd7efbf992f5c067a",

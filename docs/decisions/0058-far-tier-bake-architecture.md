@@ -297,7 +297,7 @@ not current.
 
 ### What is now pinned
 
-`src/release/far-tier-instrument.ts` carries the exhaustive spec — Blender version,
+`src/release/far-tier-instrument.ts` carries the spec — Blender version,
 engine, ray tracing, fast GI, sample count, filter size, the full colour-management
 chain, output format and depth, camera, sun, world, **user preferences**, mask
 semantics and **subject isolation**. The capture harness is **generated from that

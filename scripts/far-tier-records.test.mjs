@@ -611,6 +611,53 @@ describe("the instrument records pin what the code computes", () => {
     }
   });
 
+  it("derives the dark-pose tolerance arithmetic from the baseline, not from prose", () => {
+    // This sentence was committed WRONG once — it claimed the tile still missed
+    // at a 0.08 dark tolerance when |0.942736 - 1| = 0.057264 passes it. So the
+    // record's numbers are now recomputed here from the baseline rows.
+    const baseline = read("pinned-baseline").results;
+    const arithmetic = read("t004-gate-pre-registration").darkPoseToleranceArithmetic;
+    const dark = baseline.filter((row) => row.sourceMeanLuminance < 0.10);
+    expect(dark.length).toBeGreaterThan(0);
+    const worst = dark.reduce((a, b) =>
+      Math.abs(b.unionMeanLuminanceRatio - 1) > Math.abs(a.unionMeanLuminanceRatio - 1) ? b : a);
+    const deficit = Math.abs(worst.unionMeanLuminanceRatio - 1);
+
+    expect(arithmetic.worstDarkPose).toBe(`${worst.distanceMeters}/${worst.azimuthDegrees}`);
+    expect(arithmetic.worstDarkPoseRatio).toBe(worst.unionMeanLuminanceRatio);
+    expect(arithmetic.worstDarkPoseDeficit).toBeCloseTo(deficit, 6);
+
+    // Every probed tolerance must agree with the inequality, including the two
+    // the prose previously got backwards.
+    for (const probe of arithmetic.probe) {
+      expect(probe.verdict, `tolerance ${probe.tolerance} misreported`).toBe(deficit <= probe.tolerance ? "PASS" : "MISS");
+    }
+    // The inherited bar must still be the one that preserves the failure.
+    expect(arithmetic.inheritedToleranceKeepsTheFailure.preservesFailure).toBe(0.05 < deficit);
+    expect(arithmetic.correctedStatement).toContain(String(arithmetic.worstDarkPoseDeficit));
+  });
+
+  it("binds the whole spec-hash lineage in-tree, not only through git history", () => {
+    const lineage = read("pinned-instrument-spec").specLineage;
+    const ids = new Set(lineage.hashes.map((entry) => entry.specSha256));
+    expect(ids.size).toBe(lineage.hashes.length);
+    expect(lineage.baselineCapturedUnderSpecSha256).toBe(lineage.hashes[0].specSha256);
+    expect(read("pinned-baseline").instrument.capturedUnderSpecSha256).toBe(lineage.baselineCapturedUnderSpecSha256);
+    // And exactly one id per distinct spec: the current row must not reuse an
+    // earlier row's specId.
+    const current = lineage.hashes[lineage.hashes.length - 1];
+    expect(lineage.hashes.filter((e) => e.specId === current.specId)).toHaveLength(1);
+  });
+
+  it("labels the prose-only groups instead of claiming everything is enforced", () => {
+    const coverage = read("pinned-instrument-spec").enforcementCoverage;
+    expect(coverage.proseOnlyUnenforced.length).toBeGreaterThanOrEqual(4);
+    expect(coverage.honesty).toContain("PROSE-ONLY");
+    const module = readFileSync(join(repositoryRoot, "src", "release", "far-tier-instrument.ts"), "utf8");
+    expect(module).not.toContain("EXHAUSTIVE over the settings");
+    expect(module).toContain("PROSE-ONLY AND UNENFORCED");
+  });
+
   it("names the record whose raytracing-off column reproduces the baseline exactly", () => {
     const supersession = read("pinned-baseline").supersession;
     expect(supersession.statement).toContain("sampling-results.json");

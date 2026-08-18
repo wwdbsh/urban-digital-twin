@@ -8,7 +8,7 @@
  "claim": "Every render-relevant setting the far-tier appearance instrument depends on, enumerated, pinned, and ENFORCED by a harness generated from this same specification.",
  "whyItExists": "Three sessions measured the same byte-identical tile and disagreed by up to 6%. The instrument was specified in prose listing seven settings; Blender exposes far more that move a pixel, and the ones nobody listed are the ones that drifted.",
  "spec": {
-  "specId": "far-tier-appearance-instrument-v1",
+  "specId": "far-tier-appearance-instrument-v2",
   "application": {
    "versionString": "5.2.0 LTS"
   },
@@ -131,7 +131,7 @@
    "subjectIsolation": "A subject is rendered ALONE. Other subjects are deleted, or their collection is excluded from the view layer. `hide_render` is FORBIDDEN: scene residency moves the reading by 7.0% on the prototype cell at 1,200 m / azimuth 235, and hidden subjects demonstrably cast shadows onto the measured one. ENFORCED by the harness: no mesh in the view layer may carry hide_render, and the caller-supplied renderable-mesh count must match."
   }
  },
- "specSha256": "135385ff19b692a4b24949263647db784aff558c02b1c69466a61be7438c7d03",
+ "specSha256": "9a77561b9d8307aff77692412961102b3a3aa66e1a6dbe04db181a886ad53b89",
  "enforcementCoverage": {
   "enforcedByHarness": [
    "application.versionString",
@@ -154,11 +154,11 @@
    "maskSemantics.* — a property of the measurement code, not of Blender.",
    "sceneHygiene.clearing and betweenSubjects — procedural discipline; only their OUTCOME (isolation and mesh count) is enforced."
   ],
-  "honesty": "Earlier wording claimed every render-relevant setting was enforced. Four groups above are PROSE-ONLY and are labelled as such at every claim site rather than being wished into enforcement."
+  "honesty": "Earlier wording claimed the spec was EXHAUSTIVE and that the harness READ EVERY VALUE back. Neither was true. The four groups above are PROSE-ONLY and are labelled so at every claim site — the module doc comment, this record and ADR 0058 — rather than being wished into enforcement."
  },
  "harness": {
   "generatedFrom": "src/release/far-tier-instrument.ts farTierInstrumentAssertionPython()",
-  "sha256": "d3ab3751a732b85e96fd81410526571f106203c3426261be9383f7053bda28dd",
+  "sha256": "d394bcf76efdedfdf58b1bef86838137adc71f5a0c544e051f509de0edffc1d2",
   "behaviour": "Reads every pinned value back out of Blender immediately before capture and raises on any mismatch. GENERATED from the spec, so spec and harness cannot drift.",
   "negativeControls": {
    "method": "Each pinned setting perturbed in turn; the harness must refuse and name the right setting.",
@@ -286,7 +286,32 @@
   "limitation": "No true operating-system process restart: restarting Blender drops the MCP channel this session runs over. The test is purge-and-rebuild within one process."
  },
  "specLineage": {
+  "specIdScheme": "One id per distinct spec. v1 named a strictly smaller spec; the current spec is v2. Two different specs must never share an id, which they briefly did.",
+  "hashes": [
+   {
+    "label": "v1",
+    "specId": "far-tier-appearance-instrument-v1",
+    "specSha256": "3015b23059590cfc17535483baa284dd3a70bfbd47c7af4a434aade64ef558df",
+    "what": "The spec the operative baseline was CAPTURED under.",
+    "committedIn": "b6b0e47"
+   },
+   {
+    "label": "v2-pre-id-bump",
+    "specId": "far-tier-appearance-instrument-v1",
+    "specSha256": "135385ff19b692a4b24949263647db784aff558c02b1c69466a61be7438c7d03",
+    "what": "v1 plus the added pins, but still carrying the v1 id — the inconsistency this round removed. The spec-v2 re-capture ran under THIS hash.",
+    "committedIn": "38fdcd3"
+   },
+   {
+    "label": "v2",
+    "specId": "far-tier-appearance-instrument-v2",
+    "specSha256": "9a77561b9d8307aff77692412961102b3a3aa66e1a6dbe04db181a886ad53b89",
+    "what": "Current. Differs from the row above ONLY by specId; no pinned value changed, so the re-capture evidence carries over unchanged.",
+    "committedIn": "this commit"
+   }
+  ],
   "baselineCapturedUnderSpec": "v1",
+  "baselineCapturedUnderSpecSha256": "3015b23059590cfc17535483baa284dd3a70bfbd47c7af4a434aade64ef558df",
   "addedInV2": [
    "application.versionString read-back",
    "sceneGraph (use_nodes, frame_current, use_compositing, use_sequencer, use_simplify, use_freestyle, use_white_balance, world.use_nodes)",
@@ -296,7 +321,7 @@
    "subject isolation and renderable-mesh-count enforcement",
    "recordedEnvironment (GPU backend), recorded not pinned"
   ],
-  "howLineageWasDischarged": "NOT by assertion. The full six-pose baseline was RE-CAPTURED under spec v2 and reproduces the spec v1 baseline EXACTLY at every pose, ratio and hue spread alike. Every newly pinned setting was therefore already at its pinned value during the v1 capture.",
+  "howLineageWasDischarged": "NOT by assertion. The full six-pose baseline was RE-CAPTURED under the added-pins spec (135385ff) and reproduces the v1 baseline EXACTLY at every pose, ratio and hue spread alike. Every newly pinned setting was therefore already at its pinned value during the v1 capture. The later specId bump changed no pinned value, so that evidence still holds.",
   "whiteBalanceNote": "view_settings.use_white_balance is a per-channel scaling control, the exact shape of the open red-deficit hue finding. It was read as FALSE and the re-capture confirms it was off during the baseline. Had it been on, the hue result would have been suspect.",
   "reCaptureResult": "IDENTICAL at all six poses."
  },

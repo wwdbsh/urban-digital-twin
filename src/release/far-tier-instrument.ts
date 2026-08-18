@@ -9,9 +9,9 @@
  * drifted. An instrument whose verdicts depend on unlisted state is not an
  * instrument; it is a mood.
  *
- * So the spec below is EXHAUSTIVE over the settings that can move a reading,
- * it is the single source of truth, and the capture harness is GENERATED from
- * it — `farTierInstrumentAssertionPython()` emits code that reads every value
+ * So the spec below is the single source of truth, and the capture harness is
+ * GENERATED from it — `farTierInstrumentAssertionPython()` emits code that reads
+ * back every value
  * back out of Blender and fails closed on any mismatch. Spec and harness cannot
  * drift because there is only one of them.
  *
@@ -31,7 +31,13 @@
 import { sha256HexSync, stableSerialize } from "../domain/deterministic-hash.ts";
 
 export const FAR_TIER_INSTRUMENT_SPEC = {
-  specId: "far-tier-appearance-instrument-v1",
+  /**
+   * Bumped to v2 when the spec gained the application-version read-back, the
+   * scene-graph pins, camera type and depth of field, all-channel colour checks,
+   * the world-node guard and enforced subject isolation. v1 named a strictly
+   * smaller spec; two different specs must not share an id.
+   */
+  specId: "far-tier-appearance-instrument-v2",
 
   /**
    * Blender itself. A minor version can change EEVEE's shading; the version is
@@ -235,9 +241,19 @@ export function farTierInstrumentSpecHash(): string {
  * failure this file exists to end. Every pinned value below appears in the
  * emitted Python because it appears in the spec, and for no other reason.
  *
- * The emitted code READS every value back out of Blender and fails closed on
- * any mismatch, because setting a property Blender silently ignores or coerces
- * is indistinguishable from setting it correctly until something is measured.
+ * The emitted code reads back every ENFORCEABLE value — the preferences, render,
+ * image, colour-management, EEVEE, scene-graph, camera, sun and world settings,
+ * plus the application version, light count and subject isolation — and fails
+ * closed on any mismatch, because setting a property Blender silently ignores or
+ * coerces is indistinguishable from setting it correctly until something is
+ * measured.
+ *
+ * FOUR GROUPS ARE PROSE-ONLY AND UNENFORCED, and the record says so at every
+ * claim site: `recordedEnvironment` (it describes the machine, not the
+ * instrument), `poses` (supplied by the caller, not readable from scene state),
+ * `maskSemantics` (a property of the measurement code, not of Blender), and the
+ * procedural half of `sceneHygiene` (only its OUTCOME — isolation and mesh count
+ * — is checkable).
  *
  * ANGULAR TOLERANCES ARE 1e-4 DEGREES, not 1e-9. Angles are stored in radians
  * and compared in degrees, so a round trip lands about 1.7e-6 degrees off 60 —
