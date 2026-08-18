@@ -171,18 +171,28 @@
     "faceCountCeiling": {
       "note": "THE HARDEST LIMIT IN THIS TIER, AND IT IS NOT A QUALITY LIMIT — IT IS FEASIBILITY. Every face occupies at least (faceTexelFloor + 2 * gutterTexels)^2 texels however far the global resolution is reduced, so one atlas holds a FIXED MAXIMUM NUMBER OF FACES. A cell above it cannot be baked at this ceiling at any scale.",
       "minimumTexelsPerFace": 64,
-      "maximumFacesPer256Atlas": 1024,
-      "unpackableCellCount": 172,
+      "arithmeticCapacityOfACeilingSizedAtlas": 1024,
+      "arithmeticCapacityNote": "Capacity of an atlas that is actually AT the 256 ceiling. It is NOT a feasibility count and must not be read as one: most cells are sized well below the ceiling, because atlas edge comes from surface area.",
+      "packerMeasuredUnpackableCellCount": 172,
       "unpackableShare": 0.19479,
       "worstFaceCount": 3836,
-      "consequence": "T004 CANNOT MASS-BAKE AT THIS CEILING WITHOUT ONE OF: a larger atlas, a smaller gutter, a lower texel floor, or splitting leaves below the ledger cell. This prototype does not choose between them."
+      "raisingTheCeilingDoesNotFixIt": "MEASURED, NOT ASSUMED. The real packer at each ceiling leaves 774 cells unpackable at 128, 172 at 256, 57 at 512 and 57 at 1024. At 512 and 1024 every surviving cell already has an atlas SMALLER than the ceiling, so more ceiling cannot reach it. An earlier version of this record estimated infeasibility as faceCount > ceiling^2/64 and consequently claimed a 512 ceiling removed the blocker entirely. That was false, and it was false in the same 100%-utilisation way the delivered-resolution ladder had already been corrected for.",
+      "survivingRemedies": [
+        "Reduce the gutter below 2 texels, at the cost of mip-level-1 bleed between neighbouring faces.",
+        "Lower the per-face texel floor below 4, at the cost of aliasing the faces that fall under it.",
+        "Split leaves below the ledger cell, which is a hierarchy change and a T004 decision.",
+        "Decouple the per-cell atlas floor from surface area, so a face-dense but low-area cell can be granted a larger atlas than its area alone earns. This is the only remedy that targets the measured mechanism directly."
+      ],
+      "consequence": "T004 CANNOT MASS-BAKE AT THIS CEILING. This prototype does not choose among the remedies."
     },
     "deliveredLadder": {
       "basis": "The real packer run over every PACKABLE leaf, using each cell's own face extents from the base snapshot. This is the resolution a bake actually delivers.",
       "cellsMeasured": 711,
       "cellsUnpackable": 172,
       "underResolvedCellCount": 650,
-      "underResolvedShare": 0.736127,
+      "underResolvedShareOfPackable": 0.914205,
+      "underResolvedShareOfAllCells": 0.736127,
+      "shareDenominatorNote": "Two denominators, because they answer different questions and conflating them flatters the tier. The packable share is out of the cells this ladder could measure; the all-cells share is out of every ledger cell, and the cells it cannot measure are UNPACKABLE rather than fine.",
       "worstAchievedRatio": 0.044194,
       "worstCriticalDistanceMeters": 27153,
       "appliedScaleHistogram": {
@@ -297,37 +307,44 @@
         "atlasCeilingPixels": 128,
         "cutIndependentAtlasGpuBytes": 75715631,
         "cutIndependentAtlasMebibytes": 72.21,
-        "maximumFacesPerAtlas": 256,
-        "unpackableCellCount": 772
+        "maximumFacesAtCeilingSizedAtlas": 256,
+        "maximumFacesNote": "An arithmetic capacity for an atlas that is actually AT the ceiling. It is NOT a feasibility count, because most cells are sized well below the ceiling.",
+        "packerMeasuredUnpackableCellCount": 774,
+        "unpackableWhoseAtlasIsBelowTheCeiling": 2,
+        "unpackableWhoseAtlasIsBelowTheCeilingNote": "These cells CANNOT be helped by raising the ceiling at all: atlas edge is chosen from a cell's SURFACE AREA, not from the ceiling, so a low-area, high-face-count cell keeps a small atlas however high the ceiling goes."
       },
       {
         "atlasCeilingPixels": 256,
         "cutIndependentAtlasGpuBytes": 291984434,
         "cutIndependentAtlasMebibytes": 278.46,
-        "maximumFacesPerAtlas": 1024,
-        "unpackableCellCount": 156
+        "maximumFacesAtCeilingSizedAtlas": 1024,
+        "maximumFacesNote": "An arithmetic capacity for an atlas that is actually AT the ceiling. It is NOT a feasibility count, because most cells are sized well below the ceiling.",
+        "packerMeasuredUnpackableCellCount": 172,
+        "unpackableWhoseAtlasIsBelowTheCeiling": 16,
+        "unpackableWhoseAtlasIsBelowTheCeilingNote": "These cells CANNOT be helped by raising the ceiling at all: atlas edge is chosen from a cell's SURFACE AREA, not from the ceiling, so a low-area, high-face-count cell keeps a small atlas however high the ceiling goes."
       },
       {
         "atlasCeilingPixels": 512,
         "cutIndependentAtlasGpuBytes": 671110264,
         "cutIndependentAtlasMebibytes": 640.02,
-        "maximumFacesPerAtlas": 4096,
-        "unpackableCellCount": 0
+        "maximumFacesAtCeilingSizedAtlas": 4096,
+        "maximumFacesNote": "An arithmetic capacity for an atlas that is actually AT the ceiling. It is NOT a feasibility count, because most cells are sized well below the ceiling.",
+        "packerMeasuredUnpackableCellCount": 57,
+        "unpackableWhoseAtlasIsBelowTheCeiling": 57,
+        "unpackableWhoseAtlasIsBelowTheCeilingNote": "These cells CANNOT be helped by raising the ceiling at all: atlas edge is chosen from a cell's SURFACE AREA, not from the ceiling, so a low-area, high-face-count cell keeps a small atlas however high the ceiling goes."
       },
       {
         "atlasCeilingPixels": 1024,
         "cutIndependentAtlasGpuBytes": 903501015,
         "cutIndependentAtlasMebibytes": 861.65,
-        "maximumFacesPerAtlas": 16384,
-        "unpackableCellCount": 0
+        "maximumFacesAtCeilingSizedAtlas": 16384,
+        "maximumFacesNote": "An arithmetic capacity for an atlas that is actually AT the ceiling. It is NOT a feasibility count, because most cells are sized well below the ceiling.",
+        "packerMeasuredUnpackableCellCount": 57,
+        "unpackableWhoseAtlasIsBelowTheCeiling": 57,
+        "unpackableWhoseAtlasIsBelowTheCeilingNote": "These cells CANNOT be helped by raising the ceiling at all: atlas edge is chosen from a cell's SURFACE AREA, not from the ceiling, so a low-area, high-face-count cell keeps a small atlas however high the ceiling goes."
       }
     ],
     "atlasCeilingComparisonNote": "The 256 ceiling is chosen against these, all computed the same exact way. Note that the feasibility column moves faster than the memory column: raising the ceiling buys packability as much as sharpness."
-  },
-  "allLeavesResidentUpperBound": {
-    "note": "The degenerate case where the hierarchy is ignored entirely and every leaf is resident at once. It is NOT the budget; it is what the budget buys protection from.",
-    "atlasGpuBytes": 291984431,
-    "geometryGpuBytes": 98310624
   },
   "gpuAccounting": {
     "bytesPerTexel": 4,

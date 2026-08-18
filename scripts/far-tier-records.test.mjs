@@ -165,6 +165,10 @@ describe("the byte-replay proof", () => {
       expect(entry.unionPixels).toBe(before.unionPixels);
       expect(entry.intersectionPixels).toBe(before.intersectionPixels);
       expect(entry.intersectionOverUnion).toBe(before.intersectionOverUnion);
+      // Channel spread is a ratio-of-ratios that cannot move unless the
+      // lighting or the palette moved, so it is a second independent check
+      // that the instrument itself was not altered between captures.
+      expect(entry.channelSpread).toBe(before.channelSpread);
     }
   });
 
@@ -238,6 +242,44 @@ describe("nothing already frozen was disturbed", () => {
     expect(statement).toContain("continues to govern the near and mid tiers unchanged");
   });
 
+  it("qualifies B3-B5 as one-cut bounds and names what they do not cover", () => {
+    // The defect this pins: "never exceeds at any camera pose" reads as a peak
+    // bound, but the theorem bounds ONE antichain. A streaming runtime holding
+    // an outgoing node while its replacement uploads exceeds it momentarily.
+    const bars = readJson("bake-pre-registration").budgetBars;
+    expect(bars.boundKind).toBe("instantaneous-steady-state-over-one-selected-cut");
+    for (const key of ["B3", "B4", "B5"]) {
+      expect(bars[key].rule, `${key} rule is unqualified`).toContain("SELECTED CUT");
+      expect(bars[key].rule).toContain("steady state");
+    }
+    const excluded = bars.whatB3toB5DoNotBound;
+    expect(excluded.outsideTheBound.length).toBeGreaterThanOrEqual(3);
+    expect(excluded.consequence).toContain("T003");
+  });
+
+  it("discloses that the BUDGET bars were amended after the bake", () => {
+    // The status line once claimed the whole record predated the bake. True of
+    // the instrument, false of the budget bars as committed.
+    const record = readJson("bake-pre-registration");
+    expect(record.status).toContain("AMENDED");
+    expect(record.amendments.amendedAfterTheBakeAndFirstCapture.length).toBeGreaterThanOrEqual(3);
+    expect(record.amendments.notAmendedAndNotAmendable.length).toBeGreaterThanOrEqual(2);
+    expect(record.amendments.honestReading).toContain("do not carry that guarantee");
+  });
+
+  it("proves the appearance instrument never drifted, rather than asserting it", () => {
+    // The amendment disclosure is only worth anything if the part it claims is
+    // untouched really is untouched. Recompute it from the record itself.
+    const record = readJson("bake-pre-registration");
+    const instrument = record.blenderAgreementInstrument;
+    expect(instrument.agreementBar.tone.bar).toBe("|meanLuminanceRatio - 1| <= 0.05 at 1,200 m and at 4,000 m");
+    expect(instrument.agreementBar.hue.bar).toBe("max per-channel ratio spread <= 0.02");
+    expect(instrument.poses.distancesMeters).toEqual([400, 1_200, 4_000]);
+    expect(instrument.poses.azimuthsDegrees).toEqual([55, 235]);
+    // And the recipe hash, which the amendments claim did not move.
+    expect(record.recipe.recipeSha256).toBe(farTierRecipeHash());
+  });
+
   it("keeps the far tier's budget out of the closed criterion #30", () => {
     expect(FAR_TIER_BUDGET_CONTRACT.scope).toContain("and nothing else");
     expect(readJson("bake-pre-registration").budgetBars.separateFromCriterion30).toContain("NOT FOLDED INTO THE CLOSED 256 MiB CRITERION #30");
@@ -267,6 +309,44 @@ describe("the derived budget bars and the code agree", () => {
     expect(worst.stabilityStatement).toContain("NOT STABLE");
   });
 
+  it("measures per-ceiling feasibility with the REAL packer, not a capacity estimate", () => {
+    // The defect this pins: infeasibility was estimated as faceCount >
+    // ceiling^2/64, the same 100%-utilisation idealisation the delivered ladder
+    // had already been corrected for, and it produced the false claim that a
+    // 512 ceiling removes the packing blocker entirely.
+    const table = readJson("stage0-hierarchy").cutIndependentBound.atlasCeilingComparison;
+    expect(table.length).toBeGreaterThanOrEqual(4);
+    for (const row of table) {
+      expect(typeof row.packerMeasuredUnpackableCellCount).toBe("number");
+      // The arithmetic capacity must not be mistakable for a feasibility count.
+      expect(row).not.toHaveProperty("unpackableCellCount");
+      expect(row.maximumFacesNote).toContain("NOT a feasibility count");
+    }
+    // Raising the ceiling must NOT be reported as a cure.
+    const at512 = table.find((row) => row.atlasCeilingPixels === 512);
+    const at1024 = table.find((row) => row.atlasCeilingPixels === 1_024);
+    expect(at512.packerMeasuredUnpackableCellCount).toBeGreaterThan(0);
+    expect(at1024.packerMeasuredUnpackableCellCount).toBe(at512.packerMeasuredUnpackableCellCount);
+    // And the mechanism must be recorded: those cells' atlases sit below the ceiling.
+    expect(at512.unpackableWhoseAtlasIsBelowTheCeiling).toBe(at512.packerMeasuredUnpackableCellCount);
+  });
+
+  it("states remedies that actually bite, and does not offer a bigger atlas as one", () => {
+    const ceiling = readJson("stage0-hierarchy").leafResolutionLadder.faceCountCeiling;
+    expect(ceiling.raisingTheCeilingDoesNotFixIt).toContain("MEASURED, NOT ASSUMED");
+    expect(ceiling.survivingRemedies.length).toBeGreaterThanOrEqual(3);
+    expect(ceiling.consequence).not.toContain("a larger atlas");
+  });
+
+  it("carries both denominators for the delivered under-resolved share", () => {
+    // 650/711 packable and 650/883 overall answer different questions, and
+    // reporting the smaller share against the larger denominator flatters.
+    const delivered = readJson("stage0-hierarchy").leafResolutionLadder.deliveredLadder;
+    expect(delivered.underResolvedShareOfPackable)
+      .toBeCloseTo(delivered.underResolvedCellCount / delivered.cellsMeasured, 6);
+    expect(delivered.underResolvedShareOfPackable).toBeGreaterThan(delivered.underResolvedShareOfAllCells);
+  });
+
   it("rejects 'all leaves resident' as a bound, with its counterexample count", () => {
     const rejected = readJson("stage0-hierarchy").cutIndependentBound.allLeavesRejectedAsBound;
     expect(rejected.internalNodesCostlierThanTheirChildren).toBeGreaterThan(0);
@@ -277,7 +357,8 @@ describe("the derived budget bars and the code agree", () => {
     expect(hierarchy.hierarchy.geometryLimitation).toContain("DOES NOT REDUCE GEOMETRY RESIDENCY AT ALL");
     // The swept geometry worst case IS the whole island's, and that identity is
     // the evidence for the claim, so it must hold.
-    expect(hierarchy.worstCaseResidency.geometryGpuBytes).toBe(hierarchy.allLeavesResidentUpperBound.geometryGpuBytes);
+    expect(hierarchy.worstCaseResidency.geometryGpuBytes)
+      .toBe(hierarchy.cutIndependentBound.allLeavesRejectedAsBound.allLeavesGeometryGpuBytes);
   });
 });
 

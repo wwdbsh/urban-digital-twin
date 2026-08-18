@@ -7,6 +7,8 @@ import { describe, expect, it } from "vitest";
 import { sha256HexSync, stableSerialize } from "../domain/deterministic-hash.ts";
 import {
   FAR_TIER_ATLAS_PIXELS,
+  FAR_TIER_BOUND_EXCLUSIONS,
+  FAR_TIER_BOUND_KIND,
   FAR_TIER_BUDGET_CONTRACT,
   FAR_TIER_GPU_TEXEL_BYTES,
   FAR_TIER_MIP_CHAIN_MULTIPLIER,
@@ -146,6 +148,23 @@ describe("the frozen contract", () => {
       mutated[key] = typeof mutated[key] === "number" ? (mutated[key] as number) + 1 : { mutated: true };
       expect(sha256HexSync(stableSerialize(mutated)), `contract hash ignores ${key}`).not.toBe(baseline);
     }
+  });
+
+  it("PINS the contract hash, because every baked tile embeds it", () => {
+    // A near-miss this exists to prevent: qualifying the bound by adding a
+    // `boundKind` field to FAR_TIER_BUDGET_CONTRACT moved this hash, and the
+    // hash is written into every tile's `extras.urbanDigitalTwin`, so it
+    // silently rewrote the committed tile's bytes and invalidated the appearance
+    // capture taken against them. Documentation about how to READ the bars now
+    // lives outside the hashed object. If this literal must change, every
+    // committed tile digest and every capture taken against one changes with it.
+    expect(farTierBudgetContractHash()).toBe("30403b6d161cdee965dcec7a57dbf9b0b97f031c13940a95d793d8f4a8b6d62e");
+  });
+
+  it("keeps the read-qualification out of the hashed contract", () => {
+    expect(FAR_TIER_BOUND_KIND).toBe("instantaneous-steady-state-over-one-selected-cut");
+    expect(FAR_TIER_BOUND_EXCLUSIONS.length).toBeGreaterThanOrEqual(3);
+    expect(FAR_TIER_BUDGET_CONTRACT).not.toHaveProperty("boundKind");
   });
 
   it("pins the bound as a BOUND, not as a sampled maximum", () => {

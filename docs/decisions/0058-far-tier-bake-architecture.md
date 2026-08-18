@@ -98,7 +98,13 @@ total is needed, never merged.
 | B4 resident geometry | 98,310,624 B (93.8 MiB) |
 | B5 resident total | 390,295,058 B (372.2 MiB) |
 
-**B3–B5 are bounds, not sampled maxima, and the distinction cost a correction.** An
+**B3–B5 bound ONE SELECTED CUT** — the instantaneous, steady-state residency of the
+antichain a pose selects. They are *not* a peak bound for a streaming runtime.
+Transitional double residency (holding an outgoing node while its replacement uploads),
+retained eviction caches, and upload staging are all **outside** the bound and become
+named T003 constraints; an integration doing any of them must state its own peak on top.
+
+**They are bounds, not sampled maxima, and that distinction cost a correction.** An
 earlier version of this ADR took the maximum of a 13×13 camera sweep and called it a
 figure never exceeded at any pose. It is not: a sampled grid can only *miss* a peak,
 never invent one, so refining it kept finding worse poses — 133,190,868 atlas bytes at
@@ -117,11 +123,30 @@ The 256 ceiling is chosen against the same bound computed at other ceilings: **7
 at 128, 278.5 MiB at 256, 640.0 MiB at 512, 861.7 MiB at 1024.**
 
 **The ceiling also decides feasibility, not only sharpness.** Every face costs at least
-`(faceTexelFloor + 2·gutterTexels)² = 64` texels however far resolution is reduced, so
-an atlas holds at most **1,024 faces** at a 256 ceiling. **172 of 883 cells have more
-faces than the real packer can place and cannot be baked at this ceiling at any scale.**
-A 512 ceiling removes that limit entirely. T004 cannot mass-bake without choosing among
-a larger atlas, a smaller gutter, a lower texel floor, or splitting leaves.
+`(faceTexelFloor + 2·gutterTexels)² = 64` texels however far resolution is reduced, so an
+atlas has a fixed maximum face count. Measured with the **real packer** over all 883
+cells, the cells that cannot be baked at any scale are:
+
+| ceiling | cut-independent atlas bound | unpackable cells | of which atlas < ceiling |
+| --- | --- | --- | --- |
+| 128 | 72.2 MiB | 774 | 2 |
+| **256** | **278.5 MiB** | **172** | 16 |
+| 512 | 640.0 MiB | **57** | 57 |
+| 1024 | 861.7 MiB | **57** | 57 |
+
+**Raising the ceiling does not fix this**, and an earlier version of this ADR wrongly
+said a 512 ceiling removed the limit entirely. That came from *estimating* infeasibility
+as `faceCount > ceiling²/64` — the same 100%-utilisation idealisation B6 had just been
+corrected for. The mechanism is structural: **atlas edge is chosen from a cell's surface
+area, not from the ceiling**, so a low-area, high-face-count cell keeps a small atlas
+however high the ceiling goes. At 512 and 1024 *every* surviving cell already has an
+atlas below the ceiling, so more ceiling cannot reach it.
+
+The remedies that actually bite are: a smaller gutter (costs mip-level-1 bleed), a lower
+texel floor (costs aliasing), splitting leaves below the ledger cell, or **decoupling the
+per-cell atlas floor from surface area** so a face-dense cell can be granted a larger
+atlas than its area earns — the only one that targets the measured mechanism. T004 must
+choose; this prototype does not.
 
 ### 5. ADR 0047's no-atlas finding is reversed FOR THE FAR TIER ONLY
 

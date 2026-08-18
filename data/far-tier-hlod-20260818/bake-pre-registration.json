@@ -3,13 +3,27 @@
   "recordId": "far-tier-hlod-20260818:bake-pre-registration",
   "task": "T002",
   "artifact": "far-tier-bake-pre-registration",
-  "status": "PRE-REGISTERED — written and committed BEFORE any far-tier tile was baked and before any still was captured",
+  "status": "PRE-REGISTERED, THEN AMENDED. The appearance instrument and its bars were written and committed BEFORE any tile was baked and before any still was captured, and are unchanged. The BUDGET bars were amended AFTER the bake and after the first capture, to correct three derivations that were wrong in the flattering direction. See `amendments` — this record must not be read as wholly pre-capture.",
+  "amendments": {
+    "why": "An independent review found that three quantitative claims in the first committed version did not hold. Correcting them moved bars that had already been published, which is a real weakening of the pre-registration guarantee and is disclosed here rather than smoothed over.",
+    "amendedAfterTheBakeAndFirstCapture": [
+      "B3 / B4 / B5. Derived from the maximum of a 13x13 camera sweep and asserted to be never exceeded at any pose. A sampled grid can only MISS a peak, so the figures were too low and the quantifier was false. Refinement to 24/48/96/192 steps never converged, so the bars now come from an exact max-over-antichains bound: atlas 133,190,868 -> 291,984,434; total 231,501,492 -> 390,295,058.",
+      "B6. Derived from a ladder that assumed a 100%-full atlas. Re-derived from the resolution the real packer delivers: 360 of 883 under-resolved -> 650 of the 711 packable cells, plus 172 cells that cannot be packed at all.",
+      "B1's feasibility column. Infeasibility per ceiling was ESTIMATED as faceCount > ceiling^2/64 — the same idealisation B6 had just been corrected for — which produced the false claim that a 512 ceiling removes the packing blocker entirely. Replaced with the real packer at each ceiling: 774 / 172 / 57 / 57."
+    ],
+    "notAmendedAndNotAmendable": [
+      "The `blenderAgreementInstrument` section in its entirety — poses, bar values, primary and secondary measures, camera discipline, scene-clearing rule and the stop rule. It is byte-identical to the version committed before the first still was captured, and the re-capture of the committed tile ran against it unchanged.",
+      "The tone bar |unionMeanLuminanceRatio - 1| <= 0.05 and the hue bar of 0.02 channel spread.",
+      "`recipe` and its `recipeSha256`, which have not moved since the first commit."
+    ],
+    "honestReading": "The APPEARANCE verdict rests on a genuinely pre-registered instrument and a bar that was never touched. The BUDGET bars do not carry that guarantee: they were corrected after the fact, and every correction made the tier look worse rather than better, which is the direction that argues they were made in good faith but does not restore the guarantee."
+  },
   "capturedAt": null,
   "capturedAtStatement": "NULL BY CONSTRUCTION. A timestamp here would record when the bars were written, and presenting that as a capture time would be a small lie in the one file whose entire value is that it predates the measurements.",
   "claim": "The complete set of recipe constants, budget bars and appearance-agreement bars the far-tier bake is judged against. Nothing here is a measurement.",
   "derivedFrom": {
     "record": "stage0-hierarchy.json",
-    "sha256": "ca37173c0a3509c4eaae099a5a7881b6525e23ae5ddcd95fef22e717f9ddd8c2"
+    "sha256": "4b7ad699ef5338299956371bdd001689e0a6d52a0d335177f2d18f245f3f59a1"
   },
   "recipe": {
     "recipeId": "far-tier-hlod-bake-v1",
@@ -50,13 +64,23 @@
   },
   "budgetBars": {
     "contractId": "far-tier-hlod-gpu-budget-v1",
+    "boundKind": "instantaneous-steady-state-over-one-selected-cut",
+    "whatB3toB5DoNotBound": {
+      "statement": "B3-B5 bound the cost of ONE SELECTED CUT — the instantaneous, steady-state residency of the antichain a camera pose selects. They are NOT a bound on a streaming runtime's peak, and citing them as one would be wrong.",
+      "outsideTheBound": [
+        "TRANSITIONAL DOUBLE RESIDENCY. A runtime that keeps an outgoing node resident while its replacement uploads holds both, and momentarily exceeds these figures by the size of the overlap.",
+        "RETAINED EVICTION CACHES. A cache that keeps an evicted atlas against a likely return holds nodes no cut selects; its ceiling is ADDITIVE to these bars.",
+        "UPLOAD STAGING. Bytes in flight, or in a decode buffer, are not counted here."
+      ],
+      "consequence": "NAMED T003 CONSTRAINT. A runtime integration that does any of the above must state its own peak bound on top of this one. These bars do not cover it."
+    },
     "contractSha256": "30403b6d161cdee965dcec7a57dbf9b0b97f031c13940a95d793d8f4a8b6d62e",
     "scopeStatement": "The baked far-tier HLOD atlases and their merged prism geometry, and nothing else.",
     "separateFromCriterion30": "THE FAR TIER GETS ITS OWN BUDGET AND IS NOT FOLDED INTO THE CLOSED 256 MiB CRITERION #30. That criterion was frozen against a measurement this tier did not exist for. Adding a new tier's memory to a closed criterion would silently reopen it. The two budgets are ADDED when a total is needed, never merged.",
     "B1": {
       "rule": "Baked atlas edge length is a power of two in [64, 256] texels.",
       "rationale": "Derived, not chosen. The cut-independent atlas bound is 72.2 MiB at a 128 ceiling, 278.5 MiB at 256, 640.0 MiB at 512 and 861.7 MiB at 1024.",
-      "alsoDecidesFeasibility": "An atlas holds at most 1024 faces at this ceiling, because every face costs at least 64 texels however far resolution is reduced. 172 of 883 cells exceed what the real packer can place and CANNOT be baked at this ceiling at any scale."
+      "alsoDecidesFeasibility": "An atlas holds at most undefined faces at this ceiling, because every face costs at least 64 texels however far resolution is reduced. undefined of 883 cells exceed what the real packer can place and CANNOT be baked at this ceiling at any scale."
     },
     "B2": {
       "rule": "One far-tier tile occupies at most 349525 decoded GPU bytes of texture, mip chain included.",
@@ -64,19 +88,19 @@
       "rationale": "256 * 256 * 4 bytes * 4/3 for the mip chain."
     },
     "B3": {
-      "rule": "Resident far-tier TEXTURE memory never exceeds 291984434 decoded GPU bytes at any camera pose.",
+      "rule": "Resident far-tier TEXTURE memory for the SELECTED CUT never exceeds 291984434 decoded GPU bytes, at any camera pose, in the steady state.",
       "derivedValue": 291984434,
       "basis": "cut-independent-bound",
       "rationale": "A BOUND, not a sampled maximum. Every camera pose selects some antichain of the tree, minus whatever the 1,200 m boundary excludes, and excluding only subtracts; so the maximum over all antichains dominates every pose, and that maximum is one bottom-up pass over the tree.",
       "supersededSamplingClaim": "An earlier draft of this record derived B3 from the maximum of a 13x13 camera sweep and asserted it was never exceeded at any pose. That was wrong: a sampled grid can only MISS a peak, so refinement kept finding worse poses (133,190,868 at 12 steps creeping to 136,686,118 at 192) and never converged. The sweep is retained as an observation only."
     },
     "B4": {
-      "rule": "Resident far-tier GEOMETRY memory never exceeds 98310624 decoded GPU bytes at any camera pose.",
+      "rule": "Resident far-tier GEOMETRY memory for the SELECTED CUT never exceeds 98310624 decoded GPU bytes, at any camera pose, in the steady state.",
       "derivedValue": 98310624,
       "basis": "cut-independent-bound"
     },
     "B5": {
-      "rule": "Resident far-tier TOTAL never exceeds 390295058 decoded GPU bytes at any camera pose.",
+      "rule": "Resident far-tier TOTAL for the SELECTED CUT never exceeds 390295058 decoded GPU bytes, at any camera pose, in the steady state.",
       "derivedValue": 390295058,
       "basis": "cut-independent-bound"
     },
@@ -94,7 +118,6 @@
         "cellsMeasured": 711,
         "cellsUnpackable": 172,
         "underResolvedCellCount": 650,
-        "underResolvedShare": 0.736127,
         "worstAchievedRatio": 0.044194,
         "worstCriticalDistanceMeters": 27153,
         "meanFlatFaceShare": 0.798169

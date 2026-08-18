@@ -77,10 +77,25 @@ export const FAR_TIER_TEXEL_RATIO = { floor: 1.0, target: 1.0, ceiling: 2.0 } as
  *
  * THE CEILING ALSO DECIDES FEASIBILITY, NOT ONLY SHARPNESS. Every face costs at
  * least `(faceTexelFloor + 2 * gutterTexels)^2` texels however far the global
- * resolution is reduced, so an atlas holds a FIXED MAXIMUM NUMBER OF FACES:
- * 1,024 at a 256 ceiling. 172 of 883 ledger cells have more faces than the real
- * packer can place there, and cannot be baked at this ceiling at any scale. A
- * 512 ceiling removes that limit entirely. See `stage0-hierarchy.json`.
+ * resolution is reduced, so an atlas holds a fixed maximum face count. Measured
+ * with the REAL packer over all 883 cells, the cells that cannot be baked at
+ * any scale are: 774 at a 128 ceiling, 172 at 256, 57 at 512 and 57 at 1024.
+ *
+ * RAISING THE CEILING DOES NOT FIX THIS, and an earlier version of this comment
+ * wrongly said a 512 ceiling removed the limit entirely. That claim came from
+ * estimating infeasibility as `faceCount > ceiling^2 / 64`, which is the same
+ * 100%-utilisation idealisation the delivered-resolution ladder had already been
+ * corrected for. The real packer says otherwise, and the mechanism is
+ * structural: atlas edge is chosen from a cell's SURFACE AREA, not from the
+ * ceiling, so a low-area, high-face-count cell keeps a small atlas however high
+ * the ceiling goes. At 512 and 1024 ALL 57 survivors are cells whose atlas is
+ * already below the ceiling — raising it further cannot reach them.
+ *
+ * The remedies that do bite are therefore: a smaller gutter, a lower texel
+ * floor, splitting leaves below the ledger cell, or decoupling the per-cell
+ * atlas floor from surface area so a face-dense cell can be given a larger
+ * atlas than its area alone would earn. This prototype chooses none of them.
+ * See `stage0-hierarchy.json`.
  */
 export const FAR_TIER_ATLAS_PIXELS = { minimum: 64, maximum: 256 } as const;
 
@@ -237,7 +252,7 @@ export const FAR_TIER_BUDGET_CONTRACT = {
    * Deliberately its own contract. The exterior-completion goal's criterion #30
    * is CLOSED at 256 MiB and covers the near and mid tiers' textured assets; it
    * was frozen against a measurement this tier did not exist for. Folding a new
-   * 126 MiB tier into a closed criterion would silently re-open it, so the far
+   * 372 MiB tier into a closed criterion would silently re-open it, so the far
    * tier carries a separate ceiling and the two are added, never merged.
    */
   scope: "The baked far-tier HLOD atlases and their merged prism geometry, and nothing else.",
@@ -285,6 +300,27 @@ export const FAR_TIER_BUDGET_CONTRACT = {
   maxResidentGeometryGpuBytes: 98_310_624,
   maxResidentTotalGpuBytes: 390_295_058,
 } as const;
+
+/**
+ * WHAT B3-B5 BOUND, AND WHAT THEY DO NOT.
+ *
+ * They bound the cost of ONE SELECTED CUT: the instantaneous, steady-state
+ * residency of whatever antichain a camera pose selects. They are not a bound
+ * on a streaming runtime's peak.
+ *
+ * DELIBERATELY OUTSIDE `FAR_TIER_BUDGET_CONTRACT`. Every baked tile embeds
+ * `budgetContractSha256` in its metadata, so adding a field to that object
+ * rewrites every tile's bytes. This qualification describes how the bars should
+ * be READ; it does not change what they are, and it must not be able to
+ * invalidate an artifact that is already correct.
+ */
+export const FAR_TIER_BOUND_KIND = "instantaneous-steady-state-over-one-selected-cut" as const;
+
+export const FAR_TIER_BOUND_EXCLUSIONS = [
+  "TRANSITIONAL DOUBLE RESIDENCY. A runtime that keeps an outgoing node resident while its replacement uploads holds both, and momentarily exceeds these figures by the size of the overlap.",
+  "RETAINED EVICTION CACHES. A cache that keeps an evicted atlas against a likely return holds nodes no cut selects; its ceiling is ADDITIVE to these bars.",
+  "UPLOAD STAGING. Bytes in flight, or in a decode buffer, are not counted here.",
+] as const;
 
 export function farTierBudgetContractHash(): string {
   return sha256HexSync(stableSerialize({

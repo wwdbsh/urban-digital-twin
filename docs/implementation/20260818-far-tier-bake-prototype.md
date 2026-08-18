@@ -165,6 +165,39 @@ The adjudication went the other way — frozen evidence must describe the shippe
 and it was right: re-capturing under the unchanged instrument reproduced the MISS to six
 decimals and turned a disclosure into a measurement. Both captures are retained.
 
+## What a second review round caught
+
+Three more, and the pattern repeated: a correction can carry its own flattering error.
+
+1. **The per-ceiling feasibility column was an estimate wearing a measurement's name.**
+   Having just corrected B6 for assuming a 100%-full atlas, I estimated infeasibility per
+   ceiling as `faceCount > ceiling²/64` — the *same* idealisation — and published "a 512
+   ceiling removes that limit entirely". The real packer says 774 / 172 / 57 / 57 at
+   128 / 256 / 512 / 1024. **Raising the ceiling never gets below 57**, because atlas
+   edge comes from surface area, not from the ceiling: a low-area, high-face-count cell
+   keeps a small atlas however high the ceiling goes, and at 512+ *every* survivor is
+   such a cell. The estimate is gone; the packer runs at each ceiling.
+2. **"Never exceeds at any camera pose" over-claimed.** The theorem bounds one
+   antichain's cost. A streaming runtime holding an outgoing node while its replacement
+   uploads, or retaining evicted atlases, exceeds it momentarily. B3–B5 are now qualified
+   as instantaneous steady-state bounds over the selected cut, with double residency,
+   eviction caches and upload staging named as T003 constraints outside them.
+3. **The pre-registration's status line still said it predated the bake.** True of the
+   appearance instrument, false of the budget bars, which were amended afterwards. An
+   `amendments` block now names exactly what moved and what did not — and the claim that
+   the instrument never moved is *verified*, not asserted: its section hashes identically
+   across all four commits of that record.
+
+### A near-miss worth recording
+
+Qualifying the bound by adding a `boundKind` field to `FAR_TIER_BUDGET_CONTRACT` moved
+the contract hash — which every baked tile embeds in `extras.urbanDigitalTwin` — and so
+silently rewrote the committed tile's bytes, invalidating the appearance capture taken
+against them. Caught by the instructed digest check before commit, not by intent. The
+qualification now lives outside the hashed object, and `farTierBudgetContractHash()` is
+pinned to a literal so this cannot recur quietly. **Documentation about how to read a
+bar must never be able to invalidate an artifact that is already correct.**
+
 ## Residuals and NOT-METs
 
 1. **NOT MET — tone bar** at 1,200 m / azimuth 235. Mass bake blocked pending a user
@@ -176,6 +209,9 @@ decimals and turned a disclosure into a measurement. Both captures are retained.
 3. **The hierarchy does not reduce geometry residency.** Parent nodes concatenate
    rather than simplify. 93.8 MiB, bounded and affordable; a prerequisite for any
    larger city.
+3b. **57 cells cannot be baked at ANY atlas ceiling** without changing the gutter, the
+   texel floor, the leaf size, or decoupling atlas size from surface area. This is a
+   hard T004 blocker and no ceiling choice resolves it.
 4. **`Math.pow` cross-engine bit-exactness** is not contractually guaranteed. Replay is
    proven cross-process on the pinned toolchain only.
 5. **One cell.** Its IoU of 0.971-0.980 is better than the island median deviation of

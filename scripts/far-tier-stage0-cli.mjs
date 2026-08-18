@@ -24,6 +24,8 @@ import { fileURLToPath } from "node:url";
 import { sha256HexSync } from "../src/domain/deterministic-hash.ts";
 import {
   FAR_TIER_ATLAS_PIXELS,
+  FAR_TIER_BOUND_EXCLUSIONS,
+  FAR_TIER_BOUND_KIND,
   FAR_TIER_BUDGET_CONTRACT,
   FAR_TIER_GPU_TEXEL_BYTES,
   FAR_TIER_MIP_CHAIN_MULTIPLIER,
@@ -38,7 +40,7 @@ import {
   farTierResolution,
   farTierTexelWorldSizeMeters,
 } from "../src/release/far-tier-budget.ts";
-import { FAR_TIER_BAKE_RECIPE, farTierRecipeHash, packFarTierAtlas } from "../src/release/far-tier-bake.ts";
+import { FAR_TIER_BAKE_RECIPE, FarTierPackingUnfeasibleError, farTierRecipeHash, packFarTierAtlas } from "../src/release/far-tier-bake.ts";
 import { PROCEDURAL_TEXTURE_CLASSES, proceduralTextureTile } from "../src/release/procedural-texture.ts";
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -428,6 +430,16 @@ async function commandHierarchy() {
   // The same exact bound at other atlas ceilings, so the choice of 256 rests on
   // comparable arithmetic rather than on figures from a sweep that did not
   // converge. Only the ceiling changes; the ladder, the tree and the DP do not.
+  // How many internal nodes cost more than their children, which is why "all
+  // leaves resident" is not itself a bound. Reported, because it is the reason
+  // the simpler bound was rejected.
+  let costlierThanChildren = 0;
+  for (const node of nodes.values()) {
+    if (node.leaf || node.children.length === 0) continue;
+    const childBytes = node.children.reduce((sum, child) => sum + child.atlasGpuBytes + child.geometryGpuBytes, 0);
+    if (node.atlasGpuBytes + node.geometryGpuBytes > childBytes) costlierThanChildren += 1;
+  }
+
   const ceilingComparison = [];
   for (const ceiling of [128, 256, 512, 1_024]) {
     const pixelsFor = (area) => {
@@ -441,30 +453,39 @@ async function commandHierarchy() {
     const boundAt = (node) => {
       const own = atlasAt.get(`${node.zoom}/${node.x}/${node.y}`);
       if (node.leaf || node.children.length === 0) return own;
-      const children = node.children.reduce((sum, child) => sum + boundAt(child), 0);
-      return Math.max(own, children);
+      return Math.max(own, node.children.reduce((sum, child) => sum + boundAt(child), 0));
     };
     const atlasBytes = roots.reduce((sum, root) => sum + boundAt(root), 0);
+
+    // THE REAL PACKER, at this ceiling, on every cell. An earlier version of
+    // this table estimated infeasibility as `faceCount > ceiling^2 / 64`, which
+    // is the same 100%-utilisation idealisation B6 had already been corrected
+    // for, and it produced a materially false claim: it said a 512 ceiling
+    // removes the blocker entirely. It does not.
+    let unpackableAt = 0;
+    let unpackableDespiteHeadroom = 0;
+    for (const cell of cells) {
+      const atlasPixels = pixelsFor(cell.surfaceAreaSquareMeters);
+      try {
+        packFarTierAtlas(packableFaces(cell), atlasPixels, TARGET_TEXEL_WORLD_SIZE_METERS);
+      } catch (error) {
+        if (!(error instanceof FarTierPackingUnfeasibleError)) throw error;
+        unpackableAt += 1;
+        // The decisive diagnostic: this cell's atlas is SMALLER than the
+        // ceiling, so raising the ceiling cannot help it.
+        if (atlasPixels < ceiling) unpackableDespiteHeadroom += 1;
+      }
+    }
     ceilingComparison.push({
       atlasCeilingPixels: ceiling,
       cutIndependentAtlasGpuBytes: atlasBytes,
       cutIndependentAtlasMebibytes: round(atlasBytes / 1_048_576, 2),
-      maximumFacesPerAtlas: Math.floor((ceiling ** 2) / ((FAR_TIER_BAKE_RECIPE.faceTexelFloor + 2 * FAR_TIER_BAKE_RECIPE.gutterTexels) ** 2)),
-      unpackableCellCount: cells.filter((cell) => cell.faces.length > Math.floor((ceiling ** 2) / ((FAR_TIER_BAKE_RECIPE.faceTexelFloor + 2 * FAR_TIER_BAKE_RECIPE.gutterTexels) ** 2))).length,
+      maximumFacesAtCeilingSizedAtlas: Math.floor((ceiling ** 2) / ((FAR_TIER_BAKE_RECIPE.faceTexelFloor + 2 * FAR_TIER_BAKE_RECIPE.gutterTexels) ** 2)),
+      maximumFacesNote: "An arithmetic capacity for an atlas that is actually AT the ceiling. It is NOT a feasibility count, because most cells are sized well below the ceiling.",
+      packerMeasuredUnpackableCellCount: unpackableAt,
+      unpackableWhoseAtlasIsBelowTheCeiling: unpackableDespiteHeadroom,
+      unpackableWhoseAtlasIsBelowTheCeilingNote: "These cells CANNOT be helped by raising the ceiling at all: atlas edge is chosen from a cell's SURFACE AREA, not from the ceiling, so a low-area, high-face-count cell keeps a small atlas however high the ceiling goes.",
     });
-  }
-  if (cutBound.totalGpuBytes < worst.totalGpuBytes) {
-    fail(`the cut-independent bound ${cutBound.totalGpuBytes} is below the observed sweep maximum ${worst.totalGpuBytes}; it is therefore not a bound and the derivation is wrong.`);
-  }
-
-  // How many internal nodes cost more than their children, which is why "all
-  // leaves resident" is not itself a bound. Reported, because it is the reason
-  // the simpler bound was rejected.
-  let costlierThanChildren = 0;
-  for (const node of nodes.values()) {
-    if (node.leaf || node.children.length === 0) continue;
-    const childBytes = node.children.reduce((sum, child) => sum + child.atlasGpuBytes + child.geometryGpuBytes, 0);
-    if (node.atlasGpuBytes + node.geometryGpuBytes > childBytes) costlierThanChildren += 1;
   }
 
   // B6 FROM THE RESOLUTION THE PACKER ACTUALLY DELIVERS.
@@ -482,11 +503,11 @@ async function commandHierarchy() {
     let packing;
     try {
       packing = packFarTierAtlas(packableFaces(cell), ideal.atlasPixels, TARGET_TEXEL_WORLD_SIZE_METERS);
-    } catch {
-      // UNPACKABLE, and not because of a bad scale choice. Every face costs at
-      // least (floor + 2*gutter)^2 texels no matter how far the resolution is
-      // reduced, so an atlas holds a fixed MAXIMUM NUMBER OF FACES and a cell
-      // above it cannot be baked at this ceiling at all. Recorded, not thrown.
+    } catch (error) {
+      // ONLY a declared infeasibility is recorded as one. A bare catch here
+      // would silently reclassify any future input bug as a feasibility
+      // blocker, which is the most flattering possible way to be wrong.
+      if (!(error instanceof FarTierPackingUnfeasibleError)) throw error;
       unpackable.push({ cellId: cell.cellId, faceCount: cell.faces.length, atlasPixels: ideal.atlasPixels });
       continue;
     }
@@ -596,18 +617,28 @@ async function commandHierarchy() {
       faceCountCeiling: {
         note: "THE HARDEST LIMIT IN THIS TIER, AND IT IS NOT A QUALITY LIMIT — IT IS FEASIBILITY. Every face occupies at least (faceTexelFloor + 2 * gutterTexels)^2 texels however far the global resolution is reduced, so one atlas holds a FIXED MAXIMUM NUMBER OF FACES. A cell above it cannot be baked at this ceiling at any scale.",
         minimumTexelsPerFace: (FAR_TIER_BAKE_RECIPE.faceTexelFloor + 2 * FAR_TIER_BAKE_RECIPE.gutterTexels) ** 2,
-        maximumFacesPer256Atlas: Math.floor((FAR_TIER_ATLAS_PIXELS.maximum ** 2) / ((FAR_TIER_BAKE_RECIPE.faceTexelFloor + 2 * FAR_TIER_BAKE_RECIPE.gutterTexels) ** 2)),
-        unpackableCellCount: unpackable.length,
+        arithmeticCapacityOfACeilingSizedAtlas: Math.floor((FAR_TIER_ATLAS_PIXELS.maximum ** 2) / ((FAR_TIER_BAKE_RECIPE.faceTexelFloor + 2 * FAR_TIER_BAKE_RECIPE.gutterTexels) ** 2)),
+        arithmeticCapacityNote: "Capacity of an atlas that is actually AT the 256 ceiling. It is NOT a feasibility count and must not be read as one: most cells are sized well below the ceiling, because atlas edge comes from surface area.",
+        packerMeasuredUnpackableCellCount: unpackable.length,
         unpackableShare: round(unpackable.length / cells.length, 6),
         worstFaceCount: cells.reduce((most, cell) => Math.max(most, cell.faces.length), 0),
-        consequence: "T004 CANNOT MASS-BAKE AT THIS CEILING WITHOUT ONE OF: a larger atlas, a smaller gutter, a lower texel floor, or splitting leaves below the ledger cell. This prototype does not choose between them.",
+        raisingTheCeilingDoesNotFixIt: "MEASURED, NOT ASSUMED. The real packer at each ceiling leaves 774 cells unpackable at 128, 172 at 256, 57 at 512 and 57 at 1024. At 512 and 1024 every surviving cell already has an atlas SMALLER than the ceiling, so more ceiling cannot reach it. An earlier version of this record estimated infeasibility as faceCount > ceiling^2/64 and consequently claimed a 512 ceiling removed the blocker entirely. That was false, and it was false in the same 100%-utilisation way the delivered-resolution ladder had already been corrected for.",
+        survivingRemedies: [
+          "Reduce the gutter below 2 texels, at the cost of mip-level-1 bleed between neighbouring faces.",
+          "Lower the per-face texel floor below 4, at the cost of aliasing the faces that fall under it.",
+          "Split leaves below the ledger cell, which is a hierarchy change and a T004 decision.",
+          "Decouple the per-cell atlas floor from surface area, so a face-dense but low-area cell can be granted a larger atlas than its area alone earns. This is the only remedy that targets the measured mechanism directly.",
+        ],
+        consequence: "T004 CANNOT MASS-BAKE AT THIS CEILING. This prototype does not choose among the remedies.",
       },
       deliveredLadder: {
         basis: "The real packer run over every PACKABLE leaf, using each cell's own face extents from the base snapshot. This is the resolution a bake actually delivers.",
         cellsMeasured: leafResolutions.length,
         cellsUnpackable: unpackable.length,
         underResolvedCellCount: deliveredUnderResolved.length,
-        underResolvedShare: round(deliveredUnderResolved.length / cells.length, 6),
+        underResolvedShareOfPackable: round(deliveredUnderResolved.length / Math.max(1, leafResolutions.length), 6),
+        underResolvedShareOfAllCells: round(deliveredUnderResolved.length / cells.length, 6),
+        shareDenominatorNote: "Two denominators, because they answer different questions and conflating them flatters the tier. The packable share is out of the cells this ladder could measure; the all-cells share is out of every ledger cell, and the cells it cannot measure are UNPACKABLE rather than fine.",
         worstAchievedRatio: round(Math.min(...leafResolutions.map((entry) => entry.deliveredRatio)), 6),
         worstCriticalDistanceMeters: Math.round(Math.max(...leafResolutions.map((entry) => entry.deliveredCriticalDistanceMeters))),
         appliedScaleHistogram: scaleHistogram,
@@ -663,11 +694,6 @@ async function commandHierarchy() {
       atlasCeilingComparison: ceilingComparison,
       atlasCeilingComparisonNote: "The 256 ceiling is chosen against these, all computed the same exact way. Note that the feasibility column moves faster than the memory column: raising the ceiling buys packability as much as sharpness.",
     },
-    allLeavesResidentUpperBound: {
-      note: "The degenerate case where the hierarchy is ignored entirely and every leaf is resident at once. It is NOT the budget; it is what the budget buys protection from.",
-      atlasGpuBytes: cells.reduce((sum, cell) => sum + farTierAtlasGpuBytes(farTierResolution(Math.max(cell.surfaceAreaSquareMeters, 1e-6)).atlasPixels), 0),
-      geometryGpuBytes: cells.reduce((sum, cell) => sum + farTierGeometryGpuBytes(cell.quadCount, cell.triangleCount), 0),
-    },
     gpuAccounting: {
       bytesPerTexel: FAR_TIER_GPU_TEXEL_BYTES,
       bytesPerTexelNote: "RGBA8. A truecolour PNG decodes to RGB8, but no mainstream GPU stores a 3-byte texel; it pads to 4. Counting 3 would understate every figure here by a quarter.",
@@ -718,7 +744,21 @@ async function commandPreregister() {
     recordId: `${EVIDENCE_ID}:bake-pre-registration`,
     task: "T002",
     artifact: "far-tier-bake-pre-registration",
-    status: "PRE-REGISTERED — written and committed BEFORE any far-tier tile was baked and before any still was captured",
+    status: "PRE-REGISTERED, THEN AMENDED. The appearance instrument and its bars were written and committed BEFORE any tile was baked and before any still was captured, and are unchanged. The BUDGET bars were amended AFTER the bake and after the first capture, to correct three derivations that were wrong in the flattering direction. See `amendments` — this record must not be read as wholly pre-capture.",
+    amendments: {
+      why: "An independent review found that three quantitative claims in the first committed version did not hold. Correcting them moved bars that had already been published, which is a real weakening of the pre-registration guarantee and is disclosed here rather than smoothed over.",
+      amendedAfterTheBakeAndFirstCapture: [
+        "B3 / B4 / B5. Derived from the maximum of a 13x13 camera sweep and asserted to be never exceeded at any pose. A sampled grid can only MISS a peak, so the figures were too low and the quantifier was false. Refinement to 24/48/96/192 steps never converged, so the bars now come from an exact max-over-antichains bound: atlas 133,190,868 -> 291,984,434; total 231,501,492 -> 390,295,058.",
+        "B6. Derived from a ladder that assumed a 100%-full atlas. Re-derived from the resolution the real packer delivers: 360 of 883 under-resolved -> 650 of the 711 packable cells, plus 172 cells that cannot be packed at all.",
+        "B1's feasibility column. Infeasibility per ceiling was ESTIMATED as faceCount > ceiling^2/64 — the same idealisation B6 had just been corrected for — which produced the false claim that a 512 ceiling removes the packing blocker entirely. Replaced with the real packer at each ceiling: 774 / 172 / 57 / 57.",
+      ],
+      notAmendedAndNotAmendable: [
+        "The `blenderAgreementInstrument` section in its entirety — poses, bar values, primary and secondary measures, camera discipline, scene-clearing rule and the stop rule. It is byte-identical to the version committed before the first still was captured, and the re-capture of the committed tile ran against it unchanged.",
+        "The tone bar |unionMeanLuminanceRatio - 1| <= 0.05 and the hue bar of 0.02 channel spread.",
+        "`recipe` and its `recipeSha256`, which have not moved since the first commit.",
+      ],
+      honestReading: "The APPEARANCE verdict rests on a genuinely pre-registered instrument and a bar that was never touched. The BUDGET bars do not carry that guarantee: they were corrected after the fact, and every correction made the tier look worse rather than better, which is the direction that argues they were made in good faith but does not restore the guarantee.",
+    },
     capturedAt: null,
     capturedAtStatement: "NULL BY CONSTRUCTION. A timestamp here would record when the bars were written, and presenting that as a capture time would be a small lie in the one file whose entire value is that it predates the measurements.",
     claim: "The complete set of recipe constants, budget bars and appearance-agreement bars the far-tier bake is judged against. Nothing here is a measurement.",
@@ -739,6 +779,12 @@ async function commandPreregister() {
 
     budgetBars: {
       contractId: FAR_TIER_BUDGET_CONTRACT.contractId,
+      boundKind: FAR_TIER_BOUND_KIND,
+      whatB3toB5DoNotBound: {
+        statement: "B3-B5 bound the cost of ONE SELECTED CUT — the instantaneous, steady-state residency of the antichain a camera pose selects. They are NOT a bound on a streaming runtime's peak, and citing them as one would be wrong.",
+        outsideTheBound: [...FAR_TIER_BOUND_EXCLUSIONS],
+        consequence: "NAMED T003 CONSTRAINT. A runtime integration that does any of the above must state its own peak bound on top of this one. These bars do not cover it.",
+      },
       contractSha256: farTierBudgetContractHash(),
       scopeStatement: FAR_TIER_BUDGET_CONTRACT.scope,
       separateFromCriterion30: "THE FAR TIER GETS ITS OWN BUDGET AND IS NOT FOLDED INTO THE CLOSED 256 MiB CRITERION #30. That criterion was frozen against a measurement this tier did not exist for. Adding a new tier's memory to a closed criterion would silently reopen it. The two budgets are ADDED when a total is needed, never merged.",
@@ -753,19 +799,19 @@ async function commandPreregister() {
         rationale: "256 * 256 * 4 bytes * 4/3 for the mip chain.",
       },
       B3: {
-        rule: `Resident far-tier TEXTURE memory never exceeds ${FAR_TIER_BUDGET_CONTRACT.maxResidentAtlasGpuBytes} decoded GPU bytes at any camera pose.`,
+        rule: `Resident far-tier TEXTURE memory for the SELECTED CUT never exceeds ${FAR_TIER_BUDGET_CONTRACT.maxResidentAtlasGpuBytes} decoded GPU bytes, at any camera pose, in the steady state.`,
         derivedValue: hierarchy.cutIndependentBound.atlasGpuBytes,
         basis: "cut-independent-bound",
         rationale: "A BOUND, not a sampled maximum. Every camera pose selects some antichain of the tree, minus whatever the 1,200 m boundary excludes, and excluding only subtracts; so the maximum over all antichains dominates every pose, and that maximum is one bottom-up pass over the tree.",
         supersededSamplingClaim: "An earlier draft of this record derived B3 from the maximum of a 13x13 camera sweep and asserted it was never exceeded at any pose. That was wrong: a sampled grid can only MISS a peak, so refinement kept finding worse poses (133,190,868 at 12 steps creeping to 136,686,118 at 192) and never converged. The sweep is retained as an observation only.",
       },
       B4: {
-        rule: `Resident far-tier GEOMETRY memory never exceeds ${FAR_TIER_BUDGET_CONTRACT.maxResidentGeometryGpuBytes} decoded GPU bytes at any camera pose.`,
+        rule: `Resident far-tier GEOMETRY memory for the SELECTED CUT never exceeds ${FAR_TIER_BUDGET_CONTRACT.maxResidentGeometryGpuBytes} decoded GPU bytes, at any camera pose, in the steady state.`,
         derivedValue: hierarchy.cutIndependentBound.geometryGpuBytes,
         basis: "cut-independent-bound",
       },
       B5: {
-        rule: `Resident far-tier TOTAL never exceeds ${FAR_TIER_BUDGET_CONTRACT.maxResidentTotalGpuBytes} decoded GPU bytes at any camera pose.`,
+        rule: `Resident far-tier TOTAL for the SELECTED CUT never exceeds ${FAR_TIER_BUDGET_CONTRACT.maxResidentTotalGpuBytes} decoded GPU bytes, at any camera pose, in the steady state.`,
         derivedValue: hierarchy.cutIndependentBound.totalGpuBytes,
         basis: "cut-independent-bound",
       },

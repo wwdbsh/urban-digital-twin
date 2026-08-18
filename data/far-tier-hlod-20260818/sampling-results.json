@@ -7,8 +7,8 @@
  "capturedAtStatement": "NULL BY CONSTRUCTION, matching the T009 precedent. The readings below are the capture; a wall-clock stamp would be the only field in this record that a re-run could not reproduce.",
  "preRegistration": {
   "record": "bake-pre-registration.json",
-  "sha256": "0fc8a3d83e23e122f15e0a55dfdef1045703ddb7cc4d73ba0507fcd364e1dfa7",
-  "note": "The bars were fixed and committed BEFORE any still was captured. They are reported against verbatim, including where they are missed. The record was later CORRECTED after independent review — B3/B5 moved from a non-converging sweep maximum to a cut-independent bound, and B6 from the ideal ladder to the resolution the packer delivers — so this checksum names the corrected record. None of those corrections touched the appearance instrument or its bars, which are unchanged from the pre-capture commit."
+  "sha256": "52d32ac601b58f4a98ac6b468bec429f0858109c4ed66185d2aa3b7326a8e78e",
+  "note": "The APPEARANCE bars were fixed and committed BEFORE any still was captured and have never been touched: the pre-registration's `blenderAgreementInstrument` section is byte-identical across every commit of that record. The BUDGET bars in the same record were amended after the bake, which is disclosed in its own `amendments` block and does not touch anything this record is judged against."
  },
  "subjectDigestSupersession": {
   "status": "RESOLVED BY RE-CAPTURE. The readings below describe the COMMITTED bytes. The original readings are retained in `supersededCapture` and were not discarded.",

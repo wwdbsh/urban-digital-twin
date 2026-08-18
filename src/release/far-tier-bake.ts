@@ -486,6 +486,30 @@ export interface FarTierPacking {
 }
 
 /**
+ * Raised when an atlas cannot hold a cell's faces at ANY declared scale.
+ *
+ * Distinct from every other failure this module can produce, because it means
+ * something structural rather than something wrong with the input: each face
+ * costs at least `(faceTexelFloor + 2 * gutterTexels)^2` texels however far the
+ * global resolution is reduced, so an atlas has a fixed maximum face count. A
+ * caller taking a feasibility census must be able to tell this apart from a
+ * genuine error, or it will silently report bugs as infeasibility.
+ */
+export class FarTierPackingUnfeasibleError extends Error {
+  readonly faceCount: number;
+  readonly atlasPixels: number;
+  readonly minimumTexelsPerFace: number;
+  constructor(faceCount: number, atlasPixels: number) {
+    const minimumTexelsPerFace = (FAR_TIER_BAKE_RECIPE.faceTexelFloor + 2 * FAR_TIER_BAKE_RECIPE.gutterTexels) ** 2;
+    super(`Far-tier bake could not pack ${faceCount} faces into a ${atlasPixels}px atlas at any declared scale; each face costs at least ${minimumTexelsPerFace} texels, so this atlas holds at most ${Math.floor((atlasPixels * atlasPixels) / minimumTexelsPerFace)}.`);
+    this.name = "FarTierPackingUnfeasibleError";
+    this.faceCount = faceCount;
+    this.atlasPixels = atlasPixels;
+    this.minimumTexelsPerFace = minimumTexelsPerFace;
+  }
+}
+
+/**
  * Shelf-pack the faces in the declared order, shrinking the global resolution
  * by deterministic halvings until the atlas holds them.
  *
@@ -529,7 +553,7 @@ export function packFarTierAtlas(
       return { atlasPixels, appliedScale, texelWorldSizeMeters, faces: placed, flatFaceCount, occupancy: occupied / (atlasPixels * atlasPixels) };
     }
   }
-  throw new Error(`Far-tier bake could not pack ${faces.length} faces into a ${atlasPixels}px atlas at any declared scale.`);
+  throw new FarTierPackingUnfeasibleError(faces.length, atlasPixels);
 }
 
 // ---------------------------------------------------------------------------
