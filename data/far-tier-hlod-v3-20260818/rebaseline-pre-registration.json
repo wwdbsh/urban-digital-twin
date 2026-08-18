@@ -1,0 +1,71 @@
+{
+ "schemaVersion": "1.0",
+ "recordId": "far-tier-hlod-v3-20260818:rebaseline-pre-registration",
+ "task": "T011",
+ "artifact": "far-tier-instrument-rebaseline-pre-registration",
+ "capturedAt": null,
+ "capturedAtStatement": "NULL BY CONSTRUCTION. This record is committed BEFORE the re-baseline capture runs; a timestamp would record when the protocol was written and presenting it as a capture time would be a lie in the one file whose value is that it predates the measurement.",
+ "status": "PRE-REGISTERED — written and committed BEFORE the re-baseline capture.",
+
+ "whyThisExists": "T002 committed a baked mean luminance of 0.042303 at 1200 m / azimuth 235 and a tone MISS at ratio 1.072801. Two later sessions measured the same byte-identical tile at approximately 0.0395 under the same harness. The disagreement is now three sessions old, the explanation previously offered for it has been excluded, and every luminance-denominated bar in this goal descends from the disputed figure. This capture settles which reading the instrument actually produces.",
+
+ "honestDisclosureOfPriorKnowledge": {
+  "iAlreadyHavePartialEvidence": "This is not a blind test and must not be presented as one. T011 Stage 0a already measured the tile at 0.039517-0.039748 across three swept render settings, and T010 measured 0.03957273 independently. Those readings are committed in stage-0a-instrument-reproduction-failure.json.",
+  "whyPreRegisterAnyway": "Because the DECISION RULE is what needs fixing in advance, not the reading. Without it, whichever number appears could be rationalised into whichever conclusion is convenient, and the objection that the instrument was shopped until it agreed would be unanswerable. The rule below is committed first so the capture can only confirm or refute it.",
+  "whatWouldFalsifyMyExpectation": "A session reproducing 0.042303 within tolerance. I expect approximately 0.0395 and have said so; if 0.042303 appears, branch (a) fires, T002 stands, and my Stage 0a halt was wrong about which capture is anomalous."
+ },
+
+ "protocol": {
+  "subjects": [
+   { "id": "baked-v1", "what": "The committed v1 prototype tile, GLB 2f8599256ac45ee509dc7d7ce0da6a56964bac8e3ca66b77e795c1435ff7930b with atlas c159e0508aeb7522620b799b83041461aecf34727f69209bd7efbf992f5c067a, both verified byte-identical before rendering." },
+   { "id": "source", "what": "The 48 shipped lod_0 assets of cell manhattan-exterior-cell-w05-000747-17-38610-35822, each regenerated and verified against the committed -c2 inventory, rigid-translated into the cell-local frame." }
+  ],
+  "oneSession": "BOTH subjects are rendered in a SINGLE Blender session with no restart between them. Cross-session drift is the thing under investigation, so it must not be reintroduced by the test itself.",
+  "harness": "The T002 instrument verbatim: BLENDER_EEVEE, 1440x900, 60 degree vertical field, film_transparent, Standard view transform, world background strength 0, one sun at elevation 50 / azimuth 35, energy 3.0, angular diameter 0. Scene cleared by object deletion and datablock purge; bpy.ops.wm.read_factory_settings is NEVER called.",
+  "materialPurgeBetweenSubjects": "Materials and images are purged between subjects. Stage 0a found 869 materials accumulating across imports; that did not change any reading, but leaving it in place would be an uncontrolled variable in the one test whose purpose is to control them.",
+  "poses": "All six: 400 / 1200 / 4000 m at azimuths 55 and 235, elevation 18, camera computed from the SOURCE bounds and reused verbatim for the baked subject.",
+  "masks": {
+   "sessionMask": "Union of this session's own source and baked silhouettes, which is what the T002 instrument specifies.",
+   "t002MaskComparability": "The session mask's pixel count is also compared against T002's committed unionPixels per pose. A matching count means the two sessions agree on geometry and framing, which isolates any luminance difference to shading rather than to coverage.",
+   "why": "T010 attributed the gap to masks. Reporting both removes that explanation from contention either way."
+  },
+  "measurements": "Union mean luminance ratio (Rec.709 on the linear framebuffer), per-channel ratios and their spread, intersection-over-union, and absolute means for both subjects — the same quantities the T002 sampling record carries, so the two are directly comparable.",
+  "barsUnchanged": { "tone": "|unionMeanLuminanceRatio - 1| <= 0.05 at 1,200 m and 4,000 m", "hue": "max per-channel ratio spread <= 0.02" }
+ },
+
+ "decisionRule": {
+  "statedInAdvance": true,
+  "tolerance": "1% relative on the baked mean luminance at 1200 m / azimuth 235, the pose where the dispute is largest.",
+  "branchA": {
+   "condition": "|measured baked mean - 0.042303| / 0.042303 <= 0.01",
+   "consequence": "T002's readings STAND. Its 1.072801 and its MISS remain operative, T011's 5.32 attribution gate remains valid on its existing scale, and this task continues on it. My Stage 0a halt is recorded as having been wrong about which session was anomalous."
+  },
+  "branchB": {
+   "condition": "|measured baked mean - 0.0395| / 0.0395 <= 0.01",
+   "consequence": "T002's BAKED-TILE readings are SUPERSEDED BY STATEMENT. The T002 record is NOT edited — it is immutable and its own amendments block forbids it. Instead: the sampling-results MISS is annotated in this task's records as a non-reproducing measurement; the re-baselined verdict at every pose becomes the operative baseline; and the 5.32 gate must be RE-DERIVED from the surviving baseline before Stage 0b runs. Re-derivation against a stated baseline is legitimate; silently rescaling the old threshold is not."
+  },
+  "branchC": {
+   "condition": "Neither branch fires.",
+   "consequence": "WORSE THAN EITHER. It would mean the instrument is not reproducible across sessions at all, which invalidates every appearance measurement in this goal rather than one of them. Everything halts and the finding is reported without a proposed remedy."
+  },
+  "reportingRule": "Every pose's readings are recorded whatever they say, including the poses not under dispute, and including any pose where the tile passes a bar it previously missed."
+ },
+
+ "instrumentStateHypothesesForWhyT002MayHaveREADHIGH": {
+  "status": "DISCLOSED POSSIBILITIES, NOT CONCLUSIONS. None has been tested to the point of demonstration, and the capture below does not test them — it establishes which reading reproduces, not why the other one happened.",
+  "candidates": [
+   "SESSION STATE. T002's capture ran after a leftover T009 scene had been cleared by object deletion. Datablocks that survive object deletion — worlds, view-layer settings, colour-management state, an environment or a second light — could have raised the baked subject without moving the source, if the source's own materials happened to be less sensitive to them.",
+   "COLOUR MANAGEMENT. The instrument pins the view transform to Standard but does not pin `view_settings.look`, `exposure` or `gamma`. A non-default value on any of those would scale the framebuffer. It should scale BOTH subjects, so this hypothesis is weak on its own and is listed because it is cheap to check and would be decisive if true.",
+   "MATERIAL BINDING. Stage 0a observed 869 materials accumulating across imports in a single session. If a subject in T002 bound a material other than the one its GLB declares — for instance a leftover with a different roughness or a missing texture link — the baked subject could render brighter while the source, imported first, bound correctly.",
+   "ATLAS RESOLUTION AT THE TIME OF CAPTURE. The tile references its atlas by relative URI. If the file resolved differently in that worktree, a different atlas would have been sampled. This is testable after the fact only by digest, and the digest matches now.",
+   "MINIFICATION AND MIP STATE. At 1200 m the 256px atlas is heavily minified and 14.67% of it is unused black. Different mip generation or a texture size limit would change how much of that black is averaged in, and would affect the baked subject far more than the source, whose tiles repeat."
+  ],
+  "whatWouldSettleTheCause": "Re-running T002's exact capture script in a session started from the same state. That is out of scope here: this capture establishes which reading the instrument produces today, which is what the downstream bars need."
+ },
+
+ "notClaimedHere": [
+  "No reading has been taken for this record at the time it is committed.",
+  "This protocol does not diagnose the cause of the disagreement and does not claim to.",
+  "A verdict that the tile passes its bars is a statement about this instrument under one sun in EEVEE. It is not a claim about the shipped Cesium renderer and not visual acceptance."
+ ]
+}
