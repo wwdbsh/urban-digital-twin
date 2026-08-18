@@ -1,0 +1,147 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "far-tier-hlod-20260818:bake-pre-registration",
+  "task": "T002",
+  "artifact": "far-tier-bake-pre-registration",
+  "status": "PRE-REGISTERED — written and committed BEFORE any far-tier tile was baked and before any still was captured",
+  "capturedAt": null,
+  "capturedAtStatement": "NULL BY CONSTRUCTION. A timestamp here would record when the bars were written, and presenting that as a capture time would be a small lie in the one file whose entire value is that it predates the measurements.",
+  "claim": "The complete set of recipe constants, budget bars and appearance-agreement bars the far-tier bake is judged against. Nothing here is a measurement.",
+  "derivedFrom": {
+    "record": "stage0-hierarchy.json",
+    "sha256": "d44b547ffb94712edbe18006c85fcad272b07e79e2d21605a495dde7657b91e1"
+  },
+  "recipe": {
+    "recipeId": "far-tier-hlod-bake-v1",
+    "sourceReconstruction": "nearest-piecewise-constant",
+    "sourceAggregation": "exact-area-weighted-box-integral",
+    "compositionSpace": "linear-light",
+    "textureTransferFunction": "srgb",
+    "factorTransferFunction": "linear-as-authored",
+    "bakedBaseColorFactor": [
+      1,
+      1,
+      1,
+      1
+    ],
+    "packingOrder": "descending-face-world-area,then-building-id-ascending,then-face-index-ascending",
+    "packingAlgorithm": "shelf-first-fit-in-declared-order",
+    "gutterTexels": 2,
+    "faceTexelFloor": 4,
+    "samplerMagFilter": 9729,
+    "samplerMinFilter": 9987,
+    "bakedMipLevels": 0,
+    "mipRecommendation": "The atlas ships base level only, because PNG has no mip chain. The runtime must generate mips: at the far tier the texel ratio is near 1.0 by construction, so unmipped minification shimmers under camera motion. If a later profile needs baked mips it needs a container that can carry them (KTX2), which is a format change and a new admission decision, not a recipe tweak.",
+    "frame": "cell-local-enu-metres-y-up",
+    "frameOriginRule": "cell.bounds south-west corner",
+    "frameScaleMetricId": "rect-euclidean-frozen-scale-v1",
+    "metersPerDegreeLongitude": 84412.702,
+    "metersPerDegreeLatitude": 111049.654,
+    "capsEmitted": "roof",
+    "recipeSha256": "88baa55611bfdf52a745f01eacc2c9bb44305897109fbd5491f7e8f5caaa6dea",
+    "settledBeforeAnyBake": [
+      "GAMMA. Composition is in LINEAR light: linear = factor * srgbToLinear(texel/255), atlas = 255 * linearToSrgb(linear), consumed with baseColorFactor [1,1,1,1]. The naive encoded-space multiply is rejected by name and a test proves the two differ.",
+      "SAMPLING. NEAREST names the reconstruction (piecewise constant, no interpolation between tile texels). Aggregation is the EXACT area-weighted integral of that reconstruction over the destination texel's source footprint, in closed form. There is no sample-count parameter to tune.",
+      "MIPS. None baked. PNG cannot carry a chain. RECOMMENDATION: the runtime must generate them; at ratio ~1.0 unmipped minification shimmers under camera motion. Baked mips would need KTX2, which is a format change and a new admission decision.",
+      "PACKING ORDER. Descending face world area, then building id ascending, then face index ascending. NEVER map iteration order.",
+      "GUTTER. Two texels, edge-clamp replicated. One is halved to nothing at mip level 1 and neighbours bleed; two survives level 1.",
+      "TEXEL FLOOR. A face smaller than 4 texels on either axis carries no pattern at all, only its own area-weighted average colour."
+    ]
+  },
+  "budgetBars": {
+    "contractId": "far-tier-hlod-gpu-budget-v1",
+    "contractSha256": "1bfeeedf7ffafd4450b8ea9dbd57aa88f3f745437d91ffde859f8f0a44059f67",
+    "scopeStatement": "The baked far-tier HLOD atlases and their merged prism geometry, and nothing else.",
+    "separateFromCriterion30": "THE FAR TIER GETS ITS OWN BUDGET AND IS NOT FOLDED INTO THE CLOSED 256 MiB CRITERION #30. That criterion was frozen against a measurement this tier did not exist for. Adding a new tier's memory to a closed criterion would silently reopen it. The two budgets are ADDED when a total is needed, never merged.",
+    "B1": {
+      "rule": "Baked atlas edge length is a power of two in [64, 256] texels.",
+      "rationale": "Derived, not chosen: worst-case resident texture memory over the swept camera grid is 126.4 MiB at a 256 ceiling, 209.8 MiB at 512 and 346.0 MiB at 1024."
+    },
+    "B2": {
+      "rule": "One far-tier tile occupies at most 349525 decoded GPU bytes of texture, mip chain included.",
+      "expectedByteLength": 349525,
+      "rationale": "256 * 256 * 4 bytes * 4/3 for the mip chain."
+    },
+    "B3": {
+      "rule": "Resident far-tier TEXTURE memory never exceeds 133190868 decoded GPU bytes at any camera pose.",
+      "derivedValue": 133190868,
+      "rationale": "Maximum over a 13x13 camera grid at seven altitudes, with no frustum culling and no occlusion. Every conservatism enlarges the bound."
+    },
+    "B4": {
+      "rule": "Resident far-tier GEOMETRY memory never exceeds 98310624 decoded GPU bytes at any camera pose.",
+      "derivedValue": 98310624
+    },
+    "B5": {
+      "rule": "Resident far-tier TOTAL never exceeds 231501492 decoded GPU bytes at any camera pose.",
+      "derivedValue": 231501492
+    },
+    "B6": {
+      "rule": "Every leaf reaches texel ratio 1 at the 1200 m boundary, or is REPORTED as under-resolved with its critical distance.",
+      "knownToBeMissed": true,
+      "measuredShortfall": {
+        "underResolvedCellCount": 360,
+        "underResolvedShare": 0.407701,
+        "worstAchievedRatio": 0.284291,
+        "worstCriticalDistanceMeters": 4221
+      },
+      "rationale": "PRE-REGISTERED AS ALREADY MISSED. The arithmetic that fixes the ceiling at 256 also proves this bar cannot be met inside it, and saying so here is the whole point of pre-registering. It is reported at mass bake as a per-cell flag, never averaged away."
+    }
+  },
+  "supersedes": {
+    "T006_G2": {
+      "statement": "T006's frozen G2 bar (texturesByteLength <= 2097144 + n*87381, n <= 1) is SUPERSEDED FOR THE FAR TIER ONLY, BY THIS STATEMENT, AND IS NOT REGENERATED. G2 counted shared 128px class tiles bound once per release for the near and mid tiers, where 24 co-resident tiles is the whole texture budget. The far tier's atlases are per-cell derivative artifacts of a different size, count and lifetime, and counting them under G2 would make a frozen record report a quantity it was never designed to measure. G2 remains exactly as committed for the tiers it was measured on; data/exterior-acceptance-20260817/pre-registration.json is not touched, and neither is its checksum."
+    },
+    "ADR_0047": {
+      "statement": "ADR 0047 refused an atlas and shipped shared per-class tiles, because the near tier's maximum observed |UV| is 1210.1 and an atlas cannot repeat. THAT FINDING IS REVERSED FOR THE FAR TIER ONLY. The far tier bakes the repetition INTO its atlas patch at far-tier resolution, so its own UVs are inside [0,1] by construction and the repeat problem does not arise. ADR 0047 continues to govern the near and mid tiers unchanged."
+    }
+  },
+  "blenderAgreementInstrument": {
+    "purpose": "Test whether the baked far-tier tile agrees in APPEARANCE with the shipped lod_0 facades it stands in for, at far-tier viewing distances.",
+    "preRegisteredBeforeAnyCapture": true,
+    "sourceDiscipline": "The -c2 payload bytes are gitignored and absent from this machine. The source assets are therefore REGENERATED from the pinned base snapshot through the shipped emitter, and each regenerated GLB's sha256 is verified against the committed -c2 payload-inventory.json before it is rendered. A regenerated asset that does not match its declared checksum STOPS the run; it is never rendered as a substitute.",
+    "sceneClearing": "Objects are deleted and orphans purged. bpy.ops.wm.read_factory_settings is NEVER called: it unregisters the BlenderMCP addon and killed the channel during T009 Stage 0.",
+    "renderer": "BLENDER_EEVEE, film_transparent, Standard view transform, one fixed sun, identical across every pose and both subjects.",
+    "cameraDiscipline": "One camera transform per pose, computed from the SOURCE subject's bounds and REUSED VERBATIM for the baked subject, so any difference is the asset and never the framing.",
+    "poses": {
+      "distancesMeters": [
+        400,
+        1200,
+        4000
+      ],
+      "azimuthsDegrees": [
+        55,
+        235
+      ],
+      "elevationDegrees": 18,
+      "note": "400 m is BELOW the far tier's own boundary and is included deliberately as a control: the far tier is not claimed to hold up there, and a miss at 400 m is expected rather than disqualifying. 1,200 m is the boundary the tier must actually meet. 4,000 m is well inside its range."
+    },
+    "measurement": {
+      "primary": "MEAN LUMINANCE RATIO over the union silhouette, baked / source. Luminance is Rec. 709 on the linear framebuffer.",
+      "secondary": "PER-CHANNEL mean ratios, reported to expose hue error, following the T009 harness precedent.",
+      "tertiary": "INTERSECTION OVER UNION of the two silhouettes, which isolates the prism's GEOMETRIC error from its tonal error. A tonal bar measured over a union silhouette is contaminated by the setbacks the prism fills in, so IoU is reported alongside and neither is allowed to stand for the other."
+    },
+    "agreementBar": {
+      "statedInAdvance": true,
+      "tone": {
+        "bar": "|meanLuminanceRatio - 1| <= 0.05 at 1,200 m and at 4,000 m",
+        "rationale": "Looser than T009's 0.02 shed bar, and deliberately so: this comparison holds NEITHER geometry NOR material resolution constant. The prism fills in every setback and the bake absorbs glazing and trim into the facade material. 5% is the tolerance for a tier whose entire premise is that those losses stop mattering at 1.2 km. It is not a claim that 5% is imperceptible."
+      },
+      "hue": {
+        "bar": "max per-channel ratio spread <= 0.02",
+        "rationale": "The bake carries the SAME calibrated palette as lod_0, so a channel spread would mean the gamma decision or the palette lookup is wrong, not that the tier is coarse. This bar tests the composition, not the tier."
+      },
+      "silhouette": {
+        "bar": "REPORTED, NOT BARRED. Intersection over union is recorded at every pose with no threshold.",
+        "rationale": "The prism's silhouette error is a known, measured, accepted property of this tier — median 0.045221 and maximum 0.628806 in the committed census. Setting a bar this tier is designed to miss would be theatre. It is reported so the size of the loss travels with the evidence."
+      },
+      "reportingRule": "REPORT WITH THRESHOLD. Every pose's measured values are reported against these bars whether they pass or fail. A miss is reported as a miss and is NOT re-explained by a bar chosen afterwards.",
+      "stopRule": "If the tone bar is missed at 1,200 m or 4,000 m, the prototype STOPS and is reported for a user decision with rendered evidence. It is not tuned until it passes."
+    },
+    "agreementIsNotLikeness": "AGREEMENT IS NOT LIKENESS. A luminance ratio near 1.0 says the baked tile puts approximately the same amount of light on screen as the source. It does NOT say the two look alike, that either looks like the real building, or that the far tier is visually acceptable. Those are separate judgements and this instrument makes none of them."
+  },
+  "notClaimedHere": [
+    "No far-tier tile has been baked and no still has been captured at the time this record is committed.",
+    "These bars are not visual, geographic, factual or performance acceptance.",
+    "The budget bars are arithmetic over a modelled camera sweep, not a reading taken from a GPU."
+  ]
+}

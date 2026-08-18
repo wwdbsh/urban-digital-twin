@@ -1,0 +1,214 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "far-tier-hlod-20260818:stage0-hierarchy",
+  "task": "T002",
+  "artifact": "far-tier-hierarchy-and-budget-derivation",
+  "capturedAt": null,
+  "capturedAtStatement": "NULL BY CONSTRUCTION. Nothing here is a capture. Every number is arithmetic over committed inputs, and a timestamp would suggest a measurement session that never happened.",
+  "claim": "The far tier's hierarchy, resolution ladder and GPU budget, derived from the pinned base snapshot's own rings and heights and from the committed wave ledger. No far-tier byte existed when this was written.",
+  "inputs": {
+    "baseRelease": {
+      "releaseId": "manhattan-citywide-20260804",
+      "manifestFileChecksumSha256": "acb5a9b52014f86535c8478e7d4e516efc03f6dff95c17e9896dfea4413c203c"
+    },
+    "ledger": {
+      "ledgerId": "manhattan-exterior-wave-ledger-20260804-a3382ef4cac213a2",
+      "checksumSha256": "62e093d2ca50b54b49fd8bbad9d0b11f6301b2b197623deb343f9ea915e59016",
+      "cellCount": 883
+    },
+    "unknownHeightFallbackMeters": 10,
+    "unknownHeightNote": "The source records 76 buildings with no height. They are extruded to 10 m, which is the plan builder's own fallback. A 10 m prism where the real building is unknown is a stated substitution, not a measurement.",
+    "scaleMetricId": "rect-euclidean-frozen-scale-v1"
+  },
+  "viewReference": {
+    "viewportWidthPixels": 1440,
+    "viewportHeightPixels": 900,
+    "verticalFieldOfViewDegrees": 60,
+    "metricId": "arc-approximation-v1"
+  },
+  "screenMetric": {
+    "form": "metersPerPixel = distance * fovRadians / viewportHeightPixels",
+    "note": "The ARC form. The tangent form 2*d*tan(fov/2)/H gives 0.5132 m/px at 400 m against this form's 0.4654, so the arc form asks for FINER texels and is conservative in the quality direction.",
+    "metersPerPixel": {
+      "at400m": 0.465421,
+      "at1200m": 1.396263,
+      "at2400m": 2.792527,
+      "at4800m": 5.585054
+    }
+  },
+  "tierBoundary": {
+    "nearEdgeMeters": 1200,
+    "provenance": "Not a new number. The citywide default flip shipped the detail radius at 1,200 m and EXTERIOR_CELL_SCHEDULER_POLICY.distanceBandEdgesMeters is [1200, 2400]. The far tier begins exactly where the mid tier's detail radius stops."
+  },
+  "texelRatio": {
+    "floor": 1,
+    "target": 1,
+    "ceiling": 2,
+    "targetTexelWorldSizeMeters": 1.396263
+  },
+  "islandSurface": {
+    "note": "Every wall face plus every roof cap. Occluded faces are COUNTED: the bake has no visibility information and inventing some would be a claim this task cannot support.",
+    "facadeAreaSquareMeters": 118710033,
+    "roofAreaSquareMeters": 19496475,
+    "faceCount": 595560,
+    "prismTriangleCount": 1696292,
+    "comparisonNote": "The shipped textured island is 80,253,286 triangles at lod_0+lod_1 (wave-bytes.json). This prism tier is the number above. That ratio is why the far tier is a prism and not merged lod_1."
+  },
+  "perCellSurfaceAreaSquareMeters": {
+    "count": 883,
+    "total": 138206508,
+    "min": 83.6,
+    "p25": 82884.4,
+    "median": 116139.6,
+    "p75": 161901.6,
+    "p90": 292397.6,
+    "p95": 433791.8,
+    "p99": 892217.5,
+    "max": 1580836.9,
+    "mean": 156519.3
+  },
+  "perFaceAreaSquareMeters": {
+    "count": 595560,
+    "total": 118710033.268,
+    "min": 0.009,
+    "p25": 30.985,
+    "median": 82.189,
+    "p75": 182.931,
+    "p90": 403.986,
+    "p95": 701.34,
+    "p99": 2064.672,
+    "max": 62834.302,
+    "mean": 199.325
+  },
+  "perCellFaceCount": {
+    "count": 883,
+    "total": 595560,
+    "min": 3,
+    "p25": 367,
+    "median": 602,
+    "p75": 839,
+    "p90": 1138,
+    "p95": 1526,
+    "p99": 2553,
+    "max": 3740,
+    "mean": 674.5
+  },
+  "faceTexelFloorJustification": {
+    "floorTexels": 4,
+    "targetTexelWorldSizeMeters": 1.396263,
+    "note": "A face gets interior detail only when it is at least 4 texels on both axes at the applied resolution. At the target texel size that is a face roughly 5.6 m on a side. Below it a coursing pattern is not resolved, it is aliased, so a flat area-weighted average is both cheaper and more honest than a wrong pattern.",
+    "facesBelowFloorAtTargetShare": 0.251548
+  },
+  "sourceTileGeometry": {
+    "note": "One far-tier texel covers many source tile periods, which is why the bake integrates rather than point-samples. Periods below are the shipped tile extents in millimetres.",
+    "targetTexelWorldSizeMillimetres": 1396,
+    "tiles": [
+      {
+        "textureClass": "brick-running-bond",
+        "tileUMm": 800,
+        "tileVMm": 268,
+        "pngSha256": "fdd4c9c8238518b021a09211b380a8844bcee92cbc239f33463c7b79f4ecd519",
+        "periodsPerTexelU": 1.745,
+        "periodsPerTexelV": 5.21
+      },
+      {
+        "textureClass": "limestone-ashlar",
+        "tileUMm": 2250,
+        "tileVMm": 1000,
+        "pngSha256": "a177e50fade043f0f868a7a262f6e04b959375fb6cbb47cbdfbb27aee22794f8",
+        "periodsPerTexelU": 0.621,
+        "periodsPerTexelV": 1.396
+      },
+      {
+        "textureClass": "curtain-mullion-grid",
+        "tileUMm": 2800,
+        "tileVMm": 7200,
+        "pngSha256": "9be8020e193fd4dafda5db973e51e11893a5e7cd55d9d63ac397caced4beeb50",
+        "periodsPerTexelU": 0.499,
+        "periodsPerTexelV": 0.194
+      },
+      {
+        "textureClass": "spandrel-panel",
+        "tileUMm": 2400,
+        "tileVMm": 2400,
+        "pngSha256": "abd89e470989ba02472c2df7b029f257747452b2df794742347ed802849f8936",
+        "periodsPerTexelU": 0.582,
+        "periodsPerTexelV": 0.582
+      }
+    ],
+    "maxObservedSourceUv": {
+      "value": 1210.1,
+      "source": "ADR 0047",
+      "why": "The shipped assets repeat their tile up to 1,210 times across one wall, which is exactly why ADR 0047 refused an atlas for the NEAR tier: an atlas cannot repeat. The far tier resolves that by baking the repeat INTO the atlas patch at far-tier resolution, so its own UVs stay inside [0,1] by construction. That is a different decision on a different tier, not a reversal of the near-tier finding."
+    }
+  },
+  "leafResolutionLadder": {
+    "atlasPixelBounds": {
+      "minimum": 64,
+      "maximum": 256
+    },
+    "histogram": {
+      "64": 22,
+      "128": 36,
+      "256": 825
+    },
+    "zoomHistogram": {
+      "14": 12,
+      "15": 38,
+      "16": 193,
+      "17": 624,
+      "18": 16
+    },
+    "note": "Leaf zoom levels are the ledger's own tile ids; the far tier does not invent a hierarchy, it adopts the cut the ledger already committed.",
+    "underResolvedCellCount": 360,
+    "underResolvedShare": 0.407701,
+    "worstAchievedRatio": 0.284291,
+    "worstCriticalDistanceMeters": 4221,
+    "honesty": "THIS IS THE TIER'S LARGEST QUALITY SHORTFALL AND IT IS STATED RATHER THAN FUNDED. A leaf whose surface area exceeds what a 256px atlas can carry at ratio 1.0 does not get a bigger atlas and does not get a waiver: it renders blurrier than target between the 1,200 m boundary and its own critical distance. Raising the ceiling to 512 or 1024 would fix it at a worst-case resident cost of 209.8 MiB or 346.0 MiB respectively, against 126.4 MiB at 256. Splitting the leaf below the ledger cell would also fix it and is a T004 question, not one this prototype may answer."
+  },
+  "hierarchy": {
+    "nodeCount": 1221,
+    "leafCount": 883,
+    "rootCount": 3,
+    "pyramidProperty": "A parent covers 4x the area at 2x the texel size, so its texel count is the same as one child's. The ladder is therefore bounded: resolution per node is constant across levels and only the node COUNT falls with distance.",
+    "geometryLimitation": "THE HIERARCHY REDUCES TEXTURE RESIDENCY WITH DISTANCE AND DOES NOT REDUCE GEOMETRY RESIDENCY AT ALL. A parent node here is the concatenation of its children's prisms, not a simplified massing of them, so coarsening the cut moves texture bytes and leaves geometry bytes almost unchanged — which is why the swept geometry worst case equals the whole island's prism geometry rather than some fraction of it. At 93.8 MiB that is affordable and bounded, so it does not block this prototype. It is named here rather than discovered during a mass bake: parent-node geometry simplification is a real prerequisite for any tier that must grow past this island's size, and it is out of T002's scope."
+  },
+  "worstCaseResidency": {
+    "method": "Maximum over a 13x13 camera grid across the island bounding box at seven altitudes, with NO frustum culling and NO occlusion. Every conservatism here makes the bound larger, never smaller.",
+    "altitudesMeters": [
+      400,
+      800,
+      1200,
+      2000,
+      4000,
+      8000,
+      16000
+    ],
+    "altitudeMeters": 1200,
+    "nodeCount": 388,
+    "atlasGpuBytes": 133190868,
+    "geometryGpuBytes": 98310624,
+    "totalGpuBytes": 231501492,
+    "atlasGpuMebibytes": 127.02,
+    "geometryGpuMebibytes": 93.76,
+    "totalGpuMebibytes": 220.78
+  },
+  "allLeavesResidentUpperBound": {
+    "note": "The degenerate case where the hierarchy is ignored entirely and every leaf is resident at once. It is NOT the budget; it is what the budget buys protection from.",
+    "atlasGpuBytes": 291984431,
+    "geometryGpuBytes": 98310624
+  },
+  "gpuAccounting": {
+    "bytesPerTexel": 4,
+    "bytesPerTexelNote": "RGBA8. A truecolour PNG decodes to RGB8, but no mainstream GPU stores a 3-byte texel; it pads to 4. Counting 3 would understate every figure here by a quarter.",
+    "mipChainMultiplier": 1.3333333333333333,
+    "mipChainNote": "The atlas bakes no mips because PNG cannot carry a chain, so the runtime generates them. They are generated whether or not this budget counts them, so it counts them.",
+    "geometryVertexBytes": 20,
+    "geometryVertexNote": "POSITION and TEXCOORD_0 as float32 on unshared vertices. The canonical writer emits no NORMAL, so none is counted."
+  },
+  "notClaimedHere": [
+    "No far-tier byte has been baked at the time this record is written.",
+    "This is arithmetic, not a rendered measurement. It says nothing about whether the prism READS correctly on screen.",
+    "The prism's silhouette error is a separate and larger problem, measured in coarse-tier.json at a median 0.045221 and a maximum 0.628806, and it is NOT covered by ADR 0050's 2% cap."
+  ]
+}
