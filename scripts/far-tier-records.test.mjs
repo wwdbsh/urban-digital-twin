@@ -31,7 +31,17 @@ const RECORDS = ["stage0-hierarchy", "bake-pre-registration", "prototype-provena
  * the new records while still being described as covering them. Enumerating the
  * directories removes the chance to forget again.
  */
-const EVIDENCE_DIRECTORIES = ["far-tier-hlod-20260818", "far-tier-hlod-v2-20260818"];
+/**
+ * DISCOVERED, not listed. The T010 review caught a hand-kept RECORDS list that
+ * silently stopped covering a new directory; the fix at the time only pushed
+ * the hand-kept list up one level, to the DIRECTORIES, and T011 promptly added
+ * a third directory that the scan again did not cover. So the directories are
+ * discovered too, by prefix, and there is no list left to forget.
+ */
+const EVIDENCE_DIRECTORIES = readdirSync(join(repositoryRoot, "data"), { withFileTypes: true })
+  .filter((entry) => entry.isDirectory() && entry.name.startsWith("far-tier-hlod-"))
+  .map((entry) => entry.name)
+  .sort();
 const ALL_RECORDS = EVIDENCE_DIRECTORIES.flatMap((directory) => {
   const root = join(repositoryRoot, "data", directory);
   return readdirSync(root)
@@ -41,10 +51,16 @@ const ALL_RECORDS = EVIDENCE_DIRECTORIES.flatMap((directory) => {
 });
 
 describe("every far-tier record matches its own sidecar", () => {
-  it("discovers records from both evidence directories, v1 and v2", () => {
+  it("discovers every far-tier evidence directory, including ones added later", () => {
     expect(ALL_RECORDS.length).toBeGreaterThan(RECORDS.length);
+    // At least the three that exist today, and any future sibling automatically.
+    expect(EVIDENCE_DIRECTORIES.length).toBeGreaterThanOrEqual(3);
     for (const directory of EVIDENCE_DIRECTORIES) {
       expect(ALL_RECORDS.some((record) => record.directory === directory), `no record found under ${directory}`).toBe(true);
+    }
+    // The v1 list is retained only as a floor; it must never be the source.
+    for (const name of RECORDS) {
+      expect(ALL_RECORDS.some((record) => record.name === name), `${name} missing from discovery`).toBe(true);
     }
   });
 
@@ -537,5 +553,115 @@ describe("the v2 shading derivation cannot see a measurement", () => {
     for (const banned of ["luminance", "Luminance", "ratio", "Ratio", "camera", "pose"]) {
       expect(scalarOnly, `scalar path mentions ${banned}`).not.toContain(banned);
     }
+  });
+});
+
+describe("the instrument records pin what the code computes", () => {
+  const root = join(repositoryRoot, "data", "far-tier-hlod-instrument-20260818");
+  const read = (name) => JSON.parse(readFileSync(join(root, `${name}.json`), "utf8"));
+
+  it("pins the spec hash the module actually produces", async () => {
+    const { farTierInstrumentSpecHash } = await import("../src/release/far-tier-instrument.ts");
+    expect(read("pinned-instrument-spec").specSha256).toBe(farTierInstrumentSpecHash());
+  });
+
+  it("pins the harness digest the generator actually produces", async () => {
+    const { farTierInstrumentAssertionPython } = await import("../src/release/far-tier-instrument.ts");
+    expect(read("pinned-instrument-spec").harness.sha256).toBe(sha256HexSync(farTierInstrumentAssertionPython()));
+  });
+
+  it("stores a spec whose own serialization reproduces the pinned hash", async () => {
+    // The record embeds a COPY of the spec. If that copy drifts from the module,
+    // the record documents an instrument nobody ran.
+    const { farTierInstrumentSpecHash } = await import("../src/release/far-tier-instrument.ts");
+    const { stableSerialize } = await import("../src/domain/deterministic-hash.ts");
+    expect(sha256HexSync(stableSerialize(read("pinned-instrument-spec").spec))).toBe(farTierInstrumentSpecHash());
+  });
+
+  it("keeps the three hand-copies of the six-pose table in agreement", () => {
+    // The same numbers appear in the baseline record, the gate record and the
+    // ADR prose. Three copies is three chances to drift.
+    const baseline = read("pinned-baseline").results;
+    const gate = read("t004-gate-pre-registration").whatTheV1TileScores.rows;
+    expect(gate).toHaveLength(baseline.length);
+    for (const row of baseline) {
+      const pose = `${row.distanceMeters}/${row.azimuthDegrees}`;
+      const gateRow = gate.find((entry) => entry.pose === pose);
+      expect(gateRow, `${pose} missing from the gate record`).toBeDefined();
+      expect(gateRow.sourceMeanLuminance).toBe(row.sourceMeanLuminance);
+      expect(gateRow.A1_value).toBe(row.unionMeanLuminanceRatio);
+      expect(gateRow.A3_value).toBe(row.channelSpread);
+      expect(gateRow.A2_value).toBeCloseTo(Math.abs(row.absoluteDifference), 8);
+    }
+    const adr = readFileSync(join(repositoryRoot, "docs", "decisions", "0058-far-tier-bake-architecture.md"), "utf8");
+    for (const row of baseline) {
+      expect(adr, `ADR omits ratio for ${row.distanceMeters}/${row.azimuthDegrees}`).toContain(String(row.unionMeanLuminanceRatio));
+      expect(adr, `ADR omits spread for ${row.distanceMeters}/${row.azimuthDegrees}`).toContain(String(row.channelSpread));
+    }
+  });
+
+  it("withdrew the refuted rooftop mechanism everywhere", () => {
+    // The claim was refuted by ablation data co-landed on this same branch.
+    const attribution = read("divergence-attribution").attributionOfSurvivingFindings.fourThousandAz235TooDark;
+    expect(attribution.attribution).toContain("MECHANISM UNATTRIBUTED");
+    expect(attribution.withdrawnMechanism.whyWithdrawn).toContain("REFUTED");
+    expect(attribution.untestedCandidate).toContain("CANDIDATE, NOT A CONCLUSION");
+    for (const file of ["docs/decisions/0058-far-tier-bake-architecture.md", "docs/implementation/20260818-far-tier-instrument-pin.md"]) {
+      expect(readFileSync(join(repositoryRoot, file), "utf8")).not.toContain("consistent with T011's ablation");
+    }
+  });
+
+  it("derives the dark-pose tolerance arithmetic from the baseline, not from prose", () => {
+    // This sentence was committed WRONG once — it claimed the tile still missed
+    // at a 0.08 dark tolerance when |0.942736 - 1| = 0.057264 passes it. So the
+    // record's numbers are now recomputed here from the baseline rows.
+    const baseline = read("pinned-baseline").results;
+    const arithmetic = read("t004-gate-pre-registration").darkPoseToleranceArithmetic;
+    const dark = baseline.filter((row) => row.sourceMeanLuminance < 0.10);
+    expect(dark.length).toBeGreaterThan(0);
+    const worst = dark.reduce((a, b) =>
+      Math.abs(b.unionMeanLuminanceRatio - 1) > Math.abs(a.unionMeanLuminanceRatio - 1) ? b : a);
+    const deficit = Math.abs(worst.unionMeanLuminanceRatio - 1);
+
+    expect(arithmetic.worstDarkPose).toBe(`${worst.distanceMeters}/${worst.azimuthDegrees}`);
+    expect(arithmetic.worstDarkPoseRatio).toBe(worst.unionMeanLuminanceRatio);
+    expect(arithmetic.worstDarkPoseDeficit).toBeCloseTo(deficit, 6);
+
+    // Every probed tolerance must agree with the inequality, including the two
+    // the prose previously got backwards.
+    for (const probe of arithmetic.probe) {
+      expect(probe.verdict, `tolerance ${probe.tolerance} misreported`).toBe(deficit <= probe.tolerance ? "PASS" : "MISS");
+    }
+    // The inherited bar must still be the one that preserves the failure.
+    expect(arithmetic.inheritedToleranceKeepsTheFailure.preservesFailure).toBe(0.05 < deficit);
+    expect(arithmetic.correctedStatement).toContain(String(arithmetic.worstDarkPoseDeficit));
+  });
+
+  it("binds the whole spec-hash lineage in-tree, not only through git history", () => {
+    const lineage = read("pinned-instrument-spec").specLineage;
+    const ids = new Set(lineage.hashes.map((entry) => entry.specSha256));
+    expect(ids.size).toBe(lineage.hashes.length);
+    expect(lineage.baselineCapturedUnderSpecSha256).toBe(lineage.hashes[0].specSha256);
+    expect(read("pinned-baseline").instrument.capturedUnderSpecSha256).toBe(lineage.baselineCapturedUnderSpecSha256);
+    // And exactly one id per distinct spec: the current row must not reuse an
+    // earlier row's specId.
+    const current = lineage.hashes[lineage.hashes.length - 1];
+    expect(lineage.hashes.filter((e) => e.specId === current.specId)).toHaveLength(1);
+  });
+
+  it("labels the prose-only groups instead of claiming everything is enforced", () => {
+    const coverage = read("pinned-instrument-spec").enforcementCoverage;
+    expect(coverage.proseOnlyUnenforced.length).toBeGreaterThanOrEqual(4);
+    expect(coverage.honesty).toContain("PROSE-ONLY");
+    const module = readFileSync(join(repositoryRoot, "src", "release", "far-tier-instrument.ts"), "utf8");
+    expect(module).not.toContain("EXHAUSTIVE over the settings");
+    expect(module).toContain("PROSE-ONLY AND UNENFORCED");
+  });
+
+  it("names the record whose raytracing-off column reproduces the baseline exactly", () => {
+    const supersession = read("pinned-baseline").supersession;
+    expect(supersession.statement).toContain("sampling-results.json");
+    expect(supersession.rebaselineResultsRelationship.record).toContain("rebaseline-results.json");
+    expect(supersession.rebaselineResultsRelationship.finding).toContain("IDENTICAL");
   });
 });

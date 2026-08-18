@@ -1,0 +1,110 @@
+{
+ "schemaVersion": "1.0",
+ "recordId": "far-tier-hlod-instrument-20260818:divergence-attribution",
+ "task": "T012",
+ "artifact": "far-tier-instrument-divergence-attribution",
+ "capturedAt": null,
+ "capturedAtStatement": "NULL BY CONSTRUCTION.",
+ "headline": "THE DIVERGENCE IS ATTRIBUTED AND EXACTLY REPRODUCED. T002 measured its BAKED subject with the source resident-and-hidden, while measuring its SOURCE subject alone. Reproducing that ASYMMETRY returns T002 committed reading to six decimals; isolating both subjects returns this session reading.",
+ "theDecisiveExperiment": {
+  "pose": "1200 m / azimuth 235",
+  "subject": "the byte-identical v1 tile",
+  "denominatorNote": "Every ratio below divides by the ISOLATED source mean 0.03943247. That is not an accident of this experiment: T011 reproduced T002 committed source mean 0.039432 bit-exactly under isolation. So T002 source was measured alone and only its BAKED subject carried a resident hidden companion.",
+  "arrangementWasAsymmetric": "T002 harness held both subjects in the scene and toggled hide_render per render. For the SOURCE render the hidden companion was the single-mesh tile, whose effect is negligible; for the BAKED render it was 48 source meshes, whose effect is 7.0%. The arrangement was symmetric in code and asymmetric in consequence.",
+  "arrangements": [
+   {
+    "id": "A",
+    "setup": "Both resident, other hidden by hide_render — T002 arrangement.",
+    "sourceMeanUsed": 0.03943247,
+    "bakedMean": 0.04230319,
+    "ratio": 1.072801,
+    "note": "T002 committed 0.042303 and 1.072801. Reproduced to six decimals."
+   },
+   {
+    "id": "B",
+    "setup": "As A, hidden companion additionally excluded from shadow casting.",
+    "sourceMeanUsed": 0.03943247,
+    "bakedMean": 0.04292261,
+    "ratio": 1.088509
+   },
+   {
+    "id": "C",
+    "setup": "Companion collection excluded from the view layer.",
+    "sourceMeanUsed": 0.03943247,
+    "bakedMean": 0.03951735,
+    "ratio": 1.002152
+   },
+   {
+    "id": "D",
+    "setup": "Companion deleted — the pinned arrangement.",
+    "sourceMeanUsed": 0.03943247,
+    "bakedMean": 0.03951735,
+    "ratio": 1.002152
+   }
+  ],
+  "finding": "SCENE RESIDENCY MOVES THE READING BY +7.0%. B exceeding A shows the hidden companion was casting shadows onto the measured subject. Beyond that the MECHANISM IS NOT TRACED into EEVEE internals, and with ray tracing and fast GI off and the world at strength zero there is no obvious indirect-light path for the remainder. Measured, bounded and eliminated; not explained.",
+  "consequence": "T002 tone MISS at 1,200 m / azimuth 235 was an ARTIFACT OF ITS SCENE ARRANGEMENT. The pinned spec forbids hide_render and ENFORCES isolation by harness."
+ },
+ "hypothesesTested": [
+  {
+   "id": "H1",
+   "hypothesis": "Anisotropic filtering.",
+   "result": "NO EFFECT. Identical to eight decimals across FILTER_0/2/8/16.",
+   "verdict": "REJECTED as a cause. Still pinned: inert under one engine version is not a guarantee for the next."
+  },
+  {
+   "id": "H2",
+   "hypothesis": "gl_texture_limit downsamples the atlas.",
+   "result": "NO EFFECT beyond the eighth decimal.",
+   "verdict": "REJECTED as a cause. Still pinned."
+  },
+  {
+   "id": "H3",
+   "hypothesis": "Atlas loaded in the wrong colour space.",
+   "result": "ratio 1.002152 against 2.322015 under Non-Color — wrong direction and two orders too large.",
+   "verdict": "REJECTED as a cause. Retained as the most destructive misconfiguration available."
+  },
+  {
+   "id": "H4",
+   "hypothesis": "Sample count.",
+   "result": "About 0.1% across 16/64/256.",
+   "verdict": "REJECTED as a cause. Pinned at 64."
+  },
+  {
+   "id": "H5",
+   "hypothesis": "Scene residency.",
+   "result": "+7.0%, reproducing T002 exactly.",
+   "verdict": "CONFIRMED as the cause."
+  }
+ ],
+ "attributionOfSurvivingFindings": {
+  "fourThousandAz235TooDark": {
+   "observation": "At 4,000 m / azimuth 235 the tile reads 0.942736, a 5.7% deficit. It survives subject isolation and full instrument pinning and reproduces exactly.",
+   "attribution": "ATTRIBUTED TO THE TILE. MECHANISM UNATTRIBUTED.",
+   "withdrawnMechanism": {
+    "claim": "An earlier version of this record attributed it to sub-pixel rooftop geometry the prism does not carry, and cited T011 ablation as consistent.",
+    "whyWithdrawn": "REFUTED BY THAT SAME ABLATION, which points the other way. Deleting rooftop mass makes the SOURCE BRIGHTER at every pose. With rooftops deleted the source still rises +5.8% from 1.2 km to 4 km against +7.0% with them, so rooftops account for only about 1.2 of the 7.0 points; and the tile deficit against a roof-free source WIDENS from 5.7% to 8.4%. Rooftop mass therefore cannot explain a source that is brighter than the tile at distance.",
+    "lesson": "The refuting data was co-landed on this same branch. It was not consulted before the claim was written."
+   },
+   "untestedCandidate": "The atlas 14.67% unused BLACK area averaging in under progressive minification. It matches the monotone azimuth-235 trend 1.019942 -> 1.002152 -> 0.942736 as the tile occupies fewer pixels. NAMED AS A CANDIDATE, NOT A CONCLUSION; no controlled test isolates it here.",
+   "confidence": "Attribution to the tile is well supported by reproduction under the pinned instrument. Mechanism is open."
+  },
+  "hueSpreads": {
+   "observation": "Per-channel spread runs 0.016 to 0.034 and exceeds the 0.02 bar at five of six poses.",
+   "wasItCreatedNow": "NO — it was MASKED BEFORE. T002 recorded 0.006 to 0.016 under the residency arrangement, which brightened the tile and pulled its channel ratios toward unity.",
+   "distanceDependence": "GROWS WITH DISTANCE at both azimuths: 0.016 -> 0.021 -> 0.023 at azimuth 55; 0.026 -> 0.025 -> 0.034 at azimuth 235.",
+   "channelPattern": "RED IS CONSISTENTLY THE DEFICIT CHANNEL: 0.907/0.931/0.941 at 4,000/235 and 0.964/0.985/0.990 at 1,200/235.",
+   "attribution": "ATTRIBUTED TO THE TILE. MECHANISM UNATTRIBUTED, and left so rather than guessed.",
+   "ruledOut": "view_settings.use_white_balance, a per-channel scaling control of exactly this shape, was verified OFF during the baseline and is now pinned off."
+  }
+ },
+ "unexplainedResidue": {
+  "instrumentVarianceUnderPinning": "0.0 at every pose across two cycles, and 0.0 again across a spec-v2 re-capture.",
+  "statement": "The 6% divergence that motivated this task is fully explained and reproducible on demand. What remains open is the MECHANISM behind two tile properties — the 4,000/235 deficit and the red deficit — neither of which is an instrument effect."
+ },
+ "notClaimedHere": [
+  "No fix is proposed or applied to the tile; this task is attribution only.",
+  "The mechanism by which a resident hidden object changes a render was not traced into EEVEE internals.",
+  "No mechanism is claimed for either surviving tile finding."
+ ]
+}

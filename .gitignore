@@ -213,3 +213,17 @@ artifacts/far-tier-hlod-20260818/
 # assets. Every number the Stage A census and the Stage B halt rest on is
 # committed under data/far-tier-hlod-v2-20260818/ with checksum sidecars.
 artifacts/far-tier-hlod-v2-20260818/
+
+# T011 far-tier v3 work root: the ablation subjects (shipped emission with
+# plan.prisms emptied) and their linear EXR stills. The ablated assets carry the
+# UN-ablated plan's planHashSha256 and must never be served; they are
+# instrumentation on the T010 black-conductor precedent. Every number the
+# Stage 0a halt rests on is committed under data/far-tier-hlod-v3-20260818/.
+artifacts/far-tier-hlod-v3-20260818/
+
+# T012 instrument-pin work root: the generated assertion harness, the hypothesis
+# sweep renders and the pinned baseline stills. The harness is regenerated from
+# src/release/far-tier-instrument.ts on demand and its sha256 is committed in
+# data/far-tier-hlod-instrument-20260818/pinned-instrument-spec.json, so nothing
+# here is evidence that is not also committed.
+artifacts/far-tier-instrument-20260818/

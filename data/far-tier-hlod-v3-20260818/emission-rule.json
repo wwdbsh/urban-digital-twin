@@ -1,0 +1,61 @@
+{
+ "schemaVersion": "1.0",
+ "recordId": "far-tier-hlod-v3-20260818:emission-rule",
+ "task": "T011",
+ "artifact": "far-tier-v3-rooftop-emission-rule",
+ "capturedAt": null,
+ "capturedAtStatement": "NULL BY CONSTRUCTION. This record is a declaration committed BEFORE any measurement or prediction exists; a timestamp would be the only field a replay could not reproduce.",
+ "status": "COMMITTED BEFORE ANY v3 PREDICTION WAS COMPUTED. Changing it after a prediction is a declared NO-GO.",
+ "claim": "The complete rule by which the far tier emits rooftop mass, fixed in advance so that no later measurement can be met by quietly changing what is emitted.",
+
+ "emissionRule": {
+  "statement": "Every V3Prism the committed plan emits, with the plan's own kind, ring, baseZMm, topZMm and materialId. No exclusions, no substitutions, no additions.",
+  "grammar": "MASS_GENERATION_ADMISSION_ENVELOPE",
+  "grammarValues": {
+   "maxRingVertices": 384,
+   "lowRiseFloorHeight": true,
+   "rooftopGroupContainment": true,
+   "rooftopClusterHeightClamp": true
+  },
+  "noExclusions": "Water-tank legs are INCLUDED. T010's shading derivation excluded them, for the different and correct reason that their footprints lie inside the tank's and would double-count roof occupancy. Geometry is not occupancy: a leg occludes, so it is emitted.",
+  "noSubstitutions": "material:metal is not remapped to material:roof. Through v3TextureClassFor it carries spandrel-panel, so a tank's flat colour is v3tCalibratedFactor(metalHex, spandrelMean) x boxMean(spandrel) and NOT the roof colour. roof-equipment carries material:roof."
+ },
+
+ "grammarAdjudication": {
+  "whatHappened": "The frozen plan's emission rule named two different things as one: 'what the -c2 wave used' and 'V3_SHIPPED_GRAMMAR_OPTIONS, containment/clamp both false'. They are mutually exclusive, and the constant's NAME is the trap — V3_SHIPPED_GRAMMAR_OPTIONS is not what shipped.",
+  "verifiedBy": "Running the profile scripts/far-tier-bake-cli.mjs actually constructs, which is gated by the requirement that regeneration reproduce the committed -c2 checksums or the bake refuses to run.",
+  "measuredOnThePrototypeCell": {
+   "buildings": 48,
+   "underShippedEnvelope": { "prismTriangles": 3796, "orphanLegBuildings": 0, "waterTanks": 35, "legs": 140, "maxPrismTopZMm": 40172 },
+   "underV3ShippedGrammarOptions": { "prismTriangles": 4208, "orphanLegBuildings": 14, "waterTanks": 34, "legs": 178, "maxPrismTopZMm": 41976 }
+  },
+  "independentConfirmation": "T002's frame check measured the source bound at 40.17 m. The shipped envelope reproduces 40,172 mm EXACTLY; the alternative gives 41,976 mm, which does not match the assets the far tier must agree with.",
+  "adjudication": "Grammar (A), MASS_GENERATION_ADMISSION_ENVELOPE. The governing clause was 'pin to whatever the -c2 wave used'; the parenthetical was an inherited error.",
+  "consequenceForTheRecord": "The far tier emits under the SHIPPED admission envelope and therefore agrees with the assets lod_0 and lod_1 ship: zero orphan legs, cluster clamp active, maximum prism top 40,172 mm. Any statement that the far tier ships orphan legs at 26-30% prevalence or unclamped clusters would be false, and is not made. The 26-30% figure is historical PRE-FIX context from ADR 0049 and nothing more."
+ },
+
+ "correctedInheritedFacts": {
+  "rooftopDeltaComposition": {
+   "wrongInPriorRecords": "T002's sampling record and T010's derivation describe the 3.59 m delta as 'rooftop groups and parapets'.",
+   "correct": "It is 100% water-tank cluster. round(2400 x 0.665) + round(3000 x 0.665) = 1596 + 1995 = 3591 mm, being the leg height plus the tank height at the plan's own scale permille.",
+   "theGrammarEmitsNoParapets": "The only prism kinds the grammar produces are roof-equipment, water-tank and water-tank-leg. There is no parapet in the model at all."
+  },
+  "clusterIsInvented": {
+   "statement": "The rooftop cluster is GRAMMAR-INVENTED (ADR 0049), not sourced. No source record says any of these buildings has a water tank.",
+   "consequenceForTheFarTier": "The far tier ships it ONLY on the ground that lod_0 and lod_1 already ship it, so the tiers agree with each other. It is never shipped as a fact about a real building.",
+   "uncertaintyStringMustChange": "The far tier's uncertainty string currently says rooftop groups are 'ABSENT BY CONSTRUCTION'. Once v3 emits them that sentence is false and must be rewritten to declare an invented, tier-coherent appearance rather than an observation."
+  }
+ },
+
+ "whatThisRuleForbids": [
+  "Dropping a prism kind because it is small, awkward to pack, or unhelpful to a prediction.",
+  "Remapping a prism's material to one that happens to render closer to a target.",
+  "Adding geometry the plan does not emit, including any parapet, in order to reach a bar.",
+  "Changing the grammar envelope after a prediction has been computed."
+ ],
+
+ "notClaimedHere": [
+  "Nothing has been emitted, measured or predicted at the time this record is committed.",
+  "This rule says what will be emitted. It says nothing about whether emitting it improves any pose."
+ ]
+}

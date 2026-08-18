@@ -1,0 +1,172 @@
+{
+ "schemaVersion": "1.0",
+ "recordId": "far-tier-hlod-instrument-20260818:pinned-baseline",
+ "task": "T012",
+ "artifact": "far-tier-pinned-operative-baseline",
+ "capturedAt": null,
+ "capturedAtStatement": "NULL BY CONSTRUCTION.",
+ "headline": "THE OPERATIVE BASELINE. Captured under the pinned instrument with the generated harness enforcing it, reproduced exactly across two cycles and again under spec v2.",
+ "instrument": {
+  "specId": "far-tier-appearance-instrument-v2",
+  "specSha256": "9a77561b9d8307aff77692412961102b3a3aa66e1a6dbe04db181a886ad53b89",
+  "capturedUnder": "spec v1 (3015b230...); RE-CAPTURED under the added-pins spec (135385ff...) with identical results at all six poses, which is how the added pins were shown to have been at their pinned values during the original capture. The later specId bump to v2 changed no pinned value.",
+  "enforcement": "The generated harness ran immediately before each capture, including a caller-supplied renderable-mesh count, and returned the spec hash.",
+  "capturedUnderSpecSha256": "3015b23059590cfc17535483baa284dd3a70bfbd47c7af4a434aade64ef558df"
+ },
+ "subject": {
+  "bakedTile": "GLB 2f8599256ac45ee509dc7d7ce0da6a56964bac8e3ca66b77e795c1435ff7930b, atlas c159e0508aeb7522620b799b83041461aecf34727f69209bd7efbf992f5c067a",
+  "source": "The 48 shipped lod_0 assets of manhattan-exterior-cell-w05-000747-17-38610-35822, verified against the committed -c2 inventory.",
+  "isolation": "Each subject rendered ALONE, the other deleted. hide_render was NOT used and is now refused by the harness."
+ },
+ "results": [
+  {
+   "distanceMeters": 400,
+   "azimuthDegrees": 55,
+   "barred": false,
+   "unionPixels": 63724,
+   "intersectionOverUnion": 0.970796,
+   "sourceMeanLuminance": 0.21576742,
+   "bakedMeanLuminance": 0.2245013,
+   "absoluteDifference": 0.00873388,
+   "unionMeanLuminanceRatio": 1.040478,
+   "perChannelRatios": [
+    1.019393,
+    1.023675,
+    1.035369
+   ],
+   "channelSpread": 0.015976,
+   "toneVerdictLegacyRelativeBar": "not barred",
+   "hueVerdict": "PASS"
+  },
+  {
+   "distanceMeters": 400,
+   "azimuthDegrees": 235,
+   "barred": false,
+   "unionPixels": 60356,
+   "intersectionOverUnion": 0.976705,
+   "sourceMeanLuminance": 0.03766498,
+   "bakedMeanLuminance": 0.0384161,
+   "absoluteDifference": 0.00075112,
+   "unionMeanLuminanceRatio": 1.019942,
+   "perChannelRatios": [
+    0.976247,
+    0.997409,
+    1.002018
+   ],
+   "channelSpread": 0.025771,
+   "toneVerdictLegacyRelativeBar": "not barred",
+   "hueVerdict": "MISS"
+  },
+  {
+   "distanceMeters": 1200,
+   "azimuthDegrees": 55,
+   "barred": true,
+   "unionPixels": 5964,
+   "intersectionOverUnion": 0.972669,
+   "sourceMeanLuminance": 0.2100014,
+   "bakedMeanLuminance": 0.21487198,
+   "absoluteDifference": 0.00487058,
+   "unionMeanLuminanceRatio": 1.023193,
+   "perChannelRatios": [
+    1.004897,
+    1.012243,
+    1.025494
+   ],
+   "channelSpread": 0.020598,
+   "toneVerdictLegacyRelativeBar": "PASS",
+   "hueVerdict": "MISS"
+  },
+  {
+   "distanceMeters": 1200,
+   "azimuthDegrees": 235,
+   "barred": true,
+   "unionPixels": 5918,
+   "intersectionOverUnion": 0.977864,
+   "sourceMeanLuminance": 0.03943247,
+   "bakedMeanLuminance": 0.03951735,
+   "absoluteDifference": 0.00008488,
+   "unionMeanLuminanceRatio": 1.002152,
+   "perChannelRatios": [
+    0.964416,
+    0.984734,
+    0.989885
+   ],
+   "channelSpread": 0.02547,
+   "toneVerdictLegacyRelativeBar": "PASS",
+   "hueVerdict": "MISS"
+  },
+  {
+   "distanceMeters": 4000,
+   "azimuthDegrees": 55,
+   "barred": true,
+   "unionPixels": 524,
+   "intersectionOverUnion": 0.975191,
+   "sourceMeanLuminance": 0.20115181,
+   "bakedMeanLuminance": 0.20518977,
+   "absoluteDifference": 0.00403796,
+   "unionMeanLuminanceRatio": 1.020074,
+   "perChannelRatios": [
+    1.001148,
+    1.010185,
+    1.023902
+   ],
+   "channelSpread": 0.022754,
+   "toneVerdictLegacyRelativeBar": "PASS",
+   "hueVerdict": "MISS"
+  },
+  {
+   "distanceMeters": 4000,
+   "azimuthDegrees": 235,
+   "barred": true,
+   "unionPixels": 517,
+   "intersectionOverUnion": 0.980658,
+   "sourceMeanLuminance": 0.04218957,
+   "bakedMeanLuminance": 0.03977362,
+   "absoluteDifference": -0.00241595,
+   "unionMeanLuminanceRatio": 0.942736,
+   "perChannelRatios": [
+    0.907127,
+    0.930949,
+    0.940946
+   ],
+   "channelSpread": 0.033819,
+   "toneVerdictLegacyRelativeBar": "MISS",
+   "hueVerdict": "MISS"
+  }
+ ],
+ "summaryAgainstLegacyBars": {
+  "toneBar": "|ratio - 1| <= 0.05 at 1,200 m and 4,000 m",
+  "tonePassed": 3,
+  "toneBarred": 4,
+  "toneVerdict": "MISS",
+  "toneMissingPoses": [
+   {
+    "distanceMeters": 4000,
+    "azimuthDegrees": 235,
+    "ratio": 0.942736,
+    "excess": 0.007264,
+    "direction": "TOO DARK"
+   }
+  ],
+  "hueBar": "max per-channel ratio spread <= 0.02",
+  "huePassed": 1,
+  "hueMeasured": 6,
+  "hueVerdict": "MISS",
+  "caution": "LEGACY bars applied to the new baseline, for continuity. Whether they are the right bars is the gate pre-registration record subject."
+ },
+ "supersession": {
+  "statement": "SUPERSEDED BY STATEMENT, never edited: data/far-tier-hlod-20260818/sampling-results.json for its baked-tile readings and both its verdicts; and the figures descending from them in data/far-tier-hlod-v2-20260818/stage-b-decomposition-and-prediction.json and data/far-tier-hlod-v3-20260818/stage-0a-instrument-reproduction-failure.json.",
+  "rebaselineResultsRelationship": {
+   "record": "data/far-tier-hlod-v3-20260818/rebaseline-results.json",
+   "finding": "ITS RAYTRACING-OFF COLUMN IS NUMERICALLY IDENTICAL TO THIS BASELINE AT ALL SIX POSES, ratio and hue spread alike — 1.040478, 1.019942, 1.023193, 1.002152, 1.020074, 0.942736 and 0.015976, 0.025771, 0.020598, 0.025470, 0.022754, 0.033819.",
+   "why_it_matters": "That is a CROSS-TASK, CROSS-REBUILD, EXACT reproduction: a different task, a different scene construction, a different day, the same numbers. It is the strongest stability evidence this goal holds and it was previously unstated.",
+   "itsOpenQuestionsAreNowAnswered": "That record listed five hypotheses as still open. T012 answers them: four are rejected with measurements and the fifth, scene residency, is confirmed as the cause."
+  },
+  "t002RecordsUntouched": true
+ },
+ "notClaimedHere": [
+  "A baseline is not acceptance.",
+  "EEVEE under one sun is not the shipped Cesium renderer.",
+  "One cell."
+ ]
+}

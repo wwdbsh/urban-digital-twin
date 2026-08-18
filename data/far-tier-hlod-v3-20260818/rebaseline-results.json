@@ -1,0 +1,96 @@
+{
+ "schemaVersion": "1.0",
+ "recordId": "far-tier-hlod-v3-20260818:rebaseline-results",
+ "task": "T011",
+ "artifact": "far-tier-instrument-rebaseline-results",
+ "capturedAt": null,
+ "capturedAtStatement": "NULL BY CONSTRUCTION, matching every prior capture record in this goal.",
+
+ "preRegistration": {
+  "record": "rebaseline-pre-registration.json",
+  "sha256": "955144778db2103b65a8a10151470c88b36d88ef080faf1475692b0444e76974",
+  "note": "The decision rule and its three branches were committed before this capture ran."
+ },
+
+ "headline": "BRANCH B FIRED. The baked tile measures 0.0397 at 1200 m / azimuth 235 against T002's committed 0.042303, so T002's baked-tile readings are SUPERSEDED BY STATEMENT. But the re-baseline does NOT simply vindicate the tile: under the re-baselined instrument BOTH of T002's headline verdicts fail to reproduce, in OPPOSITE directions. T002's tone MISS at 1200/235 becomes a PASS; a NEW tone MISS appears at 4000/235 with the opposite sign, the tile being too DARK; and T002's hue PASS at 6 of 6 poses becomes a MISS at 5 of 6.",
+
+ "decision": {
+  "rule": "1% relative on the baked mean luminance at 1200 m / azimuth 235.",
+  "measuredBakedMean_1200_235": 0.03974786,
+  "t002Committed": 0.042303,
+  "laterSessionsValue": 0.0395,
+  "relativeGapVsT002": -0.060401,
+  "relativeGapVsLaterSessions": 0.006275,
+  "branchFired": "B",
+  "consequence": "T002's BAKED-TILE readings are superseded BY STATEMENT. The T002 record is NOT edited — it is immutable and its own amendments block forbids it. Its MISS is annotated here as a non-reproducing measurement. The re-baselined readings below become the operative baseline, and the Stage 0a attribution gate of 5.32 must be RE-DERIVED from this baseline before Stage 0b runs. Silent rescaling of the old threshold remains forbidden."
+ },
+
+ "harness": {
+  "oneSession": true,
+  "blender": "5.2.0 LTS",
+  "renderer": "BLENDER_EEVEE, 1440x900, 60 degree vertical field, film_transparent, Standard view transform, world background strength 0, one sun at elevation 50 / azimuth 35, energy 3.0, angular diameter 0",
+  "colourManagementPinned": { "view_transform": "Standard", "look": "None", "exposure": 0.0, "gamma": 1.0 },
+  "sceneClearing": "Object deletion and datablock purge; read_factory_settings NEVER called. Materials and images purged BETWEEN subjects — the baked subject imported into a scene holding exactly 1 material, against 432 for the 48-asset source subject, so datablock accumulation is excluded as a variable.",
+  "cameraDiscipline": "One transform per pose, computed from the SOURCE bounds and reused verbatim for the baked subject.",
+  "filter_size": 1.5,
+  "taa_render_samples": 64
+ },
+
+ "results": [
+  { "distanceMeters": 400, "azimuthDegrees": 55, "barred": false, "unionPixels": 63724, "t002UnionPixels": 63726, "intersectionOverUnion": 0.970796, "sourceMeanLuminance": 0.2193398, "bakedMeanLuminance": 0.22685848, "unionMeanLuminanceRatio": 1.034279, "t002Ratio": 1.027322, "perChannelRatios": [1.013154, 1.017753, 1.030107], "channelSpread": 0.016953, "toneVerdict": "not barred", "hueVerdict": "PASS" },
+  { "distanceMeters": 400, "azimuthDegrees": 235, "barred": false, "unionPixels": 60356, "t002UnionPixels": 60356, "intersectionOverUnion": 0.976705, "sourceMeanLuminance": 0.03809367, "bakedMeanLuminance": 0.03869532, "unionMeanLuminanceRatio": 1.015794, "t002Ratio": 1.09607, "perChannelRatios": [0.972119, 0.993528, 0.998615], "channelSpread": 0.026496, "toneVerdict": "not barred", "hueVerdict": "MISS" },
+  { "distanceMeters": 1200, "azimuthDegrees": 55, "barred": true, "unionPixels": 5964, "t002UnionPixels": 5968, "intersectionOverUnion": 0.972669, "sourceMeanLuminance": 0.21297993, "bakedMeanLuminance": 0.21678381, "unionMeanLuminanceRatio": 1.01786, "t002Ratio": 1.013019, "perChannelRatios": [0.999439, 1.007068, 1.020862], "channelSpread": 0.021423, "toneVerdict": "PASS", "hueVerdict": "MISS" },
+  { "distanceMeters": 1200, "azimuthDegrees": 235, "barred": true, "unionPixels": 5918, "t002UnionPixels": 5918, "intersectionOverUnion": 0.977864, "sourceMeanLuminance": 0.0398102, "bakedMeanLuminance": 0.03974786, "unionMeanLuminanceRatio": 0.998434, "t002Ratio": 1.072801, "perChannelRatios": [0.96044, 0.981291, 0.98675], "channelSpread": 0.02631, "toneVerdict": "PASS", "hueVerdict": "MISS" },
+  { "distanceMeters": 4000, "azimuthDegrees": 55, "barred": true, "unionPixels": 524, "t002UnionPixels": 524, "intersectionOverUnion": 0.975191, "sourceMeanLuminance": 0.20340392, "bakedMeanLuminance": 0.20672305, "unionMeanLuminanceRatio": 1.016318, "t002Ratio": 1.013554, "perChannelRatios": [0.997124, 1.006634, 1.020692], "channelSpread": 0.023568, "toneVerdict": "PASS", "hueVerdict": "MISS" },
+  { "distanceMeters": 4000, "azimuthDegrees": 235, "barred": true, "unionPixels": 517, "t002UnionPixels": 517, "intersectionOverUnion": 0.980658, "sourceMeanLuminance": 0.04252989, "bakedMeanLuminance": 0.03995444, "unionMeanLuminanceRatio": 0.939444, "t002Ratio": 1.019795, "perChannelRatios": [0.903551, 0.9279, 0.938064], "channelSpread": 0.034513, "toneVerdict": "MISS", "hueVerdict": "MISS" }
+ ],
+
+ "verdictSummary": {
+  "toneBar": "|unionMeanLuminanceRatio - 1| <= 0.05 at 1,200 m and 4,000 m",
+  "tonePassed": 3,
+  "toneBarred": 4,
+  "toneVerdict": "MISS",
+  "toneMissingPoses": [{ "distanceMeters": 4000, "azimuthDegrees": 235, "ratio": 0.939444, "excess": 0.010556, "direction": "TOO DARK — the opposite sign to the miss T002 recorded" }],
+  "hueBar": "max per-channel ratio spread <= 0.02",
+  "huePassed": 1,
+  "hueMeasured": 6,
+  "hueVerdict": "MISS",
+  "hueRange": { "min": 0.016953, "max": 0.034513 }
+ },
+
+ "sensitivityToAnUnpinnedSetting": {
+  "why": "The T002 instrument pins engine, resolution, field of view, film_transparent, view transform, world strength and sun. It does NOT pin eevee.use_raytracing, use_fast_gi, taa_render_samples, filter_size, or the colour-management look/exposure/gamma. An instrument whose verdicts move with an unpinned setting is not a settled instrument, so the largest candidate was measured rather than assumed.",
+  "experiment": "The identical capture repeated with use_raytracing disabled, same session, same purge discipline.",
+  "rows": [
+   { "pose": "400/55", "ratio_rtOn": 1.034279, "ratio_rtOff": 1.040478, "spread_rtOn": 0.016953, "spread_rtOff": 0.015976 },
+   { "pose": "400/235", "ratio_rtOn": 1.015794, "ratio_rtOff": 1.019942, "spread_rtOn": 0.026496, "spread_rtOff": 0.025771 },
+   { "pose": "1200/55", "ratio_rtOn": 1.01786, "ratio_rtOff": 1.023193, "spread_rtOn": 0.021423, "spread_rtOff": 0.020598 },
+   { "pose": "1200/235", "ratio_rtOn": 0.998434, "ratio_rtOff": 1.002152, "spread_rtOn": 0.02631, "spread_rtOff": 0.02547 },
+   { "pose": "4000/55", "ratio_rtOn": 1.016318, "ratio_rtOff": 1.020074, "spread_rtOn": 0.023568, "spread_rtOff": 0.022754 },
+   { "pose": "4000/235", "ratio_rtOn": 0.939444, "ratio_rtOff": 0.942736, "spread_rtOn": 0.034513, "spread_rtOff": 0.033819 }
+  ],
+  "finding": "Raytracing moves ratios by about 0.4% and hue spreads by about 0.001. It does NOT flip a single verdict: tone passes at 1200/55, 1200/235 and 4000/55 and misses at 4000/235 under both, and hue misses at 5 of 6 poses under both. The re-baselined verdicts are therefore robust to this setting, which strengthens them.",
+  "whatItDoesNotExplain": "The 6% baked-tile gap against T002 survives both states, so raytracing is not the cause of the original disagreement."
+ },
+
+ "theRemainingPuzzle": {
+  "observation": "With raytracing disabled the SOURCE subject reproduces T002 BIT-EXACTLY at 1200/235 — 0.03943247 against the committed 0.039432, over a union mask matching to the pixel. In the same renders the BAKED subject sits 6.6% below T002.",
+  "reading": "The most probable inference is that T002 ran with raytracing off, that its source subject is sound, and that something specific to its BAKED subject read high. What that was is not established here.",
+  "hypothesesStillOpen": "The five recorded in the pre-registration remain open and untested: surviving session state, unpinned colour management, material binding under datablock accumulation, atlas resolution at capture time, and minification over the atlas's 14.67% black area. This capture establishes which reading reproduces, not why the other happened, and does not claim to."
+ },
+
+ "whatThisChangesDownstream": {
+  "t002SamplingRecord": "SUPERSEDED BY STATEMENT for its baked-tile readings, not edited. Its tone MISS at 1200/235 is annotated as a non-reproducing measurement. Its hue PASS at 6 of 6 is likewise non-reproducing, in the opposite direction.",
+  "t010ShadingDerivation": "Its admissible band, its 0.000899 required shadow reduction, its 61%/65% shortfall and its predicted MISS all descend from the superseded 1.072801. They are not re-derived here and must not be cited as current.",
+  "t011AttributionGate": "The 5.32 threshold is denominated in the superseded scale and is now void. It must be re-derived against this baseline before Stage 0b runs.",
+  "t011Premise": "The task exists to fix a shadow-pose miss with rooftop mass. Under this baseline that miss does not exist — 1200/235 passes at 0.998434. A DIFFERENT miss exists at 4000/235, where the tile is too DARK, and rooftop mass would make it darker still. The mechanism T011 proposes now points the wrong way at the only pose that fails.",
+  "aNewBlockerOfItsOwn": "The hue bar fails at 5 of 6 poses, between 0.021 and 0.035 against a 0.02 bar. That is a defect in the shipped v1 tile that no prior record reports, it is independent of the rooftop question, and no task currently owns it."
+ },
+
+ "notClaimedHere": [
+  "This does not claim T002 was wrong, only that its baked readings do not reproduce and that this session's do, twice, under two settings.",
+  "No cause for the original disagreement has been established.",
+  "No rooftop geometry has been emitted and no v3 tile exists.",
+  "These are EEVEE-under-one-sun readings and are not a claim about the shipped Cesium renderer, nor visual acceptance."
+ ]
+}

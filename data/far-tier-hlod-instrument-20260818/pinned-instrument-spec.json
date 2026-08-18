@@ -1,0 +1,332 @@
+{
+ "schemaVersion": "1.0",
+ "recordId": "far-tier-hlod-instrument-20260818:pinned-instrument-spec",
+ "task": "T012",
+ "artifact": "far-tier-pinned-appearance-instrument",
+ "capturedAt": null,
+ "capturedAtStatement": "NULL BY CONSTRUCTION. This is a specification, not a measurement.",
+ "claim": "Every render-relevant setting the far-tier appearance instrument depends on, enumerated, pinned, and ENFORCED by a harness generated from this same specification.",
+ "whyItExists": "Three sessions measured the same byte-identical tile and disagreed by up to 6%. The instrument was specified in prose listing seven settings; Blender exposes far more that move a pixel, and the ones nobody listed are the ones that drifted.",
+ "spec": {
+  "specId": "far-tier-appearance-instrument-v2",
+  "application": {
+   "versionString": "5.2.0 LTS"
+  },
+  "recordedEnvironment": {
+   "gpuBackend": "METAL",
+   "preferencesGpuBackend": "METAL"
+  },
+  "preferences": {
+   "system.anisotropic_filter": "FILTER_0",
+   "system.gl_texture_limit": "CLAMP_OFF",
+   "system.use_gpu_subdivision": false
+  },
+  "render": {
+   "engine": "BLENDER_EEVEE",
+   "resolution_x": 1440,
+   "resolution_y": 900,
+   "resolution_percentage": 100,
+   "pixel_aspect_x": 1,
+   "pixel_aspect_y": 1,
+   "filter_size": 1.5,
+   "film_transparent": true,
+   "use_motion_blur": false,
+   "use_border": false,
+   "dither_intensity": 0,
+   "use_persistent_data": false
+  },
+  "imageSettings": {
+   "file_format": "OPEN_EXR",
+   "color_mode": "RGBA",
+   "color_depth": "32",
+   "exr_codec": "ZIP"
+  },
+  "colourManagement": {
+   "view_settings.view_transform": "Standard",
+   "view_settings.look": "None",
+   "view_settings.exposure": 0,
+   "view_settings.gamma": 1,
+   "view_settings.use_curve_mapping": false,
+   "display_settings.display_device": "sRGB",
+   "sequencer_colorspace_settings.name": "sRGB"
+  },
+  "eevee": {
+   "taa_render_samples": 64,
+   "use_raytracing": false,
+   "use_fast_gi": false,
+   "use_shadows": true,
+   "shadow_ray_count": 1,
+   "shadow_step_count": 6,
+   "shadow_resolution_scale": 1,
+   "use_volumetric_shadows": false,
+   "use_overscan": false,
+   "light_threshold": 0.01,
+   "clamp_surface_direct": 0
+  },
+  "sceneGraph": {
+   "use_nodes": true,
+   "frame_current": 1,
+   "render.use_compositing": true,
+   "render.use_sequencer": true,
+   "render.use_simplify": false,
+   "render.use_freestyle": false,
+   "view_settings.use_white_balance": false,
+   "world.use_nodes": true
+  },
+  "camera": {
+   "type": "PERSP",
+   "useDepthOfField": false,
+   "sensor_fit": "VERTICAL",
+   "angle_y_degrees": 60,
+   "clip_start": 1,
+   "clip_end": 60000,
+   "shift_x": 0,
+   "shift_y": 0
+  },
+  "sun": {
+   "type": "SUN",
+   "energy": 3,
+   "angle": 0,
+   "rotation_euler_degrees": [
+    50,
+    0,
+    35
+   ],
+   "color": [
+    1,
+    1,
+    1
+   ]
+  },
+  "world": {
+   "background_strength": 0,
+   "background_color": [
+    0,
+    0,
+    0
+   ]
+  },
+  "maskSemantics": {
+   "rule": "A pixel is covered when its alpha exceeds 0.5.",
+   "union": "Union of the SOURCE and BAKED silhouettes, computed per pose within the same session.",
+   "luminance": "Rec. 709 on the linear framebuffer: 0.2126 R + 0.7152 G + 0.0722 B.",
+   "unPremultiply": "Per-channel ratios divide by that subject's own alpha before averaging; the union luminance ratio does not."
+  },
+  "poses": {
+   "distancesMeters": [
+    400,
+    1200,
+    4000
+   ],
+   "azimuthsDegrees": [
+    55,
+    235
+   ],
+   "elevationDegrees": 18,
+   "cameraDiscipline": "One transform per pose, computed from the SOURCE subject's bounds and reused verbatim for every other subject."
+  },
+  "sceneHygiene": {
+   "clearing": "Objects deleted and datablocks purged. bpy.ops.wm.read_factory_settings is NEVER called: it unregisters the BlenderMCP addon.",
+   "betweenSubjects": "Meshes, materials and images purged between subjects, so datablock accumulation cannot bind a subject to a stale material.",
+   "subjectIsolation": "A subject is rendered ALONE. Other subjects are deleted, or their collection is excluded from the view layer. `hide_render` is FORBIDDEN: scene residency moves the reading by 7.0% on the prototype cell at 1,200 m / azimuth 235, and hidden subjects demonstrably cast shadows onto the measured one. ENFORCED by the harness: no mesh in the view layer may carry hide_render, and the caller-supplied renderable-mesh count must match."
+  }
+ },
+ "specSha256": "9a77561b9d8307aff77692412961102b3a3aa66e1a6dbe04db181a886ad53b89",
+ "enforcementCoverage": {
+  "enforcedByHarness": [
+   "application.versionString",
+   "preferences.*",
+   "render.*",
+   "imageSettings.*",
+   "colourManagement.*",
+   "eevee.*",
+   "sceneGraph.*",
+   "camera.* (type, dof, sensor fit, angle, clip, shift)",
+   "sun.* (count, energy, angle, rotation, all three colour channels)",
+   "world.* (use_nodes, background node presence, strength, all three colour channels)",
+   "lights.total",
+   "sceneHygiene.subjectIsolation (no hide_render mesh in the view layer)",
+   "sceneHygiene.renderableMeshCount (caller-supplied)"
+  ],
+  "proseOnlyUnenforced": [
+   "recordedEnvironment (GPU backend) — RECORDED, NOT PINNED, because it describes the machine rather than the instrument.",
+   "poses.* — supplied by the capture caller, not readable from scene state before capture.",
+   "maskSemantics.* — a property of the measurement code, not of Blender.",
+   "sceneHygiene.clearing and betweenSubjects — procedural discipline; only their OUTCOME (isolation and mesh count) is enforced."
+  ],
+  "honesty": "Earlier wording claimed the spec was EXHAUSTIVE and that the harness READ EVERY VALUE back. Neither was true. The four groups above are PROSE-ONLY and are labelled so at every claim site — the module doc comment, this record and ADR 0058 — rather than being wished into enforcement."
+ },
+ "harness": {
+  "generatedFrom": "src/release/far-tier-instrument.ts farTierInstrumentAssertionPython()",
+  "sha256": "d394bcf76efdedfdf58b1bef86838137adc71f5a0c544e051f509de0edffc1d2",
+  "behaviour": "Reads every pinned value back out of Blender immediately before capture and raises on any mismatch. GENERATED from the spec, so spec and harness cannot drift.",
+  "negativeControls": {
+   "method": "Each pinned setting perturbed in turn; the harness must refuse and name the right setting.",
+   "cases": [
+    {
+     "perturbed": "view_settings.exposure 0.0 -> 0.25",
+     "refused": true,
+     "refusalText": "colour.view_settings.exposure expected 0 actual 0.25"
+    },
+    {
+     "perturbed": "preferences.system.anisotropic_filter FILTER_0 -> FILTER_8",
+     "refused": true,
+     "refusalText": "preferences.system.anisotropic_filter expected FILTER_0 actual FILTER_8"
+    },
+    {
+     "perturbed": "eevee.use_raytracing False -> True",
+     "refused": true,
+     "refusalText": "eevee.use_raytracing expected false actual true"
+    },
+    {
+     "perturbed": "render.filter_size 1.5 -> 2.0",
+     "refused": true,
+     "refusalText": "render.filter_size expected 1.5 actual 2.0"
+    },
+    {
+     "perturbed": "display_settings.display_device sRGB -> Rec.1886",
+     "refused": true,
+     "refusalText": "colour.display_settings.display_device expected sRGB actual Rec.1886"
+    },
+    {
+     "perturbed": "eevee.taa_render_samples 64 -> 32",
+     "refused": true,
+     "refusalText": "eevee.taa_render_samples expected 64 actual 32"
+    },
+    {
+     "perturbed": "sun.energy 3.0 -> 2.5",
+     "refused": true,
+     "refusalText": "sun.energy expected 3 actual 2.5"
+    },
+    {
+     "perturbed": "a mesh left with hide_render = True",
+     "refused": true,
+     "refusalText": "sceneHygiene.subjectIsolation expected no hide_render mesh in the view layer actual [Mesh_0]"
+    },
+    {
+     "perturbed": "renderable mesh count 1 declared as 99",
+     "refused": true,
+     "refusalText": "sceneHygiene.renderableMeshCount expected 99 actual 1"
+    }
+   ],
+   "allFailedClosed": true,
+   "positiveControl": "The correct renderable count is accepted without raising.",
+   "builtInErrorsCaught": "The harness refused two of its author errors during construction: a FILTER_1 enum value that does not exist, and a 1e-6 tolerance a degrees/radians round trip cannot survive."
+  }
+ },
+ "selfReproduction": {
+  "toleranceStatedInAdvance": "|delta ratio| <= 0.001 and |delta hue spread| <= 0.001 at every pose.",
+  "method": "Two full capture cycles, each preceded by a complete purge and rebuild, with FIVE named settings deliberately perturbed between them: view_settings.exposure 0.7, eevee.use_raytracing on, eevee.taa_render_samples 8, render.filter_size 3.0, preferences anisotropic FILTER_16.",
+  "methodHonesty": "An earlier draft said the ENTIRE instrument was perturbed. Five settings were perturbed, and they are named above.",
+  "perPose": [
+   {
+    "pose": "400/55",
+    "r1": 1.040478,
+    "r2": 1.040478,
+    "s1": 0.015976,
+    "s2": 0.015976,
+    "deltaRatio": 0,
+    "deltaSpread": 0,
+    "withinTolerance": true
+   },
+   {
+    "pose": "400/235",
+    "r1": 1.019942,
+    "r2": 1.019942,
+    "s1": 0.025771,
+    "s2": 0.025771,
+    "deltaRatio": 0,
+    "deltaSpread": 0,
+    "withinTolerance": true
+   },
+   {
+    "pose": "1200/55",
+    "r1": 1.023193,
+    "r2": 1.023193,
+    "s1": 0.020598,
+    "s2": 0.020598,
+    "deltaRatio": 0,
+    "deltaSpread": 0,
+    "withinTolerance": true
+   },
+   {
+    "pose": "1200/235",
+    "r1": 1.002152,
+    "r2": 1.002152,
+    "s1": 0.02547,
+    "s2": 0.02547,
+    "deltaRatio": 0,
+    "deltaSpread": 0,
+    "withinTolerance": true
+   },
+   {
+    "pose": "4000/55",
+    "r1": 1.020074,
+    "r2": 1.020074,
+    "s1": 0.022754,
+    "s2": 0.022754,
+    "deltaRatio": 0,
+    "deltaSpread": 0,
+    "withinTolerance": true
+   },
+   {
+    "pose": "4000/235",
+    "r1": 0.942736,
+    "r2": 0.942736,
+    "s1": 0.033819,
+    "s2": 0.033819,
+    "deltaRatio": 0,
+    "deltaSpread": 0,
+    "withinTolerance": true
+   }
+  ],
+  "worstDeltaRatio": 0,
+  "worstDeltaSpread": 0,
+  "verdict": "PASS — exact reproduction at all six poses.",
+  "limitation": "No true operating-system process restart: restarting Blender drops the MCP channel this session runs over. The test is purge-and-rebuild within one process."
+ },
+ "specLineage": {
+  "specIdScheme": "One id per distinct spec. v1 named a strictly smaller spec; the current spec is v2. Two different specs must never share an id, which they briefly did.",
+  "hashes": [
+   {
+    "label": "v1",
+    "specId": "far-tier-appearance-instrument-v1",
+    "specSha256": "3015b23059590cfc17535483baa284dd3a70bfbd47c7af4a434aade64ef558df",
+    "what": "The spec the operative baseline was CAPTURED under.",
+    "committedIn": "b6b0e47"
+   },
+   {
+    "label": "v2-pre-id-bump",
+    "specId": "far-tier-appearance-instrument-v1",
+    "specSha256": "135385ff19b692a4b24949263647db784aff558c02b1c69466a61be7438c7d03",
+    "what": "v1 plus the added pins, but still carrying the v1 id — the inconsistency this round removed. The spec-v2 re-capture ran under THIS hash.",
+    "committedIn": "38fdcd3"
+   },
+   {
+    "label": "v2",
+    "specId": "far-tier-appearance-instrument-v2",
+    "specSha256": "9a77561b9d8307aff77692412961102b3a3aa66e1a6dbe04db181a886ad53b89",
+    "what": "Current. Differs from the row above ONLY by specId; no pinned value changed, so the re-capture evidence carries over unchanged.",
+    "committedIn": "this commit"
+   }
+  ],
+  "baselineCapturedUnderSpec": "v1",
+  "baselineCapturedUnderSpecSha256": "3015b23059590cfc17535483baa284dd3a70bfbd47c7af4a434aade64ef558df",
+  "addedInV2": [
+   "application.versionString read-back",
+   "sceneGraph (use_nodes, frame_current, use_compositing, use_sequencer, use_simplify, use_freestyle, use_white_balance, world.use_nodes)",
+   "camera.type and camera.dof.use_dof",
+   "all three channels of sun colour and world background colour",
+   "world.use_nodes guard turning a missing Background node into a recorded mismatch",
+   "subject isolation and renderable-mesh-count enforcement",
+   "recordedEnvironment (GPU backend), recorded not pinned"
+  ],
+  "howLineageWasDischarged": "NOT by assertion. The full six-pose baseline was RE-CAPTURED under the added-pins spec (135385ff) and reproduces the v1 baseline EXACTLY at every pose, ratio and hue spread alike. Every newly pinned setting was therefore already at its pinned value during the v1 capture. The later specId bump changed no pinned value, so that evidence still holds.",
+  "whiteBalanceNote": "view_settings.use_white_balance is a per-channel scaling control, the exact shape of the open red-deficit hue finding. It was read as FALSE and the re-capture confirms it was off during the baseline. Had it been on, the hue result would have been suspect.",
+  "reCaptureResult": "IDENTICAL at all six poses."
+ },
+ "notClaimedHere": [
+  "Pinning the instrument does not validate any tile.",
+  "EEVEE under one sun is not the shipped Cesium renderer."
+ ]
+}

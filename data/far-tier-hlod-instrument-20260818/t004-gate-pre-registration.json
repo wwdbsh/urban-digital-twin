@@ -1,0 +1,169 @@
+{
+ "schemaVersion": "1.0",
+ "recordId": "far-tier-hlod-instrument-20260818:t004-gate-pre-registration",
+ "task": "T012",
+ "artifact": "far-tier-appearance-gate-pre-registration",
+ "capturedAt": null,
+ "capturedAtStatement": "NULL BY CONSTRUCTION. The bars are fixed here BEFORE any further capture.",
+ "status": "PRE-REGISTERED against the pinned baseline. Fresh bars; this reinterprets no prior record.",
+ "theProblemWithTheInheritedBar": {
+  "statement": "The union-ratio bar is ILL-CONDITIONED on the dark poses.",
+  "evidence": "Source mean luminance is 0.201-0.216 at azimuth 55 and 0.038-0.042 at azimuth 235, a factor of five. A fixed RELATIVE bar admits five times less absolute error on the shadow side for no stated reason. At 4,000/235 an absolute difference of 0.0024 — among the smallest measured — is a 5.7% MISS, while 0.0087 at 400/55, over three times larger, is a 4.0% PASS."
+ },
+ "proposedGateSet": {
+  "A1": {
+   "name": "Relative tone, well-exposed poses only",
+   "rule": "|unionMeanLuminanceRatio - 1| <= 0.05 where SOURCE mean luminance >= 0.10.",
+   "rationale": "The inherited bar at its inherited value, applied only where a ratio is well conditioned. The 0.05 is NOT re-chosen.",
+   "luminanceFloor": 0.1
+  },
+  "A2": {
+   "name": "Absolute tone, every pose",
+   "rule": "|bakedMeanLuminance - sourceMeanLuminance| <= 0.010 at EVERY pose.",
+   "derivation": "0.05 * 0.21 = 0.0105 -> 0.010, what the inherited bar means in absolute terms on a well-exposed pose.",
+   "fairnessFramingStatedHonestly": "THIS IS NOT A NEUTRAL TRANSLATION. A fixed absolute bar is LOOSER in relative terms exactly where the subject is dark: 0.010 permits about 25% relative error at the shadow poses (0.010/0.040) against 5% at the lit poses (0.010/0.210). It trades one bias for the opposite bias. The argument for it is that absolute light error is what a viewer perceives against a scene, not error relative to a locally dark denominator — but that is an argument, not a proof, and the asymmetry is stated rather than buried."
+  },
+  "A3": {
+   "name": "Hue",
+   "rule": "max per-channel ratio spread <= 0.02 at EVERY pose.",
+   "rationale": "Unchanged from T002 and T010. Not re-chosen."
+  }
+ },
+ "antiFittingStatement": "NONE OF THESE NUMBERS WAS CHOSEN BY REFERENCE TO WHAT THE TILE SCORES. A1 and A3 are inherited unchanged; A2 is derived arithmetically from A1 at the lit reference; the luminance floor is half the lit level, a property of the two pose populations. Scores were computed AFTER the bars were written.",
+ "whatTheV1TileScores": {
+  "note": "REPORTED, NOT USED TO SET THE BARS.",
+  "rows": [
+   {
+    "pose": "400/55",
+    "sourceMeanLuminance": 0.21576742,
+    "A1_applies": true,
+    "A1_value": 1.040478,
+    "A1_verdict": "PASS",
+    "A2_value": 0.00873388,
+    "A2_verdict": "PASS",
+    "A2_impliedRelativeTolerance": 0.0463,
+    "A3_value": 0.015976,
+    "A3_verdict": "PASS",
+    "legacyRelativeBarVerdict": "not barred"
+   },
+   {
+    "pose": "400/235",
+    "sourceMeanLuminance": 0.03766498,
+    "A1_applies": false,
+    "A1_value": 1.019942,
+    "A1_verdict": "not applicable (below luminance floor)",
+    "A2_value": 0.00075112,
+    "A2_verdict": "PASS",
+    "A2_impliedRelativeTolerance": 0.2655,
+    "A3_value": 0.025771,
+    "A3_verdict": "MISS",
+    "legacyRelativeBarVerdict": "not barred"
+   },
+   {
+    "pose": "1200/55",
+    "sourceMeanLuminance": 0.2100014,
+    "A1_applies": true,
+    "A1_value": 1.023193,
+    "A1_verdict": "PASS",
+    "A2_value": 0.00487058,
+    "A2_verdict": "PASS",
+    "A2_impliedRelativeTolerance": 0.0476,
+    "A3_value": 0.020598,
+    "A3_verdict": "MISS",
+    "legacyRelativeBarVerdict": "PASS"
+   },
+   {
+    "pose": "1200/235",
+    "sourceMeanLuminance": 0.03943247,
+    "A1_applies": false,
+    "A1_value": 1.002152,
+    "A1_verdict": "not applicable (below luminance floor)",
+    "A2_value": 0.00008488,
+    "A2_verdict": "PASS",
+    "A2_impliedRelativeTolerance": 0.2536,
+    "A3_value": 0.02547,
+    "A3_verdict": "MISS",
+    "legacyRelativeBarVerdict": "PASS"
+   },
+   {
+    "pose": "4000/55",
+    "sourceMeanLuminance": 0.20115181,
+    "A1_applies": true,
+    "A1_value": 1.020074,
+    "A1_verdict": "PASS",
+    "A2_value": 0.00403796,
+    "A2_verdict": "PASS",
+    "A2_impliedRelativeTolerance": 0.0497,
+    "A3_value": 0.022754,
+    "A3_verdict": "MISS",
+    "legacyRelativeBarVerdict": "PASS"
+   },
+   {
+    "pose": "4000/235",
+    "sourceMeanLuminance": 0.04218957,
+    "A1_applies": false,
+    "A1_value": 0.942736,
+    "A1_verdict": "not applicable (below luminance floor)",
+    "A2_value": 0.00241595,
+    "A2_verdict": "PASS",
+    "A2_impliedRelativeTolerance": 0.237,
+    "A3_value": 0.033819,
+    "A3_verdict": "MISS",
+    "legacyRelativeBarVerdict": "MISS"
+   }
+  ],
+  "summary": {
+   "A1": "PASS at all three eligible poses.",
+   "A2": "PASS at all six; worst 0.008734 against 0.010 at 400/55.",
+   "A3": "MISS at five of six; only 400/55 passes at 0.015976."
+  }
+ },
+ "FLAGGED_FOR_USER_DECISION": {
+  "issue": "THE CHOICE OF GATE FORM MATERIALLY DECIDES A VERDICT, so it is flagged rather than decided.",
+  "detail": "At 4,000/235 the tile MISSES the inherited relative bar (0.942736) and PASSES the derived absolute bar (0.002416 against 0.010). Adopting A2 converts the only surviving tone failure into a pass.",
+  "whyItIsNotMineToDecide": "A gate change that flips the one failing verdict must not be made by the party measuring it.",
+  "optionsForTheUser": [
+   "Adopt A1 + A2 + A3 as proposed; 4,000/235 becomes a tone PASS and the open tone question closes.",
+   "Adopt A2 + A3 only, dropping the relative bar entirely as ill-conditioned.",
+   "MIDDLE OPTION: keep a RELATIVE bar at every pose but with an explicitly larger tolerance at dark poses — for example 0.05 where source mean >= 0.10 and a stated wider tolerance below it. This keeps the relative form, admits the conditioning problem openly, and forces the dark-pose tolerance to be argued as a number rather than inherited by accident. NOTE THE ARITHMETIC (see darkPoseToleranceArithmetic): the 4,000/235 failure survives only below about 0.057264, so the inherited 0.05 preserves it while about 0.06 and above — including 0.08 and 0.10 — converts it to a pass. This option is therefore only materially different from adopting A2 if the chosen dark tolerance is under 0.057264.",
+   "Keep the inherited relative bar at all poses and carry 4,000/235 as an open tone failure.",
+   "Adopt A1 + A2 + A3 but additionally REPORT the relative value at dark poses unbarred, so the deficit stays visible without gating on it."
+  ]
+ },
+ "hueIsIndependentOfThisDecision": "A3 is unchanged and the tile misses it at five of six poses under every form considered. That failure needs an owner regardless.",
+ "notClaimedHere": [
+  "No capture was taken for this record.",
+  "Gates are not acceptance."
+ ],
+ "darkPoseToleranceArithmetic": {
+  "derivedFrom": "pinned-baseline.json results; not hand-typed prose. An earlier version of this record stated this arithmetic incorrectly.",
+  "worstDarkPose": "4000/235",
+  "worstDarkPoseRatio": 0.942736,
+  "worstDarkPoseDeficit": 0.057264,
+  "rule": "A dark-pose relative tolerance T preserves the failure if and only if T < 0.057264.",
+  "inheritedToleranceKeepsTheFailure": {
+   "tolerance": 0.05,
+   "preservesFailure": true
+  },
+  "probe": [
+   {
+    "tolerance": 0.05,
+    "verdict": "MISS"
+   },
+   {
+    "tolerance": 0.06,
+    "verdict": "PASS"
+   },
+   {
+    "tolerance": 0.08,
+    "verdict": "PASS"
+   },
+   {
+    "tolerance": 0.1,
+    "verdict": "PASS"
+   }
+  ],
+  "correctedStatement": "The failure survives ONLY for a dark-pose tolerance below about 0.057264. The inherited 0.05 preserves it; about 0.06 and above converts it to a pass — including 0.08 and 0.10.",
+  "whatWasWrongBefore": "The prior text said the tile would still MISS at 0.08 and pass only at 0.10. It is 0.057264 from unity, so it PASSES at 0.08."
+ }
+}
