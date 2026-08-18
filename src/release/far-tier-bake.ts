@@ -38,6 +38,7 @@
  */
 
 import { sha256HexSync, stableSerialize } from "../domain/deterministic-hash.ts";
+import { tessellateV3Plan } from "../domain/deterministic-facade-generator-v3.ts";
 import type { V3FacadeSurface, V3Plan } from "../domain/deterministic-facade-generator-v3.ts";
 import { V3T_CALIBRATED_PALETTE, v3TextureClassFor, v3tCalibratedFactor } from "./block835-v3-package.ts";
 import type { CanonicalGlbQuad, CanonicalGlbTri, Vec2, Vec3 } from "./canonical-glb.ts";
@@ -229,6 +230,71 @@ export const FAR_TIER_BAKE_RECIPE_V2 = {
 } as const;
 
 /**
+ * RECIPE v3 — the zone-colour half, and nothing else.
+ *
+ * WHAT IT CHANGES AND WHY. T013 measured the far tier's hue deficit and
+ * attributed it to SURFACE COMPOSITION rather than to anything in the colour
+ * path. Two terms were measured: material absorption, and geometric
+ * simplification. v3 addresses the FIRST and only the first.
+ *
+ * v1 gives a wall zone the colour of its FACADE material alone. The wall it
+ * replaces is not made of facade alone: it carries windows, storefronts,
+ * cornices, sign bands and balconies, and those materials sit at different
+ * places in the palette — trim reads red-over-blue 2.008 against facade's
+ * 1.482 and glazing's 1.194. Dropping them is a re-weighting of the cell's
+ * colour, not merely a loss of detail. v3 makes a zone's colour the
+ * AREA-WEIGHTED LINEAR-LIGHT AGGREGATE of the vertical surfaces the far-tier
+ * wall stands in for on that wall's own footprint.
+ *
+ * WHAT IT DOES NOT CHANGE. It DERIVES FROM v1, not from v2: packing, gutters,
+ * texel floors, geometry emission, UVs, the transfer functions and the atlas
+ * layout are all v1's, so the only difference between a v1 tile and a v3 tile
+ * of the same cell is the colour written into each texel. That isolation is
+ * deliberate — it is what makes a capture comparison a measurement of the
+ * change rather than of a rebuild.
+ *
+ * WHAT IS DELIBERATELY EXCLUDED FROM THE AGGREGATE, and this is a judgement
+ * call recorded rather than buried:
+ *
+ * - HORIZONTAL SURFACES. Roof caps, setback decks and the ground ring are not
+ *   what a wall replaces. The prism has its own roof cap and emits no ground.
+ * - `material:metal`. Rooftop tanks, their legs and fire escapes are GEOMETRIC
+ *   omissions of the prism, not materials absorbed into a wall. Folding them
+ *   into a wall's colour would claim the wall stands in for a water tank. The
+ *   honest scope is "aggregate what the WALL replaces on the wall's own
+ *   footprint", and metal fails that test even where it hangs on a facade.
+ *   Metal is 2.22 per cent of source surface area at red-over-blue 0.986, the
+ *   least red entry in the palette, so excluding it leaves the aggregate very
+ *   slightly REDDER than a metal-inclusive one would be.
+ *
+ * NOT FROZEN AGAINST ANY ARTIFACT UNTIL ONE IS BAKED AND RECORDED.
+ */
+export const FAR_TIER_BAKE_RECIPE_V3 = {
+  ...FAR_TIER_BAKE_RECIPE,
+  recipeId: "far-tier-hlod-bake-v3",
+  supersedes: FAR_TIER_BAKE_RECIPE.recipeId,
+  derivedFrom: "far-tier-hlod-bake-v1",
+
+  /**
+   * `facade-only` is v1's behaviour and remains the default everywhere, so a
+   * caller cannot take this path by omission.
+   */
+  zoneColour: "area-correct-aggregate",
+  zoneAggregationSpace: "linear-light-area-weighted",
+  zoneAggregationIncludesRoles: ["facade", "glazing", "trim"] as readonly string[],
+  zoneAggregationExcludesRoles: ["metal", "roof", "ground"] as readonly string[],
+  zoneAggregationSurfaceFilter: "vertical-only: |normal.z| <= 0.5",
+  zoneAggregationAttribution:
+    "Every emitted source surface is attributed to the tier-0 ring edge whose outward normal it best faces, tie-broken by distance from the edge segment and then by the lower edge index; and to a zone by whether its centroid sits below or above that edge's base/shaft boundary. Attribution is total: the aggregate reports the share of vertical in-scope area it placed, and the bake refuses if any is lost.",
+  zoneAggregationCarrier:
+    "The aggregate is carried as the zone's FACTOR, divided through the zone's own class-tile linear mean, so the baked texel remains factor x tile modulation and the coursing phase v1 pins is untouched. The zone's class tile is still the FACADE material's; only the colour it is multiplied by changes.",
+} as const;
+
+export function farTierRecipeHashV3(): string {
+  return sha256HexSync(stableSerialize(FAR_TIER_BAKE_RECIPE_V3));
+}
+
+/**
  * Parameters the bake path actually reads, resolved from any recipe.
  *
  * Every v2-only field falls back to the value that reproduces v1 EXACTLY, so a
@@ -242,6 +308,8 @@ export interface FarTierEffectiveParameters {
   flatFaceTexels: number;
   /** Linear-light multiplier applied to every zone factor; 1 means none. */
   shadingScalar: number;
+  /** v1 colours a zone by its facade material alone; v3 aggregates. */
+  zoneColourMode: "facade-only" | "area-correct-aggregate";
 }
 
 export function farTierEffectiveParameters(recipe: Record<string, unknown> = FAR_TIER_BAKE_RECIPE): FarTierEffectiveParameters {
@@ -254,6 +322,7 @@ export function farTierEffectiveParameters(recipe: Record<string, unknown> = FAR
     faceTexelFloor,
     flatFaceTexels: (recipe.flatFaceTexels as number | undefined) ?? faceTexelFloor,
     shadingScalar: shading?.scalar ?? 1,
+    zoneColourMode: (recipe.zoneColour as FarTierEffectiveParameters["zoneColourMode"] | undefined) ?? "facade-only",
   };
 }
 
@@ -472,6 +541,198 @@ function paletteFactor(plan: V3Plan, materialId: string): { textureClass: Proced
   return { textureClass, factor: [calibrated[0], calibrated[1], calibrated[2]] };
 }
 
+// ---------------------------------------------------------------------------
+// Area-correct zone aggregation (recipe v3)
+// ---------------------------------------------------------------------------
+
+/** Roles a wall stands in for. `metal`, `roof` and `ground` are excluded; see the v3 recipe. */
+const AGGREGATED_ROLES = new Set(["facade", "glazing", "trim"]);
+
+/** Linear-light albedo one shipped `lod_0` material renders, averaged over many tile periods. */
+function sourceMaterialAlbedo(plan: V3Plan, materialId: string): readonly [number, number, number] {
+  const { textureClass, factor } = paletteFactor(plan, materialId);
+  const tileLinearMean = textureClass === null ? 1 : tileIntegrator(textureClass).linearMean;
+  return [factor[0] * tileLinearMean, factor[1] * tileLinearMean, factor[2] * tileLinearMean];
+}
+
+export interface FarTierZoneAggregate {
+  /** Area-weighted linear-light albedo of every in-scope surface attributed here. */
+  albedo: readonly [number, number, number];
+  areaSquareMeters: number;
+}
+
+export interface FarTierAggregateResult {
+  /** Keyed `edgeIndex:base` and `edgeIndex:shaft`. */
+  zones: Map<string, FarTierZoneAggregate>;
+  inScopeAreaSquareMeters: number;
+  attributedAreaSquareMeters: number;
+  excludedByRoleAreaSquareMeters: number;
+  excludedAsHorizontalAreaSquareMeters: number;
+}
+
+/**
+ * Attribute every vertical, in-scope source surface of one plan to a far-tier
+ * wall zone, and aggregate its albedo by area.
+ *
+ * WHY THE TESSELLATION AND NOT THE PLAN'S BOOKKEEPING. `plan.surfaces` and
+ * `plan.placements` describe INTENT; `tessellateV3Plan` emits what the shipped
+ * `lod_0` asset actually renders, including recess reveals and attachment
+ * sides. Aggregating the intent would silently disagree with the subject the
+ * instrument measures. The cost is that attribution has to be geometric, which
+ * is why it reports its own completeness and the caller refuses on a shortfall.
+ */
+export function farTierZoneAggregates(plan: V3Plan): FarTierAggregateResult {
+  const roleById = new Map(plan.materials.map((material) => [material.id, material.role]));
+  const ring = plan.tiers[0]!.ring;
+  const baseZMm = Math.min(...plan.tiers.map((tier) => tier.baseZMm));
+
+  // Each tier-0 ring edge, as an outward unit normal and a segment midpoint.
+  const edges = ring.map((corner, index) => {
+    const [ax, ay] = corner;
+    const [bx, by] = ring[(index + 1) % ring.length]!;
+    const dx = bx - ax;
+    const dy = by - ay;
+    const length = Math.sqrt(dx * dx + dy * dy);
+    // Counter-clockwise ring seen from outside: the outward normal is (dy, -dx).
+    return {
+      index,
+      normal: length === 0 ? [0, 0] : [dy / length, -dx / length],
+      midpoint: [(ax + bx) / 2, (ay + by) / 2],
+    };
+  });
+
+  // The base/shaft boundary per edge, in ABSOLUTE plan Z, from the same tier-0
+  // facade surfaces `farTierFacesForBuilding` reads.
+  const boundaryByEdge = new Map<number, number>();
+  for (const surface of plan.surfaces) {
+    if (surface.kind !== "facade") continue;
+    const facade = surface as V3FacadeSurface;
+    if (facade.tierIndex !== 0) continue;
+    const existing = boundaryByEdge.get(facade.edgeIndex);
+    if (existing === undefined || facade.baseVMaxMm > existing) boundaryByEdge.set(facade.edgeIndex, facade.baseVMaxMm);
+  }
+
+  const zones = new Map<string, { sums: [number, number, number]; area: number }>();
+  let inScope = 0;
+  let attributed = 0;
+  let excludedByRole = 0;
+  let excludedHorizontal = 0;
+
+  const albedoCache = new Map<string, readonly [number, number, number]>();
+  const albedoOf = (materialId: string): readonly [number, number, number] => {
+    const cached = albedoCache.get(materialId);
+    if (cached) return cached;
+    const value = sourceMaterialAlbedo(plan, materialId);
+    albedoCache.set(materialId, value);
+    return value;
+  };
+
+  const consume = (materialId: string, corners: readonly Vec3Mm[]): void => {
+    const role = roleById.get(materialId);
+    // Newell, so a non-planar quad still yields the area its triangulation shows.
+    let nx = 0;
+    let ny = 0;
+    let nz = 0;
+    let cx = 0;
+    let cy = 0;
+    let cz = 0;
+    for (let index = 0; index < corners.length; index += 1) {
+      const current = corners[index]!;
+      const next = corners[(index + 1) % corners.length]!;
+      nx += (current[1] - next[1]) * (current[2] + next[2]);
+      ny += (current[2] - next[2]) * (current[0] + next[0]);
+      nz += (current[0] - next[0]) * (current[1] + next[1]);
+      cx += current[0];
+      cy += current[1];
+      cz += current[2];
+    }
+    const doubleArea = Math.sqrt(nx * nx + ny * ny + nz * nz);
+    if (!(doubleArea > 0)) return;
+    const areaSquareMeters = doubleArea / 2 / 1_000_000;
+    const unitZ = nz / doubleArea;
+    if (Math.abs(unitZ) > 0.5) { excludedHorizontal += areaSquareMeters; return; }
+    if (role === undefined || !AGGREGATED_ROLES.has(role)) { excludedByRole += areaSquareMeters; return; }
+    inScope += areaSquareMeters;
+
+    const centroid = [cx / corners.length, cy / corners.length, cz / corners.length];
+    const normal2d = [nx / doubleArea, ny / doubleArea];
+    let best = edges[0]!;
+    let bestFacing = -Infinity;
+    let bestDistance = Infinity;
+    for (const edge of edges) {
+      const facing = normal2d[0]! * edge.normal[0]! + normal2d[1]! * edge.normal[1]!;
+      const dx = centroid[0]! - edge.midpoint[0]!;
+      const dy = centroid[1]! - edge.midpoint[1]!;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      // Facing first, distance second, lower index last. Total and deterministic.
+      if (facing > bestFacing + 1e-9 || (Math.abs(facing - bestFacing) <= 1e-9 && distance < bestDistance - 1e-9)) {
+        best = edge;
+        bestFacing = facing;
+        bestDistance = distance;
+      }
+    }
+    const boundary = baseZMm + (boundaryByEdge.get(best.index) ?? 0);
+    const key = `${best.index}:${centroid[2]! < boundary ? "base" : "shaft"}`;
+    const entry = zones.get(key) ?? { sums: [0, 0, 0] as [number, number, number], area: 0 };
+    const albedo = albedoOf(materialId);
+    entry.area += areaSquareMeters;
+    for (let channel = 0; channel < 3; channel += 1) entry.sums[channel] = entry.sums[channel]! + areaSquareMeters * albedo[channel]!;
+    zones.set(key, entry);
+    attributed += areaSquareMeters;
+  };
+
+  const tessellation = tessellateV3Plan(plan, { includeRecesses: true });
+  for (const quad of tessellation.quads) consume(quad.materialId, quad.corners);
+  for (const triangle of tessellation.triangles) consume(triangle.materialId, [triangle.a, triangle.b, triangle.c]);
+
+  return {
+    zones: new Map([...zones].map(([key, entry]) => [key, {
+      albedo: [entry.sums[0] / entry.area, entry.sums[1] / entry.area, entry.sums[2] / entry.area] as const,
+      areaSquareMeters: entry.area,
+    }])),
+    inScopeAreaSquareMeters: inScope,
+    attributedAreaSquareMeters: attributed,
+    excludedByRoleAreaSquareMeters: excludedByRole,
+    excludedAsHorizontalAreaSquareMeters: excludedHorizontal,
+  };
+}
+
+/**
+ * Raised when an aggregated zone colour would need a factor above 1.
+ *
+ * A factor above 1 is not merely out of the closed glTF profile's range: the
+ * rasterizer clamps before encoding, so it would clip ONE channel before the
+ * others and manufacture exactly the per-channel bias T013 spent a task
+ * excluding. Refusing is the only honest response.
+ */
+export class FarTierAggregateOutOfRangeError extends Error {
+  constructor(buildingId: string, zoneKey: string, factor: readonly number[]) {
+    super(`Far-tier v3 aggregation produced a zone factor above 1 for ${buildingId} zone ${zoneKey}: [${factor.map((value) => value.toFixed(6)).join(", ")}]. Baking it would clamp one channel before the others and invent a per-channel bias.`);
+    this.name = "FarTierAggregateOutOfRangeError";
+  }
+}
+
+/**
+ * How far above 1 an aggregated factor may land before the bake refuses.
+ *
+ * A zone whose in-scope surface is entirely its own facade material MUST
+ * reproduce that material's factor exactly, and where the palette calibration
+ * has already pushed that factor to the profile ceiling of 1 the round trip
+ * through an area-weighted albedo and back through the class tile's linear mean
+ * lands a few units in the last place above it. That is arithmetic noise and it
+ * is snapped to 1 and COUNTED. Anything larger is a real overshoot and is
+ * refused, because clamping it would clip one channel before the others.
+ */
+const AGGREGATE_UNITY_EPSILON = 1e-9;
+
+export interface FarTierFacesOptions {
+  zoneColourMode?: FarTierEffectiveParameters["zoneColourMode"];
+  /** Filled in with the aggregation's completeness, when the caller wants it. */
+  aggregateReport?: FarTierAggregateResult[];
+  /** Filled in with every factor that needed snapping to the profile ceiling. */
+  unitySnapReport?: Array<{ buildingId: string; zoneKey: string; overshoot: number }>;
+}
+
 /**
  * Enumerate one building's far-tier faces: the extruded outer ring plus a roof
  * cap, with each wall's base/shaft zones read from the plan's own facade
@@ -480,7 +741,11 @@ function paletteFactor(plan: V3Plan, materialId: string): { textureClass: Proced
 export function farTierFacesForBuilding(
   plan: V3Plan,
   offsetMeters: readonly [number, number],
+  options: FarTierFacesOptions = {},
 ): FarTierFace[] {
+  const aggregating = options.zoneColourMode === "area-correct-aggregate";
+  const aggregates = aggregating ? farTierZoneAggregates(plan) : null;
+  if (aggregates && options.aggregateReport) options.aggregateReport.push(aggregates);
   const ring = plan.tiers[0]!.ring;
   const baseZMm = Math.min(...plan.tiers.map((tier) => tier.baseZMm));
   const topZMm = Math.max(...plan.tiers.map((tier) => tier.topZMm));
@@ -514,10 +779,38 @@ export function farTierFacesForBuilding(
     const baseVMaxMm = Math.max(0, Math.min(heightMm, facade?.baseVMaxMm ?? 0));
     const split = baseVMaxMm / heightMm;
 
-    const shaft = paletteFactor(plan, shaftId);
+    /**
+     * The zone's factor. In `facade-only` mode this is v1's palette factor,
+     * byte for byte. In aggregate mode the area-weighted albedo is divided
+     * through the zone's own class-tile linear mean, so the rasterizer's
+     * `factor x modulation` still averages to the aggregate over the zone.
+     */
+    const resolveZone = (materialId: string, zoneName: "base" | "shaft"): { textureClass: ProceduralTextureClass | null; factor: [number, number, number] } => {
+      const palette = paletteFactor(plan, materialId);
+      if (!aggregates) return palette;
+      const aggregate = aggregates.zones.get(`${index}:${zoneName}`);
+      if (!aggregate || !(aggregate.areaSquareMeters > 0)) return palette;
+      const tileLinearMean = palette.textureClass === null ? 1 : tileIntegrator(palette.textureClass).linearMean;
+      const factor: [number, number, number] = [
+        aggregate.albedo[0] / tileLinearMean,
+        aggregate.albedo[1] / tileLinearMean,
+        aggregate.albedo[2] / tileLinearMean,
+      ];
+      const overshoot = Math.max(factor[0], factor[1], factor[2]) - 1;
+      if (overshoot > AGGREGATE_UNITY_EPSILON) {
+        throw new FarTierAggregateOutOfRangeError(plan.buildingId, `${index}:${zoneName}`, factor);
+      }
+      if (overshoot > 0) {
+        options.unitySnapReport?.push({ buildingId: plan.buildingId, zoneKey: `${index}:${zoneName}`, overshoot });
+        for (let channel = 0; channel < 3; channel += 1) if (factor[channel]! > 1) factor[channel] = 1;
+      }
+      return { textureClass: palette.textureClass, factor };
+    };
+
+    const shaft = resolveZone(shaftId, "shaft");
     const zones: FaceZone[] = [];
     if (split > 0) {
-      const base = paletteFactor(plan, baseId);
+      const base = resolveZone(baseId, "base");
       zones.push({ materialId: baseId, textureClass: base.textureClass, factor: base.factor, fromFraction: 0, toFraction: split });
     }
     if (split < 1) zones.push({ materialId: shaftId, textureClass: shaft.textureClass, factor: shaft.factor, fromFraction: split, toFraction: 1 });
