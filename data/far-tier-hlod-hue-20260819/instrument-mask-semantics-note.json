@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "far-tier-hlod-hue-20260819:instrument-mask-semantics-note",
+  "task": "T013",
+  "artifact": "far-tier-instrument-mask-semantics-note",
+  "capturedAt": null,
+  "capturedAtStatement": "NULL BY CONSTRUCTION. A note, not a measurement.",
+  "claim": "The pinned instrument spec's maskSemantics prose does not describe what the committed baseline's per-channel numbers were computed over.",
+  "theDiscrepancy": {
+    "specSays": "data/far-tier-hlod-instrument-20260818/pinned-instrument-spec.json, spec.maskSemantics.unPremultiply: 'Per-channel ratios divide by that subject's own alpha before averaging; the union luminance ratio does not.' Read together with maskSemantics.union, that describes averaging over the UNION.",
+    "numbersSay": "Only the SOURCE-and-BAKED INTERSECTION domain reproduces the committed per-channel ratios, to a worst absolute delta of 0.000105 across six poses. The union domain is off by up to 0.023.",
+    "evidence": "far-tier-hlod-hue-20260819/pinned-capture.json, maskSemanticsFinding, which lists six candidate domains and their worst per-pose deltas."
+  },
+  "whyThisIsANoteAndNotAnEdit": "The instrument spec, its harness hash and the operative baseline are FROZEN records of a completed task. Editing them from an attribution stage would rewrite the evidence the attribution rests on. The discrepancy is therefore recorded ALONGSIDE them, with a forward pointer from this directory, and the repair is left to whoever next changes the instrument deliberately.",
+  "whatItDoesNotAffect": {
+    "committedBaseline": "Nothing. The baseline is internally consistent; only its written description of the domain is wrong.",
+    "hueVerdicts": "Nothing. Under the union domain every spread is larger and the same five of six poses miss the 0.02 bar.",
+    "luminanceVerdicts": "Nothing. The union luminance ratio is computed over the union without un-premultiplying, exactly as the spec says, and reproduces to 8.58e-5."
+  },
+  "whatItDoesAffect": "Any FUTURE gate that declares a hue bar must state its mask domain explicitly, because the two domains differ by up to 0.023 on the same renders — larger than the effect under attribution.",
+  "notClaimedHere": [
+    "No frozen record is edited by this note.",
+    "No repair to the instrument is proposed here."
+  ]
+}

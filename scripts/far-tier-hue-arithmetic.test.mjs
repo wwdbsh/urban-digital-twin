@@ -15,6 +15,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 import { linearToSrgb, srgbToLinear } from "../src/release/far-tier-bake.ts";
+import { sha256HexSync } from "../src/domain/deterministic-hash.ts";
 import { V3T_CALIBRATED_PALETTE, v3TextureClassFor, v3tCalibratedFactor } from "../src/release/block835-v3-package.ts";
 import { proceduralTextureTile } from "../src/release/procedural-texture.ts";
 
@@ -178,5 +179,188 @@ describe("the record describes the shipped tile and nothing else", () => {
       expect(pose.texelPerPixel).toBeLessThan(1);
       expect(pose.impliedMipLevel).toBe(0);
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// The DECISION numbers, tested against the measurements they claim to summarise.
+//
+// The first draft of these records carried a metric-transfer error: a share
+// computed on log(R/B) was applied to the three-channel hue spread, and the
+// resulting ceiling understated the worst case AND hid a sign flip between the
+// two azimuths. Nothing in the record itself could have caught that, because
+// the record reported the derived number and not the measurement. These tests
+// recompute every decision number from the per-channel means beside it.
+// ---------------------------------------------------------------------------
+
+const captureRecord = JSON.parse(readFileSync(join(repositoryRoot, "data/far-tier-hlod-hue-20260819/pinned-capture.json"), "utf8"));
+const attribution = JSON.parse(readFileSync(join(repositoryRoot, "data/far-tier-hlod-hue-20260819/hue-attribution.json"), "utf8"));
+const atlasCensus = record.atlasCensus;
+
+describe("the post-correction hue spreads are the measurement, not a scaled share", () => {
+  for (const row of captureRecord.results) {
+    it(`${row.pose} recomputes its palette-equalised spread from the recorded channel means`, () => {
+      const ratios = row.bakedChannelMeans.map((value, index) => value / row.absorbedVariantChannelMeans[index]);
+      expect(row.palletteEqualisedComparison.channelSpread).toBeCloseTo(spreadOf(ratios), 6);
+    });
+  }
+
+  it("carries the same six numbers into the decision section", () => {
+    const decision = attribution.whatColourOnlyCorrectionWouldActuallyDo.perPose;
+    expect(decision).toHaveLength(6);
+    for (const [index, row] of captureRecord.results.entries()) {
+      expect(decision[index].pose).toBe(row.pose);
+      expect(decision[index].spreadAfterAColourOnlyCorrection).toBe(row.palletteEqualisedComparison.channelSpread);
+      expect(decision[index].measuredSpreadToday).toBe(row.channelSpread);
+    }
+  });
+
+  it("splits by azimuth the way the prose says: 55 crosses the bar, 235 gets worse", () => {
+    const decision = attribution.whatColourOnlyCorrectionWouldActuallyDo.perPose;
+    const at55 = decision.filter((row) => row.pose.endsWith("/55"));
+    const at235 = decision.filter((row) => row.pose.endsWith("/235"));
+    expect(at55).toHaveLength(3);
+    expect(at235).toHaveLength(3);
+    for (const row of at55) {
+      expect(row.spreadAfterAColourOnlyCorrection).toBeLessThan(row.measuredSpreadToday);
+      expect(row.legacyBarVerdictAfter).toBe("PASS");
+    }
+    for (const row of at235) expect(row.legacyBarVerdictAfter).toBe("MISS");
+    // The sign flip the retired estimate hid: azimuth 235 is not uniformly
+    // improved, and two of its three poses are made WORSE.
+    const worsened = at235.filter((row) => row.spreadAfterAColourOnlyCorrection > row.measuredSpreadToday);
+    expect(worsened).toHaveLength(2);
+    expect(attribution.whatColourOnlyCorrectionWouldActuallyDo.perAzimuthSplit.azimuth235).toContain("WORSE at 400 m and 1,200 m");
+  });
+
+  it("states a worst case that is the actual maximum and is still above the bar", () => {
+    const decision = attribution.whatColourOnlyCorrectionWouldActuallyDo;
+    const worst = Math.max(...decision.perPose.map((row) => row.spreadAfterAColourOnlyCorrection));
+    expect(decision.worstPoseAfter).toBe(worst);
+    expect(worst).toBeGreaterThan(0.02);
+    // The retired estimate must not survive as a LIVE figure. It is allowed to
+    // appear once, inside the sentence that supersedes it, because deleting a
+    // wrong number without saying it was wrong is how it comes back.
+    expect(decision.worstPoseAfter).not.toBe(0.0265);
+    expect(JSON.stringify(attribution)).not.toContain("14 to 36 per cent");
+    expect(decision.conclusion).toContain("supersedes an earlier draft");
+  });
+});
+
+describe("the chromaticity shares are labelled as chromaticity shares", () => {
+  for (const row of captureRecord.results) {
+    it(`${row.pose} recomputes both shares from log(R/B) and they sum to one`, () => {
+      const rb = (triple) => triple[0] / triple[2];
+      const total = Math.log(rb(row.bakedChannelMeans) / rb(row.sourceChannelMeans));
+      const absorption = Math.log(rb(row.absorbedVariantChannelMeans) / rb(row.sourceChannelMeans));
+      const geometry = Math.log(rb(row.bakedChannelMeans) / rb(row.absorbedVariantChannelMeans));
+      expect(row.chromaticity.decomposition.materialAbsorptionShare).toBeCloseTo(absorption / total, 4);
+      expect(row.chromaticity.decomposition.geometricSimplificationShare).toBeCloseTo(geometry / total, 4);
+      expect(row.chromaticity.decomposition.materialAbsorptionShare + row.chromaticity.decomposition.geometricSimplificationShare)
+        .toBeCloseTo(1, 3);
+    });
+  }
+
+  it("says out loud that the split is not an A3 split", () => {
+    expect(captureRecord.results[0].chromaticity.metric).toContain("log(R/B)");
+    expect(captureRecord.results[0].chromaticity.decomposition.doesNotApplyTo).toContain("A3");
+    expect(attribution.attributedMechanism.twoMeasuredTerms.caution).toContain("NOT A3 SHARES");
+  });
+
+  it("holds the case that proves the two terms do not partition the spread", () => {
+    // 400/235: absorption-only spread and palette-equalised spread do not sum
+    // to anything like the measured spread. Asserting it keeps the caution honest.
+    const row = captureRecord.results.find((entry) => entry.pose === "400/235");
+    const parts = row.palletteEqualisedComparison.absorptionOnlyChannelSpread + row.palletteEqualisedComparison.channelSpread;
+    expect(Math.abs(parts - row.channelSpread)).toBeGreaterThan(0.005);
+    expect(row.palletteEqualisedComparison.channelSpread).toBeGreaterThan(row.channelSpread);
+  });
+});
+
+describe("the absorbed variant is a controlled substitution", () => {
+  it("has a silhouette identical to the source's at every pose", () => {
+    const control = captureRecord.absorbedSourceVariant.positiveControl;
+    expect(control.worstAbsoluteDelta).toBe(0);
+    expect(control.sourceSilhouettePixels).toEqual(control.absorbedSilhouettePixels);
+    expect(control.verdict).toContain("PASS");
+  });
+
+  it("declares its mask domain, because the domain moves ratios more than the effect does", () => {
+    expect(captureRecord.absorbedSourceVariant.measurementDomain).toContain("intersection");
+    expect(captureRecord.measurementDomain.perChannelMeans).toContain("INTERSECTION");
+  });
+
+  it("documents the metal judgement call and its direction", () => {
+    const judgement = captureRecord.absorbedSourceVariant.metalJudgementCall;
+    expect(judgement.decision).toContain("material:metal");
+    expect(judgement.size).toContain("2.22 per cent");
+    expect(judgement.size).toContain("upper bound");
+  });
+});
+
+describe("prose and fields agree", () => {
+  it("quotes the used-texel count it computed", () => {
+    const observation = attribution.theDecisiveObservation;
+    expect(observation.atlasUsedTexels).toBe(atlasCensus.contentTexels + atlasCensus.gutterTexels);
+    expect(observation.arithmetic).toContain(observation.atlasUsedTexels.toLocaleString("en-US"));
+    expect(observation.arithmetic).toContain(atlasCensus.contentTexels.toLocaleString("en-US"));
+    expect(observation.arithmetic).toContain(atlasCensus.gutterTexels.toLocaleString("en-US"));
+    expect(observation.arithmetic).toContain(String(observation.texelPerPixelAt400Az55));
+    expect(observation.texelPerPixelAt400Az55).toBeLessThan(1);
+  });
+
+  it("reads the committed baseline from the frozen record rather than a transcription", () => {
+    const baselineText = readFileSync(join(repositoryRoot, "data/far-tier-hlod-instrument-20260818/pinned-baseline.json"), "utf8");
+    expect(captureRecord.reproductionGate.baselineSha256).toBe(sha256HexSync(baselineText));
+    const baseline = JSON.parse(baselineText);
+    for (const row of captureRecord.results) {
+      const committed = baseline.results.find((entry) => entry.distanceMeters === row.distanceMeters && entry.azimuthDegrees === row.azimuthDegrees);
+      expect(row.reproductionAgainstCommittedBaseline.committedSpread).toBe(committed.channelSpread);
+    }
+  });
+
+  it("qualifies the quantization sign claim to the weighting that supports it", () => {
+    const h2 = attribution.hypotheses.find((entry) => entry.id === "H2");
+    const census = record.hypotheses.H2_srgbQuantization.evidence.perChannelRelativeBias;
+    const weighted = record.hypotheses.H2_srgbQuantization.evidence.areaWeightedPerChannelRelativeBias;
+    // The census triple's lowest channel is GREEN; the area-weighted one's is RED.
+    expect(census.indexOf(Math.min(...census))).toBe(1);
+    expect(weighted.indexOf(Math.min(...weighted))).toBe(0);
+    expect(h2.signQualification).toContain("AREA-WEIGHTED");
+  });
+
+  it("puts the roof-cap candidate on a like-for-like denominator and names the counterweight", () => {
+    const open = attribution.whatIsNotAttributed;
+    expect(open.geometricSubMechanism).toContain("15.50 per cent");
+    expect(open.geometricSubMechanism).toContain("17.33 per cent");
+    expect(open.theLargerUnlabelledSurfaceSetDifference).toContain("13.10 per cent");
+    expect(open.theLargerUnlabelledSurfaceSetDifference).toContain("OTHER WAY");
+  });
+
+  it("names BOTH unexplained tile-side distance movements", () => {
+    const open = attribution.whatIsNotAttributed.tileSideDistanceMovements;
+    expect(open).toContain("2.62 per cent");
+    expect(open).toContain("0.89 per cent");
+    expect(open).toContain("NOT treated as confirmation");
+  });
+
+  it("reports the analytic model overstating as well as understating", () => {
+    const limits = attribution.whatIsNotAttributed.analyticModelLimits;
+    expect(limits).toContain("OVERSTATES");
+    expect(limits).toContain("12.35 per cent");
+  });
+
+  it("records that the mask-domain discrepancy moves no verdict, with the union numbers", () => {
+    const finding = captureRecord.maskSemanticsFinding.doesItMoveAnyVerdict;
+    expect(finding.answer).toContain("NO");
+    let missesUnion = 0;
+    let missesIntersection = 0;
+    for (const row of captureRecord.results) {
+      expect(row.maskDomainSensitivity.unionDomainSpread).toBeGreaterThanOrEqual(row.maskDomainSensitivity.intersectionDomainSpread);
+      if (row.maskDomainSensitivity.missesTheLegacyHueBarUnderUnion) missesUnion += 1;
+      if (row.maskDomainSensitivity.missesTheLegacyHueBarUnderIntersection) missesIntersection += 1;
+    }
+    expect(missesUnion).toBe(5);
+    expect(missesIntersection).toBe(5);
   });
 });
