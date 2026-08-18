@@ -132,12 +132,46 @@ describe("the byte-replay proof", () => {
     }
   });
 
-  it("discloses that the sampled tile is not the committed tile", () => {
+  it("measured the COMMITTED tile, not a superseded one", () => {
+    // The frozen evidence must describe the bytes that shipped. This binds the
+    // sampling record's subject to the replay's own digest, so a future byte
+    // change that is not re-captured fails here rather than sitting unnoticed.
     const supersession = readJson("sampling-results").subjectDigestSupersession;
     const replay = readJson("prototype-provenance").byteReplay;
     expect(supersession.committedTileGlbSha256).toBe(replay.run1.glbSha256);
-    expect(supersession.measuredTileGlbSha256).not.toBe(supersession.committedTileGlbSha256);
-    expect(supersession.status).toContain("HAVE NOT BEEN RE-TAKEN");
+    expect(readJson("sampling-results").capture.subject).toContain(replay.run1.glbSha256);
+  });
+
+  it("retains the superseded capture rather than discarding it", () => {
+    const record = readJson("sampling-results");
+    const superseded = record.supersededCapture;
+    expect(superseded.subjectGlbSha256).toBe(record.subjectDigestSupersession.supersededTileGlbSha256);
+    expect(superseded.subjectGlbSha256).not.toBe(record.subjectDigestSupersession.committedTileGlbSha256);
+    // Both captures carry the full six-pose reading set, so the re-capture can
+    // be checked against the original rather than trusted.
+    expect(superseded.results).toHaveLength(record.results.length);
+  });
+
+  it("re-captured under the UNCHANGED instrument", () => {
+    const supersession = readJson("sampling-results").subjectDigestSupersession;
+    expect(supersession.recaptureDiscipline).toContain("NOT altered");
+    // Geometry-only measures cannot move if only texel bytes changed, so an
+    // altered camera or viewport would show up here.
+    const record = readJson("sampling-results");
+    for (const [index, entry] of record.results.entries()) {
+      const before = record.supersededCapture.results[index];
+      expect(entry.distanceMeters).toBe(before.distanceMeters);
+      expect(entry.azimuthDegrees).toBe(before.azimuthDegrees);
+      expect(entry.unionPixels).toBe(before.unionPixels);
+      expect(entry.intersectionPixels).toBe(before.intersectionPixels);
+      expect(entry.intersectionOverUnion).toBe(before.intersectionOverUnion);
+    }
+  });
+
+  it("reaches the same verdict on both captures, so the MISS is not a build artefact", () => {
+    const record = readJson("sampling-results");
+    expect(record.result_tone.verdict).toBe(record.supersededCapture.toneVerdict);
+    expect(record.result_tone.missingPoses).toHaveLength(record.supersededCapture.toneMissingPoses.length);
   });
 
   it("names every source it derives from by checksum", () => {
@@ -276,7 +310,9 @@ describe("the sampling record's own arithmetic holds", () => {
   it("reproduces the union ratio from the absolute luminances it also records", () => {
     for (const entry of results) {
       expect(entry.unionMeanLuminanceRatio).toBeCloseTo(entry.bakedMeanLuminance / entry.sourceMeanLuminance, 4);
-      expect(entry.absoluteLuminanceDelta).toBeCloseTo(entry.bakedMeanLuminance - entry.sourceMeanLuminance, 6);
+      // Both operands are recorded to six decimals, so their difference carries
+      // at most that precision; checked to five.
+      expect(entry.absoluteLuminanceDelta).toBeCloseTo(entry.bakedMeanLuminance - entry.sourceMeanLuminance, 5);
     }
   });
 

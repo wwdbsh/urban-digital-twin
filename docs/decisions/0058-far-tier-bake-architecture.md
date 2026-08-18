@@ -168,7 +168,12 @@ every pose — the setback fill, seen directly.
 ## THE MISS
 
 **Tone bar `|unionMeanLuminanceRatio - 1| <= 0.05`: MISSED at 1 of 4 barred poses.**
-1,200 m / azimuth 235 measured **1.0728**, an excess of 0.0228. The other three barred
+1,200 m / azimuth 235 measured **1.0728**, an excess of 0.0228. This was measured
+**twice** — once on the pre-fix bytes and again, after independent review required the
+frozen evidence to describe the shipped bytes, on the committed tile `2f859925…` under
+the unchanged instrument. Both captures return **1.072801**; union and intersection
+pixel counts, IoU and channel spreads are identical, and no ratio moved by more than
+1e-06. **The MISS is a property of the tier, not of a build.** The other three barred
 poses passed at 1.0130, 1.0136 and 1.0198. The baked tile measures brighter than the
 source at **every** pose without exception; the sign is consistent and is not noise.
 
@@ -210,12 +215,13 @@ Fork options for the user are enumerated in `sampling-results.json`.
    contractually guaranteed.** Replay is proven cross-process on the pinned toolchain;
    cross-engine is not claimed. `Math.hypot` has been removed from every byte-producing
    path in favour of `Math.sqrt`, per `block835-v3-package.ts`'s own policy.
-6. **The appearance readings describe a superseded tile.** They were captured against
-   GLB `a0688874…`; the correctness fixes above moved the committed bytes to
-   `2f859925…`. The readings have **not** been re-taken, because re-running an
-   instrument after seeing a MISS is what pre-registration exists to prevent. The
-   supersession is disclosed in `sampling-results.json`, with the byte delta attributed
-   to the `Math.hypot` → `Math.sqrt` change alone.
+6. **The appearance readings were re-taken against the committed bytes**, on
+   adjudication that frozen evidence must describe what shipped. The instrument was not
+   altered in any respect. Both captures are retained in `sampling-results.json`, the
+   superseded one under `supersededCapture`, so the re-capture can be checked rather
+   than trusted. The measured difference between them is at most 1e-06 in any ratio,
+   which confirms — after the fact, as predicted before it — that the
+   `Math.hypot` → `Math.sqrt` fix had no appearance consequence.
 
 ## What this ADR does not decide
 

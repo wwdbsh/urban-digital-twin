@@ -99,6 +99,13 @@ channel spread and does not.
 **Tone: MISS at 1 of 4 barred poses.** 1,200 m / azimuth 235 measured 1.0728 against a
 0.05 bar. The pre-registered stop rule was invoked; the bake was **not** tuned.
 
+Measured twice. The `Math.hypot` fix moved the tile's bytes after the first capture, so
+on adjudication the instrument was re-run — unchanged in every respect — against the
+committed tile `2f859925…`. Both captures return **1.072801** at the missing pose, with
+identical pixel counts, IoU and channel spreads and no ratio moving by more than 1e-06.
+Both are retained in the record; the first is filed under `supersededCapture` rather
+than deleted, so the re-capture is checkable instead of merely asserted.
+
 The diagnosis is that azimuth 235 is the shadow side, where mean luminance is ~0.039
 against ~0.210 lit, while the absolute delta is azimuth-independent (0.002732 against
 0.002871 at 1,200 m). The prism self-shadows less because it has no recesses. That
@@ -151,9 +158,12 @@ carried from the packer rather than re-derived, which had mislabelled legitimate
 faces; and the replay's second run now spawns a **child process**, which is what the
 code comment had claimed all along while both runs shared one process and its caches.
 
-The `Math.hypot` fix moved the tile's bytes. The appearance readings therefore describe
-a **superseded digest**, and that is disclosed rather than resolved: re-running the
-instrument after seeing a MISS is what pre-registration exists to prevent.
+The `Math.hypot` fix moved the tile's bytes, which briefly left the appearance readings
+describing a superseded digest. I flagged that rather than deciding it, on the view that
+re-running an instrument after seeing a MISS is what pre-registration exists to prevent.
+The adjudication went the other way — frozen evidence must describe the shipped bytes —
+and it was right: re-capturing under the unchanged instrument reproduced the MISS to six
+decimals and turned a disclosure into a measurement. Both captures are retained.
 
 ## Residuals and NOT-METs
 
