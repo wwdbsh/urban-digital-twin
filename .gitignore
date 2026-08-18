@@ -205,3 +205,11 @@ artifacts/mass-generation-20260816/
 # bar — is committed under data/far-tier-hlod-20260818/ with checksum sidecars,
 # so the evidence stays checkable after this worktree-local tree is removed.
 artifacts/far-tier-hlod-20260818/
+
+# T010 recipe-v2 work root: the decomposition subjects (variant GLBs with one
+# surface class blacked out), their linear EXR stills, and the atlas they share.
+# None of it is retained: the variants are instrumentation that must never be
+# served, and the tile they derive from is itself a derivative of retention-only
+# assets. Every number the Stage A census and the Stage B halt rest on is
+# committed under data/far-tier-hlod-v2-20260818/ with checksum sidecars.
+artifacts/far-tier-hlod-v2-20260818/

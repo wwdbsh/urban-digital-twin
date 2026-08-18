@@ -484,3 +484,31 @@ describe("the sampling record's own arithmetic holds", () => {
     expect(residual.whatWouldSettleIt.length).toBeGreaterThan(0);
   });
 });
+
+describe("the v2 shading derivation cannot see a measurement", () => {
+  // The anti-fitting protocol in prose is worth little. This reads the file.
+  const source = readFileSync(join(repositoryRoot, "src", "release", "far-tier-shading.ts"), "utf8");
+
+  it("imports only committed plan geometry", () => {
+    const imports = [...source.matchAll(/^import .*?from "(.*?)";$/gmu)].map((match) => match[1]);
+    expect(imports).toEqual(["../domain/deterministic-facade-generator-v3.ts"]);
+  });
+
+  it("uses no transcendental in the derivation path", () => {
+    // Comments stripped first, so the check is about CODE and not about prose
+    // that happens to name the thing it forbids.
+    const code = source.replace(/\/\*[\s\S]*?\*\//gu, "").replace(/^\s*\/\/.*$/gmu, "");
+    for (const banned of ["Math.pow", "Math.exp", "Math.log", "Math.cos", "Math.sin", "**"]) {
+      expect(code, `derivation uses ${banned}`).not.toContain(banned);
+    }
+  });
+
+  it("never mentions a ratio, a pose, a camera or a luminance in the scalar's own path", () => {
+    const scalar = source.slice(source.indexOf("export function farTierShadingTerm"));
+    const band = scalar.indexOf("export function farTierRoofScalarBand");
+    const scalarOnly = band < 0 ? scalar : scalar.slice(0, band);
+    for (const banned of ["luminance", "Luminance", "ratio", "Ratio", "camera", "pose"]) {
+      expect(scalarOnly, `scalar path mentions ${banned}`).not.toContain(banned);
+    }
+  });
+});

@@ -1,0 +1,242 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "far-tier-hlod-v2-20260818:stage-b-decomposition-and-prediction",
+  "task": "T010",
+  "artifact": "far-tier-v2-shading-derivation-and-point-predictions",
+  "capturedAt": null,
+  "capturedAtStatement": "NULL BY CONSTRUCTION. The decomposition transcribed here is a capture, but the derivation and every prediction below are arithmetic; a timestamp would be the only irreproducible field.",
+  "status": "PUBLISHED BEFORE ANY v2 CAPTURE. No v2 tile has been baked and no v2 still has been taken at the time this record is committed.",
+  "claim": "The roof/wall luminance decomposition of the far-tier tile, the shading term derived from committed plan geometry, and the six point predictions that term implies — all fixed before any measurement could confirm or refute them.",
+  "lineage": {
+    "v1SamplingRecord": "data/far-tier-hlod-20260818/sampling-results.json",
+    "v1SamplingRecordSha256": "645d759b511e73f4ca6e810d50d5695c727532ed33537a2910de8745a9d96c36",
+    "v1RecordsAreImmutable": "The T002 records are not edited by this task. This record supersedes none of them; it adds to them.",
+    "v1RatiosUsed": {
+      "400/55": 1.027322,
+      "400/235": 1.09607,
+      "1200/55": 1.013019,
+      "1200/235": 1.072801,
+      "4000/55": 1.013554,
+      "4000/235": 1.019795
+    }
+  },
+  "decomposition": {
+    "purpose": "Decide whether a facade-only shading term can move the failing pose at all, before designing one.",
+    "method": "Full geometry every time, with one surface class forced to a black CONDUCTOR so it occludes without contributing. Union mask taken from the full variant and reused for all three, so the means are comparable.",
+    "blackMaterialCorrection": "A black DIELECTRIC was tried first and was wrong. glTF gives every dielectric a fixed ~4% specular reflectance, so a zero base colour still returned 0.016708 of neutral grey over 3,131 pixels — larger than the wall contribution being measured. A conductor's F0 is its base colour, so black metal reflects nothing.",
+    "additivityCaveat": "W + R does not sum exactly to L_full; the residual runs -0.7% to -3.4% of L_full. The variants therefore slightly OVERSTATE each class in isolation, which is the conservative direction for a feasibility test that asks whether walls carry enough light.",
+    "rows": [
+      {
+        "distanceMeters": 400,
+        "azimuthDegrees": 55,
+        "maskPixels": 63514,
+        "L_full": 0.22512126,
+        "W_wall": 0.1803481,
+        "R_roof": 0.04637752,
+        "roofShare": 0.206011,
+        "wallShare": 0.801115
+      },
+      {
+        "distanceMeters": 400,
+        "azimuthDegrees": 235,
+        "maskPixels": 60153,
+        "L_full": 0.0384713,
+        "W_wall": 0.00215149,
+        "R_roof": 0.03761405,
+        "roofShare": 0.977717,
+        "wallShare": 0.055925
+      },
+      {
+        "distanceMeters": 1200,
+        "azimuthDegrees": 55,
+        "maskPixels": 5945,
+        "L_full": 0.21535069,
+        "W_wall": 0.17392367,
+        "R_roof": 0.04319247,
+        "roofShare": 0.200568,
+        "wallShare": 0.80763
+      },
+      {
+        "distanceMeters": 1200,
+        "azimuthDegrees": 235,
+        "maskPixels": 5889,
+        "L_full": 0.03957273,
+        "W_wall": 0.00134595,
+        "R_roof": 0.03957231,
+        "roofShare": 0.999989,
+        "wallShare": 0.034012
+      },
+      {
+        "distanceMeters": 4000,
+        "azimuthDegrees": 55,
+        "maskPixels": 524,
+        "L_full": 0.20518977,
+        "W_wall": 0.16619937,
+        "R_roof": 0.04074548,
+        "roofShare": 0.198575,
+        "wallShare": 0.809979
+      },
+      {
+        "distanceMeters": 4000,
+        "azimuthDegrees": 235,
+        "maskPixels": 516,
+        "L_full": 0.03985023,
+        "W_wall": 0.0013514,
+        "R_roof": 0.03984916,
+        "roofShare": 0.999973,
+        "wallShare": 0.033912
+      }
+    ],
+    "finding": "THE SHADOW POSE IS ALMOST ENTIRELY ROOF. Roof share is 0.9777 at 400 m, 0.99999 at 1,200 m and 0.99997 at 4,000 m, against a wall share of 0.034 at the barred distances. The lit pose inverts it: walls carry 0.80. The T002 tone miss is therefore a ROOF brightness problem and was never a facade problem."
+  },
+  "facadeOnlyNoGo": {
+    "rule": "A facade-only term is viable iff W_sh / W_lit >= 0.06797, pre-registered before the decomposition was rendered.",
+    "derivation": "The shadow pose must lose 0.000899 of absolute mean linear luminance to reach the bar; the lit pose may lose at most 0.013226 before breaching it; a wall-only scalar t moves them by W_sh*(1-t) and W_lit*(1-t), so feasibility is W_sh/W_lit >= 0.000899/0.013226.",
+    "measured": {
+      "W_sh": 0.00134595,
+      "W_lit": 0.17392367,
+      "ratio": 0.007739
+    },
+    "threshold": 0.06797,
+    "verdict": "NO-GO — FACADE-ONLY IS NOT VIABLE, by a factor of about nine. Darkening walls enough to move the shadow pose would destroy the lit pose long before it arrived.",
+    "consequence": "The model form was selected by this measurement and by nothing else, which is why the measurement was taken first."
+  },
+  "derivedTerm": {
+    "form": "ROOF-ONLY linear-light scalar. Every roof zone's factor is multiplied by `roofScalar`; wall zones are untouched.",
+    "mechanismApproximated": "The prism replaces a building's roof with one flat plane and omits the rooftop groups standing on it — the T002 frame check measured 3.59 m of rooftop mass present in the source and absent from the prism. A flat lit plane returns more light than the roof it stands in for.",
+    "syntheticDeviationDeclaration": "THIS IS AN INVENTED APPEARANCE, NOT A MEASUREMENT. No occlusion is computed, no shadow is traced, and nothing in the derivation observes a real building. It approximates a named mechanism with a geometric proxy and must be declared as a synthetic deviation wherever a baked artifact carries it.",
+    "closedForm": "roofScalar = 1 - (sum of roof-occupying prism footprint areas) / (sum of tier-0 ring areas), area-weighted across the cell's plans, with water-tank legs excluded because they sit beneath the tank they support and would double-count its footprint.",
+    "inputsAreCommittedGeometryOnly": "Plan rings and prism rings from the committed V3 plans. Nothing reads a rendered image, a luminance ratio, a camera or a light.",
+    "arithmeticRestriction": "Only + - * / are used, so no engine-dependent transcendental enters a byte-producing path. Aggregation is over an explicitly sorted building order.",
+    "occupyingPrismKinds": [
+      "roof-equipment",
+      "water-tank"
+    ],
+    "buildingCount": 48,
+    "occupiedFraction": 0.01383258,
+    "roofScalar": 0.98616742
+  },
+  "admissibleBand": {
+    "disclosedOnPurpose": "The band was computable from published T002 readings and the decomposition BEFORE the derivation was run. Disclosing it is what makes the prediction a real test: a reader can check the derived value was not steered toward the middle of the band.",
+    "requiredShadowReduction": 0.0008991,
+    "permittedLitReduction": 0.013226,
+    "roofScalarMinimum": 0.69378922,
+    "roofScalarMaximum": 0.97727957,
+    "derivedRoofScalar": 0.98616742,
+    "derivedValueInsideBand": false,
+    "shortfall": {
+      "deliveredShadowReduction": 0.00054739,
+      "requiredShadowReduction": 0.0008991,
+      "deliveredShareOfRequired": 0.608817
+    }
+  },
+  "pointPredictions": {
+    "publishedBeforeCapture": true,
+    "predictionAgreementBar": "|measured - predicted| <= 0.01, to be judged only if a v2 capture is ever taken under this recipe id.",
+    "formula": "r_v2(pose) = r_v1(pose) * (L_full(pose) - R_roof(pose) * (1 - roofScalar)) / L_full(pose)",
+    "predictions": [
+      {
+        "distanceMeters": 400,
+        "azimuthDegrees": 55,
+        "barred": false,
+        "roofShare": 0.206011,
+        "wallShare": 0.801115,
+        "gEff": 0.99715033,
+        "unionMeanLuminanceRatioV1": 1.027322,
+        "predictedUnionMeanLuminanceRatioV2": 1.02439447,
+        "predictedVerdict": "not barred"
+      },
+      {
+        "distanceMeters": 400,
+        "azimuthDegrees": 235,
+        "barred": false,
+        "roofShare": 0.977717,
+        "wallShare": 0.055925,
+        "gEff": 0.98647565,
+        "unionMeanLuminanceRatioV1": 1.09607,
+        "predictedUnionMeanLuminanceRatioV2": 1.08124636,
+        "predictedVerdict": "not barred"
+      },
+      {
+        "distanceMeters": 1200,
+        "azimuthDegrees": 55,
+        "barred": true,
+        "roofShare": 0.200568,
+        "wallShare": 0.80763,
+        "gEff": 0.99722563,
+        "unionMeanLuminanceRatioV1": 1.013019,
+        "predictedUnionMeanLuminanceRatioV2": 1.01020851,
+        "predictedVerdict": "PASS"
+      },
+      {
+        "distanceMeters": 1200,
+        "azimuthDegrees": 235,
+        "barred": true,
+        "roofShare": 0.999989,
+        "wallShare": 0.034012,
+        "gEff": 0.98616756,
+        "unionMeanLuminanceRatioV1": 1.072801,
+        "predictedUnionMeanLuminanceRatioV2": 1.05796155,
+        "predictedVerdict": "MISS"
+      },
+      {
+        "distanceMeters": 4000,
+        "azimuthDegrees": 55,
+        "barred": true,
+        "roofShare": 0.198575,
+        "wallShare": 0.809979,
+        "gEff": 0.9972532,
+        "unionMeanLuminanceRatioV1": 1.013554,
+        "predictedUnionMeanLuminanceRatioV2": 1.01076997,
+        "predictedVerdict": "PASS"
+      },
+      {
+        "distanceMeters": 4000,
+        "azimuthDegrees": 235,
+        "barred": true,
+        "roofShare": 0.999973,
+        "wallShare": 0.033912,
+        "gEff": 0.98616779,
+        "unionMeanLuminanceRatioV1": 1.019795,
+        "predictedUnionMeanLuminanceRatioV2": 1.00568898,
+        "predictedVerdict": "PASS"
+      }
+    ]
+  },
+  "predictedVerdict": {
+    "toneBar": 0.05,
+    "barredPoses": 4,
+    "predictedPasses": 3,
+    "predictedMisses": 1,
+    "verdict": "PREDICTED MISS",
+    "missingPoses": [
+      {
+        "distanceMeters": 1200,
+        "azimuthDegrees": 235,
+        "predicted": 1.05796155
+      }
+    ]
+  },
+  "noGoInvoked": {
+    "rule": "Derived gain outside the admissible band -> predicted MISS, report, do NOT retune.",
+    "invoked": true,
+    "whatWasNotDone": [
+      "The term was NOT enlarged to reach the bar. A constant chosen to clear a threshold is a fitted constant however it is dressed up.",
+      "The model was NOT swapped for one that happens to predict a pass. Selecting a model by its predicted verdict is the same defect as selecting a constant by it.",
+      "No v2 tile was baked and no v2 capture was taken. There is nothing to report a tone verdict against, and that is the correct state at a halt."
+    ],
+    "whyTheGeometricProxyFallsShort": "The derivation counts only the roof area rooftop groups OCCUPY. It does not count the roof they SHADOW, which at any sun elevation is the larger quantity. Extending it to shadowed area would require a sun elevation, and a sun elevation is a property of the instrument rather than of the artifact — baking it in would calibrate a shipped tile to a test rig, which is precisely the coupling this goal's non-claims already warn against.",
+    "forkForTheUser": [
+      "ACCEPT A SMALLER IMPROVEMENT. Ship the derived term anyway: it moves the failing pose from 1.0728 to a predicted 1.0580, still a miss but a 20% reduction in the excess, and it improves every other pose slightly.",
+      "CHANGE THE GEOMETRY, NOT THE SHADING. Give the far-tier prism the rooftop groups it omits, at a triangle cost that must be measured against the tier's own budget. This attacks the mechanism rather than approximating it.",
+      "ACCEPT AN INSTRUMENT-COUPLED TERM, KNOWINGLY. Derive the shadowed area from a declared nominal sun elevation, accepting that the constant is then calibrated to a lighting assumption the shipped renderer does not share.",
+      "RE-EXAMINE THE INSTRUMENT. The shadow pose is 99.99% roof and five times darker than the lit pose, which makes the union ratio ill-conditioned there. Whether that pose should carry a 0.05 bar at all is a question about the instrument, and it is the user's to answer."
+    ]
+  },
+  "notClaimedHere": [
+    "No v2 tile exists and no v2 appearance measurement exists.",
+    "The predictions are arithmetic over a disclosed decomposition; they are not a rendered result and could be wrong.",
+    "The decomposition was measured in EEVEE under one sun. It is not a claim about the shipped Cesium renderer.",
+    "One cell was decomposed. Nothing here generalizes to the island."
+  ]
+}

@@ -24,7 +24,7 @@ import { spawnSync } from "node:child_process";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { execPath } from "node:process";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { sha256HexBytes, sha256HexSync, stableSerialize } from "../src/domain/deterministic-hash.ts";
 import { collectMidtownCoreSources } from "../src/release/midtown-core-source.ts";
@@ -74,10 +74,10 @@ const fail = (message) => { console.error(`far-tier-bake: ${message}`); process.
  * unrelated purpose is the cheapest available defence against choosing a cell
  * that happens to bake well.
  */
-const DEFAULT_CELL_ID = "manhattan-exterior-cell-w05-000747-17-38610-35822";
+export const DEFAULT_CELL_ID = "manhattan-exterior-cell-w05-000747-17-38610-35822";
 
 /** Real capture chronology of the pinned base snapshot; the wave CLI's own constant. */
-const CAPTURE = { capturedAt: "2026-08-04T00:00:00.000Z", updatedAt: "2026-08-04T00:00:00.000Z" };
+export const CAPTURE = { capturedAt: "2026-08-04T00:00:00.000Z", updatedAt: "2026-08-04T00:00:00.000Z" };
 
 /**
  * Wave identity. Every field here moves GLB bytes, so these are the shipped
@@ -146,7 +146,7 @@ async function loadLedger(cellId) {
  * Regenerate the cell's shipped assets and verify every one against the
  * committed `-c2` inventory. Returns the plans, which are the bake's real input.
  */
-async function materializeCell(cellId) {
+export async function materializeCell(cellId) {
   const waveId = waveOf(cellId);
   const base = WAVE_BASE_PROFILES[waveId];
   if (!base) fail(`no wave profile registered for ${waveId}; this prototype supports ${Object.keys(WAVE_BASE_PROFILES).join(", ")}.`);
@@ -211,7 +211,7 @@ async function materializeCell(cellId) {
  * the same computation on the same inputs, and `materializeCell` has already
  * proved that computation reproduces the committed `-c2` checksums.
  */
-function bakeCell(context) {
+export function bakeCell(context) {
   const { cell, sources, planChecksumSha256, profile } = context;
 
   // Cell-local frame anchored at the cell's south-west corner.
@@ -494,11 +494,16 @@ async function commandSources(cellId) {
   console.log(serialize({ ok: true, root: outputRoot, assets: written.length, stableDigest: sha256HexSync(stableSerialize(written)) }));
 }
 
-const command = process.argv[2];
-const cellIndex = process.argv.indexOf("--cell");
-const cellId = cellIndex > 0 ? process.argv[cellIndex + 1] : DEFAULT_CELL_ID;
+// Dispatch only when this file is the entry point. Another module importing
+// `materializeCell` or `bakeCell` must not trigger a command as a side effect
+// of the import — which it did, until a decomposition tool tried it.
+if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
+  const command = process.argv[2];
+  const cellIndex = process.argv.indexOf("--cell");
+  const cellId = cellIndex > 0 ? process.argv[cellIndex + 1] : DEFAULT_CELL_ID;
 
-if (command === "bake") await commandBake(cellId);
-else if (command === "replay") await commandReplay(cellId);
-else if (command === "sources") await commandSources(cellId);
-else fail("usage: far-tier-bake-cli.mjs <bake|replay|sources> [--cell <cellId>]");
+  if (command === "bake") await commandBake(cellId);
+  else if (command === "replay") await commandReplay(cellId);
+  else if (command === "sources") await commandSources(cellId);
+  else fail("usage: far-tier-bake-cli.mjs <bake|replay|sources> [--cell <cellId>]");
+}
