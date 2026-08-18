@@ -79,8 +79,27 @@ describe("far-tier runtime records", () => {
     expect(disclosures).toContain("5 of 6 sampled hues");
     expect(disclosures).toContain("NO FLOOR");
     expect(disclosures).toContain("Nothing here is visual acceptance");
-    // And the honest gap is recorded rather than implied.
-    expect(record.whatIsNotDone.join(" ")).toContain("NOT MET");
+    // And the gaps that REMAIN are recorded rather than implied. End-to-end is
+    // now met, so this pins the honest remainder instead of the old caveat.
+    const notDone = record.whatIsNotDone.join(" ");
+    expect(notDone).toContain("NO DISTANCE GATING");
+    expect(notDone).toContain("FIXTURE-ONLY");
+    expect(notDone).toContain("NO GPU MEASUREMENT");
+  });
+
+  it("records the end-to-end run against the real prototype tile", () => {
+    const record = readChecked("runtime-record") as { endToEndValidation: { pickingUnchanged: { farTierOn: string; farTierOff: string; verdict: string }; fallbackArms: Record<string, string> } };
+    // The contract's central requirement, as a measured pair rather than a claim.
+    expect(record.endToEndValidation.pickingUnchanged.farTierOn).toBe("doitt:119910");
+    expect(record.endToEndValidation.pickingUnchanged.farTierOff).toBe("doitt:119910");
+    expect(record.endToEndValidation.pickingUnchanged.verdict).toContain("IDENTICAL");
+    expect(record.endToEndValidation.fallbackArms.checksumMismatch).toContain("never as absence");
+  });
+
+  it("records that far-tier massing is hidden by alpha, not by show", () => {
+    const record = readChecked("runtime-record") as { suppression: { mechanism: { attribute: string; defectFound: string } } };
+    expect(record.suppression.mechanism.attribute).toContain("never the `show` attribute");
+    expect(record.suppression.mechanism.defectFound).toContain("SHIPPED WRONG FOR ONE REVISION");
   });
 
   it("labels the double-residency figure as arithmetic, not a GPU reading", () => {

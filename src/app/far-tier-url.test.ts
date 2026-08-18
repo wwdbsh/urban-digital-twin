@@ -11,7 +11,7 @@ import {
 
 const BASE = "https://example.test/";
 /** A write that predates the far tier: it names no flag at all. */
-const LEGACY_WRITE = { override: null, releaseId: "manhattan-block835-exterior-20260806", streaming: true, profile: "exploration", canarySnapshotId: null, scheduler: true, detailRadiusMeters: null } as const;
+const LEGACY_WRITE = { override: null, releaseId: "manhattan-block835-exterior-20260806", streaming: true, profile: "exploration", canarySnapshotId: null, scheduler: true, detailRadiusMeters: null, farTier: FAR_TIER_DEFAULT_ON } as const;
 
 describe("the rollback switch", () => {
   it("defaults OFF, so no session gets the far tier without asking", () => {
@@ -26,24 +26,20 @@ describe("the rollback switch", () => {
 });
 
 describe("a default session's URL is unchanged", () => {
+  it("is a REQUIRED field, so no writer can silently drop it", () => {
+    // It was optional once. The production writer did not pass it, the flag
+    // defaulted, and `?farTier=on` died on the first camera move. This is a
+    // type-level guarantee, asserted here so the reason survives.
+    const write: Parameters<typeof appendExteriorProfileUrl>[1] = { ...LEGACY_WRITE };
+    expect(write.farTier).toBe(FAR_TIER_DEFAULT_ON);
+  });
+
   it("serializes no far-tier parameter at all", () => {
     // THE NO-GO CONDITION: the default session's serialized URL must be
     // character-identical to what it was before this task existed.
     const written = appendExteriorProfileUrl(BASE, LEGACY_WRITE);
     expect(written).not.toContain(FAR_TIER_PARAM);
     expect(new URL(written).searchParams.has(FAR_TIER_PARAM)).toBe(false);
-  });
-
-  it("writes nothing even when the flag is passed explicitly at its default", () => {
-    const written = appendExteriorProfileUrl(BASE, { ...LEGACY_WRITE, farTier: FAR_TIER_DEFAULT_ON });
-    expect(new URL(written).searchParams.has(FAR_TIER_PARAM)).toBe(false);
-  });
-
-  it("is byte-identical with and without the new optional field", () => {
-    // An omitted flag and an explicitly-default flag must produce the same URL,
-    // or every pre-existing caller would start emitting a different link.
-    expect(appendExteriorProfileUrl(BASE, { ...LEGACY_WRITE, farTier: FAR_TIER_DEFAULT_ON }))
-      .toBe(appendExteriorProfileUrl(BASE, LEGACY_WRITE));
   });
 
   it("parses an ordinary URL to the default", () => {

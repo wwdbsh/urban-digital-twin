@@ -59,6 +59,7 @@ import { TRAVEL_CONTEXT_BUDGETS, TRAVEL_CONTEXT_RELEASE_ID, TRAVEL_CONTEXT_TILE_
 import { AggregateRequestBudget, ComposedReleaseAdapter, type ComposedReleaseMetrics } from "../runtime/composed-release-runtime";
 import { EXTERIOR_PILOT_RELEASE_ID, createExteriorPilotFaultFetcher, loadExteriorPilotRelease, parseExteriorPilotFault, type CommercialStorefrontPlacement, type LoadedExteriorPilotRelease } from "../runtime/exterior-pilot-release";
 import { BLOCK835_PUBLIC_REALM_RELEASE_ID, createBlock835PublicRealmFaultFetcher, loadBlock835PublicRealmRelease, parseBlock835PublicRealmFault, publicRealmFeatureToFeature, type Block835PublicRealmFeature, type LoadedBlock835PublicRealmRelease } from "../runtime/block835-public-realm-release";
+import { farTierStatusLine, type FarTierStateSummary } from "../runtime/far-tier-serving";
 import { EXTERIOR_RUNTIME_BUDGETS, exteriorOutcomeCacheKeys, exteriorRefusalRawStopCode, exteriorRefusalStatement, exteriorRefusalStopCode, loadExteriorCellRuntime, type ExteriorCellOutcome, type ExteriorCellRuntime, type ExteriorHeadRequest, type ExteriorRefusedBuilding } from "../runtime/exterior-cell-runtime";
 import { EXTERIOR_T1_RELEASE_IDS } from "../release/exterior-t1-variants";
 import { PROBE_MIP_CHAIN_MULTIPLIER, PROBE_TILE_WIRE_BYTES, baseLevelByteLength, predictedTextureByteLength } from "../features/explorer/gpu-texture-probe";
@@ -935,12 +936,14 @@ export interface ExteriorStreamingUrlWrite {
   /**
    * Whether this session opted in to the T003 baked far tier.
    *
-   * OPTIONAL, and absent means the default. Every caller that predates the far
-   * tier therefore keeps writing exactly the URL it wrote before, which is the
-   * property `App.test.tsx` pins: a default session's serialized URL must be
-   * character-identical to today's.
+   * REQUIRED, and deliberately so. It was optional for one revision and the
+   * production writer — which names every other field explicitly — simply did
+   * not pass it, so the flag defaulted and `?farTier=on` was dropped by the
+   * first settled-camera `replaceState`. That is the exact defect the scheduler
+   * flag above had to be fixed for, reintroduced by an optional field. Required
+   * means a call site that forgets it fails typecheck instead of failing a user.
    */
-  farTier?: boolean;
+  farTier: boolean;
   override: ExteriorStreamingOverride;
   /** The release actually streaming, so an explicit link is never ambiguous. */
   releaseId: string;
@@ -998,7 +1001,7 @@ export function appendExteriorProfileUrl(baseUrl: string, state: ExteriorStreami
   // `delete` half is mandatory: an `if (x) set(...)` with no `else delete(...)`
   // leaks a stale parameter across the next camera-driven `replaceState`, which
   // is the exact defect the scheduler flag had to be fixed for.
-  if ((state.farTier ?? FAR_TIER_DEFAULT_ON) !== FAR_TIER_DEFAULT_ON) url.searchParams.set(FAR_TIER_PARAM, farTierOptOutValue());
+  if (state.farTier !== FAR_TIER_DEFAULT_ON) url.searchParams.set(FAR_TIER_PARAM, farTierOptOutValue());
   else url.searchParams.delete(FAR_TIER_PARAM);
   return url.toString();
 }
@@ -1530,6 +1533,16 @@ export function App() {
   // no scheduler control, only the URL flag, so the value cannot change within a
   // session and no setter exists to change it by accident.
   const exteriorSchedulerRequested = initialExteriorStreaming.scheduler;
+  const farTierRequested = initialExteriorStreaming.farTier;
+  /**
+   * Read by `navigationUrlForApp`, which is a stable callback that must not
+   * close over a render-scoped value. Without this the flag is dropped by the
+   * first settled-camera `replaceState` — measured, not theorised: the first
+   * run of this feature lost `farTier=on` on the opening camera move.
+   */
+  const farTierRequestedRef = useRef(farTierRequested);
+  farTierRequestedRef.current = farTierRequested;
+  const [farTierState, setFarTierState] = useState<FarTierStateSummary | null>(null);
   // T005 detail radius, read once at boot beside the flag it qualifies and for
   // the same reason: this build has no radius control, only the URL parameter.
   const exteriorDetailRadiusMeters = initialExteriorStreaming.detailRadiusMeters;
@@ -1705,7 +1718,7 @@ export function App() {
   const getOverlayUrlFields = useCallback(() => navigationOverlayFields(exteriorRequestedRef.current, selectedStorefrontIdRef.current), []);
   const navigationUrlForApp = useCallback((value: Parameters<typeof navigationUrl>[0], base: string) => appendExteriorProfileUrl(
     appendBlock835PublicRealmUrl(navigationUrl(value, base), publicRealmRequestedRef.current, selectedPublicRealmIdRef.current),
-    { override: exteriorStreamingOverrideRef.current, releaseId: exteriorCellReleaseIdRef.current, streaming: exteriorStreamingRequestedRef.current, profile: exteriorProfileRef.current, canarySnapshotId: exteriorCanarySnapshotIdRef.current, scheduler: exteriorSchedulerRequestedRef.current, detailRadiusMeters: exteriorDetailRadiusMetersRef.current },
+    { override: exteriorStreamingOverrideRef.current, releaseId: exteriorCellReleaseIdRef.current, streaming: exteriorStreamingRequestedRef.current, profile: exteriorProfileRef.current, canarySnapshotId: exteriorCanarySnapshotIdRef.current, scheduler: exteriorSchedulerRequestedRef.current, detailRadiusMeters: exteriorDetailRadiusMetersRef.current, farTier: farTierRequestedRef.current },
   ), []);
   const updateSelectedStorefront = useCallback((storefrontId: string | null) => {
     selectedStorefrontIdRef.current = storefrontId;
@@ -4113,6 +4126,8 @@ export function App() {
       >
         <CesiumViewport
           adapter={activeAdapter}
+          farTier={farTierRequested}
+          onFarTierState={setFarTierState}
           assetResolver={exteriorActive && exteriorOverlay ? exteriorOverlay.resolver : activeAdapter.assetResolver}
           focusRequest={focusRequest}
           focusFeatureId={focusFeatureId}
@@ -4175,6 +4190,21 @@ export function App() {
           {publicRealmActive ? <strong title={publicRealmStatusMessage}>Block 835 · public realm · 4 semantic classes · 4 intersections</strong> : exteriorActive ? <strong title={exteriorMessage}>Block 835 · 14 buildings · {exteriorOverlay?.diagnostics.acceptedStorefronts ?? 0} signs</strong> : <strong>Local runtime layer</strong>}
           {!exteriorRequested && <span>{civicMode ? `Real NYC civic-context release · ${TRAVEL_CONTEXT_RELEASE_ID} over base ${CITYWIDE_RELEASE_ID} · local snapshot-relative coverage` : citywideMode ? `Real NYC citywide release · ${CITYWIDE_RELEASE_ID} · local snapshot-relative coverage` : dataMode === "real-pilot" ? "Real NYC pilot · bounded Flatiron/NoMad/Union Square coverage" : "Synthetic fixture only · no real Manhattan coverage"}</span>}
           {exteriorRequested && !exteriorActive && <span className="runtime-note-overlay" role="status">{exteriorLoadState === "loading" ? "Block 835 overlay · loading local release…" : exteriorMessage || "Block 835 overlay unavailable; base release remains active."}</span>}
+          {/* THE FAR TIER'S ONE LINE. An aggregate over the whole tier, never a
+              notice per cell: 883 cells' worth of per-cell notices would say
+              something true of the tier as a whole 883 times, and would make one
+              staging gap look like a catastrophe. Per-cell detail is on the
+              viewport container as `data-far-tier-failures`, inspectable without
+              being shouted. The counts are deliberately separate columns —
+              checksum-mismatch is an integrity failure, not another spelling of
+              absent — and the line is present only when the session opted in. */}
+          {farTierRequested && farTierState && <span
+            className="runtime-note-overlay"
+            role="status"
+            data-far-tier-drawn={farTierState.drawn}
+            data-far-tier-absent={farTierState.absent}
+            data-far-tier-checksum-mismatch={farTierState.checksumMismatch}
+          >{farTierStatusLine(farTierState)} · visual-only; picking, identity and provenance are unchanged.</span>}
           {publicRealmActive && <span className="runtime-note-overlay" role="status">NYC OTI Planimetrics local snapshot · curb profile and crosswalk striping are estimated, source-constrained, and not survey/current-paint truth.</span>}
           {publicRealmRequested && !publicRealmActive && <span className="runtime-note-overlay" role="status">{publicRealmLoadState === "loading" ? "Block 835 public realm · loading local release…" : publicRealmStatusMessage || "Block 835 public realm unavailable; the existing base/exterior state was left unchanged."}</span>}
           {publicRealmRequested && <button type="button" onClick={disablePublicRealm}>Disable public realm</button>}

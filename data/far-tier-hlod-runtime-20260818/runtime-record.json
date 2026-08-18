@@ -128,13 +128,25 @@
    "checksum-mismatch"
   ],
   "mismatchIsNotAbsence": "CHECKSUM-MISMATCH IS NEVER COLLAPSED INTO ABSENCE. Absence is a staging gap and is ordinary. A mismatch is an integrity failure: bytes exist at the path and are not the bytes that were declared. Reporting the second as the first would turn the loudest signal this path can produce into routine background noise. Counted and reported in its own column; pinned by test.",
-  "perCellDetail": "Container dataset attribute only, mirroring the data-exterior-verified-resource-failures idiom: '<cellId>: <state>: <message>' joined by ' | ', and DELETED rather than emptied when nothing failed, so an ordinary session's DOM is unchanged."
+  "perCellDetail": "Container dataset attribute only, mirroring the data-exterior-verified-resource-failures idiom: '<cellId>: <state>: <message>' joined by ' | ', and DELETED rather than emptied when nothing failed, so an ordinary session's DOM is unchanged.",
+  "absenceVsShell": {
+   "finding": "A single-page-app fallback answers 200 with the application shell for a path that does not exist, and those 691 bytes reached the digest check and were reported as CHECKSUM-MISMATCH — a staging gap wearing the costume of an integrity failure.",
+   "measurement": "Observed directly: removing the staged tile produced '1 checksum-mismatch' before the fix and '1 absent' after it.",
+   "fix": "The fetcher refuses a `text/html` content-type for an artifact path and reports it as absence, so the five-state vocabulary keeps meaning what it says."
+  }
  },
  "suppression": {
   "rule": "BY MEMBER BUILDING ID, NEVER BY CELL. Driven from the tile's members[].included == true set.",
   "whyNotPerCell": "The V3 bake refused some buildings. Each refusal still owes its massing and its entry in the refusal panel. Hiding a whole cell because a tile arrived would silently erase those refusals and make the panel describe buildings the user can no longer see.",
   "writeContract": "Every visibility write routes through applyDenseSuppressionDelta and HONORS its skipped list. Applied state is never advanced over a skipped write — doing so makes the record a lie three ways: the id is never retried, the reverse delta later un-flips an instance that was never flipped, and the hidden-instance count drifts by one per skipped write for the life of the layer.",
-  "prototypeCaveat": "THE PROTOTYPE CELL HAS 48 MEMBERS AND ALL 48 ARE included:true. The refused-member path is therefore exercised ONLY by synthetic fixtures in this task, not by real data. A cell with refusals has not been observed end to end."
+  "prototypeCaveat": "THE PROTOTYPE CELL HAS 48 MEMBERS AND ALL 48 ARE included:true. The refused-member path is therefore exercised ONLY by synthetic fixtures in this task, not by real data. A cell with refusals has not been observed end to end.",
+  "mechanism": {
+   "attribute": "PER-INSTANCE COLOUR ALPHA, never the `show` attribute.",
+   "alphaFloor": "FAR_TIER_MASSING_PICK_ALPHA = 0.004",
+   "why": "`show` is compiled into the single shader program used by BOTH the colour and the pick pass, so a `show=false` instance is also unpickable. Exterior-wave takeover WANTS that, because an exterior model replaces the massing as the pick target. The far tier does NOT: its tile is one merged mesh with no per-building ids, so if the massing stopped picking there would be nothing left to answer a click and per-building identity at far range would simply vanish.",
+   "defectFound": "THIS SHIPPED WRONG FOR ONE REVISION AND RUNNING THE APP IS WHAT CAUGHT IT. Far-tier ids were first routed into the existing show-based ownership set, which would have destroyed exactly the property Stage 0 was run to protect. It is now a separate alpha-driven set with its own applied-state ref, and `applyDenseFarTierAlphaDelta` mirrors the suppression writer's `skipped` contract rather than reusing it.",
+   "writeContract": "Same obligation as the show-based writer: `skipped` ids did not write, and the applied set is never advanced over them."
+  }
  },
  "doubleResidency": {
   "ordering": "The massing is hidden STRICTLY AFTER the tile bytes are verified and the model reports ready. There is no window in which neither is drawn, so no flicker.",
@@ -157,8 +169,26 @@
   "The far-tier cache ceiling is additive to two other ceilings. A total memory figure must ADD 256 MiB, the B3-B5 bars, and this 64 MiB; merging any pair understates the total."
  ],
  "whatIsNotDone": [
-  "THE VIEWPORT DRAW AND SUPPRESS WIRING IS NOT COMPLETE. The pick bracket is wired into the live click path, the URL switch is threaded, and the serving, verification, anchoring, suppression and state contracts exist as tested modules — but CesiumViewport does not yet construct a Model from a verified tile, add it to the far-tier primitive list, or apply the suppression delta.",
-  "CONSEQUENTLY THERE IS NO END-TO-END RUN AND NO MANUAL INTERACTION PASS. The contract clause 'validated end-to-end with the T002 prototype cell' is NOT MET by this commit. The prototype tile is staged and verifies against the committed inventory, which is the checksum path proven; the draw path is not.",
-  "No far-tier tile has been drawn in the application, so the no-flicker ordering guarantee above is a design statement rather than an observation."
- ]
+  "NO DISTANCE GATING. The runtime loads and draws every cell the inventory declares; it does not yet select by the 1,200 m near edge. With one prototype cell staged this is not observable, but a mass bake (T004) would draw tiles at every range until selection is added. The 1,200 m boundary is recorded and reasoned about here; it is not yet enforced in code.",
+  "ONE CELL, NOT A RING. Every end-to-end result above is a single-cell observation. Nothing here measures many resident tiles, eviction, or the cache ceiling under load.",
+  "THE REFUSED-MEMBER PATH IS FIXTURE-ONLY. The prototype cell's 48 members are all included:true, so a cell where the bake refused a building — the case the member-id rule exists for — has never been observed end to end.",
+  "NO GPU MEASUREMENT. The double-residency figure remains arithmetic, and no frame-time or memory reading was taken in the application."
+ ],
+ "endToEndValidation": {
+  "statement": "RUN AGAINST THE REAL T002 PROTOTYPE TILE IN THE REAL APPLICATION, on the real citywide base (manhattan-citywide-20260804), not a fixture.",
+  "stagedTile": "manhattan-exterior-cell-w05-000747-17-38610-35822.far_0.glb (2f859925…) plus its atlas (c159e050…), verified against the committed inventory by scripts/far-tier-stage-cli.mjs before staging.",
+  "drawn": "Far tier · 1 drawn · 1 declared. The textured tile is visible in place of the tan massing for that cell.",
+  "pickingUnchanged": {
+   "method": "Camera straight down at 1,400 m over member building doitt:119910 (40.8059, -73.9519, inside the cell's tile rectangle), one synthetic click at canvas centre, far tier ON and then OFF.",
+   "farTierOn": "doitt:119910",
+   "farTierOff": "doitt:119910",
+   "verdict": "IDENTICAL. Picking, feature identity and the details panel are unchanged by the far tier, which is the contract's central requirement, and it is measured rather than argued."
+  },
+  "fallbackArms": {
+   "absent": "Tile removed → 'Far tier · 0 drawn · 0 declared · 1 absent', per-cell detail on the container, massing still drawing.",
+   "checksumMismatch": "One byte flipped → 'Far tier · 0 drawn · 0 declared · 1 checksum-mismatch (fail-closed, drawing massing)', reported in its own column and never as absence.",
+   "restored": "Tile restored → 'Far tier · 1 drawn · 1 declared', failures attribute deleted rather than emptied."
+  },
+  "rollbackRehearsal": "farTier=off renders no far-tier line at all and the same click returns the same building. The flag also SURVIVES the settled-camera rewrite, which it did not in the first revision — the production writer did not pass the then-optional field, so ?farTier=on was dropped on the opening camera move. The field is now REQUIRED so a call site that forgets it fails typecheck."
+ }
 }

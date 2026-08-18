@@ -670,6 +670,7 @@ describe("exterior streaming profiles and canary state", () => {
         profile: overlayState.profile,
         canarySnapshotId: overlayState.canarySnapshotId,
         scheduler: overlayState.scheduler ?? false,
+        farTier: FAR_TIER_DEFAULT_ON,
       },
     );
 
@@ -695,7 +696,7 @@ describe("exterior streaming profiles and canary state", () => {
   it("round-trips profile and canary state and clears all three when streaming is explicitly disabled", () => {
     const enabled = canonicalUrl({ requested: true, profile: "inspection", canarySnapshotId: "snapshot:v3" });
     expect(parseExteriorStreamingUrl(enabled)).toEqual({ override: "on", explicitReleaseId: "udt-fixture-exterior-cells", profile: "inspection", canarySnapshotId: "snapshot:v3", scheduler: false, detailRadiusMeters: null, farTier: FAR_TIER_DEFAULT_ON });
-    const disabled = new URL(appendExteriorProfileUrl(enabled, { override: "off", streaming: false, releaseId: "udt-fixture-exterior-cells", profile: "inspection", canarySnapshotId: "snapshot:v3", scheduler: false }));
+    const disabled = new URL(appendExteriorProfileUrl(enabled, { override: "off", streaming: false, releaseId: "udt-fixture-exterior-cells", profile: "inspection", canarySnapshotId: "snapshot:v3", scheduler: false , farTier: FAR_TIER_DEFAULT_ON }));
     expect(disabled.searchParams.has("exteriorCells")).toBe(false);
     expect(disabled.searchParams.has("exteriorProfile")).toBe(false);
     expect(disabled.searchParams.has("exteriorCanary")).toBe(false);
@@ -833,7 +834,7 @@ describe("exterior streaming profiles and canary state", () => {
     expect(pinned.scheduler).toBe(EXTERIOR_SCHEDULER_DEFAULT_ON);
     // The opt-out survives being written beside a disabled wave, which is the
     // durability half of the same rule.
-    const written = new URL(appendExteriorProfileUrl("/", { override: "off", streaming: false, releaseId: "udt-fixture-exterior-cells", profile: DEFAULT_EXTERIOR_RENDER_PROFILE, canarySnapshotId: null, scheduler: false }));
+    const written = new URL(appendExteriorProfileUrl("/", { override: "off", streaming: false, releaseId: "udt-fixture-exterior-cells", profile: DEFAULT_EXTERIOR_RENDER_PROFILE, canarySnapshotId: null, scheduler: false , farTier: FAR_TIER_DEFAULT_ON }));
     expect(written.searchParams.get("exteriorScheduler")).toBe("off");
     expect(written.searchParams.get("exteriorStreaming")).toBe("off");
     expect(parseExteriorStreamingUrl(written.toString()).scheduler).toBe(false);
@@ -861,16 +862,16 @@ describe("exterior streaming profiles and canary state", () => {
   });
 
   it("writes the radius back on every camera move, so a radiused session stays radiused", () => {
-    const written = new URL(appendExteriorProfileUrl("/", { override: null, streaming: true, releaseId: CANARY_EXTERIOR_RELEASE_ID, profile: DEFAULT_EXTERIOR_RENDER_PROFILE, canarySnapshotId: null, scheduler: true, detailRadiusMeters: 1_200 }));
+    const written = new URL(appendExteriorProfileUrl("/", { override: null, streaming: true, releaseId: CANARY_EXTERIOR_RELEASE_ID, profile: DEFAULT_EXTERIOR_RENDER_PROFILE, canarySnapshotId: null, scheduler: true, detailRadiusMeters: 1_200 , farTier: FAR_TIER_DEFAULT_ON }));
     expect(written.searchParams.has("exteriorScheduler")).toBe(false);
     expect(written.searchParams.get("exteriorDetailRadius")).toBe("1200");
     expect(parseExteriorStreamingUrl(written.toString()).detailRadiusMeters).toBe(1_200);
     // No scheduling, no radius: the parameter never outlives the flag it qualifies.
-    const unflagged = new URL(appendExteriorProfileUrl("/?exteriorDetailRadius=1200", { override: null, streaming: true, releaseId: CANARY_EXTERIOR_RELEASE_ID, profile: DEFAULT_EXTERIOR_RENDER_PROFILE, canarySnapshotId: null, scheduler: false, detailRadiusMeters: 1_200 }));
+    const unflagged = new URL(appendExteriorProfileUrl("/?exteriorDetailRadius=1200", { override: null, streaming: true, releaseId: CANARY_EXTERIOR_RELEASE_ID, profile: DEFAULT_EXTERIOR_RENDER_PROFILE, canarySnapshotId: null, scheduler: false, detailRadiusMeters: 1_200 , farTier: FAR_TIER_DEFAULT_ON }));
     expect(unflagged.searchParams.has("exteriorDetailRadius")).toBe(false);
     expect(unflagged.searchParams.get("exteriorScheduler")).toBe("off");
     // And a writer that says nothing about the radius writes none.
-    const silent = new URL(appendExteriorProfileUrl("/", { override: null, streaming: true, releaseId: CANARY_EXTERIOR_RELEASE_ID, profile: DEFAULT_EXTERIOR_RENDER_PROFILE, canarySnapshotId: null, scheduler: true }));
+    const silent = new URL(appendExteriorProfileUrl("/", { override: null, streaming: true, releaseId: CANARY_EXTERIOR_RELEASE_ID, profile: DEFAULT_EXTERIOR_RENDER_PROFILE, canarySnapshotId: null, scheduler: true , farTier: FAR_TIER_DEFAULT_ON }));
     expect(silent.searchParams.has("exteriorDetailRadius")).toBe(false);
   });
 

@@ -15,6 +15,7 @@ function readText(path: string): string {
 }
 
 import { createFarTierPickBracket, FAR_TIER_MASSING_PICK_ALPHA, type FarTierHideable } from "./far-tier-pick-bracket";
+import { applyDenseFarTierAlphaDelta, DENSE_MASSING_BASE_ALPHA } from "./CesiumViewport";
 
 function fakeScene(observe: (visible: boolean[]) => void, hideables: FarTierHideable[]) {
   return {
@@ -115,5 +116,42 @@ describe("no bypass", () => {
       if (/\bscene\.(drillPick|pick)\s*\(/u.test(readText(path))) offenders.push(path);
     }
     expect(offenders, "these files pick without the far-tier bracket and will swallow far-range clicks").toEqual([]);
+  });
+});
+
+describe("far-tier massing is hidden by ALPHA, never by show", () => {
+  it("writes colour and leaves show untouched, so the instance stays pickable", () => {
+    // The bug this pins actually shipped for one revision: far-tier ids were
+    // routed into the show-based ownership set, which takes the massing out of
+    // the pick pass — exactly what Stage 0 measured — leaving the merged tile,
+    // which has no per-building ids, as the only thing under the cursor.
+    const attributes = { color: new Uint8Array([215, 168, 93, 209]), show: new Uint8Array([1]) };
+    const primitive = { ready: true, getGeometryInstanceAttributes: () => attributes } as unknown as Parameters<typeof applyDenseFarTierAlphaDelta>[0]["buildings"] extends Map<string, infer P> ? P : never;
+    const index = { buildings: new Map([["doitt:1", primitive]]), points: new Map() };
+
+    const covered = applyDenseFarTierAlphaDelta(index, { added: [], removed: ["doitt:1"] });
+    expect(covered.writes).toBe(1);
+    expect(covered.skipped).toEqual([]);
+    // Alpha dropped to the measured cutoff, and `show` is untouched.
+    expect(attributes.color[3]).toBe(Math.round(FAR_TIER_MASSING_PICK_ALPHA * 255));
+    expect(attributes.show[0]).toBe(1);
+
+    const restored = applyDenseFarTierAlphaDelta(index, { added: ["doitt:1"], removed: [] });
+    expect(restored.writes).toBe(1);
+    expect(attributes.color[3]).toBe(Math.round(DENSE_MASSING_BASE_ALPHA * 255));
+  });
+
+  it("reports ids it could not write as skipped, never as written", () => {
+    const index = { buildings: new Map(), points: new Map() };
+    const result = applyDenseFarTierAlphaDelta(index, { added: [], removed: ["doitt:absent"] });
+    expect(result.writes).toBe(0);
+    expect(result.skipped).toEqual(["doitt:absent"]);
+  });
+
+  it("skips an instance whose primitive is not ready yet", () => {
+    const primitive = { ready: false, getGeometryInstanceAttributes: () => ({ color: new Uint8Array(4) }) };
+    const index = { buildings: new Map([["doitt:1", primitive]]), points: new Map() } as never;
+    const result = applyDenseFarTierAlphaDelta(index, { added: [], removed: ["doitt:1"] });
+    expect(result.skipped).toEqual(["doitt:1"]);
   });
 });

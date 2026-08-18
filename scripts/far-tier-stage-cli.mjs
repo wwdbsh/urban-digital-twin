@@ -71,6 +71,14 @@ async function main() {
     results.push({ cellId: entry.cellId, status: mode === "stage" ? "staged" : "verified" });
   }
 
+  // The inventory is staged alongside the tiles so the runtime can fetch it
+  // from the same served root. The committed copy under data/ stays the source
+  // of truth; this is a copy of it, not a second authority.
+  if (mode === "stage") {
+    await mkdir(SERVING_ROOT, { recursive: true });
+    await writeFile(join(SERVING_ROOT, "payload-inventory.json"), JSON.stringify(inventory, null, 1) + "\n");
+  }
+
   const refused = results.filter((result) => result.status === "REFUSED");
   console.log(JSON.stringify({ mode, servingRoot: SERVING_ROOT, results }, null, 1));
   if (refused.length > 0) {

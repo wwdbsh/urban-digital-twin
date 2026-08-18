@@ -44,7 +44,9 @@ import { publicRealmFeatureToFeature, type Block835PublicRealmFeature, type Load
 import type { ExteriorCellOutcome, ExteriorCellRenderPlan } from "../../runtime/exterior-cell-runtime";
 import type { ExteriorRenderProfile } from "../../runtime/exterior-render-profiles";
 import { verifiedExteriorModelResource, type VerifiedExteriorResource } from "./exterior-verified-resource";
-import { createFarTierPickBracket, type FarTierHideable } from "./far-tier-pick-bracket";
+import { createFarTierPickBracket, FAR_TIER_MASSING_PICK_ALPHA, type FarTierHideable } from "./far-tier-pick-bracket";
+import { loadFarTierLayer } from "./far-tier-layer";
+import { farTierFailureDetail, summarizeFarTierState, type FarTierInventory, type FarTierStateSummary } from "../../runtime/far-tier-serving";
 import {
   boundFootprintToCamera,
   viewportFootprintFromGroundPoints,
@@ -55,6 +57,10 @@ import {
 
 interface CesiumViewportProps {
   adapter: RuntimeCityAdapter;
+  /** T003 opt-in: draw baked far-tier tiles over the massing they replace. */
+  farTier?: boolean;
+  /** One aggregate line for the far tier, never one notice per cell. */
+  onFarTierState?: (summary: FarTierStateSummary) => void;
   focusRequest: number;
   focusFeatureId: string | null;
   focusOverlayOpen?: boolean;
@@ -1330,6 +1336,10 @@ function isDenseBuildingFeature(feature: Feature): feature is DenseBuildingFeatu
   return feature.kind === "building" && feature.geometry.type === "Polygon";
 }
 
+/** The massing's shipped colour, named so the far-tier writer cannot drift from it. */
+export const DENSE_MASSING_CSS_COLOR = "#d7a85d" as const;
+export const DENSE_MASSING_BASE_ALPHA = 0.82 as const;
+
 function denseBuildingInstance(feature: DenseBuildingFeature, show: boolean): GeometryInstance {
   return new GeometryInstance({
     id: feature.id,
@@ -1343,7 +1353,7 @@ function denseBuildingInstance(feature: DenseBuildingFeature, show: boolean): Ge
       vertexFormat: VertexFormat.POSITION_ONLY,
     }),
     attributes: {
-      color: ColorGeometryInstanceAttribute.fromColor(Color.fromCssColorString("#d7a85d").withAlpha(0.82)),
+      color: ColorGeometryInstanceAttribute.fromColor(Color.fromCssColorString(DENSE_MASSING_CSS_COLOR).withAlpha(DENSE_MASSING_BASE_ALPHA)),
       // The per-instance `show` is what makes exterior-wave takeover an O(1)
       // attribute write instead of a whole-island rebuild. Cesium compiles it
       // into the single shader program used by BOTH the color and the pick
@@ -1387,6 +1397,51 @@ export interface DenseSuppressionWriteResult {
    * skipped write, permanently, for the life of the layer.
    */
   skipped: readonly string[];
+}
+
+export interface DenseFarTierAlphaWriteResult {
+  writes: number;
+  /** Same meaning, and same obligation, as `DenseSuppressionWriteResult.skipped`. */
+  skipped: readonly string[];
+}
+
+/**
+ * Hide massing UNDER a far-tier tile by driving its colour alpha, never `show`.
+ *
+ * THIS IS THE WHOLE REASON THE FAR TIER DOES NOT REUSE `applyDenseSuppressionDelta`.
+ * That function writes the `show` attribute, and Cesium compiles `show` into the
+ * single shader program used by BOTH the colour and the pick pass, so a
+ * `show=false` instance is also unpickable. Exterior-wave takeover WANTS that:
+ * the exterior model replaces the massing as the pick target. The far tier does
+ * NOT — its tile is one merged mesh with no per-building ids, so if the massing
+ * stopped picking there would be nothing left to answer a click with, and
+ * per-building identity at far range would simply disappear.
+ *
+ * Driving the colour instead keeps the instance in the pick pass. The alpha
+ * floor is `FAR_TIER_MASSING_PICK_ALPHA`, which is not zero for a measured
+ * reason recorded on that constant.
+ *
+ * The result contract mirrors the suppression writer's exactly: `skipped` ids
+ * did not write, and the caller must not advance its applied set over them.
+ */
+export function applyDenseFarTierAlphaDelta(index: DenseInstanceIndex, delta: DenseRenderPlanDelta): DenseFarTierAlphaWriteResult {
+  let writes = 0;
+  const skipped: string[] = [];
+  const write = (id: string, alpha: number): void => {
+    const primitive = index.buildings.get(id);
+    // Points carry no per-instance colour and are never far-tier members; a
+    // point id here is a caller error, so it is skipped rather than guessed at.
+    if (!primitive) { skipped.push(id); return; }
+    if (primitive.ready !== true) { skipped.push(id); return; }
+    const attributes = primitive.getGeometryInstanceAttributes(id) as { color?: Uint8Array } | undefined;
+    if (!attributes?.color) { skipped.push(id); return; }
+    attributes.color = ColorGeometryInstanceAttribute.toValue(Color.fromCssColorString(DENSE_MASSING_CSS_COLOR).withAlpha(alpha), attributes.color);
+    writes += 1;
+  };
+  // `added` means "no longer covered by a tile", so the massing comes back.
+  for (const id of delta.added) write(id, DENSE_MASSING_BASE_ALPHA);
+  for (const id of delta.removed) write(id, FAR_TIER_MASSING_PICK_ALPHA);
+  return { writes, skipped };
 }
 
 /**
@@ -1822,6 +1877,8 @@ export function medianFrameInterval(values: readonly number[]): number | null {
 
 export function CesiumViewport({
   adapter,
+  farTier = false,
+  onFarTierState,
   focusRequest,
   focusFeatureId,
   focusOverlayOpen = false,
@@ -1924,6 +1981,20 @@ export function CesiumViewport({
    * was installed would stop covering everything added afterwards.
    */
   const farTierPrimitivesRef = useRef<FarTierHideable[]>([]);
+
+  /**
+   * Member building ids whose far-tier tile has actually DRAWN.
+   *
+   * Populated strictly AFTER a tile's bytes verify and its model builds, which
+   * is the ordering that makes the takeover flicker-free: the massing is still
+   * drawing right up to the frame the tile becomes available, and there is no
+   * window in which neither is on screen.
+   */
+  const farTierSuppressedIdsRef = useRef<Set<string>>(new Set());
+  /** Ids whose massing is currently held at the far-tier pick alpha. */
+  const denseFarTierAlphaAppliedRef = useRef<ReadonlySet<string>>(new Set());
+  const onFarTierStateRef = useRef(onFarTierState);
+  onFarTierStateRef.current = onFarTierState;
   const onExteriorUnanchoredRef = useRef(onExteriorUnanchored);
   onExteriorUnanchoredRef.current = onExteriorUnanchored;
   const onExteriorCellsRetiredRef = useRef(onExteriorCellsRetired);
@@ -2136,7 +2207,22 @@ export function CesiumViewport({
       // or being evicted be a `show` write instead of a whole-island rebuild.
       const denseRenderBasis = renderedGroups.base;
       const denseSuppressedIds = new Set<string>();
-      for (const feature of denseRenderBasis) if (renderOwner(feature) !== "procedural-extrusion") denseSuppressedIds.add(feature.id);
+      // The far tier contributes into the SAME ownership set rather than
+      // carrying a parallel write path, so its suppression inherits the
+      // `skipped` contract of `applyDenseSuppressionDelta` for free: an id whose
+      // write does not land is retried instead of being recorded as flipped.
+      // Membership is by MEMBER BUILDING ID, so a building the bake refused is
+      // simply absent from this set and keeps its massing and its refusal entry.
+      const farTierSuppressed = farTierSuppressedIdsRef.current;
+      const farTierCovered = new Set<string>();
+      for (const feature of denseRenderBasis) {
+        if (renderOwner(feature) !== "procedural-extrusion") denseSuppressedIds.add(feature.id);
+        // The far tier is deliberately NOT added to `denseSuppressedIds`. That
+        // set is written with `show`, which would take the massing out of the
+        // pick pass and destroy per-building identity under the tile. It gets
+        // its own alpha-driven set instead.
+        else if (farTierSuppressed.has(feature.id)) farTierCovered.add(feature.id);
+      }
       const telemetry = denseRenderTelemetryRef.current;
       telemetry.selectionMs = performance.now() - selectionStartedAt;
       const keyStartedAt = performance.now();
@@ -2181,6 +2267,21 @@ export function CesiumViewport({
         telemetry.denseSuppressedInstanceCount = denseHiddenCountsRef.current.buildings + denseHiddenCountsRef.current.points;
         return true;
       };
+      /**
+       * The far tier's own visibility write. Same delta shape and same
+       * `skipped` obligation as ownership, different attribute.
+       */
+      const applyFarTierAlpha = (nextCovered: ReadonlySet<string>): void => {
+        const previousCovered = denseFarTierAlphaAppliedRef.current;
+        const alphaDelta = denseRenderPlanDelta(previousCovered, nextCovered);
+        if (denseRenderPlanDeltaSize(alphaDelta) === 0) return;
+        const applied = applyDenseFarTierAlphaDelta(denseActiveIndexRef.current, alphaDelta);
+        // Only what actually wrote advances the record, so a skipped id is
+        // retried next pass instead of being un-flipped by a reverse delta
+        // that never had a matching forward write.
+        denseFarTierAlphaAppliedRef.current = denseAppliedSuppressionSet(previousCovered, nextCovered, applied.skipped);
+      };
+      applyFarTierAlpha(farTierCovered);
       denseDesiredSuppressedIdsRef.current = denseSuppressedIds;
       if (denseRendering && rootDenseCollection && shouldReplaceDenseRenderPlan(denseRenderPlanFeaturesRef.current, denseRenderBasis)) {
         const pending = pendingDenseLayerRef.current;
@@ -2806,6 +2907,81 @@ export function CesiumViewport({
      */
     return emitCameraSettledAfterNextFrame(viewer.scene, () => cameraSettledEmitterRef.current?.());
   }, [cameraPoseRequest]);
+
+
+  /**
+   * THE FAR TIER (T003). Off unless the session asked for it.
+   *
+   * Fails closed per cell and stays quiet about it in aggregate: absence,
+   * checksum mismatch and unanchorable cells each keep their massing and
+   * contribute a count, never a per-cell notice. The per-cell detail goes on the
+   * container as a dataset attribute, deleted rather than emptied when nothing
+   * failed, so an ordinary session's DOM is unchanged.
+   */
+  useEffect(() => {
+    const viewer = viewerRef.current;
+    if (!farTier || !viewer) return;
+    const controller = new AbortController();
+    let disposed = false;
+    const added: FarTierHideable[] = [];
+
+    const fetchBytes = async (relativeRef: string, signal?: AbortSignal): Promise<Uint8Array> => {
+      const response = await fetch(`/${relativeRef}`, { signal });
+      if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+      // A single-page-app fallback answers 200 with the application shell for a
+      // path that does not exist. Those bytes are not a corrupted tile — they
+      // are the absence of a tile wearing a 200 — and letting them reach the
+      // digest check would report a staging gap as an INTEGRITY FAILURE, which
+      // is precisely the confusion the five-state vocabulary exists to prevent.
+      // Measured, not hypothesised: the dev server did exactly this.
+      const contentType = response.headers.get("content-type") ?? "";
+      if (contentType.includes("text/html")) throw new Error(`served the application shell rather than an artifact (content-type ${contentType}); the tile is not staged`);
+      return new Uint8Array(await response.arrayBuffer());
+    };
+
+    void (async () => {
+      let inventory: FarTierInventory;
+      try {
+        const response = await fetch("/far-tier/payload-inventory.json", { signal: controller.signal });
+        if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+        inventory = await response.json() as FarTierInventory;
+      } catch {
+        // Nothing is staged. That is a declared-but-absent tier, not an error
+        // state, and the massing keeps drawing exactly as it does today.
+        if (!disposed) onFarTierStateRef.current?.({ declared: 0, drawn: 0, notDeclared: 0, absent: 0, checksumMismatch: 0 });
+        return;
+      }
+      const result = await loadFarTierLayer(viewer.scene, inventory.entries, fetchBytes, undefined, controller.signal);
+      if (disposed) return;
+
+      for (const tile of result.drawn) {
+        added.push(tile.primitive);
+        for (const buildingId of tile.suppressibleBuildingIds) farTierSuppressedIdsRef.current.add(buildingId);
+      }
+      farTierPrimitivesRef.current = added;
+      // The suppression set is consumed by the dense render plan, which is what
+      // owns the `show` writes; nudging the scene is enough to make it run.
+      viewer.scene.requestRender();
+
+      const container = containerRef.current;
+      const detail = farTierFailureDetail(result.outcomes);
+      if (container) {
+        if (detail === null) delete container.dataset.farTierFailures;
+        else container.dataset.farTierFailures = detail;
+      }
+      onFarTierStateRef.current?.(summarizeFarTierState(result.outcomes));
+    })();
+
+    return () => {
+      disposed = true;
+      controller.abort();
+      for (const primitive of added) viewer.scene.primitives.remove(primitive);
+      farTierPrimitivesRef.current = [];
+      farTierSuppressedIdsRef.current = new Set();
+      const container = containerRef.current;
+      if (container) delete container.dataset.farTierFailures;
+    };
+  }, [farTier]);
 
   return <div className="viewport" ref={containerRef} aria-label="3D city viewport" tabIndex={0} onKeyDown={onViewportKeyDown} />;
 }
