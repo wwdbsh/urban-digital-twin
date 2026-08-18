@@ -31,7 +31,17 @@ const RECORDS = ["stage0-hierarchy", "bake-pre-registration", "prototype-provena
  * the new records while still being described as covering them. Enumerating the
  * directories removes the chance to forget again.
  */
-const EVIDENCE_DIRECTORIES = ["far-tier-hlod-20260818", "far-tier-hlod-v2-20260818"];
+/**
+ * DISCOVERED, not listed. The T010 review caught a hand-kept RECORDS list that
+ * silently stopped covering a new directory; the fix at the time only pushed
+ * the hand-kept list up one level, to the DIRECTORIES, and T011 promptly added
+ * a third directory that the scan again did not cover. So the directories are
+ * discovered too, by prefix, and there is no list left to forget.
+ */
+const EVIDENCE_DIRECTORIES = readdirSync(join(repositoryRoot, "data"), { withFileTypes: true })
+  .filter((entry) => entry.isDirectory() && entry.name.startsWith("far-tier-hlod-"))
+  .map((entry) => entry.name)
+  .sort();
 const ALL_RECORDS = EVIDENCE_DIRECTORIES.flatMap((directory) => {
   const root = join(repositoryRoot, "data", directory);
   return readdirSync(root)
@@ -41,10 +51,16 @@ const ALL_RECORDS = EVIDENCE_DIRECTORIES.flatMap((directory) => {
 });
 
 describe("every far-tier record matches its own sidecar", () => {
-  it("discovers records from both evidence directories, v1 and v2", () => {
+  it("discovers every far-tier evidence directory, including ones added later", () => {
     expect(ALL_RECORDS.length).toBeGreaterThan(RECORDS.length);
+    // At least the three that exist today, and any future sibling automatically.
+    expect(EVIDENCE_DIRECTORIES.length).toBeGreaterThanOrEqual(3);
     for (const directory of EVIDENCE_DIRECTORIES) {
       expect(ALL_RECORDS.some((record) => record.directory === directory), `no record found under ${directory}`).toBe(true);
+    }
+    // The v1 list is retained only as a floor; it must never be the source.
+    for (const name of RECORDS) {
+      expect(ALL_RECORDS.some((record) => record.name === name), `${name} missing from discovery`).toBe(true);
     }
   });
 

@@ -1,0 +1,87 @@
+{
+ "schemaVersion": "1.0",
+ "recordId": "far-tier-hlod-v3-20260818:stage-0a-instrument-reproduction-failure",
+ "task": "T011",
+ "artifact": "far-tier-stage-0a-halt-evidence",
+ "capturedAt": null,
+ "capturedAtStatement": "NULL BY CONSTRUCTION, matching the T002 and T010 precedent. The readings below are a capture; a wall-clock stamp would be the only field a re-run could not reproduce.",
+ "status": "HALTED BEFORE THE STAGE 0a GATE COULD BE EVALUATED.",
+
+ "headline": "THE T002 BAKED LUMINANCE READINGS DO NOT REPRODUCE. Rendering the byte-identical v1 tile under the T002 harness gives a union mean luminance ratio of 1.002-1.008 at 1200 m / azimuth 235, against the committed 1.072801. The Stage 0a gate is denominated in T002's units, so it cannot be evaluated; and because the committed MISS is the premise of this entire task, the premise is in question.",
+
+ "whatWasBeingAttempted": {
+  "gate": "Stage 0a attribution gate. Render the source massing with all V3Prism rooftop objects deleted and measure how much of the far tier's shadow-pose excess rooftop mass can explain. NO-GO #1 if it accounts for less than 5.32.",
+  "unitsOfTheGate": "Sum of Rec.709 linear luminance over the T002 union mask. The frozen plan states the 1200/235 excess as 16.99 total, of which the required reduction to reach the 1.05 bar is 5.32.",
+  "whyItCannotBeEvaluated": "Those figures follow from T002's committed baked mean of 0.042303. Under the same harness this session measures 0.039517-0.039748, which puts the total excess at 0.50 rather than 16.99 — a factor of about 34. A gate threshold cannot be applied to a scale that does not reproduce."
+ },
+
+ "reproductionAttempt": {
+  "subject": "The committed v1 prototype tile, verified byte-identical before rendering: GLB 2f8599256ac45ee509dc7d7ce0da6a56964bac8e3ca66b77e795c1435ff7930b, atlas c159e0508aeb7522620b799b83041461aecf34727f69209bd7efbf992f5c067a.",
+  "harness": "The T002 instrument as its own record describes it: BLENDER_EEVEE, 1440x900, 60 degree vertical field, film_transparent, Standard view transform, world background strength 0, one sun at elevation 50 / azimuth 35, energy 3.0, angular diameter 0, scene cleared by object deletion.",
+  "controlThatPASSES": {
+   "claim": "The SOURCE subject reproduces T002 exactly, which rules out camera, lighting, viewport, placement and mask as the cause.",
+   "sourceMeanLuminance_1200_az235": { "measured": 0.03943247, "t002Committed": 0.039432 },
+   "unionPixels_1200_az235": { "measured": 5918, "t002Committed": 5918 }
+  },
+  "controlThatFAILS": {
+   "bakedMeanLuminance_1200_az235": { "measured": 0.03951735, "t002Committed": 0.042303, "relativeGap": -0.0659 },
+   "unionMeanLuminanceRatio_1200_az235": { "measured": 1.002152, "t002Committed": 1.072801 },
+   "unionMeanLuminanceRatio_1200_az55": { "measured": 1.023193, "t002Committed": 1.013019 }
+  },
+  "settingsSwept": [
+   { "setting": "eevee.use_fast_gi", "values": "on / off", "effect": "NONE. Identical to eight decimal places." },
+   { "setting": "eevee.use_raytracing", "values": "on / off", "effect": "Moves the ratio from 1.002152 to 1.005766. Far short of 1.072801." },
+   { "setting": "texture interpolation", "values": "Linear / Closest", "effect": "NONE. 1.007998 against 1.008001." }
+  ],
+  "materialBindingVerified": "The imported tile uses one material with metallic 0, roughness 1, base colour linked to the atlas image, colorspace sRGB, 256x256, loaded from the verified file. The atlas is 14.67% black unused area, which minification can average in, but no interpolation or ray setting moved the result.",
+  "conclusion": "The gap is specific to the BAKED subject and is not explained by any render setting swept here."
+ },
+
+ "corroboration": {
+  "t010MeasuredTheSameThing": "T010's decomposition, in a different worktree and a different session, measured the same tile's full-variant mean at 1200/235 as 0.03957273. That is within 0.14% of this session's 0.03951735 and 6.6% from T002's 0.042303.",
+  "t010Misattributed": "T010 disclosed this as a cross-instrument MASK/scale mismatch and reasoned that its own means were taken over the full variant's alpha mask rather than T002's union mask. That explanation is now excluded: this session used T002's union mask and reproduced its pixel count exactly (5918) and still measured 0.0395.",
+  "reading": "Two independent later sessions agree with each other and disagree with T002. The most probable location of the defect is therefore the T002 capture, not this one — but that is an inference, and it is stated as one."
+ },
+
+ "whatThisPutsInQuestion": [
+  "T002's tone verdict. At the measured ratio of 1.002-1.008 the v1 tile PASSES the 1.05 bar at 1200/235, where T002 recorded a MISS at 1.072801. The MISS that has driven two subsequent tasks may not exist.",
+  "T010's shading derivation. Its admissible band, its required shadow reduction of 0.000899, its 61%/65% shortfall and its predicted MISS all descend from the 1.072801 figure.",
+  "This task's premise. T011 exists to fix a shadow-pose miss with rooftop mass. If there is no miss, the task's motivation changes even though its packing and budget work may still be worth doing.",
+  "The prediction-agreement machinery of both later tasks, which is calibrated in the same units."
+ ],
+
+ "whatIsNOTInQuestion": [
+  "The v1 tile's bytes. They are byte-identical to the committed provenance and replay cleanly.",
+  "The source assets. All 96 regenerate to their committed -c2 checksums, and the source subject reproduces T002's luminance exactly.",
+  "T010's Stage A packing census, which is pure arithmetic over committed geometry and touches no rendered measurement.",
+  "The emission rule committed earlier in this task, which is a declaration and depends on no measurement."
+ ],
+
+ "ablationDataCollectedAnyway": {
+  "why": "The renders were taken before the reproduction failure was isolated. They are reported in THIS session's own units, where they are internally consistent, and must not be compared against the T002-denominated 5.32 gate.",
+  "units": "Sum of Rec.709 linear luminance over the union of the source and baked silhouettes, this session's measurement.",
+  "rows": [
+   { "distanceMeters": 400, "azimuthDegrees": 55, "unionPixels": 63724, "sourceLuminanceSum": 13749.5634, "ablatedLuminanceSum": 13817.023, "bakedLuminanceSum": 14306.1209, "totalExcess": 556.5575, "ablationEffect": 67.4597 },
+   { "distanceMeters": 400, "azimuthDegrees": 235, "unionPixels": 60356, "sourceLuminanceSum": 2273.3075, "ablatedLuminanceSum": 2333.7071, "bakedLuminanceSum": 2318.6418, "totalExcess": 45.3343, "ablationEffect": 60.3996 },
+   { "distanceMeters": 1200, "azimuthDegrees": 55, "unionPixels": 5964, "sourceLuminanceSum": 1252.4484, "ablatedLuminanceSum": 1258.5361, "bakedLuminanceSum": 1281.4965, "totalExcess": 29.0481, "ablationEffect": 6.0877 },
+   { "distanceMeters": 1200, "azimuthDegrees": 235, "unionPixels": 5918, "sourceLuminanceSum": 233.3614, "ablatedLuminanceSum": 242.7207, "bakedLuminanceSum": 233.8637, "totalExcess": 0.5023, "ablationEffect": 9.3593 },
+   { "distanceMeters": 4000, "azimuthDegrees": 55, "unionPixels": 524, "sourceLuminanceSum": 105.4035, "ablatedLuminanceSum": 105.7062, "bakedLuminanceSum": 107.5194, "totalExcess": 2.1159, "ablationEffect": 0.3026 },
+   { "distanceMeters": 4000, "azimuthDegrees": 235, "unionPixels": 517, "sourceLuminanceSum": 21.812, "ablatedLuminanceSum": 22.4415, "bakedLuminanceSum": 20.563, "totalExcess": -1.249, "ablationEffect": 0.6295 }
+  ],
+  "readingInThisSessionsUnits": "Rooftop mass is a LARGE effect on the source at the shadow poses. Deleting it raises the source by 9.36 at 1200/235 and 60.40 at 400/235, while the entire baked-minus-source excess at those poses is 0.50 and 45.33. At 1200/235 the ablated source ends up BRIGHTER than the baked tile, i.e. removing rooftop mass overshoots the prism rather than merely reaching it.",
+  "whatThatWouldHaveMeant": "Had the scale reproduced, this would have passed an attribution gate comfortably: rooftop mass explains more than the whole remaining excess. That is exactly why the scale failure matters — the route looks open, and it cannot be confirmed against a threshold that does not reproduce.",
+  "ablationSubjectDisclosure": "The ablated subject is the shipped emission path with plan.prisms emptied and nothing else changed. It carries the UN-ablated plan's planHashSha256 in its metadata, because that hash is computed over the canonical plan and this one was mutated. It is instrumentation and must never be served, on the T010 black-conductor precedent."
+ },
+
+ "recommendedNextAction": {
+  "primary": "RE-BASELINE THE INSTRUMENT BEFORE ANY FURTHER FAR-TIER APPEARANCE WORK. Re-capture the v1 tile and the source under the T002 instrument, in one session, and either reproduce 1.072801 or supersede it with a statement. Until that is settled every luminance-denominated bar in this goal is unsafe to build on.",
+  "doNotDo": "Do not rescale the 5.32 gate into this session's units and proceed. The gate was pre-registered against a specific measurement; silently re-denominating it would be exactly the fitting the anti-fitting protocol forbids, and it would bury the more important question of which capture is right.",
+  "stillWorthDoing": "Stage 0c packing and Stage 0d budget are arithmetic over committed geometry and do not depend on any luminance reading. They could proceed independently if the user wants forward motion while the instrument question is settled."
+ },
+
+ "notClaimedHere": [
+  "This record does not claim T002 was wrong. It claims T002 does not reproduce here, and that two later sessions agree with each other against it.",
+  "No cause has been identified. Three render settings were swept and none explains the gap.",
+  "No rooftop geometry has been emitted into any far-tier tile, and no v3 tile exists."
+ ]
+}
