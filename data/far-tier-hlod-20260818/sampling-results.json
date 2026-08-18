@@ -1,0 +1,110 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "far-tier-hlod-20260818:sampling-results",
+  "task": "T002",
+  "artifact": "blender-appearance-sampling-results",
+  "capturedAt": null,
+  "capturedAtStatement": "NULL BY CONSTRUCTION, matching the T009 precedent. The readings below are the capture; a wall-clock stamp would be the only field in this record that a re-run could not reproduce.",
+  "preRegistration": {
+    "record": "bake-pre-registration.json",
+    "sha256": "f89a072deac6a1ab7962b222a5ae47ffaacd4c48c57350ea9c1b85a3d31ca4d6",
+    "note": "The bars below were fixed and committed BEFORE any still was captured. They are reported against verbatim, including where they are missed."
+  },
+
+  "headline": "THE TONE BAR IS MISSED AT ONE OF THE FOUR BARRED POSES, AND THE PROTOTYPE STOPS THERE RATHER THAN BEING TUNED UNTIL IT PASSES. The hue bar passes at all six poses, the silhouette agreement is 0.971-0.980, and the miss is confined to the shadow-side azimuth where the ratio instrument is ill-conditioned by construction.",
+
+  "capture": {
+    "posesCaptured": 6,
+    "stills": 12,
+    "errors": 0,
+    "blender": "5.2.0 LTS",
+    "renderer": "BLENDER_EEVEE, 1440x900, 60 degree vertical field of view, film_transparent, Standard view transform, world background strength 0, one fixed sun at elevation 50 degrees / azimuth 35 degrees, energy 3.0, angular diameter 0",
+    "viewportRationale": "1440x900 at a 60 degree vertical field is the REFERENCE VIEWPORT the budget arithmetic was stated against. Rendering at any other angular scale would measure a tier that was never budgeted.",
+    "outputFormat": "OpenEXR RGBA float32, so luminance is read in LINEAR light with no view transform applied.",
+    "cameraDiscipline": "One camera transform per pose, computed once from the SOURCE subject's bounds and REUSED VERBATIM for the baked subject. Any difference measured is the asset and never the framing.",
+    "sceneClearing": "Object deletion plus datablock purge only. bpy.ops.wm.read_factory_settings was NEVER called; the BlenderMCP channel survived every pose."
+  },
+
+  "sourceDiscipline": {
+    "problem": "The -c2 payload bytes are gitignored and absent from this machine, so there were no shipped GLBs on disk to render.",
+    "resolution": "All 96 of the cell's assets were REGENERATED from the pinned base snapshot through the shipped emitter and every one reproduced its committed -c2 payload-inventory.json checksum byte for byte before anything was rendered. The 48 lod_0 assets were then written out and imported unmodified.",
+    "verified": 96,
+    "byteIdentical": 96,
+    "verdict": "PASS",
+    "placement": "Rigid translation into the cell-local frame only. No geometry and no material was re-authored, so what Blender rendered is the shipped bytes.",
+    "frameCheck": "Source and baked bounding boxes agree exactly in X and Y (-16.15..250.48, -15.21..183.94). They differ in Z: source 40.17 m against baked 36.58 m. That 3.59 m is the prism's missing rooftop groups and parapets, which is an expected and declared property of this tier rather than a placement error."
+  },
+
+  "results": [
+    { "distanceMeters": 400, "azimuthDegrees": 55, "barred": false, "unionPixels": 63726, "intersectionPixels": 62057, "sourceOnlyPixels": 16, "bakedOnlyPixels": 1653, "intersectionOverUnion": 0.97381, "unionMeanLuminanceRatio": 1.027322, "intersectionMeanLuminanceRatio": 1.008802, "perChannelRatios": [1.007827, 1.008675, 1.013786], "channelSpread": 0.005959, "sourceMeanLuminance": 0.215761, "bakedMeanLuminance": 0.221656, "absoluteLuminanceDelta": 0.005895 },
+    { "distanceMeters": 400, "azimuthDegrees": 235, "barred": false, "unionPixels": 60356, "intersectionPixels": 59144, "sourceOnlyPixels": 9, "bakedOnlyPixels": 1203, "intersectionOverUnion": 0.979919, "unionMeanLuminanceRatio": 1.09607, "intersectionMeanLuminanceRatio": 1.057844, "perChannelRatios": [1.049877, 1.060101, 1.060062], "channelSpread": 0.010223, "sourceMeanLuminance": 0.037665, "bakedMeanLuminance": 0.041283, "absoluteLuminanceDelta": 0.003618 },
+    { "distanceMeters": 1200, "azimuthDegrees": 55, "barred": true, "unionPixels": 5968, "intersectionPixels": 5819, "sourceOnlyPixels": 1, "bakedOnlyPixels": 148, "intersectionOverUnion": 0.975034, "unionMeanLuminanceRatio": 1.013019, "intersectionMeanLuminanceRatio": 0.999568, "perChannelRatios": [0.995184, 1.000359, 1.0073], "channelSpread": 0.012116, "sourceMeanLuminance": 0.20988, "bakedMeanLuminance": 0.212612, "absoluteLuminanceDelta": 0.002732 },
+    { "distanceMeters": 1200, "azimuthDegrees": 235, "barred": true, "unionPixels": 5918, "intersectionPixels": 5812, "sourceOnlyPixels": 4, "bakedOnlyPixels": 102, "intersectionOverUnion": 0.982089, "unionMeanLuminanceRatio": 1.072801, "intersectionMeanLuminanceRatio": 1.040805, "perChannelRatios": [1.032639, 1.043033, 1.043918], "channelSpread": 0.011279, "sourceMeanLuminance": 0.039432, "bakedMeanLuminance": 0.042303, "absoluteLuminanceDelta": 0.002871 },
+    { "distanceMeters": 4000, "azimuthDegrees": 55, "barred": true, "unionPixels": 526, "intersectionPixels": 511, "sourceOnlyPixels": 0, "bakedOnlyPixels": 15, "intersectionOverUnion": 0.971483, "unionMeanLuminanceRatio": 1.013553, "intersectionMeanLuminanceRatio": 1.000772, "perChannelRatios": [0.994432, 1.002098, 1.010138], "channelSpread": 0.015706, "sourceMeanLuminance": 0.200758, "bakedMeanLuminance": 0.203479, "absoluteLuminanceDelta": 0.002721 },
+    { "distanceMeters": 4000, "azimuthDegrees": 235, "barred": true, "unionPixels": 519, "intersectionPixels": 508, "sourceOnlyPixels": 0, "bakedOnlyPixels": 11, "intersectionOverUnion": 0.978805, "unionMeanLuminanceRatio": 1.019795, "intersectionMeanLuminanceRatio": 0.997347, "perChannelRatios": [0.986489, 1.000224, 1.002522], "channelSpread": 0.016033, "sourceMeanLuminance": 0.042194, "bakedMeanLuminance": 0.043029, "absoluteLuminanceDelta": 0.000835 }
+  ],
+
+  "result_tone": {
+    "bar": "|unionMeanLuminanceRatio - 1| <= 0.05 at 1,200 m and at 4,000 m",
+    "barredPoses": 4,
+    "passed": 3,
+    "verdict": "MISS",
+    "missingPoses": [
+      { "distanceMeters": 1200, "azimuthDegrees": 235, "unionMeanLuminanceRatio": 1.072801, "excess": 0.022801 }
+    ],
+    "direction": "The baked tile measures BRIGHTER than the source at every one of the six poses, without exception. The sign is consistent and is not noise.",
+    "statedPlainly": "This bar was missed. It is recorded as missed. It is NOT re-judged against the intersection measure, which would have passed all four barred poses (0.9996, 1.0408, 1.0008, 0.9973), because the pre-registered PRIMARY was the union ratio and swapping to the friendlier of two pre-declared measures after seeing the numbers is exactly what pre-registration exists to prevent."
+  },
+
+  "result_hue": {
+    "bar": "max per-channel ratio spread <= 0.02",
+    "posesMeasured": 6,
+    "passed": 6,
+    "verdict": "PASS",
+    "range": { "min": 0.005959, "max": 0.016033 },
+    "whatItSettles": "The gamma decision and the palette lookup are correct. A linear-light composition error or a wrong palette entry would show up as a channel spread, and it does not at any pose. The tone miss is therefore NOT a colour-space bug; it is a lighting-and-geometry difference."
+  },
+
+  "result_silhouette": {
+    "bar": "REPORTED, NOT BARRED",
+    "intersectionOverUnion": { "min": 0.971483, "max": 0.982089 },
+    "bakedOnlyAlwaysExceedsSourceOnly": true,
+    "reading": "The prism covers MORE than the source at every pose (baked-only pixels 11-1653 against source-only pixels 0-16). That is the setback fill, seen directly. For this cell the silhouette cost is 2-3% of the union, which is far better than the island-wide median deviation of 0.045221 the census measured — this cell is not a worst case and must not be read as one."
+  },
+
+  "diagnosis": {
+    "claim": "The miss is confined to the shadow-side azimuth, and the ratio instrument is ill-conditioned there.",
+    "evidence": "Mean source luminance is ~0.21 at azimuth 55 and ~0.038-0.042 at azimuth 235, a five-fold difference, because 235 faces away from the sun. The ABSOLUTE luminance delta between baked and source is essentially azimuth-independent at 1,200 m: 0.002732 at azimuth 55 against 0.002871 at azimuth 235. The same absolute error divided by a five times smaller denominator produces a five times larger ratio, which is the whole of the miss.",
+    "mechanism": "The prism has no setbacks, no rooftop groups and no recesses, so it self-shadows less than the source massing. On the lit side that costs little. On the shadow side, where nearly all the light is indirect and the source's recesses are darker still, the flat prism reads brighter.",
+    "statusOfThisDiagnosis": "THIS IS A DIAGNOSIS, NOT A DEFENCE. It explains the miss; it does not retract it. The bar stands as written and the verdict stands as MISS."
+  },
+
+  "stopRule": {
+    "preRegisteredText": "If the tone bar is missed at 1,200 m or 4,000 m, the prototype STOPS and is reported for a user decision with rendered evidence. It is not tuned until it passes.",
+    "invoked": true,
+    "renderedEvidence": [
+      "artifacts/far-tier-hlod-20260818/stills/evidence-source-1200m-az235.png",
+      "artifacts/far-tier-hlod-20260818/stills/evidence-baked-1200m-az235.png",
+      "artifacts/far-tier-hlod-20260818/stills/evidence-source-1200m-az55.png",
+      "artifacts/far-tier-hlod-20260818/stills/evidence-baked-1200m-az55.png",
+      "artifacts/far-tier-hlod-20260818/stills/evidence-source-400m-az235.png",
+      "artifacts/far-tier-hlod-20260818/stills/evidence-baked-400m-az235.png"
+    ],
+    "renderedEvidenceNote": "The work root is gitignored, so these stills are local. The readings above are the committed evidence.",
+    "forkOptionsForTheUser": [
+      "ACCEPT AND PROCEED. Treat a 7.3% shadow-side tone excess at 1.2 km as within tolerance for a far tier and let T004 mass-bake. The absolute error is 0.0029 in linear luminance and the hue is correct; the cost is that the far tier reads slightly flat on shadowed elevations.",
+      "RE-INSTRUMENT, THEN RE-JUDGE. Adopt the intersection ratio as the primary in a NEW pre-registration and re-run. Defensible on the ground that the union measure deliberately mixes geometric and tonal error, but it must be a fresh pre-registration, not a reinterpretation of this one.",
+      "BAKE A SHADING TERM. Add a cheap ambient-occlusion or vertical-gradient term to the atlas so the prism darkens where the source self-shadows. This changes the recipe hash and invalidates the frozen bars, so it is a new Stage 0.",
+      "REDUCE THE GEOMETRIC ERROR. Give the far tier the tiered massing instead of a single prism. Costs triangles and re-opens the geometry budget, which was the decision the architect already refused for merged lod_1."
+    ]
+  },
+
+  "agreementIsNotLikeness": "AGREEMENT IS NOT LIKENESS. A luminance ratio near 1.0 says the baked tile puts approximately the same amount of light on screen as the source. It does NOT say the two look alike, that either looks like the real building, or that the far tier is visually acceptable. Those are separate judgements and this instrument makes none of them.",
+
+  "notClaimedHere": [
+    "One cell was measured. Nothing here generalizes to the island.",
+    "This cell's silhouette agreement of 0.971-0.980 is better than the island median and must not be read as typical.",
+    "No claim is made about camera motion, temporal stability, shimmer or mip behaviour; every still is a static frame.",
+    "84.8% of this cell's faces fell to flat average colour at the applied resolution, so what was measured is the tier's TONE reproduction, not its pattern reproduction. The far tier does not carry visible coursing at this cell's resolution and does not claim to."
+  ]
+}
