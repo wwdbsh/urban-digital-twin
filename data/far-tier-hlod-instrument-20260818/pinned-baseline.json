@@ -4,17 +4,18 @@
  "task": "T012",
  "artifact": "far-tier-pinned-operative-baseline",
  "capturedAt": null,
- "capturedAtStatement": "NULL BY CONSTRUCTION, matching every capture record in this goal.",
- "headline": "THE OPERATIVE BASELINE. Captured under the pinned instrument, enforced by the generated harness, reproduced exactly across two cycles separated by a deliberate full-instrument perturbation.",
+ "capturedAtStatement": "NULL BY CONSTRUCTION.",
+ "headline": "THE OPERATIVE BASELINE. Captured under the pinned instrument with the generated harness enforcing it, reproduced exactly across two cycles and again under spec v2.",
  "instrument": {
   "specId": "far-tier-appearance-instrument-v1",
-  "specSha256": "3015b23059590cfc17535483baa284dd3a70bfbd47c7af4a434aade64ef558df",
-  "enforcement": "The generated harness ran immediately before each capture and returned the spec hash; a mismatch would have raised."
+  "specSha256": "135385ff19b692a4b24949263647db784aff558c02b1c69466a61be7438c7d03",
+  "capturedUnder": "spec v1; RE-CAPTURED under spec v2 with identical results at all six poses, which is how the added pins were shown to have been at their pinned values during the original capture.",
+  "enforcement": "The generated harness ran immediately before each capture, including a caller-supplied renderable-mesh count, and returned the spec hash."
  },
  "subject": {
   "bakedTile": "GLB 2f8599256ac45ee509dc7d7ce0da6a56964bac8e3ca66b77e795c1435ff7930b, atlas c159e0508aeb7522620b799b83041461aecf34727f69209bd7efbf992f5c067a",
   "source": "The 48 shipped lod_0 assets of manhattan-exterior-cell-w05-000747-17-38610-35822, verified against the committed -c2 inventory.",
-  "isolation": "Each subject rendered ALONE, the other deleted. hide_render was NOT used; see the attribution record for why that matters."
+  "isolation": "Each subject rendered ALONE, the other deleted. hide_render was NOT used and is now refused by the harness."
  },
  "results": [
   {
@@ -150,10 +151,16 @@
   "huePassed": 1,
   "hueMeasured": 6,
   "hueVerdict": "MISS",
-  "caution": "These are the LEGACY bars applied to the new baseline, reported for continuity. Whether they are the right bars is the subject of the gate pre-registration record."
+  "caution": "LEGACY bars applied to the new baseline, for continuity. Whether they are the right bars is the gate pre-registration record subject."
  },
- "supersedes": {
-  "statement": "T002 sampling-results is SUPERSEDED BY STATEMENT for its baked-tile readings and both its verdicts. It is NOT edited. T010 and T011 records that descend from those readings are likewise not current. This baseline is operative from here.",
+ "supersession": {
+  "statement": "SUPERSEDED BY STATEMENT, never edited: data/far-tier-hlod-20260818/sampling-results.json for its baked-tile readings and both its verdicts; and the figures descending from them in data/far-tier-hlod-v2-20260818/stage-b-decomposition-and-prediction.json and data/far-tier-hlod-v3-20260818/stage-0a-instrument-reproduction-failure.json.",
+  "rebaselineResultsRelationship": {
+   "record": "data/far-tier-hlod-v3-20260818/rebaseline-results.json",
+   "finding": "ITS RAYTRACING-OFF COLUMN IS NUMERICALLY IDENTICAL TO THIS BASELINE AT ALL SIX POSES, ratio and hue spread alike — 1.040478, 1.019942, 1.023193, 1.002152, 1.020074, 0.942736 and 0.015976, 0.025771, 0.020598, 0.025470, 0.022754, 0.033819.",
+   "why_it_matters": "That is a CROSS-TASK, CROSS-REBUILD, EXACT reproduction: a different task, a different scene construction, a different day, the same numbers. It is the strongest stability evidence this goal holds and it was previously unstated.",
+   "itsOpenQuestionsAreNowAnswered": "That record listed five hypotheses as still open. T012 answers them: four are rejected with measurements and the fifth, scene residency, is confirmed as the cause."
+  },
   "t002RecordsUntouched": true
  },
  "notClaimedHere": [

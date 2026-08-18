@@ -88,6 +88,45 @@ describe("the generated harness", () => {
   });
 });
 
+describe("the harness covers the hand-written sections too", () => {
+  const python = farTierInstrumentAssertionPython();
+
+  it("checks the application version, not just scene settings", () => {
+    expect(python).toContain('"application.versionString"');
+    expect(python).toContain("bpy.app.version_string");
+  });
+
+  it("checks EVERY channel of the sun and world colours, not only red", () => {
+    for (let channel = 0; channel < 3; channel += 1) {
+      expect(python, `sun colour channel ${channel} unchecked`).toContain(`"sun.color[${channel}]"`);
+      expect(python, `world colour channel ${channel} unchecked`).toContain(`"world.background_color[${channel}]"`);
+    }
+  });
+
+  it("records a missing Background node instead of raising a KeyError", () => {
+    // `nodes['Background']` would abort the harness before the remaining checks
+    // ran, turning a mismatch into a crash with no diagnosis.
+    expect(python).toContain("nodes.get('Background')");
+    expect(python).toContain("'world.background_node'");
+  });
+
+  it("enforces subject isolation, which is the defect the whole task chased", () => {
+    expect(python).toContain("hide_render");
+    expect(python).toContain("sceneHygiene.subjectIsolation");
+    expect(python).toContain("sceneHygiene.renderableMeshCount");
+    expect(python).toContain("_EXPECTED_RENDERABLE_MESHES");
+  });
+
+  it("checks the camera type and depth of field", () => {
+    expect(python).toContain('"camera.type"');
+    expect(python).toContain('"camera.dof.use_dof"');
+  });
+
+  it("checks the white-balance control, which is shaped like the open hue finding", () => {
+    expect(python).toContain('"sceneGraph.view_settings.use_white_balance"');
+  });
+});
+
 describe("the spec hash", () => {
   it("moves when any pinned section changes", () => {
     const baseline = farTierInstrumentSpecHash();

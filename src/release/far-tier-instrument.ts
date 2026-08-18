@@ -40,6 +40,14 @@ export const FAR_TIER_INSTRUMENT_SPEC = {
   application: { versionString: "5.2.0 LTS" },
 
   /**
+   * RECORDED, NOT PINNED. These describe the machine rather than the
+   * instrument. Pinning them would make the spec unsatisfiable elsewhere; not
+   * recording them would leave a reader unable to tell whether a future
+   * disagreement is a settings drift or a hardware one.
+   */
+  recordedEnvironment: { gpuBackend: "METAL", preferencesGpuBackend: "METAL" },
+
+  /**
    * USER PREFERENCES. Not scene state — they persist across files and sessions
    * and differ between installs, which is what makes them dangerous.
    *
@@ -116,7 +124,34 @@ export const FAR_TIER_INSTRUMENT_SPEC = {
     clamp_surface_direct: 0.0,
   },
 
+  /**
+   * SCENE-GRAPH AND PIPELINE STATE. None of these moved a reading here — every
+   * one was already at its Blender default during the baseline session, which
+   * is verified rather than assumed (see the spec-lineage record). They are
+   * pinned because each can silently rescale or reroute the output, and the
+   * whole lesson of this task is that the settings nobody lists are the ones
+   * that drift.
+   *
+   * `use_white_balance` deserves its own note: it is a per-channel scaling
+   * control, which is the exact shape of the open red-deficit hue finding. It
+   * was OFF during the baseline. Had it been on, the hue result would have been
+   * suspect. It is now pinned off so that can never be ambiguous again.
+   */
+  sceneGraph: {
+    // Paths are relative to `bpy.context.scene`, which is what the generator emits against.
+    "use_nodes": true,
+    "frame_current": 1,
+    "render.use_compositing": true,
+    "render.use_sequencer": true,
+    "render.use_simplify": false,
+    "render.use_freestyle": false,
+    "view_settings.use_white_balance": false,
+    "world.use_nodes": true,
+  },
+
   camera: {
+    type: "PERSP",
+    useDepthOfField: false,
     sensor_fit: "VERTICAL",
     angle_y_degrees: 60.0,
     clip_start: 1.0,
@@ -173,13 +208,18 @@ export const FAR_TIER_INSTRUMENT_SPEC = {
      *   other subject's collection excluded from view layer   ratio 1.002152
      *   other subject deleted                                 ratio 1.002152
      *
-     * A hidden object still participates in EEVEE's lighting — it casts
-     * shadows, and its mere presence brightens the measured subject by about
-     * 7%. The first of those readings is T002's committed 1.072801, reproduced
-     * to six decimals, which is what identifies its MISS as an artifact of the
+     * SCENE RESIDENCY MOVES THE READING BY +7.0%. That B (1.088509) exceeds A
+     * (1.072801) shows the hidden subject was casting shadows onto the measured
+     * one. Beyond that, the MECHANISM IS NOT TRACED into EEVEE's internals —
+     * and with ray tracing and fast GI off and the world at strength zero there
+     * is no indirect-light path that would obviously explain the remainder. The
+     * effect is measured, bounded and eliminated; it is not explained.
+     *
+     * The first reading is T002's committed 1.072801 reproduced to six
+     * decimals, which is what identifies its MISS as an artifact of the
      * arrangement rather than a property of the tile.
      */
-    subjectIsolation: "A subject is rendered ALONE. Other subjects are deleted, or their collection is excluded from the view layer. `hide_render` is FORBIDDEN: a hidden object still casts shadows and still brightens the measured subject, by 7.0% on the prototype cell at 1,200 m / azimuth 235.",
+    subjectIsolation: "A subject is rendered ALONE. Other subjects are deleted, or their collection is excluded from the view layer. `hide_render` is FORBIDDEN: scene residency moves the reading by 7.0% on the prototype cell at 1,200 m / azimuth 235, and hidden subjects demonstrably cast shadows onto the measured one. ENFORCED by the harness: no mesh in the view layer may carry hide_render, and the caller-supplied renderable-mesh count must match.",
   },
 } as const;
 
@@ -221,6 +261,8 @@ export function farTierInstrumentAssertionPython(): string {
     "    if not ok: _mismatch.append({'setting': label, 'expected': expected, 'actual': actual})",
     "_scene = bpy.context.scene",
     "_prefs = bpy.context.preferences",
+    "# Caller sets _EXPECTED_RENDERABLE_MESHES before exec to enforce subject isolation by count.",
+    "_EXPECTED_RENDERABLE_MESHES = globals().get('_EXPECTED_RENDERABLE_MESHES', None)",
   ];
 
   for (const [key, value] of Object.entries(spec.preferences)) {
@@ -239,7 +281,15 @@ export function farTierInstrumentAssertionPython(): string {
     lines.push(`_check(${JSON.stringify(`eevee.${key}`)}, _scene.eevee.${key}, ${pyLiteral(value)}${typeof value === "number" ? ", 1e-9" : ""})`);
   }
   lines.push(
+    `_check("application.versionString", bpy.app.version_string, ${pyLiteral(spec.application.versionString)})`,
+  );
+  for (const [key, value] of Object.entries(spec.sceneGraph)) {
+    lines.push(`_check(${JSON.stringify(`sceneGraph.${key}`)}, _scene.${key}, ${pyLiteral(value)})`);
+  }
+  lines.push(
     "_cam = _scene.camera.data",
+    `_check("camera.type", _cam.type, ${pyLiteral(spec.camera.type)})`,
+    `_check("camera.dof.use_dof", _cam.dof.use_dof, ${pyLiteral(spec.camera.useDepthOfField)})`,
     `_check("camera.sensor_fit", _cam.sensor_fit, ${pyLiteral(spec.camera.sensor_fit)})`,
     `_check("camera.angle_y_degrees", math.degrees(_cam.angle_y), ${spec.camera.angle_y_degrees}, 1e-4)`,
     `_check("camera.clip_start", _cam.clip_start, ${spec.camera.clip_start}, 1e-9)`,
@@ -255,12 +305,29 @@ export function farTierInstrumentAssertionPython(): string {
     `    _check("sun.rotation_x_deg", math.degrees(_s.rotation_euler[0]), ${spec.sun.rotation_euler_degrees[0]}, 1e-4)`,
     `    _check("sun.rotation_y_deg", math.degrees(_s.rotation_euler[1]), ${spec.sun.rotation_euler_degrees[1]}, 1e-4)`,
     `    _check("sun.rotation_z_deg", math.degrees(_s.rotation_euler[2]), ${spec.sun.rotation_euler_degrees[2]}, 1e-4)`,
-    `    _check("sun.color_r", _s.data.color[0], ${spec.sun.color[0]}, 1e-9)`,
-    "_bg = _scene.world.node_tree.nodes['Background']",
-    `_check("world.background_strength", _bg.inputs[1].default_value, ${spec.world.background_strength}, 1e-9)`,
-    `_check("world.background_color_r", _bg.inputs[0].default_value[0], ${spec.world.background_color[0]}, 1e-9)`,
+    ...spec.sun.color.map((component, index) =>
+      `    _check("sun.color[${index}]", _s.data.color[${index}], ${component}, 1e-9)`),
+    // A missing Background node is a mismatch to be RECORDED, not a KeyError
+    // that aborts the harness before the remaining checks run.
+    "_bg = _scene.world.node_tree.nodes.get('Background') if _scene.world and _scene.world.use_nodes else None",
+    "if _bg is None:",
+    "    _mismatch.append({'setting': 'world.background_node', 'expected': 'present', 'actual': 'absent'})",
+    "else:",
+    `    _check("world.background_strength", _bg.inputs[1].default_value, ${spec.world.background_strength}, 1e-9)`,
+    ...spec.world.background_color.map((component, index) =>
+      `    _check("world.background_color[${index}]", _bg.inputs[0].default_value[${index}], ${component}, 1e-9)`),
     "_lights = [o for o in bpy.data.objects if o.type == 'LIGHT']",
     "if len(_lights) != 1: _mismatch.append({'setting': 'lights.total', 'expected': 1, 'actual': len(_lights)})",
+    // SUBJECT ISOLATION, ENFORCED. `hide_render` was the entire divergence, so
+    // its absence is asserted rather than described. The caller states how many
+    // renderable meshes the subject should have; a stale subject left in the
+    // scene changes that count and is refused.
+    "_hidden = [o.name for o in bpy.context.view_layer.objects if o.type == 'MESH' and o.hide_render]",
+    "if _hidden:",
+    "    _mismatch.append({'setting': 'sceneHygiene.subjectIsolation', 'expected': 'no hide_render mesh in the view layer', 'actual': _hidden[:8]})",
+    "_renderable = [o for o in bpy.context.view_layer.objects if o.type == 'MESH' and not o.hide_render]",
+    "if _EXPECTED_RENDERABLE_MESHES is not None and len(_renderable) != _EXPECTED_RENDERABLE_MESHES:",
+    "    _mismatch.append({'setting': 'sceneHygiene.renderableMeshCount', 'expected': _EXPECTED_RENDERABLE_MESHES, 'actual': len(_renderable)})",
     "if _mismatch:",
     "    raise RuntimeError('PINNED INSTRUMENT MISMATCH: ' + json.dumps(_mismatch))",
     `_ENFORCED = ${JSON.stringify({ specId: spec.specId, specSha256: "__SPEC_HASH__" })}`,

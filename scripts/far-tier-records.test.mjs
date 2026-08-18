@@ -555,3 +555,66 @@ describe("the v2 shading derivation cannot see a measurement", () => {
     }
   });
 });
+
+describe("the instrument records pin what the code computes", () => {
+  const root = join(repositoryRoot, "data", "far-tier-hlod-instrument-20260818");
+  const read = (name) => JSON.parse(readFileSync(join(root, `${name}.json`), "utf8"));
+
+  it("pins the spec hash the module actually produces", async () => {
+    const { farTierInstrumentSpecHash } = await import("../src/release/far-tier-instrument.ts");
+    expect(read("pinned-instrument-spec").specSha256).toBe(farTierInstrumentSpecHash());
+  });
+
+  it("pins the harness digest the generator actually produces", async () => {
+    const { farTierInstrumentAssertionPython } = await import("../src/release/far-tier-instrument.ts");
+    expect(read("pinned-instrument-spec").harness.sha256).toBe(sha256HexSync(farTierInstrumentAssertionPython()));
+  });
+
+  it("stores a spec whose own serialization reproduces the pinned hash", async () => {
+    // The record embeds a COPY of the spec. If that copy drifts from the module,
+    // the record documents an instrument nobody ran.
+    const { farTierInstrumentSpecHash } = await import("../src/release/far-tier-instrument.ts");
+    const { stableSerialize } = await import("../src/domain/deterministic-hash.ts");
+    expect(sha256HexSync(stableSerialize(read("pinned-instrument-spec").spec))).toBe(farTierInstrumentSpecHash());
+  });
+
+  it("keeps the three hand-copies of the six-pose table in agreement", () => {
+    // The same numbers appear in the baseline record, the gate record and the
+    // ADR prose. Three copies is three chances to drift.
+    const baseline = read("pinned-baseline").results;
+    const gate = read("t004-gate-pre-registration").whatTheV1TileScores.rows;
+    expect(gate).toHaveLength(baseline.length);
+    for (const row of baseline) {
+      const pose = `${row.distanceMeters}/${row.azimuthDegrees}`;
+      const gateRow = gate.find((entry) => entry.pose === pose);
+      expect(gateRow, `${pose} missing from the gate record`).toBeDefined();
+      expect(gateRow.sourceMeanLuminance).toBe(row.sourceMeanLuminance);
+      expect(gateRow.A1_value).toBe(row.unionMeanLuminanceRatio);
+      expect(gateRow.A3_value).toBe(row.channelSpread);
+      expect(gateRow.A2_value).toBeCloseTo(Math.abs(row.absoluteDifference), 8);
+    }
+    const adr = readFileSync(join(repositoryRoot, "docs", "decisions", "0058-far-tier-bake-architecture.md"), "utf8");
+    for (const row of baseline) {
+      expect(adr, `ADR omits ratio for ${row.distanceMeters}/${row.azimuthDegrees}`).toContain(String(row.unionMeanLuminanceRatio));
+      expect(adr, `ADR omits spread for ${row.distanceMeters}/${row.azimuthDegrees}`).toContain(String(row.channelSpread));
+    }
+  });
+
+  it("withdrew the refuted rooftop mechanism everywhere", () => {
+    // The claim was refuted by ablation data co-landed on this same branch.
+    const attribution = read("divergence-attribution").attributionOfSurvivingFindings.fourThousandAz235TooDark;
+    expect(attribution.attribution).toContain("MECHANISM UNATTRIBUTED");
+    expect(attribution.withdrawnMechanism.whyWithdrawn).toContain("REFUTED");
+    expect(attribution.untestedCandidate).toContain("CANDIDATE, NOT A CONCLUSION");
+    for (const file of ["docs/decisions/0058-far-tier-bake-architecture.md", "docs/implementation/20260818-far-tier-instrument-pin.md"]) {
+      expect(readFileSync(join(repositoryRoot, file), "utf8")).not.toContain("consistent with T011's ablation");
+    }
+  });
+
+  it("names the record whose raytracing-off column reproduces the baseline exactly", () => {
+    const supersession = read("pinned-baseline").supersession;
+    expect(supersession.statement).toContain("sampling-results.json");
+    expect(supersession.rebaselineResultsRelationship.record).toContain("rebaseline-results.json");
+    expect(supersession.rebaselineResultsRelationship.finding).toContain("IDENTICAL");
+  });
+});

@@ -15,9 +15,12 @@ This branch also carries T011's four evidence commits, which the PR lands.
 Three tasks and four sessions disagreed about a byte-identical tile. The cause was
 not a render setting. It was the **scene arrangement**.
 
-T002 rendered its two subjects with both resident and hid one per render using
-`hide_render`. **A hidden object still participates in EEVEE's lighting.** It casts
-shadows onto the measured subject, and its mere presence brightens it.
+T002 held both subjects in the scene and hid one per render with `hide_render`.
+Because every arrangement's ratio divides by the isolated source mean, and T011
+reproduced T002's *source* bit-exactly under isolation, the arrangement was
+**asymmetric in consequence**: the source was measured effectively alone, the baked
+subject with 48 hidden source meshes resident. **Scene residency moves the reading
+by +7.0%.**
 
 | arrangement at 1200 m / az 235 | baked mean | ratio |
 | --- | --- | --- |
@@ -29,9 +32,11 @@ shadows onto the measured subject, and its mere presence brightens it.
 T002 committed **0.042303** and **1.072801**. The first row reproduces both to six
 decimals. **T002's MISS was an artifact of its own arrangement.**
 
-That the second row is *brighter* than the first is the tell: the hidden objects
-were casting shadows, and removing that casting lifts the reading further. So
-`hide_render` suppresses camera visibility and nothing else.
+That the second row is *brighter* than the first shows the hidden meshes were
+casting shadows onto the measured subject. Beyond that the **mechanism is not
+traced** into EEVEE's internals — and with ray tracing and fast GI off and the world
+at strength zero there is no obvious indirect-light path for the remainder. The
+effect is measured, bounded and eliminated; it is not explained.
 
 ## What the hypotheses actually showed
 
@@ -64,10 +69,24 @@ It earned its keep during construction by refusing two of my own errors: a
 `FILTER_1` enum value that does not exist, and a 1e-6 tolerance on a camera angle
 that cannot survive a degrees↔radians round trip.
 
-Seven of seven deliberate perturbations were refused, each naming the right
-setting. Two capture cycles separated by a deliberate whole-instrument
-perturbation reproduced **exactly**: worst delta **0.0** at every pose, against a
-pre-registered tolerance of 0.001.
+**Nine of nine** deliberate perturbations were refused, each naming the right
+setting — including the two isolation controls (a mesh left with `hide_render`, and
+a wrong renderable-mesh count). Two capture cycles separated by **five named
+settings** (exposure 0.7, ray tracing on, 8 samples, filter size 3.0, anisotropy
+FILTER_16 — not the *entire* instrument, as an earlier draft overstated) reproduced
+**exactly**: worst delta **0.0** at every pose against a pre-registered 0.001.
+
+The baseline was then re-captured under **spec v2** and reproduced exactly again,
+which is how the newly added pins were shown to have been at their pinned values
+during the v1 capture rather than merely asserted. And T011's
+`rebaseline-results.json` raytracing-off column is **numerically identical at all
+six poses** — a cross-task, cross-rebuild exact reproduction, and the strongest
+stability evidence this goal holds.
+
+Not everything is enforceable: the pose list, mask semantics, the recorded GPU
+backend and the procedural clearing steps are **prose-only and unenforced**, and
+the record labels them so rather than letting a blanket "everything is enforced"
+claim stand.
 
 **Limitation, disclosed:** a true process restart was not performed, because
 restarting Blender drops the MCP channel this session runs over. The test is
@@ -79,12 +98,23 @@ exclude a defect only a fresh process would clear.
 Both are **tile properties**, not artifacts — they reproduce exactly under the
 pinned spec.
 
-**4,000 m / azimuth 235 reads 5.7% dark.** The evidence points at the *source*
-moving, not the tile: between 1.2 km and 4 km the source brightens 7.0%
-(0.039432 → 0.042190) while the tile is nearly flat (0.039517 → 0.039774).
-Attributed to sub-pixel rooftop geometry the prism does not carry — which is what
-T011's ablation independently found. **Mechanism inferred from the distance trend,
-not demonstrated by a controlled ablation at 4 km**, and labelled as an inference.
+**4,000 m / azimuth 235 reads 5.7% dark.** Attributed to the tile; **mechanism
+unattributed** — the same restraint applied to hue.
+
+I first blamed sub-pixel rooftop geometry and cited T011's ablation as consistent.
+**The ablation says the opposite**, and it was co-landed on this very branch:
+deleting rooftop mass makes the *source brighter* at every pose. The roof-free
+source still rises **+5.8%** from 1.2 km to 4 km against +7.0% with rooftops — so
+rooftops account for only ~1.2 of the 7.0 points — and the tile's deficit against a
+roof-free source **widens from 5.7% to 8.4%**. Rooftop mass cannot explain a source
+that is brighter than the tile at distance. The claim is withdrawn.
+
+Named as a **candidate, not a conclusion**: the atlas's 14.67% unused black area
+averaging in under progressive minification, which matches the monotone azimuth-235
+trend 1.0199 → 1.0022 → 0.9427. No controlled test isolates it here.
+
+The lesson is not subtle: the refuting data was on the same branch and I did not
+consult it before writing the claim.
 
 **Hue spread exceeds 0.02 at five of six poses**, grows with distance at both
 azimuths, and red is consistently the deficit channel (0.907/0.931/0.941 at

@@ -30,6 +30,7 @@ import { fileURLToPath } from "node:url";
 
 import { sha256HexBytes } from "../src/domain/deterministic-hash.ts";
 import { buildMidtownCoreV3Plan, writeMidtownCoreV3Assets } from "../src/release/midtown-core-v3-materialization.ts";
+import { FAR_TIER_BAKE_RECIPE } from "../src/release/far-tier-bake.ts";
 import { CAPTURE, DEFAULT_CELL_ID, materializeCell } from "./far-tier-bake-cli.mjs";
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -64,7 +65,12 @@ async function commandEmit(cellId) {
     let planContext;
     try {
       planContext = buildMidtownCoreV3Plan(source, context.planChecksumSha256, context.profile);
-    } catch { continue; }
+    } catch (error) {
+      // FAIL CLOSED. A swallowed refusal here would silently ablate a SUBSET of
+      // the cell and the comparison against the full source would then be
+      // measuring two different building sets, not two rooftop states.
+      fail(`building ${buildingId} refused during ablation: ${error?.code ?? error?.message ?? "unknown stop"}. The ablation subject must be the same population as the source subject.`);
+    }
     buildings += 1;
     prismsRemoved += planContext.plan.prisms.length;
 
@@ -85,11 +91,18 @@ async function commandEmit(cellId) {
     const name = `${buildingId.replace(":", "-")}__lod_0.glb`;
     await writeFile(join(outputRoot, "assets", name), lod0.bytes);
 
-    const east = (source.representative[0] - origin[0]) * 84_412.702;
-    const north = (source.representative[1] - origin[1]) * 111_049.654;
+    // Imported rather than re-typed: a divergent literal here would place the
+    // ablation subject differently from every other far-tier subject.
+    const east = (source.representative[0] - origin[0]) * FAR_TIER_BAKE_RECIPE.metersPerDegreeLongitude;
+    const north = (source.representative[1] - origin[1]) * FAR_TIER_BAKE_RECIPE.metersPerDegreeLatitude;
     placements.push({ name, buildingId, checksumSha256: sha256HexBytes(lod0.bytes), translation: [east, 0, -north] });
   }
   placements.sort((left, right) => (left.name < right.name ? -1 : 1));
+  // The cell's committed member count. A short subject is a silently different
+  // experiment, so it is refused rather than reported.
+  if (placements.length !== context.cell.buildingIds.length) {
+    fail(`ablation emitted ${placements.length} assets for a cell declaring ${context.cell.buildingIds.length} buildings; the subject populations would not match.`);
+  }
 
   await writeFile(join(outputRoot, "placements.json"), serialize({
     cellId: context.cell.cellId,
