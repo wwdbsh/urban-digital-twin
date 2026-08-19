@@ -2064,6 +2064,29 @@ export function CesiumViewport({
       const detail = farTierFailureDetail(outcomes);
       if (detail === null) delete container.dataset.farTierFailures;
       else container.dataset.farTierFailures = detail;
+      // MEMBER-LEVEL OBSERVABILITY.
+      //
+      // The eight per-state counts answer "did every cell load". They cannot
+      // answer the question a promotion sweep actually asks, which is whether
+      // any building is drawing its massing THROUGH a tile that covers it —
+      // the visible symptom would be tan massing poking out of a textured
+      // block, and nothing in the DOM could distinguish it from a correct
+      // frame.
+      //
+      // `suppressible` is every member of a DRAWN tile: the massing that ought
+      // to be held at far-tier alpha. `covered` is what actually is. Their
+      // difference is the number a sweep reads, and at a correct pose it is 0.
+      const suppressible = new Set<string>();
+      for (const tile of farTierTilesRef.current) {
+        if (!drawnCells.has(tile.cellId)) continue;
+        for (const buildingId of tile.suppressibleBuildingIds) suppressible.add(buildingId);
+      }
+      const covered = denseFarTierAlphaAppliedRef.current;
+      let coveredWithinDrawn = 0;
+      for (const buildingId of covered) if (suppressible.has(buildingId)) coveredWithinDrawn += 1;
+      container.dataset.farTierMassingSuppressible = String(suppressible.size);
+      container.dataset.farTierMassingCovered = String(coveredWithinDrawn);
+      container.dataset.farTierMassingUncovered = String(suppressible.size - coveredWithinDrawn);
     }
     onFarTierStateRef.current?.(summarizeFarTierState(outcomes));
   }, []);

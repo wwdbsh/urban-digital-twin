@@ -31,7 +31,7 @@ import { farTierCellDistanceMeters, farTierCellInRange, type FarTierCameraPose, 
 import { verifiedExteriorModelResource } from "./exterior-verified-resource";
 import {
   farTierAdmission, farTierAtlasRef, farTierEntryByteCost, farTierTileRef,
-  loadVerifiedFarTierAtlas, loadVerifiedFarTierTile, FAR_TIER_RUNTIME_BUDGETS,
+  loadVerifiedFarTierAtlas, loadVerifiedFarTierTile, FAR_TIER_MAX_LOADS_PER_PASS, FAR_TIER_RUNTIME_BUDGETS_V2,
   type FarTierFetcher, type FarTierInventoryEntry, type FarTierLoadOutcome,
 } from "../../runtime/far-tier-serving";
 
@@ -118,6 +118,20 @@ export interface FarTierResidencyOptions {
   readonly modelFactory?: FarTierModelFactory;
   readonly budgets?: { readonly maxCacheEntries: number; readonly maxCachedBytes: number };
   /**
+   * How many cells one pass may load before returning to the driver.
+   *
+   * AT ONE STAGED CELL THIS WAS INVISIBLE. At 840 the fill was a single
+   * uninterruptible chain of fetch, hash-verify and model build, and the driver
+   * only re-read the queued camera pose BETWEEN passes — so a camera move that
+   * arrived during the fill waited for every remaining cell. Bounding the pass
+   * turns that wait into one batch, and the driver yields to the event loop
+   * between batches so the move is actually delivered.
+   *
+   * It is a RESPONSIVENESS control, not a budget: every selected cell still
+   * loads, just across more passes.
+   */
+  readonly maxLoadsPerPass?: number;
+  /**
    * Called the instant a primitive enters the scene, and the instant it leaves.
    *
    * AT ADD TIME, NOT AT RESOLVE TIME. The caller has to hide these primitives on
@@ -157,7 +171,8 @@ export interface FarTierResidency {
  */
 export function createFarTierResidency(options: FarTierResidencyOptions): FarTierResidency {
   const modelFactory = options.modelFactory ?? createFarTierModel;
-  const budgets = options.budgets ?? FAR_TIER_RUNTIME_BUDGETS;
+  const maxLoadsPerPass = options.maxLoadsPerPass ?? FAR_TIER_MAX_LOADS_PER_PASS;
+  const budgets = options.budgets ?? FAR_TIER_RUNTIME_BUDGETS_V2;
 
   /** Anchors are resolved once per cell: a cell id's rectangle never changes. */
   const anchors = new Map<string, { modelMatrix: Matrix4; bounds: FarTierRectangle } | FarTierLoadOutcome>();
@@ -203,6 +218,22 @@ export function createFarTierResidency(options: FarTierResidencyOptions): FarTie
     bytes -= tile.byteCost;
     options.scene.primitives.remove(tile.primitive);
     options.onPrimitiveRemoved?.(tile.primitive);
+    // FREED BYTES MAKE A REFUSAL RETRIABLE.
+    //
+    // `load` marks a cell attempted BEFORE the admission check, so a cell
+    // refused over-budget stayed marked and `pass` skipped it forever — the
+    // ceiling was permanent for that cell even once the bytes it needed were
+    // free. Clearing the refusal here, at the only place bytes are ever
+    // returned, is what makes the ceiling a queue rather than a verdict.
+    //
+    // Only `over-budget` is cleared. An absent, mismatched or unbuildable tile
+    // is not fixed by another cell leaving, and retrying it would be a fetch
+    // loop over a file that is not going to change.
+    for (const [refusedId, outcome] of outcomes) {
+      if (outcome.state !== "over-budget") continue;
+      outcomes.delete(refusedId);
+      attempted.delete(refusedId);
+    }
   };
 
   const load = async (entry: FarTierInventoryEntry, anchor: { modelMatrix: Matrix4; bounds: FarTierRectangle }): Promise<boolean> => {
@@ -293,7 +324,12 @@ export function createFarTierResidency(options: FarTierResidencyOptions): FarTie
     // ceiling on the cells the viewer is closest to rather than on inventory
     // order, which is an arbitrary way to decide what a user sees.
     candidates.sort((left, right) => left.distance - right.distance);
-    for (const candidate of candidates) {
+    // ONE BATCH PER PASS. `pending` tells the driver there is more to do, so it
+    // comes back after yielding instead of holding the main thread for the
+    // whole island.
+    const batch = candidates.slice(0, maxLoadsPerPass);
+    pending = candidates.length > batch.length;
+    for (const candidate of batch) {
       if (aborted()) break;
       if (await load(candidate.entry, candidate.anchor)) changed = true;
     }
@@ -302,7 +338,18 @@ export function createFarTierResidency(options: FarTierResidencyOptions): FarTie
 
   let running = false;
   let queued: FarTierCameraPose | null = null;
+  let lastPose: FarTierCameraPose | null = null;
+  let pending = false;
   let current: Promise<boolean> = Promise.resolve(false);
+
+  /**
+   * Hand the main thread back between batches.
+   *
+   * A microtask is not enough: the camera pose arrives from a Cesium event, and
+   * only a macrotask boundary lets that event run. `setTimeout(0)` is the
+   * smallest one available in both the browser and the test environment.
+   */
+  const yieldToEventLoop = (): Promise<void> => new Promise((resolve) => { setTimeout(resolve, 0); });
 
   const drain = async (): Promise<boolean> => {
     running = true;
@@ -310,11 +357,16 @@ export function createFarTierResidency(options: FarTierResidencyOptions): FarTie
     try {
       // The loop re-reads `queued` synchronously after each pass, so a camera
       // move that arrives mid-pass is served rather than dropped, and two passes
-      // never run concurrently over the same residency maps.
-      while (queued && !aborted()) {
-        const pose = queued;
+      // never run concurrently over the same residency maps. `pending` keeps it
+      // going when the fill was cut short by the batch bound rather than by a
+      // new pose.
+      while ((queued || pending) && !aborted()) {
+        const pose = queued ?? lastPose;
         queued = null;
+        if (!pose) break;
+        lastPose = pose;
         changed = (await pass(pose)) || changed;
+        if (pending && !queued && !aborted()) await yieldToEventLoop();
       }
     } finally {
       running = false;
@@ -340,6 +392,7 @@ export function createFarTierResidency(options: FarTierResidencyOptions): FarTie
     },
     releaseAll(): void {
       disposed = true;
+      pending = false;
       for (const cellId of [...resident.keys()]) release(cellId);
       attempted.clear();
     },
