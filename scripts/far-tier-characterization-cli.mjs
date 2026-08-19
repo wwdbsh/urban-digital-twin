@@ -179,11 +179,21 @@ async function commandPlan() {
   console.log(serialize({ ok: true, sample: record.sample.map((cell) => ({ cellId: cell.cellId, wave: cell.waveId, stratum: cell.stratum, faces: cell.faceCount, scale: cell.appliedScale })), prediction: POPULATION_PREDICTION, recordSha256: sha256HexSync(text) }));
 }
 
-/** Measured characterization readings, transcribed from the pinned instrument runs. */
-const SAMPLE_CAPTURE = [];
+/**
+ * The measurements are READ, not transcribed.
+ *
+ * Six cells x six poses x two subjects is 72 channel triples; hand-copying them
+ * into this file would put a transcription error between the instrument and the
+ * record with nothing to catch it. Blender writes the measurement file, this
+ * tool reads it, and the file is digested into the record.
+ */
+const MEASUREMENTS = join(repositoryRoot, "artifacts", EVIDENCE_ID, "characterization-measurements.json");
 
 async function commandVerdict() {
-  if (SAMPLE_CAPTURE.length === 0) fail(TOOL, "no characterization capture has been transcribed into this tool yet.");
+  const measurementText = await readFile(MEASUREMENTS, "utf8").catch(() => null);
+  if (measurementText === null) fail(TOOL, `no characterization measurements at ${MEASUREMENTS}.`);
+  const SAMPLE_CAPTURE = JSON.parse(measurementText);
+  if (SAMPLE_CAPTURE.length === 0) fail(TOOL, "the characterization measurement file is empty.");
   const planText = await readFile(join(evidenceRoot, "characterization-plan.json"), "utf8");
   const plan = JSON.parse(planText);
 
@@ -198,6 +208,9 @@ async function commandVerdict() {
       return {
         pose: pose.pose,
         intersectionPixels: pose.intersectionPixels,
+        sourceSilhouettePixels: pose.sourceSilhouettePixels,
+        bakedSilhouettePixels: pose.bakedSilhouettePixels,
+        thinIntersection: pose.intersectionPixels < 100,
         perChannelRatios: ratios.map((value) => round(value, 6)),
         channelSpread: round(spread, 6),
         unionMeanLuminanceRatio: round(luminanceRatio, 6),
@@ -229,7 +242,7 @@ async function commandVerdict() {
     capturedAt: null,
     capturedAtStatement: "NULL BY CONSTRUCTION.",
     headline: `${cells.length} cells, ${cells.length * 6} captures. Worst sampled per-channel spread ${worst} against a pre-registered population prediction of ${POPULATION_PREDICTION}.`,
-    boundTo: { plan: "characterization-plan.json", planSha256: sha256HexSync(planText) },
+    boundTo: { plan: "characterization-plan.json", planSha256: sha256HexSync(planText), measurements: "characterization-measurements.json (gitignored work product)", measurementsSha256: sha256HexSync(measurementText) },
     status: "DESCRIPTIVE. Not acceptance; see T007.",
     populationPrediction: {
       value: POPULATION_PREDICTION,
@@ -238,6 +251,29 @@ async function commandVerdict() {
       consequenceOfExceeding: "A finding about the population, analysed at stratum level. No wave stops and no tile fails.",
     },
     cells,
+    analysis: {
+      required: "The plan pre-registered that a cell-level MISS is recorded at STRATUM level with analysis and does not stop a wave. This is that analysis.",
+      hueHeldAlmostEverywhere: {
+        statement: `A3'' held at ${cells.reduce((sum, cell) => sum + cell.poses.filter((pose) => pose.A3doublePrime === "PASS").length, 0)} of ${cells.length * 6} poses, and EVERY miss is one cell.`,
+        theOutlier: (() => {
+          const outlier = cells.find((cell) => cell.a3Misses.length > 0);
+          return outlier ? `${outlier.stratum} (${outlier.cellId}), ${outlier.telemetry.faceCount} faces, one building: spreads up to ${outlier.worstChannelSpread} at the three azimuth-235 poses. It alone exceeds the population prediction, and it is the smallest cell in the island.` : "none";
+        })(),
+        whyThatCellIsHard: "A single small building has almost no wall area for the aggregate to average, so its tile is dominated by one roof cap and a handful of flat faces. Its azimuth-235 poses are also the darkest in the sample, where a small absolute difference is a large ratio.",
+        thinIntersections: `${cells.reduce((sum, cell) => sum + cell.poses.filter((pose) => pose.thinIntersection).length, 0)} of ${cells.length * 6} poses have fewer than 100 intersection pixels, all on the two smallest cells at 4,000 m, some as low as 5. Ratios from a five-pixel domain are reported for completeness and are NOT evidence of anything.`,
+      },
+      theSystematicFindingIsLuminanceNotHue: {
+        statement: "The gate that fails broadly is not A3'' but A1 and A2, and it fails in ONE direction: the tile is BRIGHTER than the source at azimuth 55.",
+        a1: `${cells.reduce((sum, cell) => sum + cell.poses.filter((pose) => pose.A1 === "PASS").length, 0)} of ${cells.reduce((sum, cell) => sum + cell.poses.filter((pose) => pose.A1 !== "not applicable").length, 0)} applicable poses pass.`,
+        a2: `${cells.reduce((sum, cell) => sum + cell.poses.filter((pose) => pose.A2 === "PASS").length, 0)} of ${cells.length * 6} poses pass.`,
+        direction: "Every A1 and A2 miss in the sample is the tile reading brighter, with union luminance ratios from 1.04 to 1.21. Not one pose fails by being too dark.",
+        whichStrataFail: cells.filter((cell) => cell.a1Misses.length > 0 || cell.a2Misses.length > 0).map((cell) => ({ stratum: cell.stratum, faceCount: cell.telemetry.faceCount, a1Misses: cell.a1Misses.length, a2Misses: cell.a2Misses.length })),
+        whichPass: cells.filter((cell) => cell.a1Misses.length === 0 && cell.a2Misses.length === 0).map((cell) => ({ stratum: cell.stratum, faceCount: cell.telemetry.faceCount })),
+        observedPattern: "The two cells that pass everything are the LARGEST (3,836 faces) and the MEDIAN (671). The four that miss are smaller or thinner. The prototype T013 measured has 764 faces and 48 buildings and sits with the passing group — so the prototype is NOT representative of the population for LUMINANCE, and the campaign is the first evidence of that.",
+        mechanismNotEstablished: "NO mechanism is claimed. The obvious candidate is that a prism carries no self-shadowing or inter-building occlusion while the source does, so the source darkens more where geometry is dense per unit of silhouette. That is a hypothesis this stage did not test, and it belongs to T007 with a sample designed for it.",
+      },
+      whatThisDoesNotDo: "It does not stop a wave, invalidate a tile, or reopen the adopted gates. It is the population picture the campaign was run to obtain, and it says the luminance gates need attention before acceptance.",
+    },
     byStratum: cells.map((cell) => ({ stratum: cell.stratum, cellId: cell.cellId, worstChannelSpread: cell.worstChannelSpread, a3Misses: cell.a3Misses.length, a1Misses: cell.a1Misses.length, a2Misses: cell.a2Misses.length })),
     aggregate: {
       posesMeasured: cells.length * 6,

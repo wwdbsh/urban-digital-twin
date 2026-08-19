@@ -1,0 +1,936 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "far-tier-hlod-mass-20260819:characterization-results",
+  "task": "T004",
+  "artifact": "far-tier-mass-bake-characterization-results",
+  "capturedAt": null,
+  "capturedAtStatement": "NULL BY CONSTRUCTION.",
+  "headline": "6 cells, 36 captures. Worst sampled per-channel spread 0.120272 against a pre-registered population prediction of 0.039.",
+  "boundTo": {
+    "plan": "characterization-plan.json",
+    "planSha256": "ec122aa18ffbb99b4c61cb7db7d9823d1ca6291b5e14f9aebebc3534b422bf1f",
+    "measurements": "characterization-measurements.json (gitignored work product)",
+    "measurementsSha256": "88932ad4a31bb69910e9e21dc7cae137e4889ef9c58dab004965209ce1e3e339"
+  },
+  "status": "DESCRIPTIVE. Not acceptance; see T007.",
+  "populationPrediction": {
+    "value": 0.039,
+    "worstSampledSpread": 0.120272,
+    "verdict": "EXCEEDED",
+    "consequenceOfExceeding": "A finding about the population, analysed at stratum level. No wave stops and no tile fails."
+  },
+  "cells": [
+    {
+      "cellId": "manhattan-exterior-cell-w05-000855-16-19309-17892",
+      "waveId": "w05",
+      "stratum": "largest-face-count",
+      "telemetry": {
+        "faceCount": 3836,
+        "appliedScale": 0.353553,
+        "achievedTexelRatio": 0.353553,
+        "underResolved": true,
+        "refusedBuildings": 0,
+        "fallbackAreaShare": 0.01361273
+      },
+      "poses": [
+        {
+          "pose": "400/55",
+          "intersectionPixels": 279418,
+          "sourceSilhouettePixels": 280258,
+          "bakedSilhouettePixels": 280992,
+          "thinIntersection": false,
+          "perChannelRatios": [
+            0.990174,
+            1.002118,
+            1.008433
+          ],
+          "channelSpread": 0.018259,
+          "unionMeanLuminanceRatio": 1.002691,
+          "absoluteLuminanceDifference": 0.00055218,
+          "A1": "PASS",
+          "A2": "PASS",
+          "A3doublePrime": "PASS"
+        },
+        {
+          "pose": "400/235",
+          "intersectionPixels": 250998,
+          "sourceSilhouettePixels": 251649,
+          "bakedSilhouettePixels": 252168,
+          "thinIntersection": false,
+          "perChannelRatios": [
+            0.949344,
+            0.958408,
+            0.957069
+          ],
+          "channelSpread": 0.009064,
+          "unionMeanLuminanceRatio": 0.949972,
+          "absoluteLuminanceDifference": -0.00341814,
+          "A1": "not applicable",
+          "A2": "PASS",
+          "A3doublePrime": "PASS"
+        },
+        {
+          "pose": "1200/55",
+          "intersectionPixels": 18467,
+          "sourceSilhouettePixels": 18514,
+          "bakedSilhouettePixels": 18545,
+          "thinIntersection": false,
+          "perChannelRatios": [
+            0.983305,
+            0.992922,
+            0.997485
+          ],
+          "channelSpread": 0.01418,
+          "unionMeanLuminanceRatio": 0.992161,
+          "absoluteLuminanceDifference": -0.00168634,
+          "A1": "PASS",
+          "A2": "PASS",
+          "A3doublePrime": "PASS"
+        },
+        {
+          "pose": "1200/235",
+          "intersectionPixels": 18264,
+          "sourceSilhouettePixels": 18307,
+          "bakedSilhouettePixels": 18335,
+          "thinIntersection": false,
+          "perChannelRatios": [
+            0.970917,
+            0.980661,
+            0.98047
+          ],
+          "channelSpread": 0.009745,
+          "unionMeanLuminanceRatio": 0.983384,
+          "absoluteLuminanceDifference": -0.00091883,
+          "A1": "not applicable",
+          "A2": "PASS",
+          "A3doublePrime": "PASS"
+        },
+        {
+          "pose": "4000/55",
+          "intersectionPixels": 1559,
+          "sourceSilhouettePixels": 1560,
+          "bakedSilhouettePixels": 1562,
+          "thinIntersection": false,
+          "perChannelRatios": [
+            0.984409,
+            0.992837,
+            0.996772
+          ],
+          "channelSpread": 0.012363,
+          "unionMeanLuminanceRatio": 0.990041,
+          "absoluteLuminanceDifference": -0.00209842,
+          "A1": "PASS",
+          "A2": "PASS",
+          "A3doublePrime": "PASS"
+        },
+        {
+          "pose": "4000/235",
+          "intersectionPixels": 1544,
+          "sourceSilhouettePixels": 1545,
+          "bakedSilhouettePixels": 1546,
+          "thinIntersection": false,
+          "perChannelRatios": [
+            0.939627,
+            0.951573,
+            0.953724
+          ],
+          "channelSpread": 0.014096,
+          "unionMeanLuminanceRatio": 0.954535,
+          "absoluteLuminanceDifference": -0.00249009,
+          "A1": "not applicable",
+          "A2": "PASS",
+          "A3doublePrime": "PASS"
+        }
+      ],
+      "worstChannelSpread": 0.018259,
+      "a3Misses": [],
+      "a1Misses": [],
+      "a2Misses": []
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000060-16-19303-17931",
+      "waveId": "w01",
+      "stratum": "smallest-face-count",
+      "telemetry": {
+        "faceCount": 4,
+        "appliedScale": 1,
+        "achievedTexelRatio": 1,
+        "underResolved": false,
+        "refusedBuildings": 0,
+        "fallbackAreaShare": 0
+      },
+      "poses": [
+        {
+          "pose": "400/55",
+          "intersectionPixels": 555,
+          "sourceSilhouettePixels": 559,
+          "bakedSilhouettePixels": 646,
+          "thinIntersection": false,
+          "perChannelRatios": [
+            1.099738,
+            1.085406,
+            1.069434
+          ],
+          "channelSpread": 0.030304,
+          "unionMeanLuminanceRatio": 1.211444,
+          "absoluteLuminanceDifference": 0.05459098,
+          "A1": "MISS",
+          "A2": "MISS",
+          "A3doublePrime": "PASS"
+        },
+        {
+          "pose": "400/235",
+          "intersectionPixels": 555,
+          "sourceSilhouettePixels": 565,
+          "bakedSilhouettePixels": 647,
+          "thinIntersection": false,
+          "perChannelRatios": [
+            0.648212,
+            0.721318,
+            0.768484
+          ],
+          "channelSpread": 0.120272,
+          "unionMeanLuminanceRatio": 1.052222,
+          "absoluteLuminanceDifference": 0.00061656,
+          "A1": "not applicable",
+          "A2": "PASS",
+          "A3doublePrime": "MISS"
+        },
+        {
+          "pose": "1200/55",
+          "intersectionPixels": 63,
+          "sourceSilhouettePixels": 64,
+          "bakedSilhouettePixels": 73,
+          "thinIntersection": true,
+          "perChannelRatios": [
+            1.088935,
+            1.074146,
+            1.057261
+          ],
+          "channelSpread": 0.031674,
+          "unionMeanLuminanceRatio": 1.201865,
+          "absoluteLuminanceDifference": 0.05001993,
+          "A1": "MISS",
+          "A2": "MISS",
+          "A3doublePrime": "PASS"
+        },
+        {
+          "pose": "1200/235",
+          "intersectionPixels": 63,
+          "sourceSilhouettePixels": 64,
+          "bakedSilhouettePixels": 73,
+          "thinIntersection": true,
+          "perChannelRatios": [
+            0.675175,
+            0.744633,
+            0.78711
+          ],
+          "channelSpread": 0.111935,
+          "unionMeanLuminanceRatio": 0.987019,
+          "absoluteLuminanceDifference": -0.00014286,
+          "A1": "not applicable",
+          "A2": "PASS",
+          "A3doublePrime": "MISS"
+        },
+        {
+          "pose": "4000/55",
+          "intersectionPixels": 5,
+          "sourceSilhouettePixels": 5,
+          "bakedSilhouettePixels": 6,
+          "thinIntersection": true,
+          "perChannelRatios": [
+            1.014249,
+            1.013497,
+            1.006386
+          ],
+          "channelSpread": 0.007863,
+          "unionMeanLuminanceRatio": 1.181283,
+          "absoluteLuminanceDifference": 0.04010658,
+          "A1": "MISS",
+          "A2": "MISS",
+          "A3doublePrime": "PASS"
+        },
+        {
+          "pose": "4000/235",
+          "intersectionPixels": 5,
+          "sourceSilhouettePixels": 5,
+          "bakedSilhouettePixels": 6,
+          "thinIntersection": true,
+          "perChannelRatios": [
+            0.484931,
+            0.523821,
+            0.545213
+          ],
+          "channelSpread": 0.060282,
+          "unionMeanLuminanceRatio": 0.58057,
+          "absoluteLuminanceDifference": -0.00882287,
+          "A1": "not applicable",
+          "A2": "PASS",
+          "A3doublePrime": "MISS"
+        }
+      ],
+      "worstChannelSpread": 0.120272,
+      "a3Misses": [
+        "400/235",
+        "1200/235",
+        "4000/235"
+      ],
+      "a1Misses": [
+        "400/55",
+        "1200/55",
+        "4000/55"
+      ],
+      "a2Misses": [
+        "400/55",
+        "1200/55",
+        "4000/55"
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000015-16-19299-17929",
+      "waveId": "w01",
+      "stratum": "most-refused-buildings",
+      "telemetry": {
+        "faceCount": 778,
+        "appliedScale": 0.25,
+        "achievedTexelRatio": 0.25,
+        "underResolved": true,
+        "refusedBuildings": 3,
+        "fallbackAreaShare": 0.00078469
+      },
+      "poses": [
+        {
+          "pose": "400/55",
+          "intersectionPixels": 376053,
+          "sourceSilhouettePixels": 376206,
+          "bakedSilhouettePixels": 386016,
+          "thinIntersection": false,
+          "perChannelRatios": [
+            1.103803,
+            1.103063,
+            1.109715
+          ],
+          "channelSpread": 0.006652,
+          "unionMeanLuminanceRatio": 1.136893,
+          "absoluteLuminanceDifference": 0.02784416,
+          "A1": "MISS",
+          "A2": "MISS",
+          "A3doublePrime": "PASS"
+        },
+        {
+          "pose": "400/235",
+          "intersectionPixels": 420147,
+          "sourceSilhouettePixels": 420337,
+          "bakedSilhouettePixels": 447384,
+          "thinIntersection": false,
+          "perChannelRatios": [
+            0.990667,
+            0.98968,
+            0.992026
+          ],
+          "channelSpread": 0.002346,
+          "unionMeanLuminanceRatio": 1.028551,
+          "absoluteLuminanceDifference": 0.00177069,
+          "A1": "not applicable",
+          "A2": "PASS",
+          "A3doublePrime": "PASS"
+        },
+        {
+          "pose": "1200/55",
+          "intersectionPixels": 36863,
+          "sourceSilhouettePixels": 36896,
+          "bakedSilhouettePixels": 38452,
+          "thinIntersection": false,
+          "perChannelRatios": [
+            1.06762,
+            1.076975,
+            1.082811
+          ],
+          "channelSpread": 0.015192,
+          "unionMeanLuminanceRatio": 1.127817,
+          "absoluteLuminanceDifference": 0.02551838,
+          "A1": "MISS",
+          "A2": "MISS",
+          "A3doublePrime": "PASS"
+        },
+        {
+          "pose": "1200/235",
+          "intersectionPixels": 37900,
+          "sourceSilhouettePixels": 37978,
+          "bakedSilhouettePixels": 39322,
+          "thinIntersection": false,
+          "perChannelRatios": [
+            1.012758,
+            1.012359,
+            1.014139
+          ],
+          "channelSpread": 0.001779,
+          "unionMeanLuminanceRatio": 1.128103,
+          "absoluteLuminanceDifference": 0.00438478,
+          "A1": "not applicable",
+          "A2": "PASS",
+          "A3doublePrime": "PASS"
+        },
+        {
+          "pose": "4000/55",
+          "intersectionPixels": 3225,
+          "sourceSilhouettePixels": 3227,
+          "bakedSilhouettePixels": 3412,
+          "thinIntersection": false,
+          "perChannelRatios": [
+            1.060134,
+            1.068533,
+            1.074711
+          ],
+          "channelSpread": 0.014577,
+          "unionMeanLuminanceRatio": 1.124089,
+          "absoluteLuminanceDifference": 0.0240806,
+          "A1": "MISS",
+          "A2": "MISS",
+          "A3doublePrime": "PASS"
+        },
+        {
+          "pose": "4000/235",
+          "intersectionPixels": 3228,
+          "sourceSilhouettePixels": 3231,
+          "bakedSilhouettePixels": 3343,
+          "thinIntersection": false,
+          "perChannelRatios": [
+            1.019701,
+            1.01931,
+            1.021591
+          ],
+          "channelSpread": 0.002281,
+          "unionMeanLuminanceRatio": 1.135402,
+          "absoluteLuminanceDifference": 0.00478301,
+          "A1": "not applicable",
+          "A2": "PASS",
+          "A3doublePrime": "PASS"
+        }
+      ],
+      "worstChannelSpread": 0.015192,
+      "a3Misses": [],
+      "a1Misses": [
+        "400/55",
+        "1200/55",
+        "4000/55"
+      ],
+      "a2Misses": [
+        "400/55",
+        "1200/55",
+        "4000/55"
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000720-17-38611-35818",
+      "waveId": "w05",
+      "stratum": "worst-zone-fallback-share",
+      "telemetry": {
+        "faceCount": 501,
+        "appliedScale": 0.707107,
+        "achievedTexelRatio": 0.707107,
+        "underResolved": true,
+        "refusedBuildings": 0,
+        "fallbackAreaShare": 0.04650947
+      },
+      "poses": [
+        {
+          "pose": "400/55",
+          "intersectionPixels": 38462,
+          "sourceSilhouettePixels": 38514,
+          "bakedSilhouettePixels": 40154,
+          "thinIntersection": false,
+          "perChannelRatios": [
+            1.062736,
+            1.065882,
+            1.067169
+          ],
+          "channelSpread": 0.004432,
+          "unionMeanLuminanceRatio": 1.105185,
+          "absoluteLuminanceDifference": 0.02882845,
+          "A1": "MISS",
+          "A2": "MISS",
+          "A3doublePrime": "PASS"
+        },
+        {
+          "pose": "400/235",
+          "intersectionPixels": 46309,
+          "sourceSilhouettePixels": 46365,
+          "bakedSilhouettePixels": 47768,
+          "thinIntersection": false,
+          "perChannelRatios": [
+            0.990447,
+            0.995627,
+            0.99941
+          ],
+          "channelSpread": 0.008964,
+          "unionMeanLuminanceRatio": 1.041053,
+          "absoluteLuminanceDifference": 0.0030278,
+          "A1": "not applicable",
+          "A2": "PASS",
+          "A3doublePrime": "PASS"
+        },
+        {
+          "pose": "1200/55",
+          "intersectionPixels": 3921,
+          "sourceSilhouettePixels": 3930,
+          "bakedSilhouettePixels": 4072,
+          "thinIntersection": false,
+          "perChannelRatios": [
+            1.048979,
+            1.051481,
+            1.052384
+          ],
+          "channelSpread": 0.003405,
+          "unionMeanLuminanceRatio": 1.082384,
+          "absoluteLuminanceDifference": 0.02187244,
+          "A1": "MISS",
+          "A2": "MISS",
+          "A3doublePrime": "PASS"
+        },
+        {
+          "pose": "1200/235",
+          "intersectionPixels": 4373,
+          "sourceSilhouettePixels": 4377,
+          "bakedSilhouettePixels": 4515,
+          "thinIntersection": false,
+          "perChannelRatios": [
+            1.024822,
+            1.029201,
+            1.031941
+          ],
+          "channelSpread": 0.007119,
+          "unionMeanLuminanceRatio": 1.077067,
+          "absoluteLuminanceDifference": 0.00535955,
+          "A1": "not applicable",
+          "A2": "PASS",
+          "A3doublePrime": "PASS"
+        },
+        {
+          "pose": "4000/55",
+          "intersectionPixels": 349,
+          "sourceSilhouettePixels": 349,
+          "bakedSilhouettePixels": 368,
+          "thinIntersection": false,
+          "perChannelRatios": [
+            1.048137,
+            1.05083,
+            1.051265
+          ],
+          "channelSpread": 0.003128,
+          "unionMeanLuminanceRatio": 1.072685,
+          "absoluteLuminanceDifference": 0.01834554,
+          "A1": "MISS",
+          "A2": "MISS",
+          "A3doublePrime": "PASS"
+        },
+        {
+          "pose": "4000/235",
+          "intersectionPixels": 381,
+          "sourceSilhouettePixels": 381,
+          "bakedSilhouettePixels": 395,
+          "thinIntersection": false,
+          "perChannelRatios": [
+            1.015307,
+            1.021976,
+            1.026397
+          ],
+          "channelSpread": 0.01109,
+          "unionMeanLuminanceRatio": 1.065171,
+          "absoluteLuminanceDifference": 0.0045137,
+          "A1": "not applicable",
+          "A2": "PASS",
+          "A3doublePrime": "PASS"
+        }
+      ],
+      "worstChannelSpread": 0.01109,
+      "a3Misses": [],
+      "a1Misses": [
+        "400/55",
+        "1200/55",
+        "4000/55"
+      ],
+      "a2Misses": [
+        "400/55",
+        "1200/55",
+        "4000/55"
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000106-15-9650-8962",
+      "waveId": "w01",
+      "stratum": "lowest-applied-scale",
+      "telemetry": {
+        "faceCount": 1853,
+        "appliedScale": 0.176777,
+        "achievedTexelRatio": 0.176777,
+        "underResolved": true,
+        "refusedBuildings": 0,
+        "fallbackAreaShare": 0.00322933
+      },
+      "poses": [
+        {
+          "pose": "400/55",
+          "intersectionPixels": 330884,
+          "sourceSilhouettePixels": 330956,
+          "bakedSilhouettePixels": 340204,
+          "thinIntersection": false,
+          "perChannelRatios": [
+            1.045329,
+            1.045747,
+            1.049436
+          ],
+          "channelSpread": 0.004107,
+          "unionMeanLuminanceRatio": 1.065519,
+          "absoluteLuminanceDifference": 0.01084663,
+          "A1": "MISS",
+          "A2": "MISS",
+          "A3doublePrime": "PASS"
+        },
+        {
+          "pose": "400/235",
+          "intersectionPixels": 281274,
+          "sourceSilhouettePixels": 281424,
+          "bakedSilhouettePixels": 283973,
+          "thinIntersection": false,
+          "perChannelRatios": [
+            1.062542,
+            1.066944,
+            1.071428
+          ],
+          "channelSpread": 0.008886,
+          "unionMeanLuminanceRatio": 1.14084,
+          "absoluteLuminanceDifference": 0.00219269,
+          "A1": "not applicable",
+          "A2": "PASS",
+          "A3doublePrime": "PASS"
+        },
+        {
+          "pose": "1200/55",
+          "intersectionPixels": 68413,
+          "sourceSilhouettePixels": 68509,
+          "bakedSilhouettePixels": 70683,
+          "thinIntersection": false,
+          "perChannelRatios": [
+            1.024148,
+            1.029696,
+            1.033239
+          ],
+          "channelSpread": 0.009091,
+          "unionMeanLuminanceRatio": 1.044252,
+          "absoluteLuminanceDifference": 0.01013029,
+          "A1": "PASS",
+          "A2": "MISS",
+          "A3doublePrime": "PASS"
+        },
+        {
+          "pose": "1200/235",
+          "intersectionPixels": 92489,
+          "sourceSilhouettePixels": 92569,
+          "bakedSilhouettePixels": 95062,
+          "thinIntersection": false,
+          "perChannelRatios": [
+            1.040607,
+            1.042772,
+            1.047429
+          ],
+          "channelSpread": 0.006822,
+          "unionMeanLuminanceRatio": 1.067305,
+          "absoluteLuminanceDifference": 0.00160844,
+          "A1": "not applicable",
+          "A2": "PASS",
+          "A3doublePrime": "PASS"
+        },
+        {
+          "pose": "4000/55",
+          "intersectionPixels": 4912,
+          "sourceSilhouettePixels": 4918,
+          "bakedSilhouettePixels": 5049,
+          "thinIntersection": false,
+          "perChannelRatios": [
+            1.023996,
+            1.028933,
+            1.032382
+          ],
+          "channelSpread": 0.008387,
+          "unionMeanLuminanceRatio": 1.049209,
+          "absoluteLuminanceDifference": 0.01184281,
+          "A1": "PASS",
+          "A2": "MISS",
+          "A3doublePrime": "PASS"
+        },
+        {
+          "pose": "4000/235",
+          "intersectionPixels": 6127,
+          "sourceSilhouettePixels": 6132,
+          "bakedSilhouettePixels": 6234,
+          "thinIntersection": false,
+          "perChannelRatios": [
+            1.021852,
+            1.026509,
+            1.032084
+          ],
+          "channelSpread": 0.010232,
+          "unionMeanLuminanceRatio": 1.067316,
+          "absoluteLuminanceDifference": 0.00143485,
+          "A1": "not applicable",
+          "A2": "PASS",
+          "A3doublePrime": "PASS"
+        }
+      ],
+      "worstChannelSpread": 0.010232,
+      "a3Misses": [],
+      "a1Misses": [
+        "400/55"
+      ],
+      "a2Misses": [
+        "400/55",
+        "1200/55",
+        "4000/55"
+      ]
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000508-17-38611-35842",
+      "waveId": "w04",
+      "stratum": "median-face-count",
+      "telemetry": {
+        "faceCount": 671,
+        "appliedScale": 0.707107,
+        "achievedTexelRatio": 0.707107,
+        "underResolved": true,
+        "refusedBuildings": 0,
+        "fallbackAreaShare": 0.00918832
+      },
+      "poses": [
+        {
+          "pose": "400/55",
+          "intersectionPixels": 62003,
+          "sourceSilhouettePixels": 62151,
+          "bakedSilhouettePixels": 63572,
+          "thinIntersection": false,
+          "perChannelRatios": [
+            1.015303,
+            1.021751,
+            1.024905
+          ],
+          "channelSpread": 0.009602,
+          "unionMeanLuminanceRatio": 1.043292,
+          "absoluteLuminanceDifference": 0.00910915,
+          "A1": "PASS",
+          "A2": "PASS",
+          "A3doublePrime": "PASS"
+        },
+        {
+          "pose": "400/235",
+          "intersectionPixels": 61697,
+          "sourceSilhouettePixels": 61824,
+          "bakedSilhouettePixels": 63310,
+          "thinIntersection": false,
+          "perChannelRatios": [
+            0.985836,
+            0.995329,
+            0.993928
+          ],
+          "channelSpread": 0.009493,
+          "unionMeanLuminanceRatio": 1.074205,
+          "absoluteLuminanceDifference": 0.00246259,
+          "A1": "not applicable",
+          "A2": "PASS",
+          "A3doublePrime": "PASS"
+        },
+        {
+          "pose": "1200/55",
+          "intersectionPixels": 6112,
+          "sourceSilhouettePixels": 6123,
+          "bakedSilhouettePixels": 6253,
+          "thinIntersection": false,
+          "perChannelRatios": [
+            1.005393,
+            1.011383,
+            1.01352
+          ],
+          "channelSpread": 0.008127,
+          "unionMeanLuminanceRatio": 1.037591,
+          "absoluteLuminanceDifference": 0.00794795,
+          "A1": "PASS",
+          "A2": "PASS",
+          "A3doublePrime": "PASS"
+        },
+        {
+          "pose": "1200/235",
+          "intersectionPixels": 5837,
+          "sourceSilhouettePixels": 5845,
+          "bakedSilhouettePixels": 5996,
+          "thinIntersection": false,
+          "perChannelRatios": [
+            1.005821,
+            1.014968,
+            1.015078
+          ],
+          "channelSpread": 0.009257,
+          "unionMeanLuminanceRatio": 1.097063,
+          "absoluteLuminanceDifference": 0.00355363,
+          "A1": "not applicable",
+          "A2": "PASS",
+          "A3doublePrime": "PASS"
+        },
+        {
+          "pose": "4000/55",
+          "intersectionPixels": 546,
+          "sourceSilhouettePixels": 546,
+          "bakedSilhouettePixels": 563,
+          "thinIntersection": false,
+          "perChannelRatios": [
+            1.002819,
+            1.010176,
+            1.012722
+          ],
+          "channelSpread": 0.009903,
+          "unionMeanLuminanceRatio": 1.033045,
+          "absoluteLuminanceDifference": 0.0066697,
+          "A1": "PASS",
+          "A2": "PASS",
+          "A3doublePrime": "PASS"
+        },
+        {
+          "pose": "4000/235",
+          "intersectionPixels": 501,
+          "sourceSilhouettePixels": 502,
+          "bakedSilhouettePixels": 517,
+          "thinIntersection": false,
+          "perChannelRatios": [
+            0.985993,
+            0.998758,
+            1.000149
+          ],
+          "channelSpread": 0.014156,
+          "unionMeanLuminanceRatio": 1.083344,
+          "absoluteLuminanceDifference": 0.00310699,
+          "A1": "not applicable",
+          "A2": "PASS",
+          "A3doublePrime": "PASS"
+        }
+      ],
+      "worstChannelSpread": 0.014156,
+      "a3Misses": [],
+      "a1Misses": [],
+      "a2Misses": []
+    }
+  ],
+  "analysis": {
+    "required": "The plan pre-registered that a cell-level MISS is recorded at STRATUM level with analysis and does not stop a wave. This is that analysis.",
+    "hueHeldAlmostEverywhere": {
+      "statement": "A3'' held at 33 of 36 poses, and EVERY miss is one cell.",
+      "theOutlier": "smallest-face-count (manhattan-exterior-cell-w01-000060-16-19303-17931), 4 faces, one building: spreads up to 0.120272 at the three azimuth-235 poses. It alone exceeds the population prediction, and it is the smallest cell in the island.",
+      "whyThatCellIsHard": "A single small building has almost no wall area for the aggregate to average, so its tile is dominated by one roof cap and a handful of flat faces. Its azimuth-235 poses are also the darkest in the sample, where a small absolute difference is a large ratio.",
+      "thinIntersections": "4 of 36 poses have fewer than 100 intersection pixels, all on the two smallest cells at 4,000 m, some as low as 5. Ratios from a five-pixel domain are reported for completeness and are NOT evidence of anything."
+    },
+    "theSystematicFindingIsLuminanceNotHue": {
+      "statement": "The gate that fails broadly is not A3'' but A1 and A2, and it fails in ONE direction: the tile is BRIGHTER than the source at azimuth 55.",
+      "a1": "8 of 18 applicable poses pass.",
+      "a2": "24 of 36 poses pass.",
+      "direction": "Every A1 and A2 miss in the sample is the tile reading brighter, with union luminance ratios from 1.04 to 1.21. Not one pose fails by being too dark.",
+      "whichStrataFail": [
+        {
+          "stratum": "smallest-face-count",
+          "faceCount": 4,
+          "a1Misses": 3,
+          "a2Misses": 3
+        },
+        {
+          "stratum": "most-refused-buildings",
+          "faceCount": 778,
+          "a1Misses": 3,
+          "a2Misses": 3
+        },
+        {
+          "stratum": "worst-zone-fallback-share",
+          "faceCount": 501,
+          "a1Misses": 3,
+          "a2Misses": 3
+        },
+        {
+          "stratum": "lowest-applied-scale",
+          "faceCount": 1853,
+          "a1Misses": 1,
+          "a2Misses": 3
+        }
+      ],
+      "whichPass": [
+        {
+          "stratum": "largest-face-count",
+          "faceCount": 3836
+        },
+        {
+          "stratum": "median-face-count",
+          "faceCount": 671
+        }
+      ],
+      "observedPattern": "The two cells that pass everything are the LARGEST (3,836 faces) and the MEDIAN (671). The four that miss are smaller or thinner. The prototype T013 measured has 764 faces and 48 buildings and sits with the passing group — so the prototype is NOT representative of the population for LUMINANCE, and the campaign is the first evidence of that.",
+      "mechanismNotEstablished": "NO mechanism is claimed. The obvious candidate is that a prism carries no self-shadowing or inter-building occlusion while the source does, so the source darkens more where geometry is dense per unit of silhouette. That is a hypothesis this stage did not test, and it belongs to T007 with a sample designed for it."
+    },
+    "whatThisDoesNotDo": "It does not stop a wave, invalidate a tile, or reopen the adopted gates. It is the population picture the campaign was run to obtain, and it says the luminance gates need attention before acceptance."
+  },
+  "byStratum": [
+    {
+      "stratum": "largest-face-count",
+      "cellId": "manhattan-exterior-cell-w05-000855-16-19309-17892",
+      "worstChannelSpread": 0.018259,
+      "a3Misses": 0,
+      "a1Misses": 0,
+      "a2Misses": 0
+    },
+    {
+      "stratum": "smallest-face-count",
+      "cellId": "manhattan-exterior-cell-w01-000060-16-19303-17931",
+      "worstChannelSpread": 0.120272,
+      "a3Misses": 3,
+      "a1Misses": 3,
+      "a2Misses": 3
+    },
+    {
+      "stratum": "most-refused-buildings",
+      "cellId": "manhattan-exterior-cell-w01-000015-16-19299-17929",
+      "worstChannelSpread": 0.015192,
+      "a3Misses": 0,
+      "a1Misses": 3,
+      "a2Misses": 3
+    },
+    {
+      "stratum": "worst-zone-fallback-share",
+      "cellId": "manhattan-exterior-cell-w05-000720-17-38611-35818",
+      "worstChannelSpread": 0.01109,
+      "a3Misses": 0,
+      "a1Misses": 3,
+      "a2Misses": 3
+    },
+    {
+      "stratum": "lowest-applied-scale",
+      "cellId": "manhattan-exterior-cell-w01-000106-15-9650-8962",
+      "worstChannelSpread": 0.010232,
+      "a3Misses": 0,
+      "a1Misses": 1,
+      "a2Misses": 3
+    },
+    {
+      "stratum": "median-face-count",
+      "cellId": "manhattan-exterior-cell-w04-000508-17-38611-35842",
+      "worstChannelSpread": 0.014156,
+      "a3Misses": 0,
+      "a1Misses": 0,
+      "a2Misses": 0
+    }
+  ],
+  "aggregate": {
+    "posesMeasured": 36,
+    "a3Passes": 33,
+    "a1Applicable": 18,
+    "a1Passes": 8,
+    "a2Passes": 24
+  },
+  "notClaimedHere": [
+    "Six cells of 883. The extremes bound the population; they do not measure it.",
+    "This is not acceptance and no gate verdict here binds a tile.",
+    "EEVEE under one sun is not the shipped Cesium renderer."
+  ]
+}
