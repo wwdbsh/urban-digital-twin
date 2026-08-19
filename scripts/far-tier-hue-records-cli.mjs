@@ -99,8 +99,22 @@ const MASK_CONVENTION = [
   { domain: "INTERSECTION, un-premultiplied", worstAbsoluteDeltaPerPose: [0.000007, 0.000021, 0.000016, 0.000064, 0.000105, 0.000053] },
 ];
 
+/**
+ * Digest only the renders THIS STAGE produced.
+ *
+ * The renders directory is shared with the later fix and roof stages, so an
+ * unfiltered listing made this record's inventory grow every time a subsequent
+ * stage rendered anything — an attribution record silently claiming renders
+ * taken after it. The prefixes below are exactly the four subjects captured
+ * here: the source, the v1 tile, the shadows-off ablation and the absorbed
+ * variant.
+ */
+const STAGE_RENDER_PREFIXES = ["source-", "baked-", "noshadow-", "absorbed-"];
+
 async function digestTree(root) {
-  const entries = (await readdir(root)).filter((name) => !name.startsWith(".")).sort();
+  const entries = (await readdir(root))
+    .filter((name) => STAGE_RENDER_PREFIXES.some((prefix) => name.startsWith(prefix)))
+    .sort();
   const out = [];
   for (const name of entries) {
     try {

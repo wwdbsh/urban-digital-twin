@@ -256,6 +256,7 @@ describe("the verdict is judged against the pre-registered bars", () => {
 
 const roof = JSON.parse(readFileSync(join(repositoryRoot, "data/far-tier-hlod-hue-20260819/roof-term.json"), "utf8"));
 const captureRecord = JSON.parse(readFileSync(join(repositoryRoot, "data/far-tier-hlod-hue-20260819/pinned-capture.json"), "utf8"));
+const attributionRecord = JSON.parse(readFileSync(join(repositoryRoot, "data/far-tier-hlod-hue-20260819/hue-attribution.json"), "utf8"));
 
 describe("the roof term is measured, and it moves hue the wrong way", () => {
   it("worsens the spread at every one of the six poses", () => {
@@ -589,6 +590,16 @@ describe("the absorbed variant's union control is derived from measurements", ()
     expect(control.worstUnionDelta).toBe(0);
     expect(control.unionWithBakedPixels).toEqual(control.sourceUnionWithBakedPixels);
     expect(control).not.toHaveProperty("unionWithBakedAlsoIdentical");
+  });
+
+  it("digests only the renders its own stage produced", () => {
+    // An unfiltered directory listing made this inventory grow whenever a LATER
+    // stage rendered anything, so the attribution record claimed renders taken
+    // after it. Four subjects, six poses each.
+    expect(captureRecord.renders.files).toHaveLength(24);
+    const prefixes = new Set(captureRecord.renders.files.map((file) => file.name.split("-")[0]));
+    expect([...prefixes].sort()).toEqual(["absorbed", "baked", "noshadow", "source"]);
+    expect(attributionRecord.evidence.renderCount).toBe(captureRecord.renders.files.length);
   });
 
   it("records why its own checksum moved after the pre-registration cited it", () => {

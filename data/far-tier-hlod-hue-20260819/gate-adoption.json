@@ -61,7 +61,7 @@
   },
   "extensionToRoofRejected": {
     "decision": "REJECTED.",
-    "onWhatEvidence": "roof-term.json, sha256 6725ca9176a4717d38ef26447d2cfe8734cb6e886c2ae020f52ed89976abe01a.",
+    "onWhatEvidence": "roof-term.json, sha256 9ac75bfd2e46e256fb8d1249f0e34c8d7705875b1fccc3a2eb99e63fc9f3a7dc.",
     "measuredConsequences": [
       "Hue WORSE at all six poses, by 0.003780, 0.009718, 0.003927, 0.009373, 0.003856, 0.009250.",
       "The deciding pose 4,000 m / azimuth 235 goes 0.033824 to 0.043074 — past A3'' as well as past 0.02 and 0.032.",
@@ -130,11 +130,11 @@
     ]
   },
   "lineage": {
-    "attribution": "f7e24d6dd4f4ebf4b3d142a899711ab6556df066f1589c2466e80891804a451b",
-    "pinnedCapture": "969de7b207fc0d6d2942c62da2d61c98f51df59a3dfe92adfc1439fc12620aa5",
+    "attribution": "8826b5fcafb81fc835bed3428b2989d33b32a18b9ca1e3e3363b69408da9fcb3",
+    "pinnedCapture": "fff7e822371d464826f3471870c75e9f6c08a53ac53ebd5b7f7177805677ee29",
     "preRegistration": "e01db79ddde70eee239d331ee1e1d02e8ded97d080fb8594724a559ff20e89b7",
     "fixCaptureVerdict": "1e49002cb59e43a3ed16c7c6c6092cd59cf6ad152206e07c48ce675e63a2690c",
-    "roofTerm": "6725ca9176a4717d38ef26447d2cfe8734cb6e886c2ae020f52ed89976abe01a"
+    "roofTerm": "9ac75bfd2e46e256fb8d1249f0e34c8d7705875b1fccc3a2eb99e63fc9f3a7dc"
   },
   "notClaimedHere": [
     "A3'' is not a pre-registered bar and is never described as one.",

@@ -7,8 +7,8 @@
   "capturedAtStatement": "NULL BY CONSTRUCTION.",
   "headline": "THE ROOF TERM MOVES HUE THE WRONG WAY AT EVERY POSE, AND FIXES THE TONE MISS THAT HAS BLOCKED THE MASS BAKE SINCE T002. An area-correct roof aggregate widens the hue spread at all six poses — 4,000 m / azimuth 235 goes 0.033824 to 0.043074, away from 0.02 and away from 0.032 — while taking that pose's luminance ratio from 0.942687 to 1.004432. This is a trade, not a fix, and it is put to the user rather than decided here.",
   "lineage": {
-    "attribution": "hue-attribution.json, sha256 f7e24d6dd4f4ebf4b3d142a899711ab6556df066f1589c2466e80891804a451b",
-    "wallCapture": "pinned-capture.json, sha256 969de7b207fc0d6d2942c62da2d61c98f51df59a3dfe92adfc1439fc12620aa5",
+    "attribution": "hue-attribution.json, sha256 8826b5fcafb81fc835bed3428b2989d33b32a18b9ca1e3e3363b69408da9fcb3",
+    "wallCapture": "pinned-capture.json, sha256 fff7e822371d464826f3471870c75e9f6c08a53ac53ebd5b7f7177805677ee29",
     "wallFixVerdict": "fix-capture-verdict.json, sha256 1e49002cb59e43a3ed16c7c6c6092cd59cf6ad152206e07c48ce675e63a2690c",
     "whatThisStageAdds": "The roof half of the surface-composition attribution, by the same variant method, plus the residual after BOTH palette terms are equalised."
   },

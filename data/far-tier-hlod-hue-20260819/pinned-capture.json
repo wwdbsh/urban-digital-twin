@@ -868,36 +868,6 @@
         "sha256": "e80f06b8abdac018ac814b1c8920a330a90b50e083d93751893e4b18d5908744"
       },
       {
-        "name": "botheq-1200m-az235.exr",
-        "byteSize": 74448,
-        "sha256": "deae7012eac0ec158efb9a48339b6c2e77205a3d1eb7edafd30cc4149cd243e6"
-      },
-      {
-        "name": "botheq-1200m-az55.exr",
-        "byteSize": 98641,
-        "sha256": "d7e3d80b82d54c114db066fbee8f9dfd913ff0d236c10cd80eb3af6b7e99edc4"
-      },
-      {
-        "name": "botheq-4000m-az235.exr",
-        "byteSize": 34330,
-        "sha256": "cd8ea4058972d1fadd69e4cc50cd4003d910109e4583e123c689bae4fffaa10f"
-      },
-      {
-        "name": "botheq-4000m-az55.exr",
-        "byteSize": 36103,
-        "sha256": "2ece3ef4762df520a8f9203060116de0da13e9721ca07fc8c4d4dc2beb24a532"
-      },
-      {
-        "name": "botheq-400m-az235.exr",
-        "byteSize": 253824,
-        "sha256": "e0aae2d410962bb5fa22beaf6d81858abb05d5aec5ea624d43cca9c11c439a2b"
-      },
-      {
-        "name": "botheq-400m-az55.exr",
-        "byteSize": 475932,
-        "sha256": "d5d584541bca5825778e69d02b3d171ba26b98d98e736a2af0121c1aa00ecdcf"
-      },
-      {
         "name": "noshadow-baked-4000m-az235.exr",
         "byteSize": 33374,
         "sha256": "25d9638aecf6d2a5632b9cc2cb6c652f0d9a0a98a8fe98a78e766682ec8185a7"
@@ -928,36 +898,6 @@
         "sha256": "77078f844f5e65d3155b44aeb400210c1f9af33955397da5f8381cdf962c987a"
       },
       {
-        "name": "roofagg-1200m-az235.exr",
-        "byteSize": 67618,
-        "sha256": "790624bb7b832886c6e193a48a9f39471bd65d29dd5fb56cd25f1491d47c8224"
-      },
-      {
-        "name": "roofagg-1200m-az55.exr",
-        "byteSize": 90711,
-        "sha256": "62c6d69f980cf36a9146270fbb95b3ef0702f2e4a77b4d6eb831165159d78a0d"
-      },
-      {
-        "name": "roofagg-4000m-az235.exr",
-        "byteSize": 33419,
-        "sha256": "09fcb327fbd63908ab5b06424cc8c99cbcdbf50dd04bc4ce7105b8590925e29d"
-      },
-      {
-        "name": "roofagg-4000m-az55.exr",
-        "byteSize": 35887,
-        "sha256": "de3f331257277630cc34a1680ac46d9c9f6982c47fb4c9d3f1fa8d7776190c06"
-      },
-      {
-        "name": "roofagg-400m-az235.exr",
-        "byteSize": 203269,
-        "sha256": "fe4bdffe4e4de8580adb5f7f0646615cb02b6bdb5fac667fb16efbebfc5a0a61"
-      },
-      {
-        "name": "roofagg-400m-az55.exr",
-        "byteSize": 350034,
-        "sha256": "b58850d926b8bc554f913970d667d963f14802eec9535d0526b4e02bc3a6f81b"
-      },
-      {
         "name": "source-1200m-az235.exr",
         "byteSize": 74553,
         "sha256": "51dd0caae62e0fa6f8691741edda6eea99c0973db2a3cf032d41bbf706f57ae4"
@@ -986,36 +926,6 @@
         "name": "source-400m-az55.exr",
         "byteSize": 482368,
         "sha256": "f85bf72833716e76600926a13988563804a7809cb8e1eca423420f0a5363847e"
-      },
-      {
-        "name": "v3-1200m-az235.exr",
-        "byteSize": 67146,
-        "sha256": "8ef01ad1e09dbeaf0fef6e9d6110379c0abfec72f4b378b58ab09af2edd8ee6f"
-      },
-      {
-        "name": "v3-1200m-az55.exr",
-        "byteSize": 90763,
-        "sha256": "506d72726c4c911417be10a01cadcb73affc01d50dd5668b7d7890b86bd47b02"
-      },
-      {
-        "name": "v3-4000m-az235.exr",
-        "byteSize": 33414,
-        "sha256": "f340503a18f5a6d314a0a6eb3a9057ac84cf9a22cbd13e0e902f5b61dbff5900"
-      },
-      {
-        "name": "v3-4000m-az55.exr",
-        "byteSize": 36214,
-        "sha256": "3a84903fe35f67eee8af530c71743fd82d8daddf2b6d7b804845425a57d18f79"
-      },
-      {
-        "name": "v3-400m-az235.exr",
-        "byteSize": 199645,
-        "sha256": "d898f81aab62244e488c80ebcb06043b859f368682b486d696fbb38d5c8024f6"
-      },
-      {
-        "name": "v3-400m-az55.exr",
-        "byteSize": 349044,
-        "sha256": "add37cfe388591623f09838d16eb10c62b1b1b5931782adbe9ab49fbaae03f27"
       }
     ]
   },
