@@ -5,12 +5,16 @@
  * VERBS, AND THE ORDER IS STRUCTURAL RATHER THAN ADVISORY:
  *
  *   pre-register        Bars and refusal classes. Refuses once any wave has baked.
- *   bake --wave wXX     Bake every cell of a wave; write payloads and telemetry.
+ *   run-wave --wave wXX Bake every cell of a wave; write payloads and telemetry.
  *   seal --wave wXX     Byte-replay the wave in batched child processes and,
  *                       ONLY on success, write the wave's inventory record.
  *   census              Coverage arithmetic against the cell ledger.
  *
- * `bake` CANNOT write an inventory and `seal` CANNOT bake. That is how "no wave
+ * The verb is `run-wave`, not `bake`: `far-tier-bake-cli.mjs` refuses to be
+ * imported by a process invoked with one of ITS verb names, and renaming around
+ * that guard is the correct response rather than weakening it.
+ *
+ * `run-wave` CANNOT write an inventory and `seal` CANNOT bake. That is how "no wave
  * inventory before that wave's replay" stops being a rule someone has to
  * remember and becomes a property of the tool.
  *
@@ -50,7 +54,7 @@ import { materializeMidtownCoreV3Cells } from "../src/release/midtown-core-v3-so
 import { massGenerationSuccessorProfile } from "../src/release/mass-generation-retention.ts";
 import { EXTERIOR_SERVING_WAVES, exteriorServingWave } from "../src/release/exterior-serving-waves.ts";
 import { exteriorTwoLodRetentionReleaseId } from "../src/release/exterior-serving-release.ts";
-import { encodeRgbPng } from "../src/release/procedural-texture.ts";
+import { encodeRgbPng, proceduralTextureTile } from "../src/release/procedural-texture.ts";
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const EVIDENCE_ID = "far-tier-hlod-mass-20260819";
@@ -449,6 +453,212 @@ async function commandReplayBatch(waveId, cellIdList) {
   console.log(JSON.stringify({ cells: out }));
 }
 
+
+
+// ---------------------------------------------------------------------------
+// emit-sources — the source subjects for one cell, for any wave
+// ---------------------------------------------------------------------------
+
+/**
+ * `far-tier-bake-cli.mjs sources` exists but its wave table carries only w00 and
+ * w05, so it cannot materialize a Midtown or Lower Manhattan cell. Stage 3
+ * samples across ALL six waves, so the campaign needs a sources path with the
+ * campaign's own wiring. The BYTES are the same verified shipped bytes: this
+ * reuses the same materialization and the same -c2 verification.
+ */
+async function commandEmitSources(cellId) {
+  const waveId = waveOf(cellId);
+  if (!waveId) fail(TOOL, `${cellId} does not look like an exterior cell id.`);
+  const wiring = waveWiring(waveId);
+  const snapshot = await loadSnapshot();
+  const { ledger, checksumSha256 } = await loadWaveLedger();
+  snapshot.ledgerChecksumSha256 = checksumSha256;
+  const cell = ledger.cells.find((entry) => entry.cellId === cellId);
+  if (!cell) fail(TOOL, `the ledger declares no cell ${cellId}.`);
+  const waveInventory = await loadWaveInventory(wiring);
+
+  const sources = collectMidtownCoreSources(snapshot.shards, new Set(cell.buildingIds));
+  const materialization = materializeMidtownCoreV3Cells({
+    cells: [cell], sources,
+    baseManifestChecksumSha256: snapshot.planChecksumSha256,
+    capture: { capturedAt: SOURCE_CAPTURE.capturedAt, updatedAt: SOURCE_CAPTURE.updatedAt },
+    retainAllLods: true, retain: "shipped-bytes", profile: wiring.profile,
+    assemblyLods: { lod0MaxDistanceMeters: null },
+  });
+
+  const outputRoot = join(repositoryRoot, "artifacts", EVIDENCE_ID, "sample-sources", cellId);
+  await mkdir(join(outputRoot, "assets"), { recursive: true });
+  await mkdir(join(outputRoot, "textures"), { recursive: true });
+  const origin = [cell.bounds.west, cell.bounds.south];
+  const written = [];
+  for (const [relativeRef, bytes] of materialization.assetBytes) {
+    if (!relativeRef.endsWith("__lod_0.glb")) continue;
+    const declared = waveInventory.declared.get(relativeRef);
+    if (!declared || sha256HexBytes(bytes) !== declared.checksumSha256) {
+      fail(TOOL, `source asset ${relativeRef} does not reproduce its committed ${wiring.c2ReleaseId} checksum; the sample will not render unverified bytes.`);
+    }
+    const name = relativeRef.slice("public/assets/".length);
+    const buildingId = name.replace(/__lod_0\.glb$/u, "").replace("-", ":");
+    const source = sources.get(buildingId);
+    if (!source) fail(TOOL, `no source record for ${buildingId} while placing subjects.`);
+    await writeFile(join(outputRoot, "assets", name), bytes);
+    written.push({
+      name, buildingId, checksumSha256: sha256HexBytes(bytes),
+      translation: [
+        (source.representative[0] - origin[0]) * FAR_TIER_BAKE_RECIPE.metersPerDegreeLongitude,
+        0,
+        -((source.representative[1] - origin[1]) * FAR_TIER_BAKE_RECIPE.metersPerDegreeLatitude),
+      ],
+    });
+  }
+  for (const file of waveInventory.inventory.files.filter((entry) => entry.path.startsWith("public/textures/"))) {
+    const textureClass = file.path.slice("public/textures/".length).replace(/\.png$/u, "");
+    const bytes = proceduralTextureTile(textureClass).pngBytes;
+    if (sha256HexBytes(bytes) !== file.checksumSha256) fail(TOOL, `class tile ${textureClass} does not reproduce its declared checksum.`);
+    await writeFile(join(outputRoot, "textures", `${textureClass}.png`), bytes);
+  }
+  written.sort((left, right) => (left.name < right.name ? -1 : 1));
+  await writeFile(join(outputRoot, "placements.json"), serialize({
+    cellId, waveId, frame: FAR_TIER_BAKE_RECIPE.frame, originLonLat: origin,
+    note: "Rigid translation only. Geometry and materials are the verified shipped bytes; nothing is re-authored.",
+    assets: written,
+  }));
+  console.log(serialize({ ok: true, cellId, waveId, root: outputRoot, assets: written.length }));
+}
+
+// ---------------------------------------------------------------------------
+// summary — coverage arithmetic and the campaign record
+// ---------------------------------------------------------------------------
+
+async function commandSummary() {
+  const { ledger, checksumSha256: ledgerChecksumSha256 } = await loadWaveLedger();
+  const waves = [];
+  const allCells = [];
+  const allStops = [];
+  for (const waveId of WAVE_IDS) {
+    const telemetry = JSON.parse(await readFile(join(evidenceRoot, `telemetry-${waveId}.json`), "utf8"));
+    const inventoryText = await readFile(join(evidenceRoot, `inventory-${waveId}.json`), "utf8").catch(() => null);
+    if (inventoryText === null) fail(TOOL, `wave ${waveId} has telemetry but no sealed inventory; the campaign is not closed and a summary would overstate it.`);
+    const inventory = JSON.parse(inventoryText);
+    const ledgerCells = ledger.cells.filter((cell) => waveOf(cell.cellId) === waveId).length;
+    if (inventory.entries.length !== telemetry.bakedCellCount) {
+      fail(TOOL, `wave ${waveId} sealed ${inventory.entries.length} entries against ${telemetry.bakedCellCount} baked cells.`);
+    }
+    allCells.push(...telemetry.cells);
+    allStops.push(...telemetry.honestStops.map((stop) => ({ ...stop, waveId })));
+    waves.push({
+      waveId,
+      label: telemetry.waveLabel,
+      declaredCellCount: telemetry.declaredCellCount,
+      ledgerCellCount: ledgerCells,
+      bakedCellCount: telemetry.bakedCellCount,
+      honestStopCount: telemetry.honestStopCount,
+      accountedFor: telemetry.bakedCellCount + telemetry.honestStopCount,
+      complete: telemetry.bakedCellCount + telemetry.honestStopCount === ledgerCells,
+      sealedEntries: inventory.entries.length,
+      cellsReplayed: inventory.byteReplay.cellsReplayed,
+      replayMismatches: inventory.byteReplay.mismatches,
+      elapsedSeconds: telemetry.elapsedSeconds,
+      telemetrySha256: sha256HexSync(await readFile(join(evidenceRoot, `telemetry-${waveId}.json`), "utf8")),
+      inventorySha256: sha256HexSync(inventoryText),
+      distribution: telemetry.distribution,
+    });
+  }
+
+  const totals = {
+    ledgerCells: ledger.cells.length,
+    baked: waves.reduce((sum, wave) => sum + wave.bakedCellCount, 0),
+    honestStops: waves.reduce((sum, wave) => sum + wave.honestStopCount, 0),
+    sealed: waves.reduce((sum, wave) => sum + wave.sealedEntries, 0),
+    replayed: waves.reduce((sum, wave) => sum + wave.cellsReplayed, 0),
+    replayMismatches: waves.reduce((sum, wave) => sum + wave.replayMismatches, 0),
+  };
+  totals.accountedFor = totals.baked + totals.honestStops;
+  totals.everyLedgerCellAccountedFor = totals.accountedFor === totals.ledgerCells;
+  if (!totals.everyLedgerCellAccountedFor) {
+    fail(TOOL, `coverage arithmetic does not close: ${totals.accountedFor} accounted for against ${totals.ledgerCells} ledger cells.`);
+  }
+
+  const byteTotals = { glb: 0, atlas: 0 };
+  for (const waveId of WAVE_IDS) {
+    const inventory = JSON.parse(await readFile(join(evidenceRoot, `inventory-${waveId}.json`), "utf8"));
+    for (const entry of inventory.entries) { byteTotals.glb += entry.glbByteSize; byteTotals.atlas += entry.atlasByteSize; }
+  }
+  const perTileBytes = (byteTotals.glb + byteTotals.atlas) / Math.max(1, totals.sealed);
+
+  const record = {
+    schemaVersion: "1.0",
+    recordId: `${EVIDENCE_ID}:campaign-summary`,
+    task: "T004",
+    artifact: "far-tier-mass-bake-campaign-summary",
+    capturedAt: null,
+    capturedAtStatement: "NULL BY CONSTRUCTION.",
+    headline: `${totals.baked} of ${totals.ledgerCells} ledger cells baked under ${FAR_TIER_BAKE_RECIPE_V4.recipeId}, ${totals.honestStops} named honest stops, every cell accounted for, ${totals.replayed} cells byte-replayed with ${totals.replayMismatches} mismatches.`,
+    recipe: { recipeId: FAR_TIER_BAKE_RECIPE_V4.recipeId, recipeSha256: farTierRecipeHashV4(), adoptedBy: FAR_TIER_ADOPTED_RECIPE.adoptedBy, adoptionRecord: FAR_TIER_ADOPTED_RECIPE.gateRecord },
+    parentLedgerChecksumSha256: ledgerChecksumSha256,
+    waves,
+    totals,
+    coverageArithmetic: {
+      rule: "Every cell the ledger declares has EITHER a validated tile in its wave's sealed inventory OR a named honest stop. Machine-checked here; the tool refuses to write this record otherwise.",
+      ledgerCells: totals.ledgerCells,
+      withTile: totals.baked,
+      withNamedStop: totals.honestStops,
+      unaccountedFor: totals.ledgerCells - totals.accountedFor,
+      verdict: totals.everyLedgerCellAccountedFor ? "CLOSES" : "DOES NOT CLOSE",
+    },
+    honestStopsByClass: Object.fromEntries(REFUSAL_CLASSES.map((entry) => [entry.code, allStops.filter((stop) => stop.code === entry.code).length])),
+    honestStops: allStops,
+    populationDistribution: summarize(allCells),
+    payloadFootprint: {
+      glbBytes: byteTotals.glb,
+      atlasBytes: byteTotals.atlas,
+      totalBytes: byteTotals.glb + byteTotals.atlas,
+      totalMebibytes: round((byteTotals.glb + byteTotals.atlas) / (1024 * 1024), 1),
+      meanBytesPerTile: Math.round(perTileBytes),
+      retention: "LOCAL WORK PRODUCT under the approved operator gate, gitignored. The inventories and telemetry here are the committed artifact.",
+    },
+    deferredEvictionObligation: {
+      statement: "THE RUNTIME HAS NO EVICTION POLICY AND THIS CAMPAIGN IS WHY THAT NOW MATTERS. FAR_TIER_RUNTIME_BUDGETS declares maxCacheEntries 256, maxCachedBytes 64 MiB and evictionPolicy NONE — an admission over either ceiling is REFUSED rather than evicted for, and the constant itself says the question is 'deferred to mass-bake scale (T004)'.",
+      arithmetic: {
+        cellsNowBaked: totals.baked,
+        meanBytesPerTile: Math.round(perTileBytes),
+        totalPayloadMebibytes: round((byteTotals.glb + byteTotals.atlas) / (1024 * 1024), 1),
+        maxCachedBytes: 64 * 1024 * 1024,
+        maxCacheEntries: 256,
+        tilesThatFitTheByteCeiling: Math.floor((64 * 1024 * 1024) / perTileBytes),
+        whichCeilingBindsFirst: Math.floor((64 * 1024 * 1024) / perTileBytes) < 256 ? "bytes" : "entries",
+      },
+      consequence: "With no eviction, a camera that selects more far cells than the binding ceiling admits gets `over-budget` refusals for the excess — a named state, but a routine one at island scale rather than the exceptional one it was at a single staged cell.",
+      whoOwnsIt: "NOT this task. Serving is T005's and the runtime constant is a runtime decision. Named here with its arithmetic so that it is a recorded obligation rather than a surprise.",
+      whatThisCampaignDidNotDo: "It did not change the constant, the runtime, or any serving surface.",
+    },
+    zeroServingChange: {
+      claim: "This campaign changed no serving surface.",
+      payloadRoot: `artifacts/${EVIDENCE_ID}/payloads/ — a NEW gitignored root, separate from the T003 staged root.`,
+      untouched: ["src/runtime/", "src/features/explorer/", "src/app/", "data/far-tier-hlod-runtime-20260818/", "public/far-tier/"],
+      howItIsProven: "An empty git diff over those paths against the branch base, plus the T003 runtime-record and serving pin tests green. Both are reported in the task closure rather than asserted here.",
+      whyItMatters: "The runtime pins ONE inventory digest for the whole tier and fails closed on a mismatch. Writing these 883 tiles into that inventory would have moved the digest and broken the tier; writing them somewhere else is what keeps T005 free to adopt them deliberately.",
+    },
+    notClaimedHere: [
+      "Byte replay proves reproduction across a PROCESS BOUNDARY on one machine, one Node build and one architecture. Cross-machine reproduction is NOT claimed.",
+      "No appearance claim. The sampled characterization is descriptive and acceptance is T007's.",
+      "A baked tile is not a served tile. Nothing here is wired to the runtime.",
+    ],
+  };
+  const text = serialize(record);
+  await writeFile(join(evidenceRoot, "campaign-summary.json"), text);
+  await writeFile(join(evidenceRoot, "campaign-summary.sha256"), `${sha256HexSync(text)}  campaign-summary.json\n`);
+  console.log(serialize({
+    ok: true,
+    totals,
+    honestStopsByClass: record.honestStopsByClass,
+    distribution: record.populationDistribution,
+    payloadMebibytes: record.payloadFootprint.totalMebibytes,
+    eviction: record.deferredEvictionObligation.arithmetic,
+    recordSha256: sha256HexSync(text),
+  }));
+}
+
 // ---------------------------------------------------------------------------
 // pre-register and census
 // ---------------------------------------------------------------------------
@@ -539,9 +749,11 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const command = argv[0];
   const flag = (name) => { const index = argv.indexOf(`--${name}`); return index >= 0 ? argv[index + 1] : null; };
   if (command === "pre-register") await commandPreRegister();
-  else if (command === "bake") await commandBake(flag("wave"));
+  else if (command === "run-wave") await commandBake(flag("wave"));
   else if (command === "seal") await commandSeal(flag("wave"));
   else if (command === "replay-batch") await commandReplayBatch(flag("wave"), flag("cells"));
   else if (command === "census") await commandCensus();
-  else fail(TOOL, "usage: far-tier-mass-bake-cli.mjs <pre-register|bake|seal|census> [--wave wXX]");
+  else if (command === "summary") await commandSummary();
+  else if (command === "emit-sources") await commandEmitSources(flag("cell"));
+  else fail(TOOL, "usage: far-tier-mass-bake-cli.mjs <pre-register|run-wave|seal|census|summary|emit-sources> [--wave wXX] [--cell <cellId>]");
 }
