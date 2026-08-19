@@ -295,6 +295,56 @@ export function farTierRecipeHashV3(): string {
 }
 
 /**
+ * RECIPE v4 — v3's colour with v2's packing, which is what a MASS bake needs.
+ *
+ * WHY IT EXISTS. v3 is the adopted colour rule and it derives from v1's
+ * packing, deliberately, so that the T013 capture measured a colour change and
+ * nothing else. That isolation was right for one prototype cell and is wrong
+ * for the island: v1's packing gives a flat, constant-colour face a 4x4 content
+ * rect, and the Stage A census measured the consequence — 172 of 883 ledger
+ * cells cannot be packed at ANY scale, and the cells that can are packed at a
+ * median global resolution scale of 0.5.
+ *
+ * v2 fixed exactly that and cost nothing: a resolved-away face carries ONE
+ * texel, because `farTierGeometry` samples texel centres and at width 1 all
+ * four corners address the same texel, so the rendered result is identical to a
+ * 4x4 block of the same colour. v4 is the union — v3's `zoneColour` with v2's
+ * `flatFaceTexels` and `flatFaceGutterTexels`.
+ *
+ * WHAT THAT MEANS FOR APPEARANCE, stated before it was measured. Flat-face
+ * COLOURS are identical by construction: the rasterizer computes one
+ * area-weighted average per flat face and writes it to every texel of the rect,
+ * so a 1x1 rect carries the same byte a 4x4 rect carried. What changes is the
+ * atlas LAYOUT and the global resolution scale, and therefore what a minifying
+ * filter averages together. The Stage 0 capture pre-registers that as a
+ * prediction rather than assuming it away.
+ *
+ * v1, v2 AND v3 ARE UNTOUCHED. Each keeps its own id, its own hash and its own
+ * frozen artifacts. v4 is a fourth constant, selected explicitly by a caller.
+ */
+export const FAR_TIER_BAKE_RECIPE_V4 = {
+  ...FAR_TIER_BAKE_RECIPE_V3,
+  recipeId: "far-tier-hlod-bake-v4",
+  supersedes: FAR_TIER_BAKE_RECIPE_V3.recipeId,
+  derivedFrom: "far-tier-hlod-bake-v3 colour over far-tier-hlod-bake-v2 packing",
+
+  /** v2's packing half, field for field. */
+  flatFaceTexels: FAR_TIER_BAKE_RECIPE_V2.flatFaceTexels,
+  flatFaceGutterTexels: FAR_TIER_BAKE_RECIPE_V2.flatFaceGutterTexels,
+
+  /**
+   * Carried from v2 and still NULL. Stage B derived a roof-only shading term,
+   * pre-registered the verdict it implied and halted at a NO-GO without baking;
+   * the rasterizer refuses any scalar other than 1, so this stays closed.
+   */
+  shading: FAR_TIER_BAKE_RECIPE_V2.shading,
+} as const;
+
+export function farTierRecipeHashV4(): string {
+  return sha256HexSync(stableSerialize(FAR_TIER_BAKE_RECIPE_V4));
+}
+
+/**
  * THE ADOPTED FAR-TIER RECIPE, as a value a caller can assert against.
  *
  * T013 adopted v3 by user decision. Nothing in this module PREVENTS a caller
@@ -305,17 +355,43 @@ export function farTierRecipeHashV3(): string {
  * so a mass-bake path can fail closed in one line.
  */
 export const FAR_TIER_ADOPTED_RECIPE = {
-  recipeId: FAR_TIER_BAKE_RECIPE_V3.recipeId,
+  recipeId: FAR_TIER_BAKE_RECIPE_V4.recipeId,
   adoptedOn: "2026-08-19",
-  adoptedBy: "user decision, T013 (Issue #118)",
-  gateRecord: "data/far-tier-hlod-hue-20260819/gate-adoption.json",
+  adoptedBy: "user decision, T004 (Issue #104), after the pre-registered Stage 0 cycle",
+  /** The durable authorization, so the adoption cites a record rather than a memory. */
+  authorizationRecord: "https://github.com/wwdbsh/urban-digital-twin/issues/104#issuecomment-5336926652",
+  gateRecord: "data/far-tier-hlod-mass-20260819/v4-adoption-verdict.json",
+  /**
+   * THE CHAIN, kept here because a constant that names only its current value
+   * loses the reason it has that value.
+   *
+   * v3 was adopted by T013 on the same date, on the strength of a colour
+   * correction measured against A3''. v4 supersedes it for the CAMPAIGN, and
+   * only after its own pre-registered cycle: v4 carries v3's colour unchanged
+   * and adds v2's packing, without which 172 of 883 ledger cells cannot be
+   * packed at any scale. A1, A2 and A3'' are inherited unchanged — the cycle
+   * certified a recipe, not a bar.
+   */
+  supersedes: {
+    recipeId: FAR_TIER_BAKE_RECIPE_V3.recipeId,
+    adoptedBy: "user decision, T013 (Issue #118)",
+    gateRecord: "data/far-tier-hlod-hue-20260819/gate-adoption.json",
+    whySuperseded: "v3's packing leaves 172 of 883 ledger cells unpackable at any scale and a median applied resolution scale of 0.5; v4 is v3's colour over v2's packing.",
+  },
 } as const;
 
-/** Fail closed unless the caller is baking the adopted recipe. */
+/**
+ * Fail closed unless the caller is baking the adopted recipe.
+ *
+ * `farTierEffectiveParameters` deliberately falls back to v1 behaviour on every
+ * later field so that v1's byte replay cannot break, which means a caller that
+ * forgets to pass the adopted recipe gets a v1 tile SILENTLY and without error.
+ * This is the one line standing between the adoption and that outcome.
+ */
 export function assertFarTierAdoptedRecipe(recipe: Record<string, unknown>): void {
   const recipeId = recipe.recipeId as string | undefined;
   if (recipeId !== FAR_TIER_ADOPTED_RECIPE.recipeId) {
-    throw new Error(`The adopted far-tier recipe is ${FAR_TIER_ADOPTED_RECIPE.recipeId} (${farTierRecipeHashV3()}), adopted ${FAR_TIER_ADOPTED_RECIPE.adoptedOn} by ${FAR_TIER_ADOPTED_RECIPE.adoptedBy}; this caller supplied ${recipeId ?? "no recipeId"}. See ${FAR_TIER_ADOPTED_RECIPE.gateRecord}.`);
+    throw new Error(`The adopted far-tier recipe is ${FAR_TIER_ADOPTED_RECIPE.recipeId} (${farTierRecipeHashV4()}), adopted ${FAR_TIER_ADOPTED_RECIPE.adoptedOn} by ${FAR_TIER_ADOPTED_RECIPE.adoptedBy}; this caller supplied ${recipeId ?? "no recipeId"}. See ${FAR_TIER_ADOPTED_RECIPE.gateRecord}.`);
   }
 }
 

@@ -3,8 +3,12 @@
 Date: 2026-08-18
 Task: T002 (Goal `manhattan-hlod-far-tier`, Issue #102)
 Branch: `fcp/102-bake-prototype`
-Status: Accepted for the prototype. **The appearance bar is MISSED at one pose and the
-mass bake is BLOCKED pending a user decision.**
+Status: Accepted for the prototype. **As written, the appearance bar was MISSED at one
+pose and the mass bake was BLOCKED pending a user decision. BOTH HAVE SINCE MOVED —
+see the T013 amendment (adopted gate set, `A3'' = 0.035`) and the T004 amendment
+(recipe `v4` adopted, island baked at 840 tiles). This header is the T002 status and
+is kept as written rather than edited, because the amendments below are the record of
+what changed.**
 Evidence: `data/far-tier-hlod-20260818/` (`stage0-hierarchy.json`,
 `bake-pre-registration.json`, `prototype-provenance.json`, `sampling-results.json`,
 each with a `.sha256`)
@@ -557,3 +561,99 @@ Three fixes from the closing review, none of which moves a verdict:
   deliberately falls back to v1 so v1's byte replay cannot break, which means a
   caller that forgets v3 gets a v1 tile silently. Recorded as a residual risk in
   the handoff rather than assumed away.
+
+---
+
+## Amendment — T004, the mass bake campaign (Issue #104, 2026-08-19)
+
+**Status: recipe `v4` ADOPTED through a pre-registered Stage 0 cycle; the island
+is baked at 840 tiles with 43 named honest stops; NO serving surface changed.**
+
+Evidence: `data/far-tier-hlod-mass-20260819/` — `v4-pre-registration.json`,
+`v4-adoption-verdict.json`, `campaign-pre-registration.json`, `telemetry-w00..w05`,
+`inventory-w00..w05`, `campaign-summary.json`, `characterization-plan.json`,
+`characterization-results.json`, each with a `.sha256`.
+
+### Recipe v4
+
+`far-tier-hlod-bake-v4`, sha256 `fd950a77f1c57cb2b7238b588aa11cd020ace1f15c1448438dfd0f235e10412c`
+— v3's area-correct wall aggregate over v2's packing. v1, v2 and v3 keep their
+ids, hashes and frozen artifacts.
+
+It exists because the census measured v1/v3 packing at **172 of 883 cells
+unpackable at any scale** and a median applied scale of 0.5. Under v1 a face
+costs `(4 + 2×2)² = 64` texels, so a 256px atlas holds 1,024 faces; under v4 a
+flat face costs `(1 + 2×1)² = 9` and it holds 7,281. The island's largest cell
+is 1,853 faces.
+
+**Adopted through the discipline T013 made a condition of A3''.** Predictions
+and bars were committed before any v4 render existed; the capture agreed to
+**0.001999** against a 0.01 allowance, and A1, A2, A3'' and byte replay all
+passed. A3'' = 0.035 is inherited unchanged: the cycle certified a recipe, not
+a bar. `assertFarTierAdoptedRecipe` now names v4 and carries what it superseded.
+
+### Campaign results
+
+| | |
+| --- | --- |
+| Ledger cells | 883 |
+| Tiles built and sealed | **840** |
+| Named honest stops | **43**, all `fallback-share-over-bar` |
+| `packing-infeasible` | **0** |
+| Coverage arithmetic | **CLOSES** (840 + 43 = 883), machine-checked |
+| Byte replay | 840 cells, **0 mismatches**, batched fresh child processes |
+| Median applied scale | **0.707107** (0.5 under v1 packing) |
+| Under-resolved cells | 764 of 840 (90.95%) |
+| Payload | 246.7 MiB, mean 307,911 B/tile |
+
+The campaign's prototype-cell tile is **byte-identical** to the one Stage 0
+adopted, which is what makes the adoption evidence about the campaign.
+
+The byte-replay claim is reproduction **across a process boundary on one
+machine, one Node build and one architecture**. Cross-machine reproduction is
+not claimed and was not tested.
+
+### The appearance characterization is DESCRIPTIVE, and it found something
+
+Six cells by extreme across five strata, 36 poses, pre-registered before any
+capture with a population prediction of 0.039 (A3'' plus the width of T013's
+geometric-term bracket).
+
+**The prediction was EXCEEDED and the finding is not the one that was expected.**
+
+- **A3'' held at 33 of 36 poses.** All three misses are ONE cell — the island's
+  smallest, four faces and one building — with spreads to 0.120272 at its dark
+  azimuth-235 poses. Two of its poses have five intersection pixels; those
+  ratios are reported and are evidence of nothing.
+- **The systematic failure is LUMINANCE, not hue.** A1 passes 8 of 18 applicable
+  poses and A2 passes 24 of 36, and **every miss is the tile reading brighter**,
+  ratios 1.04 to 1.21. Not one pose fails by being too dark.
+- The two cells that pass everything are the **largest** (3,836 faces) and the
+  **median** (671). The prototype T013 measured has 764 faces and sits with the
+  passing group, so **the prototype is not representative of the population for
+  luminance** — and this campaign is the first evidence of that.
+
+No mechanism is claimed. The obvious candidate is that a prism carries no
+self-shadowing or inter-building occlusion while the source does; that is a
+hypothesis, not a result, and it belongs to T007 with a sample designed for it.
+
+A cell-level miss is recorded at stratum level and stops nothing, exactly as
+pre-registered. **Acceptance remains T007's.**
+
+### Zero serving change, and one obligation named
+
+The payloads live in a new gitignored root, `artifacts/far-tier-hlod-mass-20260819/payloads/`,
+FLAT, with the runtime's expected names. `src/runtime/`, `src/features/explorer/`,
+`src/app/`, `data/far-tier-hlod-runtime-20260818/` and `public/far-tier/` are
+byte-for-byte untouched, proven by an empty diff against the branch base plus
+green T003 runtime-record and serving pin tests. The runtime pins ONE inventory
+digest for the whole tier and fails closed on a mismatch; writing 840 tiles into
+it would have broken the tier.
+
+**The deferred eviction obligation is now arithmetic.** `FAR_TIER_RUNTIME_BUDGETS`
+declares `maxCacheEntries` 256, `maxCachedBytes` 64 MiB and `evictionPolicy`
+NONE, and says the question is deferred to mass-bake scale. At the campaign's
+mean of 307,911 bytes a tile the **byte ceiling admits 217 tiles and binds
+before the entry ceiling**, so with no eviction an island-scale camera gets
+`over-budget` refusals as a routine outcome rather than the exceptional one a
+single staged cell produced. Named for T005 with its numbers; not fixed here.

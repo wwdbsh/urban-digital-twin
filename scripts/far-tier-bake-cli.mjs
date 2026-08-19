@@ -111,7 +111,7 @@ const C2_RELEASE_ID = {
 
 const waveOf = (cellId) => /-(w\d{2})-/u.exec(cellId)?.[1] ?? null;
 
-async function loadSnapshot() {
+export async function loadSnapshot() {
   const manifestText = await readFile(join(snapshotRoot, "manifest.json"), "utf8").catch(() => null);
   if (manifestText === null) fail(`base snapshot is absent at ${snapshotRoot}; the bake reads real rings and cannot invent them.`);
   const manifest = JSON.parse(manifestText);
@@ -132,12 +132,23 @@ async function loadSnapshot() {
   return { manifest, manifestFileChecksumSha256, planChecksumSha256, shards };
 }
 
-async function loadLedger(cellId) {
+/**
+ * The whole ledger, checksum-verified against its own sidecar.
+ *
+ * Split out of `loadLedger` so a WAVE-level caller can read the 883-cell ledger
+ * ONCE instead of once per cell. `loadLedger` keeps its exact behaviour,
+ * including its refusal when a cell id is not declared.
+ */
+export async function loadWaveLedger() {
   const text = await readFile(join(ledgerRoot, "ledger.json"), "utf8");
   const checksumSha256 = sha256HexSync(text);
   const sidecar = (await readFile(join(ledgerRoot, "ledger.sha256"), "utf8")).trim().split(/\s+/u)[0];
   if (sidecar !== checksumSha256) fail("wave ledger does not match its own sha256 sidecar.");
-  const ledger = JSON.parse(text);
+  return { ledger: JSON.parse(text), checksumSha256 };
+}
+
+export async function loadLedger(cellId) {
+  const { ledger, checksumSha256 } = await loadWaveLedger();
   const cell = ledger.cells.find((entry) => entry.cellId === cellId);
   if (!cell) fail(`ledger declares no cell ${cellId}.`);
   return { ledger, checksumSha256, cell };

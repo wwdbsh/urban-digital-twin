@@ -1,0 +1,139 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "far-tier-hlod-mass-20260819:characterization-plan",
+  "task": "T004",
+  "artifact": "far-tier-mass-bake-characterization-plan",
+  "capturedAt": null,
+  "capturedAtStatement": "NULL BY CONSTRUCTION. NOTHING HAS BEEN CAPTURED. The tool refuses to write this plan once a sample render exists.",
+  "purpose": {
+    "statement": "DESCRIPTIVE CHARACTERIZATION OF THE BAKED POPULATION. Not acceptance.",
+    "whyThatDistinctionIsLoadBearing": "Acceptance is T007's task and needs a sample designed for it. A six-cell draw cannot carry an island-wide acceptance claim, so a cell-level MISS here is recorded at STRATUM level with analysis and does NOT stop a wave. Letting a sampled miss stop a wave would be acceptance by the back door on a sample never designed to bear it.",
+    "whatItCanShow": "Whether the adopted gates describe the population roughly as they describe the prototype, and where the tails are.",
+    "whatItCannotShow": "That every one of the island's tiles meets any bar. It does not sample enough cells to say that and does not claim to."
+  },
+  "subject": {
+    "recipeId": "far-tier-hlod-bake-v4",
+    "recipeSha256": "fd950a77f1c57cb2b7238b588aa11cd020ace1f15c1448438dfd0f235e10412c",
+    "populationCells": 840
+  },
+  "samplingMethod": {
+    "size": 6,
+    "strata": "Style-class mix, face count and wave, plus the two tails the campaign itself surfaced: refusal count and zone-fallback share.",
+    "selection": "By EXTREME within each stratum, tie-broken by cell id, so the draw is deterministic and reproducible from the committed telemetry. A six-cell random draw of 883 characterizes nothing; the extremes bound what the population can do.",
+    "reproducibility": "Re-running `plan` against the same telemetry selects the same six cells."
+  },
+  "sample": [
+    {
+      "cellId": "manhattan-exterior-cell-w05-000855-16-19309-17892",
+      "waveId": "w05",
+      "stratum": "largest-face-count",
+      "whyChosen": "The most faces in the island: the packer's hardest case and the lowest applied scale it can reach.",
+      "faceCount": 3836,
+      "includedBuildings": 96,
+      "refusedBuildings": 0,
+      "appliedScale": 0.353553,
+      "achievedTexelRatio": 0.353553,
+      "underResolved": true,
+      "fallbackZoneCount": 132,
+      "fallbackAreaShare": 0.01361273
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000060-16-19303-17931",
+      "waveId": "w01",
+      "stratum": "smallest-face-count",
+      "whyChosen": "The fewest faces: a tile that is almost all roof cap, where the wall aggregate has least to say.",
+      "faceCount": 4,
+      "includedBuildings": 1,
+      "refusedBuildings": 0,
+      "appliedScale": 1,
+      "achievedTexelRatio": 1,
+      "underResolved": false,
+      "fallbackZoneCount": 0,
+      "fallbackAreaShare": 0
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000015-16-19299-17929",
+      "waveId": "w01",
+      "stratum": "most-refused-buildings",
+      "whyChosen": "The highest count of buildings the V3 grammar refused: a tile standing in for a cell it only partly carries.",
+      "faceCount": 778,
+      "includedBuildings": 58,
+      "refusedBuildings": 3,
+      "appliedScale": 0.25,
+      "achievedTexelRatio": 0.25,
+      "underResolved": true,
+      "fallbackZoneCount": 89,
+      "fallbackAreaShare": 0.00078469
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w05-000720-17-38611-35818",
+      "waveId": "w05",
+      "stratum": "worst-zone-fallback-share",
+      "whyChosen": "The largest share of wall area still carrying v1's colour under an accepted fallback.",
+      "faceCount": 501,
+      "includedBuildings": 40,
+      "refusedBuildings": 0,
+      "appliedScale": 0.707107,
+      "achievedTexelRatio": 0.707107,
+      "underResolved": true,
+      "fallbackZoneCount": 48,
+      "fallbackAreaShare": 0.04650947
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w01-000106-15-9650-8962",
+      "waveId": "w01",
+      "stratum": "lowest-applied-scale",
+      "whyChosen": "The most under-resolved tile the campaign produced.",
+      "faceCount": 1853,
+      "includedBuildings": 104,
+      "refusedBuildings": 0,
+      "appliedScale": 0.176777,
+      "achievedTexelRatio": 0.176777,
+      "underResolved": true,
+      "fallbackZoneCount": 271,
+      "fallbackAreaShare": 0.00322933
+    },
+    {
+      "cellId": "manhattan-exterior-cell-w04-000508-17-38611-35842",
+      "waveId": "w04",
+      "stratum": "median-face-count",
+      "whyChosen": "The island's median cell by face count, as the ordinary case the extremes are extreme against.",
+      "faceCount": 671,
+      "includedBuildings": 46,
+      "refusedBuildings": 0,
+      "appliedScale": 0.707107,
+      "achievedTexelRatio": 0.707107,
+      "underResolved": true,
+      "fallbackZoneCount": 20,
+      "fallbackAreaShare": 0.00918832
+    }
+  ],
+  "capture": {
+    "poses": "The six pinned poses: 400, 1200 and 4000 m at azimuths 55 and 235, elevation 18 degrees.",
+    "instrumentSpecSha256": "9a77561b9d8307aff77692412961102b3a3aa66e1a6dbe04db181a886ad53b89",
+    "instrumentHarnessSha256": "d394bcf76efdedfdf58b1bef86838137adc71f5a0c544e051f509de0edffc1d2",
+    "isolation": "Each subject rendered ALONE, the other deleted. hide_render is forbidden and refused by the harness.",
+    "sourceSubjects": "Materialized through the shipped `sources` path, so the source is the verified shipped bytes rather than a re-authored stand-in.",
+    "maskDomain": "The SOURCE-and-BAKED INTERSECTION, un-premultiplied. Declared because the domain moves per-channel ratios by up to 0.023 on the same renders.",
+    "poseTarget": "Each cell's OWN source-bounds centre. The pose rule is the same; the target is per cell because the subjects are."
+  },
+  "populationPrediction": {
+    "id": "P-POP",
+    "statement": "The maximum per-channel spread over all sampled cells and poses is at most 0.039.",
+    "value": 0.039,
+    "derivation": "A3'' = 0.035 plus an allowance of 0.004. The allowance is the WIDTH of T013's geometric-term bracket, 0.027301 to 0.030863 — the size of the one quantity that measurement could not pin down, and therefore the honest scale for how far another cell's geometry mix may sit from the prototype's. Rounded up from 0.003562 to 0.004.",
+    "whatItIsNot": "NOT a bar. No tile fails anything by exceeding it. It is a prediction about a sample, and a miss is a finding about the population rather than a verdict on a tile.",
+    "ifItIsExceeded": "Record the cell, its stratum and its telemetry, and analyse WHY that stratum sits where it does. Do not widen the prediction and do not re-draw the sample."
+  },
+  "gatesUsedDescriptively": {
+    "A1": "|union mean luminance ratio - 1| <= 0.05 where source mean luminance >= 0.1",
+    "A2": "|baked - source| union mean luminance <= 0.01",
+    "A3doublePrime": "per-pose channel spread <= 0.035",
+    "note": "Reported per cell and per pose, and summarised per stratum. A cell-level MISS is a finding, not a stop."
+  },
+  "notClaimedHere": [
+    "Nothing has been rendered.",
+    "This is not acceptance and does not substitute for T007.",
+    "EEVEE under one sun is not the shipped Cesium renderer."
+  ]
+}
