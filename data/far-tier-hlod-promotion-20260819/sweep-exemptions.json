@@ -1,0 +1,798 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "far-tier-hlod-promotion-20260819:sweep-exemptions",
+  "task": "T005",
+  "artifact": "far-tier-promotion-sweep-exemption-set",
+  "capturedAt": null,
+  "capturedAtStatement": "NULL BY CONSTRUCTION. A set, not a measurement — and committed BEFORE the sweep it will be scored against.",
+  "why": "A 'no tan massing' verdict is only meaningful against a set of buildings that are ALLOWED to stay tan. Writing that set after looking at the screens turns every uncovered building into a retrospectively expected one, which is how a sweep passes without measuring anything.",
+  "boundTo": {
+    "promotedInventory": "promoted-inventory.json",
+    "promotedInventorySha256": "cf8e26480eecc91f2e7b473d217a0d3551d0be59b4d8da39ee1217a6e0538f0a"
+  },
+  "honestStopCells": {
+    "count": 43,
+    "why": "These 43 cells produced NO tile. Every V3T-eligible building in them must keep drawing its massing, and that massing is correct rather than a defect.",
+    "cellIds": [
+      "manhattan-exterior-cell-w01-000062-14-4823-4481",
+      "manhattan-exterior-cell-w01-000074-17-38594-35852",
+      "manhattan-exterior-cell-w02-000150-14-4822-4488",
+      "manhattan-exterior-cell-w02-000152-15-9647-8976",
+      "manhattan-exterior-cell-w02-000153-15-9646-8977",
+      "manhattan-exterior-cell-w03-000369-16-19294-17934",
+      "manhattan-exterior-cell-w03-000371-17-38590-35870",
+      "manhattan-exterior-cell-w03-000373-16-19294-17935",
+      "manhattan-exterior-cell-w04-000466-16-19302-17920",
+      "manhattan-exterior-cell-w04-000475-16-19302-17921",
+      "manhattan-exterior-cell-w04-000491-16-19301-17923",
+      "manhattan-exterior-cell-w04-000540-15-9649-8958",
+      "manhattan-exterior-cell-w04-000542-17-38598-35838",
+      "manhattan-exterior-cell-w04-000544-16-19298-17919",
+      "manhattan-exterior-cell-w04-000572-16-19303-17917",
+      "manhattan-exterior-cell-w04-000592-16-19304-17916",
+      "manhattan-exterior-cell-w04-000620-15-9655-8958",
+      "manhattan-exterior-cell-w04-000621-15-9654-8959",
+      "manhattan-exterior-cell-w04-000622-15-9655-8959",
+      "manhattan-exterior-cell-w04-000640-16-19300-17914",
+      "manhattan-exterior-cell-w04-000655-17-38612-35824",
+      "manhattan-exterior-cell-w04-000674-17-38614-35829",
+      "manhattan-exterior-cell-w04-000684-17-38615-35831",
+      "manhattan-exterior-cell-w04-000686-16-19309-17912",
+      "manhattan-exterior-cell-w04-000692-15-9655-8956",
+      "manhattan-exterior-cell-w04-000700-15-9655-8957",
+      "manhattan-exterior-cell-w05-000754-17-38611-35823",
+      "manhattan-exterior-cell-w05-000765-17-38614-35808",
+      "manhattan-exterior-cell-w05-000786-17-38612-35812",
+      "manhattan-exterior-cell-w05-000788-18-77227-71625",
+      "manhattan-exterior-cell-w05-000792-18-77227-71626",
+      "manhattan-exterior-cell-w05-000816-15-9652-8950",
+      "manhattan-exterior-cell-w05-000848-16-19309-17896",
+      "manhattan-exterior-cell-w05-000850-16-19309-17897",
+      "manhattan-exterior-cell-w05-000858-15-9655-8946",
+      "manhattan-exterior-cell-w05-000868-15-9654-8944",
+      "manhattan-exterior-cell-w05-000870-16-19311-17889",
+      "manhattan-exterior-cell-w05-000872-16-19311-17890",
+      "manhattan-exterior-cell-w05-000875-16-19311-17891",
+      "manhattan-exterior-cell-w05-000876-14-4828-4472",
+      "manhattan-exterior-cell-w05-000878-16-19312-17884",
+      "manhattan-exterior-cell-w05-000881-16-19313-17885",
+      "manhattan-exterior-cell-w05-000882-15-9656-8943"
+    ]
+  },
+  "excludedMembers": {
+    "count": 143,
+    "why": "Buildings the V3 grammar refused inside cells that DID bake. The tile does not contain them, so their massing must keep drawing and their refusal must keep explaining itself — this is T007's refusal transparency, working.",
+    "buildingIds": [
+      "doitt:1290701",
+      "doitt:1294197",
+      "doitt:1305831",
+      "doitt:1305832",
+      "doitt:1305842",
+      "doitt:1290748",
+      "doitt:1261468",
+      "doitt:1290940",
+      "doitt:1159116",
+      "doitt:1219014",
+      "doitt:777079",
+      "doitt:1297176",
+      "doitt:1290782",
+      "doitt:1290795",
+      "doitt:1290776",
+      "doitt:1290779",
+      "doitt:1107693",
+      "doitt:754837",
+      "doitt:863713",
+      "doitt:1273172",
+      "doitt:1228314",
+      "doitt:1290490",
+      "doitt:1304649",
+      "doitt:1300107",
+      "doitt:1300108",
+      "doitt:1273169",
+      "doitt:1284006",
+      "doitt:1301519",
+      "doitt:1284004",
+      "doitt:1232667",
+      "doitt:695519",
+      "doitt:1245301",
+      "doitt:1198425",
+      "doitt:1292505",
+      "doitt:527428",
+      "doitt:1191061",
+      "doitt:1290813",
+      "doitt:1292399",
+      "doitt:1109902",
+      "doitt:1154000",
+      "doitt:259493",
+      "doitt:1273167",
+      "doitt:1290649",
+      "doitt:354631",
+      "doitt:107511",
+      "doitt:751920",
+      "doitt:1260315",
+      "doitt:1159118",
+      "doitt:788370",
+      "doitt:1290493",
+      "doitt:996292",
+      "doitt:1272866",
+      "doitt:1264038",
+      "doitt:728030",
+      "doitt:1281802",
+      "doitt:45593",
+      "doitt:512130",
+      "doitt:1305498",
+      "doitt:1155723",
+      "doitt:1302104",
+      "doitt:542636",
+      "doitt:235444",
+      "doitt:1232810",
+      "doitt:607889",
+      "doitt:1119641",
+      "doitt:1273272",
+      "doitt:1302857",
+      "doitt:938362",
+      "doitt:489201",
+      "doitt:1255708",
+      "doitt:1255809",
+      "doitt:17684",
+      "doitt:1290698",
+      "doitt:1114455",
+      "doitt:1290747",
+      "doitt:1284575",
+      "doitt:1250537",
+      "doitt:1290737",
+      "doitt:1290734",
+      "doitt:1284576",
+      "doitt:29267",
+      "doitt:474107",
+      "doitt:1290732",
+      "doitt:326721",
+      "doitt:1281371",
+      "doitt:1302751",
+      "doitt:819435",
+      "doitt:1294047",
+      "doitt:510821",
+      "doitt:22991",
+      "doitt:1293541",
+      "doitt:1192679",
+      "doitt:734065",
+      "doitt:1273271",
+      "doitt:1290693",
+      "doitt:1273247",
+      "doitt:1300740",
+      "doitt:292703",
+      "doitt:473447",
+      "doitt:499926",
+      "doitt:782996",
+      "doitt:134598",
+      "doitt:729611",
+      "doitt:1250540",
+      "doitt:624211",
+      "doitt:1304316",
+      "doitt:1273248",
+      "doitt:1273197",
+      "doitt:1192686",
+      "doitt:1256128",
+      "doitt:1186877",
+      "doitt:1273199",
+      "doitt:1303574",
+      "doitt:1264161",
+      "doitt:1290715",
+      "doitt:507472",
+      "doitt:817261",
+      "doitt:996812",
+      "doitt:674505",
+      "doitt:662192",
+      "doitt:754210",
+      "doitt:847022",
+      "doitt:140398",
+      "doitt:288753",
+      "doitt:502681",
+      "doitt:195411",
+      "doitt:1256132",
+      "doitt:816730",
+      "doitt:1200372",
+      "doitt:1186007",
+      "doitt:1236201",
+      "doitt:1239726",
+      "doitt:751021",
+      "doitt:1269145",
+      "doitt:67117",
+      "doitt:1204940",
+      "doitt:1285956",
+      "doitt:344542",
+      "doitt:227329",
+      "doitt:404342",
+      "doitt:1305918",
+      "doitt:625312",
+      "doitt:1049671"
+    ],
+    "byCell": [
+      {
+        "buildingId": "doitt:1290701",
+        "cellId": "manhattan-exterior-cell-w01-000006-17-38594-35858"
+      },
+      {
+        "buildingId": "doitt:1294197",
+        "cellId": "manhattan-exterior-cell-w01-000015-16-19299-17929"
+      },
+      {
+        "buildingId": "doitt:1305831",
+        "cellId": "manhattan-exterior-cell-w01-000015-16-19299-17929"
+      },
+      {
+        "buildingId": "doitt:1305832",
+        "cellId": "manhattan-exterior-cell-w01-000015-16-19299-17929"
+      },
+      {
+        "buildingId": "doitt:1305842",
+        "cellId": "manhattan-exterior-cell-w01-000017-17-38599-35860"
+      },
+      {
+        "buildingId": "doitt:1290748",
+        "cellId": "manhattan-exterior-cell-w01-000029-17-38595-35863"
+      },
+      {
+        "buildingId": "doitt:1261468",
+        "cellId": "manhattan-exterior-cell-w01-000030-16-19298-17931"
+      },
+      {
+        "buildingId": "doitt:1290940",
+        "cellId": "manhattan-exterior-cell-w01-000033-17-38604-35856"
+      },
+      {
+        "buildingId": "doitt:1159116",
+        "cellId": "manhattan-exterior-cell-w01-000063-16-19298-17924"
+      },
+      {
+        "buildingId": "doitt:1219014",
+        "cellId": "manhattan-exterior-cell-w01-000076-17-38596-35852"
+      },
+      {
+        "buildingId": "doitt:777079",
+        "cellId": "manhattan-exterior-cell-w01-000079-17-38594-35853"
+      },
+      {
+        "buildingId": "doitt:1297176",
+        "cellId": "manhattan-exterior-cell-w01-000081-17-38596-35853"
+      },
+      {
+        "buildingId": "doitt:1290782",
+        "cellId": "manhattan-exterior-cell-w01-000083-16-19299-17926"
+      },
+      {
+        "buildingId": "doitt:1290795",
+        "cellId": "manhattan-exterior-cell-w01-000083-16-19299-17926"
+      },
+      {
+        "buildingId": "doitt:1290776",
+        "cellId": "manhattan-exterior-cell-w01-000091-17-38596-35855"
+      },
+      {
+        "buildingId": "doitt:1290779",
+        "cellId": "manhattan-exterior-cell-w01-000092-17-38597-35855"
+      },
+      {
+        "buildingId": "doitt:1107693",
+        "cellId": "manhattan-exterior-cell-w01-000113-17-38606-35852"
+      },
+      {
+        "buildingId": "doitt:754837",
+        "cellId": "manhattan-exterior-cell-w01-000129-17-38606-35855"
+      },
+      {
+        "buildingId": "doitt:863713",
+        "cellId": "manhattan-exterior-cell-w01-000132-17-38609-35848"
+      },
+      {
+        "buildingId": "doitt:1273172",
+        "cellId": "manhattan-exterior-cell-w01-000134-17-38611-35848"
+      },
+      {
+        "buildingId": "doitt:1228314",
+        "cellId": "manhattan-exterior-cell-w02-000151-15-9646-8976"
+      },
+      {
+        "buildingId": "doitt:1290490",
+        "cellId": "manhattan-exterior-cell-w02-000151-15-9646-8976"
+      },
+      {
+        "buildingId": "doitt:1304649",
+        "cellId": "manhattan-exterior-cell-w02-000159-15-9646-8972"
+      },
+      {
+        "buildingId": "doitt:1300107",
+        "cellId": "manhattan-exterior-cell-w02-000161-16-19295-17945"
+      },
+      {
+        "buildingId": "doitt:1300108",
+        "cellId": "manhattan-exterior-cell-w02-000161-16-19295-17945"
+      },
+      {
+        "buildingId": "doitt:1273169",
+        "cellId": "manhattan-exterior-cell-w02-000162-16-19294-17946"
+      },
+      {
+        "buildingId": "doitt:1284006",
+        "cellId": "manhattan-exterior-cell-w02-000163-16-19295-17946"
+      },
+      {
+        "buildingId": "doitt:1301519",
+        "cellId": "manhattan-exterior-cell-w02-000163-16-19295-17946"
+      },
+      {
+        "buildingId": "doitt:1284004",
+        "cellId": "manhattan-exterior-cell-w02-000166-16-19295-17947"
+      },
+      {
+        "buildingId": "doitt:1232667",
+        "cellId": "manhattan-exterior-cell-w02-000168-17-38595-35888"
+      },
+      {
+        "buildingId": "doitt:695519",
+        "cellId": "manhattan-exterior-cell-w02-000172-17-38594-35889"
+      },
+      {
+        "buildingId": "doitt:1245301",
+        "cellId": "manhattan-exterior-cell-w02-000179-16-19296-17945"
+      },
+      {
+        "buildingId": "doitt:1198425",
+        "cellId": "manhattan-exterior-cell-w02-000182-16-19298-17945"
+      },
+      {
+        "buildingId": "doitt:1292505",
+        "cellId": "manhattan-exterior-cell-w02-000184-16-19296-17946"
+      },
+      {
+        "buildingId": "doitt:527428",
+        "cellId": "manhattan-exterior-cell-w02-000186-16-19296-17947"
+      },
+      {
+        "buildingId": "doitt:1191061",
+        "cellId": "manhattan-exterior-cell-w02-000190-16-19295-17940"
+      },
+      {
+        "buildingId": "doitt:1290813",
+        "cellId": "manhattan-exterior-cell-w02-000190-16-19295-17940"
+      },
+      {
+        "buildingId": "doitt:1292399",
+        "cellId": "manhattan-exterior-cell-w02-000190-16-19295-17940"
+      },
+      {
+        "buildingId": "doitt:1109902",
+        "cellId": "manhattan-exterior-cell-w02-000191-16-19294-17941"
+      },
+      {
+        "buildingId": "doitt:1154000",
+        "cellId": "manhattan-exterior-cell-w02-000192-16-19295-17941"
+      },
+      {
+        "buildingId": "doitt:259493",
+        "cellId": "manhattan-exterior-cell-w02-000192-16-19295-17941"
+      },
+      {
+        "buildingId": "doitt:1273167",
+        "cellId": "manhattan-exterior-cell-w02-000195-16-19294-17942"
+      },
+      {
+        "buildingId": "doitt:1290649",
+        "cellId": "manhattan-exterior-cell-w02-000196-17-38590-35885"
+      },
+      {
+        "buildingId": "doitt:354631",
+        "cellId": "manhattan-exterior-cell-w02-000199-17-38591-35886"
+      },
+      {
+        "buildingId": "doitt:107511",
+        "cellId": "manhattan-exterior-cell-w02-000204-17-38592-35880"
+      },
+      {
+        "buildingId": "doitt:751920",
+        "cellId": "manhattan-exterior-cell-w02-000204-17-38592-35880"
+      },
+      {
+        "buildingId": "doitt:1260315",
+        "cellId": "manhattan-exterior-cell-w02-000217-17-38597-35881"
+      },
+      {
+        "buildingId": "doitt:1159118",
+        "cellId": "manhattan-exterior-cell-w02-000227-17-38599-35882"
+      },
+      {
+        "buildingId": "doitt:788370",
+        "cellId": "manhattan-exterior-cell-w02-000241-17-38597-35884"
+      },
+      {
+        "buildingId": "doitt:1290493",
+        "cellId": "manhattan-exterior-cell-w02-000244-17-38592-35885"
+      },
+      {
+        "buildingId": "doitt:996292",
+        "cellId": "manhattan-exterior-cell-w02-000251-17-38599-35885"
+      },
+      {
+        "buildingId": "doitt:1272866",
+        "cellId": "manhattan-exterior-cell-w02-000253-17-38593-35886"
+      },
+      {
+        "buildingId": "doitt:1264038",
+        "cellId": "manhattan-exterior-cell-w02-000263-17-38597-35887"
+      },
+      {
+        "buildingId": "doitt:728030",
+        "cellId": "manhattan-exterior-cell-w03-000290-17-38591-35876"
+      },
+      {
+        "buildingId": "doitt:1281802",
+        "cellId": "manhattan-exterior-cell-w03-000293-17-38591-35877"
+      },
+      {
+        "buildingId": "doitt:45593",
+        "cellId": "manhattan-exterior-cell-w03-000297-17-38592-35872"
+      },
+      {
+        "buildingId": "doitt:512130",
+        "cellId": "manhattan-exterior-cell-w03-000297-17-38592-35872"
+      },
+      {
+        "buildingId": "doitt:1305498",
+        "cellId": "manhattan-exterior-cell-w03-000298-17-38593-35872"
+      },
+      {
+        "buildingId": "doitt:1155723",
+        "cellId": "manhattan-exterior-cell-w03-000305-18-77184-71747"
+      },
+      {
+        "buildingId": "doitt:1302104",
+        "cellId": "manhattan-exterior-cell-w03-000307-17-38593-35873"
+      },
+      {
+        "buildingId": "doitt:542636",
+        "cellId": "manhattan-exterior-cell-w03-000307-17-38593-35873"
+      },
+      {
+        "buildingId": "doitt:235444",
+        "cellId": "manhattan-exterior-cell-w03-000310-16-19298-17936"
+      },
+      {
+        "buildingId": "doitt:1232810",
+        "cellId": "manhattan-exterior-cell-w03-000313-17-38592-35874"
+      },
+      {
+        "buildingId": "doitt:607889",
+        "cellId": "manhattan-exterior-cell-w03-000321-17-38592-35875"
+      },
+      {
+        "buildingId": "doitt:1119641",
+        "cellId": "manhattan-exterior-cell-w03-000326-17-38597-35875"
+      },
+      {
+        "buildingId": "doitt:1273272",
+        "cellId": "manhattan-exterior-cell-w03-000339-17-38597-35877"
+      },
+      {
+        "buildingId": "doitt:1302857",
+        "cellId": "manhattan-exterior-cell-w03-000341-17-38599-35877"
+      },
+      {
+        "buildingId": "doitt:938362",
+        "cellId": "manhattan-exterior-cell-w03-000347-17-38599-35878"
+      },
+      {
+        "buildingId": "doitt:489201",
+        "cellId": "manhattan-exterior-cell-w03-000359-16-19300-17938"
+      },
+      {
+        "buildingId": "doitt:1255708",
+        "cellId": "manhattan-exterior-cell-w03-000360-16-19301-17938"
+      },
+      {
+        "buildingId": "doitt:1255809",
+        "cellId": "manhattan-exterior-cell-w03-000360-16-19301-17938"
+      },
+      {
+        "buildingId": "doitt:17684",
+        "cellId": "manhattan-exterior-cell-w03-000364-17-38601-35879"
+      },
+      {
+        "buildingId": "doitt:1290698",
+        "cellId": "manhattan-exterior-cell-w03-000366-16-19295-17932"
+      },
+      {
+        "buildingId": "doitt:1114455",
+        "cellId": "manhattan-exterior-cell-w03-000389-17-38592-35866"
+      },
+      {
+        "buildingId": "doitt:1290747",
+        "cellId": "manhattan-exterior-cell-w03-000394-17-38597-35866"
+      },
+      {
+        "buildingId": "doitt:1284575",
+        "cellId": "manhattan-exterior-cell-w03-000401-17-38596-35867"
+      },
+      {
+        "buildingId": "doitt:1250537",
+        "cellId": "manhattan-exterior-cell-w03-000404-17-38599-35867"
+      },
+      {
+        "buildingId": "doitt:1290737",
+        "cellId": "manhattan-exterior-cell-w03-000407-17-38594-35868"
+      },
+      {
+        "buildingId": "doitt:1290734",
+        "cellId": "manhattan-exterior-cell-w03-000421-17-38595-35870"
+      },
+      {
+        "buildingId": "doitt:1284576",
+        "cellId": "manhattan-exterior-cell-w03-000423-17-38597-35870"
+      },
+      {
+        "buildingId": "doitt:29267",
+        "cellId": "manhattan-exterior-cell-w03-000427-17-38593-35871"
+      },
+      {
+        "buildingId": "doitt:474107",
+        "cellId": "manhattan-exterior-cell-w03-000428-17-38594-35871"
+      },
+      {
+        "buildingId": "doitt:1290732",
+        "cellId": "manhattan-exterior-cell-w03-000430-17-38596-35871"
+      },
+      {
+        "buildingId": "doitt:326721",
+        "cellId": "manhattan-exterior-cell-w03-000451-16-19301-17935"
+      },
+      {
+        "buildingId": "doitt:1281371",
+        "cellId": "manhattan-exterior-cell-w04-000458-16-19299-17921"
+      },
+      {
+        "buildingId": "doitt:1302751",
+        "cellId": "manhattan-exterior-cell-w04-000463-17-38600-35841"
+      },
+      {
+        "buildingId": "doitt:819435",
+        "cellId": "manhattan-exterior-cell-w04-000489-17-38607-35846"
+      },
+      {
+        "buildingId": "doitt:1294047",
+        "cellId": "manhattan-exterior-cell-w04-000496-17-38611-35840"
+      },
+      {
+        "buildingId": "doitt:510821",
+        "cellId": "manhattan-exterior-cell-w04-000520-17-38610-35844"
+      },
+      {
+        "buildingId": "doitt:22991",
+        "cellId": "manhattan-exterior-cell-w04-000532-17-38610-35846"
+      },
+      {
+        "buildingId": "doitt:1293541",
+        "cellId": "manhattan-exterior-cell-w04-000539-16-19307-17923"
+      },
+      {
+        "buildingId": "doitt:1192679",
+        "cellId": "manhattan-exterior-cell-w04-000557-17-38604-35833"
+      },
+      {
+        "buildingId": "doitt:734065",
+        "cellId": "manhattan-exterior-cell-w04-000560-17-38600-35834"
+      },
+      {
+        "buildingId": "doitt:1273271",
+        "cellId": "manhattan-exterior-cell-w04-000594-17-38612-35833"
+      },
+      {
+        "buildingId": "doitt:1290693",
+        "cellId": "manhattan-exterior-cell-w04-000598-16-19305-17917"
+      },
+      {
+        "buildingId": "doitt:1273247",
+        "cellId": "manhattan-exterior-cell-w04-000600-16-19307-17917"
+      },
+      {
+        "buildingId": "doitt:1300740",
+        "cellId": "manhattan-exterior-cell-w04-000608-16-19306-17918"
+      },
+      {
+        "buildingId": "doitt:292703",
+        "cellId": "manhattan-exterior-cell-w04-000608-16-19306-17918"
+      },
+      {
+        "buildingId": "doitt:473447",
+        "cellId": "manhattan-exterior-cell-w04-000616-17-38611-35839"
+      },
+      {
+        "buildingId": "doitt:499926",
+        "cellId": "manhattan-exterior-cell-w04-000630-17-38607-35825"
+      },
+      {
+        "buildingId": "doitt:782996",
+        "cellId": "manhattan-exterior-cell-w04-000635-15-9650-8956"
+      },
+      {
+        "buildingId": "doitt:134598",
+        "cellId": "manhattan-exterior-cell-w04-000642-16-19302-17914"
+      },
+      {
+        "buildingId": "doitt:729611",
+        "cellId": "manhattan-exterior-cell-w04-000663-16-19307-17912"
+      },
+      {
+        "buildingId": "doitt:1250540",
+        "cellId": "manhattan-exterior-cell-w04-000670-17-38615-35827"
+      },
+      {
+        "buildingId": "doitt:624211",
+        "cellId": "manhattan-exterior-cell-w04-000670-17-38615-35827"
+      },
+      {
+        "buildingId": "doitt:1304316",
+        "cellId": "manhattan-exterior-cell-w04-000673-16-19306-17914"
+      },
+      {
+        "buildingId": "doitt:1273248",
+        "cellId": "manhattan-exterior-cell-w04-000681-17-38612-35831"
+      },
+      {
+        "buildingId": "doitt:1273197",
+        "cellId": "manhattan-exterior-cell-w04-000682-17-38613-35831"
+      },
+      {
+        "buildingId": "doitt:1192686",
+        "cellId": "manhattan-exterior-cell-w04-000689-17-38616-35827"
+      },
+      {
+        "buildingId": "doitt:1256128",
+        "cellId": "manhattan-exterior-cell-w04-000690-17-38617-35827"
+      },
+      {
+        "buildingId": "doitt:1186877",
+        "cellId": "manhattan-exterior-cell-w04-000693-17-38616-35828"
+      },
+      {
+        "buildingId": "doitt:1273199",
+        "cellId": "manhattan-exterior-cell-w04-000695-17-38616-35829"
+      },
+      {
+        "buildingId": "doitt:1303574",
+        "cellId": "manhattan-exterior-cell-w04-000698-16-19308-17915"
+      },
+      {
+        "buildingId": "doitt:1264161",
+        "cellId": "manhattan-exterior-cell-w05-000701-15-9651-8954"
+      },
+      {
+        "buildingId": "doitt:1290715",
+        "cellId": "manhattan-exterior-cell-w05-000713-17-38610-35817"
+      },
+      {
+        "buildingId": "doitt:507472",
+        "cellId": "manhattan-exterior-cell-w05-000715-17-38612-35817"
+      },
+      {
+        "buildingId": "doitt:817261",
+        "cellId": "manhattan-exterior-cell-w05-000715-17-38612-35817"
+      },
+      {
+        "buildingId": "doitt:996812",
+        "cellId": "manhattan-exterior-cell-w05-000719-17-38610-35818"
+      },
+      {
+        "buildingId": "doitt:674505",
+        "cellId": "manhattan-exterior-cell-w05-000721-17-38612-35818"
+      },
+      {
+        "buildingId": "doitt:662192",
+        "cellId": "manhattan-exterior-cell-w05-000733-17-38611-35820"
+      },
+      {
+        "buildingId": "doitt:754210",
+        "cellId": "manhattan-exterior-cell-w05-000738-16-19304-17910"
+      },
+      {
+        "buildingId": "doitt:847022",
+        "cellId": "manhattan-exterior-cell-w05-000748-17-38611-35822"
+      },
+      {
+        "buildingId": "doitt:140398",
+        "cellId": "manhattan-exterior-cell-w05-000759-15-9654-8955"
+      },
+      {
+        "buildingId": "doitt:288753",
+        "cellId": "manhattan-exterior-cell-w05-000771-17-38613-35809"
+      },
+      {
+        "buildingId": "doitt:502681",
+        "cellId": "manhattan-exterior-cell-w05-000774-17-38612-35810"
+      },
+      {
+        "buildingId": "doitt:195411",
+        "cellId": "manhattan-exterior-cell-w05-000779-16-19305-17905"
+      },
+      {
+        "buildingId": "doitt:1256132",
+        "cellId": "manhattan-exterior-cell-w05-000793-16-19304-17906"
+      },
+      {
+        "buildingId": "doitt:816730",
+        "cellId": "manhattan-exterior-cell-w05-000795-17-38612-35813"
+      },
+      {
+        "buildingId": "doitt:1200372",
+        "cellId": "manhattan-exterior-cell-w05-000797-18-77227-71627"
+      },
+      {
+        "buildingId": "doitt:1186007",
+        "cellId": "manhattan-exterior-cell-w05-000798-17-38614-35813"
+      },
+      {
+        "buildingId": "doitt:1236201",
+        "cellId": "manhattan-exterior-cell-w05-000798-17-38614-35813"
+      },
+      {
+        "buildingId": "doitt:1239726",
+        "cellId": "manhattan-exterior-cell-w05-000798-17-38614-35813"
+      },
+      {
+        "buildingId": "doitt:751021",
+        "cellId": "manhattan-exterior-cell-w05-000802-17-38614-35814"
+      },
+      {
+        "buildingId": "doitt:1269145",
+        "cellId": "manhattan-exterior-cell-w05-000838-16-19306-17897"
+      },
+      {
+        "buildingId": "doitt:67117",
+        "cellId": "manhattan-exterior-cell-w05-000844-16-19306-17899"
+      },
+      {
+        "buildingId": "doitt:1204940",
+        "cellId": "manhattan-exterior-cell-w05-000846-17-38615-35799"
+      },
+      {
+        "buildingId": "doitt:1285956",
+        "cellId": "manhattan-exterior-cell-w05-000847-16-19308-17896"
+      },
+      {
+        "buildingId": "doitt:344542",
+        "cellId": "manhattan-exterior-cell-w05-000856-16-19308-17893"
+      },
+      {
+        "buildingId": "doitt:227329",
+        "cellId": "manhattan-exterior-cell-w05-000860-17-38619-35788"
+      },
+      {
+        "buildingId": "doitt:404342",
+        "cellId": "manhattan-exterior-cell-w05-000862-17-38618-35789"
+      },
+      {
+        "buildingId": "doitt:1305918",
+        "cellId": "manhattan-exterior-cell-w05-000873-15-9654-8945"
+      },
+      {
+        "buildingId": "doitt:625312",
+        "cellId": "manhattan-exterior-cell-w05-000877-14-4827-4471"
+      },
+      {
+        "buildingId": "doitt:1049671",
+        "cellId": "manhattan-exterior-cell-w05-000880-16-19312-17885"
+      }
+    ]
+  },
+  "blockAliasCell": {
+    "cellId": "manhattan-exterior-cell-w00-000000-block-00835",
+    "why": "Block 835 is the w00 wave in its entirety and carries a block alias rather than a tile coordinate, so a pose cannot be derived from its id the way it can for every other cell. It is named here so that a sweep which cannot place it is not mistaken for a sweep that found it uncovered."
+  },
+  "totals": {
+    "exemptCells": 43,
+    "exemptBuildings": 143,
+    "statement": "Everything NOT in these lists is expected to be either drawn by the far tier, drawn by the near or mid tier, or suppressed under a drawn tile."
+  },
+  "notClaimedHere": [
+    "An exemption is not an excuse. Each of these is a recorded outcome of the bake, traceable to a wave telemetry record.",
+    "This set says nothing about appearance. It is about coverage."
+  ]
+}

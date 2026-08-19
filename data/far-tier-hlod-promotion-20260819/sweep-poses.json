@@ -1,0 +1,133 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "far-tier-hlod-promotion-20260819:sweep-poses",
+  "task": "T005",
+  "artifact": "far-tier-promotion-sweep-pose-registry",
+  "capturedAt": null,
+  "capturedAtStatement": "NULL BY CONSTRUCTION. Registered BEFORE any capture.",
+  "attemptCount": 1,
+  "attemptPolicy": "SINGLE attempt per pose. A FAIL is RECORDED and NOT re-run. The poses and their verdict rule were registered before any screen was looked at.",
+  "verdictRule": {
+    "perPose": "over-budget = absent = checksum-mismatch = build-failure = 0, AND every V3T-eligible member is either drawn by the near or mid tier, suppressed under a drawn far-tier tile, or named in the committed exemption set.",
+    "readFrom": "The eight data-far-tier-* per-state counts, plus data-far-tier-massing-suppressible / -covered / -uncovered for the member-level half.",
+    "stillsAre": "CONTEXT, NOT EVIDENCE. A screenshot cannot show that a count is zero. The counts are the evidence and the stills are labelled non-evidentiary."
+  },
+  "base": "http://127.0.0.1:4173",
+  "urlGrammar": "The pose-captures grammar from scripts/exterior-two-lod-capture-cli.mjs: data, release, view, then lon/lat/height/heading/pitch/roll each toFixed(6).",
+  "boundTo": {
+    "exemptionSet": "sweep-exemptions.json",
+    "promotedInventorySha256": "cf8e26480eecc91f2e7b473d217a0d3551d0be59b4d8da39ee1217a6e0538f0a"
+  },
+  "poses": [
+    {
+      "poseId": "P1",
+      "label": "T003 validation pose — straight down at 1,400 m over doitt:119910",
+      "provenance": "PRE-EXISTING, from T003. Recorded in data/far-tier-hlod-runtime-20260818/runtime-record.json as prose (endToEndValidation.distanceGating.farPose); this is its first registration as a structured pose.",
+      "recaptureRequired": true,
+      "whyRecaptureRequired": "The tile under this pose CHANGED. T003 validated it against the v1 bake; the promoted tile is v4. The old capture describes bytes that are no longer served, so the pose must be re-captured rather than cited.",
+      "byteChangeDisclosed": {
+        "cellId": "manhattan-exterior-cell-w05-000747-17-38610-35822",
+        "glb": {
+          "v1": "2f859925",
+          "v4": "fc534a41"
+        },
+        "atlas": {
+          "v1": "c159e050",
+          "v4": "f93873cc"
+        },
+        "statement": "The prototype cell's bytes moved from v1 to v4 between T003 and this promotion. Any reader comparing this sweep's stills with T003's is comparing two different tiles, and that is said here rather than left to be noticed."
+      },
+      "pose": {
+        "lon": -73.9519,
+        "lat": 40.8059,
+        "height": 1400,
+        "heading": 0,
+        "pitch": -90,
+        "roll": 0
+      },
+      "url": "http://127.0.0.1:4173/?data=real-pilot&release=manhattan-citywide-20260804&view=free&lon=-73.951900&lat=40.805900&height=1400.000000&heading=0.000000&pitch=-90.000000&roll=0.000000"
+    },
+    {
+      "poseId": "P2",
+      "label": "Midtown overview",
+      "provenance": "NEWLY REGISTERED FOR T005. RECONSTRUCTED FROM THE USER'S SESSION SCREENSHOT — the coordinates are an approximation of a view the user was looking at, not a pose any prior record contains. It is NOT pre-existing and must not be cited as if it were.",
+      "recaptureRequired": true,
+      "pose": {
+        "lon": -73.984,
+        "lat": 40.7549,
+        "height": 2400,
+        "heading": 20,
+        "pitch": -35,
+        "roll": 0
+      },
+      "url": "http://127.0.0.1:4173/?data=real-pilot&release=manhattan-citywide-20260804&view=free&lon=-73.984000&lat=40.754900&height=2400.000000&heading=20.000000&pitch=-35.000000&roll=0.000000"
+    },
+    {
+      "poseId": "P3",
+      "label": "Over an honest-stop cell — the far tier must show massing here, not a tile",
+      "provenance": "NEWLY REGISTERED FOR T005. Derived through farTierTileAnchor from the first honest-stop cell id in the committed exemption set, so the pose cannot drift away from the cell it is about.",
+      "cellId": "manhattan-exterior-cell-w01-000062-14-4823-4481",
+      "recaptureRequired": true,
+      "pose": {
+        "lon": -74.014893,
+        "lat": 40.764771,
+        "height": 1600,
+        "heading": 0,
+        "pitch": -90,
+        "roll": 0
+      },
+      "url": "http://127.0.0.1:4173/?data=real-pilot&release=manhattan-citywide-20260804&view=free&lon=-74.014893&lat=40.764771&height=1600.000000&heading=0.000000&pitch=-90.000000&roll=0.000000"
+    },
+    {
+      "poseId": "P4",
+      "label": "Over the densest baked cell — the most members one tile has to cover",
+      "provenance": "NEWLY REGISTERED FOR T005. Derived from the promoted inventory: the entry with the most members.",
+      "cellId": "manhattan-exterior-cell-w03-000297-17-38592-35872",
+      "recaptureRequired": true,
+      "pose": {
+        "lon": -74.002533,
+        "lat": 40.736618,
+        "height": 1600,
+        "heading": 0,
+        "pitch": -90,
+        "roll": 0
+      },
+      "url": "http://127.0.0.1:4173/?data=real-pilot&release=manhattan-citywide-20260804&view=free&lon=-74.002533&lat=40.736618&height=1600.000000&heading=0.000000&pitch=-90.000000&roll=0.000000"
+    },
+    {
+      "poseId": "P5",
+      "label": "Island overview at 12 km — every cell in range at once",
+      "provenance": "NEWLY REGISTERED FOR T005. The pose that makes the selected set the whole island, which is the condition the raised ceiling was derived for.",
+      "recaptureRequired": true,
+      "pose": {
+        "lon": -73.9712,
+        "lat": 40.7831,
+        "height": 12000,
+        "heading": 0,
+        "pitch": -90,
+        "roll": 0
+      },
+      "url": "http://127.0.0.1:4173/?data=real-pilot&release=manhattan-citywide-20260804&view=free&lon=-73.971200&lat=40.783100&height=12000.000000&heading=0.000000&pitch=-90.000000&roll=0.000000"
+    },
+    {
+      "poseId": "P6-OFF",
+      "label": "Rollback arm — P2 with the far tier explicitly off",
+      "provenance": "NEWLY REGISTERED FOR T005. The same pose as P2 with ?farTier=off, to evidence that the opt-out restores the pre-HLOD composition.",
+      "recaptureRequired": true,
+      "pose": {
+        "lon": -73.984,
+        "lat": 40.7549,
+        "height": 2400,
+        "heading": 20,
+        "pitch": -35,
+        "roll": 0,
+        "farTier": "off"
+      },
+      "url": "http://127.0.0.1:4173/?data=real-pilot&release=manhattan-citywide-20260804&view=free&lon=-73.984000&lat=40.754900&height=2400.000000&heading=20.000000&pitch=-35.000000&roll=0.000000&farTier=off"
+    }
+  ],
+  "notClaimedHere": [
+    "P2 is NOT a pre-existing pose. It is reconstructed from a session screenshot and is registered here for the first time.",
+    "P1's prior capture is not reused: the tile beneath it changed from v1 to v4."
+  ]
+}
