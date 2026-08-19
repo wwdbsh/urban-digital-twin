@@ -245,3 +245,121 @@ describe("the verdict is judged against the pre-registered bars", () => {
     expect(verdict.theStop.rule).toContain("no second recipe may be tried");
   });
 });
+
+// ---------------------------------------------------------------------------
+// The roof term. Same guard as the wall stage: every decision number is
+// recomputed from the measurements beside it, and the sign is asserted rather
+// than described — the sign is the whole finding.
+// ---------------------------------------------------------------------------
+
+const roof = JSON.parse(readFileSync(join(repositoryRoot, "data/far-tier-hlod-hue-20260819/roof-term.json"), "utf8"));
+
+describe("the roof term is measured, and it moves hue the wrong way", () => {
+  it("worsens the spread at every one of the six poses", () => {
+    expect(roof.poses).toHaveLength(6);
+    for (const pose of roof.poses) {
+      expect(pose.roofAggregateChannelSpread).toBeGreaterThan(pose.v1ChannelSpread);
+      expect(pose.roofTermDirection).toBe("WORSE");
+      expect(pose.roofTermChangeInSpread).toBeCloseTo(pose.roofAggregateChannelSpread - pose.v1ChannelSpread, 6);
+    }
+    expect(roof.theRoofTerm.poseCountWorsened).toBe(6);
+  });
+
+  it("takes the deciding pose further from both bars, not closer", () => {
+    const worst = roof.poses.find((pose) => pose.pose === "4000/235");
+    expect(worst.v1ChannelSpread).toBe(0.033824);
+    expect(worst.roofAggregateChannelSpread).toBe(0.043074);
+    expect(worst.legacyBar002AfterRoofAggregate).toBe("MISS");
+    expect(worst.a3PrimeAfterRoofAggregate).toBe("MISS");
+  });
+
+  it("has the arithmetic sign that predicted it, from the committed plan data", () => {
+    const composition = roof.roofRegionComposition;
+    // Rooftop metal is BLUER than the roof cap, so aggregating it in makes the
+    // roof less red while the tile is already red-deficient.
+    expect(composition.parts.rooftopMetal.redOverBlue).toBeLessThan(composition.prismRoofCapRedOverBlue);
+    expect(composition.chromaticityShift).toBeLessThan(0);
+    expect(composition.luminanceShift).toBeGreaterThan(0);
+    const area = composition.parts.capsAndDecks.areaSquareMeters + composition.parts.equipmentAboveCrown.areaSquareMeters + composition.parts.rooftopMetal.areaSquareMeters;
+    expect(composition.aggregateAreaSquareMeters).toBeCloseTo(area, 3);
+  });
+
+  it("records the trade rather than reporting only the half that flatters it", () => {
+    const worst = roof.poses.find((pose) => pose.pose === "4000/235");
+    // Tone is fixed at the pose that has blocked the mass bake.
+    expect(Math.abs(worst.luminance.roofAggregateRatio - 1)).toBeLessThan(Math.abs(worst.luminance.v1Ratio - 1));
+    expect(worst.luminance.A2AfterRoofAggregate).toBe("PASS");
+    // And broken at the near azimuth-55 pose.
+    const near = roof.poses.find((pose) => pose.pose === "400/55");
+    expect(near.luminance.A1AfterRoofAggregate).toBe("MISS");
+    expect(near.luminance.A2AfterRoofAggregate).toBe("MISS");
+    // The sentence must carry BOTH halves, not just the flattering one.
+    expect(roof.theRoofTerm.soItIsATrade).toContain("buys the tone finding");
+    expect(roof.theRoofTerm.soItIsATrade).toContain("costs the hue finding");
+    expect(roof.theRoofTerm.soItIsATrade).toContain("breaks two luminance bars");
+  });
+
+  it("refused the ambiguous variant and says which ambiguity", () => {
+    const ambiguity = roof.theAmbiguityThatDecidedTheMethod;
+    expect(ambiguity.theSplit).toContain("710.918");
+    expect(ambiguity.theSplit).toContain("2,384.521");
+    expect(ambiguity.whatWasBuiltInstead).toContain("INVERSE");
+    // The excluded fire-escape metal must be listed, not quietly dropped.
+    expect(roof.roofRegionComposition.parts.wallFireEscapeMetalExcluded.areaSquareMeters).toBe(2384.521);
+  });
+});
+
+describe("the irreducible residual is bracketed, not asserted", () => {
+  it("brackets every pose between the two metal assignments", () => {
+    for (const pose of roof.poses) {
+      const [low, high] = pose.residualBracket;
+      expect(low).toBeLessThanOrEqual(high);
+      expect([pose.residualAfterBothPaletteTermsEqualised, pose.residualAfterWallTermOnly].sort((a, b) => a - b)).toEqual([low, high]);
+    }
+  });
+
+  it("names the trustworthy end by azimuth, because walls are what the bracket depends on", () => {
+    for (const pose of roof.poses) {
+      if (pose.azimuthDegrees === 235) expect(pose.trustworthyEndOfBracket).toContain("both-equalised");
+      else expect(pose.trustworthyEndOfBracket).toContain("absorbed-wall");
+    }
+  });
+
+  it("puts the worst residual above the legacy bar and below the roof aggregate's spread", () => {
+    const worst = roof.theIrreducibleResidual.worstPoseResidual;
+    expect(worst).toBe(Math.max(...roof.poses.map((pose) => pose.residualAfterBothPaletteTermsEqualised)));
+    expect(worst).toBeGreaterThan(0.02);
+    expect(worst).toBeLessThan(0.043074);
+    expect(roof.theIrreducibleResidual.whatABarDerivationWouldRestOn).toContain("No bar is proposed here");
+  });
+});
+
+describe("the roof stage kept its controls and its scope", () => {
+  it("moved no geometry in either variant", () => {
+    for (const pose of roof.poses) {
+      expect(pose.silhouetteControlRoofAggregateAgainstV1).toBe(0);
+      expect(pose.silhouetteControlBothEqualisedAgainstSource).toBe(0);
+    }
+  });
+
+  it("verified the v1 baseline before repainting a texel", () => {
+    expect(roof.positiveControls.v1BaselineVerifiedBeforeEditing)
+      .toContain("c159e0508aeb7522620b799b83041461aecf34727f69209bd7efbf992f5c067a");
+  });
+
+  it("measured what each correction reaches, which is the wall stage's lesson applied", () => {
+    for (const pose of roof.poses) {
+      if (pose.azimuthDegrees === 235) {
+        expect(pose.shareOfSignalTheRoofRepaintReached).toBeGreaterThan(pose.shareOfSignalTheWallCorrectionReached);
+      } else {
+        expect(pose.shareOfSignalTheWallCorrectionReached).toBeGreaterThan(pose.shareOfSignalTheRoofRepaintReached);
+      }
+    }
+  });
+
+  it("changed no recipe and captured no combined fix", () => {
+    const text = JSON.stringify(roof.notClaimedHere);
+    expect(text).toContain("NO recipe change");
+    expect(text).toContain("NO combined wall-and-roof tile");
+  });
+});
