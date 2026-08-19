@@ -15,7 +15,7 @@
   },
   "provenanceOfTheReadings": {
     "statement": "THE READINGS ARE THE ONES ALREADY CAPTURED. This record re-scores fix-capture-verdict.json against the adopted bars; it takes no render and it changes no measurement.",
-    "source": "fix-capture-verdict.json, sha256 99c0c3f242a5d52cc96305d4b63b952a45e92e7ed5729ad8496125ca79bd4072",
+    "source": "fix-capture-verdict.json, sha256 1e49002cb59e43a3ed16c7c6c6092cd59cf6ad152206e07c48ce675e63a2690c",
     "instrument": "The pinned instrument, harness enforced at each of the six captures, subject isolated by deletion, renderable-mesh count 1.",
     "domain": "The SOURCE-and-V3 intersection, un-premultiplied. The v3 silhouette is pixel-identical to v1's at all six poses.",
     "whatChangedSinceThatRecordWasWritten": "The BARS, and nothing else. A3' = 0.032 is superseded by A3'' = 0.035 and the prediction bar has served its purpose and is not re-scored here; its MISS stands on the record."

@@ -137,6 +137,8 @@ async function emit() {
     };
   });
 
+  const worstResidualPose = poses.reduce((worst, pose) => (pose.residualAfterBothPaletteTermsEqualised > worst.residualAfterBothPaletteTermsEqualised ? pose : worst), poses[0]);
+
   const record = {
     schemaVersion: "1.0",
     recordId: `${EVIDENCE_ID}:roof-term`,
@@ -194,8 +196,14 @@ async function emit() {
         trustworthyEnd: pose.trustworthyEndOfBracket,
       })),
       whyABracket: "The metal record cannot be split at material-record granularity. The absorbed-wall variant sends ALL metal to facade, which is right for the 77.03 per cent on walls; the both-equalised variant sends all of it to roof, which is right for the 22.97 per cent above the crown. Each is wrong in the opposite direction and the pair BRACKETS the truth. The bracket only matters where walls are visible, so the both-equalised end is the trustworthy one at azimuth 235 and the absorbed end at azimuth 55.",
-      worstPoseResidual: round(Math.max(...poses.map((pose) => pose.residualAfterBothPaletteTermsEqualised)), 6),
-      worstPoseResidualBracket: [round(Math.min(...poses.map((pose) => Math.min(...pose.residualBracket))), 6), round(Math.max(...poses.map((pose) => Math.max(...pose.residualBracket))), 6)],
+      worstPoseResidual: round(worstResidualPose.residualAfterBothPaletteTermsEqualised, 6),
+      worstPose: worstResidualPose.pose,
+      // THE WORST POSE'S OWN BRACKET, not the envelope of all six. An earlier
+      // version took the minimum low across every pose and the maximum high,
+      // which produced [0.006848, 0.030863] — a lower end from 400/55, three
+      // times below the 0.02 bar this evidence is used to retire. A bracket
+      // whose ends come from different poses is not a bracket on anything.
+      worstPoseResidualBracket: worstResidualPose.residualBracket,
       readAcrossThePoses: `Taking the trustworthy end at each azimuth, the irreducible geometric residual runs ${poses.map((pose) => (pose.azimuthDegrees === 235 ? pose.residualAfterBothPaletteTermsEqualised : pose.residualAfterWallTermOnly).toFixed(6)).join(", ")} across the six poses, worst 0.027301 at 4,000 m / azimuth 235.`,
       whatABarDerivationWouldRestOn: "0.027301 at the worst pose, or 0.030863 if the less trustworthy end of the bracket is taken there. Both are ABOVE the legacy 0.02 bar and BELOW the 0.043074 an area-correct roof aggregate produces. No bar is proposed here.",
     },

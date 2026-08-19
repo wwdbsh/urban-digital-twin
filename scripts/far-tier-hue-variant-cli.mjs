@@ -4,7 +4,7 @@
  *
  * THE QUESTION IT ANSWERS. The tile's hue sits below the source's at every
  * pinned pose, and the arithmetic has already shown the tile's WALL albedo
- * reproduces the source's FACADE albedo to five decimals. So the gap is not in
+ * reproduces the source's FACADE albedo to three decimals (2.6e-4 relative). So the gap is not in
  * the facade colour. The bake's own module doc names what else it does to
  * colour: "The far tier resolves only the FACADE material of each wall zone;
  * glazing and trim are absorbed into it."

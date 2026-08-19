@@ -176,6 +176,20 @@ async function emit() {
         additivityIsEnforcedNotAsserted: "The same code path with zoneColourMode facade-only must reproduce the committed v1 atlas c159e050... byte for byte, and the bake refuses if it does not.",
         metalIsExcluded: "material:metal is NOT in the wall aggregate. Rooftop tanks and legs are geometric omissions; 77.03 per cent of this cell's metal is wall fire escapes and 22.97 per cent is above the crown.",
       },
+      enforcement: {
+        requirement: "THE MASS BAKE MUST ASSERT THE RECIPE IT IS BAKING. It must check both the id and the hash above and refuse anything else.",
+        theGapThisCloses: "NOTHING IN THE CODE PREVENTS BAKING v1 BY DEFAULT, and that is deliberate: farTierEffectiveParameters falls back to v1 behaviour on every v3-only field precisely so that v1's byte replay cannot be broken by a later recipe. The same fallback means a caller that forgets to pass v3 gets a v1 tile silently, with no error and no visible difference in the pipeline.",
+        howToClose: "src/release/far-tier-bake.ts exports FAR_TIER_ADOPTED_RECIPE and assertFarTierAdoptedRecipe(recipe), which throws unless the caller is baking the adopted recipe. The mass-bake path must call it before packing. It is one line and it is the only thing standing between the adoption and a silently v1 mass bake.",
+        whyItIsNotAlreadyWiredIn: "There is no mass-bake path yet — T004 is the task that creates it. The assertion is shipped ready for that caller rather than retrofitted into far-tier-bake-cli.mjs, whose whole purpose is to replay the committed v1 artifact and which must therefore keep baking v1.",
+        residualRisk: "Until T004 calls it, the adoption is a document rather than a constraint. RECORDED PROMINENTLY rather than quietly assumed.",
+      },
+      knownImplementationLimit: {
+        finding: "The adopted tile contains FOUR wall zones coloured by v1's facade-only palette rather than the v3 aggregate, on one building, covering 51.198 of 86,964.275 square metres of wall — 0.059 per cent.",
+        cause: "The aggregate attributes each source surface to the tier-0 ring edge it best faces; on four short edges every surface lands on a neighbour, leaving those zones with no in-scope area.",
+        status: "The bake now REFUSES this by default; a caller must accept it by name and gets the count, the zones and the area. The adopted tile's digests are UNCHANGED, so nothing captured or scored moves.",
+        whatTheMassBakeMustDo: "Report the count per cell and treat a large one as a STOP. The 0.059 per cent here is a property of the attribution rule, not of this cell, and it is unmeasured at scale.",
+        citation: "fix-capture-verdict.json, implementationDisclosure.",
+      },
       operativeGates: [
         { id: "A1", statement: `|union mean luminance ratio - 1| <= ${A1_ALLOWANCE} on poses whose SOURCE mean luminance is at least ${A1_SOURCE_LUMINANCE_FLOOR}.`, status: "UNCHANGED from the inherited bar." },
         { id: "A2", statement: `|baked union mean luminance - source union mean luminance| <= ${A2_ALLOWANCE} at every pose.`, status: "UNCHANGED from the T012-era proposal." },
@@ -210,6 +224,7 @@ async function emit() {
       "A3'' is not a pre-registered bar and is never described as one.",
       "No new capture was taken to produce this record.",
       "The measured floor of 0.027301 is a property of this cell under this instrument, not a universal constant.",
+      "The adopted recipe is not enforced by any code path that exists today; see t004GateHandoff.enforcement.",
     ],
   };
 

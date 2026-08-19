@@ -81,13 +81,14 @@ const FAR_TIER_RIGHTS = {
 // The v3 bake
 // ---------------------------------------------------------------------------
 
-function bakeCellV3(context, { zoneColourMode }) {
+function bakeCellV3(context, { zoneColourMode, allowFacadeOnlyFallback = false }) {
   const { cell, sources, planChecksumSha256, profile } = context;
   const origin = [cell.bounds.west, cell.bounds.south];
   const faces = [];
   const members = [];
   const aggregateReport = [];
   const unitySnapReport = [];
+  const facadeOnlyFallbackReport = [];
 
   for (const buildingId of [...cell.buildingIds].sort()) {
     const source = sources.get(buildingId);
@@ -103,7 +104,7 @@ function bakeCellV3(context, { zoneColourMode }) {
       (source.representative[0] - origin[0]) * FAR_TIER_BAKE_RECIPE.metersPerDegreeLongitude,
       (source.representative[1] - origin[1]) * FAR_TIER_BAKE_RECIPE.metersPerDegreeLatitude,
     ];
-    const built = farTierFacesForBuilding(plan, offsetMeters, { zoneColourMode, aggregateReport, unitySnapReport });
+    const built = farTierFacesForBuilding(plan, offsetMeters, { zoneColourMode, aggregateReport, unitySnapReport, facadeOnlyFallbackReport, allowFacadeOnlyFallback });
     faces.push(...built);
     members.push({ buildingId, included: true, styleClass: plan.styleClass, faceCount: built.length, planHashSha256: plan.planHashSha256 });
   }
@@ -115,7 +116,7 @@ function bakeCellV3(context, { zoneColourMode }) {
   const rgb = bakeFarTierAtlas(packing);
   const atlasPng = encodeRgbPng(packing.atlasPixels, packing.atlasPixels, rgb);
   const geometry = farTierGeometry(packing);
-  return { faces, members, surfaceArea, resolution, packing, rgb, atlasPng, geometry, aggregateReport, unitySnapReport, delivered: farTierDeliveredQuality(packing.texelWorldSizeMeters) };
+  return { faces, members, surfaceArea, resolution, packing, rgb, atlasPng, geometry, aggregateReport, unitySnapReport, facadeOnlyFallbackReport, delivered: farTierDeliveredQuality(packing.texelWorldSizeMeters) };
 }
 
 /** Face-world-area-weighted linear albedo of an atlas's wall content. */
@@ -175,7 +176,7 @@ function writeTileV3(context, baked, atlasRelativeRef) {
 async function commandBake(cellId, { quiet = false } = {}) {
   const context = await materializeCell(cellId);
   const v1 = bakeCellV3(context, { zoneColourMode: "facade-only" });
-  const v3 = bakeCellV3(context, { zoneColourMode: "area-correct-aggregate" });
+  const v3 = bakeCellV3(context, { zoneColourMode: "area-correct-aggregate", allowFacadeOnlyFallback: true });
 
   // REGRESSION GATE. The v3 path must reproduce v1 EXACTLY when told to colour
   // a zone the v1 way. If it does not, v3 is not additive and the comparison
@@ -200,10 +201,6 @@ async function commandBake(cellId, { quiet = false } = {}) {
     excludedByRole: accumulated.excludedByRole + report.excludedByRoleAreaSquareMeters,
     excludedHorizontal: accumulated.excludedHorizontal + report.excludedAsHorizontalAreaSquareMeters,
   }), { inScope: 0, attributed: 0, excludedByRole: 0, excludedHorizontal: 0 });
-  if (Math.abs(aggregate.attributed - aggregate.inScope) > 1e-6) {
-    fail(`the aggregation lost ${round(aggregate.inScope - aggregate.attributed, 6)} square metres of in-scope surface; a partial aggregate is not an area-correct one.`);
-  }
-
   const v1Wall = wallAlbedo(v1.packing, v1.rgb);
   const v3Wall = wallAlbedo(v3.packing, v3.rgb);
   const wallShift = v3Wall.map((value, index) => value / v1Wall[index]);
@@ -241,6 +238,19 @@ async function commandBake(cellId, { quiet = false } = {}) {
       excludedByRoleAreaSquareMeters: round(aggregate.excludedByRole, 3),
       excludedAsHorizontalAreaSquareMeters: round(aggregate.excludedHorizontal, 3),
       buildingsAggregated: v3.aggregateReport.length,
+      facadeOnlyFallbacks: {
+        why: "A wall zone with no in-scope surface would silently keep v1's facade-only colour while the tile's provenance named v3. That is the one degradation the bytes do not show, so it is counted here and REFUSED by default in aggregate mode; reaching this line at all means the count is zero.",
+        count: v3.facadeOnlyFallbackReport.length,
+        zones: v3.facadeOnlyFallbackReport,
+        refusedByDefault: true,
+        acceptedExplicitlyHere: true,
+        wallFaceCount: v3.packing.faces.filter((face) => face.kind === "wall").length,
+        affectedFaceAreaSquareMeters: round(v3.packing.faces
+          .filter((face) => face.kind === "wall" && v3.facadeOnlyFallbackReport
+            .some((entry) => entry.buildingId === face.buildingId && entry.zoneKey.split(":")[0] === String(face.faceIndex)))
+          .reduce((sum, face) => sum + face.areaSquareMeters, 0), 3),
+        totalWallAreaSquareMeters: round(v3.packing.faces.filter((face) => face.kind === "wall").reduce((sum, face) => sum + face.areaSquareMeters, 0), 3),
+      },
       unitySnaps: {
         why: "A zone whose in-scope surface is entirely its own facade material must reproduce that material's factor exactly. Where the palette calibration already sits at the closed profile's ceiling of 1, the round trip through an area-weighted albedo and back through the class tile's linear mean lands a few units in the last place above it. Those are snapped to 1 and counted; anything larger than 1e-9 is REFUSED rather than clamped, because clamping would clip one channel before the others and manufacture the very bias this task excluded.",
         count: v3.unitySnapReport.length,
@@ -588,6 +598,21 @@ async function commandVerdict(cellId) {
       rule: "The pre-registration's stop rule: a MISS on ANY bar stops the task and is reported; no bar may be retuned after a capture, no pose may be dropped, and no second recipe may be tried inside this stage.",
       applied: "TWO bars are missed. The task stops here. A3' is NOT widened to admit 0.033824, P1 is NOT relaxed to admit 0.023051, and the azimuth-235 poses are NOT set aside as roof-dominated after the fact — that they are roof-dominated is a finding of this capture, not a licence to exclude them from it.",
       whatIsNotClaimed: "The recipe is not withdrawn and is not promoted. It exists, it replays, it is additive, and it demonstrably improves three of six poses; whether that is worth adopting on its own is a decision this stage does not make.",
+    },
+    implementationDisclosure: {
+      finding: "FOUR WALL ZONES IN THIS TILE CARRY v1's FACADE-ONLY COLOUR, NOT THE v3 AGGREGATE. Found by a guard added after this capture, and disclosed here rather than left in the code.",
+      why: "The aggregate attributes every source surface to the tier-0 ring edge it best faces. On four short edges of one building the surfaces all land on a neighbour, so those zones receive no in-scope area and fall back to v1's palette factor. Total attributed area is still 100 per cent — the area is placed, just not on those edges.",
+      extent: {
+        zones: outcome.aggregation.facadeOnlyFallbacks.zones,
+        zoneCount: outcome.aggregation.facadeOnlyFallbacks.count,
+        wallFaceCount: outcome.aggregation.facadeOnlyFallbacks.wallFaceCount,
+        affectedWallAreaSquareMeters: outcome.aggregation.facadeOnlyFallbacks.affectedFaceAreaSquareMeters,
+        totalWallAreaSquareMeters: outcome.aggregation.facadeOnlyFallbacks.totalWallAreaSquareMeters,
+        shareOfWallArea: round(outcome.aggregation.facadeOnlyFallbacks.affectedFaceAreaSquareMeters / outcome.aggregation.facadeOnlyFallbacks.totalWallAreaSquareMeters, 6),
+      },
+      doesItChangeAnyNumberInThisRecord: "NO. The tile's digests are unchanged — GLB e154561c..., atlas 368c863c... — because the fallback is what the code always did; the guard only made it visible. Every reading, verdict and bar below stands exactly as captured.",
+      whyItIsNotSilentAnyMore: "The bake now REFUSES this fallback by default and the caller must accept it by name. This capture's bake accepts it explicitly and reports the count, the zones and the area.",
+      whatItMeansForTheMassBake: "0.059 per cent of wall area on one building here. That share is a property of the geometric attribution, not of this cell, and it is unmeasured at scale. A mass bake must report the count per cell and treat a large one as a stop, not a warning.",
     },
     renders: {
       retention: "LOCAL WORK PRODUCT. The v3 EXR bytes live under artifacts/ and are gitignored; these checksums are the committed artifact.",

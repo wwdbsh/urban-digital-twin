@@ -341,6 +341,42 @@
     "applied": "TWO bars are missed. The task stops here. A3' is NOT widened to admit 0.033824, P1 is NOT relaxed to admit 0.023051, and the azimuth-235 poses are NOT set aside as roof-dominated after the fact — that they are roof-dominated is a finding of this capture, not a licence to exclude them from it.",
     "whatIsNotClaimed": "The recipe is not withdrawn and is not promoted. It exists, it replays, it is additive, and it demonstrably improves three of six poses; whether that is worth adopting on its own is a decision this stage does not make."
   },
+  "implementationDisclosure": {
+    "finding": "FOUR WALL ZONES IN THIS TILE CARRY v1's FACADE-ONLY COLOUR, NOT THE v3 AGGREGATE. Found by a guard added after this capture, and disclosed here rather than left in the code.",
+    "why": "The aggregate attributes every source surface to the tier-0 ring edge it best faces. On four short edges of one building the surfaces all land on a neighbour, so those zones receive no in-scope area and fall back to v1's palette factor. Total attributed area is still 100 per cent — the area is placed, just not on those edges.",
+    "extent": {
+      "zones": [
+        {
+          "buildingId": "doitt:485638",
+          "zoneKey": "8:shaft",
+          "materialId": "material:facade:shaft"
+        },
+        {
+          "buildingId": "doitt:485638",
+          "zoneKey": "12:shaft",
+          "materialId": "material:facade:shaft"
+        },
+        {
+          "buildingId": "doitt:485638",
+          "zoneKey": "13:shaft",
+          "materialId": "material:facade:shaft"
+        },
+        {
+          "buildingId": "doitt:485638",
+          "zoneKey": "14:shaft",
+          "materialId": "material:facade:shaft"
+        }
+      ],
+      "zoneCount": 4,
+      "wallFaceCount": 716,
+      "affectedWallAreaSquareMeters": 51.198,
+      "totalWallAreaSquareMeters": 86964.275,
+      "shareOfWallArea": 0.000589
+    },
+    "doesItChangeAnyNumberInThisRecord": "NO. The tile's digests are unchanged — GLB e154561c..., atlas 368c863c... — because the fallback is what the code always did; the guard only made it visible. Every reading, verdict and bar below stands exactly as captured.",
+    "whyItIsNotSilentAnyMore": "The bake now REFUSES this fallback by default and the caller must accept it by name. This capture's bake accepts it explicitly and reports the count, the zones and the area.",
+    "whatItMeansForTheMassBake": "0.059 per cent of wall area on one building here. That share is a property of the geometric attribution, not of this cell, and it is unmeasured at scale. A mass bake must report the count per cell and treat a large one as a stop, not a warning."
+  },
   "renders": {
     "retention": "LOCAL WORK PRODUCT. The v3 EXR bytes live under artifacts/ and are gitignored; these checksums are the committed artifact.",
     "files": [

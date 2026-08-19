@@ -43,7 +43,7 @@
     "evidence": {
       "measuredFloorWithBothPaletteTermsCorrected": 0.027301,
       "floorBracket": [
-        0.006848,
+        0.027301,
         0.030863
       ],
       "whatTheFloorIs": "The v1 tile against a source whose palette has been equalised on BOTH sides — walls to the facade colour the prism bakes, roof region to the roof colour it bakes. What survives is geometry, and it is 0.027301 at the worst pose, above 0.02 with both palette fixes already applied.",
@@ -56,12 +56,12 @@
     "supersededBar": 0.032,
     "statement": "SUPERSEDED BY STATEMENT, never edited. A3' = 0.032 was derived from the palette-equalised comparison as a proxy for the irreducible geometric term.",
     "whyItsDerivationBasisDidNotTransfer": "The proxy came from an instrumentation variant that substituted materials across the WHOLE source, including its rooftop groups. Recipe v3 substitutes only on the prism's walls. At the roof-dominated poses the two are not the same substitution, and the capture showed it: the wall correction reached 1e-8 of the signal at 1,200 m and 4,000 m / azimuth 235, leaving those spreads unchanged from v1.",
-    "citation": "fix-capture-verdict.json, sha256 99c0c3f242a5d52cc96305d4b63b952a45e92e7ed5729ad8496125ca79bd4072, sections whyTheWorstPoseDidNotMove and barVerdicts.A3prime_hue.",
+    "citation": "fix-capture-verdict.json, sha256 1e49002cb59e43a3ed16c7c6c6092cd59cf6ad152206e07c48ce675e63a2690c, sections whyTheWorstPoseDidNotMove and barVerdicts.A3prime_hue.",
     "whatIsRetainedFromIt": "The pre-registration itself, its stop rule, and the MISS it recorded. Nothing is rewritten; A3' simply stops being the operative bar."
   },
   "extensionToRoofRejected": {
     "decision": "REJECTED.",
-    "onWhatEvidence": "roof-term.json, sha256 495e76b940132cb13f355a744d20e5a9cc7b3ac73e7374d4aac54a2fc0cd956a.",
+    "onWhatEvidence": "roof-term.json, sha256 6725ca9176a4717d38ef26447d2cfe8734cb6e886c2ae020f52ed89976abe01a.",
     "measuredConsequences": [
       "Hue WORSE at all six poses, by 0.003780, 0.009718, 0.003927, 0.009373, 0.003856, 0.009250.",
       "The deciding pose 4,000 m / azimuth 235 goes 0.033824 to 0.043074 — past A3'' as well as past 0.02 and 0.032.",
@@ -79,6 +79,20 @@
       "whatItChangesAgainstV1": "Wall zone colour becomes the area-weighted linear-light aggregate of the vertical facade, glazing and trim surfaces the wall stands in for. Packing, gutters, texel floors, geometry emission, UVs and transfer functions are v1's.",
       "additivityIsEnforcedNotAsserted": "The same code path with zoneColourMode facade-only must reproduce the committed v1 atlas c159e050... byte for byte, and the bake refuses if it does not.",
       "metalIsExcluded": "material:metal is NOT in the wall aggregate. Rooftop tanks and legs are geometric omissions; 77.03 per cent of this cell's metal is wall fire escapes and 22.97 per cent is above the crown."
+    },
+    "enforcement": {
+      "requirement": "THE MASS BAKE MUST ASSERT THE RECIPE IT IS BAKING. It must check both the id and the hash above and refuse anything else.",
+      "theGapThisCloses": "NOTHING IN THE CODE PREVENTS BAKING v1 BY DEFAULT, and that is deliberate: farTierEffectiveParameters falls back to v1 behaviour on every v3-only field precisely so that v1's byte replay cannot be broken by a later recipe. The same fallback means a caller that forgets to pass v3 gets a v1 tile silently, with no error and no visible difference in the pipeline.",
+      "howToClose": "src/release/far-tier-bake.ts exports FAR_TIER_ADOPTED_RECIPE and assertFarTierAdoptedRecipe(recipe), which throws unless the caller is baking the adopted recipe. The mass-bake path must call it before packing. It is one line and it is the only thing standing between the adoption and a silently v1 mass bake.",
+      "whyItIsNotAlreadyWiredIn": "There is no mass-bake path yet — T004 is the task that creates it. The assertion is shipped ready for that caller rather than retrofitted into far-tier-bake-cli.mjs, whose whole purpose is to replay the committed v1 artifact and which must therefore keep baking v1.",
+      "residualRisk": "Until T004 calls it, the adoption is a document rather than a constraint. RECORDED PROMINENTLY rather than quietly assumed."
+    },
+    "knownImplementationLimit": {
+      "finding": "The adopted tile contains FOUR wall zones coloured by v1's facade-only palette rather than the v3 aggregate, on one building, covering 51.198 of 86,964.275 square metres of wall — 0.059 per cent.",
+      "cause": "The aggregate attributes each source surface to the tier-0 ring edge it best faces; on four short edges every surface lands on a neighbour, leaving those zones with no in-scope area.",
+      "status": "The bake now REFUSES this by default; a caller must accept it by name and gets the count, the zones and the area. The adopted tile's digests are UNCHANGED, so nothing captured or scored moves.",
+      "whatTheMassBakeMustDo": "Report the count per cell and treat a large one as a STOP. The 0.059 per cent here is a property of the attribution rule, not of this cell, and it is unmeasured at scale.",
+      "citation": "fix-capture-verdict.json, implementationDisclosure."
     },
     "operativeGates": [
       {
@@ -100,7 +114,7 @@
     "predictionAgreementDiscipline": {
       "statement": "ANY future far-tier recipe change must pre-register per-pose point predictions and an agreement bar BEFORE its confirming capture, and must stop on a miss rather than retune.",
       "whyItIsPartOfTheHandoff": "A3'' is a post-hoc bar. Without this discipline it would become a licence to adopt the next recipe by scoring it against a threshold that was itself chosen from a score.",
-      "theWorkedExample": "T013's own prediction bar MISSED at five of six poses, worst 0.023051, and the task stopped instead of widening it. See fix-pre-registration.json (e01db79ddde70eee239d331ee1e1d02e8ded97d080fb8594724a559ff20e89b7) and fix-capture-verdict.json (99c0c3f242a5d52cc96305d4b63b952a45e92e7ed5729ad8496125ca79bd4072).",
+      "theWorkedExample": "T013's own prediction bar MISSED at five of six poses, worst 0.023051, and the task stopped instead of widening it. See fix-pre-registration.json (e01db79ddde70eee239d331ee1e1d02e8ded97d080fb8594724a559ff20e89b7) and fix-capture-verdict.json (1e49002cb59e43a3ed16c7c6c6092cd59cf6ad152206e07c48ce675e63a2690c).",
       "andWhatItCaught": "The model assumed the whole tile carried the substitution when only the wall zones do. That is exactly the class of error a post-hoc bar cannot catch."
     },
     "instrument": {
@@ -116,15 +130,16 @@
     ]
   },
   "lineage": {
-    "attribution": "8826b5fcafb81fc835bed3428b2989d33b32a18b9ca1e3e3363b69408da9fcb3",
-    "pinnedCapture": "c55748533271679b642d3cf1c2946c6f24d380a33962951391ba879c097c2e00",
+    "attribution": "f7e24d6dd4f4ebf4b3d142a899711ab6556df066f1589c2466e80891804a451b",
+    "pinnedCapture": "969de7b207fc0d6d2942c62da2d61c98f51df59a3dfe92adfc1439fc12620aa5",
     "preRegistration": "e01db79ddde70eee239d331ee1e1d02e8ded97d080fb8594724a559ff20e89b7",
-    "fixCaptureVerdict": "99c0c3f242a5d52cc96305d4b63b952a45e92e7ed5729ad8496125ca79bd4072",
-    "roofTerm": "495e76b940132cb13f355a744d20e5a9cc7b3ac73e7374d4aac54a2fc0cd956a"
+    "fixCaptureVerdict": "1e49002cb59e43a3ed16c7c6c6092cd59cf6ad152206e07c48ce675e63a2690c",
+    "roofTerm": "6725ca9176a4717d38ef26447d2cfe8734cb6e886c2ae020f52ed89976abe01a"
   },
   "notClaimedHere": [
     "A3'' is not a pre-registered bar and is never described as one.",
     "No new capture was taken to produce this record.",
-    "The measured floor of 0.027301 is a property of this cell under this instrument, not a universal constant."
+    "The measured floor of 0.027301 is a property of this cell under this instrument, not a universal constant.",
+    "The adopted recipe is not enforced by any code path that exists today; see t004GateHandoff.enforcement."
   ]
 }

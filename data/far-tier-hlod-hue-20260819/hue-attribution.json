@@ -186,7 +186,7 @@
       "pinned-capture.json",
       "instrument-mask-semantics-note.json"
     ],
-    "renderCount": 24,
+    "renderCount": 42,
     "byteReplay": "The v1 tile was regenerated from the pinned base snapshot before any of this: GLB 2f859925..., atlas c159e050..., both reproducing the committed provenance exactly. Nothing in the frozen ledger was touched.",
     "albedoMixSha256": "2b14e57ee30625c669a398cdb64742bfd2f35af46531b31b44f938f7295498c7"
   },

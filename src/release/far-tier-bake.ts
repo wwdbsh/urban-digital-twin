@@ -295,6 +295,31 @@ export function farTierRecipeHashV3(): string {
 }
 
 /**
+ * THE ADOPTED FAR-TIER RECIPE, as a value a caller can assert against.
+ *
+ * T013 adopted v3 by user decision. Nothing in this module PREVENTS a caller
+ * from baking v1 by omission — `farTierEffectiveParameters` deliberately falls
+ * back to v1 behaviour so that v1 replay cannot be broken — so the adoption is
+ * enforceable only by the caller checking it. `assertFarTierAdoptedRecipe` is
+ * that check, kept here beside the recipe rather than described in a document,
+ * so a mass-bake path can fail closed in one line.
+ */
+export const FAR_TIER_ADOPTED_RECIPE = {
+  recipeId: FAR_TIER_BAKE_RECIPE_V3.recipeId,
+  adoptedOn: "2026-08-19",
+  adoptedBy: "user decision, T013 (Issue #118)",
+  gateRecord: "data/far-tier-hlod-hue-20260819/gate-adoption.json",
+} as const;
+
+/** Fail closed unless the caller is baking the adopted recipe. */
+export function assertFarTierAdoptedRecipe(recipe: Record<string, unknown>): void {
+  const recipeId = recipe.recipeId as string | undefined;
+  if (recipeId !== FAR_TIER_ADOPTED_RECIPE.recipeId) {
+    throw new Error(`The adopted far-tier recipe is ${FAR_TIER_ADOPTED_RECIPE.recipeId} (${farTierRecipeHashV3()}), adopted ${FAR_TIER_ADOPTED_RECIPE.adoptedOn} by ${FAR_TIER_ADOPTED_RECIPE.adoptedBy}; this caller supplied ${recipeId ?? "no recipeId"}. See ${FAR_TIER_ADOPTED_RECIPE.gateRecord}.`);
+  }
+}
+
+/**
  * Parameters the bake path actually reads, resolved from any recipe.
  *
  * Every v2-only field falls back to the value that reproduces v1 EXACTLY, so a
@@ -705,6 +730,21 @@ export function farTierZoneAggregates(plan: V3Plan): FarTierAggregateResult {
  * others and manufacture exactly the per-channel bias T013 spent a task
  * excluding. Refusing is the only honest response.
  */
+/**
+ * Raised when a wall zone in aggregate mode has no in-scope surface to
+ * aggregate, so its colour would silently revert to v1's facade-only factor.
+ *
+ * Refusing is the default because the failure is invisible in the bytes: the
+ * tile looks fine, its provenance names v3, and one zone is v1. A caller that
+ * genuinely wants the fallback must ask for it by name.
+ */
+export class FarTierAggregateMissingZoneError extends Error {
+  constructor(buildingId: string, zoneKey: string, materialId: string) {
+    super(`Far-tier v3 aggregation found no in-scope surface for ${buildingId} zone ${zoneKey} (${materialId}), so that zone would fall back to the v1 facade-only colour while the tile's provenance names v3. Pass allowFacadeOnlyFallback to accept that explicitly.`);
+    this.name = "FarTierAggregateMissingZoneError";
+  }
+}
+
 export class FarTierAggregateOutOfRangeError extends Error {
   constructor(buildingId: string, zoneKey: string, factor: readonly number[]) {
     super(`Far-tier v3 aggregation produced a zone factor above 1 for ${buildingId} zone ${zoneKey}: [${factor.map((value) => value.toFixed(6)).join(", ")}]. Baking it would clamp one channel before the others and invent a per-channel bias.`);
@@ -731,6 +771,20 @@ export interface FarTierFacesOptions {
   aggregateReport?: FarTierAggregateResult[];
   /** Filled in with every factor that needed snapping to the profile ceiling. */
   unitySnapReport?: Array<{ buildingId: string; zoneKey: string; overshoot: number }>;
+  /**
+   * Filled in with every zone that found NO aggregate and fell back to the v1
+   * facade-only palette factor.
+   *
+   * This is the real silent-degradation path in aggregate mode: a zone with no
+   * attributed surface produces a tile that is v1-coloured in that zone while
+   * its provenance says v3. It is counted, reported, and REFUSED by default.
+   */
+  facadeOnlyFallbackReport?: Array<{ buildingId: string; zoneKey: string; materialId: string }>;
+  /**
+   * Opt in to tolerating that fallback. Off by default, so a caller cannot get
+   * a partially-aggregated tile by omission.
+   */
+  allowFacadeOnlyFallback?: boolean;
 }
 
 /**
@@ -788,8 +842,13 @@ export function farTierFacesForBuilding(
     const resolveZone = (materialId: string, zoneName: "base" | "shaft"): { textureClass: ProceduralTextureClass | null; factor: [number, number, number] } => {
       const palette = paletteFactor(plan, materialId);
       if (!aggregates) return palette;
-      const aggregate = aggregates.zones.get(`${index}:${zoneName}`);
-      if (!aggregate || !(aggregate.areaSquareMeters > 0)) return palette;
+      const zoneKey = `${index}:${zoneName}`;
+      const aggregate = aggregates.zones.get(zoneKey);
+      if (!aggregate || !(aggregate.areaSquareMeters > 0)) {
+        options.facadeOnlyFallbackReport?.push({ buildingId: plan.buildingId, zoneKey, materialId });
+        if (options.allowFacadeOnlyFallback !== true) throw new FarTierAggregateMissingZoneError(plan.buildingId, zoneKey, materialId);
+        return palette;
+      }
       const tileLinearMean = palette.textureClass === null ? 1 : tileIntegrator(palette.textureClass).linearMean;
       const factor: [number, number, number] = [
         aggregate.albedo[0] / tileLinearMean,

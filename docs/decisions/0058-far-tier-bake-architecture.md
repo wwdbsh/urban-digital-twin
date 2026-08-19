@@ -530,3 +530,30 @@ is not evidence of accuracy. What the capture earns is the wall term's correctio
 measured at 4.6–4.8% of the signal where walls are visible and 1e-8 where they are
 not. The azimuth-235 spreads are unchanged from v1 and `A3''` accommodates that
 rather than closing it.
+
+### Post-adoption corrections (2026-08-19, same day)
+
+Three fixes from the closing review, none of which moves a verdict:
+
+- **The measured floor's bracket was wrong.** It had been computed as the lowest
+  low across all six poses to the highest high, giving `[0.006848, 0.030863]` —
+  a lower end taken from 400/55, three times below the 0.02 bar that evidence is
+  used to retire. Corrected to the **worst pose's own bracket, `[0.027301,
+  0.030863]`**, which is what this ADR already stated in prose. A test now
+  asserts the lower end sits above 0.02.
+- **A silent degradation path was found, counted and disclosed.** In aggregate
+  mode a wall zone with no attributed surface fell back to v1's facade-only
+  colour with nothing recorded. The adopted tile contains **four such zones on
+  one building — 51.198 of 86,964.275 m² of wall, 0.059%** — because the
+  attribution sends those short edges' surfaces to a neighbour. **The tile's
+  digests are unchanged** (`e154561c…` / `368c863c…`): the guard revealed
+  existing behaviour rather than changing it, so every captured reading and
+  verdict stands. The bake now **refuses** the fallback unless a caller accepts
+  it by name and reports the count, the zones and the area. A mass bake must
+  report it per cell and treat a large count as a stop.
+- **The adoption is now expressible as a check.** `FAR_TIER_ADOPTED_RECIPE` and
+  `assertFarTierAdoptedRecipe()` are exported so the T004 mass-bake path can fail
+  closed in one line. **Nothing enforces it today** — `farTierEffectiveParameters`
+  deliberately falls back to v1 so v1's byte replay cannot break, which means a
+  caller that forgets v3 gets a v1 tile silently. Recorded as a residual risk in
+  the handoff rather than assumed away.

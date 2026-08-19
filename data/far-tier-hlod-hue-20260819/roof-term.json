@@ -7,9 +7,9 @@
   "capturedAtStatement": "NULL BY CONSTRUCTION.",
   "headline": "THE ROOF TERM MOVES HUE THE WRONG WAY AT EVERY POSE, AND FIXES THE TONE MISS THAT HAS BLOCKED THE MASS BAKE SINCE T002. An area-correct roof aggregate widens the hue spread at all six poses — 4,000 m / azimuth 235 goes 0.033824 to 0.043074, away from 0.02 and away from 0.032 — while taking that pose's luminance ratio from 0.942687 to 1.004432. This is a trade, not a fix, and it is put to the user rather than decided here.",
   "lineage": {
-    "attribution": "hue-attribution.json, sha256 8826b5fcafb81fc835bed3428b2989d33b32a18b9ca1e3e3363b69408da9fcb3",
-    "wallCapture": "pinned-capture.json, sha256 c55748533271679b642d3cf1c2946c6f24d380a33962951391ba879c097c2e00",
-    "wallFixVerdict": "fix-capture-verdict.json, sha256 99c0c3f242a5d52cc96305d4b63b952a45e92e7ed5729ad8496125ca79bd4072",
+    "attribution": "hue-attribution.json, sha256 f7e24d6dd4f4ebf4b3d142a899711ab6556df066f1589c2466e80891804a451b",
+    "wallCapture": "pinned-capture.json, sha256 969de7b207fc0d6d2942c62da2d61c98f51df59a3dfe92adfc1439fc12620aa5",
+    "wallFixVerdict": "fix-capture-verdict.json, sha256 1e49002cb59e43a3ed16c7c6c6092cd59cf6ad152206e07c48ce675e63a2690c",
     "whatThisStageAdds": "The roof half of the surface-composition attribution, by the same variant method, plus the residual after BOTH palette terms are equalised."
   },
   "theAmbiguityThatDecidedTheMethod": {
@@ -230,8 +230,9 @@
     ],
     "whyABracket": "The metal record cannot be split at material-record granularity. The absorbed-wall variant sends ALL metal to facade, which is right for the 77.03 per cent on walls; the both-equalised variant sends all of it to roof, which is right for the 22.97 per cent above the crown. Each is wrong in the opposite direction and the pair BRACKETS the truth. The bracket only matters where walls are visible, so the both-equalised end is the trustworthy one at azimuth 235 and the absorbed end at azimuth 55.",
     "worstPoseResidual": 0.027301,
+    "worstPose": "4000/235",
     "worstPoseResidualBracket": [
-      0.006848,
+      0.027301,
       0.030863
     ],
     "readAcrossThePoses": "Taking the trustworthy end at each azimuth, the irreducible geometric residual runs 0.009580, 0.025227, 0.015413, 0.022258, 0.018400, 0.027301 across the six poses, worst 0.027301 at 4,000 m / azimuth 235.",

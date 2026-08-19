@@ -15,8 +15,10 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 import {
+  FAR_TIER_ADOPTED_RECIPE,
   FAR_TIER_BAKE_RECIPE,
   FAR_TIER_BAKE_RECIPE_V3,
+  assertFarTierAdoptedRecipe,
   farTierEffectiveParameters,
   farTierRecipeHash,
   farTierRecipeHashV3,
@@ -253,6 +255,7 @@ describe("the verdict is judged against the pre-registered bars", () => {
 // ---------------------------------------------------------------------------
 
 const roof = JSON.parse(readFileSync(join(repositoryRoot, "data/far-tier-hlod-hue-20260819/roof-term.json"), "utf8"));
+const captureRecord = JSON.parse(readFileSync(join(repositoryRoot, "data/far-tier-hlod-hue-20260819/pinned-capture.json"), "utf8"));
 
 describe("the roof term is measured, and it moves hue the wrong way", () => {
   it("worsens the spread at every one of the six poses", () => {
@@ -502,5 +505,95 @@ describe("the final verdict re-scores an existing capture and says so", () => {
     expect(finalVerdict.summary.legacyHueBar002.passed).toBe(3);
     expect(finalVerdict.honestReadingOfThisResult.whatIsNotEarned).toContain("close to arithmetic");
     expect(finalVerdict.honestReadingOfThisResult.theOpenFinding).toContain("roof-dominated");
+  });
+});
+
+
+// ---------------------------------------------------------------------------
+// The last review round: a bracket whose ends came from different poses, a
+// silent fallback nobody was counting, and an adoption nothing enforced.
+// ---------------------------------------------------------------------------
+
+describe("the measured floor's bracket belongs to one pose", () => {
+  it("is the WORST pose's own bracket, not the envelope of all six", () => {
+    const floor = roof.theIrreducibleResidual;
+    const worst = roof.poses.find((pose) => pose.pose === floor.worstPose);
+    expect(floor.worstPose).toBe("4000/235");
+    expect(floor.worstPoseResidualBracket).toEqual(worst.residualBracket);
+    expect(floor.worstPoseResidual).toBe(worst.residualAfterBothPaletteTermsEqualised);
+    // The envelope form would have taken 0.006848 from 400/55.
+    const envelopeLow = Math.min(...roof.poses.map((pose) => Math.min(...pose.residualBracket)));
+    expect(floor.worstPoseResidualBracket[0]).not.toBe(envelopeLow);
+  });
+
+  it("cannot present a lower end below the bar it is used to retire", () => {
+    expect(roof.theIrreducibleResidual.worstPoseResidualBracket[0]).toBeGreaterThan(0.02);
+    expect(adoption.theLegacyBarIsRecordedAsUNREACHABLE.evidence.floorBracket[0]).toBeGreaterThan(0.02);
+    expect(adoption.theLegacyBarIsRecordedAsUNREACHABLE.evidence.floorBracket)
+      .toEqual(roof.theIrreducibleResidual.worstPoseResidualBracket);
+  });
+});
+
+describe("the facade-only fallback is counted, bounded and disclosed", () => {
+  it("is reported with its zones and its area, not asserted away", () => {
+    const disclosure = verdict.implementationDisclosure;
+    expect(disclosure.extent.zoneCount).toBe(disclosure.extent.zones.length);
+    expect(disclosure.extent.zoneCount).toBeGreaterThan(0);
+    expect(disclosure.extent.shareOfWallArea)
+      .toBeCloseTo(disclosure.extent.affectedWallAreaSquareMeters / disclosure.extent.totalWallAreaSquareMeters, 6);
+    expect(disclosure.extent.shareOfWallArea).toBeLessThan(0.001);
+  });
+
+  it("did not move the artifact it was found in", () => {
+    expect(disclosureDigestsMatch()).toBe(true);
+    function disclosureDigestsMatch() {
+      return verdict.implementationDisclosure.doesItChangeAnyNumberInThisRecord.includes(verdict.barVerdicts.R1_byteReplay.glbSha256.slice(0, 8))
+        && verdict.implementationDisclosure.doesItChangeAnyNumberInThisRecord.includes(verdict.barVerdicts.R1_byteReplay.atlasSha256.slice(0, 8));
+    }
+  });
+
+  it("is refused by default, so it cannot come back silently", () => {
+    expect(verdict.implementationDisclosure.whyItIsNotSilentAnyMore).toContain("REFUSES");
+    expect(adoption.t004GateHandoff.knownImplementationLimit.whatTheMassBakeMustDo).toContain("STOP");
+  });
+});
+
+describe("the adoption is expressible as a check, and the gap is recorded", () => {
+  it("exports the adopted recipe as a value, matching v3", () => {
+    expect(FAR_TIER_ADOPTED_RECIPE.recipeId).toBe(FAR_TIER_BAKE_RECIPE_V3.recipeId);
+    expect(FAR_TIER_ADOPTED_RECIPE.adoptedOn).toBe("2026-08-19");
+    expect(FAR_TIER_ADOPTED_RECIPE.gateRecord).toContain("gate-adoption.json");
+  });
+
+  it("accepts v3 and refuses v1, naming the hash a caller must bake", () => {
+    expect(() => assertFarTierAdoptedRecipe(FAR_TIER_BAKE_RECIPE_V3)).not.toThrow();
+    expect(() => assertFarTierAdoptedRecipe(FAR_TIER_BAKE_RECIPE)).toThrow(/far-tier-hlod-bake-v3/u);
+    expect(() => assertFarTierAdoptedRecipe({})).toThrow(/no recipeId/u);
+    expect(() => assertFarTierAdoptedRecipe(FAR_TIER_BAKE_RECIPE)).toThrow(new RegExp(farTierRecipeHashV3(), "u"));
+  });
+
+  it("records that nothing enforces it yet, rather than implying it is enforced", () => {
+    const enforcement = adoption.t004GateHandoff.enforcement;
+    expect(enforcement.theGapThisCloses).toContain("NOTHING IN THE CODE PREVENTS BAKING v1 BY DEFAULT");
+    expect(enforcement.howToClose).toContain("assertFarTierAdoptedRecipe");
+    expect(enforcement.residualRisk).toContain("a document rather than a constraint");
+    expect(adoption.notClaimedHere.join(" ")).toContain("not enforced by any code path");
+  });
+});
+
+describe("the absorbed variant's union control is derived from measurements", () => {
+  it("carries the union counts it compares, and they agree to zero", () => {
+    const control = captureRecord.absorbedSourceVariant.positiveControl;
+    expect(control.unionWithBakedPixels).toHaveLength(6);
+    expect(control.sourceUnionWithBakedPixels).toHaveLength(6);
+    expect(control.worstUnionDelta).toBe(0);
+    expect(control.unionWithBakedPixels).toEqual(control.sourceUnionWithBakedPixels);
+    expect(control).not.toHaveProperty("unionWithBakedAlsoIdentical");
+  });
+
+  it("records why its own checksum moved after the pre-registration cited it", () => {
+    expect(captureRecord.reEmission.priorSha256).toMatch(/^[0-9a-f]{64}$/u);
+    expect(captureRecord.reEmission.whatCitesThePriorHash).toContain("not re-emitted after a capture");
+    expect(preRegistration.predictionModel.sourceRecord).toContain(captureRecord.reEmission.priorSha256);
   });
 });
