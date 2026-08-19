@@ -861,9 +861,17 @@ export const FAR_TIER_OFF_VALUE = "off" as const;
  * an archaeology exercise. The parser and the writer are polarity-agnostic:
  * they compare against this constant and write whatever it is NOT.
  *
- * T005 FLIPPED IT TO `true`. The far tier is now the default composition and a
- * default session's URL is silent; `?farTier=off` is the opt-OUT and is what a
- * URL now spells.
+ * T005 BUILT THE PROMOTION AND DID NOT ACTIVATE IT. The flip to `true` was
+ * made, swept, and REVERTED: the registered sweep failed at P2, the oblique
+ * 2,400 m pose reconstructed from the user's own session, where 11,867 of
+ * 23,959 loaded massing buildings under drawn far-tier tiles were not held at
+ * far-tier alpha — and the count was not even stable across readings (12,485,
+ * then 26, then 11,867). Shipping that as the default would put a known,
+ * intermittent double-draw in every session.
+ *
+ * Everything else the promotion needs is in place and unchanged: the promoted
+ * 840-cell inventory, the swapped pin, the raised ceilings, the retry fix, the
+ * batched fill and the fixture-mode gate. The flip remains one token.
  *
  * WHAT A ROLLBACK TO `false` ACTUALLY RESTORES, said plainly because the
  * scheduler flip taught this lesson: it restores the pre-HLOD COMPOSITION —
@@ -873,7 +881,7 @@ export const FAR_TIER_OFF_VALUE = "off" as const;
  * names it for `EXTERIOR_SCHEDULER_DEFAULT_ON`, and the T005 activation record
  * states it rather than leaving it to be discovered.
  */
-export const FAR_TIER_DEFAULT_ON = true;
+export const FAR_TIER_DEFAULT_ON = false;
 
 /**
  * Whether a session actually ARMS the far tier.

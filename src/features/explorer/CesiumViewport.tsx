@@ -2076,17 +2076,39 @@ export function CesiumViewport({
       // `suppressible` is every member of a DRAWN tile: the massing that ought
       // to be held at far-tier alpha. `covered` is what actually is. Their
       // difference is the number a sweep reads, and at a correct pose it is 0.
-      const suppressible = new Set<string>();
+      // SCOPED TO THE MASSING THAT IS ACTUALLY DRAWING.
+      //
+      // The first version of this metric compared the full member list of every
+      // drawn tile against the applied-alpha set, and read 41,405 "uncovered"
+      // at the T003 pose. That number was meaningless: `reconcileDenseFarTierAlpha`
+      // can only write alpha for buildings the dense index HOLDS, and at any
+      // pose most members of the island's tiles have no massing primitive
+      // loaded at all. A building that is not drawing cannot show tan.
+      //
+      // The question this attribute exists to answer is narrower and is the one
+      // a promotion sweep actually asks: of the buildings that ARE drawing
+      // massing right now, how many sit under a drawn far-tier tile without
+      // being held at far-tier alpha? At a correct pose that is 0.
+      const denseIndex = denseActiveIndexRef.current.buildings;
+      const applied = denseFarTierAlphaAppliedRef.current;
+      let suppressible = 0;
+      let covered = 0;
+      const uncoveredIds: string[] = [];
       for (const tile of farTierTilesRef.current) {
         if (!drawnCells.has(tile.cellId)) continue;
-        for (const buildingId of tile.suppressibleBuildingIds) suppressible.add(buildingId);
+        for (const buildingId of tile.suppressibleBuildingIds) {
+          if (!denseIndex.has(buildingId)) continue;
+          suppressible += 1;
+          if (applied.has(buildingId)) covered += 1;
+          else if (uncoveredIds.length < 8) uncoveredIds.push(buildingId);
+        }
       }
-      const covered = denseFarTierAlphaAppliedRef.current;
-      let coveredWithinDrawn = 0;
-      for (const buildingId of covered) if (suppressible.has(buildingId)) coveredWithinDrawn += 1;
-      container.dataset.farTierMassingSuppressible = String(suppressible.size);
-      container.dataset.farTierMassingCovered = String(coveredWithinDrawn);
-      container.dataset.farTierMassingUncovered = String(suppressible.size - coveredWithinDrawn);
+      container.dataset.farTierMassingActive = String(denseIndex.size);
+      container.dataset.farTierMassingSuppressible = String(suppressible);
+      container.dataset.farTierMassingCovered = String(covered);
+      container.dataset.farTierMassingUncovered = String(suppressible - covered);
+      if (uncoveredIds.length === 0) delete container.dataset.farTierMassingUncoveredSample;
+      else container.dataset.farTierMassingUncoveredSample = uncoveredIds.join(",");
     }
     onFarTierStateRef.current?.(summarizeFarTierState(outcomes));
   }, []);

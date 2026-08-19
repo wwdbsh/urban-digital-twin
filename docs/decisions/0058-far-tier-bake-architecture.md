@@ -657,3 +657,84 @@ mean of 307,911 bytes a tile the **byte ceiling admits 217 tiles and binds
 before the entry ceiling**, so with no eviction an island-scale camera gets
 `over-budget` refusals as a routine outcome rather than the exceptional one a
 single staged cell produced. Named for T005 with its numbers; not fixed here.
+
+---
+
+## Amendment — T005, the promotion that did not activate (Issue #105, 2026-08-19)
+
+**Status: the promotion is BUILT and NOT ACTIVATED. `FAR_TIER_DEFAULT_ON` stays
+`false`. The registered sweep failed at one of six poses.**
+
+Evidence: `data/far-tier-hlod-promotion-20260819/` — `promoted-inventory.json`,
+`sweep-exemptions.json`, `sweep-poses.json`, `sweep-results.json`, each with a
+`.sha256`.
+
+### What was built
+
+- **The promoted inventory**: six sealed wave inventories merged into one —
+  840 entries, 43 honest stops, 883 against the ledger, 44,076 members with the
+  143 refusals kept. The merge refuses a duplicated cell, a cell that is both
+  baked and stopped, and any total that disagrees with the ledger.
+- **One serializer, and the staged bytes are the committed bytes.** The runtime
+  pins one digest and fails closed; a staged copy differing by a space takes the
+  whole tier down in every session. The stage CLI copies rather than
+  re-serializes, and the identity is asserted.
+- **The pin swapped** to `cf8e2648…`, predecessor `9c46f62a…` kept as a constant.
+- **Budgets v2**: 288 MiB against a measured **258,644,848 declared file bytes**,
+  16.8% headroom, entries 1,024 ≥ 840. The unit is stated because it is within a
+  factor of 1.5 of the GPU bars. Justified in GPU units: island resident ≤
+  **382,457,884 B** against the frozen **390,295,058** — a **2.0% margin**.
+- **Eviction discharged, not deferred.** `release()` frees under the same
+  predicate that decides drawing; at a ceiling admitting the island there is no
+  pose that selects a cell it cannot afford, so a policy would have no reachable
+  branch.
+- **Two defects the island exposed**: `attempted` was set before the admission
+  check, so an over-budget refusal was permanent for that cell; and the fill was
+  one uninterruptible chain, so a camera move waited for 840 loads.
+
+### The sweep, and why it fails
+
+Executed in the **Orca embedded browser** — the Chrome extension browser could
+not reach this host in any tested configuration (four addresses, two ports,
+three binding modes, no proxy) while reaching the public internet.
+
+| pose | states | massing suppressible / covered / uncovered | verdict |
+| --- | --- | --- | --- |
+| P1 1,400 m ⊥ | all clean | 2,514 / 2,514 / **0** | PASS |
+| **P2 2,400 m oblique** | all clean | 23,959 / 12,092 / **11,867** | **FAIL** |
+| P3 honest-stop cell | all clean | 1 / 1 / **0** | PASS |
+| P4 densest cell | all clean | 3,751 / 3,751 / **0** | PASS |
+| P5 12 km ⊥ | all clean | 29,031 / 29,031 / **0** | PASS |
+| P6-OFF rollback | — | — (0 far-tier requests) | PASS |
+
+`absent = checksum-mismatch = build-failure = over-budget = 0` at **every** pose.
+`notDeclared = 1` throughout is the Block 835 alias, a committed exemption.
+
+**P2 is the only oblique pose and the one reconstructed from the user's own
+session.** Its uncovered count did not converge across three readings — 12,485,
+then 26, then 11,867 — and that instability is the finding. The buildings
+involved cannot be exemptions: `suppressibleBuildingIds` is built from members
+with `included: true`. The code already flags the hazard this points at, around
+`denseDesiredFarTierCoveredRef` and the dense-layer rebuild racing the
+covered-set write.
+
+**Two instrument defects were found by the sweep and are disclosed in full** in
+`sweep-results.json`: a member metric that compared against buildings with no
+massing loaded at all (reading 41,405 where the true answer was 0), and a settle
+rule that fired during a rebuild plateau. Both were corrected; P2 failed under
+all three instruments.
+
+### Numbers, no bar
+
+First far-tier attribute 4.5–7.5 s; covered set converges up to ~48 s at wide
+poses. Frame time median **8.3 ms**, p95 16.7–198 ms (foreground samples; one
+pose was rAF-throttled and excluded). 1,053–1,255 far-tier requests per ON pose,
+**0** on the OFF arm.
+
+### What a rollback means, stated because the scheduler taught it
+
+`FAR_TIER_DEFAULT_ON = false` restores the pre-HLOD **composition** and nothing
+else: the raised ceilings, the swapped pin and the merged inventory stay in the
+build. That is a third configuration nobody measured, exactly as ADR 0045 names
+it for `EXTERIOR_SCHEDULER_DEFAULT_ON`. It is the configuration this branch now
+ships, deliberately.
