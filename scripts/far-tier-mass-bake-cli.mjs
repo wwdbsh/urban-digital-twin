@@ -41,7 +41,7 @@ import { sha256HexBytes, sha256HexSync } from "../src/domain/deterministic-hash.
 import { loadWaveLedger, loadSnapshot, CAPTURE as SOURCE_CAPTURE } from "./far-tier-bake-cli.mjs";
 import { WAVE_BASE_PROFILES } from "./mass-generation-wave-cli.mjs";
 import { cellInputFor, emitTileBytes, fail, inventoryEntry, tileAtlasName, tileGlbName } from "./far-tier-campaign-support.mjs";
-import { FarTierCellStop, bakeFarTierCell } from "../src/release/far-tier-campaign.ts";
+import { FarTierCellStop, bakeFarTierCell, farTierAdditivityGate } from "../src/release/far-tier-campaign.ts";
 import {
   FAR_TIER_ADOPTED_RECIPE,
   FAR_TIER_BAKE_RECIPE,
@@ -220,12 +220,10 @@ function bakeOneCell(context, cell) {
   assertFarTierAdoptedRecipe(FAR_TIER_BAKE_RECIPE_V4);
   const input = cellInputFor(context, cell);
 
-  const v1Reference = bakeFarTierCell(input, { recipe: FAR_TIER_BAKE_RECIPE, zoneColourMode: "facade-only" });
-  const v1Sha = sha256HexBytes(encodeRgbPng(v1Reference.packing.atlasPixels, v1Reference.packing.atlasPixels, v1Reference.rgb));
-  const asV1 = bakeFarTierCell(input, { recipe: FAR_TIER_BAKE_RECIPE_V4, zoneColourMode: "facade-only", packingRecipe: FAR_TIER_BAKE_RECIPE });
-  const asV1Sha = sha256HexBytes(encodeRgbPng(asV1.packing.atlasPixels, asV1.packing.atlasPixels, asV1.rgb));
-  if (v1Sha !== asV1Sha) {
-    fail(TOOL, `the adopted recipe is not additive over v1 on ${cell.cellId}: ${v1Sha} against ${asV1Sha}.`);
+  const gate = farTierAdditivityGate(input, FAR_TIER_BAKE_RECIPE_V4, (bake) =>
+    sha256HexBytes(encodeRgbPng(bake.packing.atlasPixels, bake.packing.atlasPixels, bake.rgb)));
+  if (gate.verdict === "FAIL") {
+    fail(TOOL, `the adopted recipe is not additive over v1 on ${cell.cellId}: ${gate.reason}.`);
   }
 
   const bake = bakeFarTierCell(input, {
@@ -234,7 +232,7 @@ function bakeOneCell(context, cell) {
     allowFacadeOnlyFallback: true,
     fallbackAreaShareBar: FALLBACK_AREA_SHARE_BAR,
   });
-  return { bake, additivityV1Sha256: v1Sha };
+  return { bake, additivityGate: gate };
 }
 
 // ---------------------------------------------------------------------------
@@ -287,7 +285,7 @@ async function commandBake(waveId) {
     await writeFile(join(waveRoot, tileAtlasName(cell.cellId)), emitted.atlasBytes);
     baked.push({
       entry: inventoryEntry(cell, result.bake, emitted),
-      telemetry: { ...result.bake.telemetry, additivityV1AtlasSha256: result.additivityV1Sha256, verifiedSourceAssets: context.verifiedAssetCount },
+      telemetry: { ...result.bake.telemetry, additivityGate: result.additivityGate.verdict, additivityV1AtlasSha256: result.additivityGate.v1AtlasSha256, additivityNotApplicableReason: result.additivityGate.reason, verifiedSourceAssets: context.verifiedAssetCount },
       fallbackZones: result.bake.fallbackZones,
     });
   }
@@ -359,6 +357,8 @@ function summarize(rows) {
     cellsWithAnyFallbackZone: rows.filter((row) => row.fallbackZoneCount > 0).length,
     worstFallbackAreaShare: round(Math.max(...shares), 8),
     totalUnitySnaps: rows.reduce((sum, row) => sum + row.unitySnapCount, 0),
+    additivityGateChecked: rows.filter((row) => row.additivityGate === "PASS").length,
+    additivityGateNotApplicable: rows.filter((row) => row.additivityGate === "not-applicable").length,
     includedBuildings: rows.reduce((sum, row) => sum + row.includedBuildings, 0),
     refusedBuildings: rows.reduce((sum, row) => sum + row.refusedBuildings, 0),
   };

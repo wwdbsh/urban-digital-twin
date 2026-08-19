@@ -255,6 +255,64 @@ export function bakeFarTierCell(input: FarTierCellInput, options: FarTierCellBak
   };
 }
 
+
+/**
+ * THE PER-CELL ADDITIVITY GATE, and the one case where it cannot run.
+ *
+ * The gate proves that the adopted recipe's code path reproduces v1 EXACTLY
+ * when both of its switches are off — facade-only colour and v1 packing. That
+ * is a property of the rasterizer, and it is worth checking on every cell
+ * rather than on the one the prototype froze.
+ *
+ * BUT IT CANNOT BE CHECKED ON A CELL v1 CANNOT PACK. Under v1 a face costs at
+ * least (4 + 2x2)^2 = 64 texels, so a 256px atlas holds 1,024 faces; under v4 a
+ * flat face costs (1 + 2x1)^2 = 9, so it holds 7,281. Midtown has cells of
+ * 1,031 to 1,853 faces that v4 packs comfortably and v1 cannot pack at all.
+ *
+ * An earlier version of this campaign ran the v1 reference FIRST and let its
+ * refusal propagate, which recorded 22 Midtown cells as `packing-infeasible`
+ * under a recipe that packs them fine. The tiles were never wrong — they were
+ * never built. That is the failure mode this function exists to prevent: the
+ * gate now reports NOT-APPLICABLE with its reason instead of vetoing the cell,
+ * and every other refusal from the reference bake still propagates.
+ */
+export interface FarTierAdditivityGate {
+  applicable: boolean;
+  verdict: "PASS" | "FAIL" | "not-applicable";
+  v1AtlasSha256: string | null;
+  reason: string | null;
+}
+
+export function farTierAdditivityGate(
+  input: FarTierCellInput,
+  adoptedRecipe: Record<string, unknown>,
+  encodeAtlas: (bake: FarTierCellBake) => string,
+): FarTierAdditivityGate {
+  let reference: FarTierCellBake;
+  try {
+    reference = bakeFarTierCell(input, { recipe: FAR_TIER_BAKE_RECIPE, zoneColourMode: "facade-only" });
+  } catch (error) {
+    if (error instanceof FarTierCellStop && error.code === "packing-infeasible") {
+      return {
+        applicable: false,
+        verdict: "not-applicable",
+        v1AtlasSha256: null,
+        reason: `v1 cannot pack this cell (${error.message}), so there is no v1 atlas to reproduce. The cell is NOT refused for it.`,
+      };
+    }
+    throw error;
+  }
+  const asAdopted = bakeFarTierCell(input, { recipe: adoptedRecipe, zoneColourMode: "facade-only", packingRecipe: FAR_TIER_BAKE_RECIPE });
+  const referenceSha = encodeAtlas(reference);
+  const adoptedSha = encodeAtlas(asAdopted);
+  return {
+    applicable: true,
+    verdict: referenceSha === adoptedSha ? "PASS" : "FAIL",
+    v1AtlasSha256: referenceSha,
+    reason: referenceSha === adoptedSha ? null : `the adopted recipe with both switches off produced ${adoptedSha} against v1's ${referenceSha}`,
+  };
+}
+
 /** The v1 packing recipe, for the additivity check the campaign runs per cell. */
 export const FAR_TIER_V1_PACKING_RECIPE = FAR_TIER_BAKE_RECIPE;
 

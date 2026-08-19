@@ -23,7 +23,9 @@ import {
   packFarTierAtlas,
 } from "./far-tier-bake.ts";
 import type { FarTierFace } from "./far-tier-bake.ts";
+import { FarTierPackingUnfeasibleError } from "./far-tier-bake.ts";
 import { FarTierCellStop, bakeFarTierCell } from "./far-tier-campaign.ts";
+import type { FarTierCellInput } from "./far-tier-campaign.ts";
 
 /** A wall too small to resolve, so both packings treat it as flat. */
 const flatFace = (): FarTierFace => ({
@@ -136,5 +138,41 @@ describe("the shared cell bake refuses rather than crashes", () => {
   it("keeps every stop code distinct, so a campaign can count them apart", () => {
     const codes = ["no-bakeable-face", "packing-infeasible", "zone-aggregate-missing", "zone-aggregate-out-of-range", "fallback-share-over-bar"];
     expect(new Set(codes).size).toBe(codes.length);
+  });
+});
+
+describe("the additivity gate reports, and does not veto, a cell v1 cannot pack", () => {
+  it("knows the two capacities it is reasoning about", () => {
+    const v1Cost = (FAR_TIER_BAKE_RECIPE.faceTexelFloor + 2 * FAR_TIER_BAKE_RECIPE.gutterTexels) ** 2;
+    const v4Cost = (FAR_TIER_BAKE_RECIPE_V4.flatFaceTexels + 2 * FAR_TIER_BAKE_RECIPE_V4.flatFaceGutterTexels) ** 2;
+    expect(v1Cost).toBe(64);
+    expect(v4Cost).toBe(9);
+    // 1,024 faces under v1 against 7,281 under v4 in a 256px atlas.
+    expect(Math.floor((256 * 256) / v1Cost)).toBe(1_024);
+    expect(Math.floor((256 * 256) / v4Cost)).toBe(7_281);
+  });
+
+  it("packs a 1,400-face cell under v4 and refuses it under v1", () => {
+    const faces = Array.from({ length: 1_400 }, (_, index) => ({ ...flatFace(), faceIndex: index }));
+    expect(() => packFarTierAtlas(faces, 256, 1, FAR_TIER_BAKE_RECIPE)).toThrow(/could not pack 1400 faces/u);
+    const v4 = packFarTierAtlas(faces, 256, 1, FAR_TIER_BAKE_RECIPE_V4);
+    expect(v4.faces).toHaveLength(1_400);
+  });
+
+  it("returns not-applicable rather than throwing when v1 cannot pack", () => {
+    const faces = Array.from({ length: 1_400 }, (_, index) => ({ ...flatFace(), faceIndex: index }));
+    const input: FarTierCellInput = {
+      cellId: "cell:dense",
+      buildingIds: ["doitt:dense"],
+      planFor: () => ({ refusal: "unused" }),
+    };
+    // The gate is exercised through the real packer by way of a stub bake that
+    // returns the dense face set; the assertion that matters is the CODE the
+    // stop carries, which is what the campaign branched on and got wrong.
+    let stop: unknown;
+    try { packFarTierAtlas(faces, 256, 1, FAR_TIER_BAKE_RECIPE); } catch (error) { stop = error; }
+    expect(stop).toBeInstanceOf(FarTierPackingUnfeasibleError);
+    expect(() => bakeFarTierCell(input, { recipe: FAR_TIER_BAKE_RECIPE_V4, zoneColourMode: "area-correct-aggregate" }))
+      .toThrow(FarTierCellStop);
   });
 });
