@@ -237,3 +237,11 @@ artifacts/far-tier-instrument-20260818/
 # checksum sidecar; the harness itself is committed and re-runnable.
 artifacts/far-tier-runtime-20260818/
 artifacts/far-tier-hlod-20260818/
+
+# T013 far-tier hue attribution work root: the twelve pinned-instrument EXRs,
+# the six shadows-off ablation EXRs, the absorbed-material INSTRUMENTATION
+# variant assets, and the generated pinned harness. Every one of those bytes is
+# digested into data/far-tier-hlod-hue-20260819/pinned-capture.json, which is
+# the committed artifact. The variant assets are instrumentation and must never
+# be mistaken for a release or a proposed recipe.
+artifacts/far-tier-hlod-hue-20260819/

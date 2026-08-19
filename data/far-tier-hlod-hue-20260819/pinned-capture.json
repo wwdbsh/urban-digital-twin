@@ -1,0 +1,938 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "far-tier-hlod-hue-20260819:pinned-capture",
+  "task": "T013",
+  "artifact": "far-tier-hue-attribution-pinned-capture",
+  "capturedAt": null,
+  "capturedAtStatement": "NULL BY CONSTRUCTION.",
+  "reEmission": {
+    "why": "This record was RE-EMITTED after T013's closure to replace a hardcoded boolean in the absorbed variant's positive control with the measured union pixel counts it claimed. NO measurement changed; a field that asserted a result now carries the numbers and derives it.",
+    "priorSha256": "c55748533271679b642d3cf1c2946c6f24d380a33962951391ba879c097c2e00",
+    "whatCitesThePriorHash": "fix-pre-registration.json names the prior hash in predictionModel.sourceRecord. That record is a PRE-REGISTRATION and is not re-emitted after a capture under any circumstances, so its citation deliberately continues to name the version it was written against.",
+    "whatDidNotChange": "Every channel mean, ratio, spread, luminance and pixel count in results and in the reproduction gate."
+  },
+  "headline": "The operative six-pose baseline REPRODUCED under the pinned instrument, with the one measurement it never recorded: each subject's own per-channel means. That is what makes the red deficit decomposable instead of merely observable.",
+  "instrument": {
+    "specId": "far-tier-appearance-instrument-v2",
+    "specSha256": "9a77561b9d8307aff77692412961102b3a3aa66e1a6dbe04db181a886ad53b89",
+    "harnessSha256": "d394bcf76efdedfdf58b1bef86838137adc71f5a0c544e051f509de0edffc1d2",
+    "enforcement": "The generated harness ran immediately before every pinned capture, with the caller-supplied renderable-mesh count, and returned the spec hash. Subjects were isolated BY DELETION; hide_render was never used.",
+    "poseConventionRecovery": {
+      "why": "The pose construction was never written down. It was RECOVERED from the surviving T012 rig rather than guessed: the camera left in the scene was the 4,000 m / azimuth 235 baked capture, and its back axis and location determine both the target and the azimuth convention.",
+      "target": "The centre of the SOURCE subject's world bounding box, [117.161758, 84.367462, 20.086] in the cell-local ENU frame.",
+      "offsetRule": "camera = target + distance x (sin(az) cos(18 deg), -cos(az) cos(18 deg), sin(18 deg)); the camera tracks -Z to the target with +Y up.",
+      "residualAgainstTheSurvivingRig": "0.000546 m, which is float32 storage rounding on the recorded camera location.",
+      "corroboration": "The source bounding box's own upper Z, 40.172 m, is what the recovered target implies and is 3.6 m above the tile's 36.576 m top — the rooftop mass the prism does not carry."
+    }
+  },
+  "measurementDomain": {
+    "perChannelMeans": "Mean over the SOURCE-and-BAKED INTERSECTION of each subject's own colour divided by its own alpha.",
+    "whyItMattersThatThisIsStated": "The domain choice is not cosmetic. Across the six poses the same renders yield per-channel ratios that differ between domains by up to 0.023 — larger than the effect under attribution. Every subject in this record, including the absorbed variant, is averaged over the SAME pixel set at a given pose.",
+    "luminance": "The union luminance ratio uses the SOURCE-or-BAKED UNION and does NOT un-premultiply, which is what the pinned spec states and what reproduces the committed baseline."
+  },
+  "maskSemanticsFinding": {
+    "claim": "The pinned spec's maskSemantics prose says per-channel ratios are averaged over the UNION. The committed numbers say otherwise: only the INTERSECTION domain reproduces them.",
+    "method": "Six candidate domains computed from the same twelve renders and compared against the committed six-pose ratios.",
+    "candidates": [
+      {
+        "domain": "union, un-premultiplied, zero-filled outside the subject",
+        "worstAbsoluteDeltaPerPose": [
+          0.009431,
+          0.017005,
+          0.001315,
+          0.02303,
+          0.001324,
+          0.002447
+        ]
+      },
+      {
+        "domain": "union, premultiplied",
+        "worstAbsoluteDeltaPerPose": [
+          0.017201,
+          0.027072,
+          0.012337,
+          0.022211,
+          0.011399,
+          0.016541
+        ]
+      },
+      {
+        "domain": "own silhouette, un-premultiplied",
+        "worstAbsoluteDeltaPerPose": [
+          0.006385,
+          0.008748,
+          0.007995,
+          0.00895,
+          0.008616,
+          0.003179
+        ]
+      },
+      {
+        "domain": "own silhouette, premultiplied",
+        "worstAbsoluteDeltaPerPose": [
+          0.005996,
+          0.013889,
+          0.007648,
+          0.01753,
+          0.007279,
+          0.010946
+        ]
+      },
+      {
+        "domain": "union, sum(rgb) over sum(alpha)",
+        "worstAbsoluteDeltaPerPose": [
+          0.006132,
+          0.010588,
+          0.007707,
+          0.009175,
+          0.004902,
+          0.005565
+        ]
+      },
+      {
+        "domain": "INTERSECTION, un-premultiplied",
+        "worstAbsoluteDeltaPerPose": [
+          0.000007,
+          0.000021,
+          0.000016,
+          0.000064,
+          0.000105,
+          0.000053
+        ]
+      }
+    ],
+    "finding": "The intersection domain reproduces the committed ratios to a worst absolute delta of 0.000105 across all six poses. The next best candidate is off by 0.023.",
+    "consequence": "A PROSE-VERSUS-BEHAVIOUR discrepancy in the pinned spec, reported and not repaired here: repairing it is a change to the instrument, which this attribution stage has no mandate to make.",
+    "doesItMoveAnyVerdict": {
+      "question": "Whether the legacy hue bar's 5-of-6 MISS is an artefact of the domain the committed numbers actually used.",
+      "answer": "NO, and this is measured rather than assumed. Under the union domain the spreads are 0.019179, 0.035620, 0.022589, 0.034520, 0.023842, 0.035621 — every one LARGER than its intersection counterpart, and the same five poses miss the 0.02 bar while 400/55 passes in both. The verdict pattern is identical and the union domain is if anything harsher."
+    },
+    "whatItDoesNotMean": "It is not an error in the committed baseline. The baseline is internally consistent; only its written description of the domain is wrong.",
+    "forwardPointer": "See instrument-mask-semantics-note.json in this directory. The frozen instrument records are NOT edited."
+  },
+  "reproductionGate": {
+    "statedInAdvance": "The capture is only usable if it reproduces the committed operative baseline; otherwise it measures a different instrument and its decomposition attaches to nothing.",
+    "baselineReadFrom": "data/far-tier-hlod-instrument-20260818/pinned-baseline.json",
+    "baselineSha256": "901522f5cd25a1d872229ebee5fc1b0a6f724be275de9978e2a6306ba07924a9",
+    "worstAbsoluteRatioDelta": 0.00010526,
+    "worstAbsoluteSpreadDelta": 0.0000344,
+    "worstUnionPixelDelta": 1,
+    "worstAbsoluteLuminanceRatioDelta": 0.00008579,
+    "verdict": "PASS. Ratios reproduce to 1.05e-4, spreads to 3.44e-5, the union luminance ratio to 8.58e-5, and five of six union pixel counts exactly; the sixth differs by one pixel out of 60,356.",
+    "whyNotBitExact": "The pose transform is RECONSTRUCTED from a float32 camera location, so the camera sits within about half a millimetre of where T012 put it at 400 m. One boundary pixel crossing the alpha 0.5 threshold is the expected consequence and is the size of the observed residual."
+  },
+  "results": [
+    {
+      "pose": "400/55",
+      "distanceMeters": 400,
+      "azimuthDegrees": 55,
+      "unionPixels": 63724,
+      "intersectionPixels": 61862,
+      "sourceChannelMeans": [
+        0.245700867,
+        0.218731945,
+        0.196856174
+      ],
+      "bakedChannelMeans": [
+        0.2504641,
+        0.22390896,
+        0.2038174
+      ],
+      "absorbedVariantChannelMeans": [
+        0.25981069,
+        0.230814344,
+        0.209343002
+      ],
+      "sourceUnionMeanLuminance": 0.21577073,
+      "bakedUnionMeanLuminance": 0.22449938,
+      "perChannelRatios": [
+        1.019386,
+        1.023668,
+        1.035362
+      ],
+      "channelSpread": 0.015976,
+      "unionMeanLuminanceRatio": 1.040453,
+      "absoluteLuminanceDifference": 0.00872865,
+      "reproductionAgainstCommittedBaseline": {
+        "committedRatios": [
+          1.019393,
+          1.023675,
+          1.035369
+        ],
+        "worstAbsoluteRatioDelta": 0.00000701,
+        "committedSpread": 0.015976,
+        "absoluteSpreadDelta": 3.2e-7,
+        "committedUnionPixels": 63724,
+        "unionPixelDelta": 0,
+        "committedUnionMeanLuminanceRatio": 1.040478,
+        "absoluteLuminanceRatioDelta": 0.00002464
+      },
+      "maskDomainSensitivity": {
+        "intersectionDomainRatios": [
+          1.019386,
+          1.023668,
+          1.035362
+        ],
+        "intersectionDomainSpread": 0.015976,
+        "unionDomainRatios": [
+          1.025621,
+          1.031401,
+          1.0448
+        ],
+        "unionDomainSpread": 0.019179,
+        "missesTheLegacyHueBarUnderIntersection": false,
+        "missesTheLegacyHueBarUnderUnion": false
+      },
+      "palletteEqualisedComparison": {
+        "whatItIs": "The tile against the absorbed-material variant, over the same pixel set. Both carry the facade-only palette, so this is the tile's residual difference from the source's GEOMETRY alone.",
+        "perChannelRatios": [
+          0.964025,
+          0.970083,
+          0.973605
+        ],
+        "channelSpread": 0.00958,
+        "absorptionOnlyPerChannelRatios": [
+          1.057427,
+          1.055238,
+          1.063431
+        ],
+        "absorptionOnlyChannelSpread": 0.008193
+      },
+      "chromaticity": {
+        "metric": "log(R/B). ONE ratio of two channels, not the three-channel spread the hue bar measures.",
+        "sourceRedOverBlue": 1.248124,
+        "absorbedVariantRedOverBlue": 1.241077,
+        "bakedTileRedOverBlue": 1.228865,
+        "tileGapAgainstSourceFraction": -0.01543,
+        "decomposition": {
+          "appliesTo": "log(R/B) ONLY.",
+          "doesNotApplyTo": "The A3 hue spread, which is max minus min over THREE channel ratios. Green is not in log(R/B) at all, and at 400/235 the two terms do not partition the spread — the absorption-only spread is 0.011 and the palette-equalised spread is 0.029 against a total of 0.026. A spread-metric split would have to be measured separately, and this is not one.",
+          "materialAbsorptionShare": 0.3641,
+          "geometricSimplificationShare": 0.6359,
+          "materialAbsorptionFraction": -0.005646,
+          "geometricSimplificationFraction": -0.009839
+        }
+      }
+    },
+    {
+      "pose": "400/235",
+      "distanceMeters": 400,
+      "azimuthDegrees": 235,
+      "unionPixels": 60355,
+      "intersectionPixels": 58950,
+      "sourceChannelMeans": [
+        0.039694421,
+        0.038141124,
+        0.035691889
+      ],
+      "bakedChannelMeans": [
+        0.038750721,
+        0.038041537,
+        0.035763185
+      ],
+      "absorbedVariantChannelMeans": [
+        0.039175279,
+        0.037359667,
+        0.03542
+      ],
+      "sourceUnionMeanLuminance": 0.03766457,
+      "bakedUnionMeanLuminance": 0.0384144,
+      "perChannelRatios": [
+        0.976226,
+        0.997389,
+        1.001998
+      ],
+      "channelSpread": 0.025772,
+      "unionMeanLuminanceRatio": 1.019908,
+      "absoluteLuminanceDifference": 0.00074983,
+      "reproductionAgainstCommittedBaseline": {
+        "committedRatios": [
+          0.976247,
+          0.997409,
+          1.002018
+        ],
+        "worstAbsoluteRatioDelta": 0.00002112,
+        "committedSpread": 0.025771,
+        "absoluteSpreadDelta": 6.6e-7,
+        "committedUnionPixels": 60356,
+        "unionPixelDelta": -1,
+        "committedUnionMeanLuminanceRatio": 1.019942,
+        "absoluteLuminanceRatioDelta": 0.0000339
+      },
+      "maskDomainSensitivity": {
+        "intersectionDomainRatios": [
+          0.976226,
+          0.997389,
+          1.001998
+        ],
+        "intersectionDomainSpread": 0.025772,
+        "unionDomainRatios": [
+          0.959242,
+          0.984853,
+          0.994862
+        ],
+        "unionDomainSpread": 0.03562,
+        "missesTheLegacyHueBarUnderIntersection": true,
+        "missesTheLegacyHueBarUnderUnion": true
+      },
+      "palletteEqualisedComparison": {
+        "whatItIs": "The tile against the absorbed-material variant, over the same pixel set. Both carry the facade-only palette, so this is the tile's residual difference from the source's GEOMETRY alone.",
+        "perChannelRatios": [
+          0.989163,
+          1.018252,
+          1.009689
+        ],
+        "channelSpread": 0.029089,
+        "absorptionOnlyPerChannelRatios": [
+          0.986922,
+          0.979511,
+          0.992382
+        ],
+        "absorptionOnlyChannelSpread": 0.012871
+      },
+      "chromaticity": {
+        "metric": "log(R/B). ONE ratio of two channels, not the three-channel spread the hue bar measures.",
+        "sourceRedOverBlue": 1.112141,
+        "absorbedVariantRedOverBlue": 1.106021,
+        "bakedTileRedOverBlue": 1.083537,
+        "tileGapAgainstSourceFraction": -0.02572,
+        "decomposition": {
+          "appliesTo": "log(R/B) ONLY.",
+          "doesNotApplyTo": "The A3 hue spread, which is max minus min over THREE channel ratios. Green is not in log(R/B) at all, and at 400/235 the two terms do not partition the spread — the absorption-only spread is 0.011 and the palette-equalised spread is 0.029 against a total of 0.026. A spread-metric split would have to be measured separately, and this is not one.",
+          "materialAbsorptionShare": 0.2118,
+          "geometricSimplificationShare": 0.7882,
+          "materialAbsorptionFraction": -0.005503,
+          "geometricSimplificationFraction": -0.020329
+        }
+      }
+    },
+    {
+      "pose": "1200/55",
+      "distanceMeters": 1200,
+      "azimuthDegrees": 55,
+      "unionPixels": 5964,
+      "intersectionPixels": 5801,
+      "sourceChannelMeans": [
+        0.24420355,
+        0.213603112,
+        0.191170422
+      ],
+      "bakedChannelMeans": [
+        0.245395917,
+        0.216219437,
+        0.196047182
+      ],
+      "absorbedVariantChannelMeans": [
+        0.25908855,
+        0.225703619,
+        0.203671896
+      ],
+      "sourceUnionMeanLuminance": 0.20999704,
+      "bakedUnionMeanLuminance": 0.21486603,
+      "perChannelRatios": [
+        1.004883,
+        1.012249,
+        1.02551
+      ],
+      "channelSpread": 0.020627,
+      "unionMeanLuminanceRatio": 1.023186,
+      "absoluteLuminanceDifference": 0.00486899,
+      "reproductionAgainstCommittedBaseline": {
+        "committedRatios": [
+          1.004897,
+          1.012243,
+          1.025494
+        ],
+        "worstAbsoluteRatioDelta": 0.00001601,
+        "committedSpread": 0.020598,
+        "absoluteSpreadDelta": 0.00002934,
+        "committedUnionPixels": 5964,
+        "unionPixelDelta": 0,
+        "committedUnionMeanLuminanceRatio": 1.023193,
+        "absoluteLuminanceRatioDelta": 0.00000701
+      },
+      "maskDomainSensitivity": {
+        "intersectionDomainRatios": [
+          1.004883,
+          1.012249,
+          1.02551
+        ],
+        "intersectionDomainSpread": 0.020627,
+        "unionDomainRatios": [
+          1.003582,
+          1.011825,
+          1.026171
+        ],
+        "unionDomainSpread": 0.022589,
+        "missesTheLegacyHueBarUnderIntersection": true,
+        "missesTheLegacyHueBarUnderUnion": true
+      },
+      "palletteEqualisedComparison": {
+        "whatItIs": "The tile against the absorbed-material variant, over the same pixel set. Both carry the facade-only palette, so this is the tile's residual difference from the source's GEOMETRY alone.",
+        "perChannelRatios": [
+          0.947151,
+          0.957979,
+          0.962564
+        ],
+        "channelSpread": 0.015413,
+        "absorptionOnlyPerChannelRatios": [
+          1.060953,
+          1.056649,
+          1.065394
+        ],
+        "absorptionOnlyChannelSpread": 0.008745
+      },
+      "chromaticity": {
+        "metric": "log(R/B). ONE ratio of two channels, not the three-channel spread the hue bar measures.",
+        "sourceRedOverBlue": 1.277413,
+        "absorbedVariantRedOverBlue": 1.272088,
+        "bakedTileRedOverBlue": 1.251719,
+        "tileGapAgainstSourceFraction": -0.020114,
+        "decomposition": {
+          "appliesTo": "log(R/B) ONLY.",
+          "doesNotApplyTo": "The A3 hue spread, which is max minus min over THREE channel ratios. Green is not in log(R/B) at all, and at 400/235 the two terms do not partition the spread — the absorption-only spread is 0.011 and the palette-equalised spread is 0.029 against a total of 0.026. A spread-metric split would have to be measured separately, and this is not one.",
+          "materialAbsorptionShare": 0.2056,
+          "geometricSimplificationShare": 0.7944,
+          "materialAbsorptionFraction": -0.004169,
+          "geometricSimplificationFraction": -0.016012
+        }
+      }
+    },
+    {
+      "pose": "1200/235",
+      "distanceMeters": 1200,
+      "azimuthDegrees": 235,
+      "unionPixels": 5918,
+      "intersectionPixels": 5787,
+      "sourceChannelMeans": [
+        0.042090397,
+        0.040544976,
+        0.03810586
+      ],
+      "bakedChannelMeans": [
+        0.040595346,
+        0.039928502,
+        0.037721585
+      ],
+      "absorbedVariantChannelMeans": [
+        0.041944385,
+        0.040174727,
+        0.038241618
+      ],
+      "sourceUnionMeanLuminance": 0.0394298,
+      "bakedUnionMeanLuminance": 0.03951768,
+      "perChannelRatios": [
+        0.96448,
+        0.984795,
+        0.989916
+      ],
+      "channelSpread": 0.025436,
+      "unionMeanLuminanceRatio": 1.002229,
+      "absoluteLuminanceDifference": 0.00008788,
+      "reproductionAgainstCommittedBaseline": {
+        "committedRatios": [
+          0.964416,
+          0.984734,
+          0.989885
+        ],
+        "worstAbsoluteRatioDelta": 0.000064,
+        "committedSpread": 0.02547,
+        "absoluteSpreadDelta": 0.0000344,
+        "committedUnionPixels": 5918,
+        "unionPixelDelta": 0,
+        "committedUnionMeanLuminanceRatio": 1.002152,
+        "absoluteLuminanceRatioDelta": 0.00007677
+      },
+      "maskDomainSensitivity": {
+        "intersectionDomainRatios": [
+          0.96448,
+          0.984795,
+          0.989916
+        ],
+        "intersectionDomainSpread": 0.025436,
+        "unionDomainRatios": [
+          0.941386,
+          0.965837,
+          0.975906
+        ],
+        "unionDomainSpread": 0.03452,
+        "missesTheLegacyHueBarUnderIntersection": true,
+        "missesTheLegacyHueBarUnderUnion": true
+      },
+      "palletteEqualisedComparison": {
+        "whatItIs": "The tile against the absorbed-material variant, over the same pixel set. Both carry the facade-only palette, so this is the tile's residual difference from the source's GEOMETRY alone.",
+        "perChannelRatios": [
+          0.967837,
+          0.993871,
+          0.986401
+        ],
+        "channelSpread": 0.026034,
+        "absorptionOnlyPerChannelRatios": [
+          0.996531,
+          0.990868,
+          1.003563
+        ],
+        "absorptionOnlyChannelSpread": 0.012694
+      },
+      "chromaticity": {
+        "metric": "log(R/B). ONE ratio of two channels, not the three-channel spread the hue bar measures.",
+        "sourceRedOverBlue": 1.104565,
+        "absorbedVariantRedOverBlue": 1.096826,
+        "bakedTileRedOverBlue": 1.076183,
+        "tileGapAgainstSourceFraction": -0.025695,
+        "decomposition": {
+          "appliesTo": "log(R/B) ONLY.",
+          "doesNotApplyTo": "The A3 hue spread, which is max minus min over THREE channel ratios. Green is not in log(R/B) at all, and at 400/235 the two terms do not partition the spread — the absorption-only spread is 0.011 and the palette-equalised spread is 0.029 against a total of 0.026. A spread-metric split would have to be measured separately, and this is not one.",
+          "materialAbsorptionShare": 0.2701,
+          "geometricSimplificationShare": 0.7299,
+          "materialAbsorptionFraction": -0.007007,
+          "geometricSimplificationFraction": -0.01882
+        }
+      }
+    },
+    {
+      "pose": "4000/55",
+      "distanceMeters": 4000,
+      "azimuthDegrees": 55,
+      "unionPixels": 524,
+      "intersectionPixels": 511,
+      "sourceChannelMeans": [
+        0.245675043,
+        0.213221661,
+        0.190491397
+      ],
+      "bakedChannelMeans": [
+        0.245931218,
+        0.215376865,
+        0.195027962
+      ],
+      "absorbedVariantChannelMeans": [
+        0.260833919,
+        0.225304115,
+        0.202886707
+      ],
+      "sourceUnionMeanLuminance": 0.2011661,
+      "bakedUnionMeanLuminance": 0.20518705,
+      "perChannelRatios": [
+        1.001043,
+        1.010108,
+        1.023815
+      ],
+      "channelSpread": 0.022772,
+      "unionMeanLuminanceRatio": 1.019988,
+      "absoluteLuminanceDifference": 0.00402095,
+      "reproductionAgainstCommittedBaseline": {
+        "committedRatios": [
+          1.001148,
+          1.010185,
+          1.023902
+        ],
+        "worstAbsoluteRatioDelta": 0.00010526,
+        "committedSpread": 0.022754,
+        "absoluteSpreadDelta": 0.00001833,
+        "committedUnionPixels": 524,
+        "unionPixelDelta": 0,
+        "committedUnionMeanLuminanceRatio": 1.020074,
+        "absoluteLuminanceRatioDelta": 0.00008579
+      },
+      "maskDomainSensitivity": {
+        "intersectionDomainRatios": [
+          1.001043,
+          1.010108,
+          1.023815
+        ],
+        "intersectionDomainSpread": 0.022772,
+        "unionDomainRatios": [
+          0.999824,
+          1.009413,
+          1.023666
+        ],
+        "unionDomainSpread": 0.023842,
+        "missesTheLegacyHueBarUnderIntersection": true,
+        "missesTheLegacyHueBarUnderUnion": true
+      },
+      "palletteEqualisedComparison": {
+        "whatItIs": "The tile against the absorbed-material variant, over the same pixel set. Both carry the facade-only palette, so this is the tile's residual difference from the source's GEOMETRY alone.",
+        "perChannelRatios": [
+          0.942865,
+          0.955938,
+          0.961265
+        ],
+        "channelSpread": 0.0184,
+        "absorptionOnlyPerChannelRatios": [
+          1.061703,
+          1.056666,
+          1.06507
+        ],
+        "absorptionOnlyChannelSpread": 0.008404
+      },
+      "chromaticity": {
+        "metric": "log(R/B). ONE ratio of two channels, not the three-channel spread the hue bar measures.",
+        "sourceRedOverBlue": 1.289691,
+        "absorbedVariantRedOverBlue": 1.285614,
+        "bakedTileRedOverBlue": 1.261005,
+        "tileGapAgainstSourceFraction": -0.022243,
+        "decomposition": {
+          "appliesTo": "log(R/B) ONLY.",
+          "doesNotApplyTo": "The A3 hue spread, which is max minus min over THREE channel ratios. Green is not in log(R/B) at all, and at 400/235 the two terms do not partition the spread — the absorption-only spread is 0.011 and the palette-equalised spread is 0.029 against a total of 0.026. A spread-metric split would have to be measured separately, and this is not one.",
+          "materialAbsorptionShare": 0.1408,
+          "geometricSimplificationShare": 0.8592,
+          "materialAbsorptionFraction": -0.003162,
+          "geometricSimplificationFraction": -0.019142
+        }
+      }
+    },
+    {
+      "pose": "4000/235",
+      "distanceMeters": 4000,
+      "azimuthDegrees": 235,
+      "unionPixels": 517,
+      "intersectionPixels": 507,
+      "sourceChannelMeans": [
+        0.047593581,
+        0.045642662,
+        0.042723686
+      ],
+      "bakedChannelMeans": [
+        0.043170902,
+        0.04248856,
+        0.040198639
+      ],
+      "absorbedVariantChannelMeans": [
+        0.047356148,
+        0.045081418,
+        0.042845151
+      ],
+      "sourceUnionMeanLuminance": 0.04217802,
+      "bakedUnionMeanLuminance": 0.03976067,
+      "perChannelRatios": [
+        0.907074,
+        0.930896,
+        0.940898
+      ],
+      "channelSpread": 0.033824,
+      "unionMeanLuminanceRatio": 0.942687,
+      "absoluteLuminanceDifference": -0.00241735,
+      "reproductionAgainstCommittedBaseline": {
+        "committedRatios": [
+          0.907127,
+          0.930949,
+          0.940946
+        ],
+        "worstAbsoluteRatioDelta": 0.00005325,
+        "committedSpread": 0.033819,
+        "absoluteSpreadDelta": 0.00000515,
+        "committedUnionPixels": 517,
+        "unionPixelDelta": 0,
+        "committedUnionMeanLuminanceRatio": 0.942736,
+        "absoluteLuminanceRatioDelta": 0.00004903
+      },
+      "maskDomainSensitivity": {
+        "intersectionDomainRatios": [
+          0.907074,
+          0.930896,
+          0.940898
+        ],
+        "intersectionDomainSpread": 0.033824,
+        "unionDomainRatios": [
+          0.90468,
+          0.929565,
+          0.940301
+        ],
+        "unionDomainSpread": 0.035621,
+        "missesTheLegacyHueBarUnderIntersection": true,
+        "missesTheLegacyHueBarUnderUnion": true
+      },
+      "palletteEqualisedComparison": {
+        "whatItIs": "The tile against the absorbed-material variant, over the same pixel set. Both carry the facade-only palette, so this is the tile's residual difference from the source's GEOMETRY alone.",
+        "perChannelRatios": [
+          0.911622,
+          0.942485,
+          0.938231
+        ],
+        "channelSpread": 0.030863,
+        "absorptionOnlyPerChannelRatios": [
+          0.995011,
+          0.987704,
+          1.002843
+        ],
+        "absorptionOnlyChannelSpread": 0.01514
+      },
+      "chromaticity": {
+        "metric": "log(R/B). ONE ratio of two channels, not the three-channel spread the hue bar measures.",
+        "sourceRedOverBlue": 1.113986,
+        "absorbedVariantRedOverBlue": 1.105286,
+        "bakedTileRedOverBlue": 1.073939,
+        "tileGapAgainstSourceFraction": -0.035949,
+        "decomposition": {
+          "appliesTo": "log(R/B) ONLY.",
+          "doesNotApplyTo": "The A3 hue spread, which is max minus min over THREE channel ratios. Green is not in log(R/B) at all, and at 400/235 the two terms do not partition the spread — the absorption-only spread is 0.011 and the palette-equalised spread is 0.029 against a total of 0.026. A spread-metric split would have to be measured separately, and this is not one.",
+          "materialAbsorptionShare": 0.2142,
+          "geometricSimplificationShare": 0.7858,
+          "materialAbsorptionFraction": -0.00781,
+          "geometricSimplificationFraction": -0.028361
+        }
+      }
+    }
+  ],
+  "shadowsOffAblation": {
+    "label": "OFF-INSTRUMENT PROBE, NOT A BASELINE READING.",
+    "variable": "eevee.use_shadows, true to false. Nothing else.",
+    "proofItIsOneVariable": "The pinned harness was run under the ablation and REFUSED, naming exactly one setting: eevee.use_shadows expected true actual false.",
+    "question": "Whether the source's self-shadowing of its own micro-geometry — window reveals, cornice undersides, balconies — is what puts its hue above the tile's.",
+    "metric": "log(R/B) chromaticity, expressed as the tile's fraction relative to the source: tile red-over-blue divided by source red-over-blue, minus one.",
+    "rows": [
+      {
+        "pose": "400/55",
+        "sourceRedOverBlueOn": 1.248124,
+        "sourceRedOverBlueOff": 1.256095,
+        "bakedRedOverBlueOn": 1.228865,
+        "bakedRedOverBlueOff": 1.237575,
+        "tileGapWithShadows": -0.01543,
+        "tileGapWithoutShadows": -0.014744
+      },
+      {
+        "pose": "400/235",
+        "sourceRedOverBlueOn": 1.112141,
+        "sourceRedOverBlueOff": 1.147022,
+        "bakedRedOverBlueOn": 1.083537,
+        "bakedRedOverBlueOff": 1.084647,
+        "tileGapWithShadows": -0.02572,
+        "tileGapWithoutShadows": -0.05438
+      },
+      {
+        "pose": "4000/235",
+        "sourceRedOverBlueOn": 1.113986,
+        "sourceRedOverBlueOff": 1.133186,
+        "bakedRedOverBlueOn": 1.073939,
+        "bakedRedOverBlueOff": 1.074473,
+        "tileGapWithShadows": -0.035949,
+        "tileGapWithoutShadows": -0.051812
+      }
+    ],
+    "finding": "NO. Removing shadows WIDENS the tile's chromaticity gap at both azimuth-235 poses, from -2.57 per cent to -5.44 per cent at 400 m and from -3.59 per cent to -5.18 per cent at 4,000 m, and leaves the azimuth-55 gap essentially unchanged at -1.54 per cent against -1.47 per cent. Shadowing was masking part of the source's redness, not creating it.",
+    "secondFinding": "The tile's own chromaticity barely moves when shadows are removed — 1.083537 to 1.084647 and 1.073939 to 1.074473 — which is what a subject with no self-shadowing micro-geometry should do, and is a positive control on the ablation.",
+    "verdict": "REJECTED as the mechanism."
+  },
+  "absorbedSourceVariant": {
+    "label": "INSTRUMENTATION VARIANT, NOT A RELEASE ARTIFACT AND NOT A PROPOSED RECIPE.",
+    "construction": "The verified shipped lod_0 bytes with every glazing, trim and metal material RECORD replaced by the facade material record of the same vertical zone — factor, class tile and metal/roughness together. Geometry, UVs, normals, transforms and the entire binary chunk are byte-identical to the source. 240 material records absorbed, 192 untouched, across 48 assets.",
+    "metalJudgementCall": {
+      "decision": "material:metal was folded into material:facade:shaft in this variant.",
+      "why": "The variant's job is to remove every non-facade material so the residual is geometry alone; leaving metal in would have left a third palette in the comparison and made the residual uninterpretable.",
+      "whatItIsNot": "It is NOT a claim that the bake absorbs metal in the same sense that it absorbs glazing and trim. Most metal area in these plans is rooftop equipment and fire escapes, which the prism omits GEOMETRICALLY rather than absorbing chromatically.",
+      "size": "Metal is 2.22 per cent of source surface area with red-over-blue 0.985696, the least red material in the palette. Folding the least red material INTO the facade makes the variant redder, which makes the measured absorption term LARGER and the geometric residual SMALLER. The reported minority share of absorption is therefore an upper bound, not an understatement."
+    },
+    "capturedUnder": "The pinned instrument, harness enforced, 48 renderable meshes, the same six pose transforms.",
+    "measurementDomain": "The SOURCE-and-BAKED intersection, un-premultiplied — the identical pixel set used for the source and the tile at each pose, so all three subjects are comparable without re-masking.",
+    "positiveControl": {
+      "claim": "The variant's geometry is byte-identical to the source's, so its silhouette must be pixel-identical too. If it is not, the variant changed something it was not supposed to change.",
+      "sourceSilhouettePixels": [
+        62073,
+        59152,
+        5820,
+        5816,
+        511,
+        508
+      ],
+      "absorbedSilhouettePixels": [
+        62073,
+        59152,
+        5820,
+        5816,
+        511,
+        508
+      ],
+      "worstAbsoluteDelta": 0,
+      "unionWithBakedPixels": [
+        63724,
+        60355,
+        5964,
+        5918,
+        524,
+        517
+      ],
+      "sourceUnionWithBakedPixels": [
+        63724,
+        60355,
+        5964,
+        5918,
+        524,
+        517
+      ],
+      "worstUnionDelta": 0,
+      "verdict": "PASS at all six poses: 0 pixels of difference in the silhouette, and 0 in the union with the tile."
+    },
+    "manifestSha256": "f9a4893ab0f41d16d37b596e0b726827ea428cc6dea6ec4ad77f851fff42a0cf",
+    "finding": "Material absorption accounts for a MINORITY of the tile's log(R/B) chromaticity gap at every pose.",
+    "materialAbsorptionShareRange": [
+      0.1408,
+      0.3641
+    ],
+    "geometricSimplificationShareRange": [
+      0.6359,
+      0.8592
+    ],
+    "palletteEqualisedSpreads": {
+      "whatItIs": "The three-channel hue spread of the tile against the palette-equalised variant, measured directly. This is the quantity a colour-only correction leaves behind, and it is a MEASUREMENT rather than a scaling of the chromaticity decomposition.",
+      "perPose": [
+        {
+          "pose": "400/55",
+          "spread": 0.00958
+        },
+        {
+          "pose": "400/235",
+          "spread": 0.029089
+        },
+        {
+          "pose": "1200/55",
+          "spread": 0.015413
+        },
+        {
+          "pose": "1200/235",
+          "spread": 0.026034
+        },
+        {
+          "pose": "4000/55",
+          "spread": 0.0184
+        },
+        {
+          "pose": "4000/235",
+          "spread": 0.030863
+        }
+      ],
+      "worst": 0.030863
+    }
+  },
+  "renders": {
+    "retention": "LOCAL WORK PRODUCT. The EXR bytes live under artifacts/ and are gitignored; these checksums are the committed artifact.",
+    "files": [
+      {
+        "name": "absorbed-1200m-az235.exr",
+        "byteSize": 74592,
+        "sha256": "c88b82650309962a8d4454d052751778bea1dd34c3ec7f3fde1fb02b6657517e"
+      },
+      {
+        "name": "absorbed-1200m-az55.exr",
+        "byteSize": 98803,
+        "sha256": "9301e47df485ef45d6eae5f7a157aed498f0d462e32f90692bc85b2dd00a4128"
+      },
+      {
+        "name": "absorbed-4000m-az235.exr",
+        "byteSize": 34339,
+        "sha256": "b96e7bd3b89d55356ccd5eb61db80f999834e6b940a69ac9d50af6cb7866b5a0"
+      },
+      {
+        "name": "absorbed-4000m-az55.exr",
+        "byteSize": 36113,
+        "sha256": "27199266306c4f0b082d5f0567ddff6dc3347132583420a121b345609a2ddc01"
+      },
+      {
+        "name": "absorbed-400m-az235.exr",
+        "byteSize": 254460,
+        "sha256": "ad17e87da424186be333df28c31abb69c4ebb92a45e84571bf239f1c9beccec2"
+      },
+      {
+        "name": "absorbed-400m-az55.exr",
+        "byteSize": 477108,
+        "sha256": "6bbb7d7d835af3b0edeb4e2cd4b2fc13bba458b2f317389ec33126674dc6d69e"
+      },
+      {
+        "name": "baked-1200m-az235.exr",
+        "byteSize": 67145,
+        "sha256": "c3e31d912ced63a4deab967414df17dc5d94953bfe9e26cae27dd7e1464ca45a"
+      },
+      {
+        "name": "baked-1200m-az55.exr",
+        "byteSize": 90118,
+        "sha256": "13e3229863da944f85b45524cc7618569eaec0331faaea5a10c00d6ac8b0ca74"
+      },
+      {
+        "name": "baked-4000m-az235.exr",
+        "byteSize": 33414,
+        "sha256": "207d3b2d5d7da5174a609c5dd3fb5debad867da7d672c404c0aac7835b52a2a6"
+      },
+      {
+        "name": "baked-4000m-az55.exr",
+        "byteSize": 36021,
+        "sha256": "d384254110fc762c12175672b3a3bfbc0abbc2d5f99b4d9e2d05c4f68bf81bca"
+      },
+      {
+        "name": "baked-400m-az235.exr",
+        "byteSize": 200098,
+        "sha256": "cce18e5c260795bc2721dc750b438228e64627841b56e6b68cbda7c23c3b118a"
+      },
+      {
+        "name": "baked-400m-az55.exr",
+        "byteSize": 348341,
+        "sha256": "e80f06b8abdac018ac814b1c8920a330a90b50e083d93751893e4b18d5908744"
+      },
+      {
+        "name": "noshadow-baked-4000m-az235.exr",
+        "byteSize": 33374,
+        "sha256": "25d9638aecf6d2a5632b9cc2cb6c652f0d9a0a98a8fe98a78e766682ec8185a7"
+      },
+      {
+        "name": "noshadow-baked-400m-az235.exr",
+        "byteSize": 207017,
+        "sha256": "ff8ef51abb2f6bfe9d79037cadce5c71ce6aa60ad8fe57b2faafa8782eb42bf7"
+      },
+      {
+        "name": "noshadow-baked-400m-az55.exr",
+        "byteSize": 340405,
+        "sha256": "7de1dcad505e3dd9b87d08d0e7cd0fc5343d62fe4feef369033b3961c9453849"
+      },
+      {
+        "name": "noshadow-source-4000m-az235.exr",
+        "byteSize": 35874,
+        "sha256": "d53c6b5cc2d31b8ead31157399ff4735b0d0e996135392299e089d6d5b099f1d"
+      },
+      {
+        "name": "noshadow-source-400m-az235.exr",
+        "byteSize": 412798,
+        "sha256": "f60e9adc603c6a2283f327593452affb9ee781df5263656cc6ef4f882f444873"
+      },
+      {
+        "name": "noshadow-source-400m-az55.exr",
+        "byteSize": 476036,
+        "sha256": "77078f844f5e65d3155b44aeb400210c1f9af33955397da5f8381cdf962c987a"
+      },
+      {
+        "name": "source-1200m-az235.exr",
+        "byteSize": 74553,
+        "sha256": "51dd0caae62e0fa6f8691741edda6eea99c0973db2a3cf032d41bbf706f57ae4"
+      },
+      {
+        "name": "source-1200m-az55.exr",
+        "byteSize": 100623,
+        "sha256": "10f53d20c1468e648305ad4d9833d7ba5baf19602bfc8ed2dea720902ff82e08"
+      },
+      {
+        "name": "source-4000m-az235.exr",
+        "byteSize": 34409,
+        "sha256": "5fb849c919071a1616105a37619c355cadc72303844ca3df44de3ce627a8654e"
+      },
+      {
+        "name": "source-4000m-az55.exr",
+        "byteSize": 36267,
+        "sha256": "a6b0d125c84bd262bdadf12b9582e51dd7f36acac3c498045343fb84473c8c77"
+      },
+      {
+        "name": "source-400m-az235.exr",
+        "byteSize": 256510,
+        "sha256": "bf0c8b5959450842eee011659a908f4ebcb30ef22b2c27db3543a3fb80b06522"
+      },
+      {
+        "name": "source-400m-az55.exr",
+        "byteSize": 482368,
+        "sha256": "f85bf72833716e76600926a13988563804a7809cb8e1eca423420f0a5363847e"
+      }
+    ]
+  },
+  "notClaimedHere": [
+    "A baseline is not acceptance.",
+    "EEVEE under one sun is not the shipped Cesium renderer.",
+    "One cell.",
+    "No fix is proposed or applied."
+  ]
+}

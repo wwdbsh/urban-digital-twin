@@ -1,0 +1,301 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "far-tier-hlod-hue-20260819:final-verdict",
+  "task": "T013",
+  "artifact": "far-tier-hue-final-verdict",
+  "capturedAt": null,
+  "capturedAtStatement": "NULL BY CONSTRUCTION.",
+  "headline": "Recipe v3 scored against the adopted gate set: A1 3 of 3 applicable, A2 6 of 6, A3'' 6 of 6. No new capture was taken.",
+  "subject": {
+    "recipeId": "far-tier-hlod-bake-v3",
+    "recipeSha256": "e73206429c496c28c707120769eee5f4a6155f44442eccb9b19fe2fdcfbc24c8",
+    "glbSha256": "e154561cfe63313720b5b735cc5344c9d23b2ec1c406999f3e993511b88dc0a3",
+    "atlasSha256": "368c863cffea9002811700a3f86addd2fe1c32afce867b9209398fa45cb3b278",
+    "cellId": "manhattan-exterior-cell-w05-000747-17-38610-35822"
+  },
+  "provenanceOfTheReadings": {
+    "statement": "THE READINGS ARE THE ONES ALREADY CAPTURED. This record re-scores fix-capture-verdict.json against the adopted bars; it takes no render and it changes no measurement.",
+    "source": "fix-capture-verdict.json, sha256 1e49002cb59e43a3ed16c7c6c6092cd59cf6ad152206e07c48ce675e63a2690c",
+    "instrument": "The pinned instrument, harness enforced at each of the six captures, subject isolated by deletion, renderable-mesh count 1.",
+    "domain": "The SOURCE-and-V3 intersection, un-premultiplied. The v3 silhouette is pixel-identical to v1's at all six poses.",
+    "whatChangedSinceThatRecordWasWritten": "The BARS, and nothing else. A3' = 0.032 is superseded by A3'' = 0.035 and the prediction bar has served its purpose and is not re-scored here; its MISS stands on the record."
+  },
+  "bars": {
+    "A1": {
+      "statement": "|union mean luminance ratio - 1| <= 0.05 where source mean luminance >= 0.1",
+      "status": "unchanged"
+    },
+    "A2": {
+      "statement": "|baked - source| union mean luminance <= 0.01 at every pose",
+      "status": "unchanged"
+    },
+    "A3doublePrime": {
+      "statement": "per-pose channel spread <= 0.035",
+      "status": "ADOPTED BY USER DECISION AFTER MEASUREMENT; see gate-adoption.json"
+    },
+    "legacyHueBar": {
+      "statement": "per-pose channel spread <= 0.02",
+      "status": "REPORTED, NOT OPERATIVE. Recorded as unreachable: the measured floor with both palette terms corrected is 0.027301."
+    }
+  },
+  "poses": [
+    {
+      "pose": "400/55",
+      "distanceMeters": 400,
+      "azimuthDegrees": 55,
+      "sourceUnionMeanLuminance": 0.21577073,
+      "rawChannelSpread": 0.007363,
+      "rawPerChannelRatios": [
+        0.982989,
+        0.988641,
+        0.990352
+      ],
+      "unionMeanLuminanceRatio": 1.004122,
+      "absoluteLuminanceDifference": 0.00088945,
+      "A1": {
+        "applies": true,
+        "reason": "source mean luminance 0.21577073 is at or above 0.1",
+        "deviation": 0.004122,
+        "margin": 0.045878,
+        "verdict": "PASS"
+      },
+      "A2": {
+        "magnitude": 0.00088945,
+        "margin": 0.00911055,
+        "verdict": "PASS"
+      },
+      "A3doublePrime": {
+        "spread": 0.007363,
+        "margin": 0.027637,
+        "verdict": "PASS"
+      },
+      "legacyHueBar002": {
+        "bar": 0.02,
+        "verdict": "PASS",
+        "keptForContinuity": "Reported at every pose whether or not it is the operative bar."
+      },
+      "v1ChannelSpreadForComparison": 0.015976
+    },
+    {
+      "pose": "400/235",
+      "distanceMeters": 400,
+      "azimuthDegrees": 235,
+      "sourceUnionMeanLuminance": 0.03766457,
+      "rawChannelSpread": 0.025406,
+      "rawPerChannelRatios": [
+        0.974357,
+        0.995201,
+        0.999763
+      ],
+      "unionMeanLuminanceRatio": 1.01786,
+      "absoluteLuminanceDifference": 0.0006727,
+      "A1": {
+        "applies": false,
+        "reason": "source mean luminance 0.03766457 is below 0.1",
+        "deviation": 0.01786,
+        "margin": null,
+        "verdict": "not applicable"
+      },
+      "A2": {
+        "magnitude": 0.0006727,
+        "margin": 0.0093273,
+        "verdict": "PASS"
+      },
+      "A3doublePrime": {
+        "spread": 0.025406,
+        "margin": 0.009594,
+        "verdict": "PASS"
+      },
+      "legacyHueBar002": {
+        "bar": 0.02,
+        "verdict": "MISS",
+        "keptForContinuity": "Reported at every pose whether or not it is the operative bar."
+      },
+      "v1ChannelSpreadForComparison": 0.025772
+    },
+    {
+      "pose": "1200/55",
+      "distanceMeters": 1200,
+      "azimuthDegrees": 55,
+      "sourceUnionMeanLuminance": 0.20999704,
+      "rawChannelSpread": 0.011732,
+      "rawPerChannelRatios": [
+        0.968474,
+        0.977552,
+        0.980207
+      ],
+      "unionMeanLuminanceRatio": 0.987486,
+      "absoluteLuminanceDifference": -0.00262795,
+      "A1": {
+        "applies": true,
+        "reason": "source mean luminance 0.20999704 is at or above 0.1",
+        "deviation": 0.012514,
+        "margin": 0.037486,
+        "verdict": "PASS"
+      },
+      "A2": {
+        "magnitude": 0.00262795,
+        "margin": 0.00737205,
+        "verdict": "PASS"
+      },
+      "A3doublePrime": {
+        "spread": 0.011732,
+        "margin": 0.023268,
+        "verdict": "PASS"
+      },
+      "legacyHueBar002": {
+        "bar": 0.02,
+        "verdict": "PASS",
+        "keptForContinuity": "Reported at every pose whether or not it is the operative bar."
+      },
+      "v1ChannelSpreadForComparison": 0.020627
+    },
+    {
+      "pose": "1200/235",
+      "distanceMeters": 1200,
+      "azimuthDegrees": 235,
+      "sourceUnionMeanLuminance": 0.0394298,
+      "rawChannelSpread": 0.025436,
+      "rawPerChannelRatios": [
+        0.96448,
+        0.984795,
+        0.989916
+      ],
+      "unionMeanLuminanceRatio": 1.002229,
+      "absoluteLuminanceDifference": 0.00008788,
+      "A1": {
+        "applies": false,
+        "reason": "source mean luminance 0.0394298 is below 0.1",
+        "deviation": 0.002229,
+        "margin": null,
+        "verdict": "not applicable"
+      },
+      "A2": {
+        "magnitude": 0.00008788,
+        "margin": 0.00991212,
+        "verdict": "PASS"
+      },
+      "A3doublePrime": {
+        "spread": 0.025436,
+        "margin": 0.009564,
+        "verdict": "PASS"
+      },
+      "legacyHueBar002": {
+        "bar": 0.02,
+        "verdict": "MISS",
+        "keptForContinuity": "Reported at every pose whether or not it is the operative bar."
+      },
+      "v1ChannelSpreadForComparison": 0.025436
+    },
+    {
+      "pose": "4000/55",
+      "distanceMeters": 4000,
+      "azimuthDegrees": 55,
+      "sourceUnionMeanLuminance": 0.2011661,
+      "rawChannelSpread": 0.013714,
+      "rawPerChannelRatios": [
+        0.964637,
+        0.97551,
+        0.978351
+      ],
+      "unionMeanLuminanceRatio": 0.984226,
+      "absoluteLuminanceDifference": -0.00317314,
+      "A1": {
+        "applies": true,
+        "reason": "source mean luminance 0.2011661 is at or above 0.1",
+        "deviation": 0.015774,
+        "margin": 0.034226,
+        "verdict": "PASS"
+      },
+      "A2": {
+        "magnitude": 0.00317314,
+        "margin": 0.00682686,
+        "verdict": "PASS"
+      },
+      "A3doublePrime": {
+        "spread": 0.013714,
+        "margin": 0.021286,
+        "verdict": "PASS"
+      },
+      "legacyHueBar002": {
+        "bar": 0.02,
+        "verdict": "PASS",
+        "keptForContinuity": "Reported at every pose whether or not it is the operative bar."
+      },
+      "v1ChannelSpreadForComparison": 0.022772
+    },
+    {
+      "pose": "4000/235",
+      "distanceMeters": 4000,
+      "azimuthDegrees": 235,
+      "sourceUnionMeanLuminance": 0.04217802,
+      "rawChannelSpread": 0.033824,
+      "rawPerChannelRatios": [
+        0.907074,
+        0.930896,
+        0.940898
+      ],
+      "unionMeanLuminanceRatio": 0.942687,
+      "absoluteLuminanceDifference": -0.00241735,
+      "A1": {
+        "applies": false,
+        "reason": "source mean luminance 0.04217802 is below 0.1",
+        "deviation": 0.057313,
+        "margin": null,
+        "verdict": "not applicable"
+      },
+      "A2": {
+        "magnitude": 0.00241735,
+        "margin": 0.00758265,
+        "verdict": "PASS"
+      },
+      "A3doublePrime": {
+        "spread": 0.033824,
+        "margin": 0.001176,
+        "verdict": "PASS"
+      },
+      "legacyHueBar002": {
+        "bar": 0.02,
+        "verdict": "MISS",
+        "keptForContinuity": "Reported at every pose whether or not it is the operative bar."
+      },
+      "v1ChannelSpreadForComparison": 0.033824
+    }
+  ],
+  "summary": {
+    "A1": {
+      "applicablePoses": 3,
+      "passed": 3,
+      "verdict": "PASS",
+      "worstDeviation": 0.015774
+    },
+    "A2": {
+      "poses": 6,
+      "passed": 6,
+      "verdict": "PASS",
+      "worstMagnitude": 0.00317314
+    },
+    "A3doublePrime": {
+      "poses": 6,
+      "passed": 6,
+      "verdict": "PASS",
+      "worstSpread": 0.033824,
+      "tightestMargin": 0.001176
+    },
+    "legacyHueBar002": {
+      "poses": 6,
+      "passed": 3,
+      "note": "Reported for continuity. Under v1 it passed at 1 of 6."
+    }
+  },
+  "honestReadingOfThisResult": {
+    "whatIsEarned": "Three of six poses cross the legacy 0.02 bar that only one crossed under v1, A1's agreement improved at all three applicable poses, and A2 passes everywhere including the pose that has carried a tone MISS since T002.",
+    "whatIsNotEarned": "A 6-of-6 PASS on A3'' is not evidence that the tile is accurate. The bar was set from this tile's own worst pose plus instrument noise, so passing it is close to arithmetic. What the capture earns is the wall term's correction, measured at 4.6 to 4.8 per cent of the signal where walls are visible and 1e-8 where they are not.",
+    "theOpenFinding": "The azimuth-235 poses are roof-dominated and their spreads are unchanged from v1. Nothing in the adopted gate set closes that; A3'' accommodates it."
+  },
+  "notClaimedHere": [
+    "No new capture. No bar was moved to produce a PASS after a MISS was recorded — A3' 's MISS stands in fix-capture-verdict.json and is superseded by statement, not erased.",
+    "Passing a post-hoc bar is not acceptance of the tier.",
+    "EEVEE under one sun is not the shipped Cesium renderer, and one cell is one cell."
+  ]
+}

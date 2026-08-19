@@ -1,0 +1,411 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "far-tier-hlod-hue-20260819:fix-pre-registration",
+  "task": "T013",
+  "artifact": "far-tier-hue-fix-pre-registration",
+  "capturedAt": null,
+  "capturedAtStatement": "NULL BY CONSTRUCTION. NOTHING HAS BEEN CAPTURED. This record exists so that the numbers below cannot be chosen after the fact, and it is committed before the v3 tile is ever rendered.",
+  "claim": "Every prediction, bar and verdict rule for the recipe v3 capture, fixed in advance.",
+  "theChange": {
+    "recipeId": "far-tier-hlod-bake-v3",
+    "recipeSha256": "e73206429c496c28c707120769eee5f4a6155f44442eccb9b19fe2fdcfbc24c8",
+    "v1RecipeSha256": "88baa55611bfdf52a745f01eacc2c9bb44305897109fbd5491f7e8f5caaa6dea",
+    "derivedFrom": "far-tier-hlod-bake-v1 (88baa55611bfdf52a745f01eacc2c9bb44305897109fbd5491f7e8f5caaa6dea) — packing, gutters, texel floors, geometry emission and transfer functions are v1's, unchanged.",
+    "whatChanged": "A wall zone's colour becomes the area-weighted linear-light aggregate of the vertical facade, glazing and trim surfaces that wall stands in for, carried as the zone's factor divided through its own class-tile linear mean.",
+    "whatDidNotChange": {
+      "atlasPixels": true,
+      "faceCount": true,
+      "flatFaceCount": true,
+      "occupancy": true,
+      "appliedScale": true
+    },
+    "additiveRegressionGate": {
+      "claim": "The same code with zoneColourMode facade-only reproduces the committed v1 atlas byte for byte.",
+      "v1AtlasSha256": "c159e0508aeb7522620b799b83041461aecf34727f69209bd7efbf992f5c067a",
+      "verdict": "PASS"
+    },
+    "aggregation": {
+      "inScopeAreaSquareMeters": 92918.491,
+      "attributedAreaSquareMeters": 92918.491,
+      "attributionCompleteness": 1,
+      "excludedByRoleAreaSquareMeters": 2035.72,
+      "excludedAsHorizontalAreaSquareMeters": 44219.81,
+      "buildingsAggregated": 48,
+      "unitySnaps": {
+        "why": "A zone whose in-scope surface is entirely its own facade material must reproduce that material's factor exactly. Where the palette calibration already sits at the closed profile's ceiling of 1, the round trip through an area-weighted albedo and back through the class tile's linear mean lands a few units in the last place above it. Those are snapped to 1 and counted; anything larger than 1e-9 is REFUSED rather than clamped, because clamping would clip one channel before the others and manufacture the very bias this task excluded.",
+        "count": 10,
+        "worstOvershoot": 2.220446049250313e-16,
+        "zones": [
+          {
+            "buildingId": "doitt:141215",
+            "zoneKey": "14:shaft",
+            "overshoot": 2.220446049250313e-16
+          },
+          {
+            "buildingId": "doitt:36350",
+            "zoneKey": "11:shaft",
+            "overshoot": 2.220446049250313e-16
+          },
+          {
+            "buildingId": "doitt:36350",
+            "zoneKey": "12:shaft",
+            "overshoot": 2.220446049250313e-16
+          },
+          {
+            "buildingId": "doitt:36350",
+            "zoneKey": "14:shaft",
+            "overshoot": 2.220446049250313e-16
+          },
+          {
+            "buildingId": "doitt:36350",
+            "zoneKey": "17:shaft",
+            "overshoot": 2.220446049250313e-16
+          },
+          {
+            "buildingId": "doitt:476191",
+            "zoneKey": "5:shaft",
+            "overshoot": 2.220446049250313e-16
+          },
+          {
+            "buildingId": "doitt:549070",
+            "zoneKey": "15:shaft",
+            "overshoot": 2.220446049250313e-16
+          },
+          {
+            "buildingId": "doitt:558878",
+            "zoneKey": "6:shaft",
+            "overshoot": 2.220446049250313e-16
+          }
+        ]
+      }
+    },
+    "wallAlbedo": {
+      "v1FacadeOnlyLinear": [
+        0.547667014,
+        0.4252536,
+        0.369663138
+      ],
+      "v3AggregateLinear": [
+        0.521663932,
+        0.411333503,
+        0.350575476
+      ],
+      "perChannelShift": [
+        0.95252,
+        0.967266,
+        0.948365
+      ],
+      "redOverBlueV1": 1.48153,
+      "redOverBlueV3": 1.488022
+    },
+    "metalJudgement": {
+      "decision": "material:metal is EXCLUDED from the wall aggregate.",
+      "reasoning": "Rooftop tanks, their legs and fire escapes are GEOMETRIC omissions of the prism, not materials a wall absorbs. The recipe's stated scope is what the WALL replaces on the wall's own footprint, and a water tank is not on a wall's footprint. Including it would have the tile claim a wall stands in for rooftop equipment.",
+      "size": "2.22 per cent of source surface area at red-over-blue 0.985696, the least red entry in the palette.",
+      "direction": "Excluding the least red material leaves the aggregate very slightly REDDER than a metal-inclusive one, so the v3 tile is predicted to sit slightly ABOVE the prediction model, which was built from a variant that folded metal into the facade. This is the largest known reason for the predictions below to be imperfect and it is why the agreement bar is 0.01 rather than 0.001."
+    }
+  },
+  "predictionModel": {
+    "statement": "A is the absorbed-material variant — the SOURCE's geometry carrying the TILE's facade-only palette. If v3's aggregate exactly inverts that absorption then the v3 tile T' satisfies T'/S = T/A, which is measured at all six poses in pinned-capture.json.",
+    "whyTheTransferIsJustified": "By construction the v1 tile's wall albedo is the facade palette and so is the absorbed variant's; the v3 tile's wall albedo is the source's own vertical in-scope aggregate. The two legs are the same substitution run in opposite directions.",
+    "knownImperfections": [
+      "Metal is folded into facade in A and excluded in v3. 2.22 per cent of source area.",
+      "A substitutes per MATERIAL RECORD; v3 aggregates per WALL ZONE, so within-zone spatial variation is averaged in v3 and preserved in A.",
+      "The prediction scales the union luminance by the intersection-domain luminance shift, because the two domains are not the same pixel set."
+    ],
+    "sourceRecord": "pinned-capture.json, sha256 c55748533271679b642d3cf1c2946c6f24d380a33962951391ba879c097c2e00",
+    "attributionRecord": "hue-attribution.json, sha256 8826b5fcafb81fc835bed3428b2989d33b32a18b9ca1e3e3363b69408da9fcb3"
+  },
+  "poses": [
+    {
+      "pose": "400/55",
+      "distanceMeters": 400,
+      "azimuthDegrees": 55,
+      "measuredV1PerChannelRatios": [
+        1.019386,
+        1.023668,
+        1.035362
+      ],
+      "measuredV1ChannelSpread": 0.015976,
+      "predictedV3PerChannelRatios": [
+        0.964025,
+        0.970083,
+        0.973605
+      ],
+      "predictedV3ChannelSpread": 0.00958,
+      "predictedV3UnionMeanLuminance": 0.21253903,
+      "predictedV3UnionMeanLuminanceRatio": 0.985023,
+      "predictedV3AbsoluteLuminanceDifference": -0.0032317,
+      "measuredV1UnionMeanLuminanceRatio": 1.040453,
+      "measuredV1AbsoluteLuminanceDifference": 0.00872865
+    },
+    {
+      "pose": "400/235",
+      "distanceMeters": 400,
+      "azimuthDegrees": 235,
+      "measuredV1PerChannelRatios": [
+        0.976226,
+        0.997389,
+        1.001998
+      ],
+      "measuredV1ChannelSpread": 0.025772,
+      "predictedV3PerChannelRatios": [
+        0.989163,
+        1.018252,
+        1.009689
+      ],
+      "predictedV3ChannelSpread": 0.029089,
+      "predictedV3UnionMeanLuminance": 0.03911959,
+      "predictedV3UnionMeanLuminanceRatio": 1.038631,
+      "predictedV3AbsoluteLuminanceDifference": 0.00145502,
+      "measuredV1UnionMeanLuminanceRatio": 1.019908,
+      "measuredV1AbsoluteLuminanceDifference": 0.00074983
+    },
+    {
+      "pose": "1200/55",
+      "distanceMeters": 1200,
+      "azimuthDegrees": 55,
+      "measuredV1PerChannelRatios": [
+        1.004883,
+        1.012249,
+        1.02551
+      ],
+      "measuredV1ChannelSpread": 0.020627,
+      "predictedV3PerChannelRatios": [
+        0.947151,
+        0.957979,
+        0.962564
+      ],
+      "predictedV3ChannelSpread": 0.015413,
+      "predictedV3UnionMeanLuminance": 0.20304488,
+      "predictedV3UnionMeanLuminanceRatio": 0.966894,
+      "predictedV3AbsoluteLuminanceDifference": -0.00695216,
+      "measuredV1UnionMeanLuminanceRatio": 1.023186,
+      "measuredV1AbsoluteLuminanceDifference": 0.00486899
+    },
+    {
+      "pose": "1200/235",
+      "distanceMeters": 1200,
+      "azimuthDegrees": 235,
+      "measuredV1PerChannelRatios": [
+        0.96448,
+        0.984795,
+        0.989916
+      ],
+      "measuredV1ChannelSpread": 0.025436,
+      "predictedV3PerChannelRatios": [
+        0.967837,
+        0.993871,
+        0.986401
+      ],
+      "predictedV3ChannelSpread": 0.026034,
+      "predictedV3UnionMeanLuminance": 0.03979844,
+      "predictedV3UnionMeanLuminanceRatio": 1.009349,
+      "predictedV3AbsoluteLuminanceDifference": 0.00036864,
+      "measuredV1UnionMeanLuminanceRatio": 1.002229,
+      "measuredV1AbsoluteLuminanceDifference": 0.00008788
+    },
+    {
+      "pose": "4000/55",
+      "distanceMeters": 4000,
+      "azimuthDegrees": 55,
+      "measuredV1PerChannelRatios": [
+        1.001043,
+        1.010108,
+        1.023815
+      ],
+      "measuredV1ChannelSpread": 0.022772,
+      "predictedV3PerChannelRatios": [
+        0.942865,
+        0.955938,
+        0.961265
+      ],
+      "predictedV3ChannelSpread": 0.0184,
+      "predictedV3UnionMeanLuminance": 0.193867,
+      "predictedV3UnionMeanLuminanceRatio": 0.963716,
+      "predictedV3AbsoluteLuminanceDifference": -0.0072991,
+      "measuredV1UnionMeanLuminanceRatio": 1.019988,
+      "measuredV1AbsoluteLuminanceDifference": 0.00402095
+    },
+    {
+      "pose": "4000/235",
+      "distanceMeters": 4000,
+      "azimuthDegrees": 235,
+      "measuredV1PerChannelRatios": [
+        0.907074,
+        0.930896,
+        0.940898
+      ],
+      "measuredV1ChannelSpread": 0.033824,
+      "predictedV3PerChannelRatios": [
+        0.911622,
+        0.942485,
+        0.938231
+      ],
+      "predictedV3ChannelSpread": 0.030863,
+      "predictedV3UnionMeanLuminance": 0.04015024,
+      "predictedV3UnionMeanLuminanceRatio": 0.951923,
+      "predictedV3AbsoluteLuminanceDifference": -0.00202778,
+      "measuredV1UnionMeanLuminanceRatio": 0.942687,
+      "measuredV1AbsoluteLuminanceDifference": -0.00241735
+    }
+  ],
+  "bars": {
+    "predictionAgreement": {
+      "id": "P1",
+      "statement": "|measured v3 per-channel ratio - predicted| <= 0.01 at every pose and every channel, and the same on the channel spread.",
+      "allowance": 0.01,
+      "why": "The prediction is a transfer between two inverse substitutions that differ by a named 2.22 per cent of surface area. A bar tighter than the known imperfection would be theatre; a bar looser than the effect under test — the smallest predicted change is 0.006 — would be meaningless."
+    },
+    "A3prime": {
+      "id": "A3'",
+      "statement": "Per-pose channel spread <= 0.032 at every pose.",
+      "bar": 0.032,
+      "derivation": "The far tier is a MASSING stand-in. Its irreducible representational limit is the spread that survives when the palette term is removed entirely — the tile against a palette-equalised source, measured at 0.030863 at its worst pose. Rounded up to the third decimal that is 0.031, plus the pinned instrument's own stated cross-session reproduction tolerance of 0.001, giving 0.032.",
+      "whatItIsNotDerivedFrom": "NOT from what the v3 tile scores. No v3 capture exists at the moment this record is written, and the derivation uses only the v1-era palette-equalised measurement, which is a property of the massing representation rather than of any recipe.",
+      "whatItCovers": "The measured representational limit of a solid prism standing in for a tiered, recessed envelope. It does NOT license any colour-path error, all of which were excluded to the double-precision floor in the attribution stage.",
+      "rawSpreadsKeepBeingReported": "A3' is a verdict bar, not a reporting change. The raw per-pose spreads continue to be recorded at full precision beside it, and so does the legacy 0.02 bar's verdict, so nothing is hidden by adopting a wider bar.",
+      "theAzimuth235WorseningIsPredictedAndAccepted": "The colour correction is measured to IMPROVE all three azimuth-55 poses and to leave all three azimuth-235 poses missing the legacy 0.02 bar, worsening two of them. That is predicted here, in advance, and accepted as the cost of representing the wall's real material mix rather than a flattering subset of it. Predicted azimuth-235 spreads: 0.029089, 0.026034, 0.030863.",
+      "legacyBarVerdictPredicted": [
+        {
+          "pose": "400/55",
+          "predictedSpread": 0.00958,
+          "legacyBar002": "PASS",
+          "a3PrimeVerdict": "PASS"
+        },
+        {
+          "pose": "400/235",
+          "predictedSpread": 0.029089,
+          "legacyBar002": "MISS",
+          "a3PrimeVerdict": "PASS"
+        },
+        {
+          "pose": "1200/55",
+          "predictedSpread": 0.015413,
+          "legacyBar002": "PASS",
+          "a3PrimeVerdict": "PASS"
+        },
+        {
+          "pose": "1200/235",
+          "predictedSpread": 0.026034,
+          "legacyBar002": "MISS",
+          "a3PrimeVerdict": "PASS"
+        },
+        {
+          "pose": "4000/55",
+          "predictedSpread": 0.0184,
+          "legacyBar002": "PASS",
+          "a3PrimeVerdict": "PASS"
+        },
+        {
+          "pose": "4000/235",
+          "predictedSpread": 0.030863,
+          "legacyBar002": "MISS",
+          "a3PrimeVerdict": "PASS"
+        }
+      ]
+    },
+    "A1": {
+      "id": "A1",
+      "statement": "|union mean luminance ratio - 1| <= 0.05 on poses whose source mean luminance is at least 0.10.",
+      "appliesToPoses": [
+        "400/55",
+        "1200/55",
+        "4000/55"
+      ],
+      "rule": "Every applicable pose must PASS the 0.05 bar. A1 is a BAR, not a monotone-improvement requirement, and it is stated that way here rather than as a non-regression clause the prediction itself would fail.",
+      "predicted": [
+        {
+          "pose": "400/55",
+          "v1Ratio": 1.040453,
+          "v1AbsoluteDeviation": 0.040453,
+          "predictedV3Ratio": 0.985023,
+          "predictedV3AbsoluteDeviation": 0.014977,
+          "predictedDeviationChange": -0.025476,
+          "predictedVerdict": "PASS"
+        },
+        {
+          "pose": "1200/55",
+          "v1Ratio": 1.023186,
+          "v1AbsoluteDeviation": 0.023186,
+          "predictedV3Ratio": 0.966894,
+          "predictedV3AbsoluteDeviation": 0.033106,
+          "predictedDeviationChange": 0.00992,
+          "predictedVerdict": "PASS"
+        },
+        {
+          "pose": "4000/55",
+          "v1Ratio": 1.019988,
+          "v1AbsoluteDeviation": 0.019988,
+          "predictedV3Ratio": 0.963716,
+          "predictedV3AbsoluteDeviation": 0.036284,
+          "predictedDeviationChange": 0.016296,
+          "predictedVerdict": "PASS"
+        }
+      ],
+      "thePredictedRegressionIsDeclaredHereRatherThanDiscoveredLater": "THE CORRECTION IS PREDICTED TO MAKE A1's AGREEMENT WORSE AT TWO OF ITS THREE POSES, and that is accepted in advance. The v1 tile is BRIGHT against the source at azimuth 55 — ratios 1.040, 1.023, 1.020 — and the aggregate is DARKER than the facade-only colour because glazing and trim are darker than facade, so the tile crosses under 1 and lands at roughly 0.985, 0.967, 0.964. The absolute deviation IMPROVES at 400 m, from 0.040 to 0.015, and WORSENS at 1,200 m and 4,000 m, from 0.023 to 0.033 and from 0.020 to 0.036. All three stay well inside the 0.05 bar. The trade is deliberate: the wall now carries the material mix it actually stands in for, and being darker for the right reason is preferred to being bright for the wrong one. If a future gate wants monotone luminance improvement it must say so and derive a bar for it; A1 as inherited does not."
+    },
+    "A2": {
+      "id": "A2",
+      "statement": "|baked union mean luminance - source union mean luminance| <= 0.010 at every pose.",
+      "rule": "Every pose must PASS the 0.010 bar. As with A1 this is a bar and not a monotone-improvement requirement.",
+      "predicted": [
+        {
+          "pose": "400/55",
+          "v1AbsoluteDifference": 0.00872865,
+          "predictedV3AbsoluteDifference": -0.0032317,
+          "predictedMagnitudeChange": -0.00549695,
+          "predictedVerdict": "PASS"
+        },
+        {
+          "pose": "400/235",
+          "v1AbsoluteDifference": 0.00074983,
+          "predictedV3AbsoluteDifference": 0.00145502,
+          "predictedMagnitudeChange": 0.00070519,
+          "predictedVerdict": "PASS"
+        },
+        {
+          "pose": "1200/55",
+          "v1AbsoluteDifference": 0.00486899,
+          "predictedV3AbsoluteDifference": -0.00695216,
+          "predictedMagnitudeChange": 0.00208317,
+          "predictedVerdict": "PASS"
+        },
+        {
+          "pose": "1200/235",
+          "v1AbsoluteDifference": 0.00008788,
+          "predictedV3AbsoluteDifference": 0.00036864,
+          "predictedMagnitudeChange": 0.00028076,
+          "predictedVerdict": "PASS"
+        },
+        {
+          "pose": "4000/55",
+          "v1AbsoluteDifference": 0.00402095,
+          "predictedV3AbsoluteDifference": -0.0072991,
+          "predictedMagnitudeChange": 0.00327815,
+          "predictedVerdict": "PASS"
+        },
+        {
+          "pose": "4000/235",
+          "v1AbsoluteDifference": -0.00241735,
+          "predictedV3AbsoluteDifference": -0.00202778,
+          "predictedMagnitudeChange": -0.00038957,
+          "predictedVerdict": "PASS"
+        }
+      ],
+      "note": "A2 is the bar that converts 4,000 m / azimuth 235 to a MISS under the legacy relative bar at an absolute difference of -0.00242. The prediction says the correction moves that pose TOWARD the source, to -0.00203.",
+      "thePredictedRegressionIsDeclaredHereToo": "For the same reason as A1, the predicted magnitude GROWS at 1,200 m and 4,000 m / azimuth 55, from 0.00487 to 0.00695 and from 0.00402 to 0.00730, and at both azimuth-235 poses at 400 m and 1,200 m by under 0.0008. Every pose stays inside 0.010, with the worst predicted margin 0.0027 at 4,000 m / azimuth 55. That margin is thin enough that a P1-sized prediction error could break A2, and that is exactly what makes this a test rather than a formality."
+    },
+    "byteReplay": {
+      "id": "R1",
+      "statement": "The v3 tile must reproduce its own digests across an in-process repeat and a fresh child process, and the facade-only path through the same code must still reproduce the committed v1 atlas byte for byte."
+    }
+  },
+  "stopRule": "A MISS on ANY bar stops the task and is reported. No bar may be retuned after a capture, no pose may be dropped, and no second recipe may be tried inside this stage.",
+  "notClaimedHere": [
+    "Nothing here has been rendered. Every number is a prediction or a bar.",
+    "A3' is a proposal made by this record; adopting it is a gate decision that belongs to whoever owns the gate.",
+    "The geometric term is NOT corrected by this change and is not claimed to be.",
+    "One cell, one renderer."
+  ]
+}

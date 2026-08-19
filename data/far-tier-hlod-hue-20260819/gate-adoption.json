@@ -1,0 +1,145 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "far-tier-hlod-hue-20260819:gate-adoption",
+  "task": "T013",
+  "artifact": "far-tier-appearance-gate-adoption",
+  "capturedAt": null,
+  "capturedAtStatement": "NULL BY CONSTRUCTION. A decision record, not a measurement.",
+  "headline": "A3'' = 0.035 IS ADOPTED BY USER DECISION, AFTER THE MEASUREMENT AND KNOWING THE SCORE. That is disclosed here rather than dressed up as a pre-registration, because the bar's purpose is to codify the measured representational limit of a massing stand-in — and because the honest version of a post-hoc bar is one that says so.",
+  "decision": {
+    "decidedBy": "USER",
+    "decidedOn": "2026-08-19",
+    "decidedAfter": "The recipe v3 capture. The bar was chosen KNOWING the tile's score, and that is the material fact about it.",
+    "whatWasAdopted": [
+      "Recipe v3 — the area-correct wall-zone aggregate — as the far-tier recipe.",
+      "A3'' = 0.035 as the operative far-tier hue bar."
+    ],
+    "whatWasRejected": "Extending the aggregate to the roof region. Rejected on the measured numbers, not on preference; see the rejection section below.",
+    "howThisDiffersFromAPreRegisteredBar": {
+      "statement": "A pre-registered bar constrains a measurement that has not happened. A3'' does not. It is a POST-HOC bar and it is labelled one at every claim site.",
+      "whyThatIsAcceptableHere": "Its job is not to test the tile. Its job is to record, as a threshold, a limit that was established by measurement: what a solid prism can achieve as a stand-in for a tiered, recessed envelope once every colour-path defect has been excluded and the palette term corrected.",
+      "whatWouldNotBeAcceptable": "Using A3'' to certify any FUTURE recipe change without a fresh pre-registration. The prediction-agreement discipline in the handoff below exists precisely so this bar cannot be reused that way.",
+      "theDisclosureIsTheControl": "There is no arithmetic that makes a post-hoc bar into a pre-registered one. The control is that it is disclosed, its derivation is shown, and the raw spreads keep being reported beside it."
+    }
+  },
+  "theBar": {
+    "id": "A3''",
+    "statement": "Per-pose per-channel ratio spread <= 0.035 at every pinned pose.",
+    "bar": 0.035,
+    "derivation": {
+      "measuredWorstSpreadUnderV3": 0.033824,
+      "instrumentCrossSessionTolerance": 0.001,
+      "arithmetic": "0.033824 + 0.001 = 0.034824, rounded up to the third decimal = 0.035.",
+      "derivedBarMatchesAdopted": true,
+      "toleranceSource": "The pinned instrument's own stated cross-session reproduction tolerance, from data/far-tier-hlod-instrument-20260818/pinned-instrument-spec.json selfReproduction.toleranceStatedInAdvance.",
+      "whyAToleranceIsAddedAtAll": "A bar set exactly at the measured worst pose would fail on instrument noise alone. The tolerance is the instrument's, stated in advance of any of this, and is not a margin chosen for comfort."
+    },
+    "marginAtTheWorstPose": 0.001176,
+    "rawSpreadsKeepBeingReported": "A3'' is a verdict threshold, not a reporting change. Every record continues to carry the raw per-pose spread at full precision, the legacy 0.02 verdict, and the v1 comparison."
+  },
+  "theLegacyBarIsRecordedAsUNREACHABLE": {
+    "bar": 0.02,
+    "claim": "0.02 is not reachable by any palette correction available to this tier, and that is measured rather than argued.",
+    "evidence": {
+      "measuredFloorWithBothPaletteTermsCorrected": 0.027301,
+      "floorBracket": [
+        0.027301,
+        0.030863
+      ],
+      "whatTheFloorIs": "The v1 tile against a source whose palette has been equalised on BOTH sides — walls to the facade colour the prism bakes, roof region to the roof colour it bakes. What survives is geometry, and it is 0.027301 at the worst pose, above 0.02 with both palette fixes already applied.",
+      "andTheRoofFixMakesItWorse": "An area-correct roof aggregate widens the spread at ALL SIX poses and takes the worst pose to 0.043074."
+    },
+    "consequence": "Holding 0.02 as the far-tier bar would be holding a bar that no available change can meet. It is retained as a REPORTED figure and retired as an operative one.",
+    "whatIsNotClaimed": "That 0.02 is unreachable in principle. A tier that carried the source's setbacks, recesses and rooftop groups would be a different tier, and this measurement says nothing about it."
+  },
+  "a3PrimeSupersession": {
+    "supersededBar": 0.032,
+    "statement": "SUPERSEDED BY STATEMENT, never edited. A3' = 0.032 was derived from the palette-equalised comparison as a proxy for the irreducible geometric term.",
+    "whyItsDerivationBasisDidNotTransfer": "The proxy came from an instrumentation variant that substituted materials across the WHOLE source, including its rooftop groups. Recipe v3 substitutes only on the prism's walls. At the roof-dominated poses the two are not the same substitution, and the capture showed it: the wall correction reached 1e-8 of the signal at 1,200 m and 4,000 m / azimuth 235, leaving those spreads unchanged from v1.",
+    "citation": "fix-capture-verdict.json, sha256 1e49002cb59e43a3ed16c7c6c6092cd59cf6ad152206e07c48ce675e63a2690c, sections whyTheWorstPoseDidNotMove and barVerdicts.A3prime_hue.",
+    "whatIsRetainedFromIt": "The pre-registration itself, its stop rule, and the MISS it recorded. Nothing is rewritten; A3' simply stops being the operative bar."
+  },
+  "extensionToRoofRejected": {
+    "decision": "REJECTED.",
+    "onWhatEvidence": "roof-term.json, sha256 9ac75bfd2e46e256fb8d1249f0e34c8d7705875b1fccc3a2eb99e63fc9f3a7dc.",
+    "measuredConsequences": [
+      "Hue WORSE at all six poses, by 0.003780, 0.009718, 0.003927, 0.009373, 0.003856, 0.009250.",
+      "The deciding pose 4,000 m / azimuth 235 goes 0.033824 to 0.043074 — past A3'' as well as past 0.02 and 0.032.",
+      "NO A2 benefit worth the trade: A2 already PASSES at every pose under v3, including 4,000 m / azimuth 235 at 0.00242, so the roof aggregate's luminance gain there buys nothing against the adopted gate set.",
+      "NEW FAILURES at 400 m: A1 goes to 1.054069 (deviation 0.054069, over the 0.05 allowance) and A2 to 0.011666 (over 0.010). Two bars that pass today would start missing."
+    ],
+    "whatIsNotClaimed": "That the roof term is unimportant. It is the largest measured lever on the 4,000 m / azimuth 235 TONE finding, taking that pose's luminance ratio from 0.942687 to 1.004432. It is rejected as a HUE fix and as a package, not dismissed as a phenomenon."
+  },
+  "t004GateHandoff": {
+    "purpose": "The operative appearance gates for the mass bake, and the recipe it must use. This section is the handoff; nothing else in this directory overrides it.",
+    "recipe": {
+      "recipeId": "far-tier-hlod-bake-v3",
+      "recipeSha256": "e73206429c496c28c707120769eee5f4a6155f44442eccb9b19fe2fdcfbc24c8",
+      "derivedFrom": "far-tier-hlod-bake-v1",
+      "whatItChangesAgainstV1": "Wall zone colour becomes the area-weighted linear-light aggregate of the vertical facade, glazing and trim surfaces the wall stands in for. Packing, gutters, texel floors, geometry emission, UVs and transfer functions are v1's.",
+      "additivityIsEnforcedNotAsserted": "The same code path with zoneColourMode facade-only must reproduce the committed v1 atlas c159e050... byte for byte, and the bake refuses if it does not.",
+      "metalIsExcluded": "material:metal is NOT in the wall aggregate. Rooftop tanks and legs are geometric omissions; 77.03 per cent of this cell's metal is wall fire escapes and 22.97 per cent is above the crown."
+    },
+    "enforcement": {
+      "requirement": "THE MASS BAKE MUST ASSERT THE RECIPE IT IS BAKING. It must check both the id and the hash above and refuse anything else.",
+      "theGapThisCloses": "NOTHING IN THE CODE PREVENTS BAKING v1 BY DEFAULT, and that is deliberate: farTierEffectiveParameters falls back to v1 behaviour on every v3-only field precisely so that v1's byte replay cannot be broken by a later recipe. The same fallback means a caller that forgets to pass v3 gets a v1 tile silently, with no error and no visible difference in the pipeline.",
+      "howToClose": "src/release/far-tier-bake.ts exports FAR_TIER_ADOPTED_RECIPE and assertFarTierAdoptedRecipe(recipe), which throws unless the caller is baking the adopted recipe. The mass-bake path must call it before packing. It is one line and it is the only thing standing between the adoption and a silently v1 mass bake.",
+      "whyItIsNotAlreadyWiredIn": "There is no mass-bake path yet — T004 is the task that creates it. The assertion is shipped ready for that caller rather than retrofitted into far-tier-bake-cli.mjs, whose whole purpose is to replay the committed v1 artifact and which must therefore keep baking v1.",
+      "residualRisk": "Until T004 calls it, the adoption is a document rather than a constraint. RECORDED PROMINENTLY rather than quietly assumed."
+    },
+    "knownImplementationLimit": {
+      "finding": "The adopted tile contains FOUR wall zones coloured by v1's facade-only palette rather than the v3 aggregate, on one building, covering 51.198 of 86,964.275 square metres of wall — 0.059 per cent.",
+      "cause": "The aggregate attributes each source surface to the tier-0 ring edge it best faces; on four short edges every surface lands on a neighbour, leaving those zones with no in-scope area.",
+      "status": "The bake now REFUSES this by default; a caller must accept it by name and gets the count, the zones and the area. The adopted tile's digests are UNCHANGED, so nothing captured or scored moves.",
+      "whatTheMassBakeMustDo": "Report the count per cell and treat a large one as a STOP. The 0.059 per cent here is a property of the attribution rule, not of this cell, and it is unmeasured at scale.",
+      "citation": "fix-capture-verdict.json, implementationDisclosure."
+    },
+    "operativeGates": [
+      {
+        "id": "A1",
+        "statement": "|union mean luminance ratio - 1| <= 0.05 on poses whose SOURCE mean luminance is at least 0.1.",
+        "status": "UNCHANGED from the inherited bar."
+      },
+      {
+        "id": "A2",
+        "statement": "|baked union mean luminance - source union mean luminance| <= 0.01 at every pose.",
+        "status": "UNCHANGED from the T012-era proposal."
+      },
+      {
+        "id": "A3''",
+        "statement": "Per-pose per-channel ratio spread <= 0.035 at every pose.",
+        "status": "ADOPTED BY USER DECISION 2026-08-19, AFTER measurement. Supersedes A3' = 0.032 and retires the legacy 0.02 as operative."
+      }
+    ],
+    "predictionAgreementDiscipline": {
+      "statement": "ANY future far-tier recipe change must pre-register per-pose point predictions and an agreement bar BEFORE its confirming capture, and must stop on a miss rather than retune.",
+      "whyItIsPartOfTheHandoff": "A3'' is a post-hoc bar. Without this discipline it would become a licence to adopt the next recipe by scoring it against a threshold that was itself chosen from a score.",
+      "theWorkedExample": "T013's own prediction bar MISSED at five of six poses, worst 0.023051, and the task stopped instead of widening it. See fix-pre-registration.json (e01db79ddde70eee239d331ee1e1d02e8ded97d080fb8594724a559ff20e89b7) and fix-capture-verdict.json (1e49002cb59e43a3ed16c7c6c6092cd59cf6ad152206e07c48ce675e63a2690c).",
+      "andWhatItCaught": "The model assumed the whole tile carried the substitution when only the wall zones do. That is exactly the class of error a post-hoc bar cannot catch."
+    },
+    "instrument": {
+      "specId": "far-tier-appearance-instrument-v2",
+      "specSha256": "9a77561b9d8307aff77692412961102b3a3aa66e1a6dbe04db181a886ad53b89",
+      "harnessSha256": "d394bcf76efdedfdf58b1bef86838137adc71f5a0c544e051f509de0edffc1d2",
+      "maskDomainWarning": "The spec's maskSemantics prose says per-channel ratios average over the UNION; only the INTERSECTION reproduces the committed baseline. Any gate the mass bake declares MUST state its domain — the two differ by up to 0.023 on the same renders. See instrument-mask-semantics-note.json."
+    },
+    "whatTheGatesDoNotCover": [
+      "Silhouette. ADR 0050's 2 per cent cap does not cover this tier and the far tier must never declare it.",
+      "The shipped Cesium renderer. Every number in this directory is EEVEE under one sun.",
+      "Any cell but the prototype. One cell is one cell, and the mass bake is the first time that assumption is tested at scale."
+    ]
+  },
+  "lineage": {
+    "attribution": "8826b5fcafb81fc835bed3428b2989d33b32a18b9ca1e3e3363b69408da9fcb3",
+    "pinnedCapture": "fff7e822371d464826f3471870c75e9f6c08a53ac53ebd5b7f7177805677ee29",
+    "preRegistration": "e01db79ddde70eee239d331ee1e1d02e8ded97d080fb8594724a559ff20e89b7",
+    "fixCaptureVerdict": "1e49002cb59e43a3ed16c7c6c6092cd59cf6ad152206e07c48ce675e63a2690c",
+    "roofTerm": "9ac75bfd2e46e256fb8d1249f0e34c8d7705875b1fccc3a2eb99e63fc9f3a7dc"
+  },
+  "notClaimedHere": [
+    "A3'' is not a pre-registered bar and is never described as one.",
+    "No new capture was taken to produce this record.",
+    "The measured floor of 0.027301 is a property of this cell under this instrument, not a universal constant.",
+    "The adopted recipe is not enforced by any code path that exists today; see t004GateHandoff.enforcement."
+  ]
+}
