@@ -1,0 +1,111 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "far-tier-hlod-mass-20260819:campaign-pre-registration",
+  "task": "T004",
+  "artifact": "far-tier-mass-bake-campaign-pre-registration",
+  "capturedAt": null,
+  "capturedAtStatement": "NULL BY CONSTRUCTION. NO CAMPAIGN CELL HAS BEEN BAKED. The tool refuses to write this record once any wave telemetry or inventory exists.",
+  "recipe": {
+    "recipeId": "far-tier-hlod-bake-v4",
+    "recipeSha256": "fd950a77f1c57cb2b7238b588aa11cd020ace1f15c1448438dfd0f235e10412c",
+    "adoptedBy": "user decision, T004 (Issue #104), after the pre-registered Stage 0 cycle",
+    "gateRecord": "data/far-tier-hlod-mass-20260819/v4-adoption-verdict.json"
+  },
+  "zoneFallbackBar": {
+    "inequality": "fallbackAreaShare x 0.048 x 0.21 <= 0.001",
+    "wallCorrectionEnergyShare": 0.048,
+    "wallTermShareOfChromaticityGap": 0.21,
+    "instrumentCrossSessionTolerance": 0.001,
+    "unhalvedBar": 0.0992,
+    "halvedForMargin": true,
+    "bar": 0.05,
+    "whyHalved": "The three factors are measured on ONE cell under one instrument; the campaign is 883 cells. Halving is the margin for that extrapolation and is stated rather than folded silently into a rounder number."
+  },
+  "fallbackHandling": {
+    "underTheBar": "ACCEPTED BY NAME. The cell is baked, its zones are listed and its area share is recorded in the wave telemetry.",
+    "overTheBar": "HONEST STOP. The cell produces no tile, the zones are listed with the share, and the coverage arithmetic counts it as a named stop rather than a gap.",
+    "neverSilent": "`bakeFarTierCell` refuses the fallback outright unless BOTH an explicit opt-in and a bar are supplied, so there is no path that accepts one without judging it."
+  },
+  "refusalClasses": [
+    {
+      "code": "no-bakeable-face",
+      "meaning": "Every member of the cell was refused by the V3 grammar or absent from the pinned snapshot, so there is nothing to bake.",
+      "expectation": "A small number; the wave census already tombstoned these buildings."
+    },
+    {
+      "code": "packing-infeasible",
+      "meaning": "The cell's faces do not fit a 256px atlas at any declared scale.",
+      "expectation": "PREDICTED ZERO under v4. The 172 unpackable cells the Stage A census measured were measured under v1/v3 packing, and v4 is exactly the fix for them. A non-zero count is a finding, not a nuisance."
+    },
+    {
+      "code": "zone-aggregate-missing",
+      "meaning": "A wall zone found no in-scope surface and would silently keep v1's colour.",
+      "expectation": "Accepted by name below the pre-registered area-share bar; a stop above it."
+    },
+    {
+      "code": "fallback-share-over-bar",
+      "meaning": "The zone fallbacks above cover more of the cell's wall area than the bar allows.",
+      "expectation": "PREDICTED ZERO. The prototype sits at 0.059 per cent against a 5 per cent bar."
+    },
+    {
+      "code": "zone-aggregate-out-of-range",
+      "meaning": "An aggregated zone factor exceeded the closed glTF profile's ceiling of 1, which would clamp one channel before the others and manufacture a per-channel bias.",
+      "expectation": "PREDICTED ZERO. Refusing is the only honest response; clamping is what this task's predecessor spent a stage excluding."
+    },
+    {
+      "code": "over-b2-atlas-budget",
+      "meaning": "A tile's atlas would exceed the per-tile budget B2 was derived at.",
+      "expectation": "CANNOT FIRE. `farTierResolution` clamps the atlas edge to FAR_TIER_ATLAS_PIXELS.maximum = 256 and B2 was derived at 256, so this is a STRUCTURAL INVARIANT asserted once against the constants rather than a per-cell check. It is listed here so that a later change to either constant is understood to break it."
+    }
+  ],
+  "waveWiring": {
+    "statement": "Wave profiles and -c2 release ids come from the SHIPPED constants and are never hand-reconstructed here.",
+    "profileSource": "WAVE_BASE_PROFILES, from scripts/mass-generation-wave-cli.mjs — the registry eight other wave CLIs already import.",
+    "releaseIdSource": "exteriorTwoLodRetentionReleaseId(exteriorServingWave(waveId).retentionReleaseId), composed from the typed EXTERIOR_SERVING_WAVES registry.",
+    "crossCheck": "Each wave's committed -c2 payload inventory declares its own waveId and the tool refuses if it disagrees with the wiring; and the ledger's cell count for the wave must equal the count EXTERIOR_SERVING_WAVES declares."
+  },
+  "waves": [
+    {
+      "waveId": "w00",
+      "declaredCellCount": 1,
+      "c2ReleaseId": "manhattan-exterior-cells-20260811-v3-c2"
+    },
+    {
+      "waveId": "w01",
+      "declaredCellCount": 149,
+      "c2ReleaseId": "manhattan-midtown-core-cells-20260811-v3-c2"
+    },
+    {
+      "waveId": "w02",
+      "declaredCellCount": 126,
+      "c2ReleaseId": "manhattan-lower-manhattan-cells-20260812-c2"
+    },
+    {
+      "waveId": "w03",
+      "declaredCellCount": 176,
+      "c2ReleaseId": "manhattan-southern-remainder-cells-20260812-c2"
+    },
+    {
+      "waveId": "w04",
+      "declaredCellCount": 249,
+      "c2ReleaseId": "manhattan-central-upper-manhattan-cells-20260812-c2"
+    },
+    {
+      "waveId": "w05",
+      "declaredCellCount": 182,
+      "c2ReleaseId": "manhattan-northern-manhattan-cells-20260812-c2"
+    }
+  ],
+  "totalDeclaredCells": 883,
+  "waveStopRule": {
+    "rule": "A stop halts baking of that wave and FORBIDS committing its inventory. The `seal` verb is the only writer of an inventory and it refuses unless every baked cell replayed byte-identically.",
+    "whatItProtects": "OPERATOR TIME and RECORD INTEGRITY. It protects NO SERVING SURFACE, because there is none: the far tier serves one staged cell from the T003 root and this campaign writes to a different, gitignored root that nothing reads. Saying otherwise would overstate the safety this rule buys.",
+    "noGo": "Committing a wave inventory before that wave's replay completes."
+  },
+  "byteReplayClaim": "Every cell re-baked in batched fresh child processes. The claim is reproduction across a PROCESS BOUNDARY on one machine, one Node build and one architecture; cross-machine reproduction is NOT claimed.",
+  "notClaimedHere": [
+    "No appearance claim. Stage 3's sampled characterization is DESCRIPTIVE and acceptance belongs to T007.",
+    "No serving change. The T003 runtime records and serving root are untouched.",
+    "883 cells is the ledger's count, not a guarantee that all 883 bake."
+  ]
+}
