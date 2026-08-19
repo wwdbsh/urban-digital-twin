@@ -245,3 +245,10 @@ artifacts/far-tier-hlod-20260818/
 # the committed artifact. The variant assets are instrumentation and must never
 # be mistaken for a release or a proposed recipe.
 artifacts/far-tier-hlod-hue-20260819/
+
+# T004 mass-bake campaign work root: the island's baked tiles and atlases, the
+# v4 Stage 0 prototype, and every appearance render. Roughly 280 MB of local
+# work product under an approved operator gate. The committed artifacts are the
+# per-wave inventories, telemetry and campaign records under
+# data/far-tier-hlod-mass-20260819/, each with a checksum sidecar.
+artifacts/far-tier-hlod-mass-20260819/

@@ -295,6 +295,56 @@ export function farTierRecipeHashV3(): string {
 }
 
 /**
+ * RECIPE v4 — v3's colour with v2's packing, which is what a MASS bake needs.
+ *
+ * WHY IT EXISTS. v3 is the adopted colour rule and it derives from v1's
+ * packing, deliberately, so that the T013 capture measured a colour change and
+ * nothing else. That isolation was right for one prototype cell and is wrong
+ * for the island: v1's packing gives a flat, constant-colour face a 4x4 content
+ * rect, and the Stage A census measured the consequence — 172 of 883 ledger
+ * cells cannot be packed at ANY scale, and the cells that can are packed at a
+ * median global resolution scale of 0.5.
+ *
+ * v2 fixed exactly that and cost nothing: a resolved-away face carries ONE
+ * texel, because `farTierGeometry` samples texel centres and at width 1 all
+ * four corners address the same texel, so the rendered result is identical to a
+ * 4x4 block of the same colour. v4 is the union — v3's `zoneColour` with v2's
+ * `flatFaceTexels` and `flatFaceGutterTexels`.
+ *
+ * WHAT THAT MEANS FOR APPEARANCE, stated before it was measured. Flat-face
+ * COLOURS are identical by construction: the rasterizer computes one
+ * area-weighted average per flat face and writes it to every texel of the rect,
+ * so a 1x1 rect carries the same byte a 4x4 rect carried. What changes is the
+ * atlas LAYOUT and the global resolution scale, and therefore what a minifying
+ * filter averages together. The Stage 0 capture pre-registers that as a
+ * prediction rather than assuming it away.
+ *
+ * v1, v2 AND v3 ARE UNTOUCHED. Each keeps its own id, its own hash and its own
+ * frozen artifacts. v4 is a fourth constant, selected explicitly by a caller.
+ */
+export const FAR_TIER_BAKE_RECIPE_V4 = {
+  ...FAR_TIER_BAKE_RECIPE_V3,
+  recipeId: "far-tier-hlod-bake-v4",
+  supersedes: FAR_TIER_BAKE_RECIPE_V3.recipeId,
+  derivedFrom: "far-tier-hlod-bake-v3 colour over far-tier-hlod-bake-v2 packing",
+
+  /** v2's packing half, field for field. */
+  flatFaceTexels: FAR_TIER_BAKE_RECIPE_V2.flatFaceTexels,
+  flatFaceGutterTexels: FAR_TIER_BAKE_RECIPE_V2.flatFaceGutterTexels,
+
+  /**
+   * Carried from v2 and still NULL. Stage B derived a roof-only shading term,
+   * pre-registered the verdict it implied and halted at a NO-GO without baking;
+   * the rasterizer refuses any scalar other than 1, so this stays closed.
+   */
+  shading: FAR_TIER_BAKE_RECIPE_V2.shading,
+} as const;
+
+export function farTierRecipeHashV4(): string {
+  return sha256HexSync(stableSerialize(FAR_TIER_BAKE_RECIPE_V4));
+}
+
+/**
  * THE ADOPTED FAR-TIER RECIPE, as a value a caller can assert against.
  *
  * T013 adopted v3 by user decision. Nothing in this module PREVENTS a caller

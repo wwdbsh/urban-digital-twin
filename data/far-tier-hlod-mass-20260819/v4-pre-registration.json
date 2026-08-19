@@ -1,0 +1,232 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "far-tier-hlod-mass-20260819:v4-pre-registration",
+  "task": "T004",
+  "artifact": "far-tier-v4-adoption-pre-registration",
+  "capturedAt": null,
+  "capturedAtStatement": "NULL BY CONSTRUCTION. NOTHING HAS BEEN CAPTURED UNDER v4. The tool refuses to write this record if a v4 render exists.",
+  "claim": "Every prediction, bar and verdict rule for the recipe v4 confirming capture, fixed in advance.",
+  "whyThisCycleExists": {
+    "statement": "T013's gate adoption made a pre-registered cycle a CONDITION of using A3''. A3'' = 0.035 is a post-hoc bar derived from v3's own worst pose; it cannot certify a new recipe by itself.",
+    "citation": "gate-adoption.json, sha256 25e0cdcdd563fe2c67353be21a15cf7158b86e071fd618a928d65f949f094bf8, t004GateHandoff.predictionAgreementDiscipline."
+  },
+  "theChange": {
+    "recipeId": "far-tier-hlod-bake-v4",
+    "recipeSha256": "fd950a77f1c57cb2b7238b588aa11cd020ace1f15c1448438dfd0f235e10412c",
+    "derivedFrom": "far-tier-hlod-bake-v3 colour over far-tier-hlod-bake-v2 packing",
+    "whatChanged": "v3's colour aggregate over v2's packing: a flat face carries ONE texel with a ONE-texel gutter instead of a 4x4 rect with a two-texel gutter.",
+    "whyTheCampaignNeedsIt": "The Stage A census measured v1/v3 packing at 172 of 883 ledger cells unpackable at any scale and a median applied resolution scale of 0.5. A mass bake on that packing would refuse a fifth of the island for a reason v2 already solved.",
+    "packingChangeOnThisCell": {
+      "atlasPixels": {
+        "v3": 256,
+        "v4": 256
+      },
+      "appliedScale": {
+        "v3": 0.5,
+        "v4": 0.7071067811865476
+      },
+      "texelWorldSizeMeters": {
+        "v3": 2.792527,
+        "v4": 1.974615
+      },
+      "achievedTexelRatio": {
+        "v3": 0.5,
+        "v4": 0.707107
+      },
+      "underResolved": {
+        "v3": true,
+        "v4": true
+      },
+      "occupancy": {
+        "v3": 0.853348,
+        "v4": 0.619629
+      },
+      "flatFaceCount": {
+        "v3": 648,
+        "v4": 535
+      },
+      "faceCountIsUnchanged": true
+    },
+    "additivityGate": {
+      "claim": "v4 with facade-only colour and v1 packing reproduces this cell's own v1 atlas, digest recomputed rather than compared against a constant.",
+      "v1AtlasSha256": "c159e0508aeb7522620b799b83041461aecf34727f69209bd7efbf992f5c067a",
+      "v4FacadeOnlyV1PackingAtlasSha256": "c159e0508aeb7522620b799b83041461aecf34727f69209bd7efbf992f5c067a",
+      "verdict": "PASS"
+    }
+  },
+  "predictionBasis": {
+    "flatFaceColoursAreIdenticalByConstruction": "A flat face's colour is computed ONCE, as one area-weighted average over its zones, and written to every texel of its rect. A 1x1 rect therefore carries the same byte a 4x4 rect carried. `far-tier-bake.test.ts` pins the rect sizes ('is 1x1 under v2 and 4x4 under v1'); this task adds the OUTPUT-identity test that pins the byte, because the size test alone does not.",
+    "whatDoesChange": "The atlas LAYOUT and the global resolution scale — on this cell 0.5 to 0.7071067811865476, with the delivered texel ratio rising from 0.5 to 0.707107. A minifying filter therefore averages a DIFFERENT neighbourhood, and faces sit at different atlas addresses.",
+    "soThePredictionIs": "v4's readings equal v3's, within the agreement allowance. Same colours, same geometry, same poses; only what the filter mixes across face boundaries differs, and T013 measured that class of effect at well under the allowance.",
+    "whatWouldFalsifyIt": "A reading outside the allowance at any pose and channel. That would mean the packing change moves appearance materially, which is exactly the claim this cycle exists to test rather than assume.",
+    "sourceRecord": "fix-capture-verdict.json, sha256 1e49002cb59e43a3ed16c7c6c6092cd59cf6ad152206e07c48ce675e63a2690c"
+  },
+  "poses": [
+    {
+      "pose": "400/55",
+      "distanceMeters": 400,
+      "azimuthDegrees": 55,
+      "measuredV3PerChannelRatios": [
+        0.982989,
+        0.988641,
+        0.990352
+      ],
+      "measuredV3ChannelSpread": 0.007363,
+      "measuredV3UnionMeanLuminanceRatio": 1.004122,
+      "measuredV3AbsoluteLuminanceDifference": 0.00088945,
+      "predictedV4PerChannelRatios": [
+        0.982989,
+        0.988641,
+        0.990352
+      ],
+      "predictedV4ChannelSpread": 0.007363,
+      "predictedV4UnionMeanLuminanceRatio": 1.004122,
+      "predictedV4AbsoluteLuminanceDifference": 0.00088945
+    },
+    {
+      "pose": "400/235",
+      "distanceMeters": 400,
+      "azimuthDegrees": 235,
+      "measuredV3PerChannelRatios": [
+        0.974357,
+        0.995201,
+        0.999763
+      ],
+      "measuredV3ChannelSpread": 0.025406,
+      "measuredV3UnionMeanLuminanceRatio": 1.01786,
+      "measuredV3AbsoluteLuminanceDifference": 0.0006727,
+      "predictedV4PerChannelRatios": [
+        0.974357,
+        0.995201,
+        0.999763
+      ],
+      "predictedV4ChannelSpread": 0.025406,
+      "predictedV4UnionMeanLuminanceRatio": 1.01786,
+      "predictedV4AbsoluteLuminanceDifference": 0.0006727
+    },
+    {
+      "pose": "1200/55",
+      "distanceMeters": 1200,
+      "azimuthDegrees": 55,
+      "measuredV3PerChannelRatios": [
+        0.968474,
+        0.977552,
+        0.980207
+      ],
+      "measuredV3ChannelSpread": 0.011732,
+      "measuredV3UnionMeanLuminanceRatio": 0.987486,
+      "measuredV3AbsoluteLuminanceDifference": -0.00262795,
+      "predictedV4PerChannelRatios": [
+        0.968474,
+        0.977552,
+        0.980207
+      ],
+      "predictedV4ChannelSpread": 0.011732,
+      "predictedV4UnionMeanLuminanceRatio": 0.987486,
+      "predictedV4AbsoluteLuminanceDifference": -0.00262795
+    },
+    {
+      "pose": "1200/235",
+      "distanceMeters": 1200,
+      "azimuthDegrees": 235,
+      "measuredV3PerChannelRatios": [
+        0.96448,
+        0.984795,
+        0.989916
+      ],
+      "measuredV3ChannelSpread": 0.025436,
+      "measuredV3UnionMeanLuminanceRatio": 1.002229,
+      "measuredV3AbsoluteLuminanceDifference": 0.00008788,
+      "predictedV4PerChannelRatios": [
+        0.96448,
+        0.984795,
+        0.989916
+      ],
+      "predictedV4ChannelSpread": 0.025436,
+      "predictedV4UnionMeanLuminanceRatio": 1.002229,
+      "predictedV4AbsoluteLuminanceDifference": 0.00008788
+    },
+    {
+      "pose": "4000/55",
+      "distanceMeters": 4000,
+      "azimuthDegrees": 55,
+      "measuredV3PerChannelRatios": [
+        0.964637,
+        0.97551,
+        0.978351
+      ],
+      "measuredV3ChannelSpread": 0.013714,
+      "measuredV3UnionMeanLuminanceRatio": 0.984226,
+      "measuredV3AbsoluteLuminanceDifference": -0.00317314,
+      "predictedV4PerChannelRatios": [
+        0.964637,
+        0.97551,
+        0.978351
+      ],
+      "predictedV4ChannelSpread": 0.013714,
+      "predictedV4UnionMeanLuminanceRatio": 0.984226,
+      "predictedV4AbsoluteLuminanceDifference": -0.00317314
+    },
+    {
+      "pose": "4000/235",
+      "distanceMeters": 4000,
+      "azimuthDegrees": 235,
+      "measuredV3PerChannelRatios": [
+        0.907074,
+        0.930896,
+        0.940898
+      ],
+      "measuredV3ChannelSpread": 0.033824,
+      "measuredV3UnionMeanLuminanceRatio": 0.942687,
+      "measuredV3AbsoluteLuminanceDifference": -0.00241735,
+      "predictedV4PerChannelRatios": [
+        0.907074,
+        0.930896,
+        0.940898
+      ],
+      "predictedV4ChannelSpread": 0.033824,
+      "predictedV4UnionMeanLuminanceRatio": 0.942687,
+      "predictedV4AbsoluteLuminanceDifference": -0.00241735
+    }
+  ],
+  "bars": {
+    "P1": {
+      "id": "P1",
+      "statement": "|measured v4 per-channel ratio - predicted| <= 0.01 at every pose and channel, and the same on the channel spread.",
+      "allowance": 0.01,
+      "why": "The same allowance T013 used, for the same reason: it is far below the effect under test and far above the instrument's own reproduction floor."
+    },
+    "A1": {
+      "id": "A1",
+      "statement": "|union mean luminance ratio - 1| <= 0.05 on poses whose SOURCE mean luminance is at least 0.1.",
+      "status": "UNCHANGED. A bar, not a monotone-improvement requirement."
+    },
+    "A2": {
+      "id": "A2",
+      "statement": "|baked - source| union mean luminance <= 0.01 at every pose.",
+      "status": "UNCHANGED."
+    },
+    "A3doublePrime": {
+      "id": "A3''",
+      "statement": "Per-pose channel spread <= 0.035 at every pose.",
+      "status": "UNCHANGED, and used here as an ADOPTED bar rather than a derived one."
+    },
+    "R1": {
+      "id": "R1",
+      "statement": "The v4 tile reproduces its digests in-process and in a fresh child, and the additivity gate passes on this cell's own recomputed v1 digest."
+    }
+  },
+  "measurementDiscipline": {
+    "maskDomain": "The SOURCE-and-BAKED INTERSECTION, un-premultiplied. Declared because the domain moves per-channel ratios by up to 0.023 on the same renders.",
+    "instrumentSpecSha256": "9a77561b9d8307aff77692412961102b3a3aa66e1a6dbe04db181a886ad53b89",
+    "instrumentHarnessSha256": "d394bcf76efdedfdf58b1bef86838137adc71f5a0c544e051f509de0edffc1d2",
+    "isolation": "Subject rendered ALONE, others deleted; hide_render forbidden and refused by the harness.",
+    "poseConvention": "camera = source-bounds centre + distance x (sin(az) cos 18, -cos(az) cos 18, sin 18), tracking -Z with +Y up."
+  },
+  "stopRule": "A MISS on ANY bar stops Stage 0 and is reported. No bar may be retuned after the capture, no pose dropped, and v4 is not adopted.",
+  "notClaimedHere": [
+    "Nothing has been rendered under v4.",
+    "One cell. The campaign's cells are not represented by this one and the campaign does not claim they are.",
+    "Adopting v4 does not re-open A3''; it inherits the adopted gate set unchanged."
+  ]
+}
