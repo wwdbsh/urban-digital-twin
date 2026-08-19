@@ -19,7 +19,12 @@
     "unhalvedBar": 0.0992,
     "halvedForMargin": true,
     "bar": 0.05,
-    "whyHalved": "The three factors are measured on ONE cell under one instrument; the campaign is 883 cells. Halving is the margin for that extrapolation and is stated rather than folded silently into a rounder number."
+    "whyHalved": "The three factors are measured on ONE cell under one instrument; the campaign is 883 cells. Halving is the margin for that extrapolation and is stated rather than folded silently into a rounder number.",
+    "metricSemantics": {
+      "claim": "`fallbackAreaShare` is an UPPER BOUND on the share of wall area carrying v1's colour, not an exact share.",
+      "why": "A wall face is counted WHOLE when ANY of its zones fell back, and a face can carry a base zone and a shaft zone independently.",
+      "direction": "The measured share is at least the true one and never below it, so this bar is conservative: a cell accepted under it is accepted on a figure no smaller than reality."
+    }
   },
   "fallbackHandling": {
     "underTheBar": "ACCEPTED BY NAME. The cell is baked, its zones are listed and its area share is recorded in the wave telemetry.",
@@ -107,5 +112,13 @@
     "No appearance claim. Stage 3's sampled characterization is DESCRIPTIVE and acceptance belongs to T007.",
     "No serving change. The T003 runtime records and serving root are untouched.",
     "883 cells is the ledger's count, not a guarantee that all 883 bake."
-  ]
+  ],
+  "reEmission": {
+    "why": "The metric this bar judges was never stated to be an upper bound. A bar is only as honest as its metric, so the statement was added after the campaign.",
+    "priorSha256": "61316fe280957c6c747ce07d38d2492ec4ae8e002eb3aca7420f1644baa87bad",
+    "whatChanged": "One added `metricSemantics` block and this note. NOTHING ELSE.",
+    "barUnchanged": true,
+    "barValue": 0.05,
+    "whatDidNotChange": "Every threshold, every refusal class, every wave figure and the derivation arithmetic."
+  }
 }

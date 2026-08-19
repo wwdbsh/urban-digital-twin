@@ -80,14 +80,20 @@ function chooseSample(rows) {
     const chosen = [...rows].sort((left, right) => sorter(left, right) || byId(left, right))[0];
     return { ...chosen, stratum: label, whyChosen: reason };
   };
-  const median = [...rows].sort((left, right) => left.faceCount - right.faceCount || byId(left, right))[Math.floor(rows.length / 2)];
+  // `sorted[floor(n/2)]` is the UPPER of the two middle elements on an
+  // even-length list, so it is the upper median rather than the median. The
+  // INDEX is deliberately left as it is — changing it would select a different
+  // cell and break this tool's own claim that re-running `plan` reproduces the
+  // committed sample. Only the LABEL was wrong, and only the label changes.
+  const sortedByFaces = [...rows].sort((left, right) => left.faceCount - right.faceCount || byId(left, right));
+  const median = sortedByFaces[Math.floor(sortedByFaces.length / 2)];
   const candidates = [
     pick("largest-face-count", "The most faces in the island: the packer's hardest case and the lowest applied scale it can reach.", (left, right) => right.faceCount - left.faceCount),
     pick("smallest-face-count", "The fewest faces: a tile that is almost all roof cap, where the wall aggregate has least to say.", (left, right) => left.faceCount - right.faceCount),
     pick("most-refused-buildings", "The highest count of buildings the V3 grammar refused: a tile standing in for a cell it only partly carries.", (left, right) => right.refusedBuildings - left.refusedBuildings),
     pick("worst-zone-fallback-share", "The largest share of wall area still carrying v1's colour under an accepted fallback.", (left, right) => right.fallbackAreaShare - left.fallbackAreaShare),
     pick("lowest-applied-scale", "The most under-resolved tile the campaign produced.", (left, right) => left.appliedScale - right.appliedScale),
-    { ...median, stratum: "median-face-count", whyChosen: "The island's median cell by face count, as the ordinary case the extremes are extreme against." },
+    { ...median, stratum: "upper-median-face-count", whyChosen: "The island's UPPER-MEDIAN cell by face count — the upper of the two middle elements on an even-length population — as the ordinary case the extremes are extreme against." },
   ];
   // Deduplicate by cell id, keeping the first reason, and top up from other
   // waves so the sample is not one district's tiles wearing five labels.
@@ -260,7 +266,12 @@ async function commandVerdict() {
           return outlier ? `${outlier.stratum} (${outlier.cellId}), ${outlier.telemetry.faceCount} faces, one building: spreads up to ${outlier.worstChannelSpread} at the three azimuth-235 poses. It alone exceeds the population prediction, and it is the smallest cell in the island.` : "none";
         })(),
         whyThatCellIsHard: "A single small building has almost no wall area for the aggregate to average, so its tile is dominated by one roof cap and a handful of flat faces. Its azimuth-235 poses are also the darkest in the sample, where a small absolute difference is a large ratio.",
-        thinIntersections: `${cells.reduce((sum, cell) => sum + cell.poses.filter((pose) => pose.thinIntersection).length, 0)} of ${cells.length * 6} poses have fewer than 100 intersection pixels, all on the two smallest cells at 4,000 m, some as low as 5. Ratios from a five-pixel domain are reported for completeness and are NOT evidence of anything.`,
+        thinIntersections: (() => {
+          const thin = cells.flatMap((cell) => cell.poses.filter((pose) => pose.thinIntersection).map((pose) => ({ stratum: cell.stratum, pose: pose.pose, px: pose.intersectionPixels })));
+          const strata = [...new Set(thin.map((entry) => entry.stratum))];
+          const distances = [...new Set(thin.map((entry) => entry.pose.split("/")[0]))].sort((left, right) => Number(left) - Number(right));
+          return `${thin.length} of ${cells.length * 6} poses have fewer than 100 intersection pixels — on ${strata.length} cell(s) (${strata.join(", ")}) at ${distances.join(" and ")} m, the smallest ${Math.min(...thin.map((entry) => entry.px))} pixels. Ratios from a domain that small are reported for completeness and are NOT evidence of anything.`;
+        })(),
       },
       theSystematicFindingIsLuminanceNotHue: {
         statement: "The gate that fails broadly is not A3'' but A1 and A2, and it fails in ONE direction: the tile is BRIGHTER than the source at azimuth 55.",
@@ -272,6 +283,7 @@ async function commandVerdict() {
         observedPattern: "The two cells that pass everything are the LARGEST (3,836 faces) and the MEDIAN (671). The four that miss are smaller or thinner. The prototype T013 measured has 764 faces and 48 buildings and sits with the passing group — so the prototype is NOT representative of the population for LUMINANCE, and the campaign is the first evidence of that.",
         mechanismNotEstablished: "NO mechanism is claimed. The obvious candidate is that a prism carries no self-shadowing or inter-building occlusion while the source does, so the source darkens more where geometry is dense per unit of silhouette. That is a hypothesis this stage did not test, and it belongs to T007 with a sample designed for it.",
       },
+      aLabelCorrection: "The committed plan calls one stratum `median-face-count`. It is the UPPER MEDIAN — index floor(n/2) of an even-length population is the upper of the two middle elements. The CELL is unchanged and the plan remains reproducible; the tool's label now says `upper-median-face-count` and the plan is not rewritten, because a plan written before a capture is not edited after one.",
       whatThisDoesNotDo: "It does not stop a wave, invalidate a tile, or reopen the adopted gates. It is the population picture the campaign was run to obtain, and it says the luminance gates need attention before acceptance.",
     },
     byStratum: cells.map((cell) => ({ stratum: cell.stratum, cellId: cell.cellId, worstChannelSpread: cell.worstChannelSpread, a3Misses: cell.a3Misses.length, a1Misses: cell.a1Misses.length, a2Misses: cell.a2Misses.length })),

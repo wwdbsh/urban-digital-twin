@@ -282,6 +282,12 @@
     "unaccountedFor": 0,
     "verdict": "CLOSES"
   },
+  "fallbackAreaShareSemantics": {
+    "claim": "Every `fallbackAreaShare` in this campaign — in the telemetry, in the stops, and in the bar that judged them — is an UPPER BOUND, not an exact share.",
+    "why": "A wall face is counted WHOLE when ANY of its zones fell back, and a face can carry a base zone and a shaft zone independently. So a face whose shaft reverted but whose base did not still contributes its entire area.",
+    "direction": "The reported share is therefore at least the true one and never below it. The pre-registered 5 per cent bar is conservative in the direction that matters: a cell accepted under it is accepted on a figure no smaller than reality.",
+    "whatItDoesNotAffect": "Nothing was re-baked for this wording. The numbers in the committed per-wave telemetry are unchanged; only the statement of what they mean was missing."
+  },
   "honestStopsByClass": {
     "no-bakeable-face": 0,
     "packing-infeasible": 0,

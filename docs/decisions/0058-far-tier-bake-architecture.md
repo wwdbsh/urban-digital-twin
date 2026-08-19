@@ -3,8 +3,12 @@
 Date: 2026-08-18
 Task: T002 (Goal `manhattan-hlod-far-tier`, Issue #102)
 Branch: `fcp/102-bake-prototype`
-Status: Accepted for the prototype. **The appearance bar is MISSED at one pose and the
-mass bake is BLOCKED pending a user decision.**
+Status: Accepted for the prototype. **As written, the appearance bar was MISSED at one
+pose and the mass bake was BLOCKED pending a user decision. BOTH HAVE SINCE MOVED —
+see the T013 amendment (adopted gate set, `A3'' = 0.035`) and the T004 amendment
+(recipe `v4` adopted, island baked at 840 tiles). This header is the T002 status and
+is kept as written rather than edited, because the amendments below are the record of
+what changed.**
 Evidence: `data/far-tier-hlod-20260818/` (`stage0-hierarchy.json`,
 `bake-pre-registration.json`, `prototype-provenance.json`, `sampling-results.json`,
 each with a `.sha256`)

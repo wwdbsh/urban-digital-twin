@@ -21,6 +21,7 @@
  */
 
 import { spawnSync } from "node:child_process";
+import { realpathSync } from "node:fs";
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { execPath } from "node:process";
@@ -127,7 +128,7 @@ async function commandEmitTile(cellId, { quiet = false } = {}) {
   return outcome;
 }
 
-async function commandVerifyReplay(cellId) {
+async function commandVerifyReplay(cellId, { quiet = false } = {}) {
   const first = await commandEmitTile(cellId, { quiet: true });
   const second = await commandEmitTile(cellId, { quiet: true });
   const inProcess = first.glbSha256 === second.glbSha256 && first.atlasSha256 === second.atlasSha256;
@@ -145,8 +146,8 @@ async function commandVerifyReplay(cellId) {
     glbSha256: first.glbSha256,
     atlasSha256: first.atlasSha256,
   };
-  console.log(serialize(result));
-  if (!result.ok) process.exit(1);
+  if (!quiet) console.log(serialize(result));
+  if (!result.ok && !quiet) process.exit(1);
   return result;
 }
 
@@ -242,33 +243,26 @@ async function commandPreRegister(cellId) {
   console.log(serialize({ ok: true, recipeSha256: outcome.recipeSha256, appliedScale: outcome.packingChangeAgainstV3.appliedScale, achievedTexelRatio: outcome.packingChangeAgainstV3.achievedTexelRatio, recordSha256: sha256HexSync(text) }));
 }
 
-/** The v4 capture, transcribed from the pinned instrument run. Intersection domain. */
-const V4_CAPTURE = [
-  { pose: "400/55", distanceMeters: 400, azimuthDegrees: 55, intersectionPixels: 61862, silhouettePixels: 63513, v3SilhouettePixels: 63513,
-    source: [0.245700867, 0.218731945, 0.196856174], v4: [0.241885584, 0.216684522, 0.195326761],
-    sourceUnionMeanLuminance: 0.21577073, v4UnionMeanLuminance: 0.21706177 },
-  { pose: "400/235", distanceMeters: 400, azimuthDegrees: 235, intersectionPixels: 58950, silhouettePixels: 60153, v3SilhouettePixels: 60153,
-    source: [0.039694421, 0.038141124, 0.035691889], v4: [0.038679987, 0.037961411, 0.035686802],
-    sourceUnionMeanLuminance: 0.03766457, v4UnionMeanLuminance: 0.03834015 },
-  { pose: "1200/55", distanceMeters: 1200, azimuthDegrees: 55, intersectionPixels: 5801, silhouettePixels: 5945, v3SilhouettePixels: 5945,
-    source: [0.24420355, 0.213603112, 0.191170422], v4: [0.236842734, 0.209122601, 0.187599587],
-    sourceUnionMeanLuminance: 0.20999704, v4UnionMeanLuminance: 0.20767777 },
-  { pose: "1200/235", distanceMeters: 1200, azimuthDegrees: 235, intersectionPixels: 5787, silhouettePixels: 5889, v3SilhouettePixels: 5889,
-    source: [0.042090397, 0.040544976, 0.03810586], v4: [0.040595464, 0.03992856, 0.037721696],
-    sourceUnionMeanLuminance: 0.0394298, v4UnionMeanLuminance: 0.03951773 },
-  { pose: "4000/55", distanceMeters: 4000, azimuthDegrees: 55, intersectionPixels: 511, silhouettePixels: 524, v3SilhouettePixels: 524,
-    source: [0.245675043, 0.213221661, 0.190491397], v4: [0.237055081, 0.207872175, 0.186129874],
-    sourceUnionMeanLuminance: 0.2011661, v4UnionMeanLuminance: 0.19797538 },
-  { pose: "4000/235", distanceMeters: 4000, azimuthDegrees: 235, intersectionPixels: 507, silhouettePixels: 516, v3SilhouettePixels: 516,
-    source: [0.047593581, 0.045642662, 0.042723686], v4: [0.043171253, 0.042488276, 0.040198429],
-    sourceUnionMeanLuminance: 0.04217802, v4UnionMeanLuminance: 0.03976053 },
-];
+/**
+ * The Stage 0 readings are READ from a file the harness writes, not transcribed.
+ *
+ * An earlier version of this tool carried them as a hand-copied literal, which
+ * put an untracked transcription step between the instrument and the record the
+ * ADOPTION rests on. The characterization path already did this correctly; this
+ * one now does too, and the file's digest is recorded in the verdict.
+ */
+const V4_MEASUREMENTS = join(repositoryRoot, "artifacts", EVIDENCE_ID, "v4-measurements.json");
 
 async function commandVerdict(cellId) {
-  if (V4_CAPTURE.length === 0) fail(TOOL, "no v4 capture has been transcribed into this tool yet.");
+  const measurementText = await readFile(V4_MEASUREMENTS, "utf8").catch(() => null);
+  if (measurementText === null) fail(TOOL, `no v4 measurements at ${V4_MEASUREMENTS}.`);
+  const measurements = JSON.parse(measurementText);
+  const V4_CAPTURE = measurements.poses;
   const preText = await readFile(join(evidenceRoot, "v4-pre-registration.json"), "utf8");
   const pre = JSON.parse(preText);
   const outcome = await commandEmitTile(cellId, { quiet: true });
+  // N4: R1 is DERIVED by running the replay here, not written as a literal.
+  const replay = await commandVerifyReplay(cellId, { quiet: true });
 
   const poses = V4_CAPTURE.map((row) => {
     const predicted = pre.poses.find((entry) => entry.pose === row.pose);
@@ -284,7 +278,8 @@ async function commandVerdict(cellId) {
       distanceMeters: row.distanceMeters,
       azimuthDegrees: row.azimuthDegrees,
       intersectionPixels: row.intersectionPixels,
-      silhouetteControlAgainstV3: row.silhouettePixels - row.v3SilhouettePixels,
+      silhouettePixels: row.silhouettePixels,
+      sourceSilhouettePixels: row.sourceSilhouettePixels,
       sourceChannelMeans: row.source,
       v4ChannelMeans: row.v4,
       perChannelRatios: ratios.map((value) => round(value, 6)),
@@ -304,7 +299,7 @@ async function commandVerdict(cellId) {
   });
 
   const missed = (bar) => poses.filter((pose) => pose[bar] === "MISS").map((pose) => pose.pose);
-  const allPass = ["P1", "A1", "A2", "A3doublePrime"].every((bar) => missed(bar).length === 0);
+  const allPass = ["P1", "A1", "A2", "A3doublePrime"].every((bar) => missed(bar).length === 0) && replay.verdict === "PASS";
   const record = {
     schemaVersion: "1.0",
     recordId: `${EVIDENCE_ID}:v4-adoption-verdict`,
@@ -315,6 +310,18 @@ async function commandVerdict(cellId) {
     headline: allPass
       ? "v4 PASSES every pre-registered bar. Adopted for the campaign under the user authorization of 2026-08-19."
       : "v4 MISSES a pre-registered bar. Stage 0 stops and v4 is NOT adopted.",
+    reEmission: {
+      why: "This record was RE-EMITTED after review. Its readings were a hand transcription and its R1 verdict a literal; both are now derived — the readings from a measurement file the harness writes, R1 by running the replay from this command.",
+      priorSha256: "0e83949bec9a40c9b7b9d2dfeb8961a23ab9f86ee13f0fd3d2e3645c98fcb9ed",
+      whatChanged: "PROVENANCE, not numbers. The six poses reproduce the transcribed values exactly, and every bar verdict is unchanged.",
+      whatDidNotChange: "The pre-registration, which is not re-emitted after a capture under any circumstances.",
+    },
+    measurementProvenance: {
+      file: "v4-measurements.json (gitignored work product under artifacts/)",
+      sha256: sha256HexSync(measurementText),
+      writtenBy: "The pinned-instrument session, from the twelve committed EXRs, with no hand transcription between the instrument and this record.",
+      maskDomain: measurements.maskDomain,
+    },
     boundTo: {
       preRegistration: "v4-pre-registration.json",
       preRegistrationSha256: sha256HexSync(preText),
@@ -325,7 +332,16 @@ async function commandVerdict(cellId) {
     instrument: pre.measurementDiscipline,
     poses,
     barVerdicts: {
-      R1: { verdict: "PASS", detail: "Digests reproduce in-process and in a fresh child; the additivity gate passes on the cell's own recomputed v1 digest.", glbSha256: outcome.glbSha256, atlasSha256: outcome.atlasSha256, additivity: outcome.additivityGate },
+      R1: {
+        verdict: replay.verdict,
+        derivedBy: "This verdict RAN the replay rather than asserting it: `verify-replay` was invoked from this command and its result is recorded below. An earlier version wrote PASS as a literal.",
+        inProcessRepeat: replay.inProcessRepeat,
+        freshChildProcess: replay.freshChildProcess,
+        glbSha256: replay.glbSha256,
+        atlasSha256: replay.atlasSha256,
+        digestsMatchThisRunsBake: replay.glbSha256 === outcome.glbSha256 && replay.atlasSha256 === outcome.atlasSha256,
+        additivity: outcome.additivityGate,
+      },
       P1: { verdict: missed("P1").length === 0 ? "PASS" : "MISS", allowance: P1_ALLOWANCE, missedPoses: missed("P1"), worstChannelDelta: round(Math.max(...poses.map((pose) => pose.worstChannelPredictionDelta)), 6), worstSpreadDelta: round(Math.max(...poses.map((pose) => pose.spreadPredictionDelta)), 6) },
       A1: { verdict: missed("A1").length === 0 ? "PASS" : "MISS", missedPoses: missed("A1") },
       A2: { verdict: missed("A2").length === 0 ? "PASS" : "MISS", missedPoses: missed("A2"), worstMagnitude: round(Math.max(...poses.map((pose) => Math.abs(pose.absoluteLuminanceDifference))), 8) },
@@ -335,6 +351,7 @@ async function commandVerdict(cellId) {
     adoption: allPass ? {
       decision: "v4 ADOPTED as the far-tier recipe for the mass bake campaign.",
       authorization: "User decision recorded 2026-08-19: v4 = v2 packing + v3 colour aggregates, adopted via a pre-registered Stage 0 cycle; the v3-only path with 172 unpackable cells was rejected.",
+      authorizationRecord: "https://github.com/wwdbsh/urban-digital-twin/issues/104#issuecomment-5336926652",
       whatMoves: "assertFarTierAdoptedRecipe now names v4. v1, v2 and v3 keep their ids, hashes and frozen artifacts.",
       whatDoesNot: "A1, A2 and A3'' are inherited unchanged. This cycle certifies a recipe, not a bar.",
     } : {
@@ -360,12 +377,32 @@ async function commandVerdict(cellId) {
   if (!allPass) process.exit(1);
 }
 
-const argv = process.argv.slice(2);
-const command = argv[0];
-const cellFlag = argv.indexOf("--cell");
-const cellId = cellFlag >= 0 ? argv[cellFlag + 1] : DEFAULT_CELL_ID;
-if (command === "emit-tile") await commandEmitTile(cellId);
-else if (command === "verify-replay") await commandVerifyReplay(cellId);
-else if (command === "pre-register") await commandPreRegister(cellId);
-else if (command === "verdict") await commandVerdict(cellId);
-else fail(TOOL, "usage: far-tier-v4-cli.mjs <emit-tile|verify-replay|pre-register|verdict> [--cell <cellId>]");
+/**
+ * DISPATCH ONLY AS THE ENTRY POINT.
+ *
+ * This file documents the entry-point guard as load-bearing and then did not
+ * have one: importing it to read a constant would have run a command. Both
+ * sides are resolved through `realpathSync`, because this worktree reaches its
+ * inputs through symlinks and a raw string comparison fails OPEN.
+ */
+function isDirectEntryPoint() {
+  const entry = process.argv[1];
+  if (entry === undefined) return false;
+  try {
+    return realpathSync(fileURLToPath(import.meta.url)) === realpathSync(entry);
+  } catch {
+    return false;
+  }
+}
+
+if (isDirectEntryPoint()) {
+  const argv = process.argv.slice(2);
+  const command = argv[0];
+  const cellFlag = argv.indexOf("--cell");
+  const cellId = cellFlag >= 0 ? argv[cellFlag + 1] : DEFAULT_CELL_ID;
+  if (command === "emit-tile") await commandEmitTile(cellId);
+  else if (command === "verify-replay") await commandVerifyReplay(cellId);
+  else if (command === "pre-register") await commandPreRegister(cellId);
+  else if (command === "verdict") await commandVerdict(cellId);
+  else fail(TOOL, "usage: far-tier-v4-cli.mjs <emit-tile|verify-replay|pre-register|verdict> [--cell <cellId>]");
+}

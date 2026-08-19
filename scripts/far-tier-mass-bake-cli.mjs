@@ -32,6 +32,7 @@
  */
 
 import { spawnSync } from "node:child_process";
+import { realpathSync } from "node:fs";
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { execPath } from "node:process";
@@ -259,13 +260,11 @@ async function commandBake(waveId) {
   const stops = [];
   const started = Date.now();
   for (const cell of cells) {
-    let context;
-    try {
-      context = materializeOneCell(snapshot, cell, wiring, waveInventory);
-    } catch (error) {
-      if (error instanceof FarTierCellStop) { stops.push({ cellId: cell.cellId, code: error.code, message: error.message, detail: error.detail }); continue; }
-      throw error;
-    }
+    // `materializeOneCell` fails CLOSED through `fail()` on a sourcing mismatch
+    // and cannot raise a FarTierCellStop, so it is not wrapped in one. An
+    // earlier version caught a stop here that nothing could throw, which reads
+    // as if sourcing had a refusal path when it deliberately does not.
+    const context = materializeOneCell(snapshot, cell, wiring, waveInventory);
     let result;
     try {
       result = bakeOneCell(context, cell);
@@ -606,6 +605,12 @@ async function commandSummary() {
       unaccountedFor: totals.ledgerCells - totals.accountedFor,
       verdict: totals.everyLedgerCellAccountedFor ? "CLOSES" : "DOES NOT CLOSE",
     },
+    fallbackAreaShareSemantics: {
+      claim: "Every `fallbackAreaShare` in this campaign — in the telemetry, in the stops, and in the bar that judged them — is an UPPER BOUND, not an exact share.",
+      why: "A wall face is counted WHOLE when ANY of its zones fell back, and a face can carry a base zone and a shaft zone independently. So a face whose shaft reverted but whose base did not still contributes its entire area.",
+      direction: "The reported share is therefore at least the true one and never below it. The pre-registered 5 per cent bar is conservative in the direction that matters: a cell accepted under it is accepted on a figure no smaller than reality.",
+      whatItDoesNotAffect: "Nothing was re-baked for this wording. The numbers in the committed per-wave telemetry are unchanged; only the statement of what they mean was missing.",
+    },
     honestStopsByClass: Object.fromEntries(REFUSAL_CLASSES.map((entry) => [entry.code, allStops.filter((stop) => stop.code === entry.code).length])),
     honestStops: allStops,
     populationDistribution: summarize(allCells),
@@ -711,6 +716,43 @@ async function commandPreRegister() {
   console.log(serialize({ ok: true, bar: FALLBACK_AREA_SHARE_BAR, unhalvedBar: FALLBACK_BAR_DERIVATION.unhalvedBar, totalDeclaredCells: record.totalDeclaredCells, recordSha256: sha256HexSync(text) }));
 }
 
+/**
+ * Add the metric-semantics note to the committed pre-registration WITHOUT
+ * touching a single bar.
+ *
+ * A pre-registration is not rewritten after the fact — that is the whole point
+ * of one. But its `fallbackAreaShare` metric was never stated to be an upper
+ * bound, and a bar is only as honest as the metric it judges. This path adds
+ * that statement, records the prior checksum, and ASSERTS the bar value is
+ * unchanged; it refuses if it is not.
+ */
+async function commandAmendMetricNote() {
+  const path = join(evidenceRoot, "campaign-pre-registration.json");
+  const priorText = await readFile(path, "utf8");
+  const record = JSON.parse(priorText);
+  const priorBar = record.zoneFallbackBar.bar;
+  record.zoneFallbackBar.metricSemantics = {
+    claim: "`fallbackAreaShare` is an UPPER BOUND on the share of wall area carrying v1's colour, not an exact share.",
+    why: "A wall face is counted WHOLE when ANY of its zones fell back, and a face can carry a base zone and a shaft zone independently.",
+    direction: "The measured share is at least the true one and never below it, so this bar is conservative: a cell accepted under it is accepted on a figure no smaller than reality.",
+  };
+  record.reEmission = {
+    why: "The metric this bar judges was never stated to be an upper bound. A bar is only as honest as its metric, so the statement was added after the campaign.",
+    priorSha256: sha256HexSync(priorText),
+    whatChanged: "One added `metricSemantics` block and this note. NOTHING ELSE.",
+    barUnchanged: true,
+    barValue: priorBar,
+    whatDidNotChange: "Every threshold, every refusal class, every wave figure and the derivation arithmetic.",
+  };
+  if (record.zoneFallbackBar.bar !== priorBar || record.zoneFallbackBar.bar !== FALLBACK_AREA_SHARE_BAR) {
+    fail(TOOL, "the amend path may not move the bar; refusing.");
+  }
+  const text = serialize(record);
+  await writeFile(path, text);
+  await writeFile(join(evidenceRoot, "campaign-pre-registration.sha256"), `${sha256HexSync(text)}  campaign-pre-registration.json\n`);
+  console.log(serialize({ ok: true, priorSha256: record.reEmission.priorSha256, newSha256: sha256HexSync(text), barValue: priorBar }));
+}
+
 async function commandCensus() {
   const { ledger } = await loadWaveLedger();
   const perWave = [];
@@ -744,7 +786,22 @@ async function commandCensus() {
 // DISPATCH ONLY AS THE ENTRY POINT. A test importing `waveWiring` must not
 // trigger a campaign, and the batched replay re-enters this same file as a
 // child process, so the guard has to be exact rather than approximate.
-if (import.meta.url === `file://${process.argv[1]}`) {
+//
+// BOTH SIDES GO THROUGH `realpathSync`. The comment above already said the
+// guard must be exact while the code compared a raw string against
+// `file://${argv[1]}` — which is the fail-OPEN form this worktree can actually
+// hit, because it reaches its inputs through symlinks.
+function isDirectEntryPoint() {
+  const entry = process.argv[1];
+  if (entry === undefined) return false;
+  try {
+    return realpathSync(fileURLToPath(import.meta.url)) === realpathSync(entry);
+  } catch {
+    return false;
+  }
+}
+
+if (isDirectEntryPoint()) {
   const argv = process.argv.slice(2);
   const command = argv[0];
   const flag = (name) => { const index = argv.indexOf(`--${name}`); return index >= 0 ? argv[index + 1] : null; };
@@ -755,5 +812,6 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   else if (command === "census") await commandCensus();
   else if (command === "summary") await commandSummary();
   else if (command === "emit-sources") await commandEmitSources(flag("cell"));
+  else if (command === "amend-metric-note") await commandAmendMetricNote();
   else fail(TOOL, "usage: far-tier-mass-bake-cli.mjs <pre-register|run-wave|seal|census|summary|emit-sources> [--wave wXX] [--cell <cellId>]");
 }

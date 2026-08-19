@@ -358,6 +358,8 @@ export const FAR_TIER_ADOPTED_RECIPE = {
   recipeId: FAR_TIER_BAKE_RECIPE_V4.recipeId,
   adoptedOn: "2026-08-19",
   adoptedBy: "user decision, T004 (Issue #104), after the pre-registered Stage 0 cycle",
+  /** The durable authorization, so the adoption cites a record rather than a memory. */
+  authorizationRecord: "https://github.com/wwdbsh/urban-digital-twin/issues/104#issuecomment-5336926652",
   gateRecord: "data/far-tier-hlod-mass-20260819/v4-adoption-verdict.json",
   /**
    * THE CHAIN, kept here because a constant that names only its current value

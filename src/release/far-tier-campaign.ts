@@ -99,6 +99,15 @@ export interface FarTierCellTelemetry {
   refusedBuildings: number;
   unitySnapCount: number;
   fallbackZoneCount: number;
+  /**
+   * UPPER BOUNDS, not exact areas.
+   *
+   * A wall face is counted WHOLE when ANY of its zones fell back, and a face
+   * can carry a base zone and a shaft zone independently. The reported area and
+   * share are therefore at least the true ones and never below them — the
+   * direction that makes the pre-registered bar conservative rather than
+   * flattering.
+   */
   fallbackAreaSquareMeters: number;
   fallbackAreaShare: number;
   aggregateInScopeAreaSquareMeters: number;

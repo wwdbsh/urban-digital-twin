@@ -823,7 +823,7 @@
       "statement": "A3'' held at 33 of 36 poses, and EVERY miss is one cell.",
       "theOutlier": "smallest-face-count (manhattan-exterior-cell-w01-000060-16-19303-17931), 4 faces, one building: spreads up to 0.120272 at the three azimuth-235 poses. It alone exceeds the population prediction, and it is the smallest cell in the island.",
       "whyThatCellIsHard": "A single small building has almost no wall area for the aggregate to average, so its tile is dominated by one roof cap and a handful of flat faces. Its azimuth-235 poses are also the darkest in the sample, where a small absolute difference is a large ratio.",
-      "thinIntersections": "4 of 36 poses have fewer than 100 intersection pixels, all on the two smallest cells at 4,000 m, some as low as 5. Ratios from a five-pixel domain are reported for completeness and are NOT evidence of anything."
+      "thinIntersections": "4 of 36 poses have fewer than 100 intersection pixels — on 1 cell(s) (smallest-face-count) at 1200 and 4000 m, the smallest 5 pixels. Ratios from a domain that small are reported for completeness and are NOT evidence of anything."
     },
     "theSystematicFindingIsLuminanceNotHue": {
       "statement": "The gate that fails broadly is not A3'' but A1 and A2, and it fails in ONE direction: the tile is BRIGHTER than the source at azimuth 55.",
@@ -869,6 +869,7 @@
       "observedPattern": "The two cells that pass everything are the LARGEST (3,836 faces) and the MEDIAN (671). The four that miss are smaller or thinner. The prototype T013 measured has 764 faces and 48 buildings and sits with the passing group — so the prototype is NOT representative of the population for LUMINANCE, and the campaign is the first evidence of that.",
       "mechanismNotEstablished": "NO mechanism is claimed. The obvious candidate is that a prism carries no self-shadowing or inter-building occlusion while the source does, so the source darkens more where geometry is dense per unit of silhouette. That is a hypothesis this stage did not test, and it belongs to T007 with a sample designed for it."
     },
+    "aLabelCorrection": "The committed plan calls one stratum `median-face-count`. It is the UPPER MEDIAN — index floor(n/2) of an even-length population is the upper of the two middle elements. The CELL is unchanged and the plan remains reproducible; the tool's label now says `upper-median-face-count` and the plan is not rewritten, because a plan written before a capture is not edited after one.",
     "whatThisDoesNotDo": "It does not stop a wave, invalidate a tile, or reopen the adopted gates. It is the population picture the campaign was run to obtain, and it says the luminance gates need attention before acceptance."
   },
   "byStratum": [
