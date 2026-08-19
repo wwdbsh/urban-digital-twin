@@ -17,11 +17,14 @@ import { describe, expect, it } from "vitest";
 import {
   FAR_TIER_ADOPTED_RECIPE,
   FAR_TIER_BAKE_RECIPE,
+  FAR_TIER_BAKE_RECIPE_V2,
   FAR_TIER_BAKE_RECIPE_V3,
+  FAR_TIER_BAKE_RECIPE_V4,
   assertFarTierAdoptedRecipe,
   farTierEffectiveParameters,
   farTierRecipeHash,
   farTierRecipeHashV3,
+  farTierRecipeHashV4,
 } from "../src/release/far-tier-bake.ts";
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -438,11 +441,15 @@ describe("A3'' is adopted, derived, and disclosed as post-hoc", () => {
 });
 
 describe("the T004 handoff names one recipe and one gate set", () => {
-  it("names the recipe the mass bake must use, by id and hash", () => {
+  it("names the recipe it handed off, which T004 then superseded", () => {
     const handoff = adoption.t004GateHandoff;
+    // The record is frozen evidence of what T013 handed over. Its hash is
+    // compared as a LITERAL, not against a live call, because the live adopted
+    // recipe is now v4 and this record must keep naming v3 forever.
     expect(handoff.recipe.recipeId).toBe("far-tier-hlod-bake-v3");
-    expect(handoff.recipe.recipeSha256).toBe(farTierRecipeHashV3());
+    expect(handoff.recipe.recipeSha256).toBe("e73206429c496c28c707120769eee5f4a6155f44442eccb9b19fe2fdcfbc24c8");
     expect(handoff.recipe.derivedFrom).toBe("far-tier-hlod-bake-v1");
+    expect(FAR_TIER_ADOPTED_RECIPE.supersedes.recipeId).toBe(handoff.recipe.recipeId);
   });
 
   it("names exactly the three operative gates", () => {
@@ -560,17 +567,23 @@ describe("the facade-only fallback is counted, bounded and disclosed", () => {
 });
 
 describe("the adoption is expressible as a check, and the gap is recorded", () => {
-  it("exports the adopted recipe as a value, matching v3", () => {
-    expect(FAR_TIER_ADOPTED_RECIPE.recipeId).toBe(FAR_TIER_BAKE_RECIPE_V3.recipeId);
+  it("exports the adopted recipe as a value, and records what it superseded", () => {
+    // T004 moved the adoption to v4. T013's record correctly names v3, because
+    // v3 IS what T013 adopted; the supersession is carried on the constant
+    // rather than by rewriting a frozen record.
+    expect(FAR_TIER_ADOPTED_RECIPE.recipeId).toBe("far-tier-hlod-bake-v4");
+    expect(FAR_TIER_ADOPTED_RECIPE.supersedes.recipeId).toBe(FAR_TIER_BAKE_RECIPE_V3.recipeId);
+    expect(FAR_TIER_ADOPTED_RECIPE.supersedes.gateRecord).toContain("gate-adoption.json");
     expect(FAR_TIER_ADOPTED_RECIPE.adoptedOn).toBe("2026-08-19");
-    expect(FAR_TIER_ADOPTED_RECIPE.gateRecord).toContain("gate-adoption.json");
   });
 
-  it("accepts v3 and refuses v1, naming the hash a caller must bake", () => {
-    expect(() => assertFarTierAdoptedRecipe(FAR_TIER_BAKE_RECIPE_V3)).not.toThrow();
-    expect(() => assertFarTierAdoptedRecipe(FAR_TIER_BAKE_RECIPE)).toThrow(/far-tier-hlod-bake-v3/u);
+  it("accepts v4 and refuses v1, v2, v3 and a bare object", () => {
+    expect(() => assertFarTierAdoptedRecipe(FAR_TIER_BAKE_RECIPE_V4)).not.toThrow();
+    for (const superseded of [FAR_TIER_BAKE_RECIPE, FAR_TIER_BAKE_RECIPE_V2, FAR_TIER_BAKE_RECIPE_V3]) {
+      expect(() => assertFarTierAdoptedRecipe(superseded)).toThrow(/far-tier-hlod-bake-v4/u);
+    }
     expect(() => assertFarTierAdoptedRecipe({})).toThrow(/no recipeId/u);
-    expect(() => assertFarTierAdoptedRecipe(FAR_TIER_BAKE_RECIPE)).toThrow(new RegExp(farTierRecipeHashV3(), "u"));
+    expect(() => assertFarTierAdoptedRecipe(FAR_TIER_BAKE_RECIPE_V3)).toThrow(new RegExp(farTierRecipeHashV4(), "u"));
   });
 
   it("records that nothing enforces it yet, rather than implying it is enforced", () => {

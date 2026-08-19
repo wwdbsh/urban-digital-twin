@@ -1,0 +1,330 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "far-tier-hlod-mass-20260819:v4-adoption-verdict",
+  "task": "T004",
+  "artifact": "far-tier-v4-adoption-verdict",
+  "capturedAt": null,
+  "capturedAtStatement": "NULL BY CONSTRUCTION.",
+  "headline": "v4 PASSES every pre-registered bar. Adopted for the campaign under the user authorization of 2026-08-19.",
+  "boundTo": {
+    "preRegistration": "v4-pre-registration.json",
+    "preRegistrationSha256": "fc1554827bdacc36c371d4f4de472332d54007b934e8d1b1cdb4cacedbadc986",
+    "committedBeforeCapture": "Yes. The pre-registration refuses to be written when a v4 render exists, and it was committed in its own commit.",
+    "recipeSha256": "fd950a77f1c57cb2b7238b588aa11cd020ace1f15c1448438dfd0f235e10412c",
+    "recipeSha256MatchesPreRegistration": true
+  },
+  "instrument": {
+    "maskDomain": "The SOURCE-and-BAKED INTERSECTION, un-premultiplied. Declared because the domain moves per-channel ratios by up to 0.023 on the same renders.",
+    "instrumentSpecSha256": "9a77561b9d8307aff77692412961102b3a3aa66e1a6dbe04db181a886ad53b89",
+    "instrumentHarnessSha256": "d394bcf76efdedfdf58b1bef86838137adc71f5a0c544e051f509de0edffc1d2",
+    "isolation": "Subject rendered ALONE, others deleted; hide_render forbidden and refused by the harness.",
+    "poseConvention": "camera = source-bounds centre + distance x (sin(az) cos 18, -cos(az) cos 18, sin 18), tracking -Z with +Y up."
+  },
+  "poses": [
+    {
+      "pose": "400/55",
+      "distanceMeters": 400,
+      "azimuthDegrees": 55,
+      "intersectionPixels": 61862,
+      "silhouetteControlAgainstV3": 0,
+      "sourceChannelMeans": [
+        0.245700867,
+        0.218731945,
+        0.196856174
+      ],
+      "v4ChannelMeans": [
+        0.241885584,
+        0.216684522,
+        0.195326761
+      ],
+      "perChannelRatios": [
+        0.984472,
+        0.99064,
+        0.992231
+      ],
+      "channelSpread": 0.007759,
+      "predictedPerChannelRatios": [
+        0.982989,
+        0.988641,
+        0.990352
+      ],
+      "predictedChannelSpread": 0.007363,
+      "worstChannelPredictionDelta": 0.001999,
+      "spreadPredictionDelta": 0.000396,
+      "P1": "PASS",
+      "unionMeanLuminanceRatio": 1.005983,
+      "absoluteLuminanceDifference": 0.00129104,
+      "A1": "PASS",
+      "A2": "PASS",
+      "A3doublePrime": "PASS",
+      "legacyHueBar002": "PASS"
+    },
+    {
+      "pose": "400/235",
+      "distanceMeters": 400,
+      "azimuthDegrees": 235,
+      "intersectionPixels": 58950,
+      "silhouetteControlAgainstV3": 0,
+      "sourceChannelMeans": [
+        0.039694421,
+        0.038141124,
+        0.035691889
+      ],
+      "v4ChannelMeans": [
+        0.038679987,
+        0.037961411,
+        0.035686802
+      ],
+      "perChannelRatios": [
+        0.974444,
+        0.995288,
+        0.999857
+      ],
+      "channelSpread": 0.025414,
+      "predictedPerChannelRatios": [
+        0.974357,
+        0.995201,
+        0.999763
+      ],
+      "predictedChannelSpread": 0.025406,
+      "worstChannelPredictionDelta": 0.000094,
+      "spreadPredictionDelta": 0.000008,
+      "P1": "PASS",
+      "unionMeanLuminanceRatio": 1.017937,
+      "absoluteLuminanceDifference": 0.00067558,
+      "A1": "not applicable",
+      "A2": "PASS",
+      "A3doublePrime": "PASS",
+      "legacyHueBar002": "MISS"
+    },
+    {
+      "pose": "1200/55",
+      "distanceMeters": 1200,
+      "azimuthDegrees": 55,
+      "intersectionPixels": 5801,
+      "silhouetteControlAgainstV3": 0,
+      "sourceChannelMeans": [
+        0.24420355,
+        0.213603112,
+        0.191170422
+      ],
+      "v4ChannelMeans": [
+        0.236842734,
+        0.209122601,
+        0.187599587
+      ],
+      "perChannelRatios": [
+        0.969858,
+        0.979024,
+        0.981321
+      ],
+      "channelSpread": 0.011463,
+      "predictedPerChannelRatios": [
+        0.968474,
+        0.977552,
+        0.980207
+      ],
+      "predictedChannelSpread": 0.011732,
+      "worstChannelPredictionDelta": 0.001472,
+      "spreadPredictionDelta": 0.000269,
+      "P1": "PASS",
+      "unionMeanLuminanceRatio": 0.988956,
+      "absoluteLuminanceDifference": -0.00231927,
+      "A1": "PASS",
+      "A2": "PASS",
+      "A3doublePrime": "PASS",
+      "legacyHueBar002": "PASS"
+    },
+    {
+      "pose": "1200/235",
+      "distanceMeters": 1200,
+      "azimuthDegrees": 235,
+      "intersectionPixels": 5787,
+      "silhouetteControlAgainstV3": 0,
+      "sourceChannelMeans": [
+        0.042090397,
+        0.040544976,
+        0.03810586
+      ],
+      "v4ChannelMeans": [
+        0.040595464,
+        0.03992856,
+        0.037721696
+      ],
+      "perChannelRatios": [
+        0.964483,
+        0.984797,
+        0.989919
+      ],
+      "channelSpread": 0.025436,
+      "predictedPerChannelRatios": [
+        0.96448,
+        0.984795,
+        0.989916
+      ],
+      "predictedChannelSpread": 0.025436,
+      "worstChannelPredictionDelta": 0.000003,
+      "spreadPredictionDelta": 0,
+      "P1": "PASS",
+      "unionMeanLuminanceRatio": 1.00223,
+      "absoluteLuminanceDifference": 0.00008793,
+      "A1": "not applicable",
+      "A2": "PASS",
+      "A3doublePrime": "PASS",
+      "legacyHueBar002": "MISS"
+    },
+    {
+      "pose": "4000/55",
+      "distanceMeters": 4000,
+      "azimuthDegrees": 55,
+      "intersectionPixels": 511,
+      "silhouetteControlAgainstV3": 0,
+      "sourceChannelMeans": [
+        0.245675043,
+        0.213221661,
+        0.190491397
+      ],
+      "v4ChannelMeans": [
+        0.237055081,
+        0.207872175,
+        0.186129874
+      ],
+      "perChannelRatios": [
+        0.964913,
+        0.974911,
+        0.977104
+      ],
+      "channelSpread": 0.012191,
+      "predictedPerChannelRatios": [
+        0.964637,
+        0.97551,
+        0.978351
+      ],
+      "predictedChannelSpread": 0.013714,
+      "worstChannelPredictionDelta": 0.001247,
+      "spreadPredictionDelta": 0.001523,
+      "P1": "PASS",
+      "unionMeanLuminanceRatio": 0.984139,
+      "absoluteLuminanceDifference": -0.00319072,
+      "A1": "PASS",
+      "A2": "PASS",
+      "A3doublePrime": "PASS",
+      "legacyHueBar002": "PASS"
+    },
+    {
+      "pose": "4000/235",
+      "distanceMeters": 4000,
+      "azimuthDegrees": 235,
+      "intersectionPixels": 507,
+      "silhouetteControlAgainstV3": 0,
+      "sourceChannelMeans": [
+        0.047593581,
+        0.045642662,
+        0.042723686
+      ],
+      "v4ChannelMeans": [
+        0.043171253,
+        0.042488276,
+        0.040198429
+      ],
+      "perChannelRatios": [
+        0.907081,
+        0.93089,
+        0.940893
+      ],
+      "channelSpread": 0.033812,
+      "predictedPerChannelRatios": [
+        0.907074,
+        0.930896,
+        0.940898
+      ],
+      "predictedChannelSpread": 0.033824,
+      "worstChannelPredictionDelta": 0.000007,
+      "spreadPredictionDelta": 0.000012,
+      "P1": "PASS",
+      "unionMeanLuminanceRatio": 0.942684,
+      "absoluteLuminanceDifference": -0.00241749,
+      "A1": "not applicable",
+      "A2": "PASS",
+      "A3doublePrime": "PASS",
+      "legacyHueBar002": "MISS"
+    }
+  ],
+  "barVerdicts": {
+    "R1": {
+      "verdict": "PASS",
+      "detail": "Digests reproduce in-process and in a fresh child; the additivity gate passes on the cell's own recomputed v1 digest.",
+      "glbSha256": "fc534a4194fcbf21906d1976a8dec49d124486d33e73deca3f34eae231f632bc",
+      "atlasSha256": "f93873cc0e7a06c1d7305f3eeb03d76ded4a501b037027dd650fe010fa898604",
+      "additivity": {
+        "claim": "v4 with facade-only colour and v1 packing reproduces this cell's own v1 atlas, digest recomputed rather than compared against a constant.",
+        "v1AtlasSha256": "c159e0508aeb7522620b799b83041461aecf34727f69209bd7efbf992f5c067a",
+        "v4FacadeOnlyV1PackingAtlasSha256": "c159e0508aeb7522620b799b83041461aecf34727f69209bd7efbf992f5c067a",
+        "verdict": "PASS"
+      }
+    },
+    "P1": {
+      "verdict": "PASS",
+      "allowance": 0.01,
+      "missedPoses": [],
+      "worstChannelDelta": 0.001999,
+      "worstSpreadDelta": 0.001523
+    },
+    "A1": {
+      "verdict": "PASS",
+      "missedPoses": []
+    },
+    "A2": {
+      "verdict": "PASS",
+      "missedPoses": [],
+      "worstMagnitude": 0.00319072
+    },
+    "A3doublePrime": {
+      "verdict": "PASS",
+      "bar": 0.035,
+      "missedPoses": [],
+      "worstSpread": 0.033812
+    }
+  },
+  "packingChangeAgainstV3": {
+    "atlasPixels": {
+      "v3": 256,
+      "v4": 256
+    },
+    "appliedScale": {
+      "v3": 0.5,
+      "v4": 0.7071067811865476
+    },
+    "texelWorldSizeMeters": {
+      "v3": 2.792527,
+      "v4": 1.974615
+    },
+    "achievedTexelRatio": {
+      "v3": 0.5,
+      "v4": 0.707107
+    },
+    "underResolved": {
+      "v3": true,
+      "v4": true
+    },
+    "occupancy": {
+      "v3": 0.853348,
+      "v4": 0.619629
+    },
+    "flatFaceCount": {
+      "v3": 648,
+      "v4": 535
+    },
+    "faceCountIsUnchanged": true
+  },
+  "adoption": {
+    "decision": "v4 ADOPTED as the far-tier recipe for the mass bake campaign.",
+    "authorization": "User decision recorded 2026-08-19: v4 = v2 packing + v3 colour aggregates, adopted via a pre-registered Stage 0 cycle; the v3-only path with 172 unpackable cells was rejected.",
+    "whatMoves": "assertFarTierAdoptedRecipe now names v4. v1, v2 and v3 keep their ids, hashes and frozen artifacts.",
+    "whatDoesNot": "A1, A2 and A3'' are inherited unchanged. This cycle certifies a recipe, not a bar."
+  },
+  "notClaimedHere": [
+    "One cell, one renderer. The campaign's appearance characterization is a separate, sampled exercise and is descriptive rather than acceptance.",
+    "No bar was moved after the capture."
+  ]
+}

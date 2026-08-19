@@ -242,8 +242,27 @@ async function commandPreRegister(cellId) {
   console.log(serialize({ ok: true, recipeSha256: outcome.recipeSha256, appliedScale: outcome.packingChangeAgainstV3.appliedScale, achievedTexelRatio: outcome.packingChangeAgainstV3.achievedTexelRatio, recordSha256: sha256HexSync(text) }));
 }
 
-/** The v4 capture, transcribed from the pinned instrument run. */
-const V4_CAPTURE = [];
+/** The v4 capture, transcribed from the pinned instrument run. Intersection domain. */
+const V4_CAPTURE = [
+  { pose: "400/55", distanceMeters: 400, azimuthDegrees: 55, intersectionPixels: 61862, silhouettePixels: 63513, v3SilhouettePixels: 63513,
+    source: [0.245700867, 0.218731945, 0.196856174], v4: [0.241885584, 0.216684522, 0.195326761],
+    sourceUnionMeanLuminance: 0.21577073, v4UnionMeanLuminance: 0.21706177 },
+  { pose: "400/235", distanceMeters: 400, azimuthDegrees: 235, intersectionPixels: 58950, silhouettePixels: 60153, v3SilhouettePixels: 60153,
+    source: [0.039694421, 0.038141124, 0.035691889], v4: [0.038679987, 0.037961411, 0.035686802],
+    sourceUnionMeanLuminance: 0.03766457, v4UnionMeanLuminance: 0.03834015 },
+  { pose: "1200/55", distanceMeters: 1200, azimuthDegrees: 55, intersectionPixels: 5801, silhouettePixels: 5945, v3SilhouettePixels: 5945,
+    source: [0.24420355, 0.213603112, 0.191170422], v4: [0.236842734, 0.209122601, 0.187599587],
+    sourceUnionMeanLuminance: 0.20999704, v4UnionMeanLuminance: 0.20767777 },
+  { pose: "1200/235", distanceMeters: 1200, azimuthDegrees: 235, intersectionPixels: 5787, silhouettePixels: 5889, v3SilhouettePixels: 5889,
+    source: [0.042090397, 0.040544976, 0.03810586], v4: [0.040595464, 0.03992856, 0.037721696],
+    sourceUnionMeanLuminance: 0.0394298, v4UnionMeanLuminance: 0.03951773 },
+  { pose: "4000/55", distanceMeters: 4000, azimuthDegrees: 55, intersectionPixels: 511, silhouettePixels: 524, v3SilhouettePixels: 524,
+    source: [0.245675043, 0.213221661, 0.190491397], v4: [0.237055081, 0.207872175, 0.186129874],
+    sourceUnionMeanLuminance: 0.2011661, v4UnionMeanLuminance: 0.19797538 },
+  { pose: "4000/235", distanceMeters: 4000, azimuthDegrees: 235, intersectionPixels: 507, silhouettePixels: 516, v3SilhouettePixels: 516,
+    source: [0.047593581, 0.045642662, 0.042723686], v4: [0.043171253, 0.042488276, 0.040198429],
+    sourceUnionMeanLuminance: 0.04217802, v4UnionMeanLuminance: 0.03976053 },
+];
 
 async function commandVerdict(cellId) {
   if (V4_CAPTURE.length === 0) fail(TOOL, "no v4 capture has been transcribed into this tool yet.");
