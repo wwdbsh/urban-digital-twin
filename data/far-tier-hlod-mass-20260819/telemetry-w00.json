@@ -1,0 +1,159 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "far-tier-hlod-mass-20260819:telemetry-w00",
+  "task": "T004",
+  "artifact": "far-tier-mass-bake-wave-telemetry",
+  "capturedAt": null,
+  "capturedAtStatement": "NULL BY CONSTRUCTION.",
+  "waveId": "w00",
+  "recipeId": "far-tier-hlod-bake-v4",
+  "recipeSha256": "fd950a77f1c57cb2b7238b588aa11cd020ace1f15c1448438dfd0f235e10412c",
+  "adoptedRecipeAssertedBeforeEveryTile": true,
+  "sourceRelease": {
+    "c2ReleaseId": "manhattan-exterior-cells-20260811-v3-c2",
+    "retentionReleaseId": "manhattan-exterior-cells-20260811-v3-c1",
+    "payloadInventorySha256": "3c32785a65bfc837e66e97ff6a4fd64f95cb9db635e8f9c03e1bd9b869809122"
+  },
+  "parentLedgerChecksumSha256": "62e093d2ca50b54b49fd8bbad9d0b11f6301b2b197623deb343f9ea915e59016",
+  "declaredCellCount": 1,
+  "ledgerCellCount": 1,
+  "bakedCellCount": 1,
+  "honestStopCount": 0,
+  "honestStopsByClass": {
+    "no-bakeable-face": 0,
+    "packing-infeasible": 0,
+    "zone-aggregate-missing": 0,
+    "fallback-share-over-bar": 0,
+    "zone-aggregate-out-of-range": 0,
+    "over-b2-atlas-budget": 0
+  },
+  "honestStops": [],
+  "elapsedSeconds": 1.8,
+  "fallbackBar": {
+    "inequality": "fallbackAreaShare x 0.048 x 0.21 <= 0.001",
+    "wallCorrectionEnergyShare": 0.048,
+    "wallTermShareOfChromaticityGap": 0.21,
+    "instrumentCrossSessionTolerance": 0.001,
+    "unhalvedBar": 0.0992,
+    "halvedForMargin": true,
+    "bar": 0.05,
+    "whyHalved": "The three factors are measured on ONE cell under one instrument; the campaign is 883 cells. Halving is the margin for that extrapolation and is stated rather than folded silently into a rounder number."
+  },
+  "cells": [
+    {
+      "cellId": "manhattan-exterior-cell-w00-000000-block-00835",
+      "recipeId": "far-tier-hlod-bake-v4",
+      "faceCount": 136,
+      "wallFaceCount": 122,
+      "flatFaceCount": 82,
+      "atlasPixels": 256,
+      "appliedScale": 0.5,
+      "texelWorldSizeMeters": 2.7925268031909267,
+      "achievedTexelRatio": 0.5,
+      "underResolved": true,
+      "criticalDistanceMeters": 2400,
+      "occupancy": 0.547027587890625,
+      "surfaceAreaSquareMeters": 224410.3534012039,
+      "wallAreaSquareMeters": 208568.65853670376,
+      "includedBuildings": 14,
+      "refusedBuildings": 0,
+      "unitySnapCount": 0,
+      "fallbackZoneCount": 10,
+      "fallbackAreaSquareMeters": 781.1832610258476,
+      "fallbackAreaShare": 0.0037454489399632186,
+      "aggregateInScopeAreaSquareMeters": 213684.9777757765,
+      "aggregateAttributedAreaSquareMeters": 213684.9777757765,
+      "additivityGate": "PASS",
+      "additivityV1AtlasSha256": "f29ede425468e50e4afbb4fda92adab9ce6ad9a8e46635d962734a88017d687c",
+      "additivityNotApplicableReason": null,
+      "verifiedSourceAssets": 28
+    }
+  ],
+  "cellsWithFallbackZones": [
+    {
+      "cellId": "manhattan-exterior-cell-w00-000000-block-00835",
+      "zones": [
+        {
+          "buildingId": "doitt:102705",
+          "zoneKey": "10:shaft",
+          "materialId": "material:facade:shaft"
+        },
+        {
+          "buildingId": "doitt:262867",
+          "zoneKey": "0:shaft",
+          "materialId": "material:facade:shaft"
+        },
+        {
+          "buildingId": "doitt:262867",
+          "zoneKey": "1:shaft",
+          "materialId": "material:facade:shaft"
+        },
+        {
+          "buildingId": "doitt:262867",
+          "zoneKey": "2:shaft",
+          "materialId": "material:facade:shaft"
+        },
+        {
+          "buildingId": "doitt:262867",
+          "zoneKey": "3:shaft",
+          "materialId": "material:facade:shaft"
+        },
+        {
+          "buildingId": "doitt:262867",
+          "zoneKey": "4:shaft",
+          "materialId": "material:facade:shaft"
+        },
+        {
+          "buildingId": "doitt:262867",
+          "zoneKey": "5:shaft",
+          "materialId": "material:facade:shaft"
+        },
+        {
+          "buildingId": "doitt:262867",
+          "zoneKey": "6:shaft",
+          "materialId": "material:facade:shaft"
+        },
+        {
+          "buildingId": "doitt:262867",
+          "zoneKey": "7:shaft",
+          "materialId": "material:facade:shaft"
+        },
+        {
+          "buildingId": "doitt:262867",
+          "zoneKey": "8:shaft",
+          "materialId": "material:facade:shaft"
+        }
+      ],
+      "areaShare": 0.00374545
+    }
+  ],
+  "distribution": {
+    "cells": 1,
+    "appliedScale": {
+      "min": 0.5,
+      "median": 0.5,
+      "max": 0.5
+    },
+    "achievedTexelRatio": {
+      "min": 0.5,
+      "median": 0.5,
+      "max": 0.5
+    },
+    "underResolvedCells": 1,
+    "underResolvedShare": 1,
+    "atlasPixelsHistogram": {
+      "256": 1
+    },
+    "cellsWithAnyFallbackZone": 1,
+    "worstFallbackAreaShare": 0.00374545,
+    "totalUnitySnaps": 0,
+    "additivityGateChecked": 1,
+    "additivityGateNotApplicable": 0,
+    "includedBuildings": 14,
+    "refusedBuildings": 0
+  },
+  "notClaimedHere": [
+    "Telemetry is not acceptance. It records what the bake did, not whether the result looks right.",
+    "The wave's inventory is NOT written by this verb; `seal` writes it after the byte replay."
+  ]
+}
