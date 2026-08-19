@@ -446,3 +446,87 @@ next candidate, and it is named rather than measured.
 
 No bar was widened after the capture, no pose was set aside as roof-dominated after
 the fact, and no second recipe was tried. v3 is neither withdrawn nor promoted.
+
+---
+
+## Amendment — T013 closure (Issue #118, 2026-08-19)
+
+**Status: recipe `v3` is ADOPTED as the far-tier recipe. The operative hue bar is
+`A3'' = 0.035`, adopted BY USER DECISION on 2026-08-19 *after* the measurement.
+The legacy `0.02` bar is retired as operative and recorded as UNREACHABLE.
+Extending the aggregate to the roof is REJECTED on measured numbers.**
+
+Evidence: `data/far-tier-hlod-hue-20260819/gate-adoption.json`,
+`final-verdict.json`, `roof-term.json`, each with a `.sha256`.
+
+### The representation choice
+
+`FAR_TIER_BAKE_RECIPE_V3` — `far-tier-hlod-bake-v3`, recipe sha256
+`e73206429c496c28c707120769eee5f4a6155f44442eccb9b19fe2fdcfbc24c8`. A wall zone's
+colour is the **area-weighted linear-light aggregate** of the vertical facade,
+glazing and trim surfaces that wall stands in for, carried as the zone's factor
+divided through its own class-tile linear mean. It derives from **v1**, not v2;
+the facade-only path through the same code reproduces the committed v1 atlas
+`c159e050…` byte for byte and the bake refuses if it does not. `material:metal`
+is **excluded** — 77.03% of this cell's metal is wall fire escapes and the rest
+is rooftop tanks and legs, which are geometric omissions rather than absorbed
+materials. ADR 0047 / T006-G2 handling is unchanged.
+
+### The adopted gate set
+
+| gate | statement | status |
+| --- | --- | --- |
+| A1 | \|union mean luminance ratio − 1\| ≤ 0.05 where source mean luminance ≥ 0.10 | unchanged |
+| A2 | \|baked − source\| union mean luminance ≤ 0.010 at every pose | unchanged |
+| **A3''** | per-pose channel spread ≤ **0.035** | **adopted after measurement** |
+
+`A3''` is derived as the measured v3 worst spread **0.033824** plus the pinned
+instrument's own cross-session tolerance **0.001**, rounded up to **0.035**.
+
+**It is a post-hoc bar and the record says so at every claim site.** It was chosen
+knowing the score. Its purpose is to codify a limit that was *established by
+measurement* — what a solid prism can achieve standing in for a tiered, recessed
+envelope once every colour-path defect is excluded and the palette term corrected
+— not to test the tile. The control is the disclosure, plus the
+**prediction-agreement discipline**: any future recipe change must pre-register
+per-pose point predictions and stop on a miss, exactly as T013 did when its own
+prediction bar missed at five of six poses and the task halted rather than widen it.
+
+`A3' = 0.032` is **superseded by statement, never edited**. Its derivation basis
+did not transfer: it came from a variant that substituted materials across the
+whole source, while v3 substitutes only on walls, and at the roof-dominated poses
+those are not the same substitution. Its MISS stands in `fix-capture-verdict.json`.
+
+### The measured floor, and why 0.02 is retired
+
+With **both** palette terms corrected — walls to the facade colour and the roof
+region to the roof colour the prism bakes — the residual is **0.027301** at the
+worst pose (bracket 0.027301–0.030863; the metal record cannot be split, so the
+two variants err in opposite directions). That is the geometry term, and it sits
+**above 0.02 before any recipe is chosen**. Holding 0.02 would be holding a bar no
+available change can meet. It is retained as a reported figure at every pose.
+
+This does **not** claim 0.02 is unreachable in principle; a tier carrying the
+source's setbacks and rooftop groups would be a different tier.
+
+### The roof extension, rejected
+
+An area-correct roof aggregate widens the hue spread at **all six poses** (+0.0038
+to +0.0097) and takes 4,000 m / azimuth 235 to **0.043074** — past 0.02, 0.032 and
+0.035 alike. It buys no A2 benefit, because A2 already passes everywhere under v3
+including that pose at 0.00242, and it introduces **new failures at 400 m /
+azimuth 55**: A1 at 0.054069 over the 0.05 allowance, A2 at 0.011666 over 0.010.
+Rejected as a hue fix and as a package — not dismissed as a phenomenon, since it
+remains the largest measured lever on that pose's tone (ratio 0.942687 → 1.004432).
+
+### Final verdict against the adopted gates
+
+Six poses, existing capture re-scored, no new render: **A1 3/3 applicable PASS,
+A2 6/6 PASS, A3'' 6/6 PASS**, tightest A3'' margin 0.001176. The legacy 0.02 bar
+passes at 3 of 6, against 1 of 6 under v1.
+
+Passing a bar derived from this tile's own worst pose is close to arithmetic and
+is not evidence of accuracy. What the capture earns is the wall term's correction,
+measured at 4.6–4.8% of the signal where walls are visible and 1e-8 where they are
+not. The azimuth-235 spreads are unchanged from v1 and `A3''` accommodates that
+rather than closing it.

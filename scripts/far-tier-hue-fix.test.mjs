@@ -363,3 +363,144 @@ describe("the roof stage kept its controls and its scope", () => {
     expect(text).toContain("NO combined wall-and-roof tile");
   });
 });
+
+// ---------------------------------------------------------------------------
+// The adopted gate set and the final verdict.
+//
+// A post-hoc bar is only honest if it is labelled one, if its derivation is
+// reproducible, and if the MISS it supersedes is still on the record. All three
+// are asserted here, because all three are the kind of thing that quietly
+// erodes between one task and the next.
+// ---------------------------------------------------------------------------
+
+const adoption = JSON.parse(readFileSync(join(repositoryRoot, "data/far-tier-hlod-hue-20260819/gate-adoption.json"), "utf8"));
+const finalVerdict = JSON.parse(readFileSync(join(repositoryRoot, "data/far-tier-hlod-hue-20260819/final-verdict.json"), "utf8"));
+
+describe("A3'' is adopted, derived, and disclosed as post-hoc", () => {
+  it("reproduces its own derivation from the measured worst spread", () => {
+    const derivation = adoption.theBar.derivation;
+    const worst = Math.max(...verdict.poses.map((pose) => pose.channelSpread));
+    expect(derivation.measuredWorstSpreadUnderV3).toBeCloseTo(worst, 6);
+    expect(derivation.instrumentCrossSessionTolerance).toBe(0.001);
+    expect(adoption.theBar.bar).toBe(Math.ceil((worst + 0.001) * 1_000) / 1_000);
+    expect(derivation.derivedBarMatchesAdopted).toBe(true);
+    expect(adoption.theBar.bar).toBe(0.035);
+  });
+
+  it("says plainly that it was chosen after the measurement", () => {
+    expect(adoption.headline).toContain("AFTER THE MEASUREMENT");
+    expect(adoption.decision.decidedBy).toBe("USER");
+    expect(adoption.decision.decidedOn).toBe("2026-08-19");
+    expect(adoption.decision.howThisDiffersFromAPreRegisteredBar.statement).toContain("POST-HOC");
+    expect(finalVerdict.bars.A3doublePrime.status).toContain("AFTER MEASUREMENT");
+  });
+
+  it("keeps the raw spreads and the legacy verdict reported at every pose", () => {
+    for (const pose of finalVerdict.poses) {
+      expect(typeof pose.rawChannelSpread).toBe("number");
+      expect(pose.rawPerChannelRatios).toHaveLength(3);
+      expect(["PASS", "MISS"]).toContain(pose.legacyHueBar002.verdict);
+      expect(pose.v1ChannelSpreadForComparison).toBeGreaterThan(0);
+    }
+    expect(adoption.theBar.rawSpreadsKeepBeingReported).toContain("not a reporting change");
+  });
+
+  it("records the legacy bar as unreachable on the measured floor, not on preference", () => {
+    const legacy = adoption.theLegacyBarIsRecordedAsUNREACHABLE;
+    expect(legacy.bar).toBe(0.02);
+    expect(legacy.evidence.measuredFloorWithBothPaletteTermsCorrected).toBe(roof.theIrreducibleResidual.worstPoseResidual);
+    expect(legacy.evidence.measuredFloorWithBothPaletteTermsCorrected).toBeGreaterThan(0.02);
+    expect(legacy.whatIsNotClaimed).toContain("unreachable in principle");
+    expect(legacy.whatIsNotClaimed).toContain("says nothing about it");
+  });
+
+  it("supersedes A3' by statement and cites the capture that broke its basis", () => {
+    const superseded = adoption.a3PrimeSupersession;
+    expect(superseded.supersededBar).toBe(preRegistration.bars.A3prime.bar);
+    expect(superseded.statement).toContain("never edited");
+    expect(superseded.citation).toContain(sha256HexSync(readFileSync(join(repositoryRoot, "data/far-tier-hlod-hue-20260819/fix-capture-verdict.json"), "utf8")));
+    // The MISS it supersedes must still be on the record, unedited.
+    expect(verdict.barVerdicts.A3prime_hue.verdict).toBe("MISS");
+  });
+
+  it("rejects the roof extension on the measured numbers", () => {
+    const rejection = adoption.extensionToRoofRejected;
+    expect(rejection.decision).toBe("REJECTED.");
+    expect(rejection.measuredConsequences.join(" ")).toContain("WORSE at all six poses");
+    expect(rejection.measuredConsequences.join(" ")).toContain("0.043074");
+    expect(rejection.measuredConsequences.join(" ")).toContain("NEW FAILURES");
+    expect(rejection.whatIsNotClaimed).toContain("largest measured lever");
+  });
+});
+
+describe("the T004 handoff names one recipe and one gate set", () => {
+  it("names the recipe the mass bake must use, by id and hash", () => {
+    const handoff = adoption.t004GateHandoff;
+    expect(handoff.recipe.recipeId).toBe("far-tier-hlod-bake-v3");
+    expect(handoff.recipe.recipeSha256).toBe(farTierRecipeHashV3());
+    expect(handoff.recipe.derivedFrom).toBe("far-tier-hlod-bake-v1");
+  });
+
+  it("names exactly the three operative gates", () => {
+    const ids = adoption.t004GateHandoff.operativeGates.map((gate) => gate.id);
+    expect(ids).toEqual(["A1", "A2", "A3''"]);
+    expect(adoption.t004GateHandoff.operativeGates[2].statement).toContain("0.035");
+  });
+
+  it("carries the prediction-agreement discipline that a post-hoc bar makes necessary", () => {
+    const discipline = adoption.t004GateHandoff.predictionAgreementDiscipline;
+    expect(discipline.statement).toContain("BEFORE its confirming capture");
+    expect(discipline.statement).toContain("stop on a miss");
+    expect(discipline.whyItIsPartOfTheHandoff).toContain("post-hoc");
+  });
+
+  it("warns the mass bake about the mask domain, which moves ratios more than the effect", () => {
+    expect(adoption.t004GateHandoff.instrument.maskDomainWarning).toContain("MUST state its domain");
+    expect(adoption.t004GateHandoff.instrument.maskDomainWarning).toContain("0.023");
+  });
+
+  it("says what the gates do not cover", () => {
+    const uncovered = adoption.t004GateHandoff.whatTheGatesDoNotCover.join(" ");
+    expect(uncovered).toContain("Silhouette");
+    expect(uncovered).toContain("Cesium");
+    expect(uncovered).toContain("One cell");
+  });
+});
+
+describe("the final verdict re-scores an existing capture and says so", () => {
+  it("takes no new measurement", () => {
+    expect(finalVerdict.capturedAt).toBeNull();
+    expect(finalVerdict.provenanceOfTheReadings.statement).toContain("THE READINGS ARE THE ONES ALREADY CAPTURED");
+    expect(finalVerdict.provenanceOfTheReadings.whatChangedSinceThatRecordWasWritten).toContain("The BARS, and nothing else");
+  });
+
+  it("carries the same six spreads as the capture it re-scores", () => {
+    expect(finalVerdict.poses).toHaveLength(6);
+    for (const pose of finalVerdict.poses) {
+      const captured = verdict.poses.find((entry) => entry.pose === pose.pose);
+      expect(pose.rawChannelSpread).toBe(captured.channelSpread);
+      expect(pose.absoluteLuminanceDifference).toBe(captured.absoluteLuminanceDifference);
+    }
+  });
+
+  it("recomputes every per-pose verdict from the reading and the bar", () => {
+    for (const pose of finalVerdict.poses) {
+      expect(pose.A3doublePrime.verdict).toBe(pose.rawChannelSpread <= 0.035 ? "PASS" : "MISS");
+      expect(pose.A3doublePrime.margin).toBeCloseTo(0.035 - pose.rawChannelSpread, 6);
+      expect(pose.A2.verdict).toBe(Math.abs(pose.absoluteLuminanceDifference) <= 0.01 ? "PASS" : "MISS");
+      // A1 applies only where the SOURCE is well exposed.
+      expect(pose.A1.applies).toBe(pose.sourceUnionMeanLuminance >= 0.10);
+      if (!pose.A1.applies) expect(pose.A1.verdict).toBe("not applicable");
+    }
+  });
+
+  it("passes all three gates, and does not oversell it", () => {
+    expect(finalVerdict.summary.A1.verdict).toBe("PASS");
+    expect(finalVerdict.summary.A2.verdict).toBe("PASS");
+    expect(finalVerdict.summary.A3doublePrime.verdict).toBe("PASS");
+    expect(finalVerdict.summary.A3doublePrime.passed).toBe(6);
+    expect(finalVerdict.summary.legacyHueBar002.passed).toBe(3);
+    expect(finalVerdict.honestReadingOfThisResult.whatIsNotEarned).toContain("close to arithmetic");
+    expect(finalVerdict.honestReadingOfThisResult.theOpenFinding).toContain("roof-dominated");
+  });
+});

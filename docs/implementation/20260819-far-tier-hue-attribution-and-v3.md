@@ -83,3 +83,62 @@ over the **union**; only the **intersection** reproduces the committed baseline,
 1.05e-4 against 0.023 for the next candidate. Recorded as a note beside the frozen
 records, which are **not** edited. It moves no verdict: under the union domain every
 spread is larger and the same five of six poses miss.
+
+---
+
+## Closure (2026-08-19)
+
+**Recipe v3 ADOPTED. Operative hue bar `A3'' = 0.035`, adopted by user decision
+*after* the measurement. Roof extension REJECTED on measured numbers.**
+
+### The roof term, measured before the decision
+
+The requested roof-substituted *source* variant proved unbuildable at material-record
+granularity: roof caps, decks and equipment already carry `material:roof` — the
+prism's own colour — and the only differing record, `material:metal`, is **77.03%
+wall fire escapes** (2,384.521 m² below the crown against 710.918 m² above). The
+tool refused, and the **inverse** variant was built instead: the tile's roof cap
+repainted per building with the area-correct aggregate of its roof region.
+
+Arithmetic predicted the sign and the render agreed. Rooftop metal reads R/B
+**0.986** against the cap's **1.091**, so aggregating tanks and legs in makes the
+roof **less red** while the tile is already **red-deficient**: the aggregate is
+−1.17% chromaticity and +8.36% luminance.
+
+| pose | v1 | roof aggregate | change |
+| --- | --- | --- | --- |
+| 400/55 | 0.015976 | 0.019756 | +0.003781 |
+| 400/235 | 0.025772 | 0.035490 | +0.009718 |
+| 1200/55 | 0.020627 | 0.024554 | +0.003927 |
+| 1200/235 | 0.025436 | 0.034809 | +0.009373 |
+| 4000/55 | 0.022772 | 0.026628 | +0.003856 |
+| 4000/235 | **0.033824** | **0.043074** | **+0.009250** |
+
+Worse at all six. And at that same pose the luminance ratio goes 0.942687 →
+1.004432, essentially eliminating the tone miss that has blocked the mass bake
+since T002 — while breaking A1 and A2 at 400 m / azimuth 55. A trade, put to the
+user with numbers rather than decided in the record.
+
+### What each correction reaches
+
+Measured for both, as relative energy change over the tile's silhouette: the
+**wall** correction reaches 4.6–4.8% at azimuth 55 and **1e-8** at the far
+azimuth-235 poses; the **roof** repaint reaches 1.44–1.51% at azimuth 55 and
+6.8–7.3% at azimuth 235. Complementary, ~5× apart. This is the P1 lesson applied —
+the wall fix missed its prediction because the model assumed the whole tile
+carried the substitution.
+
+### Final gate verdict
+
+A1 3/3 applicable PASS · A2 6/6 PASS · A3'' 6/6 PASS (tightest margin 0.001176) ·
+legacy 0.02 passes 3/6 against 1/6 under v1.
+
+### The three process failures this task recorded
+
+1. A metric-transfer error survived the first attribution (a log(R/B) share applied
+   to a three-channel spread), understating the worst case and hiding a sign flip.
+2. A pre-registration draft carried a non-regression clause its own prediction
+   would have failed.
+3. The prediction bar itself **missed at five of six poses** and the task **stopped**
+   rather than retune — which is what forced the roof measurement and, ultimately,
+   the correct decision basis.
