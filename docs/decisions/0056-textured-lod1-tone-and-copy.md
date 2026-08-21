@@ -126,8 +126,31 @@ confirms the emitted bytes rather than the rasterizer.
 
 ## What is NOT decided here
 
-- **The shed-tone residue, which now has an OWNER: T006, the rendered
-  LOD-transition gate (Issue #106).** Five shed pairs remain outside 2% even
+- **The shed-tone residue is NOT settled, and T006 remains its owner.** T006
+  ran a campaign under the shipped renderer, **withdrew it**, re-ran it, and
+  returns **INCONCLUSIVE-BY-INSTRUMENT on all five pairs**.
+
+  An earlier revision of this entry claimed two settled FAILs — `doitt:10049` at
+  3.78% and `doitt:147902` at 18.85%, against a 0.591% instrument floor. **Those
+  numbers are withdrawn.** They came from a campaign that applied canvas-space
+  regions of interest to whole-window captures with no origin correction, and so
+  measured a patch 184 px left and 120 px above every target.
+
+  The corrected campaign fixes that and still cannot produce verdicts, for a
+  reason worth recording: **the wire-level control proves a byte arrived, not
+  that it was rasterized.** At the near arm of two pairs the target's GLB was
+  fetched while its own projected bounding box renders 99–100% procedural
+  massing. One pair produced a 0.008% "PASS" that turns out to be massing
+  compared against massing. The identity check that would have caught this — pick
+  the pose and read which feature the app reports — returned **no feature at all
+  twelve poses**.
+
+  What it would take is the same capability T006's Stage 0 honest stop names: a
+  runtime hook that renders a named building at a chosen level, isolated, from a
+  camera the measurement picks. See
+  `data/far-tier-lod-transition-20260821/shed-tone-results-v2.json`.
+
+- **The shed-tone residue as originally handed to T006:** Five shed pairs remain outside 2% even
   under the post-hoc intersection measure, and settling them needs an instrument
   that separates geometry from tone BY CONSTRUCTION, agreed in advance, under
   the shipped renderer rather than EEVEE. The five are named here so the

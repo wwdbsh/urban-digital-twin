@@ -1,0 +1,149 @@
+{
+  "pairs": [
+    {
+      "buildingId": "doitt:401323",
+      "ownerCellId": "manhattan-exterior-cell-w04-000688-17-38617-35826",
+      "isNegativeControl": true,
+      "nearArmPng": "data/far-tier-lod-transition-20260821/stills/ctl-near.png",
+      "farArmPng": "data/far-tier-lod-transition-20260821/stills/ctl-far.png",
+      "roi": {
+        "x0": 960,
+        "y0": 753,
+        "x1": 1050,
+        "y1": 789
+      },
+      "erosionPixels": 3,
+      "wireLevelControl": {
+        "nearArmFetched": "lod_0",
+        "farArmFetched": "lod_0"
+      },
+      "projection": {
+        "devicePixelX": 1005.0000000000001,
+        "devicePixelY": 771.2307872203606,
+        "depthMetres": 510.4666105175627,
+        "devicePixelsPerMetreAtTarget": 3.4100390226146486
+      }
+    },
+    {
+      "buildingId": "doitt:100749",
+      "ownerCellId": "manhattan-exterior-cell-w04-000495-17-38610-35840",
+      "isNegativeControl": false,
+      "nearArmPng": "data/far-tier-lod-transition-20260821/stills/p1-near.png",
+      "farArmPng": "data/far-tier-lod-transition-20260821/stills/p1-far.png",
+      "roi": {
+        "x0": 992,
+        "y0": 755,
+        "x1": 1018,
+        "y1": 789
+      },
+      "erosionPixels": 3,
+      "wireLevelControl": {
+        "nearArmFetched": "lod_0",
+        "farArmFetched": "lod_1"
+      },
+      "projection": {
+        "devicePixelX": 1005.0000000000001,
+        "devicePixelY": 772.1678343363752,
+        "depthMetres": 510.9342642356063,
+        "devicePixelsPerMetreAtTarget": 3.406917843356911
+      }
+    },
+    {
+      "buildingId": "doitt:10049",
+      "ownerCellId": "manhattan-exterior-cell-w01-000054-17-38600-35862",
+      "isNegativeControl": false,
+      "nearArmPng": "data/far-tier-lod-transition-20260821/stills/p2-near.png",
+      "farArmPng": "data/far-tier-lod-transition-20260821/stills/p2-far.png",
+      "roi": {
+        "x0": 986,
+        "y0": 711,
+        "x1": 1024,
+        "y1": 791
+      },
+      "erosionPixels": 3,
+      "wireLevelControl": {
+        "nearArmFetched": "lod_0",
+        "farArmFetched": "lod_1"
+      },
+      "projection": {
+        "devicePixelX": 1005.0000000000001,
+        "devicePixelY": 751.121325045222,
+        "depthMetres": 500.6328920575904,
+        "devicePixelsPerMetreAtTarget": 3.477020965307407
+      }
+    },
+    {
+      "buildingId": "doitt:147902",
+      "ownerCellId": "manhattan-exterior-cell-w00-000000-block-00835",
+      "isNegativeControl": false,
+      "nearArmPng": "data/far-tier-lod-transition-20260821/stills/p3-near.png",
+      "farArmPng": "data/far-tier-lod-transition-20260821/stills/p3-far.png",
+      "roi": {
+        "x0": 988,
+        "y0": 747,
+        "x1": 1022,
+        "y1": 789
+      },
+      "erosionPixels": 3,
+      "wireLevelControl": {
+        "nearArmFetched": "lod_0",
+        "farArmFetched": "lod_1"
+      },
+      "projection": {
+        "devicePixelX": 1005.0000000000001,
+        "devicePixelY": 768.2084350844268,
+        "depthMetres": 508.9640564419967,
+        "devicePixelsPerMetreAtTarget": 3.420106075418116
+      }
+    },
+    {
+      "buildingId": "doitt:100368",
+      "ownerCellId": "manhattan-exterior-cell-w02-000172-17-38594-35889",
+      "isNegativeControl": false,
+      "nearArmPng": "data/far-tier-lod-transition-20260821/stills/p4-near.png",
+      "farArmPng": "data/far-tier-lod-transition-20260821/stills/p4-far.png",
+      "roi": {
+        "x0": 992,
+        "y0": 766,
+        "x1": 1018,
+        "y1": 788
+      },
+      "erosionPixels": 3,
+      "wireLevelControl": {
+        "nearArmFetched": "lod_0",
+        "farArmFetched": "both"
+      },
+      "projection": {
+        "devicePixelX": 1005.0000000000001,
+        "devicePixelY": 777.4369550017714,
+        "depthMetres": 513.5799718441677,
+        "devicePixelsPerMetreAtTarget": 3.3893671035421424
+      }
+    },
+    {
+      "buildingId": "doitt:100176",
+      "ownerCellId": "manhattan-exterior-cell-w04-000682-17-38613-35831",
+      "isNegativeControl": false,
+      "nearArmPng": "data/far-tier-lod-transition-20260821/stills/p5-near.png",
+      "farArmPng": "data/far-tier-lod-transition-20260821/stills/p5-far.png",
+      "roi": {
+        "x0": 992,
+        "y0": 757,
+        "x1": 1018,
+        "y1": 789
+      },
+      "erosionPixels": 3,
+      "wireLevelControl": {
+        "nearArmFetched": "lod_0",
+        "farArmFetched": "both"
+      },
+      "projection": {
+        "devicePixelX": 1005.0000000000001,
+        "devicePixelY": 773.163732109056,
+        "depthMetres": 511.43222884278237,
+        "devicePixelsPerMetreAtTarget": 3.4036006403926256
+      }
+    }
+  ],
+  "note": "Poses, regions of interest and wire-level expectations for the shed-tone campaign. The PNGs named here are checksummed INPUTS; the verdict is the JSON emitted by scripts/shed-tone-compare-cli.mjs."
+}

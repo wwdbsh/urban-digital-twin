@@ -1,0 +1,98 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "far-tier-lod-transition-20260821:shed-tone-budget",
+  "task": "T006",
+  "artifact": "shed-tone-pair-instrument-budget",
+  "capturedAt": null,
+  "inheritedFrom": "docs/decisions/0056-textured-lod1-tone-and-copy.md — five shed pairs remain outside 2% even under the post-hoc intersection measure; ADR 0056 names T006 as their owner and requires an instrument that separates geometry from tone BY CONSTRUCTION, under the shipped renderer rather than EEVEE.",
+  "whyThisIsNotTheHonestStoppedMeasure": "The area ratio is honest-stopped because its error is dominated by the OUTLINE. A mean luminance over an ERODED intersection interior has no outline in it: erosion of 3 px removes antialiasing, the sub-pixel registration residual, and the 399/401 scale edge. What remains is 8-bit quantization on a mean, which shrinks as 1/sqrt(N).",
+  "erosionPixels": 3,
+  "measure": {
+    "name": "eroded-intersection-mean-luminance-ratio",
+    "version": "1.0",
+    "statement": "Rec.709 luminance, averaged over pixels inside BOTH masks after erosion; the verdict is |1 - lod1Mean/lod0Mean| against the 0.02 bar."
+  },
+  "residualTermsNotInTheNumber": [
+    "ISOLATION. Occlusion by neighbours is still not solvable without a runtime hook. Each pair is checked for occlusion at its pose and a pair whose interior cannot be cleanly separated is recorded INCONCLUSIVE, never PASS.",
+    "Mip-level delta between the arms is log2(401/399) = 0.0072 of a level, which is not a bound so much as a statement that it is negligible.",
+    "Sun and material state are identical between arms because only the camera moves."
+  ],
+  "pairs": [
+    {
+      "buildingId": "doitt:100749",
+      "present": true,
+      "releaseId": "manhattan-central-upper-manhattan-cells-20260812-s2",
+      "ownerCellId": "manhattan-exterior-cell-w04-000495-17-38610-35840",
+      "twoLodEligible": true,
+      "lod0TriangleCount": 1064,
+      "lod1TriangleCount": 520,
+      "heightMetres": 20.214000701904297,
+      "widthMetres": 30.19099998474121,
+      "projectedAreaDevicePixels": 11615.485345957963,
+      "interiorPixelsAfterErosion": 10332.07869549874,
+      "quantisationOfMeanLuminance": 0.000011137182693619485,
+      "underToneBar": true
+    },
+    {
+      "buildingId": "doitt:10049",
+      "present": true,
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-s2",
+      "ownerCellId": "manhattan-exterior-cell-w01-000054-17-38600-35862",
+      "twoLodEligible": true,
+      "lod0TriangleCount": 3064,
+      "lod1TriangleCount": 1240,
+      "heightMetres": 45.65800094604492,
+      "widthMetres": 35.24399948120117,
+      "projectedAreaDevicePixels": 30627.36722512451,
+      "interiorPixelsAfterErosion": 28545.667870991896,
+      "quantisationOfMeanLuminance": 0.000006700374734035917,
+      "underToneBar": true
+    },
+    {
+      "buildingId": "doitt:147902",
+      "present": true,
+      "releaseId": "manhattan-exterior-cells-20260811-v3-s2",
+      "ownerCellId": "manhattan-exterior-cell-w00-000000-block-00835",
+      "twoLodEligible": true,
+      "lod0TriangleCount": 1962,
+      "lod1TriangleCount": 786,
+      "heightMetres": 26.413000106811523,
+      "widthMetres": 35.154998779296875,
+      "projectedAreaDevicePixels": 17673.086665956536,
+      "interiorPixelsAfterErosion": 16097.476189234143,
+      "quantisationOfMeanLuminance": 0.000008922576924805818,
+      "underToneBar": true
+    },
+    {
+      "buildingId": "doitt:100368",
+      "present": true,
+      "releaseId": "manhattan-lower-manhattan-cells-20260812-s2",
+      "ownerCellId": "manhattan-exterior-cell-w02-000172-17-38594-35889",
+      "twoLodEligible": true,
+      "lod0TriangleCount": 640,
+      "lod1TriangleCount": 316,
+      "heightMetres": 15.08899974822998,
+      "widthMetres": 22.063225746154785,
+      "projectedAreaDevicePixels": 6336.319192838351,
+      "interiorPixelsAfterErosion": 5399.818593118309,
+      "quantisationOfMeanLuminance": 0.000015405635266043165,
+      "underToneBar": true
+    },
+    {
+      "buildingId": "doitt:100176",
+      "present": true,
+      "releaseId": "manhattan-central-upper-manhattan-cells-20260812-s2",
+      "ownerCellId": "manhattan-exterior-cell-w04-000682-17-38613-35831",
+      "twoLodEligible": true,
+      "lod0TriangleCount": 1160,
+      "lod1TriangleCount": 492,
+      "heightMetres": 18.142000198364258,
+      "widthMetres": 27.023000717163086,
+      "projectedAreaDevicePixels": 9330.959984491139,
+      "interiorPixelsAfterErosion": 8184.716124474053,
+      "quantisationOfMeanLuminance": 0.000012513171186919719,
+      "underToneBar": true
+    }
+  ],
+  "verdict": "MEASURABLE: quantization of the mean is far below the bar for every pair; the campaign may run."
+}

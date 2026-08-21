@@ -1,0 +1,154 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "far-tier-lod-transition-20260821:error-budget",
+  "task": "T006",
+  "artifact": "lod-transition-in-app-instrument-error-budget",
+  "capturedAt": null,
+  "capturedAtStatement": "NULL BY CONSTRUCTION.",
+  "theBarIsCarriedTheInstrumentIsNot": {
+    "bar": "0.02 deviation ratio, carried from criterion 19 and enforced by src/release/multi-lod-assembly.ts.",
+    "frozenInstrument": "scripts/blender/block835_v3_author.py::measure_silhouette — Blender, ORTHOGRAPHIC, four axis-aligned horizontal views, the subject ISOLATED via hide_render on every other mesh, ortho_scale derived from the subject's own bounds so it fills the frame.",
+    "thisInstrument": "CesiumJS in the shipped app — PERSPECTIVE, NO isolation available, magnification pinned by the 400 m cell ring.",
+    "statement": "THESE ARE DIFFERENT INSTRUMENTS. No part of T006 may present this one as the instrument criterion 19 was written against. Only the BAR is carried.",
+    "repositoryPrecedent": "src/release/midtown-core-v3-silhouette.ts abandoned rasterization for an exact integer sweep because 'a 512-pixel raster's own quantization is the same order as the ratios being compared against a 2% cap' — and that was an ORTHO view with the subject FILLING the frame."
+  },
+  "vehicle": {
+    "canvasCssWidth": 1005,
+    "canvasCssHeight": 790,
+    "devicePixelRatio": 2,
+    "cesiumFovDegrees": 60,
+    "cesiumFovAxis": "horizontal when width > height (CesiumJS PerspectiveFrustum default)",
+    "ringMeters": 400,
+    "nearArmMeters": 399,
+    "farArmMeters": 401,
+    "derivedFovyDegrees": 48.820659768882976,
+    "verticalDevicePixels": 1580,
+    "pixelsPerMetreAtRing": 4.3517776540168045
+  },
+  "terms": {
+    "t1BoundaryQuantization": "perimeterPixels x 1px / areaPixels — a mask is a threshold over an antialiased render.",
+    "t2RingScaleDelta": {
+      "value": 0.009950186876947376,
+      "statement": "1 - (399/401)^2. The level flips when the CELL crosses 400 m, so the arms cannot share a camera. IRREDUCIBLE without a forced-LOD hook, and IDENTICAL for every building — it alone spends half the bar."
+    },
+    "t3Registration": "perimeterPixels x 0.5px / areaPixels — sub-pixel residual after centroid alignment.",
+    "t4Isolation": "UNBOUNDED, and deliberately not given a number. The frozen instrument isolates with hide_render; the shipped renderer has no equivalent, neighbours overlap the target in perspective, and the whole CELL flips together so the occluders differ between arms. Supplying isolation would be a runtime change, which this task may not make.",
+    "direction": "The emitted total is T1+T2+T3: it OMITS T4 and computes T1/T3 from the bounding rectangle, which overstates area and so understates the ratio. This is an OPTIMISTIC LOWER BOUND on the instrument's error."
+  },
+  "resolutionThreshold": {
+    "boundaryTermAloneAreaDevicePixels": 40000,
+    "boundaryTermAloneStatement": "T1 ALONE would clear 0.02 at 40000 device px^2. This figure is NOT the operative one and must not be quoted as if it were.",
+    "operativeAreaDevicePixelsNeeded": 356440.07680270186,
+    "operativeStatement": "THE OPERATIVE THRESHOLD. With T2 spending 0.995% of the bar before any pixel is counted, and T3 riding the same perimeter as T1, a compact target needs about 356440 device px^2 — roughly a 597x597 px box.",
+    "projectedSquareMetresNeeded": 18727.4627417034,
+    "pixelsPerMetreBasis": "4.3627 device px per metre AT THE NEAR ARM (399 m), which is the distance the budget is computed at; at the ring itself (400 m) it is 4.3518.",
+    "atTheRing": "That is a projected 18727 m^2 — e.g. 137 m wide by 137 m tall."
+  },
+  "strata": {
+    "census": {
+      "population": 424,
+      "projectedAreaDevicePixels": {
+        "min": 373.8337259172368,
+        "median": 3724.2586903386295,
+        "p90": 7514.642718384307,
+        "max": 17666.06328338516
+      },
+      "heightMetres": {
+        "min": 2.859,
+        "median": 13.716,
+        "p90": 18.34,
+        "max": 47.244
+      },
+      "widthMetres": {
+        "min": 6.346,
+        "median": 15.106,
+        "p90": 22.923,
+        "max": 47.963
+      },
+      "budgetTotal": {
+        "min": 0.05982107661298775,
+        "median": 0.1089387115318399,
+        "p90": 0.1703477705907956,
+        "max": 0.35056597333859185
+      },
+      "underBarCount": 0,
+      "verdict": "HONEST-STOP"
+    },
+    "nearCap": {
+      "population": 53,
+      "projectedAreaDevicePixels": {
+        "min": 940.5453026538693,
+        "median": 3887.4335320731825,
+        "p90": 8924.174819565818,
+        "max": 11584.414578317546
+      },
+      "heightMetres": {
+        "min": 5.124000072479248,
+        "median": 14.232999801635742,
+        "p90": 22.554000854492188,
+        "max": 26.277999877929688
+      },
+      "widthMetres": {
+        "min": 6.771543264389038,
+        "median": 14.531617641448975,
+        "p90": 23.5935001373291,
+        "max": 27.206896781921387
+      },
+      "budgetTotal": {
+        "min": 0.06570049128637578,
+        "median": 0.10638976030584343,
+        "p90": 0.15397078036910597,
+        "max": 0.20645111752972967
+      },
+      "underBarCount": 0,
+      "verdict": "HONEST-STOP"
+    }
+  },
+  "viewportScaling": {
+    "note": "Could a bigger render target rescue it? Both axes are scaled so the aspect -- and therefore the derived vertical FOV -- stays fixed and resolution actually moves. It does move: the 1x honest stop stands, but the render-target-resolution axis is a real successor path, and any subset it rescues is selected by SIZE and is therefore a biased stratum, not the census.",
+    "rows": [
+      {
+        "multiple": 1,
+        "verticalDevicePixels": 1580,
+        "censusUnderBar": 0,
+        "of": 424
+      },
+      {
+        "multiple": 2,
+        "verticalDevicePixels": 3160,
+        "censusUnderBar": 0,
+        "of": 424
+      },
+      {
+        "multiple": 4,
+        "verticalDevicePixels": 6320,
+        "censusUnderBar": 0,
+        "of": 424
+      },
+      {
+        "multiple": 8,
+        "verticalDevicePixels": 12640,
+        "censusUnderBar": 97,
+        "of": 424
+      },
+      {
+        "multiple": 16,
+        "verticalDevicePixels": 25280,
+        "censusUnderBar": 382,
+        "of": 424
+      },
+      {
+        "multiple": 32,
+        "verticalDevicePixels": 50560,
+        "censusUnderBar": 421,
+        "of": 424
+      }
+    ]
+  },
+  "verdict": {
+    "census": "HONEST-STOP",
+    "nearCap": "HONEST-STOP",
+    "overall": "HONEST-STOP: the measurement half of T006 cannot be run at this bar with this instrument.",
+    "statement": "Pre-registered BEFORE any capture. Per the adjudicated Stage 0 rule, a budget exceeding the bar for all realistic strata makes T006's measurement half one honest stop, and the task proceeds to the census and shed-tone deliverables."
+  }
+}

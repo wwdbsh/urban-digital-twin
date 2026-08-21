@@ -441,3 +441,45 @@ release withdrawn, the same shape every `-s1` rollback uses. The `-s2` pin
 derivation in `App.tsx` consequently moved from the rollback list to the
 promoted set itself. Parameterless defaults of the single-record activation
 helpers moved from the `-s1` record to the promoted two-LOD record.
+
+---
+
+## Amendment — T006, and what the ring is actually keyed on (Issue #106, 2026-08-21)
+
+T006 set out to measure the rendered LOD transition against the 2% bar and found
+two things worth writing down here, because both are properties of THIS ADR's
+ring rather than of T006.
+
+### The ring is keyed on two different quantities, and which one applies depends on residency
+
+`ringSideOf` reads `lodDistanceFor(cellId)`, which is
+`measuredDistances?.get(cellId) ?? exteriorCameraHeightBucketMeters`. Those are
+not the same measurement and they do not agree:
+
+- `measuredDistances` is `unitDistanceMeters`, the nearest-edge planar distance
+  from the **viewport footprint's ground centre** to the cell rectangle, with
+  camera height excluded. At an oblique pose the footprint centre is far ahead
+  of the camera — **measured at 65,287 m** for a cell the camera was standing
+  200 m from. Cell distance is therefore not a usable dial at oblique angles.
+- The fallback is the **camera height bucket**, `max(50, round(height/100)*100)`,
+  which crosses 400 → 500 when camera height crosses **450 m**.
+
+In practice, at the poses T006 could use, the fallback is what governs: the flip
+was verified **at the wire** at 449 m versus 450 m of camera height — 449 fetched
+`__lod_0.glb` and not `__lod_1.glb`, 450 the reverse. A reader of ADR 0057 who
+expects the served level to track a 400 m *cell* distance will be wrong at
+oblique poses, and that is worth knowing before the next gate is designed
+against it.
+
+### The transition cannot be measured against a 2% area bar from inside the app
+
+Not "was not". Cannot, at this bar, with this instrument. The arithmetic is in
+`data/far-tier-lod-transition-20260821/error-budget.json`: magnification is
+pinned by the ring, so a target needs about 40,000 device px² before boundary
+quantization alone falls under 2%, and the largest of the 424 measured-fallback
+parents projects 17,666. Zero of 424 and zero of the 53 near-cap buildings come
+under the bar. T006 records that as one honest stop with the arithmetic, and
+names the missing capability — a forced-LOD and isolation hook — rather than
+adding one.
+
+What T006 *could* measure, and did, is tone: see the ADR 0056 amendment.

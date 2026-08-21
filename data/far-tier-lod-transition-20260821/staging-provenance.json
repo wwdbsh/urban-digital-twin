@@ -1,0 +1,86 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "far-tier-lod-transition-20260821:staging-provenance",
+  "task": "T006",
+  "artifact": "serving-payload-staging-provenance",
+  "capturedAt": null,
+  "why": "The -s2 payloads are gitignored local data. A measurement that rests on bytes nobody can identify is not evidence, so the bytes are identified here: where they came from, at which commit, and against which committed checksums they were verified.",
+  "source": {
+    "worktree": "/Users/sangheonlee/orca/workspaces/urban-digital-twin/fcp-105-promotion",
+    "branch": "fcp/105-promotion",
+    "commit": "33efa4bec236a3baa837daee5b03bc69e1e61901"
+  },
+  "method": "APFS clone (cp -Rc) into public/data of this worktree, then EVERY declared file re-verified by size and SHA-256 against the committed payload-inventory.json in this worktree's data/ — not against the source's.",
+  "verification": {
+    "packages": 6,
+    "filesVerified": 93564,
+    "mismatches": 0,
+    "statement": "All 93,564 declared files matched size and digest at the destination. The staged tree is byte-identical to what the committed inventories declare."
+  },
+  "packages": [
+    {
+      "releaseId": "manhattan-exterior-cells-20260811-v3-s2",
+      "payloadInventorySha256": "012b55d7838dde58517f52bb695ff6c5e81a1bdc91c16f7406d676431dbb3c65",
+      "declaredFileCount": 41,
+      "declaredByteTotal": 10755268,
+      "everyFileVerified": true
+    },
+    {
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-s2",
+      "payloadInventorySha256": "02740f614ba90cd8f8115c26b53224276eb46f339e3f90d89d8a68971df583f0",
+      "declaredFileCount": 14963,
+      "declaredByteTotal": 1964970441,
+      "everyFileVerified": true
+    },
+    {
+      "releaseId": "manhattan-lower-manhattan-cells-20260812-s2",
+      "payloadInventorySha256": "70a265722816814dd2fad0817356d0d91356835e00441795a4bc74374ea22fb7",
+      "declaredFileCount": 13277,
+      "declaredByteTotal": 1220738988,
+      "everyFileVerified": true
+    },
+    {
+      "releaseId": "manhattan-southern-remainder-cells-20260812-s2",
+      "payloadInventorySha256": "8a091d531b183a4085d74623cf8367ae4deb7c69a725575991da817de338c928",
+      "declaredFileCount": 19833,
+      "declaredByteTotal": 1495673806,
+      "everyFileVerified": true
+    },
+    {
+      "releaseId": "manhattan-central-upper-manhattan-cells-20260812-s2",
+      "payloadInventorySha256": "6b2734cd02ebc6441711a49bb85785cb99f0fd81aa3149a2d9c512d0a87fd559",
+      "declaredFileCount": 24369,
+      "declaredByteTotal": 1828378311,
+      "everyFileVerified": true
+    },
+    {
+      "releaseId": "manhattan-northern-manhattan-cells-20260812-s2",
+      "payloadInventorySha256": "5e38c4f3a5523836c114aa8bef03c2f2b350c0315679d0154493f0b27811eccf",
+      "declaredFileCount": 21081,
+      "declaredByteTotal": 1345212051,
+      "everyFileVerified": true
+    }
+  ],
+  "alsoStagedForTheAppToRun": [
+    "manhattan-citywide-20260804",
+    "manhattan-civic-context-20260804",
+    "real-wave-20260804",
+    "udt-fixture-exterior-cells"
+  ],
+  "notClaimedHere": [
+    "This records provenance of BYTES, not of any measurement taken from them.",
+    "No package was regenerated; regeneration could legitimately produce different bytes and would break the committed inventories."
+  ],
+  "alsoStagedForEnvironmentalTests": {
+    "packages": [
+      "manhattan-lower-manhattan-cells-20260812-c1",
+      "manhattan-central-upper-manhattan-cells-20260812-c1",
+      "manhattan-northern-manhattan-cells-20260812-c1",
+      "manhattan-lower-manhattan-cells-20260812-p1",
+      "manhattan-central-upper-manhattan-cells-20260812-p1",
+      "manhattan-southern-remainder-cells-20260812-p1"
+    ],
+    "source": "/Users/sangheonlee/orca/workspaces/urban-digital-twin/fcp-90-closure",
+    "why": "src/runtime/exterior-serving-residency.test.ts re-derives two load-bearing constants from the -c1 retention manifests and -p1 release graphs and FAILS CLOSED when the payloads are absent. Without them the suite reports two failures that are about this machine, not about the code."
+  }
+}

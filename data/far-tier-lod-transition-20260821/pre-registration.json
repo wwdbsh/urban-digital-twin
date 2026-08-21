@@ -1,0 +1,141 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "far-tier-lod-transition-20260821:pre-registration",
+  "task": "T006",
+  "issue": 106,
+  "artifact": "rendered-lod-transition-gate-pre-registration",
+  "capturedAt": null,
+  "capturedAtStatement": "NULL BY CONSTRUCTION. This record is written BEFORE any capture exists and is committed in a commit that precedes the first capture commit.",
+  "theBarIsCarriedTheInstrumentIsNot": {
+    "headline": "THE 2% BAR IS CARRIED FROM CRITERION 19. THE INSTRUMENT IS NOT, AND NO PART OF T006 MAY PRESENT THIS ONE AS THE INSTRUMENT CRITERION 19 WAS WRITTEN AGAINST.",
+    "theBar": "0.02 deviation ratio, enforced by src/release/multi-lod-assembly.ts, which refuses any coarse level above it.",
+    "theFrozenInstrument": "scripts/blender/block835_v3_author.py::measure_silhouette — Blender, ORTHOGRAPHIC, four axis-aligned horizontal views, subject ISOLATED by setting hide_render on every other mesh, ortho_scale derived from the subject's own bounds so it fills the frame, metric = symmetric difference over lod_0 covered pixels, worst of four views.",
+    "theInstrumentUnderTest": "CesiumJS in the shipped application — PERSPECTIVE projection, NO isolation available, magnification pinned by the 400 m cell ring, target sharing the frame with its neighbours, the ground and the sky.",
+    "whyThisMattersRatherThanBeingPedantry": "The repository has already ruled on this class of instrument at this bar. src/release/midtown-core-v3-silhouette.ts abandoned rasterization for an exact integer sweep and stated the reason: 'a 512-pixel raster's own quantization is the same order as the ratios being compared against a 2% cap'. That was an ORTHOGRAPHIC view with the subject FILLING the frame. The in-app view is strictly worse on every axis that matters.",
+    "consequence": "T006 does not inherit criterion 19's credibility by reusing its number. It must earn its own, and the first thing it must do is compute whether its instrument can resolve the bar at all."
+  },
+  "verdictVocabulary": {
+    "PASS": "Reading is inside the bar AND outside the instrument's error budget.",
+    "FAIL": "Reading is outside the bar AND outside the error budget.",
+    "INCONCLUSIVE": "Reading falls INSIDE the error budget, so the instrument cannot tell it from the bar. Added deliberately: an instrument that cannot resolve a difference must say so rather than round toward the answer it hoped for.",
+    "HONEST-STOP": "The measurement was not attempted, because pre-registered arithmetic shows the instrument cannot resolve the bar. Committed with the arithmetic, before any capture."
+  },
+  "stage0Arithmetic": {
+    "derivedBy": "scripts/lod-transition-stage0-cli.mjs — deterministic and re-runnable; every number below is its output, not a typed value.",
+    "errorBudgetRecord": "error-budget.json",
+    "errorBudgetSha256": "b3a5dfef827c01c792ecc0a5eff1a345ce8bf49652637adb0cf3e3b68fc1fd08",
+    "censusRecord": "census.json",
+    "censusSha256": "e9143b03dbbcaf1b72cbc7044dfc7d529adc187b4561713915cfd70fb71e73d1",
+    "shedToneBudgetRecord": "shed-tone-budget.json",
+    "terms": "T1 boundary quantization (perimeter x 1px / area); T2 ring scale delta 1-(399/401)^2 = 0.9950%, irreducible and identical for every building; T3 registration residual (perimeter x 0.5px / area); T4 isolation, UNBOUNDED and deliberately unnumbered.",
+    "direction": "The emitted total OMITS T4 and computes area from the bounding rectangle, which overstates area and understates the ratio. It is an OPTIMISTIC LOWER BOUND. A pessimistic budget cannot rescue a bar the optimistic one already fails."
+  },
+  "strata": [
+    {
+      "stratum": "measured-fallback census (424)",
+      "budgetMin": 0.0598,
+      "budgetMedian": 0.1089,
+      "budgetP90": 0.1703,
+      "budgetMax": 0.3506,
+      "underBarCount": 0,
+      "of": 424,
+      "verdict": "HONEST-STOP",
+      "arithmetic": "The most favourable member of the whole census, doitt:401323 at 19.4 m tall by 48.0 m wide, projects 17,666 device px^2 at the ring and carries a 5.98% budget — three times the bar. The median carries 10.89%. Not one of the 424 comes under 2%."
+    },
+    {
+      "stratum": "near-cap (53, deviationRatio in [0.0185, 0.02))",
+      "derivation": "Derived independently from the shipped -s2 manifests (lod_1.silhouette.deviationRatio) and cross-checked against the T004 histogram buckets, which report 21+12+20 = 53. Dimensions read from the shipped lod_0 GLB accessor bounds.",
+      "budgetMin": 0.0657,
+      "budgetMedian": 0.1064,
+      "budgetMax": 0.2065,
+      "underBarCount": 0,
+      "of": 53,
+      "verdict": "HONEST-STOP",
+      "arithmetic": "These are the buildings closest to the bar that still ship two levels, so they are where a rendered check would be most informative. They are also small: median 14.2 m tall by 14.5 m wide, projecting a median 3,887 device px^2. Budget 6.57% to 20.65%. None comes under 2%."
+    },
+    {
+      "stratum": "sky-silhouette availability",
+      "verdict": "HONEST-STOP",
+      "arithmetic": "This stratum existed to buy back the isolation term T4 by choosing targets whose outline meets sky. It cannot: the census tops out at 47.2 m and the near-cap set at 26.3 m, and in Manhattan a building of that height is enclosed by taller neighbours, so the sky-adjacent fraction of its outline is small and unpredictable. Even granting perfect isolation, the RESOLUTION terms T1 and T3 alone already exceed the bar for every member of both strata, so the stratum cannot be rescued by the property it was defined on.",
+      "disclosedBias": "Had it been runnable, sky-silhouette selection favours tall, isolated and corner buildings — exactly the population most likely to PASS — and any result from it would have been a biased sample, not an island statement. Recorded here so the bias is on the record even though the stratum is stopped."
+    }
+  ],
+  "measurementHalfVerdict": {
+    "verdict": "HONEST-STOP",
+    "statement": "The measurement half of T006 — the rendered silhouette comparison at the 2% bar — is ONE HONEST STOP. The in-app instrument's optimistic error budget exceeds the bar for every building in every realistic stratum, by between 3x and 17x.",
+    "theStructuralReason": "Magnification is pinned by the thing being tested. The frozen instrument chooses its own scale (ortho_scale from the subject's bounds, so the subject fills the frame); the in-app instrument cannot, because the level only flips when the CELL crosses 400 m. Moving closer to gain pixels destroys the very transition under test. A target needs about 40,000 device px^2 — a projected 2,112 m^2, say 46 m by 46 m — before the boundary term alone falls under 2%. The largest census member projects 931 m^2.",
+    "couldABiggerViewportRescueIt": "No, not within the shipped vehicle. At the shipped 1,580 vertical device pixels: 0 of 424. At 2x and 4x: still 0 of 424. Only at 8x (12,640 px) do 97 of 424 come under the bar, and that subset is selected by SIZE, so it is a biased stratum and not the census. The arithmetic is in error-budget.json under viewportScaling.",
+    "whatWasNotDone": "No sample was drawn and no seed was burned, because drawing a sample to feed an instrument that cannot resolve the bar would manufacture the appearance of a measurement. The FRAME is still committed and checksummed so a successor with a better instrument inherits it ready to use.",
+    "namedMissingCapability": "A forced-LOD and isolation hook in the runtime: the ability to render a NAMED building at a CHOSEN level, alone, from a camera the measurement picks rather than the ring dictates. That is a src/ runtime change, which this task is forbidden to make, so it is named here instead of being quietly added."
+  },
+  "census": {
+    "count": 424,
+    "dualDerivation": "AGREED. (i) 424 from the six shipped -s2 assembly packages by lod_0.maxDistanceMeters === null AND lod_1.eligible === false, over 44,989 assets scanned. (ii) 425 overCap buildings in data/mass-generation-20260816/stage0-island-silhouette.json minus 1 asset-stage volume-identity-failed tombstone = 424. Intersection 424; nothing in the manifests outside overCap.",
+    "excludedFromFrameBeforeAnyDraw": [
+      "doitt:263078"
+    ],
+    "exclusionDiscipline": "The tombstone is removed from the SAMPLING FRAME in Stage 0, before any draw and before any reading. Nothing is pruned after a number is seen.",
+    "reconciliationSource": "docs/implementation/20260816-mass-generation-retention-waves.md:69-77"
+  },
+  "shedTonePairs": {
+    "inheritedFrom": "docs/decisions/0056-textured-lod1-tone-and-copy.md:129-133, handed forward at 0057:324.",
+    "theFive": [
+      "doitt:100749",
+      "doitt:10049",
+      "doitt:147902",
+      "doitt:100368",
+      "doitt:100176"
+    ],
+    "whyThisHalfIsNotStopped": "ADR 0056 owns the flaw in its own pre-registered measure: it conflated silhouette AREA with tone. The area half of that conflation is exactly what the budget above honest-stops. The tone half is a DIFFERENT measure with a different error structure: a mean luminance over the interior of the intersection, eroded 3 px from every outline, contains no boundary at all. Erosion is how 'separates geometry from tone BY CONSTRUCTION' becomes structural rather than argued.",
+    "measure": {
+      "name": "eroded-intersection-mean-luminance-ratio",
+      "version": "1.0",
+      "erosionPixels": 3,
+      "statement": "Rec.709 luminance averaged over pixels inside BOTH masks after erosion; verdict is |1 - lod1Mean/lod0Mean| against the 0.02 bar."
+    },
+    "budget": "Quantization of the mean is 0.0007% to 0.0015% across the five — between 1,300x and 2,900x below the bar. Interior pixel counts after erosion run 5,400 to 28,546.",
+    "allFiveAreTwoLodEligible": true,
+    "residualsThatCanStillStopAPair": [
+      "ISOLATION. Occlusion by neighbours is not solvable without a runtime hook. Each pair is checked for occlusion at its pose; a pair whose interior cannot be cleanly separated is recorded INCONCLUSIVE, never PASS.",
+      "A pair whose cell will not flip at the registered pose is recorded INCONCLUSIVE with the wire-level evidence showing which artifact was actually fetched."
+    ]
+  },
+  "poses": {
+    "derivedFrom": "ownerCellId CELL geometry, never building distance. src/app/App.tsx ringSideOf keys the served level on the CELL's distance against EXTERIOR_TWO_LOD_SERVING_NEAR_RING_METERS = 400, so a pose parked by building distance can sit on the wrong side of the flip while looking correct.",
+    "construction": "For each shed pair, park so the target's OWN cell straddles the ring: a near arm at 399 m of cell distance and a far arm at 401 m. Expected ring side is pre-registered per cell.",
+    "positiveControl": "T001-style WIRE-LEVEL control per arm: the verdict records WHICH artifact the page actually fetched — <slug>__lod_0.glb versus <slug>__lod_1.glb — read from the page's resource timing. A pose whose wire evidence disagrees with its expected ring side is INCONCLUSIVE, not a reading.",
+    "disclosedInstrumentError": "The residual camera-to-building scale delta between the arms is 401/399 = 1.005013 in linear size. For the AREA measure this is the irreducible T2 term. For the TONE measure it changes which surface samples are included, not their tone, and the mip-level delta it implies is log2(401/399) = 0.0072 of a level."
+  },
+  "vehicle": {
+    "browser": "ORCA EMBEDDED BROWSER (orca goto / orca eval / orca screenshot), per T005 precedent, registered here before use.",
+    "server": "vite preview of a production build of this branch, 127.0.0.1, serving the staged -s2 packages.",
+    "canvas": "Re-verified at capture time and recorded with each reading; the budget was computed for 1005x790 CSS at devicePixelRatio 2.",
+    "settleRule": "ADOPTED FROM T005 VERBATIM: four consecutive identical full-attribute reads at 6 s spacing, with a 48 s minimum dwell. Blind to the verdict.",
+    "canvasVisibilityPositiveControl": "REQUIRED BEFORE EVERY CAPTURE, and required because T005's diagnosis pass produced a page of blank frames from a UI-hiding rule that hid the canvas's parent. Each capture verifies computed visibility: canvas visible, chrome hidden. A capture without that check is discarded, not interpreted.",
+    "attemptPolicy": "SINGLE attempt per pose. Every additional pass is disclosed with its reason in the results record, including any capture discarded for failing a precondition."
+  },
+  "stillsAreInputsNotVerdicts": {
+    "statement": "A PNG is a checksummed INPUT. The verdict is the JSON output of a committed, deterministic, re-runnable comparison CLI.",
+    "maskExtraction": "Committed in the CLI: the target's pixels are separated by rendering-state difference, not by eye. What CANNOT be isolated without runtime changes is stated plainly in the results record — neighbours that overlap the target in perspective, and ground/sky boundaries where the target's own edge is ambiguous — which is why the tone measure erodes 3 px and why occluded pairs are INCONCLUSIVE.",
+    "driftTests": "Bind the pre-registration digest, the census sha256, and the serving manifest checksums. They NEVER bind PNG bytes: an image that re-encodes differently is not a regression, and a test that says otherwise trains its readers to ignore it."
+  },
+  "nonClaims": [
+    "NOT an island bound. 424 is a census, and the shed work is five named pairs.",
+    "NOT a per-wave bound.",
+    "NO confidence interval is stated or implied anywhere in T006.",
+    "NOT visual acceptance. ADR 0050 already says why, and it is quoted rather than paraphrased: 'A coarse level inside a 2% area ratio can still read wrongly on screen, and a fallback level is not evidence about the other 99%.'",
+    "The honest stop is a statement about THIS INSTRUMENT at THIS BAR. It is not a claim that the shipped LOD transition is wrong, and it is not a claim that it is right."
+  ],
+  "followUpDestination": {
+    "forAnyShedToneFail": "Recorded as a named follow-up in the T006 implementation record and carried to the ADR 0056 residue entry, which already names T006 as owner; a FAIL hands the residue forward with the measured number rather than closing it.",
+    "forTheHonestStoppedMeasurementHalf": "The named missing capability — a forced-LOD and isolation hook — is the follow-up. Until a runtime affords it, the rendered silhouette gate at 2% is not measurable in-app, and the frame committed here is what a successor inherits.",
+    "notT007": "T007 readings (frame time, residency, eviction, double-draw) are NOT T006 verdicts and are not used as any."
+  },
+  "errata": {
+    "statement": "Corrections applied after review. NEITHER CHANGES A CLAIM OR A VERDICT IN THIS RECORD; both make the machine record agree with what the prose already said.",
+    "viewportScaling": "The emitted table scaled only the canvas HEIGHT, which changed the aspect and therefore the derived vertical FOV by the compensating amount, so pixels-per-metre came out invariant and every multiple read 0-under-bar. That was self-refuting -- T2 alone is 0.995%, so a large enough render target must clear 2%. Both axes are now scaled; the rows read 0/0/0/97/382/421 at 1x/2x/4x/8x/16x/32x, which is what the prose in this record already stated. The 1x honest stop is unchanged, and the render-target-resolution axis is named as a successor path.",
+    "operativeThreshold": "The 40,000 px^2 figure is T1 ALONE and was quoted operatively. The operative threshold is 356,440 px^2: T2 spends 0.995% of the bar before any pixel is counted and T3 rides the same perimeter as T1, so the requirement is 6/sqrt(A) < 0.02 - T2. Both figures are now emitted, labelled, and the T1-only one is marked as not operative. The honest stop is unchanged and is made stronger by the correction.",
+    "shedToneCampaign": "The Stage 1 campaign this record authorised was RUN, INVALIDATED and WITHDRAWN for a coordinate-space defect, then re-run. See shed-tone-results.json (withdrawn, unedited) and shed-tone-results-v2.json (corrected). The corrected campaign returns INCONCLUSIVE-BY-INSTRUMENT for all six pairs.",
+    "interiorPixelDeviation": "This record registered interior budgets of 5,400-28,546 px. The poses the ring actually forces give 3.41-3.48 device px/m at a 518 m slant depth, not the 4.35 assumed, and the realised interiors were 1,470-9,480 px. The gap was undisclosed in the first campaign and is disclosed here."
+  }
+}

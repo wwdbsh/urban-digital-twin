@@ -1,0 +1,321 @@
+{
+  "supersededBy": {
+    "record": "shed-tone-results-v2.json",
+    "statement": "EVERY VERDICT IN THIS RECORD IS WITHDRAWN. Nothing below has been edited; it stands as it was written so the defect is inspectable.",
+    "theDefect": "The regions of interest were emitted in CANVAS device coordinates (origin 0,0 of a 2010x1580 canvas) and applied to WHOLE-WINDOW captures (2194x1788, canvas content box at origin 184,120) with no origin correction. Every reading therefore measured a patch (-184,-120) away from its target: browser chrome and neighbouring ground, scored as if it were the building.",
+    "whatItCost": "The FAIL at 3.78% for doitt:10049, the FAIL at 18.85% for doitt:147902, and the 0.591% instrument floor are all artifacts of that offset and must not be cited.",
+    "theFix": "scripts/shed-tone-compare-cli.mjs now takes canvasOrigin, canvasSize and imageSize in the plan, offsets the region when sampling, and REFUSES when a capture's dimensions are not the registered window, when the canvas box does not fit inside it, or when the region leaves the canvas. Four tests hold each refusal shut."
+  },
+  "schemaVersion": "1.0",
+  "recordId": "far-tier-lod-transition-20260821:shed-tone-results",
+  "task": "T006",
+  "artifact": "shed-tone-pair-results",
+  "capturedAt": null,
+  "capturedAtStatement": "NULL BY CONSTRUCTION.",
+  "measure": {
+    "name": "eroded-intersection-mean-luminance-ratio",
+    "version": "1.0"
+  },
+  "bar": 0.02,
+  "barProvenance": "Carried from criterion 19 and from ADR 0056's own shed pre-registration. The INSTRUMENT is this tool, not the Blender pass; see the Stage 0 pre-registration.",
+  "planSha256": "09fa66e75f40dd754e3bafb32a1e92b0bc66e95444013ceec17de92083e2d8b2",
+  "pairs": [
+    {
+      "buildingId": "doitt:401323",
+      "ownerCellId": "manhattan-exterior-cell-w04-000688-17-38617-35826",
+      "measure": {
+        "name": "eroded-intersection-mean-luminance-ratio",
+        "version": "1.0"
+      },
+      "inputs": {
+        "nearArmPng": "data/far-tier-lod-transition-20260821/stills/ctl-near.png",
+        "nearArmSha256": "f63d7b392c33ffcff97186ba374908d9054219bd3af1f3bdf0319282988287df",
+        "farArmPng": "data/far-tier-lod-transition-20260821/stills/ctl-far.png",
+        "farArmSha256": "ff814bfc2880b98bc56685c958f15b6bf3ae96bb8e06ff9d3ad59329d28f2374",
+        "canvas": {
+          "width": 2194,
+          "height": 1788
+        }
+      },
+      "wireLevelControl": {
+        "nearArmFetched": "lod_0",
+        "farArmFetched": "lod_0"
+      },
+      "roi": {
+        "x0": 960,
+        "y0": 753,
+        "x1": 1050,
+        "y1": 789
+      },
+      "backgroundLuminanceCeiling": 0.1,
+      "erosionPixels": 3,
+      "pixels": {
+        "roi": 3240,
+        "surfaceInBothArms": 3240,
+        "surfaceInNearArmOnly": 0,
+        "surfaceInFarArmOnly": 0,
+        "keptAfterErosion": 2520
+      },
+      "nearArmMeanLuminance": 0.5128397435418608,
+      "farArmMeanLuminance": 0.5098072723311542,
+      "verdict": "INCONCLUSIVE",
+      "reason": "the wire-level control disagrees with the expected ring side: near arm fetched lod_0, far arm fetched lod_0"
+    },
+    {
+      "buildingId": "doitt:100749",
+      "ownerCellId": "manhattan-exterior-cell-w04-000495-17-38610-35840",
+      "measure": {
+        "name": "eroded-intersection-mean-luminance-ratio",
+        "version": "1.0"
+      },
+      "inputs": {
+        "nearArmPng": "data/far-tier-lod-transition-20260821/stills/p1-near.png",
+        "nearArmSha256": "43f4e49577cb3d8c32015e06960f01b96e9fe387634ea532aa9142406a372276",
+        "farArmPng": "data/far-tier-lod-transition-20260821/stills/p1-far.png",
+        "farArmSha256": "ff6dd793631330a1ddf6afc87b463dc062fe7b276d738af637daf634039d26bc",
+        "canvas": {
+          "width": 2194,
+          "height": 1788
+        }
+      },
+      "wireLevelControl": {
+        "nearArmFetched": "lod_0",
+        "farArmFetched": "lod_1"
+      },
+      "roi": {
+        "x0": 992,
+        "y0": 755,
+        "x1": 1018,
+        "y1": 789
+      },
+      "backgroundLuminanceCeiling": 0.1,
+      "erosionPixels": 3,
+      "pixels": {
+        "roi": 884,
+        "surfaceInBothArms": 884,
+        "surfaceInNearArmOnly": 0,
+        "surfaceInFarArmOnly": 0,
+        "keptAfterErosion": 560
+      },
+      "nearArmMeanLuminance": 0.7985781820728277,
+      "farArmMeanLuminance": 0.6605961792717095,
+      "verdict": "INCONCLUSIVE",
+      "reason": "only 560 interior pixels survived erosion; the pre-registered budget assumed thousands, so the mean is not resolvable here"
+    },
+    {
+      "buildingId": "doitt:10049",
+      "ownerCellId": "manhattan-exterior-cell-w01-000054-17-38600-35862",
+      "measure": {
+        "name": "eroded-intersection-mean-luminance-ratio",
+        "version": "1.0"
+      },
+      "inputs": {
+        "nearArmPng": "data/far-tier-lod-transition-20260821/stills/p2-near.png",
+        "nearArmSha256": "55307184270fba6fd04200b2de1635b758b0cb48460be1cc9247b80095971a40",
+        "farArmPng": "data/far-tier-lod-transition-20260821/stills/p2-far.png",
+        "farArmSha256": "807ae8b29a467b9805af4483736989e5d916609d2d196f83f5585fa76cabe22b",
+        "canvas": {
+          "width": 2194,
+          "height": 1788
+        }
+      },
+      "wireLevelControl": {
+        "nearArmFetched": "lod_0",
+        "farArmFetched": "lod_1"
+      },
+      "roi": {
+        "x0": 986,
+        "y0": 711,
+        "x1": 1024,
+        "y1": 791
+      },
+      "backgroundLuminanceCeiling": 0.1,
+      "erosionPixels": 3,
+      "pixels": {
+        "roi": 3040,
+        "surfaceInBothArms": 3040,
+        "surfaceInNearArmOnly": 0,
+        "surfaceInFarArmOnly": 0,
+        "keptAfterErosion": 2368
+      },
+      "nearArmMeanLuminance": 0.2688368773184953,
+      "farArmMeanLuminance": 0.258676440116589,
+      "surfaceDisagreementShare": 0,
+      "luminanceRatio": 0.9622059395152509,
+      "deviation": 0.03779406048474909,
+      "bar": 0.02,
+      "verdict": "FAIL"
+    },
+    {
+      "buildingId": "doitt:147902",
+      "ownerCellId": "manhattan-exterior-cell-w00-000000-block-00835",
+      "measure": {
+        "name": "eroded-intersection-mean-luminance-ratio",
+        "version": "1.0"
+      },
+      "inputs": {
+        "nearArmPng": "data/far-tier-lod-transition-20260821/stills/p3-near.png",
+        "nearArmSha256": "5efff97e480ca3e20f687947d44de1a75f2620ce6017c12978717d58e83757fd",
+        "farArmPng": "data/far-tier-lod-transition-20260821/stills/p3-far.png",
+        "farArmSha256": "3bafacf6a869b192adbf523f586a81ba98d1dba0ccb4c9eb194747d1aa31fed3",
+        "canvas": {
+          "width": 2194,
+          "height": 1788
+        }
+      },
+      "wireLevelControl": {
+        "nearArmFetched": "lod_0",
+        "farArmFetched": "lod_1"
+      },
+      "roi": {
+        "x0": 988,
+        "y0": 747,
+        "x1": 1022,
+        "y1": 789
+      },
+      "backgroundLuminanceCeiling": 0.1,
+      "erosionPixels": 3,
+      "pixels": {
+        "roi": 1428,
+        "surfaceInBothArms": 1428,
+        "surfaceInNearArmOnly": 0,
+        "surfaceInFarArmOnly": 0,
+        "keptAfterErosion": 1008
+      },
+      "nearArmMeanLuminance": 0.8135749081854908,
+      "farArmMeanLuminance": 0.6602107609710481,
+      "surfaceDisagreementShare": 0,
+      "luminanceRatio": 0.8114935137853632,
+      "deviation": 0.18850648621463684,
+      "bar": 0.02,
+      "verdict": "FAIL"
+    },
+    {
+      "buildingId": "doitt:100368",
+      "ownerCellId": "manhattan-exterior-cell-w02-000172-17-38594-35889",
+      "measure": {
+        "name": "eroded-intersection-mean-luminance-ratio",
+        "version": "1.0"
+      },
+      "inputs": {
+        "nearArmPng": "data/far-tier-lod-transition-20260821/stills/p4-near.png",
+        "nearArmSha256": "e141382035b470bf7c59a9f1cf625f6f7d8f0739700192243a23b60d0fcd1ed1",
+        "farArmPng": "data/far-tier-lod-transition-20260821/stills/p4-far.png",
+        "farArmSha256": "02a6ca883745f3b1e18812eda5ca718b9767e18c24dc75d26f60193993cec990",
+        "canvas": {
+          "width": 2194,
+          "height": 1788
+        }
+      },
+      "wireLevelControl": {
+        "nearArmFetched": "lod_0",
+        "farArmFetched": "both"
+      },
+      "roi": {
+        "x0": 992,
+        "y0": 766,
+        "x1": 1018,
+        "y1": 788
+      },
+      "backgroundLuminanceCeiling": 0.1,
+      "erosionPixels": 3,
+      "pixels": {
+        "roi": 572,
+        "surfaceInBothArms": 572,
+        "surfaceInNearArmOnly": 0,
+        "surfaceInFarArmOnly": 0,
+        "keptAfterErosion": 320
+      },
+      "nearArmMeanLuminance": 0.25632800490196167,
+      "farArmMeanLuminance": 0.26113275490196175,
+      "verdict": "INCONCLUSIVE",
+      "reason": "the wire-level control disagrees with the expected ring side: near arm fetched lod_0, far arm fetched both"
+    },
+    {
+      "buildingId": "doitt:100176",
+      "ownerCellId": "manhattan-exterior-cell-w04-000682-17-38613-35831",
+      "measure": {
+        "name": "eroded-intersection-mean-luminance-ratio",
+        "version": "1.0"
+      },
+      "inputs": {
+        "nearArmPng": "data/far-tier-lod-transition-20260821/stills/p5-near.png",
+        "nearArmSha256": "8463b799bf4d84672ab770946ee08c2629716390829f1b246676b1eecadf07bd",
+        "farArmPng": "data/far-tier-lod-transition-20260821/stills/p5-far.png",
+        "farArmSha256": "b29d185b6ccd2f4f0b73a6124c77fb3ac5b550f075f3a76826c6e0a35a397376",
+        "canvas": {
+          "width": 2194,
+          "height": 1788
+        }
+      },
+      "wireLevelControl": {
+        "nearArmFetched": "lod_0",
+        "farArmFetched": "both"
+      },
+      "roi": {
+        "x0": 992,
+        "y0": 757,
+        "x1": 1018,
+        "y1": 789
+      },
+      "backgroundLuminanceCeiling": 0.1,
+      "erosionPixels": 3,
+      "pixels": {
+        "roi": 832,
+        "surfaceInBothArms": 832,
+        "surfaceInNearArmOnly": 0,
+        "surfaceInFarArmOnly": 0,
+        "keptAfterErosion": 520
+      },
+      "nearArmMeanLuminance": 0.15635533031674387,
+      "farArmMeanLuminance": 0.1556478914027165,
+      "verdict": "INCONCLUSIVE",
+      "reason": "the wire-level control disagrees with the expected ring side: near arm fetched lod_0, far arm fetched both"
+    }
+  ],
+  "summary": {
+    "pass": 0,
+    "fail": 2,
+    "inconclusive": 4,
+    "of": 6
+  },
+  "campaign": {
+    "vehicle": {
+      "browser": "Orca embedded browser (orca goto / orca eval / orca screenshot).",
+      "server": "vite preview of a production build of this branch at 127.0.0.1:4173, built with VITE_EXTERIOR_SCHEDULER_PROBE=1.",
+      "probeFlagIsNotASourceChange": "VITE_EXTERIOR_SCHEDULER_PROBE is an existing build-time flag the repository already ships for exactly this purpose (src/app/App.tsx:135). No src/ file was modified.",
+      "canvas": "1005x790 CSS at devicePixelRatio 2 = 2010x1580 device px -- the exact optics the Stage 0 budget was computed for, re-verified in-session.",
+      "settleRule": "T005's, verbatim: 48 s minimum dwell, then four consecutive identical full-attribute reads at 6 s spacing. Every capture reports settled=1.",
+      "canvasVisibilityControl": "Verified per capture: canvas visible, chrome hidden. All twelve captures passed."
+    },
+    "howTheArmsWereFound": {
+      "headline": "THE PRE-REGISTRATION'S 399/401 STRADDLE WAS WRONG ABOUT THE MECHANISM, AND THE CAMPAIGN SAYS SO RATHER THAN QUIETLY USING WHAT WORKED.",
+      "whatWasAssumed": "That the arms differ by the CELL distance crossing 400 m, so 399 m and 401 m of cell distance.",
+      "whatWasMeasured": "At a 120 m / -20 deg oblique pose the scheduler probe reported the target cell at 65,287 m, because unitDistanceMeters measures from the VIEWPORT FOOTPRINT'S GROUND CENTRE, which for an oblique view sits tens of kilometres ahead. Cell distance is therefore not a usable dial at oblique angles.",
+      "whatActuallyDrivesIt": "lodDistanceFor falls back to exteriorCameraHeightBucketMeters = max(50, round(height/100)*100) whenever the cell is absent from the measured map, which is the common case here. The bucket crosses 400 -> 500 when camera height crosses 450 m, so the flip is at 450 m of CAMERA HEIGHT.",
+      "theStraddleUsed": "449 m and 450 m of camera height, same ground position, same heading 180, same pitch -60. Verified AT THE WIRE: 449 m fetched lod_0 and not lod_1; 450 m fetched lod_1 and not lod_0.",
+      "consequenceForTheBudget": "The residual scale delta between arms is 1/450 = 0.22%, BETTER than the 0.50% the pre-registration assumed, and incidence, heading and sun are identical because only height changes by one metre.",
+      "consequenceForTheHonestStop": "None. The Stage 0 area-measure stop rests on the projected SIZE of the targets, and this pose is worse on that axis, not better: at 449 m and -60 deg the slant depth is 518 m and the scale is 3.4 device px per metre, below the 4.35 the budget assumed."
+    },
+    "negativeControl": {
+      "why": "The two arms are different captures, so SOMETHING will differ even when nothing should. A measured-fallback parent has no eligible lod_1 and therefore serves lod_0 at BOTH heights: any luminance difference it shows is pure instrument error, measured rather than argued.",
+      "buildingId": "doitt:401323",
+      "interiorPixels": 2520,
+      "nearArmMeanLuminance": 0.5128397435418608,
+      "farArmMeanLuminance": 0.5098072723311542,
+      "ratio": 0.994086902879712,
+      "instrumentErrorMeasured": 0.00591309712028798,
+      "surfaceDisagreementShare": 0,
+      "statement": "Instrument error 0.591%%, on 2,520 interior pixels with ZERO surface disagreement between arms. That is the floor a shed reading has to clear, and it is comfortably inside the 2%% bar -- so a reading outside the bar is a real difference, not the instrument.",
+      "notClaimed": "ONE control on ONE building. It bounds this campaign's instrument at this pose; it is not a distribution and no confidence interval is implied.",
+      "whyItIsNotInTheTreatmentTable": "The treatment CLI refuses any pair whose far arm did not fetch lod_1. The control by construction fetches lod_0 at both arms, so it CANNOT satisfy that rule -- and the rule was not relaxed to let it through. It is run separately, on the same code path, with the expectation that is correct for it."
+    },
+    "interpretation": {
+      "doitt:10049": "FAIL at 3.78% against a 2% bar, with the instrument floor measured at 0.59%. The margin over the floor is 6.4x, so this is a real tone difference in the shipped renderer.",
+      "doitt:147902": "FAIL at 18.85%, 32x the instrument floor. Not marginal.",
+      "theOtherThree": "INCONCLUSIVE, and for two different pre-registered reasons: doitt:100749 and doitt:100176 lost too much interior to erosion (560 and 520 pixels against a threshold of 1,000 fixed before capture), and doitt:100368 and doitt:100176 also had far arms that fetched BOTH levels, so the wire cannot say which was drawn. The 1,000-pixel threshold was NOT relaxed after seeing that it refused them; relaxing a pre-registered threshold to rescue a reading is the exact failure this task exists to avoid."
+    },
+    "whatThisSettlesOfADR0056": "TWO of the five shed pairs are settled as FAILS under the shipped renderer with an instrument that separates geometry from tone by construction. THREE remain open. The residue is smaller and better characterised; it is not closed.",
+    "attemptDisclosure": "Single capture per arm. No pose was re-captured. Earlier exploratory probes (the 65 km reading, the 300/700 m and 399/401 m bracketing, the nadir test) were pose-FINDING, not readings, and are disclosed here rather than presented as attempts at a verdict."
+  }
+}
