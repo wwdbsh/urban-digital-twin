@@ -70,5 +70,17 @@
   "notClaimedHere": [
     "This records provenance of BYTES, not of any measurement taken from them.",
     "No package was regenerated; regeneration could legitimately produce different bytes and would break the committed inventories."
-  ]
+  ],
+  "alsoStagedForEnvironMENTALTests": {
+    "packages": [
+      "manhattan-lower-manhattan-cells-20260812-c1",
+      "manhattan-central-upper-manhattan-cells-20260812-c1",
+      "manhattan-northern-manhattan-cells-20260812-c1",
+      "manhattan-lower-manhattan-cells-20260812-p1",
+      "manhattan-central-upper-manhattan-cells-20260812-p1",
+      "manhattan-southern-remainder-cells-20260812-p1"
+    ],
+    "source": "/Users/sangheonlee/orca/workspaces/urban-digital-twin/fcp-90-closure",
+    "why": "src/runtime/exterior-serving-residency.test.ts re-derives two load-bearing constants from the -c1 retention manifests and -p1 release graphs and FAILS CLOSED when the payloads are absent. Without them the suite reports two failures that are about this machine, not about the code."
+  }
 }

@@ -126,8 +126,19 @@ confirms the emitted bytes rather than the rasterizer.
 
 ## What is NOT decided here
 
-- **The shed-tone residue, which now has an OWNER: T006, the rendered
-  LOD-transition gate (Issue #106).** Five shed pairs remain outside 2% even
+- **The shed-tone residue, PARTLY SETTLED by T006 (Issue #106, 2026-08-21).**
+  Two of the five are now measured FAILS in the shipped renderer:
+  `doitt:10049` at **3.78%** and `doitt:147902` at **18.85%** against the 2%
+  bar, on an eroded-intersection mean-luminance measure whose instrument error
+  was MEASURED at **0.591%** by a negative control — a measured-fallback parent,
+  which serves `lod_0` at both arms by construction, so any difference it shows
+  is instrument and nothing else. The remaining three are INCONCLUSIVE on
+  pre-registered refusals (too little interior surviving erosion; a far arm that
+  fetched both levels), and the thresholds were not relaxed to rescue them. The
+  residue is smaller and better characterised. It is NOT closed.
+  See `data/far-tier-lod-transition-20260821/shed-tone-results.json`.
+
+- **The shed-tone residue as originally handed to T006:** Five shed pairs remain outside 2% even
   under the post-hoc intersection measure, and settling them needs an instrument
   that separates geometry from tone BY CONSTRUCTION, agreed in advance, under
   the shipped renderer rather than EEVEE. The five are named here so the
