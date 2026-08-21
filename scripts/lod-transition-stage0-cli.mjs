@@ -90,7 +90,11 @@ export const VEHICLE = {
 export function vehicleOptics(vehicle = VEHICLE) {
   const aspect = vehicle.canvasCssWidth / vehicle.canvasCssHeight;
   const fov = (vehicle.cesiumFovDegrees * Math.PI) / 180;
-  const fovy = 2 * Math.atan(Math.tan(fov / 2) / aspect);
+  // CesiumJS applies `fov` to the WIDER axis: horizontal while width > height,
+  // vertical otherwise. The earlier revision divided unconditionally, which is
+  // wrong for a portrait target and was one half of why the viewport-scaling
+  // table below came out inert.
+  const fovy = aspect >= 1 ? 2 * Math.atan(Math.tan(fov / 2) / aspect) : fov;
   const verticalDevicePixels = vehicle.canvasCssHeight * vehicle.devicePixelRatio;
   const pixelsPerMetreAt = (distanceMetres) => verticalDevicePixels / (2 * distanceMetres * Math.tan(fovy / 2));
   return { aspect, fovyRadians: fovy, fovyDegrees: (fovy * 180) / Math.PI, verticalDevicePixels, pixelsPerMetreAt };
@@ -234,13 +238,26 @@ function emit() {
   const censusStratum = stratumOf(censusRows);
   const nearCapStratum = stratumOf(nearCap);
 
-  // The size a target must reach before the BOUNDARY term alone clears the bar.
+  // TWO thresholds, and the OPERATIVE one is the second.
+  // T1 alone clears 2% at (4/0.02)^2 = 40,000 px^2, but T1 is not alone: T2
+  // spends 0.995% of the bar before any pixel is counted, and T3 rides on the
+  // same perimeter as T1. For a compact shape P = 4*sqrt(A), so T1 + T3 =
+  // 6/sqrt(A) and the real requirement is 6/sqrt(A) < 0.02 - T2.
   const k = optics.pixelsPerMetreAt(VEHICLE.nearArmMeters);
-  const areaNeededPx = (4 / 0.02) ** 2;
+  const t2 = 1 - (VEHICLE.nearArmMeters / VEHICLE.farArmMeters) ** 2;
+  const boundaryOnlyAreaPx = (4 / 0.02) ** 2;
+  const areaNeededPx = (6 / (0.02 - t2)) ** 2;
   const areaNeededSquareMetres = areaNeededPx / (k * k);
 
+  // SCALE BOTH AXES. An earlier revision scaled only the height, which changed
+  // the aspect ratio, which changed the derived vertical FOV by exactly the
+  // compensating amount -- so pixels-per-metre came out invariant and the table
+  // reported "0 under the bar" at every multiple. That was self-refuting on its
+  // own terms: T2 alone is 0.995%, so a large enough render target MUST clear
+  // 2%. Scaling both axes keeps the aspect fixed and lets resolution actually
+  // move, which is the question the row was asking.
   const viewportScaling = [1, 2, 4, 8, 16, 32].map((multiple) => {
-    const scaled = { ...VEHICLE, canvasCssHeight: VEHICLE.canvasCssHeight * multiple };
+    const scaled = { ...VEHICLE, canvasCssWidth: VEHICLE.canvasCssWidth * multiple, canvasCssHeight: VEHICLE.canvasCssHeight * multiple };
     const scaledOptics = vehicleOptics(scaled);
     const under = censusRows.filter((r) => budgetFor(r.widthMetres, r.heightMetres, scaledOptics, scaled).total < 0.02).length;
     return { multiple, verticalDevicePixels: scaledOptics.verticalDevicePixels, censusUnderBar: under, of: censusRows.length };
@@ -263,7 +280,7 @@ function emit() {
     capturedAtStatement: "NULL BY CONSTRUCTION. Derived from committed inputs, not from a clock.",
     whatThisIs: "The measured-fallback parents: buildings whose lod_1 was refused by the 2% gate, so the shipped release serves lod_0 at every distance and no LOD transition exists for them.",
     dualDerivation: {
-      statement: "TWO INDEPENDENT DERIVATIONS, AGREEING. Neither is trusted alone.",
+      statement: "A PLAN-STAGE / ASSET-STAGE CROSS-CHECK, AGREEING. The two are not fully independent -- the shipped manifests descend from the same island pass -- so this is a cross-check that the plan-stage refusal survived into the shipped bytes, not two unrelated measurements of one quantity.",
       fromServingManifests: { count: manifestIds.size, rule: "lod_0.maxDistanceMeters === null AND lod_1.eligible === false, over every cell-assembly-package asset in the six -s2 releases under test", assetsScanned: assets.length },
       fromIslandPass: { count: overCapIds.size, source: "data/mass-generation-20260816/stage0-island-silhouette.json overCap.buildings", rule: "deviationRatio at or over the 0.02 cap at PLAN stage" },
       reconciliation: { inIslandPassOnly: onlyOverCap, inManifestsOnly: onlyManifest, agreed: censusIds.length, statement: `${overCapIds.size} - ${onlyOverCap.length} = ${censusIds.length}. The single difference is the asset-stage volume-identity-failed tombstone reconciled at docs/implementation/20260816-mass-generation-retention-waves.md:69-77; it is tombstoned rather than shipped as a fallback, so it is not a fallback parent.` },
@@ -298,13 +315,16 @@ function emit() {
       direction: "The emitted total is T1+T2+T3: it OMITS T4 and computes T1/T3 from the bounding rectangle, which overstates area and so understates the ratio. This is an OPTIMISTIC LOWER BOUND on the instrument's error.",
     },
     resolutionThreshold: {
-      areaDevicePixelsNeeded: areaNeededPx,
-      statement: `A compact target needs about ${Math.round(areaNeededPx)} device px^2 before the BOUNDARY term alone falls under 0.02 — roughly a ${Math.round(4 / 0.02)}x${Math.round(4 / 0.02)} px box.`,
+      boundaryTermAloneAreaDevicePixels: boundaryOnlyAreaPx,
+      boundaryTermAloneStatement: `T1 ALONE would clear 0.02 at ${Math.round(boundaryOnlyAreaPx)} device px^2. This figure is NOT the operative one and must not be quoted as if it were.`,
+      operativeAreaDevicePixelsNeeded: areaNeededPx,
+      operativeStatement: `THE OPERATIVE THRESHOLD. With T2 spending ${(t2 * 100).toFixed(3)}% of the bar before any pixel is counted, and T3 riding the same perimeter as T1, a compact target needs about ${Math.round(areaNeededPx)} device px^2 — roughly a ${Math.round(Math.sqrt(areaNeededPx))}x${Math.round(Math.sqrt(areaNeededPx))} px box.`,
       projectedSquareMetresNeeded: areaNeededSquareMetres,
-      atTheRing: `At ${optics.pixelsPerMetreAt(VEHICLE.nearArmMeters).toFixed(4)} device px per metre, that is a projected ${Math.round(areaNeededSquareMetres)} m^2 — e.g. ${Math.round(Math.sqrt(areaNeededSquareMetres))} m wide by ${Math.round(Math.sqrt(areaNeededSquareMetres))} m tall.`,
+      pixelsPerMetreBasis: `${optics.pixelsPerMetreAt(VEHICLE.nearArmMeters).toFixed(4)} device px per metre AT THE NEAR ARM (${VEHICLE.nearArmMeters} m), which is the distance the budget is computed at; at the ring itself (${VEHICLE.ringMeters} m) it is ${optics.pixelsPerMetreAt(VEHICLE.ringMeters).toFixed(4)}.`,
+      atTheRing: `That is a projected ${Math.round(areaNeededSquareMetres)} m^2 — e.g. ${Math.round(Math.sqrt(areaNeededSquareMetres))} m wide by ${Math.round(Math.sqrt(areaNeededSquareMetres))} m tall.`,
     },
     strata: { census: censusStratum, nearCap: nearCapStratum },
-    viewportScaling: { note: "Could a bigger render target rescue it? Only by leaving the shipped vehicle, and only for a size-biased subset.", rows: viewportScaling },
+    viewportScaling: { note: "Could a bigger render target rescue it? Both axes are scaled so the aspect -- and therefore the derived vertical FOV -- stays fixed and resolution actually moves. It does move: the 1x honest stop stands, but the render-target-resolution axis is a real successor path, and any subset it rescues is selected by SIZE and is therefore a biased stratum, not the census.", rows: viewportScaling },
     verdict: {
       census: censusStratum.verdict,
       nearCap: nearCapStratum.verdict,

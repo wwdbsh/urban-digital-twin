@@ -23,9 +23,9 @@
   "stage0Arithmetic": {
     "derivedBy": "scripts/lod-transition-stage0-cli.mjs — deterministic and re-runnable; every number below is its output, not a typed value.",
     "errorBudgetRecord": "error-budget.json",
-    "errorBudgetSha256": "8197836d415e07dd73530e275b987b430c8514e30161cd5ccca49204991b3cdc",
+    "errorBudgetSha256": "b3a5dfef827c01c792ecc0a5eff1a345ce8bf49652637adb0cf3e3b68fc1fd08",
     "censusRecord": "census.json",
-    "censusSha256": "aea0a0a9d1b03b18c83e75ba3f77fd492031c32540e628e833af18597cdb1233",
+    "censusSha256": "e9143b03dbbcaf1b72cbc7044dfc7d529adc187b4561713915cfd70fb71e73d1",
     "shedToneBudgetRecord": "shed-tone-budget.json",
     "terms": "T1 boundary quantization (perimeter x 1px / area); T2 ring scale delta 1-(399/401)^2 = 0.9950%, irreducible and identical for every building; T3 registration residual (perimeter x 0.5px / area); T4 isolation, UNBOUNDED and deliberately unnumbered.",
     "direction": "The emitted total OMITS T4 and computes area from the bounding rectangle, which overstates area and understates the ratio. It is an OPTIMISTIC LOWER BOUND. A pessimistic budget cannot rescue a bar the optimistic one already fails."
@@ -130,5 +130,12 @@
     "forAnyShedToneFail": "Recorded as a named follow-up in the T006 implementation record and carried to the ADR 0056 residue entry, which already names T006 as owner; a FAIL hands the residue forward with the measured number rather than closing it.",
     "forTheHonestStoppedMeasurementHalf": "The named missing capability — a forced-LOD and isolation hook — is the follow-up. Until a runtime affords it, the rendered silhouette gate at 2% is not measurable in-app, and the frame committed here is what a successor inherits.",
     "notT007": "T007 readings (frame time, residency, eviction, double-draw) are NOT T006 verdicts and are not used as any."
+  },
+  "errata": {
+    "statement": "Corrections applied after review. NEITHER CHANGES A CLAIM OR A VERDICT IN THIS RECORD; both make the machine record agree with what the prose already said.",
+    "viewportScaling": "The emitted table scaled only the canvas HEIGHT, which changed the aspect and therefore the derived vertical FOV by the compensating amount, so pixels-per-metre came out invariant and every multiple read 0-under-bar. That was self-refuting -- T2 alone is 0.995%, so a large enough render target must clear 2%. Both axes are now scaled; the rows read 0/0/0/97/382/421 at 1x/2x/4x/8x/16x/32x, which is what the prose in this record already stated. The 1x honest stop is unchanged, and the render-target-resolution axis is named as a successor path.",
+    "operativeThreshold": "The 40,000 px^2 figure is T1 ALONE and was quoted operatively. The operative threshold is 356,440 px^2: T2 spends 0.995% of the bar before any pixel is counted and T3 rides the same perimeter as T1, so the requirement is 6/sqrt(A) < 0.02 - T2. Both figures are now emitted, labelled, and the T1-only one is marked as not operative. The honest stop is unchanged and is made stronger by the correction.",
+    "shedToneCampaign": "The Stage 1 campaign this record authorised was RUN, INVALIDATED and WITHDRAWN for a coordinate-space defect, then re-run. See shed-tone-results.json (withdrawn, unedited) and shed-tone-results-v2.json (corrected). The corrected campaign returns INCONCLUSIVE-BY-INSTRUMENT for all six pairs.",
+    "interiorPixelDeviation": "This record registered interior budgets of 5,400-28,546 px. The poses the ring actually forces give 3.41-3.48 device px/m at a 518 m slant depth, not the 4.35 assumed, and the realised interiors were 1,470-9,480 px. The gap was undisclosed in the first campaign and is disclosed here."
   }
 }

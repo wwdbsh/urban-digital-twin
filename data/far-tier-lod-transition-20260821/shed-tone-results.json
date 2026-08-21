@@ -1,4 +1,11 @@
 {
+  "supersededBy": {
+    "record": "shed-tone-results-v2.json",
+    "statement": "EVERY VERDICT IN THIS RECORD IS WITHDRAWN. Nothing below has been edited; it stands as it was written so the defect is inspectable.",
+    "theDefect": "The regions of interest were emitted in CANVAS device coordinates (origin 0,0 of a 2010x1580 canvas) and applied to WHOLE-WINDOW captures (2194x1788, canvas content box at origin 184,120) with no origin correction. Every reading therefore measured a patch (-184,-120) away from its target: browser chrome and neighbouring ground, scored as if it were the building.",
+    "whatItCost": "The FAIL at 3.78% for doitt:10049, the FAIL at 18.85% for doitt:147902, and the 0.591% instrument floor are all artifacts of that offset and must not be cited.",
+    "theFix": "scripts/shed-tone-compare-cli.mjs now takes canvasOrigin, canvasSize and imageSize in the plan, offsets the region when sampling, and REFUSES when a capture's dimensions are not the registered window, when the canvas box does not fit inside it, or when the region leaves the canvas. Four tests hold each refusal shut."
+  },
   "schemaVersion": "1.0",
   "recordId": "far-tier-lod-transition-20260821:shed-tone-results",
   "task": "T006",
@@ -301,7 +308,7 @@
       "surfaceDisagreementShare": 0,
       "statement": "Instrument error 0.591%%, on 2,520 interior pixels with ZERO surface disagreement between arms. That is the floor a shed reading has to clear, and it is comfortably inside the 2%% bar -- so a reading outside the bar is a real difference, not the instrument.",
       "notClaimed": "ONE control on ONE building. It bounds this campaign's instrument at this pose; it is not a distribution and no confidence interval is implied.",
-      "whyItIsNotInTheTreATMENTTABLE": "The treatment CLI refuses any pair whose far arm did not fetch lod_1. The control by construction fetches lod_0 at both arms, so it CANNOT satisfy that rule -- and the rule was not relaxed to let it through. It is run separately, on the same code path, with the expectation that is correct for it."
+      "whyItIsNotInTheTreatmentTable": "The treatment CLI refuses any pair whose far arm did not fetch lod_1. The control by construction fetches lod_0 at both arms, so it CANNOT satisfy that rule -- and the rule was not relaxed to let it through. It is run separately, on the same code path, with the expectation that is correct for it."
     },
     "interpretation": {
       "doitt:10049": "FAIL at 3.78% against a 2% bar, with the instrument floor measured at 0.59%. The margin over the floor is 6.4x, so this is a real tone difference in the shipped renderer.",

@@ -62,6 +62,10 @@ function writePair(name, nearValue, farValue, size = 200) {
 const planFor = (paths, overrides = {}) => ({
   buildingId: "doitt:test", ownerCellId: "cell:test",
   nearArmPng: paths.nearPath, farArmPng: paths.farPath,
+  // Synthetic captures are canvas-only, so the origin is zero and the window
+  // equals the canvas. The REAL vehicle is not like this, which is the whole
+  // point of the guard being tested below.
+  canvasOrigin: { x: 0, y: 0 }, canvasSize: { width: 200, height: 200 }, imageSize: { width: 200, height: 200 },
   roi: { x0: 0, y0: 0, x1: 200, y1: 200 }, erosionPixels: 3,
   wireLevelControl: { nearArmFetched: "lod_0", farArmFetched: "lod_1" },
   ...overrides,
@@ -130,6 +134,75 @@ describe("a clean pair is measured", () => {
   });
 });
 
+describe("the coordinate space that invalidated the first campaign", () => {
+  // The first shed-tone campaign emitted regions of interest in CANVAS device
+  // coordinates and applied them to WHOLE-WINDOW captures with no origin
+  // correction, so every reading sampled a patch (-184, -120) away from its
+  // target. These tests make that class of error impossible to repeat silently.
+  it("offsets the region of interest by the canvas origin", () => {
+    // A 300x300 window whose canvas box starts at (100,100): the facade is drawn
+    // only inside the canvas, so a reading that ignores the origin lands on
+    // background and cannot resolve a mean.
+    const size = 300, origin = 100;
+    const img = (value) => encodePng(size, size, (x, y) =>
+      (x >= origin + 20 && y >= origin + 20 && x < size - 20 && y < size - 20 ? [value, value, value] : BACKDROP));
+    const nearPath = join(DIR, "origin-near.png"), farPath = join(DIR, "origin-far.png");
+    writeFileSync(nearPath, img(180)); writeFileSync(farPath, img(180));
+    const base = {
+      buildingId: "doitt:origin", nearArmPng: nearPath, farArmPng: farPath, erosionPixels: 3,
+      wireLevelControl: { nearArmFetched: "lod_0", farArmFetched: "lod_1" },
+      canvasOrigin: { x: origin, y: origin }, canvasSize: { width: 200, height: 200 }, imageSize: { width: size, height: size },
+      roi: { x0: 0, y0: 0, x1: 200, y1: 200 },
+    };
+    const withOrigin = comparePair(base);
+    expect(withOrigin.verdict).toBe("PASS");
+    expect(withOrigin.pixels.keptAfterErosion).toBeGreaterThan(1000);
+    // The same plan read as if the window WERE the canvas: the old defect.
+    const asIfCanvasOnly = comparePair({ ...base, canvasOrigin: { x: 0, y: 0 } });
+    expect(asIfCanvasOnly.pixels.keptAfterErosion).toBeLessThan(withOrigin.pixels.keptAfterErosion);
+  });
+
+  it("REFUSES a capture whose window size is not the registered one", () => {
+    const paths = writePair("dims", 180, 180);
+    const r = comparePair(planFor(paths, { imageSize: { width: 2194, height: 1788 } }));
+    expect(r.verdict).toBe("INCONCLUSIVE");
+    expect(r.reason).toContain("the plan registered a");
+  });
+
+  it("REFUSES when the canvas box does not fit inside the window", () => {
+    const paths = writePair("fit", 180, 180);
+    const r = comparePair(planFor(paths, { canvasOrigin: { x: 50, y: 50 } }));
+    expect(r.verdict).toBe("INCONCLUSIVE");
+    expect(r.reason).toContain("does not fit inside");
+  });
+
+  it("REFUSES a region of interest that leaves the canvas box", () => {
+    const paths = writePair("outside", 180, 180);
+    const r = comparePair(planFor(paths, { roi: { x0: 0, y0: 0, x1: 260, y1: 200 } }));
+    expect(r.verdict).toBe("INCONCLUSIVE");
+    expect(r.reason).toContain("outside the canvas box");
+  });
+
+  it("REFUSES a plan with no coordinate space at all", () => {
+    const paths = writePair("nospace", 180, 180);
+    const bare = planFor(paths);
+    delete bare.canvasOrigin;
+    const r = comparePair(bare);
+    expect(r.verdict).toBe("INCONCLUSIVE");
+    expect(r.reason).toContain("canvasOrigin");
+  });
+});
+
+describe("the decoder fails closed on corruption", () => {
+  it("rejects a PNG whose chunk CRC does not match", () => {
+    const png = encodePng(8, 8, () => [10, 20, 30]);
+    // Flip a byte inside the IDAT payload, leaving the CRC stale.
+    const corrupt = Buffer.from(png);
+    corrupt[corrupt.length - 12] ^= 0xff;
+    expect(() => decodePng(corrupt)).toThrow();
+  });
+});
+
 describe("every pre-registered refusal actually refuses", () => {
   it("refuses when the wire-level control disagrees with the expected ring side", () => {
     // The single most important refusal: without it a pose that never flipped
@@ -141,7 +214,10 @@ describe("every pre-registered refusal actually refuses", () => {
   });
 
   it("refuses when too little interior survives erosion to resolve a mean", () => {
-    const result = comparePair(planFor(writePair("tiny", 180, 180, 40), { roi: { x0: 0, y0: 0, x1: 40, y1: 40 } }));
+    const result = comparePair(planFor(writePair("tiny", 180, 180, 40), {
+      roi: { x0: 0, y0: 0, x1: 40, y1: 40 },
+      canvasSize: { width: 40, height: 40 }, imageSize: { width: 40, height: 40 },
+    }));
     expect(result.verdict).toBe("INCONCLUSIVE");
     expect(result.reason).toContain("interior pixels");
   });
@@ -171,7 +247,7 @@ describe("every pre-registered refusal actually refuses", () => {
   it("never returns PASS from any refusal path", () => {
     const refusals = [
       comparePair(planFor(writePair("r1", 180, 180), { wireLevelControl: { nearArmFetched: "lod_1", farArmFetched: "lod_1" } })),
-      comparePair(planFor(writePair("r2", 180, 180, 40), { roi: { x0: 0, y0: 0, x1: 40, y1: 40 } })),
+      comparePair(planFor(writePair("r2", 180, 180, 40), { roi: { x0: 0, y0: 0, x1: 40, y1: 40 }, canvasSize: { width: 40, height: 40 }, imageSize: { width: 40, height: 40 } })),
     ];
     for (const r of refusals) expect(r.verdict).toBe("INCONCLUSIVE");
   });

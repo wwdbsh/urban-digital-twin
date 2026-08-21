@@ -1,0 +1,303 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "far-tier-lod-transition-20260821:shed-tone-results-v2",
+  "task": "T006",
+  "artifact": "shed-tone-pair-results-corrected",
+  "capturedAt": null,
+  "supersedes": {
+    "record": "shed-tone-results.json",
+    "why": "That campaign applied CANVAS-space regions of interest to WHOLE-WINDOW captures with no origin correction, sampling a patch (-184,-120) away from every target. Its verdicts are WITHDRAWN. It is kept unedited with a supersession statement."
+  },
+  "headline": "ALL SIX PAIRS ARE INCONCLUSIVE-BY-INSTRUMENT. The coordinate defect is fixed and the arithmetic now runs, but the readings cannot be ATTRIBUTED to the pairs.",
+  "whyNotVerdicts": {
+    "theWireControlIsNecessaryAndNOTSufficient": "It proves a byte ARRIVED. It cannot prove that byte was RASTERIZED at the region measured. At the near arm of two pairs the target GLB was fetched while the pixels in its own projected bounding box are 99-100% procedural massing.",
+    "pickValidationFailed": "The pre-registered identity check -- click the pose and read which feature the app reports -- returned NO FEATURE at all twelve poses, and a grid of eight further probes across the viewport returned none either. Identity is therefore unconfirmed for every pair, including the ones whose arithmetic produced a clean-looking number.",
+    "maskControlStructurallyInert": "surfaceInBothArms equals the full region for all six pairs. Procedural massing and textured facade both sit far above the background luminance ceiling, so the mask separates nothing and the occlusion refusal cannot fire. This was true of the first campaign too and is not fixed by the coordinate correction.",
+    "consequence": "A number computed over pixels that cannot be attributed to the subject is not a measurement of the subject. Recording PASS or FAIL from these would be exactly the error the coordinate defect already caused once."
+  },
+  "controlFloor": {
+    "buildingId": "doitt:401323",
+    "deviationCorrected": null,
+    "note": "With the coordinate correction the control arms are 0.869% apart when run with the expectation that is correct for a fallback parent (lod_0 at both arms). The treatment rule refuses it as registered, and the rule was not relaxed; the figure is reported here rather than promoted to a verdict.",
+    "supersededValue": "The first campaign reported 0.591% for this control. That figure is withdrawn with the rest."
+  },
+  "disclosedDeviationFromTheRegisteredBudget": {
+    "registeredInteriorPixels": "5,400 to 28,546, computed at 4.35 device px/m assuming the full silhouette.",
+    "actualInteriorPixels": "1,470 to 9,480. The pose the ring forces gives 3.41-3.48 device px/m at a 518 m slant depth, not 4.35, and the first campaign additionally shrank each region to 55% of the projected extents. The second campaign uses FULL extents, which is why its counts are larger than the first campaign's 320-2,520 -- and still below what was registered.",
+    "statement": "This gap was not disclosed in the first campaign. It is disclosed here."
+  },
+  "pairs": [
+    {
+      "buildingId": "doitt:401323",
+      "ownerCellId": "manhattan-exterior-cell-w04-000688-17-38617-35826",
+      "isNegativeControl": true,
+      "wireLevelControl": {
+        "nearArmFetched": "lod_0",
+        "farArmFetched": "lod_0",
+        "note": "Fetch, not draw. See the campaign record: this control is necessary and NOT sufficient."
+      },
+      "arithmeticProduced": {
+        "verdictFromCli": "INCONCLUSIVE",
+        "luminanceRatio": null,
+        "deviation": null,
+        "keptAfterErosion": 9480,
+        "reason": "the wire-level control disagrees with the expected ring side: near arm fetched lod_0, far arm fetched lod_0"
+      },
+      "roiComposition": {
+        "nearArm": {
+          "pixels": 10824,
+          "meanRgb": [
+            128,
+            111,
+            102
+          ],
+          "proceduralMassingShare": 0.0
+        },
+        "farArm": {
+          "pixels": 10824,
+          "meanRgb": [
+            127,
+            110,
+            102
+          ],
+          "proceduralMassingShare": 0.0
+        }
+      },
+      "identityConfirmed": false,
+      "verdict": "INCONCLUSIVE-BY-INSTRUMENT",
+      "why": "the pick returned no feature at this pose, so the region cannot be attributed to this building even though its region contains no procedural massing",
+      "stills": {
+        "nearArmSha256": "9d78d338d278268df39d1e5b06789ba03a8870ead5de0f99274f475a4a16cc5e",
+        "farArmSha256": "e1ed7938f94e28d87011518c3bb25e31a346995b8bf42dc8cb5ecba0888e3e61"
+      }
+    },
+    {
+      "buildingId": "doitt:100749",
+      "ownerCellId": "manhattan-exterior-cell-w04-000495-17-38610-35840",
+      "isNegativeControl": false,
+      "wireLevelControl": {
+        "nearArmFetched": "lod_0",
+        "farArmFetched": "lod_1",
+        "note": "Fetch, not draw. See the campaign record: this control is necessary and NOT sufficient."
+      },
+      "arithmeticProduced": {
+        "verdictFromCli": "FAIL",
+        "luminanceRatio": 0.9330526630346411,
+        "deviation": 0.06694733696535893,
+        "keptAfterErosion": 2352,
+        "reason": null
+      },
+      "roiComposition": {
+        "nearArm": {
+          "pixels": 2976,
+          "meanRgb": [
+            206,
+            168,
+            104
+          ],
+          "proceduralMassingShare": 1.0
+        },
+        "farArm": {
+          "pixels": 2976,
+          "meanRgb": [
+            151,
+            155,
+            154
+          ],
+          "proceduralMassingShare": 0.0
+        }
+      },
+      "identityConfirmed": false,
+      "verdict": "INCONCLUSIVE-BY-INSTRUMENT",
+      "why": "the near arm renders 100.0% procedural massing and the far arm 0.0% inside the same region, so the ratio compares the massing fallback against wave geometry rather than lod_0 against lod_1",
+      "stills": {
+        "nearArmSha256": "2514b2af1871b7d2938635b7fff22b8587fdb3fc019410b249ba37a587b947ba",
+        "farArmSha256": "6aea854be0d35599f737fd69c4255104e53d3e72c74983c5d7641dd00e9ff818"
+      }
+    },
+    {
+      "buildingId": "doitt:10049",
+      "ownerCellId": "manhattan-exterior-cell-w01-000054-17-38600-35862",
+      "isNegativeControl": false,
+      "wireLevelControl": {
+        "nearArmFetched": "lod_0",
+        "farArmFetched": "lod_1",
+        "note": "Fetch, not draw. See the campaign record: this control is necessary and NOT sufficient."
+      },
+      "arithmeticProduced": {
+        "verdictFromCli": "FAIL",
+        "luminanceRatio": 1.0674873648887708,
+        "deviation": 0.06748736488877083,
+        "keptAfterErosion": 8960,
+        "reason": null
+      },
+      "roiComposition": {
+        "nearArm": {
+          "pixels": 10220,
+          "meanRgb": [
+            200,
+            164,
+            102
+          ],
+          "proceduralMassingShare": 0.9922
+        },
+        "farArm": {
+          "pixels": 10220,
+          "meanRgb": [
+            175,
+            177,
+            174
+          ],
+          "proceduralMassingShare": 0.0
+        }
+      },
+      "identityConfirmed": false,
+      "verdict": "INCONCLUSIVE-BY-INSTRUMENT",
+      "why": "the near arm renders 99.2% procedural massing and the far arm 0.0% inside the same region, so the ratio compares the massing fallback against wave geometry rather than lod_0 against lod_1",
+      "stills": {
+        "nearArmSha256": "48b68364b9cfddca9bcdc0fe793fba8c800840b138f19b1f3db90ce04b52bb2c",
+        "farArmSha256": "125dcebb521bd64997bf565cc8020699df984415a9b523baaed2d4253454b757"
+      }
+    },
+    {
+      "buildingId": "doitt:147902",
+      "ownerCellId": "manhattan-exterior-cell-w00-000000-block-00835",
+      "isNegativeControl": false,
+      "wireLevelControl": {
+        "nearArmFetched": "lod_0",
+        "farArmFetched": "lod_1",
+        "note": "Fetch, not draw. See the campaign record: this control is necessary and NOT sufficient."
+      },
+      "arithmeticProduced": {
+        "verdictFromCli": "PASS",
+        "luminanceRatio": 1.0000848323090612,
+        "deviation": 8.48323090612002e-05,
+        "keptAfterErosion": 4032,
+        "reason": null
+      },
+      "roiComposition": {
+        "nearArm": {
+          "pixels": 4836,
+          "meanRgb": [
+            202,
+            166,
+            102
+          ],
+          "proceduralMassingShare": 1.0
+        },
+        "farArm": {
+          "pixels": 4836,
+          "meanRgb": [
+            202,
+            166,
+            102
+          ],
+          "proceduralMassingShare": 1.0
+        }
+      },
+      "identityConfirmed": false,
+      "verdict": "INCONCLUSIVE-BY-INSTRUMENT",
+      "why": "the near arm renders 100.0% procedural massing and the far arm 100.0% inside the same region, so the ratio compares the massing fallback against wave geometry rather than lod_0 against lod_1",
+      "stills": {
+        "nearArmSha256": "62909a45209b1fcc68dd9952ed46b5a820bf4bf933a2e7493fd90503a7f02a25",
+        "farArmSha256": "3bafacf6a869b192adbf523f586a81ba98d1dba0ccb4c9eb194747d1aa31fed3"
+      }
+    },
+    {
+      "buildingId": "doitt:100368",
+      "ownerCellId": "manhattan-exterior-cell-w02-000172-17-38594-35889",
+      "isNegativeControl": false,
+      "wireLevelControl": {
+        "nearArmFetched": "lod_0",
+        "farArmFetched": "lod_0",
+        "note": "Fetch, not draw. See the campaign record: this control is necessary and NOT sufficient."
+      },
+      "arithmeticProduced": {
+        "verdictFromCli": "INCONCLUSIVE",
+        "luminanceRatio": null,
+        "deviation": null,
+        "keptAfterErosion": 1470,
+        "reason": "the wire-level control disagrees with the expected ring side: near arm fetched lod_0, far arm fetched lod_0"
+      },
+      "roiComposition": {
+        "nearArm": {
+          "pixels": 1968,
+          "meanRgb": [
+            33,
+            44,
+            52
+          ],
+          "proceduralMassingShare": 0.0
+        },
+        "farArm": {
+          "pixels": 1968,
+          "meanRgb": [
+            140,
+            134,
+            129
+          ],
+          "proceduralMassingShare": 0.0
+        }
+      },
+      "identityConfirmed": false,
+      "verdict": "INCONCLUSIVE-BY-INSTRUMENT",
+      "why": "the pick returned no feature at this pose, so the region cannot be attributed to this building even though its region contains no procedural massing",
+      "stills": {
+        "nearArmSha256": "b40537abf6e9ae61c4e0bf25f007efe45322bcdd33650a55fe46a7207a9c93f5",
+        "farArmSha256": "02a6ca883745f3b1e18812eda5ca718b9767e18c24dc75d26f60193993cec990"
+      }
+    },
+    {
+      "buildingId": "doitt:100176",
+      "ownerCellId": "manhattan-exterior-cell-w04-000682-17-38613-35831",
+      "isNegativeControl": false,
+      "wireLevelControl": {
+        "nearArmFetched": "lod_0",
+        "farArmFetched": "both",
+        "note": "Fetch, not draw. See the campaign record: this control is necessary and NOT sufficient."
+      },
+      "arithmeticProduced": {
+        "verdictFromCli": "INCONCLUSIVE",
+        "luminanceRatio": null,
+        "deviation": null,
+        "keptAfterErosion": 2184,
+        "reason": "the wire-level control disagrees with the expected ring side: near arm fetched lod_0, far arm fetched both"
+      },
+      "roiComposition": {
+        "nearArm": {
+          "pixels": 2784,
+          "meanRgb": [
+            145,
+            141,
+            134
+          ],
+          "proceduralMassingShare": 0.0
+        },
+        "farArm": {
+          "pixels": 2784,
+          "meanRgb": [
+            142,
+            138,
+            131
+          ],
+          "proceduralMassingShare": 0.0
+        }
+      },
+      "identityConfirmed": false,
+      "verdict": "INCONCLUSIVE-BY-INSTRUMENT",
+      "why": "the pick returned no feature at this pose, so the region cannot be attributed to this building even though its region contains no procedural massing",
+      "stills": {
+        "nearArmSha256": "332da5b3b01f61e94064caacf887edccb16066783873084a858779f837a420fe",
+        "farArmSha256": "b29d185b6ccd2f4f0b73a6124c77fb3ac5b550f075f3a76826c6e0a35a397376"
+      }
+    }
+  ],
+  "summary": {
+    "inconclusiveByInstrument": 6,
+    "pass": 0,
+    "fail": 0,
+    "of": 6
+  },
+  "whatWouldMakeThisMeasurable": "The same missing capability the Stage 0 honest stop names: a runtime hook that renders a NAMED building at a CHOSEN level, isolated, from a camera the measurement picks. Without it, neither identity nor isolation can be established from outside the renderer, and the wire only ever proves delivery.",
+  "attemptDisclosure": "One capture per arm in this corrected campaign; twelve captures, all settled under T005's rule, all with the canvas-visibility control passed. The first campaign's twelve captures are withdrawn, not re-scored. Exploratory pose-finding probes are disclosed in the implementation record."
+}

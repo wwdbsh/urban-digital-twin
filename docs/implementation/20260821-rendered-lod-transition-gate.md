@@ -3,7 +3,7 @@
 Task: T006 (Issue #106)
 Branch: `fcp/106-lod-transition`
 Date: 2026-08-21
-Status: **measurement half HONEST-STOPPED with arithmetic; shed-tone half RUN, 2 FAIL / 3 INCONCLUSIVE**
+Status: **measurement half HONEST-STOPPED with arithmetic; shed-tone half RUN, WITHDRAWN, RE-RUN — all six INCONCLUSIVE-BY-INSTRUMENT**
 
 ## The bar is carried. The instrument is not.
 
@@ -46,9 +46,12 @@ pessimistic budget cannot rescue a bar the optimistic one already fails.
 **The structural reason is that magnification is pinned by the thing being
 tested.** The frozen instrument chooses its own scale; the in-app instrument
 cannot, because the level only flips at the ring, and moving closer to gain
-pixels destroys the transition under test. A target needs ~40,000 device px² — a
-projected 2,112 m², say 46 m × 46 m — before the boundary term alone clears 2%.
-The largest member of the census projects 931 m².
+pixels destroys the transition under test. A target needs ~**356,440** device px² before the *total* budget clears 2% —
+T2 spends 0.995% of the bar before any pixel is counted and T3 rides the same
+perimeter as T1, so the requirement is 6/√A < 0.02 − T2. (The often-quoted
+40,000 px² is T1 **alone** and is not the operative figure.) At 4.3627 device
+px/m at the near arm that is a projected **18,724 m²**; the largest member of the
+census projects 931 m².
 
 A bigger viewport does not rescue it: 0/424 at 1×, 2× and 4×; only at 8×
 (12,640 vertical device px) do 97/424 clear, and that subset is selected by
@@ -117,45 +120,63 @@ and it is recorded as one rather than quietly used.
 It does **not** soften the honest stop: at 449 m and −60° the slant depth is
 518 m and the scale is 3.4 device px/m, *worse* than the 4.35 the budget assumed.
 
-### The negative control
+### The first campaign was withdrawn
 
-Two arms are two captures, so something differs even when nothing should. A
-measured-fallback parent has **no eligible `lod_1`** and therefore serves `lod_0`
-at both heights — any difference it shows is instrument and nothing else.
+The first shed-tone campaign emitted regions of interest in **canvas** device
+coordinates and applied them to **whole-window** captures (2194×1788, canvas box
+at origin 184,120) with no origin correction. Every reading measured a patch
+(−184, −120) away from its target. Its verdicts — a 3.78% FAIL, an 18.85% FAIL
+and a 0.591% instrument floor — are **withdrawn**. The record is kept unedited
+with a supersession statement so the defect stays inspectable; the compare tool
+now carries `canvasOrigin`/`canvasSize`/`imageSize` and **refuses** when a
+capture is not the registered window, when the canvas box does not fit inside
+it, or when the region leaves the canvas. Four tests hold those refusals shut.
 
-**`doitt:401323`: instrument error 0.591%**, on 2,520 interior pixels, with
-**zero** surface disagreement between arms. That is the floor a shed reading must
-clear, and it sits comfortably inside the 2% bar.
+### The corrected campaign, and why it still yields no verdicts
 
-The treatment CLI refuses any pair whose far arm did not fetch `lod_1`. The
-control cannot satisfy that rule by construction — and **the rule was not relaxed
-to let it through**. It is run separately, on the same code path, with the
-expectation that is correct for it.
+| pair | wire (near → far) | ROI massing share (near / far) | identity | verdict |
+| --- | --- | --- | --- | --- |
+| `doitt:401323` *(control)* | lod_0 → lod_0 | 0.000 / 0.000 | ✗ | INCONCLUSIVE-BY-INSTRUMENT |
+| `doitt:100749` | lod_0 → lod_1 | **1.000** / 0.000 | ✗ | INCONCLUSIVE-BY-INSTRUMENT |
+| `doitt:10049` | lod_0 → lod_1 | **0.992** / 0.000 | ✗ | INCONCLUSIVE-BY-INSTRUMENT |
+| `doitt:147902` | lod_0 → lod_1 | **1.000** / **1.000** | ✗ | INCONCLUSIVE-BY-INSTRUMENT |
+| `doitt:100368` | lod_0 → lod_0 | 0.000 / 0.000 | ✗ | INCONCLUSIVE-BY-INSTRUMENT |
+| `doitt:100176` | lod_0 → both | 0.000 / 0.000 | ✗ | INCONCLUSIVE-BY-INSTRUMENT |
 
-### Results
+Three findings, and the first is the one that matters beyond this task:
 
-| pair | verdict | interior px | ratio | deviation | note |
-| --- | --- | --- | --- | --- | --- |
-| `doitt:10049` | **FAIL** | 2,368 | 0.962206 | **3.78%** | 6.4× the instrument floor |
-| `doitt:147902` | **FAIL** | 1,008 | 0.811494 | **18.85%** | 32× the floor; not marginal |
-| `doitt:100749` | INCONCLUSIVE | 560 | — | — | interior below the 1,000 px threshold fixed before capture |
-| `doitt:100368` | INCONCLUSIVE | 320 | — | — | far arm fetched **both** levels; wire cannot say which drew |
-| `doitt:100176` | INCONCLUSIVE | 520 | — | — | both refusals apply |
-| *control* `doitt:401323` | — | 2,520 | 0.994087 | 0.591% | instrument floor |
+1. **The wire-level control is necessary and not sufficient.** It proves a byte
+   *arrived*; it cannot prove that byte was *rasterized* at the region measured.
+   At the near arm of `doitt:100749` and `doitt:10049` the target GLB was fetched
+   while the pixels inside its own projected bounding box are 99–100% procedural
+   massing. `doitt:147902` produced a **0.008% "PASS"** that is massing compared
+   against massing — a false pass that only the composition check exposes.
+2. **The pick validation failed everywhere.** The pre-registered identity check
+   returned **no feature at all twelve poses**, and a further grid of eight
+   probes across the viewport returned none either.
+3. **The mask control is structurally inert.** `surfaceInBothArms` equals the
+   full region for all six pairs: massing and facade both sit far above the
+   background luminance ceiling, so the mask separates nothing and the occlusion
+   refusal cannot fire. Isolation here is by **region placement alone**, with the
+   pick as the identity check — and the pick did not answer.
 
-**The 1,000-pixel threshold was not relaxed after seeing that it refused three
-pairs.** Relaxing a pre-registered threshold to rescue a reading is the exact
-failure this task exists to avoid.
+The control's corrected floor is **0.869%** (the withdrawn campaign said 0.591%).
+It is reported, not promoted to a verdict: the treatment rule refuses the control
+by construction and **the rule was not relaxed** to admit it.
 
-Every capture: settled under T005's rule verbatim (48 s dwell, then four
-consecutive identical reads at 6 s spacing), canvas-visibility control passed
-(canvas visible, chrome hidden), single attempt per arm, no re-captures.
+**Disclosed deviation.** The pre-registration budgeted 5,400–28,546 interior
+pixels at 4.35 device px/m. The pose the ring forces gives 3.41–3.48 px/m at a
+518 m slant depth, and realised interiors were 1,470–9,480 px. The first campaign
+compounded this by shrinking each region to 55% of the projected extents
+(320–2,520 px) and did not disclose it. The corrected campaign uses full extents,
+and the gap is disclosed here.
 
 ## What this settles, and what it does not
 
-**Two of the five ADR 0056 shed pairs are settled as FAILS** under the shipped
-renderer, with a measured instrument floor. Three remain open. The residue is
-smaller and better characterised; it is **not closed**.
+**Nothing of the ADR 0056 residue is settled.** All five pairs are
+INCONCLUSIVE-BY-INSTRUMENT, and T006 remains the owner. What T006 adds is a
+sharper account of *why*: identity cannot be established from outside the
+renderer, and the wire-level control that looked sufficient is not.
 
 ## Not claimed here
 
@@ -173,8 +194,12 @@ smaller and better characterised; it is **not closed**.
 
 ## Follow-ups
 
-- **The three INCONCLUSIVE shed pairs** carry forward on the ADR 0056 residue
-  entry, with the reason each was refused.
+- **All five shed pairs** carry forward on the ADR 0056 residue entry, with the
+  identity failure recorded as the reason none could be scored.
+- **An identity check that works from outside the renderer.** The pick returned
+  no feature at any pose, and without it the wire-level control cannot
+  distinguish "the byte arrived" from "the byte was drawn here". Any successor
+  gate needs this before it needs a better camera.
 - **The forced-LOD and isolation hook** is the follow-up for the honest-stopped
   half. Until a runtime affords it, the rendered silhouette gate at 2% is not
   measurable in-app.

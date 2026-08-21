@@ -36,10 +36,13 @@
     "direction": "The emitted total is T1+T2+T3: it OMITS T4 and computes T1/T3 from the bounding rectangle, which overstates area and so understates the ratio. This is an OPTIMISTIC LOWER BOUND on the instrument's error."
   },
   "resolutionThreshold": {
-    "areaDevicePixelsNeeded": 40000,
-    "statement": "A compact target needs about 40000 device px^2 before the BOUNDARY term alone falls under 0.02 — roughly a 200x200 px box.",
-    "projectedSquareMetresNeeded": 2101.611346253805,
-    "atTheRing": "At 4.3627 device px per metre, that is a projected 2102 m^2 — e.g. 46 m wide by 46 m tall."
+    "boundaryTermAloneAreaDevicePixels": 40000,
+    "boundaryTermAloneStatement": "T1 ALONE would clear 0.02 at 40000 device px^2. This figure is NOT the operative one and must not be quoted as if it were.",
+    "operativeAreaDevicePixelsNeeded": 356440.07680270186,
+    "operativeStatement": "THE OPERATIVE THRESHOLD. With T2 spending 0.995% of the bar before any pixel is counted, and T3 riding the same perimeter as T1, a compact target needs about 356440 device px^2 — roughly a 597x597 px box.",
+    "projectedSquareMetresNeeded": 18727.4627417034,
+    "pixelsPerMetreBasis": "4.3627 device px per metre AT THE NEAR ARM (399 m), which is the distance the budget is computed at; at the ring itself (400 m) it is 4.3518.",
+    "atTheRing": "That is a projected 18727 m^2 — e.g. 137 m wide by 137 m tall."
   },
   "strata": {
     "census": {
@@ -102,7 +105,7 @@
     }
   },
   "viewportScaling": {
-    "note": "Could a bigger render target rescue it? Only by leaving the shipped vehicle, and only for a size-biased subset.",
+    "note": "Could a bigger render target rescue it? Both axes are scaled so the aspect -- and therefore the derived vertical FOV -- stays fixed and resolution actually moves. It does move: the 1x honest stop stands, but the render-target-resolution axis is a real successor path, and any subset it rescues is selected by SIZE and is therefore a biased stratum, not the census.",
     "rows": [
       {
         "multiple": 1,
@@ -125,19 +128,19 @@
       {
         "multiple": 8,
         "verticalDevicePixels": 12640,
-        "censusUnderBar": 0,
+        "censusUnderBar": 97,
         "of": 424
       },
       {
         "multiple": 16,
         "verticalDevicePixels": 25280,
-        "censusUnderBar": 0,
+        "censusUnderBar": 382,
         "of": 424
       },
       {
         "multiple": 32,
         "verticalDevicePixels": 50560,
-        "censusUnderBar": 0,
+        "censusUnderBar": 421,
         "of": 424
       }
     ]

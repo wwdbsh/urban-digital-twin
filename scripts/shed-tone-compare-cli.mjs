@@ -56,8 +56,24 @@ export const MEASURE = { name: "eroded-intersection-mean-luminance-ratio", versi
  * has, and because a decoder that silently handles a format it was not given
  * would corrupt a measurement rather than refuse it.
  */
+const CRC_TABLE = (() => {
+  const table = new Uint32Array(256);
+  for (let n = 0; n < 256; n += 1) {
+    let c = n;
+    for (let k = 0; k < 8; k += 1) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+    table[n] = c >>> 0;
+  }
+  return table;
+})();
+const crc32 = (buffer) => {
+  let c = 0xffffffff;
+  for (const byte of buffer) c = CRC_TABLE[(c ^ byte) & 0xff] ^ (c >>> 8);
+  return (c ^ 0xffffffff) >>> 0;
+};
+
 export function decodePng(bytes) {
-  if (bytes.readUInt32BE(0) !== 0x89504e47) fail("not a PNG");
+  const reject = (message) => { throw new Error(`${TOOL}: ${message}`); };
+  if (bytes.readUInt32BE(0) !== 0x89504e47) reject("not a PNG");
   let offset = 8;
   let width = 0, height = 0, bitDepth = 0, colourType = 0, interlace = 0;
   const idat = [];
@@ -65,6 +81,10 @@ export function decodePng(bytes) {
     const length = bytes.readUInt32BE(offset);
     const type = bytes.toString("ascii", offset + 4, offset + 8);
     const data = bytes.subarray(offset + 8, offset + 8 + length);
+    // FAIL CLOSED ON CORRUPTION. A truncated or damaged capture that decoded to
+    // plausible-looking pixels would be measured as if it were the scene.
+    const declaredCrc = bytes.readUInt32BE(offset + 8 + length);
+    if (crc32(bytes.subarray(offset + 4, offset + 8 + length)) !== declaredCrc) reject(`PNG chunk ${type} failed its CRC`);
     if (type === "IHDR") {
       width = data.readUInt32BE(0); height = data.readUInt32BE(4);
       bitDepth = data[8]; colourType = data[9]; interlace = data[12];
@@ -72,10 +92,10 @@ export function decodePng(bytes) {
     else if (type === "IEND") break;
     offset += 12 + length;
   }
-  if (bitDepth !== 8) fail(`unsupported PNG bit depth ${bitDepth}`);
-  if (interlace !== 0) fail("interlaced PNG is not supported");
+  if (bitDepth !== 8) reject(`unsupported PNG bit depth ${bitDepth}`);
+  if (interlace !== 0) reject("interlaced PNG is not supported");
   const channels = colourType === 6 ? 4 : colourType === 2 ? 3 : 0;
-  if (channels === 0) fail(`unsupported PNG colour type ${colourType}`);
+  if (channels === 0) reject(`unsupported PNG colour type ${colourType}`);
   const raw = inflateSync(Buffer.concat(idat));
   const stride = width * channels;
   const out = Buffer.alloc(height * stride);
@@ -119,8 +139,8 @@ export const luminance709 = (r, g, b) => (0.2126 * r + 0.7152 * g + 0.0722 * b) 
  */
 export const BACKGROUND_LUMINANCE_CEILING = 0.10;
 
-function maskOf(image, roi) {
-  const { x0, y0, x1, y1 } = roi;
+function maskOf(image, roi, origin) {
+  const x0 = roi.x0 + origin.x, y0 = roi.y0 + origin.y, x1 = roi.x1 + origin.x, y1 = roi.y1 + origin.y;
   const mask = new Uint8Array((x1 - x0) * (y1 - y0));
   let index = 0;
   for (let y = y0; y < y1; y += 1) {
@@ -150,8 +170,8 @@ export function erode(mask, width, height, radius) {
   return current;
 }
 
-function meanLuminance(image, roi, keep) {
-  const { x0, y0, x1, y1 } = roi;
+function meanLuminance(image, roi, origin, keep) {
+  const x0 = roi.x0 + origin.x, y0 = roi.y0 + origin.y, x1 = roi.x1 + origin.x, y1 = roi.y1 + origin.y;
   let sum = 0, count = 0, index = 0;
   for (let y = y0; y < y1; y += 1) {
     for (let x = x0; x < x1; x += 1, index += 1) {
@@ -174,10 +194,33 @@ export function comparePair(pair, root = repositoryRoot) {
   if (near.width !== far.width || near.height !== far.height) {
     return { buildingId: pair.buildingId, verdict: "INCONCLUSIVE", reason: "the two arms were captured at different canvas sizes, so no pixel correspondence exists" };
   }
+  // THE DEFECT THIS GUARD EXISTS FOR. The pose tool emits regions of interest in
+  // CANVAS device coordinates; the captures are WHOLE-WINDOW screenshots with
+  // the canvas content box at an origin inside them. The first campaign applied
+  // canvas coordinates directly to window images and therefore measured a patch
+  // (-184, -120) away from every target -- browser chrome and neighbouring
+  // ground, scored as if it were the building. Every verdict it produced was
+  // withdrawn. The plan now carries the origin and the expected window size, and
+  // a mismatch REFUSES rather than measuring the wrong pixels quietly.
+  const origin = pair.canvasOrigin;
+  const canvasSize = pair.canvasSize;
+  const expected = pair.imageSize;
+  if (!origin || !canvasSize || !expected) {
+    return { buildingId: pair.buildingId, verdict: "INCONCLUSIVE", reason: "the plan carries no canvasOrigin/canvasSize/imageSize, so the region of interest cannot be placed in the image's coordinate space" };
+  }
+  if (near.width !== expected.width || near.height !== expected.height) {
+    return { buildingId: pair.buildingId, verdict: "INCONCLUSIVE", reason: `capture is ${near.width}x${near.height} but the plan registered a ${expected.width}x${expected.height} window; the region of interest cannot be trusted across a different layout` };
+  }
+  if (origin.x + canvasSize.width > expected.width || origin.y + canvasSize.height > expected.height) {
+    return { buildingId: pair.buildingId, verdict: "INCONCLUSIVE", reason: "the registered canvas box does not fit inside the registered window size" };
+  }
   const roi = pair.roi;
+  if (roi.x0 < 0 || roi.y0 < 0 || roi.x1 > canvasSize.width || roi.y1 > canvasSize.height) {
+    return { buildingId: pair.buildingId, verdict: "INCONCLUSIVE", reason: "the region of interest falls outside the canvas box" };
+  }
   const w = roi.x1 - roi.x0, h = roi.y1 - roi.y0;
-  const nearMask = maskOf(near, roi);
-  const farMask = maskOf(far, roi);
+  const nearMask = maskOf(near, roi, origin);
+  const farMask = maskOf(far, roi, origin);
   const intersection = new Uint8Array(nearMask.length);
   let nearOnly = 0, farOnly = 0, both = 0;
   for (let i = 0; i < nearMask.length; i += 1) {
@@ -186,8 +229,8 @@ export function comparePair(pair, root = repositoryRoot) {
     else if (farMask[i]) farOnly += 1;
   }
   const kept = erode(intersection, w, h, pair.erosionPixels ?? 3);
-  const nearStats = meanLuminance(near, roi, kept);
-  const farStats = meanLuminance(far, roi, kept);
+  const nearStats = meanLuminance(near, roi, origin, kept);
+  const farStats = meanLuminance(far, roi, origin, kept);
   const result = {
     buildingId: pair.buildingId,
     ownerCellId: pair.ownerCellId,
@@ -195,10 +238,13 @@ export function comparePair(pair, root = repositoryRoot) {
     inputs: {
       nearArmPng: pair.nearArmPng, nearArmSha256: sha256Of(nearBytes),
       farArmPng: pair.farArmPng, farArmSha256: sha256Of(farBytes),
-      canvas: { width: near.width, height: near.height },
+      imageSize: { width: near.width, height: near.height },
+      canvasOrigin: origin,
+      canvasSize,
     },
     wireLevelControl: pair.wireLevelControl ?? null,
     roi,
+    roiCoordinateSpace: "CANVAS device pixels, offset by canvasOrigin when sampled from the whole-window capture",
     backgroundLuminanceCeiling: BACKGROUND_LUMINANCE_CEILING,
     erosionPixels: pair.erosionPixels ?? 3,
     pixels: { roi: w * h, surfaceInBothArms: both, surfaceInNearArmOnly: nearOnly, surfaceInFarArmOnly: farOnly, keptAfterErosion: nearStats.count },

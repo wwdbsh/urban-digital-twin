@@ -1,0 +1,232 @@
+{
+  "pairs": [
+    {
+      "buildingId": "doitt:401323",
+      "ownerCellId": "manhattan-exterior-cell-w04-000688-17-38617-35826",
+      "isNegativeControl": true,
+      "nearArmPng": "data/far-tier-lod-transition-20260821/stills-v2/ctl-near.png",
+      "farArmPng": "data/far-tier-lod-transition-20260821/stills-v2/ctl-far.png",
+      "canvasOrigin": {
+        "x": 184,
+        "y": 120
+      },
+      "canvasSize": {
+        "width": 2010,
+        "height": 1580
+      },
+      "imageSize": {
+        "width": 2194,
+        "height": 1788
+      },
+      "roi": {
+        "x0": 923,
+        "y0": 738,
+        "x1": 1087,
+        "y1": 804
+      },
+      "roiDerivation": "Full projected bounding box of the building at mid-height: centre from projectToDevicePixels, half-extents (width x 3.4100)/2 and (height x same)/2. FULL extents, not the 55% the first campaign used, so the mask has real background inside the region and the occlusion refusal is able to fire.",
+      "erosionPixels": 3,
+      "wireLevelControl": {
+        "nearArmFetched": "lod_0",
+        "farArmFetched": "lod_0",
+        "note": "Fetch, not draw. See the campaign record: this control is necessary and NOT sufficient."
+      },
+      "projection": {
+        "devicePixelX": 1005.0000000000001,
+        "devicePixelY": 771.2307872203606,
+        "depthMetres": 510.4666105175627,
+        "devicePixelsPerMetreAtTarget": 3.4100390226146486
+      }
+    },
+    {
+      "buildingId": "doitt:100749",
+      "ownerCellId": "manhattan-exterior-cell-w04-000495-17-38610-35840",
+      "isNegativeControl": false,
+      "nearArmPng": "data/far-tier-lod-transition-20260821/stills-v2/p1-near.png",
+      "farArmPng": "data/far-tier-lod-transition-20260821/stills-v2/p1-far.png",
+      "canvasOrigin": {
+        "x": 184,
+        "y": 120
+      },
+      "canvasSize": {
+        "width": 2010,
+        "height": 1580
+      },
+      "imageSize": {
+        "width": 2194,
+        "height": 1788
+      },
+      "roi": {
+        "x0": 981,
+        "y0": 741,
+        "x1": 1029,
+        "y1": 803
+      },
+      "roiDerivation": "Full projected bounding box of the building at mid-height: centre from projectToDevicePixels, half-extents (width x 3.4069)/2 and (height x same)/2. FULL extents, not the 55% the first campaign used, so the mask has real background inside the region and the occlusion refusal is able to fire.",
+      "erosionPixels": 3,
+      "wireLevelControl": {
+        "nearArmFetched": "lod_0",
+        "farArmFetched": "lod_1",
+        "note": "Fetch, not draw. See the campaign record: this control is necessary and NOT sufficient."
+      },
+      "projection": {
+        "devicePixelX": 1005.0000000000001,
+        "devicePixelY": 772.1678343363752,
+        "depthMetres": 510.9342642356063,
+        "devicePixelsPerMetreAtTarget": 3.406917843356911
+      }
+    },
+    {
+      "buildingId": "doitt:10049",
+      "ownerCellId": "manhattan-exterior-cell-w01-000054-17-38600-35862",
+      "isNegativeControl": false,
+      "nearArmPng": "data/far-tier-lod-transition-20260821/stills-v2/p2-near.png",
+      "farArmPng": "data/far-tier-lod-transition-20260821/stills-v2/p2-far.png",
+      "canvasOrigin": {
+        "x": 184,
+        "y": 120
+      },
+      "canvasSize": {
+        "width": 2010,
+        "height": 1580
+      },
+      "imageSize": {
+        "width": 2194,
+        "height": 1788
+      },
+      "roi": {
+        "x0": 970,
+        "y0": 678,
+        "x1": 1040,
+        "y1": 824
+      },
+      "roiDerivation": "Full projected bounding box of the building at mid-height: centre from projectToDevicePixels, half-extents (width x 3.4770)/2 and (height x same)/2. FULL extents, not the 55% the first campaign used, so the mask has real background inside the region and the occlusion refusal is able to fire.",
+      "erosionPixels": 3,
+      "wireLevelControl": {
+        "nearArmFetched": "lod_0",
+        "farArmFetched": "lod_1",
+        "note": "Fetch, not draw. See the campaign record: this control is necessary and NOT sufficient."
+      },
+      "projection": {
+        "devicePixelX": 1005.0000000000001,
+        "devicePixelY": 751.121325045222,
+        "depthMetres": 500.6328920575904,
+        "devicePixelsPerMetreAtTarget": 3.477020965307407
+      }
+    },
+    {
+      "buildingId": "doitt:147902",
+      "ownerCellId": "manhattan-exterior-cell-w00-000000-block-00835",
+      "isNegativeControl": false,
+      "nearArmPng": "data/far-tier-lod-transition-20260821/stills-v2/p3-near.png",
+      "farArmPng": "data/far-tier-lod-transition-20260821/stills-v2/p3-far.png",
+      "canvasOrigin": {
+        "x": 184,
+        "y": 120
+      },
+      "canvasSize": {
+        "width": 2010,
+        "height": 1580
+      },
+      "imageSize": {
+        "width": 2194,
+        "height": 1788
+      },
+      "roi": {
+        "x0": 974,
+        "y0": 729,
+        "x1": 1036,
+        "y1": 807
+      },
+      "roiDerivation": "Full projected bounding box of the building at mid-height: centre from projectToDevicePixels, half-extents (width x 3.4201)/2 and (height x same)/2. FULL extents, not the 55% the first campaign used, so the mask has real background inside the region and the occlusion refusal is able to fire.",
+      "erosionPixels": 3,
+      "wireLevelControl": {
+        "nearArmFetched": "lod_0",
+        "farArmFetched": "lod_1",
+        "note": "Fetch, not draw. See the campaign record: this control is necessary and NOT sufficient."
+      },
+      "projection": {
+        "devicePixelX": 1005.0000000000001,
+        "devicePixelY": 768.2084350844268,
+        "depthMetres": 508.9640564419967,
+        "devicePixelsPerMetreAtTarget": 3.420106075418116
+      }
+    },
+    {
+      "buildingId": "doitt:100368",
+      "ownerCellId": "manhattan-exterior-cell-w02-000172-17-38594-35889",
+      "isNegativeControl": false,
+      "nearArmPng": "data/far-tier-lod-transition-20260821/stills-v2/p4-near.png",
+      "farArmPng": "data/far-tier-lod-transition-20260821/stills-v2/p4-far.png",
+      "canvasOrigin": {
+        "x": 184,
+        "y": 120
+      },
+      "canvasSize": {
+        "width": 2010,
+        "height": 1580
+      },
+      "imageSize": {
+        "width": 2194,
+        "height": 1788
+      },
+      "roi": {
+        "x0": 981,
+        "y0": 757,
+        "x1": 1029,
+        "y1": 798
+      },
+      "roiDerivation": "Full projected bounding box of the building at mid-height: centre from projectToDevicePixels, half-extents (width x 3.3894)/2 and (height x same)/2. FULL extents, not the 55% the first campaign used, so the mask has real background inside the region and the occlusion refusal is able to fire.",
+      "erosionPixels": 3,
+      "wireLevelControl": {
+        "nearArmFetched": "lod_0",
+        "farArmFetched": "lod_0",
+        "note": "Fetch, not draw. See the campaign record: this control is necessary and NOT sufficient."
+      },
+      "projection": {
+        "devicePixelX": 1005.0000000000001,
+        "devicePixelY": 777.4369550017714,
+        "depthMetres": 513.5799718441677,
+        "devicePixelsPerMetreAtTarget": 3.3893671035421424
+      }
+    },
+    {
+      "buildingId": "doitt:100176",
+      "ownerCellId": "manhattan-exterior-cell-w04-000682-17-38613-35831",
+      "isNegativeControl": false,
+      "nearArmPng": "data/far-tier-lod-transition-20260821/stills-v2/p5-near.png",
+      "farArmPng": "data/far-tier-lod-transition-20260821/stills-v2/p5-far.png",
+      "canvasOrigin": {
+        "x": 184,
+        "y": 120
+      },
+      "canvasSize": {
+        "width": 2010,
+        "height": 1580
+      },
+      "imageSize": {
+        "width": 2194,
+        "height": 1788
+      },
+      "roi": {
+        "x0": 981,
+        "y0": 744,
+        "x1": 1029,
+        "y1": 802
+      },
+      "roiDerivation": "Full projected bounding box of the building at mid-height: centre from projectToDevicePixels, half-extents (width x 3.4036)/2 and (height x same)/2. FULL extents, not the 55% the first campaign used, so the mask has real background inside the region and the occlusion refusal is able to fire.",
+      "erosionPixels": 3,
+      "wireLevelControl": {
+        "nearArmFetched": "lod_0",
+        "farArmFetched": "both",
+        "note": "Fetch, not draw. See the campaign record: this control is necessary and NOT sufficient."
+      },
+      "projection": {
+        "devicePixelX": 1005.0000000000001,
+        "devicePixelY": 773.163732109056,
+        "depthMetres": 511.43222884278237,
+        "devicePixelsPerMetreAtTarget": 3.4036006403926256
+      }
+    }
+  ]
+}

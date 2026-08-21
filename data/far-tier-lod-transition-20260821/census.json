@@ -7,7 +7,7 @@
   "capturedAtStatement": "NULL BY CONSTRUCTION. Derived from committed inputs, not from a clock.",
   "whatThisIs": "The measured-fallback parents: buildings whose lod_1 was refused by the 2% gate, so the shipped release serves lod_0 at every distance and no LOD transition exists for them.",
   "dualDerivation": {
-    "statement": "TWO INDEPENDENT DERIVATIONS, AGREEING. Neither is trusted alone.",
+    "statement": "A PLAN-STAGE / ASSET-STAGE CROSS-CHECK, AGREEING. The two are not fully independent -- the shipped manifests descend from the same island pass -- so this is a cross-check that the plan-stage refusal survived into the shipped bytes, not two unrelated measurements of one quantity.",
     "fromServingManifests": {
       "count": 424,
       "rule": "lod_0.maxDistanceMeters === null AND lod_1.eligible === false, over every cell-assembly-package asset in the six -s2 releases under test",

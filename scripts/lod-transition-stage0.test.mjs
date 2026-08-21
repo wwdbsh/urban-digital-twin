@@ -11,7 +11,7 @@
  * not a verdict, and a test that fails when an image re-encodes teaches its
  * readers to ignore it.
  */
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -135,6 +135,73 @@ describe("the shed-tone half is separated from the stopped half by construction"
     const shed = readRecord("shed-tone-budget");
     expect(shed.residualTermsNotInTheNumber.join(" ")).toContain("ISOLATION");
     expect(shed.residualTermsNotInTheNumber.join(" ")).toContain("INCONCLUSIVE");
+  });
+});
+
+describe("the viewport-scaling model is not inert", () => {
+  it("scales BOTH axes, so resolution actually moves", () => {
+    // The first revision scaled only the height. That changed the aspect, which
+    // changed the derived vertical FOV by the compensating amount, so
+    // pixels-per-metre came out invariant and the table read "0 under the bar"
+    // at every multiple -- self-refuting, since T2 alone is 0.995% and a large
+    // enough target must clear 2%.
+    const budget = readRecord("error-budget");
+    const rows = budget.viewportScaling.rows;
+    expect(rows.map((r) => r.multiple)).toEqual([1, 2, 4, 8, 16, 32]);
+    expect(rows[0].censusUnderBar).toBe(0);
+    // The non-1x rows are the point: pin one that must be non-zero.
+    const eightX = rows.find((r) => r.multiple === 8);
+    expect(eightX.verticalDevicePixels).toBe(12640);
+    expect(eightX.censusUnderBar).toBeGreaterThan(0);
+    expect(rows.find((r) => r.multiple === 32).censusUnderBar).toBeGreaterThan(eightX.censusUnderBar);
+  });
+
+  it("uses the OPERATIVE threshold, not the boundary term alone", () => {
+    const budget = readRecord("error-budget");
+    const t = budget.resolutionThreshold;
+    expect(t.boundaryTermAloneAreaDevicePixels).toBeCloseTo(40000, 0);
+    // T1+T3 = 6/sqrt(A) against the bar less T2.
+    expect(t.operativeAreaDevicePixelsNeeded).toBeGreaterThan(300000);
+    expect(t.boundaryTermAloneStatement).toContain("NOT the operative one");
+  });
+
+  it("switches the FOV axis when the target is taller than it is wide", () => {
+    const portrait = vehicleOptics({ ...VEHICLE, canvasCssWidth: 790, canvasCssHeight: 1005 });
+    // Cesium applies `fov` to the wider axis; portrait means it IS the vertical.
+    expect(portrait.fovyDegrees).toBeCloseTo(60, 6);
+  });
+});
+
+describe("every committed record is bound to its sidecar", () => {
+  it("covers all of them, not just the ones a test happened to name", () => {
+    // The verifier found shed-tone-plan, shed-tone-results and
+    // staging-provenance unguarded, and no discovery scan reaching this
+    // directory. This is the local equivalent: the list is derived from the
+    // directory, so a new record cannot be added without being bound.
+    const names = readdirSync(RECORD_ROOT).filter((n) => n.endsWith(".json")).map((n) => n.replace(/\.json$/u, ""));
+    expect(names.length).toBeGreaterThanOrEqual(8);
+    for (const name of names) expect(readRecord(name), name).toBeTypeOf("object");
+  });
+
+  it("keeps the withdrawn campaign withdrawn, and unedited in its verdicts", () => {
+    const withdrawn = readRecord("shed-tone-results");
+    expect(withdrawn.supersededBy.record).toBe("shed-tone-results-v2.json");
+    expect(withdrawn.supersededBy.statement).toContain("WITHDRAWN");
+    expect(withdrawn.supersededBy.theDefect).toContain("184");
+    // The numbers it recorded are still there to be inspected.
+    expect(withdrawn.summary.fail).toBe(2);
+  });
+
+  it("records the corrected campaign as attributable to nothing", () => {
+    const v2 = readRecord("shed-tone-results-v2");
+    expect(v2.summary.pass).toBe(0);
+    expect(v2.summary.fail).toBe(0);
+    expect(v2.summary.inconclusiveByInstrument).toBe(6);
+    for (const pair of v2.pairs) {
+      expect(pair.verdict, pair.buildingId).toBe("INCONCLUSIVE-BY-INSTRUMENT");
+      expect(pair.identityConfirmed, pair.buildingId).toBe(false);
+    }
+    expect(v2.whyNotVerdicts.theWireControlIsNecessaryAndNOTSufficient).toContain("RASTERIZED");
   });
 });
 
