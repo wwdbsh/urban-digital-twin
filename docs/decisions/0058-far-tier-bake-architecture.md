@@ -660,10 +660,15 @@ single staged cell produced. Named for T005 with its numbers; not fixed here.
 
 ---
 
-## Amendment — T005, the promotion that did not activate (Issue #105, 2026-08-19)
+## Amendment — T005, the promotion (Issue #105, 2026-08-19 / 2026-08-21)
 
-**Status: the promotion is BUILT and NOT ACTIVATED. `FAR_TIER_DEFAULT_ON` stays
-`false`. The registered sweep failed at one of six poses.**
+**Status: ACTIVATED. `FAR_TIER_DEFAULT_ON` is `true`.**
+
+**It took two sweeps, and the first one's FAIL is not withdrawn.** Sweep-1
+failed at P2 and this amendment was written, below, saying the promotion was not
+activated. That text is left standing rather than rewritten, because what
+changed was not the scene — it was the explanation of a number. The correction
+is at the end of this amendment, under *Sweep-2*.
 
 Evidence: `data/far-tier-hlod-promotion-20260819/` — `promoted-inventory.json`,
 `sweep-exemptions.json`, `sweep-poses.json`, `sweep-results.json`, each with a
@@ -736,5 +741,86 @@ pose was rAF-throttled and excluded). 1,053–1,255 far-tier requests per ON pos
 `FAR_TIER_DEFAULT_ON = false` restores the pre-HLOD **composition** and nothing
 else: the raised ceilings, the swapped pin and the merged inventory stay in the
 build. That is a third configuration nobody measured, exactly as ADR 0045 names
-it for `EXTERIOR_SCHEDULER_DEFAULT_ON`. It is the configuration this branch now
-ships, deliberately.
+it for `EXTERIOR_SCHEDULER_DEFAULT_ON`. It was the configuration this branch
+shipped after sweep-1; after sweep-2 the branch ships `true`, and the sentence
+above is what a rollback would leave behind.
+
+### Sweep-2 — the P2 failure was a stale publish, not a lost write
+
+The section above points at "the dense-layer rebuild racing the covered-set
+write" around `denseDesiredFarTierCoveredRef`. **That hypothesis was tested and
+is wrong.** Instrumenting the seam produced four facts that exclude it:
+
+- the selection pass itself reported **`passUncovered` = 0** at the same instant
+  the published attribute read thousands;
+- **`desiredCovered` == `appliedCovered`** throughout, so not one alpha write was
+  ever skipped;
+- every uncovered id classified as **`notDesired`** — the covered set never
+  contained it — with `uncoveredDesired` and `uncoveredHidden` both 0;
+- the **published** drawn-cell count (839) exceeded the drawn set the last pass
+  had actually **selected over** (776).
+
+The cause is one call site. `publishFarTierState()` ran at the moment the drawn
+set advanced — before `farTierCovered` was computed and long before
+`applyFarTierAlpha` wrote anything — so a reading paired a NEW drawn set with the
+PREVIOUS pass's applied-alpha set, and the pass never published again. At a wide
+oblique pose, where tiles become ready in large batches, the gap was thousands of
+buildings wide. On a cold cache it reproduced as **6,145 uncovered, stable for
+80 s and never healing**: a stuck stale reading, not an intermittent race.
+
+**The scene was correct at P2 the entire time.** This was the metric's **third**
+instrument defect, and that history is why the reading is now the pure function
+`farTierCoverageReading` — classifying every uncovered id as `hidden`, `desired`
+or `notDesired` — with `data-far-tier-pass-uncovered` published beside it as a
+selection-time control. Fixed in `200446c`; the drawn set still advances at
+selection, the publish moved after the alpha write, and the rebuild commit
+publishes again after re-applying.
+
+Sweep-2 re-ran the **same six registered poses**, registered in
+`sweep-poses.json` → `sweeps[]` before any pose was read, under a settle rule
+that is **blind to the verdict** (dense layer committed, and the triple
+`active/suppressible/covered` identical across three reads 8 s apart; it never
+inspects `uncovered`).
+
+| pose | states | massing suppressible / covered / uncovered | verdict |
+| --- | --- | --- | --- |
+| P1 1,400 m ⊥ | all clean | 2,520 / 2,520 / **0** | PASS |
+| **P2 2,400 m oblique** | all clean | 23,973 / 23,973 / **0** | **PASS** |
+| P3 honest-stop cell | all clean | 1 / 1 / **0** | PASS |
+| P4 densest cell | all clean | 3,757 / 3,757 / **0** | PASS |
+| P5 12 km ⊥ | all clean | 29,064 / 29,064 / **0** | PASS |
+| P6-OFF rollback | no far-tier UI at all | 25,021 active, 0 suppressible | PASS |
+
+`absent = checksum-mismatch = build-failure = over-budget = 0` at every ON pose;
+`notDeclared = 1` throughout is the Block 835 alias exemption. All six settled
+within 32 s.
+
+**Disclosed against the single-attempt policy.** One capture pass was discarded
+before any verdict was taken: P1 produced no far-tier element and P2 read
+`active = 0` with `appliedCovered = 0` — the dense layer had not committed, so
+the reading measured an unloaded scene. That discarded P2 reading had
+`uncovered = 0`; **accepting it would have been a false PASS in the direction
+being sought**, so discarding it moved the reading away from the desired answer,
+not toward it. No pose was re-read after a verdict was seen.
+
+### The `<!doctype` errors, diagnosed
+
+Sweep-1 recorded six repeated `Unexpected token '<', "<!doctype "` notices as
+undiagnosed. They are six exterior **serving** releases declared by
+`src/release/exterior-serving-waves.ts` whose packages do not exist on disk in
+this worktree or the main checkout — generated, gitignored local data. The SPA
+fallback answers `/data/<id>/release.json` with `index.html`. Six declared
+packages, six errors. **Not the far tier and not introduced by T005**; producing
+them needs an approved operator workflow and none was run.
+
+**This is material to both sweeps and is not glossed:** the exterior LOD-0 wave
+tier was **absent from the vehicle**. Both sweeps measure the dense massing tier,
+the far tier and their interaction. Neither clears the three-tier composition
+with exterior waves present.
+
+### Vehicle difference between the sweeps
+
+Sweep-1 ran on `vite dev`; sweep-2 ran on a **production build** via
+`vite preview`. The comparison between the two sweeps is therefore not
+vehicle-controlled. The production build is what a user receives.
+

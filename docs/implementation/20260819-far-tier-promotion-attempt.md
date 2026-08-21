@@ -3,7 +3,18 @@
 Task: T005 (Goal `manhattan-hlod-far-tier`, Issue #105)
 Branch: `fcp/105-promotion`
 Date: 2026-08-19
-Status: **BUILT, NOT ACTIVATED. `FAR_TIER_DEFAULT_ON` stays `false`.**
+Status: **SUPERSEDED BY ACTIVATION, AND LEFT STANDING.**
+See `docs/implementation/20260821-far-tier-promotion-activation.md`.
+
+> This record described the state after sweep-1: built, not activated,
+> `FAR_TIER_DEFAULT_ON = false`. It is **not corrected in place**, because the
+> reasoning it contains was honest about what had been measured and is the
+> reason the flip was withheld. What it got wrong is stated in one place, at the
+> top of the activation record: P2's failure was a **stale published reading**,
+> not the unsuppressed massing this document infers. The scene was correct; the
+> number was not. Read this document as a record of a decision made on the best
+> evidence then available, and the activation record for what that evidence
+> turned out to mean.
 
 ## What promotion needed, and what it got
 
