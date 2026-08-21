@@ -826,6 +826,15 @@ tier was **absent from the vehicle**. Both sweeps measure the dense massing tier
 the far tier and their interaction. Neither clears the three-tier composition
 with exterior waves present.
 
+**Correction (2026-08-21).** The generation named above is wrong: the effective
+default is the six **`-s2`** two-LOD releases returned by
+`exteriorDefaultActivations()`, not the `-s1` set declared by
+`exterior-serving-waves.ts` — `-s1` is their superseded predecessor. The
+illustrative URL `/data/<id>/release.json` is also wrong; the served manifest is
+`index.json`. Both errors were this agent's. The count, the mechanism and the
+materiality are unchanged and were confirmed by staging the packages locally:
+all six errors disappeared and the near tier now draws facades.
+
 ### Vehicle difference between the sweeps
 
 Sweep-1 ran on `vite dev`; sweep-2 ran on a **production build** via
