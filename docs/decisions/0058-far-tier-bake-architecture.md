@@ -776,11 +776,19 @@ selection-time control. Fixed in `200446c`; the drawn set still advances at
 selection, the publish moved after the alpha write, and the rebuild commit
 publishes again after re-applying.
 
-Sweep-2 re-ran the **same six registered poses**, registered in
-`sweep-poses.json` → `sweeps[]` before any pose was read, under a settle rule
-that is **blind to the verdict** (dense layer committed, and the triple
-`active/suppressible/covered` identical across three reads 8 s apart; it never
-inspects `uncovered`).
+Sweep-2 re-ran the **same six registered poses** — **pre-registered in `3c5c64f`**
+along with their URLs, the exemption set, the attempt policy and the verdict
+rule, before any screen was looked at, and reused unchanged rather than re-chosen
+after sweep-1's failure.
+
+The settle rule is **blind to the verdict** (dense layer committed, and the
+triple `active/suppressible/covered` identical across three reads 8 s apart; it
+never inspects `uncovered`) and was **fixed before any accepted capture** — which
+is not the same as before any pose was read, and the difference is stated rather
+than blurred: **the rule was written after the first capture pass was
+discarded**, then applied uniformly to all six accepted captures. The sweep-2
+prose in `sweeps[]` was likewise authored after the captures; an earlier revision
+claiming otherwise is withdrawn in the record itself.
 
 | pose | states | massing suppressible / covered / uncovered | verdict |
 | --- | --- | --- | --- |

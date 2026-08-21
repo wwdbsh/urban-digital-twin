@@ -1460,6 +1460,14 @@ export function applyDenseFarTierAlphaDelta(index: DenseInstanceIndex, delta: De
  * re-applies the desired covered set against the layer it just installed —
  * exactly what the `show`-based ownership path already did.
  */
+/** Set equality by membership, for deciding whether a far-tier publish is owed. */
+export function sameIdSet(a: ReadonlySet<string>, b: ReadonlySet<string>): boolean {
+  if (a === b) return true;
+  if (a.size !== b.size) return false;
+  for (const id of a) if (!b.has(id)) return false;
+  return true;
+}
+
 /** One far-tier coverage reading: what a sweep looks at, as data. */
 export interface FarTierCoverageReading {
   /** Members of DRAWN tiles that have a massing primitive loaded right now. */
@@ -2101,6 +2109,8 @@ export function CesiumViewport({
    */
   const farTierPassUncoveredRef = useRef(0);
   const farTierPassDrawnRef = useRef(0);
+  /** Monotonic publish counter: tells a settled scene from a stalled instrument. */
+  const farTierPublishSeqRef = useRef(0);
   /**
    * Bumped whenever far-tier residency changes, purely to wake the dense pass.
    *
@@ -2181,6 +2191,16 @@ export function CesiumViewport({
       // number: a published gap with `passUncovered` at 0 is staleness in the
       // reading, never a lost alpha write, and telling those two apart is what
       // this pair exists for.
+      // MONOTONIC, AND THE POINT IS THAT IT MOVES. Every other attribute here
+      // can hold the same value for two entirely different reasons: the scene
+      // has settled, or the publish has stopped happening. Sweep-1 could not
+      // tell those apart and read a frozen publish as a settled scene. A reader
+      // that sees this counter advance while the counts hold still is looking at
+      // a settled scene; one that sees it frozen is looking at a stalled
+      // instrument, and that is now a distinguishable state rather than an
+      // indistinguishable one.
+      farTierPublishSeqRef.current += 1;
+      container.dataset.farTierPublishSeq = String(farTierPublishSeqRef.current);
       container.dataset.farTierPassUncovered = String(farTierPassUncoveredRef.current);
       container.dataset.farTierPassDrawn = String(farTierPassDrawnRef.current);
       container.dataset.farTierPublishDrawn = String(drawnCells.size);
@@ -2191,6 +2211,38 @@ export function CesiumViewport({
     }
     onFarTierStateRef.current?.(summarizeFarTierState(outcomes));
   }, []);
+
+  /**
+   * DISARM MUST ERASE ITS OWN NUMBERS.
+   *
+   * When the tier is switched off — the rollback arm, or a fixture session that
+   * never arms it — the effect tears down and nothing publishes again. Without
+   * this the last live reading stays in the DOM and in the status line: a
+   * session with no far tier at all still advertising "839 drawn" and a covered
+   * count, which is the same failure mode as the stale publish, arrived at from
+   * the other direction. A sweep reading a disarmed page would score it as an
+   * armed one.
+   *
+   * The attributes are DELETED rather than zeroed, so "off" and "on and empty"
+   * stay distinguishable, and the summary is zeroed so the status line collapses
+   * rather than lingering.
+   */
+  const clearPublishedFarTierState = useCallback(() => {
+    const container = containerRef.current;
+    if (container) {
+      for (const key of [
+        "farTierFailures", "farTierMassingActive", "farTierMassingSuppressible", "farTierMassingCovered",
+        "farTierMassingUncovered", "farTierMassingUncoveredHidden", "farTierMassingUncoveredDesired",
+        "farTierMassingUncoveredNotDesired", "farTierMassingUncoveredSample", "farTierPassUncovered",
+        "farTierPassDrawn", "farTierPublishDrawn", "farTierDesiredCovered", "farTierAppliedCovered",
+        "farTierPublishSeq",
+      ]) delete container.dataset[key];
+    }
+    farTierPassUncoveredRef.current = 0;
+    farTierPassDrawnRef.current = 0;
+    onFarTierStateRef.current?.(summarizeFarTierState([]));
+  }, []);
+
   const onExteriorUnanchoredRef = useRef(onExteriorUnanchored);
   onExteriorUnanchoredRef.current = onExteriorUnanchored;
   const onExteriorCellsRetiredRef = useRef(onExteriorCellsRetired);
@@ -2554,13 +2606,26 @@ export function CesiumViewport({
       // if this pass schedules a rebuild, the write below lands on a layer that
       // is about to be discarded, and the commit path needs the desired set in
       // order to write it again against the layer it installs.
+      const previousDesiredCovered = denseDesiredFarTierCoveredRef.current;
+      const previousAppliedCovered = denseFarTierAlphaAppliedRef.current;
       denseDesiredFarTierCoveredRef.current = farTierCovered;
       applyFarTierAlpha(farTierCovered);
       // Deferred from the selection above so the published drawn set and the
       // published alpha set are the same pass's. If this pass schedules a
       // rebuild, the commit path publishes again after re-applying, because the
       // commit is the moment the alpha actually lands on the layer that draws.
-      if (farTierDrawnChanged) publishFarTierState();
+      //
+      // EDGE-TRIGGERED ON ALL THREE SETS, NOT JUST THE DRAWN ONE. Triggering on
+      // the drawn set alone leaves the residual of the defect this ordering was
+      // introduced to fix: the covered set can grow while the drawn set holds
+      // steady — massing streaming in under tiles that are already up — and the
+      // published reading would sit frozen at whatever the last drawn-set change
+      // left behind. It would look exactly like a settled scene.
+      if (farTierDrawnChanged
+        || !sameIdSet(previousDesiredCovered, farTierCovered)
+        || !sameIdSet(previousAppliedCovered, denseFarTierAlphaAppliedRef.current)) {
+        publishFarTierState();
+      }
       denseDesiredSuppressedIdsRef.current = denseSuppressedIds;
       if (denseRendering && rootDenseCollection && shouldReplaceDenseRenderPlan(denseRenderPlanFeaturesRef.current, denseRenderBasis)) {
         const pending = pendingDenseLayerRef.current;
@@ -3352,10 +3417,9 @@ export function CesiumViewport({
       farTierTilesRef.current = [];
       farTierDrawnCellsRef.current = new Set();
       farTierBaseOutcomesRef.current = [];
-      const container = containerRef.current;
-      if (container) delete container.dataset.farTierFailures;
+      clearPublishedFarTierState();
     };
-  }, [farTier, publishFarTierState]);
+  }, [farTier, publishFarTierState, clearPublishedFarTierState]);
 
   return <div className="viewport" ref={containerRef} aria-label="3D city viewport" tabIndex={0} onKeyDown={onViewportKeyDown} />;
 }

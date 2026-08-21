@@ -535,18 +535,26 @@ describe("an over-budget refusal is a queue position, not a verdict", () => {
   it("does not retry a failure that freeing bytes cannot fix", async () => {
     const scene = fakeScene();
     // The distant cell's tile is absent; the prototype's is fine.
-    const { fetcher } = fakeFetcher(stagedBytes(PROTOTYPE_CELL));
+    const { fetcher, requested } = fakeFetcher(stagedBytes(PROTOTYPE_CELL));
     const residency = createFarTierResidency({
       scene, entries: bothCells, fetcher,
       modelFactory: async () => ({ show: true, ready: true }),
     });
     await residency.reconcile(FAR_POSE);
     expect(residency.outcomes().find((outcome) => outcome.cellId === DISTANT_CELL)?.state).toBe("absent");
+
+    // THE CLAIM IS "NOT RETRIED", SO THE FETCHES ARE WHAT GET ASSERTED. The
+    // previous version of this arm asserted `state === "absent" || state ===
+    // "near"`, which is satisfied by both of the outcomes it was trying to tell
+    // apart and would have passed while the residency re-fetched the missing
+    // file on every pass. A count of requests cannot be satisfied that way.
+    const beforeSecondPass = [...requested];
     await residency.reconcile(NEAR_POSE);
-    // Still absent, and it was not re-fetched into a loop: an absent file is not
-    // made present by another cell leaving.
-    const after = residency.outcomes().find((outcome) => outcome.cellId === DISTANT_CELL);
-    expect(after?.state === "absent" || after?.state === "near").toBe(true);
+    expect(requested).toEqual(beforeSecondPass);
+    expect(requested.filter((ref) => ref.includes(DISTANT_CELL))).toHaveLength(1);
+
+    // Still absent: an absent file is not made present by another cell leaving.
+    expect(residency.outcomes().find((outcome) => outcome.cellId === DISTANT_CELL)?.state).toBe("absent");
   });
 });
 

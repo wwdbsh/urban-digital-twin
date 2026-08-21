@@ -107,7 +107,18 @@ async function main() {
   const refused = results.filter((row) => row.status === "REFUSED");
   const absent = results.filter((row) => row.status === "bake-absent");
   if (refused.length > 0) {
-    console.error(`far-tier-stage: ${refused.length} tile(s) do not match the promoted inventory; NOTHING further was staged.`);
+    // THE OLD MESSAGE SAID "NOTHING further was staged", WHICH WAS NOT TRUE.
+    // Verification and staging happen in the same loop, so every tile checked
+    // before the first mismatch has ALREADY been written to the serving root.
+    // What is actually withheld is the INVENTORY — and that is the part that
+    // matters, because the runtime pins its digest and will not serve a tier
+    // whose inventory is missing. Saying "nothing was staged" invited an
+    // operator to believe the serving root was clean when it was not.
+    console.error(`far-tier-stage: ${refused.length} tile(s) do not match the promoted inventory.`);
+    if (staged > 0) {
+      console.error(`  ${staged} tile(s) were ALREADY WRITTEN to the serving root before the mismatch was reached; they are still there.`);
+    }
+    console.error("  The INVENTORY was not written, so the tier cannot be served from this staging. Re-run with --unstage to clear the serving root.");
     for (const row of refused.slice(0, 5)) console.error(`  ${row.cellId}: ${row.detail}`);
     process.exit(1);
   }

@@ -14,6 +14,7 @@
  * Usage: node --experimental-strip-types scripts/far-tier-sweep-registry-cli.mjs emit
  */
 
+import { realpathSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -30,6 +31,65 @@ const BASE = "http://127.0.0.1:4173";
 
 const fail = (message) => { console.error(`${TOOL}: ${message}`); process.exit(1); };
 const serialize = (value) => `${JSON.stringify(value, null, 2)}\n`;
+
+/**
+ * REFUSE TO SILENTLY DESTROY AN AMENDED RECORD.
+ *
+ * These two files are DERIVED from the ledger, so re-running `emit` looks
+ * harmless. It is not. A record can carry content this tool does not derive and
+ * never will: sweep-2's registration lives in `sweep-poses.json` under
+ * `sweeps[]`, and it holds the settle rule, the vehicle note and the
+ * discarded-capture disclosure — capture-time facts about how a sweep was RUN,
+ * which a registration-time derivation has no way to reconstruct. A routine
+ * `emit` would have overwritten all of it AND rewritten the sidecar to the
+ * pre-amendment digest, leaving a record that looked internally consistent and
+ * had quietly lost the only durable account of the second sweep.
+ *
+ * So the tool fails closed instead. Any difference between what it would write
+ * and what is on disk stops the write and names the top-level keys that would be
+ * lost. `--force` is the deliberate override, and it still prints what it is
+ * about to destroy.
+ *
+ * Returns a refusal message, or `null` when the write may proceed.
+ */
+export async function refusalToOverwrite(name, nextText, force = false, root = promotionRoot) {
+  const path = join(root, `${name}.json`);
+  let currentText;
+  try {
+    currentText = await readFile(path, "utf8");
+  } catch {
+    return null; // Nothing on disk: the first emit is always allowed.
+  }
+  if (currentText === nextText) return null; // Idempotent re-emit.
+
+  const lostKeys = (() => {
+    try {
+      const current = JSON.parse(currentText);
+      const next = JSON.parse(nextText);
+      return Object.keys(current).filter((key) => !(key in next));
+    } catch {
+      // Unreadable JSON on disk is a reason to refuse, not a reason to relax:
+      // fall through with no named keys and let the digest mismatch stop it.
+      return [];
+    }
+  })();
+  const lost = lostKeys.length > 0
+    ? `Top-level keys that would be LOST: ${lostKeys.join(", ")}.`
+    : "No top-level key would be dropped, but the bytes still differ.";
+  if (force) {
+    console.error(`${TOOL}: --force: OVERWRITING ${name}.json. ${lost}`);
+    return null;
+  }
+  return [
+    `REFUSING to overwrite ${name}.json.`,
+    `On disk: ${sha256HexSync(currentText)}`,
+    `Would write: ${sha256HexSync(nextText)}`,
+    lost,
+    "This record has been amended since it was emitted. Re-emitting would destroy that amendment and rewrite the",
+    "sidecar to match, so nothing downstream would notice. Re-apply the amendment on top of a fresh emit, or pass",
+    "--force to overwrite deliberately.",
+  ].join("\n  ");
+}
 
 /**
  * The WGS84 centre of a ledger cell, from THE RUNTIME'S OWN ANCHOR.
@@ -79,7 +139,7 @@ async function readVerified(name) {
   return { text, json: JSON.parse(text), sha256: actual };
 }
 
-async function emit() {
+async function emit(force = false) {
   const inventory = await readVerified("promoted-inventory");
   const stops = inventory.json.coverage.honestStopCellIds;
   const excludedMembers = [];
@@ -215,6 +275,8 @@ async function emit() {
   await mkdir(promotionRoot, { recursive: true });
   for (const [name, record] of [["sweep-exemptions", exemptions], ["sweep-poses", poseRecord]]) {
     const text = serialize(record);
+    const refusal = await refusalToOverwrite(name, text, force);
+    if (refusal !== null) fail(refusal);
     await writeFile(join(promotionRoot, `${name}.json`), text);
     await writeFile(join(promotionRoot, `${name}.sha256`), `${sha256HexSync(text)}  ${name}.json\n`);
   }
@@ -229,8 +291,25 @@ async function emit() {
   }));
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
-  const command = process.argv[2] ?? "emit";
-  if (command !== "emit") fail("usage: far-tier-sweep-registry-cli.mjs emit");
-  await emit();
+// THE GUARD GOES THROUGH `realpathSync` ON BOTH SIDES. A raw string compare
+// against `file://${argv[1]}` fails OPEN in a worktree that reaches its files
+// through a symlink, and this file's whole job is now to refuse a destructive
+// write — a dispatch that silently does not run is the same defect wearing a
+// different hat. A test importing `refusalToOverwrite` must not emit anything.
+function isDirectEntryPoint() {
+  const entry = process.argv[1];
+  if (entry === undefined) return false;
+  try {
+    return realpathSync(fileURLToPath(import.meta.url)) === realpathSync(entry);
+  } catch {
+    return false;
+  }
+}
+
+if (isDirectEntryPoint()) {
+  const argv = process.argv.slice(2);
+  const force = argv.includes("--force");
+  const command = argv.find((value) => !value.startsWith("--")) ?? "emit";
+  if (command !== "emit") fail("usage: far-tier-sweep-registry-cli.mjs emit [--force]");
+  await emit(force);
 }
