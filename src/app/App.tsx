@@ -837,17 +837,18 @@ export const EXTERIOR_SCHEDULER_DEFAULT_ON = true;
 /**
  * T003 opt-in: the baked far-tier tiles. `?farTier=on`.
  *
- * DEFAULT OFF, which is the whole point of shipping it this way. The far tier
- * replaces the tan massing draw with baked geometry whose appearance defects
- * are open and owned by T013, so no session gets it without asking. It is a
+ * SHIPPED DEFAULT OFF UNDER T003 AND DEFAULT ON UNDER T005. The far tier
+ * replaces the tan massing draw with baked geometry; while its appearance
+ * defects were open and unowned, no session got it without asking, and T013's
+ * adopted recipe v4 plus T004's 840-tile bake is what changed that. It is a
  * member of the exterior URL state rather than a boot-time read for the reason
  * the scheduler flag documents above: every settled camera move rewrites the
  * whole URL, and a parameter the writer does not know about dies on the first
  * pan.
  *
- * Because the default is OFF, the URL states the opt-IN and stays silent
- * otherwise — so a default session's URL is character-identical to what it is
- * today. `App.test.tsx` pins that.
+ * The parameter always states the OPT-OUT from whatever `FAR_TIER_DEFAULT_ON`
+ * currently is and stays silent otherwise, so a default session's URL carries
+ * no far-tier token in either polarity. `App.test.tsx` pins that.
  */
 export const FAR_TIER_PARAM = "farTier" as const;
 export const FAR_TIER_ON_VALUE = "on" as const;
@@ -858,11 +859,61 @@ export const FAR_TIER_OFF_VALUE = "off" as const;
  *
  * One constant, read in exactly two places — the URL parse default and the
  * far-tier resolve — so reverting the far tier is a one-token edit rather than
- * an archaeology exercise. Flipping it to `true` makes the far tier the default
- * and inverts which sessions are silent, without touching the parser or the
- * writer.
+ * an archaeology exercise. The parser and the writer are polarity-agnostic:
+ * they compare against this constant and write whatever it is NOT.
+ *
+ * T005 ACTIVATED THE PROMOTION, ON THE SECOND SWEEP AND NOT THE FIRST.
+ *
+ * Sweep-1 FAILED at P2, the oblique 2,400 m pose reconstructed from the user's
+ * own session: 11,867 of 23,959 loaded massing buildings under drawn far-tier
+ * tiles read as not held at far-tier alpha, unstable across readings (12,485,
+ * then 26, then 11,867). The flip was reverted rather than shipped.
+ *
+ * That failure was an INSTRUMENT DEFECT, and saying so is not a way of excusing
+ * it: `publishFarTierState()` ran at the moment the drawn set advanced, before
+ * the covered set existed and before any alpha was written, so a reading paired
+ * a new drawn set with the previous pass's applied set. The scene was correct
+ * throughout; the published number was not. The ordering is fixed, the reading
+ * is a pure function with a selection-time control alongside it, and sweep-2
+ * re-ran all six registered poses on the corrected build: 0 uncovered at every
+ * ON pose, including P2 at 23,958 of 23,958.
+ *
+ * Both sweeps are in the record. data/far-tier-hlod-promotion-20260819/
+ * sweep-results.json holds sweep-1's FAIL unedited and sweep-2 appended beside
+ * it; neither overwrites the other.
+ *
+ * WHAT A ROLLBACK TO `false` ACTUALLY RESTORES, said plainly because the
+ * scheduler flip taught this lesson: it restores the pre-HLOD COMPOSITION —
+ * massing and mid ring, no far-tier fetches — and it does NOT restore the
+ * raised residency ceilings or the swapped inventory pin, both of which stay in
+ * the build. That is a third configuration nobody measured, exactly as ADR 0045
+ * names it for `EXTERIOR_SCHEDULER_DEFAULT_ON`, and the T005 activation record
+ * states it rather than leaving it to be discovered.
  */
-export const FAR_TIER_DEFAULT_ON = false;
+export const FAR_TIER_DEFAULT_ON = true;
+
+/**
+ * Whether a session actually ARMS the far tier.
+ *
+ * THE FAR TIER IS OFF IN FIXTURE MODE, DELIBERATELY, AND THIS IS WHERE THAT IS
+ * DECIDED.
+ *
+ * The tier was never gated on the data mode: the request was passed straight
+ * to the viewport, which was harmless while the default was OFF because a
+ * fixture session never opted in. Flipping the default to ON changes that —
+ * every synthetic session would arm the tier and fetch 840 real Manhattan tiles
+ * over a fixture city they do not describe, and the tier would then report 840
+ * `absent` cells in a session that is working exactly as designed. A promotion
+ * whose first act is to make the fixture suite look broken is not a promotion.
+ *
+ * A URL that says `?farTier=on` in fixture mode is still HONOURED AS A REQUEST:
+ * it stays in the parsed state and it round-trips through the writer. It simply
+ * does not arm the tier until a real base is active, which is the rule
+ * `exteriorStreamingActivation` already applies to exterior streaming.
+ */
+export function farTierActiveForSession(requested: boolean, dataMode: NavigationDataMode): boolean {
+  return requested && dataMode !== "fixtures";
+}
 
 /** The URL states whatever the default is NOT, so the default stays silent. */
 export function farTierOptOutValue(): string {
@@ -1542,6 +1593,7 @@ export function App() {
    */
   const farTierRequestedRef = useRef(farTierRequested);
   farTierRequestedRef.current = farTierRequested;
+  const farTierActive = farTierActiveForSession(farTierRequested, dataMode);
   const [farTierState, setFarTierState] = useState<FarTierStateSummary | null>(null);
   // T005 detail radius, read once at boot beside the flag it qualifies and for
   // the same reason: this build has no radius control, only the URL parameter.
@@ -4126,7 +4178,7 @@ export function App() {
       >
         <CesiumViewport
           adapter={activeAdapter}
-          farTier={farTierRequested}
+          farTier={farTierActive}
           onFarTierState={setFarTierState}
           assetResolver={exteriorActive && exteriorOverlay ? exteriorOverlay.resolver : activeAdapter.assetResolver}
           focusRequest={focusRequest}

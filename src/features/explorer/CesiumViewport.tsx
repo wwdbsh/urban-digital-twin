@@ -1460,6 +1460,75 @@ export function applyDenseFarTierAlphaDelta(index: DenseInstanceIndex, delta: De
  * re-applies the desired covered set against the layer it just installed —
  * exactly what the `show`-based ownership path already did.
  */
+/** Set equality by membership, for deciding whether a far-tier publish is owed. */
+export function sameIdSet(a: ReadonlySet<string>, b: ReadonlySet<string>): boolean {
+  if (a === b) return true;
+  if (a.size !== b.size) return false;
+  for (const id of a) if (!b.has(id)) return false;
+  return true;
+}
+
+/** One far-tier coverage reading: what a sweep looks at, as data. */
+export interface FarTierCoverageReading {
+  /** Members of DRAWN tiles that have a massing primitive loaded right now. */
+  suppressible: number;
+  /** Of those, how many are held at far-tier alpha. */
+  covered: number;
+  /** `suppressible - covered`. At a settled, correct pose this is 0. */
+  uncovered: number;
+  /** Uncovered, but ownership-suppressed: no massing on screen, not a defect. */
+  uncoveredHidden: number;
+  /** Uncovered, and the covered set WANTED it: an alpha write that did not land. */
+  uncoveredDesired: number;
+  /** Uncovered, and the covered set never contained it: drawn set and covered set disagree. */
+  uncoveredNotDesired: number;
+  /** Up to eight uncovered ids, for naming names in a record. */
+  uncoveredSample: string[];
+}
+
+/**
+ * The far-tier coverage question a promotion sweep asks, as a pure function.
+ *
+ * IT IS ONLY MEANINGFUL WHEN EVERY INPUT COMES FROM THE SAME PASS. The drawn
+ * set, the covered set and the applied-alpha set are produced at three
+ * different points inside one dense pass, and a reading that pairs a new drawn
+ * set with an older applied set reports every building whose tile started
+ * drawing in that pass as uncovered — thousands of them at a wide oblique pose,
+ * looking exactly like lost alpha writes when nothing was lost at all. That is
+ * a real defect this codebase shipped and T005 chased; `uncoveredNotDesired`
+ * exists to name it on sight, and the caller's contract is to publish AFTER the
+ * alpha is written, never at the moment the drawn set advances.
+ */
+export function farTierCoverageReading(input: {
+  tiles: readonly { cellId: string; suppressibleBuildingIds: readonly string[] }[];
+  drawnCells: ReadonlySet<string>;
+  denseIndexBuildingIds: ReadonlySet<string> | ReadonlyMap<string, unknown>;
+  applied: ReadonlySet<string>;
+  desired: ReadonlySet<string>;
+  hiddenByOwnership: ReadonlySet<string>;
+}): FarTierCoverageReading {
+  const inIndex = (id: string): boolean => input.denseIndexBuildingIds.has(id);
+  let suppressible = 0;
+  let covered = 0;
+  let uncoveredHidden = 0;
+  let uncoveredDesired = 0;
+  let uncoveredNotDesired = 0;
+  const uncoveredSample: string[] = [];
+  for (const tile of input.tiles) {
+    if (!input.drawnCells.has(tile.cellId)) continue;
+    for (const buildingId of tile.suppressibleBuildingIds) {
+      if (!inIndex(buildingId)) continue;
+      suppressible += 1;
+      if (input.applied.has(buildingId)) { covered += 1; continue; }
+      if (input.hiddenByOwnership.has(buildingId)) uncoveredHidden += 1;
+      else if (input.desired.has(buildingId)) uncoveredDesired += 1;
+      else uncoveredNotDesired += 1;
+      if (uncoveredSample.length < 8) uncoveredSample.push(buildingId);
+    }
+  }
+  return { suppressible, covered, uncovered: suppressible - covered, uncoveredHidden, uncoveredDesired, uncoveredNotDesired, uncoveredSample };
+}
+
 export function reconcileDenseFarTierAlpha(
   index: DenseInstanceIndex,
   previousCovered: ReadonlySet<string>,
@@ -2034,6 +2103,15 @@ export function CesiumViewport({
    */
   const denseDesiredFarTierCoveredRef = useRef<ReadonlySet<string>>(new Set());
   /**
+   * Selection-time control for the published coverage metric: what the dense
+   * pass itself saw uncovered at the moment it built the covered set, and the
+   * size of the drawn set it built it from.
+   */
+  const farTierPassUncoveredRef = useRef(0);
+  const farTierPassDrawnRef = useRef(0);
+  /** Monotonic publish counter: tells a settled scene from a stalled instrument. */
+  const farTierPublishSeqRef = useRef(0);
+  /**
    * Bumped whenever far-tier residency changes, purely to wake the dense pass.
    *
    * Without it the tier activates only when some unrelated dense dependency
@@ -2064,9 +2142,107 @@ export function CesiumViewport({
       const detail = farTierFailureDetail(outcomes);
       if (detail === null) delete container.dataset.farTierFailures;
       else container.dataset.farTierFailures = detail;
+      // MEMBER-LEVEL OBSERVABILITY.
+      //
+      // The eight per-state counts answer "did every cell load". They cannot
+      // answer the question a promotion sweep actually asks, which is whether
+      // any building is drawing its massing THROUGH a tile that covers it —
+      // the visible symptom would be tan massing poking out of a textured
+      // block, and nothing in the DOM could distinguish it from a correct
+      // frame.
+      //
+      // `suppressible` is every member of a DRAWN tile: the massing that ought
+      // to be held at far-tier alpha. `covered` is what actually is. Their
+      // difference is the number a sweep reads, and at a correct pose it is 0.
+      // SCOPED TO THE MASSING THAT IS ACTUALLY DRAWING.
+      //
+      // The first version of this metric compared the full member list of every
+      // drawn tile against the applied-alpha set, and read 41,405 "uncovered"
+      // at the T003 pose. That number was meaningless: `reconcileDenseFarTierAlpha`
+      // can only write alpha for buildings the dense index HOLDS, and at any
+      // pose most members of the island's tiles have no massing primitive
+      // loaded at all. A building that is not drawing cannot show tan.
+      //
+      // The question this attribute exists to answer is narrower and is the one
+      // a promotion sweep actually asks: of the buildings that ARE drawing
+      // massing right now, how many sit under a drawn far-tier tile without
+      // being held at far-tier alpha? At a correct pose that is 0.
+      const denseIndex = denseActiveIndexRef.current.buildings;
+      const applied = denseFarTierAlphaAppliedRef.current;
+      const desired = denseDesiredFarTierCoveredRef.current;
+      const reading = farTierCoverageReading({
+        tiles: farTierTilesRef.current,
+        drawnCells,
+        denseIndexBuildingIds: denseIndex,
+        applied,
+        desired,
+        hiddenByOwnership: denseAppliedSuppressedIdsRef.current,
+      });
+      const uncoveredIds = reading.uncoveredSample;
+      container.dataset.farTierMassingActive = String(denseIndex.size);
+      container.dataset.farTierMassingSuppressible = String(reading.suppressible);
+      container.dataset.farTierMassingCovered = String(reading.covered);
+      container.dataset.farTierMassingUncovered = String(reading.uncovered);
+      container.dataset.farTierMassingUncoveredHidden = String(reading.uncoveredHidden);
+      container.dataset.farTierMassingUncoveredDesired = String(reading.uncoveredDesired);
+      container.dataset.farTierMassingUncoveredNotDesired = String(reading.uncoveredNotDesired);
+      // The same question asked at SELECTION time, by the pass itself, against
+      // the set it had just computed. It is the control for the published
+      // number: a published gap with `passUncovered` at 0 is staleness in the
+      // reading, never a lost alpha write, and telling those two apart is what
+      // this pair exists for.
+      // MONOTONIC, AND THE POINT IS THAT IT MOVES. Every other attribute here
+      // can hold the same value for two entirely different reasons: the scene
+      // has settled, or the publish has stopped happening. Sweep-1 could not
+      // tell those apart and read a frozen publish as a settled scene. A reader
+      // that sees this counter advance while the counts hold still is looking at
+      // a settled scene; one that sees it frozen is looking at a stalled
+      // instrument, and that is now a distinguishable state rather than an
+      // indistinguishable one.
+      farTierPublishSeqRef.current += 1;
+      container.dataset.farTierPublishSeq = String(farTierPublishSeqRef.current);
+      container.dataset.farTierPassUncovered = String(farTierPassUncoveredRef.current);
+      container.dataset.farTierPassDrawn = String(farTierPassDrawnRef.current);
+      container.dataset.farTierPublishDrawn = String(drawnCells.size);
+      container.dataset.farTierDesiredCovered = String(desired.size);
+      container.dataset.farTierAppliedCovered = String(applied.size);
+      if (uncoveredIds.length === 0) delete container.dataset.farTierMassingUncoveredSample;
+      else container.dataset.farTierMassingUncoveredSample = uncoveredIds.join(",");
     }
     onFarTierStateRef.current?.(summarizeFarTierState(outcomes));
   }, []);
+
+  /**
+   * DISARM MUST ERASE ITS OWN NUMBERS.
+   *
+   * When the tier is switched off — the rollback arm, or a fixture session that
+   * never arms it — the effect tears down and nothing publishes again. Without
+   * this the last live reading stays in the DOM and in the status line: a
+   * session with no far tier at all still advertising "839 drawn" and a covered
+   * count, which is the same failure mode as the stale publish, arrived at from
+   * the other direction. A sweep reading a disarmed page would score it as an
+   * armed one.
+   *
+   * The attributes are DELETED rather than zeroed, so "off" and "on and empty"
+   * stay distinguishable, and the summary is zeroed so the status line collapses
+   * rather than lingering.
+   */
+  const clearPublishedFarTierState = useCallback(() => {
+    const container = containerRef.current;
+    if (container) {
+      for (const key of [
+        "farTierFailures", "farTierMassingActive", "farTierMassingSuppressible", "farTierMassingCovered",
+        "farTierMassingUncovered", "farTierMassingUncoveredHidden", "farTierMassingUncoveredDesired",
+        "farTierMassingUncoveredNotDesired", "farTierMassingUncoveredSample", "farTierPassUncovered",
+        "farTierPassDrawn", "farTierPublishDrawn", "farTierDesiredCovered", "farTierAppliedCovered",
+        "farTierPublishSeq",
+      ]) delete container.dataset[key];
+    }
+    farTierPassUncoveredRef.current = 0;
+    farTierPassDrawnRef.current = 0;
+    onFarTierStateRef.current?.(summarizeFarTierState([]));
+  }, []);
+
   const onExteriorUnanchoredRef = useRef(onExteriorUnanchored);
   onExteriorUnanchoredRef.current = onExteriorUnanchored;
   const onExteriorCellsRetiredRef = useRef(onExteriorCellsRetired);
@@ -2329,10 +2505,24 @@ export function CesiumViewport({
         nowDrawn.add(tile.cellId);
         for (const buildingId of tile.suppressibleBuildingIds) farTierSuppressed.add(buildingId);
       }
-      if (nowDrawn.size !== previouslyDrawn.size || [...nowDrawn].some((cellId) => !previouslyDrawn.has(cellId))) {
-        farTierDrawnCellsRef.current = nowDrawn;
-        publishFarTierState();
-      }
+      // THE DRAWN SET ADVANCES HERE. THE PUBLISH DOES NOT.
+      //
+      // It used to. That single line is the whole of the "P2 coverage race"
+      // this task was sent to chase, and there was never a race: publishing
+      // here reports the NEW drawn set against the PREVIOUS pass's applied-alpha
+      // set, because `farTierCovered` is not computed until below and the alpha
+      // is not written until later still. Every building whose tile started
+      // drawing in THIS pass therefore reads as suppressible-but-uncovered, and
+      // since the pass does not publish again, that stale reading is the last
+      // word until some later pass happens to change the drawn set again. At a
+      // wide oblique pose, where tiles become ready in large batches, the
+      // published gap was thousands of buildings wide and looked exactly like a
+      // lost write. The scene was correct the entire time.
+      //
+      // The publish now happens after `applyFarTierAlpha`, so the drawn set and
+      // the alpha set in one reading always describe the same pass.
+      const farTierDrawnChanged = nowDrawn.size !== previouslyDrawn.size || [...nowDrawn].some((cellId) => !previouslyDrawn.has(cellId));
+      if (farTierDrawnChanged) farTierDrawnCellsRef.current = nowDrawn;
 
       const farTierCovered = new Set<string>();
       for (const feature of denseRenderBasis) {
@@ -2342,6 +2532,24 @@ export function CesiumViewport({
         // pick pass and destroy per-building identity under the tile. It gets
         // its own alpha-driven set instead.
         else if (farTierSuppressed.has(feature.id)) farTierCovered.add(feature.id);
+      }
+      // INSTRUMENT ONLY. The same question `publishFarTierState` asks, asked
+      // here at selection time: of the massing this pass can see in the index
+      // and believes sits under a drawn tile, how much did this pass FAIL to
+      // put in the covered set? If this reads 0 while the published metric
+      // reads thousands, the disagreement is staleness between the pass and the
+      // publish, not a defect in the selection itself.
+      {
+        const passIndex = denseActiveIndexRef.current.buildings;
+        let passUncovered = 0;
+        for (const tile of farTierTilesRef.current) {
+          if (!nowDrawn.has(tile.cellId)) continue;
+          for (const buildingId of tile.suppressibleBuildingIds) {
+            if (passIndex.has(buildingId) && !farTierCovered.has(buildingId)) passUncovered += 1;
+          }
+        }
+        farTierPassUncoveredRef.current = passUncovered;
+        farTierPassDrawnRef.current = nowDrawn.size;
       }
       const telemetry = denseRenderTelemetryRef.current;
       telemetry.selectionMs = performance.now() - selectionStartedAt;
@@ -2398,8 +2606,26 @@ export function CesiumViewport({
       // if this pass schedules a rebuild, the write below lands on a layer that
       // is about to be discarded, and the commit path needs the desired set in
       // order to write it again against the layer it installs.
+      const previousDesiredCovered = denseDesiredFarTierCoveredRef.current;
+      const previousAppliedCovered = denseFarTierAlphaAppliedRef.current;
       denseDesiredFarTierCoveredRef.current = farTierCovered;
       applyFarTierAlpha(farTierCovered);
+      // Deferred from the selection above so the published drawn set and the
+      // published alpha set are the same pass's. If this pass schedules a
+      // rebuild, the commit path publishes again after re-applying, because the
+      // commit is the moment the alpha actually lands on the layer that draws.
+      //
+      // EDGE-TRIGGERED ON ALL THREE SETS, NOT JUST THE DRAWN ONE. Triggering on
+      // the drawn set alone leaves the residual of the defect this ordering was
+      // introduced to fix: the covered set can grow while the drawn set holds
+      // steady — massing streaming in under tiles that are already up — and the
+      // published reading would sit frozen at whatever the last drawn-set change
+      // left behind. It would look exactly like a settled scene.
+      if (farTierDrawnChanged
+        || !sameIdSet(previousDesiredCovered, farTierCovered)
+        || !sameIdSet(previousAppliedCovered, denseFarTierAlphaAppliedRef.current)) {
+        publishFarTierState();
+      }
       denseDesiredSuppressedIdsRef.current = denseSuppressedIds;
       if (denseRendering && rootDenseCollection && shouldReplaceDenseRenderPlan(denseRenderPlanFeaturesRef.current, denseRenderBasis)) {
         const pending = pendingDenseLayerRef.current;
@@ -2477,6 +2703,11 @@ export function CesiumViewport({
             // never heals, because the next delta is empty forever.
             denseFarTierAlphaAppliedRef.current = new Set<string>();
             applyFarTierAlpha(denseDesiredFarTierCoveredRef.current);
+            // The applied set was just cleared and rewritten against a brand new
+            // index, so any far-tier reading taken before this commit describes
+            // instances that no longer exist. Publish, or the last word on
+            // coverage is a rebuild's worth of stale.
+            publishFarTierState();
             denseMetricsRef.current = liveDenseMetrics();
             publishDenseMetrics(denseMetricsRef.current);
           }
@@ -3186,10 +3417,9 @@ export function CesiumViewport({
       farTierTilesRef.current = [];
       farTierDrawnCellsRef.current = new Set();
       farTierBaseOutcomesRef.current = [];
-      const container = containerRef.current;
-      if (container) delete container.dataset.farTierFailures;
+      clearPublishedFarTierState();
     };
-  }, [farTier, publishFarTierState]);
+  }, [farTier, publishFarTierState, clearPublishedFarTierState]);
 
   return <div className="viewport" ref={containerRef} aria-label="3D city viewport" tabIndex={0} onKeyDown={onViewportKeyDown} />;
 }

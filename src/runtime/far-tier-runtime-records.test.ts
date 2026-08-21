@@ -16,7 +16,7 @@ function readText(path: string): string {
   return new TextDecoder("utf-8", { fatal: true }).decode(readFileSync(path));
 }
 import { sha256HexSync } from "../domain/deterministic-hash";
-import { FAR_TIER_CELL_STATES, FAR_TIER_PAYLOAD_INVENTORY_SHA256, FAR_TIER_RUNTIME_BUDGETS } from "./far-tier-serving";
+import { FAR_TIER_CELL_STATES, FAR_TIER_PAYLOAD_INVENTORY_SHA256, FAR_TIER_PAYLOAD_INVENTORY_SHA256_PREDECESSOR, FAR_TIER_RUNTIME_BUDGETS } from "./far-tier-serving";
 import { EXTERIOR_RUNTIME_BUDGETS } from "./exterior-cell-runtime";
 
 const ROOT = "data/far-tier-hlod-runtime-20260818";
@@ -67,18 +67,33 @@ describe("far-tier runtime records", () => {
     expect(cache.whatIsImplemented).toContain("BEFORE the fetch");
     expect(cache.whatIsNOTImplemented).toContain("NO EVICTION POLICY");
     expect(cache.whatIsNOTImplemented).toContain("DEFERRED TO MASS-BAKE SCALE");
+    // T005 DISCHARGES that deferral by analysis rather than by a policy; the
+    // T003 record still records the deferral it made, which was true then.
     expect(cache.correctionRecorded).toContain("ZERO NON-TEST CONSUMERS");
   });
 
-  it("pins the committed inventory's digest in shipped code", () => {
+  it("pins the PROMOTED inventory's digest in shipped code", () => {
     // The staged copy is gitignored operator work product. Without this pin a
     // swapped staged file declares its own checksums and every per-tile check
     // faithfully confirms them.
-    const committed = readText(`${ROOT}/payload-inventory.json`);
+    //
+    // T005 moved the pin from the one-cell T003 inventory to the promoted
+    // 840-cell one, so this re-derivation follows it to the new file. Pointing
+    // it at the old file would leave the shipped constant unchecked against
+    // anything the runtime actually fetches.
+    const committed = readText("data/far-tier-hlod-promotion-20260819/promoted-inventory.json");
     expect(sha256HexSync(committed)).toBe(FAR_TIER_PAYLOAD_INVENTORY_SHA256);
+  });
+
+  it("keeps the T003 record naming the pin T003 shipped, and the predecessor constant agreeing with it", () => {
+    // The T003 runtime record is frozen evidence of what T003 pinned. It is NOT
+    // rewritten to name a digest T003 never shipped; the supersession lives on
+    // the constant and in the T005 activation record.
     const record = readChecked("runtime-record") as { servingPath: { inventoryPin: { digest: string; failDirection: string } } };
-    expect(record.servingPath.inventoryPin.digest).toBe(FAR_TIER_PAYLOAD_INVENTORY_SHA256);
+    expect(record.servingPath.inventoryPin.digest).toBe(FAR_TIER_PAYLOAD_INVENTORY_SHA256_PREDECESSOR);
     expect(record.servingPath.inventoryPin.failDirection).toContain("WHOLE TIER");
+    expect(sha256HexSync(readText(`${ROOT}/payload-inventory.json`))).toBe(FAR_TIER_PAYLOAD_INVENTORY_SHA256_PREDECESSOR);
+    expect(FAR_TIER_PAYLOAD_INVENTORY_SHA256).not.toBe(FAR_TIER_PAYLOAD_INVENTORY_SHA256_PREDECESSOR);
   });
 
   it("records that BOTH payloads are verified, and what an atlas mismatch does", () => {

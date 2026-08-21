@@ -56,6 +56,103 @@ export const FAR_TIER_RUNTIME_BUDGETS = {
 } as const;
 
 /**
+ * BUDGETS v2 — the promoted tier's ceilings, and the unit they are counted in.
+ *
+ * THE UNIT IS DECLARED FILE BYTES. `farTierEntryByteCost` sums an entry's
+ * `glbByteSize` and `atlasByteSize`, which are the sizes of the files as
+ * staged. It is NOT the decoded GPU footprint, and this ceiling is NOT
+ * comparable with `FAR_TIER_BUDGET_CONTRACT`'s B3-B5 or with
+ * `maxResidentTotalGpuBytes`. Stating the unit is the whole point: the two
+ * numbers are within a factor of 1.5 of each other and would silently pass for
+ * one another.
+ *
+ * WHY THE OLD CEILING HAD TO MOVE. Selection folds camera height into distance,
+ * so at the acceptance poses — 1,200 m and above — EVERY cell in the island is
+ * in range and the selected set is all 840. The v1 ceiling of 64 MiB was sized
+ * when the tier served ONE cell; against the island it admits roughly a quarter
+ * of it and refuses the rest, which is not a budget doing its job but a budget
+ * that was never asked this question.
+ *
+ * THE DERIVATION.
+ *
+ *   declared file bytes, all 840 promoted tiles = 258,644,848
+ *     (98,818,356 GLB + 159,826,492 atlas, summed from the promoted inventory)
+ *   ceiling = 288 MiB = 301,989,888
+ *   headroom = 43,345,040 bytes, 16.8 per cent
+ *
+ * The headroom is for tiles a later bake may add or grow; it is not a claim
+ * that anything needs it today.
+ *
+ * WHY 288 MiB IS SAFE TO ADMIT, which is a GPU question and is answered in GPU
+ * units. Holding the whole island resident costs 283,639,528 bytes of atlas
+ * (804 tiles at 256px, 28 at 128, 8 at 64, mip chain included) plus geometry
+ * bounded above by the 98,818,356 bytes of GLB on disk — the decoded arrays are
+ * a subset of those bytes, since the file also carries JSON. That upper bound is
+ * 382,457,884 against the frozen `maxResidentTotalGpuBytes` of 390,295,058: a
+ * 2.0 per cent margin. Inside, and not comfortably. A tier that grew would need
+ * that bar revisited, and this note is where a later reader should start.
+ *
+ * ADDITIVE, NEVER MERGED. These ceilings sit alongside B3-B5 and criterion #30
+ * exactly as v1's did. Nothing here relaxes either.
+ *
+ * EVICTION IS NOT DEFERRED ANY MORE — IT IS DISCHARGED. v1 owed a policy at
+ * mass-bake scale. The analysis that discharges it: `release()` in
+ * `far-tier-layer.ts` removes the primitive, subtracts its byte cost and drops
+ * it from residency, and it is driven by the SAME range predicate that decides
+ * drawing. Bytes are therefore freed exactly when a cell stops being drawable,
+ * and with a ceiling that admits the whole island there is no pose that both
+ * selects a cell and cannot afford it. An eviction policy exists to choose what
+ * to drop when you cannot hold what you selected; at this ceiling that state is
+ * unreachable, so the policy would be code with no reachable branch. See the
+ * T005 activation record for the full statement.
+ */
+export const FAR_TIER_MAX_LOADS_PER_PASS = 24 as const;
+
+/**
+ * How many failing cells `farTierFailureDetail` spells out before summarising.
+ *
+ * Twelve is enough to name a pattern by eye and small enough that the attribute
+ * stays a few hundred characters at worst. The per-state COUNTS are unbounded
+ * and are what a verdict is read from; this string is for the human looking at
+ * one session.
+ */
+export const FAR_TIER_FAILURE_DETAIL_LIMIT = 12 as const;
+
+export const FAR_TIER_RUNTIME_BUDGETS_V2 = {
+  maxCacheEntries: 1_024,
+  maxCachedBytes: 288 * 1024 * 1024,
+  unit: "DECLARED FILE BYTES — the staged file sizes an entry declares, summed by farTierEntryByteCost. NOT decoded GPU bytes and never comparable with B3-B5 or maxResidentTotalGpuBytes.",
+  derivation: {
+    promotedTiles: 840,
+    declaredFileBytesAllTiles: 258_644_848,
+    glbBytes: 98_818_356,
+    atlasBytes: 159_826_492,
+    ceilingBytes: 288 * 1024 * 1024,
+    headroomBytes: 288 * 1024 * 1024 - 258_644_848,
+    headroomShare: 0.1676,
+    entriesCeilingRationale: "1,024 against 840 promoted cells, so the entry ceiling cannot bind before the byte ceiling and a later bake has room without another swap.",
+  },
+  gpuJustification: {
+    islandAtlasGpuBytes: 283_639_528,
+    islandGeometryGpuBytesUpperBound: 98_818_356,
+    islandResidentGpuBytesUpperBound: 382_457_884,
+    frozenMaxResidentTotalGpuBytes: 390_295_058,
+    insideFrozenBar: true,
+    marginShare: 0.0201,
+    statement: "Holding the whole island is inside the frozen GPU bar by 2.0 per cent. That is the justification for admitting it, and it is stated as a margin rather than as comfort.",
+  },
+  supersedes: {
+    constant: "FAR_TIER_RUNTIME_BUDGETS",
+    maxCacheEntries: 256,
+    maxCachedBytes: 64 * 1024 * 1024,
+    whySuperseded: "Sized when the tier served ONE staged cell. Against 840 it admits about a quarter of the island and refuses the rest.",
+    keptInPlace: "The v1 constant is NOT deleted. It is the record of what the tier was admitted under before promotion.",
+  },
+  additiveTo: "far-tier-hlod-gpu-budget-v1 B3-B5, and the closed criterion #30. Never merged with either.",
+  evictionPolicy: "NONE, AND NONE IS OWED. Bytes are released on distance deselection by the same predicate that decides drawing; at a ceiling that admits the whole island there is no pose that selects a cell it cannot afford, so an eviction policy would have no reachable branch. Discharged by analysis in the T005 activation record, not deferred again.",
+} as const;
+
+/**
  * The digest of the COMMITTED payload inventory, pinned in shipped code.
  *
  * The staged copy under the serving root is gitignored operator work product,
@@ -70,7 +167,17 @@ export const FAR_TIER_RUNTIME_BUDGETS = {
  *
  * A test re-derives this from the committed file, so it cannot drift silently.
  */
-export const FAR_TIER_PAYLOAD_INVENTORY_SHA256 = "9c46f62a1ac9a662f768facd716f8d04ecf960afaf3ae0f536eb216bb3e6bd24" as const;
+export const FAR_TIER_PAYLOAD_INVENTORY_SHA256 = "cf8e26480eecc91f2e7b473d217a0d3551d0be59b4d8da39ee1217a6e0538f0a" as const;
+
+/**
+ * The pin this one replaced, kept so the swap is legible in the code as well as
+ * in the activation record.
+ *
+ * It declared the ONE-CELL T003 inventory. Promotion swaps the whole tier's
+ * declaration in a single token, and a reader who finds only the new value has
+ * no way to tell that it moved.
+ */
+export const FAR_TIER_PAYLOAD_INVENTORY_SHA256_PREDECESSOR = "9c46f62a1ac9a662f768facd716f8d04ecf960afaf3ae0f536eb216bb3e6bd24" as const;
 
 /** Where staged far-tier bytes are served from. Its own root, not a release audience. */
 export const FAR_TIER_SERVING_ROOT = "far-tier" as const;
@@ -376,7 +483,21 @@ const FAR_TIER_DETAILED_STATES: readonly FarTierCellState[] = ["absent", "checks
  * by " | ", and ABSENT rather than empty when nothing failed.
  */
 export function farTierFailureDetail(outcomes: readonly FarTierLoadOutcome[]): string | null {
-  const failures = outcomes.filter((outcome) => outcome.detail && FAR_TIER_DETAILED_STATES.includes(outcome.state));
+  const failures = outcomes.filter((outcome) => (FAR_TIER_DETAILED_STATES as readonly string[]).includes(outcome.state));
   if (failures.length === 0) return null;
-  return failures.map((outcome) => `${outcome.cellId}: ${outcome.state}: ${outcome.detail}`).join(" | ");
+  // BOUNDED, BECAUSE THIS BECOMES A DOM ATTRIBUTE.
+  //
+  // At one staged cell the detail string was at most one clause. At 840 a bad
+  // stage could put every cell in it — each clause carries a cell id, a state
+  // and a path — and a multi-hundred-kilobyte `data-` attribute is not
+  // diagnostics, it is a way to make the inspector unusable and the attribute
+  // unreadable by the very sweep that needs it.
+  //
+  // The cap keeps the FIRST few, in the order the outcomes arrived, and then
+  // says how many it did not print. It never silently truncates: a reader who
+  // sees the summary knows there is more and knows exactly how much.
+  const shown = failures.slice(0, FAR_TIER_FAILURE_DETAIL_LIMIT);
+  const detail = shown.map((outcome) => `${outcome.cellId}: ${outcome.state}: ${outcome.detail ?? ""}`).join(" | ");
+  const omitted = failures.length - shown.length;
+  return omitted === 0 ? detail : `${detail} | (+${omitted} more of ${failures.length} failing cells; see the per-state counts)`;
 }

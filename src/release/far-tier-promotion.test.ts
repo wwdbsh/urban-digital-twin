@@ -1,0 +1,210 @@
+/**
+ * The promotion's own invariants: the merged inventory, the pin it swaps, the
+ * ceilings it raises, and the byte identity the whole tier depends on.
+ *
+ * The failure this file exists to prevent is not subtle and is not recoverable
+ * at run time: the runtime pins ONE digest and fails closed on a mismatch, so
+ * a staged inventory that differs from the committed one by a single space
+ * takes the entire far tier down in every session on every machine, and the
+ * only symptom is a message about a checksum.
+ */
+import { readFileSync, existsSync } from "node:fs";
+import { describe, expect, it } from "vitest";
+
+import { sha256HexSync } from "../domain/deterministic-hash";
+import {
+  FarTierMergeError,
+  farTierInventoryDigest,
+  mergeFarTierWaveInventories,
+  serializeFarTierInventory,
+  type FarTierPromotedInventory,
+} from "./far-tier-promoted-inventory";
+import {
+  FAR_TIER_FAILURE_DETAIL_LIMIT,
+  FAR_TIER_PAYLOAD_INVENTORY_SHA256,
+  FAR_TIER_PAYLOAD_INVENTORY_SHA256_PREDECESSOR,
+  FAR_TIER_RUNTIME_BUDGETS,
+  FAR_TIER_RUNTIME_BUDGETS_V2,
+  farTierEntryByteCost,
+  farTierFailureDetail,
+} from "../runtime/far-tier-serving";
+import { FAR_TIER_BUDGET_CONTRACT } from "./far-tier-budget";
+
+const readText = (path: string): string => new TextDecoder("utf-8", { fatal: true }).decode(readFileSync(path));
+const COMMITTED_PATH = "data/far-tier-hlod-promotion-20260819/promoted-inventory.json";
+const STAGED_PATH = "public/far-tier/payload-inventory.json";
+const committedText = readText(COMMITTED_PATH);
+const committed = JSON.parse(committedText) as FarTierPromotedInventory;
+
+describe("the promoted inventory is what the runtime pins", () => {
+  it("re-derives the shipped pin from the committed bytes", () => {
+    expect(sha256HexSync(committedText)).toBe(FAR_TIER_PAYLOAD_INVENTORY_SHA256);
+  });
+
+  it("moved the pin, and says what it moved from", () => {
+    expect(FAR_TIER_PAYLOAD_INVENTORY_SHA256).not.toBe(FAR_TIER_PAYLOAD_INVENTORY_SHA256_PREDECESSOR);
+    // The predecessor is still the digest of the record T003 shipped, so the
+    // constant is a fact about history rather than a comment about it.
+    expect(sha256HexSync(readText("data/far-tier-hlod-runtime-20260818/payload-inventory.json")))
+      .toBe(FAR_TIER_PAYLOAD_INVENTORY_SHA256_PREDECESSOR);
+  });
+
+  it("carries 840 unique cells and closes 840 + 43 against the ledger", () => {
+    expect(committed.entries).toHaveLength(840);
+    expect(new Set(committed.entries.map((entry) => entry.cellId)).size).toBe(840);
+    const coverage = committed.coverage as Record<string, number | boolean | readonly string[]>;
+    expect(coverage.bakedCells).toBe(840);
+    expect(coverage.honestStopCells).toBe(43);
+    expect(coverage.accountedFor).toBe(883);
+    expect(coverage.ledgerCellCount).toBe(883);
+    expect((coverage.honestStopCellIds as readonly string[])).toHaveLength(43);
+    // A stop that is also an entry would be a cell counted twice.
+    const stops = new Set(coverage.honestStopCellIds as readonly string[]);
+    for (const entry of committed.entries) expect(stops.has(entry.cellId)).toBe(false);
+  });
+
+  it("keeps every refused member, because the massing still has to explain itself", () => {
+    const members = committed.entries.flatMap((entry) => entry.members);
+    expect(members).toHaveLength(44_076);
+    expect(members.filter((member) => !member.included)).toHaveLength(143);
+  });
+});
+
+describe("one serializer, and the staged bytes are the committed bytes", () => {
+  it("round-trips the committed record byte for byte", () => {
+    // If this fails, ANY writer that re-serializes instead of copying produces
+    // a file the runtime will reject. It is the property the copy relies on.
+    expect(serializeFarTierInventory(committed)).toBe(committedText);
+    expect(farTierInventoryDigest(committed)).toBe(FAR_TIER_PAYLOAD_INVENTORY_SHA256);
+  });
+
+  it("stages bytes identical to the committed record", () => {
+    if (!existsSync(STAGED_PATH)) {
+      // The serving root is gitignored operator work product, so a fresh clone
+      // has nothing staged. The round-trip above is the unconditional half of
+      // this guarantee; this half runs wherever staging has happened.
+      expect(existsSync(COMMITTED_PATH)).toBe(true);
+      return;
+    }
+    expect(readText(STAGED_PATH)).toBe(committedText);
+    expect(sha256HexSync(readText(STAGED_PATH))).toBe(FAR_TIER_PAYLOAD_INVENTORY_SHA256);
+  });
+});
+
+describe("the merge refuses rather than papering over", () => {
+  const entry = (cellId: string) => ({ cellId, glbSha256: "a".repeat(64), glbByteSize: 1, atlasSha256: "b".repeat(64), atlasByteSize: 1, members: [] });
+  const base = {
+    honestStopCellIds: [] as string[],
+    ledgerCellCount: 2,
+    ledgerChecksumSha256: "c".repeat(64),
+    recipeId: "far-tier-hlod-bake-v4",
+    recipeSha256: "d".repeat(64),
+    campaignSummarySha256: "e".repeat(64),
+  };
+
+  it("refuses a cell declared by two waves", () => {
+    expect(() => mergeFarTierWaveInventories({
+      ...base,
+      waves: [
+        { waveId: "w01", entries: [entry("cell:a")], recordSha256: "f".repeat(64) },
+        { waveId: "w02", entries: [entry("cell:a")], recordSha256: "f".repeat(64) },
+      ],
+    })).toThrow(FarTierMergeError);
+  });
+
+  it("refuses a cell that is both baked and an honest stop", () => {
+    expect(() => mergeFarTierWaveInventories({
+      ...base,
+      honestStopCellIds: ["cell:a"],
+      waves: [{ waveId: "w01", entries: [entry("cell:a"), entry("cell:b")], recordSha256: "f".repeat(64) }],
+    })).toThrow(/both baked and recorded as honest stops/u);
+  });
+
+  it("refuses a total that disagrees with the ledger", () => {
+    expect(() => mergeFarTierWaveInventories({
+      ...base,
+      ledgerCellCount: 99,
+      waves: [{ waveId: "w01", entries: [entry("cell:a"), entry("cell:b")], recordSha256: "f".repeat(64) }],
+    })).toThrow(/coverage it does not have/u);
+  });
+
+  it("accepts the well-formed case, so the refusals above are not vacuous", () => {
+    const merged = mergeFarTierWaveInventories({
+      ...base,
+      waves: [{ waveId: "w01", entries: [entry("cell:a"), entry("cell:b")], recordSha256: "f".repeat(64) }],
+    });
+    expect(merged.entries).toHaveLength(2);
+  });
+});
+
+describe("budgets v2 is derived, additive, and stated in its own unit", () => {
+  it("sums to the declared file bytes of the promoted island", () => {
+    const total = committed.entries.reduce((sum, entry) => sum + farTierEntryByteCost(entry), 0);
+    expect(total).toBe(258_644_848);
+    expect(FAR_TIER_RUNTIME_BUDGETS_V2.derivation.declaredFileBytesAllTiles).toBe(total);
+    expect(FAR_TIER_RUNTIME_BUDGETS_V2.derivation.glbBytes + FAR_TIER_RUNTIME_BUDGETS_V2.derivation.atlasBytes).toBe(total);
+  });
+
+  it("admits the whole island with the stated headroom", () => {
+    const total = FAR_TIER_RUNTIME_BUDGETS_V2.derivation.declaredFileBytesAllTiles;
+    expect(FAR_TIER_RUNTIME_BUDGETS_V2.maxCachedBytes).toBeGreaterThan(total);
+    expect(FAR_TIER_RUNTIME_BUDGETS_V2.maxCachedBytes - total).toBe(FAR_TIER_RUNTIME_BUDGETS_V2.derivation.headroomBytes);
+    expect(FAR_TIER_RUNTIME_BUDGETS_V2.maxCacheEntries).toBeGreaterThanOrEqual(committed.entries.length);
+  });
+
+  it("names its unit as DECLARED FILE BYTES and refuses to be read as a GPU bar", () => {
+    expect(FAR_TIER_RUNTIME_BUDGETS_V2.unit).toContain("DECLARED FILE BYTES");
+    expect(FAR_TIER_RUNTIME_BUDGETS_V2.unit).toContain("NOT decoded GPU bytes");
+    expect(FAR_TIER_RUNTIME_BUDGETS_V2.additiveTo).toContain("Never merged");
+  });
+
+  it("justifies the raise against the frozen GPU bar, which it stays inside", () => {
+    const gpu = FAR_TIER_RUNTIME_BUDGETS_V2.gpuJustification;
+    expect(gpu.islandAtlasGpuBytes + gpu.islandGeometryGpuBytesUpperBound).toBe(gpu.islandResidentGpuBytesUpperBound);
+    expect(gpu.frozenMaxResidentTotalGpuBytes).toBe(FAR_TIER_BUDGET_CONTRACT.maxResidentTotalGpuBytes);
+    expect(gpu.islandResidentGpuBytesUpperBound).toBeLessThan(gpu.frozenMaxResidentTotalGpuBytes);
+    expect(gpu.insideFrozenBar).toBe(true);
+  });
+
+  it("supersedes v1 without deleting it, and says why v1 was wrong for this", () => {
+    expect(FAR_TIER_RUNTIME_BUDGETS.maxCachedBytes).toBe(64 * 1024 * 1024);
+    expect(FAR_TIER_RUNTIME_BUDGETS_V2.supersedes.maxCachedBytes).toBe(FAR_TIER_RUNTIME_BUDGETS.maxCachedBytes);
+    expect(FAR_TIER_RUNTIME_BUDGETS_V2.supersedes.whySuperseded).toContain("ONE staged cell");
+    // v1 could not hold the island; v2 can. That is the whole change.
+    const total = FAR_TIER_RUNTIME_BUDGETS_V2.derivation.declaredFileBytesAllTiles;
+    expect(FAR_TIER_RUNTIME_BUDGETS.maxCachedBytes).toBeLessThan(total);
+  });
+
+  it("discharges the eviction obligation rather than deferring it again", () => {
+    expect(FAR_TIER_RUNTIME_BUDGETS_V2.evictionPolicy).toContain("NONE IS OWED");
+    expect(FAR_TIER_RUNTIME_BUDGETS_V2.evictionPolicy).not.toContain("Deferred to mass-bake scale");
+  });
+});
+
+describe("the failure detail cannot become a hundred-kilobyte DOM attribute", () => {
+  const failing = (count: number) => Array.from({ length: count }, (_, index) => ({
+    cellId: `cell:${index}`,
+    state: "absent" as const,
+    detail: "far-tier/cell.far_0.glb: staged bytes are absent",
+  }));
+
+  it("returns null when nothing failed", () => {
+    expect(farTierFailureDetail([{ cellId: "cell:a", state: "drawn" }])).toBeNull();
+  });
+
+  it("spells out up to the limit and then summarises the rest", () => {
+    const detail = farTierFailureDetail(failing(840));
+    expect(detail).not.toBeNull();
+    const clauses = detail!.split(" | ");
+    expect(clauses).toHaveLength(FAR_TIER_FAILURE_DETAIL_LIMIT + 1);
+    expect(clauses[clauses.length - 1]).toContain(`+${840 - FAR_TIER_FAILURE_DETAIL_LIMIT} more of 840 failing cells`);
+    // Small enough to read, and bounded no matter how bad the stage is.
+    expect(detail!.length).toBeLessThan(2_000);
+  });
+
+  it("does not summarise when it does not have to", () => {
+    const detail = farTierFailureDetail(failing(3));
+    expect(detail).not.toContain("more of");
+    expect(detail!.split(" | ")).toHaveLength(3);
+  });
+});

@@ -492,3 +492,108 @@ describe("farTierTileReady", () => {
     expect(farTierTileReady({ show: true })).toBe(false);
   });
 });
+
+/**
+ * T005 promotion behaviour: a refusal that can be retried, and a fill that does
+ * not hold the main thread for the whole island.
+ */
+describe("an over-budget refusal is a queue position, not a verdict", () => {
+  /** Five z17 tiles east of the prototype: far enough to be far-tier at a near pose. */
+  const DISTANT_CELL = "manhattan-exterior-cell-w05-000752-17-38615-35822";
+  const bothCells = [entryFor(PROTOTYPE_CELL), entryFor(DISTANT_CELL)];
+  const bothBytes = { ...stagedBytes(PROTOTYPE_CELL), ...stagedBytes(DISTANT_CELL) };
+  /** One entry only, so the second selected cell must be refused. */
+  const ONE_ENTRY = { maxCacheEntries: 1, maxCachedBytes: 1_000_000_000 } as const;
+
+  it("retries a refused cell once the bytes it needed are freed", async () => {
+    const scene = fakeScene();
+    const { fetcher } = fakeFetcher(bothBytes);
+    const residency = createFarTierResidency({
+      scene, entries: bothCells, fetcher, budgets: ONE_ENTRY,
+      modelFactory: async () => ({ show: true, ready: true }),
+    });
+
+    // High over the prototype: both cells are in far-tier range, the ceiling
+    // admits one, and nearest-first spends it on the prototype.
+    await residency.reconcile(FAR_POSE);
+    expect(residency.tiles().map((tile) => tile.cellId)).toEqual([PROTOTYPE_CELL]);
+    const refused = residency.outcomes().find((outcome) => outcome.cellId === DISTANT_CELL);
+    expect(refused?.state).toBe("over-budget");
+
+    // Drop inside the prototype's exit band. It is released — and THAT is what
+    // frees the entry the distant cell was refused for.
+    await residency.reconcile(NEAR_POSE);
+
+    const cells = residency.tiles().map((tile) => tile.cellId);
+    expect(cells).toEqual([DISTANT_CELL]);
+    // The refusal is gone rather than merely stale: before the fix, `attempted`
+    // kept the cell marked from before the admission check and no later pass
+    // ever reconsidered it.
+    expect(residency.outcomes().find((outcome) => outcome.cellId === DISTANT_CELL)).toBeUndefined();
+  });
+
+  it("does not retry a failure that freeing bytes cannot fix", async () => {
+    const scene = fakeScene();
+    // The distant cell's tile is absent; the prototype's is fine.
+    const { fetcher, requested } = fakeFetcher(stagedBytes(PROTOTYPE_CELL));
+    const residency = createFarTierResidency({
+      scene, entries: bothCells, fetcher,
+      modelFactory: async () => ({ show: true, ready: true }),
+    });
+    await residency.reconcile(FAR_POSE);
+    expect(residency.outcomes().find((outcome) => outcome.cellId === DISTANT_CELL)?.state).toBe("absent");
+
+    // THE CLAIM IS "NOT RETRIED", SO THE FETCHES ARE WHAT GET ASSERTED. The
+    // previous version of this arm asserted `state === "absent" || state ===
+    // "near"`, which is satisfied by both of the outcomes it was trying to tell
+    // apart and would have passed while the residency re-fetched the missing
+    // file on every pass. A count of requests cannot be satisfied that way.
+    const beforeSecondPass = [...requested];
+    await residency.reconcile(NEAR_POSE);
+    expect(requested).toEqual(beforeSecondPass);
+    expect(requested.filter((ref) => ref.includes(DISTANT_CELL))).toHaveLength(1);
+
+    // Still absent: an absent file is not made present by another cell leaving.
+    expect(residency.outcomes().find((outcome) => outcome.cellId === DISTANT_CELL)?.state).toBe("absent");
+  });
+});
+
+describe("the fill is bounded per pass, so a camera move is not queued behind the island", () => {
+  const CELLS = Array.from({ length: 50 }, (_, index) => `manhattan-exterior-cell-w05-000${800 + index}-17-${38610 + index}-35822`);
+
+  it("loads every selected cell across passes, not just the first batch", async () => {
+    const scene = fakeScene();
+    const entries = CELLS.map((cellId) => entryFor(cellId));
+    const bytes = Object.assign({}, ...CELLS.map((cellId) => stagedBytes(cellId)));
+    const { fetcher } = fakeFetcher(bytes);
+    const residency = createFarTierResidency({
+      scene, entries, fetcher, maxLoadsPerPass: 7,
+      budgets: { maxCacheEntries: 1_024, maxCachedBytes: 1_000_000_000 },
+      modelFactory: async () => ({ show: true, ready: true }),
+    });
+    // One pose, high enough that the whole strip is in far-tier range.
+    await residency.reconcile(poseOver(CELLS[0]!, 4_000));
+    // 50 cells at 7 per pass is 8 passes; the driver must keep coming back.
+    expect(residency.tiles()).toHaveLength(CELLS.length);
+  });
+
+  it("serves a camera move that arrives during the fill", async () => {
+    const scene = fakeScene();
+    const entries = CELLS.map((cellId) => entryFor(cellId));
+    const bytes = Object.assign({}, ...CELLS.map((cellId) => stagedBytes(cellId)));
+    const { fetcher } = fakeFetcher(bytes);
+    const residency = createFarTierResidency({
+      scene, entries, fetcher, maxLoadsPerPass: 3,
+      budgets: { maxCacheEntries: 1_024, maxCachedBytes: 1_000_000_000 },
+      modelFactory: async () => ({ show: true, ready: true }),
+    });
+    const filling = residency.reconcile(poseOver(CELLS[0]!, 4_000));
+    // A move arriving mid-fill. The drain re-reads the queued pose between
+    // batches, so this is served rather than waiting for all fifty.
+    const moved = residency.reconcile(poseOver(CELLS[49]!, 4_000));
+    await Promise.all([filling, moved]);
+    expect(residency.tiles().length).toBeGreaterThan(0);
+    // And nothing was lost: the strip is still fully resident at the end.
+    expect(residency.tiles()).toHaveLength(CELLS.length);
+  });
+});
