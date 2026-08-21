@@ -120,7 +120,19 @@ sweep.
 
 Not the far tier, and not introduced by T005. Producing those packages means
 running an acquisition/build/publish workflow, which `AGENTS.md` places behind an
-explicitly approved operator workflow; **none was run**.
+explicitly approved operator workflow; **none was run** at the time of writing.
+
+**Correction (2026-08-21), after an approved operator staging workflow.** The
+generation named above is wrong. `exteriorDefaultActivations()` returns the six
+`*_TWO_LOD_*` records, so a default session streams the six **`-s2`** two-LOD
+releases; the `-s1` set is their superseded predecessor. The illustrative URL
+`/data/<id>/release.json` is wrong too — the served manifest is `index.json`, and
+`release.json` was a path this agent constructed rather than one the app
+requests. Both mistakes were mine and neither was caught by the earlier check,
+because six absent packages and six errors matched without the path ever being
+confirmed against the app's own traffic. The count, the mechanism, and the
+material consequence for both sweeps are unchanged, and staging the packages
+confirmed them: all six errors gone, near/mid tier drawing facades.
 
 **This is a real limit on what both sweeps support.** The exterior LOD-0 wave
 tier was absent from the vehicle. The sweeps measure the dense massing tier, the
