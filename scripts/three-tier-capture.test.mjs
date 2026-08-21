@@ -104,6 +104,27 @@ describe("tier composition is read, never inferred", () => {
     // instrument never spoke", which is the T005 stalled-publish signature.
     expect(tierCompositionOf({ farTierViewport: {} }).publishSeq).toBeNull();
   });
+
+  it("tells a DISARMED page from an armed page that drew nothing", () => {
+    // clearPublishedFarTierState DELETES the attributes rather than zeroing
+    // them, exactly so these two states stay distinguishable. A reader with
+    // `?? 0` defaults would score the disarmed page as armed-and-empty.
+    const disarmed = tierCompositionOf({ farTierStatus: {}, farTierViewport: {}, schedulerDecision: { residentCount: 12 } });
+    expect(disarmed.farTierArmed).toBe(false);
+    expect(disarmed.farTierDrawnCells).toBeNull();
+    expect(disarmed.massingActive).toBeNull();
+    expect(disarmed.unreadable).toContain("far-tier-attributes-absent");
+
+    const armedEmpty = tierCompositionOf({
+      farTierStatus: { farTierDeclared: "840", farTierDrawn: "0", farTierNear: "840" },
+      farTierViewport: { farTierMassingActive: "0", farTierPublishSeq: "4" },
+      schedulerDecision: { residentCount: 12 },
+    });
+    expect(armedEmpty.farTierArmed).toBe(true);
+    expect(armedEmpty.farTierDrawnCells).toBe(0);
+    expect(armedEmpty.farTierPresent).toBe(false);
+    expect(armedEmpty.unreadable).toEqual([]);
+  });
 });
 
 describe("the committed probe expressions carry their controls", () => {

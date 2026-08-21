@@ -51,12 +51,32 @@ const sha256 = (buffer) => createHash("sha256").update(buffer).digest("hex");
  * covered by the root check, so the intent survives a refactor of the check.
  */
 export const FROZEN_EVIDENCE_ROOTS = [
+  // The T005 baselines the T006 gates are DEFINED AGAINST. This is the root the
+  // serving CLI's legacy subcommands (frames, frames-arm, frames-compose, roam)
+  // write into when run with no --out, and its guard covers only campaign-*.
+  "data/exterior-serving-20260817",
+  // The T006 campaign root, which the journeys CLI writes into BY DEFAULT.
   "data/exterior-acceptance-20260817",
   "data/exterior-completion-acceptance-20260817",
+  "data/refusal-ui-20260817",
+  "data/lod1-texturing-20260817",
+  // The T008 heap evidence, which its CLI writes into by default with no guard.
+  "data/citywide-heap-repeat-20260815",
   "data/citywide-goal-acceptance-20260815",
+  "data/shared-class-textures-20260815",
+  // Far-tier records this campaign reads and must never rewrite.
   "data/far-tier-hlod-promotion-20260819",
   "data/far-tier-hlod-mass-20260819",
   "data/far-tier-hlod-runtime-20260818",
+  // The seven curated journey records: frozen because they describe
+  // compositions that no longer exist and could not be reproduced if lost.
+  "data/central-upper-manhattan-20260812",
+  "data/central-upper-manhattan-20260812-p1",
+  "data/lower-manhattan-20260812-p1",
+  "data/northern-manhattan-20260812",
+  "data/northern-manhattan-20260812-p1",
+  "data/southern-remainder-20260812",
+  "data/southern-remainder-20260812-p1",
 ];
 
 /**
@@ -181,27 +201,45 @@ export function f1Verdict(frames) {
 export function tierCompositionOf(state) {
   const status = state.farTierStatus ?? {};
   const viewport = state.farTierViewport ?? {};
-  const drawn = Number(status.farTierDrawn ?? viewport.farTierPublishDrawn ?? 0);
-  const declared = Number(status.farTierDeclared ?? 0);
-  const near = Number(status.farTierNear ?? 0);
+  // ABSENT IS NOT ZERO, and this is the whole reason the reader is written out
+  // rather than using `?? 0`. `clearPublishedFarTierState` DELETES the
+  // data-far-tier-* attributes when the tier is disarmed instead of zeroing
+  // them, precisely so that "off" and "on and empty" stay distinguishable. A
+  // reader that defaulted a missing attribute to 0 would score a page with no
+  // far tier at all as an armed page that happened to draw nothing -- which is
+  // the same class of error as T005's stalled publish reading as a settled
+  // scene, arrived at from the other side.
+  const num = (value) => (value === undefined || value === null || value === "" ? null : Number(value));
+  const drawn = num(status.farTierDrawn ?? viewport.farTierPublishDrawn);
+  const declared = num(status.farTierDeclared);
+  const near = num(status.farTierNear);
+  const massingActive = num(viewport.farTierMassingActive);
   const resident = state.schedulerDecision?.residentCount ?? null;
-  const publishSeq = viewport.farTierPublishSeq === undefined ? null : Number(viewport.farTierPublishSeq);
+  const publishSeq = num(viewport.farTierPublishSeq);
+  const farTierAttributesPresent = Object.keys(status).length > 0 || viewport.farTierPublishSeq !== undefined;
   return {
+    farTierAttributesPresent,
+    farTierArmed: farTierAttributesPresent,
     farTierDrawnCells: drawn,
     farTierDeclaredCells: declared,
     farTierNearCells: near,
-    farTierPresent: drawn > 0,
+    farTierPresent: drawn !== null && drawn > 0,
     exteriorResidentCells: resident,
     exteriorPresent: resident !== null && resident > 0,
-    massingActive: Number(viewport.farTierMassingActive ?? 0),
-    massingSuppressible: Number(viewport.farTierMassingSuppressible ?? 0),
-    massingCovered: Number(viewport.farTierMassingCovered ?? 0),
-    massingUncovered: Number(viewport.farTierMassingUncovered ?? 0),
+    massingActive,
+    massingSuppressible: num(viewport.farTierMassingSuppressible),
+    massingCovered: num(viewport.farTierMassingCovered),
+    massingUncovered: num(viewport.farTierMassingUncovered),
     publishSeq,
     tiersObserved: [
-      Number(viewport.farTierMassingActive ?? 0) > 0 ? "dense-massing" : null,
+      massingActive !== null && massingActive > 0 ? "dense-massing" : null,
       resident !== null && resident > 0 ? "exterior-wave" : null,
-      drawn > 0 ? "far-tier" : null,
+      drawn !== null && drawn > 0 ? "far-tier" : null,
+    ].filter(Boolean),
+    unreadable: [
+      massingActive === null ? "massing-active" : null,
+      resident === null ? "scheduler-resident-count" : null,
+      !farTierAttributesPresent ? "far-tier-attributes-absent" : null,
     ].filter(Boolean),
   };
 }
