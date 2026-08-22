@@ -483,3 +483,34 @@ names the missing capability — a forced-LOD and isolation hook — rather than
 adding one.
 
 What T006 *could* measure, and did, is tone: see the ADR 0056 amendment.
+
+---
+
+## Amendment — T007 finds a user-visible regression that belongs here (Issue #107, 2026-08-22)
+
+The three-tier acceptance campaign recorded one product FAIL, and the isolation
+work puts it on this ADR rather than on the far tier's.
+
+**J2, search-select-details.** Same query (`doitt:100022`), same pose, same single
+search result as the frozen T006 baseline at
+`data/exterior-acceptance-20260817/journeys.json`. That baseline carried all four
+details-panel rows — *Cell / release*, *Active asset*, *Truth tiers*,
+*Uncertainty*. The shipped default carries **one**.
+
+The panel is honest about why, and says so in words rather than drawing less
+silently: *"A verified exterior asset ships for this building, but its cell is
+not streamed at this camera yet. Move closer to load it."*
+
+**The far tier is not the cause.** Re-run at the same pose with `farTier=off` —
+far-tier status element absent, `farTierDrawn` null — and the panel still shows
+one of four rows with the same notice. What changed is the `-s1` → `-s2` two-LOD
+serving promotion this ADR records: which cells are resident at a 260 m midtown
+camera. Evidence in `data/three-tier-acceptance-20260821/journeys-analysis.json`.
+
+Recorded as a T008 disposition. Fixes were out of scope for the campaign.
+
+A second, smaller item for the same reason: J1's boot-document check filters
+release ids ending `-s1`, so it counts zero against a default that now activates
+six `-s2` waves. That is an instrument left behind by this promotion, not a
+product failure — the substantive half of J1 (six waves active, 883 cells
+declared, no exterior parameter in the URL) holds.

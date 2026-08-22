@@ -841,3 +841,89 @@ Sweep-1 ran on `vite dev`; sweep-2 ran on a **production build** via
 `vite preview`. The comparison between the two sweeps is therefore not
 vehicle-controlled. The production build is what a user receives.
 
+
+---
+
+## Amendment — T007, the three-tier acceptance campaign (Issue #107, 2026-08-22)
+
+**Status: the three-tier default is NOT accepted. Two gates FAIL, three are not
+captured, and the two FAILs belong to different changes.**
+
+Evidence: `data/three-tier-acceptance-20260821/`, nine records with sidecars.
+
+### What the far tier is answerable for
+
+**F1 FAILS at one station of five.** `overview-52km-island`, the maximum-residency
+pose where the far tier holds essentially the whole island, read **p50 16.8 ms**
+against a 16.7 ms bar and **p95 25.2 ms** against 25 ms, over 621 rAF deltas.
+Both percentiles missed. It is recorded as a FAIL and not rounded into a pass: a
+bar with a tolerance nobody registered is not a bar. The other four stations pass
+comfortably, and the same-session `about:blank` control (p50 8.3 / p95 10.0)
+shows no station was instrument-limited.
+
+This outcome was **pre-declared before any capture**, citing T005's p95 of 198 ms
+at far-tier poses. The bar was not moved when it arrived.
+
+### What the far tier is NOT answerable for
+
+**J2 fails, and it is not the far tier's.** A searched building's details panel
+carries one of four rows — cell/release, active asset and truth tiers absent —
+where the frozen T006 baseline carried all four at the same query and pose. The
+panel is honest about why ("its cell is not streamed at this camera yet"). Re-run
+at the same pose with `farTier=off`, the loss reproduces exactly. The cause is
+the `-s1` → `-s2` two-LOD promotion changing residency, recorded against ADR 0057.
+
+**Flipping the far tier off would not fix the one user-visible failure this
+campaign found.**
+
+### G1-far, and the mip question settled by measurement
+
+The GPU texture probe had never been validated against a far-tier tile. It was,
+first, and the B-series was gated behind it passing at exactly zero:
+
+| hypothesis | bytes | delta |
+| --- | --- | --- |
+| no mips | 212,467,712 | short 70,822,291 |
+| **truncated 4/3** | **283,290,003** | **0** |
+| exact mip pyramid | 283,289,164 | short exactly 839 |
+
+Cesium **generates** the chain and accounts for it with the **truncated 4/3**
+approximation — the exact-pyramid hypothesis being short by precisely one byte
+per tile identifies the convention rather than bounding it. The repository's
+existing `PROBE_MIP_CHAIN_MULTIPLIER` was right and is now measured.
+
+**B3/B4/B5 all PASS**, in decoded GPU bytes and compared with nothing in file
+bytes: 283,290,003 / 291,984,434 · 95,302,992 / 98,310,624 · 378,592,995 /
+390,295,058, each about 3% inside. The v2 runtime justification's predicted
+382,457,884 — "inside, and not comfortably" — comes in 3,864,889 bytes high.
+
+Nothing was evicted: the 1,024-entry ceiling admits the island, so **no eviction
+pressure was exercised** and the 839-atlas residency is REPORTED, not offered as
+a B-series verdict.
+
+### The acceptance instruments are far-tier-blind, and it shows
+
+The committed G1/G2/G3 gates FAIL for **scope, not regression**. G1 attributes
+every texture byte to a known count of wave class tiles; with the far tier armed
+it is short by exactly the far-tier residency — 263,367,077 measured minus
+263,017,553 far-tier = 349,524 = 4 × 87,381, the four-tile prediction to the
+byte. J1's boot-document filter is pinned to `-s1` ids the default no longer
+serves. Neither is evidence about the product.
+
+### Not measured
+
+**M1 heap is NOT-CAPTURED**, not failed. Three instrument-failure aborts; no
+attempt reached lap 3 of the 9 it needs; the instrument wrote no record on any of
+them. Its guard — "focus/visibility changed mid-run" — fired twice from different
+laps on a machine simultaneously running another browser under agent control.
+That is a vehicle limitation, stated rather than retried past: NOT-CAPTURED is
+the difference between "the city leaks" and "this vehicle could not measure
+whether it leaks".
+
+### Rollback
+
+A campaign FAIL does **not** flip `FAR_TIER_DEFAULT_ON`, as registered before any
+reading. `false` restores the pre-HLOD composition and nothing else — the raised
+ceilings and swapped pin stay — which is a third configuration nobody has
+measured. And J2 reproduces with the far tier off, so the rollback would not buy
+the one user-visible fix on offer.
