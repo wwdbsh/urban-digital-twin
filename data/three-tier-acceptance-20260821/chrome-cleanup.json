@@ -12,6 +12,12 @@
       "at": "2026-08-22T11:39:47.833Z",
       "vsyncMode": "vsync-on",
       "survivingChromeProcessCount": 0
+    },
+    {
+      "session": "campaign-frames",
+      "at": "2026-08-22T11:47:26.441Z",
+      "vsyncMode": "vsync-on",
+      "survivingChromeProcessCount": 0
     }
   ]
 }

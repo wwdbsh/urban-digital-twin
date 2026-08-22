@@ -47,8 +47,15 @@ export const SERVING_RELEASE_IDS = [
  * checking them here turns a six-minute timeout into a one-second refusal.
  */
 export const HARNESS_REQUIRED_RELEASE_IDS = [
+  // All SIX -s1 packages, not the two the harness names directly: the app
+  // enumerates every serving wave, and one absent manifest disables exterior
+  // streaming globally rather than just that wave.
   "manhattan-exterior-cells-20260811-v3-s1",
   "manhattan-midtown-core-cells-20260811-v3-s1",
+  "manhattan-lower-manhattan-cells-20260812-s1",
+  "manhattan-southern-remainder-cells-20260812-s1",
+  "manhattan-central-upper-manhattan-cells-20260812-s1",
+  "manhattan-northern-manhattan-cells-20260812-s1",
   "manhattan-citywide-20260804",
 ];
 
@@ -130,20 +137,29 @@ async function run() {
   }
   checks.push(check("staged-serving-bytes", badFiles.length === 0, badFiles.length === 0 ? `${filesChecked} files re-verified` : badFiles.slice(0, 10).join("; ")));
 
-  // ---- 3b. RELEASES THE COMMITTED HARNESSES REQUIRE.
+  // ---- 3b. RELEASES THE COMMITTED HARNESSES REQUIRE, CHECKED AS SERVED.
+  //
+  // Checked over HTTP, not on disk, and the distinction cost a run to learn:
+  // `vite preview` serves `dist/`, and `public/data/` is copied into it at BUILD
+  // time. A package staged AFTER the build exists on disk and is invisible to
+  // the browser. An on-disk check passes and the campaign then times out six
+  // minutes later with the SPA fallback answering. Only the served bytes count.
   const harnessMissing = [];
   for (const releaseId of HARNESS_REQUIRED_RELEASE_IDS) {
-    const dir = join(repositoryRoot, "public", "data", releaseId);
-    if (!existsSync(dir)) { harnessMissing.push(`${releaseId}: not staged`); continue; }
-    // Different package families name their manifest differently: the serving
-    // releases carry index.json, the citywide base carries manifest.json. The
-    // check is "this package has a manifest", not "it has the one filename I
-    // happened to think of first".
-    const manifests = ["index.json", "manifest.json", "release.json"];
-    if (!manifests.some((name) => existsSync(join(dir, name)))) harnessMissing.push(`${releaseId}: no manifest on disk`);
+    let served = false;
+    let detail = "no manifest answered";
+    for (const name of ["index.json", "manifest.json", "release.json"]) {
+      try {
+        const response = await fetch(`${base}/data/${releaseId}/${name}`);
+        const body = (await response.text()).slice(0, 60);
+        if (/^\s*<!doctype/iu.test(body)) { detail = `${name}: SPA FALLBACK`; continue; }
+        if (response.status === 200 && body.trimStart().startsWith("{")) { served = true; break; }
+      } catch (error) { detail = `${name}: ${error}`; }
+    }
+    if (!served) harnessMissing.push(`${releaseId}: ${detail}`);
   }
-  checks.push(check("harness-required-releases-staged", harnessMissing.length === 0,
-    harnessMissing.length === 0 ? `${HARNESS_REQUIRED_RELEASE_IDS.length} vehicle dependencies present` : harnessMissing.join("; ")));
+  checks.push(check("harness-required-releases-served", harnessMissing.length === 0,
+    harnessMissing.length === 0 ? `${HARNESS_REQUIRED_RELEASE_IDS.length} vehicle dependencies answered real manifests` : harnessMissing.join("; ")));
 
   // ---- 4. FAR-TIER PAYLOAD AND RECORDS.
   const farInventory = join(repositoryRoot, "public", "far-tier", "payload-inventory.json");

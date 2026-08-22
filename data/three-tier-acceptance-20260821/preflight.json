@@ -5,10 +5,10 @@
   "phase": "0",
   "capturedAt": null,
   "capturedAtStatement": "NULL BY CONSTRUCTION.",
-  "verdict": "ABORT",
+  "verdict": "PASS",
   "rule": "FAIL CLOSED. Any unmet condition aborts the campaign rather than degrading it. There is no partial pass.",
   "whyThisExists": "T005 shipped two promotion sweeps whose vehicle was missing the entire exterior wave tier, because the server answered every absent package with index.html and nothing checked. A campaign that quietly measures two tiers and reports three is worse than one that refuses to start.",
-  "worktreeHead": "ea0d2aa3b62a1a4f30a4cc210ebbea55a1e01608",
+  "worktreeHead": "731dc3868d7c71e3b253e8a91b0b3aa38abad46d",
   "base": "http://127.0.0.1:4173",
   "hardwareAtCapture": {
     "note": "The committed pre-registration recorded this machine on BATTERY and made AC power a pre-flight condition. That record is NOT edited -- a pre-registration that changes after the fact is not one. The capture-time state is recorded HERE instead.",
@@ -23,15 +23,15 @@
       "chargePercent": 95,
       "adapterWatts": 68,
       "thermalWarningRecorded": "unknown",
-      "raw": "Now drawing from 'AC Power' |  -InternalBattery-0 (id=6946915)\t95%; charging; 0:41 remaining present: true"
+      "raw": "Now drawing from 'AC Power' |  -InternalBattery-0 (id=6946915)\t95%; charging; 0:37 remaining present: true"
     },
     "oneMachineOneSession": "Every timing verdict from this campaign is one machine, one session. Not a distribution, no confidence interval, does not generalise."
   },
   "checks": [
     {
       "id": "worktree-clean",
-      "ok": false,
-      "detail": "UNCOMMITTED CHANGES:\nM scripts/citywide-heap-repeat-cli.mjs\n M scripts/three-tier-preflight-cli.mjs\n?? data/three-tier-acceptance-20260821/chrome-cleanup.json\n?? data/three-tier-acceptance-20260821/chrome-cleanup.sha256\n?? data/three-tier-acceptance-20260821/stations/"
+      "ok": true,
+      "detail": "clean at 731dc3868d7c71e3b253e8a91b0b3aa38abad46d"
     },
     {
       "id": "pre-registration-unedited",
@@ -45,8 +45,8 @@
     },
     {
       "id": "harness-required-releases-staged",
-      "ok": false,
-      "detail": "manhattan-citywide-20260804: no manifest on disk"
+      "ok": true,
+      "detail": "3 vehicle dependencies present"
     },
     {
       "id": "far-tier-payload-inventory",
@@ -132,6 +132,6 @@
       "looksJson": true
     }
   ],
-  "passedCount": 11,
+  "passedCount": 13,
   "ofCount": 13
 }
