@@ -427,7 +427,7 @@ carries an append-only correction to `0032`'s citywide UV share).
 | tier | what it is | how it is selected |
 | --- | --- | --- |
 | near | textured `lod_0` exterior geometry | the six **`-s2`** two-LOD serving releases |
-| mid | textured `lod_1` | the same releases, selected past the ring |
+| mid | textured `lod_1` | the same releases — **declared eligible**, selected past the ring; *not* rendered-verified, see below |
 | far | baked HLOD tiles, one per ownership cell | 840 tiles, `FAR_TIER_DEFAULT_ON = true` |
 | fallback | procedural tan massing | wherever no tier above it draws |
 
@@ -449,6 +449,7 @@ default until the two-LOD promotion. **They are no longer what ships**; the six
   pre-registered `A3' = 0.032`. Recipe v3 scores 6 of 6 against it, and anyone
   comparing these numbers with the original pre-registration needs to know the
   bar moved.
+- **The mid tier's selection is verified by declaration, not by rendering.** 44,565 of 44,989 shipped assets declare an eligible `lod_1` and the runtime selects it past the ring, but no rendered lod_0-to-lod_1 comparison was ever produced — see the next point. A further 424 parents declare a `lod_1` that is marked **ineligible**: its content is the full-geometry fallback, the runtime never selects it, and those buildings therefore have no transition at all.
 - **There is no rendered 2% LOD-transition gate.** It is not measurable in the
   shipped app: at the 400 m ring the instrument's own error budget runs 5.98% to
   35.06% against a 2% bar, and moving closer to gain resolution destroys the
@@ -468,7 +469,9 @@ default until the two-LOD promotion. **They are no longer what ships**; the six
   established across process boundaries; the rendering and timing results are
   not established across machines.
 
-Full criterion-by-criterion evidence and a fourteen-item residual register:
+The goal's own acceptance record closes at **2 MET, 4 MET-AS-ADJUDICATED, 5
+NOT-MET**, with a sixteen-item residual register and a completion decision left
+to the reader rather than taken. Full criterion-by-criterion evidence:
 `data/manhattan-hlod-far-tier-acceptance-20260822/reconciliation.json`.
 
 ## Prerequisites and setup

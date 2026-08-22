@@ -7,7 +7,7 @@
   "capturedAt": null,
   "capturedAtStatement": "NULL BY CONSTRUCTION. T008 took no measurement of its own; it reconciles eleven tasks' records against eleven criteria.",
   "criteriaSha256": "ca31e09c25cf00bd382c0db1cb803dee0660e1f29a2a6f42b43ddb409f92fb74",
-  "criteriaDerivation": ".claude/fable-control-plane/goals/manhattan-hlod-far-tier/goal.json acceptanceCriteria, read from the MAIN checkout read-only, hashed as a canonical JSON array.",
+  "criteriaDerivation": ".claude/fable-control-plane/goals/manhattan-hlod-far-tier/goal.json acceptanceCriteria, read from the MAIN checkout read-only, hashed as a canonical JSON array. NOTE ON WHAT THAT HASH BINDS: goal.json is NOT tracked in this repository, so criteriaSha256 is a RECORD-INTERNAL binding -- it proves this record's eleven criteria have not been edited since it was written, and it does NOT prove they still match a file a reader can independently fetch.",
   "criteriaCount": 11,
   "verdictVocabulary": [
     "MET",
@@ -15,12 +15,12 @@
     "NOT-MET"
   ],
   "verdictCounts": {
-    "MET-AS-ADJUDICATED": 5,
-    "NOT-MET": 4,
+    "MET-AS-ADJUDICATED": 4,
+    "NOT-MET": 5,
     "MET": 2
   },
-  "stopReportCount": 4,
-  "headline": "2 MET, 5 MET-AS-ADJUDICATED, 4 NOT-MET. The far tier ships, is measured, and is pinned. What it does NOT have is a rendered 2% transition gate, a frame-time result at its most demanding station, or an identical journey suite -- and one of those three is not its fault.",
+  "stopReportCount": 5,
+  "headline": "2 MET, 4 MET-AS-ADJUDICATED, 5 NOT-MET. The far tier ships, is measured, and is pinned. It does NOT have a rendered 2% transition gate, a stills-verified default-session massing sweep, a frame-time result at its most demanding station, or an identical journey suite -- and the last of those is only partly excluded from being this goal's doing.",
   "verdicts": [
     {
       "index": 1,
@@ -38,6 +38,9 @@
         },
         {
           "statement": "A COUNTER-FINDING THAT MATTERS MORE THAN THE PASS. T007 found the three overview stations and the P2 oblique pose are TWO-tier, with massingActive 0. A campaign that inferred composition from geometry would have called them three-tier and been wrong at four poses of six. The ring is dual-keyed; composition is read or it is not known."
+        },
+        {
+          "statement": "THE 'THREE-BOUND ARITHMETIC' CLAUSE IS EVIDENCED, not assumed: T002's stage-0 hierarchy record carries the worst-case residency derivation (398 nodes over a 1,221-node, 883-leaf hierarchy) and the cut-independent bound with its atlas, geometry and total GPU byte terms, and ADR 0058 carries the B1-B5 bar table those terms feed. Tier boundaries were re-derived as recorded contract changes at each promotion."
         }
       ],
       "artifacts": [
@@ -52,22 +55,35 @@
         {
           "path": "data/far-tier-hlod-promotion-20260819/sweep-exemptions.json",
           "sha256": "6354676da304ab03783132730f75dafdfce60c82f509dd740b9fc18c92e8d430"
+        },
+        {
+          "path": "data/far-tier-hlod-20260818/stage0-hierarchy.json",
+          "sha256": "c6a2a9f9ca6f36eb17d1d6a3f20890c25576cd1a136c362ab49fd2a3688cd38c"
         }
       ]
     },
     {
       "index": 2,
       "criterion": "No tan V3-eligible massing is visible in a default session: a pre-registered pose sweep (island overview, mid-altitude, street approach, and the user's two screenshot poses reproduced) shows zero untextured-massing draws for parents that ship a textured exterior, verified on rendered stills with committed checksums; the 205 tombstoned parents render their honest massing appearance by design and are excluded by census, not by hand",
-      "verdict": "MET-AS-ADJUDICATED",
+      "verdict": "NOT-MET",
       "evidence": [
         {
-          "statement": "AT THE PRE-REGISTERED POSES, MET. T005's sweep-2 ran the six registered poses and read massing uncovered = 0 at all five ON poses -- P2 the oblique failure pose at 23,973 of 23,973 covered -- with absent, checksum-mismatch, build-failure and over-budget all zero. notDeclared 1 throughout is the committed Block 835 alias exemption."
+          "statement": "WHAT WAS MEASURED, AND IT IS REAL: T005's sweep-2 ran the six registered poses and read massing uncovered = 0 at all five ON poses -- P2, the pose sweep-1 failed, at 23,973 of 23,973 covered -- with absent, checksum-mismatch, build-failure and over-budget all zero. Sweep-1's FAIL is preserved unedited beside it."
         },
         {
-          "statement": "AND THE FIRST SWEEP FAILED. Sweep-1 reported 11,867 uncovered at P2. That FAIL is preserved unedited beside sweep-2; the cause was a stale published reading, not unsuppressed massing, and the scene was correct throughout. The record carries both."
+          "statement": "BUT THE CRITERION ASKS FOR SOMETHING THIS SWEEP DID NOT PRODUCE, on three counts, and its own source says so."
         },
         {
-          "statement": "ADJUDICATION: THE POSE SET IS NOT THE CITY. T007 observed 251 and 154 massing buildings active at its two 260 m street stations with suppressible 0 -- meaning none of them sits under a drawn far-tier cell. Whether any of those are V3-eligible was NOT determined by either campaign, and this record does not claim it either way. The criterion is met at the poses it registered; it is not evidence about poses nobody swept."
+          "statement": "(i) NOT VERIFIED ON RENDERED STILLS. The criterion requires the zero 'verified on rendered stills with committed checksums'. Sweep-2's record states: 'NONE RETAINED, and sweep-1's stills.files entry names a file that was never committed.' The verification was STATE-BASED -- DOM counts -- and its own rationale is that 'a screenshot cannot show that a count is zero'. That is a good argument for the method chosen and it is NOT the method the criterion specified."
+        },
+        {
+          "statement": "(ii) NOT A DEFAULT SESSION. The criterion is about a default session, in which parents ship a textured exterior. Sweep-2's record states: 'MATERIAL AND DISCLOSED: the exterior LOD-0 wave tier was ABSENT from the vehicle for BOTH sweeps. The sweep therefore measures the dense massing tier and the far tier and their interaction; it does NOT measure the three-tier composition with exterior waves present.' With no exterior tier in the vehicle, no parent shipped a textured exterior, so the sweep cannot speak to the population the criterion names."
+        },
+        {
+          "statement": "(iii) THE 205 TOMBSTONES ARE NOT DISPOSED OF. The criterion requires the 205 tombstoned parents to be excluded BY CENSUS, not by hand. No record in this goal enumerates a 205-parent tombstone census or shows those parents excluded by one. The far-tier exemption set covers 43 stopped cells and 143 refused buildings, which is a different population on a different axis. THIS IS AN HONEST GAP, not a disposal."
+        },
+        {
+          "statement": "WHY THIS IS A DOWNGRADE AND NOT AN ADJUDICATION. An earlier revision recorded criterion 2 as MET-AS-ADJUDICATED, naming the pose-set limit but omitting (i), (ii) and (iii) -- all three of which are stated in the very record it cited. A criterion whose specified method was not used, whose specified population was absent from the vehicle, and whose named exclusion set was never censused is not adjudicated. It is unmet."
         }
       ],
       "artifacts": [
@@ -80,10 +96,11 @@
           "sha256": "94a40e8acd377539d61e8c06767859a4a95a43823c97dd9a31b43cae54e149b0"
         },
         {
-          "path": "data/three-tier-acceptance-20260821/frames-analysis.json",
-          "sha256": "2ba419c122923e1952db83dc5c4129381ca8eeafbb6fd01e240bb6d330179f9d"
+          "path": "data/far-tier-hlod-promotion-20260819/sweep-exemptions.json",
+          "sha256": "6354676da304ab03783132730f75dafdfce60c82f509dd740b9fc18c92e8d430"
         }
-      ]
+      ],
+      "stopReport": "Zero uncovered massing is established at the registered poses by DOM state, in a vehicle with no exterior tier and with no stills retained, and the 205-parent tombstone census the criterion names does not exist. What the sweep does show is worth keeping; it is not what this criterion asked for."
     },
     {
       "index": 3,
@@ -154,6 +171,9 @@
       "evidence": [
         {
           "statement": "840 tiles baked across six waves through committed CLI entrypoints, each carrying a committed inventory, checksums and source-release provenance."
+        },
+        {
+          "statement": "THE REPLAY IS TOTAL, NOT STRATIFIED: 840 of 840 cells replayed with 0 mismatches. The criterion asked only for a stratified byte-replay; the campaign replayed every cell. Validators pass on the shipped set, and T007's pre-flight re-verified the whole arrangement 13 of 13 at both ends of its campaign."
         },
         {
           "statement": "BYTE REPLAY ACROSS PROCESS BOUNDARIES, not within one run: the campaign re-derived tiles in a separate process and required byte identity. The promoted inventory hashes to cf8e26480eecc91f2e7b473d217a0d3551d0be59b4d8da39ee1217a6e0538f0a, and the runtime fails closed against exactly that digest."
@@ -348,28 +368,36 @@
       "task": "T008 (Issue #108)",
       "amends": "data/exterior-completion-acceptance-20260817/reconciliation.json",
       "criterion": 4,
-      "change": "NO VERDICT CHANGE. The NOT-MET verdict STANDS. What is amended is the STOP REPORT'S REASONING, which is now obsolete in its premise and is replaced by a better-characterised one.",
-      "citationConvention": "The amended record is cited BY PATH AND TASK ONLY, never by hash, following the convention that record itself established for the T008/Issue-90 amendment: it embeds this record's hash in its own closures, so a hash citation here would be circular.",
-      "historyPreserved": "The amended record is NOT edited. Its bytes are unchanged and its own sidecar still verifies. This amendment lives entirely in the present record, which is the discipline the prior amendment used.",
-      "thePremiseThatIsNowFalse": "The original stop reported the gate STRUCTURALLY UNREACHABLE because 'all six promoted -s1 serving releases declare shippedLodIds [lod_0] only. There is no rendered lod_0-to-lod_1 transition anywhere in the served set.' THAT IS NO LONGER TRUE. T001 promoted the six -s2 releases and two-LOD serving is now the default: 44,565 of 44,989 shipped assets declare an eligible lod_1, and the transition exists in the served set.",
-      "theReasonThatReplacesIt": "The gate is still not met, for a DIFFERENT and newly measured reason. T006 pre-registered the in-app instrument's error budget before any capture and found it exceeds the 2% bar for every building in every realistic stratum -- 5.98% to 35.06% across the 424 measured-fallback census, 6.57% to 20.65% across the 53 near-cap buildings, ZERO under the bar in either. The cause is structural: magnification is pinned by the 400 m ring, so moving closer to gain resolution destroys the transition being tested. A target needs roughly 356,440 device px^2 before the total budget clears the bar; the largest census member projects 17,666.",
+      "change": "NO VERDICT CHANGE. The NOT-MET verdict STANDS. What is amended is the STOP REPORT'S REASONING: one of its four legs is falsified and replaced; three survive.",
+      "historyPreserved": "The amended record is NOT edited. Its bytes are unchanged and both its sidecars still verify. A test binds that, and binds it by re-hashing the bytes rather than by looking for a sentence that says so.",
       "whatT006ActuallyEstablished": "AN ARITHMETIC HONEST STOP, A CENSUS, AND FIVE INCONCLUSIVE SHED PAIRS. It did NOT establish a met 2% gate and does not claim to. The census of 424 measured-fallback parents is dual-derived and agreeing (shipped manifests against the T004 island pass, differing only by the named volume-identity-failed tombstone doitt:263078). The five ADR 0056 shed-tone pairs are INCONCLUSIVE-BY-INSTRUMENT: the wire-level control proves a byte arrived, not that it was rasterised, and one pair produced a 0.008% 'PASS' that was massing compared against massing.",
-      "whatIsCarriedForwardOnTheOriginalPOINT": "The 424 parents have no lod_1 at all by construction -- the 2% gate refused them at plan stage -- so for them there is no transition to render and never will be under this grammar. That half of the original stop survives intact and is unaffected by the -s2 promotion.",
+      "whatIsCarriedForwardOnTheOriginalPOINT": "CORRECTED. An earlier revision said the 424 parents 'have no lod_1 at all by construction'. THAT IS FALSE. They DECLARE a lod_1 -- T006's own census rule is lod_0.maxDistanceMeters === null AND lod_1.eligible === false, which requires the level to exist in order to be marked ineligible -- and its content is the full-geometry fallback the ADR 0050 measured-fallback policy specifies. What they lack is an ELIGIBLE coarse level: the 2% gate refused it at plan stage, so the runtime never selects it and no lod_0-to-lod_1 transition is ever rendered for them. The consequence for this criterion is unchanged; the description of the bytes was wrong and is corrected.",
       "successorPaths": [
         "A forced-LOD and isolation runtime hook: render a named building at a chosen level, alone, from a camera the measurement picks rather than the ring dictates. Without it neither identity nor isolation can be established from outside the renderer.",
         "Render-target resolution: the budget clears 2% for 97 of 424 at eight times the shipped vertical resolution and 382 at sixteen times -- but that subset is selected by SIZE, so it is a biased stratum and not the census.",
         "An identity check that works from outside the renderer: T006's pick returned no feature at any of twelve poses, and without it a wire-level control cannot tell 'the byte arrived' from 'the byte was drawn here'."
       ],
-      "netEffect": "D-19 moves from an UNCHARACTERISED evidence gap resting on a premise that has since become false, to a CHARACTERISED one with committed arithmetic, a committed sampling frame, and three named successor paths. It is not closed."
+      "netEffect": "D-19 moves from an UNCHARACTERISED evidence gap resting on a premise that has since become false, to a CHARACTERISED one with committed arithmetic, a committed sampling frame, and three named successor paths. It is not closed.",
+      "disciplineUsedAndWhyItDEPARTSFromThePrecedent": "THIS IS A DELIBERATE DEPARTURE FROM THE ESTABLISHED CONVENTION, NOT CONFORMANCE TO IT, and an earlier revision of this record described it backwards. The precedent is commit fba2569, which amended data/goal-integration-acceptance-20260812/reconciliation.json IN PLACE -- 24 insertions and 9 deletions -- flipping criterion 1 from NOT-MET to MET-AS-ADJUDICATED and adding priorVerdict, priorStopReport and closedBy fields to the record itself. The still-NOT-MET case in that same closure was likewise updated in place. In-place editing with prior-verdict preservation IS the convention.",
+      "whyDepart": "Because the verdict does not move. The in-place convention exists to record a TRANSITION -- priorVerdict, closedBy, an adjudication delta -- and there is no transition here: criterion 4 was NOT-MET and remains NOT-MET. Editing a frozen record to add fields that say 'nothing changed' would churn a checksum for no informational gain and would put this goal's reasoning inside the prior goal's record. Amendment-by-statement keeps the reasoning where the evidence for it lives. That is a CHOICE, defensible on those grounds, and it is stated as a choice rather than dressed up as compliance.",
+      "citation": "The amended record is cited by path AND by hash, and the hash is in this record's artifacts for criterion 4. An earlier revision claimed the citation had to omit the hash to avoid circularity, on the grounds that the amended record 'embeds this record's hash in its closures.evidenceRecords'. THAT IS FALSE and is withdrawn: the exterior-completion record has no closures key and contains no reference to this record at all. The circularity note it does carry describes a different pair of records. There is no circularity, so there is no reason not to cite by hash.",
+      "theFrozenStopHadFOURLegs": {
+        "legA_falsified": "(a) SINGLE-LOD SERVING, verbatim: \"All six promoted -s1 serving releases declare shippedLodIds ['lod_0'] only. There is no rendered lod_0-to-lod_1 transition anywhere in the served set, so no capture against the shipped app could produce the rendered evidence this criterion asks for.\" THIS LEG IS FALSIFIED. Two-LOD serving is the default and 44,565 of 44,989 shipped assets declare an ELIGIBLE lod_1; the transition exists in the served set.",
+        "legB_surviving": "(b) 424 MEASURED lod_1 FALLBACKS ON THE RETAINED SET, with FIVE OF SIX WAVES carrying a worst measured deviation ABOVE 0.02 -- w01 0.07945, w02 0.08269, w03 0.09160, w04 0.04512, w05 0.04846. SURVIVES UNTOUCHED. The -s2 promotion did not change any of those measurements.",
+        "legC_surviving": "(c) THE 2% FIGURES ARE DECLARED, NOT RENDERED -- analytic, computed over generated plans by the projected-silhouette instrument. SURVIVES: nothing in this goal produced a rendered 2% figure, and T006 established that none can be produced in-app at that bar.",
+        "legD_surviving": "(d) L1 DOES NOT DISCHARGE THIS CRITERION, by its own pre-registration. SURVIVES: L1's scope is unchanged by anything in this goal.",
+        "scopeOfTheReplacement": "ONLY leg (a) is replaced. An earlier revision of this record read as though the whole stop had been superseded; three of its four legs are intact and independently sufficient."
+      },
+      "theReasonThatReplacesLegA": "The gate is still not met, for a DIFFERENT and newly measured reason. T006 pre-registered the in-app instrument's error budget before any capture and found it exceeds the 2% bar for every building in every realistic stratum -- 5.98% to 35.06% across the 424 measured-fallback census, 6.57% to 20.65% across the 53 near-cap buildings, ZERO under the bar in either. The cause is structural: magnification is pinned by the 400 m ring, so moving closer to gain resolution destroys the transition being tested. A target needs roughly 356,440 device px^2 before the total budget clears the bar; the largest census member projects 17,666."
     }
   ],
   "residualRegister": [
     {
       "id": "R1",
       "title": "J2: a searched building loses three details-panel rows, and the two-LOD promotion owns it",
-      "detail": "At the 260 m midtown pose a searched building's panel carries one of four required rows -- Uncertainty present; Cell / release, Active asset and Truth tiers absent -- where the frozen T006 baseline carried all four at the same query and pose. Reproduces with the far tier WHOLLY DISARMED, so it belongs to the -s1 to -s2 promotion, not to this goal's tier. Recorded against ADR 0057.",
+      "detail": "At the 260 m midtown pose a searched building's panel carries one of four required rows -- Uncertainty present; Cell / release, Active asset and Truth tiers absent -- where the frozen T006 baseline carried all four at the same query and pose.",
       "severity": "USER-VISIBLE",
-      "owner": "the two-LOD serving promotion (ADR 0057), not this goal",
+      "owner": "POINTS AT the two-LOD serving promotion (ADR 0057). Not conclusively attributed, and not fully exonerating of this goal's non-draw-path changes.",
       "evidence": [
         {
           "path": "data/three-tier-acceptance-20260821/j2-far-tier-arms.json",
@@ -379,7 +407,8 @@
           "path": "data/three-tier-acceptance-20260821/journeys-analysis.json",
           "sha256": "9e91fb7ed11b57f9a6080251cfcbec1a0758931c7eee99dee42aa07be2556b26"
         }
-      ]
+      ],
+      "whatTheTwoArmRecordActuallyExcludes": "SCOPED, and an earlier revision overstated it. Both arms ran the SAME BUILD and differed only in the farTier URL parameter, so what is excluded is the FAR-TIER DRAW PATH. This goal's other shipped changes -- the raised residency ceilings and the swapped inventory pin -- were present in BOTH arms and were NOT controlled. The source record says 'consistent with' the -s1 to -s2 promotion and states explicitly that 'it does not identify which specific change in the -s2 promotion moved residency; it excludes the far tier and points at the promotion'. That hedge is restored here."
     },
     {
       "id": "R2",
@@ -554,32 +583,65 @@
           "sha256": "78d73cac8de85ce6ddb1373a1bea6f92d5f5dfdf6ab10b54f093fc757a8c7e97"
         }
       ]
+    },
+    {
+      "id": "R15",
+      "title": "The unmeasured third configuration at rollback",
+      "detail": "Flipping FAR_TIER_DEFAULT_ON to false restores the pre-HLOD COMPOSITION only. The raised residency ceilings (1,024 entries / 288 MiB declared file bytes), the swapped inventory pin and the merged inventory all remain in the build. Nobody has measured that arrangement: it is neither the two-tier city that preceded this goal nor the three-tier city that follows it. Anyone rolling back is entering a state with no acceptance evidence of any kind.",
+      "severity": "UNMEASURED CONFIGURATION",
+      "owner": "whoever flips the switch",
+      "evidence": [
+        {
+          "path": "data/far-tier-hlod-promotion-20260819/sweep-results.json",
+          "sha256": "ecee73a294e8acbb41ec760bd740a206cfc9a14681608813db6a3e4e4ee254f0"
+        }
+      ]
+    },
+    {
+      "id": "R16",
+      "title": "The pre-flight instrument overwrites its own record",
+      "detail": "scripts/three-tier-preflight-cli.mjs writes to a single path, so each run overwrote the last and T007's OPENING pre-flight record had to be recovered from git history to be committed at all. A campaign that ran it three times keeps only the third. The condition set also GREW mid-campaign, from 12 checks to 13, so two runs of 'the pre-flight' are not the same test.",
+      "severity": "INSTRUMENT DEFECT, HANDOVER ITEM",
+      "owner": "T008 successor",
+      "evidence": [
+        {
+          "path": "data/three-tier-acceptance-20260821/preflight-opening.json",
+          "sha256": "ca463d1edc712dc004a961c200eadeb583016739d5d8b390d156a2000b0d7f30"
+        },
+        {
+          "path": "data/three-tier-acceptance-20260821/preflight-closing.json",
+          "sha256": "452634adb930108bfdedbc90af4b1a3d815211d4ba0e2b4e9655384f692f589a"
+        }
+      ]
     }
   ],
   "completionDecision": {
     "statement": "THIS RECORD DOES NOT TAKE THE COMPLETION DECISION. It lays it out. The decision is the user's.",
-    "whatIsMET": "The bake pipeline is deterministic and byte-reproducible through committed CLIs, with 840 tiles, committed inventories, checksums and provenance, reconciling by machine to the 883-cell ledger (criterion 5). And this record itself, with its residual register, is the T024 deliverable the goal asked for (criterion 11).",
+    "revision": "Revised after review. Criterion 2 is downgraded from MET-AS-ADJUDICATED to NOT-MET on three deltas its own source record states, and the J2 exoneration is scoped to what the two-arm capture actually controlled.",
+    "whatIsMET": "The bake pipeline is deterministic and byte-reproducible through committed CLIs: 840 of 840 cells replayed with 0 mismatches -- a total replay where the criterion asked only for a stratified one -- with committed inventories, checksums and provenance, reconciling by machine to the 883-cell ledger (criterion 5). And this record itself, with its residual register, is the T024 deliverable the goal asked for (criterion 11).",
     "whatIsMETWithAdjudication": [
       "The three-tier composition ships by default and was VERIFIED BY DOM READ, not inferred -- with 43 cells carrying no tile, and with four of six surveyed poses turning out to be two-tier rather than three (criterion 1).",
-      "No tan V3-eligible massing at the pre-registered poses, on the second sweep; the first sweep's FAIL is preserved unedited beside it, and the pose set is not the city (criterion 2).",
       "Blender sampling was done and is where the real appearance limits were found: the hue bar A3'' = 0.035 is POST-HOC and disclosed as such, and 90.95% of cells ship under-resolved at a median applied scale of 0.707 (criterion 6).",
       "GPU memory was MEASURED, not computed, behind an instrument validated at a delta of exactly zero -- at ONE pose, not every pose, with no eviction pressure ever exercised (criterion 7).",
       "The rollback switch is one token and was rehearsed, and the record says plainly that rolling back lands in a THIRD CONFIGURATION nobody has measured (criterion 10)."
     ],
     "whatIsHonestlyNOTMET": [
+      "CRITERION 2 -- no tan V3-eligible massing in a default session. DOWNGRADED ON REVIEW. Zero uncovered massing IS established at the registered poses, but the criterion asked for verification on rendered stills with committed checksums and NONE WERE RETAINED; it asked about a default session and the exterior wave tier was ABSENT FROM BOTH SWEEP VEHICLES, so no parent in the vehicle shipped a textured exterior; and the 205-parent tombstone census it names does not exist. All three are stated in the record this criterion cites.",
       "CRITERION 3 -- the rendered 2% lod_0-to-lod_1 gate. An honest stop with committed arithmetic: the in-app instrument's error budget exceeds the bar for every building in every realistic stratum, zero of 424 and zero of 53. No sample was drawn, because feeding an unresolvable instrument would manufacture the appearance of a measurement.",
-      "CRITERION 4 -- D-19. The amendment IS made under the established discipline, with the frozen record untouched. But it does not carry the rendered evidence the criterion asks for, because that evidence cannot be produced here. The underlying NOT-MET stands, now CHARACTERISED rather than merely asserted, with three named successor paths.",
+      "CRITERION 4 -- D-19. The amendment IS made, and it DEPARTS from the in-place convention deliberately because the verdict does not move. Of the frozen stop's four legs, only leg (a) -- single-LOD serving -- is falsified; legs (b), (c) and (d) survive untouched and are independently sufficient. The underlying NOT-MET stands, now characterised rather than merely asserted, with three named successor paths.",
       "CRITERION 8 -- frame budgets at full three-tier scale. NOT-CAPTURED at three of seven registered stations, including the maximum-residency one, which would not land in either attempt. A withdrawn FAIL and a withdrawn far-tier attribution sit behind this: the two-tier baseline at that station was already at the bar before the far tier existed.",
-      "CRITERION 9 -- identical journey behaviour. One real user-visible regression: three details-panel rows lost for a searched building. It reproduces with the far tier wholly disarmed, so it belongs to the two-LOD promotion rather than to this goal."
+      "CRITERION 9 -- identical journey behaviour. One real user-visible regression: three details-panel rows lost for a searched building."
     ],
-    "theQuestionForTheUser": "Ship the three-tier city as it now stands -- default-on, measured where it could be measured, with four criteria honestly unmet and fourteen named residuals -- or hold the goal open until some subset of R1, R2, R4 and the criterion-3/4 instrument gap is closed?",
+    "onTheOneUserVisibleRegression": "SCOPED, because an earlier revision of this record overstated the exoneration. The two-arm capture ran the SAME BUILD in both arms and differed only in the farTier parameter, so it excludes THE FAR-TIER DRAW PATH. It does not exonerate this goal's other shipped changes -- the raised residency ceilings and the swapped inventory pin were present in both arms and were never controlled. The source record's own words are 'consistent with' the -s1 to -s2 promotion, and it states explicitly that it 'does not identify which specific change in the -s2 promotion moved residency'. So: the far tier's draw path is excluded, the promotion is indicated, and the attribution is not closed.",
+    "theQuestionForTheUser": "Ship the three-tier city as it now stands -- default-on, measured where it could be measured, with FIVE criteria honestly unmet and sixteen named residuals -- or hold the goal open until some subset of R1, R2, R4, the criterion-2 verification gap and the criterion-3/4 instrument gap is closed?",
     "whatWouldChangeTheAnswer": [
-      "R1 (J2) is the only user-visible defect in the register, and it is NOT this goal's tier. Fixing it is a two-LOD-serving task, not a far-tier one.",
+      "R1 (J2) is the only user-visible defect in the register. The far-tier DRAW PATH is excluded as its cause; the promotion is indicated but not proven, and this goal's ceilings and pin were not controlled for. Closing it properly needs an arm that varies those.",
+      "CRITERION 2 is the cheapest of the unmet five to close, and nothing about it is unmeasurable: it needs a sweep re-run in a vehicle that actually has the exterior tier, with stills retained and checksummed, plus a 205-parent tombstone census. That is work, not a wall.",
       "R2 (F1 at the island overview) is the largest measurement hole and is an INSTRUMENT problem, not a known performance problem. Nothing here says the island overview is slow; it says nobody could measure it.",
       "Criteria 3 and 4 both wait on the same missing capability -- a forced-LOD and isolation hook -- and neither can move without a src/ change this goal forbade itself.",
       "T007's own verdict was NOT ACCEPTED. That verdict is carried here unchanged and is not softened by this record."
     ],
-    "whatThisRecordWillNotDo": "Flip a NOT-MET to MET on evidence that does not support it. Four criteria are unmet and are recorded as unmet; the amendment to D-19 changes a reason, not a verdict."
+    "whatThisRecordWillNotDo": "Flip a NOT-MET to MET on evidence that does not support it. Five criteria are unmet and are recorded as unmet; the amendment to D-19 changes one leg of a reason, not a verdict."
   },
   "nonClaims": [
     "T008 measured nothing. Every figure is cited from the task that measured it, with that record's hash.",

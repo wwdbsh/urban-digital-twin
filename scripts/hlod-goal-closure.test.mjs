@@ -49,7 +49,7 @@ describe("the goal acceptance record", () => {
   it("gives every NOT-MET a stop report rather than leaving it bare", () => {
     const record = readRecord(ROOT, "reconciliation");
     const notMet = record.verdicts.filter((v) => v.verdict === "NOT-MET");
-    expect(notMet.length).toBe(4);
+    expect(notMet.length).toBe(5);
     for (const verdict of notMet) expect(verdict.stopReport, `criterion ${verdict.index}`).toBeTruthy();
   });
 
@@ -72,7 +72,7 @@ describe("the goal acceptance record", () => {
 describe("the residual register", () => {
   it("names every residual with an owner and a citation that resolves", () => {
     const record = readRecord(ROOT, "reconciliation");
-    expect(record.residualRegister.length).toBeGreaterThanOrEqual(14);
+    expect(record.residualRegister.length).toBe(16);
     for (const residual of record.residualRegister) {
       expect(residual.id, JSON.stringify(residual).slice(0, 60)).toMatch(/^R\d+$/u);
       expect(residual.owner, residual.id).toBeTruthy();
@@ -91,6 +91,8 @@ describe("the residual register", () => {
     expect(joined).toMatch(/shed-tone/u);
     expect(joined).toMatch(/Cross-machine determinism/u);
     expect(joined).toMatch(/Eviction policy is NONE/u);
+    expect(joined).toMatch(/unmeasured third configuration/u);
+    expect(joined).toMatch(/overwrites its own record/u);
   });
 });
 
@@ -105,20 +107,36 @@ describe("the amendment discipline", () => {
     }
   });
 
-  it("does not change the amended verdict, and says so", () => {
-    const amendment = readRecord(ROOT, "reconciliation").amendments.find((a) => a.criterion === 4);
-    expect(amendment).toBeDefined();
-    expect(amendment.amends).toBe("data/exterior-completion-acceptance-20260817/reconciliation.json");
-    expect(amendment.change).toMatch(/NO VERDICT CHANGE/u);
-    expect(amendment.historyPreserved).toMatch(/NOT edited/u);
+  it("does not change the amended verdict — checked in the amended BYTES, not in a sentence", () => {
+    // An earlier revision asserted that a claim-string existed. That is a
+    // tautology: the record asserting its own compliance. This reads the
+    // amended document and requires the verdict to still be NOT-MET with no
+    // transition fields injected, which is what "no verdict change" MEANS.
+    const amended = JSON.parse(readText(join(AMENDED, "reconciliation.json")));
+    const criterion4 = amended.verdicts.find((v) => v.index === 4);
+    expect(criterion4.verdict).toBe("NOT-MET");
+    expect(criterion4).not.toHaveProperty("priorVerdict");
+    expect(criterion4).not.toHaveProperty("closedBy");
+    expect(criterion4).not.toHaveProperty("adjudicationDelta");
+    // ...and the amended record names no successor of this closure.
+    expect(JSON.stringify(amended)).not.toMatch(/manhattan-hlod-far-tier-acceptance/u);
   });
 
-  it("cites the amended record by path and task only, never by hash", () => {
-    // The convention that record set for itself: it embeds successor hashes in
-    // its own closures, so a hash citation here would be circular.
+  it("records the departure from the in-place convention as a departure", () => {
+    // The precedent (fba2569) edited its target IN PLACE, adding priorVerdict
+    // and closedBy. This amendment does not, and must say so as a choice rather
+    // than claim it is following the convention.
     const amendment = readRecord(ROOT, "reconciliation").amendments.find((a) => a.criterion === 4);
-    expect(amendment.citationConvention).toMatch(/never by hash/u);
-    expect(amendment).not.toHaveProperty("amendsSha256");
+    expect(amendment.amends).toBe("data/exterior-completion-acceptance-20260817/reconciliation.json");
+    expect(amendment.disciplineUsedAndWhyItDEPARTSFromThePrecedent).toMatch(/DELIBERATE DEPARTURE/u);
+    expect(amendment.whyDepart).toBeTruthy();
+    expect(amendment).not.toHaveProperty("citationConvention");
+  });
+
+  it("scopes the replacement to the one falsified leg", () => {
+    const legs = readRecord(ROOT, "reconciliation").amendments.find((a) => a.criterion === 4).theFrozenStopHadFOURLegs;
+    expect(legs.legA_falsified).toMatch(/FALSIFIED/u);
+    for (const key of ["legB_surviving", "legC_surviving", "legD_surviving"]) expect(legs[key], key).toMatch(/SURVIVES/u);
   });
 
   it("leaves the goal's own criterion 4 NOT-MET", () => {
@@ -139,8 +157,11 @@ describe("the completion decision is presented, not taken", () => {
 
   it("lays out both sides rather than only the passing one", () => {
     const decision = readRecord(ROOT, "reconciliation").completionDecision;
-    expect(decision.whatIsHonestlyNOTMET.length).toBe(4);
-    expect(decision.whatIsMETWithAdjudication.length).toBeGreaterThanOrEqual(5);
+    expect(decision.whatIsHonestlyNOTMET.length).toBe(5);
+    expect(decision.whatIsMETWithAdjudication.length).toBe(4);
+    // The J2 exoneration must carry its hedge in the decision itself.
+    expect(decision.onTheOneUserVisibleRegression).toMatch(/were never controlled/u);
+    expect(decision.onTheOneUserVisibleRegression).toMatch(/not closed/u);
     expect(decision.whatThisRecordWillNotDo).toMatch(/Flip a NOT-MET to MET/u);
   });
 });
