@@ -174,7 +174,7 @@
     "FAIL (product)": 1
   },
   "boundRecords": {
-    "campaign-summary": "96b8c598397127674f0bf8b509ea5e4010adca1c048d2bc8c1e1af0f3ccac92d",
+    "campaign-summary": "5b85cc0ca1e3ccc15dd5431fd31829aae7f4356e6e33466aba8c4e4f1a49ef52",
     "chrome-cleanup": "628c0e8a8b338c2ccf59537ed67e574bbbcb94c5b11550c81c37546fae0c4bcf",
     "f1-island-station": "6d0cf6c9735375f4f0d7c03d9f5389b8f7847274b328f300bce9db8da2ab8d7d",
     "frames-analysis": "2de27491f9bc27dc58ac4f845db4e2930677950cb277f862390783b4974ec74b",
@@ -185,9 +185,9 @@
     "journeys-analysis": "9e91fb7ed11b57f9a6080251cfcbec1a0758931c7eee99dee42aa07be2556b26",
     "journeys": "b4717dfc2c51c472eee86b5b12537c3f089d1278bfaef595f2319c8723a629f1",
     "pre-registration": "2c0a21fc424dc25d39e008f7ba25b5b7be0e11b535e7dc292d4c1ed2cc90359a",
-    "preflight-closing": "7bd63c40dcf6614ab00bc0c3cf2589596e759efaa3978dc111aa352f70c52dce",
+    "preflight-closing": "452634adb930108bfdedbc90af4b1a3d815211d4ba0e2b4e9655384f692f589a",
     "preflight-opening": "ca463d1edc712dc004a961c200eadeb583016739d5d8b390d156a2000b0d7f30",
-    "preflight": "7bd63c40dcf6614ab00bc0c3cf2589596e759efaa3978dc111aa352f70c52dce",
+    "preflight": "452634adb930108bfdedbc90af4b1a3d815211d4ba0e2b4e9655384f692f589a",
     "reported-no-bar": "1b1dc380c247738c5066106518fe421da8f4cbe6d74eba7c06cc795f5f971177",
     "staging-provenance": "373a7af4c6fa4d83c9b82c025fd5b170095937d82a3f28810751bd868ecfbe3f"
   },
@@ -223,5 +223,6 @@
     "D-11 is not closed.",
     "Criterion #30 is closed elsewhere, reported in its own units, added to nothing.",
     "The far-tier OFF arm reading may not be differenced against a different instrument's ON reading from a different session."
-  ]
+  ],
+  "preflightNote": "The closing pre-flight ABORTED once, correctly, because it ran while the correction commit was still uncommitted -- worktree-clean is one of its conditions. Re-run on the clean tree: PASS 13/13. Both the abort and the re-run are disclosed; the guard refusing its own operator's untidiness is the guard working."
 }

@@ -5,10 +5,10 @@
   "phase": "0",
   "capturedAt": null,
   "capturedAtStatement": "NULL BY CONSTRUCTION.",
-  "verdict": "ABORT",
+  "verdict": "PASS",
   "rule": "FAIL CLOSED. Any unmet condition aborts the campaign rather than degrading it. There is no partial pass.",
   "whyThisExists": "T005 shipped two promotion sweeps whose vehicle was missing the entire exterior wave tier, because the server answered every absent package with index.html and nothing checked. A campaign that quietly measures two tiers and reports three is worse than one that refuses to start.",
-  "worktreeHead": "c25ebd7ec669aff6a0994792a8a7bca78090fa35",
+  "worktreeHead": "87cf35de391e05daab9a74a61090ccca8225064d",
   "base": "http://127.0.0.1:4173",
   "hardwareAtCapture": {
     "note": "The committed pre-registration recorded this machine on BATTERY and made AC power a pre-flight condition. That record is NOT edited -- a pre-registration that changes after the fact is not one. The capture-time state is recorded HERE instead.",
@@ -30,8 +30,8 @@
   "checks": [
     {
       "id": "worktree-clean",
-      "ok": false,
-      "detail": "UNCOMMITTED CHANGES:\nM data/three-tier-acceptance-20260821/campaign-summary.json\n M data/three-tier-acceptance-20260821/campaign-summary.sha256\n M data/three-tier-acceptance-20260821/captures/overview-2400m-anchor.png\n M data/three-tier-acceptance-20260821/captures/overview-52km-island.png\n M data/three-tier-acceptance-20260821/captures/transition-1200m-anchor.png\n M data/three-tier-acceptance-20260821/chrome-cleanup.json\n M data/three-tier-acceptance-20260821/chrome-cleanup.sha256\n M data/three-tier-acceptance-20260821/frames-analysis.json\n M data/three-tier-acceptance-20260821/frames-analysis.sha256\n M data/three-tier-acceptance-20260821/frames-and-gpu.json\n M data/three-tier-acceptance-20260821/frames-and-gpu.sha256\n M data/three-tier-acceptance-20260821/g1-far-and-gpu.json\n M data/three-tier-acceptance-20260821/g1-far-and-gpu.sha256\n M data/three-tier-acceptance-20260821/heap.json\n M data/three-tier-acceptance-20260821/heap.sha256\n M data/three-tier-acceptance-20260821/journeys-analysis.json\n M data/three-tier-acceptance-20260821/journeys-analysis.sha256\n M data/three-tier-acceptance-20260821/journeys.json\n M data/three-tier-acceptance-20260821/journeys.sha256\n M data/three-tier-acceptance-20260821/pre-registration.json\n M data/three-tier-acceptance-20260821/pre-registration.sha256\n M docs/decisions/0058-far-tier-bake-architecture.md\n M docs/implementation/20260822-three-tier-acceptance-campaign.md\n M scripts/three-tier-acceptance-preregistration.test.mjs\n M scripts/three-tier-capture-cli.mjs\n M scripts/three-tier-capture.test.mjs\n?? data/three-tier-acceptance-20260821/f1-island-station.json\n?? data/three-tier-acceptance-20260821/f1-island-station.sha256\n?? data/three-tier-acceptance-20260821/j2-far-tier-arms.json\n?? data/three-tier-acceptance-20260821/j2-far-tier-arms.sha256\n?? data/three-tier-acceptance-20260821/preflight-opening.json\n?? data/three-tier-acceptance-20260821/preflight-opening.sha256\n?? scripts/station-arm-frames-cli.mjs"
+      "ok": true,
+      "detail": "clean at 87cf35de391e05daab9a74a61090ccca8225064d"
     },
     {
       "id": "pre-registration-unedited",
@@ -132,6 +132,6 @@
       "looksJson": true
     }
   ],
-  "passedCount": 12,
+  "passedCount": 13,
   "ofCount": 13
 }

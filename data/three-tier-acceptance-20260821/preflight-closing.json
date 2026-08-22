@@ -8,7 +8,7 @@
   "verdict": "PASS",
   "rule": "FAIL CLOSED. Any unmet condition aborts the campaign rather than degrading it. There is no partial pass.",
   "whyThisExists": "T005 shipped two promotion sweeps whose vehicle was missing the entire exterior wave tier, because the server answered every absent package with index.html and nothing checked. A campaign that quietly measures two tiers and reports three is worse than one that refuses to start.",
-  "worktreeHead": "d3f0e941ca837e81933785ff02a56e68700c17bc",
+  "worktreeHead": "87cf35de391e05daab9a74a61090ccca8225064d",
   "base": "http://127.0.0.1:4173",
   "hardwareAtCapture": {
     "note": "The committed pre-registration recorded this machine on BATTERY and made AC power a pre-flight condition. That record is NOT edited -- a pre-registration that changes after the fact is not one. The capture-time state is recorded HERE instead.",
@@ -31,12 +31,12 @@
     {
       "id": "worktree-clean",
       "ok": true,
-      "detail": "clean at d3f0e941ca837e81933785ff02a56e68700c17bc"
+      "detail": "clean at 87cf35de391e05daab9a74a61090ccca8225064d"
     },
     {
       "id": "pre-registration-unedited",
       "ok": true,
-      "detail": "7cdd1c4f396970824e406a6ff69119ebd74ee53dc1fddfa95723a8a0f39cc49b"
+      "detail": "2c0a21fc424dc25d39e008f7ba25b5b7be0e11b535e7dc292d4c1ed2cc90359a"
     },
     {
       "id": "staged-serving-bytes",
