@@ -1,0 +1,150 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "three-tier-acceptance-20260821:heap",
+  "task": "T007",
+  "phase": "4",
+  "capturedAt": null,
+  "capturedAtStatement": "NULL BY CONSTRUCTION.",
+  "gate": "M1-M4 retained heap across repeated island laps",
+  "verdict": "NOT-CAPTURED",
+  "rule": "M1 needs >= 6 SAMPLED laps to compute a first-half versus second-half median growth ratio. No attempt reached lap 3. The instrument wrote NO record on any attempt, so there is nothing to score and nothing is scored.",
+  "whyNotAFail": "A heap FAIL would be a statement about memory growth. No growth series exists: the instrument aborted before one could be formed. Recording NOT-CAPTURED rather than FAIL is the difference between 'the city leaks' and 'this vehicle could not measure whether it leaks', and only the second is supported.",
+  "capReDerivationWasCorrectAndUnusedInTheEnd": {
+    "reDerivedCapMs": 9000000,
+    "inheritedCapMs": 4500000,
+    "note": "The cap was re-derived to 150 minutes before any lap ran, because the three-tier floor of 73.5 min would have left the inherited 75-minute cap firing on a healthy slow run. In the event no attempt survived long enough for either cap to matter. The derivation stands on its own arithmetic and is recorded; it did not decide anything here.",
+    "flagAdded": "scripts/citywide-heap-repeat-cli.mjs gained an optional --lap-phase-cap-ms following the precedent --out itself set: the default is unchanged, so nothing that ran before behaves differently. It refuses a non-positive value and refuses to combine with the FROZEN default output root."
+  },
+  "attempts": [
+    {
+      "attempt": 1,
+      "outcome": "INSTRUMENT-FAILURE ABORT",
+      "reason": "The CLI requires a SEPARATELY LAUNCHED dedicated Chrome on port 9223 with --js-flags=--expose-gc; none was running, so the CDP connect refused. No lap ran.",
+      "recordWritten": false
+    },
+    {
+      "attempt": 2,
+      "outcome": "INSTRUMENT-FAILURE ABORT",
+      "reason": "Reached lap 2 of 9, then the instrument's own fail-closed guard fired: 'street-260m-lower: focus/visibility changed mid-run (hasFocus true -> false)'. A retained-heap sample taken while the renderer is backgrounded measures a different quantity, so the guard refuses it.",
+      "lapsCompleted": 2,
+      "recordWritten": false
+    },
+    {
+      "attempt": 3,
+      "outcome": "INSTRUMENT-FAILURE ABORT",
+      "reason": "Same guard at lap 1 'transition-1200m-anchor', after every other scratch Chrome on the machine had been killed and the dedicated one relaunched clean.",
+      "lapsCompleted": 1,
+      "recordWritten": false
+    }
+  ],
+  "vehicleLimitation": {
+    "statement": "THIS VEHICLE CANNOT HOLD A ~45-MINUTE EXCLUSIVE-FOCUS MEASUREMENT WHILE AN AGENT DRIVES THE MACHINE.",
+    "detail": "M1 requires one Chrome window to remain frontmost and visible for 9 laps across 5 poses. The machine is simultaneously running an Orca embedded browser and being driven through a shell by an agent. The guard that fired is precisely a 'something else touched the desktop' detector, and it fired twice from different laps, which is the signature of an ambient condition rather than a specific action.",
+    "whatWouldFixIt": "A dedicated session with no other browser and no interactive driver, or a headless variant of the instrument whose sampling does not depend on window focus. The second is an instrument change and was not attempted here.",
+    "notRetriedFurther": "The rule for stopping was stated BEFORE this outcome was known: record NOT-CAPTURED with the vehicle limitation rather than retry indefinitely. Retrying until a run happens to survive would be selecting for a quiet desktop, not measuring the city."
+  },
+  "interimReadingsReportedNotScored": {
+    "statement": "REPORTED, NOT A VERDICT. These are the samples the aborted runs did take. They are published because suppressing them would hide the only heap evidence this campaign produced, and labelled because two-and-a-bit laps cannot answer a gate that needs six.",
+    "attempt2": [
+      {
+        "lap": "0 (warmup)",
+        "pose": "overview-52km-island",
+        "resident": 8,
+        "visible": 883,
+        "deferred": 875,
+        "released": 0,
+        "denseEntries": 99,
+        "retainedHeapBytes": 596412880
+      },
+      {
+        "lap": "0 (warmup)",
+        "pose": "street-260m-midtown",
+        "resident": 8,
+        "visible": 12,
+        "deferred": 10,
+        "released": 910,
+        "denseEntries": 99,
+        "retainedHeapBytes": 949585975
+      },
+      {
+        "lap": "1",
+        "pose": "overview-52km-island",
+        "resident": 8,
+        "visible": 883,
+        "deferred": 875,
+        "released": 1512,
+        "denseEntries": 103,
+        "retainedHeapBytes": 952725002
+      },
+      {
+        "lap": "1",
+        "pose": "street-260m-midtown",
+        "resident": 8,
+        "visible": 12,
+        "deferred": 10,
+        "released": 2422,
+        "denseEntries": 103,
+        "retainedHeapBytes": 993009257
+      },
+      {
+        "lap": "2",
+        "pose": "overview-52km-island",
+        "resident": 8,
+        "visible": 883,
+        "deferred": 875,
+        "released": 3024,
+        "denseEntries": 103,
+        "retainedHeapBytes": 959174498
+      },
+      {
+        "lap": "2",
+        "pose": "street-260m-midtown",
+        "resident": 8,
+        "visible": 12,
+        "deferred": 10,
+        "released": 3934,
+        "denseEntries": 103,
+        "retainedHeapBytes": 981501413
+      }
+    ],
+    "attempt3": [
+      {
+        "lap": "0 (warmup)",
+        "pose": "overview-52km-island",
+        "resident": 8,
+        "visible": 883,
+        "deferred": 875,
+        "released": 0,
+        "denseEntries": 99,
+        "retainedHeapBytes": 603061837
+      },
+      {
+        "lap": "0 (warmup)",
+        "pose": "street-260m-midtown",
+        "resident": 8,
+        "visible": 12,
+        "deferred": 10,
+        "released": 910,
+        "denseEntries": 99,
+        "retainedHeapBytes": 950310043
+      },
+      {
+        "lap": "1",
+        "pose": "overview-52km-island",
+        "resident": 8,
+        "visible": 883,
+        "deferred": 875,
+        "released": 1512,
+        "denseEntries": 103,
+        "retainedHeapBytes": 951696096
+      }
+    ],
+    "observation": "Across attempt 2's four sampled points the retained heap moved 952.7 -> 993.0 -> 959.2 -> 981.5 MB: oscillating within about 4 per cent, not climbing monotonically. Resident cells held at 8 at every pose in both runs and 'released' rose monotonically (0 -> 3,934), so the scheduler was releasing rather than accumulating. NONE OF THAT IS A PASS: M1 is a growth-ratio gate over 8 sampled laps and the series never reached one."
+  },
+  "m2Condition": "Never reached. M2 requires activeRequests === 0 at each sample; no attempt got far enough for the condition to be exercised as a verdict.",
+  "nonClaims": [
+    "This is not evidence that the three-tier city leaks, and not evidence that it does not.",
+    "One machine, one session, AC power.",
+    "The interim samples are a handful of points from aborted runs and carry no growth conclusion."
+  ]
+}
